@@ -1,17 +1,18 @@
 # nanoBragg
+
 program for calculation of absolute scattering from molecules and small crystals
 
 This short program calculates the absolute-scale scattering from a nanocrystal
 that is "bathed" in a beam of a given integrated photon density 
-(specified in photons/meter<sup>2</sup>).
-For example, 10<sup>12</sup> photons focused into a 3-micron round beam is represented by 
-"-fluence 1.4e24".
-Images of the expected photons/pixel on the
-detector, with and without photon-counting noise are generated in SMV format 
-(suitable for display with <a href=http://www.scripps.edu/~arvai/adxv.html>adxv</a>, 
-<a href=http://www.mrc-lmb.cam.ac.uk/harry/mosflm/>MOSFLM</a>, or most any other diffraction image display program).
-<br>The structure
-factor of the spots should be provided on an absolute "electron" scale (as output by programs like
+(specified in photons/meter<sup>2</sup>). For example, 10<sup>12</sup> photons
+focused into a 3-micron round beam is represented by "-fluence 1.4e24". Images 
+of the expected photons/pixel on the detector, with and without photon-counting
+noise are generated in SMV format (suitable for display with
+[ADXV](http://www.scripps.edu/~arvai/adxv.html),
+[MOSFLM](http://www.mrc-lmb.cam.ac.uk/harry/mosflm/),
+or most any other diffraction image display program).
+
+The structure factor of the spots should be provided on an absolute "electron" scale (as output by programs like
 <a href=http://www.phenix-online.org/documentation/fmodel.htm>phenix.fmodel</a>,
 <a href=http://www.ccp4.ac.uk/dist/html/refmac5/keywords/xray-general.html#labout>REFMAC</a> or 
 <a href=http://www.ccp4.ac.uk/dist/html/sfall.html>SFALL</a>), but must
@@ -28,7 +29,7 @@ presumed to be surrounding the nanocrystal.  The diameter of this droplet in mic
 with the "-water" option, and assumes a forward-scattering structure factor of 2.57 electrons.
 The default value for this option is zero.
 <hr>
-source code: <a href =nanoBragg.c>nanoBragg.c</a> (49k) or binaries for 
+source code: [nanoBragg.c](nanoBragg.c) (49k) or binaries for 
 <a href=nanoBragg.Linux>linux</a>, 
 <a href=nanoBragg.Darwin>OSX</a>, 
 <a href=nanoBragg.Cygwin>Cygwin</a>,
@@ -102,16 +103,18 @@ run the simulation of a 10x10x10 unit cell crystal
 <pre>./<a href=nanoBragg>nanoBragg</a> -hkl <a href=P1.hkl>P1.hkl</a> -matrix A.mat -lambda 6.2 -N 10</pre>
 
 view the result
-<pre><a href=http://www.scripps.edu/~arvai/adxv.html>adxv</a> <a href=intimage_10cells.img>intimage.img</a></pre>
+
+```
+adxv intimage.img
+```
 
 convert and re-scale as regular graphics file
-<pre>
-<a href=http://www.imagemagick.org/>convert</a> -depth 16 -type Grayscale -colorspace GRAY -endian LSB -size 1024x1024+512 \
-  -negate -normalize \
-  GRAY:intimage.img <a href=intimage_10cells.png>intimage.png
-<img src=intimage_10cells_tmb.png></a>
 
-</pre>
+```
+convert -depth 16 -type Grayscale -colorspace GRAY -endian LSB -size 1024x1024+512 -negate \ 
+-normalize GRAY:intimage.img
+```
+![some description here](doc/intimage_10cells_tmb.png)
 
 Note the "low resolution hole", which is due to the missing low-angle data in the PDB deposition.
 Missing high-resolution spots that would otherwise fall on the detector will generate a WARNING
