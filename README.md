@@ -109,7 +109,7 @@ convert and re-scale as regular graphics file
 <a href=http://www.imagemagick.org/>convert</a> -depth 16 -type Grayscale -colorspace GRAY -endian LSB -size 1024x1024+512 \
   -negate -normalize \
   GRAY:intimage.img <a href=intimage_10cells.png>intimage.png
-<img src=intimage_10cells_tmb.png></a>
+<img src=doc/intimage_10cells_tmb.png></a>
 
 </pre>
 
@@ -126,8 +126,8 @@ adxv <a href=noiseimage_10cells.img>noiseimage.img</a>
 <br>
 It has been re-scaled here as a png for better viewing:
 <br>
-<a href=noiseimage_10cells.png>
-<img src=noiseimage_10cells_tmb.png></a><br>
+<a href=doc/noiseimage_10cells.png>
+<img src=doc/noiseimage_10cells_tmb.png></a><br>
 
 Still not bad, but this is because there is no background, and the default fluence is 1e24,
  or 10<sup>12</sup> photons focused into a 1 micron beam.
@@ -142,8 +142,8 @@ was four microns wide:
 
 <br>adxv <a href=noiseimage_10cells_water.img>noiseimage.img</a>
 <br>
-<a href=noiseimage_10cells_water.png>
-<img src=noiseimage_10cells_water_tmb.png></a><br>
+<a href=doc/noiseimage_10cells_water.png>
+<img src=doc/noiseimage_10cells_water_tmb.png></a><br>
 
 </pre>
 
@@ -207,8 +207,8 @@ and now, make the diffraction image
 adxv <a href=noiseimage_SAXS.img>noiseimage.img</a>
 </pre>
 <br>
-<a href=noiseimage_SAXS.png>
-<img src=noiseimage_SAXS_tmb.png></a><br>
+<a href=doc/noiseimage_SAXS.png>
+<img src=doc/noiseimage_SAXS_tmb.png></a><br>
 Notice that the center of the image is white.  This is not a beamstop!  What is
 actually going on is that F000 is missing in P1.hkl, and so is being replaced with
 zero intensity.  You can fix this by adding an F000 term:
@@ -221,8 +221,8 @@ echo "0 0 0 520" >> P1.hkl
 adxv <a href=noiseimage_SAXS_F000.img>noiseimage.img</a>
 </pre>
 <br>
-<a href=noiseimage_SAXS_F000.png>
-<img src=noiseimage_SAXS_F000_tmb.png></a><br>
+<a href=doc/noiseimage_SAXS_F000.png>
+<img src=doc/noiseimage_SAXS_F000_tmb.png></a><br>
 You might wonder, however, why the F000 term is ~500 and not the number of electrons
 in lysozyme, which is ~8000.  The reason here is the bulk solvent.  The volume of
 water displaced by the lysozyme molecule contains almost as many electrons as the
@@ -259,8 +259,8 @@ which will create a file called <a href=mtz.stol>mtz.stol</a> that you can feed 
 adxv <a href=noiseimage_SAXS_radial.img>noiseimage.img</a>
 </pre>
 <br>
-<a href=noiseimage_SAXS_radial.png>
-<img src=noiseimage_SAXS_radial_tmb.png></a><br>
+<a href=doc/noiseimage_SAXS_radial.png>
+<img src=doc/noiseimage_SAXS_radial_tmb.png></a><br>
 Which starts to look more like a SAXS pattern from a conventional SAXS beamline.  Note that
 the "density" of the sample in this case is 0.01 g/cm^3 or 10 mg/mL.
 <br>
