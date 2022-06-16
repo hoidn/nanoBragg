@@ -326,13 +326,19 @@ the "density" of the sample in this case is 0.01 g/cm^3 or 10 mg/mL.
 
   the structure factor text list.  Default: re-read dumpfile from last run
 
-<dl>
-<dt> -hkl filename.hkl <dt>
-<dd> the structure factor text list.  Default: re-read dumpfile from last run <dd>
-<dt> -matrix auto.mat <dt>
-<dd> cell/orientation matrix file, takes first nine text numbers found <dd>
-<dt> -cell a b c alpha beta gamma<dt>
-<dd> specify unit cell dimensions (Angstrom and degrees)<dd>
+
+***-hkl filename.hkl***
+
+the structure factor text list.  Default: re-read dumpfile from last run
+
+***-matrix auto.mat***
+
+cell/orientation matrix file, takes first nine text numbers found
+
+***-cell a b c alpha beta gamma***
+
+specify unit cell dimensions (Angstrom and degrees)
+
 <dt> -misset <dt>
 <dd> instead of matrix, specify MOSFLM-style misseting angles about x,y,z (degrees)<dd>
 
