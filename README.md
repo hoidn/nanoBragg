@@ -7,21 +7,16 @@ that is "bathed" in a beam of a given integrated photon density
 (specified in photons/meter<sup>2</sup>). For example, 10<sup>12</sup> photons
 focused into a 3-micron round beam is represented by "-fluence 1.4e24". Images 
 of the expected photons/pixel on the detector, with and without photon-counting
-noise are generated in SMV format (suitable for display with
-[ADXV](http://www.scripps.edu/~arvai/adxv.html),
-[MOSFLM](http://www.mrc-lmb.cam.ac.uk/harry/mosflm/),
-or most any other diffraction image display program).
+noise are generated in SMV format (suitable for display with [ADXV][adxv],
+[MOSFLM][mosflm], or most any other diffraction image display program).
 
-The structure factor of the spots should be provided on an absolute "electron" scale (as output by programs like
-[phenix.fmodel](http://www.phenix-online.org/documentation/fmodel.htm),
-[REFMAC](http://www.ccp4.ac.uk/dist/html/refmac5/keywords/xray-general.html#labout), or 
-[SFALL](http://www.ccp4.ac.uk/dist/html/sfall.html)), but must
-be converted to a plain text file of h,k,l,F.  Note that no symmetry is imposed by this
+The structure factor of the spots should be provided on an absolute "electron" scale
+(as output by programs like [phenix.fmodel][fmodel], [REFMAC][refmac], or [SFALL][sfall]),
+but must be converted to a plain text file of h,k,l,F.  Note that no symmetry is imposed by this
 program, not even Friedel symmetry, so all reflections you wish to be non-zero intensity must be
 specified, including F000. The unit cell and crystal orientation may be provided as a 
-[MOSFLM](http://www.mrc-lmb.cam.ac.uk/harry/mosflm/)-style
-orientation matrix, which is again a text file and the first nine tokens read from it are taken
-as the x,y,z components of the three reciprocal-space cell vectors 
+[MOSFLM][mosflm]-style orientation matrix, which is again a text file and the first nine tokens read
+from it are taken as the x,y,z components of the three reciprocal-space cell vectors 
 (a,b,c are the columns, x,y,z are the rows). 
 
 The program also contains an option for adding approximate scattering from the water droplet
@@ -46,25 +41,20 @@ gcc -O -O -o nanoBragg nanoBragg.c -lm -static
 [mtz_to_P1hkl.com](mtz_to_P1hkl.com) is a script for converting mtz-formatted structure factors into
 a format that nanoBragg can read.
 
-[noisify](https://github.com/bl831/bin_stuff/blob/main/docs/noisify.md)
-is a program that takes the "photons/pixel" noiseless intensity values output by `nonBragg`, 
-`nanoBragg`, or `nearBragg` as "floagimage.bin" and adds different kinds of noise to it to generate
-an SMV file.  This is usually faster than re-running `nonBragg` just to change things like
-beam intensity.  In addition to photon shot noise, noisify has a few kinds of noise that nonBragg
-doesn't implement, such as pixel read-out noise, beam flicker, and calibration error.
+[noisify][noisify] is a program that takes the "photons/pixel" noiseless intensity values output by `nonBragg`, `nanoBragg`, or `nearBragg` as "floagimage.bin" and adds different kinds of noise to it
+to generate an SMV file.  This is usually faster than re-running `nonBragg` just to change things
+like beam intensity.  In addition to photon shot noise, noisify has a few kinds of noise that
+`nonBragg` doesn't implement, such as pixel read-out noise, beam flicker, and calibration error.
 
-[float_add](https://github.com/bl831/bin_stuff/blob/main/docs/float_add.html) may be used to
-add the raw "float" binary files output by `nonBragg`, `nanoBragg`, or even `nearBragg` so that
-renderings may be divided up on separate CPUs and then combined together.  The resulting raw files
-may then be converted to SMV images with `noisify`.
+[float_add][float_add] may be used to add the raw "float" binary files output by `nonBragg`,
+`nanoBragg`, or even `nearBragg` so that renderings may be divided up on separate CPUs and then
+combined together.  The resulting raw files may then be converted to SMV images with `noisify`.
 
-[float_func](https://github.com/bl831/bin_stuff/blob/main/docs/float_func.html)
-can perform a large number of operations on these "floagimage.bin" files.
+[float_func][float_func] can perform a large number of operations on these "floagimage.bin" files.
 
-[nonBragg](nonBragg.html)
-is for generating scattering from amorphous substances, like water and air. You will need to feed
-it a text file containing the "structure factor" of the amorphous material vs sin(theta)/lambda.
-A few examples are:
+[nonBragg]() is for generating scattering from amorphous substances, like water and air. You will
+need to feed it a text file containing the "structure factor" of the amorphous material vs
+sin(theta)/lambda. A few examples are:
 
 [air.stol](air.stol)
 
@@ -172,13 +162,13 @@ adxv noiseimage.img
 
 
 If you look closely, you can see the spots.  Note that this is an idealized case where only
-photon-counting noise is present.  there is no detector read-out noise, no point-spread function,
+photon-counting noise is present. There is no detector read-out noise, no point-spread function,
 no amplifier drift, no pixel saturation and no calibration errors.  Many of these errors
-can be added using <a href=noisify.c>noisify.c</a>, but not all.  Watch this space for updates.
+can be added using [noisify][noisify], but not all. Watch this space for updates.
 
 # SAXS simulations
 
-nanoBragg can also be used to simulate small-angle X-ray scattering (SAXS) patterns by
+`nanoBragg` can also be used to simulate small-angle X-ray scattering (SAXS) patterns by
 simply setting the number of unit cells to one (-N 1 on the command line).
 Tricubic interpolation between the hkl indicies will be used to determine the intensity
 between the "spots".
@@ -604,3 +594,12 @@ manually set the random number seed. Default:
 ***-mosaic_seed***
 
 different random number seed for mosaic domain generation. Default: 
+
+[adxv]: http://www.scripps.edu/~arvai/adxv.html
+[mosflm]: http://www.mrc-lmb.cam.ac.uk/harry/mosflm/
+[fmodel]: http://www.phenix-online.org/documentation/fmodel.htm
+[refmac]: https://www2.mrc-lmb.cam.ac.uk/groups/murshudov/content/refmac/refmac.html
+[sfall]: https://www.ccp4.ac.uk/html/sfall.html
+[noisify]: https://github.com/bl831/bin_stuff/blob/main/docs/noisify.md
+[float_add]: https://github.com/bl831/bin_stuff/blob/main/docs/float_add.md
+[float_func]: https://github.com/bl831/bin_stuff/blob/main/docs/float_func.md
