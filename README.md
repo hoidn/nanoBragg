@@ -46,7 +46,7 @@ gcc -O -O -o nanoBragg nanoBragg.c -lm -static
 [mtz_to_P1hkl.com](mtz_to_P1hkl.com) is a script for converting mtz-formatted structure factors into
 a format that nanoBragg can read.
 
-[noisify](https://github.com/bl831/bin_stuff/blob/main/docs/noisify.html)
+[noisify](https://github.com/bl831/bin_stuff/blob/main/docs/noisify.md)
 is a program that takes the "photons/pixel" noiseless intensity values output by `nonBragg`, 
 `nanoBragg`, or `nearBragg` as "floagimage.bin" and adds different kinds of noise to it to generate
 an SMV file.  This is usually faster than re-running `nonBragg` just to change things like
