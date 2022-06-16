@@ -324,11 +324,6 @@ the "density" of the sample in this case is 0.01 g/cm^3 or 10 mg/mL.
 
 ***-hkl filename.hkl***
 
-  the structure factor text list.  Default: re-read dumpfile from last run
-
-
-***-hkl filename.hkl***
-
 the structure factor text list.  Default: re-read dumpfile from last run
 
 ***-matrix auto.mat***
@@ -339,165 +334,274 @@ cell/orientation matrix file, takes first nine text numbers found
 
 specify unit cell dimensions (Angstrom and degrees)
 
-<dt> -misset <dt>
-<dd> instead of matrix, specify MOSFLM-style misseting angles about x,y,z (degrees)<dd>
+***-misset***
 
-<dt> -Na <dt>
-<dd> number of unit cells along crystal a axis <dd>
-<dt> -Nb <dt>
-<dd> number of unit cells along crystal b axis <dd>
-<dt> -Nc <dt>
-<dd> number of unit cells along crystal c axis <dd>
-<dt> -N <dt>
-<dd> number of unit cells in all three directions (ovverides above) <dd>
-<dt> -samplesize <dt>
-<dd> alternative: linear dimension of the crystal in all three directions (mm) <dd>
-<dt> -sample_thick or -sample_x ; -sample_width or -sample_y ; -sample_height or -sample_z <dt>
-<dd> alternative: linear dimension of the crystal in specified directions (mm) <dd>
+instead of matrix, specify MOSFLM-style misseting angles about x,y,z (degrees)
 
+*** -Na ***
 
-<dt> -img filename.img <dt>
-<dd> optional: inherit and interpret header of an existing SMV-format diffraction image file<dd>
-<dt> -distance <dt>
-<dd> distance from sample to beam center on detector (mm) <dd>
-<dt> -close_distance <dt>
-<dd> distance from sample to nearest point in detector plane, XDS-style (mm) <dd>
-<dt> -detsize <dt>
-<dd> detector size in x and y (mm) <dd>
-<dt> -detsize_x <dt>
-<dd> detector size in x direction (mm) <dd>
-<dt> -detsize_y <dt>
-<dd> detector size in y direction (mm) <dd>
-<dt> -pixel <dt>
-<dd> detector pixel size (mm) <dd>
-<dt> -detpixels <dt>
-<dd> detector size in x and y (pixels) <dd>
-<dt> -detpixels_x <dt>
-<dd> detector size in x direction (pixels) <dd>
-<dt> -detpixels_y <dt>
-<dd> detector size in y direction (pixels) <dd>
-<dt> -Xbeam <dt>
-<dd> direct beam position in x direction (mm) Default: center <dd>
-<dt> -Ybeam <dt>
-<dd> direct beam position in y direction (mm) Default: center <dd>
-<dt> -Xclose  -Yclose <dt>
-<dd> instead of beam center, specify point on detector closest to the sample (mm) Default: derive from Xbeam Ybeam <dd>
-<dt> -ORGX -ORGY<dt>
-<dd> instead of beam center, specify XDS-stype point on detector closest to the sample (pixels) Default: derive from Xbeam Ybeam <dd>
+number of unit cells along crystal a axis 
 
-<dt> -detector_rotx -detector_roty -detector_rotz <dt>
-<dd> specify detector mis-orientation rotations about x,y,z axes (degrees)<dd>
-<dt> -twotheta <dt>
-<dd> specify detector rotation about sample (degrees)<dd>
-<dt> -pivot sample|beam <dt>
-<dd> specify if detector rotations should be about the crystal or about the beam center point on the detector surface <dd>
+*** -Nb ***
 
-<dt> -xdet_vector -ydet_vector -zdet_vector -beam_vector -polar_vector -spindle_axis -twotheta_axis <dt>
-<dd> explicity define unit vectors defining detector and beam orientation (XDS style) <dd>
-<dt> -pix0_vector <dt>
-<dd> explicity define XYZ coordinate of the first pixel in the output file (as printed in the output) <dd>
+number of unit cells along crystal b axis 
 
-<dt> -curved_det <dt>
-<dd> all detector pixels same distance from sample (origin) <dd>
-<dt> -oversample <dt>
-<dd> number of sub-pixels per pixel. Default: 1 <dd>
-<dt> -roi xmin xmax ymin ymax <dt>
-<dd> only render pixels within a set range. Default: all detector <dd>
-<dt> -mask mask.img <dt>
-<dd> optional: skip over pixels that have zero value in a provided SMV-format image file<dd>
+*** -Nc ***
 
-<dt> -lambda <dt>
-<dd> incident x-ray wavelength (Angstrom). Default: 1 <dd>
-<dt> -fluence <dt>
-<dd> incident x-ray intensity (photons/m^2). Default: 1.26e29 so I=F^2 <dd>
-<dt> -flux <dt>
-<dd> incident x-ray intensity (photons/s). Default: none <dd>
-<dt> -exposure <dt>
-<dd> exposure time (s) used to convert flux and beam size to fluence. Default: 1 <dd>
-<dt> -beamsize <dt>
-<dd> linear size of incident x-ray beam at sample (mm). Default: 0.1 <dd>
+number of unit cells along crystal c axis 
 
-<dt> -hdivrange <dt>
-<dd> horizontal angular spread of source points (mrad). Default: 0 <dd>
-<dt> -vdivrange <dt>
-<dd> vertical angular spread of source points (mrad). Default: 0 <dd>
-<dt> -hdivstep <dt>
-<dd> number of source points in the horizontal. Default: 1 <dd>
-<dt> -vdivstep <dt>
-<dd> number of source points in the vertical. Default: 1 <dd>
-<dt> -round_div -square_div <dt>
-<dd> make the 2D divergence distribution round or square. Default: round <dd>
+*** -N ***
 
-<dt> -dispersion <dt>
-<dd> spectral dispersion: delta-lambda/lambda (percent). Default: 0 <dd>
-<dt> -dispsteps <dt>
-<dd> number of wavelengths in above range. Default: 1 <dd>
+number of unit cells in all three directions (ovverides above) 
 
-<dt> -sourcefile <dt>
-<dd> optionally specify a text file containing x,y,z,relative_intensity,wavelength of each desired point source <dd>
-<dt> -coherent <dt>
-<dd> coherently add everything, even different wavelengths. Not the default <dd>
+*** -samplesize ***
 
-<dt> -mosaic <dt>
-<dd> simulate mosaic spread with random points on a spherical cap of specified diameter (degrees). Default: 0 <dd>
-<dt> -mosaic_domains <dt>
-<dd> number of discrete mosaic domains to render. Default: 10 if mosaic>0 recommend a lot more <dd>
+alternative: linear dimension of the crystal in all three directions (mm) 
 
-<dt> -phi -osc -phistep or -phisteps <dt>
-<dd> simulate a spindle rotation about the spindle axis by averaging a series of stills. Default: 0 <dd>
-<dt> -phistep <dt>
-<dd> angular step for simulating phi spindle rotation (deg). Default: derive from phisteps <dd>
-<dt> -phisteps <dt>
-<dd> number of steps for simulating phi spindle rotation (). Default: 2 if osc>0 recommend a lot more <dd>
+*** -sample_thick or -sample_x ; -sample_width or -sample_y ; -sample_height or -sample_z ***
 
+alternative: linear dimension of the crystal in specified directions (mm) 
 
-<dt> -floatfile <dt>
-<dd> name of binary pixel intensity output file (4-byte floats) <dd>
-<dt> -intfile <dt>
-<dd> name of smv-formatted output file. <dd>
-<dt> -pgmfile <dt>
-<dd> name of pgm-formatted output file. <dd>
-<dt> -noisefile <dt>
-<dd> name of smv-formatted output file containing photon-counting noise. <dd>
+*** -img filename.img ***
 
-<dt> -nonoise <dt>
-<dd> do not calculate noise or output noisefile <dd>
-<dt> -nopgm <dt>
-<dd> do not output pgm file <dd>
+optional: inherit and interpret header of an existing SMV-format diffraction image file
 
-<dt> -scale <dt>
-<dd> scale factor for intfile. Default: fill dynamic range <dd>
-<dt> -pgmscale <dt>
-<dd> scale factor for the pgm output file. Default: fill dynamic range <dd>
+*** -distance ***
 
-<dt> -adcoffset <dt>
-<dd> specify the zero-photon level in the output images. Default: 40 <dd>
+distance from sample to beam center on detector (mm) 
 
+*** -close_distance ***
 
-<dt> -point_pixel <dt>
-<dd> turn off solid-angle correction for square flat pixels <dd>
-<dt> -printout <dt>
-<dd> print pixel values out to the screen <dd>
-<dt> -noprogress <dt>
-<dd> turn off the progress meter <dd>
-<dt> -nointerpolate <dt>
-<dd> turn off the tricubic interpolation <dd>
-<dt> -interpolate <dt>
-<dd> turn on the tricubic interpolation, even for crystals <dd>
-<dt> -round_xtal <dt>
-<dd> use ellipsoidal crystal shape for spot shape calculation (approximate) <dd>
-<dt> -square_xtal <dt>
-<dd> use paralelpiped crystal shape for spot shape calculation (exact) <dd>
-<dt> -binary_spots <dt>
-<dd> cut off every spot at the FWHM, even intensity inside. not the default <dd>
+distance from sample to nearest point in detector plane, XDS-style (mm) 
 
-<dt> -seed <dt>
-<dd> manually set the random number seed. Default: <dd>
-<dt> -mosaic_seed <dt>
-<dd> different random number seed for mosaic domain generation. Default: <dd>
+*** -detsize ***
 
-</dl>
+detector size in x and y (mm) 
 
-<br>
-<br>
-</html>
+*** -detsize_x ***
+
+detector size in x direction (mm) 
+
+*** -detsize_y ***
+
+detector size in y direction (mm) 
+
+*** -pixel ***
+
+detector pixel size (mm) 
+
+*** -detpixels ***
+
+detector size in x and y (pixels) 
+
+*** -detpixels_x ***
+
+detector size in x direction (pixels) 
+
+*** -detpixels_y ***
+
+detector size in y direction (pixels) 
+
+*** -Xbeam ***
+
+direct beam position in x direction (mm) Default: center 
+
+*** -Ybeam ***
+
+direct beam position in y direction (mm) Default: center 
+
+*** -Xclose  -Yclose ***
+
+instead of beam center, specify point on detector closest to the sample (mm) Default: derive from Xbeam Ybeam 
+
+*** -ORGX -ORGY***
+
+instead of beam center, specify XDS-stype point on detector closest to the sample (pixels) Default: derive from Xbeam Ybeam 
+
+*** -detector_rotx -detector_roty -detector_rotz ***
+
+specify detector mis-orientation rotations about x,y,z axes (degrees)
+
+*** -twotheta ***
+
+specify detector rotation about sample (degrees)
+
+*** -pivot sample|beam ***
+
+specify if detector rotations should be about the crystal or about the beam center point on the detector surface 
+
+*** -xdet_vector -ydet_vector -zdet_vector -beam_vector -polar_vector -spindle_axis -twotheta_axis ***
+
+explicity define unit vectors defining detector and beam orientation (XDS style) 
+
+*** -pix0_vector ***
+
+explicity define XYZ coordinate of the first pixel in the output file (as printed in the output) 
+
+*** -curved_det ***
+
+all detector pixels same distance from sample (origin) 
+
+*** -oversample ***
+
+number of sub-pixels per pixel. Default: 1 
+
+*** -roi xmin xmax ymin ymax ***
+
+only render pixels within a set range. Default: all detector 
+
+*** -mask mask.img ***
+
+optional: skip over pixels that have zero value in a provided SMV-format image file
+
+*** -lambda ***
+
+incident x-ray wavelength (Angstrom). Default: 1 
+
+*** -fluence ***
+
+incident x-ray intensity (photons/m^2). Default: 1.26e29 so I=F^2 
+
+*** -flux ***
+
+incident x-ray intensity (photons/s). Default: none 
+
+*** -exposure ***
+
+exposure time (s) used to convert flux and beam size to fluence. Default: 1 
+
+*** -beamsize ***
+
+linear size of incident x-ray beam at sample (mm). Default: 0.1 
+
+*** -hdivrange ***
+
+horizontal angular spread of source points (mrad). Default: 0 
+
+*** -vdivrange ***
+
+vertical angular spread of source points (mrad). Default: 0 
+
+*** -hdivstep ***
+
+number of source points in the horizontal. Default: 1 
+
+*** -vdivstep ***
+
+number of source points in the vertical. Default: 1 
+
+*** -round_div -square_div ***
+
+make the 2D divergence distribution round or square. Default: round 
+
+*** -dispersion ***
+
+spectral dispersion: delta-lambda/lambda (percent). Default: 0 
+
+*** -dispsteps ***
+
+number of wavelengths in above range. Default: 1 
+
+*** -sourcefile ***
+
+optionally specify a text file containing x,y,z,relative_intensity,wavelength of each desired point source 
+
+*** -coherent ***
+
+coherently add everything, even different wavelengths. Not the default 
+
+*** -mosaic ***
+
+simulate mosaic spread with random points on a spherical cap of specified diameter (degrees). Default: 0 
+
+*** -mosaic_domains ***
+
+number of discrete mosaic domains to render. Default: 10 if mosaic>0 recommend a lot more 
+
+*** -phi -osc -phistep or -phisteps ***
+
+simulate a spindle rotation about the spindle axis by averaging a series of stills. Default: 0 
+
+*** -phistep ***
+
+angular step for simulating phi spindle rotation (deg). Default: derive from phisteps 
+
+*** -phisteps ***
+
+number of steps for simulating phi spindle rotation (). Default: 2 if osc>0 recommend a lot more 
+
+*** -floatfile ***
+
+name of binary pixel intensity output file (4-byte floats) 
+
+*** -intfile ***
+
+name of smv-formatted output file. 
+
+*** -pgmfile ***
+
+name of pgm-formatted output file. 
+
+*** -noisefile ***
+
+name of smv-formatted output file containing photon-counting noise. 
+
+*** -nonoise ***
+
+do not calculate noise or output noisefile 
+
+*** -nopgm ***
+
+do not output pgm file 
+
+*** -scale ***
+
+scale factor for intfile. Default: fill dynamic range 
+
+*** -pgmscale ***
+
+scale factor for the pgm output file. Default: fill dynamic range 
+
+*** -adcoffset ***
+
+specify the zero-photon level in the output images. Default: 40 
+
+*** -point_pixel ***
+
+turn off solid-angle correction for square flat pixels 
+
+*** -printout ***
+
+print pixel values out to the screen 
+
+*** -noprogress ***
+
+turn off the progress meter 
+
+*** -nointerpolate ***
+
+turn off the tricubic interpolation 
+
+*** -interpolate ***
+
+turn on the tricubic interpolation, even for crystals 
+
+*** -round_xtal ***
+
+use ellipsoidal crystal shape for spot shape calculation (approximate) 
+
+*** -square_xtal ***
+
+use paralelpiped crystal shape for spot shape calculation (exact) 
+
+*** -binary_spots ***
+
+cut off every spot at the FWHM, even intensity inside. not the default 
+
+*** -seed ***
+
+manually set the random number seed. Default: 
+
+*** -mosaic_seed ***
+
+different random number seed for mosaic domain generation. Default: 
