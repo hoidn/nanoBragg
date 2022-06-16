@@ -247,7 +247,7 @@ and now, make the diffraction image
   -fluence 1e32 -N 1
 ```
 
-visualize teh results:
+visualize the results:
 
 ```
 adxv noiseimage.img
@@ -266,7 +266,8 @@ echo "0 0 0 520" >> P1.hkl
   -hdiv 0 -vdiv 0 \
   -fluence 1e32 -N 1
 ```
-tehn visualize:
+
+then visualize:
 
 ```
 adxv noiseimage.img
@@ -308,7 +309,7 @@ which will create a file called [mtz.stol](mtz.stol) that you can feed to nonBra
   -flux 1e13 -thick 1.2 -MW 14000 -density 0.01
 ```
 
-tehn visualize the results:
+then visualize the results:
 
 ```
 adxv noiseimage.img
@@ -320,6 +321,11 @@ Which starts to look more like a SAXS pattern from a conventional SAXS beamline.
 the "density" of the sample in this case is 0.01 g/cm^3 or 10 mg/mL.
 
 ## Command-line options:
+
+***-hkl filename.hkl***
+
+  the structure factor text list.  Default: re-read dumpfile from last run
+
 <dl>
 <dt> -hkl filename.hkl <dt>
 <dd> the structure factor text list.  Default: re-read dumpfile from last run <dd>
