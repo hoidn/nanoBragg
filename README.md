@@ -57,21 +57,26 @@ doesn't implement, such as pixel read-out noise, beam flicker, and calibration e
 add the raw "float" binary files output by nonBragg, nanoBragg, or even <a href=../nearBragg>nearBragg</a>
  so that renderings may be divided up on separate CPUs and then
 combined together.  The resulting raw files may then be converted to SMV images with 
-<a href=../bin_stuff/noisify.html>noisify</a>.<br>
-<a href =../bin_stuff/float_func.html>float_func</a> can perform a large number of operations on these "floagimage.bin" files.<br>
-<a href=../nonBragg/nonBragg.html>nonBragg</a> 
+<a href=../bin_stuff/noisify.html>noisify</a>.
+
+<a href =../bin_stuff/float_func.html>float_func</a> can perform a large number of operations on these "floagimage.bin" files.
+
+[nonBragg](nonBragg.html)
 is for generating scattering from amorphous substances, like water and air. 
 You will need to feed it a text file containing the "structure factor"
-of the amorphous material vs sin(theta)/lambda.  A few examples are:<br>
-<a href=air.stol>air.stol</a>
-<a href=He.stol>He.stol</a>
-<a href=ice.stol>ice.stol</a>
-<a href=nanoice.stol>nanoice.stol</a>
-<a href=Paratone-N.stol>Paratone-N.stol</a>
-<a href=water.stol>water.stol</a>
-<br>
+of the amorphous material vs sin(theta)/lambda.  A few examples are:
 
+[air.stol](air.stol)
 
+[He.stol](He.stol)
+
+[ice.stol](ice.stol)
+
+[nanoice.stol](nanoice.stol)
+
+[Paratone-N.stol](Paratone-N.stol)
+
+[water.stol](water.stol)
 
 ## example usage:
 
@@ -130,7 +135,7 @@ convert and re-scale as regular graphics file
 convert -depth 16 -type Grayscale -colorspace GRAY -endian LSB -size 1024x1024+512 -negate \ 
 -normalize GRAY:intimage.img
 ```
-![some description here](doc/intimage_10cells_tmb.png)
+![some alternate description here](doc/intimage_10cells_tmb.png)
 
 Note the "low resolution hole", which is due to the missing low-angle data in the PDB deposition.
 Missing high-resolution spots that would otherwise fall on the detector will generate a WARNING
