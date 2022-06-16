@@ -13,43 +13,46 @@ noise are generated in SMV format (suitable for display with
 or most any other diffraction image display program).
 
 The structure factor of the spots should be provided on an absolute "electron" scale (as output by programs like
-<a href=http://www.phenix-online.org/documentation/fmodel.htm>phenix.fmodel</a>,
-<a href=http://www.ccp4.ac.uk/dist/html/refmac5/keywords/xray-general.html#labout>REFMAC</a> or 
-<a href=http://www.ccp4.ac.uk/dist/html/sfall.html>SFALL</a>), but must
+[phenix.fmodel](http://www.phenix-online.org/documentation/fmodel.htm),
+[REFMAC](http://www.ccp4.ac.uk/dist/html/refmac5/keywords/xray-general.html#labout), or 
+[SFALL](http://www.ccp4.ac.uk/dist/html/sfall.html)), but must
 be converted to a plain text file of h,k,l,F.  Note that no symmetry is imposed by this
 program, not even Friedel symmetry, so all reflections you wish to be non-zero intensity must be
-specified, including F000.  The unit cell and crystal orientation may be provided as a 
-<a href=http://www.mrc-lmb.cam.ac.uk/harry/mosflm/>MOSFLM</a>-style
+specified, including F000. The unit cell and crystal orientation may be provided as a 
+[MOSFLM](http://www.mrc-lmb.cam.ac.uk/harry/mosflm/)-style
 orientation matrix, which is again a text file and the first nine tokens read from it are taken
 as the x,y,z components of the three reciprocal-space cell vectors 
 (a,b,c are the columns, x,y,z are the rows). 
-<br>
+
 The program also contains an option for adding approximate scattering from the water droplet
 presumed to be surrounding the nanocrystal.  The diameter of this droplet in microns is provided
 with the "-water" option, and assumes a forward-scattering structure factor of 2.57 electrons.
 The default value for this option is zero.
-<hr>
+
+## source
+
 source code: [nanoBragg.c](nanoBragg.c) (49k) or binaries for 
 <a href=nanoBragg.Linux>linux</a>, 
 <a href=nanoBragg.Darwin>OSX</a>, 
 <a href=nanoBragg.Cygwin>Cygwin</a>,
 <a href=nanoBragg.exe>Windows</a>
 <a href=nanoBraggCUDA>CUDA</a>
-<hr>
-auxillary programs:<br>
-<a href =UBtoA.awk>UBtoA.awk</a> can be used to generate a MOSFLM -style
-orientation matrix, and <br>
-<a href=mtz_to_P1hkl.com>mtz_to_P1hkl.com</a> 
-is a script for converting mtz-formatted structure factors into a format that nanoBragg can read.
-<br>
-<a href=../bin_stuff/noisify.html>noisify</a> 
+
+## auxillary programs:
+
+[UBtoA.awk](UBtoA.awk) can be used to generate a MOSFLM -style orientation matrix, and
+
+[mtz_to_P1hkl.com](mtz_to_P1hkl.com) is a script for converting mtz-formatted structure factors into
+a format that nanoBragg can read.
+
+<a href=../bin_stuff/noisify.html>noisify</a>
 is a program that takes the "photons/pixel" noiseless intensity values output by nonBragg or 
 <a href=../nanoBragg>nanoBragg</a>, or <a href=../nearBragg>nearBragg</a> as "floagimage.bin"
 and adds different kinds of noise to it to generate an SMV file.  This is usually faster than re-running
 nonBragg just to change things like beam intensity.  In addition to photon shot noise, noisify 
 has a few kinds of noise that nonBragg
 doesn't implement, such as pixel read-out noise, beam flicker, and calibration error.
-<br>
+
 <a href =../bin_stuff/float_add.html>float_add</a> may be used to
 add the raw "float" binary files output by nonBragg, nanoBragg, or even <a href=../nearBragg>nearBragg</a>
  so that renderings may be divided up on separate CPUs and then
@@ -68,39 +71,52 @@ of the amorphous material vs sin(theta)/lambda.  A few examples are:<br>
 <a href=water.stol>water.stol</a>
 <br>
 
-<hr>
-<p>
-<h3>example usage:</h3>
-<p>
-compile it
-<pre>gcc -O -O -o <a href=nanoBragg>nanoBragg</a> <a href=nanoBragg.c>nanoBragg.c</a> -lm -static</pre>
 
+
+## example usage:
+
+compile it
+
+```
+gcc -O -O -o nanoBragg nanoBragg.c -lm -static
+```
 
 get some structure factor data
-<pre><a href=getcif.com>getcif.com</a> 3pcq</pre>
+
+```
+getcif.com 3pcq
+```
 
 refine to get Fs on an absolute scale
-<pre>
+
+```
 refmac5 hklin 3pcq.mtz xyzin 3pcq.pdb hklout refmacout.mtz xyzout refmacout.pdb << EOF | tee refmac.log
 REFI TYPE RIGID
 TWIN
 EOF
-</pre>
-
+```
 
 extract the (de-twinned) calculated Fs, which are always 100% complete:
-<pre><a href=mtz_to_P1hkl.com>mtz_to_P1hkl.com</a> refmacout.mtz FC_ALL_LS</pre>
+
+```
+mtz_to_P1hkl.com refmacout.mtz FC_ALL_LS
+```
 
 make a random orientation matrix:
-<pre>./<a href=UBtoA.awk>UBtoA.awk</a> << EOF | tee <a href="A.mat">A.mat</a>
+
+```
+./UBtoA.awk << EOF | tee A.mat
 CELL 281 281 165.2 90 90 120 
 WAVE 6.2
 RANDOM
 EOF
-</pre>
+```
 
 run the simulation of a 10x10x10 unit cell crystal
-<pre>./<a href=nanoBragg>nanoBragg</a> -hkl <a href=P1.hkl>P1.hkl</a> -matrix A.mat -lambda 6.2 -N 10</pre>
+
+```
+./nanoBragg -hkl P1.hkl -matrix A.mat -lambda 6.2 -N 10
+```
 
 view the result
 
@@ -119,158 +135,191 @@ convert -depth 16 -type Grayscale -colorspace GRAY -endian LSB -size 1024x1024+5
 Note the "low resolution hole", which is due to the missing low-angle data in the PDB deposition.
 Missing high-resolution spots that would otherwise fall on the detector will generate a WARNING
 message in the program output and potentially undefined spot intensities, so make sure you "fill" 
-the resolution of interest in the P1.hkl file.<br>
+the resolution of interest in the P1.hkl file.
+
 Note also that this image is very clear, with lots of inter-Bragg spot subsidiary peaks.
-That is because it is a noiseless simulation.  
+That is because it is a noiseless simulation.
+
 Now have a look at the "noiseimage.img" which is scaled so that one pixel 
-unit is one photon:.  
-<br>
-adxv <a href=noiseimage_10cells.img>noiseimage.img</a>
-<br>
+unit is one photon:
+
+```
+adxv noiseimage.img
+```
+
 It has been re-scaled here as a png for better viewing:
-<br>
-<a href=doc/noiseimage_10cells.png>
-<img src=doc/noiseimage_10cells_tmb.png></a><br>
+
+![](doc/noiseimage_10cells_tmb.png)
 
 Still not bad, but this is because there is no background, and the default fluence is 1e24,
  or 10<sup>12</sup> photons focused into a 1 micron beam.
-<br>
-Now lets do something more realistic.  The fluence of a 10<sup>12</sup>-photon pulse focused into
+
+Now lets do something more realistic. The fluence of a 10<sup>12</sup>-photon pulse focused into
 a 7 micron beam is 2e22 photons/m<sup>2</sup>.  Also, the liquid jet used by 
-<a href=http://www.nature.com/nature/journal/v470/n7332/full/nature09750.html>
-Chapman et al (2010)</a>
+[Chapman et al (2010)](http://www.nature.com/nature/journal/v470/n7332/full/nature09750.html)
 was four microns wide:
-<br>
-<pre>./<a href=nanoBragg>nanoBragg</a> -hkl P1.hkl -matrix A.mat -lambda 6.2 -N 10 -fluence 2e22 -water 4</pre>
 
-<br>adxv <a href=noiseimage_10cells_water.img>noiseimage.img</a>
-<br>
-<a href=doc/noiseimage_10cells_water.png>
-<img src=doc/noiseimage_10cells_water_tmb.png></a><br>
+```
+./nanoBragg -hkl P1.hkl -matrix A.mat -lambda 6.2 -N 10 -fluence 2e22 -water 4
+```
 
-</pre>
+visualize results:
+
+```
+adxv noiseimage.img
+```
+
+![](doc/noiseimage_10cells_water_tmb.png)
+
 
 If you look closely, you can see the spots.  Note that this is an idealized case where only
 photon-counting noise is present.  there is no detector read-out noise, no point-spread function,
 no amplifier drift, no pixel saturation and no calibration errors.  Many of these errors
 can be added using <a href=noisify.c>noisify.c</a>, but not all.  Watch this space for updates.
-<hr>
-<a name=SAXS></a>
-<h1>SAXS simulations</h1>
+
+# SAXS simulations
+
 nanoBragg can also be used to simulate small-angle X-ray scattering (SAXS) patterns by
-simply setting the number of
-unit cells to one (-N 1 on the command line).  Tricubic interpolation between the hkl
-indicies will be used to determine the intensity between the "spots".
-<p>
-<h3>example usage:</h3>
-<p>
+simply setting the number of unit cells to one (-N 1 on the command line).
+Tricubic interpolation between the hkl indicies will be used to determine the intensity
+between the "spots".
+
+## example usage:
+
 get lysozyme
-<pre><a href=getcif.com>getcif.com</a> 193l</pre>
+
+```
+getcif.com 193l
+```
+
 refine to get the solvent parameters
-<pre>
+
+```
 phenix.refine 193l.pdb 193l.mtz | tee phenix_refine.log
-</pre>
-Now put these atoms into a very big unit cell.  It is important that this cell be
+```
+
+Now put these atoms into a very big unit cell. It is important that this cell be
 at least 3-4 times bigger than your molecule in all directions.  Otherwise, you will
 get neigbor-interference effects.  Most people don't want that in their SAXS patterns.
-<pre>
+
+```
 pdbset xyzin 193l.pdb xyzout bigcell.pdb << EOF
 CELL 250 250 250 90 90 90
 SPACEGROUP 1
 EOF
-</pre>
+```
+
 calculate structure factors of the molecule isolated in a huge "bath" of the
 best-fit solvent.
-<pre>
+
+```
 phenix.fmodel bigcell.pdb high_resolution=10 \
  k_sol=0.35 b_sol=46.5 mask.solvent_radius=0.5 mask.shrink_truncation_radius=0.16
-</pre>
+```
+
 note that this procedure will fill the large cell with a solvent of average
-electron density 0.35 electrons/A^3.  The old crystallographic contacts
+electron density 0.35 electrons/A^3. The old crystallographic contacts
 will be replaced with the same solvent boundary model that fit the solvent
-channels in the crystal structure.<br>
+channels in the crystal structure.
+
 now we need to convert these Fs into a format nanoBragg can read
-<pre>
-<a href=mtz_to_P1hkl.com>mtz_to_P1hkl.com</a> bigcell.pdb.mtz
-</pre>
+
+```
+mtz_to_P1hkl.com bigcell.pdb.mtz
+```
+
 and create a random orientation matrix
-<pre>
-./<a href=UBtoA.awk>UBtoA.awk</a> << EOF | tee <a href="bigcell.mat">bigcell.mat</a>
+
+```
+./UBtoA.awk << EOF | tee bigcell.mat
 CELL 250 250 250 90 90 90 
 WAVE 1
 RANDOM
 EOF
-</pre>
+```
+
 and now, make the diffraction image
-<pre>
+
+```
 ./nanoBragg -mat bigcell.mat -hkl P1.hkl -lambda 1 -dispersion 0 \
   -distance 1000 -detsize 100 -pixel 0.1 \
   -hdiv 0 -vdiv 0 \
   -fluence 1e32 -N 1
-adxv <a href=noiseimage_SAXS.img>noiseimage.img</a>
-</pre>
-<br>
-<a href=doc/noiseimage_SAXS.png>
-<img src=doc/noiseimage_SAXS_tmb.png></a><br>
-Notice that the center of the image is white.  This is not a beamstop!  What is
+```
+
+visualize teh results:
+
+```
+adxv noiseimage.img
+```
+
+![](doc/noiseimage_SAXS_tmb.png)
+
+Notice that the center of the image is white. This is not a beamstop!  What is
 actually going on is that F000 is missing in P1.hkl, and so is being replaced with
 zero intensity.  You can fix this by adding an F000 term:
-<pre>
+
+```
 echo "0 0 0 520" >> P1.hkl
 ./nanoBragg -mat bigcell.mat -hkl P1.hkl -lambda 1 -dispersion 0 \
   -distance 1000 -detsize 100 -pixel 0.1 \
   -hdiv 0 -vdiv 0 \
   -fluence 1e32 -N 1
-adxv <a href=noiseimage_SAXS_F000.img>noiseimage.img</a>
-</pre>
-<br>
-<a href=doc/noiseimage_SAXS_F000.png>
-<img src=doc/noiseimage_SAXS_F000_tmb.png></a><br>
+```
+tehn visualize:
+
+```
+adxv noiseimage.img
+```
+
+![](doc/noiseimage_SAXS_F000_tmb.png)
+
 You might wonder, however, why the F000 term is ~500 and not the number of electrons
-in lysozyme, which is ~8000.  The reason here is the bulk solvent.  The volume of
+in lysozyme, which is ~8000. The reason here is the bulk solvent. The volume of
 water displaced by the lysozyme molecule contains almost as many electrons as the
-lysozyme molecule itself.  Protein, however, is slightly denser, and so there are
+lysozyme molecule itself. Protein, however, is slightly denser, and so there are
 an extra ~520 electrons "peeking" above the average density of the solvent.
-<br>
+
 Of course, most real SAXS patterns are centrosymmetric because they are an average
 over trillions of molecules in solution, each in a random orientation.  The SAXS 
-pattern generated here is for a
-single molecule exposed to 1e34 photons/m<sup>2</sup>, 
+pattern generated here is for a single molecule exposed to 1e34 photons/m<sup>2</sup>, 
 but this is equivalent to 1e18 photons focused onto an area
 barely larger than the molecule!  However, 1e12 photons focused onto a 100x100
-micron area (1e20 phm<sup>2</sup>) containing 1e14 
-molecules will generate a pattern of similar intensity level, albeit rotationally
-averaged.
-<br>
+micron area (1e20 phm<sup>2</sup>) containing 1e14 molecules will generate a pattern 
+of similar intensity level, albeit rotationally averaged.
+
 One way to simulate such images would be to use this program to generate a few
 thousand or million orientations and then average the results.  This could be instructive
-for exploring fluctuation SAXS.
-<p>However, a much faster way would
+for exploring fluctuation SAXS. However, a much faster way would
 be to pre-average the squared structure factors to form a new P1.hkl file, and then
 generate one image with a "-fluence" equal to the actual fluence, multiplied by the
- number of exposed molecules.  A convenient script for doing this is:
-<pre>
-<a href=mtz_to_stol.com>mtz_to_stol.com</a> bigcell.pdb.mtz
-</pre>
-which will create a file called <a href=mtz.stol>mtz.stol</a> that you can feed to 
-<a href=nonBragg.c>nonBragg</a>:
-<pre>
+number of exposed molecules.  A convenient script for doing this is:
+
+```
+mtz_to_stol.com bigcell.pdb.mtz
+```
+
+which will create a file called [mtz.stol](mtz.stol) that you can feed to nonBragg:
+
+```
 ./nonBragg -stol mtz.stol -lambda 1 -dispersion 0 \
   -distance 1000 -detsize 100 -pixel 0.1 \
   -hdiv 0 -vdiv 0 \
   -flux 1e13 -thick 1.2 -MW 14000 -density 0.01
-adxv <a href=noiseimage_SAXS_radial.img>noiseimage.img</a>
-</pre>
-<br>
-<a href=doc/noiseimage_SAXS_radial.png>
-<img src=doc/noiseimage_SAXS_radial_tmb.png></a><br>
+```
+
+tehn visualize the results:
+
+```
+adxv noiseimage.img
+```
+
+![](doc/noiseimage_SAXS_radial_tmb.png)
+
 Which starts to look more like a SAXS pattern from a conventional SAXS beamline.  Note that
 the "density" of the sample in this case is 0.01 g/cm^3 or 10 mg/mL.
-<br>
 
-
-<hr>
-Command-line options:<br>
+## Command-line options:
 <dl>
 <dt> -hkl filename.hkl <dt>
 <dd> the structure factor text list.  Default: re-read dumpfile from last run <dd>
