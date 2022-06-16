@@ -31,40 +31,40 @@ The default value for this option is zero.
 
 ## source
 
-source code: [nanoBragg.c](nanoBragg.c) (49k) or binaries for 
-<a href=nanoBragg.Linux>linux</a>, 
-<a href=nanoBragg.Darwin>OSX</a>, 
-<a href=nanoBragg.Cygwin>Cygwin</a>,
-<a href=nanoBragg.exe>Windows</a>
-<a href=nanoBraggCUDA>CUDA</a>
+source code: [nanoBragg.c](nanoBragg.c) (49k).
 
-## auxillary programs:
+## compile
+
+```
+gcc -O -O -o nanoBragg nanoBragg.c -lm -static
+```
+
+## useful auxillary programs
 
 [UBtoA.awk](UBtoA.awk) can be used to generate a MOSFLM -style orientation matrix, and
 
 [mtz_to_P1hkl.com](mtz_to_P1hkl.com) is a script for converting mtz-formatted structure factors into
 a format that nanoBragg can read.
 
-<a href=../bin_stuff/noisify.html>noisify</a>
-is a program that takes the "photons/pixel" noiseless intensity values output by nonBragg or 
-<a href=../nanoBragg>nanoBragg</a>, or <a href=../nearBragg>nearBragg</a> as "floagimage.bin"
-and adds different kinds of noise to it to generate an SMV file.  This is usually faster than re-running
-nonBragg just to change things like beam intensity.  In addition to photon shot noise, noisify 
-has a few kinds of noise that nonBragg
+[noisify](https://github.com/bl831/bin_stuff/blob/main/docs/noisify.html)
+is a program that takes the "photons/pixel" noiseless intensity values output by `nonBragg`, 
+`nanoBragg`, or `nearBragg` as "floagimage.bin" and adds different kinds of noise to it to generate
+an SMV file.  This is usually faster than re-running `nonBragg` just to change things like
+beam intensity.  In addition to photon shot noise, noisify has a few kinds of noise that nonBragg
 doesn't implement, such as pixel read-out noise, beam flicker, and calibration error.
 
-<a href =../bin_stuff/float_add.html>float_add</a> may be used to
-add the raw "float" binary files output by nonBragg, nanoBragg, or even <a href=../nearBragg>nearBragg</a>
- so that renderings may be divided up on separate CPUs and then
-combined together.  The resulting raw files may then be converted to SMV images with 
-<a href=../bin_stuff/noisify.html>noisify</a>.
+[float_add](https://github.com/bl831/bin_stuff/blob/main/docs/float_add.html) may be used to
+add the raw "float" binary files output by `nonBragg`, `nanoBragg`, or even `nearBragg` so that
+renderings may be divided up on separate CPUs and then combined together.  The resulting raw files
+may then be converted to SMV images with `noisify`.
 
-<a href =../bin_stuff/float_func.html>float_func</a> can perform a large number of operations on these "floagimage.bin" files.
+[float_func](https://github.com/bl831/bin_stuff/blob/main/docs/float_func.html)
+can perform a large number of operations on these "floagimage.bin" files.
 
 [nonBragg](nonBragg.html)
-is for generating scattering from amorphous substances, like water and air. 
-You will need to feed it a text file containing the "structure factor"
-of the amorphous material vs sin(theta)/lambda.  A few examples are:
+is for generating scattering from amorphous substances, like water and air. You will need to feed
+it a text file containing the "structure factor" of the amorphous material vs sin(theta)/lambda.
+A few examples are:
 
 [air.stol](air.stol)
 
@@ -79,12 +79,6 @@ of the amorphous material vs sin(theta)/lambda.  A few examples are:
 [water.stol](water.stol)
 
 ## example usage:
-
-compile it
-
-```
-gcc -O -O -o nanoBragg nanoBragg.c -lm -static
-```
 
 get some structure factor data
 
@@ -260,7 +254,7 @@ adxv noiseimage.img
 
 ![](doc/noiseimage_SAXS_tmb.png)
 
-Notice that the center of the image is white. This is not a beamstop!  What is
+Notice that the center of the image is white. This is not a beamstop! What is
 actually going on is that F000 is missing in P1.hkl, and so is being replaced with
 zero intensity.  You can fix this by adding an F000 term:
 
