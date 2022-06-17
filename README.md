@@ -52,7 +52,7 @@ combined together.  The resulting raw files may then be converted to SMV images 
 
 [float_func][float_func] can perform a large number of operations on these "floagimage.bin" files.
 
-[nonBragg]() is for generating scattering from amorphous substances, like water and air. You will
+[nonBragg](nonBragg.c) is for generating scattering from amorphous substances, like water and air. You will
 need to feed it a text file containing the "structure factor" of the amorphous material vs
 sin(theta)/lambda. A few examples are:
 
