@@ -595,9 +595,9 @@ manually set the random number seed. Default:
 
 different random number seed for mosaic domain generation. Default: 
 
-[adxv]: http://www.scripps.edu/~arvai/adxv.html
+[adxv]: https://www.scripps.edu/tainer/arvai/adxv.html
 [mosflm]: http://www.mrc-lmb.cam.ac.uk/harry/mosflm/
-[fmodel]: http://www.phenix-online.org/documentation/fmodel.htm
+[fmodel]: https://phenix-online.org/documentation/reference/fmodel.html
 [refmac]: https://www2.mrc-lmb.cam.ac.uk/groups/murshudov/content/refmac/refmac.html
 [sfall]: https://www.ccp4.ac.uk/html/sfall.html
 [noisify]: https://github.com/bl831/bin_stuff/blob/main/docs/noisify.md
