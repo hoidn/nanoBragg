@@ -76,7 +76,7 @@ get some structure factor data
 getcif.com 3pcq
 ```
 
-refine to get Fs on an absolute scale
+refine to get **F**s on an absolute scale
 
 ```
 refmac5 hklin 3pcq.mtz xyzin 3pcq.pdb hklout refmacout.mtz xyzout refmacout.pdb << EOF | tee refmac.log
@@ -264,7 +264,7 @@ adxv noiseimage.img
 
 ![](doc/noiseimage_SAXS_F000_tmb.png)
 
-You might wonder, however, why the F000 term is ~500 and not the number of electrons
+You might wonder, however, why the **F000** term is ~500 and not the number of electrons
 in lysozyme, which is ~8000. The reason here is the bulk solvent. The volume of
 water displaced by the lysozyme molecule contains almost as many electrons as the
 lysozyme molecule itself. Protein, however, is slightly denser, and so there are
