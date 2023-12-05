@@ -1,4 +1,4 @@
-/* perfect-lattice nanocrystal diffraction simulator            -James Holton and Ken Frankel           1-6-19
+/* perfect-lattice nanocrystal diffraction simulator            -James Holton and Ken Frankel           12-5-23
 
 example:
 
@@ -220,7 +220,7 @@ int main(int argc, char** argv)
     double reciprocal_pixel_size;
 
     shapetype xtal_shape = SQUARE;
-    double hrad_sqr,fudge=1;
+    double hrad_sqr,rad_star_sqr,fudge=1;
     double sample_x   = 0;              /* m */
     double sample_y   = 0;              /* m */
     double sample_z   = 0;              /* m */
@@ -2537,7 +2537,7 @@ int debug_printed = 0;
         phi0,osc,phistep,phisteps,\
         a,b,c,ap,bp,cp,a_star,b_star,c_star,a_cross_b,b_cross_c,c_cross_a,\
         h,k,l,h0,k0,l0,h0_flr,k0_flr,l0_flr,\
-        h_interp,k_interp,l_interp,h_interp_d,k_interp_d,l_interp_d,hrad_sqr,\
+        h_interp,k_interp,l_interp,h_interp_d,k_interp_d,l_interp_d,hrad_sqr,rad_star_sqr,\
         i1,i2,i3,\
         Ewald0,Ewald,relp,\
         xd,yd,zd,xd0,yd0,zd0,\
@@ -2823,24 +2823,31 @@ if(! debug_printed_thread) {
                                     }
                                     else
                                     {
-                                        /* handy radius in reciprocal space, squared */
-                                        hrad_sqr = (h-h0)*(h-h0)*Na*Na + (k-k0)*(k-k0)*Nb*Nb + (l-l0)*(l-l0)*Nc*Nc ;
+                                        /* reciprocal-space distance */
+                                        double dx_star = (h-h0)*a_star[1] + (k-k0)*b_star[1] + (l-l0)*c_star[1];
+                                        double dy_star = (h-h0)*a_star[2] + (k-k0)*b_star[2] + (l-l0)*c_star[2];
+                                        double dz_star = (h-h0)*a_star[3] + (k-k0)*b_star[3] + (l-l0)*c_star[3];
+                                        rad_star_sqr = ( dx_star*dx_star + dy_star*dy_star + dz_star*dz_star )
+                                                       *Na*Na*Nb*Nb*Nc*Nc;
                                     }
                                     if(xtal_shape == ROUND)
                                     {
-                                        /* use sinc3 for elliptical xtal shape,
+                                       /* radius in hkl space, squared */
+                                        hrad_sqr = (h-h0)*(h-h0)*Na*Na + (k-k0)*(k-k0)*Nb*Nb + (l-l0)*(l-l0)*Nc*Nc ;
+
+                                         /* use sinc3 for elliptical xtal shape,
                                            correcting for sqrt of volume ratio between cube and sphere */
                                         F_latt = Na*Nb*Nc*0.723601254558268*sinc3(M_PI*sqrt( hrad_sqr * fudge ) );
                                     }
                                     if(xtal_shape == GAUSS)
                                     {
                                         /* fudge the radius so that volume and FWHM are similar to square_xtal spots */
-                                        F_latt = Na*Nb*Nc*exp(-( hrad_sqr / 0.63 * fudge ));
+                                        F_latt = Na*Nb*Nc*exp(-( rad_star_sqr / 0.63 * fudge ));
                                     }
                                     if(xtal_shape == TOPHAT)
                                     {
                                         /* make a flat-top spot of same height and volume as square_xtal spots */
-                                        F_latt = Na*Nb*Nc*(hrad_sqr*fudge < 0.3969 );
+                                        F_latt = Na*Nb*Nc*(rad_star_sqr*fudge < 0.3969 );
                                     }
                                     /* no need to go further if result will be zero? */
                                     if(F_latt == 0.0 && water_size == 0.0) continue;
