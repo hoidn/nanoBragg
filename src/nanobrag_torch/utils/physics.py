@@ -42,9 +42,9 @@ def sinc3(x: torch.Tensor) -> torch.Tensor:
     Returns:
         torch.Tensor: Shape factor values
     """
-    # TODO: Implement vectorized sinc3 function
-    # Reference: C_Function_Reference.md sinc3 function
-    raise NotImplementedError("sinc3 function to be implemented in Phase 2")
+    # TODO: Port logic from nanoBragg.c:2341-2354 for sinc3 function 
+    # Implements 3*sin(x)/x^3 - 3*cos(x)/x^2 for sphere shape factor
+    raise NotImplementedError("TODO: Port logic from nanoBragg.c:2341-2354 for sinc3 function")
 
 
 def polarization_factor(
@@ -65,6 +65,6 @@ def polarization_factor(
     Returns:
         torch.Tensor: Polarization correction factors
     """
-    # TODO: Implement vectorized polarization calculation
-    # Reference: C_Function_Reference.md polarization_factor function
-    raise NotImplementedError("polarization_factor function to be implemented in Phase 2")
+    # TODO: Port logic from nanoBragg.c:2550-2570 for polarization_factor
+    # Implements P = (1-f) + f*cos²(2θ) where f is Kahn factor, θ is scattering angle
+    raise NotImplementedError("TODO: Port logic from nanoBragg.c:2550-2570 for polarization_factor")

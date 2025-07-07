@@ -21,6 +21,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     -   **Action:** Ensure all `torch.meshgrid` calls use `indexing="ij"` to produce `(slow, fast)` grids.
     -   **Verification:** When comparing to external images (like the Golden Suite), always confirm the axis orientation. A 90-degree rotation in the diff image is a classic sign of an axis swap.
 
+5.  **Physical Scaling Unit Consistency:** All terms in a physical equation **MUST** be in a consistent unit system before multiplication.
+    -   **Action:** Explicitly comment the units for each term in all scaling equations. Convert units immediately before combining terms.
+    -   **Example:** `# intensity [dimensionless] × omega_pixel [steradians] × r_e_sqr [Å²] × fluence [photons/Å²] = [photons·steradians]`
+    -   **Verification:** When debugging scaling issues, first verify that all multiplication terms have compatible units.
+
 ## Repository Overview
 
 This repository contains **nanoBragg**, a C-based diffraction simulator for nanocrystals, along with comprehensive documentation for a planned PyTorch port. The codebase consists of:
@@ -74,6 +79,8 @@ This generates a detailed log at `tests/golden_data/simple_cubic_pixel_trace.log
 4. Compare against C implementation values
 5. Identify numerical precision problems
 
+**📖 Complete Debugging Guide:** See `torch/debugging.md` for comprehensive debugging methodology, troubleshooting guides, and debug script management protocols.
+
 ## Core Architecture
 
 ### C Implementation Structure
@@ -119,7 +126,8 @@ The `./torch/` directory contains a complete architectural design for a PyTorch 
 
 **Advanced Topics:**
 - `Parameter_Trace_Analysis.md`: End-to-end parameter flow analysis for gradient interpretation
-- `processes.md`: Standard Operating Procedures for development workflow
+- `processes.xml`: Standard Operating Procedures for development workflow
+- `debugging.md`: Comprehensive debugging methodology, troubleshooting guides, and debug script management
 
 ### Testing Strategy (PyTorch Port)
 1. **Tier 1**: Numerical equivalence with instrumented C code ("Golden Suite")
@@ -168,7 +176,7 @@ EOF
 ## Development Workflow
 
 ### Standard Operating Procedures
-**IMPORTANT**: For all non-trivial development tasks, consult `torch/processes.md` which contains comprehensive Standard Operating Procedures (SOPs) for:
+**IMPORTANT**: For all non-trivial development tasks, consult `torch/processes.xml` which contains comprehensive Standard Operating Procedures (SOPs) for:
 - Task planning and decomposition
 - Test-driven development
 - Bug fixing and verification

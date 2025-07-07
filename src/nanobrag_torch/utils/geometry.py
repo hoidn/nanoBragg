@@ -60,9 +60,11 @@ def unitize(vector: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         Tuple of (unit_vector, original_magnitude)
     """
     mag = magnitude(vector)
-    # Avoid division by zero by adding small epsilon
+    # Use a small epsilon to avoid division by zero
     safe_mag = torch.where(mag > 1e-12, mag, torch.ones_like(mag))
     unit_vector = vector / safe_mag.unsqueeze(-1)
+    # Ensure zero vectors remain zero
+    unit_vector = torch.where(mag.unsqueeze(-1) > 1e-12, unit_vector, torch.zeros_like(unit_vector))
     return unit_vector, mag
 
 

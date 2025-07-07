@@ -190,9 +190,10 @@ def main():
         crystal_test.cell_a = torch.tensor(100.0, requires_grad=True, dtype=dtype)
         
         def test_func(cell_a_param):
-            # Use the new method that connects the computation graph
-            crystal_test.a_star = crystal_test.calculate_reciprocal_vectors(cell_a_param)
-            result = simulator_test.run()
+            # Re-calculate a_star inside the function to keep it in the graph
+            a_star_new = crystal_test.calculate_reciprocal_vectors(cell_a_param)
+            # Pass the new tensor to the simulator to avoid graph breaks
+            result = simulator_test.run(override_a_star=a_star_new)
             return torch.sum(result)  # Return scalar for gradcheck
         
         # Run gradcheck

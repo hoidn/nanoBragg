@@ -53,8 +53,8 @@ def main():
     if os.path.exists(hkl_file):
         crystal.load_hkl(hkl_file)
     
-    # Simulation parameters (from golden test case)
-    wavelength = 6.2  # Angstroms
+    # Simulation parameters (from simple_cubic test case)
+    wavelength = 1.0  # Angstroms
     
     with open(OUTPUT_LOG_PATH, 'w') as log_file:
         log_file.write("="*80 + "\n")
@@ -78,9 +78,9 @@ def main():
         pixel_coord_target = pixel_coords_full[TARGET_S_PIXEL, TARGET_F_PIXEL]
         log_variable("Pixel Coordinate (Å)", pixel_coord_target, log_file)
         
-        # Step 4: Convert to Angstroms and calculate diffracted beam direction (unit vector)
-        # Convert from meters to Angstroms
-        pixel_coord_angstroms = pixel_coord_target * 1e10
+        # Step 4: Use pixel coordinates already in Angstroms and calculate diffracted beam direction (unit vector)
+        # Detector.get_pixel_coords() already returns coordinates in Angstroms
+        pixel_coord_angstroms = pixel_coord_target
         log_variable("Pixel Coordinate (Å)", pixel_coord_angstroms, log_file)
         
         # diffracted_beam = pixel_coord / |pixel_coord|
@@ -143,10 +143,35 @@ def main():
         F_latt = F_cell * sincg_h * sincg_k * sincg_l
         log_variable("F_latt", F_latt, log_file)
         
-        # Step 11: Calculate final intensity
+        # Step 11: Calculate raw intensity
         # I = |F_latt|²
-        intensity = torch.abs(F_latt) ** 2
-        log_variable("Final Intensity", intensity, log_file)
+        raw_intensity = torch.abs(F_latt) ** 2
+        log_variable("Raw Intensity", raw_intensity, log_file)
+        
+        # Step 12: Apply physical scaling factors
+        # Physical constants (from nanoBragg.c ~line 240)
+        r_e_sqr = 7.94e-26  # classical electron radius squared (cm²)
+        fluence = 125932015286227086360700780544.0  # photons per square meter (C default)
+        polarization = 1.0  # unpolarized beam
+        
+        # Solid angle correction
+        airpath = pixel_distance
+        close_distance = detector.distance
+        pixel_size = detector.pixel_size
+        omega_pixel = (pixel_size * pixel_size) / (airpath * airpath) * close_distance / airpath
+        log_variable("Solid Angle (steradians)", omega_pixel, log_file)
+        
+        # Convert r_e_sqr from cm² to Å²
+        r_e_sqr_angstrom = r_e_sqr * (1e8 * 1e8)
+        log_variable("r_e_sqr (Å²)", torch.tensor(r_e_sqr_angstrom), log_file)
+        
+        # Convert fluence from photons/m² to photons/Å²
+        fluence_angstrom = fluence / (1e10 * 1e10)
+        log_variable("fluence (photons/Å²)", torch.tensor(fluence_angstrom), log_file)
+        
+        # Final physical intensity with consistent units
+        physical_intensity = raw_intensity * omega_pixel * r_e_sqr_angstrom * fluence_angstrom * polarization
+        log_variable("Final Physical Intensity", physical_intensity, log_file)
         
         # Additional debugging information
         log_file.write(f"\n" + "="*80 + "\n")
@@ -161,8 +186,8 @@ def main():
         log_variable("c_star", crystal.c_star, log_file)
         
         # Detector parameters
-        log_file.write(f"Detector distance: {detector.distance} m\n")
-        log_file.write(f"Pixel size: {detector.pixel_size} m\n")
+        log_file.write(f"Detector distance: {detector.distance} Å\n")
+        log_file.write(f"Pixel size: {detector.pixel_size} Å\n")
         log_file.write(f"Detector size: {detector.spixels} x {detector.fpixels} pixels\n")
         log_file.write(f"Beam center: ({detector.beam_center_s}, {detector.beam_center_f}) pixels\n")
         log_variable("Fast detector axis", detector.fdet_vec, log_file)

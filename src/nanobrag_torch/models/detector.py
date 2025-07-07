@@ -29,9 +29,11 @@ class Detector:
 
         # Hard-coded simple_cubic geometry (from golden test case)
         # Distance: 100 mm, detector size: 50x50 mm, pixel size: 0.1 mm, 500x500 pixels
-        # Keep in meters to match C code logs and SMV output
-        self.distance = 0.1  # meters (100 mm)
-        self.pixel_size = 0.0001  # meters (0.1 mm)
+        # Convert to Angstroms for internal consistency
+        self.distance_m = 0.1  # meters (100 mm)
+        self.pixel_size_m = 0.0001  # meters (0.1 mm)
+        self.distance = self.distance_m * 1e10  # Angstroms
+        self.pixel_size = self.pixel_size_m * 1e10  # Angstroms
         self.spixels = 500  # slow pixels
         self.fpixels = 500  # fast pixels
         self.beam_center_f = 250.0  # pixels (Xbeam=25.0 mm / 0.1 mm per pixel)
@@ -80,24 +82,24 @@ class Detector:
         Get 3D coordinates of all detector pixels.
 
         Returns:
-            torch.Tensor: Pixel coordinates with shape (spixels, fpixels, 3)
+            torch.Tensor: Pixel coordinates with shape (spixels, fpixels, 3) in Angstroms
         """
         if self._pixel_coords_cache is None:
             # Create pixel coordinate grids
             s_coords = torch.arange(self.spixels, device=self.device, dtype=self.dtype)
             f_coords = torch.arange(self.fpixels, device=self.device, dtype=self.dtype)
 
-            # Convert to meters relative to beam center
-            s_meters = (s_coords - self.beam_center_s) * self.pixel_size
-            f_meters = (f_coords - self.beam_center_f) * self.pixel_size
+            # Convert to Angstroms relative to beam center
+            s_angstroms = (s_coords - self.beam_center_s) * self.pixel_size
+            f_angstroms = (f_coords - self.beam_center_f) * self.pixel_size
 
             # Create meshgrid
-            s_grid, f_grid = torch.meshgrid(s_meters, f_meters, indexing="ij")
+            s_grid, f_grid = torch.meshgrid(s_angstroms, f_angstroms, indexing="ij")
 
             # Calculate 3D coordinates for each pixel
             # pixel_coords = detector_origin + s*sdet_vec + f*fdet_vec
             # detector_origin is at distance along normal vector
-            # Distance is in meters
+            # Distance is in Angstroms
             detector_origin = self.distance * self.odet_vec
 
             # Expand basis vectors for broadcasting

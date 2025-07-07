@@ -45,8 +45,13 @@ class Simulator:
             [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
         )
         self.wavelength = 1.0  # Angstroms
+        
+        # Physical constants (from nanoBragg.c ~line 240)
+        self.r_e_sqr = 7.94e-26  # classical electron radius squared (cm²)
+        self.fluence = 125932015286227086360700780544.0  # photons per square meter (C default)
+        self.polarization = 1.0  # unpolarized beam
 
-    def run(self, pixel_batch_size: Optional[int] = None) -> torch.Tensor:
+    def run(self, pixel_batch_size: Optional[int] = None, override_a_star: Optional[torch.Tensor] = None) -> torch.Tensor:
         """
         Run the diffraction simulation.
 
@@ -56,11 +61,8 @@ class Simulator:
         Returns:
             torch.Tensor: Final diffraction image
         """
-        # Get pixel coordinates (spixels, fpixels, 3) in meters
-        pixel_coords = self.detector.get_pixel_coords()
-        
-        # Convert to Angstroms for scattering vector calculation
-        pixel_coords_angstroms = pixel_coords * 1e10  # meters to Angstroms
+        # Get pixel coordinates (spixels, fpixels, 3) in Angstroms
+        pixel_coords_angstroms = self.detector.get_pixel_coords()
         
         # Calculate scattering vectors for each pixel
         # The C code calculates scattering vector as the difference between
@@ -79,19 +81,21 @@ class Simulator:
         # For X-ray diffraction: q = (2π/λ) * (unit_out - unit_in)
         two_pi_by_lambda = 2.0 * torch.pi / self.wavelength
         k_in = two_pi_by_lambda * incident_beam_unit
-        k_out = two_pi_by_lambda * diffracted_beam_unit  
+        k_out = two_pi_by_lambda * diffracted_beam_unit
         scattering_vector = k_out - k_in
 
         # Calculate dimensionless Miller indices using reciprocal-space vectors
         # h = dot_product(q, a*) where a* is in Å⁻¹, q is in Å⁻¹
+        # Use override if provided (for gradient testing)
+        a_star = override_a_star if override_a_star is not None else self.crystal.a_star
         h = dot_product(
-            scattering_vector, self.crystal.a_star.expand_as(scattering_vector)
+            scattering_vector, a_star.view(1, 1, 3)
         )
         k = dot_product(
-            scattering_vector, self.crystal.b_star.expand_as(scattering_vector)
+            scattering_vector, self.crystal.b_star.view(1, 1, 3)
         )
         l = dot_product(
-            scattering_vector, self.crystal.c_star.expand_as(scattering_vector)
+            scattering_vector, self.crystal.c_star.view(1, 1, 3)
         )
 
         # Find nearest integer Miller indices for structure factor lookup
@@ -116,11 +120,23 @@ class Simulator:
         F_total = F_cell * F_latt
         intensity = F_total * F_total  # |F|^2
 
-        # Return raw, unscaled intensity for comparison with floatimage.bin
-        # The intfile_scale = 5.4581e+11 factor is applied when writing integer images,
-        # but floatimage.bin contains the raw photon intensities
+        # Apply physical scaling factors (from nanoBragg.c ~line 3050)
+        # Solid angle correction: omega_pixel = pixel_size^2 / airpath^2 * close_distance / airpath
+        airpath = pixel_magnitudes.squeeze(-1)  # Remove last dimension for broadcasting
+        close_distance = self.detector.distance  # detector distance
+        pixel_size = self.detector.pixel_size
+        
+        omega_pixel = (pixel_size * pixel_size) / (airpath * airpath) * close_distance / airpath
+        
+        # Apply all scaling factors with consistent units
+        # Convert r_e_sqr from cm² to Å² (1 cm = 1e8 Å)
+        r_e_sqr_angstrom = self.r_e_sqr * (1e8 * 1e8)  # cm² to Å²
+        
+        # Convert fluence from photons/m² to photons/Å² (1 m = 1e10 Å)
+        fluence_angstrom = self.fluence / (1e10 * 1e10)  # photons/m² to photons/Å²
+        
+        # Final intensity with all physical constants in consistent Angstrom units
+        # Units: [dimensionless] × [steradians] × [Å²] × [photons/Å²] × [dimensionless] = [photons·steradians]
+        physical_intensity = intensity * omega_pixel * r_e_sqr_angstrom * fluence_angstrom * self.polarization
 
-        # Sum over sources (only one source in simple_cubic case)
-        # For now, no additional summing needed since we have only one source
-
-        return intensity
+        return physical_intensity

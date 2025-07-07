@@ -13,7 +13,7 @@ import pytest
 import torch
 import fabio
 
-from src.nanobrag_torch.utils.geometry import (
+from nanobrag_torch.utils.geometry import (
     dot_product,
     cross_product,
     magnitude,
@@ -21,9 +21,9 @@ from src.nanobrag_torch.utils.geometry import (
     rotate_axis,
     rotate_umat,
 )
-from src.nanobrag_torch.models.crystal import Crystal
-from src.nanobrag_torch.models.detector import Detector
-from src.nanobrag_torch.simulator import Simulator
+from nanobrag_torch.models.crystal import Crystal
+from nanobrag_torch.models.detector import Detector
+from nanobrag_torch.simulator import Simulator
 
 # Test data directory
 GOLDEN_DATA_DIR = Path(__file__).parent / "golden_data"
