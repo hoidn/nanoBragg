@@ -28,16 +28,16 @@ class Detector:
         self.dtype = dtype
 
         # Hard-coded simple_cubic geometry (from golden test case)
-        # Distance: 100 mm, detector size: 50x50 mm, pixel size: 0.1 mm, 500x500 pixels
+        # Distance: 100 mm, detector size: 102.4x102.4 mm, pixel size: 0.1 mm, 1024x1024 pixels
         # Convert to Angstroms for internal consistency
         self.distance_m = 0.1  # meters (100 mm)
         self.pixel_size_m = 0.0001  # meters (0.1 mm)
         self.distance = self.distance_m * 1e10  # Angstroms
         self.pixel_size = self.pixel_size_m * 1e10  # Angstroms
-        self.spixels = 500  # slow pixels
-        self.fpixels = 500  # fast pixels
-        self.beam_center_f = 250.0  # pixels (Xbeam=25.0 mm / 0.1 mm per pixel)
-        self.beam_center_s = 250.0  # pixels (Ybeam=25.0 mm / 0.1 mm per pixel)
+        self.spixels = 1024  # slow pixels (from C trace: 1024x1024 pixels)
+        self.fpixels = 1024  # fast pixels
+        self.beam_center_f = 512.5  # pixels (Xbeam=0.05125 m / 0.0001 m per pixel)
+        self.beam_center_s = 512.5  # pixels (Ybeam=0.05125 m / 0.0001 m per pixel)
 
         # Detector basis vectors from golden log: DIRECTION_OF_DETECTOR_*_AXIS
         # Fast axis (X): [0, 0, 1]

@@ -10,8 +10,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     -   **Action:** Convert all input parameters (e.g., from mm, meters) to this internal system immediately upon ingestion in the configuration or model layers.
     -   **Verification:** When debugging, the first step is to check the units of all inputs to a calculation.
 
-2.  **Reciprocal Space is Law:** All calculations of Miller indices (`h,k,l`) from a scattering vector `q` **MUST** use the dot product with the **reciprocal lattice vectors** (`a*`, `b*`, `c*`). Using real-space vectors (`a`, `b`, `c`) is physically incorrect.
-    -   **Formula:** `h = dot(q, a_star)`
+2.  **Crystallographic Convention:** The PyTorch physics implementation **MUST** strictly follow the crystallographic convention used in nanoBragg.c:
+    -   **Scattering Vector:** `S = (s_out - s_in) / λ` (no 2π factor).
+    -   **Miller Indices:** `h = S · a` (dot product with **real-space** lattice vectors).
+    -   **CRITICAL**: nanoBragg.c uses real-space vectors (a, b, c), NOT reciprocal-space vectors (a*, b*, c*) for Miller index calculation.
 
 3.  **Differentiability is Paramount:** The PyTorch computation graph **MUST** remain connected for all differentiable parameters.
     -   **Action:** Do not manually overwrite derived tensors (like `a_star`). Instead, implement them as differentiable functions or `@property` methods that re-calculate from the base parameters (e.g., `cell_a`).
@@ -21,10 +23,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     -   **Action:** Ensure all `torch.meshgrid` calls use `indexing="ij"` to produce `(slow, fast)` grids.
     -   **Verification:** When comparing to external images (like the Golden Suite), always confirm the axis orientation. A 90-degree rotation in the diff image is a classic sign of an axis swap.
 
-5.  **Physical Scaling Unit Consistency:** All terms in a physical equation **MUST** be in a consistent unit system before multiplication.
-    -   **Action:** Explicitly comment the units for each term in all scaling equations. Convert units immediately before combining terms.
-    -   **Example:** `# intensity [dimensionless] × omega_pixel [steradians] × r_e_sqr [Å²] × fluence [photons/Å²] = [photons·steradians]`
-    -   **Verification:** When debugging scaling issues, first verify that all multiplication terms have compatible units.
+5.  **Parallel Trace Debugging is Mandatory:** All debugging of physics discrepancies **MUST** begin with a parallel trace comparison.
+    -   **Action:** Generate a step-by-step log from the instrumented C code and an identical log from the PyTorch script (`scripts/debug_pixel_trace.py`). Compare these two files to find the first line where they numerically diverge. This is the bug.
+    -   **Reference:** See `torch/Testing_Strategy.md` for the strategy and `torch/debugging.md` for the detailed workflow.
 
 ## Repository Overview
 
@@ -46,40 +47,8 @@ gcc -O3 -o nonBragg nonBragg.c -lm
 gcc -O3 -o noisify noisify.c -lm
 ```
 
-### Testing & Debugging Framework
-
-**C Code Testing:**
+### No Testing Framework
 The repository currently uses manual validation through example runs and visual inspection. No automated test suite exists for the C code.
-
-**PyTorch Port Testing:**
-The PyTorch implementation includes comprehensive debugging and testing tools:
-
-- **Golden Suite Tests**: Numerical equivalence validation against instrumented C code
-- **Single Pixel Trace**: Detailed step-by-step debugging for individual pixels
-- **Gradient Verification**: `torch.autograd.gradcheck` for all differentiable parameters
-
-**🔍 Debugging Workflow:**
-When debugging the PyTorch implementation, **ALWAYS** use the pixel trace debugging script first:
-
-```bash
-# Run single pixel trace debugging
-KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py
-```
-
-This generates a detailed log at `tests/golden_data/simple_cubic_pixel_trace.log` showing:
-- Step-by-step calculation for pixel (250, 350)
-- All intermediate variables (scattering vectors, Miller indices, structure factors)
-- Final intensity calculation with 12-digit precision
-- Complete parameter dump for geometry and crystal setup
-
-**Use this trace to:**
-1. Verify physics calculations are correct
-2. Debug unit conversion issues
-3. Validate coordinate system transformations
-4. Compare against C implementation values
-5. Identify numerical precision problems
-
-**📖 Complete Debugging Guide:** See `torch/debugging.md` for comprehensive debugging methodology, troubleshooting guides, and debug script management protocols.
 
 ## Core Architecture
 
@@ -127,7 +96,6 @@ The `./torch/` directory contains a complete architectural design for a PyTorch 
 **Advanced Topics:**
 - `Parameter_Trace_Analysis.md`: End-to-end parameter flow analysis for gradient interpretation
 - `processes.xml`: Standard Operating Procedures for development workflow
-- `debugging.md`: Comprehensive debugging methodology, troubleshooting guides, and debug script management
 
 ### Testing Strategy (PyTorch Port)
 1. **Tier 1**: Numerical equivalence with instrumented C code ("Golden Suite")
@@ -234,29 +202,3 @@ This is scientific simulation software for **X-ray crystallography** and **small
 - **Ewald sphere**: Geometric construction for diffraction condition
 
 The software is used in structural biology, materials science, and synchrotron/X-ray free-electron laser facilities.
-
-## Critical Implementation Rules
-
-### **Crystallographic Physics**
-**RULE 1**: The crystallographic projection from scattering vector `S` to Miller indices `(h,k,l)` **MUST** use the real-space lattice vectors (`a,b,c`), not the reciprocal-space vectors (`a_star,b_star,c_star`). 
-
-Correct implementation:
-```python
-h = dot_product(scattering_vector, crystal.a) / (2.0 * torch.pi)
-k = dot_product(scattering_vector, crystal.b) / (2.0 * torch.pi)  
-l = dot_product(scattering_vector, crystal.c) / (2.0 * torch.pi)
-```
-
-**RULE 2**: All terms in a physical scaling equation must be converted to a single, consistent unit system (e.g., meters) before multiplication. Add comments specifying the units for each term.
-
-Example:
-```python
-# Convert all quantities to meters for consistent calculation
-airpath_m = airpath * 1e-10        # Å to meters
-pixel_size_m = pixel_size * 1e-10   # Å to meters
-distance_m = distance * 1e-10       # Å to meters
-
-# Final calculation with unit annotations
-# Units: [dimensionless] × [m²] × [photons/m²] × [steradians] = [photons]
-intensity = F_squared * r_e_sqr * fluence * omega_pixel
-```

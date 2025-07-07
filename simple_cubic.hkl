@@ -1,6 +1,7 @@
 # Simple cubic HKL file for testing
 # Format: h k l F
 # All reflections have default_F = 100 from golden test log
+0 0 0 100
 1 0 0 100
 0 1 0 100
 0 0 1 100

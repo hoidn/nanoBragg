@@ -42,11 +42,10 @@ def main():
     print(f"✓ HKL file: {hkl_path}")
     print(f"✓ Output directory: {output_dir}")
     
-    # Load golden image
+    # Load golden image from corrected binary data (1024x1024)
     print("\n--- Loading Golden Reference ---")
-    golden_img_path = golden_data_dir / "simple_cubic.img"
-    golden_img = fabio.open(str(golden_img_path))
-    golden_data = golden_img.data.astype(np.float64)
+    golden_bin_path = golden_data_dir / "simple_cubic.bin"
+    golden_data = np.fromfile(str(golden_bin_path), dtype=np.float32).reshape(1024, 1024).astype(np.float64)
     print(f"✓ Loaded golden image: {golden_data.shape}")
     print(f"✓ Golden stats: max={np.max(golden_data):.2e}, mean={np.mean(golden_data):.2e}")
     
@@ -73,6 +72,49 @@ def main():
     pytorch_np_cpu = pytorch_image_cpu.cpu().numpy()
     print(f"✓ CPU simulation completed in {cpu_time:.3f} seconds")
     print(f"✓ PyTorch CPU stats: max={np.max(pytorch_np_cpu):.2e}, mean={np.mean(pytorch_np_cpu):.2e}")
+    
+    # Run C code simulation for comparison
+    print("\n--- Running C Code Simulation ---")
+    import subprocess
+    import os
+    
+    # Change to project root directory for C code execution
+    original_dir = os.getcwd()
+    os.chdir(project_root)
+    
+    try:
+        # Time the C code execution
+        start_time = time.time()
+        result = subprocess.run([
+            './nanoBragg', 
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-lambda', '6.2', 
+            '-N', '5', 
+            '-default_F', '100',
+            '-detpixels', '1024',
+            '-floatfile', 'c_timing_test.bin'
+        ], capture_output=True, text=True, check=True)
+        end_time = time.time()
+        c_time = end_time - start_time
+        
+        print(f"✓ C code simulation completed in {c_time:.3f} seconds")
+        print(f"✓ PyTorch vs C speedup: {c_time/cpu_time:.2f}x")
+        
+        # Clean up timing test file
+        if os.path.exists('c_timing_test.bin'):
+            os.remove('c_timing_test.bin')
+            
+    except subprocess.CalledProcessError as e:
+        print(f"⚠ C code execution failed: {e}")
+        print(f"stdout: {e.stdout}")
+        print(f"stderr: {e.stderr}")
+        c_time = None
+    except Exception as e:
+        print(f"⚠ Error running C code: {e}")
+        c_time = None
+    finally:
+        # Return to original directory
+        os.chdir(original_dir)
     
     # Try GPU simulation if available
     gpu_time = None
@@ -144,20 +186,25 @@ def main():
     print("✓ Saved: difference_heatmap.png")
     plt.close()
     
-    # Figure 3: Timing comparison
-    fig, ax = plt.subplots(figsize=(8, 5))
-    devices = ['CPU']
+    # Figure 3: Timing comparison (including C code)
+    fig, ax = plt.subplots(figsize=(10, 5))
+    devices = ['PyTorch CPU']
     times = [cpu_time]
     colors = ['skyblue']
     
+    if c_time is not None:
+        devices.append('C Code')
+        times.append(c_time)
+        colors.append('lightgreen')
+    
     if gpu_time is not None:
-        devices.append('GPU')
+        devices.append('PyTorch GPU')
         times.append(gpu_time)
         colors.append('lightcoral')
     
     bars = ax.bar(devices, times, color=colors)
     ax.set_ylabel('Time (seconds)')
-    ax.set_title('PyTorch nanoBragg Performance Comparison')
+    ax.set_title('nanoBragg Performance Comparison: PyTorch vs C')
     
     # Add value labels on bars
     for bar, time_val in zip(bars, times):
@@ -214,10 +261,15 @@ def main():
     print(f"Max absolute difference: {max_diff:.2e}")
     print(f"Mean absolute difference: {mean_diff:.2e}")
     print(f"Relative error: {relative_error:.2e}")
-    print(f"CPU simulation time: {cpu_time:.3f}s")
+    print(f"PyTorch CPU time: {cpu_time:.3f}s")
+    if c_time is not None:
+        print(f"C code time: {c_time:.3f}s")
+        print(f"PyTorch vs C speedup: {c_time/cpu_time:.2f}x")
     if gpu_time is not None:
-        print(f"GPU simulation time: {gpu_time:.3f}s")
-        print(f"GPU speedup: {cpu_time/gpu_time:.2f}x")
+        print(f"PyTorch GPU time: {gpu_time:.3f}s")
+        print(f"GPU vs CPU speedup: {cpu_time/gpu_time:.2f}x")
+        if c_time is not None:
+            print(f"GPU vs C speedup: {c_time/gpu_time:.2f}x")
     print(f"Differentiable: {'✓' if gradcheck_result else '✗'}")
     
     print("\n=== Demo Complete ===")

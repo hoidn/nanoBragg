@@ -10,29 +10,28 @@ Precision: torch.float64
 
 Wavelength (Å): 6.199999809265e+00
 
-Pixel coordinates tensor shape: torch.Size([500, 500, 3])
-Pixel Coordinate (Å): [1.e+09 1.e+07 0.e+00]
-Pixel Coordinate (Å): [1.e+09 1.e+07 0.e+00]
-Diffracted Beam (unit vector): [0.99995   0.0099995 0.       ]
-Pixel Distance (Å): 1.000049998750e+09
+Pixel coordinates tensor shape: torch.Size([1024, 1024, 3])
+Pixel Coordinate (Å): [ 1.000e+09  2.725e+08 -2.625e+08]
+Pixel Coordinate (Å): [ 1.000e+09  2.725e+08 -2.625e+08]
+Diffracted Beam (unit vector): [ 0.93528941  0.25486636 -0.24551347]
+Pixel Distance (Å): 1.069187775837e+09
 Incident Beam (unit vector): [1. 0. 0.]
-Wave Vector k (Å⁻¹): 1.013417005539e+00
-Scattering Vector q (Å⁻¹): [-5.06670493e-05  1.01336632e-02  0.00000000e+00]
-Fractional Miller Index h,k,l: [-5.06670493e-07  1.01336632e-04  0.00000000e+00]
-Nearest Integer h₀,k₀,l₀: [0. 0. 0.]
+Scattering Vector S (Å⁻¹): [-0.01043719  0.04110748 -0.03959895]
+Fractional Miller Index h,k,l: [-1.04371925  4.11074779 -3.95989466]
+Nearest Integer h₀,k₀,l₀: [-1.  4. -4.]
 F_cell: 1.000000000000e+02
-Δh (h - h₀): -5.066704925438e-07
-Δk (k - k₀): 1.013366317980e-04
-Δl (l - l₀): 0.000000000000e+00
-sincg(Δh, Na): 4.999999999949e+00
-sincg(Δk, Nb): 4.999997972959e+00
-sincg(Δl, Nc): 5.000000000000e+00
-F_latt: 1.249999493227e+04
-Raw Intensity: 1.562498733068e+08
-Solid Angle (steradians): 9.998500187478e-07
+Δh (h - h₀): -4.371925452502e-02
+Δk (k - k₀): 1.107477934645e-01
+Δl (l - l₀): 4.010533657088e-02
+sincg(Δh, Na): 4.630699255962e+00
+sincg(Δk, Nb): 2.891304742590e+00
+sincg(Δl, Nc): 4.688173139487e+00
+F_latt: 6.276883775613e+03
+Raw Intensity: 3.939926993255e+07
+Solid Angle (steradians): 8.181596284163e-07
 r_e_sqr (Å²): 7.939999768780e-10
 fluence (photons/Å²): 1.259320192000e+09
-Final Physical Intensity: 1.562108475710e+02
+Final Physical Intensity: 3.223167504991e+01
 
 ================================================================================
 Additional Debugging Information
@@ -44,8 +43,8 @@ b_star: [0.   0.01 0.  ]
 c_star: [0.   0.   0.01]
 Detector distance: 1000000000.0 Å
 Pixel size: 1000000.0 Å
-Detector size: 500 x 500 pixels
-Beam center: (250.0, 250.0) pixels
+Detector size: 1024 x 1024 pixels
+Beam center: (512.5, 512.5) pixels
 Fast detector axis: [0. 0. 1.]
 Slow detector axis: [ 0. -1.  0.]
 Normal detector axis: [1. 0. 0.]

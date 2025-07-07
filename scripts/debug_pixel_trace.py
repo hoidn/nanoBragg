@@ -23,8 +23,8 @@ from nanobrag_torch.models.crystal import Crystal
 from nanobrag_torch.utils.geometry import dot_product, unitize, magnitude
 
 # Constants
-TARGET_S_PIXEL = 240  # On-peak pixel from bright spot in PyTorch output
-TARGET_F_PIXEL = 250  # On-peak pixel from bright spot in PyTorch output
+TARGET_S_PIXEL = 240  # Match C code pixel coordinates (1024x1024 grid)
+TARGET_F_PIXEL = 250  # Match C code pixel coordinates (1024x1024 grid)
 OUTPUT_LOG_PATH = "tests/golden_data/simple_cubic_pixel_trace.log"
 
 def log_variable(name, tensor, log_file):
@@ -93,20 +93,16 @@ def main():
         incident_beam = torch.tensor([1.0, 0.0, 0.0], dtype=detector.dtype)
         log_variable("Incident Beam (unit vector)", incident_beam, log_file)
         
-        # Step 6: Calculate scattering vector q
-        # q = (2π/λ) * (diffracted - incident)
-        two_pi_by_lambda = 2.0 * torch.pi / wavelength
-        k_in = two_pi_by_lambda * incident_beam
-        k_out = two_pi_by_lambda * diffracted_beam
-        q = k_out - k_in
-        log_variable("Wave Vector k (Å⁻¹)", torch.tensor(two_pi_by_lambda), log_file)
-        log_variable("Scattering Vector q (Å⁻¹)", q, log_file)
+        # Step 6: Calculate scattering vector S (Crystallographic convention)
+        # S = (s_out - s_in) / λ (no 2π factor)
+        scattering_vector = (diffracted_beam - incident_beam) / wavelength
+        log_variable("Scattering Vector S (Å⁻¹)", scattering_vector, log_file)
         
-        # Step 7: Calculate fractional Miller indices
-        # h = q · a*, k = q · b*, l = q · c*
-        h_frac = dot_product(q, crystal.a_star)
-        k_frac = dot_product(q, crystal.b_star)
-        l_frac = dot_product(q, crystal.c_star)
+        # Step 7: Calculate fractional Miller indices using REAL-SPACE vectors
+        # h = S · a, k = S · b, l = S · c (dot product with real-space lattice vectors)
+        h_frac = dot_product(scattering_vector, crystal.a)
+        k_frac = dot_product(scattering_vector, crystal.b)
+        l_frac = dot_product(scattering_vector, crystal.c)
         hkl_frac = torch.stack([h_frac, k_frac, l_frac])
         log_variable("Fractional Miller Index h,k,l", hkl_frac, log_file)
         

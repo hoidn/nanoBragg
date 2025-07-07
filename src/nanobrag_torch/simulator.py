@@ -81,8 +81,8 @@ class Simulator:
         # S = (s_out - s_in) / λ where s_out, s_in are unit vectors
         scattering_vector = (diffracted_beam_unit - incident_beam_unit) / self.wavelength
 
-        # Calculate dimensionless Miller indices using crystallographic convention
-        # Laue condition: h = S·a where S is the crystallographic scattering vector
+        # Calculate dimensionless Miller indices using nanoBragg.c convention
+        # nanoBragg.c uses: h = S·a where S is the scattering vector and a is real-space vector
         # Use override if provided (for gradient testing)
         a_vec = override_a_star if override_a_star is not None else self.crystal.a
         h = dot_product(

@@ -1,140 +1,72 @@
 # nanoBragg PyTorch Testing Strategy
 
-**Version:** 1.0  
-**Date:** 2023-10-27  
+**Version:** 1.1  
+**Date:** 2024-07-25  
 **Owner:** [Your Name/Team]
 
 ## 1. Introduction & Philosophy
 
-This document outlines the comprehensive testing strategy for the PyTorch implementation of `nanoBragg`. The primary goal is to ensure that the new application is a **correct, verifiable, and trustworthy** scientific tool.
+This document outlines the comprehensive testing strategy for the PyTorch implementation of nanoBragg. The primary goal is to ensure that the new application is a correct, verifiable, and trustworthy scientific tool.
 
-Our testing philosophy is a **three-tiered hybrid approach**, designed to build confidence layer by layer:
-1.  **Tier 1: Translation Correctness:** We first prove that the PyTorch code is a faithful, numerically precise reimplementation of the original C code's physical model. The C code is treated as the "ground truth" specification.
-2.  **Tier 2: Gradient Correctness:** We then prove that the new differentiable capabilities are mathematically sound, as this is a core feature not present in the original.
-3.  **Tier 3: Scientific Validation:** Finally, we validate the model against objective physical principles and community standards to protect against any potential flaws in the original model and to establish scientific credibility.
+Our testing philosophy is a three-tiered hybrid approach, designed to build confidence layer by layer:
 
-All tests will be implemented using the **PyTest framework**.
+1. **Tier 1: Translation Correctness:** We first prove that the PyTorch code is a faithful, numerically precise reimplementation of the original C code's physical model. The C code is treated as the "ground truth" specification.
+2. **Tier 2: Gradient Correctness:** We then prove that the new differentiable capabilities are mathematically sound.
+3. **Tier 3: Scientific Validation:** Finally, we validate the model against objective physical principles.
 
-## 2. Incorporating and Superseding the Legacy Testing Approach
+All tests will be implemented using the PyTest framework.
 
-The original `nanoBragg.c` implementation relies on an implicit, manual testing strategy common in scientific software:
+## 2. Ground Truth: Parallel Trace-Driven Validation
 
-*   **Example-Based Validation:** Running a series of well-understood examples from the `README.md`.
-*   **Visual Inspection:** Manually viewing the output images to confirm they "look correct."
-*   **Scientific Plausibility:** Checking that the output conforms to known physical principles.
+The foundation of our testing strategy is a "Golden Suite" of test data. Crucially, final-output comparison is insufficient for effective debugging. Our strategy is therefore centered on **Parallel Trace-Driven Validation**.
 
-While effective for initial development, this manual approach is not scalable, repeatable, or sufficient for a robust, maintainable software project.
+For each test case, the Golden Suite must contain three components:
+1. **Golden Output Image:** The final .bin file from the C code.
+2. **Golden C-Code Trace Log:** A detailed, step-by-step log of intermediate variables from the C code for a specific on-peak pixel.
+3. **PyTorch Trace Log:** An identical, step-by-step log from the PyTorch implementation for the same pixel.
 
-Our new testing strategy is designed to **formalize, automate, and extend** this legacy approach.
+This allows for direct, line-by-line comparison of the entire physics calculation, making it possible to pinpoint the exact line of code where a divergence occurs.
 
-*   **Formalizing Example-Based Validation:** The "Golden Suite" (Section 3) is the formal, automated version of the `README` examples. Instead of a human checking if the program runs, our integration tests check that the output is bit-for-bit identical to a trusted result. This makes the process objective and instantaneous.
+### 2.1 Instrumenting the C Code
 
-*   **Formalizing Scientific Plausibility:** The manual check for physical correctness is captured and automated in the **Tier 3: Scientific Validation** tests. These tests programmatically check for adherence to Bragg's law and polarization principles, removing human subjectivity.
+The `nanoBragg.c` source in `golden_suite_generator/` must be instrumented with a `-dump_pixel <slow> <fast>` command-line flag. When run with this flag, the program must write a detailed log file (`<test_case_name>_C_trace.log`) containing key intermediate variables (e.g., `scattering_vector`, `h`, `k`, `l`, `F_cell`, `F_latt`, `omega_pixel`, `polar`) for the specified pixel. This provides the ground truth for component-level testing.
 
-*   **Addressing Visual Inspection:** We acknowledge that automated tests cannot fully replace the intuition gained from visual inspection. However, by validating the PyTorch implementation against the C code's "golden" visual output, we ensure that no visual regressions occur. The primary role of visual inspection is now shifted to the validation of *new features* rather than the verification of existing ones.
+### 2.2 Golden Test Cases
 
-By implementing this tiered, automated strategy, we retain the scientific spirit of the original validation methods while making them rigorous, repeatable, and capable of guarding against future regressions.
-
-## 3. Ground Truth Establishment: The "Golden Suite"
-
-The foundation of our testing strategy is a "Golden Suite" of test data generated from the original, trusted C code.
-
-### 3.1 Instrumenting the C Code
-
-The `nanoBragg.c` source will be modified to include a new command-line flag: `-dump_pixel <fpixel> <spixel>`. When run with this flag, the program will execute normally but will also write a detailed log file (`<test_case_name>.log`) containing key intermediate variables for the specified pixel at every step of the innermost simulation loops. This provides the ground truth for component-level testing.
-
-### 3.2 Golden Test Cases
-
-The following test cases will be defined and run using the instrumented C code to generate a set of golden output images and debug logs.
+The following test cases will be defined, and all three artifacts (image, C trace, PyTorch trace) will be generated and stored in `tests/golden_data/`.
 
 | Test Case Name | Description | Purpose |
 | :--- | :--- | :--- |
 | `simple_cubic` | A 100Å cubic cell, single wavelength, no mosaicity, no oscillation. | The "hello world" test for basic geometry and spot calculation. |
 | `triclinic_complex` | A low-symmetry triclinic cell. | To stress-test the reciprocal space and geometry calculations. |
 | `with_mosaicity` | The `simple_cubic` case with a 0.5-degree mosaic spread. | To test the mosaic domain implementation. |
-| `with_oscillation` | The `simple_cubic` case with a 1-degree oscillation over 10 phi steps. | To test the spindle rotation logic. |
-| `full_features` | A complex case with all major features enabled (divergence, dispersion, mosaicity, oscillation, etc.). | The final, comprehensive integration test case. |
 
-These golden files (`.img`, `.log`) will be committed to the repository and will not be changed.
-
-### 3.3 Golden Suite Generation
-
-The "Golden Suite" data is generated by a specially instrumented version of the original `nanoBragg.c` code.
-
-*   **Source Location:** The instrumented C source code, which includes the `-dump_pixel` flag, and a corresponding `Makefile` are located in the `golden_suite_generator/` directory of this repository.
-*   **Generation Command:** The entire suite can be regenerated by running `make -C golden_suite_generator/ all`.
-
-## 4. Tier 1: Translation Correctness Testing
+## 3. Tier 1: Translation Correctness Testing
 
 **Goal:** To prove the PyTorch code is a faithful port of the C code.
 
-### 4.1 Unit Tests (`tests/test_utils.py`)
+### 3.1 Unit Tests (`tests/test_utils.py`)
 
-*   **Target:** Functions in `utils/geometry.py` and `utils/physics.py`.
-*   **Methodology:** For each function, create a PyTest test that provides a hard-coded input. The expected output will be taken directly from the golden debug logs or calculated manually. Comparison will be done using `torch.allclose()`.
-*   **Requirement:** All utility functions must have at least one corresponding unit test.
+**Target:** Functions in `utils/geometry.py` and `utils/physics.py`.  
+**Methodology:** For each function, create a PyTest test using hard-coded inputs. The expected output will be taken directly from the Golden C-Code Trace Log.
 
-### 4.2 Component Tests (`tests/test_models.py`)
+### 3.2 Component Tests (`tests/test_models.py`)
 
-*   **Target:** The `Detector` and `Crystal` classes in `models/`.
-*   **Methodology:**
+**Target:** The `Detector` and `Crystal` classes.  
+**Methodology:** The primary component test is the **Parallel Trace Comparison**.
 
-### 4.3 Single Pixel Trace Debugging (`scripts/debug_pixel_trace.py`)
+- `test_trace_equivalence`: A test that runs `scripts/debug_pixel_trace.py` to generate a new PyTorch trace and compares it numerically, line-by-line, against the corresponding Golden C-Code Trace Log. This single test validates the entire chain of component calculations.
 
-**Purpose:** A specialized debugging tool that provides detailed, step-by-step traces of the diffraction calculation for a single pixel.
+### 3.3 Integration Tests (`tests/test_simulator.py`)
 
-**📖 Complete Debugging Guide:** See `torch/debugging.md` for comprehensive debugging methodology, script management protocols, and troubleshooting guides.
+**Target:** The end-to-end `Simulator.run()` method.  
+**Methodology:** For each test case, create a test that compares the final PyTorch image tensor against the golden `.bin` file using `torch.allclose`. This test should only be expected to pass after the Parallel Trace Comparison test passes.
 
-**Key Features:**
-- **Target Pixel:** (slow=250, fast=350) - chosen to be near a Bragg peak in the `simple_cubic` case
-- **Complete Variable Trace:** Logs all intermediate calculations with 12-digit precision
-- **Golden Reference:** Generates `tests/golden_data/simple_cubic_pixel_trace.log` as a debugging reference
-- **Physics Validation:** Shows the complete physics pipeline from pixel coordinates to final intensity
-
-**Usage in Testing:**
-```bash
-# Run pixel trace debugging
-KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py
-```
-
-**Integration with Component Testing:**
-This tool serves as a critical bridge between unit tests and integration tests by providing:
-1. **Intermediate Value Verification:** Each component's output can be validated against the trace log
-2. **Physics Chain Validation:** Ensures the complete calculation chain is correct
-3. **Debugging Reference:** When tests fail, the trace log provides exact expected values
-4. **Precision Verification:** Validates that float64 precision is maintained throughout
-
-**Trace Log Contents:**
-- Wavelength and basic parameters
-- Pixel coordinates in 3D space
-- Diffracted and incident beam directions
-- Scattering vector calculations
-- Miller index calculations (fractional and integer)
-- Structure factor lookup
-- Lattice factor calculations (sincg functions)
-- Final intensity calculation
-- Complete parameter dump for geometry and crystal setup
-    *   **`test_detector_geometry`:** Instantiate the `Detector` class using the configuration from a golden test case. Assert that its calculated basis vectors (`fdet_vec`, etc.) and the 3D coordinates of the dumped pixel match the values in the corresponding `.log` file.
-    *   **`test_crystal_geometry`:** Instantiate the `Crystal` class. Assert that its initial reciprocal vectors match the golden log.
-    *   **`test_crystal_rotation`:** Call the `crystal.get_rotated_reciprocal_vectors()` method with `phi` and mosaic matrix values taken from a specific step in the golden log. Assert that the output vectors match the C code's rotated vectors for that step.
-*   **Requirement:** Both `Detector` and `Crystal` classes must pass these component tests for at least the `simple_cubic` and `triclinic_complex` cases.
-
-### 4.3 Integration Tests (`tests/test_simulator.py`)
-
-*   **Target:** The end-to-end `Simulator.run()` method.
-*   **Methodology:** For each test case in the Golden Suite, create a test function that:
-    1.  Configures and runs the PyTorch `Simulator`.
-    2.  Loads the corresponding golden output image (`.img` file).
-    3.  Asserts that the entire output image tensor is numerically close to the golden image tensor using `torch.allclose(rtol=1e-5, atol=1e-5)`.
-*   **Requirement:** The simulator must pass integration tests for **all** cases in the Golden Suite.
-
-**Note on Precision:** All tests in this tier will be run with PyTorch's default dtype set to `torch.float64` to match the `double` precision of the C code and minimize floating-point discrepancies.
-
-## 5. Tier 2: Gradient Correctness Testing
+## 4. Tier 2: Gradient Correctness Testing
 
 **Goal:** To prove that the automatic differentiation capabilities are mathematically correct.
 
-### 5.1 Gradient Checks (`tests/test_gradients.py`)
+### 4.1 Gradient Checks (`tests/test_gradients.py`)
 
 *   **Target:** All parameters intended for refinement.
 *   **Methodology:** We will use PyTorch's built-in numerical gradient checker, `torch.autograd.gradcheck`. For each parameter, a test will be created that:
@@ -147,11 +79,11 @@ This tool serves as a critical bridge between unit tests and integration tests b
     *   **Beam:** `lambda_A`
     *   **Model:** `mosaic_spread_rad`, `fluence`
 
-## 6. Tier 3: Scientific Validation Testing
+## 5. Tier 3: Scientific Validation Testing
 
 **Goal:** To validate the model against objective physical principles, independent of the original C code.
 
-### 6.1 First Principles Tests (`tests/test_validation.py`)
+### 5.1 First Principles Tests (`tests/test_validation.py`)
 
 *   **Target:** The fundamental geometry and physics of the simulation.
 *   **Methodology:**
@@ -165,29 +97,3 @@ This tool serves as a critical bridge between unit tests and integration tests b
         1.  Configure a reflection to be at exactly 90 degrees 2-theta.
         2.  Run the simulation with polarization set to horizontal. Assert the spot intensity is near maximum.
         3.  Run again with polarization set to vertical. Assert the spot intensity is near zero.
-
-#### 6.1.3 `test_unit_system_invariance`
-*   **Target:** The entire `Simulator` forward pass.
-*   **Methodology:**
-    1.  Run a simulation with standard inputs (e.g., distance in mm).
-    2.  Run a second simulation where all length-based inputs are manually pre-converted to Angstroms (e.g., `distance_mm * 1e7`, `pixel_size_mm * 1e7`).
-    3.  Assert that the final output images from both simulations are identical using `torch.allclose`.
-*   **Purpose:** To programmatically verify that the internal unit conversion logic is correct and robust.
-
-#### 6.1.4 `test_reciprocal_space_scaling`
-*   **Target:** The Miller index calculation in the `Simulator`.
-*   **Methodology:**
-    1.  Run a simulation for a crystal with cell parameter `a`.
-    2.  Run a second simulation for a crystal with cell parameter `2*a`.
-    3.  Verify that the Bragg spots in the second image appear at approximately **half the distance** from the beam center as in the first image.
-*   **Purpose:** To confirm that the simulation correctly implements the inverse relationship between real-space and reciprocal-space dimensions.
-
-### 6.2 Cross-Validation Test (Optional but Recommended)
-
-*   **Target:** High-level agreement with community standards.
-*   **Methodology:**
-    1.  Choose a simple, common-denominator scenario (e.g., the `simple_cubic` case).
-    2.  Configure and run a simulation using an independent, trusted software package (e.g., `cctbx.xfel`).
-    3.  Run the PyTorch simulation.
-    4.  Compare the **positions** of the brightest spots in both images. A direct intensity comparison is not required, as models may differ.
-*   **Requirement:** The spot positions should agree to within a reasonable tolerance, confirming that our coordinate system and geometric conventions are not fundamentally flawed.
