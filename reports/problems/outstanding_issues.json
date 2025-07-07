@@ -1,0 +1,147 @@
+[
+  {
+    "id": "GEOM-001",
+    "title": "Detector Geometry Calibration",
+    "priority": "CRITICAL",
+    "category": "geometry",
+    "description": "Current detector/crystal geometry samples reciprocal space around (0,0,0) reflection rather than actual Bragg reflections. All Miller indices round to zero, producing uniform intensity instead of discrete Bragg spots.",
+    "evidence": [
+      "Miller indices all ~0.002, rounding to (0,0,0)",
+      "PyTorch output shows uniform 1.56e+08 intensity across all pixels",
+      "Golden reference shows discrete Bragg spots in concentric circles"
+    ],
+    "tasks": [
+      "Analyze golden reference geometry parameters from C code logs",
+      "Determine correct detector distance/pixel size for proper reciprocal space sampling",
+      "Validate that detector basis vectors match C implementation exactly",
+      "Test with different crystal orientations to hit (1,0,0), (0,1,0), etc. reflections"
+    ],
+    "blocking": ["pixel-perfect reproduction", "scientific validation"]
+  },
+  {
+    "id": "SCALE-001", 
+    "title": "Physical Constants and Intensity Scaling",
+    "priority": "HIGH",
+    "category": "physics",
+    "description": "Missing physical constants (electron radius, fluence, solid angle corrections) cause ~15 orders of magnitude intensity discrepancy between PyTorch and C implementations.",
+    "evidence": [
+      "PyTorch max: 1.56e+08 vs Golden max: 1.01e-07",
+      "C code applies fluence, r_e_sqr, solid_angle, polarization factors",
+      "PyTorch currently only calculates |F_total|^2 without physical scaling"
+    ],
+    "tasks": [
+      "Port physical constants from nanoBragg.c (lines ~3000-3200)",
+      "Implement fluence calculation",
+      "Add electron radius squared (r_e_sqr) scaling",
+      "Implement solid angle corrections for each pixel",
+      "Add polarization factor calculations",
+      "Validate final intensity units match C implementation"
+    ],
+    "blocking": ["quantitative accuracy", "physical realism"]
+  },
+  {
+    "id": "UNIT-001",
+    "title": "Comprehensive Unit System Audit",
+    "priority": "MEDIUM",
+    "category": "architecture", 
+    "description": "While core physics units are fixed, the codebase needs systematic review for remaining unit inconsistencies and better documentation of unit conventions.",
+    "evidence": [
+      "Debug script uses different wavelength (6.2Å vs 1.0Å)",
+      "Mixed meter/Angstrom conversions in various files",
+      "Unit conversion factors scattered throughout codebase"
+    ],
+    "tasks": [
+      "Audit all Python files for unit consistency",
+      "Update debug scripts to match current implementation",
+      "Document unit conventions in CLAUDE.md and module docstrings",
+      "Create unit testing framework for dimensional analysis",
+      "Standardize unit conversion constants in central config",
+      "Add runtime unit validation checks"
+    ],
+    "blocking": ["maintainability", "debugging reliability"]
+  },
+  {
+    "id": "DIFF-001",
+    "title": "Complete Differentiability Implementation", 
+    "priority": "MEDIUM",
+    "category": "differentiability",
+    "description": "While basic gradient flow is working, need comprehensive differentiable parameter support for full optimization capabilities.",
+    "evidence": [
+      "Only cell_a parameter tested for gradients",
+      "Detector parameters not differentiable",
+      "Crystal orientation parameters not implemented"
+    ],
+    "tasks": [
+      "Make all crystal cell parameters (a,b,c,α,β,γ) differentiable",
+      "Implement differentiable detector position/orientation",
+      "Add differentiable crystal orientation (phi, mosaic)",
+      "Create comprehensive gradient test suite",
+      "Add gradient checks for all physics modules",
+      "Document gradient flow architecture"
+    ],
+    "blocking": ["optimization capabilities", "parameter fitting"]
+  },
+  {
+    "id": "PERF-001",
+    "title": "Memory and Performance Optimization",
+    "priority": "LOW",
+    "category": "performance",
+    "description": "Current implementation prioritizes correctness over performance. Optimization needed for large detector arrays and batch processing.",
+    "evidence": [
+      "Full detector array (500x500) processed without batching",
+      "No memory management for large crystals",
+      "Inefficient tensor broadcasting in some operations"
+    ],
+    "tasks": [
+      "Implement pixel batching for memory management", 
+      "Optimize tensor operations and broadcasting",
+      "Add GPU memory management strategies",
+      "Profile and optimize hot paths in simulation loop",
+      "Implement sparse representation for structure factors",
+      "Add progress reporting for long simulations"
+    ],
+    "blocking": ["scalability", "production use"]
+  },
+  {
+    "id": "TEST-001",
+    "title": "Comprehensive Testing Framework",
+    "priority": "MEDIUM",
+    "category": "testing",
+    "description": "Testing infrastructure needs expansion beyond simple_cubic case to ensure robustness across different crystal systems and geometries.",
+    "evidence": [
+      "Only simple_cubic test case implemented",
+      "No tests for different crystal systems",
+      "Limited edge case coverage"
+    ],
+    "tasks": [
+      "Generate additional golden test cases (hexagonal, monoclinic, etc.)",
+      "Create property-based tests for physics invariants",
+      "Add tests for extreme parameter values",
+      "Implement regression testing framework",
+      "Add performance benchmarking tests",
+      "Create visual validation tools for debugging"
+    ],
+    "blocking": ["reliability", "scientific credibility"]
+  },
+  {
+    "id": "DEBUG-001",
+    "title": "Debug Infrastructure Synchronization",
+    "priority": "LOW", 
+    "category": "debugging",
+    "description": "Debug scripts and tracing tools are out of sync with current implementation, hampering development efficiency.",
+    "evidence": [
+      "debug_pixel_trace.py uses wrong wavelength and formulas",
+      "Mixed unit conversions in debug output",
+      "Debug scripts don't reflect recent fixes"
+    ],
+    "tasks": [
+      "Update debug_pixel_trace.py to match current physics",
+      "Sync all debug scripts with latest implementation",
+      "Add real-time debugging capabilities to simulator",
+      "Create interactive debugging notebooks",
+      "Implement logging levels and structured output",
+      "Add debug visualization tools"
+    ],
+    "blocking": ["development efficiency", "debugging speed"]
+  }
+]

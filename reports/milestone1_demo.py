@@ -25,7 +25,7 @@ from nanobrag_torch.simulator import Simulator
 
 def main():
     """Run the demo and generate all artifacts."""
-    print("=== nanoBragg PyTorch First Win Demo ===")
+    print("=== nanoBragg PyTorch Milestone 1 Demo ===")
     
     # Set seed for reproducibility
     torch.manual_seed(0)

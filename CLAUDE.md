@@ -10,10 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     -   **Action:** Convert all input parameters (e.g., from mm, meters) to this internal system immediately upon ingestion in the configuration or model layers.
     -   **Verification:** When debugging, the first step is to check the units of all inputs to a calculation.
 
-2.  **Crystallographic Convention:** The PyTorch physics implementation **MUST** strictly follow the crystallographic convention used in nanoBragg.c:
-    -   **Scattering Vector:** `S = (s_out - s_in) / λ` (no 2π factor).
-    -   **Miller Indices:** `h = S · a` (dot product with **real-space** lattice vectors).
-    -   **CRITICAL**: nanoBragg.c uses real-space vectors (a, b, c), NOT reciprocal-space vectors (a*, b*, c*) for Miller index calculation.
+2.  **Crystallographic Convention:** All calculations of Miller indices (h,k,l) from a scattering vector S **MUST** use the dot product with the **real-space lattice vectors** (a, b, c). This is a non-standard convention specific to the nanoBragg.c codebase that must be replicated exactly. **Formula:** h = dot(S, a).
 
 3.  **Differentiability is Paramount:** The PyTorch computation graph **MUST** remain connected for all differentiable parameters.
     -   **Action:** Do not manually overwrite derived tensors (like `a_star`). Instead, implement them as differentiable functions or `@property` methods that re-calculate from the base parameters (e.g., `cell_a`).
@@ -26,6 +23,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 5.  **Parallel Trace Debugging is Mandatory:** All debugging of physics discrepancies **MUST** begin with a parallel trace comparison.
     -   **Action:** Generate a step-by-step log from the instrumented C code and an identical log from the PyTorch script (`scripts/debug_pixel_trace.py`). Compare these two files to find the first line where they numerically diverge. This is the bug.
     -   **Reference:** See `torch/Testing_Strategy.md` for the strategy and `torch/debugging.md` for the detailed workflow.
+
+## Golden Test Case Specification (`simple_cubic`)
+
+To reproduce the primary golden reference (`tests/golden_data/simple_cubic.bin`), the following parameters from the C-code simulation MUST be used. These are the ground truth for the baseline validation milestone.
+
+* **Detector Size:** `1024 x 1024` pixels
+* **Pixel Size:** `0.1` mm
+* **Detector Distance:** `100` mm
+* **Beam Center:** `(512.5, 512.5)` pixels (derived from detector size and beam position)
+* **Wavelength (`lambda`):** `6.2` Å
+* **Crystal Cell:** `100 x 100 x 100` Å, `90, 90, 90` degrees
+* **Crystal Size (`-N`):** `5 x 5 x 5` cells
+* **Default Structure Factor (`-default_F`):** `100`
 
 ## Repository Overview
 

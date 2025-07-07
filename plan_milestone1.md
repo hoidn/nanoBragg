@@ -1,4 +1,4 @@
-# Agent Implementation Checklist: `simple_cubic` Image Reproduction (v3, Final)
+# Milestone 1 Checklist: simple_cubic Image Reproduction
 
 **Overall Goal:** To reproduce the entire `simple_cubic` golden test case image with the new PyTorch code, demonstrating correctness, performance potential, and differentiability.
 

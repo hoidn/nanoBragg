@@ -83,3 +83,7 @@ The codebase is self-contained but relies on standard system libraries that must
 *   **C Standard Library:** `stdio.h`, `stdlib.h`, `string.h`, `math.h`, etc.
 *   **Math Library (`libm`):** Required for functions like `sin`, `cos`, `sqrt`, `exp`, `log`. Linked with the `-lm` flag.
 *   **OpenMP Library:** Required for the parallel processing directives. Enabled and linked with the `-fopenmp` compiler flag.
+
+## 7. Key Physics & Non-Standard Conventions
+
+A critical detail for any porting or maintenance effort is the non-standard convention used for the Miller index calculation. The `nanoBragg.c` code calculates fractional Miller indices by dotting the scattering vector `S = (s_out - s_in) / λ` with the **real-space lattice vectors (`a,b,c`)**, not the reciprocal-space vectors as is common in many physics texts. This is a deliberate design choice in the original code that must be replicated exactly to achieve correct results.

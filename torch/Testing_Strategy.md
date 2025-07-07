@@ -45,19 +45,23 @@ The following test cases will be defined, and all three artifacts (image, C trac
 
 **Goal:** To prove the PyTorch code is a faithful port of the C code.
 
-### 3.1 Unit Tests (`tests/test_utils.py`)
+### 3.1 The Foundational Test: Parallel Trace Validation
+
+All debugging of physics discrepancies **must** begin with a parallel trace comparison. Comparing only the final output images is insufficient and can be misleading. The line-by-line comparison of intermediate variables between the C-code trace and the PyTorch trace is the only deterministic method for locating the source of an error and is the mandatory first step before attempting to debug with any other method.
+
+### 3.2 Unit Tests (`tests/test_utils.py`)
 
 **Target:** Functions in `utils/geometry.py` and `utils/physics.py`.  
 **Methodology:** For each function, create a PyTest test using hard-coded inputs. The expected output will be taken directly from the Golden C-Code Trace Log.
 
-### 3.2 Component Tests (`tests/test_models.py`)
+### 3.3 Component Tests (`tests/test_models.py`)
 
 **Target:** The `Detector` and `Crystal` classes.  
 **Methodology:** The primary component test is the **Parallel Trace Comparison**.
 
 - `test_trace_equivalence`: A test that runs `scripts/debug_pixel_trace.py` to generate a new PyTorch trace and compares it numerically, line-by-line, against the corresponding Golden C-Code Trace Log. This single test validates the entire chain of component calculations.
 
-### 3.3 Integration Tests (`tests/test_simulator.py`)
+### 3.4 Integration Tests (`tests/test_simulator.py`)
 
 **Target:** The end-to-end `Simulator.run()` method.  
 **Methodology:** For each test case, create a test that compares the final PyTorch image tensor against the golden `.bin` file using `torch.allclose`. This test should only be expected to pass after the Parallel Trace Comparison test passes.

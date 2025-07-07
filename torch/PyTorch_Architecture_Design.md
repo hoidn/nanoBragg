@@ -22,7 +22,7 @@ To ensure correctness and maintainability, the architecture adheres to the follo
 
 1.  **Canonical Unit System:** All internal physical calculations operate in a single, consistent unit system: **Angstroms (Å)** for all spatial dimensions and lengths, and **electron-volts (eV)** for energy. All model classes (`Detector`, `Crystal`) are responsible for converting user-facing units (e.g., mm) into this internal standard upon initialization.
 
-2.  **Reciprocal Space Projection:** The mapping from a scattering vector `q` (in Å⁻¹) to a fractional Miller index `(h,k,l)` is defined exclusively by the dot product with the reciprocal lattice vectors `(a*, b*, c*)`.
+2.  **Crystallographic Convention Adherence:** The mapping from a scattering vector S to a fractional Miller index (h,k,l) **MUST** strictly follow the non-standard convention used in nanoBragg.c: the dot product of the scattering vector with the **real-space lattice vectors (a, b, c)**. This is a critical implementation detail that deviates from many standard physics texts.
 
 3.  **Differentiable Graph Integrity:** All derived geometric properties (e.g., reciprocal vectors derived from cell parameters) must be implemented as differentiable functions. This ensures that the computation graph is never broken by in-place modification or reassignment of derived tensors, preserving end-to-end differentiability.
 
