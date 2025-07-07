@@ -16,6 +16,16 @@ The design is guided by the following principles:
 4.  **Differentiability by Design:** All custom functions and classes will be built using differentiable PyTorch operations, ensuring that the entire simulation is end-to-end differentiable with respect to its physical parameters.
 5.  **Lazy Computation & Caching:** Where possible, expensive calculations (like generating pixel coordinates) will be performed once and cached within their respective objects to avoid redundant computation.
 
+### 1.1 Core Technical Contracts
+
+To ensure correctness and maintainability, the architecture adheres to the following non-negotiable technical contracts:
+
+1.  **Canonical Unit System:** All internal physical calculations operate in a single, consistent unit system: **Angstroms (Å)** for all spatial dimensions and lengths, and **electron-volts (eV)** for energy. All model classes (`Detector`, `Crystal`) are responsible for converting user-facing units (e.g., mm) into this internal standard upon initialization.
+
+2.  **Reciprocal Space Projection:** The mapping from a scattering vector `q` (in Å⁻¹) to a fractional Miller index `(h,k,l)` is defined exclusively by the dot product with the reciprocal lattice vectors `(a*, b*, c*)`.
+
+3.  **Differentiable Graph Integrity:** All derived geometric properties (e.g., reciprocal vectors derived from cell parameters) must be implemented as differentiable functions. This ensures that the computation graph is never broken by in-place modification or reassignment of derived tensors, preserving end-to-end differentiability.
+
 ## 2. High-Level Architecture
 
 The application will be structured into several key Python modules and classes, promoting a clear separation of concerns.

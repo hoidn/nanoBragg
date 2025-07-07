@@ -11,9 +11,10 @@ Precision: torch.float64
 Wavelength (Å): 6.199999809265e+00
 
 Pixel coordinates tensor shape: torch.Size([500, 500, 3])
-Pixel Coordinate (Å): [1000000.       0.  100000.]
+Pixel Coordinate (Å): [0.1  0.   0.01]
+Pixel Coordinate (Å): [1.e+09 0.e+00 1.e+08]
 Diffracted Beam (unit vector): [0.99503719 0.         0.09950372]
-Pixel Distance (Å): 1.004987562112e+06
+Pixel Distance (Å): 1.004987562112e+09
 Incident Beam (unit vector): [1. 0. 0.]
 Wave Vector k (Å⁻¹): 1.013417005539e+00
 Scattering Vector q (Å⁻¹): [-0.0050294   0.          0.10083876]
@@ -33,12 +34,12 @@ Final Intensity: 1.562374243618e+08
 Additional Debugging Information
 ================================================================================
 Crystal unit cell: 100.0 x 100.0 x 100.0 Å
-Crystal size: 5 x 5 x 5 cells
+Crystal size: 5.0 x 5.0 x 5.0 cells
 a_star: [0.01 0.   0.  ]
 b_star: [0.   0.01 0.  ]
 c_star: [0.   0.   0.01]
-Detector distance: 1000000.0 Å
-Pixel size: 1000.0 Å
+Detector distance: 0.1 m
+Pixel size: 0.0001 m
 Detector size: 500 x 500 pixels
 Beam center: (250.0, 250.0) pixels
 Fast detector axis: [0. 0. 1.]

@@ -29,13 +29,13 @@ class Detector:
 
         # Hard-coded simple_cubic geometry (from golden test case)
         # Distance: 100 mm, detector size: 50x50 mm, pixel size: 0.1 mm, 500x500 pixels
-        # Convert to Angstroms for internal consistency
-        self.distance = 1e6  # Angstroms (100 mm)
-        self.pixel_size = 1e3  # Angstroms (0.1 mm)
+        # Keep in meters to match C code logs and SMV output
+        self.distance = 0.1  # meters (100 mm)
+        self.pixel_size = 0.0001  # meters (0.1 mm)
         self.spixels = 500  # slow pixels
         self.fpixels = 500  # fast pixels
-        self.beam_center_f = 250.5  # pixels (Xbeam=25.05 mm / 0.1 mm per pixel)
-        self.beam_center_s = 250.5  # pixels (Ybeam=25.05 mm / 0.1 mm per pixel)
+        self.beam_center_f = 250.0  # pixels (Xbeam=25.0 mm / 0.1 mm per pixel)
+        self.beam_center_s = 250.0  # pixels (Ybeam=25.0 mm / 0.1 mm per pixel)
 
         # Detector basis vectors from golden log: DIRECTION_OF_DETECTOR_*_AXIS
         # Fast axis (X): [0, 0, 1]
@@ -53,6 +53,22 @@ class Detector:
 
         self._pixel_coords_cache = None
         self._geometry_version = 0
+    
+    def to(self, device=None, dtype=None):
+        """Move detector to specified device and/or dtype."""
+        if device is not None:
+            self.device = device
+        if dtype is not None:
+            self.dtype = dtype
+        
+        # Move basis vectors to new device/dtype
+        self.fdet_vec = self.fdet_vec.to(device=self.device, dtype=self.dtype)
+        self.sdet_vec = self.sdet_vec.to(device=self.device, dtype=self.dtype)
+        self.odet_vec = self.odet_vec.to(device=self.device, dtype=self.dtype)
+        
+        # Invalidate cache since device/dtype changed
+        self.invalidate_cache()
+        return self
 
     def invalidate_cache(self):
         """Invalidate cached pixel coordinates when geometry changes."""
@@ -71,17 +87,17 @@ class Detector:
             s_coords = torch.arange(self.spixels, device=self.device, dtype=self.dtype)
             f_coords = torch.arange(self.fpixels, device=self.device, dtype=self.dtype)
 
-            # Convert to Angstroms relative to beam center
-            s_angstroms = (s_coords - self.beam_center_s) * self.pixel_size
-            f_angstroms = (f_coords - self.beam_center_f) * self.pixel_size
+            # Convert to meters relative to beam center
+            s_meters = (s_coords - self.beam_center_s) * self.pixel_size
+            f_meters = (f_coords - self.beam_center_f) * self.pixel_size
 
             # Create meshgrid
-            s_grid, f_grid = torch.meshgrid(s_angstroms, f_angstroms, indexing="ij")
+            s_grid, f_grid = torch.meshgrid(s_meters, f_meters, indexing="ij")
 
             # Calculate 3D coordinates for each pixel
             # pixel_coords = detector_origin + s*sdet_vec + f*fdet_vec
             # detector_origin is at distance along normal vector
-            # Distance is already in Angstroms
+            # Distance is in meters
             detector_origin = self.distance * self.odet_vec
 
             # Expand basis vectors for broadcasting

@@ -78,9 +78,13 @@ def main():
         pixel_coord_target = pixel_coords_full[TARGET_S_PIXEL, TARGET_F_PIXEL]
         log_variable("Pixel Coordinate (Å)", pixel_coord_target, log_file)
         
-        # Step 4: Calculate diffracted beam direction (unit vector)
+        # Step 4: Convert to Angstroms and calculate diffracted beam direction (unit vector)
+        # Convert from meters to Angstroms
+        pixel_coord_angstroms = pixel_coord_target * 1e10
+        log_variable("Pixel Coordinate (Å)", pixel_coord_angstroms, log_file)
+        
         # diffracted_beam = pixel_coord / |pixel_coord|
-        diffracted_beam, pixel_distance = unitize(pixel_coord_target)
+        diffracted_beam, pixel_distance = unitize(pixel_coord_angstroms)
         log_variable("Diffracted Beam (unit vector)", diffracted_beam, log_file)
         log_variable("Pixel Distance (Å)", pixel_distance, log_file)
         
@@ -91,9 +95,11 @@ def main():
         
         # Step 6: Calculate scattering vector q
         # q = (2π/λ) * (diffracted - incident)
-        k = 2.0 * torch.pi / wavelength  # wave vector magnitude
-        q = k * (diffracted_beam - incident_beam)
-        log_variable("Wave Vector k (Å⁻¹)", torch.tensor(k), log_file)
+        two_pi_by_lambda = 2.0 * torch.pi / wavelength
+        k_in = two_pi_by_lambda * incident_beam
+        k_out = two_pi_by_lambda * diffracted_beam
+        q = k_out - k_in
+        log_variable("Wave Vector k (Å⁻¹)", torch.tensor(two_pi_by_lambda), log_file)
         log_variable("Scattering Vector q (Å⁻¹)", q, log_file)
         
         # Step 7: Calculate fractional Miller indices
@@ -123,9 +129,9 @@ def main():
         dk = k_frac - k0.float()
         dl = l_frac - l0.float()
         
-        sincg_h = sincg(dh, torch.tensor(crystal.N_cells_a, dtype=detector.dtype))
-        sincg_k = sincg(dk, torch.tensor(crystal.N_cells_b, dtype=detector.dtype))
-        sincg_l = sincg(dl, torch.tensor(crystal.N_cells_c, dtype=detector.dtype))
+        sincg_h = sincg(dh, crystal.N_cells_a)
+        sincg_k = sincg(dk, crystal.N_cells_b)
+        sincg_l = sincg(dl, crystal.N_cells_c)
         
         log_variable("Δh (h - h₀)", dh, log_file)
         log_variable("Δk (k - k₀)", dk, log_file)
@@ -155,8 +161,8 @@ def main():
         log_variable("c_star", crystal.c_star, log_file)
         
         # Detector parameters
-        log_file.write(f"Detector distance: {detector.distance} Å\n")
-        log_file.write(f"Pixel size: {detector.pixel_size} Å\n")
+        log_file.write(f"Detector distance: {detector.distance} m\n")
+        log_file.write(f"Pixel size: {detector.pixel_size} m\n")
         log_file.write(f"Detector size: {detector.spixels} x {detector.fpixels} pixels\n")
         log_file.write(f"Beam center: ({detector.beam_center_s}, {detector.beam_center_f}) pixels\n")
         log_variable("Fast detector axis", detector.fdet_vec, log_file)

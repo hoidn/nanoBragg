@@ -190,9 +190,8 @@ def main():
         crystal_test.cell_a = torch.tensor(100.0, requires_grad=True, dtype=dtype)
         
         def test_func(cell_a_param):
-            crystal_test.cell_a = cell_a_param
-            # Recalculate reciprocal lattice vector
-            crystal_test.a_star = torch.tensor([0.01/cell_a_param*100.0, 0.0, 0.0], device=device_test, dtype=dtype)
+            # Use the new method that connects the computation graph
+            crystal_test.a_star = crystal_test.calculate_reciprocal_vectors(cell_a_param)
             result = simulator_test.run()
             return torch.sum(result)  # Return scalar for gradcheck
         

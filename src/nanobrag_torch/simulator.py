@@ -40,11 +40,11 @@ class Simulator:
 
         # Hard-coded simple_cubic beam parameters (from golden test case)
         # Incident beam direction: [1, 0, 0] (from log: INCIDENT_BEAM_DIRECTION= 1 0 0)
-        # Wave: 1e-10 meters (1 Angstrom)
+        # Wave: 1 Angstrom
         self.incident_beam_direction = torch.tensor(
             [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
         )
-        self.wavelength = 1.0e-10  # meters (1 Angstrom)
+        self.wavelength = 1.0  # Angstroms
 
     def run(self, pixel_batch_size: Optional[int] = None) -> torch.Tensor:
         """
@@ -59,25 +59,31 @@ class Simulator:
         # Get pixel coordinates (spixels, fpixels, 3) in meters
         pixel_coords = self.detector.get_pixel_coords()
         
+        # Convert to Angstroms for scattering vector calculation
+        pixel_coords_angstroms = pixel_coords * 1e10  # meters to Angstroms
+        
         # Calculate scattering vectors for each pixel
         # The C code calculates scattering vector as the difference between
         # unit vectors pointing to the pixel and the incident direction
         
         # Diffracted beam unit vector (from origin to pixel)
         pixel_magnitudes = torch.sqrt(
-            torch.sum(pixel_coords * pixel_coords, dim=-1, keepdim=True)
+            torch.sum(pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True)
         )
-        diffracted_beam_unit = pixel_coords / pixel_magnitudes
+        diffracted_beam_unit = pixel_coords_angstroms / pixel_magnitudes
 
         # Incident beam unit vector [1, 0, 0]
         incident_beam_unit = self.incident_beam_direction.expand_as(diffracted_beam_unit)
 
-        # Scattering vector: q = (k_out - k_in) in m⁻¹
-        # For X-ray diffraction: q = (unit_out - unit_in) / wavelength
-        scattering_vector = (diffracted_beam_unit - incident_beam_unit) / self.wavelength
+        # Scattering vector: q = (k_out - k_in) in Å⁻¹
+        # For X-ray diffraction: q = (2π/λ) * (unit_out - unit_in)
+        two_pi_by_lambda = 2.0 * torch.pi / self.wavelength
+        k_in = two_pi_by_lambda * incident_beam_unit
+        k_out = two_pi_by_lambda * diffracted_beam_unit  
+        scattering_vector = k_out - k_in
 
         # Calculate dimensionless Miller indices using reciprocal-space vectors
-        # h = dot_product(q, a*) where a* is in m⁻¹, q is in m⁻¹
+        # h = dot_product(q, a*) where a* is in Å⁻¹, q is in Å⁻¹
         h = dot_product(
             scattering_vector, self.crystal.a_star.expand_as(scattering_vector)
         )
@@ -101,9 +107,9 @@ class Simulator:
         delta_h = h - h0
         delta_k = k - k0
         delta_l = l - l0
-        F_latt_a = sincg(delta_h, torch.tensor(self.crystal.N_cells_a, dtype=self.dtype))
-        F_latt_b = sincg(delta_k, torch.tensor(self.crystal.N_cells_b, dtype=self.dtype))
-        F_latt_c = sincg(delta_l, torch.tensor(self.crystal.N_cells_c, dtype=self.dtype))
+        F_latt_a = sincg(delta_h, self.crystal.N_cells_a)
+        F_latt_b = sincg(delta_k, self.crystal.N_cells_b)
+        F_latt_c = sincg(delta_l, self.crystal.N_cells_c)
         F_latt = F_latt_a * F_latt_b * F_latt_c
 
         # Calculate total structure factor and intensity

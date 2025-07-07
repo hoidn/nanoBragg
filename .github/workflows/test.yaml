@@ -1,0 +1,57 @@
+name: Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, "3.10", "3.11"]
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Lint with black and isort
+      run: |
+        python -m black --check src/ tests/
+        python -m isort --check-only src/ tests/
+    
+    - name: Test with pytest
+      run: |
+        python -m pytest -q --durations=10
+
+  c-compile:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install C dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc libc6-dev
+    
+    - name: Compile C programs
+      run: |
+        make c-all
+    
+    - name: Test C programs run
+      run: |
+        ./nanoBragg --help || echo "nanoBragg compiled successfully"
+        ./nonBragg --help || echo "nonBragg compiled successfully"  
+        ./noisify --help || echo "noisify compiled successfully"

@@ -187,7 +187,7 @@ class TestTier1TranslationCorrectness:
         
         # Direct comparison with appropriate tolerances
         rtol = 1e-5  # Relative tolerance
-        atol = 1e-9  # Absolute tolerance
+        atol = 1e-9  # Absolute tolerance (safe for float64 comparisons)
         
         try:
             assert_tensor_close(pytorch_image, golden_float_data, rtol=rtol, atol=atol)

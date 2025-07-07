@@ -1,0 +1,897 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+C_Architecture_Overview.md
+C_Function_Reference.md
+C_Parameter_Dictionary.md
+Implementation_Plan.md
+Parameter_Trace_Analysis.md
+PyTorch_Architecture_Design.md
+Testing_Strategy.md
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="C_Architecture_Overview.md">
+# nanoBragg C Architecture Overview
+
+## 1. Introduction
+
+This document provides a high-level architectural overview of the `nanoBragg.c` codebase. It is intended for developers tasked with understanding, maintaining, or translating the logic to a new framework (e.g., PyTorch). It aims to explain the program's structure, data flow, and core computational model without delving into line-by-line implementation details.
+
+The entire application is contained within a single monolithic C file, `nanoBragg.c`. It is a procedural program where the `main` function orchestrates all operations from start to finish.
+
+## 2. Core Philosophy
+
+The design of `nanoBragg` is guided by principles common in high-performance scientific C code:
+
+*   **Forward Model:** The code directly simulates the physics of diffraction. It starts with a source (beam), interacts with a sample (crystal), and calculates the result at a sensor (detector).
+*   **Procedural Execution:** Logic flows sequentially from top to bottom within the `main` function. There is no object-oriented abstraction; state is managed through a large number of local variables in `main`.
+*   **In-Place Modification:** Functions frequently use pointers to modify data in-place rather than returning new structures. This is a memory-efficient C idiom. For example, vector math functions take an output pointer (`newv`) as an argument.
+*   **Explicit Integration:** The simulation calculates a final intensity by explicitly looping over every contributing physical factor (e.g., every source point, every mosaic domain, every sub-pixel) and summing the results. This "brute-force" integration is the primary target for vectorization in a framework like PyTorch.
+
+## 3. Execution Flow
+
+The program executes in three distinct phases, all orchestrated within the `main` function.
+
+```mermaid
+graph TD
+    A[Start] --> B{Phase 1: Config & Setup};
+    B --> C{Phase 2: Main Simulation Loop};
+    C --> D{Phase 3: Post-Processing & Output};
+    D --> E[End];
+
+    subgraph Phase 1: Config & Setup
+        B1[Parse Command-Line Arguments] --> B2;
+        B2[Read Input Files: .mat, .hkl, .img] --> B3;
+        B3[Initialize Parameters: Beam, Detector, Crystal] --> B4;
+        B4[Calculate Derived Geometry: Detector & Crystal Vectors];
+    end
+
+    subgraph Phase 2: Main Simulation Loop
+        C1[Loop over Detector Pixels (spixel, fpixel)] --> C2;
+        C2[Loop over Sub-Pixels (oversample)] --> C3;
+        C3[Loop over Detector Thickness Layers] --> C4;
+        C4[Loop over Sources (divergence, dispersion)] --> C5;
+        C5[Loop over Phi Steps (oscillation)] --> C6;
+        C6[Loop over Mosaic Domains] --> C7{Calculate Intensity Contribution};
+        C7 --> C8[Accumulate Intensity into `floatimage` buffer];
+        C6 -.-> C8
+    end
+
+    subgraph Phase 3: Post-Processing & Output
+        D1[Apply Final Scaling to `floatimage`] --> D2;
+        D2{Add Poisson Noise (optional)} --> D3;
+        D3[Write Output Files: .bin, .img, .pgm];
+    end
+```
+
+## 4. Key Data Structures
+
+State is managed by a large set of variables within `main`. The most critical ones are:
+
+| Variable Name | C Type | Role & Description |
+| :--- | :--- | :--- |
+| `floatimage` | `float*` | **The Main Output Buffer.** A 1D array of size `fpixels * spixels` that accumulates the calculated photon intensity for each pixel before any noise or scaling is applied. |
+| `Fhkl` | `double***` | **Structure Factor Lookup Table.** A 3D array implemented with nested pointers (`h -> k -> l`) that stores the structure factor `F` for each Miller index. It is indexed relative to `h_min`, `k_min`, `l_min`. |
+| `a`, `b`, `c` | `double[4]` | **Real-Space Crystal Vectors.** Store the crystal's unit cell vectors in the lab coordinate system (in meters). The `[0]` element stores the vector's magnitude. |
+| `a_star`, `b_star`, `c_star` | `double[4]` | **Reciprocal-Space Crystal Vectors.** Store the reciprocal lattice vectors (in Å⁻¹). The `[0]` element stores the magnitude. These are the primary vectors used for calculating Miller indices. |
+| `fdet_vector`, `sdet_vector`, `odet_vector` | `double[4]` | **Detector Basis Vectors.** A set of three orthogonal unit vectors defining the detector's coordinate system: fast axis, slow axis, and the direction normal to the detector plane (outward). |
+| `pix0_vector` | `double[4]` | **Detector Origin Vector.** The 3D vector from the crystal's origin to the center of the first pixel (pixel 0,0) on the detector. This, along with the basis vectors, defines the detector's position and orientation in space. |
+| `incident`, `diffracted`, `scattering` | `double[4]` | **Per-Step Ray Vectors.** These vectors are calculated inside the innermost loops. `incident` is the incoming beam vector, `diffracted` points from the crystal to the current detector pixel, and `scattering` is their difference, scaled by wavelength. |
+
+## 5. Parallelization Model (OpenMP)
+
+To accelerate the computationally expensive main loop, the code uses the OpenMP library.
+
+*   **Directive:** The parallelization is implemented with a single `#pragma omp parallel for` directive.
+*   **Target Loop:** The pragma is applied to the outermost loop over the detector's slow axis (`for(spixel=...;)`). This is a classic domain decomposition strategy where each available CPU core is assigned a block of detector rows to compute independently.
+*   **Data Sharing Clauses:**
+    *   `private(...)`: Loop counters and per-step calculation variables (`fpixel`, `h`, `k`, `l`, `scattering`, `incident`, etc.) are declared `private`. This ensures each thread gets its own independent copy, preventing race conditions.
+    *   `shared(...)`: Read-only configuration data (`Na`, `Nb`, `Nc`, `Fhkl`, detector vectors) and the main output buffer (`floatimage`) are `shared`. Sharing `floatimage` is safe because each thread writes to a unique, non-overlapping section of the array (`spixel*fpixels+fpixel`).
+    *   `reduction(+:...)`: Global statistics variables (`sum`, `sumsqr`, `sumn`) are handled with a `reduction` clause. Each thread computes a local sum, and OpenMP safely combines (reduces) these local sums into the global variable after the parallel section is complete.
+
+## 6. External Dependencies
+
+The codebase is self-contained but relies on standard system libraries that must be linked during compilation.
+
+*   **C Standard Library:** `stdio.h`, `stdlib.h`, `string.h`, `math.h`, etc.
+*   **Math Library (`libm`):** Required for functions like `sin`, `cos`, `sqrt`, `exp`, `log`. Linked with the `-lm` flag.
+*   **OpenMP Library:** Required for the parallel processing directives. Enabled and linked with the `-fopenmp` compiler flag.
+</file>
+
+<file path="C_Function_Reference.md">
+# nanoBragg C Function Reference
+
+## 1. Introduction
+
+This document provides a detailed reference for every function defined in `nanoBragg.c`. Its purpose is to serve as a quick lookup guide for developers translating or maintaining the code.
+
+Each function entry includes:
+*   **Signature:** The C function declaration.
+*   **Description:** A plain-language summary of what the function does.
+*   **Purity Analysis:** Whether the function is pure or has side effects.
+*   **Arguments:** A detailed breakdown of each input and output parameter.
+*   **Return Value:** The meaning of the value returned by the function.
+*   **Dependencies:** A list of other custom functions it calls.
+
+**A Note on C Idioms:** This codebase frequently uses pointers as "output parameters." This means instead of returning a value, a function will write its result into a memory location provided by the caller. This is documented explicitly for each function.
+
+## 2. Function Reference by Category
+
+### 2.1 Main Application Logic
+
+#### `main`
+*   **Signature:** `int main(int argc, char** argv)`
+*   **Description:** The main entry point and orchestrator of the entire program. It is not a reusable function. Its logic is divided into three phases:
+    1.  **Configuration & Setup:** Parses command-line arguments, reads input files, and initializes all simulation parameters and geometry.
+    2.  **Main Simulation Loop:** Executes the nested loops over pixels, sources, mosaic domains, etc., to calculate the diffraction pattern. This section is parallelized with OpenMP.
+    3.  **Post-Processing & Output:** Takes the raw `floatimage` buffer, adds noise (optional), scales the data, and writes the final images to disk.
+*   **Purity Analysis:** Has Side Effects.
+*   **Arguments:** Standard command-line arguments.
+*   **Return Value:** `int`: `0` on successful completion, non-zero on error.
+
+### 2.2 File I/O and Parsing
+
+#### `read_text_file`
+*   **Signature:** `size_t read_text_file(char *filename, size_t nargs, ... )`
+*   **Description:** A generic utility to read a multi-column text file into a series of dynamically allocated double arrays.
+*   **Purity Analysis:** Has Side Effects.
+*   **Arguments:**
+    *   `char *filename`: **Input.** Path to the text file to read.
+    *   `size_t nargs`: **Input.** The number of columns to read (and the number of subsequent pointer arguments).
+    *   `...`: **Output.** A variadic list of `double**` arguments. The function allocates memory for each array and modifies the pointers to point to the new data.
+*   **Return Value:** `size_t`: The number of lines read from the file.
+
+#### `GetFrame`
+*   **Signature:** `SMVinfo GetFrame(char *filename)`
+*   **Description:** Reads an SMV-formatted image file, parsing its header and making its pixel data available.
+*   **Purity Analysis:** Has Side Effects.
+*   **Arguments:**
+    *   `char *filename`: **Input.** Path to the SMV file.
+*   **Return Value:** `SMVinfo`: A struct containing the parsed header info, file handle, and a pointer to the memory-mapped image data.
+
+#### `ValueOf`
+*   **Signature:** `double ValueOf(const char *keyword, SMVinfo smvfile)`
+*   **Description:** Parses an SMV header string to find the floating-point value associated with a given keyword.
+*   **Purity Analysis:** Pure Function.
+*   **Arguments:**
+    *   `const char *keyword`: **Input.** The header keyword to search for (e.g., `"DISTANCE"`).
+    *   `SMVinfo smvfile`: **Input.** The SMV info struct containing the header text.
+*   **Return Value:** `double`: The parsed value, or `NAN` if not found.
+
+### 2.3 Vector & Geometry Math
+
+**Convention:** All vector arguments are pointers to a `double[4]` array where `[1]`, `[2]`, `[3]` are the x,y,z components. The `[0]` element is often used to store the vector's magnitude as a side effect.
+
+#### `rotate`
+*   **Signature:** `double *rotate(double *v, double *newv, double phix, double phiy, double phiz)`
+*   **Description:** Rotates vector `v` by applying successive rotations around the X, Y, and Z axes.
+*   **Purity Analysis:** Has Side Effects.
+*   **Arguments:**
+    *   `double *v`: **Input.** The source vector to rotate.
+    *   `double *newv`: **Output.** The destination vector where the result is stored.
+    *   `double phix, phiy, phiz`: **Input.** Rotation angles in radians.
+*   **Return Value:** `double*`: The pointer `newv`.
+
+#### `rotate_axis`
+*   **Signature:** `double *rotate_axis(double *v, double *newv, double *axis, double phi)`
+*   **Description:** Rotates vector `v` around an arbitrary `axis` vector by angle `phi` using Rodrigues' rotation formula.
+*   **Purity Analysis:** Has Side Effects.
+*   **Arguments:**
+    *   `double *v`: **Input.** The source vector.
+    *   `double *newv`: **Output.** The destination vector.
+    *   `double *axis`: **Input.** The unit vector defining the axis of rotation.
+    *   `double phi`: **Input.** The rotation angle in radians.
+*   **Return Value:** `double*`: The pointer `newv`.
+
+#### `cross_product`
+*   **Signature:** `double *cross_product(double *x, double *y, double *z)`
+*   **Description:** Calculates the cross product of vectors `x` and `y`.
+*   **Purity Analysis:** Has Side Effects.
+*   **Arguments:**
+    *   `double *x`, `*y`: **Input.** The two source vectors.
+    *   `double *z`: **Output.** The destination vector for the result.
+*   **Return Value:** `double*`: The pointer `z`.
+
+#### `dot_product`
+*   **Signature:** `double dot_product(double *x, double *y)`
+*   **Description:** Calculates the dot product of vectors `x` and `y`.
+*   **Purity Analysis:** Pure Function.
+*   **Arguments:** `double *x`, `*y`: **Input.** The two source vectors.
+*   **Return Value:** `double`: The scalar result of the dot product.
+
+#### `magnitude`
+*   **Signature:** `double magnitude(double *vector)`
+*   **Description:** Calculates the magnitude of a vector.
+*   **Purity Analysis:** Has Side Effects.
+*   **Arguments:**
+    *   `double *vector`: **Input/Output.** The source vector. The function writes the calculated magnitude into `vector[0]`.
+*   **Return Value:** `double`: The calculated magnitude.
+
+#### `unitize`
+*   **Signature:** `double unitize(double *vector, double *new_unit_vector)`
+*   **Description:** Normalizes `vector` to a unit vector.
+*   **Purity Analysis:** Has Side Effects.
+*   **Arguments:**
+    *   `double *vector`: **Input.** The source vector.
+    *   `double *new_unit_vector`: **Output.** The destination for the resulting unit vector.
+*   **Return Value:** `double`: The original magnitude of the vector before normalization.
+*   **Dependencies:** `magnitude()`
+
+### 2.4 Physics & Shape Models
+
+#### `sincg`
+*   **Signature:** `double sincg(double x, double N)`
+*   **Description:** Calculates the Fourier transform of a 1D grating of `N` elements. Used for the parallelepiped crystal shape model.
+*   **Purity Analysis:** Pure Function.
+
+#### `sinc3`
+*   **Signature:** `double sinc3(double x)`
+*   **Description:** Calculates the 3D Fourier transform of a sphere. Used for the spherical crystal shape model.
+*   **Purity Analysis:** Pure Function.
+
+#### `polarization_factor`
+*   **Signature:** `double polarization_factor(double kahn_factor, double *incident, double *diffracted, double *axis)`
+*   **Description:** Calculates the polarization correction factor for a given scattering geometry.
+*   **Purity Analysis:** Has Side Effects.
+*   **Arguments:**
+    *   `double kahn_factor`: **Input.** The polarization factor (0 to 1).
+    *   `double *incident`, `*diffracted`, `*axis`: **Input/Output.** These vectors are normalized in-place by the `unitize` helper function.
+*   **Return Value:** `double`: The polarization correction factor (typically between 0.5 and 1.0).
+*   **Dependencies:** `unitize()`, `dot_product()`, `cross_product()`.
+
+### 2.5 Random Number Generation
+
+**Convention:** All random number generators take a pointer to a seed, `long *idum`, and modify its value as a side effect to maintain the state of the generator.
+
+#### `ran1`, `poidev`, `gaussdev`, `lorentzdev`, `triangledev`, `expdev`
+*   **Description:** These functions return random deviates from uniform, Poisson, Gaussian, Lorentzian, triangular, and exponential distributions, respectively. All are stateful and not pure.
+
+#### `mosaic_rotation_umat`
+*   **Signature:** `double *mosaic_rotation_umat(float mosaicity, double umat[9], long *idum)`
+*   **Description:** Generates a random 3x3 unitary rotation matrix representing a single mosaic domain.
+*   **Purity Analysis:** Has Side Effects.
+
+### 2.6 Interpolation
+
+#### `polint`, `polin2`, `polin3`
+*   **Signatures:** `void func_name(..., double *y)`
+*   **Description:** Perform 1D, 2D, and 3D polynomial (cubic) interpolation.
+*   **Purity Analysis:** Has Side Effects (writes result to output pointer `*y`).
+</file>
+
+<file path="C_Parameter_Dictionary.md">
+# nanoBragg C Parameter Dictionary
+
+## 1. Introduction
+
+This document serves as a definitive reference for all command-line parameters accepted by `nanoBragg.c`. It maps each command-line flag to its corresponding internal C variable, specifies its data type, expected units, default value, and provides a clear description of its function.
+
+This dictionary is essential for:
+*   Understanding how to configure a `nanoBragg` simulation.
+*   Guiding the implementation of a new configuration system (e.g., Python `dataclasses`).
+*   Debugging by tracing user input to its effect in the code.
+
+**Note on Conventions:** The C code handles multiple geometry conventions (e.g., MOSFLM, XDS) via conditional logic. The PyTorch architecture will use a single, canonical internal coordinate system. The user-facing command-line interface will be responsible for parsing legacy convention flags and converting them into the application's canonical parameter set before the simulation begins.
+
+## 2. Parameter Tables
+
+The parameters are grouped by their physical domain for clarity.
+
+### 2.1 Crystal & Sample Parameters
+
+These parameters define the crystal's structure, size, and orientation.
+
+| Command-Line Flag | C Variable Name | Data Type | Units / Convention | Default Value | Description |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `-cell a b c al be ga` | `a[0]`, `b[0]`, `c[0]`, `alpha`, `beta`, `gamma` | `double` | Å and degrees (converted to radians internally) | `0.0` | Defines the unit cell dimensions and angles. Activates `user_cell=1`. |
+| `-mat <file>` | `matfilename` | `char*` | Path | `NULL` | Path to a MOSFLM-style matrix file defining the reciprocal lattice vectors. |
+| `-misset dx dy dz` | `misset[1]`, `[2]`, `[3]` | `double` | Degrees (converted to radians) | `0.0` | Applies a rotation around the lab X, Y, and Z axes to the crystal orientation. |
+| `-misset random` | `misset[0]` | `double` | Flag | `0.0` | Sets `misset[0]` to `-1`, which triggers random orientation generation. |
+| `-N <val>` | `Na`, `Nb`, `Nc` | `double` | Number of unit cells | `1.0` | Sets the number of unit cells along a, b, and c axes to `<val>`. |
+| `-Na <val>` | `Na` | `double` | Number of unit cells | `1.0` | Number of unit cells along the a-axis. |
+| `-Nb <val>` | `Nb` | `double` | Number of unit cells | `1.0` | Number of unit cells along the b-axis. |
+| `-Nc <val>` | `Nc` | `double` | Number of unit cells | `1.0` | Number of unit cells along the c-axis. |
+| `-xtalsize <val>` | `sample_x`, `_y`, `_z` | `double` | Millimeters (converted to meters) | `0.0` | Alternative to `-N`. Specifies crystal size in mm, from which `Na,Nb,Nc` are calculated. |
+| `-mosaic <val>` | `mosaic_spread` | `double` | Degrees (converted to radians) | `-1.0` | Isotropic mosaic spread. A value of 90 degrees simulates a powder. |
+| `-mosaic_domains <val>` | `mosaic_domains` | `int` | Count | `-1` | Number of discrete mosaic domains to simulate. |
+| `-hkl <file>` | `hklfilename` | `char*` | Path | `NULL` | Path to the structure factor file (h, k, l, F). |
+| `-default_F <val>` | `default_F` | `double` | Electrons | `0.0` | Structure factor value to use for reflections not found in the HKL file. |
+
+### 2.2 Beam & Source Parameters
+
+These parameters define the properties of the incident X-ray beam.
+
+| Command-Line Flag | C Variable Name | Data Type | Units / Convention | Default Value | Description |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `-lambda <val>` | `lambda0` | `double` | Ångstroms (converted to meters) | `1.0e-10` | The central wavelength of the X-ray beam. |
+| `-energy <val>` | `lambda0` | `double` | eV (converted to meters) | (derived) | Alternative to `-lambda`. Wavelength is calculated via `12398.42/energy`. |
+| `-fluence <val>` | `fluence` | `double` | photons / m² | `1.259e29` | Total integrated beam intensity. Used for calculating absolute photon counts. |
+| `-flux <val>` | `flux` | `double` | photons / s | `0.0` | Alternative to `-fluence`. Requires `-exposure` and `-beamsize`. |
+| `-exposure <val>` | `exposure` | `double` | seconds | `1.0` | Exposure time. Used with `-flux`. |
+| `-beamsize <val>` | `beamsize` | `double` | Millimeters (converted to meters) | `1e-4` | Beam diameter. Used with `-flux`. |
+| `-dispersion <val>` | `dispersion` | `double` | Percent (converted to fraction) | `0.0` | Spectral dispersion (Δλ/λ). |
+| `-dispsteps <val>` | `dispsteps` | `int` | Count | `-1` | Number of discrete wavelength steps to simulate across the dispersion range. |
+| `-hdivrange <val>` | `hdivrange` | `double` | Milliradians (converted to radians) | `-1.0` | Full angular range of horizontal beam divergence. |
+| `-vdivrange <val>` | `vdivrange` | `double` | Milliradians (converted to radians) | `-1.0` | Full angular range of vertical beam divergence. |
+| `-hdivsteps <val>` | `hdivsteps` | `int` | Count | `-1` | Number of discrete horizontal divergence steps. |
+| `-vdivsteps <val>` | `vdivsteps` | `int` | Count | `-1` | Number of discrete vertical divergence steps. |
+| `-polar <val>` | `polarization` | `double` | Kahn factor (0 to 1) | `0.0` | Polarization factor. `1.0` for fully polarized, `0.0` for unpolarized. |
+
+### 2.3 Detector & Geometry Parameters
+
+These parameters define the detector's physical properties, position, and orientation.
+
+| Command-Line Flag | C Variable Name | Data Type | Units / Convention | Default Value | Description |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `-distance <val>` | `distance` | `double` | Millimeters (converted to meters) | `100.0e-3` | Crystal-to-detector distance. Assumes `detector_pivot = BEAM`. |
+| `-detsize <val>` | `detsize_f`, `detsize_s` | `double` | Millimeters (converted to meters) | `102.4e-3` | Sets both fast and slow detector dimensions. |
+| `-pixel <val>` | `pixel_size` | `double` | Millimeters (converted to meters) | `0.1e-3` | The size of a square pixel. |
+| `-detpixels <val>` | `fpixels`, `spixels` | `int` | Count | `0` | Sets both fast and slow pixel counts. |
+| `-Xbeam <val>` | `Xbeam` | `double` | Millimeters (converted to meters) | `NAN` | Fast-axis coordinate of the direct beam. Implies `detector_pivot = BEAM`. |
+| `-Ybeam <val>` | `Ybeam` | `double` | Millimeters (converted to meters) | `NAN` | Slow-axis coordinate of the direct beam. Implies `detector_pivot = BEAM`. |
+| `-twotheta <val>` | `detector_twotheta` | `double` | Degrees (converted to radians) | `0.0` | Rotation of the detector arm around the main spindle axis. |
+| `-oversample <val>` | `oversample` | `int` | Count | `-1` | Number of sub-pixels to sample in each dimension per pixel. |
+| `-adc <val>` | `adc_offset` | `double` | ADU | `40.0` | An offset added to the final integer pixel values before writing image files. |
+| `-phi <val>` | `phi0` | `double` | Degrees (converted to radians) | `0.0` | Starting angle of the crystal rotation (spindle). |
+| `-osc <val>` | `osc` | `double` | Degrees (converted to radians) | `-1.0` | Total oscillation range for a still or rotation image. |
+| `-phisteps <val>` | `phisteps` | `int` | Count | `-1` | Number of steps to simulate across the oscillation range. |
+
+### 2.4 Simulation & Output Control
+
+These parameters control the simulation algorithm and file outputs.
+
+| Command-Line Flag | C Variable Name | Data Type | Units / Convention | Default Value | Description |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `-interpolate` | `interpolate` | `int` | Flag | `1` | Force tricubic interpolation of structure factors. |
+| `-nointerpolate` | `interpolate` | `int` | Flag | `0` | Force nearest-neighbor lookup of structure factors. |
+| `-round_xtal` | `xtal_shape` | `shapetype` | Enum (`ROUND`) | `SQUARE` | Use a spherical crystal shape model (`sinc3`). |
+| `-square_xtal` | `xtal_shape` | `shapetype` | Enum (`SQUARE`) | `SQUARE` | Use a parallelepiped crystal shape model (`sincg`). |
+| `-gauss_xtal` | `xtal_shape` | `shapetype` | Enum (`GAUSS`) | `SQUARE` | Use a Gaussian spot profile (no side lobes). |
+| `-floatfile <file>` | `floatfilename` | `char*` | Path | `"floatimage.bin"` | Output filename for the raw, unscaled floating-point image. |
+| `-intfile <file>` | `intfilename` | `char*` | Path | `"intimage.img"` | Output filename for the scaled, noiseless SMV-formatted image. |
+| `-noisefile <file>` | `noisefilename` | `char*` | Path | `"noiseimage.img"` | Output filename for the image with added Poisson noise. |
+| `-pgmfile <file>` | `pgmfilename` | `char*` | Path | `"image.pgm"` | Output filename for the 8-bit PGM image. |
+| `-nonoise` | `calculate_noise` | `int` | Flag | `0` | Disables the Poisson noise calculation and `noisefile` output. |
+| `-seed <val>` | `seed` | `long` | Integer | `-time(0)` | Seed for the Poisson noise random number generator. |
+| `-mosaic_seed <val>` | `mosaic_seed` | `long` | Integer | `-12345678` | Seed for the mosaic domain orientation generator. |
+</file>
+
+<file path="Implementation_Plan.md">
+# nanoBragg PyTorch Implementation Plan
+
+**Version:** 1.0  
+**Date:** 2023-10-27  
+**Project Lead:** [Your Name/Team]
+
+## 1. Introduction
+
+This document outlines the phased implementation plan for translating `nanoBragg.c` into a new PyTorch-based application. The plan is structured to build the application from the ground up, starting with foundational utilities and progressively assembling them into the final, complete simulator.
+
+Each phase represents a logical grouping of tasks and serves as a major milestone. A phase is not considered complete until all its associated code is implemented and all corresponding tests (as defined in `Testing_Strategy.md`) are passing.
+
+**Prerequisites:**
+*   The `C_Architecture_Overview.md`, `C_Parameter_Dictionary.md`, and `C_Function_Reference.md` documents are complete and have been reviewed.
+*   The `PyTorch_Architecture_Design.md` and `Testing_Strategy.md` documents are complete and have been approved.
+*   The "Golden C Code" test suite (instrumented C code, golden output images, and debug logs) has been generated.
+
+## 1.1. Prerequisite - Developer Environment Setup
+
+To support a consistent and maintainable development process, a `CONTRIBUTING.md` file and a `requirements.txt` file will be created as the first task. These will provide clear instructions for new developers on how to:
+1.  Create a Python virtual environment.
+2.  Install all necessary dependencies (e.g., `torch`, `pytest`, `fabio`).
+3.  Run the complete test suite to verify their setup.
+4.  Adhere to code formatting standards (e.g., `black`, `isort`).
+
+## 3. Development Phases & Tasks
+
+### Phase 1: Foundation & Utilities
+
+**Goal:** Create the low-level, reusable building blocks for geometry and physics calculations. This phase is critical as all subsequent components will depend on it.
+
+*   **Task 1.1: Implement Geometry Utilities (`utils/geometry.py`)**
+    *   **Description:** Create vectorized PyTorch functions for all core 3D vector operations.
+    *   **Functions to Implement:** `dot_product`, `cross_product`, `unitize`, `rotate_axis`, `rotate_umat`, etc.
+    *   **Reference:** `C_Function_Reference.md` for the original C function logic.
+    *   **Definition of Done:** All functions are implemented and pass their corresponding unit tests as defined in `Testing_Strategy.md` (Tier 1).
+
+*   **Task 1.2: Implement Physics Utilities (`utils/physics.py`)**
+    *   **Description:** Create vectorized PyTorch functions for the physical models.
+    *   **Functions to Implement:** `sincg`, `sinc3`, `polarization_factor`.
+    *   **Note:** The random number generators from the C code (`poidev`, `gaussdev`) will be replaced by their native PyTorch equivalents (`torch.poisson`, `torch.randn`) and do not need to be re-implemented here.
+    *   **Definition of Done:** All functions are implemented and pass their corresponding unit tests.
+
+### Phase 2: Core Data Models
+
+**Goal:** Structure the simulation's state and parameters into logical, object-oriented classes.
+
+*   **Task 2.1: Define Configuration Dataclasses (`config.py`)**
+    *   **Description:** Create the `CrystalConfig`, `DetectorConfig`, and `BeamConfig` Python `dataclasses`.
+    *   **Reference:** `C_Parameter_Dictionary.md` for the complete list of parameters, their types, and default values.
+    *   **Definition of Done:** All parameters from the dictionary are represented in the dataclasses. Code is reviewed for correctness.
+
+*   **Task 2.2: Implement the `Detector` Class (`models/detector.py`)**
+    *   **Description:** Implement the `Detector` class, which takes a `DetectorConfig` object. It should calculate and cache its basis vectors (`fdet_vec`, etc.) and implement the `get_pixel_coords()` method to generate the tensor of all pixel coordinates.
+    *   **Reference:** `PyTorch_Architecture_Design.md` and the geometry setup logic in the C `main` function.
+    *   **Definition of Done:** The class is implemented and passes its component-level tests (verifying its calculated geometry against the golden C debug logs).
+
+*   **Task 2.3: Implement the `Crystal` Class (`models/crystal.py`)**
+    *   **Description:** Implement the `Crystal` class, which takes a `CrystalConfig` object. It should calculate its base reciprocal vectors and include methods for loading HKL data and applying rotations.
+    *   **Reference:** `PyTorch_Architecture_Design.md` and the crystal setup logic in the C `main` function.
+    *   **Definition of Done:** The class is implemented and passes its component-level tests (verifying its calculated vectors against the golden C debug logs).
+
+### Phase 3: The Simulator & Application
+
+**Goal:** Assemble the components into a working simulator and create the user-facing entry point.
+
+*   **Task 3.1: Implement the `Simulator` Class (`simulator.py`)**
+    *   **Description:** This is the most complex task. Implement the `Simulator` class and its `run()` method, focusing on the vectorization strategy outlined in the architecture design. This involves preparing inputs, expanding dimensions for broadcasting, performing the vectorized physics calculations, and summing the results.
+    *   **Reference:** `PyTorch_Architecture_Design.md` and the main simulation loop in `nanoBragg.c`.
+    *   **Definition of Done:** The `run()` method is implemented. Initial "smoke tests" (running without crashing) are successful. Full correctness will be verified in the next step.
+
+*   **Task 3.2: Integration Testing**
+    *   **Description:** Write and pass the full integration tests for the `Simulator`. This involves running the complete simulation for each case in the "Golden Test Suite" and comparing the final output image to the golden C-generated image.
+    *   **Reference:** `Testing_Strategy.md` (Tier 1).
+    *   **Definition of Done:** The PyTorch simulator produces numerically identical (within tolerance) images to the C code for all test cases.
+
+*   **Task 3.3: Implement the Main Executable (`main.py`)**
+    *   **Description:** Create the final user-facing script. This includes setting up `argparse` to parse all command-line arguments, instantiating the config dataclasses, creating and running the `Simulator`, and saving the output image.
+    *   **Definition of Done:** The script can be run from the command line and successfully produces a diffraction image.
+
+### Phase 4: Advanced Features & Validation
+
+**Goal:** Implement and test the new differentiable capabilities and perform final scientific validation.
+
+*   **Task 4.1: Implement Differentiable Parameters**
+    *   **Description:** Refactor the configuration and model classes to ensure that key physical parameters can be passed as `torch.Tensor` objects with `requires_grad=True`.
+    *   **Definition of Done:** The `Simulator` can run with learnable tensors as input without error.
+
+*   **Task 4.2: Gradient Testing**
+    *   **Description:** Write and pass the gradient tests for all designated learnable parameters using `torch.autograd.gradcheck`.
+    *   **Reference:** `Testing_Strategy.md` (Tier 2).
+    *   **Definition of Done:** The analytical gradients computed by PyTorch match the numerical finite-difference gradients for all tested parameters.
+
+*   **Task 4.3: Scientific Validation**
+    *   **Description:** Perform the final sanity checks to ensure the model is physically reasonable.
+    *   **Reference:** `Testing_Strategy.md` (Tier 3).
+    *   **Tasks:**
+        *   Implement and pass the "First Principles" tests.
+        *   (Optional) Implement and pass the "Cross-Validation" test.
+    *   **Definition of Done:** The model's output is confirmed to be physically correct in idealized scenarios.
+</file>
+
+<file path="Parameter_Trace_Analysis.md">
+# nanoBragg PyTorch Parameter Trace Analysis
+
+**Version:** 1.0  
+**Date:** 2023-10-27  
+**Authors:** [Your Name/Team]
+
+## 1. Introduction
+
+This document provides a detailed, end-to-end analysis of how key physical parameters influence the final simulated diffraction pattern in the PyTorch implementation of `nanoBragg`. For each parameter, we trace its path through the computational graph, from its initial value to its effect on the final image intensity.
+
+The purpose of this document is to:
+1.  **Build Intuition:** Explain *why* a parameter affects the simulation in a certain way.
+2.  **Guide Debugging:** Provide a roadmap for tracing unexpected behavior back to its source.
+3.  **Interpret Gradients:** Offer a physical interpretation of what a calculated gradient means during an optimization or refinement task.
+4.  **Onboard Developers:** Serve as a deep dive into the "cause and effect" relationships within the simulation model.
+
+Each section follows a standard format:
+*   **Parameter:** The name of the physical parameter.
+*   **Forward Pass Trace:** A step-by-step description of the data flow during the simulation.
+*   **Backward Pass (Gradient) Trace:** A conceptual description of how the gradient flows back to the parameter via the chain rule.
+*   **Physical Intuition of the Gradient:** A plain-language explanation of what the gradient tells us.
+
+## 2. Crystal Parameters
+
+### 2.1 Mosaicity (`mosaic_spread_rad`)
+
+*   **Forward Pass Trace:**
+    1.  The scalar `mosaic_spread_rad` parameter scales a set of pre-defined, deterministic rotation angles.
+    2.  These angles, along with a set of base axes, are converted into a tensor of `mosaic_umats` (3x3 rotation matrices) using a differentiable axis-angle-to-matrix conversion.
+    3.  Each `mosaic_umat` is applied to the crystal's reciprocal vectors (`a_star`, etc.) after the main `phi` spindle rotation.
+    4.  This results in a distribution of slightly different crystal orientations for each simulation step.
+    5.  Each unique orientation produces slightly different fractional Miller indices (`h,k,l`) when dotted with a given scattering vector.
+    6.  This cloud of `h,k,l` values is sampled by the lattice transform function (`F_latt`, e.g., `sincg`), effectively "smearing" or "blurring" what would otherwise be a sharp Bragg peak.
+    7.  The final image intensity is the sum of contributions from all mosaic domains, resulting in broader, more diffuse spots as `mosaic_spread_rad` increases.
+*   **Backward Pass (Gradient) Trace:**
+    1.  The gradient flows from the `loss` back through the `sum` operation to the intensity contribution of each mosaic domain (`I_contrib`).
+    2.  From `I_contrib`, it flows to the lattice transform `F_latt`.
+    3.  The gradient of `F_latt` with respect to `h,k,l` is largest on the steep flanks of the Bragg peak.
+    4.  This gradient flows back to the rotated reciprocal vectors, then through the `matmul` operation to the `mosaic_umats`.
+    5.  Finally, it flows through the differentiable axis-angle-to-matrix conversion back to the `mosaic_spread_rad` scalar.
+*   **Physical Intuition of the Gradient:** The gradient `dL/d(mosaic_spread_rad)` indicates how the loss would change with an infinitesimal increase in mosaic spread. If the simulated peaks are too sharp compared to the data, the loss is high on the peak flanks. The gradient will be negative, signaling the optimizer to **increase** the mosaicity to better match the broader experimental spots.
+
+### 2.2 Unit Cell Length (`cell_a`)
+
+*   **Forward Pass Trace:**
+    1.  `cell_a` is a direct input to the formulas that calculate the base reciprocal lattice vectors. Specifically, a larger `cell_a` results in a smaller `a_star` magnitude (since `a_star` is proportional to `1/a`).
+    2.  The `a_star` vector is used in the dot product `h = dot(scattering_vector, rot_a_star)`.
+    3.  Therefore, changing `cell_a` inversely scales the calculated `h` values.
+    4.  This shifts the entire grid of Bragg peaks in reciprocal space. On the detector, this corresponds to a radial scaling of the spot positions (d-spacing).
+*   **Backward Pass (Gradient) Trace:**
+    1.  The gradient flows from the `loss` back to `h,k,l`.
+    2.  The gradient `dL/dh` flows back through the dot product to `rot_a_star`.
+    3.  It then flows back through the rotation operations to the base `a_star` vector.
+    4.  Finally, it flows through the derivative of the cell calculation formulas back to the `cell_a` parameter.
+*   **Physical Intuition of the Gradient:** If the simulated spots are at the wrong resolution (e.g., all are 1% too close to the center), the gradient `dL/d(cell_a)` will be non-zero. It tells the optimizer whether to **increase or decrease** the unit cell size to make the simulated d-spacings match the experimental data.
+
+### 2.3 Crystal Orientation (`misset_rot_x`)
+
+*   **Forward Pass Trace:**
+    1.  `misset_rot_x` is used to construct an initial rotation matrix `U_misset`.
+    2.  This matrix is applied to the base reciprocal vectors *before* any other rotations (`phi` or mosaic).
+    3.  This applies a global rotation to the entire reciprocal lattice.
+    4.  On the detector, this manifests as a rotation of the entire diffraction pattern around a fixed axis.
+    5.  This changes the `h,k,l` values for every pixel, altering the loss.
+*   **Backward Pass (Gradient) Trace:**
+    1.  The gradient flows from the `loss` back to `h,k,l`, then to the fully rotated reciprocal vectors.
+    2.  It back-propagates through the mosaic and phi rotations, then through the initial `U_misset` rotation.
+    3.  Finally, it flows to the underlying `misset_rot_x` angle.
+*   **Physical Intuition of the Gradient:** If the entire simulated pattern is mis-rotated compared to the data, this gradient tells the optimizer **which way and how much** to rotate the crystal model to improve alignment.
+
+## 3. Detector Parameters
+
+### 3.1 Detector Distance (`distance_mm`)
+
+*   **Forward Pass Trace:**
+    1.  `distance_mm` directly scales the component of the `pix0_vector` that is normal to the detector plane.
+    2.  This changes the 3D coordinates of every pixel, effectively moving the entire detector plane farther from or closer to the sample.
+    3.  This changes the `diffracted_vectors` and therefore the `scattering_vectors`.
+    4.  The effect is a change in the "magnification" of the pattern. A larger distance spreads the spots farther apart.
+    5.  It also affects the solid angle correction (`omega_pixel`), which scales as `1/distance^2`.
+*   **Backward Pass (Gradient) Trace:**
+    1.  The gradient flows from the `loss` back to `h,k,l` (due to spot position changes) and `omega_pixel` (due to intensity scaling).
+    2.  The gradient flows from these intermediates back to the `scattering_vectors` and `diffracted_vectors`.
+    3.  It then flows back through the detector geometry calculation to the `distance_mm` parameter.
+*   **Physical Intuition of the Gradient:** If the simulated pattern has the correct relative spot spacing but is globally too large or too small on the detector, this gradient will instruct the optimizer to **adjust the detector distance** to match the scale of the experimental pattern.
+
+## 4. Beam Parameters
+
+### 4.1 Wavelength (`lambda_A`)
+
+*   **Forward Pass Trace:**
+    1.  `lambda_A` appears in the denominator of the scattering vector definition: `S = (k_diff - k_in) / lambda`.
+    2.  A longer wavelength increases the magnitude of `S` for a given scattering angle, effectively shrinking the Ewald sphere radius in reciprocal space (`1/lambda`).
+    3.  This has a similar effect to changing the unit cell size: it causes a radial scaling of the entire diffraction pattern.
+*   **Backward Pass (Gradient) Trace:**
+    1.  The gradient flows from the `loss` to `h,k,l`, then to the `scattering_vectors`.
+    2.  The gradient `dL/dS` flows back to `lambda_A` via the derivative of the `1/x` function.
+*   **Physical Intuition of the Gradient:** This gradient indicates how to adjust the wavelength to better match the observed d-spacings. Its effect is highly correlated with `cell` and `distance`. In a typical refinement, `lambda` is often fixed if known, allowing the other parameters to absorb the variance.
+
+### 4.2 Fluence (`fluence`)
+
+*   **Forward Pass Trace:**
+    1.  `fluence` is a simple, global multiplicative scale factor applied to the entire calculated `final_image` just before the loss is computed.
+    2.  It does not affect the position, shape, or relative intensities of the spots; it only affects their absolute brightness.
+*   **Backward Pass (Gradient) Trace:**
+    1.  This is the simplest gradient path. The gradient flows from the loss back to the scaled image.
+    2.  The derivative `d(Loss)/d(fluence)` is directly computed from the difference between the simulated and target images.
+*   **Physical Intuition of the Gradient:** This gradient simply tells the optimizer whether the overall simulation is **too bright or too dim** compared to the data. It allows the model to learn the arbitrary scale factor between the simulation's physical units and the detector's raw ADU values.
+</file>
+
+<file path="PyTorch_Architecture_Design.md">
+# nanoBragg PyTorch Architecture Design
+
+**Version:** 1.0  
+**Date:** 2023-10-27  
+**Authors:** [Your Name/Team]
+
+## 1. Introduction & Guiding Principles
+
+This document outlines the software architecture for the PyTorch implementation of `nanoBragg`. The primary goal is to create a functionally equivalent, yet more modern, extensible, and performant simulator that leverages GPU acceleration and automatic differentiation for scientific modeling.
+
+The design is guided by the following principles:
+
+1.  **Object-Oriented Abstraction:** The flat, procedural structure of the C code will be replaced by a set of classes (`Crystal`, `Detector`, `Simulator`) that encapsulate related state and logic. This improves modularity and maintainability.
+2.  **Vectorization over Loops:** The core design pattern is to replace the nested C loops with vectorized PyTorch tensor operations. All calculations will be performed on large, multi-dimensional tensors, where each dimension corresponds to a loop in the original code. This is the key to performance on both CPU and GPU.
+3.  **Configuration via Dataclasses:** All simulation parameters will be managed by strongly-typed Python `dataclasses`. This provides a clean, self-documenting, and error-resistant alternative to the large set of variables in the C `main` function.
+4.  **Differentiability by Design:** All custom functions and classes will be built using differentiable PyTorch operations, ensuring that the entire simulation is end-to-end differentiable with respect to its physical parameters.
+5.  **Lazy Computation & Caching:** Where possible, expensive calculations (like generating pixel coordinates) will be performed once and cached within their respective objects to avoid redundant computation.
+
+## 2. High-Level Architecture
+
+The application will be structured into several key Python modules and classes, promoting a clear separation of concerns.
+
+### 2.1 Class Diagram
+
+```mermaid
+classDiagram
+    direction LR
+    class Simulator {
+        -crystal: Crystal
+        -detector: Detector
+        -beam_config: BeamConfig
+        +run() : torch.Tensor
+    }
+    class Crystal {
+        -config: CrystalConfig
+        -Fhkl: dict
+        -a_star, b_star, c_star: torch.Tensor
+        +load_hkl(path)
+        +get_rotated_reciprocal_vectors(phi, mosaic_umats)
+    }
+    class Detector {
+        -config: DetectorConfig
+        -fdet_vec, sdet_vec, odet_vec: torch.Tensor
+        -pixel_coords_mm: torch.Tensor
+        +get_pixel_coords()
+    }
+    class Config {
+        <<Dataclass>>
+        +CrystalConfig
+        +DetectorConfig
+        +BeamConfig
+    }
+    class Utils {
+        <<Module>>
+        +geometry.py
+        +physics.py
+    }
+
+    Simulator --> Crystal : uses
+    Simulator --> Detector : uses
+    Simulator --> Config : uses
+    Crystal --> Config : uses
+
+    Detector --> Config : uses
+    Simulator --> Utils : uses
+```
+
+### 2.2 Module & Component Breakdown
+
+*   **`config.py`:**
+    *   Contains Python `dataclasses` (`CrystalConfig`, `DetectorConfig`, `BeamConfig`) to hold all input parameters. This module has no logic, only data definitions. It serves as the single source of truth for simulation configuration.
+*   **`utils/` (Utility Modules):**
+    *   **`geometry.py`:** A collection of pure, vectorized functions for 3D geometry (`dot_product`, `cross_product`, `rotate_axis`, etc.). All functions must operate on PyTorch tensors, typically of shape `(..., 3)`, to support broadcasting.
+    *   **`physics.py`:** A collection of pure, vectorized functions for physics calculations (`sincg`, `sinc3`, `polarization_factor`, etc.). These will also be designed to work on broadcastable tensors.
+*   **`models/` (Core Object Models):**
+    *   **`crystal.py`:** Defines the `Crystal` class. It is responsible for managing the unit cell, orientation, and structure factor data. Its key method will be `get_rotated_reciprocal_vectors()`, which applies spindle and mosaic rotations to its base reciprocal vectors.
+    *   **`detector.py`:** Defines the `Detector` class. It is responsible for managing all detector geometry. Its key feature is the pre-computation and caching of all pixel coordinates into a single tensor via the `get_pixel_coords()` method.
+*   **`simulator.py`:**
+    *   Defines the main `Simulator` class. This class orchestrates the entire simulation, taking the `Crystal` and `Detector` objects as input. Its `run()` method contains the core vectorized calculation.
+*   **`main.py`:**
+    *   The main executable script. It is responsible for parsing command-line arguments (using `argparse`), instantiating the config dataclasses, creating the `Simulator` object, running the simulation, and handling file I/O for the final image.
+
+## 3. The Vectorization Strategy
+
+This is the most critical part of the design, enabling high performance. The nested loops of the C code will be mapped to dimensions of PyTorch tensors.
+
+### 3.1 Mapping Loops to Tensor Dimensions
+
+| C Loop | Tensor Dimension Name | Example Size (`N_...`) |
+| :--- | :--- | :--- |
+| `spixel` | `S` | `spixels` |
+| `fpixel` | `F` | `fpixels` |
+| `source` | `src` | `N_sources` |
+| `mos_tic` | `mos` | `N_mosaic` |
+| `phi_tic` | `phi` | `N_phi` |
+| `sub-pixel` | (Handled within pixel coords) | `oversample` |
+| `thick_tic` | `thk` | `N_thick` |
+
+### 3.2 Execution Flow in `Simulator.run()`
+
+1.  **Prepare Input Tensors:**
+    *   `pixel_coords`: from `detector.get_pixel_coords()`. Shape: `(S, F, 3)`.
+    *   `incident_vectors`: Generated from `BeamConfig`. Shape: `(N_src, 3)`.
+    *   `mosaic_umats`: Generated from `CrystalConfig`. Shape: `(N_mos, 3, 3)`.
+    *   ...and so on for `phi_steps`, etc.
+
+2.  **Expand Dimensions for Broadcasting:**
+    *   Use `torch.unsqueeze()` or `view()` to align all tensors for broadcasting. The goal is to create a virtual "hyper-tensor" where every combination of parameters is represented.
+    *   Example: `pixel_coords` becomes shape `(S, F, 1, 1, 1, 3)`.
+    *   Example: `incident_vectors` becomes shape `(1, 1, N_src, 1, 1, 3)`.
+
+3.  **Perform Vectorized Calculation:**
+    *   All subsequent calculations are performed on these broadcast-compatible tensors.
+    *   `scattering_vectors = (unitize(pixel_coords) - incident_vectors) / lambda_A`
+    *   This single line of code calculates the scattering vector for every pixel, for every source, simultaneously. The resulting tensor has a shape like `(S, F, N_src, N_mos, N_phi, 3)`.
+
+4.  **Integrate (Sum over Dimensions):**
+    *   The final intensity is calculated by summing the contributions over the appropriate dimensions.
+    *   `I_contrib = (F_cell * F_latt)**2 * ...`
+    *   `final_image = torch.sum(I_contrib, dim=(2, 3, 4))` (summing over `src`, `mos`, and `phi` dimensions).
+
+This approach moves the looping from slow, sequential Python/C code into highly optimized, parallel C++/CUDA kernels within the PyTorch backend.
+
+## 4. Memory Management and Batching
+
+The full vectorization strategy is highly performant but can be memory-intensive, as the intermediate tensors can grow very large (e.g., `pixels * sources * mosaic_domains * ...`). To ensure the simulator can handle large-scale problems without exceeding GPU or system RAM, a batching mechanism will be included.
+
+The `Simulator.run()` method will include an optional `pixel_batch_size` parameter. If provided, the calculation will be looped over the detector pixels in batches of the specified size. This approach allows for a trade-off: it slightly reduces performance by introducing a Python loop but drastically cuts peak memory usage, making the tool more robust and versatile for a wider range of hardware and simulation complexities.
+
+## 5. Differentiability and Parameter Handling
+
+*   **Learnable Parameters:** Any physical parameter intended for refinement (e.g., `cell_a`, `distance_mm`, `mosaic_spread_rad`) will be represented as a `torch.Tensor` with `requires_grad=True`. These will be managed within their respective `config` dataclasses.
+*   **Gradient Flow:** The architecture ensures a continuous computational graph from these input parameters to the final scalar loss value. For example, the `Crystal` class methods will be fully differentiable, allowing gradients to flow back from `h,k,l` to the underlying cell and orientation parameters.
+*   **Optimizer:** The `main.py` script will be responsible for creating a standard PyTorch optimizer (e.g., `torch.optim.Adam`) that takes the list of learnable parameters and updates them based on their `.grad` attribute after `loss.backward()` is called.
+
+## 6. Data I/O
+
+*   **Input:**
+    *   HKL files will be read using `pandas` or a simple text parser into a dictionary or a sparse tensor format within the `Crystal` class.
+    *   Configuration will be handled by `argparse` populating the `config` dataclasses.
+*   **Output:**
+    *   The final image tensor will be saved using libraries capable of handling scientific image formats. The `fabio` library is the recommended candidate for writing SMV files with correct headers. Alternatively, `astropy.io.fits` or simple `numpy.save` can be used for intermediate debugging.
+</file>
+
+<file path="Testing_Strategy.md">
+# nanoBragg PyTorch Testing Strategy
+
+**Version:** 1.0  
+**Date:** 2023-10-27  
+**Owner:** [Your Name/Team]
+
+## 1. Introduction & Philosophy
+
+This document outlines the comprehensive testing strategy for the PyTorch implementation of `nanoBragg`. The primary goal is to ensure that the new application is a **correct, verifiable, and trustworthy** scientific tool.
+
+Our testing philosophy is a **three-tiered hybrid approach**, designed to build confidence layer by layer:
+1.  **Tier 1: Translation Correctness:** We first prove that the PyTorch code is a faithful, numerically precise reimplementation of the original C code's physical model. The C code is treated as the "ground truth" specification.
+2.  **Tier 2: Gradient Correctness:** We then prove that the new differentiable capabilities are mathematically sound, as this is a core feature not present in the original.
+3.  **Tier 3: Scientific Validation:** Finally, we validate the model against objective physical principles and community standards to protect against any potential flaws in the original model and to establish scientific credibility.
+
+All tests will be implemented using the **PyTest framework**.
+
+## 2. Incorporating and Superseding the Legacy Testing Approach
+
+The original `nanoBragg.c` implementation relies on an implicit, manual testing strategy common in scientific software:
+
+*   **Example-Based Validation:** Running a series of well-understood examples from the `README.md`.
+*   **Visual Inspection:** Manually viewing the output images to confirm they "look correct."
+*   **Scientific Plausibility:** Checking that the output conforms to known physical principles.
+
+While effective for initial development, this manual approach is not scalable, repeatable, or sufficient for a robust, maintainable software project.
+
+Our new testing strategy is designed to **formalize, automate, and extend** this legacy approach.
+
+*   **Formalizing Example-Based Validation:** The "Golden Suite" (Section 3) is the formal, automated version of the `README` examples. Instead of a human checking if the program runs, our integration tests check that the output is bit-for-bit identical to a trusted result. This makes the process objective and instantaneous.
+
+*   **Formalizing Scientific Plausibility:** The manual check for physical correctness is captured and automated in the **Tier 3: Scientific Validation** tests. These tests programmatically check for adherence to Bragg's law and polarization principles, removing human subjectivity.
+
+*   **Addressing Visual Inspection:** We acknowledge that automated tests cannot fully replace the intuition gained from visual inspection. However, by validating the PyTorch implementation against the C code's "golden" visual output, we ensure that no visual regressions occur. The primary role of visual inspection is now shifted to the validation of *new features* rather than the verification of existing ones.
+
+By implementing this tiered, automated strategy, we retain the scientific spirit of the original validation methods while making them rigorous, repeatable, and capable of guarding against future regressions.
+
+## 3. Ground Truth Establishment: The "Golden Suite"
+
+The foundation of our testing strategy is a "Golden Suite" of test data generated from the original, trusted C code.
+
+### 3.1 Instrumenting the C Code
+
+The `nanoBragg.c` source will be modified to include a new command-line flag: `-dump_pixel <fpixel> <spixel>`. When run with this flag, the program will execute normally but will also write a detailed log file (`<test_case_name>.log`) containing key intermediate variables for the specified pixel at every step of the innermost simulation loops. This provides the ground truth for component-level testing.
+
+### 3.2 Golden Test Cases
+
+The following test cases will be defined and run using the instrumented C code to generate a set of golden output images and debug logs.
+
+| Test Case Name | Description | Purpose |
+| :--- | :--- | :--- |
+| `simple_cubic` | A 100Å cubic cell, single wavelength, no mosaicity, no oscillation. | The "hello world" test for basic geometry and spot calculation. |
+| `triclinic_complex` | A low-symmetry triclinic cell. | To stress-test the reciprocal space and geometry calculations. |
+| `with_mosaicity` | The `simple_cubic` case with a 0.5-degree mosaic spread. | To test the mosaic domain implementation. |
+| `with_oscillation` | The `simple_cubic` case with a 1-degree oscillation over 10 phi steps. | To test the spindle rotation logic. |
+| `full_features` | A complex case with all major features enabled (divergence, dispersion, mosaicity, oscillation, etc.). | The final, comprehensive integration test case. |
+
+These golden files (`.img`, `.log`) will be committed to the repository and will not be changed.
+
+## 4. Tier 1: Translation Correctness Testing
+
+**Goal:** To prove the PyTorch code is a faithful port of the C code.
+
+### 4.1 Unit Tests (`tests/test_utils.py`)
+
+*   **Target:** Functions in `utils/geometry.py` and `utils/physics.py`.
+*   **Methodology:** For each function, create a PyTest test that provides a hard-coded input. The expected output will be taken directly from the golden debug logs or calculated manually. Comparison will be done using `torch.allclose()`.
+*   **Requirement:** All utility functions must have at least one corresponding unit test.
+
+### 4.2 Component Tests (`tests/test_models.py`)
+
+*   **Target:** The `Detector` and `Crystal` classes in `models/`.
+*   **Methodology:**
+    *   **`test_detector_geometry`:** Instantiate the `Detector` class using the configuration from a golden test case. Assert that its calculated basis vectors (`fdet_vec`, etc.) and the 3D coordinates of the dumped pixel match the values in the corresponding `.log` file.
+    *   **`test_crystal_geometry`:** Instantiate the `Crystal` class. Assert that its initial reciprocal vectors match the golden log.
+    *   **`test_crystal_rotation`:** Call the `crystal.get_rotated_reciprocal_vectors()` method with `phi` and mosaic matrix values taken from a specific step in the golden log. Assert that the output vectors match the C code's rotated vectors for that step.
+*   **Requirement:** Both `Detector` and `Crystal` classes must pass these component tests for at least the `simple_cubic` and `triclinic_complex` cases.
+
+### 4.3 Integration Tests (`tests/test_simulator.py`)
+
+*   **Target:** The end-to-end `Simulator.run()` method.
+*   **Methodology:** For each test case in the Golden Suite, create a test function that:
+    1.  Configures and runs the PyTorch `Simulator`.
+    2.  Loads the corresponding golden output image (`.img` file).
+    3.  Asserts that the entire output image tensor is numerically close to the golden image tensor using `torch.allclose(rtol=1e-5, atol=1e-5)`.
+*   **Requirement:** The simulator must pass integration tests for **all** cases in the Golden Suite.
+
+**Note on Precision:** All tests in this tier will be run with PyTorch's default dtype set to `torch.float64` to match the `double` precision of the C code and minimize floating-point discrepancies.
+
+## 5. Tier 2: Gradient Correctness Testing
+
+**Goal:** To prove that the automatic differentiation capabilities are mathematically correct.
+
+### 5.1 Gradient Checks (`tests/test_gradients.py`)
+
+*   **Target:** All parameters intended for refinement.
+*   **Methodology:** We will use PyTorch's built-in numerical gradient checker, `torch.autograd.gradcheck`. For each parameter, a test will be created that:
+    1.  Sets up a minimal, fast-to-run simulation scenario.
+    2.  Defines a function that takes the parameter tensor as input and returns a scalar loss.
+    3.  Calls `gradcheck` on this function and its input.
+*   **Requirement:** The following parameters (at a minimum) must pass `gradcheck`:
+    *   **Crystal:** `cell_a`, `cell_gamma`, `misset_rot_x`
+    *   **Detector:** `distance_mm`, `Fbeam_mm`
+    *   **Beam:** `lambda_A`
+    *   **Model:** `mosaic_spread_rad`, `fluence`
+
+## 6. Tier 3: Scientific Validation Testing
+
+**Goal:** To validate the model against objective physical principles, independent of the original C code.
+
+### 6.1 First Principles Tests (`tests/test_validation.py`)
+
+*   **Target:** The fundamental geometry and physics of the simulation.
+*   **Methodology:**
+    *   **`test_bragg_spot_position`:**
+        1.  Configure a simple case: cubic cell, beam along Z, detector on XY plane, no rotations.
+        2.  Analytically calculate the exact (x,y) position of a low-index reflection (e.g., (1,0,0)) using the Bragg equation and simple trigonometry.
+        3.  Run the simulation.
+        4.  Find the coordinates of the brightest pixel in the output image using `torch.argmax`.
+        5.  Assert that the simulated spot position is within one pixel of the analytically calculated position.
+    *   **`test_polarization_limits`:**
+        1.  Configure a reflection to be at exactly 90 degrees 2-theta.
+        2.  Run the simulation with polarization set to horizontal. Assert the spot intensity is near maximum.
+        3.  Run again with polarization set to vertical. Assert the spot intensity is near zero.
+
+### 6.2 Cross-Validation Test (Optional but Recommended)
+
+*   **Target:** High-level agreement with community standards.
+*   **Methodology:**
+    1.  Choose a simple, common-denominator scenario (e.g., the `simple_cubic` case).
+    2.  Configure and run a simulation using an independent, trusted software package (e.g., `cctbx.xfel`).
+    3.  Run the PyTorch simulation.
+    4.  Compare the **positions** of the brightest spots in both images. A direct intensity comparison is not required, as models may differ.
+*   **Requirement:** The spot positions should agree to within a reasonable tolerance, confirming that our coordinate system and geometric conventions are not fundamentally flawed.
+</file>
+
+</files>
