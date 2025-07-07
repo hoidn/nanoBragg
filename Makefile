@@ -9,6 +9,7 @@ PYTHON_VENV := $(VENV_DIR)/bin/python
 setup:
 	$(PYTHON) -m venv $(VENV_DIR)
 	$(PIP) install -r requirements.txt
+	$(PIP) install -e .
 
 format:
 	$(PYTHON_VENV) -m black src/ tests/

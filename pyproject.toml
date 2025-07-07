@@ -24,3 +24,10 @@ dependencies = [
     "pytest",
     "matplotlib"
 ]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "ruff",
+    "isort"
+]
