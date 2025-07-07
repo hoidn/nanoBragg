@@ -234,3 +234,29 @@ This is scientific simulation software for **X-ray crystallography** and **small
 - **Ewald sphere**: Geometric construction for diffraction condition
 
 The software is used in structural biology, materials science, and synchrotron/X-ray free-electron laser facilities.
+
+## Critical Implementation Rules
+
+### **Crystallographic Physics**
+**RULE 1**: The crystallographic projection from scattering vector `S` to Miller indices `(h,k,l)` **MUST** use the real-space lattice vectors (`a,b,c`), not the reciprocal-space vectors (`a_star,b_star,c_star`). 
+
+Correct implementation:
+```python
+h = dot_product(scattering_vector, crystal.a) / (2.0 * torch.pi)
+k = dot_product(scattering_vector, crystal.b) / (2.0 * torch.pi)  
+l = dot_product(scattering_vector, crystal.c) / (2.0 * torch.pi)
+```
+
+**RULE 2**: All terms in a physical scaling equation must be converted to a single, consistent unit system (e.g., meters) before multiplication. Add comments specifying the units for each term.
+
+Example:
+```python
+# Convert all quantities to meters for consistent calculation
+airpath_m = airpath * 1e-10        # Å to meters
+pixel_size_m = pixel_size * 1e-10   # Å to meters
+distance_m = distance * 1e-10       # Å to meters
+
+# Final calculation with unit annotations
+# Units: [dimensionless] × [m²] × [photons/m²] × [steradians] = [photons]
+intensity = F_squared * r_e_sqr * fluence * omega_pixel
+```

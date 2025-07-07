@@ -44,10 +44,10 @@ class Simulator:
         self.incident_beam_direction = torch.tensor(
             [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
         )
-        self.wavelength = 1.0  # Angstroms
+        self.wavelength = 6.2  # Angstroms (matches debug script and C code test case)
         
         # Physical constants (from nanoBragg.c ~line 240)
-        self.r_e_sqr = 7.94e-26  # classical electron radius squared (cm²)
+        self.r_e_sqr = 7.94079248018965e-30  # classical electron radius squared (meters squared)
         self.fluence = 125932015286227086360700780544.0  # photons per square meter (C default)
         self.polarization = 1.0  # unpolarized beam
 
@@ -77,25 +77,22 @@ class Simulator:
         # Incident beam unit vector [1, 0, 0]
         incident_beam_unit = self.incident_beam_direction.expand_as(diffracted_beam_unit)
 
-        # Scattering vector: q = (k_out - k_in) in Å⁻¹
-        # For X-ray diffraction: q = (2π/λ) * (unit_out - unit_in)
-        two_pi_by_lambda = 2.0 * torch.pi / self.wavelength
-        k_in = two_pi_by_lambda * incident_beam_unit
-        k_out = two_pi_by_lambda * diffracted_beam_unit
-        scattering_vector = k_out - k_in
+        # Scattering vector using crystallographic convention (nanoBragg.c style)
+        # S = (s_out - s_in) / λ where s_out, s_in are unit vectors
+        scattering_vector = (diffracted_beam_unit - incident_beam_unit) / self.wavelength
 
-        # Calculate dimensionless Miller indices using reciprocal-space vectors
-        # h = dot_product(q, a*) where a* is in Å⁻¹, q is in Å⁻¹
+        # Calculate dimensionless Miller indices using crystallographic convention
+        # Laue condition: h = S·a where S is the crystallographic scattering vector
         # Use override if provided (for gradient testing)
-        a_star = override_a_star if override_a_star is not None else self.crystal.a_star
+        a_vec = override_a_star if override_a_star is not None else self.crystal.a
         h = dot_product(
-            scattering_vector, a_star.view(1, 1, 3)
+            scattering_vector, a_vec.view(1, 1, 3)
         )
         k = dot_product(
-            scattering_vector, self.crystal.b_star.view(1, 1, 3)
+            scattering_vector, self.crystal.b.view(1, 1, 3)
         )
         l = dot_product(
-            scattering_vector, self.crystal.c_star.view(1, 1, 3)
+            scattering_vector, self.crystal.c.view(1, 1, 3)
         )
 
         # Find nearest integer Miller indices for structure factor lookup
@@ -121,22 +118,16 @@ class Simulator:
         intensity = F_total * F_total  # |F|^2
 
         # Apply physical scaling factors (from nanoBragg.c ~line 3050)
-        # Solid angle correction: omega_pixel = pixel_size^2 / airpath^2 * close_distance / airpath
+        # Solid angle correction, converting all units to meters for calculation
         airpath = pixel_magnitudes.squeeze(-1)  # Remove last dimension for broadcasting
-        close_distance = self.detector.distance  # detector distance
-        pixel_size = self.detector.pixel_size
+        airpath_m = airpath * 1e-10  # Å to meters
+        close_distance_m = self.detector.distance * 1e-10  # Å to meters
+        pixel_size_m = self.detector.pixel_size * 1e-10  # Å to meters
         
-        omega_pixel = (pixel_size * pixel_size) / (airpath * airpath) * close_distance / airpath
+        omega_pixel = (pixel_size_m**2) / (airpath_m**2) * close_distance_m / airpath_m
         
-        # Apply all scaling factors with consistent units
-        # Convert r_e_sqr from cm² to Å² (1 cm = 1e8 Å)
-        r_e_sqr_angstrom = self.r_e_sqr * (1e8 * 1e8)  # cm² to Å²
-        
-        # Convert fluence from photons/m² to photons/Å² (1 m = 1e10 Å)
-        fluence_angstrom = self.fluence / (1e10 * 1e10)  # photons/m² to photons/Å²
-        
-        # Final intensity with all physical constants in consistent Angstrom units
-        # Units: [dimensionless] × [steradians] × [Å²] × [photons/Å²] × [dimensionless] = [photons·steradians]
-        physical_intensity = intensity * omega_pixel * r_e_sqr_angstrom * fluence_angstrom * self.polarization
+        # Final intensity with all physical constants in meters
+        # Units: [dimensionless] × [steradians] × [m²] × [photons/m²] × [dimensionless] = [photons·steradians]
+        physical_intensity = intensity * self.r_e_sqr * self.fluence * self.polarization * omega_pixel
 
         return physical_intensity

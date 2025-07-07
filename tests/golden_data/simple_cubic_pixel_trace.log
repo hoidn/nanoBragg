@@ -3,36 +3,36 @@ Single Pixel Trace Debugging Log
 nanoBragg PyTorch Implementation
 ================================================================================
 
-Target Pixel: (slow=250, fast=350)
+Target Pixel: (slow=240, fast=250)
 Test Case: simple_cubic
-Wavelength: 1.0 Angstroms
+Wavelength: 6.2 Angstroms
 Precision: torch.float64
 
-Wavelength (Å): 1.000000000000e+00
+Wavelength (Å): 6.199999809265e+00
 
 Pixel coordinates tensor shape: torch.Size([500, 500, 3])
-Pixel Coordinate (Å): [1.e+09 0.e+00 1.e+08]
-Pixel Coordinate (Å): [1.e+09 0.e+00 1.e+08]
-Diffracted Beam (unit vector): [0.99503719 0.         0.09950372]
-Pixel Distance (Å): 1.004987562112e+09
+Pixel Coordinate (Å): [1.e+09 1.e+07 0.e+00]
+Pixel Coordinate (Å): [1.e+09 1.e+07 0.e+00]
+Diffracted Beam (unit vector): [0.99995   0.0099995 0.       ]
+Pixel Distance (Å): 1.000049998750e+09
 Incident Beam (unit vector): [1. 0. 0.]
-Wave Vector k (Å⁻¹): 6.283185482025e+00
-Scattering Vector q (Å⁻¹): [-0.03118225  0.          0.62520031]
-Fractional Miller Index h,k,l: [-0.00031182  0.          0.006252  ]
+Wave Vector k (Å⁻¹): 1.013417005539e+00
+Scattering Vector q (Å⁻¹): [-5.06670493e-05  1.01336632e-02  0.00000000e+00]
+Fractional Miller Index h,k,l: [-5.06670493e-07  1.01336632e-04  0.00000000e+00]
 Nearest Integer h₀,k₀,l₀: [0. 0. 0.]
 F_cell: 1.000000000000e+02
-Δh (h - h₀): -3.118225355492e-04
-Δk (k - k₀): 0.000000000000e+00
-Δl (l - l₀): 6.252003053625e-03
-sincg(Δh, Na): 4.999980806938e+00
-sincg(Δk, Nb): 5.000000000000e+00
-sincg(Δl, Nc): 4.992287801139e+00
-F_latt: 1.248067159420e+04
-Raw Intensity: 1.557671634423e+08
-Solid Angle (steradians): 9.851853368416e-07
+Δh (h - h₀): -5.066704925438e-07
+Δk (k - k₀): 1.013366317980e-04
+Δl (l - l₀): 0.000000000000e+00
+sincg(Δh, Na): 4.999999999949e+00
+sincg(Δk, Nb): 4.999997972959e+00
+sincg(Δl, Nc): 5.000000000000e+00
+F_latt: 1.249999493227e+04
+Raw Intensity: 1.562498733068e+08
+Solid Angle (steradians): 9.998500187478e-07
 r_e_sqr (Å²): 7.939999768780e-10
 fluence (photons/Å²): 1.259320192000e+09
-Final Physical Intensity: 1.534442103348e+02
+Final Physical Intensity: 1.562108475710e+02
 
 ================================================================================
 Additional Debugging Information

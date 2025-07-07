@@ -23,8 +23,8 @@ from nanobrag_torch.models.crystal import Crystal
 from nanobrag_torch.utils.geometry import dot_product, unitize, magnitude
 
 # Constants
-TARGET_S_PIXEL = 250
-TARGET_F_PIXEL = 350
+TARGET_S_PIXEL = 240  # On-peak pixel from bright spot in PyTorch output
+TARGET_F_PIXEL = 250  # On-peak pixel from bright spot in PyTorch output
 OUTPUT_LOG_PATH = "tests/golden_data/simple_cubic_pixel_trace.log"
 
 def log_variable(name, tensor, log_file):
@@ -54,7 +54,7 @@ def main():
         crystal.load_hkl(hkl_file)
     
     # Simulation parameters (from simple_cubic test case)
-    wavelength = 1.0  # Angstroms
+    wavelength = 6.2  # Angstroms (matches simulator)
     
     with open(OUTPUT_LOG_PATH, 'w') as log_file:
         log_file.write("="*80 + "\n")

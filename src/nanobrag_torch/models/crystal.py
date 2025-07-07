@@ -3,6 +3,9 @@ Crystal model for nanoBragg PyTorch implementation.
 
 This module defines the Crystal class responsible for managing unit cell,
 orientation, and structure factor data.
+
+NOTE: The default parameters in this file are configured to match the 'simple_cubic' 
+golden test case, which uses a 10 Å unit cell and a 500×500×500 cell crystal size.
 """
 
 from typing import Tuple
