@@ -1,0 +1,26 @@
+[tool.black]
+line-length = 88
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nanobrag-torch"
+version = "0.1.0"
+description = "PyTorch implementation of nanoBragg diffraction simulator"
+authors = [{name = "nanoBragg Team"}]
+dependencies = [
+    "torch>=2.3",
+    "fabio", 
+    "numpy",
+    "pytest",
+    "matplotlib"
+]

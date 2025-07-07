@@ -1,0 +1,103 @@
+nanoBragg nanocrystal diffraction simulator - James Holton and Ken Frankel 5-17-17
+mosflm convention selected.
+pivoting detector around direct beam spot
+XDS incident beam: 0 0 1
+auto-selected no interpolation
+Unit Cell: 100 100 100 90 90 90
+Recp Cell: 0.01 0.01 0.01 90 90 90
+volume = 1e+06 A^3
+real-space cell vectors (Angstrom):
+     a           b           c         
+X: 100.00000000 -0.00000000  0.00000000
+Y:  0.00000000 100.00000000 -0.00000000
+Z:  0.00000000  0.00000000 100.00000000
+reciprocal-space cell vectors (Angstrom^-1):
+     a_star      b_star      c_star    
+X:  0.01000000 -0.00000000 -0.00000000
+Y:  0.00000000  0.01000000 -0.00000000
+Z:  0.00000000  0.00000000  0.01000000
+crystal is 0.05 x 0.05 x 0.05 microns
+auto-selected 2-fold oversampling
+approximate MW = 722657
+thick0 = 0 um
+phi0 = 0
+phi1 = 0.2
+phi2 = 0.4
+phi3 = 0.6
+phi4 = 0.8
+divergence deviation: 0 0
+lambda0 = 1e-10
+  created a total of 1 sources:
+-10 -0 0   1 1e-10
+  created a total of 1 mosaic domains
+  0 initialized hkls (all others =100)
+  parallelpiped xtal: 5x5x5 cells
+  wave=1e-10 meters +/- 0% in 1 steps
+  Kahn polarization factor: 0.000000
+  incident fluence: 1e+20 photons/m^2
+  distance=0.1 detsize=0.05x0.05  pixel=0.0001 meters (500x500 pixels)
+  sensor is 0 m thick in 1 layers with mu= -1
+  Xbeam=0.02505 Ybeam=0.02505
+  Fbeam=0.0251 Sbeam=0.0251
+  Xclose=0.025 Yclose=0.025
+  Fclose=0.0251 Sclose=0.0251
+  DIRECTION_OF_DETECTOR_X-AXIS= 0 0 1
+  DIRECTION_OF_DETECTOR_Y-AXIS= 0 -1 0
+  DIRECTION_OF_DETECTOR_Z-AXIS= 1 0 0
+  INCIDENT_BEAM_DIRECTION= 1 0 0
+  spindle ROTATION_AXIS= 0 0 1
+  POLARIZATION_PLANE_NORMAL= 0 -1 0
+  dials origin= -25.1 25.1 -100
+  roi: 0 < x < 500 && 0 < y < 500
+  hdivrange=0 hdivstep=0  radians
+  vdivrange=0 vdivstep=0  radians
+  1 divergence steps
+  1 sources
+  1 mosaic domains over mosaic spread of 0 degrees
+  5 phi steps from 0 to 1 degrees
+  2x2 pixel oversample steps
+0% done
+0% done
+1% done
+2% done
+3% done
+4% done
+5% done
+6% done
+7% done
+8% done
+9% done
+14% done
+19% done
+24% done
+29% done
+34% done
+39% done
+44% done
+49% done
+54% done
+59% done
+64% done
+69% done
+74% done
+79% done
+84% done
+89% done
+90% done
+91% done
+92% done
+93% done
+94% done
+95% done
+96% done
+97% done
+98% done
+
+solid angle subtended by detector = 0.0470858 steradian ( 0.374697% sphere)
+writing ../tests/golden_data/with_oscillation.bin as 250000 4-byte floats
+max_I = 1.00411e-07  at 0.039275 0.026175
+mean= 9.40211e-10 rms= 5.03844e-09 rmsd= 4.94994e-09
+intfile_scale = 5.47751e+11
+writing ../tests/golden_data/with_oscillation.img as 2-byte integers
+pgm_scale = 1.01011e+10
+writing image.pgm as 1-byte integers
