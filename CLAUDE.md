@@ -2,6 +2,25 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🛑 Core Implementation Rules (IMPORTANT)
+
+**YOU MUST ADHERE TO THESE RULES TO AVOID COMMON BUGS:**
+
+1.  **Consistent Unit System:** All internal physics calculations **MUST** use a single, consistent unit system. The project standard is **Angstroms (Å)** for length and **electron-volts (eV)** for energy.
+    -   **Action:** Convert all input parameters (e.g., from mm, meters) to this internal system immediately upon ingestion in the configuration or model layers.
+    -   **Verification:** When debugging, the first step is to check the units of all inputs to a calculation.
+
+2.  **Reciprocal Space is Law:** All calculations of Miller indices (`h,k,l`) from a scattering vector `q` **MUST** use the dot product with the **reciprocal lattice vectors** (`a*`, `b*`, `c*`). Using real-space vectors (`a`, `b`, `c`) is physically incorrect.
+    -   **Formula:** `h = dot(q, a_star)`
+
+3.  **Differentiability is Paramount:** The PyTorch computation graph **MUST** remain connected for all differentiable parameters.
+    -   **Action:** Do not manually overwrite derived tensors (like `a_star`). Instead, implement them as differentiable functions or `@property` methods that re-calculate from the base parameters (e.g., `cell_a`).
+    -   **Verification:** Before merging any new feature with differentiable parameters, it **MUST** have a passing `torch.autograd.gradcheck` test.
+
+4.  **Coordinate System & Image Orientation:** This project uses a `(slow, fast)` pixel indexing convention, consistent with `matplotlib.imshow(origin='lower')` and `fabio`.
+    -   **Action:** Ensure all `torch.meshgrid` calls use `indexing="ij"` to produce `(slow, fast)` grids.
+    -   **Verification:** When comparing to external images (like the Golden Suite), always confirm the axis orientation. A 90-degree rotation in the diff image is a classic sign of an axis swap.
+
 ## Repository Overview
 
 This repository contains **nanoBragg**, a C-based diffraction simulator for nanocrystals, along with comprehensive documentation for a planned PyTorch port. The codebase consists of:
@@ -22,8 +41,38 @@ gcc -O3 -o nonBragg nonBragg.c -lm
 gcc -O3 -o noisify noisify.c -lm
 ```
 
-### No Testing Framework
+### Testing & Debugging Framework
+
+**C Code Testing:**
 The repository currently uses manual validation through example runs and visual inspection. No automated test suite exists for the C code.
+
+**PyTorch Port Testing:**
+The PyTorch implementation includes comprehensive debugging and testing tools:
+
+- **Golden Suite Tests**: Numerical equivalence validation against instrumented C code
+- **Single Pixel Trace**: Detailed step-by-step debugging for individual pixels
+- **Gradient Verification**: `torch.autograd.gradcheck` for all differentiable parameters
+
+**🔍 Debugging Workflow:**
+When debugging the PyTorch implementation, **ALWAYS** use the pixel trace debugging script first:
+
+```bash
+# Run single pixel trace debugging
+KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py
+```
+
+This generates a detailed log at `tests/golden_data/simple_cubic_pixel_trace.log` showing:
+- Step-by-step calculation for pixel (250, 350)
+- All intermediate variables (scattering vectors, Miller indices, structure factors)
+- Final intensity calculation with 12-digit precision
+- Complete parameter dump for geometry and crystal setup
+
+**Use this trace to:**
+1. Verify physics calculations are correct
+2. Debug unit conversion issues
+3. Validate coordinate system transformations
+4. Compare against C implementation values
+5. Identify numerical precision problems
 
 ## Core Architecture
 
@@ -53,8 +102,9 @@ The `./torch/` directory contains a complete architectural design for a PyTorch 
 ### Key Design Principles
 - **Vectorization over loops**: Replace nested C loops with broadcasting tensor operations
 - **Object-oriented structure**: `Crystal`, `Detector`, `Simulator` classes
-- **Differentiable parameters**: Enable gradient-based optimization
+- **Differentiable parameters**: Enable gradient-based optimization. **(See Core Implementation Rules above)**
 - **GPU acceleration**: Leverage PyTorch's CUDA backend
+- **Consistent Units**: All internal calculations use Angstroms. **(See Core Implementation Rules above)**
 
 ### Critical Documentation Files
 **Architecture & Design:**

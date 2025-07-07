@@ -88,6 +88,23 @@
 | 3.B | **Verify No Regressions** | `[ ]` | Run the *entire* project test suite to ensure the fix has not introduced any new problems. |
 | 3.C | **Commit and Create PR** | `[ ]` | Commit the fix and the new test. Use `gh pr create` and reference the issue number in the PR description (e.g., "Fixes #{issue_number}"). |
 
+### **SOP-4.1: PyTorch Physics Debugging (Specialized)**
+
+**Goal:** To debug physics calculations in the PyTorch implementation using specialized tools.
+
+| ID | Task Description | State | Details & Guidance |
+| :--- | :--- | :--- | :--- |
+| 1.A | **Run Pixel Trace Debug** | `[ ]` | **ALWAYS START HERE.** Run `KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py` to generate the detailed trace log. |
+| 1.B | **Compare Against Golden Reference** | `[ ]` | Compare the generated trace against `tests/golden_data/simple_cubic_pixel_trace.log`. Look for deviations in intermediate values. |
+| 2.A | **Identify Divergence Point** | `[ ]` | Identify the first calculation step where values diverge from expected. This pinpoints the buggy component. |
+| 2.B | **Validate Component in Isolation** | `[ ]` | Create a minimal test case for the suspected component using the exact inputs from the trace log. |
+| 3.A | **Check Unit System** | `[ ]` | Verify all inputs are in the correct units (Angstroms for length, eV for energy). This is the most common source of bugs. |
+| 3.B | **Check Coordinate System** | `[ ]` | Verify `torch.meshgrid` calls use `indexing="ij"` and that all vectors follow the `(slow, fast)` convention. |
+| 3.C | **Check Differentiability** | `[ ]` | If the bug affects gradients, run `torch.autograd.gradcheck` on the suspected component. |
+| 4.A | **Implement Fix** | `[ ]` | Apply the fix to the identified component. |
+| 4.B | **Re-run Pixel Trace** | `[ ]` | Run the pixel trace again and confirm all values now match the golden reference. |
+| 4.C | **Verify Full Test Suite** | `[ ]` | Run the complete test suite to ensure no regressions. |
+
 ---
 
 ### **SOP-5: Documentation Update**
