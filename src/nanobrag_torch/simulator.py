@@ -55,11 +55,53 @@ class Simulator:
         """
         Run the diffraction simulation.
 
+        This method vectorizes the simulation over all detector pixels.
+        The current implementation assumes a single, perfect source (no beam
+        divergence or dispersion). Future implementations will add a "source"
+        dimension to the tensors to vectorize these effects as well.
+
+        C-Code Implementation Reference (from nanoBragg.c, lines 2993-3151):
+        The future implementation will vectorize the following loop over sources,
+        which currently contains the full inner physics calculation.
+
+        ```c
+                        /* loop over sources now */
+                        for(source=0;source<sources;++source){
+
+                            /* retrieve stuff from cache */
+                            incident[1] = -source_X[source];
+                            incident[2] = -source_Y[source];
+                            incident[3] = -source_Z[source];
+                            lambda = source_lambda[source];
+
+                            // ... scattering vector calculation ...
+
+                            /* sweep over phi angles */
+                            for(phi_tic = 0; phi_tic < phisteps; ++phi_tic)
+                            {
+                                // ... crystal rotation ...
+
+                                /* enumerate mosaic domains */
+                                for(mos_tic=0;mos_tic<mosaic_domains;++mos_tic)
+                                {
+                                    // ... mosaic rotation ...
+                                    // ... h,k,l calculation ...
+                                    // ... F_cell and F_latt calculation ...
+
+                                    /* convert amplitudes into intensity (photons per steradian) */
+                                    I += F_cell*F_cell*F_latt*F_latt;
+
+                                }
+                            }
+                        }
+        ```
+
         Args:
-            pixel_batch_size: Optional batching for memory management
+            pixel_batch_size: Optional batching for memory management.
+            override_a_star: Optional override for the a_star vector for testing.
 
         Returns:
-            torch.Tensor: Final diffraction image
+            torch.Tensor: Final diffraction image.
         """
         # Get pixel coordinates (spixels, fpixels, 3) in Angstroms
         pixel_coords_angstroms = self.detector.get_pixel_coords()

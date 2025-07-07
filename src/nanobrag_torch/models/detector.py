@@ -121,9 +121,52 @@ class Detector:
     def _calculate_basis_vectors(
         self,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Calculate detector basis vectors from configuration."""
-        # TODO: Implement detector geometry calculations
-        # TODO: Handle detector rotations and orientations
+        """
+        Calculate detector basis vectors from configuration.
+
+        This method will dynamically compute the detector's fast, slow, and
+        normal basis vectors based on user-provided configuration, such as
+        detector rotations (`-detector_rot*`) and the two-theta angle.
+
+        C-Code Implementation Reference (from nanoBragg.c, lines 1319-1412):
+        The C code performs these calculations in a large block within main()
+        after parsing arguments. The key operations to replicate are:
+
+        ```c
+            /* initialize detector origin from a beam center and distance */
+            /* there are two conventions here: mosflm and XDS */
+            // ... logic to handle different conventions ...
+
+            if(detector_pivot == SAMPLE){
+                printf("pivoting detector around sample\n");
+                /* initialize detector origin before rotating detector */
+                pix0_vector[1] = -Fclose*fdet_vector[1]-Sclose*sdet_vector[1]+close_distance*odet_vector[1];
+                pix0_vector[2] = -Fclose*fdet_vector[2]-Sclose*sdet_vector[2]+close_distance*odet_vector[2];
+                pix0_vector[3] = -Fclose*fdet_vector[3]-Sclose*sdet_vector[3]+close_distance*odet_vector[3];
+
+                /* now swing the detector origin around */
+                rotate(pix0_vector,pix0_vector,detector_rotx,detector_roty,detector_rotz);
+                rotate_axis(pix0_vector,pix0_vector,twotheta_axis,detector_twotheta);
+            }
+            /* now orient the detector plane */
+            rotate(fdet_vector,fdet_vector,detector_rotx,detector_roty,detector_rotz);
+            rotate(sdet_vector,sdet_vector,detector_rotx,detector_roty,detector_rotz);
+            rotate(odet_vector,odet_vector,detector_rotx,detector_roty,detector_rotz);
+
+            /* also apply orientation part of twotheta swing */
+            rotate_axis(fdet_vector,fdet_vector,twotheta_axis,detector_twotheta);
+            rotate_axis(sdet_vector,sdet_vector,twotheta_axis,detector_twotheta);
+            rotate_axis(odet_vector,odet_vector,twotheta_axis,detector_twotheta);
+
+            /* make sure beam center is preserved */
+            if(detector_pivot == BEAM){
+                printf("pivoting detector around direct beam spot\n");
+                pix0_vector[1] = -Fbeam*fdet_vector[1]-Sbeam*sdet_vector[1]+distance*beam_vector[1];
+                pix0_vector[2] = -Fbeam*fdet_vector[2]-Sbeam*sdet_vector[2]+distance*beam_vector[2];
+                pix0_vector[3] = -Fbeam*fdet_vector[3]-Sbeam*sdet_vector[3]+distance*beam_vector[3];
+            }
+        ```
+        """
         raise NotImplementedError(
             "Basis vector calculation to be implemented in Phase 2"
         )

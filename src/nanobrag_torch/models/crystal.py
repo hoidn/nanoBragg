@@ -131,8 +131,88 @@ class Crystal:
     def get_structure_factor(
         self, h: torch.Tensor, k: torch.Tensor, l: torch.Tensor
     ) -> torch.Tensor:
-        """Look up structure factor for given h,k,l indices."""
-        # For the simple_cubic test case with -default_F 100, 
+        """
+        Look up or interpolate the structure factor for given h,k,l indices.
+
+        This method will replace the milestone1 placeholder. It must handle both
+        nearest-neighbor lookup and differentiable tricubic interpolation,
+        as determined by a configuration flag, to match the C-code's
+        `interpolate` variable.
+
+        C-Code Implementation Reference (from nanoBragg.c, lines 3101-3139):
+
+        ```c
+                                    /* structure factor of the unit cell */
+                                    if(interpolate){
+                                        h0_flr = floor(h);
+                                        k0_flr = floor(k);
+                                        l0_flr = floor(l);
+
+
+                                        if ( ((h-h_min+3)>h_range) ||
+                                             (h-2<h_min)           ||
+                                             ((k-k_min+3)>k_range) ||
+                                             (k-2<k_min)           ||
+                                             ((l-l_min+3)>l_range) ||
+                                             (l-2<l_min)  ) {
+                                            if(babble){
+                                                babble=0;
+                                                printf ("WARNING: out of range for three point interpolation: h,k,l,h0,k0,l0: %g,%g,%g,%d,%d,%d \n", h,k,l,h0,k0,l0);
+                                                printf("WARNING: further warnings will not be printed! ");
+                                            }
+                                            F_cell = default_F;
+                                            interpolate=0;
+                                        }
+                                    }
+
+                                    /* only interpolate if it is safe */
+                                    if(interpolate){
+                                        /* integer versions of nearest HKL indicies */
+                                        h_interp[0]=h0_flr-1;
+                                        h_interp[1]=h0_flr;
+                                        h_interp[2]=h0_flr+1;
+                                        h_interp[3]=h0_flr+2;
+                                        k_interp[0]=k0_flr-1;
+                                        k_interp[1]=k0_flr;
+                                        k_interp[2]=k0_flr+1;
+                                        k_interp[3]=k0_flr+2;
+                                        l_interp[0]=l0_flr-1;
+                                        l_interp[1]=l0_flr;
+                                        l_interp[2]=l0_flr+1;
+                                        l_interp[3]=l0_flr+2;
+
+                                        /* polin function needs doubles */
+                                        h_interp_d[0] = (double) h_interp[0];
+                                        // ... (rest of h_interp_d, k_interp_d, l_interp_d) ...
+
+                                        /* now populate the "y" values (nearest four structure factors in each direction) */
+                                        for (i1=0;i1<4;i1++) {
+                                            for (i2=0;i2<4;i2++) {
+                                               for (i3=0;i3<4;i3++) {
+                                                      sub_Fhkl[i1][i2][i3]= Fhkl[h_interp[i1]-h_min][k_interp[i2]-k_min][l_interp[i3]-l_min];
+                                               }
+                                            }
+                                         }
+
+
+                                        /* run the tricubic polynomial interpolation */
+                                        polin3(h_interp_d,k_interp_d,l_interp_d,sub_Fhkl,h,k,l,&F_cell);
+                                    }
+
+                                    if(! interpolate)
+                                    {
+                                        if ( hkls && (h0<=h_max) && (h0>=h_min) && (k0<=k_max) && (k0>=k_min) && (l0<=l_max) && (l0>=l_min)  ) {
+                                            /* just take nearest-neighbor */
+                                            F_cell = Fhkl[h0-h_min][k0-k_min][l0-l_min];
+                                        }
+                                        else
+                                        {
+                                            F_cell = default_F;  // usually zero
+                                        }
+                                    }
+        ```
+        """
+        # For the simple_cubic test case with -default_F 100,
         # all reflections have F=100 regardless of indices
         # This matches the C code behavior with the -default_F flag
         return torch.full_like(h, 100.0, device=self.device, dtype=self.dtype)
@@ -160,12 +240,63 @@ class Crystal:
         """
         Get reciprocal lattice vectors after phi and mosaic rotations.
 
+        This method will apply the spindle rotation (phi) and the mosaic
+        domain rotations to the crystal's base reciprocal vectors. The
+        order of operations must match the C code: spindle rotation is
+        applied first, followed by the mosaic rotation. This also includes
+        the initial static orientation (`-misset`).
+
+        C-Code Implementation Reference (from nanoBragg.c):
+        
+        Initial Orientation (`-misset`), applied once (lines 1521-1527):
+        ```c
+        /* apply any missetting angle, if not already done */
+        if(misset[0] > 0.0)
+        {
+            rotate(a_star,a_star,misset[1],misset[2],misset[3]);
+            rotate(b_star,b_star,misset[1],misset[2],misset[3]);
+            rotate(c_star,c_star,misset[1],misset[2],misset[3]);
+        }
+        ```
+        
+        Spindle and Mosaic Rotations, inside the simulation loop (lines 3004-3019):
+        ```c
+                                    /* sweep over phi angles */
+                                    for(phi_tic = 0; phi_tic < phisteps; ++phi_tic)
+                                    {
+                                        phi = phi0 + phistep*phi_tic;
+
+                                        if( phi != 0.0 )
+                                        {
+                                            /* rotate about spindle if neccesary */
+                                            rotate_axis(a0,ap,spindle_vector,phi);
+                                            rotate_axis(b0,bp,spindle_vector,phi);
+                                            rotate_axis(c0,cp,spindle_vector,phi);
+                                        }
+
+                                        /* enumerate mosaic domains */
+                                        for(mos_tic=0;mos_tic<mosaic_domains;++mos_tic)
+                                        {
+                                            /* apply mosaic rotation after phi rotation */
+                                            if( mosaic_spread > 0.0 )
+                                            {
+                                                rotate_umat(ap,a,&mosaic_umats[mos_tic*9]);
+                                                rotate_umat(bp,b,&mosaic_umats[mos_tic*9]);
+                                                rotate_umat(cp,c,&mosaic_umats[mos_tic*9]);
+                                            }
+                                            else
+                                            {
+                                                a[1]=ap[1];a[2]=ap[2];a[3]=ap[3];
+                                                b[1]=bp[1];b[2]=bp[2];b[3]=bp[3];
+                                                c[1]=cp[1];c[2]=cp[2];c[3]=cp[3];
+                                            }
+        ```
+
         Args:
-            phi: Spindle rotation angles
-            mosaic_umats: Mosaic domain rotation matrices
+            phi: Spindle rotation angles.
+            mosaic_umats: Mosaic domain rotation matrices.
 
         Returns:
-            Tuple of rotated a_star, b_star, c_star vectors
+            Tuple of rotated a_star, b_star, c_star vectors.
         """
-        # TODO: Implement rotation logic using utils/geometry.py functions
         raise NotImplementedError("Vector rotation to be implemented in Phase 2")
