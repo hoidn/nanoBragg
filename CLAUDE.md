@@ -35,7 +35,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     -   **Correct:** Use mathematical formulations like `torch.linspace()` with computed endpoints that handle all cases in a single, unified operation.
     -   **Verification:** All differentiable parameters must have passing `torch.autograd.gradcheck` tests. Conditional logic should only be used for non-differentiable control flow.
 
-8.  **Never Use `.item()` on Differentiable Tensors:** The `.item()` method **MUST NOT** be used on any tensor that needs to remain differentiable.
+8.  **Preserve C-Code References Until Feature-Complete:** C-code quotes in docstrings serve as a roadmap for unimplemented features. They **MUST NOT** be removed until the corresponding feature is fully implemented, tested, and validated.
+    -   **Action:** When implementing a feature described by a C-code quote, leave the quote in place. Once the feature is complete and all its tests (including integration and gradient tests) are passing, the quote may be updated or removed if it no longer adds value beyond the implemented code.
+    -   **Example:** A docstring for an unimplemented function should retain its C-code reference. A docstring for a partially implemented function (e.g., `phi` rotation is done but `misset` is not) should retain the C-code reference for the unimplemented part, clearly marked as "Future Work".
+    -   **Verification:** Before removing any C-code reference, confirm that the functionality it describes is covered by a passing test in the test suite.
+
+9.  **Never Use `.item()` on Differentiable Tensors:** The `.item()` method **MUST NOT** be used on any tensor that needs to remain differentiable.
     -   **Action:** Pass tensors directly to configuration objects and functions instead of extracting scalar values.
     -   **Forbidden:** `config = Config(param=tensor.item())` - This permanently severs the computation graph.
     -   **Correct:** `config = Config(param=tensor)` - Preserves gradient flow.
