@@ -86,10 +86,10 @@ When comparing traces, pay close attention to:
 2. **Trace Through Computation:** Check `requires_grad` at each step
 3. **Identify Break Point:** Find where `requires_grad` becomes `False`
 4. **Common Causes:**
-   - `.item()` calls on differentiable tensors
-   - `torch.linspace` with tensor endpoints
-   - `isinstance` checks that separate tensor/scalar paths
+   - `.item()` calls on differentiable tensors (detaches from graph)
+   - `torch.linspace` with tensor endpoints (known PyTorch limitation)
    - Manual tensor overwriting instead of functional computation
+   - Using `.detach()` or `.numpy()` on tensors requiring gradients
 
 **Example Debug Pattern:**
 ```python

@@ -126,10 +126,10 @@ All debugging of physics discrepancies **must** begin with a parallel trace comp
   2. **Tracing:** Check `requires_grad` at each computation step
   3. **Break Point Identification:** Find where gradients are lost
   4. **Common Causes:**
-     - `.item()` calls on differentiable tensors
-     - `torch.linspace` with tensor endpoints
-     - `isinstance` checks creating separate execution paths
+     - `.item()` calls on differentiable tensors (detaches from computation graph)
+     - `torch.linspace` with tensor endpoints (known PyTorch limitation)
      - Manual tensor overwriting instead of functional computation
+     - Using `.detach()` or `.numpy()` on tensors that need gradients
 
 ## 5. Tier 3: Scientific Validation Testing
 

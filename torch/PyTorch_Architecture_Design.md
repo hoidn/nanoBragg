@@ -174,27 +174,35 @@ crystal_config = CrystalConfig(
 )
 ```
 
-**Forbidden Anti-Patterns:**
+**True Anti-Patterns (Gradient-Breaking):**
 ```python
-# ❌ FORBIDDEN: isinstance checks in core methods
-def get_rotated_real_vectors(self, config):
-    if isinstance(config.phi_start_deg, torch.Tensor):
-        phi_angles = config.phi_start_deg + config.osc_range_deg / 2.0
-    else:
-        phi_angles = torch.tensor(config.phi_start_deg + config.osc_range_deg / 2.0)
-
 # ❌ FORBIDDEN: .item() calls breaking computation graph
 config = CrystalConfig(phi_start_deg=phi_tensor.item())
 
 # ❌ FORBIDDEN: torch.linspace with gradient-critical endpoints
 phi_angles = torch.linspace(config.phi_start_deg, config.phi_end_deg, steps)
+
+# ❌ FORBIDDEN: .detach() or .numpy() on gradient-requiring tensors
+phi_detached = phi_tensor.detach()
+phi_numpy = phi_tensor.numpy()
+```
+
+**Flexible Type Handling (Recommended):**
+```python
+# ✓ RECOMMENDED: isinstance checks for robust APIs
+def get_rotated_real_vectors(self, config):
+    if isinstance(config.phi_start_deg, torch.Tensor):
+        phi_angles = config.phi_start_deg + config.osc_range_deg / 2.0
+    else:
+        phi_angles = torch.tensor(config.phi_start_deg + config.osc_range_deg / 2.0,
+                                 device=self.device, dtype=self.dtype)
 ```
 
 **Benefits:**
-- **Gradient Safety:** Eliminates silent gradient breaks
-- **Clear Boundaries:** Type handling is explicit and localized
-- **Maintainability:** Core logic is not cluttered with type checking
-- **Debugging:** Gradient issues are easier to trace and fix
+- **Gradient Safety:** Focuses on actual gradient-breaking operations
+- **API Flexibility:** Handles both tensor and scalar inputs gracefully
+- **Clear Interface:** Type checking makes function behavior explicit
+- **Maintainability:** Robust error handling and type conversion
 
 ## 6. Data I/O
 

@@ -30,10 +30,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     -   **Verification:** All Python scripts and tests that import torch must include this environment variable setting.
 
 7.  **Differentiable Programming Principles:** All PyTorch code **MUST** maintain computational graph connectivity for gradient flow.
-    -   **Action:** Replace conditional logic with mathematical equivalents. Use tensor operations instead of Python `if/else` statements when the condition affects tensor computations.
-    -   **Forbidden:** `if some_config_value == 1: tensor_a = ... else: tensor_b = ...` - This breaks the computational graph into separate paths.
-    -   **Correct:** Use mathematical formulations like `torch.linspace()` with computed endpoints that handle all cases in a single, unified operation.
-    -   **Verification:** All differentiable parameters must have passing `torch.autograd.gradcheck` tests. Conditional logic should only be used for non-differentiable control flow.
+    -   **Action:** Avoid functions that explicitly detach tensors from the computation graph within a differentiable code path.
+    -   **Forbidden:** Using `.item()`, `.numpy()`, or `.detach()` on a tensor that requires a gradient, as this will sever the gradient path.
+    -   **Correct:** Pass tensors directly through the computation pipeline. Use Python-level control flow (like `isinstance`) to handle different input types gracefully, but ensure the core operations are performed on tensors.
+    -   **Known Limitation:** Be aware that some PyTorch functions, like `torch.linspace`, do not propagate gradients to their `start` and `end` arguments. In such cases, a manual, differentiable implementation using basic tensor operations (e.g., `torch.arange`) is required.
+    -   **Verification:** All differentiable parameters must have passing `torch.autograd.gradcheck` tests.
 
 8.  **Preserve C-Code References Until Feature-Complete:** C-code quotes in docstrings serve as a roadmap for unimplemented features. They **MUST NOT** be removed until the corresponding feature is fully implemented, tested, and validated.
     -   **Action:** When implementing a feature described by a C-code quote, leave the quote in place. Once the feature is complete and all its tests (including integration and gradient tests) are passing, the quote may be updated or removed if it no longer adds value beyond the implemented code.
