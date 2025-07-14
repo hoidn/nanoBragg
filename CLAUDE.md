@@ -60,7 +60,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Golden Test Case Specification (`simple_cubic`)
 
-To reproduce the primary golden reference (`tests/golden_data/simple_cubic.bin`), the following parameters from the C-code simulation MUST be used. These are the ground truth for the baseline validation milestone.
+**The exact `nanoBragg.c` commands used to generate all golden reference data are centrally documented in `tests/golden_data/README.md`. That file is the single source of truth for reproducing the test suite.**
+
+The following parameters for the `simple_cubic` case are provided for quick reference and context. These are the ground truth for the baseline validation milestone.
 
 * **Detector Size:** `1024 x 1024` pixels
 * **Pixel Size:** `0.1` mm
