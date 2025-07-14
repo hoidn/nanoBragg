@@ -35,6 +35,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     -   **Correct:** Use mathematical formulations like `torch.linspace()` with computed endpoints that handle all cases in a single, unified operation.
     -   **Verification:** All differentiable parameters must have passing `torch.autograd.gradcheck` tests. Conditional logic should only be used for non-differentiable control flow.
 
+8.  **Never Use `.item()` on Differentiable Tensors:** The `.item()` method **MUST NOT** be used on any tensor that needs to remain differentiable.
+    -   **Action:** Pass tensors directly to configuration objects and functions instead of extracting scalar values.
+    -   **Forbidden:** `config = Config(param=tensor.item())` - This permanently severs the computation graph.
+    -   **Correct:** `config = Config(param=tensor)` - Preserves gradient flow.
+    -   **Verification:** Any use of `.item()` must be followed by verification that the tensor is not needed for gradient computation.
+
+9.  **Avoid `torch.linspace` for Gradient-Critical Code:** `torch.linspace` does not preserve gradients from tensor endpoints.
+    -   **Action:** Use manual tensor arithmetic for differentiable range generation: `start + step_size * torch.arange(...)`.
+    -   **Forbidden:** `torch.linspace(start_tensor, end_tensor, steps)` where `start_tensor` or `end_tensor` require gradients.
+    -   **Correct:** `start_tensor + (end_tensor - start_tensor) * torch.arange(steps) / (steps - 1)`.
+    -   **Verification:** Check that generated ranges preserve `requires_grad=True` when input tensors require gradients.
+
+10. **Boundary Enforcement for Type Safety:** Use clean architectural boundaries to handle tensor/scalar conversions.
+    -   **Action:** Core methods assume tensor inputs; type conversions happen at call sites.
+    -   **Forbidden:** `isinstance(param, torch.Tensor)` checks inside core computational methods.
+    -   **Correct:** `config = Config(param=torch.tensor(value))` at boundaries, `def core_method(tensor_param)` in implementation.
+    -   **Verification:** Core methods should not contain type checking logic; all parameters should be tensors with consistent device/dtype.
+
 ## Golden Test Case Specification (`simple_cubic`)
 
 To reproduce the primary golden reference (`tests/golden_data/simple_cubic.bin`), the following parameters from the C-code simulation MUST be used. These are the ground truth for the baseline validation milestone.

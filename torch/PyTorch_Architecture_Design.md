@@ -151,6 +151,51 @@ The physical model requires complex arithmetic for structure factors and their p
 *   **Gradient Flow:** The architecture ensures a continuous computational graph from these input parameters to the final scalar loss value. For example, the `Crystal` class methods will be fully differentiable, allowing gradients to flow back from `h,k,l` to the underlying cell and orientation parameters.
 *   **Optimizer:** The `main.py` script will be responsible for creating a standard PyTorch optimizer (e.g., `torch.optim.Adam`) that takes the list of learnable parameters and updates them based on their `.grad` attribute after `loss.backward()` is called.
 
+### 5.1 Boundary Enforcement Pattern for Differentiability
+
+**Critical Design Pattern:** To maintain gradient flow while preserving clean architecture, the system uses a **boundary enforcement pattern**:
+
+*   **Core Methods:** Assume all inputs are tensors with appropriate `device` and `dtype`
+*   **Call Sites:** Handle type conversions and tensor creation explicitly
+*   **No Mixed Types:** Avoid `isinstance` checks in computational methods
+
+**Example Implementation:**
+```python
+# ✓ CORRECT: Core method assumes tensor input
+def get_rotated_real_vectors(self, config: CrystalConfig):
+    # Assume config.phi_start_deg is already a tensor
+    phi_angles = config.phi_start_deg + config.osc_range_deg / 2.0
+    return rotated_vectors
+
+# ✓ CORRECT: Call site handles conversion
+crystal_config = CrystalConfig(
+    phi_start_deg=torch.tensor(0.0, device=device, dtype=dtype),
+    mosaic_spread_deg=torch.tensor(0.0, device=device, dtype=dtype)
+)
+```
+
+**Forbidden Anti-Patterns:**
+```python
+# ❌ FORBIDDEN: isinstance checks in core methods
+def get_rotated_real_vectors(self, config):
+    if isinstance(config.phi_start_deg, torch.Tensor):
+        phi_angles = config.phi_start_deg + config.osc_range_deg / 2.0
+    else:
+        phi_angles = torch.tensor(config.phi_start_deg + config.osc_range_deg / 2.0)
+
+# ❌ FORBIDDEN: .item() calls breaking computation graph
+config = CrystalConfig(phi_start_deg=phi_tensor.item())
+
+# ❌ FORBIDDEN: torch.linspace with gradient-critical endpoints
+phi_angles = torch.linspace(config.phi_start_deg, config.phi_end_deg, steps)
+```
+
+**Benefits:**
+- **Gradient Safety:** Eliminates silent gradient breaks
+- **Clear Boundaries:** Type handling is explicit and localized
+- **Maintainability:** Core logic is not cluttered with type checking
+- **Debugging:** Gradient issues are easier to trace and fix
+
 ## 6. Data I/O
 
 *   **Input:**

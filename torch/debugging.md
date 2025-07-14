@@ -75,7 +75,41 @@ When comparing traces, pay close attention to:
 
 **Symptoms:** `torch.autograd.gradcheck` failures, "modified in-place" errors  
 **First step:** Verify computation graph connectivity in trace  
-**Common causes:** Manual tensor reassignment, detached operations  
+**Common causes:** Manual tensor reassignment, detached operations
+
+### Gradient Flow Debugging
+
+**Symptoms:** `RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn`  
+**Methodology:** Use systematic isolation to find computation graph breaks:
+
+1. **Isolate the Problem:** Create minimal test case with `requires_grad=True` input
+2. **Trace Through Computation:** Check `requires_grad` at each step
+3. **Identify Break Point:** Find where `requires_grad` becomes `False`
+4. **Common Causes:**
+   - `.item()` calls on differentiable tensors
+   - `torch.linspace` with tensor endpoints
+   - `isinstance` checks that separate tensor/scalar paths
+   - Manual tensor overwriting instead of functional computation
+
+**Example Debug Pattern:**
+```python
+# Step 1: Isolate
+phi_start = torch.tensor(10.0, requires_grad=True)
+print(f"phi_start requires_grad: {phi_start.requires_grad}")
+
+# Step 2: Trace
+config = CrystalConfig(phi_start_deg=phi_start)
+print(f"config.phi_start_deg requires_grad: {config.phi_start_deg.requires_grad}")
+
+# Step 3: Identify break
+if isinstance(config.phi_start_deg, float):
+    print("ERROR: Gradient lost - tensor converted to float")
+```
+
+**Solutions:**
+- Replace `.item()` with direct tensor passing
+- Use manual tensor arithmetic instead of `torch.linspace`
+- Enforce tensor inputs at architectural boundaries  
 
 ### Coordinate System Issues
 

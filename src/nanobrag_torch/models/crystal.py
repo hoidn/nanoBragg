@@ -274,16 +274,30 @@ class Crystal:
         self, config: "CrystalConfig"
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
-        Get real-space lattice vectors after phi and mosaic rotations.
+        Get real-space lattice vectors after applying all rotations.
 
-        This method applies the spindle rotation (phi) and the mosaic
-        domain rotations to the crystal's base real-space vectors. The
-        order of operations matches the C code: spindle rotation is
-        applied first, followed by the mosaic rotation.
+        This method applies rotations in the correct physical sequence:
+        1. Static missetting rotation (Future Work)
+        2. Dynamic spindle (phi) rotation
+        3. Mosaic domain rotations
 
         C-Code Implementation Reference (from nanoBragg.c):
 
-        Spindle and Mosaic Rotations, inside the simulation loop (lines 3004-3019):
+        ---
+        FUTURE WORK: Initial Orientation (`-misset`), applied once (lines 1521-1527):
+        This rotation should be applied first, before the phi and mosaic rotations.
+        ```c
+        /* apply any missetting angle, if not already done */
+        if(misset[0] > 0.0)
+        {
+            rotate(a_star,a_star,misset[1],misset[2],misset[3]);
+            rotate(b_star,b_star,misset[1],misset[2],misset[3]);
+            rotate(c_star,c_star,misset[1],misset[2],misset[3]);
+        }
+        ```
+        ---
+
+        IMPLEMENTED: Spindle and Mosaic Rotations, inside the simulation loop (lines 3004-3019):
         ```c
                                     /* sweep over phi angles */
                                     for(phi_tic = 0; phi_tic < phisteps; ++phi_tic)

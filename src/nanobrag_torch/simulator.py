@@ -71,26 +71,35 @@ class Simulator:
         and mosaic domains. It integrates contributions from all crystal orientations
         to produce the final diffraction pattern.
 
-        The implementation follows the C-code structure but uses vectorized operations:
-        - Calculates scattering vectors for all pixels
-        - Gets rotated lattice vectors for all phi/mosaic orientations  
-        - Computes Miller indices for all pixel-orientation combinations
-        - Sums intensity contributions across all orientations
-
         C-Code Implementation Reference (from nanoBragg.c, lines 2993-3151):
-        The vectorized implementation replaces these nested loops:
+        The vectorized implementation replaces these nested loops. The outer `source`
+        loop is future work for handling beam divergence and dispersion.
 
         ```c
                         /* loop over sources now */
                         for(source=0;source<sources;++source){
+
+                            /* retrieve stuff from cache */
+                            incident[1] = -source_X[source];
+                            incident[2] = -source_Y[source];
+                            incident[3] = -source_Z[source];
+                            lambda = source_lambda[source];
+
+                            /* ... scattering vector calculation ... */
+
                             /* sweep over phi angles */
                             for(phi_tic = 0; phi_tic < phisteps; ++phi_tic)
                             {
+                                /* ... crystal rotation ... */
+
                                 /* enumerate mosaic domains */
                                 for(mos_tic=0;mos_tic<mosaic_domains;++mos_tic)
                                 {
-                                    // ... h,k,l calculation with rotated vectors ...
-                                    /* convert amplitudes into intensity */
+                                    /* ... mosaic rotation ... */
+                                    /* ... h,k,l calculation ... */
+                                    /* ... F_cell and F_latt calculation ... */
+
+                                    /* convert amplitudes into intensity (photons per steradian) */
                                     I += F_cell*F_cell*F_latt*F_latt;
                                 }
                             }

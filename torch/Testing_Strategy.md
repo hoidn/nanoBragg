@@ -83,6 +83,54 @@ All debugging of physics discrepancies **must** begin with a parallel trace comp
     *   **Beam:** `lambda_A`
     *   **Model:** `mosaic_spread_rad`, `fluence`
 
+### 4.2 Multi-Tier Gradient Testing
+
+**Comprehensive gradient testing requires multiple levels of verification:**
+
+#### 4.2.1 Unit-Level Gradient Tests
+- **Target:** Individual components like `get_rotated_real_vectors`
+- **Purpose:** Verify gradients flow correctly through isolated functions
+- **Example:**
+  ```python
+  def test_rotation_gradients():
+      phi_start = torch.tensor(10.0, requires_grad=True, dtype=torch.float64)
+      config = CrystalConfig(phi_start_deg=phi_start)
+      rotated_vectors = crystal.get_rotated_real_vectors(config)
+      assert rotated_vectors[0].requires_grad
+      assert torch.autograd.gradcheck(lambda x: crystal.get_rotated_real_vectors(
+          CrystalConfig(phi_start_deg=x))[0].sum(), phi_start)
+  ```
+
+#### 4.2.2 Integration-Level Gradient Tests
+- **Target:** End-to-end `Simulator.run()` method
+- **Purpose:** Verify gradients flow through complete simulation chain
+- **Critical:** All configuration parameters must be tensors to preserve gradient flow
+
+#### 4.2.3 Gradient Stability Tests
+- **Target:** Parameter ranges and edge cases
+- **Purpose:** Verify gradients remain stable across realistic parameter variations
+- **Example:**
+  ```python
+  def test_gradient_stability():
+      for phi_val in [0.0, 45.0, 90.0, 180.0]:
+          phi_start = torch.tensor(phi_val, requires_grad=True, dtype=torch.float64)
+          config = CrystalConfig(phi_start_deg=phi_start)
+          result = simulator.run_with_config(config)
+          assert result.requires_grad
+  ```
+
+#### 4.2.4 Gradient Flow Debugging
+- **Purpose:** Systematic approach to diagnose gradient breaks
+- **Methodology:**
+  1. **Isolation:** Create minimal test case with `requires_grad=True`
+  2. **Tracing:** Check `requires_grad` at each computation step
+  3. **Break Point Identification:** Find where gradients are lost
+  4. **Common Causes:**
+     - `.item()` calls on differentiable tensors
+     - `torch.linspace` with tensor endpoints
+     - `isinstance` checks creating separate execution paths
+     - Manual tensor overwriting instead of functional computation
+
 ## 5. Tier 3: Scientific Validation Testing
 
 **Goal:** To validate the model against objective physical principles, independent of the original C code.
