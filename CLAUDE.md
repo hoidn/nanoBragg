@@ -24,6 +24,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     -   **Action:** Generate a step-by-step log from the instrumented C code and an identical log from the PyTorch script (`scripts/debug_pixel_trace.py`). Compare these two files to find the first line where they numerically diverge. This is the bug.
     -   **Reference:** See `torch/Testing_Strategy.md` for the strategy and `torch/debugging.md` for the detailed workflow.
 
+6.  **PyTorch Environment Variable:** All PyTorch code execution **MUST** set the environment variable `KMP_DUPLICATE_LIB_OK=TRUE` to prevent MKL library conflicts.
+    -   **Action:** Either set `os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'` in Python before importing torch, or prefix command-line calls with `KMP_DUPLICATE_LIB_OK=TRUE`.
+    -   **Reason:** Prevents "Error #15: Initializing libiomp5.dylib, but found libiomp5.dylib already initialized" crashes when multiple libraries (PyTorch, NumPy) load MKL runtime.
+    -   **Verification:** All Python scripts and tests that import torch must include this environment variable setting.
+
+7.  **Differentiable Programming Principles:** All PyTorch code **MUST** maintain computational graph connectivity for gradient flow.
+    -   **Action:** Replace conditional logic with mathematical equivalents. Use tensor operations instead of Python `if/else` statements when the condition affects tensor computations.
+    -   **Forbidden:** `if some_config_value == 1: tensor_a = ... else: tensor_b = ...` - This breaks the computational graph into separate paths.
+    -   **Correct:** Use mathematical formulations like `torch.linspace()` with computed endpoints that handle all cases in a single, unified operation.
+    -   **Verification:** All differentiable parameters must have passing `torch.autograd.gradcheck` tests. Conditional logic should only be used for non-differentiable control flow.
+
 ## Golden Test Case Specification (`simple_cubic`)
 
 To reproduce the primary golden reference (`tests/golden_data/simple_cubic.bin`), the following parameters from the C-code simulation MUST be used. These are the ground truth for the baseline validation milestone.

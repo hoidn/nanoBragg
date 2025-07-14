@@ -9,7 +9,7 @@ from typing import Optional
 
 import torch
 
-from .config import BeamConfig
+from .config import BeamConfig, CrystalConfig
 from .models.crystal import Crystal
 from .models.detector import Detector
 from .utils.geometry import dot_product
@@ -28,13 +28,25 @@ class Simulator:
         self,
         crystal: Crystal,
         detector: Detector,
+        crystal_config: CrystalConfig = None,
         beam_config: BeamConfig = None,
         device=None,
         dtype=torch.float64,
     ):
-        """Initialize simulator with crystal, detector, and beam configuration."""
+        """
+        Initialize simulator with crystal, detector, and configurations.
+        
+        Args:
+            crystal: Crystal object containing unit cell and structure factors
+            detector: Detector object with geometry parameters
+            crystal_config: Configuration for crystal rotation parameters (phi, mosaic)
+            beam_config: Beam configuration (optional, for future use)
+            device: PyTorch device (cpu/cuda)
+            dtype: PyTorch data type
+        """
         self.crystal = crystal
         self.detector = detector
+        self.crystal_config = crystal_config if crystal_config is not None else CrystalConfig()
         self.device = device if device is not None else torch.device("cpu")
         self.dtype = dtype
 
@@ -53,44 +65,33 @@ class Simulator:
 
     def run(self, pixel_batch_size: Optional[int] = None, override_a_star: Optional[torch.Tensor] = None) -> torch.Tensor:
         """
-        Run the diffraction simulation.
+        Run the diffraction simulation with crystal rotation and mosaicity.
 
-        This method vectorizes the simulation over all detector pixels.
-        The current implementation assumes a single, perfect source (no beam
-        divergence or dispersion). Future implementations will add a "source"
-        dimension to the tensors to vectorize these effects as well.
+        This method vectorizes the simulation over all detector pixels, phi angles,
+        and mosaic domains. It integrates contributions from all crystal orientations
+        to produce the final diffraction pattern.
+
+        The implementation follows the C-code structure but uses vectorized operations:
+        - Calculates scattering vectors for all pixels
+        - Gets rotated lattice vectors for all phi/mosaic orientations  
+        - Computes Miller indices for all pixel-orientation combinations
+        - Sums intensity contributions across all orientations
 
         C-Code Implementation Reference (from nanoBragg.c, lines 2993-3151):
-        The future implementation will vectorize the following loop over sources,
-        which currently contains the full inner physics calculation.
+        The vectorized implementation replaces these nested loops:
 
         ```c
                         /* loop over sources now */
                         for(source=0;source<sources;++source){
-
-                            /* retrieve stuff from cache */
-                            incident[1] = -source_X[source];
-                            incident[2] = -source_Y[source];
-                            incident[3] = -source_Z[source];
-                            lambda = source_lambda[source];
-
-                            // ... scattering vector calculation ...
-
                             /* sweep over phi angles */
                             for(phi_tic = 0; phi_tic < phisteps; ++phi_tic)
                             {
-                                // ... crystal rotation ...
-
                                 /* enumerate mosaic domains */
                                 for(mos_tic=0;mos_tic<mosaic_domains;++mos_tic)
                                 {
-                                    // ... mosaic rotation ...
-                                    // ... h,k,l calculation ...
-                                    // ... F_cell and F_latt calculation ...
-
-                                    /* convert amplitudes into intensity (photons per steradian) */
+                                    // ... h,k,l calculation with rotated vectors ...
+                                    /* convert amplitudes into intensity */
                                     I += F_cell*F_cell*F_latt*F_latt;
-
                                 }
                             }
                         }
@@ -101,7 +102,7 @@ class Simulator:
             override_a_star: Optional override for the a_star vector for testing.
 
         Returns:
-            torch.Tensor: Final diffraction image.
+            torch.Tensor: Final diffraction image with shape (spixels, fpixels).
         """
         # Get pixel coordinates (spixels, fpixels, 3) in Angstroms
         pixel_coords_angstroms = self.detector.get_pixel_coords()
@@ -123,19 +124,30 @@ class Simulator:
         # S = (s_out - s_in) / λ where s_out, s_in are unit vectors
         scattering_vector = (diffracted_beam_unit - incident_beam_unit) / self.wavelength
 
+        # Get rotated lattice vectors for all phi steps and mosaic domains
+        # Shape: (N_phi, N_mos, 3)
+        if override_a_star is None:
+            rot_a, rot_b, rot_c = self.crystal.get_rotated_real_vectors(self.crystal_config)
+        else:
+            # For gradient testing with override, use single orientation
+            rot_a = override_a_star.view(1, 1, 3)
+            rot_b = self.crystal.b.view(1, 1, 3)
+            rot_c = self.crystal.c.view(1, 1, 3)
+
+        # Broadcast scattering vector to be compatible with rotation dimensions
+        # scattering_vector: (S, F, 3) -> (S, F, 1, 1, 3)
+        # rot_a: (N_phi, N_mos, 3) -> (1, 1, N_phi, N_mos, 3)
+        scattering_broadcast = scattering_vector.unsqueeze(-2).unsqueeze(-2)
+        rot_a_broadcast = rot_a.unsqueeze(0).unsqueeze(0)
+        rot_b_broadcast = rot_b.unsqueeze(0).unsqueeze(0)
+        rot_c_broadcast = rot_c.unsqueeze(0).unsqueeze(0)
+
         # Calculate dimensionless Miller indices using nanoBragg.c convention
         # nanoBragg.c uses: h = S·a where S is the scattering vector and a is real-space vector
-        # Use override if provided (for gradient testing)
-        a_vec = override_a_star if override_a_star is not None else self.crystal.a
-        h = dot_product(
-            scattering_vector, a_vec.view(1, 1, 3)
-        )
-        k = dot_product(
-            scattering_vector, self.crystal.b.view(1, 1, 3)
-        )
-        l = dot_product(
-            scattering_vector, self.crystal.c.view(1, 1, 3)
-        )
+        # Result shape: (S, F, N_phi, N_mos)
+        h = dot_product(scattering_broadcast, rot_a_broadcast)
+        k = dot_product(scattering_broadcast, rot_b_broadcast)
+        l = dot_product(scattering_broadcast, rot_c_broadcast)
 
         # Find nearest integer Miller indices for structure factor lookup
         h0 = torch.round(h)
@@ -156,8 +168,13 @@ class Simulator:
         F_latt = F_latt_a * F_latt_b * F_latt_c
 
         # Calculate total structure factor and intensity
+        # Shape: (S, F, N_phi, N_mos)
         F_total = F_cell * F_latt
         intensity = F_total * F_total  # |F|^2
+
+        # Integrate over phi steps and mosaic domains
+        # Sum across the last two dimensions to get final 2D image
+        integrated_intensity = torch.sum(intensity, dim=(-2, -1))
 
         # Apply physical scaling factors (from nanoBragg.c ~line 3050)
         # Solid angle correction, converting all units to meters for calculation
@@ -170,6 +187,6 @@ class Simulator:
         
         # Final intensity with all physical constants in meters
         # Units: [dimensionless] × [steradians] × [m²] × [photons/m²] × [dimensionless] = [photons·steradians]
-        physical_intensity = intensity * self.r_e_sqr * self.fluence * self.polarization * omega_pixel
+        physical_intensity = integrated_intensity * self.r_e_sqr * self.fluence * self.polarization * omega_pixel
 
         return physical_intensity

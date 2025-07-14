@@ -55,13 +55,25 @@ if(strstr(argv[i], "-pixel") && (argc > (i+1)))
 """
 
 from dataclasses import dataclass
+from typing import Tuple
 
 
 @dataclass
 class CrystalConfig:
     """Configuration for crystal properties and orientation."""
 
-    pass  # TODO: Implement based on C_Parameter_Dictionary.md
+    # Static misset rotation (applied once at initialization)
+    misset_deg: Tuple[float, float, float] = (0.0, 0.0, 0.0)
+
+    # Spindle rotation parameters
+    phi_start_deg: float = 0.0
+    osc_range_deg: float = 0.0
+    phi_steps: int = 1
+    spindle_axis: Tuple[float, float, float] = (0.0, 0.0, 1.0)
+
+    # Mosaicity parameters
+    mosaic_spread_deg: float = 0.0
+    mosaic_domains: int = 1
 
 
 @dataclass
