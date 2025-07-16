@@ -24,9 +24,46 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     -   **Action:** Generate a step-by-step log from the instrumented C code and an identical log from the PyTorch script (`scripts/debug_pixel_trace.py`). Compare these two files to find the first line where they numerically diverge. This is the bug.
     -   **Reference:** See `torch/Testing_Strategy.md` for the strategy and `torch/debugging.md` for the detailed workflow.
 
+6.  **PyTorch Environment Variable:** All PyTorch code execution **MUST** set the environment variable `KMP_DUPLICATE_LIB_OK=TRUE` to prevent MKL library conflicts.
+    -   **Action:** Either set `os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'` in Python before importing torch, or prefix command-line calls with `KMP_DUPLICATE_LIB_OK=TRUE`.
+    -   **Reason:** Prevents "Error #15: Initializing libiomp5.dylib, but found libiomp5.dylib already initialized" crashes when multiple libraries (PyTorch, NumPy) load MKL runtime.
+    -   **Verification:** All Python scripts and tests that import torch must include this environment variable setting.
+
+7.  **Differentiable Programming Principles:** All PyTorch code **MUST** maintain computational graph connectivity for gradient flow.
+    -   **Action:** Avoid functions that explicitly detach tensors from the computation graph within a differentiable code path.
+    -   **Forbidden:** Using `.item()`, `.numpy()`, or `.detach()` on a tensor that requires a gradient, as this will sever the gradient path.
+    -   **Correct:** Pass tensors directly through the computation pipeline. Use Python-level control flow (like `isinstance`) to handle different input types gracefully, but ensure the core operations are performed on tensors.
+    -   **Known Limitation:** Be aware that some PyTorch functions, like `torch.linspace`, do not propagate gradients to their `start` and `end` arguments. In such cases, a manual, differentiable implementation using basic tensor operations (e.g., `torch.arange`) is required.
+    -   **Verification:** All differentiable parameters must have passing `torch.autograd.gradcheck` tests.
+
+8.  **Preserve C-Code References Until Feature-Complete:** C-code quotes in docstrings serve as a roadmap for unimplemented features. They **MUST NOT** be removed until the corresponding feature is fully implemented, tested, and validated.
+    -   **Action:** When implementing a feature described by a C-code quote, leave the quote in place. Once the feature is complete and all its tests (including integration and gradient tests) are passing, the quote may be updated or removed if it no longer adds value beyond the implemented code.
+    -   **Example:** A docstring for an unimplemented function should retain its C-code reference. A docstring for a partially implemented function (e.g., `phi` rotation is done but `misset` is not) should retain the C-code reference for the unimplemented part, clearly marked as "Future Work".
+    -   **Verification:** Before removing any C-code reference, confirm that the functionality it describes is covered by a passing test in the test suite.
+
+9.  **Never Use `.item()` on Differentiable Tensors:** The `.item()` method **MUST NOT** be used on any tensor that needs to remain differentiable.
+    -   **Action:** Pass tensors directly to configuration objects and functions instead of extracting scalar values.
+    -   **Forbidden:** `config = Config(param=tensor.item())` - This permanently severs the computation graph.
+    -   **Correct:** `config = Config(param=tensor)` - Preserves gradient flow.
+    -   **Verification:** Any use of `.item()` must be followed by verification that the tensor is not needed for gradient computation.
+
+9.  **Avoid `torch.linspace` for Gradient-Critical Code:** `torch.linspace` does not preserve gradients from tensor endpoints.
+    -   **Action:** Use manual tensor arithmetic for differentiable range generation: `start + step_size * torch.arange(...)`.
+    -   **Forbidden:** `torch.linspace(start_tensor, end_tensor, steps)` where `start_tensor` or `end_tensor` require gradients.
+    -   **Correct:** `start_tensor + (end_tensor - start_tensor) * torch.arange(steps) / (steps - 1)`.
+    -   **Verification:** Check that generated ranges preserve `requires_grad=True` when input tensors require gradients.
+
+10. **Boundary Enforcement for Type Safety:** Use clean architectural boundaries to handle tensor/scalar conversions.
+    -   **Action:** Core methods assume tensor inputs; type conversions happen at call sites.
+    -   **Forbidden:** `isinstance(param, torch.Tensor)` checks inside core computational methods.
+    -   **Correct:** `config = Config(param=torch.tensor(value))` at boundaries, `def core_method(tensor_param)` in implementation.
+    -   **Verification:** Core methods should not contain type checking logic; all parameters should be tensors with consistent device/dtype.
+
 ## Golden Test Case Specification (`simple_cubic`)
 
-To reproduce the primary golden reference (`tests/golden_data/simple_cubic.bin`), the following parameters from the C-code simulation MUST be used. These are the ground truth for the baseline validation milestone.
+**The exact `nanoBragg.c` commands used to generate all golden reference data are centrally documented in `tests/golden_data/README.md`. That file is the single source of truth for reproducing the test suite.**
+
+The following parameters for the `simple_cubic` case are provided for quick reference and context. These are the ground truth for the baseline validation milestone.
 
 * **Detector Size:** `1024 x 1024` pixels
 * **Pixel Size:** `0.1` mm
