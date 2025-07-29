@@ -59,6 +59,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     -   **Correct:** `config = Config(param=torch.tensor(value))` at boundaries, `def core_method(tensor_param)` in implementation.
     -   **Verification:** Core methods should not contain type checking logic; all parameters should be tensors with consistent device/dtype.
 
+## Crystallographic Conventions
+
+This project adheres to the `|G| = 1/d` convention, where `G = h*a* + k*b* + l*c*`. This is equivalent to the `|Q| = 2π/d` convention where `Q = 2πG`. All tests and calculations must be consistent with this standard.
+
 ## Golden Test Case Specification (`simple_cubic`)
 
 **The exact `nanoBragg.c` commands used to generate all golden reference data are centrally documented in `tests/golden_data/README.md`. That file is the single source of truth for reproducing the test suite.**
