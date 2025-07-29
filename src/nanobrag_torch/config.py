@@ -83,6 +83,9 @@ class CrystalConfig:
     mosaic_spread_deg: float = 0.0
     mosaic_domains: int = 1
     mosaic_seed: Optional[int] = None
+    
+    # Crystal size (number of unit cells in each direction)
+    N_cells: Tuple[int, int, int] = (5, 5, 5)
 
 
 @dataclass

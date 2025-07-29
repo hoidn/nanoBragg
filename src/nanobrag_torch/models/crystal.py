@@ -30,61 +30,43 @@ class Crystal:
         self.device = device if device is not None else torch.device("cpu")
         self.dtype = dtype
 
-        # Hard-coded simple_cubic crystal parameters (from golden test case)
-        # Unit Cell: 100 100 100 90 90 90 (Angstrom and degrees)
-        # Use Angstroms for internal consistency
-        self.cell_a = torch.tensor(
-            100.0, device=self.device, dtype=self.dtype, requires_grad=False
+        # Store configuration
+        self.config = config if config is not None else CrystalConfig()
+
+        # Initialize cell parameters from config
+        # These are the fundamental parameters that can be differentiable
+        self.cell_a = torch.as_tensor(
+            self.config.cell_a, device=self.device, dtype=self.dtype
         )
-        self.cell_b = torch.tensor(
-            100.0, device=self.device, dtype=self.dtype, requires_grad=False
+        self.cell_b = torch.as_tensor(
+            self.config.cell_b, device=self.device, dtype=self.dtype
         )
-        self.cell_c = torch.tensor(
-            100.0, device=self.device, dtype=self.dtype, requires_grad=False
+        self.cell_c = torch.as_tensor(
+            self.config.cell_c, device=self.device, dtype=self.dtype
         )
-        self.cell_alpha = torch.tensor(
-            90.0, device=self.device, dtype=self.dtype, requires_grad=False
+        self.cell_alpha = torch.as_tensor(
+            self.config.cell_alpha, device=self.device, dtype=self.dtype
         )
-        self.cell_beta = torch.tensor(
-            90.0, device=self.device, dtype=self.dtype, requires_grad=False
+        self.cell_beta = torch.as_tensor(
+            self.config.cell_beta, device=self.device, dtype=self.dtype
         )
-        self.cell_gamma = torch.tensor(
-            90.0, device=self.device, dtype=self.dtype, requires_grad=False
+        self.cell_gamma = torch.as_tensor(
+            self.config.cell_gamma, device=self.device, dtype=self.dtype
         )
 
-        # Real-space lattice vectors (Angstroms)
-        self.a = torch.tensor(
-            [100.0, 0.0, 0.0], device=self.device, dtype=self.dtype, requires_grad=False
+        # Crystal size from config
+        self.N_cells_a = torch.as_tensor(
+            self.config.N_cells[0], device=self.device, dtype=self.dtype
         )
-        self.b = torch.tensor(
-            [0.0, 100.0, 0.0], device=self.device, dtype=self.dtype, requires_grad=False
+        self.N_cells_b = torch.as_tensor(
+            self.config.N_cells[1], device=self.device, dtype=self.dtype
         )
-        self.c = torch.tensor(
-            [0.0, 0.0, 100.0], device=self.device, dtype=self.dtype, requires_grad=False
-        )
-
-        # Calculate reciprocal lattice vectors (Angstroms^-1)
-        # For simple cubic: a_star = 1/|a| * unit_vector
-        self.a_star = torch.tensor(
-            [0.01, 0.0, 0.0], device=self.device, dtype=self.dtype, requires_grad=False
-        )
-        self.b_star = torch.tensor(
-            [0.0, 0.01, 0.0], device=self.device, dtype=self.dtype, requires_grad=False
-        )
-        self.c_star = torch.tensor(
-            [0.0, 0.0, 0.01], device=self.device, dtype=self.dtype, requires_grad=False
+        self.N_cells_c = torch.as_tensor(
+            self.config.N_cells[2], device=self.device, dtype=self.dtype
         )
 
-        # Crystal size: 5x5x5 cells (from golden log: "parallelpiped xtal: 5x5x5 cells")
-        self.N_cells_a = torch.tensor(
-            5, device=self.device, dtype=self.dtype, requires_grad=False
-        )
-        self.N_cells_b = torch.tensor(
-            5, device=self.device, dtype=self.dtype, requires_grad=False
-        )
-        self.N_cells_c = torch.tensor(
-            5, device=self.device, dtype=self.dtype, requires_grad=False
-        )
+        # Clear the cache when parameters change
+        self._geometry_cache = {}
 
         # Structure factor storage
         self.hkl_data = None  # Will be loaded by load_hkl()
@@ -104,20 +86,15 @@ class Crystal:
         self.cell_beta = self.cell_beta.to(device=self.device, dtype=self.dtype)
         self.cell_gamma = self.cell_gamma.to(device=self.device, dtype=self.dtype)
 
-        self.a = self.a.to(device=self.device, dtype=self.dtype)
-        self.b = self.b.to(device=self.device, dtype=self.dtype)
-        self.c = self.c.to(device=self.device, dtype=self.dtype)
-
-        self.a_star = self.a_star.to(device=self.device, dtype=self.dtype)
-        self.b_star = self.b_star.to(device=self.device, dtype=self.dtype)
-        self.c_star = self.c_star.to(device=self.device, dtype=self.dtype)
-
         self.N_cells_a = self.N_cells_a.to(device=self.device, dtype=self.dtype)
         self.N_cells_b = self.N_cells_b.to(device=self.device, dtype=self.dtype)
         self.N_cells_c = self.N_cells_c.to(device=self.device, dtype=self.dtype)
 
         if self.hkl_data is not None:
             self.hkl_data = self.hkl_data.to(device=self.device, dtype=self.dtype)
+
+        # Clear geometry cache when moving devices
+        self._geometry_cache = {}
 
         return self
 
@@ -253,22 +230,139 @@ class Crystal:
         # This matches the C code behavior with the -default_F flag
         return torch.full_like(h, 100.0, device=self.device, dtype=self.dtype)
 
-    def calculate_reciprocal_vectors(self, cell_a: torch.Tensor) -> torch.Tensor:
+    def compute_cell_tensors(self) -> dict:
         """
-        Calculate reciprocal lattice vectors from cell parameters.
+        Calculate real and reciprocal space lattice vectors from cell parameters.
 
-        Args:
-            cell_a: Unit cell a parameter in Angstroms
+        This is the central, differentiable function for all geometry calculations.
+        Uses numerically stable formulas to convert cell parameters (a,b,c,α,β,γ)
+        to real-space and reciprocal-space lattice vectors.
 
         Returns:
-            torch.Tensor: a_star reciprocal lattice vector
+            Dictionary containing:
+            - "a", "b", "c": Real-space lattice vectors (Angstroms)
+            - "a_star", "b_star", "c_star": Reciprocal-space vectors (Angstroms^-1)
+            - "V": Unit cell volume (Angstroms^3)
         """
-        # For simple cubic: a_star = 1/|a| * unit_vector
-        # Create tensor with gradient flow
-        a_star_x = 1.0 / cell_a
-        zeros = torch.zeros_like(a_star_x)
-        a_star = torch.stack([a_star_x, zeros, zeros])
-        return a_star
+        # Convert angles to radians
+        alpha_rad = torch.deg2rad(self.cell_alpha)
+        beta_rad = torch.deg2rad(self.cell_beta)
+        gamma_rad = torch.deg2rad(self.cell_gamma)
+
+        # Calculate trigonometric values
+        cos_alpha = torch.cos(alpha_rad)
+        cos_beta = torch.cos(beta_rad)
+        cos_gamma = torch.cos(gamma_rad)
+        sin_gamma = torch.sin(gamma_rad)
+
+        # Real-space lattice vectors using triclinic convention
+        # a = (a, 0, 0)
+        a_vec = torch.stack(
+            [self.cell_a, torch.zeros_like(self.cell_a), torch.zeros_like(self.cell_a)]
+        )
+
+        # b = (b*cos(γ), b*sin(γ), 0)
+        b_vec = torch.stack(
+            [
+                self.cell_b * cos_gamma,
+                self.cell_b * sin_gamma,
+                torch.zeros_like(self.cell_b),
+            ]
+        )
+
+        # c components
+        cx = self.cell_c * cos_beta
+        cy = self.cell_c * (cos_alpha - cos_beta * cos_gamma) / sin_gamma
+
+        # cz with numerical stability using clamp
+        # cz = c * sqrt(1 - cos²(β) - cy²/c²)
+        cz_squared = 1.0 - cos_beta**2 - (cy / self.cell_c) ** 2
+        # Clamp to avoid negative values due to numerical errors
+        cz_squared_clamped = torch.clamp(cz_squared, min=1e-12)
+        cz = self.cell_c * torch.sqrt(cz_squared_clamped)
+
+        c_vec = torch.stack([cx, cy, cz])
+
+        # Calculate unit cell volume: V = a · (b × c)
+        b_cross_c = torch.cross(b_vec, c_vec, dim=0)
+        V = torch.dot(a_vec, b_cross_c)
+
+        # Reciprocal lattice vectors
+        # a* = (b × c) / V
+        a_star = b_cross_c / V
+
+        # b* = (c × a) / V
+        c_cross_a = torch.cross(c_vec, a_vec, dim=0)
+        b_star = c_cross_a / V
+
+        # c* = (a × b) / V
+        a_cross_b = torch.cross(a_vec, b_vec, dim=0)
+        c_star = a_cross_b / V
+
+        # Apply orientation matrix if misset is specified
+        if hasattr(self.config, "misset_deg") and any(
+            angle != 0.0 for angle in self.config.misset_deg
+        ):
+            # TODO: Implement misset rotation
+            # This is future work as noted in the checklist
+            pass
+
+        return {
+            "a": a_vec,
+            "b": b_vec,
+            "c": c_vec,
+            "a_star": a_star,
+            "b_star": b_star,
+            "c_star": c_star,
+            "V": V,
+        }
+
+    def _compute_cell_tensors_cached(self):
+        """
+        Cached version of compute_cell_tensors to avoid redundant calculations.
+
+        Note: For differentiability, we cannot use .item() or create cache keys
+        from tensor values. Instead, we simply recompute when needed, relying
+        on PyTorch's own computation graph caching.
+        """
+        # For now, just compute directly - PyTorch will handle computation graph caching
+        # A more sophisticated caching mechanism that preserves gradients could be added later
+        return self.compute_cell_tensors()
+
+    @property
+    def a(self) -> torch.Tensor:
+        """Real-space lattice vector a (Angstroms)."""
+        return self._compute_cell_tensors_cached()["a"]
+
+    @property
+    def b(self) -> torch.Tensor:
+        """Real-space lattice vector b (Angstroms)."""
+        return self._compute_cell_tensors_cached()["b"]
+
+    @property
+    def c(self) -> torch.Tensor:
+        """Real-space lattice vector c (Angstroms)."""
+        return self._compute_cell_tensors_cached()["c"]
+
+    @property
+    def a_star(self) -> torch.Tensor:
+        """Reciprocal-space lattice vector a* (Angstroms^-1)."""
+        return self._compute_cell_tensors_cached()["a_star"]
+
+    @property
+    def b_star(self) -> torch.Tensor:
+        """Reciprocal-space lattice vector b* (Angstroms^-1)."""
+        return self._compute_cell_tensors_cached()["b_star"]
+
+    @property
+    def c_star(self) -> torch.Tensor:
+        """Reciprocal-space lattice vector c* (Angstroms^-1)."""
+        return self._compute_cell_tensors_cached()["c_star"]
+
+    @property
+    def V(self) -> torch.Tensor:
+        """Unit cell volume (Angstroms^3)."""
+        return self._compute_cell_tensors_cached()["V"]
 
     def get_rotated_real_vectors(
         self, config: "CrystalConfig"
@@ -348,8 +442,14 @@ class Crystal:
         else:
             # For multiple steps, we need to create a differentiable range
             # Use arange and manual scaling to preserve gradients
-            step_indices = torch.arange(config.phi_steps, device=self.device, dtype=self.dtype)
-            step_size = config.osc_range_deg / config.phi_steps if config.phi_steps > 1 else config.osc_range_deg
+            step_indices = torch.arange(
+                config.phi_steps, device=self.device, dtype=self.dtype
+            )
+            step_size = (
+                config.osc_range_deg / config.phi_steps
+                if config.phi_steps > 1
+                else config.osc_range_deg
+            )
             phi_angles = config.phi_start_deg + step_size * (step_indices + 0.5)
         phi_rad = torch.deg2rad(phi_angles)
 
@@ -396,7 +496,7 @@ class Crystal:
         """
         from ..utils.geometry import rotate_axis
 
-        # Convert mosaic spread to radians 
+        # Convert mosaic spread to radians
         # Assume config.mosaic_spread_deg is a tensor (enforced at call site)
         mosaic_spread_rad = torch.deg2rad(config.mosaic_spread_deg)
 
