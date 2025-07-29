@@ -60,9 +60,16 @@ from typing import Optional, Tuple
 
 @dataclass
 class CrystalConfig:
-    """Configuration for crystal properties and orientation."""
+    """Configuration for crystal properties and orientation.
+
+    This configuration class now supports general triclinic unit cells with all
+    six cell parameters (a, b, c, α, β, γ). All cell parameters can accept
+    either scalar values or PyTorch tensors, enabling gradient-based optimization
+    of crystal parameters from diffraction data.
+    """
 
     # Unit cell parameters (in Angstroms and degrees)
+    # These can be either float values or torch.Tensor for differentiability
     cell_a: float = 100.0
     cell_b: float = 100.0
     cell_c: float = 100.0
@@ -83,7 +90,7 @@ class CrystalConfig:
     mosaic_spread_deg: float = 0.0
     mosaic_domains: int = 1
     mosaic_seed: Optional[int] = None
-    
+
     # Crystal size (number of unit cells in each direction)
     N_cells: Tuple[int, int, int] = (5, 5, 5)
 

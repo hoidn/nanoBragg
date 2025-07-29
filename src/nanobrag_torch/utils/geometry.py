@@ -64,7 +64,9 @@ def unitize(vector: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
     safe_mag = torch.where(mag > 1e-12, mag, torch.ones_like(mag))
     unit_vector = vector / safe_mag.unsqueeze(-1)
     # Ensure zero vectors remain zero
-    unit_vector = torch.where(mag.unsqueeze(-1) > 1e-12, unit_vector, torch.zeros_like(unit_vector))
+    unit_vector = torch.where(
+        mag.unsqueeze(-1) > 1e-12, unit_vector, torch.zeros_like(unit_vector)
+    )
     return unit_vector, mag
 
 

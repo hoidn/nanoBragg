@@ -24,7 +24,7 @@ def sincg(u: torch.Tensor, N: torch.Tensor) -> torch.Tensor:
     # Handle both scalar and tensor N - expand to broadcast with u
     if N.ndim == 0:
         N = N.expand_as(u)
-    
+
     # Calculates sin(N*π*u)/sin(π*u), handling the u=0 case
     pi_u = torch.pi * u
     return torch.where(u.abs() < 1e-9, N, torch.sin(N * pi_u) / torch.sin(pi_u))
@@ -160,4 +160,6 @@ def polarization_factor(
     Returns:
         Tensor of polarization correction factors.
     """
-    raise NotImplementedError("TODO: Port logic from nanoBragg.c for polarization_factor")
+    raise NotImplementedError(
+        "TODO: Port logic from nanoBragg.c for polarization_factor"
+    )

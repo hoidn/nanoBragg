@@ -41,7 +41,7 @@
 | 5.A | **Code Formatting & Linting** | `[D]` | **Why:** To maintain code quality standards. <br> **How:** Run `black .` and `ruff . --fix` on all modified files. Ensure KMP_DUPLICATE_LIB_OK=TRUE is set for all PyTorch operations. |
 | 5.B | **Run Full Test Suite** | `[D]` | **Why:** To ensure no regressions and all functionality works. <br> **How:** Run `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v` and verify all tests pass, including new integration tests. |
 | 5.C | **Update Documentation** | `[D]` | **Why:** To document the new capabilities. <br> **How:** Update any relevant docstrings in Simulator and Crystal classes to reflect dynamic geometry support. Add comments explaining the integration points. |
-| 5.D | **Commit Phase 3 Work** | `[ ]` | **Why:** To checkpoint the completion of the integration and validation phase. <br> **Commit Message:** `feat(geometry): Phase 3 - Integrate and validate triclinic geometry in simulator` |
+| 5.D | **Commit Phase 3 Work** | `[D]` | **Why:** To checkpoint the completion of the integration and validation phase. <br> **Commit Message:** `feat(geometry): Phase 3 - Integrate and validate triclinic geometry in simulator` |
 
 ---
 

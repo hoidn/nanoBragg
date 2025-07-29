@@ -37,7 +37,7 @@
 | **Section 4: Finalization** |
 | 4.A | **Code Formatting & Linting** | `[D]` | **Why:** To maintain code quality. <br> **How:** Run `black .` and `ruff . --fix` on all modified files. Ensure KMP_DUPLICATE_LIB_OK=TRUE is set for all PyTorch operations. |
 | 4.B | **Run All Tests** | `[D]` | **Why:** To ensure no regressions and all new functionality works. <br> **How:** Run `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_crystal_geometry.py -v` and verify all tests pass. |
-| 4.C | **Commit Phase 2 Work** | `[ ]` | **Why:** To checkpoint the completion of the core geometry engine. <br> **Commit Message:** `feat(geometry): Phase 2 - Implement differentiable triclinic geometry engine and unit tests` |
+| 4.C | **Commit Phase 2 Work** | `[D]` | **Why:** To checkpoint the completion of the core geometry engine. <br> **Commit Message:** `feat(geometry): Phase 2 - Implement differentiable triclinic geometry engine and unit tests` |
 
 ---
 

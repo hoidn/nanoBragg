@@ -10,6 +10,17 @@ of the expected photons/pixel on the detector, with and without photon-counting
 noise are generated in SMV format (suitable for display with [ADXV][adxv],
 [MOSFLM][mosflm], or most any other diffraction image display program).
 
+## Features
+
+### PyTorch Implementation
+The PyTorch port of nanoBragg (`src/nanobrag_torch/`) provides modern features:
+
+- **General Triclinic Unit Cells**: Support for arbitrary unit cell parameters (a, b, c, α, β, γ), not limited to cubic cells
+- **Fully Differentiable Cell Parameters**: All six unit cell parameters can be optimized using gradient-based methods
+- **GPU Acceleration**: Leverage CUDA for faster simulations
+- **Automatic Differentiation**: Use PyTorch's autograd for parameter refinement and uncertainty quantification
+- **Example Use Case**: Structure refinement from diffraction data using gradient descent (see `docs/tutorials/cell_parameter_refinement.ipynb`)
+
 The structure factor of the spots should be provided on an absolute "electron" scale
 (as output by programs like [phenix.fmodel][fmodel], [REFMAC][refmac], or [SFALL][sfall]),
 but must be converted to a plain text file of h,k,l,F.  Note that no symmetry is imposed by this

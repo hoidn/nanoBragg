@@ -55,19 +55,19 @@ class Detector:
 
         self._pixel_coords_cache = None
         self._geometry_version = 0
-    
+
     def to(self, device=None, dtype=None):
         """Move detector to specified device and/or dtype."""
         if device is not None:
             self.device = device
         if dtype is not None:
             self.dtype = dtype
-        
+
         # Move basis vectors to new device/dtype
         self.fdet_vec = self.fdet_vec.to(device=self.device, dtype=self.dtype)
         self.sdet_vec = self.sdet_vec.to(device=self.device, dtype=self.dtype)
         self.odet_vec = self.odet_vec.to(device=self.device, dtype=self.dtype)
-        
+
         # Invalidate cache since device/dtype changed
         self.invalidate_cache()
         return self

@@ -23,6 +23,10 @@ class Crystal:
     - Unit cell parameters and reciprocal lattice vectors
     - Crystal orientation and rotations (phi, mosaic)
     - Structure factor data (Fhkl) loading and lookup
+
+    The Crystal class now supports general triclinic unit cells with all six
+    cell parameters (a, b, c, α, β, γ) as differentiable tensors. This enables
+    gradient-based optimization of crystal parameters from diffraction data.
     """
 
     def __init__(self, config: CrystalConfig = None, device=None, dtype=torch.float64):
@@ -126,7 +130,7 @@ class Crystal:
                 if line and not line.startswith("#"):
                     parts = line.split()
                     if len(parts) >= 4:
-                        h, k, l, F = (
+                        h, k, l, F = (  # noqa: E741
                             int(parts[0]),
                             int(parts[1]),
                             int(parts[2]),
@@ -142,7 +146,7 @@ class Crystal:
             self.hkl_data = torch.empty((0, 4), device=self.device, dtype=self.dtype)
 
     def get_structure_factor(
-        self, h: torch.Tensor, k: torch.Tensor, l: torch.Tensor
+        self, h: torch.Tensor, k: torch.Tensor, l: torch.Tensor  # noqa: E741
     ) -> torch.Tensor:
         """
         Look up or interpolate the structure factor for given h,k,l indices.
@@ -237,6 +241,10 @@ class Crystal:
         This is the central, differentiable function for all geometry calculations.
         Uses numerically stable formulas to convert cell parameters (a,b,c,α,β,γ)
         to real-space and reciprocal-space lattice vectors.
+
+        This method now supports general triclinic cells and maintains full
+        differentiability for all six cell parameters. The computation graph
+        is preserved for gradient-based optimization.
 
         Returns:
             Dictionary containing:
