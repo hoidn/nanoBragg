@@ -2,6 +2,8 @@
 
 import os
 
+import numpy as np
+
 import torch
 
 # Set environment variable for MKL compatibility
@@ -9,6 +11,7 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 from nanobrag_torch.config import CrystalConfig
 from nanobrag_torch.models.crystal import Crystal
+from nanobrag_torch.utils.geometry import angles_to_rotation_matrix
 
 
 class TestCrystalGeometry:
@@ -553,3 +556,146 @@ class TestCrystalGeometry:
             ]
         )
         assert torch.any(all_grads != 0.0), "All gradients are zero"
+
+    def test_angles_to_rotation_matrix_identity(self):
+        """Test that zero angles produce identity matrix."""
+        phi_x = torch.tensor(0.0, dtype=torch.float64)
+        phi_y = torch.tensor(0.0, dtype=torch.float64)
+        phi_z = torch.tensor(0.0, dtype=torch.float64)
+
+        R = angles_to_rotation_matrix(phi_x, phi_y, phi_z)
+        expected = torch.eye(3, dtype=torch.float64)
+
+        torch.testing.assert_close(R, expected, atol=1e-12, rtol=1e-12)
+
+    def test_angles_to_rotation_matrix_x_rotation(self):
+        """Test 90° rotation around X-axis."""
+        phi_x = torch.tensor(np.pi / 2, dtype=torch.float64)  # 90 degrees
+        phi_y = torch.tensor(0.0, dtype=torch.float64)
+        phi_z = torch.tensor(0.0, dtype=torch.float64)
+
+        R = angles_to_rotation_matrix(phi_x, phi_y, phi_z)
+
+        # Test rotating [0, 1, 0] → [0, 0, 1]
+        vec = torch.tensor([0.0, 1.0, 0.0], dtype=torch.float64)
+        rotated = torch.matmul(R, vec)
+        expected = torch.tensor([0.0, 0.0, 1.0], dtype=torch.float64)
+
+        torch.testing.assert_close(rotated, expected, atol=1e-10, rtol=1e-10)
+
+    def test_angles_to_rotation_matrix_y_rotation(self):
+        """Test 90° rotation around Y-axis."""
+        phi_x = torch.tensor(0.0, dtype=torch.float64)
+        phi_y = torch.tensor(np.pi / 2, dtype=torch.float64)  # 90 degrees
+        phi_z = torch.tensor(0.0, dtype=torch.float64)
+
+        R = angles_to_rotation_matrix(phi_x, phi_y, phi_z)
+
+        # Test rotating [1, 0, 0] → [0, 0, -1]
+        vec = torch.tensor([1.0, 0.0, 0.0], dtype=torch.float64)
+        rotated = torch.matmul(R, vec)
+        expected = torch.tensor([0.0, 0.0, -1.0], dtype=torch.float64)
+
+        torch.testing.assert_close(rotated, expected, atol=1e-10, rtol=1e-10)
+
+    def test_angles_to_rotation_matrix_z_rotation(self):
+        """Test 90° rotation around Z-axis."""
+        phi_x = torch.tensor(0.0, dtype=torch.float64)
+        phi_y = torch.tensor(0.0, dtype=torch.float64)
+        phi_z = torch.tensor(np.pi / 2, dtype=torch.float64)  # 90 degrees
+
+        R = angles_to_rotation_matrix(phi_x, phi_y, phi_z)
+
+        # Test rotating [1, 0, 0] → [0, 1, 0]
+        vec = torch.tensor([1.0, 0.0, 0.0], dtype=torch.float64)
+        rotated = torch.matmul(R, vec)
+        expected = torch.tensor([0.0, 1.0, 0.0], dtype=torch.float64)
+
+        torch.testing.assert_close(rotated, expected, atol=1e-10, rtol=1e-10)
+
+    def test_angles_to_rotation_matrix_order(self):
+        """Test that rotation order is XYZ (not ZYX or other)."""
+        # Use angles where order matters
+        phi_x = torch.tensor(np.pi / 6, dtype=torch.float64)  # 30 degrees
+        phi_y = torch.tensor(np.pi / 4, dtype=torch.float64)  # 45 degrees
+        phi_z = torch.tensor(np.pi / 3, dtype=torch.float64)  # 60 degrees
+
+        R = angles_to_rotation_matrix(phi_x, phi_y, phi_z)
+
+        # Manually compute XYZ order: R = Rz @ Ry @ Rx
+        cos_x, sin_x = torch.cos(phi_x), torch.sin(phi_x)
+        cos_y, sin_y = torch.cos(phi_y), torch.sin(phi_y)
+        cos_z, sin_z = torch.cos(phi_z), torch.sin(phi_z)
+
+        Rx = torch.tensor(
+            [[1, 0, 0], [0, cos_x, -sin_x], [0, sin_x, cos_x]], dtype=torch.float64
+        )
+
+        Ry = torch.tensor(
+            [[cos_y, 0, sin_y], [0, 1, 0], [-sin_y, 0, cos_y]], dtype=torch.float64
+        )
+
+        Rz = torch.tensor(
+            [[cos_z, -sin_z, 0], [sin_z, cos_z, 0], [0, 0, 1]], dtype=torch.float64
+        )
+
+        R_expected = torch.matmul(torch.matmul(Rz, Ry), Rx)
+
+        torch.testing.assert_close(R, R_expected, atol=1e-12, rtol=1e-12)
+
+    def test_angles_to_rotation_matrix_properties(self):
+        """Test that rotation matrices are orthogonal with det = 1."""
+        test_angles = [
+            (0.0, 0.0, 0.0),  # Identity
+            (np.pi / 4, np.pi / 6, np.pi / 3),  # 45°, 30°, 60°
+            (np.pi / 2, np.pi / 2, np.pi / 2),  # All 90°
+        ]
+
+        for angles in test_angles:
+            phi_x = torch.tensor(angles[0], dtype=torch.float64)
+            phi_y = torch.tensor(angles[1], dtype=torch.float64)
+            phi_z = torch.tensor(angles[2], dtype=torch.float64)
+
+            R = angles_to_rotation_matrix(phi_x, phi_y, phi_z)
+
+            # Check orthogonality: R @ R.T = I
+            I_computed = torch.matmul(R, R.T)
+            I_expected = torch.eye(3, dtype=torch.float64)
+            torch.testing.assert_close(I_computed, I_expected, atol=1e-12, rtol=1e-12)
+
+            # Check determinant = 1 (proper rotation, not reflection)
+            det = torch.det(R)
+            torch.testing.assert_close(
+                det, torch.tensor(1.0, dtype=torch.float64), atol=1e-12, rtol=1e-12
+            )
+
+    def test_angles_to_rotation_matrix_tensor_types(self):
+        """Test function works with different tensor types."""
+        # Test with float32
+        phi_x = torch.tensor(0.5, dtype=torch.float32)
+        phi_y = torch.tensor(0.6, dtype=torch.float32)
+        phi_z = torch.tensor(0.7, dtype=torch.float32)
+
+        R = angles_to_rotation_matrix(phi_x, phi_y, phi_z)
+        assert R.dtype == torch.float32
+        assert R.device == phi_x.device
+
+        # Test with float64
+        phi_x = torch.tensor(0.5, dtype=torch.float64)
+        phi_y = torch.tensor(0.6, dtype=torch.float64)
+        phi_z = torch.tensor(0.7, dtype=torch.float64)
+
+        R = angles_to_rotation_matrix(phi_x, phi_y, phi_z)
+        assert R.dtype == torch.float64
+        assert R.device == phi_x.device
+
+        # Test with GPU if available
+        if torch.cuda.is_available():
+            device = torch.device("cuda:0")
+            phi_x = torch.tensor(0.5, dtype=torch.float64, device=device)
+            phi_y = torch.tensor(0.6, dtype=torch.float64, device=device)
+            phi_z = torch.tensor(0.7, dtype=torch.float64, device=device)
+
+            R = angles_to_rotation_matrix(phi_x, phi_y, phi_z)
+            assert R.device == device
+            assert R.dtype == torch.float64

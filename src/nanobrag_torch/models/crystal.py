@@ -13,6 +13,7 @@ from typing import Tuple
 import torch
 
 from ..config import CrystalConfig
+from ..utils.geometry import angles_to_rotation_matrix
 
 
 class Crystal:
