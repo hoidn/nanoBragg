@@ -22,12 +22,17 @@ class Crystal:
 
     Responsible for:
     - Unit cell parameters and reciprocal lattice vectors
-    - Crystal orientation and rotations (phi, mosaic)
+    - Crystal orientation and rotations (misset, phi, mosaic)
     - Structure factor data (Fhkl) loading and lookup
 
     The Crystal class now supports general triclinic unit cells with all six
     cell parameters (a, b, c, α, β, γ) as differentiable tensors. This enables
     gradient-based optimization of crystal parameters from diffraction data.
+
+    The rotation pipeline applies transformations in the following order:
+    1. Static misset rotation (applied once to reciprocal vectors during initialization)
+    2. Dynamic spindle (phi) rotation (applied during simulation)
+    3. Mosaic domain rotations (applied during simulation)
     """
 
     def __init__(self, config: CrystalConfig = None, device=None, dtype=torch.float64):
@@ -240,12 +245,17 @@ class Crystal:
         Calculate real and reciprocal space lattice vectors from cell parameters.
 
         This is the central, differentiable function for all geometry calculations.
-        Uses numerically stable formulas to convert cell parameters (a,b,c,α,β,γ)
+        Uses the nanoBragg.c convention to convert cell parameters (a,b,c,α,β,γ)
         to real-space and reciprocal-space lattice vectors.
 
         This method now supports general triclinic cells and maintains full
         differentiability for all six cell parameters. The computation graph
         is preserved for gradient-based optimization.
+
+        The implementation follows the nanoBragg.c default orientation convention:
+        - a* is placed purely along the x-axis
+        - b* is placed in the x-y plane
+        - c* fills out 3D space
 
         C-Code Implementation Reference (from nanoBragg.c):
 
@@ -318,57 +328,120 @@ class Crystal:
         cos_gamma = torch.cos(gamma_rad)
         sin_gamma = torch.sin(gamma_rad)
 
-        # Real-space lattice vectors using triclinic convention
-        # a = (a, 0, 0)
-        a_vec = torch.stack(
-            [self.cell_a, torch.zeros_like(self.cell_a), torch.zeros_like(self.cell_a)]
-        )
-
-        # b = (b*cos(γ), b*sin(γ), 0)
-        b_vec = torch.stack(
-            [
-                self.cell_b * cos_gamma,
-                self.cell_b * sin_gamma,
-                torch.zeros_like(self.cell_b),
-            ]
-        )
-
-        # c components
-        cx = self.cell_c * cos_beta
-        cy = self.cell_c * (cos_alpha - cos_beta * cos_gamma) / sin_gamma
-
-        # cz with numerical stability using clamp
-        # cz = c * sqrt(1 - cos²(β) - cy²/c²)
-        cz_squared = 1.0 - cos_beta**2 - (cy / self.cell_c) ** 2
-        # Clamp to avoid negative values due to numerical errors
-        cz_squared_clamped = torch.clamp(cz_squared, min=1e-12)
-        cz = self.cell_c * torch.sqrt(cz_squared_clamped)
-
-        c_vec = torch.stack([cx, cy, cz])
-
-        # Calculate unit cell volume: V = a · (b × c)
-        b_cross_c = torch.cross(b_vec, c_vec, dim=0)
-        V = torch.dot(a_vec, b_cross_c)
-
-        # Reciprocal lattice vectors
-        # a* = (b × c) / V
-        a_star = b_cross_c / V
-
-        # b* = (c × a) / V
-        c_cross_a = torch.cross(c_vec, a_vec, dim=0)
-        b_star = c_cross_a / V
-
-        # c* = (a × b) / V
+        # Calculate cell volume using C-code formula
+        aavg = (alpha_rad + beta_rad + gamma_rad) / 2.0
+        skew = torch.sin(aavg) * torch.sin(aavg - alpha_rad) * torch.sin(aavg - beta_rad) * torch.sin(aavg - gamma_rad)
+        skew = torch.abs(skew)  # Handle negative values
+        
+        # Handle degenerate cases where skew approaches zero
+        skew = torch.clamp(skew, min=1e-12)
+        
+        V = 2.0 * self.cell_a * self.cell_b * self.cell_c * torch.sqrt(skew)
+        # Ensure volume is not too small
+        V = torch.clamp(V, min=1e-6)
+        V_star = 1.0 / V
+        
+        # Calculate reciprocal cell lengths using C-code formulas
+        a_star_length = self.cell_b * self.cell_c * torch.sin(alpha_rad) * V_star
+        b_star_length = self.cell_c * self.cell_a * torch.sin(beta_rad) * V_star  
+        c_star_length = self.cell_a * self.cell_b * torch.sin(gamma_rad) * V_star
+        
+        # Calculate reciprocal angles with numerical stability
+        sin_alpha = torch.sin(alpha_rad)
+        sin_beta = torch.sin(beta_rad)
+        
+        # Clamp denominators to avoid division by zero
+        denom1 = torch.clamp(sin_beta * sin_gamma, min=1e-12)
+        denom2 = torch.clamp(sin_gamma * sin_alpha, min=1e-12)
+        denom3 = torch.clamp(sin_alpha * sin_beta, min=1e-12)
+        
+        cos_alpha_star = (cos_beta * cos_gamma - cos_alpha) / denom1
+        cos_beta_star = (cos_gamma * cos_alpha - cos_beta) / denom2
+        cos_gamma_star = (cos_alpha * cos_beta - cos_gamma) / denom3
+        
+        # Ensure cos_gamma_star is in valid range for sqrt
+        cos_gamma_star_clamped = torch.clamp(cos_gamma_star, min=-1.0, max=1.0)
+        sin_gamma_star = torch.sqrt(torch.clamp(1.0 - cos_gamma_star_clamped**2, min=0.0))
+        
+        # Construct default orientation for reciprocal vectors (C-code convention)
+        # a* along x-axis
+        a_star = torch.stack([
+            a_star_length,
+            torch.zeros_like(a_star_length),
+            torch.zeros_like(a_star_length)
+        ])
+        
+        # b* in x-y plane
+        b_star = torch.stack([
+            b_star_length * cos_gamma_star,
+            b_star_length * sin_gamma_star,
+            torch.zeros_like(b_star_length)
+        ])
+        
+        # c* fills out 3D space
+        c_star_x = c_star_length * cos_beta_star
+        # Clamp sin_gamma_star to avoid division by zero
+        sin_gamma_star_safe = torch.clamp(sin_gamma_star, min=1e-12)
+        c_star_y = c_star_length * (cos_alpha_star - cos_beta_star * cos_gamma_star_clamped) / sin_gamma_star_safe
+        c_star_z = c_star_length * V / (self.cell_a * self.cell_b * self.cell_c * sin_gamma_star_safe)
+        c_star = torch.stack([c_star_x, c_star_y, c_star_z])
+        
+        # Generate real-space vectors from reciprocal vectors
+        # Cross products
+        a_star_cross_b_star = torch.cross(a_star, b_star, dim=0)
+        b_star_cross_c_star = torch.cross(b_star, c_star, dim=0)
+        c_star_cross_a_star = torch.cross(c_star, a_star, dim=0)
+        
+        # Real-space vectors: a = (b* × c*) × V_cell
+        a_vec = b_star_cross_c_star * V
+        b_vec = c_star_cross_a_star * V
+        c_vec = a_star_cross_b_star * V
+        
+        # Now that we have real-space vectors, re-generate the reciprocal ones
+        # This matches the C-code behavior (lines 1951-1956)
         a_cross_b = torch.cross(a_vec, b_vec, dim=0)
-        c_star = a_cross_b / V
+        b_cross_c = torch.cross(b_vec, c_vec, dim=0)
+        c_cross_a = torch.cross(c_vec, a_vec, dim=0)
+        
+        # Recalculate volume from the actual vectors
+        # This is crucial - the volume from the vectors is slightly different
+        # from the volume calculated by the formula, and we need to use the
+        # actual volume for perfect metric duality
+        V_actual = torch.dot(a_vec, b_cross_c)
+        # Ensure volume is not too small to prevent numerical instability
+        V_actual = torch.clamp(V_actual, min=1e-6)
+        V_star_actual = 1.0 / V_actual
+        
+        # a* = (b × c) / V, etc.
+        a_star = b_cross_c * V_star_actual
+        b_star = c_cross_a * V_star_actual
+        c_star = a_cross_b * V_star_actual
+        
+        # Update V to the actual volume
+        V = V_actual
 
-        # Apply orientation matrix if misset is specified
+        # Apply static orientation if misset is specified
         if hasattr(self.config, "misset_deg") and any(
             angle != 0.0 for angle in self.config.misset_deg
         ):
-            # TODO: Implement misset rotation
-            # This is future work as noted in the checklist
-            pass
+            # Apply the misset rotation to reciprocal vectors
+            vectors = {
+                "a": a_vec,
+                "b": b_vec,
+                "c": c_vec,
+                "a_star": a_star,
+                "b_star": b_star,
+                "c_star": c_star,
+                "V": V,
+            }
+            vectors = self._apply_static_orientation(vectors)
+            # Extract the rotated vectors - both reciprocal AND real space
+            a_vec = vectors["a"]
+            b_vec = vectors["b"]
+            c_vec = vectors["c"]
+            a_star = vectors["a_star"]
+            b_star = vectors["b_star"]
+            c_star = vectors["c_star"]
 
         return {
             "a": a_vec,
@@ -429,14 +502,18 @@ class Crystal:
 
     def get_rotated_real_vectors(
         self, config: "CrystalConfig"
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> Tuple[Tuple[torch.Tensor, torch.Tensor, torch.Tensor], Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
         """
-        Get real-space lattice vectors after applying all rotations.
+        Get real-space and reciprocal-space lattice vectors after applying all rotations.
 
         This method applies rotations in the correct physical sequence:
-        1. Static missetting rotation (Future Work)
+        1. Static missetting rotation (already applied to reciprocal vectors in compute_cell_tensors)
         2. Dynamic spindle (phi) rotation
         3. Mosaic domain rotations
+
+        The method now returns both real-space and reciprocal-space vectors to support
+        the correct physics implementation where Miller indices are calculated using
+        reciprocal-space vectors.
 
         C-Code Implementation Reference (from nanoBragg.c):
 
@@ -491,7 +568,9 @@ class Crystal:
             config: CrystalConfig containing rotation parameters.
 
         Returns:
-            Tuple of rotated (a, b, c) real-space vectors with shape (N_phi, N_mos, 3).
+            Tuple containing:
+            - First tuple: rotated (a, b, c) real-space vectors with shape (N_phi, N_mos, 3)
+            - Second tuple: rotated (a*, b*, c*) reciprocal-space vectors with shape (N_phi, N_mos, 3)
         """
         from ..utils.geometry import rotate_axis, rotate_umat
 
@@ -521,11 +600,15 @@ class Crystal:
             config.spindle_axis, device=self.device, dtype=self.dtype
         )
 
-        # Apply spindle rotation to each vector
+        # Apply spindle rotation to both real and reciprocal vectors
         # Shape: (N_phi, 3)
         a_phi = rotate_axis(self.a.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
         b_phi = rotate_axis(self.b.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
         c_phi = rotate_axis(self.c.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
+        
+        a_star_phi = rotate_axis(self.a_star.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
+        b_star_phi = rotate_axis(self.b_star.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
+        c_star_phi = rotate_axis(self.c_star.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
 
         # Generate mosaic rotation matrices
         # Assume config.mosaic_spread_deg is a tensor (enforced at call site)
@@ -539,13 +622,17 @@ class Crystal:
                 .repeat(config.mosaic_domains, 1, 1)
             )
 
-        # Apply mosaic rotations
+        # Apply mosaic rotations to both real and reciprocal vectors
         # Broadcast phi and mosaic dimensions: (N_phi, 1, 3) x (1, N_mos, 3, 3) -> (N_phi, N_mos, 3)
         a_final = rotate_umat(a_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
         b_final = rotate_umat(b_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
         c_final = rotate_umat(c_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
+        
+        a_star_final = rotate_umat(a_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
+        b_star_final = rotate_umat(b_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
+        c_star_final = rotate_umat(c_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
 
-        return a_final, b_final, c_final
+        return (a_final, b_final, c_final), (a_star_final, b_star_final, c_star_final)
 
     def _generate_mosaic_rotations(self, config: "CrystalConfig") -> torch.Tensor:
         """
@@ -591,3 +678,77 @@ class Crystal:
             )
 
         return rotated_vecs
+
+    def _apply_static_orientation(self, vectors: dict) -> dict:
+        """
+        Apply static misset rotation to reciprocal space vectors and update real-space vectors.
+
+        This method applies the crystal misset angles (in degrees) as XYZ rotations
+        to the reciprocal space vectors (a*, b*, c*), then recalculates the real-space
+        vectors from the rotated reciprocal vectors. This matches the C-code
+        behavior where misset is applied once during initialization.
+
+        C-Code Implementation Reference (from nanoBragg.c, lines 1911-1916 and 1945-1948):
+        ```c
+        /* apply any missetting angle, if not already done */
+        if(misset[0] > 0.0)
+        {
+            rotate(a_star,a_star,misset[1],misset[2],misset[3]);
+            rotate(b_star,b_star,misset[1],misset[2],misset[3]);
+            rotate(c_star,c_star,misset[1],misset[2],misset[3]);
+        }
+        
+        /* generate direct-space cell vectors, also updates magnitudes */
+        vector_scale(b_star_cross_c_star,a,V_cell);
+        vector_scale(c_star_cross_a_star,b,V_cell);
+        vector_scale(a_star_cross_b_star,c,V_cell);
+        ```
+
+        Args:
+            vectors: Dictionary containing lattice vectors, including a_star, b_star, c_star
+
+        Returns:
+            Dictionary with rotated reciprocal vectors and updated real-space vectors
+        """
+        from ..utils.geometry import rotate_umat
+
+        # Convert misset angles from degrees to radians
+        # Handle both tensor and float inputs
+        misset_x_rad = torch.deg2rad(
+            torch.as_tensor(
+                self.config.misset_deg[0], device=self.device, dtype=self.dtype
+            )
+        )
+        misset_y_rad = torch.deg2rad(
+            torch.as_tensor(
+                self.config.misset_deg[1], device=self.device, dtype=self.dtype
+            )
+        )
+        misset_z_rad = torch.deg2rad(
+            torch.as_tensor(
+                self.config.misset_deg[2], device=self.device, dtype=self.dtype
+            )
+        )
+
+        # Generate rotation matrix using XYZ convention
+        rotation_matrix = angles_to_rotation_matrix(
+            misset_x_rad, misset_y_rad, misset_z_rad
+        )
+
+        # Apply rotation to reciprocal vectors
+        vectors["a_star"] = rotate_umat(vectors["a_star"], rotation_matrix)
+        vectors["b_star"] = rotate_umat(vectors["b_star"], rotation_matrix)
+        vectors["c_star"] = rotate_umat(vectors["c_star"], rotation_matrix)
+        
+        # Recalculate real-space vectors from rotated reciprocal vectors
+        # This is crucial: a = (b* × c*) × V
+        V = vectors["V"]
+        b_star_cross_c_star = torch.cross(vectors["b_star"], vectors["c_star"], dim=0)
+        c_star_cross_a_star = torch.cross(vectors["c_star"], vectors["a_star"], dim=0)
+        a_star_cross_b_star = torch.cross(vectors["a_star"], vectors["b_star"], dim=0)
+        
+        vectors["a"] = b_star_cross_c_star * V
+        vectors["b"] = c_star_cross_a_star * V
+        vectors["c"] = a_star_cross_b_star * V
+
+        return vectors

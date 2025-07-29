@@ -86,9 +86,42 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     -   **Verification:** Before marking any implementation task complete, verify C-code reference exists
     -   **Rationale:** This is not just for human readability; it is a critical part of our trace-driven validation strategy. It provides a direct, in-code link between the new implementation and its ground-truth reference, which is essential for debugging and verification. Failure to include this reference is considered an implementation error.
 
+12. **Critical Data Flow Convention: The Misset Rotation Pipeline**
+
+    **This rule is non-negotiable and describes a non-standard data flow that MUST be replicated exactly.** The static misset orientation is integrated into the lattice vector calculation in a specific sequence.
+
+    The correct, end-to-end data flow is:
+    1.  Calculate the **base** real (`a,b,c`) and reciprocal (`a*,b*,c*`) vectors from the six unit cell parameters in a canonical orientation.
+    2.  Apply the static misset rotation matrix to **only the reciprocal vectors** (`a*,b*,c*`).
+    3.  **Crucially, recalculate the real-space vectors (`a,b,c`) from the newly rotated reciprocal vectors** using the standard crystallographic relationship (e.g., `a = (b* x c*) * V`).
+    4.  These recalculated, misset-aware real-space vectors are then passed to the dynamic rotation pipeline (`get_rotated_real_vectors`) and are ultimately used in the simulator's Miller index calculation (`h = S·a`).
+
+    **Rationale:** This specific sequence is how `nanoBragg.c` ensures the static orientation is correctly propagated. Any deviation will cause the simulation to fail validation against the golden test cases.
+
+13. **Reciprocal Vector Recalculation for Self-Consistency**
+
+    **The C-code performs a circular recalculation that MUST be replicated for exact metric duality.** After building initial reciprocal vectors and calculating real vectors from them, the C-code recalculates the reciprocal vectors using the standard formula.
+
+    The complete sequence is:
+    1. Build initial reciprocal vectors using the default orientation convention
+    2. Calculate real vectors from reciprocal: `a = (b* × c*) × V`
+    3. **Recalculate reciprocal vectors from real**: `a* = (b × c) / V_actual`
+    4. **Use actual volume**: `V_actual = a · (b × c)` instead of the formula volume
+
+    **Critical:** The volume from the actual vectors differs slightly (~0.6% for triclinic cells) from the formula volume. Using V_actual ensures perfect metric duality (a·a* = 1 exactly).
+
+    **Verification:** The `test_metric_duality` test must pass with `rtol=1e-12`.
+
 ## Crystallographic Conventions
 
 This project adheres to the `|G| = 1/d` convention, where `G = h*a* + k*b* + l*c*`. This is equivalent to the `|Q| = 2π/d` convention where `Q = 2πG`. All tests and calculations must be consistent with this standard.
+
+**Default Orientation Matrix**: The project uses the nanoBragg.c convention for constructing the default orientation of reciprocal lattice vectors from cell parameters:
+- a* is placed purely along the x-axis
+- b* is placed in the x-y plane  
+- c* fills out 3D space
+
+This specific orientation must be maintained for consistency with the C-code implementation.
 
 ## Golden Test Case Specification (`simple_cubic`)
 
@@ -270,6 +303,22 @@ The SOPs emphasize:
 - Memory-intensive vectorization strategy with batching fallback
 - GPU acceleration for tensor operations
 - Configurable precision (float32/float64) and batching for memory management
+
+## ⚡ Common Commands & Workflow
+
+To improve efficiency, use these standard commands for common tasks.
+
+- **List all available tests:**
+  `pytest --collect-only`
+- **Run the full test suite:**
+  `make test`
+- **Run a specific test function:**
+  `# Format: pytest -v <file_path>::<ClassName>::<test_function_name>`
+  `pytest -v tests/test_suite.py::TestTier1TranslationCorrectness::test_simple_cubic_reproduction`
+- **Run the pixel trace debug script:**
+  `KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py`
+- **Install the package in editable mode:**
+  `pip install -e .`
 
 ## Domain-Specific Context
 

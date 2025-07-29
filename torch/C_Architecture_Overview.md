@@ -87,3 +87,29 @@ The codebase is self-contained but relies on standard system libraries that must
 ## 7. Key Physics & Non-Standard Conventions
 
 A critical detail for any porting or maintenance effort is the non-standard convention used for the Miller index calculation. The `nanoBragg.c` code calculates fractional Miller indices by dotting the scattering vector `S = (s_out - s_in) / λ` with the **real-space lattice vectors (`a,b,c`)**, not the reciprocal-space vectors as is common in many physics texts. This is a deliberate design choice in the original code that must be replicated exactly to achieve correct results.
+
+## 8. Key Conventions and Coordinate Systems
+
+### 8.1 Canonical Lattice Orientation
+
+The C code establishes a canonical orientation for the base reciprocal lattice vectors before any missetting or dynamic rotation is applied. This convention MUST be replicated to match the golden data.
+
+The geometric rules are:
+- `a*` is aligned with the laboratory X-axis.
+- `b*` lies in the laboratory XY-plane.
+- `c*` is placed accordingly to form a right-handed system.
+
+This is implemented in `nanoBragg.c` (lines 1862-1871) with the following logic:
+
+```c
+/* construct default orientation */
+a_star[1] = a_star[0];
+b_star[1] = b_star[0]*cos_gamma_star;
+c_star[1] = c_star[0]*cos_beta_star;
+a_star[2] = 0.0;
+b_star[2] = b_star[0]*sin_gamma_star;
+c_star[2] = c_star[0]*(cos_alpha_star-cos_beta_star*cos_gamma_star)/sin_gamma_star;
+a_star[3] = 0.0;
+b_star[3] = 0.0;
+c_star[3] = c_star[0]*V_cell/(a[0]*b[0]*c[0]*sin_gamma_star);
+```

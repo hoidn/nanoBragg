@@ -15,19 +15,25 @@ def sincg(u: torch.Tensor, N: torch.Tensor) -> torch.Tensor:
     Used for crystal shape modeling in the original C code.
 
     Args:
-        u: Fractional Miller index difference (h - h0)
+        u: Input tensor, pre-multiplied by π (e.g., π * h)
         N: Number of elements in grating (scalar or tensor)
 
     Returns:
-        torch.Tensor: Shape factor values sin(Nπu)/sin(πu)
+        torch.Tensor: Shape factor values sin(Nu)/sin(u)
     """
     # Handle both scalar and tensor N - expand to broadcast with u
     if N.ndim == 0:
         N = N.expand_as(u)
 
-    # Calculates sin(N*π*u)/sin(π*u), handling the u=0 case
-    pi_u = torch.pi * u
-    return torch.where(u.abs() < 1e-9, N, torch.sin(N * pi_u) / torch.sin(pi_u))
+    # Calculates sin(N*u)/sin(u), handling the u=0 case
+    # Note: u is already pre-multiplied by π at the call site
+    # Handle near-zero case to avoid numerical instability
+    eps = 1e-10
+    sin_u = torch.sin(u)
+    # Use a small threshold to catch near-zero values
+    is_near_zero = torch.abs(sin_u) < eps
+    result = torch.where(is_near_zero, N, torch.sin(N * u) / sin_u)
+    return result
 
 
 def sinc3(x: torch.Tensor) -> torch.Tensor:

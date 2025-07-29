@@ -78,6 +78,7 @@ class CrystalConfig:
     cell_gamma: float = 90.0
 
     # Static misset rotation (applied once at initialization)
+    # Static crystal orientation angles (degrees) applied as XYZ rotations to reciprocal space vectors
     misset_deg: Tuple[float, float, float] = (0.0, 0.0, 0.0)
 
     # Spindle rotation parameters

@@ -14,9 +14,13 @@ endif
 nanoBragg_golden: nanoBragg.c
 	$(CC) $(CFLAGS) -DDEBUG_GOLDEN_SUITE -o nanoBragg_golden nanoBragg.c
 
+# Trace version for debugging vector transformations
+nanoBragg_trace: nanoBragg_trace.c
+	$(CC) $(CFLAGS) -o nanoBragg_trace nanoBragg_trace.c
+
 # Clean compiled binaries
 clean:
-	rm -f nanoBragg_golden
+	rm -f nanoBragg_golden nanoBragg_trace
 
 # Generate golden test data
 golden_data: nanoBragg_golden

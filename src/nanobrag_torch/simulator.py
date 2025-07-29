@@ -80,6 +80,11 @@ class Simulator:
         This method vectorizes the simulation over all detector pixels, phi angles,
         and mosaic domains. It integrates contributions from all crystal orientations
         to produce the final diffraction pattern.
+        
+        Important: This implementation uses the full Miller indices (h, k, l) for the
+        lattice shape factor calculation, not the fractional part (h-h0). This correctly
+        models the crystal shape transform and is consistent with the physics of
+        diffraction from a finite crystal.
 
         C-Code Implementation Reference (from nanoBragg.c, lines 2993-3151):
         The vectorized implementation replaces these nested loops. The outer `source`
@@ -152,7 +157,7 @@ class Simulator:
         # Get rotated lattice vectors for all phi steps and mosaic domains
         # Shape: (N_phi, N_mos, 3)
         if override_a_star is None:
-            rot_a, rot_b, rot_c = self.crystal.get_rotated_real_vectors(
+            (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = self.crystal.get_rotated_real_vectors(
                 self.crystal_config
             )
         else:
@@ -160,6 +165,9 @@ class Simulator:
             rot_a = override_a_star.view(1, 1, 3)
             rot_b = self.crystal.b.view(1, 1, 3)
             rot_c = self.crystal.c.view(1, 1, 3)
+            rot_a_star = override_a_star.view(1, 1, 3)
+            rot_b_star = self.crystal.b_star.view(1, 1, 3)
+            rot_c_star = self.crystal.c_star.view(1, 1, 3)
 
         # Broadcast scattering vector to be compatible with rotation dimensions
         # scattering_vector: (S, F, 3) -> (S, F, 1, 1, 3)
@@ -171,6 +179,8 @@ class Simulator:
 
         # Calculate dimensionless Miller indices using nanoBragg.c convention
         # nanoBragg.c uses: h = S·a where S is the scattering vector and a is real-space vector
+        # IMPORTANT: The real-space vectors a, b, c have already incorporated any misset rotation
+        # through the Crystal.compute_cell_tensors() method, which ensures consistency with C-code
         # Result shape: (S, F, N_phi, N_mos)
         h = dot_product(scattering_broadcast, rot_a_broadcast)
         k = dot_product(scattering_broadcast, rot_b_broadcast)
@@ -186,14 +196,12 @@ class Simulator:
         # for correct resolution cutoffs in triclinic cells
         F_cell = self.crystal.get_structure_factor(h0, k0, l0)
 
-        # Calculate lattice structure factor F_latt using fractional differences
-        # The sincg function models the shape of the Bragg peak around integer positions
-        delta_h = h - h0
-        delta_k = k - k0
-        delta_l = l - l0
-        F_latt_a = sincg(delta_h, self.crystal.N_cells_a)
-        F_latt_b = sincg(delta_k, self.crystal.N_cells_b)
-        F_latt_c = sincg(delta_l, self.crystal.N_cells_c)
+        # Calculate lattice structure factor F_latt using full Miller indices
+        # CRITICAL FIX: Use the full Miller index (h, k, l), not the fractional part (h-h0)
+        # The sincg function expects its input pre-multiplied by π
+        F_latt_a = sincg(torch.pi * h, self.crystal.N_cells_a)
+        F_latt_b = sincg(torch.pi * k, self.crystal.N_cells_b)
+        F_latt_c = sincg(torch.pi * l, self.crystal.N_cells_c)
         F_latt = F_latt_a * F_latt_b * F_latt_c
 
         # Calculate total structure factor and intensity
