@@ -59,6 +59,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     -   **Correct:** `config = Config(param=torch.tensor(value))` at boundaries, `def core_method(tensor_param)` in implementation.
     -   **Verification:** Core methods should not contain type checking logic; all parameters should be tensors with consistent device/dtype.
 
+11. **C-Code Reference Template (MANDATORY FOR ALL PORTED FUNCTIONS):**
+    -   **Action:** When implementing ANY function that ports logic from nanoBragg.c, you MUST:
+        1. FIRST create the function stub with the docstring template below
+        2. THEN fill in the C-code reference BEFORE writing any implementation
+        3. ONLY THEN proceed with the Python implementation
+    -   **Template:**
+        ```python
+        def function_name(self, ...):
+            """
+            Brief description of function purpose.
+            
+            C-Code Implementation Reference (from nanoBragg.c, lines XXXX-YYYY):
+            ```c
+            [PASTE EXACT C-CODE HERE - DO NOT PARAPHRASE]
+            ```
+            
+            Args:
+                ...
+            Returns:
+                ...
+            """
+            # Implementation goes here
+        ```
+    -   **Forbidden:** Writing the implementation before adding the C-code reference
+    -   **Verification:** Before marking any implementation task complete, verify C-code reference exists
+    -   **Rationale:** This is not just for human readability; it is a critical part of our trace-driven validation strategy. It provides a direct, in-code link between the new implementation and its ground-truth reference, which is essential for debugging and verification. Failure to include this reference is considered an implementation error.
+
 ## Crystallographic Conventions
 
 This project adheres to the `|G| = 1/d` convention, where `G = h*a* + k*b* + l*c*`. This is equivalent to the `|Q| = 2π/d` convention where `Q = 2πG`. All tests and calculations must be consistent with this standard.
