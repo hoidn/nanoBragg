@@ -35,7 +35,7 @@ class Simulator:
     ):
         """
         Initialize simulator with crystal, detector, and configurations.
-        
+
         Args:
             crystal: Crystal object containing unit cell and structure factors
             detector: Detector object with geometry parameters
@@ -46,7 +46,9 @@ class Simulator:
         """
         self.crystal = crystal
         self.detector = detector
-        self.crystal_config = crystal_config if crystal_config is not None else CrystalConfig()
+        self.crystal_config = (
+            crystal_config if crystal_config is not None else CrystalConfig()
+        )
         self.device = device if device is not None else torch.device("cpu")
         self.dtype = dtype
 
@@ -57,13 +59,21 @@ class Simulator:
             [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
         )
         self.wavelength = 6.2  # Angstroms (matches debug script and C code test case)
-        
+
         # Physical constants (from nanoBragg.c ~line 240)
-        self.r_e_sqr = 7.94079248018965e-30  # classical electron radius squared (meters squared)
-        self.fluence = 125932015286227086360700780544.0  # photons per square meter (C default)
+        self.r_e_sqr = (
+            7.94079248018965e-30  # classical electron radius squared (meters squared)
+        )
+        self.fluence = (
+            125932015286227086360700780544.0  # photons per square meter (C default)
+        )
         self.polarization = 1.0  # unpolarized beam
 
-    def run(self, pixel_batch_size: Optional[int] = None, override_a_star: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def run(
+        self,
+        pixel_batch_size: Optional[int] = None,
+        override_a_star: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         """
         Run the diffraction simulation with crystal rotation and mosaicity.
 
@@ -115,28 +125,36 @@ class Simulator:
         """
         # Get pixel coordinates (spixels, fpixels, 3) in Angstroms
         pixel_coords_angstroms = self.detector.get_pixel_coords()
-        
+
         # Calculate scattering vectors for each pixel
         # The C code calculates scattering vector as the difference between
         # unit vectors pointing to the pixel and the incident direction
-        
+
         # Diffracted beam unit vector (from origin to pixel)
         pixel_magnitudes = torch.sqrt(
-            torch.sum(pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True)
+            torch.sum(
+                pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True
+            )
         )
         diffracted_beam_unit = pixel_coords_angstroms / pixel_magnitudes
 
         # Incident beam unit vector [1, 0, 0]
-        incident_beam_unit = self.incident_beam_direction.expand_as(diffracted_beam_unit)
+        incident_beam_unit = self.incident_beam_direction.expand_as(
+            diffracted_beam_unit
+        )
 
         # Scattering vector using crystallographic convention (nanoBragg.c style)
         # S = (s_out - s_in) / λ where s_out, s_in are unit vectors
-        scattering_vector = (diffracted_beam_unit - incident_beam_unit) / self.wavelength
+        scattering_vector = (
+            diffracted_beam_unit - incident_beam_unit
+        ) / self.wavelength
 
         # Get rotated lattice vectors for all phi steps and mosaic domains
         # Shape: (N_phi, N_mos, 3)
         if override_a_star is None:
-            rot_a, rot_b, rot_c = self.crystal.get_rotated_real_vectors(self.crystal_config)
+            rot_a, rot_b, rot_c = self.crystal.get_rotated_real_vectors(
+                self.crystal_config
+            )
         else:
             # For gradient testing with override, use single orientation
             rot_a = override_a_star.view(1, 1, 3)
@@ -156,7 +174,7 @@ class Simulator:
         # Result shape: (S, F, N_phi, N_mos)
         h = dot_product(scattering_broadcast, rot_a_broadcast)
         k = dot_product(scattering_broadcast, rot_b_broadcast)
-        l = dot_product(scattering_broadcast, rot_c_broadcast)
+        l = dot_product(scattering_broadcast, rot_c_broadcast)  # noqa: E741
 
         # Find nearest integer Miller indices for structure factor lookup
         h0 = torch.round(h)
@@ -164,6 +182,8 @@ class Simulator:
         l0 = torch.round(l)
 
         # Look up structure factors F_cell using integer indices
+        # TODO: Future implementation must calculate |h*a* + k*b* + l*c*| <= 1/d_min
+        # for correct resolution cutoffs in triclinic cells
         F_cell = self.crystal.get_structure_factor(h0, k0, l0)
 
         # Calculate lattice structure factor F_latt using fractional differences
@@ -191,11 +211,17 @@ class Simulator:
         airpath_m = airpath * 1e-10  # Å to meters
         close_distance_m = self.detector.distance * 1e-10  # Å to meters
         pixel_size_m = self.detector.pixel_size * 1e-10  # Å to meters
-        
+
         omega_pixel = (pixel_size_m**2) / (airpath_m**2) * close_distance_m / airpath_m
-        
+
         # Final intensity with all physical constants in meters
         # Units: [dimensionless] × [steradians] × [m²] × [photons/m²] × [dimensionless] = [photons·steradians]
-        physical_intensity = integrated_intensity * self.r_e_sqr * self.fluence * self.polarization * omega_pixel
+        physical_intensity = (
+            integrated_intensity
+            * self.r_e_sqr
+            * self.fluence
+            * self.polarization
+            * omega_pixel
+        )
 
         return physical_intensity
