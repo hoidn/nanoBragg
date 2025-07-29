@@ -246,6 +246,60 @@ class Crystal:
         differentiability for all six cell parameters. The computation graph
         is preserved for gradient-based optimization.
 
+        C-Code Implementation Reference (from nanoBragg.c):
+
+        Volume calculation from cell parameters (lines 1798-1808):
+        ```c
+        /* get cell volume from angles */
+        aavg = (alpha+beta+gamma)/2;
+        skew = sin(aavg)*sin(aavg-alpha)*sin(aavg-beta)*sin(aavg-gamma);
+        if(skew<0.0) skew=-skew;
+        V_cell = 2.0*a[0]*b[0]*c[0]*sqrt(skew);
+        if(V_cell <= 0.0)
+        {
+            printf("WARNING: impossible unit cell volume: %g\n",V_cell);
+            V_cell = DBL_MIN;
+        }
+        V_star = 1.0/V_cell;
+        ```
+
+        NOTE: This PyTorch implementation uses a different but mathematically
+        equivalent approach. Instead of Heron's formula above, we construct
+        the real-space vectors explicitly and compute V = a · (b × c).
+
+        Default orientation construction for reciprocal vectors (lines 1862-1871):
+        ```c
+        /* construct default orientation */
+        a_star[1] = a_star[0];
+        b_star[1] = b_star[0]*cos_gamma_star;
+        c_star[1] = c_star[0]*cos_beta_star;
+        a_star[2] = 0.0;
+        b_star[2] = b_star[0]*sin_gamma_star;
+        c_star[2] = c_star[0]*(cos_alpha_star-cos_beta_star*cos_gamma_star)/sin_gamma_star;
+        a_star[3] = 0.0;
+        b_star[3] = 0.0;
+        c_star[3] = c_star[0]*V_cell/(a[0]*b[0]*c[0]*sin_gamma_star);
+        ```
+
+        Real-space basis vector construction (lines 1945-1948):
+        ```c
+        /* generate direct-space cell vectors, also updates magnitudes */
+        vector_scale(b_star_cross_c_star,a,V_cell);
+        vector_scale(c_star_cross_a_star,b,V_cell);
+        vector_scale(a_star_cross_b_star,c,V_cell);
+        ```
+
+        Reciprocal-space vector calculation (lines 1951-1956):
+        ```c
+        /* now that we have direct-space vectors, re-generate the reciprocal ones */
+        cross_product(a,b,a_cross_b);
+        cross_product(b,c,b_cross_c);
+        cross_product(c,a,c_cross_a);
+        vector_scale(b_cross_c,a_star,V_star);
+        vector_scale(c_cross_a,b_star,V_star);
+        vector_scale(a_cross_b,c_star,V_star);
+        ```
+
         Returns:
             Dictionary containing:
             - "a", "b", "c": Real-space lattice vectors (Angstroms)
