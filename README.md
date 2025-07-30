@@ -614,3 +614,42 @@ different random number seed for mosaic domain generation. Default:
 [noisify]: https://github.com/bl831/bin_stuff/blob/main/docs/noisify.md
 [float_add]: https://github.com/bl831/bin_stuff/blob/main/docs/float_add.md
 [float_func]: https://github.com/bl831/bin_stuff/blob/main/docs/float_func.md
+
+## Torch port status
+### Component-by-Component Completion Analysis
+
+| Category | Component | Status | % Complete | Weight | Weighted % | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Core Physics & Crystal Model** | **Core Diffraction Physics** | ✅ Complete | 100% | 25% | 25.0% | Miller index calculation and lattice factor (`sincg`) are implemented and validated. |
+| | **General Unit Cell Geometry** | 🚧 In Progress | 95% | 15% | 14.3% | Triclinic cell is implemented; final validation is the current task. |
+| **Crystal Orientation & Mosaicity** | **Dynamic Phi Rotation** | ✅ Complete | 100% | 10% | 10.0% | Implemented and differentiable. |
+| | **Mosaicity** | ✅ Complete | 100% | 5% | 5.0% | Implemented and differentiable. |
+| | **Static Misset Orientation** | 🚧 In Progress | 90% | 5% | 4.5% | Implemented but not yet fully validated; the current primary focus. |
+| **Detector & Beam Models** | **Detector Geometry** | 🟡 Partial | 30% | 10% | 3.0% | A basic, static detector is implemented. General, configurable geometry is not. |
+| | **Beam Model** | 🟡 Partial | 20% | 5% | 1.0% | A single wavelength is supported. Divergence and spectral dispersion are not started. |
+| **Key Porting Goals** | **Differentiability** | 🚧 In Progress | 60% | 10% | 6.0% | Core crystal parameters are differentiable. Detector and beam parameters are not yet. |
+| | **Performance (GPU Support)** | ✅ Complete | 100% | 5% | 5.0% | The PyTorch foundation enables GPU execution. The demo script validates this. |
+| **User Interface & Advanced Features** | **Configuration / CLI** | ❌ Not Started | 0% | 5% | 0.0% | All configuration is currently done via hard-coded values or dataclass defaults. |
+| | **Advanced Features** | ❌ Not Started | 10% | 5% | 0.5% | Only `sincg` shape factor is implemented. Noise models (`noisify.c`) are not ported. |
+| **Total** | | | | **100%** | **69.3%** | |
+
+---
+
+### Summary by Status
+
+#### ✅ Mostly Complete (~80-100%)
+
+*   **Core Physics Engine:** The fundamental calculations for diffraction are in place and have been rigorously debugged against the C-code reference.
+*   **Crystal Model:** The ability to define and orient a crystal is nearly feature-complete. The current work on static missetting is the final piece of this core component.
+*   **Dynamic Rotations:** `phi` scans and `mosaicity` are fully implemented and differentiable.
+*   **GPU Capability:** The use of PyTorch inherently provides the ability to run on GPUs.
+
+#### 🟡 Partially Implemented (~20-60%)
+
+*   **Differentiability:** While the most critical crystal parameters are differentiable, many other scientifically relevant parameters (detector position, beam energy) are not yet.
+*   **Detector & Beam Models:** Only the most basic, static versions of these components exist. Full feature parity with the C-code's command-line options is a major piece of remaining work.
+
+#### ❌ Not Yet Started (~0-10%)
+
+*   **User-Friendly Configuration:** There is no command-line interface (CLI) or user-friendly way to configure a simulation. This is essential for making the tool usable.
+*   **Advanced C-Code Features:** Key features from the C implementation, such as beam divergence, spectral dispersion, alternative crystal shape factors (`sinc3`), and the noise simulation from `noisify.c`, have not been ported.
