@@ -5,11 +5,12 @@ This module defines the Detector class responsible for managing all detector
 geometry calculations and pixel coordinate generation.
 """
 
-from typing import Tuple
+from typing import Optional, Tuple
 
 import torch
 
 from ..config import DetectorConfig
+from ..utils.units import mm_to_angstroms, degrees_to_radians
 
 
 class Detector:
@@ -22,39 +23,78 @@ class Detector:
     - Solid angle corrections
     """
 
-    def __init__(self, config: DetectorConfig = None, device=None, dtype=torch.float64):
+    def __init__(self, config: Optional[DetectorConfig] = None, device=None, dtype=torch.float64):
         """Initialize detector from configuration."""
         self.device = device if device is not None else torch.device("cpu")
         self.dtype = dtype
+        
+        # Use provided config or create default
+        if config is None:
+            config = DetectorConfig()  # Use defaults
+        self.config = config
+        
+        # Convert units to internal Angstrom system
+        self.distance = mm_to_angstroms(config.distance_mm)
+        self.pixel_size = mm_to_angstroms(config.pixel_size_mm)
+        
+        # Copy dimension parameters
+        self.spixels = config.spixels
+        self.fpixels = config.fpixels
+        
+        # Convert beam center from mm to pixels
+        # Note: beam center is given in mm from detector origin
+        if isinstance(config.beam_center_s, torch.Tensor):
+            self.beam_center_s = config.beam_center_s / config.pixel_size_mm
+        else:
+            self.beam_center_s = config.beam_center_s / config.pixel_size_mm
+            
+        if isinstance(config.beam_center_f, torch.Tensor):
+            self.beam_center_f = config.beam_center_f / config.pixel_size_mm
+        else:
+            self.beam_center_f = config.beam_center_f / config.pixel_size_mm
 
-        # Hard-coded simple_cubic geometry (from golden test case)
-        # Distance: 100 mm, detector size: 102.4x102.4 mm, pixel size: 0.1 mm, 1024x1024 pixels
-        # Convert to Angstroms for internal consistency
-        self.distance_m = 0.1  # meters (100 mm)
-        self.pixel_size_m = 0.0001  # meters (0.1 mm)
-        self.distance = self.distance_m * 1e10  # Angstroms
-        self.pixel_size = self.pixel_size_m * 1e10  # Angstroms
-        self.spixels = 1024  # slow pixels (from C trace: 1024x1024 pixels)
-        self.fpixels = 1024  # fast pixels
-        self.beam_center_f = 512.5  # pixels (Xbeam=0.05125 m / 0.0001 m per pixel)
-        self.beam_center_s = 512.5  # pixels (Ybeam=0.05125 m / 0.0001 m per pixel)
-
-        # Detector basis vectors from golden log: DIRECTION_OF_DETECTOR_*_AXIS
-        # Fast axis (X): [0, 0, 1]
-        # Slow axis (Y): [0, -1, 0]
-        # Normal axis (Z): [1, 0, 0]
-        self.fdet_vec = torch.tensor(
-            [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
-        )
-        self.sdet_vec = torch.tensor(
-            [0.0, -1.0, 0.0], device=self.device, dtype=self.dtype
-        )
-        self.odet_vec = torch.tensor(
-            [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
-        )
+        # Initialize basis vectors
+        if self._is_default_config():
+            # Use hard-coded vectors for backward compatibility
+            # Detector basis vectors from golden log: DIRECTION_OF_DETECTOR_*_AXIS
+            # Fast axis (X): [0, 0, 1]
+            # Slow axis (Y): [0, -1, 0]
+            # Normal axis (Z): [1, 0, 0]
+            self.fdet_vec = torch.tensor(
+                [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
+            )
+            self.sdet_vec = torch.tensor(
+                [0.0, -1.0, 0.0], device=self.device, dtype=self.dtype
+            )
+            self.odet_vec = torch.tensor(
+                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
+            )
+        else:
+            # Calculate basis vectors dynamically in Phase 2
+            self.fdet_vec, self.sdet_vec, self.odet_vec = self._calculate_basis_vectors()
 
         self._pixel_coords_cache = None
         self._geometry_version = 0
+
+    def _is_default_config(self) -> bool:
+        """Check if using default config (for backward compatibility)."""
+        c = self.config
+        # Check all basic parameters
+        basic_check = (c.distance_mm == 100.0 and c.pixel_size_mm == 0.1 and
+                       c.spixels == 1024 and c.fpixels == 1024 and
+                       c.beam_center_s == 51.2 and c.beam_center_f == 51.2)
+        
+        # Check rotation parameters (handle both float and tensor)
+        rotx_check = (c.detector_rotx_deg == 0 if isinstance(c.detector_rotx_deg, (int, float))
+                      else torch.allclose(c.detector_rotx_deg, torch.tensor(0.0)))
+        roty_check = (c.detector_roty_deg == 0 if isinstance(c.detector_roty_deg, (int, float))
+                      else torch.allclose(c.detector_roty_deg, torch.tensor(0.0)))
+        rotz_check = (c.detector_rotz_deg == 0 if isinstance(c.detector_rotz_deg, (int, float))
+                      else torch.allclose(c.detector_rotz_deg, torch.tensor(0.0)))
+        twotheta_check = (c.detector_twotheta_deg == 0 if isinstance(c.detector_twotheta_deg, (int, float))
+                          else torch.allclose(c.detector_twotheta_deg, torch.tensor(0.0)))
+        
+        return basic_check and rotx_check and roty_check and rotz_check and twotheta_check
 
     def to(self, device=None, dtype=None):
         """Move detector to specified device and/or dtype."""
