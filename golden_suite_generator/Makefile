@@ -10,17 +10,17 @@ ifeq ($(shell gcc -fopenmp -E - < /dev/null > /dev/null 2>&1 && echo yes), yes)
     CFLAGS += -fopenmp
 endif
 
-# Instrumented nanoBragg executable
+# Standard nanoBragg executable (now instrumented with TRACE statements)
+nanoBragg: nanoBragg.c
+	$(CC) $(CFLAGS) -o nanoBragg nanoBragg.c
+
+# Instrumented nanoBragg executable for golden suite
 nanoBragg_golden: nanoBragg.c
 	$(CC) $(CFLAGS) -DDEBUG_GOLDEN_SUITE -o nanoBragg_golden nanoBragg.c
 
-# Trace version for debugging vector transformations
-nanoBragg_trace: nanoBragg_trace.c
-	$(CC) $(CFLAGS) -o nanoBragg_trace nanoBragg_trace.c
-
 # Clean compiled binaries
 clean:
-	rm -f nanoBragg_golden nanoBragg_trace
+	rm -f nanoBragg nanoBragg_golden
 
 # Generate golden test data
 golden_data: nanoBragg_golden

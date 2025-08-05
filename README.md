@@ -37,11 +37,12 @@ The default value for this option is zero.
 
 ## source
 
-source code: [nanoBragg.c](nanoBragg.c) (49k).
+source code: [nanoBragg.c](golden_suite_generator/nanoBragg.c) (49k, instrumented version).
 
 ## compile
 
 ```
+cd golden_suite_generator
 gcc -O -O -o nanoBragg nanoBragg.c -lm -static
 ```
 
