@@ -35,6 +35,14 @@ presumed to be surrounding the nanocrystal.  The diameter of this droplet in mic
 with the "-water" option, and assumes a forward-scattering structure factor of 2.57 electrons.
 The default value for this option is zero.
 
+## Documentation
+
+This project contains comprehensive documentation for both users and developers. All documentation is located in the `/docs` directory.
+
+- **[User Guides](./docs/user/)**: Tutorials and guides for using the simulator.
+- **[Architecture Hub](./docs/architecture/)**: The authoritative design and specification documents for the project. **This is the best place for developers to start.**
+- **[Development Process](./docs/development/)**: Guidelines for contributing, debugging, and working with the AI agent.
+
 ## source
 
 source code: [nanoBragg.c](golden_suite_generator/nanoBragg.c) (49k, instrumented version).

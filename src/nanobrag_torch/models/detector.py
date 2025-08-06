@@ -17,6 +17,10 @@ class Detector:
     """
     Detector model managing geometry and pixel coordinates.
 
+    **Authoritative Specification:** For a complete specification of this
+    component's coordinate systems, conventions, and unit handling, see the
+    full architectural deep dive: `docs/architecture/detector.md`.
+
     Responsible for:
     - Detector position and orientation (basis vectors)
     - Pixel coordinate generation and caching
@@ -76,6 +80,9 @@ class Detector:
             # Calculate basis vectors dynamically in Phase 2
             self.fdet_vec, self.sdet_vec, self.odet_vec = self._calculate_basis_vectors()
 
+        # Calculate and cache pix0_vector (position of first pixel)
+        self._calculate_pix0_vector()
+        
         self._pixel_coords_cache: Optional[torch.Tensor] = None
         self._geometry_version = 0
 
@@ -115,6 +122,10 @@ class Detector:
         self.fdet_vec = self.fdet_vec.to(device=self.device, dtype=self.dtype)
         self.sdet_vec = self.sdet_vec.to(device=self.device, dtype=self.dtype)
         self.odet_vec = self.odet_vec.to(device=self.device, dtype=self.dtype)
+        
+        # Move beam center tensors
+        self.beam_center_s = self.beam_center_s.to(device=self.device, dtype=self.dtype)
+        self.beam_center_f = self.beam_center_f.to(device=self.device, dtype=self.dtype)
 
         # Invalidate cache since device/dtype changed
         self.invalidate_cache()
@@ -124,6 +135,79 @@ class Detector:
         """Invalidate cached pixel coordinates when geometry changes."""
         self._pixel_coords_cache = None
         self._geometry_version += 1
+        # Recalculate pix0_vector when geometry changes
+        self._calculate_pix0_vector()
+
+    def _calculate_pix0_vector(self):
+        """
+        Calculate the position of the first pixel (0,0) in 3D space.
+        
+        This follows the C-code convention where pix0_vector represents the
+        3D position of pixel (0,0), taking into account the beam center offset
+        and detector positioning.
+        
+        The calculation depends on the detector_pivot mode:
+        - BEAM pivot: pix0_vector = -Fbeam*fdet_vec - Sbeam*sdet_vec + distance*beam_vec
+        - SAMPLE pivot: pix0_vector = detector_origin + offset vectors
+        
+        C-Code Implementation Reference (from nanoBragg.c, lines 1740-1745):
+        ```c
+        if(detector_pivot == BEAM){
+            printf("pivoting detector around direct beam spot\n");
+            pix0_vector[1] = -Fbeam*fdet_vector[1]-Sbeam*sdet_vector[1]+distance*beam_vector[1];
+            pix0_vector[2] = -Fbeam*fdet_vector[2]-Sbeam*sdet_vector[2]+distance*beam_vector[2];
+            pix0_vector[3] = -Fbeam*fdet_vector[3]-Sbeam*sdet_vector[3]+distance*beam_vector[3];
+        }
+        ```
+        
+        Note: This uses pixel edges at integer indices, not pixel centers.
+        """
+        from ..config import DetectorPivot, DetectorConvention
+        
+        if self.config.detector_pivot == DetectorPivot.BEAM:
+            # BEAM pivot mode: detector rotates around the direct beam spot
+            # For MOSFLM convention, beam_vector is [1, 0, 0]
+            if self.config.detector_convention == DetectorConvention.MOSFLM:
+                beam_vector = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
+            else:
+                # XDS convention uses [0, 0, 1] as beam vector (needs verification)
+                beam_vector = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
+            
+            # Fbeam and Sbeam calculation depends on convention
+            # For MOSFLM: Fbeam = Ybeam + 0.5*pixel_size, Sbeam = Xbeam + 0.5*pixel_size
+            # where Xbeam/Ybeam are the input beam center in mm
+            if self.config.detector_convention == DetectorConvention.MOSFLM:
+                # MOSFLM convention: Fbeam = Ybeam + 0.5*pixel_size, Sbeam = Xbeam + 0.5*pixel_size
+                # Note: In MOSFLM, X/Y are swapped: Fbeam uses Y, Sbeam uses X
+                Xbeam_mm = self.config.beam_center_f  # f corresponds to Y in MOSFLM
+                Ybeam_mm = self.config.beam_center_s  # s corresponds to X in MOSFLM
+                # Apply MOSFLM formula and convert to Angstroms
+                Fbeam = mm_to_angstroms(Xbeam_mm + 0.5 * self.config.pixel_size_mm)  # Uses Ybeam in C-code
+                Sbeam = mm_to_angstroms(Ybeam_mm + 0.5 * self.config.pixel_size_mm)  # Uses Xbeam in C-code
+            else:
+                # Default behavior for other conventions
+                Fbeam = self.beam_center_f * self.pixel_size  # in Angstroms
+                Sbeam = self.beam_center_s * self.pixel_size  # in Angstroms
+            
+            # Calculate pix0_vector using BEAM pivot formula
+            self.pix0_vector = (-Fbeam * self.fdet_vec - 
+                               Sbeam * self.sdet_vec + 
+                               self.distance * beam_vector)
+        else:
+            # SAMPLE pivot mode: detector rotates around the sample
+            # Calculate detector origin (center position at the specified distance)
+            detector_origin = self.distance * self.odet_vec
+            
+            # Calculate offset from detector center to pixel (0,0)
+            # Note: beam_center_s/f are already in pixel units
+            # Using 0 instead of 0.5 to match original pixel edge convention
+            s_offset = (0.0 - self.beam_center_s) * self.pixel_size
+            f_offset = (0.0 - self.beam_center_f) * self.pixel_size
+            
+            # Calculate pix0_vector
+            self.pix0_vector = (detector_origin + 
+                               s_offset * self.sdet_vec + 
+                               f_offset * self.fdet_vec)
 
     def get_pixel_coords(self) -> torch.Tensor:
         """
@@ -133,33 +217,26 @@ class Detector:
             torch.Tensor: Pixel coordinates with shape (spixels, fpixels, 3) in Angstroms
         """
         if self._pixel_coords_cache is None:
-            # Create pixel coordinate grids
-            s_coords = torch.arange(self.spixels, device=self.device, dtype=self.dtype)
-            f_coords = torch.arange(self.fpixels, device=self.device, dtype=self.dtype)
+            # Create pixel index grids (0-based indices)
+            s_indices = torch.arange(self.spixels, device=self.device, dtype=self.dtype)
+            f_indices = torch.arange(self.fpixels, device=self.device, dtype=self.dtype)
 
-            # Convert to Angstroms relative to beam center
-            s_angstroms = (s_coords - self.beam_center_s) * self.pixel_size
-            f_angstroms = (f_coords - self.beam_center_f) * self.pixel_size
+            # Create meshgrid of indices
+            s_grid, f_grid = torch.meshgrid(s_indices, f_indices, indexing="ij")
 
-            # Create meshgrid
-            s_grid, f_grid = torch.meshgrid(s_angstroms, f_angstroms, indexing="ij")
-
-            # Calculate 3D coordinates for each pixel
-            # pixel_coords = detector_origin + s*sdet_vec + f*fdet_vec
-            # detector_origin is at distance along normal vector
-            # Distance is in Angstroms
-            detector_origin = self.distance * self.odet_vec
-
-            # Expand basis vectors for broadcasting
+            # Calculate pixel coordinates using pix0_vector as the reference
+            # pixel_coords = pix0_vector + s * pixel_size * sdet_vec + f * pixel_size * fdet_vec
+            
+            # Expand vectors for broadcasting
+            pix0_expanded = self.pix0_vector.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
             sdet_expanded = self.sdet_vec.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
             fdet_expanded = self.fdet_vec.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
-            origin_expanded = detector_origin.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
 
             # Calculate pixel coordinates
             pixel_coords = (
-                origin_expanded
-                + s_grid.unsqueeze(-1) * sdet_expanded
-                + f_grid.unsqueeze(-1) * fdet_expanded
+                pix0_expanded
+                + s_grid.unsqueeze(-1) * self.pixel_size * sdet_expanded
+                + f_grid.unsqueeze(-1) * self.pixel_size * fdet_expanded
             )
 
             self._pixel_coords_cache = pixel_coords

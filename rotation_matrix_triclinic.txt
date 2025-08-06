@@ -1,0 +1,29 @@
+Rotation Matrix for Triclinic P1 Test Case
+==========================================
+
+The actual rotation matrix that transforms the unrotated reciprocal vectors
+to the rotated ones in trace.log is:
+
+U = [ -0.789333,  -0.583113,   0.192982]
+    [ -0.056213,  -0.245344,  -0.967989]
+    [  0.611718,  -0.774736,   0.160402]
+
+This matrix satisfies:
+- a*_rotated = U @ a*_unrotated
+- b*_rotated = U @ b*_unrotated
+- c*_rotated = U @ c*_unrotated
+
+Important Notes:
+1. The misset angles (-89.968546, -31.328953, 177.753396) degrees were likely
+   extracted from a randomly generated unitary matrix using umat2misset().
+   
+2. Due to the non-uniqueness of Euler angle representations, applying these
+   angles in X-Y-Z order does NOT reproduce the original rotation matrix.
+   
+3. For the PyTorch implementation, we should either:
+   a) Store and use the rotation matrix directly (most accurate)
+   b) Use a different Euler angle convention that matches nanoBragg's umat2misset
+   c) Accept that the misset angles are for reference only and use the matrix
+
+4. The determinant is very close to 1.0 (1.000405), confirming this is a
+   proper rotation matrix with minimal numerical error.

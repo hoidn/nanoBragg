@@ -1,0 +1,73 @@
+ M .claude
+ M PROJECT_STATUS.md
+ D claude
+ D golden_suite_generator/nanoBragg_golden
+ M pyproject.toml
+ M src/nanobrag_torch/config.py
+ M src/nanobrag_torch/models/crystal.py
+ M src/nanobrag_torch/models/detector.py
+ M src/nanobrag_torch/simulator.py
+ M tests/test_suite.py
+?? P1.hkl
+?? demo_outputs/demo_summary.txt
+?? docs/detector_geometry_debugging.md
+?? docs/migration_guide.md
+?? docs/performance.md
+?? docs/rotation_usage.md
+?? docs/tutorials/
+?? golden_suite_generator/P1_trace.hkl
+?? golden_suite_generator/docs/
+?? golden_suite_generator/nanoBragg_trace
+?? phase4_commit_message.md
+?? plans/active/crystal-orientation-misset/
+?? plans/active/general-detector-geometry/implementation.md
+?? plans/active/general-detector-geometry/phase_1_checklist.md
+?? plans/active/general-detector-geometry/phase_3_checklist.md
+?? plans/active/general-detector-geometry/phase_4_checklist.md
+?? plans/active/general-detector-geometry/plan.md
+?? plans/active/general-detector-geometry/review_phase_1.md
+?? plans/active/general-detector-geometry/review_phase_2.md
+?? plans/active/general-detector-geometry/review_phase_3.md
+?? plans/active/general-detector-geometry/review_request_phase_2.md
+?? plans/active/general-detector-geometry/review_request_phase_3.md
+?? plans/active/general-triclinic-cell-params/phase_4_checklist.md
+?? plans/active/geometry-precision-fix/
+?? plans/cellparams/
+?? plans/rotation/
+?? repomix-output.xml
+?? reports/detector_verification/
+?? rotation_matrix_triclinic.txt
+?? scripts/check_detector_pix0.py
+?? scripts/debug_c_rotation.py
+?? scripts/debug_detector_basis_vectors.py
+?? scripts/debug_detector_change.py
+?? scripts/debug_detector_rotation.py
+?? scripts/debug_detector_vectors.py
+?? scripts/debug_flatt_difference.py
+?? scripts/debug_flatt_implementation.py
+?? scripts/debug_geometry_precision.py
+?? scripts/debug_old_vs_new.py
+?? scripts/debug_pix0_calculation.py
+?? scripts/debug_pix0_vector.py
+?? scripts/debug_pixel_positions.py
+?? scripts/debug_sincg.py
+?? scripts/debug_sincg_detailed.py
+?? scripts/debug_vector_comparison.py
+?? scripts/debug_volume_calculation.py
+?? scripts/test_detector_fix.py
+?? scripts/test_flatt_impact.py
+?? scripts/verify_detector_fix.py
+?? scripts/verify_detector_geometry.py
+?? session_summary_triclinic_fix.md
+?? test_debug_comparison.png
+?? tests/golden_data/cubic_tilted_detector/trace.log
+?? tests/golden_data/triclinic_P1/unrotated_vectors.txt
+?? tests/test_detector_geometry.py
+?? tests/test_gradients.py
+?? tests/test_physics.py
+?? tmp/
+?? torch/lessons_in_differentiability.md
+?? trash/
+?? triclinic_difference_map.png
+?? verify_rotation.py
+?? verify_rotation_matrix.py

@@ -276,7 +276,7 @@
     <sop id="4" variant="pytorch_physics">
         <name>PyTorch Physics Debugging (Specialized)</name>
         <goal>To debug physics calculations in the PyTorch implementation using specialized tools.</goal>
-        <reference>For complete debugging methodology, troubleshooting scenarios, and debug script management, see `torch/debugging.md`.</reference>
+        <reference>For complete debugging methodology, troubleshooting scenarios, and debug script management, see `docs/development/debugging.md`.</reference>
         
         <phase name="Phase 1: Initial Diagnosis">
             <task id="1.A">

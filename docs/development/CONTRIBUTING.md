@@ -53,4 +53,4 @@ The project uses a three-tier testing approach:
 2. **Tier 2**: Gradient correctness via automatic differentiation 
 3. **Tier 3**: Scientific validation against physical principles
 
-See `torch/Testing_Strategy.md` for detailed testing methodology.
+See `docs/development/testing_strategy.md` for detailed testing methodology.

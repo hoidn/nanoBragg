@@ -8,7 +8,7 @@ NOTE: The default parameters in this file are configured to match the 'simple_cu
 golden test case, which uses a 10 Å unit cell and a 500×500×500 cell crystal size.
 """
 
-from typing import Tuple
+from typing import Optional, Tuple
 
 import torch
 
@@ -35,7 +35,7 @@ class Crystal:
     3. Mosaic domain rotations (applied during simulation)
     """
 
-    def __init__(self, config: CrystalConfig = None, device=None, dtype=torch.float64):
+    def __init__(self, config: Optional[CrystalConfig] = None, device=None, dtype=torch.float64):
         """Initialize crystal from configuration."""
         self.device = device if device is not None else torch.device("cpu")
         self.dtype = dtype
@@ -79,7 +79,7 @@ class Crystal:
         self._geometry_cache = {}
 
         # Structure factor storage
-        self.hkl_data = None  # Will be loaded by load_hkl()
+        self.hkl_data: Optional[torch.Tensor] = None  # Will be loaded by load_hkl()
 
     def to(self, device=None, dtype=None):
         """Move crystal to specified device and/or dtype."""
@@ -361,7 +361,7 @@ class Crystal:
         
         # Ensure cos_gamma_star is in valid range for sqrt
         cos_gamma_star_clamped = torch.clamp(cos_gamma_star, min=-1.0, max=1.0)
-        sin_gamma_star = torch.sqrt(torch.clamp(1.0 - cos_gamma_star_clamped**2, min=0.0))
+        sin_gamma_star = torch.sqrt(torch.clamp(1.0 - torch.pow(cos_gamma_star_clamped, 2), min=0.0))
         
         # Construct default orientation for reciprocal vectors (C-code convention)
         # a* along x-axis
@@ -580,7 +580,10 @@ class Crystal:
         if config.phi_steps == 1:
             # For single step, use the midpoint (preserves gradients)
             phi_angles = config.phi_start_deg + config.osc_range_deg / 2.0
-            phi_angles = phi_angles.unsqueeze(0)  # Add batch dimension
+            if isinstance(phi_angles, torch.Tensor):
+                phi_angles = phi_angles.unsqueeze(0)  # Add batch dimension
+            else:
+                phi_angles = torch.tensor([phi_angles], device=self.device, dtype=self.dtype)
         else:
             # For multiple steps, we need to create a differentiable range
             # Use arange and manual scaling to preserve gradients
@@ -612,7 +615,12 @@ class Crystal:
 
         # Generate mosaic rotation matrices
         # Assume config.mosaic_spread_deg is a tensor (enforced at call site)
-        if torch.any(config.mosaic_spread_deg > 0.0):
+        if isinstance(config.mosaic_spread_deg, torch.Tensor):
+            has_mosaic = torch.any(config.mosaic_spread_deg > 0.0)
+        else:
+            has_mosaic = config.mosaic_spread_deg > 0.0
+        
+        if has_mosaic:
             mosaic_umats = self._generate_mosaic_rotations(config)
         else:
             # Identity matrices for no mosaicity
@@ -648,7 +656,10 @@ class Crystal:
 
         # Convert mosaic spread to radians
         # Assume config.mosaic_spread_deg is a tensor (enforced at call site)
-        mosaic_spread_rad = torch.deg2rad(config.mosaic_spread_deg)
+        if isinstance(config.mosaic_spread_deg, torch.Tensor):
+            mosaic_spread_rad = torch.deg2rad(config.mosaic_spread_deg)
+        else:
+            mosaic_spread_rad = torch.deg2rad(torch.tensor(config.mosaic_spread_deg, device=self.device, dtype=self.dtype))
 
         # Generate random rotation axes (normalized)
         random_axes = torch.randn(

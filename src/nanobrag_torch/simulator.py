@@ -28,8 +28,8 @@ class Simulator:
         self,
         crystal: Crystal,
         detector: Detector,
-        crystal_config: CrystalConfig = None,
-        beam_config: BeamConfig = None,
+        crystal_config: Optional[CrystalConfig] = None,
+        beam_config: Optional[BeamConfig] = None,
         device=None,
         dtype=torch.float64,
     ):
@@ -220,7 +220,7 @@ class Simulator:
         close_distance_m = self.detector.distance * 1e-10  # Å to meters
         pixel_size_m = self.detector.pixel_size * 1e-10  # Å to meters
 
-        omega_pixel = (pixel_size_m**2) / (airpath_m**2) * close_distance_m / airpath_m
+        omega_pixel = (pixel_size_m * pixel_size_m) / (airpath_m * airpath_m) * close_distance_m / airpath_m
 
         # Final intensity with all physical constants in meters
         # Units: [dimensionless] × [steradians] × [m²] × [photons/m²] × [dimensionless] = [photons·steradians]

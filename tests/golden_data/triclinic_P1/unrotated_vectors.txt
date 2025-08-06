@@ -1,0 +1,27 @@
+Unrotated Reciprocal-Space Vectors for Triclinic P1 Test Case
+=============================================================
+
+Cell Parameters:
+a = 70 Å, b = 80 Å, c = 90 Å
+α = 75°, β = 85°, γ = 95°
+
+These are the reciprocal space vectors BEFORE the misset rotation of
+(-89.968546, -31.328953, 177.753396) degrees is applied.
+
+Unrotated Real-Space Vectors (Angstroms):
+a = [70.0, 0.0, 0.0]
+b = [-6.97245942, 79.69557585, 0.0]
+c = [7.84401685, 24.06895481, 86.36641022]
+Volume = 481811.455732 A^3
+
+Unrotated Reciprocal-Space Vectors (Angstroms^-1):
+     a_star      b_star      c_star    
+X:  0.01428571  0.00000000  0.00000000
+Y:  0.00124984  0.01254775 -0.00000000
+Z: -0.00164578 -0.00349686  0.01157858
+
+Note: The vectors in trace.log are AFTER the misset rotation has been applied:
+     a_star      b_star      c_star    
+X: -0.01232259 -0.00799159  0.00223446
+Y:  0.00048342  0.00030641 -0.01120794
+Z:  0.00750655 -0.01028210  0.00185723

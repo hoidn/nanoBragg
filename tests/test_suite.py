@@ -390,6 +390,87 @@ class TestTier1TranslationCorrectness:
             else:
                 raise
 
+    def test_cubic_tilted_detector_reproduction(self):
+        """Test that PyTorch simulation reproduces the cubic_tilted_detector golden image."""
+        # Set seed for reproducibility
+        torch.manual_seed(0)
+
+        # Set environment variable for torch import
+        import os
+        os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
+        # Create crystal with same parameters as simple_cubic
+        device = torch.device("cpu")
+        dtype = torch.float64
+        crystal = Crystal(device=device, dtype=dtype)
+        
+        # Create detector with tilted configuration
+        from nanobrag_torch.config import DetectorConfig, DetectorConvention, DetectorPivot
+        detector_config = DetectorConfig(
+            distance_mm=100.0,
+            pixel_size_mm=0.1,
+            spixels=1024,
+            fpixels=1024,
+            beam_center_s=61.2,  # offset by 10mm (100 pixels)
+            beam_center_f=61.2,  # offset by 10mm (100 pixels)
+            detector_convention=DetectorConvention.MOSFLM,
+            detector_rotx_deg=5.0,
+            detector_roty_deg=3.0,
+            detector_rotz_deg=2.0,
+            detector_twotheta_deg=15.0,
+            # Don't specify twotheta_axis - let it use the convention default
+            detector_pivot=DetectorPivot.BEAM  # Match C-code's pivot mode
+        )
+        detector = Detector(config=detector_config, device=device, dtype=dtype)
+        
+        # Create crystal config (no rotation/mosaicity)
+        crystal_config = CrystalConfig(
+            phi_start_deg=torch.tensor(0.0, device=device, dtype=dtype),
+            osc_range_deg=torch.tensor(0.0, device=device, dtype=dtype),
+            mosaic_spread_deg=torch.tensor(0.0, device=device, dtype=dtype),
+        )
+        
+        # Create simulator
+        simulator = Simulator(
+            crystal, detector, crystal_config=crystal_config, device=device, dtype=dtype
+        )
+
+        # Run PyTorch simulation
+        pytorch_image = simulator.run()
+
+        # Load the golden float data
+        golden_float_path = GOLDEN_DATA_DIR / "cubic_tilted_detector" / "image.bin"
+        if not golden_float_path.exists():
+            pytest.skip(f"Golden data not found at {golden_float_path}")
+            
+        import numpy as np
+        golden_float_data = torch.from_numpy(
+            np.fromfile(str(golden_float_path), dtype=np.float32).reshape(
+                detector.spixels, detector.fpixels
+            )
+        ).to(dtype=torch.float64)
+
+        # Check that shapes match
+        assert (
+            pytorch_image.shape == golden_float_data.shape
+        ), f"Shape mismatch: {pytorch_image.shape} vs {golden_float_data.shape}"
+
+        # Calculate correlation coefficient
+        corr_coeff = torch.corrcoef(
+            torch.stack([pytorch_image.flatten(), golden_float_data.flatten()])
+        )[0, 1]
+
+        print(f"PyTorch max: {torch.max(pytorch_image):.2e}")
+        print(f"Golden max: {torch.max(golden_float_data):.2e}")
+        print(f"Correlation coefficient: {corr_coeff:.6f}")
+
+        # SUCCESS CRITERIA: High correlation (>0.990) for tilted detector
+        assert corr_coeff > 0.990, f"Low correlation: {corr_coeff:.6f}"
+        
+        print("✅ SUCCESS: cubic_tilted_detector test passed")
+        print(f"✅ Correlation: {corr_coeff:.6f} > 0.990")
+        print("✅ Dynamic detector geometry working correctly")
+
     def test_triclinic_P1_reproduction(self):
         """Test that PyTorch simulation reproduces the triclinic_P1 golden image."""
         # Set seed for reproducibility

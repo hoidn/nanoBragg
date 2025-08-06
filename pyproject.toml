@@ -8,6 +8,10 @@ line-length = 88
 select = ["E", "F", "W", "I"]
 ignore = ["E501"]
 
+[tool.pyrefly]
+project-includes = ["**/*"]
+project-excludes = ["**/*venv/**/*"]
+
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"

@@ -6,9 +6,9 @@
 **Path:** `plans/active/general-detector-geometry/`
 **Branch:** `feature/general-detector-geometry` (baseline: feature/crystal-orientation-misset)
 **Started:** 2025-08-05
-**Current Phase:** Phase 3: Golden Test Case Generation (Phase 2 Complete ✅)
-**Progress:** ████████░░░░░░░░ 40%
-**Next Milestone:** Generate cubic_tilted_detector golden test case with nanoBragg.c
+**Current Phase:** Phase 4: Integration and Backward Compatibility
+**Progress:** ████████████░░░░ 60%  
+**Next Milestone:** Integrate dynamic detector with simulator, ensure backward compatibility
 **R&D Plan:** `plans/active/general-detector-geometry/plan.md`
 **Implementation Plan:** `plans/active/general-detector-geometry/implementation.md`
 

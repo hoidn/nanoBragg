@@ -21,8 +21,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     -   **Verification:** When comparing to external images (like the Golden Suite), always confirm the axis orientation. A 90-degree rotation in the diff image is a classic sign of an axis swap.
 
 5.  **Parallel Trace Debugging is Mandatory:** All debugging of physics discrepancies **MUST** begin with a parallel trace comparison.
-    -   **Action:** Generate a step-by-step log from the instrumented C code and an identical log from the PyTorch script (`scripts/debug_pixel_trace.py`). Compare these two files to find the first line where they numerically diverge. This is the bug.
-    -   **Reference:** See `torch/Testing_Strategy.md` for the strategy and `torch/debugging.md` for the detailed workflow.
+    -   **Action:** Generate a step-by-step log from the instrumented C code and an identical log from the PyTorch script (`scripts/debug_pixel_trace.py`). Compare these two files to find the first line where they numerically diverge. **Before comparing, consult the component contract in `docs/architecture/` to verify the expected units of all variables in the trace log.**
+    -   **Reference:** See `docs/development/testing_strategy.md` for the strategy and `docs/development/debugging.md` for the detailed workflow.
 
 6.  **PyTorch Environment Variable:** All PyTorch code execution **MUST** set the environment variable `KMP_DUPLICATE_LIB_OK=TRUE` to prevent MKL library conflicts.
     -   **Action:** Either set `os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'` in Python before importing torch, or prefix command-line calls with `KMP_DUPLICATE_LIB_OK=TRUE`.
@@ -112,6 +112,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
     **Verification:** The `test_metric_duality` test must pass with `rtol=1e-12`.
 
+14. **Mandatory Component Contracts:** For any non-trivial component port (e.g., `Detector`, `Crystal`), the first step of the implementation phase **MUST** be to author (or consult, if it exists) a complete technical specification in `docs/architecture/[component_name].md`. This contract is the authoritative source for all conventions, units, and logic flows. Implementation must not begin until this document is complete.
+
 ## Crystallographic Conventions
 
 This project adheres to the `|G| = 1/d` convention, where `G = h*a* + k*b* + l*c*`. This is equivalent to the `|Q| = 2π/d` convention where `Q = 2πG`. All tests and calculations must be consistent with this standard.
@@ -143,7 +145,7 @@ The following parameters for the `simple_cubic` case are provided for quick refe
 This repository contains **nanoBragg**, a C-based diffraction simulator for nanocrystals, along with comprehensive documentation for a planned PyTorch port. The codebase consists of:
 
 - **Core C simulators**: `nanoBragg.c` (main diffraction simulator), `nonBragg.c` (amorphous scattering), `noisify.c` (noise addition)
-- **PyTorch port documentation**: Complete architectural design and implementation plan in `./torch/`
+- **PyTorch port documentation**: Complete architectural design and implementation plan in `./docs/`
 - **Auxiliary tools**: Shell scripts for data conversion and matrix generation
 
 ## Build Commands
@@ -184,7 +186,7 @@ The repository currently uses manual validation through example runs and visual 
 
 ## PyTorch Port Design
 
-The `./torch/` directory contains a complete architectural design for a PyTorch reimplementation:
+The `./docs/` directory contains a complete architectural design for a PyTorch reimplementation:
 
 ### Key Design Principles
 - **Vectorization over loops**: Replace nested C loops with broadcasting tensor operations
@@ -195,18 +197,18 @@ The `./torch/` directory contains a complete architectural design for a PyTorch 
 
 ### Critical Documentation Files
 **Architecture & Design:**
-- `PyTorch_Architecture_Design.md`: Core system architecture, vectorization strategy, class design, memory management
-- `Implementation_Plan.md`: Phased development roadmap with specific tasks and deliverables
-- `Testing_Strategy.md`: Three-tier validation approach (translation correctness, gradient correctness, scientific validation)
+- `docs/architecture/pytorch_design.md`: Core system architecture, vectorization strategy, class design, memory management
+- `docs/development/implementation_plan.md`: Phased development roadmap with specific tasks and deliverables
+- `docs/development/testing_strategy.md`: Three-tier validation approach (translation correctness, gradient correctness, scientific validation)
 
 **C Code Analysis:**
-- `C_Architecture_Overview.md`: Original C codebase structure, execution flow, and design patterns
-- `C_Function_Reference.md`: Complete function-by-function reference with porting guidance
-- `C_Parameter_Dictionary.md`: All command-line parameters mapped to internal C variables
+- `docs/architecture/c_code_overview.md`: Original C codebase structure, execution flow, and design patterns
+- `docs/architecture/c_function_reference.md`: Complete function-by-function reference with porting guidance
+- `docs/architecture/c_parameter_dictionary.md`: All command-line parameters mapped to internal C variables
 
 **Advanced Topics:**
-- `Parameter_Trace_Analysis.md`: End-to-end parameter flow analysis for gradient interpretation
-- `processes.xml`: Standard Operating Procedures for development workflow
+- `docs/architecture/parameter_trace_analysis.md`: End-to-end parameter flow analysis for gradient interpretation
+- `docs/development/processes.xml`: Standard Operating Procedures for development workflow
 
 ### Testing Strategy (PyTorch Port)
 1. **Tier 1**: Numerical equivalence with instrumented C code ("Golden Suite")
@@ -255,7 +257,7 @@ EOF
 ## Development Workflow
 
 ### Standard Operating Procedures
-**IMPORTANT**: For all non-trivial development tasks, consult `torch/processes.xml` which contains comprehensive Standard Operating Procedures (SOPs) for:
+**IMPORTANT**: For all non-trivial development tasks, consult `docs/development/processes.xml` which contains comprehensive Standard Operating Procedures (SOPs) for:
 - Task planning and decomposition
 - Test-driven development
 - Bug fixing and verification
@@ -276,9 +278,9 @@ The SOPs emphasize:
 
 ### For PyTorch Port Development
 **Primary References:**
-- `torch/Implementation_Plan.md`: Detailed phase-by-phase development plan
-- `torch/PyTorch_Architecture_Design.md`: System architecture and vectorization approach
-- `torch/Testing_Strategy.md`: Comprehensive validation methodology
+- `docs/development/implementation_plan.md`: Detailed phase-by-phase development plan
+- `docs/architecture/pytorch_design.md`: System architecture and vectorization approach
+- `docs/development/testing_strategy.md`: Comprehensive validation methodology
 
 **Implementation Order:**
 1. **Phase 1**: Implement utility functions (`utils/geometry.py`, `utils/physics.py`)
@@ -287,10 +289,10 @@ The SOPs emphasize:
 4. **Phase 4**: Add differentiable capabilities and validation
 
 **Key Implementation Guidelines:**
-- Use `torch/C_Function_Reference.md` for porting individual C functions
-- Reference `torch/C_Parameter_Dictionary.md` for parameter mapping
-- Consult `torch/Parameter_Trace_Analysis.md` for understanding gradient flow
-- Follow testing strategy in `torch/Testing_Strategy.md` for validation
+- Use `docs/architecture/c_function_reference.md` for porting individual C functions
+- Reference `docs/architecture/c_parameter_dictionary.md` for parameter mapping
+- Consult `docs/architecture/parameter_trace_analysis.md` for understanding gradient flow
+- Follow testing strategy in `docs/development/testing_strategy.md` for validation
 
 ## Memory and Performance Considerations
 
