@@ -6,9 +6,9 @@
 **Path:** `plans/active/general-detector-geometry/`
 **Branch:** `feature/general-detector-geometry` (baseline: feature/crystal-orientation-misset)
 **Started:** 2025-08-05
-**Current Phase:** Phase 4: Integration and Backward Compatibility
-**Progress:** ████████████░░░░ 60%  
-**Next Milestone:** Integrate dynamic detector with simulator, ensure backward compatibility
+**Current Phase:** Final Phase: Validation, Gradients & Documentation
+**Progress:** ████████████████ 80%  
+**Next Milestone:** Complete gradient testing, documentation updates, and final validation
 **R&D Plan:** `plans/active/general-detector-geometry/plan.md`
 **Implementation Plan:** `plans/active/general-detector-geometry/implementation.md`
 
