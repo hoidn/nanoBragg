@@ -90,6 +90,7 @@ debug_*.png
 test_debug_*.png
 *_difference_map.png
 *_comparison.png
+scripts/debug_*.py
 
 # Work in progress
 plans/active/
