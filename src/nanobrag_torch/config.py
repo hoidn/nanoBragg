@@ -110,6 +110,9 @@ class CrystalConfig:
     # Crystal size (number of unit cells in each direction)
     N_cells: Tuple[int, int, int] = (5, 5, 5)
 
+    # Structure factor parameters
+    default_F: float = 100.0  # Default structure factor magnitude
+
 
 @dataclass
 class DetectorConfig:

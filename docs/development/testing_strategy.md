@@ -38,8 +38,101 @@ The following test cases will be defined, and all three artifacts (image, C trac
 | Test Case Name | Description | Purpose |
 | :--- | :--- | :--- |
 | `simple_cubic` | A 100Å cubic cell, single wavelength, no mosaicity, no oscillation. | The "hello world" test for basic geometry and spot calculation. |
-| `triclinic_complex` | A low-symmetry triclinic cell. | To stress-test the reciprocal space and geometry calculations. |
-| `with_mosaicity` | The `simple_cubic` case with a 0.5-degree mosaic spread. | To test the mosaic domain implementation. |
+| `triclinic_P1` | A low-symmetry triclinic cell with misset orientation. | To stress-test the reciprocal space and geometry calculations. |
+| `simple_cubic_mosaic` | The `simple_cubic` case with mosaic spread. | To test the mosaic domain implementation. |
+| `cubic_tilted_detector` | Cubic cell with rotated and tilted detector. | To test general detector geometry implementation. |
+
+### 2.3 Canonical Generation Commands
+
+**⚠️ CRITICAL:** The following commands are the **single source of truth** for reproducing the golden data. All parallel verification MUST use these exact parameters. These commands must be run from within the `golden_suite_generator/` directory.
+
+#### 2.3.1 `simple_cubic`
+**Purpose:** Basic validation of geometry and physics calculations.
+
+**Canonical Command:**
+```bash
+./nanoBragg -hkl P1.hkl -matrix A.mat \
+  -lambda 6.2 \
+  -N 5 \
+  -default_F 100 \
+  -distance 100 \
+  -detsize 102.4 \
+  -pixel 0.1 \
+  -floatfile ../tests/golden_data/simple_cubic.bin \
+  -intfile ../tests/golden_data/simple_cubic.img
+```
+
+**Key Parameters:**
+- Crystal: 100Å cubic cell, 5×5×5 unit cells
+- Detector: 100mm distance, 1024×1024 pixels (via `-detsize 102.4`)
+- Beam: λ=6.2Å, uniform F=100
+
+#### 2.3.2 `triclinic_P1`
+**Purpose:** Validates general triclinic geometry and misset rotations.
+
+**Canonical Command:**
+```bash
+./nanoBragg -misset -89.968546 -31.328953 177.753396 \
+  -cell 70 80 90 75 85 95 \
+  -default_F 100 \
+  -N 5 \
+  -lambda 1.0 \
+  -detpixels 512 \
+  -floatfile tests/golden_data/triclinic_P1/image.bin
+```
+
+**Key Parameters:**
+- Crystal: Triclinic (70,80,90,75°,85°,95°), 5×5×5 unit cells
+- Detector: 100mm distance, 512×512 pixels (via `-detpixels 512`)
+- Pivot: BEAM mode ("pivoting detector around direct beam spot")
+
+**⚠️ CRITICAL DIFFERENCE:** Uses `-detpixels 512` NOT `-detsize`!
+
+#### 2.3.3 `simple_cubic_mosaic`
+**Purpose:** Validates mosaicity implementation.
+
+**Canonical Command:**
+```bash
+./nanoBragg -hkl P1.hkl -matrix A.mat \
+  -lambda 6.2 \
+  -N 5 \
+  -default_F 100 \
+  -distance 100 \
+  -detsize 100 \
+  -pixel 0.1 \
+  -mosaic_spread 1.0 \
+  -mosaic_domains 10 \
+  -floatfile ../tests/golden_data/simple_cubic_mosaic.bin \
+  -intfile ../tests/golden_data/simple_cubic_mosaic.img
+```
+
+**Key Parameters:**
+- Same as simple_cubic but with 1.0° mosaic spread, 10 domains
+- Detector: 1000×1000 pixels (via `-detsize 100`)
+
+#### 2.3.4 `cubic_tilted_detector`
+**Purpose:** Validates general detector geometry with rotations.
+
+**Canonical Command:**
+```bash
+./nanoBragg -lambda 6.2 \
+  -N 5 \
+  -cell 100 100 100 90 90 90 \
+  -default_F 100 \
+  -distance 100 \
+  -detsize 102.4 \
+  -detpixels 1024 \
+  -Xbeam 61.2 -Ybeam 61.2 \
+  -detector_rotx 5 -detector_roty 3 -detector_rotz 2 \
+  -twotheta 15 \
+  -oversample 1 \
+  -floatfile tests/golden_data/cubic_tilted_detector/image.bin
+```
+
+**Key Parameters:**
+- Detector rotations: rotx=5°, roty=3°, rotz=2°, twotheta=15°
+- Beam center offset: (61.2, 61.2) mm
+- Pivot: SAMPLE mode with explicit beam center
 
 ## 3. Tier 1: Translation Correctness Testing
 

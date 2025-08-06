@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 import torch
-from nanobrag_torch.config import CrystalConfig
+from nanobrag_torch.config import CrystalConfig, DetectorConfig
 from nanobrag_torch.models.crystal import Crystal
 from nanobrag_torch.models.detector import Detector
 from nanobrag_torch.simulator import Simulator
@@ -499,13 +499,19 @@ class TestTier1TranslationCorrectness:
 
         crystal = Crystal(config=triclinic_config, device=device, dtype=dtype)
 
-        # Create detector - need to modify its parameters for 512x512 pixels
-        detector = Detector(device=device, dtype=dtype)
-        # Override detector parameters to match triclinic test case
-        detector.spixels = 512
-        detector.fpixels = 512
-        detector.beam_center_f = 256.5  # Center of 512x512 detector
-        detector.beam_center_s = 256.5
+        # Create detector config that matches triclinic golden data parameters
+        from nanobrag_torch.config import DetectorPivot
+        triclinic_detector_config = DetectorConfig(
+            distance_mm=100.0,      # From params.json
+            pixel_size_mm=0.1,      # From params.json  
+            spixels=512,            # From params.json (detpixels)
+            fpixels=512,            # From params.json (detpixels)
+            beam_center_s=25.6,     # Center of 512x512 detector: 256 pixels * 0.1mm = 25.6mm
+            beam_center_f=25.6,     # Center of 512x512 detector: 256 pixels * 0.1mm = 25.6mm
+            detector_pivot=DetectorPivot.BEAM  # C-code uses BEAM pivot: "pivoting detector around direct beam spot"
+        )
+        
+        detector = Detector(config=triclinic_detector_config, device=device, dtype=dtype)
 
         # Crystal config for rotations (no rotation for this test case)
         crystal_rot_config = CrystalConfig(

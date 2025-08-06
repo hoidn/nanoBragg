@@ -1,230 +1,203 @@
-# Detector Geometry Debugging: Lessons Learned
+# Detector Geometry Debugging: A Case Study
+
+**Date:** January 2025  
+**Issue:** Triclinic simulation correlation catastrophically dropped from 0.957 to 0.004  
+**Root Cause:** Detector geometry calculations using wrong unit system (Angstroms instead of meters)  
+**Resolution:** Updated Detector class to use hybrid unit system matching C-code conventions
 
 ## Executive Summary
 
-During Phase 4 of the General Detector Geometry implementation, we encountered a critical bug where the `cubic_tilted_detector` test initially showed only 0.28 correlation with the golden reference image (target: ≥0.99). Through systematic debugging, we discovered multiple root causes related to coordinate conventions, unit conversions, and rotation axis specifications. This document captures the debugging process, findings, and critical lessons for future development.
+This document captures the debugging journey that led to fixing a critical regression in the PyTorch nanoBragg implementation. A seemingly simple detector refactoring caused a complete failure of the triclinic test case. Through systematic debugging and parallel trace analysis, we discovered that the detector geometry system was using the wrong unit system, producing pixel positions that were off by 9 orders of magnitude.
 
 ## The Problem
 
-### Initial Symptoms
-- `test_cubic_tilted_detector_reproduction`: **-0.015 correlation** (first attempt)
-- `test_cubic_tilted_detector_reproduction`: **0.28 correlation** (after initial fixes)
-- `test_simple_cubic_reproduction`: Regression from >0.999 to 0.977 correlation
-- Detector basis vectors not matching C-code reference values
+After implementing the general detector geometry system (Phase 2), the triclinic test correlation dropped catastrophically:
+- **Before:** 0.957 (excellent match)
+- **After:** 0.004 (complete failure)
 
-### Expected vs Actual
-- **Expected**: ≥0.990 correlation for tilted detector, ≥0.99 for simple cubic
-- **Actual**: Correlations far below threshold, indicating fundamental geometry errors
+The simple_cubic test remained mostly functional, creating a confusing situation where one test passed and another failed completely.
 
-## Debugging Process
+## The Debugging Journey
 
-### 1. Detector Vector Comparison (First Clue)
-```python
-# PyTorch vectors (incorrect)
-Fast axis: [0.3107, -0.0853, 0.9467]
+### 1. Initial Misdiagnosis: Detector Configuration
 
-# C-code reference vectors
-Fast axis: [0.0312, -0.0967, 0.9948]
+**First Hypothesis:** Wrong detector parameters in the test configuration.
+
+**What We Found:**
+- Test was using `-detsize 1024` instead of `-detpixels 512`
+- This created a 10240×10240 detector instead of 512×512
+- **Fix Applied:** Updated triclinic test configuration
+
+**Result:** Still broken! Correlation improved slightly but remained near zero.
+
+### 2. Red Herring #1: F_latt Calculation
+
+**Second Hypothesis:** The F_latt calculation was using wrong Miller indices.
+
+**Investigation:**
+- Noticed simulator was using `F_latt(h)` instead of `F_latt(h-h0)`
+- Created a "fix" to use fractional indices
+- **Discovery:** Both approaches gave identical results!
+
+**Lesson:** The shape transform naturally zeroes out at integer values, making this a non-issue.
+
+### 3. Red Herring #2: Numerical Precision
+
+**Third Hypothesis:** The sincg function had numerical precision issues.
+
+**Investigation:**
+- Created comprehensive numerical validation tests
+- Compared PyTorch vs NumPy vs C implementations
+- **Result:** Perfect agreement to machine precision
+
+**Lesson:** Don't blame numerical precision without evidence.
+
+### 4. The Breakthrough: Parallel Trace Analysis
+
+**Key Insight:** Stop guessing and directly compare calculations step-by-step.
+
+**Method:**
+1. Generated C-code trace: `./nanoBragg -trace_pixel 372 289 ...`
+2. Created Python trace script to output identical format
+3. Compared outputs line by line
+
+**The Smoking Gun:**
 ```
-The basis vectors were completely wrong, indicating the rotation calculations were incorrect.
-
-### 2. Unit Conversion Issues
-```python
-# Detector pix0_vector comparison
-PyTorch: [1120873.6667, 653100.4061, -556023.3054]  # Angstroms
-Expected: [1120873728.0, 653100416.0, -556023296.0]  # Wrong units!
-```
-Initial comparison showed a factor of ~1000 difference. Investigation revealed:
-- C-code outputs PIX0_VECTOR in **meters**
-- PyTorch internal representation in **Angstroms**
-- Test was comparing different units
-
-### 3. Pixel Coordinate Convention
-The simple_cubic test regression revealed a fundamental issue with pixel coordinate calculation:
-
-```python
-# OLD method (correct for C-code compatibility)
-pixel_position = origin + (index - beam_center) * pixel_size * basis
-
-# NEW method (incorrect initial implementation)  
-pixel_position = pix0 + index * pixel_size * basis
-where pix0 = origin + (0.5 - beam_center) * pixel_size * basis
-```
-
-The 0.5 offset assumed pixel centers at integer indices, but the C-code uses pixel edges at integer indices.
-
-### 4. Detector Pivot Mode
-Investigation revealed the detector implementation was modified to support BEAM pivot mode, with complex conditional logic:
-
-```python
-if detector_pivot == BEAM:
-    # Different pix0_vector calculation
-    # Different coordinate system origin
-else:  # SAMPLE pivot
-    # Original calculation method
-```
-
-### 5. Two-Theta Rotation Axis (Root Cause)
-The critical bug was in the two-theta rotation axis specification:
-
-```python
-# WRONG - gave 0.28 correlation
-twotheta_axis=[0.0, 1.0, 0.0]  # Y-axis rotation
-
-# CORRECT - gives 0.993 correlation  
-# MOSFLM default (from C-code line 1194)
-twotheta_axis=[0.0, 0.0, -1.0]  # -Z axis rotation
+Component         | C-Code (Correct)      | PyTorch (Broken)     | Error
+------------------|-----------------------|----------------------|--------
+Pixel Position    | 0.1 -0.011525 0.003225| 0.1 0.2193 -0.2276  | 70×
+Diffracted Vector | 0.993 -0.114 0.032    | 0.302 0.662 -0.687  | Wrong!
+Miller Indices    | 2.21, 0.36, 10.3      | 6.62, 61.5, -57.1   | Wrong!
 ```
 
-## Root Causes Discovered
+The pixel positions were off by orders of magnitude, causing everything downstream to fail.
 
-### 1. **Convention Confusion**
-- MOSFLM vs XDS detector conventions have different:
-  - Initial basis vector orientations
-  - Beam vector directions ([1,0,0] vs [0,0,1])
-  - Two-theta rotation axes ([0,0,-1] vs [1,0,0])
-  - Coordinate system handedness
+## Root Cause Analysis
 
-### 2. **Incomplete C-Code Analysis**
-- The C-code has implicit defaults not obvious from command-line parsing
-- MOSFLM convention uses -Z axis for two-theta, not +Y axis
-- Default values are set in multiple places throughout the code
+### The Unit System Mismatch
 
-### 3. **Unit System Inconsistencies**
-- C-code uses mixed units internally (meters, millimeters, Angstroms)
-- Output formats vary (PIX0_VECTOR in meters, distances in mm)
-- PyTorch implementation must maintain consistent internal units (Angstroms)
+**Global Rule (CLAUDE.md):** "All internal physics calculations MUST use Angstroms"
 
-### 4. **Pixel Indexing Ambiguity**
-- Pixel edge vs pixel center convention
-- The C-code places pixel edges at integer indices
-- Common imaging libraries often place pixel centers at integer indices
+**Hidden Exception:** The C-code detector geometry calculations use **meters**, not Angstroms!
+
+**Evidence:**
+- C-code output: `DETECTOR_PIX0_VECTOR 0.1 0.0257 -0.0257` (meters)
+- PyTorch output: `pix0_vector: [1.0e+09, 5.1e+08, -5.1e+08]` (Angstroms)
+
+### Why This Happened
+
+1. **Over-generalization:** Applied the global "Angstroms everywhere" rule to detector geometry
+2. **Missing Documentation:** No explicit documentation that detector uses meters
+3. **Subtle C-code Convention:** The C-code doesn't explicitly state units in most places
+
+## The Fix
+
+### Code Changes
+
+```python
+# BEFORE (Wrong):
+self.distance = mm_to_angstroms(config.distance_mm)      # 100mm → 1e9 Å
+self.pixel_size = mm_to_angstroms(config.pixel_size_mm)  # 0.1mm → 1e6 Å
+
+# AFTER (Correct):
+self.distance = config.distance_mm / 1000.0      # 100mm → 0.1 m
+self.pixel_size = config.pixel_size_mm / 1000.0  # 0.1mm → 0.0001 m
+```
+
+### Verification
+
+After the fix:
+- Pixel positions matched C-code within 25 micrometers
+- Triclinic correlation restored to 0.957
+- All downstream calculations (Miller indices, structure factors) became correct
 
 ## Lessons Learned
 
-### 1. **Always Verify Convention Defaults**
-```python
-# BAD: Assume a "reasonable" default
-twotheta_axis = [0.0, 1.0, 0.0]  # Seems logical for vertical axis
+### 1. Parallel Trace Debugging is Powerful
 
-# GOOD: Check the actual C-code default
-# From nanoBragg.c line 1194:
-twotheta_axis[1]=twotheta_axis[2]=0; twotheta_axis[3]=-1; /* MOSFLM convention */
-```
+**The Technique:**
+1. Instrument both implementations to output identical trace formats
+2. Run the same test case through both
+3. Compare outputs to find first divergence
+4. Fix that specific calculation
+5. Repeat until traces match
 
-### 2. **Document Coordinate Systems Explicitly**
-```python
-class DetectorConfig:
-    """
-    Coordinate System:
-    - Origin: Sample position (0,0,0)
-    - Beam direction: +X axis (MOSFLM convention)
-    - Lab frame: Right-handed, Y up, Z completing the system
-    - Pixel indexing: (slow, fast) with edges at integer indices
-    - Units: All distances in mm (user input), converted to Angstroms internally
-    """
-```
+**Why It Works:**
+- Eliminates guesswork
+- Pinpoints exact location of bugs
+- Provides ground truth for every calculation
 
-### 3. **Unit Annotations in Variable Names**
-```python
-# BAD: Ambiguous units
-distance = 100.0
-pix0_vector = [112.08, 65.31, -55.60]
+### 2. Component-Specific Documentation is Critical
 
-# GOOD: Clear unit specification
-distance_mm = 100.0
-distance_angstroms = mm_to_angstroms(distance_mm)
-pix0_vector_meters = [0.11208, 0.06531, -0.05560]
-pix0_vector_angstroms = meters_to_angstroms(pix0_vector_meters)
-```
+**What We Needed:**
+- Explicit statement that detector geometry uses meters
+- Warning about exception to global Angstrom rule
+- Examples showing expected values for validation
 
-### 4. **Trace-Driven Debugging is Essential**
-The parallel trace comparison methodology was crucial:
-1. Generate C-code trace with specific debug output
-2. Generate PyTorch trace with identical output format
-3. Compare line-by-line to find divergence
-4. Focus debugging on the exact point of divergence
+**What We Had:**
+- Global rule saying "use Angstroms everywhere"
+- No detector-specific unit documentation
+- No warning about this exception
 
-### 5. **Test Multiple Configurations Early**
-Don't just test the default configuration:
-- Test with rotations (exposed the basis vector bug)
-- Test with different pivot modes (exposed the pix0_vector bug)
-- Test with different conventions (exposed the axis bug)
+### 3. Test Suite Design Matters
 
-### 6. **Preserve Original Behavior by Default**
-When adding new features (like BEAM pivot mode), ensure the default behavior exactly matches the original:
-```python
-# Default should match original C-code behavior
-detector_pivot: DetectorPivot = DetectorPivot.SAMPLE  # Not BEAM
-```
+**Why This Bug Survived:**
+- Simple_cubic test had high tolerance (correlation > 0.99)
+- Detector geometry error was partially masked by other factors
+- Only triclinic test was sensitive enough to catch the issue
 
-## Recommended Coordinate/Notation Conventions
+**Better Approach:**
+- Add explicit unit tests for detector geometry
+- Test pixel coordinates against known values
+- Don't rely solely on end-to-end correlation tests
 
-### 1. **Coordinate System Documentation Template**
-```markdown
-## Coordinate System: [Component Name]
+### 4. Debugging Methodology
 
-**Origin**: [Description of where (0,0,0) is located]
-**Primary Axis**: [Which direction is X/Y/Z, what it represents]  
-**Handedness**: [Right-handed or left-handed]
-**Units**: [Internal units for all calculations]
-**Conventions**: [Any special conventions, e.g., rotation order]
+**What Worked:**
+1. Systematic hypothesis testing
+2. Creating minimal reproduction cases
+3. Parallel trace comparison
+4. Following the data flow from first principles
 
-### Transformations
-- From [Source] to [Target]: [Transformation description]
-- Rotation Convention: [Intrinsic/Extrinsic, Active/Passive]
-- Matrix Convention: [Row/Column vectors]
-```
+**What Didn't Work:**
+1. Guessing based on symptoms
+2. Making multiple changes at once
+3. Assuming the bug was in complex physics (it was in simple geometry)
 
-### 2. **Variable Naming Convention**
-```python
-# Pattern: {quantity}_{units}_{coordinate_system}_{note}
-distance_mm_input = 100.0  # User input in mm
-distance_angstroms = mm_to_angstroms(distance_mm_input)  # Internal
-beam_pos_lab_meters = [0.1, 0.0, 0.0]  # Lab frame, meters
-beam_pos_detector_pixels = [512, 512]  # Detector frame, pixels
-```
+## Recommendations for Future Development
 
-### 3. **Rotation Specification**
-```python
-# Always specify:
-# 1. Rotation axis (unit vector)
-# 2. Rotation angle (with units)
-# 3. Active/passive convention
-# 4. Order for multiple rotations
+### 1. Mandatory Trace Validation
 
-rotation = Rotation(
-    axis=[0, 0, 1],  # Unit vector along Z
-    angle_deg=15.0,  # Explicitly include units
-    convention="active",  # Object rotates, not coordinates
-    order="intrinsic"  # Rotations in body frame
-)
-```
+For any new component implementation:
+1. Generate C-code trace for test case
+2. Implement equivalent trace in PyTorch
+3. Validate numerical agreement before proceeding
 
-### 4. **Test Data Conventions**
-```python
-# Golden test parameters should include:
-detector_params = {
-    "distance_mm": 100.0,  # Explicit units
-    "beam_center_mm": {"x": 61.2, "y": 61.2},  # Not just [61.2, 61.2]
-    "rotations_deg": {"x": 5, "y": 3, "z": 2},  # Clear axis mapping
-    "rotation_order": "XYZ",  # Explicit order
-    "twotheta": {
-        "angle_deg": 15.0,
-        "axis": [0, 0, -1],  # Never rely on defaults
-        "pivot": "beam"  # Explicit pivot mode
-    }
-}
-```
+### 2. Explicit Unit Documentation
+
+Every component should document:
+- Input units (user-facing)
+- Internal calculation units
+- Output units (to other components)
+- Any exceptions to global rules
+
+### 3. Component Contracts
+
+Before implementing any component:
+1. Write complete technical specification
+2. Document all conventions and units
+3. Identify any non-standard behaviors
+4. Get review from team
+
+### 4. Regression Test Design
+
+For critical paths:
+- Test intermediate calculations, not just final results
+- Include strict numerical tolerances where appropriate
+- Add "canary" tests that fail loudly on specific bugs
 
 ## Conclusion
 
-The detector geometry debugging revealed that seemingly small details (rotation axes, unit conventions, coordinate origins) can cause catastrophic failures in scientific simulations. The key lesson is that **implicit conventions are dangerous** - every geometric transformation, unit conversion, and coordinate system must be explicitly documented and verified against reference implementations.
+This debugging journey revealed that a simple unit conversion error can cascade into complete system failure. The fix was trivial once identified, but finding it required systematic debugging methodology and the right tools. The parallel trace technique proved invaluable and should be standard practice for scientific computing ports.
 
-The successful resolution (achieving 0.993 correlation) came from:
-1. Systematic comparison with C-code behavior
-2. Explicit handling of all conventions
-3. Careful unit tracking throughout the codebase
-4. Comprehensive testing of non-default configurations
-
-This debugging experience reinforces the importance of the project's "trace-driven validation" methodology and the critical need for explicit, well-documented conventions in scientific computing.
+The key lesson: **Never assume conventions are universal. Always verify with ground truth data.**

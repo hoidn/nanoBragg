@@ -37,9 +37,12 @@ class Detector:
             config = DetectorConfig()  # Use defaults
         self.config = config
         
-        # Convert units to internal Angstrom system
-        self.distance = mm_to_angstroms(config.distance_mm)
-        self.pixel_size = mm_to_angstroms(config.pixel_size_mm)
+        # NOTE: Detector geometry works in METERS, not Angstroms!
+        # This is different from the physics calculations which use Angstroms
+        # The C-code detector geometry calculations use meters as evidenced by
+        # DETECTOR_PIX0_VECTOR outputting values like 0.1 (for 100mm distance)
+        self.distance = config.distance_mm / 1000.0  # Convert mm to meters
+        self.pixel_size = config.pixel_size_mm / 1000.0  # Convert mm to meters
         
         # Copy dimension parameters
         self.spixels = config.spixels
@@ -166,6 +169,7 @@ class Detector:
         """
         from ..config import DetectorPivot, DetectorConvention
         
+        
         if self.config.detector_pivot == DetectorPivot.BEAM:
             # BEAM pivot mode: detector rotates around the direct beam spot
             # For MOSFLM convention, beam_vector is [1, 0, 0]
@@ -183,13 +187,14 @@ class Detector:
                 # Note: In MOSFLM, X/Y are swapped: Fbeam uses Y, Sbeam uses X
                 Xbeam_mm = self.config.beam_center_f  # f corresponds to Y in MOSFLM
                 Ybeam_mm = self.config.beam_center_s  # s corresponds to X in MOSFLM
-                # Apply MOSFLM formula and convert to Angstroms
-                Fbeam = mm_to_angstroms(Xbeam_mm + 0.5 * self.config.pixel_size_mm)  # Uses Ybeam in C-code
-                Sbeam = mm_to_angstroms(Ybeam_mm + 0.5 * self.config.pixel_size_mm)  # Uses Xbeam in C-code
+                # Apply MOSFLM formula and convert to METERS (not Angstroms!)
+                Fbeam = (Xbeam_mm + 0.5 * self.config.pixel_size_mm) / 1000.0  # Convert mm to meters
+                Sbeam = (Ybeam_mm + 0.5 * self.config.pixel_size_mm) / 1000.0  # Convert mm to meters
+                
             else:
                 # Default behavior for other conventions
-                Fbeam = self.beam_center_f * self.pixel_size  # in Angstroms
-                Sbeam = self.beam_center_s * self.pixel_size  # in Angstroms
+                Fbeam = self.beam_center_f * self.pixel_size  # in meters
+                Sbeam = self.beam_center_s * self.pixel_size  # in meters
             
             # Calculate pix0_vector using BEAM pivot formula
             self.pix0_vector = (-Fbeam * self.fdet_vec - 

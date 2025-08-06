@@ -3,7 +3,9 @@
 **Status:** Authoritative Specification  
 **Last Updated:** Phase 5 Implementation
 
-This document provides the complete technical specification for the Detector component. For global project rules on units and coordinate systems, see `docs/architecture/conventions.md`.
+**⚠️ CRITICAL:** This component uses a [hybrid unit system](#61-critical-hybrid-unit-system-overrides-global-rule) that overrides the global Angstrom-only rule.
+
+This document provides the complete technical specification for the Detector component. For global project rules on units and coordinate systems, see [Global Conventions](./conventions.md).
 
 ---
 
@@ -111,22 +113,53 @@ pix0_vector = detector_origin + s_offset * sdet_vec + f_offset * fdet_vec
 
 ## 6. Unit Conversion System
 
-### 6.1 Internal vs User-Facing Units
+### ⚠️ 6.1 CRITICAL: Hybrid Unit System (OVERRIDES GLOBAL RULE)
 
-| Parameter | User-Facing (Config) | Internal (Calculation) | Conversion |
-| :--- | :--- | :--- | :--- |
-| `distance` | mm | Angstroms | × 10 |
-| `pixel_size` | mm | Angstroms | × 10 |
-| `beam_center_s/f` | mm | pixels | ÷ pixel_size_mm |
-| Rotation angles | degrees | radians | × π/180 |
+**This section overrides CLAUDE.md Rule #1 ("All internal calculations use Angstroms")**
 
-### 6.2 Conversion Examples
+The Detector component uses a **hybrid unit system** to maintain exact compatibility with the C-code reference implementation:
+
+| Stage | Unit System | Rationale |
+| :--- | :--- | :--- |
+| **User Input** (`DetectorConfig`) | millimeters (mm) | User-friendly units |
+| **Internal Geometry** (positions, distances) | **meters (m)** | C-code compatibility |
+| **Output to Physics** (`pixel_coords`) | Angstroms (Å) | Physics engine compatibility |
+
+**Why This Exception Exists:**
+- The C-code outputs detector positions like `DETECTOR_PIX0_VECTOR 0.1 0.0257 -0.0257` which are in **meters**
+- Converting detector geometry to Angstroms produces values ~10⁹, causing numerical precision issues
+- The physics calculations (scattering vectors, Miller indices) correctly require Angstroms
+
+### 6.2 Correct Implementation
+
 ```python
-# User provides distance in mm
-config = DetectorConfig(distance_mm=100.0)
+# ✅ CORRECT: Detector geometry uses meters internally
+class Detector:
+    def __init__(self, config):
+        # Convert mm to METERS for geometry calculations
+        self.distance = config.distance_mm / 1000.0      # 100mm → 0.1m
+        self.pixel_size = config.pixel_size_mm / 1000.0  # 0.1mm → 0.0001m
+        
+    def get_pixel_coords(self):
+        # Calculate in meters
+        coords_meters = self._calculate_pixel_positions()  # Returns meters
+        
+        # Convert to Angstroms for physics compatibility
+        coords_angstroms = coords_meters * 1e10
+        return coords_angstroms
 
-# Internal conversion
-self.distance = mm_to_angstroms(config.distance_mm)  # 1000.0 Å
+# ❌ WRONG: Using Angstroms for detector geometry
+self.distance = mm_to_angstroms(config.distance_mm)  # 100mm → 1e9 Å (WRONG!)
+```
+
+### 6.3 Unit Conversion Reference
+
+| Parameter | User Input | Internal Geometry | Output to Physics |
+| :--- | :--- | :--- | :--- |
+| `distance` | 100.0 mm | 0.1 m | 1e9 Å |
+| `pixel_size` | 0.1 mm | 0.0001 m | 1e6 Å |
+| `beam_center` | 25.6 mm | 0.0256 m | 2.56e8 Å |
+| `pix0_vector` | - | [0.1, 0.0257, -0.0257] m | [1e9, 2.57e8, -2.57e8] Å |
 
 # Beam center conversion (mm to pixels)
 self.beam_center_s = config.beam_center_s / config.pixel_size_mm
@@ -165,6 +198,53 @@ User Parameter (tensor) → Unit Conversion → Basis Vectors → Pixel Coords �
       ↑                                                                           ↓
       └─────────────────────── Gradient Backpropagation ─────────────────────────┘
 ```
+
+## 8. Critical Configuration Details
+
+### 8.1 Pivot Mode Selection
+
+**CRITICAL:** The pivot mode determines how the detector rotates and must match the C-code for each test case:
+
+| Test Case | Pivot Mode | C-Code Indicator | DetectorConfig Setting |
+| :--- | :--- | :--- | :--- |
+| simple_cubic | (default) | No explicit message | `detector_pivot=DetectorPivot.SAMPLE` |
+| triclinic_P1 | BEAM | "pivoting detector around direct beam spot" | `detector_pivot=DetectorPivot.BEAM` |
+| cubic_tilted_detector | SAMPLE | Explicit beam center given | `detector_pivot=DetectorPivot.SAMPLE` |
+
+**How to Determine Pivot Mode:**
+1. Check the C-code trace output for "pivoting detector around direct beam spot" → BEAM pivot
+2. If no message appears, check if explicit beam center is given → SAMPLE pivot
+3. When in doubt, generate a trace with both modes and compare pixel positions
+
+### 8.2 Beam Center Calculation
+
+**CRITICAL:** Beam center values are physical distances in mm, NOT pixel coordinates:
+
+```python
+# For a 512×512 detector with 0.1mm pixels:
+# Center pixel: (256, 256)
+# Physical center: 256 × 0.1mm = 25.6mm
+config = DetectorConfig(
+    spixels=512,
+    fpixels=512,
+    pixel_size_mm=0.1,
+    beam_center_s=25.6,  # mm from detector edge
+    beam_center_f=25.6   # mm from detector edge
+)
+
+# For a 1024×1024 detector with 0.1mm pixels:
+# Center pixel: (512, 512)
+# Physical center: 512 × 0.1mm = 51.2mm
+config = DetectorConfig(
+    spixels=1024,
+    fpixels=1024,
+    pixel_size_mm=0.1,
+    beam_center_s=51.2,  # mm from detector edge
+    beam_center_f=51.2   # mm from detector edge
+)
+```
+
+**Common Mistake:** Using pixel coordinates (256, 512) instead of physical distances (25.6mm, 51.2mm)
 
 ## 9. Example Configurations
 

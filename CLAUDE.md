@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**For a complete overview of the project's architecture and conventions, see the [Architecture Hub](./docs/architecture/README.md).**
+
 ## 🛑 Core Implementation Rules (IMPORTANT)
 
 **YOU MUST ADHERE TO THESE RULES TO AVOID COMMON BUGS:**
@@ -9,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 1.  **Consistent Unit System:** All internal physics calculations **MUST** use a single, consistent unit system. The project standard is **Angstroms (Å)** for length and **electron-volts (eV)** for energy.
     -   **Action:** Convert all input parameters (e.g., from mm, meters) to this internal system immediately upon ingestion in the configuration or model layers.
     -   **Verification:** When debugging, the first step is to check the units of all inputs to a calculation.
+    -   **EXCEPTION:** The [Detector component](./docs/architecture/detector.md#61-critical-hybrid-unit-system) uses meters internally for geometry calculations. See the detector specification for details.
 
 2.  **Crystallographic Convention:** All calculations of Miller indices (h,k,l) from a scattering vector S **MUST** use the dot product with the **real-space lattice vectors** (a, b, c). This is a non-standard convention specific to the nanoBragg.c codebase that must be replicated exactly. **Formula:** h = dot(S, a).
 

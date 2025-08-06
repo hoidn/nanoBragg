@@ -17,7 +17,7 @@ This is the baseline test for a perfect cubic crystal with no mosaicity. It is u
 - `simple_cubic.bin`
 - `simple_cubic.img`
 
-**Command:**
+**⚠️ CANONICAL C-CODE COMMAND (COPY-PASTEABLE):**
 ```bash
 ./nanoBragg -hkl P1.hkl -matrix A.mat \
   -lambda 6.2 \
@@ -30,7 +30,14 @@ This is the baseline test for a perfect cubic crystal with no mosaicity. It is u
   -intfile ../tests/golden_data/simple_cubic.img
 ```
 
-Note: `-detsize 102.4` and `-pixel 0.1` result in a 1024x1024 pixel image.
+**Key Parameters:**
+- **Crystal**: 100Å cubic cell, 5×5×5 unit cells
+- **Beam**: λ=6.2Å, structure factor F=100 (uniform)
+- **Detector**: 100mm distance, 0.1mm pixels, 102.4mm detector size → **1024×1024 pixels**
+- **Beam Center**: Default (center of detector) = 51.2mm from edge
+- **Pivot Mode**: Default C-code pivot mode
+
+Note: `-detsize 102.4` and `-pixel 0.1` result in a 1024×1024 pixel image.
 
 ---
 
@@ -70,7 +77,7 @@ This test validates the implementation of general triclinic unit cells. It uses 
 - `triclinic_P1/trace.log`
 - `triclinic_P1/params.json`
 
-**Command:**
+**⚠️ CANONICAL C-CODE COMMAND (COPY-PASTEABLE):**
 ```bash
 ./nanoBragg -misset -89.968546 -31.328953 177.753396 \
   -cell 70 80 90 75 85 95 \
@@ -81,13 +88,15 @@ This test validates the implementation of general triclinic unit cells. It uses 
   -floatfile tests/golden_data/triclinic_P1/image.bin
 ```
 
-**Parameters:**
-- Unit cell: a=70Å, b=80Å, c=90Å, α=75°, β=85°, γ=95°
-- Misset angles: (-89.968546°, -31.328953°, 177.753396°) for reproducible orientation
-- Crystal size: 5x5x5 unit cells
-- Wavelength: 1.0 Å
-- Detector: 512x512 pixels, 100mm distance, 0.1mm pixel size (defaults)
-- Structure factors: all reflections set to F=100
+**Key Parameters:**
+- **Crystal**: Triclinic cell a=70Å, b=80Å, c=90Å, α=75°, β=85°, γ=95°, 5×5×5 unit cells
+- **Orientation**: Misset angles (-89.968546°, -31.328953°, 177.753396°) for reproducible orientation
+- **Beam**: λ=1.0Å, structure factor F=100 (uniform)
+- **Detector**: 100mm distance, 0.1mm pixels, **-detpixels 512** → **512×512 pixels**
+- **Beam Center**: Default (center of 512×512 detector) = 25.6mm from edge
+- **Pivot Mode**: BEAM pivot ("pivoting detector around direct beam spot")
+
+**⚠️ CRITICAL:** This case uses `-detpixels 512`, NOT `-detsize`. This creates a 512×512 detector with 0.1mm pixels, beam center at 25.6mm.
 
 Note: The misset angles were generated randomly and saved for reproducibility. To regenerate this data, use the script at `tests/golden_data/triclinic_P1/regenerate_golden.sh`.
 

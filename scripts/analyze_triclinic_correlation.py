@@ -10,7 +10,7 @@ from pathlib import Path
 from nanobrag_torch.models.crystal import Crystal
 from nanobrag_torch.models.detector import Detector
 from nanobrag_torch.simulator import Simulator
-from nanobrag_torch.config import CrystalConfig
+from nanobrag_torch.config import CrystalConfig, DetectorConfig
 
 # Set up triclinic crystal exactly as in the test
 device = torch.device("cpu")
@@ -24,22 +24,25 @@ triclinic_config = CrystalConfig(
     cell_alpha=75.0391,
     cell_beta=85.0136,
     cell_gamma=95.0081,
-    N_cells=[10, 10, 10],
+    N_cells=[5, 5, 5],  # From params.json: N_cells=5
     misset_deg=[-89.968546, -31.328953, 177.753396],
 )
 
 crystal = Crystal(config=triclinic_config, device=device, dtype=dtype)
-# The detector is hard-coded, so we'll work with that
-detector = Detector(device=device, dtype=dtype)
-# Override to match triclinic test parameters
-detector.spixels = 512
-detector.fpixels = 512
-detector.beam_center_f = 256.5
-detector.beam_center_s = 256.5
-detector.distance_m = 0.085  # 85 mm
-detector.distance = detector.distance_m * 1e10  # Angstroms
-detector.pixel_size_m = 0.00008  # 0.08 mm
-detector.pixel_size = detector.pixel_size_m * 1e10  # Angstroms
+
+# Create detector config that matches triclinic golden data parameters
+from nanobrag_torch.config import DetectorPivot
+triclinic_detector_config = DetectorConfig(
+    distance_mm=100.0,      # From params.json
+    pixel_size_mm=0.1,      # From params.json  
+    spixels=512,            # From params.json (detpixels)
+    fpixels=512,            # From params.json (detpixels)
+    beam_center_s=25.6,     # Center of 512x512 detector: 256 pixels * 0.1mm = 25.6mm
+    beam_center_f=25.6,     # Center of 512x512 detector: 256 pixels * 0.1mm = 25.6mm
+    detector_pivot=DetectorPivot.BEAM  # C-code uses BEAM pivot: "pivoting detector around direct beam spot"
+)
+
+detector = Detector(config=triclinic_detector_config, device=device, dtype=dtype)
 
 crystal_rot_config = CrystalConfig(
     phi_start_deg=torch.tensor(0.0, device=device, dtype=dtype),
@@ -60,6 +63,12 @@ simulator = Simulator(
 simulator.wavelength = 1.0
 
 print("Running PyTorch simulation...")
+
+# Debug: Check detector properties that affect intensity scaling
+print(f"Detector distance (Angstroms): {detector.distance}")
+print(f"Detector pixel_size (Angstroms): {detector.pixel_size}")
+print(f"Crystal N_cells: {crystal.N_cells_a}, {crystal.N_cells_b}, {crystal.N_cells_c}")
+
 pytorch_image = simulator.run()
 
 # Load golden data
