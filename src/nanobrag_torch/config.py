@@ -184,6 +184,19 @@ class DetectorConfig:
 
 @dataclass
 class BeamConfig:
-    """Configuration for X-ray beam properties."""
-
-    pass  # TODO: Implement based on C_Parameter_Dictionary.md
+    """Configuration for X-ray beam properties.
+    
+    Simplified implementation for detector geometry testing.
+    """
+    
+    # Basic beam properties
+    wavelength_A: float = 6.2  # X-ray wavelength in Angstroms
+    
+    # Source geometry (simplified)
+    N_source_points: int = 1  # Number of source points for beam divergence
+    source_distance_mm: float = 10000.0  # Distance from source to sample (mm)
+    source_size_mm: float = 0.0  # Source size (0 = point source)
+    
+    # Beam polarization and flux (simplified)
+    polarization_factor: float = 1.0  # Polarization correction factor
+    flux: float = 1e12  # Photons per second (simplified)

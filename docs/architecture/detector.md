@@ -1,39 +1,247 @@
 # Detector Architecture Deep Dive
 
-**Status:** Authoritative Specification
+**Status:** Authoritative Specification  
+**Last Updated:** Phase 5 Implementation
 
 This document provides the complete technical specification for the Detector component. For global project rules on units and coordinate systems, see `docs/architecture/conventions.md`.
 
 ---
 
-## 1. Convention-Dependent Logic
+## 1. Overview
 
-The behavior of several geometric parameters is dependent on the `detector_convention` setting. The following table summarizes all convention-specific logic.
+The Detector class manages the detector geometry for diffraction simulations, including:
+- Position and orientation (basis vectors)
+- Pixel coordinate generation and caching
+- Support for various detector conventions (MOSFLM, XDS)
+- Dynamic geometry with rotations and tilts
+- Full differentiability for optimization workflows
 
-| Convention | Initial Fast Axis (`fdet_vec`) | Initial Slow Axis (`sdet_vec`) | Beam Vector | `twotheta` Axis (Default) |
-| :--- | :--- | :--- | :--- | :--- |
-| **MOSFLM** | `[0, 0, 1]` | `[0, -1, 0]` | `[1, 0, 0]` | `[0, 0, -1]` (Ref: `nanoBragg.c:1194`) |
-| **XDS** | `[1, 0, 0]` | `[0, 1, 0]` | `[0, 0, 1]` | `[1, 0, 0]` (Ref: `nanoBragg.c:1221`) |
+## 2. Coordinate System
+
+### 2.1 Lab Frame
+- **Origin:** Sample position `(0,0,0)`
+- **Primary Axis:** Beam travels along the `+X` axis (MOSFLM convention)
+- **Handedness:** Right-handed coordinate system
+
+### 2.2 Pixel Indexing
+- **Order:** `(slow, fast)` corresponding to `(row, column)`
+- **Reference Point:** Integer indices `(s, f)` refer to the **leading edge/corner** of the pixel
+- **Meshgrid Convention:** All `torch.meshgrid` calls use `indexing="ij"`
+
+### 2.3 Detector Basis Vectors
+- **`fdet_vec`:** Fast axis direction (pixel columns)
+- **`sdet_vec`:** Slow axis direction (pixel rows)  
+- **`odet_vec`:** Normal axis (points towards/away from source depending on convention)
+
+## 3. Convention-Dependent Logic
+
+The behavior of several geometric parameters depends on the `detector_convention` setting:
+
+| Convention | Initial Fast Axis (`fdet_vec`) | Initial Slow Axis (`sdet_vec`) | Initial Normal Axis (`odet_vec`) | Beam Vector | `twotheta` Axis (Default) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **MOSFLM** | `[0, 0, 1]` | `[0, -1, 0]` | `[1, 0, 0]` | `[1, 0, 0]` | `[0, 0, -1]` (Ref: `nanoBragg.c:1194`) |
+| **XDS** | `[1, 0, 0]` | `[0, 1, 0]` | `[0, 0, 1]` | `[0, 0, 1]` | `[1, 0, 0]` (Ref: `nanoBragg.c:1221`) |
 
 **CRITICAL:** The default `twotheta_axis` for the `MOSFLM` convention is non-intuitive and **MUST** be implemented as `[0, 0, -1]`.
 
----
+## 4. Rotation Order and Transformations
 
-## 2. Logic Flow: `pix0_vector` Calculation
+### 4.1 Rotation Sequence
+Detector rotations are applied in a specific order:
 
-The calculation of the detector's origin vector (`pix0_vector`) is critically dependent on the `detector_pivot` mode.
+```
+1. detector_rotx (rotation around X-axis)
+2. detector_roty (rotation around Y-axis)  
+3. detector_rotz (rotation around Z-axis)
+4. detector_twotheta (rotation around arbitrary axis)
+```
+
+### 4.2 Rotation Visualization
+
+```
+Initial Detector (MOSFLM):
+    +Y
+    |
+    |__ +X (beam)
+   /
+  +Z
+
+After rotx=45°:
+    +Y'
+   /|
+  / |__ +X (beam)
+ /
++Z'
+
+After additional twotheta=15°:
+  Detector plane rotated around
+  twotheta_axis = [0,0,-1]
+```
+
+## 5. Logic Flow: `pix0_vector` Calculation
+
+The calculation of the detector's origin vector (`pix0_vector`) depends on the `detector_pivot` mode:
 
 ```mermaid
 graph TD
     A[Start: Calculate Rotated Basis Vectors] --> B{Detector Pivot Mode?};
-    B -- BEAM --> C["Calculate `pix0_vector` using BEAM formula<br/>(originates from beam position on detector)"];
-    B -- SAMPLE --> D["Calculate `pix0_vector` using SAMPLE formula<br/>(originates from detector center)"];
-    C --> E[Final Detector Geometry];
-    D --> E;
+    B -- BEAM --> C["Calculate pix0_vector using BEAM formula<br/>(pivots around beam spot on detector)"];
+    B -- SAMPLE --> D["Calculate pix0_vector using SAMPLE formula<br/>(pivots around sample position)"];
+    C --> E[pix0_vector = -Fbeam*fdet - Sbeam*sdet + distance*beam_vec];
+    D --> F[pix0_vector = detector_origin + pixel_offsets];
+    E --> G[Final Detector Geometry];
+    F --> G;
 ```
 
----
+### 5.1 BEAM Pivot Mode
+When `detector_pivot = BEAM`, the detector rotates around the direct beam spot:
+```python
+pix0_vector = -Fbeam * fdet_vec - Sbeam * sdet_vec + distance * beam_vector
+```
+Where:
+- `Fbeam = Ybeam + 0.5 * pixel_size` (in MOSFLM convention)
+- `Sbeam = Xbeam + 0.5 * pixel_size` (in MOSFLM convention)
 
-## 3. Rotation Order
+### 5.2 SAMPLE Pivot Mode
+When `detector_pivot = SAMPLE`, the detector rotates around the sample:
+```python
+detector_origin = distance * odet_vec
+pix0_vector = detector_origin + s_offset * sdet_vec + f_offset * fdet_vec
+```
 
-Detector rotations are applied first (`rotx`, `roty`, `rotz`), followed by the `twotheta` rotation.
+## 6. Unit Conversion System
+
+### 6.1 Internal vs User-Facing Units
+
+| Parameter | User-Facing (Config) | Internal (Calculation) | Conversion |
+| :--- | :--- | :--- | :--- |
+| `distance` | mm | Angstroms | × 10 |
+| `pixel_size` | mm | Angstroms | × 10 |
+| `beam_center_s/f` | mm | pixels | ÷ pixel_size_mm |
+| Rotation angles | degrees | radians | × π/180 |
+
+### 6.2 Conversion Examples
+```python
+# User provides distance in mm
+config = DetectorConfig(distance_mm=100.0)
+
+# Internal conversion
+self.distance = mm_to_angstroms(config.distance_mm)  # 1000.0 Å
+
+# Beam center conversion (mm to pixels)
+self.beam_center_s = config.beam_center_s / config.pixel_size_mm
+```
+
+## 7. Performance Optimizations
+
+### 7.1 Pixel Coordinate Caching
+The detector implements intelligent caching to avoid recalculating pixel coordinates:
+
+```python
+# Geometry version tracking
+self._geometry_version  # Incremented on geometry changes
+self._pixel_coords_cache  # Cached pixel coordinates
+self._cached_basis_vectors  # For change detection
+```
+
+### 7.2 Cache Invalidation
+The cache is invalidated when:
+- Basis vectors change (detected via tensor comparison)
+- `pix0_vector` changes
+- Device or dtype changes
+
+## 8. Differentiability
+
+### 8.1 Differentiable Parameters
+All geometric parameters support gradient computation:
+- `distance_mm`
+- `beam_center_s`, `beam_center_f`
+- `detector_rotx_deg`, `detector_roty_deg`, `detector_rotz_deg`
+- `detector_twotheta_deg`
+
+### 8.2 Gradient Flow
+```
+User Parameter (tensor) → Unit Conversion → Basis Vectors → Pixel Coords → Simulation
+      ↑                                                                           ↓
+      └─────────────────────── Gradient Backpropagation ─────────────────────────┘
+```
+
+## 9. Example Configurations
+
+### 9.1 Default Detector (simple_cubic compatibility)
+```python
+config = DetectorConfig(
+    distance_mm=100.0,
+    pixel_size_mm=0.1,
+    spixels=1024,
+    fpixels=1024,
+    beam_center_s=51.2,
+    beam_center_f=51.2,
+)
+```
+
+### 9.2 Tilted Detector with Two-Theta
+```python
+config = DetectorConfig(
+    distance_mm=100.0,
+    detector_rotx_deg=5.0,
+    detector_roty_deg=3.0,
+    detector_rotz_deg=2.0,
+    detector_twotheta_deg=15.0,
+    detector_convention=DetectorConvention.MOSFLM,
+    detector_pivot=DetectorPivot.BEAM,
+)
+```
+
+### 9.3 XDS Convention Detector
+```python
+config = DetectorConfig(
+    detector_convention=DetectorConvention.XDS,
+    twotheta_axis=[1.0, 0.0, 0.0],  # Custom axis
+)
+```
+
+## 10. Common Pitfalls and Best Practices
+
+### 10.1 Unit Confusion
+**Pitfall:** Mixing mm and Angstrom units  
+**Best Practice:** Always use Config classes which handle conversions automatically
+
+### 10.2 Pixel Indexing
+**Pitfall:** Assuming pixel centers instead of edges  
+**Best Practice:** Remember that integer indices refer to pixel corners
+
+### 10.3 Rotation Order
+**Pitfall:** Applying rotations in wrong order  
+**Best Practice:** Follow the exact sequence: rotx → roty → rotz → twotheta
+
+### 10.4 Convention Mixing
+**Pitfall:** Using MOSFLM beam vector with XDS detector  
+**Best Practice:** Ensure all components use consistent conventions
+
+## 11. Testing and Validation
+
+### 11.1 Key Test Cases
+1. **Basis Vector Orthonormality:** Verify basis vectors remain orthonormal after rotations
+2. **Pixel Coordinate Consistency:** Check `pixel[0,0] == pix0_vector`
+3. **Gradient Flow:** Ensure all parameters have non-zero gradients
+4. **Convention Switching:** Verify correct behavior for both MOSFLM and XDS
+
+### 11.2 Golden Data Comparison
+The `cubic_tilted_detector` test case validates:
+- Basis vector calculation matches C-code within `atol=1e-9`
+- Pixel coordinates generate expected diffraction patterns
+- Detector rotations produce correct geometric transformations
+
+## 12. Future Enhancements
+
+### 12.1 Planned Features
+- [ ] Support for non-rectangular detectors
+- [ ] Time-dependent detector motion
+- [ ] Multi-panel detector support
+- [ ] Detector distortion corrections
+
+### 12.2 Performance Improvements
+- [ ] GPU-optimized coordinate generation
+- [ ] Batch detector configurations
+- [ ] Sparse pixel sampling for large detectors

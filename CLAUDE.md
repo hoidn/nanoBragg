@@ -114,6 +114,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 14. **Mandatory Component Contracts:** For any non-trivial component port (e.g., `Detector`, `Crystal`), the first step of the implementation phase **MUST** be to author (or consult, if it exists) a complete technical specification in `docs/architecture/[component_name].md`. This contract is the authoritative source for all conventions, units, and logic flows. Implementation must not begin until this document is complete.
 
+15. **Detector Geometry Conventions:** The Detector component follows specific conventions that **MUST** be preserved:
+    -   **Coordinate System:** Lab frame with beam along +X axis, right-handed system, sample at origin
+    -   **Pixel Indexing:** `(slow, fast)` order using `torch.meshgrid(..., indexing="ij")`
+    -   **Pixel Reference:** Integer indices refer to pixel **leading edge/corner**, not center
+    -   **Rotation Order:** detector_rotx → detector_roty → detector_rotz → detector_twotheta
+    -   **Convention Dependency:** MOSFLM vs XDS affects initial basis vectors and twotheta axis
+    -   **Unit Handling:** User config in mm/degrees, internal calculations in Angstroms/radians
+    -   **Pivot Modes:** BEAM pivot (around beam spot) vs SAMPLE pivot (around sample position)
+    -   **Verification:** All detector tests must pass, including basis vector orthonormality and gradient flow
+
 ## Crystallographic Conventions
 
 This project adheres to the `|G| = 1/d` convention, where `G = h*a* + k*b* + l*c*`. This is equivalent to the `|Q| = 2π/d` convention where `Q = 2πG`. All tests and calculations must be consistent with this standard.

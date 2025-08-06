@@ -85,6 +85,8 @@ class Detector:
         
         self._pixel_coords_cache: Optional[torch.Tensor] = None
         self._geometry_version = 0
+        self._cached_basis_vectors = (self.fdet_vec.clone(), self.sdet_vec.clone(), self.odet_vec.clone())
+        self._cached_pix0_vector = self.pix0_vector.clone()
 
     def _is_default_config(self) -> bool:
         """Check if using default config (for backward compatibility)."""
@@ -216,7 +218,19 @@ class Detector:
         Returns:
             torch.Tensor: Pixel coordinates with shape (spixels, fpixels, 3) in Angstroms
         """
-        if self._pixel_coords_cache is None:
+        # Check if geometry has changed by comparing cached values
+        geometry_changed = False
+        if hasattr(self, '_cached_basis_vectors') and hasattr(self, '_cached_pix0_vector'):
+            # Check if basis vectors have changed
+            if not (torch.allclose(self.fdet_vec, self._cached_basis_vectors[0], atol=1e-15) and
+                    torch.allclose(self.sdet_vec, self._cached_basis_vectors[1], atol=1e-15) and
+                    torch.allclose(self.odet_vec, self._cached_basis_vectors[2], atol=1e-15)):
+                geometry_changed = True
+            # Check if pix0_vector has changed
+            if not torch.allclose(self.pix0_vector, self._cached_pix0_vector, atol=1e-15):
+                geometry_changed = True
+        
+        if self._pixel_coords_cache is None or geometry_changed:
             # Create pixel index grids (0-based indices)
             s_indices = torch.arange(self.spixels, device=self.device, dtype=self.dtype)
             f_indices = torch.arange(self.fpixels, device=self.device, dtype=self.dtype)
@@ -240,6 +254,11 @@ class Detector:
             )
 
             self._pixel_coords_cache = pixel_coords
+            
+            # Update cached values for future comparisons
+            self._cached_basis_vectors = (self.fdet_vec.clone(), self.sdet_vec.clone(), self.odet_vec.clone())
+            self._cached_pix0_vector = self.pix0_vector.clone()
+            self._geometry_version += 1
 
         return self._pixel_coords_cache
 
