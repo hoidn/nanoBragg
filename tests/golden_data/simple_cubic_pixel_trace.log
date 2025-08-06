@@ -3,7 +3,7 @@ Single Pixel Trace Debugging Log
 nanoBragg PyTorch Implementation
 ================================================================================
 
-Target Pixel: (slow=240, fast=250)
+Target Pixel: (slow=100, fast=800)
 Test Case: simple_cubic
 Wavelength: 6.2 Angstroms
 Precision: torch.float64
@@ -11,27 +11,27 @@ Precision: torch.float64
 Wavelength (Å): 6.199999809265e+00
 
 Pixel coordinates tensor shape: torch.Size([1024, 1024, 3])
-Pixel Coordinate (Å): [ 1.000e+09  2.725e+08 -2.625e+08]
-Pixel Coordinate (Å): [ 1.000e+09  2.725e+08 -2.625e+08]
-Diffracted Beam (unit vector): [ 0.93528941  0.25486636 -0.24551347]
-Pixel Distance (Å): 1.069187775837e+09
+Pixel Coordinate (Å): [1.00e+09 4.12e+08 2.88e+08]
+Pixel Coordinate (Å): [1.00e+09 4.12e+08 2.88e+08]
+Diffracted Beam (unit vector): [0.89346705 0.36810843 0.25731851]
+Pixel Distance (Å): 1.119235453334e+09
 Incident Beam (unit vector): [1. 0. 0.]
-Scattering Vector S (Å⁻¹): [-0.01043719  0.04110748 -0.03959895]
-Fractional Miller Index h,k,l: [-1.04371925  4.11074779 -3.95989466]
-Nearest Integer h₀,k₀,l₀: [-1.  4. -4.]
+Scattering Vector S (Å⁻¹): [-0.01718273  0.05937233  0.04150299]
+Fractional Miller Index h,k,l: [-1.71827337  5.93723266  4.15029856]
+Nearest Integer h₀,k₀,l₀: [-2.  6.  4.]
 F_cell: 1.000000000000e+02
-Δh (h - h₀): -4.371925452502e-02
-Δk (k - k₀): 1.107477934645e-01
-Δl (l - l₀): 4.010533657088e-02
-sincg(Δh, Na): 4.630699255962e+00
-sincg(Δk, Nb): 2.891304742590e+00
-sincg(Δl, Nc): 4.688173139487e+00
-F_latt: 6.276883775613e+03
-Raw Intensity: 3.939926993255e+07
-Solid Angle (steradians): 8.181596284163e-07
+Δh (h - h₀): 2.817266309767e-01
+Δk (k - k₀): -6.276733771502e-02
+Δl (l - l₀): 1.502985600439e-01
+sincg(Δh, Na): 3.549742554571e+00
+sincg(Δk, Nb): 4.921556342071e+00
+sincg(Δl, Nc): 4.559641131127e+00
+F_latt: 7.965810686690e+03
+Raw Intensity: 6.345413989618e+07
+Solid Angle (steradians): 7.132398898373e-07
 r_e_sqr (Å²): 7.939999768780e-10
 fluence (photons/Å²): 1.259320192000e+09
-Final Physical Intensity: 3.223167504991e+01
+Final Physical Intensity: 4.525350706063e+01
 
 ================================================================================
 Additional Debugging Information
@@ -39,12 +39,12 @@ Additional Debugging Information
 Crystal unit cell: 100.0 x 100.0 x 100.0 Å
 Crystal size: 5.0 x 5.0 x 5.0 cells
 a_star: [0.01 0.   0.  ]
-b_star: [0.   0.01 0.  ]
-c_star: [0.   0.   0.01]
+b_star: [-6.123234e-19  1.000000e-02  0.000000e+00]
+c_star: [-6.123234e-19 -6.123234e-19  1.000000e-02]
 Detector distance: 1000000000.0 Å
 Pixel size: 1000000.0 Å
 Detector size: 1024 x 1024 pixels
-Beam center: (512.5, 512.5) pixels
+Beam center: (512.0, 512.0) pixels
 Fast detector axis: [0. 0. 1.]
 Slow detector axis: [ 0. -1.  0.]
 Normal detector axis: [1. 0. 0.]

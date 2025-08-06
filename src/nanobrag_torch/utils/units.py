@@ -18,9 +18,9 @@ def mm_to_angstroms(value: Union[float, torch.Tensor]) -> Union[float, torch.Ten
         value: Value in millimeters
         
     Returns:
-        Value in Angstroms (1 mm = 10,000 Å)
+        Value in Angstroms (1 mm = 10,000,000 Å)
     """
-    return value * 1e4
+    return value * 1e7
 
 
 def meters_to_angstroms(value: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:
@@ -61,9 +61,9 @@ def angstroms_to_mm(value: Union[float, torch.Tensor]) -> Union[float, torch.Ten
         value: Value in Angstroms
         
     Returns:
-        Value in millimeters (1 Å = 0.0001 mm)
+        Value in millimeters (1 Å = 1e-7 mm)
     """
-    return value * 1e-4
+    return value * 1e-7
 
 
 def angstroms_to_meters(value: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:

@@ -29,6 +29,14 @@ from nanobrag_torch.models.crystal import Crystal
 from nanobrag_torch.models.detector import Detector
 from nanobrag_torch.simulator import Simulator
 
+# Import C reference verification components
+try:
+    from c_reference_runner import CReferenceRunner, compute_agreement_metrics
+    C_REFERENCE_AVAILABLE = True
+except ImportError:
+    print("⚠️  C reference components not available")
+    C_REFERENCE_AVAILABLE = False
+
 
 def create_output_dir():
     """Create output directory for verification images."""
@@ -226,6 +234,102 @@ def create_comparison_plots(baseline_data, tilted_data, output_dir):
     plt.close()
 
 
+def create_parallel_comparison_plots(pytorch_data, c_reference_data, output_dir):
+    """Create 4-panel comparison: PyTorch vs C Reference for both configurations.
+    
+    Layout:
+    [PyTorch Baseline] [C Reference Baseline] 
+    [PyTorch Tilted  ] [C Reference Tilted  ]
+    [Difference Heatmaps and Correlation Metrics]
+    
+    Args:
+        pytorch_data: Tuple of (baseline_image, tilted_image) from PyTorch
+        c_reference_data: Tuple of (baseline_image, tilted_image) from C reference
+        output_dir: Directory to save plots
+    """
+    pytorch_baseline, pytorch_tilted = pytorch_data
+    c_baseline, c_tilted = c_reference_data
+    
+    if pytorch_baseline is None or c_baseline is None:
+        print("❌ Missing baseline data for parallel comparison")
+        return
+    
+    if pytorch_tilted is None or c_tilted is None:
+        print("❌ Missing tilted data for parallel comparison")
+        return
+    
+    # Create figure with subplots
+    fig, axes = plt.subplots(3, 2, figsize=(16, 18))
+    fig.suptitle("Parallel C Reference Verification: PyTorch vs nanoBragg.c", fontsize=16)
+    
+    # Determine common intensity range for consistent coloring
+    all_images = [pytorch_baseline, c_baseline, pytorch_tilted, c_tilted]
+    vmin = max(1e-6, min(img.min() for img in all_images))
+    vmax = max(img.max() for img in all_images)
+    
+    # Row 1: Baseline comparison
+    im1 = axes[0, 0].imshow(pytorch_baseline, norm=LogNorm(vmin=vmin, vmax=vmax),
+                           origin='lower', cmap='viridis')
+    axes[0, 0].set_title("PyTorch Baseline (simple_cubic)")
+    axes[0, 0].set_xlabel("Fast axis (pixels)")
+    axes[0, 0].set_ylabel("Slow axis (pixels)")
+    plt.colorbar(im1, ax=axes[0, 0], label="Intensity")
+    
+    im2 = axes[0, 1].imshow(c_baseline, norm=LogNorm(vmin=vmin, vmax=vmax),
+                           origin='lower', cmap='viridis')  
+    axes[0, 1].set_title("C Reference Baseline")
+    axes[0, 1].set_xlabel("Fast axis (pixels)")
+    axes[0, 1].set_ylabel("Slow axis (pixels)")
+    plt.colorbar(im2, ax=axes[0, 1], label="Intensity")
+    
+    # Row 2: Tilted comparison
+    im3 = axes[1, 0].imshow(pytorch_tilted, norm=LogNorm(vmin=vmin, vmax=vmax),
+                           origin='lower', cmap='viridis')
+    axes[1, 0].set_title("PyTorch Tilted (15° two-theta + rotations)")
+    axes[1, 0].set_xlabel("Fast axis (pixels)")
+    axes[1, 0].set_ylabel("Slow axis (pixels)")
+    plt.colorbar(im3, ax=axes[1, 0], label="Intensity")
+    
+    im4 = axes[1, 1].imshow(c_tilted, norm=LogNorm(vmin=vmin, vmax=vmax),
+                           origin='lower', cmap='viridis')
+    axes[1, 1].set_title("C Reference Tilted")
+    axes[1, 1].set_xlabel("Fast axis (pixels)")
+    axes[1, 1].set_ylabel("Slow axis (pixels)")
+    plt.colorbar(im4, ax=axes[1, 1], label="Intensity")
+    
+    # Row 3: Difference analysis
+    # Baseline difference
+    baseline_diff = pytorch_baseline - c_baseline
+    baseline_rel_diff = baseline_diff / (c_baseline + 1e-10)
+    
+    im5 = axes[2, 0].imshow(baseline_rel_diff, cmap='RdBu_r', origin='lower',
+                           vmin=-0.01, vmax=0.01)  # ±1% relative difference
+    axes[2, 0].set_title("Baseline Relative Difference\n(PyTorch - C) / C")
+    axes[2, 0].set_xlabel("Fast axis (pixels)")
+    axes[2, 0].set_ylabel("Slow axis (pixels)")
+    plt.colorbar(im5, ax=axes[2, 0], label="Relative Difference")
+    
+    # Tilted difference
+    tilted_diff = pytorch_tilted - c_tilted
+    tilted_rel_diff = tilted_diff / (c_tilted + 1e-10)
+    
+    im6 = axes[2, 1].imshow(tilted_rel_diff, cmap='RdBu_r', origin='lower',
+                           vmin=-0.01, vmax=0.01)
+    axes[2, 1].set_title("Tilted Relative Difference\n(PyTorch - C) / C")
+    axes[2, 1].set_xlabel("Fast axis (pixels)")
+    axes[2, 1].set_ylabel("Slow axis (pixels)")
+    plt.colorbar(im6, ax=axes[2, 1], label="Relative Difference")
+    
+    plt.tight_layout()
+    
+    # Save figure
+    output_path = output_dir / "parallel_c_comparison.png"
+    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    print(f"\nSaved parallel comparison plot to: {output_path}")
+    
+    plt.close()
+
+
 def print_summary_report(baseline_data, tilted_data):
     """Print a summary report of the detector geometry verification."""
     baseline_image, baseline_detector = baseline_data
@@ -277,8 +381,35 @@ def print_summary_report(baseline_data, tilted_data):
     print("\n✅ Visual verification complete!")
 
 
+def run_c_reference_verification(baseline_config, tilted_config, crystal_config, beam_config):
+    """Run C reference verification if available.
+    
+    Args:
+        baseline_config: Baseline DetectorConfig
+        tilted_config: Tilted DetectorConfig  
+        crystal_config: CrystalConfig for both simulations
+        beam_config: BeamConfig for both simulations
+        
+    Returns:
+        Tuple of (baseline_image, tilted_image) or (None, None) if unavailable
+    """
+    if not C_REFERENCE_AVAILABLE:
+        return None, None
+    
+    runner = CReferenceRunner()
+    if not runner.is_available():
+        print("⚠️  C reference nanoBragg not available")
+        return None, None
+    
+    # Run both configurations
+    baseline_configs = (baseline_config, crystal_config, beam_config)
+    tilted_configs = (tilted_config, crystal_config, beam_config)
+    
+    return runner.run_both_configurations(baseline_configs, tilted_configs)
+
+
 def main():
-    """Main function to run detector geometry verification."""
+    """Enhanced main function with optional C reference validation."""
     print("Detector Geometry Visual Verification")
     print("=====================================")
     
@@ -313,12 +444,103 @@ def main():
         detector_pivot=DetectorPivot.BEAM,
     )
     
-    # Run simulations
+    # Common crystal and beam configs
+    crystal_config = CrystalConfig(
+        cell_a=100.0,
+        cell_b=100.0,
+        cell_c=100.0,
+        cell_alpha=90.0,
+        cell_beta=90.0,
+        cell_gamma=90.0,
+        N_cells=(5, 5, 5),
+    )
+    
+    beam_config = BeamConfig(
+        wavelength_A=6.2,
+        N_source_points=1,
+        source_distance_mm=10000.0,
+        source_size_mm=0.0,
+    )
+    
+    # Run PyTorch simulations
+    print("\n" + "="*60)
+    print("PYTORCH VERIFICATION")
+    print("="*60)
     baseline_data = run_simulation(baseline_config, "Baseline (simple_cubic)")
     tilted_data = run_simulation(tilted_config, "Tilted (15° two-theta + rotations)")
     
-    # Create comparison plots
+    pytorch_results = (baseline_data[0], tilted_data[0])  # Extract just the images
+    
+    # Create standard comparison plots
     create_comparison_plots(baseline_data, tilted_data, output_dir)
+    
+    # Try C reference verification
+    if C_REFERENCE_AVAILABLE:
+        c_baseline, c_tilted = run_c_reference_verification(
+            baseline_config, tilted_config, crystal_config, beam_config
+        )
+        
+        if c_baseline is not None and c_tilted is not None:
+            c_results = (c_baseline, c_tilted)
+            
+            # Compute quantitative comparison
+            print(f"\n{'='*60}")
+            print("QUANTITATIVE AGREEMENT ANALYSIS")
+            print(f"{'='*60}")
+            
+            metrics = compute_agreement_metrics(pytorch_results, c_results)
+            
+            # Print metrics
+            if 'baseline' in metrics and 'correlation' in metrics['baseline']:
+                baseline_corr = metrics['baseline']['correlation']
+                print(f"Baseline correlation: {baseline_corr:.6f}")
+                
+            if 'tilted' in metrics and 'correlation' in metrics['tilted']:
+                tilted_corr = metrics['tilted']['correlation']
+                print(f"Tilted correlation: {tilted_corr:.6f}")
+            
+            if 'overall' in metrics:
+                min_corr = metrics['overall']['min_correlation']
+                all_good = metrics['overall']['all_correlations_good']
+                
+                print(f"Minimum correlation: {min_corr:.6f}")
+                
+                if all_good:
+                    print("✅ EXCELLENT AGREEMENT with C reference!")
+                else:
+                    print(f"⚠️  Correlation below threshold (expected > 0.999)")
+            
+            # Create enhanced parallel comparison plots
+            create_parallel_comparison_plots(pytorch_results, c_results, output_dir)
+            
+            # Save metrics to file (convert numpy/bool types for JSON compatibility)
+            import json
+            import numpy as np
+            
+            def make_json_serializable(obj):
+                """Convert numpy types to Python types for JSON serialization."""
+                if isinstance(obj, dict):
+                    return {k: make_json_serializable(v) for k, v in obj.items()}
+                elif isinstance(obj, (np.integer, np.int64, np.int32)):
+                    return int(obj)
+                elif isinstance(obj, (np.floating, np.float64, np.float32)):
+                    return float(obj)
+                elif isinstance(obj, np.ndarray):
+                    return obj.tolist()
+                elif isinstance(obj, np.bool_):
+                    return bool(obj)
+                return obj
+            
+            metrics_json = make_json_serializable(metrics)
+            metrics_file = output_dir / "correlation_metrics.json"
+            with open(metrics_file, 'w') as f:
+                json.dump(metrics_json, f, indent=2)
+            print(f"Saved metrics to: {metrics_file}")
+            
+        else:
+            print("⚠️  C reference execution failed, skipping parallel verification")
+    else:
+        print("⚠️  C reference not available, skipping parallel verification")
     
     # Print summary report
     print_summary_report(baseline_data, tilted_data)

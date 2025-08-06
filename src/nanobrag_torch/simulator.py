@@ -196,12 +196,12 @@ class Simulator:
         # for correct resolution cutoffs in triclinic cells
         F_cell = self.crystal.get_structure_factor(h0, k0, l0)
 
-        # Calculate lattice structure factor F_latt using full Miller indices
-        # CRITICAL FIX: Use the full Miller index (h, k, l), not the fractional part (h-h0)
+        # Calculate lattice structure factor F_latt using fractional part (h-h0)
+        # CORRECT: Use fractional part (h-h0, k-k0, l-l0) to match C-code behavior
         # The sincg function expects its input pre-multiplied by π
-        F_latt_a = sincg(torch.pi * h, self.crystal.N_cells_a)
-        F_latt_b = sincg(torch.pi * k, self.crystal.N_cells_b)
-        F_latt_c = sincg(torch.pi * l, self.crystal.N_cells_c)
+        F_latt_a = sincg(torch.pi * (h - h0), self.crystal.N_cells_a)
+        F_latt_b = sincg(torch.pi * (k - k0), self.crystal.N_cells_b)
+        F_latt_c = sincg(torch.pi * (l - l0), self.crystal.N_cells_c)
         F_latt = F_latt_a * F_latt_b * F_latt_c
 
         # Calculate total structure factor and intensity

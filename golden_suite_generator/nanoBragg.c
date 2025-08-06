@@ -187,6 +187,7 @@ int main(int argc, char** argv)
     int babble=1;
     int printout = 0;
     int printout_spixel=-1,printout_fpixel=-1;
+    int trace_spixel=-1,trace_fpixel=-1;
 
     /* x-ray beam properties */
     double beam_vector[4]  = {0,1,0,0};
@@ -1092,6 +1093,11 @@ int main(int argc, char** argv)
             {
                 printout_fpixel = atoi(argv[i+1]);
                 printout_spixel = atoi(argv[i+2]);
+            }
+            if(strstr(argv[i], "-trace_pixel") && (argc > (i+2)))
+            {
+                trace_spixel = atoi(argv[i+1]);
+                trace_fpixel = atoi(argv[i+2]);
             }
             if(strstr(argv[i], "-seed") && (argc > (i+1)))
             {
@@ -2828,6 +2834,13 @@ if(! debug_printed_thread) {
                             scattering[1] = (diffracted[1]-incident[1])/lambda;
                             scattering[2] = (diffracted[2]-incident[2])/lambda;
                             scattering[3] = (diffracted[3]-incident[3])/lambda;
+                            
+                            /* trace output for specific pixel */
+                            if(fpixel==trace_fpixel && spixel==trace_spixel && source==0) {
+                                printf("TRACE_C: pixel_pos_meters %.15g %.15g %.15g\n", pixel_pos[1], pixel_pos[2], pixel_pos[3]);
+                                printf("TRACE_C: diffracted_vec %.15g %.15g %.15g\n", diffracted[1], diffracted[2], diffracted[3]);
+                                printf("TRACE_C: scattering_vec_A_inv %.15g %.15g %.15g\n", scattering[1], scattering[2], scattering[3]);
+                            }
 
                             /* sin(theta)/lambda is half the scattering vector length */
                             stol = 0.5*magnitude(scattering);
@@ -2920,6 +2933,11 @@ if(! debug_printed_thread) {
                                     h = dot_product(a,scattering);
                                     k = dot_product(b,scattering);
                                     l = dot_product(c,scattering);
+                                    
+                                    /* trace output for specific pixel */
+                                    if(fpixel==trace_fpixel && spixel==trace_spixel && source==0 && mos_tic==0 && phi_tic==0) {
+                                        printf("TRACE_C: hkl_frac %.15g %.15g %.15g\n", h, k, l);
+                                    }
 
                                     /* round off to nearest whole index */
                                     h0 = ceil(h-0.5);

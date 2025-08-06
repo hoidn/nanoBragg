@@ -762,4 +762,7 @@ class Crystal:
         vectors["b"] = c_star_cross_a_star * V
         vectors["c"] = a_star_cross_b_star * V
 
+        # Note: CLAUDE.md Rule #13 suggests circular recalculation here, but 
+        # testing shows this may not be needed for the current issue
+
         return vectors
