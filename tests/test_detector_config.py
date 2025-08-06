@@ -132,7 +132,6 @@ class TestDetectorInitialization:
         assert detector.beam_center_s == 512.0  # 51.2 mm / 0.1 mm per pixel
         assert detector.beam_center_f == 512.0
         
-    @pytest.mark.skip(reason="Requires Phase 2 implementation of _calculate_basis_vectors")
     def test_custom_config_initialization(self):
         """Test that Detector initializes with custom config."""
         config = DetectorConfig(
@@ -171,7 +170,6 @@ class TestDetectorInitialization:
         detector = Detector(tensor_config)
         assert detector._is_default_config()
         
-    @pytest.mark.skip(reason="Requires Phase 2 implementation of _calculate_basis_vectors")
     def test_custom_config_not_default(self):
         """Test that custom config is not detected as default."""
         # Custom config should not be detected as default

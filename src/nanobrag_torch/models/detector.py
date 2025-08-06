@@ -43,15 +43,18 @@ class Detector:
         
         # Convert beam center from mm to pixels
         # Note: beam center is given in mm from detector origin
+        self.beam_center_s: torch.Tensor
+        self.beam_center_f: torch.Tensor
+        
         if isinstance(config.beam_center_s, torch.Tensor):
             self.beam_center_s = config.beam_center_s / config.pixel_size_mm
         else:
-            self.beam_center_s = config.beam_center_s / config.pixel_size_mm
+            self.beam_center_s = torch.tensor(config.beam_center_s / config.pixel_size_mm, device=self.device, dtype=self.dtype)
             
         if isinstance(config.beam_center_f, torch.Tensor):
             self.beam_center_f = config.beam_center_f / config.pixel_size_mm
         else:
-            self.beam_center_f = config.beam_center_f / config.pixel_size_mm
+            self.beam_center_f = torch.tensor(config.beam_center_f / config.pixel_size_mm, device=self.device, dtype=self.dtype)
 
         # Initialize basis vectors
         if self._is_default_config():
@@ -73,28 +76,33 @@ class Detector:
             # Calculate basis vectors dynamically in Phase 2
             self.fdet_vec, self.sdet_vec, self.odet_vec = self._calculate_basis_vectors()
 
-        self._pixel_coords_cache = None
+        self._pixel_coords_cache: Optional[torch.Tensor] = None
         self._geometry_version = 0
 
     def _is_default_config(self) -> bool:
         """Check if using default config (for backward compatibility)."""
+        from ..config import DetectorConvention
+        
         c = self.config
         # Check all basic parameters
         basic_check = (c.distance_mm == 100.0 and c.pixel_size_mm == 0.1 and
                        c.spixels == 1024 and c.fpixels == 1024 and
                        c.beam_center_s == 51.2 and c.beam_center_f == 51.2)
         
+        # Check detector convention is default (MOSFLM)
+        convention_check = (c.detector_convention == DetectorConvention.MOSFLM)
+        
         # Check rotation parameters (handle both float and tensor)
         rotx_check = (c.detector_rotx_deg == 0 if isinstance(c.detector_rotx_deg, (int, float))
-                      else torch.allclose(c.detector_rotx_deg, torch.tensor(0.0)))
+                      else torch.allclose(c.detector_rotx_deg, torch.tensor(0.0, dtype=c.detector_rotx_deg.dtype)))
         roty_check = (c.detector_roty_deg == 0 if isinstance(c.detector_roty_deg, (int, float))
-                      else torch.allclose(c.detector_roty_deg, torch.tensor(0.0)))
+                      else torch.allclose(c.detector_roty_deg, torch.tensor(0.0, dtype=c.detector_roty_deg.dtype)))
         rotz_check = (c.detector_rotz_deg == 0 if isinstance(c.detector_rotz_deg, (int, float))
-                      else torch.allclose(c.detector_rotz_deg, torch.tensor(0.0)))
+                      else torch.allclose(c.detector_rotz_deg, torch.tensor(0.0, dtype=c.detector_rotz_deg.dtype)))
         twotheta_check = (c.detector_twotheta_deg == 0 if isinstance(c.detector_twotheta_deg, (int, float))
-                          else torch.allclose(c.detector_twotheta_deg, torch.tensor(0.0)))
+                          else torch.allclose(c.detector_twotheta_deg, torch.tensor(0.0, dtype=c.detector_twotheta_deg.dtype)))
         
-        return basic_check and rotx_check and roty_check and rotz_check and twotheta_check
+        return bool(basic_check and convention_check and rotx_check and roty_check and rotz_check and twotheta_check)
 
     def to(self, device=None, dtype=None):
         """Move detector to specified device and/or dtype."""
@@ -164,9 +172,22 @@ class Detector:
         """
         Calculate detector basis vectors from configuration.
 
-        This method will dynamically compute the detector's fast, slow, and
+        This method dynamically computes the detector's fast, slow, and
         normal basis vectors based on user-provided configuration, such as
         detector rotations (`-detector_rot*`) and the two-theta angle.
+        
+        The calculation follows this exact sequence:
+        1. Initialize basis vectors according to detector convention (MOSFLM or XDS)
+        2. Apply detector rotations in order: X-axis, Y-axis, Z-axis
+        3. Apply two-theta rotation around the specified axis (if non-zero)
+        
+        All rotations preserve the orthonormality of the basis vectors and
+        maintain differentiability when rotation angles are provided as tensors
+        with requires_grad=True.
+        
+        Note: This method takes no parameters as it uses self.config and
+        self.device/dtype. The returned vectors are guaranteed to be on the
+        same device and have the same dtype as the detector.
 
         C-Code Implementation Reference (from nanoBragg.c, lines 1319-1412):
         The C code performs these calculations in a large block within main()
@@ -206,7 +227,68 @@ class Detector:
                 pix0_vector[3] = -Fbeam*fdet_vector[3]-Sbeam*sdet_vector[3]+distance*beam_vector[3];
             }
         ```
+        
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]: The calculated
+            (fdet_vec, sdet_vec, odet_vec) basis vectors, each with shape (3,)
         """
-        raise NotImplementedError(
-            "Basis vector calculation to be implemented in Phase 2"
-        )
+        from ..utils.geometry import angles_to_rotation_matrix, rotate_axis
+        
+        # Get configuration parameters
+        c = self.config
+        
+        # Convert rotation angles to radians (handling both scalar and tensor inputs)
+        detector_rotx = degrees_to_radians(c.detector_rotx_deg)
+        detector_roty = degrees_to_radians(c.detector_roty_deg)
+        detector_rotz = degrees_to_radians(c.detector_rotz_deg)
+        detector_twotheta = degrees_to_radians(c.detector_twotheta_deg)
+        
+        # Ensure all angles are tensors for consistent handling
+        if not isinstance(detector_rotx, torch.Tensor):
+            detector_rotx = torch.tensor(detector_rotx, device=self.device, dtype=self.dtype)
+        if not isinstance(detector_roty, torch.Tensor):
+            detector_roty = torch.tensor(detector_roty, device=self.device, dtype=self.dtype)
+        if not isinstance(detector_rotz, torch.Tensor):
+            detector_rotz = torch.tensor(detector_rotz, device=self.device, dtype=self.dtype)
+        if not isinstance(detector_twotheta, torch.Tensor):
+            detector_twotheta = torch.tensor(detector_twotheta, device=self.device, dtype=self.dtype)
+        
+        # Initialize basis vectors based on detector convention
+        from ..config import DetectorConvention
+        
+        if c.detector_convention == DetectorConvention.MOSFLM:
+            # MOSFLM convention: detector surface normal points towards source
+            fdet_vec = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
+            sdet_vec = torch.tensor([0.0, -1.0, 0.0], device=self.device, dtype=self.dtype)
+            odet_vec = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
+        elif c.detector_convention == DetectorConvention.XDS:
+            # XDS convention: detector surface normal points away from source
+            fdet_vec = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
+            sdet_vec = torch.tensor([0.0, 1.0, 0.0], device=self.device, dtype=self.dtype)
+            odet_vec = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
+        else:
+            raise ValueError(f"Unknown detector convention: {c.detector_convention}")
+        
+        # Apply detector rotations (rotx, roty, rotz) using the C-code's rotate function logic
+        # The C-code applies rotations in order: X, then Y, then Z
+        rotation_matrix = angles_to_rotation_matrix(detector_rotx, detector_roty, detector_rotz)
+        
+        # Apply the rotation matrix to all three basis vectors
+        fdet_vec = torch.matmul(rotation_matrix, fdet_vec)
+        sdet_vec = torch.matmul(rotation_matrix, sdet_vec)
+        odet_vec = torch.matmul(rotation_matrix, odet_vec)
+        
+        # Apply two-theta rotation around the specified axis
+        if isinstance(c.twotheta_axis, torch.Tensor):
+            twotheta_axis = c.twotheta_axis.to(device=self.device, dtype=self.dtype)
+        else:
+            twotheta_axis = torch.tensor(c.twotheta_axis, device=self.device, dtype=self.dtype)
+        
+        # Check if twotheta is non-zero (handle both scalar and tensor cases)
+        is_nonzero = torch.abs(detector_twotheta) > 1e-12
+        if is_nonzero:
+            fdet_vec = rotate_axis(fdet_vec, twotheta_axis, detector_twotheta)
+            sdet_vec = rotate_axis(sdet_vec, twotheta_axis, detector_twotheta)
+            odet_vec = rotate_axis(odet_vec, twotheta_axis, detector_twotheta)
+        
+        return fdet_vec, sdet_vec, odet_vec
