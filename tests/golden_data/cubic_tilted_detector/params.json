@@ -1,0 +1,26 @@
+{
+  "wavelength_A": 6.2,
+  "crystal_size_cells": 5,
+  "unit_cell": {
+    "a": 100,
+    "b": 100,
+    "c": 100,
+    "alpha": 90,
+    "beta": 90,
+    "gamma": 90
+  },
+  "detector_distance_mm": 100,
+  "detector_size_mm": 102.4,
+  "detector_pixels": 1024,
+  "beam_center_mm": {
+    "x": 61.2,
+    "y": 61.2
+  },
+  "detector_rotations_deg": {
+    "x": 5,
+    "y": 3,
+    "z": 2
+  },
+  "twotheta_deg": 15,
+  "oversample": 1
+}

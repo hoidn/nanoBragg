@@ -90,3 +90,56 @@ This test validates the implementation of general triclinic unit cells. It uses 
 - Structure factors: all reflections set to F=100
 
 Note: The misset angles were generated randomly and saved for reproducibility. To regenerate this data, use the script at `tests/golden_data/triclinic_P1/regenerate_golden.sh`.
+
+---
+
+### 4. `cubic_tilted_detector` Test Case
+
+This test validates the implementation of general detector geometry with rotations and tilts. It uses a cubic cell with a detector that has been rotated and positioned at a twotheta angle.
+
+**Generated Files:**
+- `cubic_tilted_detector/image.bin`
+- `cubic_tilted_detector/trace.log`
+- `cubic_tilted_detector/params.json`
+- `cubic_tilted_detector/detector_vectors.txt`
+
+**Command:**
+```bash
+./nanoBragg -lambda 6.2 \
+  -N 5 \
+  -cell 100 100 100 90 90 90 \
+  -default_F 100 \
+  -distance 100 \
+  -detsize 102.4 \
+  -detpixels 1024 \
+  -Xbeam 61.2 -Ybeam 61.2 \
+  -detector_rotx 5 -detector_roty 3 -detector_rotz 2 \
+  -twotheta 15 \
+  -oversample 1 \
+  -floatfile tests/golden_data/cubic_tilted_detector/image.bin
+```
+
+**Parameters:**
+- Unit cell: 100Å cubic cell
+- Crystal size: 5x5x5 unit cells
+- Wavelength: 6.2 Å
+- Detector: 1024x1024 pixels, 100mm distance, 0.1mm pixel size
+- Beam center: (61.2, 61.2) mm - offset by 10mm from detector center
+- Detector rotations: rotx=5°, roty=3°, rotz=2° applied in that order
+- Two-theta angle: 15° - detector swing around the sample
+- Structure factors: all reflections set to F=100
+
+To regenerate this data, use the script at `tests/golden_data/cubic_tilted_detector/regenerate_golden.sh`.
+
+---
+
+## Detector Trace Format
+
+When nanoBragg.c is compiled with detector tracing enabled, it outputs the following vectors after all rotations have been applied:
+
+- **DETECTOR_FAST_AXIS**: The unit vector pointing in the fast (x) direction of the detector
+- **DETECTOR_SLOW_AXIS**: The unit vector pointing in the slow (y) direction of the detector  
+- **DETECTOR_NORMAL_AXIS**: The unit vector normal to the detector plane (pointing from detector to sample)
+- **DETECTOR_PIX0_VECTOR**: The 3D position of the first pixel (0,0) in the detector
+
+All vectors are output in high precision (%.15g format) to enable accurate validation of the PyTorch implementation.

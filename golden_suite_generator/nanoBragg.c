@@ -1730,6 +1730,11 @@ int main(int argc, char** argv)
     rotate_axis(fdet_vector,fdet_vector,twotheta_axis,detector_twotheta);
     rotate_axis(sdet_vector,sdet_vector,twotheta_axis,detector_twotheta);
     rotate_axis(odet_vector,odet_vector,twotheta_axis,detector_twotheta);
+    
+    /* Trace detector basis vectors after all rotations */
+    printf("DETECTOR_FAST_AXIS %.15g %.15g %.15g\n", fdet_vector[1], fdet_vector[2], fdet_vector[3]);
+    printf("DETECTOR_SLOW_AXIS %.15g %.15g %.15g\n", sdet_vector[1], sdet_vector[2], sdet_vector[3]);
+    printf("DETECTOR_NORMAL_AXIS %.15g %.15g %.15g\n", odet_vector[1], odet_vector[2], odet_vector[3]);
 
     /* make sure beam center is preserved */
     if(detector_pivot == BEAM){
@@ -1743,6 +1748,9 @@ int main(int argc, char** argv)
     Fclose         = -dot_product(pix0_vector,fdet_vector);
     Sclose         = -dot_product(pix0_vector,sdet_vector);
     close_distance =  dot_product(pix0_vector,odet_vector);
+    
+    /* Trace pix0_vector after all transformations */
+    printf("DETECTOR_PIX0_VECTOR %.15g %.15g %.15g\n", pix0_vector[1], pix0_vector[2], pix0_vector[3]);
 
     /* where is the direct beam now? */
     /* difference between beam impact vector and detector origin */
