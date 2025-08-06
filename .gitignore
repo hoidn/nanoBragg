@@ -78,3 +78,19 @@ floatimage.bin
 intimage.img
 noiseimage.img
 image.pgm
+
+# Transient documents
+session_summary_*.md
+notes.txt
+*_trace.log
+py_*_trace.log
+
+# Temporary debug files
+debug_*.png
+test_debug_*.png
+*_difference_map.png
+*_comparison.png
+
+# Work in progress
+plans/active/
+tmp/
