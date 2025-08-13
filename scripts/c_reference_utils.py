@@ -71,6 +71,12 @@ def build_nanobragg_command(
 
     Reference: Parameter mapping in docs/architecture/c_parameter_dictionary.md
     """
+    
+    # Debug logging for incoming detector config
+    print(f"\n   [build_nanobragg_command] Received detector_config:")
+    print(f"      - beam_center_s: {detector_config.beam_center_s}")
+    print(f"      - beam_center_f: {detector_config.beam_center_f}")
+    print(f"      - detector_twotheta_deg: {detector_config.detector_twotheta_deg}")
 
     # Start with executable
     cmd = [executable_path]
@@ -90,6 +96,8 @@ def build_nanobragg_command(
     cmd.extend(["-detpixels", str(detector_config.spixels)])
 
     # Beam center
+    # Debug logging
+    print(f"   [build_nanobragg_command] Adding beam center: s={detector_config.beam_center_s}, f={detector_config.beam_center_f}")
     cmd.extend(
         [
             "-beam",
@@ -137,7 +145,11 @@ def build_nanobragg_command(
 
     # Add pivot mode flag
     from nanobrag_torch.config import DetectorPivot
-    if detector_config.detector_pivot == DetectorPivot.BEAM:
+    
+    # C-code logic: automatically use SAMPLE pivot when twotheta is nonzero
+    if abs(detector_config.detector_twotheta_deg) > 1e-6:
+        cmd.extend(["-pivot", "sample"])
+    elif detector_config.detector_pivot == DetectorPivot.BEAM:
         cmd.extend(["-pivot", "beam"])
     elif detector_config.detector_pivot == DetectorPivot.SAMPLE:
         cmd.extend(["-pivot", "sample"])

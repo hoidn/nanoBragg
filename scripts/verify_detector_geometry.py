@@ -531,7 +531,7 @@ def main():
         detector_roty_deg=3.0,
         detector_rotz_deg=2.0,
         detector_twotheta_deg=15.0,
-        detector_pivot=DetectorPivot.BEAM,
+        detector_pivot=DetectorPivot.SAMPLE,  # C-code uses SAMPLE pivot when twotheta is nonzero
     )
 
     # Common crystal and beam configs
