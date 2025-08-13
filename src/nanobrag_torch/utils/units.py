@@ -13,23 +13,25 @@ from typing import Union
 def mm_to_angstroms(value: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:
     """
     Convert millimeters to Angstroms.
-    
+
     Args:
         value: Value in millimeters
-        
+
     Returns:
         Value in Angstroms (1 mm = 10,000,000 Å)
     """
     return value * 1e7
 
 
-def meters_to_angstroms(value: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:
+def meters_to_angstroms(
+    value: Union[float, torch.Tensor],
+) -> Union[float, torch.Tensor]:
     """
     Convert meters to Angstroms.
-    
+
     Args:
         value: Value in meters
-        
+
     Returns:
         Value in Angstroms (1 m = 1e10 Å)
     """
@@ -39,10 +41,10 @@ def meters_to_angstroms(value: Union[float, torch.Tensor]) -> Union[float, torch
 def degrees_to_radians(value: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:
     """
     Convert degrees to radians.
-    
+
     Args:
         value: Angle in degrees
-        
+
     Returns:
         Angle in radians
     """
@@ -56,23 +58,25 @@ def degrees_to_radians(value: Union[float, torch.Tensor]) -> Union[float, torch.
 def angstroms_to_mm(value: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:
     """
     Convert Angstroms to millimeters.
-    
+
     Args:
         value: Value in Angstroms
-        
+
     Returns:
         Value in millimeters (1 Å = 1e-7 mm)
     """
     return value * 1e-7
 
 
-def angstroms_to_meters(value: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:
+def angstroms_to_meters(
+    value: Union[float, torch.Tensor],
+) -> Union[float, torch.Tensor]:
     """
     Convert Angstroms to meters.
-    
+
     Args:
         value: Value in Angstroms
-        
+
     Returns:
         Value in meters (1 Å = 1e-10 m)
     """
@@ -82,10 +86,10 @@ def angstroms_to_meters(value: Union[float, torch.Tensor]) -> Union[float, torch
 def radians_to_degrees(value: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:
     """
     Convert radians to degrees.
-    
+
     Args:
         value: Angle in radians
-        
+
     Returns:
         Angle in degrees
     """

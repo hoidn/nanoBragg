@@ -63,12 +63,14 @@ import torch
 
 class DetectorConvention(Enum):
     """Detector coordinate system convention."""
+
     MOSFLM = "mosflm"
     XDS = "xds"
 
 
 class DetectorPivot(Enum):
     """Detector rotation pivot mode."""
+
     BEAM = "beam"
     SAMPLE = "sample"
 
@@ -117,41 +119,41 @@ class CrystalConfig:
 @dataclass
 class DetectorConfig:
     """Configuration for detector geometry and properties.
-    
+
     This configuration class defines all parameters needed to specify detector
     geometry, position, and orientation. All distance/size parameters are in
-    user-friendly millimeter units and will be converted to Angstroms internally.
+    user-friendly millimeter units and will be converted to meters internally.
     All angle parameters are in degrees and will be converted to radians internally.
     """
-    
+
     # Basic geometry (user units: mm)
     distance_mm: Union[float, torch.Tensor] = 100.0
     pixel_size_mm: Union[float, torch.Tensor] = 0.1
-    
+
     # Detector dimensions
     spixels: int = 1024  # slow axis pixels
     fpixels: int = 1024  # fast axis pixels
-    
+
     # Beam center (mm from detector origin)
     beam_center_s: Union[float, torch.Tensor] = 51.2  # slow axis
     beam_center_f: Union[float, torch.Tensor] = 51.2  # fast axis
-    
+
     # Detector rotations (degrees)
     detector_rotx_deg: Union[float, torch.Tensor] = 0.0
     detector_roty_deg: Union[float, torch.Tensor] = 0.0
     detector_rotz_deg: Union[float, torch.Tensor] = 0.0
-    
+
     # Two-theta rotation (degrees)
     detector_twotheta_deg: Union[float, torch.Tensor] = 0.0
-    twotheta_axis: Optional[torch.Tensor] = None  # Will default to [0,1,0]
-    
+    twotheta_axis: Optional[torch.Tensor] = None  # Will default based on convention
+
     # Convention and pivot
     detector_convention: DetectorConvention = DetectorConvention.MOSFLM
     detector_pivot: DetectorPivot = DetectorPivot.SAMPLE
-    
+
     # Sampling
     oversample: int = 1
-    
+
     def __post_init__(self):
         """Validate configuration and set defaults."""
         # Set default twotheta axis if not provided
@@ -166,20 +168,20 @@ class DetectorConfig:
             else:
                 # Default fallback
                 self.twotheta_axis = torch.tensor([0.0, 1.0, 0.0])
-        
+
         # Validate pixel counts
         if self.spixels <= 0 or self.fpixels <= 0:
             raise ValueError("Pixel counts must be positive")
-        
+
         # Validate distance and pixel size
         if isinstance(self.distance_mm, (int, float)):
             if self.distance_mm <= 0:
                 raise ValueError("Distance must be positive")
-        
+
         if isinstance(self.pixel_size_mm, (int, float)):
             if self.pixel_size_mm <= 0:
                 raise ValueError("Pixel size must be positive")
-        
+
         # Validate oversample
         if self.oversample < 1:
             raise ValueError("Oversample must be at least 1")
@@ -188,18 +190,18 @@ class DetectorConfig:
 @dataclass
 class BeamConfig:
     """Configuration for X-ray beam properties.
-    
+
     Simplified implementation for detector geometry testing.
     """
-    
+
     # Basic beam properties
     wavelength_A: float = 6.2  # X-ray wavelength in Angstroms
-    
+
     # Source geometry (simplified)
     N_source_points: int = 1  # Number of source points for beam divergence
     source_distance_mm: float = 10000.0  # Distance from source to sample (mm)
     source_size_mm: float = 0.0  # Source size (0 = point source)
-    
+
     # Beam polarization and flux (simplified)
     polarization_factor: float = 1.0  # Polarization correction factor
     flux: float = 1e12  # Photons per second (simplified)

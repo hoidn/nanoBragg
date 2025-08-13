@@ -2,7 +2,8 @@
 """Verify the detector basis vector calculation fix."""
 
 import os
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 import torch
 from src.nanobrag_torch.config import DetectorConfig
@@ -20,7 +21,7 @@ config = DetectorConfig(
     detector_roty_deg=3.0,
     detector_rotz_deg=2.0,
     detector_twotheta_deg=15.0,
-    oversample=1
+    oversample=1,
 )
 
 print("DetectorConfig created:")
@@ -54,7 +55,9 @@ print(f"  Normal diff: {(detector.odet_vec - c_normal).tolist()}")
 tolerance = 1e-7
 fast_match = torch.allclose(detector.fdet_vec, c_fast, rtol=tolerance, atol=tolerance)
 slow_match = torch.allclose(detector.sdet_vec, c_slow, rtol=tolerance, atol=tolerance)
-normal_match = torch.allclose(detector.odet_vec, c_normal, rtol=tolerance, atol=tolerance)
+normal_match = torch.allclose(
+    detector.odet_vec, c_normal, rtol=tolerance, atol=tolerance
+)
 
 print(f"\nMatch within tolerance ({tolerance}):")
 print(f"  Fast axis: {fast_match}")

@@ -1,0 +1,18 @@
+{
+  "baseline": {
+    "correlation": 0.9988086689800978,
+    "rms_absolute": 2026.1054066593913,
+    "rms_relative": 5.7348399453681544,
+    "max_difference": 54885.34749706551
+  },
+  "tilted": {
+    "correlation": -0.019281114952477047,
+    "rms_absolute": 2030.7283226338338,
+    "rms_relative": 5.754291970528958,
+    "max_difference": 55039.98908689449
+  },
+  "overall": {
+    "min_correlation": -0.019281114952477047,
+    "all_correlations_good": false
+  }
+}

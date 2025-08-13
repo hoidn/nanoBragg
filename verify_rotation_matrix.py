@@ -51,16 +51,28 @@ print(f"\nDeterminant of U: {det:.6f} (should be 1 or -1)")
 
 # Now let's verify by applying this matrix
 a_star_check = U_direct @ a_star_unrot
-b_star_check = U_direct @ b_star_unrot  
+b_star_check = U_direct @ b_star_unrot
 c_star_check = U_direct @ c_star_unrot
 
 print("\nVerification - applying U to unrotated vectors:")
-print(f"a* calculated: [{a_star_check[0]:.8f}, {a_star_check[1]:.8f}, {a_star_check[2]:.8f}]")
-print(f"a* expected:   [{a_star_expected[0]:.8f}, {a_star_expected[1]:.8f}, {a_star_expected[2]:.8f}]")
-print(f"b* calculated: [{b_star_check[0]:.8f}, {b_star_check[1]:.8f}, {b_star_check[2]:.8f}]")
-print(f"b* expected:   [{b_star_expected[0]:.8f}, {b_star_expected[1]:.8f}, {b_star_expected[2]:.8f}]")
-print(f"c* calculated: [{c_star_check[0]:.8f}, {c_star_check[1]:.8f}, {c_star_check[2]:.8f}]")
-print(f"c* expected:   [{c_star_expected[0]:.8f}, {c_star_expected[1]:.8f}, {c_star_expected[2]:.8f}]")
+print(
+    f"a* calculated: [{a_star_check[0]:.8f}, {a_star_check[1]:.8f}, {a_star_check[2]:.8f}]"
+)
+print(
+    f"a* expected:   [{a_star_expected[0]:.8f}, {a_star_expected[1]:.8f}, {a_star_expected[2]:.8f}]"
+)
+print(
+    f"b* calculated: [{b_star_check[0]:.8f}, {b_star_check[1]:.8f}, {b_star_check[2]:.8f}]"
+)
+print(
+    f"b* expected:   [{b_star_expected[0]:.8f}, {b_star_expected[1]:.8f}, {b_star_expected[2]:.8f}]"
+)
+print(
+    f"c* calculated: [{c_star_check[0]:.8f}, {c_star_check[1]:.8f}, {c_star_check[2]:.8f}]"
+)
+print(
+    f"c* expected:   [{c_star_expected[0]:.8f}, {c_star_expected[1]:.8f}, {c_star_expected[2]:.8f}]"
+)
 
 # Now let's try to reconstruct the misset angles from this matrix
 # This is reverse-engineering the umat2misset function
@@ -75,7 +87,7 @@ print(f"c* expected:   [{c_star_expected[0]:.8f}, {c_star_expected[1]:.8f}, {c_s
 #   phix = atan2(U[2,1], U[2,2])
 #   phiz = atan2(U[1,0], U[0,0])
 
-print("\n" + "="*60)
+print("\n" + "=" * 60)
 print("Attempting to extract Euler angles from rotation matrix:")
 
 # Extract angles (assuming X-Y-Z rotation order)
@@ -87,18 +99,24 @@ sin_y = U_direct[0, 2]  # For X-Y-Z order, this is sin(phiy)
 if abs(sin_y) < 0.99999:  # Not at gimbal lock
     phiy_extracted = np.arcsin(sin_y)
     cos_y = np.cos(phiy_extracted)
-    phix_extracted = np.arctan2(-U_direct[1, 2]/cos_y, U_direct[2, 2]/cos_y)
-    phiz_extracted = np.arctan2(-U_direct[0, 1]/cos_y, U_direct[0, 0]/cos_y)
+    phix_extracted = np.arctan2(-U_direct[1, 2] / cos_y, U_direct[2, 2] / cos_y)
+    phiz_extracted = np.arctan2(-U_direct[0, 1] / cos_y, U_direct[0, 0] / cos_y)
 else:
     # Gimbal lock case
     print("Warning: Near gimbal lock!")
-    phiy_extracted = np.pi/2 if sin_y > 0 else -np.pi/2
+    phiy_extracted = np.pi / 2 if sin_y > 0 else -np.pi / 2
     phix_extracted = 0
     phiz_extracted = np.arctan2(U_direct[1, 0], U_direct[1, 1])
 
-print(f"\nExtracted angles (radians): phix={phix_extracted:.6f}, phiy={phiy_extracted:.6f}, phiz={phiz_extracted:.6f}")
-print(f"Extracted angles (degrees): phix={phix_extracted*180/np.pi:.6f}, phiy={phiy_extracted*180/np.pi:.6f}, phiz={phiz_extracted*180/np.pi:.6f}")
-print(f"Original angles (degrees):  phix={misset_deg[0]:.6f}, phiy={misset_deg[1]:.6f}, phiz={misset_deg[2]:.6f}")
+print(
+    f"\nExtracted angles (radians): phix={phix_extracted:.6f}, phiy={phiy_extracted:.6f}, phiz={phiz_extracted:.6f}"
+)
+print(
+    f"Extracted angles (degrees): phix={phix_extracted*180/np.pi:.6f}, phiy={phiy_extracted*180/np.pi:.6f}, phiz={phiz_extracted*180/np.pi:.6f}"
+)
+print(
+    f"Original angles (degrees):  phix={misset_deg[0]:.6f}, phiy={misset_deg[1]:.6f}, phiz={misset_deg[2]:.6f}"
+)
 
 # The key insight: the C code likely generates a random unitary matrix first,
 # then extracts Euler angles from it. The conversion might not be perfectly

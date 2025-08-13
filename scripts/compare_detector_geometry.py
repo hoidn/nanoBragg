@@ -2,7 +2,8 @@
 """Compare detector geometry between hard-coded and triclinic test."""
 
 import os
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 import torch
 import numpy as np

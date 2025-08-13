@@ -187,16 +187,18 @@ def angles_to_rotation_matrix(
     """
     # Extract device and dtype from input angles
     # Ensure all angles have the same dtype - convert to the highest precision dtype
-    if hasattr(phi_x, 'dtype') and hasattr(phi_y, 'dtype') and hasattr(phi_z, 'dtype'):
+    if hasattr(phi_x, "dtype") and hasattr(phi_y, "dtype") and hasattr(phi_z, "dtype"):
         # All are tensors
-        dtype = torch.promote_types(torch.promote_types(phi_x.dtype, phi_y.dtype), phi_z.dtype)
+        dtype = torch.promote_types(
+            torch.promote_types(phi_x.dtype, phi_y.dtype), phi_z.dtype
+        )
         device = phi_x.device
         phi_x = phi_x.to(dtype=dtype)
         phi_y = phi_y.to(dtype=dtype)
         phi_z = phi_z.to(dtype=dtype)
     else:
         # Mixed or scalar inputs - default to float64
-        device = torch.device('cpu')
+        device = torch.device("cpu")
         dtype = torch.float64
         if not isinstance(phi_x, torch.Tensor):
             phi_x = torch.tensor(phi_x, dtype=dtype, device=device)

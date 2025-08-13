@@ -80,7 +80,7 @@ class Simulator:
         This method vectorizes the simulation over all detector pixels, phi angles,
         and mosaic domains. It integrates contributions from all crystal orientations
         to produce the final diffraction pattern.
-        
+
         Important: This implementation uses the full Miller indices (h, k, l) for the
         lattice shape factor calculation, not the fractional part (h-h0). This correctly
         models the crystal shape transform and is consistent with the physics of
@@ -128,8 +128,10 @@ class Simulator:
         Returns:
             torch.Tensor: Final diffraction image with shape (spixels, fpixels).
         """
-        # Get pixel coordinates (spixels, fpixels, 3) in Angstroms
-        pixel_coords_angstroms = self.detector.get_pixel_coords()
+        # Get pixel coordinates (spixels, fpixels, 3) in meters
+        pixel_coords_meters = self.detector.get_pixel_coords()
+        # Convert to Angstroms for physics calculations
+        pixel_coords_angstroms = pixel_coords_meters * 1e10
 
         # Calculate scattering vectors for each pixel
         # The C code calculates scattering vector as the difference between
@@ -157,8 +159,8 @@ class Simulator:
         # Get rotated lattice vectors for all phi steps and mosaic domains
         # Shape: (N_phi, N_mos, 3)
         if override_a_star is None:
-            (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = self.crystal.get_rotated_real_vectors(
-                self.crystal_config
+            (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = (
+                self.crystal.get_rotated_real_vectors(self.crystal_config)
             )
         else:
             # For gradient testing with override, use single orientation
@@ -217,10 +219,15 @@ class Simulator:
         # Solid angle correction, converting all units to meters for calculation
         airpath = pixel_magnitudes.squeeze(-1)  # Remove last dimension for broadcasting
         airpath_m = airpath * 1e-10  # Å to meters
-        close_distance_m = self.detector.distance * 1e-10  # Å to meters
-        pixel_size_m = self.detector.pixel_size * 1e-10  # Å to meters
+        close_distance_m = self.detector.distance  # Already in meters
+        pixel_size_m = self.detector.pixel_size  # Already in meters
 
-        omega_pixel = (pixel_size_m * pixel_size_m) / (airpath_m * airpath_m) * close_distance_m / airpath_m
+        omega_pixel = (
+            (pixel_size_m * pixel_size_m)
+            / (airpath_m * airpath_m)
+            * close_distance_m
+            / airpath_m
+        )
 
         # Final intensity with all physical constants in meters
         # Units: [dimensionless] × [steradians] × [m²] × [photons/m²] × [dimensionless] = [photons·steradians]

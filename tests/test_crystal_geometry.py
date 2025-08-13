@@ -277,7 +277,9 @@ class TestCrystalGeometry:
         # volume from vectors (a·(b×c)), which differs slightly from the formula
         # The difference is about 0.6% for this triclinic cell
         relative_diff = torch.abs(computed_volume - volume_formula) / volume_formula
-        assert relative_diff < 0.007, f"Volume difference {relative_diff:.4%} exceeds 0.7%"
+        assert (
+            relative_diff < 0.007
+        ), f"Volume difference {relative_diff:.4%} exceeds 0.7%"
 
     def test_resolution_shell_consistency(self):
         """Verify the d-spacing convention |G|=1/d."""

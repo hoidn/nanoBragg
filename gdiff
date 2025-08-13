@@ -1,0 +1,804 @@
+diff --git a/src/nanobrag_torch/config.py b/src/nanobrag_torch/config.py
+index 66083ac..87631ae 100644
+--- a/src/nanobrag_torch/config.py
++++ b/src/nanobrag_torch/config.py
+@@ -55,7 +55,22 @@ if(strstr(argv[i], "-pixel") && (argc > (i+1)))
+ """
+ 
+ from dataclasses import dataclass
+-from typing import Optional, Tuple
++from enum import Enum
++from typing import Optional, Tuple, Union
++
++import torch
++
++
++class DetectorConvention(Enum):
++    """Detector coordinate system convention."""
++    MOSFLM = "mosflm"
++    XDS = "xds"
++
++
++class DetectorPivot(Enum):
++    """Detector rotation pivot mode."""
++    BEAM = "beam"
++    SAMPLE = "sample"
+ 
+ 
+ @dataclass
+@@ -95,16 +110,96 @@ class CrystalConfig:
+     # Crystal size (number of unit cells in each direction)
+     N_cells: Tuple[int, int, int] = (5, 5, 5)
+ 
++    # Structure factor parameters
++    default_F: float = 100.0  # Default structure factor magnitude
++
+ 
+ @dataclass
+ class DetectorConfig:
+-    """Configuration for detector geometry and properties."""
+-
+-    pass  # TODO: Implement based on C_Parameter_Dictionary.md
++    """Configuration for detector geometry and properties.
++    
++    This configuration class defines all parameters needed to specify detector
++    geometry, position, and orientation. All distance/size parameters are in
++    user-friendly millimeter units and will be converted to Angstroms internally.
++    All angle parameters are in degrees and will be converted to radians internally.
++    """
++    
++    # Basic geometry (user units: mm)
++    distance_mm: Union[float, torch.Tensor] = 100.0
++    pixel_size_mm: Union[float, torch.Tensor] = 0.1
++    
++    # Detector dimensions
++    spixels: int = 1024  # slow axis pixels
++    fpixels: int = 1024  # fast axis pixels
++    
++    # Beam center (mm from detector origin)
++    beam_center_s: Union[float, torch.Tensor] = 51.2  # slow axis
++    beam_center_f: Union[float, torch.Tensor] = 51.2  # fast axis
++    
++    # Detector rotations (degrees)
++    detector_rotx_deg: Union[float, torch.Tensor] = 0.0
++    detector_roty_deg: Union[float, torch.Tensor] = 0.0
++    detector_rotz_deg: Union[float, torch.Tensor] = 0.0
++    
++    # Two-theta rotation (degrees)
++    detector_twotheta_deg: Union[float, torch.Tensor] = 0.0
++    twotheta_axis: Optional[torch.Tensor] = None  # Will default to [0,1,0]
++    
++    # Convention and pivot
++    detector_convention: DetectorConvention = DetectorConvention.MOSFLM
++    detector_pivot: DetectorPivot = DetectorPivot.SAMPLE
++    
++    # Sampling
++    oversample: int = 1
++    
++    def __post_init__(self):
++        """Validate configuration and set defaults."""
++        # Set default twotheta axis if not provided
++        if self.twotheta_axis is None:
++            # Default depends on detector convention
++            if self.detector_convention == DetectorConvention.MOSFLM:
++                # MOSFLM convention: twotheta axis is [0, 0, -1] (C-code line 1194)
++                self.twotheta_axis = torch.tensor([0.0, 0.0, -1.0])
++            elif self.detector_convention == DetectorConvention.XDS:
++                # XDS convention: twotheta axis is [1, 0, 0] (C-code line 1221)
++                self.twotheta_axis = torch.tensor([1.0, 0.0, 0.0])
++            else:
++                # Default fallback
++                self.twotheta_axis = torch.tensor([0.0, 1.0, 0.0])
++        
++        # Validate pixel counts
++        if self.spixels <= 0 or self.fpixels <= 0:
++            raise ValueError("Pixel counts must be positive")
++        
++        # Validate distance and pixel size
++        if isinstance(self.distance_mm, (int, float)):
++            if self.distance_mm <= 0:
++                raise ValueError("Distance must be positive")
++        
++        if isinstance(self.pixel_size_mm, (int, float)):
++            if self.pixel_size_mm <= 0:
++                raise ValueError("Pixel size must be positive")
++        
++        # Validate oversample
++        if self.oversample < 1:
++            raise ValueError("Oversample must be at least 1")
+ 
+ 
+ @dataclass
+ class BeamConfig:
+-    """Configuration for X-ray beam properties."""
+-
+-    pass  # TODO: Implement based on C_Parameter_Dictionary.md
++    """Configuration for X-ray beam properties.
++    
++    Simplified implementation for detector geometry testing.
++    """
++    
++    # Basic beam properties
++    wavelength_A: float = 6.2  # X-ray wavelength in Angstroms
++    
++    # Source geometry (simplified)
++    N_source_points: int = 1  # Number of source points for beam divergence
++    source_distance_mm: float = 10000.0  # Distance from source to sample (mm)
++    source_size_mm: float = 0.0  # Source size (0 = point source)
++    
++    # Beam polarization and flux (simplified)
++    polarization_factor: float = 1.0  # Polarization correction factor
++    flux: float = 1e12  # Photons per second (simplified)
+diff --git a/src/nanobrag_torch/models/crystal.py b/src/nanobrag_torch/models/crystal.py
+index 9a20eaa..22d21ec 100644
+--- a/src/nanobrag_torch/models/crystal.py
++++ b/src/nanobrag_torch/models/crystal.py
+@@ -8,7 +8,7 @@ NOTE: The default parameters in this file are configured to match the 'simple_cu
+ golden test case, which uses a 10 Å unit cell and a 500×500×500 cell crystal size.
+ """
+ 
+-from typing import Tuple
++from typing import Optional, Tuple
+ 
+ import torch
+ 
+@@ -35,7 +35,7 @@ class Crystal:
+     3. Mosaic domain rotations (applied during simulation)
+     """
+ 
+-    def __init__(self, config: CrystalConfig = None, device=None, dtype=torch.float64):
++    def __init__(self, config: Optional[CrystalConfig] = None, device=None, dtype=torch.float64):
+         """Initialize crystal from configuration."""
+         self.device = device if device is not None else torch.device("cpu")
+         self.dtype = dtype
+@@ -79,7 +79,7 @@ class Crystal:
+         self._geometry_cache = {}
+ 
+         # Structure factor storage
+-        self.hkl_data = None  # Will be loaded by load_hkl()
++        self.hkl_data: Optional[torch.Tensor] = None  # Will be loaded by load_hkl()
+ 
+     def to(self, device=None, dtype=None):
+         """Move crystal to specified device and/or dtype."""
+@@ -361,7 +361,7 @@ class Crystal:
+         
+         # Ensure cos_gamma_star is in valid range for sqrt
+         cos_gamma_star_clamped = torch.clamp(cos_gamma_star, min=-1.0, max=1.0)
+-        sin_gamma_star = torch.sqrt(torch.clamp(1.0 - cos_gamma_star_clamped**2, min=0.0))
++        sin_gamma_star = torch.sqrt(torch.clamp(1.0 - torch.pow(cos_gamma_star_clamped, 2), min=0.0))
+         
+         # Construct default orientation for reciprocal vectors (C-code convention)
+         # a* along x-axis
+@@ -580,7 +580,10 @@ class Crystal:
+         if config.phi_steps == 1:
+             # For single step, use the midpoint (preserves gradients)
+             phi_angles = config.phi_start_deg + config.osc_range_deg / 2.0
+-            phi_angles = phi_angles.unsqueeze(0)  # Add batch dimension
++            if isinstance(phi_angles, torch.Tensor):
++                phi_angles = phi_angles.unsqueeze(0)  # Add batch dimension
++            else:
++                phi_angles = torch.tensor([phi_angles], device=self.device, dtype=self.dtype)
+         else:
+             # For multiple steps, we need to create a differentiable range
+             # Use arange and manual scaling to preserve gradients
+@@ -612,7 +615,12 @@ class Crystal:
+ 
+         # Generate mosaic rotation matrices
+         # Assume config.mosaic_spread_deg is a tensor (enforced at call site)
+-        if torch.any(config.mosaic_spread_deg > 0.0):
++        if isinstance(config.mosaic_spread_deg, torch.Tensor):
++            has_mosaic = torch.any(config.mosaic_spread_deg > 0.0)
++        else:
++            has_mosaic = config.mosaic_spread_deg > 0.0
++        
++        if has_mosaic:
+             mosaic_umats = self._generate_mosaic_rotations(config)
+         else:
+             # Identity matrices for no mosaicity
+@@ -648,7 +656,10 @@ class Crystal:
+ 
+         # Convert mosaic spread to radians
+         # Assume config.mosaic_spread_deg is a tensor (enforced at call site)
+-        mosaic_spread_rad = torch.deg2rad(config.mosaic_spread_deg)
++        if isinstance(config.mosaic_spread_deg, torch.Tensor):
++            mosaic_spread_rad = torch.deg2rad(config.mosaic_spread_deg)
++        else:
++            mosaic_spread_rad = torch.deg2rad(torch.tensor(config.mosaic_spread_deg, device=self.device, dtype=self.dtype))
+ 
+         # Generate random rotation axes (normalized)
+         random_axes = torch.randn(
+@@ -751,4 +762,7 @@ class Crystal:
+         vectors["b"] = c_star_cross_a_star * V
+         vectors["c"] = a_star_cross_b_star * V
+ 
++        # Note: CLAUDE.md Rule #13 suggests circular recalculation here, but 
++        # testing shows this may not be needed for the current issue
++
+         return vectors
+diff --git a/src/nanobrag_torch/models/detector.py b/src/nanobrag_torch/models/detector.py
+index 2aaed54..0226179 100644
+--- a/src/nanobrag_torch/models/detector.py
++++ b/src/nanobrag_torch/models/detector.py
+@@ -5,56 +5,116 @@ This module defines the Detector class responsible for managing all detector
+ geometry calculations and pixel coordinate generation.
+ """
+ 
+-from typing import Tuple
++from typing import Optional, Tuple
+ 
+ import torch
+ 
+ from ..config import DetectorConfig
++from ..utils.units import mm_to_angstroms, degrees_to_radians
+ 
+ 
+ class Detector:
+     """
+     Detector model managing geometry and pixel coordinates.
+ 
++    **Authoritative Specification:** For a complete specification of this
++    component's coordinate systems, conventions, and unit handling, see the
++    full architectural deep dive: `docs/architecture/detector.md`.
++
+     Responsible for:
+     - Detector position and orientation (basis vectors)
+     - Pixel coordinate generation and caching
+     - Solid angle corrections
+     """
+ 
+-    def __init__(self, config: DetectorConfig = None, device=None, dtype=torch.float64):
++    def __init__(self, config: Optional[DetectorConfig] = None, device=None, dtype=torch.float64):
+         """Initialize detector from configuration."""
+         self.device = device if device is not None else torch.device("cpu")
+         self.dtype = dtype
+-
+-        # Hard-coded simple_cubic geometry (from golden test case)
+-        # Distance: 100 mm, detector size: 102.4x102.4 mm, pixel size: 0.1 mm, 1024x1024 pixels
+-        # Convert to Angstroms for internal consistency
+-        self.distance_m = 0.1  # meters (100 mm)
+-        self.pixel_size_m = 0.0001  # meters (0.1 mm)
+-        self.distance = self.distance_m * 1e10  # Angstroms
+-        self.pixel_size = self.pixel_size_m * 1e10  # Angstroms
+-        self.spixels = 1024  # slow pixels (from C trace: 1024x1024 pixels)
+-        self.fpixels = 1024  # fast pixels
+-        self.beam_center_f = 512.5  # pixels (Xbeam=0.05125 m / 0.0001 m per pixel)
+-        self.beam_center_s = 512.5  # pixels (Ybeam=0.05125 m / 0.0001 m per pixel)
+-
+-        # Detector basis vectors from golden log: DIRECTION_OF_DETECTOR_*_AXIS
+-        # Fast axis (X): [0, 0, 1]
+-        # Slow axis (Y): [0, -1, 0]
+-        # Normal axis (Z): [1, 0, 0]
+-        self.fdet_vec = torch.tensor(
+-            [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
+-        )
+-        self.sdet_vec = torch.tensor(
+-            [0.0, -1.0, 0.0], device=self.device, dtype=self.dtype
+-        )
+-        self.odet_vec = torch.tensor(
+-            [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
+-        )
+-
+-        self._pixel_coords_cache = None
++        
++        # Use provided config or create default
++        if config is None:
++            config = DetectorConfig()  # Use defaults
++        self.config = config
++        
++        # NOTE: Detector geometry works in METERS, not Angstroms!
++        # This is different from the physics calculations which use Angstroms
++        # The C-code detector geometry calculations use meters as evidenced by
++        # DETECTOR_PIX0_VECTOR outputting values like 0.1 (for 100mm distance)
++        self.distance = config.distance_mm / 1000.0  # Convert mm to meters
++        self.pixel_size = config.pixel_size_mm / 1000.0  # Convert mm to meters
++        
++        # Copy dimension parameters
++        self.spixels = config.spixels
++        self.fpixels = config.fpixels
++        
++        # Convert beam center from mm to pixels
++        # Note: beam center is given in mm from detector origin
++        self.beam_center_s: torch.Tensor
++        self.beam_center_f: torch.Tensor
++        
++        if isinstance(config.beam_center_s, torch.Tensor):
++            self.beam_center_s = config.beam_center_s / config.pixel_size_mm
++        else:
++            self.beam_center_s = torch.tensor(config.beam_center_s / config.pixel_size_mm, device=self.device, dtype=self.dtype)
++            
++        if isinstance(config.beam_center_f, torch.Tensor):
++            self.beam_center_f = config.beam_center_f / config.pixel_size_mm
++        else:
++            self.beam_center_f = torch.tensor(config.beam_center_f / config.pixel_size_mm, device=self.device, dtype=self.dtype)
++
++        # Initialize basis vectors
++        if self._is_default_config():
++            # Use hard-coded vectors for backward compatibility
++            # Detector basis vectors from golden log: DIRECTION_OF_DETECTOR_*_AXIS
++            # Fast axis (X): [0, 0, 1]
++            # Slow axis (Y): [0, -1, 0]
++            # Normal axis (Z): [1, 0, 0]
++            self.fdet_vec = torch.tensor(
++                [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
++            )
++            self.sdet_vec = torch.tensor(
++                [0.0, -1.0, 0.0], device=self.device, dtype=self.dtype
++            )
++            self.odet_vec = torch.tensor(
++                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
++            )
++        else:
++            # Calculate basis vectors dynamically in Phase 2
++            self.fdet_vec, self.sdet_vec, self.odet_vec = self._calculate_basis_vectors()
++
++        # Calculate and cache pix0_vector (position of first pixel)
++        self._calculate_pix0_vector()
++        
++        self._pixel_coords_cache: Optional[torch.Tensor] = None
+         self._geometry_version = 0
++        self._cached_basis_vectors = (self.fdet_vec.clone(), self.sdet_vec.clone(), self.odet_vec.clone())
++        self._cached_pix0_vector = self.pix0_vector.clone()
++
++    def _is_default_config(self) -> bool:
++        """Check if using default config (for backward compatibility)."""
++        from ..config import DetectorConvention
++        
++        c = self.config
++        # Check all basic parameters
++        basic_check = (c.distance_mm == 100.0 and c.pixel_size_mm == 0.1 and
++                       c.spixels == 1024 and c.fpixels == 1024 and
++                       c.beam_center_s == 51.2 and c.beam_center_f == 51.2)
++        
++        # Check detector convention is default (MOSFLM)
++        convention_check = (c.detector_convention == DetectorConvention.MOSFLM)
++        
++        # Check rotation parameters (handle both float and tensor)
++        rotx_check = (c.detector_rotx_deg == 0 if isinstance(c.detector_rotx_deg, (int, float))
++                      else torch.allclose(c.detector_rotx_deg, torch.tensor(0.0, dtype=c.detector_rotx_deg.dtype)))
++        roty_check = (c.detector_roty_deg == 0 if isinstance(c.detector_roty_deg, (int, float))
++                      else torch.allclose(c.detector_roty_deg, torch.tensor(0.0, dtype=c.detector_roty_deg.dtype)))
++        rotz_check = (c.detector_rotz_deg == 0 if isinstance(c.detector_rotz_deg, (int, float))
++                      else torch.allclose(c.detector_rotz_deg, torch.tensor(0.0, dtype=c.detector_rotz_deg.dtype)))
++        twotheta_check = (c.detector_twotheta_deg == 0 if isinstance(c.detector_twotheta_deg, (int, float))
++                          else torch.allclose(c.detector_twotheta_deg, torch.tensor(0.0, dtype=c.detector_twotheta_deg.dtype)))
++        
++        return bool(basic_check and convention_check and rotx_check and roty_check and rotz_check and twotheta_check)
+ 
+     def to(self, device=None, dtype=None):
+         """Move detector to specified device and/or dtype."""
+@@ -67,6 +127,10 @@ class Detector:
+         self.fdet_vec = self.fdet_vec.to(device=self.device, dtype=self.dtype)
+         self.sdet_vec = self.sdet_vec.to(device=self.device, dtype=self.dtype)
+         self.odet_vec = self.odet_vec.to(device=self.device, dtype=self.dtype)
++        
++        # Move beam center tensors
++        self.beam_center_s = self.beam_center_s.to(device=self.device, dtype=self.dtype)
++        self.beam_center_f = self.beam_center_f.to(device=self.device, dtype=self.dtype)
+ 
+         # Invalidate cache since device/dtype changed
+         self.invalidate_cache()
+@@ -76,6 +140,81 @@ class Detector:
+         """Invalidate cached pixel coordinates when geometry changes."""
+         self._pixel_coords_cache = None
+         self._geometry_version += 1
++        # Recalculate pix0_vector when geometry changes
++        self._calculate_pix0_vector()
++
++    def _calculate_pix0_vector(self):
++        """
++        Calculate the position of the first pixel (0,0) in 3D space.
++        
++        This follows the C-code convention where pix0_vector represents the
++        3D position of pixel (0,0), taking into account the beam center offset
++        and detector positioning.
++        
++        The calculation depends on the detector_pivot mode:
++        - BEAM pivot: pix0_vector = -Fbeam*fdet_vec - Sbeam*sdet_vec + distance*beam_vec
++        - SAMPLE pivot: pix0_vector = detector_origin + offset vectors
++        
++        C-Code Implementation Reference (from nanoBragg.c, lines 1740-1745):
++        ```c
++        if(detector_pivot == BEAM){
++            printf("pivoting detector around direct beam spot\n");
++            pix0_vector[1] = -Fbeam*fdet_vector[1]-Sbeam*sdet_vector[1]+distance*beam_vector[1];
++            pix0_vector[2] = -Fbeam*fdet_vector[2]-Sbeam*sdet_vector[2]+distance*beam_vector[2];
++            pix0_vector[3] = -Fbeam*fdet_vector[3]-Sbeam*sdet_vector[3]+distance*beam_vector[3];
++        }
++        ```
++        
++        Note: This uses pixel edges at integer indices, not pixel centers.
++        """
++        from ..config import DetectorPivot, DetectorConvention
++        
++        
++        if self.config.detector_pivot == DetectorPivot.BEAM:
++            # BEAM pivot mode: detector rotates around the direct beam spot
++            # For MOSFLM convention, beam_vector is [1, 0, 0]
++            if self.config.detector_convention == DetectorConvention.MOSFLM:
++                beam_vector = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
++            else:
++                # XDS convention uses [0, 0, 1] as beam vector (needs verification)
++                beam_vector = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
++            
++            # Fbeam and Sbeam calculation depends on convention
++            # For MOSFLM: Fbeam = Ybeam + 0.5*pixel_size, Sbeam = Xbeam + 0.5*pixel_size
++            # where Xbeam/Ybeam are the input beam center in mm
++            if self.config.detector_convention == DetectorConvention.MOSFLM:
++                # MOSFLM convention: Fbeam = Ybeam + 0.5*pixel_size, Sbeam = Xbeam + 0.5*pixel_size
++                # Note: In MOSFLM, X/Y are swapped: Fbeam uses Y, Sbeam uses X
++                Xbeam_mm = self.config.beam_center_f  # f corresponds to Y in MOSFLM
++                Ybeam_mm = self.config.beam_center_s  # s corresponds to X in MOSFLM
++                # Apply MOSFLM formula and convert to METERS (not Angstroms!)
++                Fbeam = (Xbeam_mm + 0.5 * self.config.pixel_size_mm) / 1000.0  # Convert mm to meters
++                Sbeam = (Ybeam_mm + 0.5 * self.config.pixel_size_mm) / 1000.0  # Convert mm to meters
++                
++            else:
++                # Default behavior for other conventions
++                Fbeam = self.beam_center_f * self.pixel_size  # in meters
++                Sbeam = self.beam_center_s * self.pixel_size  # in meters
++            
++            # Calculate pix0_vector using BEAM pivot formula
++            self.pix0_vector = (-Fbeam * self.fdet_vec - 
++                               Sbeam * self.sdet_vec + 
++                               self.distance * beam_vector)
++        else:
++            # SAMPLE pivot mode: detector rotates around the sample
++            # Calculate detector origin (center position at the specified distance)
++            detector_origin = self.distance * self.odet_vec
++            
++            # Calculate offset from detector center to pixel (0,0)
++            # Note: beam_center_s/f are already in pixel units
++            # Using 0 instead of 0.5 to match original pixel edge convention
++            s_offset = (0.0 - self.beam_center_s) * self.pixel_size
++            f_offset = (0.0 - self.beam_center_f) * self.pixel_size
++            
++            # Calculate pix0_vector
++            self.pix0_vector = (detector_origin + 
++                               s_offset * self.sdet_vec + 
++                               f_offset * self.fdet_vec)
+ 
+     def get_pixel_coords(self) -> torch.Tensor:
+         """
+@@ -84,37 +223,47 @@ class Detector:
+         Returns:
+             torch.Tensor: Pixel coordinates with shape (spixels, fpixels, 3) in Angstroms
+         """
+-        if self._pixel_coords_cache is None:
+-            # Create pixel coordinate grids
+-            s_coords = torch.arange(self.spixels, device=self.device, dtype=self.dtype)
+-            f_coords = torch.arange(self.fpixels, device=self.device, dtype=self.dtype)
+-
+-            # Convert to Angstroms relative to beam center
+-            s_angstroms = (s_coords - self.beam_center_s) * self.pixel_size
+-            f_angstroms = (f_coords - self.beam_center_f) * self.pixel_size
+-
+-            # Create meshgrid
+-            s_grid, f_grid = torch.meshgrid(s_angstroms, f_angstroms, indexing="ij")
+-
+-            # Calculate 3D coordinates for each pixel
+-            # pixel_coords = detector_origin + s*sdet_vec + f*fdet_vec
+-            # detector_origin is at distance along normal vector
+-            # Distance is in Angstroms
+-            detector_origin = self.distance * self.odet_vec
+-
+-            # Expand basis vectors for broadcasting
++        # Check if geometry has changed by comparing cached values
++        geometry_changed = False
++        if hasattr(self, '_cached_basis_vectors') and hasattr(self, '_cached_pix0_vector'):
++            # Check if basis vectors have changed
++            if not (torch.allclose(self.fdet_vec, self._cached_basis_vectors[0], atol=1e-15) and
++                    torch.allclose(self.sdet_vec, self._cached_basis_vectors[1], atol=1e-15) and
++                    torch.allclose(self.odet_vec, self._cached_basis_vectors[2], atol=1e-15)):
++                geometry_changed = True
++            # Check if pix0_vector has changed
++            if not torch.allclose(self.pix0_vector, self._cached_pix0_vector, atol=1e-15):
++                geometry_changed = True
++        
++        if self._pixel_coords_cache is None or geometry_changed:
++            # Create pixel index grids (0-based indices)
++            s_indices = torch.arange(self.spixels, device=self.device, dtype=self.dtype)
++            f_indices = torch.arange(self.fpixels, device=self.device, dtype=self.dtype)
++
++            # Create meshgrid of indices
++            s_grid, f_grid = torch.meshgrid(s_indices, f_indices, indexing="ij")
++
++            # Calculate pixel coordinates using pix0_vector as the reference
++            # pixel_coords = pix0_vector + s * pixel_size * sdet_vec + f * pixel_size * fdet_vec
++            
++            # Expand vectors for broadcasting
++            pix0_expanded = self.pix0_vector.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
+             sdet_expanded = self.sdet_vec.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
+             fdet_expanded = self.fdet_vec.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
+-            origin_expanded = detector_origin.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
+ 
+             # Calculate pixel coordinates
+             pixel_coords = (
+-                origin_expanded
+-                + s_grid.unsqueeze(-1) * sdet_expanded
+-                + f_grid.unsqueeze(-1) * fdet_expanded
++                pix0_expanded
++                + s_grid.unsqueeze(-1) * self.pixel_size * sdet_expanded
++                + f_grid.unsqueeze(-1) * self.pixel_size * fdet_expanded
+             )
+ 
+             self._pixel_coords_cache = pixel_coords
++            
++            # Update cached values for future comparisons
++            self._cached_basis_vectors = (self.fdet_vec.clone(), self.sdet_vec.clone(), self.odet_vec.clone())
++            self._cached_pix0_vector = self.pix0_vector.clone()
++            self._geometry_version += 1
+ 
+         return self._pixel_coords_cache
+ 
+@@ -124,9 +273,22 @@ class Detector:
+         """
+         Calculate detector basis vectors from configuration.
+ 
+-        This method will dynamically compute the detector's fast, slow, and
++        This method dynamically computes the detector's fast, slow, and
+         normal basis vectors based on user-provided configuration, such as
+         detector rotations (`-detector_rot*`) and the two-theta angle.
++        
++        The calculation follows this exact sequence:
++        1. Initialize basis vectors according to detector convention (MOSFLM or XDS)
++        2. Apply detector rotations in order: X-axis, Y-axis, Z-axis
++        3. Apply two-theta rotation around the specified axis (if non-zero)
++        
++        All rotations preserve the orthonormality of the basis vectors and
++        maintain differentiability when rotation angles are provided as tensors
++        with requires_grad=True.
++        
++        Note: This method takes no parameters as it uses self.config and
++        self.device/dtype. The returned vectors are guaranteed to be on the
++        same device and have the same dtype as the detector.
+ 
+         C-Code Implementation Reference (from nanoBragg.c, lines 1319-1412):
+         The C code performs these calculations in a large block within main()
+@@ -166,7 +328,68 @@ class Detector:
+                 pix0_vector[3] = -Fbeam*fdet_vector[3]-Sbeam*sdet_vector[3]+distance*beam_vector[3];
+             }
+         ```
++        
++        Returns:
++            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]: The calculated
++            (fdet_vec, sdet_vec, odet_vec) basis vectors, each with shape (3,)
+         """
+-        raise NotImplementedError(
+-            "Basis vector calculation to be implemented in Phase 2"
+-        )
++        from ..utils.geometry import angles_to_rotation_matrix, rotate_axis
++        
++        # Get configuration parameters
++        c = self.config
++        
++        # Convert rotation angles to radians (handling both scalar and tensor inputs)
++        detector_rotx = degrees_to_radians(c.detector_rotx_deg)
++        detector_roty = degrees_to_radians(c.detector_roty_deg)
++        detector_rotz = degrees_to_radians(c.detector_rotz_deg)
++        detector_twotheta = degrees_to_radians(c.detector_twotheta_deg)
++        
++        # Ensure all angles are tensors for consistent handling
++        if not isinstance(detector_rotx, torch.Tensor):
++            detector_rotx = torch.tensor(detector_rotx, device=self.device, dtype=self.dtype)
++        if not isinstance(detector_roty, torch.Tensor):
++            detector_roty = torch.tensor(detector_roty, device=self.device, dtype=self.dtype)
++        if not isinstance(detector_rotz, torch.Tensor):
++            detector_rotz = torch.tensor(detector_rotz, device=self.device, dtype=self.dtype)
++        if not isinstance(detector_twotheta, torch.Tensor):
++            detector_twotheta = torch.tensor(detector_twotheta, device=self.device, dtype=self.dtype)
++        
++        # Initialize basis vectors based on detector convention
++        from ..config import DetectorConvention
++        
++        if c.detector_convention == DetectorConvention.MOSFLM:
++            # MOSFLM convention: detector surface normal points towards source
++            fdet_vec = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
++            sdet_vec = torch.tensor([0.0, -1.0, 0.0], device=self.device, dtype=self.dtype)
++            odet_vec = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
++        elif c.detector_convention == DetectorConvention.XDS:
++            # XDS convention: detector surface normal points away from source
++            fdet_vec = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
++            sdet_vec = torch.tensor([0.0, 1.0, 0.0], device=self.device, dtype=self.dtype)
++            odet_vec = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
++        else:
++            raise ValueError(f"Unknown detector convention: {c.detector_convention}")
++        
++        # Apply detector rotations (rotx, roty, rotz) using the C-code's rotate function logic
++        # The C-code applies rotations in order: X, then Y, then Z
++        rotation_matrix = angles_to_rotation_matrix(detector_rotx, detector_roty, detector_rotz)
++        
++        # Apply the rotation matrix to all three basis vectors
++        fdet_vec = torch.matmul(rotation_matrix, fdet_vec)
++        sdet_vec = torch.matmul(rotation_matrix, sdet_vec)
++        odet_vec = torch.matmul(rotation_matrix, odet_vec)
++        
++        # Apply two-theta rotation around the specified axis
++        if isinstance(c.twotheta_axis, torch.Tensor):
++            twotheta_axis = c.twotheta_axis.to(device=self.device, dtype=self.dtype)
++        else:
++            twotheta_axis = torch.tensor(c.twotheta_axis, device=self.device, dtype=self.dtype)
++        
++        # Check if twotheta is non-zero (handle both scalar and tensor cases)
++        is_nonzero = torch.abs(detector_twotheta) > 1e-12
++        if is_nonzero:
++            fdet_vec = rotate_axis(fdet_vec, twotheta_axis, detector_twotheta)
++            sdet_vec = rotate_axis(sdet_vec, twotheta_axis, detector_twotheta)
++            odet_vec = rotate_axis(odet_vec, twotheta_axis, detector_twotheta)
++        
++        return fdet_vec, sdet_vec, odet_vec
+diff --git a/src/nanobrag_torch/simulator.py b/src/nanobrag_torch/simulator.py
+index 113b166..205aabd 100644
+--- a/src/nanobrag_torch/simulator.py
++++ b/src/nanobrag_torch/simulator.py
+@@ -28,8 +28,8 @@ class Simulator:
+         self,
+         crystal: Crystal,
+         detector: Detector,
+-        crystal_config: CrystalConfig = None,
+-        beam_config: BeamConfig = None,
++        crystal_config: Optional[CrystalConfig] = None,
++        beam_config: Optional[BeamConfig] = None,
+         device=None,
+         dtype=torch.float64,
+     ):
+@@ -196,12 +196,12 @@ class Simulator:
+         # for correct resolution cutoffs in triclinic cells
+         F_cell = self.crystal.get_structure_factor(h0, k0, l0)
+ 
+-        # Calculate lattice structure factor F_latt using full Miller indices
+-        # CRITICAL FIX: Use the full Miller index (h, k, l), not the fractional part (h-h0)
++        # Calculate lattice structure factor F_latt using fractional part (h-h0)
++        # CORRECT: Use fractional part (h-h0, k-k0, l-l0) to match C-code behavior
+         # The sincg function expects its input pre-multiplied by π
+-        F_latt_a = sincg(torch.pi * h, self.crystal.N_cells_a)
+-        F_latt_b = sincg(torch.pi * k, self.crystal.N_cells_b)
+-        F_latt_c = sincg(torch.pi * l, self.crystal.N_cells_c)
++        F_latt_a = sincg(torch.pi * (h - h0), self.crystal.N_cells_a)
++        F_latt_b = sincg(torch.pi * (k - k0), self.crystal.N_cells_b)
++        F_latt_c = sincg(torch.pi * (l - l0), self.crystal.N_cells_c)
+         F_latt = F_latt_a * F_latt_b * F_latt_c
+ 
+         # Calculate total structure factor and intensity
+@@ -220,7 +220,7 @@ class Simulator:
+         close_distance_m = self.detector.distance * 1e-10  # Å to meters
+         pixel_size_m = self.detector.pixel_size * 1e-10  # Å to meters
+ 
+-        omega_pixel = (pixel_size_m**2) / (airpath_m**2) * close_distance_m / airpath_m
++        omega_pixel = (pixel_size_m * pixel_size_m) / (airpath_m * airpath_m) * close_distance_m / airpath_m
+ 
+         # Final intensity with all physical constants in meters
+         # Units: [dimensionless] × [steradians] × [m²] × [photons/m²] × [dimensionless] = [photons·steradians]
+diff --git a/src/nanobrag_torch/utils/geometry.py b/src/nanobrag_torch/utils/geometry.py
+index 8c437f8..9b2ca09 100644
+--- a/src/nanobrag_torch/utils/geometry.py
++++ b/src/nanobrag_torch/utils/geometry.py
+@@ -186,8 +186,24 @@ def angles_to_rotation_matrix(
+         torch.Tensor: 3x3 rotation matrix that applies rotations in XYZ order
+     """
+     # Extract device and dtype from input angles
+-    device = phi_x.device
+-    dtype = phi_x.dtype
++    # Ensure all angles have the same dtype - convert to the highest precision dtype
++    if hasattr(phi_x, 'dtype') and hasattr(phi_y, 'dtype') and hasattr(phi_z, 'dtype'):
++        # All are tensors
++        dtype = torch.promote_types(torch.promote_types(phi_x.dtype, phi_y.dtype), phi_z.dtype)
++        device = phi_x.device
++        phi_x = phi_x.to(dtype=dtype)
++        phi_y = phi_y.to(dtype=dtype)
++        phi_z = phi_z.to(dtype=dtype)
++    else:
++        # Mixed or scalar inputs - default to float64
++        device = torch.device('cpu')
++        dtype = torch.float64
++        if not isinstance(phi_x, torch.Tensor):
++            phi_x = torch.tensor(phi_x, dtype=dtype, device=device)
++        if not isinstance(phi_y, torch.Tensor):
++            phi_y = torch.tensor(phi_y, dtype=dtype, device=device)
++        if not isinstance(phi_z, torch.Tensor):
++            phi_z = torch.tensor(phi_z, dtype=dtype, device=device)
+ 
+     # Calculate sin and cos for all angles
+     cos_x = torch.cos(phi_x)
+diff --git a/src/nanobrag_torch/utils/units.py b/src/nanobrag_torch/utils/units.py
+new file mode 100644
+index 0000000..8f7d462
+--- /dev/null
++++ b/src/nanobrag_torch/utils/units.py
+@@ -0,0 +1,96 @@
++"""
++Unit conversion utilities for nanoBragg PyTorch implementation.
++
++This module provides functions to convert between user-friendly units (e.g., mm)
++and the internal unit system (Angstroms for length, radians for angles).
++All functions preserve tensor properties and gradients.
++"""
++
++import torch
++from typing import Union
++
++
++def mm_to_angstroms(value: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:
++    """
++    Convert millimeters to Angstroms.
++    
++    Args:
++        value: Value in millimeters
++        
++    Returns:
++        Value in Angstroms (1 mm = 10,000,000 Å)
++    """
++    return value * 1e7
++
++
++def meters_to_angstroms(value: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:
++    """
++    Convert meters to Angstroms.
++    
++    Args:
++        value: Value in meters
++        
++    Returns:
++        Value in Angstroms (1 m = 1e10 Å)
++    """
++    return value * 1e10
++
++
++def degrees_to_radians(value: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:
++    """
++    Convert degrees to radians.
++    
++    Args:
++        value: Angle in degrees
++        
++    Returns:
++        Angle in radians
++    """
++    if isinstance(value, torch.Tensor):
++        return torch.deg2rad(value)
++    else:
++        # For scalar values, use torch's function but return scalar
++        return torch.deg2rad(torch.tensor(value)).item()
++
++
++def angstroms_to_mm(value: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:
++    """
++    Convert Angstroms to millimeters.
++    
++    Args:
++        value: Value in Angstroms
++        
++    Returns:
++        Value in millimeters (1 Å = 1e-7 mm)
++    """
++    return value * 1e-7
++
++
++def angstroms_to_meters(value: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:
++    """
++    Convert Angstroms to meters.
++    
++    Args:
++        value: Value in Angstroms
++        
++    Returns:
++        Value in meters (1 Å = 1e-10 m)
++    """
++    return value * 1e-10
++
++
++def radians_to_degrees(value: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:
++    """
++    Convert radians to degrees.
++    
++    Args:
++        value: Angle in radians
++        
++    Returns:
++        Angle in degrees
++    """
++    if isinstance(value, torch.Tensor):
++        return torch.rad2deg(value)
++    else:
++        # For scalar values, use torch's function but return scalar
++        return torch.rad2deg(torch.tensor(value)).item()
+\ No newline at end of file

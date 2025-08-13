@@ -16,7 +16,7 @@ import numpy as np
 import torch
 
 # Set environment for PyTorch
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 from nanobrag_torch.models.crystal import Crystal
 from nanobrag_torch.models.detector import Detector
@@ -26,84 +26,110 @@ from nanobrag_torch.simulator import Simulator
 def main():
     """Run the demo and generate all artifacts."""
     print("=== nanoBragg PyTorch Milestone 1 Demo ===")
-    
+
     # Set seed for reproducibility
     torch.manual_seed(0)
     print("✓ Set random seed for reproducibility")
-    
+
     # Setup paths
     project_root = Path(__file__).parent.parent
     golden_data_dir = project_root / "tests" / "golden_data"
     hkl_path = project_root / "simple_cubic.hkl"
     output_dir = Path(__file__).parent
-    
+
     print(f"✓ Project root: {project_root}")
     print(f"✓ Golden data: {golden_data_dir}")
     print(f"✓ HKL file: {hkl_path}")
     print(f"✓ Output directory: {output_dir}")
-    
+
     # Load golden image from corrected binary data (1024x1024)
     print("\n--- Loading Golden Reference ---")
     golden_bin_path = golden_data_dir / "simple_cubic.bin"
-    golden_data = np.fromfile(str(golden_bin_path), dtype=np.float32).reshape(1024, 1024).astype(np.float64)
+    golden_data = (
+        np.fromfile(str(golden_bin_path), dtype=np.float32)
+        .reshape(1024, 1024)
+        .astype(np.float64)
+    )
     print(f"✓ Loaded golden image: {golden_data.shape}")
-    print(f"✓ Golden stats: max={np.max(golden_data):.2e}, mean={np.mean(golden_data):.2e}")
-    
+    print(
+        f"✓ Golden stats: max={np.max(golden_data):.2e}, mean={np.mean(golden_data):.2e}"
+    )
+
     # Create PyTorch simulation
     print("\n--- Setting up PyTorch Simulation ---")
     device_cpu = torch.device("cpu")
     dtype = torch.float64
-    
+
     crystal = Crystal(device=device_cpu, dtype=dtype)
     detector = Detector(device=device_cpu, dtype=dtype)
     simulator = Simulator(crystal, detector, device=device_cpu, dtype=dtype)
-    
+
     # Load HKL data
     crystal.load_hkl(str(hkl_path))
-    print(f"✓ Loaded HKL data: {crystal.hkl_data.shape[0] if crystal.hkl_data is not None else 0} reflections")
-    
+    print(
+        f"✓ Loaded HKL data: {crystal.hkl_data.shape[0] if crystal.hkl_data is not None else 0} reflections"
+    )
+
     # Run CPU simulation with timing
     print("\n--- Running CPU Simulation ---")
     start_time = time.time()
     pytorch_image_cpu = simulator.run()
     end_time = time.time()
     cpu_time = end_time - start_time
-    
+
     pytorch_np_cpu = pytorch_image_cpu.cpu().numpy()
     print(f"✓ CPU simulation completed in {cpu_time:.3f} seconds")
-    print(f"✓ PyTorch CPU stats: max={np.max(pytorch_np_cpu):.2e}, mean={np.mean(pytorch_np_cpu):.2e}")
-    
+    print(
+        f"✓ PyTorch CPU stats: max={np.max(pytorch_np_cpu):.2e}, mean={np.mean(pytorch_np_cpu):.2e}"
+    )
+
     # Run C code simulation for comparison
     print("\n--- Running C Code Simulation ---")
     import subprocess
     import os
-    
+
     # Change to project root directory for C code execution
     original_dir = os.getcwd()
     os.chdir(project_root)
-    
+
     try:
         # Time the C code execution
         start_time = time.time()
-        result = subprocess.run([
-            './nanoBragg', 
-            '-cell', '100', '100', '100', '90', '90', '90',
-            '-lambda', '6.2', 
-            '-N', '5', 
-            '-default_F', '100',
-            '-detpixels', '1024',
-            '-floatfile', 'c_timing_test.bin'
-        ], capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            [
+                "./nanoBragg",
+                "-cell",
+                "100",
+                "100",
+                "100",
+                "90",
+                "90",
+                "90",
+                "-lambda",
+                "6.2",
+                "-N",
+                "5",
+                "-default_F",
+                "100",
+                "-detpixels",
+                "1024",
+                "-floatfile",
+                "c_timing_test.bin",
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
         end_time = time.time()
         c_time = end_time - start_time
-        
+
         print(f"✓ C code simulation completed in {c_time:.3f} seconds")
         print(f"✓ PyTorch vs C speedup: {c_time/cpu_time:.2f}x")
-        
+
         # Clean up timing test file
-        if os.path.exists('c_timing_test.bin'):
-            os.remove('c_timing_test.bin')
-            
+        if os.path.exists("c_timing_test.bin"):
+            os.remove("c_timing_test.bin")
+
     except subprocess.CalledProcessError as e:
         print(f"⚠ C code execution failed: {e}")
         print(f"stdout: {e.stdout}")
@@ -115,7 +141,7 @@ def main():
     finally:
         # Return to original directory
         os.chdir(original_dir)
-    
+
     # Try GPU simulation if available
     gpu_time = None
     pytorch_np_gpu = None
@@ -124,13 +150,15 @@ def main():
         device_gpu = torch.device("cuda")
         crystal_gpu = Crystal(device=device_gpu, dtype=dtype)
         detector_gpu = Detector(device=device_gpu, dtype=dtype)
-        simulator_gpu = Simulator(crystal_gpu, detector_gpu, device=device_gpu, dtype=dtype)
+        simulator_gpu = Simulator(
+            crystal_gpu, detector_gpu, device=device_gpu, dtype=dtype
+        )
         crystal_gpu.load_hkl(str(hkl_path))
-        
+
         # Warm up GPU
         _ = simulator_gpu.run()
         torch.cuda.synchronize()
-        
+
         # Timed run
         torch.cuda.synchronize()
         start_time = time.time()
@@ -138,85 +166,94 @@ def main():
         torch.cuda.synchronize()
         end_time = time.time()
         gpu_time = end_time - start_time
-        
+
         pytorch_np_gpu = pytorch_image_gpu.cpu().numpy()
         print(f"✓ GPU simulation completed in {gpu_time:.3f} seconds")
         print(f"✓ Speedup: {cpu_time/gpu_time:.2f}x")
     else:
         print("\n--- GPU Not Available ---")
         print("ℹ GPU simulation skipped")
-    
+
     # Create visualizations
     print("\n--- Creating Visualizations ---")
-    
+
     # Figure 1: Side-by-side images
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-    
+
     # Golden image
-    im1 = axes[0].imshow(golden_data, cmap='inferno', origin='lower')
-    axes[0].set_title('Golden Reference (C code)')
-    axes[0].set_xlabel('Fast pixels')
-    axes[0].set_ylabel('Slow pixels')
+    im1 = axes[0].imshow(golden_data, cmap="inferno", origin="lower")
+    axes[0].set_title("Golden Reference (C code)")
+    axes[0].set_xlabel("Fast pixels")
+    axes[0].set_ylabel("Slow pixels")
     plt.colorbar(im1, ax=axes[0])
-    
+
     # PyTorch image (CPU)
-    im2 = axes[1].imshow(pytorch_np_cpu, cmap='inferno', origin='lower')
-    axes[1].set_title('PyTorch Implementation (CPU)')
-    axes[1].set_xlabel('Fast pixels')
-    axes[1].set_ylabel('Slow pixels')
+    im2 = axes[1].imshow(pytorch_np_cpu, cmap="inferno", origin="lower")
+    axes[1].set_title("PyTorch Implementation (CPU)")
+    axes[1].set_xlabel("Fast pixels")
+    axes[1].set_ylabel("Slow pixels")
     plt.colorbar(im2, ax=axes[1])
-    
+
     plt.tight_layout()
-    plt.savefig(output_dir / 'side_by_side_comparison.png', dpi=150, bbox_inches='tight')
+    plt.savefig(
+        output_dir / "side_by_side_comparison.png", dpi=150, bbox_inches="tight"
+    )
     print("✓ Saved: side_by_side_comparison.png")
     plt.close()
-    
+
     # Figure 2: Difference heatmap
     diff_data = np.abs(golden_data - pytorch_np_cpu)
-    log_diff = np.log1p(diff_data)  # log(1 + |golden - pytorch|) to make discrepancies visible
-    
+    log_diff = np.log1p(
+        diff_data
+    )  # log(1 + |golden - pytorch|) to make discrepancies visible
+
     plt.figure(figsize=(8, 6))
-    im = plt.imshow(log_diff, cmap='plasma', origin='lower')
-    plt.title('Difference Heatmap: log(1 + |Golden - PyTorch|)')
-    plt.xlabel('Fast pixels')
-    plt.ylabel('Slow pixels')
-    plt.colorbar(im, label='log(1 + |difference|)')
+    im = plt.imshow(log_diff, cmap="plasma", origin="lower")
+    plt.title("Difference Heatmap: log(1 + |Golden - PyTorch|)")
+    plt.xlabel("Fast pixels")
+    plt.ylabel("Slow pixels")
+    plt.colorbar(im, label="log(1 + |difference|)")
     plt.tight_layout()
-    plt.savefig(output_dir / 'difference_heatmap.png', dpi=150, bbox_inches='tight')
+    plt.savefig(output_dir / "difference_heatmap.png", dpi=150, bbox_inches="tight")
     print("✓ Saved: difference_heatmap.png")
     plt.close()
-    
+
     # Figure 3: Timing comparison (including C code)
     fig, ax = plt.subplots(figsize=(10, 5))
-    devices = ['PyTorch CPU']
+    devices = ["PyTorch CPU"]
     times = [cpu_time]
-    colors = ['skyblue']
-    
+    colors = ["skyblue"]
+
     if c_time is not None:
-        devices.append('C Code')
+        devices.append("C Code")
         times.append(c_time)
-        colors.append('lightgreen')
-    
+        colors.append("lightgreen")
+
     if gpu_time is not None:
-        devices.append('PyTorch GPU')
+        devices.append("PyTorch GPU")
         times.append(gpu_time)
-        colors.append('lightcoral')
-    
+        colors.append("lightcoral")
+
     bars = ax.bar(devices, times, color=colors)
-    ax.set_ylabel('Time (seconds)')
-    ax.set_title('nanoBragg Performance Comparison: PyTorch vs C')
-    
+    ax.set_ylabel("Time (seconds)")
+    ax.set_title("nanoBragg Performance Comparison: PyTorch vs C")
+
     # Add value labels on bars
     for bar, time_val in zip(bars, times):
         height = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width()/2., height + 0.01,
-                f'{time_val:.3f}s', ha='center', va='bottom')
-    
+        ax.text(
+            bar.get_x() + bar.get_width() / 2.0,
+            height + 0.01,
+            f"{time_val:.3f}s",
+            ha="center",
+            va="bottom",
+        )
+
     plt.tight_layout()
-    plt.savefig(output_dir / 'timing_comparison.png', dpi=150, bbox_inches='tight')
+    plt.savefig(output_dir / "timing_comparison.png", dpi=150, bbox_inches="tight")
     print("✓ Saved: timing_comparison.png")
     plt.close()
-    
+
     # Test differentiability with gradcheck on a small crop
     print("\n--- Testing Differentiability ---")
     try:
@@ -224,40 +261,46 @@ def main():
         device_test = torch.device("cpu")
         crystal_test = Crystal(device=device_test, dtype=dtype)
         detector_test = Detector(device=device_test, dtype=dtype)
-        
+
         # Override detector size for small test
         detector_test.spixels = 3
         detector_test.fpixels = 3
         detector_test.invalidate_cache()  # Clear cache
-        
-        simulator_test = Simulator(crystal_test, detector_test, device=device_test, dtype=dtype)
+
+        simulator_test = Simulator(
+            crystal_test, detector_test, device=device_test, dtype=dtype
+        )
         crystal_test.load_hkl(str(hkl_path))
-        
+
         # Make cell_a parameter require gradients
         crystal_test.cell_a = torch.tensor(100.0, requires_grad=True, dtype=dtype)
-        
+
         def test_func(cell_a_param):
             # Re-calculate a_star inside the function to keep it in the graph
             a_star_new = crystal_test.calculate_reciprocal_vectors(cell_a_param)
             # Pass the new tensor to the simulator to avoid graph breaks
             result = simulator_test.run(override_a_star=a_star_new)
             return torch.sum(result)  # Return scalar for gradcheck
-        
+
         # Run gradcheck
         input_param = torch.tensor(100.0, requires_grad=True, dtype=torch.float64)
-        gradcheck_result = torch.autograd.gradcheck(test_func, input_param, eps=1e-6, atol=1e-4)
+        gradcheck_result = torch.autograd.gradcheck(
+            test_func, input_param, eps=1e-6, atol=1e-4
+        )
         print(f"✓ Gradient check passed: {gradcheck_result}")
-        
+
     except Exception as e:
         print(f"⚠ Gradient check failed: {e}")
         gradcheck_result = False
-    
+
     # Print summary statistics
     print("\n--- Summary Statistics ---")
     max_diff = np.max(diff_data)
     mean_diff = np.mean(diff_data)
-    relative_error = mean_diff / np.mean(golden_data) if np.mean(golden_data) > 0 else float('inf')
-    
+    relative_error = (
+        mean_diff / np.mean(golden_data) if np.mean(golden_data) > 0 else float("inf")
+    )
+
     print(f"Max absolute difference: {max_diff:.2e}")
     print(f"Mean absolute difference: {mean_diff:.2e}")
     print(f"Relative error: {relative_error:.2e}")
@@ -271,7 +314,7 @@ def main():
         if c_time is not None:
             print(f"GPU vs C speedup: {c_time/gpu_time:.2f}x")
     print(f"Differentiable: {'✓' if gradcheck_result else '✗'}")
-    
+
     print("\n=== Demo Complete ===")
     print(f"Generated files in: {output_dir}")
     print("- side_by_side_comparison.png")

@@ -2,7 +2,8 @@
 """Check what pix0_vector value the detector is actually producing."""
 
 import os
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 import torch
 from src.nanobrag_torch.config import DetectorConfig, DetectorConvention, DetectorPivot
@@ -22,7 +23,7 @@ config = DetectorConfig(
     detector_rotz_deg=2.0,
     detector_twotheta_deg=15.0,
     detector_pivot=DetectorPivot.BEAM,
-    oversample=1
+    oversample=1,
 )
 
 # Create detector
@@ -54,7 +55,7 @@ print(f"  Sbeam = Xbeam + 0.5*pixel_size = {Sbeam_mm} mm")
 # These need to be converted to meters for the C-code formula
 Fbeam_m = Fbeam_mm / 1000  # 0.06125 m
 Sbeam_m = Sbeam_mm / 1000  # 0.06125 m
-distance_m = 100.0 / 1000   # 0.1 m
+distance_m = 100.0 / 1000  # 0.1 m
 
 print(f"\nIn meters:")
 print(f"  Fbeam = {Fbeam_m} m")
@@ -63,9 +64,11 @@ print(f"  distance = {distance_m} m")
 
 # The C-code formula works in meters
 beam_vector = torch.tensor([1.0, 0.0, 0.0])
-pix0_meters = (-Fbeam_m * detector.fdet_vec - 
-               Sbeam_m * detector.sdet_vec + 
-               distance_m * beam_vector)
+pix0_meters = (
+    -Fbeam_m * detector.fdet_vec
+    - Sbeam_m * detector.sdet_vec
+    + distance_m * beam_vector
+)
 
 print(f"\nC-code formula (meters):")
 print(f"  pix0 = -Fbeam*fdet - Sbeam*sdet + distance*beam")

@@ -27,7 +27,7 @@ The Detector class manages the detector geometry for diffraction simulations, in
 
 ### 2.2 Pixel Indexing
 - **Order:** `(slow, fast)` corresponding to `(row, column)`
-- **Reference Point:** Integer indices `(s, f)` refer to the **leading edge/corner** of the pixel
+- **Reference Point:** All pixel coordinates refer to **pixel centers** (index + 0.5)
 - **Meshgrid Convention:** All `torch.meshgrid` calls use `indexing="ij"`
 
 ### 2.3 Detector Basis Vectors
@@ -103,6 +103,7 @@ pix0_vector = -Fbeam * fdet_vec - Sbeam * sdet_vec + distance * beam_vector
 Where:
 - `Fbeam = Ybeam + 0.5 * pixel_size` (in MOSFLM convention)
 - `Sbeam = Xbeam + 0.5 * pixel_size` (in MOSFLM convention)
+- **Critical Mapping**: `beam_center_s` (slow axis) maps to `Xbeam`, `beam_center_f` (fast axis) maps to `Ybeam`
 
 ### 5.2 SAMPLE Pivot Mode
 When `detector_pivot = SAMPLE`, the detector rotates around the sample:

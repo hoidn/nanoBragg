@@ -397,15 +397,21 @@ class TestTier1TranslationCorrectness:
 
         # Set environment variable for torch import
         import os
+
         os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
         # Create crystal with same parameters as simple_cubic
         device = torch.device("cpu")
         dtype = torch.float64
         crystal = Crystal(device=device, dtype=dtype)
-        
+
         # Create detector with tilted configuration
-        from nanobrag_torch.config import DetectorConfig, DetectorConvention, DetectorPivot
+        from nanobrag_torch.config import (
+            DetectorConfig,
+            DetectorConvention,
+            DetectorPivot,
+        )
+
         detector_config = DetectorConfig(
             distance_mm=100.0,
             pixel_size_mm=0.1,
@@ -419,17 +425,17 @@ class TestTier1TranslationCorrectness:
             detector_rotz_deg=2.0,
             detector_twotheta_deg=15.0,
             # Don't specify twotheta_axis - let it use the convention default
-            detector_pivot=DetectorPivot.BEAM  # Match C-code's pivot mode
+            detector_pivot=DetectorPivot.BEAM,  # Match C-code's pivot mode
         )
         detector = Detector(config=detector_config, device=device, dtype=dtype)
-        
+
         # Create crystal config (no rotation/mosaicity)
         crystal_config = CrystalConfig(
             phi_start_deg=torch.tensor(0.0, device=device, dtype=dtype),
             osc_range_deg=torch.tensor(0.0, device=device, dtype=dtype),
             mosaic_spread_deg=torch.tensor(0.0, device=device, dtype=dtype),
         )
-        
+
         # Create simulator
         simulator = Simulator(
             crystal, detector, crystal_config=crystal_config, device=device, dtype=dtype
@@ -442,8 +448,9 @@ class TestTier1TranslationCorrectness:
         golden_float_path = GOLDEN_DATA_DIR / "cubic_tilted_detector" / "image.bin"
         if not golden_float_path.exists():
             pytest.skip(f"Golden data not found at {golden_float_path}")
-            
+
         import numpy as np
+
         golden_float_data = torch.from_numpy(
             np.fromfile(str(golden_float_path), dtype=np.float32).reshape(
                 detector.spixels, detector.fpixels
@@ -466,7 +473,7 @@ class TestTier1TranslationCorrectness:
 
         # SUCCESS CRITERIA: High correlation (>0.990) for tilted detector
         assert corr_coeff > 0.990, f"Low correlation: {corr_coeff:.6f}"
-        
+
         print("✅ SUCCESS: cubic_tilted_detector test passed")
         print(f"✅ Correlation: {corr_coeff:.6f} > 0.990")
         print("✅ Dynamic detector geometry working correctly")
@@ -501,17 +508,20 @@ class TestTier1TranslationCorrectness:
 
         # Create detector config that matches triclinic golden data parameters
         from nanobrag_torch.config import DetectorPivot
+
         triclinic_detector_config = DetectorConfig(
-            distance_mm=100.0,      # From params.json
-            pixel_size_mm=0.1,      # From params.json  
-            spixels=512,            # From params.json (detpixels)
-            fpixels=512,            # From params.json (detpixels)
-            beam_center_s=25.6,     # Center of 512x512 detector: 256 pixels * 0.1mm = 25.6mm
-            beam_center_f=25.6,     # Center of 512x512 detector: 256 pixels * 0.1mm = 25.6mm
-            detector_pivot=DetectorPivot.BEAM  # C-code uses BEAM pivot: "pivoting detector around direct beam spot"
+            distance_mm=100.0,  # From params.json
+            pixel_size_mm=0.1,  # From params.json
+            spixels=512,  # From params.json (detpixels)
+            fpixels=512,  # From params.json (detpixels)
+            beam_center_s=25.6,  # Center of 512x512 detector: 256 pixels * 0.1mm = 25.6mm
+            beam_center_f=25.6,  # Center of 512x512 detector: 256 pixels * 0.1mm = 25.6mm
+            detector_pivot=DetectorPivot.BEAM,  # C-code uses BEAM pivot: "pivoting detector around direct beam spot"
         )
-        
-        detector = Detector(config=triclinic_detector_config, device=device, dtype=dtype)
+
+        detector = Detector(
+            config=triclinic_detector_config, device=device, dtype=dtype
+        )
 
         # Crystal config for rotations (no rotation for this test case)
         crystal_rot_config = CrystalConfig(
@@ -566,8 +576,12 @@ class TestTier1TranslationCorrectness:
         if correlation < 0.990:
             print("⚠️  Low correlation - misset rotation issue detected")
             print("   Expected: >0.990")
-            print("   Issue: Misset is applied to reciprocal vectors but simulator uses real vectors")
-            print("   TODO: Fix rotation pipeline to apply misset to real vectors before phi/mosaic")
+            print(
+                "   Issue: Misset is applied to reciprocal vectors but simulator uses real vectors"
+            )
+            print(
+                "   TODO: Fix rotation pipeline to apply misset to real vectors before phi/mosaic"
+            )
             # For now, just check that we get some reasonable output
             assert torch.max(pytorch_image) > 0, "PyTorch image is empty"
             assert not torch.isnan(pytorch_image).any(), "PyTorch image contains NaN"
