@@ -524,14 +524,14 @@ def main():
         pixel_size_mm=0.1,
         spixels=1024,
         fpixels=1024,
-        beam_center_s=61.2,  # 10mm offset
-        beam_center_f=61.2,  # 10mm offset
+        beam_center_s=61.2,  # Correct value from golden test data
+        beam_center_f=61.2,  # Correct value from golden test data
         detector_convention=DetectorConvention.MOSFLM,
         detector_rotx_deg=5.0,
         detector_roty_deg=3.0,
         detector_rotz_deg=2.0,
         detector_twotheta_deg=15.0,
-        detector_pivot=DetectorPivot.SAMPLE,  # C-code uses SAMPLE pivot when twotheta is nonzero
+        detector_pivot=DetectorPivot.BEAM,  # Use BEAM pivot to match C implementation
     )
 
     # Common crystal and beam configs

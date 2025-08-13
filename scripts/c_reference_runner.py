@@ -99,7 +99,57 @@ class CReferenceRunner:
                     executable_path=str(self.executable_path),
                 )
 
-                print(f"Command: {' '.join(cmd)}")
+                # Enhanced logging for debugging
+                print(f"\n📋 COMMAND DEBUG INFO:")
+                print(f"   Label: {label}")
+                print(f"   Detector config details:")
+                print(f"      - beam_center_s: {detector_config.beam_center_s}")
+                print(f"      - beam_center_f: {detector_config.beam_center_f}")
+                print(f"      - distance_mm: {detector_config.distance_mm}")
+                print(f"      - pixel_size_mm: {detector_config.pixel_size_mm}")
+                print(f"      - spixels: {detector_config.spixels}")
+                print(f"      - fpixels: {detector_config.fpixels}")
+                print(f"      - detector_rotx_deg: {detector_config.detector_rotx_deg}")
+                print(f"      - detector_roty_deg: {detector_config.detector_roty_deg}")
+                print(f"      - detector_rotz_deg: {detector_config.detector_rotz_deg}")
+                print(f"      - detector_twotheta_deg: {detector_config.detector_twotheta_deg}")
+                print(f"      - detector_pivot: {detector_config.detector_pivot}")
+                print(f"      - twotheta_axis: {detector_config.twotheta_axis}")
+                print(f"   Raw command list: {cmd}")
+                print(f"   Command via subprocess.list2cmdline: {subprocess.list2cmdline(cmd)}")
+                print(f"   Formatted command: {' '.join(cmd)}")
+                
+                # Check beam values in command
+                beam_idx = None
+                if "-beam" in cmd:
+                    beam_idx = cmd.index("-beam")
+                    if beam_idx + 2 < len(cmd):
+                        print(f"   Beam values in command: -beam {cmd[beam_idx+1]} {cmd[beam_idx+2]}")
+                        # Verify beam values match config
+                        cmd_beam_s = float(cmd[beam_idx+1])
+                        cmd_beam_f = float(cmd[beam_idx+2])
+                        if abs(cmd_beam_s - detector_config.beam_center_s) > 1e-6 or abs(cmd_beam_f - detector_config.beam_center_f) > 1e-6:
+                            print(f"   ⚠️  WARNING: Beam values mismatch!")
+                            print(f"      Config: ({detector_config.beam_center_s}, {detector_config.beam_center_f})")
+                            print(f"      Command: ({cmd_beam_s}, {cmd_beam_f})")
+                else:
+                    print(f"   ⚠️  WARNING: No -beam argument found in command!")
+                    
+                # Check detector rotation values
+                if "-detector_twotheta" in cmd:
+                    tt_idx = cmd.index("-detector_twotheta")
+                    print(f"   Two-theta in command: {cmd[tt_idx+1]} degrees")
+                if "-detector_rotx" in cmd:
+                    rotx_idx = cmd.index("-detector_rotx")
+                    print(f"   Detector rotx in command: {cmd[rotx_idx+1]} degrees")
+                if "-detector_roty" in cmd:
+                    roty_idx = cmd.index("-detector_roty")
+                    print(f"   Detector roty in command: {cmd[roty_idx+1]} degrees")
+                if "-detector_rotz" in cmd:
+                    rotz_idx = cmd.index("-detector_rotz")
+                    print(f"   Detector rotz in command: {cmd[rotz_idx+1]} degrees")
+                    
+                print(f"{'='*60}\n")
                 
                 # Print parity table if verify_detector_geometry module is available
                 try:

@@ -1,93 +1,91 @@
-#!/usr/bin/env python3
-"""Debug pix0_vector calculation to understand the C-code logic."""
+#\!/usr/bin/env python3
+"""Debug pix0_vector calculation for SAMPLE pivot mode."""
 
+import os
+import sys
+import torch
 import numpy as np
+from pathlib import Path
 
-# Values from trace
-distance = 0.0974964  # meters (adjusted)
-Xbeam = 0.0612  # meters
-Ybeam = 0.0612  # meters
-pixel_size = 0.0001  # meters
-Fbeam = 0.0611719  # meters (expected: Ybeam + 0.5*pixel for MOSFLM)
-Sbeam = 0.0618222  # meters (expected: Xbeam + 0.5*pixel for MOSFLM)
+# Add src to path
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-# Detector vectors from C-code (after rotations)
-fdet = np.array([0.0311947630447082, -0.096650175316428, 0.994829447880333])
-sdet = np.array([-0.228539518954453, -0.969636205471835, -0.0870362988312832])
-odet = np.array([0.973034724475264, -0.224642766741965, -0.0523359562429438])
+from nanobrag_torch.config import DetectorConfig, DetectorConvention, DetectorPivot
+from nanobrag_torch.models.detector import Detector
 
-# Beam vector for MOSFLM
-beam_vector = np.array([1.0, 0.0, 0.0])
+# Set environment variable
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-# Expected pix0_vector from C-code
-c_pix0 = np.array([0.112087366299472, 0.0653100408232811, -0.0556023303792543])
+# Test configuration
+config = DetectorConfig(
+    distance_mm=100.0,
+    pixel_size_mm=0.1,
+    spixels=1024,
+    fpixels=1024,
+    beam_center_s=61.2,
+    beam_center_f=61.2,
+    detector_convention=DetectorConvention.MOSFLM,
+    detector_rotx_deg=5.0,
+    detector_roty_deg=3.0,
+    detector_rotz_deg=2.0,
+    detector_twotheta_deg=15.0,
+    detector_pivot=DetectorPivot.SAMPLE,
+)
 
-print("Values from trace:")
-print(f"distance = {distance} m")
-print(f"Xbeam = {Xbeam} m, Ybeam = {Ybeam} m")
-print(f"Fbeam = {Fbeam} m, Sbeam = {Sbeam} m")
-print(f"pixel_size = {pixel_size} m")
+print("Debugging pix0_vector calculation for SAMPLE pivot")
+print("="*60)
 
-print("\nChecking MOSFLM formula:")
-print(f"Expected Fbeam = Ybeam + 0.5*pixel = {Ybeam} + {0.5*pixel_size} = {Ybeam + 0.5*pixel_size}")
-print(f"Actual Fbeam = {Fbeam}")
-print(f"Difference = {Fbeam - (Ybeam + 0.5*pixel_size)}")
+# Create detector
+detector = Detector(config=config, device=torch.device("cpu"), dtype=torch.float64)
 
-print(f"\nExpected Sbeam = Xbeam + 0.5*pixel = {Xbeam} + {0.5*pixel_size} = {Xbeam + 0.5*pixel_size}")
-print(f"Actual Sbeam = {Sbeam}")
-print(f"Difference = {Sbeam - (Xbeam + 0.5*pixel_size)}")
+# Print internal values
+print(f"\nDetector internal values:")
+print(f"  distance: {detector.distance} meters")
+print(f"  pixel_size: {detector.pixel_size} meters")
+print(f"  beam_center_s: {detector.beam_center_s} pixels")
+print(f"  beam_center_f: {detector.beam_center_f} pixels")
 
-# Let's see if there's a pattern
-print("\nAnalyzing the differences:")
-print(f"Fbeam - Ybeam = {Fbeam - Ybeam} (expected: {0.5*pixel_size})")
-print(f"Sbeam - Xbeam = {Sbeam - Xbeam} (expected: {0.5*pixel_size})")
+# Manual calculation following detector code
+print(f"\nManual pix0_vector calculation (SAMPLE pivot):")
 
-# Calculate pix0_vector using BEAM pivot formula
-pix0_calc = -Fbeam * fdet - Sbeam * sdet + distance * beam_vector
+# Detector origin
+detector_origin = detector.distance * detector.odet_vec
+print(f"  detector_origin = distance * odet_vec")
+print(f"  detector_origin = {detector.distance} * {detector.odet_vec.numpy()}")
+print(f"  detector_origin = {detector_origin.numpy()} meters")
 
-print("\nCalculated pix0_vector:")
-print(f"pix0 = -Fbeam*fdet - Sbeam*sdet + distance*beam")
-print(f"     = -{Fbeam}*{fdet} - {Sbeam}*{sdet} + {distance}*{beam_vector}")
-print(f"     = {pix0_calc}")
+# Offsets
+s_offset = (0.5 - detector.beam_center_s) * detector.pixel_size
+f_offset = (0.5 - detector.beam_center_f) * detector.pixel_size
+print(f"\n  s_offset = (0.5 - {detector.beam_center_s}) * {detector.pixel_size}")
+print(f"  s_offset = {s_offset} meters")
+print(f"  f_offset = (0.5 - {detector.beam_center_f}) * {detector.pixel_size}")
+print(f"  f_offset = {f_offset} meters")
 
-print(f"\nExpected from C-code: {c_pix0}")
-print(f"Difference: {np.linalg.norm(pix0_calc - c_pix0)}")
+# Calculate pix0_vector
+pix0_manual = detector_origin + s_offset * detector.sdet_vec + f_offset * detector.fdet_vec
+print(f"\n  pix0_vector = detector_origin + s_offset * sdet_vec + f_offset * fdet_vec")
+print(f"  pix0_vector = {pix0_manual.numpy()} meters")
+print(f"  pix0_vector = {(pix0_manual * 1e10).numpy()} Angstroms")
 
-# Check individual components
-print("\nComponent breakdown:")
-print(f"-Fbeam*fdet = {-Fbeam * fdet}")
-print(f"-Sbeam*sdet = {-Sbeam * sdet}")
-print(f"distance*beam = {distance * beam_vector}")
+# Compare with detector's value
+print(f"\nDetector's calculated pix0_vector:")
+print(f"  In meters: {(detector.pix0_vector / 1e10).numpy()}")
+print(f"  In Angstroms: {detector.pix0_vector.numpy()}")
 
-# Maybe check if there's a conversion factor?
-print("\nChecking if Fbeam/Sbeam use adjusted coordinates:")
-# In MOSFLM, beam center is swapped: Fbeam uses Y, Sbeam uses X
-# Also check with original distance
-orig_distance = 0.1  # meters
-print(f"\nOriginal distance = {orig_distance} m")
+# Check if they match
+diff = torch.abs(pix0_manual - detector.pix0_vector / 1e10)
+print(f"\nDifference: {diff.numpy()} meters")
 
-# Check different beam center calculations
-print("\nTrying different formulas:")
+# Let's also check what happens with integers vs floats
+print(f"\n" + "="*60)
+print("Checking beam_center type issue:")
+print(f"  config.beam_center_s: {config.beam_center_s} (type: {type(config.beam_center_s)})")
+print(f"  config.beam_center_f: {config.beam_center_f} (type: {type(config.beam_center_f)})")
+print(f"  detector.beam_center_s: {detector.beam_center_s} (type: {type(detector.beam_center_s)})")
+print(f"  detector.beam_center_f: {detector.beam_center_f} (type: {type(detector.beam_center_f)})")
 
-# Direct assignment (matching trace values)
-Fbeam_trace = 0.0611719
-Sbeam_trace = 0.0618222
-pix0_trace = -Fbeam_trace * fdet - Sbeam_trace * sdet + distance * beam_vector
-print(f"\nUsing trace values directly:")
-print(f"pix0 = {pix0_trace}")
-print(f"Match? {np.allclose(pix0_trace, c_pix0, atol=1e-9)}")
-
-# Try understanding the 'odd' values
-# Fbeam should be 0.06125 but is 0.0611719
-# Difference is -0.0000781
-# Sbeam should be 0.06125 but is 0.0618222  
-# Difference is 0.0005722
-
-print("\nAnalyzing trace value patterns:")
-print(f"Fbeam deficit: {0.06125 - Fbeam_trace}")
-print(f"Sbeam excess: {Sbeam_trace - 0.06125}")
-
-# Maybe there's a pixel indexing offset?
-# MOSFLM uses 0.5,0.5 as first pixel center
-print("\nChecking MOSFLM pixel convention:")
-# From C-code comment: "first pixel is at 0.5,0.5 pix and pixel_size/2,pixel_size/2 mm"
+# If beam_center is a tensor, check its value
+if torch.is_tensor(detector.beam_center_s):
+    print(f"  detector.beam_center_s value: {detector.beam_center_s.item()}")
+    print(f"  detector.beam_center_f value: {detector.beam_center_f.item()}")

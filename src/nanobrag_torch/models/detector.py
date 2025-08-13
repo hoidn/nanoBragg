@@ -13,6 +13,13 @@ from ..config import DetectorConfig
 from ..utils.units import mm_to_angstroms, degrees_to_radians
 
 
+def _nonzero_scalar(x) -> bool:
+    """Return a Python bool for 'x != 0' even if x is a 0-dim torch.Tensor."""
+    if isinstance(x, torch.Tensor):
+        return bool(torch.abs(x).item() > 1e-12)
+    return abs(float(x)) > 1e-12
+
+
 class Detector:
     """
     Detector model managing geometry and pixel coordinates.
@@ -202,9 +209,24 @@ class Detector:
 
         The calculation depends on the detector_pivot mode:
         - BEAM pivot: pix0_vector = -Fbeam*fdet_vec - Sbeam*sdet_vec + distance*beam_vec
-        - SAMPLE pivot: pix0_vector = detector_origin + offset vectors
+        - SAMPLE pivot: Calculate pix0_vector BEFORE rotations, then rotate it
 
-        C-Code Implementation Reference (from nanoBragg.c, lines 1740-1745):
+        C-Code Implementation Reference (from nanoBragg.c):
+        For SAMPLE pivot (lines 376-385):
+        ```c
+        if(detector_pivot == SAMPLE){
+            printf("pivoting detector around sample\n");
+            /* initialize detector origin before rotating detector */
+            pix0_vector[1] = -Fclose*fdet_vector[1]-Sclose*sdet_vector[1]+close_distance*odet_vector[1];
+            pix0_vector[2] = -Fclose*fdet_vector[2]-Sclose*sdet_vector[2]+close_distance*odet_vector[2];
+            pix0_vector[3] = -Fclose*fdet_vector[3]-Sclose*sdet_vector[3]+close_distance*odet_vector[3];
+            
+            /* now swing the detector origin around */
+            rotate(pix0_vector,pix0_vector,detector_rotx,detector_roty,detector_rotz);
+            rotate_axis(pix0_vector,pix0_vector,twotheta_axis,detector_twotheta);
+        }
+        ```
+        For BEAM pivot (lines 398-403):
         ```c
         if(detector_pivot == BEAM){
             printf("pivoting detector around direct beam spot\n");
@@ -217,6 +239,8 @@ class Detector:
         Note: This uses pixel centers at integer indices.
         """
         from ..config import DetectorPivot, DetectorConvention
+        from ..utils.geometry import angles_to_rotation_matrix, rotate_axis
+        from ..utils.units import degrees_to_radians
 
         if self.config.detector_pivot == DetectorPivot.BEAM:
             # BEAM pivot mode: detector rotates around the direct beam spot
@@ -255,6 +279,7 @@ class Detector:
                 Sbeam = self.beam_center_s * self.pixel_size  # in meters
 
             # Calculate pix0_vector using BEAM pivot formula
+            # Uses the ROTATED basis vectors
             self.pix0_vector = (
                 -Fbeam * self.fdet_vec
                 - Sbeam * self.sdet_vec
@@ -262,8 +287,21 @@ class Detector:
             )
         else:
             # SAMPLE pivot mode: detector rotates around the sample
-            # Calculate detector origin (center position at the specified distance)
-            detector_origin = self.distance * self.odet_vec
+            # CRITICAL: Must calculate pix0_vector BEFORE rotating basis vectors
+            
+            # Get initial (unrotated) basis vectors based on convention
+            if self.config.detector_convention == DetectorConvention.MOSFLM:
+                fdet_initial = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
+                sdet_initial = torch.tensor([0.0, -1.0, 0.0], device=self.device, dtype=self.dtype)
+                odet_initial = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
+            else:
+                # XDS convention
+                fdet_initial = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
+                sdet_initial = torch.tensor([0.0, 1.0, 0.0], device=self.device, dtype=self.dtype)
+                odet_initial = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
+            
+            # Calculate initial detector origin using unrotated vectors
+            detector_origin_initial = self.distance * odet_initial
 
             # Calculate offset from detector center to pixel (0.5,0.5)
             # Note: beam_center_s/f are already in pixel units
@@ -271,10 +309,45 @@ class Detector:
             s_offset = (0.5 - self.beam_center_s) * self.pixel_size
             f_offset = (0.5 - self.beam_center_f) * self.pixel_size
 
-            # Calculate pix0_vector
-            self.pix0_vector = (
-                detector_origin + s_offset * self.sdet_vec + f_offset * self.fdet_vec
+            # Calculate initial pix0_vector using UNROTATED basis vectors
+            pix0_initial = (
+                detector_origin_initial + s_offset * sdet_initial + f_offset * fdet_initial
             )
+            
+            # Now apply the same rotations as applied to basis vectors
+            # Get rotation parameters
+            c = self.config
+            detector_rotx = degrees_to_radians(c.detector_rotx_deg)
+            detector_roty = degrees_to_radians(c.detector_roty_deg)
+            detector_rotz = degrees_to_radians(c.detector_rotz_deg)
+            detector_twotheta = degrees_to_radians(c.detector_twotheta_deg)
+            
+            # Ensure all angles are tensors
+            if not isinstance(detector_rotx, torch.Tensor):
+                detector_rotx = torch.tensor(detector_rotx, device=self.device, dtype=self.dtype)
+            if not isinstance(detector_roty, torch.Tensor):
+                detector_roty = torch.tensor(detector_roty, device=self.device, dtype=self.dtype)
+            if not isinstance(detector_rotz, torch.Tensor):
+                detector_rotz = torch.tensor(detector_rotz, device=self.device, dtype=self.dtype)
+            if not isinstance(detector_twotheta, torch.Tensor):
+                detector_twotheta = torch.tensor(detector_twotheta, device=self.device, dtype=self.dtype)
+            
+            # Apply detector rotations (rotx, roty, rotz)
+            rotation_matrix = angles_to_rotation_matrix(detector_rotx, detector_roty, detector_rotz)
+            pix0_rotated = torch.matmul(rotation_matrix, pix0_initial)
+            
+            # Apply two-theta rotation
+            if isinstance(c.twotheta_axis, torch.Tensor):
+                twotheta_axis = c.twotheta_axis.to(device=self.device, dtype=self.dtype)
+            else:
+                twotheta_axis = torch.tensor(c.twotheta_axis, device=self.device, dtype=self.dtype)
+            
+            # Check if twotheta is non-zero
+            is_nonzero = torch.abs(detector_twotheta) > 1e-12
+            if is_nonzero:
+                pix0_rotated = rotate_axis(pix0_rotated, twotheta_axis, detector_twotheta)
+            
+            self.pix0_vector = pix0_rotated
 
     def get_pixel_coords(self) -> torch.Tensor:
         """

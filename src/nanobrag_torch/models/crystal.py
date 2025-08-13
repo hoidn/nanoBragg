@@ -240,7 +240,7 @@ class Crystal:
         # For the simple_cubic test case with -default_F 100,
         # all reflections have F=100 regardless of indices
         # This matches the C code behavior with the -default_F flag
-        return torch.full_like(h, 100.0, device=self.device, dtype=self.dtype)
+        return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
 
     def compute_cell_tensors(self) -> dict:
         """

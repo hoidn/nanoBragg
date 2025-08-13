@@ -4,6 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **For a complete overview of the project's architecture and conventions, see the [Architecture Hub](./docs/architecture/README.md).**
 
+## 📋 Quick Reference: nanoBragg C Commands
+
+**For exact commands to generate golden test data and traces, see [`tests/golden_data/README.md`](./tests/golden_data/README.md).** Key examples:
+
+```bash
+# Simple cubic test case
+./nanoBragg -lambda 6.2 -N 5 -cell 100 100 100 90 90 90 -default_F 100 \
+  -distance 100 -detpixels 1024 -floatfile output.bin
+
+# Tilted detector with MOSFLM convention  
+./nanoBragg -lambda 6.2 -N 5 -cell 100 100 100 90 90 90 -default_F 100 \
+  -distance 100 -detpixels 1024 -Xbeam 61.2 -Ybeam 61.2 \
+  -detector_rotx 5 -detector_roty 3 -detector_rotz 2 -twotheta 15 \
+  -floatfile output.bin
+```
+
+For all parameters, see [`docs/architecture/c_parameter_dictionary.md`](./docs/architecture/c_parameter_dictionary.md).
+
 ## 🛑 Core Implementation Rules (IMPORTANT)
 
 **YOU MUST ADHERE TO THESE RULES TO AVOID COMMON BUGS:**
@@ -323,6 +341,7 @@ The SOPs emphasize:
 
 To improve efficiency, use these standard commands for common tasks.
 
+### Testing Commands
 - **List all available tests:**
   `pytest --collect-only`
 - **Run the full test suite:**
@@ -330,10 +349,21 @@ To improve efficiency, use these standard commands for common tasks.
 - **Run a specific test function:**
   `# Format: pytest -v <file_path>::<ClassName>::<test_function_name>`
   `pytest -v tests/test_suite.py::TestTier1TranslationCorrectness::test_simple_cubic_reproduction`
-- **Run the pixel trace debug script:**
-  `KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py`
 - **Install the package in editable mode:**
   `pip install -e .`
+
+### Debugging Commands
+- **Run the pixel trace debug script:**
+  `KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py`
+- **Generate C trace for debugging:**
+  ```bash
+  # 1. Add printf statements to nanoBragg.c for variables of interest
+  # 2. Recompile: make -C golden_suite_generator
+  # 3. Run with test parameters:
+  ./golden_suite_generator/nanoBragg [parameters] 2>&1 | grep "TRACE_C:" > c_trace.log
+  ```
+- **Compare golden reference data:**
+  See [`tests/golden_data/README.md`](./tests/golden_data/README.md) for exact commands
 
 ## Domain-Specific Context
 

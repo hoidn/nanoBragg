@@ -146,10 +146,8 @@ def build_nanobragg_command(
     # Add pivot mode flag
     from nanobrag_torch.config import DetectorPivot
     
-    # C-code logic: automatically use SAMPLE pivot when twotheta is nonzero
-    if abs(detector_config.detector_twotheta_deg) > 1e-6:
-        cmd.extend(["-pivot", "sample"])
-    elif detector_config.detector_pivot == DetectorPivot.BEAM:
+    # Use the pivot mode specified in the detector config
+    if detector_config.detector_pivot == DetectorPivot.BEAM:
         cmd.extend(["-pivot", "beam"])
     elif detector_config.detector_pivot == DetectorPivot.SAMPLE:
         cmd.extend(["-pivot", "sample"])
