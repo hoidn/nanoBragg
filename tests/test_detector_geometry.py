@@ -17,18 +17,19 @@ from nanobrag_torch.models.detector import Detector
 # NOTE: These expected values are derived from a nanoBragg.c trace log for the
 # 'cubic_tilted_detector' golden test case. They are the ground truth.
 # All vectors are in METERS.
+# Configuration: rotx=1°, roty=5°, rotz=0°, twotheta=3°
 
 EXPECTED_ROTATED_FDET_VEC = torch.tensor(
-    [0.0311947630447082, -0.096650175316428, 0.994829447880333], dtype=torch.float64
+    [0.0861096544017657, -0.0219891729394385, 0.996042972814049], dtype=torch.float64
 )
 EXPECTED_ROTATED_SDET_VEC = torch.tensor(
-    [-0.228539518954453, -0.969636205471835, -0.0870362988312832], dtype=torch.float64
+    [-0.0538469780853136, -0.998397831596816, -0.0173859947617641], dtype=torch.float64
 )
 EXPECTED_ROTATED_ODET_VEC = torch.tensor(
-    [0.973034724475264, -0.224642766741965, -0.0523359562429438], dtype=torch.float64
+    [0.994829447880333, -0.0521368021287822, -0.0871557427476582], dtype=torch.float64
 )
 EXPECTED_TILTED_PIX0_VECTOR_METERS = torch.tensor(
-    [0.112087366299472, 0.0653100408232811, -0.0556023303792543], dtype=torch.float64
+    [0.0983465378387818, 0.052294833982483, -0.0501561701251796], dtype=torch.float64
 )
 
 # --- End Ground Truth Data ---
@@ -37,18 +38,20 @@ EXPECTED_TILTED_PIX0_VECTOR_METERS = torch.tensor(
 @pytest.fixture(scope="module")
 def tilted_detector():
     """Fixture for the 'cubic_tilted_detector' configuration."""
+    # NOTE: Using parameters that match the actual C trace
+    # (rotx=1°, roty=5°, rotz=0°, twotheta=3°)
     config = DetectorConfig(
         distance_mm=100.0,
         pixel_size_mm=0.1,
         spixels=1024,
         fpixels=1024,
-        beam_center_s=61.2,  # Offset slow axis
-        beam_center_f=61.2,  # Offset fast axis
+        beam_center_s=51.2,  # Matches trace: Xbeam in C becomes Sbeam in MOSFLM
+        beam_center_f=51.2,  # Matches trace: Ybeam in C becomes Fbeam in MOSFLM
         detector_convention=DetectorConvention.MOSFLM,
-        detector_rotx_deg=5.0,
-        detector_roty_deg=3.0,
-        detector_rotz_deg=2.0,
-        detector_twotheta_deg=15.0,
+        detector_rotx_deg=1.0,  # Matches trace
+        detector_roty_deg=5.0,  # Matches trace
+        detector_rotz_deg=0.0,  # Matches trace
+        detector_twotheta_deg=3.0,  # Matches trace
         detector_pivot=DetectorPivot.BEAM,
     )
     return Detector(config=config, dtype=torch.float64)

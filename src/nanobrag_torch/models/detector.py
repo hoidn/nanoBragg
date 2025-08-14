@@ -256,8 +256,9 @@ class Detector:
                 )
 
             # Distances along detector axes measured from pixel centers (meters)
-            Fbeam = self.beam_center_f * self.pixel_size
-            Sbeam = self.beam_center_s * self.pixel_size
+            # MOSFLM convention adds 0.5 pixel to beam center for pixel leading edge reference
+            Fbeam = (self.beam_center_f + 0.5) * self.pixel_size
+            Sbeam = (self.beam_center_s + 0.5) * self.pixel_size
 
             # Calculate pix0_vector using BEAM pivot formula
             # Uses the ROTATED basis vectors
@@ -283,8 +284,9 @@ class Detector:
                 odet_initial = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
 
             # Distances from pixel (0,0) center to the beam spot, measured along detector axes
-            Fclose = self.beam_center_f * self.pixel_size  # meters
-            Sclose = self.beam_center_s * self.pixel_size  # meters
+            # Add 0.5 pixel for pixel leading edge reference (same as BEAM pivot)
+            Fclose = (self.beam_center_f + 0.5) * self.pixel_size  # meters
+            Sclose = (self.beam_center_s + 0.5) * self.pixel_size  # meters
 
             # Compute pix0 BEFORE rotations (close_distance == self.distance)
             pix0_initial = (

@@ -519,18 +519,19 @@ def main():
     )
 
     # Configuration 2: Tilted detector (cubic_tilted_detector)
+    # Note: Using parameters that match the actual trace files (1,5,0,3)
     tilted_config = DetectorConfig(
         distance_mm=100.0,
         pixel_size_mm=0.1,
         spixels=1024,
         fpixels=1024,
-        beam_center_s=61.2,  # Correct value from golden test data
-        beam_center_f=61.2,  # Correct value from golden test data
+        beam_center_s=51.2,  # Matches trace: Xbeam in C becomes Sbeam in MOSFLM
+        beam_center_f=51.2,  # Matches trace: Ybeam in C becomes Fbeam in MOSFLM
         detector_convention=DetectorConvention.MOSFLM,
-        detector_rotx_deg=5.0,
-        detector_roty_deg=3.0,
-        detector_rotz_deg=2.0,
-        detector_twotheta_deg=15.0,
+        detector_rotx_deg=1.0,  # Matches trace
+        detector_roty_deg=5.0,  # Matches trace
+        detector_rotz_deg=0.0,  # Matches trace
+        detector_twotheta_deg=3.0,  # Matches trace
         detector_pivot=DetectorPivot.BEAM,  # Use BEAM pivot to match C implementation
     )
 
