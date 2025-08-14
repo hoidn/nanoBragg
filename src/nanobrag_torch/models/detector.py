@@ -255,28 +255,9 @@ class Detector:
                     [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
                 )
 
-            # Fbeam and Sbeam calculation depends on convention
-            # For MOSFLM: Fbeam = Ybeam + 0.5*pixel_size, Sbeam = Xbeam + 0.5*pixel_size
-            # where Xbeam/Ybeam are the input beam center in mm
-            if self.config.detector_convention == DetectorConvention.MOSFLM:
-                # MOSFLM convention: Fbeam = Ybeam + 0.5*pixel_size, Sbeam = Xbeam + 0.5*pixel_size
-                # Per MOSFLM convention, the fast-axis beam center (f) is Ybeam,
-                # and the slow-axis beam center (s) is Xbeam.
-                Xbeam_mm = self.config.beam_center_s  # Slow-axis maps to Xbeam
-                Ybeam_mm = self.config.beam_center_f  # Fast-axis maps to Ybeam
-                # The formula uses Fbeam for the fast-axis vector (fdet_vec) and Sbeam for the slow-axis (sdet_vec).
-                # Therefore, Fbeam must use Ybeam_mm and Sbeam must use Xbeam_mm.
-                Fbeam = (
-                    Ybeam_mm + 0.5 * self.config.pixel_size_mm
-                ) / 1000.0  # Convert mm to meters
-                Sbeam = (
-                    Xbeam_mm + 0.5 * self.config.pixel_size_mm
-                ) / 1000.0  # Convert mm to meters
-
-            else:
-                # Default behavior for other conventions
-                Fbeam = self.beam_center_f * self.pixel_size  # in meters
-                Sbeam = self.beam_center_s * self.pixel_size  # in meters
+            # Distances along detector axes measured from pixel centers (meters)
+            Fbeam = self.beam_center_f * self.pixel_size
+            Sbeam = self.beam_center_s * self.pixel_size
 
             # Calculate pix0_vector using BEAM pivot formula
             # Uses the ROTATED basis vectors
@@ -287,9 +268,10 @@ class Detector:
             )
         else:
             # SAMPLE pivot mode: detector rotates around the sample
-            # CRITICAL: Must calculate pix0_vector BEFORE rotating basis vectors
-            
-            # Get initial (unrotated) basis vectors based on convention
+            # IMPORTANT: Compute pix0 BEFORE rotating, using the same formula as C:
+            # pix0 = -Fclose*fdet - Sclose*sdet + close_distance*odet
+
+            # Unrotated basis (by convention)
             if self.config.detector_convention == DetectorConvention.MOSFLM:
                 fdet_initial = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
                 sdet_initial = torch.tensor([0.0, -1.0, 0.0], device=self.device, dtype=self.dtype)
@@ -299,30 +281,25 @@ class Detector:
                 fdet_initial = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
                 sdet_initial = torch.tensor([0.0, 1.0, 0.0], device=self.device, dtype=self.dtype)
                 odet_initial = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
-            
-            # Calculate initial detector origin using unrotated vectors
-            detector_origin_initial = self.distance * odet_initial
 
-            # Calculate offset from detector center to pixel (0.5,0.5)
-            # Note: beam_center_s/f are already in pixel units
-            # Using 0.5 for pixel center convention
-            s_offset = (0.5 - self.beam_center_s) * self.pixel_size
-            f_offset = (0.5 - self.beam_center_f) * self.pixel_size
+            # Distances from pixel (0,0) center to the beam spot, measured along detector axes
+            Fclose = self.beam_center_f * self.pixel_size  # meters
+            Sclose = self.beam_center_s * self.pixel_size  # meters
 
-            # Calculate initial pix0_vector using UNROTATED basis vectors
+            # Compute pix0 BEFORE rotations (close_distance == self.distance)
             pix0_initial = (
-                detector_origin_initial + s_offset * sdet_initial + f_offset * fdet_initial
+                -Fclose * fdet_initial
+                - Sclose * sdet_initial
+                + self.distance * odet_initial
             )
-            
-            # Now apply the same rotations as applied to basis vectors
-            # Get rotation parameters
+
+            # Now rotate pix0 with detector_rotx/roty/rotz and twotheta, same as C
             c = self.config
             detector_rotx = degrees_to_radians(c.detector_rotx_deg)
             detector_roty = degrees_to_radians(c.detector_roty_deg)
             detector_rotz = degrees_to_radians(c.detector_rotz_deg)
             detector_twotheta = degrees_to_radians(c.detector_twotheta_deg)
-            
-            # Ensure all angles are tensors
+
             if not isinstance(detector_rotx, torch.Tensor):
                 detector_rotx = torch.tensor(detector_rotx, device=self.device, dtype=self.dtype)
             if not isinstance(detector_roty, torch.Tensor):
@@ -331,22 +308,18 @@ class Detector:
                 detector_rotz = torch.tensor(detector_rotz, device=self.device, dtype=self.dtype)
             if not isinstance(detector_twotheta, torch.Tensor):
                 detector_twotheta = torch.tensor(detector_twotheta, device=self.device, dtype=self.dtype)
-            
-            # Apply detector rotations (rotx, roty, rotz)
+
             rotation_matrix = angles_to_rotation_matrix(detector_rotx, detector_roty, detector_rotz)
             pix0_rotated = torch.matmul(rotation_matrix, pix0_initial)
-            
-            # Apply two-theta rotation
+
             if isinstance(c.twotheta_axis, torch.Tensor):
                 twotheta_axis = c.twotheta_axis.to(device=self.device, dtype=self.dtype)
             else:
                 twotheta_axis = torch.tensor(c.twotheta_axis, device=self.device, dtype=self.dtype)
-            
-            # Check if twotheta is non-zero
-            is_nonzero = torch.abs(detector_twotheta) > 1e-12
-            if is_nonzero:
+
+            if _nonzero_scalar(detector_twotheta):
                 pix0_rotated = rotate_axis(pix0_rotated, twotheta_axis, detector_twotheta)
-            
+
             self.pix0_vector = pix0_rotated
 
     def get_pixel_coords(self) -> torch.Tensor:
@@ -557,8 +530,7 @@ class Detector:
             )
 
         # Check if twotheta is non-zero (handle both scalar and tensor cases)
-        is_nonzero = torch.abs(detector_twotheta) > 1e-12
-        if is_nonzero:
+        if _nonzero_scalar(detector_twotheta):
             fdet_vec = rotate_axis(fdet_vec, twotheta_axis, detector_twotheta)
             sdet_vec = rotate_axis(sdet_vec, twotheta_axis, detector_twotheta)
             odet_vec = rotate_axis(odet_vec, twotheta_axis, detector_twotheta)

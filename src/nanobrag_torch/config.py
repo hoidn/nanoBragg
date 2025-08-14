@@ -160,8 +160,8 @@ class DetectorConfig:
         if self.twotheta_axis is None:
             # Default depends on detector convention
             if self.detector_convention == DetectorConvention.MOSFLM:
-                # MOSFLM convention: twotheta axis is [0, 0, -1] (C-code line 1194)
-                self.twotheta_axis = torch.tensor([0.0, 0.0, -1.0])
+                # MOSFLM convention: swings detector about lab Y (vertical) axis
+                self.twotheta_axis = torch.tensor([0.0, 1.0, 0.0])
             elif self.detector_convention == DetectorConvention.XDS:
                 # XDS convention: twotheta axis is [1, 0, 0] (C-code line 1221)
                 self.twotheta_axis = torch.tensor([1.0, 0.0, 0.0])

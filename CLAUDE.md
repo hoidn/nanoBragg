@@ -2,6 +2,19 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🚀 Current Initiative: Parallel Trace Validation
+
+**Status**: Active development  
+**Goal**: Fix detector geometry mismatch in tilted configurations using systematic parallel trace debugging  
+**Location**: `initiatives/parallel-trace-validation/`  
+**R&D Plan**: See `initiatives/parallel-trace-validation/docs/rd-plan.md`
+
+**Problem**: Tilted detector configurations show poor correlation (<0.9) vs C reference, while simple cubic achieves perfect correlation (>0.999).
+
+**Approach**: Generate identical, deterministic trace logs from both C and Python implementations to identify exact divergence point in geometry calculations.
+
+---
+
 **For a complete overview of the project's architecture and conventions, see the [Architecture Hub](./docs/architecture/README.md).**
 
 ## 📋 Quick Reference: nanoBragg C Commands
