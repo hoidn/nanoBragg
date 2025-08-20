@@ -88,7 +88,35 @@ This document orchestrates the implementation of the objective defined in the ma
 
 ---
 
-### **Phase 3: Golden Test Case Generation**
+### **Phase 3: Debugging Large-Angle Twotheta Rotations**
+
+**Goal:** To identify and fix the root cause of the correlation failure in large-angle `twotheta` rotations by extending the parallel trace to cover the full basis vector transformation.
+
+**Deliverable:** A corrected `Detector` class where all three basis vectors are correctly and uniformly rotated, leading to a passing end-to-end validation for the 20° twotheta test case.
+
+**Estimated Duration:** 1 day
+
+**Key Modules & APIs to Touch:**
+- `src/nanobrag_torch/models/detector.py`: Fix basis vector rotation logic in `_calculate_basis_vectors()`
+- `golden_suite_generator/nanoBragg.c`: Add extended trace instrumentation
+- `scripts/debug_beam_pivot_trace.py`: Add parallel trace for all three basis vectors
+- `scripts/verify_detector_geometry.py`: Validation script for large-angle rotations
+
+**Potential Gotchas & Critical Conventions:**
+- The `twotheta` rotation must be applied uniformly to ALL three basis vectors (fdet, sdet, odet)
+- The rotation is around an arbitrary axis (not a coordinate axis) determined by the detector convention
+- MOSFLM convention uses Y-axis (-Z in our coordinates) for twotheta rotation
+- All vectors must maintain orthogonality after rotation (verify with dot products)
+
+**Implementation Checklist:** `phase3.md`
+
+**Success Test:** 
+- Extended parallel traces match within 1e-12 tolerance for all three basis vectors
+- End-to-end correlation for 20° twotheta case exceeds 0.999
+
+---
+
+### **Phase 3 (Original): Golden Test Case Generation**
 
 **Goal:** To generate the cubic_tilted_detector golden test case with comprehensive trace data.
 **Deliverable:** Complete golden test artifacts including high-precision trace logs of detector geometry.
@@ -163,12 +191,14 @@ This document orchestrates the implementation of the objective defined in the ma
 ### Phase Status:
 - [x] **Phase 1:** DetectorConfig and Unit Conversion Foundation - 100% complete ✅
 - [x] **Phase 2:** Dynamic Basis Vector Calculation - 100% complete ✅
-- [x] **Phase 3:** Golden Test Case Generation - 100% complete ✅
-- [x] **Phase 4:** Integration and Backward Compatibility - 100% complete ✅
-- [x] **Final Phase:** Validation, Gradients & Documentation - 100% complete ✅
+- [ ] **Phase 3:** Debugging Large-Angle Twotheta Rotations - In Progress
+- [ ] **Phase 3 (Original):** Golden Test Case Generation - Postponed
+- [ ] **Phase 4:** Integration and Backward Compatibility - Postponed
+- [ ] **Final Phase:** Validation, Gradients & Documentation - Postponed
 
-**Current Phase:** ✅ COMPLETE - All phases implemented successfully  
-**Overall Progress:** ████████████████████ 100%
+**Current Phase:** Phase 3: Debugging Large-Angle Twotheta Rotations
+**Next Milestone:** A fully validated detector model with >0.999 correlation for both simple and large-angle tilted configurations.
+**Overall Progress:** ████████░░░░░░░░░░░░ 40%
 
 ---
 
