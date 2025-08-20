@@ -1,18 +1,18 @@
 {
   "baseline": {
-    "correlation": 0.9934414555227209,
-    "rms_absolute": 2026.137139023543,
-    "rms_relative": 5.7349297630197436,
-    "max_difference": 54890.05298416581
+    "correlation": 0.9988086689800967,
+    "rms_absolute": 2026.1054066593913,
+    "rms_relative": 5.7348399453681544,
+    "max_difference": 54885.34749706551
   },
   "tilted": {
-    "correlation": -0.017974478560211813,
-    "rms_absolute": 2030.7079847983796,
-    "rms_relative": 5.754234341036155,
-    "max_difference": 55039.99999911284
+    "correlation": 0.2776879870065955,
+    "rms_absolute": 2030.2883152225086,
+    "rms_relative": 5.7470520675349395,
+    "max_difference": 54897.04039423339
   },
   "overall": {
-    "min_correlation": -0.017974478560211813,
+    "min_correlation": 0.2776879870065955,
     "all_correlations_good": false
   }
 }

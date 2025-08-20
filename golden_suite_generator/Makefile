@@ -4,7 +4,7 @@
 # for validating the PyTorch implementation.
 
 CC = gcc
-CFLAGS = -O3 -lm
+CFLAGS = -O2 -lm -fno-fast-math -ffp-contract=off -DTRACING=1
 # Try to use OpenMP if available, otherwise fallback to no OpenMP
 ifeq ($(shell gcc -fopenmp -E - < /dev/null > /dev/null 2>&1 && echo yes), yes)
     CFLAGS += -fopenmp

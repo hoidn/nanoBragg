@@ -164,12 +164,17 @@ class CReferenceRunner:
                     abs_executable = (Path.cwd() / self.executable_path).resolve()
                     cmd[0] = str(abs_executable)
 
+                # Set LC_NUMERIC=C for deterministic number formatting
+                env = os.environ.copy()
+                env["LC_NUMERIC"] = "C"
+                
                 result = subprocess.run(
                     cmd,
                     cwd=temp_dir,
                     capture_output=True,
                     text=True,
                     timeout=60,  # 60 second timeout
+                    env=env,
                 )
 
                 if result.returncode != 0:

@@ -62,6 +62,7 @@ so detector distances should always be much larger than the crystal size
 #include <time.h>
 #include <limits.h>
 #include <float.h>
+#include <locale.h>
 #ifndef NAN
 #define NAN strtod("NAN",NULL)
 #endif
@@ -69,6 +70,20 @@ so detector distances should always be much larger than the crystal size
 #define TRUE 1
 #define FALSE 0
 #define Avogadro 6.02214179e23
+
+/* Trace helper functions for parallel debugging */
+#ifdef TRACING
+static void trace_vec(const char* tag, double x, double y, double z) {
+    printf("TRACE_C:%s=%.15g %.15g %.15g\n", tag, x, y, z);
+}
+static void trace_mat3(const char* tag, const double M[3][3]) {
+    printf("TRACE_C:%s=[%.15g %.15g %.15g; %.15g %.15g %.15g; %.15g %.15g %.15g]\n",
+           tag, M[0][0],M[0][1],M[0][2], M[1][0],M[1][1],M[1][2], M[2][0],M[2][1],M[2][2]);
+}
+static void trace_scalar(const char* tag, double v) {
+    printf("TRACE_C:%s=%.15g\n", tag, v);
+}
+#endif
 
 /* read in text file into double arrays at provided addresses */
 size_t read_text_file(char *filename, size_t nargs, ... );
@@ -1745,9 +1760,82 @@ int main(int argc, char** argv)
     /* make sure beam center is preserved */
     if(detector_pivot == BEAM){
         printf("pivoting detector around direct beam spot\n");
+        
+#ifdef TRACING
+        /* Set locale for consistent number formatting */
+        setlocale(LC_NUMERIC, "C");
+        
+        /* Log convention and angles */
+        printf("TRACE_C:detector_convention=MOSFLM\n");
+        printf("TRACE_C:angles_rad=rotx:%.15g roty:%.15g rotz:%.15g twotheta:%.15g\n",
+               detector_rotx, detector_roty, detector_rotz, detector_twotheta);
+        
+        /* Log beam center in meters and pixel size for documentation */
+        double pixel_mm = pixel_size * 1000.0;  /* Convert to mm for logging */
+        printf("TRACE_C:beam_center_m=X:%.15g Y:%.15g pixel_mm:%.15g\n",
+               Xbeam/1000.0, Ybeam/1000.0, pixel_mm);
+        
+        /* Log initial basis vectors (before rotations) */
+        /* Note: Need to get initial values before rotations were applied */
+        /* For MOSFLM: fdet=[0,0,1], sdet=[0,-1,0], odet=[1,0,0] */
+        trace_vec("initial_fdet", 0.0, 0.0, 1.0);
+        trace_vec("initial_sdet", 0.0, -1.0, 0.0);
+        trace_vec("initial_odet", 1.0, 0.0, 0.0);
+        
+        /* Log rotation matrices - need to reconstruct them */
+        double cx=cos(detector_rotx), sx=sin(detector_rotx);
+        double cy=cos(detector_roty), sy=sin(detector_roty);
+        double cz=cos(detector_rotz), sz=sin(detector_rotz);
+        
+        double Rx[3][3]={{1,0,0},{0,cx,-sx},{0,sx,cx}};
+        double Ry[3][3]={{cy,0,sy},{0,1,0},{-sy,0,cy}};
+        double Rz[3][3]={{cz,-sz,0},{sz,cz,0},{0,0,1}};
+        
+        /* R_total = Rz * Ry * Rx */
+        double Tmp[3][3], R_total[3][3];
+        int i, j, k;
+        /* Tmp = Ry * Rx */
+        for(i=0;i<3;i++) for(j=0;j<3;j++){ Tmp[i][j]=0; for(k=0;k<3;k++) Tmp[i][j]+=Ry[i][k]*Rx[k][j]; }
+        /* R_total = Rz * Tmp */
+        for(i=0;i<3;i++) for(j=0;j<3;j++){ R_total[i][j]=0; for(k=0;k<3;k++) R_total[i][j]+=Rz[i][k]*Tmp[k][j]; }
+        
+        trace_mat3("Rx", Rx);
+        trace_mat3("Ry", Ry);
+        trace_mat3("Rz", Rz);
+        trace_mat3("R_total", R_total);
+        
+        /* Note: At this point, all rotations AND twotheta have already been applied */
+        /* So these are actually the final rotated vectors, not intermediate stages */
+        trace_vec("fdet_after_rotz", fdet_vector[1], fdet_vector[2], fdet_vector[3]);
+        trace_vec("sdet_after_rotz", sdet_vector[1], sdet_vector[2], sdet_vector[3]);
+        trace_vec("odet_after_rotz", odet_vector[1], odet_vector[2], odet_vector[3]);
+        
+        /* Log twotheta axis and final vectors after twotheta */
+        trace_vec("twotheta_axis", twotheta_axis[1], twotheta_axis[2], twotheta_axis[3]);
+        trace_vec("fdet_after_twotheta", fdet_vector[1], fdet_vector[2], fdet_vector[3]);
+        trace_vec("sdet_after_twotheta", sdet_vector[1], sdet_vector[2], sdet_vector[3]);
+        trace_vec("odet_after_twotheta", odet_vector[1], odet_vector[2], odet_vector[3]);
+        
+        /* Log convention mapping */
+        printf("TRACE_C:convention_mapping=Fbeam←Ybeam_mm(+0.5px),Sbeam←Xbeam_mm(+0.5px),beam_vec=[1 0 0]\n");
+        trace_scalar("Fbeam_m", Fbeam);
+        trace_scalar("Sbeam_m", Sbeam);
+        trace_scalar("distance_m", distance);
+        
+        /* Log the terms before calculating pix0 */
+        trace_vec("term_fast", -Fbeam*fdet_vector[1], -Fbeam*fdet_vector[2], -Fbeam*fdet_vector[3]);
+        trace_vec("term_slow", -Sbeam*sdet_vector[1], -Sbeam*sdet_vector[2], -Sbeam*sdet_vector[3]);
+        trace_vec("term_beam", distance*beam_vector[1], distance*beam_vector[2], distance*beam_vector[3]);
+#endif
+        
         pix0_vector[1] = -Fbeam*fdet_vector[1]-Sbeam*sdet_vector[1]+distance*beam_vector[1];
         pix0_vector[2] = -Fbeam*fdet_vector[2]-Sbeam*sdet_vector[2]+distance*beam_vector[2];
         pix0_vector[3] = -Fbeam*fdet_vector[3]-Sbeam*sdet_vector[3]+distance*beam_vector[3];
+        
+#ifdef TRACING
+        /* Log final pix0_vector */
+        trace_vec("pix0_vector", pix0_vector[1], pix0_vector[2], pix0_vector[3]);
+#endif
     }
 
     /* what is the point of closest approach between sample and detector? */

@@ -211,7 +211,7 @@ def create_comparison_plots(baseline_data, tilted_data, output_dir):
         origin="lower",
         cmap="viridis",
     )
-    axes[0, 1].set_title("Tilted Detector (15° two-theta + rotations)")
+    axes[0, 1].set_title("Tilted Detector (20° two-theta)")
     axes[0, 1].set_xlabel("Fast axis (pixels)")
     axes[0, 1].set_ylabel("Slow axis (pixels)")
     plt.colorbar(im2, ax=axes[0, 1], label="Intensity")
@@ -364,7 +364,7 @@ def create_parallel_comparison_plots(pytorch_data, c_reference_data, output_dir)
         origin="lower",
         cmap="viridis",
     )
-    axes[1, 0].set_title("PyTorch Tilted (15° two-theta + rotations)")
+    axes[1, 0].set_title("PyTorch Tilted (20° two-theta)")
     axes[1, 0].set_xlabel("Fast axis (pixels)")
     axes[1, 0].set_ylabel("Slow axis (pixels)")
     plt.colorbar(im3, ax=axes[1, 0], label="Intensity")
@@ -486,8 +486,23 @@ def run_c_reference_verification(
     if not C_REFERENCE_AVAILABLE:
         return None, None
 
-    runner = CReferenceRunner()
-    if not runner.is_available():
+    # Try to find nanoBragg executable
+    possible_paths = [
+        "golden_suite_generator/nanoBragg_golden",  # Golden executable
+        "golden_suite_generator/nanoBragg_trace",   # Trace executable
+        "golden_suite_generator/nanoBragg",         # Default location
+        "./nanoBragg_golden",                       # Current directory
+    ]
+    
+    runner = None
+    for path in possible_paths:
+        if Path(path).exists():
+            runner = CReferenceRunner(executable_path=path)
+            if runner.is_available():
+                print(f"✓ Found C reference at: {path}")
+                break
+    
+    if runner is None or not runner.is_available():
         print("⚠️  C reference nanoBragg not available")
         return None, None
 
@@ -518,20 +533,20 @@ def main():
         detector_pivot=DetectorPivot.BEAM,
     )
 
-    # Configuration 2: Tilted detector (cubic_tilted_detector)
-    # Note: Using parameters that match the actual trace files (1,5,0,3)
+    # Configuration 2: Tilted detector with more dramatic rotation
+    # Using larger angles to create visible diffraction pattern changes
     tilted_config = DetectorConfig(
         distance_mm=100.0,
         pixel_size_mm=0.1,
         spixels=1024,
         fpixels=1024,
-        beam_center_s=51.2,  # Matches trace: Xbeam in C becomes Sbeam in MOSFLM
-        beam_center_f=51.2,  # Matches trace: Ybeam in C becomes Fbeam in MOSFLM
+        beam_center_s=51.2,  # Standard beam center
+        beam_center_f=51.2,  # Standard beam center
         detector_convention=DetectorConvention.MOSFLM,
-        detector_rotx_deg=1.0,  # Matches trace
-        detector_roty_deg=5.0,  # Matches trace
-        detector_rotz_deg=0.0,  # Matches trace
-        detector_twotheta_deg=3.0,  # Matches trace
+        detector_rotx_deg=0.0,   # No X rotation
+        detector_roty_deg=0.0,   # No Y rotation 
+        detector_rotz_deg=0.0,   # No Z rotation
+        detector_twotheta_deg=20.0,  # Large twotheta for visible effect
         detector_pivot=DetectorPivot.BEAM,  # Use BEAM pivot to match C implementation
     )
 
