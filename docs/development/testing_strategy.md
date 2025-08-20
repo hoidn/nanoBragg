@@ -16,7 +16,22 @@ Our testing philosophy is a three-tiered hybrid approach, designed to build conf
 
 All tests will be implemented using the PyTest framework.
 
-## 2. Ground Truth: Parallel Trace-Driven Validation
+## 2. Configuration Parity
+
+**CRITICAL REQUIREMENT:** Before implementing any test that compares against C-code output, you **MUST** ensure exact configuration parity. All golden test cases must be generated with commands that are verifiably equivalent to the PyTorch test configurations.
+
+**Authoritative Reference:** See the **[C-CLI to PyTorch Configuration Map](./c_to_pytorch_config_map.md)** for:
+- Complete parameter mappings
+- Implicit conventions (pivot modes, beam adjustments, rotation axes)
+- Common configuration bugs and prevention strategies
+
+Configuration mismatches are the most common source of test failures. Always verify:
+- Pivot mode (BEAM vs SAMPLE) based on parameter implications
+- Convention-specific adjustments (e.g., MOSFLM's 0.5 pixel offset)
+- Default rotation axes for each convention
+- Proper unit conversions at boundaries
+
+## 2.1 Ground Truth: Parallel Trace-Driven Validation
 
 The foundation of our testing strategy is a "Golden Suite" of test data. Crucially, final-output comparison is insufficient for effective debugging. Our strategy is therefore centered on **Parallel Trace-Driven Validation**.
 
@@ -27,11 +42,11 @@ For each test case, the Golden Suite must contain three components:
 
 This allows for direct, line-by-line comparison of the entire physics calculation, making it possible to pinpoint the exact line of code where a divergence occurs.
 
-### 2.1 Instrumenting the C Code
+### 2.2 Instrumenting the C Code
 
 The `nanoBragg.c` source in `golden_suite_generator/` must be instrumented with a `-dump_pixel <slow> <fast>` command-line flag. When run with this flag, the program must write a detailed log file (`<test_case_name>_C_trace.log`) containing key intermediate variables (e.g., `scattering_vector`, `h`, `k`, `l`, `F_cell`, `F_latt`, `omega_pixel`, `polar`) for the specified pixel. This provides the ground truth for component-level testing.
 
-### 2.2 Golden Test Cases
+### 2.3 Golden Test Cases
 
 The following test cases will be defined, and all three artifacts (image, C trace, PyTorch trace) will be generated and stored in `tests/golden_data/`.
 
@@ -42,11 +57,11 @@ The following test cases will be defined, and all three artifacts (image, C trac
 | `simple_cubic_mosaic` | The `simple_cubic` case with mosaic spread. | To test the mosaic domain implementation. |
 | `cubic_tilted_detector` | Cubic cell with rotated and tilted detector. | To test general detector geometry implementation. |
 
-### 2.3 Canonical Generation Commands
+### 2.4 Canonical Generation Commands
 
 **⚠️ CRITICAL:** The following commands are the **single source of truth** for reproducing the golden data. All parallel verification MUST use these exact parameters. These commands must be run from within the `golden_suite_generator/` directory.
 
-#### 2.3.1 `simple_cubic`
+#### 2.4.1 `simple_cubic`
 **Purpose:** Basic validation of geometry and physics calculations.
 
 **Canonical Command:**
@@ -67,7 +82,7 @@ The following test cases will be defined, and all three artifacts (image, C trac
 - Detector: 100mm distance, 1024×1024 pixels (via `-detsize 102.4`)
 - Beam: λ=6.2Å, uniform F=100
 
-#### 2.3.2 `triclinic_P1`
+#### 2.4.2 `triclinic_P1`
 **Purpose:** Validates general triclinic geometry and misset rotations.
 
 **Canonical Command:**
@@ -88,7 +103,7 @@ The following test cases will be defined, and all three artifacts (image, C trac
 
 **⚠️ CRITICAL DIFFERENCE:** Uses `-detpixels 512` NOT `-detsize`!
 
-#### 2.3.3 `simple_cubic_mosaic`
+#### 2.4.3 `simple_cubic_mosaic`
 **Purpose:** Validates mosaicity implementation.
 
 **Canonical Command:**

@@ -34,6 +34,12 @@ These documents are the **authoritative specifications** for each major componen
 
 ## Critical Implementation Notes
 
+### ⚠️ Configuration Parity
+**MANDATORY**: Before implementing any test involving C-code validation, consult the **[C-CLI to PyTorch Configuration Map](../development/c_to_pytorch_config_map.md)**. This document is the authoritative source for:
+- Parameter mappings between C command-line flags and PyTorch dataclasses
+- Implicit conventions (pivot modes, beam center adjustments, rotation axes)
+- Common configuration bugs and their prevention
+
 ### ⚠️ Unit System Exceptions
 While the global rule states "all calculations use Angstroms," the following exceptions apply:
 - **Detector geometry**: Uses meters internally (see [Detector spec](./detector.md#61-critical-hybrid-unit-system))

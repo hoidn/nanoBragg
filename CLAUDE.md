@@ -39,6 +39,12 @@ For all parameters, see [`docs/architecture/c_parameter_dictionary.md`](./docs/a
 
 **YOU MUST ADHERE TO THESE RULES TO AVOID COMMON BUGS:**
 
+0.  **Configuration Parity is Mandatory:** Before writing any test or implementation that involves C-code validation, you **MUST** consult the [C-CLI to PyTorch Configuration Map](./docs/development/c_to_pytorch_config_map.md). This document is the single source of truth for all parameter mappings and implicit C-code conventions. Failure to ensure 1:1 configuration parity is the most common source of bugs, particularly with:
+    - Implicit pivot mode logic (e.g., `-twotheta` implies SAMPLE pivot)
+    - Convention-dependent beam center calculations (MOSFLM adds 0.5 pixel adjustment)
+    - Rotation axis defaults (MOSFLM uses Y-axis, XDS uses X-axis for twotheta)
+    - Unit conversions (mm→m, degrees→radians)
+
 1.  **Consistent Unit System:** All internal physics calculations **MUST** use a single, consistent unit system. The project standard is **Angstroms (Å)** for length and **electron-volts (eV)** for energy.
     -   **Action:** Convert all input parameters (e.g., from mm, meters) to this internal system immediately upon ingestion in the configuration or model layers.
     -   **Verification:** When debugging, the first step is to check the units of all inputs to a calculation.

@@ -4,6 +4,12 @@
 
 This document serves as a definitive reference for all command-line parameters accepted by `nanoBragg.c`. It maps each command-line flag to its corresponding internal C variable, specifies its data type, expected units, default value, and provides a clear description of its function.
 
+**Note:** For a direct mapping of these C parameters to their PyTorch Config equivalents and a guide to implicit conventions, see the **[C-CLI to PyTorch Configuration Map](../development/c_to_pytorch_config_map.md)**. That document is essential for understanding:
+- How C-CLI flags map to PyTorch dataclass fields
+- Implicit behavior (e.g., `-twotheta` setting pivot mode to SAMPLE)
+- Convention-dependent adjustments (e.g., MOSFLM beam center calculations)
+- Common configuration bugs and their prevention
+
 This dictionary is essential for:
 *   Understanding how to configure a `nanoBragg` simulation.
 *   Guiding the implementation of a new configuration system (e.g., Python `dataclasses`).

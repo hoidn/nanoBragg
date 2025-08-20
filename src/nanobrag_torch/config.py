@@ -6,6 +6,10 @@ replace the large set of local variables and command-line parsing logic found
 in the original C main() function. Each dataclass will correspond to a physical
 component of the simulation (Crystal, Detector, Beam).
 
+For a detailed mapping of these dataclass fields to the original nanoBragg.c 
+command-line flags, including implicit conventions and common pitfalls, see:
+docs/development/c_to_pytorch_config_map.md
+
 C-Code Implementation Reference (from nanoBragg.c):
 The configuration is currently handled by a large argument-parsing loop
 in main(). The future dataclasses will encapsulate the variables set
