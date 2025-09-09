@@ -1,159 +1,276 @@
-# Detector Geometry Fix Plan
+# Fix Plan: Detector Geometry Correlation Issue
 
-**Date:** January 2025  
-**Current Status:** Partial Success - Baseline working, tilted configuration has issues  
-**Next Steps:** Debug rotation + beam center interaction
+**Date**: January 20, 2025  
+**Issue**: PyTorch vs C reference correlation = 0.040 (target > 0.999)  
+**Status**: Critical - Blocking validation of detector geometry implementation  
 
-## Current Situation
+## Executive Summary
 
-### What's Working ✅
-1. **Unit System Fix Applied**: Detector now correctly uses meters internally instead of Angstroms
-   - Distance: 100mm → 0.1m (not 1e9 Å)
-   - Pixel size: 0.1mm → 0.0001m (not 1e6 Å)
-   - This fixed the catastrophic triclinic regression (correlation went from 0.004 back to 0.957)
+Despite fixing C reference parameter bugs (-twotheta, -Xbeam/-Ybeam), the correlation between PyTorch and C implementations remains unacceptably low (0.040). The detector geometry appears correct (basis vectors match), suggesting the issue lies deeper in the simulation pipeline.
 
-2. **Baseline Configuration**: 0.999 correlation with C reference
-   - Simple detector geometry without rotations works perfectly
-   - Confirms our fundamental implementation is correct
-   - Cell parameters now properly passed to C reference
+## Current State Analysis
 
-3. **Documentation Updated**: 
-   - Detector.md now documents the hybrid unit system exception
-   - C code overview documents non-standard conventions
-   - Debugging guide created to capture lessons learned
+### What We Know Works
+- ✅ Baseline configuration (no tilt): 0.999 correlation
+- ✅ Detector basis vectors: Identical between C and PyTorch
+- ✅ pix0_vector calculation: Matches between implementations
+- ✅ C parameter mapping: Fixed (-twotheta, -Xbeam/-Ybeam)
 
-### What's Not Working ❌
-1. **Tilted Detector Configuration**: -0.02 correlation (essentially random)
-   - Combination of rotations + beam center offset produces wrong results
-   - PyTorch and C patterns are shifted differently
-   - Suggests issue with BEAM pivot mode calculations
+### What Fails
+- ❌ Tilted configuration (twotheta=20°): 0.040 correlation
+- ❌ SAMPLE pivot mode: May have implementation differences
+- ❌ Image generation: Produces vastly different patterns despite same geometry
 
-2. **Visual Comparison Shows**:
-   - Both PyTorch and C produce Bragg spots (not noise)
-   - Spots are at different locations when rotations are applied
-   - The rotation transformations aren't matching the C implementation
+### Key Insight
+**The geometry calculations are likely correct.** The issue appears to be in how the geometry is used in the simulation, not the geometry itself.
 
-## Root Cause Analysis
+## Root Cause Hypotheses (Ranked by Probability)
 
-### Confirmed Issues
-1. **Unit System Mismatch** (FIXED)
-   - Detector was using Angstroms instead of meters
-   - Caused 9 orders of magnitude error in positions
-   - Fixed by updating Detector class to use meters internally
+### 1. **SAMPLE Pivot Implementation Mismatch** (60% probability)
+- **Evidence**: Correlation changes with pivot mode (BEAM=0.28, SAMPLE=0.04)
+- **Theory**: PyTorch's SAMPLE pivot affects more than just pix0_vector
+- **Test**: Compare pixel-to-lab coordinate transformations
 
-2. **Missing Cell Parameters** (FIXED)
-   - C reference runner wasn't passing cell parameters
-   - C code was using default values
-   - Fixed by adding `-cell` parameters to command
+### 2. **Pixel Coordinate Mapping** (25% probability)
+- **Evidence**: Spot positions differ significantly in output images
+- **Theory**: get_pixel_coords() may use basis vectors differently
+- **Test**: Trace single pixel from detector to reciprocal space
 
-### Suspected Issues
-1. **Rotation Order or Convention**
-   - C code might apply rotations in different order
-   - Or use different rotation matrix conventions
-   - Need to trace through C code rotation implementation
+### 3. **Hidden Parameter Differences** (10% probability)
+- **Evidence**: C code has many implicit defaults
+- **Theory**: Missing parameter that changes with -twotheta
+- **Test**: Comprehensive parameter audit
 
-2. **Beam Center in BEAM Pivot Mode**
-   - When `detector_pivot=BEAM`, rotations happen around beam spot
-   - Beam center offset (51.2 → 61.2mm) might be handled differently
-   - C formula: `pix0_vector = -Fbeam*fdet - Sbeam*sdet + distance*beam_vec`
+### 4. **Coordinate System Convention** (5% probability)
+- **Evidence**: MOSFLM vs lab frame conversions
+- **Theory**: Subtle sign or axis convention difference
+- **Test**: Check all coordinate transformations
 
-3. **Two-Theta Axis Convention**
-   - MOSFLM convention uses non-intuitive `[0, 0, -1]` axis
-   - Might be implemented incorrectly in rotation calculations
+## Systematic Fix Approach
 
-## Next Steps
+### Phase 1: Parallel Trace Debugging (2-3 hours)
 
-### 1. Immediate: Trace Rotation Implementation
+#### Step 1.1: Instrument C Code
 ```bash
-# Generate detailed traces for rotation calculations
-./nanoBragg -trace_pixel 512 512 -detector_rotx 5 -detector_twotheta 15 ...
-KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py --rotations
+# Add comprehensive tracing to nanoBragg.c
+cd golden_suite_generator
+# Add TRACE_C prints for pixel 512,512:
+# - Pixel coordinates (s,f)
+# - Lab coordinates (x,y,z)
+# - Scattering vector S
+# - Miller indices (h,k,l)
+# - Structure factor F
+# - Final intensity
 ```
 
-Compare step-by-step:
-- Initial basis vectors
-- After each rotation (rotx, roty, rotz, twotheta)
-- Final pix0_vector calculation
-- Beam center transformation
-
-### 2. Create Minimal Test Case
+#### Step 1.2: Create Python Trace Script
 ```python
-# Test just rotations without physics
-# Compare detector basis vectors directly
+# scripts/trace_pixel_512_512.py
+import torch
+from nanobrag_torch.models.detector import Detector
+from nanobrag_torch.models.crystal import Crystal
+from nanobrag_torch.config import DetectorConfig, CrystalConfig, DetectorPivot
+
 config = DetectorConfig(
-    detector_rotx_deg=5.0,
-    detector_twotheta_deg=15.0,
-    detector_pivot=DetectorPivot.BEAM,
+    distance_mm=100.0,
+    beam_center_s=51.2,
+    beam_center_f=51.2,
+    detector_twotheta_deg=20.0,
+    detector_pivot=DetectorPivot.SAMPLE,
 )
+
+# Trace pixel 512,512 through entire pipeline
+# Print each intermediate calculation
 ```
 
-### 3. Debug Rotation Order
-Check if C code applies rotations as:
-- Option A: `R_total = R_twotheta @ R_rotz @ R_roty @ R_rotx` (current PyTorch)
-- Option B: `R_total = R_rotx @ R_roty @ R_rotz @ R_twotheta` (reversed)
-- Option C: Some other combination
+#### Step 1.3: Compare Traces
+```bash
+# Run both and diff
+./nanoBragg_golden [params] > c_trace.log 2>&1
+python scripts/trace_pixel_512_512.py > py_trace.log
+diff -u c_trace.log py_trace.log | head -50
+```
 
-### 4. Verify Two-Theta Implementation
+### Phase 2: Fix Identified Issues (1-2 hours)
+
+#### Step 2.1: Locate Divergence
+- Find first line where values differ > 1e-6
+- Identify which calculation step introduces error
+- Document the mathematical operation involved
+
+#### Step 2.2: Implement Fix
+Based on divergence location:
+
+**If in pixel→lab transformation:**
 ```python
-# Check two-theta rotation axis for MOSFLM
-# C code: twotheta_axis = [0, 0, -1] for MOSFLM
-# Verify our rotation_matrix_axis function
+# Check detector.get_pixel_coords()
+# Verify pix0_vector usage
+# Check basis vector application
 ```
 
-### 5. Test Pivot Modes Separately
-- Test SAMPLE pivot with rotations (should be simpler)
-- Test BEAM pivot without beam center offset
-- Test BEAM pivot with offset but single rotation
-- Build up complexity gradually
+**If in lab→reciprocal transformation:**
+```python
+# Check scattering vector calculation
+# Verify wavelength/energy conversions
+# Check rotation matrix applications
+```
 
-## Proposed Fix Strategy
+**If in Miller index calculation:**
+```python
+# Verify h = S·a convention (not S·a*)
+# Check crystal orientation matrices
+# Verify reciprocal lattice vectors
+```
 
-### Phase 1: Rotation Debugging (1-2 hours)
-1. Create focused rotation test comparing basis vectors
-2. Add print statements to C code for rotation matrices
-3. Compare rotation matrices element by element
-4. Fix any discrepancies in rotation order or convention
+#### Step 2.3: Verify Fix
+```bash
+# Re-run verification
+python scripts/verify_detector_geometry.py
+# Target: correlation > 0.999
+```
 
-### Phase 2: Pivot Mode Verification (1-2 hours)
-1. Verify BEAM pivot formula implementation
-2. Check how beam center affects rotated detector
-3. Compare pix0_vector calculations in detail
-4. Fix pivot mode calculations if needed
+### Phase 3: Comprehensive Validation (1 hour)
 
-### Phase 3: Integration Testing (1 hour)
-1. Run full test suite
-2. Verify triclinic still passes (regression test)
-3. Check tilted detector configuration
-4. Update visual verification plots
+#### Step 3.1: Test Matrix
+| Configuration | Expected Correlation |
+|--------------|---------------------|
+| Baseline (no tilt) | > 0.999 |
+| Small tilt (5°) | > 0.999 |
+| Medium tilt (10°) | > 0.999 |
+| Large tilt (20°) | > 0.999 |
+| With rotx/roty/rotz | > 0.999 |
 
-### Phase 4: Documentation (30 min)
-1. Document the correct rotation conventions
-2. Add rotation order to detector.md
-3. Create test case for future regression prevention
-4. Update debugging guide with rotation debugging tips
+#### Step 3.2: Regression Tests
+```bash
+pytest tests/test_detector_geometry.py -v
+pytest tests/test_suite.py::TestTier1TranslationCorrectness -v
+```
+
+#### Step 3.3: Document Fix
+- Update CLAUDE.md with new conventions discovered
+- Add unit tests for specific issue
+- Update detector.md specification if needed
+
+## Implementation Checklist
+
+### Immediate Actions (Today)
+- [ ] Create trace_pixel_512_512.py script
+- [ ] Add C instrumentation for pixel 512,512
+- [ ] Generate parallel traces for tilted case
+- [ ] Identify exact divergence point
+- [ ] Document divergence location and values
+
+### Fix Implementation (Tomorrow)
+- [ ] Analyze divergence mathematics
+- [ ] Implement targeted fix
+- [ ] Test with original configuration
+- [ ] Test with variation matrix
+- [ ] Run full regression suite
+
+### Validation & Cleanup
+- [ ] Achieve > 0.999 correlation for all test cases
+- [ ] Remove debug instrumentation
+- [ ] Commit fix with detailed explanation
+- [ ] Update documentation
+- [ ] Close related GitHub issues
 
 ## Success Criteria
 
-1. **Tilted detector correlation > 0.99** with C reference
-2. **All existing tests still pass** (no regressions)
-3. **Clear documentation** of rotation conventions
-4. **Regression test** added for rotation + beam center case
+### Minimum Acceptable
+- Tilted configuration correlation > 0.999
+- Baseline configuration unchanged (> 0.999)
+- All existing tests pass
+
+### Target
+- All detector configurations > 0.999 correlation
+- Performance unchanged or improved
+- Clear documentation of root cause
 
 ## Risk Mitigation
 
-1. **Keep changes minimal** - only fix rotation calculations
-2. **Preserve working baseline** - don't break what works
-3. **Add comprehensive tests** - prevent future regressions
-4. **Document everything** - rotation conventions are tricky
+### If Parallel Trace Fails to Find Issue
+1. Expand trace to multiple pixels (corners, edges, center)
+2. Trace entire first diffraction spot
+3. Compare intermediate images at each pipeline stage
 
-## Fallback Plan
+### If Fix Breaks Other Tests
+1. Create configuration-specific code paths
+2. Add compatibility mode flag
+3. Investigate if other tests had compensating errors
 
-If rotation debugging proves too complex:
-1. Mark tilted configuration as "known limitation"
-2. Focus on configurations without rotations for now
-3. Plan deeper C code analysis for later phase
-4. Consider contacting original nanoBragg authors
+### If Performance Degrades
+1. Profile before/after
+2. Cache repeated calculations
+3. Consider approximate methods for non-critical paths
 
-## Conclusion
+## Technical Resources
 
-We've made significant progress fixing the unit system issue, which resolved the catastrophic triclinic failure. The remaining issue with rotated detectors is more subtle but should be solvable with systematic debugging. The key is to trace through the rotation calculations step-by-step and find where PyTorch and C implementations diverge.
+### Key Files
+- `src/nanobrag_torch/models/detector.py` - Detector implementation
+- `golden_suite_generator/nanoBragg.c` - C reference
+- `scripts/verify_detector_geometry.py` - Validation script
+- `scripts/c_reference_utils.py` - C command generation
+
+### Documentation
+- `docs/architecture/detector.md` - Detector specification
+- `docs/development/c_to_pytorch_config_map.md` - Parameter mapping
+- `CLAUDE.md` - Project conventions and rules
+
+### Debugging Tools
+- `scripts/debug_pixel_trace.py` - Existing trace framework
+- `scripts/compare_traces.py` - Trace comparison utility
+- `reports/detector_verification/` - Output location
+
+## Timeline
+
+### Day 1 (Today)
+- **2 hours**: Implement parallel trace debugging
+- **1 hour**: Identify divergence point
+- **1 hour**: Document findings
+
+### Day 2
+- **2 hours**: Implement fix
+- **1 hour**: Validate fix
+- **1 hour**: Documentation and cleanup
+
+### Total Estimate
+- **8 hours** to complete resolution
+- **+2 hours** buffer for unexpected issues
+
+## Next Session Handoff
+
+If not completed in current session, the next developer should:
+
+1. **Start with**: Run trace_pixel_512_512.py if created
+2. **Focus on**: The divergence point identified in traces
+3. **Key insight**: Geometry is correct, issue is in usage
+4. **Don't retry**: Parameter name fixes (already done)
+5. **Contact**: Check git blame for recent detector changes
+
+## Appendix: Command Reference
+
+### Generate C Trace
+```bash
+cd golden_suite_generator
+./nanoBragg_golden -lambda 6.2 -N 5 -cell 100 100 100 90 90 90 \
+  -default_F 100 -distance 100 -detpixels 1024 \
+  -Xbeam 51.2 -Ybeam 51.2 -twotheta 20 \
+  -floatfile test.bin 2>&1 | grep TRACE_C > c_trace.log
+```
+
+### Run Python Verification
+```bash
+KMP_DUPLICATE_LIB_OK=TRUE python scripts/verify_detector_geometry.py
+```
+
+### Quick Correlation Check
+```bash
+cat reports/detector_verification/correlation_metrics.json | grep correlation
+```
+
+---
+
+**Document Version**: 1.0  
+**Last Updated**: January 20, 2025  
+**Author**: Claude (via session with user)  
+**Status**: Ready for implementation
