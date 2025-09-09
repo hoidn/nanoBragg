@@ -96,15 +96,9 @@ def build_nanobragg_command(
     cmd.extend(["-detpixels", str(detector_config.spixels)])
 
     # Beam center
-    # Debug logging
-    print(f"   [build_nanobragg_command] Adding beam center: s={detector_config.beam_center_s}, f={detector_config.beam_center_f}")
-    cmd.extend(
-        [
-            "-beam",
-            str(detector_config.beam_center_s),
-            str(detector_config.beam_center_f),
-        ]
-    )
+    # Use -Xbeam and -Ybeam (Xbeam->fast, Ybeam->slow)
+    cmd.extend(["-Xbeam", str(detector_config.beam_center_f)])
+    cmd.extend(["-Ybeam", str(detector_config.beam_center_s)])
 
     # Crystal unit cell parameters
     cmd.extend(
@@ -134,7 +128,7 @@ def build_nanobragg_command(
     if abs(detector_config.detector_rotz_deg) > 1e-6:
         cmd.extend(["-detector_rotz", str(detector_config.detector_rotz_deg)])
     if abs(detector_config.detector_twotheta_deg) > 1e-6:
-        cmd.extend(["-detector_twotheta", str(detector_config.detector_twotheta_deg)])
+        cmd.extend(["-twotheta", str(detector_config.detector_twotheta_deg)])
         
         # Also add explicit twotheta_axis if specified
         if detector_config.twotheta_axis is not None:
