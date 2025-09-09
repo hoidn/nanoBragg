@@ -78,6 +78,16 @@ The triclinic correlation is 0.957 instead of the target 0.990. This is due to s
 
 The implementation is functionally correct and matches the C-code's approach, but achieves only ~96% correlation rather than >99%.
 
+## Related Session Cross-References
+
+### **Direct Successors**
+- [`session_summary_triclinic_regression_analysis.md`](/Users/ollie/Documents/nanoBragg/session_summary_triclinic_regression_analysis.md) - January 8, 2025 investigation that identified detector geometry issues affecting the triclinic implementation
+- [`history/2025-01-09_documentation_fortification.md`](/Users/ollie/Documents/nanoBragg/history/2025-01-09_documentation_fortification.md) - January 9, 2025 comprehensive documentation that codified the crystallographic conventions established in this session
+
+### **Related Work** 
+- [`SESSION_SUMMARY_DETECTOR_GEOMETRY_FIX.md`](/Users/ollie/Documents/nanoBragg/SESSION_SUMMARY_DETECTOR_GEOMETRY_FIX.md) - January 13, 2025 detector geometry fixes that built upon this crystal implementation work
+- [`history/2025-01-20_detector-geometry-correlation-debug.md`](/Users/ollie/Documents/nanoBragg/history/2025-01-20_detector-geometry-correlation-debug.md) - January 20, 2025 continued debugging investigation
+
 ## Key Learnings
 
 1. **C-Code Conventions Matter**: Scientific codes often use non-standard conventions that must be replicated exactly
