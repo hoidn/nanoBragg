@@ -174,6 +174,8 @@ All debugging of physics discrepancies **must** begin with a parallel trace comp
 **Target:** The end-to-end `Simulator.run()` method.  
 **Methodology:** For each test case, create a test that compares the final PyTorch image tensor against the golden `.bin` file using `torch.allclose`. This test should only be expected to pass after the Parallel Trace Comparison test passes.
 
+**Primary Validation Tool:** The main script for running end-to-end parallel validation against the C-code reference is `scripts/verify_detector_geometry.py`. This script automates the execution of both the PyTorch and C implementations, generates comparison plots, and computes quantitative correlation metrics. It relies on `scripts/c_reference_runner.py` to manage the C-code execution.
+
 ## 4. Tier 2: Gradient Correctness Testing
 
 **Goal:** To prove that the automatic differentiation capabilities are mathematically correct.

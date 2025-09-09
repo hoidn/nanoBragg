@@ -231,6 +231,26 @@ If a new debug script is absolutely necessary:
 2. Use CPU for initial debugging, GPU for performance testing
 3. Profile memory usage during trace generation
 
+## End-to-End Verification (verify_detector_geometry.py)
+
+For high-level, end-to-end validation, the `scripts/verify_detector_geometry.py` script is the primary tool. It runs both the PyTorch and C-code simulations for a given configuration and produces a detailed visual comparison and a JSON file with correlation metrics. This should be used to confirm that a fix is complete and has not introduced regressions.
+
+**Key Features:**
+- Automatically executes both PyTorch and C implementations
+- Generates side-by-side comparison plots
+- Computes quantitative correlation metrics
+- Uses `scripts/c_reference_runner.py` for C-code execution
+- Uses `scripts/smv_parser.py` for reading C-code output images
+
+**Usage:**
+```bash
+KMP_DUPLICATE_LIB_OK=TRUE python scripts/verify_detector_geometry.py
+```
+
+**Output:**
+- Visual comparison plot: `reports/detector_verification/detector_geometry_comparison.png`
+- Metrics JSON: `reports/detector_verification/correlation_metrics.json`
+
 ## Integration with Testing
 
 The debug script integrates with the three-tier testing strategy:

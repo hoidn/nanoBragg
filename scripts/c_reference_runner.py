@@ -4,6 +4,18 @@ C Reference Runner for parallel verification.
 
 This module provides a wrapper for executing nanoBragg.c with parameter validation
 and result parsing, enabling parallel verification of PyTorch implementations.
+
+This module is a helper for end-to-end validation scripts like 'verify_detector_geometry.py'
+and is not intended to be run directly. It handles:
+- Building nanoBragg.c command-line arguments from PyTorch configs
+- Executing the C code with proper parameter validation
+- Parsing the output images via smv_parser.py
+- Computing agreement metrics between PyTorch and C outputs
+
+Usage:
+    from c_reference_runner import CReferenceRunner
+    runner = CReferenceRunner()
+    c_image = runner.run(crystal_config, beam_config, detector_config)
 """
 
 import os
@@ -119,21 +131,23 @@ class CReferenceRunner:
                 print(f"   Command via subprocess.list2cmdline: {subprocess.list2cmdline(cmd)}")
                 print(f"   Formatted command: {' '.join(cmd)}")
                 
-                # Check beam values in command
-                beam_idx = None
-                if "-beam" in cmd:
-                    beam_idx = cmd.index("-beam")
-                    if beam_idx + 2 < len(cmd):
-                        print(f"   Beam values in command: -beam {cmd[beam_idx+1]} {cmd[beam_idx+2]}")
-                        # Verify beam values match config
-                        cmd_beam_s = float(cmd[beam_idx+1])
-                        cmd_beam_f = float(cmd[beam_idx+2])
-                        if abs(cmd_beam_s - detector_config.beam_center_s) > 1e-6 or abs(cmd_beam_f - detector_config.beam_center_f) > 1e-6:
+                # Check beam values in command (now using -Xbeam and -Ybeam)
+                xbeam_idx = None
+                ybeam_idx = None
+                if "-Xbeam" in cmd and "-Ybeam" in cmd:
+                    xbeam_idx = cmd.index("-Xbeam")
+                    ybeam_idx = cmd.index("-Ybeam")
+                    if xbeam_idx + 1 < len(cmd) and ybeam_idx + 1 < len(cmd):
+                        print(f"   Beam values in command: -Xbeam {cmd[xbeam_idx+1]} -Ybeam {cmd[ybeam_idx+1]}")
+                        # Verify beam values match config (X=fast, Y=slow)
+                        cmd_xbeam = float(cmd[xbeam_idx+1])
+                        cmd_ybeam = float(cmd[ybeam_idx+1])
+                        if abs(cmd_xbeam - detector_config.beam_center_f) > 1e-6 or abs(cmd_ybeam - detector_config.beam_center_s) > 1e-6:
                             print(f"   ⚠️  WARNING: Beam values mismatch!")
-                            print(f"      Config: ({detector_config.beam_center_s}, {detector_config.beam_center_f})")
-                            print(f"      Command: ({cmd_beam_s}, {cmd_beam_f})")
+                            print(f"      Config: (s={detector_config.beam_center_s}, f={detector_config.beam_center_f})")
+                            print(f"      Command: (Xbeam={cmd_xbeam}, Ybeam={cmd_ybeam})")
                 else:
-                    print(f"   ⚠️  WARNING: No -beam argument found in command!")
+                    print(f"   ⚠️  WARNING: No -Xbeam/-Ybeam arguments found in command!")
                     
                 # Check detector rotation values
                 if "-detector_twotheta" in cmd:

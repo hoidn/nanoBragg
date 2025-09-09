@@ -547,7 +547,7 @@ def main():
         detector_roty_deg=0.0,   # No Y rotation 
         detector_rotz_deg=0.0,   # No Z rotation
         detector_twotheta_deg=20.0,  # Large twotheta for visible effect
-        detector_pivot=DetectorPivot.BEAM,  # Use BEAM pivot to match C implementation
+        detector_pivot=DetectorPivot.SAMPLE,  # Use SAMPLE pivot (twotheta implies SAMPLE in C code)
     )
 
     # Common crystal and beam configs
