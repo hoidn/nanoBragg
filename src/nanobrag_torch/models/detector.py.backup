@@ -345,9 +345,8 @@ class Detector:
             
             # Calculate Fbeam and Sbeam exactly as C code does
             # MOSFLM convention: Add 0.5 pixel offset
-            # CRITICAL FIX: Apply axis swap for MOSFLM convention (S→F, F→S)
-            Fbeam_pixels = self.config.beam_center_s / self.config.pixel_size_mm  # S→F axis swap
-            Sbeam_pixels = self.config.beam_center_f / self.config.pixel_size_mm  # F→S axis swap
+            Fbeam_pixels = self.config.beam_center_f / self.config.pixel_size_mm  # mm to pixels (should be 512)
+            Sbeam_pixels = self.config.beam_center_s / self.config.pixel_size_mm  # mm to pixels (should be 512)
             Fbeam = (Fbeam_pixels + 0.5) * self.pixel_size  # Add 0.5 pixel, convert to meters
             Sbeam = (Sbeam_pixels + 0.5) * self.pixel_size  # Add 0.5 pixel, convert to meters
             
@@ -376,9 +375,9 @@ class Detector:
             # Unrotated basis (by convention)
             if self.config.detector_convention == DetectorConvention.MOSFLM:
                 # PHASE 1 FIX: Corrected initial MOSFLM basis vectors
-                fdet_initial = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)   # Fast along +Z (CORRECT)
-                sdet_initial = torch.tensor([0.0, -1.0, 0.0], device=self.device, dtype=self.dtype)  # Slow along -Y (CORRECT)
-                odet_initial = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)   # Normal along +X (CORRECT)
+                fdet_initial = torch.tensor([0.0, -1.0, 0.0], device=self.device, dtype=self.dtype)  # Fast along negative Y
+                sdet_initial = torch.tensor([0.0, 0.0, -1.0], device=self.device, dtype=self.dtype)  # Slow along negative Z
+                odet_initial = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)   # Origin along positive X
             else:
                 # XDS convention
                 fdet_initial = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
@@ -607,13 +606,13 @@ class Detector:
         if c.detector_convention == DetectorConvention.MOSFLM:
             # PHASE 1 FIX: Corrected MOSFLM basis vectors to match C implementation
             fdet_vec = torch.tensor(
-                [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype  # Fast along +Z (CORRECT)
+                [0.0, -1.0, 0.0], device=self.device, dtype=self.dtype  # Fast along negative Y
             )
             sdet_vec = torch.tensor(
-                [0.0, -1.0, 0.0], device=self.device, dtype=self.dtype  # Slow along -Y (CORRECT)
+                [0.0, 0.0, -1.0], device=self.device, dtype=self.dtype  # Slow along negative Z
             )
             odet_vec = torch.tensor(
-                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype   # Normal along +X (CORRECT)
+                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype   # Origin along positive X (beam)
             )
         elif c.detector_convention == DetectorConvention.XDS:
             # XDS convention: detector surface normal points away from source
