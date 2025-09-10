@@ -15,7 +15,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-**For a complete overview of the project's architecture and conventions, see the [Architecture Hub](./docs/architecture/README.md).**
+**For a complete overview of the project's documentation, start with the [Project Documentation Index](./docs/index.md).**
+
+Key starting points include:
+- **[Architecture Hub](./docs/architecture/README.md)** for all technical specifications.
+- **[Testing Strategy](./docs/development/testing_strategy.md)** for validation procedures.
 
 ## 📋 Quick Reference: nanoBragg C Commands
 
@@ -38,6 +42,13 @@ For all parameters, see [`docs/architecture/c_parameter_dictionary.md`](./docs/a
 ## 🛑 Core Implementation Rules (IMPORTANT)
 
 **YOU MUST ADHERE TO THESE RULES TO AVOID COMMON BUGS:**
+
+0.  **🚨 DETECTOR DEBUGGING PREREQUISITE:** Before debugging ANY detector geometry correlation issue, you **MUST** read the [Detector Geometry Debugging Checklist](./docs/debugging/detector_geometry_checklist.md). This document will save you 4-8 hours by identifying common issues:
+    - Unit system confusion (Detector uses meters internally, not Angstroms)
+    - MOSFLM convention axis swap and +0.5 pixel offset
+    - Undocumented CUSTOM convention switching
+    - Known C code logging bugs
+    - **Failure to read this checklist will result in DAYS of unnecessary debugging!**
 
 0.  **Configuration Parity is Mandatory:** Before writing any test or implementation that involves C-code validation, you **MUST** consult the [C-CLI to PyTorch Configuration Map](./docs/development/c_to_pytorch_config_map.md). This document is the single source of truth for all parameter mappings and implicit C-code conventions. Failure to ensure 1:1 configuration parity is the most common source of bugs, particularly with:
     - Implicit pivot mode logic (e.g., `-twotheta` implies SAMPLE pivot)
