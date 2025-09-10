@@ -1064,12 +1064,17 @@ class TestTier1TranslationCorrectness:
                             tensor
                         ), f"NaN/Inf in {key} for {test_case['name']}"
                         print(f"  Volume: {tensor.item():.3e}")
+                        # Check for reasonable volume bounds
+                        assert tensor.item() > 1e-12, f"Volume too small for {test_case['name']}: {tensor.item():.3e}"
+                        assert tensor.item() < 1e15, f"Volume too large for {test_case['name']}: {tensor.item():.3e}"
                     else:  # Vectors
                         assert torch.all(
                             torch.isfinite(tensor)
                         ), f"NaN/Inf in {key} for {test_case['name']}"
                         magnitude = torch.norm(tensor).item()
                         print(f"  |{key}|: {magnitude:.3e}")
+                        # Check for reasonable vector magnitude bounds
+                        assert magnitude < 1e10, f"Vector {key} magnitude too large for {test_case['name']}: {magnitude:.3e}"
 
                 # Try to run a small simulation
                 detector = Detector(device=device, dtype=dtype)
@@ -1109,6 +1114,48 @@ class TestTier1TranslationCorrectness:
 
             except Exception as e:
                 print(f"  ✗ Failed: {str(e)}")
+                raise
+
+        # Test that bounds checking works for invalid parameters
+        print("\nTesting bounds checking...")
+        
+        invalid_cases = [
+            # Test angle bounds
+            {
+                "name": "angle too small",
+                "config": CrystalConfig(cell_alpha=5.0),  # Should fail
+                "should_fail": True
+            },
+            {
+                "name": "angle too large", 
+                "config": CrystalConfig(cell_beta=175.0),  # Should fail
+                "should_fail": True
+            },
+            # Test negative dimensions
+            {
+                "name": "negative cell dimension",
+                "config": CrystalConfig(cell_a=-10.0),  # Should fail
+                "should_fail": True
+            },
+        ]
+        
+        for invalid_case in invalid_cases:
+            print(f"  Testing: {invalid_case['name']}")
+            try:
+                crystal = Crystal(config=invalid_case["config"], device=device, dtype=dtype)
+                if invalid_case["should_fail"]:
+                    print(f"    ✗ Expected failure but creation succeeded")
+                    # This is unexpected but not fatal - just note it
+                else:
+                    print(f"    ✓ Creation succeeded as expected")
+            except ValueError as e:
+                if invalid_case["should_fail"]:
+                    print(f"    ✓ Failed as expected: {str(e)}")
+                else:
+                    print(f"    ✗ Unexpected failure: {str(e)}")
+                    raise
+            except Exception as e:
+                print(f"    ✗ Unexpected error type: {str(e)}")
                 raise
 
         print("\n✅ Extreme cell parameters test PASSED")

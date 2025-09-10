@@ -412,3 +412,223 @@ class TestDetectorDifferentiability:
             rtol=1e-12,
             msg="XDS twotheta axis default incorrect"
         )
+
+    def test_detector_real_valued_gradients(self):
+        """
+        Test that all detector geometry gradients remain real-valued.
+        
+        This test ensures that geometric operations in the detector class
+        do not introduce complex numbers, which would break gradient-based
+        optimization. Common sources of complex gradients include:
+        - sqrt of negative values
+        - acos/asin of values outside [-1,1]  
+        - divisions by zero becoming inf/nan
+        """
+        device = torch.device("cpu")
+        dtype = torch.float64
+
+        # Create detector with differentiable parameters that could potentially
+        # cause numerical issues in geometric calculations
+        distance = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+        beam_center_s = torch.tensor(25.0, dtype=dtype, requires_grad=True) 
+        beam_center_f = torch.tensor(25.0, dtype=dtype, requires_grad=True)
+        rotx = torch.tensor(45.0, dtype=dtype, requires_grad=True)  # Large rotation
+        roty = torch.tensor(30.0, dtype=dtype, requires_grad=True) 
+        rotz = torch.tensor(60.0, dtype=dtype, requires_grad=True)
+        twotheta = torch.tensor(20.0, dtype=dtype, requires_grad=True)
+
+        # Create detector config with tensor parameters
+        config = DetectorConfig(
+            distance_mm=distance,
+            beam_center_s=beam_center_s,
+            beam_center_f=beam_center_f,
+            detector_rotx_deg=rotx,
+            detector_roty_deg=roty,
+            detector_rotz_deg=rotz,
+            detector_twotheta_deg=twotheta,
+            spixels=128,  # Smaller for faster test
+            fpixels=128,
+        )
+
+        # Create detector
+        detector = Detector(config=config, device=device, dtype=dtype)
+        
+        # Get pixel coordinates which exercises most geometric calculations
+        pixel_coords = detector.get_pixel_coords()
+        
+        # Create a scalar loss that depends on the detector geometry
+        # This will trigger computation of gradients through all geometric operations
+        distances = torch.norm(pixel_coords, dim=-1)
+        total_distance = torch.sum(distances)
+        
+        # Also test basis vector magnitudes (should be 1.0)
+        basis_loss = (
+            (torch.norm(detector.fdet_vec) - 1.0)**2 +
+            (torch.norm(detector.sdet_vec) - 1.0)**2 + 
+            (torch.norm(detector.odet_vec) - 1.0)**2
+        )
+        
+        # Combined loss that exercises multiple geometric operations
+        loss = total_distance + 1000 * basis_loss
+        
+        # Compute gradients
+        loss.backward()
+        
+        # Check that all gradients are real-valued (no imaginary components)
+        def check_real_gradient(param, name):
+            if param.grad is None:
+                raise AssertionError(f"No gradient computed for {name}")
+            
+            if torch.is_complex(param.grad):
+                raise AssertionError(f"Gradients have imaginary components for {name}: {param.grad}")
+                
+            if torch.isnan(param.grad).any():
+                raise AssertionError(f"NaN values in gradients for {name}: {param.grad}")
+                
+            if torch.isinf(param.grad).any():
+                raise AssertionError(f"Inf values in gradients for {name}: {param.grad}")
+
+        # Verify all parameter gradients are real and finite
+        check_real_gradient(distance, "distance")
+        check_real_gradient(beam_center_s, "beam_center_s")
+        check_real_gradient(beam_center_f, "beam_center_f") 
+        check_real_gradient(rotx, "rotx")
+        check_real_gradient(roty, "roty")
+        check_real_gradient(rotz, "rotz")
+        check_real_gradient(twotheta, "twotheta")
+        
+        # Also verify the basis vectors themselves are real
+        assert not torch.is_complex(detector.fdet_vec), "fdet_vec has complex components"
+        assert not torch.is_complex(detector.sdet_vec), "sdet_vec has complex components" 
+        assert not torch.is_complex(detector.odet_vec), "odet_vec has complex components"
+        assert not torch.is_complex(detector.pix0_vector), "pix0_vector has complex components"
+        
+        # Verify pixel coordinates are real
+        assert not torch.is_complex(pixel_coords), "pixel_coords has complex components"
+
+    def test_detector_complex_gradient_edge_cases(self):
+        """
+        Test detector geometry with edge cases that could produce complex gradients.
+        
+        This test creates a scenario that could cause sqrt of negative numbers
+        or other operations that might produce complex gradients.
+        """
+        device = torch.device("cpu")
+        dtype = torch.float64
+
+        # Test the magnitude function directly which uses torch.sqrt
+        # Create vectors that when squared and summed might have numerical errors
+        test_vector = torch.tensor([1e-8, -1e-8, 1e-8], dtype=dtype, requires_grad=True)
+        
+        from nanobrag_torch.utils.geometry import magnitude
+        
+        # Force a scenario where we might get negative values under sqrt
+        # by creating a custom loss that could cause numerical issues
+        
+        # Compute magnitude which uses sqrt internally
+        mag = magnitude(test_vector)
+        
+        # Create a loss that might cause issues with backward pass
+        # Using operations that could introduce numerical instability
+        loss = mag * torch.tensor(1e12, dtype=dtype)  # Scale up to amplify errors
+        
+        try:
+            loss.backward()
+            
+            # Check if gradients are real
+            if test_vector.grad is not None:
+                if torch.is_complex(test_vector.grad):
+                    raise AssertionError("Gradients have imaginary components in magnitude calculation")
+                    
+                if torch.isnan(test_vector.grad).any():
+                    raise AssertionError("NaN values in gradients from magnitude calculation")
+                    
+        except RuntimeError as e:
+            if "complex" in str(e).lower():
+                raise AssertionError(f"Complex number error in gradient computation: {e}")
+            else:
+                raise  # Re-raise if it's a different error
+                
+        # Test 2: Create a scenario with very small vector that might cause sqrt issues
+        # when computing magnitude for normalization
+        tiny_vector = torch.tensor([1e-15, 1e-15, 1e-15], dtype=dtype, requires_grad=True)
+        
+        # Test unitize function which uses magnitude internally and could cause issues
+        from nanobrag_torch.utils.geometry import unitize
+        
+        unit_vec, orig_mag = unitize(tiny_vector)
+        combined_loss = torch.sum(unit_vec) + orig_mag
+        
+        try:
+            combined_loss.backward()
+            
+            if tiny_vector.grad is not None:
+                if torch.is_complex(tiny_vector.grad):
+                    raise AssertionError("Gradients have imaginary components in unitize calculation")
+                    
+        except RuntimeError as e:
+            if "complex" in str(e).lower():
+                raise AssertionError(f"Complex number error in unitize gradient: {e}")
+            else:
+                raise
+
+    def test_simulator_real_valued_gradients(self):
+        """
+        Test that the simulator operations that use sqrt do not produce complex gradients.
+        
+        This specifically tests the pixel magnitude calculations in the simulator
+        which could cause complex gradients if not properly protected.
+        """
+        device = torch.device("cpu")
+        dtype = torch.float64
+        
+        # Import the simulator to test its sqrt operations
+        from nanobrag_torch.simulator import Simulator
+        from nanobrag_torch.config import CrystalConfig
+        from nanobrag_torch.models.crystal import Crystal
+
+        # Create a simple configuration with differentiable parameters
+        distance = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+        
+        detector_config = DetectorConfig(
+            distance_mm=distance,
+            spixels=64,  # Small for fast test
+            fpixels=64,
+        )
+        
+        crystal_config = CrystalConfig(
+            cell_a=torch.tensor(100.0, dtype=dtype, requires_grad=True),
+            cell_b=100.0,
+            cell_c=100.0,
+            cell_alpha=90.0,
+            cell_beta=90.0,
+            cell_gamma=90.0,
+            mosaic_spread_deg=0.0,
+            mosaic_domains=1,
+            N_cells=(3, 3, 3),  # Small for fast test
+        )
+        
+        # Create crystal and detector
+        crystal = Crystal(config=crystal_config, device=device, dtype=dtype)
+        detector = Detector(config=detector_config, device=device, dtype=dtype)
+        
+        # Create simulator
+        simulator = Simulator(crystal, detector, crystal_config, device=device, dtype=dtype)
+        
+        # Run simulation which will exercise the sqrt operations in pixel magnitude calculations
+        image = simulator.run()
+        
+        # Create a loss that depends on the image
+        loss = torch.sum(image)
+        
+        # Compute gradients
+        loss.backward()
+        
+        # Verify gradients are real
+        assert not torch.is_complex(distance.grad), "Complex gradient from simulator distance parameter"
+        assert not torch.isnan(distance.grad).any(), "NaN gradient from simulator distance parameter"
+        assert not torch.isinf(distance.grad).any(), "Inf gradient from simulator distance parameter"
+        
+        cell_a_grad = crystal_config.cell_a.grad if hasattr(crystal_config.cell_a, 'grad') else None
+        if cell_a_grad is not None:
+            assert not torch.is_complex(cell_a_grad), "Complex gradient from simulator cell_a parameter"

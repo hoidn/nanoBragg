@@ -588,6 +588,11 @@ class Crystal:
     def V(self) -> torch.Tensor:
         """Unit cell volume (Angstroms^3)."""
         return self._compute_cell_tensors_cached()["V"]
+    
+    @property
+    def volume(self) -> torch.Tensor:
+        """Unit cell volume (Angstroms^3). Alias for V."""
+        return self.V
 
     def get_rotated_real_vectors(self, config: "CrystalConfig") -> Tuple[
         Tuple[torch.Tensor, torch.Tensor, torch.Tensor],

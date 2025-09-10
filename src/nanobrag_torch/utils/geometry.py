@@ -46,7 +46,12 @@ def magnitude(vector: torch.Tensor) -> torch.Tensor:
     Returns:
         torch.Tensor: Magnitude for each vector
     """
-    return torch.sqrt(torch.sum(vector * vector, dim=-1))
+    # Use torch.sqrt with protection against negative values to prevent complex gradients
+    # This can happen due to numerical errors in floating point arithmetic
+    squared_sum = torch.sum(vector * vector, dim=-1)
+    # Clamp to prevent negative values that could cause complex gradients
+    squared_sum = torch.clamp(squared_sum, min=0.0)
+    return torch.sqrt(squared_sum)
 
 
 def unitize(vector: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:

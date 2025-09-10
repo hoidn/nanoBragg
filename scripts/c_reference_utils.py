@@ -147,11 +147,18 @@ def build_nanobragg_command(
                 cmd.extend(["-twotheta_axis", str(axis[0]), str(axis[1]), str(axis[2])])
 
     # Add pivot mode flag
-    from nanobrag_torch.config import DetectorPivot
+    from nanobrag_torch.config import DetectorPivot, DetectorConvention
     
-    # Use the configured pivot mode directly
-    # Testing shows BEAM pivot gives much better Y-component accuracy with twotheta rotations
-    if detector_config.detector_pivot == DetectorPivot.BEAM:
+    # CRITICAL: The C code automatically forces SAMPLE pivot when twotheta != 0
+    # (see nanoBragg.c line ~784). We must replicate this behavior.
+    # Also, XDS convention always uses SAMPLE pivot.
+    if has_twotheta:
+        # Non-zero twotheta ALWAYS forces SAMPLE pivot, regardless of config
+        cmd.extend(["-pivot", "sample"])
+    elif detector_config.detector_convention == DetectorConvention.XDS:
+        # XDS convention always uses SAMPLE pivot
+        cmd.extend(["-pivot", "sample"])
+    elif detector_config.detector_pivot == DetectorPivot.BEAM:
         cmd.extend(["-pivot", "beam"])
     elif detector_config.detector_pivot == DetectorPivot.SAMPLE:
         cmd.extend(["-pivot", "sample"])

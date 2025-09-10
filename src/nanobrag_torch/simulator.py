@@ -138,11 +138,12 @@ class Simulator:
         # unit vectors pointing to the pixel and the incident direction
 
         # Diffracted beam unit vector (from origin to pixel)
-        pixel_magnitudes = torch.sqrt(
-            torch.sum(
-                pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True
-            )
+        pixel_squared_sum = torch.sum(
+            pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True
         )
+        # Clamp to prevent negative values that could cause complex gradients
+        pixel_squared_sum = torch.clamp(pixel_squared_sum, min=0.0)
+        pixel_magnitudes = torch.sqrt(pixel_squared_sum)
         diffracted_beam_unit = pixel_coords_angstroms / pixel_magnitudes
 
         # Incident beam unit vector [1, 0, 0]
