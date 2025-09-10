@@ -40,12 +40,16 @@ class TestDetectorConfig:
 
         # Sampling
         assert config.oversample == 1
+        
+        # Post_init should set twotheta_axis for MOSFLM convention
+        # MOSFLM default is [0, 0, -1] (negative Z-axis) per C code line 1245
+        torch.testing.assert_close(config.twotheta_axis, torch.tensor([0.0, 0.0, -1.0]))
 
     def test_post_init_defaults(self):
         """Test that post_init sets default twotheta axis."""
         config = DetectorConfig()
         assert config.twotheta_axis is not None
-        # MOSFLM convention default is [0, 0, -1] per C-code reference
+        # MOSFLM convention default is [0, 0, -1] (negative Z-axis) per C code line 1245
         torch.testing.assert_close(config.twotheta_axis, torch.tensor([0.0, 0.0, -1.0]))
 
     def test_custom_twotheta_axis(self):
@@ -53,6 +57,13 @@ class TestDetectorConfig:
         custom_axis = torch.tensor([1.0, 0.0, 0.0])
         config = DetectorConfig(twotheta_axis=custom_axis)
         torch.testing.assert_close(config.twotheta_axis, custom_axis)
+
+    def test_xds_convention_defaults(self):
+        """Test that XDS convention gets correct default twotheta axis."""
+        config = DetectorConfig(detector_convention=DetectorConvention.XDS)
+        assert config.twotheta_axis is not None
+        # XDS convention default is [1, 0, 0] (X-axis) per c_to_pytorch_config_map.md
+        torch.testing.assert_close(config.twotheta_axis, torch.tensor([1.0, 0.0, 0.0]))
 
     def test_invalid_pixel_counts(self):
         """Test that invalid pixel counts raise errors."""
@@ -128,6 +139,10 @@ class TestDetectorInitialization:
         # Check beam center in pixels
         assert detector.beam_center_s == 512.0  # 51.2 mm / 0.1 mm per pixel
         assert detector.beam_center_f == 512.0
+        
+        # Check that post_init set the correct default twotheta_axis
+        # MOSFLM default is [0, 0, -1] (negative Z-axis) per C code line 1245
+        torch.testing.assert_close(detector.config.twotheta_axis, torch.tensor([0.0, 0.0, -1.0]))
 
     def test_custom_config_initialization(self):
         """Test that Detector initializes with custom config."""
