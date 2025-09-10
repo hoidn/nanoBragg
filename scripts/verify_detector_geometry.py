@@ -211,7 +211,7 @@ def create_comparison_plots(baseline_data, tilted_data, output_dir):
         origin="lower",
         cmap="viridis",
     )
-    axes[0, 1].set_title("Tilted Detector (20° two-theta)")
+    axes[0, 1].set_title("Tilted Detector (rotx=5°, roty=3°, rotz=2°, twotheta=15°)")
     axes[0, 1].set_xlabel("Fast axis (pixels)")
     axes[0, 1].set_ylabel("Slow axis (pixels)")
     plt.colorbar(im2, ax=axes[0, 1], label="Intensity")
@@ -364,7 +364,7 @@ def create_parallel_comparison_plots(pytorch_data, c_reference_data, output_dir)
         origin="lower",
         cmap="viridis",
     )
-    axes[1, 0].set_title("PyTorch Tilted (20° two-theta)")
+    axes[1, 0].set_title("PyTorch Tilted (rotx=5°, roty=3°, rotz=2°, twotheta=15°)")
     axes[1, 0].set_xlabel("Fast axis (pixels)")
     axes[1, 0].set_ylabel("Slow axis (pixels)")
     plt.colorbar(im3, ax=axes[1, 0], label="Intensity")
@@ -521,20 +521,20 @@ def main():
     # Create output directory
     output_dir = create_output_dir()
 
-    # Configuration 1: Baseline (simple_cubic)
+    # Configuration 1: Baseline (simple_cubic) with original parameters
     baseline_config = DetectorConfig(
         distance_mm=100.0,
         pixel_size_mm=0.1,
         spixels=1024,
         fpixels=1024,
-        beam_center_s=51.2,
-        beam_center_f=51.2,
+        beam_center_s=51.25,  # Original beam center
+        beam_center_f=51.25,  # Original beam center
         detector_convention=DetectorConvention.MOSFLM,
         detector_pivot=DetectorPivot.BEAM,
     )
 
-    # Configuration 2: Tilted detector with more dramatic rotation
-    # Using larger angles to create visible diffraction pattern changes
+    # Configuration 2: Tilted detector with original full rotations
+    # Using the exact original parameters: rotx=5, roty=3, rotz=2, twotheta=15
     # IMPORTANT: C code forces BEAM pivot for MOSFLM convention (line 1220)
     # regardless of command-line flags, so we must match this behavior
     tilted_config = DetectorConfig(
@@ -542,13 +542,13 @@ def main():
         pixel_size_mm=0.1,
         spixels=1024,
         fpixels=1024,
-        beam_center_s=51.2,  # Standard beam center
-        beam_center_f=51.2,  # Standard beam center
+        beam_center_s=51.25,  # Original beam center
+        beam_center_f=51.25,  # Original beam center
         detector_convention=DetectorConvention.MOSFLM,
-        detector_rotx_deg=0.0,   # No X rotation
-        detector_roty_deg=0.0,   # No Y rotation 
-        detector_rotz_deg=0.0,   # No Z rotation
-        detector_twotheta_deg=20.0,  # Large twotheta for visible effect
+        detector_rotx_deg=5.0,   # Original X rotation
+        detector_roty_deg=3.0,   # Original Y rotation 
+        detector_rotz_deg=2.0,   # Original Z rotation
+        detector_twotheta_deg=15.0,  # Original twotheta
         detector_pivot=DetectorPivot.BEAM,  # MOSFLM forces BEAM pivot in C code
     )
 
@@ -575,7 +575,7 @@ def main():
     print("PYTORCH VERIFICATION")
     print("=" * 60)
     baseline_data = run_simulation(baseline_config, "Baseline (simple_cubic)")
-    tilted_data = run_simulation(tilted_config, "Tilted (15° two-theta + rotations)")
+    tilted_data = run_simulation(tilted_config, "Tilted (rotx=5°, roty=3°, rotz=2°, twotheta=15°)")
 
     pytorch_results = (baseline_data[0], tilted_data[0])  # Extract just the images
 
