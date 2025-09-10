@@ -345,9 +345,9 @@ class Detector:
             
             # Calculate Fbeam and Sbeam exactly as C code does
             # MOSFLM convention: Add 0.5 pixel offset
-            # CRITICAL FIX: Apply axis swap for MOSFLM convention (S→F, F→S)
-            Fbeam_pixels = self.config.beam_center_s / self.config.pixel_size_mm  # S→F axis swap
-            Sbeam_pixels = self.config.beam_center_f / self.config.pixel_size_mm  # F→S axis swap
+            # CORRECT MAPPING: Xbeam (C) → beam_center_f (fast), Ybeam (C) → beam_center_s (slow)
+            Fbeam_pixels = self.config.beam_center_f / self.config.pixel_size_mm  # Xbeam → fast
+            Sbeam_pixels = self.config.beam_center_s / self.config.pixel_size_mm  # Ybeam → slow
             Fbeam = (Fbeam_pixels + 0.5) * self.pixel_size  # Add 0.5 pixel, convert to meters
             Sbeam = (Sbeam_pixels + 0.5) * self.pixel_size  # Add 0.5 pixel, convert to meters
             
@@ -387,20 +387,18 @@ class Detector:
 
             # Distances from pixel (0,0) center to the beam spot, measured along detector axes
             # Convention handling: MOSFLM adds 0.5 pixel offset, CUSTOM does not
-            # CRITICAL: Apply the same axis mapping as BEAM pivot:
-            # Fclose comes from beam_center_s (corresponds to Ybeam in C)
-            # Sclose comes from beam_center_f (corresponds to Xbeam in C)
+            # CORRECT MAPPING: Xbeam (C) → beam_center_f (fast), Ybeam (C) → beam_center_s (slow)
             
             is_custom = self._is_custom_convention()
             
             if is_custom:
                 # CUSTOM convention: No +0.5 pixel offset
-                Fclose = self.beam_center_s * self.pixel_size  # meters, no +0.5
-                Sclose = self.beam_center_f * self.pixel_size  # meters, no +0.5
+                Fclose = self.beam_center_f * self.pixel_size  # meters, no +0.5
+                Sclose = self.beam_center_s * self.pixel_size  # meters, no +0.5
             else:
                 # MOSFLM convention: Add 0.5 pixel for leading edge reference
-                Fclose = (self.beam_center_s + 0.5) * self.pixel_size  # meters
-                Sclose = (self.beam_center_f + 0.5) * self.pixel_size  # meters
+                Fclose = (self.beam_center_f + 0.5) * self.pixel_size  # meters
+                Sclose = (self.beam_center_s + 0.5) * self.pixel_size  # meters
 
             # Compute pix0 BEFORE rotations (close_distance == self.distance)
             pix0_initial = (
@@ -433,7 +431,9 @@ class Detector:
             elif c.twotheta_axis is not None:
                 twotheta_axis = torch.tensor(c.twotheta_axis, device=self.device, dtype=self.dtype)
             else:
-                # Default to MOSFLM twotheta axis when not specified
+                # Default to convention-specific axis (set in config.__post_init__)
+                # MOSFLM uses [0, 0, -1], XDS uses [1, 0, 0], etc.
+                # This should already be set in config, but fallback to MOSFLM default
                 twotheta_axis = torch.tensor([0.0, 0.0, -1.0], device=self.device, dtype=self.dtype)
 
             if _nonzero_scalar(detector_twotheta):
@@ -648,7 +648,9 @@ class Detector:
                 c.twotheta_axis, device=self.device, dtype=self.dtype
             )
         else:
-            # Default to MOSFLM twotheta axis when not specified
+            # Default to convention-specific axis (set in config.__post_init__)
+            # MOSFLM uses [0, 0, -1], XDS uses [1, 0, 0], etc.
+            # This should already be set in config, but fallback to MOSFLM default
             twotheta_axis = torch.tensor([0.0, 0.0, -1.0], device=self.device, dtype=self.dtype)
 
         # Check if twotheta is non-zero (handle both scalar and tensor cases)
