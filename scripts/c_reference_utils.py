@@ -127,20 +127,30 @@ def build_nanobragg_command(
         cmd.extend(["-detector_roty", str(detector_config.detector_roty_deg)])
     if abs(detector_config.detector_rotz_deg) > 1e-6:
         cmd.extend(["-detector_rotz", str(detector_config.detector_rotz_deg)])
-    if abs(detector_config.detector_twotheta_deg) > 1e-6:
+    
+    # Track if we're using twotheta (important for pivot mode logic)
+    has_twotheta = abs(detector_config.detector_twotheta_deg) > 1e-6
+    
+    if has_twotheta:
         cmd.extend(["-twotheta", str(detector_config.detector_twotheta_deg)])
         
         # Also add explicit twotheta_axis if specified
+        # CRITICAL: Do NOT pass -twotheta_axis for MOSFLM default [0,0,-1]
+        # as this triggers CUSTOM convention in C code!
         if detector_config.twotheta_axis is not None:
             axis = detector_config.twotheta_axis
             if hasattr(axis, 'tolist'):
                 axis = axis.tolist()
-            cmd.extend(["-twotheta_axis", str(axis[0]), str(axis[1]), str(axis[2])])
+            # Only pass twotheta_axis if it's NOT the MOSFLM default
+            is_mosflm_default = (abs(axis[0]) < 1e-6 and abs(axis[1]) < 1e-6 and abs(axis[2] + 1.0) < 1e-6)
+            if not is_mosflm_default:
+                cmd.extend(["-twotheta_axis", str(axis[0]), str(axis[1]), str(axis[2])])
 
     # Add pivot mode flag
     from nanobrag_torch.config import DetectorPivot
     
-    # Use the pivot mode specified in the detector config
+    # Use the configured pivot mode directly
+    # Testing shows BEAM pivot gives much better Y-component accuracy with twotheta rotations
     if detector_config.detector_pivot == DetectorPivot.BEAM:
         cmd.extend(["-pivot", "beam"])
     elif detector_config.detector_pivot == DetectorPivot.SAMPLE:
