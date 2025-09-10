@@ -4,23 +4,29 @@
 # for validating the PyTorch implementation.
 
 CC = gcc
-CFLAGS = -O2 -lm -fno-fast-math -ffp-contract=off -DTRACING=1
+CFLAGS = -O2 -fno-fast-math -ffp-contract=off -DTRACING=1
+LDFLAGS = -lm
 # Try to use OpenMP if available, otherwise fallback to no OpenMP
 ifeq ($(shell gcc -fopenmp -E - < /dev/null > /dev/null 2>&1 && echo yes), yes)
     CFLAGS += -fopenmp
+    LDFLAGS += -fopenmp
 endif
 
 # Standard nanoBragg executable (now instrumented with TRACE statements)
 nanoBragg: nanoBragg.c
-	$(CC) $(CFLAGS) -o nanoBragg nanoBragg.c
+	$(CC) $(CFLAGS) -o nanoBragg nanoBragg.c $(LDFLAGS)
+
+# Trace-enabled nanoBragg executable
+nanoBragg_trace: nanoBragg.c
+	$(CC) $(CFLAGS) -o nanoBragg_trace nanoBragg.c $(LDFLAGS)
 
 # Instrumented nanoBragg executable for golden suite
 nanoBragg_golden: nanoBragg.c
-	$(CC) $(CFLAGS) -DDEBUG_GOLDEN_SUITE -o nanoBragg_golden nanoBragg.c
+	$(CC) $(CFLAGS) -DDEBUG_GOLDEN_SUITE -o nanoBragg_golden nanoBragg.c $(LDFLAGS)
 
 # Clean compiled binaries
 clean:
-	rm -f nanoBragg nanoBragg_golden
+	rm -f nanoBragg nanoBragg_golden nanoBragg_trace
 
 # Generate golden test data
 golden_data: nanoBragg_golden

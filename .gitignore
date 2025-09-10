@@ -67,6 +67,8 @@ Thumbs.db
 *.o
 *.exe
 nanoBragg
+nanoBragg_trace
+nanoBragg_golden
 nonBragg
 noisify
 

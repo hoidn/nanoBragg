@@ -2709,6 +2709,7 @@ int debug_printed = 0;
     #pragma omp parallel for \
     schedule(auto) \
     private(fpixel,spixel)\
+    shared(trace_fpixel,trace_spixel,RTD)\
     firstprivate(imgidx,subS,subF,Fdet,Sdet,Fdet0,Sdet0,Odet,stol,twotheta,\
         theta,vector,newvector,pixel_pos,\
         airpath,source_path,lambda,\
