@@ -207,6 +207,140 @@ class TestDetectorDifferentiability:
         assert torch.abs(beam_center_s.grad) > 1e-6
         assert torch.abs(beam_center_f.grad) > 1e-6
 
+    def test_basis_vector_gradients(self):
+        """Test that gradients flow correctly through detector basis vectors (sdet/fdet/odet)."""
+        
+        device = torch.device("cpu")
+        dtype = torch.float64
+        
+        # Create differentiable rotation parameters that affect basis vectors
+        rotx = torch.tensor(10.0, dtype=dtype, requires_grad=True)
+        roty = torch.tensor(5.0, dtype=dtype, requires_grad=True)
+        rotz = torch.tensor(3.0, dtype=dtype, requires_grad=True)
+        twotheta = torch.tensor(15.0, dtype=dtype, requires_grad=True)
+        
+        # Create detector with rotations
+        config = DetectorConfig(
+            detector_rotx_deg=rotx,
+            detector_roty_deg=roty,
+            detector_rotz_deg=rotz,
+            detector_twotheta_deg=twotheta,
+            spixels=64,  # Small for faster testing
+            fpixels=64,
+        )
+        
+        detector = Detector(config=config, device=device, dtype=dtype)
+        
+        # Test 1: Basis vectors should respond to rotation changes
+        # Create a loss that depends on basis vector orientations
+        # Use dot products with fixed vectors to make loss sensitive to orientation
+        target_f = torch.tensor([1.0, 0.5, 0.2], device=device, dtype=dtype)
+        target_s = torch.tensor([0.3, 1.0, 0.4], device=device, dtype=dtype)
+        target_o = torch.tensor([0.1, 0.2, 1.0], device=device, dtype=dtype)
+        
+        loss = (
+            torch.dot(detector.fdet_vec, target_f) ** 2 * 1.5 +
+            torch.dot(detector.sdet_vec, target_s) ** 2 * 2.0 +
+            torch.dot(detector.odet_vec, target_o) ** 2 * 1.0
+        )
+        
+        # Add a term that depends on the relative orientation of basis vectors
+        # This ensures the loss is sensitive to rotations
+        loss += torch.sum(torch.cross(detector.fdet_vec, detector.sdet_vec, dim=0) - detector.odet_vec) ** 2
+        
+        # Compute gradients
+        loss.backward()
+        
+        # Check all rotation parameters have non-zero gradients
+        assert rotx.grad is not None and torch.abs(rotx.grad) > 1e-8, \
+            f"rotx gradient too small or None: {rotx.grad}"
+        assert roty.grad is not None and torch.abs(roty.grad) > 1e-8, \
+            f"roty gradient too small or None: {roty.grad}"
+        assert rotz.grad is not None and torch.abs(rotz.grad) > 1e-8, \
+            f"rotz gradient too small or None: {rotz.grad}"
+        assert twotheta.grad is not None and torch.abs(twotheta.grad) > 1e-8, \
+            f"twotheta gradient too small or None: {twotheta.grad}"
+        
+        # Test 2: Verify gradcheck for basis vector computation
+        def func_basis_vectors(rotx_val, roty_val):
+            """Function that returns scalar depending on basis vectors."""
+            config = DetectorConfig(
+                detector_rotx_deg=rotx_val,
+                detector_roty_deg=roty_val,
+                spixels=32,
+                fpixels=32,
+            )
+            det = Detector(config=config, device=device, dtype=dtype)
+            
+            # Compute a scalar that depends on all basis vectors
+            result = (
+                torch.dot(det.fdet_vec, torch.tensor([1.0, 0.5, 0.3], device=device, dtype=dtype)) +
+                torch.dot(det.sdet_vec, torch.tensor([0.2, 1.0, 0.4], device=device, dtype=dtype)) +
+                torch.dot(det.odet_vec, torch.tensor([0.1, 0.3, 1.0], device=device, dtype=dtype))
+            )
+            return result
+        
+        # Test gradient correctness with gradcheck
+        rotx_test = torch.tensor(5.0, dtype=dtype, requires_grad=True)
+        roty_test = torch.tensor(3.0, dtype=dtype, requires_grad=True)
+        
+        assert torch.autograd.gradcheck(
+            func_basis_vectors, 
+            (rotx_test, roty_test), 
+            eps=1e-5, 
+            atol=1e-5, 
+            rtol=1e-3
+        ), "Basis vector gradients failed gradcheck"
+    
+    def test_pixel_coords_basis_vector_gradients(self):
+        """Test that pixel coordinates correctly depend on basis vector orientations."""
+        
+        device = torch.device("cpu")
+        dtype = torch.float64
+        
+        # Test with all rotation parameters to ensure basis vectors affect pixel positions
+        def func_pixel_coords_via_rotations(rotx, roty, rotz, twotheta):
+            """Pixel coordinates should change with basis vector rotations."""
+            config = DetectorConfig(
+                detector_rotx_deg=rotx,
+                detector_roty_deg=roty,
+                detector_rotz_deg=rotz,
+                detector_twotheta_deg=twotheta,
+                spixels=32,  # Small for speed
+                fpixels=32,
+                distance_mm=100.0,
+                beam_center_s=1.6,  # 16 pixels * 0.1mm
+                beam_center_f=1.6,
+            )
+            det = Detector(config=config, device=device, dtype=dtype)
+            coords = det.get_pixel_coords()
+            
+            # Return a scalar that depends on pixel positions
+            # Use corner pixels and center pixels to ensure sensitivity
+            corner_sum = (
+                torch.sum(coords[0, 0] ** 2) +      # Top-left
+                torch.sum(coords[0, -1] ** 2) +     # Top-right
+                torch.sum(coords[-1, 0] ** 2) +     # Bottom-left
+                torch.sum(coords[-1, -1] ** 2)      # Bottom-right
+            )
+            center_sum = torch.sum(coords[16, 16] ** 2)  # Center pixel
+            
+            return corner_sum * 0.25 + center_sum
+        
+        # Test with gradcheck
+        rotx = torch.tensor(5.0, dtype=dtype, requires_grad=True)
+        roty = torch.tensor(3.0, dtype=dtype, requires_grad=True)
+        rotz = torch.tensor(2.0, dtype=dtype, requires_grad=True)
+        twotheta = torch.tensor(10.0, dtype=dtype, requires_grad=True)
+        
+        assert torch.autograd.gradcheck(
+            func_pixel_coords_via_rotations,
+            (rotx, roty, rotz, twotheta),
+            eps=1e-5,
+            atol=1e-5,
+            rtol=1e-3
+        ), "Pixel coordinates don't correctly depend on basis vector rotations"
+
     @pytest.mark.slow
     def test_comprehensive_gradcheck(self):
         """Comprehensive gradient tests using torch.autograd.gradcheck."""
