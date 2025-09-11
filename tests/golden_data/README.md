@@ -4,6 +4,8 @@ This document specifies the exact `nanoBragg.c` commands used to generate the go
 
 **Prerequisites:**
 - The `nanoBragg` executable must be compiled from the C code in `golden_suite_generator/`.
+  - **Note:** When running tests with `pytest`, compilation happens automatically via `conftest.py`
+  - For manual compilation: `make -C golden_suite_generator nanoBragg_trace`
 - The necessary input files (`P1.hkl`, `A.mat`) must be present in the `golden_suite_generator/` directory.
 - All commands should be run from within the `golden_suite_generator/` directory.
 

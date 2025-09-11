@@ -376,7 +376,9 @@ To improve efficiency, use these standard commands for common tasks.
 - **List all available tests:**
   `pytest --collect-only`
 - **Run the full test suite:**
-  `make test`
+  `make test` or `pytest tests/`
+  - **Note:** Tests now auto-compile required C binaries via `conftest.py`
+  - To skip auto-compilation: `SKIP_TEST_COMPILATION=1 pytest tests/`
 - **Run a specific test function:**
   `# Format: pytest -v <file_path>::<ClassName>::<test_function_name>`
   `pytest -v tests/test_suite.py::TestTier1TranslationCorrectness::test_simple_cubic_reproduction`
@@ -386,6 +388,13 @@ To improve efficiency, use these standard commands for common tasks.
 ### Debugging Commands
 - **Run the pixel trace debug script:**
   `KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py`
+- **Verify detector geometry with C reference:**
+  ```bash
+  python scripts/verify_detector_geometry.py
+  # Optional flags:
+  #   --require-c-reference  # Exit if C binary missing (for CI)
+  #   --skip-c-reference     # Skip C validation even if available
+  ```
 - **Generate C trace for debugging:**
   ```bash
   # 1. Add printf statements to nanoBragg.c for variables of interest

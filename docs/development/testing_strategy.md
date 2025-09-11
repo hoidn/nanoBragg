@@ -16,6 +16,28 @@ Our testing philosophy is a three-tiered hybrid approach, designed to build conf
 
 All tests will be implemented using the PyTest framework.
 
+## 1.1 Test Infrastructure and Dependencies
+
+**Automatic Dependency Compilation:** The test suite now includes automatic compilation of required C binaries through `tests/conftest.py`. When you run `pytest`, the following happens automatically:
+
+1. **Binary Detection:** The `pytest_configure` hook checks for required C binaries:
+   - `golden_suite_generator/nanoBragg_trace` - For trace validation
+   - `nanoBragg_config` - For configuration consistency tests
+
+2. **Auto-Compilation:** If binaries are missing, they are automatically compiled using the Makefile in `golden_suite_generator/`. This ensures tests can run without manual setup.
+
+3. **Graceful Failure Handling:** If compilation fails (e.g., missing gcc or OpenMP):
+   - Tests requiring these binaries are automatically skipped (not failed)
+   - Clear error messages explain what's needed
+   - You can disable auto-compilation with `SKIP_TEST_COMPILATION=1`
+
+4. **Skip Decorators:** Tests use `@pytest.mark.skipif` to gracefully handle missing dependencies:
+   - Missing golden data files result in skipped tests, not failures
+   - Missing C binaries result in skipped tests with helpful messages
+   - This separates real bugs (failures) from missing setup (skips)
+
+**Running Tests:** Simply run `pytest tests/` - no manual compilation required!
+
 ## 2. Configuration Parity
 
 **CRITICAL REQUIREMENT:** Before implementing any test that compares against C-code output, you **MUST** ensure exact configuration parity. All golden test cases must be generated with commands that are verifiably equivalent to the PyTorch test configurations.
@@ -175,6 +197,12 @@ All debugging of physics discrepancies **must** begin with a parallel trace comp
 **Methodology:** For each test case, create a test that compares the final PyTorch image tensor against the golden `.bin` file using `torch.allclose`. This test should only be expected to pass after the Parallel Trace Comparison test passes.
 
 **Primary Validation Tool:** The main script for running end-to-end parallel validation against the C-code reference is `scripts/verify_detector_geometry.py`. This script automates the execution of both the PyTorch and C implementations, generates comparison plots, and computes quantitative correlation metrics. It relies on `scripts/c_reference_runner.py` to manage the C-code execution.
+
+**New Command-Line Options for `verify_detector_geometry.py`:**
+- `--require-c-reference`: Exit with error if C reference binary is not available (strict mode for CI)
+- `--skip-c-reference`: Skip C reference validation even if binary is available
+
+The script now includes prerequisite checking and provides clear compilation instructions if binaries are missing.
 
 ## 4. Tier 2: Gradient Correctness Testing
 

@@ -34,6 +34,17 @@ make format  # Auto-format all code
 #### Running Tests
 ```bash
 make test    # Run the full test suite
+pytest tests/    # Alternative: run pytest directly
+```
+
+**Test Infrastructure Features:**
+- **Automatic C Binary Compilation:** Required C binaries are automatically compiled when you run tests
+- **Graceful Dependency Handling:** Missing dependencies result in skipped tests, not failures
+- **No Manual Setup Required:** Just run `pytest` - compilation happens automatically via `conftest.py`
+
+To disable auto-compilation (e.g., in restricted environments):
+```bash
+SKIP_TEST_COMPILATION=1 pytest tests/
 ```
 
 #### Linting
