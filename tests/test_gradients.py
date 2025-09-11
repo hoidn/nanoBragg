@@ -25,18 +25,23 @@ class GradientTestHelper:
     """Helper class for gradient testing scenarios."""
 
     @staticmethod
-    def create_loss_function(param_name):
+    def create_loss_function(param_name, device=None):
         """Create a loss function that takes a parameter and returns a scalar.
 
         Args:
             param_name: Name of the parameter (e.g., 'cell_a', 'cell_beta')
+            device: torch.device to run computations on (CPU or CUDA)
 
         Returns:
             A function suitable for gradcheck
         """
+        if device is None:
+            device = torch.device("cpu")
 
         def loss_fn(param_value):
-            device = torch.device("cpu")
+            # Ensure parameter is on correct device
+            if param_value.device != device:
+                param_value = param_value.to(device)
             dtype = torch.float64
 
             # Create config with the parameter as a tensor
@@ -79,166 +84,223 @@ class GradientTestHelper:
 class TestCellParameterGradients:
     """Test gradient correctness for unit cell parameters."""
 
-    def test_gradcheck_cell_a(self):
+    def test_gradcheck_cell_a(self, device, dtype):
         """Verify cell_a parameter is fully differentiable."""
-        # Create test input with requires_grad
-        cell_a = torch.tensor(100.0, dtype=torch.float64, requires_grad=True)
+        # Skip if not float64 (gradcheck requires high precision)
+        if dtype != torch.float64:
+            pytest.skip("gradcheck requires float64 precision")
+        
+        # Create test input with requires_grad on the specified device
+        cell_a = torch.tensor(100.0, dtype=dtype, device=device, requires_grad=True)
 
         # Get loss function for cell_a
-        loss_fn = GradientTestHelper.create_loss_function("cell_a")
+        loss_fn = GradientTestHelper.create_loss_function("cell_a", device=device)
 
-        # Run gradcheck with strict settings
+        # Adjust tolerances based on device (GPU may need looser tolerances)
+        if device.type == "cuda":
+            # GPU gradcheck often needs slightly looser tolerances
+            eps, atol, rtol = 1e-5, 1e-4, 0.01
+        else:
+            # CPU can use stricter tolerances
+            eps, atol, rtol = 1e-6, 1e-5, 0.005
+
+        # Run gradcheck with device-appropriate settings
         assert gradcheck(
-            loss_fn, (cell_a,), eps=1e-6, atol=1e-5, rtol=0.05, raise_exception=True
+            loss_fn, (cell_a,), eps=eps, atol=atol, rtol=rtol, raise_exception=True
         )
 
         # Test with different values
         for test_value in [50.0, 150.0, 200.0]:
             cell_a_test = torch.tensor(
-                test_value, dtype=torch.float64, requires_grad=True
+                test_value, dtype=dtype, device=device, requires_grad=True
             )
             assert gradcheck(
                 loss_fn,
                 (cell_a_test,),
-                eps=1e-6,
-                atol=1e-5,
-                rtol=0.05,
+                eps=eps,
+                atol=atol,
+                rtol=rtol,
                 raise_exception=True,
             )
 
-    def test_gradcheck_cell_b(self):
+    def test_gradcheck_cell_b(self, device, dtype):
         """Verify cell_b parameter is fully differentiable."""
+        if dtype != torch.float64:
+            pytest.skip("gradcheck requires float64 precision")
+        
         # Create test input with requires_grad
-        cell_b = torch.tensor(100.0, dtype=torch.float64, requires_grad=True)
+        cell_b = torch.tensor(100.0, dtype=dtype, device=device, requires_grad=True)
 
         # Get loss function for cell_b
-        loss_fn = GradientTestHelper.create_loss_function("cell_b")
+        loss_fn = GradientTestHelper.create_loss_function("cell_b", device=device)
+        
+        # Adjust tolerances based on device
+        if device.type == "cuda":
+            eps, atol, rtol = 1e-5, 1e-4, 0.01
+        else:
+            eps, atol, rtol = 1e-6, 1e-5, 0.005
 
-        # Run gradcheck with strict settings
+        # Run gradcheck with device-appropriate settings
         assert gradcheck(
-            loss_fn, (cell_b,), eps=1e-6, atol=1e-5, rtol=0.05, raise_exception=True
+            loss_fn, (cell_b,), eps=eps, atol=atol, rtol=rtol, raise_exception=True
         )
 
         # Test edge cases with very small and large values
         for test_value in [10.0, 100.0, 500.0]:
             cell_b_test = torch.tensor(
-                test_value, dtype=torch.float64, requires_grad=True
+                test_value, dtype=dtype, device=device, requires_grad=True
             )
             assert gradcheck(
                 loss_fn,
                 (cell_b_test,),
-                eps=1e-6,
-                atol=1e-5,
-                rtol=0.05,
+                eps=eps,
+                atol=atol,
+                rtol=rtol,
                 raise_exception=True,
             )
 
-    def test_gradcheck_cell_c(self):
+    def test_gradcheck_cell_c(self, device, dtype):
         """Verify cell_c parameter is fully differentiable."""
+        if dtype != torch.float64:
+            pytest.skip("gradcheck requires float64 precision")
+        
         # Create test input with requires_grad
-        cell_c = torch.tensor(100.0, dtype=torch.float64, requires_grad=True)
+        cell_c = torch.tensor(100.0, dtype=dtype, device=device, requires_grad=True)
 
         # Get loss function for cell_c
-        loss_fn = GradientTestHelper.create_loss_function("cell_c")
+        loss_fn = GradientTestHelper.create_loss_function("cell_c", device=device)
+        
+        # Adjust tolerances based on device
+        if device.type == "cuda":
+            eps, atol, rtol = 1e-5, 1e-4, 0.01
+        else:
+            eps, atol, rtol = 1e-6, 1e-5, 0.005
 
-        # Run gradcheck with strict settings
+        # Run gradcheck with device-appropriate settings
         assert gradcheck(
-            loss_fn, (cell_c,), eps=1e-6, atol=1e-5, rtol=0.05, raise_exception=True
+            loss_fn, (cell_c,), eps=eps, atol=atol, rtol=rtol, raise_exception=True
         )
 
         # Test full range of reasonable cell dimensions
         for test_value in [25.0, 165.2, 300.0]:  # Including 165.2 from golden triclinic
             cell_c_test = torch.tensor(
-                test_value, dtype=torch.float64, requires_grad=True
+                test_value, dtype=dtype, device=device, requires_grad=True
             )
             assert gradcheck(
                 loss_fn,
                 (cell_c_test,),
-                eps=1e-6,
-                atol=1e-5,
-                rtol=0.05,
+                eps=eps,
+                atol=atol,
+                rtol=rtol,
                 raise_exception=True,
             )
 
-    def test_gradcheck_cell_alpha(self):
+    def test_gradcheck_cell_alpha(self, device, dtype):
         """Verify cell_alpha angle parameter is fully differentiable."""
+        if dtype != torch.float64:
+            pytest.skip("gradcheck requires float64 precision")
+        
         # Create test input with requires_grad
-        cell_alpha = torch.tensor(90.0, dtype=torch.float64, requires_grad=True)
+        cell_alpha = torch.tensor(90.0, dtype=dtype, device=device, requires_grad=True)
 
         # Get loss function for cell_alpha
-        loss_fn = GradientTestHelper.create_loss_function("cell_alpha")
+        loss_fn = GradientTestHelper.create_loss_function("cell_alpha", device=device)
+        
+        # Adjust tolerances based on device (angles need looser tolerances)
+        if device.type == "cuda":
+            eps, atol, rtol = 1e-5, 1e-4, 0.02
+        else:
+            eps, atol, rtol = 1e-6, 1e-5, 0.01
 
-        # Run gradcheck with practical numerical tolerances
-        # Note: ~2% relative error observed due to complex simulation chain
+        # Run gradcheck with device-appropriate settings
+        # Note: Angle parameters may have higher relative error due to trig functions
         assert gradcheck(
-            loss_fn, (cell_alpha,), eps=1e-6, atol=1e-5, rtol=0.05, raise_exception=True
+            loss_fn, (cell_alpha,), eps=eps, atol=atol, rtol=rtol, raise_exception=True
         )
 
         # Test angles from 60° to 120°, paying attention near 90°
         for test_value in [60.0, 75.0, 89.5, 90.0, 90.5, 105.0, 120.0]:
             cell_alpha_test = torch.tensor(
-                test_value, dtype=torch.float64, requires_grad=True
+                test_value, dtype=dtype, device=device, requires_grad=True
             )
             assert gradcheck(
                 loss_fn,
                 (cell_alpha_test,),
-                eps=1e-6,
-                atol=1e-5,
-                rtol=0.05,
+                eps=eps,
+                atol=atol,
+                rtol=rtol,
                 raise_exception=True,
             )
 
-    def test_gradcheck_cell_beta(self):
+    def test_gradcheck_cell_beta(self, device, dtype):
         """Verify cell_beta angle parameter is fully differentiable."""
+        if dtype != torch.float64:
+            pytest.skip("gradcheck requires float64 precision")
+        
         # Create test input with requires_grad
-        cell_beta = torch.tensor(90.0, dtype=torch.float64, requires_grad=True)
+        cell_beta = torch.tensor(90.0, dtype=dtype, device=device, requires_grad=True)
 
         # Get loss function for cell_beta
-        loss_fn = GradientTestHelper.create_loss_function("cell_beta")
+        loss_fn = GradientTestHelper.create_loss_function("cell_beta", device=device)
+        
+        # Adjust tolerances based on device
+        if device.type == "cuda":
+            eps, atol, rtol = 1e-5, 1e-4, 0.02
+        else:
+            eps, atol, rtol = 1e-6, 1e-5, 0.01
 
-        # Run gradcheck with strict settings
+        # Run gradcheck with device-appropriate settings
         assert gradcheck(
-            loss_fn, (cell_beta,), eps=1e-6, atol=1e-5, rtol=0.05, raise_exception=True
+            loss_fn, (cell_beta,), eps=eps, atol=atol, rtol=rtol, raise_exception=True
         )
 
         # Test including edge cases, avoiding too close to 0° or 180°
         for test_value in [30.0, 60.0, 90.0, 120.0, 150.0]:
             cell_beta_test = torch.tensor(
-                test_value, dtype=torch.float64, requires_grad=True
+                test_value, dtype=dtype, device=device, requires_grad=True
             )
             assert gradcheck(
                 loss_fn,
                 (cell_beta_test,),
-                eps=1e-6,
-                atol=1e-5,
-                rtol=0.05,
+                eps=eps,
+                atol=atol,
+                rtol=rtol,
                 raise_exception=True,
             )
 
-    def test_gradcheck_cell_gamma(self):
+    def test_gradcheck_cell_gamma(self, device, dtype):
         """Verify cell_gamma angle parameter is fully differentiable."""
+        if dtype != torch.float64:
+            pytest.skip("gradcheck requires float64 precision")
+        
         # Create test input with requires_grad
-        cell_gamma = torch.tensor(90.0, dtype=torch.float64, requires_grad=True)
+        cell_gamma = torch.tensor(90.0, dtype=dtype, device=device, requires_grad=True)
 
         # Get loss function for cell_gamma
-        loss_fn = GradientTestHelper.create_loss_function("cell_gamma")
+        loss_fn = GradientTestHelper.create_loss_function("cell_gamma", device=device)
+        
+        # Adjust tolerances based on device
+        if device.type == "cuda":
+            eps, atol, rtol = 1e-5, 1e-4, 0.02
+        else:
+            eps, atol, rtol = 1e-6, 1e-5, 0.01
 
-        # Run gradcheck with strict settings
+        # Run gradcheck with device-appropriate settings
         assert gradcheck(
-            loss_fn, (cell_gamma,), eps=1e-6, atol=1e-5, rtol=0.05, raise_exception=True
+            loss_fn, (cell_gamma,), eps=eps, atol=atol, rtol=rtol, raise_exception=True
         )
 
         # Test full range including highly skewed cells (e.g., 120° for hexagonal)
         for test_value in [45.0, 60.0, 90.0, 120.0, 135.0]:
             cell_gamma_test = torch.tensor(
-                test_value, dtype=torch.float64, requires_grad=True
+                test_value, dtype=dtype, device=device, requires_grad=True
             )
             assert gradcheck(
                 loss_fn,
                 (cell_gamma_test,),
-                eps=1e-6,
-                atol=1e-5,
-                rtol=0.05,
+                eps=eps,
+                atol=atol,
+                rtol=rtol,
                 raise_exception=True,
             )
 
