@@ -24,9 +24,13 @@ nanoBragg_trace: nanoBragg.c
 nanoBragg_golden: nanoBragg.c
 	$(CC) $(CFLAGS) -DDEBUG_GOLDEN_SUITE -o nanoBragg_golden nanoBragg.c $(LDFLAGS)
 
+# Config test binary - builds in parent directory for test compatibility
+nanoBragg_config: nanoBragg.c
+	$(CC) $(CFLAGS) -o ../nanoBragg_config nanoBragg.c $(LDFLAGS)
+
 # Clean compiled binaries
 clean:
-	rm -f nanoBragg nanoBragg_golden nanoBragg_trace
+	rm -f nanoBragg nanoBragg_golden nanoBragg_trace ../nanoBragg_config
 
 # Generate golden test data
 golden_data: nanoBragg_golden

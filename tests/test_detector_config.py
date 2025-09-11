@@ -219,5 +219,6 @@ class TestDetectorInitialization:
 
         assert detector.device == device
         assert detector.dtype == torch.float32
-        assert detector.fdet_vec.device == device
+        # Use type comparison for device since cuda vs cuda:0 are functionally equivalent
+        assert detector.fdet_vec.device.type == device.type
         assert detector.fdet_vec.dtype == torch.float32

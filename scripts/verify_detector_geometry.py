@@ -6,7 +6,9 @@ This script creates visualizations to verify the detector geometry implementatio
 by comparing baseline (simple_cubic) and tilted detector configurations.
 """
 
+import argparse
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -37,6 +39,46 @@ try:
 except ImportError:
     print("⚠️  C reference components not available")
     C_REFERENCE_AVAILABLE = False
+
+
+def check_c_binary_prerequisites():
+    """Check if C reference binary is available and provide guidance if not.
+    
+    Returns:
+        tuple: (is_available: bool, binary_path: Path or None, message: str)
+    """
+    # Check for existing binaries
+    possible_paths = [
+        Path("golden_suite_generator/nanoBragg_trace"),
+        Path("golden_suite_generator/nanoBragg_golden"),
+        Path("golden_suite_generator/nanoBragg"),
+    ]
+    
+    for path in possible_paths:
+        if path.exists():
+            return True, path, f"✓ Found C reference binary: {path}"
+    
+    # Binary not found - provide instructions
+    makefile_path = Path("golden_suite_generator/Makefile")
+    if makefile_path.exists():
+        message = """\n❌ C reference binary not found.
+
+To enable C reference validation, compile the binary:
+  make -C golden_suite_generator nanoBragg_trace
+
+Or from the golden_suite_generator directory:
+  cd golden_suite_generator && make nanoBragg_trace
+
+⚠️  Continuing with PyTorch-only verification..."""
+    else:
+        message = """\n❌ C reference binary not found.
+
+⚠️  golden_suite_generator directory or Makefile missing.
+    Cannot build C reference binary.
+
+⚠️  Continuing with PyTorch-only verification..."""
+    
+    return False, None, message
 
 
 def create_output_dir():
@@ -515,6 +557,22 @@ def run_c_reference_verification(
 
 def main():
     """Enhanced main function with optional C reference validation."""
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(
+        description="Verify detector geometry implementation against C reference"
+    )
+    parser.add_argument(
+        "--require-c-reference",
+        action="store_true",
+        help="Exit with error if C reference binary is not available (strict mode for CI)",
+    )
+    parser.add_argument(
+        "--skip-c-reference",
+        action="store_true",
+        help="Skip C reference validation even if binary is available",
+    )
+    args = parser.parse_args()
+    
     print("Detector Geometry Visual Verification")
     print("=====================================")
 
@@ -582,8 +640,27 @@ def main():
     # Create standard comparison plots
     create_comparison_plots(baseline_data, tilted_data, output_dir)
 
+    # Check C binary prerequisites and handle based on flags
+    c_available, c_binary_path, c_message = check_c_binary_prerequisites()
+    
+    # Handle --require-c-reference flag
+    if args.require_c_reference and not c_available:
+        print(c_message)
+        print("\n❌ Exiting due to --require-c-reference flag")
+        sys.exit(1)
+    
+    # Handle --skip-c-reference flag
+    if args.skip_c_reference:
+        print("⚠️  Skipping C reference validation (--skip-c-reference flag set)")
+        c_available = False
+    elif not c_available:
+        print(c_message)
+    
     # Try C reference verification
-    if C_REFERENCE_AVAILABLE:
+    if C_REFERENCE_AVAILABLE and c_available:
+        print(f"\n{'='*60}")
+        print("C REFERENCE PARALLEL VERIFICATION")
+        print(f"{'='*60}")
         c_baseline, c_tilted = run_c_reference_verification(
             baseline_config, tilted_config, crystal_config, beam_config
         )
