@@ -121,8 +121,8 @@ is used.
     - -Na <int>, -Nb <int>, -Nc <int>, -N <int>: Number of unit cells along a,b,c. Any values ≤1 are
 clamped to 1 later (zero is not preserved).
     - -samplesize <mm> or -xtalsize <mm>: Set crystal full widths in x=y=z (mm); alternative:
--sample_thick|_x, -sample_width|_y| -width, -sample_heigh|_z| -heigh, and -xtal_thick|_x,
--xtal_width|_y| -width, -xtal_heigh|_z| -heigh for each dimension.
+-sample_thick|_x, -sample_width|_y|-width, -sample_height|_z|-height, and -xtal_thick|_x,
+-xtal_width|_y|-width, -xtal_height|_z|-height for each dimension.
     - -square_xtal (default), -round_xtal, -gauss_xtal, -binary_spots/-tophat_spots: Spot shapes.
 See “Lattice factors”.
     - -fudge <value>: Shape parameter scaling (dimensionless).
