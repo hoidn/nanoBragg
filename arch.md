@@ -262,9 +262,102 @@ interface BeamConfig {
 - Tolerances: geometry comparisons use atol ~1e-15 for cached basis checks; acceptance checks use explicit tolerances per test.
 - When spec and C disagree subtly on rounding, use spec’s rounding: nearest integer via `ceil(x − 0.5)`.
 
-## 15) Developer Notes
+## 15) Differentiability Guidelines (Critical for PyTorch Implementation)
+
+### Core Principles
+
+The PyTorch implementation **MUST** maintain end-to-end differentiability to enable gradient-based optimization. This is a fundamental architectural requirement that affects every design decision.
+
+### Mandatory Rules
+
+1. **Never Use `.item()` on Differentiable Tensors**
+   - **Forbidden:** `config = Config(param=tensor.item())` — permanently severs computation graph
+   - **Correct:** `config = Config(param=tensor)` — preserves gradient flow
+   - **Rationale:** `.item()` extracts a Python scalar, completely detaching from autograd
+
+2. **Avoid `torch.linspace` for Gradient-Critical Code**
+   - **Problem:** `torch.linspace` doesn't preserve gradients from tensor endpoints
+   - **Forbidden:** `torch.linspace(start_tensor, end_tensor, steps)` where tensors require gradients
+   - **Correct:** `start_tensor + (end_tensor - start_tensor) * torch.arange(steps) / (steps - 1)`
+   - **Alternative:** Use manual tensor arithmetic for all range generation needing gradients
+
+3. **Implement Derived Properties as Functions**
+   - **Forbidden:** Overwriting class attributes with computed values (e.g., `self.a_star = calculate_reciprocal()`)
+   - **Correct:** Use `@property` decorators that recalculate from base parameters each access
+   - **Example:** Crystal reciprocal vectors must be computed from cell parameters on-demand
+
+4. **Boundary Enforcement for Type Safety**
+   - **Pattern:** Core methods assume tensor inputs; handle type conversions at call sites only
+   - **Forbidden:** `isinstance(param, torch.Tensor)` checks inside computational methods
+   - **Correct:** Convert scalars to tensors at API boundaries, maintain tensors throughout core
+   - **Benefit:** Clean architecture while preserving gradient flow
+
+5. **Avoid Gradient-Breaking Operations**
+   - **Forbidden in gradient paths:**
+     - `.detach()` — explicitly breaks gradient connection
+     - `.numpy()` — converts to NumPy array, losing autograd
+     - `.cpu()` without maintaining graph — can break device consistency
+   - **Allowed:** These operations are safe in non-differentiable contexts (logging, visualization)
+
+### Testing Requirements
+
+**Every differentiable parameter MUST have:**
+1. **Unit-level gradient test:** Verify gradients flow through isolated functions
+2. **Integration gradient test:** Verify end-to-end gradient flow through complete simulation
+3. **Stability test:** Verify gradients remain stable across parameter variations
+4. **Use `torch.autograd.gradcheck`:** With `dtype=torch.float64` for numerical precision
+
+### Common Pitfalls and Solutions
+
+| Pitfall | Symptom | Solution |
+|---------|---------|----------|
+| Using `.item()` in config | Gradients are None | Pass tensors directly |
+| `torch.linspace` with tensor bounds | No gradient on start/end | Manual arithmetic |
+| Overwriting derived attributes | Stale gradients | Use @property methods |
+| Type checks in core methods | Complex branching | Boundary enforcement |
+| In-place operations | Runtime errors | Use out-of-place ops |
+
+### Architecture Implications
+
+- **Config objects:** Must accept both scalars and tensors, preserving tensor types
+- **Model classes:** Use @property for all derived geometric/crystallographic quantities
+- **Simulator:** Maintain tensor operations throughout; batch operations for efficiency
+- **Utils:** Implement gradient-safe versions of standard operations (ranges, interpolation)
+
+### Debugging Gradient Issues
+
+1. **Check requires_grad:** Verify input tensors have `requires_grad=True`
+2. **Print computation graph:** Use `torchviz` or `tensorboard` to visualize graph
+3. **Isolate breaks:** Binary search through operations to find where gradients stop
+4. **Use retain_graph:** For debugging multiple backward passes
+5. **Check autograd.grad:** Manually compute gradients for specific tensors
+
+### Reference Documentation
+
+For comprehensive details and examples:
+- **Lessons learned:** `docs/development/lessons_in_differentiability.md` — real debugging cases and solutions
+- **Design principles:** `docs/architecture/pytorch_design.md` — architectural patterns for differentiability
+- **Testing strategy:** `docs/development/testing_strategy.md` — Tier 2 gradient correctness methodology
+- **Parameter trace:** `docs/architecture/parameter_trace_analysis.md` — understanding gradient flow paths
+- **Implementation examples:** `src/nanobrag_torch/models/crystal.py` — @property pattern in practice
+
+### Verification Checklist
+
+- [ ] All `.item()` calls verified as non-differentiable paths
+- [ ] No `torch.linspace` with gradient-requiring endpoints
+- [ ] All derived properties use @property or functional patterns
+- [ ] Type conversions happen only at boundaries
+- [ ] `torch.autograd.gradcheck` passes for all parameters
+- [ ] Integration tests verify end-to-end gradient flow
+
+**Remember:** Breaking differentiability breaks the fundamental value proposition of the PyTorch port — the ability to optimize physical parameters via gradient descent.
+
+## 16) Developer Notes
 
 - Maintain strict separation between geometry (meters) and physics (Å). Convert once at the interface.
-- Preserve differentiability: avoid `.item()` in graph-critical paths; prefer tensor-safe control flow.
+- **Preserve differentiability at all costs:** Follow Section 15 guidelines religiously. This is non-negotiable for optimization capabilities.
 - Cache only pure-geometry outputs; invalidate on config changes; keep unit tests focused and vectorized.
 - Keep acceptance tests in specs/spec-b.md up-to-date with behavior; use them as the primary source of truth.
+- **Before implementing any differentiable feature:** Review `docs/development/lessons_in_differentiability.md` to avoid known pitfalls.
+- **Use @property pattern:** For all derived quantities (reciprocal vectors, rotated bases, etc.) to maintain gradient flow.
+- **Test gradients early and often:** Don't wait until integration; verify gradients at the unit level first.
