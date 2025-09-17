@@ -70,6 +70,7 @@ class DetectorConvention(Enum):
 
     MOSFLM = "mosflm"
     XDS = "xds"
+    DIALS = "dials"
 
 
 class DetectorPivot(Enum):
@@ -186,15 +187,18 @@ class DetectorConfig:
 
         # Set default twotheta axis if not provided
         if self.twotheta_axis is None:
-            # Default depends on detector convention (from nanoBragg.c)
+            # Default depends on detector convention (per spec AT-GEO-004)
             if self.detector_convention == DetectorConvention.MOSFLM:
-                # MOSFLM convention: twotheta axis is [0, 0, -1] (C-code line 1215)
+                # MOSFLM convention: twotheta axis is [0, 0, -1]
                 self.twotheta_axis = torch.tensor([0.0, 0.0, -1.0])
             elif self.detector_convention == DetectorConvention.XDS:
-                # XDS convention: twotheta axis is [1, 0, 0] (C-code line 1245)
+                # XDS convention: twotheta axis is [1, 0, 0]
                 self.twotheta_axis = torch.tensor([1.0, 0.0, 0.0])
+            elif self.detector_convention == DetectorConvention.DIALS:
+                # DIALS convention: twotheta axis is [0, 1, 0]
+                self.twotheta_axis = torch.tensor([0.0, 1.0, 0.0])
             else:
-                # Default/DIALS convention: twotheta axis is [0, 1, 0] (C-code line 1260)
+                # Default fallback to DIALS axis [0, 1, 0]
                 self.twotheta_axis = torch.tensor([0.0, 1.0, 0.0])
 
         # Validate pixel counts

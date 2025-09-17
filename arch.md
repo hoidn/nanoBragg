@@ -176,6 +176,7 @@ interface BeamConfig {
 - Basis vectors (initial):
   - MOSFLM: f=[0,0,1], s=[0,−1,0], o=[1,0,0], beam=[1,0,0], default twotheta_axis=[0,0,−1].
   - XDS:    f=[1,0,0], s=[0,1,0],  o=[0,0,1],  beam=[0,0,1], default twotheta_axis=[1,0,0].
+  - DIALS:  f=[1,0,0], s=[0,1,0],  o=[0,0,1],  beam=[0,0,1], default twotheta_axis=[0,1,0].
 - Rotations: apply XYZ small-angle rotations to f/s/o, then rotate around twotheta_axis by two-theta.
 - r-factor update: r = b·o_after; if close_distance unspecified: close_distance = |r·distance|; then set distance = close_distance / r. Direct-beam Fbeam/Sbeam recomputed from R = close_distance/r·b − D0.
 - Pivots:

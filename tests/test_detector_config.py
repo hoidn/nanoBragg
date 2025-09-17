@@ -36,7 +36,7 @@ class TestDetectorConfig:
 
         # Convention and pivot
         assert config.detector_convention == DetectorConvention.MOSFLM
-        assert config.detector_pivot == DetectorPivot.SAMPLE
+        assert config.detector_pivot == DetectorPivot.BEAM
 
         # Sampling
         assert config.oversample == 1

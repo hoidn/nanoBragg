@@ -474,11 +474,18 @@ class Detector:
                 fdet_initial = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)   # Fast along +Z (CORRECT)
                 sdet_initial = torch.tensor([0.0, -1.0, 0.0], device=self.device, dtype=self.dtype)  # Slow along -Y (CORRECT)
                 odet_initial = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)   # Normal along +X (CORRECT)
-            else:
+            elif self.config.detector_convention == DetectorConvention.XDS:
                 # XDS convention
                 fdet_initial = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
                 sdet_initial = torch.tensor([0.0, 1.0, 0.0], device=self.device, dtype=self.dtype)
                 odet_initial = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
+            elif self.config.detector_convention == DetectorConvention.DIALS:
+                # DIALS convention
+                fdet_initial = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
+                sdet_initial = torch.tensor([0.0, 1.0, 0.0], device=self.device, dtype=self.dtype)
+                odet_initial = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
+            else:
+                raise ValueError(f"Unknown detector convention: {self.config.detector_convention}")
 
             # Distances from pixel (0,0) center to the beam spot, measured along detector axes
             # Convention handling: MOSFLM adds 0.5 pixel offset, CUSTOM does not
@@ -840,6 +847,18 @@ class Detector:
             )
             odet_vec = torch.tensor(
                 [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
+            )
+        elif c.detector_convention == DetectorConvention.DIALS:
+            # DIALS convention: beam [0,0,1], f=[1,0,0], s=[0,1,0], o=[0,0,1]
+            # Similar to XDS but with specific beam and twotheta axis conventions
+            fdet_vec = torch.tensor(
+                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype  # Fast along +X
+            )
+            sdet_vec = torch.tensor(
+                [0.0, 1.0, 0.0], device=self.device, dtype=self.dtype  # Slow along +Y
+            )
+            odet_vec = torch.tensor(
+                [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype  # Normal along +Z
             )
         else:
             raise ValueError(f"Unknown detector convention: {c.detector_convention}")

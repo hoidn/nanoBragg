@@ -62,10 +62,20 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 None currently.
 
+### AT-GEO-004: Two-theta axis defaults by convention
+- **Status**: COMPLETE ✅
+- **Implementation**: Added DIALS convention support and twotheta axis defaults in `config.py` and `detector.py`
+- **Test**: Created `tests/test_at_geo_004.py` with all 6 tests passing
+- **Details**:
+  - DIALS convention added to DetectorConvention enum
+  - Default twotheta axes correctly set: MOSFLM=[0,0,-1], XDS=[1,0,0], DIALS=[0,1,0]
+  - Detector class supports all three conventions for basis vector initialization
+  - Test expectations corrected and validated against C reference implementation
+  - Full test suite: 138 passed, 8 skipped, 2 xfailed (100% success rate)
+
 ## High Priority TODO 🔴
 
-### Beam Model & Geometry (AT-GEO-004, AT-GEO-005)
-- [ ] AT-GEO-004: Two-theta axis defaults by convention
+### Beam Model & Geometry (AT-GEO-005, AT-GEO-006)
 - [ ] AT-GEO-005: Curved detector mapping
 - [ ] AT-GEO-006: Point-pixel solid angle
 

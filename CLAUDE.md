@@ -376,7 +376,7 @@ To improve efficiency, use these standard commands for common tasks.
 - **List all available tests:**
   `pytest --collect-only`
 - **Run the full test suite:**
-  `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_suite.py -v`
+  `KMP_DUPLICATE_LIB_OK=TRUE pytest -v`
 - **Run acceptance tests:**
   `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at*.py -v`
 - **Run a specific test function:**
