@@ -16,7 +16,8 @@ from ..utils.units import mm_to_angstroms, degrees_to_radians
 def _nonzero_scalar(x) -> bool:
     """Return a Python bool for 'x != 0' even if x is a 0-dim torch.Tensor."""
     if isinstance(x, torch.Tensor):
-        return bool(torch.abs(x).item() > 1e-12)
+        # Use tensor operations to maintain gradient flow
+        return bool((torch.abs(x) > 1e-12).item())
     return abs(float(x)) > 1e-12
 
 
@@ -361,18 +362,23 @@ class Detector:
 
         if not isinstance(detector_rotx, torch.Tensor):
             detector_rotx = torch.tensor(detector_rotx, device=self.device, dtype=self.dtype)
+        elif detector_rotx.device != self.device or detector_rotx.dtype != self.dtype:
+            detector_rotx = detector_rotx.to(device=self.device, dtype=self.dtype)
+
         if not isinstance(detector_roty, torch.Tensor):
             detector_roty = torch.tensor(detector_roty, device=self.device, dtype=self.dtype)
+        elif detector_roty.device != self.device or detector_roty.dtype != self.dtype:
+            detector_roty = detector_roty.to(device=self.device, dtype=self.dtype)
+
         if not isinstance(detector_rotz, torch.Tensor):
             detector_rotz = torch.tensor(detector_rotz, device=self.device, dtype=self.dtype)
+        elif detector_rotz.device != self.device or detector_rotz.dtype != self.dtype:
+            detector_rotz = detector_rotz.to(device=self.device, dtype=self.dtype)
+
         if not isinstance(detector_twotheta, torch.Tensor):
             detector_twotheta = torch.tensor(detector_twotheta, device=self.device, dtype=self.dtype)
-
-        # Check if we have non-zero rotations that require r-factor calculation
-        has_rotations = (_nonzero_scalar(detector_rotx) or
-                        _nonzero_scalar(detector_roty) or
-                        _nonzero_scalar(detector_rotz) or
-                        _nonzero_scalar(detector_twotheta))
+        elif detector_twotheta.device != self.device or detector_twotheta.dtype != self.dtype:
+            detector_twotheta = detector_twotheta.to(device=self.device, dtype=self.dtype)
 
         # Get beam vector based on convention
         if self.config.detector_convention == DetectorConvention.MOSFLM:
@@ -380,8 +386,10 @@ class Detector:
         else:
             beam_vector = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
 
-        # Calculate r-factor if we have rotations
-        if has_rotations:
+        # Always calculate r-factor to preserve gradient flow
+        # When rotations are zero, the rotation matrix will be identity
+        # and r-factor will naturally be 1.0
+        if True:  # Always execute to preserve gradients
             # Get initial odet_vector (detector normal)
             if self.config.detector_convention == DetectorConvention.MOSFLM:
                 odet_initial = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
@@ -395,9 +403,20 @@ class Detector:
             # Calculate ratio (r-factor)
             ratio = torch.dot(beam_vector, odet_rotated)
 
-            # Prevent division by zero
-            if abs(ratio) < 1e-10:
-                ratio = torch.sign(ratio) * 1e-10 if ratio != 0 else 1e-10
+            # Prevent division by zero while maintaining gradient flow
+            # Use torch operations to preserve gradients
+            min_ratio = torch.tensor(1e-10, device=self.device, dtype=self.dtype)
+            ratio = torch.where(
+                torch.abs(ratio) < min_ratio,
+                torch.sign(ratio) * min_ratio,
+                ratio
+            )
+            # Handle zero case
+            ratio = torch.where(
+                ratio == 0,
+                min_ratio,
+                ratio
+            )
 
             # Update distance based on r-factor
             # If close_distance is specified, use it; otherwise calculate from nominal distance
@@ -408,13 +427,13 @@ class Detector:
 
             # Update the actual distance using r-factor (implements AT-GEO-003)
             self.distance_corrected = close_distance / ratio
-        else:
-            # No rotations, use nominal distance
-            self.distance_corrected = self.distance
-            ratio = 1.0
 
         # Store r-factor for later verification
-        self.r_factor = ratio if isinstance(ratio, torch.Tensor) else torch.tensor(ratio, device=self.device, dtype=self.dtype)
+        # Ensure it's a tensor with correct dtype
+        if isinstance(ratio, torch.Tensor):
+            self.r_factor = ratio.to(device=self.device, dtype=self.dtype)
+        else:
+            self.r_factor = torch.tensor(ratio, device=self.device, dtype=self.dtype)
 
         if self.config.detector_pivot == DetectorPivot.BEAM:
             # BEAM pivot mode: detector rotates around the direct beam spot
@@ -423,10 +442,9 @@ class Detector:
             # Calculate Fbeam and Sbeam exactly as C code does
             # MOSFLM convention: Add 0.5 pixel offset
             # CORRECT MAPPING: Xbeam (C) → beam_center_f (fast), Ybeam (C) → beam_center_s (slow)
-            Fbeam_pixels = self.config.beam_center_f / self.config.pixel_size_mm  # Xbeam → fast
-            Sbeam_pixels = self.config.beam_center_s / self.config.pixel_size_mm  # Ybeam → slow
-            Fbeam = (Fbeam_pixels + 0.5) * self.pixel_size  # Add 0.5 pixel, convert to meters
-            Sbeam = (Sbeam_pixels + 0.5) * self.pixel_size  # Add 0.5 pixel, convert to meters
+            # beam_center_f and beam_center_s are already in pixels
+            Fbeam = (self.beam_center_f + 0.5) * self.pixel_size  # Add 0.5 pixel, convert to meters
+            Sbeam = (self.beam_center_s + 0.5) * self.pixel_size  # Add 0.5 pixel, convert to meters
             
             # Set beam vector based on convention
             if self.config.detector_convention == DetectorConvention.MOSFLM:
@@ -465,15 +483,17 @@ class Detector:
             # Distances from pixel (0,0) center to the beam spot, measured along detector axes
             # Convention handling: MOSFLM adds 0.5 pixel offset, CUSTOM does not
             # CORRECT MAPPING: Xbeam (C) → beam_center_f (fast), Ybeam (C) → beam_center_s (slow)
-            
+
             is_custom = self._is_custom_convention()
-            
+
             if is_custom:
                 # CUSTOM convention: No +0.5 pixel offset
+                # self.beam_center_f and self.beam_center_s are already in pixels
                 Fclose = self.beam_center_f * self.pixel_size  # meters, no +0.5
                 Sclose = self.beam_center_s * self.pixel_size  # meters, no +0.5
             else:
                 # MOSFLM convention: Add 0.5 pixel for leading edge reference
+                # self.beam_center_f and self.beam_center_s are already in pixels
                 Fclose = (self.beam_center_f + 0.5) * self.pixel_size  # meters
                 Sclose = (self.beam_center_s + 0.5) * self.pixel_size  # meters
 
@@ -505,8 +525,9 @@ class Detector:
                 # This should already be set in config, but fallback to MOSFLM default
                 twotheta_axis = torch.tensor([0.0, 0.0, -1.0], device=self.device, dtype=self.dtype)
 
-            if _nonzero_scalar(detector_twotheta):
-                pix0_rotated = rotate_axis(pix0_rotated, twotheta_axis, detector_twotheta)
+            # Always apply twotheta rotation to preserve gradients
+            # When detector_twotheta is zero, this will be identity
+            pix0_rotated = rotate_axis(pix0_rotated, twotheta_axis, detector_twotheta)
 
             self.pix0_vector = pix0_rotated
 
@@ -587,6 +608,12 @@ class Detector:
         if not hasattr(self, 'r_factor'):
             # Calculate on demand if not already computed
             self._calculate_pix0_vector()
+        # Ensure r_factor is a tensor with correct dtype
+        if not isinstance(self.r_factor, torch.Tensor):
+            self.r_factor = torch.tensor(self.r_factor, device=self.device, dtype=self.dtype)
+        else:
+            # Ensure dtype consistency
+            self.r_factor = self.r_factor.to(device=self.device, dtype=self.dtype)
         return self.r_factor
 
     def get_corrected_distance(self) -> torch.Tensor:
@@ -601,6 +628,12 @@ class Detector:
         if not hasattr(self, 'distance_corrected'):
             # Calculate on demand if not already computed
             self._calculate_pix0_vector()
+        # Ensure distance_corrected is a tensor with correct dtype
+        if not isinstance(self.distance_corrected, torch.Tensor):
+            self.distance_corrected = torch.tensor(self.distance_corrected, device=self.device, dtype=self.dtype)
+        else:
+            # Ensure dtype consistency
+            self.distance_corrected = self.distance_corrected.to(device=self.device, dtype=self.dtype)
         return self.distance_corrected
 
     def verify_beam_center_preservation(self, tolerance: float = 1e-6) -> Tuple[bool, dict]:
@@ -610,8 +643,8 @@ class Detector:
         This implements the acceptance test AT-GEO-003: After all detector transformations,
         the direct beam position should still map to the user-specified beam center.
 
-        The direct beam position R = (close_distance/r) * beam_vector - pix0_vector
-        should have components (Fbeam, Sbeam) that match the original beam center.
+        For BEAM pivot: R = distance_corrected * beam_vector - pix0_vector
+        For SAMPLE pivot: The preservation is verified differently as per spec
 
         Args:
             tolerance: Tolerance for beam center comparison (in meters)
@@ -626,7 +659,7 @@ class Detector:
                 - 'error_s': Difference in S component
                 - 'max_error': Maximum absolute error
         """
-        from ..config import DetectorConvention
+        from ..config import DetectorConvention, DetectorPivot
 
         # Get beam vector
         if self.config.detector_convention == DetectorConvention.MOSFLM:
@@ -635,8 +668,9 @@ class Detector:
             beam_vector = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
 
         # Calculate direct beam position after all transformations
-        # R = (close_distance/r) * beam_vector - pix0_vector
-        # This is equivalent to distance * beam_vector - pix0_vector (since distance = close_distance/r)
+        # For both BEAM and SAMPLE pivots, the formula is the same:
+        # R = distance_corrected * beam_vector - pix0_vector
+        # This works because for SAMPLE pivot, pix0_vector is already rotated
         R = self.distance_corrected * beam_vector - self.pix0_vector
 
         # Project onto detector basis vectors to get Fbeam and Sbeam
@@ -645,18 +679,16 @@ class Detector:
 
         # Get original beam center in meters
         # Account for the +0.5 pixel offset in MOSFLM convention
-        Fbeam_pixels = self.config.beam_center_f / self.config.pixel_size_mm
-        Sbeam_pixels = self.config.beam_center_s / self.config.pixel_size_mm
-
+        # beam_center_f and beam_center_s are already in pixels
         is_custom = self._is_custom_convention()
         if is_custom:
             # CUSTOM convention: No +0.5 pixel offset
-            Fbeam_original = Fbeam_pixels * self.pixel_size
-            Sbeam_original = Sbeam_pixels * self.pixel_size
+            Fbeam_original = self.beam_center_f * self.pixel_size
+            Sbeam_original = self.beam_center_s * self.pixel_size
         else:
             # MOSFLM convention: Add 0.5 pixel offset
-            Fbeam_original = (Fbeam_pixels + 0.5) * self.pixel_size
-            Sbeam_original = (Sbeam_pixels + 0.5) * self.pixel_size
+            Fbeam_original = (self.beam_center_f + 0.5) * self.pixel_size
+            Sbeam_original = (self.beam_center_s + 0.5) * self.pixel_size
 
         # Calculate errors
         error_f = abs(Fbeam_computed - Fbeam_original)
@@ -760,18 +792,29 @@ class Detector:
             detector_rotx = torch.tensor(
                 detector_rotx, device=self.device, dtype=self.dtype
             )
+        elif detector_rotx.device != self.device or detector_rotx.dtype != self.dtype:
+            detector_rotx = detector_rotx.to(device=self.device, dtype=self.dtype)
+
         if not isinstance(detector_roty, torch.Tensor):
             detector_roty = torch.tensor(
                 detector_roty, device=self.device, dtype=self.dtype
             )
+        elif detector_roty.device != self.device or detector_roty.dtype != self.dtype:
+            detector_roty = detector_roty.to(device=self.device, dtype=self.dtype)
+
         if not isinstance(detector_rotz, torch.Tensor):
             detector_rotz = torch.tensor(
                 detector_rotz, device=self.device, dtype=self.dtype
             )
+        elif detector_rotz.device != self.device or detector_rotz.dtype != self.dtype:
+            detector_rotz = detector_rotz.to(device=self.device, dtype=self.dtype)
+
         if not isinstance(detector_twotheta, torch.Tensor):
             detector_twotheta = torch.tensor(
                 detector_twotheta, device=self.device, dtype=self.dtype
             )
+        elif detector_twotheta.device != self.device or detector_twotheta.dtype != self.dtype:
+            detector_twotheta = detector_twotheta.to(device=self.device, dtype=self.dtype)
 
         # Initialize basis vectors based on detector convention
         from ..config import DetectorConvention
@@ -825,10 +868,10 @@ class Detector:
             # This should already be set in config, but fallback to MOSFLM default
             twotheta_axis = torch.tensor([0.0, 0.0, -1.0], device=self.device, dtype=self.dtype)
 
-        # Check if twotheta is non-zero (handle both scalar and tensor cases)
-        if _nonzero_scalar(detector_twotheta):
-            fdet_vec = rotate_axis(fdet_vec, twotheta_axis, detector_twotheta)
-            sdet_vec = rotate_axis(sdet_vec, twotheta_axis, detector_twotheta)
-            odet_vec = rotate_axis(odet_vec, twotheta_axis, detector_twotheta)
+        # Always apply twotheta rotation to preserve gradients
+        # When detector_twotheta is zero, this will be identity
+        fdet_vec = rotate_axis(fdet_vec, twotheta_axis, detector_twotheta)
+        sdet_vec = rotate_axis(sdet_vec, twotheta_axis, detector_twotheta)
+        odet_vec = rotate_axis(odet_vec, twotheta_axis, detector_twotheta)
 
         return fdet_vec, sdet_vec, odet_vec

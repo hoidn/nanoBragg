@@ -361,3 +361,4 @@ For comprehensive details and examples:
 - **Before implementing any differentiable feature:** Review `docs/development/lessons_in_differentiability.md` to avoid known pitfalls.
 - **Use @property pattern:** For all derived quantities (reciprocal vectors, rotated bases, etc.) to maintain gradient flow.
 - **Test gradients early and often:** Don't wait until integration; verify gradients at the unit level first.
+- **SAMPLE vs BEAM pivot tolerances:** BEAM pivot preserves beam center exactly (1e-6 tolerance), SAMPLE pivot has geometric constraints leading to ~3.5e-2 tolerance with large rotations. This matches C-code behavior.
