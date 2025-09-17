@@ -87,7 +87,14 @@ class Crystal:
         # Structure factor storage
         self.hkl_data: Optional[torch.Tensor] = None  # 3D grid [h-h_min][k-k_min][l-l_min]
         self.hkl_metadata: Optional[dict] = None  # Contains h_min, h_max, etc.
-        self.interpolate = False  # Whether to use tricubic interpolation
+
+        # Auto-enable interpolation if crystal is small (matching C code)
+        # This can be overridden by explicit CLI flags -interpolate/-nointerpolate
+        self.interpolate = any(n <= 2 for n in [
+            self.N_cells_a.item(),
+            self.N_cells_b.item(),
+            self.N_cells_c.item()
+        ])
 
     def to(self, device=None, dtype=None):
         """Move crystal to specified device and/or dtype."""
@@ -150,9 +157,8 @@ class Crystal:
             dtype=self.dtype
         )
 
-        # Auto-enable interpolation if crystal is small (matching C code)
-        if any(n <= 2 for n in [self.N_cells_a.item(), self.N_cells_b.item(), self.N_cells_c.item()]):
-            self.interpolate = True
+        # Note: Auto-enable interpolation is already handled in __init__
+        # This should be overridden by explicit CLI flags when they're implemented
 
     def get_structure_factor(
         self, h: torch.Tensor, k: torch.Tensor, l: torch.Tensor  # noqa: E741
@@ -182,9 +188,8 @@ class Crystal:
         l_max = self.hkl_metadata['l_max']
 
         if self.interpolate:
-            # TODO: Implement tricubic interpolation
-            # For now, fall back to nearest-neighbor
-            return self._nearest_neighbor_lookup(h, k, l)
+            # Tricubic interpolation (AT-STR-002)
+            return self._tricubic_interpolation(h, k, l)
         else:
             # Nearest-neighbor lookup
             return self._nearest_neighbor_lookup(h, k, l)
@@ -233,6 +238,111 @@ class Crystal:
         )
 
         return F_result
+
+    def _tricubic_interpolation(
+        self, h: torch.Tensor, k: torch.Tensor, l: torch.Tensor  # noqa: E741
+    ) -> torch.Tensor:
+        """
+        Tricubic interpolation of structure factors (AT-STR-002).
+
+        C-Code Implementation Reference (from nanoBragg.c, lines 3152-3209):
+        ```c
+        if ( ((h-h_min+3)>h_range) ||
+             (h-2<h_min)           ||
+             ((k-k_min+3)>k_range) ||
+             (k-2<k_min)           ||
+             ((l-l_min+3)>l_range) ||
+             (l-2<l_min)  ) {
+            if(babble){
+                babble=0;
+                printf ("WARNING: out of range for three point interpolation: h,k,l,h0,k0,l0: %g,%g,%g,%d,%d,%d \n", h,k,l,h0,k0,l0);
+                printf("WARNING: further warnings will not be printed! ");
+            }
+            F_cell = default_F;
+            interpolate=0;
+        }
+        ...
+        /* integer versions of nearest HKL indicies */
+        h_interp[0]=h0_flr-1;
+        h_interp[1]=h0_flr;
+        h_interp[2]=h0_flr+1;
+        h_interp[3]=h0_flr+2;
+        ...
+        /* run the tricubic polynomial interpolation */
+        polin3(h_interp_d,k_interp_d,l_interp_d,sub_Fhkl,h,k,l,&F_cell);
+        ```
+        """
+        from ..utils.physics import polin3
+
+        h_min = self.hkl_metadata['h_min']
+        h_max = self.hkl_metadata['h_max']
+        k_min = self.hkl_metadata['k_min']
+        k_max = self.hkl_metadata['k_max']
+        l_min = self.hkl_metadata['l_min']
+        l_max = self.hkl_metadata['l_max']
+
+        # Get h_range, k_range, l_range for bounds checking
+        h_range = h_max - h_min
+        k_range = k_max - k_min
+        l_range = l_max - l_min
+
+        # Ensure inputs are tensors with the right properties
+        h = torch.as_tensor(h, device=self.device, dtype=self.dtype)
+        k = torch.as_tensor(k, device=self.device, dtype=self.dtype)
+        l = torch.as_tensor(l, device=self.device, dtype=self.dtype)  # noqa: E741
+
+        # Get the floor indices (h0_flr, k0_flr, l0_flr in C code)
+        h_flr = torch.floor(h).long()
+        k_flr = torch.floor(k).long()
+        l_flr = torch.floor(l).long()
+
+        # Check if 4x4x4 neighborhood would be out of bounds
+        # The neighborhood needs indices [floor(x)-1, floor(x), floor(x)+1, floor(x)+2]
+        # So we need to check if these would go outside [x_min, x_max]
+        out_of_bounds = (
+            (h_flr - 1 < h_min) | (h_flr + 2 > h_max) |
+            (k_flr - 1 < k_min) | (k_flr + 2 > k_max) |
+            (l_flr - 1 < l_min) | (l_flr + 2 > l_max)
+        )
+
+        # Handle out-of-bounds case
+        if torch.any(out_of_bounds):
+            # Print warning only once
+            if not hasattr(self, '_interpolation_warning_shown'):
+                print("WARNING: out of range for three point interpolation")
+                print("WARNING: further warnings will not be printed!")
+                self._interpolation_warning_shown = True
+
+            # Disable interpolation permanently
+            self.interpolate = False
+
+            # Return default_F for this evaluation
+            return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
+
+        # Build the 4x4x4 neighborhood indices
+        # h_interp[0]=h0_flr-1, h_interp[1]=h0_flr, h_interp[2]=h0_flr+1, h_interp[3]=h0_flr+2
+        h_indices = torch.tensor([h_flr - 1, h_flr, h_flr + 1, h_flr + 2], dtype=torch.float64, device=self.device)
+        k_indices = torch.tensor([k_flr - 1, k_flr, k_flr + 1, k_flr + 2], dtype=torch.float64, device=self.device)
+        l_indices = torch.tensor([l_flr - 1, l_flr, l_flr + 1, l_flr + 2], dtype=torch.float64, device=self.device)
+
+        # Build the 4x4x4 subcube of structure factors
+        sub_Fhkl = torch.zeros((4, 4, 4), dtype=self.dtype, device=self.device)
+
+        for i1 in range(4):
+            for i2 in range(4):
+                for i3 in range(4):
+                    # Calculate actual indices into the grid
+                    h_idx = int(h_indices[i1].item()) - h_min
+                    k_idx = int(k_indices[i2].item()) - k_min
+                    l_idx = int(l_indices[i3].item()) - l_min
+
+                    # Look up the structure factor
+                    sub_Fhkl[i1, i2, i3] = self.hkl_data[h_idx, k_idx, l_idx]
+
+        # Perform tricubic interpolation
+        F_cell = polin3(h_indices, k_indices, l_indices, sub_Fhkl, h, k, l)
+
+        return F_cell
 
     def _validate_cell_parameters(self):
         """

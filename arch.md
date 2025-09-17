@@ -17,7 +17,7 @@ Implementation target: Python (>=3.11) + PyTorch (float64 default). Type blocks 
   - Render far-field diffraction from perfect-lattice nanocrystals per spec, matching nanoBragg C semantics.
   - Honor detector/beam conventions (MOSFLM, XDS; ADXV/DENZO/DIALS to be added) including pivots and two-theta.
   - Vectorize core loops in PyTorch (pixels × phi × mosaic × sources × subpixels) with GPU support.
-  - Maintain differentiability (end-to-end gradients) for cell and geometry parameters.
+  - Maintain differentiability (end-to-end gradients) for cell and geometry parameters — **critical for optimization capabilities** (see Section 15).
   - Support spec’d I/O: raw float image, SMV with/without noise, optional PGM, HKL read + Fdump cache.
   - Deterministic/reproducible runs via explicit seeds per RNG domains.
 
@@ -65,10 +65,17 @@ Implementation target: Python (>=3.11) + PyTorch (float64 default). Type blocks 
   - Cache `get_pixel_coords()` outputs keyed implicitly by geometry version. Invalidate cache on geometry change (basis vector or pix0 change).
 
 - ADR-05 Deterministic Sampling & Seeds
-  - Distinct RNG domains: noise, mosaic, misset. Spec requires fixed defaults and -seed overrides. Implement the spec’s LCG+shuffle PRNG for determinism; torch.Generator may be used only if it reproduces the exact bitstream.
+  - Distinct RNG domains: noise, mosaic, misset. Spec requires fixed defaults and -seed overrides. Implement the spec's LCG+shuffle PRNG for determinism; torch.Generator may be used only if it reproduces the exact bitstream.
 
-- ADR-06 Interpolation Fallback
+- ADR-08 Differentiability Preservation [CRITICAL]
+  - All operations on differentiable parameters must maintain computation graph connectivity. See Section 15 for comprehensive guidelines.
+  - Use @property methods for derived tensors, never overwrite with `.item()` or detached values.
+  - Implement boundary enforcement: type conversions at call sites, tensor assumptions in core methods.
+
+- ADR-06 Interpolation Fallback [IMPLEMENTED]
   - Tricubic interpolation is enabled/disabled per spec. On out-of-range neighborhood, emit one-time warning, use default_F for that eval, and disable interpolation for the remainder of the run.
+  - Implementation complete: `polint`/`polin2`/`polin3` in `utils/physics.py`, `_tricubic_interpolation` in `models/crystal.py`
+  - Auto-enables for crystals with any dimension ≤ 2 cells
 
 - ADR-07 Oversample_* “Last-value” Semantics
   - When oversample_thick/polar/omega are NOT set, apply final capture/polarization/Ω once using the last computed value (loop-order dependent), matching the spec’s caveat.

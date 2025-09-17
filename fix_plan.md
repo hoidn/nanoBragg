@@ -23,20 +23,35 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - Out-of-range queries correctly return default_F
   - Removed duplicate `load_hkl()` method definition
 
+### AT-STR-002: Tricubic interpolation with fallback
+- **Status**: COMPLETE
+- **Implementation**: Fully implemented in `Crystal._tricubic_interpolation()`
+- **Test**: Created `tests/test_at_str_002.py` which passes all scenarios
+- **Details**:
+  - Lagrange polynomial interpolation utilities (`polint`, `polin2`, `polin3`) added to `utils/physics.py`
+  - 4×4×4 neighborhood tricubic interpolation matching C implementation
+  - Out-of-bounds detection with one-time warning and permanent fallback to nearest-neighbor
+  - Auto-enable for small crystals (any dimension ≤ 2 cells)
+
+### AT-GEO-002: Pivot defaults and overrides
+- **Status**: COMPLETE
+- **Implementation**: Automatic pivot selection logic added to `DetectorConfig`
+- **Test**: Created `tests/test_at_geo_002.py` which passes all scenarios
+- **Details**:
+  - Added `close_distance_mm` field to DetectorConfig
+  - `from_cli_args()` factory method implements AT-GEO-002 rules:
+    - Only -distance provided → pivot = BEAM
+    - Only -close_distance provided → pivot = SAMPLE
+    - Explicit -pivot override always wins
+  - Direct instantiation also supports automatic pivot selection in `__post_init__`
+
 ## In Progress 🚧
 
 None currently.
 
 ## High Priority TODO 🔴
 
-### Structure Factors & Interpolation (AT-STR-002)
-- **Priority**: CRITICAL - Required for accurate simulations
-- **Tasks**:
-  - [ ] Implement tricubic interpolation with fallback
-  - [ ] Add tests for interpolation behavior
-
-### Beam Model & Geometry (AT-GEO-002, AT-GEO-003, AT-GEO-004)
-- [ ] AT-GEO-002: Pivot defaults and overrides
+### Beam Model & Geometry (AT-GEO-003, AT-GEO-004)
 - [ ] AT-GEO-003: r-factor distance update and beam-center preservation
 - [ ] AT-GEO-004: Two-theta axis defaults by convention
 - [ ] AT-GEO-005: Curved detector mapping

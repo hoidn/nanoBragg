@@ -133,6 +133,7 @@ See “Lattice factors”.
     - -osc <deg>: Oscillation range.
     - -phistep <deg>: Step size.
     - -phisteps <int>: Number of steps.
+    - -dmin <Å>: Minimum d-spacing cutoff. Subpaths with computed d < dmin are skipped.
     - -oversample <int>: Sub-pixel sampling per axis (square grid).
     - -oversample_thick: Recompute absorption per subpixel (see “Normalization” caveat).
     - -oversample_polar: Recompute polarization per subpixel (see “Normalization” caveat).

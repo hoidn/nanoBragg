@@ -133,6 +133,7 @@ class DetectorConfig:
     # Basic geometry (user units: mm)
     distance_mm: Union[float, torch.Tensor] = 100.0
     pixel_size_mm: Union[float, torch.Tensor] = 0.1
+    close_distance_mm: Optional[Union[float, torch.Tensor]] = None  # For AT-GEO-002
 
     # Detector dimensions
     spixels: int = 1024  # slow axis pixels
@@ -153,13 +154,36 @@ class DetectorConfig:
 
     # Convention and pivot
     detector_convention: DetectorConvention = DetectorConvention.MOSFLM
-    detector_pivot: DetectorPivot = DetectorPivot.SAMPLE
+    detector_pivot: Optional[DetectorPivot] = None  # Will be auto-selected per AT-GEO-002
 
     # Sampling
     oversample: int = 1
 
     def __post_init__(self):
-        """Validate configuration and set defaults."""
+        """Validate configuration and set defaults.
+
+        Implements AT-GEO-002 automatic pivot selection logic:
+        - If only distance_mm is provided (not close_distance_mm): pivot = BEAM
+        - If only close_distance_mm is provided: pivot = SAMPLE
+        - If detector_pivot is explicitly set: use that (explicit override wins)
+        """
+        # AT-GEO-002: Automatic pivot selection based on distance parameters
+        if self.detector_pivot is None:
+            # Determine if distance_mm was explicitly provided (not just defaulted)
+            # Note: In real CLI, we'd know if user provided -distance vs -close_distance
+            # For testing, we use the presence/absence of close_distance_mm as indicator
+
+            if self.close_distance_mm is not None:
+                # Setup B: -close_distance provided -> pivot SHALL be SAMPLE
+                self.detector_pivot = DetectorPivot.SAMPLE
+                # Use close_distance as the actual distance if distance wasn't provided
+                if self.distance_mm == 100.0:  # Default value, likely not explicitly set
+                    self.distance_mm = self.close_distance_mm
+            else:
+                # Setup A: Only -distance provided -> pivot SHALL be BEAM
+                self.detector_pivot = DetectorPivot.BEAM
+        # Setup C: Explicit -pivot override is already set, keep it
+
         # Set default twotheta axis if not provided
         if self.twotheta_axis is None:
             # Default depends on detector convention (from nanoBragg.c)
@@ -189,6 +213,56 @@ class DetectorConfig:
         # Validate oversample
         if self.oversample < 1:
             raise ValueError("Oversample must be at least 1")
+
+    @classmethod
+    def from_cli_args(
+        cls,
+        distance_mm: Optional[Union[float, torch.Tensor]] = None,
+        close_distance_mm: Optional[Union[float, torch.Tensor]] = None,
+        pivot: Optional[str] = None,
+        **kwargs
+    ) -> "DetectorConfig":
+        """Create DetectorConfig from CLI-style arguments with AT-GEO-002 logic.
+
+        This factory method implements the AT-GEO-002 pivot selection requirements:
+        - If only -distance is provided: pivot = BEAM
+        - If only -close_distance is provided: pivot = SAMPLE
+        - If -pivot is explicitly provided: use that (override wins)
+
+        Args:
+            distance_mm: Value from -distance flag (None if not provided)
+            close_distance_mm: Value from -close_distance flag (None if not provided)
+            pivot: Explicit pivot override from -pivot flag ("beam" or "sample")
+            **kwargs: Other DetectorConfig parameters
+
+        Returns:
+            DetectorConfig with appropriate pivot setting per AT-GEO-002
+        """
+        # Determine detector_pivot based on AT-GEO-002 rules
+        if pivot is not None:
+            # Setup C: Explicit pivot override wins
+            detector_pivot = DetectorPivot.BEAM if pivot.lower() == "beam" else DetectorPivot.SAMPLE
+            # If only close_distance provided, use it as distance
+            if close_distance_mm is not None and distance_mm is None:
+                distance_mm = close_distance_mm
+        elif close_distance_mm is not None and distance_mm is None:
+            # Setup B: Only -close_distance provided -> SAMPLE pivot
+            detector_pivot = DetectorPivot.SAMPLE
+            distance_mm = close_distance_mm  # Use close_distance as actual distance
+        elif distance_mm is not None and close_distance_mm is None:
+            # Setup A: Only -distance provided -> BEAM pivot
+            detector_pivot = DetectorPivot.BEAM
+        else:
+            # Default case (shouldn't happen in normal CLI usage)
+            detector_pivot = None  # Let __post_init__ decide
+
+        # Create config with determined pivot
+        return cls(
+            distance_mm=distance_mm if distance_mm is not None else 100.0,
+            close_distance_mm=close_distance_mm,
+            detector_pivot=detector_pivot,
+            **kwargs
+        )
 
 
 @dataclass

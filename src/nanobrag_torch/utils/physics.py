@@ -169,3 +169,134 @@ def polarization_factor(
     raise NotImplementedError(
         "TODO: Port logic from nanoBragg.c for polarization_factor"
     )
+
+
+def polint(xa: torch.Tensor, ya: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+    """
+    4-point Lagrange polynomial interpolation.
+
+    C-Code Implementation Reference (from nanoBragg.c, lines 4021-4029):
+    ```c
+    void polint(double *xa, double *ya, double x, double *y)
+    {
+        double x0,x1,x2,x3;
+        x0 = (x-xa[1])*(x-xa[2])*(x-xa[3])*ya[0]/((xa[0]-xa[1])*(xa[0]-xa[2])*(xa[0]-xa[3]));
+        x1 = (x-xa[0])*(x-xa[2])*(x-xa[3])*ya[1]/((xa[1]-xa[0])*(xa[1]-xa[2])*(xa[1]-xa[3]));
+        x2 = (x-xa[0])*(x-xa[1])*(x-xa[3])*ya[2]/((xa[2]-xa[0])*(xa[2]-xa[1])*(xa[2]-xa[3]));
+        x3 = (x-xa[0])*(x-xa[1])*(x-xa[2])*ya[3]/((xa[3]-xa[0])*(xa[3]-xa[1])*(xa[3]-xa[2]));
+        *y = x0+x1+x2+x3;
+    }
+    ```
+
+    Args:
+        xa: 4-element tensor of x coordinates
+        ya: 4-element tensor of y values at xa points
+        x: Point at which to evaluate interpolation
+
+    Returns:
+        Interpolated value at x
+    """
+    # Ensure we're working with the right shape
+    if xa.dim() == 0:
+        xa = xa.unsqueeze(0)
+    if ya.dim() == 0:
+        ya = ya.unsqueeze(0)
+    if x.dim() == 0:
+        x = x.unsqueeze(0)
+
+    # Extract the 4 points
+    xa0, xa1, xa2, xa3 = xa[0], xa[1], xa[2], xa[3]
+    ya0, ya1, ya2, ya3 = ya[0], ya[1], ya[2], ya[3]
+
+    # Compute Lagrange basis polynomials
+    x0 = (x - xa1) * (x - xa2) * (x - xa3) * ya0 / ((xa0 - xa1) * (xa0 - xa2) * (xa0 - xa3))
+    x1 = (x - xa0) * (x - xa2) * (x - xa3) * ya1 / ((xa1 - xa0) * (xa1 - xa2) * (xa1 - xa3))
+    x2 = (x - xa0) * (x - xa1) * (x - xa3) * ya2 / ((xa2 - xa0) * (xa2 - xa1) * (xa2 - xa3))
+    x3 = (x - xa0) * (x - xa1) * (x - xa2) * ya3 / ((xa3 - xa0) * (xa3 - xa1) * (xa3 - xa2))
+
+    return x0 + x1 + x2 + x3
+
+
+def polin2(x1a: torch.Tensor, x2a: torch.Tensor, ya: torch.Tensor,
+           x1: torch.Tensor, x2: torch.Tensor) -> torch.Tensor:
+    """
+    2D polynomial interpolation using nested 1D interpolations.
+
+    C-Code Implementation Reference (from nanoBragg.c, lines 4033-4042):
+    ```c
+    void polin2(double *x1a, double *x2a, double **ya, double x1, double x2, double *y)
+    {
+        void polint(double *xa, double *ya, double x, double *y);
+        int j;
+        double ymtmp[4];
+        for (j=1;j<=4;j++) {
+            polint(x2a,ya[j-1],x2,&ymtmp[j-1]);
+        }
+        polint(x1a,ymtmp,x1,y);
+    }
+    ```
+
+    Args:
+        x1a: 4-element tensor of x1 coordinates
+        x2a: 4-element tensor of x2 coordinates
+        ya: 4x4 tensor of values at grid points
+        x1: First coordinate for interpolation
+        x2: Second coordinate for interpolation
+
+    Returns:
+        Interpolated value at (x1, x2)
+    """
+    ymtmp = torch.zeros(4, dtype=ya.dtype, device=ya.device)
+
+    # Interpolate along x2 direction for each x1 slice
+    for j in range(4):
+        ymtmp[j] = polint(x2a, ya[j], x2)
+
+    # Interpolate along x1 direction
+    return polint(x1a, ymtmp, x1)
+
+
+def polin3(x1a: torch.Tensor, x2a: torch.Tensor, x3a: torch.Tensor,
+           ya: torch.Tensor, x1: torch.Tensor, x2: torch.Tensor,
+           x3: torch.Tensor) -> torch.Tensor:
+    """
+    3D tricubic polynomial interpolation using nested 2D interpolations.
+
+    C-Code Implementation Reference (from nanoBragg.c, lines 4045-4058):
+    ```c
+    void polin3(double *x1a, double *x2a, double *x3a, double ***ya, double x1,
+            double x2, double x3, double *y)
+    {
+        void polint(double *xa, double ya[], double x, double *y);
+        void polin2(double *x1a, double *x2a, double **ya, double x1,double x2, double *y);
+        void polin1(double *x1a, double *ya, double x1, double *y);
+        int j;
+        double ymtmp[4];
+
+        for (j=1;j<=4;j++) {
+            polin2(x2a,x3a,&ya[j-1][0],x2,x3,&ymtmp[j-1]);
+        }
+        polint(x1a,ymtmp,x1,y);
+    }
+    ```
+
+    Args:
+        x1a: 4-element tensor of x1 (h) coordinates
+        x2a: 4-element tensor of x2 (k) coordinates
+        x3a: 4-element tensor of x3 (l) coordinates
+        ya: 4x4x4 tensor of structure factor values at grid points
+        x1: First coordinate (h) for interpolation
+        x2: Second coordinate (k) for interpolation
+        x3: Third coordinate (l) for interpolation
+
+    Returns:
+        Tricubically interpolated structure factor at (x1, x2, x3)
+    """
+    ymtmp = torch.zeros(4, dtype=ya.dtype, device=ya.device)
+
+    # Interpolate along x2,x3 plane for each x1 slice
+    for j in range(4):
+        ymtmp[j] = polin2(x2a, x3a, ya[j], x2, x3)
+
+    # Final interpolation along x1 direction
+    return polint(x1a, ymtmp, x1)
