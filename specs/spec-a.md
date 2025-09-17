@@ -144,9 +144,7 @@ See “Lattice factors”.
 (see exact formula in “Background & noise”).
 - Source intensity:
     - -fluence <photons/m^2>, or use:
-    - -flux <photons/s>, -exposure <s>, -beamsize <mm>: Determines fluence = flux·exposure /
-beamsize^2. Also clips sample_y and sample_z to beamsize if beamsize is positive and smaller—warning
-is printed.
+    - -flux &lt;photons/s&gt;, -exposure &lt;s&gt;, -beamsize &lt;mm&gt;: Determines fluence = flux·exposure / beamsize^2. Also clips sample_y and sample_z to beamsize if beamsize is positive and smaller—warning is printed.
 - Output:
     - -floatfile|-floatimage <file>: Raw floats (pixels).
     - -intfile|-intimage <file>: SMV unsigned short (scaled).
