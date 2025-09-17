@@ -600,6 +600,70 @@ Scope & Non‑Goals (Informative)
 - Interpolated amorphous background from -stol files is read but not used to alter pixel intensities
 in this version.
 
+Acceptance Tests (Normative)
+
+Structure Factors & Fdump
+
+1. HKL two-pass bounds and grid
+   - Given an HKL file containing at least three entries with distinct h,k,l (e.g., −1 0 0 F1, 0 0 0 F0, 1 0 0 F2), the loader SHALL:
+     - First pass: compute h_min, h_max, k_min, k_max, l_min, l_max matching the extrema in the file; warn on any non-integer h,k,l values.
+     - Second pass: allocate a 3D grid of size (h_range+1)×(k_range+1)×(l_range+1) and populate the exact indices with their F values.
+     - If ranges are invalid (any range < 0), the program SHALL exit with an error.
+2. default_F behavior
+   - When -default_F > 0 and an HKL file is provided, the grid SHALL be prefilled to default_F before loading, and any HKL not present in the file remains default_F. When -default_F == 0, unspecified entries remain 0.
+   - During rendering, for a nearest-neighbor lookup outside the HKL bounds, the structure factor amplitude used SHALL be default_F (or 0 if default_F==0).
+3. Interpolation enabling and out-of-range handling
+   - Auto-selection: If any of Na, Nb, Nc ≤ 2, tricubic interpolation SHALL be enabled by default; otherwise it SHALL be disabled. CLI flags -interpolate and -nointerpolate override this.
+   - If, while interpolating, any 4×4×4 neighborhood would be out of bounds for the current (h,k,l), the implementation SHALL set F_cell to default_F for that evaluation AND permanently disable interpolation for the remainder of the run (subsequent evaluations use nearest-neighbor rules).
+4. Binary cache (Fdump.bin)
+   - After successfully loading an HKL file, the program SHALL write a cache file containing: a header line with six integers (h_min h_max k_min k_max l_min l_max) followed by a form feed, then contiguous pages of doubles for each k-slab across h, each containing (l_range+1) values.
+   - On a subsequent run without -hkl, if Fdump.bin is readable, the program SHALL load the exact same grid extents and values as produced from the original HKL input.
+
+Beam Model & Geometry
+
+5. Convention initialization
+   - Selecting each convention SHALL initialize beam and detector axes and pivots as follows:
+     - MOSFLM and DENZO: beam +X, detector normal +X, fast +Z, slow −Y, pivot BEAM; MOSFLM maps Fbeam = Ybeam + 0.5·pixel, Sbeam = Xbeam + 0.5·pixel; DENZO uses Fbeam = Ybeam, Sbeam = Xbeam.
+     - ADXV: beam +Z, detector normal +Z, fast +X, slow −Y, pivot BEAM; Fbeam = Xbeam, Sbeam = detsize_s − Ybeam.
+     - XDS: beam +Z, detector normal +Z, fast +X, slow +Y, pivot SAMPLE; Fbeam = Xbeam, Sbeam = Ybeam.
+     - DIALS: beam +Z, detector normal +Z, fast +X, slow +Y, pivot SAMPLE; Fbeam = Xbeam, Sbeam = Ybeam.
+     - CUSTOM: Using user-specified axes (any of fast/slow/normal/beam/polar/spindle/twotheta/pix0) SHALL set convention to CUSTOM without modifying pivot unless -pivot is provided.
+6. Pivot semantics and detector origin
+   - BEAM pivot: With distance d and Fbeam/Sbeam in meters, the detector origin vector (from sample to detector local origin) SHALL be set to −Fbeam·f − Sbeam·s + d·b prior to subsequent rotations; after orientation, the reported direct-beam center in the detector frame SHALL agree with the beam-center mapping for the active convention.
+   - SAMPLE pivot: With near-point Fclose/Sclose and close_distance in meters, the origin vector SHALL be set to −Fclose·f − Sclose·s + close_distance·o and then rotated; after orientation, Fclose = −origin·f, Sclose = −origin·s, close_distance = origin·o.
+7. Rotations and two-theta
+   - Detector axis rotations SHALL be applied in order: rotx about +X, then roty about +Y, then rotz about +Z, then a rotation of all three axes (and origin) about twotheta_axis by the specified two-theta angle.
+   - The reported TWOTHETA value in outputs SHALL equal the user-specified value (deg).
+8. Pixel mapping and solid angle
+   - For each subpixel center (Fdet,Sdet), the 3D position vector SHALL be pos = origin + Fdet·f + Sdet·s (+ Odet·o for thickness layers). The diffracted unit vector is unit(pos), and the pixel solid-angle factor SHALL be:
+     - Ω = (pixel_size^2 / |pos|^2)·(close_distance/|pos|) by default; if -point_pixel is set, Ω = 1/|pos|^2.
+9. Polarization factor toggles
+   - If -nopolar is set, the polarization factor applied SHALL be 1 for all contributions.
+   - If -polar K is provided, the Kahn model SHALL be used with that K to compute the factor; with -oversample_polar it SHALL be applied per subpixel, otherwise once per pixel using the last computed value.
+
+CLI, Config, and State Initialization
+
+10. Header ingestion and precedence
+    - When -img and/or -mask are provided, recognized header fields (pixel counts, pixel size, distance, close_distance, wavelength, beam center, ORGX/ORGY, φ start, oscillation, two-theta) SHALL initialize corresponding parameters; when both -img and -mask are provided, the last one read SHALL win for shared keys.
+    - For -mask headers, BEAM_CENTER_Y SHALL be interpreted with a flip along the slow axis (Ybeam = detsize_s − value_mm/1000); for -img headers, BEAM_CENTER_Y SHALL be used directly (Ybeam = value_mm/1000).
+11. Pivot choice
+    - Providing -distance (without -close_distance) SHALL set pivot to BEAM. Providing -close_distance SHALL set pivot to SAMPLE. The -pivot flag SHALL override either.
+12. Auto-selection of step counts
+    - For each of horizontal divergence, vertical divergence, spectral dispersion, phi, and detector thickness sampling, missing combinations of count/range/step SHALL be resolved per the rules in “Sources, Divergence & Dispersion” and “Sampling & Accumulation”, resulting in:
+      - No parameters → count=1, range=0, step=0.
+      - Only step → range=step, count=2.
+      - Only range → step=range, count=2.
+      - Only count → range set to a finite default (angles: 1.0 rad; thickness: 0.5e-6 m) and step derived as range/(count−1) with count coerced to ≥2 for nonzero range.
+13. Fluence and clipping
+    - If -flux, -exposure, and -beamsize are provided, fluence SHALL be set to flux·exposure / beamsize^2. If beamsize > 0 and beamsize < sample_y or sample_z, the implementation SHALL clip those sample dimensions to beamsize and emit a warning.
+14. ROI and mask behavior
+    - Pixels outside the specified ROI (−roi xmin xmax ymin ymax) SHALL be skipped for simulation and excluded from statistics and outputs. Pixels with mask value 0 from -mask SHALL be skipped similarly.
+15. Random seeds
+    - Default seeds SHALL be: noise seed = negative wall-clock time; mosaic_seed = −12345678; misset_seed = noise seed. CLI -seed, -mosaic_seed, and -misset_seed SHALL override these.
+16. Outputs and scaling
+    - If -intfile is written and -scale ≤ 0 or not provided, the scaling factor SHALL be set to 55000 / max_float_pixel when max > 0, else 1.0; the ADC offset SHALL be added (default 40.0), values SHALL be clipped to [0,65535], and rounded to nearest.
+    - If -nonoise is set, a noise image SHALL NOT be written even if -noisefile is specified; otherwise, the noise image SHALL be generated by Poisson (or Gaussian approximation for large means) about the float image, then offset, clipped, and written with the same header conventions.
+
 Acceptance Criteria (Normative)
 
 - Units and conversions listed for all input quantities and internal transformations.
@@ -620,6 +684,110 @@ warnings.
     - Steps normalization and noted caveats for the oversample_* multiplicative application.
 - File formats documented exactly as written/read, including SMV header keys, units, 512-byte
 padding, and data ordering.
+
+Acceptance Tests (Normative)
+
+- Geometry & Conventions
+  - AT-GEO-001 MOSFLM beam-center mapping and 0.5-pixel offsets
+    - Setup: detector_convention=MOSFLM; pixel_size=0.1 mm; distance=100.0 mm; beam_center_X=beam_center_Y=51.2 mm; pivot=BEAM; no rotations; twotheta=0.
+    - Expectation: Using f=[0,0,1], s=[0,-1,0], o=[1,0,0], Fbeam=Sbeam=(51.2+0.05) mm. The detector origin SHALL be pix0_vector = [0.1, 0.05125, -0.05125] meters (±1e-9 m tolerance).
+  - AT-GEO-002 Pivot defaults and overrides
+    - Setup A: Provide -distance only (no -close_distance), MOSFLM.
+    - Expectation: pivot SHALL be BEAM.
+    - Setup B: Provide -close_distance only.
+    - Expectation: pivot SHALL be SAMPLE.
+    - Setup C: Provide -pivot sample when -distance is also set.
+    - Expectation: pivot SHALL be SAMPLE (explicit override wins).
+  - AT-GEO-003 r-factor distance update and beam-center preservation
+    - Setup: Non-zero detector rotations + twotheta; set close_distance explicitly; compute pre-rotation basis then rotate per spec.
+    - Expectation: r = b·o_after_rotations; distance SHALL be updated to distance = close_distance / r and direct-beam Fbeam/Sbeam computed from R = close_distance/r·b − D0 SHALL equal the user’s beam center (within tolerance), for both BEAM and SAMPLE pivots.
+  - AT-GEO-004 Two-theta axis defaults by convention
+    - Setup: For each convention: MOSFLM→axis=[0,0,-1], XDS→[1,0,0], DIALS→[0,1,0]. Apply a small twotheta.
+    - Expectation: The applied rotation axis SHALL match the convention default unless overridden. The reported TWOTHETA value SHALL equal the user-specified value (deg).
+  - AT-GEO-005 Curved detector mapping
+    - Setup: Enable -curved_det; choose several off-center pixels.
+    - Expectation: The curved mapping SHALL yield |pos| equal for all pixels at a given Fdet,Sdet angular offset (spherical arc mapping), and differ from planar mapping in a way consistent with the spec’s small-angle rotations about s and f by Sdet/distance and Fdet/distance respectively.
+  - AT-GEO-006 Point-pixel solid angle
+    - Setup: Pick an off-center pixel with finite close_distance and R.
+    - Expectation: With -point_pixel, Ω SHALL equal 1/R^2. Without it, Ω SHALL equal (pixel_size^2/R^2)·(close_distance/R).
+
+- Sampling, Normalization, Absorption
+  - AT-SAM-001 Steps normalization
+    - Setup: sources=1; mosaic_domains=1; oversample=1; phisteps=2 with identical physics across steps (e.g., zero mosaic and symmetric phi so F_cell and F_latt identical); disable thickness/polar/omega oversample toggles.
+    - Expectation: Final per-pixel scale SHALL divide by steps=2 so intensity matches the single-step case (within numeric tolerance).
+  - AT-SAM-002 Oversample_* last-value semantics
+    - Setup: oversample=2; construct a pixel where ω or polarization varies across subpixels (e.g., off-center pixel); leave -oversample_omega and -oversample_polar unset; disable absorption.
+    - Expectation: Final scale SHALL multiply by the last-computed ω and polarization values (not their averages). Enabling -oversample_omega or -oversample_polar SHALL switch to per-subpixel multiplicative application (no “last-value” behavior).
+  - AT-ABS-001 Detector absorption layering
+    - Setup: thickness>0; thicksteps>1; finite μ from -detector_abs; choose a pixel with parallax ρ=d·o ≠ 0; disable oversample_thick.
+    - Expectation: Per-layer capture fractions SHALL follow exp(−t·Δz·μ/ρ) − exp(−(t+1)·Δz·μ/ρ), summing (t=0..steps−1) to 1−exp(−thickness·μ/ρ). With -oversample_thick unset, the final S SHALL be multiplied by the last layer’s capture fraction; with -oversample_thick set, the running sum SHALL be multiplied by each layer’s capture fraction as terms accumulate.
+  - AT-SAM-003 dmin culling
+    - Setup: Choose a pixel/source such that stol=0.5·|q| yields dmin < 0.5/stol; set dmin positive.
+    - Expectation: The contribution for that subpath SHALL be skipped.
+
+- Structure Factors & Interpolation
+  - AT-STR-001 Nearest-neighbor lookup when interpolation off
+    - Setup: Load a small HKL grid with known F values; set -nointerpolate; query pixels yielding integer (h0,k0,l0) both in-range and out-of-range.
+    - Expectation: In-range uses grid values; out-of-range uses default_F.
+  - AT-STR-002 Tricubic interpolation and fallback
+    - Setup: Enable -interpolate; choose fractional h,k,l within a grid with complete 4×4×4 neighborhoods.
+    - Expectation: F_cell SHALL be tricubically interpolated between neighbors. If a required 4-neighborhood is out of bounds at any evaluation, implementation SHALL print a one-time warning, use default_F for that evaluation, and permanently disable interpolation for the rest of the run.
+  - AT-STR-003 Lattice shape models
+    - Setup: Compare SQUARE (sincg) vs ROUND (sinc3) vs GAUSS vs TOPHAT using identical crystal sizes and a reflection near a peak.
+    - Expectation: Implementations SHALL produce F_latt per the formulas: SQUARE=Π sincg(π·Δ), ROUND=Na·Nb·Nc·0.723601254558268·sinc3(π·sqrt(fudge·hrad^2)), GAUSS and TOPHAT as specified; ROUND scales and cutoff behavior SHALL match the spec.
+
+- Polarization
+  - AT-POL-001 Kahn model and toggles
+    - Setup: Define incident i, diffracted d, polarization axis p and Kahn factor K in (0,1); compute a pixel with non-zero 2θ and ψ.
+    - Expectation: With -polar K, polarization factor per pixel SHALL equal 0.5·(1 + cos^2(2θ) − K·cos(2ψ)·sin^2(2θ)). With -nopolar, factor SHALL be 1. With -oversample_polar unset, the final pixel scale SHALL use the last computed polarization value; with -oversample_polar set, apply per subpixel to the running sum.
+
+- Background & Noise
+  - AT-BKG-001 Water background term
+    - Setup: -water set to a finite µm; otherwise zero contributions (e.g., default_F=0); compute one pixel.
+    - Expectation: Initial accumulator I SHALL equal I_bg = (F_bg^2)·r_e^2·fluence·(water_size^3)·1e6·Avogadro/18 before adding any Bragg terms.
+  - AT-NOISE-001 Noise image generation and seeds
+    - Setup: Write -noisefile; set -seed; choose pixels with means <12, between 12 and 1e6, and >1e6.
+    - Expectation: For <12, use exact Poisson; for large means up to 1e6, use rejection sampling; for >1e6, use Gaussian approximation N(mean, variance=mean). Output reproducibility SHALL follow -seed; additive ADC and clipping SHALL be applied; overload count SHALL be reported.
+
+- File I/O & Headers
+  - AT-IO-001 SMV header and data ordering
+    - Setup: Write -intfile and -noisefile; big_endian vs little_endian as appropriate.
+    - Expectation: Header SHALL include all required keys exactly as listed (HEADER_BYTES, DIM, BYTE_ORDER, TYPE, SIZE1/2, PIXEL_SIZE, DISTANCE, WAVELENGTH, BEAM_CENTER_X/Y, ADXV/MOSFLM/DENZO centers, DIALS_ORIGIN, XDS_ORGX/ORGY, CLOSE_DISTANCE, PHI/OSC_START/OSC_RANGE, TWOTHETA, DETECTOR_SN, BEAMLINE), closed with }\f and padded to 512 bytes; data SHALL be fast-major (row-wise) with pixel index = slow*fpixels + fast.
+  - AT-IO-002 PGM writer
+    - Setup: Write -pgmfile with and without -pgmscale.
+    - Expectation: File SHALL be P5 with width, height, one comment line “# pixels scaled by <pgm_scale>”, 255, followed by width*height bytes with values = floor(min(255, float_pixel * pgm_scale)).
+  - AT-IO-003 Fdump caching
+    - Setup: Provide -hkl; verify Fdump.bin is written; re-run without -hkl.
+    - Expectation: Implementation SHALL read HKLs from Fdump.bin; header and data layout SHALL match spec; behavior when -default_F prefills missing points SHALL be preserved.
+
+- Sources, Divergence & Dispersion
+  - AT-SRC-001 Sourcefile and weighting
+    - Setup: -sourcefile with two sources having distinct weights and λ; disable other sampling.
+    - Expectation: steps = 2; intensity contributions SHALL sum with per-source λ and weight, then divide by steps.
+  - AT-SRC-002 Auto-selection of count/range/step
+    - Setup: Provide only step (or only range, or only count) for divergence/dispersion; also thickness sampling.
+    - Expectation: The missing quantities SHALL resolve to count/range/step per the rules in the spec, with angles default range=1.0 rad and thickness default range=0.5e-6 m when only count is provided.
+
+- Precedence, Header Ingestion, ROI & Mask
+  - AT-PRE-001 Header precedence (-img vs -mask)
+    - Setup: Provide both -img and -mask; overlapping header keys differ.
+    - Expectation: The last file read SHALL win for shared keys; for -mask ingestion, BEAM_CENTER_Y SHALL be interpreted as detsize_s − value_mm.
+  - AT-PRE-002 Pivot and origin overrides
+    - Setup: Use -Xbeam/-Ybeam vs -Xclose/-Yclose vs -ORGX/-ORGY and -pivot.
+    - Expectation: -Xbeam/-Ybeam SHALL force pivot=BEAM; -Xclose/-Yclose and -ORGX/-ORGY SHALL force pivot=SAMPLE; -pivot SHALL override both.
+  - AT-ROI-001 ROI and mask behavior
+    - Setup: Provide -roi limiting to a sub-rectangle and a -mask with zeros in a subset.
+    - Expectation: Pixels outside ROI or with mask value 0 SHALL be skipped in rendering and excluded from statistics.
+
+- Fluence, Flux, Exposure, Beamsize
+  - AT-FLU-001 Fluence calculation and sample clipping
+    - Setup: Provide -flux, -exposure, -beamsize, and also -fluence; set beamsize smaller than sample_y/z.
+    - Expectation: fluence SHALL be recomputed as flux·exposure/beamsize^2 whenever flux != 0 and exposure > 0 and beamsize ≥ 0; exposure > 0 SHALL recompute flux consistently; when beamsize > 0 and smaller than sample_y or sample_z, those sample dimensions SHALL be clipped to beamsize and a warning printed.
+
+- Statistics
+  - AT-STA-001 Float-image statistics
+    - Setup: Render a small ROI with known pattern; no scaling to int/noise.
+    - Expectation: Reported max value and its last-set subpixel coordinates; mean, RMS, and RMSD computed over unmasked ROI pixels as per definitions in the spec.
 
 Quality Bar Checklist (Informative)
 

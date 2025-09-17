@@ -1,0 +1,69 @@
+================================================================================
+PARALLEL TRACE: Pixel (512, 512) through nanoBragg pipeline
+================================================================================
+
+CONFIGURATION:
+TRACE_PY:detector_convention=mosflm
+TRACE_PY:detector_pivot=sample
+TRACE_PY:distance_mm=100
+TRACE_PY:beam_center_s=51.2
+TRACE_PY:beam_center_f=51.2
+TRACE_PY:pixel_size_mm=0.1
+
+ROTATION ANGLES (degrees):
+TRACE_PY:detector_rotx_deg=5
+TRACE_PY:detector_roty_deg=3
+TRACE_PY:detector_rotz_deg=2
+TRACE_PY:detector_twotheta_deg=20
+
+ROTATION ANGLES (radians):
+TRACE_PY:detector_rotx_rad=0.0872664600610733
+TRACE_PY:detector_roty_rad=0.0523598790168762
+TRACE_PY:detector_rotz_rad=0.0349065847694874
+TRACE_PY:detector_twotheta_rad=0.349065840244293
+
+========================================
+DETECTOR GEOMETRY CALCULATION
+========================================
+
+INITIAL BASIS VECTORS (MOSFLM convention):
+TRACE_PY:initial_fdet=0 0 1
+TRACE_PY:initial_sdet=0 -1 0
+TRACE_PY:initial_odet=1 0 0
+
+ROTATED BASIS VECTORS:
+TRACE_PY:fdet_vec=0.022652442886597 -0.0990011927852581 0.994829448025321
+TRACE_PY:sdet_vec=-0.312179211482181 -0.946027918744947 -0.0870362962991201
+TRACE_PY:odet_vec=0.949753129370803 -0.308593487912821 -0.0523359576979933
+
+PIX0_VECTOR CALCULATION:
+TRACE_PY:pivot_mode=SAMPLE (calculate pix0 BEFORE rotations, then rotate)
+TRACE_PY:Fclose_m=0.00517
+TRACE_PY:Sclose_m=0.00517
+TRACE_PY:distance_m=0.1
+TRACE_PY:pix0_unrotated=0.100000001490116 0.0051699997857213 -0.0051699997857213
+TRACE_PY:pix0_vector=0.109813559827604 0.0226983931746408 -0.0517579947957671
+
+PIXEL (512, 512) POSITION:
+TRACE_PY:pixel_pos_meters=0.0949897892755101 -0.0308070973357056 -0.00527898542738564
+TRACE_PY:pixel_pos_angstroms=949897892.7551 -308070973.357056 -52789854.2738564
+
+SCATTERING VECTOR CALCULATION:
+TRACE_PY:wavelength_A=6.2
+TRACE_PY:k_incident=1.01341700553894 0 0
+TRACE_PY:k_scattered=0.962642417900668 -0.312204278943387 -0.0534981215838013
+TRACE_PY:S_vector=-0.0507745876382729 -0.312204278943387 -0.0534981215838013
+
+========================================
+CRYSTAL LATTICE CALCULATION
+========================================
+
+REAL-SPACE LATTICE VECTORS (Angstroms):
+Traceback (most recent call last):
+  File "/Users/ollie/Documents/nanoBragg/scripts/trace_pixel_512_512.py", line 267, in <module>
+    main()
+    ~~~~^^
+  File "/Users/ollie/Documents/nanoBragg/scripts/trace_pixel_512_512.py", line 217, in main
+    trace_vec("a_vec", crystal.a_vec)
+                       ^^^^^^^^^^^^^
+AttributeError: 'Crystal' object has no attribute 'a_vec'

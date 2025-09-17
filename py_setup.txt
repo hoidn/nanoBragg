@@ -1,0 +1,20 @@
+TRACE_PY: Xbeam 0.0612
+TRACE_PY: Ybeam 0.0612
+TRACE_PY: pixel_size 0.0001
+TRACE_PY: distance 0.1
+TRACE_PY: close_distance nan
+TRACE_PY: detector_rotx_rad 0.0872664625997165
+TRACE_PY: detector_roty_rad 0.0523598775598299
+TRACE_PY: detector_rotz_rad 0.0349065850398866
+TRACE_PY: detector_twotheta_rad 0.261799387799149
+TRACE_PY: twotheta_axis 0 0 -1
+TRACE_PY: fdet_vector_initial 0 0 1
+TRACE_PY: sdet_vector_initial 0 -1 0
+TRACE_PY: odet_vector_initial 1 0 0
+TRACE_PY: beam_vector 1 0 0
+TRACE_PY: Fbeam 0.06125
+TRACE_PY: Sbeam 0.06125
+TRACE_PY: distance_for_pix0 0.1
+TRACE_PY: -Fbeam*fdet_vector[1] -1.91067931380357e-17
+TRACE_PY: -Sbeam*sdet_vector[1] 1.39980459874087e-16
+TRACE_PY: distance*beam_vector[1] 0.1

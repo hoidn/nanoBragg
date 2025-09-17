@@ -1,0 +1,188 @@
+--- nanoBragg.c.orig	2025-01-20 12:00:00.000000000 -0800
++++ nanoBragg.c	2025-01-20 12:00:00.000000000 -0800
+@@ -250,6 +250,10 @@
+     double   ***ya, double *x1a, double *x2a, double *x3a, double x1, double x2, double x3, double *y);
+ void polin3(double *x1a, double *x2a, double *x3a, double ***ya, double x1,double x2, double x3, double *y);
+ 
++/* Tracing globals for pixel debugging */
++static int trace_target_fpixel = -1;
++static int trace_target_spixel = -1;
++static int tracing_enabled = 0;
+ 
+ /* rotate a 3-vector in space applied in order phix,phiy,phiz*/
+ double *rotate(double *v, double *newv, double phix, double phiy, double phiz);
+@@ -630,6 +634,20 @@
+             }
+         }
+         
++        if(strstr(argv[i], "-trace_pixel") && (argc > (i+2)))
++        {
++            ++i;
++            trace_target_spixel = atoi(argv[i]);
++            ++i;
++            trace_target_fpixel = atoi(argv[i]);
++            tracing_enabled = 1;
++            printf("Enabling pixel tracing for spixel=%d fpixel=%d\n", 
++                   trace_target_spixel, trace_target_fpixel);
++            /* Set locale for consistent number formatting */
++            setlocale(LC_NUMERIC, "C");
++            continue;
++        }
++
+         if(strstr(argv[i], "-oversample") && (argc > (i+1)))
+         {
+             ++i;
+@@ -1380,6 +1398,7 @@
+         printf("\t-verbose  \t\tprint out progress info\n");
+         printf("\t-printout \t\tprint pixel values\n");
+         printf("\t-printout_pixel  \tpixel values and x,y at a specific pixel\n");
++        printf("\t-trace_pixel s f\tgenerate detailed trace for pixel at (s,f)\n");
+         printf("\t-babble   \t\textra-verbose output\n");
+         printf("\t-progress_meters \tprint meters instead of mm\n");
+         
+@@ -1760,6 +1779,24 @@
+     
+     if(detector_pivot == BEAM){
+         printf("pivoting detector around direct beam spot\n");
++        
++        if(tracing_enabled) {
++            printf("TRACE_C:detector_convention=MOSFLM\n");
++            printf("TRACE_C:detector_pivot=BEAM\n");
++            trace_scalar("distance_mm", distance * 1000.0);
++            trace_scalar("beam_center_s", Xbeam/pixel_size - 0.5);  /* Convert back to pixel coords */
++            trace_scalar("beam_center_f", Ybeam/pixel_size - 0.5);  /* Convert back to pixel coords */
++            trace_scalar("pixel_size_mm", pixel_size * 1000.0);
++            
++            trace_scalar("detector_rotx_deg", detector_rotx * RTD);
++            trace_scalar("detector_roty_deg", detector_roty * RTD);
++            trace_scalar("detector_rotz_deg", detector_rotz * RTD);
++            trace_scalar("detector_twotheta_deg", detector_twotheta * RTD);
++            
++            trace_scalar("detector_rotx_rad", detector_rotx);
++            trace_scalar("detector_roty_rad", detector_roty);
++            trace_scalar("detector_rotz_rad", detector_rotz);
++            trace_scalar("detector_twotheta_rad", detector_twotheta);
+         
+ #ifdef TRACING
+         /* Set locale for consistent number formatting */
+@@ -1837,6 +1874,27 @@
+         trace_vec("pix0_vector", pix0_vector[1], pix0_vector[2], pix0_vector[3]);
+ #endif
+     }
++    
++    if(detector_pivot == SAMPLE && tracing_enabled){
++        printf("TRACE_C:detector_convention=MOSFLM\n");
++        printf("TRACE_C:detector_pivot=SAMPLE\n");
++        trace_scalar("distance_mm", distance * 1000.0);
++        trace_scalar("beam_center_s", Xbeam/pixel_size - 0.5);  /* Convert back to pixel coords */
++        trace_scalar("beam_center_f", Ybeam/pixel_size - 0.5);  /* Convert back to pixel coords */
++        trace_scalar("pixel_size_mm", pixel_size * 1000.0);
++        
++        trace_scalar("detector_rotx_deg", detector_rotx * RTD);
++        trace_scalar("detector_roty_deg", detector_roty * RTD);
++        trace_scalar("detector_rotz_deg", detector_rotz * RTD);
++        trace_scalar("detector_twotheta_deg", detector_twotheta * RTD);
++        
++        trace_scalar("detector_rotx_rad", detector_rotx);
++        trace_scalar("detector_roty_rad", detector_roty);
++        trace_scalar("detector_rotz_rad", detector_rotz);
++        trace_scalar("detector_twotheta_rad", detector_twotheta);
++        
++        trace_vec("pix0_vector", pix0_vector[1], pix0_vector[2], pix0_vector[3]);
++    }
+ 
+     /* what is the point of closest approach between sample and detector? */
+     Fclose         = -dot_product(pix0_vector,fdet_vector);
+@@ -2867,6 +2925,53 @@
+                        /* construct detector subpixel position in 3D space */
+ //                      pixel_X = distance;
+ //                      pixel_Y = Sdet-Ybeam;
+ //                      pixel_Z = Fdet-Xbeam;
++                        
++                        /* Trace specific pixel if requested */
++                        if(tracing_enabled && spixel == trace_target_spixel && fpixel == trace_target_fpixel && 
++                           subS == 0 && subF == 0) {
++                            
++                            printf("TRACE_C:PIXEL_CALCULATION_START=spixel:%d fpixel:%d\n", spixel, fpixel);
++                            
++                            trace_scalar("Fdet_mm", Fdet * 1000.0);
++                            trace_scalar("Sdet_mm", Sdet * 1000.0);
++                            trace_scalar("Odet_mm", Odet * 1000.0);
++                            
++                            /* Log the basis vectors used in calculation */
++                            trace_vec("fdet_vec", fdet_vector[1], fdet_vector[2], fdet_vector[3]);
++                            trace_vec("sdet_vec", sdet_vector[1], sdet_vector[2], sdet_vector[3]);
++                            trace_vec("odet_vec", odet_vector[1], odet_vector[2], odet_vector[3]);
++                            trace_vec("pix0_vector", pix0_vector[1], pix0_vector[2], pix0_vector[3]);
++                            
++                            /* Log individual terms */
++                            double term_f[3] = {Fdet*fdet_vector[1], Fdet*fdet_vector[2], Fdet*fdet_vector[3]};
++                            double term_s[3] = {Sdet*sdet_vector[1], Sdet*sdet_vector[2], Sdet*sdet_vector[3]};
++                            double term_o[3] = {Odet*odet_vector[1], Odet*odet_vector[2], Odet*odet_vector[3]};
++                            
++                            trace_vec("term_f", term_f[0], term_f[1], term_f[2]);
++                            trace_vec("term_s", term_s[0], term_s[1], term_s[2]);
++                            trace_vec("term_o", term_o[0], term_o[1], term_o[2]);
++                        }
++                        
+                         pixel_pos[1] = Fdet*fdet_vector[1]+Sdet*sdet_vector[1]+Odet*odet_vector[1]+pix0_vector[1];
+                         pixel_pos[2] = Fdet*fdet_vector[2]+Sdet*sdet_vector[2]+Odet*odet_vector[2]+pix0_vector[2];
+                         pixel_pos[3] = Fdet*fdet_vector[3]+Sdet*sdet_vector[3]+Odet*odet_vector[3]+pix0_vector[3];
++                        
++                        /* Continue tracing for target pixel */
++                        if(tracing_enabled && spixel == trace_target_spixel && fpixel == trace_target_fpixel && 
++                           subS == 0 && subF == 0) {
++                            
++                            trace_vec("pixel_pos_meters", pixel_pos[1], pixel_pos[2], pixel_pos[3]);
++                            
++                            /* Convert to Angstroms for physics calculations */
++                            double pixel_pos_A[3] = {pixel_pos[1]*1e10, pixel_pos[2]*1e10, pixel_pos[3]*1e10};
++                            trace_vec("pixel_pos_angstroms", pixel_pos_A[0], pixel_pos_A[1], pixel_pos_A[2]);
++                            
++                            /* Log wavelength */
++                            trace_scalar("wavelength_A", lambda0);
++                            
++                            /* Log incident beam vector */
++                            double k_scale = 2.0 * M_PI / lambda0;
++                            trace_vec("k_incident", k_scale * beam_vector[1], k_scale * beam_vector[2], k_scale * beam_vector[3]);
++                        }
++                        
+                         pixel_pos[0] = 0.0;
+                         if(curved_detector) {
+                             /* construct detector pixel that is always "distance" from the sample */
+@@ -2884,6 +2989,32 @@
+                         /* construct the diffracted-beam unit vector to this sub-pixel */
+                         airpath = unitize(pixel_pos,diffracted);
+ 
++                        /* Continue scattering vector calculation for target pixel */
++                        if(tracing_enabled && spixel == trace_target_spixel && fpixel == trace_target_fpixel && 
++                           subS == 0 && subF == 0) {
++                            
++                            double pixel_distance = sqrt(pixel_pos[1]*pixel_pos[1] + pixel_pos[2]*pixel_pos[2] + pixel_pos[3]*pixel_pos[3]);
++                            trace_scalar("pixel_distance_m", pixel_distance);
++                            trace_scalar("pixel_distance_A", pixel_distance * 1e10);
++                            
++                            /* Scattered beam vector (normalized diffracted vector * k) */
++                            double k_scale = 2.0 * M_PI / lambda0;
++                            trace_vec("k_scattered", k_scale * diffracted[1], k_scale * diffracted[2], k_scale * diffracted[3]);
++                            
++                            /* Scattering vector S = k_scattered - k_incident */
++                            double S_vector[3];
++                            S_vector[0] = k_scale * diffracted[1] - k_scale * beam_vector[1];
++                            S_vector[1] = k_scale * diffracted[2] - k_scale * beam_vector[2];
++                            S_vector[2] = k_scale * diffracted[3] - k_scale * beam_vector[3];
++                            trace_vec("S_vector", S_vector[0], S_vector[1], S_vector[2]);
++                            
++                            /* Miller indices (using the real-space lattice vectors dot product convention) */
++                            double h = S_vector[0]*a[1] + S_vector[1]*a[2] + S_vector[2]*a[3];
++                            double k_idx = S_vector[0]*b[1] + S_vector[1]*b[2] + S_vector[2]*b[3];
++                            double l = S_vector[0]*c[1] + S_vector[1]*c[2] + S_vector[2]*c[3];
++                            
++                            trace_scalar("h_index", h);
++                            trace_scalar("k_index", k_idx);
++                            trace_scalar("l_index", l);
++                        }
++
+                         /* solid angle subtended by a pixel: (pix/airpath)^2*cos(2theta) */
+                         if(omega_pixel == 0.0 || oversample_omega)
+                         {

@@ -1,0 +1,127 @@
+{
+  "correlation_metrics": {
+    "correlation": 0.9931558355961912,
+    "pytorch_total": 934225.9375,
+    "c_total": 849931.5,
+    "intensity_ratio": 1.0991779565811157,
+    "pytorch_com": [
+      575.3572537023605,
+      530.7287964292041
+    ],
+    "c_com": [
+      576.3359711845017,
+      536.6712436578404
+    ],
+    "com_offset": [
+      -0.9787174821411782,
+      -5.942447228636297
+    ],
+    "pytorch_max_pixel": [
+      613,
+      612
+    ],
+    "c_max_pixel": [
+      612,
+      612
+    ],
+    "max_pixel_offset": [
+      1,
+      0
+    ],
+    "rms_absolute": 0.8088740110397339,
+    "max_abs_difference": 25.2689208984375,
+    "mean_abs_difference": 0.1340380758047104
+  },
+  "spatial_analysis": {
+    "quadrants_pytorch": {
+      "TL": 192223.375,
+      "TR": 158354.9375,
+      "BL": 213413.1875,
+      "BR": 370234.4375
+    },
+    "quadrants_c": {
+      "TL": 169850.53125,
+      "TR": 143203.25,
+      "BL": 187869.5,
+      "BR": 349008.21875
+    },
+    "best_cross_corr_offset": [
+      -1,
+      -1
+    ],
+    "max_cross_corr_value": 5719158.5
+  },
+  "pixel_coordinates": {
+    "(0,0)": {
+      "lab_coords": [
+        0.11208736667360508,
+        0.06531004061443564,
+        -0.05560233054322983
+      ]
+    },
+    "(0,1023)": {
+      "lab_coords": [
+        0.11527859106221089,
+        0.055422727873914064,
+        0.04616872198976055
+      ]
+    },
+    "(1023,0)": {
+      "lab_coords": [
+        0.08870777313055357,
+        -0.03388374305086754,
+        -0.06450614365462981
+      ]
+    },
+    "(1023,1023)": {
+      "lab_coords": [
+        0.09189899751915938,
+        -0.04377105579138912,
+        0.037264908878360564
+      ]
+    },
+    "(512,512)": {
+      "lab_coords": [
+        0.10198331485828133,
+        0.010716178092654332,
+        -0.00912332117484832
+      ]
+    }
+  },
+  "component_analysis": {
+    "lattice_vectors": [
+      [
+        100.0,
+        6.123233995736766e-15,
+        6.123233995736767e-15
+      ],
+      [
+        -0.0,
+        100.0,
+        6.123233995736767e-15
+      ],
+      [
+        0.0,
+        -0.0,
+        100.00000000000003
+      ]
+    ],
+    "center_pixel_test": {
+      "lab_coords": [
+        0.10198331485828133,
+        0.010716178092654332,
+        -0.00912332117484832
+      ]
+    }
+  },
+  "summary": {
+    "correlation": 0.9931558355961912,
+    "likely_issues": [],
+    "recommendations": [
+      "Check scattering vector calculation in simulator",
+      "Verify Miller index computation",
+      "Examine structure factor interpolation",
+      "Investigate intensity accumulation logic"
+    ]
+  }
+}

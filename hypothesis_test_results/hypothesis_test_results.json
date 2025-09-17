@@ -1,0 +1,1591 @@
+{
+  "timestamp": "2025-09-09T22:34:55.888672",
+  "num_tests": 30,
+  "results": [
+    {
+      "configuration": {
+        "hypothesis_id": 1,
+        "hypothesis_name": "Different Rotation Centers",
+        "test_name": "distance_50mm",
+        "detector_distance_mm": 50,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 4.159255743026733,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_1_distance_50mm.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 1,
+        "hypothesis_name": "Different Rotation Centers",
+        "test_name": "distance_100mm",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 3.875649929046631,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_1_distance_100mm.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 1,
+        "hypothesis_name": "Different Rotation Centers",
+        "test_name": "distance_200mm",
+        "detector_distance_mm": 200,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 3.8951690196990967,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_1_distance_200mm.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 1,
+        "hypothesis_name": "Different Rotation Centers",
+        "test_name": "distance_400mm",
+        "detector_distance_mm": 400,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 3.9417970180511475,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_1_distance_400mm.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 1,
+        "hypothesis_name": "Different Rotation Centers",
+        "test_name": "rot_0_0_0",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 0,
+        "detector_roty_deg": 0,
+        "detector_rotz_deg": 0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 3.860664129257202,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_1_rot_0_0_0.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 1,
+        "hypothesis_name": "Different Rotation Centers",
+        "test_name": "rot_5_0_0",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 5,
+        "detector_roty_deg": 0,
+        "detector_rotz_deg": 0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 4.118177652359009,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_1_rot_5_0_0.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 1,
+        "hypothesis_name": "Different Rotation Centers",
+        "test_name": "rot_0_5_0",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 0,
+        "detector_roty_deg": 5,
+        "detector_rotz_deg": 0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 4.047769069671631,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_1_rot_0_5_0.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 1,
+        "hypothesis_name": "Different Rotation Centers",
+        "test_name": "rot_0_0_5",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 0,
+        "detector_roty_deg": 0,
+        "detector_rotz_deg": 5,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 4.091338872909546,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_1_rot_0_0_5.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 1,
+        "hypothesis_name": "Different Rotation Centers",
+        "test_name": "rot_10_10_10",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 10,
+        "detector_roty_deg": 10,
+        "detector_rotz_deg": 10,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 4.068453311920166,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_1_rot_10_10_10.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 2,
+        "hypothesis_name": "Beam Position Interpretation",
+        "test_name": "beam_0_0",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 0,
+        "beam_center_f_mm": 0,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 4.1259989738464355,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_2_beam_0_0.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 2,
+        "hypothesis_name": "Beam Position Interpretation",
+        "test_name": "beam_25.6_25.6",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 25.6,
+        "beam_center_f_mm": 25.6,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 4.255223035812378,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_2_beam_25.6_25.6.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 2,
+        "hypothesis_name": "Beam Position Interpretation",
+        "test_name": "beam_51.2_51.2",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 4.328129053115845,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_2_beam_51.2_51.2.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 2,
+        "hypothesis_name": "Beam Position Interpretation",
+        "test_name": "beam_76.8_76.8",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 76.8,
+        "beam_center_f_mm": 76.8,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 4.047630071640015,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_2_beam_76.8_76.8.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 2,
+        "hypothesis_name": "Beam Position Interpretation",
+        "test_name": "pixel_size_0.05mm",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.05,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 4.461957931518555,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_2_pixel_size_0.05mm.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 2,
+        "hypothesis_name": "Beam Position Interpretation",
+        "test_name": "pixel_size_0.1mm",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 3.99141788482666,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_2_pixel_size_0.1mm.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 2,
+        "hypothesis_name": "Beam Position Interpretation",
+        "test_name": "pixel_size_0.2mm",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.2,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 3.9656312465667725,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_2_pixel_size_0.2mm.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 4,
+        "hypothesis_name": "Missing Coordinate Transformation",
+        "test_name": "identity",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 0.0,
+        "detector_roty_deg": 0.0,
+        "detector_rotz_deg": 0.0,
+        "detector_twotheta_deg": 0.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "BEAM"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 4.162504196166992,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_4_identity.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 4,
+        "hypothesis_name": "Missing Coordinate Transformation",
+        "test_name": "pivot_BEAM",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "BEAM"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 4.042137145996094,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_4_pivot_BEAM.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 4,
+        "hypothesis_name": "Missing Coordinate Transformation",
+        "test_name": "pivot_SAMPLE",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 3.982952356338501,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_4_pivot_SAMPLE.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 5,
+        "hypothesis_name": "Detector Thickness/Parallax",
+        "test_name": "incident_angle_0",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 0,
+        "detector_roty_deg": 0.0,
+        "detector_rotz_deg": 0.0,
+        "detector_twotheta_deg": 0.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "BEAM"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 4.143755912780762,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_5_incident_angle_0.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 5,
+        "hypothesis_name": "Detector Thickness/Parallax",
+        "test_name": "incident_angle_15",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 15,
+        "detector_roty_deg": 0.0,
+        "detector_rotz_deg": 0.0,
+        "detector_twotheta_deg": 0.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "BEAM"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 3.882108211517334,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_5_incident_angle_15.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 5,
+        "hypothesis_name": "Detector Thickness/Parallax",
+        "test_name": "incident_angle_30",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 30,
+        "detector_roty_deg": 0.0,
+        "detector_rotz_deg": 0.0,
+        "detector_twotheta_deg": 0.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "BEAM"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 4.141909837722778,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_5_incident_angle_30.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 5,
+        "hypothesis_name": "Detector Thickness/Parallax",
+        "test_name": "incident_angle_45",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 45,
+        "detector_roty_deg": 0.0,
+        "detector_rotz_deg": 0.0,
+        "detector_twotheta_deg": 0.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "BEAM"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 4.349664926528931,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_5_incident_angle_45.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 6,
+        "hypothesis_name": "Integer vs Fractional Pixel",
+        "test_name": "detector_size_512",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 512,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 3.8743529319763184,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_6_detector_size_512.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 6,
+        "hypothesis_name": "Integer vs Fractional Pixel",
+        "test_name": "detector_size_1024",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 3.9567859172821045,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_6_detector_size_1024.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 6,
+        "hypothesis_name": "Integer vs Fractional Pixel",
+        "test_name": "detector_size_2048",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 2048,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 4.06364107131958,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_6_detector_size_2048.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 6,
+        "hypothesis_name": "Integer vs Fractional Pixel",
+        "test_name": "beam_fraction_51.0",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.0,
+        "beam_center_f_mm": 51.0,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 3.916581869125366,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_6_beam_fraction_51.0.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 6,
+        "hypothesis_name": "Integer vs Fractional Pixel",
+        "test_name": "beam_fraction_51.2",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.2,
+        "beam_center_f_mm": 51.2,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 4.2185258865356445,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_6_beam_fraction_51.2.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 6,
+        "hypothesis_name": "Integer vs Fractional Pixel",
+        "test_name": "beam_fraction_51.5",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.5,
+        "beam_center_f_mm": 51.5,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 3.8836820125579834,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_6_beam_fraction_51.5.json"
+    },
+    {
+      "configuration": {
+        "hypothesis_id": 6,
+        "hypothesis_name": "Integer vs Fractional Pixel",
+        "test_name": "beam_fraction_51.7",
+        "detector_distance_mm": 100,
+        "detector_rotx_deg": 5.0,
+        "detector_roty_deg": 3.0,
+        "detector_rotz_deg": 2.0,
+        "detector_twotheta_deg": 15.0,
+        "beam_center_s_mm": 51.7,
+        "beam_center_f_mm": 51.7,
+        "pixel_size_mm": 0.1,
+        "detector_pixels": 1024,
+        "pivot_mode": "SAMPLE"
+      },
+      "correlation": 0.0,
+      "error_magnitude_mm": 0.0,
+      "error_magnitude_pixels": 0.0,
+      "error_vector_mm": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_c": [
+        0,
+        0,
+        0
+      ],
+      "pix0_vector_pytorch": [
+        0,
+        0,
+        0
+      ],
+      "execution_time": 4.182508945465088,
+      "notes": "Error: Output file not created: hypothesis_test_results/test_6_beam_fraction_51.7.json"
+    }
+  ],
+  "summary": {
+    "hypothesis_1": {
+      "hypothesis_id": 1,
+      "hypothesis_name": "Different Rotation Centers",
+      "num_tests": 9,
+      "correlations": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "error_magnitudes_mm": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "error_magnitudes_pixels": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean_correlation": 0.0,
+      "mean_error_mm": 0.0,
+      "std_error_mm": 0.0,
+      "tests": [
+        {
+          "test_name": "distance_50mm",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "distance_100mm",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "distance_200mm",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "distance_400mm",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "rot_0_0_0",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "rot_5_0_0",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "rot_0_5_0",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "rot_0_0_5",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "rot_10_10_10",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    "hypothesis_2": {
+      "hypothesis_id": 2,
+      "hypothesis_name": "Beam Position Interpretation",
+      "num_tests": 7,
+      "correlations": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "error_magnitudes_mm": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "error_magnitudes_pixels": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean_correlation": 0.0,
+      "mean_error_mm": 0.0,
+      "std_error_mm": 0.0,
+      "tests": [
+        {
+          "test_name": "beam_0_0",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "beam_25.6_25.6",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "beam_51.2_51.2",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "beam_76.8_76.8",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "pixel_size_0.05mm",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "pixel_size_0.1mm",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "pixel_size_0.2mm",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    "hypothesis_3": {
+      "error": "No results for this hypothesis"
+    },
+    "hypothesis_4": {
+      "hypothesis_id": 4,
+      "hypothesis_name": "Missing Coordinate Transformation",
+      "num_tests": 3,
+      "correlations": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "error_magnitudes_mm": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "error_magnitudes_pixels": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean_correlation": 0.0,
+      "mean_error_mm": 0.0,
+      "std_error_mm": 0.0,
+      "tests": [
+        {
+          "test_name": "identity",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "pivot_BEAM",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "pivot_SAMPLE",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    "hypothesis_5": {
+      "hypothesis_id": 5,
+      "hypothesis_name": "Detector Thickness/Parallax",
+      "num_tests": 4,
+      "correlations": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "error_magnitudes_mm": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "error_magnitudes_pixels": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean_correlation": 0.0,
+      "mean_error_mm": 0.0,
+      "std_error_mm": 0.0,
+      "tests": [
+        {
+          "test_name": "incident_angle_0",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "incident_angle_15",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "incident_angle_30",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "incident_angle_45",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    "hypothesis_6": {
+      "hypothesis_id": 6,
+      "hypothesis_name": "Integer vs Fractional Pixel",
+      "num_tests": 7,
+      "correlations": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "error_magnitudes_mm": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "error_magnitudes_pixels": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean_correlation": 0.0,
+      "mean_error_mm": 0.0,
+      "std_error_mm": 0.0,
+      "tests": [
+        {
+          "test_name": "detector_size_512",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "detector_size_1024",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "detector_size_2048",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "beam_fraction_51.0",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "beam_fraction_51.2",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "beam_fraction_51.5",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "test_name": "beam_fraction_51.7",
+          "correlation": 0.0,
+          "error_mm": 0.0,
+          "error_vector_mm": [
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    }
+  }
+}

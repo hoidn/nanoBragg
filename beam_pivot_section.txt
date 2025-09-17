@@ -1,0 +1,41 @@
+1732-    distance = close_distance/ratio;
+1733-
+1734-    if(detector_pivot == SAMPLE){
+1735-        printf("pivoting detector around sample\n");
+1736-        /* initialize detector origin before rotating detector */
+1737-        pix0_vector[1] = -Fclose*fdet_vector[1]-Sclose*sdet_vector[1]+close_distance*odet_vector[1];
+1738-        pix0_vector[2] = -Fclose*fdet_vector[2]-Sclose*sdet_vector[2]+close_distance*odet_vector[2];
+1739-        pix0_vector[3] = -Fclose*fdet_vector[3]-Sclose*sdet_vector[3]+close_distance*odet_vector[3];
+1740-
+1741-        /* now swing the detector origin around */
+1742-        rotate(pix0_vector,pix0_vector,detector_rotx,detector_roty,detector_rotz);
+1743-        rotate_axis(pix0_vector,pix0_vector,twotheta_axis,detector_twotheta);
+1744-    }
+1745-    /* now orient the detector plane */
+1746-    rotate(fdet_vector,fdet_vector,detector_rotx,detector_roty,detector_rotz);
+1747-    rotate(sdet_vector,sdet_vector,detector_rotx,detector_roty,detector_rotz);
+1748-    rotate(odet_vector,odet_vector,detector_rotx,detector_roty,detector_rotz);
+1749-
+1750-    /* also apply orientation part of twotheta swing */
+1751-    rotate_axis(fdet_vector,fdet_vector,twotheta_axis,detector_twotheta);
+1752-    rotate_axis(sdet_vector,sdet_vector,twotheta_axis,detector_twotheta);
+1753-    rotate_axis(odet_vector,odet_vector,twotheta_axis,detector_twotheta);
+1754-    
+1755-    /* Trace detector basis vectors after all rotations */
+1756-    printf("DETECTOR_FAST_AXIS %.15g %.15g %.15g\n", fdet_vector[1], fdet_vector[2], fdet_vector[3]);
+1757-    printf("DETECTOR_SLOW_AXIS %.15g %.15g %.15g\n", sdet_vector[1], sdet_vector[2], sdet_vector[3]);
+1758-    printf("DETECTOR_NORMAL_AXIS %.15g %.15g %.15g\n", odet_vector[1], odet_vector[2], odet_vector[3]);
+1759-
+1760-    /* make sure beam center is preserved */
+1761-    if(detector_pivot == BEAM){
+1762:        printf("pivoting detector around direct beam spot\n");
+1763-        pix0_vector[1] = -Fbeam*fdet_vector[1]-Sbeam*sdet_vector[1]+distance*beam_vector[1];
+1764-        pix0_vector[2] = -Fbeam*fdet_vector[2]-Sbeam*sdet_vector[2]+distance*beam_vector[2];
+1765-        pix0_vector[3] = -Fbeam*fdet_vector[3]-Sbeam*sdet_vector[3]+distance*beam_vector[3];
+1766-    }
+1767-
+1768-    /* what is the point of closest approach between sample and detector? */
+1769-    Fclose         = -dot_product(pix0_vector,fdet_vector);
+1770-    Sclose         = -dot_product(pix0_vector,sdet_vector);
+1771-    close_distance =  dot_product(pix0_vector,odet_vector);
+1772-    

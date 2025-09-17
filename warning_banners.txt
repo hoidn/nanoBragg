@@ -1,0 +1,247 @@
+# Visual Warning Banner Collection
+# ===============================
+# 
+# Ready-to-use ASCII art warning banners for nanoBragg convention switching prevention.
+# Copy and paste these into documentation, scripts, or terminal output.
+
+# =============================================================================
+# CRITICAL CONVENTION CONFLICT BANNERS
+# =============================================================================
+
+## Standard Critical Banner
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                 CRITICAL                                   ║
+║                            CONVENTION CONFLICT                             ║
+║                                                                            ║
+║  🚨 DANGER: This parameter combination triggers CUSTOM convention! 🚨      ║
+║                                                                            ║
+║  Your simulation will NOT match expected MOSFLM results.                   ║
+║  Correlation with C reference will be <0.9 instead of >0.999              ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+## Critical with Stop Sign
+🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑
+🛑                                                                        🛑
+🛑                          STOP - CRITICAL ERROR                         🛑
+🛑                                                                        🛑
+🛑         CONVENTION SWITCHING DETECTED - DO NOT PROCEED                 🛑
+🛑                                                                        🛑
+🛑  This parameter combination will cause silent bugs in your simulation  🛑
+🛑  Results will look "almost right" but be scientifically incorrect      🛑
+🛑                                                                        🛑
+🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑🛑
+
+## Critical - Compact Version
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                              ⚠️ CRITICAL ⚠️                               ┃
+┃                                                                          ┃
+┃  CONVENTION CONFLICT: -twotheta_axis triggers CUSTOM but you have        ┃
+┃  MOSFLM rotations. This causes <0.9 correlation instead of >0.999!      ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+## Critical - Fire Emergency Style
+🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥
+🔥                                                                        🔥
+🔥  EMERGENCY: CONVENTION SWITCHING DETECTED                              🔥
+🔥                                                                        🔥
+🔥  Mixing MOSFLM detector rotations with CUSTOM axis triggers causes     🔥
+🔥  silent bugs that are VERY hard to detect and debug.                  🔥
+🔥                                                                        🔥
+🔥  Fix this BEFORE proceeding with your simulation!                      🔥
+🔥                                                                        🔥
+🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥
+
+# =============================================================================
+# WARNING LEVEL BANNERS
+# =============================================================================
+
+## Standard Warning Banner
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 WARNING                                    │
+│                         POTENTIAL CONFIGURATION ISSUE                     │
+│                                                                            │
+│  ⚠️  This combination may cause unexpected behavior                        │
+│                                                                            │
+│  Please review the safe examples in examples/ directory                   │
+└────────────────────────────────────────────────────────────────────────────┘
+
+## Warning - Construction Style
+⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ 
+⚠️                                                                     ⚠️
+⚠️                   CONFIGURATION WARNING                             ⚠️
+⚠️                                                                     ⚠️
+⚠️  Your parameters may not behave as expected.                       ⚠️
+⚠️  Review safe examples before proceeding.                           ⚠️
+⚠️                                                                     ⚠️
+⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ 
+
+## Warning - Road Sign Style
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                              ⚠️ CAUTION ⚠️                                ║
+║                                                                           ║
+║              PROCEED WITH CAUTION - VERIFY PARAMETERS                    ║
+║                                                                           ║
+║  This configuration may work but requires manual verification.           ║
+║  Consult documentation and run validation checks.                        ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+# =============================================================================
+# INFO LEVEL BANNERS
+# =============================================================================
+
+## Standard Info Banner
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                  INFO                                      │
+│                          CONVENTION DETECTION                             │
+│                                                                            │
+│  ℹ️  Detected explicit convention specification                            │
+│                                                                            │
+│  Make sure this matches your intended coordinate system                    │
+└────────────────────────────────────────────────────────────────────────────┘
+
+## Info - Checkmark Style
+✅ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ✅
+✅                                                                           ✅
+✅                        INFORMATION NOTICE                                 ✅
+✅                                                                           ✅
+✅  Configuration looks good but please verify coordinate system choices.    ✅
+✅                                                                           ✅
+✅ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ✅
+
+# =============================================================================
+# SUCCESS BANNERS
+# =============================================================================
+
+## Standard Success Banner
+✅━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✅
+✅                                                                         ✅
+✅                        CONFIGURATION VALIDATED                          ✅
+✅                                                                         ✅
+✅  No issues detected. Safe to proceed with simulation.                  ✅
+✅                                                                         ✅
+✅━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✅
+
+## Success - Party Style
+🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉
+🎉                                                                      🎉
+🎉                    ALL SYSTEMS GO! 🚀                                🎉
+🎉                                                                      🎉
+🎉  Configuration validated successfully!                               🎉
+🎉  No convention conflicts detected.                                   🎉
+🎉  Proceeding with simulation...                                       🎉
+🎉                                                                      🎉
+🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉
+
+# =============================================================================
+# SPECIALIZED BANNERS FOR SPECIFIC ISSUES
+# =============================================================================
+
+## Twotheta Axis Warning
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                         TWOTHETA AXIS WARNING                            ║
+║                                                                           ║
+║  You specified -twotheta_axis which triggers CUSTOM convention!          ║
+║                                                                           ║
+║  If you intended MOSFLM convention:                                       ║
+║    REMOVE: -twotheta_axis parameter                                       ║
+║    KEEP:   -twotheta parameter (uses MOSFLM default Y-axis)              ║
+║                                                                           ║
+║  If you intended CUSTOM convention:                                       ║
+║    ADD:    -convention CUSTOM                                             ║
+║    KEEP:   All axis parameters                                            ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+## Beam Center Reminder
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          BEAM CENTER REMINDER                          │
+│                                                                         │
+│  💡 Convention affects beam center calculation:                        │
+│                                                                         │
+│      MOSFLM:  Automatic +0.5 pixel offset added                        │
+│      CUSTOM:  No automatic offset (uses exact coordinates)             │
+│      XDS:     No automatic offset (uses exact coordinates)             │
+│                                                                         │
+│  Verify your -Xbeam and -Ybeam values match your convention!           │
+└─────────────────────────────────────────────────────────────────────────┘
+
+## Correlation Check Reminder
+⭐ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ⭐
+⭐                                                                          ⭐
+⭐                     REMEMBER TO VALIDATE RESULTS                         ⭐
+⭐                                                                          ⭐
+⭐  After simulation completes, check correlation with C reference:        ⭐
+⭐    python scripts/verify_detector_geometry.py --float_file output.bin   ⭐
+⭐                                                                          ⭐
+⭐  Expected correlation: >0.999 for simple test cases                     ⭐
+⭐                                                                          ⭐
+⭐ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ⭐
+
+# =============================================================================
+# MINI BANNERS (for inline use)
+# =============================================================================
+
+## Mini Critical
+🚨 CRITICAL: Convention switching detected! 🚨
+
+## Mini Warning
+⚠️  WARNING: Verify parameters before proceeding
+
+## Mini Info
+ℹ️  INFO: Using explicit convention specification
+
+## Mini Success
+✅ VALIDATED: Configuration looks good
+
+## Mini Stop
+🛑 STOP: Fix critical issues before running simulation
+
+# =============================================================================
+# USAGE EXAMPLES IN SCRIPTS
+# =============================================================================
+
+# Example 1: In bash script error handling
+if detect_convention_conflict; then
+    echo "🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥"
+    echo "🔥  EMERGENCY: CONVENTION SWITCHING DETECTED                              🔥"
+    echo "🔥  Fix this BEFORE proceeding with your simulation!                      🔥" 
+    echo "🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥🚨🔥"
+    exit 1
+fi
+
+# Example 2: In Python validation
+def print_critical_warning():
+    print("""
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                 CRITICAL                                   ║
+║                            CONVENTION CONFLICT                             ║
+║  🚨 DANGER: This parameter combination triggers CUSTOM convention! 🚨      ║
+║  Your simulation will NOT match expected MOSFLM results.                   ║
+╚════════════════════════════════════════════════════════════════════════════╝
+    """)
+
+# Example 3: In documentation
+# Add this banner to README files:
+# 🛑🛑🛑 BEFORE USING nanoBragg: Run python startup_warnings.py first! 🛑🛑🛑
+
+# =============================================================================
+# CUSTOMIZATION NOTES
+# =============================================================================
+
+# These banners are designed to be:
+# 1. Highly visible and attention-grabbing
+# 2. Copy-pastable into any text context  
+# 3. Clear about the severity level
+# 4. Actionable with specific guidance
+
+# Color codes for terminal output (if supported):
+# - Red background: \033[41m text \033[0m
+# - Yellow background: \033[43m text \033[0m  
+# - Green background: \033[42m text \033[0m
+# - Bold text: \033[1m text \033[0m
+
+# Unicode alternatives for terminals that don't support box drawing:
+# ╔═╗ can be replaced with +--+
+# ║ ║ can be replaced with |  |
+# ╚═╝ can be replaced with +--+
+
+# ASCII-only versions available on request for maximum compatibility.

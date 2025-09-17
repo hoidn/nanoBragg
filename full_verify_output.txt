@@ -1,0 +1,198 @@
+Detector Geometry Visual Verification
+=====================================
+
+============================================================
+PYTORCH VERIFICATION
+============================================================
+
+============================================================
+Running simulation: Baseline (simple_cubic)
+============================================================
+
+Detector Configuration:
+  Distance: 100.0 mm
+  Beam center: (51.25, 51.25) mm
+  Rotations: rotx=0.0°, roty=0.0°, rotz=0.0°
+  Two-theta: 0.0°
+
+Detector Basis Vectors:
+  Fast axis: [0. 0. 1.]
+  Slow axis: [ 0. -1.  0.]
+  Normal axis: [1. 0. 0.]
+  Pix0 vector: [ 0.1     0.0513 -0.0513] meters
+
+Running simulation...
+
+============================================================
+Running simulation: Tilted (15° two-theta + rotations)
+============================================================
+
+Detector Configuration:
+  Distance: 100.0 mm
+  Beam center: (51.25, 51.25) mm
+  Rotations: rotx=5.0°, roty=3.0°, rotz=2.0°
+  Two-theta: 15.0°
+
+Detector Basis Vectors:
+  Fast axis: [ 0.03119476 -0.09665017  0.99482945]
+  Slow axis: [-0.22853953 -0.9696362  -0.0870363 ]
+  Normal axis: [ 0.97303472 -0.22464277 -0.05233596]
+  Pix0 vector: [ 0.11012379  0.05470049 -0.04656979] meters
+
+Running simulation...
+
+Saved comparison plot to: reports/detector_verification/detector_geometry_comparison.png
+✓ Found C reference at: golden_suite_generator/nanoBragg_trace
+
+============================================================
+C REFERENCE PARALLEL VERIFICATION
+============================================================
+🔬 Running C reference simulation: Baseline (simple_cubic)
+Generated identity matrix: /Users/ollie/Documents/nanoBragg/c_ref_b4pn84q1/identity.mat
+
+   [build_nanobragg_command] Received detector_config:
+      - beam_center_s: 51.25
+      - beam_center_f: 51.25
+      - detector_twotheta_deg: 0.0
+
+📋 COMMAND DEBUG INFO:
+   Label: Baseline (simple_cubic)
+   Detector config details:
+      - beam_center_s: 51.25
+      - beam_center_f: 51.25
+      - distance_mm: 100.0
+      - pixel_size_mm: 0.1
+      - spixels: 1024
+      - fpixels: 1024
+      - detector_rotx_deg: 0.0
+      - detector_roty_deg: 0.0
+      - detector_rotz_deg: 0.0
+      - detector_twotheta_deg: 0.0
+      - detector_pivot: DetectorPivot.BEAM
+      - twotheta_axis: tensor([ 0.,  0., -1.])
+   Raw command list: ['golden_suite_generator/nanoBragg_trace', '-default_F', '100.0', '-lambda', '6.2', '-distance', '100.0', '-pixel', '0.1', '-detpixels', '1024', '-Xbeam', '51.25', '-Ybeam', '51.25', '-cell', '100.0', '100.0', '100.0', '90.0', '90.0', '90.0', '-N', '5', '-matrix', '/Users/ollie/Documents/nanoBragg/c_ref_b4pn84q1/identity.mat', '-pivot', 'beam']
+   Command via subprocess.list2cmdline: golden_suite_generator/nanoBragg_trace -default_F 100.0 -lambda 6.2 -distance 100.0 -pixel 0.1 -detpixels 1024 -Xbeam 51.25 -Ybeam 51.25 -cell 100.0 100.0 100.0 90.0 90.0 90.0 -N 5 -matrix /Users/ollie/Documents/nanoBragg/c_ref_b4pn84q1/identity.mat -pivot beam
+   Formatted command: golden_suite_generator/nanoBragg_trace -default_F 100.0 -lambda 6.2 -distance 100.0 -pixel 0.1 -detpixels 1024 -Xbeam 51.25 -Ybeam 51.25 -cell 100.0 100.0 100.0 90.0 90.0 90.0 -N 5 -matrix /Users/ollie/Documents/nanoBragg/c_ref_b4pn84q1/identity.mat -pivot beam
+   Beam values in command: -Xbeam 51.25 -Ybeam 51.25
+============================================================
+
+
+============================================================
+CONFIGURATION PARITY TABLE: Baseline (simple_cubic)
+============================================================
+Parameter                 PyTorch              C-Code              
+-----------------------------------------------------------------
+Pivot Mode                BEAM                 beam                
+Distance (mm)             100.0                100.0               
+Beam Center S (mm)        51.25                N/A                 
+Beam Center F (mm)        51.25                N/A                 
+Detector rotx (deg)       0.0                  0.0                 
+Detector roty (deg)       0.0                  0.0                 
+Detector rotz (deg)       0.0                  0.0                 
+Two-theta (deg)           0.0                  0.0                 
+============================================================
+
+✅ C reference simulation completed
+   Image shape: (1024, 1024)
+   Value range: 4.00e+01 to 5.50e+04
+🔬 Running C reference simulation: Tilted (15° two-theta + rotations)
+Generated identity matrix: /Users/ollie/Documents/nanoBragg/c_ref_3yurzez6/identity.mat
+
+   [build_nanobragg_command] Received detector_config:
+      - beam_center_s: 51.25
+      - beam_center_f: 51.25
+      - detector_twotheta_deg: 15.0
+
+📋 COMMAND DEBUG INFO:
+   Label: Tilted (15° two-theta + rotations)
+   Detector config details:
+      - beam_center_s: 51.25
+      - beam_center_f: 51.25
+      - distance_mm: 100.0
+      - pixel_size_mm: 0.1
+      - spixels: 1024
+      - fpixels: 1024
+      - detector_rotx_deg: 5.0
+      - detector_roty_deg: 3.0
+      - detector_rotz_deg: 2.0
+      - detector_twotheta_deg: 15.0
+      - detector_pivot: DetectorPivot.BEAM
+      - twotheta_axis: tensor([ 0.,  0., -1.])
+   Raw command list: ['golden_suite_generator/nanoBragg_trace', '-default_F', '100.0', '-lambda', '6.2', '-distance', '100.0', '-pixel', '0.1', '-detpixels', '1024', '-Xbeam', '51.25', '-Ybeam', '51.25', '-cell', '100.0', '100.0', '100.0', '90.0', '90.0', '90.0', '-N', '5', '-matrix', '/Users/ollie/Documents/nanoBragg/c_ref_3yurzez6/identity.mat', '-detector_rotx', '5.0', '-detector_roty', '3.0', '-detector_rotz', '2.0', '-twotheta', '15.0', '-pivot', 'beam']
+   Command via subprocess.list2cmdline: golden_suite_generator/nanoBragg_trace -default_F 100.0 -lambda 6.2 -distance 100.0 -pixel 0.1 -detpixels 1024 -Xbeam 51.25 -Ybeam 51.25 -cell 100.0 100.0 100.0 90.0 90.0 90.0 -N 5 -matrix /Users/ollie/Documents/nanoBragg/c_ref_3yurzez6/identity.mat -detector_rotx 5.0 -detector_roty 3.0 -detector_rotz 2.0 -twotheta 15.0 -pivot beam
+   Formatted command: golden_suite_generator/nanoBragg_trace -default_F 100.0 -lambda 6.2 -distance 100.0 -pixel 0.1 -detpixels 1024 -Xbeam 51.25 -Ybeam 51.25 -cell 100.0 100.0 100.0 90.0 90.0 90.0 -N 5 -matrix /Users/ollie/Documents/nanoBragg/c_ref_3yurzez6/identity.mat -detector_rotx 5.0 -detector_roty 3.0 -detector_rotz 2.0 -twotheta 15.0 -pivot beam
+   Beam values in command: -Xbeam 51.25 -Ybeam 51.25
+   Detector rotx in command: 5.0 degrees
+   Detector roty in command: 3.0 degrees
+   Detector rotz in command: 2.0 degrees
+============================================================
+
+
+============================================================
+CONFIGURATION PARITY TABLE: Tilted (15° two-theta + rotations)
+============================================================
+Parameter                 PyTorch              C-Code              
+-----------------------------------------------------------------
+Pivot Mode                BEAM                 beam                
+Distance (mm)             100.0                100.0               
+Beam Center S (mm)        51.25                N/A                 
+Beam Center F (mm)        51.25                N/A                 
+Detector rotx (deg)       5.0                  5.0                 
+Detector roty (deg)       3.0                  3.0                 
+Detector rotz (deg)       2.0                  2.0                 
+Two-theta (deg)           15.0                 15.0                
+Two-theta axis            [0.0, 0.0, -1.0]     DEFAULT             
+============================================================
+
+✅ C reference simulation completed
+   Image shape: (1024, 1024)
+   Value range: 4.00e+01 to 5.50e+04
+
+============================================================
+QUANTITATIVE AGREEMENT ANALYSIS
+============================================================
+Baseline correlation: 0.078297
+Tilted correlation: 0.077221
+Minimum correlation: 0.077221
+⚠️  Correlation below threshold (expected > 0.999)
+
+Saved parallel comparison plot to: reports/detector_verification/parallel_c_comparison.png
+Saved metrics to: reports/detector_verification/correlation_metrics.json
+
+============================================================
+SUMMARY REPORT
+============================================================
+
+Top 5 Brightest Spots:
+
+Baseline:
+  Spot 1: ( 513,  513) - Intensity: 1.56e+02
+  Spot 2: ( 514,  513) - Intensity: 1.55e+02
+  Spot 3: ( 512,  513) - Intensity: 1.55e+02
+  Spot 4: ( 513,  514) - Intensity: 1.52e+02
+  Spot 5: ( 513,  512) - Intensity: 1.52e+02
+
+Tilted:
+  Spot 1: ( 885,  384) - Intensity: 1.57e+02
+  Spot 2: ( 884,  384) - Intensity: 1.57e+02
+  Spot 3: ( 513,  513) - Intensity: 1.56e+02
+  Spot 4: ( 885,  385) - Intensity: 1.56e+02
+  Spot 5: ( 884,  385) - Intensity: 1.56e+02
+
+Spot Position Shifts (pixels):
+  Spot 1: Δs=+372, Δf=-129, |Δ|=393.7 pixels
+  Spot 2: Δs=+370, Δf=-129, |Δ|=391.8 pixels
+  Spot 3: Δs=  +1, Δf=  +0, |Δ|=  1.0 pixels
+
+Image Statistics:
+  Baseline - Min: 1.65e-14, Max: 1.56e+02, Mean: 9.83e-01
+  Tilted   - Min: 9.10e-16, Max: 1.57e+02, Mean: 1.02e+00
+
+Detector Geometry Changes:
+  Basis vector rotations verified through visual inspection
+  Two-theta rotation causes systematic shift in diffraction pattern
+  Beam center offset preserved in tilted configuration
+
+✅ Visual verification complete!
+
+All outputs saved to: reports/detector_verification

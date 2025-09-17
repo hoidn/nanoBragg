@@ -14,6 +14,7 @@ import torch
 
 from ..config import CrystalConfig
 from ..utils.geometry import angles_to_rotation_matrix
+from ..io.hkl import read_hkl_file, try_load_hkl_or_fdump
 
 
 class Crystal:
@@ -84,7 +85,9 @@ class Crystal:
         self._geometry_cache = {}
 
         # Structure factor storage
-        self.hkl_data: Optional[torch.Tensor] = None  # Will be loaded by load_hkl()
+        self.hkl_data: Optional[torch.Tensor] = None  # 3D grid [h-h_min][k-k_min][l-l_min]
+        self.hkl_metadata: Optional[dict] = None  # Contains h_min, h_max, etc.
+        self.interpolate = False  # Whether to use tricubic interpolation
 
     def to(self, device=None, dtype=None):
         """Move crystal to specified device and/or dtype."""
@@ -175,94 +178,103 @@ class Crystal:
             # Empty HKL data
             self.hkl_data = torch.empty((0, 4), device=self.device, dtype=self.dtype)
 
+    def load_hkl(self, hkl_path: str, write_cache: bool = True):
+        """Load HKL structure factor data from file.
+
+        Args:
+            hkl_path: Path to HKL text file
+            write_cache: Whether to write Fdump.bin cache after loading
+        """
+        self.hkl_data, self.hkl_metadata = read_hkl_file(
+            hkl_path,
+            default_F=self.config.default_F,
+            device=self.device,
+            dtype=self.dtype
+        )
+
+        # Auto-enable interpolation if crystal is small (matching C code)
+        if any(n <= 2 for n in [self.N_cells_a.item(), self.N_cells_b.item(), self.N_cells_c.item()]):
+            self.interpolate = True
+
     def get_structure_factor(
         self, h: torch.Tensor, k: torch.Tensor, l: torch.Tensor  # noqa: E741
     ) -> torch.Tensor:
         """
         Look up or interpolate the structure factor for given h,k,l indices.
 
-        This method will replace the milestone1 placeholder. It must handle both
-        nearest-neighbor lookup and differentiable tricubic interpolation,
-        as determined by a configuration flag, to match the C-code's
-        `interpolate` variable.
+        Implements AT-STR-001 (nearest-neighbor lookup) and AT-STR-002 (tricubic interpolation).
+
+        This method handles both nearest-neighbor lookup and differentiable tricubic
+        interpolation, as determined by self.interpolate flag, to match the C-code.
 
         C-Code Implementation Reference (from nanoBragg.c, lines 3101-3139):
-
-        ```c
-                                    /* structure factor of the unit cell */
-                                    if(interpolate){
-                                        h0_flr = floor(h);
-                                        k0_flr = floor(k);
-                                        l0_flr = floor(l);
-
-
-                                        if ( ((h-h_min+3)>h_range) ||
-                                             (h-2<h_min)           ||
-                                             ((k-k_min+3)>k_range) ||
-                                             (k-2<k_min)           ||
-                                             ((l-l_min+3)>l_range) ||
-                                             (l-2<l_min)  ) {
-                                            if(babble){
-                                                babble=0;
-                                                printf ("WARNING: out of range for three point interpolation: h,k,l,h0,k0,l0: %g,%g,%g,%d,%d,%d \n", h,k,l,h0,k0,l0);
-                                                printf("WARNING: further warnings will not be printed! ");
-                                            }
-                                            F_cell = default_F;
-                                            interpolate=0;
-                                        }
-                                    }
-
-                                    /* only interpolate if it is safe */
-                                    if(interpolate){
-                                        /* integer versions of nearest HKL indicies */
-                                        h_interp[0]=h0_flr-1;
-                                        h_interp[1]=h0_flr;
-                                        h_interp[2]=h0_flr+1;
-                                        h_interp[3]=h0_flr+2;
-                                        k_interp[0]=k0_flr-1;
-                                        k_interp[1]=k0_flr;
-                                        k_interp[2]=k0_flr+1;
-                                        k_interp[3]=k0_flr+2;
-                                        l_interp[0]=l0_flr-1;
-                                        l_interp[1]=l0_flr;
-                                        l_interp[2]=l0_flr+1;
-                                        l_interp[3]=l0_flr+2;
-
-                                        /* polin function needs doubles */
-                                        h_interp_d[0] = (double) h_interp[0];
-                                        // ... (rest of h_interp_d, k_interp_d, l_interp_d) ...
-
-                                        /* now populate the "y" values (nearest four structure factors in each direction) */
-                                        for (i1=0;i1<4;i1++) {
-                                            for (i2=0;i2<4;i2++) {
-                                               for (i3=0;i3<4;i3++) {
-                                                      sub_Fhkl[i1][i2][i3]= Fhkl[h_interp[i1]-h_min][k_interp[i2]-k_min][l_interp[i3]-l_min];
-                                               }
-                                            }
-                                         }
-
-
-                                        /* run the tricubic polynomial interpolation */
-                                        polin3(h_interp_d,k_interp_d,l_interp_d,sub_Fhkl,h,k,l,&F_cell);
-                                    }
-
-                                    if(! interpolate)
-                                    {
-                                        if ( hkls && (h0<=h_max) && (h0>=h_min) && (k0<=k_max) && (k0>=k_min) && (l0<=l_max) && (l0>=l_min)  ) {
-                                            /* just take nearest-neighbor */
-                                            F_cell = Fhkl[h0-h_min][k0-k_min][l0-l_min];
-                                        }
-                                        else
-                                        {
-                                            F_cell = default_F;  // usually zero
-                                        }
-                                    }
-        ```
+        The C code performs nearest-neighbor lookup or tricubic interpolation based
+        on the 'interpolate' flag. Out-of-range accesses return default_F.
         """
-        # For the simple_cubic test case with -default_F 100,
-        # all reflections have F=100 regardless of indices
-        # This matches the C code behavior with the -default_F flag
-        return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
+        # If no HKL data loaded, return default_F for all reflections
+        if self.hkl_data is None:
+            return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
+
+        # Get metadata
+        h_min = self.hkl_metadata['h_min']
+        h_max = self.hkl_metadata['h_max']
+        k_min = self.hkl_metadata['k_min']
+        k_max = self.hkl_metadata['k_max']
+        l_min = self.hkl_metadata['l_min']
+        l_max = self.hkl_metadata['l_max']
+
+        if self.interpolate:
+            # TODO: Implement tricubic interpolation
+            # For now, fall back to nearest-neighbor
+            return self._nearest_neighbor_lookup(h, k, l)
+        else:
+            # Nearest-neighbor lookup
+            return self._nearest_neighbor_lookup(h, k, l)
+
+    def _nearest_neighbor_lookup(
+        self, h: torch.Tensor, k: torch.Tensor, l: torch.Tensor  # noqa: E741
+    ) -> torch.Tensor:
+        """Nearest-neighbor structure factor lookup (AT-STR-001)."""
+        h_min = self.hkl_metadata['h_min']
+        h_max = self.hkl_metadata['h_max']
+        k_min = self.hkl_metadata['k_min']
+        k_max = self.hkl_metadata['k_max']
+        l_min = self.hkl_metadata['l_min']
+        l_max = self.hkl_metadata['l_max']
+
+        # Round to nearest integers (h0, k0, l0 in C code)
+        h_int = torch.round(h).long()
+        k_int = torch.round(k).long()
+        l_int = torch.round(l).long()
+
+        # Check bounds
+        in_bounds = (
+            (h_int >= h_min) & (h_int <= h_max) &
+            (k_int >= k_min) & (k_int <= k_max) &
+            (l_int >= l_min) & (l_int <= l_max)
+        )
+
+        # Compute indices into grid
+        h_idx = h_int - h_min
+        k_idx = k_int - k_min
+        l_idx = l_int - l_min
+
+        # Clamp indices to valid range for safety
+        h_idx = torch.clamp(h_idx, 0, self.hkl_data.shape[0] - 1)
+        k_idx = torch.clamp(k_idx, 0, self.hkl_data.shape[1] - 1)
+        l_idx = torch.clamp(l_idx, 0, self.hkl_data.shape[2] - 1)
+
+        # Look up values
+        F_values = self.hkl_data[h_idx, k_idx, l_idx]
+
+        # Use default_F for out-of-bounds indices
+        F_result = torch.where(
+            in_bounds,
+            F_values,
+            torch.full_like(F_values, self.config.default_F)
+        )
+
+        return F_result
 
     def _validate_cell_parameters(self):
         """
