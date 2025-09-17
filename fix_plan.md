@@ -13,20 +13,27 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - MOSFLM convention applies +0.5 pixel offset to both Fbeam and Sbeam
   - pix0_vector calculation correctly matches expected value [0.1, 0.05125, -0.05125]
 
+### AT-STR-001: Nearest-neighbor structure factor lookup
+- **Status**: COMPLETE
+- **Implementation**: Fully implemented in `Crystal.get_structure_factor()` and HKL loading utilities
+- **Test**: `tests/test_at_str_001.py` passes all scenarios
+- **Details**:
+  - HKL file reader uses two-pass algorithm matching C-code
+  - Nearest-neighbor lookup with proper rounding behavior
+  - Out-of-range queries correctly return default_F
+  - Removed duplicate `load_hkl()` method definition
+
 ## In Progress 🚧
 
 None currently.
 
 ## High Priority TODO 🔴
 
-### Structure Factors & HKL Loading (AT-STR-001, AT-STR-002)
-- **Priority**: CRITICAL - Required for any non-trivial simulation
+### Structure Factors & Interpolation (AT-STR-002)
+- **Priority**: CRITICAL - Required for accurate simulations
 - **Tasks**:
-  - [ ] Implement HKL file reader in `Crystal` class
-  - [ ] Implement Fdump.bin binary cache writer/reader
-  - [ ] Implement nearest-neighbor lookup for structure factors
   - [ ] Implement tricubic interpolation with fallback
-  - [ ] Add tests for in-range and out-of-range queries
+  - [ ] Add tests for interpolation behavior
 
 ### Beam Model & Geometry (AT-GEO-002, AT-GEO-003, AT-GEO-004)
 - [ ] AT-GEO-002: Pivot defaults and overrides

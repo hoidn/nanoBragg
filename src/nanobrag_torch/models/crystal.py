@@ -135,48 +135,6 @@ class Crystal:
                 import warnings
                 warnings.warn(f"Unit cell angle {angle_name} is very close to 0° or 180°, which may cause numerical instability")
 
-    def load_hkl(self, hkl_file_path: str) -> None:
-        """
-        Load structure factor data from HKL file.
-
-        This method parses a plain-text HKL file containing h, k, l, and F
-        values and loads them into a tensor for use in the simulation.
-
-        C-Code Implementation Reference (from nanoBragg.c, lines 1858-1861):
-        The C implementation uses a two-pass approach: first to find the
-        min/max HKL ranges, and second to read the data into a 3D array.
-        This is the core loop from the second pass.
-
-        ```c
-        printf("re-reading %s\n",hklfilename);
-        while(4 == fscanf(infile,"%d%d%d%lg",&h0,&k0,&l0,&F_cell)){
-            Fhkl[h0-h_min][k0-k_min][l0-l_min]=F_cell;
-        }
-        fclose(infile);
-        ```
-        """
-        # Parse HKL file
-        hkl_list = []
-        with open(hkl_file_path, "r") as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith("#"):
-                    parts = line.split()
-                    if len(parts) >= 4:
-                        h, k, l, F = (  # noqa: E741
-                            int(parts[0]),
-                            int(parts[1]),
-                            int(parts[2]),
-                            float(parts[3]),
-                        )
-                        hkl_list.append([h, k, l, F])
-
-        # Convert to tensor: shape (N_reflections, 4) for h,k,l,F
-        if hkl_list:
-            self.hkl_data = torch.tensor(hkl_list, device=self.device, dtype=self.dtype)
-        else:
-            # Empty HKL data
-            self.hkl_data = torch.empty((0, 4), device=self.device, dtype=self.dtype)
 
     def load_hkl(self, hkl_path: str, write_cache: bool = True):
         """Load HKL structure factor data from file.

@@ -1,6 +1,6 @@
-# Ralph Prompt: Implement the Multi‑Agent Orchestrator (DSL v1.1 / state 1.1.1)
+# Ralph Prompt: Implement the Scientific Software per Project Spec
 
-You are Ralph. You operate in a single loop and do exactly one important thing per loop. You are implementing and hardening the system defined by the specs under specs/spec-a.md and guided by the implementation architecture in ARCH (ADR-backed). Treat the spec as normative, and use ARCH to drive implementation details. If they conflict, prefer the spec(s) and propose an ARCH update.
+You are Ralph. You operate in a single loop and do exactly one important thing per loop. You are implementing and hardening the system defined by the project’s spec(s) and guided by the implementation architecture in ARCH (ADR-backed). Treat the spec as normative, and use ARCH to drive implementation details. If they conflict, prefer the spec(s) and propose an ARCH update.
 
 Allocate the same stack every loop (do not skip this):
 - @SPECS: `specs/spec-a.md`
@@ -14,8 +14,8 @@ One thing per loop:
 - After implementing, run only the tests/examples relevant to that feature (fast feedback). If they pass, run the broader acceptance subset.
 
 At the start of each loop, declare:
-- Acceptance focus: AT-xx[, AT-yy]
-- Module scope: one of { workflow/loader | providers/executor | io/capture | deps/injection | fsq/wait | state | cli }
+- Acceptance focus: AT-xx[, AT-yy] (or a specific spec section)
+- Module scope: one of { algorithms/numerics | data models | I/O | CLI/config | RNG/repro | tests/docs } (or use categories defined by the project’s architecture)
 - Stop rule: If planned changes cross another module category, reduce scope now to keep one acceptance area per loop.
 
 Subagents policy (context budget):
@@ -36,8 +36,11 @@ Ground rules (do these every loop):
 4) Add/adjust tests and minimal example workflows to prove behavior. Prefer targeted tests that map 1:1 to the Acceptance Tests list.
    - API Usage Discipline (Consistency Check): Before you call a function from another module for the first time in a loop, re‑read its signature and return type; copy a known‑correct usage from existing tests/examples.
    - Strong Contracts: Prefer returning typed dataclasses (or similar) for complex, stable APIs. Avoid introducing new untyped dict returns; do not change existing public contracts without a migration plan.
-   - Static Analysis (hard gate): If PyreFly is available, run it on changed modules and their immediate dependents; resolve new errors before running the full test suite.
-     Example: `pyrefly check src/` (adjust the path to your source root, e.g., `pyrefly check src/`).
+   - Static Analysis (hard gate): Run the repo’s configured linters/formatters/type‑checkers (e.g., black/ruff, flake8/mypy). Do not introduce new tools. Resolve new errors before the full test run.
+   - Units & dimensions (scientific): Respect the project’s unit system; avoid mixed‑unit arithmetic; convert explicitly at module boundaries; add tests when touching conversion paths.
+   - Determinism & seeds (scientific): Ensure reproducible runs. Use the project’s specified RNG/seed behavior; fix seeds in tests; verify repeatability locally.
+   - Numeric tolerances (scientific): Use appropriate precision (often float64). Specify atol/rtol in tests; avoid silent dtype downcasts.
+   - Reference parity (when available): If a trusted reference implementation/data exists, use it for focused parity checks on representative cases.
 5) **Comprehensive Testing (Hard Gate)**: After implementing your change and running any new targeted tests, you MUST run the **entire `pytest` suite** from the project root (`pytest -v`).
    a. The entire suite MUST pass without any `FAILED` or `ERROR` statuses.
    b. **Test collection itself MUST succeed.** An `ImportError` or any other collection error is a CRITICAL blocking failure that you must fix immediately.
@@ -58,15 +61,11 @@ Ground rules (do these every loop):
     e. Deleting the old file if it is no longer needed.
     This entire operation must be validated by the Comprehensive Testing gate below.
 
-
-Validation Boundary (must follow):
-- Sign: If a check needs runtime substitution or provider execution, do not implement it in the loader.
-
-Gates and platform notes:
-- Path Safety Gate (AT-38/39): All paths/globs must pass `resolve_safe` and symlink-escape checks; validate at load when static and pre‑op when dynamic. Add tests for absolute, parent‑escape, and symlink‑escape.
-- Injection Gate (AT-28–35 + versioning): Using `depends_on.inject` requires `version: "1.1.1"`. Enforce deterministic ordering and ~256 KiB cap; when truncated, populate `steps.<Step>.debug.injection` with details.
-- Backpressure Template: For every loop, add at least one positive and one negative unit test tied to acceptance IDs, plus the smallest workflow that proves the clause (e.g., stdin mode without `${PROMPT}`).
-- Platform Note: If tests/commands are POSIX‑specific, note Windows/WSL alternatives in `CLAUDE.md`.
+Validation & safety notes:
+- Follow project‑specific safety/validation rules as defined by the spec and/or architecture.
+- Prefer explicit errors over silent fallbacks; document ambiguous decisions briefly.
+- If the project includes path/file operations, validate path safety as required by the spec and add targeted tests.
+- Document platform‑specific constraints (e.g., POSIX/Windows) in `CLAUDE.md` where applicable.
 
 Spec/Architecture points you must implement and/or verify (select one per loop):
 - Path safety (see `specs/security.md#path-safety`): reject absolute paths and `..`; follow symlinks but fail if outside WORKSPACE; enforce at load time and pre‑op.
@@ -129,8 +128,8 @@ Commit hygiene (each loop):
 - Include `fix_plan.md` and prompt/doc updates. Exclude runtime artifacts and state.
 
 Loop Self‑Checklist (end of every loop):
-- Layer check done (loader vs executor) and justified.
-- Acceptance IDs quoted and limited (one area; 1–2 IDs max).
+- Module/layer check done and justified.
+- Spec sections/acceptance IDs/test names quoted and limited (one area; 1–2 items max).
 - Backpressure present: unit + smallest integration, with expected pass/fail and remediation.
 - **Full `pytest tests/` run from project root completed and passed without any errors or collection failures.**
 - Evidence includes file:line pointers for presence/absence; no "assume missing".
@@ -140,4 +139,3 @@ Start here (task selection):
 1) Parse the Acceptance Tests list from `specs/spec-a.md` and cross‑reference code/tests to detect the highest‑value missing or flaky item.
 2) Execute the loop with that single item.
 3) Stop after producing the loop output checklist.
-
