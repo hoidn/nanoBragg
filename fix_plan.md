@@ -346,6 +346,18 @@ All medium priority items completed!
   - Explicit -pivot flag overrides all other settings
   - SMV headers correctly reflect convention-specific mappings (MOSFLM_CENTER, XDS_ORGX/Y, etc.)
 
+### AT-CLI-006: Output scaling and PGM
+- **Status**: COMPLETE ✅
+- **Implementation**: Full implementation of output scaling and PGM format
+- **Test**: Created `tests/test_at_cli_006.py` with all 5 tests passing
+- **Details**:
+  - Fixed detector pixel parsing precedence: -detpixels now takes priority over -detsize
+  - Auto-scaling correctly maps max float pixel to ~55,000 counts (accounting for ADC offset)
+  - Explicit -scale applies formula: integer pixel = floor(min(65535, float*scale + adc))
+  - PGM output includes proper P5 format with scale in comment line
+  - PGM scaling formula: min(255, floor(float*pgm_scale))
+  - Pixels outside ROI correctly remain zero in scaled outputs
+
 ## In Progress 🚧
 
 ### CLI Implementation (Critical Missing Component)
@@ -361,7 +373,7 @@ All medium priority items completed!
   - Ensured pixels outside ROI remain zero in both float and int outputs
   - Special handling for noise generation to keep pixels outside ROI at zero
   - All 4 tests passing in test_at_cli_005.py
-- [ ] AT-CLI-006: Output scaling and PGM
+- [x] AT-CLI-006: Output scaling and PGM - **COMPLETE ✅**
 - [ ] AT-CLI-007: Noise determinism
 - [ ] AT-CLI-008: dmin filtering
 - [ ] AT-CLI-009: Error handling and usage
@@ -395,9 +407,10 @@ Key implementation decisions:
 ## Summary
 
 Implementation status:
-- **Completed**: 29 of 35 acceptance tests (83%)
-- **Remaining**: 6 tests (4 CLI + 2 low-priority)
+- **Completed**: 30 of 35 acceptance tests (86%)
+- **Remaining**: 5 tests (3 CLI + 2 low-priority)
 - Core simulation engine is complete and validated
-- CLI interface partially implemented (5 of 9 AT-CLI tests complete)
+- CLI interface mostly implemented (6 of 9 AT-CLI tests complete)
 - ROI, mask, and statistics support fully implemented
-- Test suite: 260 passed, 8 skipped, 2 xfailed
+- Output scaling and PGM export fully functional
+- Test suite: 5 new tests added for AT-CLI-006, all passing

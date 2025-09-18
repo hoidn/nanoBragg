@@ -412,21 +412,24 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     # Detector parameters
     config['pixel_size_mm'] = args.pixel if args.pixel else 0.1
 
-    # Pixel counts
+    # Pixel counts - detpixels takes precedence over detsize
     if args.detpixels:
         config['fpixels'] = args.detpixels
         config['spixels'] = args.detpixels
-    else:
+    elif args.detpixels_f or args.detpixels_s:
         config['fpixels'] = args.detpixels_f if args.detpixels_f else 1024
         config['spixels'] = args.detpixels_s if args.detpixels_s else 1024
-
-    # Detector size (alternative to pixel count)
-    if args.detsize:
+    elif args.detsize:
+        # Only use detsize if detpixels not specified
         config['fpixels'] = int(args.detsize / config['pixel_size_mm'])
         config['spixels'] = int(args.detsize / config['pixel_size_mm'])
     elif args.detsize_f and args.detsize_s:
         config['fpixels'] = int(args.detsize_f / config['pixel_size_mm'])
         config['spixels'] = int(args.detsize_s / config['pixel_size_mm'])
+    else:
+        # Default values
+        config['fpixels'] = 1024
+        config['spixels'] = 1024
 
     config['distance_mm'] = args.distance if args.distance else 100.0
     config['close_distance_mm'] = args.close_distance
@@ -722,25 +725,32 @@ def main():
             print(f"Wrote float image to {config['floatfile']}")
 
         if config.get('intfile'):
-            # Scale and write SMV
+            # Scale and write SMV per AT-CLI-006
             scale = config.get('scale')
-            if not scale or scale <= 0:
-                max_val = intensity.max().item()
-                scale = 55000.0 / max_val if max_val > 0 else 1.0
-
-            # Apply scaling and ADC offset only to non-zero pixels (AT-CLI-005)
-            # Pixels outside ROI should remain zero
-            scaled = intensity * scale
             adc_offset = config.get('adc', 40.0)
 
-            if adc_offset > 0:
-                # Only add ADC where intensity > 0 (inside ROI)
-                # Note: Due to floating point precision, we may need a small threshold
-                threshold = 1e-10
-                mask = intensity > threshold
-                scaled = torch.where(mask, scaled + adc_offset, scaled)
+            if not scale or scale <= 0:
+                # Auto-scale: map max float pixel to approximately 55,000 counts
+                max_val = intensity.max().item()
+                if max_val > 0:
+                    # Calculate scale to achieve 55000 after adding ADC
+                    scale = (55000.0 - adc_offset) / max_val if adc_offset < 55000 else 55000.0 / max_val
+                else:
+                    scale = 1.0
+
+            # Apply scaling per spec: integer pixel = floor(min(65535, float*scale + adc))
+            # Only apply to non-zero pixels (AT-CLI-005)
+            # Pixels outside ROI should remain zero
+            threshold = 1e-10
+            roi_mask = intensity > threshold
+
+            # Calculate scaled values
+            scaled = intensity * scale + adc_offset
+            # Only apply scaling where intensity > 0 (inside ROI)
+            scaled = torch.where(roi_mask, scaled, torch.zeros_like(scaled))
+            # Clip to valid range and floor
             scaled = scaled.clip(0, 65535)
-            scaled_int = scaled.to(torch.int16).cpu().numpy().astype(np.uint16)
+            scaled_int = torch.floor(scaled).to(torch.int16).cpu().numpy().astype(np.uint16)
 
             write_smv(
                 filepath=config['intfile'],
@@ -762,8 +772,9 @@ def main():
             print(f"Wrote SMV image to {config['intfile']}")
 
         if config.get('pgmfile'):
-            # Write PGM
-            pgmscale = config.get('pgmscale', 1.0)
+            # Write PGM per AT-CLI-006
+            # If pgmscale not provided, default to 1.0 per spec
+            pgmscale = config.get('pgmscale', 1.0) if config.get('pgmscale') is not None else 1.0
             write_pgm(config['pgmfile'], intensity.cpu().numpy(), pgmscale)
             print(f"Wrote PGM image to {config['pgmfile']}")
 
