@@ -267,14 +267,41 @@ All medium priority items completed!
   - Separate functions for divergence, dispersion, and thickness auto-selection
   - Full test coverage of all spec-defined behaviors
 
+### AT-FLU-001: Fluence calculation and sample clipping
+- **Status**: COMPLETE ✅
+- **Implementation**: Full implementation in BeamConfig and Crystal classes
+- **Test**: Created `tests/test_at_flu_001.py` with all 8 tests passing
+- **Details**:
+  - Added flux, exposure, beamsize_mm, and fluence fields to BeamConfig
+  - BeamConfig.__post_init__ computes fluence from flux·exposure/beamsize^2 when conditions met
+  - Also handles flux recomputation when exposure > 0 and fluence/beamsize are set
+  - Added sample_x, sample_y, sample_z fields to CrystalConfig (calculated from N_cells and cell dimensions)
+  - Crystal class accepts optional beam_config parameter for sample clipping
+  - Clips sample_y and sample_z to beamsize when beamsize < sample dimensions with warning
+  - Simulator now uses fluence from beam_config instead of hardcoded value
+
+### AT-ROI-001: ROI and mask behavior
+- **Status**: COMPLETE ✅
+- **Implementation**: Full implementation of AT-ROI-001 requirements
+- **Test**: Created `tests/test_at_roi_001.py` with all 7 tests passing
+- **Details**:
+  - Added ROI bounds (roi_xmin, roi_xmax, roi_ymin, roi_ymax) to DetectorConfig
+  - Added mask_array field to DetectorConfig for external binary masks
+  - ROI defaults to full detector when not specified (0 to pixels-1)
+  - Added comprehensive validation for ROI bounds (must be within detector limits)
+  - Created mask file reader in `io/mask.py` for SMV format masks
+  - Integrated ROI/mask filtering in Simulator.run()
+  - ROI and mask are combined with AND logic (both conditions must be met)
+  - Pixels outside ROI or with mask==0 are set to zero intensity
+  - Includes utilities for creating circular and rectangular masks
+  - Handles dynamic detector sizes for compatibility with existing tests
+
 ## Low Priority TODO 🟢
 
 ### Advanced Features
-- [ ] AT-FLU-001: Fluence calculation and sample clipping
 - [ ] AT-STA-001: Float-image statistics calculation
 - [ ] AT-PRE-001: Header precedence (-img vs -mask)
 - [ ] AT-PRE-002: Pivot and origin overrides
-- [ ] AT-ROI-001: ROI and mask behavior
 
 ## Architecture Notes
 
@@ -286,10 +313,17 @@ Key implementation decisions:
 
 ## Next Steps
 
-1. **CRITICAL**: Implement HKL file loading and structure factor lookup (AT-STR-001)
-   - Without this, the simulator can only use default_F=100 for all reflections
-   - This is the biggest blocker for realistic simulations
+1. Continue with remaining low-priority features:
+   - AT-STA-001: Float-image statistics calculation
+   - AT-PRE-001: Header precedence (-img vs -mask)
+   - AT-PRE-002: Pivot and origin overrides
 
-2. Continue with remaining geometry tests (AT-GEO-002 through AT-GEO-006)
+2. All high and medium priority acceptance tests are complete!
 
-3. Add sampling and normalization features for accurate intensity calculations
+## Summary
+
+Implementation status:
+- **Completed**: 23 of 26 acceptance tests (88%)
+- **Remaining**: 3 low-priority features
+- All core simulation functionality is complete and validated
+- ROI and mask support fully implemented

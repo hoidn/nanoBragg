@@ -12,7 +12,7 @@ from typing import Optional, Tuple
 
 import torch
 
-from ..config import CrystalConfig
+from ..config import CrystalConfig, BeamConfig
 from ..utils.geometry import angles_to_rotation_matrix
 from ..io.hkl import read_hkl_file, try_load_hkl_or_fdump
 
@@ -37,14 +37,25 @@ class Crystal:
     """
 
     def __init__(
-        self, config: Optional[CrystalConfig] = None, device=None, dtype=torch.float64
+        self, config: Optional[CrystalConfig] = None, beam_config: Optional[BeamConfig] = None, device=None, dtype=torch.float64
     ):
-        """Initialize crystal from configuration."""
+        """Initialize crystal from configuration with optional beam-based sample clipping.
+
+        Args:
+            config: Crystal configuration
+            beam_config: Optional beam configuration for sample clipping (AT-FLU-001)
+            device: PyTorch device
+            dtype: PyTorch data type
+        """
         self.device = device if device is not None else torch.device("cpu")
         self.dtype = dtype
 
         # Store configuration
         self.config = config if config is not None else CrystalConfig()
+
+        # Apply sample clipping if beam config provided (AT-FLU-001)
+        if beam_config is not None and beam_config.beamsize_mm > 0:
+            self._apply_sample_clipping(beam_config)
 
         # Initialize cell parameters from config with validation
         # These are the fundamental parameters that can be differentiable
@@ -971,3 +982,24 @@ class Crystal:
         # testing shows this may not be needed for the current issue
 
         return vectors
+
+    def _apply_sample_clipping(self, beam_config: BeamConfig) -> None:
+        """Apply sample clipping based on beam size (AT-FLU-001).
+
+        Per spec: when beamsize > 0 and smaller than sample_y or sample_z,
+        those sample dimensions SHALL be clipped to beamsize and a warning printed.
+
+        Args:
+            beam_config: Beam configuration containing beamsize_mm
+        """
+        beamsize_m = beam_config.beamsize_mm / 1000.0  # Convert mm to meters
+
+        # Check and clip sample_y
+        if self.config.sample_y is not None and beamsize_m < self.config.sample_y:
+            print(f"Warning: Clipping sample_y from {self.config.sample_y:.6e} m to beamsize {beamsize_m:.6e} m")
+            self.config.sample_y = beamsize_m
+
+        # Check and clip sample_z
+        if self.config.sample_z is not None and beamsize_m < self.config.sample_z:
+            print(f"Warning: Clipping sample_z from {self.config.sample_z:.6e} m to beamsize {beamsize_m:.6e} m")
+            self.config.sample_z = beamsize_m

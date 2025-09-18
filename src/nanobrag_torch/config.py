@@ -134,6 +134,21 @@ class CrystalConfig:
     shape: CrystalShape = CrystalShape.SQUARE  # Crystal shape model for F_latt calculation
     fudge: float = 1.0  # Shape parameter scaling factor
 
+    # Sample size in meters (calculated from N_cells and unit cell dimensions)
+    # These are computed in __post_init__ and potentially clipped by beam size
+    sample_x: Optional[float] = None  # Sample size along a-axis (meters)
+    sample_y: Optional[float] = None  # Sample size along b-axis (meters)
+    sample_z: Optional[float] = None  # Sample size along c-axis (meters)
+
+    def __post_init__(self):
+        """Calculate sample dimensions from unit cell and N_cells."""
+        # Calculate sample dimensions in meters (cell parameters are in Angstroms)
+        # For simplicity, assume orthogonal axes for sample size calculation
+        # This matches the C code behavior
+        self.sample_x = self.N_cells[0] * self.cell_a * 1e-10  # Convert Å to meters
+        self.sample_y = self.N_cells[1] * self.cell_b * 1e-10
+        self.sample_z = self.N_cells[2] * self.cell_c * 1e-10
+
 
 @dataclass
 class DetectorConfig:
@@ -185,6 +200,15 @@ class DetectorConfig:
     detector_abs_um: Optional[Union[float, torch.Tensor]] = None  # Attenuation depth in micrometers
     detector_thick_um: Union[float, torch.Tensor] = 0.0  # Detector thickness in micrometers
     detector_thicksteps: int = 1  # Number of thickness layers for absorption calculation
+
+    # ROI (Region of Interest) parameters (AT-ROI-001)
+    roi_xmin: Optional[int] = None  # Fast axis minimum pixel (inclusive, 0-based)
+    roi_xmax: Optional[int] = None  # Fast axis maximum pixel (inclusive, 0-based)
+    roi_ymin: Optional[int] = None  # Slow axis minimum pixel (inclusive, 0-based)
+    roi_ymax: Optional[int] = None  # Slow axis maximum pixel (inclusive, 0-based)
+
+    # Mask parameters (AT-ROI-001)
+    mask_array: Optional[torch.Tensor] = None  # Binary mask array (0=skip, non-zero=include)
 
     def __post_init__(self):
         """Validate configuration and set defaults.
@@ -243,6 +267,36 @@ class DetectorConfig:
         # Validate oversample
         if self.oversample < 1:
             raise ValueError("Oversample must be at least 1")
+
+        # Validate and set ROI defaults (AT-ROI-001)
+        # If ROI not specified, default to full detector
+        if self.roi_xmin is None:
+            self.roi_xmin = 0
+        if self.roi_xmax is None:
+            self.roi_xmax = self.fpixels - 1  # Inclusive, 0-based
+        if self.roi_ymin is None:
+            self.roi_ymin = 0
+        if self.roi_ymax is None:
+            self.roi_ymax = self.spixels - 1  # Inclusive, 0-based
+
+        # Validate ROI bounds
+        if self.roi_xmin < 0 or self.roi_xmin >= self.fpixels:
+            raise ValueError(f"roi_xmin must be in [0, {self.fpixels-1}]")
+        if self.roi_xmax < 0 or self.roi_xmax >= self.fpixels:
+            raise ValueError(f"roi_xmax must be in [0, {self.fpixels-1}]")
+        if self.roi_ymin < 0 or self.roi_ymin >= self.spixels:
+            raise ValueError(f"roi_ymin must be in [0, {self.spixels-1}]")
+        if self.roi_ymax < 0 or self.roi_ymax >= self.spixels:
+            raise ValueError(f"roi_ymax must be in [0, {self.spixels-1}]")
+        if self.roi_xmin > self.roi_xmax:
+            raise ValueError("roi_xmin must be <= roi_xmax")
+        if self.roi_ymin > self.roi_ymax:
+            raise ValueError("roi_ymin must be <= roi_ymax")
+
+        # Validate mask array dimensions if provided
+        if self.mask_array is not None:
+            if self.mask_array.shape != (self.spixels, self.fpixels):
+                raise ValueError(f"Mask array shape {self.mask_array.shape} must match detector dimensions ({self.spixels}, {self.fpixels})")
 
     @classmethod
     def from_cli_args(
@@ -315,17 +369,40 @@ class BeamConfig:
     source_weights: Optional[torch.Tensor] = None  # (N,) source weights (ignored per spec, all equal)
     source_wavelengths: Optional[torch.Tensor] = None  # (N,) wavelengths in meters for each source
 
-    # Beam polarization and flux (simplified)
+    # Beam polarization
     polarization_factor: float = 1.0  # Kahn polarization factor K in [0,1] (1.0 = unpolarized)
     nopolar: bool = False  # If True, force polarization factor to 1 (disable polarization)
     polarization_axis: tuple[float, float, float] = (0.0, 0.0, 1.0)  # Polarization E-vector direction
-    flux: float = 1e12  # Photons per second (simplified)
+
+    # Flux and fluence parameters (AT-FLU-001)
+    flux: float = 0.0  # Photons per second
+    exposure: float = 0.0  # Exposure time in seconds
+    beamsize_mm: float = 0.0  # Beam size in mm (used for fluence calculation and sample clipping)
+    fluence: float = 125932015286227086360700780544.0  # Photons per square meter (default from C code)
 
     # Resolution cutoff
     dmin: float = 0.0  # Minimum d-spacing in Angstroms (0 = no cutoff)
 
     # Water background
     water_size_um: float = 0.0  # Water thickness in micrometers for background calculation (0 = no background)
+
+    def __post_init__(self):
+        """Calculate fluence from flux/exposure/beamsize if provided (AT-FLU-001).
+
+        Per spec: fluence SHALL be recomputed as flux·exposure/beamsize^2 whenever
+        flux != 0 and exposure > 0 and beamsize ≥ 0.
+        """
+        if self.flux != 0 and self.exposure > 0 and self.beamsize_mm >= 0:
+            # Convert beamsize from mm to meters for fluence calculation
+            beamsize_m = self.beamsize_mm / 1000.0
+            if beamsize_m > 0:
+                self.fluence = self.flux * self.exposure / (beamsize_m * beamsize_m)
+            # If beamsize is 0 but flux and exposure are set, keep existing fluence
+
+        # Also handle case where exposure > 0 recomputes flux to be consistent
+        elif self.exposure > 0 and self.beamsize_mm > 0 and self.fluence > 0:
+            beamsize_m = self.beamsize_mm / 1000.0
+            self.flux = self.fluence * (beamsize_m * beamsize_m) / self.exposure
 
 
 @dataclass
