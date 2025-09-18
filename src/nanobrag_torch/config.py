@@ -163,6 +163,7 @@ class DetectorConfig:
 
     # Detector geometry mode
     curved_detector: bool = False  # If True, use spherical mapping for pixel positions
+    point_pixel: bool = False  # If True, use 1/R^2 solid angle only (no obliquity)
 
     def __post_init__(self):
         """Validate configuration and set defaults.

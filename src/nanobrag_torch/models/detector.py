@@ -54,6 +54,13 @@ class Detector:
         self.distance = config.distance_mm / 1000.0  # Convert mm to meters
         self.pixel_size = config.pixel_size_mm / 1000.0  # Convert mm to meters
 
+        # Set close_distance (used for obliquity calculations)
+        if config.close_distance_mm is not None:
+            self.close_distance = config.close_distance_mm / 1000.0  # Convert mm to meters
+        else:
+            # Default to distance if not specified
+            self.close_distance = self.distance
+
         # Copy dimension parameters
         self.spixels = config.spixels
         self.fpixels = config.fpixels
@@ -682,6 +689,43 @@ class Detector:
         pixel_coords = self.distance * direction_normalized
 
         return pixel_coords
+
+    def get_solid_angle(self, pixel_coords: Optional[torch.Tensor] = None) -> torch.Tensor:
+        """
+        Calculate the solid angle factor for each pixel.
+
+        Per spec section "Pixel mapping and solid angle":
+        - Default: Ω = (pixel_size^2 / |pos|^2) · (close_distance/|pos|)
+        - With point_pixel: Ω = 1/|pos|^2
+
+        Args:
+            pixel_coords: Optional pre-computed pixel coordinates. If None, will compute them.
+                         Shape should be (spixels, fpixels, 3) in meters.
+
+        Returns:
+            torch.Tensor: Solid angle factor for each pixel, shape (spixels, fpixels)
+        """
+        # Get pixel coordinates if not provided
+        if pixel_coords is None:
+            pixel_coords = self.get_pixel_coords()
+
+        # Calculate distance from sample to each pixel
+        R = torch.norm(pixel_coords, dim=-1)  # Shape: (spixels, fpixels)
+
+        if self.config.point_pixel:
+            # Point pixel mode: use 1/R^2 solid angle only (no obliquity)
+            omega = 1.0 / (R * R)
+        else:
+            # Default mode: include pixel size and obliquity factor
+            # Ω = (pixel_size^2 / R^2) · (close_distance/R)
+            # where close_distance is the minimum distance along detector normal
+
+            # The obliquity factor is close_distance/R
+            # For the standard case, close_distance = distance * cos(angle)
+            # where angle is between beam and detector normal
+            omega = (self.pixel_size * self.pixel_size) / (R * R) * (self.close_distance / R)
+
+        return omega
 
     @property
     def beam_vector(self) -> torch.Tensor:

@@ -85,10 +85,19 @@ None currently.
   - Uses small-angle rotation approximation for performance
   - Maintains gradient flow for differentiability
 
-## High Priority TODO 🔴
+### AT-GEO-006: Point-pixel solid angle
+- **Status**: COMPLETE ✅
+- **Implementation**: Added solid angle calculation to Detector class
+- **Test**: Created `tests/test_at_geo_006.py` with all 5 tests passing
+- **Details**:
+  - Added `point_pixel` boolean flag to DetectorConfig
+  - Implemented `get_solid_angle()` method in Detector class
+  - With point_pixel=True: Ω = 1/R^2 (no obliquity)
+  - Default mode: Ω = (pixel_size^2/R^2)·(close_distance/R)
+  - Added `close_distance` attribute initialization in Detector.__init__
+  - Maintains gradient flow for differentiable parameters
 
-### Beam Model & Geometry (AT-GEO-006)
-- [ ] AT-GEO-006: Point-pixel solid angle
+## High Priority TODO 🔴
 
 ### Sampling & Normalization (AT-SAM-001, AT-SAM-002)
 - [ ] AT-SAM-001: Steps normalization
