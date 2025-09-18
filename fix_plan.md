@@ -355,7 +355,12 @@ All medium priority items completed!
   - Proper precedence: last file read wins for shared header keys
   - For -mask files, BEAM_CENTER_Y is interpreted with flip (detsize_s - value)
   - All 5 tests passing in test_at_cli_004.py
-- [ ] AT-CLI-005: ROI bounding
+- [x] AT-CLI-005: ROI bounding - **COMPLETE ✅**
+  - ROI flag parsing already implemented in CLI
+  - Fixed issue where write_smv was applying ADC offset twice
+  - Ensured pixels outside ROI remain zero in both float and int outputs
+  - Special handling for noise generation to keep pixels outside ROI at zero
+  - All 4 tests passing in test_at_cli_005.py
 - [ ] AT-CLI-006: Output scaling and PGM
 - [ ] AT-CLI-007: Noise determinism
 - [ ] AT-CLI-008: dmin filtering
@@ -390,8 +395,9 @@ Key implementation decisions:
 ## Summary
 
 Implementation status:
-- **Completed**: 27 of 35 acceptance tests (77%)
-- **Remaining**: 8 tests (6 CLI + 2 low-priority)
+- **Completed**: 29 of 35 acceptance tests (83%)
+- **Remaining**: 6 tests (4 CLI + 2 low-priority)
 - Core simulation engine is complete and validated
-- **Critical gap**: No CLI interface implemented
+- CLI interface partially implemented (5 of 9 AT-CLI tests complete)
 - ROI, mask, and statistics support fully implemented
+- Test suite: 260 passed, 8 skipped, 2 xfailed

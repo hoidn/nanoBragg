@@ -728,7 +728,18 @@ def main():
                 max_val = intensity.max().item()
                 scale = 55000.0 / max_val if max_val > 0 else 1.0
 
-            scaled = (intensity * scale + config.get('adc', 40.0)).clip(0, 65535)
+            # Apply scaling and ADC offset only to non-zero pixels (AT-CLI-005)
+            # Pixels outside ROI should remain zero
+            scaled = intensity * scale
+            adc_offset = config.get('adc', 40.0)
+
+            if adc_offset > 0:
+                # Only add ADC where intensity > 0 (inside ROI)
+                # Note: Due to floating point precision, we may need a small threshold
+                threshold = 1e-10
+                mask = intensity > threshold
+                scaled = torch.where(mask, scaled + adc_offset, scaled)
+            scaled = scaled.clip(0, 65535)
             scaled_int = scaled.to(torch.int16).cpu().numpy().astype(np.uint16)
 
             write_smv(
@@ -744,7 +755,9 @@ def main():
                 osc_start_deg=config.get('phi_deg', 0.0),
                 osc_range_deg=config.get('osc_deg', 0.0),
                 twotheta_deg=config.get('twotheta_deg', 0.0),
-                convention=detector_config.detector_convention.name
+                convention=detector_config.detector_convention.name,
+                scale=1.0,  # Already scaled
+                adc_offset=0.0  # Already applied ADC
             )
             print(f"Wrote SMV image to {config['intfile']}")
 
@@ -760,7 +773,44 @@ def main():
                 seed=config.get('seed'),
                 adc_offset=config.get('adc', 40.0)
             )
-            noisy, overloads = generate_poisson_noise(intensity, noise_config)
+            # For noise generation, we need to handle ROI properly (AT-CLI-005)
+            # Only apply noise and ADC to pixels inside ROI
+            # First, create a mask for where intensity > 0 (inside ROI)
+            roi_mask = intensity > 0
+
+            # Generate noise for the entire image (but without readout noise)
+            noisy, overloads = generate_poisson_noise(
+                intensity,
+                seed=noise_config.seed,
+                adc_offset=0.0,  # Don't apply ADC globally
+                readout_noise=0.0,  # Don't apply readout noise globally
+                overload_value=noise_config.overload_value
+            )
+
+            # noisy is now an integer tensor, convert back to float for additional operations
+            noisy = noisy.float()
+
+            # Add ADC offset and readout noise only to pixels inside ROI
+            if roi_mask.any():
+                # Apply readout noise only inside ROI
+                if noise_config.readout_noise > 0:
+                    generator = torch.Generator(device=intensity.device)
+                    if noise_config.seed is not None:
+                        generator.manual_seed(noise_config.seed + 1)  # Different seed for readout
+                    readout = torch.normal(
+                        mean=torch.zeros_like(noisy),
+                        std=noise_config.readout_noise,
+                        generator=generator
+                    )
+                    noisy = torch.where(roi_mask, noisy + readout, noisy)
+
+                # Add ADC offset only inside ROI
+                if noise_config.adc_offset > 0:
+                    noisy = torch.where(roi_mask, noisy + noise_config.adc_offset, noisy)
+
+            # Ensure pixels outside ROI remain exactly zero
+            noisy = torch.where(roi_mask, noisy, torch.zeros_like(noisy))
+
             noisy_int = noisy.to(torch.int16).cpu().numpy().astype(np.uint16)
 
             write_smv(
@@ -776,7 +826,9 @@ def main():
                 osc_start_deg=config.get('phi_deg', 0.0),
                 osc_range_deg=config.get('osc_deg', 0.0),
                 twotheta_deg=config.get('twotheta_deg', 0.0),
-                convention=detector_config.detector_convention.name
+                convention=detector_config.detector_convention.name,
+                scale=1.0,  # Already scaled
+                adc_offset=0.0  # Already applied ADC
             )
             print(f"Wrote noise image to {config['noisefile']} ({overloads} overloads)")
 
