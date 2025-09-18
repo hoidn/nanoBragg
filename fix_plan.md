@@ -310,6 +310,22 @@ All medium priority items completed!
   - Returns dictionary with all required statistics fields
   - Handles edge cases (empty ROI, single pixel)
 
+## High Priority TODO 🔴
+
+### CLI Implementation (Critical Missing Component)
+- [ ] Create CLI entry point (`src/nanobrag_torch/__main__.py`)
+- [ ] AT-CLI-001: CLI presence and help
+- [ ] AT-CLI-002: Minimal render and headers
+- [ ] AT-CLI-003: Conventions and pivot behavior
+- [ ] AT-CLI-004: Header precedence and mask behavior
+- [ ] AT-CLI-005: ROI bounding
+- [ ] AT-CLI-006: Output scaling and PGM
+- [ ] AT-CLI-007: Noise determinism
+- [ ] AT-CLI-008: dmin filtering
+- [ ] AT-CLI-009: Error handling and usage
+
+**Note**: The CLI implementation is required for compliance with the "Reference CLI Binding Profile" defined in spec-a.md lines 790-845. Without this, the PyTorch port cannot be used as a drop-in replacement for the C version.
+
 ## Low Priority TODO 🟢
 
 ### Advanced Features
@@ -326,18 +342,19 @@ Key implementation decisions:
 
 ## Next Steps
 
-1. Continue with remaining low-priority features:
-   - AT-STA-001: Float-image statistics calculation
+1. **PRIORITY**: Implement CLI interface for all AT-CLI-* tests
+   - This is essential for the "Reference CLI Binding Profile"
+   - Enables users to actually run the PyTorch version from command line
+
+2. Continue with remaining low-priority features:
    - AT-PRE-001: Header precedence (-img vs -mask)
    - AT-PRE-002: Pivot and origin overrides
-
-2. All high and medium priority acceptance tests are complete!
 
 ## Summary
 
 Implementation status:
-- **Completed**: 24 of 26 acceptance tests (92%)
-- **Remaining**: 2 low-priority features
-- All core simulation functionality is complete and validated
-- ROI and mask support fully implemented
-- Statistics calculation fully implemented
+- **Completed**: 24 of 35 acceptance tests (69%)
+- **Remaining**: 11 tests (9 CLI + 2 low-priority)
+- Core simulation engine is complete and validated
+- **Critical gap**: No CLI interface implemented
+- ROI, mask, and statistics support fully implemented
