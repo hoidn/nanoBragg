@@ -827,6 +827,93 @@ These tests apply only to implementations claiming the Reference CLI Binding Pro
   - Setup: Invoke nanoBragg without -hkl and without an Fdump.bin and with -default_F=0.
   - Expectation: Program prints usage/help indicating required inputs and exits with a non-zero status.
 
+Parallel Validation Tests (Profile: C-PyTorch Equivalence) — Acceptance Tests (Normative)
+
+These tests verify that PyTorch implementation produces outputs equivalent to the C reference implementation. They apply to implementations claiming the C-PyTorch Equivalence Profile. These are black-box behavioral tests comparing outputs without examining internal implementation details.
+
+- AT-PARALLEL-001 Beam Center Scales with Detector Size
+  - Setup: Test detector sizes 64x64, 128x128, 256x256, 512x512, 1024x1024 pixels with 0.1mm pixel size, cubic crystal 100Å N=3, λ=6.2Å
+  - Expectation: Beam center (mm) SHALL equal detector_pixels/2 × pixel_size_mm; Peak SHALL appear at detector center ±2 pixels; Correlation between C and PyTorch >0.95
+  - Failure mode: Fixed beam center at 51.2mm regardless of detector size
+
+- AT-PARALLEL-002 Pixel Size Independence
+  - Setup: Fixed 256x256 detector, vary pixel sizes 0.05, 0.1, 0.2, 0.4mm, beam center at 25.6mm
+  - Expectation: Beam center in pixels SHALL equal 25.6mm / pixel_size_mm ±0.1 pixels; Peak positions SHALL scale inversely with pixel size; Pattern correlation >0.95
+
+- AT-PARALLEL-003 Detector Offset Preservation
+  - Setup: Test beam centers (20,20), (30,40), (45,25), (60,60)mm with 256x256, 512x512, 1024x1024 detectors
+  - Expectation: Peak SHALL appear at beam_center_mm / pixel_size_mm ±1 pixel; Offset ratios preserved ±2%
+
+- AT-PARALLEL-004 MOSFLM 0.5 Pixel Offset
+  - Setup: MOSFLM vs XDS convention comparison, 256x256 detector, beam center 25.6mm
+  - Expectation: MOSFLM SHALL add +0.5 pixel offset; Peak position difference SHALL be 0.4-0.6 pixels between conventions; Pattern correlation >0.99 when aligned
+
+- AT-PARALLEL-005 Beam Center Parameter Mapping
+  - Setup: Test -Xbeam/-Ybeam vs -ORGX/-ORGY vs -Xclose/-Yclose parameter equivalence
+  - Expectation: Equivalent configurations SHALL produce same beam centers ±0.5 pixels; Pivot mode SHALL be set consistently
+
+- AT-PARALLEL-006 Single Reflection Position
+  - Setup: Cubic crystal 100Å, single (1,0,0) reflection, vary distance (50,100,200mm) and wavelength (1.0,1.5,2.0Å)
+  - Expectation: Peak position SHALL match Bragg angle calculation θ=arcsin(λ/(2d)) ±0.5 pixels; Distance scaling ratio ±2%; Wavelength scaling follows Bragg's law ±1%
+
+- AT-PARALLEL-007 Peak Position with Rotations
+  - Setup: Cubic crystal, apply detector rotations rotx=5°, roty=3°, rotz=2°, twotheta=10°
+  - Expectation: Peak shifts SHALL be 10-100 pixels; Relative peak positions preserved ±5%; Total intensity conserved ±10%
+
+- AT-PARALLEL-008 Multi-Peak Pattern Registration
+  - Setup: Triclinic cell (70,80,90,75,85,95)°, generate pattern with 20+ visible reflections
+  - Expectation: >95% of bright peaks SHALL align ±1 pixel between C and PyTorch; Intensity ratio RMS error <10%; Pattern correlation >0.98
+
+- AT-PARALLEL-009 Intensity Normalization
+  - Setup: Vary crystal size N=1,2,3,5,10; structure factor F=50,100,200,500; wavelength=1.0,1.5,2.0,3.0Å
+  - Expectation: Intensity SHALL scale as N³ (R²>0.99); Intensity SHALL scale as F² (R²>0.99); C/PyTorch intensity ratio SHALL be constant ±10%
+  - Failure mode: 79x intensity difference between implementations
+
+- AT-PARALLEL-010 Solid Angle Corrections
+  - Setup: Vary detector distance 50,100,200,400mm; detector tilt 0°,10°,20°,30°
+  - Expectation: Intensity SHALL follow 1/r² law ±5%; Tilt corrections SHALL preserve total flux ±10%
+
+- AT-PARALLEL-011 Polarization Factor Verification
+  - Setup: Test reflections at different scattering angles, compare polarized vs unpolarized
+  - Expectation: Polarization factor SHALL match P=(1+cos²(2θ))/2 ±1%; Angular dependence R²>0.95 vs theory
+
+- AT-PARALLEL-012 Reference Pattern Correlation
+  - Setup: Generate patterns with proven C configurations, test cubic, tetragonal, orthorhombic, triclinic cells
+  - Expectation: Simple cubic correlation SHALL be >0.999; Complex triclinic correlation SHALL be >0.995; Peak positions SHALL align ±0.5 pixels
+  - Failure mode: Correlation 0.048 indicates fundamental geometry error
+
+- AT-PARALLEL-013 Cross-Platform Consistency
+  - Setup: Run same calculation on different machines/architectures
+  - Expectation: Results SHALL be numerically identical for fixed seeds; Peak positions SHALL not vary; Intensities SHALL match to machine precision
+
+- AT-PARALLEL-014 Noise Robustness Test
+  - Setup: Add Poisson noise with different seeds, compare statistics
+  - Expectation: Mean intensity SHALL be preserved ±1%; Peak positions SHALL not shift with noise; Noise statistics SHALL match Poisson distribution
+
+- AT-PARALLEL-015 Mixed Unit Input Handling
+  - Setup: Test various unit combinations: distance in mm, wavelength in Å, angles in degrees
+  - Expectation: Unit conversions SHALL be applied consistently; Results SHALL be independent of input units used; No unit confusion errors
+
+- AT-PARALLEL-016 Extreme Scale Testing
+  - Setup: Test nano-crystals (N=1) to large crystals (N=100), wavelengths 0.1-10Å, distances 10mm-10m
+  - Expectation: Physics SHALL remain valid at all scales; No numerical overflow/underflow; Graceful handling of extreme parameters
+
+- AT-PARALLEL-017 Grazing Incidence Geometry
+  - Setup: Large detector tilts >45°, twotheta>60°, oblique incidence
+  - Expectation: Geometry calculations SHALL remain stable; Solid angle corrections SHALL be applied correctly; No singularities in rotation matrices
+
+- AT-PARALLEL-018 Crystal Boundary Conditions
+  - Setup: Crystal at singular orientations, aligned axes, zero-angle cases
+  - Expectation: No division by zero errors; Degenerate cases SHALL be handled gracefully; Results SHALL be continuous near boundaries
+
+- AT-PARALLEL-019 High-Resolution Data
+  - Setup: Small d-spacings <1Å, large detector 4096x4096, fine sampling
+  - Expectation: Memory usage SHALL scale linearly; Performance SHALL degrade gracefully; Precision SHALL be maintained for fine features
+
+- AT-PARALLEL-020 Comprehensive Integration Test
+  - Setup: Complete simulation with all features: triclinic cell, mosaic spread, phi rotation, detector tilts, absorption, polarization
+  - Expectation: Full pipeline SHALL execute without errors; All corrections SHALL be applied consistently; Final correlation between C and PyTorch SHALL be >0.95
+
 Quality Bar Checklist (Informative)
 
 - All major formulas and conversions are explicit and match the implementation.
@@ -842,6 +929,11 @@ Conformance Profiles (Normative)
 
 - Reference CLI Binding Profile
   - Scope: Implementations claiming CLI compatibility SHALL expose a command-line interface that maps flags, defaults, units, precedence, and outputs as defined below. Unknown flags SHOULD produce a clear error with usage guidance. Synonyms listed MUST be supported equivalently.
+
+- C-PyTorch Equivalence Profile
+  - Scope: Implementations claiming equivalence with the C reference implementation SHALL pass all AT-PARALLEL-* tests with specified tolerances. This profile ensures that alternative implementations produce outputs functionally equivalent to the original nanoBragg.c.
+  - Requirements: Must conform to Core Engine Profile and pass all 20 AT-PARALLEL tests.
+  - Key tolerances: Pattern correlation >0.95 for general cases, >0.999 for simple cubic; Peak position accuracy ±2 pixels; Intensity scaling within 2x; Beam center calculation must scale with detector size.
   - Units & conversions:
     - Å→m = ×1e−10; mm→m = ÷1000; µm→m = ×1e−6; deg→rad = ×π/180; mrad→rad = ÷1000.
     - Wavelength: -lambda|-wave Å→m; -energy eV→m via λ = (12398.42/E)·1e−10.

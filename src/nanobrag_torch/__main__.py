@@ -634,9 +634,9 @@ def main():
             oversample_thick=config.get('oversample_thick', False)
         )
 
-        # Set beam center if provided
+        # Set beam center if provided (values are in mm)
         if 'beam_center_x_mm' in config:
-            detector_config.beam_center_s = config['beam_center_x_mm']  # Will be mapped per convention
+            detector_config.beam_center_s = config['beam_center_x_mm']
         if 'beam_center_y_mm' in config:
             detector_config.beam_center_f = config['beam_center_y_mm']
 
@@ -760,8 +760,8 @@ def main():
                 pixel_size_mm=detector_config.pixel_size_mm,
                 distance_mm=detector_config.distance_mm,
                 wavelength_angstrom=beam_config.wavelength_A,
-                beam_center_x_mm=detector_config.beam_center_s * detector_config.pixel_size_mm,
-                beam_center_y_mm=detector_config.beam_center_f * detector_config.pixel_size_mm,
+                beam_center_x_mm=detector_config.beam_center_s,
+                beam_center_y_mm=detector_config.beam_center_f,
                 close_distance_mm=detector_config.close_distance_mm,
                 phi_deg=config.get('phi_deg', 0.0),
                 osc_start_deg=config.get('phi_deg', 0.0),
@@ -832,8 +832,8 @@ def main():
                 pixel_size_mm=detector_config.pixel_size_mm,
                 distance_mm=detector_config.distance_mm,
                 wavelength_angstrom=beam_config.wavelength_A,
-                beam_center_x_mm=detector_config.beam_center_s * detector_config.pixel_size_mm,
-                beam_center_y_mm=detector_config.beam_center_f * detector_config.pixel_size_mm,
+                beam_center_x_mm=detector_config.beam_center_s,
+                beam_center_y_mm=detector_config.beam_center_f,
                 close_distance_mm=detector_config.close_distance_mm,
                 phi_deg=config.get('phi_deg', 0.0),
                 osc_start_deg=config.get('phi_deg', 0.0),

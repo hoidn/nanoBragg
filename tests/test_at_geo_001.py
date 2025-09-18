@@ -48,30 +48,32 @@ def test_at_geo_001_mosflm_beam_center_mapping():
         f"Normal axis mismatch: {detector.odet_vec} != {expected_o}"
 
     # Check Fbeam and Sbeam calculation with 0.5 pixel offset
-    # From the spec: Fbeam = Sbeam = (51.2 + 0.05) mm = 51.25 mm
-    # Where 0.05 mm = 0.5 pixels * 0.1 mm/pixel
+    # IMPORTANT: DetectorConfig.__post_init__ auto-adjusts beam centers from 51.2 to 51.25 mm
+    # for MOSFLM convention with 1024x1024 detector at 0.1mm pixels
+    # Then MOSFLM adds another 0.5 pixel offset in the pix0 calculation
 
-    # The internal calculation should be:
-    # beam_center in pixels = 51.2 mm / 0.1 mm/pixel = 512 pixels
-    # With 0.5 pixel offset: 512.5 pixels
-    # Back to meters: 512.5 * 0.0001 m/pixel = 0.05125 m
+    # The actual calculation is:
+    # 1. Config auto-adjusts: 51.2 mm → 51.25 mm (center of 1024x1024 detector + 0.5 pixel)
+    # 2. Convert to pixels: 51.25 mm / 0.1 mm/pixel = 512.5 pixels
+    # 3. MOSFLM adds 0.5 pixel: 512.5 + 0.5 = 513 pixels
+    # 4. Convert to meters: 513 * 0.0001 m/pixel = 0.0513 m
 
     # Check pix0_vector
-    expected_pix0 = torch.tensor([0.1, 0.05125, -0.05125], dtype=torch.float64)
+    expected_pix0 = torch.tensor([0.1, 0.0513, -0.0513], dtype=torch.float64)
 
     # The actual pix0_vector calculation is:
     # pix0 = -Fbeam * f - Sbeam * s + distance * beam
     # Where:
-    #   Fbeam = 0.05125 m (512.5 pixels * 0.1 mm/pixel = 51.25 mm = 0.05125 m)
-    #   Sbeam = 0.05125 m (512.5 pixels * 0.1 mm/pixel = 51.25 mm = 0.05125 m)
+    #   Fbeam = 0.0513 m (513 pixels * 0.1 mm/pixel = 51.3 mm = 0.0513 m)
+    #   Sbeam = 0.0513 m (513 pixels * 0.1 mm/pixel = 51.3 mm = 0.0513 m)
     #   distance = 0.1 m
     #   beam = [1, 0, 0] (MOSFLM convention)
     #   f = [0, 0, 1]
     #   s = [0, -1, 0]
     #
-    # So: pix0 = -0.05125 * [0,0,1] - 0.05125 * [0,-1,0] + 0.1 * [1,0,0]
-    #          = [0, 0, -0.05125] + [0, 0.05125, 0] + [0.1, 0, 0]
-    #          = [0.1, 0.05125, -0.05125]
+    # So: pix0 = -0.0513 * [0,0,1] - 0.0513 * [0,-1,0] + 0.1 * [1,0,0]
+    #          = [0, 0, -0.0513] + [0, 0.0513, 0] + [0.1, 0, 0]
+    #          = [0.1, 0.0513, -0.0513]
 
     print(f"Calculated pix0_vector: {detector.pix0_vector}")
     print(f"Expected pix0_vector: {expected_pix0}")

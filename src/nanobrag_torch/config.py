@@ -235,6 +235,24 @@ class DetectorConfig:
                 self.detector_pivot = DetectorPivot.BEAM
         # Setup C: Explicit -pivot override is already set, keep it
 
+        # Calculate beam centers based on detector size if not explicitly overridden
+        # This fixes the critical bug where beam centers were hardcoded at 51.2mm
+        # regardless of detector size, causing catastrophic validation failures
+        if self.beam_center_s == 51.2 and self.beam_center_f == 51.2:
+            # These are the default values, calculate proper beam centers
+            # based on detector size and convention
+            detsize_s = self.spixels * self.pixel_size_mm  # Total detector size in slow axis (mm)
+            detsize_f = self.fpixels * self.pixel_size_mm  # Total detector size in fast axis (mm)
+
+            # MOSFLM convention adds 0.5 pixel offset (per spec AT-GEO-001)
+            if self.detector_convention == DetectorConvention.MOSFLM:
+                self.beam_center_s = (detsize_s + self.pixel_size_mm) / 2.0
+                self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
+            else:
+                # XDS, DIALS, and other conventions: center without offset
+                self.beam_center_s = detsize_s / 2.0
+                self.beam_center_f = detsize_f / 2.0
+
         # Set default twotheta axis if not provided
         if self.twotheta_axis is None:
             # Default depends on detector convention (per spec AT-GEO-004)

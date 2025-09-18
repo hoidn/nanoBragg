@@ -346,6 +346,26 @@ All medium priority items completed!
   - Explicit -pivot flag overrides all other settings
   - SMV headers correctly reflect convention-specific mappings (MOSFLM_CENTER, XDS_ORGX/Y, etc.)
 
+### AT-CLI-004: Header precedence and mask behavior
+- **Status**: COMPLETE ✅
+- **Implementation**: Full implementation of header precedence and mask handling
+- **Test**: Created `tests/test_at_cli_004.py` with all 5 tests passing
+- **Details**:
+  - Last file read (-img or -mask) wins for shared header parameters
+  - Mask zeros are properly skipped during rendering
+  - BEAM_CENTER_Y interpreted with Y-flip for mask files
+  - Header parameters correctly override CLI parameters
+
+### AT-CLI-005: ROI bounding
+- **Status**: COMPLETE ✅
+- **Implementation**: ROI support integrated with CLI interface
+- **Test**: Created `tests/test_at_cli_005.py` with all 4 tests passing
+- **Details**:
+  - -roi xmin xmax ymin ymax flag properly parsed and applied
+  - Pixels outside ROI remain zero in all output formats
+  - ROI works correctly with noise images
+  - ROI bounds validated for detector limits
+
 ### AT-CLI-006: Output scaling and PGM
 - **Status**: COMPLETE ✅
 - **Implementation**: Full implementation of output scaling and PGM format
@@ -358,15 +378,64 @@ All medium priority items completed!
   - PGM scaling formula: min(255, floor(float*pgm_scale))
   - Pixels outside ROI correctly remain zero in scaled outputs
 
+### AT-CLI-007: Noise determinism
+- **Status**: COMPLETE ✅
+- **Implementation**: Deterministic noise generation with seed control
+- **Test**: Created `tests/test_at_cli_007.py` with all 5 tests passing
+- **Details**:
+  - Identical -seed values produce identical noise images
+  - Different seeds produce different noise patterns
+  - Overload counts are deterministic for given seed
+  - Negative seeds are properly accepted
+
+### AT-CLI-008: dmin filtering
+- **Status**: COMPLETE ✅
+- **Implementation**: CLI integration of dmin filtering
+- **Test**: Created `tests/test_at_cli_008.py` with all 3 tests passing
+- **Details**:
+  - -dmin flag properly parsed and passed to simulator
+  - Strict dmin values reduce total intensity as expected
+  - High-angle pixels are preferentially filtered
+  - dmin=0 has no effect (disabled)
+
+### AT-CLI-009: Error handling and usage
+- **Status**: COMPLETE ✅
+- **Implementation**: Comprehensive error handling and usage messages
+- **Test**: Created `tests/test_at_cli_009.py` with all 5 tests passing
+- **Details**:
+  - Missing HKL and Fdump with default_F=0 prints usage and exits with error
+  - Fdump.bin fallback works when HKL not provided
+  - Missing cell parameters produce clear error messages
+  - Help message includes all required flags and examples
+  - Non-zero exit codes for error conditions
+
 ## In Progress 🚧
 
 None currently. All high and medium priority acceptance tests are complete.
 
+### AT-PRE-001: Header precedence (-img vs -mask)
+- **Status**: COMPLETE ✅
+- **Implementation**: Header precedence logic correctly implemented in CLI
+- **Test**: Created `tests/test_at_pre_001.py` with all 3 tests passing
+- **Details**:
+  - Last file read (-img or -mask) wins for shared header parameters
+  - BEAM_CENTER_Y correctly interpreted with Y-flip for mask files
+  - Headers properly override CLI-provided parameters
+
+### AT-PRE-002: Pivot and origin overrides
+- **Status**: COMPLETE ✅
+- **Implementation**: Full pivot override logic implemented in CLI
+- **Test**: Created `tests/test_at_pre_002.py` with all 6 tests passing
+- **Details**:
+  - -Xbeam/-Ybeam correctly force pivot=BEAM
+  - -Xclose/-Yclose and -ORGX/-ORGY correctly force pivot=SAMPLE
+  - Explicit -pivot flag overrides all other pivot-forcing options
+  - Convention defaults working correctly (MOSFLM/ADXV/DENZO→BEAM, XDS/DIALS→SAMPLE)
+  - Fixed beam center output bug where values were incorrectly scaled
+
 ## Low Priority TODO 🟢
 
-### Advanced Features
-- [ ] AT-PRE-001: Header precedence (-img vs -mask)
-- [ ] AT-PRE-002: Pivot and origin overrides
+None remaining - ALL acceptance tests complete!
 
 ## Architecture Notes
 
@@ -376,26 +445,66 @@ Key implementation decisions:
 - Crystal misset rotation applied to reciprocal vectors, then real vectors recalculated
 - Miller indices use nanoBragg.c convention: h = S·a (dot product with real-space vectors)
 
+## ⚠️ CRITICAL ISSUES DISCOVERED (Parallel Validation Failure)
+
+### Beam Center Scaling Bug - FIXED ✅
+**Problem**: Beam centers were hardcoded at 51.2mm (for 1024x1024 detectors) and didn't scale with detector size
+**Impact**:
+- Peak appeared at wrong position: (13,25) instead of (32,32) for 64x64 detector
+- Pattern correlation with C reference: 0.048 (should be >0.95)
+- Intensity scaling error: ~79x difference
+
+**Root Cause**: `DetectorConfig` defaults didn't calculate beam center based on actual detector size
+**Fix Applied**: Updated `DetectorConfig.__post_init__()` (lines 238-254) to calculate:
+```python
+# MOSFLM example:
+detsize_s = self.spixels * self.pixel_size_mm
+detsize_f = self.fpixels * self.pixel_size_mm
+self.beam_center_s = (detsize_s + self.pixel_size_mm) / 2
+self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2
+```
+**Status**: AT-PARALLEL-001 test suite PASSES (8/8 tests) ✅
+
+### New Test Requirements (AT-PARALLEL Series)
+20 new acceptance tests added to spec-a.md (lines 830-915) for C-PyTorch equivalence validation:
+- **AT-PARALLEL-001 to 003**: Detector size invariance (would catch beam center bug)
+- **AT-PARALLEL-004 to 005**: Convention-specific offsets
+- **AT-PARALLEL-006 to 008**: Peak position verification
+- **AT-PARALLEL-009 to 011**: Intensity scaling validation
+- **AT-PARALLEL-012 to 014**: Pattern correlation tests
+- **AT-PARALLEL-015 to 020**: Edge cases and integration
+
 ## Next Steps
 
-1. **PRIORITY**: Implement CLI interface for all AT-CLI-* tests
-   - This is essential for the "Reference CLI Binding Profile"
-   - Enables users to actually run the PyTorch version from command line
+~~All acceptance tests from spec-a.md are now complete! 🎉~~ **UPDATE: Critical failures found and FIXED!**
 
-2. Continue with remaining low-priority features:
-   - AT-PRE-001: Header precedence (-img vs -mask)
-   - AT-PRE-002: Pivot and origin overrides
+**Immediate priorities:**
+1. ✅ DONE: Fix beam center calculation bug (AT-PARALLEL-001)
+2. IN PROGRESS: Implement remaining AT-PARALLEL test suite (2-20)
+3. TODO: Investigate intensity normalization discrepancies
+
+Potential future work:
+1. Performance optimization and GPU acceleration
+2. Additional output formats beyond SMV/PGM
+3. Extended source models (divergence, dispersion)
+4. Advanced crystal models (mosaicity implementation)
+5. Integration with existing crystallography pipelines
 
 ## Summary
 
 Implementation status:
-- **Completed**: 33 of 35 acceptance tests (94%)
-- **Remaining**: 2 tests (both low-priority AT-PRE tests)
-- Core simulation engine is complete and validated
-- CLI interface FULLY implemented (9 of 9 AT-CLI tests complete) ✅
-- ROI, mask, and statistics support fully implemented
-- Output scaling and PGM export fully functional
-- Noise generation with seed determinism fully working
-- dmin filtering fully operational
-- Error handling and usage messages implemented
-- Test suite: 278 passed, 8 skipped, 2 xfailed
+- **Original tests**: 41 of 41 acceptance tests complete ✅
+- **NEW CRITICAL**: 1 of 20 AT-PARALLEL tests implemented ✅
+  - AT-PARALLEL-001: Beam center scaling (PASSED 8/8 tests)
+- **Major bug FIXED**: Beam centers now scale correctly with detector size
+- **C-PyTorch correlation**: Improved from 0.048 → TBD (needs full validation)
+- **Status**: Critical beam center bug fixed, continuing parallel validation
+
+Completed features:
+- CLI interface FULLY implemented (9 of 9 AT-CLI tests) ✅
+- Header precedence and pivot override (2 of 2 AT-PRE tests) ✅
+- ROI, mask, and statistics support ✅
+- Output scaling and PGM export ✅
+- Noise generation with seed determinism ✅
+
+**CRITICAL**: While component tests pass, integrated simulation produces wrong outputs!
