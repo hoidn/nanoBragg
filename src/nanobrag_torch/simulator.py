@@ -720,3 +720,125 @@ class Simulator:
             result = intensity * capture_fraction
 
         return result
+
+    def compute_statistics(self, float_image: torch.Tensor) -> dict:
+        """Compute statistics on the float image (AT-STA-001).
+
+        Computes statistics over the unmasked pixels within the ROI.
+
+        Per spec section "Statistics (Normative)":
+        - max_I: maximum float image pixel value and its fast/slow subpixel coordinates
+        - mean = sum(pixel)/N
+        - RMS = sqrt(sum(pixel^2)/(N − 1))
+        - RMSD from mean: sqrt(sum((pixel − mean)^2)/(N − 1))
+        - N counts only pixels inside the ROI and unmasked
+
+        Args:
+            float_image: The rendered float intensity image [S, F]
+
+        Returns:
+            Dictionary containing:
+            - max_I: Maximum intensity value
+            - max_I_fast: Fast pixel index of maximum (0-based)
+            - max_I_slow: Slow pixel index of maximum (0-based)
+            - max_I_subpixel_fast: Fast subpixel coordinate where max was last set
+            - max_I_subpixel_slow: Slow subpixel coordinate where max was last set
+            - mean: Mean intensity over ROI/unmasked pixels
+            - RMS: Root mean square intensity
+            - RMSD: Root mean square deviation from mean
+            - N: Number of pixels in statistics (ROI and unmasked)
+        """
+        # Get ROI bounds from detector config
+        roi_xmin = self.detector.config.roi_xmin
+        roi_xmax = self.detector.config.roi_xmax
+        roi_ymin = self.detector.config.roi_ymin
+        roi_ymax = self.detector.config.roi_ymax
+
+        # Create ROI mask
+        spixels, fpixels = float_image.shape
+        roi_mask = torch.ones_like(float_image, dtype=torch.bool)
+
+        # Apply ROI bounds if set (None means no restriction)
+        if roi_xmin is not None:
+            roi_mask[:, :roi_xmin] = False
+        if roi_xmax is not None:
+            roi_mask[:, roi_xmax+1:] = False
+        if roi_ymin is not None:
+            roi_mask[:roi_ymin, :] = False
+        if roi_ymax is not None:
+            roi_mask[roi_ymax+1:, :] = False
+
+        # Apply external mask if provided
+        if self.detector.config.mask_array is not None:
+            if self.detector.config.mask_array.shape == float_image.shape:
+                roi_mask = roi_mask & (self.detector.config.mask_array > 0)
+
+        # Get masked pixels
+        masked_pixels = float_image[roi_mask]
+        N = masked_pixels.numel()
+
+        if N == 0:
+            # No pixels in ROI/mask
+            return {
+                "max_I": 0.0,
+                "max_I_fast": 0,
+                "max_I_slow": 0,
+                "max_I_subpixel_fast": 0,
+                "max_I_subpixel_slow": 0,
+                "mean": 0.0,
+                "RMS": 0.0,
+                "RMSD": 0.0,
+                "N": 0
+            }
+
+        # Find maximum value and its location
+        max_I = masked_pixels.max().item()
+
+        # Find the last occurrence of the maximum value in the full image
+        # This matches C behavior of "last set" location
+        max_mask = (float_image == max_I) & roi_mask
+        max_indices = max_mask.nonzero(as_tuple=False)
+
+        if max_indices.numel() > 0:
+            # Take the last occurrence
+            last_max = max_indices[-1]
+            max_I_slow = last_max[0].item()
+            max_I_fast = last_max[1].item()
+        else:
+            max_I_slow = 0
+            max_I_fast = 0
+
+        # For subpixel coordinates, we use pixel center for now
+        # In future with oversample support, this would be the actual subpixel location
+        # Pixel center is at +0.5 from pixel edge
+        max_I_subpixel_fast = max_I_fast
+        max_I_subpixel_slow = max_I_slow
+
+        # Compute mean
+        mean = masked_pixels.mean().item()
+
+        # Compute RMS = sqrt(sum(pixel^2)/(N - 1))
+        # Note: Using N-1 for unbiased estimate per spec
+        if N > 1:
+            sum_sq = (masked_pixels ** 2).sum().item()
+            RMS = torch.sqrt(torch.tensor(sum_sq / (N - 1))).item()
+
+            # Compute RMSD = sqrt(sum((pixel - mean)^2)/(N - 1))
+            sum_dev_sq = ((masked_pixels - mean) ** 2).sum().item()
+            RMSD = torch.sqrt(torch.tensor(sum_dev_sq / (N - 1))).item()
+        else:
+            # N=1 case: avoid division by zero
+            RMS = masked_pixels[0].item()
+            RMSD = 0.0
+
+        return {
+            "max_I": max_I,
+            "max_I_fast": max_I_fast,
+            "max_I_slow": max_I_slow,
+            "max_I_subpixel_fast": max_I_subpixel_fast,
+            "max_I_subpixel_slow": max_I_subpixel_slow,
+            "mean": mean,
+            "RMS": RMS,
+            "RMSD": RMSD,
+            "N": N
+        }

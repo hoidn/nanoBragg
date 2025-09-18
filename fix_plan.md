@@ -296,10 +296,23 @@ All medium priority items completed!
   - Includes utilities for creating circular and rectangular masks
   - Handles dynamic detector sizes for compatibility with existing tests
 
+### AT-STA-001: Float-image statistics calculation
+- **Status**: COMPLETE ✅
+- **Implementation**: Full implementation of statistics computation per spec
+- **Test**: Created `tests/test_at_sta_001.py` with all 5 tests passing
+- **Details**:
+  - Added `compute_statistics()` method to Simulator class
+  - Computes max_I and its location (last occurrence for duplicates)
+  - Calculates mean = sum(pixel)/N
+  - Calculates RMS = sqrt(sum(pixel^2)/(N-1))
+  - Calculates RMSD = sqrt(sum((pixel-mean)^2)/(N-1))
+  - Statistics computed only over unmasked pixels within ROI
+  - Returns dictionary with all required statistics fields
+  - Handles edge cases (empty ROI, single pixel)
+
 ## Low Priority TODO 🟢
 
 ### Advanced Features
-- [ ] AT-STA-001: Float-image statistics calculation
 - [ ] AT-PRE-001: Header precedence (-img vs -mask)
 - [ ] AT-PRE-002: Pivot and origin overrides
 
@@ -323,7 +336,8 @@ Key implementation decisions:
 ## Summary
 
 Implementation status:
-- **Completed**: 23 of 26 acceptance tests (88%)
-- **Remaining**: 3 low-priority features
+- **Completed**: 24 of 26 acceptance tests (92%)
+- **Remaining**: 2 low-priority features
 - All core simulation functionality is complete and validated
 - ROI and mask support fully implemented
+- Statistics calculation fully implemented
