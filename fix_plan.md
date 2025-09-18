@@ -313,8 +313,8 @@ All medium priority items completed!
 ## High Priority TODO 🔴
 
 ### CLI Implementation (Critical Missing Component)
-- [ ] Create CLI entry point (`src/nanobrag_torch/__main__.py`)
-- [ ] AT-CLI-001: CLI presence and help
+- [x] Create CLI entry point (`src/nanobrag_torch/__main__.py`) - COMPLETE
+- [x] AT-CLI-001: CLI presence and help - COMPLETE
 - [ ] AT-CLI-002: Minimal render and headers
 - [ ] AT-CLI-003: Conventions and pivot behavior
 - [ ] AT-CLI-004: Header precedence and mask behavior

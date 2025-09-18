@@ -98,3 +98,42 @@ def radians_to_degrees(value: Union[float, torch.Tensor]) -> Union[float, torch.
     else:
         # For scalar values, use torch's function but return scalar
         return torch.rad2deg(torch.tensor(value)).item()
+
+
+def mm_to_meters(value: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:
+    """
+    Convert millimeters to meters.
+
+    Args:
+        value: Value in millimeters
+
+    Returns:
+        Value in meters (1 mm = 0.001 m)
+    """
+    return value * 0.001
+
+
+def micrometers_to_meters(value: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:
+    """
+    Convert micrometers to meters.
+
+    Args:
+        value: Value in micrometers
+
+    Returns:
+        Value in meters (1 µm = 1e-6 m)
+    """
+    return value * 1e-6
+
+
+def mrad_to_radians(value: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:
+    """
+    Convert milliradians to radians.
+
+    Args:
+        value: Value in milliradians
+
+    Returns:
+        Value in radians (1 mrad = 0.001 rad)
+    """
+    return value * 0.001

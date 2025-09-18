@@ -23,11 +23,14 @@ description = "PyTorch implementation of nanoBragg diffraction simulator"
 authors = [{name = "nanoBragg Team"}]
 dependencies = [
     "torch>=2.3",
-    "fabio", 
+    "fabio",
     "numpy",
     "pytest",
     "matplotlib"
 ]
+
+[project.scripts]
+nanoBragg = "nanobrag_torch.__main__:main"
 
 [project.optional-dependencies]
 dev = [
