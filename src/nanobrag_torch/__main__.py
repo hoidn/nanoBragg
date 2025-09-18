@@ -29,7 +29,7 @@ from .simulator import Simulator
 from .io.hkl import read_hkl_file, try_load_hkl_or_fdump
 from .io.smv import write_smv
 from .io.pgm import write_pgm
-from .io.mask import read_smv_mask
+from .io.mask import read_smv_mask, parse_smv_header, apply_smv_header_to_config
 from .io.source import read_sourcefile
 from .utils.units import (
     mm_to_meters, micrometers_to_meters, degrees_to_radians,
@@ -508,13 +508,32 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     config['oversample_polar'] = args.oversample_polar
     config['oversample_omega'] = args.oversample_omega
 
+    # Process -img and -mask files with proper precedence (AT-CLI-004)
+    # Per spec: last file read wins for shared header keys
+    if args.img or args.mask:
+        # Process -img first if provided
+        if args.img:
+            try:
+                img_header = parse_smv_header(args.img)
+                apply_smv_header_to_config(img_header, config, is_mask=False)
+                print(f"Read header from -img file: {args.img}")
+            except (FileNotFoundError, ValueError) as e:
+                print(f"Warning: Failed to read -img file: {e}", file=sys.stderr)
+
+        # Process -mask second (wins if both provided per AT-CLI-004)
+        if args.mask:
+            try:
+                mask_header = parse_smv_header(args.mask)
+                apply_smv_header_to_config(mask_header, config, is_mask=True)
+                config['mask_file'] = args.mask  # Store mask file for later loading
+                print(f"Read header from -mask file: {args.mask}")
+            except (FileNotFoundError, ValueError) as e:
+                print(f"Warning: Failed to read -mask file header: {e}", file=sys.stderr)
+                config['mask_file'] = args.mask  # Still try to load mask data
+
     # ROI
     if args.roi:
         config['roi'] = args.roi
-
-    # Mask
-    if args.mask:
-        config['mask_file'] = args.mask
 
     # Background
     if args.water:
@@ -627,7 +646,7 @@ def main():
 
         # Mask
         if 'mask_file' in config:
-            mask_data = read_smv_mask(config['mask_file'])
+            mask_data, _ = read_smv_mask(config['mask_file'])  # Returns tuple (mask, header)
             detector_config.mask_array = mask_data
 
         # Absorption

@@ -1,10 +1,135 @@
-"""Mask file I/O for nanoBragg PyTorch implementation."""
+"""SMV file I/O for nanoBragg PyTorch implementation.
+
+Handles reading SMV format files including images and masks.
+"""
 
 import struct
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import torch
+
+
+def parse_smv_header(filename: str) -> Dict[str, str]:
+    """Parse SMV header from a file.
+
+    Per spec AT-CLI-004 and AT-IO-001:
+    - SMV files have ASCII header followed by binary data
+    - Header is exactly 512 bytes
+    - Contains key=value pairs separated by semicolons
+    - Can be used for both -img and -mask files
+
+    Args:
+        filename: Path to SMV file
+
+    Returns:
+        Dictionary of header key-value pairs
+
+    Raises:
+        FileNotFoundError: If file doesn't exist
+        ValueError: If header format is invalid
+    """
+    path = Path(filename)
+    if not path.exists():
+        raise FileNotFoundError(f"SMV file not found: {filename}")
+
+    with open(path, "rb") as f:
+        # Read header (exactly 512 bytes per SMV spec)
+        header_bytes = f.read(512)
+        header_str = header_bytes.decode("ascii", errors="ignore")
+
+        # Find header content between { and }
+        start_idx = header_str.find("{")
+        end_idx = header_str.find("}")
+
+        if start_idx == -1 or end_idx == -1:
+            raise ValueError(f"Invalid SMV header format in {filename}")
+
+        header_content = header_str[start_idx+1:end_idx]
+
+        # Parse key=value pairs
+        header_dict = {}
+        for line in header_content.split(";"):
+            line = line.strip()
+            if "=" in line:
+                key, value = line.split("=", 1)
+                header_dict[key.strip()] = value.strip()
+
+    return header_dict
+
+
+def apply_smv_header_to_config(header: Dict[str, str], config: dict,
+                              is_mask: bool = False) -> None:
+    """Apply SMV header values to configuration dictionary.
+
+    Per spec AT-CLI-004 and section "File I/O":
+    - Recognized header fields initialize corresponding parameters
+    - For -mask headers, BEAM_CENTER_Y is interpreted with a flip
+    - Updates config dict in-place
+
+    Args:
+        header: Dictionary of SMV header key-value pairs
+        config: Configuration dictionary to update
+        is_mask: True if this is a mask file (affects Y beam center interpretation)
+    """
+    # Pixel counts
+    if "SIZE1" in header:
+        config["fpixels"] = int(header["SIZE1"])
+    if "SIZE2" in header:
+        config["spixels"] = int(header["SIZE2"])
+
+    # Pixel size (mm)
+    if "PIXEL_SIZE" in header:
+        config["pixel_size_mm"] = float(header["PIXEL_SIZE"])
+
+    # Distances (mm)
+    if "DISTANCE" in header:
+        config["distance_mm"] = float(header["DISTANCE"])
+    if "CLOSE_DISTANCE" in header:
+        config["close_distance_mm"] = float(header["CLOSE_DISTANCE"])
+
+    # Wavelength (Å)
+    if "WAVELENGTH" in header:
+        config["wavelength_A"] = float(header["WAVELENGTH"])
+
+    # Beam centers (mm) - key part of AT-CLI-004
+    if "BEAM_CENTER_X" in header:
+        beam_x_mm = float(header["BEAM_CENTER_X"])
+        config["beam_center_f"] = beam_x_mm  # Direct mapping for X
+
+    if "BEAM_CENTER_Y" in header:
+        beam_y_mm = float(header["BEAM_CENTER_Y"])
+        if is_mask:
+            # Per spec: For -mask, Y is interpreted as detsize_s - value_mm
+            # We need detector size to do this flip
+            if "spixels" in config and "pixel_size_mm" in config:
+                detsize_s = config["spixels"] * config["pixel_size_mm"]
+                config["beam_center_s"] = detsize_s - beam_y_mm
+            else:
+                # Store raw value with flag for later processing
+                config["beam_center_s_raw"] = beam_y_mm
+                config["beam_center_s_needs_flip"] = True
+        else:
+            # For -img, use value directly
+            config["beam_center_s"] = beam_y_mm
+
+    # XDS origin (pixels)
+    if "XDS_ORGX" in header:
+        config["orgx"] = float(header["XDS_ORGX"])
+    if "XDS_ORGY" in header:
+        config["orgy"] = float(header["XDS_ORGY"])
+
+    # Phi and oscillation (degrees)
+    if "PHI" in header:
+        config["phi_start_deg"] = float(header["PHI"])
+    if "OSC_START" in header:
+        config["phi_start_deg"] = float(header["OSC_START"])
+    if "OSC_RANGE" in header:
+        config["osc_range_deg"] = float(header["OSC_RANGE"])
+
+    # Two-theta (degrees)
+    if "TWOTHETA" in header:
+        config["detector_twotheta_deg"] = float(header["TWOTHETA"])
 
 
 def read_smv_mask(filename: str) -> Tuple[torch.Tensor, dict]:

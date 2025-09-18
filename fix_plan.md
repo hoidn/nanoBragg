@@ -349,7 +349,12 @@ All medium priority items completed!
 ## In Progress 🚧
 
 ### CLI Implementation (Critical Missing Component)
-- [ ] AT-CLI-004: Header precedence and mask behavior
+- [x] AT-CLI-004: Header precedence and mask behavior - **COMPLETE ✅**
+  - Added parse_smv_header() and apply_smv_header_to_config() functions
+  - Implemented -img and -mask file header reading in CLI
+  - Proper precedence: last file read wins for shared header keys
+  - For -mask files, BEAM_CENTER_Y is interpreted with flip (detsize_s - value)
+  - All 5 tests passing in test_at_cli_004.py
 - [ ] AT-CLI-005: ROI bounding
 - [ ] AT-CLI-006: Output scaling and PGM
 - [ ] AT-CLI-007: Noise determinism
