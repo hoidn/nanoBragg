@@ -110,9 +110,27 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - Background adds uniformly to all pixels after physics calculation
   - Full test suite passes (61/61 tests) with no regressions
 
+### AT-PARALLEL-003: Detector Offset Preservation
+- **Status**: COMPLETE ✅
+- **Implementation**: Test file created at `tests/test_at_parallel_003.py`
+- **Test**: All 3 tests passing
+- **Details**:
+  - Beam center offset preservation verified across detector sizes (256x256, 512x512, 1024x1024)
+  - Peak position test works with appropriate beam centers within detector bounds
+  - Offset ratios preserved within 2% as required per spec
+  - Tests beam centers at (20,20), (30,40), (45,25), (60,60)mm
+
 ## In Progress 🚧
 
-None currently.
+### AT-PARALLEL-002: Pixel Size Independence
+- **Status**: PARTIAL ⚠️
+- **Implementation**: Test file created at `tests/test_at_parallel_002.py`
+- **Test**: 2 of 4 tests passing
+- **Issues**:
+  - Peak position test failing due to detector geometry issues with different pixel sizes
+  - Pattern correlation test failing - images appear uncorrelated
+  - Basic beam center scaling tests pass
+  - Needs investigation into detector coordinate calculations
 
 ### AT-GEO-004: Two-theta axis defaults by convention
 - **Status**: COMPLETE ✅
@@ -476,8 +494,6 @@ self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2
 
 ## Next Steps
 
-~~All acceptance tests from spec-a.md are now complete! 🎉~~ **UPDATE: Critical failures found and FIXED!**
-
 **Immediate priorities:**
 1. ✅ DONE: Fix beam center calculation bug (AT-PARALLEL-001)
 2. IN PROGRESS: Implement remaining AT-PARALLEL test suite (2-20)
@@ -494,8 +510,10 @@ Potential future work:
 
 Implementation status:
 - **Original tests**: 41 of 41 acceptance tests complete ✅
-- **NEW CRITICAL**: 1 of 20 AT-PARALLEL tests implemented ✅
-  - AT-PARALLEL-001: Beam center scaling (PASSED 8/8 tests)
+- **NEW CRITICAL**: 3 of 20 AT-PARALLEL tests implemented
+  - AT-PARALLEL-001: Beam center scaling (PASSED 8/8 tests) ✅
+  - AT-PARALLEL-002: Pixel size independence (PARTIAL 2/4 tests) ⚠️
+  - AT-PARALLEL-003: Detector offset preservation (PASSED 3/3 tests) ✅
 - **Major bug FIXED**: Beam centers now scale correctly with detector size
 - **C-PyTorch correlation**: Improved from 0.048 → TBD (needs full validation)
 - **Status**: Critical beam center bug fixed, continuing parallel validation
