@@ -81,6 +81,15 @@ class DetectorPivot(Enum):
     SAMPLE = "sample"
 
 
+class CrystalShape(Enum):
+    """Crystal shape models for lattice factor calculation."""
+
+    SQUARE = "square"  # Parallelepiped/grating using sincg function
+    ROUND = "round"    # Spherical/elliptical using sinc3 function
+    GAUSS = "gauss"    # Gaussian in reciprocal space
+    TOPHAT = "tophat"  # Binary spots/top-hat function
+
+
 @dataclass
 class CrystalConfig:
     """Configuration for crystal properties and orientation.
@@ -120,6 +129,10 @@ class CrystalConfig:
 
     # Structure factor parameters
     default_F: float = 100.0  # Default structure factor magnitude
+
+    # Crystal shape parameters
+    shape: CrystalShape = CrystalShape.SQUARE  # Crystal shape model for F_latt calculation
+    fudge: float = 1.0  # Shape parameter scaling factor
 
 
 @dataclass
@@ -298,8 +311,13 @@ class BeamConfig:
     source_size_mm: float = 0.0  # Source size (0 = point source)
 
     # Beam polarization and flux (simplified)
-    polarization_factor: float = 1.0  # Polarization correction factor
+    polarization_factor: float = 1.0  # Kahn polarization factor K in [0,1] (1.0 = unpolarized)
+    nopolar: bool = False  # If True, force polarization factor to 1 (disable polarization)
+    polarization_axis: tuple[float, float, float] = (0.0, 0.0, 1.0)  # Polarization E-vector direction
     flux: float = 1e12  # Photons per second (simplified)
 
     # Resolution cutoff
     dmin: float = 0.0  # Minimum d-spacing in Angstroms (0 = no cutoff)
+
+    # Water background
+    water_size_um: float = 0.0  # Water thickness in micrometers for background calculation (0 = no background)

@@ -9,11 +9,11 @@ from typing import Optional
 
 import torch
 
-from .config import BeamConfig, CrystalConfig
+from .config import BeamConfig, CrystalConfig, CrystalShape
 from .models.crystal import Crystal
 from .models.detector import Detector
 from .utils.geometry import dot_product
-from .utils.physics import sincg
+from .utils.physics import sincg, sinc3, polarization_factor
 
 
 class Simulator:
@@ -68,7 +68,11 @@ class Simulator:
         self.fluence = (
             125932015286227086360700780544.0  # photons per square meter (C default)
         )
-        self.polarization = 1.0  # unpolarized beam
+        # Polarization setup from beam config
+        self.kahn_factor = self.beam_config.polarization_factor if not self.beam_config.nopolar else 0.0
+        self.polarization_axis = torch.tensor(
+            self.beam_config.polarization_axis, device=self.device, dtype=self.dtype
+        )
 
     def run(
         self,
@@ -204,6 +208,10 @@ class Simulator:
             (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = (
                 self.crystal.get_rotated_real_vectors(self.crystal_config)
             )
+            # Cache rotated reciprocal vectors for GAUSS/TOPHAT shape models
+            self._rot_a_star = rot_a_star
+            self._rot_b_star = rot_b_star
+            self._rot_c_star = rot_c_star
         else:
             # For gradient testing with override, use single orientation
             rot_a = override_a_star.view(1, 1, 3)
@@ -212,6 +220,10 @@ class Simulator:
             rot_a_star = override_a_star.view(1, 1, 3)
             rot_b_star = self.crystal.b_star.view(1, 1, 3)
             rot_c_star = self.crystal.c_star.view(1, 1, 3)
+            # Cache for shape models
+            self._rot_a_star = rot_a_star
+            self._rot_b_star = rot_b_star
+            self._rot_c_star = rot_c_star
 
         # Broadcast scattering vector to be compatible with rotation dimensions
         # scattering_vector: (S, F, 3) -> (S, F, 1, 1, 3)
@@ -240,13 +252,93 @@ class Simulator:
         # for correct resolution cutoffs in triclinic cells
         F_cell = self.crystal.get_structure_factor(h0, k0, l0)
 
-        # Calculate lattice structure factor F_latt using fractional part (h-h0)
+        # Calculate lattice structure factor F_latt based on crystal shape model
         # CORRECT: Use fractional part (h-h0, k-k0, l-l0) to match C-code behavior
-        # The sincg function expects its input pre-multiplied by π
-        F_latt_a = sincg(torch.pi * (h - h0), self.crystal.N_cells_a)
-        F_latt_b = sincg(torch.pi * (k - k0), self.crystal.N_cells_b)
-        F_latt_c = sincg(torch.pi * (l - l0), self.crystal.N_cells_c)
-        F_latt = F_latt_a * F_latt_b * F_latt_c
+        Na = self.crystal.N_cells_a
+        Nb = self.crystal.N_cells_b
+        Nc = self.crystal.N_cells_c
+        shape = self.crystal_config.shape
+        fudge = self.crystal_config.fudge
+
+        if shape == CrystalShape.SQUARE:
+            # Parallelepiped/grating model using sincg function
+            # F_latt = sincg(π·h, Na) · sincg(π·k, Nb) · sincg(π·l, Nc)
+            F_latt_a = sincg(torch.pi * (h - h0), Na)
+            F_latt_b = sincg(torch.pi * (k - k0), Nb)
+            F_latt_c = sincg(torch.pi * (l - l0), Nc)
+            F_latt = F_latt_a * F_latt_b * F_latt_c
+
+        elif shape == CrystalShape.ROUND:
+            # Spherical/elliptical model using sinc3 function
+            # hrad^2 = (h−h0)^2·Na^2 + (k−k0)^2·Nb^2 + (l−l0)^2·Nc^2
+            # F_latt = Na·Nb·Nc·0.723601254558268·sinc3(π·sqrt(fudge·hrad^2))
+            h_frac = h - h0
+            k_frac = k - k0
+            l_frac = l - l0
+            hrad_sqr = (h_frac * h_frac * Na * Na +
+                       k_frac * k_frac * Nb * Nb +
+                       l_frac * l_frac * Nc * Nc)
+            # Protect against negative values before sqrt (though shouldn't happen)
+            hrad_sqr = torch.clamp(hrad_sqr, min=0.0)
+            F_latt = Na * Nb * Nc * 0.723601254558268 * sinc3(
+                torch.pi * torch.sqrt(hrad_sqr * fudge)
+            )
+
+        elif shape == CrystalShape.GAUSS:
+            # Gaussian in reciprocal space
+            # Δr*^2 = ||(h−h0)·a* + (k−k0)·b* + (l−l0)·c*||^2 · Na^2·Nb^2·Nc^2
+            # F_latt = Na·Nb·Nc·exp(−(Δr*^2 / 0.63)·fudge)
+            h_frac = h - h0
+            k_frac = k - k0
+            l_frac = l - l0
+
+            # Get reciprocal vectors for the current phi/mosaic configuration
+            # Shape of rot_a_star etc: (N_phi, N_mos, 3)
+            if hasattr(self, '_rot_a_star'):
+                # Use cached rotated reciprocal vectors if available
+                delta_r_star = (h_frac.unsqueeze(-1) * self._rot_a_star +
+                               k_frac.unsqueeze(-1) * self._rot_b_star +
+                               l_frac.unsqueeze(-1) * self._rot_c_star)
+            else:
+                # Fall back to unrotated vectors
+                delta_r_star = (h_frac.unsqueeze(-1) * self.crystal.a_star.view(1, 1, 1, 3) +
+                               k_frac.unsqueeze(-1) * self.crystal.b_star.view(1, 1, 1, 3) +
+                               l_frac.unsqueeze(-1) * self.crystal.c_star.view(1, 1, 1, 3))
+
+            # Calculate squared magnitude
+            rad_star_sqr = torch.sum(delta_r_star * delta_r_star, dim=-1)
+            rad_star_sqr = rad_star_sqr * Na * Na * Nb * Nb * Nc * Nc
+
+            F_latt = Na * Nb * Nc * torch.exp(-(rad_star_sqr / 0.63) * fudge)
+
+        elif shape == CrystalShape.TOPHAT:
+            # Binary spots/top-hat function
+            # F_latt = Na·Nb·Nc if (Δr*^2 · fudge < 0.3969); else 0
+            h_frac = h - h0
+            k_frac = k - k0
+            l_frac = l - l0
+
+            # Similar to GAUSS, calculate reciprocal space distance
+            if hasattr(self, '_rot_a_star'):
+                delta_r_star = (h_frac.unsqueeze(-1) * self._rot_a_star +
+                               k_frac.unsqueeze(-1) * self._rot_b_star +
+                               l_frac.unsqueeze(-1) * self._rot_c_star)
+            else:
+                delta_r_star = (h_frac.unsqueeze(-1) * self.crystal.a_star.view(1, 1, 1, 3) +
+                               k_frac.unsqueeze(-1) * self.crystal.b_star.view(1, 1, 1, 3) +
+                               l_frac.unsqueeze(-1) * self.crystal.c_star.view(1, 1, 1, 3))
+
+            rad_star_sqr = torch.sum(delta_r_star * delta_r_star, dim=-1)
+            rad_star_sqr = rad_star_sqr * Na * Na * Nb * Nb * Nc * Nc
+
+            # Apply threshold
+            inside_cutoff = (rad_star_sqr * fudge) < 0.3969
+            F_latt = torch.where(inside_cutoff,
+                                torch.full_like(rad_star_sqr, Na * Nb * Nc),
+                                torch.zeros_like(rad_star_sqr))
+
+        else:
+            raise ValueError(f"Unsupported crystal shape: {shape}")
 
         # Calculate total structure factor and intensity
         # Shape: (S, F, N_phi, N_mos)
@@ -305,7 +397,7 @@ class Simulator:
 
             # Track last computed omega and polarization for each pixel (for last-value semantics)
             last_omega = torch.zeros_like(normalized_intensity)
-            last_polar = torch.ones_like(normalized_intensity) * self.polarization
+            last_polar = torch.ones_like(normalized_intensity)  # Will be computed per subpixel
 
             # Track whether we've applied factors per-subpixel
             omega_applied = False
@@ -353,27 +445,47 @@ class Simulator:
                     # Scale omega by number of subpixels (each contributes 1/N^2 of total)
                     omega_subpixel_scaled = omega_subpixel / (oversample * oversample)
 
-                    # Calculate polarization for this subpixel (simplified for now)
-                    polar_subpixel = self.polarization
+                    # Calculate polarization factor for this subpixel
+                    # Need incident and diffracted directions
+                    # Shape of incident: (S, F, 3)
+                    S, F = pixel_coords_meters.shape[:2]
+                    incident = -self.incident_beam_direction.unsqueeze(0).unsqueeze(0).expand(S, F, 3)
+
+                    # Diffracted direction is the normalized pixel coordinate
+                    diffracted = subpixel_coords / sub_magnitudes.unsqueeze(-1) * 1e10  # Normalize
+
+                    # Calculate polarization factor using Kahn model
+                    if self.beam_config.nopolar:
+                        polar_subpixel = torch.ones_like(omega_subpixel)
+                    else:
+                        polar_subpixel = polarization_factor(
+                            self.kahn_factor,
+                            incident,
+                            diffracted,
+                            self.polarization_axis
+                        )
+
+                    # Compute the subpixel intensity contribution
+                    subpixel_intensity = normalized_intensity / (oversample * oversample)
 
                     # Apply factors based on oversample flags
                     if oversample_omega:
-                        # Apply omega per subpixel - multiply and accumulate
-                        accumulated_intensity += normalized_intensity * omega_subpixel_scaled
+                        # Apply omega per subpixel
+                        subpixel_intensity = subpixel_intensity * omega_subpixel
                         omega_applied = True
                     else:
-                        # Just accumulate intensity uniformly, will apply omega at end
-                        accumulated_intensity += normalized_intensity / (oversample * oversample)
-                        # Always update last_omega to track the final subpixel's value
+                        # Track last omega value for later application
                         last_omega = omega_subpixel  # Full value, not scaled
 
                     if oversample_polar:
-                        # Apply polarization per subpixel (would multiply current contribution)
-                        # For now, polarization is constant, so no effect
-                        pass
+                        # Apply polarization per subpixel
+                        subpixel_intensity = subpixel_intensity * polar_subpixel
                     else:
                         # Track last polarization value
-                        last_polar = polar_subpixel * torch.ones_like(normalized_intensity)
+                        last_polar = polar_subpixel
+
+                    # Accumulate the subpixel contribution
+                    accumulated_intensity += subpixel_intensity
 
             # Apply last-value semantics if flags are not set
             if not oversample_omega and not omega_applied:
@@ -423,10 +535,71 @@ class Simulator:
             normalized_intensity
             * self.r_e_sqr
             * self.fluence
-            * self.polarization
         )
 
+        # Add water background if configured (AT-BKG-001)
+        if self.beam_config.water_size_um > 0:
+            water_background = self._calculate_water_background()
+            physical_intensity = physical_intensity + water_background
+
         return physical_intensity
+
+    def _calculate_water_background(self) -> torch.Tensor:
+        """Calculate water background contribution (AT-BKG-001).
+
+        The water background models forward scattering from amorphous water molecules.
+        This is a constant per-pixel contribution that mimics diffuse scattering.
+
+        Formula from spec:
+        I_bg = (F_bg^2) · r_e^2 · fluence · (water_size^3) · 1e6 · Avogadro / water_MW
+
+        Where:
+        - F_bg = 2.57 (dimensionless, water forward scattering amplitude)
+        - r_e^2 = classical electron radius squared
+        - fluence = photons per square meter
+        - water_size = water thickness in micrometers converted to meters
+        - Avogadro = 6.02214179e23 mol^-1
+        - water_MW = 18 g/mol
+
+        Note: The 1e6 factor is as specified in the C code; it creates a unit inconsistency
+        but we replicate it exactly for compatibility.
+
+        Returns:
+            Background intensity per pixel (same shape as detector)
+        """
+        # Physical constants
+        F_bg = 2.57  # Water forward scattering amplitude (dimensionless)
+        Avogadro = 6.02214179e23  # mol^-1
+        water_MW = 18.0  # g/mol
+
+        # Convert water size from micrometers to meters
+        water_size_m = self.beam_config.water_size_um * 1e-6
+
+        # Calculate background intensity per spec formula
+        # Note: The 1e6 factor creates unit inconsistency but matches C code
+        I_bg = (
+            F_bg * F_bg
+            * self.r_e_sqr
+            * self.fluence
+            * (water_size_m ** 3)
+            * 1e6
+            * Avogadro
+            / water_MW
+        )
+
+        # Create uniform background for all pixels
+        # Shape should match detector dimensions
+        fpixels = self.detector.fpixels
+        spixels = self.detector.spixels
+
+        background = torch.full(
+            (spixels, fpixels),
+            I_bg,
+            device=self.device,
+            dtype=self.dtype
+        )
+
+        return background
 
     def _apply_detector_absorption(
         self,

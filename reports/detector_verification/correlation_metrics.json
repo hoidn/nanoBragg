@@ -6,13 +6,13 @@
     "max_difference": 54890.05298416581
   },
   "tilted": {
-    "correlation": 0.9930227876310483,
+    "correlation": 0.9930227876310482,
     "rms_absolute": 2049.331590204263,
     "rms_relative": 5.850715712469499,
     "max_difference": 54886.91660171623
   },
   "overall": {
-    "min_correlation": 0.9930227876310483,
+    "min_correlation": 0.9930227876310482,
     "all_correlations_good": false
   }
 }

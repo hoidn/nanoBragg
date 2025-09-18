@@ -69,6 +69,47 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - Mask is applied to intensity before integration over phi and mosaic domains
   - Properly handles gradient flow for differentiability
 
+### AT-STR-003: Lattice shape models
+- **Status**: COMPLETE ✅
+- **Implementation**: Full implementation of all four crystal shape models
+- **Test**: Created `tests/test_at_str_003.py` with all 7 tests passing
+- **Details**:
+  - Added `CrystalShape` enum with SQUARE, ROUND, GAUSS, TOPHAT options
+  - Added `shape` and `fudge` parameters to CrystalConfig
+  - Implemented sinc3 function in `utils/physics.py` for ROUND shape
+  - Updated Simulator to calculate F_latt based on selected shape model:
+    - SQUARE: Uses sincg function (parallelepiped/grating)
+    - ROUND: Uses sinc3 function with volume correction factor 0.7236...
+    - GAUSS: Gaussian falloff in reciprocal space exp(-(Δr*^2 / 0.63) * fudge)
+    - TOPHAT: Binary spots with sharp cutoff at Δr*^2 * fudge = 0.3969
+  - Caches rotated reciprocal vectors for efficiency in GAUSS/TOPHAT calculations
+  - Full test suite passes with 172/182 tests (94.5%), no regressions
+
+### AT-POL-001: Kahn model polarization and toggles
+- **Status**: COMPLETE ✅
+- **Implementation**: Full Kahn model polarization factor calculation added to `utils/physics.py`
+- **Test**: Created `tests/test_at_pol_001.py` with all 5 tests
+- **Details**:
+  - Implemented `polarization_factor()` function with proper Kahn model physics
+  - Added `nopolar` and `polarization_axis` fields to BeamConfig
+  - Integrated polarization calculation into Simulator with oversample_polar support
+  - Supports last-value semantics when oversample_polar=False
+  - Properly applies per-subpixel when oversample_polar=True
+  - Fixed subpixel intensity accumulation bugs in the process
+
+### AT-BKG-001: Water background term
+- **Status**: COMPLETE ✅
+- **Implementation**: Added water background calculation to `Simulator` class
+- **Test**: Created `tests/test_at_bkg_001.py` with all 3 tests passing
+- **Details**:
+  - Added `water_size_um` field to BeamConfig (0 = no background)
+  - Implemented `_calculate_water_background()` method in Simulator
+  - Formula: I_bg = (F_bg^2) · r_e^2 · fluence · (water_size^3) · 1e6 · Avogadro / water_MW
+  - Uses F_bg = 2.57 (water forward scattering amplitude)
+  - Preserves the 1e6 unit inconsistency factor from C code for exact compatibility
+  - Background adds uniformly to all pixels after physics calculation
+  - Full test suite passes (61/61 tests) with no regressions
+
 ## In Progress 🚧
 
 None currently.
@@ -151,13 +192,7 @@ None remaining - all high priority items complete!
 
 ## Medium Priority TODO 🟡
 
-### Polarization (AT-POL-001)
-- [ ] Implement Kahn model polarization factor
-- [ ] Add -polar and -nopolar toggle support
-- [ ] Test oversample_polar behavior
-
-### Background & Noise (AT-BKG-001, AT-NOISE-001)
-- [ ] Implement water background term calculation
+### Noise (AT-NOISE-001)
 - [ ] Implement Poisson noise generation with seeds
 - [ ] Add exact/rejection/Gaussian sampling based on mean
 

@@ -77,8 +77,30 @@ def sinc3(x: torch.Tensor) -> torch.Tensor:
                                         F_latt = Na*Nb*Nc*0.723601254558268*sinc3(M_PI*sqrt( hrad_sqr * fudge ) );
                                     }
     ```
+
+    Args:
+        x: Input tensor (typically π * sqrt(hrad_sqr * fudge))
+
+    Returns:
+        torch.Tensor: Shape factor values 3*(sin(x)/x - cos(x))/x^2
     """
-    raise NotImplementedError("TODO: Port logic from nanoBragg.c for sinc3 function")
+    # Handle the x=0 case
+    eps = 1e-10
+    is_zero = torch.abs(x) < eps
+
+    # For non-zero values, compute 3*(sin(x)/x - cos(x))/x^2
+    # Protect against division by zero
+    x_safe = torch.where(is_zero, torch.ones_like(x), x)
+    sin_x = torch.sin(x_safe)
+    cos_x = torch.cos(x_safe)
+
+    # Compute the sinc3 function
+    result = 3.0 * (sin_x / x_safe - cos_x) / (x_safe * x_safe)
+
+    # Return 1.0 for x=0 case
+    result = torch.where(is_zero, torch.ones_like(x), result)
+
+    return result
 
 
 def polarization_factor(
@@ -158,17 +180,59 @@ def polarization_factor(
     ```
 
     Args:
-        kahn_factor: Polarization factor (0 to 1).
-        incident: Incident beam unit vectors.
-        diffracted: Diffracted beam unit vectors.
-        axis: Polarization axis unit vectors.
+        kahn_factor: Polarization factor (0 to 1). Can be scalar or tensor.
+        incident: Incident beam unit vectors [..., 3].
+        diffracted: Diffracted beam unit vectors [..., 3].
+        axis: Polarization axis unit vectors [..., 3] or [3].
 
     Returns:
-        Tensor of polarization correction factors.
+        Tensor of polarization correction factors [...].
     """
-    raise NotImplementedError(
-        "TODO: Port logic from nanoBragg.c for polarization_factor"
-    )
+    # Normalize vectors to unit length
+    eps = 1e-10
+    incident_norm = incident / (torch.norm(incident, dim=-1, keepdim=True) + eps)
+    diffracted_norm = diffracted / (torch.norm(diffracted, dim=-1, keepdim=True) + eps)
+
+    # Handle axis broadcasting - it might be a single vector for all pixels
+    if axis.dim() == 1:
+        axis = axis.unsqueeze(0).expand(incident.shape[:-1] + (3,))
+    axis_norm = axis / (torch.norm(axis, dim=-1, keepdim=True) + eps)
+
+    # Component of diffracted unit vector along incident beam unit vector
+    # cos(2θ) = i·d
+    cos2theta = torch.sum(incident_norm * diffracted_norm, dim=-1)
+    cos2theta_sqr = cos2theta * cos2theta
+    sin2theta_sqr = 1.0 - cos2theta_sqr
+
+    # Handle scalar kahn_factor
+    if not isinstance(kahn_factor, torch.Tensor):
+        kahn_factor = torch.tensor(kahn_factor, dtype=incident.dtype, device=incident.device)
+
+    # Initialize psi to zero
+    psi = torch.zeros_like(cos2theta)
+
+    # Only compute psi if kahn_factor is non-zero
+    if kahn_factor != 0.0:
+        # Cross product to get "vertical" axis orthogonal to the polarization
+        # B_in = axis × incident
+        B_in = torch.cross(axis_norm, incident_norm, dim=-1)
+        B_in_norm = B_in / (torch.norm(B_in, dim=-1, keepdim=True) + eps)
+
+        # Cross product with incident beam to get E-vector direction
+        # E_in = incident × B_in
+        E_in = torch.cross(incident_norm, B_in_norm, dim=-1)
+        E_in_norm = E_in / (torch.norm(E_in, dim=-1, keepdim=True) + eps)
+
+        # Get components of diffracted ray projected onto the E-B plane
+        E_out = torch.sum(diffracted_norm * E_in_norm, dim=-1)
+        B_out = torch.sum(diffracted_norm * B_in_norm, dim=-1)
+
+        # Compute the angle of the diffracted ray projected onto the incident E-B plane
+        psi = -torch.atan2(B_out, E_out)
+
+    # Correction for polarized incident beam
+    # Per spec equation: 0.5·(1 + cos^2(2θ) − K·cos(2ψ)·sin^2(2θ))
+    return 0.5 * (1.0 + cos2theta_sqr - kahn_factor * torch.cos(2.0 * psi) * sin2theta_sqr)
 
 
 def polint(xa: torch.Tensor, ya: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
