@@ -374,7 +374,13 @@ All medium priority items completed!
   - Special handling for noise generation to keep pixels outside ROI at zero
   - All 4 tests passing in test_at_cli_005.py
 - [x] AT-CLI-006: Output scaling and PGM - **COMPLETE ✅**
-- [ ] AT-CLI-007: Noise determinism
+- [x] AT-CLI-007: Noise determinism - **COMPLETE ✅**
+  - Added read_smv() function to io/smv.py for reading SMV files
+  - Created comprehensive test suite with 5 test cases
+  - Tests verify: identical seeds produce identical noise, different seeds produce different noise
+  - Supports negative seeds (per spec default of negative time)
+  - Overload counts are deterministic with same seed
+  - All 5 tests passing in test_at_cli_007.py
 - [ ] AT-CLI-008: dmin filtering
 - [ ] AT-CLI-009: Error handling and usage
 
@@ -407,10 +413,11 @@ Key implementation decisions:
 ## Summary
 
 Implementation status:
-- **Completed**: 30 of 35 acceptance tests (86%)
-- **Remaining**: 5 tests (3 CLI + 2 low-priority)
+- **Completed**: 31 of 35 acceptance tests (89%)
+- **Remaining**: 4 tests (2 CLI + 2 low-priority)
 - Core simulation engine is complete and validated
-- CLI interface mostly implemented (6 of 9 AT-CLI tests complete)
+- CLI interface mostly implemented (7 of 9 AT-CLI tests complete)
 - ROI, mask, and statistics support fully implemented
 - Output scaling and PGM export fully functional
-- Test suite: 5 new tests added for AT-CLI-006, all passing
+- Noise generation with seed determinism fully working
+- Test suite: 5 new tests added for AT-CLI-007, all passing

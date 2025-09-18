@@ -7,10 +7,99 @@ per spec-a.md AT-IO-001 requirements.
 import struct
 import sys
 from pathlib import Path
-from typing import Optional, Dict, Any, Union
+from typing import Optional, Dict, Any, Union, Tuple
 
 import numpy as np
 import torch
+
+
+def read_smv(filepath: Union[str, Path]) -> Tuple[np.ndarray, Dict[str, Any]]:
+    """Read an SMV format file.
+
+    Args:
+        filepath: Path to the SMV file
+
+    Returns:
+        Tuple of (image_data, header_dict) where:
+        - image_data: numpy array with shape (slow, fast)
+        - header_dict: dictionary of header key-value pairs
+    """
+    filepath = Path(filepath)
+
+    with open(filepath, 'rb') as f:
+        # Read the 512-byte header
+        header_bytes = f.read(512)
+        header_text = header_bytes.decode('ascii', errors='ignore')
+
+        # Parse header into dictionary
+        header = {}
+
+        # Find the start and end of header content (between { and })
+        start = header_text.find('{')
+        end = header_text.find('}')
+
+        if start == -1 or end == -1:
+            raise ValueError(f"Invalid SMV header in {filepath}")
+
+        # Parse key=value pairs
+        header_content = header_text[start+1:end]
+        for line in header_content.split('\n'):
+            line = line.strip()
+            if '=' in line and line.endswith(';'):
+                # Remove trailing semicolon
+                line = line[:-1]
+                key, value = line.split('=', 1)
+                header[key.strip()] = value.strip()
+
+        # Extract dimensions
+        fpixels = int(header.get('SIZE1', 0))
+        spixels = int(header.get('SIZE2', 0))
+
+        if fpixels == 0 or spixels == 0:
+            raise ValueError(f"Invalid dimensions in {filepath}: {fpixels}x{spixels}")
+
+        # Determine byte order
+        byte_order = header.get('BYTE_ORDER', 'little_endian')
+        endian = '<' if 'little' in byte_order else '>'
+
+        # Read image data
+        data_type = header.get('TYPE', 'unsigned_short')
+        if data_type == 'unsigned_short':
+            dtype = np.uint16
+            bytes_per_pixel = 2
+        elif data_type == 'signed_short':
+            dtype = np.int16
+            bytes_per_pixel = 2
+        elif data_type == 'unsigned_int':
+            dtype = np.uint32
+            bytes_per_pixel = 4
+        elif data_type == 'signed_int':
+            dtype = np.int32
+            bytes_per_pixel = 4
+        elif data_type == 'float':
+            dtype = np.float32
+            bytes_per_pixel = 4
+        else:
+            raise ValueError(f"Unsupported data type: {data_type}")
+
+        # Read the binary data
+        num_pixels = fpixels * spixels
+        data_bytes = f.read(num_pixels * bytes_per_pixel)
+
+        # Unpack based on data type and endianness
+        if len(data_bytes) < num_pixels * bytes_per_pixel:
+            raise ValueError(f"Insufficient data: expected {num_pixels * bytes_per_pixel} bytes, got {len(data_bytes)}")
+
+        # Use numpy for efficient unpacking
+        if endian == '<':
+            data = np.frombuffer(data_bytes, dtype=np.dtype(dtype).newbyteorder('<'))
+        else:
+            data = np.frombuffer(data_bytes, dtype=np.dtype(dtype).newbyteorder('>'))
+
+        # Reshape to (slow, fast) - data is stored fast-major
+        image_data = np.array(data, dtype=dtype).reshape((spixels, fpixels))
+
+    return image_data, header
 
 
 def write_smv(
