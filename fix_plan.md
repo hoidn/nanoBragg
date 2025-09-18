@@ -312,9 +312,20 @@ All medium priority items completed!
 
 ## High Priority TODO 🔴
 
+### AT-CLI-001: CLI presence and help
+- **Status**: COMPLETE ✅
+- **Implementation**: Full CLI entry point with argument parser in `src/nanobrag_torch/__main__.py`
+- **Test**: Created `tests/test_at_cli_001.py` with all 6 tests passing
+- **Details**:
+  - Complete argument parser with all spec-defined flags
+  - Help text includes usage, all required flags, and examples
+  - Supports both -h and --help flags
+  - Includes all conventions (MOSFLM, XDS, ADXV, DENZO, DIALS)
+  - Exit code 0 on help display
+
+## In Progress 🚧
+
 ### CLI Implementation (Critical Missing Component)
-- [x] Create CLI entry point (`src/nanobrag_torch/__main__.py`) - COMPLETE
-- [x] AT-CLI-001: CLI presence and help - COMPLETE
 - [ ] AT-CLI-002: Minimal render and headers
 - [ ] AT-CLI-003: Conventions and pivot behavior
 - [ ] AT-CLI-004: Header precedence and mask behavior
