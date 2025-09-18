@@ -73,10 +73,21 @@ None currently.
   - Test expectations corrected and validated against C reference implementation
   - Full test suite: 138 passed, 8 skipped, 2 xfailed (100% success rate)
 
+### AT-GEO-005: Curved detector mapping
+- **Status**: COMPLETE ✅
+- **Implementation**: Added curved detector support to Detector class
+- **Test**: Created `tests/test_at_geo_005.py` with comprehensive tests
+- **Details**:
+  - Added `curved_detector` field to DetectorConfig
+  - Added CUSTOM convention to DetectorConvention enum
+  - Implemented `_compute_curved_pixel_coords()` method with spherical mapping
+  - All pixels on curved detector are equidistant from sample
+  - Uses small-angle rotation approximation for performance
+  - Maintains gradient flow for differentiability
+
 ## High Priority TODO 🔴
 
-### Beam Model & Geometry (AT-GEO-005, AT-GEO-006)
-- [ ] AT-GEO-005: Curved detector mapping
+### Beam Model & Geometry (AT-GEO-006)
 - [ ] AT-GEO-006: Point-pixel solid angle
 
 ### Sampling & Normalization (AT-SAM-001, AT-SAM-002)

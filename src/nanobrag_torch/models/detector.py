@@ -542,6 +542,10 @@ class Detector:
         """
         Get 3D coordinates of all detector pixels.
 
+        Supports both planar and curved (spherical) detector mappings.
+        For curved detector: pixels are mapped to a spherical arc by rotating
+        from the beam direction by angles Sdet/distance and Fdet/distance.
+
         Returns:
             torch.Tensor: Pixel coordinates with shape (spixels, fpixels, 3) in meters
         """
@@ -568,27 +572,12 @@ class Detector:
                 geometry_changed = True
 
         if self._pixel_coords_cache is None or geometry_changed:
-            # Create pixel index grids (integer indices, pixel centers handled in pix0_vector)
-            s_indices = torch.arange(self.spixels, device=self.device, dtype=self.dtype)
-            f_indices = torch.arange(self.fpixels, device=self.device, dtype=self.dtype)
-
-            # Create meshgrid of indices
-            s_grid, f_grid = torch.meshgrid(s_indices, f_indices, indexing="ij")
-
-            # Calculate pixel coordinates using pix0_vector as the reference
-            # pixel_coords = pix0_vector + s * pixel_size * sdet_vec + f * pixel_size * fdet_vec
-
-            # Expand vectors for broadcasting
-            pix0_expanded = self.pix0_vector.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
-            sdet_expanded = self.sdet_vec.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
-            fdet_expanded = self.fdet_vec.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
-
-            # Calculate pixel coordinates
-            pixel_coords = (
-                pix0_expanded
-                + s_grid.unsqueeze(-1) * self.pixel_size * sdet_expanded
-                + f_grid.unsqueeze(-1) * self.pixel_size * fdet_expanded
-            )
+            if self.config.curved_detector:
+                # Curved detector mapping (spherical arc)
+                pixel_coords = self._compute_curved_pixel_coords()
+            else:
+                # Standard planar detector mapping
+                pixel_coords = self._compute_planar_pixel_coords()
 
             self._pixel_coords_cache = pixel_coords
 
@@ -602,6 +591,111 @@ class Detector:
             self._geometry_version += 1
 
         return self._pixel_coords_cache
+
+    def _compute_planar_pixel_coords(self) -> torch.Tensor:
+        """
+        Compute pixel coordinates for a standard planar detector.
+
+        Returns:
+            torch.Tensor: Pixel coordinates with shape (spixels, fpixels, 3) in meters
+        """
+        # Create pixel index grids (integer indices, pixel centers handled in pix0_vector)
+        s_indices = torch.arange(self.spixels, device=self.device, dtype=self.dtype)
+        f_indices = torch.arange(self.fpixels, device=self.device, dtype=self.dtype)
+
+        # Create meshgrid of indices
+        s_grid, f_grid = torch.meshgrid(s_indices, f_indices, indexing="ij")
+
+        # Calculate pixel coordinates using pix0_vector as the reference
+        # pixel_coords = pix0_vector + s * pixel_size * sdet_vec + f * pixel_size * fdet_vec
+
+        # Expand vectors for broadcasting
+        pix0_expanded = self.pix0_vector.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
+        sdet_expanded = self.sdet_vec.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
+        fdet_expanded = self.fdet_vec.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
+
+        # Calculate pixel coordinates
+        pixel_coords = (
+            pix0_expanded
+            + s_grid.unsqueeze(-1) * self.pixel_size * sdet_expanded
+            + f_grid.unsqueeze(-1) * self.pixel_size * fdet_expanded
+        )
+
+        return pixel_coords
+
+    def _compute_curved_pixel_coords(self) -> torch.Tensor:
+        """
+        Compute pixel coordinates for a curved (spherical) detector.
+
+        Per spec: "start at distance along b and rotate about s and f by small angles
+        Sdet/distance and Fdet/distance respectively."
+
+        Returns:
+            torch.Tensor: Pixel coordinates with shape (spixels, fpixels, 3) in meters
+        """
+        # Create pixel index grids
+        s_indices = torch.arange(self.spixels, device=self.device, dtype=self.dtype)
+        f_indices = torch.arange(self.fpixels, device=self.device, dtype=self.dtype)
+        s_grid, f_grid = torch.meshgrid(s_indices, f_indices, indexing="ij")
+
+        # Calculate Sdet and Fdet exactly as in planar detector
+        # These are the coordinates in the detector plane
+        Sdet = s_grid * self.pixel_size  # meters
+        Fdet = f_grid * self.pixel_size  # meters
+
+        # Compute rotation angles
+        # Per spec: "rotate about s by Sdet/distance and about f by Fdet/distance"
+        s_angles = Sdet / self.distance
+        f_angles = Fdet / self.distance
+
+        # Start all pixels at distance along beam direction
+        # Note: -beam_vector points from sample toward detector
+        initial_direction = -self.beam_vector
+
+        # For small angles, we can use the approximation:
+        # Rotation of vector v about axis a by angle θ ≈ v + θ * (a × v)
+        # For two successive rotations (small angles):
+        # First rotate about s by s_angle, then about f by f_angle
+
+        # Expand for broadcasting
+        initial_expanded = initial_direction.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
+        sdet_expanded = self.sdet_vec.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
+        fdet_expanded = self.fdet_vec.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
+
+        # Apply small angle approximation for the rotations
+        # The direction after rotation is approximately:
+        # d ≈ initial + s_angle * (s × initial) + f_angle * (f × initial)
+        # But since s and f are perpendicular to initial (beam), this simplifies
+
+        # For small angles and perpendicular axes, we can approximate as:
+        direction = (
+            initial_expanded
+            + s_angles.unsqueeze(-1) * fdet_expanded  # s rotation affects f component
+            + f_angles.unsqueeze(-1) * sdet_expanded  # f rotation affects s component
+        )
+
+        # Normalize to maintain constant distance
+        direction_norm = torch.norm(direction, dim=-1, keepdim=True)
+        direction_normalized = direction / direction_norm
+
+        # Scale to the correct distance
+        pixel_coords = self.distance * direction_normalized
+
+        return pixel_coords
+
+    @property
+    def beam_vector(self) -> torch.Tensor:
+        """
+        Get the beam vector based on detector convention.
+
+        Returns:
+            torch.Tensor: Unit beam vector pointing from sample toward source
+        """
+        if self.config.detector_convention == DetectorConvention.MOSFLM:
+            return torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
+        else:
+            # XDS, DIALS, and CUSTOM conventions use beam along +Z
+            return torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
 
     def get_r_factor(self) -> torch.Tensor:
         """

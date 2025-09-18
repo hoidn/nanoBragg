@@ -71,6 +71,7 @@ class DetectorConvention(Enum):
     MOSFLM = "mosflm"
     XDS = "xds"
     DIALS = "dials"
+    CUSTOM = "custom"  # For user-specified basis vectors
 
 
 class DetectorPivot(Enum):
@@ -159,6 +160,9 @@ class DetectorConfig:
 
     # Sampling
     oversample: int = 1
+
+    # Detector geometry mode
+    curved_detector: bool = False  # If True, use spherical mapping for pixel positions
 
     def __post_init__(self):
         """Validate configuration and set defaults.
