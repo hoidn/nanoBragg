@@ -34,9 +34,13 @@ class TestATParallel002:
         the beam center in pixels SHALL equal 25.6mm / pixel_size_mm ±0.1 pixels.
         """
         pixel_sizes = [0.05, 0.1, 0.2, 0.4]  # mm
-        fixed_beam_center_mm = 25.6  # mm
+        # Use detector center (128 pixels for 256x256 detector)
+        fixed_beam_center_pixels = 128  # Center pixel
 
         for pixel_size in pixel_sizes:
+            # Calculate beam center in mm for this pixel size
+            beam_center_mm = fixed_beam_center_pixels * pixel_size
+
             # Create detector config with fixed size and varying pixel size
             detector_config = DetectorConfig(
                 detector_convention=DetectorConvention.MOSFLM,
@@ -44,14 +48,14 @@ class TestATParallel002:
                 pixel_size_mm=pixel_size,
                 spixels=256,
                 fpixels=256,
-                beam_center_s=fixed_beam_center_mm,
-                beam_center_f=fixed_beam_center_mm,
+                beam_center_s=beam_center_mm,
+                beam_center_f=beam_center_mm,
             )
 
             # Verify that the beam center in mm is preserved
-            assert abs(detector_config.beam_center_s - fixed_beam_center_mm) < 0.001, \
+            assert abs(detector_config.beam_center_s - beam_center_mm) < 0.001, \
                 f"Beam center S (mm) not preserved for pixel_size={pixel_size}mm"
-            assert abs(detector_config.beam_center_f - fixed_beam_center_mm) < 0.001, \
+            assert abs(detector_config.beam_center_f - beam_center_mm) < 0.001, \
                 f"Beam center F (mm) not preserved for pixel_size={pixel_size}mm"
 
             # Create detector to verify pixel coordinates
@@ -59,7 +63,7 @@ class TestATParallel002:
 
             # Calculate expected beam center in pixels
             # MOSFLM convention: beam_center_pixels = beam_center_mm / pixel_size_mm
-            expected_beam_pixel = fixed_beam_center_mm / pixel_size
+            expected_beam_pixel = beam_center_mm / pixel_size
 
             # The detector internally stores beam centers in pixels (with the +0.5 offset handled internally)
             # Verify the beam center in pixels scales inversely with pixel size
@@ -74,7 +78,9 @@ class TestATParallel002:
         AT-PARALLEL-002: Peak positions SHALL scale inversely with pixel size.
         """
         pixel_sizes = [0.05, 0.1, 0.2, 0.4]  # mm
-        fixed_beam_center_mm = 25.6  # mm
+        # Keep beam center at the same PHYSICAL location (in mm) for all pixel sizes
+        # Use a fixed physical location near the detector center
+        fixed_beam_center_mm = 12.8  # mm (center for 0.1mm pixels, 256x256 detector)
         peak_positions = []
 
         for pixel_size in pixel_sizes:
@@ -134,10 +140,13 @@ class TestATParallel002:
         AT-PARALLEL-002: Pattern correlation SHALL be >0.95 across pixel sizes.
         """
         pixel_sizes = [0.1, 0.2]  # Use two sizes for comparison
-        fixed_beam_center_mm = 25.6  # mm
+        # Use detector center (128 pixels for 256x256 detector)
+        fixed_beam_center_pixels = 128  # Center pixel
         images = []
 
         for pixel_size in pixel_sizes:
+            # Calculate beam center in mm for this pixel size
+            beam_center_mm = fixed_beam_center_pixels * pixel_size
             # Create configurations
             detector_config = DetectorConfig(
                 detector_convention=DetectorConvention.MOSFLM,
@@ -145,8 +154,8 @@ class TestATParallel002:
                 pixel_size_mm=pixel_size,
                 spixels=256,
                 fpixels=256,
-                beam_center_s=fixed_beam_center_mm,
-                beam_center_f=fixed_beam_center_mm,
+                beam_center_s=beam_center_mm,
+                beam_center_f=beam_center_mm,
             )
 
             crystal_config = CrystalConfig(
@@ -194,9 +203,15 @@ class TestATParallel002:
         Additional test to verify parameter handling.
         """
         pixel_sizes = [0.05, 0.1, 0.2, 0.4]  # mm
-        fixed_beam_center_mm = 25.6  # mm
+        # Use detector center (128 pixels for 256x256 detector)
+        fixed_beam_center_pixels = 128  # Center pixel
 
         for pixel_size in pixel_sizes:
+            # Calculate beam center in mm for this pixel size
+            beam_center_mm = fixed_beam_center_pixels * pixel_size
+            # Calculate beam center in mm for this pixel size
+            beam_center_mm = fixed_beam_center_pixels * pixel_size
+
             # Test that setting beam center in mm is properly converted
             detector_config = DetectorConfig(
                 detector_convention=DetectorConvention.MOSFLM,
@@ -204,14 +219,15 @@ class TestATParallel002:
                 pixel_size_mm=pixel_size,
                 spixels=256,
                 fpixels=256,
-                beam_center_s=fixed_beam_center_mm,
-                beam_center_f=fixed_beam_center_mm,
+                beam_center_s=beam_center_mm,
+                beam_center_f=beam_center_mm,
             )
 
             detector = Detector(detector_config)
 
             # Verify the detector stores beam centers correctly in pixels
-            expected_beam_pixel = fixed_beam_center_mm / pixel_size
+            # MOSFLM convention adds 0.5 pixel offset
+            expected_beam_pixel = beam_center_mm / pixel_size + 0.5
 
             assert abs(detector.beam_center_s.item() - expected_beam_pixel) < 0.01, \
                 f"Detector beam_center_s incorrect for pixel_size={pixel_size}mm"

@@ -238,20 +238,36 @@ class DetectorConfig:
         # Calculate beam centers based on detector size if not explicitly overridden
         # This fixes the critical bug where beam centers were hardcoded at 51.2mm
         # regardless of detector size, causing catastrophic validation failures
-        if self.beam_center_s == 51.2 and self.beam_center_f == 51.2:
-            # These are the default values, calculate proper beam centers
-            # based on detector size and convention
-            detsize_s = self.spixels * self.pixel_size_mm  # Total detector size in slow axis (mm)
-            detsize_f = self.fpixels * self.pixel_size_mm  # Total detector size in fast axis (mm)
+        detsize_s = self.spixels * self.pixel_size_mm  # Total detector size in slow axis (mm)
+        detsize_f = self.fpixels * self.pixel_size_mm  # Total detector size in fast axis (mm)
 
-            # MOSFLM convention adds 0.5 pixel offset (per spec AT-GEO-001)
+        # Auto-calculate beam centers if they're at the exact default value (51.2mm)
+        # This indicates they weren't explicitly set by the user
+        # The 51.2mm default was originally for 1024x1024 detector with 0.1mm pixels
+        # but was incorrectly used for all detector sizes
+        if self.beam_center_s == 51.2 and self.beam_center_f == 51.2:
+            # These are the default values - auto-calculate based on detector size
+            # Only skip auto-calculation if this happens to be the correct value
+            # for the current detector (1024x1024 with 0.1mm pixels)
+            expected_center_for_default = 51.2  # Original default for 1024x1024, 0.1mm
+
+            # Check if 51.2mm is actually correct for current detector
             if self.detector_convention == DetectorConvention.MOSFLM:
-                self.beam_center_s = (detsize_s + self.pixel_size_mm) / 2.0
-                self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
+                expected_center = (detsize_s + self.pixel_size_mm) / 2.0
             else:
-                # XDS, DIALS, and other conventions: center without offset
-                self.beam_center_s = detsize_s / 2.0
-                self.beam_center_f = detsize_f / 2.0
+                expected_center = detsize_s / 2.0
+
+            # If 51.2mm is NOT the expected center for this detector, recalculate
+            # Allow small tolerance for floating point comparison
+            if abs(expected_center - 51.2) > 0.01:
+                # MOSFLM convention adds 0.5 pixel offset (per spec AT-GEO-001)
+                if self.detector_convention == DetectorConvention.MOSFLM:
+                    self.beam_center_s = (detsize_s + self.pixel_size_mm) / 2.0
+                    self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
+                else:
+                    # XDS, DIALS, and other conventions: center without offset
+                    self.beam_center_s = detsize_s / 2.0
+                    self.beam_center_f = detsize_f / 2.0
 
         # Set default twotheta axis if not provided
         if self.twotheta_axis is None:

@@ -1,14 +1,32 @@
 # nanoBragg PyTorch — Implementation Architecture
 
-Document version: 0.9 (aligned with specs/spec-b.md)
-Target spec: specs/spec-b.md (single-file normative spec)
+Document version: 1.0 (aligned with specs/spec-a.md)
+Target spec: specs/spec-a.md (single-file normative spec)
 Implementation target: Python (>=3.11) + PyTorch (float64 default). Type blocks may use TypeScript-style for clarity; implement with Python dataclasses and torch tensors.
+
+## Running The CLI
+
+- Install (recommended):
+  - `pip install -e .` from repo root (provides `nanoBragg` console script).
+- Run (installed):
+  - `nanoBragg -hkl P1.hkl -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -floatfile out.bin`
+- Run (without install):
+  - `PYTHONPATH=src python -m nanobrag_torch -hkl P1.hkl -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -floatfile out.bin`
+- Minimal quick test (no HKL):
+  - `nanoBragg -default_F 1 -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -detpixels 128 -pgmfile test.pgm`
+
+Notes
+- Entry point: `src/nanobrag_torch/__main__.py` (module runner `python -m nanobrag_torch`).
+- Required inputs: provide `-hkl` (or existing `Fdump.bin`) or set `-default_F > 0`, and either `-mat` (MOSFLM A*) or `-cell`.
+- Useful speedups: use `-roi xmin xmax ymin ymax` for small windows; reduce `-detpixels` during tests.
+- SMV/PGM outputs: `-intfile` (with optional `-scale`, `-adc`), `-noisefile` (Poisson), `-pgmfile` (8‑bit preview).
+
 
 ## Spec vs Architecture Precedence
 
-- Normative contract: The specs/spec-b.md file defines the external contract (CLI flags, units, geometry/physics equations, file formats, and Acceptance Tests). It takes precedence for externally visible behavior.
+- Normative contract: The specs/spec-a.md file defines the external contract (CLI flags, units, geometry/physics equations, file formats, and Acceptance Tests). It takes precedence for externally visible behavior.
 - Implementation guidance: This arch.md documents ADRs, module layout, and concrete decisions used to realize the spec with PyTorch. It is subordinate to the spec.
-- Conflict resolution: If arch.md and specs/spec-b.md disagree, implement to the spec and open a PR to realign arch.md.
+- Conflict resolution: If arch.md and specs/spec-a.md disagree, implement to the spec and open a PR to realign arch.md.
 - Underspecification: When the spec is silent, follow the ADRs here. If experience shows the spec needs additions, propose a spec change in specs/spec-b.md and update acceptance tests accordingly.
 
 ## 1) Goals & Non‑Goals
@@ -37,7 +55,7 @@ Implementation target: Python (>=3.11) + PyTorch (float64 default). Type blocks 
     - `simulator.py` — vectorized physics loop, scaling, solid angle
     - `utils/` — geometry (rotations, dot/cross), physics kernels, unit conversions
   - `scripts/` — debug and comparison scripts (C vs PyTorch traces)
-  - `specs/` — spec-b.md (normative); tests appended under Acceptance Tests
+  - `specs/` — spec-a.md (normative); tests appended under Acceptance Tests
   - `tests/` — project tests (Python-level, when present)
 
 - Run-time artifacts (as spec evolves)
@@ -52,7 +70,7 @@ Implementation target: Python (>=3.11) + PyTorch (float64 default). Type blocks 
   - Detector geometry (distance, pixel size, pix0_vector, pixel coordinates) uses meters internally to match C semantics and avoid Å-scale precision issues.
   - Physics computations (q, stol, shape factors) operate in Angstroms.
   - Conversion at the interface: pixel coords [m] × 1e10 → [Å].
-  - Alignment with spec: specs/spec-b.md states q is expressed in m⁻¹ in the spec; this implementation uses Å for physics while keeping geometry in meters, with explicit conversions at the interface.
+  - Alignment with spec: specs/spec-a.md states q is expressed in m⁻¹ in the spec; this implementation uses Å for physics while keeping geometry in meters, with explicit conversions at the interface.
 
 - ADR-02 Rotation Order and Conventions
   - Basis initialization per convention (MOSFLM, XDS). Apply rotations in order: rotx → roty → rotz → rotate around `twotheta_axis` by `detector_twotheta`.
@@ -182,18 +200,26 @@ interface BeamConfig {
 
 ## 7) Geometry Model & Conventions
 
-- Basis vectors (initial):
-  - MOSFLM: f=[0,0,1], s=[0,−1,0], o=[1,0,0], beam=[1,0,0], default twotheta_axis=[0,0,−1].
-  - XDS:    f=[1,0,0], s=[0,1,0],  o=[0,0,1],  beam=[0,0,1], default twotheta_axis=[1,0,0].
-  - DIALS:  f=[1,0,0], s=[0,1,0],  o=[0,0,1],  beam=[0,0,1], default twotheta_axis=[0,1,0].
+- Basis vectors and defaults (initial, before rotations):
+  - ADXV:   f=[1,0,0], s=[0,−1,0], o=[0,0,1],  beam=[0,0,1], default twotheta_axis=[−1,0,0]; pivot=BEAM. Default beam centers: Xbeam=(detsize_f+pixel)/2, Ybeam=(detsize_s−pixel)/2; mapping Fbeam=Xbeam, Sbeam=detsize_s−Ybeam.
+  - MOSFLM: f=[0,0,1], s=[0,−1,0], o=[1,0,0],  beam=[1,0,0], default twotheta_axis=[0,0,−1]; pivot=BEAM. Beam-center mapping: Fbeam=Ybeam+0.5·pixel; Sbeam=Xbeam+0.5·pixel.
+  - DENZO:  f=[0,0,1], s=[0,−1,0], o=[1,0,0],  beam=[1,0,0], default twotheta_axis=[0,0,−1]; pivot=BEAM. Beam-center mapping: Fbeam=Ybeam; Sbeam=Xbeam.
+  - XDS:    f=[1,0,0], s=[0,1,0],  o=[0,0,1],  beam=[0,0,1], default twotheta_axis=[1,0,0];  pivot=SAMPLE. Beam-center mapping: Fbeam=Xbeam; Sbeam=Ybeam (defaults Xbeam=Xclose, Ybeam=Yclose).
+  - DIALS:  f=[1,0,0], s=[0,1,0],  o=[0,0,1],  beam=[0,0,1], default twotheta_axis=[0,1,0];  pivot=SAMPLE. Beam-center mapping: Fbeam=Xbeam; Sbeam=Ybeam.
 - Rotations: apply XYZ small-angle rotations to f/s/o, then rotate around twotheta_axis by two-theta.
 - r-factor update: r = b·o_after; if close_distance unspecified: close_distance = |r·distance|; then set distance = close_distance / r. Direct-beam Fbeam/Sbeam recomputed from R = close_distance/r·b − D0.
 - Pivots:
   - SAMPLE: D0 = −Fclose·f − Sclose·s + close_distance·o, then rotate D0 (pix0) with detector rotations and two-theta.
   - BEAM: D0 = −Fbeam·f − Sbeam·s + distance·beam (after rotations); preserves beam center.
-  - CLI forcing: providing `-distance` forces BEAM pivot; providing `-close_distance` forces SAMPLE pivot. If conflicting options are provided, the last one parsed wins.
+  - CLI forcing and precedence (per spec-a):
+    - Providing `-distance` (without `-close_distance`) forces BEAM pivot; providing `-close_distance` forces SAMPLE pivot.
+    - Providing beam-center style inputs forces pivot: `-Xbeam`/`-Ybeam` → BEAM; `-Xclose`/`-Yclose` or `-ORGX`/`-ORGY` → SAMPLE.
+    - Explicit `-pivot` overrides either.
 - Beam center mapping:
-  - MOSFLM: Fbeam = Ybeam + 0.5·pixel, Sbeam = Xbeam + 0.5·pixel (mm→pixels→meters).
+  - ADXV:   Fbeam = Xbeam; Sbeam = detsize_s − Ybeam.
+  - MOSFLM: Fbeam = Ybeam + 0.5·pixel; Sbeam = Xbeam + 0.5·pixel (mm→pixels→meters).
+  - DENZO:  Fbeam = Ybeam; Sbeam = Xbeam.
+  - XDS/DIALS: Fbeam = Xbeam; Sbeam = Ybeam.
   - CUSTOM: spec is silent; ADR decision is to not apply implicit +0.5 offsets unless provided by user inputs.
 - Curved detector (planned): spherical mapping via small-angle rotations Sdet/distance and Fdet/distance.
 
@@ -245,7 +271,7 @@ interface BeamConfig {
   - io: SMV header serialization, Fdump read/write, PGM writer.
 
 - Integration tests
-  - Acceptance Tests from specs/spec-b.md (“Acceptance Tests (Normative)”), including AT-GEO-001..AT-STA-001.
+  - Acceptance Tests from specs/spec-a.md (“Acceptance Tests (Normative)”), including AT-GEO-001..AT-STA-001.
   - C-vs-PyTorch trace parity for selected pixels (debug scripts).
 
 ## 13) Implementation Plan (incremental)

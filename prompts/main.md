@@ -7,10 +7,13 @@ Allocate the same stack every loop (do not skip this):
 - @ARCH: ARCH i.e. `arch.md` (ADR-backed implementation architecture; reconcile design with spec, surface conflicts)
 - @PLAN: `fix_plan.md` (living, prioritized to‑do; keep it up to date)
 - @AGENTS: `CLAUDE.md` (concise how‑to run/build/test; keep it accurate)
+- @TESTS: `docs/development/testing_strategy.md` (testing philosophy, tiers, seeds/tolerances, commands)
+- @CONTRIB: `docs/development/CONTRIBUTING.md` (Testing section: policy and minimum expectations)
 
 One thing per loop:
 - Pick exactly one acceptance criterion/spec feature (the most valuable/blocked) to implement or fix.
 - Before changing code, search the repo to ensure it’s not already implemented or half‑implemented. Do not assume missing.
+- Before changing code, run the test suite. If any tests are failing, use subagents to gather relevant context, investigate the root causes of the failures, and fix them
 - After implementing, run only the tests/examples relevant to that feature (fast feedback). If they pass, run the broader acceptance subset.
 
 At the start of each loop, declare:
@@ -136,6 +139,7 @@ Loop Self‑Checklist (end of every loop):
 - Scope stayed within a single module category; if not, capture deferral in `fix_plan.md`.
 
 Start here (task selection):
+0) use subagents to run the tests, investigate and fix any failures, and then report back to you
 1) Parse the Acceptance Tests list from `specs/spec-a.md` and cross‑reference code/tests to detect the highest‑value missing or flaky item.
 2) Execute the loop with that single item.
 3) Stop after producing the loop output checklist.

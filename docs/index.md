@@ -43,6 +43,7 @@ These are the core, living documents that guide the project.
 * **[Migration Guide](./user/migration_guide.md)** - Guide for migrating from C to PyTorch version.
 * **[Performance Guide](./user/performance.md)** - Performance optimization and benchmarking.
 * **[Rotation Usage](./user/rotation_usage.md)** - How to use rotation features correctly.
+* **[CLI Quickstart](./user/cli_quickstart.md)** - Installing and running the PyTorch CLI.
 
 ### Development Checklists (`docs/development/checklists/`)
 * **[Checklist 1](./development/checklists/checklist1.md)** - Development checklist.

@@ -40,6 +40,7 @@ The default value for this option is zero.
 This project contains comprehensive documentation for both users and developers. All documentation is located in the `/docs` directory.
 
 - **[User Guides](./docs/user/)**: Tutorials and guides for using the simulator.
+- **[CLI Quickstart](./docs/user/cli_quickstart.md)**: Installing and running the PyTorch CLI (`nanoBragg`).
 - **[Architecture Hub](./docs/architecture/)**: The authoritative design and specification documents for the project. **This is the best place for developers to start.**
 - **[Development Process](./docs/development/)**: Guidelines for contributing, debugging, and working with the AI agent.
 
