@@ -132,6 +132,20 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - Basic beam center scaling tests pass
   - Needs investigation into detector coordinate calculations
 
+### AT-PARALLEL-004: MOSFLM 0.5 Pixel Offset
+- **Status**: PARTIAL ⚠️
+- **Implementation**: Test file created at `tests/test_at_parallel_004.py`
+- **Test**: 3 of 5 tests passing
+- **Details**:
+  - Successfully verifies MOSFLM applies +0.5 pixel offset to beam centers
+  - XDS correctly has no pixel offset
+  - Beam center calculation consistency tests pass
+- **Issues**:
+  - Peak position difference test failing: expected 0.4-0.6 pixels, got 130 pixels
+  - MOSFLM peak appears at detector edge (255,255) instead of near center
+  - XDS peak at (194,140) - also off-center
+  - Indicates fundamental issue with convention-specific geometry or pivot calculations
+
 ### AT-GEO-004: Two-theta axis defaults by convention
 - **Status**: COMPLETE ✅
 - **Implementation**: Added DIALS convention support and twotheta axis defaults in `config.py` and `detector.py`
@@ -510,13 +524,15 @@ Potential future work:
 
 Implementation status:
 - **Original tests**: 41 of 41 acceptance tests complete ✅
-- **NEW CRITICAL**: 3 of 20 AT-PARALLEL tests implemented
+- **NEW CRITICAL**: 4 of 20 AT-PARALLEL tests implemented
   - AT-PARALLEL-001: Beam center scaling (PASSED 8/8 tests) ✅
   - AT-PARALLEL-002: Pixel size independence (PARTIAL 2/4 tests) ⚠️
   - AT-PARALLEL-003: Detector offset preservation (PASSED 3/3 tests) ✅
+  - AT-PARALLEL-004: MOSFLM 0.5 pixel offset (PARTIAL 3/5 tests) ⚠️
 - **Major bug FIXED**: Beam centers now scale correctly with detector size
-- **C-PyTorch correlation**: Improved from 0.048 → TBD (needs full validation)
-- **Status**: Critical beam center bug fixed, continuing parallel validation
+- **New issue discovered**: Large peak position discrepancy between MOSFLM and XDS conventions
+- **Total test status**: 283 passed, 24 failed, 8 skipped, 2 xfailed
+- **Status**: Investigating convention-specific geometry issues affecting peak positions
 
 Completed features:
 - CLI interface FULLY implemented (9 of 9 AT-CLI tests) ✅
