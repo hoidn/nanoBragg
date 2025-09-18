@@ -321,3 +321,26 @@ class BeamConfig:
 
     # Water background
     water_size_um: float = 0.0  # Water thickness in micrometers for background calculation (0 = no background)
+
+
+@dataclass
+class NoiseConfig:
+    """Configuration for noise generation (AT-NOISE-001).
+
+    Controls Poisson noise generation and related parameters for
+    realistic detector readout simulation.
+    """
+
+    # Random seed for noise generation
+    seed: Optional[int] = None  # If None, uses negative wall-clock time per spec
+
+    # ADC parameters
+    adc_offset: float = 40.0  # ADC offset added to all pixels
+    readout_noise: float = 3.0  # Gaussian readout noise sigma
+
+    # Detector saturation
+    overload_value: float = 65535.0  # Maximum value before saturation
+
+    # Output control
+    generate_noise_image: bool = False  # Whether to generate noisy image
+    intfile_scale: float = 1.0  # Scale factor before noise generation

@@ -186,15 +186,23 @@ None currently.
   - Supports both last-value semantics (oversample_thick=False) and accumulation (oversample_thick=True)
   - Handles tilted detectors and varies appropriately with pixel position due to parallax
 
+### AT-NOISE-001: Poisson noise generation and seeds
+- **Status**: COMPLETE ✅
+- **Implementation**: Full three-regime Poisson noise generation with seed control
+- **Test**: Created `tests/test_at_noise_001.py` with all 7 tests passing
+- **Details**:
+  - Created `src/nanobrag_torch/utils/noise.py` with `generate_poisson_noise()` function
+  - Three regimes per spec: exact Poisson (<12), rejection sampling (12-1e6), Gaussian (>1e6)
+  - Added `NoiseConfig` dataclass to `config.py` with all noise parameters
+  - Supports seed for reproducibility, ADC offset, readout noise, overload clipping
+  - Returns both noisy image and overload count
+  - LCG random number generator included for C-compatibility (future use)
+
 ## High Priority TODO 🔴
 
 None remaining - all high priority items complete!
 
 ## Medium Priority TODO 🟡
-
-### Noise (AT-NOISE-001)
-- [ ] Implement Poisson noise generation with seeds
-- [ ] Add exact/rejection/Gaussian sampling based on mean
 
 ### File I/O (AT-IO-001, AT-IO-002, AT-IO-003)
 - [ ] Implement SMV header writer with all required keys
