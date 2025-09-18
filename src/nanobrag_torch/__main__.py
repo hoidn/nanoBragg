@@ -688,11 +688,13 @@ def main():
         # Set HKL data if available
         if 'hkl_data' in config and config['hkl_data'] is not None:
             hkl_array, hkl_metadata = config['hkl_data']
-            if isinstance(hkl_array, torch.Tensor):
-                crystal.hkl_data = hkl_array.clone().detach().to(dtype=torch.float64)
-            else:
-                crystal.hkl_data = torch.tensor(hkl_array, dtype=torch.float64)
-            crystal.hkl_metadata = hkl_metadata
+            # Check if we actually got data (not just (None, None))
+            if hkl_array is not None:
+                if isinstance(hkl_array, torch.Tensor):
+                    crystal.hkl_data = hkl_array.clone().detach().to(dtype=torch.float64)
+                else:
+                    crystal.hkl_data = torch.tensor(hkl_array, dtype=torch.float64)
+                crystal.hkl_metadata = hkl_metadata
 
         # Check interpolation settings
         if 'interpolate' in config:

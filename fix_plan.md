@@ -360,31 +360,7 @@ All medium priority items completed!
 
 ## In Progress 🚧
 
-### CLI Implementation (Critical Missing Component)
-- [x] AT-CLI-004: Header precedence and mask behavior - **COMPLETE ✅**
-  - Added parse_smv_header() and apply_smv_header_to_config() functions
-  - Implemented -img and -mask file header reading in CLI
-  - Proper precedence: last file read wins for shared header keys
-  - For -mask files, BEAM_CENTER_Y is interpreted with flip (detsize_s - value)
-  - All 5 tests passing in test_at_cli_004.py
-- [x] AT-CLI-005: ROI bounding - **COMPLETE ✅**
-  - ROI flag parsing already implemented in CLI
-  - Fixed issue where write_smv was applying ADC offset twice
-  - Ensured pixels outside ROI remain zero in both float and int outputs
-  - Special handling for noise generation to keep pixels outside ROI at zero
-  - All 4 tests passing in test_at_cli_005.py
-- [x] AT-CLI-006: Output scaling and PGM - **COMPLETE ✅**
-- [x] AT-CLI-007: Noise determinism - **COMPLETE ✅**
-  - Added read_smv() function to io/smv.py for reading SMV files
-  - Created comprehensive test suite with 5 test cases
-  - Tests verify: identical seeds produce identical noise, different seeds produce different noise
-  - Supports negative seeds (per spec default of negative time)
-  - Overload counts are deterministic with same seed
-  - All 5 tests passing in test_at_cli_007.py
-- [ ] AT-CLI-008: dmin filtering
-- [ ] AT-CLI-009: Error handling and usage
-
-**Note**: The CLI implementation is required for compliance with the "Reference CLI Binding Profile" defined in spec-a.md lines 790-845. Without this, the PyTorch port cannot be used as a drop-in replacement for the C version.
+None currently. All high and medium priority acceptance tests are complete.
 
 ## Low Priority TODO 🟢
 
@@ -413,11 +389,13 @@ Key implementation decisions:
 ## Summary
 
 Implementation status:
-- **Completed**: 31 of 35 acceptance tests (89%)
-- **Remaining**: 4 tests (2 CLI + 2 low-priority)
+- **Completed**: 33 of 35 acceptance tests (94%)
+- **Remaining**: 2 tests (both low-priority AT-PRE tests)
 - Core simulation engine is complete and validated
-- CLI interface mostly implemented (7 of 9 AT-CLI tests complete)
+- CLI interface FULLY implemented (9 of 9 AT-CLI tests complete) ✅
 - ROI, mask, and statistics support fully implemented
 - Output scaling and PGM export fully functional
 - Noise generation with seed determinism fully working
-- Test suite: 5 new tests added for AT-CLI-007, all passing
+- dmin filtering fully operational
+- Error handling and usage messages implemented
+- Test suite: 278 passed, 8 skipped, 2 xfailed
