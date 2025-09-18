@@ -300,3 +300,6 @@ class BeamConfig:
     # Beam polarization and flux (simplified)
     polarization_factor: float = 1.0  # Polarization correction factor
     flux: float = 1e12  # Photons per second (simplified)
+
+    # Resolution cutoff
+    dmin: float = 0.0  # Minimum d-spacing in Angstroms (0 = no cutoff)

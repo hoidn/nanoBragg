@@ -58,6 +58,17 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - Fixed dtype consistency issues (float64 throughout)
   - Fixed gradient flow through r-factor calculations
 
+### AT-SAM-003: dmin culling
+- **Status**: COMPLETE ✅
+- **Implementation**: Added dmin culling in Simulator.run() method
+- **Test**: Created `tests/test_at_sam_003.py` with all 3 tests passing
+- **Details**:
+  - Added `dmin` field to BeamConfig (0.0 = no cutoff)
+  - Calculate stol = 0.5 * |scattering_vector| for each pixel
+  - Apply culling condition: skip pixels where stol > 0.5/dmin
+  - Mask is applied to intensity before integration over phi and mosaic domains
+  - Properly handles gradient flow for differentiability
+
 ## In Progress 🚧
 
 None currently.
@@ -136,8 +147,7 @@ None currently.
 
 ## High Priority TODO 🔴
 
-### Sampling & Normalization
-- [ ] AT-SAM-003: dmin culling
+None remaining - all high priority items complete!
 
 ## Medium Priority TODO 🟡
 

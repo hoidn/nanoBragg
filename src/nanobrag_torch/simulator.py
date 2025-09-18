@@ -49,6 +49,7 @@ class Simulator:
         self.crystal_config = (
             crystal_config if crystal_config is not None else CrystalConfig()
         )
+        self.beam_config = beam_config if beam_config is not None else BeamConfig()
         self.device = device if device is not None else torch.device("cpu")
         self.dtype = dtype
 
@@ -58,7 +59,7 @@ class Simulator:
         self.incident_beam_direction = torch.tensor(
             [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
         )
-        self.wavelength = 6.2  # Angstroms (matches debug script and C code test case)
+        self.wavelength = self.beam_config.wavelength_A  # Use beam config wavelength
 
         # Physical constants (from nanoBragg.c ~line 240)
         self.r_e_sqr = (
@@ -179,6 +180,24 @@ class Simulator:
             diffracted_beam_unit - incident_beam_unit
         ) / self.wavelength
 
+        # Apply dmin culling if specified (AT-SAM-003)
+        # Calculate stol = 0.5·|q| where q is the scattering vector
+        # Per spec: cull if dmin > 0 and stol > 0 and dmin > 0.5/stol
+        dmin_mask = None
+        if self.beam_config.dmin > 0:
+            # Calculate stol = 0.5 * |scattering_vector|
+            # Note: scattering_vector is already divided by wavelength
+            stol = 0.5 * torch.norm(scattering_vector, dim=-1)  # Shape: (S, F)
+
+            # Apply culling condition: dmin > 0.5/stol
+            # This is equivalent to: stol > 0.5/dmin
+            # Avoid division by zero in stol
+            stol_threshold = 0.5 / self.beam_config.dmin
+            dmin_mask = (stol > 0) & (stol > stol_threshold)  # Shape: (S, F)
+
+            # dmin_mask is True for pixels that should be CULLED (skipped)
+            # We'll invert it later to get pixels to keep
+
         # Get rotated lattice vectors for all phi steps and mosaic domains
         # Shape: (N_phi, N_mos, 3)
         if override_a_star is None:
@@ -233,6 +252,14 @@ class Simulator:
         # Shape: (S, F, N_phi, N_mos)
         F_total = F_cell * F_latt
         intensity = F_total * F_total  # |F|^2
+
+        # Apply dmin culling mask if specified (AT-SAM-003)
+        # Set intensity to zero for pixels that should be culled
+        if dmin_mask is not None:
+            # dmin_mask is True for pixels to cull, shape: (S, F)
+            # We need to broadcast to match intensity shape: (S, F, N_phi, N_mos)
+            keep_mask = ~dmin_mask.unsqueeze(-1).unsqueeze(-1)
+            intensity = intensity * keep_mask.to(intensity.dtype)
 
         # Integrate over phi steps and mosaic domains
         # Sum across the last two dimensions to get final 2D image
