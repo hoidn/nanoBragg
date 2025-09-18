@@ -77,8 +77,16 @@ Implementation target: Python (>=3.11) + PyTorch (float64 default). Type blocks 
   - Implementation complete: `polint`/`polin2`/`polin3` in `utils/physics.py`, `_tricubic_interpolation` in `models/crystal.py`
   - Auto-enables for crystals with any dimension ≤ 2 cells
 
-- ADR-07 Oversample_* “Last-value” Semantics
-  - When oversample_thick/polar/omega are NOT set, apply final capture/polarization/Ω once using the last computed value (loop-order dependent), matching the spec’s caveat.
+- ADR-07 Oversample_* "Last-value" Semantics
+  - When oversample_thick/polar/omega are NOT set, apply final capture/polarization/Ω once using the last computed value (loop-order dependent), matching the spec's caveat.
+
+- ADR-09 Detector Absorption Implementation [IMPLEMENTED]
+  - Absorption parameters stored in DetectorConfig: `detector_abs_um` (attenuation depth), `detector_thick_um` (thickness), `detector_thicksteps` (layers)
+  - Parallax factor ρ = d·o computed per-pixel using detector normal and observation direction
+  - Layer capture fractions: exp(−t·Δz·μ/ρ) − exp(−(t+1)·Δz·μ/ρ) where μ = 1/attenuation_depth
+  - With oversample_thick=False: multiply by last layer's capture fraction (last-value semantics)
+  - With oversample_thick=True: accumulate with per-layer capture fractions
+  - Implementation in `Simulator._apply_detector_absorption()` method
 
 ## 3) High‑Level System Architecture
 

@@ -377,6 +377,19 @@ class Simulator:
             # Apply omega directly
             normalized_intensity = normalized_intensity * omega_pixel
 
+        # Apply detector absorption if configured (AT-ABS-001)
+        if (self.detector.config.detector_thick_um is not None and
+            self.detector.config.detector_thick_um > 0 and
+            self.detector.config.detector_abs_um is not None and
+            self.detector.config.detector_abs_um > 0):
+
+            # Apply absorption calculation
+            normalized_intensity = self._apply_detector_absorption(
+                normalized_intensity,
+                pixel_coords_meters,
+                oversample_thick
+            )
+
         # Final intensity with all physical constants in meters
         # Units: [dimensionless] × [steradians] × [m²] × [photons/m²] × [dimensionless] = [photons·steradians]
         physical_intensity = (
@@ -387,3 +400,78 @@ class Simulator:
         )
 
         return physical_intensity
+
+    def _apply_detector_absorption(
+        self,
+        intensity: torch.Tensor,
+        pixel_coords_meters: torch.Tensor,
+        oversample_thick: bool
+    ) -> torch.Tensor:
+        """Apply detector absorption with layering (AT-ABS-001).
+
+        Args:
+            intensity: Input intensity tensor [S, F]
+            pixel_coords_meters: Pixel coordinates in meters [S, F, 3]
+            oversample_thick: If True, apply absorption per layer; if False, use last-value semantics
+
+        Returns:
+            Intensity with absorption applied
+
+        Implementation follows spec AT-ABS-001:
+        - Parallax factor: ρ = d·o where d is detector normal, o is observation direction
+        - Capture fraction per layer: exp(−t·Δz·μ/ρ) − exp(−(t+1)·Δz·μ/ρ)
+        - With oversample_thick=False: multiply by last layer's capture fraction
+        - With oversample_thick=True: accumulate with per-layer capture fractions
+        """
+        # Get detector parameters
+        thickness_m = self.detector.config.detector_thick_um * 1e-6  # μm to meters
+        thicksteps = self.detector.config.detector_thicksteps
+
+        # Calculate μ (absorption coefficient) from attenuation depth
+        # μ = 1 / (attenuation_depth_m)
+        attenuation_depth_m = self.detector.config.detector_abs_um * 1e-6  # μm to meters
+        mu = 1.0 / attenuation_depth_m  # m^-1
+
+        # Get detector normal vector (odet_vector)
+        detector_normal = self.detector.odet_vec  # Shape: [3]
+
+        # Calculate observation directions (normalized pixel coordinates)
+        # o = pixel_coords / |pixel_coords|
+        pixel_distances = torch.sqrt(torch.sum(pixel_coords_meters**2, dim=-1, keepdim=True))
+        observation_dirs = pixel_coords_meters / torch.clamp(pixel_distances, min=1e-10)
+
+        # Calculate parallax factor: ρ = d·o
+        # detector_normal shape: [3], observation_dirs shape: [S, F, 3]
+        # Result shape: [S, F]
+        parallax = torch.sum(detector_normal.unsqueeze(0).unsqueeze(0) * observation_dirs, dim=-1)
+        parallax = torch.abs(parallax)  # Take absolute value to ensure positive
+        parallax = torch.clamp(parallax, min=1e-10)  # Avoid division by zero
+
+        # Calculate layer thickness
+        delta_z = thickness_m / thicksteps
+
+        # Initialize result
+        if oversample_thick:
+            # Accumulate with per-layer capture fractions
+            result = torch.zeros_like(intensity)
+
+            for t in range(thicksteps):
+                # Calculate capture fraction for this layer
+                # exp(−t·Δz·μ/ρ) − exp(−(t+1)·Δz·μ/ρ)
+                exp_start = torch.exp(-t * delta_z * mu / parallax)
+                exp_end = torch.exp(-(t + 1) * delta_z * mu / parallax)
+                capture_fraction = exp_start - exp_end
+
+                # Apply to intensity and accumulate
+                result = result + intensity * capture_fraction
+
+        else:
+            # Use last-value semantics: multiply by last layer's capture fraction
+            t = thicksteps - 1  # Last layer
+            exp_start = torch.exp(-t * delta_z * mu / parallax)
+            exp_end = torch.exp(-(t + 1) * delta_z * mu / parallax)
+            capture_fraction = exp_start - exp_end
+
+            result = intensity * capture_fraction
+
+        return result

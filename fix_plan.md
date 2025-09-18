@@ -122,10 +122,21 @@ None currently.
   - Uses gradient-safe arithmetic (avoids torch.linspace) to preserve differentiability
   - Properly handles point_pixel mode (omega = 1/R^2) vs standard mode with obliquity
 
+### AT-ABS-001: Detector absorption layering
+- **Status**: COMPLETE ✅
+- **Implementation**: Full detector absorption with layering support added to Simulator
+- **Test**: Created `tests/test_at_abs_001.py` with all 5 tests passing
+- **Details**:
+  - Added `detector_abs_um`, `detector_thick_um`, and `detector_thicksteps` fields to DetectorConfig
+  - Implemented `_apply_detector_absorption()` method in Simulator class
+  - Correctly calculates parallax factor ρ = d·o for each pixel
+  - Per-layer capture fractions: exp(−t·Δz·μ/ρ) − exp(−(t+1)·Δz·μ/ρ)
+  - Supports both last-value semantics (oversample_thick=False) and accumulation (oversample_thick=True)
+  - Handles tilted detectors and varies appropriately with pixel position due to parallax
+
 ## High Priority TODO 🔴
 
 ### Sampling & Normalization
-- [ ] AT-ABS-001: Detector absorption layering
 - [ ] AT-SAM-003: dmin culling
 
 ## Medium Priority TODO 🟡

@@ -168,6 +168,11 @@ class DetectorConfig:
     curved_detector: bool = False  # If True, use spherical mapping for pixel positions
     point_pixel: bool = False  # If True, use 1/R^2 solid angle only (no obliquity)
 
+    # Detector absorption parameters (AT-ABS-001)
+    detector_abs_um: Optional[Union[float, torch.Tensor]] = None  # Attenuation depth in micrometers
+    detector_thick_um: Union[float, torch.Tensor] = 0.0  # Detector thickness in micrometers
+    detector_thicksteps: int = 1  # Number of thickness layers for absorption calculation
+
     def __post_init__(self):
         """Validate configuration and set defaults.
 
