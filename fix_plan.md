@@ -198,16 +198,47 @@ None currently.
   - Returns both noisy image and overload count
   - LCG random number generator included for C-compatibility (future use)
 
+### AT-IO-001: SMV header and data ordering
+- **Status**: COMPLETE ✅
+- **Implementation**: Full SMV format writer with all required header keys
+- **Test**: Created `tests/test_at_io_001.py` with all 5 tests passing
+- **Details**:
+  - Created `src/nanobrag_torch/io/smv.py` with `write_smv()` function
+  - Writes all required header keys per spec (HEADER_BYTES, DIM, BYTE_ORDER, TYPE, etc.)
+  - Convention-specific keys for MOSFLM, XDS, ADXV, DENZO, DIALS
+  - Header closed with "}\\f" and padded to exactly 512 bytes
+  - Data written in fast-major (row-wise) order: pixel[slow,fast] at index slow*fpixels+fast
+  - Supports multiple data types (unsigned_short, float, etc.) and byte orders
+
+### AT-IO-002: PGM writer
+- **Status**: COMPLETE ✅
+- **Implementation**: PGM format writer for preview images
+- **Test**: Created `tests/test_at_io_002.py` with all 5 tests passing
+- **Details**:
+  - Created `src/nanobrag_torch/io/pgm.py` with `write_pgm()` function
+  - P5 binary PGM format with proper header structure
+  - Comment line includes scale factor as required
+  - Pixel scaling formula: floor(min(255, float_pixel * pgm_scale))
+  - Handles torch tensors and numpy arrays
+
+### AT-IO-003: Fdump caching
+- **Status**: COMPLETE ✅
+- **Implementation**: Binary cache functionality already implemented in hkl.py
+- **Test**: Created `tests/test_at_io_003.py` with all 6 tests passing
+- **Details**:
+  - Fdump.bin written automatically when reading HKL files
+  - ASCII header with six integers followed by binary float64 data
+  - `try_load_hkl_or_fdump()` implements caching behavior matching C code
+  - Preserves default_F values for unspecified grid points
+  - Falls back to cache when HKL file not available
+
 ## High Priority TODO 🔴
 
 None remaining - all high priority items complete!
 
 ## Medium Priority TODO 🟡
 
-### File I/O (AT-IO-001, AT-IO-002, AT-IO-003)
-- [ ] Implement SMV header writer with all required keys
-- [ ] Implement PGM image writer
-- [ ] Test Fdump.bin caching behavior
+All medium priority items completed!
 
 ## Low Priority TODO 🟢
 
