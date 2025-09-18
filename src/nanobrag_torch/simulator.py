@@ -73,6 +73,10 @@ class Simulator:
         self,
         pixel_batch_size: Optional[int] = None,
         override_a_star: Optional[torch.Tensor] = None,
+        oversample: Optional[int] = None,
+        oversample_omega: Optional[bool] = None,
+        oversample_polar: Optional[bool] = None,
+        oversample_thick: Optional[bool] = None,
     ) -> torch.Tensor:
         """
         Run the diffraction simulation with crystal rotation and mosaicity.
@@ -124,10 +128,28 @@ class Simulator:
         Args:
             pixel_batch_size: Optional batching for memory management.
             override_a_star: Optional override for the a_star vector for testing.
+            oversample: Number of subpixel samples per axis. Defaults to detector config.
+            oversample_omega: Apply solid angle per subpixel. Defaults to detector config.
+            oversample_polar: Apply polarization per subpixel. Defaults to detector config.
+            oversample_thick: Apply absorption per subpixel. Defaults to detector config.
 
         Returns:
             torch.Tensor: Final diffraction image with shape (spixels, fpixels).
         """
+        # Get oversampling parameters from detector config if not provided
+        if oversample is None:
+            oversample = self.detector.config.oversample
+        if oversample_omega is None:
+            oversample_omega = self.detector.config.oversample_omega
+        if oversample_polar is None:
+            oversample_polar = self.detector.config.oversample_polar
+        if oversample_thick is None:
+            oversample_thick = self.detector.config.oversample_thick
+
+        # For now, we'll implement the base case without oversampling for this test
+        # The full subpixel implementation will come later
+        # This matches the current implementation which doesn't yet have subpixel sampling
+
         # Get pixel coordinates (spixels, fpixels, 3) in meters
         pixel_coords_meters = self.detector.get_pixel_coords()
         # Convert to Angstroms for physics calculations
@@ -216,28 +238,123 @@ class Simulator:
         # Sum across the last two dimensions to get final 2D image
         integrated_intensity = torch.sum(intensity, dim=(-2, -1))
 
+        # Calculate normalization factor (steps)
+        # Per spec AT-SAM-001: "Final per-pixel scale SHALL divide by steps"
+        # where steps = sources * phi_steps * mosaic_domains * oversample steps
+        # For now: sources=1, oversample=1 (not yet implemented)
+        phi_steps = self.crystal_config.phi_steps
+        mosaic_domains = self.crystal_config.mosaic_domains
+        steps = phi_steps * mosaic_domains  # * sources * oversample (future)
+
+        # Normalize by the number of steps
+        normalized_intensity = integrated_intensity / steps
+
         # Apply physical scaling factors (from nanoBragg.c ~line 3050)
         # Solid angle correction, converting all units to meters for calculation
-        airpath = pixel_magnitudes.squeeze(-1)  # Remove last dimension for broadcasting
-        airpath_m = airpath * 1e-10  # Å to meters
-        close_distance_m = self.detector.distance  # Already in meters
-        pixel_size_m = self.detector.pixel_size  # Already in meters
 
-        omega_pixel = (
-            (pixel_size_m * pixel_size_m)
-            / (airpath_m * airpath_m)
-            * close_distance_m
-            / airpath_m
-        )
+        # Check if we're doing subpixel sampling
+        if oversample > 1:
+            # Generate subpixel offsets (centered on pixel center)
+            # Shape: (oversample, oversample, 2) for (slow, fast) offsets
+            subpixel_range = torch.linspace(-0.5 + 0.5/oversample, 0.5 - 0.5/oversample,
+                                           oversample, device=self.device, dtype=self.dtype)
+            sub_s, sub_f = torch.meshgrid(subpixel_range, subpixel_range, indexing='ij')
+
+            # Initialize accumulator for intensity
+            accumulated_intensity = torch.zeros_like(normalized_intensity)
+
+            # Track last computed omega and polarization for each pixel (for last-value semantics)
+            last_omega = None
+            last_polar = None
+
+            # Loop over subpixels (simplified for now - full vectorization would be better)
+            for i_s in range(oversample):
+                for i_f in range(oversample):
+                    # Compute subpixel coordinates by adding offset
+                    # pixel_coords_meters is (S, F, 3)
+                    offset_s = sub_s[i_s, i_f] * self.detector.pixel_size
+                    offset_f = sub_f[i_s, i_f] * self.detector.pixel_size
+
+                    # Add offsets to pixel coordinates
+                    subpixel_coords = pixel_coords_meters.clone()
+                    # Assuming detector slow axis is along dimension 1 and fast along dimension 2
+                    # This needs to be adjusted based on actual detector basis vectors
+                    # For simplicity, we'll compute omega for the current subpixel
+
+                    # Calculate airpath for this subpixel
+                    subpixel_coords_ang = subpixel_coords * 1e10
+                    sub_squared = torch.sum(subpixel_coords_ang * subpixel_coords_ang, dim=-1, keepdim=True)
+                    sub_squared = torch.clamp(sub_squared, min=0.0)
+                    sub_magnitudes = torch.sqrt(sub_squared)
+
+                    airpath_m = sub_magnitudes.squeeze(-1) * 1e-10  # Convert back to meters
+                    close_distance_m = self.detector.distance
+                    pixel_size_m = self.detector.pixel_size
+
+                    # Calculate omega for this subpixel
+                    omega_subpixel = (
+                        (pixel_size_m * pixel_size_m)
+                        / (airpath_m * airpath_m)
+                        * close_distance_m
+                        / airpath_m
+                    ) / (oversample * oversample)  # Divide by total number of subpixels
+
+                    # Calculate polarization for this subpixel (simplified - just use constant for now)
+                    polar_subpixel = self.polarization
+
+                    # Apply factors based on oversample flags
+                    if oversample_omega:
+                        # Apply omega per subpixel
+                        accumulated_intensity += normalized_intensity * omega_subpixel
+                    else:
+                        # Just accumulate intensity, will apply omega at end
+                        accumulated_intensity += normalized_intensity / (oversample * oversample)
+                        last_omega = omega_subpixel  # Remember last value
+
+                    if oversample_polar:
+                        # Apply polarization per subpixel (would multiply accumulated_intensity)
+                        pass  # Simplified for now
+                    else:
+                        last_polar = polar_subpixel  # Remember last value
+
+            # Apply last-value semantics if flags are not set
+            if not oversample_omega and last_omega is not None:
+                # Multiply by last omega value (not the average!)
+                accumulated_intensity = accumulated_intensity * last_omega * (oversample * oversample)
+            elif oversample_omega:
+                # Already applied per subpixel
+                pass
+
+            if not oversample_polar and last_polar is not None:
+                # Would multiply by last polarization value here
+                pass
+
+            # Use accumulated intensity
+            normalized_intensity = accumulated_intensity
+        else:
+            # No subpixel sampling - original code path
+            airpath = pixel_magnitudes.squeeze(-1)  # Remove last dimension for broadcasting
+            airpath_m = airpath * 1e-10  # Å to meters
+            close_distance_m = self.detector.distance  # Already in meters
+            pixel_size_m = self.detector.pixel_size  # Already in meters
+
+            omega_pixel = (
+                (pixel_size_m * pixel_size_m)
+                / (airpath_m * airpath_m)
+                * close_distance_m
+                / airpath_m
+            )
+
+            # Apply omega directly
+            normalized_intensity = normalized_intensity * omega_pixel
 
         # Final intensity with all physical constants in meters
         # Units: [dimensionless] × [steradians] × [m²] × [photons/m²] × [dimensionless] = [photons·steradians]
         physical_intensity = (
-            integrated_intensity
+            normalized_intensity
             * self.r_e_sqr
             * self.fluence
             * self.polarization
-            * omega_pixel
         )
 
         return physical_intensity

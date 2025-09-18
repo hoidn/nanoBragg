@@ -120,6 +120,15 @@ class Detector:
         )
         self._cached_pix0_vector = self.pix0_vector.clone()
 
+        # Initialize attributes used by pyrefly only if not already set
+        # These will be set properly in _calculate_pix0_vector
+        if not hasattr(self, 'distance_corrected'):
+            self.distance_corrected: Optional[torch.Tensor] = None
+        if not hasattr(self, 'r_factor'):
+            self.r_factor: Optional[torch.Tensor] = None
+        if not hasattr(self, 'pix0_vector'):
+            self.pix0_vector: Optional[torch.Tensor] = None
+
     def _is_default_config(self) -> bool:
         """Check if using default config (for backward compatibility)."""
         from ..config import DetectorConvention
@@ -645,47 +654,72 @@ class Detector:
         f_indices = torch.arange(self.fpixels, device=self.device, dtype=self.dtype)
         s_grid, f_grid = torch.meshgrid(s_indices, f_indices, indexing="ij")
 
-        # Calculate Sdet and Fdet exactly as in planar detector
-        # These are the coordinates in the detector plane
+        # Calculate Sdet and Fdet in the detector plane
+        # Per spec, these are relative to pix0_vector (the detector origin)
         Sdet = s_grid * self.pixel_size  # meters
         Fdet = f_grid * self.pixel_size  # meters
 
-        # Compute rotation angles
-        # Per spec: "rotate about s by Sdet/distance and about f by Fdet/distance"
-        s_angles = Sdet / self.distance
-        f_angles = Fdet / self.distance
+        # For curved detector, we need to map each (Fdet, Sdet) point to a sphere
+        # The idea is that each pixel is at the same distance from the sample,
+        # but at different angular positions
 
-        # Start all pixels at distance along beam direction
-        # Note: -beam_vector points from sample toward detector
-        initial_direction = -self.beam_vector
+        # The beam direction points from sample toward source
+        # So -beam_vector points from sample toward detector
+        beam_dir = -self.beam_vector
 
-        # For small angles, we can use the approximation:
-        # Rotation of vector v about axis a by angle θ ≈ v + θ * (a × v)
-        # For two successive rotations (small angles):
-        # First rotate about s by s_angle, then about f by f_angle
+        # Compute the angular offsets for each pixel
+        # These are based on the detector plane coordinates
+        # We use the small angle approximation: tan(θ) ≈ θ for small θ
+
+        # The detector plane is initially perpendicular to the beam
+        # In the detector plane, we have coordinates (Fdet, Sdet)
+        # We need to find the angles to rotate from the beam direction
+
+        # For a planar detector, a pixel at (Fdet, Sdet) would be at:
+        # P_planar = pix0_vector + Fdet * fdet_vec + Sdet * sdet_vec
+
+        # For a curved detector, we want all pixels at distance R from origin
+        # We achieve this by rotating the beam direction by small angles
+
+        # The angle to rotate about the s-axis (affects f-coordinate)
+        # tan(angle_s) = Fdet / distance, for small angles: angle_s ≈ Fdet / distance
+        angle_about_s = Fdet / self.distance
+
+        # The angle to rotate about the f-axis (affects s-coordinate)
+        # tan(angle_f) = Sdet / distance, for small angles: angle_f ≈ Sdet / distance
+        angle_about_f = Sdet / self.distance
+
+        # Apply rotations using Rodriguez formula for small angles
+        # For small angles, rotate(v, axis, θ) ≈ v + θ * (axis × v)
+
+        # Rotation about s-axis by angle_about_s
+        # s × beam_dir gives a vector in the f-o plane
+        cross_s_beam = torch.cross(self.sdet_vec, beam_dir, dim=0)
+
+        # Rotation about f-axis by angle_about_f
+        # f × beam_dir gives a vector in the s-o plane
+        cross_f_beam = torch.cross(self.fdet_vec, beam_dir, dim=0)
 
         # Expand for broadcasting
-        initial_expanded = initial_direction.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
-        sdet_expanded = self.sdet_vec.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
-        fdet_expanded = self.fdet_vec.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
+        beam_expanded = beam_dir.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
+        cross_s_expanded = cross_s_beam.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
+        cross_f_expanded = cross_f_beam.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
 
-        # Apply small angle approximation for the rotations
-        # The direction after rotation is approximately:
-        # d ≈ initial + s_angle * (s × initial) + f_angle * (f × initial)
-        # But since s and f are perpendicular to initial (beam), this simplifies
-
-        # For small angles and perpendicular axes, we can approximate as:
+        # Apply both rotations (small angle approximation)
+        # The rotated direction vector
         direction = (
-            initial_expanded
-            + s_angles.unsqueeze(-1) * fdet_expanded  # s rotation affects f component
-            + f_angles.unsqueeze(-1) * sdet_expanded  # f rotation affects s component
+            beam_expanded
+            + angle_about_s.unsqueeze(-1) * cross_s_expanded  # Rotation about s
+            + angle_about_f.unsqueeze(-1) * cross_f_expanded  # Rotation about f
         )
 
-        # Normalize to maintain constant distance
+        # Normalize to get unit direction vector
         direction_norm = torch.norm(direction, dim=-1, keepdim=True)
         direction_normalized = direction / direction_norm
 
-        # Scale to the correct distance
+        # Each pixel is at distance from the sample
+        # Note: We don't add pix0_vector here because for curved detector,
+        # pixels are positioned on a sphere centered at the sample
         pixel_coords = self.distance * direction_normalized
 
         return pixel_coords
@@ -853,7 +887,7 @@ class Detector:
             'max_error': max_error.item() if isinstance(max_error, torch.Tensor) else max_error,
         }
 
-        return is_preserved, details
+        return bool(is_preserved), details
 
     def _calculate_basis_vectors(
         self,

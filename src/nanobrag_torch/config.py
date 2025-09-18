@@ -160,6 +160,9 @@ class DetectorConfig:
 
     # Sampling
     oversample: int = 1
+    oversample_omega: bool = False  # If True, apply solid angle per subpixel (not last-value)
+    oversample_polar: bool = False  # If True, apply polarization per subpixel (not last-value)
+    oversample_thick: bool = False  # If True, apply absorption per subpixel (not last-value)
 
     # Detector geometry mode
     curved_detector: bool = False  # If True, use spherical mapping for pixel positions

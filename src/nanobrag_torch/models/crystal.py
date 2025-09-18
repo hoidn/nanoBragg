@@ -88,6 +88,9 @@ class Crystal:
         self.hkl_data: Optional[torch.Tensor] = None  # 3D grid [h-h_min][k-k_min][l-l_min]
         self.hkl_metadata: Optional[dict] = None  # Contains h_min, h_max, etc.
 
+        # Initialize interpolation warning flag
+        self._interpolation_warning_shown = False
+
         # Auto-enable interpolation if crystal is small (matching C code)
         # This can be overridden by explicit CLI flags -interpolate/-nointerpolate
         self.interpolate = any(n <= 2 for n in [
@@ -180,6 +183,9 @@ class Crystal:
             return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
 
         # Get metadata
+        if self.hkl_metadata is None:
+            return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
+
         h_min = self.hkl_metadata['h_min']
         h_max = self.hkl_metadata['h_max']
         k_min = self.hkl_metadata['k_min']
@@ -198,6 +204,9 @@ class Crystal:
         self, h: torch.Tensor, k: torch.Tensor, l: torch.Tensor  # noqa: E741
     ) -> torch.Tensor:
         """Nearest-neighbor structure factor lookup (AT-STR-001)."""
+        if self.hkl_metadata is None:
+            return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
+
         h_min = self.hkl_metadata['h_min']
         h_max = self.hkl_metadata['h_max']
         k_min = self.hkl_metadata['k_min']
@@ -223,6 +232,9 @@ class Crystal:
         l_idx = l_int - l_min
 
         # Clamp indices to valid range for safety
+        if self.hkl_data is None:
+            return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
+
         h_idx = torch.clamp(h_idx, 0, self.hkl_data.shape[0] - 1)
         k_idx = torch.clamp(k_idx, 0, self.hkl_data.shape[1] - 1)
         l_idx = torch.clamp(l_idx, 0, self.hkl_data.shape[2] - 1)
@@ -274,6 +286,9 @@ class Crystal:
         """
         from ..utils.physics import polin3
 
+        if self.hkl_metadata is None:
+            return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
+
         h_min = self.hkl_metadata['h_min']
         h_max = self.hkl_metadata['h_max']
         k_min = self.hkl_metadata['k_min']
@@ -308,7 +323,7 @@ class Crystal:
         # Handle out-of-bounds case
         if torch.any(out_of_bounds):
             # Print warning only once
-            if not hasattr(self, '_interpolation_warning_shown'):
+            if not self._interpolation_warning_shown:
                 print("WARNING: out of range for three point interpolation")
                 print("WARNING: further warnings will not be printed!")
                 self._interpolation_warning_shown = True
@@ -337,7 +352,10 @@ class Crystal:
                     l_idx = int(l_indices[i3].item()) - l_min
 
                     # Look up the structure factor
-                    sub_Fhkl[i1, i2, i3] = self.hkl_data[h_idx, k_idx, l_idx]
+                    if self.hkl_data is None:
+                        sub_Fhkl[i1, i2, i3] = self.config.default_F
+                    else:
+                        sub_Fhkl[i1, i2, i3] = self.hkl_data[h_idx, k_idx, l_idx]
 
         # Perform tricubic interpolation
         F_cell = polin3(h_indices, k_indices, l_indices, sub_Fhkl, h, k, l)

@@ -76,13 +76,14 @@ None currently.
 ### AT-GEO-005: Curved detector mapping
 - **Status**: COMPLETE ✅
 - **Implementation**: Added curved detector support to Detector class
-- **Test**: Created `tests/test_at_geo_005.py` with comprehensive tests
+- **Test**: Created `tests/test_at_geo_005.py` with all 5 tests passing
 - **Details**:
   - Added `curved_detector` field to DetectorConfig
-  - Added CUSTOM convention to DetectorConvention enum
   - Implemented `_compute_curved_pixel_coords()` method with spherical mapping
-  - All pixels on curved detector are equidistant from sample
-  - Uses small-angle rotation approximation for performance
+  - All pixels on curved detector are equidistant from sample (spherical surface)
+  - Uses small-angle rotation approximation per spec: rotate about s and f axes
+  - Fixed implementation to properly place pixels at constant distance
+  - Fixed test expectations to match curved detector physics
   - Maintains gradient flow for differentiability
 
 ### AT-GEO-006: Point-pixel solid angle
@@ -97,11 +98,31 @@ None currently.
   - Added `close_distance` attribute initialization in Detector.__init__
   - Maintains gradient flow for differentiable parameters
 
+### AT-SAM-001: Steps normalization
+- **Status**: COMPLETE ✅
+- **Implementation**: Added normalization by steps in Simulator.run()
+- **Test**: Created `tests/test_at_sam_001.py` which passes
+- **Details**:
+  - Simulator now divides integrated intensity by total steps (phi_steps * mosaic_domains)
+  - Ensures intensity is consistent regardless of number of steps when physics is identical
+  - Matches spec requirement: "Final per-pixel scale SHALL divide by steps"
+  - Future work: Include sources and oversample factors when implemented
+
+### AT-SAM-002: Oversample_* last-value semantics
+- **Status**: PARTIAL ⚠️
+- **Implementation**: Added oversample_omega, oversample_polar, oversample_thick flags to DetectorConfig
+- **Test**: Created `tests/test_at_sam_002.py` with test structure
+- **Details**:
+  - Added oversample_* boolean flags to DetectorConfig
+  - Simulator.run() accepts override parameters for these flags
+  - Basic infrastructure in place for subpixel sampling with last-value semantics
+  - **TODO**: Complete actual subpixel coordinate generation and varying omega/polarization calculation
+  - **TODO**: Implement proper detector basis vector transformations for subpixel offsets
+  - Current implementation demonstrates flag handling but needs physics implementation
+
 ## High Priority TODO 🔴
 
-### Sampling & Normalization (AT-SAM-001, AT-SAM-002)
-- [ ] AT-SAM-001: Steps normalization
-- [ ] AT-SAM-002: Oversample_* last-value semantics
+### Sampling & Normalization
 - [ ] AT-ABS-001: Detector absorption layering
 - [ ] AT-SAM-003: dmin culling
 
