@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent / 'scripts'))
 
 from nanobrag_torch.models.detector import Detector
 from nanobrag_torch.config import DetectorConfig, DetectorPivot
-from c_reference_runner import run_c_reference, DetectorConfig as CDetectorConfig
+from scripts.c_reference_runner import run_c_reference, DetectorConfig as CDetectorConfig
 
 def test_distance_scaling_hypothesis():
     """Test if error scales with detector distance (H1: Different Rotation Centers)"""

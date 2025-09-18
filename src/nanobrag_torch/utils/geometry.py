@@ -252,3 +252,69 @@ def angles_to_rotation_matrix(
     R = torch.matmul(torch.matmul(Rz, Ry), Rx)
 
     return R
+
+
+def rotate_around_axis(v: torch.Tensor, axis: torch.Tensor, angle: torch.Tensor) -> torch.Tensor:
+    """
+    Rotate vectors around an arbitrary axis (alias for rotate_axis).
+
+    Args:
+        v: Vectors to rotate with shape (..., 3)
+        axis: Unit vectors defining rotation axes with shape (..., 3)
+        angle: Rotation angles in radians
+
+    Returns:
+        torch.Tensor: Rotated vectors with shape (..., 3)
+    """
+    return rotate_axis(v, axis, angle)
+
+
+def rotate_around_x(v: torch.Tensor, angle: torch.Tensor) -> torch.Tensor:
+    """
+    Rotate vectors around the X axis.
+
+    Args:
+        v: Vectors to rotate with shape (..., 3)
+        angle: Rotation angle in radians
+
+    Returns:
+        torch.Tensor: Rotated vectors with shape (..., 3)
+    """
+    device = v.device
+    dtype = v.dtype
+    x_axis = torch.tensor([1.0, 0.0, 0.0], device=device, dtype=dtype)
+    return rotate_axis(v, x_axis, angle)
+
+
+def rotate_around_y(v: torch.Tensor, angle: torch.Tensor) -> torch.Tensor:
+    """
+    Rotate vectors around the Y axis.
+
+    Args:
+        v: Vectors to rotate with shape (..., 3)
+        angle: Rotation angle in radians
+
+    Returns:
+        torch.Tensor: Rotated vectors with shape (..., 3)
+    """
+    device = v.device
+    dtype = v.dtype
+    y_axis = torch.tensor([0.0, 1.0, 0.0], device=device, dtype=dtype)
+    return rotate_axis(v, y_axis, angle)
+
+
+def rotate_around_z(v: torch.Tensor, angle: torch.Tensor) -> torch.Tensor:
+    """
+    Rotate vectors around the Z axis.
+
+    Args:
+        v: Vectors to rotate with shape (..., 3)
+        angle: Rotation angle in radians
+
+    Returns:
+        torch.Tensor: Rotated vectors with shape (..., 3)
+    """
+    device = v.device
+    dtype = v.dtype
+    z_axis = torch.tensor([0.0, 0.0, 1.0], device=device, dtype=dtype)
+    return rotate_axis(v, z_axis, angle)

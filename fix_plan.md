@@ -255,10 +255,19 @@ All medium priority items completed!
   - Proper normalization by number of sources
   - This is deferred as it requires restructuring the entire simulation loop
 
-## Low Priority TODO 🟢
+### AT-SRC-002: Auto-selection of count/range/step
+- **Status**: COMPLETE ✅
+- **Implementation**: Auto-selection logic added to `src/nanobrag_torch/utils/auto_selection.py`
+- **Test**: Created `tests/test_at_src_002.py` with all 12 tests passing
+- **Details**:
+  - Implements complete auto-selection rules from spec section "Auto-selection rules"
+  - Handles all cases: no parameters, only step, only range, only count
+  - Default ranges: 1.0 rad for angles, 0.5e-6 m for thickness
+  - Properly coerces count to ≥2 for nonzero ranges
+  - Separate functions for divergence, dispersion, and thickness auto-selection
+  - Full test coverage of all spec-defined behaviors
 
-### Sources, Divergence & Dispersion (AT-SRC-002)
-- [ ] Add auto-selection logic for count/range/step
+## Low Priority TODO 🟢
 
 ### Advanced Features
 - [ ] AT-FLU-001: Fluence calculation and sample clipping

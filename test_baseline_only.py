@@ -21,7 +21,6 @@ from nanobrag_torch.config import (
     BeamConfig,
     DetectorConvention,
     DetectorPivot,
-    SimulatorConfig,
 )
 
 def main():
@@ -59,14 +58,7 @@ def main():
     )
     
     beam_config = BeamConfig(wavelength_angstrom=torch.tensor(6.2))
-    
-    simulator_config = SimulatorConfig(
-        crystal_size_cells=5,
-        phi_deg=torch.tensor(0.0),
-        phi_steps=1,
-        random_seed=12345,
-    )
-    
+
     print(f"Configuration:")
     print(f"  Crystal: {crystal_config.cell_a}Å cubic cell")
     print(f"  Detector distance: {detector_config.distance_mm} mm")
@@ -74,13 +66,12 @@ def main():
     print(f"  Rotations: ALL ZERO")
     print(f"  Convention: {detector_config.detector_convention}")
     print(f"  Pivot: {detector_config.detector_pivot}")
-    
+
     # Create and run simulation
     simulator = Simulator(
         crystal_config=crystal_config,
         detector_config=detector_config,
         beam_config=beam_config,
-        simulator_config=simulator_config,
     )
     
     print(f"\nRunning simulation...")
