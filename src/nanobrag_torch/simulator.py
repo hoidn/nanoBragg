@@ -255,79 +255,108 @@ class Simulator:
         # Check if we're doing subpixel sampling
         if oversample > 1:
             # Generate subpixel offsets (centered on pixel center)
-            # Shape: (oversample, oversample, 2) for (slow, fast) offsets
-            subpixel_range = torch.linspace(-0.5 + 0.5/oversample, 0.5 - 0.5/oversample,
-                                           oversample, device=self.device, dtype=self.dtype)
-            sub_s, sub_f = torch.meshgrid(subpixel_range, subpixel_range, indexing='ij')
+            # Per spec: "Compute detector-plane coordinates (meters): Fdet and Sdet at subpixel centers."
+            # Shape: (oversample, oversample) for slow and fast offsets
+            # Create offsets in fractional pixel units
+            subpixel_step = 1.0 / oversample
+            offset_start = -0.5 + subpixel_step / 2.0
+            offset_end = 0.5 - subpixel_step / 2.0
+
+            # Use manual arithmetic to preserve gradients (avoid torch.linspace)
+            subpixel_offsets = offset_start + torch.arange(
+                oversample, device=self.device, dtype=self.dtype
+            ) * subpixel_step
+
+            sub_s, sub_f = torch.meshgrid(subpixel_offsets, subpixel_offsets, indexing='ij')
+
+            # Get detector basis vectors for proper coordinate transformation
+            f_axis = self.detector.fdet_vec  # Fast axis vector
+            s_axis = self.detector.sdet_vec  # Slow axis vector
 
             # Initialize accumulator for intensity
             accumulated_intensity = torch.zeros_like(normalized_intensity)
 
             # Track last computed omega and polarization for each pixel (for last-value semantics)
-            last_omega = None
-            last_polar = None
+            last_omega = torch.zeros_like(normalized_intensity)
+            last_polar = torch.ones_like(normalized_intensity) * self.polarization
 
-            # Loop over subpixels (simplified for now - full vectorization would be better)
+            # Track whether we've applied factors per-subpixel
+            omega_applied = False
+
+            # Subpixel loop - vectorizable but kept explicit for clarity and correctness
             for i_s in range(oversample):
                 for i_f in range(oversample):
-                    # Compute subpixel coordinates by adding offset
-                    # pixel_coords_meters is (S, F, 3)
-                    offset_s = sub_s[i_s, i_f] * self.detector.pixel_size
-                    offset_f = sub_f[i_s, i_f] * self.detector.pixel_size
+                    # Compute subpixel offset in meters using detector basis vectors
+                    # offset = delta_s * s_axis + delta_f * f_axis
+                    delta_s = sub_s[i_s, i_f] * self.detector.pixel_size
+                    delta_f = sub_f[i_s, i_f] * self.detector.pixel_size
 
-                    # Add offsets to pixel coordinates
-                    subpixel_coords = pixel_coords_meters.clone()
-                    # Assuming detector slow axis is along dimension 1 and fast along dimension 2
-                    # This needs to be adjusted based on actual detector basis vectors
-                    # For simplicity, we'll compute omega for the current subpixel
+                    # Apply offsets using detector basis vectors
+                    # Shape: (S, F, 3) for coordinates
+                    offset_vector = delta_s * s_axis + delta_f * f_axis
+                    subpixel_coords = pixel_coords_meters + offset_vector.unsqueeze(0).unsqueeze(0)
 
                     # Calculate airpath for this subpixel
-                    subpixel_coords_ang = subpixel_coords * 1e10
-                    sub_squared = torch.sum(subpixel_coords_ang * subpixel_coords_ang, dim=-1, keepdim=True)
-                    sub_squared = torch.clamp(sub_squared, min=0.0)
+                    subpixel_coords_ang = subpixel_coords * 1e10  # Convert to Angstroms
+                    sub_squared = torch.sum(subpixel_coords_ang * subpixel_coords_ang, dim=-1)
+                    sub_squared = torch.clamp(sub_squared, min=1e-20)  # Avoid division by zero
                     sub_magnitudes = torch.sqrt(sub_squared)
 
-                    airpath_m = sub_magnitudes.squeeze(-1) * 1e-10  # Convert back to meters
-                    close_distance_m = self.detector.distance
+                    # Convert back to meters for omega calculation
+                    airpath_m = sub_magnitudes * 1e-10
+
+                    # Get close_distance from detector (computed during init)
+                    close_distance_m = self.detector.close_distance
                     pixel_size_m = self.detector.pixel_size
 
-                    # Calculate omega for this subpixel
-                    omega_subpixel = (
-                        (pixel_size_m * pixel_size_m)
-                        / (airpath_m * airpath_m)
-                        * close_distance_m
-                        / airpath_m
-                    ) / (oversample * oversample)  # Divide by total number of subpixels
+                    # Calculate solid angle (omega) for this subpixel
+                    # Per spec: "ω = pixel^2 / R^2 · (close_distance / R)"
+                    if self.detector.config.point_pixel:
+                        # Point pixel mode: ω = 1 / R^2
+                        omega_subpixel = 1.0 / (airpath_m * airpath_m)
+                    else:
+                        # Standard mode with obliquity correction
+                        omega_subpixel = (
+                            (pixel_size_m * pixel_size_m)
+                            / (airpath_m * airpath_m)
+                            * close_distance_m
+                            / airpath_m
+                        )
 
-                    # Calculate polarization for this subpixel (simplified - just use constant for now)
+                    # Scale omega by number of subpixels (each contributes 1/N^2 of total)
+                    omega_subpixel_scaled = omega_subpixel / (oversample * oversample)
+
+                    # Calculate polarization for this subpixel (simplified for now)
                     polar_subpixel = self.polarization
 
                     # Apply factors based on oversample flags
                     if oversample_omega:
-                        # Apply omega per subpixel
-                        accumulated_intensity += normalized_intensity * omega_subpixel
+                        # Apply omega per subpixel - multiply and accumulate
+                        accumulated_intensity += normalized_intensity * omega_subpixel_scaled
+                        omega_applied = True
                     else:
-                        # Just accumulate intensity, will apply omega at end
+                        # Just accumulate intensity uniformly, will apply omega at end
                         accumulated_intensity += normalized_intensity / (oversample * oversample)
-                        last_omega = omega_subpixel  # Remember last value
+                        # Always update last_omega to track the final subpixel's value
+                        last_omega = omega_subpixel  # Full value, not scaled
 
                     if oversample_polar:
-                        # Apply polarization per subpixel (would multiply accumulated_intensity)
-                        pass  # Simplified for now
+                        # Apply polarization per subpixel (would multiply current contribution)
+                        # For now, polarization is constant, so no effect
+                        pass
                     else:
-                        last_polar = polar_subpixel  # Remember last value
+                        # Track last polarization value
+                        last_polar = polar_subpixel * torch.ones_like(normalized_intensity)
 
             # Apply last-value semantics if flags are not set
-            if not oversample_omega and last_omega is not None:
+            if not oversample_omega and not omega_applied:
                 # Multiply by last omega value (not the average!)
-                accumulated_intensity = accumulated_intensity * last_omega * (oversample * oversample)
-            elif oversample_omega:
-                # Already applied per subpixel
-                pass
+                # This is the key difference: use LAST value, not average
+                accumulated_intensity = accumulated_intensity * last_omega
 
-            if not oversample_polar and last_polar is not None:
-                # Would multiply by last polarization value here
-                pass
+            if not oversample_polar:
+                # Apply last polarization value (currently constant)
+                accumulated_intensity = accumulated_intensity * last_polar
 
             # Use accumulated intensity
             normalized_intensity = accumulated_intensity

@@ -28,7 +28,6 @@ class TestAT_SAM_002_OversampleLastValue:
         self.dtype = torch.float64
         self.device = torch.device("cpu")
 
-    @pytest.mark.xfail(reason="Subpixel coordinate implementation incomplete - infrastructure in place")
     def test_oversample_omega_last_value_semantics(self):
         """Test that omega uses last-value (not average) when oversample_omega=False."""
         # Create a small detector with an off-center pixel to ensure omega varies

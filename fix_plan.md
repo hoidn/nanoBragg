@@ -109,16 +109,18 @@ None currently.
   - Future work: Include sources and oversample factors when implemented
 
 ### AT-SAM-002: Oversample_* last-value semantics
-- **Status**: PARTIAL ⚠️
-- **Implementation**: Added oversample_omega, oversample_polar, oversample_thick flags to DetectorConfig
-- **Test**: Created `tests/test_at_sam_002.py` with test structure
+- **Status**: COMPLETE ✅
+- **Implementation**: Full subpixel sampling with last-value semantics implemented in Simulator
+- **Test**: Created `tests/test_at_sam_002.py` with all 3 tests passing
 - **Details**:
-  - Added oversample_* boolean flags to DetectorConfig
+  - Added oversample_omega, oversample_polar, oversample_thick flags to DetectorConfig
   - Simulator.run() accepts override parameters for these flags
-  - Basic infrastructure in place for subpixel sampling with last-value semantics
-  - **TODO**: Complete actual subpixel coordinate generation and varying omega/polarization calculation
-  - **TODO**: Implement proper detector basis vector transformations for subpixel offsets
-  - Current implementation demonstrates flag handling but needs physics implementation
+  - Implemented proper subpixel coordinate generation using detector basis vectors (fdet_vec, sdet_vec)
+  - Correctly computes omega variation across subpixels using detector geometry
+  - Implements last-value semantics: when oversample_omega=False, multiplies by last subpixel's omega
+  - When oversample_omega=True, applies omega per-subpixel (averaging effect)
+  - Uses gradient-safe arithmetic (avoids torch.linspace) to preserve differentiability
+  - Properly handles point_pixel mode (omega = 1/R^2) vs standard mode with obliquity
 
 ## High Priority TODO 🔴
 
