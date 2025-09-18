@@ -299,7 +299,7 @@ class DetectorConfig:
 class BeamConfig:
     """Configuration for X-ray beam properties.
 
-    Simplified implementation for detector geometry testing.
+    Supports multiple sources for beam divergence and spectral dispersion (AT-SRC-001).
     """
 
     # Basic beam properties
@@ -309,6 +309,11 @@ class BeamConfig:
     N_source_points: int = 1  # Number of source points for beam divergence
     source_distance_mm: float = 10000.0  # Distance from source to sample (mm)
     source_size_mm: float = 0.0  # Source size (0 = point source)
+
+    # Multiple sources support (AT-SRC-001)
+    source_directions: Optional[torch.Tensor] = None  # (N, 3) unit direction vectors from sample to sources
+    source_weights: Optional[torch.Tensor] = None  # (N,) source weights (ignored per spec, all equal)
+    source_wavelengths: Optional[torch.Tensor] = None  # (N,) wavelengths in meters for each source
 
     # Beam polarization and flux (simplified)
     polarization_factor: float = 1.0  # Kahn polarization factor K in [0,1] (1.0 = unpolarized)

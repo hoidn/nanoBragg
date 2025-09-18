@@ -240,12 +240,25 @@ None remaining - all high priority items complete!
 
 All medium priority items completed!
 
+### AT-SRC-001: Sourcefile parsing (Partial)
+- **Status**: PARTIAL COMPLETE ⚠️
+- **Implementation**: Source file parser completed in `src/nanobrag_torch/io/source.py`
+- **Test**: Created `tests/test_at_src_001.py` with parsing tests
+- **Details**:
+  - Fully functional source file reader that parses X,Y,Z position, weight, and wavelength
+  - Correctly handles missing columns with proper defaults per spec
+  - Normalizes positions to unit direction vectors
+  - Weights are read but ignored (equal weighting per spec)
+  - BeamConfig updated to support multiple sources
+- **TODO**: Full integration with Simulator.run() requires significant refactoring
+  - Need to move intensity calculations inside source loop
+  - Proper normalization by number of sources
+  - This is deferred as it requires restructuring the entire simulation loop
+
 ## Low Priority TODO 🟢
 
-### Sources, Divergence & Dispersion (AT-SRC-001, AT-SRC-002)
-- [ ] Implement sourcefile reader
+### Sources, Divergence & Dispersion (AT-SRC-002)
 - [ ] Add auto-selection logic for count/range/step
-- [ ] Support multiple sources with weights and wavelengths
 
 ### Advanced Features
 - [ ] AT-FLU-001: Fluence calculation and sample clipping
