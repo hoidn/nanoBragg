@@ -88,7 +88,7 @@ class TestAT_IO_001:
                 assert header_dict["DIM"] == "2"
                 assert header_dict["SIZE1"] == "128"  # Fast axis
                 assert header_dict["SIZE2"] == "128"  # Slow axis
-                assert header_dict["PIXEL_SIZE"] == "0.100000"
+                assert float(header_dict["PIXEL_SIZE"]) == 0.1
                 assert float(header_dict["DISTANCE"]) == 100.0
                 assert float(header_dict["WAVELENGTH"]) == 1.54
 

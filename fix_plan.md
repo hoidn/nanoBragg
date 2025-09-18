@@ -323,11 +323,32 @@ All medium priority items completed!
   - Includes all conventions (MOSFLM, XDS, ADXV, DENZO, DIALS)
   - Exit code 0 on help display
 
+### AT-CLI-002: Minimal render and headers
+- **Status**: COMPLETE ✅
+- **Implementation**: Full CLI execution with simulation and file output
+- **Test**: Created `tests/test_at_cli_002.py` with all 4 tests passing
+- **Details**:
+  - CLI correctly runs simulation with minimal parameters
+  - Writes both float (.bin) and SMV (.img) output files
+  - SMV headers include all required keys per AT-IO-001
+  - Data ordering is fast-major (row-wise) as specified
+  - Fixed issues with argument parsing, write_smv signature, and header size limits
+
+### AT-CLI-003: Conventions and pivot behavior
+- **Status**: COMPLETE ✅
+- **Implementation**: Convention-based default pivot selection added to CLI
+- **Test**: Created `tests/test_at_cli_003.py` with all 5 tests passing
+- **Details**:
+  - MOSFLM, DENZO, ADXV conventions default to BEAM pivot
+  - XDS, DIALS conventions default to SAMPLE pivot
+  - -distance flag forces BEAM pivot, -close_distance forces SAMPLE pivot
+  - -Xbeam/-Ybeam force BEAM pivot, -Xclose/-Yclose/-ORGX/-ORGY force SAMPLE pivot
+  - Explicit -pivot flag overrides all other settings
+  - SMV headers correctly reflect convention-specific mappings (MOSFLM_CENTER, XDS_ORGX/Y, etc.)
+
 ## In Progress 🚧
 
 ### CLI Implementation (Critical Missing Component)
-- [ ] AT-CLI-002: Minimal render and headers
-- [ ] AT-CLI-003: Conventions and pivot behavior
 - [ ] AT-CLI-004: Header precedence and mask behavior
 - [ ] AT-CLI-005: ROI bounding
 - [ ] AT-CLI-006: Output scaling and PGM
@@ -364,8 +385,8 @@ Key implementation decisions:
 ## Summary
 
 Implementation status:
-- **Completed**: 24 of 35 acceptance tests (69%)
-- **Remaining**: 11 tests (9 CLI + 2 low-priority)
+- **Completed**: 27 of 35 acceptance tests (77%)
+- **Remaining**: 8 tests (6 CLI + 2 low-priority)
 - Core simulation engine is complete and validated
 - **Critical gap**: No CLI interface implemented
 - ROI, mask, and statistics support fully implemented

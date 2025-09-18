@@ -358,9 +358,9 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     config['hkl_data'] = None
     config['default_F'] = args.default_F
     if args.hkl:
-        config['hkl_data'] = read_hkl_file(args.hkl, default_F=args.default_F)[0]
+        config['hkl_data'] = read_hkl_file(args.hkl, default_F=args.default_F)
     elif Path('Fdump.bin').exists():
-        config['hkl_data'] = try_load_hkl_or_fdump(None, args.default_F)[0]
+        config['hkl_data'] = try_load_hkl_or_fdump(None, fdump_path="Fdump.bin", default_F=args.default_F)
 
     # Wavelength/energy
     if args.energy:
@@ -382,7 +382,17 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
         config['convention'] = 'MOSFLM'  # Default
 
     # Pivot mode precedence
+    # First set default pivot based on convention (per spec)
     pivot = None
+    convention = config['convention']
+    if convention in ['MOSFLM', 'DENZO', 'ADXV']:
+        # These conventions default to BEAM pivot
+        pivot = 'BEAM'
+    elif convention in ['XDS', 'DIALS']:
+        # These conventions default to SAMPLE pivot
+        pivot = 'SAMPLE'
+
+    # Then apply flag-based overrides
     if args.distance and not args.close_distance:
         pivot = 'BEAM'
     elif args.close_distance:
@@ -651,14 +661,23 @@ def main():
 
         # Create models
         detector = Detector(detector_config)
-        crystal = Crystal(crystal_config, hkl_data=config.get('hkl_data'))
+        crystal = Crystal(crystal_config, beam_config=beam_config)
+
+        # Set HKL data if available
+        if 'hkl_data' in config and config['hkl_data'] is not None:
+            hkl_array, hkl_metadata = config['hkl_data']
+            if isinstance(hkl_array, torch.Tensor):
+                crystal.hkl_data = hkl_array.clone().detach().to(dtype=torch.float64)
+            else:
+                crystal.hkl_data = torch.tensor(hkl_array, dtype=torch.float64)
+            crystal.hkl_metadata = hkl_metadata
 
         # Check interpolation settings
         if 'interpolate' in config:
             crystal.interpolation_enabled = config['interpolate']
 
         # Create and run simulator
-        simulator = Simulator(detector, crystal, beam_config)
+        simulator = Simulator(crystal, detector, beam_config=beam_config)
 
         print(f"Running simulation...")
         print(f"  Detector: {detector_config.fpixels}x{detector_config.spixels} pixels")
@@ -669,12 +688,12 @@ def main():
         intensity = simulator.run()
 
         # Compute statistics
-        stats = simulator.compute_statistics()
+        stats = simulator.compute_statistics(intensity)
         print(f"\nStatistics:")
         print(f"  Max intensity: {stats['max_I']:.3e} at pixel ({stats['max_I_slow']}, {stats['max_I_fast']})")
         print(f"  Mean: {stats['mean']:.3e}")
-        print(f"  RMS: {stats['rms']:.3e}")
-        print(f"  RMSD: {stats['rmsd_from_mean']:.3e}")
+        print(f"  RMS: {stats['RMS']:.3e}")
+        print(f"  RMSD: {stats['RMSD']:.3e}")
 
         # Write outputs
         if config.get('floatfile'):
@@ -693,11 +712,21 @@ def main():
             scaled = (intensity * scale + config.get('adc', 40.0)).clip(0, 65535)
             scaled_int = scaled.to(torch.int16).cpu().numpy().astype(np.uint16)
 
-            write_smv(config['intfile'], scaled_int, detector_config,
-                     wavelength_A=beam_config.wavelength_A,
-                     phi_deg=config.get('phi_deg', 0.0),
-                     osc_deg=config.get('osc_deg', 0.0),
-                     twotheta_deg=config.get('twotheta_deg', 0.0))
+            write_smv(
+                filepath=config['intfile'],
+                image_data=scaled_int,
+                pixel_size_mm=detector_config.pixel_size_mm,
+                distance_mm=detector_config.distance_mm,
+                wavelength_angstrom=beam_config.wavelength_A,
+                beam_center_x_mm=detector_config.beam_center_s * detector_config.pixel_size_mm,
+                beam_center_y_mm=detector_config.beam_center_f * detector_config.pixel_size_mm,
+                close_distance_mm=detector_config.close_distance_mm,
+                phi_deg=config.get('phi_deg', 0.0),
+                osc_start_deg=config.get('phi_deg', 0.0),
+                osc_range_deg=config.get('osc_deg', 0.0),
+                twotheta_deg=config.get('twotheta_deg', 0.0),
+                convention=detector_config.detector_convention.name
+            )
             print(f"Wrote SMV image to {config['intfile']}")
 
         if config.get('pgmfile'):
@@ -715,17 +744,29 @@ def main():
             noisy, overloads = generate_poisson_noise(intensity, noise_config)
             noisy_int = noisy.to(torch.int16).cpu().numpy().astype(np.uint16)
 
-            write_smv(config['noisefile'], noisy_int, detector_config,
-                     wavelength_A=beam_config.wavelength_A,
-                     phi_deg=config.get('phi_deg', 0.0),
-                     osc_deg=config.get('osc_deg', 0.0),
-                     twotheta_deg=config.get('twotheta_deg', 0.0))
+            write_smv(
+                filepath=config['noisefile'],
+                image_data=noisy_int,
+                pixel_size_mm=detector_config.pixel_size_mm,
+                distance_mm=detector_config.distance_mm,
+                wavelength_angstrom=beam_config.wavelength_A,
+                beam_center_x_mm=detector_config.beam_center_s * detector_config.pixel_size_mm,
+                beam_center_y_mm=detector_config.beam_center_f * detector_config.pixel_size_mm,
+                close_distance_mm=detector_config.close_distance_mm,
+                phi_deg=config.get('phi_deg', 0.0),
+                osc_start_deg=config.get('phi_deg', 0.0),
+                osc_range_deg=config.get('osc_deg', 0.0),
+                twotheta_deg=config.get('twotheta_deg', 0.0),
+                convention=detector_config.detector_convention.name
+            )
             print(f"Wrote noise image to {config['noisefile']} ({overloads} overloads)")
 
         print("\nSimulation complete.")
 
     except Exception as e:
+        import traceback
         print(f"Error: {e}", file=sys.stderr)
+        traceback.print_exc()
         sys.exit(1)
 
 

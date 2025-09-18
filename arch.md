@@ -90,8 +90,9 @@ Implementation target: Python (>=3.11) + PyTorch (float64 default). Type blocks 
 
 ## 3) High‑Level System Architecture
 
-- CLI & Config Layer (planned)
-  - Parses spec-defined flags and image/mask headers, resolves precedence, and instantiates config dataclasses.
+- CLI & Config Layer [IMPLEMENTED]
+  - `__main__.py` - Entry point with argparse, maps CLI flags to engine parameters per spec
+  - Parses spec-defined flags and image/mask headers, resolves precedence, and instantiates config dataclasses
 
 - Geometry Engine
   - Detector: conventions, rotations, pix0 computation, meters→Å conversion, solid angle factors.

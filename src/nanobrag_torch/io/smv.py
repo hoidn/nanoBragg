@@ -84,6 +84,7 @@ def write_smv(
     detsize_s_mm = spixels * pixel_size_mm
 
     # Build header dictionary with all required keys per spec
+    # Use reduced precision to fit within 512 byte limit
     header = {
         "HEADER_BYTES": "512",
         "DIM": "2",
@@ -91,60 +92,56 @@ def write_smv(
         "TYPE": data_type,
         "SIZE1": str(fpixels),  # Fast axis
         "SIZE2": str(spixels),  # Slow axis
-        "PIXEL_SIZE": f"{pixel_size_mm:.6f}",
-        "DISTANCE": f"{distance_mm:.3f}",
-        "WAVELENGTH": f"{wavelength_angstrom:.6f}",
-        "BEAM_CENTER_X": f"{beam_center_x_mm:.3f}",
-        "BEAM_CENTER_Y": f"{beam_center_y_mm:.3f}",
+        "PIXEL_SIZE": f"{pixel_size_mm:.3f}",
+        "DISTANCE": f"{distance_mm:.2f}",
+        "WAVELENGTH": f"{wavelength_angstrom:.3f}",
+        "BEAM_CENTER_X": f"{beam_center_x_mm:.2f}",
+        "BEAM_CENTER_Y": f"{beam_center_y_mm:.2f}",
     }
 
-    # Convention-specific beam centers per spec
-    if convention.upper() == "ADXV":
-        # ADXV origin at pixel (1,1)
-        adxv_x = beam_center_x_mm / pixel_size_mm + 1.0
-        adxv_y = beam_center_y_mm / pixel_size_mm + 1.0
-        header["ADXV_CENTER_X"] = f"{adxv_x:.3f}"
-        header["ADXV_CENTER_Y"] = f"{adxv_y:.3f}"
+    # Write ALL convention-specific beam centers per spec AT-IO-001
+    # Use reduced precision to fit within 512 bytes
+    # ADXV origin at pixel (1,1)
+    adxv_x = beam_center_x_mm / pixel_size_mm + 1.0
+    adxv_y = beam_center_y_mm / pixel_size_mm + 1.0
+    header["ADXV_CENTER_X"] = f"{adxv_x:.1f}"
+    header["ADXV_CENTER_Y"] = f"{adxv_y:.1f}"
 
-    if convention.upper() == "MOSFLM":
-        # MOSFLM: pixel coordinates with origin at (0,0)
-        mosflm_x = beam_center_x_mm / pixel_size_mm
-        mosflm_y = beam_center_y_mm / pixel_size_mm
-        header["MOSFLM_CENTER_X"] = f"{mosflm_x:.3f}"
-        header["MOSFLM_CENTER_Y"] = f"{mosflm_y:.3f}"
+    # MOSFLM: pixel coordinates with origin at (0,0)
+    mosflm_x = beam_center_x_mm / pixel_size_mm
+    mosflm_y = beam_center_y_mm / pixel_size_mm
+    header["MOSFLM_CENTER_X"] = f"{mosflm_x:.1f}"
+    header["MOSFLM_CENTER_Y"] = f"{mosflm_y:.1f}"
 
-    if convention.upper() == "DENZO":
-        # DENZO: origin at center of pixel (0,0)
-        denzo_x = beam_center_x_mm / pixel_size_mm + 0.5
-        denzo_y = beam_center_y_mm / pixel_size_mm + 0.5
-        header["DENZO_X_BEAM"] = f"{denzo_x:.3f}"
-        header["DENZO_Y_BEAM"] = f"{denzo_y:.3f}"
+    # DENZO: origin at center of pixel (0,0)
+    denzo_x = beam_center_x_mm / pixel_size_mm + 0.5
+    denzo_y = beam_center_y_mm / pixel_size_mm + 0.5
+    header["DENZO_X_BEAM"] = f"{denzo_x:.1f}"
+    header["DENZO_Y_BEAM"] = f"{denzo_y:.1f}"
 
-    if convention.upper() == "DIALS":
-        # DIALS origin: offset from pixel (0,0) in mm
-        header["DIALS_ORIGIN"] = f"{beam_center_x_mm:.3f},{beam_center_y_mm:.3f},0.0"
+    # DIALS origin: offset from pixel (0,0) in mm
+    header["DIALS_ORIGIN"] = f"{beam_center_x_mm:.1f},{beam_center_y_mm:.1f},0.0"
 
     # XDS origin (always included)
     # XDS uses pixel coordinates with origin at pixel (1,1)
     xds_orgx = beam_center_x_mm / pixel_size_mm + 1.0
     xds_orgy = beam_center_y_mm / pixel_size_mm + 1.0
-    header["XDS_ORGX"] = f"{xds_orgx:.3f}"
-    header["XDS_ORGY"] = f"{xds_orgy:.3f}"
+    header["XDS_ORGX"] = f"{xds_orgx:.1f}"
+    header["XDS_ORGY"] = f"{xds_orgy:.1f}"
 
-    # Optional parameters
+    # CLOSE_DISTANCE is required per AT-IO-001
+    # If not provided, use the distance value as a default
     if close_distance_mm is not None:
-        header["CLOSE_DISTANCE"] = f"{close_distance_mm:.3f}"
+        header["CLOSE_DISTANCE"] = f"{close_distance_mm:.2f}"
+    else:
+        header["CLOSE_DISTANCE"] = f"{distance_mm:.2f}"
 
-    if phi_deg is not None:
-        header["PHI"] = f"{phi_deg:.3f}"
+    # These fields are also required per AT-IO-001, default to 0.0 if not provided
+    header["PHI"] = f"{phi_deg:.1f}" if phi_deg is not None else "0.0"
+    header["OSC_START"] = f"{osc_start_deg:.1f}" if osc_start_deg is not None else "0.0"
+    header["OSC_RANGE"] = f"{osc_range_deg:.1f}" if osc_range_deg is not None else "0.0"
 
-    if osc_start_deg is not None:
-        header["OSC_START"] = f"{osc_start_deg:.3f}"
-
-    if osc_range_deg is not None:
-        header["OSC_RANGE"] = f"{osc_range_deg:.3f}"
-
-    header["TWOTHETA"] = f"{twotheta_deg:.3f}"
+    header["TWOTHETA"] = f"{twotheta_deg:.1f}"
     header["DETECTOR_SN"] = detector_sn
     header["BEAMLINE"] = beamline
 
