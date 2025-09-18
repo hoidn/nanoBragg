@@ -595,7 +595,6 @@ Scope & Non‑Goals (Informative)
 - Far-field diffraction only; no near-field wave optics or detector PSF beyond pixel obliquity.
 - No space-group symmetry applied; no partiality model beyond lattice Fourier transforms.
 - No detector nonlinearity modeling; no dark current or read noise (only Poisson photon noise).
-- Source weights read from file are ignored; equal weighting via division by steps is always used.
 - Interpolated amorphous background from -stol files is read but not used to alter pixel intensities
 in this version.
 
@@ -788,6 +787,46 @@ Acceptance Tests (Normative)
     - Setup: Render a small ROI with known pattern; no scaling to int/noise.
     - Expectation: Reported max value and its last-set subpixel coordinates; mean, RMS, and RMSD computed over unmasked ROI pixels as per definitions in the spec.
 
+CLI Binding (Profile: Reference CLI) — Acceptance Tests (Normative)
+
+These tests apply only to implementations claiming the Reference CLI Binding Profile. They verify the presence and behavior of a CLI wrapper that maps flags to engine parameters and writes outputs/headers per this spec. Small detectors and tight ROIs are used to keep runtimes low.
+
+- AT-CLI-001 CLI presence and help
+  - Setup: Invoke nanoBragg with -h (or --help).
+  - Expectation: Prints usage including at least: -hkl, -mat, -cell, -pixel, -detpixels, -distance, -lambda|-energy, -floatfile, -intfile, -noisefile, -pgmfile, -scale, -adc, -mosflm/-xds/-adxv/-denzo/-dials, -roi. Exit code indicates success.
+
+- AT-CLI-002 Minimal render and headers
+  - Setup: Run with small geometry (e.g., -detpixels 32 -pixel 0.1 -distance 100), a trivial HKL file (or -default_F), and specify -floatfile and -intfile outputs.
+  - Expectation: Both files are created. SMV header contains required keys with units: SIZE1/2, PIXEL_SIZE(mm), DISTANCE(mm), WAVELENGTH(Å), BEAM_CENTER_X/Y(mm), ADXV/MOSFLM/DENZO centers, DIALS_ORIGIN(mm,mm,mm), XDS_ORGX/ORGY(pixels), CLOSE_DISTANCE(mm), PHI/OSC_START/OSC_RANGE(deg), TWOTHETA(deg), DETECTOR_SN, BEAMLINE. Data ordering is fast-major (index = slow*fpixels + fast).
+
+- AT-CLI-003 Conventions and pivot behavior
+  - Setup: Two runs: one with -mosflm, one with -xds; same detector, pixel, distance; small ROI.
+  - Expectation: MOSFLM run uses pivot=BEAM; XDS run uses pivot=SAMPLE by default. ORGX/ORGY and ADXV/MOSFLM/DENZO center keys reflect the mapping rules defined in Geometry & Conventions. Providing -pivot sample|beam overrides the default pivot and leads to consistent origins/beam centers per the spec relations.
+
+- AT-CLI-004 Header precedence and mask behavior
+  - Setup: Provide -img and -mask files with conflicting header geometry values; ensure mask contains zeros in a small block; render a small ROI.
+  - Expectation: The last file read among -img/-mask determines shared header-initialized quantities. Pixels where the mask value is 0 are skipped (remain zero in outputs) and excluded from statistics.
+
+- AT-CLI-005 ROI bounding
+  - Setup: Render with -roi xmin xmax ymin ymax strictly inside the detector.
+  - Expectation: Only pixels within the ROI rectangle have non-zero values in the float/int/noise outputs; pixels outside remain zero.
+
+- AT-CLI-006 Output scaling and PGM
+  - Setup: Produce -intfile with and without -scale (and no noise). Also produce -pgmfile with and without -pgmscale.
+  - Expectation: Without -scale, autoscale maps max float pixel to approximately 55,000 counts (within rounding). With -scale set, integer pixel = floor(min(65535, float*scale + adc)). PGM is P5 with header, a comment line “# pixels scaled by <pgm_scale>”, 255, then fast-major bytes equal to min(255, floor(float*pgm_scale)).
+
+- AT-CLI-007 Noise determinism
+  - Setup: Produce -noisefile twice with the same -seed and same inputs over a small ROI.
+  - Expectation: Integer noise images are identical; overload counts match. Changing -seed changes the noise image.
+
+- AT-CLI-008 dmin filtering
+  - Setup: Two runs on a small ROI: one without -dmin and one with a moderately strict -dmin (Å) that removes high-angle contributions for that ROI.
+  - Expectation: The -dmin run produces a strictly lower or equal total intensity sum over the ROI compared to the run without -dmin; differences are localized toward higher-angle pixels.
+
+- AT-CLI-009 Error handling and usage
+  - Setup: Invoke nanoBragg without -hkl and without an Fdump.bin and with -default_F=0.
+  - Expectation: Program prints usage/help indicating required inputs and exits with a non-zero status.
+
 Quality Bar Checklist (Informative)
 
 - All major formulas and conversions are explicit and match the implementation.
@@ -795,3 +834,60 @@ Quality Bar Checklist (Informative)
 - Output formats and headers match exactly what is written.
 - Sampling structure, normalization, and edge-case behavior (e.g., out-of-range interpolation, last-
 value multiplicative factors, clamping Na/Nb/Nc ≥ 1) are fully specified.
+
+Conformance Profiles (Normative)
+
+- Core Engine Profile
+  - Covers physics, geometry, sampling, interpolation, background/noise, statistics, and I/O semantics independent of transport. Implementations conforming to this profile SHALL satisfy all normative sections and acceptance tests in this document except those explicitly scoped to the CLI binding.
+
+- Reference CLI Binding Profile
+  - Scope: Implementations claiming CLI compatibility SHALL expose a command-line interface that maps flags, defaults, units, precedence, and outputs as defined below. Unknown flags SHOULD produce a clear error with usage guidance. Synonyms listed MUST be supported equivalently.
+  - Units & conversions:
+    - Å→m = ×1e−10; mm→m = ÷1000; µm→m = ×1e−6; deg→rad = ×π/180; mrad→rad = ÷1000.
+    - Wavelength: -lambda|-wave Å→m; -energy eV→m via λ = (12398.42/E)·1e−10.
+    - Dispersion percent→fraction by ÷100.
+    - Fluence derivation: fluence = flux·exposure / beamsize^2 when flux ≠ 0 and exposure > 0 and beamsize ≥ 0; exposure > 0 recomputes flux to be consistent with chosen fluence and beamsize.
+  - Inputs & files:
+    - -hkl <file>: P1 “h k l F” text; required unless Fdump.bin exists or -default_F > 0.
+    - -mat <file>: MOSFLM A-matrix (reciprocal vectors scaled by 1/λ), rescaled internally by (1e−10/λ).
+    - -cell a b c α β γ: Direct cell in Å, deg; alternative to -mat.
+    - -img/-mask <file>: Apply recognized SMV header keys; -mask zeros are skipped when rendering.
+    - -sourcefile <file>: Per-source columns X Y Z weight λ; missing values default as in Sources.
+  - Detector geometry:
+    - -pixel <mm>; -detpixels <N> (square) or -detpixels_f|-detpixels_x <N>, -detpixels_s|-detpixels_y <N>.
+    - -detsize <mm> (square) or -detsize_f/-detsize_s <mm>.
+    - -distance <mm> (sets pivot=BEAM); -close_distance <mm> (sets pivot=SAMPLE).
+    - -detector_rotx/-roty/-rotz <deg>; -twotheta <deg> with -twotheta_axis x y z.
+    - -point_pixel; -curved_det (flag; no argument).
+    - -Xbeam/-Ybeam <mm> force pivot=BEAM; -Xclose/-Yclose <mm> and -ORGX/-ORGY <pixels> force pivot=SAMPLE; -pivot beam|sample overrides.
+    - Derived: ORGX = Fclose/pixel + 0.5; ORGY = Sclose/pixel + 0.5. DIALS origin from dot products of pix0 with lab axes [0,0,1], [0,1,0], [−1,0,0] in mm.
+  - Beam/detector conventions:
+    - -mosflm, -adxv, -denzo, -xds, -dials set basis vectors, beam/polarization vectors, spindle and 2θ axes, and default pivot as in Geometry & Conventions. Providing any of -fdet_vector, -sdet_vector, -odet_vector, -beam_vector, -polar_vector, -spindle_axis, -twotheta_axis, -pix0_vector selects CUSTOM.
+  - Absorption & thickness:
+    - -detector_abs <µm>|inf|0; -detector_thick <µm>; -detector_thicksteps|-thicksteps <int>.
+    - If only a layer count is provided (no total thickness or per-layer step), a finite default total thickness (e.g., 0.5 µm) SHALL be assumed and the per-layer step derived; thickness modeling SHALL be active in this case.
+  - Sampling:
+    - -phi <deg>, -osc <deg>, -phistep <deg>, -phisteps <int>; -dmin <Å>.
+    - -oversample <int>; -oversample_thick, -oversample_polar, -oversample_omega apply per-subpixel normalization to the running sum.
+    - -roi xmin xmax ymin ymax (inclusive; zero-based internally).
+  - Sources, divergence & dispersion:
+    - -lambda|-wave <Å> or -energy <eV>; -fluence <photons/m^2> or -flux/-exposure/-beamsize to derive fluence; sample_y/z clipped to beamsize if beamsize > 0 and smaller (with warning).
+    - Divergence: -divergence <mrad> sets both ranges; -hdivrange/-vdivrange <mrad>; -hdivstep/-vdivstep <mrad>; -hdivsteps/-vdivsteps <int>; -divsteps sets both counts. Auto-resolution rules: if only count is given, default angular range=1.0 rad and derive step; if only step is given, set range=step and counts=2; if range+count, derive step; enforce counts ≥ 2 for nonzero ranges. -round_div (default) culls to ellipse; -square_div disables culling.
+    - Dispersion: -dispersion <percent>, -dispsteps <int>; auto-resolution rules analogous to divergence.
+    - -sourcefile weighting: Each source’s contribution MUST be multiplied by its weight before division by steps.
+  - Crystal size/shape/mosaic:
+    - -Na/-Nb/-Nc <int>, -N <int> (clamped to ≥1 when converting from sizes); -samplesize|-xtalsize <mm> or per-axis variants.
+    - -square_xtal (default), -round_xtal, -gauss_xtal, -binary_spots|-tophat_spots; -fudge <value>.
+    - -mosaic|-mosaici|-mosaic_spr <deg>; -mosaic_dom <int>; -misset random or -misset α β γ (deg) with seeds.
+  - Interpolation:
+    - -interpolate enables tricubic; -nointerpolate disables. Auto default: enable if any of Na/Nb/Nc ≤ 2; else disable. If 4×4×4 neighborhood is out of range, a one-time warning is printed; default_F is used for that evaluation; interpolation MAY be disabled thereafter by the engine.
+  - Background & noise:
+    - -water <µm> background term; -noisefile|-noiseimage enables Poisson noise; -nonoise disables; -seed controls RNG. Poisson exact for small means, rejection up to 1e6, Gaussian approximation beyond.
+  - Outputs:
+    - -floatfile|-floatimage (4-byte floats, fast-major); -intfile|-intimage (SMV unsigned short). -scale, -adc, -pgmfile|-pgmimage, -pgmscale, -nopgm as in File I/O. SMV headers MUST include the listed keys and data ordering MUST be slow*fpixels + fast.
+  - Precedence & overrides:
+    - Last of -img/-mask wins for shared header keys; -mask interprets BEAM_CENTER_Y as detsize_s − value, -img uses value directly. Convention selection sets default vectors and pivot; custom vectors set CUSTOM. -Xbeam/-Ybeam force pivot=BEAM; -Xclose/-Yclose/-ORGX/-ORGY force pivot=SAMPLE; -pivot overrides. Missing -hkl and Fdump.bin and -default_F=0 SHALL produce a usage error.
+  - Normalization & steps:
+    - steps = sources × mosaic_domains × phisteps × oversample^2. Per-subpath: add F_cell^2 · F_latt^2 into I (starting at I_bg), applying per-subpixel capture/polar/ω if respective oversample flags are set. Final scaling per pixel S = r_e^2 · fluence · I / steps, then apply any factor whose oversample flag is NOT set using the last computed values.
+  - Error handling & reporting:
+    - Usage/help MUST enumerate flags and synonyms with units and defaults. Missing required inputs or inconsistent parameters MUST produce clear errors.
