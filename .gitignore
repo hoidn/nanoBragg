@@ -97,3 +97,7 @@ scripts/debug_*.py
 # Work in progress
 plans/active/
 tmp/
+
+# Repomix output files
+repomix-output.xml
+**/repomix-output.xml
