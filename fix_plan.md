@@ -297,6 +297,19 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - Verify allclose tolerances, correlation>0.98, and peak alignment ≤1 px after expected rotational shifts; total intensity conservation within ±10%.
   - Implement as pytest module (e.g., tests/test_parallel_cli_acceptance.py) with markers to run only when C binary present.
 
+### AT-PARALLEL-023: Misset Angles Equivalence (Explicit) — NEW
+- Status: TODO
+- Action:
+  - Add CLI comparison tests for -misset α β γ across multiple triplets (0 0 0; 10 0 0; 0 10 0; 0 0 10; 15 20 30) on cubic and triclinic cells.
+  - Isolate from φ/osc (set φ=0, osc=0); compare -floatfile outputs (rtol≤1e-5, atol≤1e-6), correlation>0.99; assert peak shifts consistent with misset.
+  - Gate on NB_RUN_PARALLEL=1 and presence of C binary.
+
+### AT-PARALLEL-024: Random Misset Reproducibility — NEW
+- Status: TODO
+- Action:
+  - Add tests for -misset random with -misset_seed S; assert same-seed runs are identical across C and PyTorch (within tolerance) and reproducible; different seeds produce different images.
+  - If available, compare reported sampled angles from C to PyTorch (post-conversion) within tight tolerance.
+
 ## Medium Priority TODO 🟡
 
 All medium priority items completed!

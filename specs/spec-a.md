@@ -922,6 +922,14 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
   - Setup: Apply non-zero detector rotations (e.g., -detector_rotx 5 -detector_roty 3 -detector_rotz 2 -twotheta 10) together with crystal φ rotation cases from AT-PARALLEL-021; fixed seeds; same small detector/ROI settings.
   - Expectation: C and PyTorch float images SHALL agree within tolerances (rtol ≤ 1e-5, atol ≤ 1e-6); peak trajectories reflect both detector and crystal rotations; total intensity conservation within ±10% across the compared images; correlation >0.98 and peak alignment within ≤1 pixel after accounting for expected rotational shifts.
 
+  - AT-PARALLEL-023 Misset Angles Equivalence (Explicit α β γ)
+  - Setup: Fix φ=0, osc=0; triclinic cell (70,80,90,75,85,95) and cubic cell; run with several explicit -misset angle triplets (e.g., 0 0 0; 10 0 0; 0 10 0; 0 0 10; 15 20 30). Small detector (256×256), -pixel 0.1, fixed -default_F and seeds. Use identical flags for C and PyTorch; tight ROI around bright peaks.
+  - Expectation: Implementations SHALL apply right-handed rotations in the documented axis order to reciprocal vectors; resulting float images SHALL match within rtol ≤ 1e-5 and atol ≤ 1e-6. Peak positions SHALL shift consistently with the misset angles; correlation >0.99 for each case.
+
+  - AT-PARALLEL-024 Random Misset Reproducibility and Equivalence
+  - Setup: Use -misset random with -misset_seed S across two runs per seed for both C and PyTorch; test at least two distinct seeds. φ=0, osc=0; small detector and ROI; fixed wavelength and structure factors.
+  - Expectation: For a given seed S, C and PyTorch float images SHALL be identical within numeric tolerances; repeating with the same seed SHALL reproduce identical images; changing the seed SHALL change the orientation and thus the image (correlation significantly lower than same-seed runs). If the C implementation reports the sampled angles, those values SHOULD match across implementations to within 1e-12 radians after conversion.
+
 Quality Bar Checklist (Informative)
 
 - All major formulas and conversions are explicit and match the implementation.
