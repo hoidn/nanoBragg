@@ -631,10 +631,11 @@ class Detector:
         Returns:
             torch.Tensor: Pixel coordinates with shape (spixels, fpixels, 3) in meters
         """
-        # Create pixel index grids - pixel corners/edges like C code
-        # The C code appears to use pixel corners (0, 1, 2, ...) not centers
-        s_indices = torch.arange(self.spixels, device=self.device, dtype=self.dtype)
-        f_indices = torch.arange(self.fpixels, device=self.device, dtype=self.dtype)
+        # Create pixel index grids - pixel centers to match C code behavior
+        # The C code uses pixel centers (0.5, 1.5, 2.5, ...) not corners
+        # Adding 0.5 to indices places coordinates at pixel centers
+        s_indices = torch.arange(self.spixels, device=self.device, dtype=self.dtype) + 0.5
+        f_indices = torch.arange(self.fpixels, device=self.device, dtype=self.dtype) + 0.5
 
         # Create meshgrid of indices
         s_grid, f_grid = torch.meshgrid(s_indices, f_indices, indexing="ij")
@@ -666,10 +667,11 @@ class Detector:
         Returns:
             torch.Tensor: Pixel coordinates with shape (spixels, fpixels, 3) in meters
         """
-        # Create pixel index grids - pixel corners/edges like C code
-        # The C code appears to use pixel corners (0, 1, 2, ...) not centers
-        s_indices = torch.arange(self.spixels, device=self.device, dtype=self.dtype)
-        f_indices = torch.arange(self.fpixels, device=self.device, dtype=self.dtype)
+        # Create pixel index grids - pixel centers to match C code behavior
+        # The C code uses pixel centers (0.5, 1.5, 2.5, ...) not corners
+        # Adding 0.5 to indices places coordinates at pixel centers
+        s_indices = torch.arange(self.spixels, device=self.device, dtype=self.dtype) + 0.5
+        f_indices = torch.arange(self.fpixels, device=self.device, dtype=self.dtype) + 0.5
         s_grid, f_grid = torch.meshgrid(s_indices, f_indices, indexing="ij")
 
         # Calculate Sdet and Fdet in the detector plane

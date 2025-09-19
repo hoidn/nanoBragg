@@ -18,7 +18,8 @@ Subagents policy (context budget):
 - Summaries should be concise; prefer file pointers and diffs over full content.
 
 IMPORTANT:
-- when debugging, ultrathink, generate multiple hypotheses, and use parallel subagents to test them
+- when debugging: ultrathink, generate multiple hypotheses, and use parallel subagents to test them
+IMPORTANT
 
 - **Refactoring Discipline**: If you move or rename a module, file, class, or function, you MUST treat it as a single, atomic operation within the loop. This requires:
     a. Creating the new file/module structure.
@@ -51,7 +52,7 @@ No cheating (important):
 
 <instructions>
 do the following in this loop:
-<step 1>
+<step 0>
 IMPORTANT:
 READ the following files (read them yourself. you may delegate exploration of other files, but not these, to subagents):
 - Index of project documentation: `./docs/index.md`
@@ -62,6 +63,9 @@ READ the following files (read them yourself. you may delegate exploration of ot
 - $PLAN: `./fix_plan.md` (living, prioritized to‑do; keep it up to date)
 - $AGENTS: `./CLAUDE.md` (concise how‑to run/build/test; keep it accurate)
 - $TESTS: `./docs/development/testing_strategy.md` (testing philosophy, tiers, seeds/tolerances, commands)
+<step 0>
+- run the full test suite 
+</step 1>
 </step 1>
 <step 2>
 declare:

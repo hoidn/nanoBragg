@@ -50,12 +50,12 @@ def test_beam_pivot_keeps_beam_indices_and_alignment():
     assert torch.allclose(s1, s0, atol=1e-12)
     assert torch.allclose(f1, f0, atol=1e-12)
 
-    # 3) For the integer beam_center pixel, the expected offset is exactly -0.5 px along s & f
+    # 3) For the integer beam_center pixel, with center-based indexing (pixels at 0.5, 1.5, 2.5...)
+    # the pixel center is at the beam position
     coords = d.get_pixel_coords()
     p_int = coords[int(d.beam_center_s.item()), int(d.beam_center_f.item())]
-    expected = _unit(
-        d.distance * d.odet_vec - 0.5 * d.pixel_size * d.sdet_vec - 0.5 * d.pixel_size * d.fdet_vec
-    )
+    # With center-based indexing, the pixel is centered at its index position
+    expected = _unit(d.distance * _beam_vec(d))
     assert torch.allclose(_unit(p_int), expected, atol=1e-12)
 
 def test_sample_pivot_moves_beam_indices_with_twotheta():
@@ -70,10 +70,10 @@ def test_sample_pivot_moves_beam_indices_with_twotheta():
     )
     d = Detector(cfg)
 
-    # At zero rotation the same "beam_center + 0.5" relationship holds
+    # At zero rotation with center-based indexing, beam indices equal beam centers
     s0, f0 = _beam_indices(d)
-    assert torch.allclose(s0, d.beam_center_s + 0.5, atol=1e-12)
-    assert torch.allclose(f0, d.beam_center_f + 0.5, atol=1e-12)
+    assert torch.allclose(s0, d.beam_center_s, atol=1e-12)
+    assert torch.allclose(f0, d.beam_center_f, atol=1e-12)
 
     # Under SAMPLE pivot, changing two-theta *moves* the beam's (s,f) indices
     d.config.detector_twotheta_deg = 15.0
