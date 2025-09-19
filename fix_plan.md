@@ -738,10 +738,22 @@ All medium priority items completed!
   - High-resolution variant: SKIPPED - requires golden data generation
 - **Note**: Test infrastructure complete; needs golden data regeneration with known parameters
 
-### Missing AT-PARALLEL Tests (9 tests remaining)
+### AT-PARALLEL-013: Cross-Platform Consistency ✅ COMPLETE
+- **Status**: COMPLETE (2025-09-19)
+- **Implementation**: Full implementation of cross-platform consistency and determinism testing
+- **Test**: Created `tests/test_at_parallel_013.py` with 6 tests (5 passing, 1 skipped)
+- **Details**:
+  - Tests PyTorch determinism with same seed (bit-for-bit identical)
+  - Tests consistency across multiple runs (rtol ≤ 1e-7, atol ≤ 1e-12)
+  - Tests numerical precision maintained with float64 throughout
+  - Platform fingerprinting for debugging and reproducibility
+  - C-PyTorch equivalence test skipped without NB_RUN_PARALLEL=1
+  - Implements deterministic mode with careful handling of threading and seeds
+  - All determinism tests pass with correlation ≥ 0.9999999 as required
+
+### Missing AT-PARALLEL Tests (8 tests remaining)
 The following AT-PARALLEL tests from spec-a-parallel.md still need implementation:
 - AT-PARALLEL-006 - Single Reflection Position (in progress - crystal orientation issue)
-- AT-PARALLEL-013 - Cross-Platform Consistency
 - AT-PARALLEL-014 - Noise Robustness Test
 - AT-PARALLEL-015 - Mixed Unit Input Handling
 - AT-PARALLEL-016 - Extreme Scale Testing
