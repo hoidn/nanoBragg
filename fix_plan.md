@@ -213,7 +213,17 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ## In Progress 🚧
 
-None currently.
+### AT-PARALLEL-020: Comprehensive Integration Test
+- **Status**: PARTIAL - Test infrastructure implemented but failing with phi rotation
+- **Implementation**: Created `tests/test_at_parallel_020.py` with 4 comprehensive tests
+- **Test Results**:
+  - test_comprehensive_minimal_features: PASSES (correlation 0.957, intensity ratio 1.02)
+  - test_phi_rotation_only: FAILS (correlation 0.40, max intensity 0.00 for both C and PyTorch)
+  - test_comprehensive_without_absorption: FAILS (correlation 0.44)
+  - test_comprehensive_integration: FAILS (correlation 0.43)
+- **Issue Found**: When phi rotation (osc=90, phisteps=9) is enabled, both C and PyTorch produce no diffraction (max intensity = 0)
+- **Root Cause**: Likely issue with triclinic crystal orientation or phi rotation not bringing reflections into Bragg condition
+- **TODO**: Debug why phi rotation produces no diffraction pattern for triclinic cell
 
 ### Recent Bug Fixes (2025-09-18) ✅
 
@@ -810,16 +820,16 @@ The following new acceptance tests require actual HKL file support for full vali
   - Tests: Parser robustness across different HKL formats
   - Critical for: Ensuring compatibility with crystallography tool outputs
 
-### Missing AT-PARALLEL Tests (2 tests remaining)
+### Missing AT-PARALLEL Tests (1 test remaining)
 The following AT-PARALLEL tests from spec-a-parallel.md still need implementation:
 - AT-PARALLEL-006 - Single Reflection Position (in progress - crystal orientation issue)
-- AT-PARALLEL-020 - Comprehensive Integration Test
 
 Recently completed:
 - AT-PARALLEL-014 - Noise Robustness Test ✅ COMPLETE (5 tests passing)
 - AT-PARALLEL-016 - Extreme Scale Testing ✅ COMPLETE (5 tests passing, 1 skipped)
 - AT-PARALLEL-017 - Grazing Incidence Geometry ✅ COMPLETE (6 tests passing)
 - AT-PARALLEL-018 - Crystal Boundary Conditions ✅ COMPLETE (8 tests passing)
+- AT-PARALLEL-020 - Comprehensive Integration Test ⚠️ PARTIAL (infrastructure complete, 1 of 4 tests passing)
 
 ## Architecture Notes
 
