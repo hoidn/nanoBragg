@@ -113,6 +113,10 @@ class CrystalConfig:
     # Static crystal orientation angles (degrees) applied as XYZ rotations to reciprocal space vectors
     misset_deg: Tuple[float, float, float] = (0.0, 0.0, 0.0)
 
+    # Random misset generation (for AT-PARALLEL-024)
+    misset_random: bool = False  # If True, generate random misset angles using seed
+    misset_seed: Optional[int] = None  # Seed for random misset generation (C-compatible LCG)
+
     # Spindle rotation parameters
     phi_start_deg: float = 0.0
     osc_range_deg: float = 0.0

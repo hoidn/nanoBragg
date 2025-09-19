@@ -10,6 +10,7 @@ golden test case, which uses a 10 Å unit cell and a 500×500×500 cell crystal 
 
 from typing import Optional, Tuple
 
+import math
 import torch
 
 from ..config import CrystalConfig, BeamConfig
@@ -573,6 +574,34 @@ class Crystal:
 
         # Update V to the actual volume
         V = V_actual
+
+        # Handle random misset generation (AT-PARALLEL-024)
+        if hasattr(self.config, "misset_random") and self.config.misset_random:
+            # Generate random misset angles using C-compatible LCG
+            from ..utils.c_random import mosaic_rotation_umat, umat2misset
+
+            # Use 90 degrees (pi/2 radians) as the cap for random orientation
+            # This matches the C code: mosaic_rotation_umat(90.0, umat, &misset_seed)
+            umat = mosaic_rotation_umat(math.pi / 2.0, seed=self.config.misset_seed)
+
+            # Extract Euler angles from the rotation matrix
+            rotx, roty, rotz = umat2misset(umat)
+
+            # Convert radians to degrees and update config
+            self.config.misset_deg = (
+                math.degrees(rotx),
+                math.degrees(roty),
+                math.degrees(rotz)
+            )
+
+            # Log the generated angles (matching C output format)
+            if hasattr(self, 'logger') and self.logger:
+                self.logger.info(
+                    f"random orientation misset angles: "
+                    f"{self.config.misset_deg[0]:.6f} "
+                    f"{self.config.misset_deg[1]:.6f} "
+                    f"{self.config.misset_deg[2]:.6f} deg"
+                )
 
         # Apply static orientation if misset is specified
         if hasattr(self.config, "misset_deg") and any(

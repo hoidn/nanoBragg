@@ -50,13 +50,14 @@ Ground rules (do these every loop):
    c. An iteration is only considered successful if this full regression check passes cleanly.
    When reporting results, cite the Acceptance Test numbers covered (e.g., "AT-28, AT-33").
    If a loop changes only non-code artifacts (e.g., prompts/docs/plan), at minimum ensure `pytest --collect-only -q` succeeds before committing.
-6) Update `fix_plan.md`: mark the item you addressed as done; add follow‑ups if you discovered edge cases or debt.
-7) Update `CLAUDE.md` with any new, brief run/build/test command or known quirk. Do not put runtime status into `CLAUDE.md`.
-8) Emit artifacts: logs, state snapshots, and—if applicable—`artifacts/<agent>/status_<step>.json`. Keep runtime state in `state.json` and `logs/` (not in docs).
-9) Reconcile spec vs. architecture: if behavior is underspecified in the spec but captured in `arch.md`, follow `arch.md`. If there is a conflict, prefer the spec for external contracts and propose an `arch.md` patch (record in `fix_plan.md`).
-10) Version control hygiene: after each loop, stage and commit all intended changes. Use a descriptive message including acceptance IDs and module scope. Do not commit runtime state/logs. Always include `fix_plan.md` and any updated prompts/docs.
-11) **Project Hygiene**: All code, especially test runners and scripts, MUST assume the project is installed in editable mode (`pip install -e .`). Scripts MUST NOT manipulate `sys.path`. Tests MUST be runnable via standard tools like `pytest` from the project root. Refer to `CLAUDE.md` for setup instructions.
-12) **Refactoring Discipline**: If you move or rename a module, file, class, or function, you MUST treat it as a single, atomic operation within the loop. This requires:
+6) Test execution scope: Only run tests via `pytest` in `./tests/`. Do not execute ad‑hoc scripts in the repo root or elsewhere as part of validation.
+7) Update `fix_plan.md`: mark the item you addressed as done; add follow‑ups if you discovered edge cases or debt.
+8) Update `CLAUDE.md` with any new, brief run/build/test command or known quirk. Do not put runtime status into `CLAUDE.md`.
+9) Emit artifacts: logs, state snapshots, and—if applicable—`artifacts/<agent>/status_<step>.json`. Keep runtime state in `state.json` and `logs/` (not in docs).
+10) Reconcile spec vs. architecture: if behavior is underspecified in the spec but captured in `arch.md`, follow `arch.md`. If there is a conflict, prefer the spec for external contracts and propose an `arch.md` patch (record in `fix_plan.md`).
+11) Version control hygiene: after each loop, stage and commit all intended changes. Use a descriptive message including acceptance IDs and module scope. Do not commit runtime state/logs. Always include `fix_plan.md` and any updated prompts/docs.
+12) **Project Hygiene**: All code, especially test runners and scripts, MUST assume the project is installed in editable mode (`pip install -e .`). Scripts MUST NOT manipulate `sys.path`. Tests MUST be runnable via standard tools like `pytest` from the project root. Refer to `CLAUDE.md` for setup instructions.
+13) **Refactoring Discipline**: If you move or rename a module, file, class, or function, you MUST treat it as a single, atomic operation within the loop. This requires:
     a. Creating the new file/module structure.
     b. Moving the code to its new location.
     c. **Searching the ENTIRE codebase** for all import statements and usages of the old path.

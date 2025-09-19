@@ -613,6 +613,12 @@ def main():
             if 'misset_deg' in config:
                 crystal_config.misset_deg = tuple(config['misset_deg'])
 
+            if 'misset_random' in config:
+                crystal_config.misset_random = config['misset_random']
+
+            if 'misset_seed' in config:
+                crystal_config.misset_seed = config['misset_seed']
+
         # Create detector config
         detector_config = DetectorConfig(
             distance_mm=config.get('distance_mm', 100.0),
