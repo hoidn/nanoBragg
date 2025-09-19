@@ -63,7 +63,7 @@ The document captures critical implicit behaviors like:
 ### 3. Enhanced Debugging Infrastructure
 
 #### A. Verification Script Documentation
-**Enhanced:** [`docs/development/debugging.md`](/Users/ollie/Documents/nanoBragg/docs/development/debugging.md)
+**Enhanced:** [`docs/debugging/debugging.md`](/Users/ollie/Documents/nanoBragg/docs/debugging/debugging.md)
 - Added comprehensive "End-to-End Verification" section (lines 234-254)
 - Documented `verify_detector_geometry.py` as primary validation tool
 - Referenced supporting scripts: `c_reference_runner.py`, `smv_parser.py`
@@ -131,7 +131,7 @@ The configuration map follows a systematic structure:
 - ✅ `docs/development/testing_strategy.md` - Added mandatory configuration verification section
 - ✅ `src/nanobrag_torch/config.py` - Added configuration map reference in header
 - ✅ `CLAUDE.md` - Enhanced Core Implementation Rule #0 with configuration map
-- ✅ `docs/development/debugging.md` - Added end-to-end verification documentation
+- ✅ `docs/debugging/debugging.md` - Added end-to-end verification documentation
 
 ## Verification and Quality Assurance
 

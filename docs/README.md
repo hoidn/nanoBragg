@@ -18,7 +18,7 @@ The authoritative technical specifications for all components, conventions, and 
 Guides for development workflow, testing, and debugging.
 - [Testing Strategy](./development/testing_strategy.md) - Including canonical golden data commands
 - [Implementation Plan](./development/implementation_plan.md) - Phased development roadmap
-- [Debugging Guide](./development/detector_geometry_debugging.md) - Case study and best practices
+- [Debugging Guide](./debugging/detector_geometry_debugging.md) - Case study and best practices
 
 ### [Reports](./reports/)
 Analysis reports, performance benchmarks, and problem investigations.

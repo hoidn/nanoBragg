@@ -59,7 +59,7 @@ READ the following files (read them yourself. you may delegate exploration of ot
 - $SPECS: `./specs/spec-a.md`
 - $ARCH: `./arch.md` (ADR-backed implementation architecture; reconcile design with spec, surface conflicts)
 - docs/development/c_to_pytorch_config_map.md — C↔Py config parity and implicit rules
-- docs/development/debugging.md — Parallel trace-driven debugging SOP
+-- docs/debugging/debugging.md — Parallel trace-driven debugging SOP
 - $PLAN: `./fix_plan.md` (living, prioritized to‑do; keep it up to date)
 - $AGENTS: `./CLAUDE.md` (concise how‑to run/build/test; keep it accurate)
 - $TESTS: `./docs/development/testing_strategy.md` (testing philosophy, tiers, seeds/tolerances, commands)

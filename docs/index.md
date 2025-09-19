@@ -27,9 +27,9 @@ These are the core, living documents that guide the project.
 ### Development Process (`docs/development/`)
 * **[C to PyTorch Config Map](./development/c_to_pytorch_config_map.md)** - Critical configuration mapping between C and PyTorch.
 * **[Contributing Guidelines](./development/CONTRIBUTING.md)** - How to contribute to the project.
-* **[Debugging Guide](./development/debugging.md)** - General debugging workflows and strategies.
+* **[Debugging Guide](./debugging/debugging.md)** - General debugging workflows and strategies.
 * **[Detector Fix Phase 2 Session](./development/detector_fix_phase2_session.md)** - Detailed debugging session log.
-* **[Detector Geometry Debugging](./development/detector_geometry_debugging.md)** - Specific detector geometry debugging guide.
+* **[Detector Geometry Debugging](./debugging/detector_geometry_debugging.md)** - Specific detector geometry debugging guide.
 * **[Detector Rotation Debugging Session](./development/detector_rotation_debugging_session.md)** - Rotation-specific debugging session.
 * **[Implementation Plan](./development/implementation_plan.md)** - Phased development roadmap.
 * **[Lessons in Differentiability](./development/lessons_in_differentiability.md)** - Key learnings about maintaining gradient flow.

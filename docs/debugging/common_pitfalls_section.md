@@ -108,8 +108,8 @@ Users assume that explicitly specifying a parameter with its default value is eq
 - [ ] Check "convention selected" output in logs
 
 **References**:
-- Hidden behavior documentation: `docs/templates/CRITICAL_BEHAVIORS.md`
-- Convention flowchart: `docs/templates/convention_selection_flowchart.md`
+- Hidden behavior documentation: `docs/debugging/CRITICAL_BEHAVIORS.md`
+- Convention flowchart: `docs/debugging/convention_selection_flowchart.md`
 
 ---
 

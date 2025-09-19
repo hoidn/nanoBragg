@@ -569,7 +569,7 @@ Acceptance Tests (Normative)
     - Expectation: With -point_pixel, Ω SHALL equal 1/R^2. Without it, Ω SHALL equal (pixel_size^2/R^2)·(close_distance/R).
 
 - Sampling, Normalization, Absorption
-  - References: ../docs/development/testing_strategy.md (Tier 1/2/3 setup), ../docs/development/debugging.md (trace workflow)
+  - References: ../docs/development/testing_strategy.md (Tier 1/2/3 setup), ../docs/debugging/debugging.md (trace workflow)
   - Why: testing_strategy structures minimal setups and tiers; debugging.md defines the trace workflow to locate first divergences deterministically.
   - AT-SAM-001 Steps normalization
     - Setup: sources=1; mosaic_domains=1; oversample=1; phisteps=2 with identical physics across steps (e.g., zero mosaic and symmetric phi so F_cell and F_latt identical); disable thickness/polar/omega oversample toggles.

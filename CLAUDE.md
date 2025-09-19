@@ -102,7 +102,7 @@ For all parameters, see [`docs/architecture/c_parameter_dictionary.md`](./docs/a
 
 5.  **Parallel Trace Debugging is Mandatory:** All debugging of physics discrepancies **MUST** begin with a parallel trace comparison.
     -   **Action:** Generate a step-by-step log from the instrumented C code and an identical log from the PyTorch script (`scripts/debug_pixel_trace.py`). Compare these two files to find the first line where they numerically diverge. **Before comparing, consult the component contract in `docs/architecture/` to verify the expected units of all variables in the trace log.**
-    -   **Reference:** See `docs/development/testing_strategy.md` for the strategy and `docs/development/debugging.md` for the detailed workflow.
+    -   **Reference:** See `docs/development/testing_strategy.md` for the strategy and `docs/debugging/debugging.md` for the detailed workflow.
     -   **Key Scripts:** The primary script for end-to-end validation is `scripts/verify_detector_geometry.py`. It uses helper modules `scripts/c_reference_runner.py` to execute the C code and `scripts/smv_parser.py` to read the output images. For single-pixel, step-by-step debugging, use `scripts/debug_pixel_trace.py`.
 
 6.  **PyTorch Environment Variable:** All PyTorch code execution **MUST** set the environment variable `KMP_DUPLICATE_LIB_OK=TRUE` to prevent MKL library conflicts.

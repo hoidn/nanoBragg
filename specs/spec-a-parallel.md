@@ -4,7 +4,7 @@ This shard enumerates the CLI profile acceptance tests, parallel validation suit
 
 Parallel Validation Tests (Profile: C-PyTorch Equivalence) — Acceptance Tests (Normative)
 
-References: ../docs/development/testing_strategy.md (parallel trace-driven validation), ../docs/development/debugging.md (trace SOP), ../docs/debugging/detector_geometry_checklist.md (detector geometry triage), ../docs/architecture/undocumented_conventions.md (hidden C behaviors)
+References: ../docs/development/testing_strategy.md (parallel trace-driven validation), ../docs/debugging/debugging.md (trace SOP), ../docs/debugging/detector_geometry_checklist.md (detector geometry triage), ../docs/architecture/undocumented_conventions.md (hidden C behaviors)
 Why: testing_strategy and debugging.md define the parallel trace methodology; the detector checklist accelerates geometry debugging; undocumented_conventions flags hidden C behaviors that often break equivalence.
 
 These tests verify that PyTorch implementation produces outputs equivalent to the C reference implementation. They apply to implementations claiming the C-PyTorch Equivalence Profile. These are black-box behavioral tests comparing outputs without examining internal implementation details.

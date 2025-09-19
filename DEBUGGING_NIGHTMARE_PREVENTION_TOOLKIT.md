@@ -28,7 +28,7 @@ Development workflows that catch hidden behaviors early.
 ## 📚 Layer 1: Documentation Improvements
 
 ### 1.1 Critical Behaviors Documentation
-**File**: `docs/templates/CRITICAL_BEHAVIORS.md`
+**File**: `docs/debugging/CRITICAL_BEHAVIORS.md`
 
 **Purpose**: Central registry of all hidden, undocumented, or non-obvious behaviors.
 
@@ -48,7 +48,7 @@ Development workflows that catch hidden behaviors early.
 ```
 
 ### 1.2 Convention Selection Flowchart
-**File**: `docs/templates/convention_selection_flowchart.md`
+**File**: `docs/debugging/convention_selection_flowchart.md`
 
 **Purpose**: Visual decision tree showing exactly when convention switching occurs.
 
@@ -67,7 +67,7 @@ Development workflows that catch hidden behaviors early.
 ```
 
 ### 1.3 Improved Parameter Documentation
-**File**: `docs/templates/twotheta_axis_parameter_docs.md`
+**File**: `docs/debugging/twotheta_axis_parameter_docs.md`
 
 **Purpose**: Template for documenting parameters with hidden side effects.
 
@@ -91,7 +91,7 @@ Development workflows that catch hidden behaviors early.
 ```
 
 ### 1.4 Common Pitfalls Section
-**File**: `docs/templates/common_pitfalls_section.md`
+**File**: `docs/debugging/common_pitfalls_section.md`
 
 **Purpose**: Standardized documentation of common mistakes and prevention.
 
@@ -155,7 +155,7 @@ class HiddenBehaviorDetector:
 ## 🔍 Layer 3: Discovery Tools
 
 ### 3.1 Behavioral Discovery Checklist
-**File**: `docs/templates/behavioral_discovery_checklist.md`
+**File**: `docs/debugging/behavioral_discovery_checklist.md`
 
 **Purpose**: Systematic process for discovering hidden behaviors in new codebases.
 
@@ -199,7 +199,7 @@ python behavior_discovery_tools.py test-equivalent ./nanoBragg \
 ## 🛠️ Layer 4: Process Integration
 
 ### 4.1 Debugging Decision Tree
-**File**: `docs/templates/debugging_decision_tree.md`
+**File**: `docs/debugging/debugging_decision_tree.md`
 
 **Purpose**: Systematic approach to diagnosing unexpected behavior.
 
