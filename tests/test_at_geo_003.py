@@ -46,24 +46,29 @@ class TestATGEO003RFactorAndBeamCenter:
         r_factor = detector.get_r_factor()
 
         # Manually calculate expected r-factor
-        from src.nanobrag_torch.utils.geometry import angles_to_rotation_matrix
+        from src.nanobrag_torch.utils.geometry import angles_to_rotation_matrix, rotate_axis
         from src.nanobrag_torch.utils.units import degrees_to_radians
 
         rotx = degrees_to_radians(5.0)
         roty = degrees_to_radians(3.0)
         rotz = degrees_to_radians(2.0)
+        twotheta = degrees_to_radians(15.0)
 
         # Initial detector normal for MOSFLM is [1, 0, 0]
         # Use float64 to match Detector's default dtype
         odet_initial = torch.tensor([1.0, 0.0, 0.0], dtype=torch.float64)
 
-        # Apply rotations (but NOT twotheta - that's applied to whole detector)
+        # Apply rotations (rotx, roty, rotz)
         rot_matrix = angles_to_rotation_matrix(
             torch.tensor(rotx, dtype=torch.float64),
             torch.tensor(roty, dtype=torch.float64),
             torch.tensor(rotz, dtype=torch.float64)
         )
         odet_rotated = torch.matmul(rot_matrix, odet_initial)
+
+        # Apply twotheta rotation around MOSFLM twotheta axis [0, 0, -1]
+        twotheta_axis = torch.tensor([0.0, 0.0, -1.0], dtype=torch.float64)
+        odet_rotated = rotate_axis(odet_rotated, twotheta_axis, torch.tensor(twotheta, dtype=torch.float64))
 
         # Beam vector for MOSFLM is [1, 0, 0]
         beam_vector = torch.tensor([1.0, 0.0, 0.0], dtype=torch.float64)

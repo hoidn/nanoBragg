@@ -419,15 +419,9 @@ class Detector:
         # When rotations are zero, the rotation matrix will be identity
         # and r-factor will naturally be 1.0
         if True:  # Always execute to preserve gradients
-            # Get initial odet_vector (detector normal)
-            if self.config.detector_convention == DetectorConvention.MOSFLM:
-                odet_initial = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
-            else:
-                odet_initial = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
-
-            # Rotate odet_vector by detector_rotx/roty/rotz (NOT twotheta)
-            rotation_matrix = angles_to_rotation_matrix(detector_rotx, detector_roty, detector_rotz)
-            odet_rotated = torch.matmul(rotation_matrix, odet_initial)
+            # Use the actual rotated detector normal (includes ALL rotations including twotheta)
+            # This is critical for correct obliquity calculations with tilted detectors
+            odet_rotated = self.odet_vec
 
             # Calculate ratio (r-factor)
             ratio = torch.dot(beam_vector, odet_rotated)
@@ -456,6 +450,10 @@ class Detector:
 
             # Update the actual distance using r-factor (implements AT-GEO-003)
             self.distance_corrected = close_distance / ratio
+
+            # CRITICAL: Update the stored close_distance for obliquity calculations
+            # This is needed when detector is rotated (e.g., with twotheta)
+            self.close_distance = close_distance
 
         # Store r-factor for later verification
         # Ensure it's a tensor with correct dtype

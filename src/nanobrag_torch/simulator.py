@@ -543,15 +543,22 @@ class Simulator:
             # No subpixel sampling - original code path
             airpath = pixel_magnitudes.squeeze(-1)  # Remove last dimension for broadcasting
             airpath_m = airpath * 1e-10  # Å to meters
-            close_distance_m = self.detector.distance  # Already in meters
+            close_distance_m = self.detector.close_distance  # Use close_distance, not distance
             pixel_size_m = self.detector.pixel_size  # Already in meters
 
-            omega_pixel = (
-                (pixel_size_m * pixel_size_m)
-                / (airpath_m * airpath_m)
-                * close_distance_m
-                / airpath_m
-            )
+            # Calculate solid angle (omega) based on point_pixel mode
+            if self.detector.config.point_pixel:
+                # Point pixel mode: ω = 1 / R^2
+                omega_pixel = 1.0 / (airpath_m * airpath_m)
+            else:
+                # Standard mode with obliquity correction
+                # ω = (pixel_size^2 / R^2) · (close_distance/R)
+                omega_pixel = (
+                    (pixel_size_m * pixel_size_m)
+                    / (airpath_m * airpath_m)
+                    * close_distance_m
+                    / airpath_m
+                )
 
             # Apply omega directly
             normalized_intensity = normalized_intensity * omega_pixel
