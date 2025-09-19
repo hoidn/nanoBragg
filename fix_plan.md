@@ -751,11 +751,39 @@ All medium priority items completed!
   - Implements deterministic mode with careful handling of threading and seeds
   - All determinism tests pass with correlation ≥ 0.9999999 as required
 
-### Missing AT-PARALLEL Tests (8 tests remaining)
+### AT-PARALLEL-015: Mixed Unit Input Handling ✅ COMPLETE
+- **Status**: COMPLETE (2025-09-19)
+- **Implementation**: Full implementation of mixed unit input handling validation
+- **Test**: Created `tests/test_at_parallel_015.py` with 5 comprehensive tests
+- **Details**:
+  - Tests distance units consistency across different detector configurations
+  - Validates wavelength handling in Angstroms with proper Bragg angle scaling
+  - Verifies angle conversions from degrees to radians throughout the system
+  - Tests comprehensive mixed unit scenario with all parameter types
+  - Validates detector rotation units are correctly converted
+  - All unit conversions verified to be applied consistently
+  - Results confirmed to be independent of input unit representations
+  - All 5 tests passing with no unit confusion errors detected
+
+### High Priority TODO - HKL File Support 🔴
+The following new acceptance tests require actual HKL file support for full validation:
+- AT-PARALLEL-027 - Non-Uniform Structure Factor Pattern Equivalence
+  - Requires: test_pattern.hkl with non-uniform F values
+  - Tests: Real crystallographic data handling, F² intensity scaling
+  - Critical for: Validating structure factor file parsing and usage
+- AT-STR-004 - Sparse HKL Handling and Missing Reflection Behavior
+  - Requires: sparse.hkl with deliberate gaps, or MOSFLM/REFMAC generated file
+  - Tests: Interplay between HKL data and default_F fallback
+  - Critical for: Validating incomplete dataset handling
+- AT-IO-004 - HKL Format Validation Suite
+  - Requires: Multiple HKL format variants (4, 5, 6 column files)
+  - Tests: Parser robustness across different HKL formats
+  - Critical for: Ensuring compatibility with crystallography tool outputs
+
+### Missing AT-PARALLEL Tests (6 tests remaining)
 The following AT-PARALLEL tests from spec-a-parallel.md still need implementation:
 - AT-PARALLEL-006 - Single Reflection Position (in progress - crystal orientation issue)
-- AT-PARALLEL-014 - Noise Robustness Test
-- AT-PARALLEL-015 - Mixed Unit Input Handling
+- AT-PARALLEL-014 - Noise Robustness Test (partial implementation in test_at_parallel_014.py)
 - AT-PARALLEL-016 - Extreme Scale Testing
 - AT-PARALLEL-017 - Grazing Incidence Geometry
 - AT-PARALLEL-018 - Crystal Boundary Conditions
@@ -858,17 +886,19 @@ self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2
 
 ## Next Steps
 
-**Immediate priorities:**
-1. ✅ DONE: Fix beam center calculation bug (AT-PARALLEL-001)
-2. IN PROGRESS: Implement remaining AT-PARALLEL test suite (2-20)
-3. TODO: Investigate intensity normalization discrepancies
+**Critical for Full Validation:**
+1. 🔴 **Generate or obtain HKL test files** for AT-PARALLEL-027, AT-STR-004, AT-IO-004
+   - Option A: Generate minimal synthetic HKL files with known patterns
+   - Option B: Use MOSFLM/REFMAC/PHENIX to generate from small test structures
+   - Option C: Extract subset from existing crystallographic datasets
+2. 🔴 **Implement HKL file tests** to prove real structure factor handling works
+3. 🟡 Complete remaining AT-PARALLEL tests (7 tests)
+4. 🟢 Performance optimization and GPU acceleration
 
-Potential future work:
-1. Performance optimization and GPU acceleration
-2. Additional output formats beyond SMV/PGM
-3. Extended source models (divergence, dispersion)
-4. Advanced crystal models (mosaicity implementation)
-5. Integration with existing crystallography pipelines
+**Why HKL tests are critical:**
+- Current test suite uses `-default_F` for all tests (uniform intensities)
+- Real crystallography requires non-uniform structure factors from HKL files
+- Without these tests, we cannot validate actual crystallographic workflows
 
 ## Test Suite Cleanup (2025-09-19) ✅
 
@@ -894,7 +924,7 @@ Potential future work:
 
 Implementation status:
 - **Original tests**: 41 of 41 acceptance tests complete ✅
-- **NEW CRITICAL**: 10 of 26 AT-PARALLEL tests fully implemented
+- **NEW CRITICAL**: 11 of 26 AT-PARALLEL tests fully implemented
   - AT-PARALLEL-001: Beam center scaling (PASSED 8/8 tests) ✅
   - AT-PARALLEL-002: Pixel size independence (PASSED 4/4 tests) ✅
   - AT-PARALLEL-003: Detector offset preservation (PASSED 3/3 tests) ✅
@@ -902,6 +932,7 @@ Implementation status:
   - AT-PARALLEL-005: Beam Center Parameter Mapping (PASSED 4/4 tests) ✅
   - AT-PARALLEL-009: Intensity Normalization (PASSED 3/3 tests) ✅
   - AT-PARALLEL-011: Polarization Factor Verification (PASSED 2/2 tests, 1 skipped) ✅
+  - AT-PARALLEL-015: Mixed Unit Input Handling (PASSED 5/5 tests) ✅
   - AT-PARALLEL-021: Crystal Phi Rotation Equivalence (PASSED 2/2 tests) ✅
   - AT-PARALLEL-022: Combined Detector+Crystal Rotation (PASSED 3/3 tests) ✅
   - AT-PARALLEL-023: Misset Angles Equivalence (PASSED 11/11 tests) ✅
