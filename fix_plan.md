@@ -765,6 +765,22 @@ All medium priority items completed!
   - Implements deterministic mode with careful handling of threading and seeds
   - All determinism tests pass with correlation ≥ 0.9999999 as required
 
+### AT-PARALLEL-018: Crystal Boundary Conditions ✅ COMPLETE
+- **Status**: COMPLETE (2025-09-19)
+- **Implementation**: Full implementation of crystal boundary condition testing
+- **Test**: Created `tests/test_at_parallel_018.py` with 8 comprehensive tests
+- **Details**:
+  - Tests cubic crystal with perfectly aligned axes (90° angles)
+  - Tests zero-angle rotations (no misset, no phi, no detector rotations)
+  - Tests near-singular cell angles (very acute <1° and very obtuse >179°)
+  - Tests spindle axis aligned with beam direction
+  - Tests very small (1Å) and very large (1000Å) unit cells
+  - Tests continuity near 90° angles to verify no discontinuities
+  - Tests identity misset matrix (0,0,0 rotations)
+  - All tests verify no NaN/Inf values, no division by zero errors
+  - Confirms degenerate cases are handled gracefully
+  - Results remain continuous near boundary conditions
+
 ### AT-PARALLEL-015: Mixed Unit Input Handling ✅ COMPLETE
 - **Status**: COMPLETE (2025-09-19)
 - **Implementation**: Full implementation of mixed unit input handling validation
@@ -794,16 +810,16 @@ The following new acceptance tests require actual HKL file support for full vali
   - Tests: Parser robustness across different HKL formats
   - Critical for: Ensuring compatibility with crystallography tool outputs
 
-### Missing AT-PARALLEL Tests (3 tests remaining)
+### Missing AT-PARALLEL Tests (2 tests remaining)
 The following AT-PARALLEL tests from spec-a-parallel.md still need implementation:
 - AT-PARALLEL-006 - Single Reflection Position (in progress - crystal orientation issue)
-- AT-PARALLEL-018 - Crystal Boundary Conditions
 - AT-PARALLEL-020 - Comprehensive Integration Test
 
 Recently completed:
 - AT-PARALLEL-014 - Noise Robustness Test ✅ COMPLETE (5 tests passing)
 - AT-PARALLEL-016 - Extreme Scale Testing ✅ COMPLETE (5 tests passing, 1 skipped)
 - AT-PARALLEL-017 - Grazing Incidence Geometry ✅ COMPLETE (6 tests passing)
+- AT-PARALLEL-018 - Crystal Boundary Conditions ✅ COMPLETE (8 tests passing)
 
 ## Architecture Notes
 
@@ -940,7 +956,7 @@ self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2
 
 Implementation status:
 - **Original tests**: 41 of 41 acceptance tests complete ✅
-- **NEW CRITICAL**: 14 of 26 AT-PARALLEL tests fully implemented
+- **NEW CRITICAL**: 15 of 26 AT-PARALLEL tests fully implemented
   - AT-PARALLEL-001: Beam center scaling (PASSED 8/8 tests) ✅
   - AT-PARALLEL-002: Pixel size independence (PASSED 4/4 tests) ✅
   - AT-PARALLEL-003: Detector offset preservation (PASSED 3/3 tests) ✅
@@ -948,10 +964,11 @@ Implementation status:
   - AT-PARALLEL-005: Beam Center Parameter Mapping (PASSED 4/4 tests) ✅
   - AT-PARALLEL-009: Intensity Normalization (PASSED 3/3 tests) ✅
   - AT-PARALLEL-011: Polarization Factor Verification (PASSED 2/2 tests, 1 skipped) ✅
-  - AT-PARALLEL-014: Noise Robustness (PASSED 5/5 tests) ✅ **NEW**
+  - AT-PARALLEL-014: Noise Robustness (PASSED 5/5 tests) ✅
   - AT-PARALLEL-015: Mixed Unit Input Handling (PASSED 5/5 tests) ✅
-  - AT-PARALLEL-016: Extreme Scale Testing (PASSED 5/5 tests, 1 skipped) ✅ **NEW**
-  - AT-PARALLEL-017: Grazing Incidence Geometry (PASSED 6/6 tests) ✅ **NEW**
+  - AT-PARALLEL-016: Extreme Scale Testing (PASSED 5/5 tests, 1 skipped) ✅
+  - AT-PARALLEL-017: Grazing Incidence Geometry (PASSED 6/6 tests) ✅
+  - AT-PARALLEL-018: Crystal Boundary Conditions (PASSED 8/8 tests) ✅ **NEW**
   - AT-PARALLEL-021: Crystal Phi Rotation Equivalence (PASSED 2/2 tests) ✅
   - AT-PARALLEL-022: Combined Detector+Crystal Rotation (PASSED 3/3 tests) ✅
   - AT-PARALLEL-023: Misset Angles Equivalence (PASSED 11/11 tests) ✅
