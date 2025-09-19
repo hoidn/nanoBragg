@@ -112,20 +112,6 @@ Spec/Architecture points you must implement and/or verify (select one per loop):
 - Acceptance tests (see spec)
 - bug fixes
 
-Output:
-<output guidelines>
-Loop output checklist (produce these in each loop):
-- Brief problem statement with quoted spec lines you implemented.
-- Relevant `arch.md` ADR(s) or sections you aligned with (quote).
-- Search summary (what exists/missing; file pointers).
-- Diff or file list of changes.
-- Targeted test or example workflow updated/added and its result.
-- `fix_plan.md` delta (items done/new).
-- Any CLAUDE.md updates (1–3 lines max).
-- Any `arch.md` updates you made or propose (1–3 lines; rationale).
-- Next most‑important item you would pick if you had another loop.
-</output guidelines>
-
 Process hints:
 <process hints>
 - If the acceptance list is large, first generate/refresh `fix_plan.md` from the spec’s Acceptance Tests by scanning for items missing coverage.
@@ -136,6 +122,23 @@ Commit hygiene (each loop):
 - Message must reference acceptance IDs (e.g., `AT-49`) and module (e.g., `providers/executor`), and briefly state behavior implemented/validated.
 - Include `fix_plan.md` and prompt/doc updates. Exclude runtime artifacts and state.
 
+</process hints>
+
+Output:
+<output format>
+Loop output checklist (produce these in each loop):
+- Brief problem statement with quoted spec lines you implemented.
+- Relevant `arch.md` ADR(s) or sections you aligned with (quote).
+- Search summary (what exists/missing; file pointers).
+- Diff or file list of changes.
+- Targeted test or example workflow updated/added and its result.
+- `fix_plan.md` delta (items done/new).
+- Any CLAUDE.md updates (1–3 lines max).
+- Any `arch.md` updates you made or propose (1–3 lines; rationale).
+- Next most‑important item you would pick if you had another loop.
+</output format>
+
+<completion checklist>
 Loop Self‑Checklist (end of every loop):
 - Module/layer check done and justified.
 - Spec sections/acceptance IDs/test names quoted and limited (one area; 1–2 items max).
@@ -143,7 +146,8 @@ Loop Self‑Checklist (end of every loop):
 - **Full `pytest tests/` run from project root completed and passed without any errors or collection failures.**
 - Evidence includes file:line pointers for presence/absence; no "assume missing".
 - Scope stayed within a single module category; if not, capture deferral in `fix_plan.md`.
-</process hints>
+</completion checklist>
+
 
 START HERE (task selection):
 0) if this is a bugfixing loop, use subagents to run the tests, investigate and fix any failures, and then report back to you. think hard.
