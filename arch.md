@@ -102,9 +102,12 @@ Notes
   - Absorption parameters stored in DetectorConfig: `detector_abs_um` (attenuation depth), `detector_thick_um` (thickness), `detector_thicksteps` (layers)
   - Parallax factor ρ = d·o computed per-pixel using detector normal and observation direction
   - Layer capture fractions: exp(−t·Δz·μ/ρ) − exp(−(t+1)·Δz·μ/ρ) where μ = 1/attenuation_depth
-  - With oversample_thick=False: multiply by last layer's capture fraction (last-value semantics)
-  - With oversample_thick=True: accumulate with per-layer capture fractions
-  - Implementation in `Simulator._apply_detector_absorption()` method
+
+- ADR-10 Convention-Aware Incident Beam Direction [IMPLEMENTED]
+  - Simulator incident beam direction must match detector convention for consistency (AT-PARALLEL-004)
+  - MOSFLM convention: beam along [1,0,0] (+X axis)
+  - XDS/DIALS conventions: beam along [0,0,1] (+Z axis)
+  - Default to MOSFLM direction when no detector provided (for backward compatibility)
 
 ## 3) High‑Level System Architecture
 
