@@ -67,23 +67,44 @@ class Detector:
 
         # Convert beam center from mm to pixels
         # Note: beam center is given in mm from detector origin
+        # MOSFLM convention adds +0.5 pixel offset per AT-PARALLEL-002
         self.beam_center_s: torch.Tensor
         self.beam_center_f: torch.Tensor
 
+        # Import DetectorConvention for checking
+        from ..config import DetectorConvention
+
+        # Calculate pixel coordinates from mm values
         if isinstance(config.beam_center_s, torch.Tensor):
-            self.beam_center_s = config.beam_center_s / config.pixel_size_mm
+            beam_center_s_pixels = config.beam_center_s / config.pixel_size_mm
+        else:
+            beam_center_s_pixels = config.beam_center_s / config.pixel_size_mm
+
+        if isinstance(config.beam_center_f, torch.Tensor):
+            beam_center_f_pixels = config.beam_center_f / config.pixel_size_mm
+        else:
+            beam_center_f_pixels = config.beam_center_f / config.pixel_size_mm
+
+        # Apply MOSFLM +0.5 pixel offset if using MOSFLM convention
+        if config.detector_convention == DetectorConvention.MOSFLM:
+            beam_center_s_pixels = beam_center_s_pixels + 0.5
+            beam_center_f_pixels = beam_center_f_pixels + 0.5
+
+        # Convert to tensors on proper device
+        if isinstance(beam_center_s_pixels, torch.Tensor):
+            self.beam_center_s = beam_center_s_pixels.to(device=self.device, dtype=self.dtype)
         else:
             self.beam_center_s = torch.tensor(
-                config.beam_center_s / config.pixel_size_mm,
+                beam_center_s_pixels,
                 device=self.device,
                 dtype=self.dtype,
             )
 
-        if isinstance(config.beam_center_f, torch.Tensor):
-            self.beam_center_f = config.beam_center_f / config.pixel_size_mm
+        if isinstance(beam_center_f_pixels, torch.Tensor):
+            self.beam_center_f = beam_center_f_pixels.to(device=self.device, dtype=self.dtype)
         else:
             self.beam_center_f = torch.tensor(
-                config.beam_center_f / config.pixel_size_mm,
+                beam_center_f_pixels,
                 device=self.device,
                 dtype=self.dtype,
             )
@@ -458,9 +479,9 @@ class Detector:
             # Calculate Fbeam and Sbeam exactly as C code does
             # MOSFLM convention: Add 0.5 pixel offset
             # CORRECT MAPPING: Xbeam (C) → beam_center_f (fast), Ybeam (C) → beam_center_s (slow)
-            # beam_center_f and beam_center_s are already in pixels
-            Fbeam = (self.beam_center_f + 0.5) * self.pixel_size  # Add 0.5 pixel, convert to meters
-            Sbeam = (self.beam_center_s + 0.5) * self.pixel_size  # Add 0.5 pixel, convert to meters
+            # beam_center_f and beam_center_s are already in pixels (with MOSFLM offset already applied in __init__)
+            Fbeam = self.beam_center_f * self.pixel_size  # Convert to meters (offset already included)
+            Sbeam = self.beam_center_s * self.pixel_size  # Convert to meters (offset already included)
             
             # Set beam vector based on convention
             if self.config.detector_convention == DetectorConvention.MOSFLM:
@@ -860,14 +881,10 @@ class Detector:
         # Account for the +0.5 pixel offset in MOSFLM convention
         # beam_center_f and beam_center_s are already in pixels
         is_custom = self._is_custom_convention()
-        if is_custom:
-            # CUSTOM convention: No +0.5 pixel offset
-            Fbeam_original = self.beam_center_f * self.pixel_size
-            Sbeam_original = self.beam_center_s * self.pixel_size
-        else:
-            # MOSFLM convention: Add 0.5 pixel offset
-            Fbeam_original = (self.beam_center_f + 0.5) * self.pixel_size
-            Sbeam_original = (self.beam_center_s + 0.5) * self.pixel_size
+        # beam_center_f and beam_center_s already have the MOSFLM +0.5 pixel offset applied in __init__
+        # so we just need to convert to meters
+        Fbeam_original = self.beam_center_f * self.pixel_size
+        Sbeam_original = self.beam_center_s * self.pixel_size
 
         # Calculate errors
         error_f = abs(Fbeam_computed - Fbeam_original)

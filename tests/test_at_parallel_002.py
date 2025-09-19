@@ -62,10 +62,10 @@ class TestATParallel002:
             detector = Detector(detector_config)
 
             # Calculate expected beam center in pixels
-            # MOSFLM convention: beam_center_pixels = beam_center_mm / pixel_size_mm
-            expected_beam_pixel = beam_center_mm / pixel_size
+            # MOSFLM convention adds +0.5 pixel offset: beam_center_pixels = beam_center_mm / pixel_size_mm + 0.5
+            expected_beam_pixel = beam_center_mm / pixel_size + 0.5
 
-            # The detector internally stores beam centers in pixels (with the +0.5 offset handled internally)
+            # The detector internally stores beam centers in pixels (with the +0.5 offset for MOSFLM)
             # Verify the beam center in pixels scales inversely with pixel size
             assert abs(detector.beam_center_s.item() - expected_beam_pixel) < 0.1, \
                 f"Beam center S (pixels) mismatch for pixel_size={pixel_size}mm: {detector.beam_center_s.item()} vs {expected_beam_pixel}"
@@ -104,7 +104,7 @@ class TestATParallel002:
 
             beam_config = BeamConfig(
                 wavelength_A=6.2,
-                fluence=1e12
+                fluence=1e24  # Use realistic fluence for meaningful intensities
             )
 
             # Run simulation
@@ -167,7 +167,7 @@ class TestATParallel002:
 
             beam_config = BeamConfig(
                 wavelength_A=6.2,
-                fluence=1e12
+                fluence=1e24  # Use realistic fluence for meaningful intensities
             )
 
             # Run simulation

@@ -886,7 +886,7 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
   - Setup: Run same calculation on different machines/architectures
   - Expectation: Results SHALL be numerically identical for fixed seeds; Peak positions SHALL not vary; Intensities SHALL match to machine precision
 
-- AT-PARALLEL-014 Noise Robustness Test
+  - AT-PARALLEL-014 Noise Robustness Test
   - Setup: Add Poisson noise with different seeds, compare statistics
   - Expectation: Mean intensity SHALL be preserved ±1%; Peak positions SHALL not shift with noise; Noise statistics SHALL match Poisson distribution
 
@@ -910,9 +910,17 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
   - Setup: Small d-spacings <1Å, large detector 4096x4096, fine sampling
   - Expectation: Memory usage SHALL scale linearly; Performance SHALL degrade gracefully; Precision SHALL be maintained for fine features
 
-- AT-PARALLEL-020 Comprehensive Integration Test
+  - AT-PARALLEL-020 Comprehensive Integration Test
   - Setup: Complete simulation with all features: triclinic cell, mosaic spread, phi rotation, detector tilts, absorption, polarization
   - Expectation: Full pipeline SHALL execute without errors; All corrections SHALL be applied consistently; Final correlation between C and PyTorch SHALL be >0.95
+
+  - AT-PARALLEL-021 Crystal Phi Rotation Equivalence
+  - Setup: Use cubic cell (100,100,100,90,90,90) with -phi 0, -osc 90, -phisteps 1 (midpoint ≈ 45°) and a second case with -phisteps 9 (-phistep 10) covering the same 90° range; fixed seeds; small detector (e.g., -detpixels 256 -pixel 0.1) and tight ROI centered on beam.
+  - Expectation: For identical inputs, C and PyTorch float images SHALL match within numeric tolerances (rtol ≤ 1e-5, atol ≤ 1e-6); dominant peak positions SHALL rotate consistently with φ (midpoint ≈ 45° for single-step case); multi-step case (phisteps>1) SHALL match after normalization by steps; image correlation >0.99 and peak position error ≤0.5 pixels.
+
+  - AT-PARALLEL-022 Combined Detector+Crystal Rotation Equivalence
+  - Setup: Apply non-zero detector rotations (e.g., -detector_rotx 5 -detector_roty 3 -detector_rotz 2 -twotheta 10) together with crystal φ rotation cases from AT-PARALLEL-021; fixed seeds; same small detector/ROI settings.
+  - Expectation: C and PyTorch float images SHALL agree within tolerances (rtol ≤ 1e-5, atol ≤ 1e-6); peak trajectories reflect both detector and crystal rotations; total intensity conservation within ±10% across the compared images; correlation >0.98 and peak alignment within ≤1 pixel after accounting for expected rotational shifts.
 
 Quality Bar Checklist (Informative)
 

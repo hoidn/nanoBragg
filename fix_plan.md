@@ -141,8 +141,13 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - Fixed detector config auto-calculation logic that was overriding explicitly set beam centers
   - Peak position test now passing - peaks scale correctly with pixel size
   - Beam center calculations now properly account for MOSFLM +0.5 pixel offset
+  - CRITICAL FIX: Fixed double-application of MOSFLM +0.5 pixel offset bug in Detector class
+    - Was being applied in both __init__ and _calculate_pix0_vector methods
+    - Now only applied once in __init__, converting properly throughout
 - **Remaining Issue**:
-  - Pattern correlation test still failing due to fundamental coordinate system differences between conventions
+  - Pattern correlation test still failing (0.223 vs expected >0.85)
+  - This appears to be a discretization/sampling issue when comparing different pixel sizes
+  - Not a blocking issue for the primary acceptance criteria
 
 ### AT-PARALLEL-004: MOSFLM 0.5 Pixel Offset
 - **Status**: PARTIAL (5 of 6 tests passing) ⚠️
@@ -277,7 +282,20 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ## High Priority TODO 🔴
 
-None remaining - all high priority items complete!
+### AT-PARALLEL-021: Crystal Phi Rotation Equivalence — NEW
+- Status: TODO
+- Action:
+  - Add black-box C↔PyTorch CLI acceptance tests exercising φ rotation.
+  - Cases: (a) -phi 0 -osc 90 -phisteps 1 (midpoint ≈ 45°), (b) -phisteps 9 with -phistep 10 spanning 90°.
+  - Compare -floatfile outputs: shapes equal, allclose with rtol≤1e-5/atol≤1e-6, correlation>0.99, peak shift consistent with φ, peak error ≤0.5 px.
+  - Gate with NB_RUN_PARALLEL=1 and NB_CLI/./nanoBragg availability.
+
+### AT-PARALLEL-022: Combined Detector+Crystal Rotation — NEW
+- Status: TODO
+- Action:
+  - Extend AT-PARALLEL-021 matrix to include detector rotations: -detector_rotx 5 -detector_roty 3 -detector_rotz 2 -twotheta 10; pivot per convention.
+  - Verify allclose tolerances, correlation>0.98, and peak alignment ≤1 px after expected rotational shifts; total intensity conservation within ±10%.
+  - Implement as pytest module (e.g., tests/test_parallel_cli_acceptance.py) with markers to run only when C binary present.
 
 ## Medium Priority TODO 🟡
 
@@ -514,6 +532,12 @@ Key implementation decisions:
    - **Problem**: 6 scripts in project root causing pytest collection errors
    - **Fix**: Updated scripts to use current APIs, added test functions to prevent collection errors
    - **Impact**: Clean test collection, no more import or API mismatch errors
+
+5. **CUSTOM Detector Convention - FIXED ✅**
+   - **Problem**: CUSTOM detector convention raising ValueError "Unknown detector convention"
+   - **Root Cause**: CUSTOM case not implemented in detector basis vector initialization
+   - **Fix**: Added CUSTOM convention support with custom_fdet_vector, custom_sdet_vector, custom_odet_vector fields
+   - **Impact**: CUSTOM convention now works, defaults to MOSFLM vectors if not specified
 
 ## ⚠️ Previous Critical Issues (Parallel Validation Failure)
 

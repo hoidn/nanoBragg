@@ -509,7 +509,7 @@ def run_matrix_test():
     print(f"C trace saved to: {c_trace_file}")
 
 
-def test_rotation_order_variations():
+def test_simple_detector_creation():
     """Test to prevent pytest collection errors."""
     # This is a complex debugging script, not a unit test
     # Just test that we can create a detector with rotations
