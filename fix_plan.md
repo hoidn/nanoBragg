@@ -643,7 +643,15 @@ All medium priority items completed!
 
 ## In Progress 🚧
 
-None currently. All high and medium priority acceptance tests are complete.
+### AT-PARALLEL-006: Single Reflection Position
+- **Status**: IN PROGRESS
+- **Implementation**: Created test file `tests/test_at_parallel_006.py`
+- **Issue Found**: The (1,0,0) reflection doesn't appear at expected position with default MOSFLM orientation
+- **Root Cause**: In MOSFLM convention with default crystal orientation, the (1,0,0) reciprocal vector is parallel to the beam direction, preventing diffraction
+- **TODO**: Need to either:
+  - Use a different reflection that satisfies Bragg condition with default orientation
+  - Apply appropriate crystal rotation to bring (1,0,0) into diffraction
+  - Clarify test requirements with spec authors
 
 ### AT-PRE-001: Header precedence (-img vs -mask)
 - **Status**: COMPLETE ✅
@@ -667,7 +675,22 @@ None currently. All high and medium priority acceptance tests are complete.
 
 ## Low Priority TODO 🟢
 
-None remaining - ALL acceptance tests complete!
+### Missing AT-PARALLEL Tests (14 tests)
+The following AT-PARALLEL tests from spec-a-parallel.md still need implementation:
+- AT-PARALLEL-006 - Single Reflection Position (in progress)
+- AT-PARALLEL-007 - Peak Position with Rotations
+- AT-PARALLEL-008 - Multi-Peak Pattern Registration
+- AT-PARALLEL-010 - Solid Angle Corrections
+- AT-PARALLEL-011 - Polarization Factor Verification
+- AT-PARALLEL-012 - Reference Pattern Correlation
+- AT-PARALLEL-013 - Cross-Platform Consistency
+- AT-PARALLEL-014 - Noise Robustness Test
+- AT-PARALLEL-015 - Mixed Unit Input Handling
+- AT-PARALLEL-016 - Extreme Scale Testing
+- AT-PARALLEL-017 - Grazing Incidence Geometry
+- AT-PARALLEL-018 - Crystal Boundary Conditions
+- AT-PARALLEL-020 - Comprehensive Integration Test
+- AT-PARALLEL-026 - Absolute Peak Position for Triclinic Crystal (marked as resolved in fix_plan but test file missing)
 
 ## Architecture Notes
 
