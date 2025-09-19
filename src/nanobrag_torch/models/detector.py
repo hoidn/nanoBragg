@@ -468,15 +468,15 @@ class Detector:
             # BEAM pivot mode: detector rotates around the direct beam spot
             # Use exact C-code formula: pix0_vector = -Fbeam*fdet_vec - Sbeam*sdet_vec + distance*beam_vec
             
-            # Calculate Fbeam and Sbeam with the C code's axis swap
-            # The C code has: Fbeam = Ybeam, Sbeam = Xbeam
-            # And c_reference_utils maps: Xbeam → beam_center_f, Ybeam → beam_center_s
-            # Therefore: Fbeam ← beam_center_s, Sbeam ← beam_center_f (SWAPPED!)
+            # Calculate Fbeam and Sbeam from beam centers
+            # For MOSFLM: Fbeam = Ybeam + 0.5*pixel, Sbeam = Xbeam + 0.5*pixel
+            # c_reference_utils now correctly maps: Xbeam=beam_center_s, Ybeam=beam_center_f
+            # Therefore: Fbeam=beam_center_f, Sbeam=beam_center_s (no swap needed)
             # The beam centers already include the MOSFLM +0.5 pixel offset from __init__
 
-            # Apply the axis swap: Fbeam gets slow value, Sbeam gets fast value
-            Fbeam = self.beam_center_s * self.pixel_size  # F (fast coord) ← beam_s (slow param)
-            Sbeam = self.beam_center_f * self.pixel_size  # S (slow coord) ← beam_f (fast param)
+            # Direct mapping: no axis swap needed
+            Fbeam = self.beam_center_f * self.pixel_size  # F (fast coord) ← beam_f (fast param)
+            Sbeam = self.beam_center_s * self.pixel_size  # S (slow coord) ← beam_s (slow param)
             
             # Set beam vector based on convention
             if self.config.detector_convention == DetectorConvention.MOSFLM:

@@ -17,6 +17,9 @@ Subagents policy (context budget):
 - provide subagents with sufficient context, including all relevant documentation file paths
 - Summaries should be concise; prefer file pointers and diffs over full content.
 
+IMPORTANT:
+- when debugging, ultrathink, generate multiple hypotheses, and use parallel subagents to test them
+
 - **Refactoring Discipline**: If you move or rename a module, file, class, or function, you MUST treat it as a single, atomic operation within the loop. This requires:
     a. Creating the new file/module structure.
     b. Moving the code to its new location.

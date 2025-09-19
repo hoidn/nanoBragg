@@ -96,9 +96,10 @@ def build_nanobragg_command(
     cmd.extend(["-detpixels", str(detector_config.spixels)])
 
     # Beam center
-    # Use -Xbeam and -Ybeam (Xbeam->fast, Ybeam->slow)
-    cmd.extend(["-Xbeam", str(detector_config.beam_center_f)])
-    cmd.extend(["-Ybeam", str(detector_config.beam_center_s)])
+    # MOSFLM convention: Fbeam = Ybeam + 0.5*pixel, Sbeam = Xbeam + 0.5*pixel
+    # Therefore: Ybeam maps to fast, Xbeam maps to slow
+    cmd.extend(["-Xbeam", str(detector_config.beam_center_s)])  # Xbeam = slow value
+    cmd.extend(["-Ybeam", str(detector_config.beam_center_f)])  # Ybeam = fast value
 
     # Crystal unit cell parameters
     cmd.extend(

@@ -374,18 +374,22 @@ None currently. All high and medium priority acceptance tests are complete.
   - Exit codes: 0 (pass), 1 (correlation below threshold), 3 (binary not found), 4 (shape mismatch)
 
 ### AT-PARALLEL-025: Maximum Intensity Position Alignment
-- **Status**: FIXED ✅ (Intensity scaling resolved)
+- **Status**: PARTIAL FIX ⚠️
 - **Implementation**: Test file created at `tests/test_at_parallel_025.py`
-- **Test**: 1 of 3 tests passing, 2 failing due to remaining position offset issue
-- **Fix Applied (2025-09-19)**:
-  - **Root Cause**: Test was comparing against wrong C output file (intimage.img with ~5.5M scale factor)
-  - **Solution**: Modified `c_reference_runner.py` to read `floatimage.bin` instead
-  - **Result**: Intensity values now match perfectly (0.010 for both C and PyTorch)
-- **Remaining Issues**:
-  - Simple cubic case: PASSES with perfect alignment (0.000 pixels)
-  - Offset beam cases: Still have ~1.4 pixel offset due to beam center calculation differences
+- **Test**: 1 of 3 tests passing, 2 failing with 1.4 pixel diagonal offset
+- **Fixes Applied**:
+  - **2025-09-19 AM**: Fixed intensity scaling by reading `floatimage.bin` instead of `intimage.img`
+  - **2025-09-19 PM**: Fixed beam center axis mapping in `c_reference_utils.py` and `detector.py`
+    - Corrected MOSFLM convention: Xbeam→slow, Ybeam→fast
+    - Fixed incorrect axis swap in `detector.py` that was compensating for wrong mapping
+- **Current Results**:
+  - Simple cubic case: PASSES with perfect alignment (0.000 pixels) ✅
+  - Offset beam cases: Still fail with 1.414 pixel diagonal offset (exactly +1 in both dimensions)
   - Pattern correlation: Very high (>0.99), confirming physics is correct
-- **Status Summary**: Main bug (5.5M intensity factor) FIXED, beam center offsets require separate investigation
+- **Root Cause Analysis**:
+  - The 1.414 pixel offset (sqrt(2)) indicates systematic +1 pixel shift in both slow and fast dimensions
+  - Likely due to pixel coordinate indexing convention differences (0-based vs 1-based, or center vs corner)
+- **TODO**: Investigate pixel coordinate calculation and rounding conventions between C and PyTorch
 
 ## High Priority TODO 🔴
 
