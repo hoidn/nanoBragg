@@ -75,17 +75,11 @@ class Detector:
         from ..config import DetectorConvention
 
         # Calculate pixel coordinates from mm values
-        if isinstance(config.beam_center_s, torch.Tensor):
-            beam_center_s_pixels = config.beam_center_s / config.pixel_size_mm
-        else:
-            beam_center_s_pixels = config.beam_center_s / config.pixel_size_mm
+        beam_center_s_pixels = config.beam_center_s / config.pixel_size_mm
+        beam_center_f_pixels = config.beam_center_f / config.pixel_size_mm
 
-        if isinstance(config.beam_center_f, torch.Tensor):
-            beam_center_f_pixels = config.beam_center_f / config.pixel_size_mm
-        else:
-            beam_center_f_pixels = config.beam_center_f / config.pixel_size_mm
-
-        # Apply MOSFLM +0.5 pixel offset if using MOSFLM convention
+        # Apply MOSFLM +0.5 pixel offset for stored beam centers
+        # This matches the C-code convention where beam centers include the offset
         if config.detector_convention == DetectorConvention.MOSFLM:
             beam_center_s_pixels = beam_center_s_pixels + 0.5
             beam_center_f_pixels = beam_center_f_pixels + 0.5
@@ -477,11 +471,13 @@ class Detector:
             # Use exact C-code formula: pix0_vector = -Fbeam*fdet_vec - Sbeam*sdet_vec + distance*beam_vec
             
             # Calculate Fbeam and Sbeam exactly as C code does
-            # MOSFLM convention: Add 0.5 pixel offset
+            # The beam centers already include the MOSFLM +0.5 pixel offset from __init__
             # CORRECT MAPPING: Xbeam (C) → beam_center_f (fast), Ybeam (C) → beam_center_s (slow)
-            # beam_center_f and beam_center_s are already in pixels (with MOSFLM offset already applied in __init__)
-            Fbeam = self.beam_center_f * self.pixel_size  # Convert to meters (offset already included)
-            Sbeam = self.beam_center_s * self.pixel_size  # Convert to meters (offset already included)
+
+            # Convert beam centers to meters for geometry calculations
+            # No additional offset needed - it's already in the stored beam centers
+            Fbeam = self.beam_center_f * self.pixel_size  # Convert to meters
+            Sbeam = self.beam_center_s * self.pixel_size  # Convert to meters
             
             # Set beam vector based on convention
             if self.config.detector_convention == DetectorConvention.MOSFLM:

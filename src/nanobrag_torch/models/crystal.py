@@ -473,11 +473,12 @@ class Crystal:
         skew = torch.abs(skew)  # Handle negative values
 
         # Handle degenerate cases where skew approaches zero
-        skew = torch.clamp(skew, min=1e-12)
+        # Use max with epsilon for numerical stability
+        skew = torch.maximum(skew, torch.tensor(1e-12, dtype=skew.dtype, device=skew.device))
 
         V = 2.0 * self.cell_a * self.cell_b * self.cell_c * torch.sqrt(skew)
         # Ensure volume is not too small
-        V = torch.clamp(V, min=1e-6)
+        V = torch.maximum(V, torch.tensor(1e-6, dtype=V.dtype, device=V.device))
         V_star = 1.0 / V
 
         # Calculate reciprocal cell lengths using C-code formulas
@@ -489,19 +490,19 @@ class Crystal:
         sin_alpha = torch.sin(alpha_rad)
         sin_beta = torch.sin(beta_rad)
 
-        # Clamp denominators to avoid division by zero
-        denom1 = torch.clamp(sin_beta * sin_gamma, min=1e-12)
-        denom2 = torch.clamp(sin_gamma * sin_alpha, min=1e-12)
-        denom3 = torch.clamp(sin_alpha * sin_beta, min=1e-12)
+        # Use maximum to avoid division by zero
+        denom1 = torch.maximum(sin_beta * sin_gamma, torch.tensor(1e-12, dtype=sin_beta.dtype, device=sin_beta.device))
+        denom2 = torch.maximum(sin_gamma * sin_alpha, torch.tensor(1e-12, dtype=sin_gamma.dtype, device=sin_gamma.device))
+        denom3 = torch.maximum(sin_alpha * sin_beta, torch.tensor(1e-12, dtype=sin_alpha.dtype, device=sin_alpha.device))
 
         cos_alpha_star = (cos_beta * cos_gamma - cos_alpha) / denom1
         cos_beta_star = (cos_gamma * cos_alpha - cos_beta) / denom2
         cos_gamma_star = (cos_alpha * cos_beta - cos_gamma) / denom3
 
-        # Ensure cos_gamma_star is in valid range for sqrt
-        cos_gamma_star_clamped = torch.clamp(cos_gamma_star, min=-1.0, max=1.0)
+        # Clamp cos_gamma_star to valid range [-1, 1]
+        cos_gamma_star_bounded = torch.clamp(cos_gamma_star, -1.0, 1.0)
         sin_gamma_star = torch.sqrt(
-            torch.clamp(1.0 - torch.pow(cos_gamma_star_clamped, 2), min=0.0)
+            torch.maximum(1.0 - torch.pow(cos_gamma_star_bounded, 2), torch.tensor(1e-12, dtype=cos_gamma_star.dtype, device=cos_gamma_star.device))
         )
 
         # Construct default orientation for reciprocal vectors (C-code convention)
@@ -525,11 +526,11 @@ class Crystal:
 
         # c* fills out 3D space
         c_star_x = c_star_length * cos_beta_star
-        # Clamp sin_gamma_star to avoid division by zero
-        sin_gamma_star_safe = torch.clamp(sin_gamma_star, min=1e-12)
+        # Use maximum to avoid division by zero
+        sin_gamma_star_safe = torch.maximum(sin_gamma_star, torch.tensor(1e-12, dtype=sin_gamma_star.dtype, device=sin_gamma_star.device))
         c_star_y = (
             c_star_length
-            * (cos_alpha_star - cos_beta_star * cos_gamma_star_clamped)
+            * (cos_alpha_star - cos_beta_star * cos_gamma_star_bounded)
             / sin_gamma_star_safe
         )
         c_star_z = (
@@ -561,8 +562,8 @@ class Crystal:
         # from the volume calculated by the formula, and we need to use the
         # actual volume for perfect metric duality
         V_actual = torch.dot(a_vec, b_cross_c)
-        # Ensure volume is not too small to prevent numerical instability
-        V_actual = torch.clamp(V_actual, min=1e-6)
+        # Ensure volume is not too small
+        V_actual = torch.maximum(V_actual, torch.tensor(1e-6, dtype=V_actual.dtype, device=V_actual.device))
         V_star_actual = 1.0 / V_actual
 
         # a* = (b × c) / V, etc.

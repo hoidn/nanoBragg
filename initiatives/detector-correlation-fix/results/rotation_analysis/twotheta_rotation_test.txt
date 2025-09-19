@@ -1,0 +1,27 @@
+Twotheta Rotation Test Results
+Angle: 20.0°
+
+
+Axis MOSFLM:
+  X-axis: difference = 0.00e+00
+  Y-axis: difference = 0.00e+00
+  Z-axis: difference = 0.00e+00
+  Diagonal: difference = 0.00e+00
+
+Axis XDS:
+  X-axis: difference = 0.00e+00
+  Y-axis: difference = 0.00e+00
+  Z-axis: difference = 0.00e+00
+  Diagonal: difference = 0.00e+00
+
+Axis Alternative:
+  X-axis: difference = 0.00e+00
+  Y-axis: difference = 0.00e+00
+  Z-axis: difference = 0.00e+00
+  Diagonal: difference = 0.00e+00
+
+Axis Custom:
+  X-axis: difference = 0.00e+00
+  Y-axis: difference = 0.00e+00
+  Z-axis: difference = 0.00e+00
+  Diagonal: difference = 0.00e+00

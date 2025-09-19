@@ -184,8 +184,8 @@ class Simulator:
         pixel_squared_sum = torch.sum(
             pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True
         )
-        # Clamp to prevent negative values that could cause complex gradients
-        pixel_squared_sum = torch.clamp(pixel_squared_sum, min=0.0)
+        # Use maximum to prevent negative values
+        pixel_squared_sum = torch.maximum(pixel_squared_sum, torch.tensor(1e-12, dtype=pixel_squared_sum.dtype, device=pixel_squared_sum.device))
         pixel_magnitudes = torch.sqrt(pixel_squared_sum)
         diffracted_beam_unit = pixel_coords_angstroms / pixel_magnitudes
 
@@ -294,8 +294,8 @@ class Simulator:
             hrad_sqr = (h_frac * h_frac * Na * Na +
                        k_frac * k_frac * Nb * Nb +
                        l_frac * l_frac * Nc * Nc)
-            # Protect against negative values before sqrt (though shouldn't happen)
-            hrad_sqr = torch.clamp(hrad_sqr, min=0.0)
+            # Use maximum to protect against negative values
+            hrad_sqr = torch.maximum(hrad_sqr, torch.tensor(1e-12, dtype=hrad_sqr.dtype, device=hrad_sqr.device))
             F_latt = Na * Nb * Nc * 0.723601254558268 * sinc3(
                 torch.pi * torch.sqrt(hrad_sqr * fudge)
             )
@@ -434,7 +434,7 @@ class Simulator:
                     # Calculate airpath for this subpixel
                     subpixel_coords_ang = subpixel_coords * 1e10  # Convert to Angstroms
                     sub_squared = torch.sum(subpixel_coords_ang * subpixel_coords_ang, dim=-1)
-                    sub_squared = torch.clamp(sub_squared, min=1e-20)  # Avoid division by zero
+                    sub_squared = torch.maximum(sub_squared, torch.tensor(1e-20, dtype=sub_squared.dtype, device=sub_squared.device))  # Avoid division by zero
                     sub_magnitudes = torch.sqrt(sub_squared)
 
                     # Convert back to meters for omega calculation
@@ -683,14 +683,14 @@ class Simulator:
         # Calculate observation directions (normalized pixel coordinates)
         # o = pixel_coords / |pixel_coords|
         pixel_distances = torch.sqrt(torch.sum(pixel_coords_meters**2, dim=-1, keepdim=True))
-        observation_dirs = pixel_coords_meters / torch.clamp(pixel_distances, min=1e-10)
+        observation_dirs = pixel_coords_meters / torch.maximum(pixel_distances, torch.tensor(1e-10, dtype=pixel_distances.dtype, device=pixel_distances.device))
 
         # Calculate parallax factor: ρ = d·o
         # detector_normal shape: [3], observation_dirs shape: [S, F, 3]
         # Result shape: [S, F]
         parallax = torch.sum(detector_normal.unsqueeze(0).unsqueeze(0) * observation_dirs, dim=-1)
         parallax = torch.abs(parallax)  # Take absolute value to ensure positive
-        parallax = torch.clamp(parallax, min=1e-10)  # Avoid division by zero
+        parallax = torch.maximum(parallax, torch.tensor(1e-10, dtype=parallax.dtype, device=parallax.device))  # Avoid division by zero
 
         # Calculate layer thickness
         delta_z = thickness_m / thicksteps

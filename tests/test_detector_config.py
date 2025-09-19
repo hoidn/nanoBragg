@@ -138,9 +138,9 @@ class TestDetectorInitialization:
         assert detector.fpixels == 1024
 
         # Check beam center in pixels
-        # MOSFLM convention: 51.25 mm / 0.1 mm per pixel = 512.5
-        assert detector.beam_center_s == 512.5
-        assert detector.beam_center_f == 512.5
+        # MOSFLM convention: 51.25 mm / 0.1 mm per pixel + 0.5 = 513.0
+        assert detector.beam_center_s == 513.0
+        assert detector.beam_center_f == 513.0
         
         # Check that post_init set the correct default twotheta_axis
         # MOSFLM default is [0, 0, -1] (negative Z-axis) per C code line 1245
@@ -167,8 +167,9 @@ class TestDetectorInitialization:
         assert detector.fpixels == 2048
 
         # Check beam center in pixels
-        assert detector.beam_center_s == 1024.0  # 204.8 mm / 0.2 mm per pixel
-        assert detector.beam_center_f == 1024.0
+        # Default convention is MOSFLM which adds +0.5 pixel offset
+        assert detector.beam_center_s == 1024.5  # 204.8 mm / 0.2 mm per pixel + 0.5
+        assert detector.beam_center_f == 1024.5
 
     def test_backward_compatibility_check(self):
         """Test that _is_default_config works correctly."""

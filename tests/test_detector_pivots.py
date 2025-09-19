@@ -37,10 +37,11 @@ def test_beam_pivot_keeps_beam_indices_and_alignment():
     )
     d = Detector(cfg)
 
-    # 1) Direct beam fractional indices must be (beam_center + 0.5, beam_center + 0.5)
+    # 1) Direct beam fractional indices must be equal to beam_center_s and beam_center_f
+    # (Note: MOSFLM +0.5 offset is already included in d.beam_center_s/f)
     s0, f0 = _beam_indices(d)
-    assert torch.allclose(s0, d.beam_center_s + 0.5, atol=1e-12)
-    assert torch.allclose(f0, d.beam_center_f + 0.5, atol=1e-12)
+    assert torch.allclose(s0, d.beam_center_s, atol=1e-12)
+    assert torch.allclose(f0, d.beam_center_f, atol=1e-12)
 
     # 2) Rotating two-theta under BEAM pivot preserves those indices
     d.config.detector_twotheta_deg = 15.0
