@@ -188,7 +188,7 @@ class TestATParallel007PeakPositionWithRotations:
         beam_config = BeamConfig(wavelength_A=config['wavelength'])
 
         # Run simulation
-        simulator = Simulator(crystal, detector, beam_config)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config)
         result = simulator.run()
 
         return result.cpu().numpy()
@@ -199,8 +199,12 @@ class TestATParallel007PeakPositionWithRotations:
             output_file = Path(tmpdir) / "c_output.bin"
 
             # Build C command
+            c_binary = os.environ.get('NB_C_BIN', './nanoBragg')
+            # Convert to absolute path if relative
+            if not os.path.isabs(c_binary):
+                c_binary = os.path.abspath(c_binary)
             cmd = [
-                os.environ.get('NB_C_BIN', './nanoBragg'),
+                c_binary,
                 '-cell'] + [str(x) for x in config['cell']] + [
                 '-default_F', str(config['default_F']),
                 '-N', str(config['N_cells'][0]),
@@ -221,11 +225,12 @@ class TestATParallel007PeakPositionWithRotations:
             ]
 
             # Run C code
+            c_dir = os.path.dirname(c_binary) if os.path.dirname(c_binary) else '.'
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                cwd=os.path.dirname(os.environ.get('NB_C_BIN', '.'))
+                cwd=c_dir
             )
 
             if result.returncode != 0:

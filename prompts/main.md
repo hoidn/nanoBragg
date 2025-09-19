@@ -10,16 +10,18 @@ One thing per loop:
 
 - Do not begin implementation until having reviewed and analyzed all contextually relevant docs and source files. think harder when doing this analysis. use parallel subagents when possible.
 
-Subagents policy (context budget):
+Subagents policy:
 - You may use up to 200 subagents for search, summarization, inventory, and planning.
 - Use at most 1 subagent for building/running tests/acceptance suites to avoid back‑pressure.
 - Use subagents for all testing, debugging, and verification-type tasks
 - provide subagents with sufficient context, including all relevant documentation file paths
 - Summaries should be concise; prefer file pointers and diffs over full content.
 
+
 IMPORTANT:
 - when debugging: ultrathink, generate multiple hypotheses, and use parallel subagents to test them
 IMPORTANT
+
 
 - **Refactoring Discipline**: If you move or rename a module, file, class, or function, you MUST treat it as a single, atomic operation within the loop. This requires:
     a. Creating the new file/module structure.
@@ -40,6 +42,8 @@ IMPORTANT
 - Determinism & seeds (scientific): Ensure reproducible runs. Use the project’s specified RNG/seed behavior; fix seeds in tests; verify repeatability locally.
 - Numeric tolerances (scientific): Use appropriate precision (often float64). Specify atol/rtol in tests; avoid silent dtype downcasts.
 - Reference parity (when available): If a trusted reference implementation/data exists, use it for focused parity checks on representative cases.
+
+- Reconcile $SPEC vs. architecture: if behavior is underspecified in the $SPEC but captured in $ARCH follow $ARCH If there is a conflict, prefer the $SPEC for external contracts and propose an $ARCH patch (record in `fix_plan.md`).
 
 Don’ts:
 - Don’t implement placeholder logic or silent fallbacks that hide validation failures.
@@ -82,8 +86,14 @@ declare:
   c. Any deviation from the $ARCH module structure will be considered a CRITICAL failure, equivalent to a broken test.
 - Search first. Use `ripgrep` patterns and outline findings. If an item exists but is incomplete, prefer finishing it over duplicating.
 </step 3>
+<step 3.5>
+- if the chosen task is bugfixing-related:
+    - use parallel subagents to run the tests, gather context, investigate failures, and then report back to you. think hard. then use a second round of subagent(s) to fix the failures.
+- if this is NOT a bugfixing loop:
+    - skip this step
+</step 3.5>
 <step 4>
-- Implement fully. No placeholders or stubs that merely satisfy trivial checks.
+- Implement fully the chosen task. No placeholders or stubs that merely satisfy trivial checks.
 </step 4>
 <step 5>
 - Add/adjust tests and minimal example workflows to prove behavior. Prefer targeted tests that map 1:1 to the Acceptance Tests list.
@@ -102,7 +112,7 @@ declare:
 <step 8>
 update docs:
 - If applicable, update `CLAUDE.md` with any new, brief run/build/test command or easily-avoidable quirk that caused issues during this loop. Do not put runtime status into `CLAUDE.md`.
-- Reconcile $SPEC vs. architecture: if behavior is underspecified in the $SPEC but captured in $ARCH follow $ARCH If there is a conflict, prefer the $SPEC for external contracts and propose an $ARCH patch (record in `fix_plan.md`).
+- if fix_plan.md is longer than 500 lines, move its least-currently relevant completed sections into fix_plan_archive.md
 </step 8>
 <step 9>
 Version control hygiene: after each loop, stage and commit all intended changes. Use a descriptive message including acceptance IDs and module scope. Do not use emojis or make any references to claude code in the commit message. Always include `fix_plan.md` and any updated prompts/docs.
@@ -161,7 +171,6 @@ Loop Self‑Checklist (end of every loop):
 
 
 START HERE:
-0) if this is a bugfixing loop, use subagents to run the tests, investigate and fix any failures, and then report back to you. think hard.
 1) Parse the Acceptance Tests list from $SPECS and cross‑reference code/tests to detect the highest‑value missing or flaky item. think hard.
 2) Execute the loop with that single item. 
 3) Stop after producing the loop output checklist.
