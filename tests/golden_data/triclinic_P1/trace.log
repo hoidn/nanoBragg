@@ -1,0 +1,108 @@
+nanoBragg nanocrystal diffraction simulator - James Holton and Ken Frankel 5-17-17
+mosflm convention selected.
+pivoting detector around direct beam spot
+XDS incident beam: 0 0 1
+auto-selected no interpolation
+Unit Cell: 70 80 90 75.0391 85.0136 95.0081
+Recp Cell: 0.014437 0.0130262 0.0115784 105.535 96.5318 83.4517
+volume = 481811 A^3
+real-space cell vectors (Angstrom):
+     a           b           c         
+X: -55.23913782 -40.96052569 -3.50238268
+Y: -3.91763340 -19.10427436 -89.93181603
+Z: 42.81693358 -66.00956019  0.04220398
+reciprocal-space cell vectors (Angstrom^-1):
+     a_star      b_star      c_star    
+X: -0.01232259 -0.00799159  0.00223446
+Y:  0.00048342  0.00030641 -0.01120794
+Z:  0.00750655 -0.01028210  0.00185723
+crystal is 0.035 x 0.04 x 0.045 microns
+auto-selected 2-fold oversampling
+approximate MW = 364219
+thick0 = 0 um
+phi0 = 0
+divergence deviation: 0 0
+lambda0 = 1e-10
+  created a total of 1 sources:
+-10 -0 0   1 1e-10
+  created a total of 1 mosaic domains
+  0 initialized hkls (all others =100)
+  parallelpiped xtal: 5x5x5 cells
+  wave=1e-10 meters +/- 0% in 1 steps
+  Kahn polarization factor: 0.000000
+  incident fluence: 1.25932e+29 photons/m^2
+  distance=0.1 detsize=0.0512x0.0512  pixel=0.0001 meters (512x512 pixels)
+  sensor is 0 m thick in 1 layers with mu= -1
+  Xbeam=0.02565 Ybeam=0.02565
+  Fbeam=0.0257 Sbeam=0.0257
+  Xclose=0.0256 Yclose=0.0256
+  Fclose=0.0257 Sclose=0.0257
+  DIRECTION_OF_DETECTOR_X-AXIS= 0 0 1
+  DIRECTION_OF_DETECTOR_Y-AXIS= 0 -1 0
+  DIRECTION_OF_DETECTOR_Z-AXIS= 1 0 0
+  INCIDENT_BEAM_DIRECTION= 1 0 0
+  spindle ROTATION_AXIS= 0 0 1
+  POLARIZATION_PLANE_NORMAL= 0 -1 0
+  dials origin= -25.7 25.7 -100
+  roi: 0 < x < 512 && 0 < y < 512
+  hdivrange=0 hdivstep=0  radians
+  vdivrange=0 vdivstep=0  radians
+  1 divergence steps
+  1 sources
+  1 mosaic domains over mosaic spread of 0 degrees
+  1 phi steps from 0 to 0 degrees
+  2x2 pixel oversample steps
+
+  noise image paramters:
+  seed: -1753768901
+  water droplet size: 0 m
+0% done
+0% done
+1% done
+2% done
+3% done
+4% done
+4% done
+5% done
+6% done
+7% done
+8% done
+9% done
+9% done
+14% done
+19% done
+24% done
+29% done
+34% done
+39% done
+44% done
+49% done
+54% done
+59% done
+64% done
+69% done
+74% done
+79% done
+84% done
+89% done
+90% done
+91% done
+92% done
+93% done
+94% done
+94% done
+95% done
+96% done
+97% done
+98% done
+
+solid angle subtended by detector = 0.246175 steradian ( 1.959% sphere)
+writing tests/golden_data/triclinic_P1/image_reproduce.bin as 262144 4-byte floats
+max_I = 138.216  at 0.026275 0.036875
+mean= 1.14645 rms= 6.88507 rmsd= 6.78895
+intfile_scale = 397.927
+writing intimage.img as 2-byte integers
+pgm_scale = 7.36491
+writing image.pgm as 1-byte integers
+300617 photons on noise image (0 overloads)
+writing noiseimage.img as 2-byte integers
