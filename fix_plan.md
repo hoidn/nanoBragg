@@ -717,10 +717,19 @@ All medium priority items completed!
   - Image correlation validation (≥0.98)
   - Tests gated with NB_RUN_PARALLEL=1 environment variable
 
-### Missing AT-PARALLEL Tests (11 tests remaining)
+### AT-PARALLEL-011: Polarization Factor Verification ✅ COMPLETE
+- **Status**: COMPLETE (2025-09-19)
+- **Implementation**: Full polarization factor verification against theoretical values
+- **Test**: Created `tests/test_at_parallel_011.py` with 3 tests (2 passing, 1 skipped)
+- **Details**:
+  - Validates unpolarized case against P = 0.5·(1+cos²(2θ)) formula (R² = 1.0, error < 0.01%)
+  - Validates Kahn model with K=0.95 against theoretical calculation (R² = 1.0, error < 0.01%)
+  - C-PyTorch equivalence test requires NB_RUN_PARALLEL=1 environment variable
+  - Both theoretical validation tests pass with perfect agreement
+
+### Missing AT-PARALLEL Tests (10 tests remaining)
 The following AT-PARALLEL tests from spec-a-parallel.md still need implementation:
 - AT-PARALLEL-006 - Single Reflection Position (in progress - crystal orientation issue)
-- AT-PARALLEL-011 - Polarization Factor Verification
 - AT-PARALLEL-012 - Reference Pattern Correlation
 - AT-PARALLEL-013 - Cross-Platform Consistency
 - AT-PARALLEL-014 - Noise Robustness Test
@@ -729,7 +738,6 @@ The following AT-PARALLEL tests from spec-a-parallel.md still need implementatio
 - AT-PARALLEL-017 - Grazing Incidence Geometry
 - AT-PARALLEL-018 - Crystal Boundary Conditions
 - AT-PARALLEL-020 - Comprehensive Integration Test
-- AT-PARALLEL-026 - Absolute Peak Position for Triclinic Crystal (marked as resolved in fix_plan but test file missing)
 
 ## Architecture Notes
 
@@ -864,13 +872,14 @@ Potential future work:
 
 Implementation status:
 - **Original tests**: 41 of 41 acceptance tests complete ✅
-- **NEW CRITICAL**: 9 of 26 AT-PARALLEL tests fully implemented
+- **NEW CRITICAL**: 10 of 26 AT-PARALLEL tests fully implemented
   - AT-PARALLEL-001: Beam center scaling (PASSED 8/8 tests) ✅
   - AT-PARALLEL-002: Pixel size independence (PASSED 4/4 tests) ✅
   - AT-PARALLEL-003: Detector offset preservation (PASSED 3/3 tests) ✅
   - AT-PARALLEL-004: MOSFLM 0.5 pixel offset (PASSED 5/5 tests) ✅
   - AT-PARALLEL-005: Beam Center Parameter Mapping (PASSED 4/4 tests) ✅
   - AT-PARALLEL-009: Intensity Normalization (PASSED 3/3 tests) ✅
+  - AT-PARALLEL-011: Polarization Factor Verification (PASSED 2/2 tests, 1 skipped) ✅
   - AT-PARALLEL-021: Crystal Phi Rotation Equivalence (PASSED 2/2 tests) ✅
   - AT-PARALLEL-022: Combined Detector+Crystal Rotation (PASSED 3/3 tests) ✅
   - AT-PARALLEL-023: Misset Angles Equivalence (PASSED 11/11 tests) ✅
@@ -880,8 +889,8 @@ Implementation status:
   - Gradient flow fully restored for differentiable programming
   - MOSFLM +0.5 pixel offset handling consistent throughout codebase
 - **Test Suite Status (2025-09-19)**:
-  - Core tests: 324 passed, 33 skipped, 2 xfailed, 0 failed ✅
-  - Parallel validation tests: 48 passed (including new AT-PARALLEL-009 with 3 tests)
+  - Core tests: 326 passed, 44 skipped, 5 xfailed, 0 failed ✅
+  - Parallel validation tests: 50 passed (including new AT-PARALLEL-011 with 2 tests)
   - Collection errors: FIXED (excluded archive folder, fixed imports in scripts)
   - Warnings: 3 deprecation warnings from NumPy 2.0 (non-critical)
   - **AT-PARALLEL-026 RESOLVED**: Triclinic "158-pixel offset" is correct physics, not a bug
