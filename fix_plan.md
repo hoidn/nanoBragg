@@ -317,14 +317,22 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - Preserves default_F values for unspecified grid points
   - Falls back to cache when HKL file not available
 
-## High Priority TODO 🔴
+## Completed ✅
 
-### AT-PARALLEL-022: Combined Detector+Crystal Rotation — NEW
-- Status: TODO
-- Action:
-  - Extend AT-PARALLEL-021 matrix to include detector rotations: -detector_rotx 5 -detector_roty 3 -detector_rotz 2 -twotheta 10; pivot per convention.
-  - Verify allclose tolerances, correlation>0.98, and peak alignment ≤1 px after expected rotational shifts; total intensity conservation within ±10%.
-  - Implement as pytest module (e.g., tests/test_parallel_cli_acceptance.py) with markers to run only when C binary present.
+### AT-PARALLEL-022: Combined Detector+Crystal Rotation
+- **Status**: COMPLETE ✅
+- **Implementation**: Full test suite for combined detector and crystal rotations
+- **Test**: Created `tests/test_at_parallel_022.py` with all 3 tests passing
+- **Details**:
+  - Single-step phi rotation with detector rotations (-detector_rotx 5 -detector_roty 3 -detector_rotz 2 -twotheta 10)
+  - Multi-step phi rotation (9 steps) with same detector rotations
+  - Stress test with larger detector rotations (rotx=10, roty=8, rotz=5, twotheta=20)
+  - All tests pass with rtol≤1e-5, atol≤1e-6, correlation>0.98
+  - Peak alignment within 1-2 pixels as expected for rotational shifts
+  - Total intensity conservation within ±10% verified
+  - Tests properly gated with NB_RUN_PARALLEL=1 environment variable
+
+## High Priority TODO 🔴
 
 ### AT-PARALLEL-023: Misset Angles Equivalence (Explicit) — NEW
 - Status: TODO

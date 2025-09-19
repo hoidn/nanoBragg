@@ -378,7 +378,6 @@ For comprehensive details and examples:
 - **Design principles:** `docs/architecture/pytorch_design.md` — architectural patterns for differentiability
 - **Testing strategy:** `docs/development/testing_strategy.md` — Tier 2 gradient correctness methodology
 - **Parameter trace:** `docs/architecture/parameter_trace_analysis.md` — understanding gradient flow paths
-- **Implementation examples:** `src/nanobrag_torch/models/crystal.py` — @property pattern in practice
 
 ### Verification Checklist
 
