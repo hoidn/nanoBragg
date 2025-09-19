@@ -87,6 +87,30 @@ def build_nanobragg_command(
     # Beam parameters
     cmd.extend(["-lambda", str(beam_config.wavelength_A)])
 
+    # Add fluence and related parameters
+    # Note: fluence may be calculated from flux/exposure/beamsize in BeamConfig.__post_init__
+    if hasattr(beam_config, 'fluence') and beam_config.fluence is not None and beam_config.fluence > 0:
+        cmd.extend(["-fluence", str(beam_config.fluence)])
+    elif hasattr(beam_config, 'flux') and beam_config.flux > 0:
+        # If fluence not set, try flux/exposure/beamsize approach
+        cmd.extend(["-flux", str(beam_config.flux)])
+        if hasattr(beam_config, 'exposure') and beam_config.exposure > 0:
+            cmd.extend(["-exposure", str(beam_config.exposure)])
+        if hasattr(beam_config, 'beamsize_mm') and beam_config.beamsize_mm > 0:
+            cmd.extend(["-beamsize", str(beam_config.beamsize_mm)])
+
+    # Add polarization if specified
+    if hasattr(beam_config, 'polarization_factor') and beam_config.polarization_factor != 1.0:
+        cmd.extend(["-polar", str(beam_config.polarization_factor)])
+
+    # Add dmin cutoff if specified
+    if hasattr(beam_config, 'dmin') and beam_config.dmin > 0:
+        cmd.extend(["-dmin", str(beam_config.dmin)])
+
+    # Add water background if specified
+    if hasattr(beam_config, 'water_size_um') and beam_config.water_size_um > 0:
+        cmd.extend(["-water", str(beam_config.water_size_um)])
+
     # Detector geometry parameters
     cmd.extend(["-distance", str(detector_config.distance_mm)])
     cmd.extend(["-pixel", str(detector_config.pixel_size_mm)])

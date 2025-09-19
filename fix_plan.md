@@ -49,17 +49,15 @@ Recently completed:
 - AT-PARALLEL-016 - Extreme Scale Testing ✅ COMPLETE (5 tests passing, 1 skipped)
 - AT-PARALLEL-017 - Grazing Incidence Geometry ✅ COMPLETE (6 tests passing)
 - AT-PARALLEL-018 - Crystal Boundary Conditions ✅ COMPLETE (8 tests passing)
-- AT-PARALLEL-020 - Comprehensive Integration Test ⚠️ PARTIAL (infrastructure complete, 1 of 4 tests passing)
+- AT-PARALLEL-020 - Comprehensive Integration Test ✅ COMPLETE (all 4 tests passing when NB_RUN_PARALLEL=1)
 
 ### Implemented 2025-09-19
-- AT-PARALLEL-026 - Absolute Peak Position for Triclinic Crystal ✅ IMPLEMENTED
-  - **Status**: Test infrastructure complete but needs debugging
+- AT-PARALLEL-026 - Absolute Peak Position for Triclinic Crystal ✅ COMPLETE
+  - **Status**: Fully implemented and passing
   - **Implementation**: Created `tests/test_at_parallel_026.py` with 3 tests
-  - **Issues Found**:
-    - Both triclinic and cubic crystals produce peaks at detector center (128.5, 128.5)
-    - PyTorch intensity ~100,000x lower than C code (fluence scaling issue)
-    - Misset angles not bringing reflections into proper diffraction condition
-  - **Test Results**: 1 passing, 2 failing (position matching but intensity mismatch)
+  - **Fixed Issue**: CReferenceRunner was not passing fluence parameter to C binary
+  - **Solution**: Updated `scripts/c_reference_utils.py` to pass fluence, flux, exposure, beamsize, polarization, dmin, and water parameters
+  - **Test Results**: All 3 tests passing, position and intensity matching correctly
 
 ## Architecture Notes
 
@@ -196,7 +194,7 @@ self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2
 
 Implementation status:
 - **Original tests**: 41 of 41 acceptance tests complete ✅
-- **NEW CRITICAL**: 18 of 27 AT-PARALLEL tests fully implemented (added AT-PARALLEL-026)
+- **NEW CRITICAL**: 19 of 27 AT-PARALLEL tests fully implemented and passing
   - AT-PARALLEL-001: Beam center scaling (PASSED 8/8 tests) ✅
   - AT-PARALLEL-002: Pixel size independence (PASSED 4/4 tests) ✅
   - AT-PARALLEL-003: Detector offset preservation (PASSED 3/3 tests) ✅
@@ -210,26 +208,24 @@ Implementation status:
   - AT-PARALLEL-016: Extreme Scale Testing (PASSED 5/5 tests, 1 skipped) ✅
   - AT-PARALLEL-017: Grazing Incidence Geometry (PASSED 6/6 tests) ✅
   - AT-PARALLEL-018: Crystal Boundary Conditions (PASSED 8/8 tests) ✅
-  - AT-PARALLEL-020: Comprehensive Integration Test (PASSED 4/4 tests) ✅ **FIXED 2025-09-19**
+  - AT-PARALLEL-020: Comprehensive Integration Test (PASSED 4/4 tests) ✅
   - AT-PARALLEL-021: Crystal Phi Rotation Equivalence (PASSED 2/2 tests) ✅
   - AT-PARALLEL-022: Combined Detector+Crystal Rotation (PASSED 3/3 tests) ✅
   - AT-PARALLEL-023: Misset Angles Equivalence (PASSED 11/11 tests) ✅
   - AT-PARALLEL-024: Random Misset Reproducibility (PASSED 5/5 tests) ✅
-  - AT-PARALLEL-026: Absolute Peak Position for Triclinic Crystal (1/3 tests passing) ⚠️ **NEW 2025-09-19**
+  - AT-PARALLEL-026: Absolute Peak Position for Triclinic Crystal (PASSED 3/3 tests) ✅ **FIXED 2025-09-19**
 - **Major bugs FIXED**:
   - Crystal geometry calculations now correct (softplus issue resolved)
   - Gradient flow fully restored for differentiable programming
   - MOSFLM +0.5 pixel offset handling consistent throughout codebase
 - **Test Suite Status (2025-09-19)**:
   - Core tests: 326 passed, 44 skipped, 5 xfailed, 0 failed ✅
-  - Parallel validation tests: 65 passed, 43 skipped, 2 xfailed (fixed AT-PARALLEL-006 and AT-PARALLEL-020)
+  - Parallel validation tests: 68 passed (3 more from AT-PARALLEL-026), 40 skipped, 2 xfailed
   - Collection errors: FIXED (excluded archive folder, fixed imports in scripts)
   - Warnings: 3 deprecation warnings from NumPy 2.0 (non-critical)
-  - **AT-PARALLEL-026 RESOLVED**: Triclinic "158-pixel offset" is correct physics, not a bug
-    - PyTorch triclinic peak: (196, 254)
-    - C-code triclinic peak: (196, 254)
-    - **Perfect match: 0.0 pixels difference**
-- **Status**: ALL TESTS PASSING - C-PyTorch equivalence validated! ✅
+  - **AT-PARALLEL-026 FIXED**: Missing fluence parameter in C runner resolved
+    - All 3 tests now passing with correct intensity scaling
+- **Status**: ALL FUNCTIONAL TESTS PASSING - C-PyTorch equivalence validated! ✅
 
 Completed features:
 - CLI interface FULLY implemented (9 of 9 AT-CLI tests) ✅
