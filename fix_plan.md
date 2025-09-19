@@ -703,10 +703,21 @@ All medium priority items completed!
   - Image correlation validation (≥0.98)
   - Tests gated with NB_RUN_PARALLEL=1 environment variable
 
-### Missing AT-PARALLEL Tests (12 tests remaining)
+### AT-PARALLEL-010: Solid Angle Corrections
+- **Status**: IN PROGRESS ⚠️
+- **Implementation**: Created test file `tests/test_at_parallel_010.py`
+- **Issue Found**: Significant intensity scale mismatch between C and PyTorch
+- **Details**:
+  - Test implements all 4 test cases from spec (point_pixel ON/OFF, various distances and tilts)
+  - C-PyTorch correlation is perfect (1.0) indicating correct relative scaling
+  - Absolute intensity scale differs by ~25 orders of magnitude (C: 1e13, PyTorch: 1e-12)
+  - PyTorch doesn't follow exact 1/R² scaling - deviates by up to 161% at 200mm
+  - Likely missing scale factor in PyTorch intensity calculation
+- **TODO**: Debug intensity normalization in Simulator class
+
+### Missing AT-PARALLEL Tests (11 tests remaining)
 The following AT-PARALLEL tests from spec-a-parallel.md still need implementation:
 - AT-PARALLEL-006 - Single Reflection Position (in progress - crystal orientation issue)
-- AT-PARALLEL-010 - Solid Angle Corrections
 - AT-PARALLEL-011 - Polarization Factor Verification
 - AT-PARALLEL-012 - Reference Pattern Correlation
 - AT-PARALLEL-013 - Cross-Platform Consistency
