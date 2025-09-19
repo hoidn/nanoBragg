@@ -468,6 +468,20 @@ None currently. All high priority items resolved!
   - C/PyTorch intensity ratios within 10% as required by spec
   - Note: Relaxed N-scaling tolerance from ±0.3 to ±0.35 due to numerical precision (slope ~5.7)
 
+### AT-PARALLEL-007: Peak Position with Rotations
+- **Status**: COMPLETE ✅
+- **Implementation**: Full implementation of peak position validation with detector rotations
+- **Test**: Created `tests/test_at_parallel_007.py` with 3 comprehensive tests
+- **Details**:
+  - Implemented 99.5th percentile peak detection with local maxima filtering
+  - Added Hungarian matching algorithm for optimal peak registration
+  - Tests detector rotations: -detector_rotx 5 -detector_roty 3 -detector_rotz 2 -twotheta 10
+  - Validates correlation ≥0.98, ≥95% peak matching within 1.0 pixel
+  - Validates intensity ratio between C and PyTorch in [0.9, 1.1]
+  - Includes tests for peak intensity ordering and rotation effect on pattern
+  - Uses scipy.optimize.linear_sum_assignment for Hungarian matching
+  - Tests are gated with NB_RUN_PARALLEL=1 environment variable
+
 ## Medium Priority TODO 🟡
 
 All medium priority items completed!
@@ -675,10 +689,9 @@ All medium priority items completed!
 
 ## Low Priority TODO 🟢
 
-### Missing AT-PARALLEL Tests (14 tests)
+### Missing AT-PARALLEL Tests (13 tests)
 The following AT-PARALLEL tests from spec-a-parallel.md still need implementation:
 - AT-PARALLEL-006 - Single Reflection Position (in progress)
-- AT-PARALLEL-007 - Peak Position with Rotations
 - AT-PARALLEL-008 - Multi-Peak Pattern Registration
 - AT-PARALLEL-010 - Solid Angle Corrections
 - AT-PARALLEL-011 - Polarization Factor Verification
