@@ -158,6 +158,18 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - Uses MOSFLM convention for both C and PyTorch for consistency
   - Tests gated with NB_RUN_PARALLEL=1 environment variable
 
+### AT-PARALLEL-005: Beam Center Parameter Mapping
+- **Status**: COMPLETE ✅
+- **Implementation**: Beam center parameter mapping tests across conventions
+- **Test**: Created `tests/test_at_parallel_005.py` with all 4 tests passing
+- **Details**:
+  - Tests -Xbeam/-Ybeam (MOSFLM) parameter mapping with +0.5 pixel offset
+  - Tests -ORGX/-ORGY (XDS) parameter mapping without pixel offset
+  - Tests pivot mode consistency (BEAM vs SAMPLE auto-selection)
+  - Tests equivalent configurations produce consistent patterns
+  - All beam centers use mm units, conventions differ only in pixel offset
+  - Fixed test bug where XDS beam centers were incorrectly assumed to be in pixels
+
 ## Completed ✅
 
 ### AT-PARALLEL-002: Pixel Size Independence
@@ -641,11 +653,12 @@ Potential future work:
 
 Implementation status:
 - **Original tests**: 41 of 41 acceptance tests complete ✅
-- **NEW CRITICAL**: 5 of 24 AT-PARALLEL tests fully implemented
+- **NEW CRITICAL**: 6 of 24 AT-PARALLEL tests fully implemented
   - AT-PARALLEL-001: Beam center scaling (PASSED 8/8 tests) ✅
   - AT-PARALLEL-002: Pixel size independence (PASSED 4/4 tests) ✅
   - AT-PARALLEL-003: Detector offset preservation (PASSED 3/3 tests) ✅
   - AT-PARALLEL-004: MOSFLM 0.5 pixel offset (PASSED 5/5 tests) ✅
+  - AT-PARALLEL-005: Beam Center Parameter Mapping (PASSED 4/4 tests) ✅
   - AT-PARALLEL-021: Crystal Phi Rotation Equivalence (PASSED 2/2 tests) ✅
 - **Major bugs FIXED**:
   - Crystal geometry calculations now correct (softplus issue resolved)

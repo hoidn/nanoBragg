@@ -64,7 +64,7 @@ def extract_pix0_vector(c_output, c_stderr):
                     continue
     return None
 
-def test_single_rotation(rotation_name, rotation_value, rotx=0.0, roty=0.0, rotz=0.0, twotheta=0.0):
+def run_single_rotation_test(rotation_name, rotation_value, rotx=0.0, roty=0.0, rotz=0.0, twotheta=0.0):
     """Test a single rotation to see its effect on Y-component"""
     print(f"\n=== Testing {rotation_name} = {rotation_value} ===")
     
@@ -148,7 +148,7 @@ def test_all_single_rotations():
     results = {}
     
     for rotation_name, rotation_value, rotx, roty, rotz, twotheta in rotations:
-        y_diff_mm = test_single_rotation(rotation_name, rotation_value, rotx, roty, rotz, twotheta)
+        y_diff_mm = run_single_rotation_test(rotation_name, rotation_value, rotx, roty, rotz, twotheta)
         if y_diff_mm is not None:
             results[rotation_name] = y_diff_mm
             
