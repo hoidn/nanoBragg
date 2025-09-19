@@ -689,10 +689,23 @@ All medium priority items completed!
 
 ## Low Priority TODO 🟢
 
-### Missing AT-PARALLEL Tests (13 tests)
+### AT-PARALLEL-008: Multi-Peak Pattern Registration
+- **Status**: COMPLETE ✅
+- **Implementation**: Full implementation with Hungarian matching algorithm
+- **Test**: Created `tests/test_at_parallel_008.py` with 3 comprehensive tests
+- **Details**:
+  - Triclinic 70,80,90,75,85,95 cell pattern validation
+  - Local maxima detection with non-maximum suppression (radius=3 pixels)
+  - Hungarian algorithm for optimal peak matching (scipy.optimize.linear_sum_assignment)
+  - Tests top 100 peaks above 99th percentile
+  - Validates ≥95% peak match within 1.0 pixel tolerance
+  - RMS error of intensity ratios validation (<10%)
+  - Image correlation validation (≥0.98)
+  - Tests gated with NB_RUN_PARALLEL=1 environment variable
+
+### Missing AT-PARALLEL Tests (12 tests remaining)
 The following AT-PARALLEL tests from spec-a-parallel.md still need implementation:
-- AT-PARALLEL-006 - Single Reflection Position (in progress)
-- AT-PARALLEL-008 - Multi-Peak Pattern Registration
+- AT-PARALLEL-006 - Single Reflection Position (in progress - crystal orientation issue)
 - AT-PARALLEL-010 - Solid Angle Corrections
 - AT-PARALLEL-011 - Polarization Factor Verification
 - AT-PARALLEL-012 - Reference Pattern Correlation
