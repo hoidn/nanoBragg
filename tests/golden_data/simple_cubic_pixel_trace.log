@@ -11,27 +11,27 @@ Precision: torch.float64
 Wavelength (Å): 6.199999809265e+00
 
 Pixel coordinates tensor shape: torch.Size([1024, 1024, 3])
-Pixel Coordinate (Å): [0.1     0.04115 0.02885]
-Pixel Coordinate (Å): [0.1     0.04115 0.02885]
-Diffracted Beam (unit vector): [0.8935111  0.36767982 0.25777795]
-Pixel Distance (Å): 1.119180280384e-01
+Pixel Coordinate (Å): [0.1     0.04125 0.02875]
+Pixel Coordinate (Å): [0.1     0.04125 0.02875]
+Diffracted Beam (unit vector): [0.89342266 0.36853685 0.25685901]
+Pixel Distance (Å): 1.119291070276e-01
 Incident Beam (unit vector): [1. 0. 0.]
-Scattering Vector S (Å⁻¹): [-0.01717563  0.0593032   0.04157709]
-Fractional Miller Index h,k,l: [-1.71756295  5.93031962  4.15770889]
+Scattering Vector S (Å⁻¹): [-0.01718989  0.05944143  0.04142887]
+Fractional Miller Index h,k,l: [-1.71898943  5.94414267  4.14288731]
 Nearest Integer h₀,k₀,l₀: [-2.  6.  4.]
 F_cell: 1.000000000000e+02
-Δh (h - h₀): 2.824370474286e-01
-Δk (k - k₀): -6.968038078960e-02
-Δl (l - l₀): 1.577088946348e-01
-sincg(Δh, Na): 3.543087080053e+00
-sincg(Δk, Nb): 4.903425924601e+00
-sincg(Δl, Nc): 4.516403615031e+00
-F_latt: 7.846467703808e+03
-Raw Intensity: 6.156705542690e+07
-Solid Angle (steradians): 7.133453781746e-07
+Δh (h - h₀): 2.810105684942e-01
+Δk (k - k₀): -5.585733404453e-02
+Δl (l - l₀): 1.428873126356e-01
+sincg(Δh, Na): 3.556440450463e+00
+sincg(Δk, Nb): 4.937819466314e+00
+sincg(Δl, Nc): 4.601015025979e+00
+F_latt: 8.079870501359e+03
+Raw Intensity: 6.528430731874e+07
+Solid Angle (steradians): 7.131335736566e-07
 r_e_sqr (Å²): 7.939999768780e-10
 fluence (photons/Å²): 1.259320192000e+09
-Final Physical Intensity: 4.391419142316e+01
+Final Physical Intensity: 4.655178511396e+01
 
 ================================================================================
 Additional Debugging Information
@@ -44,7 +44,7 @@ c_star: [-6.123234e-19 -6.123234e-19  1.000000e-02]
 Detector distance: 0.1 Å
 Pixel size: 0.0001 Å
 Detector size: 1024 x 1024 pixels
-Beam center: (512.0, 512.0) pixels
+Beam center: (513.0, 513.0) pixels
 Fast detector axis: [0. 0. 1.]
 Slow detector axis: [ 0. -1.  0.]
 Normal detector axis: [1. 0. 0.]

@@ -520,21 +520,19 @@ class Detector:
                 raise ValueError(f"Unknown detector convention: {self.config.detector_convention}")
 
             # Distances from pixel (0,0) center to the beam spot, measured along detector axes
-            # CRITICAL: The C code has a confusing mapping:
-            # - Fbeam (fast detector coordinate) = Ybeam (Y input parameter)
-            # - Sbeam (slow detector coordinate) = Xbeam (X input parameter)
-            # And from c_reference_utils.py:
-            # - Xbeam parameter → beam_center_f (fast)
-            # - Ybeam parameter → beam_center_s (slow)
-            # Therefore:
-            # - Fclose (fast) ← Ybeam ← beam_center_s (slow) - SWAPPED!
-            # - Sclose (slow) ← Xbeam ← beam_center_f (fast) - SWAPPED!
+            # Mapping clarification:
+            # - In C code: Fbeam = Ybeam + 0.5*pixel, Sbeam = Xbeam + 0.5*pixel (MOSFLM)
+            # - In c_reference_utils.py: Xbeam=beam_center_s, Ybeam=beam_center_f
+            # - In PyTorch: beam_center_f is fast, beam_center_s is slow
+            # For consistency with BEAM pivot mode:
+            # - Fclose (fast coord) ← beam_center_f (fast param)
+            # - Sclose (slow coord) ← beam_center_s (slow param)
             # NOTE: The beam centers already have the +0.5 offset from __init__ for MOSFLM!
 
             # The beam centers already include the MOSFLM +0.5 pixel offset from __init__
-            # Apply the axis swap: Fclose gets slow value, Sclose gets fast value
-            Fclose = self.beam_center_s * self.pixel_size  # F (fast coord) ← beam_s (slow param)
-            Sclose = self.beam_center_f * self.pixel_size  # S (slow coord) ← beam_f (fast param)
+            # Use consistent mapping with BEAM pivot mode: no axis swap
+            Fclose = self.beam_center_f * self.pixel_size  # F (fast coord) ← beam_f (fast param)
+            Sclose = self.beam_center_s * self.pixel_size  # S (slow coord) ← beam_s (slow param)
 
             # Compute pix0 BEFORE rotations using close_distance if specified
             # When close_distance is provided, use it directly for SAMPLE pivot

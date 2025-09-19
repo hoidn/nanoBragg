@@ -122,6 +122,10 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
   - Setup: Cell 100,100,100,90,90,90; -lambda 1.0; -N 1; -default_F 100; detector 64×64, -pixel 0.1, -distance 100; MOSFLM convention; no rotations, no mosaic, no divergence/dispersion.
   - Expectation: The pixel coordinates of maximum intensity SHALL match between C and PyTorch implementations within 0.5 pixels. Specifically: |argmax(C_image) - argmax(PyTorch_image)| < 0.5 for both row and column indices. This test detects any systematic coordinate shift including MOSFLM +0.5 pixel offsets, axis swaps, or origin differences.
 
+  - AT-PARALLEL-026 Absolute Peak Position for Triclinic Crystal
+  - Setup: Triclinic cell 70,80,90,85,95,105; -lambda 1.5; -N 1; -default_F 100; detector 256×256, -pixel 0.1, -distance 150; MOSFLM convention; identity orientation matrix.
+  - Expectation: The brightest Bragg peak SHALL appear at the same absolute pixel position (±1.0 pixel) in both C and PyTorch implementations. This validates the entire crystallographic chain for non-orthogonal unit cells.
+
 Quality Bar Checklist (Informative)
 
 - All major formulas and conversions are explicit and match the implementation.

@@ -105,7 +105,7 @@ update docs:
 - Reconcile $SPEC vs. architecture: if behavior is underspecified in the $SPEC but captured in $ARCH follow $ARCH If there is a conflict, prefer the $SPEC for external contracts and propose an $ARCH patch (record in `fix_plan.md`).
 </step 8>
 <step 9>
-Version control hygiene: after each loop, stage and commit all intended changes. Use a descriptive message including acceptance IDs and module scope. Do not commit runtime state/logs. Always include `fix_plan.md` and any updated prompts/docs.
+Version control hygiene: after each loop, stage and commit all intended changes. Use a descriptive message including acceptance IDs and module scope. Do not use emojis or make any references to claude code in the commit message. Always include `fix_plan.md` and any updated prompts/docs.
 </step 9>
 </instructions>
 
@@ -129,7 +129,7 @@ Process hints:
 
 Commit hygiene (each loop):
 - Command: `git add -A && git commit -m "<AT-ids> <module>: <concise summary>"`
-- Message must reference acceptance IDs (e.g., `AT-49`) and module (e.g., `providers/executor`), and briefly state behavior implemented/validated.
+- Message must reference acceptance IDs (e.g., `AT-49`) and module (e.g., `providers/executor`), and briefly state behavior implemented/validated. It must the test suite run summary (passed / skipped failed)
 - Include `fix_plan.md` and prompt/doc updates. Exclude runtime artifacts and state.
 
 </process hints>
@@ -154,6 +154,7 @@ Loop Self‑Checklist (end of every loop):
 - Spec sections/acceptance IDs/test names quoted and limited (one area; 1–2 items max).
 - Backpressure present: unit + smallest integration, with expected pass/fail and remediation.
 - **Full `pytest tests/` run from project root completed and passed without any errors or collection failures.**
+- Any new problems discovered during this loop - or existing problems not mentioned in the fix_plan.md - added to the fix_plan.md TODO list.
 - Evidence includes file:line pointers for presence/absence; no "assume missing".
 - Scope stayed within a single module category; if not, capture deferral in `fix_plan.md`.
 </completion checklist>
