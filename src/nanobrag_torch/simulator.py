@@ -53,12 +53,36 @@ class Simulator:
         self.device = device if device is not None else torch.device("cpu")
         self.dtype = dtype
 
-        # Hard-coded simple_cubic beam parameters (from golden test case)
-        # Incident beam direction: [1, 0, 0] (from log: INCIDENT_BEAM_DIRECTION= 1 0 0)
-        # Wave: 1 Angstrom
-        self.incident_beam_direction = torch.tensor(
-            [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
-        )
+        # Set incident beam direction based on detector convention
+        # This is critical for convention consistency (AT-PARALLEL-004)
+        from .config import DetectorConvention
+
+        if self.detector is not None and hasattr(self.detector, 'config'):
+            if self.detector.config.detector_convention == DetectorConvention.MOSFLM:
+                # MOSFLM convention: beam along +X axis
+                self.incident_beam_direction = torch.tensor(
+                    [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
+                )
+            elif self.detector.config.detector_convention == DetectorConvention.XDS:
+                # XDS convention: beam along +Z axis
+                self.incident_beam_direction = torch.tensor(
+                    [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
+                )
+            elif self.detector.config.detector_convention == DetectorConvention.DIALS:
+                # DIALS convention: beam along +Z axis (same as XDS)
+                self.incident_beam_direction = torch.tensor(
+                    [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
+                )
+            else:
+                # Default to MOSFLM beam direction
+                self.incident_beam_direction = torch.tensor(
+                    [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
+                )
+        else:
+            # If no detector provided, default to MOSFLM beam direction
+            self.incident_beam_direction = torch.tensor(
+                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
+            )
         self.wavelength = self.beam_config.wavelength_A  # Use beam config wavelength
 
         # Physical constants (from nanoBragg.c ~line 240)

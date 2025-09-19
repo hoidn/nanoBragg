@@ -131,6 +131,21 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - Offset ratios preserved within 2% as required per spec
   - Tests beam centers at (20,20), (30,40), (45,25), (60,60)mm
 
+### AT-PARALLEL-004: MOSFLM 0.5 Pixel Offset
+- **Status**: COMPLETE ✅
+- **Implementation**: Fixed critical beam direction bug in Simulator class
+- **Test**: All 5 tests in `tests/test_at_parallel_004.py` passing
+- **Fixed Issues**:
+  - **Critical Fix**: Simulator was using hardcoded incident beam direction [1,0,0] for all conventions
+  - Made incident beam direction convention-aware: MOSFLM [1,0,0], XDS/DIALS [0,0,1]
+  - Pattern correlation now >0.99 (was 0.63), matching C reference behavior (0.9974)
+  - Peak position difference now 1.4 pixels (was 125+ pixels), matching C reference
+- **Details**:
+  - MOSFLM correctly applies +0.5 pixel offset to beam centers
+  - XDS correctly has no pixel offset
+  - Conventions now produce nearly identical patterns as expected
+  - Fixed in `src/nanobrag_torch/simulator.py` lines 56-79
+
 ## Completed ✅
 
 ### AT-PARALLEL-002: Pixel Size Independence
@@ -159,19 +174,6 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - Peak position and offset ratio tests already working correctly
 
 ## In Progress 🚧
-
-### AT-PARALLEL-004: MOSFLM 0.5 Pixel Offset
-- **Status**: PARTIAL (5 of 6 tests passing) ⚠️
-- **Implementation**: Test file created at `tests/test_at_parallel_004.py`
-- **Test**: 5 of 6 tests passing
-- **Fixed Issues**:
-  - Fixed test assertions that had incorrect expected values (256 pixels instead of 128)
-  - Successfully verifies MOSFLM applies +0.5 pixel offset to beam centers
-  - XDS correctly has no pixel offset
-  - Peak position difference test now passing
-  - Beam center calculation consistency tests pass
-- **Remaining Issue**:
-  - Pattern correlation test failing (0.63 instead of >0.95) due to fundamental coordinate system differences between MOSFLM and XDS conventions
 
 ### AT-GEO-004: Two-theta axis defaults by convention
 - **Status**: COMPLETE ✅
