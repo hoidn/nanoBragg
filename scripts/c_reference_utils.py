@@ -117,8 +117,20 @@ def build_nanobragg_command(
     N_cells = crystal_config.N_cells
     cmd.extend(["-N", str(N_cells[0])])  # nanoBragg.c uses cubic crystal size
 
-    # Orientation matrix
-    cmd.extend(["-matrix", matrix_file])
+    # Orientation matrix (only if not using random misset)
+    if crystal_config.misset_random:
+        # Use random misset instead of matrix file
+        cmd.extend(["-misset", "random"])
+        if crystal_config.misset_seed is not None:
+            cmd.extend(["-misset_seed", str(crystal_config.misset_seed)])
+    else:
+        # Use provided matrix file (identity for default orientation)
+        cmd.extend(["-matrix", matrix_file])
+        # Add static misset angles if specified
+        if any(abs(angle) > 1e-6 for angle in crystal_config.misset_deg):
+            cmd.extend(["-misset", str(crystal_config.misset_deg[0]),
+                       str(crystal_config.misset_deg[1]),
+                       str(crystal_config.misset_deg[2])])
 
     # Detector rotations (only add if non-zero)
     if abs(detector_config.detector_rotx_deg) > 1e-6:
@@ -145,6 +157,15 @@ def build_nanobragg_command(
             is_mosflm_default = (abs(axis[0]) < 1e-6 and abs(axis[1]) < 1e-6 and abs(axis[2] + 1.0) < 1e-6)
             if not is_mosflm_default:
                 cmd.extend(["-twotheta_axis", str(axis[0]), str(axis[1]), str(axis[2])])
+
+    # Add crystal-specific parameters
+    # Phi rotation parameters
+    if abs(crystal_config.phi_start_deg) > 1e-6:
+        cmd.extend(["-phi", str(crystal_config.phi_start_deg)])
+    if abs(crystal_config.osc_range_deg) > 1e-6:
+        cmd.extend(["-osc", str(crystal_config.osc_range_deg)])
+    if abs(crystal_config.mosaic_spread_deg) > 1e-6:
+        cmd.extend(["-mosaic", str(crystal_config.mosaic_spread_deg)])
 
     # Add pivot mode flag
     from nanobrag_torch.config import DetectorPivot, DetectorConvention
