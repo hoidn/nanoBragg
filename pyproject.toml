@@ -1,0 +1,50 @@
+[tool.black]
+line-length = 88
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
+
+[tool.pyrefly]
+project-includes = ["**/*"]
+project-excludes = ["**/*venv/**/*"]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nanobrag-torch"
+version = "0.1.0"
+description = "PyTorch implementation of nanoBragg diffraction simulator"
+authors = [{name = "nanoBragg Team"}]
+dependencies = [
+    "torch>=2.3",
+    "fabio",
+    "numpy",
+    "pytest",
+    "matplotlib",
+    "scipy"
+]
+
+[project.scripts]
+nanoBragg = "nanobrag_torch.__main__:main"
+nb-compare = "scripts.nb_compare:main"
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "ruff",
+    "isort"
+]
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+norecursedirs = ["archive", ".*", "build", "dist", "*.egg"]
