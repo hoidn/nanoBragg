@@ -686,6 +686,8 @@ padding, and data ordering.
 Acceptance Tests (Normative)
 
 - Geometry & Conventions
+  - References: ../docs/development/c_to_pytorch_config_map.md, ../docs/architecture/detector.md, ../docs/debugging/detector_geometry_checklist.md, ../docs/architecture/undocumented_conventions.md, ../docs/architecture/conventions.md, ../docs/architecture/c_code_overview.md
+  - Why: Use config map for C↔Py parity; detector for hybrid units/pivots; checklist first for geometry triage; undocumented_conventions for hidden C behaviors; conventions for tensor indexing nuances; c_code_overview for C structure/orientation context.
   - AT-GEO-001 MOSFLM beam-center mapping and 0.5-pixel offsets
     - Setup: detector_convention=MOSFLM; pixel_size=0.1 mm; distance=100.0 mm; beam_center_X=beam_center_Y=51.2 mm; pivot=BEAM; no rotations; twotheta=0.
     - Expectation: Using f=[0,0,1], s=[0,-1,0], o=[1,0,0], Fbeam=Sbeam=(51.2+0.05) mm. The detector origin SHALL be pix0_vector = [0.1, 0.05125, -0.05125] meters (±1e-9 m tolerance).
@@ -710,6 +712,8 @@ Acceptance Tests (Normative)
     - Expectation: With -point_pixel, Ω SHALL equal 1/R^2. Without it, Ω SHALL equal (pixel_size^2/R^2)·(close_distance/R).
 
 - Sampling, Normalization, Absorption
+  - References: ../docs/development/testing_strategy.md (Tier 1/2/3 setup), ../docs/development/debugging.md (trace workflow)
+  - Why: testing_strategy structures minimal setups and tiers; debugging.md defines the trace workflow to locate first divergences deterministically.
   - AT-SAM-001 Steps normalization
     - Setup: sources=1; mosaic_domains=1; oversample=1; phisteps=2 with identical physics across steps (e.g., zero mosaic and symmetric phi so F_cell and F_latt identical); disable thickness/polar/omega oversample toggles.
     - Expectation: Final per-pixel scale SHALL divide by steps=2 so intensity matches the single-step case (within numeric tolerance).
@@ -724,6 +728,8 @@ Acceptance Tests (Normative)
     - Expectation: The contribution for that subpath SHALL be skipped.
 
 - Structure Factors & Interpolation
+  - References: ../docs/architecture/c_code_overview.md (HKL and sincg conventions), ../docs/development/testing_strategy.md
+  - Why: c_code_overview clarifies HKL rounding and fractional sincg; testing_strategy provides golden-data and trace-driven procedures for validation.
   - AT-STR-001 Nearest-neighbor lookup when interpolation off
     - Setup: Load a small HKL grid with known F values; set -nointerpolate; query pixels yielding integer (h0,k0,l0) both in-range and out-of-range.
     - Expectation: In-range uses grid values; out-of-range uses default_F.
@@ -789,6 +795,9 @@ Acceptance Tests (Normative)
 
 CLI Binding (Profile: Reference CLI) — Acceptance Tests (Normative)
 
+References: ../docs/architecture/c_parameter_dictionary.md, ../docs/development/c_to_pytorch_config_map.md, ../docs/development/testing_strategy.md
+Why: c_parameter_dictionary is the authoritative C flag→variable map; config_map captures implicit rules and parity pitfalls; testing_strategy outlines CLI acceptance patterns and end-to-end checks.
+
 These tests apply only to implementations claiming the Reference CLI Binding Profile. They verify the presence and behavior of a CLI wrapper that maps flags to engine parameters and writes outputs/headers per this spec. Small detectors and tight ROIs are used to keep runtimes low.
 
 - AT-CLI-001 CLI presence and help
@@ -828,6 +837,9 @@ These tests apply only to implementations claiming the Reference CLI Binding Pro
   - Expectation: Program prints usage/help indicating required inputs and exits with a non-zero status.
 
 Parallel Validation Tests (Profile: C-PyTorch Equivalence) — Acceptance Tests (Normative)
+
+References: ../docs/development/testing_strategy.md (parallel trace-driven validation), ../docs/development/debugging.md (trace SOP), ../docs/debugging/detector_geometry_checklist.md (detector geometry triage), ../docs/architecture/undocumented_conventions.md (hidden C behaviors)
+Why: testing_strategy and debugging.md define the parallel trace methodology; the detector checklist accelerates geometry debugging; undocumented_conventions flags hidden C behaviors that often break equivalence.
 
 These tests verify that PyTorch implementation produces outputs equivalent to the C reference implementation. They apply to implementations claiming the C-PyTorch Equivalence Profile. These are black-box behavioral tests comparing outputs without examining internal implementation details.
 

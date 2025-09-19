@@ -14,81 +14,13 @@
 | Zero scattering vectors | ~0% | Wrong pivot mode (BEAM vs SAMPLE) | §3 |
 | Reflection/inversion pattern | Negative | Coordinate system handedness | §2.3 |
 
-## §1: Critical Unit System Rules
+## §1: Unit System (pointer)
 
-### The Detector's Hybrid Unit System
-**⚠️ EXCEPTION TO GLOBAL RULES**: The Detector component uses a special unit system:
+Canonical unit rules and the detector’s hybrid exception are defined in `specs/spec-a.md` (Units & Conversions; Geometry & Conventions) and summarized in `docs/architecture/detector.md`. Refer there for detailed tables and examples.
 
-```python
-# User Config (input)  →  Internal Geometry  →  Physics Output
-#     mm               →       meters        →     Angstroms
-```
+## §2: Convention-Specific Behaviors (pointer)
 
-**Why This Matters**: 
-- Expecting Angstroms internally? **WRONG** - Detector uses meters
-- Seeing values like 0.1 instead of 1e9? **CORRECT** - That's meters
-
-### Common Unit Pitfalls
-
-#### ❌ Wrong:
-```python
-# Assuming detector internal = Angstroms
-assert detector.pix0_vector == torch.tensor([1e9, 0, 0])  # FAILS
-```
-
-#### ✅ Correct:
-```python
-# Detector internal = meters
-assert detector.pix0_vector == torch.tensor([0.1, 0, 0])  # PASSES
-```
-
-### C Trace Output Units
-| Trace Variable | Unit | Example Value | Notes |
-|---------------|------|---------------|-------|
-| `DETECTOR_PIX0_VECTOR` | meters | `0.1 0.0257 -0.0257` | Direct comparison OK |
-| `beam_center_m` | meters* | `5.125e-05` | *Has logging bug - divides by 1000 twice |
-| `pixel_pos_meters` | meters | `0.095 -0.031 -0.005` | Direct comparison OK |
-| `Fclose`/`Sclose` | meters | `0.05125` | Includes +0.5 pixel for MOSFLM |
-
-## §2: Convention-Specific Behaviors
-
-### 2.1 MOSFLM Convention (Default)
-
-**The +0.5 Pixel Adjustment**:
-```python
-# MOSFLM adds 0.5 pixel to beam center
-Fbeam = (beam_center + 0.5) * pixel_size  # In meters
-```
-
-**Axis Mapping (Non-Intuitive!)**:
-- `beam_center_s` (slow) → Maps to `Xbeam` in C
-- `beam_center_f` (fast) → Maps to `Ybeam` in C
-- `Fbeam` ← `Ybeam` (Yes, Y maps to F!)
-- `Sbeam` ← `Xbeam` (Yes, X maps to S!)
-
-### 2.2 XDS Convention
-
-**No +0.5 Pixel Adjustment**:
-```python
-# XDS does NOT add 0.5 pixel
-Fbeam = beam_center * pixel_size  # Direct scaling
-```
-
-### 2.3 🚨 UNDOCUMENTED: CUSTOM Convention
-
-**Discovery Date**: January 9, 2025  
-**Not in Original C Documentation**
-
-The C code **automatically switches** to CUSTOM convention when:
-```bash
-# This triggers CUSTOM mode (no +0.5 pixel offset):
-./nanoBragg ... -twotheta_axis 0 0 -1
-
-# This keeps MOSFLM mode (has +0.5 pixel offset):
-./nanoBragg ... -detector_twotheta 20  # No explicit axis
-```
-
-**Impact**: CUSTOM mode removes the +0.5 pixel adjustment, causing ~5mm beam center difference.
+Beam/detector conventions (MOSFLM/XDS), +0.5 pixel adjustments, axis mappings, and the CUSTOM switch are defined in `specs/spec-a.md` and elaborated in `docs/architecture/undocumented_conventions.md`. This checklist avoids restating those rules.
 
 ## §3: Pivot Mode Determination
 
@@ -115,28 +47,9 @@ if abs(config.detector_twotheta_deg) > 1e-6:
     cmd.extend(["-pivot", "sample"])  # Force SAMPLE pivot
 ```
 
-## §4: Rotation and Basis Vectors
+## §4: Rotation and Basis Vectors (pointer)
 
-### Rotation Order (Critical!)
-Rotations MUST be applied in this order:
-1. `detector_rotx` (around X-axis)
-2. `detector_roty` (around Y-axis)  
-3. `detector_rotz` (around Z-axis)
-4. `detector_twotheta` (around convention-specific axis)
-
-### Basis Vector Initial Values
-
-| Convention | fdet_vec | sdet_vec | odet_vec |
-|------------|----------|----------|----------|
-| MOSFLM | [0,0,1] | [0,-1,0] | [1,0,0] |
-| XDS | [1,0,0] | [0,1,0] | [0,0,1] |
-
-### Common Basis Vector Issues
-
-**39mm Offset Problem** (Found Jan 9, 2025):
-- Python and C calculate different basis vectors after rotation
-- Causes pix0_vector to differ by ~39mm
-- Results in 4% correlation instead of >99.9%
+Rotation order, basis initializations, and known pitfalls are specified in `specs/spec-a.md` and `docs/architecture/detector.md`. Use the trace workflow below to validate your specific configuration.
 
 ## §5: Step-by-Step Debugging Process
 

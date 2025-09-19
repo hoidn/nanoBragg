@@ -18,67 +18,19 @@ The Detector class manages the detector geometry for diffraction simulations, in
 - Dynamic geometry with rotations and tilts
 - Full differentiability for optimization workflows
 
-## 2. Coordinate System
+## 2. Coordinate System (pointer)
 
-### 2.1 Lab Frame
-- **Origin:** Sample position `(0,0,0)`
-- **Primary Axis:** Beam travels along the `+X` axis (MOSFLM convention)
-- **Handedness:** Right-handed coordinate system
+Canonical coordinate system, indexing, and meshgrid conventions are defined in `specs/spec-a.md` (Geometry & Conventions) and summarized for tensors in `docs/architecture/conventions.md`. This doc does not restate them.
 
-### 2.2 Pixel Indexing
-- **Order:** `(slow, fast)` corresponding to `(row, column)`
-- **Reference Point:** All pixel coordinates refer to **pixel centers** (index + 0.5)
-- **Meshgrid Convention:** All `torch.meshgrid` calls use `indexing="ij"`
+## 3. Convention-Dependent Logic (pointer)
 
-### 2.3 Detector Basis Vectors
-- **`fdet_vec`:** Fast axis direction (pixel columns)
-- **`sdet_vec`:** Slow axis direction (pixel rows)  
-- **`odet_vec`:** Normal axis (points towards/away from source depending on convention)
+For basis initializations, convention defaults (MOSFLM/XDS/etc.), and default `twotheta_axis`, defer to:
+- `specs/spec-a.md` (Geometry Model & Conventions)
+- `arch.md` (Geometry Model & Conventions)
 
-## 3. Convention-Dependent Logic
+## 4. Rotation Order and Transformations (pointer)
 
-The behavior of several geometric parameters depends on the `detector_convention` setting:
-
-| Convention | Initial Fast Axis (`fdet_vec`) | Initial Slow Axis (`sdet_vec`) | Initial Normal Axis (`odet_vec`) | Beam Vector | `twotheta` Axis (Default) |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **MOSFLM** | `[0, 0, 1]` | `[0, -1, 0]` | `[1, 0, 0]` | `[1, 0, 0]` | `[0, 0, -1]` (Ref: `nanoBragg.c:1194`) |
-| **XDS** | `[1, 0, 0]` | `[0, 1, 0]` | `[0, 0, 1]` | `[0, 0, 1]` | `[1, 0, 0]` (Ref: `nanoBragg.c:1221`) |
-
-**CRITICAL:** The default `twotheta_axis` for the `MOSFLM` convention is non-intuitive and **MUST** be implemented as `[0, 0, -1]`.
-
-## 4. Rotation Order and Transformations
-
-### 4.1 Rotation Sequence
-Detector rotations are applied in a specific order:
-
-```
-1. detector_rotx (rotation around X-axis)
-2. detector_roty (rotation around Y-axis)  
-3. detector_rotz (rotation around Z-axis)
-4. detector_twotheta (rotation around arbitrary axis)
-```
-
-### 4.2 Rotation Visualization
-
-```
-Initial Detector (MOSFLM):
-    +Y
-    |
-    |__ +X (beam)
-   /
-  +Z
-
-After rotx=45°:
-    +Y'
-   /|
-  / |__ +X (beam)
- /
-+Z'
-
-After additional twotheta=15°:
-  Detector plane rotated around
-  twotheta_axis = [0,0,-1]
-```
+Rotation order and axis selection are specified in the spec/arch. This component follows those contracts without deviation.
 
 ## 5. Logic Flow: `pix0_vector` Calculation
 
@@ -112,59 +64,9 @@ detector_origin = distance * odet_vec
 pix0_vector = detector_origin + s_offset * sdet_vec + f_offset * fdet_vec
 ```
 
-## 6. Unit Conversion System
+## 6. Unit Conversion System (pointer)
 
-### ⚠️ 6.1 CRITICAL: Hybrid Unit System (OVERRIDES GLOBAL RULE)
-
-**This section overrides CLAUDE.md Rule #1 ("All internal calculations use Angstroms")**
-
-The Detector component uses a **hybrid unit system** to maintain exact compatibility with the C-code reference implementation:
-
-| Stage | Unit System | Rationale |
-| :--- | :--- | :--- |
-| **User Input** (`DetectorConfig`) | millimeters (mm) | User-friendly units |
-| **Internal Geometry** (positions, distances) | **meters (m)** | C-code compatibility |
-| **Output to Physics** (`pixel_coords`) | Angstroms (Å) | Physics engine compatibility |
-
-**Why This Exception Exists:**
-- The C-code outputs detector positions like `DETECTOR_PIX0_VECTOR 0.1 0.0257 -0.0257` which are in **meters**
-- Converting detector geometry to Angstroms produces values ~10⁹, causing numerical precision issues
-- The physics calculations (scattering vectors, Miller indices) correctly require Angstroms
-
-### 6.2 Correct Implementation
-
-```python
-# ✅ CORRECT: Detector geometry uses meters internally
-class Detector:
-    def __init__(self, config):
-        # Convert mm to METERS for geometry calculations
-        self.distance = config.distance_mm / 1000.0      # 100mm → 0.1m
-        self.pixel_size = config.pixel_size_mm / 1000.0  # 0.1mm → 0.0001m
-        
-    def get_pixel_coords(self):
-        # Calculate in meters
-        coords_meters = self._calculate_pixel_positions()  # Returns meters
-        
-        # Convert to Angstroms for physics compatibility
-        coords_angstroms = coords_meters * 1e10
-        return coords_angstroms
-
-# ❌ WRONG: Using Angstroms for detector geometry
-self.distance = mm_to_angstroms(config.distance_mm)  # 100mm → 1e9 Å (WRONG!)
-```
-
-### 6.3 Unit Conversion Reference
-
-| Parameter | User Input | Internal Geometry | Output to Physics |
-| :--- | :--- | :--- | :--- |
-| `distance` | 100.0 mm | 0.1 m | 1e9 Å |
-| `pixel_size` | 0.1 mm | 0.0001 m | 1e6 Å |
-| `beam_center` | 25.6 mm | 0.0256 m | 2.56e8 Å |
-| `pix0_vector` | - | [0.1, 0.0257, -0.0257] m | [1e9, 2.57e8, -2.57e8] Å |
-
-# Beam center conversion (mm to pixels)
-self.beam_center_s = config.beam_center_s / config.pixel_size_mm
-```
+The detector’s hybrid unit system (mm inputs → meters for geometry → Å for physics) is defined in `specs/spec-a.md` and summarized in `arch.md`. This document avoids repeating those tables; see those sources for canonical conversions and rationale.
 
 ## 7. Performance Optimizations
 

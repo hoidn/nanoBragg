@@ -84,55 +84,9 @@ The codebase is self-contained but relies on standard system libraries that must
 *   **Math Library (`libm`):** Required for functions like `sin`, `cos`, `sqrt`, `exp`, `log`. Linked with the `-lm` flag.
 *   **OpenMP Library:** Required for the parallel processing directives. Enabled and linked with the `-fopenmp` compiler flag.
 
-## 7. Key Physics & Non-Standard Conventions
+## 7. Physics Conventions (pointer)
 
-**For implementation guidance on these conventions, see [CLAUDE.md](../../CLAUDE.md) and the [Architecture Hub](./README.md).**
-
-### ⚠️ 7.1 CRITICAL: Non-Standard Miller Index Calculation
-
-The `nanoBragg.c` code uses a **non-standard convention** for calculating Miller indices that MUST be replicated exactly:
-
-```c
-// nanoBragg.c lines 3547-3549
-h = dot_product(scattering,a);
-k = dot_product(scattering,b);
-l = dot_product(scattering,c);
-```
-
-**Non-Standard:** The scattering vector `S = (s_out - s_in) / λ` is dotted with the **real-space lattice vectors (`a,b,c`)**, NOT the reciprocal-space vectors (`a*,b*,c*`) as is standard in crystallography textbooks.
-
-**Why This Matters:** This convention affects all downstream calculations and is the reason CLAUDE.md Rule #2 exists.
-
-### ⚠️ 7.2 CRITICAL: F_latt Calculation Using Fractional Indices
-
-The lattice shape transform (`sincg` function) is applied to the **fractional part of the Miller index**, not the full index:
-
-```c
-// nanoBragg.c lines 3555-3557
-h0 = ceil(h-0.5);
-k0 = ceil(k-0.5);
-l0 = ceil(l-0.5);
-
-// Then later (lines 3575-3577):
-F_latt = Na*sincg(M_PI*Na*(h-h0), &stol_of_h);
-F_latt*= Nb*sincg(M_PI*Nb*(k-k0), &stol_of_k);
-F_latt*= Nc*sincg(M_PI*Nc*(l-l0), &stol_of_l);
-```
-
-**Critical Detail:** The shape transform uses `(h-h0)`, `(k-k0)`, `(l-l0)` which are the fractional parts (always between -0.5 and 0.5).
-
-**Common Mistake:** Using the full Miller indices `h`, `k`, `l` in the sincg calculation will produce incorrect results.
-
-### 7.3 Structure Factor Lookup Convention
-
-The structure factor is looked up using the **nearest integer** Miller indices:
-
-```c
-// nanoBragg.c line 3600
-F_cell = Fhkl[h0-h_min][k0-k_min][l0-l_min];
-```
-
-Where `h0`, `k0`, `l0` are the nearest integers calculated using `ceil(h-0.5)`.
+Canonical physics conventions (real-space dot for h,k,l; `ceil(h−0.5)` rounding; fractional arguments in lattice transforms; HKL lookup order) are defined in `specs/spec-a.md` (Physics, Sampling & Accumulation, HKL Data & Interpolation). This overview avoids repeating those details and focuses on program structure and data flow.
 
 ## 8. Key Conventions and Coordinate Systems
 

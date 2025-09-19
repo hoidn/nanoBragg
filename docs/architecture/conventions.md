@@ -1,38 +1,23 @@
 # Global Project Conventions
 
-**Status:** Authoritative Specification
+Status: Consolidated. Canonical definitions live in `specs/spec-a.md` (normative) and `arch.md` (ADR-backed). This file keeps only project-wide clarifications that aid PyTorch tensorization.
 
-This document is the single source of truth for conventions that apply across the entire nanoBragg-PyTorch codebase. All components MUST adhere to these rules.
+## 1) Units — See Spec/Arch
 
----
+- Canonical units, conversions, and detector hybrid exceptions are defined in:
+  - `specs/spec-a.md` (Units & Conversions; Geometry & Conventions)
+  - `arch.md` (Sections on hybrid unit system and Geometry Model)
+- This document does not restate those rules. When in doubt, defer to the spec/arch.
 
-## 1. Unit System
+## 2) Coordinate Systems & Indexing (PyTorch specifics)
 
-- **Internal Calculation Standard:** All internal PyTorch calculations **MUST** use:
-  - **Length:** Angstroms (Å)
-  - **Angles:** Radians
-- **Configuration Interface:** User-facing parameters in configuration classes (e.g., `DetectorConfig`) **MUST** be specified in:
-  - **Length:** Millimeters (mm)
-  - **Angles:** Degrees
-- **Golden Trace Interface (for Testing):** The instrumented C-code trace logs have their own unit conventions that **MUST** be handled during testing:
-  - `DETECTOR_PIX0_VECTOR`: **Meters (m)**. Tests must convert this to Angstroms (`* 1e10`) before comparison.
-  - *Add other trace-specific units here as they are discovered.*
+- Lab frame: right-handed; origin at sample. Primary beam axis per convention (see spec).
+- Pixel indexing in tensors:
+  - Order: `(slow, fast)` equals `(row, column)`.
+  - Reference point: integer indices `(s,f)` refer to the leading edge/corner of the pixel area (matches C indexing expectations).
+  - Always use `torch.meshgrid(indexing="ij")` to preserve `(slow,fast)` ordering.
 
----
+## 3) Project Glossary (selected)
 
-## 2. Coordinate Systems & Indexing
-
-- **Lab Frame:** Right-handed system.
-  - **Origin:** Sample position `(0,0,0)`.
-  - **Primary Axis:** Beam travels along the `+X` axis (MOSFLM convention).
-- **Pixel Indexing:**
-  - **Order:** `(slow, fast)`. This corresponds to `(row, column)` in a 2D tensor.
-  - **Reference Point:** Integer indices `(s, f)` refer to the **leading edge/corner** of the pixel area. This is a critical C-code compatibility requirement.
-  - **`torch.meshgrid`:** All calls to `torch.meshgrid` **MUST** use `indexing="ij"` to conform to this convention.
-
----
-
-## 3. Project Glossary
-
-- **Beam Center:** A 2D coordinate `(s, f)` in pixels representing the intersection of the direct beam with the detector plane.
-- **Pixel Origin:** The 3D coordinate corresponding to the integer index `(s, f)`. Per the convention above, this refers to the *leading edge* of the pixel.
+- Beam Center: `(s,f)` in pixels where the direct beam hits the detector.
+- Pixel Origin: 3D coordinate corresponding to integer index `(s,f)`; by convention, refers to the pixel’s leading edge.

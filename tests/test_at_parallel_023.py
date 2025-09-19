@@ -66,7 +66,8 @@ class TestAT_PARALLEL_023_MissetAnglesEquivalence:
             '-pixel': 0.1,
             '-phi': 0,      # Fixed at 0 per spec
             '-osc': 0,      # Fixed at 0 per spec
-            '-convention': 'MOSFLM',  # Use consistent convention
+            '-fluence': 1e12,  # Match PyTorch fluence to avoid scaling differences
+            '-mosflm': None,  # Use MOSFLM convention (flag without argument)
             '-floatfile': output_file,
             '-misset': [misset_angles[0], misset_angles[1], misset_angles[2]],
         }
@@ -127,6 +128,7 @@ class TestAT_PARALLEL_023_MissetAnglesEquivalence:
 
         beam_config = BeamConfig(
             wavelength_A=6.2,
+            fluence=1e12,  # Match C command fluence
         )
 
         # Create models

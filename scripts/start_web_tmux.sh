@@ -12,7 +12,7 @@ SESSION="${SESSION:-nbdash}"
 # Ensure tmux session exists
 if ! tmux has-session -t "$SESSION" 2>/dev/null; then
   echo "tmux session '$SESSION' not found; creating with scripts/tmux_dashboard.sh" >&2
-  scripts/tmux_dashboard.sh >/dev/null 2>&1 || true
+  ATTACH=0 scripts/tmux_dashboard.sh >/dev/null 2>&1 || true
 fi
 
 if command -v ttyd >/dev/null 2>&1; then
@@ -37,4 +37,3 @@ Then run again:
   PORT=${PORT} SESSION=${SESSION} scripts/start_web_tmux.sh
 EOF
 exit 1
-

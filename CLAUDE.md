@@ -68,16 +68,11 @@ For all parameters, see [`docs/architecture/c_parameter_dictionary.md`](./docs/a
     - Rotation axis defaults (MOSFLM uses Y-axis, XDS uses X-axis for twotheta)
     - Unit conversions (mm→m, degrees→radians)
 
-1.  **Consistent Unit System:** All internal physics calculations **MUST** use a single, consistent unit system. The project standard is **Angstroms (Å)** for length and **electron-volts (eV)** for energy.
-    -   **Action:** Convert all input parameters (e.g., from mm, meters) to this internal system immediately upon ingestion in the configuration or model layers.
-    -   **Verification:** When debugging, the first step is to check the units of all inputs to a calculation.
-    -   **EXCEPTION:** The [Detector component](./docs/architecture/detector.md#61-critical-hybrid-unit-system) uses meters internally for geometry calculations. See the detector specification for details.
+1.  **Units (canonical in spec/arch):** Use the conversions and detector hybrid exception exactly as defined in `specs/spec-a.md` (Units & Geometry) and summarized in `arch.md` and `docs/architecture/detector.md`.
 
-2.  **Crystallographic Convention:** All calculations of Miller indices (h,k,l) from a scattering vector S **MUST** use the dot product with the **real-space lattice vectors** (a, b, c). This is a non-standard convention specific to the nanoBragg.c codebase that must be replicated exactly. **Formula:** h = dot(S, a).
+2.  **Crystallographic Convention (by design):** Compute h,k,l via real‑space dot (see `specs/spec-a.md` Physics for the authoritative statement).
 
-3.  **Differentiability is Paramount:** The PyTorch computation graph **MUST** remain connected for all differentiable parameters.
-    -   **Action:** Do not manually overwrite derived tensors (like `a_star`). Instead, implement them as differentiable functions or `@property` methods that re-calculate from the base parameters (e.g., `cell_a`).
-    -   **Verification:** Before merging any new feature with differentiable parameters, it **MUST** have a passing `torch.autograd.gradcheck` test.
+3.  **Differentiability:** Follow `arch.md` Differentiability Guidelines (no `.item()` on grad tensors, avoid `torch.linspace` with tensor endpoints, derive via functions/properties) and require `torch.autograd.gradcheck` for parameters.
 
 4.  **Coordinate System & Image Orientation:** This project uses a `(slow, fast)` pixel indexing convention, consistent with `matplotlib.imshow(origin='lower')` and `fabio`.
     -   **Action:** Ensure all `torch.meshgrid` calls use `indexing="ij"` to produce `(slow, fast)` grids.
