@@ -1,4 +1,4 @@
-# nanoBragg PyTorch - User Guide
+# nanoBragg PyTorch guide
 
 This guide explains how to use the PyTorch implementation of nanoBragg for diffraction simulation, including parallel comparison with the C reference implementation.
 
@@ -6,23 +6,12 @@ This guide explains how to use the PyTorch implementation of nanoBragg for diffr
 - [Installation](#installation)
 - [Basic Usage](#basic-usage)
 - [Common Examples](#common-examples)
-- [Parallel C/PyTorch Comparison](#parallel-cpytorch-comparison)
-- [Visualization Tools](#visualization-tools)
 - [Test Suite](#test-suite)
 
 ## Installation
 
-### Prerequisites
-- Python 3.11+
-- PyTorch 2.0+
-- NumPy, Matplotlib, SciPy
-
 ### Setup
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd nanoBragg
-
 # Install in editable mode (recommended)
 pip install -e .
 
@@ -61,23 +50,16 @@ Plus either:
 
 ```bash
 # Minimal example with cell parameters
-nanoBragg -cell 100 100 100 90 90 90 \
+python3 -m nanobrag_torch -cell 100 100 100 90 90 90 \
           -default_F 100 \
           -lambda 1.0 \
           -distance 100 \
           -detpixels 256 \
           -floatfile output.bin
 
-# With MOSFLM matrix
-nanoBragg -mat orientation.mat \
-          -hkl P1.hkl \
-          -lambda 6.2 \
-          -distance 100 \
-          -detpixels 1024 \
-          -floatfile output.bin
 ```
 
-### Key Parameters
+### CLI Parameters
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
@@ -135,7 +117,7 @@ nanoBragg -cell 70 80 90 85 95 105 \
 
 ### 3. With HKL Structure Factors
 ```bash
-nanoBragg -hkl mystructure.hkl \
+nanoBragg -hkl ./tests/test_data/hkl_files/minimal.hkl \
           -cell 100 100 100 90 90 90 \
           -lambda 1.0 \
           -distance 100 \
@@ -164,107 +146,10 @@ nanoBragg -mosflm -cell 100 100 100 90 90 90 ...
 nanoBragg -xds -cell 100 100 100 90 90 90 ...
 ```
 
-## Parallel C/PyTorch Comparison
-
-### Using nb-compare Tool
-
-The `nb-compare` tool runs both C and PyTorch implementations and compares outputs:
-
-```bash
-# Basic comparison
-nb-compare -- -default_F 100 -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100
-
-# With custom output directory
-nb-compare --outdir my_comparison -- -default_F 100 -cell 100 100 100 90 90 90 ...
-
-# Specify C binary location
-nb-compare --c-bin ./golden_suite_generator/nanoBragg -- [arguments...]
-
-# With ROI for faster testing
-nb-compare --roi 100 156 100 156 -- [arguments...]
-```
-
-The tool generates:
-- `c_output.bin` - C implementation output
-- `pytorch_output.bin` - PyTorch output
-- `comparison.png` - Visual comparison
-- `metrics.txt` - Correlation and RMSE metrics
-
-### Manual Comparison
-
-```bash
-# Set the C binary path
-export NB_C_BIN=./golden_suite_generator/nanoBragg
-
-# Run C version
-$NB_C_BIN -cell 100 100 100 90 90 90 -default_F 100 -lambda 1.0 \
-          -distance 100 -detpixels 256 -floatfile c_output.bin
-
-# Run PyTorch version
-nanoBragg -cell 100 100 100 90 90 90 -default_F 100 -lambda 1.0 \
-          -distance 100 -detpixels 256 -floatfile py_output.bin
-
-# Compare using Python
-python3 -c "
-import numpy as np
-import matplotlib.pyplot as plt
-
-# Load images
-c_img = np.fromfile('c_output.bin', dtype=np.float32).reshape(256, 256)
-py_img = np.fromfile('py_output.bin', dtype=np.float32).reshape(256, 256)
-
-# Compute correlation
-corr = np.corrcoef(c_img.flatten(), py_img.flatten())[0,1]
-print(f'Correlation: {corr:.4f}')
-
-# Plot comparison
-fig, axes = plt.subplots(1, 3, figsize=(12, 4))
-axes[0].imshow(c_img, cmap='viridis')
-axes[0].set_title('C Output')
-axes[1].imshow(py_img, cmap='viridis')
-axes[1].set_title('PyTorch Output')
-axes[2].imshow(py_img - c_img, cmap='RdBu_r')
-axes[2].set_title('Difference')
-plt.tight_layout()
-plt.savefig('comparison.png')
-print('Saved comparison.png')
-"
-```
-
-## Visualization Tools
-
-### Generate PNG from Binary Output
-
-```python
-#!/usr/bin/env python3
-import numpy as np
-import matplotlib.pyplot as plt
-import sys
-
-# Load binary file
-data = np.fromfile(sys.argv[1], dtype=np.float32)
-
-# Determine size (assume square)
-size = int(np.sqrt(len(data)))
-image = data.reshape(size, size)
-
-# Create visualization
-plt.figure(figsize=(8, 8))
-plt.imshow(image, cmap='viridis', origin='lower')
-plt.colorbar(label='Intensity')
-plt.title(f'Diffraction Pattern ({size}x{size})')
-plt.savefig(sys.argv[1].replace('.bin', '.png'), dpi=150)
-print(f"Saved {sys.argv[1].replace('.bin', '.png')}")
-```
-
-Save as `bin2png.py` and use:
-```bash
-python3 bin2png.py output.bin
-```
 
 ### Batch Visualization Script
 
-The repository includes comparison scripts in `scripts/comparison/`:
+The repository includes comparison scripts in `scripts/comparison/`. These requires building C nanoBragg first. All comparisons pass with high (>.99) correlation coefficients, but there are small discrepancies in some conditions still. 
 
 ```bash
 # Run visual comparison tests
@@ -276,78 +161,6 @@ The repository includes comparison scripts in `scripts/comparison/`:
 # - Log-scale views
 # - Intensity histograms
 # - Correlation metrics
-```
-
-### Quick Comparison Function
-
-Add to your `.bashrc` or `.zshrc`:
-
-```bash
-nb_compare() {
-    local args="$@"
-    local c_out="/tmp/c_output.bin"
-    local py_out="/tmp/py_output.bin"
-
-    # Run both implementations
-    $NB_C_BIN $args -floatfile $c_out
-    nanoBragg $args -floatfile $py_out
-
-    # Generate comparison
-    python3 -c "
-import numpy as np
-import matplotlib.pyplot as plt
-
-# Load and reshape (detect size from file)
-c_data = np.fromfile('$c_out', dtype=np.float32)
-py_data = np.fromfile('$py_out', dtype=np.float32)
-size = int(np.sqrt(len(c_data)))
-c_img = c_data.reshape(size, size)
-py_img = py_data.reshape(size, size)
-
-# Calculate metrics
-corr = np.corrcoef(c_img.flatten(), py_img.flatten())[0,1]
-rmse = np.sqrt(np.mean((c_img - py_img)**2))
-
-print(f'Correlation: {corr:.6f}')
-print(f'RMSE: {rmse:.6f}')
-print(f'Max diff: {np.abs(c_img - py_img).max():.6f}')
-
-# Plot
-fig, axes = plt.subplots(2, 3, figsize=(12, 8))
-im = axes[0,0].imshow(c_img, cmap='viridis')
-axes[0,0].set_title('C Reference')
-plt.colorbar(im, ax=axes[0,0])
-
-axes[0,1].imshow(py_img, cmap='viridis')
-axes[0,1].set_title('PyTorch')
-
-diff = axes[0,2].imshow(py_img - c_img, cmap='RdBu_r')
-axes[0,2].set_title('Difference')
-plt.colorbar(diff, ax=axes[0,2])
-
-# Log scale
-axes[1,0].imshow(np.log10(np.maximum(c_img, 1e-10)), cmap='viridis')
-axes[1,0].set_title('C (log scale)')
-
-axes[1,1].imshow(np.log10(np.maximum(py_img, 1e-10)), cmap='viridis')
-axes[1,1].set_title('PyTorch (log scale)')
-
-# Histogram
-axes[1,2].hist(c_img.flatten(), bins=50, alpha=0.5, label='C')
-axes[1,2].hist(py_img.flatten(), bins=50, alpha=0.5, label='PyTorch')
-axes[1,2].set_yscale('log')
-axes[1,2].legend()
-axes[1,2].set_title('Intensity Distribution')
-
-plt.suptitle(f'Comparison (correlation={corr:.4f})')
-plt.tight_layout()
-plt.savefig('/tmp/nb_comparison.png', dpi=150)
-plt.show()
-"
-}
-
-# Usage:
-# nb_compare -cell 100 100 100 90 90 90 -default_F 100 -lambda 1.0 -distance 100 -detpixels 256
 ```
 
 ## Test Suite
@@ -366,22 +179,8 @@ pytest tests/ -v
 pytest tests/test_at_parallel_*.py -v  # Parallel validation tests
 pytest tests/test_at_geo_*.py -v       # Geometry tests
 pytest tests/test_gradients.py -v      # Gradient flow tests
-
-# Run with coverage
-pytest tests/ --cov=nanobrag_torch --cov-report=html
 ```
 
-### Running Visual Test Suite
-
-```bash
-# Run comprehensive visual comparisons
-./scripts/comparison/run_parallel_visual.py
-
-# This generates:
-# - 20+ comparison plots
-# - Correlation metrics for each test
-# - Summary report with statistics
-```
 
 ### Key Test Categories
 
@@ -406,30 +205,3 @@ pytest tests/ --cov=nanobrag_torch --cov-report=html
    # Or rebuild:
    make -C golden_suite_generator
    ```
-
-3. **Import Errors**
-   ```bash
-   # Ensure package is installed
-   pip install -e .
-   ```
-
-4. **Memory Issues with Large Detectors**
-   ```bash
-   # Use ROI to limit computation
-   nanoBragg ... -roi 400 600 400 600
-   ```
-
-## Performance Tips
-
-1. **Use ROI for testing**: `-roi xmin xmax ymin ymax`
-2. **Reduce oversampling**: Default `-oversample 1` is usually sufficient
-3. **Limit mosaic domains**: Start with `-mosaic_domains 1` for testing
-4. **Use smaller detectors**: `-detpixels 256` for quick tests
-5. **GPU acceleration**: PyTorch automatically uses GPU if available
-
-## Further Documentation
-
-- [Architecture Documentation](docs/architecture/README.md)
-- [C Parameter Dictionary](docs/architecture/c_parameter_dictionary.md)
-- [Testing Strategy](docs/development/testing_strategy.md)
-- [Debugging Guide](docs/debugging/debugging.md)
