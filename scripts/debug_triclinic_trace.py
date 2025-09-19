@@ -92,12 +92,12 @@ def trace_triclinic_pixel():
     f_idx = target_fpixel
     
     # Calculate pixel position in meters (matching C code)
-    # Get detector geometry vectors (convert from Angstroms to meters)
-    pix0_vec = detector.pix0_vector * 1e-10  # Convert Angstroms to meters
-    fdet_vec = detector.fdet_vec             # Unit vector (dimensionless)
-    sdet_vec = detector.sdet_vec             # Unit vector (dimensionless)
-    
-    pixel_size_m = detector.pixel_size * 1e-10  # Convert Angstroms to meters
+    # Get detector geometry vectors (ALREADY IN METERS - no conversion needed!)
+    pix0_vec = detector.pix0_vector  # Already in meters
+    fdet_vec = detector.fdet_vec     # Unit vector (dimensionless)
+    sdet_vec = detector.sdet_vec     # Unit vector (dimensionless)
+
+    pixel_size_m = detector.pixel_size  # Already in meters
     
     # Calculate pixel position in meters
     # pixel_pos = pix0_vector + f_idx * pixel_size * fdet_vec + s_idx * pixel_size * sdet_vec
@@ -120,11 +120,16 @@ def trace_triclinic_pixel():
     # Calculate scattering vector
     # Incident beam is along +x: incident = [1, 0, 0]
     incident = torch.tensor([1.0, 0.0, 0.0], device=device, dtype=dtype)
-    lambda_val = 1e-10  # meters (1 Angstrom)
-    
-    scattering = (diffracted - incident) / lambda_val
-    
-    print(f"TRACE_PY: scattering_vec_A_inv {scattering[0].item():.15g} {scattering[1].item():.15g} {scattering[2].item():.15g}")
+    lambda_A = 1.0  # Angstroms (from simulator.wavelength)
+    lambda_m = lambda_A * 1e-10  # Convert to meters
+
+    # Scattering vector in m^-1
+    scattering_m_inv = (diffracted - incident) / lambda_m
+
+    # Convert to Angstrom^-1 for output
+    scattering_A_inv = scattering_m_inv * 1e-10
+
+    print(f"TRACE_PY: scattering_vec_A_inv {scattering_A_inv[0].item():.15g} {scattering_A_inv[1].item():.15g} {scattering_A_inv[2].item():.15g}")
     
     # Calculate Miller indices using rotated real-space vectors
     # Get the rotated vectors (no phi/mosaic rotation for this case)
@@ -136,10 +141,8 @@ def trace_triclinic_pixel():
     b_vec = rot_b[0, 0]
     c_vec = rot_c[0, 0]
     
-    # Convert scattering vector to Angstroms^-1 (from meters^-1)
-    scattering_A_inv = scattering * 1e-10
-    
     # Calculate fractional Miller indices: h = S·a, etc.
+    # scattering_A_inv is already in Angstrom^-1
     h_frac = torch.dot(scattering_A_inv, a_vec)
     k_frac = torch.dot(scattering_A_inv, b_vec) 
     l_frac = torch.dot(scattering_A_inv, c_vec)
@@ -176,10 +179,10 @@ def trace_triclinic_pixel():
     
     # Apply physical scaling factors like the C code does
     # Solid angle correction
-    close_distance_m = detector.distance * 1e-10  # Convert Angstroms to meters
-    pixel_size_m = detector.pixel_size * 1e-10    # Convert Angstroms to meters
+    close_distance_m = detector.distance  # Already in meters
+    pixel_size_m_omega = detector.pixel_size  # Already in meters
     
-    omega_pixel = (pixel_size_m * pixel_size_m) / (airpath.item() * airpath.item()) * close_distance_m / airpath.item()
+    omega_pixel = (pixel_size_m_omega * pixel_size_m_omega) / (airpath.item() * airpath.item()) * close_distance_m / airpath.item()
     
     print(f"TRACE_PY: omega_pixel {omega_pixel:.15g}")
     
@@ -196,7 +199,7 @@ def trace_triclinic_pixel():
     print("Check these values against the C trace:")
     print(f"  Pixel position (meters): {pixel_pos_distance:.15g} {pixel_pos_s:.15g} {pixel_pos_f:.15g}")
     print(f"  Diffracted vector: {diffracted[0].item():.15g} {diffracted[1].item():.15g} {diffracted[2].item():.15g}")  
-    print(f"  Scattering vector: {scattering[0].item():.15g} {scattering[1].item():.15g} {scattering[2].item():.15g}")
+    print(f"  Scattering vector: {scattering_A_inv[0].item():.15g} {scattering_A_inv[1].item():.15g} {scattering_A_inv[2].item():.15g}")
     print(f"  Miller indices (frac): {h_frac.item():.15g} {k_frac.item():.15g} {l_frac.item():.15g}")
     print(f"  Miller indices (int): {h0.item()} {k0.item()} {l0.item()}")
     print(f"  F_latt: {F_latt.item():.15g}")
