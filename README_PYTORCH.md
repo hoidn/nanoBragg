@@ -155,7 +155,7 @@ The repository includes comparison scripts in `scripts/comparison/`. These requi
 # Run visual comparison tests
 ./scripts/comparison/run_parallel_visual.py
 
-# Generates parallel_test_visuals/ directory with:
+# Runs 20 comparison tests and generates parallel_test_visuals/ directory with:
 # - Side-by-side C vs PyTorch comparisons
 # - Difference maps
 # - Log-scale views
