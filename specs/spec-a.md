@@ -857,46 +857,58 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
   - Expectation: Peak position SHALL match Bragg angle calculation θ=arcsin(λ/(2d)) ±0.5 pixels; Distance scaling ratio ±2%; Wavelength scaling follows Bragg's law ±1%
 
 - AT-PARALLEL-007 Peak Position with Rotations
-  - Setup: Cubic crystal, apply detector rotations rotx=5°, roty=3°, rotz=2°, twotheta=10°
-  - Expectation: Peak shifts SHALL be 10-100 pixels; Relative peak positions preserved ±5%; Total intensity conserved ±10%
+  - Setup: 100,100,100,90,90,90 cell; -default_F 100; detector 256×256, -pixel 0.1, -distance 100; MOSFLM; auto beam center; -phi 0 -osc 0; -mosaic 0; divergence=0; dispersion=0; -oversample 1; full-frame ROI; -pivot beam; -detector_rotx 5 -detector_roty 3 -detector_rotz 2 -twotheta 10.
+  - Procedure: Run C and PyTorch with identical flags. Detect local maxima above the 99.5th percentile; select top N=25 peaks. Register C↔PyTorch peaks via Hungarian matching with 1.0‑pixel gating.
+  - Pass: Image correlation ≥ 0.98; ≥ 95% matched peaks within ≤ 1.0 pixel; total float-image sums ratio in [0.9, 1.1].
 
 - AT-PARALLEL-008 Multi-Peak Pattern Registration
-  - Setup: Triclinic cell (70,80,90,75,85,95)°, generate pattern with 20+ visible reflections
-  - Expectation: >95% of bright peaks SHALL align ±1 pixel between C and PyTorch; Intensity ratio RMS error <10%; Pattern correlation >0.98
+  - Setup: Triclinic 70,80,90,75,85,95 cell; -default_F 100; N=5; detector 512×512, -pixel 0.1, -distance 100; MOSFLM; -phi 0 -osc 0; -mosaic 0; divergence=0; dispersion=0; -oversample 1; full-frame ROI.
+  - Procedure: Find local maxima; take top N=100 peaks above the 99th percentile, using non‑max suppression radius=3 px. Match C↔PyTorch with Hungarian algorithm, 1.0‑pixel gating.
+  - Pass: ≥ 95% matched within ≤ 1.0 pixel; RMS error of intensity ratios across matched peaks < 10%; image correlation ≥ 0.98.
 
 - AT-PARALLEL-009 Intensity Normalization
-  - Setup: Vary crystal size N=1,2,3,5,10; structure factor F=50,100,200,500; wavelength=1.0,1.5,2.0,3.0Å
-  - Expectation: Intensity SHALL scale as N³ (R²>0.99); Intensity SHALL scale as F² (R²>0.99); C/PyTorch intensity ratio SHALL be constant ±10%
-  - Failure mode: 79x intensity difference between implementations
+  - Setup: Cell 100,100,100,90,90,90; detector 256×256, -pixel 0.1, -distance 100; MOSFLM; -phi 0 -osc 0; -mosaic 0; -oversample 1; point_pixel OFF.
+  - Procedure:
+    - N‑sweep: N ∈ {1,2,3,5,10} with -default_F 100 fixed (Na=Nb=Nc=N).
+    - F‑sweep: F ∈ {50,100,200,500} with N=5 fixed.
+    - For each run, compute I_max from a 21×21 window centered on the strongest peak.
+    - Fit log(I_max) vs log(N) and log(I_max) vs log(F).
+  - Pass: slope_N ≈ 6.0 ± 0.3 with R² ≥ 0.99; slope_F ≈ 2.0 ± 0.05 with R² ≥ 0.99; for each point the C/PyTorch I_max ratio mean within ±10% of 1.0.
 
 - AT-PARALLEL-010 Solid Angle Corrections
-  - Setup: Vary detector distance 50,100,200,400mm; detector tilt 0°,10°,20°,30°
-  - Expectation: Intensity SHALL follow 1/r² law ±5%; Tilt corrections SHALL preserve total flux ±10%
+  - Setup: Cell 100,100,100; N=5; -default_F 100; -phi 0 -osc 0; -mosaic 0; divergence=0; dispersion=0; -oversample 1. Distances R ∈ {50,100,200,400} mm; tilts ∈ {0°,10°,20°,30°}.
+  - Modes: (A) point_pixel ON; (B) point_pixel OFF (with obliquity).
+  - Procedure: For each R (and tilt in B) run C and PyTorch; compute total float‑image sum over the full detector.
+  - Pass: (A) sum ∝ 1/R² within ±5%; (B) sum ∝ close_distance/R³ within ±10% (check pairwise ratios). In all cases C↔PyTorch correlation ≥ 0.98.
 
 - AT-PARALLEL-011 Polarization Factor Verification
-  - Setup: Test reflections at different scattering angles, compare polarized vs unpolarized
-  - Expectation: Polarization factor SHALL match P=(1+cos²(2θ))/2 ±1%; Angular dependence R²>0.95 vs theory
+  - Setup: Cell 100,100,100; N=5; detector 256×256, -pixel 0.1, -distance 100; MOSFLM; -phi 0; -mosaic 0; -oversample 1; point_pixel OFF; polarization_axis aligned per convention.
+  - A) Unpolarized (kahn_factor=0): Compute theoretical P = 0.5·(1+cos²(2θ)) from incident/diffracted unit vectors; compare pixelwise to implementation P.
+  - B) Polarized (kahn_factor=0.95): Compute Kahn model P using the same vectors/axis; compare pixelwise to implementation P.
+  - Pass: For A and B, R² ≥ 0.95 vs theory and mean absolute relative error ≤ 1% (A) and ≤ 2% (B). C↔PyTorch image correlation ≥ 0.98 for identical axes/seeds.
 
 - AT-PARALLEL-012 Reference Pattern Correlation
-  - Setup: Generate patterns with proven C configurations, test cubic, tetragonal, orthorhombic, triclinic cells
-  - Expectation: Simple cubic correlation SHALL be >0.999; Complex triclinic correlation SHALL be >0.995; Peak positions SHALL align ±0.5 pixels
-  - Failure mode: Correlation 0.048 indicates fundamental geometry error
+  - Setup: Use the canonical C commands in tests/golden_data/README.md to generate fixtures: simple_cubic (1024×1024), triclinic_P1 (512×512, explicit misset), and cubic_tilted_detector (rotations + 2θ). Run PyTorch with identical flags.
+  - Pass: simple_cubic correlation ≥ 0.999 and top N=50 peaks ≤ 0.5 px; triclinic_P1 correlation ≥ 0.995 and top N=50 peaks ≤ 0.5 px; tilted correlation ≥ 0.98 and top N=50 peaks ≤ 1.0 px.
+  - High-resolution variant: Setup: λ=0.5Å; detector 4096×4096, pixel 0.05mm, distance 500mm; cell 100,100,100; N=5; compare on a 512×512 ROI centered on the beam. Pass: No NaNs/Infs; C vs PyTorch correlation ≥ 0.95 on the ROI; top N=50 peaks in ROI ≤ 1.0 px.
 
 - AT-PARALLEL-013 Cross-Platform Consistency
-  - Setup: Run same calculation on different machines/architectures
-  - Expectation: Results SHALL be numerically identical for fixed seeds; Peak positions SHALL not vary; Intensities SHALL match to machine precision
+  - Constraints: CPU, float64, deterministic Torch mode; identical seeds; no GPU.
+  - Setup: Use triclinic_P1 case from AT‑PARALLEL‑012.
+  - Pass: PyTorch vs PyTorch (machine A vs B) allclose with rtol ≤ 1e−7, atol ≤ 1e−12 and correlation ≥ 0.999. C vs PyTorch allclose with rtol ≤ 1e−5, atol ≤ 1e−6 and correlation ≥ 0.995.
 
   - AT-PARALLEL-014 Noise Robustness Test
-  - Setup: Add Poisson noise with different seeds, compare statistics
-  - Expectation: Mean intensity SHALL be preserved ±1%; Peak positions SHALL not shift with noise; Noise statistics SHALL match Poisson distribution
+  - Setup: Create a float image with moderate intensities (e.g., simple_cubic scaled to mean ≈ 1e3). Generate SMV integer images with Poisson noise for two seeds (e.g., 123 and 456) using the same scale/ADC.
+  - Metrics: mean(intimage) within ±1% of scale·mean(float)+ADC per seed; for top N=20 float-image peaks, median centroid shift ≤ 0.5 px and 90th percentile ≤ 1.0 px in noisy images; overload counts across seeds within ±10%.
+  - Pass: All metrics satisfied for both seeds.
 
 - AT-PARALLEL-015 Mixed Unit Input Handling
   - Setup: Test various unit combinations: distance in mm, wavelength in Å, angles in degrees
   - Expectation: Unit conversions SHALL be applied consistently; Results SHALL be independent of input units used; No unit confusion errors
 
 - AT-PARALLEL-016 Extreme Scale Testing
-  - Setup: Test nano-crystals (N=1) to large crystals (N=100), wavelengths 0.1-10Å, distances 10mm-10m
-  - Expectation: Physics SHALL remain valid at all scales; No numerical overflow/underflow; Graceful handling of extreme parameters
+  - Setup: Representative extremes (C and PyTorch): (1) Tiny: N=1, λ=0.1Å, distance=10mm, 128×128, pixel 0.05mm; (2) Large cell: 300,300,300,90,90,90; N=10; λ=6Å; 1024×1024; pixel 0.1mm; (3) Long distance: distance=10m; 256×256; pixel 0.2mm. Common: φ=0; mosaic=0; divergence/dispersion=0; oversample=1.
+  - Pass: No NaNs/Infs; no exceptions; C vs PyTorch correlation ≥ 0.95; top N=25 peaks ≤ 2 px.
 
 - AT-PARALLEL-017 Grazing Incidence Geometry
   - Setup: Large detector tilts >45°, twotheta>60°, oblique incidence
@@ -906,13 +918,11 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
   - Setup: Crystal at singular orientations, aligned axes, zero-angle cases
   - Expectation: No division by zero errors; Degenerate cases SHALL be handled gracefully; Results SHALL be continuous near boundaries
 
-- AT-PARALLEL-019 High-Resolution Data
-  - Setup: Small d-spacings <1Å, large detector 4096x4096, fine sampling
-  - Expectation: Memory usage SHALL scale linearly; Performance SHALL degrade gracefully; Precision SHALL be maintained for fine features
+ 
 
-  - AT-PARALLEL-020 Comprehensive Integration Test
-  - Setup: Complete simulation with all features: triclinic cell, mosaic spread, phi rotation, detector tilts, absorption, polarization
-  - Expectation: Full pipeline SHALL execute without errors; All corrections SHALL be applied consistently; Final correlation between C and PyTorch SHALL be >0.95
+- AT-PARALLEL-020 Comprehensive Integration Test
+  - Setup: Triclinic 70,80,90,75,85,95; N=5; -mosaic 0.5; -mosaic_dom 5; -phi 0 -osc 90 -phisteps 9; -detector_rotx 5 -detector_roty 3 -detector_rotz 2; -twotheta 10; absorption enabled (e.g., -detector_abs 500 -detector_thick 450 -thicksteps 5); polarization K=0.95; detector 512×512, pixel 0.1mm, distance 100mm; -oversample 1; fixed seeds.
+  - Pass: Runs without errors; C vs PyTorch correlation ≥ 0.95; top N=50 peaks ≤ 1.0 px; total sum ratio in [0.9, 1.1].
 
   - AT-PARALLEL-021 Crystal Phi Rotation Equivalence
   - Setup: Use cubic cell (100,100,100,90,90,90) with -phi 0, -osc 90, -phisteps 1 (midpoint ≈ 45°) and a second case with -phisteps 9 (-phistep 10) covering the same 90° range; fixed seeds; small detector (e.g., -detpixels 256 -pixel 0.1) and tight ROI centered on beam.
@@ -923,12 +933,12 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
   - Expectation: C and PyTorch float images SHALL agree within tolerances (rtol ≤ 1e-5, atol ≤ 1e-6); peak trajectories reflect both detector and crystal rotations; total intensity conservation within ±10% across the compared images; correlation >0.98 and peak alignment within ≤1 pixel after accounting for expected rotational shifts.
 
   - AT-PARALLEL-023 Misset Angles Equivalence (Explicit α β γ)
-  - Setup: Fix φ=0, osc=0; triclinic cell (70,80,90,75,85,95) and cubic cell; run with several explicit -misset angle triplets (e.g., 0 0 0; 10 0 0; 0 10 0; 0 0 10; 15 20 30). Small detector (256×256), -pixel 0.1, fixed -default_F and seeds. Use identical flags for C and PyTorch; tight ROI around bright peaks.
-  - Expectation: Implementations SHALL apply right-handed rotations in the documented axis order to reciprocal vectors; resulting float images SHALL match within rtol ≤ 1e-5 and atol ≤ 1e-6. Peak positions SHALL shift consistently with the misset angles; correlation >0.99 for each case.
+  - Setup: φ=0, osc=0; cells: triclinic (70,80,90,75,85,95) and cubic (100,100,100,90,90,90); run with explicit float -misset triplets in degrees: (0.0,0.0,0.0), (10.5,0.0,0.0), (0.0,10.25,0.0), (0.0,0.0,9.75), (15.0,20.5,30.25). Detector 256×256, -pixel 0.1, fixed -default_F and seeds. Use identical flags for C and PyTorch.
+  - Expectation: Right‑handed XYZ rotations applied to reciprocal vectors once at init; real vectors recomputed. For each case, C vs PyTorch float images allclose (rtol ≤ 1e−5, atol ≤ 1e−6), correlation ≥ 0.99; top N=25 peaks within ≤ 0.5 px.
 
   - AT-PARALLEL-024 Random Misset Reproducibility and Equivalence
-  - Setup: Use -misset random with -misset_seed S across two runs per seed for both C and PyTorch; test at least two distinct seeds. φ=0, osc=0; small detector and ROI; fixed wavelength and structure factors.
-  - Expectation: For a given seed S, C and PyTorch float images SHALL be identical within numeric tolerances; repeating with the same seed SHALL reproduce identical images; changing the seed SHALL change the orientation and thus the image (correlation significantly lower than same-seed runs). If the C implementation reports the sampled angles, those values SHOULD match across implementations to within 1e-12 radians after conversion.
+  - Setup: Implementations SHALL support -misset random and -misset_seed. Prefer a C‑compatible RNG (e.g., LCG) for identical angle sampling. Case: cubic 100,100,100; N=5; λ=1.0; detector 256×256, pixel 0.1mm, distance 100mm; φ=0; osc=0; mosaic=0; -oversample 1. Test two seeds S∈{12345,54321}.
+  - Expectation: Determinism: PyTorch same‑seed runs are identical (rtol ≤ 1e−12, atol ≤ 1e−15). Cross‑impl equivalence: For each seed, C vs PyTorch allclose (rtol ≤ 1e−5, atol ≤ 1e−6), correlation ≥ 0.99. Seed effect: Different seeds produce correlation ≤ 0.7 within the same implementation. SHOULD: if sampled angles are reported, they match within 1e−12 rad after unit conversions.
 
 Quality Bar Checklist (Informative)
 
@@ -937,6 +947,40 @@ Quality Bar Checklist (Informative)
 - Output formats and headers match exactly what is written.
 - Sampling structure, normalization, and edge-case behavior (e.g., out-of-range interpolation, last-
 value multiplicative factors, clamping Na/Nb/Nc ≥ 1) are fully specified.
+
+Developer Tools — Acceptance Tests (Optional)
+
+- AT-TOOLS-001 Dual-Runner Comparison Script
+  - Purpose: Run the C and PyTorch implementations with identical arguments; capture runtimes; compute comparison metrics; save preview images and a reproducible artifact bundle.
+  - Scope: Optional developer tooling. This AT is normative for the script’s behavior and outputs, but it does NOT gate Core Engine or C–PyTorch Equivalence conformance and is not counted in AT-PARALLEL totals.
+  - Invocation:
+    - Script name SHOULD be exposed as a console entry `nb-compare` (preferred) or available at `scripts/nb_compare.py`.
+    - Usage: `nb-compare [--outdir DIR] [--roi xmin xmax ymin ymax] [--threshold T] [--resample] [--png-scale PCTL] [--save-diff] [--c-bin PATH] [--py-bin PATH] -- ARGS...`
+    - ARGS... are forwarded unchanged to both runners (C and PyTorch).
+    - Binary resolution: C runner from `--c-bin` or `NB_C_BIN` env (default `./nanoBragg` in CWD); PyTorch runner from `--py-bin` or `NB_PY_BIN` env (default `nanoBragg` on PATH or `python -m nanobrag_torch`).
+  - Behavior:
+    - Preflight: verify both runners are executable; ensure any float outputs are captured even if caller did not pass `-floatfile` by adding separate temp paths per runner; preserve and log original stdout/stderr.
+    - Runtime capture: run C first then PyTorch using identical ARGS; measure wall time using a monotonic clock; print `C runtime: X.XXX s` and `Py runtime: Y.YYY s`.
+    - Load float outputs for metrics. If shapes differ: without `--resample` exit with error code 4; with `--resample`, resize PyTorch image to C’s shape via nearest-neighbor and note this in the summary.
+    - ROI: if provided, compute metrics on the ROI, otherwise on the full frame.
+  - Metrics (on float images after ROI/resample as applicable):
+    - Pearson correlation coefficient (flattened ROI), MSE, RMSE, max absolute difference, total sums (C_sum, Py_sum) and their ratio.
+    - Optional SSIM MAY be included.
+    - Prints a one-line summary and a small table to stdout.
+  - Outputs (unique artifact directory):
+    - Directory: `comparisons/YYYYMMDD-HHMMSS-<short-hash>` where `<short-hash>` is a hash of canonicalized ARGS.
+    - Files: `c_stdout.txt`, `c_stderr.txt`, `py_stdout.txt`, `py_stderr.txt`, `c_float.bin`, `py_float.bin` (copied or symlinked), optional `diff.bin`; `c.png`, `py.png` (8‑bit previews), optional `diff.png` heatmap if `--save-diff`.
+    - `summary.json` with fields: args, binaries used, ROI, resample flag, `runtime_c_ms`, `runtime_py_ms`, `correlation`, `mse`, `rmse`, `max_abs_diff`, `sum_c`, `sum_py`, `sum_ratio`, `png_scale_method` and percentile.
+  - PNG previews (for visualization only, not for metrics):
+    - Default scaling: linear 0 to the union 99.5th percentile of the two images (over the ROI), clipped and mapped to [0,255] uint8. `--png-scale` overrides percentile; log scaling MAY be offered but MUST be noted in `summary.json`.
+  - Exit codes:
+    - 0: success; metrics computed; artifacts saved.
+    - 1: usage error; 2: runner failure (non‑zero exit); 3: correlation < `--threshold` (if provided); 4: dimension mismatch without `--resample`; 5: I/O or parse error.
+  - Examples:
+    - `nb-compare --threshold 0.98 --roi 100 356 100 356 -- -default_F 100 -cell 100 100 100 90 90 90 -lambda 6.2 -detpixels 256 -distance 100`
+    - `NB_C_BIN=./nanoBragg NB_PY_BIN=nanoBragg nb-compare -- -default_F 100 -cell 100 100 100 90 90 90 -lambda 6.2 -detpixels 256 -distance 100`
+  - Notes:
+    - Runtimes are informational and MUST NOT be used for conformance gating; they depend on hardware and environment. Metrics operate on float images (pre‑noise/ADC) regardless of any integer/noise outputs requested via ARGS.
 
 Conformance Profiles (Normative)
 
@@ -948,7 +992,7 @@ Conformance Profiles (Normative)
 
 - C-PyTorch Equivalence Profile
   - Scope: Implementations claiming equivalence with the C reference implementation SHALL pass all AT-PARALLEL-* tests with specified tolerances. This profile ensures that alternative implementations produce outputs functionally equivalent to the original nanoBragg.c.
-  - Requirements: Must conform to Core Engine Profile and pass all 20 AT-PARALLEL tests.
+  - Requirements: Must conform to Core Engine Profile and pass all 23 AT-PARALLEL tests.
   - Key tolerances: Pattern correlation >0.95 for general cases, >0.999 for simple cubic; Peak position accuracy ±2 pixels; Intensity scaling within 2x; Beam center calculation must scale with detector size.
   - Units & conversions:
     - Å→m = ×1e−10; mm→m = ÷1000; µm→m = ×1e−6; deg→rad = ×π/180; mrad→rad = ÷1000.
