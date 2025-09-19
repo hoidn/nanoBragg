@@ -11,6 +11,7 @@ These are the core, living documents that guide the project.
 ### Core Project Guides
 * **[CLAUDE.md](../CLAUDE.md)** - The primary instruction set for the AI agent.
 * **[README.md](../README.md)** - The main project entry point.
+* **[README_PYTORCH.md](../README_PYTORCH.md)** - Comprehensive user guide for the PyTorch implementation, including CLI usage, parallel comparison tools, and visualization.
 * **[PROJECT_STATUS.md](../PROJECT_STATUS.md)** - Tracks the current active development initiative.
 
 ### Architecture & Design (`docs/architecture/`)
