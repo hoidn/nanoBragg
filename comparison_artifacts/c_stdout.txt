@@ -1,8 +1,8 @@
 TRACE_BEAM_CENTER:initial_defaults Fclose=nan Sclose=nan
-TRACE_BEAM_CENTER:Fclose_default_calc=(detsize_f - 0*pixel_size)/2.0 = (0.0256 - 0*0.0001)/2.0 = 0.0128
-TRACE_BEAM_CENTER:Sclose_default_calc=(detsize_s + 0*pixel_size)/2.0 = (0.0256 + 0*0.0001)/2.0 = 0.0128
-TRACE_BEAM_CENTER:MOSFLM_convention Fbeam_calc=Ybeam + 0.5*pixel_size = 0.01285 + 0.5*0.0001 = 0.0129
-TRACE_BEAM_CENTER:MOSFLM_convention Sbeam_calc=Xbeam + 0.5*pixel_size = 0.01285 + 0.5*0.0001 = 0.0129
+TRACE_BEAM_CENTER:Fclose_default_calc=(detsize_f - 0*pixel_size)/2.0 = (0.0064 - 0*0.0001)/2.0 = 0.0032
+TRACE_BEAM_CENTER:Sclose_default_calc=(detsize_s + 0*pixel_size)/2.0 = (0.0064 + 0*0.0001)/2.0 = 0.0032
+TRACE_BEAM_CENTER:MOSFLM_convention Fbeam_calc=Ybeam + 0.5*pixel_size = 0.00325 + 0.5*0.0001 = 0.0033
+TRACE_BEAM_CENTER:MOSFLM_convention Sbeam_calc=Xbeam + 0.5*pixel_size = 0.00325 + 0.5*0.0001 = 0.0033
 nanoBragg nanocrystal diffraction simulator - James Holton and Ken Frankel 5-17-17
 mosflm convention selected.
 TRACE_ROTATE:input_vector=[1 0 0]
@@ -23,7 +23,7 @@ DETECTOR_NORMAL_AXIS 1 0 0
 pivoting detector around direct beam spot
 TRACE_C:detector_convention=MOSFLM
 TRACE_C:angles_rad=rotx:0 roty:0 rotz:0 twotheta:0
-TRACE_C:beam_center_m=X:1.285e-05 Y:1.285e-05 pixel_mm:0.1
+TRACE_C:beam_center_m=X:3.25e-06 Y:3.25e-06 pixel_mm:0.1
 TRACE_C:initial_fdet=0 0 1
 TRACE_C:initial_sdet=0 -1 0
 TRACE_C:initial_odet=1 0 0
@@ -39,24 +39,24 @@ TRACE_C:fdet_after_twotheta=0 0 1
 TRACE_C:sdet_after_twotheta=0 -1 0
 TRACE_C:odet_after_twotheta=1 0 0
 TRACE_C:convention_mapping=Fbeam←Ybeam_mm(+0.5px),Sbeam←Xbeam_mm(+0.5px),beam_vec=[1 0 0]
-TRACE_C:Fbeam_m=0.0129
-TRACE_C:Sbeam_m=0.0129
+TRACE_C:Fbeam_m=0.0033
+TRACE_C:Sbeam_m=0.0033
 TRACE_C:distance_m=0.1
-TRACE_C:term_fast=-0 -0 -0.0129
-TRACE_C:term_slow=-0 0.0129 -0
+TRACE_C:term_fast=-0 -0 -0.0033
+TRACE_C:term_slow=-0 0.0033 -0
 TRACE_C:term_beam=0.1 0 0
-TRACE_C:pix0_vector_calculated=0.1 0.0129 -0.0129
-TRACE_C:pix0_vector=0.1 0.0129 -0.0129
+TRACE_C:pix0_vector_calculated=0.1 0.0033 -0.0033
+TRACE_C:pix0_vector=0.1 0.0033 -0.0033
 TRACE_BEAM_CENTER:final_close_calc dot_products:
-  pix0_vector=[0.1 0.0129 -0.0129]
+  pix0_vector=[0.1 0.0033 -0.0033]
   fdet_vector=[0 0 1]
   sdet_vector=[0 -1 0]
   odet_vector=[1 0 0]
 TRACE_BEAM_CENTER:dot_product_results:
-  Fclose = -dot_product(pix0_vector,fdet_vector) = 0.0129
-  Sclose = -dot_product(pix0_vector,sdet_vector) = 0.0129
+  Fclose = -dot_product(pix0_vector,fdet_vector) = 0.0033
+  Sclose = -dot_product(pix0_vector,sdet_vector) = 0.0033
   close_distance = dot_product(pix0_vector,odet_vector) = 0.1
-DETECTOR_PIX0_VECTOR 0.1 0.0129 -0.0129
+DETECTOR_PIX0_VECTOR 0.1 0.0033 -0.0033
 XDS incident beam: 0 0 1
 auto-selected no interpolation
 TRACE: Computing cross products of reciprocal vectors:
@@ -118,50 +118,50 @@ TRACE: Copying vectors to ap, bp, cp (phi=0 working copy):
 TRACE:   ap = [1e-08, 6.12323e-25, 6.12323e-25] |ap| = 1e-08 meters
 TRACE:   bp = [-0, 1e-08, 6.12323e-25] |bp| = 1e-08 meters
 TRACE:   cp = [0, -0, 1e-08] |cp| = 1e-08 meters
-crystal is 0.05 x 0.05 x 0.05 microns
-auto-selected 2-fold oversampling
+crystal is 0.03 x 0.03 x 0.03 microns
+auto-selected 1-fold oversampling
 approximate MW = 722657
 reading Fs from Fdump.bin
 thick0 = 0 um
 phi0 = 0
 divergence deviation: 0 0
-lambda0 = 1e-10
+lambda0 = 6.2e-10
   created a total of 1 sources:
--10 -0 0   1 1e-10
+-10 -0 0   1 6.2e-10
   created a total of 1 mosaic domains
   8 initialized hkls (all others =100)
-  parallelpiped xtal: 5x5x5 cells
-  wave=1e-10 meters +/- 0% in 1 steps
+  parallelpiped xtal: 3x3x3 cells
+  wave=6.2e-10 meters +/- 0% in 1 steps
   Kahn polarization factor: 0.000000
   incident fluence: 1.25932e+29 photons/m^2
-  distance=0.1 detsize=0.0256x0.0256  pixel=0.0001 meters (256x256 pixels)
+  distance=0.1 detsize=0.0064x0.0064  pixel=0.0001 meters (64x64 pixels)
   sensor is 0 m thick in 1 layers with mu= -1
 TRACE_BEAM_CENTER:FINAL_SUMMARY:
-  Input: -Xbeam 12.8 -Ybeam 12.8 -pixel 0.1000
-  Calculated: Fclose=0.0129 Sclose=0.0129 (in meters)
-  For comparison: Fclose*1000=12.9 Sclose*1000=12.9 (in mm)
-  Xbeam=0.01285 Ybeam=0.01285
-  Fbeam=0.0129 Sbeam=0.0129
-  Xclose=0.0128 Yclose=0.0128
-  Fclose=0.0129 Sclose=0.0129
+  Input: -Xbeam 3.3 -Ybeam 3.3 -pixel 0.1000
+  Calculated: Fclose=0.0033 Sclose=0.0033 (in meters)
+  For comparison: Fclose*1000=3.3 Sclose*1000=3.3 (in mm)
+  Xbeam=0.00325 Ybeam=0.00325
+  Fbeam=0.0033 Sbeam=0.0033
+  Xclose=0.0032 Yclose=0.0032
+  Fclose=0.0033 Sclose=0.0033
   DIRECTION_OF_DETECTOR_X-AXIS= 0 0 1
   DIRECTION_OF_DETECTOR_Y-AXIS= 0 -1 0
   DIRECTION_OF_DETECTOR_Z-AXIS= 1 0 0
   INCIDENT_BEAM_DIRECTION= 1 0 0
   spindle ROTATION_AXIS= 0 0 1
   POLARIZATION_PLANE_NORMAL= 0 -1 0
-  dials origin= -12.9 12.9 -100
-  roi: 0 < x < 256 && 0 < y < 256
+  dials origin= -3.3 3.3 -100
+  roi: 0 < x < 64 && 0 < y < 64
   hdivrange=0 hdivstep=0  radians
   vdivrange=0 vdivstep=0  radians
   1 divergence steps
   1 sources
   1 mosaic domains over mosaic spread of 0 degrees
   1 phi steps from 0 to 0 degrees
-  2x2 pixel oversample steps
+  1x1 pixel oversample steps
 
   noise image paramters:
-  seed: -1758266479
+  seed: -1758271296
   water droplet size: 0 m
 0% done
 0% done
@@ -200,16 +200,14 @@ TRACE_BEAM_CENTER:FINAL_SUMMARY:
 94% done
 95% done
 96% done
-97% done
-98% done
 
-solid angle subtended by detector = 0.0644821 steradian ( 0.513132% sphere)
-writing /var/folders/8y/vnl75xb954j0wd09cm8zrrx40000gp/T/tmp4a75y3_k_c.bin as 65536 4-byte floats
-max_I = 115.965  at 0.025075 0.019975
-mean= 1.0755 rms= 6.67251 rmsd= 6.58527
-intfile_scale = 474.28
+solid angle subtended by detector = 0.0040918 steradian ( 0.0325615% sphere)
+writing /var/folders/8y/vnl75xb954j0wd09cm8zrrx40000gp/T/tmp_a3i1vgv_c.bin as 4096 4-byte floats
+max_I = 7.26507  at 0.00325 0.00325
+mean= 0.769775 rms= 1.65797 rmsd= 1.46839
+intfile_scale = 7570.47
 writing intimage.img as 2-byte integers
-pgm_scale = 7.59271
+pgm_scale = 34.051
 writing image.pgm as 1-byte integers
-70175 photons on noise image (0 overloads)
+3080 photons on noise image (0 overloads)
 writing noiseimage.img as 2-byte integers

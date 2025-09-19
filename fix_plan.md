@@ -388,6 +388,31 @@ None currently. All high and medium priority acceptance tests are complete.
 
 ## High Priority TODO 🔴
 
+### 🚨 CRITICAL BUG: 1.4 Pixel Systematic Offset Between C and PyTorch 🚨
+- **Status**: ACTIVE BUG - MUST FIX IMMEDIATELY
+- **Severity**: HIGH - This is a coordinate system bug, NOT acceptable
+- **Evidence**:
+  - AT-PARALLEL-025 consistently shows 1.4 pixel offset
+  - Simple cubic: C peak at [34,34], PyTorch at [33,33]
+  - All patterns shifted by ~1.4 pixels systematically
+  - High correlation (0.997) proves physics is right but coordinates are wrong
+- **Impact**:
+  - AT-PARALLEL-025 failing (requires ≤0.5 pixel accuracy)
+  - ALL parallel tests affected by this coordinate bug
+  - Cannot claim C-PyTorch equivalence with this offset
+- **Root Cause Hypotheses**:
+  1. **Pixel indexing**: C might use 1-based, PyTorch uses 0-based
+  2. **Pixel reference point**: Edge vs center interpretation mismatch
+  3. **MOSFLM offset**: +0.5 pixel being double-applied or misapplied
+  4. **Coordinate origin**: Different assumptions about (0,0) pixel location
+  5. **Axis orientation**: Fast/slow axis swap or inversion
+- **Investigation Plan**:
+  - Compare pixel [33,33] coordinates between C and PyTorch
+  - Trace 3D position calculation for this specific pixel
+  - Check C code for any +1 or -1 adjustments to indices
+  - Verify get_pixel_coords() against C's pixel mapping
+- **Fix Priority**: IMMEDIATE - This blocks all validation claims
+
 ### AT-PARALLEL-023: Misset Angles Equivalence (Explicit)
 - **Status**: COMPLETE ✅
 - **Implementation**: Test file created at `tests/test_at_parallel_023.py`
@@ -765,10 +790,13 @@ Implementation status:
   - MOSFLM +0.5 pixel offset handling consistent throughout codebase
 - **Test Suite Status (2025-09-19)**:
   - Core tests: 321 passed, 32 skipped, 2 xfailed, 0 failed ✅
-  - Parallel validation tests: 45 passed, 1 skipped, 3 failed (AT-PARALLEL-025 intensity scaling)
+  - Parallel validation tests: 45 passed, 1 skipped, 3 failed (AT-PARALLEL-025 pixel shift bug)
   - Collection errors: FIXED (excluded archive folder, fixed imports in scripts)
   - Warnings: FIXED (tensor construction warning in test_at_str_003)
-- **Status**: Test suite clean and passing. Known intensity scaling issue in AT-PARALLEL-025 (documented)
+- **🚨 CRITICAL ISSUE**: 1.4 pixel systematic offset between C and PyTorch implementations
+  - This is NOT acceptable - indicates coordinate system bug
+  - Must be fixed before claiming C-PyTorch equivalence
+- **Status**: Test suite mechanically clean but has CRITICAL pixel alignment bug blocking validation
 
 Completed features:
 - CLI interface FULLY implemented (9 of 9 AT-CLI tests) ✅

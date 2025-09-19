@@ -149,7 +149,7 @@ Loop Self‑Checklist (end of every loop):
 </completion checklist>
 
 
-START HERE (task selection):
+START HERE:
 0) if this is a bugfixing loop, use subagents to run the tests, investigate and fix any failures, and then report back to you. think hard.
 1) Parse the Acceptance Tests list from $SPECS and cross‑reference code/tests to detect the highest‑value missing or flaky item. think hard.
 2) Execute the loop with that single item. 
