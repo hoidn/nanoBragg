@@ -28,6 +28,7 @@ from .models.crystal import Crystal
 from .simulator import Simulator
 from .io.hkl import read_hkl_file, try_load_hkl_or_fdump
 from .io.smv import write_smv
+from .io.mosflm import read_mosflm_matrix, reciprocal_to_real_cell
 from .io.pgm import write_pgm
 from .io.mask import read_smv_mask, parse_smv_header, apply_smv_header_to_config
 from .io.source import read_sourcefile
@@ -349,8 +350,25 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
 
     # Load crystal cell
     if args.mat:
-        # TODO: Load MOSFLM matrix file
-        raise NotImplementedError("MOSFLM matrix file loading not yet implemented")
+        # Load MOSFLM matrix file
+        # Need wavelength for proper scaling
+        wavelength_A = config.get('wavelength_A')
+        if not wavelength_A:
+            if args.energy:
+                wavelength_A = 12398.42 / args.energy
+            elif args.wavelength:
+                wavelength_A = args.wavelength
+            else:
+                raise ValueError("Wavelength must be specified (via -lambda or -energy) when using -mat")
+
+        # Read the MOSFLM matrix and convert to cell parameters
+        a_star, b_star, c_star = read_mosflm_matrix(args.mat, wavelength_A)
+        cell_params = reciprocal_to_real_cell(a_star, b_star, c_star)
+        config['cell_params'] = cell_params
+
+        # Also store wavelength if not already set
+        if 'wavelength_A' not in config:
+            config['wavelength_A'] = wavelength_A
     elif args.cell:
         config['cell_params'] = args.cell
 

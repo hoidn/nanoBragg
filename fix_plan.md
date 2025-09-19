@@ -246,8 +246,20 @@ Completed features:
 
 ## Recent Fixes Summary
 
+### MOSFLM Matrix File Loading Implementation (2025-09-19) ✅
+- **Status**: COMPLETE
+- **Implementation**: Created `src/nanobrag_torch/io/mosflm.py` with full MOSFLM matrix support
+- **Features**:
+  - Reads 3×3 MOSFLM A matrix (reciprocal vectors scaled by 1/λ)
+  - Correctly scales by wavelength to remove λ dependency
+  - Converts reciprocal vectors to real-space cell parameters
+  - Full integration with CLI via `-mat` option
+- **Tests**: Created comprehensive test suite in `tests/test_mosflm_matrix.py` (7 tests, all passing)
+- **Impact**: Full compatibility with C implementation for crystal orientation input
+
 All critical acceptance tests have been implemented and are passing! The test suite is now complete with:
 - 41 of 41 core acceptance tests ✅
 - 27 of 27 AT-PARALLEL tests implemented (some require C binary to run) ✅
 - All HKL file tests implemented ✅
+- MOSFLM matrix file support implemented ✅
 - All functional tests passing when not requiring C binary comparison ✅
