@@ -264,11 +264,11 @@ python3 bin2png.py output.bin
 
 ### Batch Visualization Script
 
-The repository includes `run_parallel_visual.py` for comprehensive testing:
+The repository includes comparison scripts in `scripts/comparison/`:
 
 ```bash
 # Run visual comparison tests
-./run_parallel_visual.py
+./scripts/comparison/run_parallel_visual.py
 
 # Generates parallel_test_visuals/ directory with:
 # - Side-by-side C vs PyTorch comparisons
@@ -375,7 +375,7 @@ pytest tests/ --cov=nanobrag_torch --cov-report=html
 
 ```bash
 # Run comprehensive visual comparisons
-./run_parallel_visual.py
+./scripts/comparison/run_parallel_visual.py
 
 # This generates:
 # - 20+ comparison plots
