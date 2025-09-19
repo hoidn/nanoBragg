@@ -131,12 +131,12 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - Offset ratios preserved within 2% as required per spec
   - Tests beam centers at (20,20), (30,40), (45,25), (60,60)mm
 
-## In Progress 🚧
+## Completed ✅
 
 ### AT-PARALLEL-002: Pixel Size Independence
-- **Status**: PARTIAL (3 of 4 tests passing) ⚠️
+- **Status**: COMPLETE ✅
 - **Implementation**: Test file created at `tests/test_at_parallel_002.py`
-- **Test**: 3 of 4 tests passing
+- **Test**: All 4 tests passing
 - **Fixed Issues**:
   - Fixed detector config auto-calculation logic that was overriding explicitly set beam centers
   - Peak position test now passing - peaks scale correctly with pixel size
@@ -144,10 +144,21 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - CRITICAL FIX: Fixed double-application of MOSFLM +0.5 pixel offset bug in Detector class
     - Was being applied in both __init__ and _calculate_pix0_vector methods
     - Now only applied once in __init__, converting properly throughout
-- **Remaining Issue**:
-  - Pattern correlation test still failing (0.223 vs expected >0.85)
-  - This appears to be a discretization/sampling issue when comparing different pixel sizes
-  - Not a blocking issue for the primary acceptance criteria
+  - Fixed pattern correlation test by properly accounting for physical detector size
+    - Now uses same physical detector area (25.6mm x 25.6mm) with different pixel sizes
+    - Implements proper upsampling for comparison between different resolutions
+    - Correlation now >0.95 as required by spec
+
+### AT-PARALLEL-003: Detector Offset Preservation
+- **Status**: COMPLETE ✅ (fixed)
+- **Implementation**: Test file created at `tests/test_at_parallel_003.py`
+- **Test**: All 3 tests passing
+- **Fixed Issues**:
+  - Test was expecting beam centers in pixels to equal beam_center_mm / pixel_size_mm
+  - Fixed to account for MOSFLM +0.5 pixel offset convention
+  - Peak position and offset ratio tests already working correctly
+
+## In Progress 🚧
 
 ### AT-PARALLEL-004: MOSFLM 0.5 Pixel Offset
 - **Status**: PARTIAL (5 of 6 tests passing) ⚠️

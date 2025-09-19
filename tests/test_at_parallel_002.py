@@ -139,23 +139,31 @@ class TestATParallel002:
 
         AT-PARALLEL-002: Pattern correlation SHALL be >0.95 across pixel sizes.
         """
-        pixel_sizes = [0.1, 0.2]  # Use two sizes for comparison
-        # Use detector center (128 pixels for 256x256 detector)
-        fixed_beam_center_pixels = 128  # Center pixel
+        # Use two pixel sizes but adjust detector dimensions to maintain same physical area
+        pixel_sizes = [0.1, 0.2]  # mm
+        detector_pixels = [256, 128]  # Adjust pixel count to maintain same detector size in mm
+
+        # Fixed physical detector size: 25.6mm x 25.6mm
+        fixed_detector_size_mm = 25.6
+        # Fixed beam center at physical center: 12.8mm
+        fixed_beam_center_mm = 12.8
+
         images = []
 
-        for pixel_size in pixel_sizes:
-            # Calculate beam center in mm for this pixel size
-            beam_center_mm = fixed_beam_center_pixels * pixel_size
-            # Create configurations
+        for pixel_size, n_pixels in zip(pixel_sizes, detector_pixels):
+            # Verify we maintain the same physical detector size
+            assert abs(n_pixels * pixel_size - fixed_detector_size_mm) < 0.01, \
+                f"Detector size mismatch: {n_pixels * pixel_size}mm vs {fixed_detector_size_mm}mm"
+
+            # Create configurations with same physical area but different pixel sizes
             detector_config = DetectorConfig(
                 detector_convention=DetectorConvention.MOSFLM,
                 distance_mm=100.0,
                 pixel_size_mm=pixel_size,
-                spixels=256,
-                fpixels=256,
-                beam_center_s=beam_center_mm,
-                beam_center_f=beam_center_mm,
+                spixels=n_pixels,
+                fpixels=n_pixels,
+                beam_center_s=fixed_beam_center_mm,
+                beam_center_f=fixed_beam_center_mm,
             )
 
             crystal_config = CrystalConfig(
@@ -178,24 +186,46 @@ class TestATParallel002:
             image = simulator.run()
             images.append(image)
 
-        # Resample second image to match first (account for pixel size difference)
-        # This is a simple nearest-neighbor resampling for comparison
-        # In practice, we're checking that the patterns are similar when accounting for scale
+        # Resample the coarser image (128x128) to match the finer one (256x256)
+        # Using bilinear interpolation to upsample
+        img_fine = images[0]  # 256x256 with 0.1mm pixels
+        img_coarse = images[1]  # 128x128 with 0.2mm pixels
+
+        # Upsample the coarse image to 256x256 for comparison
+        # Each coarse pixel maps to 2x2 fine pixels
+        img_coarse_upsampled = torch.zeros_like(img_fine)
+        for i in range(128):
+            for j in range(128):
+                # Each coarse pixel expands to a 2x2 block in the fine grid
+                img_coarse_upsampled[2*i:2*i+2, 2*j:2*j+2] = img_coarse[i, j]
 
         # Normalize images for correlation
-        img1 = images[0].flatten()
-        img2 = images[1].flatten()
+        img1 = img_fine.flatten()
+        img2 = img_coarse_upsampled.flatten()
 
-        # Compute correlation coefficient
-        img1_norm = (img1 - img1.mean()) / (img1.std() + 1e-10)
-        img2_norm = (img2 - img2.mean()) / (img2.std() + 1e-10)
+        # Remove zero/background pixels for better correlation measurement
+        # Focus on pixels with significant intensity
+        threshold = 0.01 * max(img1.max(), img2.max())
+        mask = (img1 > threshold) | (img2 > threshold)
 
-        correlation = (img1_norm * img2_norm).mean()
+        if mask.sum() > 10:  # Need enough pixels for meaningful correlation
+            img1_masked = img1[mask]
+            img2_masked = img2[mask]
 
-        # Note: Perfect correlation is not expected due to discretization effects
-        # We're checking that the patterns are fundamentally similar
-        assert correlation > 0.85, \
-            f"Pattern correlation {correlation:.3f} is below threshold 0.85"
+            # Compute correlation coefficient
+            img1_norm = (img1_masked - img1_masked.mean()) / (img1_masked.std() + 1e-10)
+            img2_norm = (img2_masked - img2_masked.mean()) / (img2_masked.std() + 1e-10)
+
+            correlation = (img1_norm * img2_norm).mean()
+        else:
+            # If not enough bright pixels, compare whole images
+            img1_norm = (img1 - img1.mean()) / (img1.std() + 1e-10)
+            img2_norm = (img2 - img2.mean()) / (img2.std() + 1e-10)
+            correlation = (img1_norm * img2_norm).mean()
+
+        # With proper resampling and same physical area, correlation should be high
+        assert correlation > 0.95, \
+            f"Pattern correlation {correlation:.3f} is below threshold 0.95"
 
     def test_beam_center_parameter_consistency(self):
         """Test that beam center parameters are handled consistently across pixel sizes.
