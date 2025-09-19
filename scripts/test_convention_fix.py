@@ -275,10 +275,10 @@ def test_pix0_calculation_fix():
     
     if corrected_diff < 1e-6:
         print(f"  ✅ EXCELLENT: Corrected calculation matches C reference!")
-        return True
+        assert True  # Test passed
     else:
         print(f"  ❌ Still significant differences")
-        return False
+        assert False, "Significant differences remain"
 
 
 def main():

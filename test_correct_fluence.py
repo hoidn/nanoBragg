@@ -84,10 +84,11 @@ def test_correct_fluence():
 
             if image.max() > 1:
                 print("✓ This fluence produces reasonable intensities!")
-                return fluence, image
+                assert True  # Test passed - found reasonable fluence
+                return
 
     print("None of the fluence values produced reasonable results")
-    return None, None
+    assert False, "No fluence values produced reasonable results"
 
 
 if __name__ == "__main__":

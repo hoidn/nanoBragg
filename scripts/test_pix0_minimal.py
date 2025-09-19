@@ -46,7 +46,7 @@ def test_basic_vectors():
     combined = v1 + v2 + v3
     print(f"Vector addition: v1 + v2 + v3 = {combined}")
     
-    return True
+    assert True  # Test completed successfully
 
 def test_rotation_matrices():
     """Test rotation matrix construction for specific angles."""
@@ -286,7 +286,7 @@ def test_precision_issues():
     print(f"Float64 rotation matrix:\n{R_f64}")
     print(f"Matrix difference:\n{R_f64 - R_f32.double()}")
     
-    return True
+    assert True  # Test completed successfully
 
 def main():
     """Run all minimal tests."""

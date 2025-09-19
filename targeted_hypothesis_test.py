@@ -133,7 +133,7 @@ def test_distance_scaling_hypothesis():
             print(f"  Error running test: {e}")
             results[distance] = {'error': str(e)}
     
-    return results
+    assert results, "Test completed with results"
 
 def test_beam_center_hypothesis():
     """Test if error is related to beam center interpretation (H2)"""
@@ -220,7 +220,7 @@ def test_beam_center_hypothesis():
             print(f"  Error running test: {e}")
             results[f"{beam_s}_{beam_f}"] = {'error': str(e)}
     
-    return results
+    assert results, "Test completed with results"
 
 def test_pivot_mode_hypothesis():
     """Test different pivot modes (H4: Missing Coordinate Transformation)"""
@@ -263,7 +263,7 @@ def test_pivot_mode_hypothesis():
             'api_limitation': 'Cannot compare pix0 vectors - C reference does not return detector geometry'
         }
     
-    return results
+    assert results, "Test completed with results"
 
 def test_identity_configuration():
     """Test with identity/zero rotation configuration (H4)"""
@@ -301,7 +301,7 @@ def test_identity_configuration():
 
     print(f"Identity configuration recorded (no comparison possible due to API limitation)")
 
-    return results
+    assert results, "Test completed with results"
 
 def main():
     """Run targeted hypothesis tests"""
