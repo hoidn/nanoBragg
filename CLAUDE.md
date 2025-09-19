@@ -391,6 +391,8 @@ To improve efficiency, use these standard commands for common tasks.
   `KMP_DUPLICATE_LIB_OK=TRUE pytest -v`
 - **Run acceptance tests:**
   `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_*.py -v`
+- **Run parallel validation tests (C-PyTorch equivalence):**
+  `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_*.py -v`
 - **Run a specific test function:**
   `# Format: pytest -v <file_path>::<ClassName>::<test_function_name>`
   `pytest -v tests/test_suite.py::TestTier1TranslationCorrectness::test_simple_cubic_reproduction`
