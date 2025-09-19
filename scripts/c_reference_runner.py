@@ -199,19 +199,24 @@ class CReferenceRunner:
                     print(f"STDERR: {result.stderr}")
                     return None
 
-                # Parse output image
-                image_file = temp_path / "intimage.img"
-                if not image_file.exists():
-                    print(f"❌ Output image not found: {image_file}")
+                # Parse output image from float binary (more accurate for comparison)
+                float_file = temp_path / "floatimage.bin"
+                if not float_file.exists():
+                    print(f"❌ Float output image not found: {float_file}")
                     print(f"STDOUT: {result.stdout}")
                     return None
 
-                if not validate_smv_file(str(image_file)):
-                    print(f"❌ Invalid SMV file: {image_file}")
+                # Read float binary directly (4-byte floats, shape determined by detector config)
+                try:
+                    image_data = np.fromfile(str(float_file), dtype=np.float32)
+                    expected_size = detector_config.spixels * detector_config.fpixels
+                    if len(image_data) != expected_size:
+                        print(f"❌ Float image size mismatch: expected {expected_size}, got {len(image_data)}")
+                        return None
+                    image_data = image_data.reshape(detector_config.spixels, detector_config.fpixels)
+                except Exception as e:
+                    print(f"❌ Error reading float image: {e}")
                     return None
-
-                # Parse the image
-                image_data, header = parse_smv_image(str(image_file))
 
                 print(f"✅ C reference simulation completed")
                 print(f"   Image shape: {image_data.shape}")

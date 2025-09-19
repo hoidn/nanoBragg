@@ -14,6 +14,7 @@ Subagents policy (context budget):
 - You may use up to 200 subagents for search, summarization, inventory, and planning.
 - Use at most 1 subagent for building/running tests/acceptance suites to avoid back‑pressure.
 - Use subagents for all testing, debugging, and verification-type tasks
+- provide subagents with sufficient context, including all relevant documentation file paths
 - Summaries should be concise; prefer file pointers and diffs over full content.
 
 - **Refactoring Discipline**: If you move or rename a module, file, class, or function, you MUST treat it as a single, atomic operation within the loop. This requires:
@@ -48,14 +49,16 @@ No cheating (important):
 <instructions>
 do the following in this loop:
 <step 1>
-Review the following files:
+IMPORTANT:
+READ the following files (read them yourself. you may delegate exploration of other files, but not these, to subagents):
 - Index of project documentation: `./docs/index.md`
 - $SPECS: `./specs/spec-a.md`
 - $ARCH: `./arch.md` (ADR-backed implementation architecture; reconcile design with spec, surface conflicts)
+- docs/development/c_to_pytorch_config_map.md — C↔Py config parity and implicit rules
+- docs/development/debugging.md — Parallel trace-driven debugging SOP
 - $PLAN: `./fix_plan.md` (living, prioritized to‑do; keep it up to date)
 - $AGENTS: `./CLAUDE.md` (concise how‑to run/build/test; keep it accurate)
 - $TESTS: `./docs/development/testing_strategy.md` (testing philosophy, tiers, seeds/tolerances, commands)
-- $CONTRIB: `./docs/development/CONTRIBUTING.md` (Testing section: policy and minimum expectations)
 </step 1>
 <step 2>
 declare:

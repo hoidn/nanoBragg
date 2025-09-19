@@ -374,7 +374,7 @@ class Detector:
         MOSFLM: Fbeam = Ybeam + 0.5*pixel_size, Sbeam = Xbeam + 0.5*pixel_size
         CUSTOM: Fclose = Xbeam, Sclose = Ybeam (no +0.5 offset)
 
-        Note: This uses pixel centers at integer indices.
+        Note: Pixel coordinates are generated at pixel corners/edges (pixel 0 at position 0, etc.)
         """
         from ..config import DetectorPivot, DetectorConvention
         from ..utils.geometry import angles_to_rotation_matrix, rotate_axis
@@ -468,14 +468,15 @@ class Detector:
             # BEAM pivot mode: detector rotates around the direct beam spot
             # Use exact C-code formula: pix0_vector = -Fbeam*fdet_vec - Sbeam*sdet_vec + distance*beam_vec
             
-            # Calculate Fbeam and Sbeam exactly as C code does
+            # Calculate Fbeam and Sbeam with the C code's axis swap
+            # The C code has: Fbeam = Ybeam, Sbeam = Xbeam
+            # And c_reference_utils maps: Xbeam → beam_center_f, Ybeam → beam_center_s
+            # Therefore: Fbeam ← beam_center_s, Sbeam ← beam_center_f (SWAPPED!)
             # The beam centers already include the MOSFLM +0.5 pixel offset from __init__
-            # CORRECT MAPPING: Xbeam (C) → beam_center_f (fast), Ybeam (C) → beam_center_s (slow)
 
-            # Convert beam centers to meters for geometry calculations
-            # No additional offset needed - it's already in the stored beam centers
-            Fbeam = self.beam_center_f * self.pixel_size  # Convert to meters
-            Sbeam = self.beam_center_s * self.pixel_size  # Convert to meters
+            # Apply the axis swap: Fbeam gets slow value, Sbeam gets fast value
+            Fbeam = self.beam_center_s * self.pixel_size  # F (fast coord) ← beam_s (slow param)
+            Sbeam = self.beam_center_f * self.pixel_size  # S (slow coord) ← beam_f (fast param)
             
             # Set beam vector based on convention
             if self.config.detector_convention == DetectorConvention.MOSFLM:
@@ -519,23 +520,21 @@ class Detector:
                 raise ValueError(f"Unknown detector convention: {self.config.detector_convention}")
 
             # Distances from pixel (0,0) center to the beam spot, measured along detector axes
-            # Convention handling: MOSFLM adds 0.5 pixel offset, CUSTOM does not
-            # CRITICAL MAPPING CORRECTION: Based on C code analysis
-            # C code: Fbeam = Ybeam + 0.5, Sbeam = Xbeam + 0.5
-            # Therefore: Fclose ← beam_center_s (slow/Y), Sclose ← beam_center_f (fast/X)
+            # CRITICAL: The C code has a confusing mapping:
+            # - Fbeam (fast detector coordinate) = Ybeam (Y input parameter)
+            # - Sbeam (slow detector coordinate) = Xbeam (X input parameter)
+            # And from c_reference_utils.py:
+            # - Xbeam parameter → beam_center_f (fast)
+            # - Ybeam parameter → beam_center_s (slow)
+            # Therefore:
+            # - Fclose (fast) ← Ybeam ← beam_center_s (slow) - SWAPPED!
+            # - Sclose (slow) ← Xbeam ← beam_center_f (fast) - SWAPPED!
+            # NOTE: The beam centers already have the +0.5 offset from __init__ for MOSFLM!
 
-            is_custom = self._is_custom_convention()
-
-            if is_custom:
-                # CUSTOM convention: No +0.5 pixel offset
-                # Fclose comes from Ybeam (slow axis), Sclose from Xbeam (fast axis)
-                Fclose = self.beam_center_s * self.pixel_size  # meters, no +0.5
-                Sclose = self.beam_center_f * self.pixel_size  # meters, no +0.5
-            else:
-                # MOSFLM convention: Add 0.5 pixel for leading edge reference
-                # Fclose comes from Ybeam (slow axis), Sclose from Xbeam (fast axis)
-                Fclose = (self.beam_center_s + 0.5) * self.pixel_size  # meters
-                Sclose = (self.beam_center_f + 0.5) * self.pixel_size  # meters
+            # The beam centers already include the MOSFLM +0.5 pixel offset from __init__
+            # Apply the axis swap: Fclose gets slow value, Sclose gets fast value
+            Fclose = self.beam_center_s * self.pixel_size  # F (fast coord) ← beam_s (slow param)
+            Sclose = self.beam_center_f * self.pixel_size  # S (slow coord) ← beam_f (fast param)
 
             # Compute pix0 BEFORE rotations using close_distance if specified
             # When close_distance is provided, use it directly for SAMPLE pivot
@@ -632,7 +631,8 @@ class Detector:
         Returns:
             torch.Tensor: Pixel coordinates with shape (spixels, fpixels, 3) in meters
         """
-        # Create pixel index grids (integer indices, pixel centers handled in pix0_vector)
+        # Create pixel index grids - pixel corners/edges like C code
+        # The C code appears to use pixel corners (0, 1, 2, ...) not centers
         s_indices = torch.arange(self.spixels, device=self.device, dtype=self.dtype)
         f_indices = torch.arange(self.fpixels, device=self.device, dtype=self.dtype)
 
@@ -666,7 +666,8 @@ class Detector:
         Returns:
             torch.Tensor: Pixel coordinates with shape (spixels, fpixels, 3) in meters
         """
-        # Create pixel index grids
+        # Create pixel index grids - pixel corners/edges like C code
+        # The C code appears to use pixel corners (0, 1, 2, ...) not centers
         s_indices = torch.arange(self.spixels, device=self.device, dtype=self.dtype)
         f_indices = torch.arange(self.fpixels, device=self.device, dtype=self.dtype)
         s_grid, f_grid = torch.meshgrid(s_indices, f_indices, indexing="ij")
