@@ -1,0 +1,10 @@
+# HKL file with phase - 5 columns (h,k,l,F,phase)
+# For AT-IO-004 test - phase column should be ignored
+0 0 0 100.0 0.0
+1 0 0 50.0 30.5
+0 1 0 60.0 -45.2
+0 0 1 70.0 90.0
+1 1 0 40.0 180.0
+1 0 1 35.0 -90.5
+0 1 1 38.0 45.7
+1 1 1 25.0 -180.0
