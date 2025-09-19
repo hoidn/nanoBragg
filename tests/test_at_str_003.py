@@ -220,7 +220,7 @@ class TestAT_STR_003_LatticeShapeModels:
 
         for fudge in fudge_values:
             F_latt = Na * Nb * Nc * volume_correction * sinc3(
-                torch.pi * torch.sqrt(torch.tensor(hrad_sqr * fudge))
+                torch.pi * torch.sqrt(hrad_sqr * fudge)
             )
             F_latt_values.append(F_latt)
 

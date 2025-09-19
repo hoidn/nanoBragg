@@ -726,6 +726,26 @@ Potential future work:
 4. Advanced crystal models (mosaicity implementation)
 5. Integration with existing crystallography pipelines
 
+## Test Suite Cleanup (2025-09-19) ✅
+
+### Fixed Import Errors
+- **Status**: COMPLETE
+- **Problem**: `scripts/c_reference_runner.py` had incorrect imports causing collection errors
+- **Fix**: Changed relative imports from `c_reference_utils` to `scripts.c_reference_utils`
+- **Impact**: Scripts now importable for testing
+
+### Configured Test Collection
+- **Status**: COMPLETE
+- **Problem**: Archive folder with deprecated tests causing collection errors
+- **Fix**: Updated `pyproject.toml` to exclude archive folder from test collection
+- **Impact**: Clean test collection with no errors
+
+### Fixed Tensor Warning
+- **Status**: COMPLETE
+- **Problem**: UserWarning about tensor construction in `test_at_str_003.py`
+- **Fix**: Removed unnecessary `torch.tensor()` wrapper around already-tensor value
+- **Impact**: No warnings in test suite
+
 ## Summary
 
 Implementation status:
@@ -743,8 +763,12 @@ Implementation status:
   - Crystal geometry calculations now correct (softplus issue resolved)
   - Gradient flow fully restored for differentiable programming
   - MOSFLM +0.5 pixel offset handling consistent throughout codebase
-- **Total test status**: 328 passed, 5 failed (massive improvement from initial 283/24)
-- **Status**: Critical physics and gradient issues resolved - codebase now ready for production use
+- **Test Suite Status (2025-09-19)**:
+  - Core tests: 321 passed, 32 skipped, 2 xfailed, 0 failed ✅
+  - Parallel validation tests: 45 passed, 1 skipped, 3 failed (AT-PARALLEL-025 intensity scaling)
+  - Collection errors: FIXED (excluded archive folder, fixed imports in scripts)
+  - Warnings: FIXED (tensor construction warning in test_at_str_003)
+- **Status**: Test suite clean and passing. Known intensity scaling issue in AT-PARALLEL-025 (documented)
 
 Completed features:
 - CLI interface FULLY implemented (9 of 9 AT-CLI tests) ✅

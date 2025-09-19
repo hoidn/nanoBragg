@@ -26,14 +26,14 @@ from typing import Optional, Tuple
 
 import numpy as np
 
-from c_reference_utils import (
+from scripts.c_reference_utils import (
     build_nanobragg_command,
     generate_identity_matrix,
     get_default_executable_path,
     validate_executable_exists,
 )
 from nanobrag_torch.config import BeamConfig, CrystalConfig, DetectorConfig
-from smv_parser import parse_smv_image, validate_smv_file
+from scripts.smv_parser import parse_smv_image, validate_smv_file
 
 
 class CReferenceRunner:
