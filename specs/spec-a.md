@@ -952,6 +952,10 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
   - Setup: Implementations SHALL support -misset random and -misset_seed. Prefer a C‑compatible RNG (e.g., LCG) for identical angle sampling. Case: cubic 100,100,100; N=5; λ=1.0; detector 256×256, pixel 0.1mm, distance 100mm; φ=0; osc=0; mosaic=0; -oversample 1. Test two seeds S∈{12345,54321}.
   - Expectation: Determinism: PyTorch same‑seed runs are identical (rtol ≤ 1e−12, atol ≤ 1e−15). Cross‑impl equivalence: For each seed, C vs PyTorch allclose (rtol ≤ 1e−5, atol ≤ 1e−6), correlation ≥ 0.99. Seed effect: Different seeds produce correlation ≤ 0.7 within the same implementation. SHOULD: if sampled angles are reported, they match within 1e−12 rad after unit conversions.
 
+  - AT-PARALLEL-025 Maximum Intensity Position Alignment
+  - Setup: Cell 100,100,100,90,90,90; -lambda 1.0; -N 1; -default_F 100; detector 64×64, -pixel 0.1, -distance 100; MOSFLM convention; no rotations, no mosaic, no divergence/dispersion.
+  - Expectation: The pixel coordinates of maximum intensity SHALL match between C and PyTorch implementations within 0.5 pixels. Specifically: |argmax(C_image) - argmax(PyTorch_image)| < 0.5 for both row and column indices. This test detects any systematic coordinate shift including MOSFLM +0.5 pixel offsets, axis swaps, or origin differences.
+
 Quality Bar Checklist (Informative)
 
 - All major formulas and conversions are explicit and match the implementation.

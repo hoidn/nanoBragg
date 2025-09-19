@@ -1,0 +1,15 @@
+Running simulation...
+  Detector: 128x128 pixels
+  Crystal: 100.0x100.0x100.0 Å
+  Wavelength: 6.20 Å
+WARNING: out of range for three point interpolation
+WARNING: further warnings will not be printed!
+
+Statistics:
+  Max intensity: 1.000e-02 at pixel (65, 65)
+  Mean: 9.959e-03
+  RMS: 9.960e-03
+  RMSD: 2.581e-05
+Wrote float image to /var/folders/8y/vnl75xb954j0wd09cm8zrrx40000gp/T/tmpw1jy1019_py.bin
+
+Simulation complete.
