@@ -25,41 +25,62 @@ def sincg(u: torch.Tensor, N: torch.Tensor) -> torch.Tensor:
     if N.ndim == 0:
         N = N.expand_as(u)
 
-    # Calculates sin(N*u)/sin(u), handling the u=0 case
+    # Calculates sin(N*u)/sin(u), handling special cases
     # Note: u is already pre-multiplied by π at the call site
-
-    # For numerical stability and gradient correctness, we need to handle
-    # the case where u is near zero. Near u=0, sin(Nu)/sin(u) → N (L'Hôpital's rule)
 
     eps = 1e-10
 
-    # Check if u is near zero - if so, use the analytical limit
+    # We need to handle two special cases:
+    # 1. u near 0: sin(Nu)/sin(u) → N (L'Hôpital's rule)
+    # 2. u near integer multiples of π: sin(Nu)/sin(u) → N*(-1)^(n(N-1))
+
+    # Check if u is near zero
     is_near_zero = torch.abs(u) < eps
 
-    # For the regular case, we need to avoid division by zero while maintaining gradients
-    # Instead of directly dividing, we'll use a stable formulation
+    # Check if u is near integer multiples of π
+    # u/π should be close to an integer
+    u_over_pi = u / torch.pi
+    nearest_int = torch.round(u_over_pi)
+    is_near_int_pi = torch.abs(u_over_pi - nearest_int) < eps / torch.pi
 
-    # Method 1: Use Taylor series expansion for small u
-    # sin(Nu)/sin(u) ≈ N - N(N²-1)u²/6 + O(u⁴)
-    # But for simplicity and gradient stability, just use the limit N near zero
+    # For integer multiples of π (but not 0), use L'Hôpital's rule:
+    # lim[u→nπ] sin(Nu)/sin(u) = N*cos(Nnπ)/cos(nπ) = N*(-1)^(Nn)/(-1)^n = N*(-1)^(n(N-1))
+    # We need to handle the sign based on whether n*(N-1) is odd or even
+    # Use abs and then apply the sign separately to handle negative values correctly
+    sign_exponent = nearest_int * (N - 1)
+    # Check if the exponent is odd (magnitude-wise)
+    is_odd = (torch.abs(sign_exponent) % 2) >= 0.5
+    # (-1)^(odd) = -1, (-1)^(even) = 1
+    sign_factor = torch.where(is_odd, -torch.ones_like(u), torch.ones_like(u))
 
-    # Method 2: For non-zero u, compute the ratio with safeguards
+    # Compute the regular ratio for non-special cases
     sin_u = torch.sin(u)
     sin_Nu = torch.sin(N * u)
 
     # Create a safe denominator that's never exactly zero
-    # When sin_u is very small, replace with eps while preserving sign
     safe_sin_u = torch.where(
         torch.abs(sin_u) < eps,
-        torch.where(sin_u >= 0, eps, -eps),  # Preserve sign, avoid zero
+        torch.ones_like(sin_u) * eps,  # Use eps to avoid division by zero
         sin_u
     )
 
     # Compute ratio with safe denominator
     ratio = sin_Nu / safe_sin_u
 
-    # Use limit value N near u=0, computed ratio elsewhere
-    result = torch.where(is_near_zero, N, ratio)
+    # Apply the appropriate formula based on the case:
+    # - Near u=0: return N
+    # - Near u=nπ (n≠0): return N * sign_factor
+    # - Otherwise: return the computed ratio
+    result = torch.where(
+        is_near_zero,
+        N,  # u ≈ 0
+        torch.where(
+            is_near_int_pi & ~is_near_zero,
+            N * sign_factor,  # u ≈ nπ, n≠0
+            ratio  # Regular case
+        )
+    )
+
     return result
 
 

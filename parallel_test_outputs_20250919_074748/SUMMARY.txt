@@ -1,0 +1,14 @@
+PARALLEL TEST VISUAL COMPARISON SUMMARY
+Generated: 2025-09-19T07:47:59.842938
+============================================================
+
+AT-PARALLEL-001_256x256: PASS
+AT-PARALLEL-001_64x64: PASS
+AT-PARALLEL-002_pixel_0.1mm: PASS
+AT-PARALLEL-002_pixel_0.2mm: PASS
+AT-PARALLEL-004_MOSFLM: PASS
+AT-PARALLEL-004_XDS: PASS
+AT-PARALLEL-007_with_rotations: PASS
+
+============================================================
+Total: 7/7 tests passed

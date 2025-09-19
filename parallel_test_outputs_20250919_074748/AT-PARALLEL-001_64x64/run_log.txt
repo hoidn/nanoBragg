@@ -1,0 +1,38 @@
+Command: python scripts/nb_compare.py --outdir parallel_test_outputs_20250919_074748/AT-PARALLEL-001_64x64 -- -default_F 100 -cell 100 100 100 90 90 90 -lambda 6.2 -N 5 -detpixels 64 -distance 100
+Return code: 0
+
+STDOUT:
+C binary: /Users/ollie/Documents/nanoBragg/golden_suite_generator/nanoBragg
+PyTorch command: nanoBragg
+
+Running C implementation...
+C runtime: 0.004 s
+Running PyTorch implementation...
+Py runtime: 0.673 s
+
+Loading float images...
+C image shape: (64, 64)
+PyTorch image shape: (64, 64)
+
+Computing metrics...
+
+==================================================
+COMPARISON SUMMARY
+==================================================
+Correlation: 1.000000
+RMSE: 0.000645
+Max absolute difference: 0.003018
+C sum: 24300.00
+Py sum: 24301.46
+Sum ratio (Py/C): 1.000060
+Mean peak distance: 0.00 pixels
+Max peak distance: 0.00 pixels
+Runtime speedup (C/Py): 0.01x
+
+Saving PNG previews to parallel_test_outputs_20250919_074748/AT-PARALLEL-001_64x64/
+
+✓ PASS: Correlation 1.000000 >= 0.95
+
+
+STDERR:
+

@@ -126,6 +126,10 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
   - Setup: Triclinic cell 70,80,90,85,95,105; -lambda 1.5; -N 1; -default_F 100; detector 256×256, -pixel 0.1, -distance 150; MOSFLM convention; identity orientation matrix.
   - Expectation: The brightest Bragg peak SHALL appear at the same absolute pixel position (±1.0 pixel) in both C and PyTorch implementations. This validates the entire crystallographic chain for non-orthogonal unit cells.
 
+  - AT-PARALLEL-027 Non-Uniform Structure Factor Pattern Equivalence
+  - Setup: Generate or provide a minimal HKL file (test_pattern.hkl) with deliberately non-uniform structure factors where h,k,l=(0,0,0):100.0, (1,0,0):50.0, (0,1,0):25.0, (1,1,0):12.5, (2,0,0):200.0, (0,2,0):150.0. Cell 100,100,100,90,90,90; -lambda 6.2; -N 5; detector 64×64, -pixel 0.1, -distance 100; MOSFLM convention. Run both C and PyTorch with: -hkl test_pattern.hkl (NO -default_F flag allowed).
+  - Pass Criteria: Correlation ≥0.999 between C and PyTorch outputs; intensity ratios between peaks match expected F² ratios within 1%; verify that peak at (2,0,0) reflection is 4× brighter than (1,0,0) reflection due to F² scaling (200²/50² = 16/1 for structure factor, modulated by Lorentz and other corrections).
+
 Quality Bar Checklist (Informative)
 
 - All major formulas and conversions are explicit and match the implementation.

@@ -596,6 +596,9 @@ Acceptance Tests (Normative)
   - AT-STR-003 Lattice shape models
     - Setup: Compare SQUARE (sincg) vs ROUND (sinc3) vs GAUSS vs TOPHAT using identical crystal sizes and a reflection near a peak.
     - Expectation: Implementations SHALL produce F_latt per the formulas: SQUARE=Π sincg(π·Δ), ROUND=Na·Nb·Nc·0.723601254558268·sinc3(π·sqrt(fudge·hrad^2)), GAUSS and TOPHAT as specified; ROUND scales and cutoff behavior SHALL match the spec.
+  - AT-STR-004 Sparse HKL Handling and Missing Reflection Behavior
+    - Setup: Create sparse HKL file with deliberate gaps (e.g., h,k,l,F: (0,0,0):100.0, (2,0,0):80.0, (0,2,0):60.0, with (1,0,0) and (0,1,0) missing). Alternatively, use an external crystallography tool like MOSFLM, REFMAC, or PHENIX to generate a realistic sparse HKL file from a small molecule or truncated protein dataset. Run with -hkl sparse.hkl -default_F 10. Generate diffraction pattern with small detector (64×64).
+    - Expectation: Implementation SHALL use HKL-specified F values for reflections present in the file and default_F=10 for missing reflections. Intensity ratios SHALL verify correct assignment: I(0,0,0)/I(1,0,0) = (100/10)² = 100 (within 1% after accounting for geometric factors). Missing reflections SHALL be handled identically to C reference implementation.
 
 - Polarization
   - AT-POL-001 Kahn model and toggles
@@ -620,6 +623,9 @@ Acceptance Tests (Normative)
   - AT-IO-003 Fdump caching
     - Setup: Provide -hkl; verify Fdump.bin is written; re-run without -hkl.
     - Expectation: Implementation SHALL read HKLs from Fdump.bin; header and data layout SHALL match spec; behavior when -default_F prefills missing points SHALL be preserved.
+  - AT-IO-004 HKL Format Validation Suite
+    - Setup: Provide test HKL files in different valid formats: minimal.hkl (h,k,l,F four columns), with_phase.hkl (h,k,l,F,phase five columns), with_sigma.hkl (h,k,l,F,sigma,phase six columns), negative_indices.hkl (including negative Miller indices).
+    - Expectation: All format variants SHALL produce identical diffraction patterns when phase/sigma columns are ignored. Implementation SHALL correctly parse all columns present but use only h,k,l,F for intensity calculations. Negative indices SHALL be handled correctly. Fdump.bin cache SHALL be correctly generated for all formats and produce identical results when reused.
 
 - Sources, Divergence & Dispersion
   - AT-SRC-001 Sourcefile and weighting

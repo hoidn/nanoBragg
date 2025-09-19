@@ -780,14 +780,16 @@ The following new acceptance tests require actual HKL file support for full vali
   - Tests: Parser robustness across different HKL formats
   - Critical for: Ensuring compatibility with crystallography tool outputs
 
-### Missing AT-PARALLEL Tests (6 tests remaining)
+### Missing AT-PARALLEL Tests (3 tests remaining)
 The following AT-PARALLEL tests from spec-a-parallel.md still need implementation:
 - AT-PARALLEL-006 - Single Reflection Position (in progress - crystal orientation issue)
-- AT-PARALLEL-014 - Noise Robustness Test (partial implementation in test_at_parallel_014.py)
-- AT-PARALLEL-016 - Extreme Scale Testing
-- AT-PARALLEL-017 - Grazing Incidence Geometry
 - AT-PARALLEL-018 - Crystal Boundary Conditions
 - AT-PARALLEL-020 - Comprehensive Integration Test
+
+Recently completed:
+- AT-PARALLEL-014 - Noise Robustness Test ✅ COMPLETE (5 tests passing)
+- AT-PARALLEL-016 - Extreme Scale Testing ✅ COMPLETE (5 tests passing, 1 skipped)
+- AT-PARALLEL-017 - Grazing Incidence Geometry ✅ COMPLETE (6 tests passing)
 
 ## Architecture Notes
 
@@ -924,7 +926,7 @@ self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2
 
 Implementation status:
 - **Original tests**: 41 of 41 acceptance tests complete ✅
-- **NEW CRITICAL**: 11 of 26 AT-PARALLEL tests fully implemented
+- **NEW CRITICAL**: 14 of 26 AT-PARALLEL tests fully implemented
   - AT-PARALLEL-001: Beam center scaling (PASSED 8/8 tests) ✅
   - AT-PARALLEL-002: Pixel size independence (PASSED 4/4 tests) ✅
   - AT-PARALLEL-003: Detector offset preservation (PASSED 3/3 tests) ✅
@@ -932,7 +934,10 @@ Implementation status:
   - AT-PARALLEL-005: Beam Center Parameter Mapping (PASSED 4/4 tests) ✅
   - AT-PARALLEL-009: Intensity Normalization (PASSED 3/3 tests) ✅
   - AT-PARALLEL-011: Polarization Factor Verification (PASSED 2/2 tests, 1 skipped) ✅
+  - AT-PARALLEL-014: Noise Robustness (PASSED 5/5 tests) ✅ **NEW**
   - AT-PARALLEL-015: Mixed Unit Input Handling (PASSED 5/5 tests) ✅
+  - AT-PARALLEL-016: Extreme Scale Testing (PASSED 5/5 tests, 1 skipped) ✅ **NEW**
+  - AT-PARALLEL-017: Grazing Incidence Geometry (PASSED 6/6 tests) ✅ **NEW**
   - AT-PARALLEL-021: Crystal Phi Rotation Equivalence (PASSED 2/2 tests) ✅
   - AT-PARALLEL-022: Combined Detector+Crystal Rotation (PASSED 3/3 tests) ✅
   - AT-PARALLEL-023: Misset Angles Equivalence (PASSED 11/11 tests) ✅
