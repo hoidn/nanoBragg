@@ -302,20 +302,18 @@ class Detector:
     def _is_custom_convention(self) -> bool:
         """
         Check if C code will use CUSTOM convention instead of MOSFLM.
-        
+
         Based on the C code analysis:
         - MOSFLM convention (no explicit -twotheta_axis): Uses +0.5 pixel offset
-        - CUSTOM convention (explicit -twotheta_axis): No +0.5 pixel offset  
-        
-        For now, we'll return False to always use MOSFLM convention for testing,
-        then implement proper detection later.
-        
+        - CUSTOM convention (explicit -twotheta_axis): No +0.5 pixel offset
+
+        This method delegates to the DetectorConfig.should_use_custom_convention()
+        method which replicates the exact C code logic.
+
         Returns:
             bool: True if CUSTOM convention should be used
         """
-        # TODO: Implement proper user intent detection
-        # For now, always use MOSFLM convention to match the baseline behavior
-        return False
+        return self.config.should_use_custom_convention()
 
     def _calculate_pix0_vector(self):
         """
@@ -522,20 +520,22 @@ class Detector:
 
             # Distances from pixel (0,0) center to the beam spot, measured along detector axes
             # Convention handling: MOSFLM adds 0.5 pixel offset, CUSTOM does not
-            # CORRECT MAPPING: Xbeam (C) → beam_center_f (fast), Ybeam (C) → beam_center_s (slow)
+            # CRITICAL MAPPING CORRECTION: Based on C code analysis
+            # C code: Fbeam = Ybeam + 0.5, Sbeam = Xbeam + 0.5
+            # Therefore: Fclose ← beam_center_s (slow/Y), Sclose ← beam_center_f (fast/X)
 
             is_custom = self._is_custom_convention()
 
             if is_custom:
                 # CUSTOM convention: No +0.5 pixel offset
-                # self.beam_center_f and self.beam_center_s are already in pixels
-                Fclose = self.beam_center_f * self.pixel_size  # meters, no +0.5
-                Sclose = self.beam_center_s * self.pixel_size  # meters, no +0.5
+                # Fclose comes from Ybeam (slow axis), Sclose from Xbeam (fast axis)
+                Fclose = self.beam_center_s * self.pixel_size  # meters, no +0.5
+                Sclose = self.beam_center_f * self.pixel_size  # meters, no +0.5
             else:
                 # MOSFLM convention: Add 0.5 pixel for leading edge reference
-                # self.beam_center_f and self.beam_center_s are already in pixels
-                Fclose = (self.beam_center_f + 0.5) * self.pixel_size  # meters
-                Sclose = (self.beam_center_s + 0.5) * self.pixel_size  # meters
+                # Fclose comes from Ybeam (slow axis), Sclose from Xbeam (fast axis)
+                Fclose = (self.beam_center_s + 0.5) * self.pixel_size  # meters
+                Sclose = (self.beam_center_f + 0.5) * self.pixel_size  # meters
 
             # Compute pix0 BEFORE rotations using close_distance if specified
             # When close_distance is provided, use it directly for SAMPLE pivot

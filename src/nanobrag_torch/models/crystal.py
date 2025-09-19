@@ -934,8 +934,24 @@ class Crystal:
         vectors["b"] = c_star_cross_a_star * V
         vectors["c"] = a_star_cross_b_star * V
 
-        # Note: CLAUDE.md Rule #13 suggests circular recalculation here, but
-        # testing shows this may not be needed for the current issue
+        # CLAUDE.md Rule #13: Circular recalculation for exact metric duality
+        # Step 3: Recalculate reciprocal vectors from real: a* = (b × c) / V_actual
+        # Step 4: Use actual volume: V_actual = a · (b × c)
+
+        # Calculate actual volume from real vectors
+        V_actual = torch.dot(vectors["a"], torch.cross(vectors["b"], vectors["c"], dim=0))
+
+        # Recalculate reciprocal vectors using actual volume for exact metric duality
+        b_cross_c = torch.cross(vectors["b"], vectors["c"], dim=0)
+        c_cross_a = torch.cross(vectors["c"], vectors["a"], dim=0)
+        a_cross_b = torch.cross(vectors["a"], vectors["b"], dim=0)
+
+        vectors["a_star"] = b_cross_c / V_actual
+        vectors["b_star"] = c_cross_a / V_actual
+        vectors["c_star"] = a_cross_b / V_actual
+
+        # Update volume to actual value
+        vectors["V"] = V_actual
 
         return vectors
 

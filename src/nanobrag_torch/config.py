@@ -374,6 +374,46 @@ class DetectorConfig:
             **kwargs
         )
 
+    def should_use_custom_convention(self) -> bool:
+        """
+        Determine if CUSTOM convention should be used based on C code logic.
+
+        The C code switches to CUSTOM convention when:
+        1. -twotheta_axis is explicitly passed to the command line
+        2. AND the twotheta_axis differs from the default for the current convention
+
+        This exactly replicates the logic in build_nanobragg_command() which only
+        passes -twotheta_axis when the axis is NOT the convention default.
+
+        Returns:
+            bool: True if CUSTOM convention should be used (no 0.5 pixel offset)
+        """
+        if self.twotheta_axis is None:
+            return False
+
+        # Convert twotheta_axis to list for comparison
+        if hasattr(self.twotheta_axis, 'tolist'):
+            axis = self.twotheta_axis.tolist()
+        else:
+            axis = list(self.twotheta_axis)
+
+        # Check if axis differs from the convention default
+        if self.detector_convention == DetectorConvention.MOSFLM:
+            # MOSFLM default is [0, 0, -1]
+            is_default = (abs(axis[0]) < 1e-6 and abs(axis[1]) < 1e-6 and abs(axis[2] + 1.0) < 1e-6)
+        elif self.detector_convention == DetectorConvention.XDS:
+            # XDS default is [1, 0, 0]
+            is_default = (abs(axis[0] - 1.0) < 1e-6 and abs(axis[1]) < 1e-6 and abs(axis[2]) < 1e-6)
+        elif self.detector_convention == DetectorConvention.DIALS:
+            # DIALS default is [0, 1, 0]
+            is_default = (abs(axis[0]) < 1e-6 and abs(axis[1] - 1.0) < 1e-6 and abs(axis[2]) < 1e-6)
+        else:
+            # CUSTOM convention or unknown - default to False
+            return False
+
+        # CUSTOM convention is used when twotheta_axis is NOT the default
+        return not is_default
+
 
 @dataclass
 class BeamConfig:

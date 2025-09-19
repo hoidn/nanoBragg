@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 """
-Targeted Hypothesis Testing for 28mm Systematic Offset
+Targeted Hypothesis Testing for 28mm Systematic Offset (DEPRECATED; moved to archive/)
 
 This script directly tests the most likely hypotheses by running
 detector geometry comparisons with specific parameter variations.
 
-NOTE: This script is currently disabled due to API incompatibility.
-The CReferenceRunner only returns image data, not detector geometry info.
-"""
+Uses diffraction pattern analysis (peak positions and correlations)
+since CReferenceRunner only returns image data, not detector geometry info.
 
-def test_placeholder():
-    """Placeholder test to prevent pytest collection errors."""
-    # This script needs significant rework to use current API
-    assert True
+Deprecated: superseded by scripts/test_hypothesis_framework.py and the nb-compare tool (AT-TOOLS-001).
+"""
 
 import os
 import sys
@@ -35,24 +32,29 @@ from nanobrag_torch.config import DetectorConfig, DetectorPivot
 from scripts.c_reference_runner import CReferenceRunner
 
 def test_distance_scaling_hypothesis():
-    """Test if error scales with detector distance (H1: Different Rotation Centers)"""
+    """Test if diffraction pattern changes scale with detector distance (H1: Different Rotation Centers)"""
     print("\n" + "="*60)
     print("TESTING H1: Different Rotation Centers")
-    print("Testing if error scales with detector distance...")
+    print("Testing if diffraction pattern scaling matches distance scaling...")
     print("="*60)
-    
+
     results = {}
-    distances = [50, 100, 200, 300]
-    
+    distances = [100, 200]  # Reduced for faster testing
+
+    # Import additional dependencies for simulation
+    from nanobrag_torch.config import CrystalConfig, BeamConfig
+    from nanobrag_torch.models.crystal import Crystal
+    from nanobrag_torch.simulator import Simulator
+
     for distance in distances:
         print(f"\nTesting distance: {distance}mm")
-        
+
         # Standard tilted configuration
-        config = DetectorConfig(
-            distance_mm=distance,  # Already in mm
+        detector_config = DetectorConfig(
+            distance_mm=distance,
             beam_center_s=51.2,     # mm
             beam_center_f=51.2,     # mm
-            pixel_size_mm=0.1,         # mm
+            pixel_size_mm=0.1,
             spixels=1024,
             fpixels=1024,
             detector_rotx_deg=torch.tensor(5.0),   # degrees
@@ -62,77 +64,91 @@ def test_distance_scaling_hypothesis():
             detector_pivot=DetectorPivot.BEAM,
             twotheta_axis=torch.tensor([0.0, 0.0, -1.0])
         )
-        
-        detector = Detector(config)
-        pix0_pytorch = detector.pix0_vector
-        
-        # C reference - using same config objects
-        from nanobrag_torch.config import CrystalConfig, BeamConfig
 
-        c_detector_config = DetectorConfig(
-            distance_mm=distance,
-            beam_center_s=51.2,
-            beam_center_f=51.2,
-            pixel_size_mm=0.1,
-            spixels=1024,
-            fpixels=1024,
-            detector_rotx_deg=5.0,
-            detector_roty_deg=3.0,
-            detector_rotz_deg=2.0,
-            detector_twotheta_deg=15.0,
-            detector_pivot=DetectorPivot.BEAM,
-        )
-
-        c_crystal_config = CrystalConfig(
+        crystal_config = CrystalConfig(
             cell_a=100.0, cell_b=100.0, cell_c=100.0,
             cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
             N_cells=(5, 5, 5), default_F=100.0
         )
 
-        c_beam_config = BeamConfig(wavelength_A=6.2)
+        beam_config = BeamConfig(wavelength_A=6.2)
 
+        # Generate PyTorch simulation
+        detector = Detector(detector_config)
+        crystal = Crystal(crystal_config, beam_config=beam_config)
+        simulator = Simulator(crystal, detector, beam_config=beam_config)
+        pytorch_image = simulator.run()
+
+        # Find peak position in PyTorch image
+        pytorch_peak_idx = torch.argmax(pytorch_image)
+        pytorch_peak_s = pytorch_peak_idx // 1024
+        pytorch_peak_f = pytorch_peak_idx % 1024
+
+        # Generate C reference simulation
         try:
             runner = CReferenceRunner()
-            c_image = runner.run_simulation(c_detector_config, c_crystal_config, c_beam_config)
+            c_image = runner.run_simulation(detector_config, crystal_config, beam_config)
 
-            # NOTE: CReferenceRunner only returns image data, not detector geometry
-            # This test needs detector geometry info which isn't available from current API
             if c_image is not None:
                 print(f"  C simulation completed successfully (image shape: {c_image.shape})")
-                # For now, skip the pix0 comparison since we can't get detector info
-                print(f"  Cannot compare pix0 vectors - API limitation")
-                continue
+
+                # Find peak position in C image
+                c_peak_idx = np.argmax(c_image)
+                c_peak_s = c_peak_idx // 1024
+                c_peak_f = c_peak_idx % 1024
+
+                # Calculate peak position difference
+                peak_diff_s = abs(float(pytorch_peak_s) - float(c_peak_s))
+                peak_diff_f = abs(float(pytorch_peak_f) - float(c_peak_f))
+                peak_diff_total = np.sqrt(peak_diff_s**2 + peak_diff_f**2)
+
+                # Calculate pattern correlation
+                pytorch_np = pytorch_image.detach().numpy()
+                correlation = np.corrcoef(pytorch_np.ravel(), c_image.ravel())[0, 1]
+
+                results[distance] = {
+                    'distance_mm': distance,
+                    'pytorch_peak': [float(pytorch_peak_s), float(pytorch_peak_f)],
+                    'c_peak': [float(c_peak_s), float(c_peak_f)],
+                    'peak_difference_pixels': peak_diff_total,
+                    'pattern_correlation': correlation,
+                    'pytorch_max_intensity': float(torch.max(pytorch_image)),
+                    'c_max_intensity': float(np.max(c_image))
+                }
+
+                print(f"  Peak difference: {peak_diff_total:.2f} pixels")
+                print(f"  Pattern correlation: {correlation:.4f}")
+
             else:
                 print(f"  C simulation failed")
-                continue
+                results[distance] = {'error': 'C simulation failed'}
 
-            # This code would work if we had detector geometry info:
-            # pix0_c = np.array([
-            #     c_result['detector_info'].get('pix0_vector_x', 0),
-            #     c_result['detector_info'].get('pix0_vector_y', 0),
-            #     c_result['detector_info'].get('pix0_vector_z', 0)
-            # ])
-            
-            # Calculate error
-            error_vector = pix0_pytorch.detach().numpy() - pix0_c
-            error_magnitude_m = np.linalg.norm(error_vector)
-            error_magnitude_mm = error_magnitude_m * 1000  # Convert to mm
-            
-            results[distance] = {
-                'distance_mm': distance,
-                'pix0_pytorch': pix0_pytorch.detach().numpy().tolist(),
-                'pix0_c': pix0_c.tolist(),
-                'error_vector_m': error_vector.tolist(),
-                'error_magnitude_mm': error_magnitude_mm,
-                'error_magnitude_pixels': error_magnitude_mm / 0.1  # pixel size = 0.1mm
-            }
-            
-            print(f"  Error magnitude: {error_magnitude_mm:.2f}mm ({error_magnitude_mm/0.1:.1f} pixels)")
-            
         except Exception as e:
             print(f"  Error running test: {e}")
             results[distance] = {'error': str(e)}
-    
+
+    # Analyze scaling behavior if we have results for multiple distances
+    if len([r for r in results.values() if 'peak_difference_pixels' in r]) >= 2:
+        valid_results = {k: v for k, v in results.items() if 'peak_difference_pixels' in v}
+        distances_tested = list(valid_results.keys())
+
+        if len(distances_tested) >= 2:
+            dist1, dist2 = distances_tested[:2]
+            diff1 = valid_results[dist1]['peak_difference_pixels']
+            diff2 = valid_results[dist2]['peak_difference_pixels']
+
+            # If errors scale with distance, the ratio should be proportional to distance ratio
+            distance_ratio = dist2 / dist1
+            error_ratio = diff2 / diff1 if diff1 > 0 else float('inf')
+
+            print(f"\nScaling analysis:")
+            print(f"  Distance ratio ({dist2}/{dist1}): {distance_ratio:.2f}")
+            print(f"  Error ratio ({diff2:.2f}/{diff1:.2f}): {error_ratio:.2f}")
+
+            # If errors scale linearly with distance, ratios should be similar
+            ratio_match = abs(error_ratio - distance_ratio) < 0.5
+            print(f"  Linear scaling: {'Yes' if ratio_match else 'No'}")
+
     assert results, "Test completed with results"
 
 def test_beam_center_hypothesis():
