@@ -26,11 +26,13 @@ dependencies = [
     "fabio",
     "numpy",
     "pytest",
-    "matplotlib"
+    "matplotlib",
+    "scipy"
 ]
 
 [project.scripts]
 nanoBragg = "nanobrag_torch.__main__:main"
+nb-compare = "scripts.nb_compare:main"
 
 [project.optional-dependencies]
 dev = [

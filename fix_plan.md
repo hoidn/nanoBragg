@@ -357,17 +357,25 @@ None currently. All high and medium priority acceptance tests are complete.
   - Total intensity conservation within ±10% verified
   - Tests properly gated with NB_RUN_PARALLEL=1 environment variable
 
+### AT-TOOLS-001: Dual-Runner Comparison Utility (Optional)
+- **Status**: COMPLETE ✅
+- **Implementation**: Full implementation of dual-runner comparison script
+- **Test**: Created `tests/test_at_tools_001.py` with 10 tests (8 unit tests + 2 integration tests)
+- **Details**:
+  - Created `scripts/nb_compare.py` implementing all AT-TOOLS-001 requirements
+  - Binary resolution follows spec order: --c-bin, NB_C_BIN env, ./golden_suite_generator/nanoBragg, ./nanoBragg
+  - PyTorch resolution: --py-bin, NB_PY_BIN env, nanoBragg on PATH, python -m nanobrag_torch
+  - Captures runtime with monotonic clock, saves stdout/stderr to artifacts
+  - Computes all required metrics: correlation, MSE/RMSE, max diff, sums, peak alignment
+  - Supports --roi for regional analysis and --resample for shape mismatch
+  - Generates PNG previews (C, PyTorch, and diff images) with percentile scaling
+  - Outputs structured JSON summary with all metrics and runtime info
+  - Added as console script `nb-compare` in pyproject.toml
+  - Exit codes: 0 (pass), 1 (correlation below threshold), 3 (binary not found), 4 (shape mismatch)
+
 ## High Priority TODO 🔴
 
-### AT-TOOLS-001: Dual-Runner Comparison Utility (Optional)
-- **Status**: TODO
-- **Spec reference**: `specs/spec-a.md:963`
-- **Goal**: Implement the optional developer tool that runs C and PyTorch implementations side-by-side, capturing metrics, runtime, and artifacts per AT-TOOLS-001. Expose as `nb-compare` entry point or `scripts/nb_compare.py`.
-- **Next Steps**:
-  - Build CLI wrapper that normalizes arguments, launches both binaries, manages temp float outputs, measures runtime, and tee's stdout/stderr into artifacts.
-  - Implement metric computation (correlation, MSE/RMSE, max diff, sums) and structured summary JSON + PNG previews.
-  - Write regression tests (likely under `tests/tools/test_nb_compare.py`) covering success paths, mismatch thresholds, `--resample`, ROI, and failure exit codes.
-  - Update documentation (README or tools section) describing invocation and artifacts.
+None remaining - all high priority items complete!
 
 ### AT-PARALLEL-023: Misset Angles Equivalence (Explicit)
 - **Status**: COMPLETE ✅

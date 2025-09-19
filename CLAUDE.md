@@ -33,6 +33,23 @@ Key starting points include:
 - **[Architecture Hub](./docs/architecture/README.md)** for all technical specifications.
 - **[Testing Strategy](./docs/development/testing_strategy.md)** for validation procedures.
 
+## 📋 Quick Reference: Comparison Tool
+
+The `nb-compare` tool compares C and PyTorch implementations side-by-side:
+
+```bash
+# Basic comparison
+nb-compare -- -default_F 100 -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -detpixels 256
+
+# With custom binaries and ROI
+nb-compare --c-bin ./golden_suite_generator/nanoBragg --roi 100 156 100 156 -- [args...]
+
+# With resampling for shape mismatch and custom output
+nb-compare --resample --outdir my_comparison --threshold 0.98 -- [args...]
+```
+
+Outputs comparison metrics (correlation, RMSE, peak alignment) and PNG previews to `comparison_artifacts/`.
+
 ## 📋 Quick Reference: nanoBragg C Commands
 
 For exact golden-data commands, see [`tests/golden_data/README.md`](./tests/golden_data/README.md). Use the NB_C_BIN env var to select the C binary:
