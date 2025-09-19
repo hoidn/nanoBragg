@@ -35,15 +35,20 @@ Key starting points include:
 
 ## 📋 Quick Reference: nanoBragg C Commands
 
-**For exact commands to generate golden test data and traces, see [`tests/golden_data/README.md`](./tests/golden_data/README.md).** Key examples:
+For exact golden-data commands, see [`tests/golden_data/README.md`](./tests/golden_data/README.md). Use the NB_C_BIN env var to select the C binary:
 
 ```bash
+# Recommended: instrumented binary under golden_suite_generator/
+export NB_C_BIN=./golden_suite_generator/nanoBragg
+# Alternative (frozen binary at repo root):
+# export NB_C_BIN=./nanoBragg
+
 # Simple cubic test case
-./nanoBragg -lambda 6.2 -N 5 -cell 100 100 100 90 90 90 -default_F 100 \
+"$NB_C_BIN" -lambda 6.2 -N 5 -cell 100 100 100 90 90 90 -default_F 100 \
   -distance 100 -detpixels 1024 -floatfile output.bin
 
-# Tilted detector with MOSFLM convention  
-./nanoBragg -lambda 6.2 -N 5 -cell 100 100 100 90 90 90 -default_F 100 \
+# Tilted detector with MOSFLM convention
+"$NB_C_BIN" -lambda 6.2 -N 5 -cell 100 100 100 90 90 90 -default_F 100 \
   -distance 100 -detpixels 1024 -Xbeam 61.2 -Ybeam 61.2 \
   -detector_rotx 5 -detector_roty 3 -detector_rotz 2 -twotheta 15 \
   -floatfile output.bin
@@ -229,6 +234,19 @@ gcc -O3 -o nonBragg nonBragg.c -lm
 gcc -O3 -o noisify noisify.c -lm
 ```
 
+### Binaries and Instrumentation (IMPORTANT)
+- Treat the root `./nanoBragg` as a frozen reference binary; do not rebuild it for tracing.
+- Build and recompile any instrumented C binary under `golden_suite_generator/` (e.g., `./golden_suite_generator/nanoBragg`).
+- Always invoke the C runner via `NB_C_BIN`:
+  - Recommended: `export NB_C_BIN=./golden_suite_generator/nanoBragg`
+  - Alternative: `export NB_C_BIN=./nanoBragg`
+- Tooling (e.g., comparison scripts) SHOULD resolve the C runner in this order:
+  1) `--c-bin` arg if provided
+  2) `NB_C_BIN` env var
+  3) `./golden_suite_generator/nanoBragg` if present
+  4) `./nanoBragg`
+  5) Otherwise, error with guidance
+
 ### No Testing Framework
 The repository currently uses manual validation through example runs and visual inspection. No automated test suite exists for the C code.
 
@@ -301,13 +319,13 @@ RANDOM
 EOF
 
 # Run simulation
-./nanoBragg -hkl P1.hkl -matrix A.mat -lambda 6.2 -N 10
+"$NB_C_BIN" -hkl P1.hkl -matrix A.mat -lambda 6.2 -N 10
 ```
 
 ### SAXS Simulation
 ```bash
 # Single unit cell with interpolation
-./nanoBragg -mat bigcell.mat -hkl P1.hkl -lambda 1 -N 1 -distance 1000 -detsize 100 -pixel 0.1
+"$NB_C_BIN" -mat bigcell.mat -hkl P1.hkl -lambda 1 -N 1 -distance 1000 -detsize 100 -pixel 0.1
 ```
 
 ## File I/O Conventions

@@ -3,9 +3,18 @@
 This document specifies the exact `nanoBragg.c` commands used to generate the golden reference data files stored in this directory. This ensures that the test suite is reproducible and provides a single source of truth for validation.
 
 **Prerequisites:**
-- The `nanoBragg` executable must be compiled from the C code in `golden_suite_generator/`.
-- The necessary input files (`P1.hkl`, `A.mat`) must be present in the `golden_suite_generator/` directory.
-- All commands should be run from within the `golden_suite_generator/` directory.
+- Prefer the instrumented `nanoBragg` built under `golden_suite_generator/` (recommended for tracing and golden data).
+- Alternatively, you may use the frozen reference binary at the repo root `./nanoBragg` for non‑instrumented runs.
+- The necessary input files (`P1.hkl`, `A.mat`) must be present in the `golden_suite_generator/` directory when running the canonical commands below.
+- All commands shown here assume you run from within the `golden_suite_generator/` directory.
+
+Tip: You can also set `NB_C_BIN` from the repo root and replace `./nanoBragg` with `"$NB_C_BIN"` in the commands below, for example:
+
+```bash
+export NB_C_BIN=./golden_suite_generator/nanoBragg
+"$NB_C_BIN" -hkl P1.hkl -matrix A.mat -lambda 6.2 -N 5 -default_F 100 \
+  -distance 100 -detsize 102.4 -pixel 0.1 -floatfile ../tests/golden_data/simple_cubic.bin
+```
 
 ---
 
