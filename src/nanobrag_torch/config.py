@@ -170,8 +170,8 @@ class DetectorConfig:
     fpixels: int = 1024  # fast axis pixels
 
     # Beam center (mm from detector origin)
-    beam_center_s: Union[float, torch.Tensor] = 51.2  # slow axis
-    beam_center_f: Union[float, torch.Tensor] = 51.2  # fast axis
+    beam_center_s: Union[float, torch.Tensor, None] = None  # slow axis (auto-calculated if None)
+    beam_center_f: Union[float, torch.Tensor, None] = None  # fast axis (auto-calculated if None)
 
     # Detector rotations (degrees)
     detector_rotx_deg: Union[float, torch.Tensor] = 0.0
@@ -195,6 +195,11 @@ class DetectorConfig:
     # Detector geometry mode
     curved_detector: bool = False  # If True, use spherical mapping for pixel positions
     point_pixel: bool = False  # If True, use 1/R^2 solid angle only (no obliquity)
+
+    # Custom basis vectors for CUSTOM convention (unit vectors)
+    custom_fdet_vector: Optional[Tuple[float, float, float]] = None  # Fast axis direction
+    custom_sdet_vector: Optional[Tuple[float, float, float]] = None  # Slow axis direction
+    custom_odet_vector: Optional[Tuple[float, float, float]] = None  # Normal direction
 
     # Detector absorption parameters (AT-ABS-001)
     detector_abs_um: Optional[Union[float, torch.Tensor]] = None  # Attenuation depth in micrometers
@@ -235,38 +240,25 @@ class DetectorConfig:
                 self.detector_pivot = DetectorPivot.BEAM
         # Setup C: Explicit -pivot override is already set, keep it
 
-        # Calculate beam centers based on detector size if not explicitly overridden
-        # This fixes the critical bug where beam centers were hardcoded at 51.2mm
-        # regardless of detector size, causing catastrophic validation failures
-        detsize_s = self.spixels * self.pixel_size_mm  # Total detector size in slow axis (mm)
-        detsize_f = self.fpixels * self.pixel_size_mm  # Total detector size in fast axis (mm)
+        # Auto-calculate beam centers if not explicitly provided
+        # This ensures beam centers scale correctly with detector size
+        if self.beam_center_s is None or self.beam_center_f is None:
+            detsize_s = self.spixels * self.pixel_size_mm  # Total detector size in slow axis (mm)
+            detsize_f = self.fpixels * self.pixel_size_mm  # Total detector size in fast axis (mm)
 
-        # Auto-calculate beam centers if they're at the exact default value (51.2mm)
-        # This indicates they weren't explicitly set by the user
-        # The 51.2mm default was originally for 1024x1024 detector with 0.1mm pixels
-        # but was incorrectly used for all detector sizes
-        if self.beam_center_s == 51.2 and self.beam_center_f == 51.2:
-            # These are the default values - auto-calculate based on detector size
-            # Only skip auto-calculation if this happens to be the correct value
-            # for the current detector (1024x1024 with 0.1mm pixels)
-            expected_center_for_default = 51.2  # Original default for 1024x1024, 0.1mm
-
-            # Check if 51.2mm is actually correct for current detector
             if self.detector_convention == DetectorConvention.MOSFLM:
-                expected_center = (detsize_s + self.pixel_size_mm) / 2.0
-            else:
-                expected_center = detsize_s / 2.0
-
-            # If 51.2mm is NOT the expected center for this detector, recalculate
-            # Allow small tolerance for floating point comparison
-            if abs(expected_center - 51.2) > 0.01:
                 # MOSFLM convention adds 0.5 pixel offset (per spec AT-GEO-001)
-                if self.detector_convention == DetectorConvention.MOSFLM:
+                # For MOSFLM: beam_center = (detsize + pixel_size) / 2
+                if self.beam_center_s is None:
                     self.beam_center_s = (detsize_s + self.pixel_size_mm) / 2.0
+                if self.beam_center_f is None:
                     self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
-                else:
-                    # XDS, DIALS, and other conventions: center without offset
+            else:
+                # XDS, DIALS, and other conventions: center without offset
+                # For XDS: beam_center = detsize / 2
+                if self.beam_center_s is None:
                     self.beam_center_s = detsize_s / 2.0
+                if self.beam_center_f is None:
                     self.beam_center_f = detsize_f / 2.0
 
         # Set default twotheta axis if not provided

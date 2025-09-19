@@ -167,19 +167,24 @@ def build_python_rotation_matrices(rotx=5, roty=3, rotz=2, twotheta=20):
 def get_detector_matrices(rotx=5, roty=3, rotz=2, twotheta=20):
     """Get rotation matrices from Detector class."""
     try:
-        detector = Detector(
+        from nanobrag_torch.config import DetectorConfig, DetectorConvention, DetectorPivot
+
+        config = DetectorConfig(
             distance_mm=100.0,
             beam_center_s=51.2,
             beam_center_f=51.2,
             pixel_size_mm=0.1,
-            detector_size_pixels=1024,
+            spixels=1024,
+            fpixels=1024,
             detector_rotx_deg=rotx,
             detector_roty_deg=roty,
             detector_rotz_deg=rotz,
             detector_twotheta_deg=twotheta,
-            detector_pivot="beam",
-            detector_convention="mosflm"
+            detector_pivot=DetectorPivot.BEAM,
+            detector_convention=DetectorConvention.MOSFLM
         )
+
+        detector = Detector(config)
         
         # Extract internal matrices (need to access detector's internal structure)
         # For now, just get the final vectors
@@ -502,6 +507,37 @@ def run_matrix_test():
     
     print(f"Results saved to: {results_file}")
     print(f"C trace saved to: {c_trace_file}")
+
+
+def test_rotation_order_variations():
+    """Test to prevent pytest collection errors."""
+    # This is a complex debugging script, not a unit test
+    # Just test that we can create a detector with rotations
+    try:
+        from nanobrag_torch.config import DetectorConfig, DetectorConvention, DetectorPivot
+
+        config = DetectorConfig(
+            distance_mm=100.0,
+            beam_center_s=51.2,
+            beam_center_f=51.2,
+            pixel_size_mm=0.1,
+            spixels=1024,
+            fpixels=1024,
+            detector_rotx_deg=5.0,
+            detector_roty_deg=3.0,
+            detector_rotz_deg=2.0,
+            detector_twotheta_deg=20.0,
+            detector_pivot=DetectorPivot.BEAM,
+            detector_convention=DetectorConvention.MOSFLM
+        )
+
+        detector = Detector(config)
+        assert detector is not None
+        print("✅ Detector with rotations created successfully")
+
+    except Exception as e:
+        print(f"❌ Error creating detector: {e}")
+        assert False, f"Failed to create detector: {e}"
 
 
 if __name__ == "__main__":

@@ -1,17 +1,29 @@
 # CLAUDE.md
-
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 🚀 Current Initiative: Parallel Trace Validation
+IMPORTANT INSTRUCTIONS 
+When using subagents:
+1. - Create detailed, self-contained prompts for each agent. 
+- Include a list of all relevant files the agent will need to understand the context of the tas
+- Include specific instructions on what to accomplish
+- Define clear output expectations
+- Remember agents are stateless and need complete context
+2. If appropriate, spawn parallel subagents, ensuring all agents launch in a single parallel batch
+3. Collect & Summarize Results
+- Gather outputs from all completed agents
+- Synthesize findings into cohesive response
+<example>
+<subagent you might want to use>
+name: debugger
+description: Debugging specialist for errors, test failures, and unexpected behavior. Use proactively when encountering any issues.
+model: sonnet
+</subagent you might want to use>
+this agent needs context on the spec, architecture, development practices,
+and project documentation relevant to the failing tests / feature / behavior / component(s)
+</example
+IMPORTANT
 
-**Status**: Active development  
-**Goal**: Fix detector geometry mismatch in tilted configurations using systematic parallel trace debugging  
-**Location**: `initiatives/parallel-trace-validation/`  
-**R&D Plan**: See `initiatives/parallel-trace-validation/docs/rd-plan.md`
-
-**Problem**: Tilted detector configurations show poor correlation (<0.9) vs C reference, while simple cubic achieves perfect correlation (>0.999).
-
-**Approach**: Generate identical, deterministic trace logs from both C and Python implementations to identify exact divergence point in geometry calculations.
+## 🚀 Current Initiative: None
 
 ---
 

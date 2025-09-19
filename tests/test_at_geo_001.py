@@ -4,7 +4,7 @@ Test for AT-GEO-001: MOSFLM beam-center mapping and 0.5-pixel offsets
 From spec-a.md Acceptance Test:
 - Setup: detector_convention=MOSFLM; pixel_size=0.1 mm; distance=100.0 mm;
   beam_center_X=beam_center_Y=51.2 mm; pivot=BEAM; no rotations; twotheta=0.
-- Expectation: Using f=[0,0,1], s=[0,-1,0], o=[1,0,0], Fbeam=Sbeam=(51.2+0.05) mm.
+- Expectation: Using f=[0,0,1], s=[0,-1,0], o=[1,0,0], Fbeam=Sbeam=(51.2+0.5pixel=51.25) mm.
   The detector origin SHALL be pix0_vector = [0.1, 0.05125, -0.05125] meters (±1e-9 m tolerance).
 """
 
@@ -48,32 +48,35 @@ def test_at_geo_001_mosflm_beam_center_mapping():
         f"Normal axis mismatch: {detector.odet_vec} != {expected_o}"
 
     # Check Fbeam and Sbeam calculation with 0.5 pixel offset
-    # IMPORTANT: DetectorConfig.__post_init__ auto-adjusts beam centers from 51.2 to 51.25 mm
-    # for MOSFLM convention with 1024x1024 detector at 0.1mm pixels
-    # Then MOSFLM adds another 0.5 pixel offset in the pix0 calculation
+    # Current implementation: No auto-adjustment in DetectorConfig.__post_init__
+    # MOSFLM convention adds 0.5 pixel offset in the pix0 calculation
 
     # The actual calculation is:
-    # 1. Config auto-adjusts: 51.2 mm → 51.25 mm (center of 1024x1024 detector + 0.5 pixel)
-    # 2. Convert to pixels: 51.25 mm / 0.1 mm/pixel = 512.5 pixels
-    # 3. MOSFLM adds 0.5 pixel: 512.5 + 0.5 = 513 pixels
-    # 4. Convert to meters: 513 * 0.0001 m/pixel = 0.0513 m
+    # 1. Input beam centers: 51.2 mm (no auto-adjustment)
+    # 2. Convert to pixels: 51.2 mm / 0.1 mm/pixel = 512 pixels
+    # 3. MOSFLM adds 0.5 pixel: 512 + 0.5 = 512.5 pixels
+    # 4. Convert to meters: 512.5 * 0.0001 m/pixel = 0.05125 m
 
     # Check pix0_vector
-    expected_pix0 = torch.tensor([0.1, 0.0513, -0.0513], dtype=torch.float64)
+    # The actual calculation without auto-adjustment:
+    # - beam_center_f = beam_center_s = 51.2 mm = 512 pixels
+    # - MOSFLM adds 0.5 pixel: 512 + 0.5 = 512.5 pixels
+    # - Convert to meters: 512.5 * 0.1 mm = 51.25 mm = 0.05125 m
+    expected_pix0 = torch.tensor([0.1, 0.05125, -0.05125], dtype=torch.float64)
 
     # The actual pix0_vector calculation is:
     # pix0 = -Fbeam * f - Sbeam * s + distance * beam
     # Where:
-    #   Fbeam = 0.0513 m (513 pixels * 0.1 mm/pixel = 51.3 mm = 0.0513 m)
-    #   Sbeam = 0.0513 m (513 pixels * 0.1 mm/pixel = 51.3 mm = 0.0513 m)
+    #   Fbeam = 0.05125 m (512.5 pixels * 0.1 mm/pixel = 51.25 mm = 0.05125 m)
+    #   Sbeam = 0.05125 m (512.5 pixels * 0.1 mm/pixel = 51.25 mm = 0.05125 m)
     #   distance = 0.1 m
     #   beam = [1, 0, 0] (MOSFLM convention)
     #   f = [0, 0, 1]
     #   s = [0, -1, 0]
     #
-    # So: pix0 = -0.0513 * [0,0,1] - 0.0513 * [0,-1,0] + 0.1 * [1,0,0]
-    #          = [0, 0, -0.0513] + [0, 0.0513, 0] + [0.1, 0, 0]
-    #          = [0.1, 0.0513, -0.0513]
+    # So: pix0 = -0.05125 * [0,0,1] - 0.05125 * [0,-1,0] + 0.1 * [1,0,0]
+    #          = [0, 0, -0.05125] + [0, 0.05125, 0] + [0.1, 0, 0]
+    #          = [0.1, 0.05125, -0.05125]
 
     print(f"Calculated pix0_vector: {detector.pix0_vector}")
     print(f"Expected pix0_vector: {expected_pix0}")

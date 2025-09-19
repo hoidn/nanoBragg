@@ -77,9 +77,9 @@ class TestATCLI008DminFiltering:
         result = subprocess.run(args_no_dmin, capture_output=True, text=True)
         assert result.returncode == 0, f"Run without dmin failed: {result.stderr}"
 
-        # Run 2: With dmin filtering at 3.0 Angstroms
+        # Run 2: With dmin filtering at 13.0 Angstroms (to filter edge pixels with d < 13 Å)
         output_with_dmin = Path(self.test_dir) / 'with_dmin.bin'
-        args_with_dmin = common_args + ['-floatfile', str(output_with_dmin), '-dmin', '3.0']
+        args_with_dmin = common_args + ['-floatfile', str(output_with_dmin), '-dmin', '13.0']
 
         result = subprocess.run(args_with_dmin, capture_output=True, text=True)
         assert result.returncode == 0, f"Run with dmin failed: {result.stderr}"

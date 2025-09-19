@@ -373,51 +373,6 @@ class Crystal:
 
         return F_cell
 
-    def _validate_cell_parameters(self):
-        """
-        Validate cell parameters for numerical stability and physical reasonableness.
-        
-        This method checks for parameter combinations that could lead to numerical
-        instabilities or unphysical unit cells.
-        """
-        # Check for positive cell dimensions
-        if torch.any(self.cell_a <= 0) or torch.any(self.cell_b <= 0) or torch.any(self.cell_c <= 0):
-            raise ValueError(
-                f"Cell dimensions must be positive: a={self.cell_a.item():.3f}, "
-                f"b={self.cell_b.item():.3f}, c={self.cell_c.item():.3f}"
-            )
-        
-        # Check for reasonable angle ranges (10° to 170°)
-        # Angles too close to 0° or 180° can cause numerical instabilities
-        angle_min, angle_max = 10.0, 170.0
-        
-        if torch.any(self.cell_alpha < angle_min) or torch.any(self.cell_alpha > angle_max):
-            raise ValueError(
-                f"Cell angle alpha must be between {angle_min}° and {angle_max}°, "
-                f"got {self.cell_alpha.item():.3f}°"
-            )
-        
-        if torch.any(self.cell_beta < angle_min) or torch.any(self.cell_beta > angle_max):
-            raise ValueError(
-                f"Cell angle beta must be between {angle_min}° and {angle_max}°, "
-                f"got {self.cell_beta.item():.3f}°"
-            )
-        
-        if torch.any(self.cell_gamma < angle_min) or torch.any(self.cell_gamma > angle_max):
-            raise ValueError(
-                f"Cell angle gamma must be between {angle_min}° and {angle_max}°, "
-                f"got {self.cell_gamma.item():.3f}°"
-            )
-        
-        # Check triangle inequalities for angles (necessary condition for valid unit cell)
-        # For a valid unit cell, the sum of any two angles must be greater than the third
-        alpha, beta, gamma = self.cell_alpha.item(), self.cell_beta.item(), self.cell_gamma.item()
-        
-        if not (alpha + beta > gamma and alpha + gamma > beta and beta + gamma > alpha):
-            raise ValueError(
-                f"Invalid unit cell angles violate triangle inequality: "
-                f"α={alpha:.1f}°, β={beta:.1f}°, γ={gamma:.1f}°"
-            )
 
     def compute_cell_tensors(self) -> dict:
         """

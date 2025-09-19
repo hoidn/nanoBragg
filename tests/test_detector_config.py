@@ -24,9 +24,10 @@ class TestDetectorConfig:
         assert config.spixels == 1024
         assert config.fpixels == 1024
 
-        # Beam center
-        assert config.beam_center_s == 51.2
-        assert config.beam_center_f == 51.2
+        # Beam center - MOSFLM convention adds 0.5 pixel offset for 1024x1024 detector
+        # beam_center = (1024 * 0.1 + 0.1) / 2.0 = 51.25
+        assert config.beam_center_s == 51.25
+        assert config.beam_center_f == 51.25
 
         # Rotations
         assert config.detector_rotx_deg == 0.0
@@ -137,8 +138,9 @@ class TestDetectorInitialization:
         assert detector.fpixels == 1024
 
         # Check beam center in pixels
-        assert detector.beam_center_s == 512.0  # 51.2 mm / 0.1 mm per pixel
-        assert detector.beam_center_f == 512.0
+        # MOSFLM convention: 51.25 mm / 0.1 mm per pixel = 512.5
+        assert detector.beam_center_s == 512.5
+        assert detector.beam_center_f == 512.5
         
         # Check that post_init set the correct default twotheta_axis
         # MOSFLM default is [0, 0, -1] (negative Z-axis) per C code line 1245
@@ -171,20 +173,19 @@ class TestDetectorInitialization:
     def test_backward_compatibility_check(self):
         """Test that _is_default_config works correctly."""
         # The _is_default_config method checks for specific "golden" values
-        # that include beam_center_s/f = 51.25, not the actual defaults of 51.2
-        # So a truly default detector will NOT match
+        # Now that MOSFLM defaults to 51.25, a default detector WILL match
         detector = Detector()
-        assert not detector._is_default_config()  # Default has 51.2, not 51.25
+        assert detector._is_default_config()  # Default now has 51.25 for MOSFLM
 
-        # Create a config that matches the "golden" values expected by _is_default_config
-        golden_config = DetectorConfig(
-            beam_center_s=51.25,
-            beam_center_f=51.25,
-            detector_rotx_deg=torch.tensor(0.0), 
+        # Create a config with different values that should NOT match
+        non_default_config = DetectorConfig(
+            beam_center_s=60.0,  # Different beam center
+            beam_center_f=60.0,
+            detector_rotx_deg=torch.tensor(0.0),
             detector_roty_deg=torch.tensor(0.0)
         )
-        detector = Detector(golden_config)
-        assert detector._is_default_config()
+        detector = Detector(non_default_config)
+        assert not detector._is_default_config()
 
     def test_custom_config_not_default(self):
         """Test that custom config is not detected as default."""

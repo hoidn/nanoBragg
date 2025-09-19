@@ -1032,6 +1032,37 @@ class Detector:
             odet_vec = torch.tensor(
                 [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype  # Normal along +Z
             )
+        elif c.detector_convention == DetectorConvention.CUSTOM:
+            # CUSTOM convention uses user-provided vectors or defaults to MOSFLM
+            if c.custom_fdet_vector is not None:
+                fdet_vec = torch.tensor(
+                    c.custom_fdet_vector, device=self.device, dtype=self.dtype
+                )
+            else:
+                # Default to MOSFLM fast vector
+                fdet_vec = torch.tensor(
+                    [0.0, 1.0, 0.0], device=self.device, dtype=self.dtype
+                )
+
+            if c.custom_sdet_vector is not None:
+                sdet_vec = torch.tensor(
+                    c.custom_sdet_vector, device=self.device, dtype=self.dtype
+                )
+            else:
+                # Default to MOSFLM slow vector
+                sdet_vec = torch.tensor(
+                    [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
+                )
+
+            if c.custom_odet_vector is not None:
+                odet_vec = torch.tensor(
+                    c.custom_odet_vector, device=self.device, dtype=self.dtype
+                )
+            else:
+                # Default to MOSFLM normal vector
+                odet_vec = torch.tensor(
+                    [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
+                )
         else:
             raise ValueError(f"Unknown detector convention: {c.detector_convention}")
 

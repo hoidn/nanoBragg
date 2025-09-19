@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
-"""Debug script to identify the source of NaN gradients in nanoBragg PyTorch implementation."""
+"""
+Minimal debugging script to isolate NaN gradients in Crystal class.
+"""
 
 import os
 import torch
+import numpy as np
+
+# Set environment variable for MKL compatibility
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 from nanobrag_torch.config import CrystalConfig
@@ -10,185 +15,200 @@ from nanobrag_torch.models.crystal import Crystal
 from nanobrag_torch.models.detector import Detector
 from nanobrag_torch.simulator import Simulator
 
-def test_individual_crystal_properties():
-    """Test gradient flow through individual Crystal properties."""
-    print("=== Testing Crystal property gradients ===")
 
-    device = torch.device('cpu')
+def debug_crystal_creation():
+    """Debug Crystal creation with requires_grad tensors."""
+    print("=== Testing Crystal Creation ===")
+
+    device = torch.device("cpu")
     dtype = torch.float64
 
-    # Create tensor parameter with gradient
+    # Create test input with requires_grad
     cell_a = torch.tensor(100.0, dtype=dtype, requires_grad=True)
 
-    config = CrystalConfig(
-        cell_a=cell_a,
-        cell_b=100.0,
-        cell_c=100.0,
-        cell_alpha=90.0,
-        cell_beta=90.0,
-        cell_gamma=90.0,
-        mosaic_spread_deg=0.0,
-        mosaic_domains=1,
-        N_cells=(5, 5, 5),
-    )
+    # Create config with the parameter as a tensor
+    config_kwargs = {
+        "cell_a": cell_a,
+        "cell_b": 100.0,
+        "cell_c": 100.0,
+        "cell_alpha": 90.0,
+        "cell_beta": 90.0,
+        "cell_gamma": 90.0,
+        "mosaic_spread_deg": 0.0,
+        "mosaic_domains": 1,
+        "N_cells": (5, 5, 5),
+    }
 
+    # Create config
+    config = CrystalConfig(**config_kwargs)
+    print(f"Config created successfully")
+    print(f"cell_a in config: {config.cell_a}, requires_grad: {config.cell_a.requires_grad}")
+
+    # Create crystal with this config
     crystal = Crystal(config=config, device=device, dtype=dtype)
+    print(f"Crystal created successfully")
 
-    # Test each property individually
-    properties_to_test = ['a', 'b', 'c', 'a_star', 'b_star', 'c_star', 'V']
+    # Check key properties
+    print(f"crystal.a: {crystal.a}")
+    print(f"crystal.a requires_grad: {crystal.a.requires_grad}")
+    print(f"crystal.a_star: {crystal.a_star}")
+    print(f"crystal.a_star requires_grad: {crystal.a_star.requires_grad}")
+    print(f"crystal.volume: {crystal.volume}")
+    print(f"crystal.volume requires_grad: {crystal.volume.requires_grad}")
 
-    for prop_name in properties_to_test:
-        cell_a.grad = None  # Reset gradient
+    # Check for NaNs in key tensors
+    print("\n=== Checking for NaNs ===")
+    print(f"NaN in crystal.a: {torch.isnan(crystal.a).any()}")
+    print(f"NaN in crystal.a_star: {torch.isnan(crystal.a_star).any()}")
+    print(f"NaN in crystal.volume: {torch.isnan(crystal.volume).any()}")
 
-        try:
-            prop_value = getattr(crystal, prop_name)
-            print(f"\n{prop_name}: shape={prop_value.shape}, requires_grad={prop_value.requires_grad}")
-            print(f"{prop_name} values: {prop_value}")
-            print(f"{prop_name} contains NaN: {torch.isnan(prop_value).any()}")
+    return crystal, cell_a
 
-            # Test gradient computation
-            loss = prop_value.sum()
-            loss.backward()
 
-            print(f"cell_a.grad after {prop_name}: {cell_a.grad}")
-            print(f"cell_a.grad contains NaN: {torch.isnan(cell_a.grad).any() if cell_a.grad is not None else 'None'}")
+def debug_simulation_step_by_step():
+    """Debug simulation creation step by step."""
+    print("\n=== Testing Simulation Creation ===")
 
-        except Exception as e:
-            print(f"Error testing {prop_name}: {e}")
-            import traceback
-            traceback.print_exc()
+    crystal, cell_a = debug_crystal_creation()
 
-def test_crystal_computation_stages():
-    """Test specific stages of crystal computation to isolate NaN source."""
-    print("\n=== Testing Crystal computation stages ===")
-
-    device = torch.device('cpu')
+    device = torch.device("cpu")
     dtype = torch.float64
 
-    # Create tensor parameter with gradient
-    cell_a = torch.tensor(100.0, dtype=dtype, requires_grad=True)
-
-    config = CrystalConfig(
-        cell_a=cell_a,
-        cell_b=100.0,
-        cell_c=100.0,
-        cell_alpha=90.0,
-        cell_beta=90.0,
-        cell_gamma=90.0,
-        mosaic_spread_deg=0.0,
-        mosaic_domains=1,
-        N_cells=(5, 5, 5),
-    )
-
-    crystal = Crystal(config=config, device=device, dtype=dtype)
-
-    # Test compute_cell_tensors directly
-    print("\nTesting compute_cell_tensors()...")
-    try:
-        cell_a.grad = None
-        tensors = crystal.compute_cell_tensors()
-
-        print("Cell tensors computed successfully")
-        for key, tensor in tensors.items():
-            print(f"  {key}: shape={tensor.shape}, requires_grad={tensor.requires_grad}")
-            print(f"  {key} contains NaN: {torch.isnan(tensor).any()}")
-            print(f"  {key} values: {tensor}")
-
-        # Test backward on volume (simple scalar)
-        print("\nTesting backward on volume...")
-        loss = tensors['V']
-        loss.backward()
-        print(f"cell_a.grad after V backward: {cell_a.grad}")
-        print(f"V gradient contains NaN: {torch.isnan(cell_a.grad).any() if cell_a.grad is not None else 'None'}")
-
-    except Exception as e:
-        print(f"Error in compute_cell_tensors: {e}")
-        import traceback
-        traceback.print_exc()
-
-def test_simulator_stages():
-    """Test each stage of the simulator to find where NaN appears."""
-    print("\n=== Testing Simulator stages ===")
-
-    device = torch.device('cpu')
-    dtype = torch.float64
-
-    # Create tensor parameter with gradient
-    cell_a = torch.tensor(100.0, dtype=dtype, requires_grad=True)
-
-    config = CrystalConfig(
-        cell_a=cell_a,
-        cell_b=100.0,
-        cell_c=100.0,
-        cell_alpha=90.0,
-        cell_beta=90.0,
-        cell_gamma=90.0,
-        mosaic_spread_deg=0.0,
-        mosaic_domains=1,
-        N_cells=(5, 5, 5),
-    )
-
-    crystal = Crystal(config=config, device=device, dtype=dtype)
+    # Create minimal detector
     detector = Detector(device=device, dtype=dtype)
-    simulator = Simulator(crystal, detector, crystal_config=config, device=device, dtype=dtype)
+    print(f"Detector created successfully")
 
-    # Test pixel coordinates
-    print("\nTesting pixel coordinates...")
+    # Check detector properties
     pixel_coords = detector.get_pixel_coords()
-    print(f"Pixel coords shape: {pixel_coords.shape}")
-    print(f"Pixel coords contains NaN: {torch.isnan(pixel_coords).any()}")
+    print(f"detector pixel coords: {pixel_coords.shape}")
+    print(f"detector pixel coords requires_grad: {pixel_coords.requires_grad}")
+    print(f"NaN in detector pixel coords: {torch.isnan(pixel_coords).any()}")
 
-    # Test scattering vector calculation
-    print("\nTesting scattering vector calculation...")
-    pixel_coords_angstroms = pixel_coords * 1e10
-    pixel_squared_sum = torch.sum(pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True)
-    pixel_squared_sum = torch.clamp(pixel_squared_sum, min=0.0)
-    pixel_magnitudes = torch.sqrt(pixel_squared_sum)
-    diffracted_beam_unit = pixel_coords_angstroms / pixel_magnitudes
+    # Create config for simulator
+    config = crystal.config
 
-    incident_beam_direction = torch.tensor([1.0, 0.0, 0.0], device=device, dtype=dtype)
-    incident_beam_unit = incident_beam_direction.expand_as(diffracted_beam_unit)
-    wavelength = 6.2  # Angstroms
+    # Create simulator
+    simulator = Simulator(
+        crystal, detector, crystal_config=config, device=device, dtype=dtype
+    )
+    print(f"Simulator created successfully")
 
-    scattering_vector = (diffracted_beam_unit - incident_beam_unit) / wavelength
-    print(f"Scattering vector contains NaN: {torch.isnan(scattering_vector).any()}")
+    return simulator, cell_a
 
-    # Test lattice vector access
-    print("\nTesting lattice vector access...")
-    try:
-        cell_a.grad = None
 
-        # Test getting rotated vectors
-        (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = crystal.get_rotated_real_vectors(config)
-        print(f"Rotated vectors computed successfully")
-        print(f"rot_a contains NaN: {torch.isnan(rot_a).any()}")
-        print(f"rot_a requires_grad: {rot_a.requires_grad}")
+def debug_forward_pass():
+    """Debug forward pass to find where NaN appears."""
+    print("\n=== Testing Forward Pass ===")
 
-        # Test Miller index calculation (simplified)
-        # Just test with a single pixel
-        s_vec = scattering_vector[0, 0, :].unsqueeze(0).unsqueeze(0).unsqueeze(0)  # Shape: [1, 1, 1, 3]
-        a_vec = rot_a[0, 0, :].unsqueeze(0).unsqueeze(0).unsqueeze(0)  # Shape: [1, 1, 1, 3]
+    simulator, cell_a = debug_simulation_step_by_step()
 
-        h = torch.sum(s_vec * a_vec, dim=-1)  # Dot product
-        print(f"Miller index h: {h}")
-        print(f"h contains NaN: {torch.isnan(h).any()}")
-        print(f"h requires_grad: {h.requires_grad}")
+    # Run simulation
+    print("Running simulation...")
+    image = simulator.run()
+    print(f"Simulation completed")
+    print(f"Image shape: {image.shape}")
+    print(f"Image requires_grad: {image.requires_grad}")
+    print(f"NaN in image: {torch.isnan(image).any()}")
+    print(f"Image sum: {image.sum()}")
+    print(f"Image sum requires_grad: {image.sum().requires_grad}")
 
-        # Test backward
-        h.backward()
-        print(f"cell_a.grad after h backward: {cell_a.grad}")
-        print(f"h gradient contains NaN: {torch.isnan(cell_a.grad).any() if cell_a.grad is not None else 'None'}")
+    return image, cell_a
 
-    except Exception as e:
-        print(f"Error in Miller index calculation: {e}")
-        import traceback
-        traceback.print_exc()
+
+def debug_backward_pass():
+    """Debug backward pass to find where NaN gradients appear."""
+    print("\n=== Testing Backward Pass ===")
+
+    image, cell_a = debug_forward_pass()
+
+    # Compute loss
+    loss = image.sum()
+    print(f"Loss: {loss}")
+    print(f"Loss requires_grad: {loss.requires_grad}")
+
+    # Run backward pass
+    print("Running backward pass...")
+    loss.backward()
+
+    # Check gradients
+    print(f"cell_a.grad: {cell_a.grad}")
+    print(f"NaN in cell_a.grad: {torch.isnan(cell_a.grad).any() if cell_a.grad is not None else 'No gradient'}")
+
+    return cell_a.grad
+
+
+def debug_individual_operations():
+    """Debug individual mathematical operations to find NaN source."""
+    print("\n=== Testing Individual Operations ===")
+
+    device = torch.device("cpu")
+    dtype = torch.float64
+
+    # Test basic tensor operations
+    cell_a = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+
+    # Test conversion to radians (common source of issues)
+    deg_to_rad = torch.pi / 180.0
+    angle_deg = torch.tensor(90.0, dtype=dtype, requires_grad=True)
+    angle_rad = angle_deg * deg_to_rad
+    print(f"Angle conversion: {angle_deg} deg -> {angle_rad} rad")
+
+    # Test trigonometric functions
+    cos_val = torch.cos(angle_rad)
+    sin_val = torch.sin(angle_rad)
+    print(f"cos(90°): {cos_val}")
+    print(f"sin(90°): {sin_val}")
+    print(f"NaN in cos: {torch.isnan(cos_val)}")
+    print(f"NaN in sin: {torch.isnan(sin_val)}")
+
+    # Test division operations (potential source of NaN)
+    test_denom = sin_val  # This could be near zero
+    if torch.abs(test_denom) < 1e-10:
+        print(f"WARNING: Very small denominator detected: {test_denom}")
+
+    # Test volume calculation components
+    print("\n--- Testing volume calculation ---")
+    a = torch.tensor([100.0, 0.0, 0.0], dtype=dtype, requires_grad=True)
+    b = torch.tensor([0.0, 100.0, 0.0], dtype=dtype, requires_grad=True)
+    c = torch.tensor([0.0, 0.0, 100.0], dtype=dtype, requires_grad=True)
+
+    cross_product = torch.cross(b, c, dim=0)
+    dot_product = torch.dot(a, cross_product)
+    volume = torch.abs(dot_product)
+
+    print(f"Cross product b x c: {cross_product}")
+    print(f"Dot product a · (b x c): {dot_product}")
+    print(f"Volume: {volume}")
+    print(f"NaN in volume: {torch.isnan(volume)}")
+
+    # Test reciprocal calculation
+    print("\n--- Testing reciprocal calculation ---")
+    volume_expanded = volume.expand(3)
+    print(f"Volume expanded: {volume_expanded}")
+
+    # This could be a source of NaN if volume becomes zero
+    reciprocal_scale = cross_product / volume_expanded
+    print(f"Reciprocal scale: {reciprocal_scale}")
+    print(f"NaN in reciprocal scale: {torch.isnan(reciprocal_scale).any()}")
+
 
 if __name__ == "__main__":
-    print("Starting NaN gradient debugging...")
+    print("=== Debugging NaN Gradients ===")
 
-    test_individual_crystal_properties()
-    test_crystal_computation_stages()
-    test_simulator_stages()
+    try:
+        # Test individual operations first
+        debug_individual_operations()
 
-    print("\nDebugging complete.")
+        # Test backward pass
+        grad = debug_backward_pass()
+
+        print(f"\n=== Summary ===")
+        if grad is not None and torch.isnan(grad).any():
+            print("ERROR: NaN gradient detected!")
+        else:
+            print("No NaN gradients detected in this simple test")
+
+    except Exception as e:
+        print(f"ERROR: {e}")
+        import traceback
+        traceback.print_exc()

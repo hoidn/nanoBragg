@@ -27,12 +27,39 @@ def sincg(u: torch.Tensor, N: torch.Tensor) -> torch.Tensor:
 
     # Calculates sin(N*u)/sin(u), handling the u=0 case
     # Note: u is already pre-multiplied by π at the call site
-    # Handle near-zero case to avoid numerical instability
+
+    # For numerical stability and gradient correctness, we need to handle
+    # the case where u is near zero. Near u=0, sin(Nu)/sin(u) → N (L'Hôpital's rule)
+
     eps = 1e-10
+
+    # Check if u is near zero - if so, use the analytical limit
+    is_near_zero = torch.abs(u) < eps
+
+    # For the regular case, we need to avoid division by zero while maintaining gradients
+    # Instead of directly dividing, we'll use a stable formulation
+
+    # Method 1: Use Taylor series expansion for small u
+    # sin(Nu)/sin(u) ≈ N - N(N²-1)u²/6 + O(u⁴)
+    # But for simplicity and gradient stability, just use the limit N near zero
+
+    # Method 2: For non-zero u, compute the ratio with safeguards
     sin_u = torch.sin(u)
-    # Use a small threshold to catch near-zero values
-    is_near_zero = torch.abs(sin_u) < eps
-    result = torch.where(is_near_zero, N, torch.sin(N * u) / sin_u)
+    sin_Nu = torch.sin(N * u)
+
+    # Create a safe denominator that's never exactly zero
+    # When sin_u is very small, replace with eps while preserving sign
+    safe_sin_u = torch.where(
+        torch.abs(sin_u) < eps,
+        torch.where(sin_u >= 0, eps, -eps),  # Preserve sign, avoid zero
+        sin_u
+    )
+
+    # Compute ratio with safe denominator
+    ratio = sin_Nu / safe_sin_u
+
+    # Use limit value N near u=0, computed ratio elsewhere
+    result = torch.where(is_near_zero, N, ratio)
     return result
 
 
