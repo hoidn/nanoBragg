@@ -156,6 +156,22 @@ self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2
 
 ## Next Steps
 
+**🔴 HIGH PRIORITY: PyTorch Performance Investigation**
+- **Issue**: PyTorch implementation is ~1.3x slower than C on CPU (should be faster with vectorization)
+- **Root Causes Identified**:
+  - C uses OpenMP parallel loops across pixels (parallel processing)
+  - PyTorch uses sequential vectorized operations (single-threaded BLAS)
+  - Python function call overhead for sincg/dot operations
+  - float64 default (2x memory bandwidth vs C's float32)
+  - Tensor creation/management overhead
+- **Action Items**:
+  1. Implement torch.compile() optimization for hot paths
+  2. Switch to float32 throughout for 2x memory bandwidth improvement
+  3. Investigate torch.jit.script for sincg and core loops
+  4. Test parallel pixel processing with torch multiprocessing
+  5. Profile memory allocations and reduce intermediate tensors
+- **Expected Impact**: Should achieve 2-5x speedup, potentially matching or exceeding C performance
+
 **Critical for Full Validation:**
 1. 🔴 **Generate or obtain HKL test files** for AT-PARALLEL-027, AT-STR-004, AT-IO-004
    - Option A: Generate minimal synthetic HKL files with known patterns
