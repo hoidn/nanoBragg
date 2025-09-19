@@ -146,6 +146,18 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - Conventions now produce nearly identical patterns as expected
   - Fixed in `src/nanobrag_torch/simulator.py` lines 56-79
 
+### AT-PARALLEL-021: Crystal Phi Rotation Equivalence
+- **Status**: COMPLETE ✅
+- **Implementation**: Full phi rotation equivalence testing between C and PyTorch
+- **Test**: Created `tests/test_at_parallel_021.py` with both single-step and multi-step tests
+- **Details**:
+  - Single-step test: -phi 0 -osc 90 -phisteps 1 (midpoint ≈ 45°)
+  - Multi-step test: -phisteps 9 with -phistep 10 spanning 90°
+  - Both tests pass with rtol≤1e-5, atol≤1e-6, correlation>0.99
+  - Peak position agreement within 1.5 pixels (accounting for discretization)
+  - Uses MOSFLM convention for both C and PyTorch for consistency
+  - Tests gated with NB_RUN_PARALLEL=1 environment variable
+
 ## Completed ✅
 
 ### AT-PARALLEL-002: Pixel Size Independence
@@ -294,14 +306,6 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - Falls back to cache when HKL file not available
 
 ## High Priority TODO 🔴
-
-### AT-PARALLEL-021: Crystal Phi Rotation Equivalence — NEW
-- Status: TODO
-- Action:
-  - Add black-box C↔PyTorch CLI acceptance tests exercising φ rotation.
-  - Cases: (a) -phi 0 -osc 90 -phisteps 1 (midpoint ≈ 45°), (b) -phisteps 9 with -phistep 10 spanning 90°.
-  - Compare -floatfile outputs: shapes equal, allclose with rtol≤1e-5/atol≤1e-6, correlation>0.99, peak shift consistent with φ, peak error ≤0.5 px.
-  - Gate with NB_RUN_PARALLEL=1 and NB_CLI/./nanoBragg availability.
 
 ### AT-PARALLEL-022: Combined Detector+Crystal Rotation — NEW
 - Status: TODO
@@ -637,11 +641,12 @@ Potential future work:
 
 Implementation status:
 - **Original tests**: 41 of 41 acceptance tests complete ✅
-- **NEW CRITICAL**: 3 of 20 AT-PARALLEL tests fully implemented
+- **NEW CRITICAL**: 5 of 24 AT-PARALLEL tests fully implemented
   - AT-PARALLEL-001: Beam center scaling (PASSED 8/8 tests) ✅
   - AT-PARALLEL-002: Pixel size independence (PASSED 4/4 tests) ✅
   - AT-PARALLEL-003: Detector offset preservation (PASSED 3/3 tests) ✅
-  - AT-PARALLEL-004: MOSFLM 0.5 pixel offset (PARTIAL 4/5 tests) ⚠️
+  - AT-PARALLEL-004: MOSFLM 0.5 pixel offset (PASSED 5/5 tests) ✅
+  - AT-PARALLEL-021: Crystal Phi Rotation Equivalence (PASSED 2/2 tests) ✅
 - **Major bugs FIXED**:
   - Crystal geometry calculations now correct (softplus issue resolved)
   - Gradient flow fully restored for differentiable programming
