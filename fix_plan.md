@@ -8,10 +8,10 @@
   - Add Poisson noise generation for -noisefile
 - [ ] Implement missing physics functions (sinc3, polarization_factor) in utils/physics.py
 - [ ] Add console script entry point to pyproject.toml
-- [ ] Verify all AT-CLI-* acceptance tests pass (CLI conformance)
 - [ ] Verify all AT-GEO-* acceptance tests pass (geometry conventions)
 - [ ] Verify all AT-SAM-* acceptance tests pass (sampling/normalization)
 - [ ] Verify all AT-STR-* acceptance tests pass (structure factors)
+- [ ] Verify all AT-PARALLEL-* acceptance tests pass (C-PyTorch equivalence)
 
 ## DONE
 - [x] Fixed test_configuration_consistency.py tests (mode detection, trigger tracking)
@@ -26,6 +26,11 @@
 - [x] Added missing detector conventions (ADXV, DENZO, DIALS, CUSTOM)
 - [x] Fixed unit conversion functions (added mm_to_meters)
 - [x] Fixed SMV header generation with correct field mappings
+- [x] Implemented AT-CLI-001 and AT-CLI-002 acceptance tests
+  - Created test_at_cli.py with CLI acceptance tests
+  - Fixed SMV header truncation issue (reduced decimal places to fit in 512 bytes)
+  - Fixed test to preserve form feed character in header validation
+  - All 3 AT-CLI tests now passing (109 total tests passing)
 
 ## Known Issues
 - Missing critical physics functions (sinc3, polarization_factor)
