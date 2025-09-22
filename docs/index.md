@@ -11,6 +11,7 @@ These are the core, living documents that guide the project.
 ### Core Project Guides
 * **[CLAUDE.md](../CLAUDE.md)** - The primary instruction set for the AI agent.
 * **[README.md](../README.md)** - The main project entry point.
+* **[README_PYTORCH.md](../README_PYTORCH.md)** - Comprehensive user guide for the PyTorch implementation, including CLI usage, parallel comparison tools, and visualization.
 * **[PROJECT_STATUS.md](../PROJECT_STATUS.md)** - Tracks the current active development initiative.
 
 ### Architecture & Design (`docs/architecture/`)
@@ -27,9 +28,9 @@ These are the core, living documents that guide the project.
 ### Development Process (`docs/development/`)
 * **[C to PyTorch Config Map](./development/c_to_pytorch_config_map.md)** - Critical configuration mapping between C and PyTorch.
 * **[Contributing Guidelines](./development/CONTRIBUTING.md)** - How to contribute to the project.
-* **[Debugging Guide](./development/debugging.md)** - General debugging workflows and strategies.
+* **[Debugging Guide](./debugging/debugging.md)** - General debugging workflows and strategies.
 * **[Detector Fix Phase 2 Session](./development/detector_fix_phase2_session.md)** - Detailed debugging session log.
-* **[Detector Geometry Debugging](./development/detector_geometry_debugging.md)** - Specific detector geometry debugging guide.
+* **[Detector Geometry Debugging](./debugging/detector_geometry_debugging.md)** - Specific detector geometry debugging guide.
 * **[Detector Rotation Debugging Session](./development/detector_rotation_debugging_session.md)** - Rotation-specific debugging session.
 * **[Implementation Plan](./development/implementation_plan.md)** - Phased development roadmap.
 * **[Lessons in Differentiability](./development/lessons_in_differentiability.md)** - Key learnings about maintaining gradient flow.
@@ -43,6 +44,7 @@ These are the core, living documents that guide the project.
 * **[Migration Guide](./user/migration_guide.md)** - Guide for migrating from C to PyTorch version.
 * **[Performance Guide](./user/performance.md)** - Performance optimization and benchmarking.
 * **[Rotation Usage](./user/rotation_usage.md)** - How to use rotation features correctly.
+* **[CLI Quickstart](./user/cli_quickstart.md)** - Installing and running the PyTorch CLI.
 
 ### Development Checklists (`docs/development/checklists/`)
 * **[Checklist 1](./development/checklists/checklist1.md)** - Development checklist.

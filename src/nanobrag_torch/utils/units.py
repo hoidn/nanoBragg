@@ -38,6 +38,19 @@ def meters_to_angstroms(
     return value * 1e10
 
 
+def mm_to_meters(value: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:
+    """
+    Convert millimeters to meters.
+
+    Args:
+        value: Value in millimeters
+
+    Returns:
+        Value in meters (1 mm = 0.001 m)
+    """
+    return value * 0.001
+
+
 def degrees_to_radians(value: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:
     """
     Convert degrees to radians.

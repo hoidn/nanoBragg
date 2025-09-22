@@ -76,7 +76,7 @@ While the global rule states "all calculations use Angstroms," the following exc
 | Detector pivot modes | [Detector](./detector.md) | Section 8.1 |
 | Miller index calculation | [C-Code Overview](./c_code_overview.md) | Section 7.1 |
 | Golden test commands | [Testing Strategy](../development/testing_strategy.md) | Section 2.2 |
-| Debugging methodology | [Detector Debugging Case Study](../development/detector_geometry_debugging.md) | Full document |
+| Debugging methodology | [Detector Debugging Case Study](../debugging/detector_geometry_debugging.md) | Full document |
 | End-to-end validation | [verify_detector_geometry.py](../../scripts/verify_detector_geometry.py) | Primary validation script |
 
 ## Navigation

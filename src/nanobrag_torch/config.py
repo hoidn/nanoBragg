@@ -70,6 +70,10 @@ class DetectorConvention(Enum):
 
     MOSFLM = "mosflm"
     XDS = "xds"
+    ADXV = "adxv"
+    DENZO = "denzo"
+    DIALS = "dials"
+    CUSTOM = "custom"
 
 
 class DetectorPivot(Enum):
@@ -155,8 +159,25 @@ class DetectorConfig:
     detector_convention: DetectorConvention = DetectorConvention.MOSFLM
     detector_pivot: DetectorPivot = DetectorPivot.SAMPLE
 
+    # Custom vector parameters (optional - triggers CUSTOM convention if set)
+    fdet_vector: Optional[torch.Tensor] = None  # Fast axis direction vector
+    sdet_vector: Optional[torch.Tensor] = None  # Slow axis direction vector
+    odet_vector: Optional[torch.Tensor] = None  # Detector normal vector
+    beam_vector: Optional[torch.Tensor] = None  # Beam direction vector
+    polar_vector: Optional[torch.Tensor] = None # Polarization vector
+    pix0_vector: Optional[torch.Tensor] = None  # Detector origin offset vector
+    spindle_axis: Optional[torch.Tensor] = None  # Spindle axis (for test compatibility)
+
+    # Track if twotheta_axis was explicitly set
+    _twotheta_axis_explicit: bool = False
+
     # Sampling
     oversample: int = 1
+
+    # Configuration tracking (for consistency tests)
+    _config_mode: Optional[str] = None
+    _config_trigger: Optional[str] = None
+    _config_hash: Optional[str] = None
 
     def __post_init__(self):
         """Validate configuration and set defaults."""
@@ -189,6 +210,72 @@ class DetectorConfig:
         # Validate oversample
         if self.oversample < 1:
             raise ValueError("Oversample must be at least 1")
+
+        # Detect configuration mode and trigger
+        self._detect_configuration_mode()
+
+    def _detect_configuration_mode(self):
+        """
+        Detect which configuration mode and trigger are active.
+
+        Based on the CLI specification and C code behavior:
+        - Default mode is MOSFLM
+        - CUSTOM mode is triggered by any custom vector parameter
+        - Mode affects convention-specific behavior like pixel offsets
+        """
+        # Check for vector parameters that trigger CUSTOM mode
+        custom_triggers = []
+
+        if self.fdet_vector is not None:
+            custom_triggers.append("fdet_vector")
+        if self.sdet_vector is not None:
+            custom_triggers.append("sdet_vector")
+        if self.odet_vector is not None:
+            custom_triggers.append("odet_vector")
+        if self.beam_vector is not None:
+            custom_triggers.append("beam_vector")
+        if self.polar_vector is not None:
+            custom_triggers.append("polar_vector")
+        if self.pix0_vector is not None:
+            custom_triggers.append("pix0_vector")
+        if self.spindle_axis is not None:
+            custom_triggers.append("spindle_axis")
+
+        # Check if twotheta_axis was explicitly set (not the default)
+        if self._twotheta_axis_explicit:
+            custom_triggers.append("twotheta_axis")
+
+        if custom_triggers:
+            self._config_mode = "CUSTOM"
+            self._config_trigger = ", ".join(custom_triggers)
+        else:
+            # Check for explicit mode setting
+            if self.detector_convention == DetectorConvention.MOSFLM:
+                self._config_mode = "MOSFLM"
+                self._config_trigger = "default"
+            elif self.detector_convention == DetectorConvention.XDS:
+                self._config_mode = "XDS"
+                self._config_trigger = "xds"
+            else:
+                self._config_mode = "MOSFLM"  # fallback
+                self._config_trigger = "default"
+
+        # Generate a simple hash for consistency checking
+        import hashlib
+        config_str = f"{self._config_mode}:{self._config_trigger}"
+        self._config_hash = hashlib.md5(config_str.encode()).hexdigest()[:8]
+
+    def get_config_info(self) -> dict:
+        """Get configuration mode, trigger, and hash for consistency testing."""
+        return {
+            'mode': self._config_mode,
+            'trigger': self._config_trigger,
+            'hash': self._config_hash
+        }
+
+    def is_custom_convention(self) -> bool:
+        """Check if CUSTOM convention should be used based on vector parameters."""
+        return self._config_mode == "CUSTOM"
 
 
 @dataclass

@@ -270,20 +270,15 @@ class Detector:
     def _is_custom_convention(self) -> bool:
         """
         Check if C code will use CUSTOM convention instead of MOSFLM.
-        
+
         Based on the C code analysis:
-        - MOSFLM convention (no explicit -twotheta_axis): Uses +0.5 pixel offset
-        - CUSTOM convention (explicit -twotheta_axis): No +0.5 pixel offset  
-        
-        For now, we'll return False to always use MOSFLM convention for testing,
-        then implement proper detection later.
-        
+        - MOSFLM convention (no explicit vector parameters): Uses +0.5 pixel offset
+        - CUSTOM convention (explicit vector parameters): No +0.5 pixel offset
+
         Returns:
             bool: True if CUSTOM convention should be used
         """
-        # TODO: Implement proper user intent detection
-        # For now, always use MOSFLM convention to match the baseline behavior
-        return False
+        return self.config.is_custom_convention()
 
     def _calculate_pix0_vector(self):
         """
