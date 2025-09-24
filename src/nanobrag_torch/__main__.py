@@ -90,6 +90,16 @@ Examples:
     parser.add_argument('-sourcefile', type=str, metavar='FILE',
                         help='Multi-column text file with sources')
 
+    # Auxiliary S(Q) files (read but not used in this version per spec)
+    parser.add_argument('-stol', type=str, metavar='FILE',
+                        help='Structure factor vs sin(θ)/λ for amorphous materials (read but not used)')
+    parser.add_argument('-4stol', dest='stol', type=str, metavar='FILE',
+                        help='Alias for -stol (read but not used)')
+    parser.add_argument('-Q', dest='stol', type=str, metavar='FILE',
+                        help='Alias for -stol (read but not used)')
+    parser.add_argument('-stolout', type=str, metavar='FILE',
+                        help='Output file for S(Q) (read but not used)')
+
     # Structure factors
     parser.add_argument('-default_F', type=float, default=0.0,
                         help='Default structure factor (default: 0)')
@@ -655,6 +665,16 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     # Sourcefile (store path for later processing)
     if args.sourcefile:
         config['sourcefile'] = args.sourcefile
+
+    # S(Q) auxiliary files (read but not used per spec)
+    if args.stol:
+        # Check if file exists
+        if os.path.exists(args.stol):
+            print(f"Note: S(Q) file '{args.stol}' provided but not used in this version (per spec)")
+        else:
+            print(f"Warning: S(Q) file '{args.stol}' not found")
+    if args.stolout:
+        print(f"Note: stolout file '{args.stolout}' specified but S(Q) output not implemented in this version")
 
     return config
 

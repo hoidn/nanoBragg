@@ -7,6 +7,19 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ### FIXED (2025-09-26 - Current Session)
 
+#### S(Q) Auxiliary File Support - COMPLETED ✅
+- **Issue**: CLI flags `-stol`, `-4stol`, `-Q`, `-stolout` were missing despite being in spec
+- **Spec Requirement**: spec-a-cli.md lines 128-129 state these flags should be "read but not used further in this version"
+- **Solution Implemented**:
+  - Added all four CLI arguments to argparse
+  - `-4stol` and `-Q` are aliases for `-stol` (using `dest='stol'`)
+  - Files are checked for existence and warnings printed if not found
+  - Appropriate messages inform user that files are not used in this version
+- **Files Modified**:
+  - `src/nanobrag_torch/__main__.py`: Added arguments (lines 94-101) and handling (lines 669-677)
+- **Test Results**: All flags work correctly, showing appropriate messages
+- **Impact**: Full spec compliance for S(Q) file handling
+
 #### Sourcefile CLI Integration Fix - COMPLETED ✅
 - **Issue**: `-sourcefile` CLI option was broken - read_sourcefile was called without required parameters
 - **Root Cause**: read_sourcefile requires default_wavelength_m, source_distance_m, and beam_direction but was only passed the filename
