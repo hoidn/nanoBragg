@@ -6,6 +6,21 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 # TODO remaining items:
 (none - all critical issues addressed)
 
+### Completed (2025-09-24)
+
+#### Divergence Culling Modes Implementation - COMPLETED ✅
+- **Issue**: `-round_div` and `-square_div` CLI flags were missing from spec-a-parallel.md line 237
+- **Root Cause**: The functionality existed in the code (hardcoded to `round_div=True`) but CLI flags were not exposed
+- **Solution Implemented**:
+  1. Added `-round_div` and `-square_div` CLI arguments to argparse (lines 205-208)
+  2. Added `round_div` to config dictionary processing (line 604)
+  3. Updated source generation call to use config value instead of hardcoded True (line 755)
+- **Files Modified**:
+  - `src/nanobrag_torch/__main__.py`: Added CLI arguments and config handling
+- **Test Coverage**: Created comprehensive test suite in `tests/test_divergence_culling.py` with 6 tests
+- **Verification**: All tests pass, elliptical trimming properly toggleable via CLI
+- **Spec Compliance**: Now fully compliant with spec-a-parallel.md divergence culling requirements
+
 ### Completed (2025-09-25)
 
 #### Oversample Auto-Selection Implementation - RESOLVED ✅

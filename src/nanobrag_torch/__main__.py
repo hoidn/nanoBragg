@@ -202,6 +202,10 @@ Examples:
                         help='Vertical divergence step count')
     parser.add_argument('-divsteps', type=int,
                         help='Sets both H and V step counts')
+    parser.add_argument('-round_div', action='store_true', default=True,
+                        help='Apply elliptical trimming to divergence grid (default)')
+    parser.add_argument('-square_div', action='store_false', dest='round_div',
+                        help='Disable elliptical trimming (square grid)')
 
     # Polarization
     parser.add_argument('-polar', type=float, metavar='K',
@@ -596,6 +600,9 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     config['vdivsteps'] = args.vdivsteps
     config['dispsteps'] = args.dispsteps
 
+    # Store round_div flag for elliptical trimming
+    config['round_div'] = args.round_div
+
     # Store dispersion as fraction (spec says it's a percent)
     if args.dispersion is not None:
         config['dispersion'] = args.dispersion / 100.0  # Convert percent to fraction
@@ -748,7 +755,7 @@ def main():
                     source_distance_m=10.0,  # Default 10m source distance
                     beam_direction=beam_direction,
                     polarization_axis=polarization_axis,
-                    round_div=True  # Apply elliptical trimming
+                    round_div=config.get('round_div', True)  # Apply elliptical trimming based on CLI flag
                 )
 
             # Store generated sources in config
