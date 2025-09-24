@@ -191,7 +191,7 @@ class DetectorConfig:
     detector_pivot: Optional[DetectorPivot] = None  # Will be auto-selected per AT-GEO-002
 
     # Sampling
-    oversample: int = 1
+    oversample: int = -1  # -1 means auto-select based on crystal size and detector geometry
     oversample_omega: bool = False  # If True, apply solid angle per subpixel (not last-value)
     oversample_polar: bool = False  # If True, apply polarization per subpixel (not last-value)
     oversample_thick: bool = False  # If True, apply absorption per subpixel (not last-value)
@@ -294,9 +294,9 @@ class DetectorConfig:
             if self.pixel_size_mm <= 0:
                 raise ValueError("Pixel size must be positive")
 
-        # Validate oversample
-        if self.oversample < 1:
-            raise ValueError("Oversample must be at least 1")
+        # Validate oversample (-1 means auto-select)
+        if self.oversample < -1 or self.oversample == 0:
+            raise ValueError("Oversample must be -1 (auto-select) or >= 1")
 
         # Validate and set ROI defaults (AT-ROI-001)
         # If ROI not specified, default to full detector

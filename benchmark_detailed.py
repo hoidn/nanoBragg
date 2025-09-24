@@ -115,7 +115,7 @@ def main():
     print(f"\nC binary: {c_bin}")
 
     # Define test sizes
-    test_sizes = [256, 512, 1024, 2048]
+    test_sizes = [256, 512, 1024, 2048, 4096]
 
     print("\n" + "=" * 80)
     print("Benchmarking Different Detector Sizes")

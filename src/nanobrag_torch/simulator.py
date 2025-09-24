@@ -326,6 +326,33 @@ class Simulator:
         if oversample_thick is None:
             oversample_thick = self.detector.config.oversample_thick
 
+        # Auto-select oversample if set to -1 (matches C behavior)
+        if oversample == -1:
+            # Calculate maximum crystal dimension in meters
+            xtalsize_max = max(
+                abs(self.crystal.config.cell_a * 1e-10 * self.crystal.config.N_cells[0]),  # a*Na in meters
+                abs(self.crystal.config.cell_b * 1e-10 * self.crystal.config.N_cells[1]),  # b*Nb in meters
+                abs(self.crystal.config.cell_c * 1e-10 * self.crystal.config.N_cells[2])   # c*Nc in meters
+            )
+
+            # Calculate reciprocal pixel size in meters
+            # reciprocal_pixel_size = λ * distance / pixel_size (all in meters)
+            wavelength_m = self.wavelength * 1e-10  # Convert from Angstroms to meters
+            distance_m = self.detector.config.distance_mm / 1000.0  # Convert from mm to meters
+            pixel_size_m = self.detector.config.pixel_size_mm / 1000.0  # Convert from mm to meters
+            reciprocal_pixel_size = wavelength_m * distance_m / pixel_size_m
+
+            # Calculate recommended oversample using C formula
+            import math
+            recommended_oversample = math.ceil(3.0 * xtalsize_max / reciprocal_pixel_size)
+
+            # Ensure at least 1
+            if recommended_oversample <= 0:
+                recommended_oversample = 1
+
+            oversample = recommended_oversample
+            print(f"auto-selected {oversample}-fold oversampling")
+
         # For now, we'll implement the base case without oversampling for this test
         # The full subpixel implementation will come later
         # This matches the current implementation which doesn't yet have subpixel sampling

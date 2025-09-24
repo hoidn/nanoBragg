@@ -527,7 +527,7 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
 
     # Sampling
     config['dmin'] = args.dmin if args.dmin else 0.0
-    config['oversample'] = args.oversample if args.oversample else 1
+    config['oversample'] = args.oversample if args.oversample else -1  # -1 means auto-select
     config['oversample_thick'] = args.oversample_thick
     config['oversample_polar'] = args.oversample_polar
     config['oversample_omega'] = args.oversample_omega
@@ -676,7 +676,7 @@ def main():
             detector_twotheta_deg=config.get('twotheta_deg', 0.0),
             detector_convention=DetectorConvention[config.get('convention', 'MOSFLM')],
             detector_pivot=DetectorPivot[config.get('pivot', 'BEAM')] if config.get('pivot') else None,
-            oversample=config.get('oversample', 1),
+            oversample=config.get('oversample', -1),  # -1 means auto-select
             point_pixel=config.get('point_pixel', False),
             curved_detector=config.get('curved_detector', False),
             oversample_omega=config.get('oversample_omega', False),
