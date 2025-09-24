@@ -60,15 +60,17 @@ The following HKL-related acceptance tests have been implemented:
   - Successfully validates memory scaling (sub-quadratic) and performance measurement
 
 **NEW: AT-PERF-008: CUDA Large-Tensor Residency ✅**
-- **Status**: COMPLETE (2025-09-24)
+- **Status**: COMPLETE (2025-09-24) - **FIXED DEVICE PROPAGATION (2025-09-24)**
 - **Implementation**: Created `tests/test_at_perf_008.py` with GPU residency validation
-- **Test Results**: 1 skipped, 3 xfailed (GPU tests marked as expected failures until device propagation is fully implemented)
+- **Test Results**: 3 passed, 1 skipped - All tests now passing after device fix!
 - **Details**:
   - Tests that large tensors (≥65,536 elements) stay on GPU during simulation
   - Implements tensor device tracking using PyTorch operation hooks
   - Validates proper skip behavior when CUDA is not available
-  - GPU tests marked as xfail since Detector and Crystal models need device parameter support
-  - Test instrumentation ready for when GPU device propagation is implemented
+  - **FIX**: Crystal and Detector models already had device parameters, but tests weren't using them
+  - **FIX**: ROI mask in simulator.py was created on CPU instead of using self.device
+  - **FIX**: mask_array needed to be moved to correct device when combined with ROI mask
+  - All GPU residency tests now passing with proper device propagation
 
 **AT-PERF-006: Tensor Vectorization Completeness ✅**
 - **Status**: IMPLEMENTED

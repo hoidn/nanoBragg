@@ -139,7 +139,6 @@ class TestATPERF008CUDATensorResidency:
     """
 
     @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
-    @pytest.mark.xfail(reason="GPU device propagation not fully implemented yet - Detector and Crystal need device parameter support")
     def test_large_tensor_gpu_residency(self):
         """Test that large tensors stay on GPU during simulation."""
         # Setup: Create 512x512 detector (262,144 pixels)
@@ -167,17 +166,20 @@ class TestATPERF008CUDATensorResidency:
         )
 
         # Create simulator with CUDA device
-        crystal = Crystal(crystal_config)
-        detector = Detector(detector_config)
-
         # Use 'cuda' device directly (not 'auto' as spec mentions, since that's not implemented)
         device = torch.device('cuda')
+        dtype = torch.float32  # Use float32 for better GPU performance
+
+        # Create Crystal and Detector with CUDA device to ensure GPU residency
+        crystal = Crystal(crystal_config, device=device, dtype=dtype)
+        detector = Detector(detector_config, device=device, dtype=dtype)
+
         simulator = Simulator(
             crystal=crystal,
             detector=detector,
             beam_config=beam_config,
             device=device,
-            dtype=torch.float32  # Use float32 for better GPU performance
+            dtype=dtype
         )
 
         # Track tensor operations during simulation
@@ -208,7 +210,6 @@ class TestATPERF008CUDATensorResidency:
         assert result.numel() == 262144, "Output should have 262,144 elements"
 
     @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
-    @pytest.mark.xfail(reason="Auto device selection and GPU propagation not fully implemented yet")
     def test_auto_device_selection_uses_cuda(self):
         """Test that 'auto' device selection chooses CUDA when available."""
         # Note: The spec requires device='auto' but this is not implemented yet
@@ -226,12 +227,13 @@ class TestATPERF008CUDATensorResidency:
             spixels=512, fpixels=512
         )
 
-        crystal = Crystal(crystal_config)
-        detector = Detector(detector_config)
-
         # Currently, we need to manually specify cuda device
         # Future: device='auto' should automatically select cuda when available
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+        # Create Crystal and Detector with the chosen device
+        crystal = Crystal(crystal_config, device=device)
+        detector = Detector(detector_config, device=device)
 
         simulator = Simulator(
             crystal=crystal,
@@ -279,7 +281,6 @@ class TestATPERF008CUDATensorResidency:
         assert result.device.type == 'cpu', "Should run on CPU when CUDA unavailable"
 
     @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
-    @pytest.mark.xfail(reason="GPU device propagation not fully implemented yet")
     def test_memory_efficient_gpu_usage(self):
         """Test that GPU memory is used efficiently for large simulations."""
         # Test with a larger detector to stress GPU memory
@@ -294,20 +295,24 @@ class TestATPERF008CUDATensorResidency:
             spixels=1024, fpixels=1024  # 1M pixels
         )
 
-        crystal = Crystal(crystal_config)
-        detector = Detector(detector_config)
-
         # Clear GPU cache before test
         torch.cuda.empty_cache()
 
         # Get initial memory
         initial_memory = torch.cuda.memory_allocated()
 
+        # Create Crystal and Detector with CUDA device
+        device = torch.device('cuda')
+        dtype = torch.float32  # Use float32 for memory efficiency
+
+        crystal = Crystal(crystal_config, device=device, dtype=dtype)
+        detector = Detector(detector_config, device=device, dtype=dtype)
+
         simulator = Simulator(
             crystal=crystal,
             detector=detector,
-            device=torch.device('cuda'),
-            dtype=torch.float32  # Use float32 for memory efficiency
+            device=device,
+            dtype=dtype
         )
 
         # Run simulation

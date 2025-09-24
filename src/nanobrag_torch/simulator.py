@@ -305,7 +305,8 @@ class Simulator:
 
         # Create ROI/mask filter (AT-ROI-001)
         # Start with all pixels enabled
-        roi_mask = torch.ones(self.detector.config.spixels, self.detector.config.fpixels)
+        roi_mask = torch.ones(self.detector.config.spixels, self.detector.config.fpixels,
+                             device=self.device, dtype=self.dtype)
 
         # Apply ROI bounds if specified
         # Note: ROI is in pixel indices (xmin/xmax for fast axis, ymin/ymax for slow axis)
@@ -318,7 +319,9 @@ class Simulator:
         # Apply external mask if provided
         if self.detector.config.mask_array is not None:
             # Combine with ROI mask (both must be enabled)
-            roi_mask = roi_mask * self.detector.config.mask_array
+            # Ensure mask_array is on the same device
+            mask_array = self.detector.config.mask_array.to(device=self.device, dtype=self.dtype)
+            roi_mask = roi_mask * mask_array
 
         # Get pixel coordinates (spixels, fpixels, 3) in meters
         pixel_coords_meters = self.detector.get_pixel_coords()
@@ -584,7 +587,9 @@ class Simulator:
             # Apply external mask if provided and size matches
             if self.detector.config.mask_array is not None:
                 if self.detector.config.mask_array.shape == physical_intensity.shape:
-                    roi_mask = roi_mask * self.detector.config.mask_array
+                    # Ensure mask_array is on the same device
+                    mask_array = self.detector.config.mask_array.to(device=self.device, dtype=self.dtype)
+                    roi_mask = roi_mask * mask_array
                 # If mask doesn't match, skip it (for compatibility with tests)
 
         physical_intensity = physical_intensity * roi_mask
