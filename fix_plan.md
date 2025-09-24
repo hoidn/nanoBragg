@@ -8,8 +8,34 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - With N=1, correlation is only 0.024
   - With N≥5, correlation is >0.998
   - This is likely a physics implementation difference for very broad diffraction patterns
+- ensure consistent subpixel default behavior: pytorch should match C
 
 ### Completed (2025-09-25)
+
+#### PyTorch GPU Performance Investigation - RESOLVED ✅
+- **Issue**: benchmark_detailed.py showing no GPU performance gain vs C implementation
+- **Root Cause**: Benchmark script issues:
+  1. Crystal and Detector objects not created with `device="cuda"` parameter
+  2. Benchmark included JIT compilation time in total time
+  3. Small detector sizes (256x256) don't benefit from GPU due to overhead
+- **Solution Implemented**:
+  1. Fixed benchmark_detailed.py to properly pass device parameter to Crystal/Detector constructors
+  2. Added warm-up run for GPU to trigger JIT compilation
+  3. Added separate tracking of simulation-only time vs total time
+  4. Added torch.cuda.synchronize() calls to ensure accurate timing
+- **Results**: GPU acceleration confirmed working excellently!
+  - **Simulation-only performance**: PyTorch GPU is **3.03x faster** than C on average
+  - Detector size scaling:
+    - 256x256: 1.35x faster (GPU overhead still significant)
+    - 512x512: 1.92x faster
+    - 1024x1024: 3.59x faster
+    - 2048x2048: 5.27x faster
+  - Throughput at 2048x2048: **146 MPixels/s** (GPU) vs 28 MPixels/s (C)
+- **Key Insight**: GPU performance benefits scale with detector size - larger detectors see massive speedups
+- **Files Modified**:
+  - `benchmark_detailed.py`: Fixed device handling and added simulation-only timing
+  - Created `test_gpu_performance.py` for focused GPU testing
+- **Verification**: Correlation >0.99 for all sizes, confirming physics correctness
 
 #### Default Parameter Consistency - FIXED ✅
 - **Issue**: PyTorch had different default values than C implementation

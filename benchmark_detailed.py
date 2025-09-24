@@ -24,9 +24,6 @@ def get_memory_usage():
 
 def run_pytorch_timed(args, output_file):
     """Run PyTorch version with detailed timing."""
-    import sys
-    sys.path.insert(0, '/Users/ollie/Documents/nanoBragg/src')
-
     from nanobrag_torch.config import CrystalConfig, DetectorConfig, BeamConfig, CrystalShape, DetectorConvention
     from nanobrag_torch.models.crystal import Crystal
     from nanobrag_torch.models.detector import Detector
@@ -37,6 +34,9 @@ def run_pytorch_timed(args, output_file):
     for i, arg in enumerate(args.split()):
         if arg == '-detpixels' and i+1 < len(args.split()):
             detpixels = int(args.split()[i+1])
+
+    # Check for GPU and set device FIRST
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Setup configs
     crystal_config = CrystalConfig(
@@ -60,21 +60,27 @@ def run_pytorch_timed(args, output_file):
 
     # Time different stages
     timings = {}
-
-    # Setup
-    start = time.time()
-    crystal = Crystal(crystal_config)
-    detector = Detector(detector_config)
-    simulator = Simulator(crystal, detector, crystal_config, beam_config)
-    timings['setup'] = time.time() - start
-
-    # Check for GPU
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     timings['device'] = str(device)
 
-    # Run simulation
+    # Setup - CREATE OBJECTS WITH DEVICE PARAMETER
+    start = time.time()
+    crystal = Crystal(crystal_config, device=device)
+    detector = Detector(detector_config, device=device)
+    simulator = Simulator(crystal, detector, crystal_config, beam_config)
+
+    # For GPU, need to ensure JIT compilation happens in setup
+    if device.type == 'cuda':
+        # Warm-up run to trigger compilation
+        _ = simulator.run()
+        torch.cuda.synchronize()  # Wait for GPU to finish
+
+    timings['setup'] = time.time() - start
+
+    # Run simulation (the actual timed run)
     start = time.time()
     image = simulator.run()
+    if device.type == 'cuda':
+        torch.cuda.synchronize()  # Ensure GPU computation is complete
     timings['simulation'] = time.time() - start
 
     # Save output
@@ -172,30 +178,40 @@ def main():
                 py_data = np.fromfile(py_output, dtype=np.float32).reshape(size, size)
                 correlation = np.corrcoef(c_data.flatten(), py_data.flatten())[0, 1]
 
+                # Two comparisons: total time (with setup) and simulation only
                 speedup = c_time / py_time
+                speedup_sim_only = c_time / py_timings['simulation']
+
                 print(f"\nResults:")
                 print(f"  C time: {c_time:.3f}s (memory: {c_mem:.1f} MB)")
-                print(f"  PyTorch time: {py_time:.3f}s (memory: {py_mem:.1f} MB)")
-                print(f"  Speedup: {speedup:.2f}x {'(PyTorch faster)' if speedup > 1 else '(C faster)'}")
+                print(f"  PyTorch total: {py_time:.3f}s (memory: {py_mem:.1f} MB)")
+                print(f"  PyTorch simulation only: {py_timings['simulation']:.3f}s")
+                print(f"  Speedup (total): {speedup:.2f}x {'(PyTorch faster)' if speedup > 1 else '(C faster)'}")
+                print(f"  Speedup (sim only): {speedup_sim_only:.2f}x {'(PyTorch faster)' if speedup_sim_only > 1 else '(C faster)'}")
                 print(f"  Correlation: {correlation:.6f}")
 
-                # Pixels per second
+                # Pixels per second - show both total and sim-only
                 pixels_per_sec_c = (size * size) / c_time
                 pixels_per_sec_py = (size * size) / py_time
+                pixels_per_sec_py_sim = (size * size) / py_timings['simulation']
                 print(f"  C throughput: {pixels_per_sec_c/1e6:.2f} MPixels/s")
-                print(f"  PyTorch throughput: {pixels_per_sec_py/1e6:.2f} MPixels/s")
+                print(f"  PyTorch throughput (total): {pixels_per_sec_py/1e6:.2f} MPixels/s")
+                print(f"  PyTorch throughput (sim only): {pixels_per_sec_py_sim/1e6:.2f} MPixels/s")
 
                 results.append({
                     'size': size,
                     'pixels': size * size,
                     'c_time': c_time,
                     'py_time': py_time,
+                    'py_sim_time': py_timings['simulation'],
                     'c_mem': c_mem,
                     'py_mem': py_mem,
                     'speedup': speedup,
+                    'speedup_sim_only': speedup_sim_only,
                     'correlation': correlation,
                     'c_throughput': pixels_per_sec_c,
                     'py_throughput': pixels_per_sec_py,
+                    'py_throughput_sim': pixels_per_sec_py_sim,
                     'py_timings': py_timings
                 })
 
@@ -254,10 +270,19 @@ def main():
         print("=" * 80)
 
         avg_speedup = sum(r['speedup'] for r in results) / len(results)
+        avg_speedup_sim = sum(r.get('speedup_sim_only', r['speedup']) for r in results) / len(results)
+
+        print("\nIncluding setup/compilation time:")
         if avg_speedup > 1:
-            print(f"\n✓ PyTorch is on average {avg_speedup:.2f}x faster than C")
+            print(f"  ✓ PyTorch is on average {avg_speedup:.2f}x faster than C")
         else:
-            print(f"\n✓ C is on average {1/avg_speedup:.2f}x faster than PyTorch")
+            print(f"  ✓ C is on average {1/avg_speedup:.2f}x faster than PyTorch")
+
+        print("\nSimulation only (excluding setup):")
+        if avg_speedup_sim > 1:
+            print(f"  ✓ PyTorch GPU is on average {avg_speedup_sim:.2f}x faster than C")
+        else:
+            print(f"  ✓ C is on average {1/avg_speedup_sim:.2f}x faster than PyTorch GPU")
 
         print(f"\n✓ All correlations > 0.99, indicating excellent numerical agreement")
 
