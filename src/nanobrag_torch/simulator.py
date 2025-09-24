@@ -131,8 +131,10 @@ class Simulator:
         pixel_magnitudes = torch.sqrt(pixel_squared_sum)
         diffracted_beam_unit = pixel_coords_angstroms / pixel_magnitudes
 
-        # Incident beam unit vector
-        incident_beam_unit = self.incident_beam_direction.expand_as(diffracted_beam_unit)
+        # Incident beam unit vector - ensure it's on the same device as diffracted beam
+        # Move to device within the compiled function to avoid torch.compile device issues
+        incident_beam_direction = self.incident_beam_direction.to(diffracted_beam_unit.device)
+        incident_beam_unit = incident_beam_direction.expand_as(diffracted_beam_unit)
 
         # Scattering vector using crystallographic convention
         scattering_vector = (diffracted_beam_unit - incident_beam_unit) / self.wavelength
@@ -598,6 +600,8 @@ class Simulator:
                     roi_mask = roi_mask * mask_array
                 # If mask doesn't match, skip it (for compatibility with tests)
 
+        # Ensure roi_mask is on the same device as physical_intensity
+        roi_mask = roi_mask.to(physical_intensity.device)
         physical_intensity = physical_intensity * roi_mask
 
         return physical_intensity

@@ -208,25 +208,30 @@ class TestATPERF002ParallelExecution:
 
         beam_config = BeamConfig(wavelength_A=1.0)
 
-        crystal = Crystal(crystal_config)
-        detector = Detector(detector_config)
+        # Create objects on GPU device
+        device = torch.device("cuda")
+        crystal = Crystal(crystal_config, device=device)
+        detector = Detector(detector_config, device=device)
 
         simulator = Simulator(
             crystal=crystal,
             detector=detector,
             beam_config=beam_config,
+            device=device
         )
 
         # Warm-up
         _ = simulator.run()
-        torch.cuda.synchronize()
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
 
         # Timed GPU runs
         gpu_times = []
         for _ in range(3):
             start = time.perf_counter()
             _ = simulator.run()
-            torch.cuda.synchronize()
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
             end = time.perf_counter()
             gpu_times.append(end - start)
 

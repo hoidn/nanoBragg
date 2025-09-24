@@ -589,19 +589,25 @@ class Detector:
             self, "_cached_pix0_vector"
         ):
             # Check if basis vectors have changed
+            # Move cached vectors to current device for comparison
+            cached_f = self._cached_basis_vectors[0].to(self.device)
+            cached_s = self._cached_basis_vectors[1].to(self.device)
+            cached_o = self._cached_basis_vectors[2].to(self.device)
+
             if not (
-                torch.allclose(self.fdet_vec, self._cached_basis_vectors[0], atol=1e-15)
+                torch.allclose(self.fdet_vec, cached_f, atol=1e-15)
                 and torch.allclose(
-                    self.sdet_vec, self._cached_basis_vectors[1], atol=1e-15
+                    self.sdet_vec, cached_s, atol=1e-15
                 )
                 and torch.allclose(
-                    self.odet_vec, self._cached_basis_vectors[2], atol=1e-15
+                    self.odet_vec, cached_o, atol=1e-15
                 )
             ):
                 geometry_changed = True
             # Check if pix0_vector has changed
+            cached_pix0 = self._cached_pix0_vector.to(self.device)
             if not torch.allclose(
-                self.pix0_vector, self._cached_pix0_vector, atol=1e-15
+                self.pix0_vector, cached_pix0, atol=1e-15
             ):
                 geometry_changed = True
 
