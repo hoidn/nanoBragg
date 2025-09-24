@@ -97,6 +97,129 @@ class Simulator:
             self.beam_config.polarization_axis, device=self.device, dtype=self.dtype
         )
 
+    def _compute_physics_for_position(self, pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star):
+        """Compute physics (Miller indices, structure factors, intensity) for given positions.
+
+        This is the core physics calculation that must be done per-subpixel for proper
+        anti-aliasing. Each subpixel samples a slightly different position in reciprocal
+        space, leading to different Miller indices and structure factors.
+
+        Args:
+            pixel_coords_angstroms: Pixel/subpixel coordinates in Angstroms (S, F, 3)
+            rot_a, rot_b, rot_c: Rotated real-space lattice vectors (N_phi, N_mos, 3)
+            rot_a_star, rot_b_star, rot_c_star: Rotated reciprocal vectors (N_phi, N_mos, 3)
+
+        Returns:
+            intensity: Computed intensity |F|^2 integrated over phi and mosaic (S, F)
+        """
+        # Calculate scattering vectors
+        pixel_squared_sum = torch.sum(
+            pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True
+        )
+        pixel_squared_sum = torch.maximum(
+            pixel_squared_sum,
+            torch.tensor(1e-12, dtype=pixel_squared_sum.dtype, device=pixel_squared_sum.device)
+        )
+        pixel_magnitudes = torch.sqrt(pixel_squared_sum)
+        diffracted_beam_unit = pixel_coords_angstroms / pixel_magnitudes
+
+        # Incident beam unit vector
+        incident_beam_unit = self.incident_beam_direction.expand_as(diffracted_beam_unit)
+
+        # Scattering vector using crystallographic convention
+        scattering_vector = (diffracted_beam_unit - incident_beam_unit) / self.wavelength
+
+        # Apply dmin culling if specified
+        dmin_mask = None
+        if self.beam_config.dmin > 0:
+            stol = 0.5 * torch.norm(scattering_vector, dim=-1)
+            stol_threshold = 0.5 / self.beam_config.dmin
+            dmin_mask = (stol > 0) & (stol > stol_threshold)
+
+        # Calculate Miller indices
+        scattering_broadcast = scattering_vector.unsqueeze(-2).unsqueeze(-2)
+        rot_a_broadcast = rot_a.unsqueeze(0).unsqueeze(0)
+        rot_b_broadcast = rot_b.unsqueeze(0).unsqueeze(0)
+        rot_c_broadcast = rot_c.unsqueeze(0).unsqueeze(0)
+
+        h = dot_product(scattering_broadcast, rot_a_broadcast)
+        k = dot_product(scattering_broadcast, rot_b_broadcast)
+        l = dot_product(scattering_broadcast, rot_c_broadcast)  # noqa: E741
+
+        # Find nearest integer Miller indices
+        h0 = torch.round(h)
+        k0 = torch.round(k)
+        l0 = torch.round(l)
+
+        # Look up structure factors
+        F_cell = self.crystal.get_structure_factor(h0, k0, l0)
+
+        # Calculate lattice structure factor
+        Na = self.crystal.N_cells_a
+        Nb = self.crystal.N_cells_b
+        Nc = self.crystal.N_cells_c
+        shape = self.crystal_config.shape
+        fudge = self.crystal_config.fudge
+
+        if shape == CrystalShape.SQUARE:
+            F_latt_a = sincg(torch.pi * (h - h0), Na)
+            F_latt_b = sincg(torch.pi * (k - k0), Nb)
+            F_latt_c = sincg(torch.pi * (l - l0), Nc)
+            F_latt = F_latt_a * F_latt_b * F_latt_c
+        elif shape == CrystalShape.ROUND:
+            h_frac = h - h0
+            k_frac = k - k0
+            l_frac = l - l0
+            hrad_sqr = (h_frac * h_frac * Na * Na +
+                       k_frac * k_frac * Nb * Nb +
+                       l_frac * l_frac * Nc * Nc)
+            hrad_sqr = torch.maximum(
+                hrad_sqr,
+                torch.tensor(1e-12, dtype=hrad_sqr.dtype, device=hrad_sqr.device)
+            )
+            F_latt = Na * Nb * Nc * 0.723601254558268 * sinc3(
+                torch.pi * torch.sqrt(hrad_sqr * fudge)
+            )
+        elif shape == CrystalShape.GAUSS:
+            h_frac = h - h0
+            k_frac = k - k0
+            l_frac = l - l0
+            delta_r_star = (h_frac.unsqueeze(-1) * rot_a_star.unsqueeze(0).unsqueeze(0) +
+                          k_frac.unsqueeze(-1) * rot_b_star.unsqueeze(0).unsqueeze(0) +
+                          l_frac.unsqueeze(-1) * rot_c_star.unsqueeze(0).unsqueeze(0))
+            rad_star_sqr = torch.sum(delta_r_star * delta_r_star, dim=-1)
+            rad_star_sqr = rad_star_sqr * Na * Na * Nb * Nb * Nc * Nc
+            F_latt = Na * Nb * Nc * torch.exp(-(rad_star_sqr / 0.63) * fudge)
+        elif shape == CrystalShape.TOPHAT:
+            h_frac = h - h0
+            k_frac = k - k0
+            l_frac = l - l0
+            delta_r_star = (h_frac.unsqueeze(-1) * rot_a_star.unsqueeze(0).unsqueeze(0) +
+                          k_frac.unsqueeze(-1) * rot_b_star.unsqueeze(0).unsqueeze(0) +
+                          l_frac.unsqueeze(-1) * rot_c_star.unsqueeze(0).unsqueeze(0))
+            rad_star_sqr = torch.sum(delta_r_star * delta_r_star, dim=-1)
+            rad_star_sqr = rad_star_sqr * Na * Na * Nb * Nb * Nc * Nc
+            inside_cutoff = (rad_star_sqr * fudge) < 0.3969
+            F_latt = torch.where(inside_cutoff,
+                                torch.full_like(rad_star_sqr, Na * Nb * Nc),
+                                torch.zeros_like(rad_star_sqr))
+        else:
+            raise ValueError(f"Unsupported crystal shape: {shape}")
+
+        # Calculate intensity
+        F_total = F_cell * F_latt
+        intensity = F_total * F_total  # |F|^2
+
+        # Apply dmin culling
+        if dmin_mask is not None:
+            keep_mask = ~dmin_mask.unsqueeze(-1).unsqueeze(-1)
+            intensity = intensity * keep_mask.to(intensity.dtype)
+
+        # Sum over phi and mosaic dimensions
+        intensity = torch.sum(intensity, dim=(-2, -1))
+
+        return intensity
+
     def run(
         self,
         pixel_batch_size: Optional[int] = None,
@@ -197,50 +320,6 @@ class Simulator:
 
         # Get pixel coordinates (spixels, fpixels, 3) in meters
         pixel_coords_meters = self.detector.get_pixel_coords()
-        # Convert to Angstroms for physics calculations
-        pixel_coords_angstroms = pixel_coords_meters * 1e10
-
-        # Calculate scattering vectors for each pixel
-        # The C code calculates scattering vector as the difference between
-        # unit vectors pointing to the pixel and the incident direction
-
-        # Diffracted beam unit vector (from origin to pixel)
-        pixel_squared_sum = torch.sum(
-            pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True
-        )
-        # Use maximum to prevent negative values
-        pixel_squared_sum = torch.maximum(pixel_squared_sum, torch.tensor(1e-12, dtype=pixel_squared_sum.dtype, device=pixel_squared_sum.device))
-        pixel_magnitudes = torch.sqrt(pixel_squared_sum)
-        diffracted_beam_unit = pixel_coords_angstroms / pixel_magnitudes
-
-        # Incident beam unit vector [1, 0, 0]
-        incident_beam_unit = self.incident_beam_direction.expand_as(
-            diffracted_beam_unit
-        )
-
-        # Scattering vector using crystallographic convention (nanoBragg.c style)
-        # S = (s_out - s_in) / λ where s_out, s_in are unit vectors
-        scattering_vector = (
-            diffracted_beam_unit - incident_beam_unit
-        ) / self.wavelength
-
-        # Apply dmin culling if specified (AT-SAM-003)
-        # Calculate stol = 0.5·|q| where q is the scattering vector
-        # Per spec: cull if dmin > 0 and stol > 0 and dmin > 0.5/stol
-        dmin_mask = None
-        if self.beam_config.dmin > 0:
-            # Calculate stol = 0.5 * |scattering_vector|
-            # Note: scattering_vector is already divided by wavelength
-            stol = 0.5 * torch.norm(scattering_vector, dim=-1)  # Shape: (S, F)
-
-            # Apply culling condition: dmin > 0.5/stol
-            # This is equivalent to: stol > 0.5/dmin
-            # Avoid division by zero in stol
-            stol_threshold = 0.5 / self.beam_config.dmin
-            dmin_mask = (stol > 0) & (stol > stol_threshold)  # Shape: (S, F)
-
-            # dmin_mask is True for pixels that should be CULLED (skipped)
-            # We'll invert it later to get pixels to keep
 
         # Get rotated lattice vectors for all phi steps and mosaic domains
         # Shape: (N_phi, N_mos, 3)
@@ -265,138 +344,6 @@ class Simulator:
             self._rot_b_star = rot_b_star
             self._rot_c_star = rot_c_star
 
-        # Broadcast scattering vector to be compatible with rotation dimensions
-        # scattering_vector: (S, F, 3) -> (S, F, 1, 1, 3)
-        # rot_a: (N_phi, N_mos, 3) -> (1, 1, N_phi, N_mos, 3)
-        scattering_broadcast = scattering_vector.unsqueeze(-2).unsqueeze(-2)
-        rot_a_broadcast = rot_a.unsqueeze(0).unsqueeze(0)
-        rot_b_broadcast = rot_b.unsqueeze(0).unsqueeze(0)
-        rot_c_broadcast = rot_c.unsqueeze(0).unsqueeze(0)
-
-        # Calculate dimensionless Miller indices using nanoBragg.c convention
-        # nanoBragg.c uses: h = S·a where S is the scattering vector and a is real-space vector
-        # IMPORTANT: The real-space vectors a, b, c have already incorporated any misset rotation
-        # through the Crystal.compute_cell_tensors() method, which ensures consistency with C-code
-        # Result shape: (S, F, N_phi, N_mos)
-        h = dot_product(scattering_broadcast, rot_a_broadcast)
-        k = dot_product(scattering_broadcast, rot_b_broadcast)
-        l = dot_product(scattering_broadcast, rot_c_broadcast)  # noqa: E741
-
-        # Find nearest integer Miller indices for structure factor lookup
-        h0 = torch.round(h)
-        k0 = torch.round(k)
-        l0 = torch.round(l)
-
-        # Look up structure factors F_cell using integer indices
-        # TODO: Future implementation must calculate |h*a* + k*b* + l*c*| <= 1/d_min
-        # for correct resolution cutoffs in triclinic cells
-        F_cell = self.crystal.get_structure_factor(h0, k0, l0)
-
-        # Calculate lattice structure factor F_latt based on crystal shape model
-        # CORRECT: Use fractional part (h-h0, k-k0, l-l0) to match C-code behavior
-        Na = self.crystal.N_cells_a
-        Nb = self.crystal.N_cells_b
-        Nc = self.crystal.N_cells_c
-        shape = self.crystal_config.shape
-        fudge = self.crystal_config.fudge
-
-        if shape == CrystalShape.SQUARE:
-            # Parallelepiped/grating model using sincg function
-            # F_latt = sincg(π·h, Na) · sincg(π·k, Nb) · sincg(π·l, Nc)
-            F_latt_a = sincg(torch.pi * (h - h0), Na)
-            F_latt_b = sincg(torch.pi * (k - k0), Nb)
-            F_latt_c = sincg(torch.pi * (l - l0), Nc)
-            F_latt = F_latt_a * F_latt_b * F_latt_c
-
-        elif shape == CrystalShape.ROUND:
-            # Spherical/elliptical model using sinc3 function
-            # hrad^2 = (h−h0)^2·Na^2 + (k−k0)^2·Nb^2 + (l−l0)^2·Nc^2
-            # F_latt = Na·Nb·Nc·0.723601254558268·sinc3(π·sqrt(fudge·hrad^2))
-            h_frac = h - h0
-            k_frac = k - k0
-            l_frac = l - l0
-            hrad_sqr = (h_frac * h_frac * Na * Na +
-                       k_frac * k_frac * Nb * Nb +
-                       l_frac * l_frac * Nc * Nc)
-            # Use maximum to protect against negative values
-            hrad_sqr = torch.maximum(hrad_sqr, torch.tensor(1e-12, dtype=hrad_sqr.dtype, device=hrad_sqr.device))
-            F_latt = Na * Nb * Nc * 0.723601254558268 * sinc3(
-                torch.pi * torch.sqrt(hrad_sqr * fudge)
-            )
-
-        elif shape == CrystalShape.GAUSS:
-            # Gaussian in reciprocal space
-            # Δr*^2 = ||(h−h0)·a* + (k−k0)·b* + (l−l0)·c*||^2 · Na^2·Nb^2·Nc^2
-            # F_latt = Na·Nb·Nc·exp(−(Δr*^2 / 0.63)·fudge)
-            h_frac = h - h0
-            k_frac = k - k0
-            l_frac = l - l0
-
-            # Get reciprocal vectors for the current phi/mosaic configuration
-            # Shape of rot_a_star etc: (N_phi, N_mos, 3)
-            if hasattr(self, '_rot_a_star'):
-                # Use cached rotated reciprocal vectors if available
-                delta_r_star = (h_frac.unsqueeze(-1) * self._rot_a_star +
-                               k_frac.unsqueeze(-1) * self._rot_b_star +
-                               l_frac.unsqueeze(-1) * self._rot_c_star)
-            else:
-                # Fall back to unrotated vectors
-                delta_r_star = (h_frac.unsqueeze(-1) * self.crystal.a_star.view(1, 1, 1, 3) +
-                               k_frac.unsqueeze(-1) * self.crystal.b_star.view(1, 1, 1, 3) +
-                               l_frac.unsqueeze(-1) * self.crystal.c_star.view(1, 1, 1, 3))
-
-            # Calculate squared magnitude
-            rad_star_sqr = torch.sum(delta_r_star * delta_r_star, dim=-1)
-            rad_star_sqr = rad_star_sqr * Na * Na * Nb * Nb * Nc * Nc
-
-            F_latt = Na * Nb * Nc * torch.exp(-(rad_star_sqr / 0.63) * fudge)
-
-        elif shape == CrystalShape.TOPHAT:
-            # Binary spots/top-hat function
-            # F_latt = Na·Nb·Nc if (Δr*^2 · fudge < 0.3969); else 0
-            h_frac = h - h0
-            k_frac = k - k0
-            l_frac = l - l0
-
-            # Similar to GAUSS, calculate reciprocal space distance
-            if hasattr(self, '_rot_a_star'):
-                delta_r_star = (h_frac.unsqueeze(-1) * self._rot_a_star +
-                               k_frac.unsqueeze(-1) * self._rot_b_star +
-                               l_frac.unsqueeze(-1) * self._rot_c_star)
-            else:
-                delta_r_star = (h_frac.unsqueeze(-1) * self.crystal.a_star.view(1, 1, 1, 3) +
-                               k_frac.unsqueeze(-1) * self.crystal.b_star.view(1, 1, 1, 3) +
-                               l_frac.unsqueeze(-1) * self.crystal.c_star.view(1, 1, 1, 3))
-
-            rad_star_sqr = torch.sum(delta_r_star * delta_r_star, dim=-1)
-            rad_star_sqr = rad_star_sqr * Na * Na * Nb * Nb * Nc * Nc
-
-            # Apply threshold
-            inside_cutoff = (rad_star_sqr * fudge) < 0.3969
-            F_latt = torch.where(inside_cutoff,
-                                torch.full_like(rad_star_sqr, Na * Nb * Nc),
-                                torch.zeros_like(rad_star_sqr))
-
-        else:
-            raise ValueError(f"Unsupported crystal shape: {shape}")
-
-        # Calculate total structure factor and intensity
-        # Shape: (S, F, N_phi, N_mos)
-        F_total = F_cell * F_latt
-        intensity = F_total * F_total  # |F|^2
-
-        # Apply dmin culling mask if specified (AT-SAM-003)
-        # Set intensity to zero for pixels that should be culled
-        if dmin_mask is not None:
-            # dmin_mask is True for pixels to cull, shape: (S, F)
-            # We need to broadcast to match intensity shape: (S, F, N_phi, N_mos)
-            keep_mask = ~dmin_mask.unsqueeze(-1).unsqueeze(-1)
-            intensity = intensity * keep_mask.to(intensity.dtype)
-
-        # Integrate over phi steps and mosaic domains
-        # Sum across the last two dimensions to get final 2D image
-        integrated_intensity = torch.sum(intensity, dim=(-2, -1))
-
         # Calculate normalization factor (steps)
         # Per spec AT-SAM-001: "Final per-pixel scale SHALL divide by steps"
         # where steps = sources * phi_steps * mosaic_domains * oversample^2
@@ -404,9 +351,6 @@ class Simulator:
         phi_steps = self.crystal_config.phi_steps
         mosaic_domains = self.crystal_config.mosaic_domains
         steps = phi_steps * mosaic_domains * oversample * oversample  # Include oversample^2
-
-        # Normalize by the number of steps
-        normalized_intensity = integrated_intensity / steps
 
         # Apply physical scaling factors (from nanoBragg.c ~line 3050)
         # Solid angle correction, converting all units to meters for calculation
@@ -433,16 +377,19 @@ class Simulator:
             s_axis = self.detector.sdet_vec  # Slow axis vector
 
             # Initialize accumulator for intensity
-            accumulated_intensity = torch.zeros_like(normalized_intensity)
+            accumulated_intensity = torch.zeros(
+                (self.detector.config.spixels, self.detector.config.fpixels),
+                dtype=self.dtype, device=self.device
+            )
 
             # Track last computed omega and polarization for each pixel (for last-value semantics)
-            last_omega = torch.zeros_like(normalized_intensity)
-            last_polar = torch.ones_like(normalized_intensity)  # Will be computed per subpixel
+            last_omega = None
+            last_polar = None
 
             # Track whether we've applied factors per-subpixel
             omega_applied = False
 
-            # Subpixel loop - vectorizable but kept explicit for clarity and correctness
+            # Subpixel loop - NOW WITH PER-SUBPIXEL PHYSICS CALCULATION
             for i_s in range(oversample):
                 for i_f in range(oversample):
                     # Compute subpixel offset in meters using detector basis vectors
@@ -457,6 +404,16 @@ class Simulator:
 
                     # Calculate airpath for this subpixel
                     subpixel_coords_ang = subpixel_coords * 1e10  # Convert to Angstroms
+
+                    # CRITICAL FIX: Compute physics for THIS subpixel position
+                    # This is the key to proper anti-aliasing - each subpixel samples
+                    # a slightly different position in reciprocal space
+                    subpixel_physics_intensity = self._compute_physics_for_position(
+                        subpixel_coords_ang, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star
+                    )
+
+                    # Normalize by the total number of steps
+                    subpixel_physics_intensity = subpixel_physics_intensity / steps
                     sub_squared = torch.sum(subpixel_coords_ang * subpixel_coords_ang, dim=-1)
                     sub_squared = torch.maximum(sub_squared, torch.tensor(1e-20, dtype=sub_squared.dtype, device=sub_squared.device))  # Avoid division by zero
                     sub_magnitudes = torch.sqrt(sub_squared)
@@ -505,9 +462,8 @@ class Simulator:
                             self.polarization_axis
                         )
 
-                    # Compute the subpixel intensity contribution
-                    # Note: Don't divide by oversample^2 here - it's handled in the steps normalization
-                    subpixel_intensity = normalized_intensity
+                    # Use the physics intensity computed for this specific subpixel
+                    subpixel_intensity = subpixel_physics_intensity
 
                     # Apply factors based on oversample flags
                     if oversample_omega:
@@ -541,7 +497,26 @@ class Simulator:
             # Use accumulated intensity
             normalized_intensity = accumulated_intensity
         else:
-            # No subpixel sampling - original code path
+            # No subpixel sampling - compute physics once for pixel centers
+            pixel_coords_angstroms = pixel_coords_meters * 1e10
+
+            # Compute physics for pixel centers
+            intensity = self._compute_physics_for_position(
+                pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star
+            )
+
+            # Normalize by steps
+            normalized_intensity = intensity / steps
+
+            # Calculate airpath for pixel centers
+            pixel_squared_sum = torch.sum(
+                pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True
+            )
+            pixel_squared_sum = torch.maximum(
+                pixel_squared_sum,
+                torch.tensor(1e-12, dtype=pixel_squared_sum.dtype, device=pixel_squared_sum.device)
+            )
+            pixel_magnitudes = torch.sqrt(pixel_squared_sum)
             airpath = pixel_magnitudes.squeeze(-1)  # Remove last dimension for broadcasting
             airpath_m = airpath * 1e-10  # Å to meters
             close_distance_m = self.detector.close_distance  # Use close_distance, not distance

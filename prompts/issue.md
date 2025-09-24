@@ -53,7 +53,7 @@
           - If you edited an AT: note “Edited AT-XXX requires test harness update/review”.
           - If you added an AT: note “Implement AT-XXX and integrate into CI”.
       - Remove issue file
-        - Move the issue .md to archive/
+        - Move the issue .md to archive/issues/
   - Output
       - Issue Summary: 2–3 sentences on what failed and where.
       - AT Evaluation: bullets of AT → verdict + 1–2 line rationale.
