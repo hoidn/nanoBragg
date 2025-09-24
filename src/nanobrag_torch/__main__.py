@@ -357,6 +357,8 @@ Examples:
                         help='Enable progress meter')
     parser.add_argument('-seed', type=int,
                         help='Noise RNG seed')
+    parser.add_argument('-show_config', '-echo_config', action='store_true',
+                        help='Print configuration parameters for debugging')
 
     # Explicitly handle unsupported flags from the spec
     parser.add_argument('-dispstep', dest='_unsupported_dispstep',
@@ -679,6 +681,82 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     return config
 
 
+def print_configuration(crystal_config, detector_config, beam_config, simulator_config=None):
+    """Print configuration parameters for debugging.
+
+    Args:
+        crystal_config: CrystalConfig object
+        detector_config: DetectorConfig object
+        beam_config: BeamConfig object
+        simulator_config: Optional simulator configuration dict
+    """
+    print("\n" + "="*60)
+    print("CONFIGURATION ECHO (for debugging)")
+    print("="*60)
+
+    print("\n### Crystal Configuration ###")
+    print(f"  Cell: a={crystal_config.cell_a:.3f} b={crystal_config.cell_b:.3f} c={crystal_config.cell_c:.3f} Å")
+    print(f"        α={crystal_config.cell_alpha:.3f}° β={crystal_config.cell_beta:.3f}° γ={crystal_config.cell_gamma:.3f}°")
+    print(f"  N_cells: {crystal_config.N_cells[0]} x {crystal_config.N_cells[1]} x {crystal_config.N_cells[2]}")
+    print(f"  Default F: {crystal_config.default_F}")
+    print(f"  Misset: {crystal_config.misset_deg[0]:.3f}° {crystal_config.misset_deg[1]:.3f}° {crystal_config.misset_deg[2]:.3f}°")
+    print(f"  Phi: start={crystal_config.phi_start_deg:.3f}° range={crystal_config.osc_range_deg:.3f}° steps={crystal_config.phi_steps}")
+    print(f"  Mosaic: spread={crystal_config.mosaic_spread_deg:.3f}° domains={crystal_config.mosaic_domains}")
+    if hasattr(crystal_config, 'shape') and crystal_config.shape:
+        print(f"  Crystal shape: {crystal_config.shape.name}")
+
+    print("\n### Detector Configuration ###")
+    print(f"  Pixels: {detector_config.spixels} x {detector_config.fpixels}")
+    print(f"  Pixel size: {detector_config.pixel_size_mm:.4f} mm")
+    print(f"  Distance: {detector_config.distance_mm:.3f} mm")
+    print(f"  Beam center: S={detector_config.beam_center_s:.3f} mm, F={detector_config.beam_center_f:.3f} mm")
+    print(f"  Convention: {detector_config.detector_convention.name}")
+    print(f"  Pivot: {detector_config.detector_pivot.name}")
+    print(f"  Rotations: rotx={detector_config.detector_rotx_deg:.3f}° roty={detector_config.detector_roty_deg:.3f}°")
+    print(f"             rotz={detector_config.detector_rotz_deg:.3f}° twotheta={detector_config.detector_twotheta_deg:.3f}°")
+    if detector_config.oversample != 1:
+        print(f"  Oversample: {detector_config.oversample}")
+
+    print("\n### Beam Configuration ###")
+    print(f"  Wavelength: {beam_config.wavelength_A:.4f} Å")
+    if hasattr(beam_config, 'polarization_factor') and beam_config.polarization_factor != 1.0:
+        print(f"  Polarization factor: {beam_config.polarization_factor:.3f}")
+    if beam_config.fluence:
+        print(f"  Fluence: {beam_config.fluence:.2e} photons/m²")
+    if beam_config.flux and beam_config.exposure:
+        print(f"  Flux: {beam_config.flux:.2e} photons/s")
+        print(f"  Exposure: {beam_config.exposure:.3f} s")
+    if hasattr(beam_config, 'beamsize_mm') and beam_config.beamsize_mm:
+        print(f"  Beam size: {beam_config.beamsize_mm:.3f} mm")
+
+    # Print source information if available
+    if beam_config.source_directions is not None and len(beam_config.source_directions) > 0:
+        print(f"  Sources: {len(beam_config.source_directions)} sources")
+        # Print divergence/dispersion info from config dict if available
+        if simulator_config and isinstance(simulator_config, dict):
+            if simulator_config.get('dispersion_pct', 0) > 0:
+                print(f"  Dispersion: {simulator_config['dispersion_pct']:.1f}% steps={simulator_config.get('dispersion_steps', 1)}")
+            if simulator_config.get('hdiv_range_mrad', 0) > 0:
+                print(f"  H divergence: {simulator_config['hdiv_range_mrad']:.3f} mrad steps={simulator_config.get('hdiv_steps', 1)}")
+            if simulator_config.get('vdiv_range_mrad', 0) > 0:
+                print(f"  V divergence: {simulator_config['vdiv_range_mrad']:.3f} mrad steps={simulator_config.get('vdiv_steps', 1)}")
+
+    if simulator_config and isinstance(simulator_config, dict):
+        print("\n### Simulator Configuration ###")
+        if 'roi' in simulator_config and simulator_config['roi']:
+            roi = simulator_config['roi']
+            print(f"  ROI: [{roi[0]}, {roi[1]}] x [{roi[2]}, {roi[3]}]")
+        if 'adc_offset' in simulator_config:
+            print(f"  ADC offset: {simulator_config.get('adc_offset', 40.0)}")
+        scale_val = simulator_config.get('scale', 0) if simulator_config else 0
+        if scale_val and scale_val > 0:
+            print(f"  Scale: {simulator_config['scale']}")
+        if simulator_config.get('oversample', -1) > 1:
+            print(f"  Oversample: {simulator_config['oversample']}")
+
+    print("="*60 + "\n")
+
+
 def main():
     """Main entry point for CLI."""
 
@@ -893,6 +971,10 @@ def main():
 
         # Create and run simulator
         simulator = Simulator(crystal, detector, beam_config=beam_config)
+
+        # Print configuration if requested
+        if args.show_config:
+            print_configuration(crystal_config, detector_config, beam_config, config)
 
         print(f"Running simulation...")
         print(f"  Detector: {detector_config.fpixels}x{detector_config.spixels} pixels")

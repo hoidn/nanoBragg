@@ -7,6 +7,22 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ### FIXED (2025-09-26 - Current Session)
 
+#### Configuration Echo Feature - COMPLETED ✅
+- **Issue**: No way to debug/verify configuration parameters being used
+- **Solution Implemented**:
+  - Added `-show_config` / `-echo_config` CLI flag
+  - Created `print_configuration()` function to display all configuration parameters
+  - Shows Crystal, Detector, Beam, and Simulator configurations in readable format
+  - Helps users verify their input parameters are being interpreted correctly
+- **Files Modified**:
+  - `src/nanobrag_torch/__main__.py`: Added flag (line 360), function (lines 684-756), and call (lines 966-967)
+- **Tests Created**:
+  - `tests/test_show_config.py`: Created 4 comprehensive tests for the feature
+- **Test Results**: All 4 tests pass
+- **Impact**: Improved debugging capability for users
+
+### FIXED (2025-09-26 - Previous in Session)
+
 #### S(Q) Auxiliary File Support - COMPLETED ✅
 - **Issue**: CLI flags `-stol`, `-4stol`, `-Q`, `-stolout` were missing despite being in spec
 - **Spec Requirement**: spec-a-cli.md lines 128-129 state these flags should be "read but not used further in this version"
