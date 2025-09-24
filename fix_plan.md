@@ -8,6 +8,39 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ### FIXED (2025-09-25 - Current Session)
 
+#### Simulator crystal_config Parameter Bug Fix - COMPLETED ✅
+- **Issue**: When passing crystal_config parameter to Simulator constructor, tests produced empty images (all zeros)
+  - test_rotation_compatibility: No intensity in rotated simulation
+  - test_simulator_phi_rotation: Both phi=0° and phi=30° produced zeros
+- **Root Cause**: Simulator was replacing the entire crystal.config with the provided crystal_config
+  - This caused loss of essential parameters (cell dimensions, N_cells, default_F)
+  - The new config only had rotation parameters, resulting in zero structure factors
+- **Solution Implemented**: Modified Simulator.__init__ to update only rotation parameters
+  - Changed from `self.crystal.config = crystal_config` (replacing entire config)
+  - To selective field updates preserving essential crystal parameters
+  - Now updates only: phi_start_deg, osc_range_deg, phi_steps, mosaic_spread_deg, mosaic_domains, mosaic_seed, spindle_axis
+- **Files Modified**:
+  - `src/nanobrag_torch/simulator.py`: Lines 49-67 - Selective parameter update logic
+- **Test Results**:
+  - test_rotation_compatibility: NOW PASSES - produces valid diffraction patterns
+  - test_simulator_phi_rotation: NOW PASSES - phi rotation changes pattern as expected
+- **Impact**: Simulator crystal_config parameter now works correctly for rotation studies
+
+#### Performance Test Fix - COMPLETED ✅
+- **Issue**: test_performance_triclinic was failing with 371% overhead compared to simple cubic
+- **Root Cause**: Simple cubic crystal in performance comparison was created with default config (default_F=0)
+  - Without structure factors, simple cubic ran much faster (no diffraction to calculate)
+  - Made performance comparison invalid
+- **Solution Implemented**: Added proper configuration to simple cubic crystal
+  - Added CrystalConfig with cell parameters, N_cells=[5,5,5], and default_F=100.0
+  - Also added beam_config to simple_simulator for consistency
+- **Files Modified**:
+  - `tests/test_suite.py`: Lines 914-932 - Fixed simple cubic configuration
+- **Test Results**:
+  - Triclinic overhead reduced from 371% to 3% (well within 75% threshold)
+  - test_performance_triclinic: NOW PASSES
+- **Impact**: All tests in test_suite.py now passing (22 passed, 7 skipped, 1 xfailed)
+
 #### test_suite.py Core Simulation Tests Fix - COMPLETED ✅
 - **Issue**: Four core tests in test_suite.py were producing empty images (all zeros):
   - test_cubic_tilted_detector_reproduction: PyTorch max=0.00, Golden max=152
@@ -32,9 +65,9 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 - **Test Results**:
   - test_cubic_tilted_detector_reproduction: PASSES with correlation 0.998636
   - test_simple_cubic_mosaic_reproduction: PASSES with correlation 0.958977
-  - test_rotation_compatibility: Still produces zeros (Simulator bug with crystal_config parameter)
-  - test_simulator_phi_rotation: Still produces zeros (Simulator bug with crystal_config parameter)
-- **Impact**: Fixed 2 critical core tests; identified Simulator implementation bug affecting rotation parameters
+  - test_rotation_compatibility: NOW PASSES after Simulator fix
+  - test_simulator_phi_rotation: NOW PASSES after Simulator fix
+- **Impact**: All 4 core tests now passing; critical simulation functionality restored
 
 ### FIXED (2025-09-25 - Current Session)
 

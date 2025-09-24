@@ -46,10 +46,25 @@ class Simulator:
         """
         self.crystal = crystal
         self.detector = detector
-        # If crystal_config is provided, use it; otherwise use the crystal's own config
+        # If crystal_config is provided, update only the rotation-related parameters
+        # This preserves essential parameters like cell dimensions and default_F
         if crystal_config is not None:
-            # Override the crystal's config with the provided one
-            self.crystal.config = crystal_config
+            # Update only the rotation-related fields that are explicitly set
+            # This preserves the crystal's essential parameters while allowing rotation updates
+            if hasattr(crystal_config, 'phi_start_deg'):
+                self.crystal.config.phi_start_deg = crystal_config.phi_start_deg
+            if hasattr(crystal_config, 'osc_range_deg'):
+                self.crystal.config.osc_range_deg = crystal_config.osc_range_deg
+            if hasattr(crystal_config, 'phi_steps'):
+                self.crystal.config.phi_steps = crystal_config.phi_steps
+            if hasattr(crystal_config, 'mosaic_spread_deg'):
+                self.crystal.config.mosaic_spread_deg = crystal_config.mosaic_spread_deg
+            if hasattr(crystal_config, 'mosaic_domains'):
+                self.crystal.config.mosaic_domains = crystal_config.mosaic_domains
+            if hasattr(crystal_config, 'mosaic_seed'):
+                self.crystal.config.mosaic_seed = crystal_config.mosaic_seed
+            if hasattr(crystal_config, 'spindle_axis'):
+                self.crystal.config.spindle_axis = crystal_config.spindle_axis
         self.beam_config = beam_config if beam_config is not None else BeamConfig()
         # Normalize device to ensure consistency
         if device is not None:

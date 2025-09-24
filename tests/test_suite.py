@@ -911,10 +911,21 @@ class TestTier1TranslationCorrectness:
         )
 
         # Compare with simple cubic (run simple cubic for comparison)
-        simple_crystal = Crystal(device=device, dtype=dtype)
+        simple_config = CrystalConfig(
+            cell_a=100.0,
+            cell_b=100.0,
+            cell_c=100.0,
+            cell_alpha=90.0,
+            cell_beta=90.0,
+            cell_gamma=90.0,
+            N_cells=[5, 5, 5],
+            default_F=100.0  # Need non-zero structure factor
+        )
+        simple_crystal = Crystal(config=simple_config, device=device, dtype=dtype)
         simple_simulator = Simulator(
             simple_crystal,
             detector,
+            beam_config=beam_config,  # Also need beam config
             crystal_config=rot_config,
             device=device,
             dtype=dtype,
