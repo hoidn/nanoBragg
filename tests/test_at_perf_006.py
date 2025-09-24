@@ -246,7 +246,7 @@ def test_oversample_performance_scaling(oversample):
     # Store result for comparison
     # With loops: O(oversample^2) scaling
     # With vectorization: O(1) or O(oversample) scaling
-    return elapsed, oversample
+    # Note: elapsed time is measured but not asserted here
 
 
 def test_detector_thickness_vectorization():

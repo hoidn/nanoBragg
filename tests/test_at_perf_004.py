@@ -100,10 +100,10 @@ class TestATPERF004HotPathOptimization:
             f"sincg throughput {throughput:.1f} M/s below 10 M/s threshold"
 
         # Verify correctness
-        # sincg(0) should be 1.0
-        N_test = torch.tensor(5)
-        assert torch.allclose(sincg(torch.tensor([0.0]), N_test), torch.tensor([1.0])), \
-            "sincg(0) != 1.0"
+        # sincg(0, N) should return N
+        N_test = torch.tensor(5.0)  # Use float for consistency
+        assert torch.allclose(sincg(torch.tensor([0.0]), N_test), torch.tensor([N_test.item()])), \
+            f"sincg(0, {N_test.item()}) != {N_test.item()}"
 
         print("✅ sincg throughput test PASSED")
 
@@ -210,10 +210,11 @@ class TestATPERF004HotPathOptimization:
         # This is hard to enforce in Python, so we'll be lenient
         max_allowed_percent = 30.0  # More realistic for Python
 
-        for func, percent in sorted_funcs[:10]:
-            if 'simulate' not in func and 'main' not in func:
+        for func_name, stats in sorted_funcs[:10]:
+            if 'simulate' not in func_name and 'main' not in func_name:
+                percent = stats['cumulative_time'] / total_time * 100 if total_time > 0 else 0
                 if percent > max_allowed_percent:
-                    print(f"\n⚠️  Function {func} takes {percent:.1f}% "
+                    print(f"\n⚠️  Function {func_name} takes {percent:.1f}% "
                           f"(threshold: {max_allowed_percent}%)")
 
         print("\n✅ Hot path profiling completed")
