@@ -66,13 +66,13 @@ class TestATPERF002ParallelExecution:
         )
 
         # Warm-up
-        _ = simulator.run()
+        _ = simulator.run(oversample=1)  # Explicitly set oversample=1 for fair comparison
 
         # Timed runs
         times = []
         for _ in range(3):
             start = time.perf_counter()
-            _ = simulator.run()
+            _ = simulator.run(oversample=1)  # Explicitly set oversample=1 for fair comparison
             end = time.perf_counter()
             times.append(end - start)
 
@@ -98,6 +98,7 @@ class TestATPERF002ParallelExecution:
             '-distance', '100',
             '-pixel', '0.1',
             '-detpixels', '1024',
+            '-oversample', '1',  # Explicitly set oversample=1 for fair comparison
             '-floatfile', '/tmp/test_perf_threads.bin'
         ]
 
@@ -222,7 +223,7 @@ class TestATPERF002ParallelExecution:
         )
 
         # Warm-up
-        _ = simulator.run()
+        _ = simulator.run(oversample=1)  # Explicitly set oversample=1 for fair comparison
         if torch.cuda.is_available():
             torch.cuda.synchronize()
 
@@ -230,7 +231,7 @@ class TestATPERF002ParallelExecution:
         gpu_times = []
         for _ in range(3):
             start = time.perf_counter()
-            _ = simulator.run()
+            _ = simulator.run(oversample=1)  # Explicitly set oversample=1 for fair comparison
             if torch.cuda.is_available():
                 torch.cuda.synchronize()
             end = time.perf_counter()
