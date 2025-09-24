@@ -3,7 +3,7 @@
 Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ### TODO
-- [ ] Finalize AT-PERF-006 instrumentation so CUDA large-tensor residency is automatically validated when GPUs are present.
+- [ ] Finalize AT-PERF-008 instrumentation so CUDA large-tensor residency is automatically validated when GPUs are present.
 
 ### Completed HKL File Support ✅ (2025-09-19)
 The following HKL-related acceptance tests have been implemented:

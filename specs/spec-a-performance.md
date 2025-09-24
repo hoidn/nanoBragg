@@ -69,14 +69,6 @@ This document defines performance-related acceptance tests that should have been
   - Verify correlation between compiled and uncompiled outputs ≥ 0.9999
   - Verify (total_time_10_runs_compiled) < (total_time_10_runs_baseline)
 
-### AT-PERF-008 CUDA Large-Tensor Residency
-- **Setup**: On hardware where `torch.cuda.is_available()` returns True, run the reference `Simulator.run()` workflow for a detector ≥ 512×512 pixels (≥ 262,144 elements) with `device="auto"` so the implementation chooses CUDA.
-- **Expectation**: Every tensor created or consumed inside the main simulation loop whose `numel()` ≥ 65,536 SHALL reside on a CUDA device for all arithmetic, reduction, and linear-algebra operations. Host copies are permitted only at explicit I/O boundaries (e.g., final `.cpu()` before file writes).
-- **Pass Criteria**:
-  - Instrument execution with `torch.profiler` or an autograd `record_function` hook that logs `tensor.device` per op; assert no logged large-tensor op executes on CPU when CUDA is present.
-  - Any attempt to place such tensors on CPU SHALL raise or be treated as a failure.
-  - Test SHALL skip when CUDA is unavailable (reported as SKIPPED, not PASS).
-
 ## Rationale
 
 These performance tests would have caught the issue where the PyTorch implementation is slower than C despite using vectorized operations. The root cause - lack of parallel pixel processing in PyTorch while C uses OpenMP - would have been identified by AT-PERF-002.
@@ -159,6 +151,14 @@ To pass these tests, the PyTorch implementation would need:
 - Each configuration SHALL be measured 3 times; report median time
 - Results SHALL include metadata: platform, CPU model, GPU model (if any), software versions
 - Visualization script SHALL generate comparison plots from JSON output
+
+### AT-PERF-008 CUDA Large-Tensor Residency
+- **Setup**: On hardware where `torch.cuda.is_available()` returns True, run the reference `Simulator.run()` workflow for a detector ≥ 512×512 pixels (≥ 262,144 elements) with `device="auto"` so the implementation chooses CUDA.
+- **Expectation**: Every tensor created or consumed inside the main simulation loop whose `numel()` ≥ 65,536 SHALL reside on a CUDA device for all arithmetic, reduction, and linear-algebra operations. Host copies are permitted only at explicit I/O boundaries (e.g., final `.cpu()` before file writes).
+- **Pass Criteria**:
+  - Instrument execution with `torch.profiler` or an autograd `record_function` hook that logs `tensor.device` per op; assert no logged large-tensor op executes on CPU when CUDA is present.
+  - Any attempt to place such tensors on CPU SHALL raise or be treated as a failure.
+  - Test SHALL skip when CUDA is unavailable (reported as SKIPPED, not PASS).
 
 ### GPU Performance Justification
 
