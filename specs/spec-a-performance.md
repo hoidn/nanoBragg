@@ -108,6 +108,50 @@ To pass these tests, the PyTorch implementation would need:
   - Measure throughput improvement: vectorized_version SHALL be ≥5× faster than loop version for oversample=3
   - Verify all intermediate tensors have expected shapes with all dimensions present simultaneously
 
+### AT-PERF-007 Comprehensive Performance Benchmarking Suite
+
+**Setup**: Create a systematic benchmark suite testing multiple parameter combinations:
+- Detector sizes: 128×128, 256×256, 512×512, 1024×1024, 2048×2048
+- Crystal cells: simple cubic (100,100,100,90,90,90) and triclinic (70,80,90,85,95,105)
+- Crystal sizes (-N): 1, 5, 10, 20
+- Oversampling: 1, 2, 4
+- Wavelengths: 0.5, 1.0, 1.5, 6.2 Å
+- Default structure factor: 100
+- Distance: 100 mm
+- Enable performance features: detector absorption, polarization, mosaic spread
+
+**Expectation**: The implementation SHALL provide comprehensive benchmarking capabilities:
+- Execute benchmarks for C-CPU (with OMP_NUM_THREADS={1,4,8}), PyTorch-CPU, and PyTorch-CUDA (if available)
+- Record performance metrics for each configuration:
+  - Wall-clock time (seconds)
+  - Throughput (pixels/second)
+  - Memory usage (peak RSS in MB)
+  - For PyTorch: JIT compilation time (first run vs steady-state)
+- Save results to structured output format (JSON or CSV) with columns:
+  - implementation: "C-CPU-1", "C-CPU-4", "C-CPU-8", "PyTorch-CPU", "PyTorch-CUDA"
+  - detector_size: pixel count
+  - crystal_type: "cubic" or "triclinic"
+  - crystal_N: integer
+  - oversample: integer
+  - wavelength_A: float
+  - time_seconds: float
+  - throughput_pixels_per_sec: float
+  - memory_peak_MB: float
+  - speedup_vs_C1: ratio relative to single-threaded C
+- Performance requirements:
+  - PyTorch-CPU SHALL achieve ≥0.5× throughput of C-CPU-8 (8-thread parallel C)
+  - PyTorch-CUDA SHALL achieve ≥5× throughput of C-CPU-8 when GPU is available
+  - Memory usage SHALL scale sub-quadratically: memory(2N×2N) ≤ 4.5 × memory(N×N)
+
+**Pass Criteria**:
+- Benchmark script SHALL be executable with: `python benchmark_performance.py --output-dir results/`
+- Output file SHALL be named: `benchmark_YYYYMMDD_HHMMSS.json` with timestamp
+- Script SHALL automatically detect CUDA availability and skip GPU tests if unavailable
+- Script SHALL warm up PyTorch JIT with 2 runs before measuring
+- Each configuration SHALL be measured 3 times; report median time
+- Results SHALL include metadata: platform, CPU model, GPU model (if any), software versions
+- Visualization script SHALL generate comparison plots from JSON output
+
 ### GPU Performance Justification
 
 The 10x GPU speedup requirement is justified by:
