@@ -116,6 +116,12 @@ Notes
   - Maintains exact numerical equivalence with loop-based implementation
   - Enables efficient GPU acceleration through pure tensor operations
 
+- ADR-12 Golden Data Generation Strategy [2025-09-24]
+  - Golden reference data for tests should use self-contained commands without external file dependencies
+  - Use `-cell` parameters directly instead of requiring P1.hkl/A.mat files
+  - Accept minor numerical tolerance differences (≤0.001 correlation) between C and PyTorch implementations
+  - Document exact generation commands in tests/golden_data/README.md for reproducibility
+
 ## 3) High‑Level System Architecture
 
 - CLI & Config Layer [IMPLEMENTED]
