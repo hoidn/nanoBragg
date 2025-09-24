@@ -431,10 +431,22 @@ class TestTier1TranslationCorrectness:
 
         os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-        # Create crystal with same parameters as simple_cubic
+        # Create crystal with same parameters as golden data generation
         device = torch.device("cpu")
         dtype = torch.float64
-        crystal = Crystal(device=device, dtype=dtype)
+
+        # Crystal config matching golden data: 100x100x100 cubic, N=5, default_F=100
+        from nanobrag_torch.config import BeamConfig
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            N_cells=(5, 5, 5),
+            default_F=100.0,
+            phi_start_deg=0.0,
+            osc_range_deg=0.0,
+            mosaic_spread_deg=0.0
+        )
+        crystal = Crystal(config=crystal_config, device=device, dtype=dtype)
 
         # Create detector with tilted configuration
         from nanobrag_torch.config import (
@@ -460,16 +472,14 @@ class TestTier1TranslationCorrectness:
         )
         detector = Detector(config=detector_config, device=device, dtype=dtype)
 
-        # Create crystal config (no rotation/mosaicity)
-        crystal_config = CrystalConfig(
-            phi_start_deg=torch.tensor(0.0, device=device, dtype=dtype),
-            osc_range_deg=torch.tensor(0.0, device=device, dtype=dtype),
-            mosaic_spread_deg=torch.tensor(0.0, device=device, dtype=dtype),
+        # Create beam config matching golden data (λ=6.2 Å)
+        beam_config = BeamConfig(
+            wavelength_A=6.2
         )
 
-        # Create simulator
+        # Create simulator with correct beam config
         simulator = Simulator(
-            crystal, detector, crystal_config=crystal_config, device=device, dtype=dtype
+            crystal, detector, beam_config=beam_config, device=device, dtype=dtype
         )
 
         # Run PyTorch simulation
@@ -562,17 +572,19 @@ class TestTier1TranslationCorrectness:
             mosaic_domains=1,
         )
 
+        # Create beam config matching golden data (1.0 Angstrom)
+        from nanobrag_torch.config import BeamConfig
+        beam_config = BeamConfig(wavelength_A=1.0)
+
         # Create simulator with triclinic crystal
         simulator = Simulator(
             crystal,
             detector,
+            beam_config=beam_config,
             crystal_config=crystal_rot_config,
             device=device,
             dtype=dtype,
         )
-
-        # Override wavelength to match golden data (1.0 Angstrom)
-        simulator.wavelength = 1.0
 
         # Run PyTorch simulation
         pytorch_image = simulator.run()
@@ -869,10 +881,13 @@ class TestTier1TranslationCorrectness:
             mosaic_spread_deg=torch.tensor(0.0, device=device, dtype=dtype),
         )
 
+        # Set beam config with wavelength
+        from nanobrag_torch.config import BeamConfig
+        beam_config = BeamConfig(wavelength_A=1.0)
+
         simulator = Simulator(
-            crystal, detector, crystal_config=rot_config, device=device, dtype=dtype
+            crystal, detector, beam_config=beam_config, crystal_config=rot_config, device=device, dtype=dtype
         )
-        simulator.wavelength = 1.0
 
         # Warm up with 2 runs
         for _ in range(2):
@@ -1195,7 +1210,7 @@ class TestTier1TranslationCorrectness:
 
         print("\n=== Testing Rotation Compatibility ===")
 
-        # Create triclinic crystal
+        # Create triclinic crystal with proper parameters
         config = CrystalConfig(
             cell_a=70.0,
             cell_b=80.0,
@@ -1204,6 +1219,7 @@ class TestTier1TranslationCorrectness:
             cell_beta=85.0,
             cell_gamma=95.0,
             N_cells=[3, 3, 3],
+            default_F=100.0,  # Add non-zero structure factor
         )
 
         crystal = Crystal(config=config, device=device, dtype=dtype)
@@ -1222,10 +1238,13 @@ class TestTier1TranslationCorrectness:
             mosaic_domains=10,
         )
 
+        # Create beam config with proper wavelength
+        from nanobrag_torch.config import BeamConfig
+        beam_config = BeamConfig(wavelength_A=1.0)
+
         simulator = Simulator(
-            crystal, detector, crystal_config=rot_config, device=device, dtype=dtype
+            crystal, detector, beam_config=beam_config, crystal_config=rot_config, device=device, dtype=dtype
         )
-        simulator.wavelength = 1.0
 
         # Run simulation
         image = simulator.run()
@@ -1249,11 +1268,11 @@ class TestTier1TranslationCorrectness:
         simulator_static = Simulator(
             crystal,
             detector,
+            beam_config=beam_config,  # Use same beam config
             crystal_config=rot_config_static,
             device=device,
             dtype=dtype,
         )
-        simulator_static.wavelength = 1.0
 
         image_static = simulator_static.run()
 
@@ -1277,11 +1296,22 @@ class TestTier1TranslationCorrectness:
 
         os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-        # Create crystal, detector, and simulator with mosaicity
+        # Create crystal with correct parameters matching golden data
         device = torch.device("cpu")
         dtype = torch.float64
 
-        crystal = Crystal(device=device, dtype=dtype)
+        # Crystal config matching golden data: 100x100x100 cubic, N=5, default_F=100
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            N_cells=(5, 5, 5),
+            default_F=100.0,
+            phi_start_deg=0.0,
+            osc_range_deg=0.0,
+            mosaic_spread_deg=1.0,  # Include mosaic spread from golden data
+            mosaic_domains=10  # Include mosaic domains from golden data
+        )
+        crystal = Crystal(config=crystal_config, device=device, dtype=dtype)
         
         # Configure detector to match actual golden mosaic data size (1000x1000 pixels)
         # The actual simple_cubic_mosaic.bin has 1,000,000 elements = 1000x1000 pixels  
@@ -1297,16 +1327,16 @@ class TestTier1TranslationCorrectness:
         )
         detector = Detector(config=detector_config, device=device, dtype=dtype)
 
-        # Configure with mosaicity parameters matching the golden data generation - explicitly wrap in tensors
-        # Golden data was generated with: -mosaic_spread 1.0 -mosaic_domains 10 -detsize 100
-        crystal_config = CrystalConfig(
-            phi_start_deg=torch.tensor(0.0, device=device, dtype=dtype),
-            osc_range_deg=torch.tensor(0.0, device=device, dtype=dtype),
-            mosaic_spread_deg=torch.tensor(1.0, device=device, dtype=dtype),
-            mosaic_domains=10,
+        # Create beam config matching golden data (λ=6.2 Å)
+        from nanobrag_torch.config import BeamConfig
+        beam_config = BeamConfig(
+            wavelength_A=6.2
         )
+
+        # Create simulator with correct beam config
+        # Note: mosaic parameters are already in the crystal config above
         simulator = Simulator(
-            crystal, detector, crystal_config=crystal_config, device=device, dtype=dtype
+            crystal, detector, beam_config=beam_config, device=device, dtype=dtype
         )
 
         # Run PyTorch simulation
@@ -1430,9 +1460,17 @@ class TestTier1TranslationCorrectness:
             cell_alpha=90.0,
             cell_beta=90.0,
             cell_gamma=90.0,
+            N_cells=(5, 5, 5),  # Add proper crystal size
+            default_F=100.0  # Add non-zero structure factor
         )
         crystal = Crystal(config=crystal_config, device=device, dtype=dtype)
         detector = Detector(device=device, dtype=dtype)
+
+        # Create beam config
+        from nanobrag_torch.config import BeamConfig
+        beam_config = BeamConfig(
+            wavelength_A=6.2  # Standard wavelength
+        )
 
         # Test with phi_start_deg=0 - explicitly wrap float values in tensors
         config_0 = CrystalConfig(
@@ -1442,7 +1480,7 @@ class TestTier1TranslationCorrectness:
             mosaic_spread_deg=torch.tensor(0.0, device=device, dtype=dtype),
         )
         simulator_0 = Simulator(
-            crystal, detector, crystal_config=config_0, device=device, dtype=dtype
+            crystal, detector, beam_config=beam_config, crystal_config=config_0, device=device, dtype=dtype
         )
         image_0 = simulator_0.run()
 
@@ -1454,7 +1492,7 @@ class TestTier1TranslationCorrectness:
             mosaic_spread_deg=torch.tensor(0.0, device=device, dtype=dtype),
         )
         simulator_30 = Simulator(
-            crystal, detector, crystal_config=config_30, device=device, dtype=dtype
+            crystal, detector, beam_config=beam_config, crystal_config=config_30, device=device, dtype=dtype
         )
         image_30 = simulator_30.run()
 
