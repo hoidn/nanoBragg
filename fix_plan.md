@@ -154,6 +154,17 @@ self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2
 - **AT-PARALLEL-012 to 014**: Pattern correlation tests
 - **AT-PARALLEL-015 to 020**: Edge cases and integration
 
+### Subpixel Handling and Aliasing Issue (2025-09-23)
+- Added AT-PARALLEL-029 to specs/spec-a-parallel.md for comprehensive subpixel sampling validation
+- IMPLEMENTED: AT-PARALLEL-029 test suite with FFT-based aliasing detection and FWHM metrics
+- FIXED: Critical oversample normalization bug - was dividing by oversample^2 twice
+  - Fixed in simulator.py line 406: now correctly includes oversample^2 in steps calculation
+  - Fixed in simulator.py line 510: removed redundant division by oversample^2 in subpixel loop
+  - Total intensity now conserved across oversample values (verified with test_oversample_basic.py)
+- TODO: Debug why aliasing is not reducing with higher oversample values despite correct normalization
+  - Subpixel positions may not be calculated correctly or all sampling same position
+  - Issue noted in issues/subpixel.md still partially unresolved
+
 ## Next Steps
 
 **🟢 FIXED: Performance Test API Compatibility (2025-09-23)**
@@ -289,3 +300,7 @@ All critical acceptance tests have been implemented and are passing! The test su
 - All HKL file tests implemented ✅
 - MOSFLM matrix file support implemented ✅
 - All functional tests passing when not requiring C binary comparison ✅
+
+## TODO: Spec Updates for Vectorization Issue
+
+- **Added AT-PERF-006 (Tensor Vectorization Completeness)** to specs/spec-a-performance.md - New test requires implementation to verify full tensor vectorization without Python loops for sub-pixel sampling, detector thickness, and beam source dimensions. Test must be integrated into CI pipeline.

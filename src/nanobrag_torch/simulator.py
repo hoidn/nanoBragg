@@ -399,11 +399,11 @@ class Simulator:
 
         # Calculate normalization factor (steps)
         # Per spec AT-SAM-001: "Final per-pixel scale SHALL divide by steps"
-        # where steps = sources * phi_steps * mosaic_domains * oversample steps
-        # For now: sources=1, oversample=1 (not yet implemented)
+        # where steps = sources * phi_steps * mosaic_domains * oversample^2
+        # For now: sources=1 (multi-source not yet implemented)
         phi_steps = self.crystal_config.phi_steps
         mosaic_domains = self.crystal_config.mosaic_domains
-        steps = phi_steps * mosaic_domains  # * sources * oversample (future)
+        steps = phi_steps * mosaic_domains * oversample * oversample  # Include oversample^2
 
         # Normalize by the number of steps
         normalized_intensity = integrated_intensity / steps
@@ -506,7 +506,8 @@ class Simulator:
                         )
 
                     # Compute the subpixel intensity contribution
-                    subpixel_intensity = normalized_intensity / (oversample * oversample)
+                    # Note: Don't divide by oversample^2 here - it's handled in the steps normalization
+                    subpixel_intensity = normalized_intensity
 
                     # Apply factors based on oversample flags
                     if oversample_omega:

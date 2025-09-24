@@ -90,6 +90,24 @@ To pass these tests, the PyTorch implementation would need:
 5. Proper thread pool configuration for BLAS operations
 6. GPU-optimized kernels achieving ≥10x speedup over parallel C implementation
 
+### AT-PERF-006 Tensor Vectorization Completeness
+
+**Setup**: Cell 100,100,100,90,90,90; -lambda 6.2; -N 5; -default_F 100; detector 256×256; -distance 100; -oversample 2; -detector_thick 200; -detector_thicksteps 3; -hdiv 0.1; -vdiv 0.1; -hdivstep 0.02; -vdivstep 0.02; -dispersion 0.05; -dispsteps 3.
+
+**Expectation**: The PyTorch implementation SHALL use fully vectorized tensor operations without Python-level loops for all performance-critical dimensions:
+  - Sub-pixel sampling: oversample×oversample grid SHALL be computed as a single tensor operation with shape (S, F, oversample, oversample, ...)
+  - Detector thickness: thicksteps layers SHALL be computed as a tensor dimension with shape (..., thicksteps)
+  - Beam sources: divergence and dispersion points SHALL form a sources tensor dimension with shape (..., n_sources)
+  - No Python `for` loops SHALL exist in the core computation path for these dimensions
+  - Profile SHALL show >95% of computation time in tensor operations, <5% in Python loop overhead
+
+**Pass Criteria**:
+  - Inspect implementation code to verify no `for i_s in range(oversample)` or similar loops
+  - Profile execution with Python profiler (cProfile or py-spy)
+  - Verify tensor operation time / total_time ≥ 0.95
+  - Measure throughput improvement: vectorized_version SHALL be ≥5× faster than loop version for oversample=3
+  - Verify all intermediate tensors have expected shapes with all dimensions present simultaneously
+
 ### GPU Performance Justification
 
 The 10x GPU speedup requirement is justified by:

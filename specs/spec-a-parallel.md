@@ -136,6 +136,20 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
   - Pass Criteria: throughput_pytorch ≥ 0.5 × throughput_c for CPU execution, AND throughput_pytorch_gpu ≥ 10.0 × throughput_c when CUDA is available. Throughput = (detector_pixels / execution_time).
   - Rationale: GPU acceleration should provide order-of-magnitude speedup given: (1) embarrassingly parallel pixel computations, (2) vectorized tensor operations, (3) thousands of CUDA cores vs ~8-16 CPU threads, (4) optimized BLAS/cuBLAS kernels. A 10x speedup is conservative for this workload.
 
+  - AT-PARALLEL-029 Subpixel Sampling and Aliasing Mitigation
+  - Setup: Cubic cell 100,100,100,90,90,90; -N 5; -default_F 100; -lambda 1.0; detector 256×256, -pixel 0.1, -distance 50; MOSFLM convention; -phi 0 -osc 0; -mosaic 0; divergence=0; dispersion=0.
+  - Procedure: Run both C and PyTorch with oversample values ∈ {1, 2, 4, 8}. For each oversample value:
+    1. Generate diffraction patterns and compute 2D FFT power spectra
+    2. Measure high-frequency content above Nyquist/2 (frequencies > 64 cycles/image)
+    3. Detect and count Bragg peaks using local maxima detection (3×3 window, >99th percentile)
+    4. Compute peak sharpness metric: average FWHM of top 10 brightest peaks
+  - Expectation:
+    - For oversample=1: C and PyTorch SHALL show equivalent aliasing artifacts (correlation of FFT spectra ≥ 0.95)
+    - For oversample≥2: High-frequency aliasing content SHALL decrease by ≥50% compared to oversample=1
+    - For oversample≥4: Peak FWHM SHALL stabilize within 5% between consecutive oversample doublings
+    - Peak positions SHALL remain consistent (≤0.5 pixel drift) across all oversample values
+    - C vs PyTorch correlation SHALL be ≥0.98 for matching oversample values
+
 Quality Bar Checklist (Informative)
 
 - All major formulas and conversions are explicit and match the implementation.
