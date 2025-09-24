@@ -116,7 +116,7 @@ class Simulator:
                 self._compute_physics_for_position
             )
 
-    def _compute_physics_for_position(self, pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star):
+    def _compute_physics_for_position(self, pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star, incident_beam_direction=None, wavelength=None):
         """Compute physics (Miller indices, structure factors, intensity) for given positions.
 
         This is the core physics calculation that must be done per-subpixel for proper
@@ -127,10 +127,18 @@ class Simulator:
             pixel_coords_angstroms: Pixel/subpixel coordinates in Angstroms (S, F, 3)
             rot_a, rot_b, rot_c: Rotated real-space lattice vectors (N_phi, N_mos, 3)
             rot_a_star, rot_b_star, rot_c_star: Rotated reciprocal vectors (N_phi, N_mos, 3)
+            incident_beam_direction: Optional incident beam direction (default: self.incident_beam_direction)
+            wavelength: Optional wavelength in Angstroms (default: self.wavelength)
 
         Returns:
             intensity: Computed intensity |F|^2 integrated over phi and mosaic (S, F)
         """
+        # Use provided values or defaults
+        if incident_beam_direction is None:
+            incident_beam_direction = self.incident_beam_direction
+        if wavelength is None:
+            wavelength = self.wavelength
+
         # Calculate scattering vectors
         pixel_squared_sum = torch.sum(
             pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True
@@ -144,11 +152,11 @@ class Simulator:
 
         # Incident beam unit vector - ensure it's on the same device as diffracted beam
         # Move to device within the compiled function to avoid torch.compile device issues
-        incident_beam_direction = self.incident_beam_direction.to(diffracted_beam_unit.device)
+        incident_beam_direction = incident_beam_direction.to(diffracted_beam_unit.device)
         incident_beam_unit = incident_beam_direction.expand_as(diffracted_beam_unit)
 
         # Scattering vector using crystallographic convention
-        scattering_vector = (diffracted_beam_unit - incident_beam_unit) / self.wavelength
+        scattering_vector = (diffracted_beam_unit - incident_beam_unit) / wavelength
 
         # Apply dmin culling if specified
         dmin_mask = None
@@ -368,13 +376,26 @@ class Simulator:
             self._rot_b_star = rot_b_star
             self._rot_c_star = rot_c_star
 
+        # Determine number of sources
+        if (self.beam_config.source_directions is not None and
+            len(self.beam_config.source_directions) > 0):
+            n_sources = len(self.beam_config.source_directions)
+            source_directions = self.beam_config.source_directions
+            source_wavelengths = self.beam_config.source_wavelengths  # in meters
+            # Convert wavelengths to Angstroms for computation
+            source_wavelengths_A = source_wavelengths * 1e10
+        else:
+            # No explicit sources, use single beam configuration
+            n_sources = 1
+            source_directions = None
+            source_wavelengths_A = None
+
         # Calculate normalization factor (steps)
         # Per spec AT-SAM-001: "Final per-pixel scale SHALL divide by steps"
         # where steps = sources * phi_steps * mosaic_domains * oversample^2
-        # For now: sources=1 (multi-source not yet implemented)
         phi_steps = self.crystal.config.phi_steps
         mosaic_domains = self.crystal.config.mosaic_domains
-        steps = phi_steps * mosaic_domains * oversample * oversample  # Include oversample^2
+        steps = n_sources * phi_steps * mosaic_domains * oversample * oversample  # Include sources and oversample^2
 
         # Apply physical scaling factors (from nanoBragg.c ~line 3050)
         # Solid angle correction, converting all units to meters for calculation
@@ -430,13 +451,34 @@ class Simulator:
             batch_shape = subpixel_coords_ang_all.shape[:-1]
             coords_reshaped = subpixel_coords_ang_all.reshape(-1, 3)
 
-            # Compute physics for all subpixels at once
-            physics_intensity_flat = self._compute_physics_for_position(
-                coords_reshaped, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star
-            )
+            # Compute physics for all subpixels and sources
+            if n_sources > 1:
+                # Multi-source case: loop over sources and sum contributions
+                subpixel_physics_intensity_all = torch.zeros(batch_shape, device=self.device, dtype=self.dtype)
+                for source_idx in range(n_sources):
+                    # Get source-specific parameters
+                    # Note: source_directions point FROM sample TO source
+                    # Incident beam direction should be FROM source TO sample (negated)
+                    incident_dir = -source_directions[source_idx]
+                    wavelength_A = source_wavelengths_A[source_idx]
 
-            # Reshape back to (S, F, oversample*oversample)
-            subpixel_physics_intensity_all = physics_intensity_flat.reshape(batch_shape)
+                    # Compute physics for this source
+                    physics_intensity_flat = self._compute_physics_for_position(
+                        coords_reshaped, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star,
+                        incident_beam_direction=incident_dir,
+                        wavelength=wavelength_A
+                    )
+
+                    # Add contribution from this source
+                    subpixel_physics_intensity_all += physics_intensity_flat.reshape(batch_shape)
+            else:
+                # Single source case: use default beam parameters
+                physics_intensity_flat = self._compute_physics_for_position(
+                    coords_reshaped, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star
+                )
+
+                # Reshape back to (S, F, oversample*oversample)
+                subpixel_physics_intensity_all = physics_intensity_flat.reshape(batch_shape)
 
             # Normalize by the total number of steps
             subpixel_physics_intensity_all = subpixel_physics_intensity_all / steps
@@ -517,10 +559,31 @@ class Simulator:
             # No subpixel sampling - compute physics once for pixel centers
             pixel_coords_angstroms = pixel_coords_meters * 1e10
 
-            # Compute physics for pixel centers
-            intensity = self._compute_physics_for_position(
-                pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star
-            )
+            # Compute physics for pixel centers with multiple sources if available
+            if n_sources > 1:
+                # Multi-source case: loop over sources and sum contributions
+                intensity = torch.zeros_like(pixel_coords_angstroms[..., 0])  # Shape: (S, F)
+                for source_idx in range(n_sources):
+                    # Get source-specific parameters
+                    # Note: source_directions point FROM sample TO source
+                    # Incident beam direction should be FROM source TO sample (negated)
+                    incident_dir = -source_directions[source_idx]
+                    wavelength_A = source_wavelengths_A[source_idx]
+
+                    # Compute physics for this source
+                    source_intensity = self._compute_physics_for_position(
+                        pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star,
+                        incident_beam_direction=incident_dir,
+                        wavelength=wavelength_A
+                    )
+
+                    # Add contribution from this source
+                    intensity += source_intensity
+            else:
+                # Single source case: use default beam parameters
+                intensity = self._compute_physics_for_position(
+                    pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star
+                )
 
             # Normalize by steps
             normalized_intensity = intensity / steps
