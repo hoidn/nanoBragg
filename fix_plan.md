@@ -6,6 +6,11 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 (All performance test issues resolved)
 
 ### Recent Fixes (2025-09-24 - Current Session)
+- **AT-PARALLEL-012 Golden Reference Generation**: Generated missing cubic_tilted_detector golden data
+  - Built golden_suite_generator/nanoBragg C binary with tracing support
+  - Generated tests/golden_data/cubic_tilted_detector/image.bin (4.2MB)
+  - Test now passes: cubic_tilted_detector correlation test succeeds
+  - Canonical command documented in regenerate_golden.sh
 - **AT-PERF-003 Memory Bandwidth Test Fix**: Fixed incorrect bandwidth calculation and relaxed expectations
   - Fixed bandwidth calculation to use correct dtype size (float64 = 8 bytes, not float32 = 4 bytes)
   - Relaxed bandwidth scaling expectation from 80% to 50% to account for cache effects with large arrays
@@ -58,6 +63,7 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ### Test Suite Status (2025-09-24)
 - **Total tests**: 493 tests collected
+- **AT-PARALLEL-012 Update**: cubic_tilted_detector test now PASSES after golden data generation
 - **Core acceptance tests passing**:
   - AT-GEO: 30/30 tests passing ✅
   - AT-STR: 16/16 tests passing ✅
@@ -443,7 +449,8 @@ All critical acceptance tests have been implemented and are passing! The test su
 - **Documentation Enhancement**: Consider adding more user guides and examples for advanced features.
 
 # TODO high priority:
-Investigate discrepancy between pytorch and C at higher scattering angles; ensure high (> .995) correlation. wxample command to test: -default_F 100 -cell 100 100 100 90 90 90 - lambda 6.2 -N 5 -detpixels 256 -distance 100 -pixel 0.4
+- Investigate discrepancy between pytorch and C at higher scattering angles; ensure high (> .995) correlation. wxample command to test: -default_F 100 -cell 100 100 100 90 90 90 - lambda 6.2 -N 5 -detpixels 256 -distance 100 -pixel 0.4
+- Ensure consistent same default values / behavior when cli params are unspecified in pytorch vs. reference C
 ✅ INVESTIGATED (2025-09-24): Angle-dependent discrepancy between C and PyTorch
 - **Investigation Summary:**
   - Created debug script `scripts/debug_angle_discrepancy.py` to test angle dependencies
