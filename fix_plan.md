@@ -4,8 +4,24 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ### TODO
 # TODO remaining items:
-- Fix test_parallax_dependence in AT-ABS-001 (absorption not varying with parallax)
-- Investigate other tests potentially affected by default_F=0.0 issue
+(None - all current issues resolved)
+
+### Completed (2025-09-24 - Current Session)
+
+#### AT-ABS-001 Parallax Test Fix - COMPLETED ✅
+- **Issue**: test_parallax_dependence in AT-ABS-001 failing - center and corner pixels showing same absorption
+- **Root Cause**: Test geometry (100mm distance, 2.1mm detector) produced insufficient parallax variation (0.025%)
+- **Analysis**:
+  - With standard test geometry, parallax values ranged from 0.999991 to 1.0
+  - Variation in absorption was below test tolerance of 1%
+  - Absorption implementation was actually working correctly
+- **Solution Implemented**:
+  - Updated test to use more extreme geometry: 50mm distance, 21mm detector (1mm pixels)
+  - This produces ~12% variation in intensity, well above 1% test tolerance
+- **Files Modified**:
+  - `tests/test_at_abs_001.py`: Changed detector configuration for test_parallax_dependence
+- **Test Results**: All 5 AT-ABS-001 tests now pass
+- **Verification**: Confirmed absorption varies correctly with parallax angle
 
 ### Completed (2025-09-24)
 

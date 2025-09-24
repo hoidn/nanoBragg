@@ -160,10 +160,13 @@ class TestAT_ABS_001:
 
     def test_parallax_dependence(self):
         """Test that absorption varies with parallax (off-axis vs on-axis pixels)."""
+        # Use more extreme geometry to get measurable parallax variation
+        # With 100mm distance and 2.1mm detector, variation is only ~0.025%
+        # With 50mm distance and 21mm detector, variation is ~12%
         detector_config = DetectorConfig(
-            distance_mm=100.0,
-            pixel_size_mm=0.1,
-            spixels=21, fpixels=21,  # Larger grid to see parallax effects
+            distance_mm=50.0,  # Closer distance for more parallax
+            pixel_size_mm=1.0,  # Larger pixels for bigger detector
+            spixels=21, fpixels=21,  # 21mm detector size
             detector_abs_um=500.0,
             detector_thick_um=100.0,
             detector_thicksteps=3,
