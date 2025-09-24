@@ -51,7 +51,13 @@ class Simulator:
             # Override the crystal's config with the provided one
             self.crystal.config = crystal_config
         self.beam_config = beam_config if beam_config is not None else BeamConfig()
-        self.device = device if device is not None else torch.device("cpu")
+        # Normalize device to ensure consistency
+        if device is not None:
+            # Create a dummy tensor on the device to get the actual device with index
+            temp = torch.zeros(1, device=device)
+            self.device = temp.device
+        else:
+            self.device = torch.device("cpu")
         self.dtype = dtype
 
         # Set incident beam direction based on detector convention

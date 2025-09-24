@@ -5,6 +5,33 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 ### TODO
 None - All acceptance tests are now implemented! ✅
 
+### Recent Fixes (2025-09-24)
+- **Device Normalization Fix**: Fixed CUDA device comparison issue where `torch.device("cuda")` wasn't equal to `torch.device("cuda:0")`
+  - Updated `Detector`, `Crystal`, and `Simulator` classes to normalize device on initialization
+  - Fixed test in `test_detector_config.py` to use normalized device for comparison
+  - All 15 detector config tests now passing
+- **Simulator API Fix**: Fixed test in `test_at_str_003.py` that was using outdated `simulator.crystal_config` API
+  - Changed to use `simulator.crystal.config` to match current implementation
+  - All 16 AT-STR structure factor tests now passing
+
+### Test Suite Status (2025-09-24)
+- **Total tests**: 493 tests collected
+- **Core acceptance tests passing**:
+  - AT-GEO: 30/30 tests passing ✅
+  - AT-STR: 16/16 tests passing ✅
+  - AT-IO: 23/23 tests passing ✅
+  - AT-SAM: 7/7 tests passing ✅
+  - AT-ABS: 5/5 tests passing ✅
+  - AT-BKG: 3/3 tests passing ✅
+  - AT-FLU: 8/8 tests passing ✅
+  - AT-NOISE: 7/7 tests passing ✅
+  - AT-POL: 3/3 tests passing ✅
+  - AT-PRE: 10/10 tests passing ✅
+  - AT-ROI: 4/4 tests passing ✅
+  - AT-STA: 9/9 tests passing ✅
+- **Performance tests**: Some failures due to torch.compile and CUDA issues
+- **Parallel validation tests**: Not run (require C binary)
+
 ### Completed HKL File Support ✅ (2025-09-19)
 The following HKL-related acceptance tests have been implemented:
 

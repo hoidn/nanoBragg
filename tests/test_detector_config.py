@@ -219,7 +219,11 @@ class TestDetectorInitialization:
 
         detector = Detector(device=device, dtype=torch.float32)
 
-        assert detector.device == device
+        # Normalize device for comparison (cuda -> cuda:0)
+        temp = torch.zeros(1, device=device)
+        expected_device = temp.device
+
+        assert detector.device == expected_device
         assert detector.dtype == torch.float32
-        assert detector.fdet_vec.device == device
+        assert detector.fdet_vec.device == expected_device
         assert detector.fdet_vec.dtype == torch.float32

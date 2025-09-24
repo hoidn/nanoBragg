@@ -39,7 +39,13 @@ class Detector:
         self, config: Optional[DetectorConfig] = None, device=None, dtype=torch.float64
     ):
         """Initialize detector from configuration."""
-        self.device = device if device is not None else torch.device("cpu")
+        # Normalize device to ensure consistency
+        if device is not None:
+            # Create a dummy tensor on the device to get the actual device with index
+            temp = torch.zeros(1, device=device)
+            self.device = temp.device
+        else:
+            self.device = torch.device("cpu")
         self.dtype = dtype
 
         # Use provided config or create default
