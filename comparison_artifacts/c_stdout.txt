@@ -31,7 +31,7 @@ TRACE_C:term_beam=0.1 0 0
 TRACE_C:pix0_vector=0.1 0.0513 -0.0513
 DETECTOR_PIX0_VECTOR 0.1 0.0513 -0.0513
 XDS incident beam: 0 0 1
-auto-selected tricubic interpolation of structure factors
+auto-selected no interpolation
 TRACE: Computing cross products of reciprocal vectors:
 TRACE:   Input vectors for cross products:
 TRACE:     a_star = [0.01, 0, 0]
@@ -91,8 +91,8 @@ TRACE: Copying vectors to ap, bp, cp (phi=0 working copy):
 TRACE:   ap = [1e-08, 6.12323e-25, 6.12323e-25] |ap| = 1e-08 meters
 TRACE:   bp = [-0, 1e-08, 6.12323e-25] |bp| = 1e-08 meters
 TRACE:   cp = [0, -0, 1e-08] |cp| = 1e-08 meters
-crystal is 0.01 x 0.01 x 0.01 microns
-auto-selected 1-fold oversampling
+crystal is 0.05 x 0.05 x 0.05 microns
+auto-selected 2-fold oversampling
 approximate MW = 722657
 thick0 = 0 um
 phi0 = 0
@@ -102,10 +102,10 @@ lambda0 = 1e-10
 -10 -0 0   1 1e-10
   created a total of 1 mosaic domains
   0 initialized hkls (all others =100)
-  parallelpiped xtal: 1x1x1 cells
+  parallelpiped xtal: 5x5x5 cells
   wave=1e-10 meters +/- 0% in 1 steps
   Kahn polarization factor: 0.000000
-  incident fluence: 1.25932e+29 photons/m^2
+  incident fluence: 1e+22 photons/m^2
   distance=0.1 detsize=0.1024x0.1024  pixel=0.0001 meters (1024x1024 pixels)
   sensor is 0 m thick in 1 layers with mu= -1
   Xbeam=0.05125 Ybeam=0.05125
@@ -126,58 +126,147 @@ lambda0 = 1e-10
   1 sources
   1 mosaic domains over mosaic spread of 0 degrees
   1 phi steps from 0 to 0 degrees
-  1x1 pixel oversample steps
+  2x2 pixel oversample steps
 
   noise image paramters:
-  seed: -1758309357
+  seed: -1758737044
   water droplet size: 0 m
 0% done
 0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
 1% done
 2% done
-3% done
-4% done
-4% done
-5% done
-6% done
-7% done
-8% done
-9% done
-9% done
-14% done
-19% done
-24% done
-29% done
-34% done
-39% done
-44% done
-49% done
-54% done
-59% done
-64% done
-69% done
-74% done
-79% done
-84% done
-89% done
-90% done
-91% done
-92% done
-93% done
-94% done
-94% done
-95% done
-96% done
-97% done
-98% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
 
-solid angle subtended by detector = 0.83688 steradian ( 6.65968% sphere)
-writing /var/folders/8y/vnl75xb954j0wd09cm8zrrx40000gp/T/tmpxb2ieq23_c.bin as 1048576 4-byte floats
-max_I = 0.00999999  at 0.05125 0.05125
-mean= 0.00745986 rms= 0.00757703 rmsd= 0.00132734
-intfile_scale = 5.50001e+06
+solid angle subtended by detector = 0.836879 steradian ( 6.65967% sphere)
+writing /tmp/tmpxh4vfjwx_c.bin as 1048576 4-byte floats
+max_I = 1.00768e-05  at 0.053375 0.065475
+mean= 7.44992e-08 rms= 4.53326e-07 rmsd= 4.47162e-07
+intfile_scale = 5.4581e+09
 writing intimage.img as 2-byte integers
-pgm_scale = 37669.2
+pgm_scale = 1.11816e+08
 writing image.pgm as 1-byte integers
-7880 photons on noise image (0 overloads)
+0 photons on noise image (0 overloads)
 writing noiseimage.img as 2-byte integers

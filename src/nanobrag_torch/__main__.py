@@ -643,7 +643,7 @@ def main():
                 cell_alpha=config['cell_params'][3],
                 cell_beta=config['cell_params'][4],
                 cell_gamma=config['cell_params'][5],
-                N_cells=(config.get('Na', 5), config.get('Nb', 5), config.get('Nc', 5)),
+                N_cells=(config.get('Na', 1), config.get('Nb', 1), config.get('Nc', 1)),  # Match C defaults
                 phi_start_deg=config.get('phi_deg', 0.0),
                 osc_range_deg=config.get('osc_deg', 0.0),
                 phi_steps=config.get('phi_steps', 1),

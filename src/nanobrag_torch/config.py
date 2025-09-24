@@ -129,10 +129,10 @@ class CrystalConfig:
     mosaic_seed: Optional[int] = None
 
     # Crystal size (number of unit cells in each direction)
-    N_cells: Tuple[int, int, int] = (5, 5, 5)
+    N_cells: Tuple[int, int, int] = (1, 1, 1)  # Matches C default
 
     # Structure factor parameters
-    default_F: float = 100.0  # Default structure factor magnitude
+    default_F: float = 0.0  # Default structure factor magnitude (matches C default)
 
     # Crystal shape parameters
     shape: CrystalShape = CrystalShape.SQUARE  # Crystal shape model for F_latt calculation
@@ -427,7 +427,7 @@ class BeamConfig:
     """
 
     # Basic beam properties
-    wavelength_A: float = 6.2  # X-ray wavelength in Angstroms
+    wavelength_A: float = 1.0  # X-ray wavelength in Angstroms (matches C default)
 
     # Source geometry (simplified)
     N_source_points: int = 1  # Number of source points for beam divergence

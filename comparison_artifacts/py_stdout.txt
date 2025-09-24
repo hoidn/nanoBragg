@@ -4,10 +4,10 @@ Running simulation...
   Wavelength: 1.00 Å
 
 Statistics:
-  Max intensity: 1.406e+02 at pixel (644, 462)
-  Mean: 1.003e+00
-  RMS: 6.370e+00
-  RMSD: 6.290e+00
-Wrote float image to /var/folders/8y/vnl75xb954j0wd09cm8zrrx40000gp/T/tmpi8lkxbzy_py.bin
+  Max intensity: 1.116e-05 at pixel (644, 462)
+  Mean: 7.965e-08
+  RMS: 5.058e-07
+  RMSD: 4.995e-07
+Wrote float image to /tmp/tmpgi7vq5ak_py.bin
 
 Simulation complete.
