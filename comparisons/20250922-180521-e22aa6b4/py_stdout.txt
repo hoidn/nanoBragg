@@ -1,0 +1,8 @@
+Running simulation...
+Wrote float image to test_xds_output.bin
+
+Simulation complete:
+  Image shape: torch.Size([256, 256])
+  Max value: 3.560e+01
+  Min value: 2.551e-14
+  Mean value: 2.148e-01

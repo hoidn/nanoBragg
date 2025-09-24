@@ -1,0 +1,108 @@
+nanoBragg nanocrystal diffraction simulator - James Holton and Ken Frankel 5-17-17
+xds convention selected.
+pivoting detector around sample
+XDS incident beam: 0 0 1
+auto-selected no interpolation
+Unit Cell: 100 100 100 90 90 90
+Recp Cell: 0.01 0.01 0.01 90 90 90
+volume = 1e+06 A^3
+real-space cell vectors (Angstrom):
+     a           b           c         
+X: 100.00000000 -0.00000000  0.00000000
+Y:  0.00000000 100.00000000 -0.00000000
+Z:  0.00000000  0.00000000 100.00000000
+reciprocal-space cell vectors (Angstrom^-1):
+     a_star      b_star      c_star    
+X:  0.01000000 -0.00000000 -0.00000000
+Y:  0.00000000  0.01000000 -0.00000000
+Z:  0.00000000  0.00000000  0.01000000
+crystal is 0.03 x 0.03 x 0.03 microns
+auto-selected 1-fold oversampling
+approximate MW = 722657
+thick0 = 0 um
+phi0 = 0
+divergence deviation: 0 0
+lambda0 = 6.2e-10
+  created a total of 1 sources:
+0 0 -10   1 6.2e-10
+  created a total of 1 mosaic domains
+  0 initialized hkls (all others =100)
+  parallelpiped xtal: 3x3x3 cells
+  wave=6.2e-10 meters +/- 0% in 1 steps
+  Kahn polarization factor: 0.000000
+  incident fluence: 1.25932e+29 photons/m^2
+  distance=0.1 detsize=0.0256x0.0256  pixel=0.0001 meters (256x256 pixels)
+  sensor is 0 m thick in 1 layers with mu= -1
+  Xbeam=0.0256 Ybeam=0.0256
+  Fbeam=0.0128 Sbeam=0.0128
+  Xclose=0.0128 Yclose=0.0128
+  Fclose=0.0128 Sclose=0.0128
+  DIRECTION_OF_DETECTOR_X-AXIS= 1 0 0
+  DIRECTION_OF_DETECTOR_Y-AXIS= 0 1 0
+  DIRECTION_OF_DETECTOR_Z-AXIS= 0 0 1
+  INCIDENT_BEAM_DIRECTION= 0 0 1
+  spindle ROTATION_AXIS= 1 0 0
+  POLARIZATION_PLANE_NORMAL= 0 1 0
+  dials origin= 100 -12.8 12.8
+  roi: 0 < x < 256 && 0 < y < 256
+  hdivrange=0 hdivstep=0  radians
+  vdivrange=0 vdivstep=0  radians
+  1 divergence steps
+  1 sources
+  1 mosaic domains over mosaic spread of 0 degrees
+  1 phi steps from 0 to 0 degrees
+  1x1 pixel oversample steps
+
+  noise image paramters:
+  seed: -1758589521
+  water droplet size: 0 m
+0% done
+0% done
+1% done
+2% done
+3% done
+4% done
+4% done
+5% done
+6% done
+7% done
+8% done
+9% done
+9% done
+14% done
+19% done
+24% done
+29% done
+34% done
+39% done
+44% done
+49% done
+54% done
+59% done
+64% done
+69% done
+74% done
+79% done
+84% done
+89% done
+90% done
+91% done
+92% done
+93% done
+94% done
+94% done
+95% done
+96% done
+97% done
+98% done
+
+solid angle subtended by detector = 0.0644824 steradian ( 0.513134% sphere)
+writing test_xds_output.bin as 65536 4-byte floats
+max_I = 7.26507  at 0.01275 0.01275
+mean= 0.628808 rms= 1.35343 rmsd= 1.19849
+intfile_scale = 7570.47
+writing intimage.img as 2-byte integers
+pgm_scale = 41.7191
+writing image.pgm as 1-byte integers
+41093 photons on noise image (0 overloads)
+writing noiseimage.img as 2-byte integers
