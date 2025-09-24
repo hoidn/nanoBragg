@@ -4,7 +4,20 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ### TODO
 # TODO remaining items:
-(None - all current issues resolved)
+- Document triclinic misset limitation in user guide (correlation 0.958 vs 0.995 requirement)
+
+### FIXED (2025-09-24 - Current Session)
+
+#### Detector Config Test Fix - FIXED ✅
+- **Issue**: test_detector_config tests failing due to oversample default change
+- **Root Cause**: Tests were expecting oversample=1 but default was changed to -1 for auto-selection
+- **Solution**: Updated two tests:
+  1. test_default_values: Changed assertion from oversample == 1 to oversample == -1
+  2. test_invalid_oversample: Updated error message pattern to match new validation
+- **Files Modified**:
+  - `tests/test_detector_config.py`: Fixed oversample assertions
+- **Test Results**: All 15 detector config tests now pass
+- **Impact**: Test suite consistency restored after oversample auto-selection implementation
 
 ### Completed (2025-09-24 - Current Session)
 

@@ -39,8 +39,8 @@ class TestDetectorConfig:
         assert config.detector_convention == DetectorConvention.MOSFLM
         assert config.detector_pivot == DetectorPivot.BEAM
 
-        # Sampling
-        assert config.oversample == 1
+        # Sampling - default is -1 for auto-selection
+        assert config.oversample == -1
         
         # Post_init should set twotheta_axis for MOSFLM convention
         # MOSFLM default is [0, 0, -1] (negative Z-axis) per C code line 1245
@@ -92,7 +92,7 @@ class TestDetectorConfig:
 
     def test_invalid_oversample(self):
         """Test that invalid oversample raises error."""
-        with pytest.raises(ValueError, match="Oversample must be at least 1"):
+        with pytest.raises(ValueError, match="Oversample must be -1 \\(auto-select\\) or >= 1"):
             DetectorConfig(oversample=0)
 
     def test_tensor_parameters(self):
