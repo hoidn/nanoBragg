@@ -8,7 +8,7 @@
       - Repo context: specs in specs/spec-a-*.md, plan in fix_plan.md.
   - Mission
       - Determine whether strict, correct completion of all relevant ATs would have prevented ISSUE.
-      - If not, decide whether to edit an existing AT (to close an oversight) or add a new AT that
+      - If not, decide whether to edit an existing AT or multiple ATs (to close an oversight) or add a new AT (or multiple ones) that
   generalizes to the root cause class without overfitting.
       - Apply spec changes (edits or additions) and update fix_plan.md with a TODO.
   - Method
@@ -29,7 +29,7 @@
       - Decide Remediation
           - If an existing AT has an oversight that, if corrected, would prevent ISSUE, draft minimal,
   surgical edits to that AT.
-          - Otherwise, design a new AT:
+          - Otherwise, design a new AT (or, IFF needed, multiple):
               - General: targets the root cause class, not just the symptom.
               - Actionable: reproducible Setup with exact flags/inputs and data shapes.
               - Specific: measurable Expectation with units/tolerances and pass/fail criteria.

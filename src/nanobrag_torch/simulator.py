@@ -97,6 +97,7 @@ class Simulator:
             self.beam_config.polarization_axis, device=self.device, dtype=self.dtype
         )
 
+    @torch.compile(mode="reduce-overhead")
     def _compute_physics_for_position(self, pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star):
         """Compute physics (Miller indices, structure factors, intensity) for given positions.
 

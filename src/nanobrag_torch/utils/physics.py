@@ -8,6 +8,7 @@ calculations from the original C code.
 import torch
 
 
+@torch.compile(mode="reduce-overhead")
 def sincg(u: torch.Tensor, N: torch.Tensor) -> torch.Tensor:
     """
     Calculate Fourier transform of 1D grating (parallelepiped shape factor).
@@ -84,6 +85,7 @@ def sincg(u: torch.Tensor, N: torch.Tensor) -> torch.Tensor:
     return result
 
 
+@torch.compile(mode="reduce-overhead")
 def sinc3(x: torch.Tensor) -> torch.Tensor:
     """
     Calculate 3D Fourier transform of a sphere (spherical shape factor).
@@ -151,6 +153,7 @@ def sinc3(x: torch.Tensor) -> torch.Tensor:
     return result
 
 
+@torch.compile(mode="reduce-overhead")
 def polarization_factor(
     kahn_factor: torch.Tensor,
     incident: torch.Tensor,

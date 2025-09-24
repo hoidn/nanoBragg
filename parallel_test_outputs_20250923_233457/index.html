@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Parallel Test Visual Comparison</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        .test { border: 1px solid #ccc; margin: 20px 0; padding: 10px; }
+        .test h2 { margin-top: 0; }
+        .images { display: flex; gap: 10px; }
+        .images div { text-align: center; }
+        .images img { max-width: 300px; border: 1px solid #ddd; }
+        .pass { background-color: #e8f5e9; }
+        .fail { background-color: #ffebee; }
+        .correlation { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Parallel Test Visual Comparison</h1>
+<div class="test fail">
+<h2>AT-PARALLEL-001_256x256 - FAIL</h2>
+<p class="correlation">Correlation: 0.155190</p>
+<div class="images">
+<div><img src="AT-PARALLEL-001_256x256/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test fail">
+<h2>AT-PARALLEL-001_512x512 - FAIL</h2>
+<p class="correlation">Correlation: 0.172222</p>
+<div class="images">
+<div><img src="AT-PARALLEL-001_512x512/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test fail">
+<h2>AT-PARALLEL-001_64x64 - FAIL</h2>
+<p class="correlation">Correlation: 0.390692</p>
+<div class="images">
+<div><img src="AT-PARALLEL-001_64x64/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test fail">
+<h2>AT-PARALLEL-002_pixel_0.05mm - FAIL</h2>
+<p class="correlation">Correlation: -0.182681</p>
+<div class="images">
+<div><img src="AT-PARALLEL-002_pixel_0.05mm/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test fail">
+<h2>AT-PARALLEL-002_pixel_0.1mm - FAIL</h2>
+<p class="correlation">Correlation: 0.155190</p>
+<div class="images">
+<div><img src="AT-PARALLEL-002_pixel_0.1mm/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test fail">
+<h2>AT-PARALLEL-002_pixel_0.2mm - FAIL</h2>
+<p class="correlation">Correlation: 0.171923</p>
+<div class="images">
+<div><img src="AT-PARALLEL-002_pixel_0.2mm/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test fail">
+<h2>AT-PARALLEL-003_offset_20_20 - FAIL</h2>
+<p class="correlation">Correlation: 0.163202</p>
+<div class="images">
+<div><img src="AT-PARALLEL-003_offset_20_20/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test fail">
+<h2>AT-PARALLEL-003_offset_30_40 - FAIL</h2>
+<p class="correlation">Correlation: -0.067117</p>
+<div class="images">
+<div><img src="AT-PARALLEL-003_offset_30_40/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test fail">
+<h2>AT-PARALLEL-004_MOSFLM - FAIL</h2>
+<p class="correlation">Correlation: 0.155190</p>
+<div class="images">
+<div><img src="AT-PARALLEL-004_MOSFLM/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test fail">
+<h2>AT-PARALLEL-004_XDS - FAIL</h2>
+<p class="correlation">Correlation: 0.154955</p>
+<div class="images">
+<div><img src="AT-PARALLEL-004_XDS/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test fail">
+<h2>AT-PARALLEL-007_with_rotations - FAIL</h2>
+<p class="correlation">Correlation: 0.064259</p>
+<div class="images">
+<div><img src="AT-PARALLEL-007_with_rotations/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test pass">
+<h2>AT-PARALLEL-008_triclinic - PASS</h2>
+<p class="correlation">Correlation: 0.999129</p>
+<div class="images">
+<div><img src="AT-PARALLEL-008_triclinic/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test pass">
+<h2>AT-PARALLEL-009_N1 - PASS</h2>
+<p class="correlation">Correlation: 0.999997</p>
+<div class="images">
+<div><img src="AT-PARALLEL-009_N1/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test pass">
+<h2>AT-PARALLEL-009_N10 - PASS</h2>
+<p class="correlation">Correlation: 0.999999</p>
+<div class="images">
+<div><img src="AT-PARALLEL-009_N10/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test pass">
+<h2>AT-PARALLEL-009_N5 - PASS</h2>
+<p class="correlation">Correlation: 0.999999</p>
+<div class="images">
+<div><img src="AT-PARALLEL-009_N5/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test pass">
+<h2>AT-PARALLEL-010_dist_100mm - PASS</h2>
+<p class="correlation">Correlation: 0.999999</p>
+<div class="images">
+<div><img src="AT-PARALLEL-010_dist_100mm/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test pass">
+<h2>AT-PARALLEL-010_dist_200mm - PASS</h2>
+<p class="correlation">Correlation: 0.999999</p>
+<div class="images">
+<div><img src="AT-PARALLEL-010_dist_200mm/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test pass">
+<h2>AT-PARALLEL-010_dist_50mm - PASS</h2>
+<p class="correlation">Correlation: 0.999997</p>
+<div class="images">
+<div><img src="AT-PARALLEL-010_dist_50mm/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test pass">
+<h2>AT-PARALLEL-011_polarized - PASS</h2>
+<p class="correlation">Correlation: 0.999997</p>
+<div class="images">
+<div><img src="AT-PARALLEL-011_polarized/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test pass">
+<h2>AT-PARALLEL-011_unpolarized - PASS</h2>
+<p class="correlation">Correlation: 0.999999</p>
+<div class="images">
+<div><img src="AT-PARALLEL-011_unpolarized/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test fail">
+<h2>AT-PARALLEL-021_phi_multi - FAIL</h2>
+<p class="correlation">Correlation: 0.673840</p>
+<div class="images">
+<div><img src="AT-PARALLEL-021_phi_multi/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test pass">
+<h2>AT-PARALLEL-021_phi_single - PASS</h2>
+<p class="correlation">Correlation: 0.999999</p>
+<div class="images">
+<div><img src="AT-PARALLEL-021_phi_single/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test pass">
+<h2>AT-PARALLEL-022_combined - PASS</h2>
+<p class="correlation">Correlation: 0.999999</p>
+<div class="images">
+<div><img src="AT-PARALLEL-022_combined/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test pass">
+<h2>AT-PARALLEL-023_misset_0 - PASS</h2>
+<p class="correlation">Correlation: 0.999999</p>
+<div class="images">
+<div><img src="AT-PARALLEL-023_misset_0/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test pass">
+<h2>AT-PARALLEL-023_misset_10_0_0 - PASS</h2>
+<p class="correlation">Correlation: 0.999999</p>
+<div class="images">
+<div><img src="AT-PARALLEL-023_misset_10_0_0/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test pass">
+<h2>AT-PARALLEL-023_misset_15_20_30 - PASS</h2>
+<p class="correlation">Correlation: 0.999997</p>
+<div class="images">
+<div><img src="AT-PARALLEL-023_misset_15_20_30/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test pass">
+<h2>AT-PARALLEL-025_cubic_center - PASS</h2>
+<p class="correlation">Correlation: 1.000000</p>
+<div class="images">
+<div><img src="AT-PARALLEL-025_cubic_center/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+<div class="test pass">
+<h2>AT-PARALLEL-025_cubic_offset - PASS</h2>
+<p class="correlation">Correlation: 0.999999</p>
+<div class="images">
+<div><img src="AT-PARALLEL-025_cubic_offset/diff.png" alt="Difference"><br>Difference</div>
+</div>
+</div>
+
+</body>
+</html>

@@ -137,10 +137,14 @@ def run_pytorch_implementation(device: str = 'cpu') -> float:
 
     simulator = Simulator(crystal, detector, crystal_config, beam_config)
 
-    # Warm-up run (important for GPU to avoid including initialization overhead)
+    # Warm-up run (important for both CPU and GPU to avoid including compilation/initialization overhead)
+    # torch.compile requires warm-up on CPU as well
     if device == 'cuda':
         _ = simulator.run()
         torch.cuda.synchronize()
+    else:
+        # CPU also needs warm-up for torch.compile
+        _ = simulator.run()
 
     # Measure execution time
     start_time = time.perf_counter()

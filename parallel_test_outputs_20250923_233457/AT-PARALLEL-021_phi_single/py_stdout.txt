@@ -1,0 +1,13 @@
+Running simulation...
+  Detector: 256x256 pixels
+  Crystal: 100.0x100.0x100.0 Å
+  Wavelength: 6.20 Å
+
+Statistics:
+  Max intensity: 1.547e+02 at pixel (128, 128)
+  Mean: 3.301e+00
+  RMS: 1.339e+01
+  RMSD: 1.298e+01
+Wrote float image to /var/folders/8y/vnl75xb954j0wd09cm8zrrx40000gp/T/tmpuyoh42n3_py.bin
+
+Simulation complete.
