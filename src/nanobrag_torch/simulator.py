@@ -439,8 +439,9 @@ class Simulator:
                             / airpath_m
                         )
 
-                    # Scale omega by number of subpixels (each contributes 1/N^2 of total)
-                    omega_subpixel_scaled = omega_subpixel / (oversample * oversample)
+                    # DO NOT scale omega by number of subpixels - the normalization by steps already includes oversample^2
+                    # Each subpixel should contribute its full omega value
+                    # The averaging happens through the steps normalization (line 416)
 
                     # Calculate polarization factor for this subpixel
                     # Need incident and diffracted directions
@@ -467,7 +468,7 @@ class Simulator:
 
                     # Apply factors based on oversample flags
                     if oversample_omega:
-                        # Apply omega per subpixel
+                        # Apply omega per subpixel (use full omega value, not scaled)
                         subpixel_intensity = subpixel_intensity * omega_subpixel
                         omega_applied = True
                     else:
