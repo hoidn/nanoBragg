@@ -5,6 +5,26 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 ### TODO
 (None - all current issues resolved)
 
+### FIXED (2025-09-26 - Current Session)
+
+#### Unsupported CLI Flags Rejection - COMPLETED ✅
+- **Issue**: Unsupported flags `-dispstep`, `-hdiv`, and `-vdiv` were being accepted instead of rejected
+- **Root Cause**: Python's argparse was treating these as abbreviations of supported flags
+  - `-dispstep` was interpreted as `-dispsteps`
+  - `-hdiv` would match `-hdivrange` if abbreviated
+  - `-vdiv` would match `-vdivrange` if abbreviated
+  - Setting `allow_abbrev=False` didn't prevent this due to argparse behavior in Python 3.10
+- **Solution Implemented**: Added explicit handlers for unsupported flags
+  - Created `UnsupportedFlagAction` class to reject flags with helpful error messages
+  - Added explicit argument definitions for `-dispstep`, `-hdiv`, and `-vdiv`
+  - Each unsupported flag now provides guidance to use the correct alternative
+- **Files Modified**:
+  - `src/nanobrag_torch/__main__.py`: Added UnsupportedFlagAction class (lines 46-56)
+  - `src/nanobrag_torch/__main__.py`: Added explicit unsupported flag handlers (lines 351-362)
+  - `tests/test_at_cli_009.py`: Added tests for unsupported flag rejection (lines 169-240)
+- **Test Results**: All 3 unsupported flag tests now pass
+- **Impact**: Spec compliance for CLI error handling, better user experience with clear error messages
+
 ### ANALYZED & DOCUMENTED (2025-09-26 - Current Session)
 
 #### Radial Intensity Discrepancy - ANALYZED & ACCEPTABLE ✅

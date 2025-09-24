@@ -43,6 +43,20 @@ from .utils.auto_selection import (
 )
 
 
+class UnsupportedFlagAction(argparse.Action):
+    """Action class to handle unsupported flags with helpful error messages."""
+    def __init__(self, option_strings, dest, supported_alternative=None, **kwargs):
+        self.supported_alternative = supported_alternative
+        # Set nargs to consume the value that follows the flag
+        super().__init__(option_strings, dest, nargs='?', **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        msg = f"Error: {option_string} is not supported in this version."
+        if self.supported_alternative:
+            msg += f" Use {self.supported_alternative} instead."
+        parser.error(msg)
+
+
 def create_parser() -> argparse.ArgumentParser:
     """Create argument parser with all spec-defined flags."""
 
@@ -50,6 +64,7 @@ def create_parser() -> argparse.ArgumentParser:
         prog='nanoBragg',
         description='PyTorch implementation of nanoBragg diffraction simulator',
         formatter_class=argparse.RawDescriptionHelpFormatter,
+        allow_abbrev=False,  # Prevent abbreviations like -dispstep matching -dispsteps
         epilog="""
 Examples:
   # Basic simulation
@@ -332,6 +347,20 @@ Examples:
                         help='Enable progress meter')
     parser.add_argument('-seed', type=int,
                         help='Noise RNG seed')
+
+    # Explicitly handle unsupported flags from the spec
+    parser.add_argument('-dispstep', dest='_unsupported_dispstep',
+                        action=UnsupportedFlagAction,
+                        supported_alternative='-dispsteps <int>',
+                        help=argparse.SUPPRESS)
+    parser.add_argument('-hdiv', dest='_unsupported_hdiv',
+                        action=UnsupportedFlagAction,
+                        supported_alternative='-hdivrange <mrad>',
+                        help=argparse.SUPPRESS)
+    parser.add_argument('-vdiv', dest='_unsupported_vdiv',
+                        action=UnsupportedFlagAction,
+                        supported_alternative='-vdivrange <mrad>',
+                        help=argparse.SUPPRESS)
 
     return parser
 
