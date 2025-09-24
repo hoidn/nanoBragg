@@ -8,6 +8,19 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ### FIXED (2025-09-24 - Current Session)
 
+#### Divergence Culling Tests Implementation - COMPLETED ✅
+- **Issue**: Tests for `-round_div` and `-square_div` CLI flags were missing despite implementation being complete
+- **Root Cause**: The feature was implemented in src/nanobrag_torch/__main__.py (lines 205-208, 604, 758) but test coverage was not added
+- **Solution Implemented**:
+  1. Created comprehensive test suite in `tests/test_divergence_culling.py`
+  2. Added 6 tests covering all aspects of elliptical trimming behavior
+  3. Tests verify round_div applies elliptical trimming, square_div uses full grid
+  4. Tests confirm proper behavior with single points and combined with dispersion
+- **Files Created**:
+  - `tests/test_divergence_culling.py`: 235 lines, 6 comprehensive tests
+- **Test Results**: All 6 tests pass
+- **Impact**: Feature now has proper test coverage per spec requirements
+
 #### Triclinic Misset Limitation Documentation - COMPLETED ✅
 - **Issue**: AT-PARALLEL-012 triclinic_P1 test has correlation of 0.958 instead of required 0.995
 - **Root Cause**: Extreme misset angles (-89.968546°, -31.328953°, 177.753396°) applied to triclinic crystals cause effective cell dimension changes
