@@ -652,9 +652,9 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     config['pgmscale'] = args.pgmscale
     config['seed'] = args.seed if args.seed else int(-time.time())
 
-    # Sources
+    # Sourcefile (store path for later processing)
     if args.sourcefile:
-        config['sources'] = read_sourcefile(args.sourcefile)
+        config['sourcefile'] = args.sourcefile
 
     return config
 
@@ -748,7 +748,32 @@ def main():
 
         # Generate sources from divergence/dispersion if not from file
         # This implements proper source generation per spec AT-SRC-002
-        if 'sources' not in config:
+        if 'sourcefile' in config:
+            # Load sources from file
+            wavelength_m = angstroms_to_meters(config.get('wavelength_A', 1.0))
+
+            # Get beam direction based on detector convention (MOSFLM default is [1,0,0])
+            if detector_config.detector_convention == DetectorConvention.MOSFLM:
+                beam_direction = torch.tensor([1.0, 0.0, 0.0], dtype=torch.float64)
+            else:
+                beam_direction = torch.tensor([0.0, 0.0, 1.0], dtype=torch.float64)
+
+            source_directions, source_weights, source_wavelengths = read_sourcefile(
+                config['sourcefile'],
+                default_wavelength_m=wavelength_m,
+                default_source_distance_m=10.0,  # C code default
+                beam_direction=beam_direction
+            )
+
+            # Store loaded sources in config
+            config['source_directions'] = source_directions
+            config['source_weights'] = source_weights
+            config['source_wavelengths'] = source_wavelengths
+
+            # Report source loading
+            n_sources = len(source_directions)
+            print(f"Loaded {n_sources} sources from {config['sourcefile']}")
+        elif 'sources' not in config:
             # Auto-select divergence parameters
             hdiv_params, vdiv_params = auto_select_divergence(
                 hdivsteps=config.get('hdivsteps'),

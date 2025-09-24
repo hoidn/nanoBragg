@@ -7,6 +7,20 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ### FIXED (2025-09-26 - Current Session)
 
+#### Sourcefile CLI Integration Fix - COMPLETED ✅
+- **Issue**: `-sourcefile` CLI option was broken - read_sourcefile was called without required parameters
+- **Root Cause**: read_sourcefile requires default_wavelength_m, source_distance_m, and beam_direction but was only passed the filename
+- **Solution Implemented**:
+  - Moved sourcefile loading to after wavelength and detector convention are determined
+  - Now properly passes all required parameters to read_sourcefile
+  - Correctly integrates loaded sources with the simulation pipeline
+- **Files Modified**:
+  - `src/nanobrag_torch/__main__.py`: Lines 656-657 (store path), lines 751-775 (load sources)
+- **Tests Created**:
+  - `tests/test_at_src_001_cli.py`: Created comprehensive CLI integration tests (3 tests)
+- **Test Results**: All 3 new tests pass
+- **Impact**: -sourcefile option now works correctly from CLI, enables loading custom source distributions
+
 #### Unsupported CLI Flags Rejection - COMPLETED ✅
 - **Issue**: Unsupported flags `-dispstep`, `-hdiv`, and `-vdiv` were being accepted instead of rejected
 - **Root Cause**: Python's argparse was treating these as abbreviations of supported flags
