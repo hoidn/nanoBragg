@@ -4,6 +4,21 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ### TODO
 
+#### Multi-Source Support from Divergence/Dispersion (2025-09-24) - PARTIALLY IMPLEMENTED 🟡
+- **Issue**: Divergence/dispersion parameters were parsed but not used to generate sources
+- **Implementation**: Added source generation from divergence/dispersion parameters
+- **Files Modified**:
+  - `src/nanobrag_torch/__main__.py`: Integrated auto-selection and source generation
+  - `src/nanobrag_torch/utils/auto_selection.py`: Added `generate_sources_from_divergence_dispersion` function
+- **Current Status**:
+  - ✅ Auto-selection rules work correctly (AT-SRC-002 tests pass - 18/18)
+  - ✅ Sources are generated from divergence/dispersion parameters
+  - ✅ Generated sources are passed to BeamConfig
+  - ⚠️ Simulator doesn't yet loop over multiple sources (hardcoded to sources=1)
+- **Next Steps**: Implement multi-source loop in simulator.py for full AT-SRC-001 compliance
+
+### Completed (2025-09-24 - Current Session)
+
 #### CUDA Graph Compilation Issue (2025-09-24) - FIXED ✅
 - **Issue**: AT-PERF-007 and AT-PERF-008 tests failing with CUDA graph errors
 - **Root Cause**: Nested torch.compile decorators with "reduce-overhead" mode causing CUDA graph tensor overwriting
@@ -40,7 +55,7 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 (All other functional test issues resolved)
 
-### Recent Fixes (2025-09-24 - Current Session)
+### Completed (2025-09-24 - Current Session - Additional Fixes)
 - **AT-PARALLEL-012 simple_cubic Test Fix**: Fixed golden data generation and test configuration
   - Regenerated simple_cubic.bin with correct 1024x1024 dimensions (was 500x500)
   - Used self-contained `-cell` parameters instead of missing P1.hkl/A.mat files
@@ -491,7 +506,8 @@ All critical acceptance tests have been implemented and are passing! The test su
 - **Documentation Enhancement**: Consider adding more user guides and examples for advanced features.
 
 # TODO high priority:
-- Investigate discrepancy between pytorch and C at higher scattering angles; ensure high (> .995) correlation. wxample command to test: -default_F 100 -cell 100 100 100 90 90 90 - lambda 6.2 -N 5 -detpixels 256 -distance 100 -pixel 0.4
+- investigate and fix root cause for the apparent lack of pytorch vs C speedup
+- Investigate discrepancy between pytorch and C that seems to increase monotonically with distance from det center; ensure high (> .995) correlation. wxample command to test: -default_F 100 -cell 100 100 100 90 90 90 - lambda 6.2 -N 5 -detpixels 256 -distance 100 -pixel 0.4
 - Ensure consistent same default values / behavior when cli params are unspecified in pytorch vs. reference C
 ✅ INVESTIGATED (2025-09-24): Angle-dependent discrepancy between C and PyTorch
 - **Investigation Summary:**

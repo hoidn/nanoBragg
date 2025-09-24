@@ -37,7 +37,10 @@ from .utils.units import (
     angstroms_to_meters, mrad_to_radians
 )
 from .utils.noise import generate_poisson_noise
-from .utils.auto_selection import auto_select_divergence, auto_select_dispersion
+from .utils.auto_selection import (
+    auto_select_divergence, auto_select_dispersion,
+    generate_sources_from_divergence_dispersion
+)
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -574,6 +577,29 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     elif args.polar is not None:
         config['polarization_factor'] = args.polar
 
+    # Divergence and dispersion parameters for source generation
+    # Convert from mrad to radians for divergence parameters
+    if args.divergence is not None:
+        config['hdivrange'] = mrad_to_radians(args.divergence)
+        config['vdivrange'] = mrad_to_radians(args.divergence)
+    if args.hdivrange is not None:
+        config['hdivrange'] = mrad_to_radians(args.hdivrange)
+    if args.vdivrange is not None:
+        config['vdivrange'] = mrad_to_radians(args.vdivrange)
+    if args.hdivstep is not None:
+        config['hdivstep'] = mrad_to_radians(args.hdivstep)
+    if args.vdivstep is not None:
+        config['vdivstep'] = mrad_to_radians(args.vdivstep)
+
+    # Store counts directly
+    config['hdivsteps'] = args.hdivsteps
+    config['vdivsteps'] = args.vdivsteps
+    config['dispsteps'] = args.dispsteps
+
+    # Store dispersion as fraction (spec says it's a percent)
+    if args.dispersion is not None:
+        config['dispersion'] = args.dispersion / 100.0  # Convert percent to fraction
+
     # Interpolation
     if args.interpolate:
         config['interpolate'] = True
@@ -684,6 +710,60 @@ def main():
         if 'detector_thicksteps' in config:
             detector_config.detector_thicksteps = config['detector_thicksteps']
 
+        # Generate sources from divergence/dispersion if not from file
+        # This implements proper source generation per spec AT-SRC-002
+        if 'sources' not in config:
+            # Auto-select divergence parameters
+            hdiv_params, vdiv_params = auto_select_divergence(
+                hdivsteps=config.get('hdivsteps'),
+                hdivrange=config.get('hdivrange'),
+                hdivstep=config.get('hdivstep'),
+                vdivsteps=config.get('vdivsteps'),
+                vdivrange=config.get('vdivrange'),
+                vdivstep=config.get('vdivstep')
+            )
+            disp_params = auto_select_dispersion(
+                dispsteps=config.get('dispsteps'),
+                dispersion=config.get('dispersion'),
+                dispstep=None  # No direct dispstep in CLI, computed from range/count
+            )
+
+            # Generate source arrays
+            wavelength_m = angstroms_to_meters(config.get('wavelength_A', 1.0))
+
+            # Get beam direction based on detector convention (MOSFLM default is [1,0,0])
+            if detector_config.detector_convention == DetectorConvention.MOSFLM:
+                beam_direction = torch.tensor([1.0, 0.0, 0.0], dtype=torch.float64)
+                polarization_axis = torch.tensor([0.0, 0.0, 1.0], dtype=torch.float64)
+            else:
+                beam_direction = torch.tensor([0.0, 0.0, 1.0], dtype=torch.float64)
+                polarization_axis = torch.tensor([0.0, 1.0, 0.0], dtype=torch.float64)
+
+            source_directions, source_weights, source_wavelengths = \
+                generate_sources_from_divergence_dispersion(
+                    hdiv_params=hdiv_params,
+                    vdiv_params=vdiv_params,
+                    disp_params=disp_params,
+                    central_wavelength_m=wavelength_m,
+                    source_distance_m=10.0,  # Default 10m source distance
+                    beam_direction=beam_direction,
+                    polarization_axis=polarization_axis,
+                    round_div=True  # Apply elliptical trimming
+                )
+
+            # Store generated sources in config
+            config['source_directions'] = source_directions
+            config['source_weights'] = source_weights
+            config['source_wavelengths'] = source_wavelengths
+
+            # Report source generation if multiple sources
+            n_sources = len(source_directions)
+            if n_sources > 1:
+                print(f"Generated {n_sources} sources from divergence/dispersion:")
+                print(f"  H divergence: {hdiv_params.count} steps, range={hdiv_params.range:.4f} rad")
+                print(f"  V divergence: {vdiv_params.count} steps, range={vdiv_params.range:.4f} rad")
+                print(f"  Dispersion: {disp_params.count} steps, range={disp_params.range:.4f}")
+
         # Create beam config
         beam_config = BeamConfig(
             wavelength_A=config.get('wavelength_A', 1.0),
@@ -704,6 +784,12 @@ def main():
             beam_config.nopolar = True
         elif 'polarization_factor' in config:
             beam_config.polarization_factor = config['polarization_factor']
+
+        # Set generated sources if available
+        if 'source_directions' in config:
+            beam_config.source_directions = config['source_directions']
+            beam_config.source_weights = config['source_weights']
+            beam_config.source_wavelengths = config['source_wavelengths']
 
         # Create models
         detector = Detector(detector_config)
