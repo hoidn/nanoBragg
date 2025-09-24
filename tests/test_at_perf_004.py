@@ -16,11 +16,13 @@ from contextlib import contextmanager
 from typing import Dict, List, Tuple
 
 from nanobrag_torch.simulator import Simulator
+from nanobrag_torch.models.crystal import Crystal
+from nanobrag_torch.models.detector import Detector
 from nanobrag_torch.config import (
     CrystalConfig,
     DetectorConfig,
     BeamConfig,
-    
+
     DetectorConvention
 )
 from nanobrag_torch.utils.physics import sincg
@@ -76,11 +78,12 @@ class TestATPERF004HotPathOptimization:
         x_vals = torch.linspace(-10, 10, n_points)
 
         # Warm-up
-        _ = sincg(x_vals[:1000])
+        N = torch.tensor(5)
+        _ = sincg(x_vals[:1000], N)
 
         # Measure sincg performance
         start = time.perf_counter()
-        result = sincg(x_vals)
+        result = sincg(x_vals, N)
         end = time.perf_counter()
 
         elapsed = end - start
@@ -98,7 +101,8 @@ class TestATPERF004HotPathOptimization:
 
         # Verify correctness
         # sincg(0) should be 1.0
-        assert torch.allclose(sincg(torch.tensor([0.0])), torch.tensor([1.0])), \
+        N_test = torch.tensor(5)
+        assert torch.allclose(sincg(torch.tensor([0.0]), N_test), torch.tensor([1.0])), \
             "sincg(0) != 1.0"
 
         print("✅ sincg throughput test PASSED")
@@ -163,15 +167,18 @@ class TestATPERF004HotPathOptimization:
 
         beam_config = BeamConfig(wavelength_A=1.5)
 
+        crystal = Crystal(crystal_config)
+        detector = Detector(detector_config)
+
         simulator = Simulator(
-            crystal_config=crystal_config,
-            detector_config=detector_config,
+            crystal=crystal,
+            detector=detector,
             beam_config=beam_config,
         )
 
         # Profile the simulation
         with self.profile_context() as profiler:
-            image = simulator.simulate()
+            image = simulator.run()
 
         # Analyze profile
         func_stats = self.analyze_profile(profiler)

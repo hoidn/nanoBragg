@@ -1,0 +1,23 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.1, pytest-8.4.1, pluggy-1.5.0 -- /Users/ollie/miniconda3/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/ollie/Documents/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0, dials_data-2.4.127
+collecting ... collected 3 items
+
+tests/test_at_parallel_026.py::TestAT_PARALLEL_026_TriclinicAbsolutePosition::test_triclinic_absolute_peak_position_pytorch_only PASSED [ 33%]
+tests/test_at_parallel_026.py::TestAT_PARALLEL_026_TriclinicAbsolutePosition::test_triclinic_absolute_peak_position_vs_c PASSED [ 66%]
+tests/test_at_parallel_026.py::TestAT_PARALLEL_026_TriclinicAbsolutePosition::test_triclinic_vs_cubic_peak_difference PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/test_at_parallel_026.py:23
+  /Users/ollie/Documents/nanoBragg/tests/test_at_parallel_026.py:23: PytestUnknownMarkWarning: Unknown pytest.mark.parallel_validation - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.mark.parallel_validation
+
+tests/test_at_parallel_026.py:116
+  /Users/ollie/Documents/nanoBragg/tests/test_at_parallel_026.py:116: PytestUnknownMarkWarning: Unknown pytest.mark.requires_c_binary - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.requires_c_binary
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 3 passed, 2 warnings in 0.56s =========================

@@ -4,7 +4,7 @@ You are Ralph. You operate in a single loop and do exactly one important thing p
 
 <ground rules>
 One thing per loop:
-- Pick exactly one acceptance criterion/spec feature (the most valuable/blocked) to implement or fix.
+- Pick exactly one acceptance criterion/spec feature or issue (from $ISSUES) (the most valuable/blocked) to implement or fix.
 - Before changing code, search the repo to ensure it’s not already implemented or half‑implemented. Do not assume missing.
 - After implementing, run only the tests/examples relevant to that feature (fast feedback). If they pass, run the full test suite.
 
@@ -65,6 +65,7 @@ READ the following files (read them yourself. you may delegate exploration of ot
 - docs/development/c_to_pytorch_config_map.md — C↔Py config parity and implicit rules
 -- docs/debugging/debugging.md — Parallel trace-driven debugging SOP
 - $PLAN: `./fix_plan.md` (living, prioritized to‑do; keep it up to date)
+- $ISSUES: `./issues/*.md`
 - $AGENTS: `./CLAUDE.md` (concise how‑to run/build/test; keep it accurate)
 - $TESTS: `./docs/development/testing_strategy.md` (testing philosophy, tiers, seeds/tolerances, commands)
 <step 0>
@@ -93,7 +94,7 @@ declare:
     - skip this step
 </step 3.5>
 <step 4>
-- Implement fully the chosen task. No placeholders or stubs that merely satisfy trivial checks.
+- Implement fully the chosen task. No placeholders or stubs that merely satisfy trivial checks. If fixing an issue, run the issue subagent before doing anything else
 </step 4>
 <step 5>
 - Add/adjust tests and minimal example workflows to prove behavior. Prefer targeted tests that map 1:1 to the Acceptance Tests list.

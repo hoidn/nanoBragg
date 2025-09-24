@@ -156,6 +156,16 @@ self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2
 
 ## Next Steps
 
+**🟢 FIXED: Performance Test API Compatibility (2025-09-23)**
+- **Issue**: Performance tests (AT-PERF-002 through AT-PERF-005) failing due to API mismatches
+- **Root Cause**: Tests were using outdated `Simulator(crystal_config=..., detector_config=...)` API instead of current `Simulator(crystal=..., detector=...)` API
+- **Solution**: Fixed all performance tests to:
+  1. Use correct constructor signature with instantiated `Crystal` and `Detector` objects
+  2. Call `simulator.run()` instead of `simulator.simulate()`
+  3. Pass correct parameters to `sincg(u, N)` function
+- **Status**: ✅ API compatibility issues resolved, tests now run without TypeError/AttributeError
+- **Remaining**: Some tests still fail on performance thresholds and assertion logic (not API issues)
+
 **🔴 HIGH PRIORITY: PyTorch Performance Investigation**
 - **Issue**: PyTorch implementation is ~1.3x slower than C on CPU (should be faster with vectorization)
 - **Root Causes Identified**:

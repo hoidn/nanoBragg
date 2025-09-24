@@ -1,0 +1,13 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.1, pytest-8.4.1, pluggy-1.5.0 -- /Users/ollie/miniconda3/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/ollie/Documents/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0, dials_data-2.4.127
+collecting ... collected 3 items
+
+tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_bragg_angle_prediction_single_distance PASSED [ 33%]
+tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_distance_scaling PASSED [ 66%]
+tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_combined_wavelength_and_distance PASSED [100%]
+
+============================== 3 passed in 0.62s ===============================

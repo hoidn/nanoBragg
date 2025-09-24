@@ -15,11 +15,13 @@ import subprocess
 from pathlib import Path
 
 from nanobrag_torch.simulator import Simulator
+from nanobrag_torch.models.crystal import Crystal
+from nanobrag_torch.models.detector import Detector
 from nanobrag_torch.config import (
     CrystalConfig,
     DetectorConfig,
     BeamConfig,
-    
+
     DetectorConvention
 )
 
@@ -54,20 +56,23 @@ class TestATPERF002ParallelExecution:
 
         beam_config = BeamConfig(wavelength_A=1.0)  # λ=1.0 as specified
 
+        crystal = Crystal(crystal_config)
+        detector = Detector(detector_config)
+
         simulator = Simulator(
-            crystal_config=crystal_config,
-            detector_config=detector_config,
+            crystal=crystal,
+            detector=detector,
             beam_config=beam_config,
         )
 
         # Warm-up
-        _ = simulator.simulate()
+        _ = simulator.run()
 
         # Timed runs
         times = []
         for _ in range(3):
             start = time.perf_counter()
-            _ = simulator.simulate()
+            _ = simulator.run()
             end = time.perf_counter()
             times.append(end - start)
 
@@ -203,21 +208,24 @@ class TestATPERF002ParallelExecution:
 
         beam_config = BeamConfig(wavelength_A=1.0)
 
+        crystal = Crystal(crystal_config)
+        detector = Detector(detector_config)
+
         simulator = Simulator(
-            crystal_config=crystal_config,
-            detector_config=detector_config,
+            crystal=crystal,
+            detector=detector,
             beam_config=beam_config,
         )
 
         # Warm-up
-        _ = simulator.simulate()
+        _ = simulator.run()
         torch.cuda.synchronize()
 
         # Timed GPU runs
         gpu_times = []
         for _ in range(3):
             start = time.perf_counter()
-            _ = simulator.simulate()
+            _ = simulator.run()
             torch.cuda.synchronize()
             end = time.perf_counter()
             gpu_times.append(end - start)

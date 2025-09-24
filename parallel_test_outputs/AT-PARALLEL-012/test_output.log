@@ -1,0 +1,14 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.1, pytest-8.4.1, pluggy-1.5.0 -- /Users/ollie/miniconda3/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/ollie/Documents/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0, dials_data-2.4.127
+collecting ... collected 4 items
+
+tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation XFAIL [ 25%]
+tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_triclinic_P1_correlation XFAIL [ 50%]
+tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_cubic_tilted_detector_correlation PASSED [ 75%]
+tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_high_resolution_variant SKIPPED [100%]
+
+=================== 1 passed, 1 skipped, 2 xfailed in 1.25s ====================

@@ -1,0 +1,68 @@
+[
+  {
+    "test": "Large Detector (2048x2048)",
+    "detpixels": 2048,
+    "c_time": 0.40994882583618164,
+    "pytorch_time": 1.5052900314331055,
+    "speedup": 0.27233876347795344,
+    "comparison": {
+      "correlation": 0.9952278829429944,
+      "rmse": 0.6215553283691406,
+      "max_diff": 14.412540435791016
+    },
+    "c_success": true,
+    "pytorch_success": true
+  },
+  {
+    "test": "Very Large Detector (4096x4096)",
+    "detpixels": 4096,
+    "c_time": 1.5023198127746582,
+    "pytorch_time": 3.324049234390259,
+    "speedup": 0.45195474159402266,
+    "comparison": {
+      "correlation": 0.9913602731124934,
+      "rmse": 0.048629261553287506,
+      "max_diff": 0.673189640045166
+    },
+    "c_success": true,
+    "pytorch_success": true
+  },
+  {
+    "test": "Large Crystal (10x10x10 cells)",
+    "detpixels": 1024,
+    "c_time": 0.10156917572021484,
+    "pytorch_time": 0.7227239608764648,
+    "speedup": 0.14053661040522228,
+    "comparison": {
+      "correlation": 0.9985708868314951,
+      "rmse": 10.990324974060059,
+      "max_diff": 721.951171875
+    },
+    "c_success": true,
+    "pytorch_success": true
+  },
+  {
+    "test": "Complex Case (triclinic, mosaic, large)",
+    "detpixels": 1024,
+    "c_time": 1.8957066535949707,
+    "pytorch_time": null,
+    "speedup": null,
+    "comparison": null,
+    "c_success": true,
+    "pytorch_success": false
+  },
+  {
+    "test": "Multiple Phi Steps",
+    "detpixels": 512,
+    "c_time": 0.5310981273651123,
+    "pytorch_time": 0.7156040668487549,
+    "speedup": 0.7421675643961391,
+    "comparison": {
+      "correlation": 0.3917968827403686,
+      "rmse": 6.9978485107421875,
+      "max_diff": 134.53419494628906
+    },
+    "c_success": true,
+    "pytorch_success": true
+  }
+]

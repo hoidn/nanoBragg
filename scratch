@@ -1540,3 +1540,17 @@ generate a detailed, comprehensive, self contained spec for the physics simulati
     -intfile ../tests/golden_data/simple_cubic.img
 
 </base>
+
+take the role of prompt engineer. we're going to craft a complex prompt by improving a <base>
+▌ prompt. this is going to involve some theory of mind / meta-thinking. your task is to draft an
+▌ improved version of the <base> prompt: <base> issue: $ISSUE. \n given the issue, review the project's
+▌ attention tests and determine whether correct completion of all attention tests would have prevented
+▌ the issue. If not, is there an oversight in an existing AT that, if it had been avoided, would have
+▌ prevented the iisue? If no to both prev questions, is there a good (i.e. general, actionable,
+▌ specific but not 'overfit' to the particular manifestiation of the issue) AT that could have avoided
+▌ the issue?
+▌ If yes to 2, draft the AT edit(s) and apply them. then update fix_plan to indicate that the edited AT
+▌ needs to be revisied
+▌ if yest to 3, draft the new AT and add it to the specs. then add that AT to the todo list in
+▌ fix_plan.
+▌ </base>

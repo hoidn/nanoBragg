@@ -132,8 +132,9 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
 
   - AT-PARALLEL-028 Performance Parity Requirement
   - Setup: Cell 100,100,100,90,90,90; -lambda 6.2; -N 5; -default_F 100; detector 1024×1024, -pixel 0.1, -distance 100; MOSFLM convention. Measure wall-clock execution time for both C and PyTorch implementations.
-  - Expectation: The PyTorch implementation SHALL achieve at least 50% of the C implementation's throughput (pixels/second) on CPU, or demonstrate superior performance when GPU acceleration is available. This ensures the vectorized implementation provides expected performance benefits.
-  - Pass Criteria: throughput_pytorch ≥ 0.5 × throughput_c for CPU execution, OR throughput_pytorch_gpu ≥ 2.0 × throughput_c when CUDA is available. Throughput = (detector_pixels / execution_time).
+  - Expectation: The PyTorch implementation SHALL achieve at least 50% of the C implementation's throughput (pixels/second) on CPU, and SHALL demonstrate at least 10x superior performance when GPU acceleration is available. This ensures the vectorized implementation provides the massive parallelization benefits expected from GPU compute.
+  - Pass Criteria: throughput_pytorch ≥ 0.5 × throughput_c for CPU execution, AND throughput_pytorch_gpu ≥ 10.0 × throughput_c when CUDA is available. Throughput = (detector_pixels / execution_time).
+  - Rationale: GPU acceleration should provide order-of-magnitude speedup given: (1) embarrassingly parallel pixel computations, (2) vectorized tensor operations, (3) thousands of CUDA cores vs ~8-16 CPU threads, (4) optimized BLAS/cuBLAS kernels. A 10x speedup is conservative for this workload.
 
 Quality Bar Checklist (Informative)
 

@@ -14,11 +14,13 @@ import os
 from typing import Dict, Tuple
 
 from nanobrag_torch.simulator import Simulator
+from nanobrag_torch.models.crystal import Crystal
+from nanobrag_torch.models.detector import Detector
 from nanobrag_torch.config import (
     CrystalConfig,
     DetectorConfig,
     BeamConfig,
-    
+
     DetectorConvention
 )
 
@@ -55,14 +57,17 @@ class TestATPERF003MemoryBandwidth:
 
         beam_config = BeamConfig(wavelength_A=6.2)
 
+        crystal = Crystal(crystal_config)
+        detector = Detector(detector_config)
+
         simulator = Simulator(
-            crystal_config=crystal_config,
-            detector_config=detector_config,
+            crystal=crystal,
+            detector=detector,
             beam_config=beam_config,
         )
 
         # Warm-up to allocate memory
-        _ = simulator.simulate()
+        _ = simulator.run()
 
         # Measure peak memory after allocation
         peak_memory = process.memory_info().rss / (1024 * 1024)  # MB
@@ -72,7 +77,7 @@ class TestATPERF003MemoryBandwidth:
         times = []
         for _ in range(3):
             start = time.perf_counter()
-            image = simulator.simulate()
+            image = simulator.run()
             end = time.perf_counter()
             times.append(end - start)
 
@@ -165,14 +170,18 @@ class TestATPERF003MemoryBandwidth:
 
             beam_config = BeamConfig(wavelength_A=6.2)
 
+            # Create Crystal and Detector objects first
+            crystal = Crystal(crystal_config)
+            detector = Detector(detector_config)
+
             simulator = Simulator(
-                crystal_config=crystal_config,
-                detector_config=detector_config,
+                crystal=crystal,
+                detector=detector,
                 beam_config=beam_config,
             )
 
             start = time.perf_counter()
-            _ = simulator.simulate()
+            _ = simulator.run()
             end = time.perf_counter()
             times.append(end - start)
 
@@ -222,9 +231,13 @@ class TestATPERF003MemoryBandwidth:
 
             beam_config = BeamConfig(wavelength_A=6.2)
 
+            # Create Crystal and Detector objects first
+            crystal = Crystal(crystal_config)
+            detector = Detector(detector_config)
+
             simulator = Simulator(
-                crystal_config=crystal_config,
-                detector_config=detector_config,
+                crystal=crystal,
+                detector=detector,
                 beam_config=beam_config,
             )
 
@@ -232,7 +245,7 @@ class TestATPERF003MemoryBandwidth:
             times = []
             for _ in range(3):
                 start = time.perf_counter()
-                _ = simulator.simulate()
+                _ = simulator.run()
                 end = time.perf_counter()
                 times.append(end - start)
 
@@ -285,14 +298,17 @@ class TestATPERF003MemoryBandwidth:
             device = 'cpu'
 
         # Note: device configuration would be set via config if available
+        crystal = Crystal(crystal_config)
+        detector = Detector(detector_config)
+
         simulator = Simulator(
-            crystal_config=crystal_config,
-            detector_config=detector_config,
+            crystal=crystal,
+            detector=detector,
             beam_config=beam_config,
         )
 
         # Run simulation
-        image = simulator.simulate()
+        image = simulator.run()
 
         # Check tensor properties
         assert image.dtype == torch.float32, "Output should be float32"

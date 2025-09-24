@@ -13,11 +13,13 @@ from typing import Dict, Callable
 import os
 
 from nanobrag_torch.simulator import Simulator
+from nanobrag_torch.models.crystal import Crystal
+from nanobrag_torch.models.detector import Detector
 from nanobrag_torch.config import (
     CrystalConfig,
     DetectorConfig,
     BeamConfig,
-    
+
     DetectorConvention
 )
 
@@ -50,9 +52,12 @@ class TestATPERF005CompilationOptimization:
 
         beam_config = BeamConfig(wavelength_A=6.2)
 
+        crystal = Crystal(crystal_config)
+        detector = Detector(detector_config)
+
         return Simulator(
-            crystal_config=crystal_config,
-            detector_config=detector_config,
+            crystal=crystal,
+            detector=detector,
             beam_config=beam_config,
         )
 
@@ -72,7 +77,7 @@ class TestATPERF005CompilationOptimization:
         baseline_times = []
         for i in range(5):
             start = time.perf_counter()
-            baseline_image = simulator.simulate()
+            baseline_image = simulator.run()
             end = time.perf_counter()
             baseline_times.append(end - start)
             print(f"  Run {i+1}: {baseline_times[-1]:.3f}s")
@@ -84,7 +89,7 @@ class TestATPERF005CompilationOptimization:
         try:
             # Note: torch.compile may not work with all simulator internals
             # This is a best-effort attempt
-            compiled_simulate = torch.compile(simulator.simulate, mode='default')
+            compiled_simulate = torch.compile(simulator.run, mode='default')
 
             # Warm-up compilation
             print("  Warm-up run (triggers compilation)...")
@@ -151,7 +156,8 @@ class TestATPERF005CompilationOptimization:
         times = []
         for _ in range(5):
             start = time.perf_counter()
-            result_baseline = sincg(x)
+            N = torch.tensor(5)
+            result_baseline = sincg(x, N)
             end = time.perf_counter()
             times.append(end - start)
         baseline_time = np.median(times)
@@ -164,13 +170,13 @@ class TestATPERF005CompilationOptimization:
                 compiled_sincg = torch.compile(sincg, mode='reduce-overhead')
 
                 # Warm-up
-                _ = compiled_sincg(x[:100])
+                _ = compiled_sincg(x[:100], N)
 
                 # Measure compiled performance
                 times = []
                 for _ in range(5):
                     start = time.perf_counter()
-                    result_compiled = compiled_sincg(x)
+                    result_compiled = compiled_sincg(x, N)
                     end = time.perf_counter()
                     times.append(end - start)
                 compiled_time = np.median(times)
@@ -220,30 +226,36 @@ class TestATPERF005CompilationOptimization:
 
         # Baseline: 10 runs without compilation
         print("\nBaseline (10 runs, no compilation):")
+        crystal = Crystal(crystal_config)
+        detector = Detector(detector_config)
+
         simulator = Simulator(
-            crystal_config=crystal_config,
-            detector_config=detector_config,
+            crystal=crystal,
+            detector=detector,
             beam_config=beam_config,
         )
 
         baseline_total = 0
         for i in range(10):
             start = time.perf_counter()
-            _ = simulator.simulate()
+            _ = simulator.run()
             baseline_total += time.perf_counter() - start
 
         print(f"  Total time: {baseline_total:.3f}s")
 
         # Compiled: 10 runs with compilation
         print("\nCompiled (10 runs including compilation overhead):")
+        crystal = Crystal(crystal_config)
+        detector = Detector(detector_config)
+
         simulator = Simulator(
-            crystal_config=crystal_config,
-            detector_config=detector_config,
+            crystal=crystal,
+            detector=detector,
             beam_config=beam_config,
         )
 
         try:
-            compiled_simulate = torch.compile(simulator.simulate)
+            compiled_simulate = torch.compile(simulator.run)
             compiled_total = 0
             for i in range(10):
                 start = time.perf_counter()
@@ -292,9 +304,12 @@ class TestATPERF005CompilationOptimization:
 
         beam_config = BeamConfig(wavelength_A=6.2)
 
+        crystal = Crystal(crystal_config)
+        detector = Detector(detector_config)
+
         simulator = Simulator(
-            crystal_config=crystal_config,
-            detector_config=detector_config,
+            crystal=crystal,
+            detector=detector,
             beam_config=beam_config,
         )
 
@@ -302,7 +317,7 @@ class TestATPERF005CompilationOptimization:
         print("\nGPU baseline:")
         torch.cuda.synchronize()
         start = time.perf_counter()
-        _ = simulator.simulate()
+        _ = simulator.run()
         torch.cuda.synchronize()
         baseline_gpu_time = time.perf_counter() - start
         print(f"  Time: {baseline_gpu_time:.3f}s")
@@ -310,7 +325,7 @@ class TestATPERF005CompilationOptimization:
         if hasattr(torch, 'compile'):
             try:
                 print("\nCompiling for GPU...")
-                compiled_simulate = torch.compile(simulator.simulate,
+                compiled_simulate = torch.compile(simulator.run,
                                                  mode='max-autotune')
 
                 # Warm-up
