@@ -46,9 +46,10 @@ class Simulator:
         """
         self.crystal = crystal
         self.detector = detector
-        self.crystal_config = (
-            crystal_config if crystal_config is not None else CrystalConfig()
-        )
+        # If crystal_config is provided, use it; otherwise use the crystal's own config
+        if crystal_config is not None:
+            # Override the crystal's config with the provided one
+            self.crystal.config = crystal_config
         self.beam_config = beam_config if beam_config is not None else BeamConfig()
         self.device = device if device is not None else torch.device("cpu")
         self.dtype = dtype
@@ -159,8 +160,8 @@ class Simulator:
         Na = self.crystal.N_cells_a
         Nb = self.crystal.N_cells_b
         Nc = self.crystal.N_cells_c
-        shape = self.crystal_config.shape
-        fudge = self.crystal_config.fudge
+        shape = self.crystal.config.shape
+        fudge = self.crystal.config.fudge
 
         if shape == CrystalShape.SQUARE:
             F_latt_a = sincg(torch.pi * (h - h0), Na)
@@ -326,7 +327,7 @@ class Simulator:
         # Shape: (N_phi, N_mos, 3)
         if override_a_star is None:
             (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = (
-                self.crystal.get_rotated_real_vectors(self.crystal_config)
+                self.crystal.get_rotated_real_vectors(self.crystal.config)
             )
             # Cache rotated reciprocal vectors for GAUSS/TOPHAT shape models
             self._rot_a_star = rot_a_star
@@ -349,8 +350,8 @@ class Simulator:
         # Per spec AT-SAM-001: "Final per-pixel scale SHALL divide by steps"
         # where steps = sources * phi_steps * mosaic_domains * oversample^2
         # For now: sources=1 (multi-source not yet implemented)
-        phi_steps = self.crystal_config.phi_steps
-        mosaic_domains = self.crystal_config.mosaic_domains
+        phi_steps = self.crystal.config.phi_steps
+        mosaic_domains = self.crystal.config.mosaic_domains
         steps = phi_steps * mosaic_domains * oversample * oversample  # Include oversample^2
 
         # Apply physical scaling factors (from nanoBragg.c ~line 3050)
