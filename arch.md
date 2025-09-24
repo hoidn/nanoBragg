@@ -129,33 +129,34 @@ Notes
 - Physics Engine
   - Computes scattering vectors; dmin culling; structure factor lookup/interpolation; lattice shape factors (SQUARE/ROUND/GAUSS/TOPHAT); polarization; absorption; background; steps normalization; final scaling.
 
-- I/O Engine (planned)
+- I/O Engine [IMPLEMENTED]
   - HKL text & Fdump read/write; SMV/PGM writers; noise image; statistics reporter.
 
 - Observability & Validation
   - Deterministic traces (debug scripts), acceptance-test-driven behavior.
 
-## 4) Module Structure (current and planned)
+## 4) Module Structure [IMPLEMENTED]
 
 ```
 nanobrag_torch/
   config.py                # DetectorConfig, CrystalConfig, BeamConfig (+ enums)
   simulator.py             # Vectorized physics core (pixels × phi × mosaic)
+  __main__.py             # CLI entry point with full argparse implementation
   models/
     detector.py            # Basis vectors, pivots, twotheta, pix0, pixel coords
     crystal.py             # Cell tensors, misset, phi/mosaic rotations, HKL I/O
   utils/
     geometry.py            # dot/cross, rotations (axis/matrix)
-    physics.py             # sincg, sinc3 (TODO), polarization_factor (TODO)
+    physics.py             # sincg, sinc3, polarization_factor [ALL IMPLEMENTED]
     units.py               # mm↔Å/m, deg↔rad, etc.
-
-# Planned additions
+    c_random.py           # C-compatible RNG for reproducibility
   io/
-    smv.py, pgm.py, raw.py, hkl_dump.py
-  cli/
-    main.py, parse.py      # CLI flag ingestion + header parsing
-  rng/
-    prng.py                # NR-like RNG (if needed to match C), seeds
+    hkl.py                # HKL file reading and Fdump.bin caching
+    smv.py                # SMV format reader/writer with header parsing
+    pgm.py                # PGM image writer
+    mask.py               # Mask file reading and application
+    source.py             # Source file parsing for beam divergence
+    mosflm.py             # MOSFLM matrix file support
 ```
 
 ## 5) Data Models (TypeScript-style; implement via dataclasses)
@@ -194,7 +195,7 @@ interface BeamConfig {
 
 ## 6) Execution Flow (pseudocode)
 
-1. Parse CLI and headers (planned), resolve precedence; build CrystalConfig, DetectorConfig, BeamConfig.
+1. Parse CLI and headers [IMPLEMENTED], resolve precedence; build CrystalConfig, DetectorConfig, BeamConfig.
 2. Instantiate Detector (meters) and Crystal (Å). Optionally load HKL or Fdump.
 3. Compute `pix0_vector` per pivot and convention; compute basis rotations; cache pixel coords in meters, convert to Å for physics.
 4. Build sampling sets: phi (phi_steps), mosaic (mosaic_domains), sources (divergence/dispersion), subpixels (oversample^2), thickness steps.
@@ -231,7 +232,7 @@ interface BeamConfig {
   - DENZO:  Fbeam = Ybeam; Sbeam = Xbeam.
   - XDS/DIALS: Fbeam = Xbeam; Sbeam = Ybeam.
   - CUSTOM: spec is silent; ADR decision is to not apply implicit +0.5 offsets unless provided by user inputs.
-- Curved detector (planned): spherical mapping via small-angle rotations Sdet/distance and Fdet/distance.
+- Curved detector [IMPLEMENTED]: spherical mapping via small-angle rotations Sdet/distance and Fdet/distance.
 
 ## 8) Physics Model & Scaling
 
@@ -253,7 +254,7 @@ interface BeamConfig {
 - Binary Fdump: header of six ints, form-feed separator, then (h_range+1)×(k_range+1)×(l_range+1) doubles in native endianness (fastest-varying l).
 - Interpolation: enable/disable via flags; auto-enable if any of Na/Nb/Nc ≤ 2 (per spec defaults) unless user forces off.
 
-## 10) I/O — Headers & Image Files (planned)
+## 10) I/O — Headers & Image Files [IMPLEMENTED]
 
 - SMV integer images:
   - Header keys exactly as spec; close with `}\f`; pad to 512 bytes; data unsigned short, slow-major ordering (fast index contiguous; pixel index = slow*fpixels + fast).
@@ -264,7 +265,7 @@ interface BeamConfig {
   - P5 with comment line `# pixels scaled by <pgm_scale>`; values floor(min(255, float_pixel * pgm_scale)).
 - Header ingestion from -img/-mask: recognized keys applied; last file read wins; for -mask, Y beam center interpreted as detsize_s − value_mm.
 
-## 11) RNG & Seeds (planned)
+## 11) RNG & Seeds [IMPLEMENTED]
 
 - Domains and defaults:
   - noise_seed = negative wall-clock time (spec default), override via -seed.

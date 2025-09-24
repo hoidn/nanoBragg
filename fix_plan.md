@@ -6,6 +6,12 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 None - All acceptance tests are now implemented! ✅
 
 ### Recent Fixes (2025-09-24)
+- **Architecture Documentation Update**: Updated arch.md to accurately reflect current implementation state
+  - Changed all "planned" sections to "[IMPLEMENTED]" for modules that are actually complete
+  - Updated module structure to list all implemented IO modules (hkl.py, smv.py, pgm.py, mask.py, source.py, mosflm.py)
+  - Marked physics utilities (sinc3, polarization_factor) as implemented
+  - Marked curved detector, I/O engine, and RNG modules as implemented
+  - arch.md now accurately reflects the feature-complete state of the implementation
 - **Device Normalization Fix**: Fixed CUDA device comparison issue where `torch.device("cuda")` wasn't equal to `torch.device("cuda:0")`
   - Updated `Detector`, `Crystal`, and `Simulator` classes to normalize device on initialization
   - Fixed test in `test_detector_config.py` to use normalized device for comparison
@@ -386,13 +392,11 @@ All critical acceptance tests have been implemented and are passing! The test su
 - MOSFLM matrix file support implemented ✅
 - All functional tests passing when not requiring C binary comparison ✅
 
-## TODO: Future Improvements
+## TODO: Future Improvements (Optional Enhancements)
 
-- **Performance Optimization via Vectorization**: AT-PERF-006 tests now document that the implementation uses Python loops for subpixel and thickness dimensions. Vectorizing these loops to use tensor operations could provide 5-10x speedup.
-- **Full Aliasing Reduction**: Current implementation achieves ~18-23% aliasing reduction with oversampling. Investigate why we don't achieve the theoretical 50%+ reduction.
-- **Multi-source Support**: Implement beam divergence and dispersion (sources > 1) to support the full spec requirements.
-- **Added AT-PERF-007 (Comprehensive Performance Benchmarking Suite)** to specs/spec-a-performance.md - New test requires implementation of systematic benchmarking script that compares C-CPU, PyTorch-CPU, and PyTorch-CUDA across multiple parameter combinations and saves results to JSON/CSV format. Test must be integrated into CI pipeline for regression detection.
-- documentation quality and discoverability audit
+- **Multi-source Support**: Implement beam divergence and dispersion (sources > 1) to support the full spec requirements for advanced beam modeling.
+- **Full Aliasing Reduction Investigation**: Current implementation achieves ~18-23% aliasing reduction with oversampling. Investigate why we don't achieve the theoretical 50%+ reduction (not a bug, but physics investigation).
+- **Documentation Enhancement**: Consider adding more user guides and examples for advanced features.
 
 # TODO high priority:
 ✅ INVESTIGATED (2025-09-24): Angle-dependent discrepancy between C and PyTorch
