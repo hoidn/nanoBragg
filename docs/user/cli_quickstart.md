@@ -38,4 +38,8 @@ Headers & Masks
 Tips
 - Use `-roi` to iterate quickly on small regions.
 - Set seeds for determinism: `-seed`, `-mosaic_seed`, `-misset_seed`.
+- For triclinic crystals, use smaller misset angles (<45°) to avoid pattern offsets. See [Known Limitations](known_limitations.md).
+
+Troubleshooting
+- For issues with triclinic crystals or other limitations, see [Known Limitations](known_limitations.md).
 

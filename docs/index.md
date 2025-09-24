@@ -41,10 +41,11 @@ These are the core, living documents that guide the project.
 * **[Detector Geometry Checklist](./debugging/detector_geometry_checklist.md)** - ⚠️ **MANDATORY** checklist before debugging detector issues.
 
 ### User Guides (`docs/user/`)
+* **[CLI Quickstart](./user/cli_quickstart.md)** - Installing and running the PyTorch CLI.
+* **[Known Limitations](./user/known_limitations.md)** - Current limitations and workarounds, including triclinic misset issues.
 * **[Migration Guide](./user/migration_guide.md)** - Guide for migrating from C to PyTorch version.
 * **[Performance Guide](./user/performance.md)** - Performance optimization and benchmarking.
 * **[Rotation Usage](./user/rotation_usage.md)** - How to use rotation features correctly.
-* **[CLI Quickstart](./user/cli_quickstart.md)** - Installing and running the PyTorch CLI.
 
 ### Development Checklists (`docs/development/checklists/`)
 * **[Checklist 1](./development/checklists/checklist1.md)** - Development checklist.

@@ -4,9 +4,29 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ### TODO
 # TODO remaining items:
-- Document triclinic misset limitation in user guide (correlation 0.958 vs 0.995 requirement)
+(None - all current issues resolved)
 
 ### FIXED (2025-09-24 - Current Session)
+
+#### Triclinic Misset Limitation Documentation - COMPLETED ✅
+- **Issue**: AT-PARALLEL-012 triclinic_P1 test has correlation of 0.958 instead of required 0.995
+- **Root Cause**: Extreme misset angles (-89.968546°, -31.328953°, 177.753396°) applied to triclinic crystals cause effective cell dimension changes
+- **Analysis**:
+  - Misset rotation applied to reciprocal vectors, then real vectors recalculated
+  - This recalculation doesn't preserve original cell dimensions for triclinic cells
+  - Cell dimensions change from (70, 80, 90) → (70.190, 80.204, 90.000)
+  - Causes 177.9 pixel offset between PyTorch and C peak positions
+- **Solution Implemented**: Created comprehensive user documentation
+  - Created `docs/user/known_limitations.md` with detailed explanation
+  - Added to documentation index and multiple user guides
+  - Included workarounds, examples, and validation methods
+- **Files Modified**:
+  - `docs/user/known_limitations.md`: New comprehensive limitations guide
+  - `docs/index.md`: Added to User Guides section
+  - `README_PYTORCH.md`: Added to TOC and troubleshooting
+  - `docs/user/cli_quickstart.md`: Added tip and troubleshooting reference
+- **Status**: Known limitation, documented for users, test remains xfailed
+- **Impact**: Users now aware of limitation and have practical workarounds
 
 #### Detector Config Test Fix - FIXED ✅
 - **Issue**: test_detector_config tests failing due to oversample default change

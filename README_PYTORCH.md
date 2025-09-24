@@ -9,6 +9,7 @@ This guide explains how to use the PyTorch implementation of nanoBragg for diffr
 - [Parallel C/PyTorch Comparison](#parallel-cpytorch-comparison)
 - [Visualization Tools](#visualization-tools)
 - [Test Suite](#test-suite)
+- [Known Limitations](#known-limitations)
 
 ## Installation
 
@@ -419,6 +420,11 @@ pytest tests/ --cov=nanobrag_torch --cov-report=html
    nanoBragg ... -roi 400 600 400 600
    ```
 
+5. **Triclinic Crystal Pattern Offsets**
+   - See [Known Limitations](docs/user/known_limitations.md#triclinic-crystal-misset-limitation)
+   - Use smaller misset angles (<45°) for triclinic crystals
+   - Check correlation values and center region accuracy
+
 ## Performance Tips
 
 1. **Use ROI for testing**: `-roi xmin xmax ymin ymax`
@@ -427,8 +433,19 @@ pytest tests/ --cov=nanobrag_torch --cov-report=html
 4. **Use smaller detectors**: `-detpixels 256` for quick tests
 5. **GPU acceleration**: PyTorch automatically uses GPU if available
 
+## Known Limitations
+
+The PyTorch implementation has some known limitations that users should be aware of:
+
+- **Triclinic Misset Limitation**: Extreme misset angles (>45°) with triclinic crystals may cause pattern offsets and reduced correlation (~0.958 instead of 0.995+)
+- **Memory constraints** with large detector arrays (>2048×2048 pixels)
+- **GPU memory limits** for complex simulations
+
+For complete details and workarounds, see the [Known Limitations Guide](docs/user/known_limitations.md).
+
 ## Further Documentation
 
+- [Known Limitations Guide](docs/user/known_limitations.md) - Current limitations and workarounds
 - [Architecture Documentation](docs/architecture/README.md)
 - [C Parameter Dictionary](docs/architecture/c_parameter_dictionary.md)
 - [Testing Strategy](docs/development/testing_strategy.md)
