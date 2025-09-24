@@ -4,7 +4,8 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ### TODO
 # TODO remaining items:
-(none - all critical issues addressed)
+- Fix test_parallax_dependence in AT-ABS-001 (absorption not varying with parallax)
+- Investigate other tests potentially affected by default_F=0.0 issue
 
 ### Completed (2025-09-24)
 
@@ -20,6 +21,25 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 - **Test Coverage**: Created comprehensive test suite in `tests/test_divergence_culling.py` with 6 tests
 - **Verification**: All tests pass, elliptical trimming properly toggleable via CLI
 - **Spec Compliance**: Now fully compliant with spec-a-parallel.md divergence culling requirements
+
+### Completed (2025-09-24 Session)
+
+#### AT-ABS-001 Test Fix - Default Structure Factor Issue - FIXED ✅
+- **Issue**: AT-ABS-001 tests were failing because simulations produced all zeros
+- **Root Cause**: Tests were using `CrystalConfig()` with default `default_F=0.0`, resulting in zero structure factor and no intensity
+- **Solution Implemented**:
+  1. Updated all test methods in `test_at_abs_001.py` to use `CrystalConfig(default_F=100.0)`
+  2. Added non-zero structure factor to enable absorption testing
+- **Files Modified**:
+  - `tests/test_at_abs_001.py`: Added `default_F=100.0` to all CrystalConfig instantiations
+- **Test Results**: 4 out of 5 tests now pass (up from 0/5)
+  - ✅ test_absorption_disabled_when_zero
+  - ✅ test_capture_fraction_calculation
+  - ✅ test_last_value_vs_accumulation_semantics
+  - ❌ test_parallax_dependence (still failing - absorption not varying with parallax as expected)
+  - ✅ test_absorption_with_tilted_detector
+- **Impact**: Fixed critical test infrastructure issue that was masking absorption functionality
+- **Remaining Issue**: test_parallax_dependence shows same absorption for center and corner pixels (0.0018), suggesting potential bug in parallax-dependent absorption calculation
 
 ### Completed (2025-09-25)
 

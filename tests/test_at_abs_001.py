@@ -38,7 +38,7 @@ class TestAT_ABS_001:
             detector_thicksteps=1
         )
 
-        crystal_config = CrystalConfig()
+        crystal_config = CrystalConfig(default_F=100.0)  # Need non-zero intensity
         beam_config = BeamConfig()
 
         detector = Detector(detector_config)
@@ -77,7 +77,7 @@ class TestAT_ABS_001:
             oversample_thick=False  # Use last-value semantics
         )
 
-        crystal_config = CrystalConfig()
+        crystal_config = CrystalConfig(default_F=100.0)  # Need non-zero intensity
         beam_config = BeamConfig()
 
         detector = Detector(detector_config)
@@ -133,7 +133,7 @@ class TestAT_ABS_001:
             detector_thicksteps=4,  # 4 layers
         )
 
-        crystal_config = CrystalConfig()
+        crystal_config = CrystalConfig(default_F=100.0)  # Need non-zero intensity
         beam_config = BeamConfig()
         crystal = Crystal(crystal_config)
 
@@ -170,7 +170,7 @@ class TestAT_ABS_001:
             oversample_thick=True
         )
 
-        crystal_config = CrystalConfig()
+        crystal_config = CrystalConfig(default_F=100.0)  # Need non-zero intensity
         beam_config = BeamConfig()
 
         detector = Detector(detector_config)
@@ -203,7 +203,7 @@ class TestAT_ABS_001:
             oversample_thick=False
         )
 
-        crystal_config = CrystalConfig()
+        crystal_config = CrystalConfig(default_F=100.0)  # Need non-zero intensity
         beam_config = BeamConfig()
 
         detector = Detector(detector_config)
