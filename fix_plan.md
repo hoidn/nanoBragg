@@ -6,6 +6,11 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 None - All acceptance tests are now implemented! ✅
 
 ### Recent Fixes (2025-09-24)
+- **AT-PERF-006 Test Update**: Updated test to remove xfail markers after full tensor vectorization
+  - Removed pytest.xfail() calls that were expecting Python loops to exist
+  - Tests now properly verify that the implementation uses fully vectorized tensor operations
+  - All 8 active tests in AT-PERF-006 now passing, confirming complete vectorization
+  - Performance scaling tests confirm sub-quadratic scaling with oversample parameter
 - **Architecture Documentation Update**: Updated arch.md to accurately reflect current implementation state
   - Changed all "planned" sections to "[IMPLEMENTED]" for modules that are actually complete
   - Updated module structure to list all implemented IO modules (hkl.py, smv.py, pgm.py, mask.py, source.py, mosflm.py)
