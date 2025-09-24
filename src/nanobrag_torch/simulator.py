@@ -104,7 +104,18 @@ class Simulator:
             self.beam_config.polarization_axis, device=self.device, dtype=self.dtype
         )
 
-    @torch.compile(mode="reduce-overhead")
+        # Compile the physics computation function with appropriate mode
+        # Use max-autotune on GPU to avoid CUDA graph issues with nested compilation
+        # Use reduce-overhead on CPU for better performance
+        if self.device.type == "cuda":
+            self._compute_physics_for_position = torch.compile(mode="max-autotune")(
+                self._compute_physics_for_position
+            )
+        else:
+            self._compute_physics_for_position = torch.compile(mode="reduce-overhead")(
+                self._compute_physics_for_position
+            )
+
     def _compute_physics_for_position(self, pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star):
         """Compute physics (Miller indices, structure factors, intensity) for given positions.
 

@@ -8,7 +8,20 @@ calculations from the original C code.
 import torch
 
 
-@torch.compile(mode="reduce-overhead")
+# Use different compile modes for CPU vs GPU to avoid CUDA graph issues
+# On GPU, "max-autotune" avoids the nested compilation CUDA graph problem
+# On CPU, "reduce-overhead" is faster
+def _get_compile_decorator():
+    """Get appropriate compile decorator based on available hardware."""
+    if torch.cuda.is_available():
+        # Use max-autotune mode on GPU to avoid CUDA graph issues
+        # with nested compilation
+        return torch.compile(mode="max-autotune")
+    else:
+        # Use reduce-overhead on CPU for better performance
+        return torch.compile(mode="reduce-overhead")
+
+@_get_compile_decorator()
 def sincg(u: torch.Tensor, N: torch.Tensor) -> torch.Tensor:
     """
     Calculate Fourier transform of 1D grating (parallelepiped shape factor).
@@ -85,7 +98,7 @@ def sincg(u: torch.Tensor, N: torch.Tensor) -> torch.Tensor:
     return result
 
 
-@torch.compile(mode="reduce-overhead")
+@_get_compile_decorator()
 def sinc3(x: torch.Tensor) -> torch.Tensor:
     """
     Calculate 3D Fourier transform of a sphere (spherical shape factor).
@@ -153,7 +166,7 @@ def sinc3(x: torch.Tensor) -> torch.Tensor:
     return result
 
 
-@torch.compile(mode="reduce-overhead")
+@_get_compile_decorator()
 def polarization_factor(
     kahn_factor: torch.Tensor,
     incident: torch.Tensor,
