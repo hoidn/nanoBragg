@@ -6,16 +6,36 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 (No current high-priority issues)
 
-### Status Summary (2025-09-26)
+### Status Summary (2025-09-25)
 
 **Implementation Complete**:
-- ✅ All 74 acceptance tests from spec are implemented (77 test files total)
+- ✅ All acceptance tests from spec are implemented (77 test files total)
 - ✅ Test suite passing with no critical failures
+- ✅ All detector conventions implemented (MOSFLM, XDS, DIALS, ADXV, DENZO, CUSTOM)
 - ✅ Known limitations documented (triclinic misset xfail)
 - ✅ Performance tests passing with good CPU/GPU acceleration
 - ✅ Full CLI compatibility with C implementation achieved
 
-### FIXED (2025-09-26 - Current Session)
+### FIXED (2025-09-25 - Current Session)
+
+#### ADXV and DENZO Detector Conventions Implementation - COMPLETED ✅
+- **Issue**: ADXV and DENZO detector conventions were specified in spec-a-core.md but not fully implemented
+- **Spec Requirements**:
+  - Lines 63-67: ADXV convention with beam [0,0,1], f=[1,0,0], s=[0,-1,0], o=[0,0,1], twotheta axis=[-1,0,0]
+  - Line 73: DENZO convention same as MOSFLM bases but different beam center mapping
+- **Solution Implemented**:
+  1. Added ADXV and DENZO to DetectorConvention enum in config.py
+  2. Implemented correct basis vectors for both conventions in detector.py _calculate_basis_vectors
+  3. Updated beam vector selection to handle ADXV ([0,0,1]) vs MOSFLM/DENZO ([1,0,0])
+  4. Fixed beam center calculations - DENZO gets no +0.5 pixel offset unlike MOSFLM
+  5. Set correct default twotheta axes (ADXV: [-1,0,0], DENZO: [0,0,-1])
+  6. CLI already had support for -adxv and -denzo flags
+- **Files Modified**:
+  - `src/nanobrag_torch/config.py`: Added enum values, updated __post_init__ and should_use_custom_convention
+  - `src/nanobrag_torch/models/detector.py`: Added basis vectors and beam vector handling for new conventions
+  - `tests/test_detector_conventions.py`: Created comprehensive test suite with 9 tests
+- **Test Results**: All 9 detector convention tests pass, all 90 related tests pass
+- **Impact**: Full implementation of all detector conventions specified in spec
 
 #### AT-SRC-001 Test Expectation Fix - COMPLETED ✅
 - **Issue**: test_at_src_001_simple.py failing - expected all weights to be 1.0 but file had weights 2.0 and 3.0

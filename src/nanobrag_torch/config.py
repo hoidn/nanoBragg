@@ -71,6 +71,8 @@ class DetectorConvention(Enum):
     MOSFLM = "mosflm"
     XDS = "xds"
     DIALS = "dials"
+    ADXV = "adxv"
+    DENZO = "denzo"
     CUSTOM = "custom"  # For user-specified basis vectors
 
 
@@ -257,6 +259,20 @@ class DetectorConfig:
                     self.beam_center_s = (detsize_s + self.pixel_size_mm) / 2.0
                 if self.beam_center_f is None:
                     self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
+            elif self.detector_convention == DetectorConvention.DENZO:
+                # DENZO convention: Same as MOSFLM but NO +0.5 pixel offset
+                # For DENZO: beam_center = detsize / 2
+                if self.beam_center_s is None:
+                    self.beam_center_s = detsize_s / 2.0
+                if self.beam_center_f is None:
+                    self.beam_center_f = detsize_f / 2.0
+            elif self.detector_convention == DetectorConvention.ADXV:
+                # ADXV convention: Different beam center mapping
+                # Per spec: Default Xbeam = (detsize_f + pixel)/2, Ybeam = (detsize_s - pixel)/2
+                if self.beam_center_s is None:
+                    self.beam_center_s = (detsize_s - self.pixel_size_mm) / 2.0
+                if self.beam_center_f is None:
+                    self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
             else:
                 # XDS, DIALS, and other conventions: center without offset
                 # For XDS: beam_center = detsize / 2
@@ -271,12 +287,18 @@ class DetectorConfig:
             if self.detector_convention == DetectorConvention.MOSFLM:
                 # MOSFLM convention: twotheta axis is [0, 0, -1]
                 self.twotheta_axis = torch.tensor([0.0, 0.0, -1.0])
+            elif self.detector_convention == DetectorConvention.DENZO:
+                # DENZO convention: Same as MOSFLM for twotheta axis [0, 0, -1]
+                self.twotheta_axis = torch.tensor([0.0, 0.0, -1.0])
             elif self.detector_convention == DetectorConvention.XDS:
                 # XDS convention: twotheta axis is [1, 0, 0]
                 self.twotheta_axis = torch.tensor([1.0, 0.0, 0.0])
             elif self.detector_convention == DetectorConvention.DIALS:
                 # DIALS convention: twotheta axis is [0, 1, 0]
                 self.twotheta_axis = torch.tensor([0.0, 1.0, 0.0])
+            elif self.detector_convention == DetectorConvention.ADXV:
+                # ADXV convention: twotheta axis is [-1, 0, 0]
+                self.twotheta_axis = torch.tensor([-1.0, 0.0, 0.0])
             else:
                 # Default fallback to DIALS axis [0, 1, 0]
                 self.twotheta_axis = torch.tensor([0.0, 1.0, 0.0])
@@ -405,12 +427,18 @@ class DetectorConfig:
         if self.detector_convention == DetectorConvention.MOSFLM:
             # MOSFLM default is [0, 0, -1]
             is_default = (abs(axis[0]) < 1e-6 and abs(axis[1]) < 1e-6 and abs(axis[2] + 1.0) < 1e-6)
+        elif self.detector_convention == DetectorConvention.DENZO:
+            # DENZO default is [0, 0, -1] (same as MOSFLM)
+            is_default = (abs(axis[0]) < 1e-6 and abs(axis[1]) < 1e-6 and abs(axis[2] + 1.0) < 1e-6)
         elif self.detector_convention == DetectorConvention.XDS:
             # XDS default is [1, 0, 0]
             is_default = (abs(axis[0] - 1.0) < 1e-6 and abs(axis[1]) < 1e-6 and abs(axis[2]) < 1e-6)
         elif self.detector_convention == DetectorConvention.DIALS:
             # DIALS default is [0, 1, 0]
             is_default = (abs(axis[0]) < 1e-6 and abs(axis[1] - 1.0) < 1e-6 and abs(axis[2]) < 1e-6)
+        elif self.detector_convention == DetectorConvention.ADXV:
+            # ADXV default is [-1, 0, 0]
+            is_default = (abs(axis[0] + 1.0) < 1e-6 and abs(axis[1]) < 1e-6 and abs(axis[2]) < 1e-6)
         else:
             # CUSTOM convention or unknown - default to False
             return False

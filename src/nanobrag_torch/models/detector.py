@@ -84,11 +84,13 @@ class Detector:
         beam_center_s_pixels = config.beam_center_s / config.pixel_size_mm
         beam_center_f_pixels = config.beam_center_f / config.pixel_size_mm
 
-        # Apply MOSFLM +0.5 pixel offset for stored beam centers
-        # This matches the C-code convention where beam centers include the offset
+        # Apply convention-specific pixel offsets for stored beam centers
+        # This matches the C-code convention where beam centers may include offsets
         if config.detector_convention == DetectorConvention.MOSFLM:
+            # MOSFLM adds +0.5 pixel offset
             beam_center_s_pixels = beam_center_s_pixels + 0.5
             beam_center_f_pixels = beam_center_f_pixels + 0.5
+        # Note: DENZO and other conventions do NOT add the +0.5 pixel offset
 
         # Convert to tensors on proper device
         if isinstance(beam_center_s_pixels, torch.Tensor):
@@ -417,8 +419,16 @@ class Detector:
 
         # Get beam vector based on convention
         if self.config.detector_convention == DetectorConvention.MOSFLM:
+            # MOSFLM: beam along +X axis
             beam_vector = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
+        elif self.config.detector_convention == DetectorConvention.DENZO:
+            # DENZO: Same as MOSFLM, beam along +X axis
+            beam_vector = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
+        elif self.config.detector_convention == DetectorConvention.ADXV:
+            # ADXV: beam along +Z axis
+            beam_vector = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
         else:
+            # XDS, DIALS, CUSTOM: beam along +Z axis
             beam_vector = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
 
         # Always calculate r-factor to preserve gradient flow
@@ -487,8 +497,18 @@ class Detector:
                 beam_vector = torch.tensor(
                     [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
                 )
+            elif self.config.detector_convention == DetectorConvention.DENZO:
+                # DENZO: Same as MOSFLM, beam along +X axis
+                beam_vector = torch.tensor(
+                    [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
+                )
+            elif self.config.detector_convention == DetectorConvention.ADXV:
+                # ADXV: beam along +Z axis
+                beam_vector = torch.tensor(
+                    [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
+                )
             else:
-                # XDS convention uses [0, 0, 1] as beam vector
+                # XDS, DIALS, CUSTOM convention uses [0, 0, 1] as beam vector
                 beam_vector = torch.tensor(
                     [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
                 )
@@ -1055,6 +1075,29 @@ class Detector:
             )
             odet_vec = torch.tensor(
                 [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype  # Normal along +Z
+            )
+        elif c.detector_convention == DetectorConvention.ADXV:
+            # ADXV convention per spec: beam b = [0 0 1]; f = [1 0 0]; s = [0 -1 0]; o = [0 0 1]
+            fdet_vec = torch.tensor(
+                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype  # Fast along +X
+            )
+            sdet_vec = torch.tensor(
+                [0.0, -1.0, 0.0], device=self.device, dtype=self.dtype  # Slow along -Y (like MOSFLM)
+            )
+            odet_vec = torch.tensor(
+                [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype  # Normal along +Z (beam direction)
+            )
+        elif c.detector_convention == DetectorConvention.DENZO:
+            # DENZO convention per spec: Same as MOSFLM bases (beam [1,0,0], f=[0,0,1], s=[0,-1,0], o=[1,0,0])
+            # Note: Different beam center mapping but same basis vectors as MOSFLM
+            fdet_vec = torch.tensor(
+                [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype  # Fast along +Z (same as MOSFLM)
+            )
+            sdet_vec = torch.tensor(
+                [0.0, -1.0, 0.0], device=self.device, dtype=self.dtype  # Slow along -Y (same as MOSFLM)
+            )
+            odet_vec = torch.tensor(
+                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype   # Normal along +X (same as MOSFLM)
             )
         elif c.detector_convention == DetectorConvention.CUSTOM:
             # CUSTOM convention uses user-provided vectors or defaults to MOSFLM
