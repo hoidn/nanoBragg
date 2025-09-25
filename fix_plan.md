@@ -17,6 +17,15 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ### FIXED (2025-09-26 - Current Session)
 
+#### AT-SRC-001 Test Expectation Fix - COMPLETED ✅
+- **Issue**: test_at_src_001_simple.py failing - expected all weights to be 1.0 but file had weights 2.0 and 3.0
+- **Root Cause**: Test incorrectly expected uniform weights despite providing different weights in test file
+- **Solution**: Fixed test to expect actual weights [2.0, 3.0] from the source file
+- **Files Modified**:
+  - `tests/test_at_src_001_simple.py`: Line 47-49 - Fixed weight expectation to match test data
+- **Test Results**: All 7 AT-SRC-001 tests now passing (1 in simple test + 6 in main test)
+- **Impact**: Test suite now correctly validates source weight preservation per AT-SRC-001
+
 #### AT-SRC-001 Source Weighting Implementation - COMPLETED ✅
 - **Issue**: Source weights from sourcefile were being ignored, contradicting AT-SRC-001 spec requirement
 - **Spec Contradiction**: Line 151 says "weight column is read but ignored" but AT-SRC-001 states "intensity contributions SHALL sum with per-source λ and weight"
