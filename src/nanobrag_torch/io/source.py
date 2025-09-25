@@ -105,9 +105,10 @@ def read_sourcefile(
 
     # Convert to tensors
     directions = torch.stack(directions)
-    # Per spec: "weight column is read but ignored (equal weighting results)"
-    # So we return all weights as 1.0 for equal weighting
-    weights = torch.ones(len(weights), dtype=torch.float64)
+    # Per spec AT-SRC-001: "intensity contributions SHALL sum with per-source λ and weight"
+    # Note: There's a spec contradiction - line 151 says weights are ignored,
+    # but AT-SRC-001 requires weights to be applied. We follow the normative test.
+    weights = torch.tensor(weights, dtype=torch.float64)
     wavelengths = torch.tensor(wavelengths, dtype=torch.float64)
 
     return directions, weights, wavelengths

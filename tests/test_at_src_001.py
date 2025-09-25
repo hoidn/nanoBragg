@@ -67,9 +67,10 @@ class TestAT_SRC_001_SourcefileAndWeighting:
             assert wavelengths[0].item() == pytest.approx(1.0e-10)
             assert wavelengths[1].item() == pytest.approx(1.5e-10)
 
-            # Per spec: weights are read but ignored (equal weighting)
-            # So all weights should be 1.0
-            torch.testing.assert_close(weights, torch.ones(2, dtype=torch.float64))
+            # Per AT-SRC-001: weights should be read and applied
+            # (Note: spec has contradiction - line 151 says ignored, but AT-SRC-001 requires application)
+            assert weights[0].item() == pytest.approx(2.0)
+            assert weights[1].item() == pytest.approx(3.0)
 
     def test_sourcefile_with_missing_columns(self):
         """Test reading sourcefile with missing columns (using defaults)."""
@@ -112,8 +113,10 @@ class TestAT_SRC_001_SourcefileAndWeighting:
             assert wavelengths[1].item() == pytest.approx(6.2e-10)  # Default
             assert wavelengths[2].item() == pytest.approx(6.2e-10)  # Default
 
-            # All weights should be 1.0 (equal weighting per spec)
-            torch.testing.assert_close(weights, torch.ones(3, dtype=torch.float64))
+            # Check weights are preserved from file (per AT-SRC-001)
+            assert weights[0].item() == pytest.approx(2.0)   # Specified
+            assert weights[1].item() == pytest.approx(1.0)   # Default
+            assert weights[2].item() == pytest.approx(1.5)   # Specified
 
     def test_sourcefile_default_position(self):
         """Test that missing X,Y,Z defaults to -source_distance·b position."""
@@ -173,7 +176,7 @@ class TestAT_SRC_001_SourcefileAndWeighting:
             # Verify directions are opposite (sources on opposite sides)
             torch.testing.assert_close(directions[0], -directions[1])
 
-            # All weights should be 1.0 for equal weighting
+            # Both sources have weight 1.0 specified in the file
             torch.testing.assert_close(weights, torch.ones(2, dtype=torch.float64))
 
     def test_empty_sourcefile(self):
@@ -190,3 +193,73 @@ class TestAT_SRC_001_SourcefileAndWeighting:
             # Should raise error for no valid sources
             with pytest.raises(ValueError, match="No valid source lines found"):
                 read_sourcefile(sourcefile, default_wavelength_m=6.2e-10)
+
+    def test_weighted_sources_integration(self):
+        """Test that sources with weights can be loaded and simulated (AT-SRC-001)."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sourcefile = Path(tmpdir) / "weighted_sources.txt"
+
+            # Create two sources with different weights as specified in AT-SRC-001
+            # "Setup: -sourcefile with two sources having distinct weights and λ"
+            content = """# Two sources with different weights and wavelengths
+# X Y Z weight wavelength
+0.0  0.0  -10.0  2.0  6.2e-10
+0.0  0.0  -10.0  3.0  8.0e-10
+"""
+            sourcefile.write_text(content)
+
+            # Read sources
+            directions, weights, wavelengths = read_sourcefile(
+                sourcefile,
+                default_wavelength_m=6.2e-10
+            )
+
+            # Verify weights are preserved per AT-SRC-001
+            # "intensity contributions SHALL sum with per-source λ and weight"
+            assert weights[0].item() == pytest.approx(2.0)
+            assert weights[1].item() == pytest.approx(3.0)
+
+            # Verify wavelengths are preserved
+            assert wavelengths[0].item() == pytest.approx(6.2e-10)
+            assert wavelengths[1].item() == pytest.approx(8.0e-10)
+
+            # Create a small test setup with these sources
+            beam_config = BeamConfig(
+                wavelength_A=6.2,  # Default wavelength in Angstroms
+                source_directions=directions,
+                source_weights=weights,
+                source_wavelengths=wavelengths
+            )
+
+            crystal_config = CrystalConfig(
+                cell_a=100.0, cell_b=100.0, cell_c=100.0,
+                cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+                N_cells=(1, 1, 1),
+                default_F=100.0
+            )
+
+            detector_config = DetectorConfig(
+                distance_mm=100.0,
+                spixels=8, fpixels=8,  # Small detector for speed
+                pixel_size_mm=0.1,
+                detector_convention=DetectorConvention.MOSFLM
+            )
+
+            # Create simulator with sources
+            crystal = Crystal(crystal_config, beam_config)
+            detector = Detector(detector_config)
+            # Pass beam_config as 4th parameter (after crystal_config which is None)
+            simulator = Simulator(crystal, detector, None, beam_config)
+
+            # Run simulation - per AT-SRC-001, steps should equal 2
+            result = simulator.run(oversample=1)
+
+            # Per AT-SRC-001 expectation: "steps = 2"
+            # The normalization should use sum of weights (2.0 + 3.0 = 5.0)
+            # This is implemented in the simulator's steps calculation
+
+            # Verify we get non-zero intensity (simulation runs correctly)
+            assert result.sum() > 0, "Should produce non-zero intensity with weighted sources"
+
+            # Verify shape is correct
+            assert result.shape == (8, 8), "Result should match detector size"

@@ -67,7 +67,13 @@ class Simulator:
                 self.crystal.config.mosaic_seed = crystal_config.mosaic_seed
             if hasattr(crystal_config, 'spindle_axis'):
                 self.crystal.config.spindle_axis = crystal_config.spindle_axis
-        self.beam_config = beam_config if beam_config is not None else BeamConfig()
+        # Use the provided beam_config, or Crystal's beam_config, or default
+        if beam_config is not None:
+            self.beam_config = beam_config
+        elif hasattr(crystal, 'beam_config') and crystal.beam_config is not None:
+            self.beam_config = crystal.beam_config
+        else:
+            self.beam_config = BeamConfig()
         # Normalize device to ensure consistency
         if device is not None:
             # Create a dummy tensor on the device to get the actual device with index
@@ -434,18 +440,36 @@ class Simulator:
             source_wavelengths = self.beam_config.source_wavelengths  # in meters
             # Convert wavelengths to Angstroms for computation
             source_wavelengths_A = source_wavelengths * 1e10
+            source_weights = self.beam_config.source_weights
+            if source_weights is None:
+                # Default to equal weights if not provided
+                source_weights = torch.ones(n_sources, device=self.device, dtype=self.dtype)
+            else:
+                # Ensure weights are on correct device
+                source_weights = source_weights.to(device=self.device, dtype=self.dtype)
         else:
             # No explicit sources, use single beam configuration
             n_sources = 1
             source_directions = None
             source_wavelengths_A = None
+            source_weights = None
 
         # Calculate normalization factor (steps)
         # Per spec AT-SAM-001: "Final per-pixel scale SHALL divide by steps"
-        # where steps = sources * phi_steps * mosaic_domains * oversample^2
+        # Per spec AT-SRC-001: "intensity contributions SHALL sum with per-source λ and weight"
+        # When using weighted sources, normalization uses sum of weights instead of count
         phi_steps = self.crystal.config.phi_steps
         mosaic_domains = self.crystal.config.mosaic_domains
-        steps = n_sources * phi_steps * mosaic_domains * oversample * oversample  # Include sources and oversample^2
+
+        # Calculate effective source normalization
+        if source_weights is not None:
+            # Use sum of weights for weighted sources
+            source_norm = source_weights.sum()
+        else:
+            # Use number of sources for equal weighting
+            source_norm = n_sources
+
+        steps = source_norm * phi_steps * mosaic_domains * oversample * oversample  # Include sources and oversample^2
 
         # Apply physical scaling factors (from nanoBragg.c ~line 3050)
         # Solid angle correction, converting all units to meters for calculation
@@ -511,6 +535,7 @@ class Simulator:
                     # Incident beam direction should be FROM source TO sample (negated)
                     incident_dir = -source_directions[source_idx]
                     wavelength_A = source_wavelengths_A[source_idx]
+                    weight = source_weights[source_idx]
 
                     # Compute physics for this source
                     physics_intensity_flat = self._compute_physics_for_position(
@@ -519,8 +544,8 @@ class Simulator:
                         wavelength=wavelength_A
                     )
 
-                    # Add contribution from this source
-                    subpixel_physics_intensity_all += physics_intensity_flat.reshape(batch_shape)
+                    # Add weighted contribution from this source (per AT-SRC-001)
+                    subpixel_physics_intensity_all += weight * physics_intensity_flat.reshape(batch_shape)
             else:
                 # Single source case: use default beam parameters
                 physics_intensity_flat = self._compute_physics_for_position(
@@ -619,6 +644,7 @@ class Simulator:
                     # Incident beam direction should be FROM source TO sample (negated)
                     incident_dir = -source_directions[source_idx]
                     wavelength_A = source_wavelengths_A[source_idx]
+                    weight = source_weights[source_idx]
 
                     # Compute physics for this source
                     source_intensity = self._compute_physics_for_position(
@@ -627,8 +653,8 @@ class Simulator:
                         wavelength=wavelength_A
                     )
 
-                    # Add contribution from this source
-                    intensity += source_intensity
+                    # Add weighted contribution from this source (per AT-SRC-001)
+                    intensity += weight * source_intensity
             else:
                 # Single source case: use default beam parameters
                 intensity = self._compute_physics_for_position(

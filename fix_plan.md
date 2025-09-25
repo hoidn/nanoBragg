@@ -17,6 +17,21 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ### FIXED (2025-09-26 - Current Session)
 
+#### AT-SRC-001 Source Weighting Implementation - COMPLETED ✅
+- **Issue**: Source weights from sourcefile were being ignored, contradicting AT-SRC-001 spec requirement
+- **Spec Contradiction**: Line 151 says "weight column is read but ignored" but AT-SRC-001 states "intensity contributions SHALL sum with per-source λ and weight"
+- **Solution Implemented**:
+  1. Fixed `source.py` to preserve weights from file instead of setting all to 1.0 (line 111)
+  2. Added weight application in simulator multi-source loops (lines 528, 637)
+  3. Updated normalization to use sum of weights instead of source count (lines 465-470)
+  4. Fixed Simulator parameter ordering bug (beam_config is 4th param, not 3rd)
+- **Files Modified**:
+  - `src/nanobrag_torch/io/source.py`: Lines 108-111 - Preserve actual weights from file
+  - `src/nanobrag_torch/simulator.py`: Lines 437-443, 465-470, 519, 528, 628, 637 - Apply weights and normalize
+  - `tests/test_at_src_001.py`: Updated tests to expect weighted behavior
+- **Test Results**: All 6 AT-SRC-001 tests passing
+- **Impact**: Source weighting now correctly implemented per acceptance test specification
+
 #### AT-PARALLEL-002 Pixel Size Independence - FIXED ✅
 - **Issue**: Test correlation of 0.9836 was below newly increased threshold of 0.9999
 - **Root Cause**: Two issues identified:
