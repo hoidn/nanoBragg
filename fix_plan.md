@@ -7,6 +7,22 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ### FIXED (2025-09-26 - Current Session)
 
+#### AT-ROI-001 Masked Pixel Statistics Test Implementation - COMPLETED ✅
+- **Issue**: test_statistics_exclude_masked_pixels in AT-ROI-001 was not implemented (placeholder with `pass`)
+- **Spec Requirement**: AT-ROI-001 requires pixels outside ROI or with mask value 0 be excluded from statistics
+- **Solution Implemented**:
+  - Fully implemented test that verifies masked pixel exclusion from statistics
+  - Test creates 64x64 detector with diagonal mask and ROI bounds
+  - Verifies statistics (mean, max, RMS, RMSD, N) are computed only from unmasked ROI pixels
+  - Confirms max location is within the combined mask
+  - Handles edge case where no pixels are in mask (all stats should be 0)
+- **Files Modified**:
+  - `tests/test_at_roi_001.py`: Lines 255-364 - Complete test implementation replacing placeholder
+- **Test Results**: All 7 tests in test_at_roi_001.py pass
+- **Impact**: Full compliance with AT-ROI-001 specification requirements
+
+### FIXED (2025-09-26 - Current Session)
+
 #### AT-PARALLEL-007 and AT-PARALLEL-006 Test Review - NO ISSUES FOUND ✅
 - **Investigation**: Reviewed correlation thresholds mentioned in previous fix_plan entry
 - **Findings**:
