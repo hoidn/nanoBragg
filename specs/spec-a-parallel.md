@@ -67,7 +67,7 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
 
 - AT-PARALLEL-012 Reference Pattern Correlation
   - Setup: Use the canonical C commands in tests/golden_data/README.md to generate fixtures: simple_cubic (1024×1024), triclinic_P1 (512×512, explicit misset), and cubic_tilted_detector (rotations + 2θ). Run PyTorch with identical flags.
-  - Pass: simple_cubic correlation ≥ 0.999 and top N=50 peaks ≤ 0.5 px; triclinic_P1 correlation ≥ 0.995 and top N=50 peaks ≤ 0.5 px; tilted correlation ≥ 0.98 and top N=50 peaks ≤ 1.0 px.
+  - Pass: simple_cubic correlation ≥ 0.9995 and top N=50 peaks ≤ 0.5 px; triclinic_P1 correlation ≥ 0.9995 and top N=50 peaks ≤ 0.5 px; tilted correlation ≥ 0.9995 and top N=50 peaks ≤ 1.0 px.
   - High-resolution variant: Setup: λ=0.5Å; detector 4096×4096, pixel 0.05mm, distance 500mm; cell 100,100,100; N=5; compare on a 512×512 ROI centered on the beam. Pass: No NaNs/Infs; C vs PyTorch correlation ≥ 0.95 on the ROI; top N=50 peaks in ROI ≤ 1.0 px.
 
 - AT-PARALLEL-013 Cross-Platform Consistency

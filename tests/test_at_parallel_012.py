@@ -8,9 +8,9 @@ Acceptance Test Requirements (from spec-a-parallel.md):
   - triclinic_P1 (512×512, explicit misset)
   - cubic_tilted_detector (rotations + 2θ)
 - Pass criteria:
-  - simple_cubic: correlation ≥ 0.999 and top N=50 peaks ≤ 0.5 px
-  - triclinic_P1: correlation ≥ 0.995 and top N=50 peaks ≤ 0.5 px
-  - tilted: correlation ≥ 0.98 and top N=50 peaks ≤ 1.0 px
+  - simple_cubic: correlation ≥ 0.9995 and top N=50 peaks ≤ 0.5 px
+  - triclinic_P1: correlation ≥ 0.9995 and top N=50 peaks ≤ 0.5 px
+  - tilted: correlation ≥ 0.9995 and top N=50 peaks ≤ 1.0 px
 - High-resolution variant: λ=0.5Å, 4096×4096 detector, 0.05mm pixels, 500mm distance
   - Pass: No NaNs/Infs; correlation ≥ 0.95 on 512×512 ROI; top N=50 peaks ≤ 1.0 px
 """
@@ -117,7 +117,7 @@ class TestATParallel012ReferencePatternCorrelation:
     """Test reference pattern correlation against golden C data."""
 
     def test_simple_cubic_correlation(self):
-        """Test simple cubic pattern correlation (≥0.999 correlation, ≤0.5px peaks)."""
+        """Test simple cubic pattern correlation (≥0.9995 correlation, ≤0.5px peaks)."""
         # Load golden data (now correctly 1024x1024 as documented)
         golden_file = "tests/golden_data/simple_cubic.bin"
         golden_image = load_golden_float_image(golden_file, (1024, 1024))
@@ -163,9 +163,9 @@ class TestATParallel012ReferencePatternCorrelation:
         n_matches, mean_dist = match_peaks_hungarian(golden_peaks, pytorch_peaks, max_distance=0.5)
 
         # Assertions per spec
-        # Note: spec requires 0.999, we achieve 0.9988 which is within numerical tolerance
-        # The 0.0002 difference is acceptable given float precision differences between C and PyTorch
-        assert corr >= 0.998, f"Correlation {corr:.4f} < 0.998 (relaxed from spec 0.999 by 0.001)"
+        # Note: spec requires 0.9995, we achieve 0.9988 which is below the new threshold
+        # The 0.0007 difference may need investigation
+        assert corr >= 0.9995, f"Correlation {corr:.4f} < 0.9995"
         # Peak matching is slightly below spec (typically 43/50 = 86% vs 95% requirement)
         # This is acceptable given the high correlation (0.9988)
         assert n_matches >= len(golden_peaks) * 0.85, (
@@ -174,7 +174,7 @@ class TestATParallel012ReferencePatternCorrelation:
         assert mean_dist <= 0.5, f"Mean peak distance {mean_dist:.2f} > 0.5 pixel requirement"
 
     def test_triclinic_P1_correlation(self):
-        """Test triclinic P1 pattern correlation (≥0.995 correlation, ≤0.5px peaks)."""
+        """Test triclinic P1 pattern correlation (≥0.9995 correlation, ≤0.5px peaks)."""
         # Load golden data (512x512)
         golden_file = "tests/golden_data/triclinic_P1/image.bin"
         golden_image = load_golden_float_image(golden_file, (512, 512))
@@ -222,19 +222,19 @@ class TestATParallel012ReferencePatternCorrelation:
         n_matches, mean_dist = match_peaks_hungarian(golden_peaks, pytorch_peaks, max_distance=0.5)
 
         # Assertions per spec
-        # Note: spec requires 0.995, we achieve ~0.958 which is below target
+        # Note: spec requires 0.9995, we achieve ~0.958 which is well below target
         # The triclinic case has misset angles that may contribute to differences
         # Marking as xfail until the discrepancy can be investigated further
-        if corr < 0.995:
-            pytest.xfail(f"Correlation {corr:.4f} < 0.995 - needs investigation (misset angles)")
-        assert corr >= 0.995, f"Correlation {corr:.4f} < 0.995 requirement"
+        if corr < 0.9995:
+            pytest.xfail(f"Correlation {corr:.4f} < 0.9995 - needs investigation (misset angles)")
+        assert corr >= 0.9995, f"Correlation {corr:.4f} < 0.9995 requirement"
         assert n_matches >= len(golden_peaks) * 0.95, (
             f"Only {n_matches}/{len(golden_peaks)} peaks matched (need ≥95%)"
         )
         assert mean_dist <= 0.5, f"Mean peak distance {mean_dist:.2f} > 0.5 pixel requirement"
 
     def test_cubic_tilted_detector_correlation(self):
-        """Test tilted detector pattern correlation (≥0.98 correlation, ≤1.0px peaks)."""
+        """Test tilted detector pattern correlation (≥0.9995 correlation, ≤1.0px peaks)."""
         # Load golden data (1024x1024)
         golden_file = "tests/golden_data/cubic_tilted_detector/image.bin"
         golden_image = load_golden_float_image(golden_file, (1024, 1024))
@@ -289,7 +289,7 @@ class TestATParallel012ReferencePatternCorrelation:
         n_matches, mean_dist = match_peaks_hungarian(golden_peaks, pytorch_peaks, max_distance=1.0)
 
         # Assertions per spec (relaxed for tilted detector)
-        assert corr >= 0.98, f"Correlation {corr:.4f} < 0.98 requirement"
+        assert corr >= 0.9995, f"Correlation {corr:.4f} < 0.9995 requirement"
         assert n_matches >= len(golden_peaks) * 0.95, (
             f"Only {n_matches}/{len(golden_peaks)} peaks matched (need ≥95%)"
         )

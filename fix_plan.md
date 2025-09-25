@@ -3,7 +3,57 @@
 Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ### TODO
-(Currently no pending issues)
+
+#### HIGH PRIORITY: Revisit AT-PARALLEL-007 with Higher Correlation Threshold
+- **Issue**: Correlation threshold for AT-PARALLEL-007 has been increased to 0.9995
+- **Current Status**:
+  - AT-PARALLEL-007: Correlation threshold updated from 0.98 to 0.9995 (line 273)
+- **Action Required**:
+  - Run test to verify it still passes with the higher threshold
+  - Investigate and fix if correlation is below 0.9995
+- **Files Modified**:
+  - `tests/test_at_parallel_007.py`: Correlation threshold updated to 0.9995
+  - `specs/spec-a-parallel.md`: Spec updated to match new threshold
+
+#### HIGH PRIORITY: Revisit AT-PARALLEL-012 with Higher Correlation Threshold
+- **Issue**: Correlation thresholds for AT-PARALLEL-012 have been increased to 0.9995 for all three test cases
+- **Current Status**:
+  - simple_cubic: Threshold updated from 0.999 to 0.9995, currently achieving ~0.9988
+  - triclinic_P1: Threshold updated from 0.995 to 0.9995, currently achieving ~0.958 (already xfailed due to misset angles)
+  - tilted detector: Threshold updated from 0.98 to 0.9995
+- **Action Required**:
+  - Investigate why simple_cubic correlation is 0.9988 instead of 0.9995
+  - Verify tilted detector test still passes with new threshold
+  - Consider if triclinic_P1 misset angle issue can be resolved
+- **Files Modified**:
+  - `tests/test_at_parallel_012.py`: All correlation thresholds updated to 0.9995
+  - `specs/spec-a-parallel.md`: Spec updated to match new thresholds
+
+### FIXED (2025-09-26 - Current Session)
+
+#### AT-TOOLS-001 Spec Compliance Fix - COMPLETED ✅
+- **Issue**: nb_compare.py script did not fully comply with AT-TOOLS-001 specification
+- **Spec Deviations Found**:
+  - Output directory used simple name instead of `comparisons/YYYYMMDD-HHMMSS-<short-hash>`
+  - Runtime values saved in seconds instead of milliseconds (`runtime_c_ms`, `runtime_py_ms`)
+  - PNG files named incorrectly (`c_output.png` vs spec's `c.png`)
+  - Float files not being copied to output directory as required
+  - Exit code 3 not returned for correlation below threshold
+  - PNG scaling not using union 99.5th percentile of both images
+  - Missing required fields in summary.json
+- **Solution Implemented**:
+  - Added timestamp and args hash to directory naming
+  - Changed runtime fields to milliseconds as integers
+  - Fixed PNG file names to `c.png` and `py.png`
+  - Copy float files to output as `c_float.bin` and `py_float.bin`
+  - Return exit code 3 when correlation < threshold (was returning 1)
+  - Compute PNG scaling from union of both images at 99.5th percentile
+  - Added all required fields to summary.json: args, binaries, roi, resample flag, png scale method
+- **Files Modified**:
+  - `scripts/nb_compare.py`: Complete spec compliance overhaul
+  - `tests/test_at_tools_001.py`: Updated test expectations for new behavior
+- **Test Results**: All 9 tests in test_at_tools_001.py PASS
+- **Impact**: Developer tooling now fully compliant with spec-a-parallel.md requirements
 
 ### FIXED (2025-09-26 - Current Session)
 
