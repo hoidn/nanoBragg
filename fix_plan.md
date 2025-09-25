@@ -3,9 +3,41 @@
 Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ### TODO
-(None - all current issues resolved)
+- **Issue**: Correlation thresholds for AT-PARALLEL-006 and AT-PARALLEL-007 have been increased to 0.9995
+- **Current Status**:
+  - AT-PARALLEL-006: Does not have correlation assertions, only position error tolerances
+  - AT-PARALLEL-007: Correlation threshold updated from 0.98 to 0.9995 (line 273)
+- **Action Required**:
+  - Investigate why AT-PARALLEL-007 correlation might be below 0.9995
+  - Consider adding correlation assertions to AT-PARALLEL-006 if appropriate
+  - Ensure both tests pass with the higher threshold
+- **Files to Review**:
+  - `tests/test_at_parallel_006.py`: Single reflection position test
+  - `tests/test_at_parallel_007.py`: Peak position with rotations test
+- Notes:
+  - Use parallel tracing if needed.
 
 ### FIXED (2025-09-26 - Current Session)
+
+#### Debug Trace CLI Features Implementation - COMPLETED ✅
+- **Issue**: CLI flags `-printout`, `-printout_pixel`, and `-trace_pixel` were parsed but not implemented
+- **Spec Requirement**: spec-a-cli.md lines 121-123 define these debug features for verbose pixel output
+- **Solution Implemented**:
+  - Added `debug_config` parameter to Simulator class to pass debug options
+  - Implemented `_apply_debug_output` method in Simulator for detailed pixel tracing
+  - `-printout`: Produces general verbose debug output with image statistics
+  - `-printout_pixel f s`: Limits output to specific pixel [fast, slow] coordinates
+  - `-trace_pixel s f`: Produces detailed trace for specific pixel [slow, fast] with intermediate values
+- **Files Modified**:
+  - `src/nanobrag_torch/__main__.py`: Pass debug options to Simulator (lines 972-988)
+  - `src/nanobrag_torch/simulator.py`: Added debug_config parameter and _apply_debug_output method
+- **Tests Created**:
+  - `tests/test_debug_trace.py`: Created comprehensive test suite with 5 tests
+- **Test Results**: All 5 tests pass
+- **Impact**: Improved debugging capability for users and developers
+- **Example Usage**:
+  - `nanoBragg -cell 100 100 100 90 90 90 -default_F 100 -trace_pixel 16 16`
+  - Outputs detailed trace including position, intensity calculation chain, and scaling factors
 
 #### Configuration Echo Feature - COMPLETED ✅
 - **Issue**: No way to debug/verify configuration parameters being used

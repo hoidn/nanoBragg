@@ -32,6 +32,7 @@ class Simulator:
         beam_config: Optional[BeamConfig] = None,
         device=None,
         dtype=torch.float64,
+        debug_config: Optional[dict] = None,
     ):
         """
         Initialize simulator with crystal, detector, and configurations.
@@ -43,6 +44,7 @@ class Simulator:
             beam_config: Beam configuration (optional, for future use)
             device: PyTorch device (cpu/cuda)
             dtype: PyTorch data type
+            debug_config: Debug configuration with printout, printout_pixel, trace_pixel options
         """
         self.crystal = crystal
         self.detector = detector
@@ -74,6 +76,12 @@ class Simulator:
         else:
             self.device = torch.device("cpu")
         self.dtype = dtype
+
+        # Store debug configuration
+        self.debug_config = debug_config if debug_config is not None else {}
+        self.printout = self.debug_config.get('printout', False)
+        self.printout_pixel = self.debug_config.get('printout_pixel', None)  # [fast, slow]
+        self.trace_pixel = self.debug_config.get('trace_pixel', None)  # [slow, fast]
 
         # Set incident beam direction based on detector convention
         # This is critical for convention consistency (AT-PARALLEL-004)
@@ -720,7 +728,117 @@ class Simulator:
         roi_mask = roi_mask.to(physical_intensity.device)
         physical_intensity = physical_intensity * roi_mask
 
+        # Apply debug output if requested
+        if self.printout or self.trace_pixel:
+            self._apply_debug_output(
+                physical_intensity,
+                normalized_intensity,
+                pixel_coords_meters,
+                rot_a_star, rot_b_star, rot_c_star,
+                oversample,
+                omega_pixel if not oversample or oversample == 1 else None,
+                polarization_contribution if not oversample or oversample == 1 else None
+            )
+
         return physical_intensity
+
+    def _apply_debug_output(self,
+                           physical_intensity,
+                           normalized_intensity,
+                           pixel_coords_meters,
+                           rot_a_star, rot_b_star, rot_c_star,
+                           oversample,
+                           omega_pixel=None,
+                           polarization=None):
+        """Apply debug output for -printout and -trace_pixel options.
+
+        Args:
+            physical_intensity: Final intensity values
+            normalized_intensity: Intensity before final scaling
+            pixel_coords_meters: Pixel coordinates in meters
+            rot_a_star, rot_b_star, rot_c_star: Rotated reciprocal vectors
+            oversample: Oversampling factor
+            omega_pixel: Solid angle (if computed)
+            polarization: Polarization factor (if computed)
+        """
+
+        # Check if we should limit output to specific pixel
+        if self.printout_pixel:
+            # printout_pixel is [fast, slow] from CLI
+            target_fast = self.printout_pixel[0]
+            target_slow = self.printout_pixel[1]
+
+            # Only output for this specific pixel
+            if 0 <= target_slow < physical_intensity.shape[0] and 0 <= target_fast < physical_intensity.shape[1]:
+                print(f"\n=== Pixel ({target_fast}, {target_slow}) [fast, slow] ===")
+                print(f"  Final intensity: {physical_intensity[target_slow, target_fast].item():.6e}")
+                print(f"  Normalized intensity: {normalized_intensity[target_slow, target_fast].item():.6e}")
+                if pixel_coords_meters is not None:
+                    coords = pixel_coords_meters[target_slow, target_fast]
+                    print(f"  Position (meters): ({coords[0].item():.6e}, {coords[1].item():.6e}, {coords[2].item():.6e})")
+                    # Convert to Angstroms for physics display
+                    coords_ang = coords * 1e10
+                    print(f"  Position (Å): ({coords_ang[0].item():.3f}, {coords_ang[1].item():.3f}, {coords_ang[2].item():.3f})")
+                if omega_pixel is not None:
+                    print(f"  Solid angle: {omega_pixel[target_slow, target_fast].item():.6e}")
+                if polarization is not None:
+                    print(f"  Polarization: {polarization[target_slow, target_fast].item():.4f}")
+        elif self.printout:
+            # General verbose output - print statistics for all pixels
+            print(f"\n=== Debug Output ===")
+            print(f"  Image shape: {physical_intensity.shape[0]} x {physical_intensity.shape[1]} pixels")
+            print(f"  Max intensity: {physical_intensity.max().item():.6e}")
+            print(f"  Min intensity: {physical_intensity.min().item():.6e}")
+            print(f"  Mean intensity: {physical_intensity.mean().item():.6e}")
+
+            # Find and report brightest pixel
+            max_val = physical_intensity.max()
+            max_pos = (physical_intensity == max_val).nonzero()[0]
+            print(f"  Brightest pixel: ({max_pos[1].item()}, {max_pos[0].item()}) [fast, slow] = {max_val.item():.6e}")
+
+        # Handle trace_pixel for detailed single-pixel trace
+        if self.trace_pixel:
+            # trace_pixel is [slow, fast] from CLI
+            target_slow = self.trace_pixel[0]
+            target_fast = self.trace_pixel[1]
+
+            if 0 <= target_slow < physical_intensity.shape[0] and 0 <= target_fast < physical_intensity.shape[1]:
+                print(f"\n=== TRACE: Pixel ({target_slow}, {target_fast}) [slow, fast] ===")
+                print(f"TRACE: Final intensity = {physical_intensity[target_slow, target_fast].item():.12e}")
+                print(f"TRACE: Normalized intensity = {normalized_intensity[target_slow, target_fast].item():.12e}")
+
+                # Trace coordinate information
+                if pixel_coords_meters is not None:
+                    coords = pixel_coords_meters[target_slow, target_fast]
+                    print(f"TRACE: Position (m) = {coords[0].item():.12e}, {coords[1].item():.12e}, {coords[2].item():.12e}")
+                    coords_ang = coords * 1e10
+                    print(f"TRACE: Position (Å) = {coords_ang[0].item():.6f}, {coords_ang[1].item():.6f}, {coords_ang[2].item():.6f}")
+
+                    # Calculate airpath
+                    airpath_m = torch.sqrt(torch.sum(coords * coords)).item()
+                    print(f"TRACE: Airpath (m) = {airpath_m:.12e}")
+
+                # Trace reciprocal space information if available
+                if rot_a_star is not None and rot_b_star is not None and rot_c_star is not None:
+                    # Show first reciprocal vector as example
+                    a_star_0 = rot_a_star[0, 0] if len(rot_a_star.shape) > 1 else rot_a_star
+                    print(f"TRACE: a* (first) = ({a_star_0[0].item():.6e}, {a_star_0[1].item():.6e}, {a_star_0[2].item():.6e})")
+
+                # Trace factors
+                if omega_pixel is not None:
+                    print(f"TRACE: Omega (solid angle) = {omega_pixel[target_slow, target_fast].item():.12e}")
+                if polarization is not None:
+                    print(f"TRACE: Polarization = {polarization[target_slow, target_fast].item():.12e}")
+
+                print(f"TRACE: r_e^2 = {self.r_e_sqr:.12e}")
+                print(f"TRACE: Fluence = {self.fluence:.12e}")
+                print(f"TRACE: Oversample = {oversample}")
+
+                # Show multiplication chain
+                print(f"\nTRACE: Intensity calculation chain:")
+                print(f"  normalized * r_e^2 * fluence")
+                print(f"  = {normalized_intensity[target_slow, target_fast].item():.12e} * {self.r_e_sqr:.12e} * {self.fluence:.12e}")
+                print(f"  = {physical_intensity[target_slow, target_fast].item():.12e}")
 
     def _calculate_water_background(self) -> torch.Tensor:
         """Calculate water background contribution (AT-BKG-001).

@@ -969,8 +969,13 @@ def main():
         if 'interpolate' in config:
             crystal.interpolation_enabled = config['interpolate']
 
-        # Create and run simulator
-        simulator = Simulator(crystal, detector, beam_config=beam_config)
+        # Create and run simulator with debug options
+        debug_config = {
+            'printout': args.printout,
+            'printout_pixel': args.printout_pixel,  # [fast, slow] indices
+            'trace_pixel': args.trace_pixel,  # [slow, fast] indices
+        }
+        simulator = Simulator(crystal, detector, beam_config=beam_config, debug_config=debug_config)
 
         # Print configuration if requested
         if args.show_config:
@@ -981,7 +986,14 @@ def main():
         print(f"  Crystal: {crystal_config.cell_a:.1f}x{crystal_config.cell_b:.1f}x{crystal_config.cell_c:.1f} Å")
         print(f"  Wavelength: {beam_config.wavelength_A:.2f} Å")
 
-        # Run simulation
+        # Run simulation with any debug output
+        if args.printout:
+            print("\nDebug output enabled for simulation")
+        if args.printout_pixel:
+            print(f"  Limiting output to pixel (fast={args.printout_pixel[0]}, slow={args.printout_pixel[1]})")
+        if args.trace_pixel:
+            print(f"  Tracing pixel (slow={args.trace_pixel[0]}, fast={args.trace_pixel[1]})")
+
         intensity = simulator.run()
 
         # Compute statistics
