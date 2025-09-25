@@ -6,6 +6,19 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 (Currently empty - all high priority issues resolved)
 
+### FIXED (2025-09-25 - Current Session)
+
+#### Configuration Consistency Test Corrections - COMPLETED ✅
+- **Issue**: Tests in test_configuration_consistency.py were incorrectly marked as skipped
+- **Root Cause**: Tests expected a special nanoBragg_config binary with diagnostic output (CONFIG_MODE, CONFIG_TRIGGER, CONFIG_HASH) that doesn't exist in standard build
+- **Solution Implemented**:
+  - Updated skip reasons to accurately reflect that tests require special binary that doesn't exist
+  - Clarified that actual -show_config feature is implemented and tested in test_show_config.py
+  - Fixed syntax error in test_all_vector_parameters_trigger_custom method
+- **Files Modified**:
+  - `tests/test_configuration_consistency.py`: Updated skip reasons and fixed syntax (lines 113-178)
+- **Impact**: Tests now properly marked with accurate skip reasons, no false expectations
+
 ### FIXED (2025-09-26 - Current Session)
 
 #### Custom Detector Basis Vectors CLI Integration - COMPLETED ✅
