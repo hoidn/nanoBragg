@@ -16,7 +16,7 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
 
 - AT-PARALLEL-002 Pixel Size Independence
   - Setup: Fixed 256x256 detector, vary pixel sizes 0.05, 0.1, 0.2, 0.4mm, beam center at 25.6mm
-  - Expectation: Beam center in pixels SHALL equal 25.6mm / pixel_size_mm ±0.1 pixels; Peak positions SHALL scale inversely with pixel size; Pattern correlation >0.95
+  - Expectation: Beam center in pixels SHALL equal 25.6mm / pixel_size_mm ±0.1 pixels; Peak positions SHALL scale inversely with pixel size; Pattern correlation ≥0.9999
 
 - AT-PARALLEL-003 Detector Offset Preservation
   - Setup: Test beam centers (20,20), (30,40), (45,25), (60,60)mm with 256x256, 512x512, 1024x1024 detectors
