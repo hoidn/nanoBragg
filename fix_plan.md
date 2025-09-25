@@ -6,6 +6,17 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 (Currently empty - all high priority issues resolved)
 
+### FIXED (2025-09-25 - Current Session)
+
+#### AT-PARALLEL-012 Working Directory Dependency - FIXED ✅
+- **Issue**: test_at_parallel_012.py::test_simple_cubic_correlation failing when run from different working directories
+- **Root Cause**: Tests used relative paths "tests/golden_data/..." that broke when pytest was run from different directories
+- **Solution**: Updated all golden file paths to use `Path(__file__).parent / "golden_data"` to make them relative to test file location
+- **Files Modified**:
+  - `tests/test_at_parallel_012.py`: Fixed golden_file paths in all 3 test methods (lines 122, 179, 239)
+- **Test Results**: All tests now pass regardless of working directory (2 passed, 1 xfailed, 1 skipped)
+- **Impact**: Eliminated intermittent test failures when running full test suite
+
 ### INVESTIGATED (2025-09-25 - Current Session)
 
 #### AT-PARALLEL-012 Triclinic Misset Re-Investigation - CONFIRMED ❗

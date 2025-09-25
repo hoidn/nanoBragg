@@ -119,8 +119,8 @@ class TestATParallel012ReferencePatternCorrelation:
     def test_simple_cubic_correlation(self):
         """Test simple cubic pattern correlation (≥0.9995 correlation, ≤0.5px peaks)."""
         # Load golden data (now correctly 1024x1024 as documented)
-        golden_file = "tests/golden_data/simple_cubic.bin"
-        golden_image = load_golden_float_image(golden_file, (1024, 1024))
+        golden_file = Path(__file__).parent / "golden_data" / "simple_cubic.bin"
+        golden_image = load_golden_float_image(str(golden_file), (1024, 1024))
 
         # Setup PyTorch configuration to match golden data generation
         # Generated with: -cell 100 100 100 90 90 90 -lambda 6.2 -N 5 -default_F 100 -distance 100 -detpixels 1024 -pixel 0.1
@@ -176,8 +176,8 @@ class TestATParallel012ReferencePatternCorrelation:
     def test_triclinic_P1_correlation(self):
         """Test triclinic P1 pattern correlation (≥0.9995 correlation, ≤0.5px peaks)."""
         # Load golden data (512x512)
-        golden_file = "tests/golden_data/triclinic_P1/image.bin"
-        golden_image = load_golden_float_image(golden_file, (512, 512))
+        golden_file = Path(__file__).parent / "golden_data" / "triclinic_P1" / "image.bin"
+        golden_image = load_golden_float_image(str(golden_file), (512, 512))
 
         # Setup PyTorch configuration to match canonical command
         # From README: -misset -89.968546 -31.328953 177.753396 -cell 70 80 90 75 85 95
@@ -236,8 +236,8 @@ class TestATParallel012ReferencePatternCorrelation:
     def test_cubic_tilted_detector_correlation(self):
         """Test tilted detector pattern correlation (≥0.9995 correlation, ≤1.0px peaks)."""
         # Load golden data (1024x1024)
-        golden_file = "tests/golden_data/cubic_tilted_detector/image.bin"
-        golden_image = load_golden_float_image(golden_file, (1024, 1024))
+        golden_file = Path(__file__).parent / "golden_data" / "cubic_tilted_detector" / "image.bin"
+        golden_image = load_golden_float_image(str(golden_file), (1024, 1024))
 
         # Setup PyTorch configuration to match canonical command
         # From README: -lambda 6.2 -N 5 -cell 100 100 100 90 90 90 -default_F 100
