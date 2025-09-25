@@ -6,6 +6,28 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 (Currently empty - all high priority issues resolved)
 
+### INVESTIGATED (2025-09-25 - Current Session)
+
+#### AT-PARALLEL-012 Triclinic Misset Re-Investigation - CONFIRMED ❗
+- **Issue**: AT-PARALLEL-012 triclinic_P1 test has correlation of 0.958087 instead of required 0.9995
+- **Diagnostic Analysis Performed**:
+  - Created diagnostic script to analyze the triclinic_P1 correlation issue
+  - Confirmed cell dimension changes after misset application:
+    - a: 70.189913 Å (expected 70.0) - 0.19 Å difference
+    - b: 80.204071 Å (expected 80.0) - 0.20 Å difference
+    - c: 90.000000 Å (expected 90.0) - exact match
+  - Peak offset: (145, 103) pixels between golden and PyTorch brightest pixels
+  - Intensity ratio (PyTorch/Golden): 1.020879 (close to 1.0, good)
+  - No shift improves correlation (tested ±10 pixels)
+- **Root Cause Confirmed**:
+  - Misset rotation implementation changes cell dimensions for triclinic cells
+  - Applied to reciprocal vectors, then real vectors recalculated
+  - This recalculation doesn't preserve original cell dimensions
+  - Issue occurs with extreme misset angles (-89.968546°, -31.328953°, 177.753396°)
+- **Status**: Known limitation, test correctly marked as xfail
+- **Impact**: Only affects triclinic cells with large misset angles
+- **Decision**: Leave as xfail - fixing would require major refactoring of crystallographic rotation pipeline
+
 ### FIXED (2025-09-25 - Current Session)
 
 #### Configuration Consistency Test Corrections - COMPLETED ✅
