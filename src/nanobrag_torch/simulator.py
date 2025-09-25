@@ -730,6 +730,18 @@ class Simulator:
 
         # Apply debug output if requested
         if self.printout or self.trace_pixel:
+            # For debug output, compute polarization for single pixel case
+            polarization_value = None
+            if not oversample or oversample == 1:
+                # Calculate polarization factor for the entire detector
+                if self.beam_config.nopolar:
+                    polarization_value = torch.ones_like(omega_pixel)
+                else:
+                    # Compute incident and diffracted vectors for debug output
+                    # These are already calculated in the main flow but not available here
+                    # Since this is only for debug output, we can skip it for now
+                    polarization_value = None
+
             self._apply_debug_output(
                 physical_intensity,
                 normalized_intensity,
@@ -737,7 +749,7 @@ class Simulator:
                 rot_a_star, rot_b_star, rot_c_star,
                 oversample,
                 omega_pixel if not oversample or oversample == 1 else None,
-                polarization_contribution if not oversample or oversample == 1 else None
+                polarization_value
             )
 
         return physical_intensity

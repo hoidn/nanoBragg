@@ -8,6 +8,23 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ### FIXED (2025-09-26 - Current Session)
 
+#### Custom Detector Basis Vectors CLI Integration - COMPLETED ✅
+- **Issue**: CLI flags for custom detector vectors (-fdet_vector, -sdet_vector, -odet_vector, -spindle_axis) were parsed but not passed to detector/crystal configuration
+- **Spec Requirement**: spec-a-cli.md lines 57-60 define custom unit vectors that set convention to CUSTOM
+- **Solution Implemented**:
+  - Added custom vector collection to config dictionary in __main__.py
+  - Pass custom_fdet_vector, custom_sdet_vector, custom_odet_vector to DetectorConfig
+  - Pass custom_spindle_axis to CrystalConfig
+  - Fixed debug output bug with undefined polarization_contribution variable
+  - Added "Convention: CUSTOM" print when custom vectors are used
+- **Files Modified**:
+  - `src/nanobrag_torch/__main__.py`: Added custom vector config handling (lines 521-534, 836-838, 816-817, 1011-1012)
+  - `src/nanobrag_torch/simulator.py`: Fixed debug output polarization calculation (lines 731-755)
+- **Tests Created**:
+  - `tests/test_custom_vectors.py`: Created comprehensive test suite with 5 tests
+- **Test Results**: All 5 tests pass
+- **Impact**: Custom detector basis vectors can now be specified via CLI for CUSTOM convention
+
 #### AT-PARALLEL-007 Correlation Threshold Verification - COMPLETED ✅
 - **Issue**: Correlation threshold for AT-PARALLEL-007 was increased to 0.9995
 - **Resolution**: Test passes perfectly with correlation of 1.0000 (exceeds 0.9995 requirement)

@@ -517,6 +517,22 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     config['point_pixel'] = args.point_pixel
     config['curved_detector'] = args.curved_det
 
+    # Custom vectors for CUSTOM convention
+    if args.fdet_vector:
+        config['custom_fdet_vector'] = tuple(args.fdet_vector)
+    if args.sdet_vector:
+        config['custom_sdet_vector'] = tuple(args.sdet_vector)
+    if args.odet_vector:
+        config['custom_odet_vector'] = tuple(args.odet_vector)
+    if args.beam_vector:
+        config['custom_beam_vector'] = tuple(args.beam_vector)
+    if args.polar_vector:
+        config['custom_polar_vector'] = tuple(args.polar_vector)
+    if args.spindle_axis:
+        config['custom_spindle_axis'] = tuple(args.spindle_axis)
+    if args.pix0_vector:
+        config['custom_pix0_vector'] = tuple(args.pix0_vector)
+
     # Detector absorption
     if args.detector_abs:
         if args.detector_abs in ['inf', '0']:
@@ -797,6 +813,9 @@ def main():
             if 'misset_seed' in config:
                 crystal_config.misset_seed = config['misset_seed']
 
+            if 'custom_spindle_axis' in config:
+                crystal_config.spindle_axis = config['custom_spindle_axis']
+
         # Create detector config
         detector_config = DetectorConfig(
             distance_mm=config.get('distance_mm', 100.0),
@@ -815,7 +834,11 @@ def main():
             curved_detector=config.get('curved_detector', False),
             oversample_omega=config.get('oversample_omega', False),
             oversample_polar=config.get('oversample_polar', False),
-            oversample_thick=config.get('oversample_thick', False)
+            oversample_thick=config.get('oversample_thick', False),
+            # Custom vectors for CUSTOM convention
+            custom_fdet_vector=config.get('custom_fdet_vector'),
+            custom_sdet_vector=config.get('custom_sdet_vector'),
+            custom_odet_vector=config.get('custom_odet_vector')
         )
 
         # Set beam center if provided (values are in mm)
@@ -985,6 +1008,8 @@ def main():
         print(f"  Detector: {detector_config.fpixels}x{detector_config.spixels} pixels")
         print(f"  Crystal: {crystal_config.cell_a:.1f}x{crystal_config.cell_b:.1f}x{crystal_config.cell_c:.1f} Å")
         print(f"  Wavelength: {beam_config.wavelength_A:.2f} Å")
+        if detector_config.detector_convention == DetectorConvention.CUSTOM:
+            print(f"  Convention: CUSTOM (using custom detector basis vectors)")
 
         # Run simulation with any debug output
         if args.printout:
