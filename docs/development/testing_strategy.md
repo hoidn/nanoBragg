@@ -159,6 +159,7 @@ General environment for live C parity tests:
 - `KMP_DUPLICATE_LIB_OK=TRUE` (avoid MKL conflicts on some systems)
 - `NB_RUN_PARALLEL=1` (enables live C↔PyTorch tests)
 - `NB_C_BIN=./golden_suite_generator/nanoBragg` (path to C reference binary)
+  - Fallback: if `golden_suite_generator/nanoBragg` does not exist in this repo, use `NB_C_BIN=./nanoBragg` (root‑level C binary)
 
 Quick invocation patterns (authoritative harness = pytest):
 
@@ -201,6 +202,26 @@ Reference mapping:
   - Test file: `tests/test_at_parallel_022.py`
   - Env: `NB_RUN_PARALLEL=1`, `NB_C_BIN` set
   - Command: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_022.py`
+
+### 2.5.1 Trace Recipe (per AT)
+
+For equivalence debugging (AT‑PARALLEL failures, correlation below thresholds, structured diffs), generate aligned traces:
+
+- Pixel selection: choose a strong on‑peak pixel close to the beam center or a specified coordinate in the test; record the exact `(s,f)` indices used.
+- PyTorch trace: emit a structured log containing, at minimum, `pix0_vector`, basis vectors, `R` (distance), solid angle (both point‑pixel and obliquity‑corrected), close_distance and obliquity factor, `k_in`, `k_out`, `S`, Miller indices (float and rounded), `F`, lattice factors (`F_latt_a/b/c`, product), `F^2`, `F_latt^2`, `omega/solid_angle`, pixel area, fluence and final intensity.
+- C trace: run the C binary with identical parameters and print the same variables for the same pixel. If needed, add temporary printf instrumentation; keep units consistent with the PyTorch trace (meters, steradians, Å where noted).
+- Dtype/device: debug in float64 on CPU for determinism unless the AT explicitly requires GPU.
+- Artifacts: save as `reports/debug/<DATE>/AT-<ID>/{c_trace.log, py_trace.log, metrics.json, diff_heatmap.png}` and cite paths in the plan.
+
+### 2.5.2 Matrix Gate (hard preflight)
+
+Before any parity run in a debugging loop:
+
+- Resolve the AT in this matrix to the exact pytest node(s) and required environment.
+- Verify `NB_C_BIN` exists and is executable; if the project uses a root‑level `./nanoBragg`, set `NB_C_BIN=./nanoBragg`.
+- Prohibition: Do not run PyTorch‑only tests first for equivalence loops. The first command MUST be the canonical C‑parity pytest invocation mapped here. PyTorch‑only checks are allowed only as secondary, supportive diagnostics.
+- If an AT mapping is missing or incomplete, add a minimal entry here (test file, env, canonical command) and append a TODO in `docs/fix_plan.md` referencing the addition.
+ - Friction rule: If the same parity steps (env export, pytest node, trace generation) are repeated across two loops, factor them into a minimal helper (e.g., a one‑liner shell alias or small script) and reference it in this matrix. Record the addition briefly in `docs/fix_plan.md` Attempts History. Do not bypass pytest; helpers should only wrap the mapped canonical commands.
 
 ## 2.6 CI Gates (Parity & Traces)
 
