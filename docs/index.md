@@ -29,6 +29,7 @@ These are the core, living documents that guide the project.
 * **[C to PyTorch Config Map](./development/c_to_pytorch_config_map.md)** - Critical configuration mapping between C and PyTorch.
 * **[Contributing Guidelines](./development/CONTRIBUTING.md)** - How to contribute to the project.
 * **[Debugging Guide](./debugging/debugging.md)** - General debugging workflows and strategies.
+* **[Documentation Sync SOP (Template)](../prompts/doc_sync_sop.md)** - Repeatable process to find/fix doc drift and keep SOPs aligned with tests.
 * **[Detector Fix Phase 2 Session](./development/detector_fix_phase2_session.md)** - Detailed debugging session log.
 * **[Detector Geometry Debugging](./debugging/detector_geometry_debugging.md)** - Specific detector geometry debugging guide.
 * **[Detector Rotation Debugging Session](./development/detector_rotation_debugging_session.md)** - Rotation-specific debugging session.

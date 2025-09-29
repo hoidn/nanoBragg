@@ -4,6 +4,12 @@ Purpose
 - This prompt governs any loop labeled “debugging” and any loop triggered by AT‑PARALLEL failures, correlation below thresholds, large max absolute differences, or visible structured discrepancies.
 - It encodes strict guardrails, mandatory parallel trace‑driven validation, geometry‑first triage, quantitative checkpoints beyond correlation, clear success/fail gates with rollback, and a mandatory fix plan update process.
 
+Autonomy & Interaction Policy (No‑Question Mode)
+- Do not ask the user what to work on. Select work autonomously from `docs/fix_plan.md`.
+- If an item is already `in_progress`, continue it. Otherwise pick the highest‑priority `pending` item and set it to `in_progress`.
+- Produce brief preambles and then act: read files, search, run tests, generate traces, update plan, and commit per gates.
+- Only two messages per loop: a short “next action” preamble before the first command, and the final Loop Output checklist. No idle greetings.
+
 Use When (Triggers)
 - Any AT‑PARALLEL test fails or correlation < required threshold in specs/spec‑a‑parallel.md
 - Max absolute diff is large or diff heatmap shows structured errors
@@ -60,6 +66,7 @@ Loop Objective (single loop)
 
 Progress & Tools Integration
 - Use brief preambles (what’s next) and update_plan for steps (reproduce → trace → triage → fix → verify). Prefer `rg` for search. Save artifacts under a dated folder.
+- Always do real work each loop: at minimum, read `docs/fix_plan.md`, map the AT to concrete test file(s) (via Parity Profile), and execute the mapped pytest command (or golden-data fallback) to capture a baseline.
 
 SOP — Step‑by‑Step (follow in order)
 0) Setup & Context
