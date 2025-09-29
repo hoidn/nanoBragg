@@ -40,6 +40,7 @@ SOP — Step‑by‑Step (follow in order)
    - Update docs/fix_plan.md at LOOP START using `prompts/update_fix_plan.md`: pick one item, set `Status: in_progress`, record reproduction commands and planned approach.
 
 1) Reproduce Canonically
+   - Subagent: test-failure-analyzer — Provide the failing test path/pattern and context. Capture canonical error messages, stack traces, clustered failures, and exact repro commands. Attach its report, then run the reproduced command(s) to verify.
    - Reproduce the exact failing case (e.g., AT‑PARALLEL‑002 pixel sizes: 0.05, 0.1, 0.2, 0.4 mm; fixed detector size; fixed beam center in mm). Record: image shape, correlation, MSE/RMSE, max abs diff, total sums and sum ratio.
    - Save diff heatmap (log1p|Δ|) and peak diagnostics if relevant.
 
@@ -48,10 +49,12 @@ SOP — Step‑by‑Step (follow in order)
    - Convention: MOSFLM axis/basis, +0.5 pixel on beam centers; F/S mapping; CUSTOM switch when `-twotheta_axis` is explicit.
    - Pivot: BEAM vs SAMPLE per flags/headers; r‑factor ratio; close_distance update and distance = close_distance / r.
    - Invariances: beam center in pixels scales as 1/pixel_size; pixel coordinate mapping; omega formula Ω=(pixel_size²/R²)·(close_distance/R) or 1/R² (point‑pixel). Validate.
+   - Subagent (conditional): architect-review — If triage indicates geometry/convention/pivot/omega‑formula changes, validate ADR alignment and propose ADR updates. Include a 1–3 line ADR impact summary in artifacts.
 
 3) Mandatory Parallel Trace‑Driven Validation
    - Choose an on‑peak pixel (or two) in the failing condition. Generate instrumented C trace (meters/Å per spec) and matching PyTorch trace with IDENTICAL variable names (e.g., pix0_vector, fdet/sdet/odet, Fbeam/Sbeam, R, omega, incident/diffracted, q, h,k,l, F_cell, F_latt, S-step factors).
    - Compare line‑by‑line to find the FIRST DIVERGENCE. Stop and root‑cause that divergence before changing anything else.
+   - Subagent: debugger — Drive the isolate‑first‑divergence workflow and propose the minimal corrective change. Follow its reproduce/isolate steps; keep edits surgical.
 
 4) Quantitative Checkpoints & Visuals (always attach)
    - Metrics: correlation, MSE, RMSE, max abs diff, total sums (C_sum, Py_sum) and their ratio, and optional SSIM. Count matched peaks and pixel errors if peak alignment applies.
@@ -75,6 +78,8 @@ SOP — Step‑by‑Step (follow in order)
      • Record FIRST DIVERGENCE (variable + file:line) and hypotheses.
      • If PASS: mark `Status: done` and quote spec thresholds satisfied.
      • If FAIL/PARTIAL: DO NOT mark done — keep item active and add concrete Next Actions; include rollback note if code changes were reverted.
+   - Subagent (post‑parity): issue — If the root‑cause class wasn’t covered or was weakly covered by Acceptance Tests/spec, propose precise spec shard edits/additions (IDs, shard, measurable expectations) without weakening thresholds; add a TODO to fix_plan.md.
+   - Subagent (pre‑commit): code-reviewer — Run on the changed scope to catch security/performance/config risks introduced by the fix; address high/critical findings before committing.
 
 Acceptance Metrics Reference (examples)
 - Use the exact thresholds from specs/spec‑a‑parallel.md for each AT. Examples:
