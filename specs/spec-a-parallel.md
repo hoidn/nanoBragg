@@ -13,36 +13,44 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
   - Setup: Test detector sizes 64x64, 128x128, 256x256, 512x512, 1024x1024 pixels with 0.1mm pixel size, cubic crystal 100Å N=3, λ=6.2Å
   - Expectation: Beam center (mm) SHALL equal detector_pixels/2 × pixel_size_mm; Peak SHALL appear at detector center ±2 pixels; Correlation between C and PyTorch >0.95
   - Failure mode: Fixed beam center at 51.2mm regardless of detector size
+  - Implementation: `pytest -v tests/test_at_parallel_001.py`
 
 - AT-PARALLEL-002 Pixel Size Independence
   - Setup: Fixed 256x256 detector, vary pixel sizes 0.05, 0.1, 0.2, 0.4mm, beam center at 25.6mm
   - Expectation: Beam center in pixels SHALL equal 25.6mm / pixel_size_mm ±0.1 pixels; Peak positions SHALL scale inversely with pixel size; Pattern correlation ≥0.9999
+  - Implementation: `pytest -v tests/test_at_parallel_002.py`
 
 - AT-PARALLEL-003 Detector Offset Preservation
   - Setup: Test beam centers (20,20), (30,40), (45,25), (60,60)mm with 256x256, 512x512, 1024x1024 detectors
   - Expectation: Peak SHALL appear at beam_center_mm / pixel_size_mm ±1 pixel; Offset ratios preserved ±2%
+  - Implementation: `pytest -v tests/test_at_parallel_003.py`
 
 - AT-PARALLEL-004 MOSFLM 0.5 Pixel Offset
   - Setup: MOSFLM vs XDS convention comparison, 256x256 detector, beam center 25.6mm
   - Expectation: MOSFLM SHALL add +0.5 pixel offset; Peak position difference SHALL be 0.4-0.6 pixels between conventions; Pattern correlation >0.99 when aligned
+  - Implementation: `pytest -v tests/test_at_parallel_004.py`
 
 - AT-PARALLEL-005 Beam Center Parameter Mapping
   - Setup: Test -Xbeam/-Ybeam vs -ORGX/-ORGY vs -Xclose/-Yclose parameter equivalence
   - Expectation: Equivalent configurations SHALL produce same beam centers ±0.5 pixels; Pivot mode SHALL be set consistently
+  - Implementation: `pytest -v tests/test_at_parallel_005.py`
 
 - AT-PARALLEL-006 Single Reflection Position
   - Setup: Cubic crystal 100Å, single (1,0,0) reflection, vary distance (50,100,200mm) and wavelength (1.0,1.5,2.0Å)
   - Expectation: Peak position SHALL match Bragg angle calculation θ=arcsin(λ/(2d)) ±0.5 pixels; Distance scaling ratio ±2%; Wavelength scaling follows Bragg's law ±1%
+  - Implementation: `pytest -v tests/test_at_parallel_006.py`
 
 - AT-PARALLEL-007 Peak Position with Rotations
   - Setup: 100,100,100,90,90,90 cell; -default_F 100; detector 256×256, -pixel 0.1, -distance 100; MOSFLM; auto beam center; -phi 0 -osc 0; -mosaic 0; divergence=0; dispersion=0; -oversample 1; full-frame ROI; -pivot beam; -detector_rotx 5 -detector_roty 3 -detector_rotz 2 -twotheta 10.
   - Procedure: Run C and PyTorch with identical flags. Detect local maxima above the 99.5th percentile; select top N=25 peaks. Register C↔PyTorch peaks via Hungarian matching with 1.0‑pixel gating.
   - Pass: Image correlation ≥ 0.9995; ≥ 95% matched peaks within ≤ 1.0 pixel; total float-image sums ratio in [0.9, 1.1].
+  - Implementation: `pytest -v tests/test_at_parallel_007.py`
 
 - AT-PARALLEL-008 Multi-Peak Pattern Registration
   - Setup: Triclinic 70,80,90,75,85,95 cell; -default_F 100; N=5; detector 512×512, -pixel 0.1, -distance 100; MOSFLM; -phi 0 -osc 0; -mosaic 0; divergence=0; dispersion=0; -oversample 1; full-frame ROI.
   - Procedure: Find local maxima; take top N=100 peaks above the 99th percentile, using non‑max suppression radius=3 px. Match C↔PyTorch with Hungarian algorithm, 1.0‑pixel gating.
   - Pass: ≥ 95% matched within ≤ 1.0 pixel; RMS error of intensity ratios across matched peaks < 10%; image correlation ≥ 0.98.
+  - Implementation: `pytest -v tests/test_at_parallel_008.py`
 
 - AT-PARALLEL-009 Intensity Normalization
   - Setup: Cell 100,100,100,90,90,90; detector 256×256, -pixel 0.1, -distance 100; MOSFLM; -phi 0 -osc 0; -mosaic 0; -oversample 1; point_pixel OFF.
@@ -52,91 +60,111 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
     - For each run, compute I_max from a 21×21 window centered on the strongest peak.
     - Fit log(I_max) vs log(N) and log(I_max) vs log(F).
   - Pass: slope_N ≈ 6.0 ± 0.3 with R² ≥ 0.99; slope_F ≈ 2.0 ± 0.05 with R² ≥ 0.99; for each point the C/PyTorch I_max ratio mean within ±10% of 1.0.
+  - Implementation: `pytest -v tests/test_at_parallel_009.py`
 
 - AT-PARALLEL-010 Solid Angle Corrections
+  - Implementation: `pytest -v tests/test_at_parallel_010.py`
   - Setup: Cell 100,100,100; N=5; -default_F 100; -phi 0 -osc 0; -mosaic 0; divergence=0; dispersion=0; -oversample 1. Distances R ∈ {50,100,200,400} mm; tilts ∈ {0°,10°,20°,30°}.
   - Modes: (A) point_pixel ON; (B) point_pixel OFF (with obliquity).
   - Procedure: For each R (and tilt in B) run C and PyTorch; compute total float‑image sum over the full detector.
   - Pass: (A) sum ∝ 1/R² within ±5%; (B) sum ∝ close_distance/R³ within ±10% (check pairwise ratios). In all cases C↔PyTorch correlation ≥ 0.98.
 
 - AT-PARALLEL-011 Polarization Factor Verification
+  - Implementation: `NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_011.py`
   - Setup: Cell 100,100,100; N=5; detector 256×256, -pixel 0.1, -distance 100; MOSFLM; -phi 0; -mosaic 0; -oversample 1; point_pixel OFF; polarization_axis aligned per convention.
   - A) Unpolarized (kahn_factor=0): Compute theoretical P = 0.5·(1+cos²(2θ)) from incident/diffracted unit vectors; compare pixelwise to implementation P.
   - B) Polarized (kahn_factor=0.95): Compute Kahn model P using the same vectors/axis; compare pixelwise to implementation P.
   - Pass: For A and B, R² ≥ 0.95 vs theory and mean absolute relative error ≤ 1% (A) and ≤ 2% (B). C↔PyTorch image correlation ≥ 0.98 for identical axes/seeds.
 
 - AT-PARALLEL-012 Reference Pattern Correlation
+  - Implementation: `pytest -v tests/test_at_parallel_012.py`
   - Setup: Use the canonical C commands in tests/golden_data/README.md to generate fixtures: simple_cubic (1024×1024), triclinic_P1 (512×512, explicit misset), and cubic_tilted_detector (rotations + 2θ). Run PyTorch with identical flags.
   - Pass: simple_cubic correlation ≥ 0.9995 and top N=50 peaks ≤ 0.5 px; triclinic_P1 correlation ≥ 0.9995 and top N=50 peaks ≤ 0.5 px; tilted correlation ≥ 0.9995 and top N=50 peaks ≤ 1.0 px.
   - High-resolution variant: Setup: λ=0.5Å; detector 4096×4096, pixel 0.05mm, distance 500mm; cell 100,100,100; N=5; compare on a 512×512 ROI centered on the beam. Pass: No NaNs/Infs; C vs PyTorch correlation ≥ 0.95 on the ROI; top N=50 peaks in ROI ≤ 1.0 px.
 
 - AT-PARALLEL-013 Cross-Platform Consistency
+  - Implementation: `pytest -v tests/test_at_parallel_013.py`
   - Constraints: CPU, float64, deterministic Torch mode; identical seeds; no GPU.
   - Setup: Use triclinic_P1 case from AT‑PARALLEL‑012.
   - Pass: PyTorch vs PyTorch (machine A vs B) allclose with rtol ≤ 1e−7, atol ≤ 1e−12 and correlation ≥ 0.999. C vs PyTorch allclose with rtol ≤ 1e−5, atol ≤ 1e−6 and correlation ≥ 0.995.
 
   - AT-PARALLEL-014 Noise Robustness Test
+    - Implementation: `pytest -v tests/test_at_parallel_014.py`
   - Setup: Create a float image with moderate intensities (e.g., simple_cubic scaled to mean ≈ 1e3). Generate SMV integer images with Poisson noise for two seeds (e.g., 123 and 456) using the same scale/ADC.
   - Metrics: mean(intimage) within ±1% of scale·mean(float)+ADC per seed; for top N=20 float-image peaks, median centroid shift ≤ 0.5 px and 90th percentile ≤ 1.0 px in noisy images; overload counts across seeds within ±10%.
   - Pass: All metrics satisfied for both seeds.
 
 - AT-PARALLEL-015 Mixed Unit Input Handling
+  - Implementation: `pytest -v tests/test_at_parallel_015.py`
   - Setup: Test various unit combinations: distance in mm, wavelength in Å, angles in degrees
   - Expectation: Unit conversions SHALL be applied consistently; Results SHALL be independent of input units used; No unit confusion errors
 
 - AT-PARALLEL-016 Extreme Scale Testing
+  - Implementation: `pytest -v tests/test_at_parallel_016.py`
   - Setup: Representative extremes (C and PyTorch): (1) Tiny: N=1, λ=0.1Å, distance=10mm, 128×128, pixel 0.05mm; (2) Large cell: 300,300,300,90,90,90; N=10; λ=6Å; 1024×1024; pixel 0.1mm; (3) Long distance: distance=10m; 256×256; pixel 0.2mm. Common: φ=0; mosaic=0; divergence/dispersion=0; oversample=1.
   - Pass: No NaNs/Infs; no exceptions; C vs PyTorch correlation ≥ 0.95; top N=25 peaks ≤ 2 px.
 
 - AT-PARALLEL-017 Grazing Incidence Geometry
+  - Implementation: `pytest -v tests/test_at_parallel_017.py`
   - Setup: Large detector tilts >45°, twotheta>60°, oblique incidence
   - Expectation: Geometry calculations SHALL remain stable; Solid angle corrections SHALL be applied correctly; No singularities in rotation matrices
 
 - AT-PARALLEL-018 Crystal Boundary Conditions
+  - Implementation: `pytest -v tests/test_at_parallel_018.py`
   - Setup: Crystal at singular orientations, aligned axes, zero-angle cases
   - Expectation: No division by zero errors; Degenerate cases SHALL be handled gracefully; Results SHALL be continuous near boundaries
 
  
 
 - AT-PARALLEL-020 Comprehensive Integration Test
+  - Implementation: `NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_020.py`
   - Setup: Triclinic 70,80,90,75,85,95; N=5; -mosaic 0.5; -mosaic_dom 5; -phi 0 -osc 90 -phisteps 9; -detector_rotx 5 -detector_roty 3 -detector_rotz 2; -twotheta 10; absorption enabled (e.g., -detector_abs 500 -detector_thick 450 -thicksteps 5); polarization K=0.95; detector 512×512, pixel 0.1mm, distance 100mm; -oversample 1; fixed seeds.
   - Pass: Runs without errors; C vs PyTorch correlation ≥ 0.95; top N=50 peaks ≤ 1.0 px; total sum ratio in [0.9, 1.1].
 
   - AT-PARALLEL-021 Crystal Phi Rotation Equivalence
+    - Implementation: `pytest -v tests/test_at_parallel_021.py`
   - Setup: Use cubic cell (100,100,100,90,90,90) with -phi 0, -osc 90, -phisteps 1 (midpoint ≈ 45°) and a second case with -phisteps 9 (-phistep 10) covering the same 90° range; fixed seeds; small detector (e.g., -detpixels 256 -pixel 0.1) and tight ROI centered on beam.
   - Expectation: For identical inputs, C and PyTorch float images SHALL match within numeric tolerances (rtol ≤ 1e-5, atol ≤ 1e-6); dominant peak positions SHALL rotate consistently with φ (midpoint ≈ 45° for single-step case); multi-step case (phisteps>1) SHALL match after normalization by steps; image correlation >0.99 and peak position error ≤0.5 pixels.
 
   - AT-PARALLEL-022 Combined Detector+Crystal Rotation Equivalence
+    - Implementation: `NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_022.py`
   - Setup: Apply non-zero detector rotations (e.g., -detector_rotx 5 -detector_roty 3 -detector_rotz 2 -twotheta 10) together with crystal φ rotation cases from AT-PARALLEL-021; fixed seeds; same small detector/ROI settings.
   - Expectation: C and PyTorch float images SHALL agree within tolerances (rtol ≤ 1e-5, atol ≤ 1e-6); peak trajectories reflect both detector and crystal rotations; total intensity conservation within ±10% across the compared images; correlation >0.98 and peak alignment within ≤1 pixel after accounting for expected rotational shifts.
 
   - AT-PARALLEL-023 Misset Angles Equivalence (Explicit α β γ)
+    - Implementation: `pytest -v tests/test_at_parallel_023.py`
   - Setup: φ=0, osc=0; cells: triclinic (70,80,90,75,85,95) and cubic (100,100,100,90,90,90); run with explicit float -misset triplets in degrees: (0.0,0.0,0.0), (10.5,0.0,0.0), (0.0,10.25,0.0), (0.0,0.0,9.75), (15.0,20.5,30.25). Detector 256×256, -pixel 0.1, fixed -default_F and seeds. Use identical flags for C and PyTorch.
   - Expectation: Right‑handed XYZ rotations applied to reciprocal vectors once at init; real vectors recomputed. For each case, C vs PyTorch float images allclose (rtol ≤ 1e−5, atol ≤ 1e−6), correlation ≥ 0.99; top N=25 peaks within ≤ 0.5 px.
 
   - AT-PARALLEL-024 Random Misset Reproducibility and Equivalence
+    - Implementation: `pytest -v tests/test_at_parallel_024.py`
   - Setup: Implementations SHALL support -misset random and -misset_seed. Prefer a C‑compatible RNG (e.g., LCG) for identical angle sampling. Case: cubic 100,100,100; N=5; λ=1.0; detector 256×256, pixel 0.1mm, distance 100mm; φ=0; osc=0; mosaic=0; -oversample 1. Test two seeds S∈{12345,54321}.
   - Expectation: Determinism: PyTorch same‑seed runs are identical (rtol ≤ 1e−12, atol ≤ 1e−15). Cross‑impl equivalence: For each seed, C vs PyTorch allclose (rtol ≤ 1e−5, atol ≤ 1e−6), correlation ≥ 0.99. Seed effect: Different seeds produce correlation ≤ 0.7 within the same implementation. SHOULD: if sampled angles are reported, they match within 1e−12 rad after unit conversions.
 
   - AT-PARALLEL-025 Maximum Intensity Position Alignment
+    - Implementation: `pytest -v tests/test_at_parallel_025.py`
   - Setup: Cell 100,100,100,90,90,90; -lambda 1.0; -N 1; -default_F 100; detector 64×64, -pixel 0.1, -distance 100; MOSFLM convention; no rotations, no mosaic, no divergence/dispersion.
   - Expectation: The pixel coordinates of maximum intensity SHALL match between C and PyTorch implementations within 0.5 pixels. Specifically: |argmax(C_image) - argmax(PyTorch_image)| < 0.5 for both row and column indices. This test detects any systematic coordinate shift including MOSFLM +0.5 pixel offsets, axis swaps, or origin differences.
 
   - AT-PARALLEL-026 Absolute Peak Position for Triclinic Crystal
+    - Implementation: `pytest -v tests/test_at_parallel_026.py`
   - Setup: Triclinic cell 70,80,90,85,95,105; -lambda 1.5; -N 1; -default_F 100; detector 256×256, -pixel 0.1, -distance 150; MOSFLM convention; identity orientation matrix.
   - Expectation: The brightest Bragg peak SHALL appear at the same absolute pixel position (±1.0 pixel) in both C and PyTorch implementations. This validates the entire crystallographic chain for non-orthogonal unit cells.
 
   - AT-PARALLEL-027 Non-Uniform Structure Factor Pattern Equivalence
+    - Implementation: `pytest -v tests/test_at_parallel_027.py`
   - Setup: Generate or provide a minimal HKL file (test_pattern.hkl) with deliberately non-uniform structure factors where h,k,l=(0,0,0):100.0, (1,0,0):50.0, (0,1,0):25.0, (1,1,0):12.5, (2,0,0):200.0, (0,2,0):150.0. Cell 100,100,100,90,90,90; -lambda 6.2; -N 5; detector 64×64, -pixel 0.1, -distance 100; MOSFLM convention. Run both C and PyTorch with: -hkl test_pattern.hkl (NO -default_F flag allowed).
   - Pass Criteria: Correlation ≥0.999 between C and PyTorch outputs; intensity ratios between peaks match expected F² ratios within 1%; verify that peak at (2,0,0) reflection is 4× brighter than (1,0,0) reflection due to F² scaling (200²/50² = 16/1 for structure factor, modulated by Lorentz and other corrections).
 
   - AT-PARALLEL-028 Performance Parity Requirement
+    - Implementation: `pytest -v tests/test_at_parallel_028.py`
   - Setup: Cell 100,100,100,90,90,90; -lambda 6.2; -N 5; -default_F 100; detector 1024×1024, -pixel 0.1, -distance 100; MOSFLM convention. Measure wall-clock execution time for both C and PyTorch implementations.
   - Expectation: The PyTorch implementation SHALL achieve at least 50% of the C implementation's throughput (pixels/second) on CPU, and SHALL demonstrate at least 10x superior performance when GPU acceleration is available. This ensures the vectorized implementation provides the massive parallelization benefits expected from GPU compute.
   - Pass Criteria: throughput_pytorch ≥ 0.5 × throughput_c for CPU execution, AND throughput_pytorch_gpu ≥ 10.0 × throughput_c when CUDA is available. Throughput = (detector_pixels / execution_time).
   - Rationale: GPU acceleration should provide order-of-magnitude speedup given: (1) embarrassingly parallel pixel computations, (2) vectorized tensor operations, (3) thousands of CUDA cores vs ~8-16 CPU threads, (4) optimized BLAS/cuBLAS kernels. A 10x speedup is conservative for this workload.
 
   - AT-PARALLEL-029 Subpixel Sampling and Aliasing Mitigation
+    - Implementation: `pytest -v tests/test_at_parallel_029.py`
   - Setup: Cubic cell 100,100,100,90,90,90; -N 5; -default_F 100; -lambda 1.0; detector 256×256, -pixel 0.1, -distance 50; MOSFLM convention; -phi 0 -osc 0; -mosaic 0; divergence=0; dispersion=0.
   - Procedure: Run both C and PyTorch with oversample values ∈ {1, 2, 4, 8}. For each oversample value:
     1. Generate diffraction patterns and compute 2D FFT power spectra

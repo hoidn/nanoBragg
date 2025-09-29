@@ -159,7 +159,7 @@ General environment for live C parity tests:
 - `NB_RUN_PARALLEL=1` (enables live C↔PyTorch tests)
 - `NB_C_BIN=./golden_suite_generator/nanoBragg` (path to C reference binary)
 
-Quick invocation patterns:
+Quick invocation patterns (authoritative harness = pytest):
 
 - All C‑parity ATs: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_*.py`
 - Single test file: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_0XX.py`
@@ -208,7 +208,7 @@ Optional visual parity harness (sanity check):
 - Run: `python scripts/comparison/run_parallel_visual.py`
 - Output: PNGs and `metrics.json` under `parallel_test_visuals/AT-PARALLEL-XXX/`
 
-When the visual harness and the AT tests disagree, treat the AT tests as the primary gate and use parallel trace‑driven debugging (Section 2.1) to identify the first divergence.
+When the visual harness and the AT tests disagree, treat the AT tests as the primary gate (authoritative) and use parallel trace‑driven debugging (Section 2.1) to identify the first divergence. Scripts are supportive tools; conformance is determined by the pytest suite.
 
 ## 3. Tier 1: Translation Correctness Testing
 

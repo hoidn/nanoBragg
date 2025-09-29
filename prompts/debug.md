@@ -35,6 +35,29 @@ Authoritative Inputs (consult before acting)
 Loop Objective (single loop)
 - Fix one root‑cause class deterministically, validated by traces and metrics. No test edits. No threshold edits. Produce artifacts.
 
+<debug v="1" portable="true">
+  <profile doc="docs/development/testing_strategy.md" section="Parallel Validation Matrix"/>
+  <gates start="require_plan,parity_if_equiv" end="attempt_entry,metrics,artifacts,first_divergence_if_traces"/>
+  <metrics keys="corr,rmse,max_abs,sum_ratio"/>
+  <artifacts files="c_trace.log,py_trace.log,diff_heatmap.png,summary.json"/>
+
+  <steps>
+    <s n="0" id="setup" plan="docs/fix_plan.md" parity="if_equivalence"/>
+    <s n="1" id="reproduce" map="profile|search" env="profile" run="mapped" capture="stdout,stderr,paths"/>
+    <s n="2" id="triage" checklist="geometry_first"/>
+    <s n="3" id="trace" parallel="C,PyTorch" first_divergence="true"/>
+    <s n="4" id="fix" scope="minimal" forbid="test_edits,threshold_changes"/>
+    <s n="5" id="gate" thresholds="spec" rollback_on_regress="true"/>
+    <s n="6" id="finalize" suite="pytest -v" plan_update="metrics,artifacts,first_divergence,next_actions"/>
+  </steps>
+
+  <subs>
+    <call name="test-failure-analyzer" step="1"/>
+    <call name="debugger" step="3"/>
+    <call name="issue" step="6" when="spec_gap"/>
+  </subs>
+</debug>
+
 Progress & Tools Integration
 - Use brief preambles (what’s next) and update_plan for steps (reproduce → trace → triage → fix → verify). Prefer `rg` for search. Save artifacts under a dated folder.
 
@@ -76,6 +99,7 @@ SOP — Step‑by‑Step (follow in order)
    - Re‑run the specific failing case and closest neighbors (e.g., pixel sizes ±1 step). Re‑generate traces if geometry/units changed.
 
 6) Pass/Fail Gates & Rollback
+   - Final Sanity Check (Hard Gate): Re-run the mapped test(s) from the Parity Profile (or the derived mapping when the profile is absent). Success requires those authoritative tests to meet all thresholds under the required environment.
    - Pass only if ALL relevant spec gates pass:
      • AT‑specific thresholds (e.g., AT‑PARALLEL‑002: correlation ≥ 0.9999; beam center in pixels = 25.6/pixel_size ±0.1 px; peaks scale inversely with pixel size)
      • No NaNs/Infs; max abs diff within expected numerics; diff heatmaps show only low‑level residue
