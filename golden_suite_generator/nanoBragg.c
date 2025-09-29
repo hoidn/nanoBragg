@@ -2927,7 +2927,13 @@ if(! debug_printed_thread) {
                             /* trace output for specific pixel */
                             if(fpixel==trace_fpixel && spixel==trace_spixel && source==0) {
                                 printf("TRACE_C: pixel_pos_meters %.15g %.15g %.15g\n", pixel_pos[1], pixel_pos[2], pixel_pos[3]);
+                                printf("TRACE_C: R_distance_meters %.15g\n", airpath);
+                                printf("TRACE_C: omega_pixel_sr %.15g\n", omega_pixel);
+                                printf("TRACE_C: close_distance_meters %.15g\n", close_distance);
+                                printf("TRACE_C: obliquity_factor %.15g\n", close_distance/airpath);
                                 printf("TRACE_C: diffracted_vec %.15g %.15g %.15g\n", diffracted[1], diffracted[2], diffracted[3]);
+                                printf("TRACE_C: incident_vec %.15g %.15g %.15g\n", incident[1], incident[2], incident[3]);
+                                printf("TRACE_C: lambda_meters %.15g\n", lambda);
                                 printf("TRACE_C: scattering_vec_A_inv %.15g %.15g %.15g\n", scattering[1], scattering[2], scattering[3]);
                             }
 
@@ -3022,16 +3028,17 @@ if(! debug_printed_thread) {
                                     h = dot_product(a,scattering);
                                     k = dot_product(b,scattering);
                                     l = dot_product(c,scattering);
-                                    
-                                    /* trace output for specific pixel */
-                                    if(fpixel==trace_fpixel && spixel==trace_spixel && source==0 && mos_tic==0 && phi_tic==0) {
-                                        printf("TRACE_C: hkl_frac %.15g %.15g %.15g\n", h, k, l);
-                                    }
 
                                     /* round off to nearest whole index */
                                     h0 = ceil(h-0.5);
                                     k0 = ceil(k-0.5);
                                     l0 = ceil(l-0.5);
+
+                                    /* trace output for specific pixel */
+                                    if(fpixel==trace_fpixel && spixel==trace_spixel && source==0 && mos_tic==0 && phi_tic==0) {
+                                        printf("TRACE_C: hkl_frac %.15g %.15g %.15g\n", h, k, l);
+                                        printf("TRACE_C: hkl_rounded %d %d %d\n", h0, k0, l0);
+                                    }
 
 
                                     /* structure factor of the lattice (paralelpiped crystal)
@@ -3041,14 +3048,24 @@ if(! debug_printed_thread) {
                                     if(xtal_shape == SQUARE)
                                     {
                                         /* xtal is a paralelpiped */
+                                        double F_latt_a = 1.0, F_latt_b = 1.0, F_latt_c = 1.0;
                                         if(Na>1){
-                                            F_latt *= sincg(M_PI*h,Na);
+                                            F_latt_a = sincg(M_PI*h,Na);
+                                            F_latt *= F_latt_a;
                                         }
                                         if(Nb>1){
-                                            F_latt *= sincg(M_PI*k,Nb);
+                                            F_latt_b = sincg(M_PI*k,Nb);
+                                            F_latt *= F_latt_b;
                                         }
                                         if(Nc>1){
-                                            F_latt *= sincg(M_PI*l,Nc);
+                                            F_latt_c = sincg(M_PI*l,Nc);
+                                            F_latt *= F_latt_c;
+                                        }
+                                        if(fpixel==trace_fpixel && spixel==trace_spixel && source==0 && mos_tic==0 && phi_tic==0) {
+                                            printf("TRACE_C: F_latt_a %.15g\n", F_latt_a);
+                                            printf("TRACE_C: F_latt_b %.15g\n", F_latt_b);
+                                            printf("TRACE_C: F_latt_c %.15g\n", F_latt_c);
+                                            printf("TRACE_C: F_latt %.15g\n", F_latt);
                                         }
                                     }
                                     else
@@ -3222,10 +3239,13 @@ if(! debug_printed_thread) {
                                     }
 
                                     /* now we have the structure factor for this pixel */
+                                    if(fpixel==trace_fpixel && spixel==trace_spixel && source==0 && mos_tic==0 && phi_tic==0) {
+                                        printf("TRACE_C: F_cell %.15g\n", F_cell);
+                                    }
 
                                     /* convert amplitudes into intensity (photons per steradian) */
                                     I += F_cell*F_cell*F_latt*F_latt;
-                                    
+
                                     /* only do this if we need to */
                                     if(oversample_thick) I *= capture_fraction;
                                     if(oversample_polar) I *= polar;
@@ -3251,6 +3271,16 @@ if(! debug_printed_thread) {
             if(! oversample_polar) test *= polar;
             if(! oversample_omega) test *= omega_pixel;
             floatimage[imgidx] += test;
+
+            /* trace final pixel intensity */
+            if(fpixel==trace_fpixel && spixel==trace_spixel) {
+                printf("TRACE_C: I_before_scaling %.15g\n", I);
+                printf("TRACE_C: r_e_sqr %.15g\n", r_e_sqr);
+                printf("TRACE_C: fluence %.15g\n", fluence);
+                printf("TRACE_C: steps %d\n", steps);
+                printf("TRACE_C: I_pixel_final %.15g\n", test);
+                printf("TRACE_C: floatimage_accumulated %.15g\n", floatimage[imgidx]);
+            }
 
             /* now keep track of statistics */
             if(floatimage[imgidx] > max_I) {
