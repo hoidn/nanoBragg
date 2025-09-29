@@ -117,6 +117,10 @@ SOP — Step‑by‑Step (follow in order)
    - Hard Gate (verify): Confirm the plan contains the new Attempts History entry for this loop with `Metrics:` and `Artifacts:` lines (dated paths) and consistent `Status`. If missing or inconsistent, treat the loop as failed and do not commit.
    - Subagent (post‑parity): issue — If the root‑cause class wasn’t covered or was weakly covered by Acceptance Tests/spec, propose precise spec shard edits/additions (IDs, shard, measurable expectations) without weakening thresholds; add a TODO to fix_plan.md.
    - Subagent (pre‑commit): code-reviewer — Run on the changed scope to catch security/performance/config risks introduced by the fix; address high/critical findings before committing.
+   - Version control hygiene:
+     • PASS: `git add -A && git commit -m "<AT-ids> debug: <concise summary> (suite: pass)"`
+     • FAIL/PARTIAL with rollback: stage only plan/docs/prompt changes (no reverted code), then `git add docs/fix_plan.md prompts/*.md docs/development/testing_strategy.md specs/*.md 2>/dev/null || true` and commit with `git commit -m "<AT-ids> debug: attempt #N failed/partial; metrics recorded; code reverted"`
+     • Never commit runtime artifacts (e.g., heatmaps, binaries). Keep them under run‑local artifacts directories only.
 
 Acceptance Metrics Reference (examples)
 - Use the exact thresholds from specs/spec‑a‑parallel.md for each AT. Examples:
