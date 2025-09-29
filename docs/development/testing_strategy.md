@@ -149,6 +149,67 @@ The following test cases will be defined, and all three artifacts (image, C trac
 - Beam center offset: (61.2, 61.2) mm
 - Pivot: SAMPLE mode with explicit beam center
 
+## 2.5 Parallel Validation Matrix (AT ↔ tests ↔ env/commands)
+
+This matrix maps each Acceptance Test in the AT‑PARALLEL suite to its concrete test file(s), required environment variables, and canonical commands to execute them. Use this section to run the exact parity checks that gate C↔PyTorch equivalence.
+
+General environment for live C parity tests:
+
+- `KMP_DUPLICATE_LIB_OK=TRUE` (avoid MKL conflicts on some systems)
+- `NB_RUN_PARALLEL=1` (enables live C↔PyTorch tests)
+- `NB_C_BIN=./golden_suite_generator/nanoBragg` (path to C reference binary)
+
+Quick invocation patterns:
+
+- All C‑parity ATs: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_*.py`
+- Single test file: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_0XX.py`
+- Golden‑data parity (no C binary required): `pytest -v tests/test_at_parallel_012.py`
+
+Reference mapping:
+
+- AT‑PARALLEL‑001 — Beam Center Scaling
+  - Test file: `tests/test_at_parallel_001.py`
+  - Env: none (PyTorch invariance)
+  - Notes: Verifies pixel‑size/size invariance and MOSFLM +0.5 semantics
+
+- AT‑PARALLEL‑002 — Pixel Size Independence
+  - Test file: `tests/test_at_parallel_002.py`
+  - Env: none (PyTorch invariance; resampling tolerance applied)
+  - Notes: Correlation across pixel sizes after physical resampling
+
+- AT‑PARALLEL‑003/004/005/006/007/008/009/010/013/014/015/016/017/018/021/022/023/024/025/026/028/029
+  - Test files: `tests/test_at_parallel_0XX.py`
+  - Env: varies; most invariance tests run without C; rotation/combined/tilted cases may include live parity variants (see file headers)
+
+- AT‑PARALLEL‑011 — Polarization Factor Verification (C↔PyTorch live parity)
+  - Test file: `tests/test_at_parallel_011.py`
+  - Env: `NB_RUN_PARALLEL=1`, `NB_C_BIN` set
+  - Command: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_011.py`
+
+- AT‑PARALLEL‑012 — Reference Pattern Correlation (golden data)
+  - Test file: `tests/test_at_parallel_012.py`
+  - Env: none (uses `tests/golden_data/*`)
+  - Command: `pytest -v tests/test_at_parallel_012.py`
+
+- AT‑PARALLEL‑020 — Comprehensive Integration (C↔PyTorch live parity)
+  - Test file: `tests/test_at_parallel_020.py`
+  - Env: `NB_RUN_PARALLEL=1`, `NB_C_BIN` set
+  - Command: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_020.py`
+
+- AT‑PARALLEL‑022 — Combined Detector+Crystal Rotation Equivalence (C↔PyTorch live parity)
+  - Test file: `tests/test_at_parallel_022.py`
+  - Env: `NB_RUN_PARALLEL=1`, `NB_C_BIN` set
+  - Command: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_022.py`
+
+Optional visual parity harness (sanity check):
+
+- Script: `scripts/comparison/run_parallel_visual.py`
+- Env: `NB_C_BIN` should point to C binary
+- Run: `python scripts/comparison/run_parallel_visual.py`
+- Output: PNGs and `metrics.json` under `parallel_test_visuals/AT-PARALLEL-XXX/`
+
+When the visual harness and the AT tests disagree, treat the AT tests as the primary gate and use parallel trace‑driven debugging (Section 2.1) to identify the first divergence.
+
 ## 3. Tier 1: Translation Correctness Testing
 
 **Goal:** To prove the PyTorch code is a faithful port of the C code.

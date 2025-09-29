@@ -1,22 +1,22 @@
 # nanoBragg PyTorch Implementation Fix Plan
 
 **Last Updated:** 2025-09-29
-**Current Status:** All HIGH priority equivalence issues resolved ✅
+**Current Status:** Investigating C↔Py parity discrepancy at large pixel size; see AT‑PARALLEL‑002.
 
 ## Active Focus
-No critical issues. All AT-PARALLEL tests passing (77/77 non-C-dependent tests). Full test suite: 534 tests collected.
+Investigate and resolve AT‑PARALLEL‑002 parity regression observed with visual harness at 0.4mm pixels; re‑establish thresholds without loosening.
 
 ## Immediate High‑Priority TODOs (Equivalence Discrepancies)
 
-### [AT‑PARALLEL‑002] Pixel Size Independence @ 256×256 ✅ RESOLVED
+### [AT‑PARALLEL‑002] Pixel Size Independence @ 256×256 ⚠️ REOPENED
 - Spec/AT: specs/spec-a-parallel.md — AT‑PARALLEL‑002
 - Priority: High
-- Status: done
-- Owner/Date: Claude/2025-09-25 (completed), verified 2025-09-29
-- Exit Criteria (spec thresholds): ✅ ALL SATISFIED
-  - Pattern correlation ≥ 0.9999 across pixel sizes {0.05, 0.1, 0.2, 0.4} mm ✅
-  - Beam center in pixels = 25.6 / pixel_size_mm ± 0.1 px ✅
-  - Peak positions scale inversely with pixel size (1/pixel_size) ✅
+- Status: in_progress
+- Owner/Date: Claude/2025-09-29 (reopened after visual parity run)
+- Exit Criteria (spec thresholds):
+  - Pattern correlation ≥ 0.9999 across pixel sizes {0.05, 0.1, 0.2, 0.4} mm
+  - Beam center in pixels = 25.6 / pixel_size_mm ± 0.1 px
+  - Peak positions scale inversely with pixel size (1/pixel_size)
 - Reproduction:
   - C: `export NB_C_BIN=./golden_suite_generator/nanoBragg && $NB_C_BIN -detpixels 256 -pixel <PX_MM> -distance 100 -Xbeam 25.6 -Ybeam 25.6 -cell 100 100 100 90 90 90 -lambda 6.2 -default_F 100 -N 5 -floatfile c_<PX_MM>.bin`
   - PyTorch: `nanoBragg -detpixels 256 -pixel <PX_MM> -distance 100 -Xbeam 25.6 -Ybeam 25.6 -cell 100 100 100 90 90 90 -lambda 6.2 -default_F 100 -N 5 -floatfile py_<PX_MM>.bin`
@@ -43,6 +43,25 @@ No critical issues. All AT-PARALLEL tests passing (77/77 non-C-dependent tests).
       2. For 0.4mm: Generate parallel traces (C vs Py) for an on-peak pixel to identify FIRST DIVERGENCE in physics stack
       3. Focus on: omega calculation, intensity accumulation, or F_latt/F_cell formulas
     Artifacts: reports/debug/2025-09-29-at-parallel-002/{px_*/, summary.json}; test scripts: test_pixel_size_scaling.py, test_beam_center_debug.py
+  * [2025-09-29] Attempt #4 — Result: failed (visual C↔Py parity shows discrepancy at coarse pixels).
+    Metrics (visual harness, 256×256, default_F=100, λ=6.2, distance=100mm):
+      - 0.05mm: corr=0.999999, RMSE=0.01229, max|Δ|=0.10829, sum_ratio≈1.0018
+      - 0.10mm: corr=0.999999, RMSE=0.03982, max|Δ|=0.43311, sum_ratio≈1.0033
+      - 0.20mm: corr=0.999997, RMSE=0.09681, max|Δ|=4.18947, sum_ratio≈1.0058
+      - 0.40mm: corr=0.998809, RMSE=7.35170, max|Δ|=188.37854, sum_ratio≈1.0706
+    Artifacts:
+      - parallel_test_visuals/AT-PARALLEL-002/metrics.json
+      - parallel_test_visuals/AT-PARALLEL-002/comparison_pixel_0.05mm.png
+      - parallel_test_visuals/AT-PARALLEL-002/comparison_pixel_0.1mm.png
+      - parallel_test_visuals/AT-PARALLEL-002/comparison_pixel_0.2mm.png
+      - parallel_test_visuals/AT-PARALLEL-002/comparison_pixel_0.4mm.png
+    Observations/Hypotheses:
+      - Sum ratio increases with pixel size (≈+7% at 0.4mm) → suspect solid‑angle/omega or normalization inconsistency at coarse sampling.
+      - Geometry invariances likely correct at small pixels; discrepancy emerges with reduced sampling density.
+    Next Actions:
+      1) Run live C parity ATs with env: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_011.py tests/test_at_parallel_020.py tests/test_at_parallel_022.py`.
+      2) Generate C and Py traces for an on‑peak pixel at 0.4mm; record FIRST DIVERGENCE (variable + file:line).
+      3) Re‑check omega/solid‑angle scaling and any per‑pixel normalization affected by pixel size.
   * [2025-09-25] Attempt #3 — Result: SUCCESS ✅
     Root Cause Identified: Resampling method in comparison tools was not conserving intensity when upsampling
     Fix Applied: Commit 7958417 "AT-PARALLEL-002: Fix pixel size independence test with intensity conservation"
