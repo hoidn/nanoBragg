@@ -19,6 +19,9 @@ Non‑Negotiable Guardrails
 6) Fix Plan Updates are MANDATORY at loop START and END using `prompts/update_fix_plan.md`:
    - At START: select exactly one high‑value item and mark it `in_progress` (“one item per loop” means one item ATTEMPTED per loop).
    - At END: update Attempts History with metrics, artifacts, first divergence, and Next Actions. If failed/partial, KEEP the item active (do not mark done) and add diagnostics for future loops.
+ 7) Hard Gate — Fix Plan Compliance:
+    - Start Gate: Do not proceed to reproduction until `docs/fix_plan.md` shows the chosen item set to `Status: in_progress` and contains Reproduction commands.
+    - End Gate: Do not commit unless `docs/fix_plan.md` shows a NEW “Attempts History” entry for this loop with lines starting with `Metrics:` and `Artifacts:` (real, dated paths), and `First Divergence:` if found.
 
 Authoritative Inputs (consult before acting)
 - CLAUDE.md (core rules, detector gotchas, “Parallel Trace Debugging is Mandatory”)
@@ -38,6 +41,7 @@ SOP — Step‑by‑Step (follow in order)
 0) Setup & Context
    - Identify the failing AT(s), exact thresholds, and reproduction commands. Pin device/dtype (float64 for debug). Reduce to a small ROI if needed (spec allows ROI for debug).
    - Update docs/fix_plan.md at LOOP START using `prompts/update_fix_plan.md`: pick one item, set `Status: in_progress`, record reproduction commands and planned approach.
+   - Hard Gate (verify): Ensure the plan reflects this loop’s active item and start entry before proceeding (see Guardrail 7).
 
 1) Reproduce Canonically
    - Subagent: test-failure-analyzer — Provide the failing test path/pattern and context. Capture canonical error messages, stack traces, clustered failures, and exact repro commands. Attach its report, then run the reproduced command(s) to verify.
@@ -78,6 +82,7 @@ SOP — Step‑by‑Step (follow in order)
      • Record FIRST DIVERGENCE (variable + file:line) and hypotheses.
      • If PASS: mark `Status: done` and quote spec thresholds satisfied.
      • If FAIL/PARTIAL: DO NOT mark done — keep item active and add concrete Next Actions; include rollback note if code changes were reverted.
+   - Hard Gate (verify): Confirm the plan contains the new Attempts History entry for this loop with `Metrics:` and `Artifacts:` lines (dated paths) and consistent `Status`. If missing or inconsistent, treat the loop as failed and do not commit.
    - Subagent (post‑parity): issue — If the root‑cause class wasn’t covered or was weakly covered by Acceptance Tests/spec, propose precise spec shard edits/additions (IDs, shard, measurable expectations) without weakening thresholds; add a TODO to fix_plan.md.
    - Subagent (pre‑commit): code-reviewer — Run on the changed scope to catch security/performance/config risks introduced by the fix; address high/critical findings before committing.
 
