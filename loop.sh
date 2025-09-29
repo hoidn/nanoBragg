@@ -20,5 +20,6 @@ CLAUDE_CMD="/home/ollie/.claude/local/claude"
 
 # Default: run prompt a few times
 for i in {1..5}; do
-  cat prompts/main.md | ${CLAUDE_CMD} -p --dangerously-skip-permissions --verbose --output-format stream-json | tee -a "${LOG_FILE}"
+  cat prompts/debug.md | ${CLAUDE_CMD} -p --dangerously-skip-permissions --verbose --output-format stream-json | tee -a "${LOG_FILE}"
+  #cat prompts/main.md | ${CLAUDE_CMD} -p --dangerously-skip-permissions --verbose --output-format stream-json | tee -a "${LOG_FILE}"
 done
