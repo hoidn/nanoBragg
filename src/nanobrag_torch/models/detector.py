@@ -481,12 +481,20 @@ class Detector:
         if self.config.detector_pivot == DetectorPivot.BEAM:
             # BEAM pivot mode: detector rotates around the direct beam spot
             # Use exact C-code formula: pix0_vector = -Fbeam*fdet_vec - Sbeam*sdet_vec + distance*beam_vec
-            
+
             # Calculate Fbeam and Sbeam from beam centers
-            # For MOSFLM: Fbeam = Ybeam + 0.5*pixel, Sbeam = Xbeam + 0.5*pixel
+            # For MOSFLM: Fbeam = Ybeam + 0.5*pixel_size, Sbeam = Xbeam + 0.5*pixel_size (C-code line 382)
             # c_reference_utils now correctly maps: Xbeam=beam_center_s, Ybeam=beam_center_f
             # Therefore: Fbeam=beam_center_f, Sbeam=beam_center_s (no swap needed)
-            # The beam centers already include the MOSFLM +0.5 pixel offset from __init__
+            #
+            # DERIVATION: The beam centers are stored as:
+            #   beam_center_f_pixels = beam_center_f_mm / pixel_size_mm + 0.5
+            # So: beam_center_f_mm = (beam_center_f_pixels - 0.5) * pixel_size_mm
+            # And: Fbeam_m = beam_center_f_mm / 1000 + 0.5 * pixel_size_m
+            #             = (beam_center_f_pixels - 0.5) * pixel_size_m + 0.5 * pixel_size_m
+            #             = beam_center_f_pixels * pixel_size_m
+            #
+            # Therefore, the simple formula Fbeam = beam_center_f * pixel_size is correct!
 
             # Direct mapping: no axis swap needed
             Fbeam = self.beam_center_f * self.pixel_size  # F (fast coord) ← beam_f (fast param)

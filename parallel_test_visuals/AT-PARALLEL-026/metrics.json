@@ -2,7 +2,7 @@
   {
     "config": "triclinic",
     "metrics": {
-      "correlation": 0.9999993838537466,
+      "correlation": 0.9999993838537463,
       "rmse": 1.2515375601651613e-05,
       "max_diff": 3.1449832022190094e-05,
       "relative_rmse": 0.0028432796243578196,
@@ -15,7 +15,7 @@
   {
     "config": "cubic_compare",
     "metrics": {
-      "correlation": 0.9999993838537466,
+      "correlation": 0.9999993838537463,
       "rmse": 1.2515375601651613e-05,
       "max_diff": 3.1449832022190094e-05,
       "relative_rmse": 0.0028432796243578196,
