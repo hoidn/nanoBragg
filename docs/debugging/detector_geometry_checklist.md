@@ -68,14 +68,18 @@ assert "-pivot sample" in cmd if twotheta != 0 else True
 
 ### Phase 2: Generate Parallel Traces
 ```bash
-# C trace
+# C trace (ensure instrumented build prints TRACE_C lines)
 ./nanoBragg [params] 2>&1 | grep "TRACE_C:" > c_trace.log
 
-# Python trace  
+# Python trace (ensure TRACE_PY lines follow the Trace Schema)
 python scripts/trace_pixel_512_512.py > py_trace.log
 
-# Compare
-python scripts/compare_traces.py c_trace.log py_trace.log
+# Quick first-difference check (by line)
+diff -u c_trace.log py_trace.log | head -n 50
+
+# Focused helpers (optional):
+#  - scripts/compare_rotation_matrices.py  # compares basis/rotation matrices
+#  - scripts/compare_c_python_pix0.py      # compares pix0_vector from instrumented runs
 ```
 
 ### Phase 3: Check Key Values

@@ -373,6 +373,6 @@ diff order1.out order2.out
 
 ---
 
-**Last Updated**: [DATE]  
+**Last Updated**: 2025-09-29  
 **Validated Against**: nanoBragg convention switching issue (would have saved 3-6 months)  
 **Usage Stats**: [Track how often each section is used to prioritize improvements]

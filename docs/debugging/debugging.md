@@ -21,7 +21,7 @@ This methodology is mandatory to avoid guesswork and ensure bugs are found deter
 
 ## Debugging Workflow (SOP-4.1)
 
-Follow the specialized PyTorch physics debugging process from `processes.xml`:
+Follow the specialized PyTorch physics debugging process documented in `docs/development/testing_strategy.md` (see the Parallel Validation Matrix section):
 
 1. **Identify an On-Peak Pixel:** Run the PyTorch simulation and visually inspect the output image to find the coordinates of a bright pixel on a Bragg peak.
 2. **Generate Golden C Trace:** Add trace printf statements to `nanoBragg.c` around the calculation of interest (e.g., detector geometry, scattering vectors). Recompile with `make -C golden_suite_generator` and run with your test parameters, redirecting stderr to capture the trace log.
@@ -52,6 +52,18 @@ printf("TRACE_C: pix0_vector %.15g %.15g %.15g\n", pix0_vector[1], pix0_vector[2
 ```
 **Purpose:** Provides the "ground truth" intermediate values for the physics calculation.  
 **Management:** Remove trace statements after debugging is complete to avoid cluttering output.
+
+### Trace Schema (names, units, precision)
+
+To ensure deterministic comparison between C and PyTorch traces, use the following conventions:
+
+- Prefixes: `TRACE_C:` for C-code; `TRACE_PY:` for PyTorch.
+- Variable names: keep identical tokens across implementations (e.g., `pix0_vector`, `fdet_vector`, `sdet_vector`, `odet_vector`, `Fbeam`, `Sbeam`, `pixel_pos_meters`, `diffracted_vec`, `scattering_vec_A_inv`, `hkl_frac`, `F_cell`, `F_latt`, `omega_pixel`).
+- Units:
+  - Detector geometry and positions: meters (e.g., `pixel_pos_meters`, `pix0_vector`).
+  - Physics quantities: Angstroms/Angstrom⁻¹ as appropriate (e.g., wavelength in Å; scattering vector in Å⁻¹).
+- Precision: print with ~12–15 significant digits for numeric lines.
+- One variable per line; consistent ordering between C and Py traces.
 
 ## Key Variables to Compare
 
@@ -132,7 +144,7 @@ Single Pixel Trace Debugging Log
 nanoBragg PyTorch Implementation
 ================================================================================
 
-Target Pixel: (slow=250, fast=350)
+Target Pixel: (slow=100, fast=800)
 Test Case: simple_cubic
 Wavelength: 6.2 Angstroms
 Precision: torch.float64
@@ -196,9 +208,10 @@ When modifying `scripts/debug_pixel_trace.py`:
 ### Golden Reference Management
 
 **Current Golden Reference:** `tests/golden_data/simple_cubic_pixel_trace.log`
-- Generated from: simple_cubic test case, pixel (250,350)
+- Generated from: simple_cubic test case, pixel (100,800)
 - Contains: Complete physics calculation trace
 - Precision: torch.float64
+- Trace format: follow the Trace Schema above (names/units/precision)
 - **Do not modify without team approval**
 
 ### Creating New Debug Scripts

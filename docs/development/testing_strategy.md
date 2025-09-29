@@ -30,6 +30,7 @@ Configuration mismatches are the most common source of test failures. Always ver
 - Convention-specific adjustments (e.g., MOSFLM's 0.5 pixel offset)
 - Default rotation axes for each convention
 - Proper unit conversions at boundaries
+ - Explicit convention selection: tests and harnesses MUST pass `-convention` (or equivalent API flag) to avoid implicit CUSTOM switching when vector parameters are present
 
 ## 2.1 Ground Truth: Parallel Trace-Driven Validation
 
@@ -200,6 +201,13 @@ Reference mapping:
   - Test file: `tests/test_at_parallel_022.py`
   - Env: `NB_RUN_PARALLEL=1`, `NB_C_BIN` set
   - Command: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_022.py`
+
+## 2.6 CI Gates (Parity & Traces)
+
+To prevent drift, CI should enforce the following fast gates on CPU:
+
+- Detector geometry visual parity: run `scripts/verify_detector_geometry.py` and fail if any reported correlation drops below the documented thresholds (e.g., ≥0.999 for baseline/tilted unless otherwise specified). Save PNG and metrics JSON as artifacts.
+- Trace parity check: generate one C trace and one PyTorch trace for the canonical pixel (`tests/golden_data/simple_cubic_pixel_trace.log` spec) and assert no first‑difference at the named checkpoints (e.g., pix0_vector, basis vectors, q, h,k,l, omega_pixel). Attach c_trace.log/py_trace.log on failure.
 
 Optional visual parity harness (sanity check):
 

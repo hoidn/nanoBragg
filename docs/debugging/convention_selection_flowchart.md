@@ -225,6 +225,6 @@ When you discover a new parameter that triggers CUSTOM convention:
 
 ---
 
-**Last Updated**: [DATE]  
-**Verified Against**: nanoBragg.c version [VERSION]  
+**Last Updated**: 2025-09-29  
+**Verified Against**: nanoBragg.c (golden_suite_generator) as of 2025-09-29  
 **Critical Behaviors Documented**: 8 automatic CUSTOM triggers

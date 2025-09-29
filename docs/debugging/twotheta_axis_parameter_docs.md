@@ -38,7 +38,7 @@
                         # ✅ SAFE: Explicit convention control
                         ./nanoBragg -convention CUSTOM -twotheta 20 -twotheta_axis 0 0 -1
                         
-                        See: docs/critical_behaviors.md for detailed explanation
+                        See: docs/debugging/CRITICAL_BEHAVIORS.md for detailed explanation
 ```
 
 ## Parameter Documentation Template
