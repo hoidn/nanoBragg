@@ -485,12 +485,13 @@ class Crystal:
         skew = torch.abs(skew)  # Handle negative values
 
         # Handle degenerate cases where skew approaches zero
-        # Use max with epsilon for numerical stability
-        skew = torch.maximum(skew, torch.tensor(1e-12, dtype=skew.dtype, device=skew.device))
+        # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
+        skew = skew.clamp_min(1e-12)
 
         V = 2.0 * self.cell_a * self.cell_b * self.cell_c * torch.sqrt(skew)
         # Ensure volume is not too small
-        V = torch.maximum(V, torch.tensor(1e-6, dtype=V.dtype, device=V.device))
+        # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
+        V = V.clamp_min(1e-6)
         V_star = 1.0 / V
 
         # Calculate reciprocal cell lengths using C-code formulas
@@ -502,10 +503,10 @@ class Crystal:
         sin_alpha = torch.sin(alpha_rad)
         sin_beta = torch.sin(beta_rad)
 
-        # Use maximum to avoid division by zero
-        denom1 = torch.maximum(sin_beta * sin_gamma, torch.tensor(1e-12, dtype=sin_beta.dtype, device=sin_beta.device))
-        denom2 = torch.maximum(sin_gamma * sin_alpha, torch.tensor(1e-12, dtype=sin_gamma.dtype, device=sin_gamma.device))
-        denom3 = torch.maximum(sin_alpha * sin_beta, torch.tensor(1e-12, dtype=sin_alpha.dtype, device=sin_alpha.device))
+        # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
+        denom1 = (sin_beta * sin_gamma).clamp_min(1e-12)
+        denom2 = (sin_gamma * sin_alpha).clamp_min(1e-12)
+        denom3 = (sin_alpha * sin_beta).clamp_min(1e-12)
 
         cos_alpha_star = (cos_beta * cos_gamma - cos_alpha) / denom1
         cos_beta_star = (cos_gamma * cos_alpha - cos_beta) / denom2
@@ -513,8 +514,9 @@ class Crystal:
 
         # Clamp cos_gamma_star to valid range [-1, 1]
         cos_gamma_star_bounded = torch.clamp(cos_gamma_star, -1.0, 1.0)
+        # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
         sin_gamma_star = torch.sqrt(
-            torch.maximum(1.0 - torch.pow(cos_gamma_star_bounded, 2), torch.tensor(1e-12, dtype=cos_gamma_star.dtype, device=cos_gamma_star.device))
+            (1.0 - torch.pow(cos_gamma_star_bounded, 2)).clamp_min(1e-12)
         )
 
         # Construct default orientation for reciprocal vectors (C-code convention)
@@ -538,8 +540,8 @@ class Crystal:
 
         # c* fills out 3D space
         c_star_x = c_star_length * cos_beta_star
-        # Use maximum to avoid division by zero
-        sin_gamma_star_safe = torch.maximum(sin_gamma_star, torch.tensor(1e-12, dtype=sin_gamma_star.dtype, device=sin_gamma_star.device))
+        # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
+        sin_gamma_star_safe = sin_gamma_star.clamp_min(1e-12)
         c_star_y = (
             c_star_length
             * (cos_alpha_star - cos_beta_star * cos_gamma_star_bounded)
@@ -632,9 +634,10 @@ class Crystal:
         mag_a_star_cross_b_star = torch.norm(a_star_cross_b_star)
 
         # Avoid division by zero
-        mag_b_star_cross_c_star = torch.maximum(mag_b_star_cross_c_star, torch.tensor(1e-12, dtype=self.dtype, device=self.device))
-        mag_c_star_cross_a_star = torch.maximum(mag_c_star_cross_a_star, torch.tensor(1e-12, dtype=self.dtype, device=self.device))
-        mag_a_star_cross_b_star = torch.maximum(mag_a_star_cross_b_star, torch.tensor(1e-12, dtype=self.dtype, device=self.device))
+        # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
+        mag_b_star_cross_c_star = mag_b_star_cross_c_star.clamp_min(1e-12)
+        mag_c_star_cross_a_star = mag_c_star_cross_a_star.clamp_min(1e-12)
+        mag_a_star_cross_b_star = mag_a_star_cross_b_star.clamp_min(1e-12)
 
         # Rescale to target magnitudes
         target_mag_b_star_cross_c_star = a_mag / V
@@ -1018,7 +1021,8 @@ class Crystal:
 
         # Recalculate volume from the actual rotated vectors
         V_actual = torch.dot(vectors["a"], b_cross_c)
-        V_actual = torch.maximum(V_actual, torch.tensor(1e-6, dtype=V_actual.dtype, device=V_actual.device))
+        # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
+        V_actual = V_actual.clamp_min(1e-6)
         V_star_actual = 1.0 / V_actual
 
         # a* = (b × c) / V, etc.
