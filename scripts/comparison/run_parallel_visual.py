@@ -19,7 +19,7 @@ from typing import Dict, Any, Optional, Tuple
 
 # Ensure environment is set
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
-os.environ['NB_C_BIN'] = './golden_suite_generator/nanoBragg'
+# Respect externally provided NB_C_BIN; do not override here. Fallbacks handled in main().
 
 # Output directory
 OUTPUT_DIR = Path("parallel_test_visuals")
@@ -209,11 +209,25 @@ def main():
     print("AT-PARALLEL Visual Comparison Generator")
     print("=" * 60)
 
-    # Check for C binary
-    c_bin = os.environ.get('NB_C_BIN', './golden_suite_generator/nanoBragg')
+    # Resolve C binary path with fallbacks
+    c_bin = os.environ.get('NB_C_BIN')
+    if not c_bin:
+        # Prefer golden_suite_generator if present, else root-level nanoBragg
+        golden = Path('./golden_suite_generator/nanoBragg')
+        root = Path('./nanoBragg')
+        if golden.exists():
+            c_bin = str(golden)
+        elif root.exists():
+            c_bin = str(root)
+        else:
+            c_bin = './golden_suite_generator/nanoBragg'  # default for message
+
     if not Path(c_bin).exists():
-        print(f"Warning: C binary not found at {c_bin}")
-        print("Some tests will be skipped")
+        print(f"ERROR: C binary not found at {c_bin}")
+        print("Set NB_C_BIN to a valid path (e.g., ./nanoBragg) and re-run.")
+        return
+    else:
+        print(f"Using NB_C_BIN={c_bin}")
 
     summary = {}
 
@@ -241,7 +255,7 @@ def main():
                     ret, _, _ = run_command(c_cmd)
 
                     # Run PyTorch version
-                    py_cmd = f"python3 -m nanobrag_torch {base_cmd} -floatfile {py_output}"
+                    py_cmd = f"{sys.executable} -m nanobrag_torch {base_cmd} -floatfile {py_output}"
                     ret, _, _ = run_command(py_cmd)
 
                     # Load and compare
@@ -274,7 +288,7 @@ def main():
                     ret, _, _ = run_command(c_cmd)
 
                     # Run PyTorch version
-                    py_cmd = f"python3 -m nanobrag_torch {base_cmd} -floatfile {py_output}"
+                    py_cmd = f"{sys.executable} -m nanobrag_torch {base_cmd} -floatfile {py_output}"
                     ret, _, _ = run_command(py_cmd)
 
                     # Load and compare
@@ -307,7 +321,7 @@ def main():
                     ret, _, _ = run_command(c_cmd)
 
                     # Run PyTorch version
-                    py_cmd = f"python3 -m nanobrag_torch {base_cmd} -floatfile {py_output}"
+                    py_cmd = f"{sys.executable} -m nanobrag_torch {base_cmd} -floatfile {py_output}"
                     ret, _, _ = run_command(py_cmd)
 
                     # Load and compare
@@ -340,7 +354,7 @@ def main():
                     ret, _, _ = run_command(c_cmd)
 
                     # Run PyTorch version
-                    py_cmd = f"python3 -m nanobrag_torch {base_cmd} -floatfile {py_output}"
+                    py_cmd = f"{sys.executable} -m nanobrag_torch {base_cmd} -floatfile {py_output}"
                     ret, _, _ = run_command(py_cmd)
 
                     # Load and compare
@@ -373,7 +387,7 @@ def main():
                     ret, _, _ = run_command(c_cmd)
 
                     # Run PyTorch version
-                    py_cmd = f"python3 -m nanobrag_torch {base_cmd} -floatfile {py_output}"
+                    py_cmd = f"{sys.executable} -m nanobrag_torch {base_cmd} -floatfile {py_output}"
                     ret, _, _ = run_command(py_cmd)
 
                     # Load and compare

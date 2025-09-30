@@ -203,6 +203,8 @@ Reference mapping:
   - Env: `NB_RUN_PARALLEL=1`, `NB_C_BIN` set
   - Command: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_022.py`
 
+- Parity case definitions: `tests/parity_cases.yaml` is the machine-readable companion to this matrix. It enumerates canonical commands, sweeps, thresholds, and options for the shared parity runner (`tests/test_parity_matrix.py`). Every parity-threshold AT SHALL appear in both the matrix and the YAML file.
+
 ### 2.5.1 Trace Recipe (per AT)
 
 For equivalence debugging (AT‑PARALLEL failures, correlation below thresholds, structured diffs), generate aligned traces:
@@ -222,6 +224,36 @@ Before any parity run in a debugging loop:
 - Prohibition: Do not run PyTorch‑only tests first for equivalence loops. The first command MUST be the canonical C‑parity pytest invocation mapped here. PyTorch‑only checks are allowed only as secondary, supportive diagnostics.
 - If an AT mapping is missing or incomplete, add a minimal entry here (test file, env, canonical command) and append a TODO in `docs/fix_plan.md` referencing the addition.
  - Friction rule: If the same parity steps (env export, pytest node, trace generation) are repeated across two loops, factor them into a minimal helper (e.g., a one‑liner shell alias or small script) and reference it in this matrix. Record the addition briefly in `docs/fix_plan.md` Attempts History. Do not bypass pytest; helpers should only wrap the mapped canonical commands.
+
+### 2.5.3 Normative Parity Coverage (SHALL)
+
+- Every acceptance test in `specs/spec-a-parallel.md` with a C↔Py numerical threshold MUST have:
+  - A human-readable entry in this matrix (test path, environment, canonical command), and
+  - A corresponding machine-readable case in `tests/parity_cases.yaml` powering `tests/test_parity_matrix.py`.
+- Missing coverage in either location is blocking. The fix plan cannot mark the AT done until the mapping exists or an explicit harness entry (with pass/fail logic) is added.
+- Documentation updates MUST keep the matrix and YAML file in sync with the canonical command line (arguments, sweeps, thresholds).
+
+### 2.5.4 Artifact-Backed Closure (SHALL)
+
+- Success claims for parity-threshold ATs MUST cite artifacts from a mapped parity path meeting thresholds:
+  - Metrics: correlation, MSE, RMSE, max |Δ|, C_sum, Py_sum, sum_ratio (optional SSIM when helpful).
+  - Storage: under `reports/<date>-AT-<ID>/metrics.json` (or equivalent) plus supporting visuals (diff heatmaps/overlays) when failures occur.
+  - fix_plan Attempts History MUST reference these paths (look for `Metrics:` / `Artifacts:` entries).
+- No artifacts → no closure; reopen the fix plan item instead.
+
+### 2.5.5 Environment Canonicalization Preflight (SHALL)
+
+- Resolve `NB_C_BIN` before running parity commands. Preferred order: environment value → `./golden_suite_generator/nanoBragg` → `./nanoBragg`. Abort if none exist.
+- Invoke PyTorch parity via `sys.executable` to ensure the active virtual environment executes the run.
+- Treat missing binaries/interpreters as blocking errors (fail fast rather than skipping parity).
+
+### 2.5.6 CI Meta-Check (Docs-as-Data)
+
+- CI MUST lint for:
+  - Spec → matrix → YAML coverage for all parity-threshold ATs.
+  - Existence of mapped commands/binaries referenced in the YAML.
+  - Presence of artifact paths when fix_plan marks parity items complete.
+- CI SHOULD fail when any invariant above is violated; parity documentation is normative.
 
 ## 2.6 CI Gates (Parity & Traces)
 

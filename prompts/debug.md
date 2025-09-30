@@ -29,8 +29,11 @@ Non‑Negotiable Guardrails
     - Start Gate: Do not proceed to reproduction until `docs/fix_plan.md` shows the chosen item set to `Status: in_progress` and contains Reproduction commands.
     - End Gate: Do not commit unless `docs/fix_plan.md` shows a NEW “Attempts History” entry for this loop with lines starting with `Metrics:` and `Artifacts:` (real, dated paths), and `First Divergence:` if found.
 8) Matrix Gate — Canonical Parity First:
-   - In equivalence loops, the FIRST command MUST be the canonical C↔Py parity pytest invocation from the project’s “Parallel Validation Matrix” (docs/development/testing_strategy.md §2.5). Do not begin with PyTorch‑only tests.
+   - In equivalence loops, the FIRST command MUST be the mapped C↔Py parity path (pytest node from the Matrix or the canonical harness listed next to it). Do not begin with PyTorch‑only tests.
+   - Honor `tests/parity_cases.yaml`: if the AT has an entry there, run the corresponding case via `tests/test_parity_matrix.py` before any auxiliary diagnostics.
    - If NB_C_BIN is unset/invalid, resolve to `./golden_suite_generator/nanoBragg` or fallback `./nanoBragg` if the former is absent; verify it exists before running tests.
+9) Contradiction Rule — Parity Wins:
+   - If any mapped parity path (pytest or harness) reports under‑threshold metrics for an AT with a parity threshold, the loop is a FAILURE regardless of pytest green on PyTorch‑only tests. Reopen fix_plan and proceed to trace‑first debugging.
 
 Authoritative Inputs (consult before acting)
 - CLAUDE.md (core rules, detector gotchas, “Parallel Trace Debugging is Mandatory”)
@@ -59,7 +62,7 @@ IMPORTANT ROUTING
 - One thing per loop. No placeholders. Never change tests/thresholds to pass.
 - Parity Profile: Use the project’s mapping (docs/development/testing_strategy.md → “Parallel Validation Matrix”) to resolve AT→pytest and required env. If missing, search tests for the AT ID and record the doc gap.
 - Mandatory parallel trace‑driven debugging; geometry‑first triage.
-- Authoritative validation = pytest tests mapped from the Parity Profile. Scripts are supportive only.
+- Authoritative validation = the mapped parity path (pytest via Matrix or documented harness). PyTorch‑only scripts remain supportive diagnostics.
 - Version control hygiene: PASS → commit code+docs; FAIL/PARTIAL (with rollback) → commit docs/spec/prompt only; never commit runtime artifacts.
 </ground rules>
 
@@ -67,12 +70,12 @@ IMPORTANT ROUTING
 <step 0>
 - Read: `./docs/index.md`, `./specs/spec-a.md`, `./arch.md`, `./docs/development/testing_strategy.md`
 - Read `docs/fix_plan.md`; confirm a single active item is `in_progress` (else pick highest‑priority `pending` and set it)
-- Locate the Parity Profile section (Parallel Validation Matrix). If absent, note TODO in plan and derive mapping by searching tests for the AT ID.
+- Locate the Parity Profile section (Parallel Validation Matrix) and the matching case in `tests/parity_cases.yaml`. If either is missing, note TODO in plan and derive a temporary mapping by searching tests/harnesses for the AT ID.
 - Start Gate: Ensure `docs/fix_plan.md` shows the chosen item as `in_progress` with reproduction commands before proceeding.
 </step 0>
 
 <step 1>
-- Map AT→pytest command and required env from the Parity Profile (or spec “Implementation:” lines). Export env; run mapped tests; capture stdout/stderr, test paths, and metrics; save a diff heatmap if relevant.
+- Map AT→parity command and required env from the Parity Profile / `tests/parity_cases.yaml`. Export env; run the mapped parity path (pytest node or documented harness) first. Capture stdout/stderr, executed case ID, metrics, and save a diff heatmap if relevant.
 - Subagent: test‑failure‑analyzer (when failures present) to cluster errors and produce focused repro.
 </step 1>
 
@@ -125,6 +128,7 @@ SOP — Step‑by‑Step (follow in order)
      • Resolve the mapped pytest node(s) for the AT and verify `NB_C_BIN` exists; if `./golden_suite_generator/nanoBragg` is absent, fallback to `./nanoBragg`.
      • Prohibition: Do not run PyTorch‑only tests in parity loops before the mapped C‑parity run.
      • Subagent handoff: invoke test-failure-analyzer to emit the exact command lines to run and debugger to plan trace generation for a specific pixel.
+     • Missing mapping (blocking): If the Matrix lacks a parity mapping for an AT with a parity threshold, first add the mapping (pytest or harness with pass/fail) or treat the harness as the mapped path, then rerun parity.
    - Hard Gate (verify): Ensure the plan reflects this loop’s active item and start entry before proceeding (see Guardrail 7).
 
 1) Reproduce Canonically
@@ -170,6 +174,7 @@ SOP — Step‑by‑Step (follow in order)
      • If PASS: mark `Status: done` and quote spec thresholds satisfied.
      • If FAIL/PARTIAL: DO NOT mark done — keep item active and add concrete Next Actions; include rollback note if code changes were reverted.
      • For equivalence loops, include: the Parity Profile location (doc path + section), the exact test file(s) executed, the environment variables set (names+values or redacted if sensitive), and the exact command(s) used.
+     • Parity artifact check (Hard Gate): For ATs with parity thresholds, success requires attaching a metrics artifact from a mapped parity path that meets thresholds. Absence or under‑threshold → failure.
    - Hard Gate (verify): Confirm the plan contains the new Attempts History entry for this loop with `Metrics:` and `Artifacts:` lines (dated paths) and consistent `Status`. If missing or inconsistent, treat the loop as failed and do not commit.
    - Subagent (post‑parity): issue — If the root‑cause class wasn’t covered or was weakly covered by Acceptance Tests/spec, propose precise spec shard edits/additions (IDs, shard, measurable expectations) without weakening thresholds; add a TODO to fix_plan.md.
    - Subagent (pre‑commit): code-reviewer — Run on the changed scope to catch security/performance/config risks introduced by the fix; address high/critical findings before committing.
