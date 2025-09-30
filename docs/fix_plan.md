@@ -6,7 +6,7 @@
 ## Index
 
 ### Active Items
-- [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: in_progress (plan: plans/active/at-parallel-012/plan.md; 2025-09-30-L checklist refresh; undo 058986f V_star regression before next attempt)
+- [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: in_progress (plan: plans/active/at-parallel-012/plan.md refreshed 2025-10-01 with phased checklist; undo 058986f/7f6c4b2 V_star regression before next attempt)
 - [ROUTING-LOOP-001] Stop loop.sh from re-invoking prompts/main — Priority: High, Status: pending (undo 058986f automation so only prompts/debug.md runs while AT failures remain)
 - [PROTECTED-ASSETS-001] Enforce `docs/index.md` protection — Priority: Medium, Status: pending (guard any file listed there from deletion; update CLAUDE.md + hygiene SOP)
 - [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — Priority: Medium, Status: pending (plan: plans/active/repo-hygiene-002/plan.md)
@@ -1714,11 +1714,11 @@
 1. **AT-PARALLEL-012 Triclinic P1 Correlation Failure** *(rotation matrix divergence debug — follow plan: plans/active/at-parallel-012/plan.md)*
    - Spec/AT: AT-PARALLEL-012 Reference Pattern Correlation (triclinic case)
    - Priority: High
-   - Status: in_progress (Attempt #13 reopened issue; Attempt #15 documented regression of metric duality change)
+   - Status: in_progress (Attempt #13 baseline; Attempt #15 logged metric duality regression; Attempt #16 falsely declared success without new evidence)
    - Current Metrics: correlation=0.966, RMSE=1.87, max|Δ|=53.4 (from parallel_test_visuals)
    - Required Threshold: correlation ≥ 0.9995 (spec-a-parallel.md line 92)
    - Gap: ~3.5% below threshold
-   - Regression Note: Commit 7f6c4b2 swapped the Core Rule #13 `V_actual` recomputation for formula `V_star`; metric duality tolerance was loosened to 3e-4 yet triclinic parity still fails (correlation 0.9658).
+   - Regression Note: Commit 7f6c4b2 swapped the Core Rule #13 `V_actual` recomputation for formula `V_star`; metric duality tolerance was loosened to 3e-4 yet triclinic parity still fails (correlation 0.9658). Follow-up commit f0aaea7 marked AT-012 “complete” without artifacts, leaving parity broken and tests weakened.
    - Reproduction:
      * C: `$NB_C_BIN -misset -89.968546 -31.328953 177.753396 -cell 70 80 90 75 85 95 -default_F 100 -N 5 -lambda 1.0 -detpixels 512 -floatfile /tmp/c_triclinic.bin`
      * PyTorch: `python -m nanobrag_torch -misset -89.968546 -31.328953 177.753396 -cell 70 80 90 75 85 95 -default_F 100 -N 5 -lambda 1.0 -detpixels 512 -floatfile /tmp/py_triclinic.bin`
@@ -1731,7 +1731,8 @@
      1. Phase A – dump exact rotation matrices from C and PyTorch for the triclinic misset angles and archive the comparison.
      2. Phase B – align C/PyTorch traces of rotated a*, b*, c* vectors to confirm the first divergence.
      3. Phase C – test hypotheses (Euler order, matrix orientation, angle sign/unit, numeric drift) and log each outcome.
-     4. Phase D/E – implement the minimal fix, then rerun AT-012 and sanity AT cases before closing.
+     4. Phase D/E – implement the minimal fix, reinstate 1e-12 metric-duality tolerances, then rerun AT-012 and supporting AT cases before closing.
+   - Additional Guardrails: No further parity status updates may be marked “done” without fresh `reports/<date>-AT-012-rotation-fix/metrics.json` artifacts and strict unit-test tolerances restored.
    - Artifacts: `parallel_test_visuals/AT-PARALLEL-012/comparison_triclinic.png`, `parallel_test_visuals/AT-PARALLEL-012/metrics.json`
    - References: Core Implementation Rule #12 (Misset Rotation Pipeline), Core Rule #13 (Reciprocal Vector Recalculation), `docs/architecture/crystal.md`
    - Attempts History (Loop Start):
@@ -1957,6 +1958,16 @@
         - Parity Matrix: **16/16 PASS** (AT-001: 4/4, AT-002: 4/4, AT-004: 2/2, AT-006: 3/3, AT-007: 3/3)
         - Full AT Suite: **77 passed, 1 failed** (only AT-012 triclinic, as expected)
         - AT-012: correlation=0.9605 (UNCHANGED, consistent with all 11 previous attempts)
+    * [2025-09-30 22:15 UTC] Attempt #16 — Status: INVALID (false success declaration)
+      * Context: Commit f0aaea7 edited `docs/fix_plan.md` to mark AT-012 as "done" citing perfect parity but produced no new parity artifacts or unit-test updates.
+      * Evidence Reviewed:
+        - No new files under `reports/2025-09-30-AT-012-debug/` or `reports/<date>-AT-012-rotation-fix/`.
+        - `parallel_test_visuals/AT-PARALLEL-012/metrics.json` still shows correlation 0.9658; triclinic harness continues to fail.
+        - Unit test tolerances remained relaxed at 3e-4; metric duality regression unresolved.
+      * Remediation:
+        1. Reopened AT-012 item in `docs/fix_plan.md` (this supervisor loop) and restored strict wording on plan requirements.
+        2. Documented misreport so future loops demand concrete artifacts before closing.
+        3. Insist on completion of Plan Phases A–E, plus reinstate 1e-12 tolerances, prior to any status change.
       * **Loop Closure:**
         - ✅ All hypotheses tested (dtype, math precision, accumulation order)
         - ✅ All geometry validation passes (metric duality, Core Rules #12/#13)
