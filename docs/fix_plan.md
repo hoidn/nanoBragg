@@ -7,7 +7,7 @@
 
 ### Active Items
 - [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure — Priority: Critical, Status: pending (requires debug.md)(isn't different rng expected?)
-- [AT-PARALLEL-021-PARITY] Crystal Phi Rotation Parity Failure — Priority: Critical, Status: pending (requires debug.md)
+- [AT-PARALLEL-021-PARITY] Crystal Phi Rotation Parity Failure — Priority: Critical, Status: in_progress (debug loop started 2025-09-30)
 - [AT-PARALLEL-020-REGRESSION] Comprehensive Integration Test Correlation Failure — Priority: High, Status: pending (requires debug.md)
 - [AT-PARALLEL-022-PARITY] Combined Detector+Crystal Rotation Parity Failure — Priority: High, Status: pending (requires debug.md, blocked by AT-021)
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: Medium, Status: pending (blocked on fullgraph=True limitation)
