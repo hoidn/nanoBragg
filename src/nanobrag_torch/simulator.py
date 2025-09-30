@@ -524,8 +524,10 @@ class Simulator:
         if (self.beam_config.source_directions is not None and
             len(self.beam_config.source_directions) > 0):
             n_sources = len(self.beam_config.source_directions)
-            source_directions = self.beam_config.source_directions
-            source_wavelengths = self.beam_config.source_wavelengths  # in meters
+            # PERF-PYTORCH-002: Move source tensors to correct device/dtype immediately
+            # to avoid repeated CPU→GPU copies in physics loops
+            source_directions = self.beam_config.source_directions.to(device=self.device, dtype=self.dtype)
+            source_wavelengths = self.beam_config.source_wavelengths.to(device=self.device, dtype=self.dtype)  # in meters
             # Convert wavelengths to Angstroms for computation
             source_wavelengths_A = source_wavelengths * 1e10
             source_weights = self.beam_config.source_weights
