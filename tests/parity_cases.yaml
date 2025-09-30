@@ -78,6 +78,44 @@ cases:
           -Ybeam 25.6
           -mosflm
 
+  - id: AT-PARALLEL-003
+    description: Detector offset preservation parity (C ↔ PyTorch)
+    base_args: >-
+      -default_F 100
+      -cell 100 100 100 90 90 90
+      -lambda 6.2
+      -N 5
+      -distance 100
+      -pixel 0.1
+      -mosflm
+      -seed 1
+    thresholds:
+      corr_min: 0.9999
+      sum_ratio_min: 0.98
+      sum_ratio_max: 1.02
+      max_abs_max: 500
+    runs:
+      - name: beam-20-20-detpixels-256
+        extra_args: >-
+          -detpixels 256
+          -Xbeam 20.0
+          -Ybeam 20.0
+      - name: beam-30-40-detpixels-256
+        extra_args: >-
+          -detpixels 256
+          -Xbeam 30.0
+          -Ybeam 40.0
+      - name: beam-45-25-detpixels-512
+        extra_args: >-
+          -detpixels 512
+          -Xbeam 45.0
+          -Ybeam 25.0
+      - name: beam-60-60-detpixels-1024
+        extra_args: >-
+          -detpixels 1024
+          -Xbeam 60.0
+          -Ybeam 60.0
+
   - id: AT-PARALLEL-004
     description: MOSFLM vs XDS convention parity (C ↔ PyTorch)
     base_args: >-

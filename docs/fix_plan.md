@@ -1,6 +1,6 @@
-**Last Updated:** 2025-09-30 16:00 UTC
+**Last Updated:** 2025-09-30 18:00 UTC
 
-**Current Status:** **ROOT CAUSE ISOLATED:** AT-PARALLEL-021 added to parity harness and reveals phi rotation bug exists independently of detector rotations. single_step_phi failure (corr=0.48) is identical pattern to AT-022, confirming crystal rotation is the root issue, not combined rotations. This discovery unblocks debugging strategy.
+**Current Status:** **PARITY COVERAGE EXPANSION:** AT-PARALLEL-003 successfully added to parity harness with 4 test runs (beam center offset preservation). All tests pass with C↔PyTorch correlation ≥0.9999. ROOT CAUSE for AT-021/022 remains isolated pending debug.md routing.
 
 ---
 ## Index
@@ -15,10 +15,11 @@
 
 ### Queued Items
 - [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: done (escalated)
-- Parity Harness Coverage Expansion — Status: in_progress (AT-011/021/022 added, 18 ATs remaining)
+- Parity Harness Coverage Expansion — Status: in_progress (AT-003/011/021/022 added, 17 ATs remaining)
 - Docs-as-Data CI lint
 
 ### Recently Completed (2025-09-30)
+- [AT-PARALLEL-003-HARNESS] Detector Offset Preservation Parity Addition — done
 - [AT-PARALLEL-021-HARNESS] Parity Harness Addition for Crystal Phi Rotation — done (test discovery complete)
 - [AT-PARALLEL-011-CLI] Parity Harness CLI Compatibility — done (19/20 tests pass)
 - [AT-GEO-003] Beam Center Preservation with BEAM Pivot — done
@@ -30,6 +31,37 @@
 
 ---
 ## Active Focus
+
+## [AT-PARALLEL-003-HARNESS] Detector Offset Preservation Parity Addition
+- Spec/AT: AT-PARALLEL-003 Detector Offset Preservation
+- Priority: Medium (parity harness coverage expansion)
+- Status: done
+- Owner/Date: 2025-09-30 18:00 UTC
+- Exit Criteria: ✅ SATISFIED — AT-PARALLEL-003 added to parity_cases.yaml with 4 test runs; all pass C↔PyTorch parity
+- Reproduction:
+  * Test: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_parity_matrix.py -k "AT-PARALLEL-003" -v`
+- Implementation Summary:
+  * Added AT-PARALLEL-003 to tests/parity_cases.yaml with 4 test runs covering beam center offset preservation
+  * Base parameters: cubic 100Å cell, N=5, MOSFLM convention, pixel 0.1mm, distance 100mm, seed 1
+  * Four runs testing different beam center positions and detector sizes:
+    - beam-20-20-detpixels-256: Xbeam=20mm, Ybeam=20mm, 256×256 detector
+    - beam-30-40-detpixels-256: Xbeam=30mm, Ybeam=40mm, 256×256 detector (asymmetric)
+    - beam-45-25-detpixels-512: Xbeam=45mm, Ybeam=25mm, 512×512 detector
+    - beam-60-60-detpixels-1024: Xbeam=60mm, Ybeam=60mm, 1024×1024 detector
+  * Thresholds: corr≥0.9999, sum_ratio∈[0.98, 1.02], max|Δ|<500
+- Test Results (2025-09-30 18:00 UTC):
+  * **ALL 4 RUNS PASSED** ✓
+    - beam-20-20-detpixels-256: PASSED (5.36s)
+    - beam-30-40-detpixels-256: PASSED
+    - beam-45-25-detpixels-512: PASSED
+    - beam-60-60-detpixels-1024: PASSED
+  * Total runtime: 20.51s for all 4 tests
+  * All correlations ≥0.9999, confirming excellent C↔PyTorch parity
+- Artifacts:
+  * Modified: tests/parity_cases.yaml (added AT-PARALLEL-003 entry between AT-002 and AT-004)
+- Next Actions:
+  * Continue parity harness coverage expansion: 17 AT-PARALLEL tests remain (005, 008, 009, 010, 013-019, 023-029)
+  * Next recommended: AT-PARALLEL-005 (Beam Center Parameter Mapping) — tests beam center parameter equivalence
 
 ## [AT-PARALLEL-021-PARITY] Crystal Phi Rotation Parity Addition and Root Cause Discovery
 - Spec/AT: AT-PARALLEL-021 Crystal Phi Rotation Equivalence
