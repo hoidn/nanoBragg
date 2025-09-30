@@ -585,7 +585,9 @@ class Simulator:
             incident_all = -self.incident_beam_direction.unsqueeze(0).unsqueeze(0).unsqueeze(2).expand(S, F, oversample*oversample, 3)
 
             # Diffracted directions for all subpixels
-            diffracted_all = subpixel_coords_all / sub_magnitudes_all.unsqueeze(-1) * 1e10
+            # CRITICAL: Both numerator and denominator must be in same units (Angstroms)
+            # subpixel_coords_ang_all is in Angstroms, sub_magnitudes_all is in Angstroms
+            diffracted_all = subpixel_coords_ang_all / sub_magnitudes_all.unsqueeze(-1)
 
             # Calculate polarization factor
             if self.beam_config.nopolar:
@@ -694,6 +696,38 @@ class Simulator:
 
             # Apply omega directly
             normalized_intensity = normalized_intensity * omega_pixel
+
+            # Calculate and apply polarization factor (missing in original no-subpixel path)
+            # This matches the subpixel path logic (lines 590-603)
+            if self.beam_config.nopolar:
+                polar_pixel = torch.ones_like(omega_pixel)
+            else:
+                # Get detector dimensions from pixel coordinates shape
+                S_dim, F_dim = pixel_coords_angstroms.shape[:2]
+
+                # Calculate polarization for pixel centers
+                # incident: FROM source TO sample (negated source direction)
+                incident_pixels = -self.incident_beam_direction.unsqueeze(0).unsqueeze(0).expand(S_dim, F_dim, 3)
+
+                # diffracted: FROM sample TO pixel (normalized pixel coords)
+                # Use airpath (which has shape (S, F)) instead of pixel_magnitudes (which has shape (S, F, 1))
+                diffracted_pixels = pixel_coords_angstroms / airpath.unsqueeze(-1)
+
+                # Flatten for polarization_factor function
+                incident_flat = incident_pixels.reshape(-1, 3)
+                diffracted_flat = diffracted_pixels.reshape(-1, 3)
+
+                polar_flat = polarization_factor(
+                    self.kahn_factor,
+                    incident_flat,
+                    diffracted_flat,
+                    self.polarization_axis
+                )
+
+                polar_pixel = polar_flat.reshape(S_dim, F_dim)
+
+            # Apply polarization
+            normalized_intensity = normalized_intensity * polar_pixel
 
         # Apply detector absorption if configured (AT-ABS-001)
         if (self.detector.config.detector_thick_um is not None and

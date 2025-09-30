@@ -87,6 +87,61 @@
       2. Refine fix to handle both AT-PARALLEL-002 and AT-PARALLEL-006 correctly
       3. Consider adding oversample-selection trace logging to understand branch selection better
       4. Once refined, reapply fix and validate full parity suite (target: 16/16 pass)
+  * [2025-09-29] Attempt #6 — Status: investigating (unit-mixing fix did not resolve correlation issue)
+    * Context: Fixed unit-mixing bug in subpixel path diffracted direction calculation (line 590)
+    * Bug Found: `diffracted_all = subpixel_coords_all / sub_magnitudes_all * 1e10` mixed meters/angstroms
+    * Fix Applied: Changed to `diffracted_all = subpixel_coords_ang_all / sub_magnitudes_all` (consistent units)
+    * Environment: CPU, float64, seed=1, MOSFLM convention
+    * Validation Results: NO IMPROVEMENT in correlations
+      - AT-PARALLEL-002 pixel-0.4mm: corr=0.998145 (unchanged, uses oversample=1 no-subpixel path)
+      - AT-PARALLEL-006 dist-50mm: corr=0.969419 (unchanged despite fix to oversample=2 subpixel path)
+    * **Key Discovery**: Error pattern is NOT radial polarization pattern
+      - Perfect agreement (ratio=1.000000) at center (128,128) and diagonal corners (64,64), (192,192)
+      - Small errors (ratio≈0.992/1.008) along horizontal/vertical axes: (128,64), (64,128)
+      - Pattern suggests issue with F/S axis handling, not polarization angle variation
+    * Hypothesis Rejected: Unit-mixing was not the root cause of correlation failures
+    * New Hypotheses (ranked):
+      1. **Subpixel offset calculation asymmetry**: The subpixel grid or offset calculation may have subtle asymmetry between fast/slow axes
+      2. **Detector basis vector issue**: F/S axes may have sign or normalization errors affecting off-diagonal pixels differently
+      3. **C-code quirk in subpixel polar calculation**: C code may calculate polar differently for N=1 vs N>1 cases
+      4. **Oversample flag defaults**: PyTorch may be using wrong default for oversample_polar/oversample_omega with N=1
+    * Metrics: pixel (128,64): C=0.038702, Py=0.038383, ratio=0.991749, diff=-0.000319
+    * Artifacts: debug_polarization_values.py output showing axis-dependent error pattern
+    * Next Actions:
+      1. Generate C trace with polar calculation for N=1 case showing intermediate E/B vectors
+      2. Generate matching PyTorch trace for same pixel showing E_in, B_in, E_out, B_out, psi
+      3. Compare line-by-line to find FIRST DIVERGENCE in polarization calculation chain
+      4. If polar calc is identical, investigate subpixel offset generation and basis vector application
+  * [2025-09-29] Attempt #5 — Status: partial (polarization fix recreates Attempt #4 regression pattern)
+    * Context: Re-implemented polarization calculation in no-subpixel path (simulator.py:698-727) matching subpixel logic
+    * Environment: CPU, float64, seed=1, MOSFLM convention, oversample=1
+    * Fix Implementation:
+      - Added polarization calculation using `incident_pixels` and `diffracted_pixels` unit vectors
+      - Matched subpixel path logic: `polar_flat = polarization_factor(kahn_factor, incident_flat, diffracted_flat, polarization_axis)`
+      - Applied after omega calculation (line 696), before absorption (line 729)
+    * Validation Results:
+      - **AT-PARALLEL-002**: pixel-0.05mm **PASSES** (corr≥0.9999, was failing); pixel-0.1mm/0.2mm **PASS**; pixel-0.4mm **FAILS** (corr=0.998145 < 0.9999, improved from 0.996984 but not enough)
+      - **AT-PARALLEL-006**: All 3 runs **FAIL** (dist-50mm corr≈0.9694 < 0.9995; previously passing at corr>0.999)
+    * Metrics:
+      - AT-PARALLEL-002 pixel-0.4mm: corr=0.998145, RMSE=4.67, max|Δ|=121.79, sum_ratio=1.0000 (perfect)
+      - AT-PARALLEL-006 dist-50mm: corr≈0.9694 (estimated from Attempt #4 artifacts), sum_ratio≈1.00000010 (nearly perfect)
+    * Artifacts: reports/2025-09-29-AT-PARALLEL-002/pixel-0.4mm_*, scripts/debug_polarization_investigation.py
+    * **Key Observations**:
+      1. Polarization IS being applied correctly (diagnostic shows polar/nopolar ratio ~0.77 for AT-002, ~0.98 for AT-006)
+      2. Sum ratios are nearly perfect (1.0000) in both cases → total energy is correct
+      3. Correlation failures suggest SPATIAL DISTRIBUTION error, not magnitude error
+      4. Both AT-002 and AT-006 use oversample=1 (confirmed via auto-selection formula)
+      5. C code applies polarization in both cases (verified from C logs showing "Kahn polarization factor: 0.000000")
+    * Hypotheses (ranked):
+      1. **Diffracted direction calculation bug**: Polarization depends on scattering geometry; if diffracted unit vector is wrong, polarization varies incorrectly across pixels. Check normalization and unit consistency (meters vs Angstroms).
+      2. **Incident beam direction**: MOSFLM convention uses [1,0,0]; verify this matches C-code exactly and that the sign is correct (FROM source TO sample vs propagation direction).
+      3. **Polarization axis**: Default polarization axis may differ between C and PyTorch; verify it matches MOSFLM convention exactly.
+      4. **Edge case in polarization_factor function**: Check for NaNs, Infs, or numerical instabilities at extreme scattering angles or near-zero vectors.
+    * Next Actions:
+      1. Generate aligned C and PyTorch traces for AT-PARALLEL-006 (N=1, dist=50mm, lambda=1.0) focusing on polarization intermediate values: incident vector, diffracted vector, 2θ angle, polarization factor
+      2. Identify FIRST DIVERGENCE in polarization calculation or geometry
+      3. If polarization calculation is correct, investigate if there's a C-code quirk where polarization is NOT applied for N=1 (unlikely but possible)
+      4. Consider if this is a precision/accumulation issue specific to small N values
   * [2025-09-29] Attempt #2 — Status: partial (found spatial pattern, need omega comparison)
     * Context: Generated parallel traces for pixel (64,79) in 0.4mm case using subagent
     * Metrics: Trace shows perfect agreement for I_before_scaling, Miller indices, F_latt; BUT final intensity has 0.179% error (Py=2121.36 vs C=2117.56)
