@@ -12,5 +12,7 @@ CODEX_CMD="codex"
 
 # Run the supervisor prompt repeatedly to manage Ralph's loops.
 for i in {1..20}; do
+  git pull
   ${CODEX_CMD} exec --dangerously-bypass-approvals-and-sandbox < prompts/supervisor.md | tee -a "${LOG_FILE}"
+  git push
 done
