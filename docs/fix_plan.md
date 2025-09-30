@@ -200,10 +200,10 @@
 ---
 ## Queued Items
 
-1. **AT-PARALLEL-012 Triclinic P1 Correlation Failure** *(queued)*
+1. **AT-PARALLEL-012 Triclinic P1 Correlation Failure** *(active)*
    - Spec/AT: AT-PARALLEL-012 Reference Pattern Correlation (triclinic case)
    - Priority: High
-   - Status: pending
+   - Status: in_progress
    - Current Metrics: correlation=0.966, RMSE=1.87, max|Δ|=53.4 (from parallel_test_visuals)
    - Required Threshold: correlation ≥ 0.9995 (spec-a-parallel.md line 92)
    - Gap: ~3.5% below threshold
@@ -222,6 +222,57 @@
      4. Check if reciprocal vector recalculation (Core Rule #13) is correctly implemented
    - Artifacts: `parallel_test_visuals/AT-PARALLEL-012/comparison_triclinic.png`, `parallel_test_visuals/AT-PARALLEL-012/metrics.json`
    - References: Core Implementation Rule #12 (Misset Rotation Pipeline), Core Rule #13 (Reciprocal Vector Recalculation), `docs/architecture/crystal.md`
+   - Attempts History (Loop Start):
+     * [2025-09-29 14:30 UTC] Attempt #9 — Status: partial (diagnostics complete; root cause requires C trace)
+       * Context: AT-PARALLEL-012 triclinic case has been marked xfail since commit e2df258; correlation=0.966 (3.5% below threshold of 0.9995)
+       * Environment: CPU, float64, uses golden data from tests/golden_data/triclinic_P1/image.bin
+       * Test Path: `tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_triclinic_P1_correlation`
+       * Canonical Command: `pytest -v tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_triclinic_P1_correlation`
+       * Note: This is NOT a live C↔PyTorch parity test (no NB_RUN_PARALLEL required); it compares against pre-generated golden data
+       * Planned Approach:
+         1. Run test to establish baseline metrics (correlation, RMSE, max|Δ|, sum_ratio)
+         2. Generate diff heatmap and peak diagnostics
+         3. Geometry-first triage: verify misset rotation pipeline (Core Rule #12), reciprocal vector recalculation (Core Rule #13), volume calculation
+         4. If geometry correct, generate aligned traces for an on-peak pixel to identify FIRST DIVERGENCE
+       * Metrics:
+         - Correlation: 0.9605 (3.95% below 0.9995 threshold)
+         - Sum ratio: 1.000451 (+0.05% PyTorch higher) — nearly perfect
+         - RMSE: 1.91, Max|Δ|: 48.43
+         - Peak matching: 30/50 within 0.5px threshold (actual: 33/50 matched ≤5px)
+         - Median peak displacement: 0.13 px (within 0.5px spec)
+         - Max peak displacement: 0.61 px (slightly over 0.5px)
+         - Radial pattern correlation: 0.50 (moderate correlation between distance and displacement)
+       * Geometry Validation:
+         - ✅ Metric duality: a·a*=1.0, b·b*=1.0, c·c*=1.0 (error <1e-12)
+         - ✅ Orthogonality: a·b*≈0, etc. (error <1e-16)
+         - ✅ Volume consistency: V from vectors matches V from property
+         - ✅ Core Rule #12 (Misset Rotation Pipeline) correctly implemented
+         - ✅ Core Rule #13 (Reciprocal Vector Recalculation) correctly implemented
+       * Key Findings:
+         1. Sum ratio is nearly perfect → total energy is correct
+         2. Geometry and metric duality are perfect → lattice vectors are correct
+         3. Peak positions have median displacement 0.13 px (well within spec)
+         4. BUT correlation is low (0.9605) → suggests intensity distribution around peaks differs
+         5. Moderate radial pattern in displacement (corr=0.50) → possible systematic effect
+       * Artifacts:
+         - reports/2025-09-29-AT-PARALLEL-012/triclinic_metrics.json
+         - reports/2025-09-29-AT-PARALLEL-012/triclinic_comparison.png
+         - reports/2025-09-29-AT-PARALLEL-012/peak_displacement_analysis.png
+         - scripts/debug_at012_triclinic.py, scripts/verify_metric_duality_at012.py, scripts/analyze_peak_displacement_at012.py, scripts/find_strong_peak_at012.py, scripts/analyze_peak_displacement_at012.py
+       * Next Actions (requires C code instrumentation):
+         1. Add printf instrumentation to C code for pixel (368, 262) — strongest peak
+         2. Generate C trace showing: h,k,l (float and int), F_cell, F_latt, omega, polarization factor, final intensity
+         3. Generate matching PyTorch trace for same pixel
+         4. Identify FIRST DIVERGENCE in the physics calculation chain
+         5. Focus on: lattice shape factors (F_latt), structure factor interpolation, or intensity accumulation
+       * Hypothesis (based on diagnostics):
+         - NOT geometry (metric duality perfect, Core Rules #12/#13 implemented correctly)
+         - NOT total energy (sum ratio = 1.000451)
+         - NOT peak positions (median displacement = 0.13 px ≪ 0.5 px threshold)
+         - LIKELY: Intensity distribution around peaks differs subtly — possibly F_latt calculation with triclinic cell + large misset angles, or numerical precision in lattice shape factor with N=5
+         - Radial pattern (corr=0.50) suggests possible systematic effect correlated with distance from center → could be related to omega calculation or detector geometry interaction with off-center peaks
+       * Exit Criteria: correlation ≥ 0.9995; peak match ≥ 45/50 within 0.5 px
+       * Status: PARTIAL — diagnostics complete; BLOCKED on C trace instrumentation for FIRST DIVERGENCE identification
 
 2. **Parity Harness Coverage Expansion** *(queued)*
    - Goal: ensure every parity-threshold AT (specs/spec-a-parallel.md) has a canonical entry in `tests/parity_cases.yaml` and executes via `tests/test_parity_matrix.py`.
