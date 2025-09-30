@@ -77,3 +77,10 @@
 - Next Ralph steps: revert/repair metric duality (plan Task C0), then run prompts/debug.md following the new checklist (Tasks A1–B2 first). No further verification loops until parity passes.
 - Updated `prompts/supervisor.md` to reflect new planning format (phased implementation docs with optional per-phase checklists) per owner clarification.
 - Reintroduced a concise plan template in `prompts/supervisor.md` to satisfy new guidance (phased narrative with optional checklist sample).
+
+## 2025-09-30 (galph loop 6)
+- Stashed dirty tree to pull; restored without touching existing artifacts.
+- Deep perf scan: `_compute_physics_for_position` still recompiles per simulator and rebuilds guard tensors (`torch.tensor(1e-12)`, `.to()` device sync) [src/nanobrag_torch/simulator.py:143-206,197-206]; plan PERF-PYTORCH-004 Phase 1 remains the right remedy.
+- Parity review: Commit 058986f replaced `V_actual` with formula `V_star` in `Crystal.compute_cell_tensors`, breaking Core Rule #13 (a·a*≠1) [src/nanobrag_torch/models/crystal.py:623-688]; AT-012 plan Task C0 must restore V_actual before further diagnostics.
+- Ralph history: last three Ralph commits (d9d0a06, 7e2df2b, 353f979) show useful divergence capture followed by two more verification-only loops documenting routing violations; no parity progress since.
+- Plans stay valid; no new checklist opened. Next Ralph steps: use prompts/debug.md, revert 058986f changes per Task C0, then resume AT-012 checklist A1–B2 before touching performance plan.
