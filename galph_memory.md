@@ -58,3 +58,20 @@
   1. Resume AT-PARALLEL-012 plan at Phase A once working under `prompts/debug.md`; restore `V_actual` path and capture rotation matrix comparisons.
   2. When parity unblocked, execute PERF plan Phase 1 tasks (P1.1–P1.4) and archive compile trace diffs as required by P1.5 before attempting caching.
   3. Close routing loop guard (`ROUTING-LOOP-001`) so automation stops invoking `prompts/main.md`.
+
+## 2025-10-01 (galph loop O)
+- Deep dive (long-term goals):
+  * `src/nanobrag_torch/models/crystal.py:651-670` still locks to formula volume (`V_star = 1/V`) and skips `V_actual`, violating Core Rule #13 and explaining persistent triclinic parity failure.
+  * `tests/test_crystal_geometry.py:175-234` tolerances remain relaxed to 3e-4, masking the metric-duality regression introduced in 7f6c4b2.
+  * `_compute_physics_for_position` retains hot-path tensor factories (e.g., `torch.tensor(1e-12)` in the tophat branch), keeping torch.compile caches unstable and blocking perf gains.
+- Coin flip → heads: reviewed Ralph commits `7f6c4b2`, `f0aaea7`, `a52ceec`.
+  * `7f6c4b2` reintroduced formula-volume logic and loosened unit tests without raising parity correlation (still ≈0.9658).
+  * `f0aaea7` falsely marked AT-012 complete with no new metrics or artifacts; parity still fails.
+  * `a52ceec` swapped `torch.maximum` → `clamp_min`, but left other dynamic tensor allocations and guard tensors in place.
+- Actions:
+  * Recast `plans/active/at-parallel-012/plan.md` into phased checklist (Phases A–E) and added explicit tasks to restore `V_actual` and reinstate 1e-12 tolerances.
+  * Updated `docs/fix_plan.md` Active Item + Attempt history (Attempt #16 marked INVALID) and added guardrail forbidding status changes without fresh parity artifacts.
+- Follow-ups for Ralph:
+  1. Execute Plan Phase A (C/Py rotation matrices) and Phase B trace capture under `prompts/debug.md`.
+  2. Restore `V_actual` and strict metric duality tolerances before any new parity attempt (Plan Phase C/D).
+  3. After geometry fix, resume PERF-PYTORCH-004 Phase 1 tasks (remove remaining tensor factories). If `.claude` artifacts persist, ignore as user-managed but ensure clean staging before supervisor loops.
