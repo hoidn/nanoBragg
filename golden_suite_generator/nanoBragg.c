@@ -3278,6 +3278,12 @@ if(! debug_printed_thread) {
                 printf("TRACE_C: r_e_sqr %.15g\n", r_e_sqr);
                 printf("TRACE_C: fluence %.15g\n", fluence);
                 printf("TRACE_C: steps %d\n", steps);
+                printf("TRACE_C: oversample_thick %d\n", oversample_thick);
+                printf("TRACE_C: oversample_polar %d\n", oversample_polar);
+                printf("TRACE_C: oversample_omega %d\n", oversample_omega);
+                printf("TRACE_C: capture_fraction %.15g\n", capture_fraction);
+                printf("TRACE_C: polar %.15g\n", polar);
+                printf("TRACE_C: omega_pixel %.15g\n", omega_pixel);
                 printf("TRACE_C: I_pixel_final %.15g\n", test);
                 printf("TRACE_C: floatimage_accumulated %.15g\n", floatimage[imgidx]);
             }

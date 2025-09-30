@@ -60,6 +60,33 @@
       3. Generate full C trace with I_before_scaling, F_latt, F_cell, r_e², fluence, steps for pixel (128,128)
       4. Generate matching PyTorch trace with same variables
       5. Compare line-by-line to find FIRST DIVERGENCE before final scaling
+  * [2025-09-29] Attempt #4 — Status: FIRST DIVERGENCE FOUND; rollback due to regression
+    * Context: Generated full C and PyTorch traces for pixel (128,128) @ 0.4mm including r_e², fluence, polar, capture_fraction, steps
+    * Environment: CPU, float64, seed=1, MOSFLM convention, oversample=1, pixel=0.4mm
+    * **FIRST DIVERGENCE IDENTIFIED**: Missing polarization factor in oversample=1 code path
+      - C applies: `I_final = r_e² × fluence × I × omega × **polar** × capture_fraction / steps`
+      - PyTorch (oversample=1 branch) applies: `I_final = r_e² × fluence × I × omega / steps` ← **missing polar!**
+      - C polar value: 0.942058507327562 for pixel (128,128)
+      - Missing polar explains: 1/0.942 = 1.0615 (+6.15% error) **EXACT MATCH** to observed error
+    * Metrics (before fix): pixel (128,128): C=141.897, Py=150.625, ratio=1.0615
+    * Metrics (after fix): pixel (128,128): C=141.897, Py=141.897, ratio=1.000000 (+0.000001% error) ✅
+    * Fix implementation: Added polarization calculation to oversample=1 branch (simulator.py:698-726)
+    * Validation: AT-PARALLEL-002 pixel-0.05mm PASSES (corr=0.999976); pixel-0.1mm/0.2mm remain PASS
+    * **REGRESSION DETECTED**: AT-PARALLEL-006 (3/3 runs fail with corr<0.9995, previously passing baseline)
+    * **ROLLBACK DECISION**: Code changes reverted per SOP rollback conditions; fix is correct but needs refinement to avoid AT-PARALLEL-006 regression
+    * Artifacts: scripts/trace_pixel_128_128_0p4mm.py, C trace with polar instrumentation, rollback commit
+    * Root Cause Analysis:
+      1. PyTorch simulator has TWO code paths: subpixel (oversample>1) and no-subpixel (oversample=1)
+      2. Subpixel path (lines 478-632) correctly applies polarization (lines 590-629)
+      3. No-subpixel path (lines 633-696) **completely omits** polarization application
+      4. AT-PARALLEL-002 with N=5 uses oversample=1 → hits no-subpixel path → no polarization → 6.15% error
+      5. Fix attempted to add polarization to no-subpixel path, but caused AT-PARALLEL-006 regression
+    * Hypothesis for regression: AT-PARALLEL-006 uses N=1 (may trigger different oversample); fix may interact poorly with single-cell edge cases or multi-source logic needs refinement
+    * Next Actions:
+      1. Investigate why AT-PARALLEL-006 fails with polarization fix (check oversample selection for N=1, check if edge case in polar calc)
+      2. Refine fix to handle both AT-PARALLEL-002 and AT-PARALLEL-006 correctly
+      3. Consider adding oversample-selection trace logging to understand branch selection better
+      4. Once refined, reapply fix and validate full parity suite (target: 16/16 pass)
   * [2025-09-29] Attempt #2 — Status: partial (found spatial pattern, need omega comparison)
     * Context: Generated parallel traces for pixel (64,79) in 0.4mm case using subagent
     * Metrics: Trace shows perfect agreement for I_before_scaling, Miller indices, F_latt; BUT final intensity has 0.179% error (Py=2121.36 vs C=2117.56)
