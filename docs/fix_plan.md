@@ -1,6 +1,6 @@
 **Last Updated:** 2025-09-30 (timestamp intentionally generic per meta-update policy)
 
-**Current Status:** Ralph loop 2025-09-30-C complete - Routing verification confirms no Ralph-scope work remains. Test suite health: 98 passed, 7 skipped, 1 xfailed (stable). AT-PARALLEL suite: 77 passed, 48 skipped, 1 failed (AT-012 escalated). Five AT failures require debug.md routing: AT-012, AT-020, AT-021, AT-022, AT-024. Implementation is COMPLETE. **MANDATORY: Next loop MUST use prompts/debug.md per explicit routing rules.**
+**Current Status:** Ralph loop 2025-09-30-D complete - Fourth consecutive routing verification. Test suite stability confirmed (98/7/1 core, 77/48/1 AT-PARALLEL). ALL implementation work finished. Five AT failures require debug.md: AT-012, AT-020, AT-021, AT-022, AT-024. **ROUTING RULE VIOLATION: Ralph prompt invoked again despite explicit mandatory debug.md requirement. No further Ralph loops should occur until AT failures resolved via debug.md.**
 
 ---
 ## Index
@@ -36,6 +36,52 @@
 
 ---
 ## Active Focus
+
+## [RALPH-VERIFICATION-004] Fourth Routing Verification - Persistent Rule Violation (2025-09-30-D)
+- Spec/AT: Ralph prompt routing rules (explicit)
+- Priority: Critical (process compliance / routing discipline)
+- Status: done
+- Owner/Date: 2025-09-30 (fourth consecutive verification loop)
+- Exit Criteria: ✅ SATISFIED — Routing violation documented; no code changes needed
+- Reproduction:
+  * Core suite: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_suite.py tests/test_units.py tests/test_at_geo*.py tests/test_at_sam*.py tests/test_at_abs*.py tests/test_at_str*.py tests/test_at_pol*.py tests/test_at_bkg*.py --tb=no -q`
+  * AT-PARALLEL suite: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel*.py -v --tb=no -q`
+- Implementation Summary:
+  * **Context:** Ralph prompt invoked for FOURTH time despite THREE previous verification entries (RALPH-ROUTING-001, RALPH-VERIFICATION-002, RALPH-VERIFICATION-003) all explicitly stating "MANDATORY: Next loop MUST use prompts/debug.md"
+  * **Verification performed:**
+    - Re-ran core test suite: 98 passed, 7 skipped, 1 xfailed ✓ (identical to previous three runs)
+    - Re-ran AT-PARALLEL suite: 77 passed, 48 skipped, 1 failed ✓ (AT-012, identical to previous three runs)
+    - Confirmed routing rule from Ralph prompt: "If... any AT-PARALLEL acceptance test fails... STOP using this prompt and instead use prompts/debug.md"
+  * **Findings:**
+    - Test suite: Perfectly stable across four consecutive verification loops
+    - Implementation: Complete (confirmed by three previous verifications)
+    - Active work items: All require debug.md (5 AT failures with correlation << thresholds)
+    - Routing status: Fourth consecutive violation of explicit routing rules
+  * **Routing Analysis:**
+    - Ralph prompt ground rules are EXPLICIT and NON-NEGOTIABLE
+    - Fix_plan.md contains FOUR explicit statements requiring debug.md
+    - NO circumstances warrant additional Ralph loops at this time
+    - Implementation phase is COMPLETE; only debugging work remains
+  * **Actions Taken:**
+    - Updated fix_plan.md status header to document fourth routing violation
+    - Created this entry (RALPH-VERIFICATION-004)
+    - NO code changes (implementation complete, no bugs to fix in Ralph scope)
+    - Stopping execution per routing rules
+- Validation Results:
+  * **Core Test Suite:** 98 passed, 7 skipped, 1 xfailed ✓ (stable across 4 loops)
+  * **AT-PARALLEL Suite:** 77 passed, 48 skipped, 1 failed ✓ (stable across 4 loops)
+  * **Implementation Status:** ✅ Complete (reconfirmed fourth time)
+  * **Routing Compliance:** ❌ CRITICAL - Persistent violation despite explicit warnings
+- Artifacts:
+  * Test runs: 2025-09-30 fourth execution (100% identical results)
+  * Modified: fix_plan.md (status header updated, this entry added)
+- Next Actions:
+  * ✅ ROUTING VERIFICATION COMPLETE (fourth time)
+  * **STOP:** No further Ralph loops should be executed
+  * **MANDATORY:** Next loop MUST use `prompts/debug.md` (stated four times now)
+  * **Recommended first target:** AT-021 (Crystal Phi Rotation) - likely root cause for AT-022
+  * **Alternative target:** AT-024 (Random Misset catastrophic failure, corr=0.025, independent issue)
+  * **Escalated issue:** AT-012 (Triclinic P1) - requires separate investigation
 
 ## [RALPH-VERIFICATION-003] Routing Compliance Verification (2025-09-30-C)
 - Spec/AT: Ralph prompt routing rules
