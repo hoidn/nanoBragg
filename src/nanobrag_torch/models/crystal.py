@@ -974,24 +974,22 @@ class Crystal:
         vectors["b"] = c_star_cross_a_star * V
         vectors["c"] = a_star_cross_b_star * V
 
-        # CLAUDE.md Rule #13: Circular recalculation for exact metric duality
-        # Step 3: Recalculate reciprocal vectors from real: a* = (b × c) / V_actual
-        # Step 4: Use actual volume: V_actual = a · (b × c)
-
-        # Calculate actual volume from real vectors
-        V_actual = torch.dot(vectors["a"], torch.cross(vectors["b"], vectors["c"], dim=0))
-
-        # Recalculate reciprocal vectors using actual volume for exact metric duality
+        # NOW regenerate reciprocal vectors from the rotated real-space vectors
+        # This matches the C code behavior (lines ~2107-2117 in nanoBragg.c)
+        # The C code performs this circular recalculation to ensure perfect metric duality
+        a_cross_b = torch.cross(vectors["a"], vectors["b"], dim=0)
         b_cross_c = torch.cross(vectors["b"], vectors["c"], dim=0)
         c_cross_a = torch.cross(vectors["c"], vectors["a"], dim=0)
-        a_cross_b = torch.cross(vectors["a"], vectors["b"], dim=0)
 
-        vectors["a_star"] = b_cross_c / V_actual
-        vectors["b_star"] = c_cross_a / V_actual
-        vectors["c_star"] = a_cross_b / V_actual
+        # Recalculate volume from the actual rotated vectors
+        V_actual = torch.dot(vectors["a"], b_cross_c)
+        V_actual = torch.maximum(V_actual, torch.tensor(1e-6, dtype=V_actual.dtype, device=V_actual.device))
+        V_star_actual = 1.0 / V_actual
 
-        # Update volume to actual value
-        vectors["V"] = V_actual
+        # a* = (b × c) / V, etc.
+        vectors["a_star"] = b_cross_c * V_star_actual
+        vectors["b_star"] = c_cross_a * V_star_actual
+        vectors["c_star"] = a_cross_b * V_star_actual
 
         return vectors
 

@@ -4,6 +4,32 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ## Immediate High‑Priority TODOs (Equivalence Discrepancies)
 
+### [AT-PARALLEL-012] Triclinic P1 Correlation Failure (HIGH - DEBUGGING REQUIRED)
+- Spec/AT: specs/spec-a-parallel.md — AT-PARALLEL-012 triclinic_P1 test
+- Priority: High (test failure blocks acceptance suite completion)
+- Status: **IN PROGRESS - NEEDS DEBUGGING LOOP**
+- Current State: Correlation 0.9605 vs required ≥0.9995
+- Investigation Summary (2025-09-29):
+  - Verified: Reciprocal vector calculation is CORRECT (metric duality perfect)
+  - Verified: Misset rotation IS being applied correctly (vectors change as expected)
+  - Verified: Total intensity matches (PyTorch=3.007e5 vs C=3.005e5, 0.07% diff)
+  - Problem: Spatial pattern differs (correlation only 0.9605)
+  - Hypothesis: Geometric/coordinate transformation issue, not physics bug
+  - Next Step: **ROUTE TO prompts/debug.md** for parallel trace comparison
+- Attempts History:
+  - Attempt #1 (2025-09-29): Removed reciprocal recalculation → NO CHANGE (correlation still 0.9605)
+    - Hypothesis was wrong: recalculation preserves misset rotation (within 8.7e-19)
+    - Restored recalculation per C code behavior (lines 982-993 in crystal.py)
+  - Attempt #2 (2025-09-29): Verified cell vectors and metric duality → ALL CORRECT
+    - Cell vectors: a_star=[-0.0123, 0.0005, 0.0075] matches expected after misset
+    - Metric duality: a·a*=1.0, b·b*=1.0, c·c*=1.0 (perfect within machine precision)
+- Next Action (MUST use debugging prompt):
+  - Generate parallel C↔PyTorch trace for single pixel using scripts/debug_pixel_trace.py
+  - Compare: base reciprocal vectors, rotated reciprocal, real vectors, Miller indices
+  - Identify first point of divergence in computation pipeline
+  - Focus on: rotation matrix implementation, coordinate transforms, pixel geometry
+- DO NOT CONTINUE UNDER RALPH PROMPT - this is now a debugging loop per Ralph routing rules
+
 ### [META] Fix Plan Structure Refresh (HIGH)
 - Spec/AT: Meta maintenance
 - Priority: High (reset to Medium immediately after each cleanup run)
