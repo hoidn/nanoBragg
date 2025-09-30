@@ -165,9 +165,17 @@ class TestCrystalModel:
         assert_tensor_close(c_rot[0, 0], self.crystal.c)
 
     def test_phi_rotation_90_deg(self):
-        """Test 90-degree phi rotation around Z-axis."""
-        # Create config with 90-degree rotation around Z-axis - explicitly wrap float values in tensors
-        # With phi_steps=1, this uses the midpoint of the oscillation range (45°)
+        """Test 90-degree phi rotation around Z-axis.
+
+        CRITICAL: Matches C code loop formula (nanoBragg.c:3004-3009):
+          for(phi_tic = 0; phi_tic < phisteps; ++phi_tic) {
+              phi = phi0 + phistep*phi_tic;
+          }
+        For phi_steps=1, phi_tic=0, so phi = phi_start + phistep*0 = phi_start (NO rotation!)
+        This is NOT the midpoint behavior.
+        """
+        # Create config with 90-degree oscillation range - explicitly wrap float values in tensors
+        # With phi_steps=1 and phi_start=0, C loop formula gives phi=0 (first step, no rotation)
         config = CrystalConfig(
             phi_start_deg=torch.tensor(0.0, device=self.device, dtype=self.dtype),
             phi_steps=1,
@@ -185,28 +193,11 @@ class TestCrystalModel:
         # Get rotated vectors
         (a_rot, b_rot, c_rot), _ = self.crystal.get_rotated_real_vectors(config)
 
-        # For 45-degree rotation around Z-axis (midpoint of 90° range):
-        # Rotation matrix for 45° around Z: [cos45 -sin45 0; sin45 cos45 0; 0 0 1]
-        # So: a=[ax,ay,az] -> [ax*cos45-ay*sin45, ax*sin45+ay*cos45, az]
-        cos45 = torch.cos(torch.tensor(torch.pi / 4, dtype=self.dtype))
-        sin45 = torch.sin(torch.tensor(torch.pi / 4, dtype=self.dtype))
-
-        # Calculate expected values based on actual base vectors
-        expected_a = torch.tensor([
-            base_a[0] * cos45 - base_a[1] * sin45,
-            base_a[0] * sin45 + base_a[1] * cos45, 
-            base_a[2]
-        ], dtype=self.dtype)
-        expected_b = torch.tensor([
-            base_b[0] * cos45 - base_b[1] * sin45,
-            base_b[0] * sin45 + base_b[1] * cos45,
-            base_b[2] 
-        ], dtype=self.dtype)
-        expected_c = torch.tensor([
-            base_c[0] * cos45 - base_c[1] * sin45,
-            base_c[0] * sin45 + base_c[1] * cos45,
-            base_c[2]
-        ], dtype=self.dtype)
+        # For phi=0 (C loop formula: phi_start + phistep*0), there is NO rotation
+        # Vectors should be identical to base vectors (within numerical precision)
+        expected_a = base_a
+        expected_b = base_b
+        expected_c = base_c
 
         assert_tensor_close(a_rot[0, 0], expected_a, atol=1e-6)
         assert_tensor_close(b_rot[0, 0], expected_b, atol=1e-6)
