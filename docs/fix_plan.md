@@ -6,6 +6,26 @@
 ---
 ## Active Focus
 
+## [PERF-PYTORCH-001] Multi-Source Vectorization Regression
+- Spec/AT: AT-SRC-001 (multi-source weighting) + TorchDynamo performance guardrails
+- Priority: High
+- Status: pending
+- Reproduction:
+  * PyTorch: `python -m nanobrag_torch -sourcefile tests/golden_data/sourcefile.txt -detpixels 512 -oversample 1 -floatfile /tmp/py.bin`
+  * Observe via logging that `_compute_physics_for_position` runs once per source (Python loop) when `oversample==1`
+- Issue: `Simulator.run()` (src/nanobrag_torch/simulator.py:724-746) still loops over sources when oversample=1, even though `_compute_physics_for_position` already supports batched sources. On GPU/Dynamo this causes repeated graph breaks and replays.
+- Exit Criteria: Replace the loop with a single batched call (mirroring the oversample>1 path), confirm graph capture holds (no `torch.compile` fallbacks) and document timing improvement.
+
+## [PERF-PYTORCH-002] Source Tensor Device Drift
+- Spec/AT: AT-SRC-001 + PyTorch device/dtype neutrality (CLAUDE.md §16)
+- Priority: High
+- Status: pending
+- Reproduction:
+  * PyTorch: `python -m nanobrag_torch -sourcefile tests/golden_data/sourcefile.txt -detpixels 256 --device cuda -floatfile /tmp/py.bin`
+  * Dynamo logs show repeated CPU→GPU copies for `source_directions`
+- Issue: `Simulator.run()` (src/nanobrag_torch/simulator.py:523-543) keeps `source_directions`/`source_wavelengths` on CPU; each call into `_compute_physics_for_position` issues `.to(...)` inside the compiled kernel, creating per-iteration transfers/guards.
+- Exit Criteria: Materialize source tensors on `self.device` at setup, rerun GPU benchmark to verify no implicit copies and graph stays stable. Update tests/docs accordingly.
+
 ## [AT-PARALLEL-002-EXTREME] Pixel Size Parity Failures (0.05mm & 0.4mm)
 - Spec/AT: AT-PARALLEL-002 Pixel Size Independence
 - Priority: High
