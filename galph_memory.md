@@ -61,6 +61,13 @@
 - Guidance for Ralph: run REPO-HYGIENE-002 plan in next `prompts/main.md` loop before touching physics, then resume AT-012 plan Phase A/B via `prompts/debug.md`; perf work should follow PERF-PYTORCH-004 Phase 1 (hoist constants/device prep) once hygiene + parity unblock.
 - Tree intentionally left dirty except for new plan/fix_plan edits.
 
+## 2025-09-30 (galph loop 10)
+- Stashed long-standing artifacts to satisfy mandatory `git pull --rebase`; restored them afterward. Expect the same stash/pull/pop ritual next loop until Ralph finishes `REPO-HYGIENE-002`.
+- Performance scan: `_compute_physics_for_position` still recompiles per simulator because it allocates guard tensors (`torch.tensor(1e-12, …)`) and calls `.to()` inside the compiled region (`src/nanobrag_torch/simulator.py:197-206`). `Crystal.compute_cell_tensors` uses the same guard tensors and `.item()` routing (`src/nanobrag_torch/models/crystal.py:114-118, 430-455`), matching the 200× slowdown seen in `reports/benchmarks/20250930-004916/benchmark_results.json` for ≤256² detectors.
+- Updated `docs/fix_plan.md` (PERF-PYTORCH-004 section) with loop-10 guidance pointing Ralph at Phase 1 hoisting before any new verification runs; highlighted the specific guard sites and required benchmark artifacts.
+- Code review: commit 058986f drops the V_actual metric-duality loop and adds WIP loop.sh tweaks without tests; plan `plans/active/at-parallel-012/plan.md` Task C0 already requires undoing this regression before fresh diagnostics.
+- Next Ralph steps: 1) Finish `REPO-HYGIENE-002` to clean C baseline/artifacts, 2) resume AT-012 checklist under `prompts/debug.md` (Tasks A1–B2, then restore V_actual per C0), 3) once parity is stable, execute PERF-PYTORCH-004 Phase 1 using the new fix_plan update (capture before/after compile logs and cold vs warm timings).
+
 ## 2025-09-30 (galph loop 5)
 - Could not `git pull --rebase` due to pre-existing dirty tree (parity artifacts, prompts). Left untouched per policy.
 - Deep perf scan highlights hot spots blocking long-term goal: `Simulator.__init__` recompiles `_compute_physics_for_position` every instantiation; `_compute_physics_for_position` still allocates fresh tensors (`torch.tensor(1e-12)`, `.to()` on incident beam) inside the compiled region; `Crystal.compute_cell_tensors` repeatedly builds scalar tensors with `torch.maximum(..., torch.tensor(...))`, causing Dynamo graph breaks and allocator churn.

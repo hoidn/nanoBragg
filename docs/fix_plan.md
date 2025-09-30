@@ -1383,6 +1383,13 @@
 - **Plan tweak:** Phase 1 now explicitly calls out normalizing input tensors prior to compilation and replacing those guards with `clamp_min`/helper factories. Phase 3 also tracks `.item()`-based host branching (e.g. auto-interpolation toggles) so the full graph path remains viable once guards are cleaned up.
 - **Action for Ralph:** When Phase 1 starts, remove the `.to()` call by preparing `incident_beam_direction`/`wavelength` on the host side and swap the `torch.maximum` clamps for in-place tensor-safe `clamp_min`. Log before/after Dynamo graphs in the benchmark report so we can confirm fewer recompiles.
 
+### [PERF-PYTORCH-004] Update - 2025-09-30 (galph loop 10)
+
+- **Observation:** Latest CPU benchmarks (`reports/benchmarks/20250930-004916/benchmark_results.json`) still show ≤256² detectors running ~200× slower than C because Dynamo recompiles `_compute_physics_for_position` every instantiation (setup dominates at 3.7 s vs. 3.705 s simulation). Warm 1024²/2048² cases only win when compile cost amortises across multiple runs.
+- **Secondary finding:** `_compute_physics_for_position` continues to allocate guard tensors (`torch.tensor(1e-12, ...)`) and performs `incident_beam_direction.to(...)` inside the compiled path (`src/nanobrag_torch/simulator.py:197-206`). `Crystal.compute_cell_tensors` still builds new guard tensors via `torch.maximum(..., torch.tensor(...))` and the auto-interpolation toggle relies on `.item()` (`src/nanobrag_torch/models/crystal.py:114-118`), so Dynamo never stabilises the graph.
+- **Action for Ralph:** Execute Phase 1 of `plans/active/perf-pytorch-compile-refactor/plan.md` before any further verification loops: (1) hoist constant tensor factories out of `_compute_physics_for_position` (swap to `clamp_min` / helper `new_tensor` constructors), (2) pre-normalise `incident_beam_direction`/`wavelength` during simulator construction so the `.to()` call disappears, and (3) replace the `.item()`-based interpolation toggle with config-time integers. Capture before/after compile logs plus cold/warm timings in `reports/benchmarks/<date>-perf-phase1/`.
+- **Blocking note:** Do not attempt Phase 2 caching until these guard allocations disappear; current graph churn would invalidate any cache keyed on device/dtype/oversample.
+
 
 ## [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse
 - Spec/AT: Performance parity; torch.compile reuse guidance
