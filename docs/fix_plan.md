@@ -9,6 +9,7 @@
 - [PROTECTED-ASSETS-001] Enforce `docs/index.md` protection — Priority: Medium, Status: pending (guard any file listed there from deletion; update CLAUDE.md + hygiene SOP)
 - [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — Priority: Medium, Status: reopened (pending; see plans/active/repo-hygiene-002/plan.md, reopened 2025-09-30 after hygiene regression)
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: High, Status: in_progress (Phase 2 cache validation outstanding; Phase 3 steady-state benchmarks blocked until toolchain hardened — see plans/active/perf-pytorch-compile-refactor/plan.md)
+- [AT-PARALLEL-012-PEAKMATCH] Restore 95% peak-match criterion — Priority: High, Status: pending (triclinic harness still asserts 86% matches despite spec requiring ≥95%; see section below)
 - [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
 - [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: done
 - [PERF-PYTORCH-006] Float32 / Mixed Precision Performance Mode — Priority: Medium, Status: done
@@ -78,6 +79,32 @@
   * ✅ ALL AT-PARALLEL TESTS NOW PASSING
   * Ready to resume PERF-PYTORCH-004 Phase 2 work if needed
   * No blocking issues remain
+
+## [AT-PARALLEL-012-PEAKMATCH] Restore 95% Peak Match Criterion (2025-10-02)
+- Spec/AT: AT-PARALLEL-012 Reference Pattern Correlation (triclinic case peak matching requirement)
+- Priority: High (acceptance test currently weaker than spec)
+- Status: pending
+- Owner/Date: 2025-10-02 (galph loop current)
+- Exit Criteria: Reinstate the ≥95% peak-match assertion in `tests/test_at_parallel_012.py` (triclinic case) without regressing the physics; archive metrics showing ≥50/50 matches and ≤0.5 px mean displacement under `reports/2025-10-02-AT-012-peakmatch/metrics.json`; document completion here and close item.
+- Reproduction:
+  * `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_triclinic_P1_correlation -vv`
+  * Metrics capture: `KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY' ...` (see galph log 2025-10-02) or add a helper script under `scripts/benchmarks/` to dump correlation + peak stats into the report directory.
+- Problem Summary:
+  * The triclinic harness still asserts `n_matches >= len(golden_peaks) * 0.86`, a temporary relaxation introduced while parity lagged.
+  * Spec (`specs/spec-a-parallel.md`) requires ≥95% of the top 50 peaks to align within 0.5 px; current test masks regressions.
+  * Fresh run today shows 50/50 matches with mean distance 0.0, so the relaxation is obsolete.
+- Root Cause:
+  * Threshold reduction from early AT-012 failures was never restored; no fix_plan item tracked the temporary change.
+- Observations (2025-10-02 quick check):
+  * Command (see galph log) produced `Correlation 0.99999993`, `Matches 50`, `Mean dist 0.0`.
+  * `Simulator.run` auto-selected 2× oversampling for this case; capture this detail in the archived metrics.
+- Implementation Guidance:
+  1. Tighten assertion to ≥95% (or exact equality) and update/remove the stale TODO.
+  2. Run the triclinic test with `-vv`, record stdout + metrics under `reports/2025-10-02-AT-012-peakmatch/` (JSON + markdown summary preferred).
+  3. Update this entry with artifact paths, then close the item once the stricter assertion passes.
+- Notes:
+  * Re-check the simple_cubic and tilted variants for similar relaxations; align them with spec if needed.
+  * Any new helper must reside under `scripts/benchmarks/` and respect CLAUDE tooling guidance (set `KMP_DUPLICATE_LIB_OK=TRUE`, avoid ad-hoc sys.path hacks).
 
 ## [RALPH-VERIFICATION-011] Eleventh Routing Violation - ULTIMATE ESCALATION (2025-09-30-M)
 - Spec/AT: Ralph prompt routing rules (explicit, mandatory, non-negotiable, ABSOLUTE)

@@ -113,3 +113,14 @@
   2. While touching the simulator for P3.4, hoist ROI mask/misset tensors and rerun benchmarks per plan P3.1–P3.5.
   3. After ROI caching lands, revisit performance gap vs C and decide on Phase 4 only if warm runs remain >1.5× slower.
 - Repo state leaving loop: only `docs/fix_plan.md` and `plans/active/perf-pytorch-compile-refactor/plan.md` modified; will commit as SUPERVISOR perf-alignment update. `.claude` and other user-managed artifacts untouched.
+
+## 2025-10-02 (galph loop S)
+- Startup sync: `timeout 30 git pull --rebase` returned "Already up to date."; no conflicts or dirty files before analysis.
+- Deep review confirmed the triclinic AT-012 harness still enforces an 86% peak-match tolerance despite current physics delivering 50/50 matches. Ran `KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY' ... PY` (see commands log) and captured `Correlation 0.99999993`, `Matches 50`, `Mean dist 0.0`.
+- Added active fix item `[AT-PARALLEL-012-PEAKMATCH]` to `docs/fix_plan.md` with guidance to restore the ≥95% spec threshold, archive metrics under `reports/2025-10-02-AT-012-peakmatch/`, and tighten the assertion.
+- No new multi-turn plan needed; PERF roadmap already covers ROI mask/misset caching and Dynamo logging from prior loop, but reiterate that Phase 2 tasks (multi-device cache validation) remain outstanding.
+- Guidance for Ralph:
+  1. Execute the new fix_plan item by tightening the triclinic peak-match assertion and archiving metrics; update the report directory referenced above.
+  2. Continue PERF-PYTORCH-004 Phase 2 work (P2.1–P2.5) and prep for Phase 3 once cache validation artifacts exist.
+  3. While adjusting AT-012 test, confirm simple_cubic/tilted variants still align with spec; if relaxed, queue follow-up.
+- Repo state on exit: modified `docs/fix_plan.md` and `galph_memory.md` only (no code changes).
