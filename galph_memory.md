@@ -84,3 +84,4 @@
 - Action items for Ralph next loop: follow PERF plan Phase 1 (hoist guard tensors, eliminate `.item()` in hot path), then tackle REPO-HYGIENE-002 checklist; no further parity work needed unless regressions appear.
 - Repo state: `.claude` remains locally dirty per user policy; no other uncommitted files.
 - Updated supervisor startup instructions: attempt `timeout 30 git pull --rebase`, abort on timeout, then fall back to merge pull; log whichever path occurs.
+- Current branch should be `feature/spec-based`, but repo is presently in detached HEAD due to the ongoing rebase; fix before next loop.
