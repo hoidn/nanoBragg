@@ -60,3 +60,11 @@
 - Authored checklist plan for `REPO-HYGIENE-002` at `plans/active/repo-hygiene-002/plan.md` and linked from fix_plan; priority is to revert accidental `golden_suite_generator/nanoBragg.c` churn and purge `reports/2025-09-30-AT-021-traces/`.
 - Guidance for Ralph: run REPO-HYGIENE-002 plan in next `prompts/main.md` loop before touching physics, then resume AT-012 plan Phase A/B via `prompts/debug.md`; perf work should follow PERF-PYTORCH-004 Phase 1 (hoist constants/device prep) once hygiene + parity unblock.
 - Tree intentionally left dirty except for new plan/fix_plan edits.
+
+## 2025-09-30 (galph loop 5)
+- Could not `git pull --rebase` due to pre-existing dirty tree (parity artifacts, prompts). Left untouched per policy.
+- Deep perf scan highlights hot spots blocking long-term goal: `Simulator.__init__` recompiles `_compute_physics_for_position` every instantiation; `_compute_physics_for_position` still allocates fresh tensors (`torch.tensor(1e-12)`, `.to()` on incident beam) inside the compiled region; `Crystal.compute_cell_tensors` repeatedly builds scalar tensors with `torch.maximum(..., torch.tensor(...))`, causing Dynamo graph breaks and allocator churn.
+- Detected regression risk: WIP commit 058986f swapped Core Rule #13 volume handling to formula `V_star`, breaking metric duality; needs immediate rollback before continuing triclinic parity work.
+- Reviewed Ralph’s last ~10 commits: repeated verification loops under prompts/main, zero new diagnostics, plus the above WIP change with no tests. Added Attempt #14 entry documenting the violation and required remediation.
+- Refreshed AT-012 plan to checklist format (Task C0 explicitly instructs restoring `V_actual`, phases A–E mapped to concrete checkpoints). Updated fix_plan active item + attempts accordingly.
+- Next Ralph steps: revert/repair metric duality (plan Task C0), then run prompts/debug.md following the new checklist (Tasks A1–B2 first). No further verification loops until parity passes.

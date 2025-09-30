@@ -6,7 +6,7 @@
 ## Index
 
 ### Active Items
-- [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: in_progress (plan: plans/active/at-parallel-012/plan.md)
+- [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: in_progress (plan: plans/active/at-parallel-012/plan.md; 2025-09-30-L checklist refresh; undo 058986f V_star regression before next attempt)
 - [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — Priority: Medium, Status: pending (plan: plans/active/repo-hygiene-002/plan.md)
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: High, Status: in_progress (plan: plans/active/perf-pytorch-compile-refactor/plan.md)
 - [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
@@ -1745,6 +1745,18 @@
          4. **Accumulation order**: Check if F_latt summation order affects result (Kahan summation vs naive sum)
          5. **Consider relaxing threshold**: If root cause is fundamental numerical precision, correlation=0.96 may be acceptable for triclinic+extreme misset
        * Status: PARTIAL — root cause narrowed to numerical precision; threshold not met; further investigation needed
+    * [2025-09-30 21:10 UTC] Attempt #14 — Status: INCOMPLETE (WIP misset reorder; no tests run)
+      * Context: prompts/main loop L committed WIP change 058986f reorganizing misset rotation and altering metric duality handling.
+      * Findings:
+        - Replaced Core Rule #13 volume recalculation (`V_actual`) with formula-based `V_star`, breaking metric duality guarantee (a·a* = 1).
+        - Added loop.sh automation without executing debug workflow; no new parity metrics or traces captured.
+        - AT-PARALLEL-012 remains failing (corr=0.9605). No progress on rotation matrix diagnostics.
+      * Required Actions before Attempt #15:
+        1. Restore `V_actual = torch.dot(a_vec, b_cross_c)` when regenerating reciprocal vectors (Task C0 in plan).
+        2. Resume work under `prompts/debug.md` using the refreshed checklist at `plans/active/at-parallel-012/plan.md`.
+        3. Re-run targeted parity/metric-duality tests once the regression is fixed.
+      * Artifacts: commit 058986f (WIP only); no new reports created.
+      * Status: INCOMPLETE — regression risk introduced; debugging must restart from Task C0.
     * [2025-09-29 23:45 UTC] Attempt #11 — Status: investigation complete; RECOMMENDATION: relax threshold for edge case
       * Context: Comprehensive precision investigation following Attempt #10 hypotheses
       * Environment: CPU, float64, golden data from tests/golden_data/triclinic_P1/image.bin
