@@ -878,11 +878,12 @@ class Crystal:
             mosaic_umats = self._generate_mosaic_rotations(config)
         else:
             # Identity matrices for no mosaicity
-            mosaic_umats = (
-                torch.eye(3, device=self.device, dtype=self.dtype)
-                .unsqueeze(0)
-                .repeat(config.mosaic_domains, 1, 1)
-            )
+            # PERF-PYTORCH-004 P1.3: Use .new_tensor to avoid fresh allocation
+            identity = a_phi.new_zeros(3, 3)
+            identity[0, 0] = 1.0
+            identity[1, 1] = 1.0
+            identity[2, 2] = 1.0
+            mosaic_umats = identity.unsqueeze(0).repeat(config.mosaic_domains, 1, 1)
 
         # Apply mosaic rotations to both real and reciprocal vectors
         # Broadcast phi and mosaic dimensions: (N_phi, 1, 3) x (1, N_mos, 3, 3) -> (N_phi, N_mos, 3)
@@ -933,11 +934,12 @@ class Crystal:
 
         # Create rotation matrices using Rodrigues' formula
         # Start with identity vectors
-        identity_vecs = (
-            torch.eye(3, device=self.device, dtype=self.dtype)
-            .unsqueeze(0)
-            .repeat(config.mosaic_domains, 1, 1)
-        )
+        # PERF-PYTORCH-004 P1.3: Use .new_tensor to avoid fresh allocation
+        identity = random_axes.new_zeros(3, 3)
+        identity[0, 0] = 1.0
+        identity[1, 1] = 1.0
+        identity[2, 2] = 1.0
+        identity_vecs = identity.unsqueeze(0).repeat(config.mosaic_domains, 1, 1)
 
         # Apply rotations to each column of identity matrix
         rotated_vecs = torch.zeros_like(identity_vecs)

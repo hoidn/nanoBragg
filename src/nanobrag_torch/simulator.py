@@ -137,6 +137,23 @@ class Simulator:
             self.beam_config.polarization_axis, device=self.device, dtype=self.dtype
         )
 
+        # PERF-PYTORCH-004 P1.2: Pre-normalize source tensors to avoid repeated .to() calls in run()
+        # Move source direction/wavelength/weight tensors to correct device/dtype once during init
+        if (self.beam_config.source_directions is not None and
+            len(self.beam_config.source_directions) > 0):
+            self._source_directions = self.beam_config.source_directions.to(device=self.device, dtype=self.dtype)
+            self._source_wavelengths = self.beam_config.source_wavelengths.to(device=self.device, dtype=self.dtype)  # meters
+            self._source_wavelengths_A = self._source_wavelengths * 1e10  # Convert to Angstroms once
+            if self.beam_config.source_weights is not None:
+                self._source_weights = self.beam_config.source_weights.to(device=self.device, dtype=self.dtype)
+            else:
+                # Default to equal weights if not provided
+                self._source_weights = torch.ones(len(self.beam_config.source_directions), device=self.device, dtype=self.dtype)
+        else:
+            self._source_directions = None
+            self._source_wavelengths_A = None
+            self._source_weights = None
+
         # Compile the physics computation function with appropriate mode
         # Use max-autotune on GPU to avoid CUDA graph issues with nested compilation
         # Use reduce-overhead on CPU for better performance
@@ -286,10 +303,8 @@ class Simulator:
             hrad_sqr = (h_frac * h_frac * Na * Na +
                        k_frac * k_frac * Nb * Nb +
                        l_frac * l_frac * Nc * Nc)
-            hrad_sqr = torch.maximum(
-                hrad_sqr,
-                torch.tensor(1e-12, dtype=hrad_sqr.dtype, device=hrad_sqr.device)
-            )
+            # Use clamp_min to avoid creating fresh tensors in compiled graph (PERF-PYTORCH-004 P1.1)
+            hrad_sqr = hrad_sqr.clamp_min(1e-12)
             F_latt = Na * Nb * Nc * 0.723601254558268 * sinc3(
                 torch.pi * torch.sqrt(hrad_sqr * fudge)
             )
@@ -531,23 +546,13 @@ class Simulator:
             self._rot_b_star = rot_b_star
             self._rot_c_star = rot_c_star
 
-        # Determine number of sources
-        if (self.beam_config.source_directions is not None and
-            len(self.beam_config.source_directions) > 0):
-            n_sources = len(self.beam_config.source_directions)
-            # PERF-PYTORCH-002: Move source tensors to correct device/dtype immediately
-            # to avoid repeated CPU→GPU copies in physics loops
-            source_directions = self.beam_config.source_directions.to(device=self.device, dtype=self.dtype)
-            source_wavelengths = self.beam_config.source_wavelengths.to(device=self.device, dtype=self.dtype)  # in meters
-            # Convert wavelengths to Angstroms for computation
-            source_wavelengths_A = source_wavelengths * 1e10
-            source_weights = self.beam_config.source_weights
-            if source_weights is None:
-                # Default to equal weights if not provided
-                source_weights = torch.ones(n_sources, device=self.device, dtype=self.dtype)
-            else:
-                # Ensure weights are on correct device
-                source_weights = source_weights.to(device=self.device, dtype=self.dtype)
+        # PERF-PYTORCH-004 P1.2: Use pre-normalized source tensors from __init__
+        # Tensors were already moved to correct device/dtype during initialization
+        if self._source_directions is not None:
+            n_sources = len(self._source_directions)
+            source_directions = self._source_directions
+            source_wavelengths_A = self._source_wavelengths_A
+            source_weights = self._source_weights
         else:
             # No explicit sources, use single beam configuration
             n_sources = 1
@@ -767,10 +772,8 @@ class Simulator:
             pixel_squared_sum = torch.sum(
                 pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True
             )
-            pixel_squared_sum = torch.maximum(
-                pixel_squared_sum,
-                torch.tensor(1e-12, dtype=pixel_squared_sum.dtype, device=pixel_squared_sum.device)
-            )
+            # Use clamp_min to avoid creating fresh tensors in compiled graph (PERF-PYTORCH-004 P1.1)
+            pixel_squared_sum = pixel_squared_sum.clamp_min(1e-12)
             pixel_magnitudes = torch.sqrt(pixel_squared_sum)
             airpath = pixel_magnitudes.squeeze(-1)  # Remove last dimension for broadcasting
             airpath_m = airpath * 1e-10  # Å to meters
