@@ -198,14 +198,13 @@ class TestATParallel006SingleReflection:
                 peak_positions.append(peak_slow)
                 expected_positions.append(expected_pos)
 
-                # Check position match (within 1.5 pixels to account for discretization)
-                # Note: Systematic ~1 pixel offset observed due to discrete pixel grid effects
+                # Check position match (spec: ±0.5 pixels)
                 position_error = abs(peak_slow - expected_pos)
-                assert position_error < 1.5, \
-                    f"Peak position error {position_error:.2f} pixels exceeds 1.5 pixel tolerance " \
+                assert position_error < 0.5, \
+                    f"Peak position error {position_error:.2f} pixels exceeds 0.5 pixel tolerance " \
                     f"for λ={wavelength}Å (expected {expected_pos:.1f}, got {peak_slow:.1f})"
 
-            # Check wavelength scaling follows Bragg's law (within 3% to account for discretization)
+            # Check wavelength scaling follows Bragg's law (spec: ±1%)
             if len(peak_positions) > 1:
                 # Positions should scale with sin(θ) ∝ λ
                 for i in range(1, len(wavelengths)):
@@ -220,8 +219,8 @@ class TestATParallel006SingleReflection:
                         actual_ratio = posi / pos0
                         ratio_error = abs(actual_ratio - expected_ratio) / expected_ratio
 
-                        assert ratio_error < 0.03, \
-                            f"Wavelength scaling error {ratio_error*100:.1f}% exceeds 3% " \
+                        assert ratio_error < 0.01, \
+                            f"Wavelength scaling error {ratio_error*100:.1f}% exceeds 1% " \
                             f"for λ={wavelengths[i]}Å (ratio {actual_ratio:.3f} vs expected {expected_ratio:.3f})"
 
         finally:
@@ -305,15 +304,15 @@ class TestATParallel006SingleReflection:
             # because position_mm = distance * tan(2θ), and we measure position_mm directly)
             # Actually, the ANGLE is constant, so position_mm should scale with distance
 
-            # Positions should scale linearly with distance
+            # Positions should scale linearly with distance (spec: ±2%)
             for i in range(1, len(distances)):
                 expected_ratio = distances[i] / distances[0]
                 actual_ratio = peak_positions[i] / peak_positions[0]
 
                 ratio_error = abs(actual_ratio - expected_ratio) / expected_ratio
 
-                assert ratio_error < 0.04, \
-                    f"Distance scaling error {ratio_error*100:.1f}% exceeds 4% " \
+                assert ratio_error < 0.02, \
+                    f"Distance scaling error {ratio_error*100:.1f}% exceeds 2% " \
                     f"for distance={distances[i]}mm (ratio {actual_ratio:.3f} vs expected {expected_ratio:.3f})"
 
         finally:
@@ -396,10 +395,10 @@ class TestATParallel006SingleReflection:
                         'theta': theta
                     }
 
-                    # Check individual position accuracy (account for discretization)
+                    # Check individual position accuracy (spec: ±0.5 pixels)
                     position_error = abs(peak_slow - expected_pos)
-                    assert position_error < 1.5, \
-                        f"Position error {position_error:.2f} pixels exceeds 1.5 pixel tolerance " \
+                    assert position_error < 0.5, \
+                        f"Position error {position_error:.2f} pixels exceeds 0.5 pixel tolerance " \
                         f"for λ={wavelength}Å, d={distance}mm"
 
             # Cross-check scaling relationships
@@ -417,7 +416,7 @@ class TestATParallel006SingleReflection:
                     expected_angle_ratio = 2.0
 
                     angle_error = abs(angle_ratio - expected_angle_ratio) / expected_angle_ratio
-                    assert angle_error < 0.03, \
+                    assert angle_error < 0.01, \
                         f"Angle scaling with wavelength error: {angle_error*100:.1f}%"
 
         finally:

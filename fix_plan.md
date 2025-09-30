@@ -84,26 +84,45 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - 🔴 AT-PARALLEL-020: 10x wider intensity ratio, correlation 0.95→0.85
 - Next Actions: Created specific fix_plan items below for each high-priority violation
 
-### [AT-PARALLEL-006] Restore Spec Thresholds (HIGH)
+### [AT-PARALLEL-006] Restore Spec Thresholds (HIGH - IN PROGRESS)
 - Spec/AT: specs/spec-a-parallel.md — AT-PARALLEL-006 Single Reflection Position
 - Priority: High
-- Status: pending
+- Status: **IN PROGRESS**
+- Owner: Ralph Loop 2025-09-30
 - Audit Finding (2025-09-30): Tests use 3x looser thresholds than spec
   - Peak position: ±1.5px (spec: ±0.5px) — 3x LOOSENED
   - Wavelength scaling: ±3% (spec: ±1%) — 3x LOOSENED
   - Distance scaling: ±4% (spec: ±2%) — 2x LOOSENED
-- Root Cause Hypothesis: Insufficient subpixel accuracy or discretization issues
-- Actions:
-  1. Restore tests/test_at_parallel_006.py thresholds to spec values (0.5px, 1%, 2%)
-  2. Run tests - expect failures
-  3. If failures occur, investigate whether:
-     a. Bragg angle calculation needs refinement
-     b. Subpixel sampling is insufficient
-     c. Coordinate transformation has systematic error
-  4. Fix implementation to meet spec, do NOT relax spec
-- Artifacts: docs/development/threshold_audit_2025-09-30.md
-- Owner: TBD
-- First Divergence: TBD
+- Attempts History:
+  - Attempt #1 (2025-09-30): Restored thresholds + investigated failures
+    - Action: Edited tests/test_at_parallel_006.py lines 203, 222, 314, 400, 419 to restore spec thresholds
+    - Test Results: 3/3 FAILED as expected
+      * test_bragg_angle_prediction: 1.0px error (spec: 0.5px)
+      * test_distance_scaling: 3.1% error (spec: 2%)
+      * test_combined: 1.0px error (spec: 0.5px)
+    - Investigation: Created scripts/debug_at006_failures.py with sub-pixel peak finding
+    - Findings:
+      1. **Peak position**: Sub-pixel CoM improves to 0.549px but still exceeds 0.5px spec
+         - Expected: 143.001px, Integer peak: 144px, Sub-pixel: 143.550px
+         - Adjacent pixels have nearly identical intensity (ratio 1.0005)
+         - Systematic 0.5px shift suggests geometry/oversample issue
+      2. **Distance scaling**: Systematic error compounds with distance
+         - 50mm→100mm: 1.944x (expect 2.0x) = 2.8% error
+         - 50mm→200mm: 3.818x (expect 4.0x) = 4.6% error
+         - Positions in mm: 0.800, 1.555, 3.054 (expect 0.800, 1.600, 3.200)
+         - Auto-oversample varies (4x, 2x, 1x) but error pattern suggests deeper geometry issue
+    - Artifacts: scripts/debug_at006_failures.py, test output logs
+- First Divergence: Peak position systematically ~0.5px too high; distance scaling ~0.06x/4x too low
+- Root Cause Hypothesis (updated):
+  - Peak position: Possible systematic shift in Bragg angle calculation or oversample grid alignment
+  - Distance scaling: Geometry transformation error that compounds with distance
+- Next Actions:
+  1. Generate parallel C↔PyTorch traces for 50mm and 200mm cases
+  2. Compare pixel coordinate calculations, scattering vectors, Miller indices
+  3. Check if C implementation has same scaling behavior
+  4. If PyTorch-specific: investigate detector geometry transforms (pix0, basis vectors)
+  5. If C matches: spec thresholds may need refinement for discrete pixel physics
+- DO NOT proceed until parallel traces identify first divergence point
 
 ### [AT-PARALLEL-012] Restore Spec Thresholds and Implement High-Res (HIGH)
 - Spec/AT: specs/spec-a-parallel.md — AT-PARALLEL-012 Reference Pattern Correlation
