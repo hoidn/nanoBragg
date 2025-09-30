@@ -777,27 +777,32 @@ class Crystal:
         # Generate phi angles
         # Assume config parameters are tensors (enforced at call site)
         # torch.linspace doesn't preserve gradients, so we handle different cases manually
-        if config.phi_steps == 1:
-            # For single step, use the midpoint (preserves gradients)
-            phi_angles = config.phi_start_deg + config.osc_range_deg / 2.0
-            if isinstance(phi_angles, torch.Tensor):
-                phi_angles = phi_angles.unsqueeze(0)  # Add batch dimension
-            else:
-                phi_angles = torch.tensor(
-                    [phi_angles], device=self.device, dtype=self.dtype
-                )
-        else:
-            # For multiple steps, we need to create a differentiable range
-            # Use arange and manual scaling to preserve gradients
-            step_indices = torch.arange(
-                config.phi_steps, device=self.device, dtype=self.dtype
-            )
-            step_size = (
-                config.osc_range_deg / config.phi_steps
-                if config.phi_steps > 1
-                else config.osc_range_deg
-            )
-            phi_angles = config.phi_start_deg + step_size * (step_indices + 0.5)
+        #
+        # CRITICAL: Match C code loop formula: phi = phi0 + phistep*phi_tic
+        # where phistep = osc/phisteps and phi_tic ranges from 0 to (phisteps-1)
+        #
+        # C code reference (nanoBragg.c lines 3004-3009):
+        #   for(phi_tic = 0; phi_tic < phisteps; ++phi_tic)
+        #   {
+        #       phi = phi0 + phistep*phi_tic;
+        #       if( phi != 0.0 ) { rotate_axis(...); }
+        #   }
+        #
+        # For phisteps=1, phi_tic=0, so phi = phi0 + phistep*0 = phi0 (no rotation!)
+        # PyTorch previously used midpoint formula which was INCORRECT.
+
+        # Use arange and manual scaling to preserve gradients and match C loop formula
+        step_indices = torch.arange(
+            config.phi_steps, device=self.device, dtype=self.dtype
+        )
+        step_size = (
+            config.osc_range_deg / config.phi_steps
+            if config.phi_steps > 0
+            else torch.tensor(0.0, device=self.device, dtype=self.dtype)
+        )
+        # C loop formula: phi = phi_start + step_size * step_index
+        # where step_index ranges from 0 to (phi_steps - 1)
+        phi_angles = config.phi_start_deg + step_size * step_indices
         phi_rad = torch.deg2rad(phi_angles)
 
         # Convert spindle axis to tensor

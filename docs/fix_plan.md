@@ -7,9 +7,7 @@
 
 ### Active Items
 - [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure — Priority: Critical, Status: pending (requires debug.md)(isn't different rng expected?)
-- [AT-PARALLEL-021-PARITY] Crystal Phi Rotation Parity Failure — Priority: Critical, Status: in_progress (debug loop started 2025-09-30)
 - [AT-PARALLEL-020-REGRESSION] Comprehensive Integration Test Correlation Failure — Priority: High, Status: pending (requires debug.md)
-- [AT-PARALLEL-022-PARITY] Combined Detector+Crystal Rotation Parity Failure — Priority: High, Status: pending (requires debug.md, blocked by AT-021)
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: Medium, Status: pending (blocked on fullgraph=True limitation)
 - [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
 - [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: done
@@ -19,6 +17,8 @@
 - [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: done (escalated)
 
 ### Recently Completed (2025-09-30)
+- [AT-PARALLEL-021-PARITY] Crystal Phi Rotation Parity Failure — done (phi rotation bug fixed, both AT-021 and AT-022 pass)
+- [AT-PARALLEL-022-PARITY] Combined Detector+Crystal Rotation Parity Failure — done (fixed automatically by AT-021)
 - [HEALTH-001] Test Suite Health Assessment — done (98 passed, 7 skipped, 1 xfailed)
 - [PARITY-HARNESS-AT010-016] Parity Coverage Expansion (AT-010, AT-016) — done
 - [TOOLS-CI-001] Docs-as-Data Parity Coverage Linter — done
@@ -632,20 +632,46 @@
   * Modified: tests/parity_cases.yaml (added AT-PARALLEL-021 entry with 2 runs)
   * Metrics: reports/2025-09-30-AT-PARALLEL-021/{single_step_phi_metrics.json, multi_step_phi_metrics.json}
   * Visuals: reports/2025-09-30-AT-PARALLEL-021/{single_step_phi_diff.png, multi_step_phi_diff.png}
-- Next Actions:
-  * **Follow plan:** plans/active/at-parallel-021/plan.md
-  * **REQUIRED**: Route to prompts/debug.md for parallel trace comparison of single_step_phi case
-  * Focus: Investigate Crystal.get_rotated_real_vectors() phi rotation calculation
-  * Hypothesis: Single-step midpoint phi calculation may be incorrect, or rotation matrix application has sign/axis error
-  * **This should be debugged BEFORE AT-022**, as fixing AT-021 will likely fix AT-022 automatically
-  * Priority: Critical - this blocks multiple acceptance tests (AT-021, AT-022, potentially AT-020)
+- Attempts History:
+  * [2025-09-30 13:00 UTC] Attempt #1 — Status: SUCCESS (root cause fixed; both AT-021 and AT-022 pass)
+    * Context: Parallel trace-driven debugging of single_step_phi case (pixel 190, 129)
+    * Environment: CPU, float64, NB_C_BIN=./golden_suite_generator/nanoBragg
+    * **ROOT CAUSE IDENTIFIED**: PyTorch used MIDPOINT formula for single-step phi rotation, but C code uses LOOP START formula
+      - PyTorch (WRONG): phi = phi_start + osc_range/2 = 0 + 90/2 = 45°
+      - C code (CORRECT): phi = phi_start + (osc_range/phisteps)*phi_tic = 0 + 90*0 = 0° (no rotation!)
+      - C code reference (nanoBragg.c lines 3004-3009): `for(phi_tic=0; phi_tic<phisteps; ++phi_tic) { phi = phi0 + phistep*phi_tic; if(phi != 0.0) { rotate_axis(...); } }`
+    * **FIRST DIVERGENCE**: Phi angle calculation in Crystal.get_rotated_real_vectors() (crystal.py line 782)
+      - Off-axis Bragg peaks (e.g., pixel 190,129) had intensity ratio 0.003 (PyTorch produced ~0.46 vs C's 142.2)
+      - Central beam pixels matched perfectly (ratio ~1.0) because they don't depend on phi rotation
+      - This explained the catastrophic 70% sum ratio and 0.48 correlation
+    * Fix Applied: Changed Crystal.get_rotated_real_vectors() to use C loop formula instead of midpoint
+      - Location: src/nanobrag_torch/models/crystal.py lines 777-805
+      - Changed from: `phi_angles = config.phi_start_deg + config.osc_range_deg / 2.0` (single-step special case)
+      - Changed to: `phi_angles = config.phi_start_deg + step_size * step_indices` (unified loop formula matching C)
+      - Removed special-case logic for phi_steps==1; now all phi_steps use the same C loop formula
+    * Validation Results:
+      - AT-021 single_step_phi: **PASS** (corr=1.000000, sum_ratio=1.000000) ✅
+      - AT-021 multi_step_phi: **PASS** (corr≥0.99, sum within thresholds) ✅
+      - AT-022 single_step_phi: **PASS** (corr≥0.98, sum within thresholds) ✅
+      - AT-022 multi_step_phi: **PASS** (corr≥0.98, sum within thresholds) ✅
+      - Parity Matrix: **52/55 PASS** (AT-020 and AT-024 still fail, independent issues)
+      - Full AT-PARALLEL suite: **77/126 PASS** (no regressions from fix)
+    * Metrics:
+      - AT-021 single_step_phi: corr=1.000000 (was 0.483), sum_ratio=1.000000 (was 0.707)
+      - Off-axis peak (190,129): 142.22 in both C and PyTorch (was 0.46 vs 142.22)
+    * Artifacts:
+      - Modified: src/nanobrag_torch/models/crystal.py (lines 777-805)
+      - Reports: reports/2025-09-30-AT-021-traces/{c_output.log, py_output.log, c_float.bin, py_float_fixed.bin}
+      - Metrics: reports/2025-09-30-AT-PARALLEL-021/single_step_phi_metrics.json (updated with passing results)
+    * Key Discovery: The C code's phi loop starts at phi_tic=0, giving phi=phi0 (no rotation for first step). PyTorch's midpoint assumption was fundamentally incorrect. The unified loop formula now matches C exactly for all phi_steps values.
+    * Exit Criteria: ✅ SATISFIED — Both AT-021 and AT-022 test cases now pass all thresholds
 
 ## [AT-PARALLEL-022-PARITY] Combined Detector+Crystal Rotation Parity Addition and Failure Discovery
 - Spec/AT: AT-PARALLEL-022 Combined Detector+Crystal Rotation Equivalence
 - Priority: High
-- Status: pending (requires debug.md)
-- Owner/Date: 2025-09-30 12:00 UTC
-- Exit Criteria: (1) Add AT-PARALLEL-022 to parity_cases.yaml ✓ DONE; (2) Both test cases pass parity thresholds ❌ BLOCKED
+- Status: done (fixed automatically by AT-021 phi rotation fix)
+- Owner/Date: 2025-09-30 12:00 UTC (fixed 2025-09-30 13:00 UTC)
+- Exit Criteria: ✅ SATISFIED — Both test cases pass parity thresholds after AT-021 fix
 - Reproduction:
   * Test: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_parity_matrix.py -k "AT-PARALLEL-022" -v`
 - Implementation Summary:
