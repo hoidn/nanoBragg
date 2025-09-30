@@ -1326,6 +1326,12 @@
   - Recommend deferring until all acceptance tests pass
 - **Status**: blocked (requires significant code refactoring)
 
+### [PERF-PYTORCH-004] Update - 2025-09-30 (galph loop 7)
+
+- **New findings:** `_compute_physics_for_position` still issues a device transfer (`incident_beam_direction.to(...)`) inside the compiled region and recreates clamp guards with freshly allocated tensors (e.g. `torch.maximum(..., torch.tensor(1e-12, ...))`). Dynamo treats both as graph breaks, so Phase 1 must hoist these operations before we pursue caching.
+- **Plan tweak:** Phase 1 now explicitly calls out normalizing input tensors prior to compilation and replacing those guards with `clamp_min`/helper factories. Phase 3 also tracks `.item()`-based host branching (e.g. auto-interpolation toggles) so the full graph path remains viable once guards are cleaned up.
+- **Action for Ralph:** When Phase 1 starts, remove the `.to()` call by preparing `incident_beam_direction`/`wavelength` on the host side and swap the `torch.maximum` clamps for in-place tensor-safe `clamp_min`. Log before/after Dynamo graphs in the benchmark report so we can confirm fewer recompiles.
+
 
 ## [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse
 - Spec/AT: Performance parity; torch.compile reuse guidance

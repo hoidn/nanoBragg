@@ -37,6 +37,7 @@
 - Audit `_compute_physics_for_position` for redundant `unsqueeze/expand`; prefer `view`/`reshape` when shapes are static to improve fusion opportunities.
 - Refactor `Crystal.compute_cell_tensors` guards to use `.clamp_min`/`torch.where` instead of `torch.maximum(..., torch.tensor(...))` to maintain graph continuity.
 - Ensure constants live on the caller’s device/dtype via helper factories (e.g., `device_dtype_tensor(reference, value)`).
+- Normalize incident beam direction / wavelength tensors on the caller before entering the compiled graph so the current `incident_beam_direction.to(...)` call disappears from `_compute_physics_for_position`.
 
 ### Phase 2 — Shared compiled kernel cache
 - Implement lazy cache: first instantiation compiles `_compute_physics_for_position`, stores the graph; subsequent simulators with matching key reuse callable without recompilation.
@@ -46,6 +47,7 @@
 ### Phase 3 — Remove fullgraph blockers
 - Target `Crystal.compute_cell_tensors` and interpolation paths for data-dependent branches that cause graph breaks (`torch.any(out_of_bounds)`). Replace with tensor-friendly control flow (e.g., `torch.where`) or `torch.cond` wrappers as allowed by differentiability rules.
 - Once guards removed, experiment with `torch.compile(fullgraph=True, mode="max-autotune")` on CUDA and `reduce-overhead` on CPU. Capture success/failure logs under `reports/benchmarks/<date>-fullgraph/`.
+- Eliminate `.item()`-based host decisions that sever graphs (e.g., auto-enabling `Crystal.interpolate` via `self.N_cells_a.item()`). Move those checks to configuration-time integers or tensor-safe comparisons so Dynamo sees a pure tensor program.
 
 ### Phase 4 — Kernel fusion follow-up
 - If fullgraph succeeds, compare kernel launch count before/after with `torch.profiler`. Document improvement.
