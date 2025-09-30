@@ -40,3 +40,8 @@
   1. Ensure AT-012 Plan Phase A (C/Py rotation matrix diff) actually starts; no artifacts yet.
   2. Enforce restoration of 1e-12 metric-duality tolerances once V_actual reinstated.
   3. After loop.sh guard lands, confirm automation stays on `prompts/debug.md` while AT parity fails.
+
+## 2025-09-30 (galph loop M)
+- Alternate-path recovery completed: rebase aborted, merged remote hygiene commit, preserved supervisor updates, and pushed combined history (`git merge origin/feature/spec-based`, commits `5d5c411`, `a385365`, `98ecc0b`).
+- Restored `loop.sh` as a protected automation asset with single `prompts/debug.md` invocation per loop to enforce routing compliance; script lives at repo root and remains executable.
+- Remote now synchronized; only `.claude` submodule remains dirty (user-managed). Next supervisor loop should verify Ralph updates Plan `ROUTING-LOOP-001` before altering the script further.
