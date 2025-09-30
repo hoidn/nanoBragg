@@ -1,12 +1,12 @@
 **Last Updated:** 2025-10-01 (timestamp intentionally generic per meta-update policy)
 
-**Current Status:** Core test suite: **98 passed**, 7 skipped, 1 xfailed ✓. AT-PARALLEL: **ALL PASSING** (78 passed, 48 skipped) ✓. AT-012 fixed (triclinic corr≥0.9995) ✓. AT-024 PERF-PYTORCH-004 regression fixed ✓.
+**Current Status:** Core test suite: **98 passed**, 7 skipped, 1 xfailed ✓. AT-PARALLEL: **ALL PASSING** (78 passed, 48 skipped) ✓. AT-012 fixed (triclinic corr≥0.9995) ✓. AT-024 PERF-PYTORCH-004 regression fixed ✓. **AT-PERF**: 3 GPU tests failing - device neutrality issue identified (WIP).
 
 ---
 ## Index
 
 ### Active Items
-- None currently (all tasks complete)
+- [AT-PERF-DEVICE-001] GPU Device Neutrality Violations - in_progress
 
 ### Queued Items
 - None currently
@@ -43,6 +43,78 @@
 
 ---
 ## Active Focus
+
+## [AT-PERF-DEVICE-001] GPU Device Neutrality Violations (2025-10-01)
+- Spec/AT: AT-PERF-007 (GPU Performance), AT-PERF-008 (CUDA Tensor Residency)
+- Priority: **High** (blocking GPU execution and torch.compile)
+- Status: in_progress
+- Owner/Date: 2025-10-01 (Ralph loop)
+- Exit Criteria:
+  * AT-PERF-007::test_gpu_performance passes ✅
+  * AT-PERF-008::test_large_tensor_gpu_residency passes ✅
+  * AT-PERF-008::test_memory_efficient_gpu_usage passes ✅
+  * All core tests remain passing (98/7/1)
+  * No device mismatch errors in torch.compile traces
+- Reproduction:
+  * `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_gpu_performance -v`
+  * `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_perf_008.py -v`
+- Problem Summary:
+  * torch.compile with CUDA device fails due to device mismatches between CPU and CUDA tensors
+  * Error: "Unhandled FakeTensor Device Propagation for aten.mul.Tensor, found two different devices"
+  * Violates Core Implementation Rule #16: "PyTorch Device & Dtype Neutrality"
+  * Multiple violation points identified:
+    1. `utils/physics.py::sincg` - N parameter on CPU when u is on CUDA
+    2. `simulator.py::compute_physics_for_position` - F_cell on CPU when h/k/l are CUDA
+    3. `simulator.py::run` - stored incident_beam_direction on CPU when inputs are CUDA
+- Root Cause Analysis:
+  * **Architectural Issue:** Simulator class stores device-specific tensor constants in `__init__`:
+    - `self.incident_beam_direction` (lines 353-375)
+    - `self.wavelength` (line 377)
+    - `self.r_e_sqr` (line 381)
+    - `self.fluence` (line 385)
+    - `self.kahn_factor` (line 389)
+    - `self.polarization_axis` (line 390)
+    - `self._source_weights` (line 405)
+  * **Problem:** These are created with `device=self.device` at initialization time, but may not match
+    the device of input tensors passed to `run()` method
+  * **Why it fails:** torch.compile traces tensor operations and requires consistent devices across
+    all operations. CPU↔CUDA mismatches cause "Unhandled FakeTensor Device Propagation" errors
+  * **Integer arg issue:** Functions receiving integer arguments (N_cells_a/b/c) convert them to
+    CPU tensors by default, causing mismatches when used with CUDA tensors
+- Attempts History:
+  * **Attempt #1 (2025-10-01):** Partial fix - sincg and F_cell device checks
+    - Added device check in `physics.py::sincg` (line 38-41): move N to match u.device
+    - Added device check in `simulator.py::compute_physics_for_position` (line 173-176): move F_cell to match h.device
+    - Result: Error moved from line 64/238 to line 881 (deeper architectural issue revealed)
+    - Core tests: 98 passed, 7 skipped, 1 xfailed ✓ (no regressions)
+    - Commit: fe2b91e "AT-PERF-007 WIP: Partial device neutrality fixes"
+- Implementation Plan:
+  * **Phase 1:** Fix stored tensor constants in Simulator (blocking)
+    - Option A: Create tensors lazily in run() based on input device
+    - Option B: Store as Python scalars/lists, convert to tensors with input device in run()
+    - Option C: Add explicit device migration at start of run()
+    - **Recommended:** Option B (cleaner separation, less memory overhead)
+  * **Phase 2:** Fix integer argument handling in pure functions
+    - Ensure all int args to compute_physics_for_position are converted to tensors with correct device
+    - Alternative: Change signature to require tensor inputs (breaking change)
+  * **Phase 3:** Systematic review of all tensor creations
+    - Grep for `torch.tensor(`, `torch.zeros(`, `torch.ones(`, `torch.full(`
+    - Verify each has `device=` parameter or uses `.to()` / `type_as()` pattern
+    - Add device tests for each affected code path
+- Validation Strategy:
+  * Run AT-PERF-007/008 tests with CUDA after each phase
+  * Verify core suite remains at 98/7/1
+  * Add device smoke tests: run same config on CPU and CUDA, verify correlation ≥0.9999
+  * Profile torch.compile trace logs for any remaining device warnings
+- Artifacts:
+  * Modified: src/nanobrag_torch/utils/physics.py (sincg device check)
+  * Modified: src/nanobrag_torch/simulator.py (F_cell device check)
+  * Test output: AT-PERF-007 still fails at line 881 (expected, partial fix)
+- Next Actions:
+  * Implement Phase 1: Refactor Simulator stored tensors to use lazy device resolution
+  * Run full AT-PERF suite to verify all 3 failures are fixed
+  * Add regression test for CPU→CUDA device migration
+  * Document device neutrality pattern in CLAUDE.md for future reference
 
 ## [AT-PARALLEL-024-REGRESSION] PERF-PYTORCH-004 Test Compatibility (2025-10-01)
 ## [PERF-PYTORCH-004] Phase 2 Attempt #1 - Architectural Blocker Identified (2025-10-01)
