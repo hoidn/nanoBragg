@@ -207,6 +207,17 @@ For all parameters, see [`docs/architecture/c_parameter_dictionary.md`](./docs/a
     -   **Pivot Modes:** BEAM pivot (around beam spot) vs SAMPLE pivot (around sample position)
     -   **Verification:** All detector tests must pass, including basis vector orthonormality and gradient flow
 
+16. **PyTorch Device & Dtype Neutrality:** Implementation MUST work for CPU and GPU tensors and for all supported dtypes without silent device transfers.
+    -   **Action:** Accept tensors on whatever device/dtype the caller provides; use helper utilities (`to()`/`type_as()`) to coerce internal temporaries to the dominant device/dtype instead of hard-coding `.cpu()`/`.cuda()` or allocating new CPU tensors mid-pipeline.
+    -   **Verification:** Add (or update) smoke tests that exercise both CPU and CUDA execution whenever a code path touches tensor math; at minimum, run the authoritative command once with `device=cpu` and once with `device=cuda` (when available) before marking work complete. Treat any Dynamo/compile warnings about mixed devices as failures to resolve immediately.
+    -   **Forbidden:** Leaving datasets, constants, or configuration tensors on default CPU while multiplying by GPU intermediates; relying on implicit device promotion; assuming float64/CPU execution in production paths.
+    -   **Scope:** This applies across the project and to any future PyTorch work you undertake—make code device/dtype agnostic by default.
+
+17. **Tooling & Benchmark Placement:** Benchmark, profiling, and diagnostic scripts SHALL live under structured tooling directories (`scripts/benchmarks/`, `scripts/profiling/`, etc.) and follow the repo’s CLI/env conventions.
+    -   **Action:** When creating or modifying benchmarking utilities, place them under `scripts/…`, require `KMP_DUPLICATE_LIB_OK=TRUE`, resolve binaries via the documented precedence, and record authoritative commands in `docs/development/testing_strategy.md` (or the relevant tooling index).
+    -   **Forbidden:** Dropping standalone benchmarking files in the repo root or bypassing the editable-install expectation with ad-hoc `sys.path` tweaks.
+    -   **Verification:** Update `docs/fix_plan.md` (Suite/Tooling section) with reproduction commands and results every time a benchmark uncovers an issue; ensure CI/docs reference the canonical script location.
+
 ## Crystallographic Conventions
 
 This project adheres to the `|G| = 1/d` convention, where `G = h*a* + k*b* + l*c*`. This is equivalent to the `|Q| = 2π/d` convention where `Q = 2πG`. All tests and calculations must be consistent with this standard.

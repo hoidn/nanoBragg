@@ -16,6 +16,14 @@ Our testing philosophy is a three-tiered hybrid approach, designed to build conf
 
 All tests will be implemented using the PyTest framework.
 
+### 1.4 PyTorch Device & Dtype Discipline
+
+- **Device-neutral code:** Every PyTorch path MUST operate correctly on both CPU and CUDA tensors and across supported dtypes. Do not hard-code `.cpu()`/`.cuda()` calls, create CPU-only constants, or assume float64 execution when the caller may supply float32/half tensors.
+- **Authoritative smoke runs:** When a change touches tensor math, run the authoritative reproduction command once on CPU and once on CUDA (when available). Capture both logs/metrics and attach them to the fix plan. Treat any `torch.compile` or Dynamo warning about mixed devices as blocking.
+- **Targeted tests:** Prefer parametrised tests that iterate over `device in {"cpu", "cuda"}` (guarded by `torch.cuda.is_available()`). At minimum, ensure a `gpu_smoke` marker or equivalent pytest node exercises the new logic on CUDA before declaring success.
+- **Helper utilities:** Encapsulate device/dtype harmonisation in small helpers (e.g., `tensor.to(other_tensor)` or `type_as`). Centralise these helpers in reusable modules to keep the rule enforceable across future PyTorch projects.
+- **CI gate:** If CI offers GPU runners, add a fast smoke job that runs the `gpu_smoke` marker (or agreed command) so regressions like CPU↔GPU tensor mixing fail quickly.
+
 ## 2. Configuration Parity
 
 **CRITICAL REQUIREMENT:** Before implementing any test that compares against C-code output, you **MUST** ensure exact configuration parity. All golden test cases must be generated with commands that are verifiably equivalent to the PyTorch test configurations.
@@ -415,3 +423,10 @@ All debugging of physics discrepancies **must** begin with a parallel trace comp
         1.  Configure a reflection to be at exactly 90 degrees 2-theta.
         2.  Run the simulation with polarization set to horizontal. Assert the spot intensity is near maximum.
         3.  Run again with polarization set to vertical. Assert the spot intensity is near zero.
+
+## 6. Tooling & Benchmark Hygiene
+
+- **Directory layout:** Place benchmarks, profilers, and ad-hoc tooling under `scripts/` (e.g., `scripts/benchmarks/benchmark_detailed.py`). Do not add standalone executables to the repo root.
+- **Environment parity:** All tooling must honour the same environment contract as the tests (`KMP_DUPLICATE_LIB_OK=TRUE`, `NB_C_BIN` precedence, editable install). Scripts SHOULD exit with a non-zero status if prerequisites are missing.
+- **Plan integration:** When a benchmark exposes a regression, log the command, metrics, and artifact path under `docs/fix_plan.md` › `## Suite Failures` or the relevant tracking section.
+- **Generalisation:** These expectations apply to any PyTorch project you touch—structure tooling predictably, rely on documented env vars, and keep benchmark commands discoverable through project docs.

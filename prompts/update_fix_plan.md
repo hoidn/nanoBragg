@@ -22,7 +22,7 @@ Canonical Structure of docs/fix_plan.md
 - Short table of items (ID → Title, Priority, Status).
 
 3) Items (one section per item)
-Each item SHALL use the following template:
+Each item SHALL use the following template. When updating, keep bullet text concise (aim for ≤6 lines per bullet group) to preserve readability.
 
 ```
 ## [ID] <Concise Title>
@@ -78,7 +78,7 @@ E) Never “Gloss Over” Failed Attempts
 - The plan is a ledger. If an attempt did not resolve the issue, record it with enough detail that a future loop can reproduce and continue.
 
 F) Sorting & Archival
-- Keep “in_progress” and “High” priority items at the top. Archive only “done” items (either in a dedicated Completed section or `fix_plan_archive.md`).
+- Keep “in_progress” and “High” priority items at the top. Archive only “done” items (either in a dedicated Completed section or `fix_plan_archive.md`), and when archiving condense the summary to a few lines while preserving key metrics and artifact links.
 
 Example (abbreviated)
 
