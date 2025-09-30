@@ -16,10 +16,10 @@
 
 ### Queued Items
 - [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: done (escalated)
-- Parity Harness Coverage Expansion — Status: in_progress (AT-003/005/011/021-023 added, 15 ATs remaining)
-- Docs-as-Data CI lint
+- Parity Harness Coverage Expansion — Status: in_progress (AT-003/005/011/021-023 added, 6 missing per linter)
 
 ### Recently Completed (2025-09-30)
+- [TOOLS-CI-001] Docs-as-Data Parity Coverage Linter — done
 - [AT-PARALLEL-023-HARNESS] Misset Angles Equivalence Parity Addition — done
 - [AT-PARALLEL-005-HARNESS] Beam Center Parameter Mapping Parity Addition — done
 - [AT-PARALLEL-003-HARNESS] Detector Offset Preservation Parity Addition — done
@@ -34,6 +34,56 @@
 
 ---
 ## Active Focus
+
+## [TOOLS-CI-001] Docs-as-Data Parity Coverage Linter
+- Spec/AT: Testing Strategy Section 2.5.6 (CI Meta-Check)
+- Priority: Medium
+- Status: done
+- Owner/Date: 2025-09-30 22:00 UTC
+- Exit Criteria: ✅ SATISFIED — Linter implemented with full test coverage (8/8 tests pass)
+- Reproduction:
+  * Lint: `python scripts/lint_parity_coverage.py`
+  * Test: `pytest tests/test_parity_coverage_lint.py -v`
+- Implementation Summary:
+  * Created scripts/lint_parity_coverage.py implementing Section 2.5.6 requirements
+  * Validates three key invariants:
+    - Spec → matrix → YAML coverage for all parity-threshold ATs
+    - Existence of mapped C binary (golden_suite_generator/nanoBragg or ./nanoBragg)
+    - Structural validation of parity_cases.yaml (required fields, thresholds, runs)
+  * Extracts AT IDs from spec-a-parallel.md by detecting correlation threshold requirements
+  * Compares against parity_cases.yaml entries to identify coverage gaps
+  * Exit codes: 0 (all pass), 1 (lint failures), 2 (config errors)
+- Test Results (2025-09-30 22:00 UTC):
+  * **8/8 tests PASSED** ✓
+    - test_linter_finds_repo_root PASSED
+    - test_linter_loads_yaml PASSED
+    - test_yaml_structure_validation PASSED
+    - test_missing_yaml_file PASSED
+    - test_invalid_yaml PASSED
+    - test_real_repo_linting PASSED
+    - test_extraction_of_spec_ats PASSED
+    - test_extraction_of_yaml_ats PASSED
+  * No regressions: 40 total tests passed (32 existing + 8 new)
+- Linter Findings (current repo state):
+  * ✓ Found 14 AT cases in parity_cases.yaml
+  * ✓ Found 18 parity-threshold ATs in spec
+  * ⚠ Missing YAML coverage: AT-PARALLEL-008, 010, 013, 016, 027, 029 (6 missing)
+  * ⚠ Extra ATs in YAML not in spec: AT-PARALLEL-003, 005 (manually added)
+  * Note: Some spec ATs (008, 009, 014, 015, etc.) use standalone test files with custom logic (Hungarian matching, noise generation) and should NOT be in parity_cases.yaml
+- Artifacts:
+  * New file: scripts/lint_parity_coverage.py (327 lines, executable)
+  * New file: tests/test_parity_coverage_lint.py (230 lines, 8 tests)
+  * Modified: CLAUDE.md (added lint command to Debugging Commands section)
+- Documentation:
+  * Added `python scripts/lint_parity_coverage.py` to CLAUDE.md Debugging Commands
+  * Linter output includes colored summary (✓/⚠/✗) with detailed findings
+- Next Actions:
+  * ✅ COMPLETED: Basic linter implementation satisfies Section 2.5.6 requirements
+  * Optional future enhancements:
+    - Integrate into CI/CD pipeline (e.g., GitHub Actions pre-commit hook)
+    - Add artifact path validation (check reports/ for metrics.json when fix_plan marks items done)
+    - Generate machine-readable JSON output for CI tooling
+  * Clarify spec: Some ATs should remain standalone (custom logic) vs parity harness (simple parameterized)
 
 ## [AT-PARALLEL-003-HARNESS] Detector Offset Preservation Parity Addition
 - Spec/AT: AT-PARALLEL-003 Detector Offset Preservation

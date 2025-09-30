@@ -460,6 +460,9 @@ To improve efficiency, use these standard commands for common tasks.
   ```
 - **Compare golden reference data:**
   See [`tests/golden_data/README.md`](./tests/golden_data/README.md) for exact commands
+- **Lint parity coverage documentation:**
+  `python scripts/lint_parity_coverage.py`
+  Validates spec → matrix → YAML consistency and identifies missing coverage
 
 ## Domain-Specific Context
 
