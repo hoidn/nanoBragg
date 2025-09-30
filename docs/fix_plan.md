@@ -13,7 +13,7 @@
 - [PERF-PYTORCH-006] Float32 / Mixed Precision Performance Mode — Priority: Medium, Status: done
 
 ### Queued Items
-- [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: done (escalated)
+- [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: in_progress (debug.md loop K - rotation matrix investigation required)
 
 ### Recently Completed (2025-09-30)
 - [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure — done (fixed C parsing bug + PyTorch mosaicity; both seeds pass with corr=1.0)
@@ -1774,6 +1774,54 @@
       * Status: COMPLETE — no code bugs; root cause is fundamental numerical precision; escalated for policy decision
     * [2025-09-29 23:59 UTC] Attempt #12 — Status: complete (final verification and loop closure)
       * Context: Verification loop after Attempt #11 investigation completion; confirm parity suite status and document loop closure
+    * [2025-09-30 13:27 UTC] Attempt #13 — Status: PARTIAL (rotation matrix investigation; small numerical differences found)
+      * Context: Debug.md loop K - systematic trace-driven investigation following escalation
+      * Environment: CPU, float64, fresh C and PyTorch runs (not golden data comparison)
+      * Parity Profile: AT-PARALLEL-012 maps to `pytest -v tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_triclinic_P1_correlation`
+      * Canonical Commands:
+        - C: `./golden_suite_generator/nanoBragg -misset -89.968546 -31.328953 177.753396 -cell 70 80 90 75 85 95 -default_F 100 -N 5 -lambda 1.0 -detpixels 512 -floatfile c_triclinic.bin`
+        - PyTorch: `python -m nanobrag_torch -misset -89.968546 -31.328953 177.753396 -cell 70 80 90 75 85 95 -default_F 100 -N 5 -lambda 1.0 -detpixels 512 -floatfile py_triclinic.bin`
+      * Baseline Metrics (fresh run, not golden):
+        - Correlation: 0.960466 (consistent with previous attempts)
+        - RMSE: 1.9105, Max |Δ|: 48.4333
+        - Sum ratio: 1.000451 (excellent, within [0.9, 1.1])
+        - **CRITICAL FINDING:** Max pixel mismatch - C max at (368, 262), PyTorch max at (223, 159)
+        - Different max pixel locations indicate systematic geometry error, not just precision
+      * Trace Analysis:
+        - Generated detailed C trace with built-in TRACE output (c_run.log)
+        - Generated PyTorch trace script (generate_py_trace.py)
+        - Compared reciprocal vectors after misset rotation and after re-generation
+      * **FIRST DIVERGENCE: Small but systematic differences in rotated reciprocal vectors**
+        - C after rotation: a_star = [-0.0123203, 0.000483336, 0.00750519]
+        - C after re-gen: a_star = [-0.0123226, 0.000483424, 0.00750655]
+        - PyTorch (final): a_star = [-0.012286755, 0.000482019, 0.007484724]
+        - Differences: ~0.5-1.6% in individual components
+        - Δa_star[0] = -0.000060 (0.49% rel), Δb_star[2] = 0.000061 (0.59% rel), Δc_star[1] = 0.000182 (1.63% rel)
+      * Root Cause Hypothesis (narrowed):
+        - Misset rotation IS being applied correctly in PyTorch
+        - But rotation matrix implementation differs subtly from C code
+        - Small differences (~0.5-1.6%) in reciprocal vectors propagate through ALL reflections
+        - With triclinic geometry + extreme misset angles, this causes pattern shift (different max pixels)
+        - Correlation 0.9605 is consistent with ~1% systematic geometry error
+      * Geometry-First Triage (completed):
+        ✅ Misset rotation is applied (not skipped as initially suspected from flawed trace)
+        ✅ Reciprocal vector recalculation is implemented (Core Rule #13)
+        ✅ Volume calculation uses V_actual (not V_formula)
+        ✅ Metric duality satisfied (a·a* = 1 within 1e-12)
+        ❌ Rotation matrix values differ by ~0.5-1.6% from C code
+      * Key Artifacts:
+        - reports/2025-09-30-AT-012-debug/c_triclinic.bin (fresh C output)
+        - reports/2025-09-30-AT-012-debug/py_triclinic.bin (fresh PyTorch output)
+        - reports/2025-09-30-AT-012-debug/c_run.log (C trace with built-in TRACE output)
+        - reports/2025-09-30-AT-012-debug/py_trace.log (PyTorch trace output)
+        - reports/2025-09-30-AT-012-debug/FIRST_DIVERGENCE.md (analysis document)
+      * Next Actions (Prioritized):
+        1. Compare rotation matrix implementations: Extract exact 3×3 rotation matrix from C and PyTorch for angles (-89.968546, -31.328953, 177.753396)
+        2. Verify angle convention: Confirm both use XYZ Euler angle order (not ZYX or other)
+        3. Check rotation direction: Verify sign conventions and right-hand rule compliance
+        4. Test cubic + moderate misset: Isolate rotation vs triclinic geometry effects
+        5. If rotation implementation matches spec, document as edge case and consider threshold adjustment
+      * Status: PARTIAL — FIRST DIVERGENCE identified (rotation matrix differences ~0.5-1.6%); requires deeper investigation of `angles_to_rotation_matrix()` vs C `rotate()` function
       * Environment: CPU, float64, full acceptance test suite
       * Canonical Commands:
         - Parity suite: `export KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg && pytest -v tests/test_parity_matrix.py`
