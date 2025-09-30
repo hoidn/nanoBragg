@@ -37,7 +37,9 @@ Non‑Negotiable Guardrails
    - Confirm `tests/test_parity_matrix.py` imports cleanly; if the import fails or the file is missing, return to Step 0 and bootstrap the harness before proceeding.
    - If NB_C_BIN is unset/invalid, resolve to `./golden_suite_generator/nanoBragg` or fallback `./nanoBragg` if the former is absent; verify it exists before running tests.
 10) Contradiction Rule — Parity Wins:
-   - If any mapped parity path (pytest or harness) reports under‑threshold metrics for an AT with a parity threshold, the loop is a FAILURE regardless of pytest green on PyTorch‑only tests. Reopen fix_plan and proceed to trace‑first debugging.
+   - **⚠️⚠️⚠️ IMPORTANT — STOP IMMEDIATELY IF PARITY FAILS!**
+   - If any mapped parity path (pytest or harness) reports under‑threshold metrics for an AT with a parity threshold, the loop is a **FAILURE** regardless of pytest green on PyTorch‑only tests.
+   - Do **NOT** commit. Do **NOT** exit the loop. Reopen fix_plan, capture artifacts (metrics, traces, diff heatmaps), and proceed directly to trace‑first debugging until the canonical parity command passes.
 
 Authoritative Inputs (consult before acting)
 - CLAUDE.md (core rules, detector gotchas, “Parallel Trace Debugging is Mandatory”)
@@ -178,7 +180,7 @@ SOP — Step‑by‑Step (follow in order)
      • If PASS: mark `Status: done` and quote spec thresholds satisfied.
      • If FAIL/PARTIAL: DO NOT mark done — keep item active and add concrete Next Actions; include rollback note if code changes were reverted.
      • For equivalence loops, include: the Parity Profile location (doc path + section), the exact test file(s) executed, the environment variables set (names+values or redacted if sensitive), and the exact command(s) used.
-     • Parity artifact check (Hard Gate): For ATs with parity thresholds, success requires attaching a metrics artifact from a mapped parity path that meets thresholds. Absence or under‑threshold → failure.
+     • Parity artifact check (Hard Gate): **NO PARITY PASS = NO COMMIT.** Success demands a metrics artifact from a mapped parity path that *meets* thresholds. Absence or under‑threshold metrics means the loop failed—capture diagnostics and keep the fix_plan item `in_progress`.
    - Hard Gate (verify): Confirm the plan contains the new Attempts History entry for this loop with `Metrics:` and `Artifacts:` lines (dated paths) and consistent `Status`. If missing or inconsistent, treat the loop as failed and do not commit.
    - Subagent (post‑parity): issue — If the root‑cause class wasn’t covered or was weakly covered by Acceptance Tests/spec, propose precise spec shard edits/additions (IDs, shard, measurable expectations) without weakening thresholds; add a TODO to fix_plan.md.
    - Subagent (pre‑commit): code-reviewer — Run on the changed scope to catch security/performance/config risks introduced by the fix; address high/critical findings before committing.
