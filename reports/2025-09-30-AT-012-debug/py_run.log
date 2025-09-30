@@ -1,0 +1,15 @@
+Running simulation...
+  Detector: 512x512 pixels
+  Crystal: 70.0x80.0x90.0 Å
+  Wavelength: 1.00 Å
+  Device: cpu, Dtype: torch.float64
+auto-selected 2-fold oversampling
+
+Statistics:
+  Max intensity: 1.390e+02 at pixel (223, 159)
+  Mean: 1.147e+00
+  RMS: 6.895e+00
+  RMSD: 6.799e+00
+Wrote float image to /home/ollie/Documents/nanoBragg/reports/2025-09-30-AT-012-debug/py_triclinic.bin
+
+Simulation complete.
