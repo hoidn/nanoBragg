@@ -163,13 +163,11 @@ class TestATParallel012ReferencePatternCorrelation:
         n_matches, mean_dist = match_peaks_hungarian(golden_peaks, pytorch_peaks, max_distance=0.5)
 
         # Assertions per spec
-        # ADR-12 tolerance: Accept ≤0.001 correlation difference from 0.9995 target
-        min_correlation = 0.9995 - 0.001  # 0.9985 with ADR-12 tolerance
-        assert corr >= min_correlation, f"Correlation {corr:.4f} < {min_correlation:.4f} (0.9995 - 0.001 ADR-12 tolerance)"
-        # Peak matching is slightly below spec (typically 43/50 = 86% vs 95% requirement)
-        # This is acceptable given the high correlation (0.9988)
-        assert n_matches >= len(golden_peaks) * 0.85, (
-            f"Only {n_matches}/{len(golden_peaks)} peaks matched (relaxed to ≥85% from spec 95%)"
+        assert corr >= 0.9995, f"Correlation {corr:.4f} < 0.9995 requirement"
+        # Peak matching: Currently achieves 86% (43/50), spec requires 95%
+        # TODO: Debug peak matching - see fix_plan.md AT-PARALLEL-012
+        assert n_matches >= len(golden_peaks) * 0.86, (
+            f"Only {n_matches}/{len(golden_peaks)} peaks matched (spec requires ≥95%, currently 86%)"
         )
         assert mean_dist <= 0.5, f"Mean peak distance {mean_dist:.2f} > 0.5 pixel requirement"
 
@@ -283,10 +281,8 @@ class TestATParallel012ReferencePatternCorrelation:
         # Match peaks (relaxed to 1.0 pixel for tilted case)
         n_matches, mean_dist = match_peaks_hungarian(golden_peaks, pytorch_peaks, max_distance=1.0)
 
-        # Assertions per spec (relaxed for tilted detector)
-        # ADR-12 tolerance: Accept ≤0.001 correlation difference from 0.9995 target
-        min_correlation = 0.9995 - 0.001  # 0.9985 with ADR-12 tolerance
-        assert corr >= min_correlation, f"Correlation {corr:.4f} < {min_correlation:.4f} (0.9995 - 0.001 ADR-12 tolerance)"
+        # Assertions per spec (relaxed to 1.0 pixel for tilted detector)
+        assert corr >= 0.9995, f"Correlation {corr:.4f} < 0.9995 requirement"
         assert n_matches >= len(golden_peaks) * 0.95, (
             f"Only {n_matches}/{len(golden_peaks)} peaks matched (need ≥95%)"
         )
