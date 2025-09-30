@@ -9,6 +9,8 @@ This guide explains how to use the PyTorch implementation of nanoBragg for diffr
 - [Parallel C/PyTorch Comparison](#parallel-cpytorch-comparison)
 - [Visualization Tools](#visualization-tools)
 - [Test Suite](#test-suite)
+- [Troubleshooting](#troubleshooting)
+- [Performance](#performance)
 - [Known Limitations](#known-limitations)
 
 ## PyTorch Runtime Guardrails
@@ -433,13 +435,87 @@ pytest tests/ --cov=nanobrag_torch --cov-report=html
    - Use smaller misset angles (<45°) for triclinic crystals
    - Check correlation values and center region accuracy
 
-## Performance Tips
+## Performance
 
-1. **Use ROI for testing**: `-roi xmin xmax ymin ymax`
+### CUDA Performance and torch.compile Warm-Up
+
+**Critical for production workflows:** The PyTorch implementation uses `torch.compile` for GPU acceleration, which introduces a **cold-start compilation overhead (0.5-6 seconds)** on the first run. After warm-up, performance approaches C parity at production scales.
+
+#### Performance Characteristics
+
+| Detector Size | C Time | PyTorch (Cold) | PyTorch (Warm) | Gap (Cold) | Gap (Warm) |
+|---------------|--------|----------------|----------------|------------|------------|
+| 1024²         | 0.048s | 0.553s         | 0.134s         | 11.5×      | **2.8×**   |
+| 4096²         | 0.539s | 0.799s         | 0.615s         | 1.48×      | **1.14×**  |
+
+**Key Insight:** At production scale (4096²), PyTorch is only 14% slower than C after warm-up.
+
+#### Production Workflow Recommendations
+
+For production batch processing, **compile once and simulate many times**:
+
+```python
+from nanobrag_torch.simulator import Simulator
+from nanobrag_torch.config import CrystalConfig, DetectorConfig, BeamConfig
+
+# Create simulator once (triggers torch.compile on first run)
+simulator = Simulator(crystal_config, detector_config, beam_config, device='cuda')
+
+# Warm-up: run once to trigger compilation
+_ = simulator.run()  # 0.5-6s compilation overhead
+
+# Production loop: subsequent runs are fast
+for dataset in datasets:
+    # Update parameters as needed
+    simulator.crystal_config.phi_start_deg = dataset.phi_start
+    # ... update other parameters ...
+
+    # Run simulation (no recompilation, ~1.14× C speed at 4096²)
+    result = simulator.run()
+    save_result(result, dataset.output_path)
+```
+
+**Benefits:**
+- Eliminates 0.5-6s overhead per simulation
+- Achieves near-parity performance (1.14× slower at 4096²)
+- Enables batch processing workflows
+
+#### GPU Optimization
+
+The implementation automatically uses GPU when available via PyTorch's CUDA backend:
+
+- **CUDA Graph Capture:** Enabled automatically via `torch.compile`
+- **Kernel Fusion:** Triton compiler fuses operations for efficiency
+- **No manual tuning required:** Just run on a CUDA-enabled device
+
+```bash
+# GPU is used automatically if available
+nanoBragg -device cuda -detpixels 4096 -floatfile output.bin ...
+
+# Force CPU execution
+nanoBragg -device cpu -detpixels 256 -floatfile output.bin ...
+```
+
+### Performance Best Practices
+
+1. **For production**: Use warm-up pattern above to amortize compilation cost
+2. **For testing**: Use small detectors (`-detpixels 256`) to minimize time
+3. **For single runs**: Expect 1.5-12× slower than C depending on detector size
+4. **For batch processing**: Achieve near-parity performance (~1.14× slower at 4096²)
+
+### Quick Performance Tips
+
+1. **Use ROI for testing**: `-roi xmin xmax ymin ymax` to limit computation
 2. **Reduce oversampling**: Default `-oversample 1` is usually sufficient
-3. **Limit mosaic domains**: Start with `-mosaic_domains 1` for testing
-4. **Use smaller detectors**: `-detpixels 256` for quick tests
-5. **GPU acceleration**: PyTorch automatically uses GPU if available
+3. **Limit mosaic domains**: Start with `-mosaic_domains 1` for quick tests
+4. **Use smaller detectors**: `-detpixels 256` for rapid iteration
+5. **GPU acceleration**: Automatically enabled when CUDA is available
+
+### Detailed Performance Analysis
+
+For complete performance benchmarks and optimization strategies, see:
+- [`reports/benchmarks/PERF-PYTORCH-003_investigation_summary.md`](reports/benchmarks/PERF-PYTORCH-003_investigation_summary.md)
+- [`docs/user/performance.md`](docs/user/performance.md)
 
 ## Known Limitations
 

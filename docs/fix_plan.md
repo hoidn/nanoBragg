@@ -1,6 +1,6 @@
-**Last Updated:** 2025-09-30 23:00 UTC
+**Last Updated:** 2025-09-30 23:45 UTC
 
-**Current Status:** Parity harness coverage expanded to 16 ATs (added AT-010, AT-016 with classification docs). Four critical AT failures remain: AT-020, AT-021, AT-022, AT-024 (all require debug.md routing). Parity matrix now has 55 tests total.
+**Current Status:** Completed PERF-DOC-001 (documented torch.compile warm-up for production workflows). Four critical AT failures remain: AT-020, AT-021, AT-022, AT-024 (all require debug.md routing). Parity matrix has 55 tests total.
 
 ---
 ## Index
@@ -11,6 +11,7 @@
 - [AT-PARALLEL-020-REGRESSION] Comprehensive Integration Test Correlation Failure — Priority: High, Status: pending (requires debug.md)
 - [AT-PARALLEL-022-PARITY] Combined Detector+Crystal Rotation Parity Failure — Priority: High, Status: pending (requires debug.md, blocked by AT-021)
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: Medium, Status: pending (blocked on fullgraph=True limitation)
+- [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
 - [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: pending
 - [PERF-PYTORCH-006] Float32 / Mixed Precision Performance Mode — Priority: Medium, Status: pending
 
@@ -34,6 +35,38 @@
 
 ---
 ## Active Focus
+
+## [PERF-DOC-001] Document torch.compile Warm-Up Requirement
+- Spec/AT: PERF-PYTORCH-003 recommendation #1
+- Priority: Medium
+- Status: done
+- Owner/Date: 2025-09-30 23:45 UTC
+- Exit Criteria: ✅ SATISFIED — Production workflow warm-up requirement documented in README_PYTORCH.md
+- Reproduction:
+  * View: `cat README_PYTORCH.md | grep -A 50 "## Performance"`
+- Implementation Summary:
+  * **Context:** PERF-PYTORCH-003 identified that torch.compile introduces 0.5-6s cold-start overhead; recommendation was to "document warm-up requirement for production workflows"
+  * **Added comprehensive Performance section** to README_PYTORCH.md:
+    - Performance characteristics table showing cold vs warm performance
+    - Production workflow code example (compile once, simulate many times)
+    - GPU optimization details (CUDA graph capture, kernel fusion)
+    - Performance best practices for different use cases
+    - Links to detailed performance analysis
+  * **Updated Table of Contents** to include Performance section
+  * **Key metrics documented:**
+    - 1024²: 11.5× slower (cold) → 2.8× slower (warm)
+    - 4096²: 1.48× slower (cold) → 1.14× slower (warm)
+  * **Actionable guidance:** Python code example showing warm-up pattern for batch processing
+- Validation Results:
+  * Documentation added: 81 new lines in README_PYTORCH.md ✓
+  * Table of Contents updated ✓
+  * Code example tested for syntax correctness ✓
+- Artifacts:
+  * Modified: README_PYTORCH.md (+81 lines: Performance section with warm-up workflow)
+- Next Actions:
+  * ✅ COMPLETED: Warm-up requirement documented per PERF-003 recommendation
+  * Optional: PERF-PYTORCH-005 (persistent graph caching) remains available as future optimization
+  * Continue with next highest-priority non-debugging task
 
 ## [PARITY-HARNESS-AT010-016] Parity Coverage Expansion (AT-010, AT-016)
 - Spec/AT: AT-PARALLEL-010 (Solid Angle Corrections), AT-PARALLEL-016 (Extreme Scale Testing); Section 2.5.3/2.5.3a (Normative Parity Coverage)
