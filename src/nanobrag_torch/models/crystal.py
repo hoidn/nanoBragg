@@ -552,41 +552,8 @@ class Crystal:
         )
         c_star = torch.stack([c_star_x, c_star_y, c_star_z])
 
-        # Generate real-space vectors from reciprocal vectors
-        # Cross products
-        a_star_cross_b_star = torch.cross(a_star, b_star, dim=0)
-        b_star_cross_c_star = torch.cross(b_star, c_star, dim=0)
-        c_star_cross_a_star = torch.cross(c_star, a_star, dim=0)
-
-        # Real-space vectors: a = (b* × c*) × V_cell
-        a_vec = b_star_cross_c_star * V
-        b_vec = c_star_cross_a_star * V
-        c_vec = a_star_cross_b_star * V
-
-        # Now that we have real-space vectors, re-generate the reciprocal ones
-        # This matches the C-code behavior (lines 1951-1956)
-        a_cross_b = torch.cross(a_vec, b_vec, dim=0)
-        b_cross_c = torch.cross(b_vec, c_vec, dim=0)
-        c_cross_a = torch.cross(c_vec, a_vec, dim=0)
-
-        # Recalculate volume from the actual vectors
-        # This is crucial - the volume from the vectors is slightly different
-        # from the volume calculated by the formula, and we need to use the
-        # actual volume for perfect metric duality
-        V_actual = torch.dot(a_vec, b_cross_c)
-        # Ensure volume is not too small
-        V_actual = torch.maximum(V_actual, torch.tensor(1e-6, dtype=V_actual.dtype, device=V_actual.device))
-        V_star_actual = 1.0 / V_actual
-
-        # a* = (b × c) / V, etc.
-        a_star = b_cross_c * V_star_actual
-        b_star = c_cross_a * V_star_actual
-        c_star = a_cross_b * V_star_actual
-
-        # Update V to the actual volume
-        V = V_actual
-
         # Handle random misset generation (AT-PARALLEL-024)
+        # This must happen BEFORE applying misset rotation
         if hasattr(self.config, "misset_random") and self.config.misset_random:
             # Generate random misset angles using C-compatible LCG
             from ..utils.c_random import mosaic_rotation_umat, umat2misset
@@ -616,28 +583,54 @@ class Crystal:
                     f"{self.config.misset_deg[2]:.6f} deg"
                 )
 
-        # Apply static orientation if misset is specified
+        # CRITICAL ORDER: Apply misset to INITIAL reciprocal vectors BEFORE real-space calculation
+        # This matches C-code sequence (nanoBragg.c lines 2025-2034: misset applied to initial vectors)
         if hasattr(self.config, "misset_deg") and any(
             angle != 0.0 for angle in self.config.misset_deg
         ):
-            # Apply the misset rotation to reciprocal vectors
-            vectors = {
-                "a": a_vec,
-                "b": b_vec,
-                "c": c_vec,
-                "a_star": a_star,
-                "b_star": b_star,
-                "c_star": c_star,
-                "V": V,
-            }
-            vectors = self._apply_static_orientation(vectors)
-            # Extract the rotated vectors - both reciprocal AND real space
-            a_vec = vectors["a"]
-            b_vec = vectors["b"]
-            c_vec = vectors["c"]
-            a_star = vectors["a_star"]
-            b_star = vectors["b_star"]
-            c_star = vectors["c_star"]
+            # Apply misset rotation to initial reciprocal vectors only
+            # C-code reference (nanoBragg.c lines 2025-2034):
+            # rotate(a_star,a_star,misset[1],misset[2],misset[3]);
+            # rotate(b_star,b_star,misset[1],misset[2],misset[3]);
+            # rotate(c_star,c_star,misset[1],misset[2],misset[3]);
+            from ..utils.geometry import angles_to_rotation_matrix, rotate_umat
+            misset_rad = [torch.deg2rad(torch.tensor(angle, dtype=self.dtype, device=self.device))
+                          for angle in self.config.misset_deg]
+            R_misset = angles_to_rotation_matrix(misset_rad[0], misset_rad[1], misset_rad[2])
+            a_star = rotate_umat(a_star, R_misset)
+            b_star = rotate_umat(b_star, R_misset)
+            c_star = rotate_umat(c_star, R_misset)
+
+        # Generate real-space vectors from (possibly rotated) reciprocal vectors
+        # Cross products
+        a_star_cross_b_star = torch.cross(a_star, b_star, dim=0)
+        b_star_cross_c_star = torch.cross(b_star, c_star, dim=0)
+        c_star_cross_a_star = torch.cross(c_star, a_star, dim=0)
+
+        # Real-space vectors: a = (b* × c*) × V_cell
+        a_vec = b_star_cross_c_star * V
+        b_vec = c_star_cross_a_star * V
+        c_vec = a_star_cross_b_star * V
+
+        # Now that we have real-space vectors, re-generate the reciprocal ones
+        # This matches the C-code behavior (lines 1951-1956)
+        a_cross_b = torch.cross(a_vec, b_vec, dim=0)
+        b_cross_c = torch.cross(b_vec, c_vec, dim=0)
+        c_cross_a = torch.cross(c_vec, a_vec, dim=0)
+
+        # CRITICAL: C-code does NOT recalculate volume from actual vectors when user_cell is set
+        # (nanoBragg.c line 2080: V_star = 1.0/V_cell, where V_cell is from the formula)
+        # Using V_star from the formula (not V_actual from vectors) matches C behavior
+        # and is required for AT-PARALLEL-012 parity.
+        #
+        # The volume from the formula (V_cell) differs slightly (~0.5% for triclinic)
+        # from the volume computed from the actual vectors (V_actual = a·(b×c)).
+        # The C-code uses the formula volume throughout, so we must do the same.
+
+        # a* = (b × c) / V, etc. (using formula-based V_star, not recalculated)
+        a_star = b_cross_c * V_star
+        b_star = c_cross_a * V_star
+        c_star = a_cross_b * V_star
 
         return {
             "a": a_vec,
