@@ -34,6 +34,7 @@ Non‑Negotiable Guardrails
 9) Matrix Gate — Canonical Parity First:
    - In equivalence loops, the FIRST command MUST be the mapped C↔Py parity path (pytest node from the Matrix or the canonical harness listed next to it). Do not begin with PyTorch‑only tests.
    - Honor `tests/parity_cases.yaml`: if the AT has an entry there, run the corresponding case via `tests/test_parity_matrix.py` before any auxiliary diagnostics.
+   - Confirm `tests/test_parity_matrix.py` imports cleanly; if the import fails or the file is missing, return to Step 0 and bootstrap the harness before proceeding.
    - If NB_C_BIN is unset/invalid, resolve to `./golden_suite_generator/nanoBragg` or fallback `./nanoBragg` if the former is absent; verify it exists before running tests.
 10) Contradiction Rule — Parity Wins:
    - If any mapped parity path (pytest or harness) reports under‑threshold metrics for an AT with a parity threshold, the loop is a FAILURE regardless of pytest green on PyTorch‑only tests. Reopen fix_plan and proceed to trace‑first debugging.
@@ -73,12 +74,12 @@ IMPORTANT ROUTING
 <step 0>
 - Read: `./docs/index.md`, `./specs/spec-a.md`, `./arch.md`, `./docs/development/testing_strategy.md`
 - Read `docs/fix_plan.md`; confirm a single active item is `in_progress` (else pick highest‑priority `pending` and set it)
-- Locate the Parity Profile section (Parallel Validation Matrix) and the matching case in `tests/parity_cases.yaml`. If either is missing, note TODO in plan and derive a temporary mapping by searching tests/harnesses for the AT ID.
+- Locate the Parity Profile section (Parallel Validation Matrix) **and** confirm the matching case exists in `tests/parity_cases.yaml` **and** `tests/test_parity_matrix.py`. If any of these are missing or if the file fails to import, STOP: add a fix_plan item to bootstrap the parity harness, create/repair the missing file(s), then restart Step 0. Do **not** proceed to reproduction until the parity harness entry exists and maps to the target AT.
 - Start Gate: Ensure `docs/fix_plan.md` shows the chosen item as `in_progress` with reproduction commands before proceeding.
 </step 0>
 
 <step 1>
-- Map AT→parity command and required env from the Parity Profile / `tests/parity_cases.yaml`. Export env; run the mapped parity path (pytest node or documented harness) first. Capture stdout/stderr, executed case ID, metrics, and save a diff heatmap if relevant.
+- Map AT→parity command and required env from the Parity Profile / `tests/parity_cases.yaml`. Export env; run the mapped parity path (pytest node or documented harness) first. If the command fails because the harness/case is missing, immediately bootstrap it (see Step 0 mandate) before rerunning. Capture stdout/stderr, executed case ID, metrics, and save a diff heatmap if relevant.
 - Subagent: test‑failure‑analyzer (when failures present) to cluster errors and produce focused repro.
 </step 1>
 
