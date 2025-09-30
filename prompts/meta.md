@@ -6,12 +6,13 @@ Purpose
 
 Core Principles
 - Autonomy first: the prompt must instruct the agent to choose work itself from the plan and begin immediately.
-- Single focus per loop: select exactly one high‑value item and attempt only that.
-- Doc‑driven mapping: resolve test commands/env from documentation (Parity Profile / Implementation fields), not from ad‑hoc scripts.
+- Single focus per loop: select exactly one high-value item and attempt only that.
+- Doc-driven mapping: resolve test commands/env from documentation (Parity Profile / Implementation fields), not from ad-hoc scripts.
 - Minimal work per loop: always run at least one authoritative test and capture baseline metrics/artifacts before making changes.
 - Hard gates: require plan ledger updates, metrics, and authoritative test pass before declaring success.
 - Clean commits: commit successful code changes; on failures/partials, commit only docs/prompt/spec updates.
 - Portable by default: project specifics live in docs; prompts only reference them.
+- PyTorch discipline: enforce device/dtype neutrality (CPU + CUDA smoke checks) and ensure tooling lives under structured `scripts/` paths with the documented environment contract.
 
 Required Sections for Every Loop Prompt
 1) Autonomy Contract

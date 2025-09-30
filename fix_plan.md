@@ -4,6 +4,16 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ## Immediate High‑Priority TODOs (Equivalence Discrepancies)
 
+### [META] Fix Plan Structure Refresh (HIGH)
+- Spec/AT: Meta maintenance
+- Priority: High (reset to Medium immediately after each cleanup run)
+- Owner/Date: TBD
+- Reproduction:
+  - Step 1: Run a loop with `prompts/update_fix_plan.md`, reviewing every active item for template compliance.
+  - Step 2: Archive closed or historical narrative sections to `docs/fix_plan_archive.md` (create if needed) while preserving key metrics and artifact references.
+  - Step 3: Ensure each active item records Owner/Date, First Divergence (or “TBD”), real Attempts History entries, and concise Next Actions.
+- Lifecycle Notes: Evergreen task — after each cleanup, update Status back to `pending`, downgrade Priority to Medium, and set a `Next review` note for the future cycle; do **not** mark this item `done` so routine maintenance stays visible.
+
 ### [AT‑PARALLEL‑002] Pixel Size Independence @ 256×256 ✅ COMPLETE
 - Spec/AT: specs/spec-a-parallel.md — AT‑PARALLEL‑002
 - Priority: High

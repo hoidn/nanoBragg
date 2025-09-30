@@ -50,6 +50,8 @@ IMPORTANT
 - Numeric tolerances (scientific): Use appropriate precision (often float64). Specify atol/rtol in tests; avoid silent dtype downcasts.
 - Reference parity (when available): If a trusted reference implementation/data exists, use it for focused parity checks on representative cases.
 - Instrumentation/Tracing: When emitting trace or debug output, reuse the production helpers/cached intermediates (see docs/architecture/README.md) instead of re-deriving physics.
+- PyTorch device discipline: Keep tensor operations device/dtype agnostic. Avoid `.cpu()`/`.cuda()` in production paths and run CPU + CUDA smoke checks whenever you touch PyTorch math.
+- Tooling hygiene: Place new benchmarks/profilers under `scripts/` (e.g., `scripts/benchmarks/`) and honour the documented env contract (`KMP_DUPLICATE_LIB_OK`, `NB_C_BIN` precedence, editable install).
 
 - Reconcile $SPEC vs. architecture: if behavior is underspecified in the $SPEC but captured in $ARCH follow $ARCH If there is a conflict, prefer the $SPEC for external contracts and propose an $ARCH patch (record in `fix_plan.md`).
 
