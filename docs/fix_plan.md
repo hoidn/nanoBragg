@@ -705,7 +705,7 @@
 ## [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure
 - Spec/AT: AT-PARALLEL-024 Random Misset Reproducibility and Equivalence
 - Priority: Critical (random misset implementation bug)
-- Status: done (see plan archive `plans/active/at-parallel-024/plan.md` for context)
+- Status: done (see plan archive `plans/archive/at-parallel-024/plan.md` for context)
 - Owner/Date: 2025-09-30 21:00 UTC
 - Exit Criteria: (1) Add AT-PARALLEL-024 to parity_cases.yaml ✓ DONE; (2) Both test cases pass parity thresholds ✓ COMPLETE
 - Reproduction:
@@ -801,7 +801,7 @@
   * Code: `src/nanobrag_torch/models/crystal.py` (phi rotation fix), `tests/test_suite.py` (unit test correction).
   * Reports: parity harness no longer emits failure metrics; historical failure artifacts remain in `reports/2025-09-30-AT-PARALLEL-021/` for reference.
 - Next Actions:
-  * Archive `plans/active/at-parallel-021/plan.md` once downstream validation (AT-022) remains green across another run.
+  * ✅ 2025-09-30: Archived plan at `plans/archive/at-parallel-021/plan.md` after confirming AT-022 stayed green.
 
 ## [AT-PARALLEL-022-PARITY] Combined Detector+Crystal Rotation Parity Equivalence
 - Spec/AT: AT-PARALLEL-022 Combined Detector+Crystal Rotation Equivalence
