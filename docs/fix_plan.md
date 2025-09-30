@@ -1,6 +1,5 @@
-# nanoBragg PyTorch Implementation Fix Plan
-
 **Last Updated:** 2025-09-30
+
 **Current Status:** Core implementation complete; 77/78 AT-PARALLEL tests passing; parity matrix 16/16 passing; tooling hygiene improved.
 
 ---
@@ -62,6 +61,24 @@
       - Modified: src/nanobrag_torch/simulator.py (lines 527-530, added device/dtype transfers)
       - Test run: pytest tests/test_at_src_001*.py -v (10 passed)
     * Exit Criteria: SATISFIED — source tensors moved to correct device at setup; eliminates repeated CPU→GPU copies in physics loops; ready for torch.compile GPU optimization
+
+- **New**
+
+## [PERF-PYTORCH-003] CUDA Benchmark Gap (PyTorch vs C)
+- Spec/AT: Performance parity tracking (scripts/benchmarks/benchmark_detailed.py)
+- Priority: High
+- Status: pending
+- Reproduction:
+  * `python scripts/benchmarks/benchmark_detailed.py`
+  * Review `reports/benchmarks/20250930-002422/benchmark_results.json`
+- Symptoms:
+  * PyTorch CUDA run (simulation only) is ~3.8× slower than C at 256–4096² pixels; total run up to 372× slower due to setup/compile overhead.
+  * Setup phase dominates for small detectors, suggesting compile/graph capture issues.
+  * Memory jumps (e.g., 633 MB at 256²) imply batching/temporary allocations worth auditing.
+- Exit Criteria:
+  * Identify root cause (e.g., per-run torch.compile cost, missing caching, needless allocations) and implement optimizations.
+  * Benchmark again; target ≥1× C throughput for large detectors (4096²) and eliminate extreme slowdowns for small grids.
+  * Document findings in `reports/benchmarks/` and update README/strategy if workflow changes.
 
 ## [AT-PARALLEL-002-EXTREME] Pixel Size Parity Failures (0.05mm & 0.4mm)
 - Spec/AT: AT-PARALLEL-002 Pixel Size Independence
