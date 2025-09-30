@@ -39,6 +39,23 @@ Given your findings in <1> and <2>, think about whether there's any need for a m
 - think deeply. draft / redraft the plan and save it to a .md under plans/active/. Structure the write-up as a phased implementation document (see `plans/archive/general-detector-geometry/implementation.md` for tone/shape): begin with context + phase overviews, then outline each phase’s intent, prerequisites, and exit criteria. When a phase benefits from explicit tracking, embed a checklist table using the `ID | Task Description | State | How/Why & Guidance` format (with `[ ]`, `[P]`, `[D]` markers) inside that phase section.
   • Include reproduction commands, owners (if known), and decision rules in the guidance column.
   • Favor narrative flow first; layer checklists only where they clarify verification steps or deliverables.
+  • Mini-template to crib when drafting:
+    ```md
+    ## Context
+    - Initiative: <initiative>
+    - Phase Goal: <outcome>
+    - Dependencies: <docs/tests>
+
+    ### Phase A — <short title>
+    Goal: <what this phase proves or delivers>
+    Prereqs: <artifacts or measurements required before starting>
+    Exit Criteria: <verifiable completion signal>
+
+    | ID | Task Description | State | How/Why & Guidance |
+    | --- | --- | --- | --- |
+    | A1 | <Key diagnostic or implementation step> | [ ] | Run `<command>`; capture results under `reports/<date>/...`. |
+    | A2 | <Follow-up validation> | [ ] | Compare against `<artifact>`; stop if deviation > threshold. |
+    ```
 - When refreshing an existing plan, retrofit it to this phased format before adding or editing tasks.
 - review docs/fix_plan.md. edit if needed. cross reference the new plans .md so that ralph can find it.
 </yes case>
@@ -62,4 +79,3 @@ Before finishing the loop, enforce git hygiene:
 - ignore 'routing violations'. these are out of scope.
 </notes>
 Now carefully and exhaustively follow your <instructions>.
-

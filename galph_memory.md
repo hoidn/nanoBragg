@@ -76,3 +76,4 @@
 - Refreshed AT-012 plan to checklist format (Task C0 explicitly instructs restoring `V_actual`, phases A–E mapped to concrete checkpoints). Updated fix_plan active item + attempts accordingly.
 - Next Ralph steps: revert/repair metric duality (plan Task C0), then run prompts/debug.md following the new checklist (Tasks A1–B2 first). No further verification loops until parity passes.
 - Updated `prompts/supervisor.md` to reflect new planning format (phased implementation docs with optional per-phase checklists) per owner clarification.
+- Reintroduced a concise plan template in `prompts/supervisor.md` to satisfy new guidance (phased narrative with optional checklist sample).
