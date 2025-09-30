@@ -23,6 +23,10 @@ and project documentation relevant to the failing tests / feature / behavior / c
 </example
 IMPORTANT
 
+### Protected Assets Rule
+- **Never delete or rename files referenced in `docs/index.md`.** Treat that index as the canonical allowlist of required artifacts (e.g., `loop.sh`). If removal or relocation is unavoidable, update `docs/index.md` in the same change and clearly document the rationale in the commit message and relevant plan entry.
+- Before any repository hygiene or cleanup sweep, refresh `docs/index.md` and verify that none of the targeted files appear there.
+
 ## 🚀 Current Initiative: None
 
 ## ⚙️ PyTorch Runtime Guardrails
