@@ -83,3 +83,4 @@
 - Performance gaps vs long-term goals remain: `_compute_physics_for_position` still fabricates tensors every call (`torch.tensor(1e-12)` etc.), `sincg` lattice branch uses `.item()` inside hot loops, and guards in `crystal.py`/`simulator.py` still rely on `torch.maximum` (see `src/nanobrag_torch/simulator.py:289,770,1182`). PERF-PYTORCH-004 Phase 1 tasks P1.1–P1.5 remain outstanding.
 - Action items for Ralph next loop: follow PERF plan Phase 1 (hoist guard tensors, eliminate `.item()` in hot path), then tackle REPO-HYGIENE-002 checklist; no further parity work needed unless regressions appear.
 - Repo state: `.claude` remains locally dirty per user policy; no other uncommitted files.
+- Updated supervisor startup instructions: attempt `timeout 30 git pull --rebase`, abort on timeout, then fall back to merge pull; log whichever path occurs.
