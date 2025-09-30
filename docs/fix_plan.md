@@ -1,11 +1,12 @@
 **Last Updated:** 2025-09-30
 
-**Current Status:** Core implementation complete; 77/78 AT-PARALLEL tests passing; parity matrix 16/16 passing; tooling hygiene improved.
+**Current Status:** Regression detected; 75/78 AT-PARALLEL tests passing; MOSFLM offset fix (f1cafad) caused AT-PARALLEL-012 simple_cubic and tilted detector failures (~0.9945 corr vs 0.9995 required).
 
 ---
 ## Index
 
 ### Active Items
+- [AT-PARALLEL-012-REGRESSION] Simple Cubic & Tilted Detector Correlation Regression — Priority: Critical, Status: in_progress
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: High, Status: pending
 - [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: pending
 - [PERF-PYTORCH-006] Float32 / Mixed Precision Performance Mode — Priority: Medium, Status: pending
@@ -24,6 +25,33 @@
 
 ---
 ## Active Focus
+
+## [AT-PARALLEL-012-REGRESSION] Simple Cubic & Tilted Detector Correlation Regression
+- Spec/AT: AT-PARALLEL-012 Reference Pattern Correlation
+- Priority: Critical
+- Status: in_progress
+- Owner/Date: 2025-09-30
+- Reproduction:
+  * Test: `export KMP_DUPLICATE_LIB_OK=TRUE && pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation -v`
+  * Shapes/ROI: 1024×1024 detector, 0.1mm pixel size
+- Root Cause: MOSFLM +0.5 pixel offset removal in commit f1cafad (line 95 of detector.py) caused simple_cubic and tilted_detector tests to regress
+- Symptoms:
+  * simple_cubic: corr=0.9946 (was passing at 0.9995+; -0.5% regression)
+  * cubic_tilted: corr=0.9945 (was passing at 0.9995+; -0.5% regression)
+  * triclinic_P1: corr=0.9605 (unchanged, pre-existing numerical precision issue)
+- Attempts History:
+  * [2025-09-30] Attempt #1 — Status: investigating
+    * Context: MOSFLM offset fix (f1cafad) removed duplicate +0.5 pixel offset from Detector.__init__; this fixed AT-006 but broke AT-012 simple_cubic and tilted tests
+    * Environment: CPU, float64, golden data comparison
+    * Hypothesis: Golden data was generated with OLD MOSFLM behavior (double offset); tests now fail because PyTorch uses CORRECT offset
+    * Next Actions:
+      1. Verify golden data generation commands in tests/golden_data/README.md
+      2. Check if golden data needs regeneration with corrected MOSFLM offset
+      3. OR: Verify if AT-012 tests are using explicit beam_center that should bypass MOSFLM offset
+      4. Generate diff heatmaps to identify spatial pattern of error
+- Exit Criteria: simple_cubic and tilted tests pass with corr ≥ 0.9995
+
+---
 
 ## [AT-PARALLEL-006-PYTEST] PyTorch-Only Test Failures (Bragg Position Prediction) + MOSFLM Double-Offset Bug
 - Spec/AT: AT-PARALLEL-006 Single Reflection Position + systemic MOSFLM offset bug + AT-002/003 test updates
