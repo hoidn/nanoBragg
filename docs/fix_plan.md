@@ -6,6 +6,39 @@
 ---
 ## Active Focus
 
+## [AT-PARALLEL-002-EXTREME] Pixel Size Parity Failures (0.05mm & 0.4mm)
+- Spec/AT: AT-PARALLEL-002 Pixel Size Independence
+- Priority: High
+- Status: in_progress
+- Owner/Date: 2025-09-29
+- Reproduction (C & PyTorch):
+  * C: `NB_C_BIN=./golden_suite_generator/nanoBragg; $NB_C_BIN -default_F 100 -cell 100 100 100 90 90 90 -lambda 6.2 -N 5 -distance 100 -seed 1 -detpixels 256 -pixel {0.05|0.4} -Xbeam 25.6 -Ybeam 25.6 -mosflm -floatfile /tmp/c_out.bin`
+  * PyTorch: `python -m nanobrag_torch -default_F 100 -cell 100 100 100 90 90 90 -lambda 6.2 -N 5 -distance 100 -seed 1 -detpixels 256 -pixel {0.05|0.4} -Xbeam 25.6 -Ybeam 25.6 -mosflm -floatfile /tmp/py_out.bin`
+  * Parity (canonical): `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-002"`
+  * Shapes/ROI: 256×256 detector, pixel sizes 0.05mm and 0.4mm (extremes), full frame
+- First Divergence: TBD via parallel trace
+- Attempts History:
+  * [2025-09-29] Attempt #1 — Status: investigating
+    * Context: pixel-0.1mm and pixel-0.2mm pass (corr≥0.9999); pixel-0.05mm and pixel-0.4mm fail parity harness
+    * Environment: CPU, float64, seed=1, MOSFLM convention, oversample=1 (auto-selected for both cases)
+    * Planned approach: geometry-first triage (units, beam center scaling, omega formula), then parallel trace for first divergence
+    * Metrics collected:
+      - pixel-0.05mm: corr=0.999867 (<0.9999), max|Δ|=0.14, sum_ratio=1.0374 (PyTorch 3.74% higher)
+      - pixel-0.4mm: corr=0.996984 (<0.9999), max|Δ|=227.31, sum_ratio=1.1000 (PyTorch exactly 10% higher)
+    * Artifacts: reports/2025-09-29-AT-PARALLEL-002/{pixel-0.05mm,pixel-0.4mm}_{metrics.json,diff.png,c.npy,py.npy}
+    * Observations/Hypotheses:
+      1. **Systematic pixel-size-dependent scaling**: PyTorch produces higher intensity that scales with pixel_size (3.74% @ 0.05mm, 10% @ 0.4mm)
+      2. **Uniform per-pixel error**: Every pixel shows the same ratio (not spatially localized), suggesting a global scaling factor bug
+      3. **Not oversample-related**: Both cases use oversample=1 (verified via auto-select calculation)
+      4. **Geometry triage passed**: Units correct (meters in detector, Å in physics); omega formula looks correct; close_distance formula matches spec
+      5. **Likely suspects**: steps normalization, fluence calculation, or a hidden pixel_size factor in scaling
+    * Next Actions: Generate aligned C & PyTorch traces for pixel (128,128) with 0.4mm case; identify FIRST DIVERGENCE in steps/fluence/omega/final_scaling chain
+- Risks/Assumptions: May involve subpixel/omega formula edge cases at extreme pixel sizes; solidangle/close_distance scaling may differ
+- Exit Criteria (from spec-a-parallel.md): corr≥0.9999; beam center in pixels = 25.6/pixel_size ±0.1px; inverse peak scaling verified; sum_ratio in [0.9,1.1]; max|Δ|≤300
+
+---
+## Queued Items
+
 1. **Parity Harness Coverage Expansion** *(queued)*
    - Goal: ensure every parity-threshold AT (specs/spec-a-parallel.md) has a canonical entry in `tests/parity_cases.yaml` and executes via `tests/test_parity_matrix.py`.
    - Status: Harness file `tests/test_parity_matrix.py` created (2025-09-29); initial parity cases exist for AT-PARALLEL-001/002/004/006/007.
