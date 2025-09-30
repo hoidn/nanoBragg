@@ -25,6 +25,12 @@ IMPORTANT
 
 ## 🚀 Current Initiative: None
 
+## ⚙️ PyTorch Runtime Guardrails
+
+- **Vectorization is mandatory:** Any simulator change must preserve the batched tensor flows described in `docs/architecture/pytorch_design.md` (no re-introduced Python loops when a batched helper exists).
+- **Device/dtype neutrality:** Do not introduce `.cpu()`/`.cuda()` or per-call `.to()` shims inside compiled paths; ensure tensors live on the caller’s device/dtype up front and run CPU + CUDA smoke checks when available.
+- **Quick reference:** See `docs/development/pytorch_runtime_checklist.md` (create/update as part of this change) for the actionable checklist before and after every PyTorch edit.
+
 ---
 
 **For a complete overview of the project's documentation, start with the [Project Documentation Index](./docs/index.md).**

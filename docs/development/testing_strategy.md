@@ -7,7 +7,6 @@
 ## 1. Introduction & Philosophy
 
 This document outlines the comprehensive testing strategy for the PyTorch implementation of nanoBragg. The primary goal is to ensure that the new application is a correct, verifiable, and trustworthy scientific tool.
-
 Our testing philosophy is a three-tiered hybrid approach, designed to build confidence layer by layer:
 
 1. **Tier 1: Translation Correctness:** We first prove that the PyTorch code is a faithful, numerically precise reimplementation of the original C code's physical model. The C code is treated as the "ground truth" specification.
@@ -23,6 +22,8 @@ All tests will be implemented using the PyTest framework.
 - **Targeted tests:** Prefer parametrised tests that iterate over `device in {"cpu", "cuda"}` (guarded by `torch.cuda.is_available()`). At minimum, ensure a `gpu_smoke` marker or equivalent pytest node exercises the new logic on CUDA before declaring success.
 - **Helper utilities:** Encapsulate device/dtype harmonisation in small helpers (e.g., `tensor.to(other_tensor)` or `type_as`). Centralise these helpers in reusable modules to keep the rule enforceable across future PyTorch projects.
 - **CI gate:** If CI offers GPU runners, add a fast smoke job that runs the `gpu_smoke` marker (or agreed command) so regressions like CPU↔GPU tensor mixing fail quickly.
+- **Vectorization check:** Confirm `_compute_physics_for_position` and related helpers remain batched across sources/phi/mosaic/oversample; extend broadcast dimensions instead of adding Python loops.
+- **Runtime checklist:** Consult `docs/development/pytorch_runtime_checklist.md` during development and cite it in fix-plan notes for PyTorch changes.
 
 ## 2. Configuration Parity
 
@@ -40,6 +41,7 @@ Configuration mismatches are the most common source of test failures. Always ver
 - Proper unit conversions at boundaries
  - Explicit convention selection: tests and harnesses MUST pass `-convention` (or equivalent API flag) to avoid implicit CUSTOM switching when vector parameters are present
 
+
 ## 2.1 Ground Truth: Parallel Trace-Driven Validation
 
 The foundation of our testing strategy is a "Golden Suite" of test data. Crucially, final-output comparison is insufficient for effective debugging. Our strategy is therefore centered on **Parallel Trace-Driven Validation**.
@@ -50,7 +52,6 @@ For each test case, the Golden Suite must contain three components:
 3. **PyTorch Trace Log:** An identical, step-by-step log from the PyTorch implementation for the same pixel.
 
 This allows for direct, line-by-line comparison of the entire physics calculation, making it possible to pinpoint the exact line of code where a divergence occurs.
-
 ### 2.2 Instrumenting the C Code
 
 The `nanoBragg.c` source in `golden_suite_generator/` must be instrumented with a `-dump_pixel <slow> <fast>` command-line flag. When run with this flag, the program must write a detailed log file (`<test_case_name>_C_trace.log`) containing key intermediate variables (e.g., `scattering_vector`, `h`, `k`, `l`, `F_cell`, `F_latt`, `omega_pixel`, `polar`) for the specified pixel. This provides the ground truth for component-level testing.

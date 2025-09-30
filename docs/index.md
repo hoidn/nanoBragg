@@ -9,6 +9,11 @@ Welcome to the central index for all `nanoBragg-PyTorch` project documentation. 
 These are the core, living documents that guide the project.
 
 ### Core Project Guides
+### PyTorch Guardrails
+* **[PyTorch Runtime Checklist](./development/pytorch_runtime_checklist.md)** – quick do/don’t list for vectorization and device placement. Always review before editing simulator code.
+* **[PyTorch Design](./architecture/pytorch_design.md#vectorization-strategy)** – detailed explanation of the required broadcast shapes and batched flows.
+* **[Testing Strategy §1.4](./development/testing_strategy.md#14-pytorch-device--dtype-discipline)** – required CPU/GPU smoke tests and compile checks.
+
 * **[CLAUDE.md](../CLAUDE.md)** - The primary instruction set for the AI agent.
 * **[README.md](../README.md)** - The main project entry point.
 * **[README_PYTORCH.md](../README_PYTORCH.md)** - Comprehensive user guide for the PyTorch implementation, including CLI usage, parallel comparison tools, and visualization.
