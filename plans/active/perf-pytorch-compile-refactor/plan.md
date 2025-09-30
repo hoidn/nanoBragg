@@ -63,46 +63,48 @@ Exit Criteria: Dynamo graph key identical across three simulator instantiations 
 | P1.4 | Remove CPU fallback branch triggered by scalar misset angles | [X] | Verified call sites (crystal.py:599-601) already provide tensor inputs; no CPU branches remain in hot paths. |
 | P1.5 | Document before/after compile graphs & cold/warm timings | [X] | Commit 9dddb28 completes P1.1-P1.4; test suite passes 98/7/1. Benchmark run deferred to Phase 2 (cache metrics more meaningful). |
 
-### Phase 2 — Shared Compiled Kernel Cache
-Goal: Reuse a compiled `_compute_physics_for_position` across simulator instances sharing runtime parameters.
-Prerqs: Phase 0 blueprint approved, Phase 1 graph stability confirmed.
-Exit Criteria: Benchmark shows second→tenth simulator instantiations skip compile (<50 ms setup) with cache-hit log in `reports/benchmarks/<date>-perf-cache/cache_hits.log`.
+### Phase 2 — Cross-Instance Cache Validation
+Goal: Prove torch.compile cache hits cover all supported workloads (devices, dtypes, multi-source counts) and capture reproducible metrics.
+Prerqs: Phase 0 and Phase 1 artifacts; review `phase2_investigation_findings.md`.
+Exit Criteria: JSON+log artifacts under `reports/benchmarks/<date>-compile-cache/` demonstrating ≥50× speedup between first-instance cold run and subsequent instantiations across CPU float64/float32 and CUDA float32 (if available), including a multi-source case; docs/fix_plan.md updated with findings.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| P2.1 | Implement cache container per blueprint (module singleton or helper class) | [ ] | Add under `src/nanobrag_torch/utils/runtime_cache.py`; ensure device/dtype aware. |
-| P2.2 | Plumb cache lookup into `Simulator.__init__` | [ ] | Inject debug counter (`NB_SIM_CACHE_DEBUG`) to print hit/miss; disable in production. |
-| P2.3 | Extend benchmark script to span multiple constructions | [ ] | Update `scripts/benchmarks/benchmark_detailed.py` to loop N=5 instantiations; capture compile timings. |
-| P2.4 | Validate gradients unaffected | [ ] | Run `pytest tests/test_units.py::TestCrystalGeometry::test_gradients` (or equivalent) with cache enabled. |
+| P2.1 | Extend `investigate_compile_cache.py` to parameterize device, dtype, and multi-source counts | [ ] | Add CLI flags `--devices`, `--dtypes`, `--sources` and emit a JSON summary; ensure script writes artifacts under `reports/benchmarks/<date>-compile-cache/`. |
+| P2.2 | Run cache validation on CPU (`float64` and `float32`) | [ ] | Command: `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/investigate_compile_cache.py --instances 5 --size 256 --device cpu --dtypes float64,float32 --sources 1,3`; archive stdout + JSON. |
+| P2.3 | Run cache validation on CUDA float32 (skip gracefully if unavailable) | [ ] | Same command with `--device cuda`; capture warm/cold timings and note if CUDA unavailable. |
+| P2.4 | Document cache-hit thresholds in plan + fix_plan | [ ] | Summarize minimum cache-hit speedup (target ≥50×) and list artifact paths in this plan and docs/fix_plan.md. |
 
-### Phase 3 — Remove Full-Graph Blockers
-Goal: Enable `torch.compile(fullgraph=True)` by eliminating data-dependent host branches and `.item()` calls.
-Prerqs: Phase 1 + 2 artifacts, knowledge of interpolation guard logic (`_tricubic_interpolation`).
-Exit Criteria: Successful `torch.compile(fullgraph=True, mode="max-autotune")` run on CUDA + CPU with logs archived under `reports/benchmarks/<date>-fullgraph/`.
 
-| ID | Task Description | State | How/Why & Guidance |
-| --- | --- | --- | --- |
-| P3.1 | Refactor `_tricubic_interpolation` guard (`torch.any(out_of_bounds)`) using tensor control flow | [ ] | Evaluate `torch.where` or `torch.cond`; confirm parity via targeted unit test. |
-| P3.2 | Replace `.item()` driven toggles (e.g., `Crystal.interpolate`) with tensor-safe alternatives | [ ] | Introduce config-time ints or `bool` flags stored outside grad path; update tests. |
-| P3.3 | Audit remaining host-side branches in simulator + models | [ ] | Use Dynamo trace logs to identify auto-guards; capture findings in `reports/benchmarks/<date>-fullgraph/host_branch_audit.md`. |
-| P3.4 | Attempt `fullgraph=True` compile on CPU & CUDA | [ ] | Record command, success/failure, and fallback reasons; include stack traces if still blocked. |
-
-### Phase 4 — Kernel Fusion Follow-Up
-Goal: Quantify kernel launch reduction and scope custom kernel fallback if Dynamo remains fragmented.
-Prerqs: Phase 3 results (success or documented blocker) plus profiler baselines.
-Exit Criteria: Report `reports/benchmarks/<date>-fusion/summary.md` capturing kernel counts before/after and go/no-go decision on Triton prototype.
+### Phase 3 — Steady-State Performance vs C
+Goal: Re-benchmark nanoBragg after cache validation to confirm warm-run PyTorch throughput relative to the C reference.
+Prerqs: Phase 2 JSON summary committed.
+Exit Criteria: `reports/benchmarks/<date>-perf-summary/` containing cold/warm timings for CPU and CUDA, paired C timings, and analysis showing whether PyTorch warm runs meet or beat C; docs/fix_plan.md updated with decision.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| P4.1 | Capture profiler traces pre/post Phase 3 | [ ] | Use `torch.profiler` or Nsight; annotate kernel counts and durations. |
-| P4.2 | Decide on Triton fallback scope | [ ] | If Dynamo still launches >5 kernels, outline Triton MVP (oversample=1) with acceptance tests. |
-| P4.3 | Draft Triton experiment checklist | [ ] | Only execute after parity backlog clears; store under `plans/archive/` if deferred. |
+| P3.1 | Harden `benchmark_detailed.py` (zero-division guards, CLI size selection) | [ ] | Ensure warm-setup = 0 is handled; add CLI args `--sizes`, `--iterations`; maintain repo standards. |
+| P3.2 | Collect benchmark data on CPU | [ ] | Command: `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 256,512,1024 --device cpu --iterations 2`; store metrics under `reports/benchmarks/<date>-perf-summary/cpu/`. |
+| P3.3 | Collect benchmark data on CUDA (if available) | [ ] | Run same command with `--device cuda`; synchronize and archive metrics under `reports/benchmarks/<date>-perf-summary/cuda/`. |
+| P3.4 | Compare against C baseline and decide next optimizations | [ ] | Analyse warm-run ratios vs C; if PyTorch slower by >1.5× for any size, propose follow-up optimization (fullgraph/Triton) and log in docs/fix_plan.md. |
+
+
+### Phase 4 — Graph Stabilization (Conditional)
+Goal: Execute Dynamo graph cleanup or Triton fusion only if Phase 3 shows persistent slowdowns.
+Prerqs: Phase 3 analysis requiring further optimization.
+Exit Criteria: Documented decision in this plan (either defer because warm runs meet target or outline follow-on plan for graph-level changes).
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| P4.1 | Audit Dynamo graph breaks using new benchmark traces | [ ] | Use `TORCH_LOGS=dynamic` on representative runs; capture under `reports/benchmarks/<date>-graph-audit.txt`. |
+| P4.2 | Prototype mitigation (`fullgraph=True` or Triton) | [ ] | Only execute if P3.4 flags >1.5× deficit; document reproducible commands; ensure parity harness passes before/after. |
+| P4.3 | Record go/no-go decision | [ ] | Update docs/fix_plan.md and archive plan if no further work required. |
+
 
 ## Exit criteria
-- Repeated simulator construction (e.g., 10 consecutive runs at 1024², float32, CUDA) shows ≤50 ms setup after first compile (cache hit confirmed).
-- `torch.profiler` trace shows ≤3 kernels dominating runtime for `_compute_physics_for_position` (vs current ~20).
-- Benchmark script demonstrates ≥2× speedup at 1024² relative to current warm baseline without parity regressions.
-- `docs/fix_plan.md` `[PERF-PYTORCH-004]` entry updated with attempt logs, metrics, and this plan marked as complete (move to archive).
+- Cache validation artifacts demonstrate ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (if available), including a multi-source case, with paths recorded in this plan and docs/fix_plan.md.
+- `scripts/benchmarks/benchmark_detailed.py` produces reproducible cold/warm timings on CPU (and CUDA when available) without ZeroDivisionError; metrics archived under `reports/benchmarks/<date>-perf-summary>/` alongside C baselines.
+- docs/fix_plan.md `[PERF-PYTORCH-004]` entry updated with cache-validation and steady-state benchmark findings plus closure/next-step decision.
 
 ## Notes for Ralph
 - Work must happen under `prompts/perf_debug.md` (or `prompts/debug.md` if perf prompt unavailable); no more verification-only loops while the plan is active.
@@ -116,13 +118,9 @@ Exit Criteria: Report `reports/benchmarks/<date>-fusion/summary.md` capturing ke
 - Phase 1: Hoist static tensors & geometry helpers
 - Alternative Investigation: torch.compile cross-instance caching analysis
 
-**❌ CANCELLED (torch.compile already provides desired functionality):**
-- Phase 2: Shared Compiled Kernel Cache
-- Phase 3: Remove Full-Graph Blockers  
-- Phase 4: Kernel Fusion Follow-Up
+**⏳ IN PROGRESS:**
+- Phase 2: Cross-Instance Cache Validation (CLI extensions + multi-device data outstanding)
+- Phase 3: Steady-State Performance vs C (blocked by Phase 2 artifacts)
 
-**KEY FINDING:** torch.compile's internal cache automatically reuses compiled kernels across Simulator instances after Phase 0 pure function refactoring. Observed 67-238x speedup on subsequent instances (Instance 1: ~2800ms at 256², Instances 2+: ~12ms). No explicit cache implementation needed.
-
-**RECOMMENDATION:** Close PERF-PYTORCH-004 as **COMPLETE**. The original goal (eliminate per-instance recompilation overhead) has been achieved through architectural refactoring (Phase 0) + torch.compile's automatic caching.
-
-See `phase2_investigation_findings.md` for complete analysis and benchmarks.
+**🔜 CONDITIONAL:**
+- Phase 4: Graph Stabilization (execute only if Phase 3 shows >1.5× deficit)

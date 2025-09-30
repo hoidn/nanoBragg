@@ -8,7 +8,7 @@
 ### Active Items
 - [PROTECTED-ASSETS-001] Enforce `docs/index.md` protection — Priority: Medium, Status: pending (guard any file listed there from deletion; update CLAUDE.md + hygiene SOP)
 - [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — Priority: Medium, Status: pending (plan: plans/active/repo-hygiene-002/plan.md)
-- [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: High, Status: in_progress (Phase 1 complete ✓; Phase 2 pending — see plans/active/perf-pytorch-compile-refactor/plan.md)
+- [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: High, Status: in_progress (Phase 2 cache validation outstanding; Phase 3 steady-state benchmarks blocked until toolchain hardened — see plans/active/perf-pytorch-compile-refactor/plan.md)
 - [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
 - [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: done
 - [PERF-PYTORCH-006] Float32 / Mixed Precision Performance Mode — Priority: Medium, Status: done
@@ -1540,6 +1540,13 @@
 - **Plan adjustment:** Phase 1 has been retrofitted with explicit checklist items P1.1–P1.5 to (a) swap residual guard factories to `.new_tensor`/`clamp_min`, (b) pre-normalise incident beam tensors, (c) refactor `angles_to_rotation_matrix` to reuse device-local caches, (d) guarantee misset angles stay tensors end-to-end, and (e) capture before/after compile traces. These tasks must complete before pursuing caching (Phase 2).
 - **Action for Ralph:** Resume work under `prompts/perf_debug.md` once AT parity unblocked; implement P1.1–P1.4 in a single focused branch and archive metrics under `reports/benchmarks/<date>-perf-phase1/`. Do **not** attempt cache wiring or Triton experiments until Dynamo graph keys stabilize.
 - **Next checkpoint:** After P1.5 artifacts are captured, notify supervisor so we can green-light Phase 2 cache implementation.
+
+### [PERF-PYTORCH-004] Update - 2025-10-01 (galph loop Q)
+
+- **Investigation summary:** Commit 1940066 added `scripts/benchmarks/investigate_compile_cache.py` and declared Phase 2–4 redundant after observing CPU float64 cache hits, but produced no GPU or multi-source coverage and no structured metrics.
+- **Supervisor findings:** The investigation script hard-codes a single device/dtype path and only prints timings; `scripts/benchmarks/benchmark_detailed.py` currently crashes when warm setup times reach 0 (ZeroDivisionError around line 266), leaving steady-state throughput vs C unmeasured.
+- **Plan updates:** Phase 2 now requires extending the cache investigation script with multi-device/dtype CLI flags, capturing JSON summaries, and archiving artifacts; Phase 3 focuses on hardening `benchmark_detailed.py` before collecting CPU/GPU cold vs warm data.
+- **Blocking issues:** No CUDA validation, no multi-source cache proof, and broken benchmarking tooling keep PERF-PYTORCH-004 exit criteria unmet—Ralph must complete P2.1–P2.4 before making new performance claims.
 
 ### [PERF-PYTORCH-004] Update - 2025-09-30
 

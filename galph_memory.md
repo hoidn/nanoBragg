@@ -85,3 +85,19 @@
 - Repo state: `.claude` remains locally dirty per user policy; no other uncommitted files.
 - Updated supervisor startup instructions: attempt `timeout 30 git pull --rebase`, abort on timeout, then fall back to merge pull; log whichever path occurs.
 - Current branch should be `feature/spec-based`, but repo is presently in detached HEAD due to the ongoing rebase; fix before next loop.
+
+## 2025-10-01 (galph loop Q)
+- Startup sync: unstaged local edits blocked `git pull --rebase` (galph_memory.md/supervisor.sh); stashed, completed the existing rebase, restashed, pulled latest (commit 1940066), restored local notes. Repo now clean except for plan/fix_plan updates made this loop.
+- Coin flip → tails, so skipped commit-history audit per instructions.
+- Long-term goal assessment:
+  * `scripts/benchmarks/investigate_compile_cache.py` (commit 1940066) only measures CPU float64 single-source cases and emits console text—no GPU coverage, no JSON artifacts, no multi-source proof.
+  * `scripts/benchmarks/benchmark_detailed.py` currently throws `ZeroDivisionError` when warm setup hits 0 (observed while invoking `--help`), leaving PyTorch vs C steady-state comparison unverified.
+  * Torch.compile still wraps the shim method per instance; caching appears to work for trivial cases but lacks validation for mixed dtype/device workloads, so performance claims remain anecdotal.
+- Actions this loop:
+  * Reopened PERF-PYTORCH-004 Phase 2/3 objectives by rewriting `plans/active/perf-pytorch-compile-refactor/plan.md` to focus on multi-device cache validation and steady-state benchmarking (Phases 2–4 checklists refreshed).
+  * Updated `docs/fix_plan.md` active item and attempt log with new blocking issues (missing GPU coverage, benchmark tool crash) and linked plan tasks.
+- Follow-ups for Ralph:
+  1. Extend `investigate_compile_cache.py` per plan P2.1, then run CPU/GPU cache validation batches and publish JSON/log artifacts (P2.2–P2.4).
+  2. Harden `benchmark_detailed.py` to tolerate zero warm-setup time and add CLI size controls before collecting new CPU/GPU runs (P3.1–P3.3).
+  3. Only after capturing these metrics decide whether further graph work (Phase 4) is needed.
+- Repo status for next loop: expect pending changes in docs/fix_plan.md and plans/active/perf-pytorch-compile-refactor/plan.md until committed this round; no other dirty files tracked.
