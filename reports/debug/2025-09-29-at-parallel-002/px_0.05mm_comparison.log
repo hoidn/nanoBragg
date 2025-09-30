@@ -1,0 +1,30 @@
+C binary: /home/ollie/Documents/nanoBragg/golden_suite_generator/nanoBragg
+PyTorch command: nanoBragg
+
+Running C implementation...
+C runtime: 0.006 s
+Running PyTorch implementation...
+Py runtime: 4.874 s
+
+Loading float images...
+C image shape: (256, 256)
+PyTorch image shape: (256, 256)
+
+Computing metrics...
+
+==================================================
+COMPARISON SUMMARY
+==================================================
+Correlation: 0.999867
+RMSE: 0.002440
+Max absolute difference: 0.136366
+C sum: 1125.12
+Py sum: 1167.20
+Sum ratio (Py/C): 1.037399
+Mean peak distance: 0.00 pixels
+Max peak distance: 0.00 pixels
+Runtime speedup (C/Py): 0.00x
+
+Saving PNG previews to reports/debug/2025-09-29-at-parallel-002/px_0.05mm/
+
+✗ FAIL: Correlation 0.999867 < 0.9999

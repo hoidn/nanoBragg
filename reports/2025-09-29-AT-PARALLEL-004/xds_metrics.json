@@ -1,0 +1,15 @@
+{
+  "correlation": -0.022990160017391792,
+  "mse": 92.20964813232422,
+  "rmse": 9.602585792541504,
+  "max_abs_diff": 125.61897277832031,
+  "c_sum": 71265.53125,
+  "py_sum": 76151.2109375,
+  "sum_ratio": 1.0685559989774158,
+  "case_id": "AT-PARALLEL-004",
+  "run_name": "xds",
+  "args": "-default_F 100 -cell 100 100 100 90 90 90 -lambda 1.0 -N 5 -detpixels 256 -distance 100 -pixel 0.1 -seed 1 -xds -Xbeam 25.6 -Ybeam 25.6",
+  "c_binary": "golden_suite_generator/nanoBragg",
+  "pytorch_cli": "/home/ollie/miniconda3/envs/pytorch/bin/python3.10 -m nanobrag_torch",
+  "timestamp": "2025-09-29T19:03:36.313836"
+}

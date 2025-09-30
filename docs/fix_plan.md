@@ -6,19 +6,32 @@
 ---
 ## Active Focus
 
-1. **Parity Harness Coverage Expansion** *(in_progress)*
+1. **Parity Harness Coverage Expansion** *(queued)*
    - Goal: ensure every parity-threshold AT (specs/spec-a-parallel.md) has a canonical entry in `tests/parity_cases.yaml` and executes via `tests/test_parity_matrix.py`.
    - Status: Harness file `tests/test_parity_matrix.py` created (2025-09-29); initial parity cases exist for AT-PARALLEL-001/002/004/006/007.
    - Exit criteria: parity matrix collects ≥1 case per AT with thresholds cited in metrics.json; `pytest -k parity_matrix` passes.
    - Reproduction: `NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py`.
    - Next: Verify harness executes cleanly for existing cases, then add remaining ATs (003/005/008/009/010/011/012/020/022/023/024/025/026/027/028/029).
 
-2. **Docs-as-Data CI lint** *(queued)*  
-   - Goal: add automated lint ensuring spec ↔ matrix ↔ YAML consistency and artifact references before close-out loops.  
+2. **Docs-as-Data CI lint** *(queued)*
+   - Goal: add automated lint ensuring spec ↔ matrix ↔ YAML consistency and artifact references before close-out loops.
    - Exit criteria: CI job fails when parity mapping/artifact requirements are unmet.
 
 ---
 ## Recent Resolutions
+
+- **AT-PARALLEL-004 XDS Convention Failure** (2025-09-29 19:09 UTC)
+  - Root Cause: Convention AND pivot-mode dependent Xbeam/Ybeam handling not implemented in CLI
+  - C-code behavior: XDS/DIALS conventions force SAMPLE pivot; for SAMPLE pivot, Xbeam/Ybeam are IGNORED and detector center (detsize/2) is used instead
+  - PyTorch bug: CLI always mapped Xbeam/Ybeam to beam_center regardless of convention, causing spatial misalignment
+  - Fix: Added convention-aware logic in `__main__.py:844-889`:
+    - XDS/DIALS: Ignore Xbeam/Ybeam, use detector center defaults (SAMPLE pivot forced by convention)
+    - MOSFLM/DENZO: Apply axis swap (Fbeam←Ybeam, Sbeam←Xbeam) + +0.5 pixel offset in Detector.__init__
+    - ADXV: Apply Y-axis flip
+  - Metrics: XDS improved from corr=-0.023 to >0.99 (PASSES); MOSFLM remains >0.99 (PASSES)
+  - Parity Status: 14/16 pass (AT-PARALLEL-002: pixel-0.05mm/0.4mm still fail, pre-existing)
+  - Artifacts: `reports/2025-09-29-AT-PARALLEL-004/{xds,mosflm}_metrics.json`
+  - Files Changed: `src/nanobrag_torch/__main__.py` (lines 844-889), `src/nanobrag_torch/models/detector.py` (lines 87-97)
 
 - **Parity Harness Bootstrap** (2025-09-29)
   - Context: Debugging loop Step 0 detected missing `tests/test_parity_matrix.py` (blocking condition per prompt).

@@ -842,10 +842,51 @@ def main():
         )
 
         # Set beam center if provided (values are in mm)
-        if 'beam_center_x_mm' in config:
-            detector_config.beam_center_s = config['beam_center_x_mm']
-        if 'beam_center_y_mm' in config:
-            detector_config.beam_center_f = config['beam_center_y_mm']
+        # CRITICAL: C-code Xbeam/Ybeam semantics are convention AND pivot-mode dependent! (AT-PARALLEL-004 root cause)
+        #
+        # C-code behavior (nanoBragg.c lines 631-648, 1206-1275):
+        #   - `-Xbeam`/`-Ybeam` set detector_pivot = BEAM (line 632, 637)
+        #   - `-Xclose`/`-Yclose` set detector_pivot = SAMPLE (line 642, 647)
+        #   - Convention selection OVERRIDES pivot: XDS/DIALS force SAMPLE pivot (lines 1250, 1265)
+        #   - For SAMPLE pivot: Xbeam/Ybeam are IGNORED; C uses detector center (Fclose=detsize/2)
+        #   - For BEAM pivot: Xbeam/Ybeam are mapped to Fbeam/Sbeam with convention-specific axis swaps
+        #
+        # Result: `-xds -Xbeam X -Ybeam Y` is contradictory; C resolves by using SAMPLE pivot
+        #         and ignoring X/Y, falling back to detector center (detsize_f/2, detsize_s/2)
+        #
+        # PyTorch must replicate this: For XDS/DIALS conventions, ignore Xbeam/Ybeam and use detector center.
+        convention = detector_config.detector_convention
+        pixel_size_mm = detector_config.pixel_size_mm
+
+        if 'beam_center_x_mm' in config and 'beam_center_y_mm' in config:
+            Xbeam_mm = config['beam_center_x_mm']
+            Ybeam_mm = config['beam_center_y_mm']
+
+            # Check if convention forces SAMPLE pivot (XDS/DIALS)
+            # For these conventions, Xbeam/Ybeam are ignored; use detector center instead
+            if convention in [DetectorConvention.XDS, DetectorConvention.DIALS]:
+                # XDS/DIALS: Convention forces SAMPLE pivot; ignore Xbeam/Ybeam
+                # Use detector center: Fclose = detsize_f/2, Sclose = detsize_s/2 (C line 1178)
+                # Leave beam_center_f and beam_center_s at their defaults (detector center)
+                # NOTE: DetectorConfig defaults are already set to detector center
+                pass
+            elif convention in [DetectorConvention.MOSFLM, DetectorConvention.DENZO]:
+                # MOSFLM/DENZO: BEAM pivot with axis swap (Fbeam ← Ybeam, Sbeam ← Xbeam)
+                # +0.5 pixel offset is added later in Detector.__init__
+                detector_config.beam_center_f = Ybeam_mm
+                detector_config.beam_center_s = Xbeam_mm
+            elif convention == DetectorConvention.ADXV:
+                # ADXV: BEAM pivot with Y-axis flip
+                detsize_s_mm = detector_config.spixels * pixel_size_mm
+                detector_config.beam_center_f = Xbeam_mm
+                detector_config.beam_center_s = detsize_s_mm - Ybeam_mm
+            elif convention == DetectorConvention.CUSTOM:
+                # CUSTOM: No axis swap (Fbeam ← Xbeam, Sbeam ← Ybeam)
+                detector_config.beam_center_f = Xbeam_mm
+                detector_config.beam_center_s = Ybeam_mm
+        elif 'beam_center_x_mm' in config or 'beam_center_y_mm' in config:
+            # Partial beam center - this shouldn't happen in well-formed input
+            raise ValueError("Both -Xbeam and -Ybeam must be provided together")
 
         # ROI
         if 'roi' in config:

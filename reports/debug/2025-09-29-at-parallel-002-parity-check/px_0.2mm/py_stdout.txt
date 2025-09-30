@@ -1,0 +1,14 @@
+Running simulation...
+  Detector: 256x256 pixels
+  Crystal: 100.0x100.0x100.0 Å
+  Wavelength: 6.20 Å
+auto-selected 1-fold oversampling
+
+Statistics:
+  Max intensity: 6.250e+02 at pixel (128, 128)
+  Mean: 3.816e+00
+  RMS: 2.693e+01
+  RMSD: 2.666e+01
+Wrote float image to /tmp/tmprc62_bt6_py.bin
+
+Simulation complete.

@@ -1,0 +1,101 @@
+=== PyTorch Trace: AT-PARALLEL-002 @ 0.4mm ===
+Tracing pixel: (120, 120)
+
+=== CONFIGURATION ===
+Pixel size: 0.4 mm = 0.0004000000 m
+Detector: 256x256 pixels
+Distance: 100.0 mm = 0.1000000000 m
+Beam center (mm): (25.6, 25.6)
+Beam center (pixels): (64.500000, 64.500000)
+Wavelength: 6.2 Angstrom = 0.000000000620000 m
+
+=== DETECTOR GEOMETRY ===
+pix0_vector (m): tensor([ 0.1000,  0.0258, -0.0258], dtype=torch.float64)
+Basis vectors:
+  fdet: tensor([0., 0., 1.], dtype=torch.float64)
+  sdet: tensor([ 0., -1.,  0.], dtype=torch.float64)
+  odet: tensor([1., 0., 0.], dtype=torch.float64)
+
+=== PIXEL [120,120] GEOMETRY ===
+Pixel coordinate (m): tensor([ 0.1000, -0.0224,  0.0224], dtype=torch.float64)
+Distance to pixel (R): 0.1048976644 m
+Omega (point-pixel, pixel_size^2/R^2): 1.454080148897807e-05 sr
+Solid angle (with obliquity): 1.386189251198911e-05 sr
+Close distance: 0.1000000000 m
+Obliquity factor (close_distance/R): 0.953310071834516
+
+=== SCATTERING VECTORS ===
+Wavelength (m): 6.200000000000000e-10
+k_in (incident, 1/m): tensor([1.6129e+09, 0.0000e+00, 0.0000e+00], dtype=torch.float64)
+  |k_in|: 1.612903225806452e+09 1/m
+Diffracted unit vector: tensor([ 0.9533, -0.2135,  0.2135], dtype=torch.float64)
+k_out (diffracted, 1/m): tensor([ 1.5376e+09, -3.4442e+08,  3.4442e+08], dtype=torch.float64)
+  |k_out|: 1.612903225806451e+09 1/m
+S vector (1/Angstrom): tensor([-0.0075, -0.0344,  0.0344], dtype=torch.float64)
+  |S|: 4.928728676973373e-02 1/Angstrom
+
+=== CRYSTAL VECTORS ===
+Real space vectors (Angstrom):
+  a: tensor([1.0000e+02, 6.1232e-15, 6.1232e-15], dtype=torch.float64)
+  b: tensor([0.0000e+00, 1.0000e+02, 6.1232e-15], dtype=torch.float64)
+  c: tensor([  0.0000,   0.0000, 100.0000], dtype=torch.float64)
+Miller indices (fractional):
+  h: -0.7530633575
+  k: -3.4442170337
+  l: 3.4442170337
+
+Miller indices (rounded):
+  h_int: -1
+  k_int: -3
+  l_int: 3
+Structure factor F: 100.0
+
+=== SHAPE FACTORS ===
+N_cells: (5, 5, 5)
+Fractional Miller indices:
+  h_frac: 0.2469366425
+  k_frac: -0.4442170337
+  l_frac: 0.4442170337
+Lattice factors:
+  F_latt_a = sincg(π*0.246937, 5): -9.600253870549416e-01
+  F_latt_b = sincg(π*-0.444217, 5): 6.500028886987340e-01
+  F_latt_c = sincg(π*0.444217, 5): 6.500028886987442e-01
+  F_latt (product): -4.056143312300864e-01
+
+=== INTENSITY CALCULATION ===
+F^2: 1.000000000000000e+04
+F_latt^2: 1.645229856992303e-01
+Solid angle: 1.386189251198911e-05 sr
+I_pixel (before fluence): 2.280599943514252e-02
+Fluence: 1.000000000000000e+12 photons/mm^2
+Pixel area: 1.600000000000000e-01 mm^2
+Photons per pixel: 1.600000000000000e+11
+I_final (with fluence): 3.648959909622804e+09
+
+=== COMPARISON METRICS ===
+To compare with C trace, check:
+1. pix0_vector components match within 1e-12
+2. R (distance to pixel) matches within 1e-10
+3. Solid angle matches within 1e-15 (relative)
+4. Miller indices match within 1e-6
+5. F_latt matches within 1e-12
+6. Final intensity matches within 1%
+
+=== FULL SIMULATION CONTEXT ===
+auto-selected 1-fold oversampling
+Full image statistics:
+  Shape: torch.Size([256, 256])
+  Min: 4.136653e-29
+  Max: 1.985198e-14
+  Mean: 1.022952e-16
+  Sum: 6.704018e-12
+  Traced pixel [120,120]: 1.810977e-19
+
+=== DONE ===
+To compare with C trace:
+1. Add printf statements to nanoBragg.c for the same pixel
+2. Recompile: make -C golden_suite_generator
+3. Run: ./golden_suite_generator/nanoBragg -detpixels 256 -pixel 0.4 \
+         -distance 100 -Xbeam 25.6 -Ybeam 25.6 -cell 100 100 100 90 90 90 \
+         -lambda 6.2 -default_F 100 -N 5 -floatfile /tmp/test.bin 2>&1 | grep TRACE
+4. Compare line-by-line with this output

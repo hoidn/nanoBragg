@@ -1,0 +1,96 @@
+
+============================================================
+Pixel size: 0.05 mm
+============================================================
+Running C simulation...
+Running PyTorch simulation...
+auto-selected 1-fold oversampling
+
+Image statistics:
+  C:       min=2.010607e-14, max=2.217143e+00, mean=1.716803e-02, sum=1.125124e+03
+  PyTorch: min=1.636498e-31, max=1.868873e-17, mean=1.414263e-19, sum=9.268513e-15
+
+Ratios (PyTorch/C):
+  Mean ratio: 0.000000 (-100.00% difference)
+  Sum ratio:  0.000000 (-100.00% difference)
+  Max ratio:  0.000000 (-100.00% difference)
+  Correlation: 0.0000000049
+
+Pixel area: 0.002500 mm^2
+If error scales with pixel area: expected ratio = 1.001094
+
+============================================================
+Pixel size: 0.1 mm
+============================================================
+Running C simulation...
+Running PyTorch simulation...
+auto-selected 1-fold oversampling
+
+Image statistics:
+  C:       min=6.288548e-14, max=1.499469e+02, mean=9.000947e-01, sum=5.898861e+04
+  PyTorch: min=5.056565e-31, max=1.190698e-15, mean=7.190125e-18, sum=4.712120e-13
+
+Ratios (PyTorch/C):
+  Mean ratio: 0.000000 (-100.00% difference)
+  Sum ratio:  0.000000 (-100.00% difference)
+  Max ratio:  0.000000 (-100.00% difference)
+  Correlation: 0.0000005033
+
+Pixel area: 0.010000 mm^2
+If error scales with pixel area: expected ratio = 1.004375
+
+============================================================
+Pixel size: 0.2 mm
+============================================================
+Running C simulation...
+Running PyTorch simulation...
+auto-selected 1-fold oversampling
+
+Image statistics:
+  C:       min=3.216972e-13, max=6.250000e+02, mean=3.793880e+00, sum=2.486358e+05
+  PyTorch: min=2.618396e-30, max=4.962995e-15, mean=3.029895e-17, sum=1.985672e-12
+
+Ratios (PyTorch/C):
+  Mean ratio: 0.000000 (-100.00% difference)
+  Sum ratio:  0.000000 (-100.00% difference)
+  Max ratio:  0.000000 (-100.00% difference)
+  Correlation: 0.0000021170
+
+Pixel area: 0.040000 mm^2
+If error scales with pixel area: expected ratio = 1.017500
+
+============================================================
+Pixel size: 0.4 mm
+============================================================
+Running C simulation...
+Running PyTorch simulation...
+auto-selected 1-fold oversampling
+
+Image statistics:
+  C:       min=4.660410e-12, max=2.500000e+03, mean=1.171102e+01, sum=7.674932e+05
+  PyTorch: min=4.136653e-29, max=1.985198e-14, mean=1.022952e-16, sum=6.704018e-12
+
+Ratios (PyTorch/C):
+  Mean ratio: 0.000000 (-100.00% difference)
+  Sum ratio:  0.000000 (-100.00% difference)
+  Max ratio:  0.000000 (-100.00% difference)
+  Correlation: 0.0000065074
+
+Pixel area: 0.160000 mm^2
+If error scales with pixel area: expected ratio = 1.070000
+
+============================================================
+SUMMARY: Intensity Ratio vs Pixel Size
+============================================================
+Pixel (mm)      Area (mm²)      Mean Ratio      Corr      
+------------------------------------------------------------
+0.05            0.002500        0.000000        0.00000000
+0.10            0.010000        0.000000        0.00000050
+0.20            0.040000        0.000000        0.00000212
+0.40            0.160000        0.000000        0.00000651
+
+Hypothesis: If ratio scales linearly with pixel_area...
+  0.05mm: predicted=0.000000, actual=0.000000, error=0.000000
+  0.10mm: predicted=-3.000000, actual=0.000000, error=3.000000
+  0.20mm: predicted=-15.000000, actual=0.000000, error=15.000000
+  0.40mm: predicted=-63.000000, actual=0.000000, error=63.000000

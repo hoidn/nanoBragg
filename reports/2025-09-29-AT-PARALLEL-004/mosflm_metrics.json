@@ -1,0 +1,15 @@
+{
+  "correlation": 0.809585660584844,
+  "mse": 17.0865478515625,
+  "rmse": 4.133587837219238,
+  "max_abs_diff": 67.85803985595703,
+  "c_sum": 75689.234375,
+  "py_sum": 74400.8359375,
+  "sum_ratio": 0.9829777847782596,
+  "case_id": "AT-PARALLEL-004",
+  "run_name": "mosflm",
+  "args": "-default_F 100 -cell 100 100 100 90 90 90 -lambda 1.0 -N 5 -detpixels 256 -distance 100 -pixel 0.1 -seed 1 -mosflm -Xbeam 25.6 -Ybeam 25.6",
+  "c_binary": "golden_suite_generator/nanoBragg",
+  "pytorch_cli": "/home/ollie/miniconda3/envs/pytorch/bin/python3.10 -m nanobrag_torch",
+  "timestamp": "2025-09-29T19:02:21.799362"
+}

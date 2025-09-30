@@ -86,11 +86,15 @@ class Detector:
 
         # Apply convention-specific pixel offsets for stored beam centers
         # This matches the C-code convention where beam centers may include offsets
+        # nanoBragg.c lines 1218-1234:
+        #   MOSFLM: Fbeam = Ybeam + 0.5*pixel_size; Sbeam = Xbeam + 0.5*pixel_size
+        #   DENZO:  Fbeam = Ybeam + 0.0*pixel_size; Sbeam = Xbeam + 0.0*pixel_size
+        #   XDS/DIALS/ADXV/CUSTOM: No offset
         if config.detector_convention == DetectorConvention.MOSFLM:
-            # MOSFLM adds +0.5 pixel offset
+            # MOSFLM: +0.5 pixel offset
             beam_center_s_pixels = beam_center_s_pixels + 0.5
             beam_center_f_pixels = beam_center_f_pixels + 0.5
-        # Note: DENZO and other conventions do NOT add the +0.5 pixel offset
+        # DENZO, XDS, DIALS, ADXV, CUSTOM: No pixel offset (0.0)
 
         # Convert to tensors on proper device
         if isinstance(beam_center_s_pixels, torch.Tensor):
