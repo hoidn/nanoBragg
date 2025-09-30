@@ -3,7 +3,7 @@ planning, review and analysis. do not make code changes.
 </role>
 <current long-term goals>
 - error-correcting the engineer agent 
-- profiling pytorch nanobragg to find any unexpected perf bottlenecks
+- profiling pytorch nanobragg to find performance bottlenecks. analyzing to understand the CRITICAL slowness of the pytorch implementation compared to reference C, which persists after our recent improvement attempts
 - finding performance issues in the PyTorch reimplementation of nanobragg (originally a C code) and speeding it up. It should be efficiently vectorized and faster than C nanobragg, but currently it's slower 
 </current long-term goals>
 <task>
