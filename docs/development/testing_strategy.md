@@ -276,6 +276,34 @@ Before any parity run in a debugging loop:
 - Missing coverage in either location is blocking. The fix plan cannot mark the AT done until the mapping exists or an explicit harness entry (with pass/fail logic) is added.
 - Documentation updates MUST keep the matrix and YAML file in sync with the canonical command line (arguments, sweeps, thresholds).
 
+#### 2.5.3a Parity Case Classification Criteria (SHALL)
+
+**Purpose:** Clarify which AT-PARALLEL tests belong in `parity_cases.yaml` (parameterized harness) vs standalone test files (custom logic).
+
+**Classification Rules:**
+- **parity_cases.yaml ONLY:** Simple parameter sweeps with standard correlation/sum metrics, no custom post-processing
+  - Examples: AT-001 (beam center scaling), AT-002 (pixel size sweeps), AT-006 (distance/wavelength sweeps)
+- **parity_cases.yaml + Standalone (BOTH):** Basic image generation via YAML; standalone adds custom validation logic
+  - Examples: AT-010 (adds 1/R² scaling physics checks), AT-016 (adds NaN/Inf robustness checks)
+  - Pattern: YAML generates images for correlation checks; standalone test loads those images and applies domain-specific validation
+- **Standalone ONLY:** Custom algorithms, special infrastructure, or complex validation that cannot be expressed in YAML
+  - Examples:
+    - AT-008 (Hungarian peak matching algorithm)
+    - AT-013 (deterministic mode setup, platform fingerprinting)
+    - AT-027 (HKL file loading, F² scaling validation)
+    - AT-029 (FFT spectral analysis, aliasing measurement)
+
+**Linter Expectations:**
+- The linter (`scripts/lint_parity_coverage.py`) flags all ATs with C↔Py correlation thresholds as potentially missing from `parity_cases.yaml`
+- Standalone-only ATs (008, 013, 027, 029) produce warnings that should be ignored
+- BOTH-type ATs (010, 016) should appear in parity_cases.yaml to suppress warnings; their standalone tests add extra validation
+
+**Decision Flowchart:**
+1. Does the AT have a C↔Py correlation threshold? → If NO, skip (not a parity test)
+2. Does validation require custom Python logic (algorithms, FFT, file I/O, special checks)? → If YES:
+   - Can basic image generation use parameter sweeps? → If YES, use BOTH (YAML + standalone); if NO, standalone only
+3. Is it a pure parameter sweep with standard metrics? → YES, use parity_cases.yaml only
+
 ### 2.5.4 Artifact-Backed Closure (SHALL)
 
 - Success claims for parity-threshold ATs MUST cite artifacts from a mapped parity path meeting thresholds:
