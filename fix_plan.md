@@ -6,17 +6,14 @@
 ## Index
 
 ### Active Items
-- [PROTECTED-ASSETS-001] Enforce `docs/index.md` protection — Priority: Medium, Status: pending (guard any file listed there from deletion; update CLAUDE.md + hygiene SOP)
-- [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — Priority: Medium, Status: pending (plan: plans/active/repo-hygiene-002/plan.md)
-- [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: High, Status: done (Phase 0-1 complete ✓; Phase 2-4 CANCELLED - torch.compile caching already works; 67-238x speedup observed)
-- [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
-- [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: done
-- [PERF-PYTORCH-006] Float32 / Mixed Precision Performance Mode — Priority: Medium, Status: done
+- None currently (all tasks complete)
 
 ### Queued Items
 - None currently
 
 ### Recently Completed (2025-10-01)
+- [PROTECTED-ASSETS-001] Enforce docs/index.md protection — done (CLAUDE.md updated, docs/index.md lists loop.sh, REPO-HYGIENE-002 plan amended with Protected Assets Rule reference)
+- [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — done (moved from 2025-09-30; nested directory removed, artifacts archived, parity tests pass)
 - [PERF-PYTORCH-004] Fuse Physics Kernels — done (Phase 0-1 complete; Phase 2-4 CANCELLED - torch.compile already provides cross-instance caching with 67-238x speedup; see plans/active/perf-pytorch-compile-refactor/phase2_investigation_findings.md)
 - [AT-PARALLEL-024-REGRESSION] PERF-PYTORCH-004 Test Compatibility — done (Fixed test to use tensor inputs after P1.4 scalar removal; all AT-PARALLEL tests now pass)
 - [ROUTING-LOOP-001] loop.sh routing guard — done (Supervisor verification
@@ -24,7 +21,6 @@
 
 ### Recently Completed (2025-09-30)
 - [AT-PARALLEL-012] Triclinic P1 Correlation Failure — done (Fixed by Attempt #16: Restored V_actual calculation per Core Rule #13; AT-012 triclinic now passes with corr≥0.9995)
-- [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — done (Removed nested directory, archived artifacts, parity tests pass)
 - [AT-PARALLEL-020-REGRESSION] Comprehensive Integration Test Correlation Failure — done (absorption parallax sign fix restored thresholds; corr≥0.99)
 - [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure — done (fixed C parsing bug + PyTorch mosaicity; both seeds pass with corr=1.0)
 - [CORE-REGRESSION-001] Phi Rotation Unit Test Failure — done (test was wrong, not implementation; fixed to match C loop formula)
@@ -237,23 +233,32 @@
   * Manual inspection confirmed removal of the redundant `prompts/main.md` pipeline and duplicate pulls.
 - Follow-up: Monitor automation once parity suite is green; reintroduce `prompts/main.md` only after supervisor sign-off.
 
-## [PROTECTED-ASSETS-001] `docs/index.md` safeguard (2025-09-30-L)
+## [PROTECTED-ASSETS-001] `docs/index.md` safeguard (2025-09-30-L → closed 2025-10-01)
 - Spec/AT: Repository hygiene discipline — assets referenced in `docs/index.md`
 - Priority: **Medium** (prevents future accidental deletions such as `loop.sh`)
-- Status: pending
-- Owner/Date: 2025-09-30 (loop L)
-- Exit Criteria: 
-  * `CLAUDE.md` explicitly instructs agents not to delete files referenced in `docs/index.md` unless the index is updated in the same change.
-  * `docs/index.md` clearly labels `loop.sh` (and other listed files) as protected automation assets.
-  * Hygiene SOP (plan REPO-HYGIENE-002 or successor) references this rule before any deletion.
+- Status: done
+- Owner/Date: 2025-10-01 (Ralph loop current)
+- Exit Criteria: ✅ SATISFIED — All three required actions complete
+  * `CLAUDE.md` explicitly instructs agents not to delete files referenced in `docs/index.md` unless the index is updated in the same change. ✅
+  * `docs/index.md` clearly labels `loop.sh` (and other listed files) as protected automation assets. ✅
+  * Hygiene SOP (plan REPO-HYGIENE-002 or successor) references this rule before any deletion. ✅
 - Findings:
   * Commit `df9858e` removed `loop.sh` during a cleanup because the plan lacked guidance; `docs/index.md` did not declare it as protected.
   * `loop.sh` underpins the supervisor automation and must remain in the repo even during hygiene sweeps.
-- Required Actions (Ralph/Galph):
-  1. Update `CLAUDE.md` with the protected-assets rule. ✅ (as of 2025-09-30 loop L)
-  2. Ensure `docs/index.md` lists `loop.sh` and marks it as a protected asset. ✅
-  3. Amend REPO-HYGIENE plans to check the index before deleting files (append guidance after H4 in `plans/active/repo-hygiene-002/plan.md`).
-- Follow-up: Close this item once the plan update lands and future hygiene commits reference the rule.
+- Implementation Summary:
+  * **Verification performed (2025-10-01):**
+    - Confirmed CLAUDE.md contains Protected Assets Rule (lines 26-28)
+    - Confirmed docs/index.md lists loop.sh as protected asset (line 21)
+    - Updated plans/active/repo-hygiene-002/plan.md H4 task to reference Protected Assets Rule from CLAUDE.md
+  * **Changed:** plans/active/repo-hygiene-002/plan.md (H4 guidance enhanced with explicit CLAUDE.md reference)
+- Validation Results:
+  * **Required Action 1:** ✅ CLAUDE.md Protected Assets Rule verified at lines 26-28
+  * **Required Action 2:** ✅ docs/index.md loop.sh protection verified at line 21
+  * **Required Action 3:** ✅ REPO-HYGIENE-002 plan H4 now references "Protected Assets Rule (CLAUDE.md)"
+- Artifacts:
+  * Modified: plans/active/repo-hygiene-002/plan.md (H4 task updated)
+  * Modified: docs/fix_plan.md (status updated, moved to Recently Completed 2025-10-01)
+- Next Actions: None - all exit criteria satisfied
 
 ## [CORE-REGRESSION-001-APPLY] Apply Documented Phi Rotation Test Fix (2025-09-30-J)
 - Spec/AT: Crystal phi rotation (nanoBragg.c:3004-3009 loop formula)
