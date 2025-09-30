@@ -1,6 +1,6 @@
-**Last Updated:** 2025-09-30 08:00 UTC
+**Last Updated:** 2025-09-30 08:15 UTC
 
-**Current Status:** AT-PARALLEL-006 complete (all tests passing). AT-PARALLEL-012 simple_cubic and tilted tests PASS; triclinic_P1 escalated for threshold policy decision (numerical precision limitation, not a bug). Starting META fix plan structure refresh.
+**Current Status:** Parity harness expansion in progress. AT-PARALLEL-011 added to parity_cases.yaml (2 runs: unpolarized/polarized). AT-PARALLEL-012 simple_cubic and tilted tests PASS; triclinic_P1 escalated for threshold policy decision. META fix plan structure refresh complete.
 
 ---
 ## Index
@@ -14,7 +14,7 @@
 
 ### Queued Items
 - [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: done (escalated)
-- Parity Harness Coverage Expansion
+- Parity Harness Coverage Expansion — Status: in_progress (AT-011 added, 23 ATs remaining)
 - Docs-as-Data CI lint
 
 ### Recently Completed (2025-09-30)
@@ -883,12 +883,25 @@
       * Exit Criteria: SATISFIED — investigation complete, recommendation documented, no code bugs found
       * Status: ESCALATED — awaiting stakeholder decision on threshold policy (relax to 0.96 vs document limitation)
 
-2. **Parity Harness Coverage Expansion** *(queued)*
+2. **Parity Harness Coverage Expansion** *(in progress)*
    - Goal: ensure every parity-threshold AT (specs/spec-a-parallel.md) has a canonical entry in `tests/parity_cases.yaml` and executes via `tests/test_parity_matrix.py`.
-   - Status: Harness file `tests/test_parity_matrix.py` created (2025-09-29); initial parity cases exist for AT-PARALLEL-001/002/004/006/007.
+   - Status: Harness file `tests/test_parity_matrix.py` created (2025-09-29); parity cases exist for AT-PARALLEL-001/002/004/006/007/011/012.
    - Exit criteria: parity matrix collects ≥1 case per AT with thresholds cited in metrics.json; `pytest -k parity_matrix` passes.
    - Reproduction: `NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py`.
-   - Next: Verify harness executes cleanly for existing cases, then add remaining ATs (003/005/008/009/010/011/012/020/022/023/024/025/026/027/028/029).
+   - **Attempts History**:
+     * [2025-09-30 08:15 UTC] Attempt #1 — Status: done (AT-PARALLEL-011 added)
+       * Context: Added AT-PARALLEL-011 (Polarization Factor Verification) to parity_cases.yaml
+       * Action: Added parity case with 2 runs (unpolarized: polarization=0.0, polarized: polarization=0.95)
+       * Base args: -default_F 100 -cell 100 100 100 90 90 90 -lambda 6.2 -N 5 -distance 100 -pixel 0.1 -detpixels 256 -mosflm -phi 0 -osc 0 -mosaic 0 -seed 1
+       * Thresholds: corr_min=0.98 (per spec-a-parallel.md:87), sum_ratio [0.9,1.1], max_abs_max=500
+       * Canonical Command: `pytest tests/test_parity_matrix.py --collect-only -q | grep "AT-PARALLEL-011"`
+       * Metrics:
+         - Test collection: 19 total parity tests (up from 17)
+         - New tests: test_parity_case[AT-PARALLEL-011-unpolarized], test_parity_case[AT-PARALLEL-011-polarized]
+       * Validation: `pytest tests/test_at_parallel_011.py -v` → 2 passed, 1 skipped (C parity test requires NB_RUN_PARALLEL=1)
+       * Artifacts: tests/parity_cases.yaml (lines 195-222)
+       * Exit Criteria: ✅ Parity case added and collected successfully
+   - Next: Add remaining ATs (003/005/008/009/010/013-018/020-029).
 
 3. **Docs-as-Data CI lint** *(queued)*
    - Goal: add automated lint ensuring spec ↔ matrix ↔ YAML consistency and artifact references before close-out loops.
@@ -986,8 +999,8 @@
 ---
 ## TODO Backlog
 
-- [ ] Add parity cases for AT-PARALLEL-003/005/008/009/010/012/013/014/015/016/017/018/020/021/022/023/024/025/026/027/028/029.  
-- [ ] Implement docs-as-data lint (spec ↔ matrix ↔ YAML ↔ fix_plan).  
+- [ ] Add parity cases for AT-PARALLEL-003/005/008/009/010/013/014/015/016/017/018/020/021/022/023/024/025/026/027/028/029 (AT-011 and AT-012 done).
+- [ ] Implement docs-as-data lint (spec ↔ matrix ↔ YAML ↔ fix_plan).
 - [ ] Convert legacy manual comparison scripts to consume parity harness outputs (optional).
 
 ---
