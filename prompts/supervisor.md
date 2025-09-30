@@ -36,7 +36,23 @@ Given your findings in <1> and <2>, think about whether there's any need for a m
 <yes case>
 - based on which long term <goal> and sub-goal is that effort / plan? 
 - Which existing docs/fix_plan.md items does it relate to? 
-- think deeply. draft / redraft the  plan and save it to a .md under plans/active/
+- think deeply. draft / redraft the plan and save it to a .md under plans/active/. Always structure the plan as a checklist: reference `plans/archive/general-detector-geometry/phase_1_checklist.md` and include (1) context/goal section and (2) a markdown table with `ID | Task Description | State | How/Why & Guidance` columns.
+  • Populate the table with concrete, verifiable checkpoints, using `[ ]`, `[P]`, `[D]` markers.
+  • Include reproduction commands, owners (if known), and exit criteria in the guidance column.
+  • Example structure (inline reference so you never have to open another file):
+    ```md
+    ## Context
+    - Initiative: <initiative name>
+    - Phase Goal: <what this phase delivers>
+    - Dependencies: <key docs/tests to consult>
+    
+    | ID | Task Description | State | How/Why & Guidance |
+    | --- | --- | --- | --- |
+    | D1 | Validate detector basis vector construction matches spec | [ ] | Re-run `pytest tests/test_at_geo_basis.py`; confirm orthonormality logs (see docs/architecture/detector.md). |
+    | D2 | Cross-check unit conversions for distance/pixel size | [ ] | Compare `DetectorConfig.distance_meters` vs raw inputs using `scripts/verify_detector_geometry.py`. |
+    | D3 | Update docs/fix_plan.md Attempts History with metrics/artifacts | [ ] | Append `Metrics:` + `Artifacts:` lines; note reproduction commands. |
+    ```
+- When refreshing an existing plan, convert it to this checklist structure if it predates the template (day-zero plan updates must retrofit the table).
 - review docs/fix_plan.md. edit if needed. cross reference the new plans .md so that ralph can find it.
 </yes case>
 </no case>
