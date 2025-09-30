@@ -1,13 +1,17 @@
 **Last Updated:** 2025-09-30 (timestamp intentionally generic per meta-update policy)
 
-**Current Status:** Ralph loop 2025-09-30-G complete - **SEVENTH consecutive routing verification - NEW REGRESSION DETECTED**. Core test suite: **97 passed, 1 FAILED** (test_phi_rotation_90_deg), 7 skipped, 1 xfailed. AT-PARALLEL: 77/48/1 (AT-012). **CRITICAL REGRESSION:** Phi rotation not being applied in Crystal.get_rotated_real_vectors() - vectors not rotating as expected (recent phi bug fix broke unit test). **ROUTING RULE VIOLATION (7x): Ralph prompt invoked SEVENTH time. MANDATORY debug.md required per ground rules.**
+**Current Status:** CORE-REGRESSION-001 resolved. Core test suite: **98 passed**, 7 skipped, 1 xfailed ✓. AT-PARALLEL: 77/48/1 (AT-012). Unit test `test_phi_rotation_90_deg` fixed to match C code behavior (C loop formula: phi=phi_start+phistep*phi_tic). Implementation was CORRECT; test was WRONG.
 
 ---
 ## Index
 
 ### Active Items
+<<<<<<< HEAD
 - [CORE-REGRESSION-001] Phi Rotation Unit Test Failure — Priority: **CRITICAL**, Status: pending (requires debug.md) — test_phi_rotation_90_deg broken by commit 8293a15
 - [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure — Priority: Critical, Status: in_progress (see plans/active/at-parallel-024/plan.md)
+=======
+- [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure — Priority: Critical, Status: pending (requires debug.md)(isn't different rng expected?)
+>>>>>>> ed848c65b6537c19af962397d12a99c23dac5094
 - [AT-PARALLEL-020-REGRESSION] Comprehensive Integration Test Correlation Failure — Priority: High, Status: pending (requires debug.md)
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: Medium, Status: pending (blocked on fullgraph=True limitation)
 - [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
@@ -18,6 +22,7 @@
 - [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: done (escalated)
 
 ### Recently Completed (2025-09-30)
+- [CORE-REGRESSION-001] Phi Rotation Unit Test Failure — done (test was wrong, not implementation; fixed to match C loop formula)
 - [AT-PARALLEL-021-PARITY] Crystal Phi Rotation Parity Failure — done (phi rotation bug fixed, both AT-021 and AT-022 pass)
 - [AT-PARALLEL-022-PARITY] Combined Detector+Crystal Rotation Parity Failure — done (fixed automatically by AT-021)
 - [HEALTH-001] Test Suite Health Assessment — done (98 passed, 7 skipped, 1 xfailed)
@@ -37,6 +42,46 @@
 
 ---
 ## Active Focus
+
+## [CORE-REGRESSION-001] Phi Rotation Unit Test Failure (2025-09-30-H)
+- Spec/AT: Crystal phi rotation (nanoBragg.c:3004-3009 loop formula)
+- Priority: **CRITICAL** (blocking test suite)
+- Status: done
+- Owner/Date: 2025-09-30 (debug loop H)
+- Exit Criteria: ✅ SATISFIED — Test fixed to match C code behavior; core suite passes
+- Reproduction:
+  * Failed test: `env KMP_DUPLICATE_LIB_OK=TRUE python -m pytest tests/test_suite.py -k "test_phi_rotation_90_deg" -v`
+  * Core suite: `env KMP_DUPLICATE_LIB_OK=TRUE python -m pytest tests/test_suite.py tests/test_units.py tests/test_at_geo*.py tests/test_at_sam*.py tests/test_at_abs*.py tests/test_at_str*.py tests/test_at_pol*.py tests/test_at_bkg*.py --tb=no -q`
+- Root Cause Analysis:
+  * **Context:** Commit 8293a15 fixed AT-021/022 parity by changing phi calculation from midpoint formula to C loop formula
+  * **Symptom:** Unit test `test_phi_rotation_90_deg` failed, expecting 45° rotation but getting 0° (no rotation)
+  * **Expected (test):** phi = phi_start + osc_range/2 = 0 + 90/2 = 45° (midpoint formula)
+  * **Actual (implementation):** phi = phi_start + (osc_range/phi_steps)*0 = 0 + 90*0 = 0° (C loop formula)
+  * **C code reference (nanoBragg.c:3004-3009):**
+    ```c
+    for(phi_tic = 0; phi_tic < phisteps; ++phi_tic) {
+        phi = phi0 + phistep*phi_tic;
+    }
+    ```
+  * **Finding:** For phi_steps=1, phi_tic=0, so phi = phi_start + phistep*0 = phi_start (NO rotation for first step)
+  * **Conclusion:** Implementation is CORRECT (matches C code). Unit test was WRONG (expected midpoint behavior).
+- Implementation Summary:
+  * **Changed:** tests/test_suite.py::TestCrystalModel::test_phi_rotation_90_deg
+  * **Old behavior:** Test expected 45° rotation (midpoint of 90° oscillation range)
+  * **New behavior:** Test expects 0° rotation (C loop formula: first step at phi_start)
+  * **Key change:** Replaced rotation matrix calculation with identity expectation (vectors = base_vectors)
+  * **Added documentation:** Docstring explains C loop formula and why this is NOT midpoint behavior
+- Validation Results:
+  * **Core Test Suite:** 98 passed, 7 skipped, 1 xfailed ✓ (restored to pre-regression state)
+  * **Fixed test:** `test_phi_rotation_90_deg` PASSED ✓
+  * **Parity tests:** AT-021 and AT-022 remain PASSING (commit 8293a15 was correct)
+  * **No regressions:** All other tests unchanged
+- Artifacts:
+  * Modified: tests/test_suite.py (test_phi_rotation_90_deg fixed to match C behavior)
+  * Modified: docs/fix_plan.md (status updated, this entry added)
+- Next Actions:
+  * ✅ COMPLETED: Regression resolved; core suite stable at 98/7/1
+  * Continue with remaining AT failures (AT-020, AT-024) using debug.md per routing rules
 
 ## [RALPH-VERIFICATION-007] Seventh Routing Verification - NEW REGRESSION (2025-09-30-G)
 - Spec/AT: Ralph prompt routing rules (explicit, mandatory, non-negotiable)
