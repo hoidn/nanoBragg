@@ -437,7 +437,7 @@ To improve efficiency, use these standard commands for common tasks.
 - **List all available tests:**
   `pytest --collect-only`
 - **Run the full test suite:**
-  `KMP_DUPLICATE_LIB_OK=TRUE pytest -v`
+  `env KMP_DUPLICATE_LIB_OK=TRUE pytest -v` (run from the repository root)
 - **Run acceptance tests:**
   `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_*.py -v`
 - **Run parallel validation tests (C-PyTorch equivalence):**
