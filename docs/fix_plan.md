@@ -1,6 +1,6 @@
-**Last Updated:** 2025-09-30 16:30 UTC
+**Last Updated:** 2025-09-30 17:00 UTC
 
-**Current Status:** Ralph loop complete - Test suite health verified (98 passed, 7 skipped, 1 xfailed). Four critical AT failures remain: AT-020, AT-021, AT-022, AT-024 (all require debug.md routing). Parity matrix has 55 tests total. All non-debugging actionable items complete or blocked.
+**Current Status:** Ralph loop complete - Implementation work finished. Test suite health verified (98 passed, 7 skipped, 1 xfailed). AT-PARALLEL suite: 77 passed, 48 skipped, 1 failed (AT-012 escalated). Four critical AT failures require debug.md routing: AT-020, AT-021, AT-022, AT-024. Parity matrix has 55 tests total. ALL non-debugging actionable items complete or blocked. **Next loop MUST use debug.md per routing rules.**
 
 ---
 ## Index
@@ -36,6 +36,50 @@
 
 ---
 ## Active Focus
+
+## [RALPH-ROUTING-001] Implementation Complete - Debug.md Required (2025-09-30)
+- Spec/AT: All acceptance tests, Ralph prompt scope
+- Priority: Critical (routing determination)
+- Status: done (routing to debug.md)
+- Owner/Date: 2025-09-30 17:00 UTC
+- Exit Criteria: ✅ SATISFIED — All non-debugging implementation work complete; routing decision made
+- Reproduction:
+  * Core suite: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_suite.py tests/test_units.py tests/test_at_geo*.py tests/test_at_sam*.py tests/test_at_abs*.py tests/test_at_str*.py tests/test_at_pol*.py tests/test_at_bkg*.py --tb=no -q`
+  * AT-PARALLEL suite: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel*.py -v --tb=no -q`
+- Implementation Summary:
+  * **Context:** After HEALTH-001 validation, conducted comprehensive gap analysis to determine next loop scope
+  * **Analysis Performed:**
+    - Reviewed all 29 AT-PARALLEL test implementations (001-029 files exist)
+    - Verified parity_cases.yaml coverage (16 entries, properly classified per Section 2.5.3a)
+    - Checked for TODOs/FIXMEs in source code (none found)
+    - Assessed fix_plan active items (all require debug.md or blocked)
+    - Reviewed spec for missing features (none found)
+  * **Key Findings:**
+    - ✅ All 29 AT-PARALLEL tests have implementation files
+    - ✅ No implementation gaps in spec-a (core, CLI, parallel)
+    - ✅ Parity harness properly structured with 55 test cases
+    - ✅ Source code clean (no pending TODOs)
+    - ❌ 4 critical AT failures with correlation < threshold (020, 021, 022, 024)
+    - ❌ 1 known escalated failure (AT-012 triclinic P1)
+- Validation Results:
+  * **Core Test Suite:** 98 passed, 7 skipped, 1 xfailed (0 unexpected failures) ✓
+  * **AT-PARALLEL Suite:** 77 passed, 48 skipped (require NB_RUN_PARALLEL=1), 1 failed (AT-012 escalated) ✓
+  * **Implementation Coverage:** 29/29 AT tests implemented ✓
+  * **Parity Coverage:** 16 cases in YAML, 12 standalone (proper classification) ✓
+  * **Code Quality:** No TODOs/FIXMEs found ✓
+- Artifacts:
+  * Test runs: 2025-09-30 17:00 UTC
+  * Modified: fix_plan.md (updated status header and added this entry)
+- **Routing Decision (CRITICAL):**
+  * Per Ralph prompt ground rules: "If... any AT-PARALLEL acceptance test fails, OR any correlation falls below its required threshold... STOP using this prompt and instead use the dedicated debugging prompt: prompts/debug.md"
+  * **Current state:** 4 critical AT-PARALLEL failures with correlations << thresholds
+  * **Conclusion:** ALL actionable Ralph-scope work is COMPLETE
+  * **Next loop MUST:** Use prompts/debug.md to address AT-020, AT-021, AT-022, AT-024
+- Next Actions:
+  * ✅ COMPLETED: Gap analysis confirms implementation finished
+  * ⚠️ ROUTING REQUIRED: Next loop must use debug.md per explicit routing rules
+  * 🎯 Target: AT-PARALLEL-021 (Crystal Phi Rotation) - likely root cause for AT-022
+  * Alternative: AT-PARALLEL-024 (Random Misset) - independent catastrophic failure (corr=0.025)
 
 ## [HEALTH-001] Test Suite Health Assessment (2025-09-30)
 - Spec/AT: General test suite validation
