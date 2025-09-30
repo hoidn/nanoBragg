@@ -172,7 +172,7 @@ Loop Self‑Checklist (end of every loop):
 - Module/layer check done and justified.
 - Spec sections/acceptance IDs/test names quoted and limited (one area; 1–2 items max).
 - Backpressure present: unit + smallest integration, with expected pass/fail and remediation.
-- **Full `pytest tests/` run from project root completed and passed without any errors or collection failures.**
+- **Full `pytest tests/` run from project root completed and passed without any errors or collection failures.** (Doc/prompt-only loops may instead run `pytest --collect-only -q`.)
 - Any new problems discovered during this loop - or existing problems not mentioned in the fix_plan.md - added to the fix_plan.md TODO list.
 - Evidence includes file:line pointers for presence/absence; no "assume missing".
 - Scope stayed within a single module category; if not, capture deferral in `fix_plan.md`.
