@@ -1,28 +1,54 @@
 #!/usr/bin/env python3
-"""Generate detailed PyTorch trace for simple_cubic pixel (513, 446) matching C trace format."""
+"""
+PyTorch Trace for AT-PARALLEL-012 simple_cubic
+
+Generate detailed trace for pixel (513, 446) - identified as strong off-center peak
+This matches C trace instrumentation for parallel comparison.
+
+Variables logged (matching C trace):
+- pix0_vector
+- fdet_vec, sdet_vec, odet_vec (basis vectors)
+- pixel_coords (position in meters)
+- R (airpath distance)
+- omega (solid angle)
+- close_distance, obliquity_factor
+- incident vector (k_in)
+- diffracted vector (k_out)
+- scattering vector (S)
+- Miller indices (h, k, l - float and rounded)
+- F_cell (structure factor)
+- F_latt (lattice shape factor components)
+- polarization factor
+- absorption (capture_fraction)
+- final intensity
+"""
 
 import os
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 import sys
-import torch
 from pathlib import Path
+import numpy as np
+import torch
 
 # Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from nanobrag_torch.config import CrystalConfig, DetectorConfig, BeamConfig, DetectorPivot
+from nanobrag_torch.config import CrystalConfig, DetectorConfig, BeamConfig, DetectorConvention, DetectorPivot
 from nanobrag_torch.models.crystal import Crystal
-from nanobrag_torch.models.detector import Detector, DetectorConvention
+from nanobrag_torch.models.detector import Detector
+from nanobrag_torch.simulator import Simulator
+
 
 def main():
-    # Target pixel (513, 446) - from analysis showing C=92.72, Py=100.29
-    target_s = 513
-    target_f = 446
+    # Target pixel - strong off-center peak
+    target_s, target_f = 513, 446
 
-    print(f"=== PyTorch Trace for Pixel ({target_s}, {target_f}) ===\n")
+    print("=" * 80)
+    print(f"PYTORCH TRACE: AT-PARALLEL-012 simple_cubic pixel ({target_s}, {target_f})")
+    print("=" * 80)
 
-    # Setup PyTorch configuration (matching test)
+    # Setup configuration (matching test)
     crystal_config = CrystalConfig(
         cell_a=100.0, cell_b=100.0, cell_c=100.0,
         cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
@@ -43,189 +69,236 @@ def main():
         wavelength_A=6.2
     )
 
-    # Build models
+    # Instantiate models
     crystal = Crystal(crystal_config)
     detector = Detector(detector_config)
 
-    # === DETECTOR GEOMETRY ===
-    print("TRACE_PY:detector_convention=MOSFLM")
-    print("TRACE_PY:angles_rad=rotx:0 roty:0 rotz:0 twotheta:0")
-    # Convert beam center from pixels to meters (C code uses Xbeam/Ybeam in meters, but MOSFLM swaps them)
-    # In MOSFLM: Fbeam ← Ybeam, Sbeam ← Xbeam
-    beam_center_s_m = detector.beam_center_s * detector.pixel_size
-    beam_center_f_m = detector.beam_center_f * detector.pixel_size
-    print(f"TRACE_PY:beam_center_m=X:{beam_center_s_m:.15g} Y:{beam_center_f_m:.15g} pixel_mm:{detector_config.pixel_size_mm}")
-    print(f"TRACE_PY:initial_fdet={detector.fdet_vec[0]:.15g} {detector.fdet_vec[1]:.15g} {detector.fdet_vec[2]:.15g}")
-    print(f"TRACE_PY:initial_sdet={detector.sdet_vec[0]:.15g} {detector.sdet_vec[1]:.15g} {detector.sdet_vec[2]:.15g}")
-    print(f"TRACE_PY:pix0_vector={detector.pix0_vector[0]:.15g} {detector.pix0_vector[1]:.15g} {detector.pix0_vector[2]:.15g}")
+    print("\n1. DETECTOR GEOMETRY")
+    print("-" * 80)
+    pix0 = detector.pix0_vector.cpu().numpy()
+    fdet = detector.fdet_vec.cpu().numpy()
+    sdet = detector.sdet_vec.cpu().numpy()
+    odet = detector.odet_vec.cpu().numpy()
 
-    # Get pixel position
-    pixel_coords = detector.get_pixel_coords()  # (spixels, fpixels, 3)
-    pix_vec = pixel_coords[target_s, target_f, :]
-    print(f"TRACE_PY: pixel_pos_meters {pix_vec[0]:.15g} {pix_vec[1]:.15g} {pix_vec[2]:.15g}")
+    print(f"pix0_vector [m]: [{pix0[0]:.10e}, {pix0[1]:.10e}, {pix0[2]:.10e}]")
+    print(f"fdet_vec: [{fdet[0]:.10e}, {fdet[1]:.10e}, {fdet[2]:.10e}]")
+    print(f"sdet_vec: [{sdet[0]:.10e}, {sdet[1]:.10e}, {sdet[2]:.10e}]")
+    print(f"odet_vec: [{odet[0]:.10e}, {odet[1]:.10e}, {odet[2]:.10e}]")
+    print(f"distance [m]: {detector.distance:.10e}")
+    print(f"close_distance [m]: {detector.close_distance:.10e}")
+    print(f"pixel_size [m]: {detector.pixel_size:.10e}")
+    print(f"r_factor: {detector.r_factor:.10e}")
 
-    # Compute R (airpath distance)
-    R = torch.norm(pix_vec)
-    print(f"TRACE_PY: R_distance_meters {R:.15g}")
+    print(f"\n2. PIXEL COORDINATE")
+    print("-" * 80)
+    pixel_coords = detector.get_pixel_coords()
+    pixel_coord = pixel_coords[target_s, target_f].cpu().numpy()
 
-    # Compute omega (solid angle)
-    pixel_size_m = detector_config.pixel_size_mm * 1e-3
-    close_distance_m = detector_config.distance_mm * 1e-3
-    omega_pixel = (pixel_size_m**2 * close_distance_m) / R**3
-    print(f"TRACE_PY: omega_pixel_sr {omega_pixel:.15g}")
-    print(f"TRACE_PY: close_distance_meters {close_distance_m:.15g}")
-    print(f"TRACE_PY: obliquity_factor {close_distance_m/R:.15g}")
+    print(f"Pixel: ({target_s}, {target_f})")
+    print(f"Pixel coordinate [m]: [{pixel_coord[0]:.10e}, {pixel_coord[1]:.10e}, {pixel_coord[2]:.10e}]")
 
-    # Diffracted direction (unit vector)
-    diffracted = pix_vec / R
-    print(f"TRACE_PY: diffracted_vec {diffracted[0]:.15g} {diffracted[1]:.15g} {diffracted[2]:.15g}")
+    # Convert to Angstroms for physics
+    pixel_coord_ang = pixel_coord * 1e10
+    print(f"Pixel coordinate [Å]: [{pixel_coord_ang[0]:.10e}, {pixel_coord_ang[1]:.10e}, {pixel_coord_ang[2]:.10e}]")
 
-    # Incident direction
-    incident = torch.tensor([1.0, 0.0, 0.0], dtype=torch.float64)
-    print(f"TRACE_PY: incident_vec {incident[0]:.15g} {incident[1]:.15g} {incident[2]:.15g}")
+    # Distance
+    R_m = np.linalg.norm(pixel_coord)
+    R_ang = R_m * 1e10
+    print(f"R (airpath) [m]: {R_m:.10e}")
+    print(f"R (airpath) [Å]: {R_ang:.10e}")
 
-    # Wavelength
-    lambda_m = beam_config.wavelength_A * 1e-10
-    print(f"TRACE_PY: lambda_meters {lambda_m:.15g}")
+    # Unit diffracted vector
+    diffracted_unit = pixel_coord / R_m
+    print(f"diffracted (unit): [{diffracted_unit[0]:.10e}, {diffracted_unit[1]:.10e}, {diffracted_unit[2]:.10e}]")
 
-    # Scattering vector S = (diffracted - incident) / λ (in 1/Angstrom)
-    S_vec = (diffracted - incident) / lambda_m
-    print(f"TRACE_PY: scattering_vec_A_inv {S_vec[0]:.15g} {S_vec[1]:.15g} {S_vec[2]:.15g}")
+    print(f"\n3. SOLID ANGLE (OMEGA)")
+    print("-" * 80)
+    omega = (detector.pixel_size ** 2 / R_m ** 2) * (detector.close_distance / R_m)
+    print(f"omega (area formula): {omega:.10e} sr")
+    print(f"omega (point-pixel): {1.0 / (R_m ** 2):.10e} sr")
 
-    # === CRYSTAL LATTICE ===
-    # Get rotated lattice vectors (real and reciprocal)
-    # Returns shape (N_phi, N_mos, 3) - for simple case with no rotation, this is (1, 1, 3)
-    (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = crystal.get_rotated_real_vectors(crystal_config)
+    # Obliquity factor
+    obliquity = np.dot(diffracted_unit, odet)
+    print(f"obliquity_factor (d·o): {obliquity:.10e}")
 
-    # Extract the single phi/mosaic configuration (phi=0, mos=0)
-    rot_a = rot_a[0, 0, :]  # Now shape (3,)
-    rot_b = rot_b[0, 0, :]
-    rot_c = rot_c[0, 0, :]
+    print(f"\n4. INCIDENT BEAM & SCATTERING VECTOR")
+    print("-" * 80)
+    # MOSFLM: beam along +X
+    incident_direction = np.array([1.0, 0.0, 0.0])
+    print(f"incident_direction: [{incident_direction[0]:.10e}, {incident_direction[1]:.10e}, {incident_direction[2]:.10e}]")
 
-    # Convert to meters for Miller index calculation (matching C code)
-    rot_a_m = rot_a * 1e-10
-    rot_b_m = rot_b * 1e-10
-    rot_c_m = rot_c * 1e-10
+    wavelength_ang = beam_config.wavelength_A
+    print(f"wavelength [Å]: {wavelength_ang:.10e}")
 
-    # Compute Miller indices h,k,l = S · lattice_vectors
-    h_float = torch.dot(S_vec, rot_a_m)
-    k_float = torch.dot(S_vec, rot_b_m)
-    l_float = torch.dot(S_vec, rot_c_m)
-    print(f"TRACE_PY: hkl_frac {h_float:.15g} {k_float:.15g} {l_float:.15g}")
+    # Scattering vector: S = (diffracted - incident) / λ
+    scattering_vector = (diffracted_unit - incident_direction) / wavelength_ang
+    S_mag = np.linalg.norm(scattering_vector)
 
-    # Round to nearest integer
-    h_int = int(torch.ceil(h_float - 0.5).item())
-    k_int = int(torch.ceil(k_float - 0.5).item())
-    l_int = int(torch.ceil(l_float - 0.5).item())
-    print(f"TRACE_PY: hkl_rounded {h_int} {k_int} {l_int}")
+    print(f"Scattering vector S [Å⁻¹]: [{scattering_vector[0]:.10e}, {scattering_vector[1]:.10e}, {scattering_vector[2]:.10e}]")
+    print(f"|S|: {S_mag:.10e} Å⁻¹")
+    print(f"stol (sin(θ)/λ): {S_mag / 2:.10e}")
 
-    # === LATTICE SHAPE FACTOR (F_latt) ===
-    # Using sinc function: sinc(x) = sin(π*x)/(π*x)
-    # F_latt = sinc(h*Na) * sinc(k*Nb) * sinc(l*Nc)
+    print(f"\n5. MILLER INDICES")
+    print("-" * 80)
+    # Get real-space vectors (no phi rotation for simple cubic at phi=0)
+    real_vecs = crystal.get_real_vectors()
+    a_vec = real_vecs[0].cpu().numpy()
+    b_vec = real_vecs[1].cpu().numpy()
+    c_vec = real_vecs[2].cpu().numpy()
+
+    print(f"a_vec [Å]: [{a_vec[0]:.10e}, {a_vec[1]:.10e}, {a_vec[2]:.10e}]")
+    print(f"b_vec [Å]: [{b_vec[0]:.10e}, {b_vec[1]:.10e}, {b_vec[2]:.10e}]")
+    print(f"c_vec [Å]: [{c_vec[0]:.10e}, {c_vec[1]:.10e}, {c_vec[2]:.10e}]")
+
+    # Miller indices: h = S · a, k = S · b, l = S · c
+    h_float = np.dot(scattering_vector, a_vec)
+    k_float = np.dot(scattering_vector, b_vec)
+    l_float = np.dot(scattering_vector, c_vec)
+
+    print(f"h (float): {h_float:.10e}")
+    print(f"k (float): {k_float:.10e}")
+    print(f"l (float): {l_float:.10e}")
+
+    # Nearest integer (ceil(x - 0.5))
+    h_int = int(np.ceil(h_float - 0.5))
+    k_int = int(np.ceil(k_float - 0.5))
+    l_int = int(np.ceil(l_float - 0.5))
+
+    print(f"h (int): {h_int}")
+    print(f"k (int): {k_int}")
+    print(f"l (int): {l_int}")
+
+    # Fractional parts
+    h_frac = h_float - h_int
+    k_frac = k_float - k_int
+    l_frac = l_float - l_int
+
+    print(f"Fractional parts: h={h_frac:.10e}, k={k_frac:.10e}, l={l_frac:.10e}")
+
+    print(f"\n6. STRUCTURE FACTOR")
+    print("-" * 80)
+    # For simple cubic with default_F=100, all F_cell should be 100
+    print(f"default_F: {crystal_config.default_F:.10e}")
+    print(f"F_cell (expected): {crystal_config.default_F:.10e}")
+
+    print(f"\n7. LATTICE SHAPE FACTOR (SQUARE)")
+    print("-" * 80)
+    # F_latt = sincg(π·h_frac, Na) · sincg(π·k_frac, Nb) · sincg(π·l_frac, Nc)
     Na, Nb, Nc = crystal_config.N_cells
 
     def sincg(x, N):
-        """Generalized sinc function matching C code."""
-        if N <= 1:
-            return torch.tensor(1.0, dtype=torch.float64)
-        sin_Nx = torch.sin(N * x)
-        sin_x = torch.sin(x)
-        # Handle x ≈ 0
-        if torch.abs(sin_x) < 1e-10:
-            return torch.tensor(float(N), dtype=torch.float64)
-        return sin_Nx / sin_x
+        """Generalized sinc: sin(N*x) / sin(x), with special case for x≈0"""
+        if abs(x) < 1e-10:
+            return float(N)
+        return np.sin(N * x) / np.sin(x)
 
-    import math
-    F_latt_a = sincg(math.pi * h_float, Na)
-    F_latt_b = sincg(math.pi * k_float, Nb)
-    F_latt_c = sincg(math.pi * l_float, Nc)
+    F_latt_a = sincg(np.pi * h_frac, Na)
+    F_latt_b = sincg(np.pi * k_frac, Nb)
+    F_latt_c = sincg(np.pi * l_frac, Nc)
     F_latt = F_latt_a * F_latt_b * F_latt_c
 
-    print(f"TRACE_PY: F_latt_a {F_latt_a:.15g}")
-    print(f"TRACE_PY: F_latt_b {F_latt_b:.15g}")
-    print(f"TRACE_PY: F_latt_c {F_latt_c:.15g}")
-    print(f"TRACE_PY: F_latt {F_latt:.15g}")
+    print(f"Na, Nb, Nc: {Na}, {Nb}, {Nc}")
+    print(f"F_latt_a (sincg(π·{h_frac:.6f}, {Na})): {F_latt_a:.10e}")
+    print(f"F_latt_b (sincg(π·{k_frac:.6f}, {Nb})): {F_latt_b:.10e}")
+    print(f"F_latt_c (sincg(π·{l_frac:.6f}, {Nc})): {F_latt_c:.10e}")
+    print(f"F_latt (product): {F_latt:.10e}")
 
-    # === STRUCTURE FACTOR ===
-    F_cell = crystal_config.default_F
-    print(f"TRACE_PY: F_cell {F_cell}")
+    print(f"\n8. POLARIZATION FACTOR")
+    print("-" * 80)
+    # Kahn polarization factor
+    kahn_factor = beam_config.polarization_factor
+    print(f"Kahn factor: {kahn_factor:.10e}")
 
-    # === INTENSITY CALCULATION ===
-    # I = F_cell² * F_latt²
-    I_before_scaling = F_cell**2 * F_latt**2
-    print(f"TRACE_PY: I_before_scaling {I_before_scaling:.15g}")
+    # Polarization axis (default +Y for MOSFLM)
+    polarization_axis = np.array([0.0, 1.0, 0.0])
+    print(f"Polarization axis: [{polarization_axis[0]:.10e}, {polarization_axis[1]:.10e}, {polarization_axis[2]:.10e}]")
 
-    # Physical constants (from nanoBragg.c ~line 240)
-    r_e_sqr = 7.94079248018965e-30  # classical electron radius squared (meters squared)
-    print(f"TRACE_PY: r_e_sqr {r_e_sqr:.15g}")
+    # Calculate polarization factor (from utils/physics.py)
+    # polar = 0.5 * (1 + cos²(2θ) - K·cos(2ψ)·sin²(2θ))
+    cos_2theta = np.dot(incident_direction, diffracted_unit)
+    sin_2theta_sq = 1.0 - cos_2theta ** 2
 
+    # Project incident onto plane perpendicular to scattering
+    incident_perp = incident_direction - cos_2theta * diffracted_unit
+    incident_perp_mag = np.linalg.norm(incident_perp)
+
+    if incident_perp_mag > 1e-10:
+        incident_perp_unit = incident_perp / incident_perp_mag
+        cos_2psi = np.dot(polarization_axis, incident_perp_unit)
+    else:
+        cos_2psi = 0.0
+
+    polar = 0.5 * (1.0 + cos_2theta ** 2 - kahn_factor * cos_2psi * sin_2theta_sq)
+
+    print(f"cos(2θ): {cos_2theta:.10e}")
+    print(f"sin²(2θ): {sin_2theta_sq:.10e}")
+    print(f"cos(2ψ): {cos_2psi:.10e}")
+    print(f"polarization_factor: {polar:.10e}")
+
+    print(f"\n9. ABSORPTION (DETECTOR CAPTURE)")
+    print("-" * 80)
+    # Check if detector has absorption parameters
+    if hasattr(detector_config, 'detector_thick_um') and detector_config.detector_thick_um > 0:
+        print(f"detector_thick_um: {detector_config.detector_thick_um}")
+        print(f"detector_abs_um: {detector_config.detector_abs_um}")
+        print(f"detector_thicksteps: {detector_config.detector_thicksteps}")
+        # Would need to calculate parallax and layer fractions here
+    else:
+        capture_fraction = 1.0
+        print(f"No detector absorption (capture_fraction = 1.0)")
+
+    print(f"\n10. FINAL INTENSITY CALCULATION")
+    print("-" * 80)
+
+    # Classic electron radius
+    r_e_cm = 2.8179403227e-13
+    r_e_ang = r_e_cm * 1e8
+    r_e_sq = r_e_ang ** 2
+    print(f"r_e² [Å²]: {r_e_sq:.10e}")
+
+    # Fluence (default from BeamConfig)
     fluence = beam_config.fluence
-    print(f"TRACE_PY: fluence {fluence:.15g}")
+    print(f"fluence [photons/Å²]: {fluence:.10e}")
 
-    steps = 1  # No oversampling in simple case
-    print(f"TRACE_PY: steps {steps}")
-    print(f"TRACE_PY: oversample_thick 0")
-    print(f"TRACE_PY: oversample_polar 0")
-    print(f"TRACE_PY: oversample_omega 0")
+    # Steps (for single source, single phi, no mosaic, oversample=1)
+    n_sources = 1
+    n_phi = 1
+    n_mosaic = 1
+    oversample_sq = 1  # auto-selected 1-fold oversampling
+    steps = n_sources * n_phi * n_mosaic * oversample_sq
+    print(f"steps (normalization): {steps}")
 
-    capture_fraction = 1.0
-    print(f"TRACE_PY: capture_fraction {capture_fraction}")
-
-    # Polarization factor (unpolarized case)
-    cos_2theta = torch.dot(incident, diffracted)
-    polar = 0.5 * (1.0 + cos_2theta**2)
-    print(f"TRACE_PY: polar {polar:.15g}")
-    print(f"TRACE_PY: omega_pixel {omega_pixel:.15g}")
+    # Intensity before final scaling
+    I_before_scaling = (crystal_config.default_F ** 2) * (F_latt ** 2)
+    print(f"I_before_scaling (F²·F_latt²): {I_before_scaling:.10e}")
 
     # Final intensity
-    I_pixel_final = r_e_sqr * fluence * I_before_scaling / steps * capture_fraction * polar * omega_pixel
-    print(f"TRACE_PY: I_pixel_final {I_pixel_final:.15g}")
+    I_final = r_e_sq * fluence * I_before_scaling * omega * polar / steps
+    print(f"I_final: {I_final:.10e}")
 
-    # Accumulated (no multiple sources/mosaic domains in this case)
-    print(f"TRACE_PY: floatimage_accumulated {I_pixel_final:.15g}")
+    print("\n" + "=" * 80)
+    print("SUMMARY")
+    print("=" * 80)
+    print(f"Pixel: ({target_s}, {target_f})")
+    print(f"Miller indices: h={h_int}, k={k_int}, l={l_int}")
+    print(f"F_latt: {F_latt:.6e}")
+    print(f"Polarization: {polar:.6e}")
+    print(f"Omega: {omega:.6e} sr")
+    print(f"Final intensity: {I_final:.6e}")
 
-    # Save to file
-    output_dir = Path(__file__).parent.parent / "reports" / "2025-09-30-AT-PARALLEL-012"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    # Now run full simulation and check actual value
+    print("\n" + "=" * 80)
+    print("VERIFICATION (Full Simulation)")
+    print("=" * 80)
+    simulator = Simulator(crystal, detector, crystal_config, beam_config)
+    full_image = simulator.run().cpu().numpy()
+    actual_intensity = full_image[target_s, target_f]
+    print(f"Simulated intensity at ({target_s}, {target_f}): {actual_intensity:.6e}")
+    print(f"Trace prediction: {I_final:.6e}")
+    print(f"Match: {np.isclose(actual_intensity, I_final, rtol=1e-3)}")
 
-    with open(output_dir / "py_trace_pixel_513_446.log", 'w') as f:
-        # Write all the trace lines
-        f.write(f"TRACE_PY:detector_convention=MOSFLM\n")
-        f.write(f"TRACE_PY:angles_rad=rotx:0 roty:0 rotz:0 twotheta:0\n")
-        f.write(f"TRACE_PY:beam_center_m=X:{beam_center_s_m:.15g} Y:{beam_center_f_m:.15g} pixel_mm:{detector_config.pixel_size_mm}\n")
-        f.write(f"TRACE_PY:initial_fdet={detector.fdet_vec[0]:.15g} {detector.fdet_vec[1]:.15g} {detector.fdet_vec[2]:.15g}\n")
-        f.write(f"TRACE_PY:initial_sdet={detector.sdet_vec[0]:.15g} {detector.sdet_vec[1]:.15g} {detector.sdet_vec[2]:.15g}\n")
-        f.write(f"TRACE_PY:pix0_vector={detector.pix0_vector[0]:.15g} {detector.pix0_vector[1]:.15g} {detector.pix0_vector[2]:.15g}\n")
-        f.write(f"TRACE_PY: pixel_pos_meters {pix_vec[0]:.15g} {pix_vec[1]:.15g} {pix_vec[2]:.15g}\n")
-        f.write(f"TRACE_PY: R_distance_meters {R:.15g}\n")
-        f.write(f"TRACE_PY: omega_pixel_sr {omega_pixel:.15g}\n")
-        f.write(f"TRACE_PY: close_distance_meters {close_distance_m:.15g}\n")
-        f.write(f"TRACE_PY: obliquity_factor {close_distance_m/R:.15g}\n")
-        f.write(f"TRACE_PY: diffracted_vec {diffracted[0]:.15g} {diffracted[1]:.15g} {diffracted[2]:.15g}\n")
-        f.write(f"TRACE_PY: incident_vec {incident[0]:.15g} {incident[1]:.15g} {incident[2]:.15g}\n")
-        f.write(f"TRACE_PY: lambda_meters {lambda_m:.15g}\n")
-        f.write(f"TRACE_PY: scattering_vec_A_inv {S_vec[0]:.15g} {S_vec[1]:.15g} {S_vec[2]:.15g}\n")
-        f.write(f"TRACE_PY: hkl_frac {h_float:.15g} {k_float:.15g} {l_float:.15g}\n")
-        f.write(f"TRACE_PY: hkl_rounded {h_int} {k_int} {l_int}\n")
-        f.write(f"TRACE_PY: F_latt_a {F_latt_a:.15g}\n")
-        f.write(f"TRACE_PY: F_latt_b {F_latt_b:.15g}\n")
-        f.write(f"TRACE_PY: F_latt_c {F_latt_c:.15g}\n")
-        f.write(f"TRACE_PY: F_latt {F_latt:.15g}\n")
-        f.write(f"TRACE_PY: F_cell {F_cell}\n")
-        f.write(f"TRACE_PY: I_before_scaling {I_before_scaling:.15g}\n")
-        f.write(f"TRACE_PY: r_e_sqr {r_e_sqr:.15g}\n")
-        f.write(f"TRACE_PY: fluence {fluence:.15g}\n")
-        f.write(f"TRACE_PY: steps {steps}\n")
-        f.write(f"TRACE_PY: oversample_thick 0\n")
-        f.write(f"TRACE_PY: oversample_polar 0\n")
-        f.write(f"TRACE_PY: oversample_omega 0\n")
-        f.write(f"TRACE_PY: capture_fraction {capture_fraction}\n")
-        f.write(f"TRACE_PY: polar {polar:.15g}\n")
-        f.write(f"TRACE_PY: omega_pixel {omega_pixel:.15g}\n")
-        f.write(f"TRACE_PY: I_pixel_final {I_pixel_final:.15g}\n")
-        f.write(f"TRACE_PY: floatimage_accumulated {I_pixel_final:.15g}\n")
+    return 0
 
-    print(f"\n=== Trace saved to: {output_dir / 'py_trace_pixel_513_446.log'} ===")
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

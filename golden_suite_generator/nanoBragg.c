@@ -2706,6 +2706,12 @@ int main(int argc, char** argv)
 
 int debug_printed_thread = 0;
 int debug_printed = 0;
+
+    /* Debug: print trace pixel coordinates */
+    if(trace_fpixel >= 0 && trace_spixel >= 0) {
+        printf("TRACE_CONFIG: tracing pixel (spixel=%d, fpixel=%d)\n", trace_spixel, trace_fpixel);
+    }
+
     #pragma omp parallel for \
     schedule(auto) \
     private(fpixel,spixel)\
@@ -2926,6 +2932,9 @@ if(! debug_printed_thread) {
                             
                             /* trace output for specific pixel */
                             if(fpixel==trace_fpixel && spixel==trace_spixel && source==0) {
+                                printf("TRACE_C: pix0_vector_meters %.15g %.15g %.15g\n", pix0_vector[1], pix0_vector[2], pix0_vector[3]);
+                                printf("TRACE_C: fdet_vec %.15g %.15g %.15g\n", fdet_vector[1], fdet_vector[2], fdet_vector[3]);
+                                printf("TRACE_C: sdet_vec %.15g %.15g %.15g\n", sdet_vector[1], sdet_vector[2], sdet_vector[3]);
                                 printf("TRACE_C: pixel_pos_meters %.15g %.15g %.15g\n", pixel_pos[1], pixel_pos[2], pixel_pos[3]);
                                 printf("TRACE_C: R_distance_meters %.15g\n", airpath);
                                 printf("TRACE_C: omega_pixel_sr %.15g\n", omega_pixel);
@@ -2934,6 +2943,7 @@ if(! debug_printed_thread) {
                                 printf("TRACE_C: diffracted_vec %.15g %.15g %.15g\n", diffracted[1], diffracted[2], diffracted[3]);
                                 printf("TRACE_C: incident_vec %.15g %.15g %.15g\n", incident[1], incident[2], incident[3]);
                                 printf("TRACE_C: lambda_meters %.15g\n", lambda);
+                                printf("TRACE_C: lambda_angstroms %.15g\n", lambda*1e10);
                                 printf("TRACE_C: scattering_vec_A_inv %.15g %.15g %.15g\n", scattering[1], scattering[2], scattering[3]);
                             }
 
@@ -3036,6 +3046,12 @@ if(! debug_printed_thread) {
 
                                     /* trace output for specific pixel */
                                     if(fpixel==trace_fpixel && spixel==trace_spixel && source==0 && mos_tic==0 && phi_tic==0) {
+                                        printf("TRACE_C: rot_a_angstroms %.15g %.15g %.15g\n", a[1]*1e10, a[2]*1e10, a[3]*1e10);
+                                        printf("TRACE_C: rot_b_angstroms %.15g %.15g %.15g\n", b[1]*1e10, b[2]*1e10, b[3]*1e10);
+                                        printf("TRACE_C: rot_c_angstroms %.15g %.15g %.15g\n", c[1]*1e10, c[2]*1e10, c[3]*1e10);
+                                        printf("TRACE_C: rot_a_star_A_inv %.15g %.15g %.15g\n", a_star[1], a_star[2], a_star[3]);
+                                        printf("TRACE_C: rot_b_star_A_inv %.15g %.15g %.15g\n", b_star[1], b_star[2], b_star[3]);
+                                        printf("TRACE_C: rot_c_star_A_inv %.15g %.15g %.15g\n", c_star[1], c_star[2], c_star[3]);
                                         printf("TRACE_C: hkl_frac %.15g %.15g %.15g\n", h, k, l);
                                         printf("TRACE_C: hkl_rounded %d %d %d\n", h0, k0, l0);
                                     }
@@ -3275,8 +3291,9 @@ if(! debug_printed_thread) {
             /* trace final pixel intensity */
             if(fpixel==trace_fpixel && spixel==trace_spixel) {
                 printf("TRACE_C: I_before_scaling %.15g\n", I);
+                printf("TRACE_C: r_e_meters %.15g\n", sqrt(r_e_sqr));
                 printf("TRACE_C: r_e_sqr %.15g\n", r_e_sqr);
-                printf("TRACE_C: fluence %.15g\n", fluence);
+                printf("TRACE_C: fluence_photons_per_m2 %.15g\n", fluence);
                 printf("TRACE_C: steps %d\n", steps);
                 printf("TRACE_C: oversample_thick %d\n", oversample_thick);
                 printf("TRACE_C: oversample_polar %d\n", oversample_polar);
@@ -3284,6 +3301,7 @@ if(! debug_printed_thread) {
                 printf("TRACE_C: capture_fraction %.15g\n", capture_fraction);
                 printf("TRACE_C: polar %.15g\n", polar);
                 printf("TRACE_C: omega_pixel %.15g\n", omega_pixel);
+                printf("TRACE_C: cos_2theta %.15g\n", dot_product(incident,diffracted));
                 printf("TRACE_C: I_pixel_final %.15g\n", test);
                 printf("TRACE_C: floatimage_accumulated %.15g\n", floatimage[imgidx]);
             }

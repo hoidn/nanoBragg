@@ -497,9 +497,18 @@ class Detector:
             # Therefore, the simple formula Fbeam = beam_center_f * pixel_size is correct!
 
             # Direct mapping: no axis swap needed
-            Fbeam = self.beam_center_f * self.pixel_size  # F (fast coord) ← beam_f (fast param)
-            Sbeam = self.beam_center_s * self.pixel_size  # S (slow coord) ← beam_s (slow param)
-            
+            # CRITICAL: C code adds +0.5*pixel_size to beam centers AGAIN for MOSFLM
+            # See nanoBragg.c: Fbeam = Ybeam + 0.5*pixel_size (applied AFTER Ybeam defaults)
+            # This creates a DOUBLE +0.5 offset: once in defaults, once here
+            if self.config.detector_convention == DetectorConvention.MOSFLM:
+                # Add the second +0.5 pixel offset to match C behavior
+                Fbeam = (self.beam_center_f + 0.5) * self.pixel_size
+                Sbeam = (self.beam_center_s + 0.5) * self.pixel_size
+            else:
+                # Other conventions: use beam centers as-is
+                Fbeam = self.beam_center_f * self.pixel_size
+                Sbeam = self.beam_center_s * self.pixel_size
+
             # Set beam vector based on convention
             if self.config.detector_convention == DetectorConvention.MOSFLM:
                 beam_vector = torch.tensor(
