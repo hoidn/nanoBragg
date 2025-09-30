@@ -1170,9 +1170,15 @@ class Simulator:
         # Calculate parallax factor: ρ = d·o
         # detector_normal shape: [3], observation_dirs shape: [S, F, 3]
         # Result shape: [S, F]
+        # NOTE: C code does NOT take absolute value (nanoBragg.c line 2903)
+        # Parallax can be negative for certain detector orientations
         parallax = torch.sum(detector_normal.unsqueeze(0).unsqueeze(0) * observation_dirs, dim=-1)
-        parallax = torch.abs(parallax)  # Take absolute value to ensure positive
-        parallax = torch.maximum(parallax, torch.tensor(1e-10, dtype=parallax.dtype, device=parallax.device))  # Avoid division by zero
+        # Clamp to avoid division by zero, but preserve sign
+        parallax = torch.where(
+            torch.abs(parallax) < 1e-10,
+            torch.sign(parallax) * 1e-10,
+            parallax
+        )
 
         # Calculate layer thickness
         delta_z = thickness_m / thicksteps
