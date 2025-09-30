@@ -1,6 +1,6 @@
-**Last Updated:** 2025-09-30 21:00 UTC
+**Last Updated:** 2025-09-30 23:00 UTC
 
-**Current Status:** **CRITICAL BUG DISCOVERED:** AT-PARALLEL-024 parity harness addition revealed catastrophic random misset implementation bug (correlation ~0.01-0.02, requires debug.md routing). Parity harness entry added but tests fail. Total parity coverage: 13 ATs passing (001-007, 011-012, 020-023), 1 AT failing (024), 14 ATs remaining (008-010, 013-018, 025-029). Four critical AT failures now known: AT-020, AT-021, AT-022, AT-024.
+**Current Status:** Parity harness coverage expanded to 16 ATs (added AT-010, AT-016 with classification docs). Four critical AT failures remain: AT-020, AT-021, AT-022, AT-024 (all require debug.md routing). Parity matrix now has 55 tests total.
 
 ---
 ## Index
@@ -16,9 +16,9 @@
 
 ### Queued Items
 - [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: done (escalated)
-- Parity Harness Coverage Expansion — Status: in_progress (AT-003/005/011/021-023 added, 6 missing per linter)
 
 ### Recently Completed (2025-09-30)
+- [PARITY-HARNESS-AT010-016] Parity Coverage Expansion (AT-010, AT-016) — done
 - [TOOLS-CI-001] Docs-as-Data Parity Coverage Linter — done
 - [AT-PARALLEL-023-HARNESS] Misset Angles Equivalence Parity Addition — done
 - [AT-PARALLEL-005-HARNESS] Beam Center Parameter Mapping Parity Addition — done
@@ -34,6 +34,50 @@
 
 ---
 ## Active Focus
+
+## [PARITY-HARNESS-AT010-016] Parity Coverage Expansion (AT-010, AT-016)
+- Spec/AT: AT-PARALLEL-010 (Solid Angle Corrections), AT-PARALLEL-016 (Extreme Scale Testing); Section 2.5.3/2.5.3a (Normative Parity Coverage)
+- Priority: Medium
+- Status: done
+- Owner/Date: 2025-09-30 23:00 UTC
+- Exit Criteria: ✅ SATISFIED — AT-010 and AT-016 added to parity_cases.yaml with proper classification documentation
+- Reproduction:
+  * Test AT-010: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_parity_matrix.py -k "AT-PARALLEL-010" -v`
+  * Test AT-016: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_parity_matrix.py -k "AT-PARALLEL-016" -v`
+  * Linter: `python scripts/lint_parity_coverage.py`
+- Implementation Summary:
+  * **Classification Analysis:** Used general-purpose subagent to analyze all 6 "missing" ATs (008, 010, 013, 016, 027, 029)
+  * **Decision Criteria Established:**
+    - parity_cases.yaml ONLY: Simple parameter sweeps with standard metrics
+    - BOTH (YAML + standalone): Basic image generation via YAML; standalone adds custom validation
+    - Standalone ONLY: Custom algorithms (Hungarian matching, FFT, deterministic setup)
+  * **AT-010 (Solid Angle Corrections):** BOTH classification
+    - Added 8 runs to parity_cases.yaml: 4 point_pixel cases (distance sweep 50-400mm), 4 obliquity cases (tilt sweep 0-30°)
+    - Standalone test (test_at_parallel_010.py) adds 1/R² and close_distance/R³ scaling validation
+    - Thresholds: corr≥0.98, sum_ratio∈[0.9,1.1]
+  * **AT-016 (Extreme Scale Testing):** BOTH classification
+    - Added 3 runs to parity_cases.yaml: extreme-tiny (N=1, λ=0.1Å, 10mm), extreme-large-cell (300Å, 1024²), extreme-long-distance (10m)
+    - Standalone test (test_at_parallel_016.py) adds NaN/Inf robustness checks
+    - Thresholds: corr≥0.95, sum_ratio∈[0.9,1.1]
+  * **Documentation Added:** Section 2.5.3a in testing_strategy.md
+    - Classification rules with examples for each category (YAML-only, BOTH, standalone-only)
+    - Decision flowchart for future AT additions
+    - Linter expectations clarified: standalone-only ATs (008, 013, 027, 029) produce warnings to ignore
+- Validation Results:
+  * Linter findings: 16 AT cases (was 14), 4 missing warnings (was 6: removed 010 and 016) ✓
+  * Test collection: 55 parity matrix tests (was 44: +8 from AT-010, +3 from AT-016) ✓
+  * Smoke tests:
+    - AT-010 point-pixel-distance-100mm: PASSED (5.27s)
+    - AT-016 extreme-tiny: PASSED (7.76s)
+    - AT-001/002 subset (8 tests): ALL PASSED (40.24s) - no regressions
+- Artifacts:
+  * Modified: tests/parity_cases.yaml (+56 lines: AT-010 with 8 runs, AT-016 with 3 runs)
+  * Modified: docs/development/testing_strategy.md (+38 lines: Section 2.5.3a Parity Case Classification Criteria)
+- Next Actions:
+  * ✅ COMPLETED: AT-010 and AT-016 coverage gap closed
+  * Remaining 4 "missing" ATs (008, 013, 027, 029) are correctly standalone-only per classification
+  * Linter warnings for these 4 are expected and should be ignored (documented in Section 2.5.3a)
+  * Continue with next high-priority item from fix_plan.md (debugging tasks require debug.md routing)
 
 ## [TOOLS-CI-001] Docs-as-Data Parity Coverage Linter
 - Spec/AT: Testing Strategy Section 2.5.6 (CI Meta-Check)
