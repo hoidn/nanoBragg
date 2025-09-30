@@ -1,11 +1,13 @@
 **Last Updated:** 2025-09-30 (timestamp intentionally generic per meta-update policy)
 
-**Current Status:** Core test suite: **98 passed**, 7 skipped, 1 xfailed ✓. AT-PARALLEL-012: **ALL TESTS PASSING** (corr=1.0 perfect parity). Last fix: C-style cross-product rescaling (7f6c4b2).
+**Current Status:** Core test suite: **98 passed**, 7 skipped, 1 xfailed ✓. AT-PARALLEL: 77/48/1 (AT-012 escalated). **TENTH ROUTING VIOLATION - ABSOLUTE MAXIMUM ESCALATION - ALL WORK REQUIRES debug.md**
 
 ---
 ## Index
 
 ### Active Items
+- [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: in_progress (plan: plans/active/at-parallel-012/plan.md; 2025-09-30-L checklist refresh; undo 058986f V_star regression before next attempt)
+- [ROUTING-LOOP-001] Stop loop.sh from re-invoking prompts/main — Priority: High, Status: pending (undo 058986f automation so only prompts/debug.md runs while AT failures remain)
 - [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — Priority: Medium, Status: pending (plan: plans/active/repo-hygiene-002/plan.md)
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: High, Status: in_progress (plan: plans/active/perf-pytorch-compile-refactor/plan.md)
 - [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
@@ -16,7 +18,6 @@
 - None currently
 
 ### Recently Completed (2025-09-30)
-- [AT-PARALLEL-012] Triclinic P1 Correlation Failure — done (Fixed by 7f6c4b2: C-style cross-product rescaling; corr=1.0 perfect parity achieved)
 - [AT-PARALLEL-020-REGRESSION] Comprehensive Integration Test Correlation Failure — done (absorption parallax sign fix restored thresholds; corr≥0.99)
 - [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure — done (fixed C parsing bug + PyTorch mosaicity; both seeds pass with corr=1.0)
 - [CORE-REGRESSION-001] Phi Rotation Unit Test Failure — done (test was wrong, not implementation; fixed to match C loop formula)
@@ -87,6 +88,24 @@
   * **MANDATORY (stated tenth time with absolute finality):** Next loop MUST use `prompts/debug.md`
   * **Required target:** AT-012 (Triclinic P1) per plan file at plans/active/at-parallel-012/plan.md
   * **Process note:** Implementation is 100% complete. Test suite is 100% stable. Ten consecutive verification loops confirm this conclusively. Only debugging work remains. NO FURTHER RALPH LOOPS WARRANTED OR PERMITTED UNDER ANY CIRCUMSTANCES.
+
+## [ROUTING-LOOP-001] loop.sh routing guard (2025-09-30-L)
+- Spec/AT: prompts/debug.md routing rule — main prompt forbidden while AT-PARALLEL failures persist
+- Priority: **High** (current automation reintroduces the violation every loop)
+- Status: pending
+- Owner/Date: 2025-09-30 (loop L)
+- Exit Criteria: `loop.sh` no longer invokes `prompts/main.md` unless AT-PARALLEL acceptance tests pass; produce a dry-run log under `reports/routing/2025-09-30-loop-fix.txt` proving the guard works.
+- Reproduction: `sed -n '20,60p' loop.sh` → shows the post-debug `cat prompts/main.md | ...` block added in 058986f.
+- Findings:
+  * Commit 058986f added an unconditional second prompt execution (`prompts/main.md`) immediately after the debug prompt along with redundant `git pull` calls.
+  * Because AT-012 continues to fail, the automation guarantees another routing violation each iteration, nullifying supervisor directives.
+  * No conditional gating exists; loop ignores acceptance-test status and keeps running the forbidden prompt.
+- Required Actions (Ralph):
+  1. Remove or guard the `cat prompts/main.md | ...` pipeline so the loop terminates after the debug prompt whenever any AT-PARALLEL test fails.
+  2. Collapse the duplicate `git pull` calls back to a single invocation per iteration to reduce conflict churn.
+  3. Capture a short transcript (store under `reports/routing/2025-09-30-loop-fix.txt`) demonstrating the corrected control flow.
+  4. Commit as `FIX: routing loop guard - tests: not run`, referencing this item in the body.
+- Follow-up: After the guard lands, re-run one loop manually to confirm no `prompts/main.md` invocation occurs while parity failures remain.
 
 ## [CORE-REGRESSION-001-APPLY] Apply Documented Phi Rotation Test Fix (2025-09-30-J)
 - Spec/AT: Crystal phi rotation (nanoBragg.c:3004-3009 loop formula)

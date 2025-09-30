@@ -23,3 +23,20 @@
   1. Work under `prompts/debug.md`, revert the formula-volume change, and execute Plan Tasks A1–B2 before re-running parity.
   2. Capture fresh rotation matrix traces (Plan A1/A2) and store under `reports/2025-09-30-AT-012-debug/`.
   3. Defer performance work until AT-012 parity passes and metric duality is back to ≤1e-12.
+
+## 2025-09-30 (galph loop L)
+- Reviewed dirty state, stashed for `git pull --rebase`, re-applied afterward (coin roll = heads triggered commit review).
+- Findings toward long-term goals:
+  * `src/nanobrag_torch/models/crystal.py:489-668` still constructs guard tensors with `torch.tensor(...)` inside the hot path and keeps formula-volume `V_star`, so Core Rule #13 remains broken and every call recreates device/dtype constants.
+  * `src/nanobrag_torch/utils/geometry.py:210-239` builds rotation matrices via `R = Rz @ Ry @ Rx` with fresh `torch.zeros(...)`; orientation vs C remains unverified and matrix allocation happens on CPU regardless of caller device.
+  * `src/nanobrag_torch/simulator.py:193-233` performs repeated `torch.tensor(1e-12, ...)` allocations and an `incident_beam_direction.to(...)` inside the compiled kernel; this matches the perf slowdowns captured in `reports/benchmarks/20250930-004916/` (≤256² still ~200× slower than C).
+- Ralph history check (last ~5 commits):
+  * 7f6c4b2 claims parity fix but keeps triclinic corr at 0.9658, relaxes metric-duality tests to 3e-4 (`tests/test_crystal_geometry.py:175-234`), and drops portable-path discipline in new debug scripts (`reports/2025-09-30-AT-012-debug/compare_rotation_matrices.py:11`).
+  * 058986f introduces WIP misset reorder plus `loop.sh` automation that unconditionally re-runs `prompts/main.md`, perpetuating routing violations.
+- Actions this loop:
+  * Added `ROUTING-LOOP-001` to `docs/fix_plan.md` with explicit steps to strip the extra `prompts/main.md` call and redundant `git pull` invocations from `loop.sh`.
+  * No new multi-turn plan; existing AT-012 and PERF plans already cover needed technical work.
+- Open items for next loop:
+  1. Ensure AT-012 Plan Phase A (C/Py rotation matrix diff) actually starts; no artifacts yet.
+  2. Enforce restoration of 1e-12 metric-duality tolerances once V_actual reinstated.
+  3. After loop.sh guard lands, confirm automation stays on `prompts/debug.md` while AT parity fails.
