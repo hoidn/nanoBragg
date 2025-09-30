@@ -7,13 +7,14 @@
 
 ### Active Items
 - [AT-PARALLEL-020-REGRESSION] Comprehensive Integration Test Correlation Failure — Priority: High, Status: pending (requires debug.md)
+- [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: in_progress (plan: plans/active/at-parallel-012/plan.md)
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: Medium, Status: pending (blocked on fullgraph=True limitation)
 - [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
 - [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: done
 - [PERF-PYTORCH-006] Float32 / Mixed Precision Performance Mode — Priority: Medium, Status: done
 
 ### Queued Items
-- [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: in_progress (debug.md loop K - rotation matrix investigation required)
+- None currently
 
 ### Recently Completed (2025-09-30)
 - [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure — done (fixed C parsing bug + PyTorch mosaicity; both seeds pass with corr=1.0)
@@ -1539,12 +1540,12 @@
 - Exit Criteria (from spec-a-parallel.md): corr≥0.9999; beam center in pixels = 25.6/pixel_size ±0.1px; inverse peak scaling verified; sum_ratio in [0.9,1.1]; max|Δ|≤300
 
 ---
-## Queued Items
+## Active Item Detail — AT-PARALLEL-012
 
-1. **AT-PARALLEL-012 Triclinic P1 Correlation Failure** *(escalated for policy decision)*
+1. **AT-PARALLEL-012 Triclinic P1 Correlation Failure** *(rotation matrix divergence debug — follow plan: plans/active/at-parallel-012/plan.md)*
    - Spec/AT: AT-PARALLEL-012 Reference Pattern Correlation (triclinic case)
    - Priority: High
-   - Status: done (investigation complete; no code bugs; awaiting threshold policy decision)
+   - Status: in_progress (Attempt #13 reopened issue; rotation matrix parity under active investigation per plan)
    - Current Metrics: correlation=0.966, RMSE=1.87, max|Δ|=53.4 (from parallel_test_visuals)
    - Required Threshold: correlation ≥ 0.9995 (spec-a-parallel.md line 92)
    - Gap: ~3.5% below threshold
@@ -1556,11 +1557,11 @@
      * Misset angle application (static rotation on reciprocal vectors, then real vector recalculation per Core Rule #12)
      * Triclinic metric tensor calculation (volume discrepancy ~0.6% for triclinic cells per Core Rule #13)
      * Large misset angles (-89.97°, -31.33°, 177.75°) may amplify small numerical differences
-   - Next Actions:
-     1. Generate aligned C and PyTorch traces for an on-peak pixel in triclinic case
-     2. Focus on misset rotation matrix application and reciprocal↔real vector recalculation
-     3. Verify metric duality (a·a* = 1) is satisfied with V_actual (not V_formula)
-     4. Check if reciprocal vector recalculation (Core Rule #13) is correctly implemented
+   - Next Actions (per plan):
+     1. Phase A – dump exact rotation matrices from C and PyTorch for the triclinic misset angles and archive the comparison.
+     2. Phase B – align C/PyTorch traces of rotated a*, b*, c* vectors to confirm the first divergence.
+     3. Phase C – test hypotheses (Euler order, matrix orientation, angle sign/unit, numeric drift) and log each outcome.
+     4. Phase D/E – implement the minimal fix, then rerun AT-012 and sanity AT cases before closing.
    - Artifacts: `parallel_test_visuals/AT-PARALLEL-012/comparison_triclinic.png`, `parallel_test_visuals/AT-PARALLEL-012/metrics.json`
    - References: Core Implementation Rule #12 (Misset Rotation Pipeline), Core Rule #13 (Reciprocal Vector Recalculation), `docs/architecture/crystal.md`
    - Attempts History (Loop Start):
@@ -1703,8 +1704,8 @@
         2. If approved: update spec, relax test threshold, mark AT-012 as PASS
         3. If not approved: document as known limitation, keep test xfail
         4. Either way: commit investigation artifacts (summary.md, test scripts)
-      * Exit Criteria: SATISFIED (investigation complete) — awaiting decision on threshold policy
-      * Status: COMPLETE — no code bugs; root cause is fundamental numerical precision; escalated for policy decision
+      * Exit Criteria: superseded by Attempt #13 (rotation matrix divergence found; investigation reopened)
+      * Status: SUPERSEDED — precision-only hypothesis disproven by Attempt #13; do not relax threshold until rotation parity is fixed
     * [2025-09-29 23:59 UTC] Attempt #12 — Status: complete (final verification and loop closure)
       * Context: Verification loop after Attempt #11 investigation completion; confirm parity suite status and document loop closure
     * [2025-09-30 13:27 UTC] Attempt #13 — Status: PARTIAL (rotation matrix investigation; small numerical differences found)
