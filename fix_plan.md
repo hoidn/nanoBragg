@@ -65,14 +65,114 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - Cache invalidation working correctly on pixel_size change
   - Pattern correlation maintained across pixel size variations
 
-### Re‑validate AT‑PARALLEL thresholds without loosening (HIGH)
+### Re‑validate AT‑PARALLEL thresholds without loosening ✅ COMPLETE (2025-09-30)
 - Spec/AT: specs/spec-a-parallel.md — entire AT‑PARALLEL suite
 - Priority: High
+- Status: **COMPLETE**
+- Audit Report: docs/development/threshold_audit_2025-09-30.md
+- Attempts History:
+  - Attempt #1 (2025-09-30): Systematic audit of 9 critical AT-PARALLEL tests
+    - Methodology: Parallel subagent analysis cross-referencing spec requirements with test implementations
+    - Tests audited: AT-PARALLEL-001, 002, 006, 007, 009, 012, 020, 028, 029
+    - Findings: 2 MATCH, 3 minor LOOSENED, 3 major LOOSENED, 1 FAILING
+    - Artifacts: docs/development/threshold_audit_2025-09-30.md (full report)
+- Key Findings:
+  - ✅ AT-PARALLEL-001, 028: Fully conformant
+  - ⚠️ AT-PARALLEL-002, 007, 009, 029: Minor violations (documented, some acceptable)
+  - 🔴 AT-PARALLEL-006: 3x loosening on peak position/scaling (HIGH priority fix)
+  - 🔴 AT-PARALLEL-012: Failing triclinic_P1 (0.9605 < 0.9995) + loosened thresholds
+  - 🔴 AT-PARALLEL-020: 10x wider intensity ratio, correlation 0.95→0.85
+- Next Actions: Created specific fix_plan items below for each high-priority violation
+
+### [AT-PARALLEL-006] Restore Spec Thresholds (HIGH)
+- Spec/AT: specs/spec-a-parallel.md — AT-PARALLEL-006 Single Reflection Position
+- Priority: High
 - Status: pending
-- Goal: Audit any historical tolerance changes; restore/confirm spec thresholds (no loosening), starting with AT‑PARALLEL‑002.
+- Audit Finding (2025-09-30): Tests use 3x looser thresholds than spec
+  - Peak position: ±1.5px (spec: ±0.5px) — 3x LOOSENED
+  - Wavelength scaling: ±3% (spec: ±1%) — 3x LOOSENED
+  - Distance scaling: ±4% (spec: ±2%) — 2x LOOSENED
+- Root Cause Hypothesis: Insufficient subpixel accuracy or discretization issues
 - Actions:
-  - For each AT‑PARALLEL test, confirm the enforced thresholds match the spec shard; if mismatched, update tests to spec (not relax spec) only after fixing implementation root causes.
-  - Add a brief note under each item’s Attempts History with current measured metrics and links to artifacts.
+  1. Restore tests/test_at_parallel_006.py thresholds to spec values (0.5px, 1%, 2%)
+  2. Run tests - expect failures
+  3. If failures occur, investigate whether:
+     a. Bragg angle calculation needs refinement
+     b. Subpixel sampling is insufficient
+     c. Coordinate transformation has systematic error
+  4. Fix implementation to meet spec, do NOT relax spec
+- Artifacts: docs/development/threshold_audit_2025-09-30.md
+- Owner: TBD
+- First Divergence: TBD
+
+### [AT-PARALLEL-012] Restore Spec Thresholds and Implement High-Res (HIGH)
+- Spec/AT: specs/spec-a-parallel.md — AT-PARALLEL-012 Reference Pattern Correlation
+- Priority: High
+- Status: pending
+- Audit Finding (2025-09-30): Multiple threshold violations
+  - simple_cubic: correlation ≥0.9985 (spec: ≥0.9995) — ADR-12 loosening
+  - simple_cubic: peak matching ≥85% (spec: ≥95%) — 10% LOOSENED
+  - tilted: correlation ≥0.9985 (spec: ≥0.9995) — ADR-12 loosening
+  - high-res: SKIPPED (not implemented)
+  - triclinic_P1: FAILING 0.9605 < 0.9995 (separate item, route to debug)
+- Actions:
+  1. Remove ADR-12 tolerance (lines 167, 287 in test_at_parallel_012.py)
+  2. Restore simple_cubic peak matching from 85% to 95% (line 170)
+  3. Implement high-res variant test (currently pytest.mark.skip at line 296)
+  4. Run tests - monitor for failures
+  5. If simple_cubic/tilted fail after restoration, investigate root cause
+- Artifacts: docs/development/threshold_audit_2025-09-30.md
+- Owner: TBD
+- First Divergence: TBD
+
+### [AT-PARALLEL-020] Fix Absorption and Restore Thresholds (HIGH)
+- Spec/AT: specs/spec-a-parallel.md — AT-PARALLEL-020 Comprehensive Integration Test
+- Priority: High
+- Status: pending
+- Audit Finding (2025-09-30): Major threshold loosening
+  - Correlation: ≥0.85 (spec: ≥0.95) — 0.10 LOOSENED
+  - Intensity ratio: [0.15, 1.5] (spec: [0.9, 1.1]) — 10x WIDER
+  - Peak matching: ≥35% (spec: top 50 within 1.0px) — WEAKENED
+  - Note: test comments cite absorption implementation as root cause
+- Root Cause: Absorption implementation discrepancies (detector_abs, detector_thick)
+- Actions:
+  1. Investigate absorption implementation in simulator.py and detector.py
+  2. Review absorption ADR-09 implementation against spec
+  3. Generate parallel C↔PyTorch traces for absorption test case
+  4. Fix absorption calculations to match C behavior
+  5. Restore test thresholds to spec values
+  6. Alternative: Mark comprehensive absorption tests as xfail until fixed
+- Artifacts: docs/development/threshold_audit_2025-09-30.md
+- Owner: TBD
+- First Divergence: TBD
+
+### [AT-PARALLEL-007] Harmonize Correlation Threshold (MEDIUM)
+- Spec/AT: specs/spec-a-parallel.md — AT-PARALLEL-007 Peak Position with Rotations
+- Priority: Medium
+- Status: pending
+- Audit Finding (2025-09-30): Test uses 0.9995, spec requires 0.9999
+  - Discrepancy: parity_cases.yaml specifies 0.9999 but test uses 0.9995
+- Actions:
+  1. Update tests/test_at_parallel_007.py line 273 from 0.9995 to 0.9999
+  2. Run tests - monitor for failures
+  3. If test fails, investigate why 0.0004 relaxation was needed
+- Artifacts: docs/development/threshold_audit_2025-09-30.md
+- Owner: TBD
+
+### [AT-PARALLEL-029] Harmonize Aliasing Threshold (MEDIUM)
+- Spec/AT: specs/spec-a-parallel.md — AT-PARALLEL-029 Subpixel Sampling
+- Priority: Medium
+- Status: pending
+- Audit Finding (2025-09-30): Inconsistent thresholds between tests
+  - test_pytorch_aliasing_reduction: ≥15% (spec: ≥50%)
+  - test_issue_subpixel_aliasing: ≥50% (correct)
+- Actions:
+  1. Update test_pytorch_aliasing_reduction (line 189) from 15% to 50%
+  2. Remove comment about "after fixing subpixel physics" if no longer relevant
+  3. Run tests - expect possible failures
+  4. If test fails, investigate subpixel physics implementation
+- Artifacts: docs/development/threshold_audit_2025-09-30.md
+- Owner: TBD
 
 
 ### ✅ COMPLETED (2025-09-29): Vectorize Multi-Source Physics Evaluation in Simulator
