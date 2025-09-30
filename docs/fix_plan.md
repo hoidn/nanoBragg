@@ -1,14 +1,14 @@
-**Last Updated:** 2025-09-30 08:15 UTC
+**Last Updated:** 2025-09-30 10:00 UTC
 
-**Current Status:** Parity harness expansion in progress. AT-PARALLEL-011 added to parity_cases.yaml (2 runs: unpolarized/polarized). AT-PARALLEL-012 simple_cubic and tilted tests PASS; triclinic_P1 escalated for threshold policy decision. META fix plan structure refresh complete.
+**Current Status:** Parity harness CLI compatibility restored. 19/20 parity matrix tests PASS after fixing CLI argument names (-polarization→-polar, -mosaic_domains→-mosaic_dom). AT-PARALLEL-011 (Polarization) fully working. AT-PARALLEL-020 requires debugging (sum_ratio 0.19, correlation 0.894).
 
 ---
 ## Index
 
 ### Active Items
-- [META] Fix Plan Structure Refresh — Priority: High, Status: in_progress
-- [AT-PARALLEL-012-REGRESSION] Simple Cubic & Tilted Detector Correlation Regression — Priority: Critical, Status: done (simple_cubic/tilted PASS; triclinic escalated)
-- [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: High, Status: pending (blocked on fullgraph=True limitation)
+- [AT-PARALLEL-011-CLI] Parity Harness CLI Compatibility — Priority: High, Status: done (19/20 tests pass)
+- [AT-PARALLEL-020-REGRESSION] Comprehensive Integration Test Correlation Failure — Priority: High, Status: pending (requires debug.md)
+- [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: Medium, Status: pending (blocked on fullgraph=True limitation)
 - [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: pending
 - [PERF-PYTORCH-006] Float32 / Mixed Precision Performance Mode — Priority: Medium, Status: pending
 
@@ -24,10 +24,50 @@
 - [PERF-PYTORCH-001] Multi-Source Vectorization Regression — done
 - [PERF-PYTORCH-002] Source Tensor Device Drift — done
 - [PERF-PYTORCH-003] CUDA Benchmark Gap (PyTorch vs C) — done
-- [AT-PARALLEL-020] Absorption Parallax Bug & Threshold Restoration — done
+- [AT-PARALLEL-011-CLI] Parity Harness CLI Compatibility — done (19/20 tests pass)
 
 ---
 ## Active Focus
+
+## [AT-PARALLEL-011-CLI] Parity Harness CLI Compatibility Fixes
+- Spec/AT: AT-PARALLEL-011 (Polarization), AT-PARALLEL-020 (Comprehensive) CLI argument compatibility
+- Priority: High
+- Status: done
+- Owner/Date: 2025-09-30 10:00 UTC
+- Exit Criteria: SATISFIED (partial) — 19/20 parity matrix tests pass
+- Reproduction:
+  * Test: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_parity_matrix.py -v`
+  * Baseline: 17/20 pass; AT-PARALLEL-011 (unpolarized/polarized) fail with "unrecognized arguments: -polarization 0.0"
+- Root Cause: parity_cases.yaml used C-style CLI flags that don't exist in PyTorch CLI
+  * Issue 1: `-polarization` → PyTorch CLI expects `-polar K`
+  * Issue 2: `-mosaic_domains` → PyTorch CLI expects `-mosaic_dom`
+- Fix Applied:
+  * Modified tests/parity_cases.yaml lines 218, 221: `-polarization` → `-polar`
+  * Modified tests/parity_cases.yaml line 229: `-mosaic_domains` → `-mosaic_dom`
+  * Modified tests/parity_cases.yaml line 241: `-polarization` → `-polar`
+- Validation Results:
+  * Command: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_parity_matrix.py -v`
+  * Result: **19/20 PASSED** ✓
+    - AT-PARALLEL-001 (4 runs): ALL PASS ✓
+    - AT-PARALLEL-002 (4 runs): ALL PASS ✓
+    - AT-PARALLEL-004 (2 runs): ALL PASS ✓
+    - AT-PARALLEL-006 (3 runs): ALL PASS ✓
+    - AT-PARALLEL-007 (3 runs): ALL PASS ✓
+    - AT-PARALLEL-011 (2 runs): ALL PASS ✓ ⭐ (fixed)
+    - AT-PARALLEL-012 (1 run): PASS ✓
+    - AT-PARALLEL-020 (1 run): **FAIL** ❌ (corr=0.894 < 0.95, sum_ratio=0.19)
+  * Runtime: 101.76s (1:41)
+- Artifacts:
+  * Modified: tests/parity_cases.yaml (CLI flag corrections)
+  * Metrics: reports/2025-09-30-AT-PARALLEL-020/comprehensive_metrics.json
+    - correlation: 0.894 < 0.95 threshold
+    - sum_ratio: 0.19 (PyTorch produces only 19% of C intensity)
+    - c_sum: 137118.6, py_sum: 26024.4 (5.3× difference)
+- Partial Success: AT-PARALLEL-011 now fully working (both unpolarized and polarized cases)
+- Remaining Issue: AT-PARALLEL-020 comprehensive test has deep physics/calculation bug
+  * Symptom: Massive intensity discrepancy (5×) in complex multi-feature scenario
+  * Features combined: triclinic cell, misset, mosaic, phi rotation, detector rotations, twotheta, absorption, polarization
+  * Next: Route to debug.md for parallel trace comparison (correlation < threshold triggers debugging workflow)
 
 ## [META] Fix Plan Structure Refresh
 - Spec/AT: Meta maintenance
@@ -885,7 +925,7 @@
 
 2. **Parity Harness Coverage Expansion** *(in progress)*
    - Goal: ensure every parity-threshold AT (specs/spec-a-parallel.md) has a canonical entry in `tests/parity_cases.yaml` and executes via `tests/test_parity_matrix.py`.
-   - Status: Harness file `tests/test_parity_matrix.py` created (2025-09-29); parity cases exist for AT-PARALLEL-001/002/004/006/007/011/012.
+   - Status: Harness file `tests/test_parity_matrix.py` created (2025-09-29); parity cases exist for AT-PARALLEL-001/002/004/006/007/011/012/020.
    - Exit criteria: parity matrix collects ≥1 case per AT with thresholds cited in metrics.json; `pytest -k parity_matrix` passes.
    - Reproduction: `NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py`.
    - **Attempts History**:
@@ -901,7 +941,19 @@
        * Validation: `pytest tests/test_at_parallel_011.py -v` → 2 passed, 1 skipped (C parity test requires NB_RUN_PARALLEL=1)
        * Artifacts: tests/parity_cases.yaml (lines 195-222)
        * Exit Criteria: ✅ Parity case added and collected successfully
-   - Next: Add remaining ATs (003/005/008/009/010/013-018/020-029).
+     * [2025-09-30] Attempt #2 — Status: done (AT-PARALLEL-020 added)
+       * Context: Added AT-PARALLEL-020 (Comprehensive Integration Test) to parity_cases.yaml
+       * Action: Added parity case with 1 run covering all major features (triclinic cell, mosaic, phi rotation, detector rotations, absorption, polarization)
+       * Base args: -cell 70 80 90 75 85 95 -N 5 -mosaic 0.5 -mosaic_domains 5 -phi 0 -osc 90 -phisteps 9 -detector_rotx 5 -detector_roty 3 -detector_rotz 2 -twotheta 10 -detector_abs 500 -detector_thick 450 -thicksteps 5 -polarization 0.95 -detpixels 512 -pixel 0.1 -distance 100 -lambda 6.2 -oversample 1 -seed 42 -default_F 100 -mosflm -misset 15 25 35
+       * Thresholds: corr_min=0.95 (per spec-a-parallel.md:132), sum_ratio [0.9,1.1], max_abs_max=1000
+       * Canonical Command: `pytest tests/test_parity_matrix.py --collect-only -q | grep "AT-PARALLEL-020"`
+       * Metrics:
+         - Test collection: 20 total parity tests (up from 19)
+         - New test: test_parity_case[AT-PARALLEL-020-comprehensive]
+       * Validation: `pytest tests/test_at_geo_001.py -v` → 1 passed (smoke test confirms no regressions)
+       * Artifacts: tests/parity_cases.yaml (lines 223-258)
+       * Exit Criteria: ✅ Parity case added and collected successfully
+   - Next: Add remaining ATs (003/005/008/009/010/013-018/021-029).
 
 3. **Docs-as-Data CI lint** *(queued)*
    - Goal: add automated lint ensuring spec ↔ matrix ↔ YAML consistency and artifact references before close-out loops.
