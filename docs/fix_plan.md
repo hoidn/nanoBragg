@@ -1,11 +1,12 @@
-**Last Updated:** 2025-09-30 20:00 UTC
+**Last Updated:** 2025-09-30 21:00 UTC
 
-**Current Status:** **PARITY COVERAGE EXPANSION:** AT-PARALLEL-023 successfully added to parity harness with 10 test runs (misset angle equivalence). All cubic tests pass with correlation ≥0.99; triclinic tests pass with relaxed threshold (0.985) due to known numerical precision limitations. Total parity coverage: 13 ATs (001-007, 011-012, 020-023), 15 remaining.
+**Current Status:** **CRITICAL BUG DISCOVERED:** AT-PARALLEL-024 parity harness addition revealed catastrophic random misset implementation bug (correlation ~0.01-0.02, requires debug.md routing). Parity harness entry added but tests fail. Total parity coverage: 13 ATs passing (001-007, 011-012, 020-023), 1 AT failing (024), 14 ATs remaining (008-010, 013-018, 025-029). Four critical AT failures now known: AT-020, AT-021, AT-022, AT-024.
 
 ---
 ## Index
 
 ### Active Items
+- [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure — Priority: Critical, Status: pending (requires debug.md)
 - [AT-PARALLEL-021-PARITY] Crystal Phi Rotation Parity Failure — Priority: Critical, Status: pending (requires debug.md)
 - [AT-PARALLEL-020-REGRESSION] Comprehensive Integration Test Correlation Failure — Priority: High, Status: pending (requires debug.md)
 - [AT-PARALLEL-022-PARITY] Combined Detector+Crystal Rotation Parity Failure — Priority: High, Status: pending (requires debug.md, blocked by AT-021)
@@ -95,6 +96,43 @@
 - Next Actions:
   * Continue parity harness expansion: 15 tests remain (008-010, 013-018, 024-029)
   * Next recommended: AT-024 (Random Misset Reproducibility) or AT-025 (Maximum Intensity Position Alignment)
+
+## [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure
+- Spec/AT: AT-PARALLEL-024 Random Misset Reproducibility and Equivalence
+- Priority: Critical (random misset implementation bug)
+- Status: pending (requires debug.md)
+- Owner/Date: 2025-09-30 21:00 UTC
+- Exit Criteria: (1) Add AT-PARALLEL-024 to parity_cases.yaml ✓ DONE; (2) Both test cases pass parity thresholds ❌ BLOCKED by random misset bug
+- Reproduction:
+  * Test: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_parity_matrix.py -k "AT-PARALLEL-024" -v`
+- Implementation Summary:
+  * Added AT-PARALLEL-024 to tests/parity_cases.yaml (lines 465-494)
+  * Base parameters: cubic 100Å cell, N=5, λ=1.0Å, 256×256 detector, pixel 0.1mm, distance 100mm, MOSFLM, seed 1
+  * Two runs testing random misset with different seeds:
+    - random-misset-seed-12345: -misset random -misset_seed 12345
+    - random-misset-seed-54321: -misset random -misset_seed 54321
+  * Thresholds: corr≥0.99, sum_ratio∈[0.98, 1.02], max|Δ|<500
+  * Validates: Random misset generation produces deterministic, equivalent patterns between C and PyTorch
+- Test Results (2025-09-30 21:00 UTC):
+  * **BOTH RUNS CATASTROPHICALLY FAILED** ❌
+    - random-misset-seed-12345: correlation 0.025 << 0.99 (threshold), sum_ratio 1.0885
+    - random-misset-seed-54321: correlation 0.011 << 0.99 (threshold), sum_ratio 1.1282
+    - RMSE: 10.36 (seed-12345), 10.53 (seed-54321)
+    - max|Δ|: 149.48 (seed-12345), 150.21 (seed-54321)
+  * **CRITICAL INSIGHT: RANDOM MISSET BUG DISCOVERED**
+    - Correlations ~0.01-0.02 indicate essentially uncorrelated patterns (random noise level)
+    - C and PyTorch are generating completely different random misset angles OR applying them incorrectly
+    - This is likely a seed-handling or RNG implementation mismatch
+- Artifacts:
+  * Modified: tests/parity_cases.yaml (added AT-PARALLEL-024 entry with 2 runs)
+  * Metrics: reports/2025-09-30-AT-PARALLEL-024/{random-misset-seed-12345_metrics.json, random-misset-seed-54321_metrics.json}
+  * Visuals: reports/2025-09-30-AT-PARALLEL-024/{random-misset-seed-12345_diff.png, random-misset-seed-54321_diff.png}
+- Next Actions:
+  * **REQUIRED**: Route to prompts/debug.md for parallel trace comparison
+  * Focus: Investigate random misset generation and seeding in both C and PyTorch
+  * Hypothesis: Seed is not being correctly passed/used, or RNG implementation differs between C and PyTorch
+  * Check: Are the sampled misset angles themselves correct? Should emit trace logs from both implementations
+  * Priority: Critical - random misset is a fundamental feature for realistic simulations
 
 ## [AT-PARALLEL-005-HARNESS] Beam Center Parameter Mapping Parity Addition
 - Spec/AT: AT-PARALLEL-005 Beam Center Parameter Mapping

@@ -461,3 +461,33 @@ cases:
         extra_args: >-
           -cell 70 80 90 75 85 95
           -misset 15.0 20.5 30.25
+
+  - id: AT-PARALLEL-024
+    description: Random misset reproducibility and equivalence (C ↔ PyTorch)
+    base_args: >-
+      -default_F 100
+      -cell 100 100 100 90 90 90
+      -lambda 1.0
+      -N 5
+      -detpixels 256
+      -pixel 0.1
+      -distance 100
+      -mosflm
+      -phi 0
+      -osc 0
+      -mosaic 0
+      -oversample 1
+    thresholds:
+      corr_min: 0.99
+      sum_ratio_min: 0.98
+      sum_ratio_max: 1.02
+      max_abs_max: 500
+    runs:
+      - name: random-misset-seed-12345
+        extra_args: >-
+          -misset random
+          -misset_seed 12345
+      - name: random-misset-seed-54321
+        extra_args: >-
+          -misset random
+          -misset_seed 54321
