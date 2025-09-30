@@ -1,0 +1,1 @@
+./golden_suite_generator/nanoBragg_trace -default_F 100 -cell 100 100 100 90 90 90 -lambda 6.2 -N 5 -detpixels 256 -distance 100 -Xbeam 25.6 -Ybeam 25.6 -pixel 0.4 -trace_pixel 120 120

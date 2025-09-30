@@ -42,13 +42,14 @@ Given your findings in <1> and <2>, think about whether there's any need for a m
 - Do we need a new fix_plan item to put ralph back on course, fix one of his mistakes, or instruct him to do something that he overlooked? If so, draft it and add it to fix_plan.mosaic_domains
 </no case>
 </3>
+<4>
+Before finishing the loop, enforce git hygiene:
+- Run `git status --short` to inspect new or modified files that appeared during this invocation.
+- Review diffs for each change; revert only if you created it this loop and it was accidental.
+- Stage intentional updates with `git add -A` and commit via `git commit -m "SUPERVISOR: <scope> - <tests or rationale>"`, noting any tests run (use `tests: not run` when you skip them).
+- If you deliberately leave the tree dirty, document the rationale in galph_memory.md so the next invocation knows why.
+</4>
 </instructions>
-<git discipline>
-- When you modify repo files (e.g., fix_plan.md, galph_memory.md, prompts/, plans/), run `git status` and review diffs before finishing the loop.
-- Stage intentional changes and commit with `git add -A` followed by `git commit -m "SUPERVISOR: <scope> - <tests or rationale>"`.
-- Summarize any tests or validations in the commit message; note `tests: not run` when appropriate.
-- Keep supervisor commits focused; avoid bundling unrelated updates.
-</git discipline>
 Now carefully and exhaustively follow your <instructions>.
 
 

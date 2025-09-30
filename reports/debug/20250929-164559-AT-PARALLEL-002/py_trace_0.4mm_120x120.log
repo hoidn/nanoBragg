@@ -1,0 +1,31 @@
+Running simulation...
+  Detector: 256x256 pixels
+  Crystal: 100.0x100.0x100.0 Å
+  Wavelength: 6.20 Å
+  Tracing pixel (slow=120, fast=120)
+auto-selected 1-fold oversampling
+
+=== TRACE: Pixel (120, 120) [slow, fast] ===
+TRACE: Final intensity = 2.280599943515e-02
+TRACE: Normalized intensity = 2.280599943515e-02
+TRACE: Position (m) = 1.000000000000e-01, -2.240000000000e-02, 2.240000000000e-02
+TRACE: Position (Å) = 1000000000.000000, -224000000.000000, 224000000.000000
+TRACE: Airpath (m) = 1.048976644163e-01
+TRACE: a* (first) = (1.000000e-02, 0.000000e+00, 0.000000e+00)
+TRACE: Omega (solid angle) = 1.386189251199e-05
+TRACE: r_e^2 = 7.940792480190e-30
+TRACE: Fluence = 1.259320152862e+29
+TRACE: Oversample = 1
+
+TRACE: Intensity calculation chain:
+  normalized * r_e^2 * fluence
+  = 2.280599943515e-02 * 7.940792480190e-30 * 1.259320152862e+29
+  = 2.280599943515e-02
+
+Statistics:
+  Max intensity: 2.500e+03 at pixel (64, 64)
+  Mean: 1.288e+01
+  RMS: 8.320e+01
+  RMSD: 8.220e+01
+
+Simulation complete.

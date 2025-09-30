@@ -1,0 +1,205 @@
+nanoBragg nanocrystal diffraction simulator - James Holton and Ken Frankel 5-17-17
+mosflm convention selected.
+DETECTOR_FAST_AXIS 0 0 1
+DETECTOR_SLOW_AXIS 0 -1 0
+DETECTOR_NORMAL_AXIS 1 0 0
+pivoting detector around direct beam spot
+TRACE_C:detector_convention=MOSFLM
+TRACE_C:angles_rad=rotx:0 roty:0 rotz:0 twotheta:0
+TRACE_C:beam_center_m=X:2.56e-05 Y:2.56e-05 pixel_mm:0.4
+TRACE_C:initial_fdet=0 0 1
+TRACE_C:initial_sdet=0 -1 0
+TRACE_C:initial_odet=1 0 0
+TRACE_C:Rx=[1 0 0; 0 1 -0; 0 0 1]
+TRACE_C:Ry=[1 0 0; 0 1 0; -0 0 1]
+TRACE_C:Rz=[1 -0 0; 0 1 0; 0 0 1]
+TRACE_C:R_total=[1 0 0; 0 1 0; 0 0 1]
+TRACE_C:fdet_after_rotz=0 0 1
+TRACE_C:sdet_after_rotz=0 -1 0
+TRACE_C:odet_after_rotz=1 0 0
+TRACE_C:twotheta_axis=0 0 -1
+TRACE_C:fdet_after_twotheta=0 0 1
+TRACE_C:sdet_after_twotheta=0 -1 0
+TRACE_C:odet_after_twotheta=1 0 0
+TRACE_C:convention_mapping=Fbeam←Ybeam_mm(+0.5px),Sbeam←Xbeam_mm(+0.5px),beam_vec=[1 0 0]
+TRACE_C:Fbeam_m=0.0258
+TRACE_C:Sbeam_m=0.0258
+TRACE_C:distance_m=0.1
+TRACE_C:term_fast=-0 -0 -0.0258
+TRACE_C:term_slow=-0 0.0258 -0
+TRACE_C:term_beam=0.1 0 0
+TRACE_C:pix0_vector=0.1 0.0258 -0.0258
+DETECTOR_PIX0_VECTOR 0.1 0.0258 -0.0258
+XDS incident beam: 0 0 1
+auto-selected no interpolation
+TRACE: Computing cross products of reciprocal vectors:
+TRACE:   Input vectors for cross products:
+TRACE:     a_star = [0.01, 0, 0]
+TRACE:     b_star = [-6.12323e-19, 0.01, 0]
+TRACE:     c_star = [-6.12323e-19, -6.12323e-19, 0.01]
+TRACE:   Cross product results:
+TRACE:     a_star x b_star = [0, -0, 0.0001]
+TRACE:     b_star x c_star = [0.0001, 6.12323e-21, 6.12323e-21]
+TRACE:     c_star x a_star = [-0, 0.0001, 6.12323e-21]
+TRACE: Reciprocal cell volume calculation:
+TRACE:   V_star = a_star . (b_star x c_star) = 1e-06
+TRACE: Direct-space cell volume: V_cell = 1/V_star = 1e+06
+TRACE: Before computing real-space vectors:
+TRACE:   b_star_cross_c_star = [0.0001, 6.12323e-21, 6.12323e-21]
+TRACE:   c_star_cross_a_star = [-0, 0.0001, 6.12323e-21]
+TRACE:   a_star_cross_b_star = [0, -0, 0.0001]
+TRACE:   V_cell = 1e+06, V_star = 1e-06
+TRACE: After computing real-space vectors:
+TRACE:   a = [100, 6.12323e-15, 6.12323e-15] |a| = 100
+TRACE:   b = [-0, 100, 6.12323e-15] |b| = 100
+TRACE:   c = [0, -0, 100] |c| = 100
+TRACE: Re-generating reciprocal vectors from real-space vectors:
+TRACE:   Before re-generation: a_star = [0.01, 0, 0] |a_star| = 0.01
+TRACE:   Before re-generation: b_star = [-6.12323e-19, 0.01, 0] |b_star| = 0.01
+TRACE:   Before re-generation: c_star = [-6.12323e-19, -6.12323e-19, 0.01] |c_star| = 0.01
+TRACE:   Cross products: b_cross_c = [10000, 0, 0]
+TRACE:   Cross products: c_cross_a = [-6.12323e-13, 10000, 0]
+TRACE:   Cross products: a_cross_b = [-6.12323e-13, -6.12323e-13, 10000]
+TRACE:   After re-generation: a_star = [0.01, 0, 0] |a_star| = 0.01
+TRACE:   After re-generation: b_star = [-6.12323e-19, 0.01, 0] |b_star| = 0.01
+TRACE:   After re-generation: c_star = [-6.12323e-19, -6.12323e-19, 0.01] |c_star| = 0.01
+Unit Cell: 100 100 100 90 90 90
+Recp Cell: 0.01 0.01 0.01 90 90 90
+volume = 1e+06 A^3
+real-space cell vectors (Angstrom):
+     a           b           c         
+X: 100.00000000 -0.00000000  0.00000000
+Y:  0.00000000 100.00000000 -0.00000000
+Z:  0.00000000  0.00000000 100.00000000
+reciprocal-space cell vectors (Angstrom^-1):
+     a_star      b_star      c_star    
+X:  0.01000000 -0.00000000 -0.00000000
+Y:  0.00000000  0.01000000 -0.00000000
+Z:  0.00000000  0.00000000  0.01000000
+TRACE: Converting real-space vectors from Angstroms to meters:
+TRACE:   Before conversion: a = [100, 6.12323e-15, 6.12323e-15] |a| = 100 Angstroms
+TRACE:   Before conversion: b = [-0, 100, 6.12323e-15] |b| = 100 Angstroms
+TRACE:   Before conversion: c = [0, -0, 100] |c| = 100 Angstroms
+TRACE:   After conversion: a = [1e-08, 6.12323e-25, 6.12323e-25] |a| = 1e-08 meters
+TRACE:   After conversion: b = [-0, 1e-08, 6.12323e-25] |b| = 1e-08 meters
+TRACE:   After conversion: c = [0, -0, 1e-08] |c| = 1e-08 meters
+TRACE: Copying vectors to a0, b0, c0 (phi=0 mosaic=0 reference):
+TRACE:   a0 = [1e-08, 6.12323e-25, 6.12323e-25] |a0| = 1e-08 meters
+TRACE:   b0 = [-0, 1e-08, 6.12323e-25] |b0| = 1e-08 meters
+TRACE:   c0 = [0, -0, 1e-08] |c0| = 1e-08 meters
+TRACE: Copying vectors to ap, bp, cp (phi=0 working copy):
+TRACE:   ap = [1e-08, 6.12323e-25, 6.12323e-25] |ap| = 1e-08 meters
+TRACE:   bp = [-0, 1e-08, 6.12323e-25] |bp| = 1e-08 meters
+TRACE:   cp = [0, -0, 1e-08] |cp| = 1e-08 meters
+crystal is 0.05 x 0.05 x 0.05 microns
+auto-selected 1-fold oversampling
+approximate MW = 722657
+thick0 = 0 um
+phi0 = 0
+divergence deviation: 0 0
+lambda0 = 6.2e-10
+  created a total of 1 sources:
+-10 -0 0   1 6.2e-10
+  created a total of 1 mosaic domains
+  0 initialized hkls (all others =100)
+  parallelpiped xtal: 5x5x5 cells
+  wave=6.2e-10 meters +/- 0% in 1 steps
+  Kahn polarization factor: 0.000000
+  incident fluence: 1.25932e+29 photons/m^2
+  distance=0.1 detsize=0.1024x0.1024  pixel=0.0004 meters (256x256 pixels)
+  sensor is 0 m thick in 1 layers with mu= -1
+  Xbeam=0.0256 Ybeam=0.0256
+  Fbeam=0.0258 Sbeam=0.0258
+  Xclose=0.0512 Yclose=0.0512
+  Fclose=0.0258 Sclose=0.0258
+  DIRECTION_OF_DETECTOR_X-AXIS= 0 0 1
+  DIRECTION_OF_DETECTOR_Y-AXIS= 0 -1 0
+  DIRECTION_OF_DETECTOR_Z-AXIS= 1 0 0
+  INCIDENT_BEAM_DIRECTION= 1 0 0
+  spindle ROTATION_AXIS= 0 0 1
+  POLARIZATION_PLANE_NORMAL= 0 -1 0
+  dials origin= -25.8 25.8 -100
+  roi: 0 < x < 256 && 0 < y < 256
+  hdivrange=0 hdivstep=0  radians
+  vdivrange=0 vdivstep=0  radians
+  1 divergence steps
+  1 sources
+  1 mosaic domains over mosaic spread of 0 degrees
+  1 phi steps from 0 to 0 degrees
+  1x1 pixel oversample steps
+
+  noise image paramters:
+  seed: -1759189562
+  water droplet size: 0 m
+0% done
+0% done
+1% done
+2% done
+3% done
+4% done
+4% done
+5% done
+6% done
+7% done
+8% done
+9% done
+9% done
+14% done
+19% done
+24% done
+29% done
+34% done
+39% done
+44% done
+TRACE_C: pixel_pos_meters 0.1 -0.0224 0.0224
+TRACE_C: R_distance_meters 0.104897664416325
+TRACE_C: omega_pixel_sr 1.38618925119891e-05
+TRACE_C: close_distance_meters 0.1
+TRACE_C: obliquity_factor 0.953310071834516
+TRACE_C: diffracted_vec 0.953310071834516 -0.213541456090931 0.213541456090931
+TRACE_C: incident_vec 1 0 -0
+TRACE_C: lambda_meters 6.2e-10
+TRACE_C: scattering_vec_A_inv -75306335.7507812 -344421703.37247 344421703.37247
+TRACE_C: hkl_frac -0.753063357507812 -3.4442170337247 3.4442170337247
+TRACE_C: hkl_rounded -1 -3 3
+TRACE_C: F_latt_a -0.960025387054958
+TRACE_C: F_latt_b 0.650002888698729
+TRACE_C: F_latt_c 0.650002888698729
+TRACE_C: F_latt -0.405614331230081
+TRACE_C: F_cell 100
+TRACE_C: I_before_scaling 1645.22985699226
+TRACE_C: r_e_sqr 7.94079248018965e-30
+TRACE_C: fluence 1.25932015286227e+29
+TRACE_C: steps 1
+TRACE_C: I_pixel_final 0.0217660469220755
+TRACE_C: floatimage_accumulated 0.0217660460621119
+49% done
+54% done
+59% done
+64% done
+69% done
+74% done
+79% done
+84% done
+89% done
+90% done
+91% done
+92% done
+93% done
+94% done
+94% done
+95% done
+96% done
+97% done
+98% done
+
+solid angle subtended by detector = 0.746238 steradian ( 5.93837% sphere)
+writing floatimage.bin as 65536 4-byte floats
+max_I = 2500  at 0.0258 0.0258
+mean= 11.711 rms= 77.4669 rmsd= 76.5765
+intfile_scale = 22
+writing intimage.img as 2-byte integers
+pgm_scale = 0.652941
+writing image.pgm as 1-byte integers
+767538 photons on noise image (0 overloads)
+writing noiseimage.img as 2-byte integers
