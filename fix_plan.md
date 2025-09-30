@@ -4,28 +4,30 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ## Immediate High‑Priority TODOs (Equivalence Discrepancies)
 
-### [AT‑PARALLEL‑002] Pixel Size Independence @ 256×256 (HIGH)
+### [AT‑PARALLEL‑002] Pixel Size Independence @ 256×256 ✅ COMPLETE
 - Spec/AT: specs/spec-a-parallel.md — AT‑PARALLEL‑002
 - Priority: High
-- Status: pending
-- Exit Criteria (spec thresholds):
-  - Pattern correlation ≥ 0.9999 across pixel sizes {0.05, 0.1, 0.2, 0.4} mm
-  - Beam center in pixels = 25.6 / pixel_size_mm ± 0.1 px
-  - Peak positions scale inversely with pixel size (1/pixel_size)
-- Reproduction (examples):
-  - PyTorch: `nanoBragg -detpixels 256 -pixel <PX_MM> -distance 100 -Xbeam 25.6 -Ybeam 25.6 -cell 100 100 100 90 90 90 -lambda 6.2 -default_F 100 -floatfile py_<PX_MM>.bin`
-  - C (reference): run identical flags with the C binary to produce golden outputs for each pixel size
-  - Repeat for PX_MM ∈ {0.05, 0.1, 0.2, 0.4}; keep detector size fixed at 256×256
-- Debugging SOP:
-  - Use `prompts/debug.md` (no test/threshold changes). Produce C/Py traces for an on‑peak pixel at 0.4 mm. Identify FIRST DIVERGENCE.
-  - Geometry‑first triage: MOSFLM +0.5 pixel, F/S mapping, pivot (BEAM/SAMPLE), r‑factor & close_distance, mm→m→Å conversions; ensure cache invalidation on pixel_size change.
-  - Quantitative checkpoints: correlation, MSE/RMSE, max|Δ|, total sums & ratio; diff heatmap.
-- Attempts History:
-  * [YYYY‑MM‑DD] Attempt #1 — Result: pending (to be filled).
-    Metrics: corr=…, RMSE=…, max|Δ|=…, sum_ratio=…
-    Artifacts: reports/debug/YYYY‑MM‑DD‑HHMM/{c_trace.log, py_trace.log, diff_heatmap.png, summary.json}
-    Observations/Hypotheses: bullets (ranked)
-    Next Actions: bullets
+- Status: **COMPLETE** (2025-09-29)
+- Exit Criteria (spec thresholds): **ALL MET**
+  - Pattern correlation ≥ 0.9999 across pixel sizes {0.05, 0.1, 0.2, 0.4} mm ✓
+  - Beam center in pixels = 25.6 / pixel_size_mm ± 0.1 px ✓
+  - Peak positions scale inversely with pixel size (1/pixel_size) ✓
+- Implementation:
+  - Parity tests: `tests/test_parity_matrix.py` with cases defined in `tests/parity_cases.yaml`
+  - PyTorch-only tests: `tests/test_at_parallel_002.py` (4 tests)
+  - Canonical command: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_parity_matrix.py -k "AT-PARALLEL-002" -v`
+- Test Results (2025-09-29):
+  - All 4 parity tests PASSED in 30.36s:
+    * pixel-0.05mm: PASSED (correlation ≥0.9999, sum_ratio ∈ [0.9, 1.1])
+    * pixel-0.1mm: PASSED (correlation ≥0.9999, sum_ratio ∈ [0.9, 1.1])
+    * pixel-0.2mm: PASSED (correlation ≥0.9999, sum_ratio ∈ [0.9, 1.1])
+    * pixel-0.4mm: PASSED (correlation ≥0.9999, sum_ratio ∈ [0.9, 1.1])
+  - All thresholds met: corr_min=0.9999, max_abs_max=300, sum_ratio ∈ [0.9, 1.1]
+- Implementation Details:
+  - Detector geometry correctly handles pixel size scaling (DetectorConfig, Detector model)
+  - MOSFLM +0.5 pixel offset consistently applied across all pixel sizes
+  - Cache invalidation working correctly on pixel_size change
+  - Pattern correlation maintained across pixel size variations
 
 ### Re‑validate AT‑PARALLEL thresholds without loosening (HIGH)
 - Spec/AT: specs/spec-a-parallel.md — entire AT‑PARALLEL suite
