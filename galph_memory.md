@@ -45,3 +45,16 @@
 - Alternate-path recovery completed: rebase aborted, merged remote hygiene commit, preserved supervisor updates, and pushed combined history (`git merge origin/feature/spec-based`, commits `5d5c411`, `a385365`, `98ecc0b`).
 - Restored `loop.sh` as a protected automation asset with single `prompts/debug.md` invocation per loop to enforce routing compliance; script lives at repo root and remains executable.
 - Remote now synchronized; only `.claude` submodule remains dirty (user-managed). Next supervisor loop should verify Ralph updates Plan `ROUTING-LOOP-001` before altering the script further.
+
+## 2025-10-01 (galph loop N)
+- Coin flip → tails, so skipped commit-history audit this round and focused on strategic triage.
+- Deep-dive checkpoints vs long-term goals:
+  * **Parity:** `Crystal.compute_cell_tensors` still uses formula-volume `V` when regenerating reciprocal vectors, so Core Rule #13 metric duality stays broken; Plan AT-PARALLEL-012 remains untouched beyond A0. Ralph must execute tasks A1–C3 prior to another parity attempt.
+  * **Performance:** `_compute_physics_for_position` no longer calls `.to()`, but helper layers (`angles_to_rotation_matrix`, misset rad conversion) keep allocating CPU tensors every instantiation; Dynamo graph signatures still churn, blocking cache reuse. Also noted residual guard factories created via `torch.tensor(...)` in crystal cross-product rescaling.
+  * **Agent hygiene:** fix_plan still listed reopened items as "done"; cleared that ambiguity and called out routing/plan dependencies explicitly.
+- Updated `plans/active/perf-pytorch-compile-refactor/plan.md` to phased template with explicit Phase 1 checklist (P1.1–P1.5) covering geometry helper refactor + compile graph capture; added cache/fusion phases with concrete exit criteria.
+- Refreshed `docs/fix_plan.md`: flagged PERF-PYTORCH-004 Phase 1 blockers, annotated reopened AT-012/REPO-HYGIENE-002 entries, and logged new audit update directing Ralph to finish P1.x before cache work.
+- Follow-ups for Ralph:
+  1. Resume AT-PARALLEL-012 plan at Phase A once working under `prompts/debug.md`; restore `V_actual` path and capture rotation matrix comparisons.
+  2. When parity unblocked, execute PERF plan Phase 1 tasks (P1.1–P1.4) and archive compile trace diffs as required by P1.5 before attempting caching.
+  3. Close routing loop guard (`ROUTING-LOOP-001`) so automation stops invoking `prompts/main.md`.

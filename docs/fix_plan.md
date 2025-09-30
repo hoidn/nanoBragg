@@ -10,7 +10,7 @@
 - [ROUTING-LOOP-001] Stop loop.sh from re-invoking prompts/main — Priority: High, Status: pending (undo 058986f automation so only prompts/debug.md runs while AT failures remain)
 - [PROTECTED-ASSETS-001] Enforce `docs/index.md` protection — Priority: Medium, Status: pending (guard any file listed there from deletion; update CLAUDE.md + hygiene SOP)
 - [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — Priority: Medium, Status: pending (plan: plans/active/repo-hygiene-002/plan.md)
-- [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: High, Status: in_progress (plan: plans/active/perf-pytorch-compile-refactor/plan.md)
+- [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: High, Status: in_progress (Phase 1 tasks P1.1–P1.5 pending; geometry helpers still allocate CPU tensors — see plans/active/perf-pytorch-compile-refactor/plan.md)
 - [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
 - [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: done
 - [PERF-PYTORCH-006] Float32 / Mixed Precision Performance Mode — Priority: Medium, Status: done
@@ -19,8 +19,8 @@
 - None currently
 
 ### Recently Completed (2025-09-30)
-- [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — done (Removed nested directory, archived artifacts, parity tests pass)
-- [AT-PARALLEL-012] Triclinic P1 Correlation Failure — done (Fixed by 7f6c4b2: C-style cross-product rescaling; corr=1.0 perfect parity achieved)
+- [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — ⚠️ Reopened 2025-09-30; see Active Items for reset checklist
+- [AT-PARALLEL-012] Triclinic P1 Correlation Failure — ⚠️ Reopened 2025-09-30; see Active Items + Attempt #13 artifacts for current status
 - [AT-PARALLEL-020-REGRESSION] Comprehensive Integration Test Correlation Failure — done (absorption parallax sign fix restored thresholds; corr≥0.99)
 - [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure — done (fixed C parsing bug + PyTorch mosaicity; both seeds pass with corr=1.0)
 - [CORE-REGRESSION-001] Phi Rotation Unit Test Failure — done (test was wrong, not implementation; fixed to match C loop formula)
@@ -1405,6 +1405,13 @@
   * Profiler shows single dominant kernel instead of many tiny launches; simulation-only benchmark at 4096² drops to ≲0.30 s.
   * Numerical results remain identical (correlation ≥ 0.999999 vs C).
   * Document kernel design and testing in `reports/benchmarks/<date>/fused_kernel.md`.
+
+### [PERF-PYTORCH-004] Update - 2025-10-01 (galph loop N)
+
+- **Audit result:** `_compute_physics_for_position` no longer creates explicit `.to()` transfers, but supporting helpers still trigger CPU allocations: `utils/geometry.py::angles_to_rotation_matrix` zeros out fresh `torch.zeros` matrices each call and falls back to CPU when passed Python scalars (misset path), while `crystal.py` continues to materialize guard tensors for cross-product rescaling. Dynamo still records unique graph signatures per simulator instantiation.
+- **Plan adjustment:** Phase 1 has been retrofitted with explicit checklist items P1.1–P1.5 to (a) swap residual guard factories to `.new_tensor`/`clamp_min`, (b) pre-normalise incident beam tensors, (c) refactor `angles_to_rotation_matrix` to reuse device-local caches, (d) guarantee misset angles stay tensors end-to-end, and (e) capture before/after compile traces. These tasks must complete before pursuing caching (Phase 2).
+- **Action for Ralph:** Resume work under `prompts/perf_debug.md` once AT parity unblocked; implement P1.1–P1.4 in a single focused branch and archive metrics under `reports/benchmarks/<date>-perf-phase1/`. Do **not** attempt cache wiring or Triton experiments until Dynamo graph keys stabilize.
+- **Next checkpoint:** After P1.5 artifacts are captured, notify supervisor so we can green-light Phase 2 cache implementation.
 
 ### [PERF-PYTORCH-004] Update - 2025-09-30
 

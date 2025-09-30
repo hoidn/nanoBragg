@@ -27,31 +27,64 @@
 
 ## Phased approach
 
-### Phase 0 — Caching design (no code changes yet)
-- Document desired cache key: `(device.type, device.index, dtype, oversample, n_sources, compiled_options)`.
-- Decide whether to store compiled callable on the `Crystal`/`Simulator` instance, a module-level LRU, or a new `RuntimeKernelCache` helper under `src/nanobrag_torch/utils/`.
-- Confirm lifecycle interactions with `torch.compile` (thread safety, deterministic teardown).
+### Phase 0 — Caching Design Blueprint
+Goal: Decide how compiled kernels are keyed, stored, and invalidated without violating differentiability rules.
+Prerqs: Read torch.compile caching docs, inspect current simulator lifecycle (`Simulator.__init__`, `Simulator.run`).
+Exit Criteria: Short design note in `reports/benchmarks/<date>-perf-cache/blueprint.md` capturing cache key fields, ownership model, and invalidation rules approved by supervisor.
 
-### Phase 1 — Hoist static tensors & reshape ops
-- Replace per-call `torch.tensor(1e-12, device=...)` constructs with `.new_tensor(1e-12)` or `clamp_min` so they originate outside Dynamo-traced regions.
-- Audit `_compute_physics_for_position` for redundant `unsqueeze/expand`; prefer `view`/`reshape` when shapes are static to improve fusion opportunities.
-- Refactor `Crystal.compute_cell_tensors` guards to use `.clamp_min`/`torch.where` instead of `torch.maximum(..., torch.tensor(...))` to maintain graph continuity.
-- Ensure constants live on the caller’s device/dtype via helper factories (e.g., `device_dtype_tensor(reference, value)`).
-- Normalize incident beam direction / wavelength tensors on the caller before entering the compiled graph so the current `incident_beam_direction.to(...)` call disappears from `_compute_physics_for_position`.
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| P0.1 | Enumerate runtime scenarios requiring recompilation (device/dtype/oversample/source count) | [ ] | Review existing benchmark traces; document matrix in blueprint.md. |
+| P0.2 | Propose cache owner (module-level singleton vs. Crystal-bound vs. Simulator-bound) | [ ] | Evaluate thread safety + lifetime trade-offs; include decision tree in blueprint.md. |
+| P0.3 | Spike torch.compile teardown semantics | [ ] | Prototype minimal cache in scratch notebook, confirm no dangling references after del; record outcome in blueprint.md. |
 
-### Phase 2 — Shared compiled kernel cache
-- Implement lazy cache: first instantiation compiles `_compute_physics_for_position`, stores the graph; subsequent simulators with matching key reuse callable without recompilation.
-- Add diagnostic counter (behind debug flag) to confirm reuse during benchmarks.
-- Update `scripts/benchmarks/benchmark_detailed.py` to exercise caching across multiple simulator constructions.
+### Phase 1 — Hoist Static Tensors & Geometry Helpers
+Goal: Remove per-call tensor factories and CPU fallbacks so `_compute_physics_for_position` and supporting geometry run in a stable graph on the caller’s device.
+Prerqs: Baseline profiler from instrumentation checklist, review of `src/nanobrag_torch/simulator.py` and `src/nanobrag_torch/models/crystal.py` hot paths.
+Exit Criteria: Dynamo graph key identical across three simulator instantiations in a single run; before/after trace stored in `reports/benchmarks/<date>-perf-phase1/graph_comparison.txt`.
 
-### Phase 3 — Remove fullgraph blockers
-- Target `Crystal.compute_cell_tensors` and interpolation paths for data-dependent branches that cause graph breaks (`torch.any(out_of_bounds)`). Replace with tensor-friendly control flow (e.g., `torch.where`) or `torch.cond` wrappers as allowed by differentiability rules.
-- Once guards removed, experiment with `torch.compile(fullgraph=True, mode="max-autotune")` on CUDA and `reduce-overhead` on CPU. Capture success/failure logs under `reports/benchmarks/<date>-fullgraph/`.
-- Eliminate `.item()`-based host decisions that sever graphs (e.g., auto-enabling `Crystal.interpolate` via `self.N_cells_a.item()`). Move those checks to configuration-time integers or tensor-safe comparisons so Dynamo sees a pure tensor program.
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| P1.1 | Swap remaining `torch.tensor` guard factories for `.new_tensor`/`clamp_min` helpers | [ ] | Target `simulator.py` hot path and `crystal.py` cross-product rescaling; verify with `torch.fx.experimental.symbolic_shapes.print_progress`. |
+| P1.2 | Pre-normalise incident beam + wavelength tensors prior to compile | [ ] | Ensure `Simulator.__init__` (or config load) moves them to the correct device; `_compute_physics_for_position` must not call `.to(...)`. |
+| P1.3 | Refactor `utils/geometry.py::angles_to_rotation_matrix` to avoid fresh `torch.zeros` allocations per call | [ ] | Introduce cached eye/basis via `torch.eye(3, device=dtype.device)` factories or `tensor.new_zeros`; maintain batched support. |
+| P1.4 | Remove CPU fallback branch triggered by scalar misset angles | [ ] | Guarantee misset inputs arrive as tensors; update call sites in `crystal.py` to reuse preallocated buffers. |
+| P1.5 | Document before/after compile graphs & cold/warm timings | [ ] | Run `python scripts/benchmarks/benchmark_detailed.py --size 512 --device cuda --profile` pre/post change; archive under `reports/benchmarks/<date>-perf-phase1/`. |
 
-### Phase 4 — Kernel fusion follow-up
-- If fullgraph succeeds, compare kernel launch count before/after with `torch.profiler`. Document improvement.
-- If Dynamo still breaks, sketch Triton kernel MVP covering oversample=1 single-source path. Defer implementation until parity backlog clears, but record findings.
+### Phase 2 — Shared Compiled Kernel Cache
+Goal: Reuse a compiled `_compute_physics_for_position` across simulator instances sharing runtime parameters.
+Prerqs: Phase 0 blueprint approved, Phase 1 graph stability confirmed.
+Exit Criteria: Benchmark shows second→tenth simulator instantiations skip compile (<50 ms setup) with cache-hit log in `reports/benchmarks/<date>-perf-cache/cache_hits.log`.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| P2.1 | Implement cache container per blueprint (module singleton or helper class) | [ ] | Add under `src/nanobrag_torch/utils/runtime_cache.py`; ensure device/dtype aware. |
+| P2.2 | Plumb cache lookup into `Simulator.__init__` | [ ] | Inject debug counter (`NB_SIM_CACHE_DEBUG`) to print hit/miss; disable in production. |
+| P2.3 | Extend benchmark script to span multiple constructions | [ ] | Update `scripts/benchmarks/benchmark_detailed.py` to loop N=5 instantiations; capture compile timings. |
+| P2.4 | Validate gradients unaffected | [ ] | Run `pytest tests/test_units.py::TestCrystalGeometry::test_gradients` (or equivalent) with cache enabled. |
+
+### Phase 3 — Remove Full-Graph Blockers
+Goal: Enable `torch.compile(fullgraph=True)` by eliminating data-dependent host branches and `.item()` calls.
+Prerqs: Phase 1 + 2 artifacts, knowledge of interpolation guard logic (`_tricubic_interpolation`).
+Exit Criteria: Successful `torch.compile(fullgraph=True, mode="max-autotune")` run on CUDA + CPU with logs archived under `reports/benchmarks/<date>-fullgraph/`.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| P3.1 | Refactor `_tricubic_interpolation` guard (`torch.any(out_of_bounds)`) using tensor control flow | [ ] | Evaluate `torch.where` or `torch.cond`; confirm parity via targeted unit test. |
+| P3.2 | Replace `.item()` driven toggles (e.g., `Crystal.interpolate`) with tensor-safe alternatives | [ ] | Introduce config-time ints or `bool` flags stored outside grad path; update tests. |
+| P3.3 | Audit remaining host-side branches in simulator + models | [ ] | Use Dynamo trace logs to identify auto-guards; capture findings in `reports/benchmarks/<date>-fullgraph/host_branch_audit.md`. |
+| P3.4 | Attempt `fullgraph=True` compile on CPU & CUDA | [ ] | Record command, success/failure, and fallback reasons; include stack traces if still blocked. |
+
+### Phase 4 — Kernel Fusion Follow-Up
+Goal: Quantify kernel launch reduction and scope custom kernel fallback if Dynamo remains fragmented.
+Prerqs: Phase 3 results (success or documented blocker) plus profiler baselines.
+Exit Criteria: Report `reports/benchmarks/<date>-fusion/summary.md` capturing kernel counts before/after and go/no-go decision on Triton prototype.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| P4.1 | Capture profiler traces pre/post Phase 3 | [ ] | Use `torch.profiler` or Nsight; annotate kernel counts and durations. |
+| P4.2 | Decide on Triton fallback scope | [ ] | If Dynamo still launches >5 kernels, outline Triton MVP (oversample=1) with acceptance tests. |
+| P4.3 | Draft Triton experiment checklist | [ ] | Only execute after parity backlog clears; store under `plans/archive/` if deferred. |
 
 ## Exit criteria
 - Repeated simulator construction (e.g., 10 consecutive runs at 1024², float32, CUDA) shows ≤50 ms setup after first compile (cache hit confirmed).
