@@ -8,7 +8,7 @@
 ### Active Items
 - [AT-PARALLEL-020-REGRESSION] Comprehensive Integration Test Correlation Failure — Priority: High, Status: pending (requires debug.md)
 - [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: in_progress (plan: plans/active/at-parallel-012/plan.md)
-- [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: Medium, Status: pending (blocked on fullgraph=True limitation)
+- [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: Medium, Status: in_progress (plan: plans/active/perf-pytorch-compile-refactor/plan.md)
 - [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
 - [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: done
 - [PERF-PYTORCH-006] Float32 / Mixed Precision Performance Mode — Priority: Medium, Status: done
@@ -1265,9 +1265,10 @@
   * ✅ Recommendations provided for optimization opportunities (PERF-PYTORCH-005, PERF-PYTORCH-004)
 
 ## [PERF-PYTORCH-004] Fuse Physics Kernels (Inductor → custom kernel if needed)
+- Plan reference: plans/active/perf-pytorch-compile-refactor/plan.md
 - Spec/AT: Performance parity; references CLAUDE.md §16, docs/architecture/pytorch_design.md
 - Priority: High
-- Status: pending
+- Status: in_progress (plan active)
 - Reproduction:
   * `python -m nanobrag_torch -device cuda -detpixels 2048 -floatfile /tmp/py.bin`
   * Capture CUDA profiler trace or `torch.profiler` output to count kernel launches in `_compute_physics_for_position`
