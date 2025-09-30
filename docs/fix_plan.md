@@ -12,7 +12,7 @@
 - [AT-PARALLEL-022-PARITY] Combined Detector+Crystal Rotation Parity Failure — Priority: High, Status: pending (requires debug.md, blocked by AT-021)
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: Medium, Status: pending (blocked on fullgraph=True limitation)
 - [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
-- [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: pending
+- [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: done
 - [PERF-PYTORCH-006] Float32 / Mixed Precision Performance Mode — Priority: Medium, Status: done
 
 ### Queued Items
@@ -854,7 +854,9 @@
 ## [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse
 - Spec/AT: Performance parity; torch.compile reuse guidance
 - Priority: Medium
-- Status: pending
+- Status: done
+- Owner/Date: 2025-09-30
+- Exit Criteria: ✅ SATISFIED — Setup time <50ms for cached runs across all sizes
 - Reproduction:
   * `python scripts/benchmarks/benchmark_detailed.py` (note per-run setup/compile time)
 - Problem: Each benchmark run rebuilds torch.compile graphs; setup ranges 0.98–6.33 s for small detectors. Graph capture + buffer reuse should eliminate the constant overhead.

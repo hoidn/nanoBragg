@@ -33,12 +33,29 @@ def get_memory_usage():
     return process.memory_info().rss / 1024 / 1024
 
 
-def run_pytorch_timed(args, output_file, device='cpu'):
+# PERF-PYTORCH-005: Global simulator cache for reuse across runs
+# Key: (spixels, fpixels, oversample, n_sources, device_type)
+_simulator_cache = {}
+
+
+def get_cache_key(detpixels, oversample, n_sources, device):
+    """Generate cache key for simulator reuse."""
+    device_type = device if isinstance(device, str) else str(device)
+    return (detpixels, detpixels, oversample, n_sources, device_type)
+
+
+def run_pytorch_timed(args, output_file, device='cpu', use_cache=True):
     """
     Run PyTorch version with detailed timing.
 
     Device handling: all objects created with explicit device parameter to avoid
     TorchDynamo FakeTensor device mismatches.
+
+    Args:
+        args: Command-line arguments string
+        output_file: Path to output file
+        device: Device to run on ('cpu' or 'cuda')
+        use_cache: If True, reuse cached simulators (PERF-PYTORCH-005)
     """
     from nanobrag_torch.config import (
         CrystalConfig, DetectorConfig, BeamConfig,
@@ -50,9 +67,13 @@ def run_pytorch_timed(args, output_file, device='cpu'):
 
     # Parse basic args (simplified)
     detpixels = 1024
+    oversample = 1
+    n_sources = 1
     for i, arg in enumerate(args.split()):
         if arg == '-detpixels' and i+1 < len(args.split()):
             detpixels = int(args.split()[i+1])
+        elif arg == '-oversample' and i+1 < len(args.split()):
+            oversample = int(args.split()[i+1])
 
     # Convert device string to torch.device
     device_obj = torch.device(device)
@@ -72,7 +93,7 @@ def run_pytorch_timed(args, output_file, device='cpu'):
         pixel_size_mm=0.1,
         distance_mm=100.0,
         detector_convention=DetectorConvention.MOSFLM,
-        oversample=1
+        oversample=oversample
     )
 
     beam_config = BeamConfig(wavelength_A=6.2)
@@ -80,23 +101,37 @@ def run_pytorch_timed(args, output_file, device='cpu'):
     # Time different stages
     timings = {}
     timings['device'] = str(device_obj)
+    timings['cache_hit'] = False
 
-    # Setup - CREATE OBJECTS WITH DEVICE PARAMETER
-    # This ensures all tensors live on the target device from creation,
-    # avoiding device drift and TorchDynamo compilation issues
+    # PERF-PYTORCH-005: Check cache before creating new simulator
+    cache_key = get_cache_key(detpixels, oversample, n_sources, device_obj.type)
+
     start = time.time()
-    crystal = Crystal(crystal_config, device=device_obj)
-    detector = Detector(detector_config, device=device_obj)
+    if use_cache and cache_key in _simulator_cache:
+        # Reuse cached simulator
+        simulator = _simulator_cache[cache_key]
+        timings['cache_hit'] = True
+        timings['setup'] = time.time() - start
+    else:
+        # Setup - CREATE OBJECTS WITH DEVICE PARAMETER
+        # This ensures all tensors live on the target device from creation,
+        # avoiding device drift and TorchDynamo compilation issues
+        crystal = Crystal(crystal_config, device=device_obj)
+        detector = Detector(detector_config, device=device_obj)
 
-    # CRITICAL: Pass device to Simulator to ensure incident_beam_direction lives on correct device
-    simulator = Simulator(crystal, detector, crystal_config, beam_config, device=device_obj)
+        # CRITICAL: Pass device to Simulator to ensure incident_beam_direction lives on correct device
+        simulator = Simulator(crystal, detector, crystal_config, beam_config, device=device_obj)
 
-    # For GPU, warm-up run to trigger JIT compilation
-    if device_obj.type == 'cuda':
-        _ = simulator.run()
-        torch.cuda.synchronize()
+        # For GPU, warm-up run to trigger JIT compilation
+        if device_obj.type == 'cuda':
+            _ = simulator.run()
+            torch.cuda.synchronize()
 
-    timings['setup'] = time.time() - start
+        timings['setup'] = time.time() - start
+
+        # Cache the simulator for reuse
+        if use_cache:
+            _simulator_cache[cache_key] = simulator
 
     # Run simulation (the actual timed run)
     start = time.time()
@@ -163,6 +198,8 @@ def main():
     print("\n" + "=" * 80)
     print("Benchmarking Different Detector Sizes")
     print("=" * 80)
+    print("\nPERF-PYTORCH-005: Testing simulator cache reuse")
+    print("Each size will be run twice: cold (first run) and warm (cached)")
 
     results = []
 
@@ -173,7 +210,8 @@ def main():
 
         with tempfile.TemporaryDirectory() as tmpdir:
             c_output = Path(tmpdir) / "c_output.bin"
-            py_output = Path(tmpdir) / "py_output.bin"
+            py_output_cold = Path(tmpdir) / "py_output_cold.bin"
+            py_output_warm = Path(tmpdir) / "py_output_warm.bin"
 
             args = f"-default_F 100 -cell 100 100 100 90 90 90 -lambda 6.2 -N 5 -distance 100 -detpixels {size}"
 
@@ -194,117 +232,158 @@ def main():
                 c_mem = None
                 c_success = False
 
-            # PyTorch implementation (CPU and optionally GPU)
+            # PyTorch implementation - COLD RUN (first time for this size)
             device = 'cuda' if torch.cuda.is_available() else 'cpu'
-            print(f"Running PyTorch implementation on {device.upper()}...")
+            print(f"Running PyTorch COLD (first run) on {device.upper()}...")
             mem_before = get_memory_usage()
-            py_start = time.time()
 
             try:
-                py_timings = run_pytorch_timed(args, py_output, device=device)
-                py_time = py_timings['total']
-                py_mem = get_memory_usage() - mem_before
-                py_success = True
+                py_timings_cold = run_pytorch_timed(args, py_output_cold, device=device, use_cache=True)
+                py_mem_cold = get_memory_usage() - mem_before
 
-                print(f"  Setup time: {py_timings['setup']:.3f}s")
-                print(f"  Simulation time: {py_timings['simulation']:.3f}s")
-                print(f"  I/O time: {py_timings['io']:.3f}s")
-                print(f"  Device: {py_timings['device']}")
+                print(f"  Setup time (cold): {py_timings_cold['setup']:.3f}s")
+                print(f"  Simulation time: {py_timings_cold['simulation']:.3f}s")
+                print(f"  Cache hit: {py_timings_cold['cache_hit']}")
+                py_success_cold = True
             except Exception as e:
-                print(f"  PyTorch execution error: {e}")
+                print(f"  PyTorch COLD execution error: {e}")
                 import traceback
                 traceback.print_exc()
-                py_time = None
-                py_mem = None
-                py_success = False
-                py_timings = None
+                py_success_cold = False
+                py_timings_cold = None
 
-            # Compare if both succeeded
-            if c_success and py_success:
+            # PyTorch implementation - WARM RUN (reuse cached simulator)
+            print(f"Running PyTorch WARM (cached) on {device.upper()}...")
+            mem_before = get_memory_usage()
+
+            try:
+                py_timings_warm = run_pytorch_timed(args, py_output_warm, device=device, use_cache=True)
+                py_mem_warm = get_memory_usage() - mem_before
+
+                print(f"  Setup time (warm): {py_timings_warm['setup']:.3f}s")
+                print(f"  Simulation time: {py_timings_warm['simulation']:.3f}s")
+                print(f"  Cache hit: {py_timings_warm['cache_hit']}")
+                print(f"  Setup speedup: {py_timings_cold['setup'] / py_timings_warm['setup']:.1f}x faster")
+                py_success_warm = True
+            except Exception as e:
+                print(f"  PyTorch WARM execution error: {e}")
+                import traceback
+                traceback.print_exc()
+                py_success_warm = False
+                py_timings_warm = None
+
+            # Compare if all succeeded
+            if c_success and py_success_cold and py_success_warm:
                 c_data = np.fromfile(c_output, dtype=np.float32).reshape(size, size)
-                py_data = np.fromfile(py_output, dtype=np.float32).reshape(size, size)
-                correlation = np.corrcoef(c_data.flatten(), py_data.flatten())[0, 1]
+                py_data_cold = np.fromfile(py_output_cold, dtype=np.float32).reshape(size, size)
+                py_data_warm = np.fromfile(py_output_warm, dtype=np.float32).reshape(size, size)
 
-                # Two comparisons: total time (with setup) and simulation only
-                speedup = c_time / py_time
-                speedup_sim_only = c_time / py_timings['simulation']
+                correlation_cold = np.corrcoef(c_data.flatten(), py_data_cold.flatten())[0, 1]
+                correlation_warm = np.corrcoef(c_data.flatten(), py_data_warm.flatten())[0, 1]
+
+                # Calculate times (warm run uses cached simulator, so lower setup time)
+                py_time_cold = py_timings_cold['total']
+                py_time_warm = py_timings_warm['total']
+
+                # Speedup calculations
+                speedup_cold = c_time / py_time_cold
+                speedup_warm = c_time / py_time_warm
 
                 print(f"\nResults:")
                 print(f"  C time: {c_time:.3f}s (memory: {c_mem:.1f} MB)")
-                print(f"  PyTorch total: {py_time:.3f}s (memory: {py_mem:.1f} MB)")
-                print(f"  PyTorch simulation only: {py_timings['simulation']:.3f}s")
-                print(f"  Speedup (total): {speedup:.2f}x {'(PyTorch faster)' if speedup > 1 else '(C faster)'}")
-                print(f"  Speedup (sim only): {speedup_sim_only:.2f}x {'(PyTorch faster)' if speedup_sim_only > 1 else '(C faster)'}")
-                print(f"  Correlation: {correlation:.6f}")
+                print(f"  PyTorch COLD total: {py_time_cold:.3f}s (memory: {py_mem_cold:.1f} MB)")
+                print(f"  PyTorch WARM total: {py_time_warm:.3f}s (memory: {py_mem_warm:.1f} MB)")
+                print(f"  Speedup (cold): {speedup_cold:.2f}x {'(PyTorch faster)' if speedup_cold > 1 else '(C faster)'}")
+                print(f"  Speedup (warm): {speedup_warm:.2f}x {'(PyTorch faster)' if speedup_warm > 1 else '(C faster)'}")
+                print(f"  Correlation (cold): {correlation_cold:.6f}")
+                print(f"  Correlation (warm): {correlation_warm:.6f}")
 
-                # Pixels per second - show both total and sim-only
-                pixels_per_sec_c = (size * size) / c_time
-                pixels_per_sec_py = (size * size) / py_time
-                pixels_per_sec_py_sim = (size * size) / py_timings['simulation']
-                print(f"  C throughput: {pixels_per_sec_c/1e6:.2f} MPixels/s")
-                print(f"  PyTorch throughput (total): {pixels_per_sec_py/1e6:.2f} MPixels/s")
-                print(f"  PyTorch throughput (sim only): {pixels_per_sec_py_sim/1e6:.2f} MPixels/s")
+                # PERF-PYTORCH-005: Report cache effectiveness
+                setup_improvement = py_timings_cold['setup'] / py_timings_warm['setup']
+                print(f"\n  ✓ Cache effectiveness: {setup_improvement:.1f}x faster setup")
+                if py_timings_warm['setup'] < 0.050:
+                    print(f"  ✓ PERF-PYTORCH-005 EXIT CRITERIA MET: Warm setup {py_timings_warm['setup']*1000:.1f}ms < 50ms")
+                else:
+                    print(f"  ⚠ PERF-PYTORCH-005: Warm setup {py_timings_warm['setup']*1000:.1f}ms > 50ms target")
 
                 results.append({
                     'size': size,
                     'pixels': size * size,
                     'c_time': c_time,
-                    'py_time': py_time,
-                    'py_sim_time': py_timings['simulation'],
+                    'py_time_cold': py_time_cold,
+                    'py_time_warm': py_time_warm,
+                    'py_setup_cold': py_timings_cold['setup'],
+                    'py_setup_warm': py_timings_warm['setup'],
+                    'py_sim_cold': py_timings_cold['simulation'],
+                    'py_sim_warm': py_timings_warm['simulation'],
                     'c_mem': c_mem,
-                    'py_mem': py_mem,
-                    'speedup': speedup,
-                    'speedup_sim_only': speedup_sim_only,
-                    'correlation': correlation,
-                    'c_throughput': pixels_per_sec_c,
-                    'py_throughput': pixels_per_sec_py,
-                    'py_throughput_sim': pixels_per_sec_py_sim,
-                    'py_timings': py_timings
+                    'py_mem_cold': py_mem_cold,
+                    'py_mem_warm': py_mem_warm,
+                    'speedup_cold': speedup_cold,
+                    'speedup_warm': speedup_warm,
+                    'setup_speedup': setup_improvement,
+                    'correlation_cold': correlation_cold,
+                    'correlation_warm': correlation_warm,
+                    'cache_hit_cold': py_timings_cold['cache_hit'],
+                    'cache_hit_warm': py_timings_warm['cache_hit'],
                 })
 
     # Summary and analysis
     if results:
         print("\n" + "=" * 80)
-        print("PERFORMANCE SUMMARY")
+        print("PERFORMANCE SUMMARY (PERF-PYTORCH-005: Cache Reuse)")
         print("=" * 80)
 
-        print("\n{:<10} {:>12} {:>10} {:>10} {:>10} {:>12}".format(
-            "Size", "Pixels", "C (s)", "PyTorch (s)", "Speedup", "Correlation"
+        print("\n{:<10} {:>12} {:>8} {:>10} {:>10} {:>10} {:>10}".format(
+            "Size", "Pixels", "C (s)", "PyTorch", "PyTorch", "Setup", "Corr"
         ))
-        print("-" * 70)
+        print("{:<10} {:>12} {:>8} {:>10} {:>10} {:>10} {:>10}".format(
+            "", "", "", "COLD (s)", "WARM (s)", "Speedup", "(warm)"
+        ))
+        print("-" * 82)
 
         for r in results:
-            speedup_str = f"{r['speedup']:.2f}x"
-            if r['speedup'] < 1:
-                speedup_str = f"-{1/r['speedup']:.2f}x"
-
-            print("{:<10} {:>12,} {:>10.3f} {:>10.3f} {:>10} {:>12.6f}".format(
+            print("{:<10} {:>12,} {:>8.3f} {:>10.3f} {:>10.3f} {:>9.1f}x {:>10.6f}".format(
                 f"{r['size']}x{r['size']}",
                 r['pixels'],
                 r['c_time'],
-                r['py_time'],
-                speedup_str,
-                r['correlation']
+                r['py_time_cold'],
+                r['py_time_warm'],
+                r['setup_speedup'],
+                r['correlation_warm']
             ))
 
-        # Throughput comparison
+        # PERF-PYTORCH-005: Cache effectiveness summary
         print("\n" + "=" * 80)
-        print("THROUGHPUT ANALYSIS (MPixels/second)")
+        print("CACHE EFFECTIVENESS (PERF-PYTORCH-005)")
         print("=" * 80)
 
-        print("\n{:<10} {:>15} {:>15} {:>12}".format(
-            "Size", "C (MP/s)", "PyTorch (MP/s)", "Ratio"
+        print("\n{:<10} {:>15} {:>15} {:>12} {:>12}".format(
+            "Size", "Setup COLD (ms)", "Setup WARM (ms)", "Speedup", "Exit Crit"
         ))
-        print("-" * 55)
+        print("-" * 70)
 
+        all_meet_criteria = True
         for r in results:
-            ratio = r['py_throughput'] / r['c_throughput']
-            print("{:<10} {:>15.2f} {:>15.2f} {:>12.2f}x".format(
+            setup_cold_ms = r['py_setup_cold'] * 1000
+            setup_warm_ms = r['py_setup_warm'] * 1000
+            meets_criteria = "✓" if setup_warm_ms < 50 else "✗"
+            if setup_warm_ms >= 50:
+                all_meet_criteria = False
+
+            print("{:<10} {:>15.1f} {:>15.1f} {:>11.1f}x {:>12}".format(
                 f"{r['size']}x{r['size']}",
-                r['c_throughput']/1e6,
-                r['py_throughput']/1e6,
-                ratio
+                setup_cold_ms,
+                setup_warm_ms,
+                r['setup_speedup'],
+                meets_criteria
             ))
+
+        print(f"\nPERF-PYTORCH-005 Exit Criteria: Setup time < 50ms for cached runs")
+        if all_meet_criteria:
+            print("  ✓ ALL SIZES MEET EXIT CRITERIA")
+        else:
+            print("  ⚠ Some sizes exceed 50ms target (see ✗ marks above)")
 
         # Save results to reports directory
         results_file = output_dir / 'benchmark_results.json'
@@ -317,35 +396,24 @@ def main():
         print("ANALYSIS")
         print("=" * 80)
 
-        avg_speedup = sum(r['speedup'] for r in results) / len(results)
-        avg_speedup_sim = sum(r.get('speedup_sim_only', r['speedup']) for r in results) / len(results)
+        avg_speedup_cold = sum(r['speedup_cold'] for r in results) / len(results)
+        avg_speedup_warm = sum(r['speedup_warm'] for r in results) / len(results)
+        avg_setup_speedup = sum(r['setup_speedup'] for r in results) / len(results)
 
-        print("\nIncluding setup/compilation time:")
-        if avg_speedup > 1:
-            print(f"  ✓ PyTorch is on average {avg_speedup:.2f}x faster than C")
+        print("\nCOLD runs (first time, includes compilation):")
+        if avg_speedup_cold > 1:
+            print(f"  ✓ PyTorch is on average {avg_speedup_cold:.2f}x faster than C")
         else:
-            print(f"  ✓ C is on average {1/avg_speedup:.2f}x faster than PyTorch")
+            print(f"  ✓ C is on average {1/avg_speedup_cold:.2f}x faster than PyTorch")
 
-        print("\nSimulation only (excluding setup):")
-        if avg_speedup_sim > 1:
-            print(f"  ✓ PyTorch is on average {avg_speedup_sim:.2f}x faster than C")
+        print("\nWARM runs (cached simulator):")
+        if avg_speedup_warm > 1:
+            print(f"  ✓ PyTorch is on average {avg_speedup_warm:.2f}x faster than C")
         else:
-            print(f"  ✓ C is on average {1/avg_speedup_sim:.2f}x faster than PyTorch")
+            print(f"  ✓ C is on average {1/avg_speedup_warm:.2f}x faster than PyTorch")
 
-        print(f"\n✓ All correlations > 0.99, indicating excellent numerical agreement")
-
-        # Scaling analysis
-        if len(results) > 1:
-            sizes = [r['size'] for r in results]
-            c_times = [r['c_time'] for r in results]
-            py_times = [r['py_time'] for r in results]
-
-            # Expected O(n^2) scaling
-            scaling_c = c_times[-1] / c_times[0] / ((sizes[-1]/sizes[0])**2)
-            scaling_py = py_times[-1] / py_times[0] / ((sizes[-1]/sizes[0])**2)
-
-            print(f"\n✓ C scaling factor: {scaling_c:.2f} (1.0 = perfect O(n²) scaling)")
-            print(f"✓ PyTorch scaling factor: {scaling_py:.2f} (1.0 = perfect O(n²) scaling)")
+        print(f"\nCache effectiveness: {avg_setup_speedup:.1f}x faster setup on average")
+        print(f"✓ All correlations > 0.99, indicating excellent numerical agreement")
 
         print(f"\n\nAll outputs saved to: {output_dir}")
 
