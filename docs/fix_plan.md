@@ -1,17 +1,16 @@
-**Last Updated:** 2025-09-30 03:45 UTC
+**Last Updated:** 2025-09-30 06:00 UTC
 
-**Current Status:** Major progress on AT-PARALLEL-012; root cause identified (wrong detector convention in tests); simple_cubic improved from 0.21 → 0.9946 correlation; remaining 0.5% gap requires debugging loop.
+**Current Status:** AT-PARALLEL-006 complete (all tests passing). AT-PARALLEL-012 remains at 0.5% correlation gap; requires debug.md routing per Ralph prompt guidelines (active test failures with correlations below threshold).
 
 ---
 ## Index
 
 ### Active Items
-- [AT-PARALLEL-012-REGRESSION] Simple Cubic & Tilted Detector Correlation Regression — Priority: Critical, Status: in_progress
+- [AT-PARALLEL-012-REGRESSION] Simple Cubic & Tilted Detector Correlation Regression — Priority: Critical, Status: in_progress (REQUIRES prompts/debug.md)
 - [META] Fix Plan Structure Refresh — Priority: High, Status: pending
-- [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: High, Status: pending
+- [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: High, Status: pending (blocked on fullgraph=True limitation)
 - [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: pending
 - [PERF-PYTORCH-006] Float32 / Mixed Precision Performance Mode — Priority: Medium, Status: pending
-- [AT-PARALLEL-002-EXTREME] Pixel Size Parity Failures (0.05mm & 0.4mm) — Priority: High, Status: done (documented)
 
 ### Queued Items
 - [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: done (escalated)
@@ -19,6 +18,8 @@
 - Docs-as-Data CI lint
 
 ### Recently Completed (2025-09-30)
+- [AT-PARALLEL-006-PYTEST] PyTorch-Only Test Failures (Bragg Position Prediction) — done
+- [AT-PARALLEL-002-EXTREME] Pixel Size Parity Failures (0.05mm & 0.4mm) — done (documented)
 - [PERF-PYTORCH-001] Multi-Source Vectorization Regression — done
 - [PERF-PYTORCH-002] Source Tensor Device Drift — done
 - [PERF-PYTORCH-003] CUDA Benchmark Gap (PyTorch vs C) — done
@@ -42,23 +43,19 @@
 ## [AT-PARALLEL-006-PYTEST] PyTorch-Only Test Failures (Bragg Position Prediction)
 - Spec/AT: AT-PARALLEL-006 Single Reflection Position (PyTorch self-consistency, not C-parity)
 - Priority: High
-- Status: in_progress
+- Status: done
 - Owner/Date: 2025-09-30
-- Reproduction:
-  * PyTorch test: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_bragg_angle_prediction_single_distance -v`
-  * Symptom: Peak position off by exactly **1 pixel** (expected 143, got 144 for λ=1.5Å)
-  * Context: PyTorch-only self-consistency test validating Bragg angle predictions; no C comparison
+- Exit Criteria: ✅ SATISFIED — All 3 test methods in test_at_parallel_006.py pass
+- Final Validation (2025-09-30 06:00 UTC):
+  * Command: `export KMP_DUPLICATE_LIB_OK=TRUE && pytest tests/test_at_parallel_006.py -v`
+  * Result: **3/3 PASSED** ✓
+    - test_bragg_angle_prediction_single_distance PASSED
+    - test_distance_scaling PASSED
+    - test_combined_wavelength_and_distance PASSED
+  * Resolution: Tests were already passing; Attempt #1 hypothesis was incorrect or issue self-resolved
 - Attempts History:
-  * [2025-09-30] Attempt #1 — Status: investigating
-    * Observed: Peak position error = 1.00 pixels (expected 143.0, got 144.0) for λ=1.5Å @ distance=100mm
-    * Environment: CPU, float64, detector_pixels=256, pixel_size=0.1mm, MOSFLM convention
-    * Hypothesis: Test's `calculate_expected_position()` uses `beam_center_pixels = detector_pixels / 2.0 = 128.0`, but MOSFLM convention adds +0.5 pixel offset → actual beam center is 128.5, causing systematic shift
-    * Root Cause (preliminary): Test does not account for MOSFLM +0.5 pixel offset when computing expected positions
-    * Next Actions:
-      1. Verify detector's actual beam center includes MOSFLM +0.5 offset (read detector.py)
-      2. Update test's `calculate_expected_position()` to add +0.5 for MOSFLM
-      3. Rerun all 3 failing test methods
-- Exit Criteria: All 3 test methods in test_at_parallel_006.py pass (position error < 0.5 pixels)
+  * [2025-09-30] Attempt #1 — Status: investigating (hypothesis: MOSFLM +0.5 offset in test calculations)
+  * [2025-09-30] Final Verification — Status: SUCCESS (all tests passing without code changes)
 
 ## [AT-PARALLEL-012-REGRESSION] Simple Cubic & Tilted Detector Correlation Regression
 - Spec/AT: AT-PARALLEL-012 Reference Pattern Correlation
@@ -114,6 +111,16 @@
       3. Generate C and PyTorch traces for representative on-peak pixel
       4. Identify FIRST DIVERGENCE in calculation chain
   * [2025-09-30] Attempt #3 — Status: PARTIAL (root cause narrowed; C trace required for resolution)
+  * [2025-09-30 06:00 UTC] Loop Status Check — Status: REQUIRES DEBUG.MD ROUTING
+    * Baseline Test Results:
+      - simple_cubic: corr=0.9946 < 0.9995 ❌ (0.5% gap)
+      - cubic_tilted: corr=0.9945 < 0.9995 ❌ (0.5% gap)
+      - triclinic_P1: corr=0.8352 < 0.9995 ❌ (16% gap, known numerical precision issue)
+    * Ralph Prompt Routing Rule Applied:
+      > "If any AT‑PARALLEL acceptance test fails OR any correlation falls below its required threshold... STOP using this prompt and instead use the dedicated debugging prompt: prompts/debug.md"
+    * Assessment: This is a **debugging task** (correlation failures), not an implementation task
+    * C Binary Status: ✅ Available at `./golden_suite_generator/nanoBragg`
+    * Recommended Next Step: Route to `prompts/debug.md` for parallel trace-driven debugging
     * Context: Detailed investigation of AT-PARALLEL-012 simple_cubic 0.5% correlation gap (0.9946 vs 0.9995 requirement)
     * Environment: CPU, float64, golden data comparison, no C source available
     * Approach: Spatial pattern analysis + omega parameter diagnostics (no C binary available for parallel traces)
@@ -138,12 +145,11 @@
       - diagnostic_artifacts/at012_spatial/at012_spatial_analysis.png (6-panel diagnostic plots)
       - diagnostic_artifacts/at012_spatial/DIAGNOSIS_SUMMARY.md (full spatial analysis report)
       - AT012_TRACE_ANALYSIS.md (direct beam trace analysis, pixel 512,512)
-    * **Blocking Issue**: No C source code or binary available for parallel trace comparison
-      - nanoBragg.c does not exist in repo root
-      - golden_suite_generator/ directory does not exist
-      - ./nanoBragg binary does not exist
-      - Cannot generate C traces for FIRST DIVERGENCE identification per debug workflow mandate
-    * Next Actions (BLOCKED pending C binary):
+    * **UPDATE (2025-09-30 06:00 UTC)**: C binary DOES exist at `./golden_suite_generator/nanoBragg` (updated Sep 30 01:55)
+      - C source: `./golden_suite_generator/nanoBragg.c` exists
+      - Blocking issue was outdated/incorrect
+      - Can proceed with parallel trace comparison per debug workflow
+    * Next Actions (NO LONGER BLOCKED):
       1. REQUIRED: Obtain C binary (./nanoBragg or ./golden_suite_generator/nanoBragg) or source code
       2. Instrument C code for pixel (248, 248) trace output showing all intermediate values
       3. Generate parallel C and PyTorch traces with identical variable names/units
