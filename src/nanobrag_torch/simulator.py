@@ -170,6 +170,11 @@ def compute_physics_for_position(
     # Look up structure factors
     F_cell = crystal_get_structure_factor(h0, k0, l0)
 
+    # Ensure F_cell is on the same device as h (device-neutral implementation per Core Rule #16)
+    # The crystal.get_structure_factor may return CPU tensors even when h0/k0/l0 are on CUDA
+    if F_cell.device != h.device:
+        F_cell = F_cell.to(device=h.device)
+
     # Calculate lattice structure factor
     Na = N_cells_a
     Nb = N_cells_b

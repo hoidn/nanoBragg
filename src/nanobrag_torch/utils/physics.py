@@ -35,6 +35,11 @@ def sincg(u: torch.Tensor, N: torch.Tensor) -> torch.Tensor:
     Returns:
         torch.Tensor: Shape factor values sin(Nu)/sin(u)
     """
+    # Ensure N is on the same device as u (device-neutral implementation per Core Rule #16)
+    # When N is an integer or CPU tensor and u is on CUDA, this causes torch.compile errors
+    if N.device != u.device:
+        N = N.to(device=u.device)
+
     # Handle both scalar and tensor N - expand to broadcast with u
     if N.ndim == 0:
         N = N.expand_as(u)
