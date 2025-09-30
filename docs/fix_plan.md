@@ -1,7 +1,7 @@
 # nanoBragg PyTorch Implementation Fix Plan
 
-**Last Updated:** 2025-09-29
-**Current Status:** Parity harness bootstrapped and operational; acceptance suite green.
+**Last Updated:** 2025-09-30
+**Current Status:** Core implementation complete; 77/78 AT-PARALLEL tests passing; parity matrix 16/16 passing; tooling hygiene improved.
 
 ---
 ## Active Focus
@@ -489,29 +489,16 @@
   - Status: Complete; 4/4 PyTorch tests pass; parity harness case documented (`tests/parity_cases.yaml`: AT-PARALLEL-002).
   - Artifacts: `reports/debug/2025-09-29-at-parallel-002/summary.json`.
 
+- **TOOLING-001 Benchmark Device Handling** (2025-09-30)
+  - Root Cause: Simulator.__init__() not receiving device parameter → incident_beam_direction on CPU while detector tensors on CUDA
+  - Fix: Moved benchmark to `scripts/benchmarks/benchmark_detailed.py` with device parameter fix; updated output paths to `reports/benchmarks/<timestamp>/`
+  - Validation: correlation=1.000000 on both CPU and CUDA, no TorchDynamo errors
+  - Artifacts: scripts/benchmarks/benchmark_detailed.py, reports/benchmarks/20250930-002124/
+
 ---
 ## Suite Failures
 
-## [TOOLING-001] benchmark_detailed.py Device/Location Issues
-- Priority: Medium
-- Status: done
-- Owner/Date: 2025-09-30
-- Reproduction:
-  * Fixed: `python scripts/benchmarks/benchmark_detailed.py`
-  * Before: `python benchmark_detailed.py` (TorchDynamo device mismatch)
-- Root Cause: Simulator.__init__() not receiving device parameter → incident_beam_direction on CPU while detector tensors on CUDA
-- Fix Applied:
-  1. Moved to `scripts/benchmarks/benchmark_detailed.py` with device parameter fix (line 92)
-  2. Updated output paths to `reports/benchmarks/<timestamp>/`
-  3. Proper NB_C_BIN resolution (env → golden_suite_generator → root → error)
-  4. Removed old benchmarks from repo root
-- Validation: correlation=1.000000 on both CPU and CUDA, no device errors
-- Exit Criteria: ALL SATISFIED ✓
-- Attempts History:
-  * [2025-09-30] Attempt #1 — Status: SUCCESS
-    * Fix: Added device parameter to Simulator(..., device=device_obj)
-    * Metrics: correlation=1.000000, no TorchDynamo errors
-    * Artifacts: scripts/benchmarks/benchmark_detailed.py, reports/benchmarks/20250930-002124/
+(No active suite failures)
 
 ---
 ## TODO Backlog
