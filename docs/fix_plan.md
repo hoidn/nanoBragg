@@ -7,6 +7,7 @@
 
 ### Active Items
 - [AT-PARALLEL-012-REGRESSION] Simple Cubic & Tilted Detector Correlation Regression — Priority: Critical, Status: in_progress
+- [META] Fix Plan Structure Refresh — Priority: High, Status: pending
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: High, Status: pending
 - [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: pending
 - [PERF-PYTORCH-006] Float32 / Mixed Precision Performance Mode — Priority: Medium, Status: pending
