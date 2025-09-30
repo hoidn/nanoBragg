@@ -215,10 +215,10 @@ cases:
     runs:
       - name: unpolarized
         extra_args: >-
-          -polarization 0.0
+          -polar 0.0
       - name: polarized
         extra_args: >-
-          -polarization 0.95
+          -polar 0.95
 
   - id: AT-PARALLEL-020
     description: Comprehensive integration test with all features (C ↔ PyTorch)
@@ -226,7 +226,7 @@ cases:
       -cell 70 80 90 75 85 95
       -N 5
       -mosaic 0.5
-      -mosaic_domains 5
+      -mosaic_dom 5
       -mosaic_seed 12345
       -phi 0
       -osc 90
@@ -238,7 +238,7 @@ cases:
       -detector_abs 500
       -detector_thick 450
       -thicksteps 5
-      -polarization 0.95
+      -polar 0.95
       -detpixels 512
       -pixel 0.1
       -distance 100
