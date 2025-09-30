@@ -1,6 +1,6 @@
-**Last Updated:** 2025-09-30 18:00 UTC
+**Last Updated:** 2025-09-30 19:30 UTC
 
-**Current Status:** **PARITY COVERAGE EXPANSION:** AT-PARALLEL-003 successfully added to parity harness with 4 test runs (beam center offset preservation). All tests pass with C↔PyTorch correlation ≥0.9999. ROOT CAUSE for AT-021/022 remains isolated pending debug.md routing.
+**Current Status:** **PARITY COVERAGE EXPANSION:** AT-PARALLEL-005 successfully added to parity harness with 4 test runs (beam center parameter mapping). All tests pass with C↔PyTorch correlation ≥0.9999. ROOT CAUSE for AT-021/022 remains isolated pending debug.md routing.
 
 ---
 ## Index
@@ -15,10 +15,11 @@
 
 ### Queued Items
 - [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: done (escalated)
-- Parity Harness Coverage Expansion — Status: in_progress (AT-003/011/021/022 added, 17 ATs remaining)
+- Parity Harness Coverage Expansion — Status: in_progress (AT-003/005/011/021/022 added, 16 ATs remaining)
 - Docs-as-Data CI lint
 
 ### Recently Completed (2025-09-30)
+- [AT-PARALLEL-005-HARNESS] Beam Center Parameter Mapping Parity Addition — done
 - [AT-PARALLEL-003-HARNESS] Detector Offset Preservation Parity Addition — done
 - [AT-PARALLEL-021-HARNESS] Parity Harness Addition for Crystal Phi Rotation — done (test discovery complete)
 - [AT-PARALLEL-011-CLI] Parity Harness CLI Compatibility — done (19/20 tests pass)
@@ -60,8 +61,41 @@
 - Artifacts:
   * Modified: tests/parity_cases.yaml (added AT-PARALLEL-003 entry between AT-002 and AT-004)
 - Next Actions:
-  * Continue parity harness coverage expansion: 17 AT-PARALLEL tests remain (005, 008, 009, 010, 013-019, 023-029)
-  * Next recommended: AT-PARALLEL-005 (Beam Center Parameter Mapping) — tests beam center parameter equivalence
+  * ✅ COMPLETED: AT-PARALLEL-005 added (see below)
+  * Continue parity harness coverage expansion: 16 AT-PARALLEL tests remain (008, 009, 010, 013-019, 023-029)
+  * Next recommended: AT-PARALLEL-008 (Multi-Peak Pattern Registration) — tests peak matching algorithms
+
+## [AT-PARALLEL-005-HARNESS] Beam Center Parameter Mapping Parity Addition
+- Spec/AT: AT-PARALLEL-005 Beam Center Parameter Mapping
+- Priority: Medium (parity harness coverage expansion)
+- Status: done
+- Owner/Date: 2025-09-30 19:30 UTC
+- Exit Criteria: ✅ SATISFIED — AT-PARALLEL-005 added to parity_cases.yaml with 4 test runs; all pass C↔PyTorch parity
+- Reproduction:
+  * Test: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_parity_matrix.py -k "AT-PARALLEL-005" -v`
+- Implementation Summary:
+  * Added AT-PARALLEL-005 to tests/parity_cases.yaml between AT-004 and AT-006 (lines 147-187)
+  * Base parameters: cubic 100Å cell, N=5, λ=1.0Å, 256×256 detector, pixel 0.1mm, seed 1
+  * Four runs testing different beam center parameter styles across conventions:
+    - mosflm-xbeam-ybeam-beam-pivot: MOSFLM + -distance (BEAM pivot) + -Xbeam/-Ybeam
+    - xds-xbeam-ybeam-sample-pivot: XDS + -distance (SAMPLE pivot default) + -Xbeam/-Ybeam
+    - mosflm-close-distance-sample-pivot: MOSFLM + -close_distance (SAMPLE pivot) + beam centers
+    - xds-close-distance-sample-pivot: XDS + -close_distance (SAMPLE pivot) + beam centers
+  * Thresholds: corr≥0.9999, sum_ratio∈[0.98, 1.02], max|Δ|<500
+  * Validates: Different parameter styles (-distance vs -close_distance) map correctly across conventions (MOSFLM vs XDS)
+- Test Results (2025-09-30 19:30 UTC):
+  * **ALL 4 RUNS PASSED** ✓
+    - mosflm-xbeam-ybeam-beam-pivot: PASSED
+    - xds-xbeam-ybeam-sample-pivot: PASSED
+    - mosflm-close-distance-sample-pivot: PASSED
+    - xds-close-distance-sample-pivot: PASSED
+  * Total runtime: 20.27s for all 4 tests
+  * All correlations ≥0.9999, confirming excellent C↔PyTorch parity
+- Artifacts:
+  * Modified: tests/parity_cases.yaml (added AT-PARALLEL-005 entry)
+- Next Actions:
+  * Continue parity harness expansion: 16 tests remain
+  * Next recommended: AT-PARALLEL-008 (Multi-Peak Pattern Registration)
 
 ## [AT-PARALLEL-021-PARITY] Crystal Phi Rotation Parity Addition and Root Cause Discovery
 - Spec/AT: AT-PARALLEL-021 Crystal Phi Rotation Equivalence

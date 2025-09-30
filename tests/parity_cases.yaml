@@ -144,6 +144,47 @@ cases:
           -Xbeam 25.6
           -Ybeam 25.6
 
+  - id: AT-PARALLEL-005
+    description: Beam center parameter mapping parity (C ↔ PyTorch)
+    base_args: >-
+      -default_F 100
+      -cell 100 100 100 90 90 90
+      -lambda 1.0
+      -N 5
+      -detpixels 256
+      -pixel 0.1
+      -seed 1
+    thresholds:
+      corr_min: 0.9999
+      sum_ratio_min: 0.98
+      sum_ratio_max: 1.02
+      max_abs_max: 500
+    runs:
+      - name: mosflm-xbeam-ybeam-beam-pivot
+        extra_args: >-
+          -mosflm
+          -distance 100
+          -Xbeam 25.6
+          -Ybeam 25.6
+      - name: xds-xbeam-ybeam-sample-pivot
+        extra_args: >-
+          -xds
+          -distance 100
+          -Xbeam 25.6
+          -Ybeam 25.6
+      - name: mosflm-close-distance-sample-pivot
+        extra_args: >-
+          -mosflm
+          -close_distance 100
+          -Xbeam 25.6
+          -Ybeam 25.6
+      - name: xds-close-distance-sample-pivot
+        extra_args: >-
+          -xds
+          -close_distance 100
+          -Xbeam 25.6
+          -Ybeam 25.6
+
   - id: AT-PARALLEL-006
     description: Single reflection position parity across distance/wavelength sweeps
     base_args: >-
