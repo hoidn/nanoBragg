@@ -194,16 +194,14 @@ class Simulator:
         pixel_squared_sum = torch.sum(
             pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True
         )
-        pixel_squared_sum = torch.maximum(
-            pixel_squared_sum,
-            torch.tensor(1e-12, dtype=pixel_squared_sum.dtype, device=pixel_squared_sum.device)
-        )
+        # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
+        pixel_squared_sum = pixel_squared_sum.clamp_min(1e-12)
         pixel_magnitudes = torch.sqrt(pixel_squared_sum)
         diffracted_beam_unit = pixel_coords_angstroms / pixel_magnitudes
 
-        # Incident beam unit vector - ensure it's on the same device as diffracted beam
-        # Move to device within the compiled function to avoid torch.compile device issues
-        incident_beam_direction = incident_beam_direction.to(diffracted_beam_unit.device)
+        # PERF-PYTORCH-004 Phase 1: Removed .to() call - incident_beam_direction is already on correct device
+        # The caller (run() method) ensures source_directions are moved to self.device before calling this function
+        # This avoids graph breaks in torch.compile
 
         if is_multi_source:
             # Multi-source case: broadcast over sources
@@ -662,7 +660,8 @@ class Simulator:
 
             # VECTORIZED AIRPATH AND OMEGA: Calculate for all subpixels
             sub_squared_all = torch.sum(subpixel_coords_ang_all * subpixel_coords_ang_all, dim=-1)
-            sub_squared_all = torch.maximum(sub_squared_all, torch.tensor(1e-20, dtype=sub_squared_all.dtype, device=sub_squared_all.device))
+            # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
+            sub_squared_all = sub_squared_all.clamp_min(1e-20)
             sub_magnitudes_all = torch.sqrt(sub_squared_all)
             airpath_m_all = sub_magnitudes_all * 1e-10
 
@@ -1180,7 +1179,8 @@ class Simulator:
         # Calculate observation directions (normalized pixel coordinates)
         # o = pixel_coords / |pixel_coords|
         pixel_distances = torch.sqrt(torch.sum(pixel_coords_meters**2, dim=-1, keepdim=True))
-        observation_dirs = pixel_coords_meters / torch.maximum(pixel_distances, torch.tensor(1e-10, dtype=pixel_distances.dtype, device=pixel_distances.device))
+        # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
+        observation_dirs = pixel_coords_meters / pixel_distances.clamp_min(1e-10)
 
         # Calculate parallax factor: ρ = d·o
         # detector_normal shape: [3], observation_dirs shape: [S, F, 3]
