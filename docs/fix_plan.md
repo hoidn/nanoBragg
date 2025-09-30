@@ -492,9 +492,26 @@
 ---
 ## Suite Failures
 
-[Suite Failure][2025-09-29] benchmark_detailed.py — Priority: Medium — Status: pending
-Repro: python benchmark_detailed.py
-Failures: TorchDynamo FakeTensor device mismatch (cpu vs cuda) and script lives outside `scripts/` with ad-hoc env handling
+## [TOOLING-001] benchmark_detailed.py Device/Location Issues
+- Priority: Medium
+- Status: done
+- Owner/Date: 2025-09-30
+- Reproduction:
+  * Fixed: `python scripts/benchmarks/benchmark_detailed.py`
+  * Before: `python benchmark_detailed.py` (TorchDynamo device mismatch)
+- Root Cause: Simulator.__init__() not receiving device parameter → incident_beam_direction on CPU while detector tensors on CUDA
+- Fix Applied:
+  1. Moved to `scripts/benchmarks/benchmark_detailed.py` with device parameter fix (line 92)
+  2. Updated output paths to `reports/benchmarks/<timestamp>/`
+  3. Proper NB_C_BIN resolution (env → golden_suite_generator → root → error)
+  4. Removed old benchmarks from repo root
+- Validation: correlation=1.000000 on both CPU and CUDA, no device errors
+- Exit Criteria: ALL SATISFIED ✓
+- Attempts History:
+  * [2025-09-30] Attempt #1 — Status: SUCCESS
+    * Fix: Added device parameter to Simulator(..., device=device_obj)
+    * Metrics: correlation=1.000000, no TorchDynamo errors
+    * Artifacts: scripts/benchmarks/benchmark_detailed.py, reports/benchmarks/20250930-002124/
 
 ---
 ## TODO Backlog

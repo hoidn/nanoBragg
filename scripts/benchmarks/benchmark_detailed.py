@@ -2,29 +2,48 @@
 """
 Detailed performance benchmark comparing C and PyTorch implementations.
 Includes memory usage and breakdown timing.
+
+Follows nanoBragg tooling standards (testing_strategy.md §6):
+- Located in scripts/benchmarks/
+- Honors KMP_DUPLICATE_LIB_OK and NB_C_BIN env vars
+- Saves outputs to reports/benchmarks/<timestamp>/
 """
 
 import os
+import sys
 import time
 import subprocess
 import tempfile
 from pathlib import Path
+from datetime import datetime
 import numpy as np
 import json
+
+# Ensure environment is set per project standards
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+
+# Import after environment setup
 import psutil
 import torch
 
-# Ensure environment is set
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 def get_memory_usage():
     """Get current memory usage in MB."""
     process = psutil.Process()
     return process.memory_info().rss / 1024 / 1024
 
-def run_pytorch_timed(args, output_file):
-    """Run PyTorch version with detailed timing."""
-    from nanobrag_torch.config import CrystalConfig, DetectorConfig, BeamConfig, CrystalShape, DetectorConvention
+
+def run_pytorch_timed(args, output_file, device='cpu'):
+    """
+    Run PyTorch version with detailed timing.
+
+    Device handling: all objects created with explicit device parameter to avoid
+    TorchDynamo FakeTensor device mismatches.
+    """
+    from nanobrag_torch.config import (
+        CrystalConfig, DetectorConfig, BeamConfig,
+        CrystalShape, DetectorConvention
+    )
     from nanobrag_torch.models.crystal import Crystal
     from nanobrag_torch.models.detector import Detector
     from nanobrag_torch.simulator import Simulator
@@ -35,10 +54,10 @@ def run_pytorch_timed(args, output_file):
         if arg == '-detpixels' and i+1 < len(args.split()):
             detpixels = int(args.split()[i+1])
 
-    # Check for GPU and set device FIRST
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # Convert device string to torch.device
+    device_obj = torch.device(device)
 
-    # Setup configs
+    # Setup configs (scalars only - device applied at model creation)
     crystal_config = CrystalConfig(
         cell_a=100.0, cell_b=100.0, cell_c=100.0,
         cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
@@ -60,27 +79,30 @@ def run_pytorch_timed(args, output_file):
 
     # Time different stages
     timings = {}
-    timings['device'] = str(device)
+    timings['device'] = str(device_obj)
 
     # Setup - CREATE OBJECTS WITH DEVICE PARAMETER
+    # This ensures all tensors live on the target device from creation,
+    # avoiding device drift and TorchDynamo compilation issues
     start = time.time()
-    crystal = Crystal(crystal_config, device=device)
-    detector = Detector(detector_config, device=device)
-    simulator = Simulator(crystal, detector, crystal_config, beam_config)
+    crystal = Crystal(crystal_config, device=device_obj)
+    detector = Detector(detector_config, device=device_obj)
 
-    # For GPU, need to ensure JIT compilation happens in setup
-    if device.type == 'cuda':
-        # Warm-up run to trigger compilation
+    # CRITICAL: Pass device to Simulator to ensure incident_beam_direction lives on correct device
+    simulator = Simulator(crystal, detector, crystal_config, beam_config, device=device_obj)
+
+    # For GPU, warm-up run to trigger JIT compilation
+    if device_obj.type == 'cuda':
         _ = simulator.run()
-        torch.cuda.synchronize()  # Wait for GPU to finish
+        torch.cuda.synchronize()
 
     timings['setup'] = time.time() - start
 
     # Run simulation (the actual timed run)
     start = time.time()
     image = simulator.run()
-    if device.type == 'cuda':
-        torch.cuda.synchronize()  # Ensure GPU computation is complete
+    if device_obj.type == 'cuda':
+        torch.cuda.synchronize()
     timings['simulation'] = time.time() - start
 
     # Save output
@@ -93,10 +115,34 @@ def run_pytorch_timed(args, output_file):
 
     return timings
 
+
+def resolve_c_binary():
+    """Resolve C binary path following project precedence."""
+    # Precedence: NB_C_BIN env -> golden_suite_generator -> root -> error
+    c_bin = os.environ.get('NB_C_BIN')
+    if c_bin and Path(c_bin).exists():
+        return c_bin
+
+    if Path('./golden_suite_generator/nanoBragg').exists():
+        return './golden_suite_generator/nanoBragg'
+
+    if Path('./nanoBragg').exists():
+        return './nanoBragg'
+
+    print("ERROR: No C binary found. Set NB_C_BIN or ensure ./golden_suite_generator/nanoBragg exists.")
+    sys.exit(1)
+
+
 def main():
     print("=" * 80)
     print("Detailed nanoBragg Performance Analysis")
     print("=" * 80)
+
+    # Create timestamped output directory
+    timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+    output_dir = Path('reports/benchmarks') / timestamp
+    output_dir.mkdir(parents=True, exist_ok=True)
+    print(f"\nOutputs will be saved to: {output_dir}")
 
     # System info
     print(f"\nSystem Information:")
@@ -107,11 +153,8 @@ def main():
     if torch.cuda.is_available():
         print(f"GPU: {torch.cuda.get_device_name(0)}")
 
-    # Check for C binary
-    c_bin = os.environ.get('NB_C_BIN', './golden_suite_generator/nanoBragg')
-    if not Path(c_bin).exists():
-        c_bin = './nanoBragg'
-
+    # Resolve C binary
+    c_bin = resolve_c_binary()
     print(f"\nC binary: {c_bin}")
 
     # Define test sizes
@@ -145,18 +188,20 @@ def main():
                 c_time = time.time() - c_start
                 c_mem = get_memory_usage() - mem_before
                 c_success = True
-            except:
+            except Exception as e:
+                print(f"  C execution error: {e}")
                 c_time = None
                 c_mem = None
                 c_success = False
 
-            # PyTorch implementation
-            print("Running PyTorch implementation...")
+            # PyTorch implementation (CPU and optionally GPU)
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
+            print(f"Running PyTorch implementation on {device.upper()}...")
             mem_before = get_memory_usage()
             py_start = time.time()
 
             try:
-                py_timings = run_pytorch_timed(args, py_output)
+                py_timings = run_pytorch_timed(args, py_output, device=device)
                 py_time = py_timings['total']
                 py_mem = get_memory_usage() - mem_before
                 py_success = True
@@ -166,7 +211,9 @@ def main():
                 print(f"  I/O time: {py_timings['io']:.3f}s")
                 print(f"  Device: {py_timings['device']}")
             except Exception as e:
-                print(f"  Error: {e}")
+                print(f"  PyTorch execution error: {e}")
+                import traceback
+                traceback.print_exc()
                 py_time = None
                 py_mem = None
                 py_success = False
@@ -215,7 +262,7 @@ def main():
                     'py_timings': py_timings
                 })
 
-    # Summary plot data
+    # Summary and analysis
     if results:
         print("\n" + "=" * 80)
         print("PERFORMANCE SUMMARY")
@@ -259,10 +306,11 @@ def main():
                 ratio
             ))
 
-        # Save results
-        with open('benchmark_detailed.json', 'w') as f:
+        # Save results to reports directory
+        results_file = output_dir / 'benchmark_results.json'
+        with open(results_file, 'w') as f:
             json.dump(results, f, indent=2)
-        print(f"\nDetailed results saved to benchmark_detailed.json")
+        print(f"\nDetailed results saved to {results_file}")
 
         # Analysis
         print("\n" + "=" * 80)
@@ -280,15 +328,14 @@ def main():
 
         print("\nSimulation only (excluding setup):")
         if avg_speedup_sim > 1:
-            print(f"  ✓ PyTorch GPU is on average {avg_speedup_sim:.2f}x faster than C")
+            print(f"  ✓ PyTorch is on average {avg_speedup_sim:.2f}x faster than C")
         else:
-            print(f"  ✓ C is on average {1/avg_speedup_sim:.2f}x faster than PyTorch GPU")
+            print(f"  ✓ C is on average {1/avg_speedup_sim:.2f}x faster than PyTorch")
 
         print(f"\n✓ All correlations > 0.99, indicating excellent numerical agreement")
 
         # Scaling analysis
         if len(results) > 1:
-            # Check how performance scales with size
             sizes = [r['size'] for r in results]
             c_times = [r['c_time'] for r in results]
             py_times = [r['py_time'] for r in results]
@@ -299,6 +346,9 @@ def main():
 
             print(f"\n✓ C scaling factor: {scaling_c:.2f} (1.0 = perfect O(n²) scaling)")
             print(f"✓ PyTorch scaling factor: {scaling_py:.2f} (1.0 = perfect O(n²) scaling)")
+
+        print(f"\n\nAll outputs saved to: {output_dir}")
+
 
 if __name__ == "__main__":
     main()
