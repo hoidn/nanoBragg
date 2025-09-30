@@ -1120,7 +1120,7 @@ class Detector:
             else:
                 # Default to MOSFLM fast vector
                 fdet_vec = torch.tensor(
-                    [0.0, 1.0, 0.0], device=self.device, dtype=self.dtype
+                    [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
                 )
 
             if c.custom_sdet_vector is not None:
@@ -1130,7 +1130,7 @@ class Detector:
             else:
                 # Default to MOSFLM slow vector
                 sdet_vec = torch.tensor(
-                    [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
+                    [0.0, -1.0, 0.0], device=self.device, dtype=self.dtype
                 )
 
             if c.custom_odet_vector is not None:
