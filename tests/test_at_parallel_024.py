@@ -370,15 +370,16 @@ class TestAT_PARALLEL_024:
         ]
 
         for angles in test_angles:
-            # Create rotation matrix from angles
-            rotx, roty, rotz = angles
+            # Create rotation matrix from angles (convert to tensors for PERF-PYTORCH-004 compatibility)
+            rotx, roty, rotz = [torch.tensor(a, dtype=torch.float64) for a in angles]
             umat = angles_to_rotation_matrix(rotx, roty, rotz)
 
             # Extract angles back
             extracted = umat2misset(umat)
 
-            # Create matrix from extracted angles to verify
-            umat_reconstructed = angles_to_rotation_matrix(*extracted)
+            # Create matrix from extracted angles to verify (convert to tensors for PERF-PYTORCH-004 compatibility)
+            extracted_tensors = [torch.tensor(a, dtype=torch.float64) for a in extracted]
+            umat_reconstructed = angles_to_rotation_matrix(*extracted_tensors)
 
             # The matrices should be identical (accounting for gimbal lock edge cases)
             assert torch.allclose(umat, umat_reconstructed, rtol=1e-10, atol=1e-12), \

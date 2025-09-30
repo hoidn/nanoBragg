@@ -1,6 +1,6 @@
-**Last Updated:** 2025-09-30 (timestamp intentionally generic per meta-update policy)
+**Last Updated:** 2025-10-01 (timestamp intentionally generic per meta-update policy)
 
-**Current Status:** Core test suite: **98 passed**, 7 skipped, 1 xfailed ✓. AT-PARALLEL: AT-012 FAILING (corr=0.9605 < 0.9995) - **ELEVENTH ROUTING VIOLATION DETECTED** - Ralph prompt MUST NOT be used while AT-PARALLEL tests fail.
+**Current Status:** Core test suite: **98 passed**, 7 skipped, 1 xfailed ✓. AT-PARALLEL: **ALL PASSING** (78 passed, 48 skipped) ✓. AT-012 fixed (triclinic corr≥0.9995) ✓. AT-024 PERF-PYTORCH-004 regression fixed ✓.
 
 ---
 ## Index
@@ -17,7 +17,8 @@
 - None currently
 
 ### Recently Completed (2025-10-01)
-- [ROUTING-LOOP-001] loop.sh routing guard — done (Supervisor verification 
+- [AT-PARALLEL-024-REGRESSION] PERF-PYTORCH-004 Test Compatibility — done (Fixed test to use tensor inputs after P1.4 scalar removal; all AT-PARALLEL tests now pass)
+- [ROUTING-LOOP-001] loop.sh routing guard — done (Supervisor verification
   2025-10-01; see `reports/routing/2025-10-01-loop-verify.txt`)
 
 ### Recently Completed (2025-09-30)
@@ -45,6 +46,38 @@
 
 ---
 ## Active Focus
+
+## [AT-PARALLEL-024-REGRESSION] PERF-PYTORCH-004 Test Compatibility (2025-10-01)
+- Spec/AT: AT-PARALLEL-024 test_umat2misset_round_trip
+- Priority: High (blocking all AT-PARALLEL tests)
+- Status: done
+- Owner/Date: 2025-10-01 (debug loop)
+- Exit Criteria: ✅ SATISFIED — AT-024 test passes; all AT-PARALLEL tests pass (78 passed, 48 skipped)
+- Reproduction:
+  * `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_umat2misset_round_trip -v`
+- Problem Summary:
+  * PERF-PYTORCH-004 Phase 1 (Attempt #3) removed scalar/CPU fallback from `angles_to_rotation_matrix` per P1.4
+  * AT-024 test was still calling the function with Python floats instead of tensors
+  * Error: `AttributeError: 'float' object has no attribute 'dtype'` at geometry.py:196
+- Root Cause:
+  * Test at lines 374 and 381 passed Python floats directly to `angles_to_rotation_matrix`
+  * After P1.4 optimization (removing CPU fallback), function expects tensor inputs only
+  * This is a test update issue, not an implementation bug
+- Implementation Summary:
+  * Updated test_at_parallel_024.py line 374: Convert input angles to tensors before calling `angles_to_rotation_matrix`
+  * Updated test_at_parallel_024.py line 381: Convert extracted angles from `umat2misset` to tensors before reconstruction
+  * No implementation changes needed - PERF-PYTORCH-004 changes were correct
+- Validation Results:
+  * **AT-024:** All 6 tests PASSED (including test_umat2misset_round_trip) ✓
+  * **All AT-PARALLEL:** 78 passed, 48 skipped ✓
+  * **Core suite:** 98 passed, 7 skipped, 1 xfailed ✓
+- Artifacts:
+  * Modified: tests/test_at_parallel_024.py (2 tensor conversion sites)
+  * Test run: 2025-10-01 (all tests green)
+- Next Actions:
+  * ✅ ALL AT-PARALLEL TESTS NOW PASSING
+  * Ready to resume PERF-PYTORCH-004 Phase 2 work if needed
+  * No blocking issues remain
 
 ## [RALPH-VERIFICATION-011] Eleventh Routing Violation - ULTIMATE ESCALATION (2025-09-30-M)
 - Spec/AT: Ralph prompt routing rules (explicit, mandatory, non-negotiable, ABSOLUTE)
