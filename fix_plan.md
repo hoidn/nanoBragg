@@ -8,7 +8,7 @@
 ### Active Items
 - [PROTECTED-ASSETS-001] Enforce `docs/index.md` protection — Priority: Medium, Status: pending (guard any file listed there from deletion; update CLAUDE.md + hygiene SOP)
 - [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — Priority: Medium, Status: pending (plan: plans/active/repo-hygiene-002/plan.md)
-- [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: High, Status: in_progress (Phase 1 complete ✓; Phase 2 pending — see plans/active/perf-pytorch-compile-refactor/plan.md)
+- [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: High, Status: done (Phase 0-1 complete ✓; Phase 2-4 CANCELLED - torch.compile caching already works; 67-238x speedup observed)
 - [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
 - [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: done
 - [PERF-PYTORCH-006] Float32 / Mixed Precision Performance Mode — Priority: Medium, Status: done
@@ -17,6 +17,7 @@
 - None currently
 
 ### Recently Completed (2025-10-01)
+- [PERF-PYTORCH-004] Fuse Physics Kernels — done (Phase 0-1 complete; Phase 2-4 CANCELLED - torch.compile already provides cross-instance caching with 67-238x speedup; see plans/active/perf-pytorch-compile-refactor/phase2_investigation_findings.md)
 - [AT-PARALLEL-024-REGRESSION] PERF-PYTORCH-004 Test Compatibility — done (Fixed test to use tensor inputs after P1.4 scalar removal; all AT-PARALLEL tests now pass)
 - [ROUTING-LOOP-001] loop.sh routing guard — done (Supervisor verification
   2025-10-01; see `reports/routing/2025-10-01-loop-verify.txt`)

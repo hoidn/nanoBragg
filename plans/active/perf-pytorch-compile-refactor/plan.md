@@ -42,10 +42,13 @@ Exit Criteria: `_compute_physics_for_position` is a module-level pure function o
 | P0.4 | Validate with full test suite | [X] | Core: 98 passed, 7 skipped, 1 xfailed ✓. AT-PARALLEL: 78 passed, 48 skipped ✓. No regressions. |
 | P0.5 | Document refactoring rationale | [X] | Added comprehensive docstrings to pure function and compatibility shim explaining caching rationale. |
 
-**Alternative Investigation (defer until after P0.4):**
-- Investigate whether torch.compile's internal cache already provides cross-instance reuse for pure functions
-- If torch.compile already optimizes this case, Phase 2-4 may be unnecessary
-- Document findings in blueprint.md before proceeding to Phase 2
+**Alternative Investigation (defer until after P0.4):** ✅ **COMPLETE** (2025-10-01)
+- ✅ Investigated whether torch.compile's internal cache already provides cross-instance reuse for pure functions
+- ✅ **FINDING:** torch.compile DOES cache effectively across instances (67-238x speedup observed)
+- ✅ **DECISION:** Phase 2-4 are UNNECESSARY - torch.compile's built-in caching provides desired behavior
+- ✅ Documented findings in `phase2_investigation_findings.md`
+
+**Key Result:** After Phase 0 refactoring to pure function, torch.compile automatically reuses compiled kernels across instances with dramatic performance gains (Instance 1: ~2800ms at 256², Instances 2+: ~12ms). No explicit cache implementation needed.
 
 ### Phase 1 — Hoist Static Tensors & Geometry Helpers
 Goal: Remove per-call tensor factories and CPU fallbacks so `_compute_physics_for_position` and supporting geometry run in a stable graph on the caller’s device.
@@ -105,3 +108,21 @@ Exit Criteria: Report `reports/benchmarks/<date>-fusion/summary.md` capturing ke
 - Work must happen under `prompts/perf_debug.md` (or `prompts/debug.md` if perf prompt unavailable); no more verification-only loops while the plan is active.
 - Treat caching layer as infrastructural: add targeted unit tests (e.g., `tests/test_simulator_compile_cache.py`) but avoid touching physics logic until derivatives verified.
 - Coordinate with parity tasks: brief supervisor ping required before merging Triton/Inductor-level changes to ensure parity harness stays authoritative.
+
+## Phase Status Summary (2025-10-01 Update)
+
+**✅ COMPLETE:**
+- Phase 0: Refactor to pure function (enables torch.compile caching)
+- Phase 1: Hoist static tensors & geometry helpers
+- Alternative Investigation: torch.compile cross-instance caching analysis
+
+**❌ CANCELLED (torch.compile already provides desired functionality):**
+- Phase 2: Shared Compiled Kernel Cache
+- Phase 3: Remove Full-Graph Blockers  
+- Phase 4: Kernel Fusion Follow-Up
+
+**KEY FINDING:** torch.compile's internal cache automatically reuses compiled kernels across Simulator instances after Phase 0 pure function refactoring. Observed 67-238x speedup on subsequent instances (Instance 1: ~2800ms at 256², Instances 2+: ~12ms). No explicit cache implementation needed.
+
+**RECOMMENDATION:** Close PERF-PYTORCH-004 as **COMPLETE**. The original goal (eliminate per-instance recompilation overhead) has been achieved through architectural refactoring (Phase 0) + torch.compile's automatic caching.
+
+See `phase2_investigation_findings.md` for complete analysis and benchmarks.
