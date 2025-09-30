@@ -5,7 +5,7 @@ This module orchestrates the entire diffraction simulation, taking Crystal and
 Detector objects as input and producing the final diffraction pattern.
 """
 
-from typing import Optional
+from typing import Optional, Callable
 
 import torch
 
@@ -14,6 +14,260 @@ from .models.crystal import Crystal
 from .models.detector import Detector
 from .utils.geometry import dot_product
 from .utils.physics import sincg, sinc3, polarization_factor
+
+
+def compute_physics_for_position(
+    # Geometry inputs
+    pixel_coords_angstroms: torch.Tensor,
+    rot_a: torch.Tensor,
+    rot_b: torch.Tensor,
+    rot_c: torch.Tensor,
+    rot_a_star: torch.Tensor,
+    rot_b_star: torch.Tensor,
+    rot_c_star: torch.Tensor,
+    # Beam parameters
+    incident_beam_direction: torch.Tensor,
+    wavelength: torch.Tensor,
+    source_weights: Optional[torch.Tensor] = None,
+    # Beam configuration (dmin culling)
+    dmin: float = 0.0,
+    # Crystal structure factor function
+    crystal_get_structure_factor: Callable[[torch.Tensor, torch.Tensor, torch.Tensor], torch.Tensor] = None,
+    # Crystal parameters for lattice factor
+    N_cells_a: int = 0,
+    N_cells_b: int = 0,
+    N_cells_c: int = 0,
+    crystal_shape: CrystalShape = CrystalShape.SQUARE,
+    crystal_fudge: float = 1.0,
+) -> torch.Tensor:
+    """Compute physics (Miller indices, structure factors, intensity) for given positions.
+
+    This is a pure function with no instance state dependencies, enabling safe cross-instance
+    kernel caching for torch.compile optimization (PERF-PYTORCH-004 Phase 0).
+
+    REFACTORING NOTE (PERF-PYTORCH-004 Phase 0):
+    This function was refactored from a bound method (`Simulator._compute_physics_for_position`)
+    to a module-level pure function to enable safe cross-instance kernel caching with torch.compile.
+    Caching bound methods is unsafe because they capture `self`, which can lead to silent
+    correctness bugs when the cached kernel is reused across different simulator instances
+    with different state.
+
+    All required state is now passed as explicit parameters, ensuring that:
+    1. The function has no hidden dependencies on instance state
+    2. torch.compile can safely cache compiled kernels across instances
+    3. The function's behavior is fully determined by its inputs
+    4. Testing and debugging are simplified (pure function properties)
+
+    This is the core physics calculation that must be done per-subpixel for proper
+    anti-aliasing. Each subpixel samples a slightly different position in reciprocal
+    space, leading to different Miller indices and structure factors.
+
+    VECTORIZED OVER SOURCES: This function supports batched computation over
+    multiple sources (beam divergence/dispersion). When multiple sources are provided,
+    the computation is vectorized across the source dimension, eliminating the Python loop.
+
+    Args:
+        pixel_coords_angstroms: Pixel/subpixel coordinates in Angstroms (S, F, 3) or (batch, 3)
+        rot_a, rot_b, rot_c: Rotated real-space lattice vectors (N_phi, N_mos, 3)
+        rot_a_star, rot_b_star, rot_c_star: Rotated reciprocal vectors (N_phi, N_mos, 3)
+        incident_beam_direction: Incident beam direction.
+            - Single source: shape (3,)
+            - Multiple sources: shape (n_sources, 3)
+        wavelength: Wavelength in Angstroms.
+            - Single source: scalar
+            - Multiple sources: shape (n_sources,) or (n_sources, 1, 1)
+        source_weights: Optional per-source weights for multi-source accumulation.
+            Shape: (n_sources,). If None, equal weighting is assumed.
+        dmin: Minimum d-spacing for resolution culling (0 = no culling)
+        crystal_get_structure_factor: Function to look up structure factors for (h0, k0, l0)
+        N_cells_a/b/c: Number of unit cells in each direction
+        crystal_shape: Crystal shape enum for lattice structure factor calculation
+        crystal_fudge: Fudge factor for lattice structure factor
+
+    Returns:
+        intensity: Computed intensity |F|^2 integrated over phi and mosaic
+            - Single source: shape (S, F) or (batch,)
+            - Multiple sources: weighted sum across sources, shape (S, F) or (batch,)
+    """
+    # Detect if we have batched sources
+    is_multi_source = incident_beam_direction.dim() == 2
+    n_sources = incident_beam_direction.shape[0] if is_multi_source else 1
+
+    # Calculate scattering vectors
+    pixel_squared_sum = torch.sum(
+        pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True
+    )
+    # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
+    pixel_squared_sum = pixel_squared_sum.clamp_min(1e-12)
+    pixel_magnitudes = torch.sqrt(pixel_squared_sum)
+    diffracted_beam_unit = pixel_coords_angstroms / pixel_magnitudes
+
+    # PERF-PYTORCH-004 Phase 1: No .to() call needed - incident_beam_direction is already on correct device
+    # The caller (run() method) ensures source_directions are moved to self.device before calling this function
+    # This avoids graph breaks in torch.compile
+
+    if is_multi_source:
+        # Multi-source case: broadcast over sources
+        # diffracted_beam_unit: (S, F, 3) or (batch, 3)
+        # incident_beam_direction: (n_sources, 3)
+        # Need to add source dimension to diffracted_beam_unit
+
+        # Add source dimension: (S, F, 3) -> (1, S, F, 3)
+        diffracted_expanded = diffracted_beam_unit.unsqueeze(0)
+        # Expand incident: (n_sources, 3) -> (n_sources, 1, 1, 3)
+        incident_expanded = incident_beam_direction.view(n_sources, 1, 1, 3)
+
+        # Expand to match diffracted shape
+        incident_beam_unit = incident_expanded.expand(n_sources, *diffracted_beam_unit.shape)
+        diffracted_beam_unit = diffracted_expanded.expand_as(incident_beam_unit)
+    else:
+        # Single source case: broadcast as before
+        incident_beam_unit = incident_beam_direction.expand_as(diffracted_beam_unit)
+
+    # Prepare wavelength for broadcasting
+    if is_multi_source:
+        # wavelength: (n_sources,) -> (n_sources, 1, 1, 1) for 4D broadcast (n_sources, S, F, 3)
+        if wavelength.dim() == 1:
+            wavelength = wavelength.view(n_sources, 1, 1, 1)
+
+    # Scattering vector using crystallographic convention
+    scattering_vector = (diffracted_beam_unit - incident_beam_unit) / wavelength
+
+    # Apply dmin culling if specified
+    dmin_mask = None
+    if dmin > 0:
+        stol = 0.5 * torch.norm(scattering_vector, dim=-1)
+        stol_threshold = 0.5 / dmin
+        dmin_mask = (stol > 0) & (stol > stol_threshold)
+
+    # Calculate Miller indices
+    # scattering_vector shape: (S, F, 3) or (n_sources, S, F, 3)
+    # Need to add phi and mosaic dimensions for broadcasting
+    if is_multi_source:
+        # Multi-source: (n_sources, S, F, 3) -> (n_sources, S, F, 1, 1, 3)
+        scattering_broadcast = scattering_vector.unsqueeze(-2).unsqueeze(-2)
+        # rot vectors: (N_phi, N_mos, 3) -> (1, 1, 1, N_phi, N_mos, 3)
+        rot_a_broadcast = rot_a.unsqueeze(0).unsqueeze(0).unsqueeze(0)
+        rot_b_broadcast = rot_b.unsqueeze(0).unsqueeze(0).unsqueeze(0)
+        rot_c_broadcast = rot_c.unsqueeze(0).unsqueeze(0).unsqueeze(0)
+    else:
+        # Single source: (S, F, 3) -> (S, F, 1, 1, 3)
+        scattering_broadcast = scattering_vector.unsqueeze(-2).unsqueeze(-2)
+        # rot vectors: (N_phi, N_mos, 3) -> (1, 1, N_phi, N_mos, 3)
+        rot_a_broadcast = rot_a.unsqueeze(0).unsqueeze(0)
+        rot_b_broadcast = rot_b.unsqueeze(0).unsqueeze(0)
+        rot_c_broadcast = rot_c.unsqueeze(0).unsqueeze(0)
+
+    h = dot_product(scattering_broadcast, rot_a_broadcast)
+    k = dot_product(scattering_broadcast, rot_b_broadcast)
+    l = dot_product(scattering_broadcast, rot_c_broadcast)  # noqa: E741
+
+    # Find nearest integer Miller indices
+    h0 = torch.round(h)
+    k0 = torch.round(k)
+    l0 = torch.round(l)
+
+    # Look up structure factors
+    F_cell = crystal_get_structure_factor(h0, k0, l0)
+
+    # Calculate lattice structure factor
+    Na = N_cells_a
+    Nb = N_cells_b
+    Nc = N_cells_c
+    shape = crystal_shape
+    fudge = crystal_fudge
+
+    if shape == CrystalShape.SQUARE:
+        F_latt_a = sincg(torch.pi * (h - h0), Na)
+        F_latt_b = sincg(torch.pi * (k - k0), Nb)
+        F_latt_c = sincg(torch.pi * (l - l0), Nc)
+        F_latt = F_latt_a * F_latt_b * F_latt_c
+    elif shape == CrystalShape.ROUND:
+        h_frac = h - h0
+        k_frac = k - k0
+        l_frac = l - l0
+        hrad_sqr = (h_frac * h_frac * Na * Na +
+                   k_frac * k_frac * Nb * Nb +
+                   l_frac * l_frac * Nc * Nc)
+        # Use clamp_min to avoid creating fresh tensors in compiled graph (PERF-PYTORCH-004 P1.1)
+        hrad_sqr = hrad_sqr.clamp_min(1e-12)
+        F_latt = Na * Nb * Nc * 0.723601254558268 * sinc3(
+            torch.pi * torch.sqrt(hrad_sqr * fudge)
+        )
+    elif shape == CrystalShape.GAUSS:
+        h_frac = h - h0
+        k_frac = k - k0
+        l_frac = l - l0
+        if is_multi_source:
+            # Multi-source: rot_*_star (N_phi, N_mos, 3) -> (1, 1, 1, N_phi, N_mos, 3)
+            delta_r_star = (h_frac.unsqueeze(-1) * rot_a_star.unsqueeze(0).unsqueeze(0).unsqueeze(0) +
+                          k_frac.unsqueeze(-1) * rot_b_star.unsqueeze(0).unsqueeze(0).unsqueeze(0) +
+                          l_frac.unsqueeze(-1) * rot_c_star.unsqueeze(0).unsqueeze(0).unsqueeze(0))
+        else:
+            # Single source: rot_*_star (N_phi, N_mos, 3) -> (1, 1, N_phi, N_mos, 3)
+            delta_r_star = (h_frac.unsqueeze(-1) * rot_a_star.unsqueeze(0).unsqueeze(0) +
+                          k_frac.unsqueeze(-1) * rot_b_star.unsqueeze(0).unsqueeze(0) +
+                          l_frac.unsqueeze(-1) * rot_c_star.unsqueeze(0).unsqueeze(0))
+        rad_star_sqr = torch.sum(delta_r_star * delta_r_star, dim=-1)
+        rad_star_sqr = rad_star_sqr * Na * Na * Nb * Nb * Nc * Nc
+        F_latt = Na * Nb * Nc * torch.exp(-(rad_star_sqr / 0.63) * fudge)
+    elif shape == CrystalShape.TOPHAT:
+        h_frac = h - h0
+        k_frac = k - k0
+        l_frac = l - l0
+        if is_multi_source:
+            # Multi-source: rot_*_star (N_phi, N_mos, 3) -> (1, 1, 1, N_phi, N_mos, 3)
+            delta_r_star = (h_frac.unsqueeze(-1) * rot_a_star.unsqueeze(0).unsqueeze(0).unsqueeze(0) +
+                          k_frac.unsqueeze(-1) * rot_b_star.unsqueeze(0).unsqueeze(0).unsqueeze(0) +
+                          l_frac.unsqueeze(-1) * rot_c_star.unsqueeze(0).unsqueeze(0).unsqueeze(0))
+        else:
+            # Single source: rot_*_star (N_phi, N_mos, 3) -> (1, 1, N_phi, N_mos, 3)
+            delta_r_star = (h_frac.unsqueeze(-1) * rot_a_star.unsqueeze(0).unsqueeze(0) +
+                          k_frac.unsqueeze(-1) * rot_b_star.unsqueeze(0).unsqueeze(0) +
+                          l_frac.unsqueeze(-1) * rot_c_star.unsqueeze(0).unsqueeze(0))
+        rad_star_sqr = torch.sum(delta_r_star * delta_r_star, dim=-1)
+        rad_star_sqr = rad_star_sqr * Na * Na * Nb * Nb * Nc * Nc
+        inside_cutoff = (rad_star_sqr * fudge) < 0.3969
+        F_latt = torch.where(inside_cutoff,
+                            torch.full_like(rad_star_sqr, Na * Nb * Nc),
+                            torch.zeros_like(rad_star_sqr))
+    else:
+        raise ValueError(f"Unsupported crystal shape: {shape}")
+
+    # Calculate intensity
+    F_total = F_cell * F_latt
+    intensity = F_total * F_total  # |F|^2
+
+    # Apply dmin culling
+    if dmin_mask is not None:
+        if is_multi_source:
+            # Multi-source: add two unsqueeze for phi and mosaic
+            keep_mask = ~dmin_mask.unsqueeze(-1).unsqueeze(-1)
+        else:
+            keep_mask = ~dmin_mask.unsqueeze(-1).unsqueeze(-1)
+        intensity = intensity * keep_mask.to(intensity.dtype)
+
+    # Sum over phi and mosaic dimensions
+    # intensity shape before sum: (S, F, N_phi, N_mos) or (n_sources, S, F, N_phi, N_mos)
+    intensity = torch.sum(intensity, dim=(-2, -1))
+    # After sum: (S, F) or (n_sources, S, F)
+
+    # Handle multi-source weighted accumulation
+    if is_multi_source:
+        # Apply source weights and sum over sources
+        # intensity: (n_sources, S, F) or (n_sources, batch)
+        # source_weights: (n_sources,) -> (n_sources, 1, 1) or (n_sources, 1)
+        if source_weights is not None:
+            # Prepare weights for broadcasting
+            weight_shape = [n_sources] + [1] * (intensity.dim() - 1)
+            weights_broadcast = source_weights.view(*weight_shape)
+            # Apply weights and sum over source dimension
+            intensity = torch.sum(intensity * weights_broadcast, dim=0)
+        else:
+            # No weights provided, simple sum
+            intensity = torch.sum(intensity, dim=0)
+
+    return intensity
 
 
 class Simulator:
@@ -167,35 +421,25 @@ class Simulator:
             )
 
     def _compute_physics_for_position(self, pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star, incident_beam_direction=None, wavelength=None, source_weights=None):
-        """Compute physics (Miller indices, structure factors, intensity) for given positions.
+        """Compatibility shim - calls the pure function compute_physics_for_position.
 
-        This is the core physics calculation that must be done per-subpixel for proper
-        anti-aliasing. Each subpixel samples a slightly different position in reciprocal
-        space, leading to different Miller indices and structure factors.
+        REFACTORING NOTE (PERF-PYTORCH-004 Phase 0):
+        This method has been refactored to a forwarding shim that calls the module-level
+        pure function `compute_physics_for_position`. This enables safe cross-instance
+        kernel caching with torch.compile.
 
-        VECTORIZED OVER SOURCES: This function now supports batched computation over
-        multiple sources (beam divergence/dispersion). When multiple sources are provided,
-        the computation is vectorized across the source dimension, eliminating the Python loop.
+        See docstring of `compute_physics_for_position` for full documentation.
 
         Args:
             pixel_coords_angstroms: Pixel/subpixel coordinates in Angstroms (S, F, 3) or (batch, 3)
             rot_a, rot_b, rot_c: Rotated real-space lattice vectors (N_phi, N_mos, 3)
             rot_a_star, rot_b_star, rot_c_star: Rotated reciprocal vectors (N_phi, N_mos, 3)
-            incident_beam_direction: Optional incident beam direction.
-                - Single source: shape (3,)
-                - Multiple sources: shape (n_sources, 3)
-                Default: self.incident_beam_direction
-            wavelength: Optional wavelength in Angstroms.
-                - Single source: scalar
-                - Multiple sources: shape (n_sources,) or (n_sources, 1, 1)
-                Default: self.wavelength
-            source_weights: Optional per-source weights for multi-source accumulation.
-                Shape: (n_sources,). If None, equal weighting is assumed.
+            incident_beam_direction: Optional incident beam direction (defaults to self.incident_beam_direction)
+            wavelength: Optional wavelength (defaults to self.wavelength)
+            source_weights: Optional per-source weights for multi-source accumulation
 
         Returns:
             intensity: Computed intensity |F|^2 integrated over phi and mosaic
-                - Single source: shape (S, F) or (batch,)
-                - Multiple sources: weighted sum across sources, shape (S, F) or (batch,)
         """
         # Use provided values or defaults
         if incident_beam_direction is None:
@@ -203,185 +447,26 @@ class Simulator:
         if wavelength is None:
             wavelength = self.wavelength
 
-        # Detect if we have batched sources
-        is_multi_source = incident_beam_direction.dim() == 2
-        n_sources = incident_beam_direction.shape[0] if is_multi_source else 1
-
-        # Calculate scattering vectors
-        pixel_squared_sum = torch.sum(
-            pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True
+        # Forward to pure function with explicit parameters
+        return compute_physics_for_position(
+            pixel_coords_angstroms=pixel_coords_angstroms,
+            rot_a=rot_a,
+            rot_b=rot_b,
+            rot_c=rot_c,
+            rot_a_star=rot_a_star,
+            rot_b_star=rot_b_star,
+            rot_c_star=rot_c_star,
+            incident_beam_direction=incident_beam_direction,
+            wavelength=wavelength,
+            source_weights=source_weights,
+            dmin=self.beam_config.dmin,
+            crystal_get_structure_factor=self.crystal.get_structure_factor,
+            N_cells_a=self.crystal.N_cells_a,
+            N_cells_b=self.crystal.N_cells_b,
+            N_cells_c=self.crystal.N_cells_c,
+            crystal_shape=self.crystal.config.shape,
+            crystal_fudge=self.crystal.config.fudge,
         )
-        # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
-        pixel_squared_sum = pixel_squared_sum.clamp_min(1e-12)
-        pixel_magnitudes = torch.sqrt(pixel_squared_sum)
-        diffracted_beam_unit = pixel_coords_angstroms / pixel_magnitudes
-
-        # PERF-PYTORCH-004 Phase 1: Removed .to() call - incident_beam_direction is already on correct device
-        # The caller (run() method) ensures source_directions are moved to self.device before calling this function
-        # This avoids graph breaks in torch.compile
-
-        if is_multi_source:
-            # Multi-source case: broadcast over sources
-            # diffracted_beam_unit: (S, F, 3) or (batch, 3)
-            # incident_beam_direction: (n_sources, 3)
-            # Need to add source dimension to diffracted_beam_unit
-
-            # Add source dimension: (S, F, 3) -> (1, S, F, 3)
-            diffracted_expanded = diffracted_beam_unit.unsqueeze(0)
-            # Expand incident: (n_sources, 3) -> (n_sources, 1, 1, 3)
-            incident_expanded = incident_beam_direction.view(n_sources, 1, 1, 3)
-
-            # Expand to match diffracted shape
-            incident_beam_unit = incident_expanded.expand(n_sources, *diffracted_beam_unit.shape)
-            diffracted_beam_unit = diffracted_expanded.expand_as(incident_beam_unit)
-        else:
-            # Single source case: broadcast as before
-            incident_beam_unit = incident_beam_direction.expand_as(diffracted_beam_unit)
-
-        # Prepare wavelength for broadcasting
-        if is_multi_source:
-            # wavelength: (n_sources,) -> (n_sources, 1, 1, 1) for 4D broadcast (n_sources, S, F, 3)
-            if wavelength.dim() == 1:
-                wavelength = wavelength.view(n_sources, 1, 1, 1)
-
-        # Scattering vector using crystallographic convention
-        scattering_vector = (diffracted_beam_unit - incident_beam_unit) / wavelength
-
-        # Apply dmin culling if specified
-        dmin_mask = None
-        if self.beam_config.dmin > 0:
-            stol = 0.5 * torch.norm(scattering_vector, dim=-1)
-            stol_threshold = 0.5 / self.beam_config.dmin
-            dmin_mask = (stol > 0) & (stol > stol_threshold)
-
-        # Calculate Miller indices
-        # scattering_vector shape: (S, F, 3) or (n_sources, S, F, 3)
-        # Need to add phi and mosaic dimensions for broadcasting
-        if is_multi_source:
-            # Multi-source: (n_sources, S, F, 3) -> (n_sources, S, F, 1, 1, 3)
-            scattering_broadcast = scattering_vector.unsqueeze(-2).unsqueeze(-2)
-            # rot vectors: (N_phi, N_mos, 3) -> (1, 1, 1, N_phi, N_mos, 3)
-            rot_a_broadcast = rot_a.unsqueeze(0).unsqueeze(0).unsqueeze(0)
-            rot_b_broadcast = rot_b.unsqueeze(0).unsqueeze(0).unsqueeze(0)
-            rot_c_broadcast = rot_c.unsqueeze(0).unsqueeze(0).unsqueeze(0)
-        else:
-            # Single source: (S, F, 3) -> (S, F, 1, 1, 3)
-            scattering_broadcast = scattering_vector.unsqueeze(-2).unsqueeze(-2)
-            # rot vectors: (N_phi, N_mos, 3) -> (1, 1, N_phi, N_mos, 3)
-            rot_a_broadcast = rot_a.unsqueeze(0).unsqueeze(0)
-            rot_b_broadcast = rot_b.unsqueeze(0).unsqueeze(0)
-            rot_c_broadcast = rot_c.unsqueeze(0).unsqueeze(0)
-
-        h = dot_product(scattering_broadcast, rot_a_broadcast)
-        k = dot_product(scattering_broadcast, rot_b_broadcast)
-        l = dot_product(scattering_broadcast, rot_c_broadcast)  # noqa: E741
-
-        # Find nearest integer Miller indices
-        h0 = torch.round(h)
-        k0 = torch.round(k)
-        l0 = torch.round(l)
-
-        # Look up structure factors
-        F_cell = self.crystal.get_structure_factor(h0, k0, l0)
-
-        # Calculate lattice structure factor
-        Na = self.crystal.N_cells_a
-        Nb = self.crystal.N_cells_b
-        Nc = self.crystal.N_cells_c
-        shape = self.crystal.config.shape
-        fudge = self.crystal.config.fudge
-
-        if shape == CrystalShape.SQUARE:
-            F_latt_a = sincg(torch.pi * (h - h0), Na)
-            F_latt_b = sincg(torch.pi * (k - k0), Nb)
-            F_latt_c = sincg(torch.pi * (l - l0), Nc)
-            F_latt = F_latt_a * F_latt_b * F_latt_c
-        elif shape == CrystalShape.ROUND:
-            h_frac = h - h0
-            k_frac = k - k0
-            l_frac = l - l0
-            hrad_sqr = (h_frac * h_frac * Na * Na +
-                       k_frac * k_frac * Nb * Nb +
-                       l_frac * l_frac * Nc * Nc)
-            # Use clamp_min to avoid creating fresh tensors in compiled graph (PERF-PYTORCH-004 P1.1)
-            hrad_sqr = hrad_sqr.clamp_min(1e-12)
-            F_latt = Na * Nb * Nc * 0.723601254558268 * sinc3(
-                torch.pi * torch.sqrt(hrad_sqr * fudge)
-            )
-        elif shape == CrystalShape.GAUSS:
-            h_frac = h - h0
-            k_frac = k - k0
-            l_frac = l - l0
-            if is_multi_source:
-                # Multi-source: rot_*_star (N_phi, N_mos, 3) -> (1, 1, 1, N_phi, N_mos, 3)
-                delta_r_star = (h_frac.unsqueeze(-1) * rot_a_star.unsqueeze(0).unsqueeze(0).unsqueeze(0) +
-                              k_frac.unsqueeze(-1) * rot_b_star.unsqueeze(0).unsqueeze(0).unsqueeze(0) +
-                              l_frac.unsqueeze(-1) * rot_c_star.unsqueeze(0).unsqueeze(0).unsqueeze(0))
-            else:
-                # Single source: rot_*_star (N_phi, N_mos, 3) -> (1, 1, N_phi, N_mos, 3)
-                delta_r_star = (h_frac.unsqueeze(-1) * rot_a_star.unsqueeze(0).unsqueeze(0) +
-                              k_frac.unsqueeze(-1) * rot_b_star.unsqueeze(0).unsqueeze(0) +
-                              l_frac.unsqueeze(-1) * rot_c_star.unsqueeze(0).unsqueeze(0))
-            rad_star_sqr = torch.sum(delta_r_star * delta_r_star, dim=-1)
-            rad_star_sqr = rad_star_sqr * Na * Na * Nb * Nb * Nc * Nc
-            F_latt = Na * Nb * Nc * torch.exp(-(rad_star_sqr / 0.63) * fudge)
-        elif shape == CrystalShape.TOPHAT:
-            h_frac = h - h0
-            k_frac = k - k0
-            l_frac = l - l0
-            if is_multi_source:
-                # Multi-source: rot_*_star (N_phi, N_mos, 3) -> (1, 1, 1, N_phi, N_mos, 3)
-                delta_r_star = (h_frac.unsqueeze(-1) * rot_a_star.unsqueeze(0).unsqueeze(0).unsqueeze(0) +
-                              k_frac.unsqueeze(-1) * rot_b_star.unsqueeze(0).unsqueeze(0).unsqueeze(0) +
-                              l_frac.unsqueeze(-1) * rot_c_star.unsqueeze(0).unsqueeze(0).unsqueeze(0))
-            else:
-                # Single source: rot_*_star (N_phi, N_mos, 3) -> (1, 1, N_phi, N_mos, 3)
-                delta_r_star = (h_frac.unsqueeze(-1) * rot_a_star.unsqueeze(0).unsqueeze(0) +
-                              k_frac.unsqueeze(-1) * rot_b_star.unsqueeze(0).unsqueeze(0) +
-                              l_frac.unsqueeze(-1) * rot_c_star.unsqueeze(0).unsqueeze(0))
-            rad_star_sqr = torch.sum(delta_r_star * delta_r_star, dim=-1)
-            rad_star_sqr = rad_star_sqr * Na * Na * Nb * Nb * Nc * Nc
-            inside_cutoff = (rad_star_sqr * fudge) < 0.3969
-            F_latt = torch.where(inside_cutoff,
-                                torch.full_like(rad_star_sqr, Na * Nb * Nc),
-                                torch.zeros_like(rad_star_sqr))
-        else:
-            raise ValueError(f"Unsupported crystal shape: {shape}")
-
-        # Calculate intensity
-        F_total = F_cell * F_latt
-        intensity = F_total * F_total  # |F|^2
-
-        # Apply dmin culling
-        if dmin_mask is not None:
-            if is_multi_source:
-                # Multi-source: add two unsqueeze for phi and mosaic
-                keep_mask = ~dmin_mask.unsqueeze(-1).unsqueeze(-1)
-            else:
-                keep_mask = ~dmin_mask.unsqueeze(-1).unsqueeze(-1)
-            intensity = intensity * keep_mask.to(intensity.dtype)
-
-        # Sum over phi and mosaic dimensions
-        # intensity shape before sum: (S, F, N_phi, N_mos) or (n_sources, S, F, N_phi, N_mos)
-        intensity = torch.sum(intensity, dim=(-2, -1))
-        # After sum: (S, F) or (n_sources, S, F)
-
-        # Handle multi-source weighted accumulation
-        if is_multi_source:
-            # Apply source weights and sum over sources
-            # intensity: (n_sources, S, F) or (n_sources, batch)
-            # source_weights: (n_sources,) -> (n_sources, 1, 1) or (n_sources, 1)
-            if source_weights is not None:
-                # Prepare weights for broadcasting
-                weight_shape = [n_sources] + [1] * (intensity.dim() - 1)
-                weights_broadcast = source_weights.view(*weight_shape)
-                # Apply weights and sum over source dimension
-                intensity = torch.sum(intensity * weights_broadcast, dim=0)
-            else:
-                # No weights provided, simple sum
-                intensity = torch.sum(intensity, dim=0)
-
-        return intensity
 
     def run(
         self,

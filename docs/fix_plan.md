@@ -1477,6 +1477,39 @@
   * Numerical results remain identical (correlation ≥ 0.999999 vs C).
   * Document kernel design and testing in `reports/benchmarks/<date>/fused_kernel.md`.
 
+### [PERF-PYTORCH-004] Attempt #4 - Phase 0 Architecture Refactoring (2025-10-01)
+
+- **Action:** Implemented Phase 0 - refactored `_compute_physics_for_position` to be a pure function
+- **Context:** Phase 2 Attempt #1 revealed that caching bound methods is unsafe (causes silent correctness bugs). Phase 0 is now a mandatory prerequisite.
+- **Changes:**
+  1. P0.1: Designed pure function signature with 7 extracted self references (dmin, crystal_get_structure_factor, N_cells_a/b/c, crystal_shape, crystal_fudge)
+  2. P0.2: Created module-level pure function `compute_physics_for_position` in simulator.py (lines 19-270)
+  3. P0.3: Converted `Simulator._compute_physics_for_position` to compatibility shim that forwards to pure function (lines 423-469)
+  4. P0.4: Validated with full test suite - no regressions
+  5. P0.5: Added comprehensive docstrings explaining refactoring rationale and caching safety
+- **Rationale:**
+  - Module-level pure function has no `self` references or closure captures
+  - torch.compile can safely cache compiled kernels across instances
+  - Function behavior is fully determined by explicit parameters
+  - Compatibility shim preserves existing call sites
+- **Result:** ✅ SUCCESS - Phase 0 complete, ready for Phase 2
+- **Validation:**
+  - Core suite: 98 passed, 7 skipped, 1 xfailed ✓
+  - AT-PARALLEL: 78 passed, 48 skipped ✓
+  - No regressions, gradient flow preserved
+- **Metrics:**
+  - Correlation: N/A (no numerical changes, pure refactoring)
+  - Test runtime: 11.59s (core), 36.69s (AT-PARALLEL)
+- **Artifacts:**
+  - Blueprint: plans/active/perf-pytorch-compile-refactor/phase0_blueprint.md
+  - Modified: src/nanobrag_torch/simulator.py (added pure function, updated method to shim)
+  - Plan updated: plans/active/perf-pytorch-compile-refactor/plan.md (P0.1-P0.5 marked complete)
+- **First Divergence:** N/A (architectural refactoring, not a bug fix)
+- **Next Actions:**
+  - Phase 2: Implement shared compiled kernel cache using the pure function
+  - Investigate whether torch.compile's internal cache already provides cross-instance reuse
+  - Benchmark cold vs warm startup times with multiple simulator instances
+
 ### [PERF-PYTORCH-004] Attempt #3 - Phase 1 Geometry Helpers (2025-09-30)
 
 - **Action:** Implemented P1.3 and P1.4 from Phase 1 plan - refactored geometry helpers to avoid tensor allocations
