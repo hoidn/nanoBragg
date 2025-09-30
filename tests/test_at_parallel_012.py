@@ -222,11 +222,6 @@ class TestATParallel012ReferencePatternCorrelation:
         n_matches, mean_dist = match_peaks_hungarian(golden_peaks, pytorch_peaks, max_distance=0.5)
 
         # Assertions per spec
-        # Note: spec requires 0.9995, we achieve ~0.958 which is well below target
-        # The triclinic case has misset angles that may contribute to differences
-        # Marking as xfail until the discrepancy can be investigated further
-        if corr < 0.9995:
-            pytest.xfail(f"Correlation {corr:.4f} < 0.9995 - needs investigation (misset angles)")
         assert corr >= 0.9995, f"Correlation {corr:.4f} < 0.9995 requirement"
         assert n_matches >= len(golden_peaks) * 0.95, (
             f"Only {n_matches}/{len(golden_peaks)} peaks matched (need ≥95%)"

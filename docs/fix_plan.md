@@ -200,14 +200,37 @@
 ---
 ## Queued Items
 
-1. **Parity Harness Coverage Expansion** *(queued)*
+1. **AT-PARALLEL-012 Triclinic P1 Correlation Failure** *(queued)*
+   - Spec/AT: AT-PARALLEL-012 Reference Pattern Correlation (triclinic case)
+   - Priority: High
+   - Status: pending
+   - Current Metrics: correlation=0.966, RMSE=1.87, max|Δ|=53.4 (from parallel_test_visuals)
+   - Required Threshold: correlation ≥ 0.9995 (spec-a-parallel.md line 92)
+   - Gap: ~3.5% below threshold
+   - Reproduction:
+     * C: `$NB_C_BIN -misset -89.968546 -31.328953 177.753396 -cell 70 80 90 75 85 95 -default_F 100 -N 5 -lambda 1.0 -detpixels 512 -floatfile /tmp/c_triclinic.bin`
+     * PyTorch: `python -m nanobrag_torch -misset -89.968546 -31.328953 177.753396 -cell 70 80 90 75 85 95 -default_F 100 -N 5 -lambda 1.0 -detpixels 512 -floatfile /tmp/py_triclinic.bin`
+     * Test: `pytest -v tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_triclinic_P1_correlation`
+   - Hypotheses:
+     * Misset angle application (static rotation on reciprocal vectors, then real vector recalculation per Core Rule #12)
+     * Triclinic metric tensor calculation (volume discrepancy ~0.6% for triclinic cells per Core Rule #13)
+     * Large misset angles (-89.97°, -31.33°, 177.75°) may amplify small numerical differences
+   - Next Actions:
+     1. Generate aligned C and PyTorch traces for an on-peak pixel in triclinic case
+     2. Focus on misset rotation matrix application and reciprocal↔real vector recalculation
+     3. Verify metric duality (a·a* = 1) is satisfied with V_actual (not V_formula)
+     4. Check if reciprocal vector recalculation (Core Rule #13) is correctly implemented
+   - Artifacts: `parallel_test_visuals/AT-PARALLEL-012/comparison_triclinic.png`, `parallel_test_visuals/AT-PARALLEL-012/metrics.json`
+   - References: Core Implementation Rule #12 (Misset Rotation Pipeline), Core Rule #13 (Reciprocal Vector Recalculation), `docs/architecture/crystal.md`
+
+2. **Parity Harness Coverage Expansion** *(queued)*
    - Goal: ensure every parity-threshold AT (specs/spec-a-parallel.md) has a canonical entry in `tests/parity_cases.yaml` and executes via `tests/test_parity_matrix.py`.
    - Status: Harness file `tests/test_parity_matrix.py` created (2025-09-29); initial parity cases exist for AT-PARALLEL-001/002/004/006/007.
    - Exit criteria: parity matrix collects ≥1 case per AT with thresholds cited in metrics.json; `pytest -k parity_matrix` passes.
    - Reproduction: `NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py`.
    - Next: Verify harness executes cleanly for existing cases, then add remaining ATs (003/005/008/009/010/011/012/020/022/023/024/025/026/027/028/029).
 
-2. **Docs-as-Data CI lint** *(queued)*
+3. **Docs-as-Data CI lint** *(queued)*
    - Goal: add automated lint ensuring spec ↔ matrix ↔ YAML consistency and artifact references before close-out loops.
    - Exit criteria: CI job fails when parity mapping/artifact requirements are unmet.
 
