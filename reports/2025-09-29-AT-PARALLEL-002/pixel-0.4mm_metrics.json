@@ -1,15 +1,15 @@
 {
-  "correlation": 0.9969842477444666,
-  "mse": 70.93814849853516,
-  "rmse": 8.422478675842285,
-  "max_abs_diff": 227.3077392578125,
+  "correlation": 0.9981449694751193,
+  "mse": 21.816024780273438,
+  "rmse": 4.670762538909912,
+  "max_abs_diff": 121.78759765625,
   "c_sum": 767493.1875,
-  "py_sum": 844250.4375,
-  "sum_ratio": 1.1000103339679481,
+  "py_sum": 767493.1875,
+  "sum_ratio": 1.0,
   "case_id": "AT-PARALLEL-002",
   "run_name": "pixel-0.4mm",
   "args": "-default_F 100 -cell 100 100 100 90 90 90 -lambda 6.2 -N 5 -distance 100 -seed 1 -detpixels 256 -pixel 0.4 -Xbeam 25.6 -Ybeam 25.6 -mosflm",
   "c_binary": "golden_suite_generator/nanoBragg",
   "pytorch_cli": "/home/ollie/miniconda3/envs/pytorch/bin/python3.10 -m nanobrag_torch",
-  "timestamp": "2025-09-29T19:07:49.406266"
+  "timestamp": "2025-09-29T20:30:55.914776"
 }

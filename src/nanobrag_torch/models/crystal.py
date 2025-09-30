@@ -564,22 +564,30 @@ class Crystal:
         b_cross_c = torch.cross(b_vec, c_vec, dim=0)
         c_cross_a = torch.cross(c_vec, a_vec, dim=0)
 
-        # Recalculate volume from the actual vectors
-        # This is crucial - the volume from the vectors is slightly different
-        # from the volume calculated by the formula, and we need to use the
-        # actual volume for perfect metric duality
-        V_actual = torch.dot(a_vec, b_cross_c)
-        # Ensure volume is not too small
-        V_actual = torch.maximum(V_actual, torch.tensor(1e-6, dtype=V_actual.dtype, device=V_actual.device))
-        V_star_actual = 1.0 / V_actual
+        # C-code parity: DO NOT recalculate volume from real vectors
+        # The C code (nanoBragg.c:2082, 2115) uses V_star = 1/V_cell where
+        # V_cell = 1/V_star_original (from reciprocal vectors), NOT from a·(b×c).
+        # This creates a ~0.55% volume difference for triclinic cells but is
+        # required for exact C parity.
+        #
+        # Original PyTorch (incorrect for C parity):
+        #   V_actual = torch.dot(a_vec, b_cross_c)
+        #   V_star_actual = 1.0 / V_actual
+        #
+        # C-code equivalent (correct):
+        #   V_cell = 1.0 / V_star_original  (line 2082)
+        #   V_star = V_star_original        (unchanged, used at line 2115)
+        #
+        # Therefore: V_star_for_recalc = V_star_original (NOT 1/V_actual)
+        V_star_for_recalc = V_star_original  # Use formula volume, not actual
 
-        # a* = (b × c) / V, etc.
-        a_star = b_cross_c * V_star_actual
-        b_star = c_cross_a * V_star_actual
-        c_star = a_cross_b * V_star_actual
+        # a* = (b × c) / V, etc. using formula volume for C parity
+        a_star = b_cross_c * V_star_for_recalc
+        b_star = c_cross_a * V_star_for_recalc
+        c_star = a_cross_b * V_star_for_recalc
 
-        # Update V to the actual volume
-        V = V_actual
+        # V remains as formula volume (1/V_star_original) for C parity
+        V = V_cell_original
 
         # Handle random misset generation (AT-PARALLEL-024)
         if hasattr(self.config, "misset_random") and self.config.misset_random:
