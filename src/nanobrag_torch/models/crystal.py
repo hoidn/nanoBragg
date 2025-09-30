@@ -607,30 +607,65 @@ class Crystal:
         b_star_cross_c_star = torch.cross(b_star, c_star, dim=0)
         c_star_cross_a_star = torch.cross(c_star, a_star, dim=0)
 
+        # C-code implementation for user-supplied cell (nanoBragg.c lines 2072-2080):
+        # When cell parameters are user-supplied, the C code rescales cross products
+        # to enforce that real-space vectors have exactly the user-specified magnitudes.
+        # This uses formula volume V_cell throughout (not V_actual from vectors).
+        #
+        # C-code reference (lines 2076-2080):
+        #   vector_rescale(b_star_cross_c_star, b_star_cross_c_star, a[0]/V_cell);
+        #   vector_rescale(c_star_cross_a_star, c_star_cross_a_star, b[0]/V_cell);
+        #   vector_rescale(a_star_cross_b_star, a_star_cross_b_star, c[0]/V_cell);
+        #   V_star = 1.0/V_cell;
+        #
+        # vector_rescale normalizes and scales: new_vec = (target_mag / |old_vec|) * old_vec
+
+        # User-supplied cell parameters (always true in our case)
+        a_mag = self.config.cell_a
+        b_mag = self.config.cell_b
+        c_mag = self.config.cell_c
+
+        # Rescale cross products to enforce: |(b* × c*)| = |a| / V_cell
+        # This ensures real vectors will have exact user-specified magnitudes
+        mag_b_star_cross_c_star = torch.norm(b_star_cross_c_star)
+        mag_c_star_cross_a_star = torch.norm(c_star_cross_a_star)
+        mag_a_star_cross_b_star = torch.norm(a_star_cross_b_star)
+
+        # Avoid division by zero
+        mag_b_star_cross_c_star = torch.maximum(mag_b_star_cross_c_star, torch.tensor(1e-12, dtype=self.dtype, device=self.device))
+        mag_c_star_cross_a_star = torch.maximum(mag_c_star_cross_a_star, torch.tensor(1e-12, dtype=self.dtype, device=self.device))
+        mag_a_star_cross_b_star = torch.maximum(mag_a_star_cross_b_star, torch.tensor(1e-12, dtype=self.dtype, device=self.device))
+
+        # Rescale to target magnitudes
+        target_mag_b_star_cross_c_star = a_mag / V
+        target_mag_c_star_cross_a_star = b_mag / V
+        target_mag_a_star_cross_b_star = c_mag / V
+
+        b_star_cross_c_star = b_star_cross_c_star * (target_mag_b_star_cross_c_star / mag_b_star_cross_c_star)
+        c_star_cross_a_star = c_star_cross_a_star * (target_mag_c_star_cross_a_star / mag_c_star_cross_a_star)
+        a_star_cross_b_star = a_star_cross_b_star * (target_mag_a_star_cross_b_star / mag_a_star_cross_b_star)
+
+        # Use formula volume throughout (matches C-code behavior)
+        # V_star = 1.0 / V_cell (line 2080)
+        V_star_formula = 1.0 / V
+
         # Real-space vectors: a = (b* × c*) × V_cell
+        # After rescaling, these will have exactly the user-specified magnitudes
         a_vec = b_star_cross_c_star * V
         b_vec = c_star_cross_a_star * V
         c_vec = a_star_cross_b_star * V
 
         # Now that we have real-space vectors, re-generate the reciprocal ones
-        # This matches the C-code behavior (lines 1951-1956)
+        # This matches the C-code behavior (lines 2103-2119)
         a_cross_b = torch.cross(a_vec, b_vec, dim=0)
         b_cross_c = torch.cross(b_vec, c_vec, dim=0)
         c_cross_a = torch.cross(c_vec, a_vec, dim=0)
 
-        # CRITICAL: C-code does NOT recalculate volume from actual vectors when user_cell is set
-        # (nanoBragg.c line 2080: V_star = 1.0/V_cell, where V_cell is from the formula)
-        # Using V_star from the formula (not V_actual from vectors) matches C behavior
-        # and is required for AT-PARALLEL-012 parity.
-        #
-        # The volume from the formula (V_cell) differs slightly (~0.5% for triclinic)
-        # from the volume computed from the actual vectors (V_actual = a·(b×c)).
-        # The C-code uses the formula volume throughout, so we must do the same.
-
-        # a* = (b × c) / V, etc. (using formula-based V_star, not recalculated)
-        a_star = b_cross_c * V_star
-        b_star = c_cross_a * V_star
-        c_star = a_cross_b * V_star
+        # Use formula-based V_star (matches C-code line 2080: V_star = 1.0/V_cell)
+        # This differs from Core Rule #13 but is required for C parity
+        a_star = b_cross_c * V_star_formula
+        b_star = c_cross_a * V_star_formula
+        c_star = a_cross_b * V_star_formula
 
         return {
             "a": a_vec,
