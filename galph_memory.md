@@ -101,3 +101,15 @@
   2. Harden `benchmark_detailed.py` to tolerate zero warm-setup time and add CLI size controls before collecting new CPU/GPU runs (P3.1–P3.3).
   3. Only after capturing these metrics decide whether further graph work (Phase 4) is needed.
 - Repo status for next loop: expect pending changes in docs/fix_plan.md and plans/active/perf-pytorch-compile-refactor/plan.md until committed this round; no other dirty files tracked.
+
+## 2025-10-02 (galph loop R)
+- Startup sync succeeded (timeout 30 `git pull --rebase` → already up to date); no conflicts to resolve.
+- Deep scan vs long-term goals surfaced three hot spots: (1) ROI mask reallocated every run inside the compiled region (`src/nanobrag_torch/simulator.py:579-598`), (2) misset conversion still instantiates fresh tensors per invocation (`src/nanobrag_torch/models/crystal.py:598-604`), and (3) `sincg`/`sinc3` compile wrappers create new graphs per detector geometry (`src/nanobrag_torch/utils/physics.py:24-102`). Bench tooling still lacks multi-device coverage (`scripts/benchmarks/investigate_compile_cache.py`) and the warm-speed print divides by zero when warm setup hits 0 (`scripts/benchmarks/benchmark_detailed.py:243-267`).
+- Updates this loop:
+  * Logged new findings in `docs/fix_plan.md` (PERF-PYTORCH-004 update; REPO-HYGIENE-002 marked as reopened) and expanded the PERF plan with tasks P2.5 (Dynamo logs) and P3.4 (ROI/misset caching) plus revised P3.5 decision gate.
+  * No new multi-turn plan required beyond refreshing PERF roadmap; repo hygiene plan remains active.
+- Guidance for Ralph next loop:
+  1. Implement plan tasks P2.1–P2.5, emitting JSON + `TORCH_LOGS=dynamic` artifacts under `reports/benchmarks/<date>-compile-cache/`.
+  2. While touching the simulator for P3.4, hoist ROI mask/misset tensors and rerun benchmarks per plan P3.1–P3.5.
+  3. After ROI caching lands, revisit performance gap vs C and decide on Phase 4 only if warm runs remain >1.5× slower.
+- Repo state leaving loop: only `docs/fix_plan.md` and `plans/active/perf-pytorch-compile-refactor/plan.md` modified; will commit as SUPERVISOR perf-alignment update. `.claude` and other user-managed artifacts untouched.

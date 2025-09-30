@@ -7,7 +7,7 @@
 
 ### Active Items
 - [PROTECTED-ASSETS-001] Enforce `docs/index.md` protection — Priority: Medium, Status: pending (guard any file listed there from deletion; update CLAUDE.md + hygiene SOP)
-- [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — Priority: Medium, Status: pending (plan: plans/active/repo-hygiene-002/plan.md)
+- [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — Priority: Medium, Status: reopened (pending; see plans/active/repo-hygiene-002/plan.md, reopened 2025-09-30 after hygiene regression)
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: High, Status: in_progress (Phase 2 cache validation outstanding; Phase 3 steady-state benchmarks blocked until toolchain hardened — see plans/active/perf-pytorch-compile-refactor/plan.md)
 - [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
 - [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: done
@@ -23,7 +23,7 @@
 
 ### Recently Completed (2025-09-30)
 - [AT-PARALLEL-012] Triclinic P1 Correlation Failure — done (Fixed by Attempt #16: Restored V_actual calculation per Core Rule #13; AT-012 triclinic now passes with corr≥0.9995)
-- [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — done (Removed nested directory, archived artifacts, parity tests pass)
+- [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — done (Removed nested directory, archived artifacts, parity tests pass) — **Reopened 2025-09-30; see Active Items for outstanding cleanup**
 - [AT-PARALLEL-020-REGRESSION] Comprehensive Integration Test Correlation Failure — done (absorption parallax sign fix restored thresholds; corr≥0.99)
 - [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure — done (fixed C parsing bug + PyTorch mosaicity; both seeds pass with corr=1.0)
 - [CORE-REGRESSION-001] Phi Rotation Unit Test Failure — done (test was wrong, not implementation; fixed to match C loop formula)
@@ -1547,6 +1547,13 @@
 - **Supervisor findings:** The investigation script hard-codes a single device/dtype path and only prints timings; `scripts/benchmarks/benchmark_detailed.py` currently crashes when warm setup times reach 0 (ZeroDivisionError around line 266), leaving steady-state throughput vs C unmeasured.
 - **Plan updates:** Phase 2 now requires extending the cache investigation script with multi-device/dtype CLI flags, capturing JSON summaries, and archiving artifacts; Phase 3 focuses on hardening `benchmark_detailed.py` before collecting CPU/GPU cold vs warm data.
 - **Blocking issues:** No CUDA validation, no multi-source cache proof, and broken benchmarking tooling keep PERF-PYTORCH-004 exit criteria unmet—Ralph must complete P2.1–P2.4 before making new performance claims.
+
+### [PERF-PYTORCH-004] Update - 2025-10-02 (galph loop R)
+
+- **Code audit:** `Simulator.run` still materializes a full-frame ROI mask with `torch.ones(...)` on every invocation (src/nanobrag_torch/simulator.py:579-598). On 4096² detectors this allocates ~128 MB per call inside the compiled region and dominates allocator churn. Cache the mask (or pre-apply ROI inside `Detector`) once Phase 2 metrics are in place so warm runs stop rebuilding it.
+- **Crystal tensors:** `Crystal.compute_cell_tensors` regenerates misset radians via `[torch.deg2rad(torch.tensor(...)) for angle in misset]` (src/nanobrag_torch/models/crystal.py:598-604), creating fresh device tensors each run. Move these conversions to a configuration helper so the compiled graph only receives ready-made tensors.
+- **Compiled helpers:** `sincg`/`sinc3` are decorated with `torch.compile` at import time (src/nanobrag_torch/utils/physics.py:24-102). When detector sizes change, Dynamo emits a new graph per shape. Phase 2 runs must capture `TORCH_LOGS=dynamic` to confirm grating kernels hit the cache instead of recompiling per resolution.
+- **Action for Ralph:** Fold these findings into PERF plan execution: while implementing P2.1–P2.4, record cache logs (`TORCH_LOGS=dynamic env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/investigate_compile_cache.py ...`) and, in the same branch, stage ROI/misset precomputation so Phase 3 benchmarks can measure the delta cleanly.
 
 ### [PERF-PYTORCH-004] Update - 2025-09-30
 

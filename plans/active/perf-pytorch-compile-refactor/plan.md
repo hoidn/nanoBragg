@@ -74,10 +74,11 @@ Exit Criteria: JSON+log artifacts under `reports/benchmarks/<date>-compile-cache
 | P2.2 | Run cache validation on CPU (`float64` and `float32`) | [ ] | Command: `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/investigate_compile_cache.py --instances 5 --size 256 --device cpu --dtypes float64,float32 --sources 1,3`; archive stdout + JSON. |
 | P2.3 | Run cache validation on CUDA float32 (skip gracefully if unavailable) | [ ] | Same command with `--device cuda`; capture warm/cold timings and note if CUDA unavailable. |
 | P2.4 | Document cache-hit thresholds in plan + fix_plan | [ ] | Summarize minimum cache-hit speedup (target ≥50×) and list artifact paths in this plan and docs/fix_plan.md. |
+| P2.5 | Capture Dynamo compile logs for grating kernels | [ ] | Run `TORCH_LOGS=dynamic env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/investigate_compile_cache.py ...` once CLI is extended; archive log under `reports/benchmarks/<date>-compile-cache/dynamo.log` to prove `sincg`/`sinc3` reuse. |
 
 
 ### Phase 3 — Steady-State Performance vs C
-Goal: Re-benchmark nanoBragg after cache validation to confirm warm-run PyTorch throughput relative to the C reference.
+Goal: Re-benchmark nanoBragg after cache validation to confirm warm-run PyTorch throughput relative to the C reference, while hoisting any per-run tensor fabrication (ROI mask, misset radians) that skews allocator costs.
 Prerqs: Phase 2 JSON summary committed.
 Exit Criteria: `reports/benchmarks/<date>-perf-summary/` containing cold/warm timings for CPU and CUDA, paired C timings, and analysis showing whether PyTorch warm runs meet or beat C; docs/fix_plan.md updated with decision.
 
@@ -86,7 +87,8 @@ Exit Criteria: `reports/benchmarks/<date>-perf-summary/` containing cold/warm ti
 | P3.1 | Harden `benchmark_detailed.py` (zero-division guards, CLI size selection) | [ ] | Ensure warm-setup = 0 is handled; add CLI args `--sizes`, `--iterations`; maintain repo standards. |
 | P3.2 | Collect benchmark data on CPU | [ ] | Command: `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 256,512,1024 --device cpu --iterations 2`; store metrics under `reports/benchmarks/<date>-perf-summary/cpu/`. |
 | P3.3 | Collect benchmark data on CUDA (if available) | [ ] | Run same command with `--device cuda`; synchronize and archive metrics under `reports/benchmarks/<date>-perf-summary/cuda/`. |
-| P3.4 | Compare against C baseline and decide next optimizations | [ ] | Analyse warm-run ratios vs C; if PyTorch slower by >1.5× for any size, propose follow-up optimization (fullgraph/Triton) and log in docs/fix_plan.md. |
+| P3.4 | Cache ROI/misset tensors before benchmarking | [ ] | Implement detector-level ROI mask caching and misset tensor precomputation in the same branch; document code changes and ensure new cache path keeps gradients intact. |
+| P3.5 | Compare against C baseline and decide next optimizations | [ ] | Analyse warm-run ratios vs C; if PyTorch slower by >1.5× for any size, propose follow-up optimization (fullgraph/Triton) and log in docs/fix_plan.md. |
 
 
 ### Phase 4 — Graph Stabilization (Conditional)
