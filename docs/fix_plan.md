@@ -1,4 +1,4 @@
-**Last Updated:** 2025-09-30 02:00 UTC
+**Last Updated:** 2025-09-30 03:45 UTC
 
 **Current Status:** Major progress on AT-PARALLEL-012; root cause identified (wrong detector convention in tests); simple_cubic improved from 0.21 → 0.9946 correlation; remaining 0.5% gap requires debugging loop.
 
@@ -113,6 +113,43 @@
       2. Focus on simple_cubic case (closest to passing)
       3. Generate C and PyTorch traces for representative on-peak pixel
       4. Identify FIRST DIVERGENCE in calculation chain
+  * [2025-09-30] Attempt #3 — Status: PARTIAL (root cause narrowed; C trace required for resolution)
+    * Context: Detailed investigation of AT-PARALLEL-012 simple_cubic 0.5% correlation gap (0.9946 vs 0.9995 requirement)
+    * Environment: CPU, float64, golden data comparison, no C source available
+    * Approach: Spatial pattern analysis + omega parameter diagnostics (no C binary available for parallel traces)
+    * **Key Findings**:
+      1. Spatial pattern analysis reveals clear **radial dependence** (corr=-0.6332 with distance from center)
+      2. Center pixels: PyTorch +7.07% HIGHER than golden; Edge pixels: +3.18% HIGHER
+      3. Omega calculation formula verified CORRECT: omega = (pixel_size² × close_distance) / R³
+      4. All geometry parameters verified: r_factor=1.0, close_distance=0.1m, pixel_size=0.0001m
+      5. pix0_vector calculation verified CORRECT for MOSFLM BEAM pivot: [0.1, 0.05125, -0.05125]m
+      6. Off-axis peak analysis: Top 5 peaks show uniform error pattern (std dev 0.91%), suggesting systematic bug
+      7. Recommended trace pixel: (248, 248) at 373.4px from center with -0.35% error
+    * **Hypothesis (preliminary)**: Radial intensity pattern suggests subtle error in:
+      - Intensity normalization/scaling (overall +4.1% mean ratio PyTorch/Golden)
+      - Position-dependent calculation (ratio decreases with distance from center)
+      - Possibly in F_latt, fluence, r_e² constant application, or steps normalization
+      - NOT a simple scale factor (different error at center vs edge rules out uniform bug)
+    * Metrics: corr=0.9946 (unchanged), RMSE=0.585, max|Δ|=14.1, radial_corr=-0.6332, mean_ratio=1.041
+    * Artifacts:
+      - scripts/diagnose_omega_at012.py (omega parameter diagnostic)
+      - scripts/diagnose_at012_spatial_pattern.py (spatial analysis with plots)
+      - scripts/find_offaxis_peak_at012.py (off-axis peak identification)
+      - diagnostic_artifacts/at012_spatial/at012_spatial_analysis.png (6-panel diagnostic plots)
+      - diagnostic_artifacts/at012_spatial/DIAGNOSIS_SUMMARY.md (full spatial analysis report)
+      - AT012_TRACE_ANALYSIS.md (direct beam trace analysis, pixel 512,512)
+    * **Blocking Issue**: No C source code or binary available for parallel trace comparison
+      - nanoBragg.c does not exist in repo root
+      - golden_suite_generator/ directory does not exist
+      - ./nanoBragg binary does not exist
+      - Cannot generate C traces for FIRST DIVERGENCE identification per debug workflow mandate
+    * Next Actions (BLOCKED pending C binary):
+      1. REQUIRED: Obtain C binary (./nanoBragg or ./golden_suite_generator/nanoBragg) or source code
+      2. Instrument C code for pixel (248, 248) trace output showing all intermediate values
+      3. Generate parallel C and PyTorch traces with identical variable names/units
+      4. Compare traces line-by-line to identify FIRST DIVERGENCE
+      5. Investigate these specific values in traces: F_cell, F_latt, F², fluence, r_e², steps, omega, polar, final intensity
+      6. Apply surgical fix to the first divergent calculation
 - Exit Criteria: simple_cubic and tilted tests pass with corr ≥ 0.9995
 
 ---
