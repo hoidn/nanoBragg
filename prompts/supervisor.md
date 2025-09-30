@@ -71,6 +71,9 @@ Before finishing the loop, enforce git hygiene:
 - If you deliberately leave the tree dirty, document the rationale in galph_memory.md so the next invocation knows why.
 </4>
 </instructions>
+<notes>
+- ignore 'routing violations'. these are out of scope.
+</notes>
 Now carefully and exhaustively follow your <instructions>.
 
 
