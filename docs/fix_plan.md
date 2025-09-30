@@ -1,6 +1,6 @@
 **Last Updated:** 2025-09-30 (timestamp intentionally generic per meta-update policy)
 
-**Current Status:** Core test suite: **98 passed**, 7 skipped, 1 xfailed ✓. AT-PARALLEL: 77/48/1 (AT-020 pending, AT-024 resolved). Active failures: AT-020 (requires debug.md). AT-012 escalated.
+**Current Status:** Core test suite: **98 passed**, 7 skipped, 1 xfailed ✓. AT-PARALLEL: 77/48/1 (AT-020 pending; AT-012 escalated). Active failures: AT-020 (requires debug.md).
 
 ---
 ## Index
@@ -37,6 +37,39 @@
 
 ---
 ## Active Focus
+
+## [CORE-REGRESSION-001-APPLY] Apply Documented Phi Rotation Test Fix (2025-09-30-J)
+- Spec/AT: Crystal phi rotation (nanoBragg.c:3004-3009 loop formula)
+- Priority: **CRITICAL** (blocking test suite)
+- Status: done
+- Owner/Date: 2025-09-30 (loop J - apply documented fix)
+- Exit Criteria: ✅ SATISFIED — Test fix applied; core suite restored to 98/7/1
+- Reproduction:
+  * Fixed test: `env KMP_DUPLICATE_LIB_OK=TRUE python -m pytest tests/test_suite.py::TestCrystalModel::test_phi_rotation_90_deg -v`
+  * Core suite: `env KMP_DUPLICATE_LIB_OK=TRUE python -m pytest tests/test_suite.py tests/test_units.py tests/test_at_geo*.py tests/test_at_sam*.py tests/test_at_abs*.py tests/test_at_str*.py tests/test_at_pol*.py tests/test_at_bkg*.py --tb=no -q`
+- Root Cause Analysis:
+  * **Context:** CORE-REGRESSION-001 documented the fix but it was never actually applied to the test file
+  * **Symptom:** Test `test_phi_rotation_90_deg` still expected 45° rotation (midpoint formula) instead of 0° (C loop formula)
+  * **Expected (documented fix):** phi = phi_start + phistep*0 = 0° (no rotation for first step)
+  * **Actual (test code):** Test expected 45° rotation with rotation matrix calculation
+  * **Finding:** The documented fix in CORE-REGRESSION-001 was correct but was never committed to the repository
+- Implementation Summary:
+  * **Changed:** tests/test_suite.py::TestCrystalModel::test_phi_rotation_90_deg
+  * **Applied documented fix:** Test now expects 0° rotation (C loop formula behavior)
+  * **Removed:** 45° rotation matrix calculation code
+  * **Added:** Comprehensive docstring explaining C loop formula and why phi_steps=1 means NO rotation
+  * **Key assertion:** Rotated vectors equal base vectors (identity transformation)
+- Validation Results:
+  * **Core Test Suite:** 98 passed, 7 skipped, 1 xfailed ✓ (restored to stable state)
+  * **Fixed test:** `test_phi_rotation_90_deg` PASSED ✓
+  * **Parity tests:** AT-021 and AT-022 remain PASSING (commit 8293a15 was correct)
+  * **No regressions:** All other tests unchanged
+- Artifacts:
+  * Modified: tests/test_suite.py (applied documented fix to test_phi_rotation_90_deg)
+  * Modified: docs/fix_plan.md (status updated, this entry added)
+- Next Actions:
+  * ✅ COMPLETED: Core regression fully resolved; suite stable at 98/7/1
+  * **ROUTING REQUIRED:** AT-PARALLEL-012 still failing → Next loop MUST use prompts/debug.md per routing rules
 
 ## [RALPH-VERIFICATION-008] Eighth Routing Verification - Maximum Escalation (2025-09-30-I)
 - Spec/AT: Ralph prompt routing rules (explicit, mandatory, non-negotiable)
