@@ -648,10 +648,6 @@ class Crystal:
         c_star_cross_a_star = c_star_cross_a_star * (target_mag_c_star_cross_a_star / mag_c_star_cross_a_star)
         a_star_cross_b_star = a_star_cross_b_star * (target_mag_a_star_cross_b_star / mag_a_star_cross_b_star)
 
-        # Use formula volume throughout (matches C-code behavior)
-        # V_star = 1.0 / V_cell (line 2080)
-        V_star_formula = 1.0 / V
-
         # Real-space vectors: a = (b* × c*) × V_cell
         # After rescaling, these will have exactly the user-specified magnitudes
         a_vec = b_star_cross_c_star * V
@@ -664,11 +660,23 @@ class Crystal:
         b_cross_c = torch.cross(b_vec, c_vec, dim=0)
         c_cross_a = torch.cross(c_vec, a_vec, dim=0)
 
-        # Use formula-based V_star (matches C-code line 2080: V_star = 1.0/V_cell)
-        # This differs from Core Rule #13 but is required for C parity
-        a_star = b_cross_c * V_star_formula
-        b_star = c_cross_a * V_star_formula
-        c_star = a_cross_b * V_star_formula
+        # Recalculate volume from the actual vectors (Core Rule #13)
+        # This is crucial - the volume from the vectors is slightly different
+        # from the volume calculated by the formula, and we need to use the
+        # actual volume for perfect metric duality (a·a* = 1 within 1e-12)
+        V_actual = torch.dot(a_vec, b_cross_c)
+        # Ensure volume is not too small
+        # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum
+        V_actual = V_actual.clamp_min(1e-6)
+        V_star_actual = 1.0 / V_actual
+
+        # a* = (b × c) / V_actual, etc.
+        a_star = b_cross_c * V_star_actual
+        b_star = c_cross_a * V_star_actual
+        c_star = a_cross_b * V_star_actual
+
+        # Update V to the actual volume
+        V = V_actual
 
         return {
             "a": a_vec,

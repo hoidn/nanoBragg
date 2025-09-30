@@ -174,64 +174,63 @@ class TestCrystalGeometry:
 
         # Check metric duality: a* · a = 1, a* · b = 0, etc.
         # The 9 relationships that define the reciprocal lattice
-        # Note: C-code uses formula volume (not V_actual) which introduces ~0.02-0.03%
-        # deviation from perfect metric duality. This is required for C parity.
-        # See nanoBragg.c lines 2072-2080 (vector_rescale + V_star = 1.0/V_cell)
+        # Core Rule #13: Using V_actual ensures perfect metric duality (a·a* = 1 exactly)
+        # See nanoBragg.c lines 2103-2119 for the recalculation sequence
         torch.testing.assert_close(
             torch.dot(a_star, a),
             torch.tensor(1.0, dtype=torch.float64),
-            rtol=3e-4,  # Allow ~0.03% error to match C-code convention
-            atol=3e-4,
+            rtol=1e-12,  # Perfect metric duality with V_actual
+            atol=1e-12,
         )
         torch.testing.assert_close(
             torch.dot(a_star, b),
             torch.tensor(0.0, dtype=torch.float64),
-            rtol=3e-4,
-            atol=3e-4,
+            rtol=1e-12,
+            atol=1e-12,
         )
         torch.testing.assert_close(
             torch.dot(a_star, c),
             torch.tensor(0.0, dtype=torch.float64),
-            rtol=3e-4,
-            atol=3e-4,
+            rtol=1e-12,
+            atol=1e-12,
         )
 
         torch.testing.assert_close(
             torch.dot(b_star, a),
             torch.tensor(0.0, dtype=torch.float64),
-            rtol=3e-4,
-            atol=3e-4,
+            rtol=1e-12,
+            atol=1e-12,
         )
         torch.testing.assert_close(
             torch.dot(b_star, b),
             torch.tensor(1.0, dtype=torch.float64),
-            rtol=3e-4,
-            atol=3e-4,
+            rtol=1e-12,
+            atol=1e-12,
         )
         torch.testing.assert_close(
             torch.dot(b_star, c),
             torch.tensor(0.0, dtype=torch.float64),
-            rtol=3e-4,
-            atol=3e-4,
+            rtol=1e-12,
+            atol=1e-12,
         )
 
         torch.testing.assert_close(
             torch.dot(c_star, a),
             torch.tensor(0.0, dtype=torch.float64),
-            rtol=3e-4,
-            atol=3e-4,
+            rtol=1e-12,
+            atol=1e-12,
         )
         torch.testing.assert_close(
             torch.dot(c_star, b),
             torch.tensor(0.0, dtype=torch.float64),
-            rtol=3e-4,
-            atol=3e-4,
+            rtol=1e-12,
+            atol=1e-12,
         )
         torch.testing.assert_close(
             torch.dot(c_star, c),
             torch.tensor(1.0, dtype=torch.float64),
-            rtol=3e-4,
-            atol=3e-4,
+            rtol=1e-12,
+            atol=1e-12,
         )
 
     def test_volume_identity(self):
