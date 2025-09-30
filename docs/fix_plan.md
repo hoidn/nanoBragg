@@ -7,7 +7,7 @@
 
 ### Active Items
 - [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: in_progress (plan: plans/active/at-parallel-012/plan.md)
-- [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — Priority: Medium, Status: pending
+- [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — Priority: Medium, Status: pending (plan: plans/active/repo-hygiene-002/plan.md)
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: Medium, Status: in_progress (plan: plans/active/perf-pytorch-compile-refactor/plan.md)
 - [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
 - [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: done
@@ -126,6 +126,7 @@
 - Scope: `golden_suite_generator/nanoBragg.c`, `reports/2025-09-30-AT-021-traces/*`
 - Priority: **Medium** (blocks clean diffs + future C parity instrumentation)
 - Status: pending
+- Plan: `plans/active/repo-hygiene-002/plan.md`
 - Owner/Date: 2025-09-30 (galph)
 - Problem Statement:
   * Commit `92ac528` unintentionally replaced the entire `golden_suite_generator/nanoBragg.c` file (4.5k LOC churn) while only intending to adjust `tests/test_suite.py` and docs.

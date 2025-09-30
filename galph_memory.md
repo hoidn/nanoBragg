@@ -53,3 +53,10 @@
 - Planning: existing AT-012 and PERF-PYTORCH-004 plans remain valid; no new checklist drafted. fix_plan priorities looked sane so left untouched.
 - Guidance for Ralph: 1) Finish `REPO-HYGIENE-002` before touching C again; 2) Go back to `prompts/debug.md` and execute AT-012 plan Phase A/B; 3) When perf work resumes, start Perf Phase 1 by hoisting constants/device prep out of `_compute_physics_for_position` and logging before/after compile graphs.
 - Ops note: Worktree still dirty from legacy artifacts (parallel_test_visuals/*, reports/, .claude, etc.); expect to stash before `git pull --rebase` next loop.
+
+## 2025-09-30 (galph loop 9)
+- `git pull --rebase` blocked by long-standing dirty artifacts (parallel_test_visuals/*, reports/benchmarks/20250930-004916/, trash/test_parity_matrix.py, etc.); left untouched per hygiene rule.
+- Deep analysis (long-term goals): AT-PARALLEL-012 still fails because PyTorch rotation matrices drift ~0.5–1.6% vs C (`reports/2025-09-30-AT-012-debug/FIRST_DIVERGENCE.md`); `_compute_physics_for_position` keeps spawning guard tensors (`torch.tensor(1e-12)`, `.to(...)`), so torch.compile recompiles every instantiation and CPU benchmarks (`reports/benchmarks/20250930-004916/benchmark_results.json`) remain >200× slower than C at 256².
+- Authored checklist plan for `REPO-HYGIENE-002` at `plans/active/repo-hygiene-002/plan.md` and linked from fix_plan; priority is to revert accidental `golden_suite_generator/nanoBragg.c` churn and purge `reports/2025-09-30-AT-021-traces/`.
+- Guidance for Ralph: run REPO-HYGIENE-002 plan in next `prompts/main.md` loop before touching physics, then resume AT-012 plan Phase A/B via `prompts/debug.md`; perf work should follow PERF-PYTORCH-004 Phase 1 (hoist constants/device prep) once hygiene + parity unblock.
+- Tree intentionally left dirty except for new plan/fix_plan edits.
