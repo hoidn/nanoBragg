@@ -433,6 +433,13 @@
   - Artifacts: `reports/debug/2025-09-29-at-parallel-002/summary.json`.
 
 ---
+## Suite Failures
+
+[Suite Failure][2025-09-29] benchmark_detailed.py — Priority: Medium — Status: pending
+Repro: python benchmark_detailed.py
+Failures: TorchDynamo FakeTensor device mismatch (cpu vs cuda) and script lives outside `scripts/` with ad-hoc env handling
+
+---
 ## TODO Backlog
 
 - [ ] Add parity cases for AT-PARALLEL-003/005/008/009/010/012/013/014/015/016/017/018/020/021/022/023/024/025/026/027/028/029.  
