@@ -14,7 +14,10 @@ One thing per loop:
 - Before changing code, search the repo to ensure it’s not already implemented or half‑implemented. Do not assume missing.
 - After implementing, run only the tests/examples relevant to that feature (fast feedback). If they pass, run the full test suite.
 
-- Do not begin implementation until having reviewed and analyzed all contextually relevant docs and source files. think harder when doing this analysis. use parallel subagents when possible.
+- When selecting your fix_plan.md item, inspect it for any referenced plan files (e.g., entries under `plans/` or `plan:` metadata).
+  • If a plan is referenced, read that plan end-to-end before deciding on actions and treat its directives as mandatory context.
+  • If the referenced plan is missing or stale, note this in your loop output and add an item to fix_plan.md describing the gap.
+- Do not begin implementation until having reviewed and analyzed all contextually relevant docs, source files, and any linked plan documents. Think harder when doing this analysis. Use parallel subagents when possible.
 
 Subagents policy:
 - You may use up to 200 subagents for search, summarization, inventory, and planning.
