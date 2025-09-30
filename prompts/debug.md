@@ -61,9 +61,6 @@ Subagents Playbook (required delegation)
 - issue: Only if root cause is a spec/test gap; draft precise spec shard edits without weakening thresholds and append a TODO to fix_plan.md.
 - code-reviewer: Pre‑commit scan of the changed scope for security/perf/config risks.
 
-IMPORTANT ROUTING
-- This loop is for equivalence discrepancies (AT‑PARALLEL failures, correlation below thresholds, structured diffs, geometry invariance breaks). For non‑debug work, use prompts/main.md.
-
 <ground rules>
 - Autonomy (No‑Question Mode): Do not ask the user what to work on. Select work from `docs/fix_plan.md`. If an item is `in_progress`, continue it; otherwise pick the highest‑priority `pending` item and set it `in_progress`.
 - One thing per loop. No placeholders. Never change tests/thresholds to pass.
