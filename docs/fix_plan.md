@@ -33,7 +33,48 @@
       4. **Geometry triage passed**: Units correct (meters in detector, Å in physics); omega formula looks correct; close_distance formula matches spec
       5. **Likely suspects**: steps normalization, fluence calculation, or a hidden pixel_size factor in scaling
     * Next Actions: Generate aligned C & PyTorch traces for pixel (128,128) with 0.4mm case; identify FIRST DIVERGENCE in steps/fluence/omega/final_scaling chain
-- Risks/Assumptions: May involve subpixel/omega formula edge cases at extreme pixel sizes; solidangle/close_distance scaling may differ
+  * [2025-09-29] Attempt #3 — Status: omega hypothesis rejected; new investigation needed
+    * Context: Attempt #2 revealed spatially structured error (7.97e-6 * distance_px²); hypothesis pointed to omega (solid angle) calculation
+    * Environment: CPU, float64, seed=1, MOSFLM convention, oversample=1, pixel=0.4mm
+    * Approach: Generated parallel traces with omega values for pixels (64,64) [beam center] and (128,128) [90.51px from center]
+    * **Key Finding**: Omega calculation is IDENTICAL between C and PyTorch
+      - Pixel (64,64): C omega=1.6e-05, Py omega=1.6e-05; C_final=2500.0, Py_final=2500.0 (PERFECT)
+      - Pixel (128,128): C omega=1.330100955665e-05, Py omega=1.330100955665e-05; C_final=141.90, Py_final=150.62 (6.15% error)
+      - R (airpath), close_distance, obliquity_factor ALL IDENTICAL
+    * **Spatial Pattern Confirmed**:
+      - Beam center: ratio=1.000000 (PERFECT agreement)
+      - Linear fit: ratio = 1.0108 + 5.91e-6 * dist² (R²>0.99)
+      - At 90.51px: predicted=1.059, actual=1.062
+      - Overall: sum_ratio=1.100 (PyTorch exactly 10% higher globally)
+    * **Hypothesis Rejected**: Omega is NOT the source of error
+    * Metrics: pixel (128,128): C=141.90, Py=150.62, ratio=1.0615
+    * Artifacts: /tmp/{c,py}_trace_0.4mm.bin; comparison output saved
+    * Next Actions:
+      1. **CRITICAL**: The error has two components: ~1% uniform baseline + quadratic distance term
+      2. Since omega/R/close_distance are identical, divergence must be in:
+         - Physics intensity calculation (F_latt, F_cell) - but Attempt #2 said I_before_scaling matches!
+         - Steps normalization
+         - Fluence calculation
+         - r_e² constant
+         - OR a subtle unit/coordinate system issue causing position-dependent physics errors
+      3. Generate full C trace with I_before_scaling, F_latt, F_cell, r_e², fluence, steps for pixel (128,128)
+      4. Generate matching PyTorch trace with same variables
+      5. Compare line-by-line to find FIRST DIVERGENCE before final scaling
+  * [2025-09-29] Attempt #2 — Status: partial (found spatial pattern, need omega comparison)
+    * Context: Generated parallel traces for pixel (64,79) in 0.4mm case using subagent
+    * Metrics: Trace shows perfect agreement for I_before_scaling, Miller indices, F_latt; BUT final intensity has 0.179% error (Py=2121.36 vs C=2117.56)
+    * Artifacts: reports/2025-09-29-debug-traces-002/{c_trace_pixel_64_79.log, py_trace_FIXED_pixel_64_79.log, comparison_pixel_64_79_DETAILED.md, FINAL_ANALYSIS.md}
+    * First Divergence: NONE in physics calc (I_before_scaling matches); divergence occurs in final intensity scaling
+    * Key Discovery: **Error is spatially structured** - scales as distance² from beam center
+      - Beam center (64,64): ratio=1.000000 (PERFECT)
+      - Distance 10px: ratio=1.000799
+      - Distance 20px: ratio=1.003190
+      - Distance 30px: ratio=1.007149
+      - **Fit: error ≈ 7.97e-6 * (distance_px)²**
+    * Bug fixed: Trace code was using reciprocal vectors (rot_a_star) instead of real vectors (rot_a) for Miller index calc in _apply_debug_output(); fixed in src/nanobrag_torch/simulator.py:878-887
+    * Hypothesis: Omega (solid angle) calculation has geometric bug for off-center pixels; formula is omega=(pixel_size²·close_distance)/R³ where R³ term suggests R calculation may be wrong
+    * Next Actions: (1) Extract omega values from PyTorch traces for pixels at various distances; (2) Instrument C code to print omega for same pixels; (3) Compare omega, airpath_m, close_distance_m, pixel_size_m between C and PyTorch to find which diverges
+- Risks/Assumptions: May involve subpixel/omega formula edge cases at extreme pixel sizes; solidangle/close_distance scaling may differ; quadratic distance-dependent error suggests R or R² bug
 - Exit Criteria (from spec-a-parallel.md): corr≥0.9999; beam center in pixels = 25.6/pixel_size ±0.1px; inverse peak scaling verified; sum_ratio in [0.9,1.1]; max|Δ|≤300
 
 ---

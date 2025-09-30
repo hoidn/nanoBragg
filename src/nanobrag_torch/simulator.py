@@ -772,6 +772,7 @@ class Simulator:
                 physical_intensity,
                 normalized_intensity,
                 pixel_coords_meters,
+                rot_a, rot_b, rot_c,
                 rot_a_star, rot_b_star, rot_c_star,
                 oversample,
                 omega_pixel if not oversample or oversample == 1 else None,
@@ -784,6 +785,7 @@ class Simulator:
                            physical_intensity,
                            normalized_intensity,
                            pixel_coords_meters,
+                           rot_a, rot_b, rot_c,
                            rot_a_star, rot_b_star, rot_c_star,
                            oversample,
                            omega_pixel=None,
@@ -794,7 +796,8 @@ class Simulator:
             physical_intensity: Final intensity values
             normalized_intensity: Intensity before final scaling
             pixel_coords_meters: Pixel coordinates in meters
-            rot_a_star, rot_b_star, rot_c_star: Rotated reciprocal vectors
+            rot_a, rot_b, rot_c: Rotated real-space lattice vectors (Angstroms)
+            rot_a_star, rot_b_star, rot_c_star: Rotated reciprocal vectors (Angstroms^-1)
             oversample: Oversampling factor
             omega_pixel: Solid angle (if computed)
             polarization: Polarization factor (if computed)
@@ -848,19 +851,90 @@ class Simulator:
                 # Trace coordinate information
                 if pixel_coords_meters is not None:
                     coords = pixel_coords_meters[target_slow, target_fast]
-                    print(f"TRACE: Position (m) = {coords[0].item():.12e}, {coords[1].item():.12e}, {coords[2].item():.12e}")
+                    print(f"TRACE_PY: pixel_pos_meters {coords[0].item():.15g} {coords[1].item():.15g} {coords[2].item():.15g}")
                     coords_ang = coords * 1e10
                     print(f"TRACE: Position (Å) = {coords_ang[0].item():.6f}, {coords_ang[1].item():.6f}, {coords_ang[2].item():.6f}")
 
-                    # Calculate airpath
+                    # Calculate airpath and omega
                     airpath_m = torch.sqrt(torch.sum(coords * coords)).item()
-                    print(f"TRACE: Airpath (m) = {airpath_m:.12e}")
+                    print(f"TRACE_PY: R_distance_meters {airpath_m:.15g}")
+
+                    # Calculate omega (same formula as in main calculation)
+                    pixel_size_m = self.detector.pixel_size  # already in meters
+                    close_distance_m = self.detector.close_distance  # already in meters
+                    if self.detector.config.point_pixel:
+                        omega_pixel = 1.0 / (airpath_m * airpath_m)
+                    else:
+                        omega_pixel = (pixel_size_m * pixel_size_m) / (airpath_m * airpath_m) * close_distance_m / airpath_m
+
+                    print(f"TRACE_PY: omega_pixel_sr {omega_pixel:.15g}")
+                    print(f"TRACE_PY: close_distance_meters {close_distance_m:.15g}")
+                    print(f"TRACE_PY: obliquity_factor {close_distance_m/airpath_m:.15g}")
 
                 # Trace reciprocal space information if available
                 if rot_a_star is not None and rot_b_star is not None and rot_c_star is not None:
                     # Show first reciprocal vector as example
                     a_star_0 = rot_a_star[0, 0] if len(rot_a_star.shape) > 1 else rot_a_star
                     print(f"TRACE: a* (first) = ({a_star_0[0].item():.6e}, {a_star_0[1].item():.6e}, {a_star_0[2].item():.6e})")
+
+                    # Detailed trace: recalculate Miller indices and F_latt for this specific pixel
+                    # This is duplicated computation but only for one pixel during trace
+                    coords_ang = pixel_coords_meters[target_slow, target_fast] * 1e10  # m to Å
+
+                    # Calculate scattering vector (same as in _compute_physics_for_position)
+                    pixel_mag = torch.sqrt(torch.sum(coords_ang * coords_ang))
+                    diffracted_unit = coords_ang / pixel_mag
+                    incident_unit = self.incident_beam_direction
+                    scattering_vec = (diffracted_unit - incident_unit) / self.wavelength
+
+                    print(f"TRACE: scattering_vec_A_inv = {scattering_vec[0].item():.12e} {scattering_vec[1].item():.12e} {scattering_vec[2].item():.12e}")
+
+                    # Calculate Miller indices using first phi/mosaic orientation
+                    # Use the rotated real-space vectors (NOT reciprocal!)
+                    # Following nanoBragg.c convention: h = dot(a, scattering)
+                    from nanobrag_torch.utils.geometry import dot_product
+                    a_vec = rot_a[0, 0] if len(rot_a.shape) > 1 else rot_a
+                    b_vec = rot_b[0, 0] if len(rot_b.shape) > 1 else rot_b
+                    c_vec = rot_c[0, 0] if len(rot_c.shape) > 1 else rot_c
+
+                    h = dot_product(scattering_vec.unsqueeze(0), a_vec.unsqueeze(0)).item()
+                    k = dot_product(scattering_vec.unsqueeze(0), b_vec.unsqueeze(0)).item()
+                    l = dot_product(scattering_vec.unsqueeze(0), c_vec.unsqueeze(0)).item()
+
+                    h0 = round(h)
+                    k0 = round(k)
+                    l0 = round(l)
+
+                    print(f"TRACE: hkl_frac {h:.12e} {k:.12e} {l:.12e}")
+                    print(f"TRACE: hkl_rounded {h0} {k0} {l0}")
+
+                    # Calculate F_latt components (SQUARE shape assumed)
+                    Na = self.crystal.N_cells_a
+                    Nb = self.crystal.N_cells_b
+                    Nc = self.crystal.N_cells_c
+
+                    from nanobrag_torch.utils import sincg
+                    F_latt_a = sincg(torch.pi * torch.tensor(h - h0), Na).item()
+                    F_latt_b = sincg(torch.pi * torch.tensor(k - k0), Nb).item()
+                    F_latt_c = sincg(torch.pi * torch.tensor(l - l0), Nc).item()
+                    F_latt = F_latt_a * F_latt_b * F_latt_c
+
+                    print(f"TRACE: F_latt_a {F_latt_a:.12e}")
+                    print(f"TRACE: F_latt_b {F_latt_b:.12e}")
+                    print(f"TRACE: F_latt_c {F_latt_c:.12e}")
+                    print(f"TRACE: F_latt {F_latt:.12e}")
+
+                    # Get structure factor
+                    F_cell = self.crystal.get_structure_factor(
+                        torch.tensor([[h0]]),
+                        torch.tensor([[k0]]),
+                        torch.tensor([[l0]])
+                    ).item()
+                    print(f"TRACE: F_cell {F_cell:.12e}")
+
+                    # Calculate I_before_scaling (this is before r_e^2 * fluence / steps)
+                    I_before_scaling = (F_cell * F_latt) ** 2
+                    print(f"TRACE: I_before_scaling {I_before_scaling:.12e}")
 
                 # Trace factors
                 if omega_pixel is not None:
