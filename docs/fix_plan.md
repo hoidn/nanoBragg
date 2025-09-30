@@ -1,34 +1,78 @@
-**Last Updated:** 2025-09-30 12:00 UTC
+**Last Updated:** 2025-09-30 16:00 UTC
 
-**Current Status:** Parity harness expansion: AT-PARALLEL-022 added to parity_cases.yaml. Testing revealed significant failure in single-step phi rotation case (corr=0.48) requiring debug.md routing. AT-PARALLEL-020 still requires debugging (sum_ratio 0.19, correlation 0.894).
+**Current Status:** **ROOT CAUSE ISOLATED:** AT-PARALLEL-021 added to parity harness and reveals phi rotation bug exists independently of detector rotations. single_step_phi failure (corr=0.48) is identical pattern to AT-022, confirming crystal rotation is the root issue, not combined rotations. This discovery unblocks debugging strategy.
 
 ---
 ## Index
 
 ### Active Items
-- [AT-PARALLEL-011-CLI] Parity Harness CLI Compatibility — Priority: High, Status: done (19/20 tests pass)
+- [AT-PARALLEL-021-PARITY] Crystal Phi Rotation Parity Failure — Priority: Critical, Status: pending (requires debug.md)
 - [AT-PARALLEL-020-REGRESSION] Comprehensive Integration Test Correlation Failure — Priority: High, Status: pending (requires debug.md)
+- [AT-PARALLEL-022-PARITY] Combined Detector+Crystal Rotation Parity Failure — Priority: High, Status: pending (requires debug.md, blocked by AT-021)
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: Medium, Status: pending (blocked on fullgraph=True limitation)
 - [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: pending
 - [PERF-PYTORCH-006] Float32 / Mixed Precision Performance Mode — Priority: Medium, Status: pending
 
 ### Queued Items
 - [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: done (escalated)
-- [AT-PARALLEL-022-PARITY] Combined Detector+Crystal Rotation Parity Failure — Priority: High, Status: pending (requires debug.md)
-- Parity Harness Coverage Expansion — Status: in_progress (AT-011/022 added, 22 ATs remaining)
+- Parity Harness Coverage Expansion — Status: in_progress (AT-011/021/022 added, 18 ATs remaining)
 - Docs-as-Data CI lint
 
 ### Recently Completed (2025-09-30)
+- [AT-PARALLEL-021-HARNESS] Parity Harness Addition for Crystal Phi Rotation — done (test discovery complete)
+- [AT-PARALLEL-011-CLI] Parity Harness CLI Compatibility — done (19/20 tests pass)
 - [AT-GEO-003] Beam Center Preservation with BEAM Pivot — done
 - [AT-PARALLEL-006-PYTEST] PyTorch-Only Test Failures (Bragg Position Prediction) — done
 - [AT-PARALLEL-002-EXTREME] Pixel Size Parity Failures (0.05mm & 0.4mm) — done (documented)
 - [PERF-PYTORCH-001] Multi-Source Vectorization Regression — done
 - [PERF-PYTORCH-002] Source Tensor Device Drift — done
 - [PERF-PYTORCH-003] CUDA Benchmark Gap (PyTorch vs C) — done
-- [AT-PARALLEL-011-CLI] Parity Harness CLI Compatibility — done (19/20 tests pass)
 
 ---
 ## Active Focus
+
+## [AT-PARALLEL-021-PARITY] Crystal Phi Rotation Parity Addition and Root Cause Discovery
+- Spec/AT: AT-PARALLEL-021 Crystal Phi Rotation Equivalence
+- Priority: Critical (root cause for AT-022)
+- Status: pending (requires debug.md)
+- Owner/Date: 2025-09-30 16:00 UTC
+- Exit Criteria: (1) Add AT-PARALLEL-021 to parity_cases.yaml ✓ DONE; (2) Both test cases pass parity thresholds ❌ BLOCKED by phi rotation bug
+- Reproduction:
+  * Test: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_parity_matrix.py -k "AT-PARALLEL-021" -v`
+- Implementation Summary:
+  * **KEY DISCOVERY**: Added AT-PARALLEL-021 (crystal phi rotation WITHOUT detector rotations) to parity_cases.yaml
+  * Base parameters: cubic 100Å cell, N=5, 256×256 detector, MOSFLM convention, NO detector rotations
+  * Two runs:
+    - single_step_phi: -phi 0 -osc 90 -phisteps 1 (single phi step at midpoint ~45°)
+    - multi_step_phi: -phi 0 -osc 90 -phisteps 9 (nine phi steps across 90° range)
+  * Thresholds: corr≥0.99, sum_ratio∈[0.9, 1.1], max|Δ|<500
+- Test Results (2025-09-30 16:00 UTC):
+  * **single_step_phi: CATASTROPHIC FAILURE (IDENTICAL TO AT-022)**
+    - Correlation: 0.483 << 0.99 (spec requires ≥0.99) ❌
+    - Sum ratio: 0.707 (PyTorch produces only 71% of C intensity) ❌
+    - RMSE: 12.29, max|Δ|: 141.75
+    - **EXACT SAME PATTERN as AT-022 single_step_phi (corr=0.48, sum_ratio=0.71)**
+  * **multi_step_phi: BORDERLINE FAILURE**
+    - Correlation: 0.980 < 0.99 (just barely below threshold) ❌
+    - Sum ratio: 1.122 (PyTorch produces 12.2% more intensity) ❌
+    - RMSE: 1.75, max|Δ|: 18.45
+    - **Similar to AT-022 multi_step_phi (corr=0.984, sum_ratio=1.105)**
+- **CRITICAL INSIGHT: ROOT CAUSE ISOLATED**
+  * The phi rotation bug exists INDEPENDENTLY of detector rotations
+  * AT-022 failures are NOT due to combined detector+crystal rotation interaction
+  * The bug is in crystal phi rotation implementation itself (likely in `Crystal.get_rotated_real_vectors()`)
+  * Single-step phi rotation (phisteps=1) has a fundamental implementation error
+  * Multi-step accumulation partially masks the error but still fails thresholds
+- Artifacts:
+  * Modified: tests/parity_cases.yaml (added AT-PARALLEL-021 entry with 2 runs)
+  * Metrics: reports/2025-09-30-AT-PARALLEL-021/{single_step_phi_metrics.json, multi_step_phi_metrics.json}
+  * Visuals: reports/2025-09-30-AT-PARALLEL-021/{single_step_phi_diff.png, multi_step_phi_diff.png}
+- Next Actions:
+  * **REQUIRED**: Route to prompts/debug.md for parallel trace comparison of single_step_phi case
+  * Focus: Investigate Crystal.get_rotated_real_vectors() phi rotation calculation
+  * Hypothesis: Single-step midpoint phi calculation may be incorrect, or rotation matrix application has sign/axis error
+  * **This should be debugged BEFORE AT-022**, as fixing AT-021 will likely fix AT-022 automatically
+  * Priority: Critical - this blocks multiple acceptance tests (AT-021, AT-022, potentially AT-020)
 
 ## [AT-PARALLEL-022-PARITY] Combined Detector+Crystal Rotation Parity Addition and Failure Discovery
 - Spec/AT: AT-PARALLEL-022 Combined Detector+Crystal Rotation Equivalence

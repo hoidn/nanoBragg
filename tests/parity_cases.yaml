@@ -257,6 +257,36 @@ cases:
       - name: comprehensive
         extra_args: >-
 
+  - id: AT-PARALLEL-021
+    description: Crystal phi rotation equivalence (C ↔ PyTorch)
+    base_args: >-
+      -default_F 100
+      -cell 100 100 100 90 90 90
+      -lambda 6.2
+      -N 5
+      -pixel 0.1
+      -distance 100
+      -detpixels 256
+      -mosflm
+      -seed 1
+      -phi 0
+      -mosaic 0
+      -oversample 1
+    thresholds:
+      corr_min: 0.99
+      sum_ratio_min: 0.9
+      sum_ratio_max: 1.1
+      max_abs_max: 500
+    runs:
+      - name: single_step_phi
+        extra_args: >-
+          -osc 90
+          -phisteps 1
+      - name: multi_step_phi
+        extra_args: >-
+          -osc 90
+          -phisteps 9
+
   - id: AT-PARALLEL-022
     description: Combined detector and crystal rotation equivalence (C ↔ PyTorch)
     base_args: >-

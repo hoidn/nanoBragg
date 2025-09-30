@@ -1,0 +1,15 @@
+{
+  "correlation": 0.48329419651052813,
+  "mse": 150.95986938476562,
+  "rmse": 12.286572456359863,
+  "max_abs_diff": 141.75289916992188,
+  "c_sum": 215621.59375,
+  "py_sum": 152405.484375,
+  "sum_ratio": 0.7068192091730144,
+  "case_id": "AT-PARALLEL-021",
+  "run_name": "single_step_phi",
+  "args": "-default_F 100 -cell 100 100 100 90 90 90 -lambda 6.2 -N 5 -pixel 0.1 -distance 100 -detpixels 256 -mosflm -seed 1 -phi 0 -mosaic 0 -oversample 1 -osc 90 -phisteps 1",
+  "c_binary": "golden_suite_generator/nanoBragg",
+  "pytorch_cli": "/home/ollie/miniconda3/envs/pytorch/bin/python3.10 -m nanobrag_torch",
+  "timestamp": "2025-09-30T04:07:34.991713"
+}
