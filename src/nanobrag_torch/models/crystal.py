@@ -354,26 +354,31 @@ class Crystal:
 
         # Build the 4x4x4 neighborhood indices
         # h_interp[0]=h0_flr-1, h_interp[1]=h0_flr, h_interp[2]=h0_flr+1, h_interp[3]=h0_flr+2
-        h_indices = torch.tensor([h_flr - 1, h_flr, h_flr + 1, h_flr + 2], dtype=torch.float64, device=self.device)
-        k_indices = torch.tensor([k_flr - 1, k_flr, k_flr + 1, k_flr + 2], dtype=torch.float64, device=self.device)
-        l_indices = torch.tensor([l_flr - 1, l_flr, l_flr + 1, l_flr + 2], dtype=torch.float64, device=self.device)
+        # Vectorized version: build indices directly without Python loops
+        offsets = torch.arange(-1, 3, device=self.device, dtype=torch.long)  # [-1, 0, 1, 2]
 
-        # Build the 4x4x4 subcube of structure factors
-        sub_Fhkl = torch.zeros((4, 4, 4), dtype=self.dtype, device=self.device)
+        # Build coordinate arrays for interpolation (as float for polin3)
+        h_indices = (h_flr + offsets).to(dtype=self.dtype)
+        k_indices = (k_flr + offsets).to(dtype=self.dtype)
+        l_indices = (l_flr + offsets).to(dtype=self.dtype)
 
-        for i1 in range(4):
-            for i2 in range(4):
-                for i3 in range(4):
-                    # Calculate actual indices into the grid
-                    h_idx = int(h_indices[i1].item()) - h_min
-                    k_idx = int(k_indices[i2].item()) - k_min
-                    l_idx = int(l_indices[i3].item()) - l_min
+        # Build the 4x4x4 subcube of structure factors using vectorized indexing
+        if self.hkl_data is None:
+            # If no HKL data loaded, use default_F everywhere
+            sub_Fhkl = torch.full((4, 4, 4), self.config.default_F, dtype=self.dtype, device=self.device)
+        else:
+            # Calculate grid indices into hkl_data array
+            # Need to broadcast to create 4x4x4 indexing grid
+            h_grid = (h_flr.long() + offsets) - h_min  # shape: (4,)
+            k_grid = (k_flr.long() + offsets) - k_min  # shape: (4,)
+            l_grid = (l_flr.long() + offsets) - l_min  # shape: (4,)
 
-                    # Look up the structure factor
-                    if self.hkl_data is None:
-                        sub_Fhkl[i1, i2, i3] = self.config.default_F
-                    else:
-                        sub_Fhkl[i1, i2, i3] = self.hkl_data[h_idx, k_idx, l_idx]
+            # Use advanced indexing with broadcasting:
+            # h_grid[:, None, None] broadcasts to (4, 1, 1)
+            # k_grid[None, :, None] broadcasts to (1, 4, 1)
+            # l_grid[None, None, :] broadcasts to (1, 1, 4)
+            # Result: (4, 4, 4) gathered from hkl_data
+            sub_Fhkl = self.hkl_data[h_grid[:, None, None], k_grid[None, :, None], l_grid[None, None, :]]
 
         # Perform tricubic interpolation
         F_cell = polin3(h_indices, k_indices, l_indices, sub_Fhkl, h, k, l)

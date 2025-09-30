@@ -70,12 +70,21 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 - **Impact**: Eliminates O(n_sources) Python loop; enables torch.compile to see full batched computation; expected >10x speedup for realistic divergence grids
 - **Status**: ✅ COMPLETE
 
-### TODO High priority
-
-#### Eliminate Python Loop in Tricubic Interpolation (MEDIUM)
-- Affected module: `src/nanobrag_torch/models/crystal.py` `_tricubic_interpolation` (~332-360).
-- Problem: The 4×4×4 neighborhood is gathered via nested Python loops and `.item()` calls, forcing host round-trips and preventing CUDA/vectorized execution whenever interpolation is enabled.
-- Plan: Replace manual loops with tensor indexing (`torch.stack`, `index_select`, or `take_along_dim`) to gather the full subcube on-device in one operation, keeping the interpolation fully vectorized.
+### ✅ COMPLETED (2025-09-29): Vectorize Tricubic Interpolation in Crystal Model
+- **Affected module**: `src/nanobrag_torch/models/crystal.py` lines 355-384
+- **Problem**: The 4×4×4 neighborhood was gathered via nested Python loops and `.item()` calls (lines 364-376), forcing host round-trips and preventing CUDA/vectorized execution whenever interpolation was enabled.
+- **Solution Implemented**:
+  - Replaced nested Python loops with vectorized tensor operations using advanced indexing
+  - Used `torch.arange(-1, 3)` to create offset indices directly on device
+  - Applied broadcasting with `h_grid[:, None, None], k_grid[None, :, None], l_grid[None, None, :]` to gather 4×4×4 subcube in single operation
+  - Eliminated all `.item()` calls to maintain full GPU/vectorization compatibility
+- **Test Results**: All tests passing
+  - `test_at_str_002.py`: 3/3 passed (tricubic interpolation functionality)
+  - `test_at_perf_006.py`: 8/8 passed, 1 skipped (tensor vectorization completeness)
+  - `test_at_str_*.py`: 16/16 passed (all structure factor tests)
+  - Core acceptance tests: 69/69 passed
+- **Impact**: Enables fully vectorized interpolation on GPU without Python loops or host round-trips
+- **Status**: ✅ COMPLETE
 
 ### Status Summary (2025-09-25)
 
