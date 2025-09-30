@@ -95,7 +95,6 @@ test_debug_*.png
 scripts/debug_*.py
 
 # Work in progress
-plans/active/
 tmp/
 
 # Repomix output files
