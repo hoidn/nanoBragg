@@ -567,7 +567,8 @@ int main(int argc, char** argv)
                 if(argv[i+6][0] == '-') continue;
                 gamma = atof(argv[i+6])/RTD;
             }
-            if(strstr(argv[i], "-misset") && (argc > (i+1)))
+            /* Check for -misset random (must not match -misset_seed) */
+            if(strcmp(argv[i], "-misset") == 0 && (argc > (i+1)))
             {
                 if(strstr(argv[i+1],"rand"))
                 {
@@ -575,7 +576,8 @@ int main(int argc, char** argv)
                     continue;
                 }
             }
-            if(strstr(argv[i], "-misset") && (argc > (i+3)))
+            /* Check for -misset rotx roty rotz (must not match -misset_seed) */
+            if(strcmp(argv[i], "-misset") == 0 && (argc > (i+3)))
             {
                 misset[0] = 1;
                 misset[1] = atof(argv[i+1])/RTD;
