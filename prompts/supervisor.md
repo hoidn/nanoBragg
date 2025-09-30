@@ -32,11 +32,11 @@ review ralph's work over the last N (~30 but can be more or less - you decide) i
 if it comes up <tails>: proceed to step <3>
 </2>
 <3>
-Given your findings in <1> and <2>, think about whether there's any need for a multi-turn planning effort -- i.e. ralph can't see the forest for the trees and may struggle with major refactorings and multi-turn implementation efforts unless they are coordinated by you. Is there a need for such planning *right now*? If so:
+Given your findings in <1> and <2>, think about whether there's any need for a multi-turn planning effort -- i.e. ralph can't see the forest for the trees and may struggle with major refactorings and multi-turn implementation efforts unless they are coordinated by you. Is there a need for such planning *right now*? If such a plan is already spoken for (plans/active/ or wherever else past galph might have saved to), does that plan require updates or is it up to date / high quality and simply pending? IFF you determine the need for a new plan or modification of an existing one:
 <yes case>
-- based on which long term <goal> and sub-goal? 
+- based on which long term <goal> and sub-goal is that effort / plan? 
 - Which existing docs/fix_plan.md items does it relate to? 
-- think deeply. draft a plan and save it to a .md under plans/
+- think deeply. draft / redraft the  plan and save it to a .md under plans/active/
 - review docs/fix_plan.md. edit if needed. cross reference the new plans .md so that ralph can find it.
 </yes case>
 </no case>
