@@ -119,7 +119,7 @@ declare:
    If a loop changes only non-code artifacts (e.g., prompts/docs/plan), at minimum ensure `pytest --collect-only -q` succeeds before committing.
 </step 6>
 <step 7>
-- Update `docs/fix_plan.md` for the active item: append to its Attempts History with metrics, artifact paths, observations, and next actions; record First Divergence if known; only mark the item `done` when exit criteria are satisfied, otherwise keep it active with concrete follow-ups.
+- Update `docs/fix_plan.md` for the active item using `prompts/update_fix_plan.md`: append to its Attempts History with metrics, artifact paths, observations, and next actions; record First Divergence if known; only mark the item `done` when exit criteria are satisfied, otherwise keep it active with concrete follow-ups.
 </step 7>
 <step 8>
 update docs:

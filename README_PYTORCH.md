@@ -11,6 +11,14 @@ This guide explains how to use the PyTorch implementation of nanoBragg for diffr
 - [Test Suite](#test-suite)
 - [Known Limitations](#known-limitations)
 
+## PyTorch Runtime Guardrails
+
+- Ensure all simulator changes remain **fully vectorized** (extend the broadcast dimensions instead of adding Python loops).
+- Keep tensors on the caller’s **device/dtype**; preload configuration tensors onto the target device and avoid per-iteration `.to()` shims.
+- Run CPU and CUDA smoke tests (see `docs/development/pytorch_runtime_checklist.md`) before declaring success.
+
+Refer to [`docs/development/pytorch_runtime_checklist.md`](docs/development/pytorch_runtime_checklist.md) for the full checklist.
+
 ## Installation
 
 ### Prerequisites
@@ -450,3 +458,10 @@ For complete details and workarounds, see the [Known Limitations Guide](docs/use
 - [C Parameter Dictionary](docs/architecture/c_parameter_dictionary.md)
 - [Testing Strategy](docs/development/testing_strategy.md)
 - [Debugging Guide](docs/debugging/debugging.md)
+## PyTorch Runtime Guardrails
+
+- Ensure all simulator changes remain **fully vectorized** (extend the broadcast dimensions instead of adding Python loops).
+- Keep tensors on the caller’s **device/dtype**; preload config tensors onto the target device and avoid per-iteration `.to()` shims.
+- Run CPU and CUDA smoke tests (see `docs/development/pytorch_runtime_checklist.md`) before declaring success.
+
+Refer to `[docs/development/pytorch_runtime_checklist.md](docs/development/pytorch_runtime_checklist.md)` for the full checklist.
