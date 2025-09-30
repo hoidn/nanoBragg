@@ -28,11 +28,14 @@ Non‑Negotiable Guardrails
 7) Hard Gate — Fix Plan Compliance:
     - Start Gate: Do not proceed to reproduction until `docs/fix_plan.md` shows the chosen item set to `Status: in_progress` and contains Reproduction commands.
     - End Gate: Do not commit unless `docs/fix_plan.md` shows a NEW “Attempts History” entry for this loop with lines starting with `Metrics:` and `Artifacts:` (real, dated paths), and `First Divergence:` if found.
-8) Matrix Gate — Canonical Parity First:
+8) Bootstrap Parity Harness (blocking):
+   - If either `tests/parity_cases.yaml` or `tests/test_parity_matrix.py` is missing, PAUSE. Add a fix_plan item, generate both files (shared pytest harness + YAML case definitions), and rerun Step 0 before touching the failing AT. Use the canonical structure: parameterised pytest that runs the C binary (`NB_C_BIN`) and PyTorch CLI (`sys.executable -m nanobrag_torch`), enforces corr/MSE/RMSE/max|Δ|/sum ratios, and writes `metrics.json` artifacts on failure.
+   - Minimal YAML entry for the failing AT must include `id`, `base_args`, `thresholds`, `runs:[name, extra_args]` (and seeds where needed). Do not continue until the files exist and are referenced by the matrix.
+9) Matrix Gate — Canonical Parity First:
    - In equivalence loops, the FIRST command MUST be the mapped C↔Py parity path (pytest node from the Matrix or the canonical harness listed next to it). Do not begin with PyTorch‑only tests.
    - Honor `tests/parity_cases.yaml`: if the AT has an entry there, run the corresponding case via `tests/test_parity_matrix.py` before any auxiliary diagnostics.
    - If NB_C_BIN is unset/invalid, resolve to `./golden_suite_generator/nanoBragg` or fallback `./nanoBragg` if the former is absent; verify it exists before running tests.
-9) Contradiction Rule — Parity Wins:
+10) Contradiction Rule — Parity Wins:
    - If any mapped parity path (pytest or harness) reports under‑threshold metrics for an AT with a parity threshold, the loop is a FAILURE regardless of pytest green on PyTorch‑only tests. Reopen fix_plan and proceed to trace‑first debugging.
 
 Authoritative Inputs (consult before acting)

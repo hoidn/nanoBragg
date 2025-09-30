@@ -231,6 +231,14 @@ Reference mapping:
 
 - Parity case definitions: `tests/parity_cases.yaml` is the machine-readable companion to this matrix. It enumerates canonical commands, sweeps, thresholds, and options for the shared parity runner (`tests/test_parity_matrix.py`). Every parity-threshold AT SHALL appear in both the matrix and the YAML file.
 
+### 2.5.0 Bootstrap Parity Harness (blocking)
+
+- If either `tests/parity_cases.yaml` or `tests/test_parity_matrix.py` is missing, the matrix is incomplete. Stop before running any parity loop.
+- Add a fix_plan item (“Bootstrap parity harness for AT-…”) and create both files before proceeding:
+  - `tests/test_parity_matrix.py`: parameterised pytest harness that runs the C reference (`NB_C_BIN`) and the PyTorch CLI (`sys.executable -m nanobrag_torch`), writes temporary floatfiles, loads them into NumPy, computes correlation/MSE/RMSE/max |Δ|/sum ratio (optional SSIM), saves `metrics.json` (plus diff artifacts) on failure, and enforces thresholds specified in the YAML.
+  - `tests/parity_cases.yaml`: a top-level `cases:` list with entries containing `id`, `description`, `base_args`, `thresholds`, optional `options`, and `runs` (array of `{name, extra_args, thresholds?}`). Include seeds and device settings when determinism demands it.
+- After the bootstrap, rerun Step 0 so the matrix and YAML stay in sync. Parity work MUST NOT continue until both files exist and the target AT has an entry.
+
 ### 2.5.1 Trace Recipe (per AT)
 
 For equivalence debugging (AT‑PARALLEL failures, correlation below thresholds, structured diffs), generate aligned traces:
