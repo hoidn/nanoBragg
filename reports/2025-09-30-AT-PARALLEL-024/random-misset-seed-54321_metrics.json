@@ -11,5 +11,5 @@
   "args": "-default_F 100 -cell 100 100 100 90 90 90 -lambda 1.0 -N 5 -detpixels 256 -pixel 0.1 -distance 100 -mosflm -phi 0 -osc 0 -mosaic 0 -oversample 1 -misset random -misset_seed 54321",
   "c_binary": "golden_suite_generator/nanoBragg",
   "pytorch_cli": "/home/ollie/miniconda3/envs/pytorch/bin/python3.10 -m nanobrag_torch",
-  "timestamp": "2025-09-30T12:15:08.954885"
+  "timestamp": "2025-09-30T13:09:09.481760"
 }

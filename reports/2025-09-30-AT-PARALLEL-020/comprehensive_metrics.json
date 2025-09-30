@@ -1,15 +1,15 @@
 {
-  "correlation": 0.8909984166917829,
-  "mse": 2.514230489730835,
-  "rmse": 1.585632562637329,
-  "max_abs_diff": 50.68004608154297,
+  "correlation": 0.9704217406149527,
+  "mse": 2.4050252437591553,
+  "rmse": 1.5508143901824951,
+  "max_abs_diff": 50.68040466308594,
   "c_sum": 137118.609375,
-  "py_sum": 26041.85546875,
-  "sum_ratio": 0.18992210894969924,
+  "py_sum": 26639.228515625,
+  "sum_ratio": 0.19427872436169827,
   "case_id": "AT-PARALLEL-020",
   "run_name": "comprehensive",
   "args": "-cell 70 80 90 75 85 95 -N 5 -mosaic 0.5 -mosaic_dom 5 -mosaic_seed 12345 -phi 0 -osc 90 -phisteps 9 -detector_rotx 5 -detector_roty 3 -detector_rotz 2 -twotheta 10 -detector_abs 500 -detector_thick 450 -thicksteps 5 -polar 0.95 -detpixels 512 -pixel 0.1 -distance 100 -lambda 6.2 -oversample 1 -seed 42 -default_F 100 -mosflm -misset 15 25 35",
   "c_binary": "golden_suite_generator/nanoBragg",
   "pytorch_cli": "/home/ollie/miniconda3/envs/pytorch/bin/python3.10 -m nanobrag_torch",
-  "timestamp": "2025-09-30T12:14:33.550804"
+  "timestamp": "2025-09-30T12:51:07.922189"
 }
