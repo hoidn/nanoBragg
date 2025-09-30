@@ -6,6 +6,7 @@
 ## Index
 
 ### Active Items
+- [META] Fix Plan Structure Refresh — Priority: High, Status: pending
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: High, Status: pending
 - [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: pending
 - [PERF-PYTORCH-006] Float32 / Mixed Precision Performance Mode — Priority: Medium, Status: pending
@@ -24,6 +25,18 @@
 
 ---
 ## Active Focus
+
+## [META] Fix Plan Structure Refresh
+- Spec/AT: Meta maintenance
+- Priority: High (reset to Medium immediately after each cleanup run)
+- Status: pending
+- Owner/Date: TBD
+- Reproduction:
+  * Step 1: Run a loop with `prompts/update_fix_plan.md`, reviewing every active item for template compliance.
+  * Step 2: Move lengthy or no-longer-relevant completed sections into `archive/fix_plan_archive.md` (create if needed) while preserving key metrics and artifact references; update the Index accordingly.
+  * Step 3: Ensure each active item records Owner/Date, First Divergence (or "TBD"), real Attempts History entries, and concise Next Actions; refresh the `**Last Updated:**` header.
+- Lifecycle Notes: Evergreen task — after each cleanup, update Status back to `pending`, downgrade Priority to Medium, and set a “Next review” note for the future cycle; do **not** mark this item `done` so routine maintenance stays visible.
+- Exit Criteria: Plan header timestamp refreshed; active items validated against the template; bulky completed content relocated to `archive/fix_plan_archive.md` with references intact.
 
 ## [AT-PARALLEL-006-PYTEST] PyTorch-Only Test Failures (Bragg Position Prediction)
 - Spec/AT: AT-PARALLEL-006 Single Reflection Position (PyTorch self-consistency, not C-parity)
