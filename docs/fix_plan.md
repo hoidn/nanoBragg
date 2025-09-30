@@ -1405,6 +1405,30 @@
   * Numerical results remain identical (correlation ≥ 0.999999 vs C).
   * Document kernel design and testing in `reports/benchmarks/<date>/fused_kernel.md`.
 
+### [PERF-PYTORCH-004] Attempt #3 - Phase 1 Geometry Helpers (2025-09-30)
+
+- **Action:** Implemented P1.3 and P1.4 from Phase 1 plan - refactored geometry helpers to avoid tensor allocations
+- **Changes:**
+  - `utils/geometry.py::angles_to_rotation_matrix`: Replaced `torch.zeros(3, 3, device=device, dtype=dtype)` with `cos_x.new_zeros(3, 3)` for Rx, Ry, Rz matrices (3 instances)
+  - `utils/geometry.py::rotate_around_{x,y,z}`: Replaced `torch.tensor([...], device=device, dtype=dtype)` with `v.new_tensor([...])` for axis vectors (3 instances)
+  - `utils/geometry.py::angles_to_rotation_matrix`: Removed CPU fallback branch for scalar inputs (P1.4 requirement - all call sites verified to provide tensors)
+- **Rationale:**
+  - `tensor.new_zeros()` and `tensor.new_tensor()` inherit device/dtype from the calling tensor, avoiding explicit device/dtype arguments
+  - Eliminates fresh tensor allocations inside torch.compile regions that trigger graph recompilation
+  - Removes CPU fallback that would force device transfers in misset rotation paths
+- **Result:** ✅ SUCCESS - All tensor allocation hoisting complete for geometry helpers
+- **Validation:**
+  - Core test suite: 98 passed, 7 skipped, 1 xfailed (no regressions)
+  - Geometry tests: All 7 `test_angles_to_rotation_matrix_*` tests PASSED
+  - No device/dtype issues introduced
+- **Artifacts:**
+  - Modified: src/nanobrag_torch/utils/geometry.py (6 allocation sites + CPU fallback removal)
+  - Test output: All geometry rotation tests pass in 2.58s
+- **Next Actions:**
+  - P1.1: Address remaining guard tensor allocations in crystal.py (`.clamp_min()` conversions already done in Attempt #2)
+  - P1.2: Verify incident beam direction normalization (may already be complete)
+  - P1.5: Capture before/after compile traces and benchmark timings
+
 ### [PERF-PYTORCH-004] Update - 2025-10-01 (galph loop N)
 
 - **Audit result:** `_compute_physics_for_position` no longer creates explicit `.to()` transfers, but supporting helpers still trigger CPU allocations: `utils/geometry.py::angles_to_rotation_matrix` zeros out fresh `torch.zeros` matrices each call and falls back to CPU when passed Python scalars (misset path), while `crystal.py` continues to materialize guard tensors for cross-product rescaling. Dynamo still records unique graph signatures per simulator instantiation.
