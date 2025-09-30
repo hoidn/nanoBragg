@@ -11,7 +11,7 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
 
 - AT-PARALLEL-001 Beam Center Scales with Detector Size
   - Setup: Test detector sizes 64x64, 128x128, 256x256, 512x512, 1024x1024 pixels with 0.1mm pixel size, cubic crystal 100Å N=3, λ=6.2Å
-  - Expectation: Beam center (mm) SHALL equal detector_pixels/2 × pixel_size_mm; Peak SHALL appear at detector center ±2 pixels; Correlation between C and PyTorch >0.95
+  - Expectation: Beam center (mm) SHALL equal detector_pixels/2 × pixel_size_mm; Peak SHALL appear at detector center ±2 pixels; Correlation between C and PyTorch ≥0.9999
   - Failure mode: Fixed beam center at 51.2mm regardless of detector size
   - Implementation:
     - Parity (canonical): `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-001"`
@@ -31,7 +31,7 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
 
 - AT-PARALLEL-004 MOSFLM 0.5 Pixel Offset
   - Setup: MOSFLM vs XDS convention comparison, 256x256 detector, beam center 25.6mm
-  - Expectation: MOSFLM SHALL add +0.5 pixel offset; Peak position difference SHALL be 0.4-0.6 pixels between conventions; Pattern correlation >0.99 when aligned
+  - Expectation: MOSFLM SHALL add +0.5 pixel offset; Peak position difference SHALL be 0.4-0.6 pixels between conventions; Pattern correlation ≥0.9999 when aligned
   - Implementation:
     - Parity (canonical): `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-004"`
     - Supplemental PyTorch-only regression: `pytest -v tests/test_at_parallel_004.py`
@@ -43,7 +43,7 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
 
 - AT-PARALLEL-006 Single Reflection Position
   - Setup: Cubic crystal 100Å, single (1,0,0) reflection, vary distance (50,100,200mm) and wavelength (1.0,1.5,2.0Å)
-  - Expectation: Peak position SHALL match Bragg angle calculation θ=arcsin(λ/(2d)) ±0.5 pixels; Distance scaling ratio ±2%; Wavelength scaling follows Bragg's law ±1%
+  - Expectation: Peak position SHALL match Bragg angle calculation θ=arcsin(λ/(2d)) ±0.5 pixels; Distance scaling ratio ±2%; Wavelength scaling follows Bragg's law ±1%; Correlation between C and PyTorch ≥0.9999
   - Implementation:
     - Parity (canonical): `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-006"`
     - Supplemental PyTorch-only regression: `pytest -v tests/test_at_parallel_006.py`
@@ -51,7 +51,7 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
 - AT-PARALLEL-007 Peak Position with Rotations
   - Setup: 100,100,100,90,90,90 cell; -default_F 100; detector 256×256, -pixel 0.1, -distance 100; MOSFLM; auto beam center; -phi 0 -osc 0; -mosaic 0; divergence=0; dispersion=0; -oversample 1; full-frame ROI; -pivot beam; -detector_rotx 5 -detector_roty 3 -detector_rotz 2 -twotheta 10.
   - Procedure: Run C and PyTorch with identical flags. Detect local maxima above the 99.5th percentile; select top N=25 peaks. Register C↔PyTorch peaks via Hungarian matching with 1.0‑pixel gating.
-  - Pass: Image correlation ≥ 0.9995; ≥ 95% matched peaks within ≤ 1.0 pixel; total float-image sums ratio in [0.9, 1.1].
+  - Pass: Image correlation ≥ 0.9999; ≥ 95% matched peaks within ≤ 1.0 pixel; total float-image sums ratio in [0.9, 1.1].
   - Implementation:
     - Parity (canonical): `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-007"`
     - Supplemental PyTorch-only regression: `pytest -v tests/test_at_parallel_007.py`
@@ -241,7 +241,7 @@ Conformance Profiles (Normative)
 - C-PyTorch Equivalence Profile
   - Scope: Implementations claiming equivalence with the C reference implementation SHALL pass all AT-PARALLEL-* tests with specified tolerances. This profile ensures that alternative implementations produce outputs functionally equivalent to the original nanoBragg.c.
   - Requirements: Must conform to Core Engine Profile and pass all 23 AT-PARALLEL tests.
-  - Key tolerances: Pattern correlation >0.95 for general cases, >0.999 for simple cubic; Peak position accuracy ±2 pixels; Intensity scaling within 2x; Beam center calculation must scale with detector size.
+  - Key tolerances: Pattern correlation ≥0.9999 for high-precision parity tests (AT-001/002/004/006/007); ≥0.98 for complex scenarios (multi-peak, polarization, integration tests); Peak position accuracy ±2 pixels; Intensity scaling within 2x; Beam center calculation must scale with detector size.
   - Units & conversions:
     - Å→m = ×1e−10; mm→m = ÷1000; µm→m = ×1e−6; deg→rad = ×π/180; mrad→rad = ÷1000.
     - Wavelength: -lambda|-wave Å→m; -energy eV→m via λ = (12398.42/E)·1e−10.
