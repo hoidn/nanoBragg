@@ -6,12 +6,7 @@
 ## Index
 
 ### Active Items
-<<<<<<< HEAD
-- [CORE-REGRESSION-001] Phi Rotation Unit Test Failure — Priority: **CRITICAL**, Status: pending (requires debug.md) — test_phi_rotation_90_deg broken by commit 8293a15
 - [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure — Priority: Critical, Status: in_progress (see plans/active/at-parallel-024/plan.md)
-=======
-- [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure — Priority: Critical, Status: pending (requires debug.md)(isn't different rng expected?)
->>>>>>> ed848c65b6537c19af962397d12a99c23dac5094
 - [AT-PARALLEL-020-REGRESSION] Comprehensive Integration Test Correlation Failure — Priority: High, Status: pending (requires debug.md)
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: Medium, Status: pending (blocked on fullgraph=True limitation)
 - [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
@@ -628,7 +623,7 @@
 ## [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure
 - Spec/AT: AT-PARALLEL-024 Random Misset Reproducibility and Equivalence
 - Priority: Critical (random misset implementation bug)
-- Status: in_progress (debug plan active; follow plans/active/at-parallel-024/plan.md)
+- Status: in_progress (plan refreshed 2025-09-30; see plans/active/at-parallel-024/plan.md)
 - Owner/Date: 2025-09-30 21:00 UTC
 - Exit Criteria: (1) Add AT-PARALLEL-024 to parity_cases.yaml ✓ DONE; (2) Both test cases pass parity thresholds ❌ BLOCKED by random misset bug
 - Reproduction:
@@ -642,24 +637,22 @@
   * Thresholds: corr≥0.99, sum_ratio∈[0.98, 1.02], max|Δ|<500
   * Validates: Random misset generation produces deterministic, equivalent patterns between C and PyTorch
 - Test Results (2025-09-30 21:00 UTC):
-  * **BOTH RUNS CATASTROPHICALLY FAILED** ❌
-    - random-misset-seed-12345: correlation 0.025 << 0.99 (threshold), sum_ratio 1.0885
-    - random-misset-seed-54321: correlation 0.011 << 0.99 (threshold), sum_ratio 1.1282
-    - RMSE: 10.36 (seed-12345), 10.53 (seed-54321)
-    - max|Δ|: 149.48 (seed-12345), 150.21 (seed-54321)
-  * **CRITICAL INSIGHT: RANDOM MISSET BUG DISCOVERED**
-    - Correlations ~0.01-0.02 indicate essentially uncorrelated patterns (random noise level)
-    - C and PyTorch are generating completely different random misset angles OR applying them incorrectly
-    - This is likely a seed-handling or RNG implementation mismatch
+  * random-misset-seed-12345: correlation **0.0070** ❌, sum_ratio **1.0603** ❌, RMSE 10.218, max|Δ| 154.29
+  * random-misset-seed-54321: correlation **0.0105** ❌, sum_ratio **1.1282** ❌, RMSE 10.532, max|Δ| 150.21
+  * C sums vs PyTorch sums diverge by 6–13%, confirming physics mismatch rather than RNG noise
+- **Critical Insight (2025-09-30 supervisor sweep):**
+  * PyTorch random misset generation currently calls `mosaic_rotation_umat(math.pi / 2.0, …)` (`src/nanobrag_torch/models/crystal.py:594-603`), limiting rotations to ±90°.
+  * The C reference invokes `mosaic_rotation_umat(90.0, …)` (`golden_suite_generator/nanoBragg.c:2010-2016`); because the value is treated as radians inside the quaternion math, the effective cap is 90 **radians**, yielding a near-uniform orientation distribution.
+  * Example (seed 12345): PyTorch’s π/2 cap produces Euler angles `[64.62°, -44.46°, -58.90°]`, while forcing the 90.0 input (mirroring C) yields `[105.72°, -34.95°, -97.82°]`, matching nanoBragg. The narrower orientation cone explains the near-zero correlation.
 - Artifacts:
   * Modified: tests/parity_cases.yaml (added AT-PARALLEL-024 entry with 2 runs)
   * Metrics: reports/2025-09-30-AT-PARALLEL-024/{random-misset-seed-12345_metrics.json, random-misset-seed-54321_metrics.json}
   * Visuals: reports/2025-09-30-AT-PARALLEL-024/{random-misset-seed-12345_diff.png, random-misset-seed-54321_diff.png}
 - Next Actions:
-  * **Follow plan**: `plans/active/at-parallel-024/plan.md` (Phase A → Phase D)
-  * Route work through `prompts/debug.md`; capture misset angles/rotation matrices for both implementations
-  * Validate RNG parity (CLCG outputs) before touching rotation pipeline; record first divergence in fix_plan attempts
-  * Priority remains Critical — random misset determinism underpins downstream acceptance tests
+  * Execute plan phases in `plans/active/at-parallel-024/plan.md` (RNG parity check → fix → validation).
+  * Align PyTorch sampling with the C semantics (restore 90.0-radian cap), rerun parity cases, and document post-fix metrics.
+  * Verify determinism across repeated PyTorch runs with identical seeds before marking this item done.
+
 
 ## [AT-PARALLEL-005-HARNESS] Beam Center Parameter Mapping Parity Addition
 - Spec/AT: AT-PARALLEL-005 Beam Center Parameter Mapping
@@ -695,109 +688,44 @@
 
 ## [AT-PARALLEL-021-PARITY] Crystal Phi Rotation Parity Addition and Root Cause Discovery
 - Spec/AT: AT-PARALLEL-021 Crystal Phi Rotation Equivalence
-- Priority: Critical (root cause for AT-022)
-- Status: pending (requires debug.md)
-- Owner/Date: 2025-09-30 16:00 UTC
-- Exit Criteria: (1) Add AT-PARALLEL-021 to parity_cases.yaml ✓ DONE; (2) Both test cases pass parity thresholds ❌ BLOCKED by phi rotation bug
+- Priority: Critical (unblocked AT-PARALLEL-022 after fix)
+- Status: done (phi rotation bug fixed via C loop formula port)
+- Owner/Date: 2025-09-30 20:30 UTC
+- Exit Criteria: ✅ SATISFIED — parity cases pass with corr≥0.99 and sum_ratio∈[0.9,1.1]
 - Reproduction:
   * Test: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_parity_matrix.py -k "AT-PARALLEL-021" -v`
 - Implementation Summary:
-  * **KEY DISCOVERY**: Added AT-PARALLEL-021 (crystal phi rotation WITHOUT detector rotations) to parity_cases.yaml
-  * Base parameters: cubic 100Å cell, N=5, 256×256 detector, MOSFLM convention, NO detector rotations
-  * Two runs:
-    - single_step_phi: -phi 0 -osc 90 -phisteps 1 (single phi step at midpoint ~45°)
-    - multi_step_phi: -phi 0 -osc 90 -phisteps 9 (nine phi steps across 90° range)
-  * Thresholds: corr≥0.99, sum_ratio∈[0.9, 1.1], max|Δ|<500
-- Test Results (2025-09-30 16:00 UTC):
-  * **single_step_phi: CATASTROPHIC FAILURE (IDENTICAL TO AT-022)**
-    - Correlation: 0.483 << 0.99 (spec requires ≥0.99) ❌
-    - Sum ratio: 0.707 (PyTorch produces only 71% of C intensity) ❌
-    - RMSE: 12.29, max|Δ|: 141.75
-    - **EXACT SAME PATTERN as AT-022 single_step_phi (corr=0.48, sum_ratio=0.71)**
-  * **multi_step_phi: BORDERLINE FAILURE**
-    - Correlation: 0.980 < 0.99 (just barely below threshold) ❌
-    - Sum ratio: 1.122 (PyTorch produces 12.2% more intensity) ❌
-    - RMSE: 1.75, max|Δ|: 18.45
-    - **Similar to AT-022 multi_step_phi (corr=0.984, sum_ratio=1.105)**
-- **CRITICAL INSIGHT: ROOT CAUSE ISOLATED**
-  * The phi rotation bug exists INDEPENDENTLY of detector rotations
-  * AT-022 failures are NOT due to combined detector+crystal rotation interaction
-  * The bug is in crystal phi rotation implementation itself (likely in `Crystal.get_rotated_real_vectors()`)
-  * Single-step phi rotation (phisteps=1) has a fundamental implementation error
-  * Multi-step accumulation partially masks the error but still fails thresholds
+  * Added AT-PARALLEL-021 (single-step and multi-step phi) to tests/parity_cases.yaml, isolating the crystal rotation pipeline.
+  * Commit 8293a15 updates `src/nanobrag_torch/models/crystal.py:777-827` to use the nanoBragg loop formula `phi = phi_start + phistep * phi_tic`, eliminating the midpoint special-case that diverged from C when `phi_steps == 1`.
+  * Commit ed848c6 aligns the unit test `tests/test_suite.py:167-207` with the C behavior (single-step phi stays at `phi_start`), preventing future regressions.
+- Test Results (2025-09-30 20:30 UTC):
+  * `pytest … -k "AT-PARALLEL-021" -v` → both parity cases PASS (2025-09-30 run, corr=1.000000, sum_ratio=1.000000 for single- and multi-step).
+  * AT-PARALLEL-022 parity now also passes as a downstream effect (verified manually the same day).
 - Artifacts:
-  * Modified: tests/parity_cases.yaml (added AT-PARALLEL-021 entry with 2 runs)
-  * Metrics: reports/2025-09-30-AT-PARALLEL-021/{single_step_phi_metrics.json, multi_step_phi_metrics.json}
-  * Visuals: reports/2025-09-30-AT-PARALLEL-021/{single_step_phi_diff.png, multi_step_phi_diff.png}
-- Attempts History:
-  * [2025-09-30 13:00 UTC] Attempt #1 — Status: SUCCESS (root cause fixed; both AT-021 and AT-022 pass)
-    * Context: Parallel trace-driven debugging of single_step_phi case (pixel 190, 129)
-    * Environment: CPU, float64, NB_C_BIN=./golden_suite_generator/nanoBragg
-    * **ROOT CAUSE IDENTIFIED**: PyTorch used MIDPOINT formula for single-step phi rotation, but C code uses LOOP START formula
-      - PyTorch (WRONG): phi = phi_start + osc_range/2 = 0 + 90/2 = 45°
-      - C code (CORRECT): phi = phi_start + (osc_range/phisteps)*phi_tic = 0 + 90*0 = 0° (no rotation!)
-      - C code reference (nanoBragg.c lines 3004-3009): `for(phi_tic=0; phi_tic<phisteps; ++phi_tic) { phi = phi0 + phistep*phi_tic; if(phi != 0.0) { rotate_axis(...); } }`
-    * **FIRST DIVERGENCE**: Phi angle calculation in Crystal.get_rotated_real_vectors() (crystal.py line 782)
-      - Off-axis Bragg peaks (e.g., pixel 190,129) had intensity ratio 0.003 (PyTorch produced ~0.46 vs C's 142.2)
-      - Central beam pixels matched perfectly (ratio ~1.0) because they don't depend on phi rotation
-      - This explained the catastrophic 70% sum ratio and 0.48 correlation
-    * Fix Applied: Changed Crystal.get_rotated_real_vectors() to use C loop formula instead of midpoint
-      - Location: src/nanobrag_torch/models/crystal.py lines 777-805
-      - Changed from: `phi_angles = config.phi_start_deg + config.osc_range_deg / 2.0` (single-step special case)
-      - Changed to: `phi_angles = config.phi_start_deg + step_size * step_indices` (unified loop formula matching C)
-      - Removed special-case logic for phi_steps==1; now all phi_steps use the same C loop formula
-    * Validation Results:
-      - AT-021 single_step_phi: **PASS** (corr=1.000000, sum_ratio=1.000000) ✅
-      - AT-021 multi_step_phi: **PASS** (corr≥0.99, sum within thresholds) ✅
-      - AT-022 single_step_phi: **PASS** (corr≥0.98, sum within thresholds) ✅
-      - AT-022 multi_step_phi: **PASS** (corr≥0.98, sum within thresholds) ✅
-      - Parity Matrix: **52/55 PASS** (AT-020 and AT-024 still fail, independent issues)
-      - Full AT-PARALLEL suite: **77/126 PASS** (no regressions from fix)
-    * Metrics:
-      - AT-021 single_step_phi: corr=1.000000 (was 0.483), sum_ratio=1.000000 (was 0.707)
-      - Off-axis peak (190,129): 142.22 in both C and PyTorch (was 0.46 vs 142.22)
-    * Artifacts:
-      - Modified: src/nanobrag_torch/models/crystal.py (lines 777-805)
-      - Reports: reports/2025-09-30-AT-021-traces/{c_output.log, py_output.log, c_float.bin, py_float_fixed.bin}
-      - Metrics: reports/2025-09-30-AT-PARALLEL-021/single_step_phi_metrics.json (updated with passing results)
-    * Key Discovery: The C code's phi loop starts at phi_tic=0, giving phi=phi0 (no rotation for first step). PyTorch's midpoint assumption was fundamentally incorrect. The unified loop formula now matches C exactly for all phi_steps values.
-    * Exit Criteria: ✅ SATISFIED — Both AT-021 and AT-022 test cases now pass all thresholds
+  * Code: `src/nanobrag_torch/models/crystal.py` (phi rotation fix), `tests/test_suite.py` (unit test correction).
+  * Reports: parity harness no longer emits failure metrics; historical failure artifacts remain in `reports/2025-09-30-AT-PARALLEL-021/` for reference.
+- Next Actions:
+  * Archive `plans/active/at-parallel-021/plan.md` once downstream validation (AT-022) remains green across another run.
 
-## [AT-PARALLEL-022-PARITY] Combined Detector+Crystal Rotation Parity Addition and Failure Discovery
+## [AT-PARALLEL-022-PARITY] Combined Detector+Crystal Rotation Parity Equivalence
 - Spec/AT: AT-PARALLEL-022 Combined Detector+Crystal Rotation Equivalence
 - Priority: High
-- Status: done (fixed automatically by AT-021 phi rotation fix)
-- Owner/Date: 2025-09-30 12:00 UTC (fixed 2025-09-30 13:00 UTC)
-- Exit Criteria: ✅ SATISFIED — Both test cases pass parity thresholds after AT-021 fix
+- Status: done (passes automatically after AT-021 fix)
+- Owner/Date: 2025-09-30 20:40 UTC
+- Exit Criteria: ✅ SATISFIED — Both parity cases meet corr≥0.98 and sum_ratio∈[0.9,1.1]
 - Reproduction:
   * Test: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_parity_matrix.py -k "AT-PARALLEL-022" -v`
 - Implementation Summary:
-  * Added AT-PARALLEL-022 to tests/parity_cases.yaml with two runs:
-    - single_step_phi: -phi 0 -osc 90 -phisteps 1 (single phi step at midpoint ~45°)
-    - multi_step_phi: -phi 0 -osc 90 -phisteps 9 (nine phi steps across 90° range)
-  * Base parameters: cubic 100Å cell, N=5, 256×256 detector, MOSFLM convention
-  * Detector rotations: -detector_rotx 5 -detector_roty 3 -detector_rotz 2 -twotheta 10
-  * Thresholds: corr≥0.98, sum_ratio∈[0.9, 1.1], max|Δ|<500
-- Test Results (2025-09-30 12:00 UTC):
-  * **single_step_phi: MAJOR FAILURE**
-    - Correlation: 0.4845 << 0.98 (spec requires ≥0.98) ❌
-    - Sum ratio: 0.7132 (PyTorch produces only 71% of C intensity) ❌
-    - RMSE: 12.20, max|Δ|: 144.97
-    - **This indicates a serious bug in PyTorch's single-step phi rotation with combined detector rotations**
-  * **multi_step_phi: BORDERLINE FAILURE**
-    - Correlation: 0.9836 > 0.98 ✓
-    - Sum ratio: 1.1046 (just 0.46% above 1.1 threshold) ❌
-    - RMSE: 1.59, max|Δ|: 19.01
-    - **Near-passing; sum ratio slightly high but correlation acceptable**
+  * Parity harness entry (single-step and multi-step phi) remains as originally authored in tests/parity_cases.yaml.
+  * No additional code changes were needed beyond the AT-021 fix — once PyTorch phi rotation obeys the nanoBragg loop formula, detector rotations also align.
+- Test Results (2025-09-30 20:40 UTC):
+  * `pytest … -k "AT-PARALLEL-022" -v` → both parity cases PASS (corr=1.000000, sum_ratio=1.000000).
+  * Old failure artifacts under `reports/2025-09-30-AT-PARALLEL-022/` are retained for historical context; new runs no longer emit diff images.
 - Artifacts:
-  * Modified: tests/parity_cases.yaml (added AT-PARALLEL-022 entry)
-  * Metrics: reports/2025-09-30-AT-PARALLEL-022/{single_step_phi_metrics.json, multi_step_phi_metrics.json}
-  * Visuals: reports/2025-09-30-AT-PARALLEL-022/{single_step_phi_diff.png, multi_step_phi_diff.png}
+  * Code: `src/nanobrag_torch/models/crystal.py` (shared with AT-021 fix).
+  * Reports: parity harness passes; no new failure artifacts generated.
 - Next Actions:
-  * **REQUIRED**: Route to prompts/debug.md for parallel trace comparison of single_step_phi case
-  * Focus: Investigate why single-step phi rotation (phisteps=1) fails catastrophically with combined detector rotations
-  * Hypothesis: Possible issue with phi rotation midpoint calculation or interaction with detector_twotheta
-  * After fixing single_step_phi, re-evaluate multi_step_phi threshold (may need slight relaxation to 1.11)
+  * None required beyond keeping AT-021/022 parity in the regression suite.
 
 ## [AT-PARALLEL-011-CLI] Parity Harness CLI Compatibility Fixes
 - Spec/AT: AT-PARALLEL-011 (Polarization), AT-PARALLEL-020 (Comprehensive) CLI argument compatibility
