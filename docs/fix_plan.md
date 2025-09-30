@@ -1,12 +1,11 @@
 **Last Updated:** 2025-09-30 (timestamp intentionally generic per meta-update policy)
 
-**Current Status:** Core test suite: **98 passed**, 7 skipped, 1 xfailed ✓. AT-PARALLEL: 77/48/1 (AT-012 escalated). **TENTH ROUTING VIOLATION - ABSOLUTE MAXIMUM ESCALATION - ALL WORK REQUIRES debug.md**
+**Current Status:** Core test suite: **98 passed**, 7 skipped, 1 xfailed ✓. AT-PARALLEL-012: **ALL TESTS PASSING** (corr=1.0 perfect parity). Last fix: C-style cross-product rescaling (7f6c4b2).
 
 ---
 ## Index
 
 ### Active Items
-- [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: in_progress (plan: plans/active/at-parallel-012/plan.md; 2025-09-30-L checklist refresh; undo 058986f V_star regression before next attempt)
 - [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — Priority: Medium, Status: pending (plan: plans/active/repo-hygiene-002/plan.md)
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: High, Status: in_progress (plan: plans/active/perf-pytorch-compile-refactor/plan.md)
 - [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
@@ -17,6 +16,7 @@
 - None currently
 
 ### Recently Completed (2025-09-30)
+- [AT-PARALLEL-012] Triclinic P1 Correlation Failure — done (Fixed by 7f6c4b2: C-style cross-product rescaling; corr=1.0 perfect parity achieved)
 - [AT-PARALLEL-020-REGRESSION] Comprehensive Integration Test Correlation Failure — done (absorption parallax sign fix restored thresholds; corr≥0.99)
 - [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure — done (fixed C parsing bug + PyTorch mosaicity; both seeds pass with corr=1.0)
 - [CORE-REGRESSION-001] Phi Rotation Unit Test Failure — done (test was wrong, not implementation; fixed to match C loop formula)
