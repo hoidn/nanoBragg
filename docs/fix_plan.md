@@ -18,6 +18,7 @@
 - Docs-as-Data CI lint
 
 ### Recently Completed (2025-09-30)
+- [AT-GEO-003] Beam Center Preservation with BEAM Pivot — done
 - [AT-PARALLEL-006-PYTEST] PyTorch-Only Test Failures (Bragg Position Prediction) — done
 - [AT-PARALLEL-002-EXTREME] Pixel Size Parity Failures (0.05mm & 0.4mm) — done (documented)
 - [PERF-PYTORCH-001] Multi-Source Vectorization Regression — done
@@ -44,6 +45,36 @@
   * Verified all completed items (AT-006, PERF-001/002/003, AT-004, AT-002-EXTREME, etc.) already archived
   * Index now correctly shows priorities and statuses
 - Next Review: After next major milestone (e.g., after PERF-004/005 completion)
+
+## [AT-GEO-003] Beam Center Preservation with BEAM Pivot
+- Spec/AT: AT-GEO-003 R-Factor and Beam Center
+- Priority: High
+- Status: done
+- Owner/Date: 2025-09-30
+- Exit Criteria: ✅ SATISFIED — All 8 tests in test_at_geo_003.py pass, especially beam center preservation tests
+- Final Validation (2025-09-30):
+  * Command: `export KMP_DUPLICATE_LIB_OK=TRUE && pytest tests/test_at_geo_003.py -v`
+  * Result: **8/8 PASSED** ✓
+    - test_r_factor_calculation PASSED
+    - test_distance_update_with_close_distance PASSED
+    - test_beam_center_preservation_beam_pivot PASSED ⭐
+    - test_beam_center_preservation_sample_pivot PASSED
+    - test_beam_center_with_various_rotations[DetectorPivot.BEAM] PASSED ⭐
+    - test_beam_center_with_various_rotations[DetectorPivot.SAMPLE] PASSED
+    - test_r_factor_with_zero_rotations PASSED
+    - test_distance_correction_calculation PASSED
+  * Broader validation: 49 passed geometry & parallel tests (only triclinic_P1 known issue remains)
+- Root Cause: Inconsistent MOSFLM +0.5 pixel offset handling between pix0_vector calculation and beam center verification
+  * pix0_vector calculation: Applied +0.5 pixel offset for MOSFLM (correct)
+  * verify_beam_center_preservation: Did NOT apply offset, causing 5e-5m (0.5 pixel) mismatch
+- Fix (commit 24a5480):
+  * Modified verify_beam_center_preservation() in detector.py:927-934
+  * Now applies same +0.5 pixel MOSFLM offset when computing Fbeam_original/Sbeam_original
+  * Ensures consistent comparison between original and computed beam centers
+- Artifacts:
+  * Commit: 24a5480 "AT-GEO-003 data models: Fix MOSFLM beam center preservation in verify method"
+  * Test output: 49 passed, 1 failed (triclinic_P1 known), 1 skipped
+- Next: Continue with next pending high-priority item
 
 ## [AT-PARALLEL-006-PYTEST] PyTorch-Only Test Failures (Bragg Position Prediction)
 - Spec/AT: AT-PARALLEL-006 Single Reflection Position (PyTorch self-consistency, not C-parity)
