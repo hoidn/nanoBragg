@@ -221,9 +221,9 @@ class Simulator:
 
         # Prepare wavelength for broadcasting
         if is_multi_source:
-            # wavelength: (n_sources,) -> (n_sources, 1, 1)
+            # wavelength: (n_sources,) -> (n_sources, 1, 1, 1) for 4D broadcast (n_sources, S, F, 3)
             if wavelength.dim() == 1:
-                wavelength = wavelength.view(n_sources, 1, 1)
+                wavelength = wavelength.view(n_sources, 1, 1, 1)
 
         # Scattering vector using crystallographic convention
         scattering_vector = (diffracted_beam_unit - incident_beam_unit) / wavelength
@@ -725,25 +725,21 @@ class Simulator:
 
             # Compute physics for pixel centers with multiple sources if available
             if n_sources > 1:
-                # Multi-source case: loop over sources and sum contributions
-                intensity = torch.zeros_like(pixel_coords_angstroms[..., 0])  # Shape: (S, F)
-                for source_idx in range(n_sources):
-                    # Get source-specific parameters
-                    # Note: source_directions point FROM sample TO source
-                    # Incident beam direction should be FROM source TO sample (negated)
-                    incident_dir = -source_directions[source_idx]
-                    wavelength_A = source_wavelengths_A[source_idx]
-                    weight = source_weights[source_idx]
+                # VECTORIZED Multi-source case: batch all sources together (matching subpixel path)
+                # Note: source_directions point FROM sample TO source
+                # Incident beam direction should be FROM source TO sample (negated)
+                incident_dirs_batched = -source_directions  # Shape: (n_sources, 3)
+                wavelengths_batched = source_wavelengths_A  # Shape: (n_sources,)
 
-                    # Compute physics for this source
-                    source_intensity = self._compute_physics_for_position(
-                        pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star,
-                        incident_beam_direction=incident_dir,
-                        wavelength=wavelength_A
-                    )
-
-                    # Add weighted contribution from this source (per AT-SRC-001)
-                    intensity += weight * source_intensity
+                # Single batched call for all sources
+                # This replaces the Python loop and enables torch.compile optimization
+                intensity = self._compute_physics_for_position(
+                    pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star,
+                    incident_beam_direction=incident_dirs_batched,
+                    wavelength=wavelengths_batched,
+                    source_weights=source_weights
+                )
+                # The weighted sum over sources is done inside _compute_physics_for_position
             else:
                 # Single source case: use default beam parameters
                 intensity = self._compute_physics_for_position(
