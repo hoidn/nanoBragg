@@ -1,0 +1,172 @@
+cases:
+  - id: AT-PARALLEL-001
+    description: Beam center scaling parity (C ↔ PyTorch)
+    base_args: >-
+      -default_F 100
+      -cell 100 100 100 90 90 90
+      -lambda 6.2
+      -N 3
+      -pixel 0.1
+      -distance 100
+      -mosflm
+      -seed 1
+    thresholds:
+      corr_min: 0.95
+      sum_ratio_min: 0.9
+      sum_ratio_max: 1.1
+      max_abs_max: 500
+    runs:
+      - name: detpixels-64
+        extra_args: >-
+          -detpixels 64
+          -Xbeam 3.2
+          -Ybeam 3.2
+      - name: detpixels-128
+        extra_args: >-
+          -detpixels 128
+          -Xbeam 6.4
+          -Ybeam 6.4
+      - name: detpixels-256
+        extra_args: >-
+          -detpixels 256
+          -Xbeam 12.8
+          -Ybeam 12.8
+      - name: detpixels-512
+        extra_args: >-
+          -detpixels 512
+          -Xbeam 25.6
+          -Ybeam 25.6
+
+  - id: AT-PARALLEL-002
+    description: Pixel size independence parity (C ↔ PyTorch)
+    base_args: >-
+      -default_F 100
+      -cell 100 100 100 90 90 90
+      -lambda 6.2
+      -N 5
+      -distance 100
+      -seed 1
+      -detpixels 256
+    thresholds:
+      corr_min: 0.9999
+      sum_ratio_min: 0.9
+      sum_ratio_max: 1.1
+      max_abs_max: 300
+    runs:
+      - name: pixel-0.05mm
+        extra_args: >-
+          -pixel 0.05
+          -Xbeam 25.6
+          -Ybeam 25.6
+          -mosflm
+      - name: pixel-0.1mm
+        extra_args: >-
+          -pixel 0.1
+          -Xbeam 25.6
+          -Ybeam 25.6
+          -mosflm
+      - name: pixel-0.2mm
+        extra_args: >-
+          -pixel 0.2
+          -Xbeam 25.6
+          -Ybeam 25.6
+          -mosflm
+      - name: pixel-0.4mm
+        extra_args: >-
+          -pixel 0.4
+          -Xbeam 25.6
+          -Ybeam 25.6
+          -mosflm
+
+  - id: AT-PARALLEL-004
+    description: MOSFLM vs XDS convention parity (C ↔ PyTorch)
+    base_args: >-
+      -default_F 100
+      -cell 100 100 100 90 90 90
+      -lambda 1.0
+      -N 5
+      -detpixels 256
+      -distance 100
+      -pixel 0.1
+      -seed 1
+    thresholds:
+      corr_min: 0.99
+      sum_ratio_min: 0.9
+      sum_ratio_max: 1.1
+      max_abs_max: 500
+    runs:
+      - name: mosflm
+        extra_args: >-
+          -mosflm
+          -Xbeam 25.6
+          -Ybeam 25.6
+      - name: xds
+        extra_args: >-
+          -xds
+          -Xbeam 25.6
+          -Ybeam 25.6
+
+  - id: AT-PARALLEL-006
+    description: Single reflection position parity across distance/wavelength sweeps
+    base_args: >-
+      -default_F 100
+      -cell 100 100 100 90 90 90
+      -pixel 0.1
+      -detpixels 256
+      -mosflm
+      -N 1
+      -seed 1
+    thresholds:
+      corr_min: 0.9995
+      sum_ratio_min: 0.9
+      sum_ratio_max: 1.1
+      max_abs_max: 250
+    runs:
+      - name: dist-50mm-lambda-1.0
+        extra_args: >-
+          -distance 50
+          -lambda 1.0
+      - name: dist-100mm-lambda-1.5
+        extra_args: >-
+          -distance 100
+          -lambda 1.5
+      - name: dist-200mm-lambda-2.0
+        extra_args: >-
+          -distance 200
+          -lambda 2.0
+
+  - id: AT-PARALLEL-007
+    description: Peak position parity with detector rotations
+    base_args: >-
+      -default_F 100
+      -cell 100 100 100 90 90 90
+      -lambda 1.0
+      -pixel 0.1
+      -detpixels 256
+      -distance 100
+      -N 5
+      -seed 1
+    thresholds:
+      corr_min: 0.9995
+      sum_ratio_min: 0.9
+      sum_ratio_max: 1.1
+      max_abs_max: 400
+    runs:
+      - name: rot-0-0-0
+        extra_args: >-
+          -detector_rotx 0
+          -detector_roty 0
+          -detector_rotz 0
+          -mosflm
+      - name: rot-5-3-2
+        extra_args: >-
+          -detector_rotx 5
+          -detector_roty 3
+          -detector_rotz 2
+          -mosflm
+      - name: rot-10-5-3
+        extra_args: >-
+          -detector_rotx 10
+          -detector_roty 5
+          -detector_rotz 3
+          -mosflm
