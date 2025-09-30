@@ -163,23 +163,35 @@ General environment for live C parity tests:
 
 Quick invocation patterns (authoritative harness = pytest):
 
-- All C‑parity ATs: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_*.py`
-- Single test file: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_0XX.py`
-- Golden‑data parity (no C binary required): `pytest -v tests/test_at_parallel_012.py`
+- Shared parity matrix: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py`
+- Single parity case (example): `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-002"`
+- PyTorch-only invariance (when applicable): `pytest -v tests/test_at_parallel_0XX.py`
+- Golden-data parity (no C binary required): `pytest -v tests/test_at_parallel_012.py`
 
 Reference mapping:
 
 - AT‑PARALLEL‑001 — Beam Center Scaling
-  - Test file: `tests/test_at_parallel_001.py`
-  - Env: none (PyTorch invariance)
-  - Notes: Verifies pixel‑size/size invariance and MOSFLM +0.5 semantics
+  - Parity harness: `tests/test_parity_matrix.py -k "AT-PARALLEL-001"`
+  - Env: `NB_RUN_PARALLEL=1`, `NB_C_BIN` set (parity)
+  - Command (canonical): `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-001"`
+  - Supplemental PyTorch-only regression: `pytest -v tests/test_at_parallel_001.py`
+  - Notes: Verifies detector-size scaling and MOSFLM +0.5 offset parity.
 
 - AT‑PARALLEL‑002 — Pixel Size Independence
-  - Test file: `tests/test_at_parallel_002.py`
-  - Env: none (PyTorch invariance; resampling tolerance applied)
-  - Notes: Correlation across pixel sizes after physical resampling
+  - Parity harness: `tests/test_parity_matrix.py -k "AT-PARALLEL-002"`
+  - Env: `NB_RUN_PARALLEL=1`, `NB_C_BIN` set (parity)
+  - Command (canonical): `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-002"`
+  - Supplemental PyTorch-only regression: `pytest -v tests/test_at_parallel_002.py`
+  - Notes: Enforces correlation ≥0.9999 across pixel sizes under MOSFLM convention.
 
-- AT‑PARALLEL‑003/004/005/006/007/008/009/010/013/014/015/016/017/018/021/022/023/024/025/026/028/029
+- AT‑PARALLEL‑004 — MOSFLM 0.5 Pixel Offset
+  - Parity harness: `tests/test_parity_matrix.py -k "AT-PARALLEL-004"`
+  - Env: `NB_RUN_PARALLEL=1`, `NB_C_BIN` set (parity)
+  - Command (canonical): `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-004"`
+  - Supplemental PyTorch-only regression: `pytest -v tests/test_at_parallel_004.py`
+  - Notes: Verifies MOSFLM +0.5 pixel offset vs. XDS convention with correlation >0.99.
+
+- AT‑PARALLEL‑003/005/006/007/008/009/010/013/014/015/016/017/018/021/022/023/024/025/026/028/029
   - Test files: `tests/test_at_parallel_0XX.py`
   - Env: varies; most invariance tests run without C; rotation/combined/tilted cases may include live parity variants (see file headers)
 

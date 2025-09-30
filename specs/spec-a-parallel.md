@@ -13,12 +13,16 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
   - Setup: Test detector sizes 64x64, 128x128, 256x256, 512x512, 1024x1024 pixels with 0.1mm pixel size, cubic crystal 100Å N=3, λ=6.2Å
   - Expectation: Beam center (mm) SHALL equal detector_pixels/2 × pixel_size_mm; Peak SHALL appear at detector center ±2 pixels; Correlation between C and PyTorch >0.95
   - Failure mode: Fixed beam center at 51.2mm regardless of detector size
-  - Implementation: `pytest -v tests/test_at_parallel_001.py`
+  - Implementation:
+    - Parity (canonical): `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-001"`
+    - Supplemental PyTorch-only regression: `pytest -v tests/test_at_parallel_001.py`
 
 - AT-PARALLEL-002 Pixel Size Independence
   - Setup: Fixed 256x256 detector, vary pixel sizes 0.05, 0.1, 0.2, 0.4mm, beam center at 25.6mm
   - Expectation: Beam center in pixels SHALL equal 25.6mm / pixel_size_mm ±0.1 pixels; Peak positions SHALL scale inversely with pixel size; Pattern correlation ≥0.9999
-  - Implementation: `pytest -v tests/test_at_parallel_002.py`
+  - Implementation:
+    - Parity (canonical): `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-002"`
+    - Supplemental PyTorch-only regression: `pytest -v tests/test_at_parallel_002.py`
 
 - AT-PARALLEL-003 Detector Offset Preservation
   - Setup: Test beam centers (20,20), (30,40), (45,25), (60,60)mm with 256x256, 512x512, 1024x1024 detectors
@@ -28,7 +32,9 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
 - AT-PARALLEL-004 MOSFLM 0.5 Pixel Offset
   - Setup: MOSFLM vs XDS convention comparison, 256x256 detector, beam center 25.6mm
   - Expectation: MOSFLM SHALL add +0.5 pixel offset; Peak position difference SHALL be 0.4-0.6 pixels between conventions; Pattern correlation >0.99 when aligned
-  - Implementation: `pytest -v tests/test_at_parallel_004.py`
+  - Implementation:
+    - Parity (canonical): `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-004"`
+    - Supplemental PyTorch-only regression: `pytest -v tests/test_at_parallel_004.py`
 
 - AT-PARALLEL-005 Beam Center Parameter Mapping
   - Setup: Test -Xbeam/-Ybeam vs -ORGX/-ORGY vs -Xclose/-Yclose parameter equivalence
