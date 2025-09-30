@@ -49,6 +49,7 @@ IMPORTANT
 - Determinism & seeds (scientific): Ensure reproducible runs. Use the project’s specified RNG/seed behavior; fix seeds in tests; verify repeatability locally.
 - Numeric tolerances (scientific): Use appropriate precision (often float64). Specify atol/rtol in tests; avoid silent dtype downcasts.
 - Reference parity (when available): If a trusted reference implementation/data exists, use it for focused parity checks on representative cases.
+- Instrumentation/Tracing: When emitting trace or debug output, reuse the production helpers/cached intermediates (see docs/architecture/README.md) instead of re-deriving physics.
 
 - Reconcile $SPEC vs. architecture: if behavior is underspecified in the $SPEC but captured in $ARCH follow $ARCH If there is a conflict, prefer the $SPEC for external contracts and propose an $ARCH patch (record in `fix_plan.md`).
 

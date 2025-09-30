@@ -90,6 +90,8 @@ For all parameters, see [`docs/architecture/c_parameter_dictionary.md`](./docs/a
     - Rotation axis defaults (MOSFLM uses Y-axis, XDS uses X-axis for twotheta)
     - Unit conversions (mm→m, degrees→radians)
 
+0.  **Instrumentation / Tracing Discipline:** Never re-derive physics or duplicate algorithms in trace/debug code. Instrumentation must reuse the production helpers or cached intermediates so traces reflect the exact values the main path computed (see [Architecture Hub](./docs/architecture/README.md#⚠️-trace-instrumentation-rule)). Parallel "trace-only" implementations inevitably drift and make parity debugging unreliable.
+
 1.  **Units (canonical in spec/arch):** Use the conversions and detector hybrid exception exactly as defined in `specs/spec-a.md` (Units & Geometry) and summarized in `arch.md` and `docs/architecture/detector.md`.
 
 2.  **Crystallographic Convention (by design):** Compute h,k,l via real‑space dot (see `specs/spec-a.md` Physics for the authoritative statement).
