@@ -11,7 +11,7 @@ cases:
       -mosflm
       -seed 1
     thresholds:
-      corr_min: 0.95
+      corr_min: 0.9999
       sum_ratio_min: 0.9
       sum_ratio_max: 1.1
       max_abs_max: 500
@@ -90,7 +90,7 @@ cases:
       -pixel 0.1
       -seed 1
     thresholds:
-      corr_min: 0.99
+      corr_min: 0.9999
       sum_ratio_min: 0.9
       sum_ratio_max: 1.1
       max_abs_max: 500
@@ -117,7 +117,7 @@ cases:
       -N 1
       -seed 1
     thresholds:
-      corr_min: 0.9995
+      corr_min: 0.9999
       sum_ratio_min: 0.9
       sum_ratio_max: 1.1
       max_abs_max: 250
@@ -147,7 +147,7 @@ cases:
       -N 5
       -seed 1
     thresholds:
-      corr_min: 0.9995
+      corr_min: 0.9999
       sum_ratio_min: 0.9
       sum_ratio_max: 1.1
       max_abs_max: 400
