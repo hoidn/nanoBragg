@@ -119,16 +119,20 @@ class Simulator:
             self.incident_beam_direction = torch.tensor(
                 [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
             )
-        self.wavelength = self.beam_config.wavelength_A  # Use beam config wavelength
+        # PERF-PYTORCH-006: Store wavelength as tensor with correct dtype
+        self.wavelength = torch.tensor(self.beam_config.wavelength_A, device=self.device, dtype=self.dtype)
 
         # Physical constants (from nanoBragg.c ~line 240)
-        self.r_e_sqr = (
-            7.94079248018965e-30  # classical electron radius squared (meters squared)
+        # PERF-PYTORCH-006: Store as tensors with correct dtype to avoid implicit float64 upcasting
+        self.r_e_sqr = torch.tensor(
+            7.94079248018965e-30, device=self.device, dtype=self.dtype  # classical electron radius squared (meters squared)
         )
         # Use fluence from beam config (AT-FLU-001)
-        self.fluence = self.beam_config.fluence
+        self.fluence = torch.tensor(self.beam_config.fluence, device=self.device, dtype=self.dtype)
         # Polarization setup from beam config
-        self.kahn_factor = self.beam_config.polarization_factor if not self.beam_config.nopolar else 0.0
+        # PERF-PYTORCH-006: Store as tensor with correct dtype
+        kahn_value = self.beam_config.polarization_factor if not self.beam_config.nopolar else 0.0
+        self.kahn_factor = torch.tensor(kahn_value, device=self.device, dtype=self.dtype)
         self.polarization_axis = torch.tensor(
             self.beam_config.polarization_axis, device=self.device, dtype=self.dtype
         )
@@ -495,14 +499,23 @@ class Simulator:
             roi_mask = roi_mask * mask_array
 
         # Get pixel coordinates (spixels, fpixels, 3) in meters
-        pixel_coords_meters = self.detector.get_pixel_coords()
+        # PERF-PYTORCH-006: Ensure pixel coords match simulator dtype
+        pixel_coords_meters = self.detector.get_pixel_coords().to(device=self.device, dtype=self.dtype)
 
         # Get rotated lattice vectors for all phi steps and mosaic domains
         # Shape: (N_phi, N_mos, 3)
+        # PERF-PYTORCH-006: Convert crystal vectors to correct device/dtype
         if override_a_star is None:
             (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = (
                 self.crystal.get_rotated_real_vectors(self.crystal.config)
             )
+            # Convert to correct dtype/device
+            rot_a = rot_a.to(device=self.device, dtype=self.dtype)
+            rot_b = rot_b.to(device=self.device, dtype=self.dtype)
+            rot_c = rot_c.to(device=self.device, dtype=self.dtype)
+            rot_a_star = rot_a_star.to(device=self.device, dtype=self.dtype)
+            rot_b_star = rot_b_star.to(device=self.device, dtype=self.dtype)
+            rot_c_star = rot_c_star.to(device=self.device, dtype=self.dtype)
             # Cache rotated reciprocal vectors for GAUSS/TOPHAT shape models
             self._rot_a_star = rot_a_star
             self._rot_b_star = rot_b_star
@@ -898,7 +911,9 @@ class Simulator:
                 polarization_value
             )
 
-        return physical_intensity
+        # PERF-PYTORCH-006: Ensure output matches requested dtype
+        # Some intermediate operations may upcast for precision, but final output should match dtype
+        return physical_intensity.to(dtype=self.dtype)
 
     def _apply_debug_output(self,
                            physical_intensity,

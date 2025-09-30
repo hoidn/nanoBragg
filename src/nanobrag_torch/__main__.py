@@ -360,6 +360,14 @@ Examples:
     parser.add_argument('-show_config', '-echo_config', action='store_true',
                         help='Print configuration parameters for debugging')
 
+    # Performance options (PERF-PYTORCH-006)
+    parser.add_argument('-dtype', type=str, choices=['float32', 'float64'],
+                        default='float64',
+                        help='Floating point precision (float32 for speed, float64 for accuracy)')
+    parser.add_argument('-device', type=str, choices=['cpu', 'cuda'],
+                        default='cpu',
+                        help='Device for computation (cpu or cuda)')
+
     # Explicitly handle unsupported flags from the spec
     parser.add_argument('-dispstep', dest='_unsupported_dispstep',
                         action=UnsupportedFlagAction,
@@ -1039,7 +1047,13 @@ def main():
             'printout_pixel': args.printout_pixel,  # [fast, slow] indices
             'trace_pixel': args.trace_pixel,  # [slow, fast] indices
         }
-        simulator = Simulator(crystal, detector, beam_config=beam_config, debug_config=debug_config)
+
+        # Parse dtype and device (PERF-PYTORCH-006)
+        dtype = torch.float32 if args.dtype == 'float32' else torch.float64
+        device = torch.device(args.device)
+
+        simulator = Simulator(crystal, detector, beam_config=beam_config,
+                            device=device, dtype=dtype, debug_config=debug_config)
 
         # Print configuration if requested
         if args.show_config:
@@ -1049,6 +1063,7 @@ def main():
         print(f"  Detector: {detector_config.fpixels}x{detector_config.spixels} pixels")
         print(f"  Crystal: {crystal_config.cell_a:.1f}x{crystal_config.cell_b:.1f}x{crystal_config.cell_c:.1f} Å")
         print(f"  Wavelength: {beam_config.wavelength_A:.2f} Å")
+        print(f"  Device: {device}, Dtype: {dtype}")
         if detector_config.detector_convention == DetectorConvention.CUSTOM:
             print(f"  Convention: CUSTOM (using custom detector basis vectors)")
 

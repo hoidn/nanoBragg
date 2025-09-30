@@ -1,0 +1,15 @@
+{
+  "correlation": 0.010533531740316593,
+  "mse": 110.9292221069336,
+  "rmse": 10.532294273376465,
+  "max_abs_diff": 150.2112274169922,
+  "c_sum": 73209.265625,
+  "py_sum": 82593.4375,
+  "sum_ratio": 1.1281828440004926,
+  "case_id": "AT-PARALLEL-024",
+  "run_name": "random-misset-seed-54321",
+  "args": "-default_F 100 -cell 100 100 100 90 90 90 -lambda 1.0 -N 5 -detpixels 256 -pixel 0.1 -distance 100 -mosflm -phi 0 -osc 0 -mosaic 0 -oversample 1 -misset random -misset_seed 54321",
+  "c_binary": "golden_suite_generator/nanoBragg",
+  "pytorch_cli": "/home/ollie/miniconda3/envs/pytorch/bin/python3.10 -m nanobrag_torch",
+  "timestamp": "2025-09-30T06:18:05.836957"
+}

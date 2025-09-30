@@ -1,0 +1,15 @@
+{
+  "correlation": 0.9871567340634158,
+  "mse": 1.4562408924102783,
+  "rmse": 1.2067480087280273,
+  "max_abs_diff": 32.99073028564453,
+  "c_sum": 80533.03125,
+  "py_sum": 80790.4375,
+  "sum_ratio": 1.0031962816499596,
+  "case_id": "AT-PARALLEL-023",
+  "run_name": "triclinic-misset-15-20p5-30p25",
+  "args": "-default_F 100 -lambda 1.0 -N 5 -pixel 0.1 -distance 100 -detpixels 256 -mosflm -phi 0 -osc 0 -mosaic 0 -oversample 1 -seed 1 -cell 70 80 90 75 85 95 -misset 15.0 20.5 30.25",
+  "c_binary": "golden_suite_generator/nanoBragg",
+  "pytorch_cli": "/home/ollie/miniconda3/envs/pytorch/bin/python3.10 -m nanobrag_torch",
+  "timestamp": "2025-09-30T05:42:38.268860"
+}
