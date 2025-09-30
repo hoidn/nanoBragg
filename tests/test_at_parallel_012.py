@@ -136,7 +136,7 @@ class TestATParallel012ReferencePatternCorrelation:
             fpixels=1024,
             pixel_size_mm=0.1,
             distance_mm=100.0,
-            detector_convention=DetectorConvention.ADXV,  # C code default (no -mosflm flag)
+            detector_convention=DetectorConvention.MOSFLM,  # C code default (no explicit convention flag)
             detector_pivot=DetectorPivot.BEAM
         )
 
@@ -193,7 +193,7 @@ class TestATParallel012ReferencePatternCorrelation:
             fpixels=512,
             pixel_size_mm=0.1,
             distance_mm=100.0,
-            detector_convention=DetectorConvention.ADXV,  # C code default (no -mosflm flag)
+            detector_convention=DetectorConvention.MOSFLM,  # C code default (no explicit convention flag)
             detector_pivot=DetectorPivot.BEAM
         )
 
