@@ -5,6 +5,7 @@ Purpose
 - It encodes strict guardrails, mandatory parallel trace‑driven validation, geometry‑first triage, quantitative checkpoints beyond correlation, clear success/fail gates with rollback, and a mandatory fix plan update process.
 
 Autonomy & Interaction Policy (No‑Question Mode)
+- Before reading context or selecting work, run `git pull --rebase` to sync with origin. Resolve conflicts immediately (especially docs/fix_plan.md), recording outcomes in galph_memory.md and the loop output.
 - Do not ask the user what to work on. Select work autonomously from `docs/fix_plan.md`.
 - If an item is already `in_progress`, continue it. Otherwise pick the highest‑priority `pending` item and set it to `in_progress`.
 - Produce brief preambles and then act: read files, search, run tests, generate traces, update plan, and commit per gates.
@@ -188,6 +189,7 @@ SOP — Step‑by‑Step (follow in order)
      • PASS: `git add -A && git commit -m "<AT-ids> debug: <concise summary> (suite: pass)"`
      • FAIL/PARTIAL with rollback: stage only plan/docs/prompt changes (no reverted code), then `git add docs/fix_plan.md prompts/*.md docs/development/testing_strategy.md specs/*.md 2>/dev/null || true` and commit with `git commit -m "<AT-ids> debug: attempt #N failed/partial; metrics recorded; code reverted"`
      • Never commit runtime artifacts (e.g., heatmaps, binaries). Keep them under run‑local artifacts directories only.
+     • After any commit (success or documented rollback), run `git push`. If the push is rejected, immediately `git pull --rebase`, resolve conflicts (capture decisions in docs/fix_plan.md and loop output), then push again before ending the loop.
 
 Acceptance Metrics Reference (examples)
 - Use the exact thresholds from specs/spec‑a‑parallel.md for each AT. Examples:

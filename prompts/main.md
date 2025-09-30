@@ -130,7 +130,7 @@ update docs:
 - if fix_plan.md is longer than 500 lines, move its least-currently relevant completed sections into fix_plan_archive.md
 </step 8>
 <step 9>
-Version control hygiene: after each loop, stage and commit all intended changes. Use a descriptive message including acceptance IDs and module scope. Do not use emojis or make any references to claude code in the commit message. Always include `fix_plan.md` and any updated prompts/docs.
+Version control hygiene: after each loop, stage and commit all intended changes. Use a descriptive message including acceptance IDs and module scope. Do not use emojis or make any references to claude code in the commit message. Always include `fix_plan.md` and any updated prompts/docs. After committing, run `git push`; if it fails, `git pull --rebase`, resolve conflicts (documenting resolutions in fix_plan.md and loop output), then push again.
 </step 9>
 </instructions>
 
@@ -156,6 +156,7 @@ Commit hygiene (each loop):
 - Command: `git add -A && git commit -m "<AT-ids> <module>: <concise summary>"`
 - Message must reference acceptance IDs (e.g., `AT-49`) and module (e.g., `providers/executor`), and briefly state behavior implemented/validated. It must the test suite run summary (passed / skipped failed)
 - Include `fix_plan.md` and prompt/doc updates. Exclude runtime artifacts and state.
+- After committing, run `git push`; if it is rejected, `git pull --rebase`, resolve conflicts (document outcomes in fix_plan.md / loop output), then push again.
 
 </process hints>
 
@@ -186,7 +187,8 @@ Loop Self‑Checklist (end of every loop):
 
 
 START HERE:
-1) Parse the Acceptance Tests list from $SPECS and cross‑reference code/tests to detect the highest‑value missing or flaky item. think hard.
-2) Execute the loop with that single item. 
+0) Run `git pull --rebase` to sync with origin before selecting work. Resolve any conflicts immediately (document decisions in fix_plan.md and your loop output).
+1) Parse the Acceptance Tests list from $SPECS and cross-reference code/tests to detect the highest-value missing or flaky item. think hard.
+2) Execute the loop with that single item.
 3) Stop after producing the loop output checklist.
 Follow the detailed <instructions>
