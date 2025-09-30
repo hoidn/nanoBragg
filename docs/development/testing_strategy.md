@@ -191,7 +191,21 @@ Reference mapping:
   - Supplemental PyTorch-only regression: `pytest -v tests/test_at_parallel_004.py`
   - Notes: Verifies MOSFLM +0.5 pixel offset vs. XDS convention with correlation >0.99.
 
-- AT‑PARALLEL‑003/005/006/007/008/009/010/013/014/015/016/017/018/021/022/023/024/025/026/028/029
+- AT‑PARALLEL‑006 — Single Reflection Position
+  - Parity harness: `tests/test_parity_matrix.py -k "AT-PARALLEL-006"`
+  - Env: `NB_RUN_PARALLEL=1`, `NB_C_BIN` set (parity)
+  - Command (canonical): `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-006"`
+  - Supplemental checks: `pytest -v tests/test_at_parallel_006.py`
+  - Notes: Enforces parity across distance/wavelength sweeps.
+
+- AT‑PARALLEL‑007 — Peak Position with Rotations
+  - Parity harness: `tests/test_parity_matrix.py -k "AT-PARALLEL-007"`
+  - Env: `NB_RUN_PARALLEL=1`, `NB_C_BIN` set (parity)
+  - Command (canonical): `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-007"`
+  - Supplemental checks: `pytest -v tests/test_at_parallel_007.py`
+  - Notes: Validates rotated detector parity with correlation ≥0.9995 and consistent intensity sums.
+
+- AT‑PARALLEL‑003/005/008/009/010/013/014/015/016/017/018/021/022/023/024/025/026/028/029
   - Test files: `tests/test_at_parallel_0XX.py`
   - Env: varies; most invariance tests run without C; rotation/combined/tilted cases may include live parity variants (see file headers)
 

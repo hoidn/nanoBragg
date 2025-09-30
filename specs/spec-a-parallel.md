@@ -44,13 +44,17 @@ These tests verify that PyTorch implementation produces outputs equivalent to th
 - AT-PARALLEL-006 Single Reflection Position
   - Setup: Cubic crystal 100Å, single (1,0,0) reflection, vary distance (50,100,200mm) and wavelength (1.0,1.5,2.0Å)
   - Expectation: Peak position SHALL match Bragg angle calculation θ=arcsin(λ/(2d)) ±0.5 pixels; Distance scaling ratio ±2%; Wavelength scaling follows Bragg's law ±1%
-  - Implementation: `pytest -v tests/test_at_parallel_006.py`
+  - Implementation:
+    - Parity (canonical): `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-006"`
+    - Supplemental PyTorch-only regression: `pytest -v tests/test_at_parallel_006.py`
 
 - AT-PARALLEL-007 Peak Position with Rotations
   - Setup: 100,100,100,90,90,90 cell; -default_F 100; detector 256×256, -pixel 0.1, -distance 100; MOSFLM; auto beam center; -phi 0 -osc 0; -mosaic 0; divergence=0; dispersion=0; -oversample 1; full-frame ROI; -pivot beam; -detector_rotx 5 -detector_roty 3 -detector_rotz 2 -twotheta 10.
   - Procedure: Run C and PyTorch with identical flags. Detect local maxima above the 99.5th percentile; select top N=25 peaks. Register C↔PyTorch peaks via Hungarian matching with 1.0‑pixel gating.
   - Pass: Image correlation ≥ 0.9995; ≥ 95% matched peaks within ≤ 1.0 pixel; total float-image sums ratio in [0.9, 1.1].
-  - Implementation: `pytest -v tests/test_at_parallel_007.py`
+  - Implementation:
+    - Parity (canonical): `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-007"`
+    - Supplemental PyTorch-only regression: `pytest -v tests/test_at_parallel_007.py`
 
 - AT-PARALLEL-008 Multi-Peak Pattern Registration
   - Setup: Triclinic 70,80,90,75,85,95 cell; -default_F 100; N=5; detector 512×512, -pixel 0.1, -distance 100; MOSFLM; -phi 0 -osc 0; -mosaic 0; divergence=0; dispersion=0; -oversample 1; full-frame ROI.
