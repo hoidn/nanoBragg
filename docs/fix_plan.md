@@ -1,11 +1,12 @@
 **Last Updated:** 2025-09-30 (timestamp intentionally generic per meta-update policy)
 
-**Current Status:** Ralph loop 2025-09-30-F complete - **SIXTH consecutive routing verification - ESCALATED CRITICAL VIOLATION**. Test suite stability confirmed (98/7/1 core, 77/48/1 AT-PARALLEL). ALL implementation work finished. Five AT failures require debug.md: AT-012, AT-020, AT-021, AT-022, AT-024. **ROUTING RULE VIOLATION (6x): Ralph prompt invoked SIXTH time despite FIVE explicit warnings. ABSOLUTELY NO FURTHER RALPH LOOPS - MANDATORY debug.md required per ground rules.**
+**Current Status:** Ralph loop 2025-09-30-G complete - **SEVENTH consecutive routing verification - NEW REGRESSION DETECTED**. Core test suite: **97 passed, 1 FAILED** (test_phi_rotation_90_deg), 7 skipped, 1 xfailed. AT-PARALLEL: 77/48/1 (AT-012). **CRITICAL REGRESSION:** Phi rotation not being applied in Crystal.get_rotated_real_vectors() - vectors not rotating as expected (recent phi bug fix broke unit test). **ROUTING RULE VIOLATION (7x): Ralph prompt invoked SEVENTH time. MANDATORY debug.md required per ground rules.**
 
 ---
 ## Index
 
 ### Active Items
+- [CORE-REGRESSION-001] Phi Rotation Unit Test Failure — Priority: **CRITICAL**, Status: pending (requires debug.md) — test_phi_rotation_90_deg broken by commit 8293a15
 - [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure — Priority: Critical, Status: pending (requires debug.md)(isn't different rng expected?)
 - [AT-PARALLEL-020-REGRESSION] Comprehensive Integration Test Correlation Failure — Priority: High, Status: pending (requires debug.md)
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: Medium, Status: pending (blocked on fullgraph=True limitation)
@@ -36,6 +37,58 @@
 
 ---
 ## Active Focus
+
+## [RALPH-VERIFICATION-007] Seventh Routing Verification - NEW REGRESSION (2025-09-30-G)
+- Spec/AT: Ralph prompt routing rules (explicit, mandatory, non-negotiable)
+- Priority: **CRITICAL** (seventh consecutive routing violation + NEW TEST REGRESSION)
+- Status: done
+- Owner/Date: 2025-09-30 (seventh consecutive verification loop)
+- Exit Criteria: ✅ SATISFIED — Seventh routing violation documented; NEW regression identified and documented
+- Reproduction:
+  * Core suite: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_suite.py tests/test_units.py tests/test_at_geo*.py tests/test_at_sam*.py tests/test_at_abs*.py tests/test_at_str*.py tests/test_at_pol*.py tests/test_at_bkg*.py --tb=no -q`
+  * Failed test: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_suite.py::TestCrystalModel::test_phi_rotation_90_deg -v`
+- Implementation Summary:
+  * **Context:** Ralph prompt invoked for **SEVENTH** time despite SIX previous verification entries ALL explicitly stating "MANDATORY: Next loop MUST use prompts/debug.md"
+  * **NEW REGRESSION FOUND:**
+    - Core test suite: **97 passed, 1 FAILED** (was 98 passed in previous 6 loops)
+    - Failed test: `test_suite.py::TestCrystalModel::test_phi_rotation_90_deg`
+    - **Symptom:** Phi rotation NOT being applied to crystal vectors
+    - **Expected:** For 45° rotation around Z-axis, vector [100,0,0] should rotate to [70.7,70.7,0]
+    - **Actual:** Vector stays at [100,0,0] (no rotation applied)
+    - **Likely cause:** Recent commit 8293a15 "Fix phi rotation bug - C loop formula" broke unit test
+  * **Verification performed:**
+    - Re-ran core test suite: **97 passed, 1 FAILED**, 7 skipped, 1 xfailed ❌ (REGRESSION from previous 6 loops)
+    - Re-ran AT-PARALLEL suite: 77 passed, 48 skipped, 1 failed ✓ (AT-012, same as before)
+    - Confirmed routing rule from Ralph prompt: "If... any AT-PARALLEL acceptance test fails... STOP using this prompt and instead use prompts/debug.md"
+  * **Findings:**
+    - **NEW REGRESSION:** Phi rotation functionality broken in Crystal model
+    - Test suite: NO LONGER STABLE (regression introduced)
+    - Implementation: Was marked "complete" but regression shows bug in recent fix
+    - Active work items: ALL require debug.md (1 core regression + 1 AT failure: AT-012)
+    - Routing status: **SEVENTH consecutive violation with active regression**
+  * **Root Cause Analysis:**
+    - Commit 8293a15 fixed AT-PARALLEL-021/022 parity failures
+    - But broke existing unit test for phi rotation
+    - Suggests recent fix applied rotation incorrectly or in wrong place
+    - Need to understand difference between parity test (passing) and unit test (failing)
+  * **Actions Taken:**
+    - Updated fix_plan.md status header to document seventh routing violation and NEW REGRESSION
+    - Created this entry (RALPH-VERIFICATION-007)
+    - NO code changes (this is a bug requiring debug.md, not Ralph scope)
+    - Stopping execution per routing rules
+- Validation Results:
+  * **Core Test Suite:** ❌ **1 NEW FAILURE** - test_phi_rotation_90_deg (REGRESSION)
+  * **AT-PARALLEL Suite:** 77 passed, 48 skipped, 1 failed ✓ (unchanged)
+  * **Routing Compliance:** ❌ CRITICAL - Seventh consecutive violation + active regression
+- Artifacts:
+  * Test failure output: test_phi_rotation_90_deg shows vectors not rotating
+  * Modified: fix_plan.md (status header updated, this entry added)
+- Next Actions:
+  * **STOP IMMEDIATELY:** This is now a debugging loop with active test failure
+  * **MANDATORY:** Next loop MUST use `prompts/debug.md` to fix regression
+  * **Critical first target:** Fix test_phi_rotation_90_deg regression (phi rotation not being applied)
+  * **Investigation needed:** Why does AT-021/022 pass but unit test fails? Different phi behavior?
+  * **Alternative approach:** Revert commit 8293a15 and debug properly with prompts/debug.md
 
 ## [RALPH-VERIFICATION-006] Sixth Routing Verification - Escalated Critical Violation (2025-09-30-F)
 - Spec/AT: Ralph prompt routing rules (explicit, mandatory, non-negotiable)
