@@ -81,20 +81,16 @@ class Detector:
         from ..config import DetectorConvention
 
         # Calculate pixel coordinates from mm values
+        # NOTE: The MOSFLM +0.5 pixel offset is already included in config.beam_center_s/f
+        # by DetectorConfig.__post_init__ (lines 259-261), so we do NOT add it here.
         beam_center_s_pixels = config.beam_center_s / config.pixel_size_mm
         beam_center_f_pixels = config.beam_center_f / config.pixel_size_mm
 
-        # Apply convention-specific pixel offsets for stored beam centers
-        # This matches the C-code convention where beam centers may include offsets
+        # The convention-specific offsets are already applied in DetectorConfig.__post_init__
         # nanoBragg.c lines 1218-1234:
-        #   MOSFLM: Fbeam = Ybeam + 0.5*pixel_size; Sbeam = Xbeam + 0.5*pixel_size
-        #   DENZO:  Fbeam = Ybeam + 0.0*pixel_size; Sbeam = Xbeam + 0.0*pixel_size
-        #   XDS/DIALS/ADXV/CUSTOM: No offset
-        if config.detector_convention == DetectorConvention.MOSFLM:
-            # MOSFLM: +0.5 pixel offset
-            beam_center_s_pixels = beam_center_s_pixels + 0.5
-            beam_center_f_pixels = beam_center_f_pixels + 0.5
-        # DENZO, XDS, DIALS, ADXV, CUSTOM: No pixel offset (0.0)
+        #   MOSFLM: beam_center_mm includes +0.5 pixel worth of offset
+        #   DENZO/XDS/DIALS/ADXV/CUSTOM: No offset
+        # No additional offset needed here.
 
         # Convert to tensors on proper device
         if isinstance(beam_center_s_pixels, torch.Tensor):

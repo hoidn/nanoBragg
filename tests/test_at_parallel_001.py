@@ -69,12 +69,12 @@ class TestATParallel001:
             detector_convention=DetectorConvention.MOSFLM
         )
 
-        # Expected beam center in DetectorConfig (geometric center in mm, NO offset yet)
-        # The MOSFLM +0.5 pixel offset is applied later in Detector.__init__
+        # Expected beam center in DetectorConfig (includes MOSFLM +0.5 pixel offset in mm)
+        # DetectorConfig.__post_init__ applies: beam_center = (detsize + pixel_size) / 2
         expected_detsize_s = detector_pixels * pixel_size_mm
         expected_detsize_f = detector_pixels * pixel_size_mm
-        expected_beam_center_s = expected_detsize_s / 2.0  # Geometric center
-        expected_beam_center_f = expected_detsize_f / 2.0  # Geometric center
+        expected_beam_center_s = (expected_detsize_s + pixel_size_mm) / 2.0  # MOSFLM offset
+        expected_beam_center_f = (expected_detsize_f + pixel_size_mm) / 2.0  # MOSFLM offset
 
         # Verify beam centers are calculated correctly in DetectorConfig
         assert abs(detector_config.beam_center_s - expected_beam_center_s) < 0.001, \
