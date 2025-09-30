@@ -633,6 +633,7 @@
   * Metrics: reports/2025-09-30-AT-PARALLEL-021/{single_step_phi_metrics.json, multi_step_phi_metrics.json}
   * Visuals: reports/2025-09-30-AT-PARALLEL-021/{single_step_phi_diff.png, multi_step_phi_diff.png}
 - Next Actions:
+  * **Follow plan:** plans/active/at-parallel-021/plan.md
   * **REQUIRED**: Route to prompts/debug.md for parallel trace comparison of single_step_phi case
   * Focus: Investigate Crystal.get_rotated_real_vectors() phi rotation calculation
   * Hypothesis: Single-step midpoint phi calculation may be incorrect, or rotation matrix application has sign/axis error
