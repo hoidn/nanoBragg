@@ -75,3 +75,11 @@
   1. Execute Plan Phase A (C/Py rotation matrices) and Phase B trace capture under `prompts/debug.md`.
   2. Restore `V_actual` and strict metric duality tolerances before any new parity attempt (Plan Phase C/D).
   3. After geometry fix, resume PERF-PYTORCH-004 Phase 1 tasks (remove remaining tensor factories). If `.claude` artifacts persist, ignore as user-managed but ensure clean staging before supervisor loops.
+
+## 2025-10-01 (galph loop P)
+- Synced with remote (git pull --rebase) before review; no conflicts this round.
+- Closed AT-PARALLEL-012 effort: archived plan at `plans/archive/at-parallel-012/plan.md` with all phases marked [D]; docs/fix_plan.md summary now reflects Attempt #16 success (corr≈0.99963, tolerances back to 1e-12).
+- Verified routing automation: `loop.sh` now emits only `prompts/debug.md`; logged proof under `reports/routing/2025-10-01-loop-verify.txt` and marked `[ROUTING-LOOP-001]` as done in fix_plan.
+- Performance gaps vs long-term goals remain: `_compute_physics_for_position` still fabricates tensors every call (`torch.tensor(1e-12)` etc.), `sincg` lattice branch uses `.item()` inside hot loops, and guards in `crystal.py`/`simulator.py` still rely on `torch.maximum` (see `src/nanobrag_torch/simulator.py:289,770,1182`). PERF-PYTORCH-004 Phase 1 tasks P1.1–P1.5 remain outstanding.
+- Action items for Ralph next loop: follow PERF plan Phase 1 (hoist guard tensors, eliminate `.item()` in hot path), then tackle REPO-HYGIENE-002 checklist; no further parity work needed unless regressions appear.
+- Repo state: `.claude` remains locally dirty per user policy; no other uncommitted files.
