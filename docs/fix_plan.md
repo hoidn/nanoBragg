@@ -1,6 +1,6 @@
-**Last Updated:** 2025-09-30 10:00 UTC
+**Last Updated:** 2025-09-30 12:00 UTC
 
-**Current Status:** Parity harness CLI compatibility restored. 19/20 parity matrix tests PASS after fixing CLI argument names (-polarization→-polar, -mosaic_domains→-mosaic_dom). AT-PARALLEL-011 (Polarization) fully working. AT-PARALLEL-020 requires debugging (sum_ratio 0.19, correlation 0.894).
+**Current Status:** Parity harness expansion: AT-PARALLEL-022 added to parity_cases.yaml. Testing revealed significant failure in single-step phi rotation case (corr=0.48) requiring debug.md routing. AT-PARALLEL-020 still requires debugging (sum_ratio 0.19, correlation 0.894).
 
 ---
 ## Index
@@ -14,7 +14,8 @@
 
 ### Queued Items
 - [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: done (escalated)
-- Parity Harness Coverage Expansion — Status: in_progress (AT-011 added, 23 ATs remaining)
+- [AT-PARALLEL-022-PARITY] Combined Detector+Crystal Rotation Parity Failure — Priority: High, Status: pending (requires debug.md)
+- Parity Harness Coverage Expansion — Status: in_progress (AT-011/022 added, 22 ATs remaining)
 - Docs-as-Data CI lint
 
 ### Recently Completed (2025-09-30)
@@ -28,6 +29,42 @@
 
 ---
 ## Active Focus
+
+## [AT-PARALLEL-022-PARITY] Combined Detector+Crystal Rotation Parity Addition and Failure Discovery
+- Spec/AT: AT-PARALLEL-022 Combined Detector+Crystal Rotation Equivalence
+- Priority: High
+- Status: pending (requires debug.md)
+- Owner/Date: 2025-09-30 12:00 UTC
+- Exit Criteria: (1) Add AT-PARALLEL-022 to parity_cases.yaml ✓ DONE; (2) Both test cases pass parity thresholds ❌ BLOCKED
+- Reproduction:
+  * Test: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_parity_matrix.py -k "AT-PARALLEL-022" -v`
+- Implementation Summary:
+  * Added AT-PARALLEL-022 to tests/parity_cases.yaml with two runs:
+    - single_step_phi: -phi 0 -osc 90 -phisteps 1 (single phi step at midpoint ~45°)
+    - multi_step_phi: -phi 0 -osc 90 -phisteps 9 (nine phi steps across 90° range)
+  * Base parameters: cubic 100Å cell, N=5, 256×256 detector, MOSFLM convention
+  * Detector rotations: -detector_rotx 5 -detector_roty 3 -detector_rotz 2 -twotheta 10
+  * Thresholds: corr≥0.98, sum_ratio∈[0.9, 1.1], max|Δ|<500
+- Test Results (2025-09-30 12:00 UTC):
+  * **single_step_phi: MAJOR FAILURE**
+    - Correlation: 0.4845 << 0.98 (spec requires ≥0.98) ❌
+    - Sum ratio: 0.7132 (PyTorch produces only 71% of C intensity) ❌
+    - RMSE: 12.20, max|Δ|: 144.97
+    - **This indicates a serious bug in PyTorch's single-step phi rotation with combined detector rotations**
+  * **multi_step_phi: BORDERLINE FAILURE**
+    - Correlation: 0.9836 > 0.98 ✓
+    - Sum ratio: 1.1046 (just 0.46% above 1.1 threshold) ❌
+    - RMSE: 1.59, max|Δ|: 19.01
+    - **Near-passing; sum ratio slightly high but correlation acceptable**
+- Artifacts:
+  * Modified: tests/parity_cases.yaml (added AT-PARALLEL-022 entry)
+  * Metrics: reports/2025-09-30-AT-PARALLEL-022/{single_step_phi_metrics.json, multi_step_phi_metrics.json}
+  * Visuals: reports/2025-09-30-AT-PARALLEL-022/{single_step_phi_diff.png, multi_step_phi_diff.png}
+- Next Actions:
+  * **REQUIRED**: Route to prompts/debug.md for parallel trace comparison of single_step_phi case
+  * Focus: Investigate why single-step phi rotation (phisteps=1) fails catastrophically with combined detector rotations
+  * Hypothesis: Possible issue with phi rotation midpoint calculation or interaction with detector_twotheta
+  * After fixing single_step_phi, re-evaluate multi_step_phi threshold (may need slight relaxation to 1.11)
 
 ## [AT-PARALLEL-011-CLI] Parity Harness CLI Compatibility Fixes
 - Spec/AT: AT-PARALLEL-011 (Polarization), AT-PARALLEL-020 (Comprehensive) CLI argument compatibility
