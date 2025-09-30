@@ -1,13 +1,13 @@
 **Last Updated:** 2025-09-30 (timestamp intentionally generic per meta-update policy)
 
-**Current Status:** Core test suite: **98 passed**, 7 skipped, 1 xfailed ✓. AT-PARALLEL: 77/48/1 (AT-020 pending; AT-012 escalated). Active failures: AT-020 (requires debug.md).
+**Current Status:** Core test suite: **98 passed**, 7 skipped, 1 xfailed ✓. AT-PARALLEL: 77/48/1 (AT-012 escalated). Active failures: AT-012 (requires debug.md).
 
 ---
 ## Index
 
 ### Active Items
-- [AT-PARALLEL-020-REGRESSION] Comprehensive Integration Test Correlation Failure — Priority: High, Status: pending (requires debug.md)
 - [AT-PARALLEL-012] Triclinic P1 Correlation Failure — Priority: High, Status: in_progress (plan: plans/active/at-parallel-012/plan.md)
+- [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — Priority: Medium, Status: pending
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: Medium, Status: in_progress (plan: plans/active/perf-pytorch-compile-refactor/plan.md)
 - [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
 - [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: done
@@ -17,6 +17,7 @@
 - None currently
 
 ### Recently Completed (2025-09-30)
+- [AT-PARALLEL-020-REGRESSION] Comprehensive Integration Test Correlation Failure — done (absorption parallax sign fix restored thresholds; corr≥0.99)
 - [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure — done (fixed C parsing bug + PyTorch mosaicity; both seeds pass with corr=1.0)
 - [CORE-REGRESSION-001] Phi Rotation Unit Test Failure — done (test was wrong, not implementation; fixed to match C loop formula)
 - [AT-PARALLEL-021-PARITY] Crystal Phi Rotation Parity Failure — done (phi rotation bug fixed, both AT-021 and AT-022 pass)
@@ -118,6 +119,29 @@
   * **Recommended first target:** AT-024 (Random Misset catastrophic failure, corr=0.025, independent issue)
   * **Alternative target:** AT-020 (Comprehensive Integration, corr=0.894)
   * **Escalated issue:** AT-012 (Triclinic P1) - requires separate investigation
+
+## [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528
+- Scope: `golden_suite_generator/nanoBragg.c`, `reports/2025-09-30-AT-021-traces/*`
+- Priority: **Medium** (blocks clean diffs + future C parity instrumentation)
+- Status: pending
+- Owner/Date: 2025-09-30 (galph)
+- Problem Statement:
+  * Commit `92ac528` unintentionally replaced the entire `golden_suite_generator/nanoBragg.c` file (4.5k LOC churn) while only intending to adjust `tests/test_suite.py` and docs.
+  * The commit also dragged large generated artifacts (`reports/2025-09-30-AT-021-traces/*` and binary diffs) without rationale, making future parity diffs noisy and obscuring the true C baseline.
+  * This violates repo hygiene expectations and complicates any subsequent C-port trace validation.
+- Evidence:
+  * `git show 92ac528 --stat` shows +4,579/-0 on `golden_suite_generator/nanoBragg.c` with no explanation in the commit body.
+  * No plans or fix_plan entries justified a wholesale nanoBragg.c replacement on that loop.
+- Required Actions (next available `prompts/main.md` loop):
+  1. Inspect `golden_suite_generator/nanoBragg.c` against the canonical version under `golden_suite_generator/` (pre-92ac528) to confirm the diff is accidental.
+  2. Restore the canonical instrumented file (drop unintended edits) and relocate any intentional tracing changes into a dedicated instrumentation branch/doc if still needed.
+  3. Remove stray binary artifacts from `reports/2025-09-30-AT-021-traces/*` unless explicitly required by an active plan; archive under `reports/archive/` if preservation is necessary.
+  4. Re-run AT-021/024 parity checks if modifications touch the C binary to confirm no regressions.
+  5. Document the cleanup in fix_plan attempts and close this item once diffs are back to the minimal expected set.
+- Command Reference:
+  * Compare with canonical tag/commit: `git diff 92ac528^:golden_suite_generator/nanoBragg.c golden_suite_generator/nanoBragg.c | head`
+  * Parity verification (post-cleanup): `NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-021 or AT-PARALLEL-024"`
+
   * **Process note:** Implementation is 100% complete. Test suite is 100% stable. Eight consecutive verification loops confirm this conclusively. Only debugging work remains. NO FURTHER RALPH LOOPS WARRANTED OR PERMITTED.
 
 ## [CORE-REGRESSION-001] Phi Rotation Unit Test Failure (2025-09-30-H)
