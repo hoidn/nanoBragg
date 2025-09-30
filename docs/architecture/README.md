@@ -49,6 +49,10 @@ While the global rule states "all calculations use Angstroms," the following exc
 - **Miller indices**: Calculated using real-space vectors, not reciprocal (see [C-Code Overview](./c_code_overview.md#71-critical-non-standard-miller-index-calculation))
 - **F_latt calculation**: Uses fractional indices `(h-h0)` (see [C-Code Overview](./c_code_overview.md#72-critical-f_latt-calculation))
 
+### ⚠️ Trace Instrumentation Rule
+- **Do not reimplement physics for tracing or debug output.** Instrumentation must surface the exact values produced by the production path (by reusing the same helpers or cached intermediates). Parallel “trace-only” implementations inevitably drift and make parity debugging unreliable.
+- When additional quantities are needed for logs, extend the production helper to return them (or cache during the main computation) instead of duplicating formulae in the trace layer.
+
 ## Development Workflow
 
 1. **Before implementing any component**:

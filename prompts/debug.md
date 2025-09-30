@@ -18,7 +18,7 @@ Use When (Triggers)
 
 Non‑Negotiable Guardrails
 1) Never change tests, tolerances, or acceptance thresholds to “pass.” Do not weaken spec gates.
-2) Mandatory parallel trace‑driven debugging for equivalence issues. Produce both C and PyTorch traces and identify the FIRST DIVERGENCE.
+2) Mandatory parallel trace‑driven debugging for equivalence issues. Produce both C and PyTorch traces and identify the FIRST DIVERGENCE. Instrumentation must log the exact values computed by the production helpers (see docs/architecture/README.md) rather than re‑deriving physics in the trace path.
 3) Geometry‑first triage: units, conventions, pivots, MOSFLM +0.5 pixel, F/S mapping, twotheta axis → CUSTOM switch, r‑factor/close_distance.
 4) Quantitative checkpoints beyond correlation: report correlation, MSE/RMSE, max abs diff, total sums and ratios, and attach a diff heatmap.
 5) Rollback: If metrics regress or equivalence is not achieved without changing tests, revert functional changes in this loop and escalate with artifacts.
