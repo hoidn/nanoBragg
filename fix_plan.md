@@ -39,7 +39,15 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
 
 ### TODO
 
-(No current high-priority issues)
+#### Vectorize Multi-Source Physics Evaluation in Simulator (MEDIUM)
+- Affected module: `src/nanobrag_torch/simulator.py` lines ~520-700.
+- Problem: `Simulator.run` iterates over each source in Python, re-invoking `_compute_physics_for_position` for the full detector per source. With realistic divergence grids (e.g. 15×15 angles × 11 λ ≈ 2.5k sources) this scales runtime linearly and repeatedly recompiles the TorchScript kernel.
+- Plan: Batch sources by stacking directions, wavelengths, and weights into an extra dimension and broadcasting through `_compute_physics_for_position`, so the per-frame cost remains O(pixels). Ensure torch.compile sees a single batched call and adjust normalization to use weight sums.
+
+#### Eliminate Python Loop in Tricubic Interpolation (MEDIUM)
+- Affected module: `src/nanobrag_torch/models/crystal.py` `_tricubic_interpolation` (~332-360).
+- Problem: The 4×4×4 neighborhood is gathered via nested Python loops and `.item()` calls, forcing host round-trips and preventing CUDA/vectorized execution whenever interpolation is enabled.
+- Plan: Replace manual loops with tensor indexing (`torch.stack`, `index_select`, or `take_along_dim`) to gather the full subcube on-device in one operation, keeping the interpolation fully vectorized.
 
 ### Status Summary (2025-09-25)
 
