@@ -39,6 +39,27 @@
 - Lifecycle Notes: Evergreen task — after each cleanup, update Status back to `pending`, downgrade Priority to Medium, and set a "Next review" note for the future cycle; do **not** mark this item `done` so routine maintenance stays visible.
 - Exit Criteria: Plan header timestamp refreshed; active items validated against the template; bulky completed content relocated to `archive/fix_plan_archive.md` with references intact.
 
+## [AT-PARALLEL-006-PYTEST] PyTorch-Only Test Failures (Bragg Position Prediction)
+- Spec/AT: AT-PARALLEL-006 Single Reflection Position (PyTorch self-consistency, not C-parity)
+- Priority: High
+- Status: in_progress
+- Owner/Date: 2025-09-30
+- Reproduction:
+  * PyTorch test: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_bragg_angle_prediction_single_distance -v`
+  * Symptom: Peak position off by exactly **1 pixel** (expected 143, got 144 for λ=1.5Å)
+  * Context: PyTorch-only self-consistency test validating Bragg angle predictions; no C comparison
+- Attempts History:
+  * [2025-09-30] Attempt #1 — Status: investigating
+    * Observed: Peak position error = 1.00 pixels (expected 143.0, got 144.0) for λ=1.5Å @ distance=100mm
+    * Environment: CPU, float64, detector_pixels=256, pixel_size=0.1mm, MOSFLM convention
+    * Hypothesis: Test's `calculate_expected_position()` uses `beam_center_pixels = detector_pixels / 2.0 = 128.0`, but MOSFLM convention adds +0.5 pixel offset → actual beam center is 128.5, causing systematic shift
+    * Root Cause (preliminary): Test does not account for MOSFLM +0.5 pixel offset when computing expected positions
+    * Next Actions:
+      1. Verify detector's actual beam center includes MOSFLM +0.5 offset (read detector.py)
+      2. Update test's `calculate_expected_position()` to add +0.5 for MOSFLM
+      3. Rerun all 3 failing test methods
+- Exit Criteria: All 3 test methods in test_at_parallel_006.py pass (position error < 0.5 pixels)
+
 ## [AT-PARALLEL-012-REGRESSION] Simple Cubic & Tilted Detector Correlation Regression
 - Spec/AT: AT-PARALLEL-012 Reference Pattern Correlation
 - Priority: Critical
