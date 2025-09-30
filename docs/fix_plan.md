@@ -6,7 +6,7 @@
 ## Index
 
 ### Active Items
-- [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure — Priority: Critical, Status: pending (requires debug.md)(isn't different rng expected?)
+- [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure — Priority: Critical, Status: in_progress (see plans/active/at-parallel-024/plan.md)
 - [AT-PARALLEL-020-REGRESSION] Comprehensive Integration Test Correlation Failure — Priority: High, Status: pending (requires debug.md)
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: Medium, Status: pending (blocked on fullgraph=True limitation)
 - [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
@@ -530,7 +530,7 @@
 ## [AT-PARALLEL-024-PARITY] Random Misset Reproducibility Catastrophic Failure
 - Spec/AT: AT-PARALLEL-024 Random Misset Reproducibility and Equivalence
 - Priority: Critical (random misset implementation bug)
-- Status: pending (requires debug.md)
+- Status: in_progress (debug plan active; follow plans/active/at-parallel-024/plan.md)
 - Owner/Date: 2025-09-30 21:00 UTC
 - Exit Criteria: (1) Add AT-PARALLEL-024 to parity_cases.yaml ✓ DONE; (2) Both test cases pass parity thresholds ❌ BLOCKED by random misset bug
 - Reproduction:
@@ -558,11 +558,10 @@
   * Metrics: reports/2025-09-30-AT-PARALLEL-024/{random-misset-seed-12345_metrics.json, random-misset-seed-54321_metrics.json}
   * Visuals: reports/2025-09-30-AT-PARALLEL-024/{random-misset-seed-12345_diff.png, random-misset-seed-54321_diff.png}
 - Next Actions:
-  * **REQUIRED**: Route to prompts/debug.md for parallel trace comparison
-  * Focus: Investigate random misset generation and seeding in both C and PyTorch
-  * Hypothesis: Seed is not being correctly passed/used, or RNG implementation differs between C and PyTorch
-  * Check: Are the sampled misset angles themselves correct? Should emit trace logs from both implementations
-  * Priority: Critical - random misset is a fundamental feature for realistic simulations
+  * **Follow plan**: `plans/active/at-parallel-024/plan.md` (Phase A → Phase D)
+  * Route work through `prompts/debug.md`; capture misset angles/rotation matrices for both implementations
+  * Validate RNG parity (CLCG outputs) before touching rotation pipeline; record first divergence in fix_plan attempts
+  * Priority remains Critical — random misset determinism underpins downstream acceptance tests
 
 ## [AT-PARALLEL-005-HARNESS] Beam Center Parameter Mapping Parity Addition
 - Spec/AT: AT-PARALLEL-005 Beam Center Parameter Mapping
