@@ -111,6 +111,22 @@
   * Setup time per run falls to <50 ms across sizes; repeated runs show negligible warm-up.
   * Document replay strategy and include before/after timings in benchmark report.
 
+## [PERF-PYTORCH-006] Float32 / Mixed Precision Performance Mode
+- Spec/AT: Performance parity + benchmarking workflow
+- Priority: Medium
+- Status: pending
+- Reproduction:
+  * `python scripts/benchmarks/benchmark_detailed.py --device cuda`
+  * Compare simulation timings when forcing float64 (current default) vs float32.
+- Problem: Simulator defaults to `dtype=torch.float64`, mirroring C for correctness but crippling GPU throughput (FP64 is ~3–8× slower on consumer GPUs). We need an explicit perf mode that runs in float32 (or mixed precision) while keeping a float64 option for scientific validation.
+- Planned Fix:
+  * Audit simulator/config initialisation to allow selecting dtype at runtime (`--dtype float32`, config flag, or environment).
+  * Ensure key constants and buffers honour the selected dtype (beam/crystal/detector tensors, cached constants).
+  * Add smoke tests/benchmarks comparing float32 vs float64 to confirm numerical tolerance.
+- Exit Criteria:
+  * Benchmark report demonstrates ≥2× speedup for large detectors when using float32 mode, with documented numerical deltas vs float64.
+  * README/testing strategy updated to describe the performance mode and appropriate use cases.
+
 ## [AT-PARALLEL-002-EXTREME] Pixel Size Parity Failures (0.05mm & 0.4mm)
 - Spec/AT: AT-PARALLEL-002 Pixel Size Independence
 - Priority: High
