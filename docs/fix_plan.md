@@ -80,6 +80,37 @@
   * Benchmark again; target ≥1× C throughput for large detectors (4096²) and eliminate extreme slowdowns for small grids.
   * Document findings in `reports/benchmarks/` and update README/strategy if workflow changes.
 
+## [PERF-PYTORCH-004] Fuse Physics Kernels (Inductor → custom kernel if needed)
+- Spec/AT: Performance parity; references CLAUDE.md §16, docs/architecture/pytorch_design.md
+- Priority: High
+- Status: pending
+- Reproduction:
+  * `python -m nanobrag_torch -device cuda -detpixels 2048 -floatfile /tmp/py.bin`
+  * Capture CUDA profiler trace or `torch.profiler` output to count kernel launches in `_compute_physics_for_position`
+- Problem: Simulation spends ~0.35–0.50 s launching ~20 small kernels per pixel batch (Miller indices, sinc3, masks, sums). GPU under-utilised, especially at ≤2048² grids.
+- Planned Fix:
+  * First, make `_compute_physics_for_position` fully compile-friendly: remove per-call tensor factories, keep shapes static, and wrap it with `torch.compile(..., fullgraph=True)` so Inductor produces a single fused kernel.
+  * If profiling still shows many launches, fall back to a custom CUDA/Triton kernel that computes |F|² in one pass (batched across sources/φ/mosaic). Start with the oversample==1 path, then extend to subpixel sampling.
+  * Replace the tensor-op chain in `src/nanobrag_torch/simulator.py` with the fused call while preserving numerical parity.
+- Exit Criteria:
+  * Profiler shows single dominant kernel instead of many tiny launches; simulation-only benchmark at 4096² drops to ≲0.30 s.
+  * Numerical results remain identical (correlation ≥ 0.999999 vs C).
+  * Document kernel design and testing in `reports/benchmarks/<date>/fused_kernel.md`.
+
+## [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse
+- Spec/AT: Performance parity; torch.compile reuse guidance
+- Priority: Medium
+- Status: pending
+- Reproduction:
+  * `python scripts/benchmarks/benchmark_detailed.py` (note per-run setup/compile time)
+- Problem: Each benchmark run rebuilds torch.compile graphs; setup ranges 0.98–6.33 s for small detectors. Graph capture + buffer reuse should eliminate the constant overhead.
+- Planned Fix:
+  * Add simulator option to preallocate buffers and capture a CUDA graph after first compile; reuse keyed by `(spixels, fpixels, oversample, n_sources)`.
+  * Update benchmark to cache simulators/graphs and replay them.
+- Exit Criteria:
+  * Setup time per run falls to <50 ms across sizes; repeated runs show negligible warm-up.
+  * Document replay strategy and include before/after timings in benchmark report.
+
 ## [AT-PARALLEL-002-EXTREME] Pixel Size Parity Failures (0.05mm & 0.4mm)
 - Spec/AT: AT-PARALLEL-002 Pixel Size Independence
 - Priority: High
