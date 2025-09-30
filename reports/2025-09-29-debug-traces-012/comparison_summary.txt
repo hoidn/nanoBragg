@@ -1,0 +1,1 @@
+AT-PARALLEL-012 Pixel (368, 262) Trace Comparison\n============================================================\n\nC final intensity:       1.382164387435720e+02\nPyTorch final intensity: 1.155709736511202e+02\nDifference (Py - C):     -2.264546509245181e+01\nRatio (Py/C):            8.361593939309554e-01\nRelative error:          -16.384061%\n

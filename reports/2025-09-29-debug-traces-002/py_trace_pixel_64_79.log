@@ -1,0 +1,32 @@
+Running simulation...
+  Detector: 256x256 pixels
+  Crystal: 100.0x100.0x100.0 Å
+  Wavelength: 6.20 Å
+  Tracing pixel (slow=64, fast=79)
+auto-selected 1-fold oversampling
+
+=== TRACE: Pixel (64, 79) [slow, fast] ===
+TRACE: Final intensity = 2.121363563786e+03
+TRACE: Normalized intensity = 2.121363563786e+03
+TRACE: Position (m) = 1.000000000000e-01, 0.000000000000e+00, 6.000000000000e-03
+TRACE: Position (Å) = 1000000000.000000, 0.000000, 60000000.000000
+TRACE: Airpath (m) = 1.001798382909e-01
+TRACE: a* (first) = (1.000000e-02, 0.000000e+00, 0.000000e+00)
+TRACE: Omega (solid angle) = 1.591398717363e-05
+TRACE: r_e^2 = 7.940792480190e-30
+TRACE: Fluence = 1.259320152862e+29
+TRACE: Oversample = 1
+
+TRACE: Intensity calculation chain:
+  normalized * r_e^2 * fluence
+  = 2.121363563786e+03 * 7.940792480190e-30 * 1.259320152862e+29
+  = 2.121363563786e+03
+
+Statistics:
+  Max intensity: 2.500e+03 at pixel (64, 64)
+  Mean: 1.288e+01
+  RMS: 8.320e+01
+  RMSD: 8.220e+01
+Wrote float image to /tmp/py_trace_pixel_64_79.bin
+
+Simulation complete.

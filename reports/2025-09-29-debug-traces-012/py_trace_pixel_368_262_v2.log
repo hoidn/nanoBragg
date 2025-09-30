@@ -1,0 +1,26 @@
+=== PyTorch Trace for Pixel (368, 262) ===
+
+=== Crystal Geometry ===
+Cell: a=70.0, b=80.0, c=90.0
+Angles: α=75.0°, β=85.0°, γ=95.0°
+Misset: (-89.968546, -31.328953, 177.753396) degrees
+N_cells: (5, 5, 5)
+default_F: 100.0
+
+Reciprocal vectors (1/Angstrom):
+  a_star = [-1.228675494868860e-02, 4.820185412568148e-04, 7.484723816302425e-03]
+  b_star = [-7.969636761201410e-03, 3.055644302324256e-04, -1.025385839964174e-02]
+  c_star = [2.234004742154110e-03, -1.120566688593248e-02, 1.856854153285047e-03]
+
+Real vectors (meters):
+  a = [-5.538900381882583e+01, -3.928262100007014e+00, 4.293309763725902e+01]
+  b = [-4.106501118407451e+01, -1.915300712665212e+01, -6.617794283192507e+01]
+  c = [-3.502382675379931e+00, -8.993181602980994e+01, 4.220397627119205e-02]
+
+Rotated real vectors at phi=0 (meters):
+Traceback (most recent call last):
+  File "/home/ollie/Documents/nanoBragg/scripts/trace_pytorch_at012_pixel.py", line 77, in <module>
+    print(f"  rot_a = [{rot_a[0]:.15e}, {rot_a[1]:.15e}, {rot_a[2]:.15e}]")
+  File "/home/ollie/miniconda3/envs/pytorch/lib/python3.10/site-packages/torch/_tensor.py", line 1129, in __format__
+    return object.__format__(self, format_spec)
+TypeError: unsupported format string passed to Tensor.__format__

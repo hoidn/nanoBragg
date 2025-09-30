@@ -1,0 +1,15 @@
+{
+  "correlation": 0.9694194554773481,
+  "mse": 2.33427954299259e-07,
+  "rmse": 0.0004831438127439469,
+  "max_abs_diff": 0.0011257603764533997,
+  "c_sum": 2412.235107421875,
+  "py_sum": 2412.2353515625,
+  "sum_ratio": 1.0000001012092994,
+  "case_id": "AT-PARALLEL-006",
+  "run_name": "dist-50mm-lambda-1.0",
+  "args": "-default_F 100 -cell 100 100 100 90 90 90 -pixel 0.1 -detpixels 256 -mosflm -N 1 -seed 1 -distance 50 -lambda 1.0",
+  "c_binary": "golden_suite_generator/nanoBragg",
+  "pytorch_cli": "/home/ollie/miniconda3/envs/pytorch/bin/python3.10 -m nanobrag_torch",
+  "timestamp": "2025-09-29T20:45:19.429384"
+}

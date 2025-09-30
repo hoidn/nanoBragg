@@ -145,28 +145,46 @@ class Simulator:
                 self._compute_physics_for_position
             )
 
-    def _compute_physics_for_position(self, pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star, incident_beam_direction=None, wavelength=None):
+    def _compute_physics_for_position(self, pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star, incident_beam_direction=None, wavelength=None, source_weights=None):
         """Compute physics (Miller indices, structure factors, intensity) for given positions.
 
         This is the core physics calculation that must be done per-subpixel for proper
         anti-aliasing. Each subpixel samples a slightly different position in reciprocal
         space, leading to different Miller indices and structure factors.
 
+        VECTORIZED OVER SOURCES: This function now supports batched computation over
+        multiple sources (beam divergence/dispersion). When multiple sources are provided,
+        the computation is vectorized across the source dimension, eliminating the Python loop.
+
         Args:
-            pixel_coords_angstroms: Pixel/subpixel coordinates in Angstroms (S, F, 3)
+            pixel_coords_angstroms: Pixel/subpixel coordinates in Angstroms (S, F, 3) or (batch, 3)
             rot_a, rot_b, rot_c: Rotated real-space lattice vectors (N_phi, N_mos, 3)
             rot_a_star, rot_b_star, rot_c_star: Rotated reciprocal vectors (N_phi, N_mos, 3)
-            incident_beam_direction: Optional incident beam direction (default: self.incident_beam_direction)
-            wavelength: Optional wavelength in Angstroms (default: self.wavelength)
+            incident_beam_direction: Optional incident beam direction.
+                - Single source: shape (3,)
+                - Multiple sources: shape (n_sources, 3)
+                Default: self.incident_beam_direction
+            wavelength: Optional wavelength in Angstroms.
+                - Single source: scalar
+                - Multiple sources: shape (n_sources,) or (n_sources, 1, 1)
+                Default: self.wavelength
+            source_weights: Optional per-source weights for multi-source accumulation.
+                Shape: (n_sources,). If None, equal weighting is assumed.
 
         Returns:
-            intensity: Computed intensity |F|^2 integrated over phi and mosaic (S, F)
+            intensity: Computed intensity |F|^2 integrated over phi and mosaic
+                - Single source: shape (S, F) or (batch,)
+                - Multiple sources: weighted sum across sources, shape (S, F) or (batch,)
         """
         # Use provided values or defaults
         if incident_beam_direction is None:
             incident_beam_direction = self.incident_beam_direction
         if wavelength is None:
             wavelength = self.wavelength
+
+        # Detect if we have batched sources
+        is_multi_source = incident_beam_direction.dim() == 2
+        n_sources = incident_beam_direction.shape[0] if is_multi_source else 1
 
         # Calculate scattering vectors
         pixel_squared_sum = torch.sum(
@@ -182,7 +200,30 @@ class Simulator:
         # Incident beam unit vector - ensure it's on the same device as diffracted beam
         # Move to device within the compiled function to avoid torch.compile device issues
         incident_beam_direction = incident_beam_direction.to(diffracted_beam_unit.device)
-        incident_beam_unit = incident_beam_direction.expand_as(diffracted_beam_unit)
+
+        if is_multi_source:
+            # Multi-source case: broadcast over sources
+            # diffracted_beam_unit: (S, F, 3) or (batch, 3)
+            # incident_beam_direction: (n_sources, 3)
+            # Need to add source dimension to diffracted_beam_unit
+
+            # Add source dimension: (S, F, 3) -> (1, S, F, 3)
+            diffracted_expanded = diffracted_beam_unit.unsqueeze(0)
+            # Expand incident: (n_sources, 3) -> (n_sources, 1, 1, 3)
+            incident_expanded = incident_beam_direction.view(n_sources, 1, 1, 3)
+
+            # Expand to match diffracted shape
+            incident_beam_unit = incident_expanded.expand(n_sources, *diffracted_beam_unit.shape)
+            diffracted_beam_unit = diffracted_expanded.expand_as(incident_beam_unit)
+        else:
+            # Single source case: broadcast as before
+            incident_beam_unit = incident_beam_direction.expand_as(diffracted_beam_unit)
+
+        # Prepare wavelength for broadcasting
+        if is_multi_source:
+            # wavelength: (n_sources,) -> (n_sources, 1, 1)
+            if wavelength.dim() == 1:
+                wavelength = wavelength.view(n_sources, 1, 1)
 
         # Scattering vector using crystallographic convention
         scattering_vector = (diffracted_beam_unit - incident_beam_unit) / wavelength
@@ -195,10 +236,22 @@ class Simulator:
             dmin_mask = (stol > 0) & (stol > stol_threshold)
 
         # Calculate Miller indices
-        scattering_broadcast = scattering_vector.unsqueeze(-2).unsqueeze(-2)
-        rot_a_broadcast = rot_a.unsqueeze(0).unsqueeze(0)
-        rot_b_broadcast = rot_b.unsqueeze(0).unsqueeze(0)
-        rot_c_broadcast = rot_c.unsqueeze(0).unsqueeze(0)
+        # scattering_vector shape: (S, F, 3) or (n_sources, S, F, 3)
+        # Need to add phi and mosaic dimensions for broadcasting
+        if is_multi_source:
+            # Multi-source: (n_sources, S, F, 3) -> (n_sources, S, F, 1, 1, 3)
+            scattering_broadcast = scattering_vector.unsqueeze(-2).unsqueeze(-2)
+            # rot vectors: (N_phi, N_mos, 3) -> (1, 1, 1, N_phi, N_mos, 3)
+            rot_a_broadcast = rot_a.unsqueeze(0).unsqueeze(0).unsqueeze(0)
+            rot_b_broadcast = rot_b.unsqueeze(0).unsqueeze(0).unsqueeze(0)
+            rot_c_broadcast = rot_c.unsqueeze(0).unsqueeze(0).unsqueeze(0)
+        else:
+            # Single source: (S, F, 3) -> (S, F, 1, 1, 3)
+            scattering_broadcast = scattering_vector.unsqueeze(-2).unsqueeze(-2)
+            # rot vectors: (N_phi, N_mos, 3) -> (1, 1, N_phi, N_mos, 3)
+            rot_a_broadcast = rot_a.unsqueeze(0).unsqueeze(0)
+            rot_b_broadcast = rot_b.unsqueeze(0).unsqueeze(0)
+            rot_c_broadcast = rot_c.unsqueeze(0).unsqueeze(0)
 
         h = dot_product(scattering_broadcast, rot_a_broadcast)
         k = dot_product(scattering_broadcast, rot_b_broadcast)
@@ -242,9 +295,16 @@ class Simulator:
             h_frac = h - h0
             k_frac = k - k0
             l_frac = l - l0
-            delta_r_star = (h_frac.unsqueeze(-1) * rot_a_star.unsqueeze(0).unsqueeze(0) +
-                          k_frac.unsqueeze(-1) * rot_b_star.unsqueeze(0).unsqueeze(0) +
-                          l_frac.unsqueeze(-1) * rot_c_star.unsqueeze(0).unsqueeze(0))
+            if is_multi_source:
+                # Multi-source: rot_*_star (N_phi, N_mos, 3) -> (1, 1, 1, N_phi, N_mos, 3)
+                delta_r_star = (h_frac.unsqueeze(-1) * rot_a_star.unsqueeze(0).unsqueeze(0).unsqueeze(0) +
+                              k_frac.unsqueeze(-1) * rot_b_star.unsqueeze(0).unsqueeze(0).unsqueeze(0) +
+                              l_frac.unsqueeze(-1) * rot_c_star.unsqueeze(0).unsqueeze(0).unsqueeze(0))
+            else:
+                # Single source: rot_*_star (N_phi, N_mos, 3) -> (1, 1, N_phi, N_mos, 3)
+                delta_r_star = (h_frac.unsqueeze(-1) * rot_a_star.unsqueeze(0).unsqueeze(0) +
+                              k_frac.unsqueeze(-1) * rot_b_star.unsqueeze(0).unsqueeze(0) +
+                              l_frac.unsqueeze(-1) * rot_c_star.unsqueeze(0).unsqueeze(0))
             rad_star_sqr = torch.sum(delta_r_star * delta_r_star, dim=-1)
             rad_star_sqr = rad_star_sqr * Na * Na * Nb * Nb * Nc * Nc
             F_latt = Na * Nb * Nc * torch.exp(-(rad_star_sqr / 0.63) * fudge)
@@ -252,9 +312,16 @@ class Simulator:
             h_frac = h - h0
             k_frac = k - k0
             l_frac = l - l0
-            delta_r_star = (h_frac.unsqueeze(-1) * rot_a_star.unsqueeze(0).unsqueeze(0) +
-                          k_frac.unsqueeze(-1) * rot_b_star.unsqueeze(0).unsqueeze(0) +
-                          l_frac.unsqueeze(-1) * rot_c_star.unsqueeze(0).unsqueeze(0))
+            if is_multi_source:
+                # Multi-source: rot_*_star (N_phi, N_mos, 3) -> (1, 1, 1, N_phi, N_mos, 3)
+                delta_r_star = (h_frac.unsqueeze(-1) * rot_a_star.unsqueeze(0).unsqueeze(0).unsqueeze(0) +
+                              k_frac.unsqueeze(-1) * rot_b_star.unsqueeze(0).unsqueeze(0).unsqueeze(0) +
+                              l_frac.unsqueeze(-1) * rot_c_star.unsqueeze(0).unsqueeze(0).unsqueeze(0))
+            else:
+                # Single source: rot_*_star (N_phi, N_mos, 3) -> (1, 1, N_phi, N_mos, 3)
+                delta_r_star = (h_frac.unsqueeze(-1) * rot_a_star.unsqueeze(0).unsqueeze(0) +
+                              k_frac.unsqueeze(-1) * rot_b_star.unsqueeze(0).unsqueeze(0) +
+                              l_frac.unsqueeze(-1) * rot_c_star.unsqueeze(0).unsqueeze(0))
             rad_star_sqr = torch.sum(delta_r_star * delta_r_star, dim=-1)
             rad_star_sqr = rad_star_sqr * Na * Na * Nb * Nb * Nc * Nc
             inside_cutoff = (rad_star_sqr * fudge) < 0.3969
@@ -270,11 +337,32 @@ class Simulator:
 
         # Apply dmin culling
         if dmin_mask is not None:
-            keep_mask = ~dmin_mask.unsqueeze(-1).unsqueeze(-1)
+            if is_multi_source:
+                # Multi-source: add two unsqueeze for phi and mosaic
+                keep_mask = ~dmin_mask.unsqueeze(-1).unsqueeze(-1)
+            else:
+                keep_mask = ~dmin_mask.unsqueeze(-1).unsqueeze(-1)
             intensity = intensity * keep_mask.to(intensity.dtype)
 
         # Sum over phi and mosaic dimensions
+        # intensity shape before sum: (S, F, N_phi, N_mos) or (n_sources, S, F, N_phi, N_mos)
         intensity = torch.sum(intensity, dim=(-2, -1))
+        # After sum: (S, F) or (n_sources, S, F)
+
+        # Handle multi-source weighted accumulation
+        if is_multi_source:
+            # Apply source weights and sum over sources
+            # intensity: (n_sources, S, F) or (n_sources, batch)
+            # source_weights: (n_sources,) -> (n_sources, 1, 1) or (n_sources, 1)
+            if source_weights is not None:
+                # Prepare weights for broadcasting
+                weight_shape = [n_sources] + [1] * (intensity.dim() - 1)
+                weights_broadcast = source_weights.view(*weight_shape)
+                # Apply weights and sum over source dimension
+                intensity = torch.sum(intensity * weights_broadcast, dim=0)
+            else:
+                # No weights provided, simple sum
+                intensity = torch.sum(intensity, dim=0)
 
         return intensity
 
@@ -525,27 +613,26 @@ class Simulator:
             batch_shape = subpixel_coords_ang_all.shape[:-1]
             coords_reshaped = subpixel_coords_ang_all.reshape(-1, 3)
 
-            # Compute physics for all subpixels and sources
+            # Compute physics for all subpixels and sources (VECTORIZED)
             if n_sources > 1:
-                # Multi-source case: loop over sources and sum contributions
-                subpixel_physics_intensity_all = torch.zeros(batch_shape, device=self.device, dtype=self.dtype)
-                for source_idx in range(n_sources):
-                    # Get source-specific parameters
-                    # Note: source_directions point FROM sample TO source
-                    # Incident beam direction should be FROM source TO sample (negated)
-                    incident_dir = -source_directions[source_idx]
-                    wavelength_A = source_wavelengths_A[source_idx]
-                    weight = source_weights[source_idx]
+                # VECTORIZED Multi-source case: batch all sources together
+                # Note: source_directions point FROM sample TO source
+                # Incident beam direction should be FROM source TO sample (negated)
+                incident_dirs_batched = -source_directions  # Shape: (n_sources, 3)
+                wavelengths_batched = source_wavelengths_A  # Shape: (n_sources,)
 
-                    # Compute physics for this source
-                    physics_intensity_flat = self._compute_physics_for_position(
-                        coords_reshaped, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star,
-                        incident_beam_direction=incident_dir,
-                        wavelength=wavelength_A
-                    )
+                # Single batched call for all sources
+                # This replaces the Python loop and enables torch.compile optimization
+                physics_intensity_flat = self._compute_physics_for_position(
+                    coords_reshaped, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star,
+                    incident_beam_direction=incident_dirs_batched,
+                    wavelength=wavelengths_batched,
+                    source_weights=source_weights
+                )
 
-                    # Add weighted contribution from this source (per AT-SRC-001)
-                    subpixel_physics_intensity_all += weight * physics_intensity_flat.reshape(batch_shape)
+                # Reshape back to (S, F, oversample*oversample)
+                # The weighted sum over sources is done inside _compute_physics_for_position
+                subpixel_physics_intensity_all = physics_intensity_flat.reshape(batch_shape)
             else:
                 # Single source case: use default beam parameters
                 physics_intensity_flat = self._compute_physics_for_position(

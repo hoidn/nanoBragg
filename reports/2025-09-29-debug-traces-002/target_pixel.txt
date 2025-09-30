@@ -1,0 +1,1 @@
+64 <_io.TextIOWrapper name='reports/2025-09-29-debug-traces-002/target_pixel.txt' mode='w' encoding='UTF-8'>

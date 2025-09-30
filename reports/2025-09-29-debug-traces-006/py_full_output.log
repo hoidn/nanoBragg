@@ -1,0 +1,41 @@
+=== PyTorch Trace for Pixel (64, 128) - AT-PARALLEL-006 ===
+Detector: 50.0mm, 0.1mm/px, (256x256)
+Crystal: 100.0Å cubic, N=(1, 1, 1)
+Beam: λ=1.0Å, fluence=1.259320e+29
+
+auto-selected 1-fold oversampling
+
+=== TRACE: Pixel (64, 128) [slow, fast] ===
+TRACE: Final intensity = 3.870247017639e-02
+TRACE: Normalized intensity = 3.870247017639e-02
+TRACE_PY: pixel_pos_meters 0.05 0.00645 -4.99999999999997e-05
+TRACE: Position (Å) = 500000000.000000, 64500000.000000, -500000.000000
+TRACE_PY: R_distance_meters 0.0504143332793364
+TRACE_PY: omega_pixel_sr 3.90218558305036e-06
+TRACE_PY: close_distance_meters 0.05
+TRACE_PY: obliquity_factor 0.991781438880871
+TRACE: a* (first) = (1.000000e-02, 0.000000e+00, 0.000000e+00)
+TRACE_PY: diffracted_vec 0.991781438880871 0.127939805615632 -0.000991781438880865
+TRACE_PY: incident_vec 1 0 0
+TRACE_PY: lambda_meters 1e-10
+TRACE: scattering_vec_A_inv = -8.218561119129e-03 1.279398056156e-01 -9.917814388809e-04
+TRACE_PY: polar_axis 0 0 1
+TRACE_PY: polarization_factor 0.99181521105758
+TRACE: hkl_frac -8.218561119129e-01 1.279398056156e+01 -9.917814388809e-02
+TRACE: hkl_rounded -1 13 0
+TRACE: F_latt_a 9.999999771811e-01
+TRACE: F_latt_b 1.000000025066e+00
+TRACE: F_latt_c 9.999999806549e-01
+TRACE: F_latt 9.999999829022e-01
+TRACE: F_cell 1.000000000000e+02
+TRACE: I_before_scaling 9.999999658044e+03
+Traceback (most recent call last):
+  File "/home/ollie/Documents/nanoBragg/scripts/trace_polarization_at006.py", line 77, in <module>
+    main()
+  File "/home/ollie/Documents/nanoBragg/scripts/trace_polarization_at006.py", line 68, in main
+    image = simulator.run()
+  File "/home/ollie/Documents/nanoBragg/src/nanobrag_torch/simulator.py", line 805, in run
+    self._apply_debug_output(
+  File "/home/ollie/Documents/nanoBragg/src/nanobrag_torch/simulator.py", line 995, in _apply_debug_output
+    print(f"TRACE: Omega (solid angle) = {omega_pixel[target_slow, target_fast].item():.12e}")
+IndexError: too many indices for tensor of dimension 0

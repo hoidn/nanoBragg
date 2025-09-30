@@ -39,12 +39,28 @@ Implementation of spec-a.md acceptance tests for nanoBragg PyTorch port.
   - Add a brief note under each item’s Attempts History with current measured metrics and links to artifacts.
 
 
-### TODO
+### ✅ COMPLETED (2025-09-29): Vectorize Multi-Source Physics Evaluation in Simulator
+- **Affected module**: `src/nanobrag_torch/simulator.py` lines 148-367, 616-643
+- **Problem**: `Simulator.run` iterated over each source in Python (loop at lines 532-548), re-invoking `_compute_physics_for_position` for the full detector per source. With realistic divergence grids (e.g. 15×15 angles × 11 λ ≈ 2.5k sources) this scaled runtime linearly and repeatedly recompiled the TorchScript kernel.
+- **Solution Implemented**:
+  - Modified `_compute_physics_for_position` to accept batched sources:
+    - `incident_beam_direction`: shape (n_sources, 3) for multi-source
+    - `wavelength`: shape (n_sources,) for multi-source
+    - `source_weights`: shape (n_sources,) for weighted accumulation
+  - Added multi-source broadcasting logic with proper dimension handling
+  - Vectorized scattering vector calculation across source dimension
+  - Implemented weighted sum over sources within the physics function
+  - Updated caller in `run()` to pass batched sources (single call replaces Python loop)
+- **Test Results**: All tests passing
+  - `test_multi_source_integration.py`: 1/1 passed
+  - `test_divergence_culling.py`: 6/6 passed
+  - `test_at_perf_006.py`: 8/9 passed (1 skipped)
+  - `test_suite.py`: 22/30 passed (7 skipped, 1 xfail)
+  - `test_detector_config.py`: 15/15 passed
+- **Impact**: Eliminates O(n_sources) Python loop; enables torch.compile to see full batched computation; expected >10x speedup for realistic divergence grids
+- **Status**: ✅ COMPLETE
 
-#### Vectorize Multi-Source Physics Evaluation in Simulator (MEDIUM)
-- Affected module: `src/nanobrag_torch/simulator.py` lines ~520-700.
-- Problem: `Simulator.run` iterates over each source in Python, re-invoking `_compute_physics_for_position` for the full detector per source. With realistic divergence grids (e.g. 15×15 angles × 11 λ ≈ 2.5k sources) this scales runtime linearly and repeatedly recompiles the TorchScript kernel.
-- Plan: Batch sources by stacking directions, wavelengths, and weights into an extra dimension and broadcasting through `_compute_physics_for_position`, so the per-frame cost remains O(pixels). Ensure torch.compile sees a single batched call and adjust normalization to use weight sums.
+### TODO High priority
 
 #### Eliminate Python Loop in Tricubic Interpolation (MEDIUM)
 - Affected module: `src/nanobrag_torch/models/crystal.py` `_tricubic_interpolation` (~332-360).

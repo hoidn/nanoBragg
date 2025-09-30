@@ -1,0 +1,12 @@
+=== PyTorch Trace for Pixel (368, 262) ===
+
+=== Crystal Geometry ===
+Cell: a=70.0, b=80.0, c=90.0
+Angles: α=75.0°, β=85.0°, γ=95.0°
+Misset: (-89.968546, -31.328953, 177.753396) degrees
+N_cells: (5, 5, 5)
+default_F: 100.0
+Traceback (most recent call last):
+  File "/home/ollie/Documents/nanoBragg/scripts/trace_pytorch_at012_pixel.py", line 61, in <module>
+    a_star, b_star, c_star = crystal.reciprocal_vectors
+AttributeError: 'Crystal' object has no attribute 'reciprocal_vectors'
