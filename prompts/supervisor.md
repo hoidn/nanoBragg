@@ -62,9 +62,10 @@ Given your findings in <1> and <2>, think about whether there's any need for a m
 </yes case>
 </no case>
 - Since you decided there's no need for planning, you will instead focus on review / housekeeping. 
-- This means: review and evaluate ralph's work. Scrutinize the commit history. Look at the diffs. 
-- Are the docs/fix_plan.md contents and priorities sane? if not, fix 
-- Do we need a new docs/fix_plan item to put ralph back on course, fix one of his mistakes, or instruct him to do something that he overlooked? If so, draft it and add it to docs/fix_plan.mosaic_domains
+- Once the above is done (or deemed unneeded): review and evaluate ralph's work. Scrutinize the commit history. Look at the diffs. 
+- Are the docs/fix_plan.md contents and priorities sane? if not, fix. things to consider:
+  - if docs/fix_plan.md is longer than 1000 lines it should be housecleaned. If it's disorganized and / or internally inconsistent, this should be addressed. If you decide to shorten docs/fix_plan.md, the least relevant portions should be moved to archive/fix_plan_archive.md (with summary + archive cross reference if appropriate)
+- Do we need a new docs/fix_plan item to put ralph back on course, fix one of his mistakes, or instruct him to do something that he overlooked? If so, draft it and add it to docs/fix_plans
 </no case>
 </3>
 <4>
