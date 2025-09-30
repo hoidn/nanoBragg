@@ -27,16 +27,25 @@
 
 ## Phased approach
 
-### Phase 0 — Caching Design Blueprint
-Goal: Decide how compiled kernels are keyed, stored, and invalidated without violating differentiability rules.
-Prerqs: Read torch.compile caching docs, inspect current simulator lifecycle (`Simulator.__init__`, `Simulator.run`).
-Exit Criteria: Short design note in `reports/benchmarks/<date>-perf-cache/blueprint.md` capturing cache key fields, ownership model, and invalidation rules approved by supervisor.
+### Phase 0 — Architecture Refactoring (NOW MANDATORY - 2025-10-01)
+**BLOCKER IDENTIFIED:** Phase 2 attempt revealed that `_compute_physics_for_position` is a bound method capturing `self`. Caching bound methods across instances is unsafe (causes silent correctness bugs). This phase is now a hard prerequisite for all subsequent phases.
+
+Goal: Refactor physics computation to be a pure function without `self` references, enabling safe kernel caching.
+Prerqs: Review Attempt #1 findings in `docs/fix_plan.md` (2025-10-01), understand bound method closure semantics.
+Exit Criteria: `_compute_physics_for_position` is a module-level pure function or @staticmethod with all required state passed as explicit parameters. All tests pass. Gradient tests remain green.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| P0.1 | Enumerate runtime scenarios requiring recompilation (device/dtype/oversample/source count) | [ ] | Review existing benchmark traces; document matrix in blueprint.md. |
-| P0.2 | Propose cache owner (module-level singleton vs. Crystal-bound vs. Simulator-bound) | [ ] | Evaluate thread safety + lifetime trade-offs; include decision tree in blueprint.md. |
-| P0.3 | Spike torch.compile teardown semantics | [ ] | Prototype minimal cache in scratch notebook, confirm no dangling references after del; record outcome in blueprint.md. |
+| P0.1 | Design pure function signature | [ ] | Extract ALL self references: beam_config, fluence, r_e_sqr, kahn_factor, polarization_axis, crystal.shape, crystal.config.N_cells, etc. Document in blueprint.md. |
+| P0.2 | Refactor to module-level function or @staticmethod | [ ] | Move function outside Simulator class; update signature with explicit params; ensure no closure captures. |
+| P0.3 | Update all call sites | [ ] | Pass explicit parameters at every invocation site (run(), subpixel loops, etc.); verify gradients flow through. |
+| P0.4 | Validate with full test suite | [ ] | Run core + AT-PARALLEL tests; ensure no regressions; confirm gradient tests pass. |
+| P0.5 | Document refactoring rationale | [ ] | Add comments explaining why pure function is required for caching; reference Attempt #1 findings. |
+
+**Alternative Investigation (defer until after P0.4):**
+- Investigate whether torch.compile's internal cache already provides cross-instance reuse for pure functions
+- If torch.compile already optimizes this case, Phase 2-4 may be unnecessary
+- Document findings in blueprint.md before proceeding to Phase 2
 
 ### Phase 1 — Hoist Static Tensors & Geometry Helpers
 Goal: Remove per-call tensor factories and CPU fallbacks so `_compute_physics_for_position` and supporting geometry run in a stable graph on the caller’s device.
