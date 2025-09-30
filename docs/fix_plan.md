@@ -1634,10 +1634,11 @@
 1. **AT-PARALLEL-012 Triclinic P1 Correlation Failure** *(rotation matrix divergence debug — follow plan: plans/active/at-parallel-012/plan.md)*
    - Spec/AT: AT-PARALLEL-012 Reference Pattern Correlation (triclinic case)
    - Priority: High
-   - Status: in_progress (Attempt #13 reopened issue; rotation matrix parity under active investigation per plan)
+   - Status: in_progress (Attempt #13 reopened issue; Attempt #15 documented regression of metric duality change)
    - Current Metrics: correlation=0.966, RMSE=1.87, max|Δ|=53.4 (from parallel_test_visuals)
    - Required Threshold: correlation ≥ 0.9995 (spec-a-parallel.md line 92)
    - Gap: ~3.5% below threshold
+   - Regression Note: Commit 7f6c4b2 swapped the Core Rule #13 `V_actual` recomputation for formula `V_star`; metric duality tolerance was loosened to 3e-4 yet triclinic parity still fails (correlation 0.9658).
    - Reproduction:
      * C: `$NB_C_BIN -misset -89.968546 -31.328953 177.753396 -cell 70 80 90 75 85 95 -default_F 100 -N 5 -lambda 1.0 -detpixels 512 -floatfile /tmp/c_triclinic.bin`
      * PyTorch: `python -m nanobrag_torch -misset -89.968546 -31.328953 177.753396 -cell 70 80 90 75 85 95 -default_F 100 -N 5 -lambda 1.0 -detpixels 512 -floatfile /tmp/py_triclinic.bin`
@@ -1848,6 +1849,17 @@
         - reports/2025-09-30-AT-012-debug/c_triclinic.bin (fresh C output)
         - reports/2025-09-30-AT-012-debug/py_triclinic.bin (fresh PyTorch output)
         - reports/2025-09-30-AT-012-debug/c_run.log (C trace with built-in TRACE output)
+    * [2025-09-30 20:45 UTC] Attempt #15 — Status: REGRESSION (spec violation, parity unchanged)
+      * Context: Commit 7f6c4b2 introduced cross-product rescaling intended to mirror C `vector_rescale` logic and relaxed unit tests to rtol=3e-4.
+      * Metrics: `parallel_test_visuals/AT-PARALLEL-012/metrics.json` still reports triclinic correlation 0.9658, RMSE 1.87, max|Δ| 53.4 (no improvement over Attempt #13).
+      * Findings:
+        - `src/nanobrag_torch/models/crystal.py` now uses formula `V` (1/V_cell) instead of `V_actual`, breaking Core Rule #13 metric duality (observed drift ≈3.2e-4).
+        - `tests/test_crystal_geometry.py::test_metric_duality` tolerances were relaxed to 3e-4 to accommodate the regression; prior 1e-12 guardrail lost.
+        - No new artifacts captured under `reports/2025-09-30-AT-012-debug/`; plan tasks A1–B2 remain unstarted.
+      * Action Items:
+        1. Revert to V_actual recomputation per Plan C0 and restore strict tolerances (`tests/test_units.py::test_metric_duality` without relaxations).
+        2. Resume rotation matrix comparison work (Plan Phase A) before attempting further parity runs.
+        3. Archive commit 7f6c4b2 findings under `reports/2025-09-30-AT-012-debug/commit_7f6c4b2_regression.md` once traces confirm regression.
         - reports/2025-09-30-AT-012-debug/py_trace.log (PyTorch trace output)
         - reports/2025-09-30-AT-012-debug/FIRST_DIVERGENCE.md (analysis document)
       * Next Actions (Prioritized):

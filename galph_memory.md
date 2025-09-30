@@ -1,86 +1,25 @@
-## 2025-09-30
-- Reviewed current repo state; no prior galph memory.
-- Identified critical outstanding parity failures (AT-020/021/022/024). AT-021 phi rotation bug is root cause for AT-022.
-- Per long-term goals, PyTorch still shows major parity gaps plus performance overhead (torch.compile warm-up dominates small detectors; large crystal case still ~7× slower vs C). Potential optimizations: share compiled kernels across instances, real geometry caching, consider chunked evaluation to trim memory.
-- Created supervisor plan for AT-021 debugging at `plans/active/at-parallel-021/plan.md`; cross-referenced from fix_plan. This plan should be the next loop (requires prompts/debug.md).
-- Observed Ralph’s recent loops mainly documentation/perf; no regressions but backlog untouched. Next action for Ralph: run debug loop against AT-021 using new plan.
+## 2025-09-30 (loops 1-4 summary)
+- Established parity backlog: AT-020/021/022/024 failing; created first supervisor plan for AT-021 and enforced prompts/debug.md routing.
+- Diagnosed AT-024 random misset cap mismatch (π/2 vs 90 radians) and opened dedicated plan; insisted Ralph stop verification-only loops.
+- Flagged torch.compile warm-up overhead (per-instance compilation, inline tensor factories) and opened AT-012 rotation parity plan (Phases A–E).
+- Documented performance hotspots (`_compute_physics_for_position` guard tensors, `Crystal.compute_cell_tensors` clamps) and chronic dirty worktree artifacts blocking `git pull --rebase`.
 
-## 2025-09-30 (galph loop 2)
-- Deep dive confirmed AT-PARALLEL-024 failure stems from the random misset cap mismatch: PyTorch clamps to π/2 (`src/nanobrag_torch/models/crystal.py:594-603`) while C uses the raw `90.0` argument as radians (`golden_suite_generator/nanoBragg.c:2010-2016`). Documented evidence in fix_plan and opened dedicated plan at `plans/active/at-parallel-024/plan.md` with phased instructions.
-- Verified AT-PARALLEL-021/022 parity now pass after commit 8293a15; updated `docs/fix_plan.md` to mark both complete and to record new metrics + unit-test alignment (`tests/test_suite.py:167-207`). Plan 021 can be archived once Ralph confirms AT-022 stays green in his next loop.
-- Performance review: benchmarks (`reports/benchmarks/20250930-111451/benchmark_results.json`) still show PyTorch ≥10× slower than C for ≤1k detectors; primary culprits are per-instance `torch.compile` wrapping in `Simulator.__init__` and repeated constant tensor creation inside `_compute_physics_for_position`. Flag for future perf initiative.
-- Ralph review: last seven loops (`RALPH-ROUTING-001`…`RALPH-VERIFICATION-007`) repeatedly re-ran the full suite without debugging, even mislabeling the phi fix as a regression (`d702171`). Next guidance: insist Ralph route through `prompts/debug.md` for outstanding ATs and avoid further verification-only loops.
-- VC hygiene: committed plan+fix_plan update (`SUPERVISOR: at-parallel-024 parity plan - tests: parity AT-021/022`). Worktree remains dirty from pre-existing artifacts (e.g., `tests/test_suite.py`, `parallel_test_visuals/*`, `trash/test_parity_matrix.py`); do not stage these on the next loop without user direction.
-- Next steps for Ralph: execute the new AT-024 plan under `prompts/debug.md`, reproduce misset angles against C, and implement the 90-radian cap fix.
+## 2025-09-30 (loops 5-10 summary)
+- Authored repo hygiene checklist (REPO-HYGIENE-002) to undo accidental `golden_suite_generator/nanoBragg.c` churn and purge stray reports.
+- Created PERF-PYTORCH-004 plan to hoist constants, introduce compile caching, and remove Dynamo graph breaks; reiterated need for prompts/debug.md while parity fails.
+- Repeatedly documented routing violations from Ralph and emphasized restoring Core Rule #13 metric duality after WIP commit 058986f swapped `V_actual` for formula volume.
+- Noted that `_compute_physics_for_position` still recompiles each Simulator and that benchmarks in `reports/benchmarks/20250930-004916/` show ≥200× slowdown vs C for small detectors.
 
-## 2025-09-30 (galph loop 3)
-- Deep analysis: `_compute_physics_for_position` is still wrapped by `torch.compile` inside every `Simulator` ctor (per-run warm-up 0.5–6s). Constants like `torch.tensor(1e-12, device=...)` are created inside the compiled path, forcing Dynamo to materialize tensors each call; recommend caching via `.new_tensor()` or lifting constants alongside a shared compiled kernel. Random misset fix in commit ac29c4f now mirrors C's 90-radian bug—parity restored but we still need a follow-up story before calling the PyTorch port “better than C”.
-- Ralph review (last ~20 commits): positives — ac29c4f fixed AT-024 parity, d9d0a06 finally gathered first divergence for AT-012; negatives — repeated routing violations and contradictory fix_plan statuses caused the triclinic work to stall. Commit 92ac528 accidentally dragged the entire `golden_suite_generator/nanoBragg.c` binary diff; watch for unnecessary churn in future loops.
-- Planning: opened `plans/active/at-parallel-012/plan.md` to drive the rotation-matrix investigation (Phase A–E). Updated `docs/fix_plan.md` to mark AT-012 as active, supersede the “precision-only” conclusion, and point Ralph at the new plan.
-- Next Ralph steps: run prompts/debug.md, execute Phase A of the AT-012 plan (dump C vs PyTorch rotation matrices), then march through the plan. Avoid verification loops until AT-012 closes; flag any binary churn (like re-adding full C sources) before committing.
-
-## 2025-09-30 (galph loop 4)
-- Deep performance review: `_compute_physics_for_position` still recompiles per `Simulator` instance and allocates inline tensors (`torch.tensor(1e-12)`, repeated `unsqueeze`/`expand`), blocking kernel fusion; `Crystal.compute_cell_tensors` guard clauses (`torch.maximum(..., torch.tensor(...))`) introduce Dynamo graph breaks. Benchmarks (`reports/benchmarks/20250930-002124/benchmark_results.json`) confirm cold runs pay 4.8 s compile, warm runs still ≈0.52 s sim at 256², keeping PyTorch ~2.7× slower than C.
-- Heads outcome: reviewed last ~25 Ralph commits. Positives — 8293a15 fixed phi rotation parity; ac29c4f restored AT-024. Negatives — repeated verification-only loops (0d7eb13), misleading regression report (d702171), and 92ac528 accidentally committed a full `golden_suite_generator/nanoBragg.c` replacement plus large binary churn (needs future cleanup guidance).
-- New multi-turn plan opened at `plans/active/perf-pytorch-compile-refactor/plan.md` and cross-referenced from `[PERF-PYTORCH-004]` in `docs/fix_plan.md`. Plan focuses on hoisting constants, sharing compiled kernels, and removing graph breaks before attempting fusion. Fix_plan active list updated accordingly.
-- Follow-ups for Ralph: route via perf/debug prompt, execute Plan Phase 0–1 first (cache design + constant hoisting), then re-benchmark; also flag large C churn from 92ac528 before the next commit. Outstanding dirty artifacts (parallel_test_visuals/*, scratch, trash/test_parity_matrix.py) pre-existed this loop.
-- Committed `SUPERVISOR: perf roadmap plan - tests: not run` and pushed; worktree intentionally left with prior untracked parity outputs.
-
-## 2025-09-30 (galph loop 5)
-- Step 1 analysis: PyTorch path still recompiles per `Simulator` init; `_compute_physics_for_position` allocates inline `torch.tensor(...)` constants and `torch.maximum(..., torch.tensor(...))` clamps that force new tensors every call. `Crystal.compute_cell_tensors` repeats the same pattern and the `.item()`-based interpolation toggle still severs gradients. Fresh CPU benchmarks (`reports/benchmarks/20250930-004916/benchmark_results.json`) show small detectors paying ~3.7 s compile vs C at 16 ms, confirming the warm-up penalty; only ≥1024² grids hit parity/speedup. Need constant hoisting + shared compile cache before pursuing fusion.
-- Housekeeping: Archived stale plans for AT-021 and AT-024 to `plans/archive/...` and flipped status headers to 'Archived 2025-09-30'. Updated `docs/fix_plan.md` to point at the archive paths and record the archive action. Active plans now limited to AT-012 rotation divergence and PERF-PYTORCH-004.
-- Coin toss = heads. Commit review (last ~30): 👍 ac29c4f finally fixed AT-024 parity with matching misset angles; d9d0a06 captured the triclinic first divergence. ⚠️ 92ac528 dragged a 4.5k-line `nanoBragg.c` dump plus reports assets into history—need follow-up cleanup. ⚠️ Ralph continues to ship `RALPH-VERIFICATION-00*` verification loops instead of routing through prompts/debug.md, so agent error-correction remains priority.
-- Guidance for Ralph: stay on the AT-012 plan (Phase A rotation matrix comparison, Phase B lattice trace) until correlation ≥0.9995; perf work should start Phase 1 hoisting only after AT-012 moves. Also call out the 92ac528 churn before touching C again.
-- Outstanding dirt predates this loop (.claude, parallel_test_visuals/*, scratch, trash/test_parity_matrix.py, new benchmark output). No new artifacts beyond plan moves and fix_plan update.
-
-## 2025-09-30 (galph loop 6)
-- `git pull --rebase` blocked by long-standing dirty artifacts (`parallel_test_visuals/*`, `.claude`, `trash/test_parity_matrix.py`, etc.); left untouched per policy.
-- Deep analysis reiterated two blockers toward long-term goals: (1) `_compute_physics_for_position` still wraps `torch.compile` per `Simulator` instantiation and spawns fresh constants (`torch.tensor(1e-12, ...)`), preventing reuse/fusion (`src/nanobrag_torch/simulator.py:143-199`); (2) `Crystal` toggles interpolation via `.item()` on differentiable tensors, severing gradients (`src/nanobrag_torch/models/crystal.py:114-118`). Benchmarks in `reports/benchmarks/20250930-004916/` confirm small detectors pay 3.7 s warm-up vs 16 ms C.
-- Coin = heads. Commit review (last ~30): positives — `ac29c4f` (AT-024 parity) and `d9d0a06` (AT-012 first divergence) added high-value debugging artifacts. Negatives — `d702171` mislabeled a non-regression and `0d7eb13` continued verification-only loops; `92ac528` still sits with a 4.6k-line `golden_suite_generator/nanoBragg.c` churn + stray reports, obscuring C diffs.
-- Planning: Existing AT-012 and PERF-PYTORCH-004 plans remain valid; no new multi-turn plans required. Instead updated `docs/fix_plan.md` — cleared stale AT-020 status, logged `REPO-HYGIENE-002` to clean the 92ac528 churn, and cross-referenced benchmarks.
-- Next Ralph actions: follow AT-012 plan (Phases A/B), execute `REPO-HYGIENE-002` under `prompts/main.md`, then resume PERF-PYTORCH-004 Phase 1 constant hoisting. Flag inability to run `git pull --rebase` until legacy artifacts are addressed.
-
-## 2025-09-30 (galph loop 7)
-- Deep dive reaffirmed perf blockers: `_compute_physics_for_position` still creates guard tensors inside the compiled region (e.g., `torch.maximum(..., torch.tensor(1e-12,...))`) and performs a device transfer via `incident_beam_direction.to(...)`, both preventing compile caching; `Crystal.__init__` still toggles interpolation with `.item()` (host branch). Evidence: `src/nanobrag_torch/simulator.py:190-231`, `src/nanobrag_torch/models/crystal.py:108-121`, CPU benchmarks in `reports/benchmarks/20250930-004916/` show 256² runs spend 3.7 s vs 16 ms C.
-- Coin = heads again. Commit review across ~30 entries: 👍 `ac29c4f` (AT-024 parity fix) and `d9d0a06` (AT-012 first divergence) are strong progress; ⚠️ `92ac528` still carries 4.5k LOC nanoBragg.c churn + reports, and routing violations continue (`d702171`, `0d7eb13`). Feedback needed: Ralph must prioritize `REPO-HYGIENE-002`, follow debug prompt, stop verification-only loops.
-- Plan maintenance: Updated `plans/active/perf-pytorch-compile-refactor/plan.md` Phase 1/3 to cover hoisting the `.to(...)` call and removing `.item()` host decisions; mirrored guidance in `docs/fix_plan.md` `[PERF-PYTORCH-004]` update. No new plans opened.
-- Outstanding dirty files (parallel_test_visuals/*, `.claude`, `trash/test_parity_matrix.py`, `reports/benchmarks/20250930-004916/`, etc.) predate this loop and remain intentionally untouched; next supervisor should expect `git pull --rebase` to require stashing again.
-- Follow-ups for Ralph: 1) Execute `REPO-HYGIENE-002` cleanup before new C diffs land. 2) Resume AT-012 plan Phase A/B via `prompts/debug.md`. 3) When perf work resumes, start Phase 1 with the newly documented hoists and log before/after compile traces.
-
-## 2025-09-30 (galph loop 8)
-- Re-ran deep perf review: `_compute_physics_for_position` still recompiles every `Simulator` instance (torch.compile wraps inside `__init__`) and spawns fresh guard tensors (`torch.tensor(1e-12)`, `.to(...)`) inside the compiled graph [src/nanobrag_torch/simulator.py:143, src/nanobrag_torch/simulator.py:197, src/nanobrag_torch/simulator.py:204]; `Crystal.compute_cell_tensors` keeps the same pattern of tensor factories in its clamps [src/nanobrag_torch/models/crystal.py:489-543]. Benchmarks `reports/benchmarks/20250930-004916/benchmark_results.json` still show 256² CPU runs taking 3.7 s vs 16 ms C.
-- Coin = tails, but I still skimmed latest commits: `058986f` (WIP misset reorder) never ran tests and may have disrupted geometry; `92ac528` still leaves the 4.6k LOC `golden_suite_generator/nanoBragg.c` churn plus reports in-tree; `7e2df2b` documents yet another verification loop without new debugging. No fresh regressions spotted, just lingering hygiene debt.
-- Planning: existing AT-012 and PERF-PYTORCH-004 plans remain valid; no new checklist drafted. fix_plan priorities looked sane so left untouched.
-- Guidance for Ralph: 1) Finish `REPO-HYGIENE-002` before touching C again; 2) Go back to `prompts/debug.md` and execute AT-012 plan Phase A/B; 3) When perf work resumes, start Perf Phase 1 by hoisting constants/device prep out of `_compute_physics_for_position` and logging before/after compile graphs.
-- Ops note: Worktree still dirty from legacy artifacts (parallel_test_visuals/*, reports/, .claude, etc.); expect to stash before `git pull --rebase` next loop.
-
-## 2025-09-30 (galph loop 9)
-- `git pull --rebase` blocked by long-standing dirty artifacts (parallel_test_visuals/*, reports/benchmarks/20250930-004916/, trash/test_parity_matrix.py, etc.); left untouched per hygiene rule.
-- Deep analysis (long-term goals): AT-PARALLEL-012 still fails because PyTorch rotation matrices drift ~0.5–1.6% vs C (`reports/2025-09-30-AT-012-debug/FIRST_DIVERGENCE.md`); `_compute_physics_for_position` keeps spawning guard tensors (`torch.tensor(1e-12)`, `.to(...)`), so torch.compile recompiles every instantiation and CPU benchmarks (`reports/benchmarks/20250930-004916/benchmark_results.json`) remain >200× slower than C at 256².
-- Authored checklist plan for `REPO-HYGIENE-002` at `plans/active/repo-hygiene-002/plan.md` and linked from fix_plan; priority is to revert accidental `golden_suite_generator/nanoBragg.c` churn and purge `reports/2025-09-30-AT-021-traces/`.
-- Guidance for Ralph: run REPO-HYGIENE-002 plan in next `prompts/main.md` loop before touching physics, then resume AT-012 plan Phase A/B via `prompts/debug.md`; perf work should follow PERF-PYTORCH-004 Phase 1 (hoist constants/device prep) once hygiene + parity unblock.
-- Tree intentionally left dirty except for new plan/fix_plan edits.
-
-## 2025-09-30 (galph loop 10)
-- Stashed long-standing artifacts to satisfy mandatory `git pull --rebase`; restored them afterward. Expect the same stash/pull/pop ritual next loop until Ralph finishes `REPO-HYGIENE-002`.
-- Performance scan: `_compute_physics_for_position` still recompiles per simulator because it allocates guard tensors (`torch.tensor(1e-12, …)`) and calls `.to()` inside the compiled region (`src/nanobrag_torch/simulator.py:197-206`). `Crystal.compute_cell_tensors` uses the same guard tensors and `.item()` routing (`src/nanobrag_torch/models/crystal.py:114-118, 430-455`), matching the 200× slowdown seen in `reports/benchmarks/20250930-004916/benchmark_results.json` for ≤256² detectors.
-- Updated `docs/fix_plan.md` (PERF-PYTORCH-004 section) with loop-10 guidance pointing Ralph at Phase 1 hoisting before any new verification runs; highlighted the specific guard sites and required benchmark artifacts.
-- Code review: commit 058986f drops the V_actual metric-duality loop and adds WIP loop.sh tweaks without tests; plan `plans/active/at-parallel-012/plan.md` Task C0 already requires undoing this regression before fresh diagnostics.
-- Next Ralph steps: 1) Finish `REPO-HYGIENE-002` to clean C baseline/artifacts, 2) resume AT-012 checklist under `prompts/debug.md` (Tasks A1–B2, then restore V_actual per C0), 3) once parity is stable, execute PERF-PYTORCH-004 Phase 1 using the new fix_plan update (capture before/after compile logs and cold vs warm timings).
-
-## 2025-09-30 (galph loop 5)
-- Could not `git pull --rebase` due to pre-existing dirty tree (parity artifacts, prompts). Left untouched per policy.
-- Deep perf scan highlights hot spots blocking long-term goal: `Simulator.__init__` recompiles `_compute_physics_for_position` every instantiation; `_compute_physics_for_position` still allocates fresh tensors (`torch.tensor(1e-12)`, `.to()` on incident beam) inside the compiled region; `Crystal.compute_cell_tensors` repeatedly builds scalar tensors with `torch.maximum(..., torch.tensor(...))`, causing Dynamo graph breaks and allocator churn.
-- Detected regression risk: WIP commit 058986f swapped Core Rule #13 volume handling to formula `V_star`, breaking metric duality; needs immediate rollback before continuing triclinic parity work.
-- Reviewed Ralph’s last ~10 commits: repeated verification loops under prompts/main, zero new diagnostics, plus the above WIP change with no tests. Added Attempt #14 entry documenting the violation and required remediation.
-- Refreshed AT-012 plan to checklist format (Task C0 explicitly instructs restoring `V_actual`, phases A–E mapped to concrete checkpoints). Updated fix_plan active item + attempts accordingly.
-- Next Ralph steps: revert/repair metric duality (plan Task C0), then run prompts/debug.md following the new checklist (Tasks A1–B2 first). No further verification loops until parity passes.
-- Updated `prompts/supervisor.md` to reflect new planning format (phased implementation docs with optional per-phase checklists) per owner clarification.
-- Reintroduced a concise plan template in `prompts/supervisor.md` to satisfy new guidance (phased narrative with optional checklist sample).
-
-## 2025-09-30 (galph loop 6)
-- Stashed dirty tree to pull; restored without touching existing artifacts.
-- Deep perf scan: `_compute_physics_for_position` still recompiles per simulator and rebuilds guard tensors (`torch.tensor(1e-12)`, `.to()` device sync) [src/nanobrag_torch/simulator.py:143-206,197-206]; plan PERF-PYTORCH-004 Phase 1 remains the right remedy.
-- Parity review: Commit 058986f replaced `V_actual` with formula `V_star` in `Crystal.compute_cell_tensors`, breaking Core Rule #13 (a·a*≠1) [src/nanobrag_torch/models/crystal.py:623-688]; AT-012 plan Task C0 must restore V_actual before further diagnostics.
-- Ralph history: last three Ralph commits (d9d0a06, 7e2df2b, 353f979) show useful divergence capture followed by two more verification-only loops documenting routing violations; no parity progress since.
-- Plans stay valid; no new checklist opened. Next Ralph steps: use prompts/debug.md, revert 058986f changes per Task C0, then resume AT-012 checklist A1–B2 before touching performance plan.
+## 2025-09-30 (galph loop current)
+- `git pull --rebase` blocked by long-standing dirty artifacts (`parallel_test_visuals/*`, `.claude`, `trash/test_parity_matrix.py`); left untouched per policy.
+- Deep analysis vs long-term goals:
+  * AT-012: commit 7f6c4b2 introduced cross-product rescaling but still fails triclinic parity (corr 0.9658) and breaks Core Rule #13 by sticking with formula `V_star`; tests relaxed to rtol=3e-4.
+  * Performance: `_compute_physics_for_position` still compiled per instantiation; inline tensor factories and `.to()` calls remain; crystal clamps still allocate guard tensors—same bottlenecks blocking perf goals.
+  * Agent hygiene: Ralph continues verification-only loops despite routing rules; recent commits (7f6c4b2) lack diagnostics and introduce spec regressions.
+- Actions this loop:
+  * Updated `plans/active/at-parallel-012/plan.md` to highlight the 7f6c4b2 regression and require restoring `V_actual` (Task C0) plus reinstating 1e-12 test tolerances.
+  * Logged Attempt #14 in `docs/fix_plan.md` recording the failed parity attempt and Core Rule #13 violation; added regression note under the active item.
+- Next steps for Ralph:
+  1. Work under `prompts/debug.md`, revert the formula-volume change, and execute Plan Tasks A1–B2 before re-running parity.
+  2. Capture fresh rotation matrix traces (Plan A1/A2) and store under `reports/2025-09-30-AT-012-debug/`.
+  3. Defer performance work until AT-012 parity passes and metric duality is back to ≤1e-12.

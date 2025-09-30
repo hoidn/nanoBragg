@@ -5,7 +5,7 @@
 - Phase Goal: Match nanoBragg C misset + rotation pipeline so the triclinic P1 parity harness reaches corr ≥ 0.9995 with aligned peak coordinates.
 - Dependencies: `specs/spec-a-parallel.md`, `docs/architecture/crystal.md`, `docs/architecture/pytorch_design.md` §§3.2–3.4, `docs/development/c_to_pytorch_config_map.md`, `docs/debugging/detector_geometry_checklist.md`, `golden_suite_generator/nanoBragg.c` lines 1911–2117 & 3581–3654, `reports/2025-09-30-AT-012-debug/` artifacts.
 - Baseline Failure Snapshot: Attempt #13 captured corr=0.9605, sum_ratio≈1.00045, max pixel mismatch (C 368,262 vs Py 223,159) in `reports/2025-09-30-AT-012-debug/FIRST_DIVERGENCE.md`.
-- WIP Risk: Commit 058986f reordered misset handling but also replaced the Core Rule #13 volume recalculation (`V_actual`) with formula `V_star`; this regresses metric duality and must be corrected before further diagnostics.
+- WIP Risk: Commits 058986f/7f6c4b2 reordered misset handling and swapped the Core Rule #13 volume recalculation (`V_actual`) for formula `V_star`; metric duality now drifts by ~3e-4 and violates the spec guardrail. Re-establish the V_actual path before trusting new diagnostics.
 - Reproduction Command: `NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-012 and triclinic"`.
 - Prompt Routing: Ralph must work under `prompts/debug.md` until this checklist is complete.
 
@@ -17,7 +17,7 @@
 | A3 | Record element-wise diff + determinants in `rotation_matrix_comparison.md` | [ ] | Compute absolute/relative deltas and determinants, confirm both matrices remain orthonormal; store alongside traces. |
 | B1 | Align lattice tensor traces (pre-/post-misset, post-recalc) C vs PyTorch | [ ] | Extend trace tooling to dump `a*,b*,c*` and `a,b,c` vectors at each stage; tabulate first component where Py diverges. |
 | B2 | Document divergence line references in fix_plan Attempts History | [ ] | After B1, update `docs/fix_plan.md` (AT-012 Attempt #14+) with exact file:line references and artifact paths. |
-| C0 | Restore metric duality by using `V_actual` when regenerating reciprocal vectors | [ ] | Undo the 058986f regression: compute `V_actual = torch.dot(a_vec, b_cross_c)` and use it (with ε clamp) so `a·a*`, `b·b*`, `c·c*` equal 1 within 1e-12; verify `tests/test_units.py::test_metric_duality` locally. |
+| C0 | Restore metric duality by using `V_actual` when regenerating reciprocal vectors | [ ] | Back out the 058986f/7f6c4b2 change: compute `V_actual = torch.dot(a_vec, b_cross_c)` (ε clamp) so `a·a*`, `b·b*`, `c·c*` equal 1 within 1e-12; rerun `tests/test_units.py::test_metric_duality`. |
 | C1 | Validate Euler composition order matches C (`rotate` sequence) | [ ] | Confirm PyTorch multiplies rotation matrices with the same X→Y→Z semantics; if not, adjust `angles_to_rotation_matrix` and document findings in artifacts. |
 | C2 | Check column vs row vector orientation in `rotate_umat` usage | [ ] | Ensure matrices act on column vectors like C; test by transposing candidate matrices and comparing against C trace outputs. |
 | C3 | Confirm angle sign and degree→radian conversions for negative angles | [ ] | Build a quick table comparing `angles_to_rotation_matrix` vs C for sign-flipped inputs; store CSV/log for reference. |
@@ -33,3 +33,4 @@
 - Keep all diagnostics under `reports/2025-09-30-AT-012-debug/` or a dated sibling (no scatter under repo root).
 - Do not modify detector geometry while this plan is active; focus strictly on the crystal rotation pipeline.
 - Maintain C-code references per Implementation Rule #11 when touching geometry helpers.
+- Reinstate the 1e-12 metric duality tolerances in tests after C0 lands; lower tolerances were a stopgap pending this fix.

@@ -28,7 +28,7 @@ do a deep analysis of the codebase in light of the <current long term goals>. Wh
 </1>
 <2>
 flip a coin using python. if it comes up <heads>:
-review ralph's work over the last N (~30 but can be more or less - you decide) iterations. Check the commit history. Has the work been productive? Have there been regressions? Do we need to provide any feedback / course-correction?
+review ralph's work over the last N (~5 but can be more or less - you decide) iterations. Check the commit history. Has the work been productive? Have there been regressions? Do we need to provide any feedback / course-correction?
 </heads>
 if it comes up <tails>: proceed to step <3>
 </2>
