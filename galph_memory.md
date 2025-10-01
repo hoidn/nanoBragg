@@ -618,3 +618,16 @@
  2. Author plateau mitigation memo (plan C1) and pick a concrete fix path (peak clustering vs quantization vs targeted float64) before touching tests; archive decision in `reports/2025-10-AT012-regression/phase_c_decision.md`.
  3. Convert `io/source.py`, `utils/noise.py`, `utils/c_random.py` to respect caller dtype/device, recording before/after snippets in `reports/DTYPE-DEFAULT-001/phase_b3_audit.md`, then resume Tier-1 once plateau fix lands.
  4. Execute routing guard plan Phase A (loop.sh audit + diff) so automation stays on `prompts/debug.md` until parity suite recovers.
+
+## 2025-10-12 (galph loop BK)
+- `git pull --rebase` clean; coin toss → tails so stayed in review/analysis mode (no new plan authored).
+- AT-012 remains blocked in Phase C: no mitigation memo or prototype yet, and artifacts stop at Phase B3. Float32 vs float64 experiments confirm the root cause is per-pixel math (sinc/geometry), so Phase C needs a decision between peak clustering, controlled quantization, or a scoped float64 exception, with validation archived under `reports/2025-10-AT012-regression/phase_c_*`.
+- DTYPE rollout still halted at Phase B3. Helpers `io/source.py`, `utils/noise.py`, and `utils/c_random.py` continue to allocate float64 tensors regardless of caller device/dtype; they must be refit to respect the simulator’s dtype before Tier-1 reruns (plan task B3, fix_plan immediate action).
+- PERF plan Phase A cannot progress until `scripts/validate_weighted_source_normalization.py` writes into timestamped output dirs; it still hardcodes `reports/benchmarks/20250930-multi-source-normalization/`, so each run overwrites prior evidence. 4096² warm baselines and profiler traces remain missing.
+- Automation hygiene unchanged: `loop.sh` still drives `prompts/main.md` in a 40-iteration loop with unconditional `git push`. Plan ROUTING-LOOP-001 Phase A tasks (A1–A3 audit + report) remain the gating step before remediation.
+- Noted lingering backup file `src/nanobrag_torch/models/detector.py.backup`; keep under hygiene watch (Protected Assets respected) so the next REPO-HYGIENE sweep can archive or justify it.
+- Follow-ups for Ralph:
+  1. Execute plateau plan Phase C1–C3: log the mitigation memo, implement the chosen fix under `prompts/debug.md`, and rerun AT-012 + plateau diagnostics.
+  2. Finish DTYPE plan task B3 by porting the helper modules to caller dtype/device and recording before/after snippets in `reports/DTYPE-DEFAULT-001/phase_b3_audit.md`, then prep Tier-1/Tier-2 reruns once AT-012 passes.
+  3. Unblock PERF plan Phase A by parameterising/timestamping the weighted-source validation outputs, then capture fresh CPU (incl. 4096² warm) and profiler baselines per plan A1–B2.
+  4. Complete routing guard Phase A audit (reports/routing/…) so we can restore the `prompts/debug.md` guard before automation runs again.
