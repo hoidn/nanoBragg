@@ -2,7 +2,7 @@
 
 **Last Updated:** 2025-10-12 (galph loop BR)
 **Active Focus:**
-- AT-012: capture Phase C3 validation artifacts + plateau histograms under `reports/2025-10-AT012-regression/phase_c_validation/`, then run Phase C4 benchmarks and append results to the mitigation memo.
+- AT-012: hold Phase C work in standby per supervisor notes; no action until new directive lands.
 - DTYPE: finish Phase B3 by making `io/source.py`, `utils/noise.py`, and `utils/c_random.py` device/dtype neutral (record before/after in `reports/DTYPE-DEFAULT-001/phase_b3_audit.md`).
 - PERF: reconcile 1-iteration vs 5-iteration warm timings, complete Phase B4 hotspot summary (top ops from trace) and B5 eager-mode profile before designing Phase C experiments.
 

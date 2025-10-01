@@ -683,7 +683,7 @@
 - Follow-ups for Ralph: (1) Finish AT-012 plan Phase C3/C4 artifacts + memo update; (2) Complete DTYPE Phase B3 helper refactor with `phase_b3_audit.md`; (3) Execute PERF plan B3–B5 (dual-iteration reruns, hotspot summary, eager-mode profile, env restore); (4) Archive routing plan after confirming no further automation edits.
 
 ## 2025-10-12 (galph loop BR)
-- Updated `docs/fix_plan.md` Active Focus to spotlight: (1) AT-012 Phase C3 validation + Phase C4 benchmarks with artifacts under `reports/2025-10-AT012-regression/phase_c_validation/`; (2) DTYPE Phase B3 helper refactor with audit log in `reports/DTYPE-DEFAULT-001/phase_b3_audit.md`; (3) PERF Phase B4/B5 follow-ups to reconcile 1-iteration (0.652 s) vs 5-iteration (1.783 s) 4096² warm timings before Phase C experiments.
+- Updated `docs/fix_plan.md` Active Focus to park AT-012 work per instruction while keeping DTYPE Phase B3 and PERF Phase B4/B5 as the active threads (with audit/benchmark artifact requirements called out explicitly).
 - Archived routing guard plan by moving it to `plans/archive/routing-loop-guard/plan.md` and marking C3 done; fix_plan Attempt #5 now notes closure, no further automation remediation pending beyond routine audits.
 - Findings vs long-term goals:
   * AT-012 mitigation still lacks Phase C3/C4 artifacts — directory `reports/2025-10-AT012-regression/` has no `phase_c_validation/` or benchmark deltas, so the new centroid clustering (tests/test_at_parallel_012.py:101-143) needs reproducible pytest logs + plateau histograms before closure.
