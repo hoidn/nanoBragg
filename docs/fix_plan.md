@@ -1,7 +1,7 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-11 (galph loop BJ)
-**Active Focus:** Protect automation assets, finish nanoBragg hygiene cleanup, restore AT-012 peak matches, repair multi-source weighting validation via BeamConfig, and capture fresh CPU/GPU benchmarks including the 4096² warm-run profile for PERF-PYTORCH-004.
+**Last Updated:** 2025-10-12 (galph loop BL)
+**Active Focus:** Protect automation assets, finish nanoBragg hygiene cleanup, execute AT-012 plateau plan C2a–C2c to restore ≥95% peak matches, repair multi-source weighting validation via BeamConfig, and capture fresh CPU/GPU benchmarks including the 4096² warm-run profile for PERF-PYTORCH-004.
 
 ## Index
 | ID | Title | Priority | Status |
@@ -358,7 +358,7 @@
     Metrics: simple_cubic: 43/50 matches (86%, need 95%), corr=0.9999999999; triclinic PASS; tilted PASS. Physics perfect, peak alignment insufficient.
     Artifacts: `reports/2025-10-AT012-regression/phase_c_decision.md` (decision memo); `tests/test_at_parallel_012.py` (updated find_peaks function + removed dtype overrides).
     Observations/Hypotheses: Tolerance approach correctly finds ~52 raw peaks in both images (vs 52/45 with exact equality). COM clustering produces consistent centroids but systematic ~1px offsets persist (e.g., golden (512,512) → pytorch (513,513)). This suggests plateau fragmentation causes slightly different intensity distributions within each plateau, leading to different COM calculations. Correlation remains perfect, confirming this is test framework sensitivity, not physics bug.
-    Next Actions: Exhaust clustering mitigations (try uniform weights, geometric centroids) or pivot to Option 3 (float64 override) with updated rationale in Phase C decision memo.
+    Next Actions: Execute plan tasks C2a–C2c (brightest-member selection, float centroid fallback, memo update) and re-run AT-012 validation before considering Option 3 fallback.
 - Risks/Assumptions: Ensure triclinic/tilted variants remain passing; preserve differentiability (no `.item()` in hot path); guard ROI caching vs Protected Assets rule. Diagnostic scripts must honour dtype/device arguments to produce trustworthy comparisons.
 - Exit Criteria (quote thresholds from spec):
   * PyTorch run matches ≥48/50 peaks within 0.5 px and maintains corr ≥0.9995.

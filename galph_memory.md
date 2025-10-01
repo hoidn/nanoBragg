@@ -631,3 +631,10 @@
   2. Finish DTYPE plan task B3 by porting the helper modules to caller dtype/device and recording before/after snippets in `reports/DTYPE-DEFAULT-001/phase_b3_audit.md`, then prep Tier-1/Tier-2 reruns once AT-012 passes.
   3. Unblock PERF plan Phase A by parameterising/timestamping the weighted-source validation outputs, then capture fresh CPU (incl. 4096² warm) and profiler baselines per plan A1–B2.
   4. Complete routing guard Phase A audit (reports/routing/…) so we can restore the `prompts/debug.md` guard before automation runs again.
+
+## 2025-10-12 (galph loop BL)
+- Pulled origin updates (0af5e08 plateau clustering). No conflicts.
+- Deep-dive: AT-012 still 43/50 after COM clustering; systematic ~1 px offsets noted in tests/test_at_parallel_012.py:57-139. Identified need to change clustering representative rather than COM rounding.
+- Updated plateau plan Phase C: set C2 to [P], added C2a–C2c checklist directing brightest-member selection, float centroid fallback, and memo update with artifacts under reports/2025-10-AT012-regression/phase_c_trials/.
+- Refreshed docs/fix_plan.md header + Attempt #16 next actions to call out new subtasks; Active Focus now highlights executing C2a–C2c.
+- Follow-ups for Ralph: implement C2a first (log results), attempt C2b if still <48/50, then update decision memo and rerun AT-012 + parity suite before touching other initiatives; keep dtype helper audit (Phase B3) and weighted source output path pending plateau fix.
