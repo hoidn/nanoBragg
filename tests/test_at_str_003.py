@@ -129,9 +129,18 @@ class TestAT_STR_003_LatticeShapeModels:
         self.crystal_config.fudge = 1.0
 
         # Create simulator to test the full implementation
+        # Create minimal detector (required for Simulator but not used in this test)
+        from nanobrag_torch.models.detector import Detector
+        detector = Detector(DetectorConfig(
+            distance_mm=100.0,
+            pixel_size_mm=0.1,
+            spixels=8, fpixels=8,
+            beam_center_s=0.4, beam_center_f=0.4
+        ))
+        crystal = Crystal(self.crystal_config, self.beam_config)
         simulator = Simulator(
-            crystal=Crystal(self.crystal_config),
-            detector=None,  # Not needed for this test
+            crystal=crystal,
+            detector=detector,
             crystal_config=self.crystal_config,
             beam_config=self.beam_config,
         )
@@ -178,9 +187,18 @@ class TestAT_STR_003_LatticeShapeModels:
             self.crystal_config.shape = shape
 
             # Create simulator with this shape
+            # Create minimal detector (required for Simulator but not used in this test)
+            from nanobrag_torch.models.detector import Detector
+            detector = Detector(DetectorConfig(
+                distance_mm=100.0,
+                pixel_size_mm=0.1,
+                spixels=8, fpixels=8,
+                beam_center_s=0.4, beam_center_f=0.4
+            ))
+            crystal = Crystal(self.crystal_config, self.beam_config)
             simulator = Simulator(
-                crystal=Crystal(self.crystal_config),
-                detector=None,
+                crystal=crystal,
+                detector=detector,
                 crystal_config=self.crystal_config,
                 beam_config=self.beam_config,
             )
