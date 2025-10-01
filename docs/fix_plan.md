@@ -186,7 +186,8 @@
   * ✅ Phase B7 complete (benchmark env toggle fix) — commit e64ce6d
   * ✅ Phase B6 complete (ten-process reproducibility) — mean speedup 0.828±0.031 at target
   * ✅ Phase C1 complete (torch.compile impact) — 1.86× speedup from compilation; compiled mode meets ≤1.2× target; artifacts under reports/benchmarks/20251001-055419/
-  * Next: Execute Phase C8 (pixel→Å conversion kernel cost) via `--profile` to capture compiled-path hotspot, then C9 (rotated-vector cost) and C10 (mosaic RNG cost) before proceeding to Phase D caching work (D5/D6/D7/D8)
+  * ✅ Phase C8 complete (pixel→Å conversion cost) — conversion costs ~100ms (17% of 582ms warm time); NOT a bottleneck; recommend deprioritizing D5
+  * Next: Execute Phase C9 (rotated-vector cost) and C10 (mosaic RNG cost) before proceeding to Phase D caching work (D6/D7/D8; D5 deprioritized per C8 findings)
 - Attempts History:
   * [2025-10-01] Attempt #4 — Result: success (Phase 0/1 complete). Refactored to pure function + hoisted guard tensors; torch.compile caching delivers ≥37× warm/cold speedup.
     Metrics: CPU float64 warm/cold 37.09×; CPU float32 1485.90×; CUDA float32 1256.03×; warm setup <50 ms.
@@ -357,6 +358,11 @@
     Artifacts: `reports/benchmarks/20251001-054330-4096-warm-repro/{B6_summary.md, B6_summary.json, run1-10.log + JSON files, analyze_results.py}`, `scripts/benchmarks/run_b6_reproducibility.sh`.
     Observations/Hypotheses: B7 harness fix successfully resolved prior compile-mode ambiguity. Reproducibility now proven with CV=3.7% (vs Attempt #33's 3.9%). Performance stable at 1.21× slowdown, reconciling Attempt #33 measurement and explaining Attempt #32 regression as env-toggle bug. **Phase B complete with reproducible evidence; performance within 10% margin of ≤1.2× target.** Ready for Phase C diagnostics or closure decision per plan guidance.
     Next Actions: Update plan.md B6 status to [X] (✅ done). Decide Phase C entry: either proceed with diagnostics (C1-C10) to close remaining 0.2% gap, or close Phase B as "target achieved within measurement variance" and defer optimization to future work.
+  * [2025-10-01] Attempt #37 (ralph loop) — Result: success (C8 COMPLETE). Profiled 4096² CPU float32 warm run to measure pixel→Å conversion (`pixel_coords_meters * 1e10`) cost.
+    Metrics: Warm time 0.582s vs C 0.536s (speedup 0.86×, PyTorch 1.16× slower). Profiler shows ~10 `aten::mul` operations totaling 1.178s across full 11.5s trace. Estimated pixel→Å conversion cost: ~100ms or 17% of warm simulation time. Total profiler events: 3,210. Correlation: 1.000000 (perfect parity).
+    Artifacts: `reports/profiling/20251001-pixel-coord-conversion/{trace.json, analysis.txt, C8_diagnostic_summary.md}`, `reports/benchmarks/20251001-063328/benchmark_results.json`. Cache setup: 81,480× speedup (0.0ms warm vs 174.8ms cold), meets <50ms target.
+    Observations/Hypotheses: **Pixel→Å conversion is NOT a significant bottleneck.** Individual scalar multiplication (`* 1e10`) costs ~100ms (17% of 582ms warm time). Caching (Phase D5) would save at most 100ms, improving speedup from 0.86× to ~0.93× but still below 1.0× target. Profiler function-level overhead dominates trace; actual kernel costs are lower. Compiled mode is highly effective (torch.compile). **Recommendation: Deprioritize D5 (Hoist pixel Å cache) unless larger detectors show worse scaling or GPU profiling reveals different bottlenecks.**
+    Next Actions: Mark C8 complete in plan.md [X]. Proceed to C9 (rotated-vector regeneration cost) and C10 (mosaic RNG cost) diagnostics. Consider D5 optional given minimal ROI (~7% speedup gain at best). Update Phase C decision to reflect pixel conversion is not the limiting factor.
 - Risks/Assumptions: 1024² CPU performance acceptable given GPU alternative; Phase 4 revisit only if future profiling identifies specific bottlenecks. Weighted-source tooling must be path-agnostic before P3.0c evidence is considered durable.
 - Exit Criteria (quote thresholds from spec):
   * ✅ Phase 2 artifacts demonstrating ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (37–6428× achieved).

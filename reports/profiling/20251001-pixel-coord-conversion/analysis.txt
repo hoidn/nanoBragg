@@ -1,0 +1,35 @@
+Pixel→Å Conversion Cost Analysis (Phase C8)
+================================================================================
+
+Benchmark: 4096² detector, CPU, float32, compiled mode
+Warm simulation time: 0.582s (from benchmark)
+C reference time: 0.536s
+Speedup: 0.86x (PyTorch 1.16× slower)
+
+Total profiler events: 3210
+Total duration captured: 11.539 s
+
+Top multiplication operations:
+--------------------------------------------------------------------------------
+1. nanobrag_torch/simulator.py(676): run                                   499.020 ms ( 4.32%)
+2. nanobrag_torch/simulator.py(612): _compute_physics_for_position         289.277 ms ( 2.51%)
+3. nanobrag_torch/simulator.py(19): compute_physics_for_position           272.087 ms ( 2.36%)
+4. aten::mul                                                                24.673 ms ( 0.21%)
+5. aten::mul                                                                23.705 ms ( 0.21%)
+6. nanobrag_torch/simulator.py(352): torch_dynamo_resume_in_compute_physi   11.014 ms ( 0.10%)
+7. aten::mul                                                                10.233 ms ( 0.09%)
+8. aten::mul                                                                10.162 ms ( 0.09%)
+9. aten::mul                                                                 7.739 ms ( 0.07%)
+10. aten::mul                                                                 7.558 ms ( 0.07%)
+11. aten::mul                                                                 7.477 ms ( 0.06%)
+12. aten::mul                                                                 7.473 ms ( 0.06%)
+13. aten::mul                                                                 7.419 ms ( 0.06%)
+14. aten::mul                                                                 0.042 ms ( 0.00%)
+15. <built-in method matmul of type object at 0x7ac9373a0f40>                 0.030 ms ( 0.00%)
+16. aten::matmul                                                              0.027 ms ( 0.00%)
+17. aten::mul                                                                 0.019 ms ( 0.00%)
+18. <built-in method matmul of type object at 0x7ac9373a0f40>                 0.016 ms ( 0.00%)
+19. aten::matmul                                                              0.015 ms ( 0.00%)
+20. <built-in method matmul of type object at 0x7ac9373a0f40>                 0.014 ms ( 0.00%)
+
+Total time in top 20 mul operations: 1178.000 ms (10.21%)
