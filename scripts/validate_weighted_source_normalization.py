@@ -26,7 +26,8 @@ def test_weighted_sources(device='cpu'):
     # Configuration: 2 sources with different weights and wavelengths
     # Source 1: weight=2.0, λ=6.2Å
     # Source 2: weight=3.0, λ=8.0Å
-    source_wavelengths = torch.tensor([6.2, 8.0], device=device, dtype=dtype)
+    source_wavelengths_A = torch.tensor([6.2, 8.0], device=device, dtype=dtype)  # Angstroms
+    source_wavelengths_m = source_wavelengths_A * 1e-10  # Convert to meters for BeamConfig
     source_weights = torch.tensor([2.0, 3.0], device=device, dtype=dtype)
     source_directions = torch.tensor([
         [1.0, 0.0, 0.0],  # Primary beam direction (MOSFLM convention)
@@ -54,12 +55,16 @@ def test_weighted_sources(device='cpu'):
         fpixels=128
     )
 
-    # Beam config with weighted sources
+    # Beam config with weighted sources - MUST pass sources through BeamConfig
+    # so Simulator.__init__ can populate _source_* cache tensors
     beam_config = BeamConfig(
-        wavelength_A=6.2,  # Primary wavelength (will be overridden by source_wavelengths)
+        wavelength_A=6.2,  # Primary wavelength (used as fallback)
         flux=1e12,
         exposure=1.0,
-        beamsize_mm=0.1
+        beamsize_mm=0.1,
+        source_directions=source_directions,
+        source_wavelengths=source_wavelengths_m,  # BeamConfig expects meters
+        source_weights=source_weights
     )
 
     # Create crystal and detector objects
@@ -68,8 +73,8 @@ def test_weighted_sources(device='cpu'):
 
     # Create simulator with weighted sources
     print("Creating simulator with weighted sources...")
-    print(f"  Source 1: weight={source_weights[0].item():.1f}, λ={source_wavelengths[0].item():.1f}Å")
-    print(f"  Source 2: weight={source_weights[1].item():.1f}, λ={source_wavelengths[1].item():.1f}Å")
+    print(f"  Source 1: weight={source_weights[0].item():.1f}, λ={source_wavelengths_A[0].item():.1f}Å")
+    print(f"  Source 2: weight={source_weights[1].item():.1f}, λ={source_wavelengths_A[1].item():.1f}Å")
 
     simulator = Simulator(
         crystal=crystal,
@@ -80,10 +85,14 @@ def test_weighted_sources(device='cpu'):
         dtype=dtype
     )
 
-    # Set multi-source beam parameters
-    simulator.source_directions = source_directions
-    simulator.source_wavelengths = source_wavelengths
-    simulator.source_weights = source_weights
+    # Verify that sources were properly cached from BeamConfig
+    assert simulator._source_directions is not None, "Multi-source directions not cached"
+    assert simulator._source_wavelengths is not None, "Multi-source wavelengths not cached"
+    assert simulator._source_weights is not None, "Multi-source weights not cached"
+    print(f"  ✓ Multi-source caching verified:")
+    print(f"    Directions shape: {simulator._source_directions.shape}")
+    print(f"    Wavelengths (Å): {(simulator._source_wavelengths * 1e10).tolist()}")
+    print(f"    Weights: {simulator._source_weights.tolist()}")
 
     # Run simulation
     print("\nRunning simulation...")
@@ -117,7 +126,7 @@ def test_weighted_sources(device='cpu'):
         'nonzero_pixels': int(nonzero_pixels),
         'image_shape': list(image.shape),
         'source_weights': source_weights.cpu().tolist(),
-        'source_wavelengths': source_wavelengths.cpu().tolist(),
+        'source_wavelengths_A': source_wavelengths_A.cpu().tolist(),
         'dtype': str(image.dtype)
     }
 
