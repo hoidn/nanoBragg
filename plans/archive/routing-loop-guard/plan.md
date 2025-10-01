@@ -1,6 +1,6 @@
 # Plan: ROUTING-LOOP-001 Automation Guard Refresh
 
-**Status:** Active (supervisor-created)
+**Status:** Archived — completed 2025-10-01 (supervisor-created)
 **Priority:** High — protects prompt routing and prevents regression loops
 **Related fix_plan item:** `[ROUTING-LOOP-001]` loop.sh routing guard — docs/fix_plan.md
 **Created:** 2025-10-06 by galph (refresh after regression)
@@ -41,7 +41,7 @@ Exit Criteria: fix_plan entry updated with metrics/artifacts; plan archived.
 | --- | --- | --- | --- |
 | C1 | Final supervisor check | [X] | Re-run A1 on merged script to confirm compliance; attach diff summary to fix_plan Attempt entry. ✅ Complete (compliance verified via reports/routing/20251001-compliance-verified.txt) |
 | C2 | Update documentation | [X] | Ensure `docs/fix_plan.md` Attempt references the dry-run log and notes the corrected behavior; highlight that automation must use `prompts/debug.md` while AT parity incomplete. ✅ Complete |
-| C3 | Archive plan | [DEFER] | Move this file to `plans/archive/routing-loop-guard/plan.md` once C1–C2 complete. (Will be done after commit) |
+| C3 | Archive plan | [X] | ✅ Complete (2025-10-12 loop): plan moved to `plans/archive/routing-loop-guard/plan.md` and fix_plan entry updated to note closure. |
 
 ## Notes & Guardrails
 - `loop.sh` is listed in `docs/index.md` (Protected Assets rule); do not delete or rename it.

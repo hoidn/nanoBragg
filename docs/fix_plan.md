@@ -1,7 +1,10 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-01 (galph loop BP)
-**Active Focus:** Complete AT-012 Phase C3 validation and C4 warm benchmarks, finish DTYPE Phase B3 helper audits, and drive PERF Phase B3–B5 profiler follow-ups (explain 1.25× vs 3.55× warm gap) before Phase C experiments.
+**Last Updated:** 2025-10-12 (galph loop BR)
+**Active Focus:**
+- AT-012: capture Phase C3 validation artifacts + plateau histograms under `reports/2025-10-AT012-regression/phase_c_validation/`, then run Phase C4 benchmarks and append results to the mitigation memo.
+- DTYPE: finish Phase B3 by making `io/source.py`, `utils/noise.py`, and `utils/c_random.py` device/dtype neutral (record before/after in `reports/DTYPE-DEFAULT-001/phase_b3_audit.md`).
+- PERF: reconcile 1-iteration vs 5-iteration warm timings, complete Phase B4 hotspot summary (top ops from trace) and B5 eager-mode profile before designing Phase C experiments.
 
 ## Index
 | ID | Title | Priority | Status |
@@ -498,7 +501,7 @@
     Artifacts: None yet; must create `reports/routing/<date>-loop-audit.txt` during Plan Phase A.
     Observations/Hypotheses: Until we capture the audit and restore single-iteration `prompts/debug.md`, automation poses risk of repeated bad pushes (Protected Assets rule reminder: do not delete `loop.sh`).
     Next Actions: Ralph to execute plan tasks A1–A3 before any further automation runs; supervisor to hold routing plan open until audit log and corrective diff exist.
-  * [2025-10-06] Attempt #2 — Result: regression. Discovered automation script once again runs `prompts/main.md` inside a fixed loop, violating routing guard and spamming `git push`. Plan rebooted at `plans/active/routing-loop-guard/plan.md` (Phase A pending).
+  * [2025-10-06] Attempt #2 — Result: regression. Discovered automation script once again runs `prompts/main.md` inside a fixed loop, violating routing guard and spamming `git push`. Plan rebooted (now archived at `plans/archive/routing-loop-guard/plan.md`) with Phase A tasks pending at the time.
     Metrics: n/a
     Artifacts: To be captured during Phase A (see plan tasks A1–A3).
     Observations/Hypotheses: Likely rebase dropped prior fix; guard needs reinstatement alongside single-iteration workflow.
@@ -512,7 +515,7 @@
     Metrics: Crystal geometry smoke test 19/19 passed post-change; no regressions.
     Artifacts: reports/routing/20251001-loop-audit.txt (Phase A), reports/routing/20251001-compliance-verified.txt (Phase C), loop.sh (git diff).
     Observations/Hypotheses: Regression had doubled to 40 iterations from prior 20; routing guard now restored per plan exit criteria (single debug.md execution, conditional push, rebase-before-work).
-    Next Actions: Archive plan to plans/archive/routing-loop-guard/ once committed; monitor for future regressions.
+    Next Actions: ✅ Plan archived; continue monitoring automation for future regressions.
 - Risks/Assumptions: Ensure future automation edits maintain routing guard.
 - Exit Criteria (quote thresholds from spec): ✅ Script executes `prompts/debug.md` exactly once per run with evidence recorded in reports (satisfied).
 
