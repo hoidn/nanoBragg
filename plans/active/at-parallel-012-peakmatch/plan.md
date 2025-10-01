@@ -39,6 +39,9 @@ Exit Criteria: Root cause hypothesis documented with supporting traces (pixel-le
 | B1 | Inspect ROI mask & threshold handling | [ ] | Instrument `Simulator.run` (temporary logging or tensor dumps under `reports/.../roi_debug.pt`) to verify ROI mask zeros align with missing peaks; respect Instrumentation Rule #0. |
 | B2 | Trace representative missing peak | [ ] | Use `scripts/debug_pixel_trace.py --pixel <slow> <fast>` with coordinates from A2 to compare C vs PyTorch intensities; store trace logs in the report folder. |
 | B3 | Evaluate polarization/solid-angle factors | [ ] | For the traced pixel, compare intermediate multipliers (polarization, omega, lattice factor); note first divergence in a markdown summary (`reports/.../divergence.md`). |
+| B4 | Check dtype sensitivity of peak detection | [ ] | Re-run the simple_cubic harness with `simulator.run().to(torch.float32)` before calling `find_peaks`; capture match counts. If float32 restores ≥50 peaks (current float64 run returns 45), document the results and decide whether to quantize outputs or adjust the detector logic. |
+
+> 2025-10-02 note: Supervisor reproduction confirmed that casting the PyTorch image to float32 prior to `find_peaks` yields 50/50 matches with 0.0 px mean distance, whereas the current float64 path produces only 45 peaks (43 matched). Treat this as the leading hypothesis until refuted by Phase B traces.
 
 ### Phase C — Implement & Validate Fix
 Goal: Apply targeted corrections (ROI mask caching, intensity scaling, etc.) and restore ≥95% peak matches without breaking other variants.
