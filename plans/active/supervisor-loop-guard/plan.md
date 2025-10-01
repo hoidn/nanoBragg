@@ -8,7 +8,7 @@
 ## Context
 - Initiative: Error-correcting the engineer agent / automation hygiene
 - Phase Goal: Bring `supervisor.sh` up to the same guarded, single-iteration standard as `loop.sh` (timeouted pull, single prompt execution, conditional push) before the supervisor harness runs again.
-- Dependencies: `prompts/meta.md` routing rules, `docs/index.md` (Protected Assets — `supervisor.sh` is listed), `plans/active/routing-loop-guard/plan.md` (reference implementation), commit `853cf08` (`loop.sh` guard), existing audit logs in `reports/routing/`.
+- Dependencies: `prompts/meta.md` routing rules, `docs/index.md` (Protected Assets — currently only `loop.sh`; Phase B must add `supervisor.sh` so the guard is enforced by policy), `plans/active/routing-loop-guard/plan.md` (reference implementation), commit `853cf08` (`loop.sh` guard), existing audit logs in `reports/routing/`.
 
 ---
 
@@ -36,6 +36,7 @@ Exit Criteria: `supervisor.sh` updated with timeouted pull (`timeout 30 git pull
 | B2 | Implement guarded script | [ ] | Edit `supervisor.sh` to: (1) run the timeouted pull with fallback, (2) execute `prompts/supervisor.md` exactly once via `${CODEX_CMD}`, (3) capture exit status, (4) only `git push` when local commits exist and command succeeded. Preserve logging (`tmp/supervisorlog*.txt`) and Protected Assets constraints. |
 | B3 | Guarded dry run | [ ] | Run `CODEX_CMD=printf ./supervisor.sh > reports/routing/<stamp>-supervisor-dry-run.log 2>&1`. Confirm log shows single iteration, demonstrates fallback warning path, and no push attempt on dry run. |
 | B4 | Hygiene verification | [ ] | `bash -n supervisor.sh` (or `shellcheck` if available) and record results in `reports/routing/<stamp>-supervisor-hygiene.txt`, including `git status` output showing expected changes only. |
+| B5 | Mark supervisor.sh as protected asset | [ ] | Update `docs/index.md` Core Guides list so it includes `supervisor.sh` alongside `loop.sh`; store diff in `reports/routing/<stamp>-supervisor-protected-asset.md` and note the change in fix_plan Attempt log. |
 
 ---
 
@@ -53,7 +54,7 @@ Exit Criteria: Compliance log + fix_plan updates committed/pushed; plan ready to
 ---
 
 ## Notes & Guardrails
-- Do **not** delete or rename `supervisor.sh`; it is a Protected Asset listed in `docs/index.md`.
+- Do **not** delete or rename `supervisor.sh`; treat it as a Protected Asset and make the docs/index.md update in Phase B5 to formalise the policy before rerunning automation.
 - Keep automation pointed at `prompts/supervisor.md`; no switch back to `prompts/main.md` without supervisor directive.
 - Ensure the script respects exit codes: on non-zero prompt failure, skip push and surface the error in logs.
 - Maintain parity with `loop.sh` guard logic so future audits can diff the two scripts easily.

@@ -1,13 +1,13 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-13 (galph loop CA)
+**Last Updated:** 2025-10-15 (galph loop CM)
 **Active Focus:**
 - ROUTING: Close the reopened guard plan by capturing a fresh regression audit referencing commit `c49e3be` and re-confirming the guarded `loop.sh` flow (`plans/active/routing-loop-guard/plan.md` Phases A–C) before automation resumes.
-- ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md` to document the unguarded `supervisor.sh` loop before restoring a single-iteration flow.
+- ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md`, then drive Phase B guard work (B2–B4) and new task B5 to add `supervisor.sh` to docs/index.md so Protected-Asset policy covers the script before automation runs again.
 - AT-012: Plan archived (`plans/archive/at-parallel-012-plateau-regression/plan.md`); monitor for regressions using `reports/2025-10-AT012-regression/phase_c_validation/` artifacts and re-open only if peak matches drop below spec.
-- GRADIENT: Reopen Tier-2 gradcheck coverage to add the remaining spec-required parameters (`misset_rot_x`, `lambda_A`, `fluence`) and align docs/tests (see `[AT-TIER2-GRADCHECK]`).
+- GRADIENT: Execute `plans/active/gradcheck-tier2-completion/plan.md` Phase A (A1–A3 baseline audit + env alignment) before adding misset/beam gradchecks from Phases B/C; once pass logs exist, close `[AT-TIER2-GRADCHECK]` with Phase D documentation updates.
 - DTYPE: ✅ Complete. Plan archived to `plans/archive/dtype-default-fp32/`. All phases (A-D) finished; float32 defaults documented in arch.md, pytorch_runtime_checklist.md, CLAUDE.md, prompts/debug.md.
-- PERF: Phase B5 eager trace captured; 4096² warm regression resurfaced (see reports/benchmarks/20251001-025148/). Run B6 reproducibility with cache-state logging before unlocking Phase C diagnostics; unblock B7 so benchmark logs capture `compile_mode` and flush caches when `NANOBRAGG_DISABLE_COMPILE` toggles.
+- PERF: Land plan task B7 (benchmark env toggle fix), rerun Phase B6 ten-process reproducibility with the new compile metadata, capture the weighted-source parity memo feeding C5, then execute Phase C diagnostics (C1/C2 plus C8/C9 pixel-grid & rotated-vector cost probes) ahead of Phase D caching work.
 
 ## Index
 | ID | Title | Priority | Status |
@@ -131,11 +131,11 @@
   * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/investigate_compile_cache.py --instances 5 --size 256 --devices cpu,cuda --dtypes float64,float32 --sources 1`
   * Shapes/ROI: 256²–1024² detectors, pixel 0.1 mm, oversample 1, full-frame ROI
 - First Divergence (if known): 4096² warm runs still trail the C binary (latest speedup_warm≈0.30 per reports/benchmarks/20251001-025148/ after 1.77 s PyTorch vs 0.53 s C) and prior 1.11× measurements appear non-reproducible without warmed torch.compile caches; additionally, PyTorch now honours `source_weights` whereas C ignores them (golden_suite_generator/nanoBragg.c:2604-3278), so weighted-source parity remains unresolved pending a decision memo (src/nanobrag_torch/simulator.py:310-360, 420-570).
-- Immediate Next Actions (2025-10-13):
+- Immediate Next Actions (2025-10-15):
   * Implement plan task B7 so benchmark logs record the actual compile mode, push/pop any prior `NANOBRAGG_DISABLE_COMPILE` value, and stop reusing cached simulators across mode switches; rerun the 4096² regression command both compiled and eager to populate reports/benchmarks/<stamp>-env-toggle-fix/.
   * After the harness fix, redo Phase B task B6: run ten cold-process warm benchmarks with the new compile-mode field, record cache/state metadata, and reconcile the slowdown in reports/benchmarks/20251001-025148/ against the prior 1.11× runs from reports/benchmarks/20251001-014819-measurement-reconciliation/.
   * Document the weighted-source semantic gap by diffing PyTorch vs C accumulation (C ignores weights); produce a short decision note under reports/benchmarks/<stamp>-weighted-source-parity/ feeding plan task C5 before optimisation work.
-  * With reproducibility + harness instrumentation in place, execute Phase C diagnostics starting with C1 (compile disabled) and C2 (single-stage reduction), then collect the new measurements from C8 (pixel→Å conversion cost) and C9 (rotated-vector regeneration) so Phase D optimisations are evidence-backed.
+  * With reproducibility + harness instrumentation in place, execute Phase C diagnostics starting with C1 (compile disabled) and C2 (single-stage reduction), then capture C8 (pixel→Å conversion kernel cost) and C9 (rotated-vector regeneration timing) so Phase D caching work (D5/D6) has quantified baselines.
 - Attempts History:
   * [2025-10-01] Attempt #4 — Result: success (Phase 0/1 complete). Refactored to pure function + hoisted guard tensors; torch.compile caching delivers ≥37× warm/cold speedup.
     Metrics: CPU float64 warm/cold 37.09×; CPU float32 1485.90×; CUDA float32 1256.03×; warm setup <50 ms.
@@ -588,12 +588,13 @@
   * PyTorch: n/a
   * Shell: `sed -n '1,160p' supervisor.sh`
 - First Divergence (if known): Script runs `for i in {1..40}` over `prompts/supervisor.md` without the mandated `timeout 30 git pull --rebase` guard or conditional push suppression; mirrors the routing regression previously fixed in `loop.sh`.
-- Immediate Next Actions (2025-10-13):
+- Immediate Next Actions (2025-10-15):
   * Execute plan Phase A tasks A1–A3 to capture a regression report under `reports/routing/` and log the attempt in this ledger.
   * Draft guard design note (Phase B1) before editing the script so the patched flow mirrors `loop.sh` protections and documents the fallback (`git rebase --abort` → `git pull --no-rebase`) for timeout scenarios.
+  * Implement the guarded flow (Phase B2–B4) and new task B5 to add `supervisor.sh` to docs/index.md so Protected Assets policy covers the script before the automation loop runs again.
 - Attempts History:
   * [2025-10-13] Attempt #1 — Result: regression documented. Confirmed `supervisor.sh` loops 40× with no pull/rebase guard and no exit criteria. No artifacts yet (pending plan Phase A). Next Actions: follow plan tasks A1–A3 to produce evidence, then proceed to Phase B implementation.
-- Risks/Assumptions: Treat `supervisor.sh` as Protected Asset; ensure edits retain logging expectations and do not re-enable multi-iteration loops.
+- Risks/Assumptions: Treat `supervisor.sh` as a Protected Asset (Phase B5 formalises this in docs/index.md); ensure edits retain logging expectations and do not re-enable multi-iteration loops.
 - Exit Criteria: Guarded single-iteration script with audit/dry-run/compliance logs captured and plan archived.
 
 ### Completed Items — Key Reference
