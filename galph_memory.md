@@ -246,3 +246,16 @@
 - Peak-match effort untouched: no artifacts under `reports/2025-10-02-AT-012-peakmatch/`; Phase A checklist in `plans/active/at-parallel-012-peakmatch/plan.md` remains at [ ].
 - No new plan spun up; existing active plans already track the work. Fix_plan priorities still accurate, so left unchanged.
 - Ralph next actions: execute PERF Plan P3.0/P3.0b/P3.0c to restore multi-source semantics, then run AT-012 Plan Phase A (capture baseline JSON/peaks) before exploring dtype hypotheses; keep work under `prompts/debug.md`.
+
+## 2025-10-04 (galph loop AG)
+- Sync: `git pull --rebase` clean (no remote deltas); working tree remained clean throughout review.
+- Deep analysis (long-term goals):
+  * Multi-source path still broken—`Simulator.run` divides by `source_weights.sum()` inside `steps`, so weighted sums average intensities (`src/nanobrag_torch/simulator.py:688-695`) and polarization still uses the global beam vector instead of per-source directions (`src/nanobrag_torch/simulator.py:813-834`).
+  * Fallback crash persists: when `BeamConfig.source_wavelengths` is `None`, `__init__` still calls `.to()` on it (`src/nanobrag_torch/simulator.py:666-677` + `src/nanobrag_torch/config.py:465-469`), matching the failure PERF plan P3.0 documents.
+  * Perf hotspots unchanged—ROI mask and detector constants are rebuilt every run (`src/nanobrag_torch/simulator.py:571-609`), and warm-run benchmarks remain untrustworthy because `scripts/benchmarks/benchmark_detailed.py:108-157` still sums the boolean `cache_hit` into totals and hardcodes detector sizes.
+  * AT-012 peak-match effort is stalled: `reports/` has no `2025-10-02-AT-012-peakmatch/` directory yet, so Phase A (A1–A3) never started.
+- Planning call: existing plans (`plans/active/at-parallel-012-peakmatch`, `plans/active/perf-pytorch-compile-refactor`) already capture these gaps; no new plan drafted. docs/fix_plan.md priorities remain aligned with observed blockers.
+- Next steps for Ralph:
+  1. Execute AT-012 Phase A (A1–A3) to capture fresh failure artifacts before new hypotheses.
+  2. Work through PERF Phase 3 tasks sequentially—P3.0/P3.0b/P3.0c to restore multi-source semantics, then P3.1 to fix the benchmark script, before collecting warm-run data.
+  3. Once those are underway, cache ROI/misset tensors per P3.4 to remove the remaining per-run tensor churn.
