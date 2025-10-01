@@ -414,3 +414,9 @@
   1. Execute PERF plan tasks P3.0b/P3.0c/P3.4 with trace artifacts before attempting any new benchmarks; fix polarization weighting to use per-source directions and move normalization after the reduction.
   2. Complete routing plan Phase A artifact capture and restore `loop.sh` to single-pass `prompts/debug.md` execution prior to rerunning automation.
   3. Resume DTYPE-DEFAULT plan Phase C once AT-012 float32 parity passes, capturing float64 vs float32 plateau traces under `reports/DTYPE-DEFAULT-001/20251006-at012-regression/`.
+
+## 2025-10-07 (galph loop AT)
+- `git pull --rebase` clean; reviewed galph_memory + active plans before analysis.
+- Deep-dive reaffirmed multi-source physics regressions: `steps` still divides by summed weights (violates AT-SRC-001), polarization paths still reuse the first source vector, and ROI/misset tensors (`Simulator.run`:611-705) plus detector constants are rebuilt each call, matching the chronic CPU allocator churn in benchmarks. DTYPE plan Phase B3 helper plumbing still outstanding; automation harness (`loop.sh`) remains in 40-iteration `prompts/main.md` loop with unconditional pushes.
+- Updated the PERF plan Phase 3 table with spec citations, explicit reproduction commands (pytest multi-source test + `nb-compare` C/Py pairing), and profiler artifact expectations; filed `[PERF-PYTORCH-004]` Attempt #14 documenting the spec alignment and required artifacts.
+- Follow-up for Ralph: finish PERF plan tasks P3.0–P3.0c (guard defaults, per-source polarization, normalization) and P3.4 (ROI/misset caching) with the new artifact targets before re-running P3.2/P3.3 benchmarks; keep routing plan Phase A in focus; capture dtype float64 vs float32 plateau traces once AT-012 matches ≥95% again.
