@@ -459,9 +459,3 @@
 
 ### Archive
 For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, early PERF fixes, routing escalation log), see `docs/fix_plan_archive.md`.
-  * [2025-10-07] Attempt #7 — Result: INVALID (see main log). Relaxing the acceptance thresholds and enforcing float64 broke spec §AT-012; work redirected to `plans/active/at-parallel-012-plateau-regression/plan.md` to restore the proper contract.
-  * [2025-10-08] Attempt #8 — Result: regression reconfirmed under restored spec contract. Reverted temporary float64 override and reinstated 0.5 px tolerance/95% peak expectation (`commit 1435c8e`). Tests now fail fast with 43/50 matched peaks while recording Phase A artifacts.
-    Metrics: corr=0.9999999999999997; matches=43/50 (86%); required ≥48/50; mean distance logged in baseline report.
-    Artifacts: reports/2025-10-AT012-regression/simple_cubic_baseline.log; reports/2025-10-AT012-regression/simple_cubic_metrics.json; tests/test_at_parallel_012.py (spec assertions restored).
-    Observations/Hypotheses: Plateau fragmentation persists in native float32 despite parity correlation of 1.0; histogram/trace capture still needed (Plan Phase A3/B1). Removing the float64 override exposes the real defect so downstream dtype default work can proceed once plateau fix lands.
-    Next Actions: Finish Plan Phase A by generating plateau histograms (A3) and logging the update in this ledger (A4), then proceed to Phase B divergence tracing.
