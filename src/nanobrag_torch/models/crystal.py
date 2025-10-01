@@ -596,8 +596,16 @@ class Crystal:
             # rotate(b_star,b_star,misset[1],misset[2],misset[3]);
             # rotate(c_star,c_star,misset[1],misset[2],misset[3]);
             from ..utils.geometry import angles_to_rotation_matrix, rotate_umat
-            misset_rad = [torch.deg2rad(torch.tensor(angle, dtype=self.dtype, device=self.device))
-                          for angle in self.config.misset_deg]
+            # Preserve gradient flow: convert to tensor only if not already a tensor
+            misset_rad = []
+            for angle in self.config.misset_deg:
+                if isinstance(angle, torch.Tensor):
+                    # Already a tensor - just convert dtype/device while preserving gradients
+                    angle_tensor = angle.to(dtype=self.dtype, device=self.device)
+                else:
+                    # Scalar - create new tensor
+                    angle_tensor = torch.tensor(angle, dtype=self.dtype, device=self.device)
+                misset_rad.append(torch.deg2rad(angle_tensor))
             R_misset = angles_to_rotation_matrix(misset_rad[0], misset_rad[1], misset_rad[2])
             a_star = rotate_umat(a_star, R_misset)
             b_star = rotate_umat(b_star, R_misset)

@@ -1,16 +1,41 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-02 (galph loop T)
+**Last Updated:** 2025-09-30 (ralph loop)
 **Active Focus:** Protect automation assets, finish nanoBragg hygiene cleanup, restore AT-012 peak matches, and capture authoritative performance evidence for PERF-PYTORCH-004.
 
 ## Index
 | ID | Title | Priority | Status |
 | --- | --- | --- | --- |
+| [GRADIENT-MISSET-001](#gradient-misset-001-fix-misset-gradient-flow) | Fix misset gradient flow | High | done |
 | [PROTECTED-ASSETS-001](#protected-assets-001-docsindexmd-safeguard) | Protect docs/index.md assets | Medium | in_progress |
 | [REPO-HYGIENE-002](#repo-hygiene-002-restore-canonical-nanobraggc) | Restore canonical nanoBragg.c | Medium | in_progress |
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
 | [DTYPE-DEFAULT-001](#dtype-default-001-migrate-default-dtype-to-float32) | Migrate default dtype to float32 | High | new |
 | [AT-PARALLEL-012-PEAKMATCH](#at-parallel-012-peakmatch-restore-95-peak-alignment) | Restore 95% peak alignment | High | done |
+
+---
+
+## [GRADIENT-MISSET-001] Fix misset gradient flow
+- Spec/AT: arch.md §15 Differentiability Guidelines, Core Implementation Rule #9 (CLAUDE.md)
+- Priority: High
+- Status: done
+- Owner/Date: ralph/2025-09-30
+- Reproduction (C & PyTorch):
+  * C: n/a (PyTorch-specific gradient correctness issue)
+  * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_gradient_flow -v`
+  * Shapes/ROI: n/a (gradient test, not image comparison)
+- First Divergence (if known): Crystal.compute_cell_tensors line 599 used `torch.tensor(angle, ...)` which breaks gradient flow when angle is already a tensor with requires_grad=True
+- Attempts History:
+  * [2025-09-30] Attempt #1 — Result: success. Fixed gradient-breaking `torch.tensor()` call by checking if input is already a tensor and using `.to()` instead.
+    Metrics: test_misset_gradient_flow PASSED; all 39 core geometry tests pass (2 skipped).
+    Artifacts: src/nanobrag_torch/models/crystal.py lines 599-608 (git diff).
+    Observations/Hypotheses: The code used `torch.tensor(angle, dtype=..., device=...)` which creates a new tensor without gradients, even when `angle` is already a tensor with `requires_grad=True`. This is a Core Implementation Rule #9 violation. Fix: check `isinstance(angle, torch.Tensor)` and use `.to(dtype=..., device=...)` to preserve gradients.
+    Next Actions: None - issue resolved. All gradient tests pass.
+- Risks/Assumptions: Ensure all other code paths that accept tensor-or-scalar inputs use similar gradient-preserving patterns.
+- Exit Criteria (quote thresholds from spec):
+  * test_misset_gradient_flow passes (✅ satisfied).
+  * No regressions in crystal/detector geometry tests (✅ 39 passed, 2 skipped).
+  * Gradient flow maintained through misset parameters (✅ verified by torch.autograd.gradcheck).
 
 ---
 
