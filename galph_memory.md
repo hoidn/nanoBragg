@@ -880,3 +880,11 @@ Follow-ups for Ralph:
 - Perf review: `scripts/benchmarks/benchmark_detailed.py` continues toggling `NB_DISABLE_COMPILE`, so `--disable-compile` never feeds `NANOBRAGG_DISABLE_COMPILE`; Phase B task B7 of the perf plan is still blocking reproducible warm measurements. Flagged as top priority for Ralph.
 - 4096² warm gap: simulator still rebuilds the 16 M×3 Å-position tensor (`pixel_coords_meters * 1e10`) and re-coerces scalar detector constants every run; this aligns with perf plan items C8/C9—Ralph needs to quantify and hoist these caches after B7 lands.
 - Feedback for Ralph: (1) Execute supervisor guard plan Phase A (audit log + fix_plan attempt) immediately. (2) Patch the benchmark env toggle per perf plan B7 and rerun the env-mode regression study. (3) Once B7 is done, schedule perf plan C8/C9 profiling to capture pixel-grid & detector-scalar allocation costs.
+
+## 2025-10-01 04:27 (galph loop)
+- Ran `timeout 30 git pull --rebase --autostash` because `supervisor.sh` is still dirty; tree restored with local edits intact.
+- Confirmed `supervisor.sh` remains unguarded (40x loop, no pull/push gates) per lines 13-16; plan `plans/active/supervisor-loop-guard/plan.md` Phase A tasks A1–A3 are still outstanding and must be completed before any automation runs.
+- Performance review: simulator still rebuilds the 16M×3 Å grid every warm run (`src/nanobrag_torch/simulator.py:966`) and re-wraps scalar detector constants via `torch.as_tensor` (`simulator.py:860,1008`); aligns with PERF plan tasks C8 and D5/D6 to profile then cache pixel Å coords and rotated lattice tensors—should be prioritized after benchmark harness fix.
+- Noted `_generate_mosaic_rotations` regenerates random axes each call (`crystal.py:932-958`) without caching/seeding, which busts torch.compile warm caches; fold this into Phase C9/D6 profiling and consider deterministic caching keyed by `mosaic_seed`.
+- Weighted-source parity gap persists (PyTorch applies `source_weights`, C ignores); reinforce plan B7+C5 sequence before further perf work.
+- Next for Ralph: (1) Execute supervisor guard plan Phase A (audit + fix_plan attempt) immediately, then Phase B1 design. (2) Land PERF harness fix B7 and rerun B6 with compile-mode logs. (3) Carry Phase C diagnostics toward D5/D6 caching once harness evidence captured.
