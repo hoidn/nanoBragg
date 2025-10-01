@@ -691,18 +691,12 @@ class Simulator:
 
         # Calculate normalization factor (steps)
         # Per spec AT-SAM-001: "Final per-pixel scale SHALL divide by steps"
-        # Per spec AT-SRC-001: "intensity contributions SHALL sum with per-source λ and weight"
-        # When using weighted sources, normalization uses sum of weights instead of count
+        # PERF-PYTORCH-004 P3.0c: Per AT-SRC-001 "steps = sources; intensity contributions SHALL sum with per-source λ and weight, then divide by steps"
+        # The divisor SHALL be the COUNT of sources, not the SUM of weights.
+        # Weights are applied during accumulation (inside compute_physics_for_position), then we normalize by count.
         phi_steps = self.crystal.config.phi_steps
         mosaic_domains = self.crystal.config.mosaic_domains
-
-        # Calculate effective source normalization
-        if source_weights is not None:
-            # Use sum of weights for weighted sources
-            source_norm = source_weights.sum()
-        else:
-            # Use number of sources for equal weighting
-            source_norm = n_sources
+        source_norm = n_sources
 
         steps = source_norm * phi_steps * mosaic_domains * oversample * oversample  # Include sources and oversample^2
 
