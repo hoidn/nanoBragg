@@ -138,3 +138,6 @@
 - Benchmark tooling gaps persist: investigations script still CPU-only (scripts/benchmarks/investigate_compile_cache.py) and detailed benchmark divides by zero on 0s warm setup (scripts/benchmarks/benchmark_detailed.py:249-287).
 - Authored new phased plan at plans/active/at-parallel-012-peakmatch/plan.md and cross-referenced fix_plan; item now ready for Ralph to execute under prompts/debug.md.
 - Follow-ups for Ralph: Phase A of peak-match plan (rerun test, capture artifacts) then Phase B tracing; continue PERF-PYTORCH-004 P2.1–P2.5 once multi-source expand fix lands.
+
+## 2025-10-02 (galph loop T addendum)
+- Noted existing working-copy edit in `prompts/update_fix_plan.md`; change predates this loop and left untouched per supervisor policy.
