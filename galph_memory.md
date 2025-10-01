@@ -146,3 +146,24 @@
 - Restored `docs/fix_plan.md` with compact active item ledger plus key completed sections (Protected Assets, routing guard, AT-024 regression, PERF Phase 2, triclinic fix); added dtype hypothesis to AT-012 plan (Phase B4).
 - Reintroduced `docs/fix_plan_archive.md` to hold extended history while keeping main plan at 204 lines (<1000).
 - Next actions for Ralph: follow updated plan B4 (float32 vs float64 peak detection) during AT-012 investigation, continue REPO-HYGIENE-002 H1–H6, and execute PERF-PYTORCH-004 plan tasks P2.1–P2.5 / P3.1–P3.5.
+
+## 2025-10-02 (galph loop V)
+- Startup sync: `git pull --rebase` initially blocked by `prompts/update_fix_plan.md`; stashed (`git stash push -m "galph-pre-pull"`), pull returned "Already up to date.", then `git stash pop` restored the pending edit.
+- Deep analysis toward long-term goals:
+  * AT-012 peak gap now traced to dtype: rerunning the simple_cubic harness and casting `simulator.run()` to float32 before `find_peaks` yields 50/50 matches (mean Δ0.0 px) whereas float64 stays at 45/50 (43 matched). Command logged under `python - <<'PY' ...` and codified as Plan Phase B4 (`plans/active/at-parallel-012-peakmatch/plan.md`).
+  * Multi-source configuration still brittle—`src/nanobrag_torch/simulator.py:404` dereferences `beam_config.source_wavelengths` without a fallback; providing `source_directions` alone reproduces the AttributeError. Needs default-to-main-wavelength handling before Phase 3 performance work.
+  * Benchmark tooling bug confirmed: `scripts/benchmarks/benchmark_detailed.py:149` sums the boolean `cache_hit` flag into `timings['total']`, inflating warm-run totals by +1 s and masking true torch.compile gains. Also observed the warm-path divide-by-zero warning when setup=0.
+  * Test harness still enforces the relaxed 86% threshold (`tests/test_at_parallel_012.py:169`); tightening awaits the dtype fix plus ROI checks in Phase B1–B3.
+- Coin flip → heads → commit review: inspected `51110d4`, `cb6a761`, `a661afc`, `be3398b`.
+  * `51110d4` correctly validated torch.compile caching but left multi-source failure and benchmark timing bug unresolved; float32 cache speedup numbers remain valid but need refreshed once CLI is fixed.
+  * `cb6a761` patched device drift (`F_cell.to(...)`) yet retained CPU-only constants; full device neutrality (incident beam, cached tensors) still outstanding.
+  * `a661afc` documented GPU issues without actionable mitigation; needs follow-through once simulator constants are hoisted.
+  * `be3398b` solved the AT-024 float mismatch cleanly—no regressions spotted.
+- Planning/docs updates:
+  * Verified `plans/active/at-parallel-012-peakmatch/plan.md` now includes Phase B4 dtype task plus supervisor note; no new plan required beyond reinforcing Phase B execution order.
+  * `docs/fix_plan.md` already captured Attempt #2 (float32 diagnostic); added guidance to PERF entry to cover the cache_hit bug and missing `source_wavelengths` guard.
+- Guidance for Ralph next loop:
+  1. Execute AT-012 Plan Phase A artifacts, then Phase B (including new B4 dtype experiment) before touching core physics; archive results under `reports/2025-10-02-AT-012-peakmatch/`.
+  2. Patch `Simulator.__init__` to default `source_wavelengths` to `beam_config.wavelength_A` when multi-source directions are supplied, and rerun multi-source torch.compile cache tests.
+  3. Fix `scripts/benchmarks/benchmark_detailed.py:149` to exclude booleans from total time and rerun the 256–1024² benchmarks so PERF Phase 3 can compare against C accurately.
+- Repo state leaving loop: clean tree (users' `prompts/update_fix_plan.md` restored untouched); no commits made this run.
