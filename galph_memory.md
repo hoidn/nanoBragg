@@ -666,3 +666,10 @@
 - `loop.sh` still runs `prompts/main.md` 40× with unconditional `git push`; ROUTING plan Phase A evidence remains outstanding.
 - Ran `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation -vv` for verification (passes). Ralph must archive this run + plateau histograms under Phase C3 and update `phase_c_decision.md` per C2c.
 - Follow-ups for Ralph: (1) finish AT-012 Phase C3/C4 artifacts & memo update, (2) complete DTYPE helper refactor with audit log, (3) kick off PERF Phase B profiling, (4) execute routing guard plan Phase A by recording loop.sh audit and adding fix_plan entry.
+
+## 2025-10-01 (galph loop BP)
+- Updated docs/fix_plan.md focus to AT-012 Phase C3/C4, DTYPE Phase B3, and PERF Phase B3–B5; refreshed PERF plan B4 guidance to explain the new 1.25× vs 3.55× warm gap.
+- DTYPE helpers still hard-code float64 CPU tensors (src/nanobrag_torch/io/source.py:45-112, src/nanobrag_torch/utils/noise.py:156-168, src/nanobrag_torch/utils/c_random.py:217-227); no `reports/DTYPE-DEFAULT-001/phase_b3_audit.md` yet.
+- AT-012 plateau mitigation lacks Phase C3/C4 artifacts (`reports/2025-10-AT012-regression/` has no `phase_c_trials/` or `phase_c_validation/` directories); tests were run but not archived.
+- PERF profiling now produces a 1.25× warm trace (reports/benchmarks/20251001-010128/) versus the 3.55× five-iteration baseline (reports/benchmarks/20251001-005052/); plan now requires rerunning both iteration counts before claiming improvement.
+- Follow-ups for Ralph: (1) capture AT-012 Phase C3 validation log + plateau histograms and Phase C4 benchmark deltas, (2) finish DTYPE Phase B3 by making the helper factories device/dtype neutral and logging the before/after audit, (3) run the dual-iteration warm benchmarks + hotspot summary per PERF plan B4/B5 and note any C-profile coverage.

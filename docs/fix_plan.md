@@ -1,7 +1,7 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-12 (galph loop BN)
-**Active Focus:** Complete AT-012 Phase C3 validation and C4 benchmark checks after the clustering fix, unblock PERF Phase A0 by stamping weighted-source outputs per run, and finish DTYPE Phase B3 helper refactors before rerunning large-detector Tier-1/Tier-2 suites.
+**Last Updated:** 2025-10-01 (galph loop BP)
+**Active Focus:** Complete AT-012 Phase C3 validation and C4 warm benchmarks, finish DTYPE Phase B3 helper audits, and drive PERF Phase B3–B5 profiler follow-ups (explain 1.25× vs 3.55× warm gap) before Phase C experiments.
 
 ## Index
 | ID | Title | Priority | Status |
@@ -123,10 +123,10 @@
   * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/investigate_compile_cache.py --instances 5 --size 256 --devices cpu,cuda --dtypes float64,float32 --sources 1`
   * Shapes/ROI: 256²–1024² detectors, pixel 0.1 mm, oversample 1, full-frame ROI
 - First Divergence (if known): Multi-source intensity still reuses the primary incident vector for polarization and recomputes detector masks every run, leaving batched sources under-weighted vs C (src/nanobrag_torch/simulator.py:681-916)
-- Immediate Next Actions (2025-10-12):
-  * Close plan task A0 by adding an `--out`/timestamp parameter to `scripts/validate_weighted_source_normalization.py` (it still hardcodes `reports/benchmarks/20250930-multi-source-normalization/` after commit 0a78312). Re-run the script once the path fix lands and attach the fresh summary when logging the attempt.
-  * Re-run P3.0c with weighted sources plumbed through `BeamConfig` (`_source_*` caches) so the simulator exercises unequal weights under torch.compile; archive parity artifacts in the newly stamped directory.
-  * Execute plan task P3.3a by benchmarking 4096² CPU warm runs vs C and collecting profiler traces when PyTorch stays slower; link results in the next attempt log after the script path fix.
+- Immediate Next Actions (2025-10-01):
+  * Finish PERF plan tasks B3–B5: capture the C-side profile (or explain infeasibility), summarise PyTorch hotspots, and run the eager-mode trace.
+  * Re-run `benchmark_detailed.py` with both 1-iteration and 5-iteration warm loops so the 1.25× vs 3.55× gap is documented under `reports/benchmarks/20251001-010128/` before claiming improvement.
+  * Keep AT-012 Phase C3/C4 and DTYPE Phase B3 in lockstep—no new performance experiments until plateau validation artifacts and the dtype helper audit (`reports/DTYPE-DEFAULT-001/phase_b3_audit.md`) exist.
 - Attempts History:
   * [2025-10-01] Attempt #4 — Result: success (Phase 0/1 complete). Refactored to pure function + hoisted guard tensors; torch.compile caching delivers ≥37× warm/cold speedup.
     Metrics: CPU float64 warm/cold 37.09×; CPU float32 1485.90×; CUDA float32 1256.03×; warm setup <50 ms.
