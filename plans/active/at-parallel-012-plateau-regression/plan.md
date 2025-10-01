@@ -37,9 +37,9 @@ Exit Criteria: Documented first divergence (function + tensor) with side-by-side
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Generate paired C & PyTorch traces | [ ] | Use `scripts/debug_pixel_trace.py` and instrumented C binary for a representative missing peak; store logs under `reports/2025-10-AT012-regression/traces/`. |
-| B2 | Analyze accumulation order | [ ] | Compare reduction operations (sum over phi/mosaic/sources) to C loop order; note any mismatched associativity or dtype promotions. |
-| B3 | Evaluate peak detection sensitivity | [ ] | Experiment with deterministic ordering (`torch.sort` before sum, Kahan summation) or alternative filters to see which step stabilizes plateaus without spec deviation. Document hypotheses + metrics. |
+| B1 | Generate paired C & PyTorch traces | [X] | `reports/2025-10-AT012-regression/PHASE_B1_REPORT.md` + `traces/` directory capture side-by-side logs for the failing pixel (commit f2dddb8). |
+| B2 | Analyze accumulation order | [X] | `reports/2025-10-AT012-regression/accumulation_order_analysis.md` documents the multi-stage vs single-stage reduction gap and quantifies 7.68× plateau fragmentation. |
+| B3 | Evaluate peak detection sensitivity | [ ] | Run the listed experiments (single-stage reduction prototype, compensated summation, float64 intermediate) and record outcomes in `reports/2025-10-AT012-regression/phase_b3_experiments.md`. |
 
 ### Phase C — Mitigation Selection & Implementation
 Goal: Implement the least invasive change that restores plateau stability while preserving performance goals.
