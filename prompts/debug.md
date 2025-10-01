@@ -55,10 +55,10 @@ Loop Objective (single loop)
 - Fix one root‑cause class deterministically, validated by traces and metrics. No test edits. No threshold edits. Produce artifacts.
 
 Subagents Playbook (required delegation)
-- test-failure-analyzer: Resolve AT→pytest node(s) + exact environment from the Parallel Validation Matrix; output the exact command lines to run. If mapping is missing, derive it and add a minimal Matrix entry plus a TODO in fix_plan.md.
+- test-failure-analyzer: Resolve AT→pytest node(s) + exact environment from the Parallel Validation Matrix; output the exact command lines to run. If mapping is missing, derive it and add a minimal Matrix entry plus a TODO in docs/fix_plan.md.
 - debugger: Generate aligned C and PyTorch traces for the same pixel; compute FIRST DIVERGENCE (variable + file:line); output artifact paths.
 - python-pro: Compute quantitative checkpoints (corr, MSE/RMSE, max|Δ|, sum ratios) and render diff heatmaps.
-- issue: Only if root cause is a spec/test gap; draft precise spec shard edits without weakening thresholds and append a TODO to fix_plan.md.
+- issue: Only if root cause is a spec/test gap; draft precise spec shard edits without weakening thresholds and append a TODO to docs/fix_plan.md.
 - code-reviewer: Pre‑commit scan of the changed scope for security/perf/config risks.
 
 <ground rules>
@@ -180,7 +180,7 @@ SOP — Step‑by‑Step (follow in order)
      • For equivalence loops, include: the Parity Profile location (doc path + section), the exact test file(s) executed, the environment variables set (names+values or redacted if sensitive), and the exact command(s) used.
      • Parity artifact check (Hard Gate): **NO PARITY PASS = NO COMMIT.** Success demands a metrics artifact from a mapped parity path that *meets* thresholds. Absence or under‑threshold metrics means the loop failed—capture diagnostics and keep the fix_plan item `in_progress`.
    - Hard Gate (verify): Confirm the plan contains the new Attempts History entry for this loop with `Metrics:` and `Artifacts:` lines (dated paths) and consistent `Status`. If missing or inconsistent, treat the loop as failed and do not commit.
-   - Subagent (post‑parity): issue — If the root‑cause class wasn’t covered or was weakly covered by Acceptance Tests/spec, propose precise spec shard edits/additions (IDs, shard, measurable expectations) without weakening thresholds; add a TODO to fix_plan.md.
+   - Subagent (post‑parity): issue — If the root‑cause class wasn’t covered or was weakly covered by Acceptance Tests/spec, propose precise spec shard edits/additions (IDs, shard, measurable expectations) without weakening thresholds; add a TODO to docs/fix_plan.md.
    - Subagent (pre‑commit): code-reviewer — Run on the changed scope to catch security/performance/config risks introduced by the fix; address high/critical findings before committing.
    - Version control hygiene:
      • PASS: `git add -A && git commit -m "<AT-ids> debug: <concise summary> (suite: pass)"`
