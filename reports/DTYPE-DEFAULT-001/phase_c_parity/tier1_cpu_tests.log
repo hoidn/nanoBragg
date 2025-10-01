@@ -1,0 +1,30 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.18, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/pytorch/bin/python3.10
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/nanoBragg
+configfile: pyproject.toml
+plugins: typeguard-2.13.3, anyio-4.9.0
+collecting ... collected 20 items
+
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[64] PASSED [  5%]
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[128] PASSED [ 10%]
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[256] PASSED [ 15%]
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[512] PASSED [ 20%]
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[1024] PASSED [ 25%]
+tests/test_at_parallel_001.py::TestATParallel001::test_peak_position_at_beam_center PASSED [ 30%]
+tests/test_at_parallel_001.py::TestATParallel001::test_cli_beam_center_calculation PASSED [ 35%]
+tests/test_at_parallel_001.py::TestATParallel001::test_intensity_scaling_with_solid_angle PASSED [ 40%]
+tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_scales_with_pixel_size PASSED [ 45%]
+tests/test_at_parallel_002.py::TestATParallel002::test_peak_position_scales_inversely_with_pixel_size PASSED [ 50%]
+tests/test_at_parallel_002.py::TestATParallel002::test_pattern_correlation_across_pixel_sizes PASSED [ 55%]
+tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_parameter_consistency PASSED [ 60%]
+tests/test_at_parallel_004.py::TestAT_PARALLEL_004::test_mosflm_adds_half_pixel_offset PASSED [ 65%]
+tests/test_at_parallel_004.py::TestAT_PARALLEL_004::test_xds_has_no_pixel_offset PASSED [ 70%]
+tests/test_at_parallel_004.py::TestAT_PARALLEL_004::test_peak_position_difference PASSED [ 75%]
+tests/test_at_parallel_004.py::TestAT_PARALLEL_004::test_pattern_correlation_when_aligned PASSED [ 80%]
+tests/test_at_parallel_004.py::TestAT_PARALLEL_004::test_beam_center_calculation_consistency PASSED [ 85%]
+tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_bragg_angle_prediction_single_distance PASSED [ 90%]
+tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_distance_scaling PASSED [ 95%]
+tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_combined_wavelength_and_distance PASSED [100%]
+
+============================= 20 passed in 26.15s ==============================

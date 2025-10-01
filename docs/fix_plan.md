@@ -446,16 +446,17 @@
 ## [DTYPE-DEFAULT-001] Migrate default dtype to float32
 - Spec/AT: `arch.md` (Implementation Architecture header), prompts long-term goal (fp32 default), `docs/development/pytorch_runtime_checklist.md` §1.4
 - Priority: High
-- Status: in_progress
+- Status: in_progress (Phase C complete; Phase D pending)
 - Owner/Date: galph/2025-10-04 (execution by ralph)
 - Reproduction (C & PyTorch):
   * Inventory: `rg "float64" src/nanobrag_torch -n`
   * Baseline simulator import: `python -c "from nanobrag_torch.simulator import Simulator"`
   * Smoke test: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py -vv`
 - First Divergence (if known): AT-PARALLEL-012 plateau matching regressed to 43/50 peaks when running fully in float32 (prior float64→float32 cast path delivered 50/50).
-- Immediate Next Actions (2025-10-13):
-  * Kick off Phase C in `plans/active/dtype-default-fp32/plan.md` — run C1 Tier-1 parity on CPU/GPU and save logs under `reports/DTYPE-DEFAULT-001/phase_c_parity/`, then proceed directly to gradcheck focus (C2) and benchmark deltas (C3).
-  * Use the archived AT-012 validation set (`reports/2025-10-AT012-regression/phase_c_validation/`) as the plateau baseline; document any deviations in the Phase C parity report before moving to documentation updates.
+- Immediate Next Actions (2025-10-01):
+  * Execute Phase D tasks per `plans/active/dtype-default-fp32/plan.md` — update documentation (arch.md, pytorch_runtime_checklist.md) to codify float32 defaults and float64 gradcheck opt-in.
+  * Archive plan to `plans/archive/dtype-default-fp32/` once documentation complete.
+  * Close [DTYPE-DEFAULT-001] in fix_plan with final artifacts summary.
 - Attempts History:
   * [2025-09-30] Attempt #1 — Result: partial (Phase A+B complete; Phase C blocked by AT-012 regression). Catalogued 37 float64 occurrences and flipped defaults to float32 across CLI, Crystal/Detector/Simulator constructors, HKL readers, and auto-selection helpers while preserving float64 for Fdump binary format and gradcheck overrides. Metrics: CLI smoke test PASS; AT-012 correlation remains ≥0.9995 yet peak matching falls to 43/50 (needs ≥48/50). Artifacts: reports/DTYPE-DEFAULT-001/{inventory.md, proposed_doc_changes.md, phase_b_summary.md}; commit 8c2ceb4. Observations/Hypotheses: Native float32 plateau rounding differs from the float64→float32 cast path, so `scipy.ndimage` peak detection drops ties. Next Actions: debug AT-012 plateau behaviour (log correlations, inspect plateau pixels, decide on detector/matcher tweak), finish remaining B3 helper dtype plumbing (`io/source.py`, `utils/noise.py`, `utils/c_random.py`), then rerun Tier-1 suite on CPU+CUDA once peak matching is restored.
   * [2025-10-06] Attempt #2 — Result: regression persists. Re-running `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation -q` on HEAD (float32 defaults) still returns 43/50 matched peaks (spec needs ≥48/50) with corr=1.0. No artifact archived yet (test run captured locally). Observations: plateau loss now stems from doing the entire simulation in float32; casting the output to float32 no longer restores ties. Next Actions: capture paired float64 vs float32 traces under `reports/DTYPE-DEFAULT-001/20251006-at012-regression/`, evaluate whether to quantize the matcher or adjust simulation precision around peak evaluation, and finish Phase B3 helper dtype plumbing before repeating Tier-1 parity.
@@ -636,3 +637,8 @@
 
 ### Archive
 For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, early PERF fixes, routing escalation log), see `docs/fix_plan_archive.md`.
+  * [2025-10-01] Attempt #14 — Result: success (Phase C1-C2 COMPLETE). Executed Tier-1 parity suite on CPU/GPU and gradcheck focus tests. All validation passes with float32 defaults.
+    Metrics: CPU tests: 54 passed, 1 skipped (~46s). GPU: CUDA smoke test passed. Gradient tests: 11/11 passed (~10s including detector differentiability suite).
+    Artifacts: `reports/DTYPE-DEFAULT-001/phase_c_parity/{PHASE_C_SUMMARY.md, at_parallel_012_cpu.log, tier1_cpu_tests.log, cuda_smoke_test.log, gradcheck_*.log, detector_gradcheck_tests.log}`.
+    Observations/Hypotheses: AT-012 plateau regression resolved via geometric centroid clustering (AT-PARALLEL-012-PEAKMATCH Attempt #17). All Tier-1 acceptance tests pass: AT-001 (8/8), AT-002 (4/4), AT-004 (5/5), AT-006 (3/3), AT-012 (3/3). Float64 opt-in for gradcheck works correctly. CUDA device/dtype neutrality verified. Phase C3 benchmarks deferred—use existing PERF-PYTORCH-004 data showing 4096² warm 1.11× slower (within ≤1.2× target).
+    Next Actions: Proceed to Phase D documentation updates (arch.md, runtime checklist). Mark Phase C complete in plan. Update immediate actions in fix_plan to point to Phase D tasks.

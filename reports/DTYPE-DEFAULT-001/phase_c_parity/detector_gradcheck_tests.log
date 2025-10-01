@@ -1,0 +1,19 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.18, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/pytorch/bin/python3.10
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/nanoBragg
+configfile: pyproject.toml
+plugins: typeguard-2.13.3, anyio-4.9.0
+collecting ... collected 9 items
+
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_parameter_gradients PASSED [ 11%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_basis_vector_gradients PASSED [ 22%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_pixel_coords_basis_vector_gradients PASSED [ 33%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_comprehensive_gradcheck PASSED [ 44%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_beam_strike_invariant_in_beam_pivot_mode PASSED [ 55%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_xds_convention_basic_geometry PASSED [ 66%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_real_valued_gradients PASSED [ 77%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_complex_gradient_edge_cases PASSED [ 88%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_simulator_real_valued_gradients PASSED [100%]
+
+============================== 9 passed in 5.19s ===============================

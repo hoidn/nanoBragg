@@ -1,0 +1,8 @@
+Simulator device: cuda:0
+Simulator dtype: torch.float32
+auto-selected 1-fold oversampling
+Output image device: cuda:0
+Output image dtype: torch.float32
+Output image shape: torch.Size([128, 128])
+Output image sum: 0.0000e+00
+✓ CUDA smoke test with float32 passed
