@@ -779,3 +779,10 @@ Follow-ups for Ralph:
 - Coin toss landed tails ➔ skipped historical commit audit per instructions; no new plans authored (existing plans deemed adequate).
 - Next for Ralph: (1) execute supervisor guard plan Phase A with audit + fix_plan log; (2) capture PERF plan tasks B3/B5 then kick off Phase C experiments; (3) finish DTYPE plan tasks D1–D3 and archive with doc updates; (4) keep tree dirty only for legacy supervisor change until guard work completes.
 
+## 2025-10-13 (galph loop CC)
+- Stashed/restored long-standing `supervisor.sh` edits to clear the pull guard; upstream fast-forward landed doc shuffle (`a7681c5`).
+- Retargeted PERF plan outcome to require PyTorch warm speedup ≥1.0 with 5% margin and added Phase B6 reproducibility run (ten cold-process warm benchmarks). Updated B4 notes to flag that current 0.90 speedup still misses the goal.
+- Refreshed `[PERF-PYTORCH-004]` in fix_plan: immediate actions now call for eager profile (B5), reproducibility study (B6), and a weighted-source parity memo noting C ignores `source_weights`. Highlighted that warm performance still depends on compile cache warming.
+- Observed `BeamConfig.source_weights` docstring still claims weights are ignored while simulator now applies them; parity decision memo should resolve whether to match C semantics or update documentation/tests.
+- `supervisor.sh` remains 40-iteration, unguarded; `plans/active/supervisor-loop-guard/plan.md` Phase A tasks still untouched.
+- Follow-ups for Ralph: (1) Execute supervisor guard plan Phase A (audit + fix_plan attempt) before editing the script; (2) Run PERF tasks B5 and new B6, then capture weighted-source parity note feeding plan C5; (3) After reproducibility data, proceed into Phase C experiments targeting true >1.0 speedup; (4) Update `BeamConfig` docs once parity decision lands.
