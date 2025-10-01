@@ -531,6 +531,38 @@ class Simulator:
             self._source_wavelengths_A = None
             self._source_weights = None
 
+        # PERF-PYTORCH-004 P3.4: Cache frequently-accessed tensors to reduce per-run allocations
+        # Pre-convert pixel coordinates to correct device/dtype once
+        self._cached_pixel_coords_meters = self.detector.get_pixel_coords().to(device=self.device, dtype=self.dtype)
+
+        # Build ROI mask once and cache it (AT-ROI-001)
+        # Start with all pixels enabled
+        self._cached_roi_mask = torch.ones(
+            self.detector.config.spixels,
+            self.detector.config.fpixels,
+            device=self.device,
+            dtype=self.dtype
+        )
+
+        # Apply ROI bounds if specified
+        # Note: ROI is in pixel indices (xmin/xmax for fast axis, ymin/ymax for slow axis)
+        roi_ymin = self.detector.config.roi_ymin
+        roi_ymax = self.detector.config.roi_ymax
+        roi_xmin = self.detector.config.roi_xmin
+        roi_xmax = self.detector.config.roi_xmax
+
+        # Set everything outside ROI to zero
+        self._cached_roi_mask[:roi_ymin, :] = 0  # Below ymin
+        self._cached_roi_mask[roi_ymax+1:, :] = 0  # Above ymax
+        self._cached_roi_mask[:, :roi_xmin] = 0  # Left of xmin
+        self._cached_roi_mask[:, roi_xmax+1:] = 0  # Right of xmax
+
+        # Apply external mask if provided and cache it
+        if self.detector.config.mask_array is not None:
+            # Pre-convert mask_array to correct device/dtype and combine with ROI mask
+            mask_array = self.detector.config.mask_array.to(device=self.device, dtype=self.dtype)
+            self._cached_roi_mask = self._cached_roi_mask * mask_array
+
         # Compile the physics computation function with appropriate mode
         # Use max-autotune on GPU to avoid CUDA graph issues with nested compilation
         # Use reduce-overhead on CPU for better performance
@@ -703,29 +735,11 @@ class Simulator:
         # The full subpixel implementation will come later
         # This matches the current implementation which doesn't yet have subpixel sampling
 
-        # Create ROI/mask filter (AT-ROI-001)
-        # Start with all pixels enabled
-        roi_mask = torch.ones(self.detector.config.spixels, self.detector.config.fpixels,
-                             device=self.device, dtype=self.dtype)
+        # PERF-PYTORCH-004 P3.4: Use cached ROI mask instead of rebuilding every run
+        roi_mask = self._cached_roi_mask
 
-        # Apply ROI bounds if specified
-        # Note: ROI is in pixel indices (xmin/xmax for fast axis, ymin/ymax for slow axis)
-        # First set everything outside ROI to zero
-        roi_mask[:self.detector.config.roi_ymin, :] = 0  # Below ymin
-        roi_mask[self.detector.config.roi_ymax+1:, :] = 0  # Above ymax
-        roi_mask[:, :self.detector.config.roi_xmin] = 0  # Left of xmin
-        roi_mask[:, self.detector.config.roi_xmax+1:] = 0  # Right of xmax
-
-        # Apply external mask if provided
-        if self.detector.config.mask_array is not None:
-            # Combine with ROI mask (both must be enabled)
-            # Ensure mask_array is on the same device
-            mask_array = self.detector.config.mask_array.to(device=self.device, dtype=self.dtype)
-            roi_mask = roi_mask * mask_array
-
-        # Get pixel coordinates (spixels, fpixels, 3) in meters
-        # PERF-PYTORCH-006: Ensure pixel coords match simulator dtype
-        pixel_coords_meters = self.detector.get_pixel_coords().to(device=self.device, dtype=self.dtype)
+        # PERF-PYTORCH-004 P3.4: Use cached pixel coordinates instead of fetching/converting every run
+        pixel_coords_meters = self._cached_pixel_coords_meters
 
         # Get rotated lattice vectors for all phi steps and mosaic domains
         # Shape: (N_phi, N_mos, 3)
