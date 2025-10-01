@@ -82,6 +82,11 @@
     Artifacts: pending — rerun `investigate_compile_cache.py` with `TORCH_LOGS=dynamic` once broadcast fix lands; record logs under `reports/benchmarks/<date>-compile-cache/`.
     Observations/Hypotheses: Need to fix multi-source broadcast, hoist ROI/misset tensors (Plan P3.4), add default `source_wavelengths` when missing (Plan P3.0), ensure polarization uses per-source incident directions before the sum (Plan P3.0b), restore multi-source normalization so intensities sum rather than average (Plan P3.0c), and correct timing aggregator before trusting new benchmarks.
     Next Actions: Implement plan tasks P2.1–P2.5 (CLI extension, CPU/CUDA runs, Dynamo logs), then P3.0/P3.0b/P3.0c–P3.5 (multi-source defaults + polarization + normalization, benchmark hardening, ROI caching, C comparison).
+  * [2025-09-30] Attempt #6 — Result: P3.0 complete, P3.0b blocker discovered. Fixed multi-source broadcast dimension handling; multi-source execution now stable (258.98× cache speedup). Discovered architectural issue: polarization calculation uses global `self.incident_beam_direction` instead of per-source incident directions.
+    Metrics: Multi-source benchmark (n_sources=3, 256², cpu): 258.98× warm/cold speedup; AT-012: 3/4 passed.
+    Artifacts: reports/benchmarks/20250930-180237-compile-cache/cache_validation_summary.json; commits 2c90a99, 1778a6b.
+    Observations/Hypotheses: P3.0 complete — source defaults work correctly. P3.0b blocked by polarization issue at simulator.py:813 (oversample path) and :934 (no-oversample path). Both paths use `self.incident_beam_direction` (global) instead of per-source `incident_dirs_batched`. Multi-source runs compute incorrect polarization factors. Fix requires either (1) passing `incident_dirs_batched` to polarization in multi-source branch, or (2) moving polarization inside `compute_physics_for_position`.
+    Next Actions: Fix P3.0b by refactoring polarization to use per-source incident directions; recommend approach (1) for minimal disruption. Then proceed to P3.0c normalization verification.
 - Risks/Assumptions: Requires CUDA availability; must avoid `.item()` in differentiable paths when caching tensors.
 - Exit Criteria (quote thresholds from spec):
   * Phase 2 artifacts demonstrating ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (multi-source included) committed.
