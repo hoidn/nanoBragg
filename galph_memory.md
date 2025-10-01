@@ -793,3 +793,14 @@ Follow-ups for Ralph:
 - Updated `docs/fix_plan.md` Active Focus and `[PERF-PYTORCH-004]` immediate actions to make Phase B6 reproducibility + cache-state logging mandatory; logged Attempt #32 documenting the regression evidence.
 - Refreshed `plans/active/perf-pytorch-compile-refactor/plan.md` Phase B (B4/B6 guidance) to treat prior gains as provisional and require comparing 014819 vs 025148 before proceeding.
 - Follow-ups for Ralph: (1) Execute supervisor guard plan Phase A (audit + fix_plan entry) before touching `supervisor.sh`; (2) Run Phase B6 reproducibility with cold interpreters, capture cache metadata, and write a regression memo comparing both benchmark sets; (3) Deliver the weighted-source parity note feeding plan task C5, then resume Phase C diagnostics once reproducibility is understood.
+
+## 2025-10-01 (galph loop CE)
+- Cleared pull guard via stash→timeout pull→reapply path; no conflicts, restored long-standing `supervisor.sh` dirtiness after rebase.
+- Re-ran heads-up review of recent commits: profiling commit 73dcb96 adds `reports/benchmarks/20251001-025148/` with warm speedup 0.299 (PyTorch 1.77 s vs C 0.53 s) yet narrative still cites 1.1×; flagged this mismatch in analysis.
+- Deep dive vs goals: 4096² warm regression persists, no evidence of B6 reproducibility study, and weighted-source semantics remain undocumented (config doc still says weights ignored). Supervisor guard plan Phase A still untouched.
+- Updated `[PERF-PYTORCH-004]` first-divergence note in `docs/fix_plan.md` so active item reflects the 0.299 speedup dataset; pushed change (`SUPERVISOR: perf-plan status refresh - tests: not run`).
+- Key follow-ups for Ralph:
+  1. Execute `plans/active/supervisor-loop-guard/plan.md` Phase A audit (A1–A3) and log Attempt under `[ROUTING-SUPERVISOR-001]` before touching the script.
+  2. Run PERF plan task B6: ten cold-interpreter 4096² warm benchmarks with cache-state notes, comparing 025148 vs 014819 to explain the regression; capture under `reports/benchmarks/<stamp>-4096-warm-repro/`.
+  3. Draft the weighted-source parity memo (decision for C ignoring weights vs PyTorch honoring them) feeding plan task C5, and align `BeamConfig.source_weights` docs once the policy is set.
+- Tree intentionally left dirty by `supervisor.sh` per standing guard policy.
