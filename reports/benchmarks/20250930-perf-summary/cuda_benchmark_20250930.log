@@ -1,0 +1,147 @@
+================================================================================
+Detailed nanoBragg Performance Analysis
+================================================================================
+
+Outputs will be saved to: reports/benchmarks/20250930-221546
+
+System Information:
+CPU cores: 32
+Total RAM: 125.7 GB
+PyTorch version: 2.7.1+cu126
+CUDA available: True
+GPU: NVIDIA GeForce RTX 3090
+
+Benchmark Configuration:
+Test sizes: [256, 512, 1024]
+Iterations: 2
+Device: cuda
+Dtype: float64
+
+C binary: ./golden_suite_generator/nanoBragg
+
+================================================================================
+Benchmarking Different Detector Sizes
+================================================================================
+
+PERF-PYTORCH-005: Testing simulator cache reuse
+Each size will be run twice: cold (first run) and warm (cached)
+
+==================================================
+Detector Size: 256x256 (65,536 pixels)
+--------------------------------------------------
+Running C implementation...
+Running PyTorch COLD (first run) on CUDA...
+  Setup time (cold): 1.072s
+  Simulation time: 0.447s
+  Cache hit: False
+Running PyTorch WARM (cached) on CUDA...
+  Setup time (warm): 0.000s
+  Simulation time: 0.006s
+  Cache hit: True
+  Setup speedup: 899428.0x faster
+
+Results:
+  C time: 0.011s (memory: 0.0 MB)
+  PyTorch COLD total: 1.520s (memory: 686.1 MB)
+  PyTorch WARM total: 0.007s (memory: 0.0 MB)
+  Speedup (cold): 0.01x (C faster)
+  Speedup (warm): 1.60x (PyTorch faster)
+  Correlation (cold): 1.000000
+  Correlation (warm): 1.000000
+
+  ✓ Cache effectiveness: 899428.0x faster setup
+  ✓ PERF-PYTORCH-005 EXIT CRITERIA MET: Warm setup 0.0ms < 50ms
+
+==================================================
+Detector Size: 512x512 (262,144 pixels)
+--------------------------------------------------
+Running C implementation...
+Running PyTorch COLD (first run) on CUDA...
+  Setup time (cold): 0.837s
+  Simulation time: 0.448s
+  Cache hit: False
+Running PyTorch WARM (cached) on CUDA...
+  Setup time (warm): 0.000s
+  Simulation time: 0.006s
+  Cache hit: True
+  Setup speedup: 501733.6x faster
+
+Results:
+  C time: 0.016s (memory: 0.0 MB)
+  PyTorch COLD total: 1.287s (memory: 9.8 MB)
+  PyTorch WARM total: 0.008s (memory: 0.0 MB)
+  Speedup (cold): 0.01x (C faster)
+  Speedup (warm): 2.17x (PyTorch faster)
+  Correlation (cold): 1.000000
+  Correlation (warm): 1.000000
+
+  ✓ Cache effectiveness: 501733.6x faster setup
+  ✓ PERF-PYTORCH-005 EXIT CRITERIA MET: Warm setup 0.0ms < 50ms
+
+==================================================
+Detector Size: 1024x1024 (1,048,576 pixels)
+--------------------------------------------------
+Running C implementation...
+Running PyTorch COLD (first run) on CUDA...
+  Setup time (cold): 0.017s
+  Simulation time: 0.441s
+  Cache hit: False
+Running PyTorch WARM (cached) on CUDA...
+  Setup time (warm): 0.000s
+  Simulation time: 0.007s
+  Cache hit: True
+  Setup speedup: 17851.0x faster
+
+Results:
+  C time: 0.038s (memory: 0.0 MB)
+  PyTorch COLD total: 0.463s (memory: -2.0 MB)
+  PyTorch WARM total: 0.012s (memory: 0.0 MB)
+  Speedup (cold): 0.08x (C faster)
+  Speedup (warm): 3.21x (PyTorch faster)
+  Correlation (cold): 1.000000
+  Correlation (warm): 1.000000
+
+  ✓ Cache effectiveness: 17851.0x faster setup
+  ✓ PERF-PYTORCH-005 EXIT CRITERIA MET: Warm setup 0.0ms < 50ms
+
+================================================================================
+PERFORMANCE SUMMARY (PERF-PYTORCH-005: Cache Reuse)
+================================================================================
+
+Size             Pixels    C (s)    PyTorch    PyTorch      Setup       Corr
+                                   COLD (s)   WARM (s)    Speedup     (warm)
+----------------------------------------------------------------------------------
+256x256          65,536    0.011      1.520      0.007  899428.0x   1.000000
+512x512         262,144    0.016      1.287      0.008  501733.6x   1.000000
+1024x1024     1,048,576    0.038      0.463      0.012   17851.0x   1.000000
+
+================================================================================
+CACHE EFFECTIVENESS (PERF-PYTORCH-005)
+================================================================================
+
+Size       Setup COLD (ms) Setup WARM (ms)      Speedup    Exit Crit
+----------------------------------------------------------------------
+256x256             1072.2             0.0    899428.0x            ✓
+512x512              837.4             0.0    501733.6x            ✓
+1024x1024             17.0             0.0     17851.0x            ✓
+
+PERF-PYTORCH-005 Exit Criteria: Setup time < 50ms for cached runs
+  ✓ ALL SIZES MEET EXIT CRITERIA
+
+Detailed results saved to reports/benchmarks/20250930-221546/benchmark_results.json
+
+================================================================================
+ANALYSIS
+================================================================================
+
+COLD runs (first time, includes compilation):
+  ✓ C is on average 29.28x faster than PyTorch
+
+WARM runs (cached simulator):
+  ✓ PyTorch is on average 2.33x faster than C
+
+Cache effectiveness: 473004.2x faster setup on average
+✓ All correlations > 0.99, indicating excellent numerical agreement
+
+
+All outputs saved to: reports/benchmarks/20250930-221546
