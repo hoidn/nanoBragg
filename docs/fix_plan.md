@@ -1,6 +1,6 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-07 (galph loop AW)
+**Last Updated:** 2025-10-08 (galph loop AY)
 **Active Focus:** Protect automation assets, finish nanoBragg hygiene cleanup, restore AT-012 peak matches, correct multi-source physics regressions, and capture authoritative performance evidence for PERF-PYTORCH-004 (CPU+CUDA reruns after physics fixes).
 
 ## Index
@@ -101,7 +101,7 @@
   * C: `NB_C_BIN=./golden_suite_generator/nanoBragg python scripts/benchmarks/benchmark_detailed.py --sizes 256,512,1024 --device cpu --iterations 2`
   * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/investigate_compile_cache.py --instances 5 --size 256 --devices cpu,cuda --dtypes float64,float32 --sources 1`
   * Shapes/ROI: 256²–1024² detectors, pixel 0.1 mm, oversample 1, full-frame ROI
-- First Divergence (if known): Multi-source expansion failure at `compute_physics_for_position` broadcast (src/nanobrag_torch/simulator.py:109-135) when `sources>1`
+- First Divergence (if known): Multi-source intensity still reuses the primary incident vector and averages weights (`steps` multiplies by `source_weights.sum()`), yielding under-powered peaks vs C (src/nanobrag_torch/simulator.py:681-916)
 - Attempts History:
   * [2025-10-01] Attempt #4 — Result: success (Phase 0/1 complete). Refactored to pure function + hoisted guard tensors; torch.compile caching delivers ≥37× warm/cold speedup.
     Metrics: CPU float64 warm/cold 37.09×; CPU float32 1485.90×; CUDA float32 1256.03×; warm setup <50 ms.
@@ -158,6 +158,11 @@
     Artifacts: plans/active/perf-pytorch-compile-refactor/plan.md (Phase 3 table stamped 2025-10-07), galph_memory.md (loop entry pending at close of supervisor run).
     Observations/Hypotheses: Current code still violates AT-SRC-001 normalization and per-source polarization; ROI/misset tensors and detector constants are rebuilt each run, explaining persistent allocator churn in CPU benchmarks. These must be corrected before any new performance numbers are credible.
     Next Actions: Ralph to execute updated plan tasks P3.0–P3.0c (multi-source defaults, per-source polarization, normalization) and P3.4 (ROI/misset caching) with the new artifact targets before rerunning P3.2/P3.3 benchmarks.
+  * [2025-10-08] Attempt #15 — Result: supervisor audit. Re-read `Simulator.run`/`compute_physics_for_position` and confirmed multi-source polarization still collapses to the primary source direction (`incident_dirs_batched[0]`) in both oversample and pixel-center paths; normalization still multiplies by `source_weights.sum()`; ROI mask allocation and detector grid `.to()` casts re-run every invocation.
+    Metrics: Analysis only.
+    Artifacts: None (findings logged in galph_memory.md — 2025-10-08 loop AY entry).
+    Observations/Hypotheses: (1) Polarization should be computed per-source before reduction; current broadcast turns Kahn factors into an average. (2) Because `compute_physics_for_position` already applies weights during summation, global `steps` should use `n_sources` rather than Σweights. (3) `roi_mask = torch.ones(...)` (`simulator.py:618-635`) and `detector.get_pixel_coords().to(...)` rebuild large tensors per call, blocking P3.4’s allocator goals.
+    Next Actions: Ralph to execute plan tasks P3.0b (per-source polarization) and P3.0c (normalization) with new trace/benchmark artifacts, then deliver P3.4 ROI/misset caching before re-running P3.2/P3.3 benchmarks.
 - Risks/Assumptions: Requires CUDA availability; must avoid `.item()` in differentiable paths when caching tensors.
 - Exit Criteria (quote thresholds from spec):
   * Phase 2 artifacts demonstrating ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (multi-source included) committed.
