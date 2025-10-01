@@ -1,7 +1,8 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-01 (ralph loop - AT-GEO-001 MOSFLM +0.5 pixel offset fix)
+**Last Updated:** 2025-10-01 (ralph loop - AT-SRC-001 float32 dtype compatibility)
 **Active Focus:**
+- AT-SRC-001-DTYPE: ✅ Complete. Fixed dtype mismatch in AT-SRC-001 tests after DTYPE-DEFAULT-001 migration to float32.
 - AT-GEO-001-MOSFLM-OFFSET: ✅ Complete. Fixed MOSFLM +0.5 pixel offset to be applied consistently for all beam centers (auto-calculated and explicitly provided).
 - AT-CLI-006-SCALING: ✅ Complete. Fixed float32 rounding error in SMV scaling that caused off-by-one errors at precision boundaries.
 - AT-PARALLEL-002-003-MOSFLM: ✅ Complete. Fixed double-offset bug in Detector.__init__ for MOSFLM convention when beam_center explicitly provided.
@@ -19,6 +20,7 @@
 ## Index
 | ID | Title | Priority | Status |
 | --- | --- | --- | --- |
+| [AT-SRC-001-DTYPE](#at-src-001-dtype-fix-float32-dtype-compatibility) | Fix float32 dtype compatibility in AT-SRC-001 tests | Medium | done |
 | [AT-GEO-001-MOSFLM-OFFSET](#at-geo-001-mosflm-offset-fix-mosflm-05-pixel-offset-application) | Fix MOSFLM +0.5 pixel offset application | High | done |
 | [AT-CLI-006-SCALING](#at-cli-006-scaling-fix-float32-rounding-in-smv-scaling) | Fix float32 rounding in SMV scaling | High | done |
 | [AT-PARALLEL-002-003-MOSFLM](#at-parallel-002-003-mosflm-fix-double-offset-in-detectorinit) | Fix MOSFLM double-offset in Detector.__init__ | High | done |
@@ -37,6 +39,32 @@
 | [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | done |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | done |
+
+---
+
+## [AT-SRC-001-DTYPE] Fix float32 dtype compatibility in AT-SRC-001 tests
+- Spec/AT: AT-SRC-001 (Source File & Weighting), DTYPE-DEFAULT-001 migration
+- Priority: Medium
+- Status: done
+- Owner/Date: ralph/2025-10-01
+- Reproduction (C & PyTorch):
+  * C: n/a (test compatibility issue after dtype default change)
+  * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_src_001.py tests/test_at_src_001_simple.py -v`
+  * Shapes/ROI: Various sourcefile configurations (2-3 sources, different weights/wavelengths)
+- First Divergence (if known): After DTYPE-DEFAULT-001 migrated project default from float64 to float32, AT-SRC-001 tests failed with dtype mismatch errors. Tests expected float64 tensors but `read_sourcefile()` now returns float32 by default.
+- Attempts History:
+  * [2025-10-01] Attempt #1 — Result: success. Updated all torch.float64 assertions in AT-SRC-001 tests to torch.float32.
+    Metrics: 4 tests fixed (test_sourcefile_parsing, test_sourcefile_with_all_columns, test_sourcefile_default_position, test_multiple_sources_normalization). Full suite: 476 passed (up from 472), 117 skipped, 2 xfailed, 15 failed (down from 19).
+    Artifacts:
+      - tests/test_at_src_001_simple.py lines 41, 48 (changed dtype assertions)
+      - tests/test_at_src_001.py lines 64, 147, 180 (changed dtype assertions)
+    Observations/Hypotheses: The DTYPE-DEFAULT-001 migration changed the default dtype from float64 to float32 throughout the project. Tests that hardcoded float64 expectations needed updating to match the new default. This is a test hygiene issue, not a functional bug - the sourcefile parsing works correctly with float32.
+    Next Actions: None - issue resolved. All AT-SRC-001 tests pass. Tests now align with project-wide float32 default.
+- Risks/Assumptions: Assumes float32 precision is sufficient for source direction normalization and weight representation. This is reasonable for typical source configurations.
+- Exit Criteria (quote thresholds from spec):
+  * All AT-SRC-001 tests pass (✅ 7/7 passed in 4.10s).
+  * No regressions in related tests (✅ verified - overall pass count increased from 472 to 476).
+  * Tests align with DTYPE-DEFAULT-001 project default (✅ satisfied - all assertions now use float32).
 
 ---
 

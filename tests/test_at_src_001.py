@@ -61,7 +61,7 @@ class TestAT_SRC_001_SourcefileAndWeighting:
 
             # Check directions are normalized (unit vectors)
             norms = torch.linalg.norm(directions, dim=1)
-            torch.testing.assert_close(norms, torch.ones(2, dtype=torch.float64))
+            torch.testing.assert_close(norms, torch.ones(2, dtype=torch.float32))
 
             # Check wavelengths match input
             assert wavelengths[0].item() == pytest.approx(1.0e-10)
@@ -144,7 +144,7 @@ class TestAT_SRC_001_SourcefileAndWeighting:
             )
 
             # Position [-15, 0, 0] normalized to unit vector: [-1, 0, 0]
-            expected_direction = torch.tensor([[-1.0, 0.0, 0.0]], dtype=torch.float64)
+            expected_direction = torch.tensor([[-1.0, 0.0, 0.0]], dtype=torch.float32)
             torch.testing.assert_close(directions, expected_direction)
 
             # Check wavelength uses default
@@ -177,7 +177,7 @@ class TestAT_SRC_001_SourcefileAndWeighting:
             torch.testing.assert_close(directions[0], -directions[1])
 
             # Both sources have weight 1.0 specified in the file
-            torch.testing.assert_close(weights, torch.ones(2, dtype=torch.float64))
+            torch.testing.assert_close(weights, torch.ones(2, dtype=torch.float32))
 
     def test_empty_sourcefile(self):
         """Test that empty sourcefile raises appropriate error."""
