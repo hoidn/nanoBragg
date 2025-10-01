@@ -742,3 +742,6 @@
   2. Resume DTYPE plan Phase C by capturing parity/gradcheck artifacts and deciding on the AT-012 plateau fix strategy; archive outputs under `reports/DTYPE-DEFAULT-001/`.
   3. Complete PERF plan tasks B3/B5 and note whether duplicated norm computations or pixel cache allocations show up as hotspots in the forthcoming traces.
 - Note: `supervisor.sh` remains dirty from prior loops (no changes this run per policy); leave untouched until guard work begins.
+
+## 2025-10-13 (galph loop BX addendum)
+- Post-rebase check: `loop.sh` on HEAD (`853cf08`) already contains the guarded single-run flow. Leave `[ROUTING-LOOP-001]` guidance intact until we verify whether additional audit artifacts are still required, but do not instruct Ralph to reapply the guard.
