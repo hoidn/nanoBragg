@@ -25,6 +25,7 @@ Exit Criteria: `reports/benchmarks/<date>-4096-warm-baseline/` directory contain
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
+| A0 | Fix weighted-source validation output path | [ ] | Update `scripts/validate_weighted_source_normalization.py` to write artifacts under `reports/benchmarks/<stamp>/` using repo-relative paths (`Path(__file__).resolve().parents[1]`). Current hard-coded `/home/ollie/...` path raises `FileNotFoundError` on macOS; repair before rerunning P3.0c evidence. |
 | A1 | Re-run CPU benchmark sweep | [ ] | `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 512,1024,2048,4096 --device cpu --iterations 5 --keep-artifacts --out reports/benchmarks/$(date +%Y%m%d-%H%M%S)-cpu-baseline/`. Record commit hash. |
 | A2 | Capture C binary timings | [ ] | `NB_C_BIN=./golden_suite_generator/nanoBragg python scripts/benchmarks/benchmark_detailed.py --sizes 512,1024,2048,4096 --device cpu --c-only --iterations 5 --out reports/benchmarks/<same-stamp>-c-baseline/` to ensure matching configuration. |
 | A3 | (Optional CUDA) Measure GPU warm | [ ] | If GPU available, rerun A1 with `--device cuda --disable-compile` toggles to separate compile vs kernel cost; archive under same reports directory. |
@@ -41,6 +42,7 @@ Exit Criteria: Torch profiler (`.json`/Chrome trace) + optional `torch._inductor
 | B2 | Collect PyTorch trace | [ ] | `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --profile --iterations 2 --keep-artifacts --out reports/profiling/<stamp>-4096-warm/`. Verify the trace covers only warm iteration. |
 | B3 | Collect reference C profile (optional) | [ ] | Use `perf record --call-graph dwarf --` or `gprof` around the C binary for same config. Store flamegraph/pdf if available. |
 | B4 | Summarise hotspots | [ ] | Create `hotspot_analysis.md` describing top PyTorch ops (e.g., polarization, lattice accumulation, memory copies) with % of total time; note disparities vs C profile. |
+| B5 | Profile structure-factor lookup | [ ] | Run `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 1024 --device cpu --disable-compile --profile --iterations 1 --keep-artifacts --out reports/profiling/<stamp>-sf-eager/` to capture eager-mode trace. Focus on `Crystal._nearest_neighbor_lookup` advanced indexing cost; export Chrome trace and annotate in Phase B summary. |
 
 ### Phase C — Diagnostic Experiments & Hypothesis Testing
 Goal: Narrow down root causes through controlled experiments (e.g., disable components, vary batch dimensions, inspect memory bandwidth).
@@ -54,6 +56,8 @@ Exit Criteria: `diagnostic_experiments.md` enumerating each experiment, findings
 | C3 | Check memory allocator pressure | [ ] | Enable `PYTORCH_JIT_LOG_LEVEL=>>` or memory snapshot (`torch.cuda.memory_stats` / `torch._C._debug_set_autograd_fork_join_debug(True)`) to detect recurrent reallocations; correlate with plan tasks (ROI caching, guard tensors). |
 | C4 | Evaluate dtype/precision sensitivity | [ ] | Run warm benchmark with `--dtype float64` to see whether numeric precision affects kernel fusion or caching; log results for float32 vs float64. |
 | C5 | Validate weighted-source path | [ ] | Run 3-source config to ensure multi-source fixes don’t reintroduce warm penalties; capture metrics (same directory). |
+| C6 | Compare HKL gather strategies | [ ] | Prototype a microbenchmark (512² ROI) that contrasts current advanced indexing `self.hkl_data[h_idx, k_idx, l_idx]` vs flattened `torch.take` / `gather` approach. Record timing + memory deltas under `reports/profiling/<stamp>-gather-study/` and decide if refactor justified. |
+| C7 | Quantify pixel-coordinate memory pressure | [ ] | Log host memory usage after `_cached_pixel_coords_meters` construction for 2048² and 4096² detectors (use `psutil` + `torch.cuda.memory_allocated`). Document whether tiling/blocking is needed to stay under 1.5× C runtime. |
 
 ### Phase D — Optimization Implementation
 Goal: Apply targeted code changes driven by Phase C findings (e.g., restructure reductions, hoist caches, adjust data layout) while preserving vectorization and differentiability.
@@ -84,3 +88,5 @@ Exit Criteria: Fix plan marked complete with evidence; documentation updated; pl
 - Coordinate with plateau mitigation (AT-012 plan) to avoid reintroducing float64 overrides.
 - All experiments that modify physics must cite spec clauses and capture parity traces before merging.
 - Protected Assets Rule: ensure any tooling updates respect files referenced in `docs/index.md` (e.g., keep `loop.sh`).
+- Ensure weighted-source tooling (`scripts/validate_weighted_source_normalization.py`) remains path-agnostic so artifacts land under `reports/` on all OSes.
+- When profiling eager paths (`--disable-compile`), cap detector sizes (≤1024²) to keep traces manageable while exposing `Crystal.get_structure_factor` hotspots.

@@ -38,7 +38,7 @@ Exit Criteria: All constructors default to float32; float64 usage limited to gra
 | --- | --- | --- | --- |
 | B1 | Update config and simulator defaults | [X] | Defaults flipped to float32 across CLI, Crystal/Detector/Simulator, and HKL loaders (commit 8c2ceb4; see `reports/DTYPE-DEFAULT-001/phase_b_summary.md`). |
 | B2 | Adjust constant initialisation | [X] | Beam/polarisation tensors and HKL arrays now use caller dtype; smoke test `python -m nanobrag_torch --help` logged on 2025-09-30. |
-| B3 | Audit helper functions | [P] | Auto-selection helpers updated; remaining float64 literals in `io/source.py`, `utils/noise.py`, `utils/c_random.py` need dtype plumbing per Phase B summary. |
+| B3 | Audit helper functions | [P] | Auto-selection helpers updated; remaining float64 literals in `io/source.py` (`read_sourcefile` defaults), `utils/noise.py` (Poisson buffers), and `utils/c_random.py` (rotation matrices) must accept caller dtype/device. Capture before/after snippets in `reports/DTYPE-DEFAULT-001/phase_b3_audit.md` before flipping to float32. |
 
 ### Phase C — Validation & Regression Sweep
 Goal: Demonstrate float32 defaults maintain parity, gradients, and performance targets.
