@@ -1,6 +1,6 @@
 # Fix Plan Update 
 <task>
-review docs/fix_plan.md and, if needed, bring it in line with the format and content requirements.
+review docs/fix_plan.md and, if needed, bring it in line with the format and content requirements. remove accidentally-duplicated sections and resolve inconsistencies.
 </task>
 
 Purpose
