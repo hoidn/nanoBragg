@@ -1,12 +1,12 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-13 (galph loop BW)
+**Last Updated:** 2025-10-13 (galph loop CA)
 **Active Focus:**
-- ROUTING: Execute Phase A of `plans/active/routing-loop-guard/plan.md` to capture the regression audit before editing `loop.sh` (commit `c49e3be` reintroduced 40× `prompts/main.md` loop + unconditional push).
+- ROUTING: Close the reopened guard plan by capturing a fresh regression audit referencing commit `c49e3be` and re-confirming the guarded `loop.sh` flow (`plans/active/routing-loop-guard/plan.md` Phases A–C) before automation resumes.
 - ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md` to document the unguarded `supervisor.sh` loop before restoring a single-iteration flow.
 - AT-012: Plan archived (`plans/archive/at-parallel-012-plateau-regression/plan.md`); monitor for regressions using `reports/2025-10-AT012-regression/phase_c_validation/` artifacts and re-open only if peak matches drop below spec.
-- DTYPE: With plateau plan complete, execute Phase C tasks (`plans/active/dtype-default-fp32/plan.md` C1–C3) — capture Tier-1 parity on CPU/GPU, run gradcheck focus tests, and log warm/cold benchmarks under `reports/DTYPE-DEFAULT-001/` before moving to documentation updates.
-- PERF: Phase B4 reconciliation done; collect remaining evidence (B3 C-side profile and B5 eager trace) so Phase C diagnostics can start with complete hotspot coverage.
+- DTYPE: Shift to Phase D of `plans/active/dtype-default-fp32/plan.md` — finalize documentation/prompt updates (tasks D1–D2) and archive the plan (D3) with links under `reports/DTYPE-DEFAULT-001/`.
+- PERF: Phase B4 reconciliation done; gather the remaining evidence (B3 C-side profile, B5 eager trace, fresh 1×/5× rebaseline after clearing compile cache) so Phase C diagnostics begin with complete hotspot coverage.
 
 ## Index
 | ID | Title | Priority | Status |
@@ -453,10 +453,10 @@
   * Baseline simulator import: `python -c "from nanobrag_torch.simulator import Simulator"`
   * Smoke test: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py -vv`
 - First Divergence (if known): AT-PARALLEL-012 plateau matching regressed to 43/50 peaks when running fully in float32 (prior float64→float32 cast path delivered 50/50).
-- Immediate Next Actions (2025-10-01):
-  * Execute Phase D tasks per `plans/active/dtype-default-fp32/plan.md` — update documentation (arch.md, pytorch_runtime_checklist.md) to codify float32 defaults and float64 gradcheck opt-in.
-  * Archive plan to `plans/archive/dtype-default-fp32/` once documentation complete.
-  * Close [DTYPE-DEFAULT-001] in fix_plan with final artifacts summary.
+- Immediate Next Actions (2025-10-13):
+  * Execute Phase D tasks per `plans/active/dtype-default-fp32/plan.md` — finish any outstanding doc edits (arch.md refresh, runtime checklist cross-check, CLAUDE/prompt call-outs) and document how float64 overrides are requested for gradcheck.
+  * Communicate the default change downstream (Phase D2) and archive the plan (Phase D3) with links to `reports/DTYPE-DEFAULT-001/phase_d_rollout/` once artifacts are captured.
+  * Update this ledger with the Phase D completion memo so the item can move to "done" status.
 - Attempts History:
   * [2025-09-30] Attempt #1 — Result: partial (Phase A+B complete; Phase C blocked by AT-012 regression). Catalogued 37 float64 occurrences and flipped defaults to float32 across CLI, Crystal/Detector/Simulator constructors, HKL readers, and auto-selection helpers while preserving float64 for Fdump binary format and gradcheck overrides. Metrics: CLI smoke test PASS; AT-012 correlation remains ≥0.9995 yet peak matching falls to 43/50 (needs ≥48/50). Artifacts: reports/DTYPE-DEFAULT-001/{inventory.md, proposed_doc_changes.md, phase_b_summary.md}; commit 8c2ceb4. Observations/Hypotheses: Native float32 plateau rounding differs from the float64→float32 cast path, so `scipy.ndimage` peak detection drops ties. Next Actions: debug AT-012 plateau behaviour (log correlations, inspect plateau pixels, decide on detector/matcher tweak), finish remaining B3 helper dtype plumbing (`io/source.py`, `utils/noise.py`, `utils/c_random.py`), then rerun Tier-1 suite on CPU+CUDA once peak matching is restored.
   * [2025-10-06] Attempt #2 — Result: regression persists. Re-running `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation -q` on HEAD (float32 defaults) still returns 43/50 matched peaks (spec needs ≥48/50) with corr=1.0. No artifact archived yet (test run captured locally). Observations: plateau loss now stems from doing the entire simulation in float32; casting the output to float32 no longer restores ties. Next Actions: capture paired float64 vs float32 traces under `reports/DTYPE-DEFAULT-001/20251006-at012-regression/`, evaluate whether to quantize the matcher or adjust simulation precision around peak evaluation, and finish Phase B3 helper dtype plumbing before repeating Tier-1 parity.
@@ -510,6 +510,8 @@
   * PyTorch: n/a
   * Shapes/ROI: n/a
 - First Divergence (if known): Commit `c49e3be` reverted the guard—`loop.sh` pipes `prompts/main.md` through `{1..40}` loop, removes `git pull --rebase`, and performs unconditional `git push`.
+- Immediate Next Actions (2025-10-13):
+  * Run plan Phase A tasks (A1–A3) against commit `c49e3be` so the regression evidence references the latest violation, then confirm the current guarded script via Phase C compliance log before re-archiving the plan.
 - Attempts History:
   * [2025-10-12] Attempt #6 — Result: regression reopened. Detected commit `c49e3be` (loop.sh) restoring the 40-iteration `prompts/main.md` pipeline and stripping the timeouted `git pull --rebase`/conditional push added in `ffd9a5c`. No new audit artifacts captured; automation must stay paused until Phase A evidence is refreshed under `reports/routing/`.
     Metrics: n/a (manual inspection).

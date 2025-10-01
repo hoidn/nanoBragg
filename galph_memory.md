@@ -758,3 +758,15 @@ Follow-ups for Ralph:
 2. Once audit is committed, proceed through Phase B (design note, guarded implementation with fallback, dry-run + hygiene logs) and Phase C closure tasks.
 3. After automation guard is restored, restart DTYPE plan Phase C (C1–C3) with CPU/GPU parity, gradcheck, and benchmark artifacts; then tackle PERF plan tasks B3 and B5 to complete the profiling baseline.
 - Tree intentionally left dirty due to existing `supervisor.sh` regression.
+
+## 2025-10-13 (galph loop BZ update)
+- Ran stash→pull→rebase flow to push supervisor note; restored pre-existing `supervisor.sh` edit after rebase per policy.
+- Updated `docs/fix_plan.md` immediate actions under `[PERF-PYTORCH-004]` to focus Ralph on Phase B3/B5 evidence capture, cold-start rebaseline, and Phase C experiments (commit ff62de9).
+- Key follow-ups for Ralph: (1) Execute routing guard plan Phase A for `loop.sh` / Phase A for `supervisor.sh`; (2) Capture PERF plan B3/B5 artifacts + rebaseline; (3) Kick off DTYPE plan Phase C parity/grad/bench suite once plateau mitigation remains stable.
+- Tree left with longstanding `supervisor.sh` modification (pre-existing regression) — no additional files dirty.
+
+## 2025-10-13 (galph loop CA)
+- Stashed/restored dirty `galph_memory.md` and `supervisor.sh` to satisfy the required `timeout 30 git pull --rebase`; no upstream changes.
+- Updated `docs/fix_plan.md` Active Focus to emphasise refreshed guard evidence, DTYPE Phase D rollout, and PERF B3/B5 + rebaseline requirements; refreshed DTYPE immediate next actions to call for documentation/prompt updates and plan archival, and added ROUTING loop immediate-action note targeting commit `c49e3be`.
+- Confirmed `supervisor.sh` still runs 40 iterations with no guard (`supervisor.sh:14-17`); flagged ROI mask recreation each run as a persistent hotspot risk (`src/nanobrag_torch/simulator.py:1048-1074`); PERF plan B3/B5 still unchecked (`plans/active/perf-pytorch-compile-refactor/plan.md:41-45`) and the latest reconciliation artifacts (`reports/benchmarks/20251001-014819-measurement-reconciliation/`) rely on warmed caches.
+- Follow-ups for Ralph: (1) Execute both guard plans’ Phase A tasks with new audit logs (loop referencing c49e3be, supervisor snapshot/diff) before touching automation scripts; (2) Complete PERF Phase B3/B5 plus a fresh cold-start rebaseline, then proceed into Phase C allocator diagnostics with special attention to ROI mask caching; (3) Finish DTYPE Phase D (docs + communication) and archive the plan once artifacts are recorded.
