@@ -81,16 +81,12 @@ class Detector:
         from ..config import DetectorConvention
 
         # Calculate pixel coordinates from mm values
-        # MOSFLM convention adds +0.5 pixel offset (spec-a-core.md lines 71-72, ADR-03)
+        # NOTE: MOSFLM +0.5 pixel offset is already applied in DetectorConfig.__post_init__()
+        # when beam_center is auto-calculated. When beam_center is explicitly provided by user,
+        # no offset should be added (the user's value is taken literally).
+        # See DetectorConfig.__post_init__() lines 255-261 for MOSFLM offset handling.
         beam_center_s_pixels = config.beam_center_s / config.pixel_size_mm
         beam_center_f_pixels = config.beam_center_f / config.pixel_size_mm
-
-        # Apply MOSFLM +0.5 pixel offset (spec-a-core.md lines 71-72)
-        # MOSFLM: Fbeam = Ybeam + 0.5·pixel; Sbeam = Xbeam + 0.5·pixel
-        # Other conventions: No offset
-        if config.detector_convention == DetectorConvention.MOSFLM:
-            beam_center_s_pixels = beam_center_s_pixels + 0.5
-            beam_center_f_pixels = beam_center_f_pixels + 0.5
 
         # Convert to tensors on proper device
         if isinstance(beam_center_s_pixels, torch.Tensor):
