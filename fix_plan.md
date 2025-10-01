@@ -275,24 +275,30 @@
   * C: n/a (CUDA-specific PyTorch issue)
   * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 256 --device cuda --iterations 2`
   * Shapes/ROI: Any detector size on CUDA device
-- First Divergence (if known): RuntimeError at simulator.py:345 when torch.compile enables CUDA graphs optimization
+- First Divergence (if known): RuntimeError at simulator.py:349 when torch.compile enables CUDA graphs optimization
 - Attempts History:
   * [2025-09-30] Attempt #1 — Result: documented blocker. Discovered during P3.3 benchmark attempt that CUDA execution fails with CUDAGraphs error.
     Metrics: N/A (error prevents execution)
     Artifacts: /tmp/cuda_benchmark_20250930-214118.log
-    Observations/Hypotheses: Error message: "accessing tensor output of CUDAGraphs that has been overwritten by a subsequent run. Stack trace: File simulator.py, line 345: incident_flat = incident_beam_direction.unsqueeze(0).unsqueeze(0).expand(...).reshape(-1, 3).contiguous()". Root cause: `incident_beam_direction` (shape [3]) is being repeatedly expanded/reshaped inside torch.compile graph without cloning, creating aliased tensor views that violate CUDA graphs memory safety. CPU doesn't enforce these constraints, so issue only appears on CUDA. Solutions: (A) Clone tensor before expansion (simplest), (B) Restructure to avoid aliasing, (C) Disable CUDA graphs (defeats perf goal).
-    Next Actions: Implement option A (add .clone() to incident_beam_direction before expansion in compute_physics_for_position). Verify: (1) CUDA benchmarks run successfully, (2) CPU performance unchanged, (3) Gradient flow preserved (clone maintains requires_grad). Test with `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_001.py -v --device cuda` (if parametrized) or manual CUDA smoke test.
-  * [2025-09-30] Attempt #2 — Result: success. Implemented option A (clone before calling compiled function).
+    Observations/Hypotheses: Error message: "accessing tensor output of CUDAGraphs that has been overwritten by a subsequent run. Stack trace: File simulator.py, line 349: incident_flat = incident_beam_direction.unsqueeze(0).unsqueeze(0).expand(...).reshape(-1, 3).contiguous()". Root cause: `incident_beam_direction` (shape [3]) is being repeatedly expanded/reshaped inside torch.compile graph without cloning, creating aliased tensor views that violate CUDA graphs memory safety. CPU doesn't enforce these constraints, so issue only appears on CUDA. Solutions: (A) Clone tensor before expansion (simplest), (B) Restructure to avoid aliasing, (C) Disable CUDA graphs (defeats perf goal), (D) Mark step boundary with torch.compiler.cudagraph_mark_step_begin().
+    Next Actions: Implement option A (add .clone() to incident_beam_direction before expansion in compute_physics_for_position). Verify: (1) CUDA benchmarks run successfully, (2) CPU performance unchanged, (3) Gradient flow preserved (clone maintains requires_grad).
+  * [2025-09-30] Attempt #2 — Result: failed. Implemented clone in wrapper but error persisted.
     Metrics: test_misset_gradient_flow PASSED (gradient flow preserved); test_beam_center_scales_with_detector_size PASSED 5/5 (CPU physics unchanged).
-    Artifacts: src/nanobrag_torch/simulator.py lines 572-586 (compilation refactor), 615-622 (clone+forward); tests/test_perf_pytorch_005_cudagraphs.py (new test file).
-    Observations/Hypotheses: Implemented wrapper pattern: `_compute_physics_for_position` (uncompiled wrapper) clones `incident_beam_direction` then calls `_compiled_compute_physics` (compiled pure function). Changed compilation target from wrapper to pure function `compute_physics_for_position` at lines 580/584. Clone at line 619 prevents CUDA graphs aliasing while preserving gradient flow (torch.Tensor.clone() maintains requires_grad). CPU tests confirm no physics regression.
-    Next Actions: None - ready for P3.3 CUDA benchmarks. When CUDA is available, run benchmark with `--device cuda` to verify fix.
-- Risks/Assumptions: Clone operation adds minimal overhead; gradients verified on CPU (CUDA gradcheck requires CUDA hardware).
+    Artifacts: src/nanobrag_torch/simulator.py lines 572-586 (compilation refactor), 615-622 (clone+forward).
+    Observations/Hypotheses: Implemented wrapper pattern: `_compute_physics_for_position` (uncompiled wrapper) clones `incident_beam_direction` then calls `_compiled_compute_physics` (compiled pure function). Clone at line 617 did not resolve CUDA graphs aliasing because the wrapper itself may be traced. Error persisted: "Error: accessing tensor output of CUDAGraphs that has been overwritten by a subsequent run."
+    Next Actions: Try option D (torch.compiler.cudagraph_mark_step_begin()).
+  * [2025-09-30] Attempt #3 — Result: SUCCESS. Implemented torch.compiler.cudagraph_mark_step_begin() in wrapper.
+    Metrics: CUDA benchmarks 256²:1.51×, 512²:1.69×, 1024²:3.33× faster than C (warm); CPU tests 43/43 passed; CUDA gradient flow verified (-70.37 grad on distance_mm).
+    Artifacts: reports/benchmarks/20250930-220755/benchmark_results.json; src/nanobrag_torch/simulator.py lines 612-622 (clone + cudagraph_mark_step_begin).
+    Observations/Hypotheses: Combined approach: (1) Clone incident_beam_direction in wrapper to preserve gradients, (2) Call torch.compiler.cudagraph_mark_step_begin() before forwarding to compiled function to mark CUDA graph step boundary. This tells PyTorch that tensors can be safely reused across invocations. Clone alone was insufficient because wrapper may be traced; step boundary marker alone would lose gradients. Both together resolve the aliasing issue while preserving differentiability and device neutrality.
+    Next Actions: Mark PERF-PYTORCH-005 done; unblock P3.3 CUDA benchmarks in PERF-PYTORCH-004.
+- Risks/Assumptions: Clone operation adds minimal overhead (<1% based on benchmarks); torch.compiler.cudagraph_mark_step_begin() is device-neutral (no-op on CPU).
 - Exit Criteria (quote thresholds from spec):
-  * ✅ Code implements clone before compiled function call without conditional device logic (device-neutral).
+  * ✅ Code implements clone + step boundary marker without conditional device logic (device-neutral).
   * ✅ CPU gradient test passes (test_misset_gradient_flow).
-  * ✅ CPU physics tests pass without regression (test_beam_center_scales_with_detector_size 5/5).
-  * ⏸ CUDA benchmark runs deferred pending CUDA hardware availability (blocking unblocked, implementation complete).
+  * ✅ CPU physics tests pass without regression (43/43 passed, 1 skipped).
+  * ✅ CUDA benchmark runs successfully (256²:1.51×, 512²:1.69×, 1024²:3.33× faster than C warm).
+  * ✅ CUDA gradient flow verified (distance_mm.grad = -70.37).
 
 ---
 

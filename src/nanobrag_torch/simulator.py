@@ -340,9 +340,6 @@ def compute_physics_for_position(
             intensity = intensity * polar
         else:
             # Single source case
-            # NOTE: incident_beam_direction is cloned in _compute_physics_for_position wrapper
-            # before entering torch.compile to avoid CUDA graphs aliasing violations
-
             # Flatten for polarization calculation
             # Use .contiguous() to avoid CUDA graphs tensor reuse errors
             if original_n_dims == 3:
@@ -613,10 +610,16 @@ class Simulator:
             wavelength = self.wavelength
 
         # PERF-PYTORCH-005: Clone incident_beam_direction to avoid CUDA graphs aliasing violations
-        # CUDA graphs requires that tensors which will be expanded inside torch.compile
-        # are cloned outside the compiled region to prevent "accessing tensor output of
-        # CUDAGraphs that has been overwritten by a subsequent run" errors.
+        # CUDA graphs requires that tensors which will be expanded/reshaped inside torch.compile
+        # are cloned OUTSIDE the compiled region (in this uncompiled wrapper) to prevent
+        # "accessing tensor output of CUDAGraphs that has been overwritten by a subsequent run" errors.
+        # This wrapper method is intentionally NOT compiled to allow this clone operation.
         incident_beam_direction = incident_beam_direction.clone()
+
+        # Mark CUDA graph step boundary to prevent aliasing errors
+        # This tells torch.compile that we're starting a new step and tensors can be safely reused
+        if self.device.type == "cuda":
+            torch.compiler.cudagraph_mark_step_begin()
 
         # Forward to compiled pure function with explicit parameters
         return self._compiled_compute_physics(
