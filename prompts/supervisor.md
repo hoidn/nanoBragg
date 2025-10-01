@@ -23,6 +23,16 @@ Before concluding each invocation:
 </task>
 
 <instructions>
+<0>
+READ the following files:
+- Index of project documentation: `./docs/index.md`
+- $SPECS: `./specs/spec-a.md`
+- $ARCH: `./arch.md` (ADR-backed implementation architecture; reconcile design with spec, surface conflicts)
+- docs/development/c_to_pytorch_config_map.md — C↔Py config parity and implicit rules
+-- docs/debugging/debugging.md — Parallel trace-driven debugging SOP
+- $PLAN: `./fix_plan.md` (living, prioritized to‑do; keep it up to date)
+- $TESTS: `./docs/development/testing_strategy.md` (testing philosophy, tiers, seeds/tolerances, commands)
+<0>
 <1>
 do a deep analysis of the codebase in light of the <current long term goals>. What are some current issues / gaps and possible approaches to resolving them? Review docs/fix_plan.md and plans/active/, as previous iterations of you may have already done some legwork.
 </1>
