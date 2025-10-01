@@ -225,21 +225,26 @@
 ## [ROUTING-LOOP-001] loop.sh routing guard
 - Spec/AT: Prompt routing rules (prompts/meta.md)
 - Priority: High
-- Status: done
-- Owner/Date: galph/2025-10-01
+- Status: in_progress
+- Owner/Date: galph/2025-10-06 (regression follow-up)
 - Reproduction (C & PyTorch):
-  * C: `sed -n '1,40p' loop.sh`
+  * C: `sed -n '1,80p' loop.sh`
   * PyTorch: n/a
   * Shapes/ROI: n/a
-- First Divergence (if known): n/a — automation task
+- First Divergence (if known): Automation harness now reverts to `prompts/main.md` with 20-iteration loop and unconditional `git push`.
 - Attempts History:
+  * [2025-10-06] Attempt #2 — Result: regression. Discovered automation script once again runs `prompts/main.md` inside a fixed loop, violating routing guard and spamming `git push`. Plan rebooted at `plans/active/routing-loop-guard/plan.md` (Phase A pending).
+    Metrics: n/a
+    Artifacts: To be captured during Phase A (see plan tasks A1–A3).
+    Observations/Hypotheses: Likely rebase dropped prior fix; guard needs reinstatement alongside single-iteration workflow.
+    Next Actions: Execute Phase A to document current state, then complete Phases B–C per plan.
   * [2025-10-01] Attempt #1 — Result: success. `loop.sh` now runs a single `git pull` and invokes `prompts/debug.md` only; verification captured in `reports/routing/2025-10-01-loop-verify.txt`.
     Metrics: n/a
     Artifacts: reports/routing/2025-10-01-loop-verify.txt
     Observations/Hypotheses: Guard prevents Ralph from re-entering prompts/main.md while parity tests fail.
     Next Actions: Monitor automation once AT suite is fully green before permitting main prompt.
 - Risks/Assumptions: Ensure future automation edits maintain routing guard.
-- Exit Criteria (quote thresholds from spec): ✅ script executes debug prompt only; verification recorded (satisfied).
+- Exit Criteria (quote thresholds from spec): script executes `prompts/debug.md` exactly once per run with evidence recorded in reports.
 
 ## [AT-PARALLEL-024-REGRESSION] PERF-PYTORCH-004 Test Compatibility
 - Spec/AT: AT-PARALLEL-024 `test_umat2misset_round_trip`
