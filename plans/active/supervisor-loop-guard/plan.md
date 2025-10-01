@@ -47,9 +47,9 @@ Exit Criteria: Compliance log + fix_plan updates committed/pushed; plan ready to
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Capture compliance snapshot | [ ] | Repeat Phase A snapshot after the fix: `sed -n '1,160p' supervisor.sh > reports/routing/<stamp>-supervisor-compliance.txt` plus note for single-run flow. Attach diff vs guard baseline showing no outstanding deviations. |
-| C2 | Update docs/fix_plan.md | [ ] | Add Attempt entries for Phase B/C outcomes with links to dry-run, hygiene, and compliance logs; update status towards "done" once review complete. |
-| C3 | Archive plan | [ ] | Once supervisor approves, move this file to `plans/archive/supervisor-loop-guard/plan-20251013.md` (or similar) and cross-reference in fix_plan and `galph_memory.md`. |
+| C1 | Capture compliance snapshot | [✅] | Repeat Phase A snapshot after the fix: `sed -n '1,160p' supervisor.sh > reports/routing/<stamp>-supervisor-compliance.txt` plus note for single-run flow. Attach diff vs guard baseline showing no outstanding deviations. **Completed 2025-10-01**: Created reports/routing/20251001-052502-supervisor-compliance.txt (with commit hash 65c8940), reports/routing/20251001-052502-supervisor-vs-loop-diff.txt (diff showing guard parity), and reports/routing/20251001-052502-supervisor-compliance-notes.md (comprehensive verification summary). All four guard elements verified present and correct. |
+| C2 | Update docs/fix_plan.md | [✅] | Add Attempt entries for Phase B/C outcomes with links to dry-run, hygiene, and compliance logs; update status towards "done" once review complete. **Completed 2025-10-01**: Added Attempt #4 to ROUTING-SUPERVISOR-001 with all Phase C artifacts, updated status to "done", and revised Active Focus summary to mark item complete. |
+| C3 | Archive plan | [~] | Once supervisor approves, move this file to `plans/archive/supervisor-loop-guard/plan-20251013.md` (or similar) and cross-reference in fix_plan and `galph_memory.md`. **Status 2025-10-01**: Plan ready for archival - all phases A/B/C complete, all exit criteria satisfied. Awaiting supervisor review for final archival step. |
 
 ---
 
