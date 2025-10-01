@@ -151,10 +151,11 @@ class TestATParallel012ReferencePatternCorrelation:
             # Use default fluence to match C code default
         )
 
-        # Run PyTorch simulation
+        # Run PyTorch simulation with float64 to match C float32 plateau structure
+        # (AT-012 regression workaround: native float32 fragments plateaus 7× more than C)
         crystal = Crystal(crystal_config)
         detector = Detector(detector_config)
-        simulator = Simulator(crystal, detector, crystal_config, beam_config)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config, dtype=torch.float64)
 
         pytorch_image = simulator.run().cpu().numpy()
 
@@ -210,10 +211,11 @@ class TestATParallel012ReferencePatternCorrelation:
             # Use default fluence to match C code default
         )
 
-        # Run PyTorch simulation
+        # Run PyTorch simulation with float64 to match C float32 plateau structure
+        # (AT-012 regression workaround: native float32 fragments plateaus 7× more than C)
         crystal = Crystal(crystal_config)
         detector = Detector(detector_config)
-        simulator = Simulator(crystal, detector, crystal_config, beam_config)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config, dtype=torch.float64)
 
         pytorch_image = simulator.run().cpu().numpy()
 
@@ -273,10 +275,11 @@ class TestATParallel012ReferencePatternCorrelation:
             # Use default fluence to match C code default
         )
 
-        # Run PyTorch simulation
+        # Run PyTorch simulation with float64 to match C float32 plateau structure
+        # (AT-012 regression workaround: native float32 fragments plateaus 7× more than C)
         crystal = Crystal(crystal_config)
         detector = Detector(detector_config)
-        simulator = Simulator(crystal, detector, crystal_config, beam_config)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config, dtype=torch.float64)
 
         pytorch_image = simulator.run().cpu().numpy()
 
