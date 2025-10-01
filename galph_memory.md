@@ -570,3 +570,9 @@
 - Logged Attempt #16 in PERF plan noting invalid weighted-source validation (`scripts/validate_weighted_source_normalization.py` mutates simulator post-init, caches untouched) and required BeamConfig-fed redo.
 - Logged Attempt #8 for AT-012 (plateau remains 43/50 under float32) and Attempt #5 for DTYPE rollout (helper modules still emit float64); plateau plan `plans/active/at-parallel-012-plateau-regression/plan.md` remains in Phase A/B.
 - Next actions for Ralph: (1) Execute refreshed PERF plan Phase A baseline reruns + BeamConfig-weighted validation; (2) Fix plateau diagnostics (plan A3/B3) before mitigation; (3) Finish DTYPE plan Phase B3 and rerun Tier-1 once AT-012 passes.
+
+## 2025-10-11 (galph loop BG)
+- `scripts/validate_weighted_source_normalization.py` still hard-codes `/home/ollie/.../validation_results.json`; macOS run raised `FileNotFoundError`, so P3.0c evidence cannot regenerate until output path is repo-relative. Added PERF plan task A0 and noted the blocker in fix_plan Attempt #25.
+- Warm-run CPU profile (512², cached compile) shows `Torch-Compiled Region` dominates (~3.8 ms, 66 % CPU) with `aten::mul/sum` leading ops; eager traces needed to isolate `Crystal._nearest_neighbor_lookup` gathers and quantify the ~200 MB `_cached_pixel_coords_meters` allocation. Added PERF plan tasks B5 (eager profile), C6 (HKL gather microbenchmark), and C7 (pixel-coordinate memory audit).
+- DTYPE plan Phase B3 guidance now calls out the exact float64 holdouts (`io/source.py`, `utils/noise.py`, `utils/c_random.py`) and requires recording before/after snippets in `reports/DTYPE-DEFAULT-001/`.
+- Follow-ups for Ralph: (1) land the weighted-source script path fix before rerunning P3.0c; (2) execute PERF plan B5/C6/C7 diagnostics to confirm structure-factor and pixel-grid hypotheses; (3) convert the identified helper modules to respect caller dtype/device per DTYPE plan B3.
