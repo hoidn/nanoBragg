@@ -141,3 +141,8 @@
 
 ## 2025-10-02 (galph loop T addendum)
 - Noted existing working-copy edit in `prompts/update_fix_plan.md`; change predates this loop and left untouched per supervisor policy.
+
+## 2025-10-02 (galph loop U)
+- Restored `docs/fix_plan.md` with compact active item ledger plus key completed sections (Protected Assets, routing guard, AT-024 regression, PERF Phase 2, triclinic fix); added dtype hypothesis to AT-012 plan (Phase B4).
+- Reintroduced `docs/fix_plan_archive.md` to hold extended history while keeping main plan at 204 lines (<1000).
+- Next actions for Ralph: follow updated plan B4 (float32 vs float64 peak detection) during AT-012 investigation, continue REPO-HYGIENE-002 H1–H6, and execute PERF-PYTORCH-004 plan tasks P2.1–P2.5 / P3.1–P3.5.
