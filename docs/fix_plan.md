@@ -1,6 +1,6 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-08 (galph loop BB)
+**Last Updated:** 2025-10-08 (galph loop BC)
 **Active Focus:** Protect automation assets, finish nanoBragg hygiene cleanup, restore AT-012 peak matches, reconcile multi-source weighting with C semantics, and convert the new CPU/GPU benchmarking artifacts into a Phase 3 decision for PERF-PYTORCH-004.
 
 ## Index
@@ -194,6 +194,11 @@
     Observations/Hypotheses: Small/medium grids improved, but large CPU detector still violates ≤1.5× goal. Need CUDA results plus weighted-source parity before Phase 3 closure. P3.0c remains the gating prerequisite for final benchmarking memo.
     Next Actions: Run P3.3 CUDA benchmarks once cudagraph blocker is cleared; finish P3.0c weighted-source validation before issuing the Phase 3 decision (P3.5).
   * [2025-09-30] Attempt #19 — Result: partial (P3.3 CUDA benchmarks captured; weighting unresolved). Added `torch.compiler.cudagraph_mark_step_begin()` in `_compute_physics_for_position` wrapper to fix CUDA graphs aliasing, then collected CUDA benchmarks (`reports/benchmarks/20250930-220739/`, `reports/benchmarks/20250930-220755/`). Warm GPU runs now beat C (256² 1.55×, 512² 1.69×, 1024² 3.33× faster) with cache setup ≤18 ms and correlation ≥0.999999999912. CPU 1024² deficit from Attempt #18 persists.
+  * [2025-10-08] Attempt #20 — Result: supervisor audit (no code change). Verified multi-source vectorization now applies Kahn factors per source, but normalization still divides by `n_sources` after applying optional weights. C ignores input weights entirely, so PyTorch currently undercounts unequal-weight cases (average of weights instead of sum). ROI/pixel coordinate caching (`Simulator.__init__`:534-564) confirmed effective; allocator churn persists primarily from per-run ROI `.to()` copies. CPU benchmarks remain >2× slower at 1024² despite cache fixes.
+    Metrics: Analysis only (inspected `src/nanobrag_torch/simulator.py` lines 585-840, weights handling); benchmark deltas unchanged since Attempt #18/19.
+    Artifacts: n/a — findings logged here and in `plans/active/perf-pytorch-compile-refactor/plan.md`.
+    Observations/Hypotheses: Need explicit decision on whether to ignore `source_weights` (match C) or change denominator to `weights.sum()` with matching parity artifacts. Weighted-source validation (P3.0c) still outstanding; CPU 1024² slowdown may stem from reduction order or insufficient tiling rather than ROI caching.
+    Next Actions: Execute P3.0c weighted-source parity checklist (two-source unequal weights) and capture regression evidence before rerunning P3.2/P3.3 benchmarks; investigate 1024² CPU hotspot once parity decision recorded.
     Metrics: CUDA warm timings — 256²: 0.00683 s vs C 0.01061 s (1.55×); 512²: 0.00769 s vs C 0.01298 s (1.69×); 1024²: 0.01211 s vs C 0.04031 s (3.33×). CUDA grad smoke: `distance_mm.grad = -70.37`. Tests: 43 passed, 1 skipped.
     Artifacts: `reports/benchmarks/20250930-220739/benchmark_results.json`; `reports/benchmarks/20250930-220755/benchmark_results.json`; fix in `src/nanobrag_torch/simulator.py` (commit e617ccb).
     Observations/Hypotheses: PERF-PYTORCH-005 cudagraph guard clears blocker, but Phase 3 exit still gated by P3.0c weighted-source parity and CPU 1024² slowdown. `BeamConfig.source_weights` docstring still claims weights are ignored—update documentation once parity decision lands. Need nb-compare + pytest artifacts for unequal weights before considering P3.0c closed.
@@ -232,7 +237,7 @@
     Artifacts: reports/2025-09-30-AT-012-peakmatch/final_summary.json, reports/2025-09-30-AT-012-peakmatch/peak_detection_summary.json
     First Divergence: Not a physics divergence — float64 precision breaks plateau ties. Golden C output (float32) has 8 unique peak values creating plateaus. PyTorch float64 has 38 unique values due to numerical noise, causing scipy.ndimage.maximum_filter to find 45 local maxima instead of 52.
     Solution: Cast pytorch_image.astype(np.float32) before find_peaks() in all three test methods. This matches golden data precision and restores plateau ties, achieving 50/50 peak matches (100%) vs spec requirement of 48/50 (95%).
-    Next Actions: None — AT-PARALLEL-012 complete and passing. Plan archived at `plans/archive/at-parallel-012-peakmatch/plan.md`; assertions tightened to ≥95%.
+    Next Actions: Previously closed, but regression reopened in later attempts; keep plan active until float32 plateau handling is restored.
   * [2025-09-30] Attempt #4 — Result: REGRESSION. test_simple_cubic_correlation now failing with 43/50 peaks matched (86%), regressed from Attempt #3.
     Metrics: corr≈0.9999999999999997; matches=43/50 (86%); requirement: ≥48/50 (95%).
     Artifacts: None yet — will generate during debugging loop.
@@ -341,6 +346,11 @@
     Artifacts: `tests/test_at_parallel_012.py` (commit cd9a034).
     Observations/Hypotheses: Confirms regression is confined to float32 execution; masking tests postpones required analysis and should be temporary. Plateau artifacts still missing under `reports/DTYPE-DEFAULT-001/`.
     Next Actions: Generate float32 vs float64 plateau traces, finish Phase B3 helper dtype plumbing, then revert the override and rerun Tier-1 suite under default float32.
+  * [2025-10-08] Attempt #6 — Result: regression confirmed after removing override. Commit 1435c8e restored spec-compliant AT-012 assertions (float32 default, 0.5 px tolerance, fixed 50 peaks), causing simple_cubic to fail fast (43/50). Plateau artifacts captured under `reports/2025-10-AT012-regression/` per plan Phase A.
+    Metrics: corr=0.9999999999999997; matches=43/50; 86% peak hit rate vs ≥95% requirement.
+    Artifacts: tests/test_at_parallel_012.py; reports/2025-10-AT012-regression/simple_cubic_baseline.log + simple_cubic_metrics.json.
+    Observations/Hypotheses: Native float32 accumulation still fragments plateau intensities. DTYPE plan Phase C0 now blocked on plateau fix; helper dtype plumbing (Phase B3) remains outstanding.
+    Next Actions: Coordinate with AT-012 plateau plan to produce plateau histograms and divergence traces before attempting further dtype-related validation or documentation updates.
 - Plan Reference: `plans/active/dtype-default-fp32/plan.md` (Phase A complete, Phase B `[P]`).
 - Risks/Assumptions: Must preserve float64 gradcheck path; documentation currently states float64 defaults; small value shifts must stay within existing tolerances and acceptance comparisons.
 - Exit Criteria (quote thresholds from spec):
@@ -449,3 +459,8 @@
 ### Archive
 For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, early PERF fixes, routing escalation log), see `docs/fix_plan_archive.md`.
   * [2025-10-07] Attempt #7 — Result: INVALID (see main log). Relaxing the acceptance thresholds and enforcing float64 broke spec §AT-012; work redirected to `plans/active/at-parallel-012-plateau-regression/plan.md` to restore the proper contract.
+  * [2025-10-08] Attempt #8 — Result: regression reconfirmed under restored spec contract. Reverted temporary float64 override and reinstated 0.5 px tolerance/95% peak expectation (`commit 1435c8e`). Tests now fail fast with 43/50 matched peaks while recording Phase A artifacts.
+    Metrics: corr=0.9999999999999997; matches=43/50 (86%); required ≥48/50; mean distance logged in baseline report.
+    Artifacts: reports/2025-10-AT012-regression/simple_cubic_baseline.log; reports/2025-10-AT012-regression/simple_cubic_metrics.json; tests/test_at_parallel_012.py (spec assertions restored).
+    Observations/Hypotheses: Plateau fragmentation persists in native float32 despite parity correlation of 1.0; histogram/trace capture still needed (Plan Phase A3/B1). Removing the float64 override exposes the real defect so downstream dtype default work can proceed once plateau fix lands.
+    Next Actions: Finish Plan Phase A by generating plateau histograms (A3) and logging the update in this ledger (A4), then proceed to Phase B divergence tracing.

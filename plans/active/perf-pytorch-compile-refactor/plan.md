@@ -147,7 +147,7 @@ Exit Criteria: Documented decision in this plan (either defer because warm runs 
 **🔜 CONDITIONAL:**
 - Phase 4: Graph Stabilization (execute only if Phase 3 shows >1.5× deficit)
 
-**📋 DISCOVERED ISSUES (confirmed 2025-10-08, galph loop AZ):**
-- Weighted-source parity artifacts still missing. C-side `source_I` only seeds the background term, so PyTorch’s weight-aware accumulation needs reconciliation + documentation before benchmarking (P3.0c).
-- ROI mask and detector constants are rebuilt every `Simulator.run`, keeping allocator churn high and blocking CPU parity (P3.4).
-- Cold/warm benchmark baselines predate the latest physics fixes; reruns on CPU/CUDA (P3.2/P3.3) remain outstanding.
+**📋 DISCOVERED ISSUES (confirmed 2025-10-08, galph loop BC):**
+- Weighted-source parity artifacts still missing. C ignores input weights whereas PyTorch applies them then divides by `n_sources`, so unequal-weight cases are currently undercounted. Capture weighted-source pytest + nb-compare evidence (P3.0c) before locking in either "ignore weights" or "sum weights" semantics.
+- 1024² CPU benchmarks remain >2× slower than the C reference despite ROI/pixel caching; revisit reduction order / batching once parity work lands.
+- Cold/warm benchmark baselines predate the latest physics fixes; reruns on CPU/CUDA (P3.2/P3.3) remain outstanding after P3.0c evidence is recorded.

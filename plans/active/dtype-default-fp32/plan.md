@@ -47,8 +47,8 @@ Exit Criteria: Test matrix recorded in fix_plan; benchmark delta ≤~5 % vs pr
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C0 | Remove temporary float64 overrides in AT-012 tests | [ ] | Once plateau regression is understood, drop `dtype=torch.float64` overrides (commit cd9a034) so Tier-1 exercises default float32. Track removal alongside artifact capture to ensure regression truly resolved. |
-| C1 | Run Tier-1 parity suite on CPU/GPU | [ ] | Blocked until AT-012 regression (43/50 peaks in float32 native path) is resolved. Capture paired float64 vs float32 runs under `reports/DTYPE-DEFAULT-001/20251006-at012-regression/` (include plateau pixel dumps and peak tables), then rerun `env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_at_parallel_012.py -vv`. Once AT-012 passes, expand to the full suite and archive metrics under `reports/DTYPE-DEFAULT-001/parity_<device>.json`. |
+| C0 | Remove temporary float64 overrides in AT-012 tests | [X] | Commit 1435c8e restored default float32 assertions (0.5 px, 95% of 50). Simple_cubic now fails 43/50; artifacts logged under `reports/2025-10-AT012-regression/`. |
+| C1 | Run Tier-1 parity suite on CPU/GPU | [ ] | Blocked until AT-012 plateau fix lands. Reuse artifacts from `reports/2025-10-AT012-regression/` for baseline, then capture paired float64 vs float32 runs under `reports/DTYPE-DEFAULT-001/` before rerunning the full Tier-1 matrix (`NB_RUN_PARALLEL=1 … tests/test_at_parallel_012.py -vv`). |
 | C2 | Execute gradcheck focus tests | [ ] | `pytest tests/test_crystal_geometry.py::TestMetricDuality::test_metric_duality_grad` et al with explicit `dtype=torch.float64` to verify opt-in precision still works post-default switch. |
 | C3 | Benchmark warm/cold performance | [ ] | `python scripts/benchmarks/benchmark_detailed.py --sizes 256,512 --device cuda --dtype float32 --iterations 3`; compare to float64 baselines and store in `reports/DTYPE-DEFAULT-001/benchmarks/`. |
 

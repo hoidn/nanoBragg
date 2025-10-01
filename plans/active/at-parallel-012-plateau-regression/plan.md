@@ -25,10 +25,10 @@ Exit Criteria: Commit-independent report under `reports/2025-10-AT012-regression
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| A1 | Restore local test expectations | [ ] | Check out working tree; revert `tests/test_at_parallel_012.py` tolerance/dtype relaxations to the archived spec form (0.5 px, fixed 50 peaks, default dtype). Do this on a scratch branch; do NOT commit until fix validated. |
-| A2 | Run targeted pytest and capture logs | [ ] | Command: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation -vv`; copy stdout + JSON metrics into `reports/2025-10-AT012-regression/simple_cubic_baseline.log/json`. |
+| A1 | Restore local test expectations | [X] | Commit 1435c8e reinstated spec assertions (0.5 px, 95% of 50) and dropped the temporary float64 override. |
+| A2 | Run targeted pytest and capture logs | [X] | `KMP_DUPLICATE_LIB_OK=TRUE pytest … -vv` output recorded at `reports/2025-10-AT012-regression/simple_cubic_baseline.log`; summary JSON stored alongside. |
 | A3 | Quantify plateau fragmentation | [ ] | Use existing notebook/script (`reports/2025-09-30-AT-012-peakmatch/peak_detection_summary.json` as template) to compute unique value counts in 20×20 ROI (C vs PyTorch) and save histogram PNGs + CSV. |
-| A4 | Update fix_plan attempt log | [ ] | Add Attempt entry summarizing regression evidence with artifact paths; keep `[AT-PARALLEL-012-PEAKMATCH]` status `in_progress`. |
+| A4 | Update fix_plan attempt log | [X] | Attempt #8 appended to `docs/fix_plan.md` with artifact links; status remains `in_progress` pending plateau fix. |
 
 ### Phase B — Numerical Divergence Analysis
 Goal: Localize the divergence causing plateau fragmentation under float32.
