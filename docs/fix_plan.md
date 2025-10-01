@@ -1,11 +1,11 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-13 (galph loop BV)
+**Last Updated:** 2025-10-13 (galph loop BW)
 **Active Focus:**
 - ROUTING: Execute Phase A of `plans/active/routing-loop-guard/plan.md` to capture the regression audit before editing `loop.sh` (commit `c49e3be` reintroduced 40× `prompts/main.md` loop + unconditional push).
-- AT-012: hold Phase C work in standby per supervisor notes; no action until new directive lands.
-- DTYPE: Phase B complete; line up Phase C (Tier-1 parity CPU/GPU, gradcheck focus, warm/cold benchmarks) once AT-012 plateau plan resumes. Stage results under `reports/DTYPE-DEFAULT-001/`.
-- PERF: reconcile 1-iteration vs 5-iteration warm timings, complete Phase B4 hotspot summary (top ops from trace) and B5 eager-mode profile before designing Phase C experiments.
+- AT-012: Plan archived (`plans/archive/at-parallel-012-plateau-regression/plan.md`); monitor for regressions using `reports/2025-10-AT012-regression/phase_c_validation/` artifacts and re-open only if peak matches drop below spec.
+- DTYPE: With plateau plan complete, execute Phase C tasks (`plans/active/dtype-default-fp32/plan.md` C1–C3) — capture Tier-1 parity on CPU/GPU, run gradcheck focus tests, and log warm/cold benchmarks under `reports/DTYPE-DEFAULT-001/` before moving to documentation updates.
+- PERF: Phase B4 reconciliation done; collect remaining evidence (B3 C-side profile and B5 eager trace) so Phase C diagnostics can start with complete hotspot coverage.
 
 ## Index
 | ID | Title | Priority | Status |
@@ -15,7 +15,7 @@
 | [REPO-HYGIENE-002](#repo-hygiene-002-restore-canonical-nanobraggc) | Restore canonical nanoBragg.c | Medium | in_progress |
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
 | [DTYPE-DEFAULT-001](#dtype-default-001-migrate-default-dtype-to-float32) | Migrate default dtype to float32 | High | in_progress |
-| [AT-PARALLEL-012-PEAKMATCH](#at-parallel-012-peakmatch-restore-95-peak-alignment) | Restore 95% peak alignment | High | in_progress |
+| [AT-PARALLEL-012-PEAKMATCH](#at-parallel-012-peakmatch-restore-95-peak-alignment) | Restore 95% peak alignment | High | done |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | in_progress |
 
 ---
@@ -291,13 +291,13 @@
 - Priority: High
 - Status: done
 - Owner/Date: ralph/2025-09-30 (reopened 2025-10-09 after float64 workaround rejected)
-- Plan Reference: `plans/active/at-parallel-012-plateau-regression/plan.md`
+- Plan Reference: `plans/archive/at-parallel-012-plateau-regression/plan.md` (archived 2025-10-01; Phase C validation logged under `reports/2025-10-AT012-regression/phase_c_validation/`).
 - Reproduction (C & PyTorch):
   * C: `NB_C_BIN=./golden_suite_generator/nanoBragg -lambda 6.2 -cell 100 100 100 90 90 90 -default_F 100 -distance 100 -detpixels 1024 -floatfile c_simple_cubic.bin`
   * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation -vv`
   * Shapes/ROI: 1024×1024 detector, pixel 0.1 mm, oversample auto (currently 1×), full-frame ROI
 - First Divergence (if known): Phase B3 analysis isolates per-pixel float32 arithmetic (geometry + sinc pipelines) as the driver — PyTorch float32 yields ≈5× more unique plateau intensities than C float32 despite perfect correlation (see `reports/2025-10-AT012-regression/phase_b3_experiments.md`).
-- Immediate Next Actions (2025-10-12): Execute plan Phase C3 by capturing the full validation artifacts (`reports/2025-10-AT012-regression/phase_c_validation/`) with the new clustering logic, then run Phase C4 benchmark checks to confirm no performance regressions. Update the decision memo with the validation results before closing the plan.
+- Immediate Next Actions (2025-10-13): None. Use archived artifacts (`reports/2025-10-AT012-regression/phase_c_validation/`) as the compliance baseline and re-open the plan only if peak matches drop below 48/50 or tolerance adjustments reappear.
 - Attempts History:
   * [2025-10-02] Attempt #1 — Result: failed. Correlation 0.9999999999999997 but only 43/50 peaks matched (86%) vs ≥95% requirement.
     Metrics: corr=1.0; matches=43/50; unmatched peaks on outer ring.
@@ -452,8 +452,8 @@
   * Smoke test: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py -vv`
 - First Divergence (if known): AT-PARALLEL-012 plateau matching regressed to 43/50 peaks when running fully in float32 (prior float64→float32 cast path delivered 50/50).
 - Immediate Next Actions (2025-10-13):
-  * Coordinate with AT-012 plateau remediation so Phase C (plan tasks C1–C3) can start; when greenlit, capture float32 Tier-1 parity on CPU/GPU under `reports/DTYPE-DEFAULT-001/phase_c_parity/`.
-  * Run gradcheck focus tests with explicit float64 overrides (plan task C2) and log warm/cold benchmark deltas for float32 vs prior float64 baselines (plan task C3) — archive outputs alongside existing Phase B artifacts before requesting closure.
+  * Kick off Phase C in `plans/active/dtype-default-fp32/plan.md` — run C1 Tier-1 parity on CPU/GPU and save logs under `reports/DTYPE-DEFAULT-001/phase_c_parity/`, then proceed directly to gradcheck focus (C2) and benchmark deltas (C3).
+  * Use the archived AT-012 validation set (`reports/2025-10-AT012-regression/phase_c_validation/`) as the plateau baseline; document any deviations in the Phase C parity report before moving to documentation updates.
 - Attempts History:
   * [2025-09-30] Attempt #1 — Result: partial (Phase A+B complete; Phase C blocked by AT-012 regression). Catalogued 37 float64 occurrences and flipped defaults to float32 across CLI, Crystal/Detector/Simulator constructors, HKL readers, and auto-selection helpers while preserving float64 for Fdump binary format and gradcheck overrides. Metrics: CLI smoke test PASS; AT-012 correlation remains ≥0.9995 yet peak matching falls to 43/50 (needs ≥48/50). Artifacts: reports/DTYPE-DEFAULT-001/{inventory.md, proposed_doc_changes.md, phase_b_summary.md}; commit 8c2ceb4. Observations/Hypotheses: Native float32 plateau rounding differs from the float64→float32 cast path, so `scipy.ndimage` peak detection drops ties. Next Actions: debug AT-012 plateau behaviour (log correlations, inspect plateau pixels, decide on detector/matcher tweak), finish remaining B3 helper dtype plumbing (`io/source.py`, `utils/noise.py`, `utils/c_random.py`), then rerun Tier-1 suite on CPU+CUDA once peak matching is restored.
   * [2025-10-06] Attempt #2 — Result: regression persists. Re-running `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation -q` on HEAD (float32 defaults) still returns 43/50 matched peaks (spec needs ≥48/50) with corr=1.0. No artifact archived yet (test run captured locally). Observations: plateau loss now stems from doing the entire simulation in float32; casting the output to float32 no longer restores ties. Next Actions: capture paired float64 vs float32 traces under `reports/DTYPE-DEFAULT-001/20251006-at012-regression/`, evaluate whether to quantize the matcher or adjust simulation precision around peak evaluation, and finish Phase B3 helper dtype plumbing before repeating Tier-1 parity.

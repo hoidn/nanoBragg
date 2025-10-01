@@ -159,6 +159,6 @@ Phase B3 analysis confirmed:
 - Phase B3 Report: `reports/2025-10-AT012-regression/phase_b3_experiments.md`
 - Phase C3 Validation: `reports/2025-10-AT012-regression/phase_c_validation/VALIDATION_SUMMARY.md`
 - Phase C4 Benchmarks: `reports/2025-10-AT012-regression/phase_c_validation/c4_benchmark_impact_summary.md`
-- Plan: `plans/active/at-parallel-012-plateau-regression/plan.md`
+- Plan: `plans/archive/at-parallel-012-plateau-regression/plan.md`
 - Spec: `specs/spec-a-parallel.md` AT-PARALLEL-012 (line 92)
 - DTYPE Plan: `plans/active/dtype-default-fp32/plan.md` Phase C0

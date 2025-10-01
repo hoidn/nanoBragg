@@ -718,3 +718,15 @@
   1. Execute routing guard plan Phase A (tasks A1–A3) to capture `loop.sh` regression evidence, then apply Phase B/C to restore guard before any automation run.
   2. Finish DTYPE plan task B3 with audit log + helper refactor, then resume Phase C validation once plateau artifacts stay green.
   3. Resume PERF plan Phase B4/B5: reconcile 1 vs 5 iteration benchmarks, produce hotspot summary, prepare warm 4096² profiling artifacts per plan guidance.
+## 2025-10-01 (galph loop BV)
+- Pulled remote commit d1e0dc9 (PERF Phase B reconciliation) before work; no conflicts.
+- Reviewed long-term goals: automation guard still regressed (loop.sh 40× main, see plans/active/routing-loop-guard/plan.md), DTYPE Phase B complete but fix_plan pointed at stale B3 todo, PERF plan Phase B4 marked done via reconciliation study while B3/B5 remain open.
+- Updated docs/fix_plan.md Active Focus and DTYPE next-actions to reflect Phase Cprep and plateau gating (lines 3-8, 454-459).
+- Follow-ups for Ralph: (1) Execute routing guard plan Phase A (reports/routing audit) before editing loop.sh; (2) Begin DTYPE plan Phase C once AT-012 plateau work resumes, logging Tier-1 parity + gradcheck + benchmark artifacts under reports/DTYPE-DEFAULT-001/; (3) For PERF plan, finish tasks B3/B5 (C profile + eager trace) and decide whether Phase C polishes are needed now that warm gap is ~1.1×.
+
+## 2025-10-13 (galph loop BW)
+- `timeout 30 git pull --rebase` initially failed due to unstaged galph_memory.md; stashed/restored the note to keep prior context before proceeding.
+- Fix_plan drift: AT-012 item still pointed at missing `plans/active` path and left DTYPE Phase C on hold. Updated Active Focus, status table, and plan reference to the archived document (`plans/archive/at-parallel-012-plateau-regression/plan.md`) so Ralph relies on the validated artifacts in `reports/2025-10-AT012-regression/phase_c_validation/`.
+- Adjusted DTYPE next-actions to start Phase C immediately (Tier-1 parity, gradcheck focus, benchmark deltas under `reports/DTYPE-DEFAULT-001/phase_c_parity/`), and refreshed `phase_c_decision.md` to reference the archived plan path for future loops.
+- Commit review (`37c5e71`, `d1e0dc9`, `9271e81`) confirmed dtype helper neutrality, PERF warm reconciled to ~1.1×, and AT-012 documentation captured Phase C closure. No regressions spotted, but PERF plan still lacks B3 C-side profile and B5 eager trace; routing guard plan Phase A audit remains outstanding.
+- Follow-ups for Ralph: (1) Execute routing guard plan tasks A1–A3 with audit logs in `reports/routing/`; (2) Run DTYPE plan Phase C1–C3 with parity/gradcheck/benchmark artifacts and log the attempt; (3) Capture PERF Phase B3 C-profile (or documented rationale) and Phase B5 eager-mode trace before entering Phase C diagnostics; (4) Keep AT-012 plan archived but monitor `tests/test_at_parallel_012.py` for future plateau regressions.
