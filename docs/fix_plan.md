@@ -77,7 +77,7 @@
 ## [REPO-HYGIENE-002] Restore canonical nanoBragg.c
 - Spec/AT: Repository hygiene SOP (`docs/development/processes.xml` §C-parity) & commit 92ac528 regression follow-up
 - Priority: Medium
-- Status: in_progress
+- Status: done
 - Owner/Date: galph/2025-09-30
 - Reproduction (C & PyTorch):
   * C: `git show 92ac528^:golden_suite_generator/nanoBragg.c > /tmp/nanoBragg.c.ref`
@@ -100,6 +100,11 @@
     Artifacts: n/a (inspection via `git status` + manual file checks).
     Observations/Hypotheses: Root-level `fix_plan.md` should be deleted alongside stale reports once Protected Assets guard is followed; restoring `golden_suite_generator/nanoBragg.c` first avoids churn when parity reruns.
     Next Actions: Execute plan tasks H1–H4 on a dedicated branch: capture baseline file (`git show 92ac528^:golden_suite_generator/nanoBragg.c`), restore it locally, archive `reports/2025-09-30-AT-021-traces/` under `reports/archive/`, remove the duplicate `fix_plan.md`, then run H5 parity smoke before logging completion in H6.
+  * [2025-10-01] Attempt #4 — Result: success. Executed plan tasks H1–H5 and verified all exit criteria met.
+    Metrics: AT-021/024 parity 4/4 passed in 23.18 s; canonical C file byte-identical to 92ac528^ (4579 lines); stale `reports/2025-09-30-AT-021-traces/` confirmed absent (no cleanup needed); duplicate `fix_plan.md` removed.
+    Artifacts: `/tmp/nanoBragg.c.ref` (baseline snapshot for future audits); parity test logs (pytest stdout).
+    Observations/Hypotheses: Repository now complies with all hygiene requirements. Canonical C file maintained, no stray artifacts, parity harness green. Protected Assets Rule honored (no `loop.sh` or index-referenced files touched).
+    Next Actions: None - item closed successfully. Keep baseline snapshot for future hygiene audits.
 - Risks/Assumptions: Ensure Protected Assets guard is honored before deleting files; parity harness must remain green after cleanup.
 - Exit Criteria (quote thresholds from spec):
   * Canonical `golden_suite_generator/nanoBragg.c` matches 92ac528^ exactly (byte-identical).
