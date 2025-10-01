@@ -153,9 +153,13 @@ def write_fdump(
         F_numpy.tofile(f)
 
 
-def read_fdump(filepath: str, device=None, dtype=torch.float64) -> Tuple[torch.Tensor, dict]:
+def read_fdump(filepath: str, device=None, dtype=torch.float32) -> Tuple[torch.Tensor, dict]:
     """
     Read binary Fdump.bin cache file.
+
+    Note: Fdump.bin always stores data as float64 (C doubles) per spec, but the returned
+    tensor dtype can be specified to match the caller's precision requirements.
+    Default is float32 per DTYPE-DEFAULT-001 project policy.
 
     Returns:
         tuple: (F_grid, metadata_dict) same as read_hkl_file
@@ -181,14 +185,14 @@ def read_fdump(filepath: str, device=None, dtype=torch.float64) -> Tuple[torch.T
         k_range = k_max - k_min
         l_range = l_max - l_min
 
-        # Read binary data
+        # Read binary data (always float64 in Fdump.bin format)
         num_elements = (h_range + 1) * (k_range + 1) * (l_range + 1)
         F_data = np.fromfile(f, dtype=np.float64, count=num_elements)
 
         # Reshape to 3D grid
         F_grid = F_data.reshape((h_range + 1, k_range + 1, l_range + 1))
 
-        # Convert to torch tensor
+        # Convert to torch tensor with requested dtype
         F_tensor = torch.from_numpy(F_grid).to(device=device, dtype=dtype)
 
         metadata = {
