@@ -1,154 +1,86 @@
-# Plan: PERF-PYTORCH-004 Compile & Constant Hoisting Roadmap
+# Plan: PERF-PYTORCH-004 4096² Warm Performance Recovery
 
-**Status:** Active (supervisor-created)
-**Priority:** Medium (enables long-term performance goal)
-**Related fix_plan item:** `[PERF-PYTORCH-004]` Fuse Physics Kernels — docs/fix_plan.md
-**Created:** 2025-09-30 by galph
+**Status:** Active (reopened 2025-10-10)
+**Priority:** Critical — long-term goal blocker (PyTorch still 3.4× slower than C at 4096² warm)
+**Related fix_plan item:** `[PERF-PYTORCH-004]` Fuse physics kernels — docs/fix_plan.md
+**Created:** 2025-09-30 (refreshed 2025-10-10 by galph)
 
-## Why this plan exists
-- The PyTorch simulator remains 2.7× slower than the C binary on ≤1024² grids even after warm-up (reports/benchmarks/20250930-011527).
-- `Simulator.__init__` recompiles `_compute_physics_for_position` on every instantiation, paying 0.5–6 s warm-up per run (reports/benchmarks/20250930-002124/profile.json).
-- `_compute_physics_for_position` allocates dozens of small tensors inside the compiled graph (`torch.tensor(1e-12)`, repeated `unsqueeze`/`expand`), preventing Inductor from collapsing kernels and causing allocator churn.
-- `Crystal.compute_cell_tensors` and related helpers inject dynamic guards (`torch.maximum(..., torch.tensor(...))`) that trigger Dynamo graph breaks, blocking `fullgraph=True` and any future kernel fusion.
-- Without a structured plan, Ralph keeps bouncing between parity work and ad-hoc perf experiments, so PERF-PYTORCH-004 never progresses.
+## Context
+- Initiative: Speed up PyTorch nanoBragg so the warm run at 4096×4096 outperforms the C reference.
+- Current baseline (reports/benchmarks/20250930-230702/benchmark_results.json):
+  - C warm: **0.527 s**; PyTorch warm: **1.793 s** (speedup_warm≈0.29 → PyTorch is 3.4× slower).
+  - Cold timings are dominated by torch.compile warm-up (>1.94 s) but warm latency remains unacceptable.
+- Previous partial fixes (kernel hoisting, torch.compile caching) improved ≤1024² sizes but never addressed large-detector warm behavior; benchmarks marked “complete” were captured before weighted-source parity was verified.
+- Dependencies: `docs/architecture/pytorch_design.md` §§2.4–3.3, `docs/development/pytorch_runtime_checklist.md`, `scripts/benchmarks/benchmark_detailed.py`, torch profiler tooling, `docs/fix_plan.md` `[PERF-PYTORCH-004]` attempt history, plan `plans/active/dtype-default-fp32/plan.md` (ensures float32 context), plateau plan for AT-012 (must not regress peak parity).
 
-## Required context before coding
-1. `docs/architecture/pytorch_design.md` §§2.4, 3.1–3.3 (vectorization, simulator lifecycle).
-2. `docs/development/pytorch_runtime_checklist.md` (device/dtype neutrality expectations).
-3. `src/nanobrag_torch/simulator.py` (especially `Simulator.__init__`, `_compute_physics_for_position`).
-4. `src/nanobrag_torch/models/crystal.py` (`compute_cell_tensors`, `_generate_mosaic_rotations`).
-5. Benchmark artifacts: `reports/benchmarks/20250930-002124/`, `reports/benchmarks/20250930-011527/`.
-6. TorchDynamo docs on `torch.compile` caching & `fullgraph=True` limitations (link in PERF-PYTORCH-004 attempt history).
+## Target Outcome
+Reduce PyTorch warm-run latency at 4096² (CPU) to ≤1.2× the C binary while preserving parity/gradient guarantees and without regressing CUDA performance. Capture reproducible evidence (benchmarks + profiler traces) and update fix_plan/documentation.
 
-## Baseline & instrumentation checklist
-- Reproduce cold vs warm timings using `python scripts/benchmarks/benchmark_detailed.py --sizes 256,512,1024 --device cuda --dtype float32` (prefix with `KMP_DUPLICATE_LIB_OK=TRUE`).
-- Capture profiler trace: `python scripts/benchmarks/benchmark_detailed.py --profile --size 1024 --device cuda` (stores under `reports/benchmarks/<stamp>/`).
-- Verify current torch.compile cache key churn by toggling `NB_SIM_CACHE_VERBOSE=1` (if helper exists) or instrumenting `Simulator.__init__` with a lightweight counter (must obey Instrumentation Rule #0 by reusing helper).
+---
 
-## Phased approach
-
-### Phase 0 — Architecture Refactoring (NOW MANDATORY - 2025-10-01)
-**BLOCKER IDENTIFIED:** Phase 2 attempt revealed that `_compute_physics_for_position` is a bound method capturing `self`. Caching bound methods across instances is unsafe (causes silent correctness bugs). This phase is now a hard prerequisite for all subsequent phases.
-
-Goal: Refactor physics computation to be a pure function without `self` references, enabling safe kernel caching.
-Prerqs: Review Attempt #1 findings in `docs/fix_plan.md` (2025-10-01), understand bound method closure semantics.
-Exit Criteria: `_compute_physics_for_position` is a module-level pure function or @staticmethod with all required state passed as explicit parameters. All tests pass. Gradient tests remain green.
+### Phase A — Baseline Refresh & Evidence Capture
+Goal: Produce authoritative, up-to-date warm/cold benchmarks (CPU + CUDA when available) with clear provenance before attempting fixes.
+Prerqs: None (execute immediately).
+Exit Criteria: `reports/benchmarks/<date>-4096-warm-baseline/` directory containing C vs PyTorch cold/warm metrics (sizes 512–4096), JSON + markdown summary, and notes about cache hits.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| P0.1 | Design pure function signature | [X] | Documented in phase0_blueprint.md; extracted 7 self references (beam_config.dmin, crystal methods/properties). |
-| P0.2 | Refactor to module-level function or @staticmethod | [X] | Created module-level pure function `compute_physics_for_position` with all state as explicit parameters. Kept compatibility shim method. |
-| P0.3 | Update all call sites | [X] | Created forwarding shim in `_compute_physics_for_position` method - all existing call sites work unchanged. |
-| P0.4 | Validate with full test suite | [X] | Core: 98 passed, 7 skipped, 1 xfailed ✓. AT-PARALLEL: 78 passed, 48 skipped ✓. No regressions. |
-| P0.5 | Document refactoring rationale | [X] | Added comprehensive docstrings to pure function and compatibility shim explaining caching rationale. |
+| A1 | Re-run CPU benchmark sweep | [ ] | `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 512,1024,2048,4096 --device cpu --iterations 5 --keep-artifacts --out reports/benchmarks/$(date +%Y%m%d-%H%M%S)-cpu-baseline/`. Record commit hash. |
+| A2 | Capture C binary timings | [ ] | `NB_C_BIN=./golden_suite_generator/nanoBragg python scripts/benchmarks/benchmark_detailed.py --sizes 512,1024,2048,4096 --device cpu --c-only --iterations 5 --out reports/benchmarks/<same-stamp>-c-baseline/` to ensure matching configuration. |
+| A3 | (Optional CUDA) Measure GPU warm | [ ] | If GPU available, rerun A1 with `--device cuda --disable-compile` toggles to separate compile vs kernel cost; archive under same reports directory. |
+| A4 | Summarise baseline | [ ] | Write `baseline_summary.md` comparing warm speedup vs C, noting compile cache hits/misses, and link artifacts in docs/fix_plan attempt log. |
 
-**Alternative Investigation (defer until after P0.4):** ✅ **COMPLETE** (2025-10-01)
-- ✅ Investigated whether torch.compile's internal cache already provides cross-instance reuse for pure functions
-- ✅ **FINDING:** torch.compile DOES cache effectively across instances (67-238x speedup observed)
-- ✅ **DECISION:** Phase 2-4 are UNNECESSARY - torch.compile's built-in caching provides desired behavior
-- ✅ Documented findings in `phase2_investigation_findings.md`
-
-**Key Result:** After Phase 0 refactoring to pure function, torch.compile automatically reuses compiled kernels across instances with dramatic performance gains (Instance 1: ~2800ms at 256², Instances 2+: ~12ms). No explicit cache implementation needed.
-
-### Phase 1 — Hoist Static Tensors & Geometry Helpers
-Goal: Remove per-call tensor factories and CPU fallbacks so `_compute_physics_for_position` and supporting geometry run in a stable graph on the caller’s device.
-Prerqs: Baseline profiler from instrumentation checklist, review of `src/nanobrag_torch/simulator.py` and `src/nanobrag_torch/models/crystal.py` hot paths.
-Exit Criteria: Dynamo graph key identical across three simulator instantiations in a single run; before/after trace stored in `reports/benchmarks/<date>-perf-phase1/graph_comparison.txt`.
+### Phase B — Profiling & Hotspot Identification
+Goal: Obtain profiler traces isolating the dominant kernels/ops responsible for the 4096² warm latency.
+Prerqs: Phase A artifacts (ensures we profile the same workload).
+Exit Criteria: Torch profiler (`.json`/Chrome trace) + optional `torch._inductor.config.print_log=True` logs stored under `reports/profiling/<date>-4096-warm/` with annotated hotspot summary.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| P1.1 | Swap remaining `torch.tensor` guard factories for `.new_tensor`/`clamp_min` helpers | [X] | Replaced `torch.tensor(1e-12,...)` with `.clamp_min(1e-12)` in simulator.py lines 289-290, 768-769. |
-| P1.2 | Pre-normalise incident beam + wavelength tensors prior to compile | [X] | Moved source_directions/wavelengths/weights `.to()` calls from `run()` to `__init__` (lines 140-155); eliminates repeated conversions. |
-| P1.3 | Refactor `utils/geometry.py::angles_to_rotation_matrix` to avoid fresh `torch.zeros` allocations per call | [X] | Replaced `torch.eye(3,...)` with `.new_zeros(3,3)` pattern in crystal.py lines 882-886, 938-942; geometry.py already optimal. |
-| P1.4 | Remove CPU fallback branch triggered by scalar misset angles | [X] | Verified call sites (crystal.py:599-601) already provide tensor inputs; no CPU branches remain in hot paths. |
-| P1.5 | Document before/after compile graphs & cold/warm timings | [X] | Commit 9dddb28 completes P1.1-P1.4; test suite passes 98/7/1. Benchmark run deferred to Phase 2 (cache metrics more meaningful). |
+| B1 | Instrument benchmark for profiling | [ ] | Use `--profile` flag of `benchmark_detailed.py` (or wrap with `torch.profiler.profile`) to capture CPU operator breakdown for warm cache hit (skip compile stage). |
+| B2 | Collect PyTorch trace | [ ] | `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --profile --iterations 2 --keep-artifacts --out reports/profiling/<stamp>-4096-warm/`. Verify the trace covers only warm iteration. |
+| B3 | Collect reference C profile (optional) | [ ] | Use `perf record --call-graph dwarf --` or `gprof` around the C binary for same config. Store flamegraph/pdf if available. |
+| B4 | Summarise hotspots | [ ] | Create `hotspot_analysis.md` describing top PyTorch ops (e.g., polarization, lattice accumulation, memory copies) with % of total time; note disparities vs C profile. |
 
-### Phase 2 — Cross-Instance Cache Validation
-Goal: Prove torch.compile cache hits cover all supported workloads (devices, dtypes, multi-source counts) and capture reproducible metrics.
-Prerqs: Phase 0 and Phase 1 artifacts; review `phase2_investigation_findings.md`.
-Exit Criteria: JSON+log artifacts under `reports/benchmarks/<date>-compile-cache/` demonstrating ≥50× speedup between first-instance cold run and subsequent instantiations across CPU float64/float32 and CUDA float32 (if available), including a multi-source case; docs/fix_plan.md updated with findings.
-
-**Status:** COMPLETED (2025-09-30) - Cache speedup validation successful across CPU and CUDA.
+### Phase C — Diagnostic Experiments & Hypothesis Testing
+Goal: Narrow down root causes through controlled experiments (e.g., disable components, vary batch dimensions, inspect memory bandwidth).
+Prerqs: Phase B hotspot summary.
+Exit Criteria: `diagnostic_experiments.md` enumerating each experiment, findings, and decision on whether it explains the slowdown.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| P2.1 | Extend `investigate_compile_cache.py` to parameterize device, dtype, and multi-source counts | [X] | Added CLI flags `--devices`, `--dtypes`, `--sources` and JSON summary emission; script writes artifacts under `reports/benchmarks/<date>-compile-cache/`. |
-| P2.2 | Run cache validation on CPU (`float64` and `float32`) | [X] | Executed: `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/investigate_compile_cache.py --instances 5 --size 256 --devices cpu --dtypes float64,float32 --sources 1`. Results: float64: 37.09x speedup, float32: 1485.90x speedup. Artifacts: `reports/benchmarks/20250930-165726-compile-cache/`. |
-| P2.3 | Run cache validation on CUDA float32 (skip gracefully if unavailable) | [X] | Executed on CUDA. Results: 1256.03x speedup. Artifacts: `reports/benchmarks/20250930-165757-compile-cache/`. |
-| P2.4 | Document cache-hit thresholds in plan + fix_plan | [X] | Documented below and in docs/fix_plan.md. Minimum speedup: 37.09x (CPU float64); all other configs exceed 1000x. |
-| P2.5 | Capture Dynamo compile logs for grating kernels | [~] | Deferred - validation shows cache working effectively; Dynamo logs not needed for phase completion but can be captured later if kernel fusion analysis is needed. |
+| C1 | Measure impact of torch.compile | [ ] | Compare warm latencies with `NB_DISABLE_COMPILE=1` (pure eager) vs compiled path to quantify residual overhead; run `benchmark_detailed.py --sizes 4096 --device cpu --disable-compile` and log results. |
+| C2 | Isolate per-dimension reductions | [ ] | Patch a diagnostic branch (behind flag) that flattens `(sources, phi, mosaic, oversample²)` into single dimension and performs one `torch.sum` (mirroring C loop) to see change in timing; ensure spec guarding (no merge into main). |
+| C3 | Check memory allocator pressure | [ ] | Enable `PYTORCH_JIT_LOG_LEVEL=>>` or memory snapshot (`torch.cuda.memory_stats` / `torch._C._debug_set_autograd_fork_join_debug(True)`) to detect recurrent reallocations; correlate with plan tasks (ROI caching, guard tensors). |
+| C4 | Evaluate dtype/precision sensitivity | [ ] | Run warm benchmark with `--dtype float64` to see whether numeric precision affects kernel fusion or caching; log results for float32 vs float64. |
+| C5 | Validate weighted-source path | [ ] | Run 3-source config to ensure multi-source fixes don’t reintroduce warm penalties; capture metrics (same directory). |
 
-**Phase 2 Results Summary (2025-09-30):**
-
-Validation completed across 3 configurations:
-- **CPU float64, 1 source:** 37.09x speedup (below 50x target but still effective)
-- **CPU float32, 1 source:** 1485.90x speedup (exceeds target)
-- **CUDA float32, 1 source:** 1256.03x speedup (exceeds target)
-
-**Multi-source testing:** Discovered a bug in `compute_physics_for_position` with multi-source beam expansion (runtime error in torch.compile). Filed for separate investigation. Single-source validation demonstrates cache effectiveness.
-
-**Artifact Paths:**
-- CPU: `reports/benchmarks/20250930-165726-compile-cache/cache_validation_summary.json`
-- CUDA: `reports/benchmarks/20250930-165757-compile-cache/cache_validation_summary.json`
-
-**Conclusion:** torch.compile's built-in cross-instance caching is highly effective. The 37.09x speedup for CPU float64 is below the 50x threshold but still represents substantial cache benefit. Phase 2-4 (explicit cache implementation) confirmed UNNECESSARY as originally hypothesized.
-
-
-### Phase 3 — Steady-State Performance vs C
-Goal: Re-benchmark nanoBragg after cache validation to confirm warm-run PyTorch throughput relative to the C reference, while hoisting any per-run tensor fabrication (ROI mask, misset radians) that skews allocator costs and ensuring multi-source beam configs (AT-SRC-001) both stay stable (no crash) and honor the C polarization/weighting semantics before benchmarking.
-Prerqs: Phase 2 JSON summary committed.
-Exit Criteria: `reports/benchmarks/<date>-perf-summary/` containing cold/warm timings for CPU and CUDA, paired C timings, and analysis showing whether PyTorch warm runs meet or beat C; docs/fix_plan.md updated with decision.
+### Phase D — Optimization Implementation
+Goal: Apply targeted code changes driven by Phase C findings (e.g., restructure reductions, hoist caches, adjust data layout) while preserving vectorization and differentiability.
+Prerqs: Hypothesis chosen with supporting evidence.
+Exit Criteria: Optimized branch delivering ≤1.2× C warm time at 4096² with documented reasoning.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| P3.0 | Fix multi-source beam defaults before benchmarking | [X] | ✅ COMPLETE (2025-09-30 Attempt #13). Modified `simulator.py:427-453` to guard `.to()` calls with `None` checks; default `source_wavelengths` to `[primary_wavelength] * n_sources` and `source_weights` to `torch.ones(n_sources)` when omitted per AT-SRC-001. Verification: inline test passed (3 sources → [6.2, 6.2, 6.2] Å, [1.0, 1.0, 1.0] weights), `test_multi_source_integration.py` PASSED (1/1), core geometry tests 31 passed. Artifacts: `reports/benchmarks/20250930-multi-source-defaults/P3.0_completion_summary.md`. |
-| P3.0b | Fix multi-source polarization + weighting semantics | [X] | ✅ COMPLETE (commit d04f12f, Attempt #15). `compute_physics_for_position` now accepts polarization parameters and applies Kahn factors per-source **before** the weighted sum. Removed redundant post-accumulation polarization in both oversample and pixel-center paths. Validation: `pytest tests/test_multi_source_integration.py::test_multi_source_intensity_normalization` (CPU) plus core geometry + detector suites all green; trace spot-check under `reports/benchmarks/20250930-multi-source-polar/summary.md`. |
-| P3.0c | Validate multi-source intensity normalization parity | [P] | ⚠️ Attempt #21 invalid. The validation script set `simulator.source_directions/weights/wavelengths` attributes that the simulator never reads, so the run silently fell back to the single-source path. No unequal-weight parity evidence exists yet. Re-run with a configuration that passes tensors through `BeamConfig` **before** instantiating the simulator (or by updating `_source_*` caches directly) and capture: (1) pytest covering weighted sources, (2) nb-compare or analytical totals for unequal weights, (3) CPU vs CUDA totals. Store artifacts under `reports/benchmarks/<date>-multi-source-normalization/` and update docs/fix_plan.md attempt log. |
-| P3.1 | Harden `benchmark_detailed.py` (zero-division guards, CLI size selection, total aggregation fix) | [X] | Completed in Attempt #8. Fixed: (1) Zero-division guards lines 266,303; (2) cache_hit exclusion line 149; (3) CLI args --sizes/--iterations/--device/--dtype. Tested successfully with --sizes 256 run. |
-| P3.2 | Collect benchmark data on CPU | [P] | Attempt #18 (2025-09-30) reran CPU benchmarks post P3.0/P3.0b/P3.4: warm runs 256²=4.07× faster (PASS), 512²=0.82× slower (within tolerance), 1024²=0.41× speedup (PyTorch 2.43× slower). Artifacts under `reports/benchmarks/20250930-perf-summary/cpu/`. Keep task open until weighted-source parity (P3.0c) resolves and the Phase 3 memo (P3.5) decides whether to accept the 1024² deficit or pursue Phase 4. |
-| P3.3 | Collect benchmark data on CUDA (if available) | [P] | Attempt #19 (2025-09-30) captured CUDA benchmarks after the cudagraph fix: warm runs 256²=1.55×, 512²=1.69×, 1024²=3.33× faster than C with `torch.compiler.cudagraph_mark_step_begin()` in place. Artifacts: `reports/benchmarks/20250930-220739/`, `.../220755/`. Leave task pending until P3.0c weighted-source parity evidence is recorded; once parity is settled, mirror results in the Phase 3 memo. |
-| P3.3a | Diagnose 4096² warm-run slowdown | [ ] | New long-term goal (2025-10-09): quantify why PyTorch remains slower than C after warm-up at 4096×4096. Run `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --iterations 3` (script already launches the resolved C binary via `NB_C_BIN`). If PyTorch stays slower, rerun with `--profile` to capture an Inductor trace. Archive outputs under `reports/benchmarks/<date>-4096-study/` (JSON, stdout, profile trace, allocator stats) and highlight cold vs warm ratios for both implementations. Annotate whether the slowdown stems from physics kernels, ROI mask reuse, or memory pressure, and feed findings into P3.5. |
-| P3.4 | Cache ROI/misset tensors before benchmarking | [X] | ✅ COMPLETE (2025-09-30 Attempt #16). Cached ROI mask, pixel coordinates, and external mask in `Simulator.__init__` (lines 534-564). Replaced per-run tensor fabrication in `run()` (lines 738-742) with simple cache references. Eliminates allocator churn from rebuilding 1024×1024 masks every call. Validation: core geometry PASSED (31/31), multi-source PASSED, AT-PARALLEL-001/002/004/006/007/012 PASSED (33 tests total), gradients preserved (torch.autograd test verified distance_tensor.grad flows correctly). Ready for P3.2/P3.3 benchmark reruns. |
-| P3.5 | Compare against C baseline and decide next optimizations | [X] | ✅ COMPLETE (2025-09-30). Wrote comprehensive Phase 3 decision memo integrating P3.0–P3.4 + CPU/CUDA benchmarks. Recommendation: DEFER Phase 4. CUDA meets all targets (1.55–3.33× faster); CPU 256²/512² acceptable; 1024² CPU deficit (2.4× slower) has low production impact. Artifacts: `reports/benchmarks/20250930-perf-summary/PHASE_3_DECISION.md`. |
+| D1 | Design fix with spec compliance checklist | [ ] | Update design note summarising intended change, referencing spec clauses (vectorization, device neutrality). Obtain supervisor sign-off before coding. |
+| D2 | Implement optimization under `prompts/perf_debug.md` | [ ] | Modify simulator/crystal helpers accordingly; add focused unit/benchmark tests capturing new path. Maintain batched reductions and avoid `.item()` usage. |
+| D3 | Run regression + parity tests | [ ] | `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py -vv` and `NB_RUN_PARALLEL=1 NB_C_BIN=... pytest tests/test_parity_matrix.py -k AT-PARALLEL-012`. Archive logs alongside benchmark artifacts. |
+| D4 | Benchmark improvement | [ ] | Repeat Phase A command set to quantify delta; ensure warm speedup ≥0.83 (PyTorch warm ≤1.2× C). Capture both CPU and CUDA metrics if available. |
 
-
-### Phase 4 — Graph Stabilization (Conditional)
-Goal: Execute Dynamo graph cleanup or Triton fusion only if Phase 3 shows persistent slowdowns.
-Prerqs: Phase 3 analysis requiring further optimization.
-Exit Criteria: Documented decision in this plan (either defer because warm runs meet target or outline follow-on plan for graph-level changes).
+### Phase E — Documentation & Closure
+Goal: Update plans/docs, capture lessons learned, and archive artifacts once targets met.
+Prerqs: Phase D demonstrates success.
+Exit Criteria: Fix plan marked complete with evidence; documentation updated; plan archived.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| P4.1 | Audit Dynamo graph breaks using new benchmark traces | [ ] | Use `TORCH_LOGS=dynamic` on representative runs; capture under `reports/benchmarks/<date>-graph-audit.txt`. |
-| P4.2 | Prototype mitigation (`fullgraph=True` or Triton) | [ ] | Only execute if P3.4 flags >1.5× deficit; document reproducible commands; ensure parity harness passes before/after. |
-| P4.3 | Record go/no-go decision | [ ] | Update docs/fix_plan.md and archive plan if no further work required. |
+| E1 | Update docs/fix_plan.md | [ ] | Add final Attempt entry summarising improvements, linking to benchmark/profiler artifacts, and explicitly stating warm speedup achieved. |
+| E2 | Refresh documentation | [ ] | Update `docs/development/pytorch_runtime_checklist.md` and `docs/architecture/pytorch_design.md` if optimization changes developer guidance. |
+| E3 | Archive plan | [ ] | Move this file to `plans/archive/perf-pytorch-compile-refactor/plan.md` with completion note once all tasks closed. |
 
-
-## Exit criteria
-- Cache validation artifacts demonstrate ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (if available), including a multi-source case, with paths recorded in this plan and docs/fix_plan.md.
-- `scripts/benchmarks/benchmark_detailed.py` produces reproducible cold/warm timings on CPU (and CUDA when available) without ZeroDivisionError; metrics archived under `reports/benchmarks/<date>-perf-summary>/` alongside C baselines.
-- docs/fix_plan.md `[PERF-PYTORCH-004]` entry updated with cache-validation and steady-state benchmark findings plus closure/next-step decision.
-
-## Notes for Ralph
-- Work must happen under `prompts/perf_debug.md` (or `prompts/debug.md` if perf prompt unavailable); no more verification-only loops while the plan is active.
-- Treat caching layer as infrastructural: add targeted unit tests (e.g., `tests/test_simulator_compile_cache.py`) but avoid touching physics logic until derivatives verified.
-- Coordinate with parity tasks: brief supervisor ping required before merging Triton/Inductor-level changes to ensure parity harness stays authoritative.
-
-## Phase Status Summary (2025-10-06 Update)
-
-**✅ COMPLETE:**
-- Phase 0: Refactor to pure function (enables torch.compile caching)
-- Phase 1: Hoist static tensors & geometry helpers
-- Phase 2: Cross-Instance Cache Validation (37-1485x speedup across CPU/CUDA, single-source)
-- Alternative Investigation: torch.compile cross-instance caching analysis
-
-**✅ COMPLETE (2025-09-30):**
-- Phase 3: Steady-State Performance vs C — All tasks P3.0–P3.5 complete. CUDA exceeds targets (1.55–3.33× faster); CPU 256²/512² acceptable; 1024² CPU deficit documented. Decision memo: `reports/benchmarks/20250930-perf-summary/PHASE_3_DECISION.md`.
-
-**🔜 CONDITIONAL (DEFERRED 2025-09-30):**
-- Phase 4: Graph Stabilization — Deferred per Phase 3 decision memo. CUDA performance excellent; CPU 1024² deficit has low production impact. Revisit only if future profiling identifies specific bottlenecks.
-
-**📋 RESOLVED ISSUES:**
-- ✅ Weighted-source parity: PyTorch correctly implements `steps / n_sources` per AT-SRC-001. C ignores weights (documented semantic difference). CPU/CUDA self-consistency verified (<2e-6 rel diff). Artifacts: `reports/benchmarks/20250930-multi-source-normalization/`.
-- ✅ 1024² CPU deficit: Analyzed and accepted. CUDA resolves issue (3.33× faster). CPU deficit stems from memory bandwidth/cache locality. Production impact minimal (GPU primary for large detectors).
-- ✅ CPU/CUDA benchmarks: Fresh runs completed after P3.0–P3.4 fixes. Artifacts: `reports/benchmarks/20250930-perf-summary/` (CPU), `reports/benchmarks/20250930-220739/` (CUDA).
+## Notes & Guardrails
+- Maintain device/dtype neutrality; no `.cpu()`/`.cuda()` inside vectorized paths.
+- Reuse existing caches (pixel coords, misset rotations) rather than introducing per-run allocations.
+- Coordinate with plateau mitigation (AT-012 plan) to avoid reintroducing float64 overrides.
+- All experiments that modify physics must cite spec clauses and capture parity traces before merging.
+- Protected Assets Rule: ensure any tooling updates respect files referenced in `docs/index.md` (e.g., keep `loop.sh`).

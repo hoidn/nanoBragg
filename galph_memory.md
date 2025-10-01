@@ -563,3 +563,10 @@
 - AT-012 acceptance tests are still hard-wired to float64 (`tests/test_at_parallel_012.py:158-170,217-227,283-293`), so default float32 physics is unverified; plateau mitigation must land before these overrides can be removed.
 - PERF plan still lacks 4096² CPU warm benchmark (P3.3a) and 1024² remains 2.4× slower than C per `reports/benchmarks/20250930-perf-summary/cpu/P3.2_summary.md`.
 - Follow-ups for Ralph: (1) redo weighted-source normalization using BeamConfig-fed tensors and capture pytest + nb-compare artifacts; (2) implement a float32-safe plateau fix then drop the AT-012 float64 overrides; (3) once parity tasks unblock, execute P3.3a 4096² warm benchmark with profiler traces.
+
+## 2025-10-10 (galph loop BF)
+- Refreshed `plans/active/perf-pytorch-compile-refactor/plan.md` into new Phase A–E roadmap targeting the 4096² warm gap (PyTorch warm 1.793 s vs C 0.527 s; see reports/benchmarks/20250930-230702/benchmark_results.json).
+- Reopened fix_plan items `[PERF-PYTORCH-004]`, `[DTYPE-DEFAULT-001]`, `[AT-PARALLEL-012-PEAKMATCH]`; updated statuses and exit criteria with checkbox checklists to reflect outstanding work.
+- Logged Attempt #16 in PERF plan noting invalid weighted-source validation (`scripts/validate_weighted_source_normalization.py` mutates simulator post-init, caches untouched) and required BeamConfig-fed redo.
+- Logged Attempt #8 for AT-012 (plateau remains 43/50 under float32) and Attempt #5 for DTYPE rollout (helper modules still emit float64); plateau plan `plans/active/at-parallel-012-plateau-regression/plan.md` remains in Phase A/B.
+- Next actions for Ralph: (1) Execute refreshed PERF plan Phase A baseline reruns + BeamConfig-weighted validation; (2) Fix plateau diagnostics (plan A3/B3) before mitigation; (3) Finish DTYPE plan Phase B3 and rerun Tier-1 once AT-012 passes.
