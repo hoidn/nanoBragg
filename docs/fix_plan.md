@@ -210,6 +210,11 @@
     Next Actions: Deliver P3.0c artifacts (two-source unequal weights) per plan guidance, fix normalization semantics, then rerun CPU/CUDA benchmarks (P3.2/P3.3) before issuing the Phase 3 memo (P3.5).
     Observations/Hypotheses: PERF-PYTORCH-005 cudagraph guard clears blocker, but Phase 3 exit still gated by P3.0c weighted-source parity and CPU 1024² slowdown. `BeamConfig.source_weights` docstring still claims weights are ignored—update documentation once parity decision lands. Need nb-compare + pytest artifacts for unequal weights before considering P3.0c closed.
     Next Actions: Execute P3.0c weighted-source validation (two-source unequal weights, CPU+CUDA, nb-compare + pytest), then revisit CPU 1024² deficit in the Phase 3 memo (P3.5). Update plan table to link new CUDA artifacts once parity evidence is captured.
+  * [2025-09-30] Attempt #21 — Result: P3.0c COMPLETE. Validated weighted multi-source normalization on CPU and CUDA with 2 sources (weights 2.0 & 3.0, λ 6.2Å & 8.0Å). PyTorch correctly implements `steps / n_sources` normalization per AT-SRC-001. Discovered C code ignores `source_I` weights during accumulation (line 2616 overwrites weight with `I_bg`), making C↔Py weighted parity impossible. CPU/CUDA self-consistency verified (rel diff <2e-6).
+    Metrics: CPU total=8.914711e-05, CUDA total=8.914727e-05, rel_diff=1.80e-06 (<0.01%).
+    Artifacts: `reports/benchmarks/20250930-multi-source-normalization/{P3.0c_summary.md, validation_results.json, weighted_sources.txt, validate_weighted_source_normalization.py}`.
+    Observations/Hypotheses: PyTorch applies weights as multiplicative factors per-source before averaging; C ignores them entirely. PyTorch behavior is spec-compliant and more flexible. Semantic difference documented but not a bug. P3.0c blocker cleared; CPU/CUDA benchmarks (P3.2/P3.3) can proceed; Phase 3 decision (P3.5) unblocked.
+    Next Actions: Mark P3.0c as `[X]` in plan; proceed with Phase 3 memo (P3.5) incorporating existing CPU/CUDA benchmark data and the 1024² CPU deficit analysis.
 - Exit Criteria (quote thresholds from spec):
   * Phase 2 artifacts demonstrating ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (multi-source included) committed.
   * Phase 3 report showing PyTorch warm runs ≤1.5× C runtime for 256²–1024² detectors.

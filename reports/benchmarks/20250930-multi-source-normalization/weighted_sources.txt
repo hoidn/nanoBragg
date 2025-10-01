@@ -1,0 +1,5 @@
+# Multi-source configuration for weighted normalization validation
+# Format: X Y Z weight lambda(Å)
+# Two sources with different weights and wavelengths
+0.0 0.0 -10.0 2.0 6.2
+0.0 0.0 -10.0 3.0 8.0

@@ -1,0 +1,40 @@
+{
+  "cpu": {
+    "device": "cpu",
+    "total_intensity": 8.914710633689538e-05,
+    "max_intensity": 1.2280631267458375e-07,
+    "nonzero_pixels": 16384,
+    "image_shape": [
+      128,
+      128
+    ],
+    "source_weights": [
+      2.0,
+      3.0
+    ],
+    "source_wavelengths": [
+      6.199999809265137,
+      8.0
+    ],
+    "dtype": "torch.float32"
+  },
+  "cuda": {
+    "device": "cuda",
+    "total_intensity": 8.914726640796289e-05,
+    "max_intensity": 1.2280631267458375e-07,
+    "nonzero_pixels": 16384,
+    "image_shape": [
+      128,
+      128
+    ],
+    "source_weights": [
+      2.0,
+      3.0
+    ],
+    "source_wavelengths": [
+      6.199999809265137,
+      8.0
+    ],
+    "dtype": "torch.float32"
+  }
+}
