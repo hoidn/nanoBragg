@@ -122,17 +122,17 @@
 ## [PERF-PYTORCH-004] Fuse physics kernels
 - Spec/AT: PERF-PYTORCH-004 roadmap (`plans/active/perf-pytorch-compile-refactor/plan.md`), docs/architecture/pytorch_design.md §§2.4, 3.1–3.3
 - Priority: High
-- Status: in_progress (P3.0c validation invalidated 2025-10-10; Phase 3 decision memo PROVISIONAL)
+- Status: in_progress (P3.0c validation invalidated 2025-10-10; warm speedup still <1.0 so new target unmet; Phase 3 decision memo PROVISIONAL)
 - Owner/Date: galph/2025-09-30
 - Reproduction (C & PyTorch):
   * C: `NB_C_BIN=./golden_suite_generator/nanoBragg python scripts/benchmarks/benchmark_detailed.py --sizes 256,512,1024 --device cpu --iterations 2`
   * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/investigate_compile_cache.py --instances 5 --size 256 --devices cpu,cuda --dtypes float64,float32 --sources 1`
   * Shapes/ROI: 256²–1024² detectors, pixel 0.1 mm, oversample 1, full-frame ROI
-- First Divergence (if known): Multi-source intensity still reuses the primary incident vector for polarization and recomputes detector masks every run, leaving batched sources under-weighted vs C (src/nanobrag_torch/simulator.py:681-916)
+- First Divergence (if known): 4096² warm runs still trail the C binary (latest speedup_warm≈0.90) and the improvement relies on a warmed torch.compile cache; additionally, PyTorch now honours `source_weights` whereas C ignores them (golden_suite_generator/nanoBragg.c:2604-3278), so weighted-source parity remains unresolved pending a decision memo (src/nanobrag_torch/simulator.py:310-360, 420-570).
 - Immediate Next Actions (2025-10-13):
-  * Execute remaining Phase B diagnostics: complete task B3 by capturing a reference C profile (or documenting why it cannot run) and finish task B5 by recording the eager-mode trace that isolates structure-factor gathers; stash both under `reports/profiling/<date>-4096-warm/` and link them in the plan.
-  * Reconfirm the 1.1× warm gap after a cold start by rerunning `benchmark_detailed.py` for 1-iteration and 5-iteration sweeps at 4096² in a fresh process (cleared compile cache). Store outputs under a new `reports/benchmarks/<date>-4096-warm-rebaseline/` directory so the reconciliation doesn’t hinge on cached state.
-  * Once the evidence above is landed, move into Phase C by running C1 (compile disabled) and C2 (single-stage reduction experiment) to test whether compile cache effects or reduction ordering caused the original 3.55× slowdown.
+  * Finish remaining Phase B diagnostics: (i) run B5 to capture the eager-mode structure-factor profile at 1024² and annotate the hotspot summary; (ii) run B6 reproducibility study (ten warm runs from cold interpreters) so we know whether speedup_warm ≥1.0 is achievable without manual cache priming; (iii) B3 C profile is optional but record rationale if skipped.
+  * Document the weighted-source semantic gap by diffing PyTorch vs C accumulation (C ignores weights); produce a short decision note under `reports/benchmarks/<date>-weighted-source-parity/` that feeds into plan task C5 before any optimisation work proceeds.
+  * After the evidence above lands, proceed with Phase C experiments starting with C1 (compile disabled) and C2 (single-stage reduction) to identify what still keeps the warmed CPU path slower than C.
 - Attempts History:
   * [2025-10-01] Attempt #4 — Result: success (Phase 0/1 complete). Refactored to pure function + hoisted guard tensors; torch.compile caching delivers ≥37× warm/cold speedup.
     Metrics: CPU float64 warm/cold 37.09×; CPU float32 1485.90×; CUDA float32 1256.03×; warm setup <50 ms.
