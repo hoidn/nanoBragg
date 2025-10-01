@@ -558,3 +558,8 @@
 - Reconfirmed commit a209c14's validation script never touches `_source_*` caches; simulator still runs single-source defaults. Ralph must feed weights via BeamConfig before instantiation and rerun parity artifacts.
 - Long-term perf gap: 4096² CPU warm remains unprofiled; expect Ralph to execute plan task P3.3a and archive profiler traces under `reports/benchmarks/<date>-4096-study/`.
 - Routing guard plan still pending (Phase A audit not recorded); remind Ralph to capture `reports/routing/<date>-loop-audit.txt` before running automation again.
+## 2025-10-10 (galph loop BE)
+- Deep-dive confirmed weighted-source validation (scripts/validate_weighted_source_normalization.py) never exercises unequal weights; simulator caches `_source_*` from BeamConfig during `__init__`, so mutating `simulator.source_*` post-init reverts to the single-source path. Plan PERF-PYTORCH-004 P3.0c remains open.
+- AT-012 acceptance tests are still hard-wired to float64 (`tests/test_at_parallel_012.py:158-170,217-227,283-293`), so default float32 physics is unverified; plateau mitigation must land before these overrides can be removed.
+- PERF plan still lacks 4096² CPU warm benchmark (P3.3a) and 1024² remains 2.4× slower than C per `reports/benchmarks/20250930-perf-summary/cpu/P3.2_summary.md`.
+- Follow-ups for Ralph: (1) redo weighted-source normalization using BeamConfig-fed tensors and capture pytest + nb-compare artifacts; (2) implement a float32-safe plateau fix then drop the AT-012 float64 overrides; (3) once parity tasks unblock, execute P3.3a 4096² warm benchmark with profiler traces.
