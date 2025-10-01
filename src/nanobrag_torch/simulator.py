@@ -422,14 +422,26 @@ class Simulator:
             self.beam_config.polarization_axis, device=self.device, dtype=self.dtype
         )
 
-        # PERF-PYTORCH-004 P1.2: Pre-normalize source tensors to avoid repeated .to() calls in run()
+        # PERF-PYTORCH-004 P1.2 + P3.0: Pre-normalize source tensors to avoid repeated .to() calls in run()
         # Move source direction/wavelength/weight tensors to correct device/dtype once during init
+        # P3.0: Seed fallback tensors (equal weights, primary wavelength) when omitted before device cast
         _has_sources = (self.beam_config.source_directions is not None and
                        len(self.beam_config.source_directions) > 0)
         if _has_sources:
             self._source_directions = self.beam_config.source_directions.to(device=self.device, dtype=self.dtype)
-            self._source_wavelengths = self.beam_config.source_wavelengths.to(device=self.device, dtype=self.dtype)  # meters
+
+            # P3.0: Default source_wavelengths to primary wavelength if not provided (AT-SRC-001)
+            if self.beam_config.source_wavelengths is not None:
+                self._source_wavelengths = self.beam_config.source_wavelengths.to(device=self.device, dtype=self.dtype)  # meters
+            else:
+                # Use primary wavelength for all sources
+                primary_wavelength_m = self.beam_config.wavelength_A * 1e-10
+                n_sources = len(self.beam_config.source_directions)
+                self._source_wavelengths = torch.full((n_sources,), primary_wavelength_m, device=self.device, dtype=self.dtype)
+
             self._source_wavelengths_A = self._source_wavelengths * 1e10  # Convert to Angstroms once
+
+            # P3.0: Default source_weights to equal weights if not provided
             if self.beam_config.source_weights is not None:
                 self._source_weights = self.beam_config.source_weights.to(device=self.device, dtype=self.dtype)
             else:
