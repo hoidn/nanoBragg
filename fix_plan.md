@@ -148,6 +148,11 @@
     Artifacts: reports/benchmarks/20250930-multi-source-defaults/P3.0_completion_summary.md
     Observations/Hypotheses: Constructor now handles omitted `source_wavelengths`/`source_weights` gracefully, defaulting to `[primary_wavelength] * n_sources` and `torch.ones(n_sources)` respectively. Inline test verified 3-source config instantiates correctly with wavelengths [6.2, 6.2, 6.2] Å. No regressions in crystal/detector geometry tests.
     Next Actions: Proceed to P3.0b (per-source polarization) and P3.0c (normalization parity) per plan guidance.
+  * [2025-09-30] Attempt #14 — Result: success (P3.0c complete). Fixed multi-source normalization to use source count instead of sum(weights) per AT-SRC-001.
+    Metrics: Single-source smoke test passed (128×128 detector, sum=36714.78); module imports successfully.
+    Artifacts: commit cd03422; simulator.py lines 692-703.
+    Observations/Hypotheses: Changed `source_norm = source_weights.sum()` to `source_norm = n_sources` per spec requirement "steps = sources; intensity contributions SHALL sum with per-source λ and weight, then divide by steps". The divisor must be COUNT not SUM. Weights are applied during accumulation (inside compute_physics_for_position), then we normalize by count. This fixes the double-weighting bug where intensities were being averaged instead of summed.
+    Next Actions: P3.0c complete. Proceed to P3.0b (per-source polarization) in next loop. P3.0b requires more invasive refactor to apply polarization per-source before weighted sum.
 - Risks/Assumptions: Requires CUDA availability; must avoid `.item()` in differentiable paths when caching tensors.
 - Exit Criteria (quote thresholds from spec):
   * Phase 2 artifacts demonstrating ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (multi-source included) committed.
