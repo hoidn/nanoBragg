@@ -294,3 +294,65 @@
 - Coin flip → heads: reviewed recent engineer commits. `fcbb93a` still reuses the first source for polarization, so multi-source physics remains wrong; `a2a9e83` fixed AT-012 by casting to float32 before `find_peaks`; WIP `48a1cdd` landed without tests (broadcast refactor). Feedback needed: finish PERF plan P3.0/P3.0b/P3.0c before further benchmarks.
 - Planning actions: archived `plans/active/at-parallel-012-peakmatch` (all tasks flagged [D]) under `plans/archive/at-parallel-012-peakmatch/plan.md`, created new fp32 initiative plan (`plans/active/dtype-default-fp32/plan.md`), and added `[DTYPE-DEFAULT-001]` entry to docs/fix_plan.md.
 - Next steps for Ralph: (1) Execute PERF Plan P3.0/P3.0b/P3.0c in order—seed source defaults, apply per-source polarization, fix normalization; (2) resume ROI caching (P3.4) after physics parity; (3) start Phase A of the new dtype plan by inventorying float64 assumptions; (4) keep commits under `prompts/debug.md` until multi-source physics passes parity.
+
+## 2025-10-04 (galph loop AK)
+- Sync: `timeout 30 git pull --rebase` initially blocked by modified `prompts/supervisor.md`; stashed (`galph-pre-pull`), pulled, then restored stash so user customization stays intact.
+- Deep analysis vs goals:
+  * Multi-source defaults still crash because `Simulator.__init__` dereferences `beam_config.source_wavelengths`/`source_weights` with `.to(...)` when they are `None` (`src/nanobrag_torch/simulator.py:429-441`).
+  * Polarization continues to reuse only the first source (`incident_for_polarization = incident_dirs_batched[0]`) in both oversample and pixel-center paths (lines 775-778, 894-895), leaving secondary sources unpolarized.
+  * `steps` still divides by `source_weights.sum()` (lines 687-695), averaging intensities instead of matching the C sum-over-sources semantics; ROI/mask tensors remain per-run allocations (lines 543-615, 905-918), and simulator defaults remain float64 (`simulator.py:311` signature).
+- Coin flip = heads → Reviewed engineer commits `3f9dc82`, `fcbb93a`, `904dc9b`. Findings: 3f9dc82 mislabeled P3.0 complete despite open crash/polarization issues; fcbb93a’s “fix” still hard-codes the primary source so physics remains wrong; 904dc9b only touched benchmark CLI yet marked normalization complete, creating documentation drift.
+- Planning/docs actions: Reopened tasks P3.0–P3.0c in `plans/active/perf-pytorch-compile-refactor/plan.md` (set states back to `[ ]`, added explicit crash/polarization/normalization guidance) and corrected `[PERF-PYTORCH-004]` attempt history in `docs/fix_plan.md` (Attempts #7–#9 now describe failures + this audit). Updated fix_plan header to reflect current focus.
+- Next steps for Ralph:
+  1. Implement fallback seeding in `Simulator.__init__` so multi-source configs without explicit wavelengths/weights stop crashing; record reproduction + fix artifacts.
+  2. Rework polarization to apply Kahn factors per source before summing, then re-run C vs PyTorch traces for a 3-source case to prove parity.
+  3. Adjust normalization so `steps` no longer divides by Σweights; verify with `tests/test_at_parallel_001.py::TestATSRC001::test_multiple_sources_normalization` before collecting new benchmarks; only afterward resume ROI caching (P3.4) and Phase 3 benchmarking.
+
+## 2025-10-05 (galph loop AL)
+- Sync: `timeout 30 git pull --rebase` initially blocked by dirty plan/fix docs; stashed (`git stash push -m 'galph-sync-temp'`), finished the pending interactive rebase with `git commit --amend --no-edit` + `git rebase --continue`, reran pull (clean), then `git stash pop` restored local notes.
+- Step-1 findings vs long-term goals:
+  * `Simulator.__init__` still calls `.to()` on `beam_config.source_wavelengths/weights` when they are `None` (`src/nanobrag_torch/simulator.py:430-437`), so multi-source configs crash without manual seeding.
+  * Multi-source polarization remains wrong: oversample and pixel-center paths reuse only the first source vector (`simulator.py:774-824`, `894-951`), leaving secondary sources unpolarized.
+  * `steps` divides by `source_weights.sum()` (`simulator.py:687-695`), averaging intensities instead of matching the nanoBragg sum; normalization parity still outstanding.
+  * ROI mask/misset tensors are rebuilt every run (`simulator.py:604-641`, `1005-1045`), keeping CPU warm runs slow until P3.4 hoists them.
+- Step-2 (coin=heads) commit review: `3f9dc82`/`fcbb93a` still leave the `.to(None)` crash, first-source polarization shortcut, and weight-averaging bug; `904dc9b`/`b06a6d6` gathered benchmarks but marked Phase 3 complete despite CPU runs violating ≤1.5× C and upstream physics defects; `a2a9e83` float32 peak fix is correct.
+- Actions: Reopened PERF plan Phase 3 rows (P3.2/P3.3 now `[P]`, P3.5 `[ ]`), added ROI caching to discovered issues, and logged Attempt #11 in `docs/fix_plan.md` so plan/fix_plan align with outstanding work.
+- Guidance for Ralph:
+  1. Deliver P3.0/P3.0b/P3.0c fixes (fallback seeding, per-source polarization, sum-based normalization) with multi-source parity artifacts before revisiting benchmarks.
+  2. Execute P3.4 ROI/misset caching to remove per-run tensor churn, then rerun CPU/CUDA benchmarks and produce the Phase 3 summary before considering Phase 4.
+  3. Leave the AT-012 peak-match plan closed unless new physics work regresses the float32-based matcher.
+
+## 2025-10-05 (galph loop AM)
+- Sync workflow: staging area was dirty (plans/fix docs). Stashed, completed lingering interactive rebase via `git rebase --continue`, reran `timeout 30 git pull --rebase` (fast-forward to 8c2ceb4), then `git stash pop` restored local supervisor edits.
+- Step-1 analysis vs long-term goals:
+  * New commit 8c2ceb4 switches runtime defaults to float32. AT-PARALLEL-012 now matches only 43/50 peaks when run natively in float32; plateau sensitivity must be debugged before Phase C benchmarking.
+  * Multi-source defects persist: `Simulator.__init__` still calls `.to()` on `beam_config.source_wavelengths/weights` when they are `None`, so default divergence configs crash; polarization uses only the primary source (`incident_dirs_batched[0]`), and `steps` divides by `source_weights.sum()`, averaging intensities instead of summing contributions. These map directly to PERF plan tasks P3.0/P3.0b/P3.0c.
+  * Performance blockers remain (ROI/misset tensor rebuild every run; guard tensor fabrication) as noted in prior loops—no new progress logged in benchmarks since b06a6d6.
+- Planning/docs updates: refreshed `plans/active/dtype-default-fp32/plan.md` (Phase A complete, Phase B `[P]`, Phase C gated on AT-012 fix) and updated `[DTYPE-DEFAULT-001]` in docs/fix_plan.md with Attempt #1 summary plus plan reference. Status now `in_progress`.
+- Local note: `prompts/supervisor.md` remains intentionally customized (fp32 reminder); left unstaged per prior policy.
+- No pruning performed—older entries still relevant for ongoing PERF/AT initiatives; reassess when dtype migration stabilises.
+- Next steps for Ralph:
+  1. Diagnose AT-PARALLEL-012 float32 regression (compare plateau pixel values vs float64→float32, adjust peak detection or simulation as needed) and capture artifacts under `reports/DTYPE-DEFAULT-001/`.
+  2. Implement PERF plan P3.0/P3.0b/P3.0c fixes: guard against `None` source tensors, apply polarization per-source before reduction, and remove weight-sum divisor from `steps`. Provide multi-source parity traces to confirm correctness.
+  3. Finish dtype helper plumbing (Phase B3: `io/source.py`, `utils/noise.py`, `utils/c_random.py`), then proceed to Phase C validation once AT-012 passes.
+
+## 2025-10-06 (galph loop AN)
+- Sync: `timeout 30 git pull --rebase` succeeded after finishing pending interactive rebase (`git rebase --continue`). Working tree started clean.
+- Step-1 findings vs goals:
+  * Multi-source path still broken: `Simulator.__init__` dereferences `source_wavelengths/source_weights` even when None, so divergence configs without explicit tensors still crash (`src/nanobrag_torch/simulator.py:427-441`).
+  * Polarization remains first-source only in both oversample and pixel-center branches (`simulator.py:775-822`, `894-950`), violating AT-SRC-001; normalization continues to divide by Σweights (`simulator.py:687-695`) so intensities average rather than sum.
+  * ROI/mask tensors are rebuilt every run (`simulator.py:611-629`), keeping CPU steady-state slower than the C baseline despite compile caching.
+  * DTYPE plan still blocked: float32 defaults leave AT-PARALLEL-012 at 43/50 peaks when run natively; Phase B3 helpers remain outstanding.
+- Step-2 (coin=heads) audit of recent ralph commits (`fcbb93a`, `904dc9b`, `b06a6d6`, `8c2ceb4`) confirmed mislabelled progress: polarization still approximated with primary source, normalization untouched, benchmarks recorded despite unmet exit criteria, and dtype flip shipped without resolving float32 parity.
+- Actions this loop:
+  * Added Attempt #12 to `[PERF-PYTORCH-004]` in `docs/fix_plan.md` documenting the audit, with explicit code citations for the outstanding bugs.
+  * No new plan authored; existing `plans/active/perf-pytorch-compile-refactor/plan.md` already tracks P3.0–P3.4 as open.
+- Next steps for Ralph:
+  1. Implement guarded source seeding before `.to(...)`, rewrite polarization to apply Kahn factors per source prior to reduction, and move weight normalization after the per-source sum (Perf plan P3.0–P3.0c).
+  2. Hoist ROI/omega/misset tensors out of the hot path (P3.4) and only then rerun the CPU/CUDA benchmarks for Phase 3.
+  3. Resume DTYPE Phase B3 helper updates and investigate float32 peak regression (store artifacts under `reports/DTYPE-DEFAULT-001/`) once multi-source parity is restored.
+## 2025-10-06 (galph loop AO)
+- Step-1 audit vs long-term goals: Multi-source path still broken — `Simulator.__init__` dereferences `beam_config.source_wavelengths` without fallback (src/nanobrag_torch/simulator.py:431), polarization uses only source[0] (simulator.py:775), and `steps` divides by Σweights (simulator.py:687), so intensities average instead of summing. These map directly to PERF plan P3.0/P3.0b/P3.0c.
+- ROI/mask tensors are rebuilt on every `run` call (simulator.py:611-629) and `Detector.get_pixel_coords().to(...)` clones the full grid each run, keeping CPU warm timings 0.44×–0.63× of C at 512²–1024² (reports/benchmarks/20250930-184744/benchmark_results.json). Highlights urgency of P3.4 caching before revisiting benchmarks.
+- Coin flip → tails, so no additional commit audit beyond Step 3 housekeeping. `docs/fix_plan.md` priorities still align with active plans; no edits needed this loop.
+- Next actions for Ralph: deliver PERF-PYTORCH-004 P3.0/P3.0b/P3.0c fixes with regression artifacts under `reports/PERF-PYTORCH-004/` and implement ROI/misset caching per P3.4 before re-running CPU/CUDA benchmarks; resume DTYPE plan Phase B3 once AT-012 peak parity holds in native float32.

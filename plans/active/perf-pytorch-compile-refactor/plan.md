@@ -101,14 +101,14 @@ Exit Criteria: `reports/benchmarks/<date>-perf-summary/` containing cold/warm ti
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| P3.0 | Fix multi-source beam defaults before benchmarking | [X] | Reproduced crash; fixed in Attempt #6. Multi-source now stable with 258.98× speedup. |
-| P3.0b | Fix multi-source polarization + weighting semantics | [X] | Fixed in Attempt #7. Primary source incident direction used for polarization approximation. |
-| P3.0c | Restore multi-source intensity normalization parity | [X] | Verified in Attempt #8. test_multiple_sources_normalization PASSED; normalization already correct. |
+| P3.0 | Fix multi-source beam defaults before benchmarking | [ ] | `Simulator.__init__` still calls `.to(...)` on `beam_config.source_wavelengths/weights` even when callers omit them, causing a crash (`AttributeError: 'NoneType' object has no attribute 'to'`). Seed fallback tensors (equal weights, primary wavelength) **before** the device cast and verify with the minimal reproduction: instantiate `BeamConfig(source_directions=torch.tensor([[1.,0.,0.],[0.,1.,0.],[-1.,0.,0.]]))` and build a `Simulator` under `python - <<'PY'`. |
+| P3.0b | Fix multi-source polarization + weighting semantics | [ ] | Current implementation (commit `fcbb93a`) only reuses the first source direction for polarization, leaving secondary sources unpolarized. Rework the oversample and pixel-center paths so each source applies its own Kahn factor **prior** to reduction; confirm parity by diffing against C traces (`scripts/debug_pixel_trace.py` vs instrumented C) for a 3-source setup. |
+| P3.0c | Restore multi-source intensity normalization parity | [ ] | `steps` still divides by `source_weights.sum()`, averaging intensities instead of matching nanoBragg’s sum-over-sources semantics. Move source-weight normalization inside the per-source accumulation (after polarization fix) and re-run `tests/test_at_parallel_001.py::TestATSRC001::test_multiple_sources_normalization`. |
 | P3.1 | Harden `benchmark_detailed.py` (zero-division guards, CLI size selection, total aggregation fix) | [X] | Completed in Attempt #8. Fixed: (1) Zero-division guards lines 266,303; (2) cache_hit exclusion line 149; (3) CLI args --sizes/--iterations/--device/--dtype. Tested successfully with --sizes 256 run. |
-| P3.2 | Collect benchmark data on CPU | [X] | Completed in Attempt #9. Fixed --device flag bug (line 255), ran benchmarks. Results: 256²=2.12×, 512²=0.63× (1.6× slower), 1024²=0.44× (2.3× slower). Artifacts: reports/benchmarks/20250930-184744/. |
-| P3.3 | Collect benchmark data on CUDA (if available) | [X] | Completed in Attempt #9. Results: 256²=1.51×, 512²=1.50×, 1024²=2.40× (all faster than C). Artifacts: reports/benchmarks/20250930-184803/. |
-| P3.4 | Cache ROI/misset tensors before benchmarking | [ ] | Deferred - CPU performance fails exit criteria (>1.5× slower at 512²/1024²). Implement detector-level ROI mask caching and misset tensor precomputation; document code changes and ensure new cache path keeps gradients intact. |
-| P3.5 | Compare against C baseline and decide next optimizations | [X] | Completed in Attempt #9. Analysis: CUDA meets all targets (1.5-2.4× faster). CPU violates exit criteria at 512²/1024² (1.6-2.3× slower). Decision: Recommend P3.4 caching optimizations, then Phase 4 graph work if CPU still fails. CUDA path complete. |
+| P3.2 | Collect benchmark data on CPU | [P] | Attempt #9 captured timings, but CPU warm runs violated the ≤1.5× C criterion (512²≈1.6× slower, 1024²≈2.3× slower). Treat those numbers as "before" baselines only. After P3.0–P3.0c and P3.4 land, rerun `python scripts/benchmarks/benchmark_detailed.py --sizes 256,512,1024 --device cpu --iterations 2` and archive fresh results under `reports/benchmarks/<date>-perf-summary/cpu/` with accompanying C timings. |
+| P3.3 | Collect benchmark data on CUDA (if available) | [P] | CUDA data from Attempt #9 met targets, but revalidate once physics fixes land so CPU/GPU datasets share the same simulator build. Command mirrors P3.2 with `--device cuda`; synchronise and store logs under `reports/benchmarks/<date>-perf-summary/cuda/`. |
+| P3.4 | Cache ROI/misset tensors before benchmarking | [ ] | CPU deficit plus per-run tensor fabrication (ROI mask, misset tensors) remain unresolved. Implement detector-level ROI/mask caching and misset tensor hoisting; ensure gradients stay intact; rerun targeted profiler to confirm allocator churn drops before re-benchmarking. |
+| P3.5 | Compare against C baseline and decide next optimizations | [ ] | Defer final go/no-go until P3.0–P3.4 complete and fresh CPU/CUDA benchmarks meet spec tolerances. Deliverable: analysis memo under `reports/benchmarks/<date>-perf-summary/summary.md` documenting speed ratios, bottleneck notes, and the Phase 4 decision. |
 
 
 ### Phase 4 — Graph Stabilization (Conditional)
@@ -142,12 +142,13 @@ Exit Criteria: Documented decision in this plan (either defer because warm runs 
 - Alternative Investigation: torch.compile cross-instance caching analysis
 
 **⏳ IN PROGRESS:**
-- Phase 3: Steady-State Performance vs C (ready to proceed)
+- Phase 3: Steady-State Performance vs C — P3.0–P3.4 remain active (defaults, polarization, normalization, ROI caching). CPU/CUDA benchmarks (P3.2/P3.3) must be rerun after fixes; Phase 3 decision (P3.5) deferred until new data meets ≤1.5× criteria.
 
 **🔜 CONDITIONAL:**
 - Phase 4: Graph Stabilization (execute only if Phase 3 shows >1.5× deficit)
 
 **📋 DISCOVERED ISSUES:**
-- Multi-source beam expansion bug in `compute_physics_for_position` (torch.compile error with 3-source configs)
-- Polarization currently uses `self.incident_beam_direction` after the per-source sum, so multi-source runs skip Kahn weighting per source; fix captured under task P3.0b.
-- Multi-source normalization currently divides by Σweights, averaging intensities instead of summing like nanoBragg.c; tracked under task P3.0c.
+- `Simulator.__init__` still dereferences `beam_config.source_wavelengths/weights` even when None, crashing multi-source defaults (P3.0).
+- Polarization remains per-run, not per-source; secondary sources reuse the primary direction (P3.0b).
+- `steps` divides by Σweights so intensities average instead of summing; normalization parity still missing (P3.0c).
+- ROI mask and misset tensors are rebuilt every run, adding allocator churn and contributing to CPU slowdowns (P3.4).
