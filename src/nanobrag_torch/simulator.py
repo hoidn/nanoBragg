@@ -696,7 +696,8 @@ class Simulator:
 
         C-Code Implementation Reference (from nanoBragg.c, lines 2993-3151):
         The vectorized implementation replaces these nested loops. The outer `source`
-        loop is future work for handling beam divergence and dispersion.
+        loop is implemented via the `incident_beam_direction`, `wavelength`, and
+        `source_weights` parameters, which handle beam divergence and dispersion.
 
         ```c
                         /* loop over sources now */
