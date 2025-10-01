@@ -316,7 +316,7 @@ class Simulator:
         crystal_config: Optional[CrystalConfig] = None,
         beam_config: Optional[BeamConfig] = None,
         device=None,
-        dtype=torch.float64,
+        dtype=torch.float32,
         debug_config: Optional[dict] = None,
     ):
         """

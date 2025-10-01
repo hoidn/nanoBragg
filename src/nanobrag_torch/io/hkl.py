@@ -16,7 +16,7 @@ def read_hkl_file(
     filepath: str,
     default_F: float = 0.0,
     device=None,
-    dtype=torch.float64
+    dtype=torch.float32
 ) -> Tuple[torch.Tensor, dict]:
     """
     Read HKL text file with two-pass algorithm matching C implementation.
@@ -212,7 +212,7 @@ def try_load_hkl_or_fdump(
     default_F: float = 0.0,
     write_cache: bool = True,
     device=None,
-    dtype=torch.float64
+    dtype=torch.float32
 ) -> Tuple[Optional[torch.Tensor], Optional[dict]]:
     """
     Attempt to load HKL data with caching behavior matching C code.

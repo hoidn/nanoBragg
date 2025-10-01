@@ -36,7 +36,7 @@ class Detector:
     """
 
     def __init__(
-        self, config: Optional[DetectorConfig] = None, device=None, dtype=torch.float64
+        self, config: Optional[DetectorConfig] = None, device=None, dtype=torch.float32
     ):
         """Initialize detector from configuration."""
         # Normalize device to ensure consistency

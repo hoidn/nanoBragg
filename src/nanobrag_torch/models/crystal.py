@@ -38,7 +38,7 @@ class Crystal:
     """
 
     def __init__(
-        self, config: Optional[CrystalConfig] = None, beam_config: Optional[BeamConfig] = None, device=None, dtype=torch.float64
+        self, config: Optional[CrystalConfig] = None, beam_config: Optional[BeamConfig] = None, device=None, dtype=torch.float32
     ):
         """Initialize crystal from configuration with optional beam-based sample clipping.
 

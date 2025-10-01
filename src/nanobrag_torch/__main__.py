@@ -362,7 +362,7 @@ Examples:
 
     # Performance options (PERF-PYTORCH-006)
     parser.add_argument('-dtype', type=str, choices=['float32', 'float64'],
-                        default='float64',
+                        default='float32',
                         help='Floating point precision (float32 for speed, float64 for accuracy)')
     parser.add_argument('-device', type=str, choices=['cpu', 'cuda'],
                         default='cpu',
@@ -789,6 +789,10 @@ def main():
     args = parser.parse_args()
 
     try:
+        # Parse dtype and device early (DTYPE-DEFAULT-001)
+        dtype = torch.float32 if args.dtype == 'float32' else torch.float64
+        device = torch.device(args.device)
+
         # Validate and convert arguments
         config = parse_and_validate_args(args)
 
@@ -924,9 +928,9 @@ def main():
 
             # Get beam direction based on detector convention (MOSFLM default is [1,0,0])
             if detector_config.detector_convention == DetectorConvention.MOSFLM:
-                beam_direction = torch.tensor([1.0, 0.0, 0.0], dtype=torch.float64)
+                beam_direction = torch.tensor([1.0, 0.0, 0.0], dtype=dtype)
             else:
-                beam_direction = torch.tensor([0.0, 0.0, 1.0], dtype=torch.float64)
+                beam_direction = torch.tensor([0.0, 0.0, 1.0], dtype=dtype)
 
             source_directions, source_weights, source_wavelengths = read_sourcefile(
                 config['sourcefile'],
@@ -964,11 +968,11 @@ def main():
 
             # Get beam direction based on detector convention (MOSFLM default is [1,0,0])
             if detector_config.detector_convention == DetectorConvention.MOSFLM:
-                beam_direction = torch.tensor([1.0, 0.0, 0.0], dtype=torch.float64)
-                polarization_axis = torch.tensor([0.0, 0.0, 1.0], dtype=torch.float64)
+                beam_direction = torch.tensor([1.0, 0.0, 0.0], dtype=dtype)
+                polarization_axis = torch.tensor([0.0, 0.0, 1.0], dtype=dtype)
             else:
-                beam_direction = torch.tensor([0.0, 0.0, 1.0], dtype=torch.float64)
-                polarization_axis = torch.tensor([0.0, 1.0, 0.0], dtype=torch.float64)
+                beam_direction = torch.tensor([0.0, 0.0, 1.0], dtype=dtype)
+                polarization_axis = torch.tensor([0.0, 1.0, 0.0], dtype=dtype)
 
             source_directions, source_weights, source_wavelengths = \
                 generate_sources_from_divergence_dispersion(
@@ -979,7 +983,8 @@ def main():
                     source_distance_m=10.0,  # Default 10m source distance
                     beam_direction=beam_direction,
                     polarization_axis=polarization_axis,
-                    round_div=config.get('round_div', True)  # Apply elliptical trimming based on CLI flag
+                    round_div=config.get('round_div', True),  # Apply elliptical trimming based on CLI flag
+                    dtype=dtype
                 )
 
             # Store generated sources in config
@@ -1032,9 +1037,9 @@ def main():
             # Check if we actually got data (not just (None, None))
             if hkl_array is not None:
                 if isinstance(hkl_array, torch.Tensor):
-                    crystal.hkl_data = hkl_array.clone().detach().to(dtype=torch.float64)
+                    crystal.hkl_data = hkl_array.clone().detach().to(dtype=dtype)
                 else:
-                    crystal.hkl_data = torch.tensor(hkl_array, dtype=torch.float64)
+                    crystal.hkl_data = torch.tensor(hkl_array, dtype=dtype)
                 crystal.hkl_metadata = hkl_metadata
 
         # Check interpolation settings
@@ -1048,9 +1053,7 @@ def main():
             'trace_pixel': args.trace_pixel,  # [slow, fast] indices
         }
 
-        # Parse dtype and device (PERF-PYTORCH-006)
-        dtype = torch.float32 if args.dtype == 'float32' else torch.float64
-        device = torch.device(args.device)
+        # dtype and device already parsed earlier (DTYPE-DEFAULT-001)
 
         simulator = Simulator(crystal, detector, beam_config=beam_config,
                             device=device, dtype=dtype, debug_config=debug_config)

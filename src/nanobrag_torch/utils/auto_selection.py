@@ -226,6 +226,7 @@ def generate_sources_from_divergence_dispersion(
     beam_direction: Optional[torch.Tensor] = None,
     polarization_axis: Optional[torch.Tensor] = None,
     round_div: bool = True,
+    dtype=torch.float32,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Generate source arrays from divergence and dispersion parameters.
@@ -253,9 +254,9 @@ def generate_sources_from_divergence_dispersion(
         - wavelengths: (N,) tensor of wavelengths in meters
     """
     if beam_direction is None:
-        beam_direction = torch.tensor([1.0, 0.0, 0.0], dtype=torch.float64)  # MOSFLM default
+        beam_direction = torch.tensor([1.0, 0.0, 0.0], dtype=dtype)  # MOSFLM default
     if polarization_axis is None:
-        polarization_axis = torch.tensor([0.0, 0.0, 1.0], dtype=torch.float64)  # Default vertical
+        polarization_axis = torch.tensor([0.0, 0.0, 1.0], dtype=dtype)  # Default vertical
 
     # Generate divergence grid
     hdiv_angles = []
@@ -347,12 +348,12 @@ def generate_sources_from_divergence_dispersion(
     # Convert to tensors
     if len(directions) == 0:
         # No sources generated (shouldn't happen with proper defaults)
-        directions = torch.tensor([[0.0, 0.0, 1.0]], dtype=torch.float64)
-        weights_list = torch.tensor([1.0], dtype=torch.float64)
-        wavelengths_list = torch.tensor([central_wavelength_m], dtype=torch.float64)
+        directions = torch.tensor([[0.0, 0.0, 1.0]], dtype=dtype)
+        weights_list = torch.tensor([1.0], dtype=dtype)
+        wavelengths_list = torch.tensor([central_wavelength_m], dtype=dtype)
     else:
         directions = torch.stack(directions)
-        weights_list = torch.tensor(weights_list, dtype=torch.float64)
-        wavelengths_list = torch.tensor(wavelengths_list, dtype=torch.float64)
+        weights_list = torch.tensor(weights_list, dtype=dtype)
+        wavelengths_list = torch.tensor(wavelengths_list, dtype=dtype)
 
     return directions, weights_list, wavelengths_list
