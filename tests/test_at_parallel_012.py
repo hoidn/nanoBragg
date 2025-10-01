@@ -39,13 +39,19 @@ from nanobrag_torch.simulator import Simulator
 
 
 def load_golden_float_image(filename: str, shape: Tuple[int, int]) -> np.ndarray:
-    """Load a binary float image from golden data."""
+    """Load a binary float image from golden data.
+
+    Returns float32 to match C code storage precision and enable plateau-based peak detection.
+    The golden C output uses float32 storage, which creates intensity plateaus at beam center.
+    Loading as float64 would add artificial precision that breaks plateau tie-breaking in
+    peak detection algorithms (scipy.ndimage.maximum_filter).
+    """
     with open(filename, 'rb') as f:
         data = f.read()
         n_floats = len(data) // 4
         assert n_floats == shape[0] * shape[1], f"Expected {shape[0]*shape[1]} floats, got {n_floats}"
         floats = struct.unpack(f'{n_floats}f', data)
-        return np.array(floats).reshape(shape)
+        return np.array(floats, dtype=np.float32).reshape(shape)
 
 
 def find_peaks(

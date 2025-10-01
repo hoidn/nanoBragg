@@ -11,7 +11,7 @@
 | [REPO-HYGIENE-002](#repo-hygiene-002-restore-canonical-nanobraggc) | Restore canonical nanoBragg.c | Medium | in_progress |
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
 | [DTYPE-DEFAULT-001](#dtype-default-001-migrate-default-dtype-to-float32) | Migrate default dtype to float32 | High | new |
-| [AT-PARALLEL-012-PEAKMATCH](#at-parallel-012-peakmatch-restore-95-peak-alignment) | Restore 95% peak alignment | High | done |
+| [AT-PARALLEL-012-PEAKMATCH](#at-parallel-012-peakmatch-restore-95-peak-alignment) | Restore 95% peak alignment | High | in_progress |
 
 ---
 
@@ -139,8 +139,8 @@
 ## [AT-PARALLEL-012-PEAKMATCH] Restore 95% peak alignment
 - Spec/AT: specs/spec-a-parallel.md §AT-012 Reference Pattern Correlation (≥95% of top 50 peaks within 0.5 px)
 - Priority: High
-- Status: done
-- Owner/Date: galph/2025-09-30
+- Status: in_progress
+- Owner/Date: ralph/2025-09-30
 - Reproduction (C & PyTorch):
   * C: `NB_C_BIN=./golden_suite_generator/nanoBragg -lambda 6.2 -cell 100 100 100 90 90 90 -default_F 100 -distance 100 -detpixels 1024 -floatfile c_simple_cubic.bin`
   * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation -vv`
@@ -163,6 +163,11 @@
     First Divergence: Not a physics divergence — float64 precision breaks plateau ties. Golden C output (float32) has 8 unique peak values creating plateaus. PyTorch float64 has 38 unique values due to numerical noise, causing scipy.ndimage.maximum_filter to find 45 local maxima instead of 52.
     Solution: Cast pytorch_image.astype(np.float32) before find_peaks() in all three test methods. This matches golden data precision and restores plateau ties, achieving 50/50 peak matches (100%) vs spec requirement of 48/50 (95%).
     Next Actions: None — AT-PARALLEL-012 complete and passing. Plan archived at `plans/archive/at-parallel-012-peakmatch/plan.md`; assertions tightened to ≥95%.
+  * [2025-09-30] Attempt #4 — Result: REGRESSION. test_simple_cubic_correlation now failing with 43/50 peaks matched (86%), regressed from Attempt #3.
+    Metrics: corr≈0.9999999999999997; matches=43/50 (86%); requirement: ≥48/50 (95%).
+    Artifacts: None yet — will generate during debugging loop.
+    Observations/Hypotheses: DTYPE-DEFAULT-001 (commit 8c2ceb4) changed simulator to native float32; Attempt #3's workaround (casting output to float32 for peak detection) no longer sufficient when physics runs in float32 from the start. Native float32 simulation produces different plateau structure than float64→float32 cast path.
+    Next Actions: Run parallel trace comparison (float64 vs float32 physics) at a missing peak location; verify if plateau structure differs; consider adjusting peak detection tolerance or reverting to float64 until root cause understood.
 - Risks/Assumptions: Ensure triclinic/tilted variants remain passing; preserve differentiability (no `.item()` in hot path); guard ROI caching vs Protected Assets rule.
 - Exit Criteria (quote thresholds from spec):
   * PyTorch run matches ≥48/50 peaks within 0.5 px and maintains corr ≥0.9995.
