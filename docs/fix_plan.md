@@ -1,8 +1,8 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-01 (ralph loop - PERF plan archival)
-**Test Suite Status:** ✅ Healthy - 489 passed, 117 skipped, 2 xfailed, 2 failed (environment-dependent), 176s runtime
-**Environment-Dependent Tests:** 7 tests (test_at_parallel_026::test_triclinic_absolute_peak_position_vs_c, test_at_tools_001::test_script_integration, test_at_perf_003::test_memory_bandwidth_utilization, 4× test_at_perf_007) marked with appropriate markers; fail in full suite without NB_C_BIN or due to test isolation issues but pass individually - expected behavior
+**Last Updated:** 2025-10-01 (ralph loop - AT-TOOLS-001 path fix)
+**Test Suite Status:** ✅ Healthy - 490 passed, 117 skipped, 2 xfailed, 1 failed (environment-dependent), 177s runtime
+**Environment-Dependent Tests:** 1 test (test_at_parallel_026::test_triclinic_absolute_peak_position_vs_c) marked with requires_c_binary; fails in full suite without NB_C_BIN - expected behavior
 **Active Focus:**
 - Test infrastructure: Registered `parallel_validation` and `requires_c_binary` pytest markers to eliminate warnings
 - Core test suite stabilized at 489 passing tests across all acceptance test categories
@@ -22,6 +22,7 @@
 ## Index
 | ID | Title | Priority | Status |
 | --- | --- | --- | --- |
+| [TEST-AT-TOOLS-001](#test-at-tools-001-fix-script-path-resolution) | Fix script path resolution in test_at_tools_001 | High | done |
 | [TEST-PYTEST-MARKERS](#test-pytest-markers-register-custom-pytest-markers) | Register custom pytest markers | Medium | done |
 | [TEST-MOSFLM-OFFSET](#test-mosflm-offset-fix-test-expectations-after-at-geo-001-mosflm-offset-refactoring) | Fix test expectations after AT-GEO-001 MOSFLM offset refactoring | High | done |
 | [AT-SRC-001-DTYPE](#at-src-001-dtype-fix-float32-dtype-compatibility) | Fix float32 dtype compatibility in AT-SRC-001 tests | Medium | done |
@@ -44,6 +45,32 @@
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | done |
 | [AT-PARALLEL-001](#at-parallel-001-fix-mosflm-beam-center-auto-calculation) | Fix MOSFLM beam center auto-calculation | High | done |
+
+---
+
+## [TEST-AT-TOOLS-001] Fix script path resolution in test_at_tools_001
+- Spec/AT: AT-TOOLS-001 (Dual-Runner Comparison Script), specs/spec-a-parallel.md lines 199-200
+- Priority: High
+- Status: done
+- Owner/Date: ralph/2025-10-01
+- Reproduction (C & PyTorch):
+  * C: n/a (test infrastructure bug)
+  * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_tools_001.py::TestAT_TOOLS_001_DualRunnerComparison::test_script_integration -v` (was failing with FileNotFoundError)
+  * Shapes/ROI: 64×64 detector for integration test
+- First Divergence (if known): tests/test_at_tools_001.py line 175 used relative path `scripts/nb_compare.py` but pytest runs tests from temporary directories, causing `python: can't open file '/tmp/pytest-of-ollie/pytest-332/.../scripts/nb_compare.py': [Errno 2] No such file or directory`.
+- Attempts History:
+  * [2025-10-01] Attempt #1 — Result: success. Resolved script path relative to repo root and added `cwd` parameter to subprocess.run.
+    Metrics: test_script_integration PASSED in 10.63s. All 9 tests in test_at_tools_001.py pass. Full suite: 490 passed (up from 489), 117 skipped, 2 xfailed, 1 failed (down from 2, only environment-dependent C binary test remains). Runtime: 176.82s (0:02:56).
+    Artifacts:
+      - tests/test_at_tools_001.py lines 173-191 (added repo_root detection, script_path resolution, sys.executable usage, cwd parameter)
+    Observations/Hypotheses: Test was attempting to run `python scripts/nb_compare.py` from subprocess which fails when pytest runs from a temp directory. Fix follows pattern from conftest.py (line 17: `Path(__file__).parent.parent`). Also changed `'python'` to `sys.executable` for proper virtual environment isolation, and added `cwd=str(repo_root)` to ensure nb_compare.py can find its dependencies (e.g., scripts/c_reference_runner.py).
+    Next Actions: None - issue resolved. AT-TOOLS-001 now fully passing.
+- Risks/Assumptions: Assumes repo_root layout is stable (script at scripts/nb_compare.py relative to tests directory).
+- Exit Criteria (quote thresholds from spec):
+  * AT-TOOLS-001: "Invoke nb-compare utility with standard parameters" (✅ satisfied - test invokes script successfully)
+  * test_script_integration passes (✅ 1/1 passed in 10.63s)
+  * All 9 tests in test_at_tools_001.py pass (✅ 9/9 passed in 15.23s)
+  * Test suite improves (✅ 489→490 passed, 2→1 failed)
 
 ---
 
