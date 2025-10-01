@@ -566,7 +566,7 @@
 - First Divergence (if known): Script runs `for i in {1..40}` over `prompts/supervisor.md` without the mandated `timeout 30 git pull --rebase` guard or conditional push suppression; mirrors the routing regression previously fixed in `loop.sh`.
 - Immediate Next Actions (2025-10-13):
   * Execute plan Phase A tasks A1–A3 to capture a regression report under `reports/routing/` and log the attempt in this ledger.
-  * Draft guard design note (Phase B1) before editing the script so the patched flow mirrors `loop.sh` protections.
+  * Draft guard design note (Phase B1) before editing the script so the patched flow mirrors `loop.sh` protections and documents the fallback (`git rebase --abort` → `git pull --no-rebase`) for timeout scenarios.
 - Attempts History:
   * [2025-10-13] Attempt #1 — Result: regression documented. Confirmed `supervisor.sh` loops 40× with no pull/rebase guard and no exit criteria. No artifacts yet (pending plan Phase A). Next Actions: follow plan tasks A1–A3 to produce evidence, then proceed to Phase B implementation.
 - Risks/Assumptions: Treat `supervisor.sh` as Protected Asset; ensure edits retain logging expectations and do not re-enable multi-iteration loops.

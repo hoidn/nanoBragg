@@ -745,3 +745,16 @@
 
 ## 2025-10-13 (galph loop BX addendum)
 - Post-rebase check: `loop.sh` on HEAD (`853cf08`) already contains the guarded single-run flow. Leave `[ROUTING-LOOP-001]` guidance intact until we verify whether additional audit artifacts are still required, but do not instruct Ralph to reapply the guard.
+
+## 2025-10-01 (galph loop BY)
+- Stashed/restored pre-existing `supervisor.sh` edits to satisfy the required pull; left that file dirty for Ralph per policy.
+- Found `plans/active/supervisor-loop-guard/plan.md` empty while `supervisor.sh` still runs 40×; authored phased plan with audit/design/compliance steps and added fallback guidance.
+- Updated `[ROUTING-SUPERVISOR-001]` next actions in `docs/fix_plan.md` to call out the new plan and require the rebase→fallback flow.
+- Re-reviewed active initiatives: DTYPE plan stalled at Phase C (needs parity/gradcheck/bench artifacts once plateau remediation settles); PERF plan still missing B3 C-side profile + B5 eager trace despite warm gap ≈1.1×; automation hygiene remains top priority until both scripts are guarded.
+- Pending contextual work: supervisor guard audit (Phase A), then guard implementation/dry run per plan; resume DTYPE Phase C and PERF Phase B3/B5 once routing hygiene stabilized.
+
+Follow-ups for Ralph:
+1. Execute `plans/active/supervisor-loop-guard/plan.md` Phase A (A1–A3) to capture regression evidence and log it in fix_plan before touching the script.
+2. Once audit is committed, proceed through Phase B (design note, guarded implementation with fallback, dry-run + hygiene logs) and Phase C closure tasks.
+3. After automation guard is restored, restart DTYPE plan Phase C (C1–C3) with CPU/GPU parity, gradcheck, and benchmark artifacts; then tackle PERF plan tasks B3 and B5 to complete the profiling baseline.
+- Tree intentionally left dirty due to existing `supervisor.sh` regression.
