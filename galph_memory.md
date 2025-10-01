@@ -167,3 +167,7 @@
   2. Patch `Simulator.__init__` to default `source_wavelengths` to `beam_config.wavelength_A` when multi-source directions are supplied, and rerun multi-source torch.compile cache tests.
   3. Fix `scripts/benchmarks/benchmark_detailed.py:149` to exclude booleans from total time and rerun the 256–1024² benchmarks so PERF Phase 3 can compare against C accurately.
 - Repo state leaving loop: clean tree (users' `prompts/update_fix_plan.md` restored untouched); no commits made this run.
+
+## 2025-10-02 (galph loop W)
+- Reinforced fix_plan pruning guidance: `prompts/update_fix_plan.md` now warns against over-pruning and sets a target of ~500 lines when trimming a >1000-line plan so key context stays in the main ledger.
+- No other files touched; tests not run (docs-only update).
