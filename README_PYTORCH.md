@@ -146,6 +146,8 @@ nanoBragg -mosflm -cell 100 100 100 90 90 90 ...
 nanoBragg -xds -cell 100 100 100 90 90 90 ...
 ```
 
+### Benchmarks 
+`python scripts/benchmarks/benchmark_detailed.py`
 
 ### Batch Visualization Script
 
@@ -205,3 +207,5 @@ pytest tests/test_gradients.py -v      # Gradient flow tests
    # Or rebuild:
    make -C golden_suite_generator
    ```
+
+
