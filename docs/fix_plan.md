@@ -1,8 +1,8 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-12 (galph loop BS)
+**Last Updated:** 2025-10-13 (galph loop BU)
 **Active Focus:**
-- ROUTING: restore `loop.sh` guard per `[ROUTING-LOOP-001]` after regression in commit `c49e3be` (reintroduced `prompts/main.md` loop + unconditional push); follow archived plan tasks before running automation again.
+- ROUTING: Execute Phase A of `plans/active/routing-loop-guard/plan.md` to capture the regression audit before editing `loop.sh` (commit `c49e3be` reintroduced 40× `prompts/main.md` loop + unconditional push).
 - AT-012: hold Phase C work in standby per supervisor notes; no action until new directive lands.
 - DTYPE: finish Phase B3 by making `io/source.py`, `utils/noise.py`, and `utils/c_random.py` device/dtype neutral (record before/after in `reports/DTYPE-DEFAULT-001/phase_b3_audit.md`).
 - PERF: reconcile 1-iteration vs 5-iteration warm timings, complete Phase B4 hotspot summary (top ops from trace) and B5 eager-mode profile before designing Phase C experiments.
@@ -501,6 +501,7 @@
 - Priority: High
 - Status: in_progress (regressed 2025-10-01 via commit `c49e3be`)
 - Owner/Date: galph/2025-10-06 (regression follow-up); ralph/2025-10-01 (completion)
+- Plan Reference: `plans/active/routing-loop-guard/plan.md`
 - Reproduction (C & PyTorch):
   * C: `sed -n '1,80p' loop.sh`
   * PyTorch: n/a
@@ -511,7 +512,7 @@
     Metrics: n/a (manual inspection).
     Artifacts: Pending re-run of Phase A logs (`reports/routing/<date>-loop-audit.txt`).
     Observations/Hypotheses: Regression likely came from local edits outside the routing plan; without the guard the engineer agent resumes unsupervised loops and may spam pushes.
-    Next Actions: Reapply routing guard exactly as `ffd9a5c` (single `prompts/debug.md`, timeouted `git pull --rebase`, conditional push) and capture new audit + compliance logs before restarting automation.
+    Next Actions: Follow `plans/active/routing-loop-guard/plan.md` Phase A (tasks A1–A3) to capture the regression audit before reapplying the guard from `ffd9a5c`.
   * [2025-10-07] Attempt #3 — Result: regression worsening. Observed `loop.sh` running `prompts/main.md` in a `{1..40}` loop with unconditional `git push`. No audit artifact captured yet; Phase A still pending.
     Metrics: n/a
     Artifacts: Pending report under `reports/routing/` (plan tasks A1–A3).

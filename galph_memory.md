@@ -707,3 +707,14 @@
 - Coin flip=HEADS: commit audit (last ~10). `c49e3be` reintroduced 40× `prompts/main.md` loop + unconditional push — regression; `c1e56ed` delivered AT-012 validation docs (48/50 peaks) but follow-up artifacts already logged. Need Ralph to restore guard immediately and capture fresh routing audit.
 - Planning decision: existing active plans (dtype-default-fp32, perf-pytorch-compile-refactor) remain valid; routing plan can stay archived but Ralph must re-execute its Phase B/C tasks before automation resumes — highlighted in fix_plan instead of drafting a new plan.
 - Follow-ups for Ralph: (1) Revert `loop.sh` to guarded single-iteration flow and drop new regression, logging audit under `reports/routing/` + fix_plan Attempt. (2) Execute DTYPE Phase B3 refactor with `phase_b3_audit.md` capturing before/after diffs and device/dtype tests. (3) Resume PERF Plan B4/B5 with matched iteration benchmarks and hotspot write-up; include note about restoring environment vars. (4) After dtype/perf progress, address ROI mask fallback allocations as candidate PERF Phase C task.
+
+## 2025-10-13 (galph loop BU)
+- Reopened automation guard effort: created `plans/active/routing-loop-guard/plan.md` with Phases A–C (audit, restoration, compliance) and rewired docs/fix_plan.md Active Focus + ROUTING entry to point at the new plan. Regression still present (`loop.sh` runs 40× `prompts/main.md` with unconditional push); no fresh audit logs yet.
+- Long-term goal check:
+  * Error-correcting agent: routing guard remains broken; Ralph must run plan Phase A before touching `loop.sh`.
+  * Default fp32 rollout: Phase B3 still blocked (helpers `io/source.py`, `utils/noise.py`, `utils/c_random.py` emit float64 CPU tensors; no `reports/DTYPE-DEFAULT-001/phase_b3_audit.md`).
+  * 4096² performance gap: PERF plan stalled at Phase B4/B5; profiler trace lacks hotspot summary and warm benchmarks still 3.4× slower than C.
+- Follow-ups for Ralph:
+  1. Execute routing guard plan Phase A (tasks A1–A3) to capture `loop.sh` regression evidence, then apply Phase B/C to restore guard before any automation run.
+  2. Finish DTYPE plan task B3 with audit log + helper refactor, then resume Phase C validation once plateau artifacts stay green.
+  3. Resume PERF plan Phase B4/B5: reconcile 1 vs 5 iteration benchmarks, produce hotspot summary, prepare warm 4096² profiling artifacts per plan guidance.
