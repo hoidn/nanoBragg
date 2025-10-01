@@ -148,6 +148,11 @@
     Artifacts: None — findings recorded in `plans/active/perf-pytorch-compile-refactor/plan.md` (Phase 3 notes) and galph_memory.md (2025-10-06 loop AS entry).
     Observations/Hypotheses: Physics semantics unchanged since Attempt #12; Ralph must land P3.0b/P3.0c fixes before new performance data is meaningful. ROI/misset caching (P3.4) and source guard rails remain prerequisites to re-running P3.2/P3.3 benchmarks.
     Next Actions: Same as Attempt #12 — execute plan tasks P3.0b/P3.0c/P3.4 under `prompts/debug.md`, capturing 3-source C/Py traces and refreshed CPU benchmarks once fixes land.
+  * [2025-10-07] Attempt #14 — Result: supervisor audit. Reconciled AT-SRC-001 in `specs/spec-a-core.md` with current simulator behavior; confirmed `steps` must divide by the **count** of sources (not the sum of weights) and that ROI mask regeneration at `simulator.py:611-705` remains a CPU bottleneck. Updated `plans/active/perf-pytorch-compile-refactor/plan.md` Phase 3 table with spec citations, explicit reproduction commands (`pytest tests/test_multi_source_integration.py::test_multi_source_intensity_normalization`, `nb-compare --sourcefile ...`) and profiler artifact expectations.
+    Metrics: Analysis only.
+    Artifacts: plans/active/perf-pytorch-compile-refactor/plan.md (Phase 3 table stamped 2025-10-07), galph_memory.md (loop entry pending at close of supervisor run).
+    Observations/Hypotheses: Current code still violates AT-SRC-001 normalization and per-source polarization; ROI/misset tensors and detector constants are rebuilt each run, explaining persistent allocator churn in CPU benchmarks. These must be corrected before any new performance numbers are credible.
+    Next Actions: Ralph to execute updated plan tasks P3.0–P3.0c (multi-source defaults, per-source polarization, normalization) and P3.4 (ROI/misset caching) with the new artifact targets before rerunning P3.2/P3.3 benchmarks.
 - Risks/Assumptions: Requires CUDA availability; must avoid `.item()` in differentiable paths when caching tensors.
 - Exit Criteria (quote thresholds from spec):
   * Phase 2 artifacts demonstrating ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (multi-source included) committed.
