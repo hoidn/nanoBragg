@@ -12,6 +12,7 @@
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
 | [DTYPE-DEFAULT-001](#dtype-default-001-migrate-default-dtype-to-float32) | Migrate default dtype to float32 | High | in_progress |
 | [AT-PARALLEL-012-PEAKMATCH](#at-parallel-012-peakmatch-restore-95-peak-alignment) | Restore 95% peak alignment | High | in_progress |
+| [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | in_progress |
 
 ---
 
@@ -339,7 +340,7 @@
   * [2025-09-30] Attempt #4 — Result: success (Phase C complete). Executed broader Tier-1 CPU suite and updated documentation to codify float32 defaults.
     Metrics: 55 tests passed, 4 skipped (crystal geometry 19/19, detector geometry 12/12, AT-PARALLEL-012 3/3, AT-PARALLEL-001 8/8, AT-PARALLEL-002 4/4, AT-PARALLEL-004 5/5, AT-PARALLEL-006 3/3, multi_source 1/1).
     Artifacts: `arch.md` (lines 5, 313-316, 361); `docs/development/pytorch_runtime_checklist.md` (line 12).
-    Observations/Hypotheses: Float32 defaults deliver required coverage when precision-critical tests stay on float64.
+    Observations/Hypotheses: Float32 defaults deliver required coverage when precision-critical tests stay on float64. Plateau workaround later rolled back (see Attempts #5–#6).
     Next Actions: Monitor float32 performance regressions during Phase B3 helper plumbing.
   * [2025-10-07] Attempt #5 — Result: partial workaround. Force-set `dtype=torch.float64` in AT-012 tests to bypass plateau fragmentation (commit cd9a034). Simple_cubic still fails (43/50); other variants pass. Override contradicts float32-default goal.
     Metrics: triclinic PASS, tilted PASS, simple_cubic FAIL (43/50, corr≈1.0).
@@ -359,9 +360,6 @@
   * Benchmarks under `reports/DTYPE-DEFAULT-001/` show ≤5 % regression vs previous float64 baseline.
 
 ---
-
-### Completed Items — Key Reference
-(See `docs/fix_plan_archive.md` for the full historical ledger.)
 
 ## [ROUTING-LOOP-001] loop.sh routing guard
 - Spec/AT: Prompt routing rules (prompts/meta.md)
@@ -396,6 +394,9 @@
     Next Actions: Monitor automation once AT suite is fully green before permitting main prompt.
 - Risks/Assumptions: Ensure future automation edits maintain routing guard.
 - Exit Criteria (quote thresholds from spec): script executes `prompts/debug.md` exactly once per run with evidence recorded in reports.
+
+### Completed Items — Key Reference
+(See `docs/fix_plan_archive.md` for the full historical ledger.)
 
 ## [AT-PARALLEL-024-REGRESSION] PERF-PYTORCH-004 Test Compatibility
 - Spec/AT: AT-PARALLEL-024 `test_umat2misset_round_trip`
