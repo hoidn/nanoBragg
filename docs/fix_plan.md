@@ -81,29 +81,30 @@
   * No blocking issues remain
 
 ## [AT-PARALLEL-012-PEAKMATCH] Restore 95% Peak Match Criterion (2025-10-02)
-- Spec/AT: AT-PARALLEL-012 Reference Pattern Correlation (triclinic case peak matching requirement)
+- Spec/AT: AT-PARALLEL-012 Reference Pattern Correlation (simple_cubic peak matching requirement)
 - Priority: High (acceptance test currently weaker than spec)
 - Status: pending
 - Owner/Date: 2025-10-02 (galph loop current)
-- Exit Criteria: Reinstate the ≥95% peak-match assertion in `tests/test_at_parallel_012.py` (triclinic case) without regressing the physics; archive metrics showing ≥50/50 matches and ≤0.5 px mean displacement under `reports/2025-10-02-AT-012-peakmatch/metrics.json`; document completion here and close item.
+- Exit Criteria: Raise the simple_cubic peak-match rate to ≥95% (≥48/50 peaks within 0.5 px), tighten the assertion in `tests/test_at_parallel_012.py` accordingly, and archive before/after metrics under `reports/2025-10-02-AT-012-peakmatch/`. Document the fix and close this item once the stricter assertion passes.
 - Reproduction:
-  * `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_triclinic_P1_correlation -vv`
+  * `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation -vv`
   * Metrics capture: `KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY' ...` (see galph log 2025-10-02) or add a helper script under `scripts/benchmarks/` to dump correlation + peak stats into the report directory.
 - Problem Summary:
-  * The triclinic harness still asserts `n_matches >= len(golden_peaks) * 0.86`, a temporary relaxation introduced while parity lagged.
-  * Spec (`specs/spec-a-parallel.md`) requires ≥95% of the top 50 peaks to align within 0.5 px; current test masks regressions.
-  * Fresh run today shows 50/50 matches with mean distance 0.0, so the relaxation is obsolete.
+  * The simple_cubic harness still asserts `n_matches >= len(golden_peaks) * 0.86`, a relaxation added while correlation lagged.
+  * Spec (`specs/spec-a-parallel.md`) requires ≥95% of the top 50 peaks within 0.5 px; current test allows 86% and hides the remaining parity gap.
+  * Fresh run today yields `Matches 43 / 50` despite correlation ≈1.0, so five peaks remain unmatched.
 - Root Cause:
-  * Threshold reduction from early AT-012 failures was never restored; no fix_plan item tracked the temporary change.
+  * The earlier relaxation was never tracked in fix_plan, so no follow-up analysis occurred after metric duality fixes.
+  * Missing peaks likely stem from residual intensity/ROI discrepancies between PyTorch and the C golden image (needs investigation).
 - Observations (2025-10-02 quick check):
-  * Command (see galph log) produced `Correlation 0.99999993`, `Matches 50`, `Mean dist 0.0`.
-  * `Simulator.run` auto-selected 2× oversampling for this case; capture this detail in the archived metrics.
+  * Command (see galph log) produced `Correlation 0.9999999999999997`, `Matches 43 / 50` (auto-selected 1× oversampling).
+  * Prior `reports/2025-09-29-AT-PARALLEL-012/peak_displacement_analysis.png` already highlighted missing outer-ring peaks—revisit with current build.
 - Implementation Guidance:
-  1. Tighten assertion to ≥95% (or exact equality) and update/remove the stale TODO.
-  2. Run the triclinic test with `-vv`, record stdout + metrics under `reports/2025-10-02-AT-012-peakmatch/` (JSON + markdown summary preferred).
-  3. Update this entry with artifact paths, then close the item once the stricter assertion passes.
+  1. Regenerate simple_cubic comparison artifacts (diff heatmaps, peak tables) under `reports/2025-10-02-AT-012-peakmatch/` to identify which peaks drop out; include both intensity and positional deltas.
+  2. Trace one missing peak end-to-end (C vs PyTorch) using `scripts/debug_pixel_trace.py` or `nb-compare` to pinpoint whether lattice factors, polarization, or ROI masking diverge.
+  3. After the physics fix restores ≥95% matches, tighten the assertion to spec, remove the stale TODO, and update this entry with artifact paths.
 - Notes:
-  * Re-check the simple_cubic and tilted variants for similar relaxations; align them with spec if needed.
+  * Verify the triclinic and tilted variants still meet spec (currently they already assert ≥95%); adjust only if new diagnostics expose similar gaps.
   * Any new helper must reside under `scripts/benchmarks/` and respect CLAUDE tooling guidance (set `KMP_DUPLICATE_LIB_OK=TRUE`, avoid ad-hoc sys.path hacks).
 
 ## [RALPH-VERIFICATION-011] Eleventh Routing Violation - ULTIMATE ESCALATION (2025-09-30-M)

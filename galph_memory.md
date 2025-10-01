@@ -116,11 +116,11 @@
 
 ## 2025-10-02 (galph loop S)
 - Startup sync: `timeout 30 git pull --rebase` returned "Already up to date."; no conflicts or dirty files before analysis.
-- Deep review confirmed the triclinic AT-012 harness still enforces an 86% peak-match tolerance despite current physics delivering 50/50 matches. Ran `KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY' ... PY` (see commands log) and captured `Correlation 0.99999993`, `Matches 50`, `Mean dist 0.0`.
-- Added active fix item `[AT-PARALLEL-012-PEAKMATCH]` to `docs/fix_plan.md` with guidance to restore the ≥95% spec threshold, archive metrics under `reports/2025-10-02-AT-012-peakmatch/`, and tighten the assertion.
+- Deep review confirmed the simple_cubic AT-012 harness still enforces an 86% peak-match tolerance; fresh run yielded `Correlation 1.0`, `Matches 43 / 50` (command logged via `KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY' ... PY`).
+- Added active fix item `[AT-PARALLEL-012-PEAKMATCH]` to `docs/fix_plan.md` with guidance to investigate the missing peaks, archive diagnostics under `reports/2025-10-02-AT-012-peakmatch/`, and only tighten the assertion once ≥95% matches are restored.
 - No new multi-turn plan needed; PERF roadmap already covers ROI mask/misset caching and Dynamo logging from prior loop, but reiterate that Phase 2 tasks (multi-device cache validation) remain outstanding.
 - Guidance for Ralph:
-  1. Execute the new fix_plan item by tightening the triclinic peak-match assertion and archiving metrics; update the report directory referenced above.
+  1. Execute the new fix_plan item by diagnosing the missing simple_cubic peaks, publishing parity artifacts, and tightening the assertion once ≥95% matches are achieved.
   2. Continue PERF-PYTORCH-004 Phase 2 work (P2.1–P2.5) and prep for Phase 3 once cache validation artifacts exist.
-  3. While adjusting AT-012 test, confirm simple_cubic/tilted variants still align with spec; if relaxed, queue follow-up.
+  3. While investigating AT-012, confirm the triclinic/tilted variants remain at spec; queue follow-up if additional relaxations surface.
 - Repo state on exit: modified `docs/fix_plan.md` and `galph_memory.md` only (no code changes).
