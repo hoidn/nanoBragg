@@ -315,9 +315,10 @@ def compute_physics_for_position(
                 incident_expanded = incident_beam_direction.unsqueeze(1).unsqueeze(1).expand(-1, diffracted_beam_unit.shape[0], diffracted_beam_unit.shape[1], -1)
 
             # Flatten for polarization calculation
+            # Use .contiguous() to avoid CUDA graphs tensor reuse errors
             flat_shape = diffracted_expanded.shape
-            incident_flat = incident_expanded.reshape(-1, 3)
-            diffracted_flat = diffracted_expanded.reshape(-1, 3)
+            incident_flat = incident_expanded.reshape(-1, 3).contiguous()
+            diffracted_flat = diffracted_expanded.reshape(-1, 3).contiguous()
 
             # Calculate polarization
             polar_flat = polarization_factor(
@@ -338,12 +339,13 @@ def compute_physics_for_position(
         else:
             # Single source case
             # Flatten for polarization calculation
+            # Use .contiguous() to avoid CUDA graphs tensor reuse errors
             incident_flat = incident_beam_direction.unsqueeze(0).expand(diffracted_beam_unit.shape[0] * (diffracted_beam_unit.shape[1] if original_n_dims == 3 else 1), -1)
             if original_n_dims == 3:
-                incident_flat = incident_beam_direction.unsqueeze(0).unsqueeze(0).expand(diffracted_beam_unit.shape[0], diffracted_beam_unit.shape[1], -1).reshape(-1, 3)
+                incident_flat = incident_beam_direction.unsqueeze(0).unsqueeze(0).expand(diffracted_beam_unit.shape[0], diffracted_beam_unit.shape[1], -1).reshape(-1, 3).contiguous()
             else:
-                incident_flat = incident_beam_direction.unsqueeze(0).expand(diffracted_beam_unit.shape[0], -1).reshape(-1, 3)
-            diffracted_flat = diffracted_beam_unit.reshape(-1, 3)
+                incident_flat = incident_beam_direction.unsqueeze(0).expand(diffracted_beam_unit.shape[0], -1).reshape(-1, 3).contiguous()
+            diffracted_flat = diffracted_beam_unit.reshape(-1, 3).contiguous()
 
             # Calculate polarization
             polar_flat = polarization_factor(
@@ -851,8 +853,9 @@ class Simulator:
 
             # VECTORIZED PHYSICS: Process all subpixels at once
             # Reshape to (S*F*oversample^2, 3) for physics calculation
+            # Use .contiguous() to avoid CUDA graphs tensor reuse errors
             batch_shape = subpixel_coords_ang_all.shape[:-1]
-            coords_reshaped = subpixel_coords_ang_all.reshape(-1, 3)
+            coords_reshaped = subpixel_coords_ang_all.reshape(-1, 3).contiguous()
 
             # Compute physics for all subpixels and sources (VECTORIZED)
             if n_sources > 1:

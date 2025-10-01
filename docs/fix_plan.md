@@ -168,7 +168,11 @@
     Artifacts: plan update in `plans/active/perf-pytorch-compile-refactor/plan.md` (P3.0c guidance refreshed 2025-10-08); galph_memory.md (loop AZ entry pending).
     Observations/Hypotheses: Need to reconcile weighting semantics—either adopt C’s behavior (ignore weights) or document/validate a new contract. Weighted parity artifacts (nb-compare + pytest) are still outstanding and must drive the decision before benchmarking.
     Next Actions: Execute updated P3.0c tasks: build two-source weighted comparison, capture C vs PyTorch metrics, and decide on the correct weighting model. Block P3.2/P3.3 benchmarking until this parity evidence exists.
-- Risks/Assumptions: Requires CUDA availability; must avoid `.item()` in differentiable paths when caching tensors.
+  * [2025-09-30] Attempt #17 — Result: partial (P3.2 complete; P3.3 blocked). Executed fresh CPU benchmarks after P3.0–P3.4 physics fixes completed. CPU results show excellent cache performance (4469-6433× setup speedup) and 256² meeting targets (3.24× faster warm), but 512²/1024² still lag C (0.78× and 0.43× speedup respectively). CUDA benchmarks blocked by `RuntimeError: Error: accessing tensor output of CUDAGraphs that has been overwritten` in polarization reshape views. Attempted `.contiguous()` fix insufficient; requires `.clone()` instead.
+    Metrics: CPU: 256²=3.24× faster (warm), 512²=C 1.28× faster, 1024²=C 2.33× faster; corr≥0.99999 all sizes. CUDA: execution error, benchmarks incomplete.
+    Artifacts: `reports/benchmarks/20250930-212505/benchmark_results.json` (CPU only); CUDA artifacts missing due to blocker.
+    Observations/Hypotheses: CPU warm runs improved significantly vs Attempt #9 but still violate ≤1.5× criterion for larger sizes. CUDA graphs incompatible with reshape views even after `.contiguous()`; need explicit `.clone()` at lines 320-321, 344-347, 858 in `simulator.py`. Partial fix applied (`.contiguous()` added) but error persists because CUDA graphs requires full tensor copy, not just memory layout guarantee.
+    Next Actions: (1) Replace `.contiguous()` with `.clone()` in polarization paths and rerun CUDA benchmarks (P3.3). (2) After CUDA data collected, analyze combined CPU+CUDA results and decide P3.5 (proceed to Phase 4 or close out).
 - Exit Criteria (quote thresholds from spec):
   * Phase 2 artifacts demonstrating ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (multi-source included) committed.
   * Phase 3 report showing PyTorch warm runs ≤1.5× C runtime for 256²–1024² detectors.
