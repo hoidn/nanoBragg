@@ -638,3 +638,10 @@
 - Updated plateau plan Phase C: set C2 to [P], added C2a–C2c checklist directing brightest-member selection, float centroid fallback, and memo update with artifacts under reports/2025-10-AT012-regression/phase_c_trials/.
 - Refreshed docs/fix_plan.md header + Attempt #16 next actions to call out new subtasks; Active Focus now highlights executing C2a–C2c.
 - Follow-ups for Ralph: implement C2a first (log results), attempt C2b if still <48/50, then update decision memo and rerun AT-012 + parity suite before touching other initiatives; keep dtype helper audit (Phase B3) and weighted source output path pending plateau fix.
+
+## 2025-10-12 (galph loop BM)
+- No new plan; existing AT-012, DTYPE, PERF, ROUTING plans still valid. Plateau plan remains blocked at Phase C2 because `find_peaks` in `tests/test_at_parallel_012.py:57-139` rounds intensity-weighted COM coordinates to ints; directs Ralph to implement C2a (brightest-pixel representative) before rerunning AT-012.
+- DTYPE Phase B3 still open: helpers `src/nanobrag_torch/io/source.py:45-112`, `src/nanobrag_torch/utils/noise.py:102-124` (`lcg_random`), and `src/nanobrag_torch/utils/c_random.py` continue to hard-code float64 CPU tensors. Need dtype/device-aware tensor factories with before/after snippets in `reports/DTYPE-DEFAULT-001/phase_b3_audit.md` prior to Phase C retests.
+- PERF plan Phase A0 unresolved: `scripts/validate_weighted_source_normalization.py:170-177` still writes into `reports/benchmarks/20250930-multi-source-normalization/`, so reruns clobber evidence. Require timestamp/CLI override before capturing new 4096² warm baselines (A1–A4).
+- Fix_plan index reviewed; priorities remain consistent with active plans, no edits today.
+- Follow-ups for Ralph: (1) finish AT-012 C2a with log in `reports/2025-10-AT012-regression/phase_c_trials/`, (2) refit the dtype helper modules per Phase B3 guidance, (3) teach the weighted-source validation script to parameterize its output directory so PERF Phase A can proceed.
