@@ -79,6 +79,7 @@ E) Never “Gloss Over” Failed Attempts
 
 F) Sorting & Archival
 - Keep “in_progress” and “High” priority items at the top. Archive only “done” items (either in a dedicated Completed section or `fix_plan_archive.md`), and when archiving condense the summary to a few lines while preserving key metrics and artifact links.
+- Enforce a hard **1000-line maximum** for `docs/fix_plan.md`. Before saving, run `wc -l docs/fix_plan.md`; if the count is ≥1000, STOP the loop and move the least relevant or completed material to `docs/fix_plan_archive.md` (include a short summary + link) before committing. Never push a fix_plan.md longer than 999 lines.
 
 Example (abbreviated)
 
