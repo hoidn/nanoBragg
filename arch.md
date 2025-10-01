@@ -2,7 +2,7 @@
 
 Document version: 1.0 (aligned with specs/spec-a.md)
 Target spec: specs/spec-a.md (single-file normative spec)
-Implementation target: Python (>=3.11) + PyTorch (float64 default). Type blocks may use TypeScript-style for clarity; implement with Python dataclasses and torch tensors.
+Implementation target: Python (>=3.11) + PyTorch (float32 default). Type blocks may use TypeScript-style for clarity; implement with Python dataclasses and torch tensors.
 
 ## Running The CLI
 
@@ -310,10 +310,10 @@ interface BeamConfig {
 
 ## 14) Implementation‑Defined Defaults (explicit)
 
-- dtype: float64 tensors for numerical stability, with `.to(dtype=...)` promoted when needed.
+- dtype: float32 tensors for performance and memory efficiency. Precision-critical operations (gradient checks, metric duality validation) override to float64 explicitly where required.
 - device: CPU default; opt-in CUDA via `.to(device)`.
-- Tolerances: geometry comparisons use atol ~1e-15 for cached basis checks; acceptance checks use explicit tolerances per test.
-- When spec and C disagree subtly on rounding, use spec’s rounding: nearest integer via `ceil(x − 0.5)`.
+- Tolerances: geometry comparisons use atol ~1e-15 for cached basis checks (with float64); acceptance checks use explicit tolerances per test appropriate for float32 precision.
+- When spec and C disagree subtly on rounding, use spec's rounding: nearest integer via `ceil(x − 0.5)`.
 
 ## 15) Differentiability Guidelines (Critical for PyTorch Implementation)
 
@@ -358,7 +358,7 @@ The PyTorch implementation **MUST** maintain end-to-end differentiability to ena
 1. **Unit-level gradient test:** Verify gradients flow through isolated functions
 2. **Integration gradient test:** Verify end-to-end gradient flow through complete simulation
 3. **Stability test:** Verify gradients remain stable across parameter variations
-4. **Use `torch.autograd.gradcheck`:** With `dtype=torch.float64` for numerical precision
+4. **Use `torch.autograd.gradcheck`:** With `dtype=torch.float64` for numerical precision (note: gradient tests explicitly override to float64 for accuracy, even though default dtype is float32)
 
 ### Common Pitfalls and Solutions
 

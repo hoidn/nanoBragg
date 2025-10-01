@@ -9,6 +9,7 @@ Use this quick checklist before and after every PyTorch simulator edit. It disti
    - Verify `_compute_physics_for_position` receives tensors with the expected batch dimensions.
 
 2. **Device & Dtype Neutrality**
+   - **Default dtype is float32** for performance and memory efficiency. Precision-critical operations (gradient checks, metric duality) explicitly override to float64 where required.
    - Materialize configuration tensors (beam, detector, crystal) on the execution device before the main loop.
    - Avoid per-iteration `.to()`, `.cpu()`, `.cuda()`, or tensor factories (`torch.tensor(...)`) inside compiled regions; cache constants once.
    - Run CPU **and** CUDA smoke commands (`pytest -v -m gpu_smoke`) when a GPU is available.
