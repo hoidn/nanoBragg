@@ -1,0 +1,4 @@
+implementation,dtype,unique_values,fragmentation_ratio
+C_golden,float32,66,1.00
+PyTorch,float32,324,4.909
+PyTorch,float64,301,4.561

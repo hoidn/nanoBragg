@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.18, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/pytorch/bin/python3.10
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/nanoBragg
+configfile: pyproject.toml
+plugins: typeguard-2.13.3, anyio-4.9.0
+collecting ... collected 55 items / 54 deselected / 1 selected
+
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-012-simple_cubic] PASSED [100%]
+
+======================= 1 passed, 54 deselected in 5.54s =======================

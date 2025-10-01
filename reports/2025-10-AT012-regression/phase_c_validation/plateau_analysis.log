@@ -1,0 +1,28 @@
+================================================================================
+AT-PARALLEL-012 Phase A3: Plateau Fragmentation Analysis
+================================================================================
+
+Loading golden reference: /home/ollie/Documents/nanoBragg/tests/golden_data/simple_cubic.bin
+Running PyTorch float32 simulation...
+auto-selected 1-fold oversampling
+Running PyTorch float64 simulation...
+auto-selected 1-fold oversampling
+
+================================================================================
+RESULTS: Unique Value Counts (20x20 beam-center ROI)
+================================================================================
+C golden (float32):         66 unique values
+PyTorch float32:           324 unique values  (× 4.91)
+PyTorch float64:           301 unique values  (× 4.56)
+
+Fragmentation: PyTorch float32 has 4.91× more unique values than C
+Fragmentation: PyTorch float64 has 4.56× more unique values than C
+
+✓ Saved CSV summary: /home/ollie/Documents/nanoBragg/reports/2025-10-AT012-regression/phase_a3_plateau_fragmentation.csv
+✓ Saved histogram: /home/ollie/Documents/nanoBragg/reports/2025-10-AT012-regression/phase_a3_plateau_histogram.png
+✓ Saved value distribution: /home/ollie/Documents/nanoBragg/reports/2025-10-AT012-regression/phase_a3_value_distribution.png
+✓ Saved summary report: /home/ollie/Documents/nanoBragg/reports/2025-10-AT012-regression/phase_a3_summary.md
+
+================================================================================
+Phase A3 Complete: Artifacts saved to /home/ollie/Documents/nanoBragg/reports/2025-10-AT012-regression
+================================================================================

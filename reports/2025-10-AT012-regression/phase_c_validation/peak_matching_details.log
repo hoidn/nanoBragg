@@ -1,0 +1,6 @@
+auto-selected 1-fold oversampling
+Correlation: 0.9999999999366286
+Peaks matched: 48/50 (need ≥48/50)
+Mean distance: 0.0000 px
+Golden peaks found: 50
+PyTorch peaks found: 50
