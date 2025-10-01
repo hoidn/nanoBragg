@@ -11,8 +11,16 @@ import pytest
 import numpy as np
 from torch.autograd import gradcheck, gradgradcheck
 
-# Set environment variable for MKL compatibility
+# Set environment variables before importing nanobrag_torch
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
+# Disable torch.compile for gradient tests to avoid PyTorch compilation issues
+# The torch.inductor backend has bugs with:
+#   1. C++ array declarations in backward passes (conflicting tmp_acc* arrays)
+#   2. Donated buffers in backward functions that break gradcheck
+# Since gradcheck is testing numerical gradient correctness (not performance),
+# disabling compilation is safe and appropriate.
+os.environ["NANOBRAGG_DISABLE_COMPILE"] = "1"
 
 # Import the core components
 from nanobrag_torch.config import CrystalConfig

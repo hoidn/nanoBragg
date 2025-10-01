@@ -13,7 +13,15 @@ import torch
 # On CPU, "reduce-overhead" is faster
 def _get_compile_decorator():
     """Get appropriate compile decorator based on available hardware."""
-    if torch.cuda.is_available():
+    import os
+    disable_compile = os.environ.get("NANOBRAGG_DISABLE_COMPILE", "0") == "1"
+
+    if disable_compile:
+        # Return identity decorator when compilation is disabled (for gradient testing)
+        def identity_decorator(fn):
+            return fn
+        return identity_decorator
+    elif torch.cuda.is_available():
         # Use max-autotune mode on GPU to avoid CUDA graph issues
         # with nested compilation
         return torch.compile(mode="max-autotune")

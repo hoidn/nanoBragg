@@ -573,7 +573,15 @@ class Simulator:
         # The wrapper method _compute_physics_for_position should NOT be compiled
         # because it needs to clone incident_beam_direction before passing to the
         # compiled pure function (required for CUDA graphs compatibility)
-        if self.device.type == "cuda":
+        #
+        # Allow disabling compilation via environment variable for gradient testing
+        # (torch.inductor has C++ codegen bugs in backward passes that break gradcheck)
+        import os
+        disable_compile = os.environ.get("NANOBRAGG_DISABLE_COMPILE", "0") == "1"
+
+        if disable_compile:
+            self._compiled_compute_physics = compute_physics_for_position
+        elif self.device.type == "cuda":
             self._compiled_compute_physics = torch.compile(mode="max-autotune")(
                 compute_physics_for_position
             )
