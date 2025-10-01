@@ -34,6 +34,8 @@ Goal: Switch runtime defaults to float32 while allowing tests to request float64
 Prerqs: Phase A inventory approved.
 Exit Criteria: All constructors default to float32; float64 usage limited to gradcheck/test overrides; code passes lint/unit style checks.
 
+**Supervisor note (2025-10-12):** `read_sourcefile()` still seeds float64 CPU tensors for directions/weights/wavelengths, and the LCG helpers in `utils/noise.py` / `utils/c_random.py` instantiate float64 constants. Keep this phase open until those factories respect the caller’s device/dtype and the Phase B3 audit captures before/after code snippets.
+
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | B1 | Update config and simulator defaults | [X] | Defaults flipped to float32 across CLI, Crystal/Detector/Simulator, and HKL loaders (commit 8c2ceb4; see `reports/DTYPE-DEFAULT-001/phase_b_summary.md`). |

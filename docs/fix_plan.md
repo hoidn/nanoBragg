@@ -1,7 +1,7 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-11 (galph loop BJ)
-**Active Focus:** Protect automation assets, finish nanoBragg hygiene cleanup, restore AT-012 peak matches, repair multi-source weighting validation via BeamConfig, and capture fresh CPU/GPU benchmarks including the 4096² warm-run profile for PERF-PYTORCH-004.
+**Last Updated:** 2025-10-12 (galph loop BN)
+**Active Focus:** Complete AT-012 Phase C3 validation and C4 benchmark checks after the clustering fix, unblock PERF Phase A0 by stamping weighted-source outputs per run, and finish DTYPE Phase B3 helper refactors before rerunning large-detector Tier-1/Tier-2 suites.
 
 ## Index
 | ID | Title | Priority | Status |
@@ -123,10 +123,10 @@
   * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/investigate_compile_cache.py --instances 5 --size 256 --devices cpu,cuda --dtypes float64,float32 --sources 1`
   * Shapes/ROI: 256²–1024² detectors, pixel 0.1 mm, oversample 1, full-frame ROI
 - First Divergence (if known): Multi-source intensity still reuses the primary incident vector for polarization and recomputes detector masks every run, leaving batched sources under-weighted vs C (src/nanobrag_torch/simulator.py:681-916)
-- Immediate Next Actions (2025-10-11):
-  * Close plan task A0 by teaching `scripts/validate_weighted_source_normalization.py` to stamp unique `reports/benchmarks/<date>-.../` output directories (CLI flag or timestamp) so reruns stop clobbering evidence; rerun the script once the path fix lands.
-  * Re-run P3.0c with weighted sources plumbed through `BeamConfig` (or `_source_*` caches) so simulator uses non-uniform weights before torch.compile capture; archive parity artifacts under the freshly stamped `reports/benchmarks/<date>-multi-source-normalization/` directory.
-  * Execute plan task P3.3a by benchmarking 4096² CPU warm runs vs C and collecting profiler traces when PyTorch stays slower; link results in the next attempt log.
+- Immediate Next Actions (2025-10-12):
+  * Close plan task A0 by adding an `--out`/timestamp parameter to `scripts/validate_weighted_source_normalization.py` (it still hardcodes `reports/benchmarks/20250930-multi-source-normalization/` after commit 0a78312). Re-run the script once the path fix lands and attach the fresh summary when logging the attempt.
+  * Re-run P3.0c with weighted sources plumbed through `BeamConfig` (`_source_*` caches) so the simulator exercises unequal weights under torch.compile; archive parity artifacts in the newly stamped directory.
+  * Execute plan task P3.3a by benchmarking 4096² CPU warm runs vs C and collecting profiler traces when PyTorch stays slower; link results in the next attempt log after the script path fix.
 - Attempts History:
   * [2025-10-01] Attempt #4 — Result: success (Phase 0/1 complete). Refactored to pure function + hoisted guard tensors; torch.compile caching delivers ≥37× warm/cold speedup.
     Metrics: CPU float64 warm/cold 37.09×; CPU float32 1485.90×; CUDA float32 1256.03×; warm setup <50 ms.
@@ -288,7 +288,7 @@
   * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation -vv`
   * Shapes/ROI: 1024×1024 detector, pixel 0.1 mm, oversample auto (currently 1×), full-frame ROI
 - First Divergence (if known): Phase B3 analysis isolates per-pixel float32 arithmetic (geometry + sinc pipelines) as the driver — PyTorch float32 yields ≈5× more unique plateau intensities than C float32 despite perfect correlation (see `reports/2025-10-AT012-regression/phase_b3_experiments.md`).
-- Immediate Next Actions (2025-10-11): Run plan Phase C1–C3 to produce a mitigation decision memo, implement the selected fix under `prompts/debug.md`, and revalidate plateau metrics before resuming Tier-1/DTYPE closures.
+- Immediate Next Actions (2025-10-12): Execute plan Phase C3 by capturing the full validation artifacts (`reports/2025-10-AT012-regression/phase_c_validation/`) with the new clustering logic, then run Phase C4 benchmark checks to confirm no performance regressions. Update the decision memo with the validation results before closing the plan.
 - Attempts History:
   * [2025-10-02] Attempt #1 — Result: failed. Correlation 0.9999999999999997 but only 43/50 peaks matched (86%) vs ≥95% requirement.
     Metrics: corr=1.0; matches=43/50; unmatched peaks on outer ring.
@@ -373,7 +373,7 @@
     Metrics: simple_cubic: 43/50 matches (86%, need 95%), corr=0.9999999999; triclinic PASS; tilted PASS. Physics perfect, peak alignment insufficient.
     Artifacts: `reports/2025-10-AT012-regression/phase_c_decision.md` (decision memo); `tests/test_at_parallel_012.py` (updated find_peaks function + removed dtype overrides).
     Observations/Hypotheses: Tolerance approach correctly finds ~52 raw peaks in both images (vs 52/45 with exact equality). COM clustering produces consistent centroids but systematic ~1px offsets persist (e.g., golden (512,512) → pytorch (513,513)). This suggests plateau fragmentation causes slightly different intensity distributions within each plateau, leading to different COM calculations. Correlation remains perfect, confirming this is test framework sensitivity, not physics bug.
-    Next Actions: Exhaust clustering mitigations (try uniform weights, geometric centroids) or pivot to Option 3 (float64 override) with updated rationale in Phase C decision memo.
+    Next Actions: Execute plan tasks C2a–C2c (brightest-member selection, float centroid fallback, memo update) and re-run AT-012 validation before considering Option 3 fallback.
   * [2025-10-01] Attempt #17 — Result: Phase C2 COMPLETE. Identified root cause: cluster_radius=1.5px was over-merging distinct peaks (52 candidates → 45 final peaks → only 45/50 could match). Reduced cluster_radius to 0.5px (matching spec tolerance) and replaced intensity-weighted COM with geometric centroid (simpler, equally effective).
     Metrics: simple_cubic: 3/3 tests PASSED, triclinic PASSED, tilted PASSED (all in 5.22s). Core geometry regression: 43/43 tests PASSED in 21.89s. Correlation remains ≈1.0.
     Artifacts: tests/test_at_parallel_012.py lines 112 (cluster_radius = 0.5) and 126 (geometric centroid); pytest logs from AT-012 and geometry suites.
@@ -432,9 +432,9 @@
   * Baseline simulator import: `python -c "from nanobrag_torch.simulator import Simulator"`
   * Smoke test: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py -vv`
 - First Divergence (if known): AT-PARALLEL-012 plateau matching regressed to 43/50 peaks when running fully in float32 (prior float64→float32 cast path delivered 50/50).
-- Immediate Next Actions (2025-10-11):
-  * Execute `plans/active/dtype-default-fp32/plan.md` Phase B task B3 by converting `io/source.py`, `utils/noise.py`, and `utils/c_random.py` to respect caller-provided dtype/device; capture before/after snippets in `reports/DTYPE-DEFAULT-001/phase_b3_audit.md` before opening a PR.
-  * Coordinate with the plateau plan Phase C1–C3 mitigation work before rerunning Tier-1/Tier-2 suites; hold broader validation until the mitigation decision memo is logged under `reports/2025-10-AT012-regression/phase_c_decision.md`.
+- Immediate Next Actions (2025-10-12):
+  * Execute `plans/active/dtype-default-fp32/plan.md` Phase B task B3 by converting `io/source.py`, `utils/noise.py`, and `utils/c_random.py` to respect caller-provided dtype/device—they still emit float64 CPU tensors. Capture before/after snippets in `reports/DTYPE-DEFAULT-001/phase_b3_audit.md` before opening a PR.
+  * Coordinate with the plateau plan Phase C2 mitigation work before rerunning Tier-1/Tier-2 suites; hold broader validation until the C2a bright-peak fix is logged under `reports/2025-10-AT012-regression/phase_c_trials/`.
 - Attempts History:
   * [2025-09-30] Attempt #1 — Result: partial (Phase A+B complete; Phase C blocked by AT-012 regression). Catalogued 37 float64 occurrences and flipped defaults to float32 across CLI, Crystal/Detector/Simulator constructors, HKL readers, and auto-selection helpers while preserving float64 for Fdump binary format and gradcheck overrides. Metrics: CLI smoke test PASS; AT-012 correlation remains ≥0.9995 yet peak matching falls to 43/50 (needs ≥48/50). Artifacts: reports/DTYPE-DEFAULT-001/{inventory.md, proposed_doc_changes.md, phase_b_summary.md}; commit 8c2ceb4. Observations/Hypotheses: Native float32 plateau rounding differs from the float64→float32 cast path, so `scipy.ndimage` peak detection drops ties. Next Actions: debug AT-012 plateau behaviour (log correlations, inspect plateau pixels, decide on detector/matcher tweak), finish remaining B3 helper dtype plumbing (`io/source.py`, `utils/noise.py`, `utils/c_random.py`), then rerun Tier-1 suite on CPU+CUDA once peak matching is restored.
   * [2025-10-06] Attempt #2 — Result: regression persists. Re-running `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation -q` on HEAD (float32 defaults) still returns 43/50 matched peaks (spec needs ≥48/50) with corr=1.0. No artifact archived yet (test run captured locally). Observations: plateau loss now stems from doing the entire simulation in float32; casting the output to float32 no longer restores ties. Next Actions: capture paired float64 vs float32 traces under `reports/DTYPE-DEFAULT-001/20251006-at012-regression/`, evaluate whether to quantize the matcher or adjust simulation precision around peak evaluation, and finish Phase B3 helper dtype plumbing before repeating Tier-1 parity.

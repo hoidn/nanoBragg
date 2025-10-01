@@ -645,3 +645,15 @@
 - PERF plan Phase A0 unresolved: `scripts/validate_weighted_source_normalization.py:170-177` still writes into `reports/benchmarks/20250930-multi-source-normalization/`, so reruns clobber evidence. Require timestamp/CLI override before capturing new 4096² warm baselines (A1–A4).
 - Fix_plan index reviewed; priorities remain consistent with active plans, no edits today.
 - Follow-ups for Ralph: (1) finish AT-012 C2a with log in `reports/2025-10-AT012-regression/phase_c_trials/`, (2) refit the dtype helper modules per Phase B3 guidance, (3) teach the weighted-source validation script to parameterize its output directory so PERF Phase A can proceed.
+
+## 2025-10-12 (galph loop BN)
+- `timeout 30 git pull --rebase` already clean; coin toss → heads so reviewed Ralph’s recent commits (caddc55 plateau clustering, 0a78312 validation script, 6f0c648 hygiene) for regressions.
+- Deep dive vs long-term goals:
+  * AT-012 Phase C2 is now complete upstream (cluster_radius=0.5, geometric centroid). Next step is to execute Phase C3 validation and Phase C4 benchmark checks; ensure artifacts land under `reports/2025-10-AT012-regression/phase_c_validation/`.
+  * `scripts/validate_weighted_source_normalization.py` remains hardcoded to `reports/benchmarks/20250930-multi-source-normalization/`; Plan A0 still needs an `--out`/timestamp path before rerunning P3.0c/4096² baselines.
+  * DTYPE helpers (`io/source.py`, `utils/noise.py`, `utils/c_random.py`) still emit float64 CPU tensors, keeping Phase B3 open and blocking float32 Tier-1 reruns.
+- Updates this loop: refreshed `docs/fix_plan.md` header/active focus, reconciled Attempt #17 to note C2 completion, and tightened immediate-action bullets for `[PERF-PYTORCH-004]` and `[DTYPE-DEFAULT-001]`. Annotated plateau plan Phase C guidance to focus on validation/benchmark exit criteria. Tweaked PERF plan A0 guidance to demand CLI/timestamp output.
+- Follow-ups for Ralph:
+  1. Run AT-012 plan C3/C4 (validation artifacts + benchmark check) and update `reports/2025-10-AT012-regression/phase_c_validation/` plus the decision memo before archiving the plan.
+  2. Patch `scripts/validate_weighted_source_normalization.py` to accept `--out`/timestamped paths and rerun P3.0c before starting 4096² baseline/profiler tasks.
+  3. Complete DTYPE Phase B3 by making `io/source.py`, `utils/noise.py`, `utils/c_random.py` device/dtype neutral and logging before/after snippets in `reports/DTYPE-DEFAULT-001/phase_b3_audit.md` ahead of Tier-1 reruns.
