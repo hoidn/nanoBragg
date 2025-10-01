@@ -197,6 +197,14 @@ Acceptance Metrics Reference (examples)
 Artifacts (required)
 - c_trace.log, py_trace.log (aligned names/units), diff_heatmap.png, summary.json (correlation, RMSE, MSE, max_abs_diff, sums/ratio, peak stats if used), and reproduction commands.
 
+Debugging Dtype-Sensitive Issues
+- **Default precision:** float32 (production runs)
+- **Debug precision:** float64 (use for numerical precision investigations and gradient checks)
+- If you suspect a numerical precision issue:
+  1. Rerun with explicit `dtype=torch.float64` override to check if issue persists
+  2. Compare float32 vs float64 correlation and metrics
+  3. Note: Gradient checks (`torch.autograd.gradcheck`) always require float64 for numerical accuracy
+
 Guarded Anti‑Patterns (block)
 - Changing tests, thresholds, or loosening tolerances.
 - Submitting “fixes” without traces and metrics.

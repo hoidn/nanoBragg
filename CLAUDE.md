@@ -431,7 +431,8 @@ The SOPs emphasize:
 ### PyTorch Port
 - Memory-intensive vectorization strategy with batching fallback
 - GPU acceleration for tensor operations
-- Configurable precision (float32/float64) and batching for memory management
+- **Default precision: float32** (configurable via explicit dtype override; use float64 for gradient checks)
+- Batching support for memory management
 
 ## ⚡ Common Commands & Workflow
 
