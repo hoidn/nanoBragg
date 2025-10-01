@@ -165,7 +165,14 @@ def main():
 
     # Save results
     import json
-    output_path = '/home/ollie/Documents/nanoBragg/reports/benchmarks/20250930-multi-source-normalization/validation_results.json'
+    from pathlib import Path
+
+    # Use repo-relative path
+    repo_root = Path(__file__).parent.parent
+    output_dir = repo_root / 'reports' / 'benchmarks' / '20250930-multi-source-normalization'
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / 'validation_results.json'
+
     with open(output_path, 'w') as f:
         json.dump(results, f, indent=2)
 
