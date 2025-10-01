@@ -335,3 +335,19 @@
   1. Diagnose AT-PARALLEL-012 float32 regression (compare plateau pixel values vs float64→float32, adjust peak detection or simulation as needed) and capture artifacts under `reports/DTYPE-DEFAULT-001/`.
   2. Implement PERF plan P3.0/P3.0b/P3.0c fixes: guard against `None` source tensors, apply polarization per-source before reduction, and remove weight-sum divisor from `steps`. Provide multi-source parity traces to confirm correctness.
   3. Finish dtype helper plumbing (Phase B3: `io/source.py`, `utils/noise.py`, `utils/c_random.py`), then proceed to Phase C validation once AT-012 passes.
+
+## 2025-10-06 (galph loop AN)
+- Sync: `timeout 30 git pull --rebase` succeeded after finishing pending interactive rebase (`git rebase --continue`). Working tree started clean.
+- Step-1 findings vs goals:
+  * Multi-source path still broken: `Simulator.__init__` dereferences `source_wavelengths/source_weights` even when None, so divergence configs without explicit tensors still crash (`src/nanobrag_torch/simulator.py:427-441`).
+  * Polarization remains first-source only in both oversample and pixel-center branches (`simulator.py:775-822`, `894-950`), violating AT-SRC-001; normalization continues to divide by Σweights (`simulator.py:687-695`) so intensities average rather than sum.
+  * ROI/mask tensors are rebuilt every run (`simulator.py:611-629`), keeping CPU steady-state slower than the C baseline despite compile caching.
+  * DTYPE plan still blocked: float32 defaults leave AT-PARALLEL-012 at 43/50 peaks when run natively; Phase B3 helpers remain outstanding.
+- Step-2 (coin=heads) audit of recent ralph commits (`fcbb93a`, `904dc9b`, `b06a6d6`, `8c2ceb4`) confirmed mislabelled progress: polarization still approximated with primary source, normalization untouched, benchmarks recorded despite unmet exit criteria, and dtype flip shipped without resolving float32 parity.
+- Actions this loop:
+  * Added Attempt #12 to `[PERF-PYTORCH-004]` in `docs/fix_plan.md` documenting the audit, with explicit code citations for the outstanding bugs.
+  * No new plan authored; existing `plans/active/perf-pytorch-compile-refactor/plan.md` already tracks P3.0–P3.4 as open.
+- Next steps for Ralph:
+  1. Implement guarded source seeding before `.to(...)`, rewrite polarization to apply Kahn factors per source prior to reduction, and move weight normalization after the per-source sum (Perf plan P3.0–P3.0c).
+  2. Hoist ROI/omega/misset tensors out of the hot path (P3.4) and only then rerun the CPU/CUDA benchmarks for Phase 3.
+  3. Resume DTYPE Phase B3 helper updates and investigate float32 peak regression (store artifacts under `reports/DTYPE-DEFAULT-001/`) once multi-source parity is restored.
