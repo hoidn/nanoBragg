@@ -1,7 +1,7 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-01 (ralph loop - test suite health verification and flaky test analysis)
-**Test Suite Status:** ✅ Healthy - 489 passed, 117 skipped, 2 xfailed, ~175s runtime
+**Last Updated:** 2025-10-01 (ralph loop - test suite health verification)
+**Test Suite Status:** ✅ Healthy - 489 passed, 117 skipped, 2 xfailed, 2 failed (environment-dependent), 175s runtime
 **Environment-Dependent Tests:** 2 tests (test_at_parallel_026::test_triclinic_absolute_peak_position_vs_c, test_at_tools_001::test_script_integration) marked `@pytest.mark.requires_c_binary` fail in full suite without NB_C_BIN but pass individually - expected behavior for optional C-parity validation
 **Active Focus:**
 - Core test suite stabilized at 489 passing tests across all acceptance test categories
