@@ -23,7 +23,7 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 os.environ["NANOBRAGG_DISABLE_COMPILE"] = "1"
 
 # Import the core components
-from nanobrag_torch.config import CrystalConfig
+from nanobrag_torch.config import CrystalConfig, DetectorConfig
 from nanobrag_torch.models.crystal import Crystal
 from nanobrag_torch.models.detector import Detector
 from nanobrag_torch.simulator import Simulator
@@ -70,7 +70,14 @@ class GradientTestHelper:
             crystal = Crystal(config=config, device=device, dtype=dtype)
 
             # Create minimal detector (hard-coded geometry)
-            detector = Detector(device=device, dtype=dtype)
+            # Use tiny 8x8 detector for fast gradcheck evaluation
+            detector_config = DetectorConfig(
+                spixels=8,
+                fpixels=8,
+                pixel_size_mm=0.1,
+                distance_mm=100.0,
+            )
+            detector = Detector(config=detector_config, device=device, dtype=dtype)
 
             # Create simulator
             simulator = Simulator(
@@ -292,7 +299,14 @@ class TestAdvancedGradients:
 
             # Create objects
             crystal = Crystal(config=config, device=device, dtype=dtype)
-            detector = Detector(device=device, dtype=dtype)
+            # Use tiny 8x8 detector for fast gradcheck evaluation
+            detector_config = DetectorConfig(
+                spixels=8,
+                fpixels=8,
+                pixel_size_mm=0.1,
+                distance_mm=100.0,
+            )
+            detector = Detector(config=detector_config, device=device, dtype=dtype)
 
             # Run simulation
             simulator = Simulator(
@@ -361,7 +375,14 @@ class TestAdvancedGradients:
 
             # Create objects
             crystal = Crystal(config=config, device=device, dtype=dtype)
-            detector = Detector(device=device, dtype=dtype)
+            # Use tiny 8x8 detector for fast gradcheck evaluation
+            detector_config = DetectorConfig(
+                spixels=8,
+                fpixels=8,
+                pixel_size_mm=0.1,
+                distance_mm=100.0,
+            )
+            detector = Detector(config=detector_config, device=device, dtype=dtype)
 
             # Run simulation
             simulator = Simulator(
@@ -406,11 +427,19 @@ class TestAdvancedGradients:
             mosaic_spread_deg=0.0,
             mosaic_domains=1,
             N_cells=(5, 5, 5),
+            default_F=100.0,  # Ensure nonzero signal
         )
 
         # Create objects
         crystal = Crystal(config=config, device=device, dtype=dtype)
-        detector = Detector(device=device, dtype=dtype)
+        # Use 32x32 detector for gradient flow test (not gradcheck, so can be larger)
+        detector_config = DetectorConfig(
+            spixels=32,
+            fpixels=32,
+            pixel_size_mm=0.1,
+            distance_mm=100.0,
+        )
+        detector = Detector(config=detector_config, device=device, dtype=dtype)
 
         # Run simulation
         simulator = Simulator(
@@ -607,7 +636,14 @@ class TestPropertyBasedGradients:
 
                 # Create objects
                 crystal = Crystal(config=config, device=device, dtype=dtype)
-                detector = Detector(device=device, dtype=dtype)
+                # Use tiny 8x8 detector for fast gradcheck evaluation
+                detector_config = DetectorConfig(
+                    spixels=8,
+                    fpixels=8,
+                    pixel_size_mm=0.1,
+                    distance_mm=100.0,
+                )
+                detector = Detector(config=detector_config, device=device, dtype=dtype)
 
                 # Run simulation
                 simulator = Simulator(
