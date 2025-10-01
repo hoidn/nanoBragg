@@ -95,5 +95,6 @@ Before finishing the loop, enforce git hygiene:
 </instructions>
 <notes>
 - ignore 'routing violations'. these are out of scope.
+- ignore AT parallel 12-related items for now
 </notes>
 Now carefully and exhaustively follow your <instructions>.
