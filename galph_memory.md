@@ -186,3 +186,19 @@
 - Planning: Added Phase 3 task P3.0 in `plans/active/perf-pytorch-compile-refactor/plan.md` (multi-source defaults) and cross-referenced it in `docs/fix_plan.md` so Ralph must fix defaults before benchmarking.
 - Coin flip (heads): Reviewed commits `78be581`, `51110d4`, `cb6a761`, `a661afc`; GPU neutrality fix still leaves incident-beam tensors CPU-bound, benchmark tooling remains broken, and multi-source crash persists.
 - Next for Ralph: Execute AT-012 Plan Phase A/B (esp. dtype experiment), implement PERF P3.0 alongside benchmark fixes, and address torch.compile rewrap/device-neutrality backlog before new perf claims.
+
+## 2025-10-02 (galph loop Z)
+- Sync: `git pull --rebase` completed cleanly; no stash needed.
+- Findings vs goals:
+  * Performance: `src/nanobrag_torch/simulator.py:786-804` applies polarization after the multi-source sum using `self.incident_beam_direction`, so divergent beams never get per-source Kahn weighting; this breaks AT-SRC-001 parity and blocks trustworthy benchmarks.
+  * Stability: same file (`lines 401-414`) still dereferences `beam_config.source_wavelengths` without a fallback; multi-source configs built via CLI helpers continue to crash until defaults redirect to `wavelength_A`.
+  * Peak-match initiative stagnates—`plans/active/at-parallel-012-peakmatch/plan.md` remains untouched (Phase A checklist all [ ]), so no new artifacts exist to drive the >95% threshold fix.
+  * Tooling: `benchmark_detailed.py` issues logged earlier remain; perf plan must still harden CLI + totals before fresh numbers mean anything.
+  * Reminder: accidentally launched Python without `KMP_DUPLICATE_LIB_OK` during a quick tensor truthiness check—error reproduced, reran with env set; worth reinforcing to Ralph.
+- Actions:
+  * Updated `plans/active/perf-pytorch-compile-refactor/plan.md` (Phase 3) with task P3.0b to fix per-source polarization/weighting semantics and noted issue in discovered-issues list.
+  * Refreshed `docs/fix_plan.md` `[PERF-PYTORCH-004]` Observations/Next Actions to call out P3.0b alongside defaults/benchmark tasks.
+  * Committed and pushed `SUPERVISOR: PERF plan multi-source guard - tests: not run` on `feature/spec-based`.
+- Coin flip: tails → no commit review this loop.
+- Guidance for Ralph next: 1) Execute PERF Plan P3.0 and new P3.0b before re-running cache/benchmark scripts (capture logs under `reports/benchmarks/<date>-perf-summary/`); 2) Start AT-012 Plan Phase A (baseline artifacts + float32 comparison) so we can move on to divergence tracing; 3) Fix `benchmark_detailed.py` aggregation (P3.1) immediately after the multi-source fixes so performance evidence is usable.
+- Repo state: clean after push.
