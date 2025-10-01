@@ -134,6 +134,7 @@
   * Close out Phase B by executing task B6: run ten cold-process warm benchmarks, record cache/state metadata, and reconcile the new slowdown reported in reports/benchmarks/20251001-025148/ against the 1.11× runs from reports/benchmarks/20251001-014819-measurement-reconciliation/.
   * Document the weighted-source semantic gap by diffing PyTorch vs C accumulation (C ignores weights); produce a short decision note under reports/benchmarks/<stamp>-weighted-source-parity/ feeding plan task C5 before optimisation work.
   * After the evidence above lands, proceed with Phase C experiments starting with C1 (compile disabled) and C2 (single-stage reduction) to identify what still keeps the warmed CPU path slower than C.
+  * Implement plan task B7 so benchmark logs record the actual compile mode; rerun the 4096² regression command both compiled and eager to populate reports/benchmarks/<stamp>-env-toggle-fix/.
 - Attempts History:
   * [2025-10-01] Attempt #4 — Result: success (Phase 0/1 complete). Refactored to pure function + hoisted guard tensors; torch.compile caching delivers ≥37× warm/cold speedup.
     Metrics: CPU float64 warm/cold 37.09×; CPU float32 1485.90×; CUDA float32 1256.03×; warm setup <50 ms.

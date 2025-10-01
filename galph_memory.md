@@ -822,3 +822,10 @@ Follow-ups for Ralph:
 - Logged Attempt #34 under `[PERF-PYTORCH-004]` in `docs/fix_plan.md` to document the regression dataset, env pollution risk, and required follow-ups (patch harness, rerun cold-process study, reconciliation memo).
 - Commit review (last 10): feature commit `0e3054c` adds Tier 2 gradcheck coverage (healthy); `73dcb96` and `1e23ba2` generate extensive benchmark artifacts but do not yet reconcile the 0.30 vs 0.82 warm measurements—evidence inconsistency triggered the above reopen. Supervisor commits just update ledger files.
 - Action items for Ralph: (1) Execute supervisor guard plan Phase A before further script edits; `supervisor.sh` still loops 40× without timeout guard. (2) Implement Plan B7 and rerun cold-process B6 study capturing compile mode & cache state. (3) Produce reconciliation memo contrasting 025148 vs new roll-up vs 030128 and update fix_plan/plan accordingly. (4) Begin Phase C experiments only after reproducibility is resolved.
+
+## 2025-10-01 03:28 (galph loop)
+- Coin toss = tails so skipped historical audit per Step 2, but reviewed recent commits (last new engineer change is 0e3054c gradcheck suite; no perf progress yet).
+- Reconfirmed 4096² warm regression in `reports/benchmarks/20251001-025148/` (PyTorch warm 1.77 s vs C 0.53 s, speedup≈0.30 despite `cache_hit_warm=true`).
+- Updated PERF plan B7 to require NB_DISABLE_COMPILE push/pop, compile-mode metadata, and reproduction logs; mirrored the change in fix_plan immediate actions.
+- Open supervisor automation guard remains untouched (supervisor.sh still loops 40×). Plan Phase A (reports snapshot + fix_plan attempt) still outstanding.
+- Follow-ups for Ralph: (1) Run supervisor guard plan Phase A A1–A3 immediately; (2) Execute PERF plan B6 reproducibility study with ten cold interpreters and reconcile vs 014819 dataset; (3) After B6, implement plan B7 env-toggle fix and capture compiled vs eager artifacts under `reports/benchmarks/<stamp>-env-toggle-fix/`; (4) Draft weighted-source parity memo feeding plan task C5.
