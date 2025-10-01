@@ -1613,17 +1613,154 @@ class TestTier1TranslationCorrectness:
 class TestTier2GradientCorrectness:
     """Tier 2: Gradient correctness tests."""
 
-    @pytest.mark.skip(reason="Requires implementation of differentiable parameters")
     def test_gradcheck_crystal_params(self):
-        """Test gradients for crystal parameters using torch.autograd.gradcheck."""
-        # TODO: Implement gradient checking for crystal parameters
-        pass
+        """Test gradients for crystal parameters using torch.autograd.gradcheck.
 
-    @pytest.mark.skip(reason="Requires implementation of differentiable parameters")
+        Per testing_strategy.md §4.1, the following crystal parameters must pass gradcheck:
+        - cell_a, cell_b, cell_c (unit cell dimensions)
+        - cell_alpha, cell_beta, cell_gamma (unit cell angles)
+
+        This test verifies that all six unit cell parameters maintain computation graph
+        connectivity and produce numerically correct gradients suitable for optimization.
+        """
+        import os
+        os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
+        device = torch.device("cpu")
+        dtype = torch.float64  # Use float64 for gradient checking per arch.md §15
+
+        def create_crystal_loss_function(param_name):
+            """Create a scalar loss function for a specific crystal parameter."""
+            def loss_fn(param_value):
+                # Build config with the parameter under test
+                config_kwargs = {
+                    "cell_a": 100.0,
+                    "cell_b": 100.0,
+                    "cell_c": 100.0,
+                    "cell_alpha": 89.0,  # Avoid exact 90° stationary points
+                    "cell_beta": 89.0,
+                    "cell_gamma": 89.0,
+                    "N_cells": [5, 5, 5],
+                    "mosaic_spread_deg": 0.0,
+                    "mosaic_domains": 1,
+                }
+                config_kwargs[param_name] = param_value
+
+                config = CrystalConfig(**config_kwargs)
+                crystal = Crystal(config=config, device=device, dtype=dtype)
+
+                # Return sum of reciprocal vectors for gradient testing
+                return (crystal.a_star.sum() + crystal.b_star.sum() + crystal.c_star.sum())
+
+            return loss_fn
+
+        # Test each of the six mandatory crystal parameters
+        test_cases = [
+            ("cell_a", 100.0),
+            ("cell_b", 100.0),
+            ("cell_c", 100.0),
+            ("cell_alpha", 89.0),
+            ("cell_beta", 89.0),
+            ("cell_gamma", 120.0),  # Include non-orthogonal case
+        ]
+
+        for param_name, test_value in test_cases:
+            param_tensor = torch.tensor(test_value, dtype=dtype, requires_grad=True)
+            loss_fn = create_crystal_loss_function(param_name)
+
+            # Run gradcheck with tolerances per arch.md §15
+            gradcheck_result = torch.autograd.gradcheck(
+                loss_fn,
+                (param_tensor,),
+                eps=1e-6,
+                atol=1e-5,
+                rtol=0.05,
+                raise_exception=True
+            )
+
+            assert gradcheck_result, f"Gradient check failed for {param_name}"
+
+        print("✅ All crystal parameter gradient checks PASSED")
+
     def test_gradcheck_detector_params(self):
-        """Test gradients for detector parameters using torch.autograd.gradcheck."""
-        # TODO: Implement gradient checking for detector parameters
-        pass
+        """Test gradients for detector parameters using torch.autograd.gradcheck.
+
+        Per testing_strategy.md §4.1, the following detector parameters must pass gradcheck:
+        - distance_mm (detector distance from sample)
+        - beam_center_f, beam_center_s (beam center position)
+
+        This test verifies that detector geometry parameters maintain computation graph
+        connectivity and produce numerically correct gradients suitable for optimization.
+        """
+        import os
+        os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
+        device = torch.device("cpu")
+        dtype = torch.float64  # Use float64 for gradient checking per arch.md §15
+
+        # Test distance_mm parameter
+        def distance_loss_fn(distance_mm):
+            """Loss function for detector distance parameter."""
+            from nanobrag_torch.config import DetectorConfig, DetectorConvention, DetectorPivot
+
+            detector_config = DetectorConfig(
+                distance_mm=distance_mm,
+                pixel_size_mm=0.1,
+                spixels=64,  # Small detector for speed
+                fpixels=64,
+                beam_center_s=3.2,
+                beam_center_f=3.2,
+                detector_convention=DetectorConvention.MOSFLM,
+                detector_pivot=DetectorPivot.BEAM,
+            )
+
+            detector = Detector(config=detector_config, device=device, dtype=dtype)
+
+            # Return sum of pix0 vector for gradient testing
+            return detector.pix0_vector.sum()
+
+        distance_mm = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+        assert torch.autograd.gradcheck(
+            distance_loss_fn,
+            (distance_mm,),
+            eps=1e-6,
+            atol=1e-5,
+            rtol=0.05,
+            raise_exception=True
+        ), "Gradient check failed for distance_mm"
+
+        # Test beam_center_f parameter
+        def beam_center_f_loss_fn(beam_center_f):
+            """Loss function for beam center fast axis parameter."""
+            from nanobrag_torch.config import DetectorConfig, DetectorConvention, DetectorPivot
+
+            detector_config = DetectorConfig(
+                distance_mm=100.0,
+                pixel_size_mm=0.1,
+                spixels=64,
+                fpixels=64,
+                beam_center_s=3.2,
+                beam_center_f=beam_center_f,
+                detector_convention=DetectorConvention.MOSFLM,
+                detector_pivot=DetectorPivot.BEAM,
+            )
+
+            detector = Detector(config=detector_config, device=device, dtype=dtype)
+
+            # Return sum of pix0 vector for gradient testing
+            return detector.pix0_vector.sum()
+
+        beam_center_f = torch.tensor(3.2, dtype=dtype, requires_grad=True)
+        assert torch.autograd.gradcheck(
+            beam_center_f_loss_fn,
+            (beam_center_f,),
+            eps=1e-6,
+            atol=1e-5,
+            rtol=0.05,
+            raise_exception=True
+        ), "Gradient check failed for beam_center_f"
+
+        print("✅ All detector parameter gradient checks PASSED")
 
     def test_gradcheck_phi_rotation(self):
         """Test gradients for phi rotation parameter using torch.autograd.gradcheck."""
