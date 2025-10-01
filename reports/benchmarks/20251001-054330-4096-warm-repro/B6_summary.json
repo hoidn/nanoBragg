@@ -1,0 +1,22 @@
+{
+  "timestamp": "20251001-054330",
+  "n_runs": 10,
+  "mean_speedup": 0.8279809791242736,
+  "std_speedup": 0.030663417812804912,
+  "cv_percent": 3.70339640473825,
+  "speedup_range": [
+    0.7916560548177793,
+    0.8965945041611826
+  ],
+  "mean_pytorch_warm_s": 0.6176763057708741,
+  "std_pytorch_warm_s": 0.017778477431521257,
+  "mean_c_warm_s": 0.5110696315765381,
+  "std_c_warm_s": 0.012888010725828927,
+  "slowdown_factor": 1.2077572132848569,
+  "compile_modes": [
+    "compiled"
+  ],
+  "cache_hits": 10,
+  "meets_target": false,
+  "target_speedup": 0.83
+}
