@@ -508,3 +508,19 @@
   * `loop.sh` still routes through `prompts/main.md` in a `{1..40}` loop with unconditional `git push`, confirming ROUTING-LOOP-001 Phase A evidence is overdue.
 - Plan maintenance: updated `plans/active/at-parallel-012-plateau-regression/plan.md` Phase B3 guidance to require fixing the validation harness and Phase C1/C2 to prioritise a single-stage reduction that flattens `(sources × phi × mosaic × oversample²)` before falling back to post-processing. No new plans opened.
 - Follow-ups for Ralph: (1) Patch the diagnostic script or otherwise ensure Phase B3 experiments actually exercise dtype permutations, then execute the listed single-stage/compensated-sum trials and log under `reports/2025-10-AT012-regression/phase_b3_experiments.md`; (2) Produce the unequal-weight parity evidence for PERF P3.0c (pytest + nb-compare) and decide whether to align with C or change weighting semantics; (3) Capture the routing audit report (`reports/routing/<date>-loop-audit.txt`) before any further automation; (4) After parity tasks, revisit CPU 1024² benchmark deficit in the Phase 3 memo.
+
+## 2025-09-30 (galph loop BE)
+- Sync clean (git pull --rebase already up to date).
+- Deep analysis (long-term goals):
+  * AT-012 plateau workflow still blocked — Phase B3 has no artifacts because `scripts/validate_single_stage_reduction.py` silently hard-codes float32; plateau histograms under `reports/2025-10-AT012-regression/` are absent.
+  * PERF-PYTORCH-004 Phase 3 remains unproven: simulator continues to divide by `n_sources` after applying optional weights (`src/nanobrag_torch/simulator.py:815-823`), so unequal-weight runs average intensities instead of matching the C sum; no weighted-source parity evidence exists and CPU 1024² remains 2.43× slower.
+  * ROUTING-LOOP-001 still pending — no audit file under `reports/routing/`, automation keeps looping `prompts/main.md` with unconditional pushes.
+- Fix-plan updates: logged AT-012 Attempt #12 (documenting broken Phase B3 harness) and PERF Attempt #21 (reaffirming normalization bug + missing parity artifacts); kept plan cross-refs intact.
+- Feedback for Ralph (review of recent commits):
+  1. Commit e8742d7 prematurely declared PERF Phase 3 complete without weighted-source evidence; numbers were gathered before fixing normalization, so benchmarks must be rerun after P3.0c.
+  2. `scripts/validate_single_stage_reduction.py` (from f2dddb8) never honourred its `dtype` parameter, so Phase B3 conclusions about float64 vs float32 are invalid.
+  3. No progress on routing audit despite repeated reminders.
+- Next steps to hand off:
+  1. Patch the Phase B3 script to pass `dtype`/`device` through `Simulator`, rerun experiments, and archive results per plan tasks A3/B3.
+  2. Execute PERF P3.0c exactly as specified (two-source unequal weights, pytest + nb-compare artifacts) and adjust normalization to match the chosen semantics before re-running CPU/CUDA benchmarks.
+  3. Produce `reports/routing/<date>-loop-audit.txt` and update `[ROUTING-LOOP-001]` attempts before the automation runs again.
