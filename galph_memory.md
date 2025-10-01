@@ -132,6 +132,7 @@
 - Tree left clean; no commits this loop.
 
 ## 2025-10-02 (galph loop T)
+- Local dirty: prompts/update_fix_plan.md predates this loop; left untouched per policy.
 - Deep scan for long-term goals flagged multi-source broadcast bug (src/nanobrag_torch/simulator.py:109-135) still raising expand shape errors when sources>1; perf plan Phase 2 remains blocked on this.
 - Reconfirmed per-run ROI mask fabrication and mask dtype casts (src/nanobrag_torch/simulator.py:586-602, 950-979) likely causing the missing peaks; noted constant tensor factories in __init__ (src/nanobrag_torch/simulator.py:358-395) and misset tensor rebuilds (src/nanobrag_torch/models/crystal.py:565-608).
 - Benchmark tooling gaps persist: investigations script still CPU-only (scripts/benchmarks/investigate_compile_cache.py) and detailed benchmark divides by zero on 0s warm setup (scripts/benchmarks/benchmark_detailed.py:249-287).
