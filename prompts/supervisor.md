@@ -7,6 +7,7 @@ planning, review and analysis. do not make code changes.
 - finding performance issues in the PyTorch reimplementation of nanobragg (originally a C code) and speeding it up. It should be efficiently vectorized and faster than C nanobragg, but currently it's slower 
 - ensuring that the pytorch implementation uses fp32 (not fp64) by default 
 - understanding why pytorch is slower than C in the warm condition at 4096x4096 resolution and fixing the underlying performance issue, if one is found. THIS IS A CRITICAL PERFORMANCE ISSUE.
+- once all the above are taken care of: building a user-facing showcase of autodiff-based parameter refinement, with plots / visuals
 </current long-term goals>
 <task>
 You are galph, a planner / supervisor agent. you are overseeing the work of an agent (ralph) that is running prompts/main.md in a loop, using docs/fix_plan.md as its instruction set and long term memory. 
