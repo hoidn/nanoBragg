@@ -102,6 +102,10 @@ def compute_physics_for_position(
     pixel_magnitudes = torch.sqrt(pixel_squared_sum)
     diffracted_beam_unit = pixel_coords_angstroms / pixel_magnitudes
 
+    # Determine spatial dimensionality from original pixel_coords BEFORE multi-source expansion
+    # This tells us if we have (S, F, 3) or (batch, 3) input
+    original_n_dims = pixel_coords_angstroms.dim()  # 2 for (batch, 3), 3 for (S, F, 3)
+
     # PERF-PYTORCH-004 Phase 1: No .to() call needed - incident_beam_direction is already on correct device
     # The caller (run() method) ensures source_directions are moved to self.device before calling this function
     # This avoids graph breaks in torch.compile
@@ -112,10 +116,16 @@ def compute_physics_for_position(
         # incident_beam_direction: (n_sources, 3)
         # Need to add source dimension to diffracted_beam_unit
 
-        # Add source dimension: (S, F, 3) -> (1, S, F, 3)
+        # Add source dimension: (S, F, 3) -> (1, S, F, 3) or (batch, 3) -> (1, batch, 3)
         diffracted_expanded = diffracted_beam_unit.unsqueeze(0)
-        # Expand incident: (n_sources, 3) -> (n_sources, 1, 1, 3)
-        incident_expanded = incident_beam_direction.view(n_sources, 1, 1, 3)
+
+        # Handle both 2D (batch, 3) and 3D (S, F, 3) cases for incident beam expansion
+        if original_n_dims == 2:
+            # (batch, 3) case: expand incident to (n_sources, 1, 3)
+            incident_expanded = incident_beam_direction.view(n_sources, 1, 3)
+        else:
+            # (S, F, 3) case: expand incident to (n_sources, 1, 1, 3)
+            incident_expanded = incident_beam_direction.view(n_sources, 1, 1, 3)
 
         # Expand to match diffracted shape
         incident_beam_unit = incident_expanded.expand(n_sources, *diffracted_beam_unit.shape)
@@ -126,9 +136,14 @@ def compute_physics_for_position(
 
     # Prepare wavelength for broadcasting
     if is_multi_source:
-        # wavelength: (n_sources,) -> (n_sources, 1, 1, 1) for 4D broadcast (n_sources, S, F, 3)
+        # wavelength: (n_sources,) -> broadcast shape matching diffracted_beam_unit
         if wavelength.dim() == 1:
-            wavelength = wavelength.view(n_sources, 1, 1, 1)
+            if original_n_dims == 2:
+                # (batch, 3) case: (n_sources,) -> (n_sources, 1, 1)
+                wavelength = wavelength.view(n_sources, 1, 1)
+            else:
+                # (S, F, 3) case: (n_sources,) -> (n_sources, 1, 1, 1)
+                wavelength = wavelength.view(n_sources, 1, 1, 1)
 
     # Scattering vector using crystallographic convention
     scattering_vector = (diffracted_beam_unit - incident_beam_unit) / wavelength
@@ -141,17 +156,28 @@ def compute_physics_for_position(
         dmin_mask = (stol > 0) & (stol > stol_threshold)
 
     # Calculate Miller indices
-    # scattering_vector shape: (S, F, 3) or (n_sources, S, F, 3)
+    # scattering_vector shape: (S, F, 3) single source, or
+    #                          (n_sources, S, F, 3) or (n_sources, batch, 3) multi-source
     # Need to add phi and mosaic dimensions for broadcasting
     if is_multi_source:
         # Multi-source: (n_sources, S, F, 3) -> (n_sources, S, F, 1, 1, 3)
+        #            or (n_sources, batch, 3) -> (n_sources, batch, 1, 1, 3)
         scattering_broadcast = scattering_vector.unsqueeze(-2).unsqueeze(-2)
-        # rot vectors: (N_phi, N_mos, 3) -> (1, 1, 1, N_phi, N_mos, 3)
-        rot_a_broadcast = rot_a.unsqueeze(0).unsqueeze(0).unsqueeze(0)
-        rot_b_broadcast = rot_b.unsqueeze(0).unsqueeze(0).unsqueeze(0)
-        rot_c_broadcast = rot_c.unsqueeze(0).unsqueeze(0).unsqueeze(0)
+        # rot vectors: (N_phi, N_mos, 3) -> (1, 1, 1, N_phi, N_mos, 3) for (S, F) case
+        #                                or (1, 1, N_phi, N_mos, 3) for batch case
+        # Number of leading dims to add depends on ORIGINAL pixel_coords shape
+        if original_n_dims == 2:
+            # batch case: add 2 leading dims
+            rot_a_broadcast = rot_a.unsqueeze(0).unsqueeze(0)
+            rot_b_broadcast = rot_b.unsqueeze(0).unsqueeze(0)
+            rot_c_broadcast = rot_c.unsqueeze(0).unsqueeze(0)
+        else:
+            # (S, F) case: add 3 leading dims
+            rot_a_broadcast = rot_a.unsqueeze(0).unsqueeze(0).unsqueeze(0)
+            rot_b_broadcast = rot_b.unsqueeze(0).unsqueeze(0).unsqueeze(0)
+            rot_c_broadcast = rot_c.unsqueeze(0).unsqueeze(0).unsqueeze(0)
     else:
-        # Single source: (S, F, 3) -> (S, F, 1, 1, 3)
+        # Single source: (S, F, 3) -> (S, F, 1, 1, 3) or (batch, 3) -> (batch, 1, 1, 3)
         scattering_broadcast = scattering_vector.unsqueeze(-2).unsqueeze(-2)
         # rot vectors: (N_phi, N_mos, 3) -> (1, 1, N_phi, N_mos, 3)
         rot_a_broadcast = rot_a.unsqueeze(0).unsqueeze(0)
@@ -253,9 +279,9 @@ def compute_physics_for_position(
         intensity = intensity * keep_mask.to(intensity.dtype)
 
     # Sum over phi and mosaic dimensions
-    # intensity shape before sum: (S, F, N_phi, N_mos) or (n_sources, S, F, N_phi, N_mos)
+    # intensity shape before sum: (S, F, N_phi, N_mos) or (n_sources, S, F, N_phi, N_mos) or (n_sources, batch, N_phi, N_mos)
     intensity = torch.sum(intensity, dim=(-2, -1))
-    # After sum: (S, F) or (n_sources, S, F)
+    # After sum: (S, F) or (n_sources, S, F) or (n_sources, batch)
 
     # Handle multi-source weighted accumulation
     if is_multi_source:
@@ -398,8 +424,9 @@ class Simulator:
 
         # PERF-PYTORCH-004 P1.2: Pre-normalize source tensors to avoid repeated .to() calls in run()
         # Move source direction/wavelength/weight tensors to correct device/dtype once during init
-        if (self.beam_config.source_directions is not None and
-            len(self.beam_config.source_directions) > 0):
+        _has_sources = (self.beam_config.source_directions is not None and
+                       len(self.beam_config.source_directions) > 0)
+        if _has_sources:
             self._source_directions = self.beam_config.source_directions.to(device=self.device, dtype=self.dtype)
             self._source_wavelengths = self.beam_config.source_wavelengths.to(device=self.device, dtype=self.dtype)  # meters
             self._source_wavelengths_A = self._source_wavelengths * 1e10  # Convert to Angstroms once
