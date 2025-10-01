@@ -10,7 +10,27 @@
 - Repeatedly documented routing violations from Ralph and emphasized restoring Core Rule #13 metric duality after WIP commit 058986f swapped `V_actual` for formula volume.
 - Noted that `_compute_physics_for_position` still recompiles each Simulator and that benchmarks in `reports/benchmarks/20250930-004916/` show ≥200× slowdown vs C for small detectors.
 
-## 2025-09-30 (galph loop current)
+## 2025-09-30 (ralph debugging loop — AT-012 float32 regression)
+- **Context**: AT-PARALLEL-012 test_simple_cubic_correlation failing (43/50 peaks matched, need ≥95%) after DTYPE-DEFAULT-001 (commit 8c2ceb4) switched simulator to native float32.
+- **Investigation**:
+  * Reproduced: 43/50 peaks matched (86%), corr≈1.0 (perfect physics) ✅
+  * Parity matrix test: PASSES perfectly ✅ (live C↔Py comparison with current float32)
+  * **Root cause identified**: PyTorch float32 produces 7× more unique values (4901 vs C's 669) in hot pixels, fragmenting intensity plateaus. Peak detection algorithm (scipy.ndimage.maximum_filter) is sensitive to plateau structure.
+  * Parallel comparison: C float32 beam center (20×20 ROI) has 91 unique values; PyTorch has 331 (3.6× fragmentation). Max absolute diff tiny (0.0017).
+  * **First Divergence**: Numerical accumulation patterns differ (likely FMA, compiler opts, vectorized accumulation order, or torch.compile kernel fusion) → perfect correlation but incompatible plateau structure.
+- **Changes committed (56c46b2)**:
+  * Fixed `load_golden_float_image()` to return `dtype=np.float32` (was implicitly float64, adding artificial precision)
+  * Reopened AT-012-PEAKMATCH in fix_plan.md (status: in_progress)
+  * Added Attempt #5 entry with root cause, metrics, first divergence, and 4 recommended next actions
+- **Key Finding**: This is NOT a physics bug (correlation ≥0.9995 ✅, parity PASSES ✅). It's a numerical precision issue where PyTorch's float32 accumulation creates different rounding patterns than C's float32, breaking a peak detection algorithm that assumes stable plateaus.
+- **Recommended Next Actions**:
+  * Option A: Regenerate golden data with PyTorch float32 output (accepts current numerical behavior)
+  * Option B: Force float64 for AT-012 only (add dtype override to configs) ← **RECOMMENDED** for expedience
+  * Option C: Investigate why PyTorch float32 fragments plateaus 7× more (time-intensive)
+  * Option D: Adjust peak detection to cluster nearby maxima (make algorithm robust to fragmentation)
+- **Observations**: Golden data was regenerated fresh today (2025-09-30 01:56) with current C binary. Live parity test uses same binary and passes perfectly. Regression is specific to pre-generated golden data comparison, not C↔Py equivalence.
+
+## 2025-09-30 (galph loop earlier)
 - `git pull --rebase` blocked by long-standing dirty artifacts (`parallel_test_visuals/*`, `.claude`, `trash/test_parity_matrix.py`); left untouched per policy.
 - Deep analysis vs long-term goals:
   * AT-012: commit 7f6c4b2 introduced cross-product rescaling but still fails triclinic parity (corr 0.9658) and breaks Core Rule #13 by sticking with formula `V_star`; tests relaxed to rtol=3e-4.
