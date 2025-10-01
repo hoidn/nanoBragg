@@ -129,10 +129,10 @@
   * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/investigate_compile_cache.py --instances 5 --size 256 --devices cpu,cuda --dtypes float64,float32 --sources 1`
   * Shapes/ROI: 256²–1024² detectors, pixel 0.1 mm, oversample 1, full-frame ROI
 - First Divergence (if known): Multi-source intensity still reuses the primary incident vector for polarization and recomputes detector masks every run, leaving batched sources under-weighted vs C (src/nanobrag_torch/simulator.py:681-916)
-- Immediate Next Actions (2025-10-01):
-  * Finish PERF plan tasks B3–B5: capture the C-side profile (or explain infeasibility), summarise PyTorch hotspots, and run the eager-mode trace.
-  * Re-run `benchmark_detailed.py` with both 1-iteration and 5-iteration warm loops so the 1.25× vs 3.55× gap is documented under `reports/benchmarks/20251001-010128/` before claiming improvement.
-  * Keep AT-012 Phase C3/C4 and DTYPE Phase B3 in lockstep—no new performance experiments until plateau validation artifacts and the dtype helper audit (`reports/DTYPE-DEFAULT-001/phase_b3_audit.md`) exist.
+- Immediate Next Actions (2025-10-13):
+  * Execute remaining Phase B diagnostics: complete task B3 by capturing a reference C profile (or documenting why it cannot run) and finish task B5 by recording the eager-mode trace that isolates structure-factor gathers; stash both under `reports/profiling/<date>-4096-warm/` and link them in the plan.
+  * Reconfirm the 1.1× warm gap after a cold start by rerunning `benchmark_detailed.py` for 1-iteration and 5-iteration sweeps at 4096² in a fresh process (cleared compile cache). Store outputs under a new `reports/benchmarks/<date>-4096-warm-rebaseline/` directory so the reconciliation doesn’t hinge on cached state.
+  * Once the evidence above is landed, move into Phase C by running C1 (compile disabled) and C2 (single-stage reduction experiment) to test whether compile cache effects or reduction ordering caused the original 3.55× slowdown.
 - Attempts History:
   * [2025-10-01] Attempt #4 — Result: success (Phase 0/1 complete). Refactored to pure function + hoisted guard tensors; torch.compile caching delivers ≥37× warm/cold speedup.
     Metrics: CPU float64 warm/cold 37.09×; CPU float32 1485.90×; CUDA float32 1256.03×; warm setup <50 ms.
