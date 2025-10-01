@@ -81,8 +81,8 @@
   * Ready to resume PERF-PYTORCH-004 Phase 2 work if needed
   * No blocking issues remain
 
-<<<<<<< HEAD
 ## [AT-PARALLEL-012-PEAKMATCH] Restore 95% Peak Match Criterion (2025-10-02)
+- Plan: See `plans/active/at-parallel-012-peakmatch/plan.md` for phased breakdown.
 - Spec/AT: AT-PARALLEL-012 Reference Pattern Correlation (simple_cubic peak matching requirement)
 - Priority: High (acceptance test currently weaker than spec)
 - Status: pending
