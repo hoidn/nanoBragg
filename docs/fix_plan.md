@@ -1,7 +1,8 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-01 (ralph loop - AT-SRC-001 float32 dtype compatibility)
+**Last Updated:** 2025-10-01 (ralph loop - TEST-MOSFLM-OFFSET test expectations)
 **Active Focus:**
+- TEST-MOSFLM-OFFSET: ✅ Complete. Fixed 3 test failures (test_denzo_beam_center_mapping, test_beam_pivot_keeps_beam_indices_and_alignment, test_sample_pivot_moves_beam_indices_with_twotheta) with incorrect expectations after AT-GEO-001 fix.
 - AT-SRC-001-DTYPE: ✅ Complete. Fixed dtype mismatch in AT-SRC-001 tests after DTYPE-DEFAULT-001 migration to float32.
 - AT-GEO-001-MOSFLM-OFFSET: ✅ Complete. Fixed MOSFLM +0.5 pixel offset to be applied consistently for all beam centers (auto-calculated and explicitly provided).
 - AT-CLI-006-SCALING: ✅ Complete. Fixed float32 rounding error in SMV scaling that caused off-by-one errors at precision boundaries.
@@ -20,6 +21,7 @@
 ## Index
 | ID | Title | Priority | Status |
 | --- | --- | --- | --- |
+| [TEST-MOSFLM-OFFSET](#test-mosflm-offset-fix-test-expectations-after-at-geo-001-mosflm-offset-refactoring) | Fix test expectations after AT-GEO-001 MOSFLM offset refactoring | High | done |
 | [AT-SRC-001-DTYPE](#at-src-001-dtype-fix-float32-dtype-compatibility) | Fix float32 dtype compatibility in AT-SRC-001 tests | Medium | done |
 | [AT-GEO-001-MOSFLM-OFFSET](#at-geo-001-mosflm-offset-fix-mosflm-05-pixel-offset-application) | Fix MOSFLM +0.5 pixel offset application | High | done |
 | [AT-CLI-006-SCALING](#at-cli-006-scaling-fix-float32-rounding-in-smv-scaling) | Fix float32 rounding in SMV scaling | High | done |
@@ -69,6 +71,33 @@
   * AT-PARALLEL-001: "Peak position accuracy: ±2 pixels from center" (✅ satisfied)
   * AT-PARALLEL-001: "Cross-size correlation: >0.95" (✅ satisfied)
   * All 8 AT-PARALLEL-001 tests pass (✅ 8/8 passed in 19.48s)
+
+---
+
+## [TEST-MOSFLM-OFFSET] Fix test expectations after AT-GEO-001 MOSFLM offset refactoring
+- Spec/AT: AT-GEO-001 (MOSFLM beam-center mapping), test infrastructure hygiene
+- Priority: High
+- Status: done
+- Owner/Date: ralph/2025-10-01
+- Reproduction (C & PyTorch):
+  * C: n/a (test expectation issue, not implementation bug)
+  * PyTorch: `env NANOBRAGG_DISABLE_COMPILE=1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_detector_conventions.py::TestDetectorConventions::test_denzo_beam_center_mapping tests/test_detector_pivots.py -v`
+  * Shapes/ROI: 1024×1024 detector, pixel 0.1 mm, MOSFLM convention
+- First Divergence (if known): After AT-GEO-001 fix moved MOSFLM +0.5 pixel offset from Detector.__init__ to _calculate_pix0_vector (fix_plan.md lines 110-127), three tests had outdated expectations that beam_center_s/f attributes would include the offset. Per the corrected design, these attributes store user input as-is; the offset is applied only in the pix0 geometry calculation.
+- Attempts History:
+  * [2025-10-01] Attempt #1 — Result: success. Updated test expectations to match AT-GEO-001 implementation.
+    Metrics: 3 tests fixed (test_denzo_beam_center_mapping, test_beam_pivot_keeps_beam_indices_and_alignment, test_sample_pivot_moves_beam_indices_with_twotheta). Full suite: 483 passed (+3 from 480), 119 skipped, 6 failed (down from 9), 2 xfailed. Test time: 143.4s with NANOBRAGG_DISABLE_COMPILE=1.
+    Artifacts:
+      - tests/test_detector_conventions.py lines 104-117 (fixed expected_stored to not include offset)
+      - tests/test_detector_pivots.py lines 40-47 (added expected_beam_idx = beam_center + 0.5)
+      - tests/test_detector_pivots.py lines 76-82 (added expected_beam_idx = beam_center + 0.5)
+    Observations/Hypotheses: The tests were checking that `detector.beam_center_s` equals 512.5 (user input 51.2mm / 0.1mm + 0.5 offset). After AT-GEO-001, this attribute stores 512.0 (user input only), and the offset is applied when computing pix0_vector. The geometry calculation `_beam_indices()` correctly produces 512.5 because it uses pix0_vector. Fix: Tests now expect beam_center_s=512.0 and compute expected_beam_idx=512.5 explicitly when needed.
+    Next Actions: None - issue resolved. All detector geometry tests now pass. Remaining 6 failures are in performance benchmarks (4) and tools (1), plus 1 environment-dependent parallel test.
+- Risks/Assumptions: Tests now explicitly document that MOSFLM +0.5 offset is applied in geometry calculations, not in stored attributes. This clarifies the AT-GEO-001 design decision.
+- Exit Criteria (quote thresholds from spec):
+  * All 3 affected tests pass (✅ 3/3 passed).
+  * No regressions in detector geometry tests (✅ verified - all detector tests passing).
+  * Test suite improves (✅ 480→483 passed, 9→6 failed).
 
 ---
 
