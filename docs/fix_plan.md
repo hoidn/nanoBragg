@@ -1,7 +1,7 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-08 (galph loop AY)
-**Active Focus:** Protect automation assets, finish nanoBragg hygiene cleanup, restore AT-012 peak matches, correct multi-source physics regressions, and capture authoritative performance evidence for PERF-PYTORCH-004 (CPU+CUDA reruns after physics fixes).
+**Last Updated:** 2025-10-08 (galph loop BB)
+**Active Focus:** Protect automation assets, finish nanoBragg hygiene cleanup, restore AT-012 peak matches, reconcile multi-source weighting with C semantics, and convert the new CPU/GPU benchmarking artifacts into a Phase 3 decision for PERF-PYTORCH-004.
 
 ## Index
 | ID | Title | Priority | Status |
@@ -173,6 +173,16 @@
     Artifacts: `reports/benchmarks/20250930-212505/benchmark_results.json` (CPU only); CUDA artifacts missing due to blocker.
     Observations/Hypotheses: CPU warm runs improved significantly vs Attempt #9 but still violate ≤1.5× criterion for larger sizes. CUDA graphs incompatible with reshape views even after `.contiguous()`; need explicit `.clone()` at lines 320-321, 344-347, 858 in `simulator.py`. Partial fix applied (`.contiguous()` added) but error persists because CUDA graphs requires full tensor copy, not just memory layout guarantee.
     Next Actions: (1) Replace `.contiguous()` with `.clone()` in polarization paths and rerun CUDA benchmarks (P3.3). (2) After CUDA data collected, analyze combined CPU+CUDA results and decide P3.5 (proceed to Phase 4 or close out).
+  * [2025-09-30] Attempt #18 — Result: partial (P3.2 rerun complete; 1024² CPU still slow). Re-executed CPU benchmarks after P3.0/P3.0b/P3.4 landed; archived summary under `reports/benchmarks/20250930-perf-summary/cpu/`. Warm runs now show 256² 4.07× faster than C and 512² within tolerance (0.82× slower), but 1024² remains 2.43× slower (0.41× speedup). Cache setup stayed <50 ms (4376–6428× faster). Correlations ≥0.9999999999366 throughout.
+    Metrics: CPU warm timings — 256²: 0.003 s vs C 0.012 s; 512²: 0.025 s vs C 0.020 s; 1024²: 0.099 s vs C 0.041 s. Tests: 43 passed, 1 skipped.
+    Artifacts: `reports/benchmarks/20250930-perf-summary/cpu/P3.2_summary.md`; `reports/benchmarks/20250930-perf-summary/cpu/benchmark_results.json`; log referenced in summary (`/tmp/cpu_benchmark_20250930-213314.log`).
+    Observations/Hypotheses: Small/medium grids improved, but large CPU detector still violates ≤1.5× goal. Need CUDA results plus weighted-source parity before Phase 3 closure. P3.0c remains the gating prerequisite for final benchmarking memo.
+    Next Actions: Run P3.3 CUDA benchmarks once cudagraph blocker is cleared; finish P3.0c weighted-source validation before issuing the Phase 3 decision (P3.5).
+  * [2025-09-30] Attempt #19 — Result: partial (P3.3 CUDA benchmarks captured; weighting unresolved). Added `torch.compiler.cudagraph_mark_step_begin()` in `_compute_physics_for_position` wrapper to fix CUDA graphs aliasing, then collected CUDA benchmarks (`reports/benchmarks/20250930-220739/`, `reports/benchmarks/20250930-220755/`). Warm GPU runs now beat C (256² 1.55×, 512² 1.69×, 1024² 3.33× faster) with cache setup ≤18 ms and correlation ≥0.999999999912. CPU 1024² deficit from Attempt #18 persists.
+    Metrics: CUDA warm timings — 256²: 0.00683 s vs C 0.01061 s (1.55×); 512²: 0.00769 s vs C 0.01298 s (1.69×); 1024²: 0.01211 s vs C 0.04031 s (3.33×). CUDA grad smoke: `distance_mm.grad = -70.37`. Tests: 43 passed, 1 skipped.
+    Artifacts: `reports/benchmarks/20250930-220739/benchmark_results.json`; `reports/benchmarks/20250930-220755/benchmark_results.json`; fix in `src/nanobrag_torch/simulator.py` (commit e617ccb).
+    Observations/Hypotheses: PERF-PYTORCH-005 cudagraph guard clears blocker, but Phase 3 exit still gated by P3.0c weighted-source parity and CPU 1024² slowdown. `BeamConfig.source_weights` docstring still claims weights are ignored—update documentation once parity decision lands. Need nb-compare + pytest artifacts for unequal weights before considering P3.0c closed.
+    Next Actions: Execute P3.0c weighted-source validation (two-source unequal weights, CPU+CUDA, nb-compare + pytest), then revisit CPU 1024² deficit in the Phase 3 memo (P3.5). Update plan table to link new CUDA artifacts once parity evidence is captured.
 - Exit Criteria (quote thresholds from spec):
   * Phase 2 artifacts demonstrating ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (multi-source included) committed.
   * Phase 3 report showing PyTorch warm runs ≤1.5× C runtime for 256²–1024² detectors.
