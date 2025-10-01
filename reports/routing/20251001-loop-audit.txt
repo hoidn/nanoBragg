@@ -1,0 +1,41 @@
+# ROUTING-LOOP-001 Audit Report
+Date: $(date)
+Auditor: ralph (loop BK)
+
+## Current loop.sh State (Violations Found)
+
+### Issue 1: Wrong Prompt
+- **Current:** `cat prompts/main.md`  
+- **Expected:** `cat prompts/debug.md`
+- **Risk:** Main prompt may execute multiple rounds of work instead of focused debugging
+
+### Issue 2: Excessive Iterations
+- **Current:** `for i in {1..40}`
+- **Expected:** Single execution per invocation
+- **Risk:** 40× amplification of any bugs, spam pushes
+
+### Issue 3: Unconditional git push
+- **Current:** `git push || true` inside loop
+- **Expected:** Conditional push after successful work, or manual push
+- **Risk:** Every iteration pushes, even on failures
+
+### Issue 4: No git pull --rebase
+- **Current:** No sync before starting
+- **Expected:** `git pull --rebase` before work begins
+- **Risk:** Working on stale code
+
+## Compliance Summary
+❌ Prompt routing: FAIL (using prompts/main.md instead of prompts/debug.md)
+❌ Loop count: FAIL (40 iterations instead of 1)
+❌ Git hygiene: FAIL (unconditional push inside loop, no rebase)
+
+## Remediation Required
+1. Change prompt to prompts/debug.md
+2. Remove loop or set to single iteration
+3. Add git pull --rebase before work
+4. Make push conditional or manual
+
+## Reference
+- Fix plan: docs/fix_plan.md [ROUTING-LOOP-001]
+- Plan: plans/active/routing-loop-guard/plan.md
+- Protected asset: docs/index.md (loop.sh listed)

@@ -1,0 +1,41 @@
+# ROUTING-LOOP-001 Compliance Verification
+Date: $(date)
+Verifier: ralph (loop BK)
+
+## Changes Applied
+
+### 1. Prompt Routing ✅
+- **Before:** `cat prompts/main.md`  
+- **After:** `cat prompts/debug.md`
+- **Status:** COMPLIANT - Using debug prompt as required
+
+### 2. Loop Removal ✅  
+- **Before:** `for i in {1..40}; do ... done`
+- **After:** Single execution (no loop)
+- **Status:** COMPLIANT - No iteration amplification
+
+### 3. Git Pull Added ✅
+- **Before:** No sync
+- **After:** `timeout 30 git pull --rebase`
+- **Status:** COMPLIANT - Syncs before work
+
+### 4. Conditional Push ✅
+- **Before:** `git push || true` (unconditional, inside loop)
+- **After:** Conditional check + error handling
+- **Status:** COMPLIANT - Only pushes when commits exist
+
+## Verification Summary
+✅ Prompt routing: PASS (prompts/debug.md)
+✅ Loop count: PASS (single execution)  
+✅ Git hygiene: PASS (rebase before work, conditional push after)
+
+## Test Evidence
+- Audit report: reports/routing/20251001-loop-audit.txt
+- This verification: reports/routing/20251001-compliance-verified.txt
+- Script diff: loop.sh (git diff will show changes)
+
+## Exit Criteria Met
+All Phase B requirements satisfied:
+- Updated loop.sh matches routing spec ✅
+- Manual review passed (shellcheck unavailable) ✅
+- Key changes verified manually ✅

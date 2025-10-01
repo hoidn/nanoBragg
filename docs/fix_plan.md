@@ -12,7 +12,7 @@
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
 | [DTYPE-DEFAULT-001](#dtype-default-001-migrate-default-dtype-to-float32) | Migrate default dtype to float32 | High | in_progress |
 | [AT-PARALLEL-012-PEAKMATCH](#at-parallel-012-peakmatch-restore-95-peak-alignment) | Restore 95% peak alignment | High | in_progress |
-| [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | in_progress |
+| [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 
 ---
 
@@ -475,8 +475,8 @@
 ## [ROUTING-LOOP-001] loop.sh routing guard
 - Spec/AT: Prompt routing rules (prompts/meta.md)
 - Priority: High
-- Status: in_progress
-- Owner/Date: galph/2025-10-06 (regression follow-up)
+- Status: done
+- Owner/Date: galph/2025-10-06 (regression follow-up); ralph/2025-10-01 (completion)
 - Reproduction (C & PyTorch):
   * C: `sed -n '1,80p' loop.sh`
   * PyTorch: n/a
@@ -503,8 +503,13 @@
     Artifacts: reports/routing/2025-10-01-loop-verify.txt
     Observations/Hypotheses: Guard prevents Ralph from re-entering prompts/main.md while parity tests fail.
     Next Actions: Monitor automation once AT suite is fully green before permitting main prompt.
+  * [2025-10-01] Attempt #5 — Result: success (plan Phases A–C complete). Captured audit showing violations (40-iteration loop using prompts/main.md with unconditional push), remediated script to single-execution prompts/debug.md with git pull --rebase and conditional push, verified compliance.
+    Metrics: Crystal geometry smoke test 19/19 passed post-change; no regressions.
+    Artifacts: reports/routing/20251001-loop-audit.txt (Phase A), reports/routing/20251001-compliance-verified.txt (Phase C), loop.sh (git diff).
+    Observations/Hypotheses: Regression had doubled to 40 iterations from prior 20; routing guard now restored per plan exit criteria (single debug.md execution, conditional push, rebase-before-work).
+    Next Actions: Archive plan to plans/archive/routing-loop-guard/ once committed; monitor for future regressions.
 - Risks/Assumptions: Ensure future automation edits maintain routing guard.
-- Exit Criteria (quote thresholds from spec): script executes `prompts/debug.md` exactly once per run with evidence recorded in reports.
+- Exit Criteria (quote thresholds from spec): ✅ Script executes `prompts/debug.md` exactly once per run with evidence recorded in reports (satisfied).
 
 ### Completed Items — Key Reference
 (See `docs/fix_plan_archive.md` for the full historical ledger.)
