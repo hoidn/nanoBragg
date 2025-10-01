@@ -62,6 +62,7 @@ Exit Criteria: `diagnostic_experiments.md` enumerating each experiment, findings
 | C7 | Quantify pixel-coordinate memory pressure | [ ] | Log host memory usage after `_cached_pixel_coords_meters` construction for 2048² and 4096² detectors (use `psutil` + `torch.cuda.memory_allocated`). Document whether tiling/blocking is needed to stay under 1.5× C runtime. |
 | C8 | Profile pixel→Å conversion cost | [ ] | Capture torch.profiler trace on a 4096² warm run (compiled) to measure the time spent in the `pixel_coords_meters * 1e10` kernel; run `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --iterations 1 --profile --keep-artifacts` and store the annotated trace under `reports/profiling/<stamp>-pixel-coord-conversion/trace.json`, noting kernel duration and % of warm time. |
 | C9 | Measure rotated-vector regeneration cost | [ ] | Use a microbenchmark (e.g. `python scripts/benchmarks/profile_rotated_vectors.py` or a short inline script) to time `crystal.get_rotated_real_vectors` for the 4096² config; log results to `reports/profiling/<stamp>-rotated-vector-cost/timings.md` with device/dtype, phi_steps, mosaic_domains, and per-call latency so we can justify caching. |
+| C10 | Quantify mosaic rotation RNG cost | [ ] | Build a temporary microbenchmark (stash under `reports/profiling/<stamp>-mosaic-rotation-cost/profile.py`) that calls `_generate_mosaic_rotations` with the 4096² benchmark config (current mosaic_domains/mosaic_spread); capture `torch.utils.benchmark.Timer` results, RNG seed handling, and store the markdown summary beside the script. |
 
 ### Phase D — Optimization Implementation
 Goal: Apply targeted code changes driven by Phase C findings (e.g., restructure reductions, hoist caches, adjust data layout) while preserving vectorization and differentiability.
@@ -76,6 +77,8 @@ Exit Criteria: Optimized branch delivering ≤1.2× C warm time at 4096² with d
 | D4 | Benchmark improvement | [ ] | Repeat Phase A command set to quantify delta; ensure warm speedup ≥0.83 (PyTorch warm ≤1.2× C). Capture both CPU and CUDA metrics if available. |
 | D5 | Hoist pixel Å cache | [ ] | Guided by C8, add a cached `_cached_pixel_coords_angstroms` tensor alongside the meters cache (respecting device/dtype) and reuse it in both oversample and base paths so the 16M-element `* 1e10` multiply disappears from warm runs. |
 | D6 | Cache rotated lattice tensors | [ ] | Following C9, memoize `crystal.get_rotated_real_vectors` outputs keyed by phi/mosaic settings (invalidate on config change) to avoid redundant recomputation; document gradient considerations and capture before/after timings. |
+| D7 | Cache mosaic rotation matrices | [ ] | After C10, memoize `_generate_mosaic_rotations` outputs keyed by `(mosaic_domains, mosaic_spread, device, dtype, mosaic_seed)` so warm runs reuse them; ensure deterministic seeding and record pre/post timings in the same profiling directory. |
+| D8 | Hoist detector scalar tensors | [ ] | Replace per-call `torch.as_tensor` conversions for `pixel_size`/`close_distance` with cached tensors on the simulator keyed by device/dtype; verify compile graph reuse via `benchmark_detailed.py --disable-compile` logs and archive timing deltas under `reports/profiling/<stamp>-detector-scalar-cache/`. |
 
 ### Phase E — Documentation & Closure
 Goal: Update plans/docs, capture lessons learned, and archive artifacts once targets met.
@@ -90,6 +93,7 @@ Exit Criteria: Fix plan marked complete with evidence; documentation updated; pl
 
 ## Notes & Guardrails
 - Maintain device/dtype neutrality; no `.cpu()`/`.cuda()` inside vectorized paths.
+- `_generate_mosaic_rotations` currently samples new random axes each call; caching must respect `mosaic_seed` semantics so warmed runs remain deterministic.
 - Reuse existing caches (pixel coords, misset rotations) rather than introducing per-run allocations.
 - Coordinate with plateau mitigation (AT-012 plan) to avoid reintroducing float64 overrides.
 - All experiments that modify physics must cite spec clauses and capture parity traces before merging.

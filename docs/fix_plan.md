@@ -1,13 +1,13 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-15 (galph loop CM)
+**Last Updated:** 2025-10-15 (galph loop CP)
 **Active Focus:**
 - ROUTING: Close the reopened guard plan by capturing a fresh regression audit referencing commit `c49e3be` and re-confirming the guarded `loop.sh` flow (`plans/active/routing-loop-guard/plan.md` Phases A–C) before automation resumes.
 - ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md`, then drive Phase B guard work (B2–B4) and new task B5 to add `supervisor.sh` to docs/index.md so Protected-Asset policy covers the script before automation runs again.
 - AT-012: Plan archived (`plans/archive/at-parallel-012-plateau-regression/plan.md`); monitor for regressions using `reports/2025-10-AT012-regression/phase_c_validation/` artifacts and re-open only if peak matches drop below spec.
 - GRADIENT: Execute `plans/active/gradcheck-tier2-completion/plan.md` Phase A (A1–A3 baseline audit + env alignment) before adding misset/beam gradchecks from Phases B/C; once pass logs exist, close `[AT-TIER2-GRADCHECK]` with Phase D documentation updates.
 - DTYPE: ✅ Complete. Plan archived to `plans/archive/dtype-default-fp32/`. All phases (A-D) finished; float32 defaults documented in arch.md, pytorch_runtime_checklist.md, CLAUDE.md, prompts/debug.md.
-- PERF: Land plan task B7 (benchmark env toggle fix), rerun Phase B6 ten-process reproducibility with the new compile metadata, capture the weighted-source parity memo feeding C5, then execute Phase C diagnostics (C1/C2 plus C8/C9 pixel-grid & rotated-vector cost probes) ahead of Phase D caching work.
+- PERF: Land plan task B7 (benchmark env toggle fix), rerun Phase B6 ten-process reproducibility with the new compile metadata, capture the weighted-source parity memo feeding C5, then execute Phase C diagnostics (C1/C2 plus C8/C9 pixel-grid & rotated-vector cost probes, and new C10 mosaic RNG timing) ahead of Phase D caching work (D5/D6/D7) and detector-scalar hoisting (D8).
 
 ## Index
 | ID | Title | Priority | Status |
@@ -136,6 +136,8 @@
   * After the harness fix, redo Phase B task B6: run ten cold-process warm benchmarks with the new compile-mode field, record cache/state metadata, and reconcile the slowdown in reports/benchmarks/20251001-025148/ against the prior 1.11× runs from reports/benchmarks/20251001-014819-measurement-reconciliation/.
   * Document the weighted-source semantic gap by diffing PyTorch vs C accumulation (C ignores weights); produce a short decision note under reports/benchmarks/<stamp>-weighted-source-parity/ feeding plan task C5 before optimisation work.
   * With reproducibility + harness instrumentation in place, execute Phase C diagnostics starting with C1 (compile disabled) and C2 (single-stage reduction), then capture C8 (pixel→Å conversion kernel cost) and C9 (rotated-vector regeneration timing) so Phase D caching work (D5/D6) has quantified baselines.
+  * Run new plan task C10 to profile `_generate_mosaic_rotations` on the 4096² config, archive the benchmark under `reports/profiling/<date>-mosaic-rotation-cost/`, and use the numbers to justify Phase D7 memoization work.
+  * Queue Phase D8 once C8 logs confirm repeated `torch.as_tensor` conversions are re-materializing scalars inside the compiled graph; capture before/after eager + compiled timings under `reports/profiling/<date>-detector-scalar-cache/`.
 - Attempts History:
   * [2025-10-01] Attempt #4 — Result: success (Phase 0/1 complete). Refactored to pure function + hoisted guard tensors; torch.compile caching delivers ≥37× warm/cold speedup.
     Metrics: CPU float64 warm/cold 37.09×; CPU float32 1485.90×; CUDA float32 1256.03×; warm setup <50 ms.
