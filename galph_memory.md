@@ -730,3 +730,15 @@
 - Adjusted DTYPE next-actions to start Phase C immediately (Tier-1 parity, gradcheck focus, benchmark deltas under `reports/DTYPE-DEFAULT-001/phase_c_parity/`), and refreshed `phase_c_decision.md` to reference the archived plan path for future loops.
 - Commit review (`37c5e71`, `d1e0dc9`, `9271e81`) confirmed dtype helper neutrality, PERF warm reconciled to ~1.1×, and AT-012 documentation captured Phase C closure. No regressions spotted, but PERF plan still lacks B3 C-side profile and B5 eager trace; routing guard plan Phase A audit remains outstanding.
 - Follow-ups for Ralph: (1) Execute routing guard plan tasks A1–A3 with audit logs in `reports/routing/`; (2) Run DTYPE plan Phase C1–C3 with parity/gradcheck/benchmark artifacts and log the attempt; (3) Capture PERF Phase B3 C-profile (or documented rationale) and Phase B5 eager-mode trace before entering Phase C diagnostics; (4) Keep AT-012 plan archived but monitor `tests/test_at_parallel_012.py` for future plateau regressions.
+
+## 2025-10-13 (galph loop BX)
+- Identified supervisor automation script regression: `supervisor.sh` runs `prompts/supervisor.md` 40× with no pull/rebase guard or single-iteration check. Authored new plan `plans/active/supervisor-loop-guard/plan.md` and wired `[ROUTING-SUPERVISOR-001]` into docs/fix_plan.md (Active Focus + dedicated section). Phase A (evidence capture) is the immediate next action before touching the script.
+- Long-term goal gap review:
+  * Routing hygiene: both loop and supervisor scripts lack guard compliance; `loop.sh` plan still awaiting Phase A audit, and supervisor plan is new.
+  * DTYPE Phase C remains blocked by AT-012 plateau fragmentation (43/50 peaks) — no new artifacts under `reports/DTYPE-DEFAULT-001/`; recommend paired float64/float32 trace capture + decision on matcher vs dtype override prior to gradcheck/benchmark sweep.
+  * PERF plan tasks B3 (C-side profile) and B5 (eager trace) still open; `compute_physics_for_position` recomputes `pixel_magnitudes` for polarization and instantiates a 200 MB pixel cache per detector instance, so profiling should confirm whether these dominate the remaining 1.1× CPU warm gap.
+- Follow-ups for Ralph:
+  1. Execute Phase A (A1–A3) of the new supervisor guard plan and the existing loop guard plan before editing any automation scripts.
+  2. Resume DTYPE plan Phase C by capturing parity/gradcheck artifacts and deciding on the AT-012 plateau fix strategy; archive outputs under `reports/DTYPE-DEFAULT-001/`.
+  3. Complete PERF plan tasks B3/B5 and note whether duplicated norm computations or pixel cache allocations show up as hotspots in the forthcoming traces.
+- Note: `supervisor.sh` remains dirty from prior loops (no changes this run per policy); leave untouched until guard work begins.

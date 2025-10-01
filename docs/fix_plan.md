@@ -3,6 +3,7 @@
 **Last Updated:** 2025-10-13 (galph loop BW)
 **Active Focus:**
 - ROUTING: Execute Phase A of `plans/active/routing-loop-guard/plan.md` to capture the regression audit before editing `loop.sh` (commit `c49e3be` reintroduced 40× `prompts/main.md` loop + unconditional push).
+- ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md` to document the unguarded `supervisor.sh` loop before restoring a single-iteration flow.
 - AT-012: Plan archived (`plans/archive/at-parallel-012-plateau-regression/plan.md`); monitor for regressions using `reports/2025-10-AT012-regression/phase_c_validation/` artifacts and re-open only if peak matches drop below spec.
 - DTYPE: With plateau plan complete, execute Phase C tasks (`plans/active/dtype-default-fp32/plan.md` C1–C3) — capture Tier-1 parity on CPU/GPU, run gradcheck focus tests, and log warm/cold benchmarks under `reports/DTYPE-DEFAULT-001/` before moving to documentation updates.
 - PERF: Phase B4 reconciliation done; collect remaining evidence (B3 C-side profile and B5 eager trace) so Phase C diagnostics can start with complete hotspot coverage.
@@ -17,6 +18,7 @@
 | [DTYPE-DEFAULT-001](#dtype-default-001-migrate-default-dtype-to-float32) | Migrate default dtype to float32 | High | in_progress |
 | [AT-PARALLEL-012-PEAKMATCH](#at-parallel-012-peakmatch-restore-95-peak-alignment) | Restore 95% peak alignment | High | done |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | in_progress |
+| [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | in_progress |
 
 ---
 
@@ -550,6 +552,25 @@
     Next Actions: ✅ Plan archived; continue monitoring automation for future regressions.
 - Risks/Assumptions: Ensure future automation edits maintain routing guard.
 - Exit Criteria (quote thresholds from spec): Pending — must restore single-execution `prompts/debug.md` flow with fresh audit/compliance logs before marking complete again.
+
+## [ROUTING-SUPERVISOR-001] supervisor.sh automation guard
+- Spec/AT: Prompt routing rules (prompts/meta.md), automation guard SOP (`plans/active/routing-loop-guard/plan.md` as reference)
+- Priority: High
+- Status: in_progress (new 2025-10-13; guard never implemented for supervisor automation)
+- Owner/Date: galph/2025-10-13
+- Plan Reference: `plans/active/supervisor-loop-guard/plan.md`
+- Reproduction (C & PyTorch):
+  * C: n/a
+  * PyTorch: n/a
+  * Shell: `sed -n '1,160p' supervisor.sh`
+- First Divergence (if known): Script runs `for i in {1..40}` over `prompts/supervisor.md` without the mandated `timeout 30 git pull --rebase` guard or conditional push suppression; mirrors the routing regression previously fixed in `loop.sh`.
+- Immediate Next Actions (2025-10-13):
+  * Execute plan Phase A tasks A1–A3 to capture a regression report under `reports/routing/` and log the attempt in this ledger.
+  * Draft guard design note (Phase B1) before editing the script so the patched flow mirrors `loop.sh` protections.
+- Attempts History:
+  * [2025-10-13] Attempt #1 — Result: regression documented. Confirmed `supervisor.sh` loops 40× with no pull/rebase guard and no exit criteria. No artifacts yet (pending plan Phase A). Next Actions: follow plan tasks A1–A3 to produce evidence, then proceed to Phase B implementation.
+- Risks/Assumptions: Treat `supervisor.sh` as Protected Asset; ensure edits retain logging expectations and do not re-enable multi-iteration loops.
+- Exit Criteria: Guarded single-iteration script with audit/dry-run/compliance logs captured and plan archived.
 
 ### Completed Items — Key Reference
 (See `docs/fix_plan_archive.md` for the full historical ledger.)
