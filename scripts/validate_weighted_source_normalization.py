@@ -10,6 +10,8 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 import torch
 import numpy as np
+import argparse
+from datetime import datetime
 from nanobrag_torch.config import CrystalConfig, DetectorConfig, BeamConfig
 from nanobrag_torch.simulator import Simulator
 from nanobrag_torch.models.crystal import Crystal
@@ -132,6 +134,18 @@ def test_weighted_sources(device='cpu'):
 
 def main():
     """Run validation on CPU and CUDA (if available)."""
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(
+        description='Validate multi-source weighted normalization on CPU and CUDA'
+    )
+    parser.add_argument(
+        '--outdir',
+        type=str,
+        default=None,
+        help='Output directory for results (default: reports/benchmarks/YYYYMMDD-HHMMSS-multi-source-normalization)'
+    )
+    args = parser.parse_args()
+
     results = {}
 
     # Test on CPU
@@ -167,9 +181,19 @@ def main():
     import json
     from pathlib import Path
 
-    # Use repo-relative path
+    # Use repo-relative path with timestamped directory
     repo_root = Path(__file__).parent.parent
-    output_dir = repo_root / 'reports' / 'benchmarks' / '20250930-multi-source-normalization'
+
+    if args.outdir:
+        # User-provided output directory (relative to repo root or absolute)
+        output_dir = Path(args.outdir)
+        if not output_dir.is_absolute():
+            output_dir = repo_root / output_dir
+    else:
+        # Default: timestamped directory
+        timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+        output_dir = repo_root / 'reports' / 'benchmarks' / f'{timestamp}-multi-source-normalization'
+
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / 'validation_results.json'
 

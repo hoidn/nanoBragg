@@ -239,6 +239,11 @@
     Artifacts: plans/active/perf-pytorch-compile-refactor/plan.md (A0 row updated).
     Observations/Hypotheses: Need dynamic stamping (e.g., timestamped directory or CLI argument) so future reruns land under `reports/benchmarks/<date>-.../` per plan expectations. Until then Phase A baseline capture remains blocked.
     Next Actions: Ralph to extend the script with an `--out` flag or timestamped default, rerun validation, and update plan/fix-plan entries with new artifact paths.
+  * [2025-10-01] Attempt #28 (ralph loop BJ) — Result: success. Added timestamped default directory and `--outdir` CLI flag to `scripts/validate_weighted_source_normalization.py`.
+    Metrics: Validation run successful (CPU total=5.750597e-05, CUDA total=5.750608e-05, rel_diff=1.771353e-06). Core geometry tests 31/31 passed in 5.26s.
+    Artifacts: `reports/benchmarks/20251001-004135-multi-source-normalization/validation_results.json` (timestamped), `reports/benchmarks/custom-test/validation_results.json` (CLI override test).
+    Observations/Hypotheses: Script now defaults to `reports/benchmarks/YYYYMMDD-HHMMSS-multi-source-normalization/` pattern, ensuring successive runs produce unique directories. CLI flag `--outdir` allows explicit override (relative or absolute paths). Fix unblocks Phase A baseline capture.
+    Next Actions: Mark plan.md task A0 as `[X]` complete. Proceed with A1-A4 baseline benchmarks.
   * [2025-09-30] Attempt #23 (ralph loop BC) — Result: Phase 3 decision memo written BEFORE Attempt #22 invalidation. Wrote comprehensive memo integrating P3.0–P3.4 deliverables and CPU/CUDA benchmarks assuming P3.0c was valid. Recommendation: DEFER Phase 4 (graph optimization) given CUDA meets all targets (1.55–3.33× faster than C across 256²–1024²) and only large CPU detectors (1024²) show deficit (2.4× slower).
     Metrics: CPU — 256²: 4.07× faster, 512²: 1.23× slower (within tolerance), 1024²: 2.43× slower. CUDA — 256²: 1.55× faster, 512²: 1.69× faster, 1024²: 3.33× faster. Cache: 37–6428× setup speedup. Correlations ≈1.0 throughout.
     Artifacts: `reports/benchmarks/20250930-perf-summary/PHASE_3_DECISION.md` (decision memo - **PROVISIONAL pending P3.0c correction**), `reports/benchmarks/20250930-perf-summary/cpu/P3.2_summary.md` (CPU), `reports/benchmarks/20250930-220739/benchmark_results.json` (CUDA).

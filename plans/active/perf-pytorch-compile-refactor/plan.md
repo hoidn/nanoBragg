@@ -25,7 +25,7 @@ Exit Criteria: `reports/benchmarks/<date>-4096-warm-baseline/` directory contain
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| A0 | Fix weighted-source validation output path | [P] | Script now uses repo-relative paths (commit 0a78312) but still writes to a fixed directory name (`reports/benchmarks/20250930-multi-source-normalization/`). Follow up by parameterising the output stamp or allowing a CLI override so successive runs land under unique `reports/benchmarks/<date>-.../` folders as required before closing this task. |
+| A0 | Fix weighted-source validation output path | [X] | ✅ Complete (2025-10-01 loop BJ). Added `argparse` with `--outdir` flag and timestamped default (`YYYYMMDD-HHMMSS-multi-source-normalization`). Script now produces unique directories per run. Verified with CPU+CUDA validation run (artifacts under `reports/benchmarks/20251001-004135-multi-source-normalization/`). Core tests 31/31 passed. |
 | A1 | Re-run CPU benchmark sweep | [ ] | `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 512,1024,2048,4096 --device cpu --iterations 5 --keep-artifacts --out reports/benchmarks/$(date +%Y%m%d-%H%M%S)-cpu-baseline/`. Record commit hash. |
 | A2 | Capture C binary timings | [ ] | `NB_C_BIN=./golden_suite_generator/nanoBragg python scripts/benchmarks/benchmark_detailed.py --sizes 512,1024,2048,4096 --device cpu --c-only --iterations 5 --out reports/benchmarks/<same-stamp>-c-baseline/` to ensure matching configuration. |
 | A3 | (Optional CUDA) Measure GPU warm | [ ] | If GPU available, rerun A1 with `--device cuda --disable-compile` toggles to separate compile vs kernel cost; archive under same reports directory. |
