@@ -18,7 +18,7 @@ At the start of every invocation:
 - Run `timeout 30 git pull --rebase` with a hard 30-second timeout  to sync with origin before reviewing context. If the command times out, immediately abort any partial rebase (`git rebase --abort`) and fall back to a normal merge via `git pull --no-rebase`. Whatever path you take, resolve resulting conflicts (docs/fix_plan.md is a frequent hotspot) and document key decisions in galph_memory.md. If the pull reports conflicts:
   * Run `git status --short` to list conflicted files.
   * Fix each file (remove conflict markers, keep the intended content) and stage it with `git add`.
-  * When the index is clean, resume with `timeout 30 git rebase --continue`. IMPORTANT: NEVER RUN THIS COMMAND WITHOUT TIMEOUT
+  * When the index is clean, resume with `timeout 30 git rebase --continue --no-edit`. IMPORTANT: NEVER RUN THIS COMMAND WITHOUT TIMEOUT
 - After resolving any conflicts, read the latest galph_memory.md entry (and any linked plan files) so you do not lose past context.
 - Prune or summarize older entries when they become stale or redundant.
 
