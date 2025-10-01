@@ -66,8 +66,8 @@
 ## [REPO-HYGIENE-002] Restore canonical nanoBragg.c
 - Spec/AT: Repository hygiene SOP (`docs/development/processes.xml` §C-parity) & commit 92ac528 regression follow-up
 - Priority: Medium
-- Status: in_progress
-- Owner/Date: galph/2025-09-30
+- Status: done
+- Owner/Date: galph/2025-09-30 (completed ralph/2025-09-30)
 - Reproduction (C & PyTorch):
   * C: `git show 92ac528^:golden_suite_generator/nanoBragg.c > /tmp/nanoBragg.c.ref`
   * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-021 or AT-PARALLEL-024"`
@@ -79,11 +79,16 @@
     Artifacts: reports/archive/2025-09-30-AT-021-traces/
     Observations/Hypotheses: Need to restore canonical `nanoBragg.c` from 92ac528^ and execute plan tasks H1–H6 without touching protected assets.
     Next Actions: Complete plan H1–H6 (baseline snapshot, restore canonical file, purge stray reports, rerun parity smoke tests, log closure).
+  * [2025-09-30] Attempt #2 — Result: success. Verified repository already in clean state; canonical C file unchanged, artifacts already archived, parity tests pass.
+    Metrics: AT-021/024 parity 4/4 passed in 26.49s; `golden_suite_generator/nanoBragg.c` matches pristine reference (4579 lines).
+    Artifacts: `/tmp/nanoBragg.c.ref` (pristine reference for verification); `reports/archive/2025-09-30-AT-021-traces/` (archived traces).
+    Observations/Hypotheses: Repository was already in compliance with all exit criteria. Plan tasks H1-H6 executed: (H1) captured pristine baseline, (H2) verified no drift via `git diff 92ac528^`, (H3) confirmed canonical file unchanged, (H4) verified artifacts in archive, (H5) parity smoke tests passed, (H6) documented completion.
+    Next Actions: None - all exit criteria satisfied. Move plan to archive.
 - Risks/Assumptions: Ensure Protected Assets guard is honored before deleting files; parity harness must remain green after cleanup.
 - Exit Criteria (quote thresholds from spec):
-  * Canonical `golden_suite_generator/nanoBragg.c` matches 92ac528^ exactly (byte-identical).
-  * Reports from 2025-09-30 relocated under `reports/archive/`.
-  * `NB_RUN_PARALLEL=1` parity smoke (`AT-PARALLEL-021`, `AT-PARALLEL-024`) passes without diff.
+  * ✅ Canonical `golden_suite_generator/nanoBragg.c` matches 92ac528^ exactly (byte-identical).
+  * ✅ Reports from 2025-09-30 relocated under `reports/archive/`.
+  * ✅ `NB_RUN_PARALLEL=1` parity smoke (`AT-PARALLEL-021`, `AT-PARALLEL-024`) passes without diff.
 
 ---
 
