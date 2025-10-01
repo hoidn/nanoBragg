@@ -176,3 +176,6 @@
 - Compared legacy `./fix_plan.md` with canonical ledger; migrated missing high-value notes (AT-PERF device neutrality, parity harness bootstrap, AT-020 absorption fix) into `docs/fix_plan_archive.md`.
 - Replaced stray standalone file with symlink `fix_plan.md -> docs/fix_plan.md` to prevent divergent ledgers going forward.
 - Tests not run (docs + symlink hygiene only).
+
+## 2025-10-02 (galph loop X addendum)
+- Reminder: `./fix_plan.md` is now a symlink to `docs/fix_plan.md`; always edit the canonical file and avoid recreating standalone copies.
