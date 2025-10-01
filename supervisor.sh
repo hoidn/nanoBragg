@@ -14,5 +14,4 @@ CODEX_CMD="codex"
 for i in {1..20}; do
   #git pull
   ${CODEX_CMD} exec -m gpt-5-codex -c model_reasoning_effort="high" --dangerously-bypass-approvals-and-sandbox < prompts/supervisor.md | tee -a "${LOG_FILE}"
-  git push
 done
