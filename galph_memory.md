@@ -202,3 +202,17 @@
 - Coin flip: tails → no commit review this loop.
 - Guidance for Ralph next: 1) Execute PERF Plan P3.0 and new P3.0b before re-running cache/benchmark scripts (capture logs under `reports/benchmarks/<date>-perf-summary/`); 2) Start AT-012 Plan Phase A (baseline artifacts + float32 comparison) so we can move on to divergence tracing; 3) Fix `benchmark_detailed.py` aggregation (P3.1) immediately after the multi-source fixes so performance evidence is usable.
 - Repo state: clean after push.
+
+## 2025-10-03 (galph loop AA)
+- Sync: `git pull --rebase` returned already up to date; no conflicts.
+- Findings vs goals: multi-source defaults still dereference `beam_config.source_wavelengths` without a fallback (src/nanobrag_torch/simulator.py:397), per-source polarization still uses the global beam vector in both subpixel and pixel paths (src/nanobrag_torch/simulator.py:786, 904), and `benchmark_detailed.py:118` keeps adding the boolean `cache_hit` flag into total timing; AT-012 float64 peak drop remains the active hypothesis (Plan Phase B4).
+- Coin flip (heads): No new engineer commits beyond `78be581` and `51110d4`; both still leave multi-source crash + polarization + timing bugs unresolved—flagged for follow-up.
+- Planning/docs: Updated `plans/active/perf-pytorch-compile-refactor/plan.md` task P3.1 to call out the `cache_hit` aggregation fix; other plans remain accurate.
+- Next actions for Ralph: execute AT-012 Plan Phase A/B (esp. dtype artifact capture), deliver PERF Plan P3.0/P3.0b fixes before benchmarking, and patch `benchmark_detailed.py` totals as part of P3.1.
+
+## 2025-10-03 (galph loop AB)
+- Sync: Required temporary stash to satisfy `git pull --rebase`; re-applied cleanly and confirmed only `galph_memory.md` remained dirty.
+- Deep analysis toward goals: confirmed multi-source path still pins polarization to `self.incident_beam_direction` and uncovered a new normalization gap—`steps` divides by Σweights so PyTorch averages source intensities while nanoBragg.c sums them—alongside the existing `source_wavelengths` None crash and `benchmark_detailed.py` total-time boolean bug.
+- Coin flip (heads) → commit review: `51110d4` delivered cache validation but left multi-source crash, polarization, and benchmark math unfixed; `78be581` correctly patches detector device drift; earlier WIP commits (`cb6a761`, `a661afc`) documented the device-neutrality effort but still staged regressions that must be completed (normalization, per-source Kahn weighting, CLI robustness).
+- Planning/docs updates: added Task P3.0c to `plans/active/perf-pytorch-compile-refactor/plan.md` for multi-source normalization parity and noted the issue under discovered problems; refreshed `docs/fix_plan.md` `[PERF-PYTORCH-004]` observations to call out P3.0c alongside existing P3.0/P3.0b/P3.1 guidance.
+- Next steps for Ralph: 1) Execute plan tasks P3.0–P3.0c before rerunning benchmarks (fix fallback, per-source polarization, and normalization), 2) capture AT-012 Phase A artifacts then run Phase B4 float32 diagnostic with archived reports, 3) patch `benchmark_detailed.py` totals per P3.1 and rerun perf suite once multi-source issues are resolved.
