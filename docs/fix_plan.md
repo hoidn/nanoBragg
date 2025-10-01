@@ -1,7 +1,8 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-15 (galph loop CP)
+**Last Updated:** 2025-10-15 (ralph loop)
 **Active Focus:**
+- DTYPE-INFERENCE: ✅ Complete. Simulator now infers dtype from crystal/detector components when not explicitly specified (DTYPE-INFERENCE-001).
 - ROUTING: Close the reopened guard plan by capturing a fresh regression audit referencing commit `c49e3be` and re-confirming the guarded `loop.sh` flow (`plans/active/routing-loop-guard/plan.md` Phases A–C) before automation resumes.
 - ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md`, then drive Phase B guard work (B2–B4) and new task B5 to add `supervisor.sh` to docs/index.md so Protected-Asset policy covers the script before automation runs again.
 - AT-012: Plan archived (`plans/archive/at-parallel-012-plateau-regression/plan.md`); monitor for regressions using `reports/2025-10-AT012-regression/phase_c_validation/` artifacts and re-open only if peak matches drop below spec.
@@ -12,6 +13,7 @@
 ## Index
 | ID | Title | Priority | Status |
 | --- | --- | --- | --- |
+| [DTYPE-INFERENCE-001](#dtype-inference-001-simulator-dtype-inference) | Simulator dtype inference | High | done |
 | [GRADIENT-MISSET-001](#gradient-misset-001-fix-misset-gradient-flow) | Fix misset gradient flow | High | done |
 | [PROTECTED-ASSETS-001](#protected-assets-001-docsindexmd-safeguard) | Protect docs/index.md assets | Medium | in_progress |
 | [REPO-HYGIENE-002](#repo-hygiene-002-restore-canonical-nanobraggc) | Restore canonical nanoBragg.c | Medium | in_progress |
@@ -21,6 +23,30 @@
 | [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | done |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | in_progress |
+
+---
+
+## [DTYPE-INFERENCE-001] Simulator dtype inference
+- Spec/AT: AT-PARALLEL-013 Cross-Platform Consistency (test_numerical_precision_float64), arch.md §14 default precision
+- Priority: High
+- Status: done
+- Owner/Date: ralph/2025-10-15
+- Reproduction (C & PyTorch):
+  * C: n/a (PyTorch dtype handling issue)
+  * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_numerical_precision_float64 -v`
+  * Shapes/ROI: 64×64 detector, pixel 0.1 mm
+- First Divergence (if known): Simulator.__init__ had hardcoded dtype=torch.float32 default, ignoring dtype of crystal/detector
+- Attempts History:
+  * [2025-10-15] Attempt #1 — Result: success. Changed Simulator.__init__ to infer dtype from crystal/detector when not explicitly provided.
+    Metrics: test_numerical_precision_float64 PASSED; test_mosaic_rotation_umat_determinism PASSED after fixing test to pass dtype=torch.float64. Overall: 6 passed, 1 skipped in 4.65s.
+    Artifacts: src/nanobrag_torch/simulator.py lines 401-462 (dtype inference logic), tests/test_at_parallel_024.py line 346 (test fix).
+    Observations/Hypotheses: Simulator had dtype=torch.float32 hardcoded as default parameter. When Crystal and Detector were created with dtype=torch.float64, Simulator ignored this and used float32, causing precision loss. Fix: change default to dtype=None and infer from crystal.dtype or detector.dtype, falling back to float32 if neither exists (per arch.md §14). Also fixed test_mosaic_rotation_umat_determinism which was comparing float32 tensors with float64 expectations.
+    Next Actions: None - issue resolved. Dtype now properly preserved from components.
+- Risks/Assumptions: Assumes Crystal and Detector classes have .dtype attribute. If not present, falls back to float32 default.
+- Exit Criteria (quote thresholds from spec):
+  * test_numerical_precision_float64 passes (✅ satisfied).
+  * Simulator respects dtype of input components (✅ verified).
+  * No regressions in related tests (✅ verified).
 
 ---
 

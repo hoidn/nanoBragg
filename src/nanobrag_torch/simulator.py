@@ -398,7 +398,7 @@ class Simulator:
         crystal_config: Optional[CrystalConfig] = None,
         beam_config: Optional[BeamConfig] = None,
         device=None,
-        dtype=torch.float32,
+        dtype=None,
         debug_config: Optional[dict] = None,
     ):
         """
@@ -410,7 +410,7 @@ class Simulator:
             crystal_config: Configuration for crystal rotation parameters (phi, mosaic)
             beam_config: Beam configuration (optional, for future use)
             device: PyTorch device (cpu/cuda)
-            dtype: PyTorch data type
+            dtype: PyTorch data type (if None, inferred from crystal/detector; defaults to float32)
             debug_config: Debug configuration with printout, printout_pixel, trace_pixel options
         """
         self.crystal = crystal
@@ -448,6 +448,17 @@ class Simulator:
             self.device = temp.device
         else:
             self.device = torch.device("cpu")
+
+        # Infer dtype from crystal or detector if not explicitly provided
+        # This ensures dtype consistency when components are created with specific precision
+        if dtype is None:
+            if hasattr(crystal, 'dtype'):
+                dtype = crystal.dtype
+            elif hasattr(detector, 'dtype'):
+                dtype = detector.dtype
+            else:
+                # Default to float32 (arch.md §14 default precision)
+                dtype = torch.float32
         self.dtype = dtype
 
         # Store debug configuration
