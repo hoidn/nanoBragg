@@ -1,0 +1,48 @@
+{
+  "date": "2025-09-30",
+  "phase": "B1",
+  "task": "Generate paired C & PyTorch traces",
+  "configuration": {
+    "cell": [
+      100.0,
+      100.0,
+      100.0,
+      90.0,
+      90.0,
+      90.0
+    ],
+    "wavelength_A": 6.2,
+    "N_cells": [
+      5,
+      5,
+      5
+    ],
+    "default_F": 100.0,
+    "detector_pixels": 1024,
+    "pixel_size_mm": 0.1,
+    "distance_mm": 100.0
+  },
+  "results": {
+    "correlation": 0.9999999999366286,
+    "peak_matches": 43,
+    "peak_total": 50,
+    "match_percentage": 86.0,
+    "spec_requirement": "\u226548/50 (95%)",
+    "status": "REGRESSION_CONFIRMED"
+  },
+  "plateau_analysis": {
+    "golden_unique_values": 131795,
+    "pytorch_unique_values": 1012257,
+    "fragmentation_ratio": 7.6805417504457685
+  },
+  "representative_peak": {
+    "pixel_slow": 512,
+    "pixel_fast": 512,
+    "golden_intensity": 154.6524658203125,
+    "pytorch_intensity": 154.65240478515625
+  },
+  "artifacts": {
+    "pytorch_trace": "reports/2025-10-AT012-regression/traces/pytorch_trace_pixel_512_512.txt",
+    "c_guidance": "reports/2025-10-AT012-regression/traces/c_instrumentation_guidance.txt"
+  }
+}

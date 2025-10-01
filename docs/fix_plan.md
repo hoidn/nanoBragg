@@ -264,6 +264,12 @@
     Artifacts: commit cd9a034 (`tests/test_at_parallel_012.py`).
     Observations/Hypotheses: Confirms plateau fragmentation is specific to float32 pipeline; forcing float64 in tests sidesteps the Tier-1 requirement of validating default dtype.
     Next Actions: Collect float32 vs float64 plateau artifacts per DTYPE plan and remove the override once plateau discrepancy resolved.
+  * [2025-09-30] Attempt #10 — Result: Phase B COMPLETE. Used parallel subagents to analyze accumulation order and validated hypothesis with script.
+    Metrics: Confirmed 7.68× fragmentation (1,012,257 unique vs C's 131,795) via `scripts/validate_single_stage_reduction.py`; beam center ROI shows 324 unique values vs C's expected ~20-40.
+    Artifacts: `reports/2025-10-AT012-regression/PHASE_B1_REPORT.md`, `reports/2025-10-AT012-regression/accumulation_order_analysis.md`, `reports/2025-10-AT012-regression/traces/pytorch_trace_pixel_512_512.txt`, `scripts/validate_single_stage_reduction.py`, `scripts/debug_at012_plateau_regression.py`.
+    First Divergence: Multi-stage reduction architecture in `simulator.py`. C uses single sequential accumulation (`I += term` in one loop); PyTorch uses 3 separate `torch.sum()` operations (lines 290, 378, 946) — each introducing independent float32 rounding → 7× plateau fragmentation.
+    Observations/Hypotheses: Root cause confirmed via code analysis and experimental validation. Three reduction stages: (1) sum over phi/mosaic dims, (2) weighted sum over sources, (3) sum over subpixels. Each stage writes intermediate results causing independent rounding. Proposed fix: single-stage reduction by flattening all integration dimensions before one `.sum()` call, matching C's sequential accumulation pattern.
+    Next Actions: Proceed to Phase C — implement single-stage reduction refactor in simulator.py, validate with AT-012 test (expect ≥48/50 peaks), measure post-fix fragmentation ratio (target <2×), benchmark performance impact.
 - Risks/Assumptions: Ensure triclinic/tilted variants remain passing; preserve differentiability (no `.item()` in hot path); guard ROI caching vs Protected Assets rule.
 - Exit Criteria (quote thresholds from spec):
   * PyTorch run matches ≥48/50 peaks within 0.5 px and maintains corr ≥0.9995.

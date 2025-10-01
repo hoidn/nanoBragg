@@ -1,0 +1,56 @@
+================================================================================
+PyTorch Pixel Trace - AT-PARALLEL-012 Plateau Regression
+================================================================================
+
+Target Pixel: (slow=512, fast=512)
+Test Case: simple_cubic
+Dtype: torch.float32
+Device: cpu
+
+Configuration:
+  Wavelength: 6.2 Angstroms
+  Cell: 100.0 100.0 100.0 Angstroms
+  Angles: 90.0 90.0 90.0 degrees
+  N_cells: (5, 5, 5)
+  default_F: 100.0
+  Detector: 1024x1024, 0.1 mm/pixel
+  Distance: 100.0 mm
+
+================================================================================
+DETECTOR GEOMETRY
+================================================================================
+
+TRACE_PY: pixel_pos_A 1.000000014901161e-01 5.000084638595581e-05 -5.000084638595581e-05
+TRACE_PY: pixel_distance_A 1.000000312924385e-01
+
+TRACE_PY: incident_dir 1.000000000000000e+00 0.000000000000000e+00 0.000000000000000e+00
+
+TRACE_PY: diffracted_dir 9.999997019767761e-01 5.000082892365754e-04 -5.000082892365754e-04
+TRACE_PY: scattering_vec_inv_A -4.806826225944860e-08 8.064650319283828e-05 -8.064650319283828e-05
+TRACE_PY: scattering_mag_inv_A 1.140513923019171e-04
+
+================================================================================
+CRYSTAL PARAMETERS
+================================================================================
+
+TRACE_PY: cell_params 1.000000000000000e+02 1.000000000000000e+02 1.000000000000000e+02 9.000000000000000e+01 9.000000000000000e+01 9.000000000000000e+01
+TRACE_PY: N_cells 5 5 5
+TRACE_PY: default_F 1.000000000000000e+02
+
+================================================================================
+IMPORTANT: Full per-phi, per-mosaic accumulation trace
+================================================================================
+
+This geometry trace shows the setup for pixel (512, 512).
+For detailed numerical divergence analysis, compare this with the
+C trace generated using the instrumentation guidance file.
+
+The C trace will show:
+  - Per-phi crystal orientation (a, b, c vectors)
+  - Per-phi Miller indices (h, k, l)
+  - Per-phi structure factors (F_cell, F_latt)
+  - Per-phi intensity contributions
+  - Final accumulated intensity
+
+Phase B2 analysis will identify the first diverging value.
+

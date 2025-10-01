@@ -1,0 +1,70 @@
+================================================================================
+C Code Instrumentation Guidance for AT-PARALLEL-012 Traces
+================================================================================
+
+TARGET PIXEL:
+  slow (spixel): 512
+  fast (fpixel): 512
+
+CONFIGURATION:
+  -cell 100 100 100 90 90 90
+  -lambda 6.2
+  -N 5
+  -default_F 100
+  -distance 100
+  -detpixels 1024
+  -pixel 0.1
+  -floatfile simple_cubic.bin
+
+INSTRUMENTATION LOCATIONS IN nanoBragg.c:
+
+1. Pixel loop (around line 2700):
+   Add guard: if (spixel == 512 && fpixel == 512) {
+   Print detector geometry:
+     fprintf(stderr, "TRACE_C: pixel_pos_A %.15e %.15e %.15e\n", pixel_pos[1], pixel_pos[2], pixel_pos[3]);
+     fprintf(stderr, "TRACE_C: pixel_distance_A %.15e\n", pixel_distance);
+     fprintf(stderr, "TRACE_C: incident_dir %.15e %.15e %.15e\n", incident[1], incident[2], incident[3]);
+     fprintf(stderr, "TRACE_C: diffracted_dir %.15e %.15e %.15e\n", diffracted[1], diffracted[2], diffracted[3]);
+     fprintf(stderr, "TRACE_C: scattering_vec_inv_A %.15e %.15e %.15e\n", scattering[1], scattering[2], scattering[3]);
+
+2. Crystal rotation loop (phi loop, around line 2900):
+   Keep guard: if (spixel == 512 && fpixel == 512) {
+   Print rotated vectors per phi step:
+     fprintf(stderr, "TRACE_C: phi_deg %.15e\n", phi*RTD);
+     fprintf(stderr, "TRACE_C: a_vec_A %.15e %.15e %.15e\n", a[1], a[2], a[3]);
+     fprintf(stderr, "TRACE_C: b_vec_A %.15e %.15e %.15e\n", b[1], b[2], b[3]);
+     fprintf(stderr, "TRACE_C: c_vec_A %.15e %.15e %.15e\n", c[1], c[2], c[3]);
+     fprintf(stderr, "TRACE_C: hkl_frac %.15e %.15e %.15e\n", h, k, l);
+     fprintf(stderr, "TRACE_C: hkl_int %d %d %d\n", h0, k0, l0);
+
+3. Structure factor calculation (around line 3100):
+   Print F_cell and F_latt:
+     fprintf(stderr, "TRACE_C: F_cell %.15e\n", F_cell);
+     fprintf(stderr, "TRACE_C: F_latt_re %.15e\n", F_latt[1]);
+     fprintf(stderr, "TRACE_C: F_latt_im %.15e\n", F_latt[2]);
+     fprintf(stderr, "TRACE_C: I_latt %.15e\n", I_latt);
+
+4. Final intensity accumulation (around line 3400):
+   Print per-phi contribution:
+     fprintf(stderr, "TRACE_C: I_phi_contribution %.15e\n", I);
+     fprintf(stderr, "TRACE_C: I_pixel_accumulated %.15e\n", floatimage[pixel]);
+
+COMPILATION:
+  make -C golden_suite_generator
+
+EXECUTION:
+  NB_C_BIN=./golden_suite_generator/nanoBragg
+  $NB_C_BIN -cell 100 100 100 90 90 90 -lambda 6.2 -N 5 -default_F 100 \
+    -distance 100 -detpixels 1024 -pixel 0.1 -floatfile /tmp/c_trace.bin \
+    2> reports/2025-10-AT012-regression/traces/c_trace_pixel_512_512.txt
+
+TRACE COMPARISON:
+  diff -u reports/2025-10-AT012-regression/traces/c_trace_pixel_512_512.txt \
+          reports/2025-10-AT012-regression/traces/pytorch_trace_pixel_512_512.txt
+
+NOTES:
+  - C code uses 1-indexed arrays, PyTorch uses 0-indexed
+  - C pixel loop: for(spixel=0; spixel<spixels; ++spixel)
+  - Target C pixel: spixel=512, fpixel=512
+  - Match TRACE_C and TRACE_PY prefixes for easy diffing
+  - Units: positions in Angstroms, scattering vectors in inverse Angstroms
