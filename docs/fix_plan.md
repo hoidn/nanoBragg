@@ -663,6 +663,7 @@
 - Priority: High
 - Status: in_progress
 - Owner/Date: ralph/2025-10-01
+- Plan Reference: `plans/active/gradcheck-tier2-completion/plan.md`
 - Reproduction (C & PyTorch):
   * C: n/a (PyTorch-specific gradient correctness tests)
   * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest tests/test_gradients.py -v`
