@@ -1,0 +1,76 @@
+# Plan: DTYPE-DEFAULT-001 Float32 Default Rollout
+
+**Status:** Active (supervisor-created)
+**Priority:** High – aligns runtime defaults with long-term performance goals
+**Related fix_plan item:** `[DTYPE-DEFAULT-001]` Migrate simulator defaults to float32 — see docs/fix_plan.md
+**Created:** 2025-10-04 by galph
+
+## Context
+- Initiative: DTYPE-DEFAULT-001 (ensure PyTorch implementation uses float32 by default)
+- Phase Goal: Shift simulator/config defaults from float64 to float32 without regressing parity, gradients, or documentation contracts.
+- Dependencies: `arch.md` (currently claims float64 default), `docs/development/pytorch_runtime_checklist.md`, `docs/architecture/pytorch_design.md` §2.4, acceptance tests (`tests/test_at_*`), perf harness under `reports/benchmarks/`.
+
+## Phase Overview
+- **Phase A — Inventory & Spec Harmonisation:** Document every location assuming float64 defaults and align ADR/spec narrative before code edits.
+- **Phase B — Implementation Update:** Change default dtype plumbing (configs, simulator constants, tensor factories) while preserving caller overrides.
+- **Phase C — Validation & Regression Sweep:** Prove parity, gradients, and performance hold (CPU/GPU) with float32 defaults.
+- **Phase D — Documentation & Rollout:** Update architecture docs, runtime checklist, and fix_plan with new expectations; archive plan.
+
+---
+
+### Phase A — Inventory & Spec Harmonisation
+Goal: Enumerate all float64 default assumptions and settle doc parity (arch vs spec vs long-term goal).
+Prerqs: None (can start immediately).
+Exit Criteria: Inventory markdown summarising impacted code paths + proposed doc updates, supervisor sign-off recorded in fix_plan attempt log.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| A1 | Catalogue float64 defaults in code | [ ] | `rg "float64" src/nanobrag_torch -n` and inspect constructors (`Simulator.__init__`, configs, utils). Capture findings in `reports/DTYPE-DEFAULT-001/inventory.md`. |
+| A2 | Reconcile spec/architecture statements | [ ] | Compare `arch.md` header (float64 default) vs long-term goal; draft proposed wording changes and identify acceptance tests needing note about dtype. |
+| A3 | Identify gradient-critical paths | [ ] | List components requiring float64 for gradcheck (e.g., `gradcheck` tests) and flag where float64 must remain opt-in. Document in the same inventory file. |
+
+### Phase B — Implementation Update
+Goal: Switch runtime defaults to float32 while allowing tests to request float64 explicitly.
+Prerqs: Phase A inventory approved.
+Exit Criteria: All constructors default to float32; float64 usage limited to gradcheck/test overrides; code passes lint/unit style checks.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| B1 | Update config and simulator defaults | [ ] | Change `Simulator.__init__(..., dtype=...)` and config factories to default `torch.float32`; ensure device-neutral constants use `.type_as` or `torch.tensor(..., dtype=self.dtype)` without forcing float64. |
+| B2 | Adjust constant initialisation | [ ] | Replace hard-coded float64 tensors (e.g., `self.r_e_sqr`, ROI masks) with dtype-aware factories; verify via `python -m nanobrag_torch --help` smoke instantiation. |
+| B3 | Audit helper functions | [ ] | Ensure utilities (geometry/physics) avoid implicit float64 via `torch.arange`/`torch.tensor` defaults; add parameterised dtype tests where missing. |
+
+### Phase C — Validation & Regression Sweep
+Goal: Demonstrate float32 defaults maintain parity, gradients, and performance targets.
+Prerqs: Phase B merged to working branch.
+Exit Criteria: Test matrix recorded in fix_plan; benchmark delta ≤~5 % vs prior float64 baseline; gradients validated.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| C1 | Run Tier-1 parity suite on CPU/GPU | [ ] | `env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_at_parallel_*.py -vv` on cpu + cuda (when available); capture metrics under `reports/DTYPE-DEFAULT-001/parity_<device>.json`. |
+| C2 | Execute gradcheck focus tests | [ ] | `pytest tests/test_crystal_geometry.py::TestMetricDuality::test_metric_duality_grad` et al with `dtype=torch.float64` overrides to ensure float64 path still viable. |
+| C3 | Benchmark warm/cold performance | [ ] | `python scripts/benchmarks/benchmark_detailed.py --sizes 256,512 --device cuda --dtype float32 --iterations 3` and compare against historical reports. Archive results in `reports/DTYPE-DEFAULT-001/benchmarks/`. |
+
+### Phase D — Documentation & Rollout
+Goal: Align documentation/tooling and close the initiative.
+Prerqs: Validation artifacts reviewed.
+Exit Criteria: Docs updated, plan archived, fix_plan attempt recorded with links.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| D1 | Update docs & checklists | [ ] | Revise `arch.md`, `docs/development/pytorch_runtime_checklist.md`, and any README references to note float32 default + float64 gradcheck usage. |
+| D2 | Communicate change downstream | [ ] | Ensure prompts (e.g., `prompts/debug.md`) remind engineers to request float64 explicitly for gradcheck; update CLAUDE.md if necessary. |
+| D3 | Archive plan & log completion | [ ] | Move this plan to `plans/archive/dtype-default-fp32/` and update `[DTYPE-DEFAULT-001]` attempts history with validation artifacts. |
+
+---
+
+## Notes & Guardrails
+- Preserve ability to run float64 paths for gradcheck/tests; do not remove dtype arguments.
+- Re-run performance comparisons vs C after defaults change to quantify improvement.
+- Ensure Protected Assets compliance when touching docs referenced in `docs/index.md`.
+
+## Phase Status Snapshot (initial)
+- Phase A: [ ]
+- Phase B: [ ]
+- Phase C: [ ]
+- Phase D: [ ]

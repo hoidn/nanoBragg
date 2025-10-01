@@ -9,6 +9,7 @@
 | [PROTECTED-ASSETS-001](#protected-assets-001-docsindexmd-safeguard) | Protect docs/index.md assets | Medium | in_progress |
 | [REPO-HYGIENE-002](#repo-hygiene-002-restore-canonical-nanobraggc) | Restore canonical nanoBragg.c | Medium | in_progress |
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
+| [DTYPE-DEFAULT-001](#dtype-default-001-migrate-default-dtype-to-float32) | Migrate default dtype to float32 | High | new |
 | [AT-PARALLEL-012-PEAKMATCH](#at-parallel-012-peakmatch-restore-95-peak-alignment) | Restore 95% peak alignment | High | done |
 
 ---
@@ -131,12 +132,32 @@
     Artifacts: reports/2025-09-30-AT-012-peakmatch/final_summary.json, reports/2025-09-30-AT-012-peakmatch/peak_detection_summary.json
     First Divergence: Not a physics divergence — float64 precision breaks plateau ties. Golden C output (float32) has 8 unique peak values creating plateaus. PyTorch float64 has 38 unique values due to numerical noise, causing scipy.ndimage.maximum_filter to find 45 local maxima instead of 52.
     Solution: Cast pytorch_image.astype(np.float32) before find_peaks() in all three test methods. This matches golden data precision and restores plateau ties, achieving 50/50 peak matches (100%) vs spec requirement of 48/50 (95%).
-    Next Actions: None — AT-PARALLEL-012 complete and passing. Updated test assertions from 86% threshold to spec-required 95%.
+    Next Actions: None — AT-PARALLEL-012 complete and passing. Plan archived at `plans/archive/at-parallel-012-peakmatch/plan.md`; assertions tightened to ≥95%.
 - Risks/Assumptions: Ensure triclinic/tilted variants remain passing; preserve differentiability (no `.item()` in hot path); guard ROI caching vs Protected Assets rule.
 - Exit Criteria (quote thresholds from spec):
   * PyTorch run matches ≥48/50 peaks within 0.5 px and maintains corr ≥0.9995.
   * Acceptance test asserts `≥0.95` with supporting artifacts archived under `reports/2025-10-02-AT-012-peakmatch/`.
   * CPU + CUDA parity harness remains green post-fix.
+
+---
+
+## [DTYPE-DEFAULT-001] Migrate default dtype to float32
+- Spec/AT: `arch.md` (Implementation Architecture header), prompts long-term goal (fp32 default), `docs/development/pytorch_runtime_checklist.md` §1.4
+- Priority: High
+- Status: new
+- Owner/Date: galph/2025-10-04
+- Reproduction (C & PyTorch):
+  * Inventory: `rg "float64" src/nanobrag_torch -n`
+  * Baseline simulator import: `python -c "from nanobrag_torch.simulator import Simulator"`
+  * Smoke test: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py -vv`
+- First Divergence (if known): n/a — initiative to align defaults with performance goals.
+- Attempts History:
+  * _Pending Phase A._ Plan tracked at `plans/active/dtype-default-fp32/plan.md`.
+- Risks/Assumptions: Must preserve float64 gradcheck path; documentation currently states float64 defaults; small value shifts must stay within existing tolerances and acceptance comparisons.
+- Exit Criteria (quote thresholds from spec):
+  * Default simulator/config dtype switches to float32 and is documented in `arch.md` and runtime checklist.
+  * Tier-1/Tier-2 acceptance suites pass on CPU & CUDA with float32 defaults.
+  * Benchmarks under `reports/DTYPE-DEFAULT-001/` show ≤5 % regression vs previous float64 baseline.
 
 ---
 
