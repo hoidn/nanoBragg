@@ -524,3 +524,20 @@
   1. Patch the Phase B3 script to pass `dtype`/`device` through `Simulator`, rerun experiments, and archive results per plan tasks A3/B3.
   2. Execute PERF P3.0c exactly as specified (two-source unequal weights, pytest + nb-compare artifacts) and adjust normalization to match the chosen semantics before re-running CPU/CUDA benchmarks.
   3. Produce `reports/routing/<date>-loop-audit.txt` and update `[ROUTING-LOOP-001]` attempts before the automation runs again.
+
+## 2025-10-09 (galph loop BF)
+- Sync clean; no upstream changes blocked the loop.
+- Deep analysis vs long-term goals:
+  * AT-012 still fails 43/50 peaks in float32 and Attempt #12’s float64 override masked the regression. Fix_plan now shows status `in_progress` with Attempt #13 documenting the rejected workaround and the broken diagnostic script (ignores `dtype`).
+  * PyTorch multi-source weighting continues to divide by `n_sources` after applying weights; parity evidence for unequal weights remains missing. Added P3.3a to PERF plan to study 4096² warm behaviour as requested by new long-term goal.
+  * Automation guard unresolved: `loop.sh` still runs `prompts/main.md` 40× with unconditional `git push`. ROUTING-LOOP-001 Phase A evidence remains outstanding.
+- Plan maintenance: updated `plans/active/perf-pytorch-compile-refactor/plan.md` with P3.3a (4096² warm benchmark + profiling) and logged Attempt #13 in `[AT-PARALLEL-012-PEAKMATCH]`. Fix_plan table now reflects reopened status.
+- Ralph review (heads coin flip):
+  • `8a86f65` reintroduced float64 overrides and prematurely marked AT-012 done — regression; must be reverted (already undone by supervisor but commit reveals pattern).
+  • `f2dddb8` added Phase B reports + script but the helper ignores its dtype argument, making conclusions suspect; needs refactor per plan.
+  • `712617f`, `0c76ccc` prompt edits OK, but no progress on routing guard or weighted-source parity; focus is drifting.
+- Follow-ups for Ralph:
+ 1. Patch `scripts/validate_single_stage_reduction.py` so `dtype` flows into Crystal/Detector/Simulator, then rerun Phase A3 histograms & Phase B3 experiments under float32/float64 variants with artifacts under `reports/2025-10-AT012-regression/`.
+ 2. Tackle AT-012 Phase C mitigation once diagnostics are trustworthy; no more dtype overrides or tolerance loosening.
+ 3. Execute PERF plan P3.0c (unequal weights) and new P3.3a 4096² benchmark/profiling, then update docs/fix_plan.md with findings before claiming perf wins.
+ 4. Complete ROUTING-LOOP-001 Phase A report documenting current `loop.sh` behaviour before automation runs again.
