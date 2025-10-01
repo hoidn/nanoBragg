@@ -29,7 +29,8 @@ class TestCrystalGeometry:
             cell_gamma=90.0,
         )
 
-        crystal = Crystal(config=config)
+        # Override dtype to float64 for precision-critical regression test
+        crystal = Crystal(config=config, dtype=torch.float64)
 
         # Get the computed tensors
         tensors = crystal.compute_cell_tensors()
@@ -91,7 +92,8 @@ class TestCrystalGeometry:
             cell_gamma=95.0081,
         )
 
-        crystal = Crystal(config=config)
+        # Override dtype to float64 for precision-critical C-code validation test
+        crystal = Crystal(config=config, dtype=torch.float64)
         tensors = crystal.compute_cell_tensors()
 
         # Expected values from trace.log lines 9-18
@@ -166,7 +168,8 @@ class TestCrystalGeometry:
             cell_gamma=96.1,
         )
 
-        crystal = Crystal(config=config)
+        # Override dtype to float64 for precision-critical metric duality test (Core Rule #13)
+        crystal = Crystal(config=config, dtype=torch.float64)
 
         # Get both real and reciprocal vectors
         a, b, c = crystal.a, crystal.b, crystal.c
@@ -327,7 +330,8 @@ class TestCrystalGeometry:
             cell_gamma=94.5,
         )
 
-        crystal = Crystal(config=config)
+        # Override dtype to float64 for precision-critical rotation invariance test
+        crystal = Crystal(config=config, dtype=torch.float64)
 
         # Test with a specific reflection
         h, k, l = 2.0, 4.0, -3.0
@@ -604,7 +608,8 @@ class TestCrystalGeometry:
             misset_deg=(90.0, 0.0, 0.0),  # 90° rotation around X axis
         )
 
-        crystal = Crystal(config=config)
+        # Override dtype to float64 for precision-critical misset orientation test
+        crystal = Crystal(config=config, dtype=torch.float64)
 
         # For a cubic cell with 90° X rotation:
         # Original: a* = [0.01, 0, 0], b* = [0, 0.01, 0], c* = [0, 0, 0.01]
@@ -720,7 +725,8 @@ class TestCrystalGeometry:
             misset_deg=(30.0, 45.0, 60.0),
         )
 
-        crystal = Crystal(config=config)
+        # Override dtype to float64 for precision-critical rotation order test
+        crystal = Crystal(config=config, dtype=torch.float64)
 
         # Manually compute expected result with XYZ rotation order
         # Start with unrotated reciprocal vectors for cubic cell
