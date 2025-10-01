@@ -261,7 +261,8 @@
   * C: `NB_C_BIN=./golden_suite_generator/nanoBragg -lambda 6.2 -cell 100 100 100 90 90 90 -default_F 100 -distance 100 -detpixels 1024 -floatfile c_simple_cubic.bin`
   * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation -vv`
   * Shapes/ROI: 1024×1024 detector, pixel 0.1 mm, oversample auto (currently 1×), full-frame ROI
-- First Divergence (if known): Not yet fully localized — suspected ROI mask zeroing & intensity scaling at `src/nanobrag_torch/simulator.py:586-603` / `:950-979`; float64 peak detection drops plateau maxima vs float32/golden outputs.
+- First Divergence (if known): Phase B3 analysis isolates per-pixel float32 arithmetic (geometry + sinc pipelines) as the driver — PyTorch float32 yields ≈5× more unique plateau intensities than C float32 despite perfect correlation (see `reports/2025-10-AT012-regression/phase_b3_experiments.md`).
+- Immediate Next Actions (2025-10-11): Run plan Phase C1–C3 to produce a mitigation decision memo, implement the selected fix under `prompts/debug.md`, and revalidate plateau metrics before resuming Tier-1/DTYPE closures.
 - Attempts History:
   * [2025-10-02] Attempt #1 — Result: failed. Correlation 0.9999999999999997 but only 43/50 peaks matched (86%) vs ≥95% requirement.
     Metrics: corr=1.0; matches=43/50; unmatched peaks on outer ring.

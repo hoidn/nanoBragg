@@ -42,16 +42,16 @@ Exit Criteria: Documented first divergence (function + tensor) with side-by-side
 | B3 | Evaluate peak detection sensitivity | [X] | Fixed `scripts/validate_single_stage_reduction.py` to honor dtype parameter. Ran float32 vs float64 experiments; results recorded in `reports/2025-10-AT012-regression/phase_b3_experiments.md`. **Key finding:** Both dtypes show ~5× fragmentation (float32=4.91×, float64=4.56×), confirming per-pixel FP operations (not multi-stage accumulation) as root cause. Single-stage reduction will NOT fix AT-012; Phase C must pursue alternative mitigations (peak clustering, FMA tuning, or documented float64 override). |
 
 ### Phase C — Mitigation Selection & Implementation
-Goal: Implement the least invasive change that restores plateau stability while preserving performance goals.
-Prerqs: Phase B identifies candidate mitigation with supporting data.
-Exit Criteria: Candidate fix implemented with targeted tests/benchmarks captured; supervisor sign-off recorded in fix_plan attempt.
+Goal: Select and implement a mitigation that addresses the per-pixel float32 fragmentation quantified in Phase B3 while keeping physics/parity and performance targets intact.
+Prerqs: Phase A/B artifacts reviewed; decision should cite `reports/2025-10-AT012-regression/phase_b3_experiments.md`.
+Exit Criteria: Decision memo + implemented fix + regression artifacts archived with supervisor sign-off recorded in fix_plan attempts.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Choose mitigation strategy | [ ] | Prefer physics-path fixes first: prototype a single-stage accumulation that flattens `(sources × phi × mosaic × oversample²)` and performs one `torch.sum`, mirroring C's sequential `I += term`. Fall back to compensated summation or matcher tweaks only if single-stage refactor fails parity/perf requirements. Document the trade-off analysis (spec alignment, expected perf impact). |
-| C2 | Implement under debug prompt | [ ] | Apply the selected change in simulator/test suite under `prompts/debug.md`. If using single-stage reduction, guard against device/dtype drift and keep vectorization (no Python loops). Maintain Core Rules (differentiability, batching). |
-| C3 | Validate physics + regression tests | [ ] | Rerun `pytest tests/test_at_parallel_012.py -vv` plus parity harness (`NB_RUN_PARALLEL=1 NB_C_BIN=... pytest tests/test_parity_matrix.py -k AT-PARALLEL-012`). Archive logs under reports directory. |
-| C4 | Benchmark impact | [ ] | Record timing vs main branch using `scripts/benchmarks/benchmark_detailed.py --sizes 256 --dtype float32`. Note Δ% to ensure we do not regress PERF-PYTORCH-004 targets. |
+| C1 | Draft mitigation decision memo | [ ] | Summarize Phase B3 findings and evaluate at least three options (peak clustering in matcher, controlled rounding/quantization in simulator, documented float64 exception). Store analysis under `reports/2025-10-AT012-regression/phase_c_decision.md` with go/no-go rationale tied to spec + DTYPE plan. |
+| C2 | Implement chosen mitigation under debug prompt | [ ] | Apply the selected change in the appropriate module while running inside `prompts/debug.md`. Preserve vectorization/differentiability; update tests or helper scripts as needed. Note code locations and guard conditions in the memo. |
+| C3 | Revalidate plateau + acceptance tests | [ ] | Run `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation -vv` and `NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_parity_matrix.py -k AT-PARALLEL-012`. Re-run `scripts/analyze_at012_plateau.py` to capture updated plateau histograms; ensure ROI unique-count ratio ≤1.5× C baseline. Archive outputs under `reports/2025-10-AT012-regression/phase_c_validation/`. |
+| C4 | Benchmark impact | [ ] | Re-run `scripts/benchmarks/benchmark_detailed.py --sizes 256 --device cpu --dtype float32 --iterations 3` (and CUDA if available) to confirm mitigation does not worsen PERF-PYTORCH-004 targets. Note deltas vs prior baseline in the memo. |
 
 ### Phase D — Test & Documentation Closure
 Goal: Reinstate canonical assertions and complete documentation/plan closures.

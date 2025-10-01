@@ -576,3 +576,13 @@
 - Warm-run CPU profile (512², cached compile) shows `Torch-Compiled Region` dominates (~3.8 ms, 66 % CPU) with `aten::mul/sum` leading ops; eager traces needed to isolate `Crystal._nearest_neighbor_lookup` gathers and quantify the ~200 MB `_cached_pixel_coords_meters` allocation. Added PERF plan tasks B5 (eager profile), C6 (HKL gather microbenchmark), and C7 (pixel-coordinate memory audit).
 - DTYPE plan Phase B3 guidance now calls out the exact float64 holdouts (`io/source.py`, `utils/noise.py`, `utils/c_random.py`) and requires recording before/after snippets in `reports/DTYPE-DEFAULT-001/`.
 - Follow-ups for Ralph: (1) land the weighted-source script path fix before rerunning P3.0c; (2) execute PERF plan B5/C6/C7 diagnostics to confirm structure-factor and pixel-grid hypotheses; (3) convert the identified helper modules to respect caller dtype/device per DTYPE plan B3.
+
+## 2025-10-11 (galph loop BH)
+- Pulled commit 5b91964 (Phase B3 dtype harness fix + new report); no conflicts.
+- Plateau investigation: Phase B3 artifacts confirm per-pixel float32 fragmentation as root cause. Updated Phase C of `plans/active/at-parallel-012-plateau-regression/plan.md` to require a mitigation decision memo, targeted implementation, plateau revalidation, and benchmark check. Synced `[AT-PARALLEL-012-PEAKMATCH]` in docs/fix_plan.md with the new divergence statement and Phase C marching orders.
+- DTYPE rollout still blocked on helper modules (`plans/active/dtype-default-fp32/plan.md` lines 39-63) and Tier-1/benchmarks (C1–C3). PERF plan Phase A tasks (A0–A4) remain untouched; weighted-source script path bug still prevents evidence capture.
+- Routing guard plan still pending Phase A audit (no new data this loop).
+- Follow-ups for Ralph:
+ 1. Execute plateau plan Phase C1–C3: author the mitigation memo, prototype the chosen fix under `prompts/debug.md`, and re-run plateau + parity tests with artifacts under `reports/2025-10-AT012-regression/phase_c_validation/`.
+ 2. Finish DTYPE plan Phase B3 helper conversions (`io/source.py`, `utils/noise.py`, `utils/c_random.py`) then progress Phase C Tier-1/gradcheck/benchmark tasks once AT-012 passes.
+ 3. Unblock PERF plan Phase A by fixing `scripts/validate_weighted_source_normalization.py` output path (task A0) before capturing fresh 4096² warm baselines and profiler traces.
