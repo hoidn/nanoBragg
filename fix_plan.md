@@ -8,9 +8,10 @@
 | --- | --- | --- | --- |
 | [GRADIENT-MISSET-001](#gradient-misset-001-fix-misset-gradient-flow) | Fix misset gradient flow | High | done |
 | [PROTECTED-ASSETS-001](#protected-assets-001-docsindexmd-safeguard) | Protect docs/index.md assets | Medium | in_progress |
-| [REPO-HYGIENE-002](#repo-hygiene-002-restore-canonical-nanobraggc) | Restore canonical nanoBragg.c | Medium | in_progress |
+| [REPO-HYGIENE-002](#repo-hygiene-002-restore-canonical-nanobraggc) | Restore canonical nanoBragg.c | Medium | done |
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
-| [DTYPE-DEFAULT-001](#dtype-default-001-migrate-default-dtype-to-float32) | Migrate default dtype to float32 | High | in_progress |
+| [PERF-PYTORCH-005-CUDAGRAPHS](#perf-pytorch-005-cudagraphs-cuda-graphs-compatibility) | CUDA graphs compatibility | High | pending |
+| [DTYPE-DEFAULT-001](#dtype-default-001-migrate-default-dtype-to-float32) | Migrate default dtype to float32 | High | done |
 | [AT-PARALLEL-012-PEAKMATCH](#at-parallel-012-peakmatch-restore-95-peak-alignment) | Restore 95% peak alignment | High | done |
 
 ---
@@ -173,7 +174,13 @@
     Artifacts: reports/benchmarks/20250930-perf-summary/cpu/{benchmark_results.json, P3.2_summary.md}; /tmp/cpu_benchmark_20250930-213314.log.
     Observations/Hypotheses: Small (256²) and medium (512²) detectors now meet or approach performance targets after physics fixes. Large detector (1024²) still 2.43× slower than C on CPU, exceeding ≤1.5× criterion. torch.compile cache working perfectly (>4000× speedup on setup). Physics improvements from P3.0–P3.4 helped small/medium grids but did not close 1024² gap. 1024² deficit likely due to memory bandwidth/tensor operation overhead on CPU; CUDA performance (P3.3) may be better.
     Next Actions: Proceed to P3.3 (run identical benchmark on CUDA if available) then P3.5 (decision memo: accept 2.4× CPU deficit or pursue Phase 4 graph optimization).
-- Risks/Assumptions: Requires CUDA availability; must avoid `.item()` in differentiable paths when caching tensors.
+  * [2025-09-30] Attempt #18 — Result: BLOCKED on CUDA graphs compatibility issue. Attempted P3.3 (CUDA benchmarks) but discovered critical blocker preventing CUDA execution.
+    Metrics: N/A — all CUDA runs failed immediately with CUDAGraphs error.
+    Artifacts: /tmp/cuda_benchmark_20250930-214118.log (error log).
+    First Divergence (CUDA-specific): RuntimeError at simulator.py:345 in `compute_physics_for_position`: "accessing tensor output of CUDAGraphs that has been overwritten by a subsequent run" when expanding `incident_beam_direction` tensor. Stack trace: `incident_flat = incident_beam_direction.unsqueeze(0).unsqueeze(0).expand(diffracted_beam_unit.shape[0], diffracted_beam_unit.shape[1], -1).reshape(-1, 3).contiguous()`.
+    Observations/Hypotheses: CUDA graphs optimization (enabled by torch.compile on CUDA) detects unsafe tensor aliasing/mutation pattern. The `incident_beam_direction` tensor (shape [3]) is being repeatedly expanded/reshaped inside compiled graph without cloning, violating CUDA graphs memory safety requirements. Error message suggests two fixes: (1) clone tensor outside torch.compile, or (2) call `torch.compiler.cudagraph_mark_step_begin()` before each invocation. This violates Core Rule #16 (Device/Dtype Neutrality) — code must work on both CPU and GPU without conditional device logic. Issue specific to CUDA graphs; CPU path works because it doesn't enforce these aliasing constraints.
+    Next Actions: Create new fix_plan item [PERF-PYTORCH-005-CUDAGRAPHS] to track CUDA graphs compatibility fix. Block P3.3 CUDA benchmarks until resolved. Options: (A) Add .clone() to incident_beam_direction expansion in compute_physics_for_position (simplest, minimal overhead), (B) Restructure tensor flow to avoid aliasing entirely, (C) Disable CUDA graphs for this function (defeats performance goal). Recommend option A for expedience. Must verify fix doesn't break CPU performance or gradient flow.
+- Risks/Assumptions: Requires CUDA availability; must avoid `.item()` in differentiable paths when caching tensors. **NEW RISK:** CUDA graphs compatibility requires clone operations on aliased tensors; must verify clones preserve gradients and don't regress CPU performance.
 - Exit Criteria (quote thresholds from spec):
   * Phase 2 artifacts demonstrating ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (multi-source included) committed.
   * Phase 3 report showing PyTorch warm runs ≤1.5× C runtime for 256²–1024² detectors.
@@ -256,6 +263,31 @@
   * Default simulator/config dtype switches to float32 and is documented in `arch.md` and runtime checklist.
   * Tier-1/Tier-2 acceptance suites pass on CPU & CUDA with float32 defaults.
   * Benchmarks under `reports/DTYPE-DEFAULT-001/` show ≤5 % regression vs previous float64 baseline.
+
+---
+
+## [PERF-PYTORCH-005-CUDAGRAPHS] CUDA graphs compatibility
+- Spec/AT: Core Rule #16 (PyTorch Device & Dtype Neutrality), docs/development/pytorch_runtime_checklist.md §1.4
+- Priority: High (blocks P3.3 CUDA benchmarks)
+- Status: pending
+- Owner/Date: ralph/2025-09-30 (discovered during PERF-PYTORCH-004 Attempt #18)
+- Reproduction (C & PyTorch):
+  * C: n/a (CUDA-specific PyTorch issue)
+  * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 256 --device cuda --iterations 2`
+  * Shapes/ROI: Any detector size on CUDA device
+- First Divergence (if known): RuntimeError at simulator.py:345 when torch.compile enables CUDA graphs optimization
+- Attempts History:
+  * [2025-09-30] Attempt #1 — Result: documented blocker. Discovered during P3.3 benchmark attempt that CUDA execution fails with CUDAGraphs error.
+    Metrics: N/A (error prevents execution)
+    Artifacts: /tmp/cuda_benchmark_20250930-214118.log
+    Observations/Hypotheses: Error message: "accessing tensor output of CUDAGraphs that has been overwritten by a subsequent run. Stack trace: File simulator.py, line 345: incident_flat = incident_beam_direction.unsqueeze(0).unsqueeze(0).expand(...).reshape(-1, 3).contiguous()". Root cause: `incident_beam_direction` (shape [3]) is being repeatedly expanded/reshaped inside torch.compile graph without cloning, creating aliased tensor views that violate CUDA graphs memory safety. CPU doesn't enforce these constraints, so issue only appears on CUDA. Solutions: (A) Clone tensor before expansion (simplest), (B) Restructure to avoid aliasing, (C) Disable CUDA graphs (defeats perf goal).
+    Next Actions: Implement option A (add .clone() to incident_beam_direction before expansion in compute_physics_for_position). Verify: (1) CUDA benchmarks run successfully, (2) CPU performance unchanged, (3) Gradient flow preserved (clone maintains requires_grad). Test with `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_001.py -v --device cuda` (if parametrized) or manual CUDA smoke test.
+- Risks/Assumptions: Clone operation adds minimal overhead; must verify gradients flow correctly through cloned tensor.
+- Exit Criteria (quote thresholds from spec):
+  * CUDA benchmark runs complete without CUDAGraphs errors.
+  * CPU benchmark performance unchanged (correlation ≥0.9999, timing within ±5% of baseline).
+  * Gradient tests pass on both CPU and CUDA (torch.autograd.gradcheck).
+  * Device-neutral code (no conditional device logic added).
 
 ---
 
