@@ -259,6 +259,11 @@
     Artifacts: Inline profiling output (no trace saved yet); updated plan `plans/active/perf-pytorch-compile-refactor/plan.md`.
     Observations/Hypotheses: Multi-source tooling must be path-agnostic; structure-factor gather and pixel-coordinate cache size remain top suspects for the 3.4× warm gap.
     Next Actions: Repair validation script output path (plan task A0), record eager-mode trace per B5, then execute C6/C7 experiments prior to any performance code changes.
+  * [2025-10-01] Attempt #29 (loop BK) — Result: Phase A COMPLETE. Executed baseline benchmarks (sizes 512–4096, float32, 5 iterations) capturing C and PyTorch timings simultaneously.
+    Metrics: 4096² warm 1.783s (Py) vs 0.502s (C) → speedup 0.28 (Py 3.55× slower). 2048² warm 0.428s vs 0.136s → speedup 0.32 (Py 3.15× slower). 1024² warm 0.093s vs 0.044s → speedup 0.47 (Py 2.11× slower). 512² warm 0.006s vs 0.014s → speedup 2.22 (Py faster). All correlations = 1.000000. Cache setup speedup 6k–114k×.
+    Artifacts: `reports/benchmarks/20251001-005052-cpu-baseline/{benchmark_output.log, results/benchmark_results.json, phase_a_summary.md}`.
+    Observations/Hypotheses: Performance gap at 4096² unchanged from prior benchmarks (was 3.4×, now 3.55×). Small sizes show PyTorch wins; large sizes confirm critical deficit. Cache system highly effective (warm setup <1ms). Deterioration pattern suggests memory bandwidth or allocator churn at scale. Ready for Phase B profiling.
+    Next Actions: Proceed to plan Phase B tasks B1–B5 (capture torch profiler traces for 4096² warm run, eager-mode SF lookup profile, hotspot summary with % CPU time per op).
 - Risks/Assumptions: 1024² CPU performance acceptable given GPU alternative; Phase 4 revisit only if future profiling identifies specific bottlenecks. Weighted-source tooling must be path-agnostic before P3.0c evidence is considered durable.
 - Exit Criteria (quote thresholds from spec):
   * ✅ Phase 2 artifacts demonstrating ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (37–6428× achieved).
