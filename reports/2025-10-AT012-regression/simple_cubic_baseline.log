@@ -1,0 +1,80 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.18, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/pytorch/bin/python3.10
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/nanoBragg
+configfile: pyproject.toml
+plugins: typeguard-2.13.3, anyio-4.9.0
+collecting ... collected 1 item
+
+tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation FAILED [100%]
+
+=================================== FAILURES ===================================
+__ TestATParallel012ReferencePatternCorrelation.test_simple_cubic_correlation __
+
+self = <tests.test_at_parallel_012.TestATParallel012ReferencePatternCorrelation object at 0x73e5059b6dd0>
+
+    def test_simple_cubic_correlation(self):
+        """Test simple cubic pattern correlation (≥0.9995 correlation, ≤0.5px peaks)."""
+        # Load golden data (now correctly 1024x1024 as documented)
+        golden_file = Path(__file__).parent / "golden_data" / "simple_cubic.bin"
+        golden_image = load_golden_float_image(str(golden_file), (1024, 1024))
+    
+        # Setup PyTorch configuration to match golden data generation
+        # Generated with: -cell 100 100 100 90 90 90 -lambda 6.2 -N 5 -default_F 100 -distance 100 -detpixels 1024 -pixel 0.1
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            N_cells=(5, 5, 5),
+            default_F=100.0
+        )
+    
+        detector_config = DetectorConfig(
+            spixels=1024,
+            fpixels=1024,
+            pixel_size_mm=0.1,
+            distance_mm=100.0,
+            detector_convention=DetectorConvention.MOSFLM,  # C code default (no explicit convention flag)
+            detector_pivot=DetectorPivot.BEAM
+        )
+    
+        beam_config = BeamConfig(
+            wavelength_A=6.2
+            # Use default fluence to match C code default
+        )
+    
+        # Run PyTorch simulation with float64 to match C float32 plateau structure
+        # (AT-012 regression workaround: native float32 fragments plateaus 7× more than C)
+        crystal = Crystal(crystal_config)
+        detector = Detector(detector_config)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config)
+    
+        pytorch_image = simulator.run().cpu().numpy()
+    
+        # Calculate correlation
+        corr, _ = pearsonr(golden_image.flatten(), pytorch_image.flatten())
+    
+        # Find peaks (both should detect exactly 50 per spec)
+        golden_peaks = find_peaks(golden_image, n_peaks=50, percentile=99.5)
+        pytorch_peaks = find_peaks(pytorch_image.astype(np.float32), n_peaks=50, percentile=99.5)
+    
+        # Match peaks using spec-required 0.5 pixel tolerance
+        n_matches, mean_dist = match_peaks_hungarian(golden_peaks, pytorch_peaks, max_distance=0.5)
+    
+        # Assertions per spec-a-parallel.md §AT-012
+        assert corr >= 0.9995, f"Correlation {corr:.4f} < 0.9995 requirement"
+    
+        # Spec requires ≥95% of top 50 peaks within 0.5px
+        required_matches = int(0.95 * 50)  # 48 peaks
+>       assert n_matches >= required_matches, (
+            f"Only {n_matches}/50 peaks matched within 0.5px (need ≥{required_matches})"
+        )
+E       AssertionError: Only 43/50 peaks matched within 0.5px (need ≥47)
+E       assert 43 >= 47
+
+tests/test_at_parallel_012.py:181: AssertionError
+----------------------------- Captured stdout call -----------------------------
+auto-selected 1-fold oversampling
+=========================== short test summary info ============================
+FAILED tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation - AssertionError: Only 43/50 peaks matched within 0.5px (need ≥47)
+assert 43 >= 47
+============================== 1 failed in 7.81s ===============================
