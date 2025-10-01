@@ -39,6 +39,10 @@ def compute_physics_for_position(
     N_cells_c: int = 0,
     crystal_shape: CrystalShape = CrystalShape.SQUARE,
     crystal_fudge: float = 1.0,
+    # Polarization parameters (PERF-PYTORCH-004 P3.0b)
+    apply_polarization: bool = True,
+    kahn_factor: float = 1.0,
+    polarization_axis: Optional[torch.Tensor] = None,
 ) -> torch.Tensor:
     """Compute physics (Miller indices, structure factors, intensity) for given positions.
 
@@ -83,6 +87,9 @@ def compute_physics_for_position(
         N_cells_a/b/c: Number of unit cells in each direction
         crystal_shape: Crystal shape enum for lattice structure factor calculation
         crystal_fudge: Fudge factor for lattice structure factor
+        apply_polarization: Whether to apply Kahn polarization correction (default True)
+        kahn_factor: Polarization factor for Kahn correction (0=unpolarized, 1=fully polarized)
+        polarization_axis: Polarization axis unit vector (3,) or broadcastable shape
 
     Returns:
         intensity: Computed intensity |F|^2 integrated over phi and mosaic
@@ -282,6 +289,76 @@ def compute_physics_for_position(
     # intensity shape before sum: (S, F, N_phi, N_mos) or (n_sources, S, F, N_phi, N_mos) or (n_sources, batch, N_phi, N_mos)
     intensity = torch.sum(intensity, dim=(-2, -1))
     # After sum: (S, F) or (n_sources, S, F) or (n_sources, batch)
+
+    # PERF-PYTORCH-004 P3.0b: Apply polarization PER-SOURCE before weighted sum
+    if apply_polarization and not (kahn_factor == 0.0):
+        # Calculate polarization factor for each source
+        # Need diffracted beam direction: pixel_coords_angstroms normalized
+        pixel_magnitudes = torch.norm(pixel_coords_angstroms, dim=-1, keepdim=True).clamp_min(1e-12)
+        diffracted_beam_unit = pixel_coords_angstroms / pixel_magnitudes
+
+        if is_multi_source:
+            # Multi-source case: apply per-source polarization
+            # diffracted_beam_unit: (S, F, 3) or (batch, 3)
+            # incident_beam_direction: (n_sources, 3)
+
+            # Expand diffracted to (n_sources, S, F, 3) or (n_sources, batch, 3)
+            if original_n_dims == 2:
+                # batch case
+                diffracted_expanded = diffracted_beam_unit.unsqueeze(0).expand(n_sources, -1, -1)
+                incident_expanded = incident_beam_direction.unsqueeze(1).expand(-1, diffracted_beam_unit.shape[0], -1)
+            else:
+                # (S, F, 3) case
+                diffracted_expanded = diffracted_beam_unit.unsqueeze(0).expand(n_sources, -1, -1, -1)
+                incident_expanded = incident_beam_direction.unsqueeze(1).unsqueeze(1).expand(-1, diffracted_beam_unit.shape[0], diffracted_beam_unit.shape[1], -1)
+
+            # Flatten for polarization calculation
+            flat_shape = diffracted_expanded.shape
+            incident_flat = incident_expanded.reshape(-1, 3)
+            diffracted_flat = diffracted_expanded.reshape(-1, 3)
+
+            # Calculate polarization
+            polar_flat = polarization_factor(
+                kahn_factor,
+                incident_flat,
+                diffracted_flat,
+                polarization_axis
+            )
+
+            # Reshape to match intensity shape: (n_sources, S, F) or (n_sources, batch)
+            if original_n_dims == 2:
+                polar = polar_flat.reshape(n_sources, -1)
+            else:
+                polar = polar_flat.reshape(n_sources, diffracted_beam_unit.shape[0], diffracted_beam_unit.shape[1])
+
+            # Apply polarization per source
+            intensity = intensity * polar
+        else:
+            # Single source case
+            # Flatten for polarization calculation
+            incident_flat = incident_beam_direction.unsqueeze(0).expand(diffracted_beam_unit.shape[0] * (diffracted_beam_unit.shape[1] if original_n_dims == 3 else 1), -1)
+            if original_n_dims == 3:
+                incident_flat = incident_beam_direction.unsqueeze(0).unsqueeze(0).expand(diffracted_beam_unit.shape[0], diffracted_beam_unit.shape[1], -1).reshape(-1, 3)
+            else:
+                incident_flat = incident_beam_direction.unsqueeze(0).expand(diffracted_beam_unit.shape[0], -1).reshape(-1, 3)
+            diffracted_flat = diffracted_beam_unit.reshape(-1, 3)
+
+            # Calculate polarization
+            polar_flat = polarization_factor(
+                kahn_factor,
+                incident_flat,
+                diffracted_flat,
+                polarization_axis
+            )
+
+            # Reshape to match intensity shape
+            if original_n_dims == 2:
+                polar = polar_flat.reshape(-1)
+            else:
+                polar = polar_flat.reshape(diffracted_beam_unit.shape[0], diffracted_beam_unit.shape[1])
+
+            # Apply polarization
+            intensity = intensity * polar
 
     # Handle multi-source weighted accumulation
     if is_multi_source:
@@ -510,6 +587,10 @@ class Simulator:
             N_cells_c=self.crystal.N_cells_c,
             crystal_shape=self.crystal.config.shape,
             crystal_fudge=self.crystal.config.fudge,
+            # PERF-PYTORCH-004 P3.0b: Pass polarization parameters
+            apply_polarization=not self.beam_config.nopolar,
+            kahn_factor=self.kahn_factor,
+            polarization_axis=self.polarization_axis,
         )
 
     def run(
@@ -777,11 +858,6 @@ class Simulator:
                 # Reshape back to (S, F, oversample*oversample)
                 # The weighted sum over sources is done inside _compute_physics_for_position
                 subpixel_physics_intensity_all = physics_intensity_flat.reshape(batch_shape)
-
-                # PERF-PYTORCH-004 P3.0b: For multi-source polarization, use primary source direction
-                # This is the incident direction that will be used for polarization calculation below
-                # Use the first source as representative (typically the central/primary source)
-                incident_for_polarization = incident_dirs_batched[0]
             else:
                 # Single source case: use default beam parameters
                 physics_intensity_flat = self._compute_physics_for_position(
@@ -791,11 +867,11 @@ class Simulator:
                 # Reshape back to (S, F, oversample*oversample)
                 subpixel_physics_intensity_all = physics_intensity_flat.reshape(batch_shape)
 
-                # Single source: use the global incident beam direction
-                incident_for_polarization = self.incident_beam_direction
-
             # Normalize by the total number of steps
             subpixel_physics_intensity_all = subpixel_physics_intensity_all / steps
+
+            # PERF-PYTORCH-004 P3.0b: Polarization is now applied per-source inside compute_physics_for_position
+            # Only omega needs to be applied here for subpixel oversampling
 
             # VECTORIZED AIRPATH AND OMEGA: Calculate for all subpixels
             sub_squared_all = torch.sum(subpixel_coords_ang_all * subpixel_coords_ang_all, dim=-1)
@@ -822,56 +898,22 @@ class Simulator:
                     / airpath_m_all
                 )
 
-            # VECTORIZED POLARIZATION: Calculate for all subpixels
-            # Shape of incident: (S, F, oversample*oversample, 3)
-            # PERF-PYTORCH-004 P3.0b: Use per-source incident direction (primary source for multi-source)
-            incident_all = -incident_for_polarization.unsqueeze(0).unsqueeze(0).unsqueeze(0).expand(S, F, oversample*oversample, 3)
-
-            # Diffracted directions for all subpixels
-            # CRITICAL: Both numerator and denominator must be in same units (Angstroms)
-            # subpixel_coords_ang_all is in Angstroms, sub_magnitudes_all is in Angstroms
-            diffracted_all = subpixel_coords_ang_all / sub_magnitudes_all.unsqueeze(-1)
-
-            # Calculate polarization factor
-            if self.beam_config.nopolar:
-                polar_all = torch.ones_like(omega_all)
-            else:
-                # Reshape for polarization calculation
-                incident_flat = incident_all.reshape(-1, 3)
-                diffracted_flat = diffracted_all.reshape(-1, 3)
-                polar_flat = polarization_factor(
-                    self.kahn_factor,
-                    incident_flat,
-                    diffracted_flat,
-                    self.polarization_axis
-                )
-                polar_all = polar_flat.reshape(S, F, oversample*oversample)
-
-            # Apply factors based on oversample flags
+            # Apply omega based on oversample flags
             intensity_all = subpixel_physics_intensity_all.clone()
 
             if oversample_omega:
                 # Apply omega per subpixel
                 intensity_all = intensity_all * omega_all
 
-            if oversample_polar:
-                # Apply polarization per subpixel
-                intensity_all = intensity_all * polar_all
-
             # Sum over all subpixels to get final intensity
             # Shape: (S, F)
             accumulated_intensity = torch.sum(intensity_all, dim=2)
 
-            # Apply last-value semantics if flags are not set
+            # Apply last-value semantics if omega flag is not set
             if not oversample_omega:
                 # Get the last subpixel's omega (last in flattened order)
                 last_omega = omega_all[:, :, -1]  # Shape: (S, F)
                 accumulated_intensity = accumulated_intensity * last_omega
-
-            if not oversample_polar:
-                # Get the last subpixel's polarization
-                last_polar = polar_all[:, :, -1]  # Shape: (S, F)
-                accumulated_intensity = accumulated_intensity * last_polar
 
             # Use accumulated intensity
             normalized_intensity = accumulated_intensity
@@ -896,20 +938,17 @@ class Simulator:
                     source_weights=source_weights
                 )
                 # The weighted sum over sources is done inside _compute_physics_for_position
-
-                # PERF-PYTORCH-004 P3.0b: For multi-source polarization, use primary source direction
-                incident_for_polarization = incident_dirs_batched[0]
             else:
                 # Single source case: use default beam parameters
                 intensity = self._compute_physics_for_position(
                     pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star
                 )
 
-                # Single source: use the global incident beam direction
-                incident_for_polarization = self.incident_beam_direction
-
             # Normalize by steps
             normalized_intensity = intensity / steps
+
+            # PERF-PYTORCH-004 P3.0b: Polarization is now applied per-source inside compute_physics_for_position
+            # Only omega needs to be applied here
 
             # Calculate airpath for pixel centers
             pixel_squared_sum = torch.sum(
@@ -941,39 +980,6 @@ class Simulator:
 
             # Apply omega directly
             normalized_intensity = normalized_intensity * omega_pixel
-
-            # Calculate and apply polarization factor (missing in original no-subpixel path)
-            # This matches the subpixel path logic (lines 590-603)
-            if self.beam_config.nopolar:
-                polar_pixel = torch.ones_like(omega_pixel)
-            else:
-                # Get detector dimensions from pixel coordinates shape
-                S_dim, F_dim = pixel_coords_angstroms.shape[:2]
-
-                # Calculate polarization for pixel centers
-                # incident: FROM source TO sample (negated source direction)
-                # PERF-PYTORCH-004 P3.0b: Use per-source incident direction (primary source for multi-source)
-                incident_pixels = -incident_for_polarization.unsqueeze(0).unsqueeze(0).expand(S_dim, F_dim, 3)
-
-                # diffracted: FROM sample TO pixel (normalized pixel coords)
-                # Use airpath (which has shape (S, F)) instead of pixel_magnitudes (which has shape (S, F, 1))
-                diffracted_pixels = pixel_coords_angstroms / airpath.unsqueeze(-1)
-
-                # Flatten for polarization_factor function
-                incident_flat = incident_pixels.reshape(-1, 3)
-                diffracted_flat = diffracted_pixels.reshape(-1, 3)
-
-                polar_flat = polarization_factor(
-                    self.kahn_factor,
-                    incident_flat,
-                    diffracted_flat,
-                    self.polarization_axis
-                )
-
-                polar_pixel = polar_flat.reshape(S_dim, F_dim)
-
-            # Apply polarization
-            normalized_intensity = normalized_intensity * polar_pixel
 
         # Apply detector absorption if configured (AT-ABS-001)
         if (self.detector.config.detector_thick_um is not None and

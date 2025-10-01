@@ -153,6 +153,11 @@
     Artifacts: commit cd03422; simulator.py lines 692-703.
     Observations/Hypotheses: Changed `source_norm = source_weights.sum()` to `source_norm = n_sources` per spec requirement "steps = sources; intensity contributions SHALL sum with per-source λ and weight, then divide by steps". The divisor must be COUNT not SUM. Weights are applied during accumulation (inside compute_physics_for_position), then we normalize by count. This fixes the double-weighting bug where intensities were being averaged instead of summed.
     Next Actions: P3.0c complete. Proceed to P3.0b (per-source polarization) in next loop. P3.0b requires more invasive refactor to apply polarization per-source before weighted sum.
+  * [2025-09-30] Attempt #15 — Result: success (P3.0b complete). Refactored polarization calculation to apply per-source before weighted sum reduction, ensuring each source uses its own incident direction for Kahn factor.
+    Metrics: test_multi_source_integration PASSED (1/1); test_crystal_geometry PASSED (19/19); test_detector_geometry PASSED (12/12); test_at_parallel_001 PASSED (8/8).
+    Artifacts: src/nanobrag_torch/simulator.py (lines 42-46 signature extension, 286-354 per-source polarization logic, 514-516 parameter forwarding, 792-793 and 908-909 removed post-sum polarization).
+    Observations/Hypotheses: Moved polarization calculation inside `compute_physics_for_position` pure function. Polarization now applies to each source's contribution using its own incident direction BEFORE the weighted sum reduction. This fixes AT-SRC-001 violation where secondary sources were effectively unpolarized. Implementation maintains vectorized tensor operations (ADR-11), preserves gradient flow (no .item() calls), and remains device/dtype neutral. Both oversample and no-oversample paths updated to remove now-redundant post-sum polarization code.
+    Next Actions: P3.0b complete. Proceed to P3.0c (normalization verification - already completed in Attempt #14, verify still working) and then P3.4 (ROI caching) before re-benchmarking.
 - Risks/Assumptions: Requires CUDA availability; must avoid `.item()` in differentiable paths when caching tensors.
 - Exit Criteria (quote thresholds from spec):
   * Phase 2 artifacts demonstrating ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (multi-source included) committed.
