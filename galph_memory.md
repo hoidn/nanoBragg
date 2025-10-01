@@ -404,3 +404,13 @@
   1. Execute routing plan Phase A (capture current `loop.sh`, produce audit report, update fix_plan with artifact link) then Phase B–C to restore debug prompt guard.
   2. Resume PERF-PYTORCH-004 Phase 3 tasks — fix multi-source weighting & polarization plus ROI caching — before recording new benchmarks.
   3. For DTYPE plan Phase C1, generate float64 vs float32 trace/peak artifacts under `reports/DTYPE-DEFAULT-001/20251006-at012-regression/` and resolve plateau failure prior to doc updates.
+## 2025-10-06 (galph loop AS)
+- Step-1 analysis reinforced open blockers: multi-source normalization still divides by Σweights and polarization keeps only the first source direction in both oversample and pixel-center paths (`src/nanobrag_torch/simulator.py:687-695`, `:775-822`, `:894-950`); ROI mask construction and detector grid `.to()` allocations rerun each `Simulator.run` call (`simulator.py:611-634`), perpetuating CPU slowdowns; dtype rollout remains stalled with AT-012 at 43/50 matches; automation harness `loop.sh` continues to call `prompts/main.md` in a 20-iteration loop with unconditional `git push` (lines 16-18).
+- Coin flip=heads → reviewed recent ralph commits (`8c2ceb4`, `56c46b2`, `df7c0fd`, `5d8237a`, `2c432b5`, `b812155`): dtype flip shipped regression without docs/tests, follow-up commits added documentation only (no fixes), and `loop.sh` regression reintroduced verification-centric automation. Productivity low; regressions remain unresolved.
+- Actions this loop:
+  * Logged Attempt #13 under `[PERF-PYTORCH-004]` in `docs/fix_plan.md` describing the ongoing multi-source/polarization/ROI issues; updated ledger header to loop AS.
+  * Bumped `plans/active/perf-pytorch-compile-refactor/plan.md` status summary to 2025-10-06 and reaffirmed outstanding blockers.
+- Next steps for Ralph:
+  1. Execute PERF plan tasks P3.0b/P3.0c/P3.4 with trace artifacts before attempting any new benchmarks; fix polarization weighting to use per-source directions and move normalization after the reduction.
+  2. Complete routing plan Phase A artifact capture and restore `loop.sh` to single-pass `prompts/debug.md` execution prior to rerunning automation.
+  3. Resume DTYPE-DEFAULT plan Phase C once AT-012 float32 parity passes, capturing float64 vs float32 plateau traces under `reports/DTYPE-DEFAULT-001/20251006-at012-regression/`.

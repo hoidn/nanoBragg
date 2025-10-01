@@ -133,7 +133,7 @@ Exit Criteria: Documented decision in this plan (either defer because warm runs 
 - Treat caching layer as infrastructural: add targeted unit tests (e.g., `tests/test_simulator_compile_cache.py`) but avoid touching physics logic until derivatives verified.
 - Coordinate with parity tasks: brief supervisor ping required before merging Triton/Inductor-level changes to ensure parity harness stays authoritative.
 
-## Phase Status Summary (2025-09-30 Update)
+## Phase Status Summary (2025-10-06 Update)
 
 **✅ COMPLETE:**
 - Phase 0: Refactor to pure function (enables torch.compile caching)
@@ -147,7 +147,7 @@ Exit Criteria: Documented decision in this plan (either defer because warm runs 
 **🔜 CONDITIONAL:**
 - Phase 4: Graph Stabilization (execute only if Phase 3 shows >1.5× deficit)
 
-**📋 DISCOVERED ISSUES:**
+**📋 DISCOVERED ISSUES (confirmed 2025-10-06, galph loop AS):**
 - `Simulator.__init__` still dereferences `beam_config.source_wavelengths/weights` even when None, crashing multi-source defaults (P3.0).
 - Polarization remains per-run, not per-source; secondary sources reuse the primary direction (P3.0b).
 - `steps` divides by Σweights so intensities average instead of summing; normalization parity still missing (P3.0c).

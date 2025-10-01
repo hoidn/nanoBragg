@@ -1,6 +1,6 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-06 (galph loop AQ)
+**Last Updated:** 2025-10-06 (galph loop AS)
 **Active Focus:** Protect automation assets, finish nanoBragg hygiene cleanup, restore AT-012 peak matches, correct multi-source physics regressions, and capture authoritative performance evidence for PERF-PYTORCH-004 (CPU+CUDA reruns after physics fixes).
 
 ## Index
@@ -143,6 +143,11 @@
     Artifacts: n/a (code review only; see citations below).
     Observations/Hypotheses: (1) `Simulator.__init__` still calls `.to(...)` on `beam_config.source_wavelengths`/`source_weights` without guarding for `None`, so divergence configs that rely on auto-generated tensors crash immediately (`src/nanobrag_torch/simulator.py:427-441`). (2) Multi-source polarization continues to reuse only the first source direction, leaving secondary sources unpolarized and violating AT-SRC-001 (`simulator.py:775-822` and `simulator.py:894-950`). (3) The `steps` normalization still divides by `source_weights.sum()` so intensities average instead of summing (`simulator.py:687-695`). (4) ROI masks and external masks are rebuilt from scratch on every run, causing allocator churn and keeping CPU benchmarks slower than C even after warm caches (`simulator.py:611-629`).
     Next Actions: Re-open plan tasks P3.0/P3.0b/P3.0c/P3.4 in code, implement guarded seeding + per-source polarization + post-sum weighting before normalization, then hoist ROI/misset tensors ahead of re-running benchmarks. Only after those fixes land should Ralph resume P3.2/P3.3 measurements.
+  * [2025-10-06] Attempt #13 — Result: supervisor audit (galph loop AS). Confirmed that current HEAD still averages multi-source intensities via `steps` (dividing by `source_weights.sum()`/`n_sources`) and applies polarization using only the primary source (`incident_dirs_batched[0]`) in both oversample and pixel-center paths (`src/nanobrag_torch/simulator.py:714-779, 879-944`). ROI mask reconstruction (`simulator.py:626-642`) and repeated `.to()` conversions on cached detector grids persist, so allocator churn remains a CPU bottleneck. No benchmarks or traces executed this loop.
+    Metrics: Analysis only.
+    Artifacts: None — findings recorded in `plans/active/perf-pytorch-compile-refactor/plan.md` (Phase 3 notes) and galph_memory.md (2025-10-06 loop AS entry).
+    Observations/Hypotheses: Physics semantics unchanged since Attempt #12; Ralph must land P3.0b/P3.0c fixes before new performance data is meaningful. ROI/misset caching (P3.4) and source guard rails remain prerequisites to re-running P3.2/P3.3 benchmarks.
+    Next Actions: Same as Attempt #12 — execute plan tasks P3.0b/P3.0c/P3.4 under `prompts/debug.md`, capturing 3-source C/Py traces and refreshed CPU benchmarks once fixes land.
 - Risks/Assumptions: Requires CUDA availability; must avoid `.item()` in differentiable paths when caching tensors.
 - Exit Criteria (quote thresholds from spec):
   * Phase 2 artifacts demonstrating ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (multi-source included) committed.
