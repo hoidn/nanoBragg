@@ -586,3 +586,20 @@
  1. Execute plateau plan Phase C1–C3: author the mitigation memo, prototype the chosen fix under `prompts/debug.md`, and re-run plateau + parity tests with artifacts under `reports/2025-10-AT012-regression/phase_c_validation/`.
  2. Finish DTYPE plan Phase B3 helper conversions (`io/source.py`, `utils/noise.py`, `utils/c_random.py`) then progress Phase C Tier-1/gradcheck/benchmark tasks once AT-012 passes.
  3. Unblock PERF plan Phase A by fixing `scripts/validate_weighted_source_normalization.py` output path (task A0) before capturing fresh 4096² warm baselines and profiler traces.
+
+## 2025-10-11 (galph loop BI)
+- `git pull --rebase` clean; reviewed latest ralph commits (23c18c6, e4ce0ff, 5b91964, 0a78312). Weighted-source validation now routes through `BeamConfig` and plateau diagnostics capture dtype fragmentation correctly, but mitigation work (plan Phase C) is still outstanding and repeated runs overwrite artifacts because the script writes to a fixed directory name.
+- Deep-dive vs long-term goals:
+  * AT-012 plateau regression remains stuck in Phase C; need mitigation decision memo + implementation before DTYPE plan Phase C or Tier-1 reruns can resume. Fragmentation evidence confirms physics parity but peak matcher still fails spec.
+  * Default float32 rollout stalled: helper modules (`io/source.py`, `utils/noise.py`, `utils/c_random.py`) still instantiate float64 tensors regardless of caller device/dtype. Highlighted these as blockers for DTYPE plan B3/C progression.
+  * PERF 4096² warm-gap investigation cannot proceed until weighted-source validation writes into timestamped `reports/benchmarks/<date>-…` directories; plan A0 left at `[P]` with guidance to add CLI/timestamp override.
+  * Observed tracked backup file `src/nanobrag_torch/models/detector.py.backup` during scans—verify in a later loop whether it’s intentional; do not delete without Protected Assets check.
+- Plan updates: Marked PERF plan task A0 as `[P]` with new guidance (dynamic output stamp) and logged Attempt #27 in `[PERF-PYTORCH-004]` documenting the remaining gap.
+- Feedback for Ralph’s recent loops:
+  1. Weighted-source fix (23c18c6, 0a78312) restores multi-source coverage; next step is to parameterise the output path so each validation run preserves evidence (`plans/active/perf-pytorch-compile-refactor/plan.md` A0).
+  2. Plateau analysis scripts now quantify fragmentation accurately (e4ce0ff, 5b91964); request immediate Phase C mitigation memo + prototype so AT-012 can pass in float32.
+  3. DTYPE rollout progress halted at helper modules; prioritise converting `io/source.py`, `utils/noise.py`, `utils/c_random.py` to respect caller dtype/device and capture before/after snippets under `reports/DTYPE-DEFAULT-001/`.
+- Next Ralph actions:
+  1. Implement `--out` or timestamped default in `scripts/validate_weighted_source_normalization.py`, rerun validation, and update artifacts/plan (PERF plan A0).
+  2. Draft Phase C mitigation memo for AT-012 (plan tasks C1–C4) and execute chosen fix under `prompts/debug.md` before re-running acceptance tests.
+  3. Finish DTYPE plan Phase B3 helper conversions, then resume Phase C validation once plateau fix lands.
