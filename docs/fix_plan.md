@@ -163,6 +163,11 @@
     Artifacts: None (findings logged in galph_memory.md — 2025-10-08 loop AY entry).
     Observations/Hypotheses: (1) Polarization should be computed per-source before reduction; current broadcast turns Kahn factors into an average. (2) `roi_mask = torch.ones(...)` (`simulator.py:618-635`) and `detector.get_pixel_coords().to(...)` rebuild large tensors per call, blocking P3.4’s allocator goals. (3) The revised `source_norm = n_sources` path needs validation with a weighted multi-source test to ensure it matches C output. 
     Next Actions: Ralph to execute plan tasks P3.0b (per-source polarization) and P3.0c (normalization validation with weighted sources) with new trace/benchmark artifacts, then deliver P3.4 ROI/misset caching before re-running P3.2/P3.3 benchmarks.
+  * [2025-10-08] Attempt #16 — Result: supervisor audit (galph loop AZ). Reviewed `golden_suite_generator/nanoBragg.c:2604-3278` and confirmed the C implementation ignores `source_I` during the accumulation loop (it only seeds `I` before `I = I_bg`). PyTorch’s current weighted reduction therefore diverges from C semantics for non-uniform source weights. Collected evidence by tracing the C loop and cross-checking with `src/nanobrag_torch/simulator.py:300-360`.
+    Metrics: Analysis only.
+    Artifacts: plan update in `plans/active/perf-pytorch-compile-refactor/plan.md` (P3.0c guidance refreshed 2025-10-08); galph_memory.md (loop AZ entry pending).
+    Observations/Hypotheses: Need to reconcile weighting semantics—either adopt C’s behavior (ignore weights) or document/validate a new contract. Weighted parity artifacts (nb-compare + pytest) are still outstanding and must drive the decision before benchmarking.
+    Next Actions: Execute updated P3.0c tasks: build two-source weighted comparison, capture C vs PyTorch metrics, and decide on the correct weighting model. Block P3.2/P3.3 benchmarking until this parity evidence exists.
 - Risks/Assumptions: Requires CUDA availability; must avoid `.item()` in differentiable paths when caching tensors.
 - Exit Criteria (quote thresholds from spec):
   * Phase 2 artifacts demonstrating ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (multi-source included) committed.

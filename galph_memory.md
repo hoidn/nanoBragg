@@ -466,3 +466,8 @@
 - Automation script still loops over `prompts/main.md` with unconditional pushes (`loop.sh:1-19`); ROUTING-LOOP-001 remains blocked until Phase A artifacts captured.
 - Updated `plans/active/perf-pytorch-compile-refactor/plan.md` P3.0c row to mark the code change as partial and require parity evidence (pytest + nb-compare artifacts). No new plan opened.
 - Follow-ups for Ralph: execute AT-012 Plateau plan Phase A (capture regression artifacts), tackle PERF plan P3.0b and new P3.0c validation, start ROI caching work (P3.4), and complete routing plan Phase A before rerunning automation.
+## 2025-10-08 (galph loop AZ)
+- `timeout 30 git pull --rebase` clean; re-read docs index/spec/arch/testing plus active plans before analysis.
+- Confirmed via `golden_suite_generator/nanoBragg.c:2604-3278` that C ignores `source_I` inside the accumulation loop; PyTorch currently multiplies intensities by `source_weights`, so weighted multi-source parity remains unproven.
+- Updated `plans/active/perf-pytorch-compile-refactor/plan.md` Phase 3 (P3.0b→[X], refreshed P3.0c guidance with weighted-case commands, revised discovered-issues list) and logged Attempt #16 under `[PERF-PYTORCH-004]` in `docs/fix_plan.md` to capture the weighting gap.
+- Follow-ups for Ralph: (1) Execute refreshed P3.0c tasks—build a two-source weighted case, run pytest + nb-compare, document whether to mirror C’s semantics; (2) Tackle P3.4 ROI/misset caching before new benchmarks; (3) Continue AT-012 plateau plan Phase A to unblock DTYPE defaults; (4) REPO-HYGIENE-002 and routing plan Phase A artifacts still outstanding.
