@@ -122,7 +122,12 @@ class CLCG:
         return min(temp, self.RNMX)
 
 
-def mosaic_rotation_umat(mosaicity: float, seed: Optional[int] = None) -> torch.Tensor:
+def mosaic_rotation_umat(
+    mosaicity: float,
+    seed: Optional[int] = None,
+    dtype: torch.dtype = torch.float32,
+    device: torch.device = torch.device('cpu')
+) -> torch.Tensor:
     """Generate a random unitary rotation matrix within a spherical cap.
 
     This function ports the mosaic_rotation_umat() function from nanoBragg.c,
@@ -181,6 +186,8 @@ def mosaic_rotation_umat(mosaicity: float, seed: Optional[int] = None) -> torch.
     Args:
         mosaicity: Maximum rotation angle in radians.
         seed: Random seed for reproducibility.
+        dtype: Data type for output tensor (default: torch.float32)
+        device: Device for output tensor (default: CPU)
 
     Returns:
         A 3x3 unitary rotation matrix as a torch.Tensor.
@@ -215,7 +222,7 @@ def mosaic_rotation_umat(mosaicity: float, seed: Optional[int] = None) -> torch.
     t24 = v3 * v3
 
     # Populate the unitary rotation matrix
-    umat = torch.zeros(3, 3, dtype=torch.float64)
+    umat = torch.zeros(3, 3, dtype=dtype, device=device)
     umat[0, 0] = t1 + t2 * t3      # uxx
     umat[0, 1] = t7 - t9            # uxy
     umat[0, 2] = t11 + t12          # uxz

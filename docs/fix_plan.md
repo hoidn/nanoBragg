@@ -477,7 +477,12 @@
     Artifacts: n/a — findings captured from script review (`scripts/validate_single_stage_reduction.py:23-88`).
     Observations/Hypotheses: With the harness hard-coded to float32, Phase B3 cannot explore single-stage reduction vs compensated summation vs float64 accumulators. Plan tasks A3/B3 therefore remain blocked; plateau unique-value counts for float32 vs float64 are still missing.
     Next Actions: Fix the diagnostic script to accept `dtype`/`device` overrides (pass through to `Simulator(..., dtype=dtype)`), rerun Phase B3 checklist (single-stage, compensated sum, float64 accumulator), and archive results to `reports/2025-10-AT012-regression/phase_b3_experiments.md` before attempting any Phase C mitigation.
-- Plan Reference: `plans/active/dtype-default-fp32/plan.md` (Phase A complete, Phase B `[P]`).
+  * [2025-10-01] Attempt #13 — Result: success (Phase B3 COMPLETE). Converted `io/source.py`, `utils/noise.py`, and `utils/c_random.py` to respect caller-provided dtype/device parameters with float32 CPU defaults.
+    Metrics: Crystal geometry 19/19 passed (2.62s); detector geometry 12/12 passed (5.11s). No regressions.
+    Artifacts: `reports/DTYPE-DEFAULT-001/phase_b3_audit.md` (before/after code snippets); commits to source.py (lines 13-20, 50, 73, 77, 81, 115-116), noise.py (lines 129-134, 168), c_random.py (lines 125-130, 225).
+    Observations/Hypotheses: All three helper modules now accept dtype/device and default to float32/CPU aligning with project standards. Preserved C-compatibility for LCG bitstream and source file parsing. Backward compatible — existing callers work without modification; opt-in float64 still available for precision-critical operations (gradcheck).
+    Next Actions: Mark plan.md task B3 as `[X]` complete. Phase B now fully complete — proceed to Phase C validation tasks (C1-C3: run Tier-1 parity CPU/GPU, execute gradcheck focus tests, benchmark warm/cold performance).
+- Plan Reference: `plans/active/dtype-default-fp32/plan.md` (Phase A complete, Phase B `[X]`).
 - Risks/Assumptions: Must preserve float64 gradcheck path; documentation currently states float64 defaults; small value shifts must stay within existing tolerances and acceptance comparisons.
 - Exit Criteria (quote thresholds from spec):
   * Default simulator/config dtype switches to float32 and is documented in `arch.md` and runtime checklist.

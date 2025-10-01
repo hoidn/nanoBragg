@@ -15,6 +15,8 @@ def read_sourcefile(
     default_wavelength_m: float,
     default_source_distance_m: float = 10.0,
     beam_direction: Optional[torch.Tensor] = None,
+    dtype: torch.dtype = torch.float32,
+    device: torch.device = torch.device('cpu'),
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """Read source file containing X,Y,Z position, weight, and wavelength.
 
@@ -35,6 +37,8 @@ def read_sourcefile(
         default_wavelength_m: Default wavelength in meters (λ0)
         default_source_distance_m: Default source distance in meters (10 m)
         beam_direction: Unit beam direction vector (default [0,0,1])
+        dtype: Data type for output tensors (default: torch.float32)
+        device: Device for output tensors (default: CPU)
 
     Returns:
         Tuple of:
@@ -43,7 +47,7 @@ def read_sourcefile(
         - wavelengths: (N,) tensor of wavelengths in meters
     """
     if beam_direction is None:
-        beam_direction = torch.tensor([0.0, 0.0, 1.0], dtype=torch.float64)
+        beam_direction = torch.tensor([0.0, 0.0, 1.0], dtype=dtype, device=device)
 
     directions = []
     weights = []
@@ -66,15 +70,15 @@ def read_sourcefile(
             if len(parts) >= 3:
                 # X, Y, Z provided
                 x, y, z = float(parts[0]), float(parts[1]), float(parts[2])
-                position = torch.tensor([x, y, z], dtype=torch.float64)
+                position = torch.tensor([x, y, z], dtype=dtype, device=device)
             elif len(parts) == 2:
                 # X, Y provided, Z defaults to 0
                 x, y = float(parts[0]), float(parts[1])
-                position = torch.tensor([x, y, 0.0], dtype=torch.float64)
+                position = torch.tensor([x, y, 0.0], dtype=dtype, device=device)
             elif len(parts) == 1:
                 # Only X provided, Y and Z default to 0
                 x = float(parts[0])
-                position = torch.tensor([x, 0.0, 0.0], dtype=torch.float64)
+                position = torch.tensor([x, 0.0, 0.0], dtype=dtype, device=device)
             else:
                 # Use default position (should not happen since we skip empty lines)
                 position = default_position.clone()
@@ -108,7 +112,7 @@ def read_sourcefile(
     # Per spec AT-SRC-001: "intensity contributions SHALL sum with per-source λ and weight"
     # Note: There's a spec contradiction - line 151 says weights are ignored,
     # but AT-SRC-001 requires weights to be applied. We follow the normative test.
-    weights = torch.tensor(weights, dtype=torch.float64)
-    wavelengths = torch.tensor(wavelengths, dtype=torch.float64)
+    weights = torch.tensor(weights, dtype=dtype, device=device)
+    wavelengths = torch.tensor(wavelengths, dtype=dtype, device=device)
 
     return directions, weights, wavelengths
