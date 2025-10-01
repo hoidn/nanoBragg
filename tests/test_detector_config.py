@@ -24,11 +24,12 @@ class TestDetectorConfig:
         assert config.spixels == 1024
         assert config.fpixels == 1024
 
-        # Beam center - auto-calculated as detector center without convention offset
-        # The MOSFLM +0.5 pixel offset is applied later in Detector._calculate_pix0_vector
-        # beam_center = (1024 * 0.1) / 2.0 = 51.2
-        assert config.beam_center_s == 51.2
-        assert config.beam_center_f == 51.2
+        # Beam center - auto-calculated per MOSFLM default formula (spec-a-core.md line 71):
+        # "Default Xbeam = (detsize_s + pixel)/2, Ybeam = (detsize_f + pixel)/2"
+        # beam_center = (1024 * 0.1 + 0.1) / 2.0 = 51.25 mm
+        # This represents Xbeam/Ybeam (user coordinates, before F/S mapping)
+        assert config.beam_center_s == 51.25
+        assert config.beam_center_f == 51.25
 
         # Rotations
         assert config.detector_rotx_deg == 0.0
@@ -139,10 +140,11 @@ class TestDetectorInitialization:
         assert detector.fpixels == 1024
 
         # Check beam center in pixels
-        # MOSFLM convention: beam_center_s/f = 51.2 mm / 0.1 mm per pixel = 512.0
-        # The +0.5 pixel offset is applied in _calculate_pix0_vector, not stored here
-        assert detector.beam_center_s == 512.0
-        assert detector.beam_center_f == 512.0
+        # MOSFLM default: beam_center = (detsize + pixel) / 2 = (102.4 + 0.1) / 2 = 51.25 mm
+        # In pixels: 51.25 mm / 0.1 mm per pixel = 512.5 pixels
+        # Note: This represents Xbeam/Ybeam before F/S mapping (+0.5 pixel in _calculate_pix0_vector)
+        assert detector.beam_center_s == 512.5
+        assert detector.beam_center_f == 512.5
         
         # Check that post_init set the correct default twotheta_axis
         # MOSFLM default is [0, 0, -1] (negative Z-axis) per C code line 1245
@@ -177,9 +179,9 @@ class TestDetectorInitialization:
     def test_backward_compatibility_check(self):
         """Test that _is_default_config works correctly."""
         # The _is_default_config method checks for specific "golden" values
-        # Now that MOSFLM defaults to 51.2 (without +0.5 pixel in config), a default detector WILL match
+        # MOSFLM defaults to 51.25mm per spec formula: (detsize + pixel)/2 = (102.4 + 0.1)/2
         detector = Detector(dtype=torch.float64)
-        assert detector._is_default_config()  # Default now has 51.2 for MOSFLM
+        assert detector._is_default_config()  # Default now has 51.25 for MOSFLM
 
         # Create a config with different values that should NOT match
         non_default_config = DetectorConfig(

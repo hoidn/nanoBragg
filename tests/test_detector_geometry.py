@@ -29,7 +29,7 @@ EXPECTED_ROTATED_ODET_VEC = torch.tensor(
     [0.994829447880333, -0.0521368021287822, -0.0871557427476582], dtype=torch.float64
 )
 EXPECTED_TILTED_PIX0_VECTOR_METERS = torch.tensor(
-    [0.09834815117478057, 0.05224381462124676, -0.05010723729442110], dtype=torch.float64
+    [0.09834653804116220, 0.05229483397146283, -0.05015617014334144], dtype=torch.float64
 )
 
 # --- End Ground Truth Data ---
@@ -140,15 +140,16 @@ class TestDetectorGeometryRegressions:
         )
         detector = Detector(config=config, dtype=torch.float64)
 
-        # Expected calculation for MOSFLM convention (after fix for AT-PARALLEL-002):
+        # Expected calculation for MOSFLM convention (per AT-GEO-001 and C code):
         # fdet=[0,0,1], sdet=[0,-1,0], beam=[1,0,0]
-        # When beam_center is explicitly provided, it's used as-is (no +0.5 offset)
-        # Sbeam = beam_center_s/1000 = 10/1000 = 0.01 m
-        # Fbeam = beam_center_f/1000 = 0/1000 = 0.0 m
+        # beam_center represents Xbeam/Ybeam (user coordinates)
+        # MOSFLM mapping ALWAYS adds +0.5 pixel: Fbeam = Ybeam + 0.5*pixel; Sbeam = Xbeam + 0.5*pixel
+        # Sbeam = (beam_center_s + 0.5*pixel_size)/1000 = (10 + 0.05)/1000 = 0.01005 m
+        # Fbeam = (beam_center_f + 0.5*pixel_size)/1000 = (0 + 0.05)/1000 = 0.00005 m
         # pix0 = -Fbeam*fdet - Sbeam*sdet + dist*beam
-        #      = 0*[0,0,1] - 0.01*[0,-1,0] + 0.1*[1,0,0]
-        #      = [0.1, +0.01, 0.0]
-        expected_pix0 = torch.tensor([0.1, 0.01, 0.0], dtype=torch.float64)
+        #      = -0.00005*[0,0,1] - 0.01005*[0,-1,0] + 0.1*[1,0,0]
+        #      = [0.1, +0.01005, -0.00005]
+        expected_pix0 = torch.tensor([0.1, 0.01005, -0.00005], dtype=torch.float64)
 
         torch.testing.assert_close(
             detector.pix0_vector,
