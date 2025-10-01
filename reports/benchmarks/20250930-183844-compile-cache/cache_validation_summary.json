@@ -1,0 +1,40 @@
+{
+  "all_runs": [
+    {
+      "construction_times": [
+        0.002302199020050466,
+        0.0024608720559626818,
+        0.002319630002602935
+      ],
+      "first_run_times": [
+        0.1878295459318906,
+        0.015254964004270732,
+        0.015758180990815163
+      ],
+      "second_run_times": [
+        0.013714494998566806,
+        0.015285275061614811,
+        0.015803390997461975
+      ],
+      "cache_speedup": 12.112898963433256,
+      "config": {
+        "n_instances": 3,
+        "size": 256,
+        "device": "cpu",
+        "dtype": "torch.float64",
+        "n_sources": 3
+      },
+      "run_metadata": {
+        "timestamp": "2025-09-30T18:38:45.970421",
+        "pytorch_version": "2.7.1+cu126",
+        "cuda_available": true
+      }
+    }
+  ],
+  "summary": {
+    "total_configurations": 1,
+    "min_cache_speedup": 12.112898963433256,
+    "max_cache_speedup": 12.112898963433256,
+    "mean_cache_speedup": 12.112898963433256
+  }
+}

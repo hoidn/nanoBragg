@@ -146,7 +146,7 @@ def run_pytorch_timed(args, output_file, device='cpu', use_cache=True):
     image_np.tofile(output_file)
     timings['io'] = time.time() - start
 
-    timings['total'] = sum(v for k, v in timings.items() if k not in ['device'])
+    timings['total'] = sum(v for k, v in timings.items() if k not in ['device', 'cache_hit'])
 
     return timings
 
@@ -169,6 +169,22 @@ def resolve_c_binary():
 
 
 def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Detailed nanoBragg performance benchmark')
+    parser.add_argument('--sizes', type=str, default='256,512,1024,2048,4096',
+                        help='Comma-separated detector sizes to test (default: 256,512,1024,2048,4096)')
+    parser.add_argument('--iterations', type=int, default=1,
+                        help='Number of iterations per size (default: 1)')
+    parser.add_argument('--device', type=str, default='cpu',
+                        help='Device to use: cpu or cuda (default: cpu)')
+    parser.add_argument('--dtype', type=str, default='float64',
+                        help='Data type: float32 or float64 (default: float64)')
+    args = parser.parse_args()
+
+    # Parse sizes from CLI
+    test_sizes = [int(s.strip()) for s in args.sizes.split(',')]
+
     print("=" * 80)
     print("Detailed nanoBragg Performance Analysis")
     print("=" * 80)
@@ -188,12 +204,15 @@ def main():
     if torch.cuda.is_available():
         print(f"GPU: {torch.cuda.get_device_name(0)}")
 
+    print(f"\nBenchmark Configuration:")
+    print(f"Test sizes: {test_sizes}")
+    print(f"Iterations: {args.iterations}")
+    print(f"Device: {args.device}")
+    print(f"Dtype: {args.dtype}")
+
     # Resolve C binary
     c_bin = resolve_c_binary()
     print(f"\nC binary: {c_bin}")
-
-    # Define test sizes
-    test_sizes = [256, 512, 1024, 2048, 4096]
 
     print("\n" + "=" * 80)
     print("Benchmarking Different Detector Sizes")
@@ -263,7 +282,8 @@ def main():
                 print(f"  Setup time (warm): {py_timings_warm['setup']:.3f}s")
                 print(f"  Simulation time: {py_timings_warm['simulation']:.3f}s")
                 print(f"  Cache hit: {py_timings_warm['cache_hit']}")
-                print(f"  Setup speedup: {py_timings_cold['setup'] / py_timings_warm['setup']:.1f}x faster")
+                setup_speedup = py_timings_cold['setup'] / py_timings_warm['setup'] if py_timings_warm['setup'] > 0 else float('inf')
+                print(f"  Setup speedup: {setup_speedup:.1f}x faster" if setup_speedup != float('inf') else "  Setup speedup: ∞ (instant warm setup)")
                 py_success_warm = True
             except Exception as e:
                 print(f"  PyTorch WARM execution error: {e}")
@@ -299,7 +319,7 @@ def main():
                 print(f"  Correlation (warm): {correlation_warm:.6f}")
 
                 # PERF-PYTORCH-005: Report cache effectiveness
-                setup_improvement = py_timings_cold['setup'] / py_timings_warm['setup']
+                setup_improvement = py_timings_cold['setup'] / py_timings_warm['setup'] if py_timings_warm['setup'] > 0 else float('inf')
                 print(f"\n  ✓ Cache effectiveness: {setup_improvement:.1f}x faster setup")
                 if py_timings_warm['setup'] < 0.050:
                     print(f"  ✓ PERF-PYTORCH-005 EXIT CRITERIA MET: Warm setup {py_timings_warm['setup']*1000:.1f}ms < 50ms")
