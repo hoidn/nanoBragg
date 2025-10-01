@@ -253,12 +253,13 @@ class DetectorConfig:
             detsize_f = self.fpixels * self.pixel_size_mm  # Total detector size in fast axis (mm)
 
             if self.detector_convention == DetectorConvention.MOSFLM:
-                # MOSFLM convention adds 0.5 pixel offset (per spec AT-GEO-001)
-                # For MOSFLM: beam_center = (detsize + pixel_size) / 2
+                # MOSFLM convention: Auto-calculated beam center at detector center
+                # NOTE: The +0.5 pixel CONVENTION MAPPING is applied later in Detector._calculate_pix0_vector
+                # Here we just set the raw beam center position (detector center)
                 if self.beam_center_s is None:
-                    self.beam_center_s = (detsize_s + self.pixel_size_mm) / 2.0
+                    self.beam_center_s = detsize_s / 2.0
                 if self.beam_center_f is None:
-                    self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
+                    self.beam_center_f = detsize_f / 2.0
             elif self.detector_convention == DetectorConvention.DENZO:
                 # DENZO convention: Same as MOSFLM but NO +0.5 pixel offset
                 # For DENZO: beam_center = detsize / 2
