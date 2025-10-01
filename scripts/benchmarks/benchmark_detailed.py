@@ -44,9 +44,10 @@ def get_cache_key(detpixels, oversample, n_sources, device):
     return (detpixels, detpixels, oversample, n_sources, device_type)
 
 
-def run_pytorch_timed(args, output_file, device='cpu', use_cache=True):
+def run_pytorch_timed(args, output_file, device='cpu', use_cache=True, enable_profiler=False,
+                      profiler_path=None, disable_compile=False):
     """
-    Run PyTorch version with detailed timing.
+    Run PyTorch version with detailed timing and optional profiling.
 
     Device handling: all objects created with explicit device parameter to avoid
     TorchDynamo FakeTensor device mismatches.
@@ -56,6 +57,9 @@ def run_pytorch_timed(args, output_file, device='cpu', use_cache=True):
         output_file: Path to output file
         device: Device to run on ('cpu' or 'cuda')
         use_cache: If True, reuse cached simulators (PERF-PYTORCH-005)
+        enable_profiler: If True, run torch.profiler during simulation
+        profiler_path: Path to save profiler trace (required if enable_profiler=True)
+        disable_compile: If True, disable torch.compile (for eager-mode profiling)
     """
     from nanobrag_torch.config import (
         CrystalConfig, DetectorConfig, BeamConfig,
@@ -120,7 +124,12 @@ def run_pytorch_timed(args, output_file, device='cpu', use_cache=True):
         detector = Detector(detector_config, device=device_obj)
 
         # CRITICAL: Pass device to Simulator to ensure incident_beam_direction lives on correct device
+        # Disable compile if requested (for eager-mode profiling)
+        if disable_compile:
+            os.environ['NB_DISABLE_COMPILE'] = '1'
         simulator = Simulator(crystal, detector, crystal_config, beam_config, device=device_obj)
+        if disable_compile and 'NB_DISABLE_COMPILE' in os.environ:
+            del os.environ['NB_DISABLE_COMPILE']
 
         # For GPU, warm-up run to trigger JIT compilation
         if device_obj.type == 'cuda':
@@ -135,9 +144,38 @@ def run_pytorch_timed(args, output_file, device='cpu', use_cache=True):
 
     # Run simulation (the actual timed run)
     start = time.time()
-    image = simulator.run()
-    if device_obj.type == 'cuda':
-        torch.cuda.synchronize()
+
+    if enable_profiler:
+        # Set up profiler
+        from torch.profiler import profile, ProfilerActivity, schedule as profiler_schedule
+
+        activities = [ProfilerActivity.CPU]
+        if device_obj.type == 'cuda':
+            activities.append(ProfilerActivity.CUDA)
+
+        # Profile warm run only (skip setup)
+        # Note: Use only one trace saving method (not both on_trace_ready and export_chrome_trace)
+        with profile(
+            activities=activities,
+            record_shapes=True,
+            profile_memory=True,
+            with_stack=True
+        ) as prof:
+            image = simulator.run()
+            if device_obj.type == 'cuda':
+                torch.cuda.synchronize()
+
+        # Save Chrome trace if path provided
+        if profiler_path:
+            trace_file = Path(profiler_path) / 'trace.json'
+            prof.export_chrome_trace(str(trace_file))
+            timings['profiler_trace'] = str(trace_file)
+            print(f"    Saved trace to: {trace_file}")
+    else:
+        image = simulator.run()
+        if device_obj.type == 'cuda':
+            torch.cuda.synchronize()
+
     timings['simulation'] = time.time() - start
 
     # Save output
@@ -146,7 +184,7 @@ def run_pytorch_timed(args, output_file, device='cpu', use_cache=True):
     image_np.tofile(output_file)
     timings['io'] = time.time() - start
 
-    timings['total'] = sum(v for k, v in timings.items() if k not in ['device', 'cache_hit'])
+    timings['total'] = sum(v for k, v in timings.items() if k not in ['device', 'cache_hit', 'profiler_trace'] and isinstance(v, (int, float)))
 
     return timings
 
@@ -180,6 +218,12 @@ def main():
                         help='Device to use: cpu or cuda (default: cpu)')
     parser.add_argument('--dtype', type=str, default='float64',
                         help='Data type: float32 or float64 (default: float64)')
+    parser.add_argument('--profile', action='store_true',
+                        help='Enable PyTorch profiler for performance analysis')
+    parser.add_argument('--keep-artifacts', action='store_true',
+                        help='Keep profiler trace files in output directory')
+    parser.add_argument('--disable-compile', action='store_true',
+                        help='Disable torch.compile for eager-mode profiling')
     args = parser.parse_args()
 
     # Parse sizes from CLI
@@ -209,6 +253,11 @@ def main():
     print(f"Iterations: {args.iterations}")
     print(f"Device: {args.device}")
     print(f"Dtype: {args.dtype}")
+    print(f"Profiling: {'enabled' if args.profile else 'disabled'}")
+    if args.disable_compile:
+        print(f"Compile: DISABLED (eager mode)")
+    if args.keep_artifacts:
+        print(f"Artifacts: keeping profiler traces")
 
     # Resolve C binary
     c_bin = resolve_c_binary()
@@ -222,8 +271,9 @@ def main():
 
     results = []
 
-    # Store CLI device before it gets shadowed by command args
-    target_device = args.device
+    # Store CLI args before they get used in the loop
+    cli_args = args
+    target_device = cli_args.device
 
     for size in test_sizes:
         print(f"\n{'='*50}")
@@ -235,13 +285,13 @@ def main():
             py_output_cold = Path(tmpdir) / "py_output_cold.bin"
             py_output_warm = Path(tmpdir) / "py_output_warm.bin"
 
-            args = f"-default_F 100 -cell 100 100 100 90 90 90 -lambda 6.2 -N 5 -distance 100 -detpixels {size}"
+            sim_args = f"-default_F 100 -cell 100 100 100 90 90 90 -lambda 6.2 -N 5 -distance 100 -detpixels {size}"
 
             # C implementation
             print("Running C implementation...")
             mem_before = get_memory_usage()
             c_start = time.time()
-            c_cmd = f"{c_bin} {args} -floatfile {c_output}"
+            c_cmd = f"{c_bin} {sim_args} -floatfile {c_output}"
 
             try:
                 subprocess.run(c_cmd, shell=True, check=True, capture_output=True)
@@ -261,7 +311,8 @@ def main():
             mem_before = get_memory_usage()
 
             try:
-                py_timings_cold = run_pytorch_timed(args, py_output_cold, device=device, use_cache=True)
+                py_timings_cold = run_pytorch_timed(sim_args, py_output_cold, device=device, use_cache=True,
+                                                    disable_compile=cli_args.disable_compile)
                 py_mem_cold = get_memory_usage() - mem_before
 
                 print(f"  Setup time (cold): {py_timings_cold['setup']:.3f}s")
@@ -279,13 +330,24 @@ def main():
             print(f"Running PyTorch WARM (cached) on {device.upper()}...")
             mem_before = get_memory_usage()
 
+            # Set up profiler path for this size if profiling enabled
+            profiler_path = None
+            if cli_args.profile:
+                profiler_path = output_dir / f'profile_{size}x{size}'
+                profiler_path.mkdir(parents=True, exist_ok=True)
+                print(f"  Profiling enabled: {profiler_path}")
+
             try:
-                py_timings_warm = run_pytorch_timed(args, py_output_warm, device=device, use_cache=True)
+                py_timings_warm = run_pytorch_timed(sim_args, py_output_warm, device=device, use_cache=True,
+                                                    enable_profiler=cli_args.profile, profiler_path=profiler_path,
+                                                    disable_compile=cli_args.disable_compile)
                 py_mem_warm = get_memory_usage() - mem_before
 
                 print(f"  Setup time (warm): {py_timings_warm['setup']:.3f}s")
                 print(f"  Simulation time: {py_timings_warm['simulation']:.3f}s")
                 print(f"  Cache hit: {py_timings_warm['cache_hit']}")
+                if 'profiler_trace' in py_timings_warm:
+                    print(f"  Profiler trace saved: {py_timings_warm['profiler_trace']}")
                 setup_speedup = py_timings_cold['setup'] / py_timings_warm['setup'] if py_timings_warm['setup'] > 0 else float('inf')
                 print(f"  Setup speedup: {setup_speedup:.1f}x faster" if setup_speedup != float('inf') else "  Setup speedup: ∞ (instant warm setup)")
                 py_success_warm = True
@@ -438,6 +500,21 @@ def main():
 
         print(f"\nCache effectiveness: {avg_setup_speedup:.1f}x faster setup on average")
         print(f"✓ All correlations > 0.99, indicating excellent numerical agreement")
+
+        if cli_args.profile:
+            print("\n" + "=" * 80)
+            print("PROFILING ARTIFACTS")
+            print("=" * 80)
+            print(f"\nProfiler traces saved to subdirectories:")
+            for size in test_sizes:
+                profile_dir = output_dir / f'profile_{size}x{size}'
+                if profile_dir.exists():
+                    trace_file = profile_dir / 'trace.json'
+                    if trace_file.exists():
+                        print(f"  {size}x{size}: {trace_file}")
+            print(f"\nTo view profiler traces:")
+            print(f"  Chrome: Open chrome://tracing and load trace.json")
+            print(f"  TensorBoard: Run 'tensorboard --logdir {output_dir}'")
 
         print(f"\n\nAll outputs saved to: {output_dir}")
 
