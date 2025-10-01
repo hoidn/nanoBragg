@@ -171,3 +171,8 @@
 ## 2025-10-02 (galph loop W)
 - Reinforced fix_plan pruning guidance: `prompts/update_fix_plan.md` now warns against over-pruning and sets a target of ~500 lines when trimming a >1000-line plan so key context stays in the main ledger.
 - No other files touched; tests not run (docs-only update).
+
+## 2025-10-02 (galph loop X)
+- Compared legacy `./fix_plan.md` with canonical ledger; migrated missing high-value notes (AT-PERF device neutrality, parity harness bootstrap, AT-020 absorption fix) into `docs/fix_plan_archive.md`.
+- Replaced stray standalone file with symlink `fix_plan.md -> docs/fix_plan.md` to prevent divergent ledgers going forward.
+- Tests not run (docs + symlink hygiene only).
