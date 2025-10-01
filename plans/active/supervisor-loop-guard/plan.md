@@ -19,9 +19,9 @@ Exit Criteria: Timestamped audit under `reports/routing/` capturing script snaps
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| A1 | Snapshot current script | [ ] | `mkdir -p reports/routing` then `sed -n '1,160p' supervisor.sh > reports/routing/$(date +%Y%m%d-%H%M%S)-supervisor-regression.txt`; prepend commit hash via `git rev-parse HEAD`. |
-| A2 | Highlight guard gaps | [ ] | Append to the same report: `git show 853cf08:loop.sh | diff -u - supervisor.sh` to document missing timeout guard, single-run flow, and conditional push. Comment the three violations explicitly. |
-| A3 | Log attempt in fix_plan | [ ] | Under `[ROUTING-SUPERVISOR-001]`, add Attempt entry pointing to the audit file; note regression scope and that implementation will follow Phase B. |
+| A1 | Snapshot current script | [✅] | `mkdir -p reports/routing` then `sed -n '1,160p' supervisor.sh > reports/routing/$(date +%Y%m%d-%H%M%S)-supervisor-regression.txt`; prepend commit hash via `git rev-parse HEAD`. **Completed 2025-10-01**: Created reports/routing/20251001-044821-supervisor-regression.txt with commit 81abe16. |
+| A2 | Highlight guard gaps | [✅] | Append to the same report: `git show 853cf08:loop.sh | diff -u - supervisor.sh` to document missing timeout guard, single-run flow, and conditional push. Comment the three violations explicitly. **Completed 2025-10-01**: Added diff and 4 explicit violations with risk analysis. |
+| A3 | Log attempt in fix_plan | [✅] | Under `[ROUTING-SUPERVISOR-001]`, add Attempt entry pointing to the audit file; note regression scope and that implementation will follow Phase B. **Completed 2025-10-01**: Added Attempt #2 with artifact path, metrics, and observations. |
 
 ---
 

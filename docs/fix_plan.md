@@ -596,6 +596,11 @@
   * Implement the guarded flow (Phase B2–B4) and new task B5 to add `supervisor.sh` to docs/index.md so Protected Assets policy covers the script before the automation loop runs again.
 - Attempts History:
   * [2025-10-13] Attempt #1 — Result: regression documented. Confirmed `supervisor.sh` loops 40× with no pull/rebase guard and no exit criteria. No artifacts yet (pending plan Phase A). Next Actions: follow plan tasks A1–A3 to produce evidence, then proceed to Phase B implementation.
+  * [2025-10-01] Attempt #2 — Result: success (Phase A complete). Captured regression audit at commit 81abe16.
+    Metrics: N/A (documentation task)
+    Artifacts: reports/routing/20251001-044821-supervisor-regression.txt (script snapshot + diff + 4 identified violations)
+    Observations/Hypotheses: supervisor.sh has 4 critical guard gaps vs loop.sh@853cf08: (1) no timeout on git pull --rebase, (2) for-loop running 20 iterations instead of single execution, (3) no conditional push guard, (4) missing conda env activation. Violations documented with explicit risk statements.
+    Next Actions: Execute Phase B tasks B1–B5 (guard design note, implement guarded script, dry run, hygiene verification, mark as protected asset in docs/index.md).
 - Risks/Assumptions: Treat `supervisor.sh` as a Protected Asset (Phase B5 formalises this in docs/index.md); ensure edits retain logging expectations and do not re-enable multi-iteration loops.
 - Exit Criteria: Guarded single-iteration script with audit/dry-run/compliance logs captured and plan archived.
 
