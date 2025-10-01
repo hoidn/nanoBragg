@@ -351,3 +351,8 @@
   1. Implement guarded source seeding before `.to(...)`, rewrite polarization to apply Kahn factors per source prior to reduction, and move weight normalization after the per-source sum (Perf plan P3.0–P3.0c).
   2. Hoist ROI/omega/misset tensors out of the hot path (P3.4) and only then rerun the CPU/CUDA benchmarks for Phase 3.
   3. Resume DTYPE Phase B3 helper updates and investigate float32 peak regression (store artifacts under `reports/DTYPE-DEFAULT-001/`) once multi-source parity is restored.
+## 2025-10-06 (galph loop AO)
+- Step-1 audit vs long-term goals: Multi-source path still broken — `Simulator.__init__` dereferences `beam_config.source_wavelengths` without fallback (src/nanobrag_torch/simulator.py:431), polarization uses only source[0] (simulator.py:775), and `steps` divides by Σweights (simulator.py:687), so intensities average instead of summing. These map directly to PERF plan P3.0/P3.0b/P3.0c.
+- ROI/mask tensors are rebuilt on every `run` call (simulator.py:611-629) and `Detector.get_pixel_coords().to(...)` clones the full grid each run, keeping CPU warm timings 0.44×–0.63× of C at 512²–1024² (reports/benchmarks/20250930-184744/benchmark_results.json). Highlights urgency of P3.4 caching before revisiting benchmarks.
+- Coin flip → tails, so no additional commit audit beyond Step 3 housekeeping. `docs/fix_plan.md` priorities still align with active plans; no edits needed this loop.
+- Next actions for Ralph: deliver PERF-PYTORCH-004 P3.0/P3.0b/P3.0c fixes with regression artifacts under `reports/PERF-PYTORCH-004/` and implement ROI/misset caching per P3.4 before re-running CPU/CUDA benchmarks; resume DTYPE plan Phase B3 once AT-012 peak parity holds in native float32.
