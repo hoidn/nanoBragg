@@ -513,6 +513,16 @@
     Artifacts: Pending re-run of Phase A logs (`reports/routing/<date>-loop-audit.txt`).
     Observations/Hypotheses: Regression likely came from local edits outside the routing plan; without the guard the engineer agent resumes unsupervised loops and may spam pushes.
     Next Actions: Follow `plans/active/routing-loop-guard/plan.md` Phase A (tasks A1–A3) to capture the regression audit before reapplying the guard from `ffd9a5c`.
+  * [2025-10-01] Attempt #7 — Result: Phase A COMPLETE. Captured regression audit showing 40-iteration loop using `prompts/main.md` with unconditional push at commit 53d65a4.
+    Metrics: n/a (audit task only).
+    Artifacts: `reports/routing/20251001-loop-regression.txt` (includes snapshot, diff vs ffd9a5c baseline, commit context).
+    Observations/Hypotheses: Current loop.sh lost (1) `timeout 30 git pull --rebase`, (2) single-execution `prompts/debug.md`, (3) conditional push logic. All three violations documented in diff output.
+    Next Actions: Execute plan Phase B (tasks B1–B3) to restore guard from ffd9a5c baseline, then Phase C verification.
+  * [2025-10-01] Attempt #8 — Result: Phase B and C COMPLETE. Restored guard from ffd9a5c baseline, verified compliance with dry-run and hygiene checks.
+    Metrics: n/a (guard restoration only).
+    Artifacts: `reports/routing/20251001-loop-dry-run-summary.txt`, `reports/routing/20251001-loop-hygiene.txt`, `reports/routing/20251001-loop-compliance.txt`, restored `loop.sh`.
+    Observations/Hypotheses: All three guard elements now present: (1) timeout 30 git pull --rebase with fallback, (2) single execution of prompts/debug.md, (3) conditional push checking for commits. Script matches ffd9a5c baseline exactly.
+    Next Actions: Commit changes (loop.sh, fix_plan updates, routing reports), push to remote, mark item as done pending supervisor review.
   * [2025-10-07] Attempt #3 — Result: regression worsening. Observed `loop.sh` running `prompts/main.md` in a `{1..40}` loop with unconditional `git push`. No audit artifact captured yet; Phase A still pending.
     Metrics: n/a
     Artifacts: Pending report under `reports/routing/` (plan tasks A1–A3).

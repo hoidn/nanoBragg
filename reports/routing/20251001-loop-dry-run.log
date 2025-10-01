@@ -1,0 +1,4 @@
+error: cannot pull with rebase: You have unstaged changes.
+error: Please commit or stash them.
+WARNING: git pull --rebase failed or timed out. Proceeding with local state.
+{"type":"system","subtype":"init","cwd":"/home/ollie/Documents/nanoBragg","session_id":"81c67f19-f44d-446f-b516-033225e75829","tools":["Task","Bash","Glob","Grep","ExitPlanMode","Read","Edit","Write","NotebookEdit","WebFetch","TodoWrite","WebSearch","BashOutput","KillShell","SlashCommand"],"mcp_servers":[],"model":"claude-sonnet-4-5-20250929","permissionMode":"bypassPermissions","slash_commands":["compact","context","cost","init","output-style:new","pr-comments","release-notes","todos","review","security-review"],"apiKeySource":"none","output_style":"default","agents":["general-purpose","statusline-setup","output-style-setup"],"uuid":"b317c031-50f6-4f55-9748-db8b50a9b042"}
