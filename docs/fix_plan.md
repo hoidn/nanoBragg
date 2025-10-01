@@ -6,7 +6,7 @@
 - ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md` to document the unguarded `supervisor.sh` loop before restoring a single-iteration flow.
 - AT-012: Plan archived (`plans/archive/at-parallel-012-plateau-regression/plan.md`); monitor for regressions using `reports/2025-10-AT012-regression/phase_c_validation/` artifacts and re-open only if peak matches drop below spec.
 - DTYPE: ✅ Complete. Plan archived to `plans/archive/dtype-default-fp32/`. All phases (A-D) finished; float32 defaults documented in arch.md, pytorch_runtime_checklist.md, CLAUDE.md, prompts/debug.md.
-- PERF: Phase B4 reconciliation done; collect remaining evidence (B3 C-side profile and B5 eager trace) so Phase C diagnostics can start with complete hotspot coverage.
+- PERF: Phase B5 eager trace captured; 4096² warm regression resurfaced (see reports/benchmarks/20251001-025148/). Run B6 reproducibility with cache-state logging before unlocking Phase C diagnostics.
 
 ## Index
 | ID | Title | Priority | Status |
@@ -130,8 +130,8 @@
   * Shapes/ROI: 256²–1024² detectors, pixel 0.1 mm, oversample 1, full-frame ROI
 - First Divergence (if known): 4096² warm runs still trail the C binary (latest speedup_warm≈0.90) and the improvement relies on a warmed torch.compile cache; additionally, PyTorch now honours `source_weights` whereas C ignores them (golden_suite_generator/nanoBragg.c:2604-3278), so weighted-source parity remains unresolved pending a decision memo (src/nanobrag_torch/simulator.py:310-360, 420-570).
 - Immediate Next Actions (2025-10-13):
-  * Finish remaining Phase B diagnostics: (i) run B5 to capture the eager-mode structure-factor profile at 1024² and annotate the hotspot summary; (ii) run B6 reproducibility study (ten warm runs from cold interpreters) so we know whether speedup_warm ≥1.0 is achievable without manual cache priming; (iii) B3 C profile is optional but record rationale if skipped.
-  * Document the weighted-source semantic gap by diffing PyTorch vs C accumulation (C ignores weights); produce a short decision note under `reports/benchmarks/<date>-weighted-source-parity/` that feeds into plan task C5 before any optimisation work proceeds.
+  * Close out Phase B by executing task B6: run ten cold-process warm benchmarks, record cache/state metadata, and reconcile the new slowdown reported in reports/benchmarks/20251001-025148/ against the 1.11× runs from reports/benchmarks/20251001-014819-measurement-reconciliation/.
+  * Document the weighted-source semantic gap by diffing PyTorch vs C accumulation (C ignores weights); produce a short decision note under reports/benchmarks/<stamp>-weighted-source-parity/ feeding plan task C5 before optimisation work.
   * After the evidence above lands, proceed with Phase C experiments starting with C1 (compile disabled) and C2 (single-stage reduction) to identify what still keeps the warmed CPU path slower than C.
 - Attempts History:
   * [2025-10-01] Attempt #4 — Result: success (Phase 0/1 complete). Refactored to pure function + hoisted guard tensors; torch.compile caching delivers ≥37× warm/cold speedup.
@@ -281,6 +281,11 @@
     Artifacts: `reports/benchmarks/20251001-014819-measurement-reconciliation/{reconciliation_summary.md, quick_comparison.md, timeline.md, benchmark_results_1iter.json, benchmark_results_5iter.json}`.
     Observations/Hypotheses: (1) Iteration count does NOT explain discrepancy—1-iter vs 5-iter differ by only 1.6%. (2) PyTorch improved 3.1× between Phase A (00:50:52) and Phase B (01:01:28), most likely due to warm torch.compile cache state. (3) Current performance 1.11-1.15× slower meets ≤1.2× target (within 10% margin). (4) Phase A baseline appears to be outlier with cold cache state.
     Next Actions: (1) Mark Phase B task B4 complete with reconciliation summary, (2) Update Phase B decision to reflect **TARGET NEARLY ACHIEVED** status, (3) Consider Phase C/D optional "polish" work given proximity to goal.
+  * [2025-10-13] Attempt #32 — Result: supervisor audit (no code change). Detected newly added benchmark set reports/benchmarks/20251001-025148/ showing warm speedup_warm=0.299 (PyTorch 1.774s vs C 0.531s) — a return to the original 3.3× slowdown. This contradicts Attempt #31’s 1.11× measurements and indicates the improvement is not yet reproducible.
+    Metrics: 4096² warm totals — PyTorch 1.7738s, C 0.5306s.
+    Artifacts: reports/benchmarks/20251001-025148/benchmark_results.json; reports/benchmarks/20251001-025010/profile_1024x1024/trace.json (B5 eager profile).
+    Observations/Hypotheses: Warm speedup hinges on cache state; without disciplined B6 reproducibility the plan cannot claim Phase B complete. Need cache-cleared reruns plus analysis contrasting 014819 vs 025148 results.
+    Next Actions: Run B6 with explicit cache clearing notes, capture regression memo comparing both datasets, then update plan tables before entering Phase C.
 - Risks/Assumptions: 1024² CPU performance acceptable given GPU alternative; Phase 4 revisit only if future profiling identifies specific bottlenecks. Weighted-source tooling must be path-agnostic before P3.0c evidence is considered durable.
 - Exit Criteria (quote thresholds from spec):
   * ✅ Phase 2 artifacts demonstrating ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (37–6428× achieved).

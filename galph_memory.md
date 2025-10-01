@@ -786,3 +786,10 @@ Follow-ups for Ralph:
 - Observed `BeamConfig.source_weights` docstring still claims weights are ignored while simulator now applies them; parity decision memo should resolve whether to match C semantics or update documentation/tests.
 - `supervisor.sh` remains 40-iteration, unguarded; `plans/active/supervisor-loop-guard/plan.md` Phase A tasks still untouched.
 - Follow-ups for Ralph: (1) Execute supervisor guard plan Phase A (audit + fix_plan attempt) before editing the script; (2) Run PERF tasks B5 and new B6, then capture weighted-source parity note feeding plan C5; (3) After reproducibility data, proceed into Phase C experiments targeting true >1.0 speedup; (4) Update `BeamConfig` docs once parity decision lands.
+
+## 2025-10-13 (galph loop CD)
+- Used `timeout 30 git pull --rebase --autostash`; no conflicts, restored pre-existing `supervisor.sh` edit per policy.
+- Noted freshly committed benchmarks at `reports/benchmarks/20251001-025148/` showing warm speedup_warm=0.299 (PyTorch 1.77s vs C 0.53s), contradicting the 1.11× runs from `reports/benchmarks/20251001-014819-measurement-reconciliation/`.
+- Updated `docs/fix_plan.md` Active Focus and `[PERF-PYTORCH-004]` immediate actions to make Phase B6 reproducibility + cache-state logging mandatory; logged Attempt #32 documenting the regression evidence.
+- Refreshed `plans/active/perf-pytorch-compile-refactor/plan.md` Phase B (B4/B6 guidance) to treat prior gains as provisional and require comparing 014819 vs 025148 before proceeding.
+- Follow-ups for Ralph: (1) Execute supervisor guard plan Phase A (audit + fix_plan entry) before touching `supervisor.sh`; (2) Run Phase B6 reproducibility with cold interpreters, capture cache metadata, and write a regression memo comparing both benchmark sets; (3) Deliver the weighted-source parity note feeding plan task C5, then resume Phase C diagnostics once reproducibility is understood.
