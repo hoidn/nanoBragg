@@ -132,10 +132,10 @@
   * Shapes/ROI: 256²–1024² detectors, pixel 0.1 mm, oversample 1, full-frame ROI
 - First Divergence (if known): 4096² warm runs still trail the C binary (latest speedup_warm≈0.30 per reports/benchmarks/20251001-025148/ after 1.77 s PyTorch vs 0.53 s C) and prior 1.11× measurements appear non-reproducible without warmed torch.compile caches; additionally, PyTorch now honours `source_weights` whereas C ignores them (golden_suite_generator/nanoBragg.c:2604-3278), so weighted-source parity remains unresolved pending a decision memo (src/nanobrag_torch/simulator.py:310-360, 420-570).
 - Immediate Next Actions (2025-10-13):
-  * Close out Phase B by executing task B6: run ten cold-process warm benchmarks, record cache/state metadata, and reconcile the new slowdown reported in reports/benchmarks/20251001-025148/ against the 1.11× runs from reports/benchmarks/20251001-014819-measurement-reconciliation/.
+  * Implement plan task B7 so benchmark logs record the actual compile mode and restore any prior `NB_DISABLE_COMPILE` value; rerun the 4096² regression command both compiled and eager to populate reports/benchmarks/<stamp>-env-toggle-fix/.
+  * After the harness fix, redo Phase B task B6: run ten cold-process warm benchmarks with the new compile-mode field, record cache/state metadata, and reconcile the slowdown in reports/benchmarks/20251001-025148/ against the prior 1.11× runs from reports/benchmarks/20251001-014819-measurement-reconciliation/.
   * Document the weighted-source semantic gap by diffing PyTorch vs C accumulation (C ignores weights); produce a short decision note under reports/benchmarks/<stamp>-weighted-source-parity/ feeding plan task C5 before optimisation work.
-  * After the evidence above lands, proceed with Phase C experiments starting with C1 (compile disabled) and C2 (single-stage reduction) to identify what still keeps the warmed CPU path slower than C.
-  * Implement plan task B7 so benchmark logs record the actual compile mode; rerun the 4096² regression command both compiled and eager to populate reports/benchmarks/<stamp>-env-toggle-fix/.
+  * With reproducibility + harness instrumentation in place, execute Phase C diagnostics starting with C1 (compile disabled) and C2 (single-stage reduction), then collect the new measurements from C8 (pixel→Å conversion cost) and C9 (rotated-vector regeneration) so Phase D optimisations are evidence-backed.
 - Attempts History:
   * [2025-10-01] Attempt #4 — Result: success (Phase 0/1 complete). Refactored to pure function + hoisted guard tensors; torch.compile caching delivers ≥37× warm/cold speedup.
     Metrics: CPU float64 warm/cold 37.09×; CPU float32 1485.90×; CUDA float32 1256.03×; warm setup <50 ms.

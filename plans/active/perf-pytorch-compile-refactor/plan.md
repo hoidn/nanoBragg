@@ -60,6 +60,8 @@ Exit Criteria: `diagnostic_experiments.md` enumerating each experiment, findings
 | C5 | Validate weighted-source path | [ ] | Run 3-source config to ensure multi-source fixes don’t reintroduce warm penalties; capture metrics (same directory). |
 | C6 | Compare HKL gather strategies | [ ] | Prototype a microbenchmark (512² ROI) that contrasts current advanced indexing `self.hkl_data[h_idx, k_idx, l_idx]` vs flattened `torch.take` / `gather` approach. Record timing + memory deltas under `reports/profiling/<stamp>-gather-study/` and decide if refactor justified. |
 | C7 | Quantify pixel-coordinate memory pressure | [ ] | Log host memory usage after `_cached_pixel_coords_meters` construction for 2048² and 4096² detectors (use `psutil` + `torch.cuda.memory_allocated`). Document whether tiling/blocking is needed to stay under 1.5× C runtime. |
+| C8 | Profile pixel→Å conversion cost | [ ] | Capture torch.profiler trace on a 4096² warm run (compiled) to measure the time spent in the `pixel_coords_meters * 1e10` kernel; run `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --iterations 1 --profile --keep-artifacts` and store the annotated trace under `reports/profiling/<stamp>-pixel-coord-conversion/trace.json`, noting kernel duration and % of warm time. |
+| C9 | Measure rotated-vector regeneration cost | [ ] | Use a microbenchmark (e.g. `python scripts/benchmarks/profile_rotated_vectors.py` or a short inline script) to time `crystal.get_rotated_real_vectors` for the 4096² config; log results to `reports/profiling/<stamp>-rotated-vector-cost/timings.md` with device/dtype, phi_steps, mosaic_domains, and per-call latency so we can justify caching. |
 
 ### Phase D — Optimization Implementation
 Goal: Apply targeted code changes driven by Phase C findings (e.g., restructure reductions, hoist caches, adjust data layout) while preserving vectorization and differentiability.
@@ -72,6 +74,8 @@ Exit Criteria: Optimized branch delivering ≤1.2× C warm time at 4096² with d
 | D2 | Implement optimization under `prompts/perf_debug.md` | [ ] | Modify simulator/crystal helpers accordingly; add focused unit/benchmark tests capturing new path. Maintain batched reductions and avoid `.item()` usage. |
 | D3 | Run regression + parity tests | [ ] | `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py -vv` and `NB_RUN_PARALLEL=1 NB_C_BIN=... pytest tests/test_parity_matrix.py -k AT-PARALLEL-012`. Archive logs alongside benchmark artifacts. |
 | D4 | Benchmark improvement | [ ] | Repeat Phase A command set to quantify delta; ensure warm speedup ≥0.83 (PyTorch warm ≤1.2× C). Capture both CPU and CUDA metrics if available. |
+| D5 | Hoist pixel Å cache | [ ] | Guided by C8, add a cached `_cached_pixel_coords_angstroms` tensor alongside the meters cache (respecting device/dtype) and reuse it in both oversample and base paths so the 16M-element `* 1e10` multiply disappears from warm runs. |
+| D6 | Cache rotated lattice tensors | [ ] | Following C9, memoize `crystal.get_rotated_real_vectors` outputs keyed by phi/mosaic settings (invalidate on config change) to avoid redundant recomputation; document gradient considerations and capture before/after timings. |
 
 ### Phase E — Documentation & Closure
 Goal: Update plans/docs, capture lessons learned, and archive artifacts once targets met.
