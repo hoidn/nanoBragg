@@ -259,3 +259,31 @@
   1. Execute AT-012 Phase A (A1–A3) to capture fresh failure artifacts before new hypotheses.
   2. Work through PERF Phase 3 tasks sequentially—P3.0/P3.0b/P3.0c to restore multi-source semantics, then P3.1 to fix the benchmark script, before collecting warm-run data.
   3. Once those are underway, cache ROI/misset tensors per P3.4 to remove the remaining per-run tensor churn.
+
+## 2025-10-04 (galph loop AH)
+- Sync: `git pull --rebase` returned "Already up to date"; no conflicts.
+- Deep analysis vs long-term goals:
+  * `Simulator.__init__` still dereferences `beam_config.source_wavelengths` with `.to(...)` when callers omit explicit wavelengths, so multi-source configs built programmatically still crash (src/nanobrag_torch/simulator.py:425-438).
+  * Multi-source physics remains incorrect: polarization uses the global incident vector in both oversample and pixel-center paths (src/nanobrag_torch/simulator.py:813-833, 932-951) and `steps` divides by `source_weights.sum()` (src/nanobrag_torch/simulator.py:687-695), averaging intensities instead of summing like nanoBragg.c.
+  * ROI mask and detector tensors are rebuilt on every run (src/nanobrag_torch/simulator.py:543-615, 905-918), so even once physics is fixed we still pay large allocator overhead—Phase P3.4 remains unfunded.
+- Ralph commit review (last 10): engineer WIP `48a1cdd` shipped without tests and left the `.to()` crash path in place; follow-up `3f9dc82` labeled P3.0 “complete” despite the fallback and polarization/normalization gaps, so productivity stalled and parity regressions persist.
+- Planning/docs actions: Added Attempt #7 under `[PERF-PYTORCH-004]` in `docs/fix_plan.md` capturing the outstanding fallback/polarization/normalization issues and sequencing next actions (P3.0→P3.0b→P3.0c→P3.4). Existing active plans remain valid; no new plan created.
+- Next for Ralph:
+  1. Finish PERF Plan P3.0 by seeding default wavelengths/weights before `.to()` and re-running the multi-source crash reproduction.
+  2. Immediately tackle P3.0b/P3.0c to move polarization/normalization inside the per-source accumulation; archive before/after metrics per plan guidance.
+  3. Only after physics parity is restored, execute P3.4 ROI caching and rerun steady-state benchmarks (Phase 3) against the C binary.
+
+## 2025-10-04 (galph loop AI)
+- Sync: worktree was dirty (`docs/fix_plan.md`, `galph_memory.md`), stashed via `git stash push -m "galph-temp-before-pull"`, completed `timeout 30 git pull --rebase` after finishing an outstanding interactive rebase, then `git stash pop` restored local notes.
+- Deep analysis vs goals:
+  * Multi-source defaults still crash because `Simulator.__init__` calls `.to(...)` on `beam_config.source_wavelengths` without seeding fallbacks (src/nanobrag_torch/simulator.py:429-441); no helper populates wavelengths/weights when only directions are provided.
+  * Polarization remains wrong after commit `fcbb93a`: both oversample and pixel-center paths reuse only the primary source vector (src/nanobrag_torch/simulator.py:775-823, 894-951), leaving secondary sources unpolarized and blocking P3.0b.
+  * `steps` divides by `source_weights.sum()` (src/nanobrag_torch/simulator.py:680-695), so multi-source intensities are averaged instead of summed; aligns with the open P3.0c normalization task.
+  * ROI mask/omega tensors are still rebuilt each run via fresh `torch.ones`/`.to()` churn (src/nanobrag_torch/simulator.py:613-630, 804-833), keeping warm-run perf far behind C until P3.4 executes.
+- Planning/docs updates: tightened `plans/active/perf-pytorch-compile-refactor/plan.md` P3.0/P3.0b/P3.0c guidance with explicit line references and fallback/polarization requirements; corrected `[PERF-PYTORCH-004]` Attempt #7 in `docs/fix_plan.md` to mark commit `fcbb93a` as a failed approximation and restate next actions.
+- Coin flip = heads → reviewed latest engineer commits (fcbb93a, 3f9dc82, 48a1cdd): polarization fix is incomplete, diagnostic commit overstates default readiness, and WIP left `.to(None)` path intact; no new regressions beyond the outstanding multi-source gaps.
+- Repo note: `prompts/supervisor.md` remained locally modified from a prior loop (added fp32 default reminder); change left untouched per policy.
+- Next steps for Ralph:
+  1. Implement P3.0 fallback seeding before touching torch.compile again, capturing before/after logs per plan.
+  2. Rework polarization so each source applies its own Kahn factor before reduction; validate against C traces and update the new parity artifacts.
+  3. Fix normalization (`steps`) to match nanoBragg.c, then continue with P3.1 benchmarking/CLI hardening once physics parity is restored; only afterwards resume ROI caching (P3.4).
