@@ -39,7 +39,7 @@ Exit Criteria: Documented first divergence (function + tensor) with side-by-side
 | --- | --- | --- | --- |
 | B1 | Generate paired C & PyTorch traces | [X] | `reports/2025-10-AT012-regression/PHASE_B1_REPORT.md` + `traces/` directory capture side-by-side logs for the failing pixel (commit f2dddb8). |
 | B2 | Analyze accumulation order | [X] | `reports/2025-10-AT012-regression/accumulation_order_analysis.md` documents the multi-stage vs single-stage reduction gap and quantifies 7.68× plateau fragmentation. |
-| B3 | Evaluate peak detection sensitivity | [ ] | Run the listed experiments (single-stage reduction prototype, compensated summation, float64 intermediate) and record outcomes in `reports/2025-10-AT012-regression/phase_b3_experiments.md`. Ensure the diagnostics script actually toggles dtype — `scripts/validate_single_stage_reduction.py` currently ignores its `dtype` parameter, so adjust the harness before trusting results. |
+| B3 | Evaluate peak detection sensitivity | [X] | Fixed `scripts/validate_single_stage_reduction.py` to honor dtype parameter. Ran float32 vs float64 experiments; results recorded in `reports/2025-10-AT012-regression/phase_b3_experiments.md`. **Key finding:** Both dtypes show ~5× fragmentation (float32=4.91×, float64=4.56×), confirming per-pixel FP operations (not multi-stage accumulation) as root cause. Single-stage reduction will NOT fix AT-012; Phase C must pursue alternative mitigations (peak clustering, FMA tuning, or documented float64 override). |
 
 ### Phase C — Mitigation Selection & Implementation
 Goal: Implement the least invasive change that restores plateau stability while preserving performance goals.
