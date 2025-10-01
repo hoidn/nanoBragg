@@ -698,8 +698,11 @@ class Simulator:
 
             # VECTORIZED: Create all subpixel positions at once
             # Shape: (oversample*oversample, 3)
-            delta_s_all = sub_s_flat * self.detector.pixel_size
-            delta_f_all = sub_f_flat * self.detector.pixel_size
+            # Convert detector properties to tensors with correct device/dtype (AT-PERF-DEVICE-001)
+            # Use as_tensor to avoid warnings when value might already be a tensor
+            pixel_size_m_tensor = torch.as_tensor(self.detector.pixel_size, device=pixel_coords_meters.device, dtype=pixel_coords_meters.dtype)
+            delta_s_all = sub_s_flat * pixel_size_m_tensor
+            delta_f_all = sub_f_flat * pixel_size_m_tensor
 
             # Shape: (oversample*oversample, 3)
             offset_vectors = delta_s_all.unsqueeze(-1) * s_axis + delta_f_all.unsqueeze(-1) * f_axis
@@ -761,8 +764,10 @@ class Simulator:
             airpath_m_all = sub_magnitudes_all * 1e-10
 
             # Get close_distance from detector (computed during init)
-            close_distance_m = self.detector.close_distance
-            pixel_size_m = self.detector.pixel_size
+            # Convert detector properties to tensors with correct device/dtype (AT-PERF-DEVICE-001)
+            # Use as_tensor to avoid warnings when value might already be a tensor
+            close_distance_m = torch.as_tensor(self.detector.close_distance, device=airpath_m_all.device, dtype=airpath_m_all.dtype)
+            pixel_size_m = torch.as_tensor(self.detector.pixel_size, device=airpath_m_all.device, dtype=airpath_m_all.dtype)
 
             # Calculate solid angle (omega) for all subpixels
             # Shape: (S, F, oversample*oversample)
@@ -867,8 +872,10 @@ class Simulator:
             pixel_magnitudes = torch.sqrt(pixel_squared_sum)
             airpath = pixel_magnitudes.squeeze(-1)  # Remove last dimension for broadcasting
             airpath_m = airpath * 1e-10  # Å to meters
-            close_distance_m = self.detector.close_distance  # Use close_distance, not distance
-            pixel_size_m = self.detector.pixel_size  # Already in meters
+            # Convert detector properties to tensors with correct device/dtype (AT-PERF-DEVICE-001)
+            # Use as_tensor to avoid warnings when value might already be a tensor
+            close_distance_m = torch.as_tensor(self.detector.close_distance, device=airpath_m.device, dtype=airpath_m.dtype)
+            pixel_size_m = torch.as_tensor(self.detector.pixel_size, device=airpath_m.device, dtype=airpath_m.dtype)
 
             # Calculate solid angle (omega) based on point_pixel mode
             if self.detector.config.point_pixel:

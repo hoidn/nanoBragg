@@ -1,17 +1,18 @@
 **Last Updated:** 2025-10-01 (timestamp intentionally generic per meta-update policy)
 
-**Current Status:** Core test suite: **98 passed**, 7 skipped, 1 xfailed ✓. AT-PARALLEL: **ALL PASSING** (78 passed, 48 skipped) ✓. AT-012 fixed (triclinic corr≥0.9995) ✓. AT-024 PERF-PYTORCH-004 regression fixed ✓. **AT-PERF**: 3 GPU tests failing - device neutrality issue identified (WIP).
+**Current Status:** Core test suite: **98 passed**, 7 skipped, 1 xfailed ✓. AT-PARALLEL: **ALL PASSING** (78 passed, 48 skipped) ✓. AT-012 fixed (triclinic corr≥0.9995) ✓. AT-024 PERF-PYTORCH-004 regression fixed ✓. **AT-PERF**: **ALL GPU TESTS PASSING** (AT-PERF-007/008 device neutrality fixed) ✓.
 
 ---
 ## Index
 
 ### Active Items
-- [AT-PERF-DEVICE-001] GPU Device Neutrality Violations - in_progress
+- None currently
 
 ### Queued Items
 - None currently
 
 ### Recently Completed (2025-10-01)
+- [AT-PERF-DEVICE-001] GPU Device Neutrality Violations — done (Fixed detector.pixel_size/close_distance device neutrality; all AT-PERF-007/008 GPU tests pass)
 - [PROTECTED-ASSETS-001] Enforce docs/index.md protection — done (CLAUDE.md updated, docs/index.md lists loop.sh, REPO-HYGIENE-002 plan amended with Protected Assets Rule reference)
 - [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — done (moved from 2025-09-30; nested directory removed, artifacts archived, parity tests pass)
 - [PERF-PYTORCH-004] Fuse Physics Kernels — done (Phase 0-1 complete; Phase 2-4 CANCELLED - torch.compile already provides cross-instance caching with 67-238x speedup; see plans/active/perf-pytorch-compile-refactor/phase2_investigation_findings.md)
@@ -47,9 +48,9 @@
 ## [AT-PERF-DEVICE-001] GPU Device Neutrality Violations (2025-10-01)
 - Spec/AT: AT-PERF-007 (GPU Performance), AT-PERF-008 (CUDA Tensor Residency)
 - Priority: **High** (blocking GPU execution and torch.compile)
-- Status: in_progress
+- Status: done
 - Owner/Date: 2025-10-01 (Ralph loop)
-- Exit Criteria:
+- Exit Criteria: ✅ SATISFIED
   * AT-PERF-007::test_gpu_performance passes ✅
   * AT-PERF-008::test_large_tensor_gpu_residency passes ✅
   * AT-PERF-008::test_memory_efficient_gpu_usage passes ✅
@@ -88,6 +89,22 @@
     - Result: Error moved from line 64/238 to line 881 (deeper architectural issue revealed)
     - Core tests: 98 passed, 7 skipped, 1 xfailed ✓ (no regressions)
     - Commit: fe2b91e "AT-PERF-007 WIP: Partial device neutrality fixes"
+  * **Attempt #2 (2025-10-01):** ✅ COMPLETE - Fixed detector property device neutrality
+    - Root cause: `self.detector.pixel_size` and `self.detector.close_distance` are Python floats (or tensors after r-factor update)
+    - Fix: Convert to tensors at point of use with `torch.as_tensor()` to match operand device/dtype
+    - Locations fixed:
+      * Line 703: `pixel_size_m_tensor` for subpixel delta calculations
+      * Lines 769-770: `close_distance_m` and `pixel_size_m` for subpixel omega calculations
+      * Lines 877-878: `close_distance_m` and `pixel_size_m` for non-oversample omega calculations
+    - Used `torch.as_tensor()` instead of `torch.tensor()` to avoid warnings when value is already a tensor
+    - Results:
+      * AT-PERF-007::test_gpu_performance: PASSED ✅
+      * AT-PERF-008 (all 3 GPU tests): PASSED (3 passed, 1 skipped) ✅
+      * Sample core tests: 22 passed (AT-GEO-001/002/003, AT-FLU-001) ✓
+      * Sample parallel tests: 15 passed, 1 skipped (AT-001/002/012) ✓
+      * No warnings in final run ✓
+    - Metrics: All exit criteria met
+    - Artifacts: src/nanobrag_torch/simulator.py (4 conversion sites)
 - Implementation Plan:
   * **Phase 1:** Fix stored tensor constants in Simulator (blocking)
     - Option A: Create tensors lazily in run() based on input device
