@@ -105,11 +105,11 @@ def find_peaks(
     sorted_intensities = peak_intensities[sorted_idx]
 
     # Cluster nearby peaks to avoid duplicates from plateau tolerance
-    # Use cluster_radius=1.5px to handle float32 fragmentation (Phase B3: 5× more unique values)
-    # This ensures that peaks on the same physical plateau are merged into single representatives
+    # Use cluster_radius=0.5px to match spec geometric tolerance (AT-012 requires ≤0.5px offset)
+    # Prevents over-merging distinct peaks while handling float32 plateau fragmentation
     clustered_peaks = []
     used = np.zeros(len(sorted_coords), dtype=bool)
-    cluster_radius = 1.5  # Calibrated for AT-012 float32 plateau fragmentation
+    cluster_radius = 0.5  # Match spec tolerance; prevents over-merging distinct peaks
 
     for i in range(len(sorted_coords)):
         if used[i]:
@@ -121,11 +121,9 @@ def find_peaks(
         cluster_mask = (distances <= cluster_radius) & ~used
         cluster_indices = np.where(cluster_mask)[0]
 
-        # Compute intensity-weighted center of mass for this cluster
+        # Compute geometric centroid for this cluster (simpler and equally effective)
         cluster_coords = sorted_coords[cluster_indices]
-        cluster_intensities = sorted_intensities[cluster_indices]
-        weights = cluster_intensities / np.sum(cluster_intensities)
-        com = np.sum(cluster_coords * weights[:, np.newaxis], axis=0)
+        com = np.mean(cluster_coords, axis=0)
 
         clustered_peaks.append((int(np.round(com[0])), int(np.round(com[1]))))
 
