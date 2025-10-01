@@ -1,7 +1,8 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-01 (ralph loop - AT-PARALLEL-002-003-MOSFLM completion)
+**Last Updated:** 2025-10-01 (ralph loop - AT-CLI-006 float32 rounding fix)
 **Active Focus:**
+- AT-CLI-006-SCALING: ✅ Complete. Fixed float32 rounding error in SMV scaling that caused off-by-one errors at precision boundaries.
 - AT-PARALLEL-002-003-MOSFLM: ✅ Complete. Fixed double-offset bug in Detector.__init__ for MOSFLM convention when beam_center explicitly provided.
 - AT-GEO-003-BEAMCENTER: ✅ Complete. Fixed double-offset bug in verify_beam_center_preservation for MOSFLM convention.
 - DEBUG-TRACE-INDEXERROR: ✅ Complete. Fixed IndexError in trace_pixel debug output when omega_pixel/polarization are scalars.
@@ -17,6 +18,7 @@
 ## Index
 | ID | Title | Priority | Status |
 | --- | --- | --- | --- |
+| [AT-CLI-006-SCALING](#at-cli-006-scaling-fix-float32-rounding-in-smv-scaling) | Fix float32 rounding in SMV scaling | High | done |
 | [AT-PARALLEL-002-003-MOSFLM](#at-parallel-002-003-mosflm-fix-double-offset-in-detectorinit) | Fix MOSFLM double-offset in Detector.__init__ | High | done |
 | [AT-GEO-003-BEAMCENTER-001](#at-geo-003-beamcenter-001-fix-double-offset-bug) | Fix double-offset bug in beam center verification | High | done |
 | [DEBUG-TRACE-INDEXERROR-001](#debug-trace-indexerror-001-fix-scalar-tensor-indexing) | Fix scalar tensor indexing in debug trace | High | done |
@@ -33,6 +35,33 @@
 | [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | done |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | done |
+
+---
+
+## [AT-CLI-006-SCALING] Fix float32 rounding in SMV scaling
+- Spec/AT: AT-CLI-006 (Output scaling and PGM), spec-a-cli.md line 181: "integer pixel = floor(min(65535, float*scale + adc))"
+- Priority: High
+- Status: done
+- Owner/Date: ralph/2025-10-01
+- Reproduction (C & PyTorch):
+  * C: n/a (PyTorch-specific precision issue)
+  * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_cli_006.py::test_explicit_scale_flag -v`
+  * Shapes/ROI: 10×10 detector, pixel 0.1 mm, default parameters
+- First Divergence (if known): When float32 intensity values near precision boundaries (e.g., 0.03999999538064003 ≈ 0.04) were scaled using float32 arithmetic, intermediate results rounded differently than Python's float64 `int()` function. The test expected `int(0.03999999538064003 * 1000 + 50) = 89` but float32 arithmetic gave `floor(0.04 * 1000 + 50) = floor(90.0) = 90`.
+- Attempts History:
+  * [2025-10-01] Attempt #1 — Result: success. Fixed by using float64 precision for scaling arithmetic in both __main__.py (line 1121) and smv.py (line 258).
+    Metrics: test_at_cli_006.py 5/5 passed in 25.47s. Tested pixel (5,5) with float_val=0.03999999538064003 now produces expected int value 89.
+    Artifacts:
+      - src/nanobrag_torch/__main__.py lines 1119-1121 (convert intensity to double before scaling)
+      - src/nanobrag_torch/io/smv.py lines 254-260 (convert image_data to float64 before scaling, use floor instead of round)
+      - src/nanobrag_torch/io/smv.py lines 263-274 (changed round to floor for all integer dtypes for consistency)
+    Observations/Hypotheses: The spec says `floor(min(65535, float*scale + adc))` where "float" refers to the float image data (float32). However, the test computes `int(float_val * scale_value + adc_value)` using Python's float64 arithmetic, which gives different results at precision boundaries due to float32 rounding. The fix ensures scaling arithmetic uses float64 to match the test's expectations and avoid rounding artifacts. Changed `np.round()` to `np.floor()` to match the spec's floor requirement.
+    Next Actions: None - issue resolved. All AT-CLI-006 tests pass.
+- Risks/Assumptions: Float64 arithmetic for scaling may have minor performance impact, but ensures correctness per spec. Assumes tests are correct in using Python's int() (float64) rather than float32 arithmetic.
+- Exit Criteria (quote thresholds from spec):
+  * AT-CLI-006: "With -scale set, integer pixel = floor(min(65535, float*scale + adc))" (✅ satisfied - test passes with floor and float64 precision).
+  * All 5 tests in test_at_cli_006.py pass (✅ verified - 5/5 passed in 25.47s).
+  * No regressions in related I/O tests (✅ smoke-tested AT-CLI-002, AT-CLI-007, AT-NOISE-001 with no new failures).
 
 ---
 

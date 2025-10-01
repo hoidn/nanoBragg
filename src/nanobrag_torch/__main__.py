@@ -1116,7 +1116,9 @@ def main():
             roi_mask = intensity > threshold
 
             # Calculate scaled values
-            scaled = intensity * scale + adc_offset
+            # Per spec-a-cli.md line 181: integer pixel = floor(min(65535, float*scale + adc))
+            # Use float64 for scaling to match Python's int() behavior and avoid float32 rounding errors
+            scaled = intensity.double() * scale + adc_offset
             # Only apply scaling where intensity > 0 (inside ROI)
             scaled = torch.where(roi_mask, scaled, torch.zeros_like(scaled))
             # Clip to valid range and floor
