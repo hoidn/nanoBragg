@@ -5,6 +5,7 @@
 - ROUTING: Close the reopened guard plan by capturing a fresh regression audit referencing commit `c49e3be` and re-confirming the guarded `loop.sh` flow (`plans/active/routing-loop-guard/plan.md` Phases A–C) before automation resumes.
 - ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md` to document the unguarded `supervisor.sh` loop before restoring a single-iteration flow.
 - AT-012: Plan archived (`plans/archive/at-parallel-012-plateau-regression/plan.md`); monitor for regressions using `reports/2025-10-AT012-regression/phase_c_validation/` artifacts and re-open only if peak matches drop below spec.
+- GRADIENT: Reopen Tier-2 gradcheck coverage to add the remaining spec-required parameters (`misset_rot_x`, `lambda_A`, `fluence`) and align docs/tests (see `[AT-TIER2-GRADCHECK]`).
 - DTYPE: ✅ Complete. Plan archived to `plans/archive/dtype-default-fp32/`. All phases (A-D) finished; float32 defaults documented in arch.md, pytorch_runtime_checklist.md, CLAUDE.md, prompts/debug.md.
 - PERF: Phase B5 eager trace captured; 4096² warm regression resurfaced (see reports/benchmarks/20251001-025148/). Run B6 reproducibility with cache-state logging before unlocking Phase C diagnostics.
 
@@ -17,7 +18,7 @@
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
 | [DTYPE-DEFAULT-001](#dtype-default-001-migrate-default-dtype-to-float32) | Migrate default dtype to float32 | High | done |
 | [AT-PARALLEL-012-PEAKMATCH](#at-parallel-012-peakmatch-restore-95-peak-alignment) | Restore 95% peak alignment | High | done |
-| [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | done |
+| [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | in_progress |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | in_progress |
 
@@ -26,7 +27,7 @@
 ## [GRADIENT-MISSET-001] Fix misset gradient flow
 - Spec/AT: arch.md §15 Differentiability Guidelines, Core Implementation Rule #9 (CLAUDE.md)
 - Priority: High
-- Status: done
+- Status: in_progress
 - Owner/Date: ralph/2025-09-30
 - Reproduction (C & PyTorch):
   * C: n/a (PyTorch-specific gradient correctness issue)
@@ -84,7 +85,7 @@
 ## [REPO-HYGIENE-002] Restore canonical nanoBragg.c
 - Spec/AT: Repository hygiene SOP (`docs/development/processes.xml` §C-parity) & commit 92ac528 regression follow-up
 - Priority: Medium
-- Status: done
+- Status: in_progress
 - Owner/Date: galph/2025-09-30
 - Reproduction (C & PyTorch):
   * C: `git show 92ac528^:golden_suite_generator/nanoBragg.c > /tmp/nanoBragg.c.ref`
@@ -660,7 +661,7 @@
 ## [AT-TIER2-GRADCHECK] Implement Tier 2 gradient correctness tests
 - Spec/AT: testing_strategy.md §4.1 Gradient Checks, arch.md §15 Differentiability Guidelines
 - Priority: High
-- Status: done
+- Status: in_progress
 - Owner/Date: ralph/2025-10-01
 - Reproduction (C & PyTorch):
   * C: n/a (PyTorch-specific gradient correctness tests)
@@ -672,12 +673,17 @@
     Metrics: test_gradcheck_crystal_params PASSED (6 parameters tested: cell_a, cell_b, cell_c, cell_alpha, cell_beta, cell_gamma); test_gradcheck_detector_params PASSED (2 parameters tested: distance_mm, beam_center_f). Full test suite: 55 passed, 5 skipped, 1 xfailed in 15.25s - no regressions.
     Artifacts: tests/test_suite.py lines 1616-1763 (git diff commit 0e3054c).
     Observations/Hypotheses: The tests were marked as skipped with "Requires implementation of differentiable parameters" but differentiability was already implemented in the Crystal and Detector classes with comprehensive tests in test_gradients.py. The Tier 2 tests in test_suite.py just needed proper implementation rather than placeholders. Used float64 per arch.md §15 and tolerances (eps=1e-6, atol=1e-5, rtol=0.05) validated by existing gradient infrastructure.
-    Next Actions: None - spec requirement satisfied. All mandatory Tier 2 gradient parameters now have passing gradcheck tests.
-- Risks/Assumptions: Gradient tests use relaxed tolerances (rtol=0.05) due to complex physics simulation chain, validated against existing test_gradients.py comprehensive test suite.
+    Next Actions (historical): None. Superseded by Attempt #2 after gap review.
+  * [2025-10-13] Attempt #2 — Result: regression. Post-review of commit 0e3054c found spec gaps: testing_strategy.md §4.1 also mandates gradcheck coverage for `misset_rot_x`, beam `lambda_A`, and `fluence`. Current Tier-2 suite only exercises cell lengths/angles and detector distance/beam_center_f (`tests/test_suite.py:1616-1756`), and no test in `tests/test_gradients.py` covers the missing parameters. We therefore cannot claim §4.1 compliance yet.
+    Metrics: Manual inspection; no new tests executed.
+    Artifacts: n/a — code review findings.
+    Observations/Hypotheses: Need dedicated scalar loss functions that thread the differentiable parameters into Simulator/Crystal without severing gradients. Reuse existing helpers where possible to avoid duplicate heavy simulations (e.g., share GradientTestHelper but inject misset/beam configs). Ensure new tests remain CPU-only float64 to keep runtime manageable.
+    Next Actions: Re-open item; implement gradcheck tests for (a) `CrystalConfig.misset_deg[0]` (rot_x), (b) `BeamConfig.wavelength_A`, and (c) `BeamConfig.fluence` per §4.1, with documentation updates once tests pass.
+- Risks/Assumptions: Gradient tests use relaxed tolerances (rtol=0.05) due to complex physics simulation chain, validated against existing test_gradients.py comprehensive test suite. New tests must ensure they do not reintroduce long-running simulator invocations.
 - Exit Criteria (quote thresholds from spec):
-  * testing_strategy.md §4.1: "The following parameters (at a minimum) must pass gradcheck: Crystal: cell_a, cell_gamma, misset_rot_x; Detector: distance_mm, Fbeam_mm" (✅ satisfied: all 6 cell params + distance_mm + beam_center_f pass).
-  * arch.md §15: "Use torch.autograd.gradcheck with dtype=torch.float64" (✅ satisfied: all tests use float64).
-  * No regressions in existing test suite (✅ 55 passed, 5 skipped, 1 xfailed - same as before).
+  * testing_strategy.md §4.1: "The following parameters (at a minimum) must pass gradcheck: Crystal: cell_a, cell_gamma, misset_rot_x; Detector: distance_mm, Fbeam_mm; Beam: lambda_A; Model: mosaic_spread_rad, fluence." (⚠️ outstanding: misset_rot_x, lambda_A, fluence still require tests; existing coverage for cell params + beam_center_f remains valid.)
+  * arch.md §15: "Use torch.autograd.gradcheck with dtype=torch.float64" (✅ existing tests honour float64; extend same discipline to new cases).
+  * No regressions in existing test suite (✅ baseline remains 55 passed, 5 skipped, 1 xfailed; maintain or improve once new tests land).
 
 ---
 
