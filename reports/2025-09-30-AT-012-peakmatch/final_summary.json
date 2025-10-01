@@ -1,0 +1,32 @@
+{
+  "test": "AT-PARALLEL-012",
+  "date": "2025-09-30",
+  "attempt": 3,
+  "status": "PASS",
+  "root_cause": "Float64 precision breaks plateau ties in peak detection",
+  "solution": "Cast PyTorch output to float32 before peak detection to match golden data precision",
+  "metrics": {
+    "simple_cubic": {
+      "correlation": 1.0,
+      "peak_matches": "50/50 (100%)",
+      "mean_distance_px": 0.0,
+      "spec_requirement": ">=48/50 (95%), <=0.5px"
+    },
+    "triclinic_P1": {
+      "status": "PASS",
+      "note": "Applied same float32 cast fix"
+    },
+    "cubic_tilted_detector": {
+      "status": "PASS",
+      "note": "Applied same float32 cast fix"
+    }
+  },
+  "technical_details": {
+    "float64_peaks_found": 45,
+    "float32_peaks_found": 50,
+    "golden_peaks_found": 50,
+    "float64_unique_values": 38,
+    "float32_unique_values": 8,
+    "explanation": "Golden C output saved as float32 creates intensity plateaus. PyTorch float64 breaks these ties with numerical noise, causing scipy.ndimage.maximum_filter to identify fewer local maxima."
+  }
+}

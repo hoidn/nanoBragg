@@ -1,0 +1,8 @@
+{
+  "correlation": 1.0,
+  "golden_peaks": 50,
+  "pytorch_f64_peaks": 45,
+  "pytorch_f32_peaks": 50,
+  "golden_dtype": "float64",
+  "pytorch_dtype": "float64"
+}

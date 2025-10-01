@@ -9,7 +9,7 @@
 | [PROTECTED-ASSETS-001](#protected-assets-001-docsindexmd-safeguard) | Protect docs/index.md assets | Medium | in_progress |
 | [REPO-HYGIENE-002](#repo-hygiene-002-restore-canonical-nanobraggc) | Restore canonical nanoBragg.c | Medium | in_progress |
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
-| [AT-PARALLEL-012-PEAKMATCH](#at-parallel-012-peakmatch-restore-95-peak-alignment) | Restore 95% peak alignment | High | in_progress |
+| [AT-PARALLEL-012-PEAKMATCH](#at-parallel-012-peakmatch-restore-95-peak-alignment) | Restore 95% peak alignment | High | done |
 
 ---
 
@@ -103,8 +103,8 @@
 ## [AT-PARALLEL-012-PEAKMATCH] Restore 95% peak alignment
 - Spec/AT: specs/spec-a-parallel.md §AT-012 Reference Pattern Correlation (≥95% of top 50 peaks within 0.5 px)
 - Priority: High
-- Status: in_progress
-- Owner/Date: galph/2025-10-02
+- Status: done
+- Owner/Date: galph/2025-09-30
 - Reproduction (C & PyTorch):
   * C: `NB_C_BIN=./golden_suite_generator/nanoBragg -lambda 6.2 -cell 100 100 100 90 90 90 -default_F 100 -distance 100 -detpixels 1024 -floatfile c_simple_cubic.bin`
   * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation -vv`
@@ -121,6 +121,12 @@
     Artifacts: ad-hoc reproduction; formalize under `reports/2025-10-02-AT-012-peakmatch/` during Plan Phase A.
     Observations/Hypotheses: Double-precision rounding drops plateau duplicates at beam center; aligning dtype or peak tolerance may resolve without physics changes.
     Next Actions: Plan Phase B4 (dtype sensitivity), capture traces, then decide whether to quantize outputs or adjust matcher before tightening the assertion.
+  * [2025-09-30] Attempt #3 — Result: PASS. Fixed peak detection by casting PyTorch output to float32 to match golden data precision.
+    Metrics: simple_cubic: corr=1.0, matches=50/50 (100%), mean_dist=0.0px; triclinic_P1: PASS; cubic_tilted: PASS.
+    Artifacts: reports/2025-09-30-AT-012-peakmatch/final_summary.json, reports/2025-09-30-AT-012-peakmatch/peak_detection_summary.json
+    First Divergence: Not a physics divergence — float64 precision breaks plateau ties. Golden C output (float32) has 8 unique peak values creating plateaus. PyTorch float64 has 38 unique values due to numerical noise, causing scipy.ndimage.maximum_filter to find 45 local maxima instead of 52.
+    Solution: Cast pytorch_image.astype(np.float32) before find_peaks() in all three test methods. This matches golden data precision and restores plateau ties, achieving 50/50 peak matches (100%) vs spec requirement of 48/50 (95%).
+    Next Actions: None — AT-PARALLEL-012 complete and passing. Updated test assertions from 86% threshold to spec-required 95%.
 - Risks/Assumptions: Ensure triclinic/tilted variants remain passing; preserve differentiability (no `.item()` in hot path); guard ROI caching vs Protected Assets rule.
 - Exit Criteria (quote thresholds from spec):
   * PyTorch run matches ≥48/50 peaks within 0.5 px and maintains corr ≥0.9995.

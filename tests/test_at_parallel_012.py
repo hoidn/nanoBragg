@@ -156,18 +156,20 @@ class TestATParallel012ReferencePatternCorrelation:
         corr, _ = pearsonr(golden_image.flatten(), pytorch_image.flatten())
 
         # Find peaks
+        # Note: Cast PyTorch image to float32 to match golden data precision for peak detection.
+        # The golden C output is saved as float32, creating intensity plateaus. PyTorch's float64
+        # precision breaks these ties with numerical noise, causing maximum_filter to find fewer
+        # local maxima (45 vs 52). Correlation remains 1.0, confirming physics correctness.
         golden_peaks = find_peaks(golden_image, n_peaks=50, percentile=99.5)
-        pytorch_peaks = find_peaks(pytorch_image, n_peaks=50, percentile=99.5)
+        pytorch_peaks = find_peaks(pytorch_image.astype(np.float32), n_peaks=50, percentile=99.5)
 
         # Match peaks
         n_matches, mean_dist = match_peaks_hungarian(golden_peaks, pytorch_peaks, max_distance=0.5)
 
         # Assertions per spec
         assert corr >= 0.9995, f"Correlation {corr:.4f} < 0.9995 requirement"
-        # Peak matching: Currently achieves 86% (43/50), spec requires 95%
-        # TODO: Debug peak matching - see fix_plan.md AT-PARALLEL-012
-        assert n_matches >= len(golden_peaks) * 0.86, (
-            f"Only {n_matches}/{len(golden_peaks)} peaks matched (spec requires ≥95%, currently 86%)"
+        assert n_matches >= len(golden_peaks) * 0.95, (
+            f"Only {n_matches}/{len(golden_peaks)} peaks matched (need ≥95%)"
         )
         assert mean_dist <= 0.5, f"Mean peak distance {mean_dist:.2f} > 0.5 pixel requirement"
 
@@ -213,8 +215,9 @@ class TestATParallel012ReferencePatternCorrelation:
         corr, _ = pearsonr(golden_image.flatten(), pytorch_image.flatten())
 
         # Find peaks
+        # Note: Cast to float32 to match golden data precision (see simple_cubic test for rationale)
         golden_peaks = find_peaks(golden_image, n_peaks=50, percentile=99.0)
-        pytorch_peaks = find_peaks(pytorch_image, n_peaks=50, percentile=99.0)
+        pytorch_peaks = find_peaks(pytorch_image.astype(np.float32), n_peaks=50, percentile=99.0)
 
         # Match peaks
         n_matches, mean_dist = match_peaks_hungarian(golden_peaks, pytorch_peaks, max_distance=0.5)
@@ -275,8 +278,9 @@ class TestATParallel012ReferencePatternCorrelation:
         corr, _ = pearsonr(golden_image.flatten(), pytorch_image.flatten())
 
         # Find peaks (use lower percentile for tilted detector)
+        # Note: Cast to float32 to match golden data precision (see simple_cubic test for rationale)
         golden_peaks = find_peaks(golden_image, n_peaks=50, percentile=98.0)
-        pytorch_peaks = find_peaks(pytorch_image, n_peaks=50, percentile=98.0)
+        pytorch_peaks = find_peaks(pytorch_image.astype(np.float32), n_peaks=50, percentile=98.0)
 
         # Match peaks (relaxed to 1.0 pixel for tilted case)
         n_matches, mean_dist = match_peaks_hungarian(golden_peaks, pytorch_peaks, max_distance=1.0)
