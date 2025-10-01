@@ -10,6 +10,9 @@ PERF-PYTORCH-004 Phase 2 prerequisite investigation.
 import os
 import sys
 import time
+import json
+from pathlib import Path
+from datetime import datetime
 import torch
 
 # Set required environment variable
@@ -24,7 +27,7 @@ from nanobrag_torch.models.crystal import Crystal
 from nanobrag_torch.models.detector import Detector
 
 
-def benchmark_compile_times(n_instances=10, size=256, device='cpu', dtype=torch.float64):
+def benchmark_compile_times(n_instances=10, size=256, device='cpu', dtype=torch.float64, n_sources=1):
     """Benchmark compilation times across multiple simulator instances.
 
     Tests:
@@ -37,6 +40,7 @@ def benchmark_compile_times(n_instances=10, size=256, device='cpu', dtype=torch.
         size: Detector size (square)
         device: Device to run on ('cpu' or 'cuda')
         dtype: Data type for tensors
+        n_sources: Number of X-ray sources (1 or 3 for multi-source testing)
     """
     print("=" * 80)
     print("torch.compile Cross-Instance Caching Investigation")
@@ -46,6 +50,7 @@ def benchmark_compile_times(n_instances=10, size=256, device='cpu', dtype=torch.
     print(f"  Detector size: {size}x{size}")
     print(f"  Device: {device}")
     print(f"  Dtype: {dtype}")
+    print(f"  Sources: {n_sources}")
     print(f"  PyTorch version: {torch.__version__}")
     print(f"  CUDA available: {torch.cuda.is_available()}")
 
@@ -66,9 +71,28 @@ def benchmark_compile_times(n_instances=10, size=256, device='cpu', dtype=torch.
         fpixels=size
     )
 
-    beam_config = BeamConfig(
-        wavelength_A=6.2
-    )
+    # Configure beam with multiple sources if requested
+    if n_sources == 1:
+        beam_config = BeamConfig(
+            wavelength_A=6.2
+        )
+    else:
+        # Create multiple source directions for vectorization testing
+        source_directions = torch.tensor([
+            [0.0, 0.0, 1.0],  # Primary beam along +Z
+            [0.01, 0.0, 0.9999],  # Slightly off-axis
+            [0.0, 0.01, 0.9999]   # Another off-axis
+        ][:n_sources], device=device, dtype=dtype)
+
+        # source_wavelengths needs to be in meters, not Angstroms
+        wavelengths_m = torch.tensor([6.2e-10] * n_sources, device=device, dtype=dtype)
+        weights = torch.ones(n_sources, device=device, dtype=dtype) / n_sources
+
+        beam_config = BeamConfig(
+            source_directions=source_directions,
+            source_weights=weights,
+            source_wavelengths=wavelengths_m
+        )
 
     construction_times = []
     first_run_times = []
@@ -169,16 +193,23 @@ def benchmark_compile_times(n_instances=10, size=256, device='cpu', dtype=torch.
             print(f"\n   CONCLUSION: Phase 2-4 (explicit cache) IS NECESSARY.")
             print(f"   torch.compile recompiles for each new instance.")
 
+    # Calculate cache speedup for JSON output
+    cache_speedup = None
+    if len(first_run_times) > 1:
+        cache_speedup = first_run_times[0] / (sum(first_run_times[1:]) / len(first_run_times[1:]))
+
     # Return results for further analysis
     return {
         'construction_times': construction_times,
         'first_run_times': first_run_times,
         'second_run_times': second_run_times,
+        'cache_speedup': cache_speedup,
         'config': {
             'n_instances': n_instances,
             'size': size,
             'device': device,
-            'dtype': str(dtype)
+            'dtype': str(dtype),
+            'n_sources': n_sources
         }
     }
 
@@ -227,31 +258,115 @@ def test_pure_function_caching():
 if __name__ == '__main__':
     import argparse
 
-    parser = argparse.ArgumentParser(description='Investigate torch.compile caching')
+    parser = argparse.ArgumentParser(
+        description='Investigate torch.compile caching across devices, dtypes, and source counts (PERF-PYTORCH-004 Phase 2)'
+    )
     parser.add_argument('--instances', type=int, default=5, help='Number of instances')
     parser.add_argument('--size', type=int, default=128, help='Detector size')
-    parser.add_argument('--device', type=str, default='cpu', choices=['cpu', 'cuda'])
-    parser.add_argument('--dtype', type=str, default='float64', choices=['float32', 'float64'])
+    parser.add_argument('--devices', type=str, default='cpu', help='Comma-separated list of devices (cpu,cuda)')
+    parser.add_argument('--dtypes', type=str, default='float64', help='Comma-separated list of dtypes (float32,float64)')
+    parser.add_argument('--sources', type=str, default='1', help='Comma-separated list of source counts (1,3)')
+    parser.add_argument('--outdir', type=str, default=None, help='Output directory (default: reports/benchmarks/<timestamp>-compile-cache)')
 
     args = parser.parse_args()
 
-    dtype = torch.float32 if args.dtype == 'float32' else torch.float64
+    # Parse comma-separated lists
+    devices = [d.strip() for d in args.devices.split(',')]
+    dtypes_str = [d.strip() for d in args.dtypes.split(',')]
+    source_counts = [int(s.strip()) for s in args.sources.split(',')]
 
-    # Check device availability
-    if args.device == 'cuda' and not torch.cuda.is_available():
-        print("WARNING: CUDA requested but not available, falling back to CPU")
-        args.device = 'cpu'
+    # Convert dtype strings to torch dtypes
+    dtype_map = {
+        'float32': torch.float32,
+        'float64': torch.float64
+    }
+    dtypes = [dtype_map[d] for d in dtypes_str]
 
-    # Run pure function test first
+    # Setup output directory
+    if args.outdir is None:
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        outdir = Path(__file__).parent.parent.parent / 'reports' / 'benchmarks' / f'{timestamp}-compile-cache'
+    else:
+        outdir = Path(args.outdir)
+
+    outdir.mkdir(parents=True, exist_ok=True)
+    print(f"Output directory: {outdir}")
+
+    # Collect all results
+    all_results = []
+
+    # Run pure function test first (single time, on CPU float64)
+    print("\n" + "=" * 80)
+    print("Running pure function caching test...")
+    print("=" * 80)
     test_pure_function_caching()
 
-    # Run full simulator test
-    results = benchmark_compile_times(
-        n_instances=args.instances,
-        size=args.size,
-        device=args.device,
-        dtype=dtype
-    )
+    # Run benchmarks for all combinations
+    total_runs = len(devices) * len(dtypes) * len(source_counts)
+    run_num = 0
+
+    for device in devices:
+        # Check device availability
+        if device == 'cuda' and not torch.cuda.is_available():
+            print(f"\nWARNING: CUDA requested but not available, skipping CUDA tests")
+            continue
+
+        for dtype, dtype_str in zip(dtypes, dtypes_str):
+            for n_sources in source_counts:
+                run_num += 1
+                print(f"\n\n{'=' * 80}")
+                print(f"Run {run_num}/{total_runs}: device={device}, dtype={dtype_str}, sources={n_sources}")
+                print('=' * 80)
+
+                # Run benchmark
+                results = benchmark_compile_times(
+                    n_instances=args.instances,
+                    size=args.size,
+                    device=device,
+                    dtype=dtype,
+                    n_sources=n_sources
+                )
+
+                # Add metadata
+                results['run_metadata'] = {
+                    'timestamp': datetime.now().isoformat(),
+                    'pytorch_version': torch.__version__,
+                    'cuda_available': torch.cuda.is_available()
+                }
+
+                all_results.append(results)
+
+    # Write JSON summary
+    summary_file = outdir / 'cache_validation_summary.json'
+    with open(summary_file, 'w') as f:
+        json.dump({
+            'all_runs': all_results,
+            'summary': {
+                'total_configurations': len(all_results),
+                'min_cache_speedup': min([r['cache_speedup'] for r in all_results if r['cache_speedup'] is not None], default=None),
+                'max_cache_speedup': max([r['cache_speedup'] for r in all_results if r['cache_speedup'] is not None], default=None),
+                'mean_cache_speedup': sum([r['cache_speedup'] for r in all_results if r['cache_speedup'] is not None]) / len([r for r in all_results if r['cache_speedup'] is not None]) if len([r for r in all_results if r['cache_speedup'] is not None]) > 0 else None
+            }
+        }, f, indent=2)
+
+    print("\n\n" + "=" * 80)
+    print("SUMMARY")
+    print("=" * 80)
+    print(f"\nTotal configurations tested: {len(all_results)}")
+    if len(all_results) > 0:
+        speedups = [r['cache_speedup'] for r in all_results if r['cache_speedup'] is not None]
+        if speedups:
+            print(f"Cache speedup range: {min(speedups):.2f}x - {max(speedups):.2f}x")
+            print(f"Mean cache speedup: {sum(speedups)/len(speedups):.2f}x")
+
+            if min(speedups) >= 50.0:
+                print("\n✅ ALL configurations exceed 50x cache speedup threshold")
+            elif min(speedups) >= 2.0:
+                print(f"\n⚠️  Some configurations below 50x threshold (min: {min(speedups):.2f}x)")
+            else:
+                print(f"\n❌ Cache not effective (min: {min(speedups):.2f}x)")
+
+    print(f"\nResults written to: {summary_file}")
 
     print("\n" + "=" * 80)
     print("Investigation Complete")
