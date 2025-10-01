@@ -1,6 +1,6 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-07 (galph loop AU)
+**Last Updated:** 2025-10-07 (galph loop AW)
 **Active Focus:** Protect automation assets, finish nanoBragg hygiene cleanup, restore AT-012 peak matches, correct multi-source physics regressions, and capture authoritative performance evidence for PERF-PYTORCH-004 (CPU+CUDA reruns after physics fixes).
 
 ## Index
@@ -79,6 +79,11 @@
     Artifacts: reports/archive/2025-09-30-AT-021-traces/
     Observations/Hypotheses: Need to restore canonical `nanoBragg.c` from 92ac528^ and execute plan tasks H1–H6 without touching protected assets.
     Next Actions: Complete plan H1–H6 (baseline snapshot, restore canonical file, purge stray reports, rerun parity smoke tests, log closure).
+  * [2025-10-07] Attempt #2 — Result: supervisor audit. Confirmed canonical `nanoBragg.c` still diverges from 92ac528^, `reports/2025-09-30-AT-021-traces/` remains under repo root, and a stray top-level `fix_plan.md` (duplicate of docs version) persists. These artefacts keep Plan H1–H4 open and continue to block clean rebases.
+    Metrics: Analysis only.
+    Artifacts: n/a (inspection via `git status` + manual file checks).
+    Observations/Hypotheses: Root-level `fix_plan.md` should be deleted alongside stale reports once Protected Assets guard is followed; restoring `golden_suite_generator/nanoBragg.c` first avoids churn when parity reruns.
+    Next Actions: Execute plan tasks H1–H4 on a dedicated branch: capture baseline file (`git show 92ac528^:golden_suite_generator/nanoBragg.c`), restore it locally, archive `reports/2025-09-30-AT-021-traces/` under `reports/archive/`, remove the duplicate `fix_plan.md`, then run H5 parity smoke before logging completion in H6.
 - Risks/Assumptions: Ensure Protected Assets guard is honored before deleting files; parity harness must remain green after cleanup.
 - Exit Criteria (quote thresholds from spec):
   * Canonical `golden_suite_generator/nanoBragg.c` matches 92ac528^ exactly (byte-identical).
