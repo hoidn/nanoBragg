@@ -270,7 +270,9 @@
   * ✅ Phase B6 complete (ten-process reproducibility) — mean speedup 0.828±0.031 at target
   * ✅ Phase C1 complete (torch.compile impact) — 1.86× speedup from compilation; compiled mode meets ≤1.2× target; artifacts under reports/benchmarks/20251001-055419/
   * ✅ Phase C8 complete (pixel→Å conversion cost) — conversion costs ~100ms (17% of 582ms warm time); NOT a bottleneck; recommend deprioritizing D5
-  * Next: Execute Phase C9 (rotated-vector cost) and C10 (mosaic RNG cost) before proceeding to Phase D caching work (D6/D7/D8; D5 deprioritized per C8 findings)
+  * ✅ Phase C9 complete (rotated-vector cost) — ~1.6ms (0.3% of warm time); NOT a bottleneck; recommend deprioritizing D6
+  * ✅ Phase C10 complete (mosaic RNG cost) — ~0.3ms (0.0% of warm time); NOT a bottleneck; recommend deprioritizing D7
+  * Next: Decide Phase C continuation (C2-C7 remaining) or proceed to Phase D optimization work (D8 detector scalar caching appears most promising)
 - Attempts History:
   * [2025-10-01] Attempt #4 — Result: success (Phase 0/1 complete). Refactored to pure function + hoisted guard tensors; torch.compile caching delivers ≥37× warm/cold speedup.
     Metrics: CPU float64 warm/cold 37.09×; CPU float32 1485.90×; CUDA float32 1256.03×; warm setup <50 ms.
@@ -446,6 +448,11 @@
     Artifacts: `reports/profiling/20251001-pixel-coord-conversion/{trace.json, analysis.txt, C8_diagnostic_summary.md}`, `reports/benchmarks/20251001-063328/benchmark_results.json`. Cache setup: 81,480× speedup (0.0ms warm vs 174.8ms cold), meets <50ms target.
     Observations/Hypotheses: **Pixel→Å conversion is NOT a significant bottleneck.** Individual scalar multiplication (`* 1e10`) costs ~100ms (17% of 582ms warm time). Caching (Phase D5) would save at most 100ms, improving speedup from 0.86× to ~0.93× but still below 1.0× target. Profiler function-level overhead dominates trace; actual kernel costs are lower. Compiled mode is highly effective (torch.compile). **Recommendation: Deprioritize D5 (Hoist pixel Å cache) unless larger detectors show worse scaling or GPU profiling reveals different bottlenecks.**
     Next Actions: Mark C8 complete in plan.md [X]. Proceed to C9 (rotated-vector regeneration cost) and C10 (mosaic RNG cost) diagnostics. Consider D5 optional given minimal ROI (~7% speedup gain at best). Update Phase C decision to reflect pixel conversion is not the limiting factor.
+  * [2025-10-01] Attempt #38 (ralph loop) — Result: success (C9 & C10 COMPLETE). Executed microbenchmarks for rotated-vector regeneration and mosaic rotation RNG costs.
+    Metrics: C9 - rotated vectors: mean 1.564ms per call, total ~1.6ms (0.3% of 600ms target) for baseline config (phi=1, mosaic=1). C10 - mosaic RNG: mean 0.283ms per call, total ~0.3ms (0.0% of 600ms target) for 10 domains @ 1.0° spread. Combined overhead: ~1.9ms (<0.5% of warm time).
+    Artifacts: `reports/profiling/20251001-073443-rotated-vector-cost/{timings.json, C9_diagnostic_summary.md}`, `reports/profiling/20251001-073617-mosaic-rotation-cost/{timings.json, C10_diagnostic_summary.md}`, `scripts/benchmarks/{profile_rotated_vectors.py, profile_mosaic_rotations.py}`.
+    Observations/Hypotheses: **Both operations are NOT significant bottlenecks (<5% threshold).** Rotated vector regeneration (C9) and mosaic rotation RNG (C10) contribute negligible overhead to warm runs. Caching strategies D6 (rotated vectors) and D7 (mosaic matrices) would provide minimal ROI (~2ms total savings). Phase C8/C9/C10 diagnostics collectively ruled out three potential optimization targets (pixel→Å conversion, rotated vectors, mosaic RNG), leaving C2-C7 remaining diagnostic tasks and D8 (detector scalar caching) as the most promising Phase D candidate.
+    Next Actions: Mark C9 and C10 complete in plan.md [X]. Decide Phase C continuation: execute remaining diagnostics (C2-C7) or proceed directly to Phase D with D8 detector scalar tensor caching as primary optimization target. Update fix_plan with recommendation to deprioritize D5/D6/D7 based on diagnostic evidence.
 - Risks/Assumptions: 1024² CPU performance acceptable given GPU alternative; Phase 4 revisit only if future profiling identifies specific bottlenecks. Weighted-source tooling must be path-agnostic before P3.0c evidence is considered durable.
 - Exit Criteria (quote thresholds from spec):
   * ✅ Phase 2 artifacts demonstrating ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (37–6428× achieved).
