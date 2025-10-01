@@ -9,7 +9,7 @@
 - [PROTECTED-ASSETS-001] Enforce `docs/index.md` protection — Priority: Medium, Status: pending (guard any file listed there from deletion; update CLAUDE.md + hygiene SOP)
 - [REPO-HYGIENE-002] Remove accidental nanoBragg.c churn from 92ac528 — Priority: Medium, Status: reopened (pending; see plans/active/repo-hygiene-002/plan.md, reopened 2025-09-30 after hygiene regression)
 - [PERF-PYTORCH-004] Fuse Physics Kernels — Priority: High, Status: in_progress (Phase 2 cache validation outstanding; Phase 3 steady-state benchmarks blocked until toolchain hardened — see plans/active/perf-pytorch-compile-refactor/plan.md)
-- [AT-PARALLEL-012-PEAKMATCH] Restore 95% peak-match criterion — Priority: High, Status: pending (triclinic harness still asserts 86% matches despite spec requiring ≥95%; see section below)
+- [AT-PARALLEL-012-PEAKMATCH] Restore 95% peak-match criterion — Priority: High, Status: pending (simple_cubic harness still asserts 86% matches despite spec requiring ≥95%; see section below)
 - [PERF-DOC-001] Document torch.compile Warm-Up Requirement — Priority: Medium, Status: done
 - [PERF-PYTORCH-005] CUDA Graph Capture & Buffer Reuse — Priority: Medium, Status: done
 - [PERF-PYTORCH-006] Float32 / Mixed Precision Performance Mode — Priority: Medium, Status: done
