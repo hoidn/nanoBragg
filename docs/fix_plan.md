@@ -217,10 +217,11 @@
     Metrics: Analysis only.
     Artifacts: n/a (findings documented in plan + galph_memory).
     Observations/Hypotheses: Need concrete reproduction showing the mismatch before altering normalization semantics; benchmarking without parity evidence risks drawing false conclusions.
-    Next Actions: Execute P3.0c table (two-source unequal weights) capturing pytest + nb-compare outputs, then decide whether to align with C (ignore weights) or adopt sum-of-weights normalization with updated spec/docs.
-  * [2025-09-30] Attempt #21 — Result: supervisor audit (no code change). Reconfirmed the normalization bug in `src/nanobrag_torch/simulator.py:815-823`: after applying optional weights, intensity is still divided by `n_sources`, yielding `(w₁I₁ + w₂I₂ + …)/n_sources` instead of C’s `(I₁ + I₂ + …)`. No weighted-source parity artifacts exist under `reports/benchmarks/` or plan directories.
-    Metrics: Analysis only.
-    Artifacts: n/a — pointer for reproduction: inspect simulator normalization path via `rg "source_norm" src/nanobrag_torch/simulator.py`.
+  * [2025-10-01] Attempt #21 — Result: success (Phase B complete). Executed remaining Phase B tasks: marked B3 skipped (would require gprof recompilation; deemed optional), completed B5 eager-mode profiling at 1024². Results: PyTorch eager warm 0.082s vs C 0.052s (1.64× slower), profiler trace captured.
+    Metrics: 1024² eager mode 1.64× slower than C; significantly slower than compiled mode (0.082s vs ~0.565s at 4096² from B4).
+    Artifacts: `reports/benchmarks/20251001-025010/` with Chrome trace in profile_1024x1024/trace.json; plan updated with B3/B5 completion in `plans/active/perf-pytorch-compile-refactor/plan.md`.
+    Observations/Hypotheses: Eager mode profiling confirms torch.compile provides substantial performance benefit. Structure-factor advanced indexing cost visible in trace. Phase B diagnostics now complete; all profiling evidence collected for Phase C decision.
+    Next Actions: Review Phase B findings (B4 shows 1.11-1.15× performance, within 10% of ≤1.2× target). Decide whether to proceed to Phase C diagnostics or close plan as target nearly achieved.
     Observations/Hypotheses: Without parity evidence, the plan closure claim in commit e8742d7 is unsupported; Phase 3 cannot end until unequal-weight cases either match C or a deliberate contract change is documented. CPU 1024² still 2.43× slower, so we lack data to justify deferring Phase 4.
     Next Actions: Deliver P3.0c artifacts (two-source unequal weights) per plan guidance, fix normalization semantics, then rerun CPU/CUDA benchmarks (P3.2/P3.3) before issuing the Phase 3 memo (P3.5).
     Observations/Hypotheses: PERF-PYTORCH-005 cudagraph guard clears blocker, but Phase 3 exit still gated by P3.0c weighted-source parity and CPU 1024² slowdown. `BeamConfig.source_weights` docstring still claims weights are ignored—update documentation once parity decision lands. Need nb-compare + pytest artifacts for unequal weights before considering P3.0c closed.
