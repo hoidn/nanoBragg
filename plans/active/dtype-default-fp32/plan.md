@@ -47,7 +47,7 @@ Exit Criteria: Test matrix recorded in fix_plan; benchmark delta ≤~5 % vs pr
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Run Tier-1 parity suite on CPU/GPU | [ ] | Blocked until AT-012 regression (43/50 peaks in float32 native path) is resolved; rerun `env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_at_parallel_012.py -vv` first, then expand to full suite. Archive metrics under `reports/DTYPE-DEFAULT-001/parity_<device>.json`. |
+| C1 | Run Tier-1 parity suite on CPU/GPU | [ ] | Blocked until AT-012 regression (43/50 peaks in float32 native path) is resolved. Capture paired float64 vs float32 runs under `reports/DTYPE-DEFAULT-001/20251006-at012-regression/` (include plateau pixel dumps and peak tables), then rerun `env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_at_parallel_012.py -vv`. Once AT-012 passes, expand to the full suite and archive metrics under `reports/DTYPE-DEFAULT-001/parity_<device>.json`. |
 | C2 | Execute gradcheck focus tests | [ ] | `pytest tests/test_crystal_geometry.py::TestMetricDuality::test_metric_duality_grad` et al with explicit `dtype=torch.float64` to verify opt-in precision still works post-default switch. |
 | C3 | Benchmark warm/cold performance | [ ] | `python scripts/benchmarks/benchmark_detailed.py --sizes 256,512 --device cuda --dtype float32 --iterations 3`; compare to float64 baselines and store in `reports/DTYPE-DEFAULT-001/benchmarks/`. |
 
