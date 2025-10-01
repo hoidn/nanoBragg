@@ -25,7 +25,7 @@ class TestDetectorConventions:
             distance_mm=100.0
         )
 
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
 
         # ADXV per spec: f = [1 0 0]; s = [0 -1 0]; o = [0 0 1]
         expected_fdet = torch.tensor([1.0, 0.0, 0.0], dtype=torch.float64)
@@ -57,8 +57,8 @@ class TestDetectorConventions:
             distance_mm=100.0
         )
 
-        detector_denzo = Detector(config_denzo)
-        detector_mosflm = Detector(config_mosflm)
+        detector_denzo = Detector(config_denzo, dtype=torch.float64)
+        detector_mosflm = Detector(config_mosflm, dtype=torch.float64)
 
         # DENZO should have same basis vectors as MOSFLM
         assert torch.allclose(detector_denzo.fdet_vec, detector_mosflm.fdet_vec, atol=1e-6), \
@@ -95,8 +95,8 @@ class TestDetectorConventions:
             beam_center_f=beam_center_mm_f
         )
 
-        detector_denzo = Detector(config_denzo)
-        detector_mosflm = Detector(config_mosflm)
+        detector_denzo = Detector(config_denzo, dtype=torch.float64)
+        detector_mosflm = Detector(config_mosflm, dtype=torch.float64)
 
         # Convert mm to pixels for comparison
         beam_center_pixels = beam_center_mm_s / pixel_size  # 500 pixels
@@ -125,7 +125,7 @@ class TestDetectorConventions:
             distance_mm=100.0
         )
 
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
 
         # ADXV beam should be along +Z per spec
         # This is tested indirectly through the normal vector and r-factor calculation
@@ -218,7 +218,7 @@ class TestDetectorConventions:
                 distance_mm=100.0
             )
 
-            detector = Detector(config)
+            detector = Detector(config, dtype=torch.float64)
 
             # Check orthogonality
             dot_fs = torch.dot(detector.fdet_vec, detector.sdet_vec)
@@ -259,7 +259,7 @@ class TestDetectorConventions:
                 detector_rotz_deg=2.0
             )
 
-            detector = Detector(config)
+            detector = Detector(config, dtype=torch.float64)
 
             # After rotation, basis should still be orthonormal
             # Check orthogonality

@@ -246,8 +246,8 @@ class TestAT_SRC_001_SourcefileAndWeighting:
             )
 
             # Create simulator with sources
-            crystal = Crystal(crystal_config, beam_config)
-            detector = Detector(detector_config)
+            crystal = Crystal(crystal_config, beam_config, dtype=torch.float64)
+            detector = Detector(detector_config, dtype=torch.float64)
             # Pass beam_config as 4th parameter (after crystal_config which is None)
             simulator = Simulator(crystal, detector, None, beam_config)
 

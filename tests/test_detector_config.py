@@ -123,7 +123,7 @@ class TestDetectorInitialization:
 
     def test_default_initialization(self):
         """Test that Detector initializes with default config."""
-        detector = Detector()
+        detector = Detector(dtype=torch.float64)
 
         # Check that config was created
         assert detector.config is not None
@@ -156,7 +156,7 @@ class TestDetectorInitialization:
             beam_center_s=204.8,  # 1024 pixels * 0.2 mm
             beam_center_f=204.8,
         )
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
 
         # Check unit conversions (detector uses meters internally)
         assert detector.distance == 0.2  # 200 mm = 0.2 m
@@ -175,7 +175,7 @@ class TestDetectorInitialization:
         """Test that _is_default_config works correctly."""
         # The _is_default_config method checks for specific "golden" values
         # Now that MOSFLM defaults to 51.25, a default detector WILL match
-        detector = Detector()
+        detector = Detector(dtype=torch.float64)
         assert detector._is_default_config()  # Default now has 51.25 for MOSFLM
 
         # Create a config with different values that should NOT match
@@ -197,7 +197,7 @@ class TestDetectorInitialization:
 
     def test_basis_vectors_initialization(self):
         """Test that basis vectors are initialized correctly."""
-        detector = Detector()
+        detector = Detector(dtype=torch.float64)
 
         # Check default basis vectors (use correct dtype)
         torch.testing.assert_close(

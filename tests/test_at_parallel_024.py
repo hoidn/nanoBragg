@@ -111,12 +111,12 @@ class TestAT_PARALLEL_024:
             )
 
             # Create two separate simulators
-            crystal1 = Crystal(crystal_config1, beam_config)
-            detector1 = Detector(detector_config)
+            crystal1 = Crystal(crystal_config1, beam_config, dtype=torch.float64)
+            detector1 = Detector(detector_config, dtype=torch.float64)
             sim1 = Simulator(crystal1, detector1, crystal_config1, beam_config)
 
-            crystal2 = Crystal(crystal_config2, beam_config)
-            detector2 = Detector(detector_config)
+            crystal2 = Crystal(crystal_config2, beam_config, dtype=torch.float64)
+            detector2 = Detector(detector_config, dtype=torch.float64)
             sim2 = Simulator(crystal2, detector2, crystal_config2, beam_config)
 
             # Generate images
@@ -166,8 +166,8 @@ class TestAT_PARALLEL_024:
                 wavelength_A=base_config['wavelength']
             )
 
-            crystal = Crystal(crystal_config, beam_config)
-            detector = Detector(detector_config)
+            crystal = Crystal(crystal_config, beam_config, dtype=torch.float64)
+            detector = Detector(detector_config, dtype=torch.float64)
             sim = Simulator(crystal, detector, crystal_config, beam_config)
 
             images.append(sim.run())
@@ -276,8 +276,8 @@ class TestAT_PARALLEL_024:
                 wavelength_A=base_config['wavelength']
             )
 
-            crystal = Crystal(crystal_config, beam_config)
-            detector = Detector(detector_config)
+            crystal = Crystal(crystal_config, beam_config, dtype=torch.float64)
+            detector = Detector(detector_config, dtype=torch.float64)
             sim = Simulator(crystal, detector, crystal_config, beam_config)
             pt_image = sim.run()
 

@@ -126,8 +126,8 @@ def run_simulation_deterministic(seed: int = 42):
     )
 
     # Create models in deterministic mode
-    crystal = Crystal(crystal_config)
-    detector = Detector(detector_config)
+    crystal = Crystal(crystal_config, dtype=torch.float64)
+    detector = Detector(detector_config, dtype=torch.float64)
     simulator = Simulator(crystal, detector, crystal_config, beam_config)
 
     # Run simulation on CPU with float64
@@ -312,7 +312,7 @@ class TestATParallel013CrossPlatformConsistency:
         )
 
         # Verify float64 is used
-        crystal = Crystal(crystal_config)
+        crystal = Crystal(crystal_config, dtype=torch.float64)
 
         # Check that internal tensors are float64
         assert crystal.cell_a.dtype == torch.float64, "Crystal cell_a not float64"
@@ -327,7 +327,7 @@ class TestATParallel013CrossPlatformConsistency:
             distance_mm=100.0
         )
 
-        detector = Detector(detector_config)
+        detector = Detector(detector_config, dtype=torch.float64)
         beam_config = BeamConfig(wavelength_A=1.0, fluence=1e15)
         simulator = Simulator(crystal, detector, crystal_config, beam_config)
 

@@ -76,7 +76,7 @@ def test_twotheta_rotation_applied():
         beam_center_f=51.2
     )
 
-    detector = Detector(config)
+    detector = Detector(config, dtype=torch.float64)
 
     # The twotheta rotation should affect the detector basis vectors
     # For XDS with twotheta axis [1,0,0], rotation should be around X axis
@@ -122,7 +122,7 @@ def test_twotheta_value_preserved():
         assert config.detector_twotheta_deg == test_twotheta_deg
 
         # Create detector and verify the value is used
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
         # The detector internally converts to radians but the config value should remain in degrees
         assert config.detector_twotheta_deg == test_twotheta_deg
 
@@ -137,7 +137,7 @@ def test_mosflm_twotheta_rotation():
         pixel_size_mm=0.1
     )
 
-    detector = Detector(config)
+    detector = Detector(config, dtype=torch.float64)
 
     # For MOSFLM with twotheta axis [0,0,-1], rotation should be around negative Z axis
     # Original MOSFLM basis: fdet=[0,0,1], sdet=[0,-1,0], odet=[1,0,0]
