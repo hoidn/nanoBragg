@@ -1,7 +1,7 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-08 (galph loop BC)
-**Active Focus:** Protect automation assets, finish nanoBragg hygiene cleanup, restore AT-012 peak matches, reconcile multi-source weighting with C semantics, and convert the new CPU/GPU benchmarking artifacts into a Phase 3 decision for PERF-PYTORCH-004.
+**Last Updated:** 2025-10-10 (galph loop BD)
+**Active Focus:** Protect automation assets, finish nanoBragg hygiene cleanup, restore AT-012 peak matches, repair multi-source weighting validation via BeamConfig, and capture fresh CPU/GPU benchmarks including the 4096² warm-run profile for PERF-PYTORCH-004.
 
 ## Index
 | ID | Title | Priority | Status |
@@ -118,6 +118,9 @@
   * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/investigate_compile_cache.py --instances 5 --size 256 --devices cpu,cuda --dtypes float64,float32 --sources 1`
   * Shapes/ROI: 256²–1024² detectors, pixel 0.1 mm, oversample 1, full-frame ROI
 - First Divergence (if known): Multi-source intensity still reuses the primary incident vector for polarization and recomputes detector masks every run, leaving batched sources under-weighted vs C (src/nanobrag_torch/simulator.py:681-916)
+- Immediate Next Actions (2025-10-10):
+  * Re-run P3.0c with weighted sources plumbed through `BeamConfig` (or `_source_*` caches) so simulator uses non-uniform weights before torch.compile capture; archive parity artifacts under `reports/benchmarks/<date>-multi-source-normalization/`.
+  * Execute plan task P3.3a by benchmarking 4096² CPU warm runs vs C and collecting profiler traces when PyTorch stays slower; link results in the next attempt log.
 - Attempts History:
   * [2025-10-01] Attempt #4 — Result: success (Phase 0/1 complete). Refactored to pure function + hoisted guard tensors; torch.compile caching delivers ≥37× warm/cold speedup.
     Metrics: CPU float64 warm/cold 37.09×; CPU float32 1485.90×; CUDA float32 1256.03×; warm setup <50 ms.

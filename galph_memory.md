@@ -552,3 +552,9 @@
  1. Fix the weighted-source validation pipeline (set tensors on `BeamConfig` prior to simulator init, rerun pytest + nb-compare, archive under `reports/benchmarks/<date>-multi-source-normalization/`).
  2. Restore AT-012 tests to float32 after a real plateau fix passes; stop relying on float64 overrides to mask fragmentation.
  3. Execute PERF P3.3a 4096² CPU warm benchmark once P3.0c artifacts exist, capturing profiler stats for bottleneck analysis.
+
+## 2025-10-10 (galph loop BD)
+- No upstream changes; refreshed docs/fix_plan.md header + action list to emphasize BeamConfig-based weighted-source validation and 4096² warm-run profiling (P3.0c/P3.3a).
+- Reconfirmed commit a209c14's validation script never touches `_source_*` caches; simulator still runs single-source defaults. Ralph must feed weights via BeamConfig before instantiation and rerun parity artifacts.
+- Long-term perf gap: 4096² CPU warm remains unprofiled; expect Ralph to execute plan task P3.3a and archive profiler traces under `reports/benchmarks/<date>-4096-study/`.
+- Routing guard plan still pending (Phase A audit not recorded); remind Ralph to capture `reports/routing/<date>-loop-audit.txt` before running automation again.
