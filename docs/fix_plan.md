@@ -1,6 +1,6 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-10 (galph loop BD)
+**Last Updated:** 2025-10-11 (galph loop BJ)
 **Active Focus:** Protect automation assets, finish nanoBragg hygiene cleanup, restore AT-012 peak matches, repair multi-source weighting validation via BeamConfig, and capture fresh CPU/GPU benchmarks including the 4096² warm-run profile for PERF-PYTORCH-004.
 
 ## Index
@@ -123,8 +123,9 @@
   * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/investigate_compile_cache.py --instances 5 --size 256 --devices cpu,cuda --dtypes float64,float32 --sources 1`
   * Shapes/ROI: 256²–1024² detectors, pixel 0.1 mm, oversample 1, full-frame ROI
 - First Divergence (if known): Multi-source intensity still reuses the primary incident vector for polarization and recomputes detector masks every run, leaving batched sources under-weighted vs C (src/nanobrag_torch/simulator.py:681-916)
-- Immediate Next Actions (2025-10-10):
-  * Re-run P3.0c with weighted sources plumbed through `BeamConfig` (or `_source_*` caches) so simulator uses non-uniform weights before torch.compile capture; archive parity artifacts under `reports/benchmarks/<date>-multi-source-normalization/`.
+- Immediate Next Actions (2025-10-11):
+  * Close plan task A0 by teaching `scripts/validate_weighted_source_normalization.py` to stamp unique `reports/benchmarks/<date>-.../` output directories (CLI flag or timestamp) so reruns stop clobbering evidence; rerun the script once the path fix lands.
+  * Re-run P3.0c with weighted sources plumbed through `BeamConfig` (or `_source_*` caches) so simulator uses non-uniform weights before torch.compile capture; archive parity artifacts under the freshly stamped `reports/benchmarks/<date>-multi-source-normalization/` directory.
   * Execute plan task P3.3a by benchmarking 4096² CPU warm runs vs C and collecting profiler traces when PyTorch stays slower; link results in the next attempt log.
 - Attempts History:
   * [2025-10-01] Attempt #4 — Result: success (Phase 0/1 complete). Refactored to pure function + hoisted guard tensors; torch.compile caching delivers ≥37× warm/cold speedup.
@@ -406,6 +407,9 @@
   * Baseline simulator import: `python -c "from nanobrag_torch.simulator import Simulator"`
   * Smoke test: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py -vv`
 - First Divergence (if known): AT-PARALLEL-012 plateau matching regressed to 43/50 peaks when running fully in float32 (prior float64→float32 cast path delivered 50/50).
+- Immediate Next Actions (2025-10-11):
+  * Execute `plans/active/dtype-default-fp32/plan.md` Phase B task B3 by converting `io/source.py`, `utils/noise.py`, and `utils/c_random.py` to respect caller-provided dtype/device; capture before/after snippets in `reports/DTYPE-DEFAULT-001/phase_b3_audit.md` before opening a PR.
+  * Coordinate with the plateau plan Phase C1–C3 mitigation work before rerunning Tier-1/Tier-2 suites; hold broader validation until the mitigation decision memo is logged under `reports/2025-10-AT012-regression/phase_c_decision.md`.
 - Attempts History:
   * [2025-09-30] Attempt #1 — Result: partial (Phase A+B complete; Phase C blocked by AT-012 regression). Catalogued 37 float64 occurrences and flipped defaults to float32 across CLI, Crystal/Detector/Simulator constructors, HKL readers, and auto-selection helpers while preserving float64 for Fdump binary format and gradcheck overrides. Metrics: CLI smoke test PASS; AT-012 correlation remains ≥0.9995 yet peak matching falls to 43/50 (needs ≥48/50). Artifacts: reports/DTYPE-DEFAULT-001/{inventory.md, proposed_doc_changes.md, phase_b_summary.md}; commit 8c2ceb4. Observations/Hypotheses: Native float32 plateau rounding differs from the float64→float32 cast path, so `scipy.ndimage` peak detection drops ties. Next Actions: debug AT-012 plateau behaviour (log correlations, inspect plateau pixels, decide on detector/matcher tweak), finish remaining B3 helper dtype plumbing (`io/source.py`, `utils/noise.py`, `utils/c_random.py`), then rerun Tier-1 suite on CPU+CUDA once peak matching is restored.
   * [2025-10-06] Attempt #2 — Result: regression persists. Re-running `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation -q` on HEAD (float32 defaults) still returns 43/50 matched peaks (spec needs ≥48/50) with corr=1.0. No artifact archived yet (test run captured locally). Observations: plateau loss now stems from doing the entire simulation in float32; casting the output to float32 no longer restores ties. Next Actions: capture paired float64 vs float32 traces under `reports/DTYPE-DEFAULT-001/20251006-at012-regression/`, evaluate whether to quantize the matcher or adjust simulation precision around peak evaluation, and finish Phase B3 helper dtype plumbing before repeating Tier-1 parity.

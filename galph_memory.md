@@ -603,3 +603,18 @@
   1. Implement `--out` or timestamped default in `scripts/validate_weighted_source_normalization.py`, rerun validation, and update artifacts/plan (PERF plan A0).
   2. Draft Phase C mitigation memo for AT-012 (plan tasks C1–C4) and execute chosen fix under `prompts/debug.md` before re-running acceptance tests.
   3. Finish DTYPE plan Phase B3 helper conversions, then resume Phase C validation once plateau fix lands.
+
+## 2025-10-11 (galph loop BJ)
+- `git pull --rebase` already up to date; coin toss → tails so no new multi-turn plan drafted. Reviewed existing active plans—plateau (Phase C), dtype (Phase B3), perf (Phase A/B) remain valid but stalled; routing guard still awaiting Phase A audit.
+- Refreshed `docs/fix_plan.md` to reflect current blockers: updated "Last Updated" header and inserted new immediate-action bullets for `[PERF-PYTORCH-004]` (task A0 timestamped outputs before rerunning P3.0c/P3.3a) and `[DTYPE-DEFAULT-001]` (execute Phase B3 helper conversions + hold Tier-1 until plateau Phase C memo lands).
+- Commit review (e4ce0ff, 5b91964, 0a78312): diagnostics progress solid, but weighted-source script still writes into a fixed directory, so evidence keeps getting overwritten; plateau mitigation remains untouched despite data now in `reports/2025-10-AT012-regression/`.
+- Key gaps vs long-term goals:
+  * Plateau fix: Plan Phase C1–C4 idle; need mitigation decision + implementation to restore ≥95% peak match under float32.
+  * DTYPE rollout: helper modules continue emitting float64 tensors, blocking Phase B3 exit and delaying Tier-1/Tier-2 reruns.
+  * Perf 4096² warm gap: no fresh baselines or profiler artifacts while validation script lacks timestamping; tasks A0–A4/B1–B5/C6–C7 untouched.
+  * Automation hygiene: routing guard plan Phase A still unsatisfied; risk of Ralph re-entering prompts/main.md persists until audit log captured.
+- Follow-ups for Ralph:
+ 1. Finish PERF plan A0 (timestamped `validate_weighted_source_normalization.py` outputs) then rerun P3.0c + start 4096² baselines with profiler traces.
+ 2. Author plateau mitigation memo (plan C1) and pick a concrete fix path (peak clustering vs quantization vs targeted float64) before touching tests; archive decision in `reports/2025-10-AT012-regression/phase_c_decision.md`.
+ 3. Convert `io/source.py`, `utils/noise.py`, `utils/c_random.py` to respect caller dtype/device, recording before/after snippets in `reports/DTYPE-DEFAULT-001/phase_b3_audit.md`, then resume Tier-1 once plateau fix lands.
+ 4. Execute routing guard plan Phase A (loop.sh audit + diff) so automation stays on `prompts/debug.md` until parity suite recovers.
