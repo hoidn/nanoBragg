@@ -657,3 +657,12 @@
   1. Run AT-012 plan C3/C4 (validation artifacts + benchmark check) and update `reports/2025-10-AT012-regression/phase_c_validation/` plus the decision memo before archiving the plan.
   2. Patch `scripts/validate_weighted_source_normalization.py` to accept `--out`/timestamped paths and rerun P3.0c before starting 4096² baseline/profiler tasks.
   3. Complete DTYPE Phase B3 by making `io/source.py`, `utils/noise.py`, `utils/c_random.py` device/dtype neutral and logging before/after snippets in `reports/DTYPE-DEFAULT-001/phase_b3_audit.md` ahead of Tier-1 reruns.
+
+## 2025-10-01 (galph loop BO)
+- Pulled recent supervisor/perf commits (caddc55, e64ce6d, 6df23f6). AT-012 simple_cubic now passes in float32, but no Phase C artifacts exist (`reports/2025-10-AT012-regression/phase_c_trials/` or `phase_c_validation/`). Updated plan row C2a to note centroid-based clustering and remind Ralph to capture the first passing pytest log during Phase C3 before closing.
+- DTYPE Phase B3 still blocking: helper factories in `src/nanobrag_torch/io/source.py`, `src/nanobrag_torch/utils/noise.py::lcg_random`, and `src/nanobrag_torch/utils/c_random.py` continue to allocate float64 CPU tensors; no `reports/DTYPE-DEFAULT-001/phase_b3_audit.md` yet.
+- PERF plan Phase A baseline exists (`reports/benchmarks/20251001-005052-cpu-baseline/`), but profiling stage untouched—`reports/profiling/` absent, `_compute_physics_for_position` still compiled per-instance. Need Phase B traces and hotspot summary before diagnostics.
+- Weighted-source validation script now timestamps outputs (e64ce6d), so Phase A0 unblocked.
+- `loop.sh` still runs `prompts/main.md` 40× with unconditional `git push`; ROUTING plan Phase A evidence remains outstanding.
+- Ran `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation -vv` for verification (passes). Ralph must archive this run + plateau histograms under Phase C3 and update `phase_c_decision.md` per C2c.
+- Follow-ups for Ralph: (1) finish AT-012 Phase C3/C4 artifacts & memo update, (2) complete DTYPE helper refactor with audit log, (3) kick off PERF Phase B profiling, (4) execute routing guard plan Phase A by recording loop.sh audit and adding fix_plan entry.
