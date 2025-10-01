@@ -1,7 +1,8 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-01 (ralph loop - ROUTING-SUPERVISOR-001 Phase C completion)
+**Last Updated:** 2025-10-01 (ralph loop - TEST-SIMULATOR-API-001 completion)
 **Active Focus:**
+- TEST-SIMULATOR-API: ✅ Complete. Fixed 8 test failures caused by obsolete Simulator API usage after PERF-004 Phase 0 refactoring (commit c41431f).
 - DTYPE-INFERENCE: ✅ Complete. Simulator now infers dtype from crystal/detector components when not explicitly specified (DTYPE-INFERENCE-001).
 - ROUTING: ✅ Complete. loop.sh guard verified compliant at commit 65c8940 (`plans/active/routing-loop-guard/plan.md` Phases A–C).
 - ROUTING-SUPERVISOR: ✅ Complete. supervisor.sh guard implemented and verified (all Phase A/B/C tasks complete, plan ready for archival per `plans/active/supervisor-loop-guard/plan.md`).
@@ -13,6 +14,7 @@
 ## Index
 | ID | Title | Priority | Status |
 | --- | --- | --- | --- |
+| [TEST-SIMULATOR-API-001](#test-simulator-api-001-fix-obsolete-simulator-api-usage) | Fix obsolete Simulator API usage | High | done |
 | [TEST-GRADIENTS-HANG-001](#test-gradients-hang-001-fix-hanging-gradient-tests) | Fix hanging gradient tests | High | done |
 | [DTYPE-INFERENCE-001](#dtype-inference-001-simulator-dtype-inference) | Simulator dtype inference | High | done |
 | [GRADIENT-MISSET-001](#gradient-misset-001-fix-misset-gradient-flow) | Fix misset gradient flow | High | done |
@@ -24,6 +26,34 @@
 | [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | done |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | done |
+
+---
+
+## [TEST-SIMULATOR-API-001] Fix obsolete Simulator API usage
+- Spec/AT: Core Implementation Rule #14 (CLAUDE.md), PERF-PYTORCH-004 Phase 0 refactoring
+- Priority: High
+- Status: done
+- Owner/Date: ralph/2025-10-01
+- Reproduction (C & PyTorch):
+  * C: n/a (test infrastructure issue from PERF-004 Phase 0 refactoring)
+  * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_perf_pytorch_005_cudagraphs.py -v` (would fail with TypeError before fix)
+  * Shapes/ROI: Various test cases (64×64, 32×32, 8×8 detectors)
+- First Divergence (if known): Simulator.__init__ signature changed during PERF-PYTORCH-004 Phase 0 to accept Crystal and Detector objects as positional arguments (not keyword args crystal_config/detector_config). Tests were not updated, causing TypeError: unexpected keyword argument.
+- Attempts History:
+  * [2025-10-01] Attempt #1 — Result: success. Fixed all 8 test failures by migrating to new Simulator API.
+    Metrics: From 20 failures → 12 failures. The 8 Simulator API failures resolved: test_perf_pytorch_005_cudagraphs.py (6 tests), test_at_src_001.py (partial), test_at_str_003.py (2 tests). Overall: 479 passed, 117 skipped.
+    Artifacts:
+      - tests/test_perf_pytorch_005_cudagraphs.py: Added Crystal/Detector imports, created objects before all 5 Simulator instantiations
+      - tests/test_at_src_001.py: Fixed keyword argument syntax (1 instantiation)
+      - tests/test_at_str_003.py: Added minimal 8×8 detector for tests that were passing detector=None (2 instantiations); detector now required for P3.4 caching optimization
+    Observations/Hypotheses: PERF-PYTORCH-004 Phase 0 refactored Simulator to accept Crystal and Detector objects as positional args to enable safe cross-instance kernel caching with torch.compile. Old API `Simulator(crystal_config=..., detector_config=...)` is now broken. New API requires: `crystal = Crystal(config); detector = Detector(config); simulator = Simulator(crystal, detector, crystal_config, beam_config)`. Phase 0 also added P3.4 caching that requires non-None detector (calls detector.get_pixel_coords() in __init__).
+    Next Actions: None - issue resolved. Commit c41431f. Remaining 12 failures are unrelated (sourcefile parsing, detector config, debug trace, etc.).
+- Risks/Assumptions: Tests passing detector=None now get minimal 8×8 detector; this is harmless since they only access simulator.crystal.N_cells_* and don't call .run().
+- Exit Criteria (quote thresholds from spec):
+  * All test_perf_pytorch_005_cudagraphs.py tests pass (✅ 6/6 passed).
+  * test_at_src_001.py Simulator instantiation fixed (✅ partial - 1 fixed, other failures unrelated to API).
+  * test_at_str_003.py tests pass (✅ 7/7 passed).
+  * No TypeError: unexpected keyword argument 'detector_config' (✅ verified).
 
 ---
 
