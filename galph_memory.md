@@ -179,3 +179,10 @@
 
 ## 2025-10-02 (galph loop X addendum)
 - Reminder: `./fix_plan.md` is now a symlink to `docs/fix_plan.md`; always edit the canonical file and avoid recreating standalone copies.
+
+## 2025-10-02 (galph loop Y)
+- Sync: `git pull --rebase --autostash` required because existing working-tree edits blocked the standard pull; re-applied cleanly with no conflicts.
+- Deep dive: AT-012 plan still lacks Phase A artifacts; `Simulator.__init__` multi-source branch raises when `source_wavelengths` is omitted; repeated `torch.compile(...)` wrapping per instance keeps warm-up cost high and still builds guard tensors on the hot path.
+- Planning: Added Phase 3 task P3.0 in `plans/active/perf-pytorch-compile-refactor/plan.md` (multi-source defaults) and cross-referenced it in `docs/fix_plan.md` so Ralph must fix defaults before benchmarking.
+- Coin flip (heads): Reviewed commits `78be581`, `51110d4`, `cb6a761`, `a661afc`; GPU neutrality fix still leaves incident-beam tensors CPU-bound, benchmark tooling remains broken, and multi-source crash persists.
+- Next for Ralph: Execute AT-012 Plan Phase A/B (esp. dtype experiment), implement PERF P3.0 alongside benchmark fixes, and address torch.compile rewrap/device-neutrality backlog before new perf claims.

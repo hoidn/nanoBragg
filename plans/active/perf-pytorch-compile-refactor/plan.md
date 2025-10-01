@@ -95,12 +95,13 @@ Validation completed across 3 configurations:
 
 
 ### Phase 3 — Steady-State Performance vs C
-Goal: Re-benchmark nanoBragg after cache validation to confirm warm-run PyTorch throughput relative to the C reference, while hoisting any per-run tensor fabrication (ROI mask, misset radians) that skews allocator costs.
+Goal: Re-benchmark nanoBragg after cache validation to confirm warm-run PyTorch throughput relative to the C reference, while hoisting any per-run tensor fabrication (ROI mask, misset radians) that skews allocator costs and ensuring multi-source beam configs (AT-SRC-001) no longer crash before benchmarking.
 Prerqs: Phase 2 JSON summary committed.
 Exit Criteria: `reports/benchmarks/<date>-perf-summary/` containing cold/warm timings for CPU and CUDA, paired C timings, and analysis showing whether PyTorch warm runs meet or beat C; docs/fix_plan.md updated with decision.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
+| P3.0 | Fix multi-source beam defaults before benchmarking | [ ] | Reproduce the crash via `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/investigate_compile_cache.py --instances 2 --size 256 --devices cpu --sources 3`; update `BeamConfig`/`Simulator` so `source_directions` without explicit wavelengths/weights uses the primary beam wavelength and equal weights on the caller's device. Archive failing run log under `reports/benchmarks/<date>-perf-summary/multi-source-before.txt` and the fixed rerun as `.../multi-source-after.txt`. |
 | P3.1 | Harden `benchmark_detailed.py` (zero-division guards, CLI size selection) | [ ] | Ensure warm-setup = 0 is handled; add CLI args `--sizes`, `--iterations`; maintain repo standards. |
 | P3.2 | Collect benchmark data on CPU | [ ] | Command: `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 256,512,1024 --device cpu --iterations 2`; store metrics under `reports/benchmarks/<date>-perf-summary/cpu/`. |
 | P3.3 | Collect benchmark data on CUDA (if available) | [ ] | Run same command with `--device cuda`; synchronize and archive metrics under `reports/benchmarks/<date>-perf-summary/cuda/`. |

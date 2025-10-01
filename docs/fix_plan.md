@@ -80,8 +80,8 @@
   * [2025-10-02] Attempt #5 — Result: partial diagnostic. Multi-source configs crash (`expand`: shape mismatch); `benchmark_detailed.py` divides by zero when warm setup=0 and adds boolean `cache_hit` into totals.
     Metrics: N/A (runs aborted on expand error).
     Artifacts: pending — rerun `investigate_compile_cache.py` with `TORCH_LOGS=dynamic` once broadcast fix lands; record logs under `reports/benchmarks/<date>-compile-cache/`.
-    Observations/Hypotheses: Need to fix multi-source broadcast, hoist ROI/misset tensors (Plan P3.4), add default `source_wavelengths` when missing, and correct timing aggregator before trusting new benchmarks.
-    Next Actions: Implement plan tasks P2.1–P2.5 (CLI extension, CPU/CUDA runs, Dynamo logs), then P3.1–P3.5 (benchmark hardening, ROI caching, C comparison).
+    Observations/Hypotheses: Need to fix multi-source broadcast, hoist ROI/misset tensors (Plan P3.4), add default `source_wavelengths` when missing (Plan P3.0), and correct timing aggregator before trusting new benchmarks.
+    Next Actions: Implement plan tasks P2.1–P2.5 (CLI extension, CPU/CUDA runs, Dynamo logs), then P3.0–P3.5 (multi-source defaults, benchmark hardening, ROI caching, C comparison).
 - Risks/Assumptions: Requires CUDA availability; must avoid `.item()` in differentiable paths when caching tensors.
 - Exit Criteria (quote thresholds from spec):
   * Phase 2 artifacts demonstrating ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (multi-source included) committed.
