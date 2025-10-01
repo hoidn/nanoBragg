@@ -19,6 +19,7 @@
 | [DTYPE-DEFAULT-001](#dtype-default-001-migrate-default-dtype-to-float32) | Migrate default dtype to float32 | High | done |
 | [AT-PARALLEL-012-PEAKMATCH](#at-parallel-012-peakmatch-restore-95-peak-alignment) | Restore 95% peak alignment | High | done |
 | [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | in_progress |
+| [CLI-DTYPE-002](#cli-dtype-002-cli-dtype-parity) | CLI dtype parity | High | in_progress |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | in_progress |
 
@@ -599,6 +600,44 @@
 - Risks/Assumptions: Treat `supervisor.sh` as a Protected Asset (Phase B5 formalises this in docs/index.md); ensure edits retain logging expectations and do not re-enable multi-iteration loops.
 - Exit Criteria: Guarded single-iteration script with audit/dry-run/compliance logs captured and plan archived.
 
+## [CLI-DTYPE-002] CLI dtype parity
+- Spec/AT: arch.md §14 (float32 default with float64 override), docs/development/testing_strategy.md §1.4 (device/dtype discipline), CLI flag `-dtype`
+- Priority: High
+- Status: in_progress (new 2025-10-15)
+- Owner/Date: galph/2025-10-15
+- Plan Reference: n/a — single-iteration fix (track here)
+- Reproduction (CLI):
+  * `python - <<'PY'`
+    ```python
+    import tempfile
+    from pathlib import Path
+    import torch
+    from nanobrag_torch.__main__ import create_parser, parse_and_validate_args
+
+    with tempfile.TemporaryDirectory() as tmp:
+        hkl = Path(tmp) / "dtype_precision.hkl"
+        hkl.write_text("0 0 0 1.23456789012345\n")
+        parser = create_parser()
+        args = parser.parse_args([
+            "-hkl", str(hkl),
+            "-cell", "100", "100", "100", "90", "90", "90",
+            "-default_F", "0",
+            "-dtype", "float64"
+        ])
+        config = parse_and_validate_args(args)
+        grid, _ = config['hkl_data']
+        print(grid.dtype)  # BUG: prints torch.float32 today
+    ```
+    `PY`
+- First Divergence (if known): `parse_and_validate_args` (src/nanobrag_torch/__main__.py:435) calls `read_hkl_file`/`try_load_hkl_or_fdump` without forwarding the parsed dtype, so HKL/Fdump data is always loaded as float32. When the CLI is run with `-dtype float64`, the simulator converts those float32 tensors to float64 later, permanently losing precision relative to the requested double-precision path and violating the DTYPE-DEFAULT-001 guarantee.
+- Immediate Next Actions (2025-10-15):
+  * Update `parse_and_validate_args` (and any helper that constructs `CrystalConfig`) to thread the parsed dtype/device into HKL/Fdump loaders so CLI `-dtype` honours float64 from the start.
+  * Add a regression test (e.g., `tests/test_cli_dtype.py`) that invokes the parser with `-dtype float64` and asserts `config['hkl_data'][0].dtype == torch.float64`, covering both HKL and Fdump paths.
+  * Re-run AT-IO-003 and the CLI smoke (help + minimal render) to ensure no regressions, capturing logs under `reports/DTYPE-CLI/<date>/`.
+- Attempts History: None — new item.
+- Risks/Assumptions: Ensure `write_fdump` continues to emit float64 on disk (spec requirement) while the in-memory tensor honours caller dtype; watch for latent callers that relied on the old float64 default during plan DTYPE-DEFAULT-001 migration.
+- Exit Criteria: CLI runs with `-dtype float64` produce double-precision HKL/Fdump tensors end-to-end, regression test passes, and existing dtype-sensitive tests (AT-IO-003, CLI smoke, gradchecks) remain green.
+
 ### Completed Items — Key Reference
 (See `docs/fix_plan_archive.md` for the full historical ledger.)
 
@@ -732,4 +771,3 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * "Precision-critical operations (gradient checks, metric duality validation) override to float64 explicitly where required" (arch.md:313) ✅ satisfied
   * All geometry/gradient tests pass with explicit dtype overrides ✅ satisfied (27+ tests)
   * Test failures reduced from 36 to <10 ✅ satisfied (reduced to ~9 remaining, only 4 dtype-related in IO module)
-
