@@ -770,3 +770,12 @@ Follow-ups for Ralph:
 - Updated `docs/fix_plan.md` Active Focus to emphasise refreshed guard evidence, DTYPE Phase D rollout, and PERF B3/B5 + rebaseline requirements; refreshed DTYPE immediate next actions to call for documentation/prompt updates and plan archival, and added ROUTING loop immediate-action note targeting commit `c49e3be`.
 - Confirmed `supervisor.sh` still runs 40 iterations with no guard (`supervisor.sh:14-17`); flagged ROI mask recreation each run as a persistent hotspot risk (`src/nanobrag_torch/simulator.py:1048-1074`); PERF plan B3/B5 still unchecked (`plans/active/perf-pytorch-compile-refactor/plan.md:41-45`) and the latest reconciliation artifacts (`reports/benchmarks/20251001-014819-measurement-reconciliation/`) rely on warmed caches.
 - Follow-ups for Ralph: (1) Execute both guard plans’ Phase A tasks with new audit logs (loop referencing c49e3be, supervisor snapshot/diff) before touching automation scripts; (2) Complete PERF Phase B3/B5 plus a fresh cold-start rebaseline, then proceed into Phase C allocator diagnostics with special attention to ROI mask caching; (3) Finish DTYPE Phase D (docs + communication) and archive the plan once artifacts are recorded.
+
+## 2025-10-13 (galph loop CB)
+- Stashed/restored pre-existing `supervisor.sh` edits to satisfy required `timeout 30 git pull --rebase`; upstream unchanged.
+- Reviewed active goals: `plans/active/supervisor-loop-guard/plan.md` still untouched (Phase A tasks A1–A3 outstanding); automation remains 40-iteration loop (`supervisor.sh:13-17`).
+- Warm 4096² perf gap persists at 3.4× (Phase A baseline `reports/benchmarks/20251001-005052-cpu-baseline/`); PERF plan Phase B3/B5 and all Phase C diagnostics still [ ].
+- DTYPE rollout stuck at Phase D (docs/prompt updates); checklist still references pending updates despite runtime checklist mentioning float32 default.
+- Coin toss landed tails ➔ skipped historical commit audit per instructions; no new plans authored (existing plans deemed adequate).
+- Next for Ralph: (1) execute supervisor guard plan Phase A with audit + fix_plan log; (2) capture PERF plan tasks B3/B5 then kick off Phase C experiments; (3) finish DTYPE plan tasks D1–D3 and archive with doc updates; (4) keep tree dirty only for legacy supervisor change until guard work completes.
+
