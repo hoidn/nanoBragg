@@ -1,7 +1,8 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-01 (ralph loop - DEBUG-TRACE-INDEXERROR-001 completion)
+**Last Updated:** 2025-10-01 (ralph loop - AT-GEO-003-BEAMCENTER-001 completion)
 **Active Focus:**
+- AT-GEO-003-BEAMCENTER: ✅ Complete. Fixed double-offset bug in verify_beam_center_preservation for MOSFLM convention.
 - DEBUG-TRACE-INDEXERROR: ✅ Complete. Fixed IndexError in trace_pixel debug output when omega_pixel/polarization are scalars.
 - TEST-SIMULATOR-API: ✅ Complete. Fixed 8 test failures caused by obsolete Simulator API usage after PERF-004 Phase 0 refactoring (commit c41431f).
 - DTYPE-INFERENCE: ✅ Complete. Simulator now infers dtype from crystal/detector components when not explicitly specified (DTYPE-INFERENCE-001).
@@ -15,6 +16,7 @@
 ## Index
 | ID | Title | Priority | Status |
 | --- | --- | --- | --- |
+| [AT-GEO-003-BEAMCENTER-001](#at-geo-003-beamcenter-001-fix-double-offset-bug) | Fix double-offset bug in beam center verification | High | done |
 | [DEBUG-TRACE-INDEXERROR-001](#debug-trace-indexerror-001-fix-scalar-tensor-indexing) | Fix scalar tensor indexing in debug trace | High | done |
 | [DETECTOR-BEAMCENTER-001](#detector-beamcenter-001-mosflm-05-pixel-offset) | MOSFLM +0.5 pixel offset | High | done |
 | [TEST-SIMULATOR-API-001](#test-simulator-api-001-fix-obsolete-simulator-api-usage) | Fix obsolete Simulator API usage | High | done |
@@ -29,6 +31,30 @@
 | [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | done |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | done |
+
+---
+
+## [AT-GEO-003-BEAMCENTER-001] Fix double-offset bug in beam center verification
+- Spec/AT: AT-GEO-003 R-factor and Beam Center (spec-a-core.md), arch.md ADR-03 (MOSFLM +0.5 pixel offset)
+- Priority: High
+- Status: done
+- Owner/Date: ralph/2025-10-01
+- Reproduction (C & PyTorch):
+  * C: n/a (PyTorch-specific verification method bug)
+  * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_geo_003.py::TestATGEO003RFactorAndBeamCenter::test_beam_center_preservation_beam_pivot -v`
+  * Shapes/ROI: 1024×1024 detector, pixel 0.1mm, rotations (rotx=5°, roty=3°, rotz=2°, twotheta=15°)
+- First Divergence (if known): Detector.verify_beam_center_preservation method (detector.py lines 922-929) was double-applying the MOSFLM +0.5 pixel offset. The beam_center_f and beam_center_s attributes already include the +0.5 offset from __init__ (lines 91-93), but the verification method was adding it again.
+- Attempts History:
+  * [2025-10-01] Attempt #1 — Result: success. Removed double-offset logic in verify_beam_center_preservation.
+    Metrics: test_beam_center_preservation_beam_pivot PASSED. All 8 AT-GEO-003 tests pass (2.42s). Geometry/core test suite: 111 passed, 3 pre-existing failures in AT-PARALLEL-002/003 (unrelated).
+    Artifacts: src/nanobrag_torch/models/detector.py lines 918-926 (removed conditional offset for MOSFLM).
+    Observations/Hypotheses: The __init__ method applies the MOSFLM +0.5 pixel offset to beam_center_s_pixels and beam_center_f_pixels before storing them as self.beam_center_s and self.beam_center_f. The _calculate_pix0_vector method (lines 503-504) uses these values directly: `Fbeam = self.beam_center_f * self.pixel_size`. The verification method was incorrectly adding +0.5 again when computing Fbeam_original and Sbeam_original for MOSFLM convention, causing a 5e-5 error (50x the tolerance of 1e-6). Fix: use the same direct formula as _calculate_pix0_vector for all conventions.
+    Next Actions: None - issue resolved. Beam center preservation now correctly verifies within 1e-6 tolerance for BEAM pivot mode.
+- Risks/Assumptions: Assumes beam_center_f and beam_center_s always include the MOSFLM offset when detector_convention == MOSFLM.
+- Exit Criteria (quote thresholds from spec):
+  * AT-GEO-003: "The direct beam position should map to the user-specified beam center within tolerance=1e-6" (✅ satisfied - max error now <1e-7).
+  * All 8 AT-GEO-003 tests pass (✅ satisfied - 8/8 passed in 2.42s).
+  * No regressions in related detector geometry tests (✅ verified - 111 passed, 3 pre-existing failures in unrelated AT-PARALLEL tests).
 
 ---
 

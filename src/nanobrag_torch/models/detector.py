@@ -916,17 +916,14 @@ class Detector:
         Sbeam_computed = torch.dot(R, self.sdet_vec)
 
         # Get original beam center in meters
-        # CRITICAL: For MOSFLM, the beam centers stored are user-provided (Xbeam/Ybeam),
-        # but the pix0_vector calculation adds +0.5 pixel to get Fbeam/Sbeam.
-        # We need to apply the same offset here for consistent comparison.
-        if self.config.detector_convention == DetectorConvention.MOSFLM:
-            # Add +0.5 pixel offset to match what's used in pix0_vector calculation
-            Fbeam_original = (self.beam_center_f + 0.5) * self.pixel_size
-            Sbeam_original = (self.beam_center_s + 0.5) * self.pixel_size
-        else:
-            # Other conventions: use beam centers as-is
-            Fbeam_original = self.beam_center_f * self.pixel_size
-            Sbeam_original = self.beam_center_s * self.pixel_size
+        # CRITICAL: For MOSFLM, self.beam_center_f and self.beam_center_s ALREADY include
+        # the +0.5 pixel offset applied in __init__ (lines 91-93).
+        # The pix0_vector calculation (line 503-504) uses these values directly:
+        #   Fbeam = self.beam_center_f * self.pixel_size
+        # So we must use the same formula here for consistent comparison.
+        # Do NOT add +0.5 again - that would be double-offsetting!
+        Fbeam_original = self.beam_center_f * self.pixel_size
+        Sbeam_original = self.beam_center_s * self.pixel_size
 
         # Calculate errors
         error_f = abs(Fbeam_computed - Fbeam_original)
