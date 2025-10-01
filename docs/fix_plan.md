@@ -174,15 +174,19 @@
 ## [DTYPE-DEFAULT-001] Migrate default dtype to float32
 - Spec/AT: `arch.md` (Implementation Architecture header), prompts long-term goal (fp32 default), `docs/development/pytorch_runtime_checklist.md` §1.4
 - Priority: High
-- Status: new
-- Owner/Date: galph/2025-10-04
+- Status: in_progress
+- Owner/Date: ralph/2025-09-30
 - Reproduction (C & PyTorch):
   * Inventory: `rg "float64" src/nanobrag_torch -n`
   * Baseline simulator import: `python -c "from nanobrag_torch.simulator import Simulator"`
   * Smoke test: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py -vv`
-- First Divergence (if known): n/a — initiative to align defaults with performance goals.
+- First Divergence (if known): AT-PARALLEL-012 peak matching regression — native float32 produces 43/50 peak matches vs 50/50 with float64→float32 cast workaround.
 - Attempts History:
-  * _Pending Phase A._ Plan tracked at `plans/active/dtype-default-fp32/plan.md`.
+  * [2025-09-30] Attempt #1 — Result: Phase A+B complete; Phase C blocked by AT-012 regression. Catalogued 37 float64 occurrences; updated 7 core files (CLI default, model constructors, HKL I/O, auto_selection tensors). Preserved float64 for Fdump binary format and test overrides.
+    Metrics: CLI smoke test PASS; AT-012 correlation ≥0.9995 (assertion passed) but only 43/50 peaks matched vs requirement ≥48/50 (95%).
+    Artifacts: reports/DTYPE-DEFAULT-001/{inventory.md, proposed_doc_changes.md, phase_b_summary.md}; commit 8c2ceb4.
+    Observations/Hypotheses: Native float32 simulation produces slightly different numerical values than float64→float32 cast path. Peak detection on intensity plateaus is sensitive to rounding differences. Correlation remains high, suggesting physics correctness maintained but peak *detection* algorithm affected.
+    Next Actions: Debug AT-012 peak matching (add correlation logging, compare plateau pixels, investigate if test tolerance needs adjustment for native float32). Complete remaining B3 items (io/source.py, utils/noise.py, utils/c_random.py). Plan tracked at `plans/active/dtype-default-fp32/plan.md`.
 - Risks/Assumptions: Must preserve float64 gradcheck path; documentation currently states float64 defaults; small value shifts must stay within existing tolerances and acceptance comparisons.
 - Exit Criteria (quote thresholds from spec):
   * Default simulator/config dtype switches to float32 and is documented in `arch.md` and runtime checklist.
