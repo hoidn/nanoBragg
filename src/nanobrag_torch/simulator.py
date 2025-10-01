@@ -303,6 +303,8 @@ def compute_physics_for_position(
             # Multi-source case: apply per-source polarization
             # diffracted_beam_unit: (S, F, 3) or (batch, 3)
             # incident_beam_direction: (n_sources, 3)
+            # NOTE: incident_beam_direction is cloned in _compute_physics_for_position wrapper
+            # before entering torch.compile to avoid CUDA graphs aliasing violations
 
             # Expand diffracted to (n_sources, S, F, 3) or (n_sources, batch, 3)
             if original_n_dims == 2:
@@ -338,9 +340,11 @@ def compute_physics_for_position(
             intensity = intensity * polar
         else:
             # Single source case
+            # NOTE: incident_beam_direction is cloned in _compute_physics_for_position wrapper
+            # before entering torch.compile to avoid CUDA graphs aliasing violations
+
             # Flatten for polarization calculation
             # Use .contiguous() to avoid CUDA graphs tensor reuse errors
-            incident_flat = incident_beam_direction.unsqueeze(0).expand(diffracted_beam_unit.shape[0] * (diffracted_beam_unit.shape[1] if original_n_dims == 3 else 1), -1)
             if original_n_dims == 3:
                 incident_flat = incident_beam_direction.unsqueeze(0).unsqueeze(0).expand(diffracted_beam_unit.shape[0], diffracted_beam_unit.shape[1], -1).reshape(-1, 3).contiguous()
             else:
@@ -568,13 +572,17 @@ class Simulator:
         # Compile the physics computation function with appropriate mode
         # Use max-autotune on GPU to avoid CUDA graph issues with nested compilation
         # Use reduce-overhead on CPU for better performance
+        # PERF-PYTORCH-005: Create compiled version of the pure function
+        # The wrapper method _compute_physics_for_position should NOT be compiled
+        # because it needs to clone incident_beam_direction before passing to the
+        # compiled pure function (required for CUDA graphs compatibility)
         if self.device.type == "cuda":
-            self._compute_physics_for_position = torch.compile(mode="max-autotune")(
-                self._compute_physics_for_position
+            self._compiled_compute_physics = torch.compile(mode="max-autotune")(
+                compute_physics_for_position
             )
         else:
-            self._compute_physics_for_position = torch.compile(mode="reduce-overhead")(
-                self._compute_physics_for_position
+            self._compiled_compute_physics = torch.compile(mode="reduce-overhead")(
+                compute_physics_for_position
             )
 
     def _compute_physics_for_position(self, pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star, incident_beam_direction=None, wavelength=None, source_weights=None):
@@ -604,8 +612,14 @@ class Simulator:
         if wavelength is None:
             wavelength = self.wavelength
 
-        # Forward to pure function with explicit parameters
-        return compute_physics_for_position(
+        # PERF-PYTORCH-005: Clone incident_beam_direction to avoid CUDA graphs aliasing violations
+        # CUDA graphs requires that tensors which will be expanded inside torch.compile
+        # are cloned outside the compiled region to prevent "accessing tensor output of
+        # CUDAGraphs that has been overwritten by a subsequent run" errors.
+        incident_beam_direction = incident_beam_direction.clone()
+
+        # Forward to compiled pure function with explicit parameters
+        return self._compiled_compute_physics(
             pixel_coords_angstroms=pixel_coords_angstroms,
             rot_a=rot_a,
             rot_b=rot_b,
