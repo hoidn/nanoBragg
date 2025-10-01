@@ -487,7 +487,11 @@ class Simulator:
                 [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
             )
         # PERF-PYTORCH-006: Store wavelength as tensor with correct dtype
-        self.wavelength = torch.tensor(self.beam_config.wavelength_A, device=self.device, dtype=self.dtype)
+        # Handle tensor-or-scalar inputs to preserve gradients (Core Rule #9)
+        if isinstance(self.beam_config.wavelength_A, torch.Tensor):
+            self.wavelength = self.beam_config.wavelength_A.to(device=self.device, dtype=self.dtype)
+        else:
+            self.wavelength = torch.tensor(self.beam_config.wavelength_A, device=self.device, dtype=self.dtype)
 
         # Physical constants (from nanoBragg.c ~line 240)
         # PERF-PYTORCH-006: Store as tensors with correct dtype to avoid implicit float64 upcasting
@@ -495,7 +499,11 @@ class Simulator:
             7.94079248018965e-30, device=self.device, dtype=self.dtype  # classical electron radius squared (meters squared)
         )
         # Use fluence from beam config (AT-FLU-001)
-        self.fluence = torch.tensor(self.beam_config.fluence, device=self.device, dtype=self.dtype)
+        # Handle tensor-or-scalar inputs to preserve gradients (Core Rule #9)
+        if isinstance(self.beam_config.fluence, torch.Tensor):
+            self.fluence = self.beam_config.fluence.to(device=self.device, dtype=self.dtype)
+        else:
+            self.fluence = torch.tensor(self.beam_config.fluence, device=self.device, dtype=self.dtype)
         # Polarization setup from beam config
         # PERF-PYTORCH-006: Store as tensor with correct dtype
         kahn_value = self.beam_config.polarization_factor if not self.beam_config.nopolar else 0.0
