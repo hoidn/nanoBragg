@@ -1,6 +1,6 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-06 (galph loop AS)
+**Last Updated:** 2025-10-07 (galph loop AU)
 **Active Focus:** Protect automation assets, finish nanoBragg hygiene cleanup, restore AT-012 peak matches, correct multi-source physics regressions, and capture authoritative performance evidence for PERF-PYTORCH-004 (CPU+CUDA reruns after physics fixes).
 
 ## Index
@@ -199,6 +199,11 @@
     First Divergence: Numerical accumulation in PyTorch float32 differs from C float32 → 4901 unique plateau values vs 669 in C (same physics parameters, perfect correlation). Issue is NOT physics correctness (corr≥0.9995 ✅, parity PASSES ✅), but numerical precision causing plateau fragmentation that breaks peak detection algorithm sensitivity.
     Observations/Hypotheses: C float32 creates stable plateaus (91 unique values in 20×20 beam center); PyTorch float32 has 331 unique values (3.6× fragmentation). Possibly due to: (1) different FMA/compiler optimizations, (2) different accumulation order in vectorized ops, (3) torch.compile kernel fusion changing numerical properties. Golden data was generated fresh today (2025-09-30) with current C binary; parity matrix live C↔Py test passes perfectly.
     Next Actions: Options: (A) Regenerate golden data with PyTorch float32 output (accepts current numerical behavior), (B) Force float64 for AT-012 only (add dtype override to configs), (C) Investigate why PyTorch float32 fragments plateaus 7× more than C float32 (time-intensive), (D) Adjust peak detection to cluster nearby maxima (make algorithm robust to fragmentation). Recommend B (float64 override) for expedience while DTYPE-DEFAULT-001 proceeds elsewhere.
+  * [2025-10-07] Attempt #6 — Result: partial. Added `dtype=torch.float64` overrides to AT-012 test constructors; triclinic and tilted variants pass but simple_cubic still fails (43/50 matches). Override masks native float32 behavior.
+    Metrics: triclinic PASS, tilted PASS, simple_cubic FAIL (43/50). Corr≈1.0 across cases.
+    Artifacts: commit cd9a034 (`tests/test_at_parallel_012.py`).
+    Observations/Hypotheses: Confirms plateau fragmentation is specific to float32 pipeline; forcing float64 in tests sidesteps the Tier-1 requirement of validating default dtype.
+    Next Actions: Collect float32 vs float64 plateau artifacts per DTYPE plan and remove the override once plateau discrepancy resolved.
 - Risks/Assumptions: Ensure triclinic/tilted variants remain passing; preserve differentiability (no `.item()` in hot path); guard ROI caching vs Protected Assets rule.
 - Exit Criteria (quote thresholds from spec):
   * PyTorch run matches ≥48/50 peaks within 0.5 px and maintains corr ≥0.9995.
@@ -220,6 +225,11 @@
 - Attempts History:
   * [2025-09-30] Attempt #1 — Result: partial (Phase A+B complete; Phase C blocked by AT-012 regression). Catalogued 37 float64 occurrences and flipped defaults to float32 across CLI, Crystal/Detector/Simulator constructors, HKL readers, and auto-selection helpers while preserving float64 for Fdump binary format and gradcheck overrides. Metrics: CLI smoke test PASS; AT-012 correlation remains ≥0.9995 yet peak matching falls to 43/50 (needs ≥48/50). Artifacts: reports/DTYPE-DEFAULT-001/{inventory.md, proposed_doc_changes.md, phase_b_summary.md}; commit 8c2ceb4. Observations/Hypotheses: Native float32 plateau rounding differs from the float64→float32 cast path, so `scipy.ndimage` peak detection drops ties. Next Actions: debug AT-012 plateau behaviour (log correlations, inspect plateau pixels, decide on detector/matcher tweak), finish remaining B3 helper dtype plumbing (`io/source.py`, `utils/noise.py`, `utils/c_random.py`), then rerun Tier-1 suite on CPU+CUDA once peak matching is restored.
   * [2025-10-06] Attempt #2 — Result: regression persists. Re-running `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation -q` on HEAD (float32 defaults) still returns 43/50 matched peaks (spec needs ≥48/50) with corr=1.0. No artifact archived yet (test run captured locally). Observations: plateau loss now stems from doing the entire simulation in float32; casting the output to float32 no longer restores ties. Next Actions: capture paired float64 vs float32 traces under `reports/DTYPE-DEFAULT-001/20251006-at012-regression/`, evaluate whether to quantize the matcher or adjust simulation precision around peak evaluation, and finish Phase B3 helper dtype plumbing before repeating Tier-1 parity.
+  * [2025-10-07] Attempt #3 — Result: partial workaround. Force-set `dtype=torch.float64` in AT-012 tests to bypass plateau fragmentation (commit cd9a034). Simple_cubic still fails (43/50); other variants pass. Override contradicts float32-default goal.
+    Metrics: triclinic PASS, tilted PASS, simple_cubic FAIL (43/50, corr≈1.0).
+    Artifacts: `tests/test_at_parallel_012.py` (commit cd9a034).
+    Observations/Hypotheses: Confirms regression is confined to float32 execution; masking tests postpones required analysis and should be temporary. Plateau artifacts still missing under `reports/DTYPE-DEFAULT-001/`.
+    Next Actions: Generate float32 vs float64 plateau traces, finish Phase B3 helper dtype plumbing, then revert the override and rerun Tier-1 suite under default float32.
 - Plan Reference: `plans/active/dtype-default-fp32/plan.md` (Phase A complete, Phase B `[P]`).
 - Risks/Assumptions: Must preserve float64 gradcheck path; documentation currently states float64 defaults; small value shifts must stay within existing tolerances and acceptance comparisons.
 - Exit Criteria (quote thresholds from spec):
@@ -241,8 +251,13 @@
   * C: `sed -n '1,80p' loop.sh`
   * PyTorch: n/a
   * Shapes/ROI: n/a
-- First Divergence (if known): Automation harness now reverts to `prompts/main.md` with 20-iteration loop and unconditional `git push`.
+- First Divergence (if known): Automation harness now reverts to `prompts/main.md` with 40-iteration loop and unconditional `git push`.
 - Attempts History:
+  * [2025-10-07] Attempt #3 — Result: regression worsening. Observed `loop.sh` running `prompts/main.md` in a `{1..40}` loop with unconditional `git push`. No audit artifact captured yet; Phase A still pending.
+    Metrics: n/a
+    Artifacts: Pending report under `reports/routing/` (plan tasks A1–A3).
+    Observations/Hypotheses: Doubling of iterations amplifies routing violation and risk of spam pushes; confirms automation remains unsupervised.
+    Next Actions: Execute plan Phase A immediately and block automation until evidence captured.
   * [2025-10-06] Attempt #2 — Result: regression. Discovered automation script once again runs `prompts/main.md` inside a fixed loop, violating routing guard and spamming `git push`. Plan rebooted at `plans/active/routing-loop-guard/plan.md` (Phase A pending).
     Metrics: n/a
     Artifacts: To be captured during Phase A (see plan tasks A1–A3).
