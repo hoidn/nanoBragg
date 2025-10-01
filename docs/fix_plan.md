@@ -1,7 +1,8 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-12 (galph loop BR)
+**Last Updated:** 2025-10-12 (galph loop BS)
 **Active Focus:**
+- ROUTING: restore `loop.sh` guard per `[ROUTING-LOOP-001]` after regression in commit `c49e3be` (reintroduced `prompts/main.md` loop + unconditional push); follow archived plan tasks before running automation again.
 - AT-012: hold Phase C work in standby per supervisor notes; no action until new directive lands.
 - DTYPE: finish Phase B3 by making `io/source.py`, `utils/noise.py`, and `utils/c_random.py` device/dtype neutral (record before/after in `reports/DTYPE-DEFAULT-001/phase_b3_audit.md`).
 - PERF: reconcile 1-iteration vs 5-iteration warm timings, complete Phase B4 hotspot summary (top ops from trace) and B5 eager-mode profile before designing Phase C experiments.
@@ -15,7 +16,7 @@
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
 | [DTYPE-DEFAULT-001](#dtype-default-001-migrate-default-dtype-to-float32) | Migrate default dtype to float32 | High | in_progress |
 | [AT-PARALLEL-012-PEAKMATCH](#at-parallel-012-peakmatch-restore-95-peak-alignment) | Restore 95% peak alignment | High | in_progress |
-| [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
+| [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | in_progress |
 
 ---
 
@@ -488,14 +489,19 @@
 ## [ROUTING-LOOP-001] loop.sh routing guard
 - Spec/AT: Prompt routing rules (prompts/meta.md)
 - Priority: High
-- Status: done
+- Status: in_progress (regressed 2025-10-01 via commit `c49e3be`)
 - Owner/Date: galph/2025-10-06 (regression follow-up); ralph/2025-10-01 (completion)
 - Reproduction (C & PyTorch):
   * C: `sed -n '1,80p' loop.sh`
   * PyTorch: n/a
   * Shapes/ROI: n/a
-- First Divergence (if known): Automation harness now reverts to `prompts/main.md` with 40-iteration loop and unconditional `git push`.
+- First Divergence (if known): Commit `c49e3be` reverted the guard—`loop.sh` pipes `prompts/main.md` through `{1..40}` loop, removes `git pull --rebase`, and performs unconditional `git push`.
 - Attempts History:
+  * [2025-10-12] Attempt #6 — Result: regression reopened. Detected commit `c49e3be` (loop.sh) restoring the 40-iteration `prompts/main.md` pipeline and stripping the timeouted `git pull --rebase`/conditional push added in `ffd9a5c`. No new audit artifacts captured; automation must stay paused until Phase A evidence is refreshed under `reports/routing/`.
+    Metrics: n/a (manual inspection).
+    Artifacts: Pending re-run of Phase A logs (`reports/routing/<date>-loop-audit.txt`).
+    Observations/Hypotheses: Regression likely came from local edits outside the routing plan; without the guard the engineer agent resumes unsupervised loops and may spam pushes.
+    Next Actions: Reapply routing guard exactly as `ffd9a5c` (single `prompts/debug.md`, timeouted `git pull --rebase`, conditional push) and capture new audit + compliance logs before restarting automation.
   * [2025-10-07] Attempt #3 — Result: regression worsening. Observed `loop.sh` running `prompts/main.md` in a `{1..40}` loop with unconditional `git push`. No audit artifact captured yet; Phase A still pending.
     Metrics: n/a
     Artifacts: Pending report under `reports/routing/` (plan tasks A1–A3).
@@ -522,7 +528,7 @@
     Observations/Hypotheses: Regression had doubled to 40 iterations from prior 20; routing guard now restored per plan exit criteria (single debug.md execution, conditional push, rebase-before-work).
     Next Actions: ✅ Plan archived; continue monitoring automation for future regressions.
 - Risks/Assumptions: Ensure future automation edits maintain routing guard.
-- Exit Criteria (quote thresholds from spec): ✅ Script executes `prompts/debug.md` exactly once per run with evidence recorded in reports (satisfied).
+- Exit Criteria (quote thresholds from spec): Pending — must restore single-execution `prompts/debug.md` flow with fresh audit/compliance logs before marking complete again.
 
 ### Completed Items — Key Reference
 (See `docs/fix_plan_archive.md` for the full historical ledger.)

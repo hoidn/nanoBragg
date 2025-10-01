@@ -690,3 +690,11 @@
   * DTYPE Phase B3 remains blocked: helper factories still emit float64 CPU tensors (`src/nanobrag_torch/io/source.py:24-79`, `src/nanobrag_torch/utils/noise.py:150-186`, `src/nanobrag_torch/utils/c_random.py:218-244`) and there is no `reports/DTYPE-DEFAULT-001/phase_b3_audit.md` documenting fixes.
   * PERF plan Phase B incomplete: the profiler run at `reports/benchmarks/20251001-010128/` lacks a hotspot percentage summary and there is no eager-mode trace; meanwhile the 5-iteration baseline `reports/benchmarks/20251001-005052-cpu-baseline/results/benchmark_results.json` still shows PyTorch 3.55× slower than C at 4096², so Phase B4/B5 must reconcile the discrepancy.
 - Follow-ups for Ralph: finish AT-012 plan Phase C3/C4 with archived artifacts + memo update, complete DTYPE Phase B3 helper refactors with the audit log, and run PERF Phase B4/B5 (include re-run with matching iteration counts and extract top-operator breakdown from the Chrome trace).
+
+## 2025-10-12 (galph loop BS)
+- `git pull --rebase` clean; no conflicts.
+- Detected loop automation regression: commit `c49e3be` reintroduced `prompts/main.md` 40-iteration loop and removed rebase/conditional push (`loop.sh:16-19`). Reopened `[ROUTING-LOOP-001]` in docs/fix_plan.md and logged Attempt #6; Active Focus now tells Ralph to restore `ffd9a5c` guard before rerunning automation.
+- DTYPE Phase B3 still undone—helpers continue to allocate float64 CPU tensors (`src/nanobrag_torch/io/source.py:45-112`, `src/nanobrag_torch/utils/noise.py:161-168`, `src/nanobrag_torch/utils/c_random.py:217-227`). No `reports/DTYPE-DEFAULT-001/phase_b3_audit.md` yet; highlighted in analysis for Ralph.
+- PERF plan Phase B gap persists: need dual-iteration benchmarks + hotspot summary; plan already outlines tasks B4/B5 but Ralph hasn’t executed them. Keep priority in fix_plan Active Focus.
+- Commit review (latest ~10): `c1e56ed` properly archived AT-012 validation artifacts (48/50 peaks) but plan Phase D remains open; `c49e3be` is a regression requiring immediate fix. Provide feedback in final report.
+- No new plan drafted; existing plans adequate once routing guard restored. Docs/fix_plan.md updated accordingly; tree staged for supervisor commit.
