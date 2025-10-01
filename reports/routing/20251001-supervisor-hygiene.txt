@@ -1,0 +1,5 @@
+ M supervisor.sh
+?? reports/routing/20251001-supervisor-dry-run-summary.md
+?? reports/routing/20251001-supervisor-dry-run.log
+?? reports/routing/20251001-supervisor-guard-design.md
+?? reports/routing/20251001-supervisor-hygiene.txt

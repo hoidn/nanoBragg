@@ -627,7 +627,12 @@
     Artifacts: reports/routing/20251001-044821-supervisor-regression.txt (script snapshot + diff + 4 identified violations)
     Observations/Hypotheses: supervisor.sh has 4 critical guard gaps vs loop.sh@853cf08: (1) no timeout on git pull --rebase, (2) for-loop running 20 iterations instead of single execution, (3) no conditional push guard, (4) missing conda env activation. Violations documented with explicit risk statements.
     Next Actions: Execute Phase B tasks B1–B5 (guard design note, implement guarded script, dry run, hygiene verification, mark as protected asset in docs/index.md).
-- Risks/Assumptions: Treat `supervisor.sh` as a Protected Asset (Phase B5 formalises this in docs/index.md); ensure edits retain logging expectations and do not re-enable multi-iteration loops.
+  * [2025-10-01] Attempt #3 — Result: success (Phase B complete). Implemented all four guard elements mirroring loop.sh@853cf08.
+    Metrics: Dry run PASS (single iteration, pull guard fallback, no push attempt); Syntax check PASS; Protected asset added to docs/index.md
+    Artifacts: reports/routing/20251001-supervisor-guard-design.md (design note), reports/routing/20251001-supervisor-dry-run-summary.md (dry run validation), reports/routing/20251001-supervisor-hygiene.txt (syntax check + git status), reports/routing/20251001-supervisor-protected-asset.md (docs/index.md diff), supervisor.sh (guarded implementation)
+    Observations/Hypotheses: All four guard elements successfully implemented: (1) timeout 30 git pull --rebase with fallback logic (checks for mid-rebase, aborts, falls back to pull --no-rebase), (2) single execution (removed for-loop, added exit code capture), (3) conditional push (only on SUPERVISOR_EXIT=0 and when commits exist), (4) conda env activation. Script now mirrors loop.sh guard structure.
+    Next Actions: Execute Phase C compliance verification (C1-C3) then archive plan.
+- Risks/Assumptions: Treat `supervisor.sh` as a Protected Asset (Phase B5 completed - now listed in docs/index.md); ensure edits retain logging expectations and do not re-enable multi-iteration loops.
 - Exit Criteria: Guarded single-iteration script with audit/dry-run/compliance logs captured and plan archived.
 
 ### Completed Items — Key Reference
