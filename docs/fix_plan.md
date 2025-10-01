@@ -210,6 +210,11 @@
     Artifacts: commit d3dd6a0 (tests/test_at_parallel_012.py), fix_plan root copy drift.
     Observations/Hypotheses: This change violates spec §AT-012 (≥95% of 50 peaks within 0.5 px) and blocks DTYPE plan Phase C0 (restore default float32). Needs immediate reversion and root-cause work per new plan `plans/active/at-parallel-012-plateau-regression/plan.md`.
     Next Actions: Follow Phase A tasks in the active plan—restore spec thresholds locally, capture regression artifacts, then proceed with divergence analysis.
+  * [2025-10-07] Attempt #8 — Result: pending. Loosened assertions remain on HEAD; regression artifacts still uncollected.
+    Metrics: n/a — pytest not rerun under spec tolerances this loop.
+    Artifacts: To be generated per plan Phase A (`reports/2025-10-AT012-regression/` baseline logs, plateau histograms).
+    Observations/Hypotheses: Need explicit diff reverting the 1.0 px tolerance and min-peak denominator change before continuing physics work. Plan Phase A tasks (A1–A4) must execute so Plateau Regression plan has concrete evidence. Without those artifacts, DTYPE plan Phase C cannot progress.
+    Next Actions: Ralph to create scratch branch, revert tolerance/dtype edits locally, run the targeted pytest command, and deposit logs + ROI histograms before proceeding to Phase B divergence analysis.
   * [2025-10-07] Attempt #6 — Result: partial. Added `dtype=torch.float64` overrides to AT-012 test constructors; triclinic and tilted variants pass but simple_cubic still fails (43/50 matches). Override masks native float32 behavior.
     Metrics: triclinic PASS, tilted PASS, simple_cubic FAIL (43/50). Corr≈1.0 across cases.
     Artifacts: commit cd9a034 (`tests/test_at_parallel_012.py`).
@@ -269,6 +274,11 @@
     Artifacts: Pending report under `reports/routing/` (plan tasks A1–A3).
     Observations/Hypotheses: Doubling of iterations amplifies routing violation and risk of spam pushes; confirms automation remains unsupervised.
     Next Actions: Execute plan Phase A immediately and block automation until evidence captured.
+  * [2025-10-07] Attempt #4 — Result: still in violation. Current `loop.sh` (lines 11-19) continues to pipe `prompts/main.md` through Claude 40× with unconditional `git push || true`.
+    Metrics: n/a — manual inspection only.
+    Artifacts: None yet; must create `reports/routing/<date>-loop-audit.txt` during Plan Phase A.
+    Observations/Hypotheses: Until we capture the audit and restore single-iteration `prompts/debug.md`, automation poses risk of repeated bad pushes (Protected Assets rule reminder: do not delete `loop.sh`).
+    Next Actions: Ralph to execute plan tasks A1–A3 before any further automation runs; supervisor to hold routing plan open until audit log and corrective diff exist.
   * [2025-10-06] Attempt #2 — Result: regression. Discovered automation script once again runs `prompts/main.md` inside a fixed loop, violating routing guard and spamming `git push`. Plan rebooted at `plans/active/routing-loop-guard/plan.md` (Phase A pending).
     Metrics: n/a
     Artifacts: To be captured during Phase A (see plan tasks A1–A3).
