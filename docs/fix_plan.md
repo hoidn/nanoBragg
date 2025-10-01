@@ -98,6 +98,11 @@
     Artifacts: reports/benchmarks/20250930-183844-compile-cache/cache_validation_summary.json; reports/benchmarks/20250930-184006/ (CLI test run).
     Observations/Hypotheses: P3.0c normalization already working correctly. P3.1 hardening fixes: (1) Zero-division guard when warm setup=0 (lines 266, 303); (2) Exclude boolean cache_hit from total sum (line 149); (3) Add CLI args --sizes, --iterations, --device, --dtype. All smoke tests pass.
     Next Actions: Proceed to P3.2/P3.3 steady-state benchmarking (CPU + CUDA), then P3.4 ROI/misset caching.
+  * [2025-09-30] Attempt #9 — Result: P3.2/P3.3 complete. Fixed benchmark_detailed.py --device flag bug (line 255 was overriding CLI arg with auto-detection). CPU and CUDA benchmarks collected.
+    Metrics: CPU - 256²: 2.12× faster, 512²: 1.6× slower, 1024²: 2.3× slower; CUDA - 256²: 1.51× faster, 512²: 1.50× faster, 1024²: 2.40× faster.
+    Artifacts: reports/benchmarks/20250930-184744/ (CPU); reports/benchmarks/20250930-184803/ (CUDA).
+    Observations/Hypotheses: CUDA meets/exceeds C performance at all sizes (1.5-2.4× faster). CPU performance degrades at larger sizes (512²/1024² are 1.6-2.3× slower than C), violating Phase 3 exit criteria (≤1.5× C runtime). This suggests memory bandwidth or cache efficiency issues on CPU that don't affect GPU execution.
+    Next Actions: Phase 3 partial success - CUDA exceeds targets, CPU fails at 512²+. Recommend P3.4 (ROI/misset caching) to reduce CPU overhead, then re-benchmark. If still >1.5× slower, proceed to Phase 4 graph optimization for CPU path.
 - Risks/Assumptions: Requires CUDA availability; must avoid `.item()` in differentiable paths when caching tensors.
 - Exit Criteria (quote thresholds from spec):
   * Phase 2 artifacts demonstrating ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (multi-source included) committed.

@@ -222,6 +222,9 @@ def main():
 
     results = []
 
+    # Store CLI device before it gets shadowed by command args
+    target_device = args.device
+
     for size in test_sizes:
         print(f"\n{'='*50}")
         print(f"Detector Size: {size}x{size} ({size**2:,} pixels)")
@@ -252,7 +255,8 @@ def main():
                 c_success = False
 
             # PyTorch implementation - COLD RUN (first time for this size)
-            device = 'cuda' if torch.cuda.is_available() else 'cpu'
+            # Use CLI-specified device instead of auto-detection
+            device = target_device
             print(f"Running PyTorch COLD (first run) on {device.upper()}...")
             mem_before = get_memory_usage()
 

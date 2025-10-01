@@ -105,10 +105,10 @@ Exit Criteria: `reports/benchmarks/<date>-perf-summary/` containing cold/warm ti
 | P3.0b | Fix multi-source polarization + weighting semantics | [X] | Fixed in Attempt #7. Primary source incident direction used for polarization approximation. |
 | P3.0c | Restore multi-source intensity normalization parity | [X] | Verified in Attempt #8. test_multiple_sources_normalization PASSED; normalization already correct. |
 | P3.1 | Harden `benchmark_detailed.py` (zero-division guards, CLI size selection, total aggregation fix) | [X] | Completed in Attempt #8. Fixed: (1) Zero-division guards lines 266,303; (2) cache_hit exclusion line 149; (3) CLI args --sizes/--iterations/--device/--dtype. Tested successfully with --sizes 256 run. |
-| P3.2 | Collect benchmark data on CPU | [ ] | Command: `env KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 256,512,1024 --device cpu --iterations 2`; store metrics under `reports/benchmarks/<date>-perf-summary/cpu/`. |
-| P3.3 | Collect benchmark data on CUDA (if available) | [ ] | Run same command with `--device cuda`; synchronize and archive metrics under `reports/benchmarks/<date>-perf-summary/cuda/`. |
-| P3.4 | Cache ROI/misset tensors before benchmarking | [ ] | Implement detector-level ROI mask caching and misset tensor precomputation in the same branch; document code changes and ensure new cache path keeps gradients intact. |
-| P3.5 | Compare against C baseline and decide next optimizations | [ ] | Analyse warm-run ratios vs C; if PyTorch slower by >1.5× for any size, propose follow-up optimization (fullgraph/Triton) and log in docs/fix_plan.md. |
+| P3.2 | Collect benchmark data on CPU | [X] | Completed in Attempt #9. Fixed --device flag bug (line 255), ran benchmarks. Results: 256²=2.12×, 512²=0.63× (1.6× slower), 1024²=0.44× (2.3× slower). Artifacts: reports/benchmarks/20250930-184744/. |
+| P3.3 | Collect benchmark data on CUDA (if available) | [X] | Completed in Attempt #9. Results: 256²=1.51×, 512²=1.50×, 1024²=2.40× (all faster than C). Artifacts: reports/benchmarks/20250930-184803/. |
+| P3.4 | Cache ROI/misset tensors before benchmarking | [ ] | Deferred - CPU performance fails exit criteria (>1.5× slower at 512²/1024²). Implement detector-level ROI mask caching and misset tensor precomputation; document code changes and ensure new cache path keeps gradients intact. |
+| P3.5 | Compare against C baseline and decide next optimizations | [X] | Completed in Attempt #9. Analysis: CUDA meets all targets (1.5-2.4× faster). CPU violates exit criteria at 512²/1024² (1.6-2.3× slower). Decision: Recommend P3.4 caching optimizations, then Phase 4 graph work if CPU still fails. CUDA path complete. |
 
 
 ### Phase 4 — Graph Stabilization (Conditional)
