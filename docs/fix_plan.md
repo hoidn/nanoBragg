@@ -13,6 +13,7 @@
 ## Index
 | ID | Title | Priority | Status |
 | --- | --- | --- | --- |
+| [TEST-GRADIENTS-HANG-001](#test-gradients-hang-001-fix-hanging-gradient-tests) | Fix hanging gradient tests | High | done |
 | [DTYPE-INFERENCE-001](#dtype-inference-001-simulator-dtype-inference) | Simulator dtype inference | High | done |
 | [GRADIENT-MISSET-001](#gradient-misset-001-fix-misset-gradient-flow) | Fix misset gradient flow | High | done |
 | [PROTECTED-ASSETS-001](#protected-assets-001-docsindexmd-safeguard) | Protect docs/index.md assets | Medium | in_progress |
@@ -23,6 +24,30 @@
 | [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | done |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | done |
+
+---
+
+## [TEST-GRADIENTS-HANG-001] Fix hanging gradient tests
+- Spec/AT: arch.md §15 Differentiability Guidelines, docs/development/testing_strategy.md §4 Tier 2 Gradient Correctness
+- Priority: High
+- Status: done
+- Owner/Date: ralph/2025-10-01
+- Reproduction (C & PyTorch):
+  * C: n/a (test infrastructure issue)
+  * PyTorch: `env KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest tests/test_gradients.py -v` (would timeout >60s before fix)
+  * Shapes/ROI: Default 1024×1024 detector for gradient tests (too large)
+- First Divergence (if known): tests/test_gradients.py created Detector() without config, using 1024×1024 default. torch.autograd.gradcheck requires hundreds of forward+backward evaluations, making 1024² simulation prohibitively slow.
+- Attempts History:
+  * [2025-10-01] Attempt #1 — Result: success. Reduced detector size for gradient tests to 8×8 pixels (gradcheck) and 32×32 (gradient flow test).
+    Metrics: All 14 gradient tests pass in 4.49s (vs timing out previously). Core suite: 72 passed, 5 skipped, 1 xfailed in 8.07s.
+    Artifacts: tests/test_gradients.py (5 locations updated: lines 74-79, 303-308, 379-384, 435, 430, 639-644). Commit dddc014.
+    Observations/Hypotheses: gradcheck evaluates loss function many times (forward + backward passes with finite differences). With 1024² detector and default N_cells=(5,5,5), each evaluation takes ~0.5s, making total test time >60s. Using 8×8 detector reduces evaluation to <0.1s, bringing total test time to ~4.5s. The gradient flow test (not using gradcheck) needed 32×32 detector to produce nonzero signal; added default_F=100.0 to ensure Bragg peaks hit detector.
+    Next Actions: None - issue resolved. Note: Full test suite still times out on some other tests (likely other tests with large default detectors), but gradient tests are fixed.
+- Risks/Assumptions: Small detectors may miss edge cases, but gradcheck is testing numerical gradient correctness (not physics coverage), so tiny detector is appropriate.
+- Exit Criteria (quote thresholds from spec):
+  * All gradient tests in tests/test_gradients.py pass (✅ 14/14 passed in 4.49s).
+  * No timeout on gradient tests (✅ previously >60s, now 4.49s).
+  * Core test suite remains passing (✅ 72 passed, 5 skipped, 1 xfailed).
 
 ---
 
