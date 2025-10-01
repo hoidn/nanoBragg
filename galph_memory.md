@@ -368,3 +368,19 @@
 - Coin=heads audit of recent commits reconfirmed regressions: `b06a6d6` benchmark commit published numbers without fixing physics, `8c2ceb4` flipped defaults without updating docs or parity, and no code since then addresses the outstanding bugs.
 - Actions for Ralph: finish PERF plan P3.0/P3.0b/P3.0c first (guard source tensors, per-source polarization, correct normalization) and hoist ROI/misset caches before running any new benchmarks; collect float64 vs float32 plateau traces under `reports/DTYPE-DEFAULT-001/20251006-at012-regression/` and leave docs unchanged until parity is restored; defer further benchmarking or documentation updates until these blockers clear.
 - Follow-up: Next loop should verify that artifacts for multi-source fixes and AT-012 diagnostics exist, and ensure perf benchmarks are rerun only after physics parity and caching work are complete.
+## 2025-10-06 (galph loop AR)
+- `git pull --rebase` clean; reviewed existing memory + active plans before analysis.
+- Step-1 analysis vs long-term goals:
+  * Error-correcting agent: `loop.sh` currently reverts to `prompts/main.md` inside a 20-iteration loop with unconditional `git push`; contradicts fix_plan status and routing SOP.
+  * PyTorch performance: `_compute_physics_for_position` still divides by summed source weights (averaging multi-source intensities) and polarization in `Simulator.run` uses only the first source; ROI/mask tensors rebuilt per run, and detector grids/clamps allocate guard tensors (crystal `compute_cell_tensors` still constructs new tensors for spindle axis). These keep PERF-PYTORCH-004 Phase 3 blockers active and explain benchmark stagnation.
+  * DTYPE rollout: AT-012 peak matcher still failing 43/50 when running native float32, no new artifacts under `reports/DTYPE-DEFAULT-001/`; docs (`arch.md`) still advertise float64 default.
+- Coin flip = heads → commit review (last ~6 non-supervisor commits):
+  * `8c2ceb4` flipped defaults to float32 but shipped AT-012 regression without parity artifacts or doc updates; plateau fragmentation unresolved.
+  * `56c46b2` merge only documented regression, no fix; automation guard apparently lost during merge (now regressed).
+  * Earlier GRADIENT-MISSET fix (`b812155`) solid, but subsequent work stalled on restoring Core Rule #13 tolerances until supervisor intervention.
+  Recommendation: Ralph must stop publishing benchmarks/rollouts before physics + automation gates pass; enforce plan-driven fixes.
+- Planning action: Reopened `[ROUTING-LOOP-001]` (status→in_progress) and authored phased remediation plan at `plans/active/routing-loop-guard/plan.md`; logged regression Attempt #2 in fix_plan.
+- Follow-up for Ralph:
+  1. Execute routing plan Phase A (capture current `loop.sh`, produce audit report, update fix_plan with artifact link) then Phase B–C to restore debug prompt guard.
+  2. Resume PERF-PYTORCH-004 Phase 3 tasks — fix multi-source weighting & polarization plus ROI caching — before recording new benchmarks.
+  3. For DTYPE plan Phase C1, generate float64 vs float32 trace/peak artifacts under `reports/DTYPE-DEFAULT-001/20251006-at012-regression/` and resolve plateau failure prior to doc updates.
