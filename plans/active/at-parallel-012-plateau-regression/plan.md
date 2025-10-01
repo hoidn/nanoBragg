@@ -39,7 +39,7 @@ Exit Criteria: Documented first divergence (function + tensor) with side-by-side
 | --- | --- | --- | --- |
 | B1 | Generate paired C & PyTorch traces | [X] | `reports/2025-10-AT012-regression/PHASE_B1_REPORT.md` + `traces/` directory capture side-by-side logs for the failing pixel (commit f2dddb8). |
 | B2 | Analyze accumulation order | [X] | `reports/2025-10-AT012-regression/accumulation_order_analysis.md` documents the multi-stage vs single-stage reduction gap and quantifies 7.68× plateau fragmentation. |
-| B3 | Evaluate peak detection sensitivity | [ ] | Run the listed experiments (single-stage reduction prototype, compensated summation, float64 intermediate) and record outcomes in `reports/2025-10-AT012-regression/phase_b3_experiments.md`. |
+| B3 | Evaluate peak detection sensitivity | [ ] | Run the listed experiments (single-stage reduction prototype, compensated summation, float64 intermediate) and record outcomes in `reports/2025-10-AT012-regression/phase_b3_experiments.md`. Ensure the diagnostics script actually toggles dtype — `scripts/validate_single_stage_reduction.py` currently ignores its `dtype` parameter, so adjust the harness before trusting results. |
 
 ### Phase C — Mitigation Selection & Implementation
 Goal: Implement the least invasive change that restores plateau stability while preserving performance goals.
@@ -48,8 +48,8 @@ Exit Criteria: Candidate fix implemented with targeted tests/benchmarks captured
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Choose mitigation strategy | [ ] | Decide between physics-path change (e.g., deterministic reduction) vs peak post-processing (clustering/plateau merge). Document decision criteria (spec alignment, performance cost). |
-| C2 | Implement under debug prompt | [ ] | Apply change in simulator/test suite per decision; ensure work happens under `prompts/debug.md`. Maintain Core Rules (vectorization, differentiability). |
+| C1 | Choose mitigation strategy | [ ] | Prefer physics-path fixes first: prototype a single-stage accumulation that flattens `(sources × phi × mosaic × oversample²)` and performs one `torch.sum`, mirroring C's sequential `I += term`. Fall back to compensated summation or matcher tweaks only if single-stage refactor fails parity/perf requirements. Document the trade-off analysis (spec alignment, expected perf impact). |
+| C2 | Implement under debug prompt | [ ] | Apply the selected change in simulator/test suite under `prompts/debug.md`. If using single-stage reduction, guard against device/dtype drift and keep vectorization (no Python loops). Maintain Core Rules (differentiability, batching). |
 | C3 | Validate physics + regression tests | [ ] | Rerun `pytest tests/test_at_parallel_012.py -vv` plus parity harness (`NB_RUN_PARALLEL=1 NB_C_BIN=... pytest tests/test_parity_matrix.py -k AT-PARALLEL-012`). Archive logs under reports directory. |
 | C4 | Benchmark impact | [ ] | Record timing vs main branch using `scripts/benchmarks/benchmark_detailed.py --sizes 256 --dtype float32`. Note Δ% to ensure we do not regress PERF-PYTORCH-004 targets. |
 
