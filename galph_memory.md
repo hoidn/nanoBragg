@@ -130,3 +130,10 @@
 - Determined no new multi-turn plan yet; priority is to rewrite fix_plan using canonical structure and strip duplicate routing-violation entries.
 - Heads coin flip → skimmed latest commits (8974cb4..00f822a); activity dominated by supervisor touch-ups, no new technical progress from Ralph to assess.
 - Tree left clean; no commits this loop.
+
+## 2025-10-02 (galph loop T)
+- Deep scan for long-term goals flagged multi-source broadcast bug (src/nanobrag_torch/simulator.py:109-135) still raising expand shape errors when sources>1; perf plan Phase 2 remains blocked on this.
+- Reconfirmed per-run ROI mask fabrication and mask dtype casts (src/nanobrag_torch/simulator.py:586-602, 950-979) likely causing the missing peaks; noted constant tensor factories in __init__ (src/nanobrag_torch/simulator.py:358-395) and misset tensor rebuilds (src/nanobrag_torch/models/crystal.py:565-608).
+- Benchmark tooling gaps persist: investigations script still CPU-only (scripts/benchmarks/investigate_compile_cache.py) and detailed benchmark divides by zero on 0s warm setup (scripts/benchmarks/benchmark_detailed.py:249-287).
+- Authored new phased plan at plans/active/at-parallel-012-peakmatch/plan.md and cross-referenced fix_plan; item now ready for Ralph to execute under prompts/debug.md.
+- Follow-ups for Ralph: Phase A of peak-match plan (rerun test, capture artifacts) then Phase B tracing; continue PERF-PYTORCH-004 P2.1–P2.5 once multi-source expand fix lands.
