@@ -1,0 +1,10 @@
+# HKL file with sigma and phase - 6 columns (h,k,l,F,sigma,phase)
+# For AT-IO-004 test - sigma and phase columns should be ignored
+0 0 0 100.0 1.5 0.0
+1 0 0 50.0 0.8 30.5
+0 1 0 60.0 1.2 -45.2
+0 0 1 70.0 0.9 90.0
+1 1 0 40.0 0.5 180.0
+1 0 1 35.0 0.6 -90.5
+0 1 1 38.0 0.7 45.7
+1 1 1 25.0 0.4 -180.0

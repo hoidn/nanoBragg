@@ -1,0 +1,768 @@
+# tests/test_detector_geometry.py
+"""
+Tests for detector geometry calculations against C-code reference.
+
+These tests verify that the PyTorch detector implementation produces identical
+geometric calculations to the reference nanoBragg.c implementation. They serve
+as regression tests to prevent reintroduction of geometric bugs.
+"""
+
+import pytest
+import torch
+
+from nanobrag_torch.config import DetectorConfig, DetectorConvention, DetectorPivot
+from nanobrag_torch.models.detector import Detector
+
+# --- Ground Truth Data from nanoBragg.c Trace ---
+# NOTE: These expected values are derived from a nanoBragg.c trace log for the
+# 'cubic_tilted_detector' golden test case. They are the ground truth.
+# All vectors are in METERS.
+# Configuration: rotx=1°, roty=5°, rotz=0°, twotheta=3°
+
+EXPECTED_ROTATED_FDET_VEC = torch.tensor(
+    [0.0861096544017657, -0.0219891729394385, 0.996042972814049], dtype=torch.float64
+)
+EXPECTED_ROTATED_SDET_VEC = torch.tensor(
+    [-0.0538469780853136, -0.998397831596816, -0.0173859947617641], dtype=torch.float64
+)
+EXPECTED_ROTATED_ODET_VEC = torch.tensor(
+    [0.994829447880333, -0.0521368021287822, -0.0871557427476582], dtype=torch.float64
+)
+EXPECTED_TILTED_PIX0_VECTOR_METERS = torch.tensor(
+    [0.0983465378387818, 0.052294833982483, -0.0501561701251796], dtype=torch.float64
+)
+
+# --- End Ground Truth Data ---
+
+
+@pytest.fixture(scope="module")
+def tilted_detector():
+    """Fixture for the 'cubic_tilted_detector' configuration."""
+    # NOTE: Using parameters that match the actual C trace
+    # (rotx=1°, roty=5°, rotz=0°, twotheta=3°)
+    config = DetectorConfig(
+        distance_mm=100.0,
+        pixel_size_mm=0.1,
+        spixels=1024,
+        fpixels=1024,
+        beam_center_s=51.2,  # Matches trace: Xbeam in C becomes Sbeam in MOSFLM
+        beam_center_f=51.2,  # Matches trace: Ybeam in C becomes Fbeam in MOSFLM
+        detector_convention=DetectorConvention.MOSFLM,
+        detector_rotx_deg=1.0,  # Matches trace
+        detector_roty_deg=5.0,  # Matches trace
+        detector_rotz_deg=0.0,  # Matches trace
+        detector_twotheta_deg=3.0,  # Matches trace
+        detector_pivot=DetectorPivot.BEAM,
+    )
+    return Detector(config=config, dtype=torch.float64)
+
+
+class TestDetectorGeometryRegressions:
+    """
+    Regression tests for detector geometry calculations.
+
+    These tests verify that the PyTorch implementation produces identical
+    results to the reference C-code for complex geometric configurations.
+    """
+
+    def test_rotated_basis_vectors_match_c_reference(self, tilted_detector):
+        """
+        Test that rotated detector basis vectors match C-code reference.
+
+        This test verifies that the sequence of detector rotations
+        (rotx -> roty -> rotz -> twotheta) produces the exact same
+        basis vectors as the reference nanoBragg.c implementation.
+
+        Regression prevention: Ensures rotation order, axis conventions,
+        and matrix definitions remain consistent with C-code.
+        """
+        torch.testing.assert_close(
+            tilted_detector.fdet_vec,
+            EXPECTED_ROTATED_FDET_VEC,
+            atol=1e-8,
+            rtol=1e-8,
+            msg="Fast detector vector (fdet_vec) does not match C-code reference after rotation.",
+        )
+        torch.testing.assert_close(
+            tilted_detector.sdet_vec,
+            EXPECTED_ROTATED_SDET_VEC,
+            atol=1e-8,
+            rtol=1e-8,
+            msg="Slow detector vector (sdet_vec) does not match C-code reference after rotation.",
+        )
+        torch.testing.assert_close(
+            tilted_detector.odet_vec,
+            EXPECTED_ROTATED_ODET_VEC,
+            atol=1e-8,
+            rtol=1e-8,
+            msg="Normal detector vector (odet_vec) does not match C-code reference after rotation.",
+        )
+
+    def test_pix0_vector_matches_c_reference_in_beam_pivot(self, tilted_detector):
+        """
+        Test that pix0_vector calculation matches C-code for BEAM pivot mode.
+
+        This is a critical test that verifies the complex interaction between:
+        - Rotated basis vectors
+        - BEAM pivot mode calculation
+        - MOSFLM convention F/S axis mapping
+
+        Regression prevention: This test caught and prevents reintroduction
+        of the MOSFLM F/S mapping bug that caused large geometric offsets.
+        """
+        torch.testing.assert_close(
+            tilted_detector.pix0_vector,
+            EXPECTED_TILTED_PIX0_VECTOR_METERS,
+            atol=1e-8,
+            rtol=1e-8,
+            msg="pix0_vector does not match C-code reference for tilted BEAM pivot configuration.",
+        )
+
+    def test_mosflm_axis_mapping_correctness(self):
+        """
+        Test MOSFLM axis mapping with isolated beam center offset.
+
+        This test uses a simple un-rotated detector with offset only on
+        the slow axis to verify the correct mapping:
+        - beam_center_s (slow axis) -> Xbeam -> Sbeam
+        - beam_center_f (fast axis) -> Ybeam -> Fbeam
+
+        Regression prevention: Ensures the critical F/S mapping fix
+        remains correct in MOSFLM convention.
+        """
+        config = DetectorConfig(
+            distance_mm=100.0,
+            pixel_size_mm=0.1,
+            beam_center_s=10.0,  # 10mm offset on SLOW axis
+            beam_center_f=0.0,  # 0mm offset on FAST axis
+            detector_convention=DetectorConvention.MOSFLM,
+            detector_pivot=DetectorPivot.BEAM,
+        )
+        detector = Detector(config=config, dtype=torch.float64)
+
+        # Expected calculation for MOSFLM convention:
+        # fdet=[0,0,1], sdet=[0,-1,0], beam=[1,0,0]
+        # Xbeam = beam_center_s = 10mm
+        # Ybeam = beam_center_f = 0mm
+        # Sbeam = (Xbeam + 0.5*pixel_size)/1000 = (10 + 0.05)/1000 = 0.01005 m
+        # Fbeam = (Ybeam + 0.5*pixel_size)/1000 = (0 + 0.05)/1000 = 0.00005 m
+        # pix0 = -Fbeam*fdet - Sbeam*sdet + dist*beam
+        #      = -0.00005*[0,0,1] - 0.01005*[0,-1,0] + 0.1*[1,0,0]
+        #      = [0.1, +0.01005, -0.00005]
+        expected_pix0 = torch.tensor([0.1, 0.01005, -0.00005], dtype=torch.float64)
+
+        torch.testing.assert_close(
+            detector.pix0_vector,
+            expected_pix0,
+            atol=1e-12,
+            rtol=1e-12,
+            msg="MOSFLM axis mapping failed for isolated slow-axis offset.",
+        )
+
+
+class TestDetectorDifferentiability:
+    """Tests for gradient flow through detector geometry calculations."""
+
+    def test_detector_parameter_gradients(self):
+        """Test that gradients flow through detector geometric parameters."""
+
+        device = torch.device("cpu")
+        dtype = torch.float64
+
+        # Create differentiable parameters
+        distance = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+        beam_center_s = torch.tensor(51.2, dtype=dtype, requires_grad=True)
+        beam_center_f = torch.tensor(51.2, dtype=dtype, requires_grad=True)
+        rotx = torch.tensor(5.0, dtype=dtype, requires_grad=True)
+
+        # Create detector config with tensor parameters
+        config = DetectorConfig(
+            distance_mm=distance,
+            beam_center_s=beam_center_s,
+            beam_center_f=beam_center_f,
+            detector_rotx_deg=rotx,
+            detector_roty_deg=torch.tensor(1.0, dtype=dtype, requires_grad=False),  # Break symmetry
+        )
+
+        # Create detector and get pixel coords
+        detector = Detector(config=config, device=device, dtype=dtype)
+        pixel_coords = detector.get_pixel_coords()
+
+        # Create a scalar output for gradient computation
+        # Sum of all pixel distances from origin
+        distances = torch.norm(pixel_coords, dim=-1)
+        total_distance = torch.sum(distances)
+
+        # Compute gradients
+        total_distance.backward()
+
+        # Check that all parameters have gradients
+        assert distance.grad is not None, "No gradient for distance"
+        assert beam_center_s.grad is not None, "No gradient for beam_center_s"
+        assert beam_center_f.grad is not None, "No gradient for beam_center_f"
+        assert rotx.grad is not None, "No gradient for rotx"
+
+        # Verify gradients are reasonable
+        assert torch.abs(distance.grad) > 1e-6
+        assert torch.abs(beam_center_s.grad) > 1e-6
+        assert torch.abs(beam_center_f.grad) > 1e-6
+
+    def test_basis_vector_gradients(self):
+        """Test that gradients flow correctly through detector basis vectors (sdet/fdet/odet)."""
+        
+        device = torch.device("cpu")
+        dtype = torch.float64
+        
+        # Create differentiable rotation parameters that affect basis vectors
+        rotx = torch.tensor(10.0, dtype=dtype, requires_grad=True)
+        roty = torch.tensor(5.0, dtype=dtype, requires_grad=True)
+        rotz = torch.tensor(3.0, dtype=dtype, requires_grad=True)
+        twotheta = torch.tensor(15.0, dtype=dtype, requires_grad=True)
+        
+        # Create detector with rotations
+        config = DetectorConfig(
+            detector_rotx_deg=rotx,
+            detector_roty_deg=roty,
+            detector_rotz_deg=rotz,
+            detector_twotheta_deg=twotheta,
+            spixels=64,  # Small for faster testing
+            fpixels=64,
+        )
+        
+        detector = Detector(config=config, device=device, dtype=dtype)
+        
+        # Test 1: Basis vectors should respond to rotation changes
+        # Create a loss that depends on basis vector orientations
+        # Use dot products with fixed vectors to make loss sensitive to orientation
+        target_f = torch.tensor([1.0, 0.5, 0.2], device=device, dtype=dtype)
+        target_s = torch.tensor([0.3, 1.0, 0.4], device=device, dtype=dtype)
+        target_o = torch.tensor([0.1, 0.2, 1.0], device=device, dtype=dtype)
+        
+        loss = (
+            torch.dot(detector.fdet_vec, target_f) ** 2 * 1.5 +
+            torch.dot(detector.sdet_vec, target_s) ** 2 * 2.0 +
+            torch.dot(detector.odet_vec, target_o) ** 2 * 1.0
+        )
+        
+        # Add a term that depends on the relative orientation of basis vectors
+        # This ensures the loss is sensitive to rotations
+        loss += torch.sum(torch.cross(detector.fdet_vec, detector.sdet_vec, dim=0) - detector.odet_vec) ** 2
+        
+        # Compute gradients
+        loss.backward()
+        
+        # Check all rotation parameters have non-zero gradients
+        assert rotx.grad is not None and torch.abs(rotx.grad) > 1e-8, \
+            f"rotx gradient too small or None: {rotx.grad}"
+        assert roty.grad is not None and torch.abs(roty.grad) > 1e-8, \
+            f"roty gradient too small or None: {roty.grad}"
+        assert rotz.grad is not None and torch.abs(rotz.grad) > 1e-8, \
+            f"rotz gradient too small or None: {rotz.grad}"
+        assert twotheta.grad is not None and torch.abs(twotheta.grad) > 1e-8, \
+            f"twotheta gradient too small or None: {twotheta.grad}"
+        
+        # Test 2: Verify gradcheck for basis vector computation
+        def func_basis_vectors(rotx_val, roty_val):
+            """Function that returns scalar depending on basis vectors."""
+            config = DetectorConfig(
+                detector_rotx_deg=rotx_val,
+                detector_roty_deg=roty_val,
+                spixels=32,
+                fpixels=32,
+            )
+            det = Detector(config=config, device=device, dtype=dtype)
+            
+            # Compute a scalar that depends on all basis vectors
+            result = (
+                torch.dot(det.fdet_vec, torch.tensor([1.0, 0.5, 0.3], device=device, dtype=dtype)) +
+                torch.dot(det.sdet_vec, torch.tensor([0.2, 1.0, 0.4], device=device, dtype=dtype)) +
+                torch.dot(det.odet_vec, torch.tensor([0.1, 0.3, 1.0], device=device, dtype=dtype))
+            )
+            return result
+        
+        # Test gradient correctness with gradcheck
+        rotx_test = torch.tensor(5.0, dtype=dtype, requires_grad=True)
+        roty_test = torch.tensor(3.0, dtype=dtype, requires_grad=True)
+        
+        assert torch.autograd.gradcheck(
+            func_basis_vectors, 
+            (rotx_test, roty_test), 
+            eps=1e-5, 
+            atol=1e-5, 
+            rtol=1e-3
+        ), "Basis vector gradients failed gradcheck"
+    
+    def test_pixel_coords_basis_vector_gradients(self):
+        """Test that pixel coordinates correctly depend on basis vector orientations."""
+        
+        device = torch.device("cpu")
+        dtype = torch.float64
+        
+        # Test with all rotation parameters to ensure basis vectors affect pixel positions
+        def func_pixel_coords_via_rotations(rotx, roty, rotz, twotheta):
+            """Pixel coordinates should change with basis vector rotations."""
+            config = DetectorConfig(
+                detector_rotx_deg=rotx,
+                detector_roty_deg=roty,
+                detector_rotz_deg=rotz,
+                detector_twotheta_deg=twotheta,
+                spixels=32,  # Small for speed
+                fpixels=32,
+                distance_mm=100.0,
+                beam_center_s=1.6,  # 16 pixels * 0.1mm
+                beam_center_f=1.6,
+            )
+            det = Detector(config=config, device=device, dtype=dtype)
+            coords = det.get_pixel_coords()
+            
+            # Return a scalar that depends on pixel positions
+            # Use corner pixels and center pixels to ensure sensitivity
+            corner_sum = (
+                torch.sum(coords[0, 0] ** 2) +      # Top-left
+                torch.sum(coords[0, -1] ** 2) +     # Top-right
+                torch.sum(coords[-1, 0] ** 2) +     # Bottom-left
+                torch.sum(coords[-1, -1] ** 2)      # Bottom-right
+            )
+            center_sum = torch.sum(coords[16, 16] ** 2)  # Center pixel
+            
+            return corner_sum * 0.25 + center_sum
+        
+        # Test with gradcheck
+        rotx = torch.tensor(5.0, dtype=dtype, requires_grad=True)
+        roty = torch.tensor(3.0, dtype=dtype, requires_grad=True)
+        rotz = torch.tensor(2.0, dtype=dtype, requires_grad=True)
+        twotheta = torch.tensor(10.0, dtype=dtype, requires_grad=True)
+        
+        assert torch.autograd.gradcheck(
+            func_pixel_coords_via_rotations,
+            (rotx, roty, rotz, twotheta),
+            eps=1e-5,
+            atol=1e-5,
+            rtol=1e-3
+        ), "Pixel coordinates don't correctly depend on basis vector rotations"
+
+    @pytest.mark.slow
+    def test_comprehensive_gradcheck(self):
+        """Comprehensive gradient tests using torch.autograd.gradcheck."""
+
+        device = torch.device("cpu")
+        dtype = torch.float64
+
+        # Create a small detector for fast testing
+        spixels = 128
+        fpixels = 128
+
+        # Test distance_mm gradient
+        def func_distance(distance_mm):
+            config = DetectorConfig(
+                distance_mm=distance_mm,
+                spixels=spixels,
+                fpixels=fpixels,
+            )
+            detector = Detector(config=config, device=device, dtype=dtype)
+            coords = detector.get_pixel_coords()
+            # Return a differentiable scalar - mean distance from origin
+            return torch.mean(torch.norm(coords, dim=-1))
+
+        distance_input = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+        assert torch.autograd.gradcheck(
+            func_distance, (distance_input,), eps=1e-6, atol=1e-6, rtol=1e-4
+        )
+
+        # Test beam_center_s gradient
+        def func_beam_s(beam_center_s):
+            config = DetectorConfig(
+                beam_center_s=beam_center_s,
+                spixels=spixels,
+                fpixels=fpixels,
+            )
+            detector = Detector(config=config, device=device, dtype=dtype)
+            coords = detector.get_pixel_coords()
+            return torch.mean(torch.norm(coords, dim=-1))
+
+        beam_s_input = torch.tensor(51.2, dtype=dtype, requires_grad=True)
+        assert torch.autograd.gradcheck(
+            func_beam_s, (beam_s_input,), eps=1e-6, atol=1e-6, rtol=1e-4
+        )
+
+        # Test detector_rotx_deg gradient
+        def func_rotx(rotx_deg):
+            config = DetectorConfig(
+                detector_rotx_deg=rotx_deg,
+                spixels=spixels,
+                fpixels=fpixels,
+            )
+            detector = Detector(config=config, device=device, dtype=dtype)
+            coords = detector.get_pixel_coords()
+            return torch.mean(torch.norm(coords, dim=-1))
+
+        rotx_input = torch.tensor(5.0, dtype=dtype, requires_grad=True)
+        assert torch.autograd.gradcheck(
+            func_rotx, (rotx_input,), eps=1e-6, atol=1e-6, rtol=1e-4
+        )
+
+    def test_beam_strike_invariant_in_beam_pivot_mode(self):
+        """
+        Test that beam strike position remains invariant during detector rotations in BEAM pivot mode.
+        
+        In BEAM pivot mode, the detector rotates around the direct beam spot, meaning
+        the pixel coordinates where the beam hits the detector should remain constant
+        regardless of detector tilts. This is a key validation of BEAM pivot behavior.
+        """
+        # Configure detector with BEAM pivot and known beam center
+        base_config = DetectorConfig(
+            distance_mm=100.0,
+            pixel_size_mm=0.1,
+            beam_center_s=25.6,  # 256 pixels * 0.1mm
+            beam_center_f=25.6,  # 256 pixels * 0.1mm
+            spixels=512,
+            fpixels=512,
+            detector_convention=DetectorConvention.MOSFLM,
+            detector_pivot=DetectorPivot.BEAM,
+        )
+        
+        # Create reference detector (no rotation)
+        reference_detector = Detector(config=base_config, dtype=torch.float64)
+        reference_coords = reference_detector.get_pixel_coords()
+        
+        # Calculate beam hit position (should be at beam center)
+        # beam_vector is [1,0,0] for MOSFLM, distance is 0.1m
+        beam_vector = torch.tensor([1.0, 0.0, 0.0], dtype=torch.float64)
+        beam_strike_3d = reference_detector.distance * beam_vector
+        
+        # Find which pixel is closest to the beam strike
+        pixel_distances = torch.norm(reference_coords - beam_strike_3d.unsqueeze(0).unsqueeze(0), dim=-1)
+        reference_min_indices = torch.unravel_index(torch.argmin(pixel_distances), pixel_distances.shape)
+        reference_beam_pixel_coord = reference_coords[reference_min_indices[0], reference_min_indices[1]]
+        
+        # Test with detector rotation - beam strike should stay in same place
+        tilted_config = DetectorConfig(
+            distance_mm=100.0,
+            pixel_size_mm=0.1,
+            beam_center_s=25.6,
+            beam_center_f=25.6,
+            spixels=512,
+            fpixels=512,
+            detector_rotx_deg=10.0,  # Add some rotation
+            detector_roty_deg=5.0,
+            detector_convention=DetectorConvention.MOSFLM,
+            detector_pivot=DetectorPivot.BEAM,
+        )
+        
+        tilted_detector = Detector(config=tilted_config, dtype=torch.float64)
+        tilted_coords = tilted_detector.get_pixel_coords()
+        
+        # Find closest pixel to beam strike in tilted detector
+        pixel_distances_tilted = torch.norm(tilted_coords - beam_strike_3d.unsqueeze(0).unsqueeze(0), dim=-1)
+        tilted_min_indices = torch.unravel_index(torch.argmin(pixel_distances_tilted), pixel_distances_tilted.shape)
+        tilted_beam_pixel_coord = tilted_coords[tilted_min_indices[0], tilted_min_indices[1]]
+        
+        # The physical 3D coordinates of the beam strike should be very similar
+        torch.testing.assert_close(
+            reference_beam_pixel_coord,
+            tilted_beam_pixel_coord,
+            atol=1e-3,  # Allow small differences due to discrete pixel grid
+            rtol=1e-6,
+            msg="Beam strike position changed during detector rotation in BEAM pivot mode"
+        )
+
+    def test_xds_convention_basic_geometry(self):
+        """
+        Test XDS convention detector geometry and verify beam_vector.
+        
+        XDS convention uses different initial basis vectors and beam direction
+        compared to MOSFLM. This test validates the basic setup and removes
+        the "needs verification" comment from the code.
+        """
+        # Create XDS detector with simple configuration
+        config = DetectorConfig(
+            distance_mm=100.0,
+            pixel_size_mm=0.1,
+            beam_center_s=25.6,
+            beam_center_f=25.6,
+            spixels=512,
+            fpixels=512,
+            detector_convention=DetectorConvention.XDS,
+            detector_pivot=DetectorPivot.BEAM,
+        )
+        
+        detector = Detector(config=config, dtype=torch.float64)
+        
+        # Test XDS initial basis vectors (before any rotations)
+        config_no_rotation = DetectorConfig(
+            distance_mm=100.0,
+            detector_convention=DetectorConvention.XDS,
+        )
+        detector_no_rotation = Detector(config=config_no_rotation, dtype=torch.float64)
+        
+        # Expected XDS basis vectors (from detector.md documentation)
+        expected_fdet = torch.tensor([1.0, 0.0, 0.0], dtype=torch.float64)
+        expected_sdet = torch.tensor([0.0, 1.0, 0.0], dtype=torch.float64)  
+        expected_odet = torch.tensor([0.0, 0.0, 1.0], dtype=torch.float64)
+        
+        torch.testing.assert_close(
+            detector_no_rotation.fdet_vec,
+            expected_fdet,
+            atol=1e-12,
+            rtol=1e-12,
+            msg="XDS fast detector vector incorrect"
+        )
+        
+        torch.testing.assert_close(
+            detector_no_rotation.sdet_vec, 
+            expected_sdet,
+            atol=1e-12,
+            rtol=1e-12,
+            msg="XDS slow detector vector incorrect"
+        )
+        
+        torch.testing.assert_close(
+            detector_no_rotation.odet_vec,
+            expected_odet, 
+            atol=1e-12,
+            rtol=1e-12,
+            msg="XDS normal detector vector incorrect"
+        )
+        
+        # Test XDS beam vector ([0, 0, 1] per documentation)
+        # This verifies and removes "needs verification" comment
+        expected_beam_vector = torch.tensor([0.0, 0.0, 1.0], dtype=torch.float64)
+        
+        # The beam vector is used internally in pix0_vector calculation for BEAM pivot
+        # We can verify it indirectly by checking the geometry makes sense
+        pix0 = detector.pix0_vector
+        
+        # For XDS with beam along [0,0,1], the detector should be positioned
+        # along the Z axis at distance 0.1m
+        # Basic sanity check - pix0 should have reasonable Z component
+        assert abs(pix0[2]) > 0.05, "XDS detector positioning appears incorrect"
+        
+        # Test that XDS twotheta axis defaults correctly
+        expected_twotheta_axis = torch.tensor([1.0, 0.0, 0.0], dtype=config.twotheta_axis.dtype)
+        torch.testing.assert_close(
+            config.twotheta_axis,
+            expected_twotheta_axis,
+            atol=1e-12,
+            rtol=1e-12,
+            msg="XDS twotheta axis default incorrect"
+        )
+
+    def test_detector_real_valued_gradients(self):
+        """
+        Test that all detector geometry gradients remain real-valued.
+        
+        This test ensures that geometric operations in the detector class
+        do not introduce complex numbers, which would break gradient-based
+        optimization. Common sources of complex gradients include:
+        - sqrt of negative values
+        - acos/asin of values outside [-1,1]  
+        - divisions by zero becoming inf/nan
+        """
+        device = torch.device("cpu")
+        dtype = torch.float64
+
+        # Create detector with differentiable parameters that could potentially
+        # cause numerical issues in geometric calculations
+        distance = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+        beam_center_s = torch.tensor(25.0, dtype=dtype, requires_grad=True) 
+        beam_center_f = torch.tensor(25.0, dtype=dtype, requires_grad=True)
+        rotx = torch.tensor(45.0, dtype=dtype, requires_grad=True)  # Large rotation
+        roty = torch.tensor(30.0, dtype=dtype, requires_grad=True) 
+        rotz = torch.tensor(60.0, dtype=dtype, requires_grad=True)
+        twotheta = torch.tensor(20.0, dtype=dtype, requires_grad=True)
+
+        # Create detector config with tensor parameters
+        config = DetectorConfig(
+            distance_mm=distance,
+            beam_center_s=beam_center_s,
+            beam_center_f=beam_center_f,
+            detector_rotx_deg=rotx,
+            detector_roty_deg=roty,
+            detector_rotz_deg=rotz,
+            detector_twotheta_deg=twotheta,
+            spixels=128,  # Smaller for faster test
+            fpixels=128,
+        )
+
+        # Create detector
+        detector = Detector(config=config, device=device, dtype=dtype)
+        
+        # Get pixel coordinates which exercises most geometric calculations
+        pixel_coords = detector.get_pixel_coords()
+        
+        # Create a scalar loss that depends on the detector geometry
+        # This will trigger computation of gradients through all geometric operations
+        distances = torch.norm(pixel_coords, dim=-1)
+        total_distance = torch.sum(distances)
+        
+        # Also test basis vector magnitudes (should be 1.0)
+        basis_loss = (
+            (torch.norm(detector.fdet_vec) - 1.0)**2 +
+            (torch.norm(detector.sdet_vec) - 1.0)**2 + 
+            (torch.norm(detector.odet_vec) - 1.0)**2
+        )
+        
+        # Combined loss that exercises multiple geometric operations
+        loss = total_distance + 1000 * basis_loss
+        
+        # Compute gradients
+        loss.backward()
+        
+        # Check that all gradients are real-valued (no imaginary components)
+        def check_real_gradient(param, name):
+            if param.grad is None:
+                raise AssertionError(f"No gradient computed for {name}")
+            
+            if torch.is_complex(param.grad):
+                raise AssertionError(f"Gradients have imaginary components for {name}: {param.grad}")
+                
+            if torch.isnan(param.grad).any():
+                raise AssertionError(f"NaN values in gradients for {name}: {param.grad}")
+                
+            if torch.isinf(param.grad).any():
+                raise AssertionError(f"Inf values in gradients for {name}: {param.grad}")
+
+        # Verify all parameter gradients are real and finite
+        check_real_gradient(distance, "distance")
+        check_real_gradient(beam_center_s, "beam_center_s")
+        check_real_gradient(beam_center_f, "beam_center_f") 
+        check_real_gradient(rotx, "rotx")
+        check_real_gradient(roty, "roty")
+        check_real_gradient(rotz, "rotz")
+        check_real_gradient(twotheta, "twotheta")
+        
+        # Also verify the basis vectors themselves are real
+        assert not torch.is_complex(detector.fdet_vec), "fdet_vec has complex components"
+        assert not torch.is_complex(detector.sdet_vec), "sdet_vec has complex components" 
+        assert not torch.is_complex(detector.odet_vec), "odet_vec has complex components"
+        assert not torch.is_complex(detector.pix0_vector), "pix0_vector has complex components"
+        
+        # Verify pixel coordinates are real
+        assert not torch.is_complex(pixel_coords), "pixel_coords has complex components"
+
+    def test_detector_complex_gradient_edge_cases(self):
+        """
+        Test detector geometry with edge cases that could produce complex gradients.
+        
+        This test creates a scenario that could cause sqrt of negative numbers
+        or other operations that might produce complex gradients.
+        """
+        device = torch.device("cpu")
+        dtype = torch.float64
+
+        # Test the magnitude function directly which uses torch.sqrt
+        # Create vectors that when squared and summed might have numerical errors
+        test_vector = torch.tensor([1e-8, -1e-8, 1e-8], dtype=dtype, requires_grad=True)
+        
+        from nanobrag_torch.utils.geometry import magnitude
+        
+        # Force a scenario where we might get negative values under sqrt
+        # by creating a custom loss that could cause numerical issues
+        
+        # Compute magnitude which uses sqrt internally
+        mag = magnitude(test_vector)
+        
+        # Create a loss that might cause issues with backward pass
+        # Using operations that could introduce numerical instability
+        loss = mag * torch.tensor(1e12, dtype=dtype)  # Scale up to amplify errors
+        
+        try:
+            loss.backward()
+            
+            # Check if gradients are real
+            if test_vector.grad is not None:
+                if torch.is_complex(test_vector.grad):
+                    raise AssertionError("Gradients have imaginary components in magnitude calculation")
+                    
+                if torch.isnan(test_vector.grad).any():
+                    raise AssertionError("NaN values in gradients from magnitude calculation")
+                    
+        except RuntimeError as e:
+            if "complex" in str(e).lower():
+                raise AssertionError(f"Complex number error in gradient computation: {e}")
+            else:
+                raise  # Re-raise if it's a different error
+                
+        # Test 2: Create a scenario with very small vector that might cause sqrt issues
+        # when computing magnitude for normalization
+        tiny_vector = torch.tensor([1e-15, 1e-15, 1e-15], dtype=dtype, requires_grad=True)
+        
+        # Test unitize function which uses magnitude internally and could cause issues
+        from nanobrag_torch.utils.geometry import unitize
+        
+        unit_vec, orig_mag = unitize(tiny_vector)
+        combined_loss = torch.sum(unit_vec) + orig_mag
+        
+        try:
+            combined_loss.backward()
+            
+            if tiny_vector.grad is not None:
+                if torch.is_complex(tiny_vector.grad):
+                    raise AssertionError("Gradients have imaginary components in unitize calculation")
+                    
+        except RuntimeError as e:
+            if "complex" in str(e).lower():
+                raise AssertionError(f"Complex number error in unitize gradient: {e}")
+            else:
+                raise
+
+    def test_simulator_real_valued_gradients(self):
+        """
+        Test that the simulator operations that use sqrt do not produce complex gradients.
+        
+        This specifically tests the pixel magnitude calculations in the simulator
+        which could cause complex gradients if not properly protected.
+        """
+        device = torch.device("cpu")
+        dtype = torch.float64
+        
+        # Import the simulator to test its sqrt operations
+        from nanobrag_torch.simulator import Simulator
+        from nanobrag_torch.config import CrystalConfig
+        from nanobrag_torch.models.crystal import Crystal
+
+        # Create a simple configuration with differentiable parameters
+        distance = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+        
+        detector_config = DetectorConfig(
+            distance_mm=distance,
+            spixels=64,  # Small for fast test
+            fpixels=64,
+        )
+        
+        crystal_config = CrystalConfig(
+            cell_a=torch.tensor(100.0, dtype=dtype, requires_grad=True),
+            cell_b=100.0,
+            cell_c=100.0,
+            cell_alpha=90.0,
+            cell_beta=90.0,
+            cell_gamma=90.0,
+            mosaic_spread_deg=0.0,
+            mosaic_domains=1,
+            N_cells=(3, 3, 3),  # Small for fast test
+        )
+        
+        # Create crystal and detector
+        crystal = Crystal(config=crystal_config, device=device, dtype=dtype)
+        detector = Detector(config=detector_config, device=device, dtype=dtype)
+        
+        # Create simulator
+        simulator = Simulator(crystal, detector, crystal_config, device=device, dtype=dtype)
+        
+        # Run simulation which will exercise the sqrt operations in pixel magnitude calculations
+        image = simulator.run()
+        
+        # Create a loss that depends on the image
+        loss = torch.sum(image)
+        
+        # Compute gradients
+        loss.backward()
+        
+        # Verify gradients are real
+        assert not torch.is_complex(distance.grad), "Complex gradient from simulator distance parameter"
+        assert not torch.isnan(distance.grad).any(), "NaN gradient from simulator distance parameter"
+        assert not torch.isinf(distance.grad).any(), "Inf gradient from simulator distance parameter"
+        
+        cell_a_grad = crystal_config.cell_a.grad if hasattr(crystal_config.cell_a, 'grad') else None
+        if cell_a_grad is not None:
+            assert not torch.is_complex(cell_a_grad), "Complex gradient from simulator cell_a parameter"

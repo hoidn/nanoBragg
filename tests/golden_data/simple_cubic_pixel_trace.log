@@ -1,0 +1,52 @@
+================================================================================
+Single Pixel Trace Debugging Log
+nanoBragg PyTorch Implementation
+================================================================================
+
+Target Pixel: (slow=100, fast=800)
+Test Case: simple_cubic
+Wavelength: 6.2 Angstroms
+Precision: torch.float64
+
+Wavelength (Å): 6.199999809265e+00
+
+Pixel coordinates tensor shape: torch.Size([1024, 1024, 3])
+Pixel Coordinate (Å): [0.1     0.04125 0.02875]
+Pixel Coordinate (Å): [0.1     0.04125 0.02875]
+Diffracted Beam (unit vector): [0.89342266 0.36853685 0.25685901]
+Pixel Distance (Å): 1.119291070276e-01
+Incident Beam (unit vector): [1. 0. 0.]
+Scattering Vector S (Å⁻¹): [-0.01718989  0.05944143  0.04142887]
+Fractional Miller Index h,k,l: [-1.71898943  5.94414267  4.14288731]
+Nearest Integer h₀,k₀,l₀: [-2.  6.  4.]
+F_cell: 1.000000000000e+02
+Δh (h - h₀): 2.810105684942e-01
+Δk (k - k₀): -5.585733404453e-02
+Δl (l - l₀): 1.428873126356e-01
+sincg(Δh, Na): 3.556440450463e+00
+sincg(Δk, Nb): 4.937819466314e+00
+sincg(Δl, Nc): 4.601015025979e+00
+F_latt: 8.079870501359e+03
+Raw Intensity: 6.528430731874e+07
+Solid Angle (steradians): 7.131335736566e-07
+r_e_sqr (Å²): 7.939999768780e-10
+fluence (photons/Å²): 1.259320192000e+09
+Final Physical Intensity: 4.655178511396e+01
+
+================================================================================
+Additional Debugging Information
+================================================================================
+Crystal unit cell: 100.0 x 100.0 x 100.0 Å
+Crystal size: 5.0 x 5.0 x 5.0 cells
+a_star: [0.01 0.   0.  ]
+b_star: [-6.123234e-19  1.000000e-02  0.000000e+00]
+c_star: [-6.123234e-19 -6.123234e-19  1.000000e-02]
+Detector distance: 0.1 Å
+Pixel size: 0.0001 Å
+Detector size: 1024 x 1024 pixels
+Beam center: (513.0, 513.0) pixels
+Fast detector axis: [0. 0. 1.]
+Slow detector axis: [ 0. -1.  0.]
+Normal detector axis: [1. 0. 0.]
+
+Trace completed successfully.

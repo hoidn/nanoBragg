@@ -1,0 +1,13 @@
+{
+  "c_code_commit_hash": "8d42cff01d0a26178d17e885fba7615e1200e20a",
+  "compiler_version": "Apple clang version 17.0.0 (clang-1700.0.13.3)",
+  "command": "./nanoBragg -misset -89.968546 -31.328953 177.753396 -cell 70 80 90 75 85 95 -default_F 100 -N 5 -lambda 1.0 -detpixels 512 -floatfile tests/golden_data/triclinic_P1/image.bin",
+  "cell": [70, 80, 90, 75, 85, 95],
+  "misset_angles": [-89.968546, -31.328953, 177.753396],
+  "lambda": 1.0,
+  "N_cells": 5,
+  "detpixels": 512,
+  "default_F": 100,
+  "distance_mm": 100,
+  "pixel_size_mm": 0.1
+}

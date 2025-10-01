@@ -1,0 +1,13 @@
+# HKL file with negative Miller indices - 4 columns
+# For AT-IO-004 test - negative indices should be handled correctly
+0 0 0 100.0
+1 0 0 50.0
+-1 0 0 50.0
+0 1 0 60.0
+0 -1 0 60.0
+0 0 1 70.0
+0 0 -1 70.0
+1 1 0 40.0
+-1 -1 0 40.0
+1 -1 0 45.0
+-1 1 0 45.0
