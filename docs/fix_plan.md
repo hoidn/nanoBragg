@@ -215,6 +215,11 @@
     Artifacts: `reports/benchmarks/20250930-multi-source-normalization/{P3.0c_summary.md, validation_results.json, weighted_sources.txt, validate_weighted_source_normalization.py}`.
     Observations/Hypotheses: PyTorch applies weights as multiplicative factors per-source before averaging; C ignores them entirely. PyTorch behavior is spec-compliant and more flexible. Semantic difference documented but not a bug. P3.0c blocker cleared; CPU/CUDA benchmarks (P3.2/P3.3) can proceed; Phase 3 decision (P3.5) unblocked.
     Next Actions: Mark P3.0c as `[X]` in plan; proceed with Phase 3 memo (P3.5) incorporating existing CPU/CUDA benchmark data and the 1024² CPU deficit analysis.
+  * [2025-10-10] Attempt #22 — Result: invalidates Attempt #21. `scripts/validate_weighted_source_normalization.py` mutates `simulator.source_directions/weights/wavelengths`, but the simulator only uses `_source_*` tensors populated from `BeamConfig` during `__init__`. The run therefore fell back to the single-source branch, so the recorded CPU/CUDA totals do not exercise unequal weights. Weighted-source parity evidence remains outstanding.
+    Metrics: Analysis only (confirmed `_source_directions is None` after running the script).
+    Artifacts: n/a — findings logged here and in `plans/active/perf-pytorch-compile-refactor/plan.md` (P3.0c row).
+    Observations/Hypotheses: Need a harness that feeds multi-source tensors through `BeamConfig` (or directly updates `_source_*` caches) before instantiating `Simulator`. Until that exists, P3.0c cannot close nor can Phase 3 be declared complete.
+    Next Actions: Repair the validation script, regenerate CPU/CUDA results with unequal weights, archive outputs under `reports/benchmarks/<date>-multi-source-normalization/`, then resume P3.2/P3.3 and P3.5.
 - Exit Criteria (quote thresholds from spec):
   * Phase 2 artifacts demonstrating ≥50× warm/cold delta for CPU float64/float32 and CUDA float32 (multi-source included) committed.
   * Phase 3 report showing PyTorch warm runs ≤1.5× C runtime for 256²–1024² detectors.

@@ -537,7 +537,18 @@
   • `f2dddb8` added Phase B reports + script but the helper ignores its dtype argument, making conclusions suspect; needs refactor per plan.
   • `712617f`, `0c76ccc` prompt edits OK, but no progress on routing guard or weighted-source parity; focus is drifting.
 - Follow-ups for Ralph:
- 1. Patch `scripts/validate_single_stage_reduction.py` so `dtype` flows into Crystal/Detector/Simulator, then rerun Phase A3 histograms & Phase B3 experiments under float32/float64 variants with artifacts under `reports/2025-10-AT012-regression/`.
- 2. Tackle AT-012 Phase C mitigation once diagnostics are trustworthy; no more dtype overrides or tolerance loosening.
- 3. Execute PERF plan P3.0c (unequal weights) and new P3.3a 4096² benchmark/profiling, then update docs/fix_plan.md with findings before claiming perf wins.
- 4. Complete ROUTING-LOOP-001 Phase A report documenting current `loop.sh` behaviour before automation runs again.
+1. Patch `scripts/validate_single_stage_reduction.py` so `dtype` flows into Crystal/Detector/Simulator, then rerun Phase A3 histograms & Phase B3 experiments under float32/float64 variants with artifacts under `reports/2025-10-AT012-regression/`.
+2. Tackle AT-012 Phase C mitigation once diagnostics are trustworthy; no more dtype overrides or tolerance loosening.
+3. Execute PERF plan P3.0c (unequal weights) and new P3.3a 4096² benchmark/profiling, then update docs/fix_plan.md with findings before claiming perf wins.
+4. Complete ROUTING-LOOP-001 Phase A report documenting current `loop.sh` behaviour before automation runs again.
+
+## 2025-10-10 (galph loop BG)
+- Sync clean; no upstream conflicts.
+- Weighted-source validation: `scripts/validate_weighted_source_normalization.py` writes to `simulator.source_*` attributes that the simulator never reads, so Attempt #21’s “two-source” evidence actually exercised the single-source path. Reopened PERF plan task P3.0c and logged Attempt #22 in fix_plan; Ralph must rebuild the harness via `BeamConfig` or by populating `_source_*` caches before instantiation.
+- AT-012 status: tests remain hard-coded to `dtype=torch.float64` (commit 8a86f65) so Tier-1 still violates the float32 contract. Plateau plan Phase A/B artifacts exist but mitigation (Phase C/D) untouched; reminded Ralph to remove overrides only after plateau fragmentation is solved.
+- Dtype hygiene: `io/source.py`, `utils/noise.py`, and `utils/c_random.py` still default to float64, aligning with DTYPE plan Phase B3 outstanding items.
+- 4096² warm-run requirement (long-term goal) still unaddressed; PERF plan P3.3a left pending and needs real benchmarks plus profiling once multi-source parity is fixed.
+- Follow-ups for Ralph:
+ 1. Fix the weighted-source validation pipeline (set tensors on `BeamConfig` prior to simulator init, rerun pytest + nb-compare, archive under `reports/benchmarks/<date>-multi-source-normalization/`).
+ 2. Restore AT-012 tests to float32 after a real plateau fix passes; stop relying on float64 overrides to mask fragmentation.
+ 3. Execute PERF P3.3a 4096² CPU warm benchmark once P3.0c artifacts exist, capturing profiler stats for bottleneck analysis.
