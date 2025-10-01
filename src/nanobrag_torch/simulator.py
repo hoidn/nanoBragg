@@ -291,7 +291,9 @@ def compute_physics_for_position(
     # After sum: (S, F) or (n_sources, S, F) or (n_sources, batch)
 
     # PERF-PYTORCH-004 P3.0b: Apply polarization PER-SOURCE before weighted sum
-    if apply_polarization and not (kahn_factor == 0.0):
+    # IMPORTANT: Apply polarization even when kahn_factor==0.0 (unpolarized case)
+    # The formula 0.5*(1.0 + cos²(2θ)) is the correct unpolarized correction
+    if apply_polarization:
         # Calculate polarization factor for each source
         # Need diffracted beam direction: pixel_coords_angstroms normalized
         pixel_magnitudes = torch.norm(pixel_coords_angstroms, dim=-1, keepdim=True).clamp_min(1e-12)
