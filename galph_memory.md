@@ -240,3 +240,9 @@
 - Planning decision: Existing active plans (`at-parallel-012-peakmatch`, `perf-pytorch-compile-refactor`, `repo-hygiene-002`) already cover the needed multi-turn work; no new plan drafted.
 - Ralph status: No engineer commits since 78be581 (device-neutrality fix); pending work is executing Plan AT-012 Phase A/B and PERF Phase 3 tasks.
 - Follow-ups for next loop: 1) Confirm Ralph captures AT-012 Phase A artifacts + float32/float64 comparison; 2) Ensure PERF tasks P3.0–P3.0c start (fallback, polarization, normalization) before new benchmarks; 3) Push progress on repo-hygiene-002 (H1–H4 not started).
+
+## 2025-10-04 (galph loop AF)
+- Deep dive reaffirmed multi-source regressions: `src/nanobrag_torch/simulator.py` still calls `.to()` on `beam_config.source_wavelengths` when None, normalizes by `source_weights.sum()` (averages), and drives polarization with `self.incident_beam_direction`; all three gaps block PERF Plan P3.0–P3.0c.
+- Peak-match effort untouched: no artifacts under `reports/2025-10-02-AT-012-peakmatch/`; Phase A checklist in `plans/active/at-parallel-012-peakmatch/plan.md` remains at [ ].
+- No new plan spun up; existing active plans already track the work. Fix_plan priorities still accurate, so left unchanged.
+- Ralph next actions: execute PERF Plan P3.0/P3.0b/P3.0c to restore multi-source semantics, then run AT-012 Plan Phase A (capture baseline JSON/peaks) before exploring dtype hypotheses; keep work under `prompts/debug.md`.
