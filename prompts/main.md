@@ -8,9 +8,9 @@ One thing per loop:
 - Before changing code, search the repo to ensure it’s not already implemented or half‑implemented. Do not assume missing.
 - After implementing, run only the tests/examples relevant to that feature (fast feedback). If they pass, run the full test suite.
 
-- When selecting your fix_plan.md item, inspect it for any referenced plan files (e.g., entries under `plans/` or `plan:` metadata).
+- When selecting your docs/fix_plan.md item, inspect it for any referenced plan files (e.g., entries under `plans/` or `plan:` metadata).
   • If a plan is referenced, read that plan end-to-end before deciding on actions and treat its directives as mandatory context.
-  • If the referenced plan is missing or stale, note this in your loop output and add an item to fix_plan.md describing the gap.
+  • If the referenced plan is missing or stale, note this in your loop output and add an item to docs/fix_plan.md describing the gap.
 - Do not begin implementation until having reviewed and analyzed all contextually relevant docs, source files, and any linked plan documents. Think harder when doing this analysis. Use parallel subagents when possible.
 
 Subagents policy:
@@ -50,7 +50,7 @@ IMPORTANT
 - PyTorch device discipline: Keep tensor operations device/dtype agnostic. Avoid `.cpu()`/`.cuda()` in production paths and run CPU + CUDA smoke checks whenever you touch PyTorch math.
 - Tooling hygiene: Place new benchmarks/profilers under `scripts/` (e.g., `scripts/benchmarks/`) and honour the documented env contract (`KMP_DUPLICATE_LIB_OK`, `NB_C_BIN` precedence, editable install).
 
-- Reconcile $SPEC vs. architecture: if behavior is underspecified in the $SPEC but captured in $ARCH follow $ARCH If there is a conflict, prefer the $SPEC for external contracts and propose an $ARCH patch (record in `fix_plan.md`).
+- Reconcile $SPEC vs. architecture: if behavior is underspecified in the $SPEC but captured in $ARCH follow $ARCH If there is a conflict, prefer the $SPEC for external contracts and propose an $ARCH patch (record in `docs/fix_plan.md`).
 
 Don’ts:
 - Don’t implement placeholder logic or silent fallbacks that hide validation failures.
@@ -71,7 +71,7 @@ READ the following files (read them yourself. you may delegate exploration of ot
 - $ARCH: `./arch.md` (ADR-backed implementation architecture; reconcile design with spec, surface conflicts)
 - docs/development/c_to_pytorch_config_map.md — C↔Py config parity and implicit rules
 -- docs/debugging/debugging.md — Parallel trace-driven debugging SOP
-- $PLAN: `./fix_plan.md` (living, prioritized to‑do; keep it up to date)
+- $PLAN: `./docs/fix_plan.md` (living, prioritized to‑do; keep it up to date)
 - $ISSUES: `./issues/*.md`
 - $AGENTS: `./CLAUDE.md` (concise how‑to run/build/test; keep it accurate)
 - $TESTS: `./docs/development/testing_strategy.md` (testing philosophy, tiers, seeds/tolerances, commands)
@@ -121,10 +121,10 @@ declare:
 <step 8>
 update docs:
 - If applicable, update `CLAUDE.md` with any new, brief run/build/test command or easily-avoidable quirk that caused issues during this loop. Do not put runtime status into `CLAUDE.md`.
-- if fix_plan.md is longer than 500 lines, move its least-currently relevant completed sections into fix_plan_archive.md
+- if docs/fix_plan.md is longer than 500 lines, move its least-currently relevant completed sections into archive/fix_plan_archive.md
 </step 8>
 <step 9>
-Version control hygiene: after each loop, stage and commit all intended changes. Use a descriptive message including acceptance IDs and module scope. Do not use emojis or make any references to claude code in the commit message. Always include `fix_plan.md` and any updated prompts/docs. After committing, run `git push`; if it fails, `git pull --rebase`, resolve conflicts (documenting resolutions in fix_plan.md and loop output), then push again.
+Version control hygiene: after each loop, stage and commit all intended changes. Use a descriptive message including acceptance IDs and module scope. Do not use emojis or make any references to claude code in the commit message. Always include `docs/fix_plan.md` and any updated prompts/docs. After committing, run `git push`; if it fails, `git pull --rebase`, resolve conflicts (documenting resolutions in docs/fix_plan.md and loop output), then push again.
 </step 9>
 </instructions>
 
@@ -143,14 +143,14 @@ Spec/Architecture points you must implement and/or verify (select one per loop):
 
 Process hints:
 <process hints>
-- If the acceptance list is large, first generate/refresh `fix_plan.md` from the spec’s Acceptance Tests by scanning for items missing coverage.
+- If the acceptance list is large, first generate/refresh `docs/fix_plan.md` from the spec’s Acceptance Tests by scanning for items missing coverage.
  - When Acceptance Tests feel ambiguous, use $ARCH for implementation guidance; if it disagrees with the spec, propose a doc fix and proceed with the spec’s contract.
 
 Commit hygiene (each loop):
 - Command: `git add -A && git commit -m "<AT-ids> <module>: <concise summary>"`
 - Message must reference acceptance IDs (e.g., `AT-49`) and module (e.g., `providers/executor`), and briefly state behavior implemented/validated. It must the test suite run summary (passed / skipped failed)
-- Include `fix_plan.md` and prompt/doc updates. Exclude runtime artifacts and state.
-- After committing, run `git push`; if it is rejected, `git pull --rebase`, resolve conflicts (document outcomes in fix_plan.md / loop output), then push again.
+- Include `docs/fix_plan.md` and prompt/doc updates. Exclude runtime artifacts and state.
+- After committing, run `git push`; if it is rejected, `git pull --rebase`, resolve conflicts (document outcomes in docs/fix_plan.md / loop output), then push again.
 
 </process hints>
 
@@ -162,7 +162,7 @@ Loop output checklist (produce these in each loop):
 - Search summary (what exists/missing; file pointers).
 - Diff or file list of changes.
 - Targeted test or example workflow updated/added and its result.
-- `fix_plan.md` delta (items done/new).
+- `docs/fix_plan.md` delta (items done/new).
 - Any CLAUDE.md updates (1–3 lines max).
 - Any `arch.md` updates you made or propose (1–3 lines; rationale).
 - Next most‑important item you would pick if you had another loop.
@@ -174,14 +174,14 @@ Loop Self‑Checklist (end of every loop):
 - Spec sections/acceptance IDs/test names quoted and limited (one area; 1–2 items max).
 - Backpressure present: unit + smallest integration, with expected pass/fail and remediation.
 - **Full `pytest tests/` run from project root completed and passed without any errors or collection failures.** (Doc/prompt-only loops may instead run `pytest --collect-only -q`.)
-- Any new problems discovered during this loop - or existing problems not mentioned in the fix_plan.md - added to the fix_plan.md TODO list.
+- Any new problems discovered during this loop - or existing problems not mentioned in the docs/fix_plan.md - added to the docs/fix_plan.md TODO list.
 - Evidence includes file:line pointers for presence/absence; no "assume missing".
-- Scope stayed within a single module category; if not, capture deferral in `fix_plan.md`.
+- Scope stayed within a single module category; if not, capture deferral in `docs/fix_plan.md`.
 </completion checklist>
 
 
 START HERE:
-0) Run `git pull --rebase` to sync with origin before selecting work. Resolve any conflicts immediately (document decisions in fix_plan.md and your loop output).
+0) Run `git pull --rebase` to sync with origin before selecting work. Resolve any conflicts immediately (document decisions in docs/fix_plan.md and your loop output).
 1) Parse the Acceptance Tests list from $SPECS and cross-reference code/tests to detect the highest-value missing or flaky item. think hard.
 2) Execute the loop with that single item.
 3) Stop after producing the loop output checklist.
