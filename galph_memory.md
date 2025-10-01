@@ -231,3 +231,12 @@
 - Planning/docs: Existing plans (PERF Phase 3, AT-012 peakmatch) remain correct; no new plan drafted this loop.
 - Next for Ralph: 1) Execute PERF Plan tasks P3.0–P3.0c with artifacts under `reports/benchmarks/<date>-perf-summary/`; 2) Run AT-012 Phase A commands and store outputs under `reports/2025-10-02-AT-012-peakmatch/`; 3) Patch `scripts/benchmarks/benchmark_detailed.py` totals per P3.1 before quoting performance data.
 - Repo state: only `galph_memory.md` updated; commit/push pending at loop end.
+## 2025-10-03 (galph loop AE)
+- Sync: `git pull --rebase` returned "Already up to date"; no conflicts or stashes.
+- Deep-dive vs long-term goals:
+  * Multi-source path still broken in `src/nanobrag_torch/simulator.py` (lines ~400-680): missing wavelength fallback (`source_wavelengths` `.to()` on None), polarization still uses `self.incident_beam_direction` rather than per-source vectors inside the oversample path, and `steps` divides by Σweights so intensities average instead of summing (see plan tasks P3.0/P3.0b/P3.0c).
+  * AT-012 peak-match plan untouched: no artifacts under `reports/2025-10-02-AT-012-peakmatch/`, peak finder still drops to 43/50 in float64; Phase A checklist needs to run before new hypotheses.
+  * Perf hotspots linger: `Simulator.run()` rebuilds ROI mask + `torch.as_tensor` constants every call; plan P3.4 (ROI/misset caching) should stay high priority once multi-source fixes land.
+- Planning decision: Existing active plans (`at-parallel-012-peakmatch`, `perf-pytorch-compile-refactor`, `repo-hygiene-002`) already cover the needed multi-turn work; no new plan drafted.
+- Ralph status: No engineer commits since 78be581 (device-neutrality fix); pending work is executing Plan AT-012 Phase A/B and PERF Phase 3 tasks.
+- Follow-ups for next loop: 1) Confirm Ralph captures AT-012 Phase A artifacts + float32/float64 comparison; 2) Ensure PERF tasks P3.0–P3.0c start (fallback, polarization, normalization) before new benchmarks; 3) Push progress on repo-hygiene-002 (H1–H4 not started).
