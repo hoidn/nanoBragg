@@ -1,7 +1,8 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-01 (ralph loop - TEST-SIMULATOR-API-001 completion)
+**Last Updated:** 2025-10-01 (ralph loop - DEBUG-TRACE-INDEXERROR-001 completion)
 **Active Focus:**
+- DEBUG-TRACE-INDEXERROR: ✅ Complete. Fixed IndexError in trace_pixel debug output when omega_pixel/polarization are scalars.
 - TEST-SIMULATOR-API: ✅ Complete. Fixed 8 test failures caused by obsolete Simulator API usage after PERF-004 Phase 0 refactoring (commit c41431f).
 - DTYPE-INFERENCE: ✅ Complete. Simulator now infers dtype from crystal/detector components when not explicitly specified (DTYPE-INFERENCE-001).
 - ROUTING: ✅ Complete. loop.sh guard verified compliant at commit 65c8940 (`plans/active/routing-loop-guard/plan.md` Phases A–C).
@@ -14,6 +15,7 @@
 ## Index
 | ID | Title | Priority | Status |
 | --- | --- | --- | --- |
+| [DEBUG-TRACE-INDEXERROR-001](#debug-trace-indexerror-001-fix-scalar-tensor-indexing) | Fix scalar tensor indexing in debug trace | High | done |
 | [DETECTOR-BEAMCENTER-001](#detector-beamcenter-001-mosflm-05-pixel-offset) | MOSFLM +0.5 pixel offset | High | done |
 | [TEST-SIMULATOR-API-001](#test-simulator-api-001-fix-obsolete-simulator-api-usage) | Fix obsolete Simulator API usage | High | done |
 | [TEST-GRADIENTS-HANG-001](#test-gradients-hang-001-fix-hanging-gradient-tests) | Fix hanging gradient tests | High | done |
@@ -27,6 +29,30 @@
 | [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | done |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | done |
+
+---
+
+## [DEBUG-TRACE-INDEXERROR-001] Fix scalar tensor indexing in debug trace
+- Spec/AT: CLI contract (spec-a-cli.md), docs/development/testing_strategy.md (debug output requirements)
+- Priority: High
+- Status: done
+- Owner/Date: ralph/2025-10-01
+- Reproduction (C & PyTorch):
+  * C: n/a (PyTorch-specific debug output issue)
+  * PyTorch: `python -m nanobrag_torch -cell 100 100 100 90 90 90 -default_F 100 -lambda 1.0 -distance 100 -detpixels 64 -pixel 0.1 -floatfile /tmp/test.bin -printout -trace_pixel 30 30`
+  * Shapes/ROI: 64×64 detector, pixel 0.1 mm
+- First Divergence (if known): In point_pixel mode or certain solid angle calculation paths, `omega_pixel` and `polarization` become scalar (0-dimensional) tensors rather than 2D tensors. Debug output code at simulator.py:1292-1294 and 1175-1177 attempted to index these with `[target_slow, target_fast]` causing IndexError: too many indices for tensor of dimension 0.
+- Attempts History:
+  * [2025-10-01] Attempt #1 — Result: success. Added dimensionality checks before indexing omega_pixel and polarization in debug output.
+    Metrics: tests/test_debug_trace.py: 5/5 passed in 25.54s. Full suite: 480 passed (+2 from previous), 117 skipped, 2 xfailed, 11 failed (down from 13). The 2 fixed failures were test_trace_pixel_flag and test_combined_debug_flags.
+    Artifacts: src/nanobrag_torch/simulator.py lines 1174-1187 (printout path) and 1291-1304 (trace path).
+    Observations/Hypotheses: When point_pixel=True, omega_pixel is computed as scalar `1.0 / (airpath_m * airpath_m)` (line 1033). Similarly, polarization can be scalar in certain configurations. The debug output code didn't handle this case. Fix: check `tensor.dim() == 0` before indexing; if scalar, call `.item()` directly; else index then call `.item()`.
+    Next Actions: None - issue resolved. Debug trace output now works for all detector configurations.
+- Risks/Assumptions: Assumes omega_pixel and polarization are either 0-D (scalar) or 2-D (full detector grid). No other dimensionalities expected.
+- Exit Criteria (quote thresholds from spec):
+  * test_debug_trace.py passes completely (✅ 5/5 passed).
+  * No IndexError when using -trace_pixel flag (✅ verified).
+  * Debug output works for both point_pixel and standard solid angle modes (✅ verified).
 
 ---
 

@@ -1172,9 +1172,19 @@ class Simulator:
                     coords_ang = coords * 1e10
                     print(f"  Position (Å): ({coords_ang[0].item():.3f}, {coords_ang[1].item():.3f}, {coords_ang[2].item():.3f})")
                 if omega_pixel is not None:
-                    print(f"  Solid angle: {omega_pixel[target_slow, target_fast].item():.6e}")
+                    # Handle both scalar and 2D tensor cases
+                    if omega_pixel.dim() == 0:
+                        omega_val = omega_pixel.item()
+                    else:
+                        omega_val = omega_pixel[target_slow, target_fast].item()
+                    print(f"  Solid angle: {omega_val:.6e}")
                 if polarization is not None:
-                    print(f"  Polarization: {polarization[target_slow, target_fast].item():.4f}")
+                    # Handle both scalar and 2D tensor cases
+                    if polarization.dim() == 0:
+                        polar_val = polarization.item()
+                    else:
+                        polar_val = polarization[target_slow, target_fast].item()
+                    print(f"  Polarization: {polar_val:.4f}")
         elif self.printout:
             # General verbose output - print statistics for all pixels
             print(f"\n=== Debug Output ===")
@@ -1289,9 +1299,19 @@ class Simulator:
 
                 # Trace factors
                 if omega_pixel is not None:
-                    print(f"TRACE: Omega (solid angle) = {omega_pixel[target_slow, target_fast].item():.12e}")
+                    # Handle both scalar and 2D tensor cases
+                    if omega_pixel.dim() == 0:
+                        omega_val = omega_pixel.item()
+                    else:
+                        omega_val = omega_pixel[target_slow, target_fast].item()
+                    print(f"TRACE: Omega (solid angle) = {omega_val:.12e}")
                 if polarization is not None:
-                    print(f"TRACE: Polarization = {polarization[target_slow, target_fast].item():.12e}")
+                    # Handle both scalar and 2D tensor cases
+                    if polarization.dim() == 0:
+                        polar_val = polarization.item()
+                    else:
+                        polar_val = polarization[target_slow, target_fast].item()
+                    print(f"TRACE: Polarization = {polar_val:.12e}")
 
                 print(f"TRACE: r_e^2 = {self.r_e_sqr:.12e}")
                 print(f"TRACE: Fluence = {self.fluence:.12e}")
