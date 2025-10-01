@@ -223,3 +223,11 @@
 - Coin flip = heads → commit audit: no new Ralph commits since 78be581 (device-neutrality patch). Multi-source crash/semantics regressions remain unresolved; reiterate need to execute P3.0/P3.0b/P3.0c before new perf claims.
 - docs/fix_plan.md and active plans remain accurate; no new plan authored this loop.
 - Next steps for Ralph: complete PERF Phase 3 tasks (fallback, per-source polarization, normalization), run AT-SRC-001 + benchmark reproductions with artifacts under `reports/benchmarks/<date>-perf-summary/`, then proceed to AT-012 peak-match Plan Phase A/B once multi-source path is stable.
+
+## 2025-10-03 (galph loop AD)
+- Sync: `git pull --rebase` already up to date; no stashing needed.
+- Deep analysis vs goals: multi-source path still lacks wavelength fallback (`src/nanobrag_torch/simulator.py:394-416`), polarization continues to reuse the global `self.incident_beam_direction` after the per-source accumulation (`src/nanobrag_torch/simulator.py:793-817`, `:847-864`), and normalization still divides by `source_weights.sum()` so intensities average instead of matching C (`src/nanobrag_torch/simulator.py:652-668`). AT-012 peak-match plan remains untouched—no report dir under `reports/2025-10-02-AT-012-peakmatch/` yet—and float64 vs float32 discrepancy persists. `benchmark_detailed.py` total aggregation bug (boolean `cache_hit`) still unfixed, blocking trustworthy perf numbers.
+- Coin flip = heads → commit review: no engineer commits after `78be581`; last work stopped at device-neutrality fix, leaving Phase 3 PERF tasks untouched. Feedback needed: Ralph must execute P3.0–P3.0c before running benchmarks and capture AT-012 Phase A artifacts instead of re-looping prompts.
+- Planning/docs: Existing plans (PERF Phase 3, AT-012 peakmatch) remain correct; no new plan drafted this loop.
+- Next for Ralph: 1) Execute PERF Plan tasks P3.0–P3.0c with artifacts under `reports/benchmarks/<date>-perf-summary/`; 2) Run AT-012 Phase A commands and store outputs under `reports/2025-10-02-AT-012-peakmatch/`; 3) Patch `scripts/benchmarks/benchmark_detailed.py` totals per P3.1 before quoting performance data.
+- Repo state: only `galph_memory.md` updated; commit/push pending at loop end.
