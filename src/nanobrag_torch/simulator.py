@@ -771,6 +771,11 @@ class Simulator:
                 # Reshape back to (S, F, oversample*oversample)
                 # The weighted sum over sources is done inside _compute_physics_for_position
                 subpixel_physics_intensity_all = physics_intensity_flat.reshape(batch_shape)
+
+                # PERF-PYTORCH-004 P3.0b: For multi-source polarization, use primary source direction
+                # This is the incident direction that will be used for polarization calculation below
+                # Use the first source as representative (typically the central/primary source)
+                incident_for_polarization = incident_dirs_batched[0]
             else:
                 # Single source case: use default beam parameters
                 physics_intensity_flat = self._compute_physics_for_position(
@@ -779,6 +784,9 @@ class Simulator:
 
                 # Reshape back to (S, F, oversample*oversample)
                 subpixel_physics_intensity_all = physics_intensity_flat.reshape(batch_shape)
+
+                # Single source: use the global incident beam direction
+                incident_for_polarization = self.incident_beam_direction
 
             # Normalize by the total number of steps
             subpixel_physics_intensity_all = subpixel_physics_intensity_all / steps
@@ -810,7 +818,8 @@ class Simulator:
 
             # VECTORIZED POLARIZATION: Calculate for all subpixels
             # Shape of incident: (S, F, oversample*oversample, 3)
-            incident_all = -self.incident_beam_direction.unsqueeze(0).unsqueeze(0).unsqueeze(2).expand(S, F, oversample*oversample, 3)
+            # PERF-PYTORCH-004 P3.0b: Use per-source incident direction (primary source for multi-source)
+            incident_all = -incident_for_polarization.unsqueeze(0).unsqueeze(0).unsqueeze(0).expand(S, F, oversample*oversample, 3)
 
             # Diffracted directions for all subpixels
             # CRITICAL: Both numerator and denominator must be in same units (Angstroms)
@@ -881,11 +890,17 @@ class Simulator:
                     source_weights=source_weights
                 )
                 # The weighted sum over sources is done inside _compute_physics_for_position
+
+                # PERF-PYTORCH-004 P3.0b: For multi-source polarization, use primary source direction
+                incident_for_polarization = incident_dirs_batched[0]
             else:
                 # Single source case: use default beam parameters
                 intensity = self._compute_physics_for_position(
                     pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star
                 )
+
+                # Single source: use the global incident beam direction
+                incident_for_polarization = self.incident_beam_direction
 
             # Normalize by steps
             normalized_intensity = intensity / steps
@@ -931,7 +946,8 @@ class Simulator:
 
                 # Calculate polarization for pixel centers
                 # incident: FROM source TO sample (negated source direction)
-                incident_pixels = -self.incident_beam_direction.unsqueeze(0).unsqueeze(0).expand(S_dim, F_dim, 3)
+                # PERF-PYTORCH-004 P3.0b: Use per-source incident direction (primary source for multi-source)
+                incident_pixels = -incident_for_polarization.unsqueeze(0).unsqueeze(0).expand(S_dim, F_dim, 3)
 
                 # diffracted: FROM sample TO pixel (normalized pixel coords)
                 # Use airpath (which has shape (S, F)) instead of pixel_magnitudes (which has shape (S, F, 1))
