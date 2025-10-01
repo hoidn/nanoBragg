@@ -27,7 +27,7 @@ Exit Criteria: Commit-independent report under `reports/2025-10-AT012-regression
 | --- | --- | --- | --- |
 | A1 | Restore local test expectations | [X] | Commit 1435c8e reinstated spec assertions (0.5 px, 95% of 50) and dropped the temporary float64 override. |
 | A2 | Run targeted pytest and capture logs | [X] | `KMP_DUPLICATE_LIB_OK=TRUE pytest … -vv` output recorded at `reports/2025-10-AT012-regression/simple_cubic_baseline.log`; summary JSON stored alongside. |
-| A3 | Quantify plateau fragmentation | [ ] | Use existing notebook/script (`reports/2025-09-30-AT-012-peakmatch/peak_detection_summary.json` as template) to compute unique value counts in 20×20 ROI (C vs PyTorch) and save histogram PNGs + CSV. |
+| A3 | Quantify plateau fragmentation | [X] | Completed via `scripts/analyze_at012_plateau.py`. Results: PyTorch float32 shows 4.91× fragmentation (324 vs 66 unique values in C), float64 shows 4.56× fragmentation. Artifacts under `reports/2025-10-AT012-regression/` (CSV, histograms, summary). |
 | A4 | Update fix_plan attempt log | [X] | Attempt #8 appended to `docs/fix_plan.md` with artifact links; status remains `in_progress` pending plateau fix. |
 
 ### Phase B — Numerical Divergence Analysis
