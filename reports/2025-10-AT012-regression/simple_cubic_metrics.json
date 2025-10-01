@@ -1,0 +1,18 @@
+{
+  "test": "simple_cubic_correlation",
+  "date": "2025-09-30",
+  "spec_requirements": {
+    "correlation": "≥0.9995",
+    "peak_threshold": "0.5px",
+    "peak_matches": "≥48/50 (95%)"
+  },
+  "actual_results": {
+    "correlation": 0.9999999999999997,
+    "peak_matches": 43,
+    "total_peaks": 50,
+    "match_percentage": 86.0,
+    "mean_distance": "captured in log"
+  },
+  "status": "REGRESSION CONFIRMED",
+  "notes": "Native float32 execution produces only 43/50 peak matches vs spec requirement of 48/50"
+}
