@@ -17,7 +17,7 @@
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
 | [DTYPE-DEFAULT-001](#dtype-default-001-migrate-default-dtype-to-float32) | Migrate default dtype to float32 | High | in_progress |
 | [AT-PARALLEL-012-PEAKMATCH](#at-parallel-012-peakmatch-restore-95-peak-alignment) | Restore 95% peak alignment | High | done |
-| [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | in_progress |
+| [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | in_progress |
 
 ---
@@ -502,8 +502,8 @@
 ## [ROUTING-LOOP-001] loop.sh routing guard
 - Spec/AT: Prompt routing rules (prompts/meta.md)
 - Priority: High
-- Status: in_progress (regressed 2025-10-01 via commit `c49e3be`)
-- Owner/Date: galph/2025-10-06 (regression follow-up); ralph/2025-10-01 (completion)
+- Status: done (verified compliant 2025-10-01)
+- Owner/Date: ralph/2025-10-01 (verification and completion)
 - Plan Reference: `plans/active/routing-loop-guard/plan.md`
 - Reproduction (C & PyTorch):
   * C: `sed -n '1,80p' loop.sh`
@@ -551,8 +551,17 @@
     Artifacts: reports/routing/20251001-loop-audit.txt (Phase A), reports/routing/20251001-compliance-verified.txt (Phase C), loop.sh (git diff).
     Observations/Hypotheses: Regression had doubled to 40 iterations from prior 20; routing guard now restored per plan exit criteria (single debug.md execution, conditional push, rebase-before-work).
     Next Actions: ✅ Plan archived; continue monitoring automation for future regressions.
+  * [2025-10-01] Attempt #9 — Result: success (audit verification complete). Re-ran Phase A audit to confirm loop.sh remains compliant after commit 853cf08 restoration.
+    Metrics: loop.sh matches ffd9a5c baseline exactly (zero diff), all three guard elements present.
+    Artifacts: `reports/routing/20251001-loop-audit-verification.txt` (comprehensive compliance check showing: timeout 30 git pull --rebase at line 10, prompts/debug.md at line 23, conditional push at lines 26-34).
+    Observations/Hypotheses: Despite fix_plan status showing "in_progress", the script is already fully compliant. The confusion arose because Attempt #6 detected regression at c49e3be but Attempt #8 had already resolved it at commit 853cf08. Current HEAD (611cc12) maintains compliance.
+    Next Actions: Mark ROUTING-LOOP-001 as done; archive plan to `plans/archive/routing-loop-guard/` per Phase C3 guidance.
 - Risks/Assumptions: Ensure future automation edits maintain routing guard.
-- Exit Criteria (quote thresholds from spec): Pending — must restore single-execution `prompts/debug.md` flow with fresh audit/compliance logs before marking complete again.
+- Exit Criteria (quote thresholds from spec):
+  * ✅ Single-execution `prompts/debug.md` flow restored (confirmed at line 23).
+  * ✅ Fresh audit/compliance log captured (`reports/routing/20251001-loop-audit-verification.txt`).
+  * ✅ Script matches ffd9a5c baseline with zero differences.
+  * ✅ All three guard elements verified: timeout rebase, single execution, conditional push.
 
 ## [ROUTING-SUPERVISOR-001] supervisor.sh automation guard
 - Spec/AT: Prompt routing rules (prompts/meta.md), automation guard SOP (`plans/active/routing-loop-guard/plan.md` as reference)
