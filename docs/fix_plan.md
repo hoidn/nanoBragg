@@ -1,10 +1,10 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-13 (galph loop BU)
+**Last Updated:** 2025-10-13 (galph loop BV)
 **Active Focus:**
 - ROUTING: Execute Phase A of `plans/active/routing-loop-guard/plan.md` to capture the regression audit before editing `loop.sh` (commit `c49e3be` reintroduced 40× `prompts/main.md` loop + unconditional push).
 - AT-012: hold Phase C work in standby per supervisor notes; no action until new directive lands.
-- DTYPE: finish Phase B3 by making `io/source.py`, `utils/noise.py`, and `utils/c_random.py` device/dtype neutral (record before/after in `reports/DTYPE-DEFAULT-001/phase_b3_audit.md`).
+- DTYPE: Phase B complete; line up Phase C (Tier-1 parity CPU/GPU, gradcheck focus, warm/cold benchmarks) once AT-012 plateau plan resumes. Stage results under `reports/DTYPE-DEFAULT-001/`.
 - PERF: reconcile 1-iteration vs 5-iteration warm timings, complete Phase B4 hotspot summary (top ops from trace) and B5 eager-mode profile before designing Phase C experiments.
 
 ## Index
@@ -451,9 +451,9 @@
   * Baseline simulator import: `python -c "from nanobrag_torch.simulator import Simulator"`
   * Smoke test: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py -vv`
 - First Divergence (if known): AT-PARALLEL-012 plateau matching regressed to 43/50 peaks when running fully in float32 (prior float64→float32 cast path delivered 50/50).
-- Immediate Next Actions (2025-10-12):
-  * Execute `plans/active/dtype-default-fp32/plan.md` Phase B task B3 by converting `io/source.py`, `utils/noise.py`, and `utils/c_random.py` to respect caller-provided dtype/device—they still emit float64 CPU tensors. Capture before/after snippets in `reports/DTYPE-DEFAULT-001/phase_b3_audit.md` before opening a PR.
-  * Coordinate with the plateau plan Phase C2 mitigation work before rerunning Tier-1/Tier-2 suites; hold broader validation until the C2a bright-peak fix is logged under `reports/2025-10-AT012-regression/phase_c_trials/`.
+- Immediate Next Actions (2025-10-13):
+  * Coordinate with AT-012 plateau remediation so Phase C (plan tasks C1–C3) can start; when greenlit, capture float32 Tier-1 parity on CPU/GPU under `reports/DTYPE-DEFAULT-001/phase_c_parity/`.
+  * Run gradcheck focus tests with explicit float64 overrides (plan task C2) and log warm/cold benchmark deltas for float32 vs prior float64 baselines (plan task C3) — archive outputs alongside existing Phase B artifacts before requesting closure.
 - Attempts History:
   * [2025-09-30] Attempt #1 — Result: partial (Phase A+B complete; Phase C blocked by AT-012 regression). Catalogued 37 float64 occurrences and flipped defaults to float32 across CLI, Crystal/Detector/Simulator constructors, HKL readers, and auto-selection helpers while preserving float64 for Fdump binary format and gradcheck overrides. Metrics: CLI smoke test PASS; AT-012 correlation remains ≥0.9995 yet peak matching falls to 43/50 (needs ≥48/50). Artifacts: reports/DTYPE-DEFAULT-001/{inventory.md, proposed_doc_changes.md, phase_b_summary.md}; commit 8c2ceb4. Observations/Hypotheses: Native float32 plateau rounding differs from the float64→float32 cast path, so `scipy.ndimage` peak detection drops ties. Next Actions: debug AT-012 plateau behaviour (log correlations, inspect plateau pixels, decide on detector/matcher tweak), finish remaining B3 helper dtype plumbing (`io/source.py`, `utils/noise.py`, `utils/c_random.py`), then rerun Tier-1 suite on CPU+CUDA once peak matching is restored.
   * [2025-10-06] Attempt #2 — Result: regression persists. Re-running `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation -q` on HEAD (float32 defaults) still returns 43/50 matched peaks (spec needs ≥48/50) with corr=1.0. No artifact archived yet (test run captured locally). Observations: plateau loss now stems from doing the entire simulation in float32; casting the output to float32 no longer restores ties. Next Actions: capture paired float64 vs float32 traces under `reports/DTYPE-DEFAULT-001/20251006-at012-regression/`, evaluate whether to quantize the matcher or adjust simulation precision around peak evaluation, and finish Phase B3 helper dtype plumbing before repeating Tier-1 parity.
