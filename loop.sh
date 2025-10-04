@@ -20,7 +20,7 @@ CLAUDE_CMD="/home/ollie/.claude/local/claude"
 
 # Execute debug prompt once per invocation
 # Note: Using debug.md per routing guard while AT parity suite incomplete
-cat prompts/debug.md | "${CLAUDE_CMD}" -p --dangerously-skip-permissions --verbose --output-format stream-json | tee -a "${LOG_FILE}"
+cat prompts/main.md | "${CLAUDE_CMD}" -p --dangerously-skip-permissions --verbose --output-format stream-json | tee -a "${LOG_FILE}"
 
 # Conditional push: only if there are commits to push and no errors occurred
 if git diff --quiet origin/$(git rev-parse --abbrev-ref HEAD)..HEAD 2>/dev/null; then
