@@ -10,15 +10,11 @@ Before you dive in: the PyTorch port of nanoBragg is a drop-in simulator that is
 
   ```python
   eps = 1e-10
-  is_near_zero = torch.abs(u) < eps
   u_over_pi = u / torch.pi
   nearest_int = torch.round(u_over_pi)
   is_near_int_pi = torch.abs(u_over_pi - nearest_int) < eps / torch.pi
 
-  # lim u→0 sin(Nu)/sin(u) = N
-  near_zero_val = N
-
-  # lim u→nπ sin(Nu)/sin(u) = N * (-1)^{n(N-1)}
+  # lim u→nπ sin(Nu)/sin(u) = N * (-1)^{n(N-1)} (covers n = 0 as well)
   sign = torch.where(((nearest_int * (N - 1)).abs() % 2) >= 0.5,
                      -torch.ones_like(u), torch.ones_like(u))
   near_int_val = N * sign
@@ -28,11 +24,10 @@ Before you dive in: the PyTorch port of nanoBragg is a drop-in simulator that is
                                          torch.ones_like(u) * eps,
                                          torch.sin(u))
 
-  result = torch.where(is_near_zero, near_zero_val,
-            torch.where(is_near_int_pi & ~is_near_zero, near_int_val, ratio))
+  result = torch.where(is_near_int_pi, near_int_val, ratio)
   ```
 
-  That logic delivers the correct limit at u≈0 and u≈nπ, preventing NaNs when gradients query the troublesome points.
+  That logic delivers the correct limit at u≈0 and every u≈nπ, preventing NaNs when gradients query the troublesome points.
 
 If you touch the physics helpers or geometry pipeline, rerun the C/PyTorch trace comparisons and gradient tests—these edge cases come back the moment you assume they’re solved.
 
