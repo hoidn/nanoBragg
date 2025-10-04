@@ -155,7 +155,7 @@ nanoBragg -xds -cell 100 100 100 90 90 90 ...
 
 ### Batch Visualization Script
 
-The repository includes comparison scripts in `scripts/comparison/`. These requires building C nanoBragg first. All comparisons pass with high (>.99) correlation coefficients, but there are small discrepancies in some conditions still. 
+The repository includes comparison scripts in `scripts/comparison/`. These requires building C nanoBragg first. All comparisons now pass with high (typically > .9999) correlation coefficients.
 
 ```bash
 # Run visual comparison tests
