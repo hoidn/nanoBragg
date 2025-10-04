@@ -62,7 +62,7 @@
   3. After loop.sh guard lands, confirm automation stays on `prompts/debug.md` while AT parity fails.
 
 ## 2025-09-30 (galph loop M)
-- Alternate-path recovery completed: rebase aborted, merged remote hygiene commit, preserved supervisor updates, and pushed combined history (`git merge origin/feature/spec-based`, commits `5d5c411`, `a385365`, `98ecc0b`).
+- Alternate-path recovery completed: rebase aborted, merged remote hygiene commit, preserved supervisor updates, and pushed combined history (`git merge origin/feature/spec-based-2`, commits `5d5c411`, `a385365`, `98ecc0b`).
 - Restored `loop.sh` as a protected automation asset with single `prompts/debug.md` invocation per loop to enforce routing compliance; script lives at repo root and remains executable.
 - Remote now synchronized; only `.claude` submodule remains dirty (user-managed). Next supervisor loop should verify Ralph updates Plan `ROUTING-LOOP-001` before altering the script further.
 
@@ -104,7 +104,7 @@
 - Action items for Ralph next loop: follow PERF plan Phase 1 (hoist guard tensors, eliminate `.item()` in hot path), then tackle REPO-HYGIENE-002 checklist; no further parity work needed unless regressions appear.
 - Repo state: `.claude` remains locally dirty per user policy; no other uncommitted files.
 - Updated supervisor startup instructions: attempt `timeout 30 git pull --rebase`, abort on timeout, then fall back to merge pull; log whichever path occurs.
-- Current branch should be `feature/spec-based`, but repo is presently in detached HEAD due to the ongoing rebase; fix before next loop.
+- Current branch should be `feature/spec-based-2`, but repo is presently in detached HEAD due to the ongoing rebase; fix before next loop.
 
 ## 2025-10-01 (galph loop Q)
 - Startup sync: unstaged local edits blocked `git pull --rebase` (galph_memory.md/supervisor.sh); stashed, completed the existing rebase, restashed, pulled latest (commit 1940066), restored local notes. Repo now clean except for plan/fix_plan updates made this loop.
@@ -218,7 +218,7 @@
 - Actions:
   * Updated `plans/active/perf-pytorch-compile-refactor/plan.md` (Phase 3) with task P3.0b to fix per-source polarization/weighting semantics and noted issue in discovered-issues list.
   * Refreshed `docs/fix_plan.md` `[PERF-PYTORCH-004]` Observations/Next Actions to call out P3.0b alongside defaults/benchmark tasks.
-  * Committed and pushed `SUPERVISOR: PERF plan multi-source guard - tests: not run` on `feature/spec-based`.
+  * Committed and pushed `SUPERVISOR: PERF plan multi-source guard - tests: not run` on `feature/spec-based-2`.
 - Coin flip: tails → no commit review this loop.
 - Guidance for Ralph next: 1) Execute PERF Plan P3.0 and new P3.0b before re-running cache/benchmark scripts (capture logs under `reports/benchmarks/<date>-perf-summary/`); 2) Start AT-012 Plan Phase A (baseline artifacts + float32 comparison) so we can move on to divergence tracing; 3) Fix `benchmark_detailed.py` aggregation (P3.1) immediately after the multi-source fixes so performance evidence is usable.
 - Repo state: clean after push.
@@ -431,7 +431,7 @@
 - Follow-up for Ralph: (1) Execute routing plan Phase A and capture loop.sh audit before rerunning automation; (2) Work perf plan P3.0–P3.4—fix per-source physics, remove Σweight divisor, and cache ROI/misset tensors—before collecting new benchmarks; (3) For dtype plan, gather float32 vs float64 plateau artifacts under `reports/DTYPE-DEFAULT-001/20251006-at012-regression/`, resolve plateau fragmentation, then undo the test override (plan task C0) and rerun Tier-1 under default float32; (4) Update `arch.md` + runtime docs only after float32 parity is proven.
 
 ## 2025-10-07 (galph loop AV)
-- `timeout 30 git pull --rebase` clean at start; post-commit push required rebase onto origin/feature/spec-based (`f587fd2`), no conflicts.
+- `timeout 30 git pull --rebase` clean at start; post-commit push required rebase onto origin/feature/spec-based-2 (`f587fd2`), no conflicts.
 - Deep-dive vs long-term goals: multi-source path still averages by `source_norm` after already summing weighted intensities (`src/nanobrag_torch/simulator.py:688-696`), polarization uses only the first source direction even when batching (`:775-778`), and ROI masks/omega tensors are rebuilt each run (`:1003-1028`), keeping Phase 3 PERF blockers in place. `loop.sh:13-20` still loops prompts/main.md 40× with unconditional pushes.
 - Coin flip=heads → reviewed Ralph’s recent commits; `d3dd6a0` lowered AT‑012 thresholds to 1.0 px and introduced float64 overrides (`tests/test_at_parallel_012.py:158-195`), masking the regression rather than fixing plateau fragmentation.
 - Authored new plan `plans/active/at-parallel-012-plateau-regression/plan.md` restoring the spec contract; updated `[AT-PARALLEL-012-PEAKMATCH]` in docs/fix_plan.md with Attempt #7 marked INVALID and referenced the plan.
@@ -484,7 +484,7 @@
 - User request: merge the root `fix_plan.md` with the canonical `docs/fix_plan.md` via symlink. Supervisor remit is review/analysis only, so deferred to Ralph; note requirement under REPO-HYGIENE-002 before the next hygiene pass.
 - Next for Ralph: (1) Execute PERF P3.0c weighted-source validation (two-source unequal weights on CPU+CUDA with pytest + nb-compare), then revisit the 1024² CPU slowdown in the Phase 3 memo (P3.5); (2) Update `BeamConfig` docs/comments after the weighting decision; (3) Replace the root `fix_plan.md` with a symlink to the canonical ledger per the user request while checking the Protected Assets rule; (4) Confirm whether the pending `supervisor.sh` edit is intentional or should be archived before the next loop.
 ## 2025-10-08 (galph loop BC)
-- Sync clean after stashing prompt edit; rebased onto `origin/feature/spec-based`.
+- Sync clean after stashing prompt edit; rebased onto `origin/feature/spec-based-2`.
 - Reviewed `docs/fix_plan.md`: removed the accidental duplicate "Completed" section that still contained active `[ROUTING-LOOP-001]`, added the routing item to the index, and clarified DTYPE Attempt #3 notes so later regressions are obvious. Confirmed line count (467) stays under the 1000-line guardrail.
 - Updated active plans to stay in sync: marked Plateau Plan Phase A tasks A1/A2/A4 as complete (artifacts from commit 1435c8e) and refreshed DTYPE plan Phase C0→[X] plus weighted-suite blocker notes; PERF plan now highlights the outstanding P3.0c decision and 1024² CPU slowdown.
 - Added PERF Attempt #20 in the ledger to capture the weighting-vs-n_sources audit so Ralph has explicit marching orders before running more benchmarks.
@@ -838,7 +838,7 @@ Follow-ups for Ralph:
 - Heads coin toss → reviewed engineer commits. Feedback for Ralph: extend Tier-2 gradcheck to cover misset/beam/fluence, then rerun tests; execute supervisor guard plan Phase A before further automation edits; fix benchmark harness env toggle per PERF plan and re-run the 10× cold study to reconcile the 0.30 vs 0.83 datasets.
 
 ## 2025-10-14 (galph loop CJ)
-- Stashed long-standing `supervisor.sh` dirtiness to satisfy the `timeout 30 git pull --rebase` guard, rebased onto origin/feature/spec-based, then restored the dirty state after push (stash tag `galph-supervisor-dirty`).
+- Stashed long-standing `supervisor.sh` dirtiness to satisfy the `timeout 30 git pull --rebase` guard, rebased onto origin/feature/spec-based-2, then restored the dirty state after push (stash tag `galph-supervisor-dirty`).
 - Deep-dive vs long-term perf goal: confirmed warm regression in `reports/benchmarks/20251001-025148/benchmark_results.json` (speedup_warm≈0.299 despite `cache_hit_warm=true`) and noted negative `py_mem_warm` deltas, signalling instrumentation drift in the benchmark script.
 - Isolated a dominant warm hotspot: `src/nanobrag_torch/simulator.py:958` rebuilds the 16 M×3 pixel grid in Å (`pixel_coords_meters * 1e10`) every call; `crystal.get_rotated_real_vectors` is also re-executed per run. Added Phase C tasks C8/C9 and Phase D tasks D5/D6 in `plans/active/perf-pytorch-compile-refactor/plan.md` to profile and hoist these caches, and updated `docs/fix_plan.md` next actions to call them out explicitly.
 - Bench harness hygiene: `benchmark_detailed.py` still fails to restore prior `NB_DISABLE_COMPILE`. Immediate next steps now lead with plan task B7 before the rerun of B6; fix_plan reflects that ordering.
@@ -875,7 +875,7 @@ Follow-ups for Ralph:
 - Follow-ups for Ralph: (1) Execute supervisor guard Phase A immediately so we can proceed to guarded implementation; (2) Land PERF task B7 (env toggle fix + compile mode logging) then rerun B6 with ten cold interpreters capturing cache/compile metadata; (3) Draft the weighted-source decision memo backing plan C5; (4) After reproducibility evidence, tackle Phase C profiling focusing on pixel-to-Å and lattice regeneration costs.
 - Tree intentionally left dirty only by legacy `supervisor.sh` edits pending guard work.
 ## 2025-10-15 (galph loop CO)
-- Stashed the standing `supervisor.sh` edit to satisfy the mandatory `timeout 30 git pull --rebase`, then restored it; branch remains `feature/spec-based` with that file still dirty for guard work.
+- Stashed the standing `supervisor.sh` edit to satisfy the mandatory `timeout 30 git pull --rebase`, then restored it; branch remains `feature/spec-based-2` with that file still dirty for guard work.
 - Reconfirmed `supervisor.sh` still runs 40 unguarded iterations and bypasses git hygiene; `plans/active/supervisor-loop-guard/plan.md` Phase A (A1–A3) remains untouched. Ralph must capture the audit report before any automation reruns.
 - Perf review: `scripts/benchmarks/benchmark_detailed.py` continues toggling `NB_DISABLE_COMPILE`, so `--disable-compile` never feeds `NANOBRAGG_DISABLE_COMPILE`; Phase B task B7 of the perf plan is still blocking reproducible warm measurements. Flagged as top priority for Ralph.
 - 4096² warm gap: simulator still rebuilds the 16 M×3 Å-position tensor (`pixel_coords_meters * 1e10`) and re-coerces scalar detector constants every run; this aligns with perf plan items C8/C9—Ralph needs to quantify and hoist these caches after B7 lands.
