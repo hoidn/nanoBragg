@@ -61,6 +61,8 @@ python3 -m nanobrag_torch -cell 100 100 100 90 90 90 \
 
 ### CLI Parameters
 
+These are the basic parameters:
+
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `-lambda <Å>` | X-ray wavelength | Required |
@@ -70,6 +72,8 @@ python3 -m nanobrag_torch -cell 100 100 100 90 90 90 \
 | `-N <cells>` | Crystal size (NxNxN unit cells) | 1 |
 | `-mosaic <deg>` | Mosaic spread | 0 |
 | `-misset x y z` | Crystal misorientation (degrees) | 0 0 0 |
+
+See the C reference (README.md) for a more exhaustive listing and detailed descriptions.
 
 ### Output Options
 
