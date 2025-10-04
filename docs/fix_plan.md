@@ -20,7 +20,7 @@
 | [AT-PARALLEL-012-PEAKMATCH](#at-parallel-012-peakmatch-restore-95-peak-alignment) | Restore 95% peak alignment | High | done |
 | [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | in_progress |
 | [CLI-DTYPE-002](#cli-dtype-002-cli-dtype-parity) | CLI dtype parity | High | in_progress |
-| [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | queued |
+| [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | in_progress |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | in_progress |
 
@@ -642,7 +642,7 @@
 ## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
 - Spec/AT: specs/spec-a-cli.md flag catalogue, docs/architecture/detector.md §5 (pix0 workflow), docs/development/c_to_pytorch_config_map.md (pivot rules), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860
 - Priority: High
-- Status: queued (opened 2025-10-16)
+- Status: in_progress (re-affirmed 2025-10-17 after plan refresh)
 - Owner/Date: galph/2025-10-16
 - Plan Reference: `plans/active/cli-noise-pix0/plan.md`
 - Reproduction (C & PyTorch):

@@ -895,3 +895,8 @@ Follow-ups for Ralph:
 - Performance plan still stalled at Phase B6/B7; `supervisor-loop-guard` Phase A tasks remain unstarted. Emphasised these as top priorities alongside the new CLI dtype fix.
 - Next actions for Ralph: (1) Implement `[CLI-DTYPE-002]` (thread dtype through CLI loaders + add regression test + rerun AT-IO-003); (2) Rework the updated tests so float32 default coverage returns while keeping float64 assertions explicit; (3) Execute supervisor guard plan Phase A and progress perf plan B7/B6 per existing guidance.
 - Repo intentionally left dirty (`supervisor.sh`) pending guard implementation; do not reset without resolving plan Phase B.
+## 2025-10-04 (galph loop)
+- Sync succeeded (already up to date). Investigated CLI gaps for `-nonoise` and `-pix0_vector_mm`; confirmed parser lacks flags and Detector ignores stored `custom_pix0_vector` (src/nanobrag_torch/__main__.py:542,1152).
+- Refreshed `plans/active/cli-noise-pix0/plan.md` Phase B table (new tasks B3–B5) so both meter/mm overrides funnel through a future `pix0_override_m` tensor and cache hygiene stays explicit; C1 now calls for meter vs millimetre regression tests.
+- Updated docs/fix_plan.md `[CLI-FLAGS-003]` status to in_progress with note that Phase A evidence must precede implementation; input.md directs Ralph to execute Phase A (A1–A3) with NB_C_BIN commands, TRACE_C instrumentation, and pytest CLI smoke.
+- Follow-ups for Ralph: capture C logs (noise vs no-noise) plus pix0 trace, summarise under reports/2025-10-cli-flags/phase_a/README.md, log Attempts in docs/fix_plan.md, then run KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_entrypoint.py -q before moving to Phase B.

@@ -2,6 +2,7 @@
 - Initiative: CLI Parity for nanoBragg PyTorch vs C (supports long-term goal in prompts/supervisor.md)
 - Phase Goal: Accept `-nonoise` and `-pix0_vector_mm` flags with C-equivalent semantics so the parallel comparison command in prompts/supervisor.md executes end-to-end.
 - Dependencies: specs/spec-a-cli.md §§3.2–3.4, docs/architecture/detector.md §5, docs/development/c_to_pytorch_config_map.md (detector pivot + noise), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860 (flag behavior), docs/debugging/detector_geometry_checklist.md (pix0 validation), docs/development/testing_strategy.md §2 (CLI parity tests).
+- Current gap snapshot: CLI already stores `config['custom_pix0_vector']`, but `DetectorConfig`/`Detector` ignore it and always recompute pix0; there is no parser support for `-nonoise` or `-pix0_vector_mm`.
 
 ### Phase A — Requirements & Trace Alignment
 Goal: Confirm the authoritative semantics for both flags and capture the C reference behavior (including unit expectations) before touching implementation.
@@ -23,8 +24,9 @@ Exit Criteria: `nanoBragg --help` lists both flags; manual dry run of supervisor
 | --- | --- | --- | --- |
 | B1 | Extend argparse surface | [ ] | Add `-nonoise` (store_true) and `-pix0_vector_mm` (nargs=3) to `create_parser()`. Mirror help text from C usage strings. |
 | B2 | Thread `-nonoise` to simulator | [ ] | Carry a `suppress_noise` boolean through `parse_and_validate_args`, set `NoiseConfig.generate_noise_image` (or skip noise writer entirely) when true, and ensure `-noisefile` is ignored with a parity warning. |
-| B3 | Support pix0 overrides | [ ] | Introduce `custom_pix0_vector_mm` on `DetectorConfig`; convert to meters inside Detector initialisation and bypass `_calculate_pix0_vector()` when provided, falling back to auto-cache invalidation. Honour CUSTOM convention rules and maintain differentiability (avoid `.detach()` or `.cpu()`). |
-| B4 | Unit & cache hygiene | [ ] | Update detector cache invalidation so supplying pix0 overrides still triggers `invalidate_cache()` for dependent tensors; add asserts ensuring provided vector is on same device/dtype as detector tensors. |
+| B3 | Support pix0 overrides | [ ] | Extend `DetectorConfig` with a single `pix0_override_m` tensor slot; map both `-pix0_vector` (meters) and `-pix0_vector_mm` (millimetres) to this field inside `parse_and_validate_args`, normalising units and dtype/device. Update `Detector.__init__`/`_calculate_pix0_vector` to respect the override instead of recomputing. |
+| B4 | Preserve meter and mm flag parity | [ ] | Ensure the existing `-pix0_vector` path (meters) now threads through the same override field so CUSTOM convention consumers regain functionality; add validation errors for mixed units or partial vectors. |
+| B5 | Unit & cache hygiene | [ ] | Update detector cache invalidation so supplying pix0 overrides still triggers `invalidate_cache()` for dependent tensors; add assertions ensuring the stored tensor lives on the detector device/dtype and keeps gradient flow intact. |
 
 ### Phase C — Validation & Documentation
 Goal: Prove parity via targeted tests and update docs/fix_plan so future loops know the flags are supported.
@@ -33,7 +35,7 @@ Exit Criteria: Tests and documentation changes landed; supervisor command succes
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Add CLI regression tests | [ ] | Create/extend pytest case under `tests/test_cli_flags.py` asserting arg parsing accepts new flags (including combined with `-noisefile` and custom vectors); verify resulting configs match expected meters values. |
+| C1 | Add CLI regression tests | [ ] | Create/extend pytest case under `tests/test_cli_flags.py` asserting arg parsing accepts both `-pix0_vector` (meters) and `-pix0_vector_mm` (millimetres) plus `-nonoise`; verify resulting configs normalise to identical meter-space tensors and that `noisefile` is skipped when suppressed. |
 | C2 | Golden parity smoke | [ ] | Execute the supervisor command twice: once using C reference (`NB_C_BIN`), once via PyTorch CLI. Confirm CLI completes image generation; stash outputs under `reports/2025-10-cli-flags/phase_c/`. |
 | C3 | Update documentation | [ ] | Refresh `specs/spec-a-cli.md` and `README_PYTORCH.md` flag tables, note alias in `docs/architecture/c_parameter_dictionary.md`, and reference this plan from `docs/fix_plan.md` (new item) so future loops close it. |
 | C4 | Fix-plan & plan closure | [ ] | Add new fix_plan entry (e.g., `[CLI-FLAGS-003]`) pointing to this plan; set completion criteria (tests, docs, command run). Once tasks pass, close plan and archive per SOP. |
