@@ -1,8 +1,45 @@
 # nanoBragg PyTorch guide
 
-This guide explains how to use the PyTorch implementation of nanoBragg for diffraction simulation, including parallel comparison with the C reference implementation.
+## What This Is About
+
+Before you dive in: the PyTorch port of nanoBragg is a drop-in simulator that is also differentiable, compiled, and verified against the C reference. Getting there took some engineering work:
+
+- **Vectorizing the legacy control flow**: The C code walks sub-pixels, mosaic blocks, and sources with nested loops and early exits. We rebuilt those pieces as batched tensor ops so autograd sees a continuous graph, while preserving the numerical order that keeps the Bragg peaks stable.
+- **Killing implicit state**: The reference implementation hides configuration in globals and scratch structs. Every one of those knobs had to become an explicit tensor argument before `torch.compile` would cache kernels safely.
+- **Example: stabilizing the shape factors**: One of many numerical landmines. Functions like `sincg`, `sinc3`, and polarization all contained removable singularities that autograd interpreted as "divide by zero." For `sincg`, we substituted in the L'Hôpital limits so the limit values are emitted directly:
+
+  ```python
+  eps = 1e-10
+  is_near_zero = torch.abs(u) < eps
+  u_over_pi = u / torch.pi
+  nearest_int = torch.round(u_over_pi)
+  is_near_int_pi = torch.abs(u_over_pi - nearest_int) < eps / torch.pi
+
+  # lim u→0 sin(Nu)/sin(u) = N
+  near_zero_val = N
+
+  # lim u→nπ sin(Nu)/sin(u) = N * (-1)^{n(N-1)}
+  sign = torch.where(((nearest_int * (N - 1)).abs() % 2) >= 0.5,
+                     -torch.ones_like(u), torch.ones_like(u))
+  near_int_val = N * sign
+
+  # fallback: sin(Nu)/sin(u), guarding the denominator
+  ratio = torch.sin(N * u) / torch.where(torch.abs(torch.sin(u)) < eps,
+                                         torch.ones_like(u) * eps,
+                                         torch.sin(u))
+
+  result = torch.where(is_near_zero, near_zero_val,
+            torch.where(is_near_int_pi & ~is_near_zero, near_int_val, ratio))
+  ```
+
+  That logic delivers the correct limit at u≈0 and u≈nπ, preventing NaNs when gradients query the troublesome points.
+
+If you touch the physics helpers or geometry pipeline, rerun the C/PyTorch trace comparisons and gradient tests—these edge cases come back the moment you assume they’re solved.
+
+The rest of this guide walks through installation, usage, and validation, so you can build on top of the differentiable simulator without re-learning these lessons.
 
 ## Table of Contents
+- [What This Is About](#what-this-is-about)
 - [Installation](#installation)
 - [Basic Usage](#basic-usage)
 - [Common Examples](#common-examples)
@@ -196,42 +233,6 @@ pytest tests/test_gradients.py -v      # Gradient flow tests
 - **AT-IO**: File I/O validation
 - **Gradient tests**: Differentiability validation
 
-## What This Is About
-
-Porting nanoBragg into a differentiable PyTorch kernel meant rewriting more than just the loop nest. Highlights worth keeping in mind:
-
-- **Vectorizing the legacy control flow**: The C code walks sub-pixels, mosaic blocks, and sources with nested loops and early exits. We rebuilt those pieces as batched tensor ops so autograd sees a continuous graph, while preserving the numerical order that keeps the Bragg peaks stable.
-- **Killing implicit state**: The reference implementation hides configuration in globals and scratch structs. Every one of those knobs had to become an explicit tensor argument before `torch.compile` would cache kernels safely.
-- **Stabilizing the shape factors**: Functions like `sincg`, `sinc3`, and polarization each had removable singularities or branchy logic that autograd interpreted as "divide by zero." For `sincg`, we welded in the L'Hôpital limits so the limit values are emitted directly:
-
-  ```python
-  eps = 1e-10
-  is_near_zero = torch.abs(u) < eps
-  u_over_pi = u / torch.pi
-  nearest_int = torch.round(u_over_pi)
-  is_near_int_pi = torch.abs(u_over_pi - nearest_int) < eps / torch.pi
-
-  # lim u→0 sin(Nu)/sin(u) = N
-  near_zero_val = N
-
-  # lim u→nπ sin(Nu)/sin(u) = N * (-1)^{n(N-1)}
-  sign = torch.where(((nearest_int * (N - 1)).abs() % 2) >= 0.5,
-                     -torch.ones_like(u), torch.ones_like(u))
-  near_int_val = N * sign
-
-  # fallback: sin(Nu)/sin(u), guarding the denominator
-  ratio = torch.sin(N * u) / torch.where(torch.abs(torch.sin(u)) < eps,
-                                         torch.ones_like(u) * eps,
-                                         torch.sin(u))
-
-  result = torch.where(is_near_zero, near_zero_val,
-            torch.where(is_near_int_pi & ~is_near_zero, near_int_val, ratio))
-  ```
-
-  That logic delivers the correct limit at u≈0 and u≈nπ, preventing NaNs when gradients query the troublesome points.
-
-If you touch the physics helpers or geometry pipeline, rerun the C/PyTorch trace comparisons and gradient tests—these edge cases come back the moment you assume they’re solved.
-
 ## Troubleshooting
 
 ### Common Issues
@@ -247,4 +248,3 @@ If you touch the physics helpers or geometry pipeline, rerun the C/PyTorch trace
    # Or rebuild:
    make -C golden_suite_generator
    ```
-
