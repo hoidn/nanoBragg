@@ -12,6 +12,7 @@
 ## Index
 | ID | Title | Priority | Status |
 | --- | --- | --- | --- |
+| [GOLDEN-DATA-001](#golden-data-001-generate-missing-test-reference-files) | Generate missing golden data | Medium | done |
 | [GRADIENT-MISSET-001](#gradient-misset-001-fix-misset-gradient-flow) | Fix misset gradient flow | High | done |
 | [PROTECTED-ASSETS-001](#protected-assets-001-docsindexmd-safeguard) | Protect docs/index.md assets | Medium | in_progress |
 | [REPO-HYGIENE-002](#repo-hygiene-002-restore-canonical-nanobraggc) | Restore canonical nanoBragg.c | Medium | in_progress |
@@ -23,6 +24,27 @@
 | [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | queued |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | in_progress |
+
+---
+
+## [GOLDEN-DATA-001] Generate missing test reference files
+- Spec/AT: AT-PARALLEL-012 (tests/golden_data/README.md sections 3 & 4)
+- Priority: Medium
+- Status: done
+- Owner/Date: ralph/2025-10-03
+- Reproduction: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py tests/test_at_parallel_013.py --lf -v`
+- First Divergence: FileNotFoundError for triclinic_P1/image.bin and cubic_tilted_detector/image.bin
+- Attempts History:
+  * [2025-10-03] Attempt #1 — Result: success. Generated missing golden data files and fixed dtype parameter issue.
+    Metrics: 3 previously failing tests now pass (triclinic_P1, cubic_tilted_detector, numerical_precision_float64).
+    Artifacts: tests/golden_data/triclinic_P1/image.bin (1,048,576 bytes), tests/golden_data/cubic_tilted_detector/image.bin (4,194,304 bytes), tests/test_at_parallel_013.py (added dtype=torch.float64 to Simulator, added NANOBRAGG_DISABLE_COMPILE=1 env var).
+    Observations/Hypotheses: Missing .bin files were not generated despite directories existing. C binary needed recompilation (make in golden_suite_generator/). test_numerical_precision_float64 was not passing dtype to Simulator constructor and torch.compile fails on CPU-only systems without CUDA due to Triton device detection IndexError.
+    Next Actions: None - all tests fixed. Note: On CPU-only systems without CUDA, run tests with NANOBRAGG_DISABLE_COMPILE=1 to avoid torch.compile Triton errors.
+- Risks/Assumptions: Golden data files are now in git (forced with -f due to .gitignore). torch.compile graceful fallback added to simulator.py may need refinement for production use.
+- Exit Criteria:
+  * test_triclinic_P1_correlation passes (✅ satisfied)
+  * test_cubic_tilted_detector_correlation passes (✅ satisfied)
+  * test_numerical_precision_float64 passes (✅ satisfied with NANOBRAGG_DISABLE_COMPILE=1)
 
 ---
 
