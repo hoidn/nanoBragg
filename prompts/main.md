@@ -67,6 +67,7 @@ do the following in this loop:
 IMPORTANT:
 READ the following files (read them yourself. you may delegate exploration of other files, but not these, to subagents):
 - Index of project documentation: `./docs/index.md`
+ - Supervisor steering memo (if present): `./input.md` — use its "Do Now" to steer selection and execution for this loop. You MAY switch the active in_progress item in docs/fix_plan.md to match the Do Now; record the switch in Attempts History.
 - $SPECS: `./specs/spec-a.md`
 - $ARCH: `./arch.md` (ADR-backed implementation architecture; reconcile design with spec, surface conflicts)
 - docs/development/c_to_pytorch_config_map.md — C↔Py config parity and implicit rules
@@ -76,7 +77,7 @@ READ the following files (read them yourself. you may delegate exploration of ot
 - $AGENTS: `./CLAUDE.md` (concise how‑to run/build/test; keep it accurate)
 - $TESTS: `./docs/development/testing_strategy.md` (testing philosophy, tiers, seeds/tolerances, commands)
 <step 0>
-- In `docs/fix_plan.md`, ensure exactly one high-value item is selected for this loop: if one is already `in_progress`, continue it; otherwise mark the highest-priority `pending` item as `in_progress` and record/refresh its reproduction commands before proceeding.
+- Ensure exactly one high-value item is chosen for this loop’s execution. If `input.md` provides a "Do Now", prefer that selection and mark it `in_progress` (multiple items may be `in_progress` in the ledger, but execute only one this loop). Record/refresh its reproduction commands before proceeding.
 - run the full test suite 
 </step 1>
 </step 1>

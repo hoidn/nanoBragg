@@ -22,12 +22,14 @@ Required Sections for Every Loop Prompt
 
 2) Authoritative Inputs
 - Plan: `docs/fix_plan.md` (single source of loop work)
+- Supervisor steering memo: `./input.md` (written by galph each run; use its "Do Now" to steer which single item to execute this loop)
 - Specs: `specs/*.md` (Acceptance Tests and contracts)
 - Parity Profile: where AT→tests/env/commands mapping lives (e.g., `docs/development/testing_strategy.md`, section “Parallel Validation Matrix”)
 - Architecture docs as needed
 
 3) Minimal Actions Per Loop (hard rule)
-- Read `docs/fix_plan.md`; pick/confirm the active item.
+- Read `./input.md` (if present); prefer its "Do Now" selection while maintaining one-item execution per loop.
+- Read `docs/fix_plan.md`; pick/confirm the active item (you may switch to match the Do Now and must record the switch in Attempts History).
 - Map AT→pytest command via Parity Profile (or fall back by searching tests for the AT ID).
 - Execute the mapped test(s) to capture a baseline; save metrics/artifacts.
 
@@ -35,7 +37,7 @@ Required Sections for Every Loop Prompt
 - Setup → Reproduce → Triage → Fix → Gate → Finalize
 
 5) Gates (hard requirements)
-- Start gate: plan shows chosen item set to `in_progress` with reproduction commands.
+- Start gate: plan shows chosen item set to `in_progress` with reproduction commands (and aligns with `input.md` Do Now when provided).
 - End gate: plan Attempt entry appended with Metrics + Artifacts (real paths) + First Divergence (if traces used).
 - Final sanity: re‑run mapped authoritative tests and pass thresholds before declaring success.
 

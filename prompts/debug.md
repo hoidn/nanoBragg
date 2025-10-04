@@ -6,8 +6,9 @@ Purpose
 
 Autonomy & Interaction Policy (No‑Question Mode)
 - Before reading context or selecting work, run `git pull --rebase` to sync with origin. Resolve conflicts immediately (especially docs/fix_plan.md), recording outcomes in galph_memory.md and the loop output.
+- Read `./input.md` (if present). If it contains a "Do Now", prefer that selection for this loop while maintaining one‑item execution; record any switch in `docs/fix_plan.md` Attempts History.
 - Do not ask the user what to work on. Select work autonomously from `docs/fix_plan.md`.
-- If an item is already `in_progress`, continue it. Otherwise pick the highest‑priority `pending` item and set it to `in_progress`.
+- If an item is already `in_progress`, continue it OR switch to the `input.md` Do Now if provided and justified; in either case, ensure exactly one item is attempted this loop.
 - Produce brief preambles and then act: read files, search, run tests, generate traces, update plan, and commit per gates.
 - Only two messages per loop: a short “next action” preamble before the first command, and the final Loop Output checklist. No idle greetings.
 

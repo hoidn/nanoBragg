@@ -96,6 +96,22 @@ Given your findings in <1> and <2>, think about whether there's any need for a m
 - Do we need a new docs/fix_plan item to put ralph back on course, fix one of his mistakes, or instruct him to do something that he overlooked? If so, draft it and add it to docs/fix_plans
 </no case>
 </3>
+<3.5>
+Render and write ./input.md (supervisor→engineer steering memo). Overwrite the entire file every invocation. Keep length ~100–200 lines. Include these sections in order:
+- Header: timestamp, current commit hash (short), author “galph”, and Active Focus summary.
+- Do Now: 1 line naming the exact docs/fix_plan.md item (ID and title) to execute this loop, plus the authoritative pytest command/env. If you intend to delegate the choice, write “Do Now: delegate” and provide decision guidance below.
+- If Blocked: fallback action (what to run/capture, how to record it in Attempts History).
+- Priorities & Rationale: 3–6 bullets with file pointers (specs/arch/tests/plan) justifying the Do Now.
+- How-To Map: exact commands (pytest, nb-compare), env vars, ROI/thresholds, and where to store artifacts.
+- Pitfalls To Avoid: 5–10 crisp do/don’t reminders (device/dtype neutrality, vectorization, Protected Assets, two‑message loop policy, no ad‑hoc scripts).
+- Pointers: file paths with line anchors to the most relevant spec/arch/testing_strategy/fix_plan entries for this loop.
+- Next Up (optional): 1–2 candidates Ralph may choose next loop if he finishes early (still one thing per loop).
+
+Rules:
+- Ralph must not edit input.md. You (galph) are the single writer.
+- If input.md’s Do Now conflicts with an existing in_progress selection in fix_plan.md, Ralph is allowed to switch; he must record the change in Attempts History.
+- Commit input.md each run as part of step <4> (commit only if the content changed).
+</3.5>
 <4>
 Before finishing the loop, enforce git hygiene:
 - Run `git status --short` to inspect new or modified files that appeared during this invocation.
