@@ -4,7 +4,7 @@
 
 Before you dive in: the PyTorch port of nanoBragg is a drop-in simulator that is also differentiable, compiled, and verified against the C reference. Getting there took some engineering work:
 
-- **Vectorizing the legacy control flow**: The C code walks sub-pixels, mosaic blocks, and sources with nested loops and early exits. We rebuilt those pieces as batched tensor ops so autograd sees a continuous graph, while preserving the numerical order that keeps the Bragg peaks stable.
+- **Vectorizing the legacy control flow**: The C code walks sub-pixels, mosaic blocks, and sources with nested loops and early exits. We rebuilt those pieces as batched tensor ops so autograd sees a continuous graph.
 - **Killing implicit state**: The reference implementation hides configuration in globals and scratch structs. Every one of those knobs had to become an explicit tensor argument before `torch.compile` would cache kernels safely.
 - **Example: stabilizing the shape factors**: One of many numerical landmines. Functions like `sincg`, `sinc3`, and polarization all contained removable singularities that autograd interpreted as "divide by zero." For `sincg`, we substituted in the L'Hôpital limits so the limit values are emitted directly:
 
