@@ -1,6 +1,6 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-15 (galph loop CP)
+**Last Updated:** 2025-10-16 (galph loop)
 **Active Focus:**
 - ROUTING: Close the reopened guard plan by capturing a fresh regression audit referencing commit `c49e3be` and re-confirming the guarded `loop.sh` flow (`plans/active/routing-loop-guard/plan.md` Phases A–C) before automation resumes.
 - ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md`, then drive Phase B guard work (B2–B4) and new task B5 to add `supervisor.sh` to docs/index.md so Protected-Asset policy covers the script before automation runs again.
@@ -20,6 +20,7 @@
 | [AT-PARALLEL-012-PEAKMATCH](#at-parallel-012-peakmatch-restore-95-peak-alignment) | Restore 95% peak alignment | High | done |
 | [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | in_progress |
 | [CLI-DTYPE-002](#cli-dtype-002-cli-dtype-parity) | CLI dtype parity | High | in_progress |
+| [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | queued |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | in_progress |
 
@@ -637,6 +638,20 @@
 - Attempts History: None — new item.
 - Risks/Assumptions: Ensure `write_fdump` continues to emit float64 on disk (spec requirement) while the in-memory tensor honours caller dtype; watch for latent callers that relied on the old float64 default during plan DTYPE-DEFAULT-001 migration.
 - Exit Criteria: CLI runs with `-dtype float64` produce double-precision HKL/Fdump tensors end-to-end, regression test passes, and existing dtype-sensitive tests (AT-IO-003, CLI smoke, gradchecks) remain green.
+
+## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
+- Spec/AT: specs/spec-a-cli.md flag catalogue, docs/architecture/detector.md §5 (pix0 workflow), docs/development/c_to_pytorch_config_map.md (pivot rules), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860
+- Priority: High
+- Status: queued (opened 2025-10-16)
+- Owner/Date: galph/2025-10-16
+- Plan Reference: `plans/active/cli-noise-pix0/plan.md`
+- Reproduction (C & PyTorch):
+  * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./nanoBragg`; capture whether the noisefile is skipped and log `TRACE_C: pix0_vector`.
+  * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+- First Divergence (if known): PyTorch CLI currently errors out on `-nonoise` (unknown flag) and ignores `-pix0_vector` overrides; `_mm` variant unsupported. Detector pipeline always recalculates pix0, so CUSTOM convention inputs cannot reproduce C traces.
+- Next Actions: Execute plan Phase A (capture C traces + parity memo), then Phase B (argparse/config wiring) followed by Phase C validations documented under `reports/2025-10-cli-flags/`.
+- Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised.
+- Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced; (ii) CLI regression tests covering both flags pass; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance.
 
 ### Completed Items — Key Reference
 (See `docs/fix_plan_archive.md` for the full historical ledger.)
