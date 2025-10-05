@@ -1,0 +1,85 @@
+# Orchestration Guide (galph ↔ ralph)
+
+This README documents the cross‑machine orchestration for the supervisor (galph) and engineer (ralph) loops. It lives alongside the orchestration code (not in `docs/`) to keep project docs and automation harness separate.
+
+## Overview
+- Two actors:
+  - `supervisor.sh` → `scripts/orchestration/supervisor.py` (galph)
+  - `loop.sh` → `scripts/orchestration/loop.py` (ralph)
+- Modes:
+  - Async: local, back‑to‑back iterations.
+  - Sync via Git: strict turn‑taking using `sync/state.json` committed and pushed between machines.
+- Wrappers call Python by default; set `ORCHESTRATION_PYTHON=0` to force legacy bash logic.
+
+## State File
+- Path: `sync/state.json` (tracked and pushed so both machines see updates)
+- Fields:
+  - `iteration` (int)
+  - `expected_actor` ("galph" | "ralph")
+  - `status` ("idle" | "running-galph" | "waiting-ralph" | "running-ralph" | "complete" | "failed")
+  - `last_update`, `lease_expires_at` (ISO8601)
+  - `galph_commit`, `ralph_commit` (short SHAs)
+
+## Branch Safety (important)
+- Always operate on the intended branch; pass `--branch <name>` to both runners.
+- The orchestrators will abort if the current branch is not the specified one.
+- Pushes use explicit refspecs: `git push origin HEAD:<branch>` to avoid cross‑branch mistakes.
+
+## Defaults
+- Iterations: 20 (`--sync-loops N` to change)
+- Poll interval: 5s (`--poll-interval S`)
+- No max wait by default (`--max-wait-sec S` to enable)
+- Loop prompt: `main` (feature work). Switch with `--prompt debug` for parity/trace loops.
+- Per‑iteration logs under `logs/` (see Logging).
+
+## Sync via Git (two machines)
+1) Preconditions:
+   - Both machines share the same remote and branch (e.g., `feature/spec-based-2`).
+   - Ensure `sync/state.json` exists; set `expected_actor` to the actor who should start.
+2) Start supervisor (galph machine):
+   ```bash
+   ORCHESTRATION_BRANCH=feature/spec-based-2    ./supervisor.sh --sync-via-git --branch feature/spec-based-2      --sync-loops 20 --logdir logs --verbose --heartbeat-secs 10
+   ```
+3) Start loop (ralph machine):
+   ```bash
+   ORCHESTRATION_BRANCH=feature/spec-based-2    ./loop.sh --sync-via-git --branch feature/spec-based-2      --sync-loops 20 --prompt main --logdir logs
+   ```
+- Handshake:
+  - Galph writes: `expected_actor=ralph`, `status=waiting-ralph`.
+  - Ralph writes: `status=running-ralph`, then on success sets `expected_actor=galph`, `status=complete`, and increments `iteration`.
+  - Supervisor advances when it observes `expected_actor=galph` and `iteration` increased.
+
+## Async (single machine)
+- Run without `--sync-via-git` to execute N iterations locally (still writes per‑iteration logs):
+  ```bash
+  ./supervisor.sh --sync-loops 5 --logdir logs
+  ./loop.sh --sync-loops 5 --prompt main --logdir logs
+  ```
+
+## Logging
+- Descriptive per‑iteration logs:
+  - Supervisor: `logs/<branch>/galph/iter-00017_YYYYMMDD_HHMMSS.log`
+  - Loop: `logs/<branch>/ralph/iter-00017_YYYYMMDD_HHMMSS_<prompt>.log`
+- Configure base directory with `--logdir PATH` (default `logs/`).
+- Supervisor console options:
+  - `--verbose`: print state changes to console and log
+  - `--heartbeat-secs N`: periodic heartbeat lines while polling
+- `logs/` is ignored by Git.
+
+## Flag Reference
+- Supervisor
+  - `--sync-via-git` · `--sync-loops N` · `--poll-interval S` · `--max-wait-sec S`
+  - `--branch NAME` (abort if not on this branch)
+  - `--logdir PATH` (per‑iteration logs)
+  - `--verbose` · `--heartbeat-secs N`
+- Loop
+  - `--sync-via-git` · `--sync-loops N` · `--poll-interval S` · `--max-wait-sec S`
+  - `--branch NAME` · `--logdir PATH` · `--prompt {main,debug}`
+
+## Troubleshooting
+- Push rejected / rebase in progress: orchestrators auto‑abort in‑progress rebase before pulling. If conflicts arise, fix them locally, commit, and rerun.
+- Branch mismatch: checkout the correct branch or adjust `--branch`.
+- Missing prompt: ensure `prompts/<name>.md` exists (default is `main`).
+
+## Notes
+- `loop.sh`, `supervisor.sh`, and `input.md` are treated as protected entrypoints elsewhere in the project. Keep wrappers; they manage env and call Python modules by default.
