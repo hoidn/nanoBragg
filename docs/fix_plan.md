@@ -664,14 +664,14 @@
 ## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
 - Spec/AT: specs/spec-a-cli.md flag catalogue, docs/architecture/detector.md §5 (pix0 workflow), docs/development/c_to_pytorch_config_map.md (pivot rules), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860
 - Priority: High
-- Status: in_progress (Phase A complete 2025-10-05, moving to Phase B)
+- Status: in_progress (Phase A complete; Phase B1-B3 ✅, B4/B5 evidence capture pending)
 - Owner/Date: ralph/2025-10-05
 - Plan Reference: `plans/active/cli-noise-pix0/plan.md`
 - Reproduction (C & PyTorch):
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
-- First Divergence (if known): Detector override path still fails — `_calculate_pix0_vector()` returns without assigning `self.pix0_vector`, so `DetectorConfig(pix0_override_m=…)` raises `AttributeError` at `src/nanobrag_torch/models/detector.py:144`. Noise suppression wiring and argparse flags now exist but parity remains blocked until the detector fix lands.
-- Next Actions: Finish plan Phase B by patching the detector override branch (set attribute + cached copy), then add validation/tests per Phase C before rerunning the supervisor command under PyTorch.
+- First Divergence (if known): No authoritative artifact yet proving that `-pix0_vector` (meters) and `-pix0_vector_mm` normalise to the same override tensor or that detector cache invalidation preserves overrides across device moves. Without those checks, mm alias parity and cache hygiene remain unverified and block progression to Phase C.
+- Next Actions: Execute plan Phase B tasks B4/B5 — log parser equivalence + dual-flag error handling under `reports/2025-10-cli-flags/phase_b/detector/pix0_override_equivalence.txt`, then capture the detector mini-harness showing override stability (`cache_handoff.txt`). Once evidence exists, promote Phase C1 test authoring and parity run.
 - Attempts History:
   * [2025-10-05] Phase A Complete — Tasks A1-A3 executed per plan.
     Metrics: C reference behavior captured for both flags via parallel command execution.

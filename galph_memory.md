@@ -912,3 +912,10 @@ Follow-ups for Ralph:
 - Updated `plans/active/cli-noise-pix0/plan.md` to mark B1/B2 `[D]`, keep B3 `[P]`, and spell out the override-assignment fix. Logged new attempt in `docs/fix_plan.md` noting the AttributeError regression and clarifying next actions (finish B3, then Phase C tests).
 - Regenerated `input.md` with Phase B3 guidance (override fix + pytest). Do Now remains `[CLI-FLAGS-003]` with emphasis on detector assignment, cache hygiene, and reporting structure under `reports/2025-10-cli-flags/phase_b/`.
 - No additional plans opened; fix_plan and plan updates should keep Ralph focused on override wiring before validation. Next loop should verify the detector patch, rerun CLI pytest smoke, and capture dry-run parity evidence.
+
+## 2025-10-05 (galph loop DY)
+- `timeout 30 git pull --rebase` returned "Already up to date"; no conflicts.
+- Verified CLI parity scaffolding: parser maps `-pix0_vector_mm` to meters (`PYTHONPATH=src ... parse_and_validate_args`), detector override preserves tensors after `invalidate_cache()`.
+- Updated `plans/active/cli-noise-pix0/plan.md` Phase B table (B4/B5 now [P] with explicit log commands) and refreshed docs/fix_plan.md First Divergence (missing alias/cache artefacts).
+- Regenerated input.md (Do Now = Phase B4/B5 evidence capture, includes python snippets + pytest smoke) so Ralph focuses on parity logs before Phase C.
+- Follow-ups for Ralph: run the two logging snippets into `reports/2025-10-cli-flags/phase_b/detector/`, record Attempt entry under `[CLI-FLAGS-003]`, then execute pytest smoke; once artefacts land, proceed toward Phase C1 test authoring.
