@@ -692,6 +692,18 @@
     Metrics: `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY' … DetectorConfig(pix0_override_m=(0.1,0.2,0.3))` reproduces.
     Observations/Hypotheses: Parser/Noise guard completed (plan tasks B1/B2 ✅). `_calculate_pix0_vector()` needs to assign the override tensor and refresh `_cached_pix0_vector`; cache invalidation should reuse the same path.
     Next Actions: Implement detector fix (plan task B3), then add regression covering both meter/mm overrides before moving to Phase C.
+  * [2025-10-05] Attempt #2 (ralph) — Result: success. Fixed detector override assignment bug (plan task B3 complete).
+    Metrics: Detector now correctly assigns `self.pix0_vector` when override is provided. CLI pix0 conversion verified (100mm→0.1m, precision <1e-9).
+    Artifacts:
+      - Code fix at `src/nanobrag_torch/models/detector.py:391-407`
+      - Smoke test validates tuple/tensor overrides with device/dtype coercion
+      - End-to-end CLI test: `-pix0_vector_mm 100 200 300` → `pix0_vector tensor([0.1, 0.2, 0.3])`
+    Observations/Hypotheses:
+      - Root cause: `_calculate_pix0_vector()` returned override without assignment (lines 395/397 before fix)
+      - Fix: Assign to `self.pix0_vector` before return; also set `r_factor=1.0`, `distance_corrected=distance`, `close_distance=distance` for compatibility
+      - Device/dtype neutrality preserved: override tensor coerced to detector's device/dtype via `.to()`
+      - Differentiability maintained: no `.detach()` or `.cpu()` in override path
+    Next Actions: Tasks B4/B5 (unit parity + cache hygiene) then Phase C validation. Note: Pre-existing test failure in test_at_cli_006 (scaling bug) unrelated to this fix.
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag.
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced; (ii) CLI regression tests covering both flags pass; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance.
 

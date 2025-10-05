@@ -24,7 +24,7 @@ Exit Criteria: `nanoBragg --help` lists both flags; manual dry run of supervisor
 | --- | --- | --- | --- |
 | B1 | Extend argparse surface | [D] | `create_parser()` now exposes both flags (see `src/nanobrag_torch/__main__.py:187-206`); keep help text aligned with `nanoBragg.c` usage block. |
 | B2 | Thread `-nonoise` to simulator | [D] | `parse_and_validate_args()` records `suppress_noise`, and the noise writer at `__main__.py:1170-1199` skips SMV noise output when true. Add warning copy before closing Phase C. |
-| B3 | Support pix0 overrides | [P] | `DetectorConfig.pix0_override_m` exists and CLI threads meters/mm inputs, but `_calculate_pix0_vector()` returns early without assigning `self.pix0_vector`, causing `AttributeError` during init (repro: `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python -m ...`). Patch detector path so overrides populate the attribute, update cached copy, and honour device/dtype. |
+| B3 | Support pix0 overrides | [D] | Fixed detector override assignment bug (2025-10-05). `_calculate_pix0_vector()` now assigns to `self.pix0_vector` and sets `r_factor=1.0`, `distance_corrected=distance`. Device/dtype coercion preserved via `.to()`. Verified: CLI `-pix0_vector_mm 100 200 300` → tensor([0.1, 0.2, 0.3]). |
 | B4 | Preserve meter and mm flag parity | [ ] | Ensure the existing `-pix0_vector` path (meters) now threads through the same override field so CUSTOM convention consumers regain functionality; add validation errors for mixed units or partial vectors. |
 | B5 | Unit & cache hygiene | [ ] | Update detector cache invalidation so supplying pix0 overrides still triggers `invalidate_cache()` for dependent tensors; add assertions ensuring the stored tensor lives on the detector device/dtype and keeps gradient flow intact. |
 
