@@ -8,7 +8,7 @@ if [[ "${ORCHESTRATION_PYTHON:-1}" == "1" ]]; then
   conda activate pytorch
   # --------------------------------------------------------------------
   PYTHON_BIN=${PYTHON_BIN:-python3}
-  exec "$PYTHON_BIN" scripts/orchestration/loop.py "$@"
+  exec "$PYTHON_BIN" -m scripts.orchestration.loop "$@"
 fi
 
 # --- Args & defaults ---

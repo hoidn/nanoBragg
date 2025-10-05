@@ -4,7 +4,7 @@ set -euo pipefail
 # Prefer Python implementation; keep legacy below for fallback
 if [[ "${ORCHESTRATION_PYTHON:-1}" == "1" ]]; then
   PYTHON_BIN=${PYTHON_BIN:-python3}
-  exec "$PYTHON_BIN" scripts/orchestration/supervisor.py "$@"
+  exec "$PYTHON_BIN" -m scripts.orchestration.supervisor "$@"
 fi
 
 
