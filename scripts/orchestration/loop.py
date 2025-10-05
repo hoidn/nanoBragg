@@ -9,7 +9,7 @@ from pathlib import Path
 from subprocess import Popen, PIPE
 
 from .state import OrchestrationState
-from .git_bus import safe_pull, add, commit, push, short_head, has_unpushed_commits
+from .git_bus import safe_pull, add, commit, push_to, short_head, has_unpushed_commits, assert_on_branch, current_branch
 
 
 def _log_file(prefix: str) -> Path:
@@ -52,6 +52,7 @@ def main() -> int:
     ap.add_argument("--max-wait-sec", type=int, default=int(os.getenv("MAX_WAIT_SEC", 0)))
     ap.add_argument("--state-file", type=Path, default=Path(os.getenv("STATE_FILE", "sync/state.json")))
     ap.add_argument("--claude-cmd", type=str, default=os.getenv("CLAUDE_CMD", "/home/ollie/.claude/local/claude"))
+    ap.add_argument("--branch", type=str, default=os.getenv("ORCHESTRATION_BRANCH", ""))
     args, unknown = ap.parse_known_args()
 
     log_path = _log_file("claudelog")
@@ -59,6 +60,13 @@ def main() -> int:
     def logp(msg: str) -> None:
         with open(log_path, "a", encoding="utf-8") as f:
             f.write(msg + "\n")
+
+    # Branch guard / resolution
+    if args.branch:
+        assert_on_branch(args.branch, lambda m: None)
+        branch_target = args.branch
+    else:
+        branch_target = current_branch()
 
     # Always keep up to date
     safe_pull(logp)
@@ -99,20 +107,20 @@ def main() -> int:
                 st.write(str(args.state_file))
                 add([str(args.state_file)])
                 commit(f"[SYNC i={st.iteration}] actor=ralph → next=galph status=ok ralph_commit={sha}")
-                push(logp)
+                push_to(branch_target, logp)
             else:
                 st.stamp(expected_actor="ralph", status="failed", increment=False, ralph_commit=sha)
                 st.write(str(args.state_file))
                 add([str(args.state_file)])
                 commit(f"[SYNC i={st.iteration}] actor=ralph status=fail ralph_commit={sha}")
-                push(logp)
+                push_to(branch_target, logp)
                 logp(f"Loop failed rc={rc}; halting")
                 return rc
 
         # Optional: push local commits from the loop (async hygiene)
         if rc == 0 and has_unpushed_commits():
             try:
-                push(logp)
+                push_to(branch_target, logp)
             except Exception as e:
                 logp(f"WARNING: git push failed: {e}")
                 return 1
@@ -122,4 +130,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

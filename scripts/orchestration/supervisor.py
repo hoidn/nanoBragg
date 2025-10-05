@@ -9,7 +9,7 @@ from pathlib import Path
 from subprocess import Popen, PIPE
 
 from .state import OrchestrationState
-from .git_bus import safe_pull, add, commit, push, short_head
+from .git_bus import safe_pull, add, commit, push_to, short_head, assert_on_branch, current_branch
 
 
 def _log_file(prefix: str) -> Path:
@@ -55,6 +55,7 @@ def main() -> int:
     ap.add_argument("--max-wait-sec", type=int, default=int(os.getenv("MAX_WAIT_SEC", 0)))
     ap.add_argument("--state-file", type=Path, default=Path(os.getenv("STATE_FILE", "sync/state.json")))
     ap.add_argument("--codex-cmd", type=str, default=os.getenv("CODEX_CMD", "codex"))
+    ap.add_argument("--branch", type=str, default=os.getenv("ORCHESTRATION_BRANCH", ""), help="Expected Git branch to operate on")
     args, unknown = ap.parse_known_args()
 
     log_path = _log_file("supervisorlog")
@@ -62,6 +63,13 @@ def main() -> int:
     def logp(msg: str) -> None:
         with open(log_path, "a", encoding="utf-8") as f:
             f.write(msg + "\n")
+
+    # Branch guard (if provided) and target branch resolution
+    if args.branch:
+        assert_on_branch(args.branch, lambda m: None)
+        branch_target = args.branch
+    else:
+        branch_target = current_branch()
 
     if not args.sync_via_git:
         # Legacy async mode: run N iterations back-to-back
@@ -86,7 +94,7 @@ def main() -> int:
             st.write(str(args.state_file))
             add([str(args.state_file)])
             commit("[SYNC init] actor=galph status=idle")
-            push(logp)
+            push_to(branch_target, logp)
 
         # Wait for our turn
         logp("Waiting for expected_actor=galph...")
@@ -106,7 +114,7 @@ def main() -> int:
         st.write(str(args.state_file))
         add([str(args.state_file)])
         commit(f"[SYNC i={st.iteration}] actor=galph status=running")
-        push(logp)
+        push_to(branch_target, logp)
 
         # Execute one supervisor iteration
         rc = tee_run([args.codex_cmd, "exec", "-m", "gpt-5-codex", "-c", "model_reasoning_effort=high", "--dangerously-bypass-approvals-and-sandbox"], Path("prompts/supervisor.md"), log_path)
@@ -120,13 +128,13 @@ def main() -> int:
             st.write(str(args.state_file))
             add([str(args.state_file)])
             commit(f"[SYNC i={st.iteration}] actor=galph → next=ralph status=ok galph_commit={sha}")
-            push(logp)
+            push_to(branch_target, logp)
         else:
             st.stamp(expected_actor="galph", status="failed", galph_commit=sha)
             st.write(str(args.state_file))
             add([str(args.state_file)])
             commit(f"[SYNC i={st.iteration}] actor=galph status=fail galph_commit={sha}")
-            push(logp)
+            push_to(branch_target, logp)
             logp(f"Supervisor iteration failed rc={rc}. Halting.")
             return rc
 
@@ -147,4 +155,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
