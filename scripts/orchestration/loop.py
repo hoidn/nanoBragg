@@ -91,7 +91,7 @@ def main() -> int:
             st.write(str(args.state_file))
             add([str(args.state_file)])
             commit(f"[SYNC i={st.iteration}] actor=ralph status=running")
-            push(logp)
+            push_to(branch_target, logp)
 
         # Execute one engineer loop
         rc = tee_run([args.claude_cmd, "-p", "--dangerously-skip-permissions", "--verbose", "--output-format", "stream-json"], Path("prompts/main.md"), log_path)
