@@ -202,6 +202,9 @@ class DetectorConfig:
     curved_detector: bool = False  # If True, use spherical mapping for pixel positions
     point_pixel: bool = False  # If True, use 1/R^2 solid angle only (no obliquity)
 
+    # Detector origin override (CLI-FLAGS-003)
+    pix0_override_m: Optional[Union[Tuple[float, float, float], torch.Tensor]] = None  # Override pix0 vector (meters)
+
     # Custom basis vectors for CUSTOM convention (unit vectors)
     custom_fdet_vector: Optional[Tuple[float, float, float]] = None  # Fast axis direction
     custom_sdet_vector: Optional[Tuple[float, float, float]] = None  # Slow axis direction

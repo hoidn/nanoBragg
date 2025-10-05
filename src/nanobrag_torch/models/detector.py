@@ -388,6 +388,16 @@ class Detector:
         from ..utils.geometry import angles_to_rotation_matrix, rotate_axis
         from ..utils.units import degrees_to_radians
 
+        # CLI-FLAGS-003: Short-circuit if pix0_override_m is provided
+        if self.config.pix0_override_m is not None:
+            override = self.config.pix0_override_m
+            if isinstance(override, (tuple, list)):
+                return torch.tensor(override, device=self.device, dtype=self.dtype)
+            elif isinstance(override, torch.Tensor):
+                return override.to(device=self.device, dtype=self.dtype)
+            else:
+                raise TypeError(f"pix0_override_m must be tuple, list, or Tensor, got {type(override)}")
+
         # Calculate r-factor for distance correction (AT-GEO-003)
         c = self.config
 

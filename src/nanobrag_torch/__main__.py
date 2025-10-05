@@ -187,6 +187,9 @@ Examples:
     parser.add_argument('-pix0_vector', nargs=3, type=float,
                         metavar=('X', 'Y', 'Z'),
                         help='Detector origin offset (meters)')
+    parser.add_argument('-pix0_vector_mm', nargs=3, type=float,
+                        metavar=('X', 'Y', 'Z'),
+                        help='Detector origin offset (millimeters)')
 
     # Beam centers
     parser.add_argument('-Xbeam', type=float, metavar='MM',
@@ -333,6 +336,8 @@ Examples:
                         help='Scale factor for PGM output')
     parser.add_argument('-noisefile', '-noiseimage', type=str, metavar='FILE',
                         dest='noisefile', help='SMV with Poisson noise')
+    parser.add_argument('-nonoise', action='store_true',
+                        help='Suppress noise image generation')
     parser.add_argument('-nopgm', action='store_true',
                         help='Disable PGM output')
 
@@ -448,7 +453,7 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     # Convention and pivot
     if any([args.fdet_vector, args.sdet_vector, args.odet_vector,
             args.beam_vector, args.polar_vector, args.spindle_axis,
-            args.pix0_vector]):
+            args.pix0_vector, args.pix0_vector_mm]):
         config['convention'] = 'CUSTOM'
     elif args.convention:
         config['convention'] = args.convention
@@ -538,8 +543,18 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
         config['custom_polar_vector'] = tuple(args.polar_vector)
     if args.spindle_axis:
         config['custom_spindle_axis'] = tuple(args.spindle_axis)
+    # Handle pix0 override (validate mutual exclusivity)
+    if args.pix0_vector and args.pix0_vector_mm:
+        raise ValueError("Cannot specify both -pix0_vector and -pix0_vector_mm simultaneously")
+
     if args.pix0_vector:
         config['custom_pix0_vector'] = tuple(args.pix0_vector)
+        # pix0_vector is in meters, convert to config
+        config['pix0_override_m'] = tuple(args.pix0_vector)
+    elif args.pix0_vector_mm:
+        # Convert millimeters to meters
+        config['pix0_override_m'] = tuple(x * 0.001 for x in args.pix0_vector_mm)
+        config['custom_pix0_vector'] = config['pix0_override_m']
 
     # Detector absorption
     if args.detector_abs:
@@ -683,6 +698,7 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     config['intfile'] = args.intfile
     config['pgmfile'] = args.pgmfile
     config['noisefile'] = args.noisefile
+    config['suppress_noise'] = args.nonoise
     config['scale'] = args.scale
     config['adc'] = args.adc
     config['pgmscale'] = args.pgmscale
@@ -850,7 +866,9 @@ def main():
             # Custom vectors for CUSTOM convention
             custom_fdet_vector=config.get('custom_fdet_vector'),
             custom_sdet_vector=config.get('custom_sdet_vector'),
-            custom_odet_vector=config.get('custom_odet_vector')
+            custom_odet_vector=config.get('custom_odet_vector'),
+            # Detector origin override (CLI-FLAGS-003)
+            pix0_override_m=config.get('pix0_override_m')
         )
 
         # Set beam center if provided (values are in mm)
@@ -1149,7 +1167,8 @@ def main():
             write_pgm(config['pgmfile'], intensity.cpu().numpy(), pgmscale)
             print(f"Wrote PGM image to {config['pgmfile']}")
 
-        if config.get('noisefile'):
+        # CLI-FLAGS-003: Honor -nonoise flag
+        if config.get('noisefile') and not config.get('suppress_noise', False):
             # Generate and write noise image
             noise_config = NoiseConfig(
                 seed=config.get('seed'),

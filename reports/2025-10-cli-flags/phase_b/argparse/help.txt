@@ -1,0 +1,193 @@
+usage: nanoBragg [-h] [-hkl FILE] [-mat FILE] [-cell a b c α β γ] [-img FILE]
+                 [-mask FILE] [-sourcefile FILE] [-stol FILE] [-4stol FILE]
+                 [-Q FILE] [-stolout FILE] [-default_F DEFAULT_F] [-pixel MM]
+                 [-detpixels N] [-detpixels_f N] [-detpixels_s N]
+                 [-detsize MM] [-detsize_f MM] [-detsize_s MM] [-distance MM]
+                 [-close_distance MM] [-point_pixel] [-detector_rotx DEG]
+                 [-detector_roty DEG] [-detector_rotz DEG] [-twotheta DEG]
+                 [-twotheta_axis X Y Z] [-curved_det] [-detector_abs µm]
+                 [-detector_thick µm]
+                 [-detector_thicksteps DETECTOR_THICKSTEPS] [-mosflm] [-xds]
+                 [-adxv] [-denzo] [-dials] [-pivot {beam,sample}]
+                 [-fdet_vector X Y Z] [-sdet_vector X Y Z]
+                 [-odet_vector X Y Z] [-beam_vector X Y Z]
+                 [-polar_vector X Y Z] [-spindle_axis X Y Z]
+                 [-pix0_vector X Y Z] [-pix0_vector_mm X Y Z] [-Xbeam MM]
+                 [-Ybeam MM] [-Xclose MM] [-Yclose MM] [-ORGX PIXELS]
+                 [-ORGY PIXELS] [-lambda Å] [-energy eV] [-dispersion %]
+                 [-dispsteps DISPSTEPS] [-divergence mrad] [-hdivrange mrad]
+                 [-vdivrange mrad] [-hdivstep mrad] [-vdivstep mrad]
+                 [-hdivsteps HDIVSTEPS] [-vdivsteps VDIVSTEPS]
+                 [-divsteps DIVSTEPS] [-round_div] [-square_div] [-polar K]
+                 [-nopolar] [-Na NA] [-Nb NB] [-Nc NC] [-N N] [-samplesize MM]
+                 [-sample_thick MM] [-sample_width MM] [-sample_height MM]
+                 [-square_xtal] [-round_xtal] [-gauss_xtal] [-binary_spots]
+                 [-fudge FUDGE] [-mosaic DEG] [-mosaic_dom MOSAIC_DOM]
+                 [-mosaic_seed MOSAIC_SEED] [-misset [MISSET ...]]
+                 [-misset_seed MISSET_SEED] [-phi DEG] [-osc DEG]
+                 [-phistep DEG] [-phisteps PHISTEPS] [-dmin Å]
+                 [-oversample OVERSAMPLE] [-oversample_thick]
+                 [-oversample_polar] [-oversample_omega]
+                 [-roi xmin xmax ymin ymax] [-water µm] [-fluence photons/m^2]
+                 [-flux photons/s] [-exposure s] [-beamsize MM]
+                 [-floatfile FILE] [-intfile FILE] [-scale SCALE] [-adc ADC]
+                 [-pgmfile FILE] [-pgmscale PGMSCALE] [-noisefile FILE]
+                 [-nonoise] [-nopgm] [-interpolate] [-nointerpolate]
+                 [-printout] [-printout_pixel f s] [-trace_pixel s f]
+                 [-noprogress] [-progress] [-seed SEED] [-show_config]
+                 [-dtype {float32,float64}] [-device {cpu,cuda}]
+
+PyTorch implementation of nanoBragg diffraction simulator
+
+options:
+  -h, --help            show this help message and exit
+  -hkl FILE             Text file of "h k l F" (P1 reflections)
+  -mat FILE             3×3 MOSFLM-style A matrix (reciprocal vectors)
+  -cell a b c α β γ     Direct cell in Å and degrees
+  -img FILE             Read SMV header to set geometry
+  -mask FILE            Read SMV mask (0 values are skipped)
+  -sourcefile FILE      Multi-column text file with sources
+  -stol FILE            Structure factor vs sin(θ)/λ for amorphous materials
+                        (read but not used)
+  -4stol FILE           Alias for -stol (read but not used)
+  -Q FILE               Alias for -stol (read but not used)
+  -stolout FILE         Output file for S(Q) (read but not used)
+  -default_F DEFAULT_F  Default structure factor (default: 0)
+  -pixel MM             Pixel size in mm (default: 0.1)
+  -detpixels N          Square detector pixel count
+  -detpixels_f, -detpixels_x N
+                        Fast-axis pixels
+  -detpixels_s, -detpixels_y N
+                        Slow-axis pixels
+  -detsize MM           Square detector side in mm
+  -detsize_f MM         Fast-axis size in mm
+  -detsize_s MM         Slow-axis size in mm
+  -distance MM          Sample-to-detector distance in mm
+  -close_distance MM    Minimum distance to detector plane in mm
+  -point_pixel          Use 1/R^2 solid-angle only (no obliquity)
+  -detector_rotx DEG    Detector rotation about X axis (degrees)
+  -detector_roty DEG    Detector rotation about Y axis (degrees)
+  -detector_rotz DEG    Detector rotation about Z axis (degrees)
+  -twotheta DEG         Detector rotation about twotheta axis
+  -twotheta_axis X Y Z  Unit vector for twotheta rotation
+  -curved_det           Pixels on sphere equidistant from sample
+  -detector_abs µm      Attenuation depth in µm (inf or 0 to disable)
+  -detector_thick µm    Sensor thickness in µm
+  -detector_thicksteps, -thicksteps DETECTOR_THICKSTEPS
+                        Discretization layers through thickness
+  -mosflm               Use MOSFLM convention
+  -xds                  Use XDS convention
+  -adxv                 Use ADXV convention
+  -denzo                Use DENZO convention
+  -dials                Use DIALS convention
+  -pivot {beam,sample}  Override pivot mode
+  -fdet_vector X Y Z    Fast axis unit vector
+  -sdet_vector X Y Z    Slow axis unit vector
+  -odet_vector X Y Z    Detector normal unit vector
+  -beam_vector X Y Z    Beam unit vector
+  -polar_vector X Y Z   Polarization unit vector
+  -spindle_axis X Y Z   Spindle rotation axis
+  -pix0_vector X Y Z    Detector origin offset (meters)
+  -pix0_vector_mm X Y Z
+                        Detector origin offset (millimeters)
+  -Xbeam MM             Direct-beam X position (mm)
+  -Ybeam MM             Direct-beam Y position (mm)
+  -Xclose MM            Near point X (mm)
+  -Yclose MM            Near point Y (mm)
+  -ORGX PIXELS          XDS-style beam center X
+  -ORGY PIXELS          XDS-style beam center Y
+  -lambda, -wave Å      Central wavelength in Å
+  -energy eV            Central energy in eV
+  -dispersion %         Spectral width (percent)
+  -dispsteps DISPSTEPS  Number of wavelength steps
+  -divergence mrad      Sets both H and V divergence
+  -hdivrange mrad       Horizontal divergence range
+  -vdivrange mrad       Vertical divergence range
+  -hdivstep mrad        Horizontal divergence step size
+  -vdivstep mrad        Vertical divergence step size
+  -hdivsteps HDIVSTEPS  Horizontal divergence step count
+  -vdivsteps VDIVSTEPS  Vertical divergence step count
+  -divsteps DIVSTEPS    Sets both H and V step counts
+  -round_div            Apply elliptical trimming to divergence grid (default)
+  -square_div           Disable elliptical trimming (square grid)
+  -polar K              Kahn polarization factor (0-1)
+  -nopolar              Disable polarization correction
+  -Na NA                Unit cells along a
+  -Nb NB                Unit cells along b
+  -Nc NC                Unit cells along c
+  -N N                  Unit cells (all axes)
+  -samplesize, -xtalsize MM
+                        Crystal size in mm
+  -sample_thick, -sample_x, -xtal_thick, -xtal_x MM
+                        Crystal thickness (x) in mm
+  -sample_width, -sample_y, -width, -xtal_width, -xtal_y MM
+                        Crystal width (y) in mm
+  -sample_height, -sample_z, -height, -xtal_height, -xtal_z MM
+                        Crystal height (z) in mm
+  -square_xtal          Square crystal shape (default)
+  -round_xtal           Round crystal shape
+  -gauss_xtal           Gaussian crystal shape
+  -binary_spots, -tophat_spots
+                        Binary/tophat spots
+  -fudge FUDGE          Shape parameter scaling
+  -mosaic, -mosaici, -mosaic_spr DEG
+                        Isotropic mosaic spread (degrees)
+  -mosaic_dom MOSAIC_DOM
+                        Number of mosaic domains
+  -mosaic_seed MOSAIC_SEED
+                        Seed for mosaic rotations
+  -misset [MISSET ...]  Misset angles (deg) or "random"
+  -misset_seed MISSET_SEED
+                        Seed for random misset
+  -phi DEG              Starting spindle rotation angle
+  -osc DEG              Oscillation range
+  -phistep DEG          Step size
+  -phisteps PHISTEPS    Number of phi steps
+  -dmin Å               Minimum d-spacing cutoff
+  -oversample OVERSAMPLE
+                        Sub-pixel sampling per axis
+  -oversample_thick     Recompute absorption per subpixel
+  -oversample_polar     Recompute polarization per subpixel
+  -oversample_omega     Recompute solid angle per subpixel
+  -roi xmin xmax ymin ymax
+                        Pixel index limits (inclusive, zero-based)
+  -water µm             Water background size (µm)
+  -fluence photons/m^2  Fluence (photons/m^2)
+  -flux photons/s       Flux (photons/s)
+  -exposure s           Exposure time (seconds)
+  -beamsize MM          Beam size (mm)
+  -floatfile, -floatimage FILE
+                        Raw float output
+  -intfile, -intimage FILE
+                        SMV integer output
+  -scale SCALE          Scale factor for SMV output
+  -adc ADC              ADC offset for SMV (default: 40)
+  -pgmfile, -pgmimage FILE
+                        PGM preview output
+  -pgmscale PGMSCALE    Scale factor for PGM output
+  -noisefile, -noiseimage FILE
+                        SMV with Poisson noise
+  -nonoise              Suppress noise image generation
+  -nopgm                Disable PGM output
+  -interpolate          Enable tricubic interpolation
+  -nointerpolate        Disable interpolation
+  -printout             Verbose pixel prints
+  -printout_pixel f s   Limit prints to specified pixel
+  -trace_pixel s f      Instrument trace for a pixel
+  -noprogress           Disable progress meter
+  -progress             Enable progress meter
+  -seed SEED            Noise RNG seed
+  -show_config, -echo_config
+                        Print configuration parameters for debugging
+  -dtype {float32,float64}
+                        Floating point precision (float32 for speed, float64
+                        for accuracy)
+  -device {cpu,cuda}    Device for computation (cpu or cuda)
+
+Examples:
+  # Basic simulation
+  nanoBragg -hkl P1.hkl -mat A.mat -lambda 6.2 -N 5 -distance 100
+
+  # With detector rotation and output
+  nanoBragg -hkl P1.hkl -cell 100 100 100 90 90 90 -lambda 6.2 \
+            -distance 100 -detector_rotx 5 -floatfile output.bin

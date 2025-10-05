@@ -1,0 +1,19 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/myenv/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+collecting ... collected 10 items
+
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_short_flag PASSED [ 10%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_long_flag PASSED [ 20%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_invocable PASSED      [ 30%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_examples PASSED [ 40%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_wavelength_synonyms PASSED [ 50%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_output_synonyms PASSED [ 60%]
+tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F PASSED [ 70%]
+tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_hkl_file PASSED [ 80%]
+tests/test_at_cli_002.py::TestAT_CLI_002::test_data_ordering_fast_major PASSED [ 90%]
+tests/test_at_cli_002.py::TestAT_CLI_002::test_error_without_required_inputs PASSED [100%]
+
+============================= 10 passed in 41.69s ==============================
