@@ -1,0 +1,36 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.18, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/pytorch/bin/python3.10
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/nanoBragg
+configfile: pyproject.toml
+plugins: typeguard-2.13.3, anyio-4.9.0
+collecting ... collected 2 items
+
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_beam_wavelength FAILED [ 50%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_beam_fluence FAILED [100%]
+
+=================================== FAILURES ===================================
+_________ TestTier2GradientCorrectness.test_gradcheck_beam_wavelength __________
+tests/test_suite.py:1880: in test_gradcheck_beam_wavelength
+    assert torch.autograd.gradcheck(
+../../miniconda3/envs/pytorch/lib/python3.10/site-packages/torch/autograd/gradcheck.py:2056: in gradcheck
+    return _gradcheck_helper(**args)
+../../miniconda3/envs/pytorch/lib/python3.10/site-packages/torch/autograd/gradcheck.py:2078: in _gradcheck_helper
+    func_out = func(*tupled_inputs)
+tests/test_suite.py:1868: in wavelength_loss_fn
+    simulator = Simulator(
+E   TypeError: Simulator.__init__() got an unexpected keyword argument 'detector_config'
+___________ TestTier2GradientCorrectness.test_gradcheck_beam_fluence ___________
+tests/test_suite.py:1958: in test_gradcheck_beam_fluence
+    assert torch.autograd.gradcheck(
+../../miniconda3/envs/pytorch/lib/python3.10/site-packages/torch/autograd/gradcheck.py:2056: in gradcheck
+    return _gradcheck_helper(**args)
+../../miniconda3/envs/pytorch/lib/python3.10/site-packages/torch/autograd/gradcheck.py:2078: in _gradcheck_helper
+    func_out = func(*tupled_inputs)
+tests/test_suite.py:1946: in fluence_loss_fn
+    simulator = Simulator(
+E   TypeError: Simulator.__init__() got an unexpected keyword argument 'detector_config'
+=========================== short test summary info ============================
+FAILED tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_beam_wavelength - TypeError: Simulator.__init__() got an unexpected keyword argument 'detector_config'
+FAILED tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_beam_fluence - TypeError: Simulator.__init__() got an unexpected keyword argument 'detector_config'
+============================== 2 failed in 1.01s ===============================

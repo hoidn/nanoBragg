@@ -1,0 +1,25 @@
+[
+  {
+    "size": 4096,
+    "pixels": 16777216,
+    "c_time": 0.5491814613342285,
+    "py_time_cold": 2.79441237449646,
+    "py_time_warm": 1.13789701461792,
+    "py_setup_cold": 0.16918659210205078,
+    "py_setup_warm": 1.430511474609375e-06,
+    "py_sim_cold": 2.5867278575897217,
+    "py_sim_warm": 1.099743127822876,
+    "c_mem": 0.0,
+    "py_mem_cold": 430.86328125,
+    "py_mem_warm": -0.2265625,
+    "speedup_cold": 0.19652842448967056,
+    "speedup_warm": 0.4826284402535595,
+    "setup_speedup": 118270.0,
+    "correlation_cold": 0.9999999998399844,
+    "correlation_warm": 0.9999999998399844,
+    "cache_hit_cold": false,
+    "cache_hit_warm": true,
+    "compile_mode_cold": "eager",
+    "compile_mode_warm": "eager"
+  }
+]

@@ -253,24 +253,26 @@ def write_smv(
     # Convert image data based on data type
     if data_type == "unsigned_short":
         # Apply scale and ADC offset, clip to uint16 range
-        scaled_data = image_data * scale + adc_offset
+        # Per spec-a-cli.md line 181: integer pixel = floor(min(65535, float*scale + adc))
+        # Use float64 for scaling to match Python's int() behavior and avoid float32 rounding errors
+        scaled_data = image_data.astype(np.float64) * scale + adc_offset
         clipped_data = np.clip(scaled_data, 0, 65535)
-        output_data = np.round(clipped_data).astype(np.uint16)
+        output_data = np.floor(clipped_data).astype(np.uint16)
         dtype_str = "u2"
     elif data_type == "signed_short":
         scaled_data = image_data * scale + adc_offset
         clipped_data = np.clip(scaled_data, -32768, 32767)
-        output_data = np.round(clipped_data).astype(np.int16)
+        output_data = np.floor(clipped_data).astype(np.int16)
         dtype_str = "i2"
     elif data_type == "unsigned_int":
         scaled_data = image_data * scale + adc_offset
         clipped_data = np.clip(scaled_data, 0, 2**32-1)
-        output_data = np.round(clipped_data).astype(np.uint32)
+        output_data = np.floor(clipped_data).astype(np.uint32)
         dtype_str = "u4"
     elif data_type == "signed_int":
         scaled_data = image_data * scale + adc_offset
         clipped_data = np.clip(scaled_data, -2**31, 2**31-1)
-        output_data = np.round(clipped_data).astype(np.int32)
+        output_data = np.floor(clipped_data).astype(np.int32)
         dtype_str = "i4"
     elif data_type == "float":
         output_data = image_data.astype(np.float32)

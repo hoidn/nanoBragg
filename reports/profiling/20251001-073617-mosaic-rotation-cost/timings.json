@@ -1,0 +1,16 @@
+{
+  "mean_ms": 0.28323902282863855,
+  "min_ms": 0.2766030374914408,
+  "max_ms": 0.2956939861178398,
+  "std_ms": 0.004806503219170301,
+  "iterations": 100,
+  "mosaic_domains": 10,
+  "mosaic_spread_deg": 1.0,
+  "device": "cpu",
+  "dtype": "torch.float32",
+  "matrix_shape": [
+    10,
+    3,
+    3
+  ]
+}

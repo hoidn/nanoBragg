@@ -37,11 +37,14 @@ def test_beam_pivot_keeps_beam_indices_and_alignment():
     )
     d = Detector(cfg, dtype=torch.float64)
 
-    # 1) Direct beam fractional indices must be equal to beam_center_s and beam_center_f
-    # (Note: MOSFLM +0.5 offset is already included in d.beam_center_s/f)
+    # 1) Direct beam fractional indices must account for MOSFLM +0.5 pixel offset
+    # CRITICAL: d.beam_center_s/f store user input (51.2mm / 0.1mm = 512.0 pixels).
+    # The MOSFLM +0.5 offset is applied in pix0_vector calculation (per AT-GEO-001 fix),
+    # so beam indices will be 512.5, not 512.0.
     s0, f0 = _beam_indices(d)
-    assert torch.allclose(s0, d.beam_center_s, atol=1e-12)
-    assert torch.allclose(f0, d.beam_center_f, atol=1e-12)
+    expected_beam_idx = d.beam_center_s + 0.5  # MOSFLM offset applied in geometry
+    assert torch.allclose(s0, expected_beam_idx, atol=1e-12)
+    assert torch.allclose(f0, expected_beam_idx, atol=1e-12)
 
     # 2) Rotating two-theta under BEAM pivot preserves those indices
     d.config.detector_twotheta_deg = 15.0
@@ -70,10 +73,13 @@ def test_sample_pivot_moves_beam_indices_with_twotheta():
     )
     d = Detector(cfg, dtype=torch.float64)
 
-    # At zero rotation with center-based indexing, beam indices equal beam centers
+    # At zero rotation with center-based indexing, beam indices include MOSFLM +0.5 offset
+    # CRITICAL: d.beam_center_s/f store user input (512.0 pixels).
+    # Beam indices will be 512.5 due to MOSFLM offset applied in pix0 (per AT-GEO-001 fix).
     s0, f0 = _beam_indices(d)
-    assert torch.allclose(s0, d.beam_center_s, atol=1e-12)
-    assert torch.allclose(f0, d.beam_center_f, atol=1e-12)
+    expected_beam_idx = d.beam_center_s + 0.5  # MOSFLM offset
+    assert torch.allclose(s0, expected_beam_idx, atol=1e-12)
+    assert torch.allclose(f0, expected_beam_idx, atol=1e-12)
 
     # Under SAMPLE pivot, changing two-theta *moves* the beam's (s,f) indices
     d.config.detector_twotheta_deg = 15.0

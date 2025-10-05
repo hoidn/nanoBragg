@@ -44,6 +44,8 @@ dev = [
 [tool.pytest.ini_options]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "parallel_validation: marks tests that validate C-PyTorch equivalence",
+    "requires_c_binary: marks tests that require NB_C_BIN environment variable pointing to C binary",
 ]
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]

@@ -34,14 +34,20 @@ def get_memory_usage():
 
 
 # PERF-PYTORCH-005: Global simulator cache for reuse across runs
-# Key: (spixels, fpixels, oversample, n_sources, device_type)
+# Key: (spixels, fpixels, oversample, n_sources, device_type, compile_mode)
 _simulator_cache = {}
 
 
-def get_cache_key(detpixels, oversample, n_sources, device):
-    """Generate cache key for simulator reuse."""
+def get_cache_key(detpixels, oversample, n_sources, device, compile_enabled):
+    """
+    Generate cache key for simulator reuse.
+
+    Includes compile_mode (PERF-PYTORCH-004 Plan B7) to prevent compiled/eager
+    simulators from bleeding across mode switches.
+    """
     device_type = device if isinstance(device, str) else str(device)
-    return (detpixels, detpixels, oversample, n_sources, device_type)
+    compile_mode = 'compiled' if compile_enabled else 'eager'
+    return (detpixels, detpixels, oversample, n_sources, device_type, compile_mode)
 
 
 def run_pytorch_timed(args, output_file, device='cpu', use_cache=True, enable_profiler=False,
@@ -107,8 +113,19 @@ def run_pytorch_timed(args, output_file, device='cpu', use_cache=True, enable_pr
     timings['device'] = str(device_obj)
     timings['cache_hit'] = False
 
+    # PERF-PYTORCH-004 Plan B7: Push/pop NANOBRAGG_DISABLE_COMPILE safely
+    # Store prior value to restore after simulator creation
+    prior_compile_env = os.environ.get('NANOBRAGG_DISABLE_COMPILE')
+    compile_enabled = not disable_compile
+
+    # Set compile mode and record in metadata
+    timings['compile_mode'] = 'compiled' if compile_enabled else 'eager'
+    if disable_compile:
+        os.environ['NANOBRAGG_DISABLE_COMPILE'] = '1'
+
     # PERF-PYTORCH-005: Check cache before creating new simulator
-    cache_key = get_cache_key(detpixels, oversample, n_sources, device_obj.type)
+    # Cache key now includes compile mode to prevent mode bleed
+    cache_key = get_cache_key(detpixels, oversample, n_sources, device_obj.type, compile_enabled)
 
     start = time.time()
     if use_cache and cache_key in _simulator_cache:
@@ -124,12 +141,7 @@ def run_pytorch_timed(args, output_file, device='cpu', use_cache=True, enable_pr
         detector = Detector(detector_config, device=device_obj)
 
         # CRITICAL: Pass device to Simulator to ensure incident_beam_direction lives on correct device
-        # Disable compile if requested (for eager-mode profiling)
-        if disable_compile:
-            os.environ['NB_DISABLE_COMPILE'] = '1'
         simulator = Simulator(crystal, detector, crystal_config, beam_config, device=device_obj)
-        if disable_compile and 'NB_DISABLE_COMPILE' in os.environ:
-            del os.environ['NB_DISABLE_COMPILE']
 
         # For GPU, warm-up run to trigger JIT compilation
         if device_obj.type == 'cuda':
@@ -141,6 +153,15 @@ def run_pytorch_timed(args, output_file, device='cpu', use_cache=True, enable_pr
         # Cache the simulator for reuse
         if use_cache:
             _simulator_cache[cache_key] = simulator
+
+    # PERF-PYTORCH-004 Plan B7: Restore prior NANOBRAGG_DISABLE_COMPILE value
+    if prior_compile_env is None:
+        # Was not set before, remove if we set it
+        if 'NANOBRAGG_DISABLE_COMPILE' in os.environ:
+            del os.environ['NANOBRAGG_DISABLE_COMPILE']
+    else:
+        # Restore original value
+        os.environ['NANOBRAGG_DISABLE_COMPILE'] = prior_compile_env
 
     # Run simulation (the actual timed run)
     start = time.time()
@@ -223,7 +244,8 @@ def main():
     parser.add_argument('--keep-artifacts', action='store_true',
                         help='Keep profiler trace files in output directory')
     parser.add_argument('--disable-compile', action='store_true',
-                        help='Disable torch.compile for eager-mode profiling')
+                        help='Disable torch.compile for eager-mode profiling (sets NANOBRAGG_DISABLE_COMPILE=1; '
+                             'invalidates simulator cache so compiled/eager modes do not bleed)')
     args = parser.parse_args()
 
     # Parse sizes from CLI
@@ -412,6 +434,8 @@ def main():
                     'correlation_warm': correlation_warm,
                     'cache_hit_cold': py_timings_cold['cache_hit'],
                     'cache_hit_warm': py_timings_warm['cache_hit'],
+                    'compile_mode_cold': py_timings_cold.get('compile_mode', 'compiled'),
+                    'compile_mode_warm': py_timings_warm.get('compile_mode', 'compiled'),
                 })
 
     # Summary and analysis

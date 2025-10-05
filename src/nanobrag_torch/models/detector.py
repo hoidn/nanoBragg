@@ -81,16 +81,12 @@ class Detector:
         from ..config import DetectorConvention
 
         # Calculate pixel coordinates from mm values
-        # NOTE: The MOSFLM +0.5 pixel offset is already included in config.beam_center_s/f
-        # by DetectorConfig.__post_init__ (lines 259-261), so we do NOT add it here.
+        # NOTE: MOSFLM +0.5 pixel offset is already applied in DetectorConfig.__post_init__()
+        # when beam_center is auto-calculated. When beam_center is explicitly provided by user,
+        # no offset should be added (the user's value is taken literally).
+        # See DetectorConfig.__post_init__() lines 255-261 for MOSFLM offset handling.
         beam_center_s_pixels = config.beam_center_s / config.pixel_size_mm
         beam_center_f_pixels = config.beam_center_f / config.pixel_size_mm
-
-        # The convention-specific offsets are already applied in DetectorConfig.__post_init__
-        # nanoBragg.c lines 1218-1234:
-        #   MOSFLM: beam_center_mm includes +0.5 pixel worth of offset
-        #   DENZO/XDS/DIALS/ADXV/CUSTOM: No offset
-        # No additional offset needed here.
 
         # Convert to tensors on proper device
         if isinstance(beam_center_s_pixels, torch.Tensor):
@@ -158,6 +154,8 @@ class Detector:
 
         c = self.config
         # Check all basic parameters
+        # Note: beam_center for MOSFLM defaults to 51.25 per spec formula: (detsize + pixel)/2
+        # This represents Xbeam/Ybeam (before F/S mapping which adds another +0.5 pixel)
         basic_check = (
             c.distance_mm == 100.0
             and c.pixel_size_mm == 0.1
@@ -497,14 +495,17 @@ class Detector:
             # Therefore, the simple formula Fbeam = beam_center_f * pixel_size is correct!
 
             # Direct mapping: no axis swap needed
-            # CRITICAL: For MOSFLM, apply +0.5 pixel offset to convert from user-provided beam_center
-            # (Xbeam/Ybeam) to internal Fbeam/Sbeam. This offset is part of the MOSFLM convention.
+            # For MOSFLM convention, ALWAYS add +0.5 pixel offset per spec-a-core.md line 72:
+            # "Fbeam = Ybeam + 0.5·pixel; Sbeam = Xbeam + 0.5·pixel"
+            # This is a convention mapping rule that applies regardless of whether beam_center
+            # was auto-calculated or explicitly provided.
             if self.config.detector_convention == DetectorConvention.MOSFLM:
-                # Add +0.5 pixel offset for MOSFLM convention
+                # beam_center_f and beam_center_s are in pixels
+                # Add +0.5 pixel offset before converting to meters
                 Fbeam = (self.beam_center_f + 0.5) * self.pixel_size
                 Sbeam = (self.beam_center_s + 0.5) * self.pixel_size
             else:
-                # Other conventions: use beam centers as-is
+                # Other conventions: no offset
                 Fbeam = self.beam_center_f * self.pixel_size
                 Sbeam = self.beam_center_s * self.pixel_size
 
@@ -567,12 +568,15 @@ class Detector:
             # For consistency with BEAM pivot mode:
             # - Fclose (fast coord) ← beam_center_f (fast param)
             # - Sclose (slow coord) ← beam_center_s (slow param)
-            # NOTE: The beam centers already have the +0.5 offset from __init__ for MOSFLM!
 
-            # The beam centers already include the MOSFLM +0.5 pixel offset from __init__
-            # Use consistent mapping with BEAM pivot mode: no axis swap
-            Fclose = self.beam_center_f * self.pixel_size  # F (fast coord) ← beam_f (fast param)
-            Sclose = self.beam_center_s * self.pixel_size  # S (slow coord) ← beam_s (slow param)
+            # For MOSFLM convention, ALWAYS add +0.5 pixel offset (same as BEAM pivot mode)
+            # This is the convention mapping rule from spec-a-core.md line 72
+            if self.config.detector_convention == DetectorConvention.MOSFLM:
+                Fclose = (self.beam_center_f + 0.5) * self.pixel_size
+                Sclose = (self.beam_center_s + 0.5) * self.pixel_size
+            else:
+                Fclose = self.beam_center_f * self.pixel_size
+                Sclose = self.beam_center_s * self.pixel_size
 
             # Compute pix0 BEFORE rotations using close_distance if specified
             # When close_distance is provided, use it directly for SAMPLE pivot
@@ -921,15 +925,12 @@ class Detector:
         Sbeam_computed = torch.dot(R, self.sdet_vec)
 
         # Get original beam center in meters
-        # CRITICAL: For MOSFLM, the beam centers stored are user-provided (Xbeam/Ybeam),
-        # but the pix0_vector calculation adds +0.5 pixel to get Fbeam/Sbeam.
-        # We need to apply the same offset here for consistent comparison.
+        # For MOSFLM, we must add +0.5 pixel offset per convention (same as in _calculate_pix0_vector)
+        # This ensures consistent comparison with the computed beam center
         if self.config.detector_convention == DetectorConvention.MOSFLM:
-            # Add +0.5 pixel offset to match what's used in pix0_vector calculation
             Fbeam_original = (self.beam_center_f + 0.5) * self.pixel_size
             Sbeam_original = (self.beam_center_s + 0.5) * self.pixel_size
         else:
-            # Other conventions: use beam centers as-is
             Fbeam_original = self.beam_center_f * self.pixel_size
             Sbeam_original = self.beam_center_s * self.pixel_size
 

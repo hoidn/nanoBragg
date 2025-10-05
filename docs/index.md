@@ -18,7 +18,8 @@ These are the core, living documents that guide the project.
 * **[README.md](../README.md)** - The main project entry point.
 * **[README_PYTORCH.md](../README_PYTORCH.md)** - Comprehensive user guide for the PyTorch implementation, including CLI usage, parallel comparison tools, and visualization.
 * **[PROJECT_STATUS.md](../PROJECT_STATUS.md)** - Tracks the current active development initiative.
-* **[loop.sh](../loop.sh)** - Supervisory automation harness for Claude loops; treat as a protected asset (do **not** delete during hygiene passes).
+* **[loop.sh](../loop.sh)** - Ralph automation harness for Claude loops; treat as a protected asset (do **not** delete during hygiene passes).
+* **[supervisor.sh](../supervisor.sh)** - Galph automation harness for supervisor loops; treat as a protected asset (do **not** delete during hygiene passes).
 
 ### Architecture & Design (`docs/architecture/`)
 * **[Architecture Hub](./architecture/README.md)** - The central navigation point for all architectural documentation.

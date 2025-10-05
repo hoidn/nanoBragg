@@ -170,9 +170,13 @@ class TestAT_TOOLS_001_DualRunnerComparison:
     )
     def test_script_integration(self):
         """Test the full script execution."""
+        # Resolve script path relative to repo root (tests are run from temp dirs)
+        repo_root = Path(__file__).parent.parent
+        script_path = repo_root / 'scripts' / 'nb_compare.py'
+
         # Run with minimal arguments
         cmd = [
-            'python', 'scripts/nb_compare.py',
+            sys.executable, str(script_path),
             '--outdir', 'test_comparison',
             '--',
             '-default_F', '100',
@@ -183,8 +187,8 @@ class TestAT_TOOLS_001_DualRunnerComparison:
             '-floatfile', 'test.bin'
         ]
 
-        # Run the script
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        # Run the script from repo root to ensure proper path resolution
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(repo_root))
 
         # Check that it ran without critical errors per spec
         # Exit codes: 0=success, 1=usage error, 2=runner failure, 3=correlation<threshold, 4=shape mismatch, 5=I/O error

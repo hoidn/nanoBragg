@@ -101,19 +101,20 @@ class TestDetectorConventions:
         # Convert mm to pixels for comparison
         beam_center_pixels = beam_center_mm_s / pixel_size  # 500 pixels
 
-        # DENZO should store beam center as-is in pixels
-        # MOSFLM should add +0.5 pixel offset
-        expected_denzo = beam_center_pixels  # 500.0
-        expected_mosflm = beam_center_pixels + 0.5  # 500.5
+        # CRITICAL: Both DENZO and MOSFLM should store beam center as-is (user input) in pixels.
+        # The MOSFLM +0.5 pixel offset per spec-a-core.md line 72 ("Fbeam = Ybeam + 0.5·pixel")
+        # is a MAPPING formula applied in _calculate_pix0_vector, NOT in the stored attribute.
+        # See AT-GEO-001-MOSFLM-OFFSET fix (fix_plan.md lines 110-127).
+        expected_stored = beam_center_pixels  # 500.0 for both conventions
 
-        assert torch.allclose(detector_denzo.beam_center_s, torch.tensor(expected_denzo, dtype=torch.float64), atol=1e-6), \
-            f"DENZO beam_center_s should be {expected_denzo}, got {detector_denzo.beam_center_s}"
-        assert torch.allclose(detector_denzo.beam_center_f, torch.tensor(expected_denzo, dtype=torch.float64), atol=1e-6), \
-            f"DENZO beam_center_f should be {expected_denzo}, got {detector_denzo.beam_center_f}"
-        assert torch.allclose(detector_mosflm.beam_center_s, torch.tensor(expected_mosflm, dtype=torch.float64), atol=1e-6), \
-            f"MOSFLM beam_center_s should be {expected_mosflm}, got {detector_mosflm.beam_center_s}"
-        assert torch.allclose(detector_mosflm.beam_center_f, torch.tensor(expected_mosflm, dtype=torch.float64), atol=1e-6), \
-            f"MOSFLM beam_center_f should be {expected_mosflm}, got {detector_mosflm.beam_center_f}"
+        assert torch.allclose(detector_denzo.beam_center_s, torch.tensor(expected_stored, dtype=torch.float64), atol=1e-6), \
+            f"DENZO beam_center_s should be {expected_stored}, got {detector_denzo.beam_center_s}"
+        assert torch.allclose(detector_denzo.beam_center_f, torch.tensor(expected_stored, dtype=torch.float64), atol=1e-6), \
+            f"DENZO beam_center_f should be {expected_stored}, got {detector_denzo.beam_center_f}"
+        assert torch.allclose(detector_mosflm.beam_center_s, torch.tensor(expected_stored, dtype=torch.float64), atol=1e-6), \
+            f"MOSFLM beam_center_s should be {expected_stored} (offset applied in pix0 calc), got {detector_mosflm.beam_center_s}"
+        assert torch.allclose(detector_mosflm.beam_center_f, torch.tensor(expected_stored, dtype=torch.float64), atol=1e-6), \
+            f"MOSFLM beam_center_f should be {expected_stored} (offset applied in pix0 calc), got {detector_mosflm.beam_center_f}"
 
     def test_adxv_beam_direction(self):
         """Test ADXV uses beam along +Z axis."""

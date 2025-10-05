@@ -253,19 +253,23 @@ class DetectorConfig:
             detsize_f = self.fpixels * self.pixel_size_mm  # Total detector size in fast axis (mm)
 
             if self.detector_convention == DetectorConvention.MOSFLM:
-                # MOSFLM convention adds 0.5 pixel offset (per spec AT-GEO-001)
-                # For MOSFLM: beam_center = (detsize + pixel_size) / 2
+                # MOSFLM convention: Auto-calculated beam center includes +pixel_size in default formula
+                # Per spec-a-core.md line 71: "Default Xbeam = (detsize_s + pixel)/2, Ybeam = (detsize_f + pixel)/2"
+                # This represents Xbeam/Ybeam (user coordinates)
+                # The additional +0.5 pixel CONVENTION MAPPING (Fbeam = Ybeam + 0.5·pixel) is applied
+                # later in Detector._calculate_pix0_vector to get Fbeam/Sbeam (internal coordinates)
                 if self.beam_center_s is None:
                     self.beam_center_s = (detsize_s + self.pixel_size_mm) / 2.0
                 if self.beam_center_f is None:
                     self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
             elif self.detector_convention == DetectorConvention.DENZO:
-                # DENZO convention: Same as MOSFLM but NO +0.5 pixel offset
-                # For DENZO: beam_center = detsize / 2
+                # DENZO convention: Same default formula as MOSFLM
+                # Per C code line 1226: "if(isnan(Xbeam)) Xbeam = (detsize_s + pixel_size)/2.0"
+                # But DENZO mapping is different: Fbeam = Ybeam + 0.0*pixel (no additional offset)
                 if self.beam_center_s is None:
-                    self.beam_center_s = detsize_s / 2.0
+                    self.beam_center_s = (detsize_s + self.pixel_size_mm) / 2.0
                 if self.beam_center_f is None:
-                    self.beam_center_f = detsize_f / 2.0
+                    self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
             elif self.detector_convention == DetectorConvention.ADXV:
                 # ADXV convention: Different beam center mapping
                 # Per spec: Default Xbeam = (detsize_f + pixel)/2, Ybeam = (detsize_s - pixel)/2

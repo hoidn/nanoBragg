@@ -398,7 +398,7 @@ class Simulator:
         crystal_config: Optional[CrystalConfig] = None,
         beam_config: Optional[BeamConfig] = None,
         device=None,
-        dtype=torch.float32,
+        dtype=None,
         debug_config: Optional[dict] = None,
     ):
         """
@@ -410,7 +410,7 @@ class Simulator:
             crystal_config: Configuration for crystal rotation parameters (phi, mosaic)
             beam_config: Beam configuration (optional, for future use)
             device: PyTorch device (cpu/cuda)
-            dtype: PyTorch data type
+            dtype: PyTorch data type (if None, inferred from crystal/detector; defaults to float32)
             debug_config: Debug configuration with printout, printout_pixel, trace_pixel options
         """
         self.crystal = crystal
@@ -448,6 +448,17 @@ class Simulator:
             self.device = temp.device
         else:
             self.device = torch.device("cpu")
+
+        # Infer dtype from crystal or detector if not explicitly provided
+        # This ensures dtype consistency when components are created with specific precision
+        if dtype is None:
+            if hasattr(crystal, 'dtype'):
+                dtype = crystal.dtype
+            elif hasattr(detector, 'dtype'):
+                dtype = detector.dtype
+            else:
+                # Default to float32 (arch.md §14 default precision)
+                dtype = torch.float32
         self.dtype = dtype
 
         # Store debug configuration
@@ -487,7 +498,11 @@ class Simulator:
                 [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
             )
         # PERF-PYTORCH-006: Store wavelength as tensor with correct dtype
-        self.wavelength = torch.tensor(self.beam_config.wavelength_A, device=self.device, dtype=self.dtype)
+        # Handle tensor-or-scalar inputs to preserve gradients (Core Rule #9)
+        if isinstance(self.beam_config.wavelength_A, torch.Tensor):
+            self.wavelength = self.beam_config.wavelength_A.to(device=self.device, dtype=self.dtype)
+        else:
+            self.wavelength = torch.tensor(self.beam_config.wavelength_A, device=self.device, dtype=self.dtype)
 
         # Physical constants (from nanoBragg.c ~line 240)
         # PERF-PYTORCH-006: Store as tensors with correct dtype to avoid implicit float64 upcasting
@@ -495,7 +510,11 @@ class Simulator:
             7.94079248018965e-30, device=self.device, dtype=self.dtype  # classical electron radius squared (meters squared)
         )
         # Use fluence from beam config (AT-FLU-001)
-        self.fluence = torch.tensor(self.beam_config.fluence, device=self.device, dtype=self.dtype)
+        # Handle tensor-or-scalar inputs to preserve gradients (Core Rule #9)
+        if isinstance(self.beam_config.fluence, torch.Tensor):
+            self.fluence = self.beam_config.fluence.to(device=self.device, dtype=self.dtype)
+        else:
+            self.fluence = torch.tensor(self.beam_config.fluence, device=self.device, dtype=self.dtype)
         # Polarization setup from beam config
         # PERF-PYTORCH-006: Store as tensor with correct dtype
         kahn_value = self.beam_config.polarization_factor if not self.beam_config.nopolar else 0.0
@@ -677,7 +696,8 @@ class Simulator:
 
         C-Code Implementation Reference (from nanoBragg.c, lines 2993-3151):
         The vectorized implementation replaces these nested loops. The outer `source`
-        loop is future work for handling beam divergence and dispersion.
+        loop is implemented via the `incident_beam_direction`, `wavelength`, and
+        `source_weights` parameters, which handle beam divergence and dispersion.
 
         ```c
                         /* loop over sources now */
@@ -1153,9 +1173,19 @@ class Simulator:
                     coords_ang = coords * 1e10
                     print(f"  Position (Å): ({coords_ang[0].item():.3f}, {coords_ang[1].item():.3f}, {coords_ang[2].item():.3f})")
                 if omega_pixel is not None:
-                    print(f"  Solid angle: {omega_pixel[target_slow, target_fast].item():.6e}")
+                    # Handle both scalar and 2D tensor cases
+                    if omega_pixel.dim() == 0:
+                        omega_val = omega_pixel.item()
+                    else:
+                        omega_val = omega_pixel[target_slow, target_fast].item()
+                    print(f"  Solid angle: {omega_val:.6e}")
                 if polarization is not None:
-                    print(f"  Polarization: {polarization[target_slow, target_fast].item():.4f}")
+                    # Handle both scalar and 2D tensor cases
+                    if polarization.dim() == 0:
+                        polar_val = polarization.item()
+                    else:
+                        polar_val = polarization[target_slow, target_fast].item()
+                    print(f"  Polarization: {polar_val:.4f}")
         elif self.printout:
             # General verbose output - print statistics for all pixels
             print(f"\n=== Debug Output ===")
@@ -1270,9 +1300,19 @@ class Simulator:
 
                 # Trace factors
                 if omega_pixel is not None:
-                    print(f"TRACE: Omega (solid angle) = {omega_pixel[target_slow, target_fast].item():.12e}")
+                    # Handle both scalar and 2D tensor cases
+                    if omega_pixel.dim() == 0:
+                        omega_val = omega_pixel.item()
+                    else:
+                        omega_val = omega_pixel[target_slow, target_fast].item()
+                    print(f"TRACE: Omega (solid angle) = {omega_val:.12e}")
                 if polarization is not None:
-                    print(f"TRACE: Polarization = {polarization[target_slow, target_fast].item():.12e}")
+                    # Handle both scalar and 2D tensor cases
+                    if polarization.dim() == 0:
+                        polar_val = polarization.item()
+                    else:
+                        polar_val = polarization[target_slow, target_fast].item()
+                    print(f"TRACE: Polarization = {polar_val:.12e}")
 
                 print(f"TRACE: r_e^2 = {self.r_e_sqr:.12e}")
                 print(f"TRACE: Fluence = {self.fluence:.12e}")

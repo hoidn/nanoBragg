@@ -767,8 +767,9 @@ class Crystal:
         C-Code Implementation Reference (from nanoBragg.c):
 
         ---
-        FUTURE WORK: Initial Orientation (`-misset`), applied once (lines 1521-1527):
-        This rotation should be applied first, before the phi and mosaic rotations.
+        Initial Orientation (`-misset`), applied once (lines 1521-1527):
+        This rotation is applied first, before phi and mosaic rotations, during
+        Crystal initialization (see lines 593-612 in this file).
         ```c
         /* apply any missetting angle, if not already done */
         if(misset[0] > 0.0)

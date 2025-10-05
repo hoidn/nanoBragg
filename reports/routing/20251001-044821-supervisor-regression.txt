@@ -1,0 +1,90 @@
+Commit: 81abe16d61740d4c08698d6de040ce32ff93f777
+#!/usr/bin/env bash
+set -euo pipefail
+
+
+# Prepare a timestamped log for supervisor runs.
+mkdir -p tmp
+TS=$(date '+%Y%m%d_%H%M%S')
+LOG_FILE="tmp/supervisorlog${TS}.txt"
+ln -sf "${LOG_FILE}" tmp/supervisorlog-latest.txt
+
+CODEX_CMD="codex"
+
+# Run the supervisor prompt repeatedly to manage Ralph's loops.
+for i in {1..20}; do
+  #git pull
+  ${CODEX_CMD} exec -m gpt-5-codex -c model_reasoning_effort="high" --dangerously-bypass-approvals-and-sandbox < prompts/supervisor.md | tee -a "${LOG_FILE}"
+done
+
+
+=== Guard Gaps (diff vs loop.sh @853cf08) ===
+
+--- -	2025-10-01 04:48:30.065452970 -0700
++++ supervisor.sh	2025-09-30 23:33:58.482861856 -0700
+@@ -1,34 +1,17 @@
+ #!/usr/bin/env bash
+ set -euo pipefail
+ 
+-# --- Activate the conda environment required for Claude automation ---
+-source "$(conda info --base)/etc/profile.d/conda.sh"
+-conda activate pytorch
+-# --------------------------------------------------------------------
+-
+-# Sync with remote before starting work
+-timeout 30 git pull --rebase || {
+-  echo "WARNING: git pull --rebase failed or timed out. Proceeding with local state."
+-}
+ 
++# Prepare a timestamped log for supervisor runs.
+ mkdir -p tmp
+ TS=$(date '+%Y%m%d_%H%M%S')
+-LOG_FILE="tmp/claudelog${TS}.txt"
+-ln -sf "${LOG_FILE}" tmp/claudelog-latest.txt
+-
+-CLAUDE_CMD="/home/ollie/.claude/local/claude"
++LOG_FILE="tmp/supervisorlog${TS}.txt"
++ln -sf "${LOG_FILE}" tmp/supervisorlog-latest.txt
+ 
+-# Execute debug prompt once per invocation
+-# Note: Using debug.md per routing guard while AT parity suite incomplete
+-cat prompts/debug.md | "${CLAUDE_CMD}" -p --dangerously-skip-permissions --verbose --output-format stream-json | tee -a "${LOG_FILE}"
++CODEX_CMD="codex"
+ 
+-# Conditional push: only if there are commits to push and no errors occurred
+-if git diff --quiet origin/$(git rev-parse --abbrev-ref HEAD)..HEAD 2>/dev/null; then
+-  echo "No new commits to push."
+-else
+-  echo "Pushing commits to remote..."
+-  git push || {
+-    echo "WARNING: git push failed. Please push manually."
+-    exit 1
+-  }
+-fi
++# Run the supervisor prompt repeatedly to manage Ralph's loops.
++for i in {1..20}; do
++  #git pull
++  ${CODEX_CMD} exec -m gpt-5-codex -c model_reasoning_effort="high" --dangerously-bypass-approvals-and-sandbox < prompts/supervisor.md | tee -a "${LOG_FILE}"
++done
+
+
+=== Identified Guard Violations ===
+
+1. MISSING TIMEOUT GUARD: supervisor.sh has no timeout protection on git pull --rebase
+   - loop.sh@853cf08 has: timeout 30 git pull --rebase || { ... fallback ... }
+   - supervisor.sh has: commented-out '#git pull' inside loop (line 16)
+   - Risk: Automation can hang on network issues or rebase conflicts
+
+2. MISSING SINGLE-RUN FLOW: supervisor.sh uses for-loop (1..20 iterations) 
+   - loop.sh@853cf08 executes prompt exactly once
+   - supervisor.sh runs 20 iterations unconditionally (line 15)
+   - Risk: Runaway loops consuming resources/quota without human oversight
+
+3. MISSING CONDITIONAL PUSH: supervisor.sh has no push guard at all
+   - loop.sh@853cf08 checks for commits and command success before push
+   - supervisor.sh has no push logic, commented-out git pull
+   - Risk: Work accumulated locally or pushes on failure states
+
+4. WRONG CONDA ENV: supervisor.sh activates base, loop.sh activates pytorch
+   - Note: Actually supervisor.sh has NO conda activation; diff shows loop.sh added it
+

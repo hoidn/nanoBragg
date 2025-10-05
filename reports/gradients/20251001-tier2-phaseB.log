@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.18, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/pytorch/bin/python3.10
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/nanoBragg
+configfile: pyproject.toml
+plugins: typeguard-2.13.3, anyio-4.9.0
+collecting ... collected 1 item
+
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_misset_rot_x PASSED [100%]
+
+============================== 1 passed in 1.23s ===============================

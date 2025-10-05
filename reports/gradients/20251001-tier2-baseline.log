@@ -1,0 +1,15 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.18, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/pytorch/bin/python3.10
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/nanoBragg
+configfile: pyproject.toml
+plugins: typeguard-2.13.3, anyio-4.9.0
+collecting ... collected 5 items
+
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_crystal_params PASSED [ 20%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_detector_params PASSED [ 40%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_phi_rotation SKIPPEDted 3, got 2)) [ 60%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_mosaic_spread SKIPPEDack (expected 3, got 2)) [ 80%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradient_numerical_stability SKIPPEDexpected 3, got 2)) [100%]
+
+========================= 2 passed, 3 skipped in 1.29s =========================
