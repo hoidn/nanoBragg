@@ -54,6 +54,7 @@ def main() -> int:
     ap.add_argument("--claude-cmd", type=str, default=os.getenv("CLAUDE_CMD", "/home/ollie/.claude/local/claude"))
     ap.add_argument("--prompt", type=str, choices=["main", "debug"], default=os.getenv("LOOP_PROMPT", "main"), help="Select which prompt to run (default: main)")
     ap.add_argument("--branch", type=str, default=os.getenv("ORCHESTRATION_BRANCH", ""))
+    ap.add_argument("--logdir", type=Path, default=Path("logs"), help="Base directory for per-iteration logs (default: logs/)")
     args, unknown = ap.parse_known_args()
 
     log_path = _log_file("claudelog")
@@ -73,8 +74,21 @@ def main() -> int:
     safe_pull(logp)
 
     for _ in range(args.sync_loops):
+        # Compute per-iteration log path (branch/prompt aware)
+        safe_pull(lambda m: None)
+        st_probe = OrchestrationState.read(str(args.state_file))
+        itnum = st_probe.iteration
+        ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        iter_log = args.logdir / branch_target.replace('/', '-') / "ralph" / f"iter-{itnum:05d}_{ts}_{args.prompt}.log"
+
         if args.sync_via_git:
             args.state_file.parent.mkdir(parents=True, exist_ok=True)
+            # Logger bound to this iteration
+            def logp(msg: str) -> None:
+                iter_log.parent.mkdir(parents=True, exist_ok=True)
+                with open(iter_log, "a", encoding="utf-8") as f:
+                    f.write(msg + "\n")
+
             logp("[SYNC] Waiting for expected_actor=ralph...")
             start = time.time()
             while True:
@@ -99,7 +113,7 @@ def main() -> int:
         if not prompt_path.exists():
             logp(f"ERROR: prompt file not found: {prompt_path}")
             return 2
-        rc = tee_run([args.claude_cmd, "-p", "--dangerously-skip-permissions", "--verbose", "--output-format", "stream-json"], prompt_path, log_path)
+        rc = tee_run([args.claude_cmd, "-p", "--dangerously-skip-permissions", "--verbose", "--output-format", "stream-json"], prompt_path, iter_log)
 
         # Complete handoff
         safe_pull(logp)

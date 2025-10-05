@@ -58,13 +58,16 @@ def main() -> int:
     ap.add_argument("--branch", type=str, default=os.getenv("ORCHESTRATION_BRANCH", ""), help="Expected Git branch to operate on")
     ap.add_argument("--verbose", action="store_true", help="Print state changes to console during polling")
     ap.add_argument("--heartbeat-secs", type=int, default=int(os.getenv("HEARTBEAT_SECS", "0")), help="Console heartbeat interval while polling (0=off)")
+    ap.add_argument("--logdir", type=Path, default=Path("logs"), help="Base directory for per-iteration logs (default: logs/)")
     args, unknown = ap.parse_known_args()
 
-    log_path = _log_file("supervisorlog")
-
-    def logp(msg: str) -> None:
-        with open(log_path, "a", encoding="utf-8") as f:
-            f.write(msg + "\n")
+    # per-iteration logger factory
+    def make_logger(path: Path):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        def _log(msg: str) -> None:
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(msg + "\n")
+        return _log
 
     # Branch guard (if provided) and target branch resolution
     if args.branch:
@@ -82,10 +85,20 @@ def main() -> int:
         return 0
 
     # Sync via Git
-    logp(f"Running supervisor in SYNC via git mode for {args.sync_loops} iteration(s)")
+    # session notice (to console only)
+    print(f"[sync] supervisor: SYNC via git for {args.sync_loops} iteration(s)")
     args.state_file.parent.mkdir(parents=True, exist_ok=True)
 
     for _ in range(args.sync_loops):
+        # Determine iteration-specific log file
+        # Use current state when available to derive iteration number
+        safe_pull(lambda m: None)
+        st_probe = OrchestrationState.read(str(args.state_file))
+        itnum = st_probe.iteration
+        ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        iter_log = args.logdir / branch_target.replace('/', '-') / "galph" / f"iter-{itnum:05d}_{ts}.log"
+        logp = make_logger(iter_log)
+
         safe_pull(logp)
 
         # Initialize state if missing
@@ -99,27 +112,30 @@ def main() -> int:
             push_to(branch_target, logp)
 
         # Wait for our turn
-        logp("Waiting for expected_actor=galph...")
-        start = time.time()
-        last_hb = start
-        prev_state = None
-        while True:
-            safe_pull(logp)
-            st = OrchestrationState.read(str(args.state_file))
-            cur_state = (st.expected_actor, st.status, st.iteration)
-            if args.verbose and cur_state != prev_state:
-                print(f"[sync] state: actor={st.expected_actor} status={st.status} iter={st.iteration}")
-                prev_state = cur_state
-            if st.expected_actor == "galph":
-                break
-            if args.max_wait_sec and (time.time() - start) > args.max_wait_sec:
-                logp("Timeout waiting for galph turn")
-                return 1
-            if args.heartbeat_secs and (time.time() - last_hb) >= args.heartbeat_secs:
-                elapsed = int(time.time() - start)
-                print(f"[sync] waiting for turn (galph)… {elapsed}s elapsed")
-                last_hb = time.time()
-            time.sleep(args.poll_interval)
+            logp("Waiting for expected_actor=galph...")
+            start = time.time()
+            last_hb = start
+            prev_state = None
+            while True:
+                safe_pull(logp)
+                st = OrchestrationState.read(str(args.state_file))
+                cur_state = (st.expected_actor, st.status, st.iteration)
+                if args.verbose and cur_state != prev_state:
+                    print(f"[sync] state: actor={st.expected_actor} status={st.status} iter={st.iteration}")
+                    logp(f"[sync] state: actor={st.expected_actor} status={st.status} iter={st.iteration}")
+                    prev_state = cur_state
+                if st.expected_actor == "galph":
+                    break
+                if args.max_wait_sec and (time.time() - start) > args.max_wait_sec:
+                    logp("Timeout waiting for galph turn")
+                    return 1
+                if args.heartbeat_secs and (time.time() - last_hb) >= args.heartbeat_secs:
+                    elapsed = int(time.time() - start)
+                    msg = f"[sync] waiting for turn (galph)… {elapsed}s elapsed"
+                    print(msg)
+                    logp(msg)
+                    last_hb = time.time()
+                time.sleep(args.poll_interval)
 
         # Mark running
         st.status = "running-galph"
@@ -129,7 +145,7 @@ def main() -> int:
         push_to(branch_target, logp)
 
         # Execute one supervisor iteration
-        rc = tee_run([args.codex_cmd, "exec", "-m", "gpt-5-codex", "-c", "model_reasoning_effort=high", "--dangerously-bypass-approvals-and-sandbox"], Path("prompts/supervisor.md"), log_path)
+        rc = tee_run([args.codex_cmd, "exec", "-m", "gpt-5-codex", "-c", "model_reasoning_effort=high", "--dangerously-bypass-approvals-and-sandbox"], Path("prompts/supervisor.md"), iter_log)
 
         safe_pull(logp)
         sha = short_head()
@@ -162,13 +178,16 @@ def main() -> int:
             cur_state2 = (st2.expected_actor, st2.status, st2.iteration)
             if args.verbose and cur_state2 != prev_state2:
                 print(f"[sync] state: actor={st2.expected_actor} status={st2.status} iter={st2.iteration}")
+                logp(f"[sync] state: actor={st2.expected_actor} status={st2.status} iter={st2.iteration}")
                 prev_state2 = cur_state2
             if st2.expected_actor == "galph" and st2.iteration > current_iter:
                 logp(f"Ralph completed iteration {current_iter}; proceeding to {st2.iteration}")
                 break
             if args.heartbeat_secs and (time.time() - last_hb2) >= args.heartbeat_secs:
                 elapsed = int(time.time() - start2)
-                print(f"[sync] waiting for ralph… {elapsed}s elapsed (i={current_iter})")
+                msg = f"[sync] waiting for ralph… {elapsed}s elapsed (i={current_iter})"
+                print(msg)
+                logp(msg)
                 last_hb2 = time.time()
             time.sleep(args.poll_interval)
 

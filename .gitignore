@@ -104,3 +104,4 @@ repomix-output.xml
 # Runtime/benchmark artifacts
 reports/benchmarks/
 commands
+logs/
