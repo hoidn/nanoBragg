@@ -670,8 +670,8 @@
 - Reproduction (C & PyTorch):
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
-- First Divergence (if known): PyTorch CLI currently errors out on `-nonoise` (unknown flag) and ignores `-pix0_vector` overrides; `_mm` variant unsupported. Detector pipeline always recalculates pix0, so CUSTOM convention inputs cannot reproduce C traces.
-- Next Actions: Execute plan Phase B (argparse/config wiring for both flags) followed by Phase C validations.
+- First Divergence (if known): Detector override path still fails — `_calculate_pix0_vector()` returns without assigning `self.pix0_vector`, so `DetectorConfig(pix0_override_m=…)` raises `AttributeError` at `src/nanobrag_torch/models/detector.py:144`. Noise suppression wiring and argparse flags now exist but parity remains blocked until the detector fix lands.
+- Next Actions: Finish plan Phase B by patching the detector override branch (set attribute + cached copy), then add validation/tests per Phase C before rerunning the supervisor command under PyTorch.
 - Attempts History:
   * [2025-10-05] Phase A Complete — Tasks A1-A3 executed per plan.
     Metrics: C reference behavior captured for both flags via parallel command execution.
@@ -688,6 +688,10 @@
       - Both pix0 flags trigger `beam_convention = CUSTOM` side effect
       - Output pix0_vector: -0.216475836 0.216343050 -0.230192414 (meters)
     Next Actions: Phase B argparse additions (B1: add flags, B2: noise suppression wiring, B3-B5: pix0 override support with proper mm->m conversion)
+  * [2025-10-16] Audit — Result: failure. CLI wiring present, but detector override crashes (`AttributeError: 'Detector' object has no attribute 'pix0_vector'`) when `pix0_override_m` is provided.
+    Metrics: `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY' … DetectorConfig(pix0_override_m=(0.1,0.2,0.3))` reproduces.
+    Observations/Hypotheses: Parser/Noise guard completed (plan tasks B1/B2 ✅). `_calculate_pix0_vector()` needs to assign the override tensor and refresh `_cached_pix0_vector`; cache invalidation should reuse the same path.
+    Next Actions: Implement detector fix (plan task B3), then add regression covering both meter/mm overrides before moving to Phase C.
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag.
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced; (ii) CLI regression tests covering both flags pass; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance.
 

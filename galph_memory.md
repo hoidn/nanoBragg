@@ -906,3 +906,9 @@ Follow-ups for Ralph:
 - Reviewed Ralph commit 2293fd5 (Phase A evidence) → productive, no regressions detected; fix_plan entry accurately reflects status.
 - Regenerated input.md with Phase B guidance (Do Now = CLI-FLAGS-003 B1–B3 + pytest smoke) and noted reporting structure for new artifacts.
 - Repo currently modified (input.md, galph_memory.md); will commit once instructions complete.
+## 2025-10-05 (galph loop — CLI override audit)
+- `timeout 30 git pull --rebase` returned "Already up to date"; no conflicts. Tree still carries longstanding `supervisor.sh` dirt (unchanged per policy).
+- Deep analysis against the active long-term goal (run supervisor parity command) shows Phase B parser wiring exists, but `_calculate_pix0_vector()` returns early on overrides leaving `self.pix0_vector` unset. Reproduced crash via `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY' … DetectorConfig(pix0_override_m=...)` → AttributeError at `src/nanobrag_torch/models/detector.py:144`.
+- Updated `plans/active/cli-noise-pix0/plan.md` to mark B1/B2 `[D]`, keep B3 `[P]`, and spell out the override-assignment fix. Logged new attempt in `docs/fix_plan.md` noting the AttributeError regression and clarifying next actions (finish B3, then Phase C tests).
+- Regenerated `input.md` with Phase B3 guidance (override fix + pytest). Do Now remains `[CLI-FLAGS-003]` with emphasis on detector assignment, cache hygiene, and reporting structure under `reports/2025-10-cli-flags/phase_b/`.
+- No additional plans opened; fix_plan and plan updates should keep Ralph focused on override wiring before validation. Next loop should verify the detector patch, rerun CLI pytest smoke, and capture dry-run parity evidence.
