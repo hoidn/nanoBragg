@@ -670,8 +670,8 @@
 - Reproduction (C & PyTorch):
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
-- First Divergence (if known): Phase C evidence still missing — no regression test demonstrates `-nonoise` suppression or pix0 alias parity (plan task C1), the PyTorch CLI has not yet executed the supervisor command with the new flags (plan task C2), and the documentation tables remain stale (plan task C3). Without these artifacts, CLI parity is unproven.
-- Next Actions: Advance to plan Phase C — (C1) add CLI regression coverage (e.g., `tests/test_cli_flags.py`) verifying `-nonoise` behavior and meter/mm alias normalisation, (C2) run the supervisor command via the PyTorch CLI and archive outputs under `reports/2025-10-cli-flags/phase_c/`, then (C3/C4) update spec + README tables and record the attempt in this ledger for closure.
+- First Divergence (if known): Phase C1 complete ✅ (regression tests passing). Remaining gaps: PyTorch CLI has not yet executed the supervisor command end-to-end with the new flags (plan task C2), and the documentation tables remain stale (plan task C3). Without C2/C3 artifacts, full CLI parity and documentation coverage are unproven.
+- Next Actions: Continue plan Phase C — (C2) run the supervisor command via the PyTorch CLI and confirm image generation completes without errors, archive outputs under `reports/2025-10-cli-flags/phase_c/parity/`, then (C3/C4) update spec + README tables and close the fix_plan item.
 - Attempts History:
   * [2025-10-05] Phase A Complete — Tasks A1-A3 executed per plan.
     Metrics: C reference behavior captured for both flags via parallel command execution.
@@ -687,6 +687,35 @@
       - **Critical finding:** C code does NOT divide by 1000 for `_mm` suffix; caller must provide pre-scaled values
       - Both pix0 flags trigger `beam_convention = CUSTOM` side effect
       - Output pix0_vector: -0.216475836 0.216343050 -0.230192414 (meters)
+  * [2025-10-05] Phase C1 Complete — Task C1 executed (CLI regression tests).
+    Metrics: 18 test cases, 18 passed, 0 failed, 0 skipped (CPU); 17 passed, 1 skipped (CUDA unavailable in environment).
+    Runtime: 3.34s
+    Artifacts:
+      - `tests/test_cli_flags.py` - 293 lines, 18 comprehensive test cases
+      - `reports/2025-10-cli-flags/phase_c/pytest/test_cli_flags.log` - pytest output log
+    Test Coverage:
+      - ✅ pix0_vector meters alias parsing and config storage
+      - ✅ pix0_vector_mm millimeters alias parsing with conversion to meters (mm * 0.001)
+      - ✅ Equivalence of meters and millimeters aliases (tolerance: 1e-12)
+      - ✅ Mutual exclusivity enforcement (ValueError on dual-flag usage)
+      - ✅ Signed combination parametrization (3 scenarios including negatives, zero, small values)
+      - ✅ Detector override persistence through cache invalidation (CPU)
+      - ✅ Detector override persistence through cache invalidation (CUDA, device check)
+      - ✅ Detector override dtype preservation (float32, float64)
+      - ✅ r_factor=1.0 and close_distance consistency when override provided
+      - ✅ -nonoise suppresses noisefile generation (suppress_noise=True)
+      - ✅ -nonoise doesn't mutate adc default (40.0) or seed handling
+      - ✅ -noisefile without -nonoise enables noise generation (suppress_noise=False)
+      - ✅ -nonoise valid without -noisefile (no-op but accepted)
+      - ✅ pix0 override doesn't mutate custom_beam_vector
+      - ✅ pix0 override triggers CUSTOM convention
+      - ✅ ROI remains unaffected by new flags
+      - ✅ MOSFLM convention preserved when pix0 not specified
+    Observations/Hypotheses:
+      - Parser correctly normalizes both aliases to meter-space tensors in config['pix0_override_m']
+      - DetectorConfig and Detector honor pix0_override_m across device/dtype variations
+      - Noise suppression flag cleanly gates noise writer without side effects
+      - All CLI parsing assertions match C-code semantics from Phase A findings
     Next Actions: Phase B argparse additions (B1: add flags, B2: noise suppression wiring, B3-B5: pix0 override support with proper mm->m conversion)
   * [2025-10-16] Audit — Result: failure. CLI wiring present, but detector override crashes (`AttributeError: 'Detector' object has no attribute 'pix0_vector'`) when `pix0_override_m` is provided.
     Metrics: `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY' … DetectorConfig(pix0_override_m=(0.1,0.2,0.3))` reproduces.
