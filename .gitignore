@@ -100,3 +100,7 @@ tmp/
 # Repomix output files
 repomix-output.xml
 **/repomix-output.xml
+
+# Runtime/benchmark artifacts
+reports/benchmarks/
+commands
