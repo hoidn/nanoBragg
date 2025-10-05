@@ -581,14 +581,20 @@ class Simulator:
 
         if disable_compile:
             self._compiled_compute_physics = compute_physics_for_position
-        elif self.device.type == "cuda":
-            self._compiled_compute_physics = torch.compile(mode="max-autotune")(
-                compute_physics_for_position
-            )
         else:
-            self._compiled_compute_physics = torch.compile(mode="reduce-overhead")(
-                compute_physics_for_position
-            )
+            try:
+                if self.device.type == "cuda":
+                    self._compiled_compute_physics = torch.compile(mode="max-autotune")(
+                        compute_physics_for_position
+                    )
+                else:
+                    self._compiled_compute_physics = torch.compile(mode="reduce-overhead")(
+                        compute_physics_for_position
+                    )
+            except Exception:
+                # Fall back to uncompiled version if torch.compile fails
+                # (e.g., missing CUDA, Triton issues, or compilation errors)
+                self._compiled_compute_physics = compute_physics_for_position
 
     def _compute_physics_for_position(self, pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star, incident_beam_direction=None, wavelength=None, source_weights=None):
         """Compatibility shim - calls the pure function compute_physics_for_position.

@@ -301,6 +301,10 @@ class TestATParallel013CrossPlatformConsistency:
 
     def test_numerical_precision_float64(self):
         """Test that float64 precision is maintained throughout."""
+        import os
+        # Disable torch.compile for this test to avoid CUDA/Triton device detection issues
+        os.environ["NANOBRAGG_DISABLE_COMPILE"] = "1"
+
         set_deterministic_mode()
 
         # Create test configuration
@@ -329,7 +333,7 @@ class TestATParallel013CrossPlatformConsistency:
 
         detector = Detector(detector_config, dtype=torch.float64)
         beam_config = BeamConfig(wavelength_A=1.0, fluence=1e15)
-        simulator = Simulator(crystal, detector, crystal_config, beam_config)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config, dtype=torch.float64)
 
         result = simulator.run()
         assert result.dtype == torch.float64, "Simulation result not float64"
