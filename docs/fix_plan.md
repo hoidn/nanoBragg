@@ -664,7 +664,7 @@
 ## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
 - Spec/AT: specs/spec-a-cli.md flag catalogue, docs/architecture/detector.md §5 (pix0 workflow), docs/development/c_to_pytorch_config_map.md (pivot rules), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860
 - Priority: High
-- Status: in_progress (Phase A complete; Phase B1-B3 ✅, B4/B5 evidence capture pending)
+- Status: in_progress (Phase A complete; Phase B complete ✅ — all tasks B1-B5 done, ready for Phase C)
 - Owner/Date: ralph/2025-10-05
 - Plan Reference: `plans/active/cli-noise-pix0/plan.md`
 - Reproduction (C & PyTorch):
@@ -704,6 +704,19 @@
       - Device/dtype neutrality preserved: override tensor coerced to detector's device/dtype via `.to()`
       - Differentiability maintained: no `.detach()` or `.cpu()` in override path
     Next Actions: Tasks B4/B5 (unit parity + cache hygiene) then Phase C validation. Note: Pre-existing test failure in test_at_cli_006 (scaling bug) unrelated to this fix.
+  * [2025-10-05] Attempt #3 (ralph) — Result: success. Completed Phase B tasks B4/B5 (pix0 parser parity and detector cache stability).
+    Metrics: Parser equivalence verified: `-pix0_vector -0.2 0.3 0.4` and `-pix0_vector_mm -200 300 400` both yield `pix0_override_m=(-0.2, 0.3, 0.4)`. Dual-flag error handling confirmed (raises ValueError). Detector cache stability verified across CPU/CUDA with invalidate_cache() preserving override tensor. CLI help smoke tests: 6/6 passed.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_b/detector/pix0_override_equivalence.txt` - Parser alias parity and dual-flag error handling
+      - `reports/2025-10-cli-flags/phase_b/detector/cache_handoff.txt` - Cache stability across CPU/CUDA with device/dtype preservation
+      - `reports/2025-10-cli-flags/phase_b/pytest/cli_help_smoke.log` - CLI help baseline tests (6 passed)
+    Observations/Hypotheses:
+      - Parser correctly normalizes mm→m with exact 1000× scaling (precision verified at <1e-9)
+      - Dual-flag check raises ValueError (not SystemExit) as expected from parse_and_validate_args
+      - Detector override tensor survives invalidate_cache() on both CPU and CUDA
+      - Device/dtype coercion via `.to()` preserves tensor properties (float64 on both devices)
+      - CUDA available on this system; both CPU and CUDA paths verified
+    Next Actions: Move to Phase C (C1: regression tests, C2: golden parity smoke, C3-C4: documentation updates and plan closure).
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag.
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced; (ii) CLI regression tests covering both flags pass; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance.
 

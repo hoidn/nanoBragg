@@ -1,0 +1,4 @@
+cpu_pix0 tensor([ 0.1200, -0.3400,  0.5600], dtype=torch.float64) cpu torch.float64
+cpu_after_invalidate tensor([ 0.1200, -0.3400,  0.5600], dtype=torch.float64)
+cuda_pix0 tensor([ 0.1200, -0.3400,  0.5600], device='cuda:0', dtype=torch.float64) cuda:0 torch.float64
+cuda_after_invalidate tensor([ 0.1200, -0.3400,  0.5600], device='cuda:0', dtype=torch.float64)

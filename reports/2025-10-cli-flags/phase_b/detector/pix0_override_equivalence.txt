@@ -1,0 +1,7 @@
+argv ['-cell', '100', '100', '100', '90', '90', '90', '-default_F', '1', '-lambda', '0.5', '-pixel', '0.1', '-pix0_vector', '-0.2', '0.3', '0.4']
+pix0_override_m (-0.2, 0.3, 0.4)
+
+argv ['-cell', '100', '100', '100', '90', '90', '90', '-default_F', '1', '-lambda', '0.5', '-pixel', '0.1', '-pix0_vector_mm', '-200', '300', '400']
+pix0_override_m (-0.2, 0.3, 0.4)
+
+dual_flag_value_error: Cannot specify both -pix0_vector and -pix0_vector_mm simultaneously
