@@ -900,3 +900,9 @@ Follow-ups for Ralph:
 - Refreshed `plans/active/cli-noise-pix0/plan.md` Phase B table (new tasks B3–B5) so both meter/mm overrides funnel through a future `pix0_override_m` tensor and cache hygiene stays explicit; C1 now calls for meter vs millimetre regression tests.
 - Updated docs/fix_plan.md `[CLI-FLAGS-003]` status to in_progress with note that Phase A evidence must precede implementation; input.md directs Ralph to execute Phase A (A1–A3) with NB_C_BIN commands, TRACE_C instrumentation, and pytest CLI smoke.
 - Follow-ups for Ralph: capture C logs (noise vs no-noise) plus pix0 trace, summarise under reports/2025-10-cli-flags/phase_a/README.md, log Attempts in docs/fix_plan.md, then run KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_entrypoint.py -q before moving to Phase B.
+## 2025-10-05 (galph loop)
+- Re-confirmed CLI gaps: -nonoise absent from parser (src/nanobrag_torch/__main__.py:334) and pix0 overrides ignored by Detector (src/nanobrag_torch/models/detector.py:326); Phase B of plans/active/cli-noise-pix0/plan.md remains the active path.
+- No new plan drafted—existing CLI plan already covers required work; emphasized need to convert mm alias to meters and short-circuit pix0 caches through override tensor field.
+- Reviewed Ralph commit 2293fd5 (Phase A evidence) → productive, no regressions detected; fix_plan entry accurately reflects status.
+- Regenerated input.md with Phase B guidance (Do Now = CLI-FLAGS-003 B1–B3 + pytest smoke) and noted reporting structure for new artifacts.
+- Repo currently modified (input.md, galph_memory.md); will commit once instructions complete.
