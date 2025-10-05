@@ -1,7 +1,9 @@
 {
   "iteration": 1,
   "expected_actor": "ralph",
-  "status": "idle",
+  "status": "running-ralph",
   "last_update": "",
-  "lease_expires_at": ""
+  "lease_expires_at": "",
+  "galph_commit": null,
+  "ralph_commit": null
 }
