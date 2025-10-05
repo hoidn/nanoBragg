@@ -1,12 +1,86 @@
 # nanoBragg PyTorch guide
 
+This guide explains how to use the PyTorch implementation of nanoBragg for diffraction simulation, including parallel comparison with the C reference implementation.
+
 ## What This Is About
 
-Before you dive in: the PyTorch port of nanoBragg is a drop-in simulator that is also differentiable, compiled, and verified against the C reference. Getting there took some engineering work:
+The PyTorch port of nanoBragg is a drop-in simulator that is also differentiable. Adaptations include:
 
-- **Vectorizing the legacy control flow**: The C code walks sub-pixels, mosaic blocks, and sources with nested loops and early exits. We rebuilt those pieces as batched tensor ops so autograd sees a continuous graph.
-- **Killing implicit state**: The reference implementation hides configuration in globals and scratch structs. Every one of those knobs had to become an explicit tensor argument before `torch.compile` would cache kernels safely.
-- **Example: stabilizing the shape factors**: One of many numerical landmines. Functions like `sincg`, `sinc3`, and polarization all contained removable singularities that autograd interpreted as "divide by zero." For `sincg`, we substituted in the L'Hôpital limits so the limit values are emitted directly:
+- Vectorizing the legacy control flow: The C code walks sub-pixels, mosaic blocks, and sources with nested loops and early exits. We rebuilt those pieces as batched tensor ops so autograd sees a continuous graph.
+
+  Example: nested loops → batched tensor ops
+
+  ```c
+  // C (nanoBragg.c core loops)
+  for (spixel=0; spixel<spixels; ++spixel) {
+    for (fpixel=0; fpixel<fpixels; ++fpixel) {
+      imgidx = spixel*fpixels + fpixel;
+      for (thick_tic=0; thick_tic<detector_thicksteps; ++thick_tic) {
+        for (subS=0; subS<oversample; ++subS) {
+          for (subF=0; subF<oversample; ++subF) {
+            /* pixel_pos, diffracted, omega_pixel, capture_fraction */
+            for (source=0; source<sources; ++source) {
+              /* incident, lambda, scattering, stol, polar */
+              for (phi_tic=0; phi_tic<phisteps; ++phi_tic) {
+                /* rotate a0,b0,c0 by spindle phi → ap,bp,cp */
+                for (mos_tic=0; mos_tic<mosaic_domains; ++mos_tic) {
+                  /* apply mosaic rotation, compute h,k,l and h0,k0,l0 */
+                  /* F_latt via sincg/sinc3/gauss/tophat; accumulate */
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  ```
+
+  ```python
+  # PyTorch (vectorized, no Python loops; dims broadcast and reduce)
+  # pixel_coords: (Sp, Fp, 3)
+  # sources: (S, 3), wavelengths: (S,)
+  # mosaic rotations: (M, 3, 3)
+  diffracted = pixel_coords / pixel_coords.norm(dim=-1, keepdim=True)
+  incident = sources.view(S, 1, 1, 3).expand(-1, Sp, Fp, -1)
+  scat = (diffracted.unsqueeze(0) - incident) / wavelengths.view(S, 1, 1, 1)
+  # rotate lattice vectors per mosaic domain and dot for h,k,l
+  rot_a = (mosaic_umats @ a_vec).view(M, 3)
+  h = (scat.unsqueeze(-2) @ rot_a.view(1,1,1,M,3,1)).squeeze(-1)
+  # ... similar for k,l, then F_cell, F_latt ...
+  intensity = ((F_cell * F_latt) ** 2 * weights.view(S,1,1,1)).sum(dim=0).sum(dim=-1)
+  ```
+- Killing implicit state: The reference implementation hides configuration in globals and scratch structs. We turned those into explicit tensor inputs.
+
+  Example: beam direction (global → explicit)
+
+  ```c
+  // C (implicit global used across functions)
+  double beam_vector[4] = {0,1,0,0};
+  if (strstr(argv[i], "-beam_vector") && argc > i+3) {
+      beam_vector[1] = atof(argv[i+1]);
+      beam_vector[2] = atof(argv[i+2]);
+      beam_vector[3] = atof(argv[i+3]);
+  }
+  ...
+  ratio = dot_product(beam_vector, vector); // used implicitly downstream
+  ```
+
+  ```python
+  # PyTorch (explicit config, explicit tensors)
+  # __main__.py
+  parser.add_argument('-beam_vector', nargs=3, type=float)
+  if args.beam_vector:
+      config['beam_vector'] = tuple(args.beam_vector)
+
+  # detector/simulator: construct a tensor and pass explicitly
+  if 'beam_vector' in config:
+      beam_vec = torch.tensor(config['beam_vector'], device=device, dtype=dtype)
+  else:
+      beam_vec = default_beam_vector(convention)
+  intensity = compute_physics_for_position(..., incident_beam_direction=beam_vec, ...)
+  ```
+- Example: stabilizing the shape factors.  One of many numerical landmines. Functions like sincg, sinc3, and polarization all contained removable singularities that autograd interpreted as "divide by zero." For sincg, we substituted in the L'Hôpital limits so the limit values are emitted directly:
 
   ```python
   eps = 1e-10
@@ -19,7 +93,7 @@ Before you dive in: the PyTorch port of nanoBragg is a drop-in simulator that is
                      -torch.ones_like(u), torch.ones_like(u))
   near_int_val = N * sign
 
-  # fallback: sin(Nu)/sin(u), guarding the denominator
+  # fallback: sin(Nu)/sin(u); the eps guard is cheap insurance against tiny denominators
   ratio = torch.sin(N * u) / torch.where(torch.abs(torch.sin(u)) < eps,
                                          torch.ones_like(u) * eps,
                                          torch.sin(u))
@@ -27,11 +101,22 @@ Before you dive in: the PyTorch port of nanoBragg is a drop-in simulator that is
   result = torch.where(is_near_int_pi, near_int_val, ratio)
   ```
 
-  That logic delivers the correct limit at u≈0 and every u≈nπ, preventing NaNs when gradients query the troublesome points.
+Other adaptations: removing non‑differentiable ops
 
-If you touch the physics helpers or geometry pipeline, rerun the C/PyTorch trace comparisons and gradient tests—these edge cases come back the moment you assume they’re solved.
+  Example: Nearest‑neighbor assignment → Tricubic interpolation
+  ```python
+  # Before (nearest neighbor lookup; non-differentiable w.r.t. h,k,l)
+  h0 = torch.round(h).long(); k0 = torch.round(k).long(); l0 = torch.round(l).long()
+  F_cell = Fhkl[h0 - h_min, k0 - k_min, l0 - l_min]
 
-The rest of this guide walks through installation, usage, and validation, so you can build on top of the differentiable simulator without re-learning these lessons.
+  # After (tricubic interpolation when enabled; differentiable a.e.)
+  if interpolate:
+      F_cell = polin3(h_indices, k_indices, l_indices, sub_Fhkl, h, k, l)
+  else:
+      F_cell = nearest_neighbor(h, k, l)
+  ```
+
+If you touch the physics helpers or geometry pipeline, rerun the C/PyTorch trace comparisons and gradient tests to catch any regressions.
 
 ## Table of Contents
 - [What This Is About](#what-this-is-about)

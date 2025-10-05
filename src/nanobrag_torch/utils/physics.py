@@ -76,7 +76,9 @@ def sincg(u: torch.Tensor, N: torch.Tensor) -> torch.Tensor:
     sin_u = torch.sin(u)
     sin_Nu = torch.sin(N * u)
 
-    # Create a safe denominator that's never exactly zero
+    # Create a safe denominator that's never exactly zero.
+    # Cheap insurance against tiny denominators: if trig precision or tolerances
+    # shift, we still avoid exploding ratios.
     safe_sin_u = torch.where(
         torch.abs(sin_u) < eps,
         torch.ones_like(sin_u) * eps,  # Use eps to avoid division by zero
