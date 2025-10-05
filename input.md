@@ -1,101 +1,100 @@
-Header: 2025-10-05 23:08:58Z | Commit f69007c | Author galph | Active Focus: [CLI-FLAGS-003] Phase B4/B5 – prove pix0 alias parity and detector cache stability before Phase C
-Do Now: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm — capture Phase B4/B5 evidence logs | PyTest: KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src pytest tests/test_at_cli_001.py -q
-If Blocked: Dump failing argv/trace to reports/2025-10-cli-flags/phase_b/attempt_fail/<stamp>.txt, note exit codes, and log the attempt under docs/fix_plan.md#CLI-FLAGS-003 before retrying commands.
+2025-10-05 23:26:58Z | 24fbeeb | galph | Active Focus: Close CLI-FLAGS-003 Phase C gaps so the supervisor command with -nonoise and -pix0_vector_mm succeeds under PyTorch CLI.
+Do Now: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm — implement Phase C1 regression tests | PyTest: KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src pytest tests/test_cli_flags.py -q
+If Blocked: Capture a manual parser + detector smoke run (store under reports/2025-10-cli-flags/phase_c/manual/) and log the fallback in docs/fix_plan.md Attempts History before resuming implementation.
+
 Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md:23-41 — Phase B table tags B4/B5 as [P]; without the parser parity log and cache harness we cannot advance to C1 regression testing.
-- docs/fix_plan.md:667-674 — First Divergence explicitly calls out missing artifacts for meter vs mm parity and cache hygiene; closing them is mandatory to unblock the long-term parity command.
-- src/nanobrag_torch/__main__.py:546-557 — CLI parses both pix0 flags and applies mm→m conversion; we must demonstrate equivalence and SystemExit when both flags appear.
-- src/nanobrag_torch/models/detector.py:391-407 and 661-684 — Override branch and cache refresh; evidence must show override tensors survive invalidate_cache() and device transfers.
-- docs/development/testing_strategy.md:18-26 — Device/dtype discipline requires logs documenting CPU and CUDA behaviour (or explicit note when CUDA unavailable).
-- docs/development/c_to_pytorch_config_map.md:60-68 — Config map ties CLI flags to DetectorConfig fields; artefacts should cite this mapping to confirm parity with C semantics.
-- reports/2025-10-cli-flags/phase_b/ currently contains argparse/pytest folders only; new detector/ parity logs keep plan reporting consistent with Phase A layout.
-- prompts/supervisor.md long-term goal command includes -pix0_vector_mm and -nonoise; today’s work is the prerequisite to even attempt a PyTorch dry run of that command.
-- docs/architecture/detector.md (pix0 discussion) — reiterates the hybrid unit system; referencing it in logs clarifies why mm inputs convert to meters internally.
-- docs/debugging/detector_geometry_checklist.md Section 1 — mandates verifying pix0 vector orientation before comparing traces; parity logs should mention alignment with that checklist.
-- arch.md §2 — documents detector module responsibilities; cite it in cache_handoff.txt when describing invalidate_cache ergonomics.
-- reports/2025-10-cli-flags/phase_a/c_with_noise.log — use as reference when confirming C writes noiseimage.img; include contrast statement in new logs.
+- docs/fix_plan.md:664 now lists Phase C evidence as the First Divergence; addressing C1 tests is the enabling step for the parity smoke.
+- plans/active/cli-noise-pix0/plan.md:36 defines the exact assertions the new tests must cover (meter/mm alias, noise suppression, override integrity).
+- specs/spec-a-cli.md:109 keeps -noisefile/-nonoise normative, so automated coverage ensures we continue to satisfy the spec’s output contract.
+- docs/architecture/detector.md:35 documents the pix0 override workflow; test coverage prevents regressions when detector internals change.
+- src/nanobrag_torch/__main__.py:339 & 1170 contain the new flag handling; covering those lines via tests protects the CLI surface without manual smoke runs.
+- docs/development/testing_strategy.md:166 reminds us to archive authoritative commands/logs; storing the pytest output is part of closing the fix-plan item.
+
 How-To Map:
-- Prep step: mkdir -p reports/2025-10-cli-flags/phase_b/detector to keep artefacts grouped with Phase B evidence.
-- Step 1 (parser alias check):
-PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY' > reports/2025-10-cli-flags/phase_b/detector/pix0_override_equivalence.txt
-from nanobrag_torch.__main__ import create_parser, parse_and_validate_args
-import itertools
-parser = create_parser()
-inputs = [
-    ['-cell','100','100','100','90','90','90','-default_F','1','-lambda','0.5','-pixel','0.1','-pix0_vector','-0.2','0.3','0.4'],
-    ['-cell','100','100','100','90','90','90','-default_F','1','-lambda','0.5','-pixel','0.1','-pix0_vector_mm','-200','300','400'],
-]
-for argv in inputs:
-    args = parser.parse_args(argv)
-    cfg = parse_and_validate_args(args)
-    print('argv', argv)
-    print('pix0_override_m', cfg.get('pix0_override_m'))
-try:
-    parser.parse_args(inputs[0] + ['-pix0_vector_mm','1','2','3'])
-except SystemExit as exc:
-    print('dual_flag_exit_code', exc.code)
-PY
-- Step 2 (detector cache harness with device sweep):
-PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY' > reports/2025-10-cli-flags/phase_b/detector/cache_handoff.txt
-import torch
-from nanobrag_torch.config import DetectorConfig, DetectorConvention
-from nanobrag_torch.models.detector import Detector
-cfg = DetectorConfig(distance_mm=150.0, pixel_size_mm=0.12, spixels=16, fpixels=20,
-                     detector_convention=DetectorConvention.CUSTOM,
-                     pix0_override_m=(0.12, -0.34, 0.56))
-det = Detector(config=cfg, device=torch.device('cpu'), dtype=torch.float64)
-print('cpu_pix0', det.pix0_vector, det.pix0_vector.device, det.pix0_vector.dtype)
-det.invalidate_cache()
-print('cpu_after_invalidate', det.pix0_vector)
-if torch.cuda.is_available():
-    det = det.to(torch.device('cuda'))
-    print('cuda_pix0', det.pix0_vector, det.pix0_vector.device, det.pix0_vector.dtype)
-    det.invalidate_cache()
-    print('cuda_after_invalidate', det.pix0_vector)
-else:
-    print('cuda_unavailable')
-PY
-- Step 2b (optional dtype downshift): rerun the harness with dtype=torch.float32 once the float64 run succeeds and append results to cache_handoff.txt for completeness.
-- Step 3 (optional warning check): ensure `-nonoise` still suppresses noise output by grepping CLI config echo once parser parity is logged (record result in pix0_override_equivalence.txt).
-- Step 4 (pytest smoke for CLI help baseline):
-KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src pytest tests/test_at_cli_001.py -q | tee reports/2025-10-cli-flags/phase_b/pytest/cli_help_smoke.log
-- Step 5 (documentation bookkeeping): append Attempt entry in docs/fix_plan.md:664-706 citing both detector logs, and mark plan tasks B4/B5 as ready for closure once reviewers confirm.
-- Step 6 (git sanity check): git status --short should show only input.md, docs/fix_plan.md, plans/active/cli-noise-pix0/plan.md after edits; if additional files appear, document why in the Attempt entry.
-- Step 7 (context reminder): copy summary snippets from reports/2025-10-cli-flags/phase_b/detector/*.txt into docs/fix_plan.md attempts so auditors can spot-check without opening raw logs.
+- Create `tests/test_cli_flags.py` if missing; add a module-level docstring referencing CLI-FLAGS-003 Phase C1.
+- Import `pytest`, `torch`, `parse_and_validate_args`, `create_parser`, `DetectorConfig`, and `Detector` so tests touch the real CLI + detector stack.
+- Define a helper `def run_parse(args):` that uses `parser = create_parser()` and returns `parse_and_validate_args(parser.parse_args(args))` to avoid shared state between tests.
+- Test pix0 meters alias:
+  - Call `config = run_parse(['-cell','100','100','100','90','90','90','-pixel','0.1','-pix0_vector','0.1','-0.2','0.3'])`.
+  - Assert `config['pix0_override_m'] == pytest.approx((0.1, -0.2, 0.3), rel=0, abs=1e-12)`.
+  - Assert `config['custom_pix0_vector'] == config['pix0_override_m']` to confirm CUSTOM override propagation.
+- Test pix0 millimeter alias:
+  - Call `config_mm = run_parse(['-cell','100','100','100','90','90','90','-pixel','0.1','-pix0_vector_mm','100','-200','300'])`.
+  - Assert the override matches `(0.1, -0.2, 0.3)` and confirm meter conversion occurs with 1e-12 tolerance.
+  - Compare to the meters result to enforce equality.
+- Test dual-flag rejection:
+  - Use `with pytest.raises(ValueError)` around `run_parse([...'-pix0_vector','0','0','0','-pix0_vector_mm','0','0','0'])` and assert the error message mentions mutual exclusivity.
+- Cover detector override persistence on CPU:
+  - Build `cfg = DetectorConfig(distance_mm=100, pixel_size_mm=0.1, spixels=4, fpixels=4, pix0_override_m=torch.tensor([0.01,-0.02,0.03], dtype=torch.float64))`.
+  - Instantiate `det = Detector(cfg, device='cpu', dtype=torch.float64)`.
+  - Assert `torch.allclose(det.pix0_vector, torch.tensor([0.01,-0.02,0.03], dtype=torch.float64))`.
+  - Call `det.invalidate_cache()` and assert `pix0_vector` remains unchanged.
+  - Check `det.close_distance == det.distance` and `det.r_factor == pytest.approx(1.0)`.
+- Cover detector override persistence on CUDA:
+  - Wrap in `pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")`.
+  - Repeat the CPU assertions using `device='cuda'` and ensure the tensor stays on `cuda:0`.
+- Test -nonoise suppresses runtime noise:
+  - Parse `config = run_parse(['-floatfile','out.bin','-noisefile','noise.img','-nonoise'])`.
+  - Assert `config['noisefile'] == 'noise.img'` and `config['suppress_noise'] is True`.
+  - Assert `config['adc']` keeps default 40.0 to ensure we did not mutate unrelated fields.
+- Test -noisefile without -nonoise:
+  - Parse `config = run_parse(['-floatfile','out.bin','-noisefile','noise.img'])`.
+  - Assert `config['suppress_noise'] is False` to show tests detect future regressions.
+- Sanity test for seed handling:
+  - Provide explicit `-seed 1234 -nonoise`; ensure `config['seed'] == 1234` (no forced reseeding when noise disabled).
+- Add docstrings/comment blocks referencing Phase A evidence (`reports/2025-10-cli-flags/phase_a/README.md`) so future maintainers know the expected values.
+- Parameterize pix0 tests over several signed combinations (e.g., `[('0.1','-0.2','0.3'), ('-0.1','0.0','0.0')]`) to catch sign bugs; convert mm by multiplying by 1000 using list comprehension.
+- Default dtype in tests should follow runtime default (float32) unless checking precision; when necessary, set `dtype=torch.float64` explicitly to match detector override code.
+- After writing tests, run the authoritative command `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src pytest tests/test_cli_flags.py -q | tee reports/2025-10-cli-flags/phase_c/pytest/test_cli_flags.log`.
+- Inspect the log: ensure 0 failures, desired skips, and recorded run duration.
+- If pytest fails, triage by verifying CLI parsing logic or detector override path; adjust implementation only if spec alignment demands it.
+- Upon success, update docs/fix_plan.md Attempts History (append Phase C1 entry) referencing the new log and summarizing metrics (pass count, skips, runtime).
+- Optionally, add TODO comments in plan Phase C2 referencing upcoming parity smoke to keep momentum.
+- Stage new test file and report artifacts before ending the engineer loop (document expectation in input to maintain transparency).
+- Keep commands reproducible: note any temporary environment variables (NB_C_BIN not needed yet) in the log header.
+- If manual smoke fallback triggered, save stdout/stderr under `reports/2025-10-cli-flags/phase_c/manual/parser_noise_diff.log` and cite it in fix_plan Attempts History.
+- Prepare to reuse helper functions from Phase B logs if needed (e.g., conversion check) but prefer pytest assertions over print statements.
+- Ensure the test file imports only necessary modules; avoid heavy simulator imports to keep runtime low.
+- When comparing floats, rely on `pytest.approx` rather than direct equality to avoid spurious failures from float formatting.
+- Verify ROI defaults remain unchanged by the new flags by asserting `config.get('roi') is None` in relevant tests.
+- Document expected behavior for future reference: `-pix0_vector_mm` accepts millimeter inputs, PyTorch converts to meters (improvement over C), tests should assert this conversion explicitly.
+ - After pytest succeeds, run `git status --short tests/test_cli_flags.py` to confirm only the intended files changed before logging the attempt.
+ - Note skip counts in the pytest log (e.g., CUDA skip) so future loops can verify coverage remained consistent.
+ - Consider adding `pytest.register_assert_rewrite` in the test module if helper functions are factored out for clearer assertion messages.
+ - If you add helper functions, place them above tests and prefix with `_` to reduce pytest collection noise.
+ - Keep test names descriptive (`test_pix0_alias_mm_matches_meters`) so failures immediately indicate which flag regressed.
+ - Capture expected `DetectorConfig.detector_convention` value when overrides are provided (should remain MOSFLM unless CUSTOM triggered) to document behavior.
+ - Verify `config['convention']` transitions to `CUSTOM` when pix0 vectors supplied, mirroring C behavior, and assert this inside tests.
+ - Double-check that enabling `-pix0_vector_mm` does not alter `beam_vector`; include asserts on `config.get('custom_beam_vector') is None` unless explicitly set.
+ - For future reuse, comment the fixture structure so Phase C2 can import the same helpers rather than duplicating parsing logic.
+- Before leaving the loop, ensure `reports/2025-10-cli-flags/phase_c/` has an updated README or index summarizing new artifacts (even a short note suffices).
+ - Plan to tag the pytest log with commit hash 24fbeeb in its header for traceability; include the exact command used.
+ - If you rely on helper constants (e.g., expected pix0 tuples), define them at top-level so multiple tests reuse the same canonical values.
+ - Record the wall-clock runtime of the pytest invocation in the log; it helps spot future slowdowns in CLI parsing.
+ - After writing tests, run `python -m compileall tests/test_cli_flags.py` to ensure there are no syntax errors before handing control back.
+
 Pitfalls To Avoid:
-- Do not remove or rename reports/2025-10-cli-flags artifacts; Phase A audit relies on consistent paths.
-- Avoid editing loop.sh or supervisor.sh; supervisor guard plan is still active elsewhere.
-- Keep override tensors as torch.Tensor; never convert to float via .item()/.tolist() when logging.
-- Respect CUSTOM convention side effects; do not reset config['convention']='MOSFLM' after overrides.
-- Remember parser.parse_args exits with SystemExit; capture exit codes rather than swallowing exceptions and continue logging them.
-- When CUDA is unavailable, explicitly log that fact to satisfy device/dtype documentation requirements.
-- Ensure stdout redirection overwrites (not appends) the detector logs to avoid stale content.
-- No new helper scripts outside the repo tree; use inline python - <<'PY' blocks as outlined.
-- After pytest, clear temporary __pycache__ only if failures reference stale bytecode; otherwise leave tree untouched.
-- Maintain ASCII in logs and doc updates; avoid smart quotes or non-breaking spaces when editing fix_plan.md.
-- Record manual command invocations in docs/fix_plan.md Attempts with timestamps; missing provenance will block supervisor sign-off.
-- Avoid running the full 2463×2527 simulation until Phase C artifacts say so; today’s focus is lightweight parity, not end-to-end execution.
-- Keep the detector harness free of torch.compile wrappers; the plan expects eager mode evidence for cache behaviour.
-- When using tee, verify the resulting file ends with a newline to satisfy lint tools that parse logs.
-- After completing commands, re-run the alias script with reversed argv order if needed to prove determinism; include note if outputs differ.
-- Keep environment variables explicit in every command you log; implicit inheritance causes audit drift.
+- Do not construct Namespace objects manually; always run through `create_parser()` so argparse-level defaults are honored.
+- Avoid mutating global state between tests (e.g., env vars, working directory); isolate each scenario to prevent cross contamination.
+- Refrain from calling `torch.cuda.manual_seed` inside tests—letting CLI set seeds keeps parity with runtime behavior.
+- Do not refactor CLI code during this loop; focus on tests unless failures expose a clear implementation bug tied to spec compliance.
+- Skip adding sleeps or long-running simulations; tests must finish quickly to keep supervisor loops tight.
+- Avoid storing large binary fixtures in git; rely on existing golden data and new textual logs under `reports/`.
+- Do not downgrade assertions to loose tolerances; keep unit conversion checks strict so they catch regressions.
+- Resist the urge to run the full supervisor command yet; defer to Phase C2 once tests pass.
+- Ensure any conditional CUDA coverage falls back gracefully; never mark tests xfail for missing GPU support.
+- Do not forget to mention new artifacts in docs/fix_plan.md; missing logs make future audits painful.
+
 Pointers:
-- plans/active/cli-noise-pix0/plan.md:23-41 — Phase B + C guidance.
-- docs/fix_plan.md:664-708 — Current status and attempts history for [CLI-FLAGS-003].
-- src/nanobrag_torch/__main__.py:546-557 — pix0 flag parsing logic to compare with logs.
-- src/nanobrag_torch/models/detector.py:391-407, 661-684 — override path and cache refresh checks relative to harness output.
-- docs/development/testing_strategy.md:18-26 — device/dtype logging expectations.
-- docs/architecture/detector.md (pix0 section) — use for interpreting logged vectors, especially MOSFLM vs CUSTOM discussion.
-- specs/spec-a-cli.md (pix0 flag shard) — reference for documentation updates after tests.
-- reports/2025-10-cli-flags/phase_a/README.md — baseline findings to echo when describing mm conversion rationale.
-- docs/debugging/detector_geometry_checklist.md:12-38 — checklist items to cite if parity logs uncover orientation mismatches.
-- docs/architecture/pytorch_design.md §2.4 — reminds why detector caches are hoisted; mention in cache_handoff.txt when commenting on invalidate_cache behaviour.
-- arch.md §2 — documents detector module responsibilities; cite in cache_handoff.txt when describing invalidate_cache ergonomics.
-- reports/2025-10-cli-flags/phase_a/c_with_noise.log — reference for expected noisefile behaviour; contrast with PyTorch logs showing suppression.
-- reports/2025-10-cli-flags/phase_b/argparse/help.txt — prior Phase B output ensuring help text already listed the new flags; confirm parity after modifications.
-Next Up:
-- Phase C1 regression: add pytest covering meter/mm alias plus -nonoise once B4/B5 artefacts land.
-- Supervisor command dry-run under PyTorch CLI with -nonoise and pix0 override after parity proof is committed.
-- Phase C2 golden comparison: plan the NB_C_BIN vs PyTorch execution using the supervisor command, noting ROI and expected output paths for reports/2025-10-cli-flags/phase_c.
-- Phase C3 documentation sweep: refresh specs/spec-a-cli.md and README_PYTORCH.md tables with the new flags once tests land.
-- Coordinate with docs/index.md update (Phase B5 reminder) to list supervisor.sh as protected asset after guard work resumes; note dependency in fix_plan once guard plan moves forward.
+- docs/fix_plan.md:664
+- plans/active/cli-noise-pix0/plan.md:36
+- specs/spec-a-cli.md:109
+- docs/architecture/detector.md:35
+- src/nanobrag_torch/__main__.py:339
+- src/nanobrag_torch/__main__.py:1170
+- src/nanobrag_torch/models/detector.py:391
+- docs/development/testing_strategy.md:166
+- reports/2025-10-cli-flags/phase_a/README.md:10
+- prompts/supervisor.md:7
+
+Next Up: After Phase C1 passes, move directly to Phase C2 parity smoke (PyTorch CLI vs NB_C_BIN command capture) or Phase C3 documentation updates (specs/spec-a-cli.md, README_PYTORCH.md) depending on time remaining.

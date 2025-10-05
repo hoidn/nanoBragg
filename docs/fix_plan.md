@@ -670,8 +670,8 @@
 - Reproduction (C & PyTorch):
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
-- First Divergence (if known): No authoritative artifact yet proving that `-pix0_vector` (meters) and `-pix0_vector_mm` normalise to the same override tensor or that detector cache invalidation preserves overrides across device moves. Without those checks, mm alias parity and cache hygiene remain unverified and block progression to Phase C.
-- Next Actions: Execute plan Phase B tasks B4/B5 — log parser equivalence + dual-flag error handling under `reports/2025-10-cli-flags/phase_b/detector/pix0_override_equivalence.txt`, then capture the detector mini-harness showing override stability (`cache_handoff.txt`). Once evidence exists, promote Phase C1 test authoring and parity run.
+- First Divergence (if known): Phase C evidence still missing — no regression test demonstrates `-nonoise` suppression or pix0 alias parity (plan task C1), the PyTorch CLI has not yet executed the supervisor command with the new flags (plan task C2), and the documentation tables remain stale (plan task C3). Without these artifacts, CLI parity is unproven.
+- Next Actions: Advance to plan Phase C — (C1) add CLI regression coverage (e.g., `tests/test_cli_flags.py`) verifying `-nonoise` behavior and meter/mm alias normalisation, (C2) run the supervisor command via the PyTorch CLI and archive outputs under `reports/2025-10-cli-flags/phase_c/`, then (C3/C4) update spec + README tables and record the attempt in this ledger for closure.
 - Attempts History:
   * [2025-10-05] Phase A Complete — Tasks A1-A3 executed per plan.
     Metrics: C reference behavior captured for both flags via parallel command execution.

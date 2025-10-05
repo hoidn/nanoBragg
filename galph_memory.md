@@ -919,3 +919,9 @@ Follow-ups for Ralph:
 - Updated `plans/active/cli-noise-pix0/plan.md` Phase B table (B4/B5 now [P] with explicit log commands) and refreshed docs/fix_plan.md First Divergence (missing alias/cache artefacts).
 - Regenerated input.md (Do Now = Phase B4/B5 evidence capture, includes python snippets + pytest smoke) so Ralph focuses on parity logs before Phase C.
 - Follow-ups for Ralph: run the two logging snippets into `reports/2025-10-cli-flags/phase_b/detector/`, record Attempt entry under `[CLI-FLAGS-003]`, then execute pytest smoke; once artefacts land, proceed toward Phase C1 test authoring.
+## 2025-10-05 (galph loop — Phase C1 gating)
+- Sync clean; reviewed 2c45876 confirming Phase B evidence landed, no regressions spotted.
+- Deep dive confirmed remaining blockers are Phase C artifacts: missing CLI regression tests, no PyTorch parity run, docs still stale; no new plan needed beyond existing cli-noise-pix0 roadmap.
+- Updated docs/fix_plan.md `[CLI-FLAGS-003]` First Divergence/Next Actions to reflect Phase C focus (tests, parity smoke, docs).
+- Regenerated input.md (100 lines) directing Ralph to implement Phase C1 pytest coverage, archive logs under `reports/2025-10-cli-flags/phase_c/`, and log results in fix_plan.
+- Follow-up for Ralph: add `tests/test_cli_flags.py` covering pix0 aliases + -nonoise suppression, run `pytest` per memo, stash log, and record Attempt entry before moving to Phase C2.
