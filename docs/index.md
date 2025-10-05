@@ -19,6 +19,7 @@ These are the core, living documents that guide the project.
 * **[README_PYTORCH.md](../README_PYTORCH.md)** - Comprehensive user guide for the PyTorch implementation, including CLI usage, parallel comparison tools, and visualization.
 * **[PROJECT_STATUS.md](../PROJECT_STATUS.md)** - Tracks the current active development initiative.
 * **[loop.sh](../loop.sh)** - Supervisory automation harness for Claude loops; treat as a protected asset (do **not** delete during hygiene passes).
+* **[supervisor.sh](../supervisor.sh)** - Supervisor (galph) runner. Supports `--sync-via-git` for cross-machine turn taking; treat as a protected asset.
 * **[input.md](../input.md)** - Supervisor→Engineer steering memo. Rewritten and committed each supervisor run; treat as a protected asset.
 
 ### Architecture & Design (`docs/architecture/`)
