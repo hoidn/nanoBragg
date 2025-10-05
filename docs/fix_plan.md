@@ -664,15 +664,31 @@
 ## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
 - Spec/AT: specs/spec-a-cli.md flag catalogue, docs/architecture/detector.md §5 (pix0 workflow), docs/development/c_to_pytorch_config_map.md (pivot rules), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860
 - Priority: High
-- Status: in_progress (re-affirmed 2025-10-17 after plan refresh)
-- Owner/Date: galph/2025-10-16
+- Status: in_progress (Phase A complete 2025-10-05, moving to Phase B)
+- Owner/Date: ralph/2025-10-05
 - Plan Reference: `plans/active/cli-noise-pix0/plan.md`
 - Reproduction (C & PyTorch):
-  * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./nanoBragg`; capture whether the noisefile is skipped and log `TRACE_C: pix0_vector`.
+  * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): PyTorch CLI currently errors out on `-nonoise` (unknown flag) and ignores `-pix0_vector` overrides; `_mm` variant unsupported. Detector pipeline always recalculates pix0, so CUSTOM convention inputs cannot reproduce C traces.
-- Next Actions: Execute plan Phase A (capture C traces + parity memo), then Phase B (argparse/config wiring) followed by Phase C validations documented under `reports/2025-10-cli-flags/`.
-- Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised.
+- Next Actions: Execute plan Phase B (argparse/config wiring for both flags) followed by Phase C validations.
+- Attempts History:
+  * [2025-10-05] Phase A Complete — Tasks A1-A3 executed per plan.
+    Metrics: C reference behavior captured for both flags via parallel command execution.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_a/c_with_nonoise.log` - C run WITH -nonoise
+      - `reports/2025-10-cli-flags/phase_a/c_with_noise.log` - C run WITHOUT -nonoise
+      - `reports/2025-10-cli-flags/phase_a/pix0_trace/trace.log` - pix0 vector analysis
+      - `reports/2025-10-cli-flags/phase_a/README.md` - Complete Phase A findings
+    Observations/Hypotheses:
+      - `-nonoise` suppresses noise parameters section AND noise image generation (noiseimage.img not written)
+      - Float/int/PGM images still generated when -nonoise is active
+      - C code treats `-pix0_vector` and `-pix0_vector_mm` identically (strstr match, no unit conversion)
+      - **Critical finding:** C code does NOT divide by 1000 for `_mm` suffix; caller must provide pre-scaled values
+      - Both pix0 flags trigger `beam_convention = CUSTOM` side effect
+      - Output pix0_vector: -0.216475836 0.216343050 -0.230192414 (meters)
+    Next Actions: Phase B argparse additions (B1: add flags, B2: noise suppression wiring, B3-B5: pix0 override support with proper mm->m conversion)
+- Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag.
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced; (ii) CLI regression tests covering both flags pass; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance.
 
 ### Completed Items — Key Reference
