@@ -50,9 +50,22 @@ READ the following files:
 -- docs/debugging/debugging.md — Parallel trace-driven debugging SOP
 - $PLAN: `./fix_plan.md` (living, prioritized to‑do; keep it up to date)
 - $TESTS: `./docs/development/testing_strategy.md` (testing philosophy, tiers, seeds/tolerances, commands)
+- Set `AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md` (or project‑specific path) and consult it for authoritative reference commands and test discovery.
 <0>
 <1>
 do a deep analysis of the codebase in light of the <current long term goals>. What are some current issues / gaps and possible approaches to resolving them? Review docs/fix_plan.md and plans/active/, as previous iterations of you may have already done some legwork.
+ 
+Phase Gate (Evidence): If the active plan phase is Evidence, Do Now SHALL be evidence‑only: run the authoritative reference reproduction commands and capture the required artifacts; at most run the project’s test discovery (no execution). Do not include runnable tests.
+
+Validation Preflight (tests): Before listing any test file/identifier in Do Now, validate that it resolves via the project’s documented test discovery; if validation fails, omit tests and note “(none — evidence‑only this loop)” and add a TODO in docs/fix_plan.md documenting the missing mapping.
+
+Human Summary (input.md header): Prepend a short summary block with the following lines (validated where applicable):
+- Summary: <one‑sentence goal for this loop>
+- Phase: <Evidence | Implementation | Validation>
+- Focus: <plan item ID/title from docs/fix_plan.md>
+- Branch: <expected branch>
+- Mapped tests: <validated list | none — evidence‑only>
+- Artifacts: <key paths to produce under reports/>
 </1>
 <2>
 flip a coin using python. if it comes up <heads>:
