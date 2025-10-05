@@ -925,3 +925,10 @@ Follow-ups for Ralph:
 - Updated docs/fix_plan.md `[CLI-FLAGS-003]` First Divergence/Next Actions to reflect Phase C focus (tests, parity smoke, docs).
 - Regenerated input.md (100 lines) directing Ralph to implement Phase C1 pytest coverage, archive logs under `reports/2025-10-cli-flags/phase_c/`, and log results in fix_plan.
 - Follow-up for Ralph: add `tests/test_cli_flags.py` covering pix0 aliases + -nonoise suppression, run `pytest` per memo, stash log, and record Attempt entry before moving to Phase C2.
+
+## 2025-10-05 (galph loop)
+- Confirmed repo already contains `scaled.hkl` (commit e7a7505) so parity command inputs exist; long-term goal remains feasible.
+- Reviewed Ralph commit b6c6a61 (`tests/test_cli_flags.py`); tests look solid and cover meters/mm aliases, override persistence, and -nonoise suppression — no regressions spotted.
+- Updated `plans/active/cli-noise-pix0/plan.md` Phase C table (C1 → [D]) and added parity risk reminder about potential mm→m double conversion; Phase C2 parity run now primary focus.
+- Regenerated `input.md` directing Phase C2 parity captures (C + PyTorch runs + pytest) with explicit log paths under `reports/2025-10-cli-flags/phase_c/parity/`.
+- Next actions for Ralph: execute C/PyTorch CLI runs per input.md, archive outputs, record attempt in `[CLI-FLAGS-003]`, then proceed to Phase C3 documentation once evidence reviewed.

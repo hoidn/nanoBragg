@@ -33,9 +33,11 @@ Goal: Prove parity via targeted tests and update docs/fix_plan so future loops k
 Prereqs: Phase B code ready; editable install available for CLI tests.
 Exit Criteria: Tests and documentation changes landed; supervisor command successfully runs PyTorch CLI and reaches simulator without flag errors.
 
+**Parity risk reminder:** C instrumentation shows `DETECTOR_PIX0_VECTOR` emitted in meters even when using `-pix0_vector_mm`. During Phase C2 parity run, capture both C and PyTorch pix0 traces to confirm we are not double-converting the override.
+
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Add CLI regression tests | [ ] | Create/extend pytest case under `tests/test_cli_flags.py` asserting arg parsing accepts both `-pix0_vector` (meters) and `-pix0_vector_mm` (millimetres) plus `-nonoise`; verify resulting configs normalise to identical meter-space tensors and that `noisefile` is skipped when suppressed. |
+| C1 | Add CLI regression tests | [D] | ✅ 2025-10-16 (commit b6c6a61). `tests/test_cli_flags.py` covers meters/mm aliases, mutual exclusion, override persistence (CPU/CUDA), dtype preservation, and `-nonoise` suppression. |
 | C2 | Golden parity smoke | [ ] | Execute the supervisor command twice: once using C reference (`NB_C_BIN`), once via PyTorch CLI. Confirm CLI completes image generation; stash outputs under `reports/2025-10-cli-flags/phase_c/`. |
 | C3 | Update documentation | [ ] | Refresh `specs/spec-a-cli.md` and `README_PYTORCH.md` flag tables, note alias in `docs/architecture/c_parameter_dictionary.md`, and reference this plan from `docs/fix_plan.md` (new item) so future loops close it. |
 | C4 | Fix-plan & plan closure | [ ] | Add new fix_plan entry (e.g., `[CLI-FLAGS-003]`) pointing to this plan; set completion criteria (tests, docs, command run). Once tasks pass, close plan and archive per SOP. |
