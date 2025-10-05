@@ -56,6 +56,8 @@ def main() -> int:
     ap.add_argument("--state-file", type=Path, default=Path(os.getenv("STATE_FILE", "sync/state.json")))
     ap.add_argument("--codex-cmd", type=str, default=os.getenv("CODEX_CMD", "codex"))
     ap.add_argument("--branch", type=str, default=os.getenv("ORCHESTRATION_BRANCH", ""), help="Expected Git branch to operate on")
+    ap.add_argument("--verbose", action="store_true", help="Print state changes to console during polling")
+    ap.add_argument("--heartbeat-secs", type=int, default=int(os.getenv("HEARTBEAT_SECS", "0")), help="Console heartbeat interval while polling (0=off)")
     args, unknown = ap.parse_known_args()
 
     log_path = _log_file("supervisorlog")
@@ -99,14 +101,24 @@ def main() -> int:
         # Wait for our turn
         logp("Waiting for expected_actor=galph...")
         start = time.time()
+        last_hb = start
+        prev_state = None
         while True:
             safe_pull(logp)
             st = OrchestrationState.read(str(args.state_file))
+            cur_state = (st.expected_actor, st.status, st.iteration)
+            if args.verbose and cur_state != prev_state:
+                print(f"[sync] state: actor={st.expected_actor} status={st.status} iter={st.iteration}")
+                prev_state = cur_state
             if st.expected_actor == "galph":
                 break
             if args.max_wait_sec and (time.time() - start) > args.max_wait_sec:
                 logp("Timeout waiting for galph turn")
                 return 1
+            if args.heartbeat_secs and (time.time() - last_hb) >= args.heartbeat_secs:
+                elapsed = int(time.time() - start)
+                print(f"[sync] waiting for turn (galph)… {elapsed}s elapsed")
+                last_hb = time.time()
             time.sleep(args.poll_interval)
 
         # Mark running
@@ -141,12 +153,23 @@ def main() -> int:
         # Wait for Ralph to finish and increment iteration
         logp(f"Waiting for Ralph to complete i={st.iteration}...")
         current_iter = st.iteration
+        start2 = time.time()
+        last_hb2 = start2
+        prev_state2 = None
         while True:
             safe_pull(logp)
             st2 = OrchestrationState.read(str(args.state_file))
+            cur_state2 = (st2.expected_actor, st2.status, st2.iteration)
+            if args.verbose and cur_state2 != prev_state2:
+                print(f"[sync] state: actor={st2.expected_actor} status={st2.status} iter={st2.iteration}")
+                prev_state2 = cur_state2
             if st2.expected_actor == "galph" and st2.iteration > current_iter:
                 logp(f"Ralph completed iteration {current_iter}; proceeding to {st2.iteration}")
                 break
+            if args.heartbeat_secs and (time.time() - last_hb2) >= args.heartbeat_secs:
+                elapsed = int(time.time() - start2)
+                print(f"[sync] waiting for ralph… {elapsed}s elapsed (i={current_iter})")
+                last_hb2 = time.time()
             time.sleep(args.poll_interval)
 
     logp("Supervisor SYNC loop finished.")
