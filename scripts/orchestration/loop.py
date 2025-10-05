@@ -52,6 +52,7 @@ def main() -> int:
     ap.add_argument("--max-wait-sec", type=int, default=int(os.getenv("MAX_WAIT_SEC", 0)))
     ap.add_argument("--state-file", type=Path, default=Path(os.getenv("STATE_FILE", "sync/state.json")))
     ap.add_argument("--claude-cmd", type=str, default=os.getenv("CLAUDE_CMD", "/home/ollie/.claude/local/claude"))
+    ap.add_argument("--prompt", type=str, choices=["main", "debug"], default=os.getenv("LOOP_PROMPT", "main"), help="Select which prompt to run (default: main)")
     ap.add_argument("--branch", type=str, default=os.getenv("ORCHESTRATION_BRANCH", ""))
     args, unknown = ap.parse_known_args()
 
@@ -94,7 +95,11 @@ def main() -> int:
             push_to(branch_target, logp)
 
         # Execute one engineer loop
-        rc = tee_run([args.claude_cmd, "-p", "--dangerously-skip-permissions", "--verbose", "--output-format", "stream-json"], Path("prompts/main.md"), log_path)
+        prompt_path = Path("prompts") / f"{args.prompt}.md"
+        if not prompt_path.exists():
+            logp(f"ERROR: prompt file not found: {prompt_path}")
+            return 2
+        rc = tee_run([args.claude_cmd, "-p", "--dangerously-skip-permissions", "--verbose", "--output-format", "stream-json"], prompt_path, log_path)
 
         # Complete handoff
         safe_pull(logp)
