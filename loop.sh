@@ -6,11 +6,14 @@ SYNC_VIA_GIT=0
 POLL_INTERVAL=${POLL_INTERVAL:-5}
 MAX_WAIT_SEC=${MAX_WAIT_SEC:-0}
 STATE_FILE="sync/state.json"
+SYNC_LOOPS=${SYNC_LOOPS:-20}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --sync-via-git)
       SYNC_VIA_GIT=1; shift ;;
+    --sync-loops)
+      SYNC_LOOPS="$2"; shift 2 ;;
     --poll-interval)
       POLL_INTERVAL="$2"; shift 2 ;;
     --max-wait-sec)
@@ -96,7 +99,9 @@ with open(path,'w') as f:
 PY
 }
 
-if [[ "$SYNC_VIA_GIT" -eq 1 ]]; then
+for i in $(seq 1 "$SYNC_LOOPS"); do
+  echo "[loop] Iteration ${i}/${SYNC_LOOPS}" | tee -a "$LOG_FILE"
+  if [[ "$SYNC_VIA_GIT" -eq 1 ]]; then
   mkdir -p "$(dirname "$STATE_FILE")"
   git_safe_pull
 
@@ -167,3 +172,4 @@ else
   echo "Loop execution failed with rc=$rc" | tee -a "$LOG_FILE"
   exit "$rc"
 fi
+done
