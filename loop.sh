@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Prefer Python implementation; keep legacy below for fallback
+if [[ "${ORCHESTRATION_PYTHON:-1}" == "1" ]]; then
+  # --- Activate the conda environment required for Claude automation ---
+  source "$(conda info --base)/etc/profile.d/conda.sh"
+  conda activate pytorch
+  # --------------------------------------------------------------------
+  PYTHON_BIN=${PYTHON_BIN:-python3}
+  exec "$PYTHON_BIN" scripts/orchestration/loop.py "$@"
+fi
+
 # --- Args & defaults ---
 SYNC_VIA_GIT=0
 POLL_INTERVAL=${POLL_INTERVAL:-5}
