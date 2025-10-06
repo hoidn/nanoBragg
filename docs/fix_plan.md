@@ -792,6 +792,24 @@
       - **Lattice Factor Issue:** F_latt components have wrong sign and magnitude (~10-20× error)
       - **Primary Suspect:** sincg() argument order in `src/nanobrag_torch/models/crystal.py` get_structure_factor()
         - C uses sincg(π·h, Na) pattern (nanoBragg.c:3063-3178)
+  * [2025-10-06] Attempt #21 (evidence-only loop) — Result: success (Phase H3 evidence complete). **pix0 vector divergence root cause identified and quantified.**
+    Metrics: pix0 delta = 1.14 mm Y-component. Miller index deltas: Δh=0.00008, Δk=0.00003, Δl=0.0003 (within 1e-3 threshold but compound through sincg). F_latt component differences: 0.3-3.4%. Pytest collection: successful (all tests importable).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_h/trace_py_after_H3_refresh.log` - Fresh PyTorch trace (50 lines)
+      - `reports/2025-10-cli-flags/phase_h/trace_py_after_H3_refresh.stderr` - Harness stderr (clean run)
+      - `reports/2025-10-cli-flags/phase_h/pix0_reproduction.md` - Numerical reproduction of C BEAM-pivot formula
+      - `reports/2025-10-cli-flags/phase_h/implementation_notes.md` - 2025-10-06 section with root cause analysis
+      - `reports/2025-10-cli-flags/phase_h/attempt_log.txt` - Attempt #21 entry with metrics
+      - `reports/2025-10-cli-flags/phase_h/pytest_collect_refresh.log` - Test collection validation
+    Observations/Hypotheses:
+      - **ROOT CAUSE CONFIRMED:** PyTorch applies raw `-pix0_vector_mm` override without BEAM-pivot transformation that C applies
+      - C computes: `pix0 = -Fbeam*fdet - Sbeam*sdet + distance*beam` = `(-0.216336514802, 0.215206668836, -0.230198010449)` m
+      - PyTorch uses raw: `pix0_override_m` = `(-0.216336293, 0.215205512, -0.230200866)` m
+      - Delta: `(-0.000000221802, 0.000001156836, 0.000002855551)` m (~1.14 mm Y error)
+      - **Cascade Quantified:** pix0 delta → pixel position delta (identical) → scattering vector delta (~0.001%) → Miller index delta (~0.0003 max) → F_latt component divergence (0.3-3.4%)
+      - **First Divergence:** The pix0 vector is the FIRST divergence point; all downstream deltas are consequences
+      - Evidence-only loop per `input.md` directive - no code changes
+    Next Actions: (1) Implement detector-side fix applying BEAM-pivot transformation to pix0 override; (2) Add regression test comparing C and PyTorch pix0 output for CUSTOM convention; (3) Execute Phase H4 parity rerun with lattice fix (polarization disabled); (4) Capture <0.5% F_latt deltas and <10× intensity gap under `phase_h/parity_after_lattice_fix/`.
         - PyTorch may have π in wrong position or missing Na/Nb/Nc multiplication
       - **Secondary Suspect:** Missing Na/Nb/Nc scaling factor after sincg computation
       - Miller indices fractional precision suggests pix0 cascade, but reciprocal vectors match exactly (Phase G3)

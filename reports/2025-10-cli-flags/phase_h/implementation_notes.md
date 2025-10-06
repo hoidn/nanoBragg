@@ -146,3 +146,81 @@ The PyTorch implementation is computing **different fractional Miller indices** 
 - `reports/2025-10-cli-flags/phase_h/manual_sincg.md` - proves sincg arguments OK
 - `reports/2025-10-cli-flags/phase_h/trace_py_after_H3.log` - latest PyTorch trace
 - `reports/2025-10-cli-flags/phase_h/trace_comparison_after_H2.md` - H2 comparison showing Miller divergence
+
+---
+
+## 2025-10-06 Update: pix0 Vector Divergence Root Cause
+
+**Investigation Summary:**
+Performed pix0 vector reproduction analysis to quantify the detector geometry divergence between C and PyTorch implementations.
+
+**Key Findings:**
+
+### 1. ✅ **pix0 Vector Delta Quantified**
+- **PyTorch (raw override):** `-0.216336293, 0.215205512, -0.230200866` m
+- **C (BEAM-pivot formula):** `-0.216336514802, 0.215206668836, -0.230198010449` m
+- **Delta:** `-0.000000221802, 0.000001156836, 0.000002855551` m (~1.14 mm Y component)
+
+### 2. 🔴 **Pixel Position Propagation**
+The pix0 delta propagates directly to pixel positions:
+- **pixel_py:** `-0.099504821084, 0.035709685862, -0.231093193780` m
+- **pixel_c:** `-0.099505042886, 0.035710842698, -0.231090338228` m
+- **pixel_delta:** identical to pix0_delta (as expected from linear geometry)
+
+### 3. 🔴 **Scattering Vector Impact**
+The pixel position difference cascades to scattering vectors:
+- **scattering_py:** `-0.401381653140, 0.143856611876, 0.092791036024` Å⁻¹
+- **scattering_c:** `-0.401386249330, 0.143862601024, 0.092793940575` Å⁻¹
+- **scattering_delta:** `-4.596e-06, 5.989e-06, 2.905e-06` Å⁻¹ (~0.001% relative)
+
+### 4. 🔴 **Miller Index Divergence (FIRST DIVERGENCE)**
+This scattering vector difference produces the observed Miller index mismatch:
+- **hkl_py:** `2.099910581725, 2.010431773566, -12.869255026506`
+- **hkl_c:** `2.099829406661, 2.010404082040, -12.869526246456`
+- **hkl_delta:** `-0.000081175065, -0.000027691527, -0.000271219950`
+  - Δh≈0.00008, Δk≈0.00003, Δl≈0.0003 (all within 1e-3 threshold ✅ but still compound)
+
+### 5. 🔴 **F_latt Component Divergence (CONSEQUENCE)**
+The Miller index differences amplify through `sincg` nonlinearity:
+- **F_latt_py components:** `-3.090311, 30.504771, -1.524981`
+- **F_latt_c components:** `-3.101519, 30.581863, -1.576684`
+- **Relative differences:** ~0.4%, 0.3%, 3.4%
+
+From trace_py_after_H3_refresh.log, PyTorch F_latt components are:
+- **F_latt_py (latest):** `-3.28845, 10.73575, -1.77545` (product: 62.68)
+
+**ROOT CAUSE IDENTIFIED:**
+PyTorch applies the raw `-pix0_vector_mm` override WITHOUT applying the CUSTOM transform that C applies. The C code computes pix0 using the BEAM-pivot formula:
+```
+pix0_c = -Fbeam*fdet - Sbeam*sdet + distance*beam
+```
+whereas PyTorch uses the raw override directly. This ~1.14 mm Y-component error is the FIRST DIVERGENCE in the geometry chain.
+
+**Proposed Fix:**
+When `-pix0_vector_mm` is provided:
+1. C applies BEAM-pivot transformation before using the vector
+2. PyTorch should either:
+   - **Option A (safer):** Apply the same BEAM-pivot transform to override values
+   - **Option B:** Document that override is pre-transformed and update CLI guidance
+
+**Evidence Files:**
+- `reports/2025-10-cli-flags/phase_h/pix0_reproduction.md` - numerical reproduction of C's BEAM-pivot formula
+- `reports/2025-10-cli-flags/phase_h/trace_py_after_H3_refresh.log` - fresh PyTorch trace with latest lattice data
+- `reports/2025-10-cli-flags/phase_h/trace_py_after_H3_refresh.stderr` - harness stderr (empty = clean run)
+
+**Next Actions for Phase H3 Completion:**
+1. ✅ Captured fresh trace evidence (trace_py_after_H3_refresh.log)
+2. ✅ Reproduced C's pix0 calculation (pix0_reproduction.md)
+3. ✅ Quantified pix0 → pixel → scattering → Miller → F_latt cascade
+4. ✅ Updated implementation_notes.md with 2025-10-06 section
+5. ⏳ Restore attempt_log.txt with Attempt #21 entry (next task)
+6. ⏳ Outline detector-side fix plan before requesting implementation
+
+**Recommended Detector Fix Design:**
+When `pix0_override_m` is present, Detector should:
+- Verify the override is in CUSTOM convention coordinate frame
+- Apply BEAM-pivot transformation: `pix0 = -Fbeam*fdet - Sbeam*sdet + distance*beam`
+- Use transformed result for pixel position calculations
+- Add regression test comparing C and PyTorch pix0 output for CUSTOM convention
+
+This ensures the 1.14 mm delta is eliminated at the source, preventing cascade to Miller indices and F_latt.

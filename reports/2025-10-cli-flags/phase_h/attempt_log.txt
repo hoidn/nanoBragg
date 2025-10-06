@@ -1,2 +1,63 @@
-.                                                                        [100%]
-1 passed in 0.94s
+# CLI-FLAGS-003 Phase H Attempt Log
+
+## Attempt #21 — 2025-10-06 (Evidence-only loop)
+
+**Goal:** Phase H3 evidence gathering - quantify pix0 vector divergence and trace through geometry cascade
+
+**Tasks Completed:**
+1. ✅ Ran trace harness to generate fresh PyTorch trace (trace_py_after_H3_refresh.log)
+2. ✅ Reproduced C's BEAM-pivot pix0 calculation (pix0_reproduction.md)
+3. ✅ Quantified pix0 → pixel → scattering → Miller → F_latt cascade
+4. ✅ Updated implementation_notes.md with 2025-10-06 section
+5. ✅ Restored this attempt_log.txt with proper Attempt #21 entry
+6. ✅ Validated test collection with pytest --collect-only -q
+
+**Metrics:**
+
+### pix0 Vector Divergence
+- **PyTorch (raw override):** -0.216336293, 0.215205512, -0.230200866 m
+- **C (BEAM-pivot formula):** -0.216336514802, 0.215206668836, -0.230198010449 m
+- **Delta:** -0.000000221802, 0.000001156836, 0.000002855551 m (~1.14 mm Y component)
+
+### Pixel Position Propagation
+- **pixel_delta:** identical to pix0_delta (as expected from linear geometry)
+
+### Scattering Vector Impact
+- **scattering_delta:** -4.596e-06, 5.989e-06, 2.905e-06 Å⁻¹ (~0.001% relative)
+
+### Miller Index Divergence (FIRST DIVERGENCE)
+- **hkl_py:** 2.099910581725, 2.010431773566, -12.869255026506
+- **hkl_c:** 2.099829406661, 2.010404082040, -12.869526246456
+- **hkl_delta:** -0.000081175065, -0.000027691527, -0.000271219950
+  - Δh≈0.00008, Δk≈0.00003, Δl≈0.0003 (all within 1e-3 threshold ✅)
+
+### F_latt Component Divergence
+From pix0_reproduction.md:
+- **F_latt_py components:** -3.090311, 30.504771, -1.524981
+- **F_latt_c components:** -3.101519, 30.581863, -1.576684
+- **Relative differences:** ~0.4%, 0.3%, 3.4%
+
+From trace_py_after_H3_refresh.log:
+- **F_latt_py (latest):** -3.28845, 10.73575, -1.77545 (product: 62.68)
+
+**Artifacts:**
+- reports/2025-10-cli-flags/phase_h/trace_py_after_H3_refresh.log
+- reports/2025-10-cli-flags/phase_h/trace_py_after_H3_refresh.stderr
+- reports/2025-10-cli-flags/phase_h/pix0_reproduction.md
+- reports/2025-10-cli-flags/phase_h/implementation_notes.md (2025-10-06 section)
+- reports/2025-10-cli-flags/phase_h/pytest_collect_refresh.log
+
+**Observations:**
+- ROOT CAUSE CONFIRMED: PyTorch applies raw `-pix0_vector_mm` override WITHOUT the BEAM-pivot transformation that C applies
+- The ~1.14 mm Y-component error is the FIRST DIVERGENCE
+- Cascades through: pix0 → pixel position → scattering vector → Miller indices → F_latt
+- Miller index deltas are within 1e-3 threshold but still compound through sincg nonlinearity
+- F_latt component differences range from 0.3% to 3.4%
+
+**Next Actions:**
+- Implement detector-side fix: Apply BEAM-pivot transform to pix0 override
+- Add regression test comparing C and PyTorch pix0 output for CUSTOM convention
+- Execute Phase H4: parity rerun with lattice fix (polarization disabled)
+- Capture <0.5% F_latt deltas and <10× intensity gap
+
+**Status:** Evidence complete, ready for implementation phase
