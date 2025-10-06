@@ -1272,3 +1272,8 @@ Follow-ups for Ralph:
 - Noted that `reports/2025-10-cli-flags/phase_k/f_latt_fix/test_metrics_failure.json` still reflects pre-pivot ratios (corr≈0.173); next loop must regenerate after SAMPLE pivot to see if F_cell/F_latt remain off.
 - Vectorization plan remains untouched; Phase A baselines for tricubic/absorption still pending once CLI parity unblocks bandwidth.
 - Follow-up for Ralph: execute Phase K2 per new memo, write updated scaling metrics (including F_cell vs C), keep Attempt #41 notes intact, and stage plan for K3 if ratios finally align.
+
+## 2025-10-31 (galph loop — K2 rescope)
+- Evidence review shows PyTorch still rescales MOSFLM cross products; C only does so when `user_cell` is set. Root cause for F_latt_b ≈ +21.6% identified. K2b added to plan with required `mosflm_rescale.py` artifact.
+- Noted BeamConfig Kahn factor should default to 0.0 (C `polarization`). Reopened Phase I2 and updated fix_plan next steps to include default realignment during K3.
+- Issued new Evidence memo (input.md) directing Ralph to rerun trace harness, refresh scaling markdown, and capture orientation deltas before touching normalization code.
