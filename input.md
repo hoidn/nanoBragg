@@ -6,7 +6,7 @@ Branch: feature/spec-based-2
 Mapped tests: tests/test_cli_scaling.py::TestFlattSquareMatchesC::test_f_latt_square_matches_c (collect-only verified 2025-11-08)
 Artifacts: reports/2025-10-cli-flags/phase_k/f_latt_fix/post_fix/
 Do Now: CLI-FLAGS-003 Phase K3g3 — env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::TestFlattSquareMatchesC::test_f_latt_square_matches_c -v
-If Blocked: Capture new base-lattice traces via reports/2025-10-cli-flags/phase_k/base_lattice/run_c_trace.sh and trace_harness.py, stash outputs under reports/2025-10-cli-flags/phase_k/base_lattice/blocked/<timestamp>/, and log the stall in docs/fix_plan.md Attempt history before awaiting guidance.
+If Blocked: Capture new base-lattice traces via reports/2025-10-cli-flags/phase_k/base_lattice/run_c_trace.sh and trace_harness.py, stash outputs under reports/2025-10-cli-flags/phase_k/base_lattice/blocked/<timestamp>/, and log the stall in docs/fix_plan.md Attempts History, then proceed with trace-first debugging per prompts/debug.md.
 
 Priorities & Rationale:
 - plans/active/cli-noise-pix0/plan.md: K3g3 exit criteria demand rerunning the scaling pytest node and nb-compare with updated artifacts before entering Phase L.
@@ -24,13 +24,12 @@ How-To Map:
 - Update scaling_chain.md and summary.md with new metrics, and append Attempt notes plus artifact paths to docs/fix_plan.md under CLI-FLAGS-003.
 
 Pitfalls To Avoid:
-- Do not run the full pytest suite; stay on the single selector until code changes land.
+- Do not run the full pytest suite more than once; run it once at the end if code changed. For prompt/docs-only loops, use `pytest --collect-only -q`.
 - Keep NB_C_BIN pointed at ./golden_suite_generator/nanoBragg for all trace and nb-compare runs.
 - Avoid rerunning scripts/trace_per_phi.py until the scaling parity shows green; we need clean baseline first.
 - Preserve device/dtype neutrality—when regenerating traces, use float64 CPU per plan but avoid hard-coding .cpu() into production code.
 - Do not overwrite existing artifacts; rely on the ${stamp} suffix to preserve provenance.
 - Remember Protected Assets rule: leave docs/index.md and loop.sh untouched.
-- Skip git add/commit until the supervisor review closes the loop.
 - Ensure KMP_DUPLICATE_LIB_OK=TRUE is set for every Python invocation that imports torch.
 - Capture nb-compare stdout/stderr in the same post_fix directory for traceability.
 - Document any deviation (like CUDA unavailability) directly in docs/fix_plan.md Attempt log.
