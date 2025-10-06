@@ -101,6 +101,10 @@ Subagents Playbook (required delegation)
 - Narrow & Fix: Apply the smallest change that fixes the FIRST DIVERGENCE. Prioritize geometry before physics. Re‑run the failing case + close neighbors; regenerate traces if geometry/units changed.
 </step 4>
 
+<step 4.5>
+- Static analysis (if configured): Run `pyrefly check src` to catch obvious issues before parity/regression tests. Address high‑confidence findings that relate to the changed scope. Do not introduce or install new tools mid‑loop; skip this step if pyrefly is not already configured for this repo.
+</step 4.5>
+
 <step 5>
 - Pass/Fail Gates & Rollback:
   • Final Sanity (Hard Gate): Re‑run the mapped authoritative tests under required env; thresholds must pass.
