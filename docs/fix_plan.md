@@ -661,8 +661,24 @@
       - pix0_vector values still match PyTorch pre-F2: `(-0.2163, 0.2152, -0.2302)` vs C `(-0.21648, 0.21634, -0.23019)`
       - Remaining 1.14mm Y-axis discrepancy likely due to Phase G crystal orientation issue, not detector
     Next Actions: (1) Mark plan Phase F2 as done; (2) Execute Phase F3 parity smoke test; (3) Continue to Phase G for crystal orientation fix which is likely the root cause of remaining pix0 discrepancy.
+  * [2025-10-05] Attempt #12 (ralph) — Result: evidence-only (Phase F3 partial). **Parity validation reveals severe geometry divergence after detector fixes.**
+    Metrics: Correlation = -5.03e-06 (near zero, indicating completely different diffraction patterns). RMSE = 75.44. Max |Δ| = 1.150e+05. C sum = 6.491e+03, PyTorch sum = 7.572e+05 (sum_ratio = 116.65×). Pytest collection: 624 items / 1 skipped (successful).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/c_reference/img.bin` - C float image (24M, max_I=446.254)
+      - `reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/c_reference/command.log` - C execution log (7.9K)
+      - `reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/pytorch/torch_img.bin` - PyTorch float image (24M, max_I=1.150e+05)
+      - `reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/pytorch/command.log` - PyTorch execution log (437B)
+      - `reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/pytest_collect.log` - pytest --collect-only output
+      - `reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/metrics.json` - Parity metrics summary
+    Observations/Hypotheses:
+      - **Critical finding:** Near-zero correlation (-5e-06) proves the detector F1/F2 fixes did NOT resolve the geometry mismatch
+      - Phase F beam_vector and pix0 fixes appear ineffective for this configuration (MOSFLM A.mat with custom overrides)
+      - Missing MOSFLM A* orientation (Phase G) is likely the dominant factor preventing parity
+      - Attempted to extract pix0/beam vectors for verification but CUSTOM convention initialization failed in standalone Detector instantiation (issue with enum handling)
+      - 116× sum ratio indicates massive intensity scaling mismatch alongside geometry divergence
+    Next Actions: (1) Execute Phase G (G1-G3) to implement MOSFLM A* orientation support in Crystal before retrying parity; (2) Generate full parallel traces comparing C/PyTorch lattice vectors at pixel (1145,2220) to identify remaining divergence; (3) Verify Phase F fixes actually apply to CLI configurations (current evidence suggests they may not be triggered for this supervisor command); (4) Update plan Phase F3 status to blocked pending Phase G completion.
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
-- Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; (viii) Phase G crystal orientation ❌ next loop (unblocked); (ix) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌ blocked on G.
+- Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; **(viii) Phase F3 parity evidence captured** ✅ (Attempt #12); (ix) Phase G crystal orientation ❌ next loop (unblocked); (x) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌ blocked on G.
 
 ### Completed Items — Key Reference
 (See `docs/fix_plan_archive.md` for the full historical ledger.)
