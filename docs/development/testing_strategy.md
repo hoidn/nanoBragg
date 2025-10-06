@@ -25,6 +25,12 @@ All tests will be implemented using the PyTest framework.
 - **Vectorization check:** Confirm `_compute_physics_for_position` and related helpers remain batched across sources/phi/mosaic/oversample; extend broadcast dimensions instead of adding Python loops.
 - **Runtime checklist:** Consult `docs/development/pytorch_runtime_checklist.md` during development and cite it in fix-plan notes for PyTorch changes.
 
+### 1.5 Loop Execution Notes (Do Now + Validation Scripts)
+
+- Do Now must include an exact pytest command: In the supervisor→engineer handoff (`input.md`), include the precise `pytest` node(s) that reproduce the active item. If no test exists, first author the minimal targeted test and then run it.
+- Prefer reusable validation scripts: Place ad‑hoc validations under `scripts/validation/` and reference them from `input.md` rather than embedding Python snippets inline. Keep them portable and invoke via the project’s standard CLI/env.
+- Test cadence per loop: Run targeted tests first; execute the full `pytest` suite at most once per engineer turn (end of loop) when code changed. For prompt/docs‑only loops, use `pytest --collect-only -q` to verify import/collection.
+
 ## 2. Configuration Parity
 
 **CRITICAL REQUIREMENT:** Before implementing any test that compares against C-code output, you **MUST** ensure exact configuration parity. All golden test cases must be generated with commands that are verifiably equivalent to the PyTorch test configurations.
