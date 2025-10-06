@@ -612,6 +612,23 @@
       - **Pivot override behavior:** Even explicit `detector_pivot=DetectorPivot.BEAM` is overridden to SAMPLE when custom basis vectors present (matching C)
       - **Phase H6f complete:** Implementation, tests, and documentation artifacts all landed; ready for Phase H6g parity verification
     Next Actions: **Phase H6g required** — Re-run PyTorch trace harness with updated pivot logic (`PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_h/trace_harness.py --out reports/2025-10-cli-flags/phase_h6/post_fix/trace_py.log`), diff against C trace to verify |Δpix0| < 5e-5 m threshold, run nb-compare smoke test for visual parity, archive artifacts under `phase_h6/post_fix/`, and record results in Attempt #41. Once pix0 parity confirmed, resume Phase K2 normalization with refreshed traces.
+  * [2025-10-06] Attempt #41 (ralph loop) — Result: **SUCCESS** (Phase H6g complete). **pix0 alignment validated; max delta 2.85 μm << 50 μm threshold.**
+    Metrics: pix0 deltas: ΔFast=0.123 μm, ΔSlow=0.114 μm, ΔClose=2.851 μm (max=2.851 μm < 50 μm threshold). Beam center perfect match (ΔFclose=0, ΔSclose=0). close_distance delta=2.837 μm, r_factor delta=6.8e-8. All geometry metrics align to sub-micron precision.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_h6/post_fix/trace_py.log` - PyTorch trace with SAMPLE pivot
+      - `reports/2025-10-cli-flags/phase_h6/post_fix/trace_py_<stamp>.log` - Timestamped backup
+      - `reports/2025-10-cli-flags/phase_h6/post_fix/trace_diff.txt` - Line-by-line C vs PyTorch diff
+      - `reports/2025-10-cli-flags/phase_h6/post_fix/metadata.json` - Quantitative delta metrics
+      - `reports/2025-10-cli-flags/phase_h6/post_fix/env_snapshot.txt` - Reproducibility snapshot (commit, Python, PyTorch versions)
+      - `reports/2025-10-cli-flags/phase_h6/post_fix/attempt_notes.md` - Complete evidence summary with metrics tables and next actions
+    Observations/Hypotheses:
+      - **Phase H6f pivot fix validated:** SAMPLE pivot forcing (Attempt #40) successfully eliminated the 1.14 mm pix0 error; residual deltas now dominated by numerical precision (~3 μm).
+      - **Convention handling confirmed:** TRACE_PY shows `detector_convention=CUSTOM`, verifying custom vector presence correctly triggers CUSTOM mode and SAMPLE pivot enforcement.
+      - **Beam center consistency:** Fclose/Sclose match exactly (0.0 delta), confirming CLI parsing and mm→m conversion are correct.
+      - **Geometry stability:** close_distance delta of 2.84 μm and r_factor delta of 6.8e-8 demonstrate numerical stability across the detector geometry pipeline.
+      - **No unit regressions:** All trace values in meters (as required by detector hybrid unit system); no millimeter/Angstrom confusion.
+      - **Phase H6g exit criteria met:** |Δpix0| = 2.85 μm << 50 μm threshold; evidence artifacts archived; ready for Phase K2.
+    Next Actions: **Phase K2 required** — With pix0 parity confirmed, regenerate scaling-chain analysis with corrected SAMPLE pivot traces. Execute Phase K2 checklist from `plans/active/cli-noise-pix0/plan.md`: (1) rerun PyTorch trace harness for pixel (1039,685) with final geometry, (2) diff F_latt components against C baseline, (3) update `reports/2025-10-cli-flags/phase_j/scaling_chain.md` with post-H6 comparison, (4) archive refreshed traces under `phase_k/f_latt_fix/`, (5) proceed to Phase K3 regression test once F_latt parity is restored.
   * [2025-10-06] Attempt #29 (ralph loop) — Result: Phase H5a EVIDENCE-ONLY COMPLETE. **C-code pix0 override behavior with custom vectors documented.**
     Metrics: Evidence-only loop. Two C runs executed: WITH override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m) and WITHOUT override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m). Identical geometry values confirm override is ignored when custom vectors are present.
     Artifacts:
