@@ -539,6 +539,24 @@
       - Revert Attempt #29 (Phase H5b) so pix0 overrides are ignored whenever custom detector vectors are supplied, restoring C precedence (logs to `reports/2025-10-cli-flags/phase_h5/pytest_h5b_revert.log`).
       - After the revert, capture new PyTorch traces (`reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/`) and update `phase_h5/parity_summary.md` with pix0/F_latt deltas (<5e-5 m, <1e-3 relative error).
       - Record the follow-up attempt in this entry and then resume Phase K normalization work once geometry parity is confirmed.
+  * [2025-10-22] Attempt #31 (ralph loop) — Result: **SUCCESS** (Phase H5b revert complete). **Custom vector pix0 override precedence restored to match C behavior.**
+    Metrics: Targeted pytest 4/4 passed in 2.43s (TestCLIPix0Override suite). Core tests: cli_flags 26/26, detector_geometry 12/12, crystal_geometry 19/19 (57 passed, 1 warning).
+    Artifacts:
+      - `src/nanobrag_torch/models/detector.py:518-539` - Added `has_custom_vectors` detection logic and gated pix0_override application
+      - `reports/2025-10-cli-flags/phase_h5/pytest_h5b_revert.log` - Targeted test run log (4 tests, all passing)
+      - `reports/2025-10-cli-flags/phase_h5/implementation_notes.md` - Updated with Attempt #31 details and rationale
+    Observations/Hypotheses:
+      - **Revert rationale:** Attempt #30 evidence proves C ignores `-pix0_vector_mm` when custom vectors present
+      - **Detection logic:** `has_custom_vectors = any([custom_fdet/sdet/odet_vector is not None])`
+      - **Precedence gate:** `if pix0_override_tensor is not None and not has_custom_vectors:`
+      - **Comments updated:** Reference `c_precedence_2025-10-22.md` for evidence trail
+      - **Device/dtype neutrality:** Preserved throughout (no `.cpu()`/`.cuda()` calls)
+      - **Test coverage:** All pix0 override scenarios pass (CPU/CUDA parametrizations)
+    Next Actions:
+      - Execute Phase H5c: capture new PyTorch traces using Phase H trace harness
+      - Compare with C traces from `reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/`
+      - Update `phase_h5/parity_summary.md` with pix0/F_latt deltas (<5e-5 m, <1e-3 relative error)
+      - Proceed to Phase K normalization work once geometry parity confirmed
   * [2025-10-17] Attempt #25 (ralph) — Result: success (Phase H4a-c complete). **Post-rotation beam-centre recomputation implemented and verified.**
     Metrics: pix0_vector parity achieved - C vs PyTorch deltas < 2e-8 m (well within 5e-5 m tolerance). Test suite: test_cli_flags.py 23/23 passed, test_detector_geometry.py 12/12 passed, test_crystal_geometry.py 19/19 passed (54 total).
     Artifacts:
