@@ -11,6 +11,8 @@ Autonomy & Interaction Policy (No‑Question Mode)
 - If an item is already `in_progress`, continue it OR switch to the `input.md` Do Now if provided and justified; in either case, ensure exactly one item is attempted this loop.
 - Produce brief preambles and then act: read files, search, run tests, generate traces, update plan, and commit per gates.
 - Only two messages per loop: a short “next action” preamble before the first command, and the final Loop Output checklist. No idle greetings.
+- Include the exact pytest command(s) in the Do Now and use them for reproduction; if no test exists, write the minimal targeted test first and then run it.
+- Prefer using `scripts/validation/*` scripts for reproducible validations; do not embed ad‑hoc Python in `input.md`.
 
 Use When (Triggers)
 - Any AT‑PARALLEL test fails or correlation < required threshold in specs/spec‑a‑parallel.md
@@ -34,9 +36,10 @@ Non‑Negotiable Guardrails
    - If either `tests/parity_cases.yaml` or `tests/test_parity_matrix.py` is missing, PAUSE. Add a fix_plan item, generate both files (shared pytest harness + YAML case definitions), and rerun Step 0 before touching the failing AT. Use the canonical structure: parameterised pytest that runs the C binary (`NB_C_BIN`) and PyTorch CLI (`sys.executable -m nanobrag_torch`), enforces corr/MSE/RMSE/max|Δ|/sum ratios, and writes `metrics.json` artifacts on failure.
    - Minimal YAML entry for the failing AT must include `id`, `base_args`, `thresholds`, `runs:[name, extra_args]` (and seeds where needed). Do not continue until the files exist and are referenced by the matrix.
 9) Matrix Gate — Canonical Parity First:
-   - In equivalence loops, the FIRST command MUST be the mapped C↔Py parity path (pytest node from the Matrix or the canonical harness listed next to it). Do not begin with PyTorch‑only tests.
-   - Honor `tests/parity_cases.yaml`: if the AT has an entry there, run the corresponding case via `tests/test_parity_matrix.py` before any auxiliary diagnostics.
-   - Confirm `tests/test_parity_matrix.py` imports cleanly; if the import fails or the file is missing, return to Step 0 and bootstrap the harness before proceeding.
+    - In equivalence loops, the FIRST command MUST be the mapped C↔Py parity path (pytest node from the Matrix or the canonical harness listed next to it). Do not begin with PyTorch‑only tests.
+    - Honor `tests/parity_cases.yaml`: if the AT has an entry there, run the corresponding case via `tests/test_parity_matrix.py` before any auxiliary diagnostics.
+    - Confirm `tests/test_parity_matrix.py` imports cleanly; if the import fails or the file is missing, return to Step 0 and bootstrap the harness before proceeding.
+10) Test cadence: run targeted tests first; execute the full test suite at most once per loop at the end if code changed. For prompt/docs‑only loops, use `pytest --collect-only -q`.
    - If NB_C_BIN is unset/invalid, resolve to `./golden_suite_generator/nanoBragg` or fallback `./nanoBragg` if the former is absent; verify it exists before running tests.
 10) Contradiction Rule — Parity Wins:
    - **⚠️⚠️⚠️ IMPORTANT — STOP IMMEDIATELY IF PARITY FAILS!**
@@ -225,6 +228,6 @@ Loop Checklist (self‑audit)
 - Produced C & Py traces; identified FIRST DIVERGENCE
 - Implemented a minimal, surgical fix (no test edits)
 - Reported metrics: corr/MSE/RMSE/max|Δ|/sum ratio; heatmap attached
-- Verified spec thresholds; ran full suite; updated fix_plan with trace links
+ - Verified spec thresholds; ran full suite once if code changed (docs/prompt‑only used `--collect-only`); updated fix_plan with trace links
 - No thresholds changed; no unrelated changes sneaked in
  - Updated docs/fix_plan.md at START and END per `prompts/update_fix_plan.md` (one item attempted; failure recorded without being dropped)

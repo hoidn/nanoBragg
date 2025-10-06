@@ -78,8 +78,10 @@ READ the following files (read them yourself. you may delegate exploration of ot
 - $TESTS: `./docs/development/testing_strategy.md` (testing philosophy, tiers, seeds/tolerances, commands)
 <step 0>
 - Ensure exactly one high-value item is chosen for this loop’s execution. If `input.md` provides a "Do Now", prefer that selection and mark it `in_progress` (multiple items may be `in_progress` in the ledger, but execute only one this loop). Record/refresh its reproduction commands before proceeding.
-- run the full test suite 
-</step 1>
+</step 0>
+<step 1>
+- Map to the exact pytest command from `./input.md` Do Now (or derive it from `./docs/development/testing_strategy.md`). Run that targeted command to reproduce a baseline. If no such test exists, write the minimal targeted test first and then run it.
+- Do not run the full test suite at this stage.
 </step 1>
 <step 2>
 declare:
@@ -113,6 +115,7 @@ declare:
    a. The entire suite MUST pass without any `FAILED` or `ERROR` statuses.
    b. **Test collection itself MUST succeed.** An `ImportError` or any other collection error is a CRITICAL blocking failure that you must fix immediately.
    c. An iteration is only considered successful if this full regression check passes cleanly.
+   d. Run the full suite at most once in this loop; when iterating, re-run only targeted tests until ready for the final full run. For prompt/docs‑only loops, use `pytest --collect-only -q`.
    When reporting results, cite the Acceptance Test numbers covered (e.g., "AT-28, AT-33").
    If a loop changes only non-code artifacts (e.g., prompts/docs/plan), at minimum ensure `pytest --collect-only -q` succeeds before committing.
 </step 6>
@@ -163,6 +166,7 @@ Loop output checklist (produce these in each loop):
 - Search summary (what exists/missing; file pointers).
 - Diff or file list of changes.
 - Targeted test or example workflow updated/added and its result.
+- Exact pytest command(s) executed for reproduction and (if applicable) the single full-suite run.
 - `docs/fix_plan.md` delta (items done/new).
 - Any CLAUDE.md updates (1–3 lines max).
 - Any `arch.md` updates you made or propose (1–3 lines; rationale).
@@ -174,7 +178,7 @@ Loop Self‑Checklist (end of every loop):
 - Module/layer check done and justified.
 - Spec sections/acceptance IDs/test names quoted and limited (one area; 1–2 items max).
 - Backpressure present: unit + smallest integration, with expected pass/fail and remediation.
-- **Full `pytest tests/` run from project root completed and passed without any errors or collection failures.** (Doc/prompt-only loops may instead run `pytest --collect-only -q`.)
+- **Full `pytest tests/` run from project root executed at most once in this loop and passed without any errors or collection failures.** (Doc/prompt-only loops use `pytest --collect-only -q`.)
 - Any new problems discovered during this loop - or existing problems not mentioned in the docs/fix_plan.md - added to the docs/fix_plan.md TODO list.
 - Evidence includes file:line pointers for presence/absence; no "assume missing".
 - Scope stayed within a single module category; if not, capture deferral in `docs/fix_plan.md`.
