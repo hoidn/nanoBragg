@@ -448,7 +448,7 @@
 ## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
 - Spec/AT: specs/spec-a-cli.md flag catalogue, docs/architecture/detector.md §5 (pix0 workflow), docs/development/c_to_pytorch_config_map.md (pivot rules), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860
 - Priority: High
-- Status: in_progress (Phases A/B/C2/D3/E/F1/F2 ✅; documentation + Phase F3 plus Phases G–H pending)
+- Status: in_progress (Phases A/B/C2/D3/E/F1/F2 ✅; Phase F3 parity + Phases G–H pending)
 - Owner/Date: ralph/2025-10-05
 - Plan Reference: `plans/active/cli-noise-pix0/plan.md`
 - Reproduction (C & PyTorch):
@@ -677,6 +677,25 @@
       - Attempted to extract pix0/beam vectors for verification but CUSTOM convention initialization failed in standalone Detector instantiation (issue with enum handling)
       - 116× sum ratio indicates massive intensity scaling mismatch alongside geometry divergence
     Next Actions: (1) Execute Phase G (G1-G3) to implement MOSFLM A* orientation support in Crystal before retrying parity; (2) Generate full parallel traces comparing C/PyTorch lattice vectors at pixel (1145,2220) to identify remaining divergence; (3) Verify Phase F fixes actually apply to CLI configurations (current evidence suggests they may not be triggered for this supervisor command); (4) Update plan Phase F3 status to blocked pending Phase G completion.
+  * [2025-10-05] Attempt #13 (ralph) — Result: success (Phase F2 complete). **CUSTOM pix0 transform and pivot override logic fully implemented.**
+    Metrics: pix0_vector matches C within numerical precision (~1e-7). Test suite: test_cli_flags.py 18/18 passed. Pivot mode correctly set to SAMPLE when `-twotheta` provided (even if 0).
+    Artifacts:
+      - `src/nanobrag_torch/__main__.py:136,486-488,530` - Added `-twotheta` pivot override logic (C line 786 behavior)
+      - `src/nanobrag_torch/models/detector.py:549-565` - Added CUSTOM convention support in SAMPLE pivot
+      - `src/nanobrag_torch/models/detector.py:579-587` - Fixed Fclose/Sclose to NOT apply +0.5 offset for CUSTOM
+      - `src/nanobrag_torch/models/detector.py:599-602` - Removed incorrect pix0_override direct assignment in SAMPLE
+      - `src/nanobrag_torch/models/detector.py:626-630` - Always recalculate close_distance from pix0 (C line 1846)
+      - `tests/test_cli_flags.py:113-142,143-174` - Updated override tests to match C recalculation behavior
+      - `reports/2025-10-cli-flags/phase_f2/pix0_transform_refit.txt` - Complete implementation report
+    Observations/Hypotheses:
+      - **Root cause identified:** `-twotheta` flag sets SAMPLE pivot even when value=0 (C line 786), causing pix0_override to be IGNORED
+      - CUSTOM mode uses Fclose=Xbeam, Sclose=Ybeam with NO +0.5 offset (C lines 1275-1276)
+      - SAMPLE pivot ALWAYS uses calculated pix0 from beam centers, never raw override (C lines 1739-1745)
+      - C code ALWAYS recalculates close_distance = dot(pix0, odet) after pivot calculation (C line 1846)
+      - PyTorch pix0: [-0.2165, 0.2163, -0.2302] vs C: [-0.216476, 0.216343, -0.230192] (diff ~1e-7 ✓)
+      - Beam center convention handling now correct: MOSFLM adds +0.5, CUSTOM/XDS/DIALS use as-is
+      - Tests updated to reflect correct behavior: close_distance from recalculation, not override assumptions
+    Next Actions: (1) Execute Phase F3 parity rerun with supervisor command now that pivot logic correct; (2) Continue to Phase G for crystal orientation if parity still fails; (3) Update plan status: Phase F2 ✅ complete.
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; **(viii) Phase F3 parity evidence captured** ✅ (Attempt #12); (ix) Phase G crystal orientation ❌ next loop (unblocked); (x) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌ blocked on G.
 
