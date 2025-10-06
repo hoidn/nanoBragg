@@ -85,7 +85,7 @@ Exit Criteria: Crystal trace (rotated a/b/c vectors) aligns with C for the super
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
-| G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+| G2 | Teach `Crystal` to ingest orientation | [D] | ✅ 2025-10-17 Attempt #17 (ralph). Modified `Crystal.compute_cell_tensors()` (lines 545-603) to detect MOSFLM orientation in config, convert to tensors with proper device/dtype, and integrate with Core Rules 12-13 pipeline. Tests: 26/26 passed (CLI), 35/35 passed (crystal). Metric duality perfect. Artifacts: `reports/2025-10-cli-flags/phase_g/README.md`. |
 | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
 
 ### Phase H — Polarization Alignment (follow-up)

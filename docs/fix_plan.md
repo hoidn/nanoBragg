@@ -728,8 +728,24 @@
       - Next phase requires Crystal to check for MOSFLM orientation and apply Core Rules 12-13 (misset pipeline + metric duality)
       - C reference: nanoBragg.c:3135-3278 shows full orientation handling including misset rotation and recalculation
     Next Actions: Execute Phase G2 per plan task: Update Crystal.__init__ to detect MOSFLM orientation in config, apply it instead of canonical build, integrate with misset rotation (Core Rule 12), and ensure metric duality (Core Rule 13). Then run Phase G3 trace verification.
+  * [2025-10-17] Attempt #17 (ralph) — Result: success (Phase G2 complete). **MOSFLM orientation ingestion implemented in Crystal.**
+    Metrics: Test suite: 26/26 passed (mapped CLI tests), 35/35 passed (crystal geometry tests). Metric duality perfect: a·a* = b·b* = c·c* = 1.000000000000. Runtime: 2.51s (mapped), 7.50s (crystal).
+    Artifacts:
+      - `src/nanobrag_torch/models/crystal.py:545-603` - Added MOSFLM orientation detection and tensor conversion
+      - `reports/2025-10-cli-flags/phase_g/README.md` - Complete Phase G2 implementation report
+      - Manual validation: `/tmp/test_mosflm_exact.py` demonstrates CLI→Config→Crystal pipeline with metric duality
+    Observations/Hypotheses:
+      - Crystal.compute_cell_tensors() now detects `mosflm_a_star/b_star/c_star` in config (lines 547-550)
+      - When present, converts numpy arrays to tensors with proper device/dtype (lines 554-568)
+      - Uses MOSFLM vectors as "base" reciprocal vectors instead of computing from cell parameters
+      - Core Rule 12 pipeline unchanged: misset rotation still applies to reciprocal vectors (lines 611-635)
+      - Core Rule 13 pipeline unchanged: real-from-reciprocal, then reciprocal-from-real using V_actual (lines 637-710)
+      - Backward compatible: falls back to canonical orientation when MOSFLM vectors not provided
+      - Differentiability preserved: no `.item()`, `.detach()`, or device hard-coding
+      - Device/dtype neutrality maintained via `.to()` coercion
+    Next Actions: (1) Execute Phase G3 trace verification comparing PyTorch lattice vectors with C reference at supervisor command pixel; (2) Rerun Phase F3 parity command with MOSFLM orientation now wired through Crystal; (3) Document correlation metrics in `phase_g/parity_after_orientation_fix/`; (4) Update plan to mark G2 complete.
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
-- Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; **(viii) Phase F3 parity evidence captured** ✅ (Attempt #12); (ix) Phase G crystal orientation ❌ next loop (unblocked); (x) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌ blocked on G.
+- Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; **(viii) Phase F3 parity evidence captured** ✅ (Attempt #12); **(ix) Phase G2 MOSFLM orientation ingestion complete** ✅ (Attempt #17); (x) Phase G3 trace verification ❌ next loop (unblocked); (xi) Phase F3 parity rerun ❌ blocked on G3; (xii) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌ blocked on G3.
 
 ### Completed Items — Key Reference
 (See `docs/fix_plan_archive.md` for the full historical ledger.)
