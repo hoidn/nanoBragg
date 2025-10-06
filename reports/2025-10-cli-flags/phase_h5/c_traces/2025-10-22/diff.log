@@ -1,0 +1,11 @@
+--- reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/with_override.log	2025-10-06 08:27:05.860759781 -0700
++++ reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/without_override.log	2025-10-06 08:27:23.933882863 -0700
+@@ -258,7 +258,7 @@
+ 2% done
+ 
+ solid angle subtended by detector = 0.192259 steradian ( 1.52995% sphere)
+-writing img.bin as 6224001 4-byte floats
++writing img_no_override.bin as 6224001 4-byte floats
+ max_I = 446.254  at 0.117906 0.178794
+ mean= 0.00104287 rms= 0.334386 rmsd= 0.334384
+ intfile_scale = 123.248
