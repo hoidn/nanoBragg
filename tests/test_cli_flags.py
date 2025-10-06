@@ -10,7 +10,7 @@ import os
 import pytest
 import torch
 from nanobrag_torch.__main__ import create_parser, parse_and_validate_args
-from nanobrag_torch.config import DetectorConfig
+from nanobrag_torch.config import DetectorConfig, DetectorConvention, DetectorPivot
 from nanobrag_torch.models.detector import Detector
 
 # Set required environment variable
@@ -106,74 +106,87 @@ class TestPix0VectorAlias:
 
 
 class TestDetectorOverridePersistence:
-    """Test detector override behavior on CPU and CUDA."""
+    """
+    Test detector override behavior on CPU and CUDA.
+
+    UPDATED for CLI-FLAGS-003 Phase H3b: pix0_override with BEAM pivot
+    now applies the BEAM-pivot formula, NOT the raw override.
+    Reference: plans/active/cli-noise-pix0/plan.md Phase H3b
+    """
 
     def test_detector_override_persistence_cpu(self):
-        """Verify pix0 override persists through cache invalidation on CPU."""
-        # Use pix0_override that aligns with expected geometry for MOSFLM convention
-        # MOSFLM odet_vec = [1, 0, 0], so pix0 = [distance, y, z] gives close_distance = distance
+        """
+        Verify pix0 calculation applies BEAM-pivot formula even with override.
+
+        Phase H3b Update: When pix0_override is provided with BEAM pivot,
+        the detector ALWAYS applies the formula:
+            pix0 = -Fbeam*fdet - Sbeam*sdet + distance*beam
+
+        The override is IGNORED (as per C-code behavior and parity analysis).
+        """
         cfg = DetectorConfig(
             distance_mm=100,
             pixel_size_mm=0.1,
             spixels=4,
             fpixels=4,
-            pix0_override_m=torch.tensor([0.1, -0.02, 0.03], dtype=torch.float64)  # [distance, y, z]
+            beam_center_f=0.2,  # mm
+            beam_center_s=0.2,  # mm
+            pix0_override_m=torch.tensor([0.15, -0.05, 0.05], dtype=torch.float64)  # Will be IGNORED
         )
 
         det = Detector(cfg, device='cpu', dtype=torch.float64)
 
-        # Check override applied
-        assert torch.allclose(
-            det.pix0_vector,
-            torch.tensor([0.1, -0.02, 0.03], dtype=torch.float64)
-        )
+        # Phase H3b: pix0 is calculated from formula, NOT from override
+        # Expected: pix0 = -Fbeam*fdet - Sbeam*sdet + distance*beam
+        # For MOSFLM: fdet=[0,0,1], sdet=[0,-1,0], beam=[1,0,0]
+        # Fbeam = Ybeam + 0.5*pixel = 0.0002 + 0.00005 = 0.00025 m
+        # Sbeam = Xbeam + 0.5*pixel = 0.0002 + 0.00005 = 0.00025 m
+        # pix0 = -0.00025*[0,0,1] - 0.00025*[0,-1,0] + 0.1*[1,0,0]
+        #      = [0, 0, -0.00025] + [0, 0.00025, 0] + [0.1, 0, 0]
+        #      = [0.1, 0.00025, -0.00025]
+        expected_pix0 = torch.tensor([0.1, 0.00025, -0.00025], dtype=torch.float64)
 
-        # Invalidate cache and verify override persists
+        assert torch.allclose(det.pix0_vector, expected_pix0, atol=1e-9)
+
+        # Invalidate cache and verify formula still applied
         det.invalidate_cache()
-        assert torch.allclose(
-            det.pix0_vector,
-            torch.tensor([0.1, -0.02, 0.03], dtype=torch.float64)
-        )
+        assert torch.allclose(det.pix0_vector, expected_pix0, atol=1e-9)
 
-        # When override is used with BEAM pivot, r_factor should be 1.0
-        # close_distance is recalculated from pix0 as dot(pix0, odet_vec) per C code line 1846
-        # For MOSFLM odet=[1,0,0], close_distance = pix0[0] = 0.1
+        # r_factor and close_distance should be consistent
         assert det.r_factor == pytest.approx(1.0, rel=1e-9)
         assert det.close_distance.item() == pytest.approx(0.1, rel=1e-9)  # pix0[0] for MOSFLM
 
     @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
     def test_detector_override_persistence_cuda(self):
-        """Verify pix0 override persists through cache invalidation on CUDA."""
-        # Use pix0_override that aligns with expected geometry for MOSFLM convention
-        # MOSFLM odet_vec = [1, 0, 0], so pix0 = [distance, y, z] gives close_distance = distance
+        """
+        Verify pix0 calculation applies BEAM-pivot formula on CUDA.
+
+        Phase H3b Update: Same behavior as CPU test, but validates device neutrality.
+        """
         cfg = DetectorConfig(
             distance_mm=100,
             pixel_size_mm=0.1,
             spixels=4,
             fpixels=4,
-            pix0_override_m=torch.tensor([0.1, -0.02, 0.03], dtype=torch.float64)  # [distance, y, z]
+            beam_center_f=0.2,  # mm
+            beam_center_s=0.2,  # mm
+            pix0_override_m=torch.tensor([0.15, -0.05, 0.05], dtype=torch.float64)  # Will be IGNORED
         )
 
         det = Detector(cfg, device='cuda', dtype=torch.float64)
 
-        # Check override applied and on correct device
-        assert torch.allclose(
-            det.pix0_vector.cpu(),
-            torch.tensor([0.1, -0.02, 0.03], dtype=torch.float64)
-        )
+        # Phase H3b: pix0 calculated from formula (same as CPU test)
+        expected_pix0 = torch.tensor([0.1, 0.00025, -0.00025], dtype=torch.float64)
+
+        assert torch.allclose(det.pix0_vector.cpu(), expected_pix0, atol=1e-9)
         assert det.pix0_vector.device.type == 'cuda'
 
-        # Invalidate cache and verify override persists
+        # Invalidate cache and verify formula still applied
         det.invalidate_cache()
-        assert torch.allclose(
-            det.pix0_vector.cpu(),
-            torch.tensor([0.1, -0.02, 0.03], dtype=torch.float64)
-        )
+        assert torch.allclose(det.pix0_vector.cpu(), expected_pix0, atol=1e-9)
         assert det.pix0_vector.device.type == 'cuda'
 
-        # When override is used with BEAM pivot, r_factor should be 1.0
-        # close_distance is recalculated from pix0 as dot(pix0, odet_vec) per C code line 1846
-        # For MOSFLM odet=[1,0,0], close_distance = pix0[0] = 0.1
+        # r_factor and close_distance should be consistent
         assert det.r_factor.cpu().item() == pytest.approx(1.0, rel=1e-9)
         assert det.close_distance.cpu().item() == pytest.approx(0.1, rel=1e-9)  # pix0[0] for MOSFLM
 
@@ -365,3 +378,94 @@ class TestCLIBeamVector:
         incident = simulator.incident_beam_direction
         assert torch.allclose(incident, expected_norm, atol=1e-6), \
             f"Simulator incident_beam_direction {incident} != detector beam_vector {expected_norm}"
+
+
+class TestCLIPix0Override:
+    """
+    Regression tests for CLI-FLAGS-003 Phase H3b.
+
+    Test the BEAM-pivot pix0 transformation when -pix0_vector_mm override is provided.
+    Reference: plans/active/cli-noise-pix0/plan.md Phase H3b
+    Evidence: reports/2025-10-cli-flags/phase_h/pix0_reproduction.md
+    """
+
+    @pytest.mark.parametrize("device,dtype", [
+        ("cpu", torch.float32),
+        pytest.param("cuda", torch.float32, marks=pytest.mark.skipif(
+            not torch.cuda.is_available(), reason="CUDA not available"
+        ))
+    ])
+    def test_pix0_override_beam_pivot_transform(self, device, dtype):
+        """
+        Verify pix0 override with BEAM pivot applies the C-code formula.
+
+        When pix0_override is provided with BEAM pivot, the detector must ALWAYS
+        apply the BEAM-pivot transformation formula:
+
+            pix0 = -Fbeam*fdet - Sbeam*sdet + distance*beam
+
+        This ensures geometric consistency and matches C-code behavior.
+        Reference: nanoBragg.c lines 1833-1835, pix0_reproduction.md
+        """
+        # Test configuration: MOSFLM convention with BEAM pivot
+        # Use simple detector geometry for analytical verification
+        distance_mm = 100.0  # 100mm = 0.1m
+        pixel_size_mm = 0.1
+        spixels = fpixels = 512
+
+        # MOSFLM beam centers (mm)
+        Xbeam_mm = 51.2
+        Ybeam_mm = 51.2
+
+        # MOSFLM convention: Fbeam = Ybeam + 0.5*pixel, Sbeam = Xbeam + 0.5*pixel
+        Fbeam_mm = Ybeam_mm + 0.5 * pixel_size_mm
+        Sbeam_mm = Xbeam_mm + 0.5 * pixel_size_mm
+
+        # Convert to meters
+        Fbeam_m = Fbeam_mm / 1000.0
+        Sbeam_m = Sbeam_mm / 1000.0
+        distance_m = distance_mm / 1000.0
+
+        # MOSFLM basis vectors (unrotated): f=[0,0,1], s=[0,-1,0], o=[1,0,0], beam=[1,0,0]
+        fdet = torch.tensor([0.0, 0.0, 1.0], device=device, dtype=dtype)
+        sdet = torch.tensor([0.0, -1.0, 0.0], device=device, dtype=dtype)
+        beam = torch.tensor([1.0, 0.0, 0.0], device=device, dtype=dtype)
+
+        # Expected pix0 from BEAM-pivot formula (C-code lines 1833-1835)
+        expected_pix0 = (
+            -Fbeam_m * fdet
+            - Sbeam_m * sdet
+            + distance_m * beam
+        )
+
+        # Create detector config WITH pix0_override
+        # (The override should NOT bypass the formula!)
+        dummy_override = torch.tensor([0.15, -0.05, 0.05], device=device, dtype=dtype)
+
+        cfg = DetectorConfig(
+            distance_mm=distance_mm,
+            pixel_size_mm=pixel_size_mm,
+            spixels=spixels,
+            fpixels=fpixels,
+            beam_center_f=Xbeam_mm,
+            beam_center_s=Ybeam_mm,
+            detector_convention=DetectorConvention.MOSFLM,
+            detector_pivot=DetectorPivot.BEAM,
+            pix0_override_m=dummy_override  # This should be IGNORED for BEAM pivot
+        )
+
+        det = Detector(cfg, device=device, dtype=dtype)
+
+        # Verify pix0 matches the BEAM-pivot formula, NOT the raw override
+        pix0_delta = torch.abs(det.pix0_vector - expected_pix0)
+        max_error = torch.max(pix0_delta).item()
+
+        assert max_error <= 1e-6, \
+            f"pix0 delta exceeds threshold: max_error={max_error:.3e} m\n" \
+            f"Expected (formula): {expected_pix0.cpu().numpy()}\n" \
+            f"Actual (detector):  {det.pix0_vector.cpu().numpy()}\n" \
+            f"Delta (per component): {pix0_delta.cpu().numpy()}"
+
+        # Also verify device/dtype preservation
+        assert det.pix0_vector.device.type == device
+        assert det.pix0_vector.dtype == dtype

@@ -516,15 +516,21 @@ class Detector:
             # beam_vector is already set via self.beam_vector property
 
             # Use exact C-code formula WITH distance correction (AT-GEO-003)
-            # CLI-FLAGS-003 Phase F2: Use override if provided, otherwise calculate
-            if pix0_override_tensor is not None:
-                self.pix0_vector = pix0_override_tensor
-            else:
-                self.pix0_vector = (
-                    -Fbeam * self.fdet_vec
-                    - Sbeam * self.sdet_vec
-                    + self.distance_corrected * beam_vector
-                )
+            # CLI-FLAGS-003 Phase H3b: Always apply BEAM-pivot transform
+            # When pix0_override is provided, C code still applies the BEAM-pivot formula
+            # using Fbeam/Sbeam derived from the override (nanoBragg.c lines 1833-1835)
+            # The override affects the BEAM CENTERS, not the pix0 calculation itself.
+
+            # BEAM pivot formula (C-code reference: nanoBragg.c lines 1833-1835):
+            # pix0_vector[1] = -Fbeam*fdet_vector[1]-Sbeam*sdet_vector[1]+distance*beam_vector[1];
+            # pix0_vector[2] = -Fbeam*fdet_vector[2]-Sbeam*sdet_vector[2]+distance*beam_vector[2];
+            # pix0_vector[3] = -Fbeam*fdet_vector[3]-Sbeam*sdet_vector[3]+distance*beam_vector[3];
+
+            self.pix0_vector = (
+                -Fbeam * self.fdet_vec
+                - Sbeam * self.sdet_vec
+                + self.distance_corrected * beam_vector
+            )
         else:
             # SAMPLE pivot mode: detector rotates around the sample
             # IMPORTANT: Compute pix0 BEFORE rotating, using the same formula as C:
