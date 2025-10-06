@@ -1160,3 +1160,10 @@ Follow-ups for Ralph:
 - docs/fix_plan.md now points Next Actions to C trace reruns + PyTorch parity capture; logged new Attempt #29 (2025-10-21) noting override reinstatement pending evidence.
 - input.md reissued (Evidence phase) directing Ralph to run NB_C_BIN command with/without override, update c_precedence.md, extend Phase H harness for H5c, and archive outputs under reports/2025-10-cli-flags/phase_h5/.
 - Next follow-up: Expect refreshed C logs in reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-21/ plus PyTorch parity log; after evidence lands, revisit Phase K normalization tasks.
+
+## 2025-10-23 (galph loop — H5a evidence push)
+- Confirmed Phase J traces still show pix0 Y delta ~1.14 mm and `F_latt` 7.69e1 vs C 3.56e4 (`reports/2025-10-cli-flags/phase_j/trace_py_scaling.log:1-27`, `trace_c_scaling.log:164-190`); geometry remains the blocker before normalization.
+- Expanded `plans/active/cli-noise-pix0/plan.md` context with a 2025-10-22 correction note and tightened H5c guidance to demand `F_latt` ≈3.5636e4 and pix0 <5e-5 m deltas before Phase K.
+- Clarified `docs/fix_plan.md` Attempt #29 to mark the 2025-10-06 "override ignored" conclusion as instrumentation error so future loops do not rely on it.
+- Reissued `input.md` (Evidence phase, 100 lines) instructing Ralph to rerun the C command with/without `-pix0_vector_mm`, store logs under `reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/`, diff them, and update `c_precedence.md` with dot-product derivations.
+- Follow-ups for Ralph: deliver H5a (both C traces + precedence memo), keep prior logs untouched, then pause for supervisor review before starting H5c PyTorch traces.
