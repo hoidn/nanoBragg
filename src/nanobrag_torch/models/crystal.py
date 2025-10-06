@@ -381,9 +381,32 @@ class Crystal:
             sub_Fhkl = self.hkl_data[h_grid[:, None, None], k_grid[None, :, None], l_grid[None, None, :]]
 
         # Perform tricubic interpolation
-        F_cell = polin3(h_indices, k_indices, l_indices, sub_Fhkl, h, k, l)
+        # CRITICAL BUG: The current polin3/polin2/polint implementation cannot handle
+        # batched tensor inputs. It expects scalar/1D inputs only. Additionally, the code
+        # above builds a single 4x4x4 neighborhood (sub_Fhkl) but different query points
+        # need different neighborhoods based on their Miller indices.
+        #
+        # This is a known limitation documented in PERF-PYTORCH-004 fix plan.
+        # For now, fall back to nearest-neighbor when batched inputs are detected.
+        #
+        # TODO: Implement fully vectorized tricubic interpolation that handles:
+        #   1. Batched inputs (arbitrary shape tensors)
+        #   2. Per-point neighborhoods (each query needs its own 4x4x4 subcube)
+        #   3. torch.compile compatibility
+        if h.numel() > 1:
+            # Batched input detected - fall back to nearest neighbor
+            if not self._interpolation_warning_shown:
+                print("WARNING: tricubic interpolation not yet supported for batched inputs")
+                print("WARNING: falling back to nearest-neighbor lookup")
+                print("WARNING: this warning will only be shown once")
+                self._interpolation_warning_shown = True
+            return self._nearest_neighbor_lookup(h, k, l)
 
-        return F_cell
+        # Scalar case: polin3 can handle this
+        F_cell = polin3(h_indices.squeeze(), k_indices.squeeze(), l_indices.squeeze(),
+                        sub_Fhkl, h.squeeze(), k.squeeze(), l.squeeze())
+
+        return F_cell.reshape(h.shape)
 
 
     def compute_cell_tensors(self) -> dict:
@@ -519,40 +542,65 @@ class Crystal:
             (1.0 - torch.pow(cos_gamma_star_bounded, 2)).clamp_min(1e-12)
         )
 
-        # Construct default orientation for reciprocal vectors (C-code convention)
-        # a* along x-axis
-        a_star = torch.stack(
-            [
-                a_star_length,
-                torch.zeros_like(a_star_length),
-                torch.zeros_like(a_star_length),
-            ]
-        )
+        # Check if MOSFLM orientation matrix is provided (Phase G - CLI-FLAGS-003)
+        # If present, use those reciprocal vectors instead of constructing from cell parameters
+        if (
+            hasattr(self.config, "mosflm_a_star") and self.config.mosflm_a_star is not None
+            and hasattr(self.config, "mosflm_b_star") and self.config.mosflm_b_star is not None
+            and hasattr(self.config, "mosflm_c_star") and self.config.mosflm_c_star is not None
+        ):
+            # MOSFLM orientation provided - convert to tensors and use directly
+            # These are already in Å⁻¹ from the -mat file parsing
+            a_star = torch.as_tensor(
+                self.config.mosflm_a_star,
+                device=self.device,
+                dtype=self.dtype
+            )
+            b_star = torch.as_tensor(
+                self.config.mosflm_b_star,
+                device=self.device,
+                dtype=self.dtype
+            )
+            c_star = torch.as_tensor(
+                self.config.mosflm_c_star,
+                device=self.device,
+                dtype=self.dtype
+            )
+        else:
+            # No MOSFLM orientation - construct default orientation from cell parameters (C-code convention)
+            # a* along x-axis
+            a_star = torch.stack(
+                [
+                    a_star_length,
+                    torch.zeros_like(a_star_length),
+                    torch.zeros_like(a_star_length),
+                ]
+            )
 
-        # b* in x-y plane
-        b_star = torch.stack(
-            [
-                b_star_length * cos_gamma_star,
-                b_star_length * sin_gamma_star,
-                torch.zeros_like(b_star_length),
-            ]
-        )
+            # b* in x-y plane
+            b_star = torch.stack(
+                [
+                    b_star_length * cos_gamma_star,
+                    b_star_length * sin_gamma_star,
+                    torch.zeros_like(b_star_length),
+                ]
+            )
 
-        # c* fills out 3D space
-        c_star_x = c_star_length * cos_beta_star
-        # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
-        sin_gamma_star_safe = sin_gamma_star.clamp_min(1e-12)
-        c_star_y = (
-            c_star_length
-            * (cos_alpha_star - cos_beta_star * cos_gamma_star_bounded)
-            / sin_gamma_star_safe
-        )
-        c_star_z = (
-            c_star_length
-            * V
-            / (self.cell_a * self.cell_b * self.cell_c * sin_gamma_star_safe)
-        )
-        c_star = torch.stack([c_star_x, c_star_y, c_star_z])
+            # c* fills out 3D space
+            c_star_x = c_star_length * cos_beta_star
+            # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
+            sin_gamma_star_safe = sin_gamma_star.clamp_min(1e-12)
+            c_star_y = (
+                c_star_length
+                * (cos_alpha_star - cos_beta_star * cos_gamma_star_bounded)
+                / sin_gamma_star_safe
+            )
+            c_star_z = (
+                c_star_length
+                * V
+                / (self.cell_a * self.cell_b * self.cell_c * sin_gamma_star_safe)
+            )
+            c_star = torch.stack([c_star_x, c_star_y, c_star_z])
 
         # Handle random misset generation (AT-PARALLEL-024)
         # This must happen BEFORE applying misset rotation

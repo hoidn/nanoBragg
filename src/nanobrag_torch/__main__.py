@@ -133,7 +133,7 @@ Examples:
                         help='Detector rotation about Y axis (degrees)')
     parser.add_argument('-detector_rotz', type=float, default=0.0, metavar='DEG',
                         help='Detector rotation about Z axis (degrees)')
-    parser.add_argument('-twotheta', type=float, default=0.0, metavar='DEG',
+    parser.add_argument('-twotheta', type=float, default=None, metavar='DEG',
                         help='Detector rotation about twotheta axis')
     parser.add_argument('-twotheta_axis', nargs=3, type=float,
                         metavar=('X', 'Y', 'Z'),
@@ -187,6 +187,9 @@ Examples:
     parser.add_argument('-pix0_vector', nargs=3, type=float,
                         metavar=('X', 'Y', 'Z'),
                         help='Detector origin offset (meters)')
+    parser.add_argument('-pix0_vector_mm', nargs=3, type=float,
+                        metavar=('X', 'Y', 'Z'),
+                        help='Detector origin offset (millimeters)')
 
     # Beam centers
     parser.add_argument('-Xbeam', type=float, metavar='MM',
@@ -333,6 +336,8 @@ Examples:
                         help='Scale factor for PGM output')
     parser.add_argument('-noisefile', '-noiseimage', type=str, metavar='FILE',
                         dest='noisefile', help='SMV with Poisson noise')
+    parser.add_argument('-nonoise', action='store_true',
+                        help='Suppress noise image generation')
     parser.add_argument('-nopgm', action='store_true',
                         help='Disable PGM output')
 
@@ -422,6 +427,12 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
         cell_params = reciprocal_to_real_cell(a_star, b_star, c_star)
         config['cell_params'] = cell_params
 
+        # Phase G1: Store MOSFLM reciprocal vectors for Crystal orientation
+        # These are in Å⁻¹ and already wavelength-scaled from read_mosflm_matrix
+        config['mosflm_a_star'] = a_star  # numpy array from read_mosflm_matrix
+        config['mosflm_b_star'] = b_star
+        config['mosflm_c_star'] = c_star
+
         # Also store wavelength if not already set
         if 'wavelength_A' not in config:
             config['wavelength_A'] = wavelength_A
@@ -448,7 +459,7 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     # Convention and pivot
     if any([args.fdet_vector, args.sdet_vector, args.odet_vector,
             args.beam_vector, args.polar_vector, args.spindle_axis,
-            args.pix0_vector]):
+            args.pix0_vector, args.pix0_vector_mm]):
         config['convention'] = 'CUSTOM'
     elif args.convention:
         config['convention'] = args.convention
@@ -476,6 +487,10 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
         pivot = 'BEAM'
     elif any([args.Xclose is not None, args.Yclose is not None,
               args.ORGX is not None, args.ORGY is not None]):
+        pivot = 'SAMPLE'
+
+    # C-code line 786: -twotheta sets detector_pivot = SAMPLE (even if twotheta=0)
+    if args.twotheta is not None:
         pivot = 'SAMPLE'
 
     if args.pivot:  # Explicit override wins
@@ -518,7 +533,7 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     config['detector_rotx_deg'] = args.detector_rotx
     config['detector_roty_deg'] = args.detector_roty
     config['detector_rotz_deg'] = args.detector_rotz
-    config['twotheta_deg'] = args.twotheta
+    config['twotheta_deg'] = args.twotheta if args.twotheta is not None else 0.0
     if args.twotheta_axis:
         config['twotheta_axis'] = args.twotheta_axis
 
@@ -538,8 +553,18 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
         config['custom_polar_vector'] = tuple(args.polar_vector)
     if args.spindle_axis:
         config['custom_spindle_axis'] = tuple(args.spindle_axis)
+    # Handle pix0 override (validate mutual exclusivity)
+    if args.pix0_vector and args.pix0_vector_mm:
+        raise ValueError("Cannot specify both -pix0_vector and -pix0_vector_mm simultaneously")
+
     if args.pix0_vector:
         config['custom_pix0_vector'] = tuple(args.pix0_vector)
+        # pix0_vector is in meters, convert to config
+        config['pix0_override_m'] = tuple(args.pix0_vector)
+    elif args.pix0_vector_mm:
+        # Convert millimeters to meters
+        config['pix0_override_m'] = tuple(x * 0.001 for x in args.pix0_vector_mm)
+        config['custom_pix0_vector'] = config['pix0_override_m']
 
     # Detector absorption
     if args.detector_abs:
@@ -683,6 +708,7 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     config['intfile'] = args.intfile
     config['pgmfile'] = args.pgmfile
     config['noisefile'] = args.noisefile
+    config['suppress_noise'] = args.nonoise
     config['scale'] = args.scale
     config['adc'] = args.adc
     config['pgmscale'] = args.pgmscale
@@ -813,7 +839,11 @@ def main():
                 mosaic_domains=config.get('mosaic_domains', 1),
                 shape=CrystalShape[config.get('crystal_shape', 'SQUARE')],
                 fudge=config.get('fudge', 1.0),
-                default_F=config.get('default_F', 0.0)
+                default_F=config.get('default_F', 0.0),
+                # Phase G1: Pass MOSFLM orientation if provided
+                mosflm_a_star=config.get('mosflm_a_star'),
+                mosflm_b_star=config.get('mosflm_b_star'),
+                mosflm_c_star=config.get('mosflm_c_star')
             )
 
             if 'misset_deg' in config:
@@ -850,7 +880,10 @@ def main():
             # Custom vectors for CUSTOM convention
             custom_fdet_vector=config.get('custom_fdet_vector'),
             custom_sdet_vector=config.get('custom_sdet_vector'),
-            custom_odet_vector=config.get('custom_odet_vector')
+            custom_odet_vector=config.get('custom_odet_vector'),
+            custom_beam_vector=config.get('custom_beam_vector'),
+            # Detector origin override (CLI-FLAGS-003)
+            pix0_override_m=config.get('pix0_override_m')
         )
 
         # Set beam center if provided (values are in mm)
@@ -1149,7 +1182,8 @@ def main():
             write_pgm(config['pgmfile'], intensity.cpu().numpy(), pgmscale)
             print(f"Wrote PGM image to {config['pgmfile']}")
 
-        if config.get('noisefile'):
+        # CLI-FLAGS-003: Honor -nonoise flag
+        if config.get('noisefile') and not config.get('suppress_noise', False):
             # Generate and write noise image
             noise_config = NoiseConfig(
                 seed=config.get('seed'),

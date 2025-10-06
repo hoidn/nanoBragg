@@ -209,6 +209,36 @@ def compute_physics_for_position(
         F_cell = F_cell.to(device=h.device)
 
     # Calculate lattice structure factor
+    #
+    # C-Code Implementation Reference (from nanoBragg.c, lines 3062-3081):
+    # ```c
+    # /* structure factor of the lattice (paralelpiped crystal)
+    #     F_latt = sin(M_PI*Na*h)*sin(M_PI*Nb*k)*sin(M_PI*Nc*l)/sin(M_PI*h)/sin(M_PI*k)/sin(M_PI*l);
+    # */
+    # F_latt = 1.0;
+    # if(xtal_shape == SQUARE)
+    # {
+    #     /* xtal is a paralelpiped */
+    #     double F_latt_a = 1.0, F_latt_b = 1.0, F_latt_c = 1.0;
+    #     if(Na>1){
+    #         F_latt_a = sincg(M_PI*h,Na);
+    #         F_latt *= F_latt_a;
+    #     }
+    #     if(Nb>1){
+    #         F_latt_b = sincg(M_PI*k,Nb);
+    #         F_latt *= F_latt_b;
+    #     }
+    #     if(Nc>1){
+    #         F_latt_c = sincg(M_PI*l,Nc);
+    #         F_latt *= F_latt_c;
+    #     }
+    # }
+    # ```
+    #
+    # Per specs/spec-a-core.md §4.3:
+    # "SQUARE (grating): F_latt = sincg(π·h, Na) · sincg(π·k, Nb) · sincg(π·l, Nc)"
+    #
+    # CRITICAL: Use fractional h,k,l directly (NOT h-h0), unlike ROUND/GAUSS/TOPHAT shapes.
     Na = N_cells_a
     Nb = N_cells_b
     Nc = N_cells_c
@@ -216,9 +246,10 @@ def compute_physics_for_position(
     fudge = crystal_fudge
 
     if shape == CrystalShape.SQUARE:
-        F_latt_a = sincg(torch.pi * (h - h0), Na)
-        F_latt_b = sincg(torch.pi * (k - k0), Nb)
-        F_latt_c = sincg(torch.pi * (l - l0), Nc)
+        # Note: sincg internally handles Na/Nb/Nc > 1 guards per C implementation
+        F_latt_a = sincg(torch.pi * h, Na)
+        F_latt_b = sincg(torch.pi * k, Nb)
+        F_latt_c = sincg(torch.pi * l, Nc)
         F_latt = F_latt_a * F_latt_b * F_latt_c
     elif shape == CrystalShape.ROUND:
         h_frac = h - h0
@@ -456,42 +487,22 @@ class Simulator:
         self.printout_pixel = self.debug_config.get('printout_pixel', None)  # [fast, slow]
         self.trace_pixel = self.debug_config.get('trace_pixel', None)  # [slow, fast]
 
-        # Set incident beam direction based on detector convention
-        # This is critical for convention consistency (AT-PARALLEL-004)
-        from .config import DetectorConvention
-
-        if self.detector is not None and hasattr(self.detector, 'config'):
-            if self.detector.config.detector_convention == DetectorConvention.MOSFLM:
-                # MOSFLM convention: beam along +X axis
-                self.incident_beam_direction = torch.tensor(
-                    [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
-                )
-            elif self.detector.config.detector_convention == DetectorConvention.XDS:
-                # XDS convention: beam along +Z axis
-                self.incident_beam_direction = torch.tensor(
-                    [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
-                )
-            elif self.detector.config.detector_convention == DetectorConvention.DIALS:
-                # DIALS convention: beam along +Z axis (same as XDS)
-                self.incident_beam_direction = torch.tensor(
-                    [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
-                )
-            else:
-                # Default to MOSFLM beam direction
-                self.incident_beam_direction = torch.tensor(
-                    [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
-                )
+        # Set incident beam direction from detector.beam_vector
+        # This is critical for convention consistency (AT-PARALLEL-004) and CLI override support (CLI-FLAGS-003 Phase H2)
+        # The detector.beam_vector property handles both convention defaults and CUSTOM overrides (e.g., -beam_vector)
+        if self.detector is not None:
+            # Use detector's beam_vector property which handles:
+            # - CUSTOM convention with user-supplied custom_beam_vector
+            # - Convention defaults (MOSFLM: [1,0,0], XDS/DIALS: [0,0,1])
+            # The detector normalizes and returns the vector with correct device/dtype
+            self.incident_beam_direction = self.detector.beam_vector.clone()
         else:
             # If no detector provided, default to MOSFLM beam direction
             self.incident_beam_direction = torch.tensor(
                 [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
             )
         # PERF-PYTORCH-006: Store wavelength as tensor with correct dtype
-        # Handle tensor-or-scalar inputs to preserve gradients (Core Rule #9)
-        if isinstance(self.beam_config.wavelength_A, torch.Tensor):
-            self.wavelength = self.beam_config.wavelength_A.to(device=self.device, dtype=self.dtype)
-        else:
-            self.wavelength = torch.tensor(self.beam_config.wavelength_A, device=self.device, dtype=self.dtype)
+        self.wavelength = torch.tensor(self.beam_config.wavelength_A, device=self.device, dtype=self.dtype)
 
         # Physical constants (from nanoBragg.c ~line 240)
         # PERF-PYTORCH-006: Store as tensors with correct dtype to avoid implicit float64 upcasting
@@ -499,11 +510,7 @@ class Simulator:
             7.94079248018965e-30, device=self.device, dtype=self.dtype  # classical electron radius squared (meters squared)
         )
         # Use fluence from beam config (AT-FLU-001)
-        # Handle tensor-or-scalar inputs to preserve gradients (Core Rule #9)
-        if isinstance(self.beam_config.fluence, torch.Tensor):
-            self.fluence = self.beam_config.fluence.to(device=self.device, dtype=self.dtype)
-        else:
-            self.fluence = torch.tensor(self.beam_config.fluence, device=self.device, dtype=self.dtype)
+        self.fluence = torch.tensor(self.beam_config.fluence, device=self.device, dtype=self.dtype)
         # Polarization setup from beam config
         # PERF-PYTORCH-006: Store as tensor with correct dtype
         kahn_value = self.beam_config.polarization_factor if not self.beam_config.nopolar else 0.0
@@ -589,14 +596,20 @@ class Simulator:
 
         if disable_compile:
             self._compiled_compute_physics = compute_physics_for_position
-        elif self.device.type == "cuda":
-            self._compiled_compute_physics = torch.compile(mode="max-autotune")(
-                compute_physics_for_position
-            )
         else:
-            self._compiled_compute_physics = torch.compile(mode="reduce-overhead")(
-                compute_physics_for_position
-            )
+            try:
+                if self.device.type == "cuda":
+                    self._compiled_compute_physics = torch.compile(mode="max-autotune")(
+                        compute_physics_for_position
+                    )
+                else:
+                    self._compiled_compute_physics = torch.compile(mode="reduce-overhead")(
+                        compute_physics_for_position
+                    )
+            except Exception:
+                # Fall back to uncompiled version if torch.compile fails
+                # (e.g., missing CUDA, Triton issues, or compilation errors)
+                self._compiled_compute_physics = compute_physics_for_position
 
     def _compute_physics_for_position(self, pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star, incident_beam_direction=None, wavelength=None, source_weights=None):
         """Compatibility shim - calls the pure function compute_physics_for_position.
@@ -1184,16 +1197,20 @@ class Simulator:
             target_fast = self.trace_pixel[1]
 
             if 0 <= target_slow < physical_intensity.shape[0] and 0 <= target_fast < physical_intensity.shape[1]:
-                print(f"\n=== TRACE: Pixel ({target_slow}, {target_fast}) [slow, fast] ===")
-                print(f"TRACE: Final intensity = {physical_intensity[target_slow, target_fast].item():.12e}")
-                print(f"TRACE: Normalized intensity = {normalized_intensity[target_slow, target_fast].item():.12e}")
+                # Output pix0_vector first
+                pix0 = self.detector.pix0_vector
+                print(f"TRACE_PY: pix0_vector_meters {pix0[0].item():.15g} {pix0[1].item():.15g} {pix0[2].item():.15g}")
+
+                # Output detector basis vectors
+                fdet = self.detector.fdet_vec
+                sdet = self.detector.sdet_vec
+                print(f"TRACE_PY: fdet_vec {fdet[0].item():.15g} {fdet[1].item():.15g} {fdet[2].item():.15g}")
+                print(f"TRACE_PY: sdet_vec {sdet[0].item():.15g} {sdet[1].item():.15g} {sdet[2].item():.15g}")
 
                 # Trace coordinate information
                 if pixel_coords_meters is not None:
                     coords = pixel_coords_meters[target_slow, target_fast]
                     print(f"TRACE_PY: pixel_pos_meters {coords[0].item():.15g} {coords[1].item():.15g} {coords[2].item():.15g}")
-                    coords_ang = coords * 1e10
-                    print(f"TRACE: Position (Å) = {coords_ang[0].item():.6f}, {coords_ang[1].item():.6f}, {coords_ang[2].item():.6f}")
 
                     # Calculate airpath and omega
                     airpath_m = torch.sqrt(torch.sum(coords * coords)).item()
@@ -1203,40 +1220,61 @@ class Simulator:
                     pixel_size_m = self.detector.pixel_size  # already in meters
                     close_distance_m = self.detector.close_distance  # already in meters
                     if self.detector.config.point_pixel:
-                        omega_pixel = 1.0 / (airpath_m * airpath_m)
+                        omega_pixel_val = 1.0 / (airpath_m * airpath_m)
                     else:
-                        omega_pixel = (pixel_size_m * pixel_size_m) / (airpath_m * airpath_m) * close_distance_m / airpath_m
+                        omega_pixel_val = (pixel_size_m * pixel_size_m) / (airpath_m * airpath_m) * close_distance_m / airpath_m
 
-                    print(f"TRACE_PY: omega_pixel_sr {omega_pixel:.15g}")
+                    print(f"TRACE_PY: omega_pixel_sr {omega_pixel_val:.15g}")
                     print(f"TRACE_PY: close_distance_meters {close_distance_m:.15g}")
                     print(f"TRACE_PY: obliquity_factor {close_distance_m/airpath_m:.15g}")
 
+                    # Calculate diffracted and incident vectors
+                    coords_ang = coords * 1e10  # m to Å
+                    pixel_mag = torch.sqrt(torch.sum(coords_ang * coords_ang))
+                    diffracted_vec = coords_ang / pixel_mag
+                    incident_vec = self.incident_beam_direction
+
+                    print(f"TRACE_PY: diffracted_vec {diffracted_vec[0].item():.15g} {diffracted_vec[1].item():.15g} {diffracted_vec[2].item():.15g}")
+                    print(f"TRACE_PY: incident_vec {incident_vec[0].item():.15g} {incident_vec[1].item():.15g} {incident_vec[2].item():.15g}")
+
+                    # Wavelength
+                    lambda_m = self.wavelength.item() * 1e-10
+                    print(f"TRACE_PY: lambda_meters {lambda_m:.15g}")
+                    print(f"TRACE_PY: lambda_angstroms {self.wavelength.item():.15g}")
+
+                    # Scattering vector (in m^-1, not Å^-1!)
+                    scattering_vec_ang_inv = (diffracted_vec - incident_vec) / self.wavelength
+                    scattering_vec_m_inv = scattering_vec_ang_inv * 1e10  # Å^-1 to m^-1
+                    print(f"TRACE_PY: scattering_vec_A_inv {scattering_vec_m_inv[0].item():.15g} {scattering_vec_m_inv[1].item():.15g} {scattering_vec_m_inv[2].item():.15g}")
+
                 # Trace reciprocal space information if available
                 if rot_a_star is not None and rot_b_star is not None and rot_c_star is not None:
-                    # Show first reciprocal vector as example
-                    a_star_0 = rot_a_star[0, 0] if len(rot_a_star.shape) > 1 else rot_a_star
-                    print(f"TRACE: a* (first) = ({a_star_0[0].item():.6e}, {a_star_0[1].item():.6e}, {a_star_0[2].item():.6e})")
+                    # Output rotated real and reciprocal vectors (first phi/mosaic domain)
+                    a_vec = rot_a[0, 0] if len(rot_a.shape) > 1 else rot_a
+                    b_vec = rot_b[0, 0] if len(rot_b.shape) > 1 else rot_b
+                    c_vec = rot_c[0, 0] if len(rot_c.shape) > 1 else rot_c
 
-                    # Detailed trace: recalculate Miller indices and F_latt for this specific pixel
-                    # This is duplicated computation but only for one pixel during trace
+                    print(f"TRACE_PY: rot_a_angstroms {a_vec[0].item():.15g} {a_vec[1].item():.15g} {a_vec[2].item():.15g}")
+                    print(f"TRACE_PY: rot_b_angstroms {b_vec[0].item():.15g} {b_vec[1].item():.15g} {b_vec[2].item():.15g}")
+                    print(f"TRACE_PY: rot_c_angstroms {c_vec[0].item():.15g} {c_vec[1].item():.15g} {c_vec[2].item():.15g}")
+
+                    a_star_vec = rot_a_star[0, 0] if len(rot_a_star.shape) > 1 else rot_a_star
+                    b_star_vec = rot_b_star[0, 0] if len(rot_b_star.shape) > 1 else rot_b_star
+                    c_star_vec = rot_c_star[0, 0] if len(rot_c_star.shape) > 1 else rot_c_star
+
+                    print(f"TRACE_PY: rot_a_star_A_inv {a_star_vec[0].item():.15g} {a_star_vec[1].item():.15g} {a_star_vec[2].item():.15g}")
+                    print(f"TRACE_PY: rot_b_star_A_inv {b_star_vec[0].item():.15g} {b_star_vec[1].item():.15g} {b_star_vec[2].item():.15g}")
+                    print(f"TRACE_PY: rot_c_star_A_inv {c_star_vec[0].item():.15g} {c_star_vec[1].item():.15g} {c_star_vec[2].item():.15g}")
+
+                    # Calculate Miller indices using scattering vector and real-space vectors
+                    # Following nanoBragg.c convention: h = dot(a, scattering)
                     coords_ang = pixel_coords_meters[target_slow, target_fast] * 1e10  # m to Å
-
-                    # Calculate scattering vector (same as in _compute_physics_for_position)
                     pixel_mag = torch.sqrt(torch.sum(coords_ang * coords_ang))
                     diffracted_unit = coords_ang / pixel_mag
                     incident_unit = self.incident_beam_direction
                     scattering_vec = (diffracted_unit - incident_unit) / self.wavelength
 
-                    print(f"TRACE: scattering_vec_A_inv = {scattering_vec[0].item():.12e} {scattering_vec[1].item():.12e} {scattering_vec[2].item():.12e}")
-
-                    # Calculate Miller indices using first phi/mosaic orientation
-                    # Use the rotated real-space vectors (NOT reciprocal!)
-                    # Following nanoBragg.c convention: h = dot(a, scattering)
                     from nanobrag_torch.utils.geometry import dot_product
-                    a_vec = rot_a[0, 0] if len(rot_a.shape) > 1 else rot_a
-                    b_vec = rot_b[0, 0] if len(rot_b.shape) > 1 else rot_b
-                    c_vec = rot_c[0, 0] if len(rot_c.shape) > 1 else rot_c
-
                     h = dot_product(scattering_vec.unsqueeze(0), a_vec.unsqueeze(0)).item()
                     k = dot_product(scattering_vec.unsqueeze(0), b_vec.unsqueeze(0)).item()
                     l = dot_product(scattering_vec.unsqueeze(0), c_vec.unsqueeze(0)).item()
@@ -1245,24 +1283,26 @@ class Simulator:
                     k0 = round(k)
                     l0 = round(l)
 
-                    print(f"TRACE: hkl_frac {h:.12e} {k:.12e} {l:.12e}")
-                    print(f"TRACE: hkl_rounded {h0} {k0} {l0}")
+                    print(f"TRACE_PY: hkl_frac {h:.15g} {k:.15g} {l:.15g}")
+                    print(f"TRACE_PY: hkl_rounded {h0} {k0} {l0}")
 
                     # Calculate F_latt components (SQUARE shape assumed)
+                    # Per specs/spec-a-core.md §4.3 and nanoBragg.c:3071-3079:
+                    # Use fractional h,k,l directly (NOT h-h0) for SQUARE lattice factor
                     Na = self.crystal.N_cells_a
                     Nb = self.crystal.N_cells_b
                     Nc = self.crystal.N_cells_c
 
                     from nanobrag_torch.utils import sincg
-                    F_latt_a = sincg(torch.pi * torch.tensor(h - h0), Na).item()
-                    F_latt_b = sincg(torch.pi * torch.tensor(k - k0), Nb).item()
-                    F_latt_c = sincg(torch.pi * torch.tensor(l - l0), Nc).item()
+                    F_latt_a = sincg(torch.pi * torch.tensor(h), Na).item()
+                    F_latt_b = sincg(torch.pi * torch.tensor(k), Nb).item()
+                    F_latt_c = sincg(torch.pi * torch.tensor(l), Nc).item()
                     F_latt = F_latt_a * F_latt_b * F_latt_c
 
-                    print(f"TRACE: F_latt_a {F_latt_a:.12e}")
-                    print(f"TRACE: F_latt_b {F_latt_b:.12e}")
-                    print(f"TRACE: F_latt_c {F_latt_c:.12e}")
-                    print(f"TRACE: F_latt {F_latt:.12e}")
+                    print(f"TRACE_PY: F_latt_a {F_latt_a:.15g}")
+                    print(f"TRACE_PY: F_latt_b {F_latt_b:.15g}")
+                    print(f"TRACE_PY: F_latt_c {F_latt_c:.15g}")
+                    print(f"TRACE_PY: F_latt {F_latt:.15g}")
 
                     # Get structure factor
                     F_cell = self.crystal.get_structure_factor(
@@ -1270,17 +1310,60 @@ class Simulator:
                         torch.tensor([[k0]]),
                         torch.tensor([[l0]])
                     ).item()
-                    print(f"TRACE: F_cell {F_cell:.12e}")
+                    print(f"TRACE_PY: F_cell {F_cell:.15g}")
 
                     # Calculate I_before_scaling (this is before r_e^2 * fluence / steps)
                     I_before_scaling = (F_cell * F_latt) ** 2
-                    print(f"TRACE: I_before_scaling {I_before_scaling:.12e}")
+                    print(f"TRACE_PY: I_before_scaling {I_before_scaling:.15g}")
+
+                    # Physical constants and scaling factors
+                    r_e_m = torch.sqrt(self.r_e_sqr).item()
+                    print(f"TRACE_PY: r_e_meters {r_e_m:.15g}")
+                    print(f"TRACE_PY: r_e_sqr {self.r_e_sqr.item():.15g}")
+                    print(f"TRACE_PY: fluence_photons_per_m2 {self.fluence.item():.15g}")
+                    print(f"TRACE_PY: steps {self.crystal.config.phi_steps}")
+
+                    # Oversample flags
+                    print(f"TRACE_PY: oversample_thick {1 if self.detector.config.oversample_thick else 0}")
+                    print(f"TRACE_PY: oversample_polar {1 if self.detector.config.oversample_polar else 0}")
+                    print(f"TRACE_PY: oversample_omega {1 if self.detector.config.oversample_omega else 0}")
+
+                    # Capture fraction and polarization
+                    print(f"TRACE_PY: capture_fraction 1")
+
+                    # Calculate polarization for this pixel
+                    # This matches the polarization_factor calculation in the main physics
+                    if polarization is not None and isinstance(polarization, torch.Tensor):
+                        polar_val = polarization[target_slow, target_fast].item()
+                    else:
+                        # Recalculate using same method as main code
+                        # For now, use a placeholder
+                        polar_val = 1.0
+
+                    print(f"TRACE_PY: polar {polar_val:.15g}")
+                    print(f"TRACE_PY: omega_pixel {omega_pixel_val:.15g}")
+
+                    # Calculate cos_2theta
+                    # cos(2θ) = incident · diffracted
+                    cos_2theta = torch.dot(incident_unit, diffracted_unit).item()
+                    print(f"TRACE_PY: cos_2theta {cos_2theta:.15g}")
+
+                    # Final intensity
+                    I_pixel_final = physical_intensity[target_slow, target_fast].item()
+                    print(f"TRACE_PY: I_pixel_final {I_pixel_final:.15g}")
+                    print(f"TRACE_PY: floatimage_accumulated {I_pixel_final:.15g}")
 
                 # Trace factors
                 if omega_pixel is not None:
-                    print(f"TRACE: Omega (solid angle) = {omega_pixel[target_slow, target_fast].item():.12e}")
+                    if isinstance(omega_pixel, torch.Tensor):
+                        print(f"TRACE: Omega (solid angle) = {omega_pixel[target_slow, target_fast].item():.12e}")
+                    else:
+                        print(f"TRACE: Omega (solid angle) = {omega_pixel:.12e}")
                 if polarization is not None:
-                    print(f"TRACE: Polarization = {polarization[target_slow, target_fast].item():.12e}")
+                    if isinstance(polarization, torch.Tensor):
+                        print(f"TRACE: Polarization = {polarization[target_slow, target_fast].item():.12e}")
+                    else:
+                        print(f"TRACE: Polarization = {polarization:.12e}")
 
                 print(f"TRACE: r_e^2 = {self.r_e_sqr:.12e}")
                 print(f"TRACE: Fluence = {self.fluence:.12e}")

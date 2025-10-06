@@ -1,0 +1,162 @@
+from __future__ import annotations
+
+import argparse
+import os
+import sys
+import time
+from datetime import datetime
+from pathlib import Path
+from subprocess import Popen, PIPE
+
+from .state import OrchestrationState
+from .git_bus import safe_pull, add, commit, push_to, short_head, has_unpushed_commits, assert_on_branch, current_branch
+
+
+def _log_file(prefix: str) -> Path:
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    Path("tmp").mkdir(parents=True, exist_ok=True)
+    p = Path("tmp") / f"{prefix}{ts}.txt"
+    latest = Path("tmp") / f"{prefix}latest.txt"
+    try:
+        if latest.exists() or latest.is_symlink():
+            latest.unlink()
+        latest.symlink_to(p.name)
+    except Exception:
+        pass
+    return p
+
+
+def tee_run(cmd: list[str], stdin_file: Path, log_path: Path) -> int:
+    with open(stdin_file, "rb") as fin, open(log_path, "a", encoding="utf-8") as flog:
+        flog.write(f"$ {' '.join(cmd)}\n")
+        flog.flush()
+        proc = Popen(cmd, stdin=fin, stdout=PIPE, stderr=PIPE, text=True, bufsize=1)
+        while True:
+            line = proc.stdout.readline() if proc.stdout else ""
+            if not line:
+                break
+            sys.stdout.write(line)
+            flog.write(line)
+        err = proc.stderr.read() if proc.stderr else ""
+        if err:
+            sys.stderr.write(err)
+            flog.write(err)
+        return proc.wait()
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="Engineer (ralph) orchestrator")
+    ap.add_argument("--sync-via-git", action="store_true", help="Enable cross-machine synchronous mode via Git state")
+    ap.add_argument("--sync-loops", type=int, default=int(os.getenv("SYNC_LOOPS", 20)))
+    ap.add_argument("--poll-interval", type=int, default=int(os.getenv("POLL_INTERVAL", 5)))
+    ap.add_argument("--max-wait-sec", type=int, default=int(os.getenv("MAX_WAIT_SEC", 0)))
+    ap.add_argument("--state-file", type=Path, default=Path(os.getenv("STATE_FILE", "sync/state.json")))
+    ap.add_argument("--claude-cmd", type=str, default=os.getenv("CLAUDE_CMD", "/home/ollie/.claude/local/claude"))
+    ap.add_argument("--prompt", type=str, choices=["main", "debug"], default=os.getenv("LOOP_PROMPT", "main"), help="Select which prompt to run (default: main)")
+    ap.add_argument("--branch", type=str, default=os.getenv("ORCHESTRATION_BRANCH", ""))
+    ap.add_argument("--logdir", type=Path, default=Path("logs"), help="Base directory for per-iteration logs (default: logs/)")
+    args, unknown = ap.parse_known_args()
+
+    log_path = _log_file("claudelog")
+
+    def logp(msg: str) -> None:
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(msg + "\n")
+
+    # Branch guard / resolution
+    if args.branch:
+        assert_on_branch(args.branch, lambda m: None)
+        branch_target = args.branch
+    else:
+        branch_target = current_branch()
+
+    # Always keep up to date
+    ok_initial = safe_pull(logp)
+    if not ok_initial:
+        print("[sync] ERROR: git pull failed; see iter log for details (likely untracked-file collisions).")
+        print("[sync] Remediation: move or remove the conflicting untracked files, then re-run the loop.")
+        return 1
+
+    for _ in range(args.sync_loops):
+        # Compute per-iteration log path (branch/prompt aware)
+        ok_probe = safe_pull(lambda m: None)
+        if not ok_probe:
+            print("[sync] ERROR: git pull failed before iteration probe; see iter log.")
+            return 1
+        st_probe = OrchestrationState.read(str(args.state_file))
+        itnum = st_probe.iteration
+        ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        iter_log = args.logdir / branch_target.replace('/', '-') / "ralph" / f"iter-{itnum:05d}_{ts}_{args.prompt}.log"
+
+        if args.sync_via_git:
+            args.state_file.parent.mkdir(parents=True, exist_ok=True)
+            # Logger bound to this iteration
+            def logp(msg: str) -> None:
+                iter_log.parent.mkdir(parents=True, exist_ok=True)
+                with open(iter_log, "a", encoding="utf-8") as f:
+                    f.write(msg + "\n")
+
+            logp("[SYNC] Waiting for expected_actor=ralph...")
+            start = time.time()
+            while True:
+                if not safe_pull(logp):
+                    print("[sync] ERROR: git pull failed during polling; see iter log (likely untracked-file collisions).")
+                    return 1
+                st = OrchestrationState.read(str(args.state_file))
+                if st.expected_actor == "ralph":
+                    break
+                if args.max_wait_sec and (time.time() - start) > args.max_wait_sec:
+                    logp("[SYNC] Timeout waiting for turn; exiting")
+                    return 1
+                time.sleep(args.poll_interval)
+
+            # Mark running
+            st.status = "running-ralph"
+            st.write(str(args.state_file))
+            add([str(args.state_file)])
+            commit(f"[SYNC i={st.iteration}] actor=ralph status=running")
+            push_to(branch_target, logp)
+
+        # Execute one engineer loop
+        prompt_path = Path("prompts") / f"{args.prompt}.md"
+        if not prompt_path.exists():
+            logp(f"ERROR: prompt file not found: {prompt_path}")
+            return 2
+        rc = tee_run([args.claude_cmd, "-p", "--dangerously-skip-permissions", "--verbose", "--output-format", "stream-json"], prompt_path, iter_log)
+
+        # Complete handoff
+        if not safe_pull(logp):
+            print("[sync] ERROR: git pull failed during handoff; see iter log.")
+            return 1
+        sha = short_head()
+        st = OrchestrationState.read(str(args.state_file))
+
+        if args.sync_via_git:
+            if rc == 0:
+                st.stamp(expected_actor="galph", status="complete", increment=True, ralph_commit=sha)
+                st.write(str(args.state_file))
+                add([str(args.state_file)])
+                commit(f"[SYNC i={st.iteration}] actor=ralph → next=galph status=ok ralph_commit={sha}")
+                push_to(branch_target, logp)
+            else:
+                st.stamp(expected_actor="ralph", status="failed", increment=False, ralph_commit=sha)
+                st.write(str(args.state_file))
+                add([str(args.state_file)])
+                commit(f"[SYNC i={st.iteration}] actor=ralph status=fail ralph_commit={sha}")
+                push_to(branch_target, logp)
+                logp(f"Loop failed rc={rc}; halting")
+                return rc
+
+        # Optional: push local commits from the loop (async hygiene)
+        if rc == 0 and has_unpushed_commits():
+            try:
+                push_to(branch_target, logp)
+            except Exception as e:
+                logp(f"WARNING: git push failed: {e}")
+                return 1
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

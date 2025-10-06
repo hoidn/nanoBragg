@@ -115,8 +115,16 @@ def run_simulation(
     return runtime, result.stdout, result.stderr
 
 
-def load_float_image(filepath: str) -> np.ndarray:
-    """Load a float image from binary file."""
+def load_float_image(filepath: str, args_list: Optional[List[str]] = None) -> np.ndarray:
+    """Load a float image from binary file and infer dimensions.
+
+    Args:
+        filepath: Path to binary float32 image file
+        args_list: Command-line arguments to parse for detector dimensions
+
+    Returns:
+        2D numpy array if dimensions can be determined, else 1D array
+    """
     if not Path(filepath).exists():
         raise FileNotFoundError(f"Float image not found: {filepath}")
 
@@ -124,13 +132,38 @@ def load_float_image(filepath: str) -> np.ndarray:
     filesize = Path(filepath).stat().st_size
     n_pixels = filesize // 4  # float32
 
+    data = np.fromfile(filepath, dtype=np.float32)
+
+    # Try to extract dimensions from command-line arguments first
+    if args_list:
+        # Look for -detpixels_x and -detpixels_y (separate X/Y specification)
+        try:
+            if '-detpixels_x' in args_list:
+                idx_x = args_list.index('-detpixels_x')
+                fpixels = int(args_list[idx_x + 1])
+                if '-detpixels_y' in args_list:
+                    idx_y = args_list.index('-detpixels_y')
+                    spixels = int(args_list[idx_y + 1])
+                    if fpixels * spixels == n_pixels:
+                        return data.reshape(spixels, fpixels)
+        except (ValueError, IndexError):
+            pass
+
+        # Look for -detpixels (square detector)
+        try:
+            if '-detpixels' in args_list:
+                idx = args_list.index('-detpixels')
+                size = int(args_list[idx + 1])
+                if size * size == n_pixels:
+                    return data.reshape(size, size)
+        except (ValueError, IndexError):
+            pass
+
     # Common detector sizes to try
     common_sizes = [
         (64, 64), (128, 128), (256, 256), (512, 512), (1024, 1024),
         (2048, 2048), (4096, 4096)
     ]
-
-    data = np.fromfile(filepath, dtype=np.float32)
 
     # Try to find matching size
     for h, w in common_sizes:
@@ -360,8 +393,8 @@ def main():
 
         # Load float images
         print("\nLoading float images...")
-        c_img = load_float_image(c_float_path)
-        py_img = load_float_image(py_float_path)
+        c_img = load_float_image(c_float_path, args.args)
+        py_img = load_float_image(py_float_path, args.args)
 
         print(f"C image shape: {c_img.shape}")
         print(f"PyTorch image shape: {py_img.shape}")

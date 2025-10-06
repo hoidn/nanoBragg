@@ -62,6 +62,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Tuple, Union
 
+import numpy as np
 import torch
 
 
@@ -118,6 +119,13 @@ class CrystalConfig:
     # Random misset generation (for AT-PARALLEL-024)
     misset_random: bool = False  # If True, generate random misset angles using seed
     misset_seed: Optional[int] = None  # Seed for random misset generation (C-compatible LCG)
+
+    # MOSFLM matrix orientation (Phase G - CLI-FLAGS-003)
+    # When -mat file is provided, these store the MOSFLM A* orientation in Å⁻¹
+    # If None, Crystal uses canonical orientation from cell parameters
+    mosflm_a_star: Optional[np.ndarray] = None  # MOSFLM a* reciprocal vector (Å⁻¹)
+    mosflm_b_star: Optional[np.ndarray] = None  # MOSFLM b* reciprocal vector (Å⁻¹)
+    mosflm_c_star: Optional[np.ndarray] = None  # MOSFLM c* reciprocal vector (Å⁻¹)
 
     # Spindle rotation parameters
     phi_start_deg: float = 0.0
@@ -202,10 +210,14 @@ class DetectorConfig:
     curved_detector: bool = False  # If True, use spherical mapping for pixel positions
     point_pixel: bool = False  # If True, use 1/R^2 solid angle only (no obliquity)
 
+    # Detector origin override (CLI-FLAGS-003)
+    pix0_override_m: Optional[Union[Tuple[float, float, float], torch.Tensor]] = None  # Override pix0 vector (meters)
+
     # Custom basis vectors for CUSTOM convention (unit vectors)
     custom_fdet_vector: Optional[Tuple[float, float, float]] = None  # Fast axis direction
     custom_sdet_vector: Optional[Tuple[float, float, float]] = None  # Slow axis direction
     custom_odet_vector: Optional[Tuple[float, float, float]] = None  # Normal direction
+    custom_beam_vector: Optional[Tuple[float, float, float]] = None  # Incident beam direction (unit vector)
 
     # Detector absorption parameters (AT-ABS-001)
     detector_abs_um: Optional[Union[float, torch.Tensor]] = None  # Attenuation depth in micrometers
@@ -468,7 +480,9 @@ class BeamConfig:
     source_wavelengths: Optional[torch.Tensor] = None  # (N,) wavelengths in meters for each source
 
     # Beam polarization
-    polarization_factor: float = 0.0  # Kahn polarization factor K in [0,1] (0.0 = unpolarized, matches C default)
+    # C defaults: polar=1.0, polarization=0.0, nopolar=0 (golden_suite_generator/nanoBragg.c:308-309)
+    # polar controls the Kahn factor application; polarization is the E-vector rotation angle
+    polarization_factor: float = 1.0  # Kahn polarization factor K in [0,1] (1.0 = fully polarized, matches C default polar=1.0)
     nopolar: bool = False  # If True, force polarization factor to 1 (disable polarization)
     polarization_axis: tuple[float, float, float] = (0.0, 0.0, 1.0)  # Polarization E-vector direction
 

@@ -57,13 +57,21 @@ def sincg(u: torch.Tensor, N: torch.Tensor) -> torch.Tensor:
 
     eps = 1e-10
 
-    # Special case: u near integer multiples of π (including u ≈ 0 via n = 0)
-    # lim[u→nπ] sin(Nu)/sin(u) = N*cos(Nnπ)/cos(nπ) = N*(-1)^(Nn)/(-1)^n = N*(-1)^(n(N-1))
+    # We need to handle two special cases:
+    # 1. u near 0: sin(Nu)/sin(u) → N (L'Hôpital's rule)
+    # 2. u near integer multiples of π: sin(Nu)/sin(u) → N*(-1)^(n(N-1))
+
+    # Check if u is near zero
+    is_near_zero = torch.abs(u) < eps
+
+    # Check if u is near integer multiples of π
     # u/π should be close to an integer
     u_over_pi = u / torch.pi
     nearest_int = torch.round(u_over_pi)
     is_near_int_pi = torch.abs(u_over_pi - nearest_int) < eps / torch.pi
 
+    # For integer multiples of π (but not 0), use L'Hôpital's rule:
+    # lim[u→nπ] sin(Nu)/sin(u) = N*cos(Nnπ)/cos(nπ) = N*(-1)^(Nn)/(-1)^n = N*(-1)^(n(N-1))
     # We need to handle the sign based on whether n*(N-1) is odd or even
     # Use abs and then apply the sign separately to handle negative values correctly
     sign_exponent = nearest_int * (N - 1)
@@ -76,9 +84,7 @@ def sincg(u: torch.Tensor, N: torch.Tensor) -> torch.Tensor:
     sin_u = torch.sin(u)
     sin_Nu = torch.sin(N * u)
 
-    # Create a safe denominator that's never exactly zero.
-    # Cheap insurance against tiny denominators: if trig precision or tolerances
-    # shift, we still avoid exploding ratios.
+    # Create a safe denominator that's never exactly zero
     safe_sin_u = torch.where(
         torch.abs(sin_u) < eps,
         torch.ones_like(sin_u) * eps,  # Use eps to avoid division by zero
@@ -88,13 +94,18 @@ def sincg(u: torch.Tensor, N: torch.Tensor) -> torch.Tensor:
     # Compute ratio with safe denominator
     ratio = sin_Nu / safe_sin_u
 
-    # Apply the appropriate formula:
-    # - Near u = nπ (including n = 0): return N * sign_factor
+    # Apply the appropriate formula based on the case:
+    # - Near u=0: return N
+    # - Near u=nπ (n≠0): return N * sign_factor
     # - Otherwise: return the computed ratio
     result = torch.where(
-        is_near_int_pi,
-        N * sign_factor,  # u ≈ nπ
-        ratio  # Regular case
+        is_near_zero,
+        N,  # u ≈ 0
+        torch.where(
+            is_near_int_pi & ~is_near_zero,
+            N * sign_factor,  # u ≈ nπ, n≠0
+            ratio  # Regular case
+        )
     )
 
     return result
