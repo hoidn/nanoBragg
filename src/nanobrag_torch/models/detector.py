@@ -487,29 +487,32 @@ class Detector:
 
             # Calculate Fbeam and Sbeam from beam centers
             # For MOSFLM: Fbeam = Ybeam + 0.5*pixel_size, Sbeam = Xbeam + 0.5*pixel_size (C-code line 382)
-            # c_reference_utils now correctly maps: Xbeam=beam_center_s, Ybeam=beam_center_f
-            # Therefore: Fbeam=beam_center_f, Sbeam=beam_center_s (no swap needed)
+            # CLI-FLAGS-003 Phase H5e unit correction (2025-10-24):
+            # CRITICAL: self.beam_center_f and self.beam_center_s are stored as config values
+            # from DetectorConfig in MILLIMETERS (see config.py:186-188, __main__.py:921-922, 930-931).
+            # Must convert mm→m before use in geometry calculations.
             #
-            # DERIVATION: The beam centers are stored as:
-            #   beam_center_f_pixels = beam_center_f_mm / pixel_size_mm + 0.5
-            # So: beam_center_f_mm = (beam_center_f_pixels - 0.5) * pixel_size_mm
-            # And: Fbeam_m = beam_center_f_mm / 1000 + 0.5 * pixel_size_m
-            #             = (beam_center_f_pixels - 0.5) * pixel_size_m + 0.5 * pixel_size_m
-            #             = beam_center_f_pixels * pixel_size_m
+            # C-code reference (nanoBragg.c:1184-1239, specifically lines 1220-1221 for MOSFLM):
+            # Fbeam_m = (Ybeam_mm + 0.5*pixel_mm) / 1000
+            # Sbeam_m = (Xbeam_mm + 0.5*pixel_mm) / 1000
             #
-            # Therefore, the simple formula Fbeam = beam_center_f * pixel_size is correct!
+            # Since __main__.py already applies the axis swap at lines 921-922, we only need to:
+            # 1. Convert beam_center_f/s from mm to m (÷ 1000)
+            # 2. Add the MOSFLM +0.5 pixel offset (in meters)
+            #
+            # Reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/diff_notes.md documents
+            # the 1.1mm ΔF that this fix resolves.
 
-            # Direct mapping: no axis swap needed
-            # CRITICAL: For MOSFLM, apply +0.5 pixel offset to convert from user-provided beam_center
-            # (Xbeam/Ybeam) to internal Fbeam/Sbeam. This offset is part of the MOSFLM convention.
             if self.config.detector_convention == DetectorConvention.MOSFLM:
-                # Add +0.5 pixel offset for MOSFLM convention
-                Fbeam = (self.beam_center_f + 0.5) * self.pixel_size
-                Sbeam = (self.beam_center_s + 0.5) * self.pixel_size
+                # MOSFLM convention: add +0.5 pixel offset (C: nanoBragg.c:1220-1221)
+                # beam_center_f/s are in mm; convert to m and add half-pixel in meters
+                # Use config values directly (they're in mm) and convert
+                Fbeam = (self.config.beam_center_f / 1000.0) + (0.5 * self.pixel_size)
+                Sbeam = (self.config.beam_center_s / 1000.0) + (0.5 * self.pixel_size)
             else:
-                # Other conventions: use beam centers as-is
-                Fbeam = self.beam_center_f * self.pixel_size
-                Sbeam = self.beam_center_s * self.pixel_size
+                # Other conventions: convert mm→m without offset
+                Fbeam = self.config.beam_center_f / 1000.0
+                Sbeam = self.config.beam_center_s / 1000.0
 
             # Reuse beam_vector from r-factor calculation above
             # This ensures CUSTOM convention overrides (e.g., -beam_vector) are honored
