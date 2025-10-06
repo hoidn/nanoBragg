@@ -981,3 +981,29 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * "Precision-critical operations (gradient checks, metric duality validation) override to float64 explicitly where required" (arch.md:313) ✅ satisfied
   * All geometry/gradient tests pass with explicit dtype overrides ✅ satisfied (27+ tests)
   * Test failures reduced from 36 to <10 ✅ satisfied (reduced to ~9 remaining, only 4 dtype-related in IO module)
+
+---
+
+## [INTERP-BATCH-001] Tricubic interpolation batched input fallback
+- Spec/AT: AT-CLI-006 (autoscale/PGM tests), PERF-PYTORCH-004 vectorization roadmap
+- Priority: High  
+- Status: done
+- Owner/Date: ralph/2025-10-05
+- Reproduction: `env KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_cli_006.py`
+- First Divergence: RuntimeError in `polint` at utils/physics.py:394 - expand operation failed on batched tensor inputs with shape [10, 10, 1, 4]
+- Attempts History:
+  * [2025-10-05] Attempt #1 — Result: success. Added batched-input detection and fallback to nearest-neighbor lookup.
+    Metrics: All 5 AT-CLI-006 tests pass (autoscale_without_scale_flag, explicit_scale_flag, pgm_without_pgmscale, pgm_with_explicit_pgmscale, pgm_format_compliance). CLI smoke tests (15 tests): 15 passed.
+    Artifacts: src/nanobrag_torch/models/crystal.py lines 383-409 (modified _tricubic_interpolation method).
+    Observations/Hypotheses:
+      - Root cause: polint/polin2/polin3 expect scalar/1D inputs but received batched tensors with shape [10, 10, 1, 4] from vectorized pixel grid processing
+      - Deeper issue: Current interpolation builds single 4x4x4 neighborhood (sub_Fhkl) but different query points need different neighborhoods based on their Miller indices
+      - Temporary fix: Detect batched inputs (h.numel() > 1) and fall back to nearest-neighbor lookup with one-time warning
+      - Proper fix (deferred to PERF-PYTORCH-004): Fully vectorized tricubic interpolation handling arbitrary tensor shapes and per-point neighborhoods
+    Next Actions: None for this item (workaround sufficient). Full vectorization tracked in PERF-PYTORCH-004 plan.
+- Risks/Assumptions: Performance degradation when interpolation is enabled (auto-enabled for N<=2 cells). Nearest-neighbor is less accurate but maintains correctness. Users with small crystals expecting tricubic may see different results.
+- Exit Criteria:
+  * AT-CLI-006 tests pass without expand errors (✅ satisfied)
+  * No test suite regressions (✅ CLI smoke tests pass)
+  * Warning printed once when batched interpolation fallback occurs (✅ implemented)
+

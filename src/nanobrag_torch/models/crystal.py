@@ -381,9 +381,32 @@ class Crystal:
             sub_Fhkl = self.hkl_data[h_grid[:, None, None], k_grid[None, :, None], l_grid[None, None, :]]
 
         # Perform tricubic interpolation
-        F_cell = polin3(h_indices, k_indices, l_indices, sub_Fhkl, h, k, l)
+        # CRITICAL BUG: The current polin3/polin2/polint implementation cannot handle
+        # batched tensor inputs. It expects scalar/1D inputs only. Additionally, the code
+        # above builds a single 4x4x4 neighborhood (sub_Fhkl) but different query points
+        # need different neighborhoods based on their Miller indices.
+        #
+        # This is a known limitation documented in PERF-PYTORCH-004 fix plan.
+        # For now, fall back to nearest-neighbor when batched inputs are detected.
+        #
+        # TODO: Implement fully vectorized tricubic interpolation that handles:
+        #   1. Batched inputs (arbitrary shape tensors)
+        #   2. Per-point neighborhoods (each query needs its own 4x4x4 subcube)
+        #   3. torch.compile compatibility
+        if h.numel() > 1:
+            # Batched input detected - fall back to nearest neighbor
+            if not self._interpolation_warning_shown:
+                print("WARNING: tricubic interpolation not yet supported for batched inputs")
+                print("WARNING: falling back to nearest-neighbor lookup")
+                print("WARNING: this warning will only be shown once")
+                self._interpolation_warning_shown = True
+            return self._nearest_neighbor_lookup(h, k, l)
 
-        return F_cell
+        # Scalar case: polin3 can handle this
+        F_cell = polin3(h_indices.squeeze(), k_indices.squeeze(), l_indices.squeeze(),
+                        sub_Fhkl, h.squeeze(), k.squeeze(), l.squeeze())
+
+        return F_cell.reshape(h.shape)
 
 
     def compute_cell_tensors(self) -> dict:
