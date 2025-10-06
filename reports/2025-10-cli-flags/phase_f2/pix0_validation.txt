@@ -1,0 +1,27 @@
+Phase F2 Validation Report
+============================================================
+
+Configuration:
+  Convention: DetectorConvention.CUSTOM
+  Pivot: DetectorPivot.BEAM
+  pix0_override_m: (-0.216336293, 0.215205512, -0.230200866)
+
+Results:
+  pix0_vector (m): tensor([-0.2163,  0.2152, -0.2302], dtype=torch.float64)
+  beam_vector: tensor([ 5.1388e-04,  0.0000e+00, -1.0000e+00], dtype=torch.float64)
+  close_distance (m): 0.23127466558613893
+  r_factor: 0.9999878550371455
+
+Expected from C trace (Attempt #8):
+  pix0_vector: (-0.21648, 0.21634, -0.23019)
+  beam_vector: (0.000513879, 0, -0.999999868)
+
+PyTorch before F2 (Attempt #8):
+  pix0_vector: (-0.21634, 0.21521, -0.23020)
+
+Analysis:
+  Phase F2 changes:
+    - Removed early return that bypassed r_factor/close_distance calculation
+    - pix0_override is now used AFTER all pivot formulas are applied
+    - close_distance is derived from pix0_vector via dot product with odet
+    - r_factor is calculated normally from rotated detector normal
