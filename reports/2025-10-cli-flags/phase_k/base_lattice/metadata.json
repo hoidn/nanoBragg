@@ -1,0 +1,23 @@
+{
+  "phase": "K3f1",
+  "date": "2025-10-06",
+  "task": "Capture C baseline lattice trace",
+  "c_binary": "./golden_suite_generator/nanoBragg",
+  "git_commit": "$(git rev-parse HEAD)",
+  "uname": "$(uname -a)",
+  "environment": {
+    "NB_C_BIN": "./golden_suite_generator/nanoBragg"
+  },
+  "command": "See run_c_trace.sh",
+  "output_lines": $(wc -l < reports/2025-10-cli-flags/phase_k/base_lattice/c_stdout.txt),
+  "key_values_extracted": {
+    "a_star": "[-0.0290511, -0.0293959, 0.0107499]",
+    "b_star": "[-0.00312639, 0.0104376, -0.0328567]",
+    "c_star": "[0.0259604, -0.014333, -0.0106066]",
+    "V_cell_Ang3": 24682.3,
+    "V_star": 4.05149e-05,
+    "a0_meters": "[-1.43563e-09, -2.18718e-09, -5.58202e-10]",
+    "b0_meters": "[-1.14987e-09, 7.1732e-11, -2.91132e-09]",
+    "c0_meters": "[2.107e-09, -2.43893e-09, -9.75265e-10]"
+  }
+}

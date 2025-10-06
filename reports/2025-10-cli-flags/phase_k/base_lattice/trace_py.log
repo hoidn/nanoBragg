@@ -1,0 +1,37 @@
+TRACE_PY_BASE: ========== Phase K3f2 PyTorch Base Lattice Trace ==========
+TRACE_PY_BASE: dtype=torch.float64, device=cpu
+TRACE_PY_BASE: Loaded MOSFLM matrix from A.mat
+TRACE_PY_BASE:   wavelength = 0.9768 Å
+TRACE_PY_BASE: Creating Detector...
+TRACE_PY_BASE: Creating Crystal...
+TRACE_PY_BASE:
+TRACE_PY_BASE: ========== MOSFLM Reciprocal Vectors (λ-scaled) ==========
+TRACE_PY_BASE:   a_star = [-1.177003215, -1.190972323, 0.435530564] |a_star| = 1.730155633
+TRACE_PY_BASE:   b_star = [-0.126665578, 0.4228804311, -1.331186015] |b_star| = 1.402472187
+TRACE_PY_BASE:   c_star = [1.051785607, -0.580701197, -0.4297262439] |c_star| = 1.275982557
+TRACE_PY_BASE:
+TRACE_PY_BASE: ========== Real-Space Vectors (meters) ==========
+TRACE_PY_BASE:   a = [-0.0005816432933, -0.0008861342451, -0.0002261552061] |a| = 0.001083830706 meters
+TRACE_PY_BASE:   b = [-0.0004658689445, 2.906217376e-05, -0.001179519977] |b| = 0.001268521131 meters
+TRACE_PY_BASE:   c = [0.0008536476363, -0.0009881307294, -0.0003951280392] |c| = 0.001364273724 meters
+TRACE_PY_BASE:   V_cell = 1.641459882e-09 m³ = 1.641459882e+21 Å³
+TRACE_PY_BASE:   V_star = 609213792.4 m⁻³
+TRACE_PY_BASE:
+TRACE_PY_BASE: ========== Detector Geometry ==========
+TRACE_PY_BASE:   pix0_vector = [0.23127466, 0.21399308, -0.217828295] meters
+TRACE_PY_BASE:   beam_vector = [1, 0, 0]
+TRACE_PY_BASE:   Fdet = [0, 0, 1]
+TRACE_PY_BASE:   Sdet = [0, -1, 0]
+TRACE_PY_BASE:   Odet = [1, 0, 0]
+TRACE_PY_BASE:
+TRACE_PY_BASE: ========== φ=0° Scattering Example (pixel 1039,685) ==========
+TRACE_PY_BASE:   pixel_coords[1039,685] = [0.23127466, 0.03519908, -0.099922295] meters
+TRACE_PY_BASE:   diffracted (d) = [0.909154357, 0.1383696638, -0.3928004471]
+TRACE_PY_BASE:   incident (i) = [-1, -0, -0]
+TRACE_PY_BASE:   S (Å⁻¹) = [1.954498727, 0.1416560849, -0.4021298599]
+TRACE_PY_BASE:   h_frac = -11714036.23
+TRACE_PY_BASE:   k_frac = -4321032.221
+TRACE_PY_BASE:   l_frac = 16873712.71
+TRACE_PY_BASE:
+TRACE_PY_BASE: K3f2 complete. Trace written to stderr.
+TRACE_PY_BASE: ========================================================

@@ -690,6 +690,29 @@
       - **Likely root causes:** (1) MOSFLM matrix loading produces different a_star/b_star/c_star, (2) reciprocal→real conversion differs, or (3) scattering vector S calculation uses different geometry.
       - **Plan pivot required:** Phase K3f must now debug base lattice vectors (compare a_star/b_star/c_star from MOSFLM matrix loading, verify reciprocal→real formula, trace a/b/c before φ rotation) instead of φ-sampling adjustments.
     Next Actions: **Phase K3f redirected** - Compare base lattice vectors between C and PyTorch: (1) Log MOSFLM a_star/b_star/c_star after matrix loading, (2) Trace reciprocal→real conversion (cell_a/b/c calculation), (3) Log a/b/c vectors BEFORE φ rotation, (4) Verify scattering vector S = (d - i)/λ uses identical geometry. Once base lattice parity achieved, regenerate scaling-chain memo and confirm Δk<5e-4 at all φ steps.
+  * [2025-10-06] Attempt #46 (ralph) — Result: **EVIDENCE COMPLETE** (Phase K3f base lattice traces). **First divergence: reciprocal vectors scaled 40.51× too large.**
+    Metrics: Reciprocal vector ratio (Py/C) = 40.514916 (a_star, b_star, c_star all identical), real vector ratio = ~405,149×, V_cell mismatch (C=24,682 vs Py=1.64e-9 with wrong units).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_k/base_lattice/c_stdout.txt` — C trace (291 lines, includes base vectors + φ=0 scattering)
+      - `reports/2025-10-cli-flags/phase_k/base_lattice/trace_py.log` — PyTorch trace (37 lines, matching structure)
+      - `reports/2025-10-cli-flags/phase_k/base_lattice/summary.md` — Automated comparison showing first divergence
+      - `reports/2025-10-cli-flags/phase_k/base_lattice/README.md` — Executive summary with root cause hypothesis
+      - `reports/2025-10-cli-flags/phase_k/base_lattice/compare_traces.py` — K3f3 comparison script
+      - `reports/2025-10-cli-flags/phase_k/base_lattice/trace_harness.py` — K3f2 PyTorch harness
+      - `reports/2025-10-cli-flags/phase_k/base_lattice/run_c_trace.sh` — K3f1 C capture script
+      - `reports/2025-10-cli-flags/phase_k/base_lattice/metadata.json` — Environment snapshot
+    Observations/Hypotheses:
+      - **40.51× scaling factor consistent across all reciprocal vectors:** Strongly suggests λ-scaling applied twice
+      - **MOSFLM matrix files already contain λ-scaled vectors:** C code shows `scaling factor = 1e-10/lambda0 = 1.02375`
+      - **PyTorch may be re-scaling in `read_mosflm_matrix()` or `Crystal.compute_cell_tensors()`:** Need to verify whether function expects raw or pre-scaled input
+      - **Real vector cascade:** 405,149× error in real vectors derives from reciprocal error via cross-product calculation
+      - **Miller index impact:** Massive lattice error explains the Δk≈6 mismatch from Phase K3e
+    Next Actions (Phase K3f4):
+      1. Investigate `src/nanobrag_torch/io/mosflm.py:read_mosflm_matrix()` — verify λ-scaling expectations
+      2. Review `src/nanobrag_torch/models/crystal.py:compute_cell_tensors()` — check MOSFLM branch for double-scaling
+      3. Compare with C code (`nanoBragg.c:3135-3148`) to understand expected input format
+      4. Test hypothesis: remove λ-scaling from reader output OR adjust compute_cell_tensors() to skip scaling when MOSFLM vectors provided
+      5. Document chosen fix approach in base_lattice/README.md and update plan before implementing
   * [2025-10-06] Attempt #29 (ralph loop) — Result: Phase H5a EVIDENCE-ONLY COMPLETE. **C-code pix0 override behavior with custom vectors documented.**
     Metrics: Evidence-only loop. Two C runs executed: WITH override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m) and WITHOUT override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m). Identical geometry values confirm override is ignored when custom vectors are present.
     Artifacts:
