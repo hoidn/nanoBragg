@@ -973,3 +973,10 @@ Follow-ups for Ralph:
 - Updated `plans/active/cli-noise-pix0/plan.md` (Phase F1 → [D], added note to repopulate artifact) and refreshed `docs/fix_plan.md` Next Actions accordingly.
 - Rewrote `input.md` directing Ralph to implement Phase F2 (CUSTOM pix0 transform), repopulate the beam-vector artifact, and rerun the full parity harness; documented command scaffolding + artifact paths under `reports/2025-10-cli-flags/phase_f/`.
 - No new plan created; CLI plan remains authoritative. Pending follow-up: Phase F2 implementation + parity rerun, then proceed to Phase G.
+
+## 2025-10-16 (galph loop — F1 beam-vector wiring audit)
+- Repo synced clean; no upstream changes before analysis.
+- Verified `_calculate_pix0_vector()` still instantiates convention-default beam vectors, so CUSTOM overrides never influence r-factor/pix0 math despite CLI wiring.
+- Updated `plans/active/cli-noise-pix0/plan.md` (Phase F snapshot now flags F1 as [P] with guidance to reuse `self.beam_vector`) and refreshed `[CLI-FLAGS-003]` Next Actions accordingly.
+- Reissued `input.md` to keep Ralph on Phase F1, bundling a validation harness that writes beam/pix0 tensors under `reports/2025-10-cli-flags/phase_f/`.
+- Follow-up: Ralph to refactor `_calculate_pix0_vector()` to consume `self.beam_vector`, regenerate artifacts, and log Attempt #11 before tackling Phase F2.

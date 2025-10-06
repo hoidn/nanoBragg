@@ -671,7 +671,7 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase C2 parity run exposed a 2.58e2× intensity scaling mismatch (PyTorch max_I≈1.15e5 vs C max_I≈4.46e2). Phase D3/E diagnostics (2025-10-16) confirm three blocking geometry gaps: (a) PyTorch applies the raw `-pix0_vector_mm` override without the CUSTOM transform used in C (1.14 mm Y error); (b) CLI ignores `-beam_vector`, leaving the incident ray at the convention default `[0,0,1]`; (c) `-mat A.mat` handling discards the MOSFLM orientation, so Crystal falls back to canonical upper-triangular vectors while C uses the supplied A*. Traces also show a polarization delta (C Kahn factor ≈0.9126 vs PyTorch 1.0) to revisit after geometry fixes.
-- Next Actions: (1) Execute plan task C3 to update documentation tables, and record closure in C4; (2) Drive plan Phase F (F1–F3) — thread custom beam vector, port CUSTOM pix0 transform, rerun parity smoke; (3) Execute plan Phase G (G1–G3) to retain MOSFLM orientation and verify crystal traces; (4) Once geometry aligns, address polarization via Phase H and run final parity/documentation sweeps.
+- Next Actions: (1) Execute plan task C3 to update documentation tables, and record closure in C4; (2) Drive plan Phase F — finish F1 by refactoring `_calculate_pix0_vector()` to reuse `Detector.beam_vector` (so CUSTOM overrides affect r-factor/pix0 math) and regenerate `reports/2025-10-cli-flags/phase_f/beam_vector_after_fix.txt`, then implement F2 pix0 transform + F3 parity rerun; (3) Execute plan Phase G (G1–G3) to retain MOSFLM orientation and verify crystal traces; (4) Once geometry aligns, address polarization via Phase H and run final parity/documentation sweeps.
 - Attempts History:
   * [2025-10-05] Phase A Complete — Tasks A1-A3 executed per plan.
     Metrics: C reference behavior captured for both flags via parallel command execution.
@@ -1006,4 +1006,3 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * AT-CLI-006 tests pass without expand errors (✅ satisfied)
   * No test suite regressions (✅ CLI smoke tests pass)
   * Warning printed once when batched interpolation fallback occurs (✅ implemented)
-
