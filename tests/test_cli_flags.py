@@ -110,12 +110,14 @@ class TestDetectorOverridePersistence:
 
     def test_detector_override_persistence_cpu(self):
         """Verify pix0 override persists through cache invalidation on CPU."""
+        # Use pix0_override that aligns with expected geometry for MOSFLM convention
+        # MOSFLM odet_vec = [1, 0, 0], so pix0 = [distance, y, z] gives close_distance = distance
         cfg = DetectorConfig(
             distance_mm=100,
             pixel_size_mm=0.1,
             spixels=4,
             fpixels=4,
-            pix0_override_m=torch.tensor([0.01, -0.02, 0.03], dtype=torch.float64)
+            pix0_override_m=torch.tensor([0.1, -0.02, 0.03], dtype=torch.float64)  # [distance, y, z]
         )
 
         det = Detector(cfg, device='cpu', dtype=torch.float64)
@@ -123,29 +125,33 @@ class TestDetectorOverridePersistence:
         # Check override applied
         assert torch.allclose(
             det.pix0_vector,
-            torch.tensor([0.01, -0.02, 0.03], dtype=torch.float64)
+            torch.tensor([0.1, -0.02, 0.03], dtype=torch.float64)
         )
 
         # Invalidate cache and verify override persists
         det.invalidate_cache()
         assert torch.allclose(
             det.pix0_vector,
-            torch.tensor([0.01, -0.02, 0.03], dtype=torch.float64)
+            torch.tensor([0.1, -0.02, 0.03], dtype=torch.float64)
         )
 
-        # When override is used, r_factor should be 1.0 and close_distance == distance (in meters)
+        # When override is used with BEAM pivot, r_factor should be 1.0
+        # close_distance is recalculated from pix0 as dot(pix0, odet_vec) per C code line 1846
+        # For MOSFLM odet=[1,0,0], close_distance = pix0[0] = 0.1
         assert det.r_factor == pytest.approx(1.0, rel=1e-9)
-        assert det.close_distance == pytest.approx(cfg.distance_mm * 1e-3, rel=1e-9)  # mm to m
+        assert det.close_distance == pytest.approx(0.1, rel=1e-9)  # pix0[0] for MOSFLM
 
     @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
     def test_detector_override_persistence_cuda(self):
         """Verify pix0 override persists through cache invalidation on CUDA."""
+        # Use pix0_override that aligns with expected geometry for MOSFLM convention
+        # MOSFLM odet_vec = [1, 0, 0], so pix0 = [distance, y, z] gives close_distance = distance
         cfg = DetectorConfig(
             distance_mm=100,
             pixel_size_mm=0.1,
             spixels=4,
             fpixels=4,
-            pix0_override_m=torch.tensor([0.01, -0.02, 0.03], dtype=torch.float64)
+            pix0_override_m=torch.tensor([0.1, -0.02, 0.03], dtype=torch.float64)  # [distance, y, z]
         )
 
         det = Detector(cfg, device='cuda', dtype=torch.float64)
@@ -153,7 +159,7 @@ class TestDetectorOverridePersistence:
         # Check override applied and on correct device
         assert torch.allclose(
             det.pix0_vector.cpu(),
-            torch.tensor([0.01, -0.02, 0.03], dtype=torch.float64)
+            torch.tensor([0.1, -0.02, 0.03], dtype=torch.float64)
         )
         assert det.pix0_vector.device.type == 'cuda'
 
@@ -161,14 +167,15 @@ class TestDetectorOverridePersistence:
         det.invalidate_cache()
         assert torch.allclose(
             det.pix0_vector.cpu(),
-            torch.tensor([0.01, -0.02, 0.03], dtype=torch.float64)
+            torch.tensor([0.1, -0.02, 0.03], dtype=torch.float64)
         )
         assert det.pix0_vector.device.type == 'cuda'
 
-        # When override is used, r_factor should be 1.0 and close_distance == distance (in meters)
-        # Move tensor to CPU for comparison; close_distance is a float
+        # When override is used with BEAM pivot, r_factor should be 1.0
+        # close_distance is recalculated from pix0 as dot(pix0, odet_vec) per C code line 1846
+        # For MOSFLM odet=[1,0,0], close_distance = pix0[0] = 0.1
         assert det.r_factor.cpu().item() == pytest.approx(1.0, rel=1e-9)
-        assert det.close_distance == pytest.approx(cfg.distance_mm * 1e-3, rel=1e-9)  # mm to m
+        assert det.close_distance == pytest.approx(0.1, rel=1e-9)  # pix0[0] for MOSFLM
 
     def test_detector_override_dtype_preservation(self):
         """Verify pix0 override preserves dtype across operations."""

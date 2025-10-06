@@ -1,0 +1,71 @@
+## Phase F2 Completion Report: CUSTOM pix0 Transform Implementation
+Date: 2025-10-05
+Owner: ralph
+
+### Summary
+Successfully implemented the CUSTOM pix0 transform to match C-code behavior (nanoBragg.c:1736-1846).
+Key discovery: The `-twotheta` flag (even when 0) sets detector_pivot = SAMPLE in C code (line 786),
+causing pix0 override to be IGNORED in favor of calculated values from beam centers.
+
+### Root Cause Analysis
+The C-PyTorch pix0 discrepancy was caused by two issues:
+1. **Missing pivot override**: CLI parser didn't set SAMPLE pivot when `-twotheta` provided
+2. **Convention-specific offsets**: CUSTOM mode incorrectly applied MOSFLM +0.5 pixel offset to beam centers
+
+### Implementation Changes
+
+#### 1. CLI Parser (src/nanobrag_torch/__main__.py)
+- **Line 136**: Changed `-twotheta` default from 0.0 to None to detect explicit provision
+- **Lines 486-488**: Added pivot override logic: `if args.twotheta is not None: pivot = 'SAMPLE'`
+- **Line 530**: Fill in twotheta default after pivot logic: `args.twotheta if args.twotheta is not None else 0.0`
+
+#### 2. Detector Model (src/nanobrag_torch/models/detector.py)
+- **Lines 549-565**: Added CUSTOM convention support in SAMPLE pivot branch
+  - Uses custom_*det_vector if provided, otherwise defaults to MOSFLM-like values
+- **Lines 579-587**: Fixed Fclose/Sclose calculation for CUSTOM convention
+  - CUSTOM: NO +0.5 pixel offset (Fclose = Xbeam, Sclose = Ybeam per C line 1275-1276)
+  - MOSFLM: +0.5 pixel offset as before
+- **Lines 599-602**: Removed incorrect pix0_override direct assignment in SAMPLE pivot
+  - C code shows override is IGNORED; standard calculation always used
+- **Lines 626-630**: Always recalculate close_distance from final pix0 (C line 1846)
+
+#### 3. Test Updates (tests/test_cli_flags.py)
+- **Lines 113-142**: Updated CPU override persistence test
+  - Changed pix0_override from [0.01, -0.02, 0.03] to [0.1, -0.02, 0.03]
+  - Updated close_distance assertion to match recalculated value (0.1 = pix0[0] for MOSFLM)
+- **Lines 143-174**: Updated CUDA override persistence test similarly
+- **Rationale**: Tests were checking old behavior where close_distance == distance for overrides.
+  C code ALWAYS recalculates close_distance = dot(pix0, odet) (line 1846), so tests updated.
+
+### Validation Results
+
+#### Pix0 Vector Parity (Supervisor Command)
+```
+PyTorch pix0:  [-0.2165,  0.2163, -0.2302]
+C pix0:        [-0.216475836, 0.216343050, -0.230192414]
+Difference:    [ 1.19e-07,  1.34e-07, -2.86e-06] ✅ (numerical precision)
+```
+
+#### Test Suite Results
+- `test_cli_flags.py`: 18/18 passed
+- Pivot mode correctly set to SAMPLE when `-twotheta` provided
+- Convention-specific beam center offsets working correctly
+- pix0 override properly ignored in SAMPLE pivot mode
+
+### C-Code Reference Alignment
+The implementation now correctly matches C code flow:
+1. **Pivot selection** (C line 786): `-twotheta` → SAMPLE pivot
+2. **CUSTOM beam centers** (C lines 1275-1276): Fclose=Xbeam, Sclose=Ybeam (no offset)
+3. **SAMPLE pivot formula** (C lines 1739-1741): pix0 = -Fclose*fdet - Sclose*sdet + close_distance*odet
+4. **Rotation** (C lines 1744-1745): Rotate pix0 with detector rotations
+5. **Recalculation** (C line 1846): close_distance = dot(pix0, odet)
+
+### Next Steps (Per Plan)
+- [x] Phase F2 complete - CUSTOM pix0 transform implemented
+- [ ] Phase F3 pending - Full parity rerun with supervisor command
+- [ ] Phase G pending - MOSFLM matrix orientation support
+- [ ] Phase H pending - Polarization alignment
+
+### Artifacts
+- Test script (deleted): test_phase_f2.py
+- This report: reports/2025-10-cli-flags/phase_f2/pix0_transform_refit.txt

@@ -133,7 +133,7 @@ Examples:
                         help='Detector rotation about Y axis (degrees)')
     parser.add_argument('-detector_rotz', type=float, default=0.0, metavar='DEG',
                         help='Detector rotation about Z axis (degrees)')
-    parser.add_argument('-twotheta', type=float, default=0.0, metavar='DEG',
+    parser.add_argument('-twotheta', type=float, default=None, metavar='DEG',
                         help='Detector rotation about twotheta axis')
     parser.add_argument('-twotheta_axis', nargs=3, type=float,
                         metavar=('X', 'Y', 'Z'),
@@ -483,6 +483,10 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
               args.ORGX is not None, args.ORGY is not None]):
         pivot = 'SAMPLE'
 
+    # C-code line 786: -twotheta sets detector_pivot = SAMPLE (even if twotheta=0)
+    if args.twotheta is not None:
+        pivot = 'SAMPLE'
+
     if args.pivot:  # Explicit override wins
         pivot = args.pivot.upper()
 
@@ -523,7 +527,7 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     config['detector_rotx_deg'] = args.detector_rotx
     config['detector_roty_deg'] = args.detector_roty
     config['detector_rotz_deg'] = args.detector_rotz
-    config['twotheta_deg'] = args.twotheta
+    config['twotheta_deg'] = args.twotheta if args.twotheta is not None else 0.0
     if args.twotheta_axis:
         config['twotheta_axis'] = args.twotheta_axis
 

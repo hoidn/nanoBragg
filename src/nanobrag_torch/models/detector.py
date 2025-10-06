@@ -546,6 +546,23 @@ class Detector:
                 fdet_initial = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
                 sdet_initial = torch.tensor([0.0, 1.0, 0.0], device=self.device, dtype=self.dtype)
                 odet_initial = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
+            elif self.config.detector_convention == DetectorConvention.CUSTOM:
+                # CUSTOM convention: use custom vectors if provided, otherwise use defaults
+                # C code sets defaults to MOSFLM-like values (nanoBragg.c lines 263-265)
+                if self.config.custom_fdet_vector:
+                    fdet_initial = torch.tensor(self.config.custom_fdet_vector, device=self.device, dtype=self.dtype)
+                else:
+                    fdet_initial = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
+
+                if self.config.custom_sdet_vector:
+                    sdet_initial = torch.tensor(self.config.custom_sdet_vector, device=self.device, dtype=self.dtype)
+                else:
+                    sdet_initial = torch.tensor([0.0, -1.0, 0.0], device=self.device, dtype=self.dtype)
+
+                if self.config.custom_odet_vector:
+                    odet_initial = torch.tensor(self.config.custom_odet_vector, device=self.device, dtype=self.dtype)
+                else:
+                    odet_initial = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
             else:
                 raise ValueError(f"Unknown detector convention: {self.config.detector_convention}")
 
@@ -559,10 +576,15 @@ class Detector:
             # - Sclose (slow coord) ← beam_center_s (slow param)
             # NOTE: The beam centers already have the +0.5 offset from __init__ for MOSFLM!
 
-            # The beam centers already include the MOSFLM +0.5 pixel offset from __init__
-            # Use consistent mapping with BEAM pivot mode: no axis swap
-            Fclose = self.beam_center_f * self.pixel_size  # F (fast coord) ← beam_f (fast param)
-            Sclose = self.beam_center_s * self.pixel_size  # S (slow coord) ← beam_s (slow param)
+            # C-code lines 1273-1276: CUSTOM convention uses Fclose=Xbeam, Sclose=Ybeam (no +0.5 offset)
+            # MOSFLM adds +0.5 pixel offset per C-code lines 1233-1234
+            if self.config.detector_convention == DetectorConvention.MOSFLM:
+                Fclose = (self.beam_center_f + 0.5) * self.pixel_size
+                Sclose = (self.beam_center_s + 0.5) * self.pixel_size
+            else:
+                # CUSTOM, XDS, DIALS: use beam centers as-is
+                Fclose = self.beam_center_f * self.pixel_size
+                Sclose = self.beam_center_s * self.pixel_size
 
             # Compute pix0 BEFORE rotations using close_distance if specified
             # When close_distance is provided, use it directly for SAMPLE pivot
@@ -596,21 +618,16 @@ class Detector:
             # When detector_twotheta is zero, this will be identity
             pix0_rotated = rotate_axis(pix0_rotated, twotheta_axis, detector_twotheta)
 
-            # CLI-FLAGS-003 Phase F2: Use override if provided, otherwise use calculated
-            if pix0_override_tensor is not None:
-                self.pix0_vector = pix0_override_tensor
-            else:
-                self.pix0_vector = pix0_rotated
+            # CLI-FLAGS-003 Phase F2: SAMPLE pivot always uses calculated pix0
+            # The C code (nanoBragg.c:1739-1745) shows that pix0_override is IGNORED for SAMPLE pivot;
+            # instead, Fclose/Sclose from beam centers are used in the standard formula, then rotated.
+            self.pix0_vector = pix0_rotated
 
-        # CLI-FLAGS-003 Phase F2: When pix0_override is provided, derive close_distance from it
-        # This matches C code (nanoBragg.c:1844-1846):
-        #   Fclose         = -dot_product(pix0_vector,fdet_vector);
-        #   Sclose         = -dot_product(pix0_vector,sdet_vector);
-        #   close_distance =  dot_product(pix0_vector,odet_vector);
-        if pix0_override_tensor is not None:
-            # Calculate close_distance as the projection of pix0 onto the detector normal
-            # Use the ROTATED odet_vec (self.odet_vec) since pix0_override is in final coordinates
-            self.close_distance = torch.dot(self.pix0_vector, self.odet_vec)
+        # ALWAYS recalculate close_distance from final pix0_vector (C code nanoBragg.c:1846)
+        # This ensures consistency between pix0 and close_distance for all pivot modes
+        close_dist_tensor = torch.dot(self.pix0_vector, self.odet_vec)
+        # Convert to scalar for consistency with existing code
+        self.close_distance = close_dist_tensor.item() if close_dist_tensor.dim() == 0 else close_dist_tensor
 
     def get_pixel_coords(self) -> torch.Tensor:
         """
