@@ -545,21 +545,36 @@
   * [2025-10-22] Attempt #31 (ralph loop) — Result: **SUCCESS** (Phase H5b revert complete). **Custom vector pix0 override precedence restored to match C behavior.**
     Metrics: Targeted pytest 4/4 passed in 2.43s (TestCLIPix0Override suite). Core tests: cli_flags 26/26, detector_geometry 12/12, crystal_geometry 19/19 (57 passed, 1 warning).
     Artifacts:
-      - `src/nanobrag_torch/models/detector.py:518-539` - Added `has_custom_vectors` detection logic and gated pix0_override application
-      - `reports/2025-10-cli-flags/phase_h5/pytest_h5b_revert.log` - Targeted test run log (4 tests, all passing)
-      - `reports/2025-10-cli-flags/phase_h5/implementation_notes.md` - Updated with Attempt #31 details and rationale
+      - `src/nanobrag_torch/models/detector.py:518-540` - Restored custom-vector guard matching C precedence
+      - `reports/2025-10-cli-flags/phase_h5/pytest_h5b_revert.log` - Regression test results post-revert
+      - `reports/2025-10-cli-flags/phase_h5/implementation_notes.md` - Documents revert implementation
     Observations/Hypotheses:
-      - **Revert rationale:** Attempt #30 evidence proves C ignores `-pix0_vector_mm` when custom vectors present
-      - **Detection logic:** `has_custom_vectors = any([custom_fdet/sdet/odet_vector is not None])`
-      - **Precedence gate:** `if pix0_override_tensor is not None and not has_custom_vectors:`
-      - **Comments updated:** Reference `c_precedence_2025-10-22.md` for evidence trail
-      - **Device/dtype neutrality:** Preserved throughout (no `.cpu()`/`.cuda()` calls)
-      - **Test coverage:** All pix0 override scenarios pass (CPU/CUDA parametrizations)
+      - **Revert complete:** pix0 override now correctly skipped when custom detector vectors are present
+      - **Test coverage:** Validates both override paths (with/without custom vectors) on CPU + CUDA
+      - **Matches C behavior:** Precedence logic aligns with golden_suite_generator/nanoBragg.c
+    Next Actions: Capture PyTorch traces (Phase H5c) to verify pix0/Fbeam/Sbeam/F_latt parity with C reference traces from 2025-10-22.
+  * [2025-10-22] Attempt #32 (ralph loop) — Result: **EVIDENCE CAPTURED, PARITY GAP IDENTIFIED** (Phase H5c PyTorch trace). **pix0 divergence exceeds threshold despite revert.**
+    Metrics: pix0 ΔS = +1.393e-04 m (139 μm), ΔF = -1.136e-03 m (**1.1 mm**), ΔO = -5.594e-06 m. All three components exceed <5e-5 m threshold. Basis vectors (fdet, sdet) match C exactly.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/trace_py.log` - PyTorch trace for pixel (1039, 685)
+      - `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/trace_py.stdout` - Full harness output
+      - `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/diff_notes.md` - Component-by-component comparison
+      - `reports/2025-10-cli-flags/phase_h5/parity_summary.md` - Updated with metrics table and analysis
+    Observations/Hypotheses:
+      - **Primary finding:** pix0 divergence persists after revert, with ΔF = 1.1mm being most significant
+      - **Basis vector parity:** fdet/sdet match C exactly (0.0 delta), ruling out orientation issues
+      - **Pattern analysis:** Deltas show systematic bias (S: +139μm, F: -1136μm, O: -5.6μm), not random error
+      - **Possible causes:**
+        1. Different beam-center → pix0 conversion logic (Xbeam/Ybeam → Fbeam/Sbeam path)
+        2. Pivot mode calculation differs despite identical detector_pivot=BEAM setting
+        3. MOSFLM +0.5 pixel offset applied differently in custom vector path
+        4. Custom vector projection math differs from C implementation
+      - **Missing C instrumentation:** F_latt components, fractional h/k/l not logged in C trace; cannot validate lattice factors until Phase K1 adds instrumentation
     Next Actions:
-      - Execute Phase H5c: capture new PyTorch traces using Phase H trace harness
-      - Compare with C traces from `reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/`
-      - Update `phase_h5/parity_summary.md` with pix0/F_latt deltas (<5e-5 m, <1e-3 relative error)
-      - Proceed to Phase K normalization work once geometry parity confirmed
+      1. **BLOCK Phase K normalization work** until pix0 parity resolved; 1.1mm delta will cascade into incorrect Miller index calculations
+      2. Add detailed pix0 calculation trace to BOTH C and PyTorch (log Xbeam, Ybeam, Fbeam, Sbeam, basis dot products, pivot terms)
+      3. Compare step-by-step pix0 derivation to identify where C and PyTorch diverge
+      4. Once pix0 matches (<5e-5 m), resume Phase K1 F_latt work with C instrumentation
   * [2025-10-17] Attempt #25 (ralph) — Result: success (Phase H4a-c complete). **Post-rotation beam-centre recomputation implemented and verified.**
     Metrics: pix0_vector parity achieved - C vs PyTorch deltas < 2e-8 m (well within 5e-5 m tolerance). Test suite: test_cli_flags.py 23/23 passed, test_detector_geometry.py 12/12 passed, test_crystal_geometry.py 19/19 passed (54 total).
     Artifacts:
