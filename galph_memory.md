@@ -1124,3 +1124,11 @@ Follow-ups for Ralph:
 - Regenerated input.md (Phase: Implementation) directing Ralph to execute Phase I (I1–I3), add a CLI polarization regression test, rerun targeted pytest nodes, and stash evidence under reports/2025-10-cli-flags/phase_i/.
 - Vectorization plan untouched; Phase A baseline capture still pending once CLI parity clears.
 - Follow-ups for Ralph: implement polarization parity per plan, update docs/fix_plan.md Attempt #26 with metrics, and only then advance to nb-compare / vectorization work.
+
+## 2025-10-19 (galph loop — Phase I3 parity directive)
+- `git pull --rebase` clean; workspace already on feature/spec-based-2. Reviewed prior memory plus required docs (spec-a shards, arch.md, config map, debugging guide, testing strategy, fix_plan, docs/index).
+- Long-term goal sweep: CLI parity stalled only on Phase I3; vectorization plan Phases A–F untouched pending parity evidence. `_tricubic_interpolation` still falls back to nearest-neighbour for batched tensors, reinforcing urgency once CLI closes.
+- Hypotheses for Phase I3 parity gap (triage): (1) Polarization factor may still diverge if CLI path misses Kahn defaults despite BeamConfig fix—confirm by running nb-compare; (2) -nonoise might still emit noiseimage if simulator flag regressed; (3) pix0 override suppression with custom vectors must match C—verify stdout pix0 to ensure parity. Highest-confidence risk is #1; next step is the nb-compare command recorded in input.md (correlation + polarization metrics).
+- No new plan drafted—`plans/active/cli-noise-pix0/plan.md` remains authoritative. Updated docs/fix_plan.md next actions to focus on Attempt #27 parity run and deepened I3 guidance.
+- Regenerated input.md (143 lines, Validation phase) instructing Ralph to run nb-compare with the supervisor command, archive artifacts under `reports/2025-10-cli-flags/phase_i/supervisor_command/`, execute targeted pytest, and document Attempt #27 metrics.
+- Follow-ups for Ralph: execute Do Now nb-compare command, capture stdout/stderr + summary.json, run targeted pytest + collect-only, update README + docs/fix_plan Attempt #27, leave code untouched.

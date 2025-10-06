@@ -455,7 +455,7 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase C2 parity run exposed a 2.58e2× intensity scaling mismatch (PyTorch max_I≈1.15e5 vs C max_I≈4.46e2). Phase D3/E diagnostics (2025-10-16) confirm three blocking geometry gaps: (a) PyTorch applies the raw `-pix0_vector_mm` override without the CUSTOM transform used in C (1.14 mm Y error); (b) CLI ignores `-beam_vector`, leaving the incident ray at the convention default `[0,0,1]`; (c) `-mat A.mat` handling discards the MOSFLM orientation, so Crystal falls back to canonical upper-triangular vectors while C uses the supplied A*. Traces also show a polarization delta (C Kahn factor ≈0.9126 vs PyTorch 1.0) to revisit after geometry fixes.
-- Next Actions: Drive Phase I in `plans/active/cli-noise-pix0/plan.md`: (I1) audit polarization inputs vs nanoBragg.c 2080-2155, (I2) port the Kahn factor into the simulator with device/dtype neutrality, (I3) rerun the supervisor command with polarization enabled, archive logs under `reports/2025-10-cli-flags/phase_i/`, and record Attempt #26 with metrics.
+- Next Actions: Complete Phase I3 in `plans/active/cli-noise-pix0/plan.md` by rerunning the supervisor command with polarization enabled, capturing PyTorch+C outputs under `reports/2025-10-cli-flags/phase_i/supervisor_command/`, and logging Attempt #27 with final parity metrics.
 - Attempts History:
   * [2025-10-17] Attempt #26 (ralph) — Result: success (Phase I polarization defaults complete). **BeamConfig.polarization_factor default aligned with C polar=1.0.**
     Metrics: CLI polarization tests 3/3 passed. Core tests: cli_flags 26/26, detector_geometry 12/12, crystal_geometry 19/19 (57 passed, 1 warning). Test collection: 632 tests collected.
@@ -467,7 +467,7 @@
       - **C Reference:** golden_suite_generator/nanoBragg.c:308-309 sets polar=1.0, polarization=0.0, nopolar=0
       - **Test Coverage:** Validates default matches C (1.0), -nopolar flag behavior, and -polar <value> override
       - **Phase I Tasks:** I1 (audit) ✅, I2 (implement) ✅; I3 (final parity sweep) remains pending
-    Next Actions: Execute Phase I3 final parity sweep with supervisor command, archive phase_i/ artifacts, close CLI-FLAGS-003.
+    Next Actions: Execute Phase I3 final parity sweep by running the supervisor command end-to-end (PyTorch CLI + C reference), stash logs under `reports/2025-10-cli-flags/phase_i/supervisor_command/`, document polarization metrics in Attempt #27, then close CLI-FLAGS-003.
   * [2025-10-17] Attempt #25 (ralph) — Result: success (Phase H4a-c complete). **Post-rotation beam-centre recomputation implemented and verified.**
     Metrics: pix0_vector parity achieved - C vs PyTorch deltas < 2e-8 m (well within 5e-5 m tolerance). Test suite: test_cli_flags.py 23/23 passed, test_detector_geometry.py 12/12 passed, test_crystal_geometry.py 19/19 passed (54 total).
     Artifacts:
