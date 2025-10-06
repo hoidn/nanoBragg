@@ -1,31 +1,37 @@
-Summary: Capture concrete evidence that PyTorch still selects BEAM pivot while C runs the supervisor case in SAMPLE.
-Phase: Evidence
-Focus: CLI-FLAGS-003 Phase H6e — pivot parity proof
+Summary: Enforce SAMPLE pivot for custom detector vectors and tidy parity artifacts.
+Phase: Implementation
+Focus: CLI-FLAGS-003 Phase H6f — custom-vector SAMPLE pivot
 Branch: feature/spec-based-2
-Mapped tests: none — evidence-only
-Artifacts: reports/2025-10-cli-flags/phase_h6/pivot_parity.md
-Do Now: CLI-FLAGS-003 H6e — Confirm pivot parity; run `PYTHONPATH=src python - <<'PY'\nfrom nanobrag_torch.config import DetectorConfig, DetectorConvention\nconfig = DetectorConfig(spixels=2463, fpixels=2527, pixel_size_mm=0.172, distance_mm=231.274660, detector_convention=DetectorConvention.CUSTOM, beam_center_s=213.907080, beam_center_f=217.742295, pix0_override_m=(-216.336293/1000, 215.205512/1000, -230.200866/1000), custom_fdet_vector=(0.999982, -0.005998, -0.000118), custom_sdet_vector=(-0.005998, -0.999970, -0.004913), custom_odet_vector=(-0.000088, 0.004914, -0.999988), custom_beam_vector=(0.00051387949, 0.0, -0.99999986))\nprint(config.detector_pivot)\nPY` and summarise alongside the C trace message in the artifact.
-If Blocked: Record pivot evidence attempt (command + stderr) in reports/2025-10-cli-flags/phase_h6/attempts.log and flag in Attempts History before proceeding.
+Mapped tests: tests/test_cli_flags.py::TestCLIPivotSelection::test_custom_vectors_force_sample_pivot
+Artifacts: reports/2025-10-cli-flags/phase_h6/visuals/; reports/2025-10-cli-flags/phase_h6/pivot_fix.md; reports/2025-10-cli-flags/phase_h6/pytest_pivot_fix.log
+Do Now: CLI-FLAGS-003 Phase H6f — move the Phase H6 parity PNG/JPEGs under reports, add `tests/test_cli_flags.py::TestCLIPivotSelection::test_custom_vectors_force_sample_pivot`, then run `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py::TestCLIPivotSelection::test_custom_vectors_force_sample_pivot -v`
+If Blocked: Capture the failing command + traceback in reports/2025-10-cli-flags/phase_h6/pivot_fix_attempt.log and leave Attempts History note before trying alternatives.
 Priorities & Rationale:
-- specs/spec-a-cli.md:136 — custom vectors force CUSTOM convention; document how C treats pivot.
-- docs/architecture/detector.md:109 — pivot determination checklist to cite in parity memo.
-- plans/active/cli-noise-pix0/plan.md:130 — Phase H6e freshly added; this memo executes that row.
-- docs/fix_plan.md:448 — Next Actions now require pivot proof before implementation.
+- docs/fix_plan.md:457 — Next action now demands H6f pivot enforcement before normalization resumes.
+- plans/active/cli-noise-pix0/plan.md:130 — Phase H6f checklist defines regression test + artifact expectations.
+- docs/architecture/detector.md:51 — Pivot formulas; must flip to SAMPLE when custom vectors exist.
+- specs/spec-a-cli.md:§3.4 — CLI precedence for custom geometry + pix0 overrides.
+- reports/2025-10-cli-flags/phase_h6/pivot_parity.md — Evidence you just gathered; closing the gap depends on this change.
 How-To Map:
-- Extract C evidence: `grep -n "pivoting" reports/2025-10-cli-flags/phase_h6/c_trace/trace_c_pix0.log >> reports/2025-10-cli-flags/phase_h6/pivot_parity.md`.
-- Run the inline Python snippet above (use PYTHONPATH=src) and append output with context to the same markdown.
-- In the artifact, note that SAMPLE pivot message appears in C while the Python snippet reports DetectorPivot.BEAM.
+- Relocate `img*_*.png`, `intimage_*.jpeg`, `noiseimage_preview.jpeg` into `reports/2025-10-cli-flags/phase_h6/visuals/` and update references in `pivot_parity.md` + `phase_h5/parity_summary.md`.
+- Update `DetectorConfig.__post_init__` (or `from_cli_args`) to force SAMPLE pivot whenever any custom detector vectors or pix0 override is supplied; cite C reference lines and keep device/dtype neutrality.
+- Add regression `TestCLIPivotSelection.test_custom_vectors_force_sample_pivot` covering: default BEAM, explicit SAMPLE override, and custom vectors forcing SAMPLE (cpu+cuda parametrization if feasible without blowing runtime).
+- Log implementation decisions in `reports/2025-10-cli-flags/phase_h6/pivot_fix.md` and stash pytest output at `reports/2025-10-cli-flags/phase_h6/pytest_pivot_fix.log`.
+- After tests pass, refresh trace via `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_h/trace_harness.py --out reports/2025-10-cli-flags/phase_h6/post_fix/trace_py.log` for use in H6g (do not diff yet, just capture).
 Pitfalls To Avoid:
-- Do not modify source files yet; this loop is evidence-only.
-- Keep PYTHONPATH pointing at src so the editable build is used.
-- Avoid running pytest or nb-compare in Evidence phase.
-- Preserve existing trace logs; add new files instead of overwriting.
-- Document units (mm vs m) explicitly in the memo.
-- Capture command invocations verbatim for reproducibility.
-- Respect Protected Assets (docs/index.md, loop.sh, input.md).
+- Do not drop the custom-vector precedence guard that skips pix0 override within BEAM mode.
+- Keep tensors on caller device/dtype; no hard-coded `.cpu()` or float64 literals.
+- Respect Evidence vs Implementation boundary: tests must run only after code changes staged.
+- Maintain Protected Assets: leave docs/index.md, loop.sh, supervisor.sh untouched except via plans.
+- Avoid re-running full test suite; stay scoped to targeted pytest + added trace harness.
+- Do not overwrite existing reports; create new files or append with timestamps.
+- Ensure new test skips or parametrizes when CUDA unavailable instead of failing.
+- Preserve existing Attempt numbering in docs/fix_plan.md when logging outcomes.
+- Keep `KMP_DUPLICATE_LIB_OK=TRUE` in environment for any PyTorch execution.
 Pointers:
-- specs/spec-a-cli.md:136
-- docs/architecture/detector.md:109
-- plans/active/cli-noise-pix0/plan.md:130
-- docs/fix_plan.md:448
-Next Up: Phase H6f — adjust DetectorConfig pivot logic and add regression test once pivot parity evidence lands.
+- docs/fix_plan.md#cli-flags-003-handle-nonoise-and-pix0_vector_mm
+- plans/active/cli-noise-pix0/plan.md#phase-h6--pix0-divergence-isolation
+- docs/architecture/detector.md:51
+- specs/spec-a-cli.md
+- reports/2025-10-cli-flags/phase_h6/pivot_parity.md
+Next Up: H6g trace/nb-compare verification once SAMPLE pivot parity holds.

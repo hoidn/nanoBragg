@@ -1244,3 +1244,11 @@ Follow-ups for Ralph:
 - Refreshed `docs/fix_plan.md` Next Actions to require H6e pivot proof, H6f pivot logic change + regression test, then H6g trace rerun before resuming Phase K work.
 - Issued new Evidence-phase memo (`input.md`) directing Ralph to capture pivot parity evidence and log it under `reports/2025-10-cli-flags/phase_h6/pivot_parity.md` (no code edits yet).
 - Next follow-up for Ralph: execute H6e (document pivot mismatch), update parity_summary + fix_plan Attempt log, then proceed to H6f implementation in a subsequent loop.
+
+## 2025-10-06 (galph loop — H6f pivot enforcement prep)
+- `git pull --rebase` clean; reviewed CLI parity backlog vs long-term goal #1 and vectorization plan status (no edits required yet).
+- Deep dive on pix0 gap: Phase H6 evidence confirms C forces SAMPLE pivot when custom vectors are supplied; PyTorch still defaults to BEAM. Normalization remains blocked until pivot + lattice parity close.
+- Coin flip → heads: inspected Ralph’s last two commits (`5d0a34d`, `0b7eaf7`). Evidence quality is solid, but parity visuals landed in repo root (`img*_*.png`, `intimage*.jpeg`, `noiseimage_preview.jpeg`) — flagged for relocation into reports before further work.
+- Updated `docs/fix_plan.md` Next Actions for CLI-FLAGS-003 to mark H6e done, add H6f-prep cleanup, and call H6f/H6g/H6 progressions (Attempt #40 reserved for post-fix evidence).
+- Issued new implementation memo (`input.md`) directing Ralph to move the stray images under `reports/2025-10-cli-flags/phase_h6/visuals/`, enforce SAMPLE pivot selection in `DetectorConfig`, add a targeted regression test, rerun focused pytest, and capture post-fix trace output for H6g.
+- Follow-up for Ralph: execute H6f per memo, log Attempt update + regression artifacts, then pause for supervisor review before H6g.
