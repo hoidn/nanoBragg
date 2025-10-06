@@ -1,9 +1,9 @@
 {
   "iteration": 25,
-  "expected_actor": "galph",
-  "status": "running-galph",
-  "last_update": "2025-10-06T06:45:19Z",
-  "lease_expires_at": "2025-10-06T06:55:19Z",
-  "galph_commit": "88092d3",
+  "expected_actor": "ralph",
+  "status": "waiting-ralph",
+  "last_update": "2025-10-06T06:56:42Z",
+  "lease_expires_at": "2025-10-06T07:06:42Z",
+  "galph_commit": "80405b7",
   "ralph_commit": "0f18548"
 }
