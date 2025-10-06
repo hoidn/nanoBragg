@@ -760,6 +760,22 @@
       - **Miller Index Parity:** Now correctly compute (2,2,-13) vs previous wrong (6,7,-3). F_cell match confirms we're indexing the same reflection.
       - **Intensity Parity:** Still divergent (F_latt 35636 vs 62.68, I_pixel 446.25 vs 0.00356) due to lattice transform differences (Phase H) and missing polarization (Phase I).
     Next Actions: (1) Advance to Phase H lattice alignment to close the `hkl_frac`/`F_latt` gap before touching polarization; (2) Update Phase G3 status in plan to ✅; (3) Once lattice parity improves, transition to Phase I tasks I1–I3.
+  * [2025-10-05] Attempt #19 (ralph loop i=20) — Result: evidence-only (Phase H1 complete). **Incident beam vector NOT flowing from detector config to simulator.**
+    Metrics: C incident_vec = `[0.000513879, 0.0, -0.999999868]`; PyTorch incident_vec = `[1, 0, 0]` (MOSFLM default). Cascading failures: scattering vector completely wrong, Miller indices (23,44,-24) vs C (2,2,-13), F_latt 0.06 vs C 35636, final intensity 0.0 vs C 446.25.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_h/trace_harness.py` - Phase H1 harness with custom_beam_vector passed to DetectorConfig
+      - `reports/2025-10-cli-flags/phase_h/trace_py.log` - PyTorch trace showing incident_vec=[1,0,0]
+      - `reports/2025-10-cli-flags/phase_h/trace_py.stderr` - Trace harness stderr
+      - `reports/2025-10-cli-flags/phase_h/trace_diff.log` - Unified diff vs C trace
+      - `reports/2025-10-cli-flags/phase_h/trace_comparison.md` - Complete divergence analysis
+    Observations/Hypotheses:
+      - **ROOT CAUSE:** DetectorConfig receives `custom_beam_vector=[0.00051387949, 0.0, -0.99999986]` from harness (line 112), but Simulator is using MOSFLM default `[1,0,0]` instead
+      - Detector.beam_vector property exists and should return custom_beam_vector for CUSTOM convention, but simulator's incident_beam_direction is not being set from it
+      - Phase H1 harness correctly removed manual `simulator.incident_beam_direction` override to expose this flow gap
+      - CLI→DetectorConfig threading is correct; gap is DetectorConfig→Detector→Simulator propagation
+      - All downstream failures (scattering vector, Miller indices, structure factor, intensity) are consequences of wrong incident direction
+      - Detector geometry metrics match within tolerance (pix0 ~0.14mm residual, omega correct, basis vectors correct)
+    Next Actions: (1) Execute plan Phase H2 to investigate where Detector.beam_vector should feed simulator.incident_beam_direction; (2) Check if Simulator.__init__ should consume detector.beam_vector or if apply_custom_vectors() needs to set it; (3) Fix the beam vector propagation chain; (4) Re-run Phase H1 trace to verify incident_vec matches C; (5) With beam vector fixed, advance to Phase H3 (lattice structure factor parity).
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; **(viii) Phase F3 parity evidence captured** ✅ (Attempt #12); **(ix) Phase G2 MOSFLM orientation ingestion complete** ✅ (Attempt #17); **(x) Phase G3 trace verification complete with transpose fix** ✅ (Attempt #18); (xi) Phase H lattice structure factor alignment ❌ pending; (xii) Phase F3 parity rerun with lattice fix ❌; (xiii) Phase I polarization alignment ❌; (xiv) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌.
 
