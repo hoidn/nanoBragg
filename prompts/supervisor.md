@@ -80,6 +80,7 @@ Given your findings in <1> and <2>, think about whether there's any need for a m
 - we will be calling the plan topic the <focus issue> of this turn.
 - based on which long term <goal> and sub-goal is that effort / plan? 
 - Which existing docs/fix_plan.md items does it (i.e. the <focus issue>) relate to? 
+- Documentation review for <focus issue>: Using `docs/index.md` as the map, identify and read the specific documents relevant to the chosen <focus issue> (e.g., component contracts, architecture ADRs, parity/testing strategy). List the file paths you will rely on (with a one‑line rationale each) before drafting or updating the plan.
 - think deeply. draft / redraft the plan and save it to a .md under plans/active/. Structure the write-up as a phased implementation document (see `plans/archive/general-detector-geometry/implementation.md` for tone/shape): begin with context + phase overviews, then outline each phase’s intent, prerequisites, and exit criteria. When a phase benefits from explicit tracking, embed a checklist table using the `ID | Task Description | State | How/Why & Guidance` format (with `[ ]`, `[P]`, `[D]` markers) inside that phase section.
   • Include reproduction commands, owners (if known), and decision rules in the guidance column.
   • Favor narrative flow first; layer checklists only where they clarify verification steps or deliverables.
@@ -109,6 +110,7 @@ Given your findings in <1> and <2>, think about whether there's any need for a m
 - Are the docs/fix_plan.md contents and priorities sane? things to consider:
   - if docs/fix_plan.md is longer than 1000 lines it should be housecleaned. If it's disorganized and / or internally inconsistent, consider how this could be addressed. 
 - after considering the above, you have enough information to choose a <focus issue> for this turn. do so. Consider the nature of the <focus issue>:
+    - Documentation review for <focus issue>: From `docs/index.md`, enumerate and read the documents that are most relevant to the chosen <focus issue>`; note the key file paths you will rely on for this turn.
     - Do we need a new docs/fix_plan item to put ralph back on course, fix one of his mistakes, or instruct him to do something that he overlooked? If so, draft it and add it to docs/fix_plans
     - does the <focus issue> involve identified issues in docs/fix_plan.md? If so, fix them. If you decide to shorten docs/fix_plan.md, the least relevant portions should be moved to archive/fix_plan_archive.md (with summary + archive cross reference if appropriate)
 </no case>
