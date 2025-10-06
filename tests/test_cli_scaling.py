@@ -51,6 +51,92 @@ def read_float_image(path, shape):
     return data.reshape(shape)
 
 
+class TestMOSFLMCellVectors:
+    """Test MOSFLM matrix cell vector computation (Phase K3g2)."""
+
+    def test_mosflm_cell_vectors(self):
+        """
+        Verify that PyTorch correctly computes real-space vectors from MOSFLM matrices.
+
+        This test validates CLI-FLAGS-003 Phase K3g1 implementation:
+        When MOSFLM reciprocal vectors are provided (via -mat file), PyTorch must:
+        1. Compute V_star = a* · (b* × c*)
+        2. Compute V_cell = 1 / V_star
+        3. Derive real vectors: a = (b* × c*) × V_cell, etc.
+        4. Update cell_a/b/c parameters from the derived vectors
+
+        Expected output (from C trace):
+        - V_cell ≈ 24682.3 Å³
+        - |a| ≈ 26.7514 Å
+        - |b| ≈ 31.3100 Å
+        - |c| ≈ 33.6734 Å
+        """
+        import torch
+        from nanobrag_torch.models.crystal import Crystal, CrystalConfig
+        from nanobrag_torch.io.mosflm import read_mosflm_matrix
+
+        # Read A.mat from repo root
+        mat_file = Path('A.mat')
+        if not mat_file.exists():
+            pytest.skip("A.mat not found in repository root")
+
+        wavelength_A = 0.976800
+        a_star, b_star, c_star = read_mosflm_matrix(str(mat_file), wavelength_A)
+
+        # Create Crystal with MOSFLM orientation
+        config = CrystalConfig(
+            cell_a=100.0,  # placeholder
+            cell_b=100.0,
+            cell_c=100.0,
+            cell_alpha=90.0,
+            cell_beta=90.0,
+            cell_gamma=90.0,
+            mosflm_a_star=a_star,
+            mosflm_b_star=b_star,
+            mosflm_c_star=c_star,
+            N_cells=(36, 47, 29),
+        )
+
+        crystal = Crystal(config, device=torch.device('cpu'), dtype=torch.float64)
+        tensors = crystal.compute_cell_tensors()
+
+        # Expected values from C trace (reports/2025-10-cli-flags/phase_k/base_lattice/c_stdout.txt)
+        expected_V_cell = 24682.3  # Å³
+        expected_mag_a = 26.7514   # Å
+        expected_mag_b = 31.3100   # Å
+        expected_mag_c = 33.6734   # Å
+
+        # Compute actual values
+        actual_V_cell = tensors['V'].item()
+        actual_mag_a = torch.norm(tensors['a']).item()
+        actual_mag_b = torch.norm(tensors['b']).item()
+        actual_mag_c = torch.norm(tensors['c']).item()
+
+        # Tolerance: 5e-4 relative error (from Phase K3f exit criteria)
+        rtol = 5e-4
+
+        # Assertions
+        V_rel_error = abs(actual_V_cell - expected_V_cell) / expected_V_cell
+        assert V_rel_error <= rtol, \
+            f"V_cell relative error {V_rel_error:.6g} > {rtol}. " \
+            f"Expected {expected_V_cell:.2f}, got {actual_V_cell:.2f} Å³"
+
+        a_rel_error = abs(actual_mag_a - expected_mag_a) / expected_mag_a
+        assert a_rel_error <= rtol, \
+            f"|a| relative error {a_rel_error:.6g} > {rtol}. " \
+            f"Expected {expected_mag_a:.4f}, got {actual_mag_a:.4f} Å"
+
+        b_rel_error = abs(actual_mag_b - expected_mag_b) / expected_mag_b
+        assert b_rel_error <= rtol, \
+            f"|b| relative error {b_rel_error:.6g} > {rtol}. " \
+            f"Expected {expected_mag_b:.4f}, got {actual_mag_b:.4f} Å"
+
+        c_rel_error = abs(actual_mag_c - expected_mag_c) / expected_mag_c
+        assert c_rel_error <= rtol, \
+            f"|c| relative error {c_rel_error:.6g} > {rtol}. " \
+            f"Expected {expected_mag_c:.4f}, got {actual_mag_c:.4f} Å"
+
+
 @pytest.mark.skipif(not is_parallel_enabled(), reason="NB_RUN_PARALLEL=1 required for C↔PyTorch parity")
 class TestFlattSquareMatchesC:
     """Test that SQUARE lattice factor matches C implementation."""

@@ -691,7 +691,70 @@ class Crystal:
             and hasattr(self.config, "mosflm_c_star") and self.config.mosflm_c_star is not None
         )
 
-        if not mosflm_provided:
+        if mosflm_provided:
+            # MOSFLM matrix provided (CLI-FLAGS-003 Phase K3g1)
+            # Recompute cell volume and real vectors from MOSFLM reciprocal vectors
+            #
+            # C-Code Implementation Reference (from nanoBragg.c, lines 2135-2169):
+            # ```c
+            # /* reciprocal unit cell volume, but is it lambda-corrected? */
+            # V_star = dot_product(a_star,b_star_cross_c_star);
+            # printf("TRACE: Reciprocal cell volume calculation:\n");
+            # printf("TRACE:   V_star = a_star . (b_star x c_star) = %g\n", V_star);
+            #
+            # /* make sure any user-supplied cell takes */
+            # if(user_cell)
+            # {
+            #     /* a,b,c and V_cell were generated above */
+            #     /* force the cross-product vectors to have proper magnitude: b_star X c_star = a*V_star */
+            #     vector_rescale(b_star_cross_c_star,b_star_cross_c_star,a[0]/V_cell);
+            #     vector_rescale(c_star_cross_a_star,c_star_cross_a_star,b[0]/V_cell);
+            #     vector_rescale(a_star_cross_b_star,a_star_cross_b_star,c[0]/V_cell);
+            #     V_star = 1.0/V_cell;
+            # }
+            #
+            # /* direct-space cell volume */
+            # V_cell = 1.0/V_star;
+            # printf("TRACE: Direct-space cell volume: V_cell = 1/V_star = %g\n", V_cell);
+            #
+            # /* generate direct-space cell vectors, also updates magnitudes */
+            # printf("TRACE: Before computing real-space vectors:\n");
+            # printf("TRACE:   b_star_cross_c_star = [%g, %g, %g]\n", b_star_cross_c_star[1], b_star_cross_c_star[2], b_star_cross_c_star[3]);
+            # printf("TRACE:   c_star_cross_a_star = [%g, %g, %g]\n", c_star_cross_a_star[1], c_star_cross_a_star[2], c_star_cross_a_star[3]);
+            # printf("TRACE:   a_star_cross_b_star = [%g, %g, %g]\n", a_star_cross_b_star[1], a_star_cross_b_star[2], a_star_cross_b_star[3]);
+            # printf("TRACE:   V_cell = %g, V_star = %g\n", V_cell, V_star);
+            #
+            # vector_scale(b_star_cross_c_star,a,V_cell);
+            # vector_scale(c_star_cross_a_star,b,V_cell);
+            # vector_scale(a_star_cross_b_star,c,V_cell);
+            #
+            # printf("TRACE: After computing real-space vectors:\n");
+            # printf("TRACE:   a = [%g, %g, %g] |a| = %g\n", a[1], a[2], a[3], a[0]);
+            # printf("TRACE:   b = [%g, %g, %g] |b| = %g\n", b[1], b[2], b[3], b[0]);
+            # printf("TRACE:   c = [%g, %g, %g] |c| = %g\n", c[1], c[2], c[3], c[0]);
+            # ```
+            #
+            # Step 1: Compute reciprocal cell volume V_star = a* · (b* × c*)
+            V_star = torch.dot(a_star, b_star_cross_c_star)
+            # Clamp to avoid division by zero
+            V_star = V_star.clamp_min(1e-18)
+
+            # Step 2: Compute direct-space cell volume V_cell = 1 / V_star (in Å³)
+            V_cell = 1.0 / V_star
+
+            # Step 3: Compute real-space vectors: a = (b* × c*) × V_cell, etc. (in Å)
+            a_vec = b_star_cross_c_star * V_cell
+            b_vec = c_star_cross_a_star * V_cell
+            c_vec = a_star_cross_b_star * V_cell
+
+            # Step 4: Update cell parameters (magnitudes in Å)
+            self.cell_a = torch.norm(a_vec)
+            self.cell_b = torch.norm(b_vec)
+            self.cell_c = torch.norm(c_vec)
+
+            # Update V to V_cell in Å³ for metric duality calculation (will be converted to meters later)
+            V = V_cell
+        else:
             # User-supplied cell parameters (not MOSFLM matrix)
             # Rescale cross products to enforce exact cell lengths
             a_mag = self.config.cell_a
@@ -719,11 +782,11 @@ class Crystal:
             c_star_cross_a_star = c_star_cross_a_star * (target_mag_c_star_cross_a_star / mag_c_star_cross_a_star)
             a_star_cross_b_star = a_star_cross_b_star * (target_mag_a_star_cross_b_star / mag_a_star_cross_b_star)
 
-        # Real-space vectors: a = (b* × c*) × V_cell
-        # After rescaling, these will have exactly the user-specified magnitudes
-        a_vec = b_star_cross_c_star * V
-        b_vec = c_star_cross_a_star * V
-        c_vec = a_star_cross_b_star * V
+            # Real-space vectors: a = (b* × c*) × V_cell
+            # After rescaling, these will have exactly the user-specified magnitudes
+            a_vec = b_star_cross_c_star * V
+            b_vec = c_star_cross_a_star * V
+            c_vec = a_star_cross_b_star * V
 
         # Now that we have real-space vectors, re-generate the reciprocal ones
         # This matches the C-code behavior (lines 2103-2119)
