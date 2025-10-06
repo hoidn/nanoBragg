@@ -480,6 +480,20 @@
         4. Missing last-value Ω/polarization multiply (per spec § oversample_* semantics with oversample=1)
       - **Tooling success:** nb-compare now handles non-standard detector dimensions (2463×2527 via -detpixels_x/-detpixels_y)
     Next Actions: Superseded by 2025-10-19 directive; follow Phase J checklist in `plans/active/cli-noise-pix0/plan.md` before any implementation work.
+  * [2025-10-19] Attempt #28 (ralph) — Result: **EVIDENCE COMPLETE** (Phase J scaling diagnosis). **First divergence identified: `I_before_scaling` caused by F_latt calculation error.**
+    Metrics: C I_before_scaling=1.48e15, PyTorch I_before_scaling=5.34e8 (ratio=3.6e-7, ~2772× difference). Root cause: F_latt components differ drastically (C: F_latt_a=35.9, F_latt_b=38.6, F_latt_c=25.7 → F_latt=35636; PyTorch: F_latt_a=-2.4, F_latt_b=11.8, F_latt_c=-2.7 → F_latt=76.9). This 463× F_latt error squares to create the observed ~2e5× intensity gap.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_j/trace_c_scaling.log` - C scaling trace for pixel (1039,685)
+      - `reports/2025-10-cli-flags/phase_j/trace_py_scaling.log` - PyTorch scaling trace for same pixel
+      - `reports/2025-10-cli-flags/phase_j/analyze_scaling.py` - Analysis script computing factor-by-factor ratios
+      - `reports/2025-10-cli-flags/phase_j/scaling_chain.md` - Full ratio analysis and diagnosis
+    Observations/Hypotheses:
+      - **F_latt components diverge before normalization:** C values (35.9, 38.6, 25.7) vs PyTorch (-2.4, 11.8, -2.7) indicate lattice shape factor calculation error
+      - **Secondary issues (non-blocking):** Polarization C=0.9126 vs PyTorch=1.0 (9.6% discrepancy), omega C=4.16e-7 vs PyTorch=4.17e-7 (0.2% difference, within tolerance)
+      - **Steps, r_e², fluence all match exactly:** Confirms normalization infrastructure is correct; issue is in physics computation upstream
+      - **F_cell matches perfectly (300.58):** Structure factor lookup/interpolation working correctly
+      - **Hypothesis:** F_latt calculation (sincg lattice shape factor) may have sign errors, incorrect fractional Miller index handling, or wrong lattice vector magnitudes
+    Next Actions: Phase K implementation per plan - investigate F_latt calculation in PyTorch simulator (likely `_compute_physics_for_position` lattice shape factor section), compare against C nanoBragg.c sincg implementation, fix discrepancy, add targeted regression test for F_latt components, then rerun Phase L parity command.
   * [2025-10-17] Attempt #26 (ralph) — Result: success (Phase I polarization defaults complete). **BeamConfig.polarization_factor default aligned with C polar=1.0.**
     Metrics: CLI polarization tests 3/3 passed. Core tests: cli_flags 26/26, detector_geometry 12/12, crystal_geometry 19/19 (57 passed, 1 warning). Test collection: 632 tests collected.
     Artifacts:

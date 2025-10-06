@@ -126,9 +126,9 @@ Exit Criteria: Report under `reports/2025-10-cli-flags/phase_j/scaling_chain.md`
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| J1 | Capture single-pixel scaling traces | [ ] | Run C with `-dump_pixel 1039 685` (same supervisor command) and extend `trace_harness.py` to emit `steps`, `I_before_scaling`, `omega`, `polarization`, and intermediate sums. Store raw logs under `reports/2025-10-cli-flags/phase_j/trace_c_scaling.log` and `trace_py_scaling.log`. |
-| J2 | Compute factor-by-factor ratios | [ ] | Author `reports/2025-10-cli-flags/phase_j/analyze_scaling.py` (CLI harness) to parse the Phase J traces, compute Py/C ratios for each factor, and write a Markdown table to `scaling_chain.md`. Include assertions that highlight the first ratio deviating >1e-6. |
-| J3 | Update fix_plan Attempt log | [ ] | Summarize findings in docs/fix_plan.md `[CLI-FLAGS-003]` Attempt #28, attaching artifact paths and marking I3 blocked pending Phase K implementation. |
+| J1 | Capture single-pixel scaling traces | [D] | ✅ 2025-10-19: C trace (`trace_c_scaling.log`) and PyTorch trace (`trace_py_scaling.log`) captured for pixel (1039,685) with full scaling chain (`steps`, `I_before_scaling`, `r_e²`, `fluence`, `polar`, `omega`). |
+| J2 | Compute factor-by-factor ratios | [D] | ✅ 2025-10-19: `analyze_scaling.py` created and executed; identifies first divergence as `I_before_scaling` with Py/C ratio=3.6e-7. Root cause: F_latt components differ by ~463× (C: 35636 vs PyTorch: 76.9). Markdown report at `scaling_chain.md`. |
+| J3 | Update fix_plan Attempt log | [D] | ✅ 2025-10-19: Attempt #28 logged in `docs/fix_plan.md` with complete metrics, artifacts, and hypothesis (F_latt calculation error in sincg lattice shape factor). Phase I3 remains blocked pending Phase K F_latt fix. |
 
 ### Phase K — Normalization Implementation
 Goal: Align PyTorch normalization logic with C based on Phase J evidence (steps division, fluence, r_e², omega/polarization application order).
