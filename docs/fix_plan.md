@@ -714,6 +714,20 @@
       - Test assertions needed update to call `.cpu().item()` for CUDA tensors in pytest.approx comparisons
       - Fix unblocks Phase G orientation work where Crystal parameters must flow gradients
     Next Actions: Execute Phase G tasks G1-G3 per input.md: (1) Extend CLI to cache MOSFLM A* vectors from -mat file; (2) Wire orientation through CrystalConfig/Crystal initialization applying misset pipeline + metric duality; (3) Validate lattice-vector parity with trace comparison and rerun supervisor parity.
+  * [2025-10-17] Attempt #15 (ralph loop i=17) — Result: success. Completed Phase G1 - MOSFLM orientation wiring through config pipeline.
+    Metrics: Mapped tests 26/26 passed in 2.50s (tests/test_cli_flags.py tests/test_at_geo_003.py). CLI now caches MOSFLM A* orientation alongside cell parameters.
+    Artifacts:
+      - src/nanobrag_torch/__main__.py:430-434 - Cache MOSFLM reciprocal vectors (a*, b*, c* in Å⁻¹) in config dict
+      - src/nanobrag_torch/__main__.py:844-846 - Pass mosflm_*_star to CrystalConfig construction
+      - src/nanobrag_torch/config.py:122-127 - Added Optional[np.ndarray] fields for MOSFLM orientation
+      - src/nanobrag_torch/config.py:65 - Added numpy import for type hints
+      - Commit 28fc584 - Phase G1 complete
+    Observations/Hypotheses:
+      - Previously, read_mosflm_matrix() output was immediately discarded after reciprocal_to_real_cell() conversion
+      - MOSFLM A* vectors now flow through config→CrystalConfig but Crystal.__init__ doesn't yet use them
+      - Next phase requires Crystal to check for MOSFLM orientation and apply Core Rules 12-13 (misset pipeline + metric duality)
+      - C reference: nanoBragg.c:3135-3278 shows full orientation handling including misset rotation and recalculation
+    Next Actions: Execute Phase G2 per plan task: Update Crystal.__init__ to detect MOSFLM orientation in config, apply it instead of canonical build, integrate with misset rotation (Core Rule 12), and ensure metric duality (Core Rule 13). Then run Phase G3 trace verification.
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; **(viii) Phase F3 parity evidence captured** ✅ (Attempt #12); (ix) Phase G crystal orientation ❌ next loop (unblocked); (x) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌ blocked on G.
 
