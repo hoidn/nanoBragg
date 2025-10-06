@@ -1078,3 +1078,11 @@ Follow-ups for Ralph:
 - Updated `docs/fix_plan.md` `[CLI-FLAGS-003]` Next Actions to mirror the new projection math, regression expectations, and artifact checklist ahead of Attempt #22.
 - Rewrote `input.md` (114 lines) directing Ralph to implement the BEAM-pivot transform, add the targeted pytest node, capture traces/logs under `reports/2025-10-cli-flags/phase_h/implementation/`, and log Attempt #22 once complete.
 - No code edits performed; awaiting Ralph’s implementation pass before moving to Phase H4 parity.
+## 2025-10-06 (galph loop — Phase H3b retargeted)
+- Coin flip → tails; skipped retrospective review per SOP.
+- Re-read required docs plus `plans/active/vectorization.md` and `plans/active/cli-noise-pix0/plan.md`; long-term Goal 1 still blocked on pix0 override parity, Goal 2 remains queued until CLI parity settles.
+- Evidence review: targeted pytest node now aborts during CLI parsing (missing `-default_F`), and manual Detector instantiation reproduces large X-component error (pix0 ≈1.19e-04 m vs C’s −0.2165 m). `Detector._calculate_pix0_vector` projection math yields F/S beams ≈0.2177/0.2139 m, driving unrealistic beam-centre tensors (~1.25e3 px) and failing to match C.
+- Updated `plans/active/cli-noise-pix0/plan.md` Phase H3b to split into H3b1 (capture C/Py traces with/without override), H3b2 (mirror actual CUSTOM/BEAM mapping without projection), and H3b3 (fix CLI regression test). Annotated the phase with Attempt #22 failure context.
+- Synced `docs/fix_plan.md` Next Actions to align with the new H3b1–H3b3 scope (trace collection → implementation → regression test repair).
+- Authored new input.md directing Ralph to gather paired C/Py traces, stash logs under `reports/2025-10-cli-flags/phase_h/implementation/`, and summarise deltas in `pix0_mapping_analysis.md` before touching detector code.
+- Follow-up for Ralph next loop: execute H3b1 evidence capture (both NB_C_BIN and Py harness runs, override on/off), document findings, then proceed to H3b2 using measured relationships.
