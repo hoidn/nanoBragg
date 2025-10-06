@@ -1,88 +1,83 @@
-Summary: Capture beam-vector evidence for CLI-FLAGS-003 Phase E before touching implementation.
+Summary: Capture full C/PyTorch traces for the supervisor command to localize beam-vector + pix0 divergence before touching implementation.
 Phase: Evidence
 Focus: CLI-FLAGS-003 — Handle -nonoise and -pix0_vector_mm
 Branch: feature/spec-based-2
-Mapped tests: none — evidence-only this loop
-Artifacts: reports/2025-10-cli-flags/phase_e/beam_vector_check.txt
+Mapped tests: none — evidence-only
+Artifacts: reports/2025-10-cli-flags/phase_e/c_trace_beam.log; reports/2025-10-cli-flags/phase_e/pytorch_trace_beam.log; reports/2025-10-cli-flags/phase_e/trace_diff_beam.txt; reports/2025-10-cli-flags/phase_e/trace_summary.md
 
 Header:
-- Timestamp: 2025-10-06T01:21:20Z
-- Commit: 2e11820
+- Timestamp: 2025-10-06T01:32:39Z
+- Commit: ae11d23
 - Author: galph
-- Active Focus: CLI-FLAGS-003 Phase E — beam vector + pix0 parity diagnostics
+- Active Focus: CLI-FLAGS-003 Phase E — beam-vector + pix0 trace parity diagnostics
 
-Do Now: [CLI-FLAGS-003] Phase E0 beam-vector evidence — see How-To Map for inline python command.
+Do Now: [CLI-FLAGS-003] Phase E1/E2 trace capture — run NB_C_BIN=./golden_suite_generator/nanoBragg with -dump_pixel; diff with trace_harness.py output (see How-To Map).
 
-If Blocked: If the CLI snippet dies on import/argparse, fall back to dumping `create_parser().parse_args([...])` into `reports/2025-10-cli-flags/phase_e/parser_dump.txt` and document the failure in docs/fix_plan.md Attempts.
+If Blocked: If C trace command fails (e.g., missing NB_C_BIN or instrumentation), capture the exact stderr to reports/2025-10-cli-flags/phase_e/c_trace_failure.log, record the attempt in docs/fix_plan.md (Attempt #8), and fall back to verifying parser output only (beam_vector_check) until the binary is rebuilt.
 
 Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md Phase E table now includes E0 for beam-vector parity; we need that artifact before rerunning traces.
-- docs/fix_plan.md (CLI-FLAGS-003) calls out custom beam vector omission as a fresh divergence; evidence will unblock implementation guidance.
-- docs/development/c_to_pytorch_config_map.md §Detector Parameters reminds us CUSTOM convention should inherit user beam vectors.
-- docs/debugging/debugging.md §Parallel Trace Comparison forbids implementation changes before evidence and trace alignment.
+- docs/fix_plan.md:735-812 pinpoints unresolved geometry gaps (pix0 transform + ignored beam vector) blocking the supervisor parity goal; we must refresh trace evidence before implementing fixes.
+- plans/active/cli-noise-pix0/plan.md Phase E tasks E0–E3 remain unchecked; completing them restores the diagnostic baseline needed for implementation.
+- docs/debugging/debugging.md §Parallel Trace Comparison mandates trace-first workflow; skipping it risks reintroducing parity regressions.
+- docs/development/c_to_pytorch_config_map.md §Detector Parameters clarifies CUSTOM convention expectations (beam + pix0 transforms), informing trace interpretation.
+- reports/2025-10-cli-flags/phase_d/intensity_gap.md documents the intensity mismatch; fresh traces confirm whether beam-vector wiring explains the delta.
 
 How-To Map:
 1. `mkdir -p reports/2025-10-cli-flags/phase_e`
-2. `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python - <<'PY' > reports/2025-10-cli-flags/phase_e/beam_vector_check.txt
-import torch
-from nanobrag_torch.__main__ import create_parser, parse_and_validate_args
-from nanobrag_torch.config import DetectorConfig, DetectorPivot, DetectorConvention
-from nanobrag_torch.models.detector import Detector
-
-args = create_parser().parse_args([
-    '-mat','A.mat','-hkl','scaled.hkl','-lambda','0.9768','-oversample','1',
-    '-pix0_vector_mm','-216.336293','215.205512','-230.200866',
-    '-nonoise','-floatfile','/tmp/discard.bin',
-    '-spindle_axis','-1','0','0','-Xbeam','217.742295','-Ybeam','213.907080',
-    '-distance','231.274660','-pixel','0.172','-detpixels_x','2463','-detpixels_y','2527',
-    '-odet_vector','-0.000088','0.004914','-0.999988',
-    '-sdet_vector','-0.005998','-0.999970','-0.004913',
-    '-fdet_vector','0.999982','-0.005998','-0.000118',
-    '-beam_vector','0.00051387949','0.0','-0.99999986',
-    '-Na','36','-Nb','47','-Nc','29','-osc','0.1','-phi','0','-phisteps','10',
-    '-detector_rotx','0','-detector_roty','0','-detector_rotz','0','-twotheta','0'
-])
-config_dict = parse_and_validate_args(args)
-config = DetectorConfig(
-    distance_mm=config_dict['distance_mm'],
-    pixel_size_mm=config_dict['pixel_size_mm'],
-    spixels=config_dict['spixels'],
-    fpixels=config_dict['fpixels'],
-    beam_center_s=config_dict.get('beam_center_y_mm'),
-    beam_center_f=config_dict.get('beam_center_x_mm'),
-    detector_rotx_deg=config_dict['detector_rotx_deg'],
-    detector_roty_deg=config_dict['detector_roty_deg'],
-    detector_rotz_deg=config_dict['detector_rotz_deg'],
-    detector_twotheta_deg=config_dict['twotheta_deg'],
-    detector_pivot=DetectorPivot[config_dict['pivot']],
-    detector_convention=DetectorConvention[config_dict['convention']],
-    pix0_override_m=config_dict['pix0_override_m'],
-    custom_fdet_vector=config_dict['custom_fdet_vector'],
-    custom_sdet_vector=config_dict['custom_sdet_vector'],
-    custom_odet_vector=config_dict['custom_odet_vector']
-)
-beam = Detector(config=config, dtype=torch.float64).beam_vector
-print('beam_vector:', beam)
-PY`
-3. Annotate docs/fix_plan.md `[CLI-FLAGS-003]` Attempts with the artifact path and observed values (expected `[0., 0., 1.]` vs C log `0.00051387949 0 -0.99999986`).
+2. Ensure C binary is built with tracing: `timeout 120 make -C golden_suite_generator` (only if nanoBragg changed since last build).
+3. Run C trace (target pixel 1039 685) capturing full stdout/stderr:
+   ```bash
+   NB_C_BIN=./golden_suite_generator/nanoBragg \
+   timeout 180 "$NB_C_BIN" -mat A.mat -floatfile img.bin -hkl scaled.hkl -nonoise -nointerpolate \
+     -oversample 1 -exposure 1 -flux 1e18 -beamsize 1.0 -spindle_axis -1 0 0 \
+     -Xbeam 217.742295 -Ybeam 213.907080 -distance 231.274660 -lambda 0.976800 \
+     -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 \
+     -odet_vector -0.000088 0.004914 -0.999988 \
+     -sdet_vector -0.005998 -0.999970 -0.004913 \
+     -fdet_vector 0.999982 -0.005998 -0.000118 \
+     -pix0_vector_mm -216.336293 215.205512 -230.200866 \
+     -beam_vector 0.00051387949 0.0 -0.99999986 \
+     -Na 36 -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 \
+     -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0 \
+     -dump_pixel 1039 685 2>&1 | tee reports/2025-10-cli-flags/phase_e/c_trace_beam.log
+   ```
+4. Generate PyTorch trace using the harness (stdout includes TRACE_PY lines):
+   ```bash
+   KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_e/trace_harness.py \
+     2>&1 | tee reports/2025-10-cli-flags/phase_e/pytorch_trace_beam.log
+   ```
+5. Diff the two traces (filtering prefixes for clarity) and save summary:
+   ```bash
+   paste \
+     <(grep '^TRACE_C' reports/2025-10-cli-flags/phase_e/c_trace_beam.log) \
+     <(grep '^TRACE_PY' reports/2025-10-cli-flags/phase_e/pytorch_trace_beam.log) \
+     > reports/2025-10-cli-flags/phase_e/trace_side_by_side.tsv
+   diff -u \
+     <(grep '^TRACE_C' reports/2025-10-cli-flags/phase_e/c_trace_beam.log) \
+     <(grep '^TRACE_PY' reports/2025-10-cli-flags/phase_e/pytorch_trace_beam.log | sed 's/TRACE_PY:/TRACE_C:/') \
+     > reports/2025-10-cli-flags/phase_e/trace_diff_beam.txt
+   ```
+6. Summarize the first divergence (variable name, C value, PyTorch value, hypothesised cause) in `reports/2025-10-cli-flags/phase_e/trace_summary.md` and log Attempt #8 in docs/fix_plan.md with artifact paths.
 
 Pitfalls To Avoid:
-- No code edits until beam-vector evidence and Phase E traces exist.
-- Keep snippet inline; do not add ad-hoc scripts outside `reports/` archives.
-- Maintain `KMP_DUPLICATE_LIB_OK=TRUE` or the snippet will crash on MKL.
-- Do not convert values to numpy or call `.item()` on tensors needed for later gradient work.
-- Avoid rerunning parity command yet; we need first-divergence artifacts first.
-- Do not touch docs/index.md or other protected assets.
-- Leave `input.md` untouched after reading.
-- Use existing plan/attempt IDs when updating docs/fix_plan.md.
-- Preserve device/dtype neutrality in any subsequent prototypes.
-- Honor two-message loop policy—capture evidence before implementations.
+- Do not modify Python or C sources yet; this loop is evidence-only.
+- Keep `scaled.hkl.1` untouched now but plan to delete it later—avoid creating additional duplicates.
+- Ensure `NB_C_BIN` points to the instrumented binary under `golden_suite_generator`; the frozen root binary lacks tracing.
+- Retain `KMP_DUPLICATE_LIB_OK=TRUE` for all PyTorch commands to prevent MKL crashes.
+- Avoid `.item()`/`.cpu()` when post-processing tensors in ad-hoc scripts.
+- Preserve CUSTOM vector normalization; do not renormalize within the harness.
+- Do not run pytest or other suites in this evidence pass.
+- Capture command outputs verbatim—no manual reformatting of TRACE lines.
+- Confirm directories exist before writing artifacts to keep plan cross-references valid.
+- Leave `input.md` unchanged after reading; edits are supervisor-only.
 
 Pointers:
-- plans/active/cli-noise-pix0/plan.md (Phase E table, task E0)
-- docs/fix_plan.md (CLI-FLAGS-003 section)
-- reports/2025-10-cli-flags/phase_d/intensity_gap.md (context for geometry mismatch)
-- docs/development/c_to_pytorch_config_map.md §Detector parameters
-- docs/debugging/debugging.md §Parallel Trace Comparison rule
+- docs/fix_plan.md:735-812 (CLI-FLAGS-003 status & attempts)
+- plans/active/cli-noise-pix0/plan.md (Phase E tasks E0–E3 guidance)
+- docs/debugging/debugging.md:1-120 (parallel trace process)
+- docs/development/c_to_pytorch_config_map.md:40-140 (detector parameter parity)
+- reports/2025-10-cli-flags/phase_d/intensity_gap.md (prior intensity analysis context)
+- reports/2025-10-cli-flags/phase_e/instrumentation_notes.md (C trace instructions)
+- reports/2025-10-cli-flags/phase_e/pytorch_instrumentation_notes.md (PyTorch harness checklist)
 
-Next Up: Once beam-vector evidence is captured, proceed to plan tasks E1–E3 to gather the full C/PyTorch trace set for the supervisor command.
+Next Up: If traces align and beam vector remains divergent, proceed to plan Phase E3 analysis followed by implementation sketching for beam/pix0 fixes.

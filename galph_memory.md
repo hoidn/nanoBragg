@@ -953,3 +953,10 @@ Follow-ups for Ralph:
 - Extended `docs/fix_plan.md` `[CLI-FLAGS-003]` first-divergence summary + Attempt #6 documenting the missing beam-vector wiring and pointing Ralph at plan task E0 before implementation.
 - Rewrote `input.md` (beam-vector snippet, evidence-only loop) so Ralph captures `reports/2025-10-cli-flags/phase_e/beam_vector_check.txt` and logs it in fix_plan before any code edits.
 - Follow-up: Ralph must run the snippet, store artifact, update Attempts, then continue with Phase E traces; implementation work waits until both beam and pix0 align with C.
+
+## 2025-10-06 (galph loop — Phase E trace reset)
+- Repo already at `ae11d23`; `timeout 30 git pull --rebase` returned clean.
+- Reviewed latest CLI-FLAGS-003 artifacts: Phase E0 evidence exists (beam vector still defaults to `[0,0,1]`), but C/PyTorch trace captures have not been refreshed since the earlier pix0-only investigation. Plan Phase E tasks E1–E3 remain unchecked.
+- Confirmed Ralph's last commit (750fc74) added `reports/2025-10-cli-flags/phase_e/beam_vector_check.txt` **and** an unintended duplicate `scaled.hkl.1` (byte-identical to `scaled.hkl`). Documented cleanup requirement in `docs/fix_plan.md` Attempt #7 observations.
+- Regenerated `input.md` directing Ralph to capture full C and PyTorch traces (pixel 1039,685) and diff them, storing outputs under `reports/2025-10-cli-flags/phase_e/` before any implementation edits; emphasized evidence-only loop per plan Phase E.
+- No new multi-turn plan needed; existing `plans/active/cli-noise-pix0/plan.md` still governs. Next supervisor check: verify trace artifacts exist, confirm Attempt #8 added in fix_plan, and ensure stray `scaled.hkl.1` is deleted once evidence work lands.
