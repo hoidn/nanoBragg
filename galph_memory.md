@@ -1191,3 +1191,10 @@ Follow-ups for Ralph:
 - Added Phase H5e row to `plans/active/cli-noise-pix0/plan.md` directing mm→m conversion with new trace artifacts; refreshed docs/fix_plan.md Next Actions to prioritise H5a/H5c/H5e sequence before Phase K.
 - Issued `input.md` (Implementation phase) instructing Ralph to implement unit fix, capture trace evidence under `reports/2025-10-cli-flags/phase_h5/unit_fix/`, run `tests/test_cli_flags.py::TestCLIPix0Override`, and log Attempt #33.
 - No code changes made this loop; planning/docs only. Next follow-up: verify H5e Attempt captures <5e-5 m pix0 deltas, then greenlight Phase K1 (sincg update).
+
+## 2025-10-24 (galph loop — Phase K1 directive)
+- Re-ran parity backlog review after clean `git pull`; active focus remains CLI-FLAGS-003. H5c traces still missing post-unit-fix, so emphasized capturing them as part of upcoming Phase K work.
+- Deep dive confirmed SQUARE lattice factor still uses `(h-h0)` in `src/nanobrag_torch/simulator.py:200-280`, violating `specs/spec-a-core.md:218` and C reference `golden_suite_generator/nanoBragg.c:3069-3079`. Phase J evidence (`reports/2025-10-cli-flags/phase_j/scaling_chain.md`) still shows 3.6e-7 intensity ratio.
+- Ralph’s recent loop (315a54c) successfully closed H5e; no regressions spotted in commit diffs. Pending action is Phase K1 sincg parity plus Phase K2 scaling refresh.
+- Issued new `input.md` (Implementation phase, 107 lines) detailing Phase K1 tasks: swap to `sincg(torch.pi * h, Na)`, rerun scaling traces, author `tests/test_cli_scaling.py::test_f_latt_square_matches_c`, and update plan/attempt logs with artifacts under `reports/2025-10-cli-flags/phase_k/`.
+- Follow-up for next supervisor loop: verify Ralph delivers Phase K1 artifacts (trace_py_after.log, scaling_chain_after.md, pytest log) and updates docs/fix_plan.md Attempt #34 before greenlighting Phase K2.
