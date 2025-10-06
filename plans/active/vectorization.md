@@ -1,7 +1,7 @@
 ## Context
 - Initiative: PERF-PYTORCH-004 vectorization backlog; supports long-term goal "Parallel parity + performance" from docs/fix_plan.md
 - Phase Goal: Deliver a production-ready, fully vectorized tricubic interpolation pipeline (gather + polynomial evaluation) and follow with detector absorption vectorization without regressing physics, gradients, or device neutrality.
-- Dependencies: specs/spec-a-core.md §4 (Structure factors), specs/spec-a-parallel.md §2.3 (Interpolation acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4, docs/architecture/c_code_overview.md (tricubic routines), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, `nanoBragg.c` lines 2604–3278 (polin3/polin2/polint + detector absorption), `tests/test_at_str_002.py`, `tests/test_at_abs_001.py`, `reports/benchmarks/20250930-165726-compile-cache/` (current performance references).
+- Dependencies: specs/spec-a-core.md §4 (Structure factors), specs/spec-a-parallel.md §2.3 (Interpolation acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4, docs/architecture/c_code_overview.md (tricubic routines), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, `nanoBragg.c` lines 2604–3278 (polin3/polin2/polint + detector absorption), `tests/test_at_str_002.py`, `tests/test_at_abs_001.py`, `reports/benchmarks/20250930-165726-compile-cache/` (current performance references). No dedicated tricubic/absorption microbenchmarks exist yet; Phase A will author reusable harnesses under `scripts/benchmarks/` so future loops can rerun baselines without ad-hoc snippets.
 
 ### Phase A — Evidence & Baseline Capture
 Goal: Document the current (non-vectorized) behavior, warnings, and performance so we can prove the impact of the refactor.
@@ -11,8 +11,8 @@ Exit Criteria: Baseline pytest log, timing snippet results, and notes stored und
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | A1 | Re-run tricubic acceptance tests | [ ] | `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py -v` ⇒ save log to `reports/2025-10-vectorization/phase_a/test_at_str_002.log`; confirm nearest-neighbour fallback warning message appears for batched inputs. |
-| A2 | Measure current tricubic runtime | [ ] | `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/sample_tricubic_baseline.py` (create minimal harness if missing) to capture CPU timings for 256² and 512² detectors; record outputs in `phase_a/tricubic_baseline.md`. |
-| A3 | Record detector absorption baseline | [ ] | `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_abs_001.py -v` plus a microbenchmark (`python scripts/benchmarks/sample_absorption_baseline.py`) so we have pre-refactor timings; store under `phase_a/absorption_baseline.md`. |
+| A2 | Measure current tricubic runtime | [ ] | Author `scripts/benchmarks/tricubic_baseline.py` (device/dtype neutral, honours `KMP_DUPLICATE_LIB_OK=TRUE`) and run `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --repeats 5`. Capture CPU timings (and CUDA when available) in `phase_a/tricubic_baseline.md` plus raw JSON/CSV under `phase_a/tricubic_baseline_results.json`. |
+| A3 | Record detector absorption baseline | [ ] | Create `scripts/benchmarks/absorption_baseline.py` mirroring A2's interface; execute `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/absorption_baseline.py --sizes 256 512 --repeats 5` alongside `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_abs_001.py -v`. Store logs in `phase_a/absorption_baseline.md` and metrics in `phase_a/absorption_baseline_results.json`. |
 
 ### Phase B — Tricubic Vectorization Design
 Goal: Lock the tensor-shape design, broadcasting plan, and gradient checks before code changes.
@@ -55,7 +55,7 @@ Exit Criteria: Validation summary in `reports/2025-10-vectorization/phase_e/summ
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | E1 | Regression tests sweep | [ ] | `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py tests/test_tricubic_vectorized.py -v` (CPU + CUDA when available). Log outputs under `phase_e/pytest.log`. |
-| E2 | Performance benchmark | [ ] | Extend (or create) `scripts/benchmarks/sample_tricubic_baseline.py` to compare pre/post timings; run for CPU & CUDA, storing CSV/JSON in `phase_e/perf_results.json`. |
+| E2 | Performance benchmark | [ ] | Reuse the Phase A harnesses (`tricubic_baseline.py`, `absorption_baseline.py`) in "baseline" vs "vectorized" modes; run CPU & CUDA sweeps with identical seeds and persist outputs to `phase_e/perf_results.json`. |
 | E3 | Parity against C reference | [ ] | Use `nb-compare --resample --outdir reports/2025-10-vectorization/phase_e/nb_compare -- -default_F ...` (match AT-STR-002 config) to ensure intensities align within tolerance. Summarize metrics in `phase_e/summary.md`. |
 
 ### Phase F — Detector Absorption Vectorization

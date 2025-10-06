@@ -1047,3 +1047,12 @@ Follow-ups for Ralph:
 - Coin flip → heads; reviewed last ~10 Ralph iterations. Latest commit 8c1583d correctly delegates `detector.beam_vector` into Simulator, adds regression test (`TestCLIBeamVector::test_custom_beam_vector_propagates`), no regressions observed. Work productive; advised to capture post-fix trace before touching lattice math.
 - Plan upkeep: marked `plans/active/cli-noise-pix0/plan.md` Phase H2 as [D] with Attempt #20 context and refreshed H3 guidance to require new trace evidence + hypothesis logging. Input memo rewritten (108 lines) directing Ralph to produce `trace_py_after_H2` artifacts, diff vs C, update reports/implementation notes, and run targeted pytest.
 - Follow-ups for Ralph next loop: run trace harness with env vars, store `trace_py_after_H2` + diff + comparison markdown, update docs/fix_plan Attempt log with findings, keep loop evidence-only (no code edits) before advancing to lattice fixes.
+
+## 2025-10-06 (galph loop — H3 sincg diagnosis setup)
+- Git already up to date (15fdec5); mandatory spec/arch/testing docs and active plans refreshed before analysis.
+- Long-term Goal 1: New Phase H3 evidence (commit ce28187) shows `F_latt` mismatch; confirmed top hypothesis is PyTorch feeding `(h-h0)` into `sincg`. Updated `plans/active/cli-noise-pix0/plan.md` H3 guidance to require manual `sincg(M_PI*h, Na)` reproduction and hypothesis logging before any simulator edits.
+- docs/fix_plan.md `[CLI-FLAGS-003]` Next Actions now point at rerunning `trace_harness.py`, capturing manual `sincg` calculations, then executing Phase H4 once the lattice fix is staged.
+- Coin flip=heads → reviewed Ralph’s latest code commit (ce28187). Evidence-only trace capture landed as expected, no regressions observed; productive iteration highlighting sincg vs lattice scaling suspects.
+- Long-term Goal 2: `plans/active/vectorization.md` Phase A updated to author reusable tricubic/absorption benchmark harnesses under `scripts/benchmarks/` so baseline timings can be captured once CLI parity stabilises; fix_plan Next Actions adjusted accordingly.
+- Authored new input.md (Do Now: rerun trace harness, compute manual sincg table, pytest collect) and staged reporting guardrails for today’s evidence-only loop.
+- Follow-ups for Ralph: regenerate PyTorch trace under `trace_py_after_H3.log`, create `manual_sincg.md` comparing `(h-h0)` vs absolute arguments, append findings to `implementation_notes.md`, and keep Attempt log current before proposing the simulator fix.
