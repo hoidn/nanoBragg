@@ -1,0 +1,57 @@
+# Scaling Chain Analysis: C vs PyTorch
+
+Pixel: (slow=1039, fast=685)
+
+## Factor-by-Factor Comparison
+
+| Factor | C Value | PyTorch Value | Ratio (Py/C) | Match? |
+|--------|---------|---------------|--------------|--------|
+| I_before_scaling | 1.480792e+15 | 1.806530e+14 | 1.219976e-01 | ❌ |
+| steps | 1.000000e+01 | 1.000000e+01 | 1.000000e+00 | ✅ |
+| r_e_sqr | 7.940792e-30 | 7.940792e-30 | 1.000000e+00 | ✅ |
+| fluence_photons_per_m2 | 1.000000e+24 | 1.000000e+24 | 1.000000e+00 | ✅ |
+| polar | 9.125758e-01 | 1.000000e+00 | 1.095799e+00 | ❌ |
+| omega_pixel | 4.158679e-07 | 4.158604e-07 | 9.999821e-01 | ❌ |
+| I_pixel_final | 4.462541e+02 | 4.971766e+02 | 1.114111e+00 | ❌ |
+
+## Normalization Formula
+
+Expected (from C code):
+```
+I_pixel = (I_before_scaling / steps) * r_e² * fluence * polar * omega
+```
+
+### C Normalization Chain
+
+- Start: 1.480792e+15
+- ÷ steps: 1.480792e+14
+- × r_e²: 1.175866e-15
+- × fluence: 1.175866e+09
+- × polar: 1.073067e+09
+- × omega: 4.462541e+02
+
+### PyTorch Normalization Chain
+
+- Start: 1.806530e+14
+- ÷ steps: 1.806530e+13
+- × r_e²: 1.434528e-16
+- × fluence: 1.434528e+08
+- × polar: 1.434528e+08
+- × omega: 4.971766e+02
+
+## First Divergence
+
+**Factor:** `I_before_scaling`
+- C value: 1.480792010454e+15
+- PyTorch value: 1.806530429487e+14
+- Ratio (Py/C): 1.219976e-01
+
+**Diagnosis:** The lattice structure factor computation diverges before normalization.
+This indicates an issue with `F_latt` calculation (lattice shape factor).
+
+## Summary
+
+- Final intensity ratio (Py/C): **1.114e+00**
+- Matches 124,538× global sum ratio: ❌
+
+Markdown report written to: reports/2025-10-cli-flags/phase_k/f_latt_fix/scaling_chain.md

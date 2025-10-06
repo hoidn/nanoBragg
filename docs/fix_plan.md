@@ -628,6 +628,22 @@
       - **No unit regressions:** All trace values in meters (as required by detector hybrid unit system); no millimeter/Angstrom confusion.
       - **Phase H6g exit criteria met:** |Δpix0| = 2.85 μm << 50 μm threshold; evidence artifacts archived; ready for Phase K2.
     Next Actions: **Phase K2 required** — With pix0 parity confirmed, regenerate scaling-chain analysis with corrected SAMPLE pivot traces. Execute Phase K2 checklist from `plans/active/cli-noise-pix0/plan.md`: (1) rerun PyTorch trace harness for pixel (1039,685) with final geometry, (2) diff F_latt components against C baseline, (3) update `reports/2025-10-cli-flags/phase_j/scaling_chain.md` with post-H6 comparison, (4) archive refreshed traces under `phase_k/f_latt_fix/`, (5) proceed to Phase K3 regression test once F_latt parity is restored.
+  * [2025-10-06] Attempt #42 (ralph loop) — Result: **EVIDENCE COMPLETE** (Phase K2/K2b). **Critical finding: MOSFLM rescaling is NOT the root cause of F_latt_b error.**
+    Metrics: Evidence-only loop (per supervisor directive). Scaling ratios: F_latt_b C=38.63 vs Py=46.98 (21.6% error), polar C=0.913 vs Py=1.0 (9.6% error), I_final C=446 vs Py=497 (11.4% error). MOSFLM lattice vector analysis reveals perfect magnitude match (|b|_C = |b|_Py = 31.310 Å), ruling out rescale hypothesis.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_py_after.log` - Fresh PyTorch trace for pixel (1039, 685) with SAMPLE pivot
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/mosflm_rescale.py` - Script demonstrating C user_cell=0 vs user_cell=1 rescaling behavior
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/orientation_delta.md` - MOSFLM lattice vector comparison showing zero magnitude deltas
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/scaling_chain.md` - Updated scaling chain analysis (C vs PyTorch ratios)
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/scaling_summary.md` - Existing summary from prior phase (not refreshed this loop)
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/metrics_after.json` - Existing JSON metrics from prior phase
+    Observations/Hypotheses:
+      - **Rescale hypothesis disproven:** C with user_cell=0 (no rescale) produces |b| = 31.310 Å; PyTorch (always rescales) also produces |b| = 31.310 Å. Vectors match identically regardless of rescale path.
+      - **F_latt_b still diverges:** Despite identical lattice vector magnitudes, F_latt_b shows 21.6% error (C=38.63, Py=46.98). This proves the error is NOT in vector_rescale logic.
+      - **Polarization remains secondary issue:** C polar=0.9126 vs Py polar=1.0 (9.6% error). BeamConfig defaults still need alignment per Phase K3 task.
+      - **First divergence confirmed:** I_before_scaling shows 87.8% lower in PyTorch due to F_latt squaring (25.5% error squared ≈ 57% mismatch).
+      - **Root cause location narrowed:** F_latt_b error must originate in either (a) Miller index (h,k,l) calculation upstream of sincg, or (b) sincg function evaluation itself, NOT in lattice vector construction.
+    Next Actions: **Phase K3 blocked** pending root-cause identification. Execute K2.1 (new subtask): compare fractional Miller indices (h_frac, k_frac, l_frac) from C vs PyTorch traces for pixel (1039, 685) to isolate whether the 21.6% F_latt_b error originates in scattering-vector → reciprocal-space projection or in the sincg lattice shape factor evaluation. Once first divergence is pinpointed, proceed with targeted fix in Phase K3.
   * [2025-10-06] Attempt #29 (ralph loop) — Result: Phase H5a EVIDENCE-ONLY COMPLETE. **C-code pix0 override behavior with custom vectors documented.**
     Metrics: Evidence-only loop. Two C runs executed: WITH override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m) and WITHOUT override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m). Identical geometry values confirm override is ignored when custom vectors are present.
     Artifacts:
