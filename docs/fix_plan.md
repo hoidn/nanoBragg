@@ -658,6 +658,23 @@
       - **Phase E analysis was incomplete:** Previous test assumed polar stayed at 1.0, missing the per-pixel reset. Updated test_default_polarization_parity reflects correct behavior.
       - **Parity test failures appear pre-existing:** test_cli_scaling and test_parity_matrix failures not caused by K3a-K3b changes; likely require additional investigation beyond these tasks.
     Next Actions: **Phase K3c investigation required** - test_cli_scaling::test_f_latt_square_matches_c shows correlation=0.174 (< 0.999) and sum_ratio=1.45 (>1e-3). This appears unrelated to MOSFLM rescale or polarization defaults (test uses -cell without -mat, so K3a doesn't apply). Investigate root cause separately; K3a-K3b changes are correct per plan and diagnostic evidence.
+  * [2025-10-06] Attempt #44 (ralph loop) — Result: **EVIDENCE COMPLETE** (Phase K3d dtype sensitivity). **Dtype precision NOT root cause of F_latt_b discrepancy.**
+    Metrics: Evidence-only loop. Float32 and float64 produce nearly identical results: F_latt_b=2.33 (both dtypes), vs C F_latt_b=38.63 → 93.98% error for both. Float64 improves F_latt precision by only 0.39% (relative dtype error 3.86e-01%), ruling out rounding as the root cause. Miller index precision: h_frac Δ=1.09e-06 (4.12e-06% error), k_frac Δ=1.38e-07 (1.40e-06% error), l_frac Δ=4.13e-06 (3.73e-05% error). All precision deltas 6-7 orders of magnitude smaller than indices themselves.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/analyze_scaling.py` - Dtype sweep script with production-path instrumentation (compliant with CLAUDE.md Rule #0.3)
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/dtype_sweep/float32_run.log` - Full float32 trace output
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/dtype_sweep/float64_run.log` - Full float64 trace output
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/dtype_sweep/trace_float32.json` - Machine-readable float32 data
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/dtype_sweep/trace_float64.json` - Machine-readable float64 data
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/dtype_sweep/dtype_sensitivity.json` - Automated comparison summary
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/dtype_sweep/dtype_sensitivity.md` - Complete evidence report
+    Observations/Hypotheses:
+      - **Dtype precision ruled out:** Both float32 and float64 produce F_latt_b ≈ 2.33, which is 16.6× smaller than C's 38.63. This is a systematic error, not a precision issue.
+      - **Miller index precision excellent:** Fractional h/k/l precision is 6-7 orders of magnitude better than needed, ruling out index rounding errors.
+      - **F_latt component precision adequate:** Float64 improves F_latt by < 0.4%, negligible compared to the 93.98% systematic error.
+      - **Root cause remains:** Geometric/orientation discrepancy (likely MOSFLM rescaling mismatch per Phase K2b) is the driver, not numerical precision.
+      - **Phase K3a still critical:** The MOSFLM rescale guard is the next blocking step; dtype sweep confirms this is the right path.
+    Next Actions: **Phase K3a remains blocking** - implement MOSFLM rescale guard per plan.md task, then rerun dtype sweep to verify F_latt_b moves closer to C's 38.63. If still divergent after K3a, investigate MOSFLM → real-space conversion formula and reciprocal vector recalculation sequence (CLAUDE.md Rule #13).
   * [2025-10-06] Attempt #29 (ralph loop) — Result: Phase H5a EVIDENCE-ONLY COMPLETE. **C-code pix0 override behavior with custom vectors documented.**
     Metrics: Evidence-only loop. Two C runs executed: WITH override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m) and WITHOUT override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m). Identical geometry values confirm override is ignored when custom vectors are present.
     Artifacts:

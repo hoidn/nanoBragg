@@ -1,0 +1,40 @@
+================================================================================
+CLI-FLAGS-003 Phase K3d: Dtype Sensitivity Analysis (float32)
+================================================================================
+
+Environment:
+  NB_PYTORCH_DTYPE = float32
+  PyTorch dtype = torch.float32
+  Device = cpu
+
+Tracing pixel (133, 134)...
+
+--------------------------------------------------------------------------------
+Scaling Chain Trace
+--------------------------------------------------------------------------------
+
+Target pixel: (133, 134)
+Wavelength: 0.976800 Å
+
+Miller indices (fractional):
+  h = 26.415195465087891
+  k = -9.899109840393066
+  l = -11.067195892333984
+
+Miller indices (rounded):
+  h = 26.0
+  k = -10.0
+  l = -11.0
+
+Lattice shape factors (SQUARE, Na=36, Nb=47, Nc=29):
+  F_latt_a = 0.171621218323708
+  F_latt_b = 2.326403141021729
+  F_latt_c = -0.765703320503235
+  F_latt   = -3.057148159948536e-01
+
+Scaling factors:
+  omega_pixel = 1.087334894691594e-04 sr
+  polar       = 0.000000
+
+Trace saved to: /home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_k/f_latt_fix/dtype_sweep/trace_float32.json
+

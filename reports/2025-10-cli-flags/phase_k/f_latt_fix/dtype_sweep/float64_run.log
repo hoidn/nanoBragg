@@ -1,0 +1,71 @@
+================================================================================
+CLI-FLAGS-003 Phase K3d: Dtype Sensitivity Analysis (float64)
+================================================================================
+
+Environment:
+  NB_PYTORCH_DTYPE = float64
+  PyTorch dtype = torch.float64
+  Device = cpu
+
+Tracing pixel (133, 134)...
+
+--------------------------------------------------------------------------------
+Scaling Chain Trace
+--------------------------------------------------------------------------------
+
+Target pixel: (133, 134)
+Wavelength: 0.976800 Å
+
+Miller indices (fractional):
+  h = 26.415194376200542
+  k = -9.899109978860006
+  l = -11.067191764513556
+
+Miller indices (rounded):
+  h = 26.0
+  k = -10.0
+  l = -11.0
+
+Lattice shape factors (SQUARE, Na=36, Nb=47, Nc=29):
+  F_latt_a = 0.171805304987945
+  F_latt_b = 2.326201567663405
+  F_latt_c = -0.767915111338079
+  F_latt   = -3.069001691294620e-01
+
+Scaling factors:
+  omega_pixel = 1.087334733506817e-04 sr
+  polar       = 0.000000
+
+Trace saved to: /home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_k/f_latt_fix/dtype_sweep/trace_float64.json
+
+================================================================================
+Dtype Comparison: float32 vs float64
+================================================================================
+
+Fractional Miller Index Deltas (float64 - float32):
+  Δh = -1.088887348288381e-06
+  Δk = -1.384669392479054e-07
+  Δl = 4.127820428578843e-06
+
+Lattice Shape Factor Deltas (float64 - float32):
+  ΔF_latt_a = 1.840866642379146e-04
+  ΔF_latt_b = -2.015733583231594e-04
+  ΔF_latt_c = -2.211790834844574e-03
+  ΔF_latt   = -1.185353134608436e-03
+
+Relative Precision Errors (%):
+  h_frac:    4.1222e-06%
+  k_frac:    1.3988e-06%
+  l_frac:    3.7298e-05%
+  F_latt_b:  8.6653e-03%
+  F_latt:    3.8623e-01%
+
+C Reference Comparison (from scaling_chain.md):
+  C F_latt_b      = 38.63
+  PyTorch float32 = 2.33  (error: 93.98%)
+  PyTorch float64 = 2.33  (error: 93.98%)
+
+❌ Float64 does NOT reduce error (dtype not the root cause)
+
+Summary saved to: /home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_k/f_latt_fix/dtype_sweep/dtype_sensitivity.json
+
