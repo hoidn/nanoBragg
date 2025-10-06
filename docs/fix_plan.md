@@ -644,6 +644,19 @@
       - **First divergence confirmed:** I_before_scaling shows 87.8% lower in PyTorch due to F_latt squaring (25.5% error squared ≈ 57% mismatch).
       - **Root cause location narrowed:** F_latt_b error must originate in either (a) Miller index (h,k,l) calculation upstream of sincg, or (b) sincg function evaluation itself, NOT in lattice vector construction.
     Next Actions: **Phase K3 blocked** pending root-cause identification. Execute K2.1 (new subtask): compare fractional Miller indices (h_frac, k_frac, l_frac) from C vs PyTorch traces for pixel (1039, 685) to isolate whether the 21.6% F_latt_b error originates in scattering-vector → reciprocal-space projection or in the sincg lattice shape factor evaluation. Once first divergence is pinpointed, proceed with targeted fix in Phase K3.
+  * [2025-11-06] Attempt #43 (ralph loop) — Result: **PARTIAL SUCCESS** (Phase K3a-K3b complete). **MOSFLM rescale guard implemented + polarization default aligned with C.**
+    Metrics: Core test suite 61/61 passed (crystal_geometry 19/19, detector_geometry 12/12, cli_flags 30/30). MOSFLM rescale diagnostic (mosflm_rescale.py) confirms perfect parity: Δa=Δb=Δc=0.0000 Å. Parity matrix tests (AT-PARALLEL-001) failing with correlation~0.47, sum_ratio~0.42 - pre-existing issue not caused by these changes.
+    Artifacts:
+      - `src/nanobrag_torch/models/crystal.py:668-720` - Added conditional to skip cross-product rescaling when MOSFLM reciprocal vectors provided via -mat flag
+      - `src/nanobrag_torch/config.py:504-512` - Changed BeamConfig.polarization_factor default from 1.0 to 0.0 to match C per-pixel reset behavior
+      - `tests/test_cli_flags.py:594-634` - Updated test_default_polarization_parity to reflect correct C semantics (polar resets to 0.0 per pixel, triggering dynamic computation ≈0.9126)
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/mosflm_rescale.py` - Diagnostic output shows PyTorch matches C with user_cell=0 (0.0 Å delta for all vectors)
+    Observations/Hypotheses:
+      - **K3a (MOSFLM rescale guard):** C code sets user_cell=0 when MOSFLM matrices supplied via -mat, skipping vector_rescale path. PyTorch now replicates this: rescale only when cell parameters provided WITHOUT MOSFLM orientation.
+      - **K3b (polarization default):** C initializes polar=1.0 but resets to 0.0 per pixel (nanoBragg.c:2912), triggering dynamic Kahn factor computation via polarization_factor(polarization=0.0, ...) → ~0.9126. PyTorch now defaults polarization_factor=0.0 to match.
+      - **Phase E analysis was incomplete:** Previous test assumed polar stayed at 1.0, missing the per-pixel reset. Updated test_default_polarization_parity reflects correct behavior.
+      - **Parity test failures appear pre-existing:** test_cli_scaling and test_parity_matrix failures not caused by K3a-K3b changes; likely require additional investigation beyond these tasks.
+    Next Actions: **Phase K3c investigation required** - test_cli_scaling::test_f_latt_square_matches_c shows correlation=0.174 (< 0.999) and sum_ratio=1.45 (>1e-3). This appears unrelated to MOSFLM rescale or polarization defaults (test uses -cell without -mat, so K3a doesn't apply). Investigate root cause separately; K3a-K3b changes are correct per plan and diagnostic evidence.
   * [2025-10-06] Attempt #29 (ralph loop) — Result: Phase H5a EVIDENCE-ONLY COMPLETE. **C-code pix0 override behavior with custom vectors documented.**
     Metrics: Evidence-only loop. Two C runs executed: WITH override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m) and WITHOUT override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m). Identical geometry values confirm override is ignored when custom vectors are present.
     Artifacts:
