@@ -1132,3 +1132,11 @@ Follow-ups for Ralph:
 - No new plan drafted—`plans/active/cli-noise-pix0/plan.md` remains authoritative. Updated docs/fix_plan.md next actions to focus on Attempt #27 parity run and deepened I3 guidance.
 - Regenerated input.md (143 lines, Validation phase) instructing Ralph to run nb-compare with the supervisor command, archive artifacts under `reports/2025-10-cli-flags/phase_i/supervisor_command/`, execute targeted pytest, and document Attempt #27 metrics.
 - Follow-ups for Ralph: execute Do Now nb-compare command, capture stdout/stderr + summary.json, run targeted pytest + collect-only, update README + docs/fix_plan Attempt #27, leave code untouched.
+## 2025-10-19 (galph loop — Phase J directive)
+- `git pull --rebase` was clean; reviewed CLAUDE guardrails, spec shards, arch.md, config map, debugging + testing strategy, fix_plan, and active plans before action.
+- Deep-dive confirmed Goal #1 is now blocked solely by a 1.24538e5× intensity gap even after polarization parity; Goal #2 (vectorization) remains paused until CLI parity lands (Phase A evidence still outstanding).
+- Reviewed Ralph’s recent commits (`e8146c2`, `beadffc`): polarization default fix + new tests look solid; nb-compare tooling patch captured parity failure evidence without regressions. No course correction needed, but scaling issue persists.
+- Updated `plans/active/cli-noise-pix0/plan.md` with new Phases J–L covering scaling evidence → normalization implementation → final parity; marked I3 as blocked and refreshed context to emphasise the scaling gap.
+- Synced `docs/fix_plan.md` Next Actions with the Phase J checklist and noted that Attempt #27 directives are superseded; Phase K work now gated on Attempt #28 evidence.
+- Regenerated `input.md` (Evidence phase) instructing Ralph to capture C/Py scaling traces, build `scaling_chain.md`, and log Attempt #28 before any simulator edits.
+- Follow-ups for Ralph: deliver plan tasks J1–J3 (logs + analysis + fix_plan update) under `reports/2025-10-cli-flags/phase_j/`, then pause for supervisor review before touching normalization code.

@@ -3,6 +3,7 @@
 - Phase Goal: Accept `-nonoise` and `-pix0_vector_mm` flags with C-equivalent semantics so the parallel comparison command in prompts/supervisor.md executes end-to-end.
 - Dependencies: specs/spec-a-cli.md §§3.2–3.4, docs/architecture/detector.md §5, docs/development/c_to_pytorch_config_map.md (detector pivot + noise), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860 (flag behavior), docs/debugging/detector_geometry_checklist.md (pix0 validation), docs/development/testing_strategy.md §2 (CLI parity tests).
 - Current gap snapshot (2025-10-18 refresh): Phase H4 parity landed (Attempt #25) with pix0 deltas < 2e-8 m and regression tolerances tightened; the remaining blocker before executing the supervisor command end-to-end is Phase I polarization alignment.
+- Gap snapshot update (2025-10-19): Attempt #27 parity run reveals 1.24538e5× intensity scaling mismatch despite polarization fix; Phases J–L track the normalization diagnosis, fix, and closure required before long-term Goal #1 completes.
 - Evidence status: Phase E artifacts (`reports/2025-10-cli-flags/phase_e/`) hold C/PyTorch traces, diffs, and beam-vector checks. Phase H3b1 also stashes WITH/without override traces under `reports/2025-10-cli-flags/phase_h/implementation/` for reference.
 
 ### Phase A — Requirements & Trace Alignment
@@ -114,6 +115,39 @@ Exit Criteria: Polarization entries in C/PyTorch traces agree (≈0.9126 for sup
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| I1 | Audit polarization inputs | [X] | ✅ Completed 2025-10-17. C defaults polar=1.0/polarization=0.0/nopolar=0 verified at nanoBragg.c:308-309. PyTorch BeamConfig.polarization_factor was defaulting to 0.0 instead of 1.0. |
-| I2 | Implement polarization parity | [X] | ✅ Completed 2025-10-17. Updated BeamConfig.polarization_factor default to 1.0 (config.py:483-487). Added TestCLIPolarization with 3 tests (test_cli_flags.py:591-675). Tests verify default=1.0, -nopolar flag, and -polar override. |
-| I3 | Final parity sweep | [ ] | Rerun supervisor command traces verifying polarization parity; update docs/fix_plan.md with closure summary and archive plan. |
+| I1 | Audit polarization inputs | [D] | ✅ Completed 2025-10-17. C defaults polar=1.0/polarization=0.0/nopolar=0 verified at nanoBragg.c:308-309. PyTorch BeamConfig.polarization_factor was defaulting to 0.0 instead of 1.0. |
+| I2 | Implement polarization parity | [D] | ✅ Completed 2025-10-17. Updated BeamConfig.polarization_factor default to 1.0 (config.py:483-487). Added TestCLIPolarization with 3 tests (test_cli_flags.py:591-675). Tests verify default=1.0, -nopolar flag, and -polar override. |
+| I3 | Final parity sweep | [P] | Attempt #27 (2025-10-06) failed with 124,538× intensity scaling gap; blocked until Phase J evidence resolves normalization divergence. |
+
+### Phase J — Intensity Scaling Evidence
+Goal: Isolate the first divergence in the normalization chain (steps, ω, r_e², fluence) responsible for the 1.2×10⁵ intensity mismatch.
+Prereqs: Phase I2 complete; beam/pix0/orientation traces from Phases F–H archived.
+Exit Criteria: Report under `reports/2025-10-cli-flags/phase_j/scaling_chain.md` documenting C vs PyTorch values for `steps`, `I_before_scaling`, `omega`, `polarization`, `r_e²`, `fluence`, and the resulting per-pixel intensities, with the first mismatched quantity identified and logged in docs/fix_plan.md Attempt history.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| J1 | Capture single-pixel scaling traces | [ ] | Run C with `-dump_pixel 1039 685` (same supervisor command) and extend `trace_harness.py` to emit `steps`, `I_before_scaling`, `omega`, `polarization`, and intermediate sums. Store raw logs under `reports/2025-10-cli-flags/phase_j/trace_c_scaling.log` and `trace_py_scaling.log`. |
+| J2 | Compute factor-by-factor ratios | [ ] | Author `reports/2025-10-cli-flags/phase_j/analyze_scaling.py` (CLI harness) to parse the Phase J traces, compute Py/C ratios for each factor, and write a Markdown table to `scaling_chain.md`. Include assertions that highlight the first ratio deviating >1e-6. |
+| J3 | Update fix_plan Attempt log | [ ] | Summarize findings in docs/fix_plan.md `[CLI-FLAGS-003]` Attempt #28, attaching artifact paths and marking I3 blocked pending Phase K implementation. |
+
+### Phase K — Normalization Implementation
+Goal: Align PyTorch normalization logic with C based on Phase J evidence (steps division, fluence, r_e², omega/polarization application order).
+Prereqs: Phase J report pinpoints the mismatched factor; existing regression suite green.
+Exit Criteria: Code changes merged with targeted tests covering the corrected scaling, and docs/fix_plan.md records Attempt #29 metrics before moving to Phase L.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| K1 | Implement normalization fix | [ ] | Modify `src/nanobrag_torch/simulator.py` per Phase J diagnosis (e.g., adjust `steps`, avoid double-multiplying omega, ensure r_e²/fluence ordering). Follow Runtime Guardrails: maintain vectorization and device neutrality. |
+| K2 | Add targeted regression tests | [ ] | Extend `tests/test_cli_flags.py` (or new `tests/test_cli_scaling.py`) with a normalized-intensity assertion using a reduced detector ROI, and add a micro test that checks `steps` division via a mock crystal (φ=2, mosaic=3). Capture pytest log under `reports/2025-10-cli-flags/phase_k/pytest.log`. |
+| K3 | Refresh documentation | [ ] | Update `README_PYTORCH.md` scaling section and add a note to `docs/architecture/pytorch_design.md` summarizing the normalization pipeline. Record evidence in `phase_k/notes.md`. |
+
+### Phase L — Final Parity & Regression Sweep
+Goal: Demonstrate full parity for the supervisor command and close CLI-FLAGS-003.
+Prereqs: Phases J–K complete; scaling regression tests green.
+Exit Criteria: `nb-compare` metrics meet thresholds (correlation ≥0.999, sum_ratio 0.99–1.01, peak distance ≤1 px), targeted pytest nodes pass, docs/fix_plan.md Attempt #30 logs metrics, and this plan is ready for archival.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| L1 | Rerun supervisor command parity | [ ] | Execute the authoritative nb-compare command, stash outputs under `reports/2025-10-cli-flags/phase_l/supervisor_command/`, and verify metrics within thresholds. |
+| L2 | Regression confirmation | [ ] | Run the CLI flag suite plus any new scaling tests (`env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py tests/test_cli_scaling.py -v`) with results saved to `phase_l/pytest.log`. |
+| L3 | Closeout documentation | [ ] | Update docs/fix_plan.md exit criteria, archive this plan per SOP, and note parity completion in `docs/development/testing_strategy.md` if thresholds changed. |
