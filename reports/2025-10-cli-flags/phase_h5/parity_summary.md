@@ -167,9 +167,39 @@ The persistent error pattern (S: +139μm, F: -1136μm, O: -5.6μm) suggests:
 | Fclose_m | 0.217742295 | 0.217742295 | — | ✅ Exact match |
 | Sclose_m | 0.21390708 | 0.21390708 | — | ✅ Exact match |
 
+### Phase H6e: Detector Pivot Mismatch Confirmed (2025-10-06)
+
+**Critical Finding:** Evidence loop confirmed PyTorch uses **BEAM pivot** while C uses **SAMPLE pivot** for the supervisor command.
+
+**Evidence:**
+```
+C trace: "pivoting detector around sample"
+PyTorch: DetectorPivot.BEAM (extracted via CLI config inspection)
+```
+
+**Impact on Pix0:**
+- BEAM pivot formula: `pix0 = -Fbeam·fdet - Sbeam·sdet + distance·beam` (after rotations)
+- SAMPLE pivot formula: `pix0 = -Fclose·fdet - Sclose·sdet + close_distance·odet`, then rotate pix0
+- **Different formulas → different pix0 vectors → cascading geometry errors**
+
+**Root Cause:**
+- `DetectorConfig` pivot selection does not force SAMPLE pivot when custom detector vectors are present
+- Missing the C code's implicit rule: *custom vectors → SAMPLE pivot*
+
+**Specification References:**
+- `specs/spec-a-cli.md`: Custom detector basis vectors SHALL force SAMPLE pivot mode
+- `docs/architecture/detector.md` §5.2: Pivot checklist item #3 (custom geometry override)
+
+**Resolution Path:**
+- Phase H6f: Implement custom-vector-to-SAMPLE-pivot forcing rule
+- Phase H6g: Revalidate pix0 traces (require |Δpix0| < 5e-5 m)
+
+**Detailed Evidence:** See `reports/2025-10-cli-flags/phase_h6/pivot_parity.md`
+
 ## References
-- Plan checkpoint: `plans/active/cli-noise-pix0/plan.md` Phase H5/H5c/H6c
-- Fix plan entry: `docs/fix_plan.md` §[CLI-FLAGS-003] Attempt #35 (H5c), Attempt #38 (H6c this loop)
+- Plan checkpoint: `plans/active/cli-noise-pix0/plan.md` Phase H5/H5c/H6c/H6e
+- Fix plan entry: `docs/fix_plan.md` §[CLI-FLAGS-003] Attempt #35 (H5c), Attempt #38 (H6c), Attempt #39 (H6e this loop)
 - Unit fix commit: Attempt #33 (commit 831b670, H5e task)
 - Custom-vector revert: Attempt #31 (H5b task)
 - Phase H6c analysis: `reports/2025-10-cli-flags/phase_h6/analysis.md`
+- **Phase H6e pivot evidence:** `reports/2025-10-cli-flags/phase_h6/pivot_parity.md`

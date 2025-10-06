@@ -583,6 +583,20 @@
       - **Pix0 delta persists:** Despite correct Fclose/Sclose, final pix0 still differs by (ΔF=-1136μm, ΔS=+139μm, ΔO=-6μm). This indicates the divergence occurs downstream in the term_fast/term_slow/term_close combination or a missing CUSTOM convention transform.
       - **No code changes:** Evidence-only loop per supervisor directive (input.md:13). Documentation artifacts captured for next debugging phase.
     Next Actions: **Phase H6d required** — Fix the trace logging to show consistent units (meters) for beam_center_m in PyTorch, then investigate why pix0 differs when Fclose/Sclose are identical. Likely causes: (1) MOSFLM +0.5 pixel offset applied/unapplied incorrectly in CUSTOM mode, (2) missing transform in custom-vector path, or (3) pivot calculation differs despite identical detector_pivot setting. Phase K1 remains blocked until pix0 parity achieved.
+  * [2025-10-06] Attempt #39 (ralph loop) — Result: **EVIDENCE COMPLETE** (Phase H6e pivot parity proof). **Confirmed C uses SAMPLE pivot while PyTorch defaults to BEAM pivot for supervisor command.**
+    Metrics: Evidence-only loop. Wall-clock ~2s. C pivot mode extracted from existing trace log ("pivoting detector around sample"). PyTorch pivot mode extracted via inline Python config inspection (DetectorPivot.BEAM). No code changes required.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_h6/pivot_parity.md` - Complete pivot parity evidence report (210 lines)
+      - `reports/2025-10-cli-flags/phase_h5/parity_summary.md` - Updated with Phase H6e findings (cross-reference to pivot evidence)
+      - `docs/fix_plan.md` - This Attempt #39 log
+    Observations/Hypotheses:
+      - **C pivot extraction:** `grep -i "pivoting" reports/2025-10-cli-flags/phase_h6/c_trace/trace_c_pix0.log` → "pivoting detector around sample"
+      - **PyTorch pivot inspection:** Python snippet with supervisor command config parameters → DetectorPivot.BEAM
+      - **Root cause confirmed:** `DetectorConfig` pivot selection does not force SAMPLE when custom detector vectors are present (missing C implicit rule)
+      - **Impact quantified:** BEAM pivot formula (`pix0 = -Fbeam·fdet - Sbeam·sdet + distance·beam`) differs from SAMPLE pivot (`pix0 = -Fclose·fdet - Sclose·sdet + close_distance·odet`) → different pix0 vectors → cascading into 1.14mm delta
+      - **Specification alignment:** specs/spec-a-cli.md and docs/architecture/detector.md §5.2 both require custom vectors → SAMPLE pivot
+      - **Phase H6e exit criteria met:** Evidence documented, parity mismatch confirmed, spec references cited
+    Next Actions: **Phase H6f required** — Implement custom-vector-to-SAMPLE-pivot forcing rule in `DetectorConfig.__post_init__`/`from_cli_args` (detect any of `custom_fdet_vector`, `custom_sdet_vector`, `custom_odet_vector`, `custom_beam_vector`, or `pix0_override_m` and force `detector_pivot=DetectorPivot.SAMPLE`), add regression test `tests/test_cli_flags.py::test_custom_vectors_force_sample_pivot` (CPU+CUDA), document in `reports/2025-10-cli-flags/phase_h6/pivot_fix.md`, then proceed to Phase H6g (re-run PyTorch trace harness and require |Δpix0| < 5e-5 m before closing H6).
   * [2025-10-06] Attempt #29 (ralph loop) — Result: Phase H5a EVIDENCE-ONLY COMPLETE. **C-code pix0 override behavior with custom vectors documented.**
     Metrics: Evidence-only loop. Two C runs executed: WITH override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m) and WITHOUT override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m). Identical geometry values confirm override is ignored when custom vectors are present.
     Artifacts:
