@@ -455,10 +455,10 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase K3e evidence reveals a **fundamental lattice/geometry mismatch**, not a φ-grid offset. C reports `k_frac≈−3.857` across all φ steps while PyTorch reports `k_frac≈−9.899` (Δk≈6.04 at φ=0°). This 6-unit discrepancy indicates the base reciprocal lattice vectors or scattering geometry differ before any φ rotation is applied.
-- Next Actions (2025-10-06 refresh):
-  1. Phase K3f — K3e evidence proves Δk≈6 at **all** φ steps, ruling out φ-sampling as the root cause. Instead, debug base lattice vectors: compare `a_star/b_star/c_star` from MOSFLM matrix loading, verify reciprocal→real conversion, and trace `a/b/c` vectors before φ rotation to identify where the 6-unit k offset originates.
-  2. Phase K3f (continued) — Once base lattice parity is restored, regenerate scaling-chain memo and confirm Δk<5e-4 across φ steps, then stage code/tests/docs updates.
-  3. Phase K3c — after K3f lands, rerun `env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v`, refresh documentation (`docs/architecture/pytorch_design.md`, `docs/development/testing_strategy.md`), and log Attempt #45 with post-fix metrics.
+- Next Actions (2025-11-07 refresh):
+  1. Phase K3f1–K3f3 — Generate matching C/PyTorch baseline traces for MOSFLM vectors, real lattice vectors, and φ=0 scattering components under `reports/2025-10-cli-flags/phase_k/base_lattice/`, then diff them to pinpoint the first component deviating beyond 5e-4.
+  2. Phase K3f4 — Document the diagnosed root cause and planned remediation in the new `base_lattice/summary.md`, update this plan + fix_plan with the chosen implementation approach before touching simulator/detector code.
+  3. Phase K3c — After K3f resolves the Δk≈6 gap, rerun `env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v`, refresh normalization docs, and log the closure attempt.
 - Attempts History:
   * [2025-10-06] Attempt #27 (ralph) — Result: **PARITY FAILURE** (Phase I3 supervisor command). **Intensity scaling discrepancy: 124,538× sum ratio.**
     Metrics: Correlation=0.9978 (< 0.999 threshold), sum_ratio=124,538 (should be ~1.0), C max_I=446, PyTorch max_I=5.411e7 (121,000× discrepancy), mean_peak_distance=37.79 px (> 1 px threshold).

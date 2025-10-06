@@ -1,41 +1,34 @@
-Summary: Capture per-φ Miller index + lattice traces (C vs PyTorch) so we can nail the φ-grid mismatch before touching normalization.
-Phase: Implementation
-Focus: CLI-FLAGS-003 — Phase K3e per-φ Miller index parity
-Branch: main
+Summary: Capture C/PyTorch base-lattice traces to isolate the Δk≈6 gap.
+Phase: Evidence
+Focus: CLI-FLAGS-003 / Phase K3f — Base lattice & scattering parity
+Branch: feature/spec-based-2
 Mapped tests: none — evidence-only
-Artifacts: reports/2025-10-cli-flags/phase_k/f_latt_fix/per_phi/
-Do Now: CLI-FLAGS-003 K3e per-φ parity; PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_k/f_latt_fix/analyze_scaling.py --per-phi --outdir reports/2025-10-cli-flags/phase_k/f_latt_fix/per_phi/
-If Blocked: If the script lacks `--per-phi`, scaffold it first; if C trace instrumentation fails to build, save the compile error to per_phi/attempt_failed.log and fall back to copying Attempt #43 trace with manual φ annotations.
+Artifacts: reports/2025-10-cli-flags/phase_k/base_lattice/
+Do Now: CLI-FLAGS-003 Phase K3f1 – run `timeout 30 ./golden_suite_generator/nanoBragg -mat A.mat -floatfile img.bin -hkl scaled.hkl -nonoise -nointerpolate -oversample 1 -exposure 1 -flux 1e18 -beamsize 1.0 -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080 -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866 -beam_vector 0.00051387949 0.0 -0.99999986 -Na 36 -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0 2>&1 | tee reports/2025-10-cli-flags/phase_k/base_lattice/c_trace.log`
+If Blocked: Capture a fresh per-φ summary via `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/trace_per_phi.py --out reports/2025-10-cli-flags/phase_k/base_lattice/per_phi_probe.json` and log the failure in Attempts History.
 Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md:176 — K3e mandates a per-φ dump before any further normalization work.
-- docs/fix_plan.md:451 — Next Actions now pivot on resolving the φ-grid mismatch (k≈1.9997 vs 1.9928).
-- reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_py_after.log — Current log only shows φ₀; we need the full 0…9 sweep.
-- reports/2025-10-cli-flags/phase_j/trace_c_scaling.log — Baseline C trace to mirror when instrumenting φ ticks.
-- specs/spec-a-core.md §4.3 — Sincg sensitivity confirms why Δk≈7e-3 blows up F_latt_b, so evidence must quantify k per φ.
+- plans/active/cli-noise-pix0/plan.md (Phase K3f table) mandates C+Py baseline traces before any normalization fixes.
+- docs/fix_plan.md (CLI-FLAGS-003 Next Actions) now points to K3f1–K3f4 as the gating work toward long-term goal #1.
+- specs/spec-a-core.md (lattice factor) is needed to interpret h/k/l tolerances while reviewing trace output.
+- docs/architecture/detector.md (SAMPLE pivot & beam definitions) anchors expected pixel geometry for Δk diagnosis.
 How-To Map:
-- Extend `reports/…/analyze_scaling.py` to accept `--per-phi` and emit JSON/markdown tables of `φ_tic`, `h`, `k`, `l`, `F_latt_{a,b,c}` for both C and PyTorch; store files under the timestamped folder inside per_phi/.
-- Patch `golden_suite_generator/nanoBragg.c` instrumentation (copy Attempt #43 scaffolding) to log `TRACE_C_PHI φ_tic=<idx> k=<val> F_latt_b=<val>`; rebuild via `make -C golden_suite_generator`.
-- Run the PyTorch side command (above) with `NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg` so the script can invoke C and PyTorch back-to-back.
-- Capture stdout/stderr to `per_phi/<timestamp>/run.log`, and drop a summary markdown (`per_phi_summary.md`) with the first φ where Δk > 5e-4.
-- Leave the dtype sweep artifacts untouched; reference them when summarising findings.
+- Add `TRACE_C_BASE` printf blocks near MOSFLM load, real-vector recomputation, and scattering-vector setup inside `golden_suite_generator/nanoBragg.c`; rebuild with `timeout 30 make -C golden_suite_generator`.
+- Run the Do Now command; confirm the log includes MOSFLM a*/b*/c*, real a/b/c, and φ=0 scattering vector components; stash under base_lattice/c_trace.log.
+- Mirror the fields in PyTorch by extending `reports/2025-10-cli-flags/phase_k/trace_harness.py` to emit `TRACE_PY_BASE` lines, then execute `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_k/trace_harness.py --out reports/2025-10-cli-flags/phase_k/base_lattice/trace_py.log`.
+- Note any instrumentation edits in Attempts History; keep CLAUDE Rule #8 (reuse production helpers) intact.
 Pitfalls To Avoid:
-- Do not regress existing scaling artifacts—create a fresh timestamped subdir.
-- No pytest in this loop; focus on traces.
-- Keep edits confined to the script + instrumentation; core simulator code stays untouched until φ mismatch is proven.
-- Respect Protected Assets (docs/index.md listings).
-- Clean rebuild the C binary after instrumentation to avoid stale traces.
-- Ensure command runs with `KMP_DUPLICATE_LIB_OK=TRUE` to prevent MKL clashes.
-- Document commit hash + torch version in the summary for reproducibility.
-- Avoid hard-coded `.cpu()`/`.cuda()` in new logging helpers.
-- Don’t push; hand back evidence first.
+- Do not modify simulator normalization paths yet; this loop is evidence-only.
+- Keep instrumentation in `golden_suite_generator/` and reports scripts—no hacks inside src/ modules.
+- Preserve SAMPLE pivot behavior; avoid toggling detector pivots while logging data.
+- Ensure logs print double precision (%.15g) to match existing trace tooling.
+- Avoid `pytest` entirely this loop; Evidence phase forbids it.
+- Verify `NB_C_BIN` points to the instrumented binary before running.
+- Don’t rely on cached pixel coordinates—reinitialize detector if basis vectors change.
+- Retain the `TRACE_*` prefixes exactly; comparison tooling expects them.
 Pointers:
-- plans/active/cli-noise-pix0/plan.md:180
-- docs/fix_plan.md:451
-- reports/2025-10-cli-flags/phase_k/f_latt_fix/analyze_scaling.py
-- reports/2025-10-cli-flags/phase_j/trace_c_scaling.log
-- src/nanobrag_torch/models/crystal.py:828
-- golden_suite_generator/nanoBragg.c:3038
-- specs/spec-a-core.md §4.3
-Next Up:
-1. After per-φ evidence, implement φ sampling fix (K3f) and rerun scaling-chain validation.
-2. Once F_latt parity holds, close K3c with targeted pytest + doc refresh before attempting Phase L.
+- plans/active/cli-noise-pix0/plan.md (Phase K3f tasks)
+- docs/fix_plan.md (CLI-FLAGS-003 entry)
+- docs/architecture/detector.md (§5 pix0 & pivots)
+- docs/architecture/pytorch_design.md (§2 lattice pipeline)
+- specs/spec-a-core.md (§4 lattice factor equations)
+Next Up: Phase K3f3 diff/summary once both traces land.
