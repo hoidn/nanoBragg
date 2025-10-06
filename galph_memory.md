@@ -1023,3 +1023,13 @@ Follow-ups for Ralph:
 - Updated docs/fix_plan.md Next Actions to focus on executing Phase G3, refreshing parity artifacts, and sequencing Phase H afterwards.
 - Authored new input.md guiding Ralph through MOSFLM-aware trace harness updates, regenerated C/Py traces, nb-compare parity rerun, regression tests, and docs/fix_plan Attempt #18 logging.
 - Determined no additional planning document required; vectorization roadmap stays queued until CLI parity artifacts turn green.
+
+## 2025-10-06 (galph loop — Phase H lattice kickoff)
+- Sync clean (4dab2ea). Reviewed required specs, architecture docs, testing strategy, `plans/active/*`, and `docs/fix_plan.md` per SOP before analysis.
+- Goal 1 status: Orientation ingestion + MOSFLM transpose fixes landed (commits 2bc6f4e, b73f0e2), yet traces still show `hkl_frac` ≈ (2.098, 2.017, -12.871) vs C (2.001, 1.993, -12.991) and `F_latt` 62.68 vs 3.56e4, so intensity parity remains off by ~1e5×.
+- Updated `plans/active/cli-noise-pix0/plan.md` to add Phase H (lattice structure factor alignment) with tasks H1–H3 and moved polarization to new Phase I. Context now calls out the lattice gap and sequencing (H before I).
+- Refreshed `docs/fix_plan.md` `[CLI-FLAGS-003]` entry: status line now lists phases completed, Next Actions target Phase H artifacts under `reports/2025-10-cli-flags/phase_h/`, exit criteria include Phase H lattice + Phase I polarization.
+- Coin flip=heads triggered a review of Ralph’s recent work: orientation ingestion commits solid (tests pass, MOSFLM parity proven) but Phase H remains unstarted; harness still overrides beam vector manually. Feedback: evidence first, no polarization tweaks yet.
+- Vectorization goal unchanged — plan stays at Phase A evidence until CLI parity narrows the gap.
+- Authored new 106-line input.md directing Ralph to clone the trace harness, remove manual beam override, capture fresh PyTorch traces/diffs, and log findings (reports/2025-10-cli-flags/phase_h/*). Added reporting checklist + reference metrics.
+- Follow-ups for Ralph next loop: execute Phase H1 evidence capture, then tackle Phase H2 sincg/NaNbNc diagnosis, defer polarization (Phase I) and `scaled.hkl.1` cleanup until lattice parity improves.

@@ -2,7 +2,7 @@
 - Initiative: CLI Parity for nanoBragg PyTorch vs C (supports long-term goal in prompts/supervisor.md)
 - Phase Goal: Accept `-nonoise` and `-pix0_vector_mm` flags with C-equivalent semantics so the parallel comparison command in prompts/supervisor.md executes end-to-end.
 - Dependencies: specs/spec-a-cli.md §§3.2–3.4, docs/architecture/detector.md §5, docs/development/c_to_pytorch_config_map.md (detector pivot + noise), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860 (flag behavior), docs/debugging/detector_geometry_checklist.md (pix0 validation), docs/development/testing_strategy.md §2 (CLI parity tests).
-- Current gap snapshot (2025-10-17 refresh): Phase F1/F2 delivered custom beam-vector wiring and the full CUSTOM pix0 transform, with validation artifacts under `reports/2025-10-cli-flags/phase_f*/`. The parity rerun (F3) remains outstanding, and C traces continue to show the MOSFLM orientation missing because `-mat` still collapses to canonical vectors. Polarization (C Kahn ≈0.913 vs PyTorch 1.0) stays deferred until geometry parity lands.
+- Current gap snapshot (2025-10-17 refresh): Phase F1/F2 delivered custom beam-vector wiring and the full CUSTOM pix0 transform, with validation artifacts under `reports/2025-10-cli-flags/phase_f*/`. The parity rerun (F3) remains outstanding. Traces now confirm MOSFLM orientation parity, but `hkl_frac` and lattice structure factor terms still diverge (PyTorch `F_latt≈6.3e1` vs C `3.6e4`). We must align the scattering/lattice pipeline (new Phase H) before tackling polarization (Phase I) where C’s Kahn factor ≈0.913 vs PyTorch 1.0.
 - Evidence status: Phase E artifacts (`reports/2025-10-cli-flags/phase_e/`) hold C/PyTorch traces, diffs, and beam-vector checks. Current harness injects the custom beam vector manually; CLI parity requires native wiring.
 
 ### Phase A — Requirements & Trace Alignment
@@ -88,13 +88,24 @@ Exit Criteria: Crystal trace (rotated a/b/c vectors) aligns with C for the super
 | G2 | Teach `Crystal` to ingest orientation | [D] | ✅ 2025-10-17 Attempt #17 (ralph). Modified `Crystal.compute_cell_tensors()` (lines 545-603) to detect MOSFLM orientation in config, convert to tensors with proper device/dtype, and integrate with Core Rules 12-13 pipeline. Tests: 26/26 passed (CLI), 35/35 passed (crystal). Metric duality perfect. Artifacts: `reports/2025-10-cli-flags/phase_g/README.md`. |
 | G3 | Trace verification + parity rerun | [D] | ✅ 2025-10-06 Attempt #18 (ralph). Fixed MOSFLM matrix transpose bug (`src/nanobrag_torch/io/mosflm.py:88`). Reciprocal vectors now match C exactly (9/9 components to 16 decimals). Miller indices match: (2,2,-13). F_cell perfect match: 300.58. Real vectors within 0.05Å (<0.2% error). Artifacts: `reports/2025-10-cli-flags/phase_g/trace_summary_orientation_fixed.md`, `traces/trace_c.log`, `traces/trace_py_fixed.log`. Intensity parity still divergent (deferred to Phase H polarization). |
 
-### Phase H — Polarization Alignment (follow-up)
-Goal: Match C’s Kahn polarization factor once geometry aligns.
-Prereqs: Phases F and G complete; traces confirm geometry parity.
+### Phase H — Lattice Structure Factor Alignment
+Goal: Bring scattering vector (`hkl_frac`) and lattice structure factor (`F_latt*`) parity in line with C so intensity mismatches narrow before polarization work.
+Prereqs: Phases F and G complete; orientation traces captured (Phase G3 artifacts in place).
+Exit Criteria: Trace comparison shows `h`, `k`, `l` fractional components within 1e-3 of C, `F_latt_a/b/c` within 0.5% (signed), and a parity rerun demonstrates ≥0.95 correlation improvement attributable to lattice fixes (polarization still disabled).
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| H1 | Refresh trace evidence post-orientation | [ ] | Re-run `reports/2025-10-cli-flags/phase_e/trace_harness.py` (updated to drop manual beam override) so the PyTorch trace reflects current CLI wiring. Store diff under `reports/2025-10-cli-flags/phase_h/trace_comparison.md`, highlighting `hkl_frac` and `F_latt*` deltas. |
+| H2 | Diagnose & fix lattice mismatch | [ ] | Compare C lattice pipeline (`nanoBragg.c:3005-3178`) with `Simulator._compute_intensity()` to pinpoint the divergence (likely sincg input or Na/Nb/Nc scaling). Implement fix preserving vectorization/device neutrality; capture rationale in `phase_h/implementation_notes.md`. |
+| H3 | Validate lattice parity | [ ] | Re-run C/PyTorch parity (float image + trace) without polarization, confirm `F_latt` components align within tolerance and intensity gap narrows (<10×). Update docs/fix_plan Attempt log with findings and artifacts under `phase_h/parity_after_lattice_fix/`. |
+
+### Phase I — Polarization Alignment (follow-up)
+Goal: Match C’s Kahn polarization factor once lattice geometry aligns.
+Prereqs: Phases F–H complete; traces show `F_latt` parity.
 Exit Criteria: Polarization entries in C/PyTorch traces agree (≈0.9126 for supervisor command) and parity smoke stays green.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| H1 | Audit polarization inputs | [ ] | Review CLI defaults/flags (`-polar`, `-nopolar`) and C calculations (nanoBragg.c:2080-2155); map them to PyTorch simulator inputs. |
-| H2 | Implement polarization parity | [ ] | Update simulator polarization handling to compute Kahn factor per spec/C reference. Document conversions and add targeted regression tests. |
-| H3 | Final parity sweep | [ ] | Rerun supervisor command traces verifying polarization parity; update docs/fix_plan.md with closure summary and archive plan. |
+| I1 | Audit polarization inputs | [ ] | Review CLI defaults/flags (`-polar`, `-nopolar`) and C calculations (nanoBragg.c:2080-2155); map them to PyTorch simulator inputs. |
+| I2 | Implement polarization parity | [ ] | Update simulator polarization handling to compute Kahn factor per spec/C reference. Document conversions and add targeted regression tests. |
+| I3 | Final parity sweep | [ ] | Rerun supervisor command traces verifying polarization parity; update docs/fix_plan.md with closure summary and archive plan. |
