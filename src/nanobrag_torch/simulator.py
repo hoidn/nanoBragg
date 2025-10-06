@@ -456,31 +456,15 @@ class Simulator:
         self.printout_pixel = self.debug_config.get('printout_pixel', None)  # [fast, slow]
         self.trace_pixel = self.debug_config.get('trace_pixel', None)  # [slow, fast]
 
-        # Set incident beam direction based on detector convention
-        # This is critical for convention consistency (AT-PARALLEL-004)
-        from .config import DetectorConvention
-
-        if self.detector is not None and hasattr(self.detector, 'config'):
-            if self.detector.config.detector_convention == DetectorConvention.MOSFLM:
-                # MOSFLM convention: beam along +X axis
-                self.incident_beam_direction = torch.tensor(
-                    [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
-                )
-            elif self.detector.config.detector_convention == DetectorConvention.XDS:
-                # XDS convention: beam along +Z axis
-                self.incident_beam_direction = torch.tensor(
-                    [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
-                )
-            elif self.detector.config.detector_convention == DetectorConvention.DIALS:
-                # DIALS convention: beam along +Z axis (same as XDS)
-                self.incident_beam_direction = torch.tensor(
-                    [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
-                )
-            else:
-                # Default to MOSFLM beam direction
-                self.incident_beam_direction = torch.tensor(
-                    [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
-                )
+        # Set incident beam direction from detector.beam_vector
+        # This is critical for convention consistency (AT-PARALLEL-004) and CLI override support (CLI-FLAGS-003 Phase H2)
+        # The detector.beam_vector property handles both convention defaults and CUSTOM overrides (e.g., -beam_vector)
+        if self.detector is not None:
+            # Use detector's beam_vector property which handles:
+            # - CUSTOM convention with user-supplied custom_beam_vector
+            # - Convention defaults (MOSFLM: [1,0,0], XDS/DIALS: [0,0,1])
+            # The detector normalizes and returns the vector with correct device/dtype
+            self.incident_beam_direction = self.detector.beam_vector.clone()
         else:
             # If no detector provided, default to MOSFLM beam direction
             self.incident_beam_direction = torch.tensor(

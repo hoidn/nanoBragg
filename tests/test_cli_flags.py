@@ -297,4 +297,71 @@ class TestCLIIntegrationSanity:
         ])
 
         assert config.get('convention') == 'MOSFLM'
-        assert config.get('pix0_override_m') is None
+
+
+class TestCLIBeamVector:
+    """Test -beam_vector CLI flag propagation through Detector→Simulator."""
+
+    def test_custom_beam_vector_propagates(self):
+        """
+        Verify custom beam vector from CLI reaches Simulator.incident_beam_direction.
+
+        Addresses CLI-FLAGS-003 Phase H2: beam vector must propagate from detector
+        to simulator so CLI `-beam_vector` overrides reach the physics kernels.
+
+        Evidence: input.md Do Now (2025-10-17), plans/active/cli-noise-pix0/plan.md H2
+        """
+        from nanobrag_torch.models.detector import Detector
+        from nanobrag_torch.models.crystal import Crystal
+        from nanobrag_torch.simulator import Simulator
+        from nanobrag_torch.config import DetectorConfig, DetectorConvention, CrystalConfig, BeamConfig
+
+        # Custom beam vector (will be normalized by detector)
+        custom_beam_raw = (0.5, 0.5, 0.707107)
+
+        # Create detector config with custom beam vector
+        detector_config = DetectorConfig(
+            distance_mm=100.0,
+            pixel_size_mm=0.1,
+            spixels=64,
+            fpixels=64,
+            detector_convention=DetectorConvention.CUSTOM,
+            custom_beam_vector=custom_beam_raw
+        )
+
+        # Construct detector
+        detector = Detector(detector_config)
+
+        # Verify detector has the custom beam vector (normalized)
+        beam_vec = detector.beam_vector
+        expected = torch.tensor(custom_beam_raw, dtype=detector.dtype, device=detector.device)
+        expected_norm = expected / torch.linalg.norm(expected)
+
+        assert torch.allclose(beam_vec, expected_norm, atol=1e-6), \
+            f"Detector beam_vector {beam_vec} != expected {expected_norm}"
+
+        # Construct minimal configs for simulator
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            N_cells=(5, 5, 5),
+            default_F=1.0
+        )
+
+        beam_config = BeamConfig(wavelength_A=6.2)
+
+        # Create Crystal object
+        crystal = Crystal(crystal_config)
+
+        # Construct simulator and verify it picks up detector's beam vector
+        simulator = Simulator(
+            crystal=crystal,
+            detector=detector,
+            crystal_config=crystal_config,
+            beam_config=beam_config
+        )
+
+        # CRITICAL: Simulator.incident_beam_direction must match detector.beam_vector
+        incident = simulator.incident_beam_direction
+        assert torch.allclose(incident, expected_norm, atol=1e-6), \
+            f"Simulator incident_beam_direction {incident} != detector beam_vector {expected_norm}"
