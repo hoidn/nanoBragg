@@ -10,7 +10,7 @@ from pathlib import Path
 from subprocess import Popen, PIPE
 
 from .state import OrchestrationState
-from .git_bus import safe_pull, add, commit, push_to, short_head, assert_on_branch, current_branch
+from .git_bus import safe_pull, add, commit, push_to, short_head, assert_on_branch, current_branch, has_unpushed_commits, push_with_rebase
 
 
 def _log_file(prefix: str) -> Path:
@@ -164,7 +164,8 @@ def main() -> int:
         if not safe_pull(lambda m: None):
             # Pre-pull fallback: attempt doc/meta auto-commit if enabled, then retry pull
             if args.prepull_auto_commit_docs:
-                if _supervisor_autocommit_docs(args, lambda m: None):
+                committed, forbidden = _supervisor_autocommit_docs(args, lambda m: None)
+                if committed and not forbidden:
                     if not safe_pull(lambda m: None):
                         print("[sync] ERROR: git pull failed after pre-pull auto-commit; see iter log.")
                         return 1
@@ -182,7 +183,8 @@ def main() -> int:
 
         if not safe_pull(logp):
             if args.prepull_auto_commit_docs:
-                if _supervisor_autocommit_docs(args, logp):
+                committed, forbidden = _supervisor_autocommit_docs(args, logp)
+                if committed and not forbidden:
                     if not safe_pull(logp):
                         print("[sync] ERROR: git pull failed after pre-pull auto-commit; see iter log.")
                         return 1
@@ -192,6 +194,16 @@ def main() -> int:
             else:
                 print("[sync] ERROR: git pull failed; see iter log for details.")
                 return 1
+
+        # Resume mode: if a local stamped handoff exists but isn't pushed yet, publish and skip work
+        st_local_probe = OrchestrationState.read(str(args.state_file))
+        if (st_local_probe.expected_actor != "galph" or st_local_probe.status in {"waiting-ralph", "failed"}) and has_unpushed_commits():
+            logp("[sync] Detected local stamped handoff with unpushed commits; attempting push-only reconciliation.")
+            if not push_with_rebase(branch_target, logp):
+                print("[sync] ERROR: failed to push local stamped handoff; resolve and retry.")
+                return 1
+            # Continue to next supervisor iteration
+            continue
 
         # Initialize state if missing
         if not args.state_file.exists():
@@ -242,35 +254,35 @@ def main() -> int:
         # Execute one supervisor iteration
         rc = tee_run([args.codex_cmd, "exec", "-m", "gpt-5-codex", "-c", "model_reasoning_effort=high", "--dangerously-bypass-approvals-and-sandbox"], Path("prompts/supervisor.md"), iter_log)
 
-        if not safe_pull(logp):
-            print("[sync] ERROR: git pull failed after supervisor run; see iter log.")
-            return 1
         sha = short_head()
 
-        # Auto-commit doc/meta hygiene (supervisor only)
-        if rc == 0 and args.auto_commit_docs:
+        # Determine post-run success without early-returning
+        post_ok = (rc == 0)
+        if args.auto_commit_docs:
             committed_docs, forbidden = _supervisor_autocommit_docs(args, logp)
             if forbidden:
-                print("[sync] ERROR: Uncommitted changes outside doc/meta whitelist:")
-                for p in forbidden:
-                    print(f" - {p}")
-                print("Please commit/stash these changes or adjust the whitelist before supervisor handoff.")
-                return 1
+                logp("[sync] Doc/meta whitelist violation detected; marking post-run as failed.")
+                post_ok = False
 
+        # Stamp FIRST (idempotent): write local handoff or failure before any pushes
         st = OrchestrationState.read(str(args.state_file))
-        if rc == 0:
+        if post_ok:
             st.stamp(expected_actor="ralph", status="waiting-ralph", galph_commit=sha)
             st.write(str(args.state_file))
             add([str(args.state_file)])
             commit(f"[SYNC i={st.iteration}] actor=galph → next=ralph status=ok galph_commit={sha}")
-            push_to(branch_target, logp)
         else:
             st.stamp(expected_actor="galph", status="failed", galph_commit=sha)
             st.write(str(args.state_file))
             add([str(args.state_file)])
             commit(f"[SYNC i={st.iteration}] actor=galph status=fail galph_commit={sha}")
-            push_to(branch_target, logp)
-            logp(f"Supervisor iteration failed rc={rc}. Halting.")
+
+        # Publish stamped state. If push fails, exit; restart will resume push without re-running work.
+        if not push_with_rebase(branch_target, logp):
+            print("[sync] ERROR: failed to push stamped state; resolve and relaunch to resume push.")
+            return 1
+        if not post_ok:
+            logp(f"Supervisor iteration failed rc={rc}. Stamped failure and pushed; exiting.")
             return rc
 
         # Wait for Ralph to finish and increment iteration

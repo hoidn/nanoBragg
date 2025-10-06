@@ -99,6 +99,30 @@ def push_to(branch: str, log_print, remote: str = "origin") -> None:
     if cp.stderr:
         log_print(cp.stderr.rstrip())
 
+def push_with_rebase(branch: str, log_print, remote: str = "origin") -> bool:
+    """
+    Try to push HEAD to the given remote branch. If rejected, attempt
+    to reconcile by pulling/rebasing and retry the push. Returns True
+    on success, False otherwise.
+    """
+    cp = _run(["git", "push", remote, f"HEAD:{branch}"])
+    if cp.stdout:
+        log_print(cp.stdout.rstrip())
+    if cp.returncode == 0:
+        if cp.stderr:
+            log_print(cp.stderr.rstrip())
+        return True
+    if cp.stderr:
+        log_print(cp.stderr.rstrip())
+    # Attempt to reconcile and retry
+    safe_pull(log_print)
+    cp2 = _run(["git", "push", remote, f"HEAD:{branch}"])
+    if cp2.stdout:
+        log_print(cp2.stdout.rstrip())
+    if cp2.stderr:
+        log_print(cp2.stderr.rstrip())
+    return cp2.returncode == 0
+
 
 def short_head() -> str:
     cp = _run(["git", "rev-parse", "--short", "HEAD"]) 
