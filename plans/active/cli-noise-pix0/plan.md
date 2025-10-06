@@ -96,8 +96,8 @@ Exit Criteria: Trace comparison shows `h`, `k`, `l` fractional components within
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | H1 | Refresh trace evidence post-orientation | [D] | ✅ 2025-10-17: `reports/2025-10-cli-flags/phase_h/trace_harness.py` + `trace_comparison.md` captured the no-override trace and logged Attempt #19 (beam vector divergence documented). |
-| H2 | Fix incident beam propagation from CLI | [ ] | Update `Simulator` initialization to consume `detector.beam_vector` (preserving device/dtype + normalization) so CLI `-beam_vector` reaches physics kernels; rerun `trace_harness.py` to confirm `incident_vec` matches C before proceeding. Record notes in `phase_h/implementation_notes.md`. |
-| H3 | Diagnose & fix residual lattice mismatch | [ ] | Once beam vector parity is green, compare `F_latt*` and `hkl_frac` vs C (nanoBragg.c:3005-3178) to locate remaining divergence (likely sincg input or Na/Nb/Nc scaling). Implement fixes without breaking vectorization/device neutrality; document in `phase_h/implementation_notes.md`. |
+| H2 | Fix incident beam propagation from CLI | [D] | ✅ 2025-10-17 Attempt #20 (ralph). Simulator now clones `detector.beam_vector` (commit 8c1583d); regression covered by `tests/test_cli_flags.py::TestCLIBeamVector::test_custom_beam_vector_propagates`. Pending: rerun `phase_h/trace_harness.py` to confirm `incident_vec` parity before Phase H3. |
+| H3 | Diagnose & fix residual lattice mismatch | [ ] | After confirming `incident_vec` via `phase_h/trace_harness.py`, diff `F_latt*`/`hkl_frac` against C (`nanoBragg.c` 3005-3178). Track hypotheses in `phase_h/implementation_notes.md` (suspect sincg arguments or Na/Nb/Nc scaling) while keeping vectorization/device neutrality intact. |
 | H4 | Validate lattice parity | [ ] | Re-run C/PyTorch parity (float image + trace) with polarization disabled, confirm `F_latt` components within 0.5% and intensity gap <10×. Archive metrics under `phase_h/parity_after_lattice_fix/` and update docs/fix_plan Attempt log. |
 
 ### Phase I — Polarization Alignment (follow-up)
