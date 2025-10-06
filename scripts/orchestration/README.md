@@ -78,6 +78,9 @@ This README documents the cross‑machine orchestration for the supervisor (galp
       - Files must be ≤ `--max-autocommit-bytes` (default 1,048,576 bytes)
       - Any dirty tracked changes outside the whitelist cause a clear error and the handoff is aborted (no state flip)
     - Configure whitelist via `--autocommit-whitelist a,b,c` and size via `--max-autocommit-bytes N`
+  - `--prepull-auto-commit-docs` / `--no-prepull-auto-commit-docs` (default: on)
+    - If the initial git pull fails (e.g., due to local modified doc/meta files), supervisor will attempt a doc/meta whitelist auto‑commit first, then retry the pull.
+    - If non‑whitelisted dirty files are present, the supervisor exits with a clear error (prevents accidental commits of code/large files).
 - Loop
   - `--sync-via-git` · `--sync-loops N` · `--poll-interval S` · `--max-wait-sec S`
   - `--branch NAME` · `--logdir PATH` · `--prompt {main,debug}`
