@@ -553,6 +553,23 @@
       - **Instrumentation coverage:** Captured convention, angles, beam_center (Xclose/Yclose), Fclose/Sclose/close_distance/ratio/distance, term decomposition, pix0 before/after rotations, basis vectors before/after rotations/twotheta
       - **Next critical step:** Phase H6b must generate matching PyTorch trace with identical variable names/units to enable line-by-line diff and identify first divergence
     Next Actions: Proceed to Phase H6b (extend PyTorch trace harness to emit matching TRACE_PY lines from `_calculate_pix0_vector()`), then Phase H6c (diff traces and document first divergence in analysis.md).
+  * [2025-10-06] Attempt #37 (ralph) — Result: **EVIDENCE COMPLETE** (Phase H6b PyTorch trace harness instrumented). **PyTorch pix0 trace captured with TRACE_PY lines matching C format.**
+    Metrics: Evidence-only loop. Wall-clock ~8s. PyTorch harness executed with PYTHONPATH=src (editable install) and detector_pivot auto-selection. Trace output 73 lines (21 TRACE_PY pix0 lines + 52 simulator trace lines).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_h6/py_trace/trace_py_pix0.log` - Full PyTorch trace (73 lines, TRACE_PY format matching C)
+      - `reports/2025-10-cli-flags/phase_h6/py_trace/trace_py_pix0.stderr` - Stderr confirming pixel (1039, 685) trace completed
+      - `reports/2025-10-cli-flags/phase_h6/py_trace/env_snapshot.txt` - Environment variables snapshot (55 lines)
+      - `reports/2025-10-cli-flags/phase_h6/py_trace/git_context.txt` - Git commit reference (cb5daae)
+      - `reports/2025-10-cli-flags/phase_h/trace_harness.py:30-122` - Patched Detector.__init__ to emit TRACE_PY lines post-geometry-setup
+    Observations/Hypotheses:
+      - **PyTorch pix0:** (-0.216337, 0.215207, -0.230198) meters
+      - **C pix0 (reference):** (-0.216476, 0.216343, -0.230192) meters
+      - **Deltas:** ΔX = +139 µm, ΔY = -1136 µm, ΔZ = -6 µm
+      - **Large ΔS persists:** 1.1 mm slow-axis error remains after Phase H5e unit fix, indicating deeper divergence in pix0 calculation
+      - **Instrumentation complete:** Captured detector_convention, angles (radians), beam_center_m (Xclose/Yclose), initial basis vectors, Fclose/Sclose, close_distance, ratio, distance, term_fast/slow/close_before_rot, pix0 (before/after rotations), final basis vectors, twotheta_axis
+      - **Harness improvements:** Removed hard-coded DetectorPivot.BEAM (line 114) to allow natural SAMPLE pivot selection; patched Detector.__init__ instead of non-existent _configure_geometry method; added term_* emission for all CUSTOM cases with custom vectors (not pivot-gated)
+      - **Editable install confirmed:** PYTHONPATH=src used throughout (per Phase H6b guardrails); trace reflects current detector.py implementation
+    Next Actions: **Phase H6c required** — Diff C vs PyTorch traces line-by-line (use `diff -u reports/2025-10-cli-flags/phase_h6/c_trace/trace_c_pix0_clean.log reports/2025-10-cli-flags/phase_h6/py_trace/trace_py_pix0.log | grep '^[-+]' | head -50`), identify first divergence in term_* or intermediate calculations, document in `reports/2025-10-cli-flags/phase_h6/analysis.md`, update `phase_h5/parity_summary.md` with findings, and propose corrective action (missing MOSFLM offset? beam_vector scaling? Fclose/Sclose calculation difference?).
   * [2025-10-06] Attempt #29 (ralph loop) — Result: Phase H5a EVIDENCE-ONLY COMPLETE. **C-code pix0 override behavior with custom vectors documented.**
     Metrics: Evidence-only loop. Two C runs executed: WITH override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m) and WITHOUT override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m). Identical geometry values confirm override is ignored when custom vectors are present.
     Artifacts:
