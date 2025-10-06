@@ -1,111 +1,65 @@
-Summary: Capture post-unit-fix pix0 traces so Phase K consumes fresh geometry evidence before any new code.
+Summary: Pin down the pix0 divergence by adding matched C/Py instrumentation before resuming normalization work.
 Phase: Evidence
-Focus: CLI-FLAGS-003 Phase H5c trace refresh
+Focus: CLI-FLAGS-003 Phase H6 — Pix0 Divergence Isolation
 Branch: feature/spec-based-2
 Mapped tests: none — evidence-only
-Artifacts: reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/trace_py.log
-Artifacts: reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/trace_py.stdout
-Artifacts: reports/2025-10-cli-flags/phase_h5/parity_summary.md
-Do Now: CLI-FLAGS-003 Phase H5c — Capture post-unit-fix trace; run `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_h/trace_harness.py --out reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/trace_py.log`
-If Blocked: Log the failure (command + stderr) to reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/attempt_log.md and halt for supervisor guidance.
+Artifacts: reports/2025-10-cli-flags/phase_h6/c_trace/trace_c_pix0.log
+Artifacts: reports/2025-10-cli-flags/phase_h6/py_trace/trace_py_pix0.log
+Artifacts: reports/2025-10-cli-flags/phase_h6/analysis.md
+Do Now: CLI-FLAGS-003 Phase H6a — capture C pix0 trace; run `NB_C_BIN=./golden_suite_generator/nanoBragg ./golden_suite_generator/nanoBragg -mat A.mat -floatfile img.bin -hkl scaled.hkl -nonoise -nointerpolate -oversample 1 -exposure 1 -flux 1e18 -beamsize 1.0 -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080 -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866 -beam_vector 0.00051387949 0.0 -0.99999986 -Na 36 -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0 2>&1 | tee reports/2025-10-cli-flags/phase_h6/c_trace/trace_c_pix0.log`
+If Blocked: Capture stderr/stdout to `reports/2025-10-cli-flags/phase_h6/attempt_log.md`, note the failing step (instrumentation, build, or run), and halt for supervisor guidance.
 
-Timeline:
-01. Confirm `NB_C_BIN=./golden_suite_generator/nanoBragg` remains exported in the shell; note it in attempt log.
-02. Ensure editable install still active; no reinstall needed unless torch import fails.
-03. Create `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/` before running harness.
-04. Execute the Do Now trace harness; tee stdout to trace_py.stdout for later diffing.
-05. Immediately copy `trace_py.log` to a scratch diff view against the 2025-10-22 baseline to spot unit-fix deltas.
-06. Compute Δpix0, ΔFbeam, ΔSbeam manually (spreadsheet or python) and jot them into attempt log.
-07. Verify the trace still reports the corrected `incident_vec` and rotated reciprocal vectors; flag any regressions.
-08. Update `reports/2025-10-cli-flags/phase_h5/parity_summary.md` with the new numeric deltas and tolerance checks.
-09. Note in the summary whether `F_latt` ratios now fall inside 1e-3; this informs Phase K2 readiness.
-10. Stage screenshots or diff snippets only if values look suspicious; otherwise keep artifacts textual.
-11. Append Attempt #35 to docs/fix_plan.md with metrics, deltas, and artifact paths.
-12. Mark H5c as done in plans/active/cli-noise-pix0/plan.md once evidence is committed.
-13. Leave a short README stub in the new trace directory summarising the command, git hash, and environment variables.
-14. Double-check no new binary files (e.g., .npy) were produced—cleanup immediately if so.
-15. Signal completion in Attempts History and pause before touching Phase K2 tasks.
-16. Re-run the harness if stdout shows missing TRACE_PY lines; stale caches can drop signals.
-17. Capture a quick checksum (`shasum`) of trace_py.log and add it to the attempt log for reproducibility.
-18. Note current git commit (`git rev-parse HEAD`) inside the trace README.
-19. Record wall-clock runtime of the harness; large drifts may hint at hidden device switches.
-20. Verify locks on reports directory (no leftover write permissions issues) before proceeding.
-21. Snapshot `env | sort` into the attempt log to document environment variables used.
-22. After editing docs, re-open them to confirm UTF-8 encoding only—no stray BOM characters.
-23. Stage files incrementally and run `git diff --cached` to ensure only evidence files appear.
-24. Draft the docs/fix_plan attempt entry in a scratch buffer before committing to avoid typos.
-25. Re-read the updated plan row to make sure guidance still matches the recorded artifacts.
+Instrumentation Checklist:
+- Add `TRACE_C:` lines near pix0 math in `golden_suite_generator/nanoBragg.c` (beam center parsing, Fbeam/Sbeam, r_factor, close_distance, pix0 components).
+- Touch `reports/2025-10-cli-flags/phase_h/trace_harness.py` only through hooks; avoid embedding business logic in the script body.
+- Keep trace variable names identical between C and PyTorch (`TRACE_C: Fbeam_mm`, `TRACE_PY: Fbeam_mm`, etc.).
+- Record git hashes (`git rev-parse HEAD`, `git -C golden_suite_generator rev-parse HEAD`) inside each trace README.
+- Store environment snapshot with `env | sort > .../env_snapshot.txt` to replicate runs later.
+- Use `shasum -a 256` for each log and include the checksum inside the README.
+- After instrumentation, rebuild C binary via `make -C golden_suite_generator` and note compiler flags.
+- Preserve existing trace harness CLI; add new options only if strictly necessary and document them in the README.
+- Ensure all new directories live under `reports/2025-10-cli-flags/phase_h6/` to keep provenance tidy.
+- Update docs/fix_plan.md Attempt #36 immediately after capturing both traces.
 
 Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md:127 keeps H5c open; new traces are prerequisite for K2/K3.
-- docs/fix_plan.md:470-517 demands refreshed pix0 evidence plus scaling reruns before normalization continues.
-- reports/2025-10-cli-flags/phase_h5/parity_summary.md:6-18 now warns that current metrics predate Attempt #33.
-- specs/spec-a-core.md:70-120 mandates <5e-5 m pix0 tolerance; we must document compliance.
+- plans/active/cli-noise-pix0/plan.md:134-153 documents Phase H6 tasks required before K2 resumes.
+- docs/fix_plan.md:455-484 now mandates H6 instrumentation and a fresh Attempt #36 log before normalization.
+- docs/architecture/detector.md:35-82 contains the canonical BEAM pivot pix0 formula we must validate line-by-line.
+- specs/spec-a-cli.md:120-152 reiterates CUSTOM convention precedence and pivot side-effects relevant to pix0 overrides.
 
 How-To Map:
-- Export `KMP_DUPLICATE_LIB_OK=TRUE` for every python invocation; without it the harness may trip MKL.
-- Run the Do Now command from repo root so relative paths resolve; capture stdout with `tee` to keep a textual artifact.
-- Use `python -m filecmp` or `diff -u` to compare new trace against `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/trace_py.log`; record key differences.
-- Update `parity_summary.md` by replacing the dated metrics table with the new numbers, noting pass/fail for pix0, F/S beams, and F_latt.
-- In docs/fix_plan.md, add Attempt #35 under CLI-FLAGS-003 with metrics (Δpix0, ΔFbeam, ΔSbeam, F_latt ratio) plus artifact references.
-- Stage only report/doc updates; leave git tree clean except for these evidence files.
-
-Trace Checklist:
-- pix0_vector_meters (three components) — confirm Δ < 5e-5 m vs C trace.
-- Fbeam/Sbeam scalars — ensure conversion now matches C within tolerance.
-- hkl_frac triplet — verify rounding to (2,2,-13) persists.
-- F_latt_a/b/c and product — expect close agreement with C once K1 fix in place.
-- omega_pixel_sr and polar — note values but defer detailed analysis to Phase K2.
+- Step 1: Apply C instrumentation (H6a) — insert `TRACE_C` outputs around `pix0_vector` calculation, rebuild with `make -C golden_suite_generator -j8`, and document changes in `c_trace/README.md`.
+- Step 2: Run the Do Now command, tee stdout, and clip the `TRACE_C` lines into `c_trace/trace_c_pix0.log`; append `git status --short` results to the README.
+- Step 3: Extend the PyTorch trace harness (H6b) to emit mirrored variables from `_calculate_pix0_vector()`; route output to `phase_h6/py_trace/trace_py_pix0.log` plus a matching README and env snapshot.
+- Step 4: Diff the traces (H6c) using `diff -u` or a notebook; summarize the first mismatch (units + magnitude) in `phase_h6/analysis.md` with direct line citations to both logs.
+- Step 5: Update `reports/2025-10-cli-flags/phase_h5/parity_summary.md` with a new section “Attempt #36 (Phase H6 diagnostics)” showing Δpix0/ΔFbeam/ΔSbeam values and the identified divergence.
+- Step 6: Edit docs/fix_plan.md Attempt history for CLI-FLAGS-003 with Attempt #36, referencing all new artifacts and proposed fix.
+- Step 7: Stage only reports/docs plus temporary instrumentation patches; if `nanoBragg.c` must stay instrumented for multiple loops, document the intent in Attempt history.
 
 Pitfalls To Avoid:
-- Do not rerun C trace; existing 2025-10-22 artifacts remain the comparator for this loop.
-- Skip pytest/nb-compare entirely—Evidence gate forbids test execution.
-- Resist tweaking simulator code; today is documentation + trace capture only.
-- Avoid creating new directories outside `reports/2025-10-cli-flags/phase_h5/`.
-- Keep device/dtype neutral commentary; trace harness already respects configs.
-- Protect docs/index.md and other protected assets per CLAUDE.md instructions.
-- Document every command in attempt log to maintain reproducibility.
-- If CUDA warms up unexpectedly, note it but do not debug—you’re on CPU path here.
-- Leave NB_RUN_PARALLEL unset so parity pytest stays skipped.
-- Don’t forget to commit/push the updated reports; supervisor automation expects clean git after run.
-
-Data Notes:
-- Baseline C trace: reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/with_override.log (use for diffing).
-- Previous PyTorch trace: reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/trace_py.log (contains pre-unit-fix pix0 error).
-- Attempt log template: reports/2025-10-cli-flags/phase_h5/py_traces/attempt_log_template.md (copy if blank).
-- Target tolerances: pix0 < 5e-5 m, F_latt ratio within 1e-3, h/k/l residuals < 1e-6.
-- Post-run checklist: update plan, fix_plan, parity_summary, and artifact README.
-
-Command Log Template:
-cmd01: export NB_C_BIN=./golden_suite_generator/nanoBragg
-cmd02: export KMP_DUPLICATE_LIB_OK=TRUE
-cmd03: mkdir -p reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24
-cmd04: PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_h/trace_harness.py --out reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/trace_py.log
-cmd05: tee reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/trace_py.stdout
-cmd06: diff -u reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/with_override.log reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/trace_py.log
-cmd07: python reports/2025-10-cli-flags/phase_j/analyze_scaling.py --py reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/trace_py.log --c reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/with_override.log --out reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/quick_ratio.md
-cmd08: git status --short
-cmd09: git add reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/*.log reports/2025-10-cli-flags/phase_h5/parity_summary.md docs/fix_plan.md plans/active/cli-noise-pix0/plan.md
-cmd10: git commit -m "CLI-FLAGS-003 H5c trace refresh"
-
-Post-Run Questions:
-- Did Δpix0 fall below 5e-5 m on all components?
-- Are F_latt ratios now within 1e-3 of C?
-- Did h,k,l fractional differences stay under 1e-6?
-- Any anomalies in omega or polar that require Phase K follow-up?
-
-Telemetry Checklist:
-log01: Harness wall-clock runtime (seconds).
-log02: SHA of trace_py.log (shasum -a 256).
-log03: Git commit hash recorded in attempt log.
-log04: Environment snapshot (`env | sort > ...`).
-log05: Notes on CPU vs GPU usage (should remain CPU).
-
+- Do not alter production simulator logic while instrumenting; confine changes to trace hooks and guard with `#ifdef TRACE_PIX0` if necessary.
+- Avoid rerunning pytest or nb-compare; Evidence phase forbids tests.
+- Keep Protected Assets untouched (docs/index.md, loop.sh, supervisor.sh, input.md).
+- Ensure C trace uses meters for pix0 components; note any mm intermediate conversions explicitly.
+- Prevent CLIs from emitting ANSI colour codes—use plain text for diffability.
+- Do not delete prior H5 assets; they remain the baseline comparator.
+- Revert instrumentation diffs after logs are captured unless further loops require them (capture rationale in Attempt #36).
+- Maintain device/dtype neutrality in PyTorch trace — no forced `.cpu()` or `.double()` just for logging.
+- Respect two-message loop policy: avoid triggering additional automation tracks.
+- Keep git history linear; avoid merge commits while instrumentation is in flight.
 
 Pointers:
-- plans/active/cli-noise-pix0/plan.md:120-133
-- docs/fix_plan.md:470-517
-- reports/2025-10-cli-flags/phase_h5/parity_summary.md:6-18
-- specs/spec-a-core.md:70-120
+- plans/active/cli-noise-pix0/plan.md:120-167
+- docs/fix_plan.md:448-530
+- docs/architecture/detector.md:35-112
+- docs/development/c_to_pytorch_config_map.md:60-110
+- docs/debugging/debugging.md:20-88
 
-Next Up: Phase K2 scaling-chain refresh after H5c evidence lands (stay on this focus until supervisor review).
+Telemetry Targets:
+- Record harness runtime and CPU info in each README.
+- Log the executed Do Now command verbatim for reproducibility.
+- Archive raw `TRACE_C/PY` snippets inside analysis.md for quick reference.
+- Tag Attempt #36 with `Phase H6` in docs/fix_plan.md to keep history searchable.
+- Catalog any instrumentation flags (e.g., `TRACE_PIX0=1`) used during builds.
+
+Next Up: Once pix0 parity (<5e-5 m) is proven, transition to Phase H5c closure followed by Phase K2 scaling-chain refresh.

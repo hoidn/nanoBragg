@@ -1207,3 +1207,11 @@ Follow-ups for Ralph:
 - Issued new supervisor memo (`input.md`) directing Ralph to execute H5c trace harness, capture artifacts under `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/`, and log Attempt #35; memo length trimmed to Evidence-only tasks with expanded timeline.
 - No code changes made; repo remains clean pending Ralph’s evidence.
 - Follow-up for Ralph: run Do Now command, update parity_summary + fix_plan attempt, then pause for supervisor review before touching Phase K2.
+
+## 2025-10-24 (galph loop — Phase H6 spin-up)
+- Coin flip = tails → skipped retrospective review; focused on active CLI parity gap per long-term Goal #1.
+- Deep analysis confirms pix0 parity still fails after Attempt #35 (ΔF ≈ -1.136 mm, ΔS ≈ +0.139 mm) even with beam-center mm→m fix; `plans/active/cli-noise-pix0/plan.md` lacked follow-up guidance.
+- Added Phase H6 section (H6a–H6d) to `plans/active/cli-noise-pix0/plan.md` and updated H5c state to [P]; plan now requires matched C/Py instrumentation to isolate `_calculate_pix0_vector` divergence.
+- Refreshed CLI-FLAGS-003 Next Actions in `docs/fix_plan.md` to mandate H6 evidence before resuming normalization (K2/K3).
+- Issued new `input.md` (Evidence phase) directing Ralph to instrument nanoBragg.c and the PyTorch trace harness, capture logs under `reports/2025-10-cli-flags/phase_h6/`, and log Attempt #36.
+- Follow-up for Ralph: execute Phase H6a/H6b/H6c tasks, update parity_summary + docs/fix_plan (Attempt #36), then coordinate a targeted fix to collapse pix0 deltas <5e-5 m before returning to Phase K.
