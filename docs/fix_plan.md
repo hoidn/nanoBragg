@@ -724,6 +724,24 @@
       - Base lattice traces still show historical 40× deltas until the harness is rerun; expect Δh/Δk/Δl < 5e-4 once logs refreshed.
       - Normalization parity remains to be confirmed via Phase K3g3 scaling rerun.
     Next Actions: Execute Phase K3g3 — rerun `tests/test_cli_scaling.py::test_f_latt_square_matches_c` with `NB_RUN_PARALLEL=1`, refresh `phase_k/f_latt_fix/` scaling_chain artifacts + nb-compare, then regenerate `trace_py.log` so summary diff reflects corrected vectors before moving to Phase L.
+  * [2025-10-06] Attempt #48 (galph) — Result: **PARITY FAILURE** (Phase K3g3 evidence collection). **MOSFLM rescale fix insufficient; correlation 0.174 indicates fundamental physics divergence.**
+    Metrics: Parity test FAILED with correlation=0.174 (<0.999 threshold), sum_ratio=1.45 (expect ~1.0), max_ratio=2.13, peak_distance=122–272 px (>1 px threshold). Dtype analysis (float32 vs float64) shows F_latt_b error=93.98% in BOTH dtypes, ruling out precision as root cause.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/pytest_post_fix.log` — pytest output showing test failure (correlation 0.174)
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/test_metrics_failure.json` — {c_sum: 1627779, py_sum: 2360700, sum_ratio: 1.45, correlation: 0.174}
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/nb_compare_post_fix/summary.json` — nb-compare metrics with PNGs (c.png, py.png, diff.png)
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/nb_compare_post_fix/README.md` — Executive summary with observations and next actions
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/analyze_output_post_fix_fp32.txt` — Float32 dtype sweep showing F_latt_b error 93.98%
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/analyze_output_post_fix_fp64.txt` — Float64 dtype sweep confirming error persists
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/scaling_chain.md` — Updated with Phase K3g3 failure metrics and blocker summary
+    Observations/Hypotheses:
+      - **Low correlation (0.174)** indicates images are nearly uncorrelated, suggesting fundamental physics divergence beyond simple scaling mismatch
+      - **Intensity excess (1.45× sum, 2.13× max)** shows PyTorch produces significantly brighter images overall
+      - **Peak displacement (122–272 px)** means Bragg peaks appear in completely different locations, not just intensity scaling
+      - **Dtype-independent error** rules out float32 precision; F_latt_b C=38.63 vs Py=2.33 (93.98% error) persists in float64
+      - **MOSFLM rescale fix (commit 46ba36b) verified** via Attempt #47, but parity test shows it's insufficient
+      - **Hypotheses:** (1) Base lattice vectors still diverge despite rescale fix (K3f traces needed), (2) Fractional Miller indices misaligned (Δk≈6.0 from K3e), (3) Additional geometry/physics bugs upstream of F_latt calculation
+    Next Actions: **Phase K3f base-lattice traces REQUIRED** — The MOSFLM rescale implementation is incomplete or the divergence occurs in a different component. Capture fresh C baseline for lattice + scattering (K3f1), extend PyTorch trace harness (K3f2), diff traces to isolate first divergence (K3f3), document root cause (K3f4). Phase L parity sweep remains blocked until correlation >0.999.
   * [2025-10-06] Attempt #29 (ralph loop) — Result: Phase H5a EVIDENCE-ONLY COMPLETE. **C-code pix0 override behavior with custom vectors documented.**
     Metrics: Evidence-only loop. Two C runs executed: WITH override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m) and WITHOUT override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m). Identical geometry values confirm override is ignored when custom vectors are present.
     Artifacts:
