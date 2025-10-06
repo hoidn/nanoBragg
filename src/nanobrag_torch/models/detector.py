@@ -625,9 +625,9 @@ class Detector:
 
         # ALWAYS recalculate close_distance from final pix0_vector (C code nanoBragg.c:1846)
         # This ensures consistency between pix0 and close_distance for all pivot modes
+        # CRITICAL: Keep as tensor for differentiability (Core Rule #9)
         close_dist_tensor = torch.dot(self.pix0_vector, self.odet_vec)
-        # Convert to scalar for consistency with existing code
-        self.close_distance = close_dist_tensor.item() if close_dist_tensor.dim() == 0 else close_dist_tensor
+        self.close_distance = close_dist_tensor
 
     def get_pixel_coords(self) -> torch.Tensor:
         """

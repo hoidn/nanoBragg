@@ -139,7 +139,7 @@ class TestDetectorOverridePersistence:
         # close_distance is recalculated from pix0 as dot(pix0, odet_vec) per C code line 1846
         # For MOSFLM odet=[1,0,0], close_distance = pix0[0] = 0.1
         assert det.r_factor == pytest.approx(1.0, rel=1e-9)
-        assert det.close_distance == pytest.approx(0.1, rel=1e-9)  # pix0[0] for MOSFLM
+        assert det.close_distance.item() == pytest.approx(0.1, rel=1e-9)  # pix0[0] for MOSFLM
 
     @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
     def test_detector_override_persistence_cuda(self):
@@ -175,7 +175,7 @@ class TestDetectorOverridePersistence:
         # close_distance is recalculated from pix0 as dot(pix0, odet_vec) per C code line 1846
         # For MOSFLM odet=[1,0,0], close_distance = pix0[0] = 0.1
         assert det.r_factor.cpu().item() == pytest.approx(1.0, rel=1e-9)
-        assert det.close_distance == pytest.approx(0.1, rel=1e-9)  # pix0[0] for MOSFLM
+        assert det.close_distance.cpu().item() == pytest.approx(0.1, rel=1e-9)  # pix0[0] for MOSFLM
 
     def test_detector_override_dtype_preservation(self):
         """Verify pix0 override preserves dtype across operations."""
