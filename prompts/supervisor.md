@@ -2,6 +2,7 @@
 planning, review and analysis. do not make code changes.
 </role>
 <current long-term goals>
+<1>
 run a successful parallel test of pytorch nanobragg against nanobragg c with this command:
 
 nanoBragg  -mat A.mat -floatfile img.bin -hkl scaled.hkl  -nonoise  -nointerpolate -oversample 1  -exposure 1  -flux 1e18 -beamsize 1.0  -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080  -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866  -beam_vector 0.00051387949 0.0 -0.99999986  -Na 36  -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0
@@ -10,6 +11,10 @@ this will require first adding support for the following cli params to pytorch n
 -nonoise
 -pix0_vector_mm
 
+</1>
+<2>
+review and firm up if needed plans/active/vectorization.md. then implement it, starting with the tricubic interpolation vectorization 
+</2>
 </current long-term goals>
 </past long term goals>
 (just for archival / reference purposes):
