@@ -62,6 +62,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Tuple, Union
 
+import numpy as np
 import torch
 
 
@@ -118,6 +119,13 @@ class CrystalConfig:
     # Random misset generation (for AT-PARALLEL-024)
     misset_random: bool = False  # If True, generate random misset angles using seed
     misset_seed: Optional[int] = None  # Seed for random misset generation (C-compatible LCG)
+
+    # MOSFLM matrix orientation (Phase G - CLI-FLAGS-003)
+    # When -mat file is provided, these store the MOSFLM A* orientation in Å⁻¹
+    # If None, Crystal uses canonical orientation from cell parameters
+    mosflm_a_star: Optional[np.ndarray] = None  # MOSFLM a* reciprocal vector (Å⁻¹)
+    mosflm_b_star: Optional[np.ndarray] = None  # MOSFLM b* reciprocal vector (Å⁻¹)
+    mosflm_c_star: Optional[np.ndarray] = None  # MOSFLM c* reciprocal vector (Å⁻¹)
 
     # Spindle rotation parameters
     phi_start_deg: float = 0.0

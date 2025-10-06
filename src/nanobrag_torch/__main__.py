@@ -427,6 +427,12 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
         cell_params = reciprocal_to_real_cell(a_star, b_star, c_star)
         config['cell_params'] = cell_params
 
+        # Phase G1: Store MOSFLM reciprocal vectors for Crystal orientation
+        # These are in Å⁻¹ and already wavelength-scaled from read_mosflm_matrix
+        config['mosflm_a_star'] = a_star  # numpy array from read_mosflm_matrix
+        config['mosflm_b_star'] = b_star
+        config['mosflm_c_star'] = c_star
+
         # Also store wavelength if not already set
         if 'wavelength_A' not in config:
             config['wavelength_A'] = wavelength_A
@@ -833,7 +839,11 @@ def main():
                 mosaic_domains=config.get('mosaic_domains', 1),
                 shape=CrystalShape[config.get('crystal_shape', 'SQUARE')],
                 fudge=config.get('fudge', 1.0),
-                default_F=config.get('default_F', 0.0)
+                default_F=config.get('default_F', 0.0),
+                # Phase G1: Pass MOSFLM orientation if provided
+                mosflm_a_star=config.get('mosflm_a_star'),
+                mosflm_b_star=config.get('mosflm_b_star'),
+                mosflm_c_star=config.get('mosflm_c_star')
             )
 
             if 'misset_deg' in config:
