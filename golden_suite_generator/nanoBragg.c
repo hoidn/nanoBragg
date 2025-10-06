@@ -1735,25 +1735,93 @@ int main(int argc, char** argv)
 
     if(detector_pivot == SAMPLE){
         printf("pivoting detector around sample\n");
+
+#ifdef TRACING
+        /* Set locale for consistent number formatting */
+        setlocale(LC_NUMERIC, "C");
+
+        /* Log convention and angles */
+        if(beam_convention == CUSTOM) printf("TRACE_C:detector_convention=CUSTOM\n");
+        else if(beam_convention == MOSFLM) printf("TRACE_C:detector_convention=MOSFLM\n");
+        else if(beam_convention == XDS) printf("TRACE_C:detector_convention=XDS\n");
+        else if(beam_convention == DIALS) printf("TRACE_C:detector_convention=DIALS\n");
+        else if(beam_convention == ADXV) printf("TRACE_C:detector_convention=ADXV\n");
+        else if(beam_convention == DENZO) printf("TRACE_C:detector_convention=DENZO\n");
+
+        printf("TRACE_C:angles_rad=rotx:%.15g roty:%.15g rotz:%.15g twotheta:%.15g\n",
+               detector_rotx, detector_roty, detector_rotz, detector_twotheta);
+
+        /* Log beam center and pixel size (SAMPLE pivot uses Xclose/Yclose) */
+        double pixel_mm = pixel_size * 1000.0;  /* Convert to mm for logging */
+        printf("TRACE_C:beam_center_m=Xclose:%.15g Yclose:%.15g pixel_mm:%.15g\n",
+               Xclose/1000.0, Yclose/1000.0, pixel_mm);
+
+        /* Log initial basis vectors (before rotations) */
+        trace_vec("initial_fdet", fdet_vector[1], fdet_vector[2], fdet_vector[3]);
+        trace_vec("initial_sdet", sdet_vector[1], sdet_vector[2], sdet_vector[3]);
+        trace_vec("initial_odet", odet_vector[1], odet_vector[2], odet_vector[3]);
+
+        /* Log SAMPLE pivot parameters */
+        trace_scalar("Fclose_m", Fclose);
+        trace_scalar("Sclose_m", Sclose);
+        trace_scalar("close_distance_m", close_distance);
+        trace_scalar("ratio", ratio);
+        trace_scalar("distance_m", distance);
+
+        /* Log the terms before calculating pix0 (before rotations) */
+        trace_vec("term_fast_before_rot", -Fclose*fdet_vector[1], -Fclose*fdet_vector[2], -Fclose*fdet_vector[3]);
+        trace_vec("term_slow_before_rot", -Sclose*sdet_vector[1], -Sclose*sdet_vector[2], -Sclose*sdet_vector[3]);
+        trace_vec("term_close_before_rot", close_distance*odet_vector[1], close_distance*odet_vector[2], close_distance*odet_vector[3]);
+#endif
+
         /* initialize detector origin before rotating detector */
         pix0_vector[1] = -Fclose*fdet_vector[1]-Sclose*sdet_vector[1]+close_distance*odet_vector[1];
         pix0_vector[2] = -Fclose*fdet_vector[2]-Sclose*sdet_vector[2]+close_distance*odet_vector[2];
         pix0_vector[3] = -Fclose*fdet_vector[3]-Sclose*sdet_vector[3]+close_distance*odet_vector[3];
 
+#ifdef TRACING
+        /* Log pix0 before rotation */
+        trace_vec("pix0_before_rotation", pix0_vector[1], pix0_vector[2], pix0_vector[3]);
+#endif
+
         /* now swing the detector origin around */
         rotate(pix0_vector,pix0_vector,detector_rotx,detector_roty,detector_rotz);
+
+#ifdef TRACING
+        trace_vec("pix0_after_rotz", pix0_vector[1], pix0_vector[2], pix0_vector[3]);
+#endif
+
         rotate_axis(pix0_vector,pix0_vector,twotheta_axis,detector_twotheta);
+
+#ifdef TRACING
+        trace_vec("pix0_after_twotheta", pix0_vector[1], pix0_vector[2], pix0_vector[3]);
+#endif
     }
     /* now orient the detector plane */
     rotate(fdet_vector,fdet_vector,detector_rotx,detector_roty,detector_rotz);
     rotate(sdet_vector,sdet_vector,detector_rotx,detector_roty,detector_rotz);
     rotate(odet_vector,odet_vector,detector_rotx,detector_roty,detector_rotz);
 
+#ifdef TRACING
+    /* Log basis vectors after XYZ rotations */
+    trace_vec("fdet_after_rotz", fdet_vector[1], fdet_vector[2], fdet_vector[3]);
+    trace_vec("sdet_after_rotz", sdet_vector[1], sdet_vector[2], sdet_vector[3]);
+    trace_vec("odet_after_rotz", odet_vector[1], odet_vector[2], odet_vector[3]);
+#endif
+
     /* also apply orientation part of twotheta swing */
     rotate_axis(fdet_vector,fdet_vector,twotheta_axis,detector_twotheta);
     rotate_axis(sdet_vector,sdet_vector,twotheta_axis,detector_twotheta);
     rotate_axis(odet_vector,odet_vector,twotheta_axis,detector_twotheta);
-    
+
+#ifdef TRACING
+    /* Log twotheta axis and final vectors after twotheta */
+    trace_vec("twotheta_axis", twotheta_axis[1], twotheta_axis[2], twotheta_axis[3]);
+    trace_vec("fdet_after_twotheta", fdet_vector[1], fdet_vector[2], fdet_vector[3]);
+    trace_vec("sdet_after_twotheta", sdet_vector[1], sdet_vector[2], sdet_vector[3]);
+    trace_vec("odet_after_twotheta", odet_vector[1], odet_vector[2], odet_vector[3]);
+#endif
+
     /* Trace detector basis vectors after all rotations */
     printf("DETECTOR_FAST_AXIS %.15g %.15g %.15g\n", fdet_vector[1], fdet_vector[2], fdet_vector[3]);
     printf("DETECTOR_SLOW_AXIS %.15g %.15g %.15g\n", sdet_vector[1], sdet_vector[2], sdet_vector[3]);

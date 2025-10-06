@@ -534,6 +534,25 @@
       - **Hypothesis:** `_calculate_pix0_vector()` likely has unit conversion error when using custom vectors OR pivot mode (SAMPLE) calculation differs from C implementation despite identical detector_pivot setting.
       - **Phase K blocked:** The 1.1mm pix0 error will cascade into incorrect Miller index calculations (h/k/l off by several tenths) and invalidate F_latt comparisons.
     Next Actions: **Phase H6 required** — Instrument `_calculate_pix0_vector()` with targeted print statements, generate comparative pix0 trace (Python vs C), identify first divergence, fix root cause, verify ΔF/ΔS/ΔO all below 50μm. Phase K normalization work cannot proceed until pix0 parity is achieved.
+  * [2025-10-24] Attempt #36 (ralph) — Result: **EVIDENCE COMPLETE** (Phase H6a C trace capture). **C pix0 calculation fully instrumented and captured for SAMPLE pivot with custom vectors.**
+    Metrics: Evidence-only loop. Wall-clock ~3s. C binary rebuilt with SAMPLE pivot tracing. Supervisor command executed successfully with max_I=446.254.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_h6/c_trace/trace_c_pix0.log` - Full C trace with TRACE_C instrumentation (24 TRACE_C lines)
+      - `reports/2025-10-cli-flags/phase_h6/c_trace/trace_c_pix0_clean.log` - Extracted TRACE_C lines for easy comparison
+      - `reports/2025-10-cli-flags/phase_h6/c_trace/README.md` - Complete trace metadata, build context, git hash, observations
+      - `reports/2025-10-cli-flags/phase_h6/c_trace/env_snapshot.txt` - Environment variables snapshot
+      - `reports/2025-10-cli-flags/phase_h6/c_trace/trace_c_pix0.log.sha256` - Checksum 6c691855c28ed0888c3446831c524ecd1a3d092b54daf4c667c74290f21e5bb2
+      - `golden_suite_generator/nanoBragg.c:1736-1823` - Instrumentation added to SAMPLE pivot path with trace_vec/trace_scalar calls
+    Observations/Hypotheses:
+      - **Convention:** CUSTOM (due to explicit detector vectors overriding MOSFLM default)
+      - **Pivot:** SAMPLE (custom vectors present, so -pix0_vector_mm override is ignored per C precedence)
+      - **Zero rotations:** All angles zero (rotx=0, roty=0, rotz=0, twotheta=0), so pix0 and basis vectors unchanged after rotation
+      - **Critical pix0 formula:** `pix0 = -Fclose*fdet - Sclose*sdet + close_distance*odet` computed BEFORE rotations
+      - **Actual values:** Fclose=0.217742 m, Sclose=0.213907 m, close_distance=0.231272 m, ratio=0.999988, distance=0.231275 m
+      - **C pix0 result:** (-0.216476, 0.216343, -0.230192) meters matching DETECTOR_PIX0_VECTOR output
+      - **Instrumentation coverage:** Captured convention, angles, beam_center (Xclose/Yclose), Fclose/Sclose/close_distance/ratio/distance, term decomposition, pix0 before/after rotations, basis vectors before/after rotations/twotheta
+      - **Next critical step:** Phase H6b must generate matching PyTorch trace with identical variable names/units to enable line-by-line diff and identify first divergence
+    Next Actions: Proceed to Phase H6b (extend PyTorch trace harness to emit matching TRACE_PY lines from `_calculate_pix0_vector()`), then Phase H6c (diff traces and document first divergence in analysis.md).
   * [2025-10-06] Attempt #29 (ralph loop) — Result: Phase H5a EVIDENCE-ONLY COMPLETE. **C-code pix0 override behavior with custom vectors documented.**
     Metrics: Evidence-only loop. Two C runs executed: WITH override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m) and WITHOUT override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m). Identical geometry values confirm override is ignored when custom vectors are present.
     Artifacts:
