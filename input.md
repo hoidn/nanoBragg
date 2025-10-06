@@ -1,70 +1,133 @@
-timestamp: 2025-10-06 06:22:50Z
-commit: 15fdec5
+timestamp: 2025-10-06 06:37:45Z
+commit: ae4ac7f
 author: galph
 Active Focus: [CLI-FLAGS-003] Phase H3 lattice mismatch diagnosis
+Summary: Prove the pix0-driven lattice divergence and log an evidence-backed fix plan before touching detector code.
+Phase: Evidence
+Focus: CLI-FLAGS-003
+Branch: feature/spec-based-2
+Mapped tests: pytest --collect-only -q
+Artifacts: reports/2025-10-cli-flags/phase_h/trace_py_after_H3_refresh.log; reports/2025-10-cli-flags/phase_h/pix0_reproduction.md; reports/2025-10-cli-flags/phase_h/attempt_log.txt
 
-Do Now: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm — run `env KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_h/trace_harness.py > reports/2025-10-cli-flags/phase_h/trace_py_after_H3.log 2> reports/2025-10-cli-flags/phase_h/trace_py_after_H3.stderr`; finish with `pytest --collect-only -q`
-If Blocked: Capture the failing stdout/stderr, append a short note to `reports/2025-10-cli-flags/phase_h/attempt_log.txt`, and diff against `trace_py_after_H2.log` to pinpoint where execution diverged before asking for guidance.
+Do Now: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm — evidence: execute the trace harness + pix0 reproduction per How-To Map, then run `pytest --collect-only -q`.
+If Blocked: Capture stdout/stderr for any failing command under `reports/2025-10-cli-flags/phase_h/blocked/` and diff against the prior attempt before escalating.
 
 Priorities & Rationale:
-- docs/fix_plan.md:448 — Next actions call for confirming the `(h-h0)` usage before any simulator edits.
-- plans/active/cli-noise-pix0/plan.md:100 — Phase H3 checklist now requires a manual `sincg` reproduction and hypothesis log.
-- reports/2025-10-cli-flags/phase_h/trace_comparison_after_H2.md:1 — Existing trace diff highlights the `F_latt` magnitude gap we must quantify.
-- reports/2025-10-cli-flags/phase_h/implementation_notes.md:1 — Hypotheses already point at the `sincg` argument order; extend this with today’s evidence.
-- golden_suite_generator/nanoBragg.c:3063 — Canonical formula uses absolute `h/k/l`; reproduce these numbers for our comparison.
-- src/nanobrag_torch/simulator.py:218 — Current PyTorch path feeds `(h-h0)` into `sincg`; verify this is the culprit before touching code.
+- plans/active/cli-noise-pix0/plan.md:105 — Phase H3 now requires a C-style pix0 reconstruction plus restored attempt log before implementation.
+- docs/fix_plan.md:472 — Next Actions call for demonstrating the ~1.14 mm pix0 delta and propagating it through to h/k/l.
+- reports/2025-10-cli-flags/phase_h/implementation_notes.md:54 — Latest entry flags Miller index divergence but leaves the detector fix plan blank.
+- reports/2025-10-cli-flags/phase_h/trace_py_after_H3.log:1 — Current trace still reflects the mismatched pix0; we need a refreshed run tied to today’s evidence.
+- docs/development/testing_strategy.md:1 — Authoritative commands doc; keep `pytest --collect-only -q` as the validation touchpoint for evidence loops.
 
 How-To Map:
-- `env KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_h/trace_harness.py > reports/2025-10-cli-flags/phase_h/trace_py_after_H3.log 2> reports/2025-10-cli-flags/phase_h/trace_py_after_H3.stderr` — regenerate the PyTorch trace with the post-H2 wiring; keep stderr for run metadata.
-- `python - <<'PY'` (see below) → pipe output to `reports/2025-10-cli-flags/phase_h/manual_sincg.md` to compute `sincg` for the exact `h,k,l` tuples from the C trace and compare against PyTorch results:
-  ```python
-  import torch
-  h = torch.tensor(2.001203, dtype=torch.float64)
-  k = torch.tensor(1.992798, dtype=torch.float64)
-  l = torch.tensor(-12.990767, dtype=torch.float64)
-  Na, Nb, Nc = (36, 47, 29)
-  from nanobrag_torch.utils.physics import sincg
-  vals = {
-      'C_expected': (35.889, 38.632, 25.702),
-      'Py_current': (
-          float(sincg(torch.pi * (h - torch.round(h)), torch.tensor(Na)).item()),
-          float(sincg(torch.pi * (k - torch.round(k)), torch.tensor(Nb)).item()),
-          float(sincg(torch.pi * (l - torch.round(l)), torch.tensor(Nc)).item()),
-      ),
-      'Py_with_absolute': (
-          float(sincg(torch.pi * h, torch.tensor(Na)).item()),
-          float(sincg(torch.pi * k, torch.tensor(Nb)).item()),
-          float(sincg(torch.pi * l, torch.tensor(Nc)).item()),
-      ),
-  }
-  for key, triplet in vals.items():
-      print(key, ':', ', '.join(f'{x:.6f}' for x in triplet))
+- Export the authoritative commands doc before running anything: `export AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md`.
+- Trace refresh (store stderr for provenance):
+  `env KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_h/trace_harness.py > reports/2025-10-cli-flags/phase_h/trace_py_after_H3_refresh.log 2> reports/2025-10-cli-flags/phase_h/trace_py_after_H3_refresh.stderr`
+- Pix0 + lattice reproduction (captures both raw override and C formula) — pipe output to the Markdown evidence file:
+  ```bash
+  python - <<'PY' > reports/2025-10-cli-flags/phase_h/pix0_reproduction.md
+  import torch, math
+
+  mm_to_m = 1e-3
+  pixel_size_mm = 0.172
+  distance_mm = 231.274660
+  xbeam_mm = 217.742295
+  ybeam_mm = 213.907080
+  target_fast = 685
+  target_slow = 1039
+  wavelength_A = 0.9768
+
+  fdet = torch.tensor([0.999982004873912, -0.00599800002923425, -0.000118000000575132], dtype=torch.float64)
+  sdet = torch.tensor([-0.0059979996566955, -0.999969942765222, -0.0049129997187971], dtype=torch.float64)
+  beam = torch.tensor([0.000513879494092498, 0.0, -0.999999867963924], dtype=torch.float64)
+
+  pix0_override_m = torch.tensor([-216.336293, 215.205512, -230.200866], dtype=torch.float64) * mm_to_m
+  Fbeam_m = xbeam_mm * mm_to_m
+  Sbeam_m = ybeam_mm * mm_to_m
+  distance_m = distance_mm * mm_to_m
+  pix0_c_m = -Fbeam_m * fdet - Sbeam_m * sdet + distance_m * beam
+
+  pixel_size_m = pixel_size_mm * mm_to_m
+  center_fast = (target_fast + 0.5) * pixel_size_m
+  center_slow = (target_slow + 0.5) * pixel_size_m
+  pixel_py = pix0_override_m + center_slow * sdet + center_fast * fdet
+  pixel_c = pix0_c_m + center_slow * sdet + center_fast * fdet
+
+  def scattering_and_hkl(pixel_vec, label):
+      coords_ang = pixel_vec * 1e10
+      diffracted_unit = coords_ang / coords_ang.norm()
+      scattering = (diffracted_unit - beam) / wavelength_A
+      a_vec = torch.tensor([-14.3562690335399, -21.8805340763623, -5.5476578307123], dtype=torch.float64)
+      b_vec = torch.tensor([-11.4986968432508, 0.671588233999813, -29.1143056268565], dtype=torch.float64)
+      c_vec = torch.tensor([21.0699500320179, -24.4045855811067, -9.7143290320006], dtype=torch.float64)
+      h = torch.dot(scattering, a_vec).item()
+      k = torch.dot(scattering, b_vec).item()
+      l = torch.dot(scattering, c_vec).item()
+      return scattering, (h, k, l)
+
+  scattering_py, hkl_py = scattering_and_hkl(pixel_py, "Py override")
+  scattering_c, hkl_c = scattering_and_hkl(pixel_c, "C formula")
+
+  def fmt(vec):
+      return ', '.join(f"{v:.12f}" for v in vec)
+
+  print("# Pix0 + Lattice Reproduction")
+  print("pix0_override_m:", fmt(pix0_override_m))
+  print("pix0_c_formula_m:", fmt(pix0_c_m))
+  diff = pix0_c_m - pix0_override_m
+  print("pix0_delta_m:", fmt(diff))
+  print("\n## Pixel positions (meters)")
+  print("pixel_py:", fmt(pixel_py))
+  print("pixel_c:", fmt(pixel_c))
+  print("pixel_delta:", fmt(pixel_c - pixel_py))
+  print("\n## Scattering vectors (1/Å)")
+  print("scattering_py:", fmt(scattering_py))
+  print("scattering_c:", fmt(scattering_c))
+  print("scattering_delta:", fmt(scattering_c - scattering_py))
+  print("\n## Miller indices (fractional)")
+  print("hkl_py:", ', '.join(f"{v:.12f}" for v in hkl_py))
+  print("hkl_c:", ', '.join(f"{v:.12f}" for v in hkl_c))
+  print("hkl_delta:", ', '.join(f"{(c - p):.12f}" for p, c in zip(hkl_py, hkl_c)))
+
+  # Quick sincg check for completeness
+  def sincg(arg, n):
+      arg = torch.tensor(arg, dtype=torch.float64)
+      n = torch.tensor(float(n), dtype=torch.float64)
+      return torch.where(arg == 0, n, torch.sin(arg * n) / torch.sin(arg))
+
+  Na, Nb, Nc = 36, 47, 29
+  import math
+  pi = math.pi
+  for label, hkl in ("py", hkl_py), ("c", hkl_c):
+      ha, ka, la = hkl
+      Fa = sincg(pi * (ha - round(ha)), Na)
+      Fb = sincg(pi * (ka - round(ka)), Nb)
+      Fc = sincg(pi * (la - round(la)), Nc)
+      print(f"\nF_latt components ({label}): {Fa.item():.6f}, {Fb.item():.6f}, {Fc.item():.6f}")
   PY
   ```
-- Update `reports/2025-10-cli-flags/phase_h/implementation_notes.md` with a new “2025-10-06” block summarising the manual `sincg` findings, the confirmed root cause, and the proposed fix/test plan; note the filenames you produced and any follow-on questions.
-- `pytest --collect-only -q` — ensure collection still passes after evidence gathering; stash the log under `reports/2025-10-cli-flags/phase_h/pytest_collect.log`.
+- Restore the attempt log by overwriting `reports/2025-10-cli-flags/phase_h/attempt_log.txt` with a concise Attempt #21 entry summarising today’s evidence (remove the stray pytest output before committing anything).
+- Append a 2025-10-06 section to `reports/2025-10-cli-flags/phase_h/implementation_notes.md` capturing the quantified pix0/pixel/scattering deltas and outlining the detector override fix you plan to implement next loop.
+- Validation touchpoint: `pytest --collect-only -q > reports/2025-10-cli-flags/phase_h/pytest_collect_refresh.log`
 
 Pitfalls To Avoid:
-- Do not modify simulator code yet; today is evidence-only per Phase H3.
-- Keep all new artifacts under `reports/2025-10-cli-flags/phase_h/` to preserve trace lineage.
-- Avoid reintroducing manual beam overrides in the harness; rely on CLI wiring now that H2 landed.
-- Maintain float64 tensors in scratch scripts so comparisons stay numerically stable.
-- Do not delete or rename any files listed in `docs/index.md` (Protected Assets rule).
-- Skip ad-hoc snippets outside `reports/…`; no temp files in repo root.
-- Preserve device/dtype neutrality in any helper code (no `.cpu()`/`.item()` on critical tensors).
-- If you need to re-run the harness, clean up old logs or suffix them clearly; no silent overwrites.
-- Keep the loop evidence-only—no commits or merges until we agree on the fix plan.
-- Continue logging attempts in `reports/2025-10-cli-flags/phase_h/attempt_log.txt` after each major action.
+- Stay evidence-only; no code or config edits while Phase H3 remains open.
+- Do not overwrite prior trace artifacts—use the `_refresh` suffixes above.
+- Keep all scratch outputs under `reports/2025-10-cli-flags/phase_h/`; no repo-root temp files.
+- Maintain float64 throughout the reproduction script (no `.float()` shortcuts).
+- Set `AUTHORITATIVE_CMDS_DOC` before running commands to comply with testing SOP.
+- Ensure attempt_log.txt is human-readable (summary + metrics); never paste raw pytest output again.
+- Avoid running broader pytest suites; `--collect-only -q` is the sole test this loop.
+- No manual beam overrides in the harness—rely on CLI wiring now that H2 landed.
+- Preserve Protected Assets listed in docs/index.md (do not rename/remove input.md, loop.sh, etc.).
+- Keep git tree clean at end; evidence artifacts must be committed with this memo.
 
 Pointers:
-- docs/fix_plan.md:448 — Current status and next actions for `[CLI-FLAGS-003]`.
-- plans/active/cli-noise-pix0/plan.md:91 — Phase H tasks and exit criteria.
-- reports/2025-10-cli-flags/phase_h/trace_py_after_H2.log:1 — Last PyTorch trace for comparison.
-- reports/2025-10-cli-flags/phase_h/trace_comparison_after_H2.md:1 — Prior diff to baseline your notes.
-- reports/2025-10-cli-flags/phase_h/implementation_notes.md:1 — Append today’s findings here.
-- src/nanobrag_torch/simulator.py:218 — Location of the current lattice factor calculation.
-- golden_suite_generator/nanoBragg.c:3063 — Reference sincg usage (`sincg(M_PI*h, Na)`).
+- docs/development/testing_strategy.md:1 — Authoritative commands + evidence-only loop guidance.
+- docs/debugging/debugging.md:18 — Parallel trace SOP to contextualise today’s trace refresh.
+- plans/active/cli-noise-pix0/plan.md:95 — Phase H checklist with the new pix0 reproduction requirement.
+- docs/fix_plan.md:448 — `[CLI-FLAGS-003]` entry housing Next Actions and attempt history.
+- reports/2025-10-cli-flags/phase_h/trace_comparison_after_H2.md:1 — Prior diff highlighting pix0 as the first divergence (use as baseline).
 
 Next Up:
-- Queue Phase H4 parity rerun after the lattice fix plan is agreed (still within `[CLI-FLAGS-003]`).
-- Prep Phase A baselines for `[VECTOR-TRICUBIC-001]` once CLI parity evidence is captured.
+- After the detector pix0 fix plan is locked, schedule Phase H4 parity rerun (still `[CLI-FLAGS-003]`).

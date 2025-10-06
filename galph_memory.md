@@ -1056,3 +1056,10 @@ Follow-ups for Ralph:
 - Long-term Goal 2: `plans/active/vectorization.md` Phase A updated to author reusable tricubic/absorption benchmark harnesses under `scripts/benchmarks/` so baseline timings can be captured once CLI parity stabilises; fix_plan Next Actions adjusted accordingly.
 - Authored new input.md (Do Now: rerun trace harness, compute manual sincg table, pytest collect) and staged reporting guardrails for today’s evidence-only loop.
 - Follow-ups for Ralph: regenerate PyTorch trace under `trace_py_after_H3.log`, create `manual_sincg.md` comparing `(h-h0)` vs absolute arguments, append findings to `implementation_notes.md`, and keep Attempt log current before proposing the simulator fix.
+## 2025-10-06 (galph loop — Phase H3 pix0 evidence refresh)
+- Re-read core docs + active plans; long-term Goal 1 still blocked by Phase H3 lattice parity, Goal 2 (vectorization) queued until CLI parity stabilises.
+- Evidence review: trace diff shows 1.14 mm gap between PyTorch `pix0_override_m` and C’s BEAM-pivot transform, cascading to pixel_pos, scattering_vec, and h/k/l deltas. Sincg confirmed equivalent; root cause is detector pix0 override handling.
+- Plan upkeep: updated `plans/active/cli-noise-pix0/plan.md` Phase H exit criteria and H3 task to require reproducing C’s pix0 math + restoring attempt log. docs/fix_plan.md Next Actions now point at capturing `pix0_reproduction.md`, propagating deltas, and logging Attempt #21 properly before code edits.
+- Coin flip = heads → reviewed Ralph commits `ce28187`, `4e0e36e` (evidence-only, productive; no regressions). Feedback captured in input.md.
+- Authored new input.md directing Ralph to rerun trace harness, build pix0 reproduction notebook, clean up `attempt_log.txt`, append implementation notes, and run `pytest --collect-only -q` (evidence loop).
+- Follow-ups for Ralph next loop: produce the refreshed trace + pix0 reproduction artifacts, restore the attempt log with human-readable Attempt #21, log findings in implementation_notes.md, keep work evidence-only pending detector fix design.
