@@ -455,8 +455,28 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase C2 parity run exposed a 2.58e2× intensity scaling mismatch (PyTorch max_I≈1.15e5 vs C max_I≈4.46e2). Phase D3/E diagnostics (2025-10-16) confirm three blocking geometry gaps: (a) PyTorch applies the raw `-pix0_vector_mm` override without the CUSTOM transform used in C (1.14 mm Y error); (b) CLI ignores `-beam_vector`, leaving the incident ray at the convention default `[0,0,1]`; (c) `-mat A.mat` handling discards the MOSFLM orientation, so Crystal falls back to canonical upper-triangular vectors while C uses the supplied A*. Traces also show a polarization delta (C Kahn factor ≈0.9126 vs PyTorch 1.0) to revisit after geometry fixes.
-- Next Actions: Complete Phase I3 in `plans/active/cli-noise-pix0/plan.md` by rerunning the supervisor command with polarization enabled, capturing PyTorch+C outputs under `reports/2025-10-cli-flags/phase_i/supervisor_command/`, and logging Attempt #27 with final parity metrics.
+- Next Actions: Debug the 124,538× intensity scaling parity failure discovered in Attempt #27. Switch to debug.md prompt, generate parallel traces for on-peak pixels, and audit `simulator.py` final scaling logic (steps normalization, r_e², fluence, last-value Ω/polarization).
 - Attempts History:
+  * [2025-10-06] Attempt #27 (ralph) — Result: **PARITY FAILURE** (Phase I3 supervisor command). **Intensity scaling discrepancy: 124,538× sum ratio.**
+    Metrics: Correlation=0.9978 (< 0.999 threshold), sum_ratio=124,538 (should be ~1.0), C max_I=446, PyTorch max_I=5.411e7 (121,000× discrepancy), mean_peak_distance=37.79 px (> 1 px threshold).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_i/supervisor_command/README.md` - Full evidence report with metrics, hypotheses, next actions
+      - `reports/2025-10-cli-flags/phase_i/supervisor_command/summary.json` - Complete parity metrics (correlation, RMSE, sums, peak distances)
+      - `reports/2025-10-cli-flags/phase_i/supervisor_command/c_stdout.txt` - C simulation output (max_I=446.254, fluence=1e24, steps=10)
+      - `reports/2025-10-cli-flags/phase_i/supervisor_command/py_stdout.txt` - PyTorch output (max_I=5.411e7)
+      - `reports/2025-10-cli-flags/phase_i/supervisor_command/diff.png` - Difference heatmap (559 KB)
+      - `scripts/nb_compare.py:118-180,396-397` - **Tooling fix deployed:** Added -detpixels_x/-detpixels_y parsing to load_float_image()
+    Observations/Hypotheses:
+      - **High correlation (0.998) indicates pattern matches:** Shapes and positions correct, magnitudes catastrophically wrong
+      - **Intensity ratio 121,250×:** PyTorch raw values ~124,538× higher than C after normalization
+      - **Both implementations completed without errors:** Detector geometry, pix0 vectors, convention selection all agree
+      - **Hypotheses for debugging loop:**
+        1. Missing division by `steps = sources × mosaic × phisteps × oversample²` (C: steps=10 confirmed)
+        2. Missing scaling by r_e² (classical electron radius = 2.818×10⁻¹⁵ m; r_e² = 7.94×10⁻³⁰ m²)
+        3. Incorrect fluence calculation (C: 1e24 photons/m², PyTorch: verify derivation from flux/exposure/beamsize)
+        4. Missing last-value Ω/polarization multiply (per spec § oversample_* semantics with oversample=1)
+      - **Tooling success:** nb-compare now handles non-standard detector dimensions (2463×2527 via -detpixels_x/-detpixels_y)
+    Next Actions: Execute parallel trace debugging (debug.md prompt) for on-peak pixel (C max at ~(452,532) or PyTorch max at (1039,685)). Compare step-by-step scaling: fluence calc, steps division, r_e² multiply, Ω/polarization last-value logic. Target finding first divergence in `simulator.py` final scaling code.
   * [2025-10-17] Attempt #26 (ralph) — Result: success (Phase I polarization defaults complete). **BeamConfig.polarization_factor default aligned with C polar=1.0.**
     Metrics: CLI polarization tests 3/3 passed. Core tests: cli_flags 26/26, detector_geometry 12/12, crystal_geometry 19/19 (57 passed, 1 warning). Test collection: 632 tests collected.
     Artifacts:

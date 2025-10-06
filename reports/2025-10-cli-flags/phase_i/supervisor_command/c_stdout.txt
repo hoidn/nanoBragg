@@ -1,0 +1,267 @@
+WARNING: auto-generating odet_vector
+nanoBragg nanocrystal diffraction simulator - James Holton and Ken Frankel 5-17-17
+custom convention selected.
+pivoting detector around sample
+DETECTOR_FAST_AXIS 0.999982004873912 -0.00599800002923425 -0.000118000000575132
+DETECTOR_SLOW_AXIS -0.0059979996566955 -0.999969942765222 -0.0049129997187971
+DETECTOR_NORMAL_AXIS -8.85282813644494e-05 0.00491361907271126 -0.999987924182263
+DETECTOR_PIX0_VECTOR -0.216475836204836 0.216343050492215 -0.230192414300537
+XDS incident beam: 0.00063187 0.00490992 0.999988
+reading A.mat
+TRACE: Raw matrix values from file:
+TRACE:   a_star (raw) = [-0.0283771, -0.0287139, 0.0105005]
+TRACE:   b_star (raw) = [-0.00305386, 0.0101955, -0.0320944]
+TRACE:   c_star (raw) = [0.0253582, -0.0140005, -0.0103605]
+TRACE:   lambda0 = 0.9768 Angstroms
+TRACE:   scaling factor = 1e-10/lambda0 = 1.02375
+TRACE: After wavelength correction:
+TRACE:   a_star = [-0.0290511, -0.0293959, 0.0107499] |a_star| = 0.0427041
+TRACE:   b_star = [-0.00312639, 0.0104376, -0.0328567] |b_star| = 0.0346162
+TRACE:   c_star = [0.0259604, -0.014333, -0.0106066] |c_star| = 0.0314941
+TRACE: Computing cross products of reciprocal vectors:
+TRACE:   Input vectors for cross products:
+TRACE:     a_star = [-0.0290511, -0.0293959, 0.0107499]
+TRACE:     b_star = [-0.00312639, 0.0104376, -0.0328567]
+TRACE:     c_star = [0.0259604, -0.014333, -0.0106066]
+TRACE:   Cross product results:
+TRACE:     a_star x b_star = [0.000853648, -0.000988131, -0.000395128]
+TRACE:     b_star x c_star = [-0.000581643, -0.000886134, -0.000226155]
+TRACE:     c_star x a_star = [-0.000465869, 2.90622e-05, -0.00117952]
+TRACE: Reciprocal cell volume calculation:
+TRACE:   V_star = a_star . (b_star x c_star) = 4.05149e-05
+TRACE: Direct-space cell volume: V_cell = 1/V_star = 24682.3
+TRACE: Before computing real-space vectors:
+TRACE:   b_star_cross_c_star = [-0.000581643, -0.000886134, -0.000226155]
+TRACE:   c_star_cross_a_star = [-0.000465869, 2.90622e-05, -0.00117952]
+TRACE:   a_star_cross_b_star = [0.000853648, -0.000988131, -0.000395128]
+TRACE:   V_cell = 24682.3, V_star = 4.05149e-05
+TRACE: After computing real-space vectors:
+TRACE:   a = [-14.3563, -21.8718, -5.58202] |a| = 26.7514
+TRACE:   b = [-11.4987, 0.71732, -29.1132] |b| = 31.31
+TRACE:   c = [21.07, -24.3893, -9.75265] |c| = 33.6734
+TRACE: Re-generating reciprocal vectors from real-space vectors:
+TRACE:   Before re-generation: a_star = [-0.0290511, -0.0293959, 0.0107499] |a_star| = 0.0427041
+TRACE:   Before re-generation: b_star = [-0.00312639, 0.0104376, -0.0328567] |b_star| = 0.0346162
+TRACE:   Before re-generation: c_star = [0.0259604, -0.014333, -0.0106066] |c_star| = 0.0314941
+TRACE:   Cross products: b_cross_c = [-717.047, -725.557, 265.331]
+TRACE:   Cross products: c_cross_a = [-77.1664, 257.625, -810.977]
+TRACE:   Cross products: a_cross_b = [640.762, -353.771, -261.795]
+TRACE:   After re-generation: a_star = [-0.0290511, -0.0293959, 0.0107499] |a_star| = 0.0427041
+TRACE:   After re-generation: b_star = [-0.00312639, 0.0104376, -0.0328567] |b_star| = 0.0346162
+TRACE:   After re-generation: c_star = [0.0259604, -0.014333, -0.0106066] |c_star| = 0.0314941
+Unit Cell: 26.7514 31.31 33.6734 88.687 71.5295 68.1375
+Recp Cell: 0.0427041 0.0346162 0.0314941 83.8005 109.406 112.647
+volume = 24682.3 A^3
+real-space cell vectors (Angstrom):
+     a           b           c         
+X: -14.35626903 -11.49869684 21.06995003
+Y: -21.87179285  0.71732003 -24.38929625
+Z: -5.58202083 -29.11321478 -9.75265167
+reciprocal-space cell vectors (Angstrom^-1):
+     a_star      b_star      c_star    
+X: -0.02905110 -0.00312639  0.02596044
+Y: -0.02939588  0.01043764 -0.01433302
+Z:  0.01074988 -0.03285667 -0.01060661
+TRACE: Converting real-space vectors from Angstroms to meters:
+TRACE:   Before conversion: a = [-14.3563, -21.8718, -5.58202] |a| = 26.7514 Angstroms
+TRACE:   Before conversion: b = [-11.4987, 0.71732, -29.1132] |b| = 31.31 Angstroms
+TRACE:   Before conversion: c = [21.07, -24.3893, -9.75265] |c| = 33.6734 Angstroms
+TRACE:   After conversion: a = [-1.43563e-09, -2.18718e-09, -5.58202e-10] |a| = 2.67514e-09 meters
+TRACE:   After conversion: b = [-1.14987e-09, 7.1732e-11, -2.91132e-09] |b| = 3.131e-09 meters
+TRACE:   After conversion: c = [2.107e-09, -2.43893e-09, -9.75265e-10] |c| = 3.36734e-09 meters
+TRACE: Copying vectors to a0, b0, c0 (phi=0 mosaic=0 reference):
+TRACE:   a0 = [-1.43563e-09, -2.18718e-09, -5.58202e-10] |a0| = 2.67514e-09 meters
+TRACE:   b0 = [-1.14987e-09, 7.1732e-11, -2.91132e-09] |b0| = 3.131e-09 meters
+TRACE:   c0 = [2.107e-09, -2.43893e-09, -9.75265e-10] |c0| = 3.36734e-09 meters
+TRACE: Copying vectors to ap, bp, cp (phi=0 working copy):
+TRACE:   ap = [-1.43563e-09, -2.18718e-09, -5.58202e-10] |ap| = 2.67514e-09 meters
+TRACE:   bp = [-1.14987e-09, 7.1732e-11, -2.91132e-09] |bp| = 3.131e-09 meters
+TRACE:   cp = [2.107e-09, -2.43893e-09, -9.75265e-10] |cp| = 3.36734e-09 meters
+crystal is 0.096305 x 0.147157 x 0.0976527 microns
+WARNING: maximum dimension of sample is 1471.57 A
+         but reciprocal pixel size is 1313.42 A
+         intensity may vary significantly across a pixel!
+         recommend -oversample 4 to work around this
+approximate MW = 20382
+counting entries in scaled.hkl
+re-reading scaled.hkl
+writing dump file for next time: Fdump.bin
+thick0 = 0 um
+phi0 = 0
+phi1 = 0.01
+phi2 = 0.02
+phi3 = 0.03
+phi4 = 0.04
+phi5 = 0.05
+phi6 = 0.06
+phi7 = 0.07
+phi8 = 0.08
+phi9 = 0.09
+divergence deviation: 0 0
+lambda0 = 9.768e-11
+  created a total of 1 sources:
+-0.00513879 0 10   1 9.768e-11
+  created a total of 1 mosaic domains
+  64333 initialized hkls (all others =0)
+  parallelpiped xtal: 36x47x29 cells
+  wave=9.768e-11 meters +/- 0% in 1 steps
+  Kahn polarization factor: 0.000000
+  incident fluence: 1e+24 photons/m^2
+  distance=0.231275 detsize=0.423636x0.434644  pixel=0.000172 meters (2463x2527 pixels)
+  sensor is 0 m thick in 1 layers with mu= -1
+  Xbeam=0.217742 Ybeam=0.213907
+  Fbeam=0.217889 Sbeam=0.215043
+  Xclose=0.211818 Yclose=0.217322
+  Fclose=0.217742 Sclose=0.213907
+  DIRECTION_OF_DETECTOR_X-AXIS= 0.999982 -0.005998 -0.000118
+  DIRECTION_OF_DETECTOR_Y-AXIS= -0.005998 -0.99997 -0.004913
+  DIRECTION_OF_DETECTOR_Z-AXIS= -8.85283e-05 0.00491362 -0.999988
+  INCIDENT_BEAM_DIRECTION= 0.000513879 0 -1
+  spindle ROTATION_AXIS= -1 0 0
+  POLARIZATION_PLANE_NORMAL= 0 -0.000513879 0
+  dials origin= -230.192 216.343 216.476
+  roi: 0 < x < 2463 && 0 < y < 2527
+  hdivrange=0 hdivstep=0  radians
+  vdivrange=0 vdivstep=0  radians
+  1 divergence steps
+  1 sources
+  1 mosaic domains over mosaic spread of 0 degrees
+  10 phi steps from 0 to 0.1 degrees
+  1x1 pixel oversample steps
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+
+solid angle subtended by detector = 0.192259 steradian ( 1.52995% sphere)
+writing /tmp/tmp_i11w2i8_c.bin as 6224001 4-byte floats
+max_I = 446.254  at 0.117906 0.178794
+mean= 0.00104287 rms= 0.334386 rmsd= 0.334384
+intfile_scale = 123.248
+writing intimage.img as 2-byte integers
+pgm_scale = 149.529
+writing image.pgm as 1-byte integers
