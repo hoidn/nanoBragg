@@ -1,0 +1,8 @@
+Command: Crystal.compute_cell_tensors() MOSFLM verification
+Wavelength_A: 0.9768
+Results (PyTorch float64 CPU):
+  V_cell_A^3 = 24682.256630
+  |a|_A = 26.751388
+  |b|_A = 31.309964
+  |c|_A = 33.673354
+  |a*|_A^-1 = 0.042704

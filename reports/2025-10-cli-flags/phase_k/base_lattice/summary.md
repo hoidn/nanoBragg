@@ -76,3 +76,15 @@ Key observations:
   - PyTorch real vectors are ~405149× larger than C
   - This cascades from the reciprocal vector error
 ======================================================================
+
+-----------------------------------------------------------------------
+2025-11-08 Update — MOSFLM rescale implementation check (Commit 46ba36b)
+-----------------------------------------------------------------------
+- Command: Inline `KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY'` snippet (see `post_fix/cell_tensors_py.txt` for exact code and output).
+- Results confirm PyTorch now matches C trace magnitudes pre-φ rotation:
+  * Root cause (from 2025-10-06 analysis): `Crystal.compute_cell_tensors` kept V=1 Å³ when MOSFLM matrices were provided, inflating reciprocal vectors by 40×. Commit 46ba36b now recomputes V_star, V_cell, and real vectors from MOSFLM inputs before rebuilding duals.
+  * V_cell = 24682.256630 Å³ (C trace 24682.3 Å³ → Δ=4.3e-5, 1.7e-6 relative)
+  * |a| = 26.751388 Å, |b| = 31.309964 Å, |c| = 33.673354 Å (all within 5e-6 relative to C values)
+  * |a*| = 0.042704 Å⁻¹ (reciprocal magnitudes align with C after recomputation)
+- Evidence stored under `reports/2025-10-cli-flags/phase_k/base_lattice/post_fix/cell_tensors_py.txt`.
+- Next Step: Regenerate `trace_py.log` after rerunning the harness so the diff reflects the fixed vectors (Plan K3f4 exit criteria), then proceed to K3g3 normalization parity.

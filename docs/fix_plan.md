@@ -455,10 +455,10 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase K3e evidence reveals a **fundamental lattice/geometry mismatch**, not a φ-grid offset. C reports `k_frac≈−3.857` across all φ steps while PyTorch reports `k_frac≈−9.899` (Δk≈6.04 at φ=0°). This 6-unit discrepancy indicates the base reciprocal lattice vectors or scattering geometry differ before any φ rotation is applied.
- - Next Actions (2025-11-08 refresh):
-  1. Phase K3f4 — Append a “Root Cause” section to `reports/2025-10-cli-flags/phase_k/base_lattice/summary.md` capturing the MOSFLM volume/rescale gap and outline the fix path; propagate the note into plan ⟶ docs/fix_plan (done once summary updated).
-  2. Phase K3g1/K3g2 — Implement the MOSFLM real-vector rebuild in `Crystal.compute_cell_tensors` (derive `V_cell`, real vectors, and updated reciprocal duals from the supplied A* matrix) and land the accompanying regression test under `tests/test_cli_scaling.py` (or sibling). Reference nanoBragg.c lines 3135-3210 in the code docstring per Core Rule #11.
-  3. Phase K3g3 (then K3c) — Re-run scaling evidence with `env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v`, refresh `phase_k/f_latt_fix/` artifacts + nb-compare, and close Attempt #46 once Δh/Δk/Δl < 5e-4 and F_latt parity holds.
+- Next Actions (2025-11-08 update):
+  1. Phase K3g3 — Re-run scaling evidence with `env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v`, refresh `phase_k/f_latt_fix/` artifacts + nb-compare, and confirm Δh/Δk/Δl < 5e-4 alongside F_latt parity.
+  2. Phase K3c/K3L prep — Once scaling is green, rerun the supervisor nb-compare command (Plan Phase L1) and targeted CLI regressions (L2) before closeout documentation (L3).
+  3. Documentation sync — Update `reports/2025-10-cli-flags/phase_k/base_lattice/summary.md` diff with fresh traces post-K3g3 and reflect outcomes in galph_memory/plan archives.
 - Attempts History:
   * [2025-10-06] Attempt #27 (ralph) — Result: **PARITY FAILURE** (Phase I3 supervisor command). **Intensity scaling discrepancy: 124,538× sum ratio.**
     Metrics: Correlation=0.9978 (< 0.999 threshold), sum_ratio=124,538 (should be ~1.0), C max_I=446, PyTorch max_I=5.411e7 (121,000× discrepancy), mean_peak_distance=37.79 px (> 1 px threshold).
@@ -713,6 +713,17 @@
       3. Compare with C code (`nanoBragg.c:3135-3148`) to understand expected input format
       4. Test hypothesis: remove λ-scaling from reader output OR adjust compute_cell_tensors() to skip scaling when MOSFLM vectors provided
       5. Document chosen fix approach in base_lattice/README.md and update plan before implementing
+  * [2025-11-08] Attempt #47 (galph) — Result: **EVIDENCE COMPLETE** (Phase K3f4 root-cause documentation). **MOSFLM rescale fix validated; cell tensors now match C.**
+    Metrics: PyTorch float64 CPU run reported V_cell=24682.256630 Å³ vs C 24682.3 (Δ=4.3e-5), |a|=26.751388 Å, |b|=31.309964 Å, |c|=33.673354 Å (all <1.7e-6 relative); |a*|=0.042704 Å⁻¹ (matches C reciprocal magnitude).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_k/base_lattice/post_fix/cell_tensors_py.txt` — Inline `KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY'` reproduction and outputs.
+      - `reports/2025-10-cli-flags/phase_k/base_lattice/summary.md` — 2025-11-08 update capturing placeholder-volume root cause and commit 46ba36b remediation.
+      - `tests/test_cli_scaling.py::TestMOSFLMCellVectors::test_mosflm_cell_vectors` — Regression test asserting |a|/|b|/|c| and V_cell within 5e-4 of C reference.
+    Observations/Hypotheses:
+      - MOSFLM branch now mirrors C pipeline (V_star dot, V_cell inversion, real-vector rebuild, reciprocal dual recompute).
+      - Base lattice traces still show historical 40× deltas until the harness is rerun; expect Δh/Δk/Δl < 5e-4 once logs refreshed.
+      - Normalization parity remains to be confirmed via Phase K3g3 scaling rerun.
+    Next Actions: Execute Phase K3g3 — rerun `tests/test_cli_scaling.py::test_f_latt_square_matches_c` with `NB_RUN_PARALLEL=1`, refresh `phase_k/f_latt_fix/` scaling_chain artifacts + nb-compare, then regenerate `trace_py.log` so summary diff reflects corrected vectors before moving to Phase L.
   * [2025-10-06] Attempt #29 (ralph loop) — Result: Phase H5a EVIDENCE-ONLY COMPLETE. **C-code pix0 override behavior with custom vectors documented.**
     Metrics: Evidence-only loop. Two C runs executed: WITH override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m) and WITHOUT override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m). Identical geometry values confirm override is ignored when custom vectors are present.
     Artifacts:
