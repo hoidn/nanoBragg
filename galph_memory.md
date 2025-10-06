@@ -1063,3 +1063,11 @@ Follow-ups for Ralph:
 - Coin flip = heads → reviewed Ralph commits `ce28187`, `4e0e36e` (evidence-only, productive; no regressions). Feedback captured in input.md.
 - Authored new input.md directing Ralph to rerun trace harness, build pix0 reproduction notebook, clean up `attempt_log.txt`, append implementation notes, and run `pytest --collect-only -q` (evidence loop).
 - Follow-ups for Ralph next loop: produce the refreshed trace + pix0 reproduction artifacts, restore the attempt log with human-readable Attempt #21, log findings in implementation_notes.md, keep work evidence-only pending detector fix design.
+
+## 2025-10-06 (galph loop — Phase H3b kick-off)
+- `git pull --rebase` clean. Reviewed core docs + active plans + testing strategy per SOP.
+- Goal 1: Phase H3 evidence (Attempt #21) now complete; updated `plans/active/cli-noise-pix0/plan.md` to split H3 into H3a (done) and new H3b implementation task, and refreshed `[CLI-FLAGS-003]` Next Actions to focus on applying the BEAM-pivot transform plus regression test.
+- Goal 1 follow-up: Authored new input.md directing Ralph to implement the pix0 transform, add a targeted CLI regression test, capture artifacts under `reports/2025-10-cli-flags/phase_h/implementation/`, and document Attempt #22 before moving to parity (Phase H4).
+- Goal 2: Vectorization plan unchanged—Phase A evidence still outstanding; keep queued until CLI parity unblocks bandwidth.
+- Coin flip = heads: reviewed Ralph’s latest evidence commits (`4e0e36e`, `0f18548`); both were productive (manual sincg rejection, pix0 reproduction) with no regressions.
+- Follow-ups for Ralph: execute Phase H3b implementation per new memo, then proceed to H4 parity once regression test passes.
