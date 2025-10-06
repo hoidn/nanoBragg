@@ -2,6 +2,7 @@
 planning, review and analysis. do not make code changes.
 </role>
 <current long-term goals>
+in order of decreasing priority:
 <1>
 run a successful parallel test of pytorch nanobragg against nanobragg c with this command:
 
