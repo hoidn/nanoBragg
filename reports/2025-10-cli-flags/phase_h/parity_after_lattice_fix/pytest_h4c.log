@@ -1,0 +1,219 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/myenv/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+collecting ... collected 2 items
+
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot[cpu] FAILED [ 50%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot[cuda] FAILED [100%]
+
+=================================== FAILURES ===================================
+___________ TestCLIPix0Override.test_pix0_vector_mm_beam_pivot[cpu] ____________
+
+self = <tests.test_cli_flags.TestCLIPix0Override object at 0x7ba7a8ded350>
+device = 'cpu'
+
+    @pytest.mark.parametrize("device", ["cpu", pytest.param("cuda", marks=pytest.mark.skipif(
+        not torch.cuda.is_available(), reason="CUDA not available"))])
+    def test_pix0_vector_mm_beam_pivot(self, device):
+        """
+        Regression test for CLI-FLAGS-003 Phase H3b.
+    
+        CRITICAL FINDING from Phase H3b1:
+        When custom detector vectors are provided, C code IGNORES -pix0_vector_mm entirely.
+        The custom vectors already define the detector geometry completely.
+    
+        This test verifies BOTH scenarios:
+        1. WITH custom vectors: pix0_override has NO EFFECT (matches C behavior)
+        2. WITHOUT custom vectors: pix0_override IS applied
+    
+        Expected pix0 vector from C trace (phase_h) WITH custom vectors:
+        -0.216336514802265, 0.215206668836451, -0.230198010448577 meters
+    
+        Reference: plans/active/cli-noise-pix0/plan.md Phase H3b
+        Evidence: reports/2025-10-cli-flags/phase_h/implementation/pix0_mapping_analysis.md
+        """
+        import json
+        from pathlib import Path
+    
+        # Load expected C pix0 vector
+        expected_json_path = Path("reports/2025-10-cli-flags/phase_h/implementation/pix0_expected.json")
+        with open(expected_json_path) as f:
+            expected_data = json.load(f)
+    
+        expected_pix0_with_custom_vectors = torch.tensor([
+            expected_data["pix0_vector_m"]["x"],
+            expected_data["pix0_vector_m"]["y"],
+            expected_data["pix0_vector_m"]["z"]
+        ], device=device, dtype=torch.float32)
+    
+        # Custom detector vectors from supervisor command
+        custom_odet = (-0.000088, 0.004914, -0.999988)
+        custom_sdet = (-0.005998, -0.999970, -0.004913)
+        custom_fdet = (0.999982, -0.005998, -0.000118)
+    
+        # -pix0_vector_mm from supervisor command
+        pix0_override_mm = (-216.336293, 215.205512, -230.200866)
+    
+        # ==========================================
+        # CASE 1: WITH custom vectors → override should be IGNORED
+        # ==========================================
+        # From C trace: Xbeam=0.217742 m, Ybeam=0.213907 m
+        # For CUSTOM convention: Fbeam=Ybeam, Sbeam=Xbeam (no +0.5 offset)
+        # DetectorConfig expects beam_center_f/s in mm
+        Xbeam_m = 0.217742  # From C trace (meters)
+        Ybeam_m = 0.213907  # From C trace (meters)
+        beam_center_s_mm = Xbeam_m * 1000.0  # Convert to mm - Sbeam comes from Xbeam
+        beam_center_f_mm = Ybeam_m * 1000.0  # Convert to mm - Fbeam comes from Ybeam
+    
+        # Build detector from parsed config (with custom vectors)
+        from nanobrag_torch.config import DetectorConfig, DetectorConvention, DetectorPivot
+    
+        det_with_custom = Detector(
+            DetectorConfig(
+                distance_mm=231.27466,
+                pixel_size_mm=0.172,
+                spixels=1024,
+                fpixels=1024,
+                beam_center_f=beam_center_f_mm,  # mm
+                beam_center_s=beam_center_s_mm,  # mm
+                detector_convention=DetectorConvention.CUSTOM,
+                detector_pivot=DetectorPivot.BEAM,
+                pix0_override_m=(-0.216336293, 0.215205512, -0.230200866),  # Should be IGNORED
+                custom_beam_vector=(0.00051387949, 0.0, -0.99999986),
+                custom_odet_vector=custom_odet,
+                custom_sdet_vector=custom_sdet,
+                custom_fdet_vector=custom_fdet
+            ),
+            device=device,
+            dtype=torch.float32
+        )
+    
+        # Verify pix0 matches C expectation (override should be IGNORED)
+        pix0_delta = torch.abs(det_with_custom.pix0_vector - expected_pix0_with_custom_vectors)
+        max_error = torch.max(pix0_delta).item()
+    
+        # CLI-FLAGS-003 Phase H4c: Tolerance tightened to 5e-5 m (50 μm) after H4a beam-centre
+        # recomputation implementation. Expected values updated to fresh C trace from phase_h.
+        # The post-rotation newvector logic now correctly updates Fbeam/Sbeam and distance_corrected.
+>       assert max_error <= 5e-5, \
+            f"CASE 1 FAILED: With custom vectors, pix0_override should be IGNORED\n" \
+            f"pix0 delta exceeds 5e-5 m threshold: max_error={max_error:.6e} m\n" \
+            f"Expected (C trace): {expected_pix0_with_custom_vectors.cpu().numpy()}\n" \
+            f"Actual (PyTorch):   {det_with_custom.pix0_vector.cpu().numpy()}\n" \
+            f"Delta (per component): {pix0_delta.cpu().numpy()}"
+E       AssertionError: CASE 1 FAILED: With custom vectors, pix0_override should be IGNORED
+E         pix0 delta exceeds 5e-5 m threshold: max_error=3.858224e-03 m
+E         Expected (C trace): [-0.21633652  0.21520667 -0.23019801]
+E         Actual (PyTorch):   [-0.2124783   0.2190185  -0.23017962]
+E         Delta (per component): [3.8582236e-03 3.8118362e-03 1.8388033e-05]
+E       assert 0.003858223557472229 <= 5e-05
+
+tests/test_cli_flags.py:520: AssertionError
+___________ TestCLIPix0Override.test_pix0_vector_mm_beam_pivot[cuda] ___________
+
+self = <tests.test_cli_flags.TestCLIPix0Override object at 0x7ba6aecdfa80>
+device = 'cuda'
+
+    @pytest.mark.parametrize("device", ["cpu", pytest.param("cuda", marks=pytest.mark.skipif(
+        not torch.cuda.is_available(), reason="CUDA not available"))])
+    def test_pix0_vector_mm_beam_pivot(self, device):
+        """
+        Regression test for CLI-FLAGS-003 Phase H3b.
+    
+        CRITICAL FINDING from Phase H3b1:
+        When custom detector vectors are provided, C code IGNORES -pix0_vector_mm entirely.
+        The custom vectors already define the detector geometry completely.
+    
+        This test verifies BOTH scenarios:
+        1. WITH custom vectors: pix0_override has NO EFFECT (matches C behavior)
+        2. WITHOUT custom vectors: pix0_override IS applied
+    
+        Expected pix0 vector from C trace (phase_h) WITH custom vectors:
+        -0.216336514802265, 0.215206668836451, -0.230198010448577 meters
+    
+        Reference: plans/active/cli-noise-pix0/plan.md Phase H3b
+        Evidence: reports/2025-10-cli-flags/phase_h/implementation/pix0_mapping_analysis.md
+        """
+        import json
+        from pathlib import Path
+    
+        # Load expected C pix0 vector
+        expected_json_path = Path("reports/2025-10-cli-flags/phase_h/implementation/pix0_expected.json")
+        with open(expected_json_path) as f:
+            expected_data = json.load(f)
+    
+        expected_pix0_with_custom_vectors = torch.tensor([
+            expected_data["pix0_vector_m"]["x"],
+            expected_data["pix0_vector_m"]["y"],
+            expected_data["pix0_vector_m"]["z"]
+        ], device=device, dtype=torch.float32)
+    
+        # Custom detector vectors from supervisor command
+        custom_odet = (-0.000088, 0.004914, -0.999988)
+        custom_sdet = (-0.005998, -0.999970, -0.004913)
+        custom_fdet = (0.999982, -0.005998, -0.000118)
+    
+        # -pix0_vector_mm from supervisor command
+        pix0_override_mm = (-216.336293, 215.205512, -230.200866)
+    
+        # ==========================================
+        # CASE 1: WITH custom vectors → override should be IGNORED
+        # ==========================================
+        # From C trace: Xbeam=0.217742 m, Ybeam=0.213907 m
+        # For CUSTOM convention: Fbeam=Ybeam, Sbeam=Xbeam (no +0.5 offset)
+        # DetectorConfig expects beam_center_f/s in mm
+        Xbeam_m = 0.217742  # From C trace (meters)
+        Ybeam_m = 0.213907  # From C trace (meters)
+        beam_center_s_mm = Xbeam_m * 1000.0  # Convert to mm - Sbeam comes from Xbeam
+        beam_center_f_mm = Ybeam_m * 1000.0  # Convert to mm - Fbeam comes from Ybeam
+    
+        # Build detector from parsed config (with custom vectors)
+        from nanobrag_torch.config import DetectorConfig, DetectorConvention, DetectorPivot
+    
+        det_with_custom = Detector(
+            DetectorConfig(
+                distance_mm=231.27466,
+                pixel_size_mm=0.172,
+                spixels=1024,
+                fpixels=1024,
+                beam_center_f=beam_center_f_mm,  # mm
+                beam_center_s=beam_center_s_mm,  # mm
+                detector_convention=DetectorConvention.CUSTOM,
+                detector_pivot=DetectorPivot.BEAM,
+                pix0_override_m=(-0.216336293, 0.215205512, -0.230200866),  # Should be IGNORED
+                custom_beam_vector=(0.00051387949, 0.0, -0.99999986),
+                custom_odet_vector=custom_odet,
+                custom_sdet_vector=custom_sdet,
+                custom_fdet_vector=custom_fdet
+            ),
+            device=device,
+            dtype=torch.float32
+        )
+    
+        # Verify pix0 matches C expectation (override should be IGNORED)
+        pix0_delta = torch.abs(det_with_custom.pix0_vector - expected_pix0_with_custom_vectors)
+        max_error = torch.max(pix0_delta).item()
+    
+        # CLI-FLAGS-003 Phase H4c: Tolerance tightened to 5e-5 m (50 μm) after H4a beam-centre
+        # recomputation implementation. Expected values updated to fresh C trace from phase_h.
+        # The post-rotation newvector logic now correctly updates Fbeam/Sbeam and distance_corrected.
+>       assert max_error <= 5e-5, \
+            f"CASE 1 FAILED: With custom vectors, pix0_override should be IGNORED\n" \
+            f"pix0 delta exceeds 5e-5 m threshold: max_error={max_error:.6e} m\n" \
+            f"Expected (C trace): {expected_pix0_with_custom_vectors.cpu().numpy()}\n" \
+            f"Actual (PyTorch):   {det_with_custom.pix0_vector.cpu().numpy()}\n" \
+            f"Delta (per component): {pix0_delta.cpu().numpy()}"
+E       AssertionError: CASE 1 FAILED: With custom vectors, pix0_override should be IGNORED
+E         pix0 delta exceeds 5e-5 m threshold: max_error=3.858224e-03 m
+E         Expected (C trace): [-0.21633652  0.21520667 -0.23019801]
+E         Actual (PyTorch):   [-0.2124783   0.2190185  -0.23017962]
+E         Delta (per component): [3.8582236e-03 3.8118362e-03 1.8388033e-05]
+E       assert 0.003858223557472229 <= 5e-05
+
+tests/test_cli_flags.py:520: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot[cpu]
+FAILED tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot[cuda]
+============================== 2 failed in 2.43s ===============================

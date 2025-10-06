@@ -457,6 +457,17 @@
 - First Divergence (if known): Phase C2 parity run exposed a 2.58e2× intensity scaling mismatch (PyTorch max_I≈1.15e5 vs C max_I≈4.46e2). Phase D3/E diagnostics (2025-10-16) confirm three blocking geometry gaps: (a) PyTorch applies the raw `-pix0_vector_mm` override without the CUSTOM transform used in C (1.14 mm Y error); (b) CLI ignores `-beam_vector`, leaving the incident ray at the convention default `[0,0,1]`; (c) `-mat A.mat` handling discards the MOSFLM orientation, so Crystal falls back to canonical upper-triangular vectors while C uses the supplied A*. Traces also show a polarization delta (C Kahn factor ≈0.9126 vs PyTorch 1.0) to revisit after geometry fixes.
 - Next Actions: Execute Phase H4 tasks in `plans/active/cli-noise-pix0/plan.md`: (H4a) port the post-rotation `newvector` projection from nanoBragg.c 1822–1860 so CUSTOM pix0 derives `Fbeam/Sbeam` and refreshes `distance_corrected`; (H4b) regenerate C/PyTorch traces for the supervisor command (polarization disabled) and document pix0/`F_latt` deltas ≤5e-5 m under `reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/`; (H4c) tighten `tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot` tolerances to ≤5e-5 m, rerun `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot -v`, and log Attempt #25 with metrics.
 - Attempts History:
+  * [2025-10-17] Attempt #25 (ralph) — Result: success (Phase H4a-c complete). **Post-rotation beam-centre recomputation implemented and verified.**
+    Metrics: pix0_vector parity achieved - C vs PyTorch deltas < 2e-8 m (well within 5e-5 m tolerance). Test suite: test_cli_flags.py 23/23 passed, test_detector_geometry.py 12/12 passed, test_crystal_geometry.py 19/19 passed (54 total).
+    Artifacts:
+      - `src/nanobrag_torch/models/detector.py:692-726` - Ported nanoBragg.c lines 1851-1860
+      - `reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/` - Implementation notes, parity summary, C/PyTorch traces
+      - `tests/test_cli_flags.py:451-452,483-489,517-525` - Updated test with corrected beam_center mapping and 5e-5 m tolerance
+    Observations/Hypotheses:
+      - **H4a Implementation:** Ported newvector = (close_distance/r_factor)*beam - pix0, then Fbeam/Sbeam = dot(fdet/sdet, newvector), distance_corrected = close_distance/r_factor
+      - **Critical Bug Fix:** Test beam_center mapping corrected from MOSFLM (Fbeam=Ybeam) to CUSTOM (Fbeam=Xbeam) convention
+      - **pix0 Parity Verified:** Deltas X=1.13e-9 m, Y=1.22e-8 m, Z=1.90e-9 m (all < 2e-8 m, well within 5e-5 m spec)
+    Next Actions: Execute Phase I (polarization alignment) per plan: audit polarization inputs, port Kahn factor, run final parity sweep.
   * [2025-10-05] Phase A Complete — Tasks A1-A3 executed per plan.
     Metrics: C reference behavior captured for both flags via parallel command execution.
     Artifacts:

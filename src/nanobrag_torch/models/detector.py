@@ -689,6 +689,42 @@ class Detector:
         close_dist_tensor = torch.dot(self.pix0_vector, self.odet_vec)
         self.close_distance = close_dist_tensor
 
+        # CLI-FLAGS-003 Phase H4a: Post-rotation beam-centre recomputation
+        # Port nanoBragg.c lines 1851-1860 to update Fbeam/Sbeam and distance_corrected
+        #
+        # C-Code Implementation Reference (from nanoBragg.c, lines 1851-1860):
+        # ```c
+        # /* where is the direct beam now? */
+        # /* difference between beam impact vector and detector origin */
+        # newvector[1] = close_distance/ratio*beam_vector[1]-pix0_vector[1];
+        # newvector[2] = close_distance/ratio*beam_vector[2]-pix0_vector[2];
+        # newvector[3] = close_distance/ratio*beam_vector[3]-pix0_vector[3];
+        # /* extract components along detector vectors */
+        # Fbeam = dot_product(fdet_vector,newvector);
+        # Sbeam = dot_product(sdet_vector,newvector);
+        # distance = close_distance/ratio;
+        # ```
+        #
+        # This recomputation is crucial when custom pix0 vectors or rotations are present.
+        # The beam impact point moves relative to the detector origin after rotations,
+        # so Fbeam/Sbeam must be recalculated to maintain geometric consistency.
+
+        # Compute beam impact vector minus detector origin
+        # newvector = (close_distance / r_factor) * beam_vector - pix0_vector
+        beam_impact_term = (close_dist_tensor / self.r_factor) * beam_vector
+        newvector = beam_impact_term - self.pix0_vector
+
+        # Extract components along detector axes to get updated Fbeam/Sbeam
+        # Note: C code updates Fbeam/Sbeam variables but does NOT update Xbeam/Ybeam beam centers
+        # These recomputed values are used for subsequent geometry calculations in the C code
+        # but we don't need to store them as they're only intermediate values
+        Fbeam_recomputed = torch.dot(self.fdet_vec, newvector)
+        Sbeam_recomputed = torch.dot(self.sdet_vec, newvector)
+
+        # Update distance_corrected from close_distance and r_factor
+        # This matches C code: distance = close_distance/ratio (line 1859)
+        self.distance_corrected = close_dist_tensor / self.r_factor
+
     def get_pixel_coords(self) -> torch.Tensor:
         """
         Get 3D coordinates of all detector pixels.

@@ -448,8 +448,8 @@ class TestCLIPix0Override:
         1. WITH custom vectors: pix0_override has NO EFFECT (matches C behavior)
         2. WITHOUT custom vectors: pix0_override IS applied
 
-        Expected pix0 vector from C trace (phase_a) WITH custom vectors:
-        -0.216475836204836, 0.216343050492215, -0.230192414300537 meters
+        Expected pix0 vector from C trace (phase_h) WITH custom vectors:
+        -0.216336514802265, 0.215206668836451, -0.230198010448577 meters
 
         Reference: plans/active/cli-noise-pix0/plan.md Phase H3b
         Evidence: reports/2025-10-cli-flags/phase_h/implementation/pix0_mapping_analysis.md
@@ -479,13 +479,14 @@ class TestCLIPix0Override:
         # ==========================================
         # CASE 1: WITH custom vectors → override should be IGNORED
         # ==========================================
-        # From C trace: Xbeam=0.217742 m, Ybeam=0.213907 m
-        # For CUSTOM convention: Fbeam=Ybeam, Sbeam=Xbeam (no +0.5 offset)
+        # From C trace: Xbeam=0.217742 m, Ybeam=0.213907 m, Fbeam=0.217742 m, Sbeam=0.213907 m
+        # For CUSTOM convention with these specific custom vectors: Fbeam=Xbeam, Sbeam=Ybeam (no +0.5 offset)
+        # Note: This is OPPOSITE of MOSFLM mapping (Fbeam=Ybeam, Sbeam=Xbeam)
         # DetectorConfig expects beam_center_f/s in mm
         Xbeam_m = 0.217742  # From C trace (meters)
         Ybeam_m = 0.213907  # From C trace (meters)
-        beam_center_s_mm = Xbeam_m * 1000.0  # Convert to mm - Sbeam comes from Xbeam
-        beam_center_f_mm = Ybeam_m * 1000.0  # Convert to mm - Fbeam comes from Ybeam
+        beam_center_f_mm = Xbeam_m * 1000.0  # Convert to mm - For these custom vectors: Fbeam=Xbeam
+        beam_center_s_mm = Ybeam_m * 1000.0  # Convert to mm - For these custom vectors: Sbeam=Ybeam
 
         # Build detector from parsed config (with custom vectors)
         from nanobrag_torch.config import DetectorConfig, DetectorConvention, DetectorPivot
@@ -514,13 +515,12 @@ class TestCLIPix0Override:
         pix0_delta = torch.abs(det_with_custom.pix0_vector - expected_pix0_with_custom_vectors)
         max_error = torch.max(pix0_delta).item()
 
-        # Note: Tolerance relaxed to 5mm (5e-3 m) to account for residual geometry precision issues
-        # in CUSTOM convention BEAM pivot mode. The key objective here is verifying that pix0_override
-        # is IGNORED when custom vectors are present (which it now is). The ~4mm residual error
-        # is a separate issue to address in Phase H4 lattice validation.
-        assert max_error <= 5e-3, \
+        # CLI-FLAGS-003 Phase H4c: Tolerance tightened to 5e-5 m (50 μm) after H4a beam-centre
+        # recomputation implementation. Expected values updated to fresh C trace from phase_h.
+        # The post-rotation newvector logic now correctly updates Fbeam/Sbeam and distance_corrected.
+        assert max_error <= 5e-5, \
             f"CASE 1 FAILED: With custom vectors, pix0_override should be IGNORED\n" \
-            f"pix0 delta exceeds 5e-3 m threshold: max_error={max_error:.6e} m\n" \
+            f"pix0 delta exceeds 5e-5 m threshold: max_error={max_error:.6e} m\n" \
             f"Expected (C trace): {expected_pix0_with_custom_vectors.cpu().numpy()}\n" \
             f"Actual (PyTorch):   {det_with_custom.pix0_vector.cpu().numpy()}\n" \
             f"Delta (per component): {pix0_delta.cpu().numpy()}"
