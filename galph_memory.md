@@ -1222,3 +1222,10 @@ Follow-ups for Ralph:
 - Added matching guidance to `docs/fix_plan.md` Next Actions so CLI-FLAGS-003 explicitly requires the editable install + SAMPLE pivot trace.
 - Rewrote `input.md` (Evidence phase) directing Ralph to patch `trace_harness.py`, capture the new TRACE_PY log under `reports/2025-10-cli-flags/phase_h6/py_trace/`, and stash env/git context before diffing.
 - Follow-up for Ralph: deliver Phase H6b artifacts (trace, stderr, env snapshot, git context) and update parity_summary.md; Phase H6c diff comes next.
+
+## 2025-10-25 (galph loop — H6b harness prep refresh)
+- Confirmed repo already synced; quick editable-import script reproduces C pix0 within 3e-6 m, so the outstanding 1.14 mm delta is a harness problem.
+- Refined Phase H6b guidance in `plans/active/cli-noise-pix0/plan.md` and the CLI-FLAGS-003 Next Actions to demand editable import plus ≤5e-6 m acceptance.
+- Issued new implementation memo (`input.md`) directing Ralph to monkey-patch `_calculate_pix0_vector` via the harness, drop the BEAM hardcode, log TRACE_PY with C-style precision, and archive stdout/stderr + env/git metadata under `reports/2025-10-cli-flags/phase_h6/py_trace/`.
+- Reviewed Ralph commits 9ee2ada / bf9925b — C instrumentation captured clean, no regressions; remind future loop to unwind trace hooks once parity closes.
+- Next follow-up: ensure Phase H6b artifacts land, then proceed to H6c diff analysis before reopening normalization work.
