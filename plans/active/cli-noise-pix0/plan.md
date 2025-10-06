@@ -114,6 +114,6 @@ Exit Criteria: Polarization entries in C/PyTorch traces agree (≈0.9126 for sup
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| I1 | Audit polarization inputs | [ ] | Review CLI defaults/flags (`-polar`, `-nopolar`) and C calculations (nanoBragg.c:2080-2155); map them to PyTorch simulator inputs. |
-| I2 | Implement polarization parity | [ ] | Update simulator polarization handling to compute Kahn factor per spec/C reference. Document conversions and add targeted regression tests. |
+| I1 | Audit polarization inputs | [X] | ✅ Completed 2025-10-17. C defaults polar=1.0/polarization=0.0/nopolar=0 verified at nanoBragg.c:308-309. PyTorch BeamConfig.polarization_factor was defaulting to 0.0 instead of 1.0. |
+| I2 | Implement polarization parity | [X] | ✅ Completed 2025-10-17. Updated BeamConfig.polarization_factor default to 1.0 (config.py:483-487). Added TestCLIPolarization with 3 tests (test_cli_flags.py:591-675). Tests verify default=1.0, -nopolar flag, and -polar override. |
 | I3 | Final parity sweep | [ ] | Rerun supervisor command traces verifying polarization parity; update docs/fix_plan.md with closure summary and archive plan. |

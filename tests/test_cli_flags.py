@@ -586,3 +586,89 @@ class TestCLIPix0Override:
         assert det_with_custom.pix0_vector.dtype == torch.float32
         assert det_without_custom.pix0_vector.device.type == device
         assert det_without_custom.pix0_vector.dtype == torch.float32
+
+
+class TestCLIPolarization:
+    """Test CLI polarization defaults match C reference (CLI-FLAGS-003 Phase I)."""
+
+    def test_default_polarization_parity(self):
+        """
+        Verify BeamConfig.polarization_factor defaults to 1.0 to match C polar=1.0.
+
+        C reference: golden_suite_generator/nanoBragg.c:308-309
+            double polar=1.0,polarization=0.0;
+            int nopolar = 0;
+
+        PyTorch parity requirement:
+            BeamConfig.polarization_factor must default to 1.0 (fully polarized)
+            BeamConfig.nopolar must default to False
+
+        Evidence: reports/2025-10-cli-flags/phase_e/trace_summary.md lines 133-139
+            Shows PyTorch using 1.0 vs C using ~0.91 (calculated Kahn factor)
+            Root cause was PyTorch defaulting to 0.0 instead of 1.0
+        """
+        # Parse minimal command with no explicit polarization flags
+        config = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-default_F', '100',
+            '-lambda', '6.2',
+            '-distance', '100',
+            '-detpixels', '128'
+        ])
+
+        # When no polarization flags provided, config dict should not contain polarization keys
+        # BeamConfig() constructor will use its default polarization_factor=1.0
+        assert 'polarization_factor' not in config, \
+            "Config should not contain polarization_factor when no -polar flag provided"
+        assert config.get('nopolar', False) is False, \
+            "Config nopolar should be False or absent when no -nopolar flag provided"
+
+        # Verify BeamConfig default directly by importing and instantiating
+        from nanobrag_torch.config import BeamConfig
+        beam_config = BeamConfig()
+        assert beam_config.polarization_factor == 1.0, \
+            f"Expected BeamConfig default polarization_factor=1.0 (C polar=1.0), got {beam_config.polarization_factor}"
+        assert beam_config.nopolar is False, \
+            f"Expected BeamConfig default nopolar=False (C nopolar=0), got {beam_config.nopolar}"
+
+    def test_nopolar_flag(self):
+        """
+        Verify -nopolar flag sets nopolar=True.
+
+        C reference: nanoBragg.c:844
+            nopolar = 1;
+        """
+        config = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-default_F', '100',
+            '-lambda', '6.2',
+            '-distance', '100',
+            '-detpixels', '128',
+            '-nopolar'
+        ])
+
+        # Verify -nopolar flag sets nopolar in config
+        assert config.get('nopolar', False) is True, \
+            f"Expected config['nopolar']=True with -nopolar flag, got {config.get('nopolar')}"
+
+    def test_polar_override(self):
+        """
+        Verify -polar <value> overrides default polarization_factor.
+
+        C reference: nanoBragg.c:847-852
+            polar = strtod(argv[++i],NULL);
+        """
+        config = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-default_F', '100',
+            '-lambda', '6.2',
+            '-distance', '100',
+            '-detpixels', '128',
+            '-polar', '0.5'
+        ])
+
+        # Verify -polar flag stores value in config
+        assert 'polarization_factor' in config, \
+            "Expected config to contain polarization_factor when -polar flag provided"
+        assert config['polarization_factor'] == pytest.approx(0.5, rel=0, abs=1e-12), \
+            f"Expected config['polarization_factor']=0.5 from -polar 0.5, got {config['polarization_factor']}"

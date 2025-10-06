@@ -480,7 +480,9 @@ class BeamConfig:
     source_wavelengths: Optional[torch.Tensor] = None  # (N,) wavelengths in meters for each source
 
     # Beam polarization
-    polarization_factor: float = 0.0  # Kahn polarization factor K in [0,1] (0.0 = unpolarized, matches C default)
+    # C defaults: polar=1.0, polarization=0.0, nopolar=0 (golden_suite_generator/nanoBragg.c:308-309)
+    # polar controls the Kahn factor application; polarization is the E-vector rotation angle
+    polarization_factor: float = 1.0  # Kahn polarization factor K in [0,1] (1.0 = fully polarized, matches C default polar=1.0)
     nopolar: bool = False  # If True, force polarization factor to 1 (disable polarization)
     polarization_axis: tuple[float, float, float] = (0.0, 0.0, 1.0)  # Polarization E-vector direction
 
