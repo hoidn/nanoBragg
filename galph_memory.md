@@ -1262,3 +1262,13 @@ Follow-ups for Ralph:
 - Authored new `input.md` (Evidence phase) instructing Ralph to rerun the trace harness with pivot fix, capture diff vs C trace, compute deltas, run ROI nb-compare, and prepare Attempt #41 notes; memo also emphasises no pytest this loop.
 - Key gap notes: normalization tasks K2/K3 still blocked pending H6g; vectorization plan untouched (Phase A baseline scripts outstanding).
 - Follow-up for Ralph: execute H6g evidence capture, archive artifacts under `reports/2025-10-cli-flags/phase_h6/post_fix/`, then log Attempt #41 in `docs/fix_plan.md` with measured |Δpix0| before touching normalization.
+
+## 2025-10-27 (galph loop — K2 evidence staging)
+- `git pull --rebase` clean; synced with origin before review.
+- Read docs/index.md, specs/spec-a.*, arch.md, config map, debugging SOP, testing_strategy.md to refresh guardrails for CLI parity + scaling work.
+- Verified CLI-FLAGS-003 Attempt #41 already landed: pix0 deltas ≤2.85 µm with SAMPLE pivot. Updated `plans/active/cli-noise-pix0/plan.md` context (new 2025-10-27 snapshot) and marked H6g `[D]`; expanded Phase K2 guidance to demand quantitative ratios explaining `test_metrics_failure.json`.
+- Refreshed `docs/fix_plan.md` Next Actions so K2 (scaling harness rerun + ratio analysis) and K3 (targeted pytest + docs) are the only blockers before Phase L. Issued replacement Evidence memo in `input.md` targeting K2 harness rerun and scaling markdown refresh.
+- Coin flip → heads: reviewed Ralph’s last commits. `ea8092f` (H6f) adds solid pivot forcing + regression test ✅. `921780a` only updates fix_plan. `0b7eaf7` still leaves parity PNG/JPEG artifacts in repo root (img*_*.png, intimage*.jpeg, noiseimage_preview.jpeg) — remind Ralph to relocate/delete once evidence obligations satisfied.
+- Noted that `reports/2025-10-cli-flags/phase_k/f_latt_fix/test_metrics_failure.json` still reflects pre-pivot ratios (corr≈0.173); next loop must regenerate after SAMPLE pivot to see if F_cell/F_latt remain off.
+- Vectorization plan remains untouched; Phase A baselines for tricubic/absorption still pending once CLI parity unblocks bandwidth.
+- Follow-up for Ralph: execute Phase K2 per new memo, write updated scaling metrics (including F_cell vs C), keep Attempt #41 notes intact, and stage plan for K3 if ratios finally align.
