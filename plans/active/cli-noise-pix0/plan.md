@@ -89,15 +89,16 @@ Exit Criteria: Crystal trace (rotated a/b/c vectors) aligns with C for the super
 | G3 | Trace verification + parity rerun | [D] | ✅ 2025-10-06 Attempt #18 (ralph). Fixed MOSFLM matrix transpose bug (`src/nanobrag_torch/io/mosflm.py:88`). Reciprocal vectors now match C exactly (9/9 components to 16 decimals). Miller indices match: (2,2,-13). F_cell perfect match: 300.58. Real vectors within 0.05Å (<0.2% error). Artifacts: `reports/2025-10-cli-flags/phase_g/trace_summary_orientation_fixed.md`, `traces/trace_c.log`, `traces/trace_py_fixed.log`. Intensity parity still divergent (deferred to Phase H polarization). |
 
 ### Phase H — Lattice Structure Factor Alignment
-Goal: Bring scattering vector (`hkl_frac`) and lattice structure factor (`F_latt*`) parity in line with C so intensity mismatches narrow before polarization work.
+Goal: Ensure the CLI-provided beam vector propagates through Detector→Simulator and bring scattering/lattice parity back in line before polarization work.
 Prereqs: Phases F and G complete; orientation traces captured (Phase G3 artifacts in place).
 Exit Criteria: Trace comparison shows `h`, `k`, `l` fractional components within 1e-3 of C, `F_latt_a/b/c` within 0.5% (signed), and a parity rerun demonstrates ≥0.95 correlation improvement attributable to lattice fixes (polarization still disabled).
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| H1 | Refresh trace evidence post-orientation | [ ] | Re-run `reports/2025-10-cli-flags/phase_e/trace_harness.py` (updated to drop manual beam override) so the PyTorch trace reflects current CLI wiring. Store diff under `reports/2025-10-cli-flags/phase_h/trace_comparison.md`, highlighting `hkl_frac` and `F_latt*` deltas. |
-| H2 | Diagnose & fix lattice mismatch | [ ] | Compare C lattice pipeline (`nanoBragg.c:3005-3178`) with `Simulator._compute_intensity()` to pinpoint the divergence (likely sincg input or Na/Nb/Nc scaling). Implement fix preserving vectorization/device neutrality; capture rationale in `phase_h/implementation_notes.md`. |
-| H3 | Validate lattice parity | [ ] | Re-run C/PyTorch parity (float image + trace) without polarization, confirm `F_latt` components align within tolerance and intensity gap narrows (<10×). Update docs/fix_plan Attempt log with findings and artifacts under `phase_h/parity_after_lattice_fix/`. |
+| H1 | Refresh trace evidence post-orientation | [D] | ✅ 2025-10-17: `reports/2025-10-cli-flags/phase_h/trace_harness.py` + `trace_comparison.md` captured the no-override trace and logged Attempt #19 (beam vector divergence documented). |
+| H2 | Fix incident beam propagation from CLI | [ ] | Update `Simulator` initialization to consume `detector.beam_vector` (preserving device/dtype + normalization) so CLI `-beam_vector` reaches physics kernels; rerun `trace_harness.py` to confirm `incident_vec` matches C before proceeding. Record notes in `phase_h/implementation_notes.md`. |
+| H3 | Diagnose & fix residual lattice mismatch | [ ] | Once beam vector parity is green, compare `F_latt*` and `hkl_frac` vs C (nanoBragg.c:3005-3178) to locate remaining divergence (likely sincg input or Na/Nb/Nc scaling). Implement fixes without breaking vectorization/device neutrality; document in `phase_h/implementation_notes.md`. |
+| H4 | Validate lattice parity | [ ] | Re-run C/PyTorch parity (float image + trace) with polarization disabled, confirm `F_latt` components within 0.5% and intensity gap <10×. Archive metrics under `phase_h/parity_after_lattice_fix/` and update docs/fix_plan Attempt log. |
 
 ### Phase I — Polarization Alignment (follow-up)
 Goal: Match C’s Kahn polarization factor once lattice geometry aligns.
