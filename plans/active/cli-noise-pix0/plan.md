@@ -3,6 +3,7 @@
 - Phase Goal: Accept `-nonoise` and `-pix0_vector_mm` flags with C-equivalent semantics so the parallel comparison command in prompts/supervisor.md executes end-to-end.
 - Dependencies: specs/spec-a-cli.md §§3.2–3.4, docs/architecture/detector.md §5, docs/development/c_to_pytorch_config_map.md (detector pivot + noise), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860 (flag behavior), docs/debugging/detector_geometry_checklist.md (pix0 validation), docs/development/testing_strategy.md §2 (CLI parity tests).
 - Current gap snapshot: CLI flag parsing and detector override handling now land; remaining gaps are documentation updates (Phase C3/C4) and unresolved physics parity — Phase D3 showed geometry mismatch requiring Phase E trace comparison before implementation fixes.
+- Newly observed gap (2025-10-16): CLI ignores `-beam_vector`, so PyTorch runs retain the default +Z beam direction instead of the custom vector (`0.00051387949, 0, -0.99999986`) used by the supervisor command. This must be captured in Phase E evidence and resolved alongside the pix0 transform port.
 
 ### Phase A — Requirements & Trace Alignment
 Goal: Confirm the authoritative semantics for both flags and capture the C reference behavior (including unit expectations) before touching implementation.
@@ -60,6 +61,7 @@ Exit Criteria: Trace comparison identifies first divergent variable; findings lo
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
+| E0 | Verify beam vector parity | [ ] | Execute a one-off snippet (e.g. `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python - <<'PY' …`) that instantiates the CLI configs for the supervisor command and prints `Detector(...).beam_vector`; capture stdout under `reports/2025-10-cli-flags/phase_e/beam_vector_check.txt`. Expect C trace beam direction `0.00051387949 0 -0.99999986`; PyTorch currently returns `[0, 0, 1]`, marking the earliest divergence before pix0 transforms. |
 | E1 | Instrument C trace for peak pixel | [ ] | Add temporary `TRACE_C:` prints (pix0_vector, incident_beam_direction, scattering_vector, h/k/l, F_cell, F_latt, omega) for pixel (slow=1039, fast=685); build via `make -C golden_suite_generator`. Store log at `reports/2025-10-cli-flags/phase_e/c_trace.log`. |
 | E2 | Generate matching PyTorch trace | [ ] | Use `scripts/debug_pixel_trace.py` (or purpose-built harness) to log identical variables for the same pixel; respect `KMP_DUPLICATE_LIB_OK=TRUE`. Save to `reports/2025-10-cli-flags/phase_e/pytorch_trace.log`. |
 | E3 | Diff traces and identify first divergence | [ ] | Perform line-by-line comparison (e.g., `diff -u`) and document the first mismatched value in `trace_comparison.md`, including hypotheses referencing spec lines. Update docs/fix_plan.md `[CLI-FLAGS-003]` Attempt history with divergence summary. |

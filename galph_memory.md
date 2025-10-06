@@ -945,3 +945,11 @@ Follow-ups for Ralph:
 - Regenerated `input.md` (100 lines) instructing Ralph to gather C and PyTorch traces for pixel (1039,685), diff them, and log findings under `reports/2025-10-cli-flags/phase_e/` plus a new Attempts entry.
 - Observation: Ralph's `analyze_intensity.py` still ends with scaling hypotheses; revisit once trace pinpoints the true divergence.
 - Next steps for Ralph: execute plan Phase E1–E2 trace capture, produce `trace_diff.txt`/`trace_comparison.md`, and hold off on fixes until divergence is documented.
+
+## 2025-10-06 (galph loop — beam vector gap)
+- Sync clean; consumed docs per SOP plus recent reports before analysis.
+- Ran inline CLI harness (no artifact yet) showing `Detector.beam_vector` remains `[0.,0.,1.]` despite `-beam_vector 0.00051387949 0 -0.99999986`; C log uses the custom vector, explaining additional geometry drift beyond pix0 transform.
+- Updated `plans/active/cli-noise-pix0/plan.md` Phase E with new task E0 targeting beam-vector parity evidence and noted the new gap in plan context.
+- Extended `docs/fix_plan.md` `[CLI-FLAGS-003]` first-divergence summary + Attempt #6 documenting the missing beam-vector wiring and pointing Ralph at plan task E0 before implementation.
+- Rewrote `input.md` (beam-vector snippet, evidence-only loop) so Ralph captures `reports/2025-10-cli-flags/phase_e/beam_vector_check.txt` and logs it in fix_plan before any code edits.
+- Follow-up: Ralph must run the snippet, store artifact, update Attempts, then continue with Phase E traces; implementation work waits until both beam and pix0 align with C.
