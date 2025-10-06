@@ -808,6 +808,24 @@
       - Device/dtype neutrality preserved: detector.beam_vector already returns tensor with correct device/dtype
       - No regression: All existing geometry and CLI tests pass
     Next Actions: (1) Re-run Phase H1 trace harness (`reports/2025-10-cli-flags/phase_h/trace_harness.py`) to verify `incident_vec` now matches C reference; (2) Once trace confirms beam vector parity, proceed to Phase H3 (diagnose lattice structure factor mismatch per plan); (3) After H3/H4 complete, execute Phase F3 parity rerun with full lattice+beam fixes in place.
+  * [2025-10-06] Attempt #22 (ralph loop i=23) — Result: evidence-only (Phase H3 investigation complete). **sincg argument hypothesis REJECTED - Miller indices divergence is the root cause.**
+    Metrics: Pytest collection 625 tests successful in 2.71s. Manual sincg validation proves both formulations (C: `sincg(π*h, Na)` and PyTorch: `sincg(π*(h-h0), Na)`) produce identical results (Δ ~2.8e-12, float64 noise level). Trace comparison confirms F_latt components still diverge due to upstream Miller index calculation errors (h Δ=0.097, k Δ=0.024, l Δ=0.120).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_h/trace_py_after_H3.log` - PyTorch trace after H2 beam vector fix (regenerated)
+      - `reports/2025-10-cli-flags/phase_h/trace_py_after_H3.stderr` - Stderr from trace harness run
+      - `reports/2025-10-cli-flags/phase_h/manual_sincg.md` - Manual sincg calculation proving both approaches yield identical results
+      - `reports/2025-10-cli-flags/phase_h/implementation_notes.md` - Updated with 2025-10-06 section rejecting sincg hypothesis and identifying Miller index divergence as root cause
+      - `reports/2025-10-cli-flags/phase_h/pytest_collect.log` - Pytest collection log (625 tests, no breakage)
+    Observations/Hypotheses:
+      - **sincg Hypothesis REJECTED:** Manual calculation proves `sincg(π*2.001203, 36) ≈ sincg(π*0.001203, 36)` (both produce ~35.889, matching C expected value)
+      - **ROOT CAUSE IDENTIFIED:** Miller indices (h,k,l) themselves differ between C and PyTorch implementations
+        - C trace: h=2.001, k=1.993, l=-12.991
+        - PyTorch: h=2.098, k=2.017, l=-12.871 (from earlier grep)
+        - All deltas exceed 1e-3 threshold (Phase H exit criteria violated)
+      - **Upstream Problem:** Miller index calculation `h = q·a*` produces different results despite reciprocal vectors matching (Phase G3)
+      - **New Suspects:** (1) Scattering vector calculation - H2 showed 0.06% difference (may be too loose); (2) Pixel position calculation - pix0_vector differs at mm scale; (3) Reciprocal vector rotation needs revalidation
+      - F_latt sign/magnitude errors are **symptoms** not root cause - fixing Miller indices will resolve lattice factors
+    Next Actions: (1) Compare latest PyTorch trace (trace_py_after_H3.log) with C trace to verify current Miller indices after H2 beam fix; (2) Trace backwards from Miller index calculation: review `h = q·a*` computation in simulator; (3) If scattering vector 0.06% delta is suspect, investigate `q = (k_out - k_in)/λ` calculation; (4) Check if pix0_vector difference needs addressing before lattice work; (5) No code changes until evidence gathering complete per Phase H3 mandate.
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; **(viii) Phase F3 parity evidence captured** ✅ (Attempt #12); **(ix) Phase G2 MOSFLM orientation ingestion complete** ✅ (Attempt #17); **(x) Phase G3 trace verification complete with transpose fix** ✅ (Attempt #18); (xi) Phase H lattice structure factor alignment ❌ pending; (xii) Phase F3 parity rerun with lattice fix ❌; (xiii) Phase I polarization alignment ❌; (xiv) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌.
 
