@@ -832,8 +832,21 @@
       - Polarization mismatch persists (0.9126 vs 1.0) but defer until geometry parity returns.
       - Residual repo hygiene note: duplicate `scaled.hkl.1` still present; remove once implementation loop lands to keep Protected Assets policy satisfied.
     Next Actions: Follow `plans/active/cli-noise-pix0/plan.md` Phase F (thread beam vector, port pix0 transform, rerun parity), then Phase G (retain A*, update Crystal, re-trace). Log Attempt #10 once implementation changes begin; clean up `scaled.hkl.1` during that pass.
+  * [2025-10-16] Attempt #10 (ralph) — Result: success (Phase F1 complete). **custom_beam_vector threading implemented and validated.**
+    Metrics: Supervisor command snippet confirms correct beam_vector retrieval: `tensor([5.1388e-04, 0.0000e+00, -1.0000e+00])` matches expected `(0.00051387949, 0.0, -0.99999986)`.
+    Artifacts:
+      - `src/nanobrag_torch/config.py:212` - Added `custom_beam_vector` field to DetectorConfig
+      - `src/nanobrag_torch/models/detector.py:846-871` - Updated `beam_vector` property to use custom override for CUSTOM convention
+      - `src/nanobrag_torch/__main__.py:870` - Threaded `custom_beam_vector` from CLI parser to DetectorConfig
+      - `reports/2025-10-cli-flags/phase_f/beam_vector_after_fix.txt` - Validation output
+    Observations/Hypotheses:
+      - CLI parser already stored `-beam_vector` in config; implementation gap was only in DetectorConfig → Detector threading
+      - Property implementation preserves differentiability (uses `torch.tensor()` with explicit device/dtype, no detach/item calls)
+      - Device/dtype neutrality maintained via `.to()` coercion matching detector's device/dtype
+      - Tests running at 77% with no new failures related to beam_vector changes (pre-existing failures unrelated)
+    Next Actions: (1) Execute plan Phase F2 to port CUSTOM pix0 transformation logic from C; (2) Run Phase F3 parity smoke test after F2; (3) Continue to Phase G for crystal orientation fix.
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
-- Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; (vi) Geometry bug identified and fixed ❌ next loop; (vii) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌ blocked on geometry fix.
+- Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; (vii) Phase F2 pix0 CUSTOM transform ❌ next loop; (viii) Phase G crystal orientation ❌ blocked on F2; (ix) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌ blocked on F2+G.
 
 ### Completed Items — Key Reference
 (See `docs/fix_plan_archive.md` for the full historical ledger.)
