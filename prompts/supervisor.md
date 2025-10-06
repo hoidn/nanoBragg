@@ -54,18 +54,33 @@ READ the following files:
 <0>
 <1>
 do a deep analysis of the codebase in light of the <current long term goals>. What are some current issues / gaps and possible approaches to resolving them? Review docs/fix_plan.md and plans/active/, as previous iterations of you may have already done some legwork.
- 
-Phase Gate (Evidence): If the active plan phase is Evidence, Do Now SHALL be evidence‑only: run the authoritative reference reproduction commands and capture the required artifacts; at most run the project’s test discovery (no execution). Do not include runnable tests.
 
-Validation Preflight (tests): Before listing any test file/identifier in Do Now, validate that it resolves via the project’s documented test discovery; if validation fails, omit tests and note “(none — evidence‑only this loop)” and add a TODO in docs/fix_plan.md documenting the missing mapping.
+GENERAL EVIDENCE/Triage CONTRACT (applies to any project):
+- Evidence phase is analysis‑only. Do not change code; at most run test discovery.
+- Produce a first‑pass triage that narrows hypotheses before any implementation:
+  - Metrics: compute 3–5 domain‑appropriate metrics (magnitude, variance, correlation/RMSE, counts), and note reproducibility across ≥2 runs if applicable.
+  - Factor check: compare the observed delta’s scale against documented multiplicative factors (e.g., counts/steps/weights/oversampling). Record any near‑equal matches.
+  - Invariants: list any expected invariants (units, orientations, normalizations) and whether they hold.
+  - Minimal first‑divergence (if traces exist): capture the first differing variable only; don’t expand into full debugging.
+  - Top hypotheses: list up to 2 ranked hypotheses with file:line pointers and doc citations; include confidence and the concrete observation each explains.
+  - Next action: one authoritative command that would confirm/disconfirm the highest‑ranked hypothesis.
 
-Human Summary (input.md header): Prepend a short summary block with the following lines (validated where applicable):
-- Summary: <one‑sentence goal for this loop>
+ARTIFACT PREFLIGHT (generic):
+- If required baseline artifacts are missing, run only the documented reproduction commands from AUTHORITATIVE_CMDS_DOC to generate them, then stop at triage.
+- Place artifacts under `reports/<YYYY-MM-DD>-<short_tag>/<phase>/`; include a brief SUMMARY.md and a machine‑readable stats file (e.g., JSON/CSV). Do not commit large binaries outside reports/.
+
+VALIDATION PREFLIGHT (tests):
+- Before listing any test identifier in Do Now, validate it resolves via the project’s test discovery. If not, omit and note “(none — evidence‑only this loop)” and add a TODO in docs/fix_plan.md for the missing mapping.
+
+HUMAN SUMMARY (input.md header additions):
+- Summary: <one‑sentence goal>
 - Phase: <Evidence | Implementation | Validation>
-- Focus: <plan item ID/title from docs/fix_plan.md>
+- Focus: <plan item>
 - Branch: <expected branch>
+- Observed delta: <brief description + key metric(s)>
+- Top hypotheses: <H1, H2>
 - Mapped tests: <validated list | none — evidence‑only>
-- Artifacts: <key paths to produce under reports/>
+- Artifacts: <key paths under reports/>
 </1>
 <2>
 flip a coin using python. if it comes up <heads>:
