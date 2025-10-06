@@ -1,9 +1,9 @@
 {
   "pix0_vector_m": {
-    "x": -0.216336514802265,
-    "y": 0.215206668836451,
-    "z": -0.230198010448577
+    "x": -0.216475836,
+    "y": 0.216343050,
+    "z": -0.230192414
   },
-  "source": "reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/trace_c.log",
-  "note": "Expected DETECTOR_PIX0_VECTOR from C trace with custom vectors (pix0_override IGNORED per precedence rule)"
+  "source": "reports/2025-10-cli-flags/phase_h6/c_trace/trace_c_pix0.log",
+  "note": "Expected DETECTOR_PIX0_VECTOR from C trace with custom vectors and SAMPLE pivot (Phase H6f fix). Custom vectors FORCE SAMPLE pivot in C, so pix0_override is IGNORED per precedence rule. Updated from Phase H6a C trace showing correct SAMPLE pivot values."
 }

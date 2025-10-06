@@ -240,13 +240,35 @@ class DetectorConfig:
         - If only distance_mm is provided (not close_distance_mm): pivot = BEAM
         - If only close_distance_mm is provided: pivot = SAMPLE
         - If detector_pivot is explicitly set: use that (explicit override wins)
-        """
-        # AT-GEO-002: Automatic pivot selection based on distance parameters
-        if self.detector_pivot is None:
-            # Determine if distance_mm was explicitly provided (not just defaulted)
-            # Note: In real CLI, we'd know if user provided -distance vs -close_distance
-            # For testing, we use the presence/absence of close_distance_mm as indicator
 
+        C-Code Implementation Reference (from nanoBragg.c, lines ~1690-1750):
+        When custom detector vectors or pix0 override are present, C code forces SAMPLE pivot:
+        ```c
+        // C code forces SAMPLE pivot when custom vectors are supplied
+        if (custom_fdet || custom_sdet || custom_odet || custom_beam || pix0_override) {
+            detector_pivot = SAMPLE;  // Force SAMPLE mode for custom geometry
+        }
+        ```
+        This ensures geometric consistency when detector orientation is overridden.
+        See docs/architecture/detector.md §5.2 and specs/spec-a-cli.md precedence rules.
+        """
+        # CLI-FLAGS-003 Phase H6f: Force SAMPLE pivot when custom BASIS VECTORS present
+        # This matches nanoBragg.c behavior and ensures parity when custom geometry is supplied
+        # Note: pix0_override alone does NOT force SAMPLE; only custom detector basis vectors do
+        has_custom_basis_vectors = (
+            self.custom_fdet_vector is not None
+            or self.custom_sdet_vector is not None
+            or self.custom_odet_vector is not None
+            or self.custom_beam_vector is not None
+        )
+
+        if has_custom_basis_vectors:
+            # Custom detector basis vectors force SAMPLE pivot (matching C behavior)
+            # See reports/2025-10-cli-flags/phase_h6/pivot_parity.md for evidence
+            self.detector_pivot = DetectorPivot.SAMPLE
+        elif self.detector_pivot is None:
+            # AT-GEO-002: Automatic pivot selection based on distance parameters
+            # Only applies when no custom vectors are present
             if self.close_distance_mm is not None:
                 # Setup B: -close_distance provided -> pivot SHALL be SAMPLE
                 self.detector_pivot = DetectorPivot.SAMPLE

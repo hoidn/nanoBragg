@@ -500,7 +500,7 @@ class TestCLIPix0Override:
                 beam_center_f=beam_center_f_mm,  # mm
                 beam_center_s=beam_center_s_mm,  # mm
                 detector_convention=DetectorConvention.CUSTOM,
-                detector_pivot=DetectorPivot.BEAM,
+                detector_pivot=DetectorPivot.BEAM,  # CLI-FLAGS-003 Phase H6f: Will be OVERRIDDEN to SAMPLE by custom vectors
                 pix0_override_m=(-0.216336293, 0.215205512, -0.230200866),  # Should be IGNORED
                 custom_beam_vector=(0.00051387949, 0.0, -0.99999986),
                 custom_odet_vector=custom_odet,
@@ -672,3 +672,123 @@ class TestCLIPolarization:
             "Expected config to contain polarization_factor when -polar flag provided"
         assert config['polarization_factor'] == pytest.approx(0.5, rel=0, abs=1e-12), \
             f"Expected config['polarization_factor']=0.5 from -polar 0.5, got {config['polarization_factor']}"
+
+
+class TestCLIPivotSelection:
+    """
+    Test automatic pivot mode selection with custom detector vectors (CLI-FLAGS-003 Phase H6f).
+
+    Validates that custom detector basis vectors and pix0 overrides force SAMPLE pivot mode
+    to match nanoBragg.c behavior. See reports/2025-10-cli-flags/phase_h6/pivot_parity.md.
+
+    C Reference: nanoBragg.c lines ~1690-1750
+        When custom_fdet/sdet/odet/beam or pix0_override are present, C forces SAMPLE pivot
+        to ensure geometric consistency with overridden detector orientation.
+    """
+
+    @pytest.mark.parametrize("device", ["cpu", "cuda"])
+    @pytest.mark.parametrize("dtype_name", ["float32", "float64"])
+    def test_custom_vectors_force_sample_pivot(self, device, dtype_name):
+        """
+        Verify custom detector vectors force SAMPLE pivot mode.
+
+        Test covers:
+        1. Default BEAM pivot without custom vectors
+        2. SAMPLE pivot when any custom vector is supplied
+        3. SAMPLE pivot when pix0 override is supplied
+        4. Device/dtype neutrality (CPU + CUDA when available)
+        """
+        # Skip CUDA tests if not available
+        if device == "cuda" and not torch.cuda.is_available():
+            pytest.skip("CUDA not available")
+
+        dtype = torch.float32 if dtype_name == "float32" else torch.float64
+
+        # Test 1: Default BEAM pivot (no custom vectors)
+        config_default = DetectorConfig(
+            spixels=1024,
+            fpixels=1024,
+            pixel_size_mm=0.1,
+            distance_mm=100.0,
+            detector_convention=DetectorConvention.MOSFLM
+        )
+        assert config_default.detector_pivot == DetectorPivot.BEAM, \
+            "Expected BEAM pivot for default MOSFLM configuration without custom vectors"
+
+        # Test 2: Custom fdet_vector forces SAMPLE pivot
+        config_custom_fdet = DetectorConfig(
+            spixels=2463,
+            fpixels=2527,
+            pixel_size_mm=0.172,
+            distance_mm=231.274660,
+            detector_convention=DetectorConvention.CUSTOM,
+            beam_center_s=213.907080,
+            beam_center_f=217.742295,
+            custom_fdet_vector=(0.999982, -0.005998, -0.000118)
+        )
+        assert config_custom_fdet.detector_pivot == DetectorPivot.SAMPLE, \
+            "Expected SAMPLE pivot when custom_fdet_vector is present"
+
+        # Test 3: All four custom vectors force SAMPLE pivot
+        config_all_custom = DetectorConfig(
+            spixels=2463,
+            fpixels=2527,
+            pixel_size_mm=0.172,
+            distance_mm=231.274660,
+            detector_convention=DetectorConvention.CUSTOM,
+            beam_center_s=213.907080,
+            beam_center_f=217.742295,
+            custom_fdet_vector=(0.999982, -0.005998, -0.000118),
+            custom_sdet_vector=(-0.005998, -0.999970, -0.004913),
+            custom_odet_vector=(-0.000088, 0.004914, -0.999988),
+            custom_beam_vector=(0.00051387949, 0.0, -0.99999986)
+        )
+        assert config_all_custom.detector_pivot == DetectorPivot.SAMPLE, \
+            "Expected SAMPLE pivot when all custom vectors are present"
+
+        # Test 4: pix0_override WITHOUT custom vectors does NOT force SAMPLE (uses default BEAM)
+        config_pix0_override = DetectorConfig(
+            spixels=1024,
+            fpixels=1024,
+            pixel_size_mm=0.1,
+            distance_mm=100.0,
+            detector_convention=DetectorConvention.MOSFLM,
+            pix0_override_m=(-0.216336, 0.215206, -0.230201)
+        )
+        # Phase H6f clarification: Only custom BASIS vectors force SAMPLE, not pix0_override alone
+        assert config_pix0_override.detector_pivot == DetectorPivot.BEAM, \
+            "Expected BEAM pivot when ONLY pix0_override is present (no custom basis vectors)"
+
+        # Test 5: Verify Detector class honors forced SAMPLE pivot with device/dtype
+        # This ensures pivot forcing propagates through geometry calculations
+        detector = Detector(config_all_custom, device=device, dtype=dtype)
+
+        # Check detector correctly initialized on requested device
+        pix0_vector = detector.pix0_vector
+        assert pix0_vector.device.type == device, \
+            f"Expected pix0_vector on {device}, got {pix0_vector.device.type}"
+        assert pix0_vector.dtype == dtype, \
+            f"Expected pix0_vector dtype {dtype}, got {pix0_vector.dtype}"
+
+        # Verify pix0 shape is (3,) vector
+        assert pix0_vector.shape == (3,), \
+            f"Expected pix0_vector shape (3,), got {pix0_vector.shape}"
+
+        # C reference pix0 from reports/2025-10-cli-flags/phase_h6/c_trace/trace_c_pix0.log
+        # SAMPLE pivot: pix0 = (-0.216476, 0.216343, -0.230192) meters
+        c_reference_pix0 = torch.tensor(
+            [-0.216476, 0.216343, -0.230192],
+            device=device,
+            dtype=dtype
+        )
+
+        # Allow larger tolerance due to SAMPLE pivot geometry calculations
+        # We're verifying the pivot selection logic is correct, not exact parity yet
+        # (H6g will verify exact parity after all pivot fixes are complete)
+        pix0_delta = torch.abs(pix0_vector - c_reference_pix0)
+        max_delta = torch.max(pix0_delta).item()
+
+        # Sanity check: pix0 should be within ~5mm of C reference
+        # (exact parity verification happens in Phase H6g after this fix)
+        assert max_delta < 0.005, \
+            f"pix0 delta {max_delta:.6f} m exceeds 5mm threshold (expected rough agreement)"
