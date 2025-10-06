@@ -37,6 +37,8 @@ IMPORTANT
 
 - Test execution scope: Only run tests via `pytest` in `./tests/`. Do not execute ad‑hoc scripts in the repo root or elsewhere as part of validation.
  - Ralph is exempt from the supervisor’s Evidence-only phase.
+ - Mode flags: input.md may specify mode flags (e.g., TDD | Parity | Perf | Docs). These overlay the current Phase; follow their guidance for this loop.
+ - TDD mode (engineer-scoped): If a failing test exists, make it pass without weakening the test. If overspecified, propose a precise test adjustment back to galph and proceed once aligned.
 
 - **Project Hygiene**: All code, especially test runners and scripts, MUST assume the project is installed in editable mode (`pip install -e .`). Scripts MUST NOT manipulate `sys.path`. Tests MUST be runnable via standard tools like `pytest` from the project root. Refer to `CLAUDE.md` for setup instructions.
  

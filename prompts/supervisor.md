@@ -119,7 +119,8 @@ Given your findings in <1> and <2>, think about whether there's any need for a m
 Render and write ./input.md (supervisor→engineer steering memo). Overwrite the entire file every invocation. Keep length ~100–200 lines. Include these sections in order:
 Header:
 - Summary: <one‑sentence goal for this loop>
-- Phase: <Evidence | Implementation | Validation>
+ - Phase: <Evidence | Implementation | Validation>
+ - Mode: <TDD | Parity | Perf | Docs | none>
 - Focus: <plan item ID/title from docs/fix_plan.md>
 - Branch: <expected branch>
 - Mapped tests: <validated list | none — evidence‑only>
@@ -128,6 +129,8 @@ Header:
   - Note: any pytest command included here is provided for verification / feedback in Ralph’s subsequent loop.
 <Do Now guidelines>
 Phase Gate (Evidence, supervisor-scoped): When you (galph) select an Evidence-phase task, focus on information collection and do not change the implementation or introduce new tests (with the exception of verification scripts). This gate applies only to galph. Ralph is exempt.
+Mode flags: Mode flags are combinable and refine execution within the selected Phase. Keep Phase mutually exclusive.
+TDD mode (supervisor-scoped): When Phase=Evidence, author/update a single minimal failing test that encodes the acceptance criterion. Confirm it fails via a targeted pytest selector; record the selector and expected failure text in input.md. Do not change production code.
 Command Sourcing (tests): Only include an exact pytest command in Do Now when sourced from an authoritative mapping (e.g., docs/development/testing_strategy.md) or an existing, known test file/identifier. If no authoritative mapping exists, set the Do Now task to author the minimal targeted test first; do not guess at a pytest selector here.
 </Do Now guidelines>
 - If Blocked: fallback action (what to run/capture, how to record it in Attempts History).
