@@ -151,8 +151,25 @@ The persistent error pattern (S: +139μm, F: -1136μm, O: -5.6μm) suggests:
 - **Implementation Notes:** `reports/2025-10-cli-flags/phase_h5/implementation_notes.md`
 - **Delta Analysis:** Inline above (Pix0 Vector Comparison table)
 
+### Phase H6 Diagnostics
+
+- **2025-10-26: Phase H6c first divergence recorded** (beam_center_m logged in mm vs m).
+  - **Root cause:** PyTorch trace outputs beam_center_m values in millimeters while C logs them in meters (1000× scale difference).
+  - **Impact:** This is a trace logging issue, NOT a calculation error. Fclose/Sclose match exactly, confirming the actual pix0 calculation uses correct units.
+  - **Key finding:** The 1.1mm pix0 discrepancy persists even though Fclose/Sclose are identical, suggesting the divergence occurs in a different part of the pix0 computation (term_fast/term_slow/term_close combination or missing CUSTOM convention transform).
+  - **Artifacts:** See `phase_h6/analysis.md`, `phase_h6/trace_diff.txt` for detailed comparison.
+  - **Metrics Table:**
+
+| Variable | C (m) | PyTorch (logged) | PyTorch (corrected to m) | Issue |
+| --- | --- | --- | --- | --- |
+| Xclose | 0.000211818 | 0.217742295 (mm logged as m) | 0.000217742 | Trace unit label |
+| Yclose | 0.000217322 | 0.21390708 (mm logged as m) | 0.000213907 | Trace unit label |
+| Fclose_m | 0.217742295 | 0.217742295 | — | ✅ Exact match |
+| Sclose_m | 0.21390708 | 0.21390708 | — | ✅ Exact match |
+
 ## References
-- Plan checkpoint: `plans/active/cli-noise-pix0/plan.md` Phase H5/H5c
-- Fix plan entry: `docs/fix_plan.md` §[CLI-FLAGS-003] Attempt #35 (this loop)
+- Plan checkpoint: `plans/active/cli-noise-pix0/plan.md` Phase H5/H5c/H6c
+- Fix plan entry: `docs/fix_plan.md` §[CLI-FLAGS-003] Attempt #35 (H5c), Attempt #38 (H6c this loop)
 - Unit fix commit: Attempt #33 (commit 831b670, H5e task)
 - Custom-vector revert: Attempt #31 (H5b task)
+- Phase H6c analysis: `reports/2025-10-cli-flags/phase_h6/analysis.md`

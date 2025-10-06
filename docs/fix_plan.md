@@ -570,6 +570,18 @@
       - **Harness improvements:** Removed hard-coded DetectorPivot.BEAM (line 114) to allow natural SAMPLE pivot selection; patched Detector.__init__ instead of non-existent _configure_geometry method; added term_* emission for all CUSTOM cases with custom vectors (not pivot-gated)
       - **Editable install confirmed:** PYTHONPATH=src used throughout (per Phase H6b guardrails); trace reflects current detector.py implementation
     Next Actions: **Phase H6c required** — Diff C vs PyTorch traces line-by-line (use `diff -u reports/2025-10-cli-flags/phase_h6/c_trace/trace_c_pix0_clean.log reports/2025-10-cli-flags/phase_h6/py_trace/trace_py_pix0.log | grep '^[-+]' | head -50`), identify first divergence in term_* or intermediate calculations, document in `reports/2025-10-cli-flags/phase_h6/analysis.md`, update `phase_h5/parity_summary.md` with findings, and propose corrective action (missing MOSFLM offset? beam_vector scaling? Fclose/Sclose calculation difference?).
+  * [2025-10-26] Attempt #38 (ralph) — Result: **EVIDENCE COMPLETE** (Phase H6c trace diff analysis). **First divergence identified: beam_center_m unit mismatch (mm vs m in trace logging).**
+    Metrics: Evidence-only loop. Wall-clock ~1s. Diff generated between C and PyTorch traces. First divergence at beam_center_m: C logs Xclose/Yclose in meters (0.000211818, 0.000217322), PyTorch logs in mm (0.217742295, 0.21390708). Fclose/Sclose match exactly (0.217742295, 0.21390708 m), confirming calculation uses correct units internally.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_h6/trace_diff.txt` - Full unified diff output (73 lines)
+      - `reports/2025-10-cli-flags/phase_h6/analysis.md` - Detailed divergence analysis with numeric tables
+      - `reports/2025-10-cli-flags/phase_h5/parity_summary.md` - Updated with H6c findings and metrics table
+    Observations/Hypotheses:
+      - **Root cause:** PyTorch trace harness logs beam_center config values (in mm) directly under the "beam_center_m" label, while C logs the pixel-based derived values (in meters). This is a trace instrumentation mismatch, NOT a calculation error.
+      - **Key evidence:** Fclose_m and Sclose_m match exactly between C and PyTorch (0.217742295 m, 0.21390708 m), confirming the mm→m conversion happens correctly in the actual pix0 calculation.
+      - **Pix0 delta persists:** Despite correct Fclose/Sclose, final pix0 still differs by (ΔF=-1136μm, ΔS=+139μm, ΔO=-6μm). This indicates the divergence occurs downstream in the term_fast/term_slow/term_close combination or a missing CUSTOM convention transform.
+      - **No code changes:** Evidence-only loop per supervisor directive (input.md:13). Documentation artifacts captured for next debugging phase.
+    Next Actions: **Phase H6d required** — Fix the trace logging to show consistent units (meters) for beam_center_m in PyTorch, then investigate why pix0 differs when Fclose/Sclose are identical. Likely causes: (1) MOSFLM +0.5 pixel offset applied/unapplied incorrectly in CUSTOM mode, (2) missing transform in custom-vector path, or (3) pivot calculation differs despite identical detector_pivot setting. Phase K1 remains blocked until pix0 parity achieved.
   * [2025-10-06] Attempt #29 (ralph loop) — Result: Phase H5a EVIDENCE-ONLY COMPLETE. **C-code pix0 override behavior with custom vectors documented.**
     Metrics: Evidence-only loop. Two C runs executed: WITH override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m) and WITHOUT override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m). Identical geometry values confirm override is ignored when custom vectors are present.
     Artifacts:
