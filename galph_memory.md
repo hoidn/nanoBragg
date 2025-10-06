@@ -1167,3 +1167,13 @@ Follow-ups for Ralph:
 - Clarified `docs/fix_plan.md` Attempt #29 to mark the 2025-10-06 "override ignored" conclusion as instrumentation error so future loops do not rely on it.
 - Reissued `input.md` (Evidence phase, 100 lines) instructing Ralph to rerun the C command with/without `-pix0_vector_mm`, store logs under `reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/`, diff them, and update `c_precedence.md` with dot-product derivations.
 - Follow-ups for Ralph: deliver H5a (both C traces + precedence memo), keep prior logs untouched, then pause for supervisor review before starting H5c PyTorch traces.
+
+## 2025-10-24 (galph loop — Phase H5 revert directive)
+- `git pull --rebase` clean; re-read docs/index.md, spec shards, arch.md, config map, debugging + testing strategy, fix_plan, and active plans before proceeding.
+- Deep analysis vs long-term goals: parity still blocked by pix0 mismatch (PyTorch applies override while C ignores with custom vectors); vectorization plan untouched until CLI parity closes.
+- Reviewed Ralph’s latest loops (5878f16, 052307f): evidence solidly shows nanoBragg ignores `-pix0_vector_mm` when custom detector vectors supplied, but repo still carries Attempt #29 override change → root cause of 3.6e-7 `F_latt` ratio. Direction needed to undo that change.
+- Updated `plans/active/cli-noise-pix0/plan.md` Phase H5: marked H5a [D], replaced H5b with "revert override when custom vectors supplied", refreshed H5c/H5d guidance, and revised context to cite 2025-10-22 C evidence.
+- Synced `docs/fix_plan.md` Next Actions with new H5b/H5c tasks, emphasized Attempt #29 now needs a revert, and kept Attempt #30 observations as canonical precedence proof.
+- Reissued `input.md` (131 lines, Implementation phase) directing Ralph to remove the override for custom vectors, rerun targeted pytest + trace harness, update parity_summary.md, and log Attempt #31 before touching Phase K.
+- Hypotheses for remaining intensity gap now hinge on normalization once geometry parity returns; no new plan beyond existing Phase K tasks.
+- Follow-ups for Ralph: execute Do Now revert + tests, capture PyTorch traces under `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/`, update parity_summary.md and docs/fix_plan Attempt history, then pause for supervisor review before Phase K work.

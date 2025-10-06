@@ -5,7 +5,7 @@
 - Current gap snapshot (2025-10-18 refresh): Phase H4 parity landed (Attempt #25) with pix0 deltas < 2e-8 m and regression tolerances tightened; the remaining blocker before executing the supervisor command end-to-end is Phase I polarization alignment.
 - Gap snapshot update (2025-10-19): Attempt #27 parity run reveals 1.24538e5× intensity scaling mismatch despite polarization fix; Phases J–L track the normalization diagnosis, fix, and closure required before long-term Goal #1 completes.
 - Gap snapshot refresh (2025-10-21): Phase H5b implementation reinstated the pix0 override for custom detector vectors (`reports/2025-10-cli-flags/phase_h5/parity_summary.md`); pending work is to refresh C precedence traces (H5a) and capture PyTorch parity logs (H5c) before resuming Phase K normalization tasks.
-- Gap correction (2025-10-22): Phase J traces still show PyTorch pix0 Y offset ~1.14 mm and `F_latt` ~7.69e1 vs C 3.56e4 because the 2025-10-06 precedence run captured stale geometry. H5a/H5c must refresh C/PyTorch traces to confirm override projection before entering Phase K.
+- Gap correction (2025-10-22): Fresh C evidence (`reports/2025-10-cli-flags/phase_h5/c_precedence_2025-10-22.md`) proves nanoBragg ignores `-pix0_vector_mm` whenever custom detector vectors are present. PyTorch now deviates because H5b applied the override unconditionally, yielding a 1.14 mm pix0 delta and the 3.6e-7 `F_latt` ratio. Revert the override in the custom-vector path and reconfirm parity before entering Phase K.
 - Evidence status: Phase E artifacts (`reports/2025-10-cli-flags/phase_e/`) hold C/PyTorch traces, diffs, and beam-vector checks. Phase H3b1 also stashes WITH/without override traces under `reports/2025-10-cli-flags/phase_h/implementation/` for reference.
 
 ### Phase A — Requirements & Trace Alignment
@@ -110,17 +110,17 @@ Update 2025-10-17: Attempt #22 proved the projection-based override mapping push
 | H4b | Refresh traces and parity evidence | [D] | ✅ 2025-10-17 Attempt #25: Stored C/PyTorch traces in `reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/trace_c.log` and `trace_py.log`; `summary.md` records pix0 deltas ≤1.3e-8 m and `F_latt` agreement <0.2%. |
 | H4c | Tighten regression test + targeted pytest | [D] | ✅ 2025-10-17 Attempt #25: Updated regression tolerance to 5e-5 m (CPU and CUDA parametrised) and captured `pytest_h4c.log`; Attempt #25 logged in docs/fix_plan.md. |
 
-### Phase H5 — Custom Vector Pix0 Override Reinstatement
-Goal: Reconcile the newly observed 1.14 mm pix0 delta when both custom detector vectors and `-pix0_vector_mm` are supplied so PyTorch mirrors C’s override precedence.
-Prereqs: Phase H4 artifacts available; Phase J scaling report (`reports/2025-10-cli-flags/phase_j/scaling_chain.md`) pinpointing the divergence.
+### Phase H5 — Custom Vector Pix0 Override Parity
+Goal: Bring PyTorch pix0 precedence back in line with C when custom detector vectors accompany `-pix0_vector_mm`, eliminating the 1.14 mm delta driving the `F_latt` mismatch.
+Prereqs: Phase H4 artifacts available; C precedence proof in `reports/2025-10-cli-flags/phase_h5/c_precedence_2025-10-22.md`.
 Exit Criteria: Detector traces with custom vectors show `pix0_vector`, `Fbeam`, and `Sbeam` matching C within 5e-5 m, and fractional h/k/l plus `F_latt_a/b/c` align within 1e-3 relative difference before resuming normalization work.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| H5a | Verify C precedence with explicit derivation | [P] | Re-run the supervisor command twice (with and without `-pix0_vector_mm`) capturing fresh C traces under `reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-21/`. Update `phase_h5/c_precedence.md` to replace the 2025-10-06 conclusion (which stated the override was ignored) and document the dot-product derivation that now shows C recomputes `Fbeam/Sbeam` from the override with custom vectors. |
-| H5b | Restore pix0 override application in PyTorch custom-vector path | [D] | ✅ 2025-10-21 Attempt #29 (ralph). `Detector._calculate_pix0_vector` applies the override before projecting onto detector axes regardless of custom vectors; see `reports/2025-10-cli-flags/phase_h5/parity_summary.md` and regression log `pytest_regression.log` (57 passed). |
-| H5c | Capture updated PyTorch traces & compare | [ ] | Extend `phase_h/trace_harness.py` for Phase H5 to log `pix0_vector`, derived `Fbeam/Sbeam`, fractional h/k/l, and `F_latt` components with the new override path. Store outputs in `reports/2025-10-cli-flags/phase_h5/py_traces/` and append deltas (C vs PyTorch) to `phase_h5/parity_summary.md`; explicitly confirm `F_latt` converges to the C value (~3.5636e4) and pix0 deltas fall <5e-5 m before unlocking Phase K. |
-| H5d | Update fix_plan Attempt log | [ ] | After H5a/H5c align within 5e-5 m and 1e-3 relative error, record Attempt #29 closure in `docs/fix_plan.md` summarising restored override precedence and remaining Phase K normalization gaps. |
+| H5a | Verify C precedence with explicit derivation | [D] | ✅ 2025-10-22 Attempt #30. C traces stored under `reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/` prove geometry is identical with or without `-pix0_vector_mm` when custom vectors are present. `c_precedence_2025-10-22.md` carries the dot-product derivation. |
+| H5b | Revert PyTorch override when custom vectors supplied | [ ] | Undo the unconditional override path introduced in Attempt #29. In `Detector._calculate_pix0_vector`, gate the pix0_override projection so it runs only when **no** custom detector vectors are provided. Preserve device/dtype neutrality and keep regression coverage by updating `tests/test_cli_flags.py::TestCLIPix0Override` if expectations change. Capture targeted pytest output in `reports/2025-10-cli-flags/phase_h5/pytest_h5b_revert.log` and summarise the implementation in `phase_h5/implementation_notes.md`. |
+| H5c | Capture updated PyTorch traces & compare | [ ] | After reverting, rerun the Phase H trace harness so `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/` contains TRACE_PY logs for pix0, F/S beams, h/k/l, and `F_latt`. Update `phase_h5/parity_summary.md` with C vs PyTorch deltas; require `|Δpix0| < 5e-5 m` and `F_latt` ratio within 1e-3 before Phase K resumes. |
+| H5d | Update fix_plan Attempt log | [ ] | Log the revert and trace parity metrics in `docs/fix_plan.md` (new attempt), explicitly noting how the change restores `F_latt` agreement and unblocks Phase K normalization work. |
 
 ### Phase I — Polarization Alignment (follow-up)
 Goal: Match C’s Kahn polarization factor once lattice geometry aligns.

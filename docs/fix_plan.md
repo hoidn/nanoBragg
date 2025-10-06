@@ -521,7 +521,7 @@
       - **PyTorch status (2025-10-06 snapshot):** Implementation skipped override in the custom-vector path, matching this interpretation.
     Update 2025-10-21: superseded by refreshed C traces showing the override DOES apply with custom vectors; the 2025-10-06 instrumentation reused the derived Fbeam/Sbeam so the runs appeared identical. See Attempt #29 (2025-10-21) for corrected evidence.
     Update 2025-10-22: Fresh evidence collection (Attempt #30) **re-confirms 2025-10-06 finding**. WITH and WITHOUT override runs produce IDENTICAL geometry (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m). The 2025-10-21 claim is not supported by fresh C traces. See `reports/2025-10-cli-flags/phase_h5/c_precedence_2025-10-22.md` for authoritative dot-product derivation proving override is ignored when custom vectors are present.
-  * [2025-10-21] Attempt #29 (ralph) — Result: **PARTIAL** (Phase H5b implementation). `Detector._calculate_pix0_vector` now projects `pix0_override_tensor` onto f/s axes even when custom vectors are supplied; regression suite (`reports/2025-10-cli-flags/phase_h5/pytest_regression.log`) green and parity memo logged at `reports/2025-10-cli-flags/phase_h5/parity_summary.md`. Pending: refresh C traces (H5a) and PyTorch parity logs (H5c) to confirm `Fbeam/Sbeam`, h/k/l, and `F_latt` alignment before closing this attempt.
+  * [2025-10-21] Attempt #29 (ralph) — Result: **PARTIAL** (Phase H5b implementation). `Detector._calculate_pix0_vector` now projects `pix0_override_tensor` onto f/s axes even when custom vectors are supplied; regression suite (`reports/2025-10-cli-flags/phase_h5/pytest_regression.log`) green and parity memo logged at `reports/2025-10-cli-flags/phase_h5/parity_summary.md`. **Superseded by Attempt #30 evidence — this override path must now be reverted so PyTorch matches C precedence when custom vectors are present.** Pending: apply the revert, capture new PyTorch traces (H5c), and log the follow-up attempt.
   * [2025-10-22] Attempt #30 (ralph loop) — Result: Phase H5a EVIDENCE RE-CAPTURE COMPLETE. **C-code behavior re-confirmed: override ignored when custom vectors present.**
     Metrics: Evidence-only loop. Fresh C traces captured 2025-10-22. Two C runs executed: WITH override (pix0 = [-0.216476, 0.216343, -0.230192] m, Fbeam=0.217889 m, Sbeam=0.215043 m) and WITHOUT override (pix0 = [-0.216476, 0.216343, -0.230192] m, Fbeam=0.217889 m, Sbeam=0.215043 m). Geometry IDENTICAL to 15 significant figures.
     Artifacts:
@@ -536,9 +536,9 @@
       - **PyTorch parity status:** Phase H3b2 (commit d6f158c) correctly skips override when custom vectors present, **matching C behavior exactly**
       - **1.14 mm pix0 delta root cause:** Not due to override precedence (that logic is correct). Must trace to different issue in Phase K normalization or Phase L parity sweep.
     Next Actions:
-      - REVERSE Attempt #29 (2025-10-21) Phase H5b implementation that applied override with custom vectors (this contradicts C evidence)
-      - Skip Phase H5c (PyTorch trace) since parity is already correct per Phase H3b2
-      - Proceed to Phase K (normalization fix) to resolve the 1.14 mm delta via a different root cause
+      - Revert Attempt #29 (Phase H5b) so pix0 overrides are ignored whenever custom detector vectors are supplied, restoring C precedence (logs to `reports/2025-10-cli-flags/phase_h5/pytest_h5b_revert.log`).
+      - After the revert, capture new PyTorch traces (`reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/`) and update `phase_h5/parity_summary.md` with pix0/F_latt deltas (<5e-5 m, <1e-3 relative error).
+      - Record the follow-up attempt in this entry and then resume Phase K normalization work once geometry parity is confirmed.
   * [2025-10-17] Attempt #25 (ralph) — Result: success (Phase H4a-c complete). **Post-rotation beam-centre recomputation implemented and verified.**
     Metrics: pix0_vector parity achieved - C vs PyTorch deltas < 2e-8 m (well within 5e-5 m tolerance). Test suite: test_cli_flags.py 23/23 passed, test_detector_geometry.py 12/12 passed, test_crystal_geometry.py 19/19 passed (54 total).
     Artifacts:

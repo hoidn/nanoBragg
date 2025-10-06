@@ -1,100 +1,131 @@
-Summary: Capture fresh C traces to prove pix0 override precedence before touching PyTorch scaling.
-Phase: Evidence
-Focus: CLI-FLAGS-003 / -nonoise & -pix0_vector_mm parity
+Summary: Restore pix0 precedence with custom detector vectors so PyTorch reproduces C `F_latt` for the supervisor command.
+Phase: Implementation
+Focus: CLI-FLAGS-003 / Handle -nonoise and -pix0_vector_mm
 Branch: feature/spec-based-2
-Mapped tests: none — evidence-only
-Artifacts: reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/, reports/2025-10-cli-flags/phase_h5/c_precedence.md
-Artifacts note: store raw stdout with TRACE_C lines intact; do not trim progress banners or warnings.
-Artifacts note: ensure the precedence memo records timestamp, git SHA, and NB_C_BIN path for reproducibility.
-Artifacts note: attach a brief summary of observed deltas (pix0, Fbeam, Sbeam) at the top of the memo for quick reference.
-Do Now: CLI-FLAGS-003 H5a — run `NB_C_BIN=./golden_suite_generator/nanoBragg` with the supervisor command (first WITH, then WITHOUT `-pix0_vector_mm`) and tee stdout to `reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/{with_override,without_override}.log`; refresh `c_precedence.md` with the new dot-product derivation.
-Do Now note: after both runs, jot down immediate observations (match vs mismatch) before diving into diff analysis.
-Do Now note: keep terminal scrollback until logs are verified on disk in case tee fails.
-If Blocked: Capture at least the WITH-override run to `reports/.../c_traces/2025-10-22/with_override_attempt.log`, log the failure cause plus environment in c_precedence.md under a new "Attempts" heading, and stop.
-If Blocked note: mention whether the failure occurred before or after command launch (e.g., missing NB_C_BIN vs runtime crash).
-If Blocked note: record stdout tail (~20 lines) in the memo so the supervisor can triage remotely.
+Mapped tests: tests/test_cli_flags.py::TestCLIPix0Override
+Artifacts: reports/2025-10-cli-flags/phase_h5/pytest_h5b_revert.log, reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/, reports/2025-10-cli-flags/phase_h5/parity_summary.md, docs/fix_plan.md (Attempt #31 entry)
+Do Now: CLI-FLAGS-003 H5b — revert custom-vector pix0 override (`env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py::TestCLIPix0Override -v`)
+Do Now note: Commit d6f158c kept overrides disabled; Attempt #29 reintroduced them. Restore the pre-Attempt-29 behavior while preserving new r-factor math.
+Do Now note: Annotate code comments referencing `reports/2025-10-cli-flags/phase_h5/c_precedence_2025-10-22.md` so future readers know why overrides are skipped with custom vectors.
+If Blocked: Halt after editing the detector; log the failure cause, git diff, and current pix0 deltas in `reports/2025-10-cli-flags/phase_h5/attempt_h5b_blocked.md`, then wait for supervisor guidance.
+If Blocked note: Include command output (tail 20 lines) and environment details (device availability, torch version).
+If Blocked note: Mention whether pytest or trace harness failed; do not attempt ad-hoc fixes.
 
 Priorities & Rationale:
-- docs/fix_plan.md:508-570 — Next actions demand H5a evidence before Phase K resumes.
-  Reasserts that normalization work is paused until pix0 override parity is proven with new traces.
-- plans/active/cli-noise-pix0/plan.md:1-35 — Plan context flags the 1.14 mm pix0 delta blocking normalization.
-  Highlights the new 2025-10-22 bullet noting stale C evidence and the need for refreshed logs.
-- reports/2025-10-cli-flags/phase_j/trace_c_scaling.log:164-202 — Baseline C values (`F_latt` 3.56e4, polar 0.9126) to match against future PyTorch traces.
-  Use these numbers as the acceptance target when comparing PyTorch outputs in H5c.
-- docs/architecture/detector.md — Details pix0 projection math for custom vectors so the dot-product derivation is documented verbatim.
-  Cite the BEAM pivot equations when updating c_precedence.md to keep derivations authoritative.
-- specs/spec-a-cli.md — Canonical CLI semantics for `-pix0_vector_mm`, including unit expectations for the override flag.
-  Restate the spec text in the precedence memo to show compliance with the external contract.
-- docs/debugging/detector_geometry_checklist.md — Required checklist before claiming detector parity; note the expectation on meter vs millimetre conversions.
-  Reference its guidance on verifying Fbeam/Sbeam signs when you summarise the traces.
+- plans/active/cli-noise-pix0/plan.md §Phase H5 — Newly revised tasks require undoing the override for custom vectors before Phase K normalization.
+- docs/fix_plan.md:506-551 — Next actions and Attempt #30 observations explicitly call for the revert + fresh PyTorch traces.
+- reports/2025-10-cli-flags/phase_j/scaling_chain.md — Shows the 3.6e-7 `F_latt` ratio driven by the 1.14 mm pix0 delta; reverting restores geometry parity.
+- specs/spec-a-cli.md §§Precedence — Custom vectors supersede pix0 overrides; implementation must follow the normative spec.
+- docs/architecture/detector.md §5.3 — Contains BEAM pivot formulas and projection math that must remain intact after the revert.
+- docs/debugging/detector_geometry_checklist.md — Provides mandatory unit/orientation checks when validating the updated traces.
+- AUTHORITATIVE_CMDS_DOC=docs/development/testing_strategy.md — Confirms targeted pytest cadence and CPU/CUDA smoke expectations.
 
 How-To Map:
-1. Prep instrumentation
-   - Run `export NB_C_BIN=./golden_suite_generator/nanoBragg` from repo root to select the instrumented binary.
-   - Ensure the binary still contains the TRACE_C printf hooks for pix0/Fbeam/Sbeam; rebuild if needed before running the command.
-2. Create output directories
-   - Execute `mkdir -p reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22` to keep artifacts segregated by date.
-   - Confirm the directory exists so later tee commands do not fail silently.
-3. WITH override run
-   - Invoke the supervisor command exactly as documented, including `-pix0_vector_mm -216.336293 215.205512 -230.200866`.
-   - Command template:
-     `"$NB_C_BIN" -mat A.mat -floatfile img.bin -hkl scaled.hkl -nonoise -nointerpolate -oversample 1 -exposure 1 -flux 1e18 -beamsize 1.0 -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080 -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866 -beam_vector 0.00051387949 0.0 -0.99999986 -Na 36 -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0 2>&1 | tee reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/with_override.log`.
-   - Let the run complete; confirm the log contains TRACE_C lines for pix0, Fbeam, Sbeam, hkl, and F_latt.
-   - After the run, quickly `grep TRACE_C: pix0` to verify instrumentation fired before moving on.
-   - Note any warnings or error messages emitted; copy them into the memo verbatim.
-4. WITHOUT override run
-   - Repeat the command verbatim but remove the `-pix0_vector_mm` triplet (keep every other flag identical).
-   - Tee output to `reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/without_override.log` for side-by-side comparison.
-   - Verify the log still reports TRACE_C values; you should see geometry differences if the override is applied.
-   - Use `grep TRACE_C: F_latt` on both logs to sanity-check magnitude (expect ~3.56e4 vs ~3.56e4 once fixed).
-   - If the values remain identical, flag it immediately in the memo and halt further implementation work.
-5. Diff and annotate
-   - Run `diff -u reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/with_override.log reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/without_override.log > reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/diff.log`.
-   - Inspect the diff to ensure Fbeam, Sbeam, pix0_vector, and hkl values differ; record precise deltas in the memo.
-6. Update precedence memo
-   - Append a new section to `reports/2025-10-cli-flags/phase_h5/c_precedence.md` summarising the two runs.
-   - Include a table with pix0, Fbeam, Sbeam, F_latt, and hkl values plus the computed dot products (pix0 delta projected on fdet/sdet).
-   - Document any surprises (e.g., if values still match identically) and flag for supervisor review before moving forward.
-7. Housekeeping
-   - Keep raw logs unedited; if redaction is necessary, duplicate the file first.
-   - Preserve file permissions (644) so later tooling can read them without sudo.
-   - Note the git status after updates so the supervisor can diff the memo changes easily next loop.
+1. Code change
+   - Open `src/nanobrag_torch/models/detector.py`.
+   - Locate the pix0 override block inside `_calculate_pix0_vector`.
+   - Guard the override projection with `if pix0_override_tensor is not None and not self.has_custom_vectors():` (or equivalent helper).
+   - Keep device/dtype coercion and comments; cite `c_precedence_2025-10-22.md` when explaining the guard.
+   - Ensure CUSTOM path still updates `beam_center_{f,s}` when overrides apply in the no-custom case.
+2. Targeted tests
+   - Run `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py::TestCLIPix0Override -v | tee reports/2025-10-cli-flags/phase_h5/pytest_h5b_revert.log`.
+   - Confirm CPU and CUDA parametrisations respect the new guard (CUDA will auto-skip if unavailable).
+   - If assertions change, adjust expectations but keep tolerances ≤5e-5 m.
+3. PyTorch traces
+   - Reuse the Phase H harness: `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_h/trace_harness.py --out reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/trace_py.log`.
+   - Diff against `reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/with_override.log` (expect identical pix0/F/S, h/k/l, `F_latt`).
+   - Record deltas in `parity_summary.md` (<5e-5 m pix0, <1e-3 relative `F_latt`).
+4. Documentation updates
+   - Append a new Attempt (#31) in `docs/fix_plan.md` summarising the revert, pytest results, and trace metrics.
+   - Update `reports/2025-10-cli-flags/phase_h5/parity_summary.md` with a table of old vs new values.
+   - Note any test changes in `reports/2025-10-cli-flags/phase_h5/implementation_notes.md`.
 
 Pitfalls To Avoid:
-- Don't skip `NB_C_BIN`; the root binary lacks TRACE_C outputs needed for precedence analysis.
-  Using the wrong binary forces another evidence loop and wastes time.
-- No pytest runs this loop (Evidence gate).
-  Tests violate the Evidence-phase rule; stick to command-line traces only.
-- Keep outputs under `reports/2025-10-cli-flags/phase_h5/`; Protected Assets forbid ad-hoc directories.
-  Ensure nested directories use the 2025-10-22 stamp to avoid clobbering prior evidence.
-- Retain the original CLI flag order; reordering may change precedence checks in nanoBragg.c.
-  The goal is a faithful reproduction of the supervisor command, not experimentation.
-- Ensure logs capture full stdout/stderr via `tee`; partial logs invalidate the evidence and make diffs useless.
-  Double-check file sizes after each run.
-- Avoid editing pix0 math or Detector code yet—this loop is evidence gathering only.
-  Implementation changes belong to a later plan phase.
-- Do not delete previous 2025-10-21 traces; archive new ones alongside them for comparison.
-  Historical context is needed to explain the change in conclusions.
-- Confirm commands run from repo root; relative paths assume cwd=/Users/ollie/Documents/nanoBragg3.
-  Running elsewhere will break path resolution for A.mat and scaled.hkl.
-- Respect device neutrality when reporting later—no hard-coded CPU assumptions in notes.
-  Mention device/dtype explicitly if relevant in observations.
-- Document units (meters vs mm) explicitly in c_precedence.md updates.
-  The spec expects clarity on unit conversions, especially for `_mm` overrides.
+- Do not edit reference logs under `reports/2025-10-cli-flags/phase_h5/c_traces/`; they are protected evidence.
+- Avoid reintroducing `.cpu()`, `.detach()`, or `.item()` inside `_calculate_pix0_vector`; differentiability must remain intact.
+- Keep MOSFLM/XDS behavior untouched; only guard the override when custom vectors are explicitly provided.
+- No ad-hoc scripts—reuse existing harnesses and pytest selectors per testing_strategy.md.
+- Maintain Protected Assets; consult docs/index.md before moving or deleting tooling.
+- Run the targeted pytest exactly once; no full suite this loop.
+- Preserve device/dtype neutrality in regression tests; adjust tolerances only with justification logged in parity_summary.md.
+- When updating docs/fix_plan.md, keep Attempt chronology intact and cite plan cross-references.
+- Ensure new logs land under `reports/2025-10-cli-flags/phase_h5/` with the 2025-10-22 stamp to prevent clobbering earlier attempts.
+- Capture git diff prior to commit; only include detector.py, parity docs, reports, and fix_plan updates.
 
 Pointers:
-- plans/active/cli-noise-pix0/plan.md:7-121 — Phase H5 goal, exit criteria, and post-update guidance describing the stale C evidence.
-  Follow the checklist so H5a is satisfied before PyTorch work resumes.
-- docs/fix_plan.md:520-570 — Attempt #29 status plus supervisor note correcting the earlier "override ignored" assumption.
-  Reference this when writing the precedence summary to show the misinterpretation was resolved.
-- reports/2025-10-cli-flags/phase_j/scaling_chain.md — Factor-by-factor breakdown identifying `F_latt` as the first divergence.
-  Use its values to cross-check the C trace numbers you capture.
-- docs/architecture/detector.md — BEAM pivot equations and projection rules for pix0 and beam center handling.
-  Quote the relevant equation in your memo to tie the dot-product math back to the spec.
-- docs/debugging/detector_geometry_checklist.md — Mandatory detector debugging checklist to confirm geometry evidence quality.
-  Tick through its steps (units, axis orientation, pivot) while reviewing the new C logs.
-- specs/spec-a-cli.md — CLI flag reference ensuring behaviour matches the normative spec.
-  Point to the `pix0_vector_mm` paragraph when you justify the observed precedence.
+- plans/active/cli-noise-pix0/plan.md:95-146 — Phase H5 checklist, exit criteria, and reporting expectations.
+- docs/fix_plan.md:506-551 — Attempt #29/#30 narrative + updated Next Actions.
+- reports/2025-10-cli-flags/phase_h5/c_precedence_2025-10-22.md — Authoritative C precedence evidence.
+- reports/2025-10-cli-flags/phase_j/scaling_chain.md — Quantifies the current F_latt gap you are closing.
+- docs/architecture/detector.md §5 — Pix0 computation details and convention nuances.
+- docs/development/testing_strategy.md §1.5 — Targeted pytest requirements and logging conventions.
+- docs/debugging/detector_geometry_checklist.md — Mandatory validation steps before claiming detector parity.
+- reports/2025-10-cli-flags/phase_h/trace_harness.py — Reusable script for PyTorch trace capture.
+- tests/test_cli_flags.py:375-452 — Regression tests covering override precedence scenarios.
+- plans/active/vectorization.md — Leave untouched; vectorization remains pending until CLI parity is restored.
 
-Next Up: Phase H5c PyTorch trace capture and comparison once the C precedence evidence is logged and reviewed.
-Next Up note: prepare to mirror the C trace structure so diffing is one-to-one (ensure TRACE_PY lines include pix0/Fbeam/Sbeam/F_latt).
+Next Up: Phase H5c PyTorch trace verification and docs/fix_plan Attempt #31 closure once override parity is restored.
+Next Up note: After traces align, you can pivot to Phase K normalization tasks per plan (steps ordering + scaling fix).
+
+Verification Checklist:
+- Confirm `Detector.has_custom_vectors()` (or equivalent) accurately reflects CLI inputs (custom f/s/o or None).
+- Print temporary debug (guarded by `if __debug__`) only if needed; remove before commit to keep traces clean.
+- Validate that `self.beam_center_f/s` remain tensors post-revert; avoid silent Python floats.
+- Double-check `distance_corrected` and `close_distance` invariants via trace harness output.
+- Ensure new Attempt entry references plan lines and artifacts explicitly (dates, commands, metrics).
+
+Metrics To Capture:
+- Pix0 delta (PyTorch - C) in meters for each component (target <5e-5).
+- `F_latt` ratio Py/C (target 0.999–1.001) reported in parity_summary.md.
+- `h`, `k`, `l` fractional offsets compared to C trace (should match within 1e-6).
+- pytest duration and device coverage recorded in pytest log header.
+- Git SHA in parity_summary.md for reproducibility.
+
+Reporting Notes:
+- Update `phase_h5/parity_summary.md` intro paragraph to mention Attempt #31 and cite new artifacts.
+- Cross-link `phase_h5/implementation_notes.md` with the exact detector.py lines changed.
+- When editing docs/fix_plan.md, keep markdown bullet indentation consistent (two spaces before hyphen inside Attempts).
+- Record command invocations verbatim in the relevant report to aid future reproductions.
+- Tag parity summary tables with "after Attempt #31" so later archives distinguish versions.
+
+Command Log Expectations:
+- `pytest_h5b_revert.log` should include command header, environment variables, and summary lines.
+- Trace harness output should preserve `TRACE_PY` ordering; no manual edits to log lines.
+- Diff commands (e.g., `diff -u .../trace_c .../trace_py`) may go into `parity_summary.md` as fenced code for clarity.
+- If additional sanity checks are run (e.g., quick smoke ROI), document them separately under `reports/2025-10-cli-flags/phase_h5/sanity/`.
+- Document wall-clock timing for trace harness to monitor any regressions.
+
+Fallback Plan:
+- If revert causes broader regressions, capture `git diff` output into `reports/.../attempt_h5b_blocked.md` and ping supervisor with summary + hypothesis.
+- Should tests reveal stale fixtures, update them in a separate patch queued after parity is restored.
+- If CUDA skips unexpectedly, note availability status and driver version in the report.
+- Maintain clean workspace; stash unrelated files before proceeding.
+- Escalate if evidence suggests C actually honors overrides—include new C traces before any PyTorch edits.
+
+Coding Reminders:
+- Respect Core Rule #16 (device/dtype neutrality) when modifying helper methods.
+- Use small helper (e.g., `_has_custom_vectors`) if readability improves; include docstring referencing C behavior.
+- Keep magnet for gradient flow by reusing existing tensors where possible (no fresh tensor creation on every call).
+- Re-run static type checks if available (optional) to ensure signature parity.
+- Update docstrings/comments to clarify precedence decisions for future maintainers.
+
+Documentation Touchpoints:
+- Mention revert rationale in `docs/development/pytorch_runtime_checklist.md` if override rules affect guardrails.
+- Consider adding a short FAQ note in `README_PYTORCH.md` under CLI flags about custom vectors vs pix0 overrides (optional, only if time).
+- Ensure `plans/active/cli-noise-pix0/plan.md` Phase H5 table state transitions ([ ], [D]) are accurate after work.
+- Archive any superseded parity summaries under `reports/archive/` if file size balloons.
+- Keep Attempt numbering monotonic; if Attempt #31 already used externally, bump to next free number.
+
+Coordination Notes:
+- Log progress in Attempts History within docs/fix_plan.md even if partial (e.g., revert complete, traces pending).
+- If time remains, outline next steps for Phase K in a short note for supervisor review.
+- Avoid overlapping plan phases (no Phase K edits until H5 marked complete).
+- Mention in parity_summary.md whether override revert changed runtime metrics (if measurable).
+- Maintain chronological ordering in `reports/2025-10-cli-flags/phase_h5/` directories (YYYY-MM-DD).
+
+Housekeeping:
+- Verify `input.md` is not touched by Ralph; only supervisor writes to it.
+- Keep repo clean: remove temporary diff files after use.
+- Run `git status` before finishing to ensure only intended files changed.
+- Prepare commit message referencing "CLI-FLAGS-003 H5b revert" and list tests run.
+- Push branch after commit; supervisor expects remote sync for next loop.
