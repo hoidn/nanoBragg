@@ -1006,3 +1006,13 @@ Follow-ups for Ralph:
 - Updated plans/active/cli-noise-pix0/plan.md (F2 → [D], F3 marked pending orientation) and refreshed fix_plan next actions to push G1–G3 plus gradient fix.
 - Rewrote input.md (Do Now = Phase G1 orientation + grad hygiene, mapped pytest command, parity harness instructions) with artifact expectations under reports/2025-10-cli-flags/phase_g/.
 - Upcoming asks for Ralph: preserve MOSFLM A* in config/Crystal, keep close_distance differentiable, rerun supervisor parity with new traces, then proceed toward Phase H.
+
+## 2025-10-06 (galph loop — Phase G2 orientation prep)
+- `git pull --rebase` fast-forward; no conflicts. Reviewed required specs/arch/testing docs plus `plans/active/*` and fix_plan per SOP.
+- Deep analysis vs long-term goals:
+  * Goal 1 (CLI parity) still blocked by missing MOSFLM orientation in `Crystal`; commit 28fc584 wired A* through the CLI/config but Crystal ignores it, keeping canonical vectors → parity metrics ≈−5e-06.
+  * Goal 1 also needs sustained differentiability—close_distance tensor fix (b049227) confirmed, but parity harness remains pending Phase G2/G3.
+  * Goal 2 (vectorization) untouched since roadmap rewrite; Phase A evidence not yet captured, so we deferred until CLI parity stabilises.
+- Updated `plans/active/cli-noise-pix0/plan.md` marking Phase G1 as [D] with commit 28fc584 context; highlighted G2 as the next actionable blocker.
+- Replaced `input.md` directing Ralph to execute Phase G2 (Crystal orientation ingestion), with explicit artifact directory, trace workflow, and pytest commands.
+- No new plans required; vectorization roadmap stands. Next follow-ups for Ralph: implement Crystal orientation per Core Rules 12–13, capture trace evidence under `reports/2025-10-cli-flags/phase_g/`, then proceed to Phase G3 parity rerun.
