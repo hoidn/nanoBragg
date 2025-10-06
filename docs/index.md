@@ -45,6 +45,7 @@ These are the core, living documents that guide the project.
 * **[Lessons in Differentiability](./development/lessons_in_differentiability.md)** - Key learnings about maintaining gradient flow.
 * **[Project Status](./development/PROJECT_STATUS.md)** - Current development status (duplicate link).
 * **[Testing Strategy](./development/testing_strategy.md)** - Three-tier validation approach.
+* **[Validation Scripts](../scripts/validation/README.md)** - Reusable parity/validation helpers referenced by prompts and supervisor input; prefer these over ad‑hoc snippets when available.
 
 ### Debugging Resources (`docs/debugging/`)
 * **[Detector Geometry Checklist](./debugging/detector_geometry_checklist.md)** - ⚠️ **MANDATORY** checklist before debugging detector issues.
