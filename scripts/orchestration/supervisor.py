@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import os
 import sys
 import time
@@ -59,6 +60,17 @@ def main() -> int:
     ap.add_argument("--verbose", action="store_true", help="Print state changes to console during polling")
     ap.add_argument("--heartbeat-secs", type=int, default=int(os.getenv("HEARTBEAT_SECS", "0")), help="Console heartbeat interval while polling (0=off)")
     ap.add_argument("--logdir", type=Path, default=Path("logs"), help="Base directory for per-iteration logs (default: logs/)")
+    # Auto-commit doc/meta hygiene (supervisor only)
+    ap.add_argument("--auto-commit-docs", dest="auto_commit_docs", action="store_true",
+                    help="Auto-stage+commit doc/meta whitelist when dirty (default: on)")
+    ap.add_argument("--no-auto-commit-docs", dest="auto_commit_docs", action="store_false",
+                    help="Disable auto commit of doc/meta whitelist")
+    ap.set_defaults(auto_commit_docs=True)
+    ap.add_argument("--autocommit-whitelist", type=str,
+                    default="input.md,galph_memory.md,docs/fix_plan.md,plans/**/*.md,prompts/**/*.md",
+                    help="Comma-separated glob whitelist for supervisor auto-commit (doc/meta only)")
+    ap.add_argument("--max-autocommit-bytes", type=int, default=int(os.getenv("MAX_AUTOCOMMIT_BYTES", "1048576")),
+                    help="Maximum per-file size (bytes) eligible for auto-commit")
     args, unknown = ap.parse_known_args()
 
     # per-iteration logger factory
@@ -92,14 +104,18 @@ def main() -> int:
     for _ in range(args.sync_loops):
         # Determine iteration-specific log file
         # Use current state when available to derive iteration number
-        safe_pull(lambda m: None)
+        if not safe_pull(lambda m: None):
+            print("[sync] ERROR: git pull failed; see iter log for details.")
+            return 1
         st_probe = OrchestrationState.read(str(args.state_file))
         itnum = st_probe.iteration
         ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         iter_log = args.logdir / branch_target.replace('/', '-') / "galph" / f"iter-{itnum:05d}_{ts}.log"
         logp = make_logger(iter_log)
 
-        safe_pull(logp)
+        if not safe_pull(logp):
+            print("[sync] ERROR: git pull failed; see iter log for details.")
+            return 1
 
         # Initialize state if missing
         if not args.state_file.exists():
@@ -117,7 +133,9 @@ def main() -> int:
         last_hb = start
         prev_state = None
         while True:
-            safe_pull(logp)
+            if not safe_pull(logp):
+                print("[sync] ERROR: git pull failed during polling; see iter log.")
+                return 1
             st = OrchestrationState.read(str(args.state_file))
             cur_state = (st.expected_actor, st.status, st.iteration)
             if args.verbose and cur_state != prev_state:
@@ -148,8 +166,60 @@ def main() -> int:
         # Execute one supervisor iteration
         rc = tee_run([args.codex_cmd, "exec", "-m", "gpt-5-codex", "-c", "model_reasoning_effort=high", "--dangerously-bypass-approvals-and-sandbox"], Path("prompts/supervisor.md"), iter_log)
 
-        safe_pull(logp)
+        if not safe_pull(logp):
+            print("[sync] ERROR: git pull failed after supervisor run; see iter log.")
+            return 1
         sha = short_head()
+
+        # Auto-commit doc/meta hygiene (supervisor only)
+        def _list(cmd: list[str]) -> list[str]:
+            from subprocess import run, PIPE
+            cp = run(cmd, stdout=PIPE, stderr=PIPE, text=True)
+            if cp.returncode != 0:
+                return []
+            return [p for p in (cp.stdout or "").splitlines() if p.strip()]
+
+        def _matches_any(path: str, patterns: list[str]) -> bool:
+            return any(fnmatch.fnmatch(path, pat) for pat in patterns)
+
+        if rc == 0 and args.auto_commit_docs:
+            whitelist = [p.strip() for p in args.autocommit_whitelist.split(',') if p.strip()]
+            max_bytes = args.max_autocommit_bytes
+            # Collect dirty paths (modifications and untracked)
+            unstaged_mod = _list(["git", "diff", "--name-only", "--diff-filter=M"])
+            staged_mod = _list(["git", "diff", "--cached", "--name-only", "--diff-filter=AM"])
+            untracked = _list(["git", "ls-files", "--others", "--exclude-standard"])
+            dirty_all = sorted(set(unstaged_mod) | set(staged_mod) | set(untracked))
+            allowed: list[str] = []
+            forbidden: list[str] = []
+            for p in dirty_all:
+                # Only consider regular files within whitelist and size cap
+                if _matches_any(p, whitelist):
+                    try:
+                        if os.path.isfile(p) and os.path.getsize(p) <= max_bytes:
+                            allowed.append(p)
+                        else:
+                            forbidden.append(p)
+                    except FileNotFoundError:
+                        forbidden.append(p)
+                else:
+                    forbidden.append(p)
+
+            if forbidden:
+                # Refuse to hand off with non-whitelisted dirty changes
+                print("[sync] ERROR: Uncommitted changes outside doc/meta whitelist:")
+                for p in forbidden:
+                    print(f" - {p}")
+                print("Please commit/stash these changes or adjust the whitelist before supervisor handoff.")
+                logp("Auto-commit skipped due to forbidden dirty paths: " + ", ".join(forbidden))
+                return 1
+
+            if allowed:
+                add(allowed)
+                body = "\n\nFiles:\n" + "\n".join(f" - {p}" for p in allowed)
+                committed = commit("SUPERVISOR AUTO: doc/meta hygiene — tests: not run" + body)
+                if committed:
+                    push_to(branch_target, logp)
 
         st = OrchestrationState.read(str(args.state_file))
         if rc == 0:
@@ -174,7 +244,9 @@ def main() -> int:
         last_hb2 = start2
         prev_state2 = None
         while True:
-            safe_pull(logp)
+            if not safe_pull(logp):
+                print("[sync] ERROR: git pull failed while waiting for Ralph; see iter log.")
+                return 1
             st2 = OrchestrationState.read(str(args.state_file))
             cur_state2 = (st2.expected_actor, st2.status, st2.iteration)
             if args.verbose and cur_state2 != prev_state2:
