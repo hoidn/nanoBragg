@@ -1111,7 +1111,7 @@ int main(int argc, char** argv)
                 printout_fpixel = atoi(argv[i+1]);
                 printout_spixel = atoi(argv[i+2]);
             }
-            if(strstr(argv[i], "-trace_pixel") && (argc > (i+2)))
+            if((strstr(argv[i], "-trace_pixel") || strstr(argv[i], "-dump_pixel")) && (argc > (i+2)))
             {
                 trace_spixel = atoi(argv[i+1]);
                 trace_fpixel = atoi(argv[i+2]);

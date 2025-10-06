@@ -1,0 +1,13 @@
+diff --git a/golden_suite_generator/nanoBragg.c b/golden_suite_generator/nanoBragg.c
+index a57d990..838a60a 100644
+--- a/golden_suite_generator/nanoBragg.c
++++ b/golden_suite_generator/nanoBragg.c
+@@ -1111,7 +1111,7 @@ int main(int argc, char** argv)
+                 printout_fpixel = atoi(argv[i+1]);
+                 printout_spixel = atoi(argv[i+2]);
+             }
+-            if(strstr(argv[i], "-trace_pixel") && (argc > (i+2)))
++            if((strstr(argv[i], "-trace_pixel") || strstr(argv[i], "-dump_pixel")) && (argc > (i+2)))
+             {
+                 trace_spixel = atoi(argv[i+1]);
+                 trace_fpixel = atoi(argv[i+2]);

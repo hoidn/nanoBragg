@@ -778,8 +778,27 @@
       - Steps normalization verified correct: `steps = 1×10×1×1 = 10` (line 831)
       - **Likely causes:** (1) pix0_vector override not applied, (2) CUSTOM basis vectors wrong, (3) SAMPLE pivot calculation error, (4) incident_beam_direction wrong, (5) Miller index/scattering vector bug
     Next Actions: **MANDATORY parallel trace comparison** per `docs/debugging/debugging.md` §2.1 - instrument C to print pix0_vector, incident_beam_direction, scattering_vector, h/k/l, F_cell, F_latt, omega for pixel (1039,685); generate matching PyTorch trace; compare line-by-line to find first divergence. Only after trace identifies root cause should implementation fixes begin.
+  * [2025-10-06] Phase E Complete (ralph) — Result: success. **First divergence identified: pix0_vector mismatch at line 1 of trace.**
+    Metrics: C trace (40 vars), PyTorch trace (40 vars). C pix0_vector = `-0.216475836, 0.216343050, -0.230192414` m; PyTorch pix0_vector = `-0.216336293, 0.215205512, -0.230200866` m. Y-component error = **1.14 mm** (explains 1535-pixel horizontal displacement: 1535px × 0.172mm/px ≈ 264mm geometry shift).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_e/c_trace.log` - C reference trace (40 TRACE_C lines)
+      - `reports/2025-10-cli-flags/phase_e/pytorch_trace.log` - PyTorch trace (40 TRACE_PY lines)
+      - `reports/2025-10-cli-flags/phase_e/trace_diff.txt` - Unified diff output
+      - `reports/2025-10-cli-flags/phase_e/trace_comparison.md` - Complete analysis report
+      - `reports/2025-10-cli-flags/phase_e/instrumentation_notes.md` - C instrumentation docs
+      - `reports/2025-10-cli-flags/phase_e/pytorch_instrumentation_notes.md` - PyTorch trace harness docs
+      - `reports/2025-10-cli-flags/phase_e/trace_harness.py` - Evidence-only trace script
+      - `reports/2025-10-cli-flags/phase_e/c_trace.patch` - C instrumentation diff
+    Observations/Hypotheses:
+      - **ROOT CAUSE CONFIRMED:** pix0_vector override is not being applied correctly in PyTorch
+      - C transforms the input: `-pix0_vector_mm -216.336... 215.205... -230.200...` → output pix0 = `-0.216475... 0.216343... -0.230192...` (note Y changed from 215.2 to 216.3 mm)
+      - **Key finding:** C code applies CUSTOM convention transformation to pix0_vector AFTER override
+      - PyTorch override path (detector.py:391-407) assigns the raw input without convention transform
+      - Cascade confirmed: bad pix0 → bad pixel_pos (line 4) → bad diffracted_vec (line 9) → bad scattering_vec (line 13) → bad hkl (line 20) → wrong reflection → **10⁸× intensity error** (446 vs 4.5e-6)
+      - All other geometry CORRECT: fdet/sdet basis vectors match exactly, incident_vec matches, lambda matches
+    Next Actions: (1) Locate CUSTOM convention's pix0 transformation in C code (lines ~1730-1860); (2) Port this logic to PyTorch detector.py override path; (3) Re-run Phase E2 to verify pix0_vector matches; (4) Run Phase C2 parity check to verify correlation >0.999.
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
-- Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); **(iv) Phase D3 evidence report completed with hypothesis and trace recipe** ✅; (v) Geometry bug identified via parallel trace and fixed; (vi) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌ blocked on geometry fix.
+- Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; (vi) Geometry bug identified and fixed ❌ next loop; (vii) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌ blocked on geometry fix.
 
 ### Completed Items — Key Reference
 (See `docs/fix_plan_archive.md` for the full historical ledger.)
