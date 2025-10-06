@@ -1,5 +1,4 @@
 Summary: Close the MOSFLM scaling gap so CLI-FLAGS-003 can advance to Phase L with fresh parity evidence.
- - Phase: Evidence
  - Mode: Parity
 Focus: CLI-FLAGS-003 Phase K3g3 — MOSFLM scaling parity
 Branch: feature/spec-based-2
