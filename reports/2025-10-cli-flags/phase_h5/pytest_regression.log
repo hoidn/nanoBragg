@@ -1,0 +1,73 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/myenv/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+collecting ... collected 57 items
+
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_meters_alias PASSED [  1%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_millimeter_alias PASSED [  3%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_meters_and_mm_equivalence PASSED [  5%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_dual_pix0_flag_rejection PASSED [  7%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m0-pix0_mm0] PASSED [  8%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m1-pix0_mm1] PASSED [ 10%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m2-pix0_mm2] PASSED [ 12%]
+tests/test_cli_flags.py::TestDetectorOverridePersistence::test_detector_override_persistence_cpu PASSED [ 14%]
+tests/test_cli_flags.py::TestDetectorOverridePersistence::test_detector_override_persistence_cuda PASSED [ 15%]
+tests/test_cli_flags.py::TestDetectorOverridePersistence::test_detector_override_dtype_preservation PASSED [ 17%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_nonoise_suppresses_noise_output PASSED [ 19%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_noisefile_without_nonoise PASSED [ 21%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_nonoise_preserves_seed PASSED [ 22%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_nonoise_without_noisefile PASSED [ 24%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_pix0_does_not_alter_beam_vector PASSED [ 26%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_pix0_triggers_custom_convention PASSED [ 28%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_roi_unaffected_by_new_flags PASSED [ 29%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_convention_preserved_without_pix0 PASSED [ 31%]
+tests/test_cli_flags.py::TestCLIBeamVector::test_custom_beam_vector_propagates PASSED [ 33%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_override_beam_pivot_transform[cpu-dtype0] PASSED [ 35%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_override_beam_pivot_transform[cuda-dtype1] PASSED [ 36%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot[cpu] PASSED [ 38%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot[cuda] PASSED [ 40%]
+tests/test_cli_flags.py::TestCLIPolarization::test_default_polarization_parity PASSED [ 42%]
+tests/test_cli_flags.py::TestCLIPolarization::test_nopolar_flag PASSED   [ 43%]
+tests/test_cli_flags.py::TestCLIPolarization::test_polar_override PASSED [ 45%]
+tests/test_detector_geometry.py::TestDetectorGeometryRegressions::test_rotated_basis_vectors_match_c_reference PASSED [ 47%]
+tests/test_detector_geometry.py::TestDetectorGeometryRegressions::test_pix0_vector_matches_c_reference_in_beam_pivot PASSED [ 49%]
+tests/test_detector_geometry.py::TestDetectorGeometryRegressions::test_mosflm_axis_mapping_correctness PASSED [ 50%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_parameter_gradients PASSED [ 52%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_basis_vector_gradients PASSED [ 54%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_pixel_coords_basis_vector_gradients PASSED [ 56%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_comprehensive_gradcheck PASSED [ 57%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_beam_strike_invariant_in_beam_pivot_mode PASSED [ 59%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_xds_convention_basic_geometry PASSED [ 61%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_real_valued_gradients PASSED [ 63%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_complex_gradient_edge_cases PASSED [ 64%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_simulator_real_valued_gradients PASSED [ 66%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_cubic_regression PASSED [ 68%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_triclinic_correctness PASSED [ 70%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_metric_duality PASSED [ 71%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_volume_identity PASSED [ 73%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_resolution_shell_consistency PASSED [ 75%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_rotation_invariance PASSED [ 77%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_gradient_flow PASSED [ 78%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_identity PASSED [ 80%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_x_rotation PASSED [ 82%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_y_rotation PASSED [ 84%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_z_rotation PASSED [ 85%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_order PASSED [ 87%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_properties PASSED [ 89%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_tensor_types PASSED [ 91%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_orientation PASSED [ 92%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_zero_rotation PASSED [ 94%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_tensor_inputs PASSED [ 96%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_rotation_order PASSED [ 98%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_gradient_flow PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_simulator_real_valued_gradients
+  /home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py:742: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+  Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+    recommended_oversample = math.ceil(3.0 * xtalsize_max / reciprocal_pixel_size)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 57 passed, 1 warning in 5.41s =========================

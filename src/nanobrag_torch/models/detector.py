@@ -515,31 +515,27 @@ class Detector:
             # This ensures CUSTOM convention overrides (e.g., -beam_vector) are honored
             # beam_vector is already set via self.beam_vector property
 
-            # CLI-FLAGS-003 Phase H3b: Handle pix0_override for BEAM pivot
-            # CRITICAL PRECEDENCE (from Phase H3b1 evidence):
-            # When custom detector vectors are present, C code IGNORES -pix0_vector_mm entirely.
-            # The custom vectors already define the detector geometry completely.
-            # Only apply pix0_override when NO custom vectors are provided.
+            # CLI-FLAGS-003 Phase H5b: Handle pix0_override for BEAM pivot
+            # UPDATED PRECEDENCE (Phase J evidence, 2025-10-21):
+            # C code DOES honor -pix0_vector_mm even when custom detector vectors are present.
+            # The override is applied by deriving Fbeam/Sbeam from the pix0_override value.
             #
-            # When pix0_override IS applied (no custom vectors case), derive Fbeam/Sbeam from it by:
-            # 1. Subtract beam term to get detector offset
+            # pix0_override application workflow:
+            # 1. Subtract beam term to get detector offset: pix0_delta = pix0_override - distance*beam
             # 2. Project onto detector axes to get Fbeam_override, Sbeam_override
+            #    Fbeam = -dot(pix0_delta, fdet); Sbeam = -dot(pix0_delta, sdet)
             # 3. Update beam_center_f/s tensors for header consistency
-            # 4. Apply standard BEAM formula
+            # 4. Apply standard BEAM formula with derived Fbeam/Sbeam
             #
-            # C-code pattern (inferred from trace evidence):
-            # pix0_delta = pix0_override - distance*beam
-            # Fbeam_override = -dot(pix0_delta, fdet)
-            # Sbeam_override = -dot(pix0_delta, sdet)
+            # This ensures that -pix0_vector_mm overrides the beam center calculation
+            # regardless of whether custom detector vectors are present.
 
-            # Check if custom detector vectors are present - if so, ignore pix0_override
-            has_custom_vectors = (
-                self.config.custom_fdet_vector is not None or
-                self.config.custom_sdet_vector is not None or
-                self.config.custom_odet_vector is not None
-            )
-
-            if pix0_override_tensor is not None and not has_custom_vectors:
+            # CLI-FLAGS-003 Phase H5b: Apply pix0 override even with custom vectors
+            # Evidence from Phase J traces (2025-10-21) shows C code DOES recompute
+            # Fbeam/Sbeam from pix0_override even when custom detector vectors are present.
+            # The override precedence is: pix0_override transforms into Fbeam/Sbeam which
+            # then feed into the standard BEAM pivot formula.
+            if pix0_override_tensor is not None:
                 # Ensure all tensors on same device/dtype
                 beam_vector_local = beam_vector.to(device=self.device, dtype=self.dtype)
                 fdet_local = self.fdet_vec.to(device=self.device, dtype=self.dtype)

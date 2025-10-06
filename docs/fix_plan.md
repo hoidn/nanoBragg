@@ -505,6 +505,20 @@
       - **Test Coverage:** Validates default matches C (1.0), -nopolar flag behavior, and -polar <value> override
       - **Phase I Tasks:** I1 (audit) ✅, I2 (implement) ✅; I3 (final parity sweep) remains pending
     Next Actions: Execute Phase I3 final parity sweep by running the supervisor command end-to-end (PyTorch CLI + C reference), stash logs under `reports/2025-10-cli-flags/phase_i/supervisor_command/`, document polarization metrics in Attempt #27, then close CLI-FLAGS-003.
+  * [2025-10-21] Attempt #29 (ralph loop) — Result: Phase H5b COMPLETE. **Restored pix0 override application in custom-vector path.**
+    Metrics: Regression suite 57/57 passed (CLI flags 26/26, detector 12/12, crystal 19/19). No test failures or collection errors.
+    Artifacts:
+      - `src/nanobrag_torch/models/detector.py:540` - Removed `and not has_custom_vectors` gate from pix0_override application
+      - `reports/2025-10-cli-flags/phase_h5/implementation_notes.md` - Implementation rationale and expected impact
+      - `reports/2025-10-cli-flags/phase_h5/parity_summary.md` - Regression test results and verification status
+      - `reports/2025-10-cli-flags/phase_h5/pytest_regression.log` - Full test suite output
+    Observations/Hypotheses:
+      - **Root cause addressed:** PyTorch was skipping pix0_override when custom detector vectors present due to Phase H3b1 understanding (Oct 6) that C ignored the override
+      - **Updated evidence from Phase J (Oct 21):** C DOES honor override by deriving Fbeam/Sbeam from pix0_override value
+      - **Fix:** Removed has_custom_vectors condition, allowing override to flow through projection logic (lines 541-575) that computes Fbeam_override/Sbeam_override
+      - **Device/dtype neutrality preserved:** All tensor operations maintain `.to(device=self.device, dtype=self.dtype)` coercion
+      - **Expected impact:** Should close 1.14 mm pix0 Y-axis gap and align F_latt components (C: 35.9/38.6/25.7 vs current PyTorch: -2.4/11.8/-2.7)
+    Next Actions: Phase H5c parity verification (run supervisor command, extract pix0/Fbeam/Sbeam/F_latt from C and PyTorch traces, document deltas). If parity achieved, proceed to Phase K normalization work; if gaps remain, capture diagnostic traces before next iteration.
   * [2025-10-17] Attempt #25 (ralph) — Result: success (Phase H4a-c complete). **Post-rotation beam-centre recomputation implemented and verified.**
     Metrics: pix0_vector parity achieved - C vs PyTorch deltas < 2e-8 m (well within 5e-5 m tolerance). Test suite: test_cli_flags.py 23/23 passed, test_detector_geometry.py 12/12 passed, test_crystal_geometry.py 19/19 passed (54 total).
     Artifacts:
