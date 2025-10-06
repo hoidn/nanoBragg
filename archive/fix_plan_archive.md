@@ -1,6 +1,26 @@
 
 ## Completed ✅
 
+### [GOLDEN-DATA-001] Generate missing test reference files (archived 2025-10-17)
+- Generated the missing triclinic_P1 and cubic_tilted_detector `.bin` images plus dtype fixes so AT-PARALLEL-012/013 suites pass.
+- Key artifacts: `reports/2025-10-cli-flags/phase_c/parity/`, `tests/golden_data/triclinic_P1/image.bin`, `tests/golden_data/cubic_tilted_detector/image.bin`.
+- Follow-on: none — item remains closed; regression guard is the Tier-1 parallel suite.
+
+### [GRADIENT-MISSET-001] Fix misset gradient flow (archived 2025-10-17)
+- Restored Core Rule #13 pipeline by reapplying misset rotations to reciprocal vectors and rebuilding metric-dual real vectors; gradchecks now pass.
+- Key artifacts: `reports/2025-09-30-AT-012-debug/`, commits finalizing V_actual usage.
+- Follow-on: keep gradcheck coverage under `[AT-TIER2-GRADCHECK]`.
+
+### [AT-PARALLEL-012-PEAKMATCH] Restore 95% peak alignment (archived 2025-10-17)
+- Reworked test peak clustering (0.5 px radius + geometric centroid) to tolerate float32 plateau fragmentation; now ≥48/50 peaks match with corr≈1.0.
+- Key artifacts: `reports/2025-10-AT012-regression/phase_c_validation/`.
+- Follow-on: reopen only if simple_cubic peak matches fall below spec.
+
+### [DTYPE-DEFAULT-001] Migrate default dtype to float32 (archived 2025-10-17)
+- Completed float32 default migration across CLI/config/simulator, updated docs/checklists, and coordinated with AT-012 regression fix.
+- Key artifacts: `reports/DTYPE-DEFAULT-001/phase_c_parity/`, `arch.md` + `docs/development/pytorch_runtime_checklist.md` updates, `plans/archive/dtype-default-fp32/plan.md`.
+- Follow-on: maintain float64 opt-in for gradchecks; monitor linked `[AT-PARALLEL-012-PEAKMATCH]` archive if plateaus regress.
+
 ### AT-GEO-001: MOSFLM beam-center mapping and 0.5-pixel offsets
 - **Status**: COMPLETE
 - **Implementation**: Already correctly implemented in `src/nanobrag_torch/models/detector.py`

@@ -1,134 +1,80 @@
-## Vectorization Refactoring Plan for `nanobrag-torch`
+## Context
+- Initiative: PERF-PYTORCH-004 vectorization backlog; supports long-term goal "Parallel parity + performance" from docs/fix_plan.md
+- Phase Goal: Deliver a production-ready, fully vectorized tricubic interpolation pipeline (gather + polynomial evaluation) and follow with detector absorption vectorization without regressing physics, gradients, or device neutrality.
+- Dependencies: specs/spec-a-core.md §4 (Structure factors), specs/spec-a-parallel.md §2.3 (Interpolation acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4, docs/architecture/c_code_overview.md (tricubic routines), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, `nanoBragg.c` lines 2604–3278 (polin3/polin2/polint + detector absorption), `tests/test_at_str_002.py`, `tests/test_at_abs_001.py`, `reports/benchmarks/20250930-165726-compile-cache/` (current performance references).
 
-### 1. Objective
+### Phase A — Evidence & Baseline Capture
+Goal: Document the current (non-vectorized) behavior, warnings, and performance so we can prove the impact of the refactor.
+Prereqs: Editable install (`pip install -e .`), C binary available for parity (when needed), environment variable `KMP_DUPLICATE_LIB_OK=TRUE`.
+Exit Criteria: Baseline pytest log, timing snippet results, and notes stored under `reports/2025-10-vectorization/phase_a/` with references in docs/fix_plan.md Attempt history.
 
-This plan outlines the strategy to refactor two performance-critical, non-vectorized components in the `nanobrag-torch` simulator: **detector absorption** and **Fhkl tricubic interpolation**. The goal is to replace the current Python-level loops with fully vectorized PyTorch tensor operations to significantly improve performance, especially on GPUs, and to enable the practical use of tricubic interpolation for full-frame simulations.
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| A1 | Re-run tricubic acceptance tests | [ ] | `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py -v` ⇒ save log to `reports/2025-10-vectorization/phase_a/test_at_str_002.log`; confirm nearest-neighbour fallback warning message appears for batched inputs. |
+| A2 | Measure current tricubic runtime | [ ] | `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/sample_tricubic_baseline.py` (create minimal harness if missing) to capture CPU timings for 256² and 512² detectors; record outputs in `phase_a/tricubic_baseline.md`. |
+| A3 | Record detector absorption baseline | [ ] | `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_abs_001.py -v` plus a microbenchmark (`python scripts/benchmarks/sample_absorption_baseline.py`) so we have pre-refactor timings; store under `phase_a/absorption_baseline.md`. |
 
-### 2. Task 1: Vectorize Detector Absorption (`_apply_detector_absorption`)
+### Phase B — Tricubic Vectorization Design
+Goal: Lock the tensor-shape design, broadcasting plan, and gradient checks before code changes.
+Prereqs: Phase A artifacts uploaded and referenced in docs/fix_plan.md.
+Exit Criteria: Design memo (`reports/2025-10-vectorization/phase_b/design_notes.md`) describing target shapes, indexing strategy, gradient expectations, and failure modes; docs/fix_plan.md updated with summary and link.
 
-**Current State:** The implementation in `src/nanobrag_torch/simulator.py` uses a Python `for` loop to iterate over `thicksteps` when `oversample_thick=True`. This is a major performance bottleneck as it executes expensive `torch.exp()` operations sequentially for every pixel on the detector.
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| B1 | Derive tensor shapes & broadcasting plan | [ ] | Document how `(S,F)` Miller grids expand to `(S,F,4,4,4)` neighborhoods; include diagrams referencing c_code_overview.md appendix; note device/dtype handling requirements. |
+| B2 | Map C polin3 semantics to PyTorch ops | [ ] | Translate nanoBragg.c polynomial evaluation to tensor algebra; identify reuse opportunities (e.g., precomputed vandermonde weights). Capture equations + references in design memo. |
+| B3 | Gradient & dtype checklist | [ ] | Cross-check docs/development/pytorch_runtime_checklist.md so the forthcoming implementation keeps gradients (no `.item()`, no `torch.linspace`) and works on CPU/CUDA; list explicit assertions/tests to add in Phase E. |
 
-**Proposed Solution:** Eliminate the Python loop by creating a new tensor dimension for the thickness layers. This will allow the capture fraction for all layers and all pixels to be computed in a single, parallelized operation.
+### Phase C — Implementation: Neighborhood Gather
+Goal: Replace scalar neighbor gathering with fully batched advanced indexing inside `Crystal._tricubic_interpolation` while keeping fallbacks for out-of-range queries.
+Prereqs: Phase B design finalized; create feature branch per SOP if needed.
+Exit Criteria: Vectorized gather merged, unit tests covering neighborhood assembly added, and plan task C1–C3 marked done with artifact references.
 
-#### 2.1. Implementation Steps
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| C1 | Implement batched neighborhood gather | [ ] | Replace Python loops with broadcasting + advanced indexing to build `(S,F,4,4,4)` `sub_Fhkl` tensor; ensure compatibility with arbitrary batch dims (e.g., oversample, mosaic). |
+| C2 | Preserve fallback semantics | [ ] | Maintain existing out-of-bounds detection and warning (single emission); verify fallback path still works by forcing OOB indices in a targeted unit test saved under `tests/test_tricubic_vectorized.py`. |
+| C3 | Add shape assertions & cache hooks | [ ] | Introduce lightweight assertions to catch unexpected shapes; ensure any caching stays device-aware to avoid CPU allocations when running on CUDA. Document in `reports/2025-10-vectorization/phase_c/implementation_notes.md`. |
 
-The refactoring will be applied to the `_apply_detector_absorption` method in `src/nanobrag_torch/simulator.py`.
+### Phase D — Implementation: Polynomial Evaluation
+Goal: Vectorize `polint`, `polin2`, and `polin3` so they consume batches from Phase C without Python loops.
+Prereqs: Phase C merged or staged with passing tests.
+Exit Criteria: All polynomial helpers accept batched tensors, no Python loops over pixels remain, and helper-level unit tests exist.
 
-1.  **Create a Layer Index Tensor:**
-    Instead of a Python loop `for t in range(thicksteps):`, create a 1D tensor representing the layer indices.
-    ```python
-    t_indices = torch.arange(thicksteps, device=intensity.device, dtype=intensity.dtype)
-    ```
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| D1 | Vectorize `polint` | [ ] | Rewrite using tensor broadcasting; support trailing batch dims and ensure numerical stability matches C (consider Kahan-style compensation if necessary). Add regression test in `tests/test_tricubic_vectorized.py::test_polint_vectorized_matches_scalar`. |
+| D2 | Vectorize `polin2`/`polin3` | [ ] | Stack vectorized `polint` results instead of looping; maintain compatibility with scalar callers (if any). Capture proof-of-equivalence logs in `reports/2025-10-vectorization/phase_d/polynomial_validation.md`. |
+| D3 | Audit differentiability | [ ] | Run `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_gradients.py::TestCrystal::test_tricubic_gradient -v` (add test if absent) to confirm gradients survive the refactor. |
 
-2.  **Expand Tensors for Broadcasting:**
-    To perform the calculation in parallel, expand the dimensions of the `t_indices` and `parallax` tensors to make them broadcast-compatible.
-    *   `t_indices` (shape `(T,)`) becomes `t_expanded` (shape `(T, 1, 1)`).
-    *   `parallax` (shape `(S, F)`) becomes `parallax_expanded` (shape `(1, S, F)`).
-    *   `intensity` (shape `(S, F)`) becomes `intensity_expanded` (shape `(1, S, F)`).
-    ```python
-    t_expanded = t_indices.reshape(-1, 1, 1)
-    parallax_expanded = parallax.unsqueeze(0)
-    intensity_expanded = intensity.unsqueeze(0)
-    ```
+### Phase E — Validation & Performance Assessment
+Goal: Prove the new vectorized path matches legacy outputs, keeps gradients, and improves runtime on representative detector sizes.
+Prereqs: Phases C/D complete; baseline artifacts from Phase A available for comparison.
+Exit Criteria: Validation summary in `reports/2025-10-vectorization/phase_e/summary.md` including parity metrics, perf deltas, and gradient results; docs/fix_plan.md attempts updated.
 
-3.  **Vectorize Capture Fraction Calculation:**
-    Compute the capture fractions for all layers and pixels in a single operation. The formula is `exp(−t·Δz·μ/ρ) − exp(−(t+1)·Δz·μ/ρ)`.
-    ```python
-    exp_start_all = torch.exp(-t_expanded * delta_z * mu / parallax_expanded)
-    exp_end_all = torch.exp(-(t_expanded + 1) * delta_z * mu / parallax_expanded)
-    capture_fractions = exp_start_all - exp_end_all  # Resulting shape: (T, S, F)
-    ```
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| E1 | Regression tests sweep | [ ] | `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py tests/test_tricubic_vectorized.py -v` (CPU + CUDA when available). Log outputs under `phase_e/pytest.log`. |
+| E2 | Performance benchmark | [ ] | Extend (or create) `scripts/benchmarks/sample_tricubic_baseline.py` to compare pre/post timings; run for CPU & CUDA, storing CSV/JSON in `phase_e/perf_results.json`. |
+| E3 | Parity against C reference | [ ] | Use `nb-compare --resample --outdir reports/2025-10-vectorization/phase_e/nb_compare -- -default_F ...` (match AT-STR-002 config) to ensure intensities align within tolerance. Summarize metrics in `phase_e/summary.md`. |
 
-4.  **Apply Fractions and Sum:**
-    Multiply the expanded intensity tensor by the capture fractions and sum along the thickness dimension (`dim=0`) to get the final result.
-    ```python
-    # Multiply intensity by capture fractions for each layer
-    # (1, S, F) * (T, S, F) -> (T, S, F)
-    layered_intensity = intensity_expanded * capture_fractions
+### Phase F — Detector Absorption Vectorization
+Goal: Apply the same vectorization discipline to `_apply_detector_absorption`, eliminating Python loops over `thicksteps` while preserving physics.
+Prereqs: Phase E validated so tricubic changes are stable; absorption baseline from Phase A available.
+Exit Criteria: Vectorized absorption path merged, tests updated, and performance improvements documented similar to tricubic work.
 
-    # Sum over the thickness dimension to get the final result
-    # (T, S, F) -> (S, F)
-    result = torch.sum(layered_intensity, dim=0)
-    ```
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| F1 | Refresh design notes | [ ] | Append absorption section to `design_notes.md` describing tensor shapes (`(T,S,F)`), numerical stability considerations, and potential reuse of exponential precomputation. |
+| F2 | Implement vectorized absorption | [ ] | Modify `_apply_detector_absorption` to broadcast layer indices and parallax tensors as described; maintain differentiability and device neutrality. Record implementation notes in `phase_f/implementation.md`. |
+| F3 | Validate & benchmark | [ ] | `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_abs_001.py -v` plus microbenchmark update; capture results under `phase_f/summary.md` comparing against Phase A data. |
 
-#### 2.2. Verification & Acceptance Criteria
+### Phase G — Documentation & Closure
+Goal: Ensure documentation, plans, and fix_plan reflect the new vectorized behavior and that artifacts are archived.
+Prereqs: Phases A–F complete.
+Exit Criteria: Plan archived or marked complete, docs updated, and fix_plan entry closed.
 
-*   **Numerical Equivalence:** The vectorized implementation must produce results that are numerically identical (`torch.allclose` with `atol=1e-12`) to the original loop-based implementation. A unit test will be created to verify this.
-*   **Performance Gain:** A benchmark test will be created to measure the execution time. The vectorized version is expected to be **orders of magnitude faster**, especially for `thicksteps > 1` on a GPU.
-
----
-
-### 3. Task 2: Vectorize Fhkl Tricubic Interpolation (`polin3`)
-
-**Current State:** The functions `polin3`, `polin2`, and `polint` in `src/nanobrag_torch/utils/physics.py` are direct ports of the scalar C code. They use nested Python loops and are incompatible with the vectorized inputs from the main simulator, making `F_hkl` refinement on full images impossible.
-
-**Proposed Solution:** Refactor the interpolation functions from the bottom up (`polint` -> `polin2` -> `polin3`) to handle batched inputs corresponding to all pixels on the detector. The most critical part is to first gather the 4x4x4 neighborhoods for all pixels in a single, vectorized operation.
-
-#### 3.1. Implementation Steps
-
-This is a multi-phase refactoring task.
-
-**Phase 1: Vectorized Neighborhood Gathering** (in `Crystal._tricubic_interpolation`)
-
-1.  **Input:** The function receives `h, k, l` tensors of shape `(S, F)`.
-2.  **Calculate Indices:** Compute `h_flr`, `k_flr`, `l_flr` using `torch.floor()`.
-3.  **Create Offset Tensor:** `offsets = torch.arange(-1, 3, device=self.device, dtype=torch.long)` -> `[-1, 0, 1, 2]`.
-4.  **Construct Index Grids:** Use broadcasting to create the full integer indices for all neighborhoods.
-    ```python
-    # Shapes: (S, F, 4)
-    h_indices = h_flr.unsqueeze(-1) + offsets
-    k_indices = k_flr.unsqueeze(-1) + offsets
-    l_indices = l_flr.unsqueeze(-1) + offsets
-    ```
-5.  **Gather `F_hkl` Data:** Use advanced indexing to gather the `F_hkl` values for all neighborhoods at once. This is the most critical step.
-    ```python
-    # h_indices[:, :, :, None, None] -> (S, F, 4, 1, 1)
-    # k_indices[:, :, None, :, None] -> (S, F, 1, 4, 1)
-    # l_indices[:, :, None, None, :] -> (S, F, 1, 1, 4)
-    # These broadcast to index a (S, F, 4, 4, 4) tensor from hkl_data
-    sub_Fhkl = self.hkl_data[
-        h_indices[:, :, :, None, None],
-        k_indices[:, :, None, :, None],
-        l_indices[:, :, None, None, :]
-    ] # Resulting shape: (S, F, 4, 4, 4)
-    ```
-
-**Phase 2: Vectorize `polint`** (in `utils/physics.py`)
-
-1.  **Update Signature:** Modify `polint` to accept batched inputs.
-    *   `xa`: shape `(..., 4)`
-    *   `ya`: shape `(..., 4)`
-    *   `x`: shape `(...)`
-2.  **Vectorize Lagrange Formula:** Rewrite the scalar formula using tensor slicing and broadcasting.
-    ```python
-    def polint_vectorized(xa, ya, x):
-        x = x.unsqueeze(-1) # Shape: (..., 1)
-        # Slices of xa and ya will have shape (..., 1)
-        x0 = (x - xa[..., 1:2]) * (x - xa[..., 2:3]) * (x - xa[..., 3:4]) * ya[..., 0:1] / \
-             ((xa[..., 0:1] - xa[..., 1:2]) * (xa[..., 0:1] - xa[..., 2:3]) * (xa[..., 0:1] - xa[..., 3:4]))
-        # ... repeat for x1, x2, x3 ...
-        return x0 + x1 + x2 + x3
-    ```
-
-**Phase 3: Vectorize `polin2` and `polin3`** (in `utils/physics.py`)
-
-1.  **Update Signatures:** Modify `polin2` and `polin3` to accept batched inputs.
-2.  **Replace Loops with Slicing:** Replace the Python `for` loops with tensor slicing and calls to the newly vectorized `polint` and `polin2`.
-    *   **Vectorized `polin2`:**
-        ```python
-        def polin2_vectorized(x1a, x2a, ya, x1, x2):
-            # ya shape: (..., 4, 4)
-            ymtmp = torch.zeros_like(ya[..., 0]) # Shape: (..., 4)
-            # Replace loop with vectorized calls
-            for j in range(4):
-                ymtmp[..., j] = polint_vectorized(x2a, ya[..., j, :], x2)
-            return polint_vectorized(x1a, ymtmp, x1)
-        ```
-        (Note: The small `for j in range(4)` loop can remain for clarity, as it doesn't scale with the number of pixels).
-    *   **Vectorized `polin3`:** The logic is identical to `polin2` but with an extra dimension, calling the new `polin2_vectorized`.
-
-#### 3.2. Verification & Acceptance Criteria
-
-*   **Numerical Equivalence:** Create a unit test that compares the output of the new vectorized `polin3` against a reference implementation that manually iterates over each pixel and calls the original scalar `polin3`. The results must be identical (`torch.allclose`).
-*   **Performance Gain:** Benchmark the vectorized implementation on a full-size detector image (e.g., 1024x1024). The execution time should be reduced from minutes/hours (for a hypothetical looped version) to **under a second** on a modern GPU.
-
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| G1 | Update documentation | [ ] | Revise `docs/architecture/pytorch_design.md` (vectorization subsections) and `docs/development/pytorch_runtime_checklist.md` with the new expectations; note script locations in `docs/development/testing_strategy.md`. |
+| G2 | Close planning artifacts | [ ] | Move key reports to `reports/archive/` (retain relative paths), update docs/fix_plan.md Attempts with final metrics, and archive this plan per SOP. |

@@ -1,115 +1,56 @@
-2025-10-06T02:36:00Z | a50acc2 | galph | Active Focus: Finish CUSTOM beam vector wiring ahead of pix0 transform
-Summary: Make `_calculate_pix0_vector()` honor user-supplied beam vectors so CUSTOM overrides drive parity evidence
+Summary: Port CUSTOM pix0 transform so PyTorch CLI parity matches C pix0 trace.
 Phase: Implementation
 Focus: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
 Branch: feature/spec-based-2
-Mapped tests: none — manual parity harness
-Artifacts: reports/2025-10-cli-flags/phase_f/
+Mapped tests: env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py -k pix0 -v
+Artifacts: reports/2025-10-cli-flags/phase_f/pix0_transform_validation/
 
-Do Now: [CLI-FLAGS-003] Phase F1 — refactor detector pix0 override to call `Detector.beam_vector`; verify via validation snippet (env KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python ...)
-If Blocked: Capture fresh detector trace showing the lingering default beam vector, store under reports/2025-10-cli-flags/phase_f/blocked/<timestamp>, and log the stall in docs/fix_plan.md Attempts before pausing.
+timestamp: 2025-10-06T02:54:20Z
+commit: 1918c2b
+author: galph
+active focus: CLI-FLAGS-003 Phase F2 — port CUSTOM pix0 transform
+
+Do Now: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm — env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py -k pix0 -v
+If Blocked: Capture current pix0/beam vectors via the Phase E Python snippet and log Attempt #12 in docs/fix_plan.md before proceeding.
+
 Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md — Phase F1 reverted to [P]; helper still hardcodes convention defaults so CUSTOM beam input never lands.
-- docs/fix_plan.md:664 — Next Actions explicitly call for the `_calculate_pix0_vector()` refactor and regenerated beam-vector artifact prior to Phase F2.
-- docs/development/c_to_pytorch_config_map.md §Detector Parameters — Confirms CUSTOM overrides must traverse the same r-factor/pix0 math as meter-path inputs.
-- docs/architecture/detector.md §5 — Details CUSTOM convention rotation/pivot ordering that the helper must reuse verbatim.
-- docs/debugging/detector_geometry_checklist.md — Mandatory preflight; reinforces unit system and +0.5 pixel offset rules before edits.
-- reports/2025-10-cli-flags/phase_e/trace_summary.md — Shows current parity harness only succeeds by injecting beam overrides manually.
+- plans/active/cli-noise-pix0/plan.md:76 — Phase F2 demands replacing the early-return pix0 override with the CUSTOM transform copied from nanoBragg.c.
+- docs/fix_plan.md:645 — Next actions already escalate F2 as the blocker before orientation (Phase G) work can begin.
+- src/nanobrag_torch/models/detector.py:401 — Early return after setting pix0_override_m bypasses the rotation/pivot math; must be removed.
+- docs/architecture/detector.md:35 — BEAM-pivot pix0 formula defines the reference math we need to reuse for CUSTOM overrides.
+- specs/spec-a-cli.md:60 — CLI contract states `-pix0_vector` supplies meters, `_mm` supplies millimetres but still triggers CUSTOM convention.
 
 How-To Map:
-- export AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md so subsequent shells inherit the authoritative command reference.
-- Re-read docs/debugging/detector_geometry_checklist.md and docs/architecture/detector.md §5 before editing; note CUSTOM pivot sequence and meter⇄millimeter conversions.
-- Update `_calculate_pix0_vector()` BEAM-pivot branch to reuse `self.beam_vector` (tensor on caller device/dtype) instead of instantiating convention defaults; ensure pix0 override retains differentiability and cache invalidation.
-- Run the validation snippet below after edits to repopulate beam/pix0 artifacts and confirm CUSTOM vector usage:
-  ```python
-  import torch
-  from pathlib import Path
-  from nanobrag_torch.__main__ import create_parser, parse_and_validate_args
-  from nanobrag_torch.config import DetectorConfig
-  from nanobrag_torch.models.detector import Detector
-
-  args = [
-      "-mat", "A.mat",
-      "-floatfile", "py_pix0_test.bin",
-      "-hkl", "scaled.hkl",
-      "-nonoise",
-      "-nointerpolate",
-      "-oversample", "1",
-      "-exposure", "1",
-      "-flux", "1e18",
-      "-beamsize", "1.0",
-      "-spindle_axis", "-1", "0", "0",
-      "-Xbeam", "217.742295",
-      "-Ybeam", "213.907080",
-      "-distance", "231.274660",
-      "-lambda", "0.976800",
-      "-pixel", "0.172",
-      "-detpixels_x", "2463",
-      "-detpixels_y", "2527",
-      "-odet_vector", "-0.000088", "0.004914", "-0.999988",
-      "-sdet_vector", "-0.005998", "-0.999970", "-0.004913",
-      "-fdet_vector", "0.999982", "-0.005998", "-0.000118",
-      "-pix0_vector_mm", "-216.336293", "215.205512", "-230.200866",
-      "-beam_vector", "0.00051387949", "0.0", "-0.99999986",
-      "-Na", "36",
-      "-Nb", "47",
-      "-Nc", "29",
-      "-osc", "0.1",
-      "-phi", "0",
-      "-phisteps", "10",
-      "-detector_rotx", "0",
-      "-detector_roty", "0",
-      "-detector_rotz", "0",
-      "-twotheta", "0"
-  ]
-
-  parser = create_parser()
-  parsed = parse_and_validate_args(parser.parse_args(args))
-  det_cfg = DetectorConfig(
-      distance_mm=parsed['distance_mm'],
-      close_distance_mm=parsed.get('close_distance_mm'),
-      pixel_size_mm=parsed['pixel_size_mm'],
-      spixels=parsed['spixels'],
-      fpixels=parsed['fpixels'],
-      detector_rotx_deg=parsed['detector_rotx_deg'],
-      detector_roty_deg=parsed['detector_roty_deg'],
-      detector_rotz_deg=parsed['detector_rotz_deg'],
-      detector_twotheta_deg=parsed['twotheta_deg'],
-      detector_convention=parsed['convention'],
-      detector_pivot=parsed['pivot'],
-      beam_center_s=parsed['beam_center_y_mm'],
-      beam_center_f=parsed['beam_center_x_mm'],
-      custom_fdet_vector=parsed.get('custom_fdet_vector'),
-      custom_sdet_vector=parsed.get('custom_sdet_vector'),
-      custom_odet_vector=parsed.get('custom_odet_vector'),
-      custom_beam_vector=parsed.get('custom_beam_vector'),
-      pix0_override_m=parsed.get('pix0_override_m')
-  )
-  det = Detector(det_cfg, device=torch.device("cpu"), dtype=torch.float64)
-  Path("reports/2025-10-cli-flags/phase_f/beam_vector_after_fix.txt").write_text(f"{det.beam_vector.tolist()}\n")
-  Path("reports/2025-10-cli-flags/phase_f/pix0_vector_after_fix.txt").write_text(f"{det.pix0_vector.tolist()}\n")
-  print("beam_vector", det.beam_vector)
-  print("pix0_vector", det.pix0_vector)
-  ```
-- Diff the new pix0 vector against `reports/2025-10-cli-flags/phase_e/c_trace_beam.log` (expect ≤1e-12 delta); log results in a short summary under `reports/2025-10-cli-flags/phase_f/beam_vector_check.md`.
-- After verification, add Attempt #11 to docs/fix_plan.md capturing commands, artifacts, and observed deltas before moving to Phase F2.
+- `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py -k pix0 -v | tee reports/2025-10-cli-flags/phase_f/pix0_transform_validation/pytest.log`
+- `NB_C_BIN=./golden_suite_generator/nanoBragg nanoBragg  -mat A.mat -floatfile img.bin -hkl scaled.hkl  -nonoise  -nointerpolate -oversample 1  -exposure 1  -flux 1e18 -beamsize 1.0  -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080  -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866  -beam_vector 0.00051387949 0.0 -0.99999986  -Na 36  -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0` (store outputs under `reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/c_reference/`).
+- `env KMP_DUPLICATE_LIB_OK=TRUE nanoBragg  -mat A.mat -floatfile torch_img.bin -hkl scaled.hkl  -nonoise  -nointerpolate -oversample 1  -exposure 1  -flux 1e18 -beamsize 1.0  -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080  -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866  -beam_vector 0.00051387949 0.0 -0.99999986  -Na 36  -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0` (store outputs under `reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/pytorch/`).
+- `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY'
+from nanobrag_torch.__main__ import create_parser, parse_and_validate_args
+parser = create_parser()
+args = parser.parse_args("-mat A.mat -floatfile torch_img.bin -hkl scaled.hkl -nonoise -nointerpolate -oversample 1 -exposure 1 -flux 1e18 -beamsize 1.0 -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080 -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866 -beam_vector 0.00051387949 0.0 -0.99999986 -Na 36 -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0".split())
+config = parse_and_validate_args(args)
+detector = config['detector']
+print("pix0_vector_meters", detector.pix0_vector)
+print("beam_vector", detector.beam_vector)
+PY
+> reports/2025-10-cli-flags/phase_f/pix0_transform_validation/pix0_vector_after_f2.txt`
 
 Pitfalls To Avoid:
-- Do not keep the early-return path that bypasses CUSTOM math when `pix0_override_m` is present.
-- Preserve differentiability and device/dtype neutrality (avoid `.item()`, `.cpu()`, or mismatched tensor factories).
-- Keep detector geometry vectorized; no per-pixel or per-axis Python loops.
-- Obey Protected Assets (docs/index.md) — no renaming/removing indexed files.
-- Ensure detector caches invalidate once pix0 or beam vectors change; regen `_cached_*` tensors as needed.
-- Store probes under reports/2025-10-cli-flags/ (no ad-hoc temp scripts elsewhere).
-- Document evidence before edits escalate; parallel trace discipline still applies.
-- Confirm artifact files are non-empty and readable before committing or logging.
+- Keep `_calculate_pix0_vector` differentiable — no `.detach()`, `.cpu()`, or `.item()` on tensors that feed gradients.
+- Preserve device/dtype neutrality; reuse existing tensors and `type_as` instead of hard-coding CPU allocations.
+- Do not bypass the CUSTOM transform by reintroducing the early return; all overrides must flow through the BEAM/SAMPLE pivots.
+- Respect Protected Assets (docs/index.md); do not delete or rename any indexed files while working in reports/.
+- Avoid adding temporary scripts outside `scripts/`; use the plan’s report directories for artifacts.
+- Maintain vectorization — no per-pixel Python loops when porting the C logic.
+- Leave polarization work untouched until Phase G/H; focus on pix0 parity first.
 
 Pointers:
-- plans/active/cli-noise-pix0/plan.md#phase-f-—-detector-implementation-beam--pix0-parity
-- docs/fix_plan.md:664
-- docs/development/c_to_pytorch_config_map.md
-- docs/architecture/detector.md#5-detector-origin-and-pivots
-- docs/debugging/detector_geometry_checklist.md
-- reports/2025-10-cli-flags/phase_e/trace_summary.md
+- plans/active/cli-noise-pix0/plan.md:76 — Phase F2 guidance and exit criteria.
+- docs/fix_plan.md:645 — Current next actions and outstanding checkpoints for `[CLI-FLAGS-003]`.
+- src/nanobrag_torch/models/detector.py:401 — Early-return override path needing CUSTOM transform port.
+- docs/architecture/detector.md:35 — Reference formulas for BEAM-pivot pix0 calculation.
+- specs/spec-a-cli.md:60 — CLI contract for `-pix0_vector` / `_mm` semantics and CUSTOM convention trigger.
 
-Next Up: If F1 lands quickly, proceed to Phase F2 (CUSTOM pix0 transform) under the same plan before attempting parity reruns.
+Next Up:
+- [CLI-FLAGS-003] Phase F3 — rerun parity harness after pix0 transform (store under `phase_f/parity_after_detector_fix/`).
+- [VECTOR-TRICUBIC-001] Phase A — capture tricubic/absorption baselines once CLI geometry is back in sync.
