@@ -2,7 +2,7 @@
 - Initiative: CLI Parity for nanoBragg PyTorch vs C (supports long-term goal in prompts/supervisor.md)
 - Phase Goal: Accept `-nonoise` and `-pix0_vector_mm` flags with C-equivalent semantics so the parallel comparison command in prompts/supervisor.md executes end-to-end.
 - Dependencies: specs/spec-a-cli.md §§3.2–3.4, docs/architecture/detector.md §5, docs/development/c_to_pytorch_config_map.md (detector pivot + noise), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860 (flag behavior), docs/debugging/detector_geometry_checklist.md (pix0 validation), docs/development/testing_strategy.md §2 (CLI parity tests).
-- Current gap snapshot: CLI already stores `config['custom_pix0_vector']`, but `DetectorConfig`/`Detector` ignore it and always recompute pix0; there is no parser support for `-nonoise` or `-pix0_vector_mm`.
+- Current gap snapshot: CLI flag parsing and detector override handling now land; remaining gaps are documentation updates (Phase C3/C4) and unresolved physics parity — Phase D3 showed geometry mismatch requiring Phase E trace comparison before implementation fixes.
 
 ### Phase A — Requirements & Trace Alignment
 Goal: Confirm the authoritative semantics for both flags and capture the C reference behavior (including unit expectations) before touching implementation.
@@ -11,9 +11,9 @@ Exit Criteria: Documented parity notes under `reports/2025-10-cli-flags/phase_a/
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| A1 | Extract C reference for `-nonoise` | [ ] | Run the supervisor command with and without `-nonoise` using `NB_C_BIN=./nanoBragg`; capture stdout/stderr diff and note whether `noisefile` is suppressed despite flag order. |
-| A2 | Capture pix0 vector ground truth | [ ] | Instrument C (add `TRACE_C:pix0_vector`) for the supervisor command; store logs under `reports/2025-10-cli-flags/phase_a/pix0_trace/`. Confirm units (meters vs mm) and whether C honors custom pix0 overrides. |
-| A3 | Update findings memo | [ ] | Summarise results in `reports/2025-10-cli-flags/phase_a/README.md`, including conclusions on `beam_convention=CUSTOM` interactions and required unit conversions. |
+| A1 | Extract C reference for `-nonoise` | [D] | ✅ 2025-10-05: Supervisor command captured with/without `-nonoise`; logs stored under `reports/2025-10-cli-flags/phase_a/`. |
+| A2 | Capture pix0 vector ground truth | [D] | ✅ 2025-10-05: Instrumented C trace recorded pix0 vector values; confirms outputs remain in meters even for `_mm` flag. |
+| A3 | Update findings memo | [D] | ✅ 2025-10-05: Phase A summary authored in `reports/2025-10-cli-flags/phase_a/README.md` documenting semantics and CUSTOM convention side effects. |
 
 ### Phase B — CLI & Config Wiring
 Goal: Teach the PyTorch CLI to parse both flags, thread them through configs, and respect overrides in Detector/Noise handling without breaking existing behavior.
@@ -51,4 +51,15 @@ Exit Criteria: Regression sweep documented, outstanding risks rolled into releva
 | --- | --- | --- | --- |
 | D1 | Run targeted regression suite | [ ] | Execute `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_noise_generation.py tests/test_detector_pix0.py -v`; ensure existing tolerances hold with overrides. |
 | D2 | Record residual risks | [ ] | Append summary to `reports/2025-10-cli-flags/phase_d/notes.md` covering any limitations (e.g., lack of `_mm` alias upstream, CUSTOM convention edge cases). Link to relevant active plans if work remains. |
-| D3 | Investigate intensity scaling gap | [ ] | Compare C vs PyTorch outputs from Phase C2 (max/mean). Identify missing normalization factors (phi_steps, mosaic, etc.) and document findings in `reports/2025-10-cli-flags/phase_d/intensity_gap.md`; propose remediation path before plan closure. |
+| D3 | Investigate intensity scaling gap | [D] | ✅ 2025-10-06: Phase C2 artifacts analysed; determined discrepancy is geometric (zero correlation, peaks displaced by 1.5k pixels). Artifacts under `reports/2025-10-cli-flags/phase_d/`. See Notes below for mandatory follow-up trace work. |
+
+### Phase E — Parallel Trace Root Cause
+Goal: Pinpoint the first physics divergence between C and PyTorch for the supervisor command using the mandated parallel trace workflow.
+Prereqs: Phase D3 report published; C binary ready for instrumentation (`NB_C_BIN=./golden_suite_generator/nanoBragg`).
+Exit Criteria: Trace comparison identifies first divergent variable; findings logged in `reports/2025-10-cli-flags/phase_e/trace_comparison.md` and summarized in docs/fix_plan.md `[CLI-FLAGS-003]` Attempts.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| E1 | Instrument C trace for peak pixel | [ ] | Add temporary `TRACE_C:` prints (pix0_vector, incident_beam_direction, scattering_vector, h/k/l, F_cell, F_latt, omega) for pixel (slow=1039, fast=685); build via `make -C golden_suite_generator`. Store log at `reports/2025-10-cli-flags/phase_e/c_trace.log`. |
+| E2 | Generate matching PyTorch trace | [ ] | Use `scripts/debug_pixel_trace.py` (or purpose-built harness) to log identical variables for the same pixel; respect `KMP_DUPLICATE_LIB_OK=TRUE`. Save to `reports/2025-10-cli-flags/phase_e/pytorch_trace.log`. |
+| E3 | Diff traces and identify first divergence | [ ] | Perform line-by-line comparison (e.g., `diff -u`) and document the first mismatched value in `trace_comparison.md`, including hypotheses referencing spec lines. Update docs/fix_plan.md `[CLI-FLAGS-003]` Attempt history with divergence summary. |

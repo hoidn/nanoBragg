@@ -1,100 +1,100 @@
-timestamp: 2025-10-06T00:32:22Z
-commit: 9f7b8cb
+timestamp: 2025-10-06T00:49:07Z
+commit: e409734
 author: galph
-focus: CLI-FLAGS-003 Phase D3 intensity audit
-Summary: Diagnose the 2.6e2× intensity gap between C and PyTorch parity runs and capture evidence for plan D3.
+focus: CLI-FLAGS-003 Phase E — Parallel trace to locate first divergence
+Summary: Capture and compare C vs PyTorch pixel traces for the supervisor parity run to expose the first physics mismatch.
 Phase: Evidence
 Focus: CLI-FLAGS-003 — Handle -nonoise and -pix0_vector_mm
 Branch: feature/spec-based-2
 Mapped tests: none — evidence-only
-Artifacts: reports/2025-10-cli-flags/phase_d/
+Artifacts: reports/2025-10-cli-flags/phase_e/
 
-Do Now: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm — Phase D3 intensity gap analysis. Export AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md; compare `reports/2025-10-cli-flags/phase_c/parity/c_img.bin` vs `torch_img.bin` (max/mean/sum RMS) using a Python notebook or script; inspect simulator normalization factors (steps, fluence, r_e_sqr) to pinpoint which scalar(s) inflate PyTorch output; summarize findings in `reports/2025-10-cli-flags/phase_d/intensity_gap.md` with hypotheses and next-step recommendations.
-If Blocked: If numpy load or analysis fails, capture traceback to `reports/2025-10-cli-flags/phase_d/intensity_gap_FAIL.log`, note commands attempted, log a new Attempt entry under `[CLI-FLAGS-003]`, then pause for supervisor guidance.
+Do Now: [CLI-FLAGS-003] Phase E1–E2 — instrument the C binary for pixel (1039,685) and gather matching PyTorch trace logs; authoritative commands live in ./docs/development/testing_strategy.md.
+If Blocked: Capture failing commands plus stderr/stdout to reports/2025-10-cli-flags/phase_e/trace_attempt_FAIL.log, note the scenario in docs/fix_plan.md [CLI-FLAGS-003] Attempts, then pause for supervisor direction.
 
-- Priorities & Rationale:
-- reports/2025-10-cli-flags/phase_c/parity/SUMMARY.md — Records the 115k vs 446 peak gap; we need quantitative backing before adjusting simulator scaling.
-- plans/active/cli-noise-pix0/plan.md:112 — Phase D3 requires explicit analysis artifacts to close CLI parity.
-- docs/fix_plan.md:664 — Next actions now point to D3; without intensity diagnosis the fix-plan item cannot close.
-- docs/architecture/detector.md:205 — Defines meter-space pix0 handling; confirm override didn’t double-scale contributing to intensity jump.
-- docs/development/c_to_pytorch_config_map.md:25 — Fluence/pivot parity expectations; cross-check PyTorch’s BeamConfig against C output.
-- docs/development/testing_strategy.md:18 — Evidence loops must cite authoritative commands; keep logs reproducible before moving to implementation.
-- src/nanobrag_torch/simulator.py:1050 — Final physical intensity scaling (r_e^2 * fluence); verify constants line up with C trace before concluding disparity cause.
-- src/nanobrag_torch/simulator.py:969 — Normalized intensity accumulation before omega; confirm oversample handling matches C semantics to rule out extra factor of oversample².
-- docs/architecture/pytorch_design.md:112 — Describes expected batching order; use as reference when reasoning about multi-source sums.
-- reports/2025-10-cli-flags/phase_a/README.md — Baseline pix0 and noise behavior; ensures current discrepancy is new to Phase C.
-- reports/2025-10-cli-flags/phase_b/detector/pix0_override_equivalence.txt — Confirms mm↔m conversion accuracy; double-check values when interpreting logged vectors.
-- src/nanobrag_torch/models/detector.py:391 — Override assignment; verify r_factor adjustments aren’t part of intensity mismatch.
-- docs/architecture/conventions.md:pix0-overrides — Guardrail for CUSTOM convention behavior relevant to this command.
-- tests/test_at_parallel_012.py — Reference for acceptable correlation thresholds; helps gauge severity of intensity scaling beyond correlation.
-- reports/benchmarks/20250930-180237-compile-cache/cache_validation_summary.json — Example of structured reporting; mimic format for intensity report where practical.
+Priorities & Rationale:
+- plans/active/cli-noise-pix0/plan.md:80 — Phase E gate; no implementation changes allowed until trace pair exists.
+- docs/fix_plan.md:664 — Next Actions explicitly demand the parallel trace before further parity work.
+- docs/debugging/debugging.md:24 — SOP mandates identical trace schema; we must follow it precisely for trustworthy comparisons.
+- docs/development/c_to_pytorch_config_map.md:50 — Detector and beam vectors must match C inputs; sanity-check these during trace capture.
+- docs/architecture/detector.md:210 — CUSTOM convention math defines pix0 origin; interpret trace outputs against this reference.
+- reports/2025-10-cli-flags/phase_d/intensity_gap.md — Phase D3 analysis identified geometry divergence; the highlighted peak pixel anchors this loop.
 
-- How-To Map:
-- mkdir -p reports/2025-10-cli-flags/phase_d before writing new artifacts; place markdown summary under `intensity_gap.md` and include tables/metrics.
-- Use `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY' ... PY` to load both float images (dtype=np.float32) and compute stats: max, min, mean, std, L2 norm, total photons. Save raw numbers to `intensity_gap_stats.json` alongside markdown.
-- Compute ratio of per-pixel sums and identify whether difference equals `phi_steps`, `mosaic_domains`, or any other scalar in command config; log reasoning explicitly.
-- Inspect simulator code paths by running a targeted debug snippet (no edits): instantiate `Simulator` via CLI helper, print `steps`, `fluence`, `r_e_sqr`, and applied omega to confirm expected magnitudes; capture output to `intensity_gap_simulator_dump.log`.
-- Diff C log `c_cli.log` vs PyTorch `torch_stdout.log` focusing on fluence, solid-angle, scaling printouts. Note any values missing on PyTorch side and quote relevant log lines in markdown.
-- Extract detector pix0 vectors from both implementations (C trace + PyTorch detector repr) to ensure they match within 1e-9 meters; log results in markdown appendix.
-- Run a narrow ROI comparison (e.g., 10×10 window around C peak) and compute per-pixel residual histograms saved to `intensity_gap_peak_roi.png` to visualise scaling difference.
-- Update `docs/fix_plan.md` `[CLI-FLAGS-003]` Attempts History` with a new entry summarizing measurements, conclusions, and whether additional implementation work is required.
-- If investigation suggests missing normalization (e.g., phi_steps), draft remediation hypotheses but stop short of code edits—document them under “Proposed Fixes” in the markdown summary.
-- Capture command snippets verbatim (with env vars) in the markdown so future loops can replay analysis without ambiguity.
-- Use `numpy.fromfile` with explicit dtype and shape `(2527, 2463)` to avoid accidental reshaping errors; include snippet in appendix.
-- Consider plotting radial profiles (mean intensity vs radius) for both images and save to `intensity_gap_radial_profile.png`; note any constant scale shift vs structural differences.
-- Record runtime for each analysis command to help future loops gauge effort; add a small table in markdown with command + duration.
-- Store any CSV/JSON intermediate files mentioned in markdown; link them via relative paths for quick review.
-- After analysis, re-run the parity command if (and only if) a likely fix candidate emerges; otherwise document why rerun was deferred.
-- For ROI extraction, reuse `scripts/compare_outputs.py` utilities if possible; otherwise implement ad-hoc slicing with care and log coordinates used.
-- When printing simulator internals, wrap calls in `torch.no_grad()` to avoid autograd overhead and mention this choice in logs.
-- Validate that both float images are read in column-major order consistent with C output; note any transpositions done for plotting.
-- Include a concluding checklist in the markdown summarizing unresolved questions vs confirmed causes; mark items with [ ] / [x] for clarity.
-- Push all artifacts only after verifying file sizes (e.g., `ls -lh`) and reference those sizes in the markdown for sanity checks.
-- Note whether PyTorch run applied automatic scaling (e.g., `Simulator` warnings); grep logs and cite absence/presence explicitly in summary.
-- If time permits, compute correlation coefficient between images to confirm alignment despite scale; record value next to scale factor.
+How-To Map:
+- Pre-flight:
+  * Export `AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md` at shell start so logs capture the context variable.
+  * Verify git worktree clean except for temporary TRACE edits (`git status -sb`); avoid dangling instrumentation when run completes.
+  * Confirm `NB_C_BIN=./golden_suite_generator/nanoBragg` is up to date (`make -C golden_suite_generator` if last build predates loop; document command if rebuilt).
+- C trace instrumentation (Phase E1):
+  * Add `TRACE_C:` printf statements in `golden_suite_generator/nanoBragg.c` near the pixel loop to dump: `pix0_vector`, `incident_beam_direction`, `pixel_position`, `scattering_vector`, `h,k,l`, `F_cell`, `F_latt`, `omega_pixel`, and final intensity for the sampled pixel.
+  * Use consistent label ordering per docs/debugging/debugging.md (one variable per line, 12–15 significant digits, meters vs Å as documented).
+  * Rebuild via `timeout 120 make -C golden_suite_generator`; stash the diff or note touched lines in reports/2025-10-cli-flags/phase_e/instrumentation_notes.md.
+  * Run the supervisor parity command with `-dump_pixel 1039 685` appended:
+    `NB_C_BIN=./golden_suite_generator/nanoBragg timeout 120 "$NB_C_BIN" -mat A.mat -floatfile img.bin -hkl scaled.hkl -nonoise -nointerpolate -oversample 1 -exposure 1 -flux 1e18 -beamsize 1.0 -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080 -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866 -beam_vector 0.00051387949 0.0 -0.99999986 -Na 36 -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0 -dump_pixel 1039 685 2>&1 | tee reports/2025-10-cli-flags/phase_e/c_trace.log`
+  * Immediately archive the instrumented C diff (if any) to `reports/2025-10-cli-flags/phase_e/c_trace.patch` for reproducibility and rollback documentation.
+- PyTorch trace capture (Phase E2):
+  * Prefer the existing `scripts/debug_pixel_trace.py`; if parameters are missing, augment via CLI options or by preparing a temporary JSON config describing the supervisor command (store as `reports/2025-10-cli-flags/phase_e/supervisor_command.json`).
+  * Invocation template:
+    `env AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python scripts/debug_pixel_trace.py --mat A.mat --hkl scaled.hkl --lambda 0.976800 --oversample 1 --pix0-vector-mm -216.336293 215.205512 -230.200866 --flux 1e18 --exposure 1 --beamsize 1.0 --spindle-axis -1 0 0 --Xbeam 217.742295 --Ybeam 213.907080 --distance 231.274660 --pixel 0.172 --detpixels 2463 2527 --odet-vector -0.000088 0.004914 -0.999988 --sdet-vector -0.005998 -0.999970 -0.004913 --fdet-vector 0.999982 -0.005998 -0.000118 --beam-vector 0.00051387949 0.0 -0.99999986 --Na 36 --Nb 47 --Nc 29 --osc 0.1 --phi 0 --phisteps 10 --pixel-index 1039 685 --out reports/2025-10-cli-flags/phase_e/pytorch_trace.log`
+  * Ensure the script prints variables with `TRACE_PY:` prefix matching the C labels; adjust script if necessary (log modifications in instrumentation notes, but revert code before finishing loop).
+  * If script lacks features, clone it into `reports/2025-10-cli-flags/phase_e/trace_harness.py` (evidence-only) and document invocation details; use identical math paths as production code—no re-derivations.
+- Trace comparison (Phase E3 prerequisites):
+  * Run `diff -u reports/2025-10-cli-flags/phase_e/c_trace.log reports/2025-10-cli-flags/phase_e/pytorch_trace.log | tee reports/2025-10-cli-flags/phase_e/trace_diff.txt`.
+  * Draft `reports/2025-10-cli-flags/phase_e/trace_comparison.md` summarising the first mismatched value, referencing spec/arch lines and hypothesising potential causes.
+  * Update `docs/fix_plan.md` `[CLI-FLAGS-003]` Attempts with command snippets, divergence description, and next steps (E3 completion will be tracked in Phase E table).
+- Trace variable checklist (reference while capturing logs):
+  * Detector origins: `pix0_vector`, `fdet_vector`, `sdet_vector`, `odet_vector` (meters).
+  * Beam geometry: `incident_beam_direction`, `beam_vector`, `distance_corrected`.
+  * Pixel position & scattering: `pixel_pos_meters`, `diffracted_vec`, `scattering_vec_A_inv`.
+  * Reciprocal space: `h`, `k`, `l`, `stol`, `twotheta`.
+  * Intensity path: `F_cell`, `F_latt`, `omega_pixel`, `polar`, `intensity`.
+  * Normalization scalars: `steps`, `fluence`, `r_e_sqr`, `source_weight` (if present).
+- Post-run hygiene:
+  * Remove any temporary TRACE prints from C source; re-run `make -C golden_suite_generator` to restore pristine binary (log deletion command in instrumentation notes).
+  * Ensure reports directory contains: `c_trace.log`, `pytorch_trace.log`, `trace_diff.txt`, `trace_comparison.md`, `instrumentation_notes.md`, and any auxiliary configs.
+  * Leave a succinct Attempt entry in docs/fix_plan.md capturing metrics, divergence, and recommendations before closing the loop.
+- Instrumentation notes template (capture in reports/2025-10-cli-flags/phase_e/instrumentation_notes.md):
+  * Header with timestamp, git commit hash, and NB_C_BIN path used for the run.
+  * List of source files touched (e.g., nanoBragg.c line ranges) and the exact TRACE labels added.
+  * Build commands executed (include timeout wrapper) and whether recompilation was necessary.
+  * Runtime command(s) with full argument list and wall-clock durations.
+  * Observed warnings or anomalies during execution (e.g., OpenMP thread counts, floatfile writes).
+  * Post-run clean-up actions (TRACE removal commands, `git checkout --` usage if applied).
+  * Checklist tick-boxes: `[ ] C trace captured`, `[ ] PyTorch trace captured`, `[ ] diff archived`, `[ ] fix_plan updated`.
+- Trace log formatting reminders:
+  * Prefix C lines with `TRACE_C:` and PyTorch lines with `TRACE_PY:` to simplify diffing.
+  * Maintain consistent variable order across both traces to minimize diff noise.
+  * Use scientific notation with fixed precision (e.g., `%.15g`) so trailing zeros do not obscure differences.
+  * Include units in comments once per section if helpful (e.g., `# meters`) rather than per line.
+  * Separate logical groups (geometry, beam, scattering, intensity) with blank lines for readability.
 
-- Pitfalls To Avoid:
-- Do not edit simulator or CLI code during this evidence loop; limit work to analysis scripts and documentation.
-- Avoid overwriting Phase C artifacts; copy data before manipulating if needed.
-- Keep computations device-neutral (numpy or torch on CPU) and note dtype conversions explicitly.
-- Do not assume missing normalization factors—prove gaps with numbers before suggesting fixes.
-- Preserve Protected Assets (docs/index.md references) and avoid renaming reports directories.
-- Refrain from running heavy pytest suites; only gather metrics necessary for D3.
-- When using python snippets, guard file paths and close resources to prevent accidental binary truncation.
-- Ensure markdown summary cites exact commands, file paths, and ratios for reproducibility.
-- Log every analysis attempt (success or failure) in fix_plan to maintain traceability.
-- Keep environment variables consistent; include them in summary for replicability.
-- Coordinate with future loops by leaving TODOs in `intensity_gap.md` if deeper implementation work is required; do not silently defer findings.
-- Verify that any temporary plots or JSON files stay under reports/ (not repo root) to avoid Protected Asset violations during cleanup.
-- Avoid clipping float images when loading via numpy; always work on copies and retain originals untouched for re-analysis.
-- If matplotlib is used for plots, set `Agg` backend to avoid GUI requirements and record the command in the markdown.
-- Guard against accidentally normalizing arrays by number of pixels when computing sums; note formula used for each metric to prevent confusion.
-- Do not compress large binaries into git history; keep any zipped derivatives within reports/ and mention them explicitly before removal.
-- Avoid using random sampling for ROI comparisons; deterministic slices ease reproducibility and comparison with future loops.
-- Remember that python’s default float is double precision—document any conversions to maintain transparency in calculations.
-- If leveraging torch for computations, be explicit about device placement to avoid silent CPU↔GPU transfers when CUDA is available.
-- Maintain separation between raw evidence and interpretation: keep calculations in scripts, reserve markdown for conclusions to ensure reproducibility.
-- Avoid deleting intermediate notebooks/scripts after use; commit to reports/ or document their temporary nature and deletion rationale.
+Pitfalls To Avoid:
+- Do not touch simulator/detector production code—this loop is for evidence gathering only.
+- Keep CUSTOM convention inputs verbatim; avoid reordering vector components or unit scaling outside documented conversions.
+- Respect instrumentation rule: reuse production helpers rather than recomputing variables in trace scripts.
+- Avoid torch.compile, Dynamo caching tweaks, or manual GPU/CPU transfers that could skew trace output.
+- Protected Assets Rule: never delete or rename artifacts listed in docs/index.md (loop.sh, supervisor.sh, input.md, A.mat, etc.).
+- Always set `KMP_DUPLICATE_LIB_OK=TRUE` before importing torch in any Python harness.
+- Treat `scaled.hkl` and `A.mat` as read-only; copy if you need variants.
+- Capture failures immediately—no reruns without new instrumentation notes.
+- Keep trace precision high (15 significant digits) and align units with spec (meters for detector geometry, Å/Å⁻¹ for physics).
+- Remove TRACE diffs before ending loop; document clean-up in instrumentation notes to prevent accidental commits.
 
 Pointers:
-- reports/2025-10-cli-flags/phase_c/parity/c_cli.log — Source of C fluence/solid-angle stats.
-- reports/2025-10-cli-flags/phase_c/parity/torch_stdout.log — PyTorch run details; compare with C log.
-- plans/active/cli-noise-pix0/plan.md:101 — Phase D scope and new D3 checklist.
-- docs/architecture/pytorch_design.md:vectorization-strategy — Reference for expected batched normalization.
-- src/nanobrag_torch/simulator.py:827 — Current steps normalization (sources×phi×mosaic×oversample²); verify against C behavior.
-- src/nanobrag_torch/config.py:491 — Fluence computation from flux/exposure/beamsize; confirm identical to C trace.
-- reports/2025-10-cli-flags/phase_a/pix0_trace/trace.log — Ground-truth pix0 vector from instrumented C run for comparison.
-- docs/architecture/c_parameter_dictionary.md:detector_flags — Update target for documentation task once intensity is resolved.
-- tests/test_cli_flags.py:40 — Regression coverage verifying parser behavior; ensure findings do not contradict assumptions baked into tests.
-- scripts/compare_outputs.py — Existing tooling for image comparison; assess whether it can accelerate stats extraction.
-- prompts/supervisor.md — Canonical parity command reference; keep any reruns faithful to this script.
-- src/nanobrag_torch/simulator.py:1250 — Debug trace section documenting normalized intensity; helpful for correlating with Step prints.
-- docs/architecture/detector.md:312 — Explanation of CUSTOM pivot math; confirm parity when interpreting pix0_vector outputs.
-- reports/2025-10-cli-flags/phase_b/detector/cache_handoff.txt — Evidence that cache invalidation keeps overrides; cite if re-running detectors during analysis.
-- docs/debugging/debugging.md:parallel-trace-rule — Reminder that future implementation changes must start with trace comparisons.
-- archive/fix_plan_archive.md — For precedent on documenting physics gaps; mirror structure when writing intensity report.
+- docs/development/testing_strategy.md#21-ground-truth-parallel-trace-driven-validation — Canonical trace workflow.
+- docs/debugging/debugging.md:40 — Variable naming schema and precision requirements for trace logs.
+- docs/architecture/c_parameter_dictionary.md#pix0_vector_mm — Flag semantics; confirm conversions reflect this entry.
+- docs/architecture/detector.md:255 — CUSTOM basis construction; compare with trace outputs.
+- src/nanobrag_torch/models/detector.py:360 — Pix0 override assignment path to validate against C trace results.
+- src/nanobrag_torch/simulator.py:820 — Steps/normalization path; note values once divergence pinpointed.
+- reports/2025-10-cli-flags/phase_c/parity/c_cli.log — Baseline C run (without TRACE) for cross-checking derived values.
 
 Next Up:
-- Phase C3 documentation updates (specs/spec-a-cli.md + README_PYTORCH.md) once intensity scaling diagnosis is complete.
-- Phase D1 regression sweep (noise + pix0 tests) after documentation and intensity report are in place, ensuring no cross-component regressions.
-- Coordinate with PERF-PYTORCH-004 plan if intensity analysis implicates physics normalization shared with performance tasks.
+- If traces align quickly and first divergence is recorded, outline remediation hypotheses in `reports/2025-10-cli-flags/phase_e/trace_comparison.md` and queue Phase C3 doc updates for the following loop.
+- Otherwise, if trace capture hits tooling gaps (e.g., debug script lacking arguments), document blockers clearly in instrumentation_notes.md and propose one lightweight helper script for next loop.
+- Maintain the evidence-only stance: defer any code fix sketches until the divergence is documented and linked to spec/arch citations.
+- Prepare a short bullet summary for the next Attempts History entry so future loops can fast-forward into implementation once the trace is in hand.
+- Note any environmental anomalies (CPU/GPU availability, OpenMP thread differences) so they can be ruled out quickly in subsequent analysis loops.
+- Keep the reports directory tidy—each artifact should include a short README block explaining how to regenerate it.
+- Double-check that `input.md` remains unedited by Ralph; any adjustments must flow through supervisor loops only.
+- Sync the new artifacts with `git add` next supervisor pass to prevent accidental loss.

@@ -937,3 +937,11 @@ Follow-ups for Ralph:
 - Updated `plans/active/cli-noise-pix0/plan.md` Phase C table (C2 → [D]) and introduced Phase D3 task to diagnose scaling mismatch using existing logs. Fix-plan item now calls for documentation updates (C3/C4) plus D3 analysis before closure.
 - Regenerated `input.md` (100 lines) directing Ralph to execute Phase D3 evidence loop: compute detailed stats comparing `c_img.bin` vs `torch_img.bin`, capture simulator normalization dumps, and summarize in `reports/2025-10-cli-flags/phase_d/intensity_gap.md` before any code changes.
 - No new plans opened; existing CLI plan now governs intensity investigation. Next loop should produce D3 artifacts, update fix_plan Attempts, and only then proceed to doc updates (C3) and regression sweeps (D1).
+## 2025-10-06 (galph loop — Phase E setup)
+- `timeout 30 git pull --rebase` → Already up to date; worktree clean on entry.
+- Reviewed Ralph's Phase D3 evidence confirming PyTorch geometry is off (zero correlation, 1.5k-pixel peak offset); documentation updates deferred until physics parity is restored.
+- Updated `plans/active/cli-noise-pix0/plan.md` to mark Phases A/B/D3 done, refresh the gap summary, and add Phase E (trace tasks E1–E3) ahead of implementation work.
+- Tweaked `docs/fix_plan.md` `[CLI-FLAGS-003]` status to note Phase D3 completion and emphasize the mandatory parallel trace before code edits.
+- Regenerated `input.md` (100 lines) instructing Ralph to gather C and PyTorch traces for pixel (1039,685), diff them, and log findings under `reports/2025-10-cli-flags/phase_e/` plus a new Attempts entry.
+- Observation: Ralph's `analyze_intensity.py` still ends with scaling hypotheses; revisit once trace pinpoints the true divergence.
+- Next steps for Ralph: execute plan Phase E1–E2 trace capture, produce `trace_diff.txt`/`trace_comparison.md`, and hold off on fixes until divergence is documented.

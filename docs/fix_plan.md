@@ -664,14 +664,14 @@
 ## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
 - Spec/AT: specs/spec-a-cli.md flag catalogue, docs/architecture/detector.md §5 (pix0 workflow), docs/development/c_to_pytorch_config_map.md (pivot rules), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860
 - Priority: High
-- Status: in_progress (Phase A ✅, Phase B ✅, Phase C2 ✅ — docs + intensity follow-up pending)
+- Status: in_progress (Phase A ✅, Phase B ✅, Phase C2 ✅, Phase D3 ✅ — docs + Phase E trace pending)
 - Owner/Date: ralph/2025-10-05
 - Plan Reference: `plans/active/cli-noise-pix0/plan.md`
 - Reproduction (C & PyTorch):
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase C2 parity run exposed a 2.58e2× intensity scaling mismatch (PyTorch max_I≈1.15e5 vs C max_I≈4.46e2) despite successful CLI execution. Documentation tables (specs/spec-a-cli.md, README_PYTORCH.md, docs/architecture/c_parameter_dictionary.md) still omit the new flags.
-- Next Actions: (1) Execute plan task C3 to update documentation/parameter tables, (2) log fix-plan closure steps in C4, and (3) investigate the intensity gap per new plan task D3 using Phase C2 artifacts before declaring parity complete.
+- Next Actions: (1) Execute plan task C3 to update documentation/parameter tables, (2) log fix-plan closure steps in C4, and (3) complete plan Phase E (tasks E1–E3) by capturing C/PyTorch traces and documenting the first divergence before attempting implementation changes.
 - Attempts History:
   * [2025-10-05] Phase A Complete — Tasks A1-A3 executed per plan.
     Metrics: C reference behavior captured for both flags via parallel command execution.
