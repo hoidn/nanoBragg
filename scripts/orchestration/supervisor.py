@@ -4,7 +4,7 @@ import argparse
 import os
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from subprocess import Popen, PIPE
 
@@ -95,7 +95,7 @@ def main() -> int:
         safe_pull(lambda m: None)
         st_probe = OrchestrationState.read(str(args.state_file))
         itnum = st_probe.iteration
-        ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         iter_log = args.logdir / branch_target.replace('/', '-') / "galph" / f"iter-{itnum:05d}_{ts}.log"
         logp = make_logger(iter_log)
 
@@ -103,41 +103,42 @@ def main() -> int:
 
         # Initialize state if missing
         if not args.state_file.exists():
-            st = OrchestrationState()
-            st.expected_actor = "galph"
-            st.status = "idle"
-            st.write(str(args.state_file))
+            st_init = OrchestrationState()
+            st_init.expected_actor = "galph"
+            st_init.status = "idle"
+            st_init.write(str(args.state_file))
             add([str(args.state_file)])
             commit("[SYNC init] actor=galph status=idle")
             push_to(branch_target, logp)
 
-        # Wait for our turn
-            logp("Waiting for expected_actor=galph...")
-            start = time.time()
-            last_hb = start
-            prev_state = None
-            while True:
-                safe_pull(logp)
-                st = OrchestrationState.read(str(args.state_file))
-                cur_state = (st.expected_actor, st.status, st.iteration)
-                if args.verbose and cur_state != prev_state:
-                    print(f"[sync] state: actor={st.expected_actor} status={st.status} iter={st.iteration}")
-                    logp(f"[sync] state: actor={st.expected_actor} status={st.status} iter={st.iteration}")
-                    prev_state = cur_state
-                if st.expected_actor == "galph":
-                    break
-                if args.max_wait_sec and (time.time() - start) > args.max_wait_sec:
-                    logp("Timeout waiting for galph turn")
-                    return 1
-                if args.heartbeat_secs and (time.time() - last_hb) >= args.heartbeat_secs:
-                    elapsed = int(time.time() - start)
-                    msg = f"[sync] waiting for turn (galph)… {elapsed}s elapsed"
-                    print(msg)
-                    logp(msg)
-                    last_hb = time.time()
-                time.sleep(args.poll_interval)
+        # Wait for our turn (always executed)
+        logp("Waiting for expected_actor=galph...")
+        start = time.time()
+        last_hb = start
+        prev_state = None
+        while True:
+            safe_pull(logp)
+            st = OrchestrationState.read(str(args.state_file))
+            cur_state = (st.expected_actor, st.status, st.iteration)
+            if args.verbose and cur_state != prev_state:
+                print(f"[sync] state: actor={st.expected_actor} status={st.status} iter={st.iteration}")
+                logp(f"[sync] state: actor={st.expected_actor} status={st.status} iter={st.iteration}")
+                prev_state = cur_state
+            if st.expected_actor == "galph":
+                break
+            if args.max_wait_sec and (time.time() - start) > args.max_wait_sec:
+                logp("Timeout waiting for galph turn")
+                return 1
+            if args.heartbeat_secs and (time.time() - last_hb) >= args.heartbeat_secs:
+                elapsed = int(time.time() - start)
+                msg = f"[sync] waiting for turn (galph)… {elapsed}s elapsed"
+                print(msg)
+                logp(msg)
+                last_hb = time.time()
+            time.sleep(args.poll_interval)
 
         # Mark running
+        st = OrchestrationState.read(str(args.state_file))
         st.status = "running-galph"
         st.write(str(args.state_file))
         add([str(args.state_file)])
