@@ -777,6 +777,26 @@
       - Detector geometry metrics match within tolerance (pix0 ~0.14mm residual, omega correct, basis vectors correct)
     Next Actions: (1) Execute plan Phase H2 to investigate where Detector.beam_vector should feed simulator.incident_beam_direction; (2) Check if Simulator.__init__ should consume detector.beam_vector or if apply_custom_vectors() needs to set it; (3) Fix the beam vector propagation chain; (4) Re-run Phase H1 trace to verify incident_vec matches C; (5) With beam vector fixed, advance to Phase H3 (lattice structure factor parity).
   * [2025-10-05] Attempt #20 (ralph) — Result: success (Phase H2 complete). **Simulator now consumes detector.beam_vector for incident beam direction.**
+  * [2025-10-05] Attempt #21 (ralph loop i=22) — Result: evidence-only (Phase H3 trace captured). **Incident beam vector parity achieved; lattice factor divergence isolated.**
+    Metrics: incident_vec perfect match (0.00051387949 0 -0.99999986 vs C 0.000513879494 0 -0.999999868). Miller indices diverge: h Δ=0.097, k Δ=0.024, l Δ=0.120 (exceeds 1e-3 threshold). F_latt components critical: Py [-3.29, 10.74, -1.78] vs C [35.89, 38.63, 25.70]; product 62.68 vs C 35636 (568× difference). Pytest: test_custom_beam_vector_propagates 1/1 passed.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_h/trace_py_after_H2.log` - PyTorch trace after beam fix (49 lines)
+      - `reports/2025-10-cli-flags/phase_h/trace_py_after_H2.stderr` - Harness stderr
+      - `reports/2025-10-cli-flags/phase_h/trace_diff_after_H2.log` - Diff vs C trace
+      - `reports/2025-10-cli-flags/phase_h/trace_comparison_after_H2.md` - Complete divergence analysis
+      - `reports/2025-10-cli-flags/phase_h/implementation_notes.md` - Hypotheses: sincg argument order or Na/Nb/Nc scaling
+      - `reports/2025-10-cli-flags/phase_h/attempt_log.txt` - Pytest run log
+    Observations/Hypotheses:
+      - **Beam Vector Fix Confirmed:** H2 delegation (commit 8c1583d) works perfectly - incident_vec now matches C
+      - **First Divergence:** pix0_vector_meters differs at ~1e-4 level (acceptable for beam geometry)
+      - **Lattice Factor Issue:** F_latt components have wrong sign and magnitude (~10-20× error)
+      - **Primary Suspect:** sincg() argument order in `src/nanobrag_torch/models/crystal.py` get_structure_factor()
+        - C uses sincg(π·h, Na) pattern (nanoBragg.c:3063-3178)
+        - PyTorch may have π in wrong position or missing Na/Nb/Nc multiplication
+      - **Secondary Suspect:** Missing Na/Nb/Nc scaling factor after sincg computation
+      - Miller indices fractional precision suggests pix0 cascade, but reciprocal vectors match exactly (Phase G3)
+      - All prerequisites validated: orientation correct, incident beam correct, geometry within tolerance
+    Next Actions: (1) Review nanoBragg.c:3063-3178 to extract exact sincg argument pattern; (2) Check `src/nanobrag_torch/models/crystal.py` get_structure_factor() for argument order; (3) Verify Na/Nb/Nc multiplication happens after sincg; (4) Fix sincg usage and rerun trace harness; (5) Validate F_latt components within 0.5% (Phase H exit criteria); (6) Advance to Phase H4 parity validation once lattice factors match.
     Metrics: Test `test_custom_beam_vector_propagates` passes. Detector correctly provides normalized beam vector `[0.5, 0.5, 0.7071]` → `[0.5000, 0.5000, 0.7071]` (normalized), and Simulator.incident_beam_direction now matches exactly. All CLI flags tests: 19/19 passed. Geometry tests (detector + crystal): 31/31 passed.
     Artifacts:
       - `src/nanobrag_torch/simulator.py:459-472` - Replaced hard-coded convention logic with `self.detector.beam_vector.clone()` call
