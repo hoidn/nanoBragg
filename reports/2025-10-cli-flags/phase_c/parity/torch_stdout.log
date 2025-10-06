@@ -1,0 +1,16 @@
+Running simulation...
+  Detector: 2463x2527 pixels
+  Crystal: 28.0x32.8x31.2 Å
+  Wavelength: 0.98 Å
+  Device: cpu, Dtype: torch.float32
+  Convention: CUSTOM (using custom detector basis vectors)
+
+Statistics:
+  Max intensity: 1.150e+05 at pixel (1145, 2220)
+  Mean: 1.217e-01
+  RMS: 7.544e+01
+  RMSD: 7.544e+01
+Wrote float image to reports/2025-10-cli-flags/phase_c/parity/torch_img.bin
+
+Simulation complete.
+PyTorch run completed successfully
