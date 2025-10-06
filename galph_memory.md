@@ -1147,3 +1147,10 @@ Follow-ups for Ralph:
 - Synced `docs/fix_plan.md` Next Actions to require H5a–H5c before Phase K; Attempt #28 observations now document the confirmed driver (missing override in custom-vector path).
 - Regenerated `input.md` (Implementation phase) directing Ralph to execute Phase H5b with fresh C/PyTorch traces and targeted pytest.
 - Follow-up: Expect Attempt #29 after override fix; pause Phase K normalization work until H5 parity evidence lands.
+
+## 2025-10-06 (galph loop — Phase H5 evidence setup)
+- Reviewed required guardrails (docs/index.md, specs/spec-a*, arch.md, config map, debugging guide, testing strategy, docs/fix_plan.md). Focus remains CLI-FLAGS-003 Phase H5; vectorization plan untouched until parity lands.
+- Confirmed plans/active/cli-noise-pix0/plan.md already tracks Phase H5a–H5d; no new plan needed. docs/fix_plan.md Next Actions (line 448) aligned with H5 checklist.
+- Identified outstanding gap: need fresh C traces with and without -pix0_vector_mm to validate override precedence (Phase J evidence shows F_latt divergence from pix0 mismatch). Hypotheses logged in supervisor summary; implementation deferred until traces captured.
+- input.md rewritten (Evidence phase) directing Ralph to run long-form C command twice and archive logs under reports/2025-10-cli-flags/phase_h5/c_traces/, plus document derivation in c_precedence.md before touching PyTorch.
+- No code/doc changes yet; awaiting H5a artifacts. Next follow-up: after Ralph captures traces, greenlight H5b override reapplication and revisit docs/fix_plan Attempt log.
