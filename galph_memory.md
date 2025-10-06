@@ -1033,3 +1033,11 @@ Follow-ups for Ralph:
 - Vectorization goal unchanged — plan stays at Phase A evidence until CLI parity narrows the gap.
 - Authored new 106-line input.md directing Ralph to clone the trace harness, remove manual beam override, capture fresh PyTorch traces/diffs, and log findings (reports/2025-10-cli-flags/phase_h/*). Added reporting checklist + reference metrics.
 - Follow-ups for Ralph next loop: execute Phase H1 evidence capture, then tackle Phase H2 sincg/NaNbNc diagnosis, defer polarization (Phase I) and `scaled.hkl.1` cleanup until lattice parity improves.
+
+## 2025-10-06 (galph loop)
+- Coin flip=heads → reviewed Ralph commits d150858, b73f0e2; work productive (Phase H1 evidence, Phase G3 orientation fix).
+- Updated plans/active/cli-noise-pix0/plan.md Phase H goal + tasks (H1 marked done; new H2 beam propagation, H3 lattice, H4 parity).
+- docs/fix_plan.md Next Actions now call out H2–H4 sequence; reinforced beam-vector fix as first deliverable.
+- Authored new input.md (Do Now: Phase H2 beam propagation + targeted pytest) and committed with message "SUPERVISOR: CLI H2 plan refresh - tests: not run".
+- Working tree clean post-push (feature/spec-based-2 @ 35cd319).
+ - Follow-up: Ralph to wire detector.beam_vector into Simulator, rerun beam trace, and land targeted pytest per input.md.

@@ -71,7 +71,64 @@ def main() -> int:
                     help="Comma-separated glob whitelist for supervisor auto-commit (doc/meta only)")
     ap.add_argument("--max-autocommit-bytes", type=int, default=int(os.getenv("MAX_AUTOCOMMIT_BYTES", "1048576")),
                     help="Maximum per-file size (bytes) eligible for auto-commit")
+    # Pre-pull auto-commit: try to auto-commit doc/meta before initial pull if pull fails due to local mods
+    ap.add_argument("--prepull-auto-commit-docs", dest="prepull_auto_commit_docs", action="store_true",
+                    help="If initial git pull fails, attempt doc/meta whitelist auto-commit then retry (default: on)")
+    ap.add_argument("--no-prepull-auto-commit-docs", dest="prepull_auto_commit_docs", action="store_false",
+                    help="Disable pre-pull doc/meta auto-commit fallback")
+    ap.set_defaults(prepull_auto_commit_docs=True)
     args, unknown = ap.parse_known_args()
+
+    # Helpers shared by pre-pull and post-run auto-commit paths
+    def _list(cmd: list[str]) -> list[str]:
+        from subprocess import run, PIPE
+        cp = run(cmd, stdout=PIPE, stderr=PIPE, text=True)
+        if cp.returncode != 0:
+            return []
+        return [p for p in (cp.stdout or "").splitlines() if p.strip()]
+
+    def _matches_any(path: str, patterns: list[str]) -> bool:
+        return any(fnmatch.fnmatch(path, pat) for pat in patterns)
+
+    def _supervisor_autocommit_docs(args_ns, log_func) -> tuple[bool, list[str]]:
+        """
+        Attempt to auto-stage+commit doc/meta whitelist changes.
+        Returns (committed: bool, forbidden_paths: list[str]).
+        If forbidden_paths non-empty, caller should abort handoff.
+        """
+        whitelist = [p.strip() for p in args_ns.autocommit_whitelist.split(',') if p.strip()]
+        max_bytes = args_ns.max_autocommit_bytes
+        # Collect dirty paths (modifications and untracked)
+        unstaged_mod = _list(["git", "diff", "--name-only", "--diff-filter=M"])
+        staged_mod = _list(["git", "diff", "--cached", "--name-only", "--diff-filter=AM"])
+        untracked = _list(["git", "ls-files", "--others", "--exclude-standard"])
+        dirty_all = sorted(set(unstaged_mod) | set(staged_mod) | set(untracked))
+        allowed: list[str] = []
+        forbidden: list[str] = []
+        for p in dirty_all:
+            if _matches_any(p, whitelist):
+                try:
+                    if os.path.isfile(p) and os.path.getsize(p) <= max_bytes:
+                        allowed.append(p)
+                    else:
+                        forbidden.append(p)
+                except FileNotFoundError:
+                    forbidden.append(p)
+            else:
+                forbidden.append(p)
+
+        if forbidden:
+            if log_func:
+                log_func("Auto-commit blocked by forbidden dirty paths: " + ", ".join(forbidden))
+            return False, forbidden
+
+        committed = False
+        if allowed:
+            add(allowed)
+            body = "\n\nFiles:\n" + "\n".join(f" - {p}" for p in allowed)
+            committed = commit("SUPERVISOR AUTO: doc/meta hygiene — tests: not run" + body)
+            # Do not push here; let subsequent logic push state or later commits
+        return committed, []
 
     # per-iteration logger factory
     def make_logger(path: Path):
@@ -105,8 +162,18 @@ def main() -> int:
         # Determine iteration-specific log file
         # Use current state when available to derive iteration number
         if not safe_pull(lambda m: None):
-            print("[sync] ERROR: git pull failed; see iter log for details.")
-            return 1
+            # Pre-pull fallback: attempt doc/meta auto-commit if enabled, then retry pull
+            if args.prepull_auto_commit_docs:
+                if _supervisor_autocommit_docs(args, lambda m: None):
+                    if not safe_pull(lambda m: None):
+                        print("[sync] ERROR: git pull failed after pre-pull auto-commit; see iter log.")
+                        return 1
+                else:
+                    print("[sync] ERROR: git pull failed; pre-pull auto-commit not applicable or blocked. See iter log.")
+                    return 1
+            else:
+                print("[sync] ERROR: git pull failed; see iter log for details.")
+                return 1
         st_probe = OrchestrationState.read(str(args.state_file))
         itnum = st_probe.iteration
         ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
@@ -114,8 +181,17 @@ def main() -> int:
         logp = make_logger(iter_log)
 
         if not safe_pull(logp):
-            print("[sync] ERROR: git pull failed; see iter log for details.")
-            return 1
+            if args.prepull_auto_commit_docs:
+                if _supervisor_autocommit_docs(args, logp):
+                    if not safe_pull(logp):
+                        print("[sync] ERROR: git pull failed after pre-pull auto-commit; see iter log.")
+                        return 1
+                else:
+                    print("[sync] ERROR: git pull failed; pre-pull auto-commit not applicable or blocked. See iter log.")
+                    return 1
+            else:
+                print("[sync] ERROR: git pull failed; see iter log for details.")
+                return 1
 
         # Initialize state if missing
         if not args.state_file.exists():
@@ -172,54 +248,14 @@ def main() -> int:
         sha = short_head()
 
         # Auto-commit doc/meta hygiene (supervisor only)
-        def _list(cmd: list[str]) -> list[str]:
-            from subprocess import run, PIPE
-            cp = run(cmd, stdout=PIPE, stderr=PIPE, text=True)
-            if cp.returncode != 0:
-                return []
-            return [p for p in (cp.stdout or "").splitlines() if p.strip()]
-
-        def _matches_any(path: str, patterns: list[str]) -> bool:
-            return any(fnmatch.fnmatch(path, pat) for pat in patterns)
-
         if rc == 0 and args.auto_commit_docs:
-            whitelist = [p.strip() for p in args.autocommit_whitelist.split(',') if p.strip()]
-            max_bytes = args.max_autocommit_bytes
-            # Collect dirty paths (modifications and untracked)
-            unstaged_mod = _list(["git", "diff", "--name-only", "--diff-filter=M"])
-            staged_mod = _list(["git", "diff", "--cached", "--name-only", "--diff-filter=AM"])
-            untracked = _list(["git", "ls-files", "--others", "--exclude-standard"])
-            dirty_all = sorted(set(unstaged_mod) | set(staged_mod) | set(untracked))
-            allowed: list[str] = []
-            forbidden: list[str] = []
-            for p in dirty_all:
-                # Only consider regular files within whitelist and size cap
-                if _matches_any(p, whitelist):
-                    try:
-                        if os.path.isfile(p) and os.path.getsize(p) <= max_bytes:
-                            allowed.append(p)
-                        else:
-                            forbidden.append(p)
-                    except FileNotFoundError:
-                        forbidden.append(p)
-                else:
-                    forbidden.append(p)
-
+            committed_docs, forbidden = _supervisor_autocommit_docs(args, logp)
             if forbidden:
-                # Refuse to hand off with non-whitelisted dirty changes
                 print("[sync] ERROR: Uncommitted changes outside doc/meta whitelist:")
                 for p in forbidden:
                     print(f" - {p}")
                 print("Please commit/stash these changes or adjust the whitelist before supervisor handoff.")
-                logp("Auto-commit skipped due to forbidden dirty paths: " + ", ".join(forbidden))
                 return 1
-
-            if allowed:
-                add(allowed)
-                body = "\n\nFiles:\n" + "\n".join(f" - {p}" for p in allowed)
-                committed = commit("SUPERVISOR AUTO: doc/meta hygiene — tests: not run" + body)
-                if committed:
-                    push_to(branch_target, logp)
 
         st = OrchestrationState.read(str(args.state_file))
         if rc == 0:
