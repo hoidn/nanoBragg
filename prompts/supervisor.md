@@ -61,17 +61,7 @@ READ the following files:
 <1>
 do a deep analysis of the codebase in light of the <current long term goals>. What are some current issues / gaps and possible approaches to resolving them? Review docs/fix_plan.md and plans/active/, as previous iterations of you may have already done some legwork.
  
-Phase Gate (Evidence): If the active plan phase is Evidence, Do Now SHALL be evidence‑only: run the authoritative reference reproduction commands and capture the required artifacts; at most run the project’s test discovery (no execution). Do not include runnable tests.
 
-Validation Preflight (tests): Before listing any test file/identifier in Do Now, validate that it resolves via the project’s documented test discovery; if validation fails, omit tests and note “(none — evidence‑only this loop)” and add a TODO in docs/fix_plan.md documenting the missing mapping.
-
-Human Summary (input.md header): Prepend a short summary block with the following lines (validated where applicable):
-- Summary: <one‑sentence goal for this loop>
-- Phase: <Evidence | Implementation | Validation>
-- Focus: <plan item ID/title from docs/fix_plan.md>
-- Branch: <expected branch>
-- Mapped tests: <validated list | none — evidence‑only>
-- Artifacts: <key paths to produce under reports/>
 
 Debugging Items — Hypothesis + Triage (initial pass):
 - Only when the selected item is a debugging or parity analysis task, formulate 1–3 plausible hypotheses for the observed gap/issue.
@@ -87,8 +77,9 @@ if it comes up <tails>: proceed to step <3>
 <3>
 Given your findings in <1> and <2>, think about whether there's any need for a multi-turn planning effort -- i.e. ralph can't see the forest for the trees and may struggle with major refactorings and multi-turn implementation efforts unless they are coordinated by you. Is there a need for such planning *right now*? If such a plan is already spoken for (plans/active/ or wherever else past galph might have saved to), does that plan require updates or is it up to date / high quality and simply pending? IFF you determine the need for a new plan or modification of an existing one:
 <yes case>
+- we will be calling the plan topic the <focus issue> of this turn.
 - based on which long term <goal> and sub-goal is that effort / plan? 
-- Which existing docs/fix_plan.md items does it relate to? 
+- Which existing docs/fix_plan.md items does it (i.e. the <focus issue>) relate to? 
 - think deeply. draft / redraft the plan and save it to a .md under plans/active/. Structure the write-up as a phased implementation document (see `plans/archive/general-detector-geometry/implementation.md` for tone/shape): begin with context + phase overviews, then outline each phase’s intent, prerequisites, and exit criteria. When a phase benefits from explicit tracking, embed a checklist table using the `ID | Task Description | State | How/Why & Guidance` format (with `[ ]`, `[P]`, `[D]` markers) inside that phase section.
   • Include reproduction commands, owners (if known), and decision rules in the guidance column.
   • Favor narrative flow first; layer checklists only where they clarify verification steps or deliverables.
@@ -115,15 +106,27 @@ Given your findings in <1> and <2>, think about whether there's any need for a m
 </no case>
 - Since you decided there's no need for planning, you will instead focus on review / housekeeping. 
 - Once the above is done (or deemed unneeded): review and evaluate ralph's work. Scrutinize the commit history. Look at the diffs. 
-- Are the docs/fix_plan.md contents and priorities sane? if not, fix. things to consider:
-  - if docs/fix_plan.md is longer than 1000 lines it should be housecleaned. If it's disorganized and / or internally inconsistent, this should be addressed. If you decide to shorten docs/fix_plan.md, the least relevant portions should be moved to archive/fix_plan_archive.md (with summary + archive cross reference if appropriate)
-- Do we need a new docs/fix_plan item to put ralph back on course, fix one of his mistakes, or instruct him to do something that he overlooked? If so, draft it and add it to docs/fix_plans
+- Are the docs/fix_plan.md contents and priorities sane? things to consider:
+  - if docs/fix_plan.md is longer than 1000 lines it should be housecleaned. If it's disorganized and / or internally inconsistent, consider how this could be addressed. 
+- after considering the above, you have enough information to choose a <focus issue> for this turn. do so. Consider the nature of the <focus issue>:
+    - Do we need a new docs/fix_plan item to put ralph back on course, fix one of his mistakes, or instruct him to do something that he overlooked? If so, draft it and add it to docs/fix_plans
+    - does the <focus issue> involve identified issues in docs/fix_plan.md? If so, fix them. If you decide to shorten docs/fix_plan.md, the least relevant portions should be moved to archive/fix_plan_archive.md (with summary + archive cross reference if appropriate)
 </no case>
 </3>
 <3.5>
 Render and write ./input.md (supervisor→engineer steering memo). Overwrite the entire file every invocation. Keep length ~100–200 lines. Include these sections in order:
-- Header: timestamp, current commit hash (short), author “galph”, and Active Focus summary.
+Header:
+- Summary: <one‑sentence goal for this loop>
+- Phase: <Evidence | Implementation | Validation>
+- Focus: <plan item ID/title from docs/fix_plan.md>
+- Branch: <expected branch>
+- Mapped tests: <validated list | none — evidence‑only>
+- Artifacts: <key paths to produce under reports/>
 - Do Now: 1 line naming the exact docs/fix_plan.md item (ID and title) to execute this loop, plus the exact pytest command/env to reproduce it. If no such test exists, the Do Now MUST be to author the minimal targeted test first and then run it. If you intend to delegate the choice, write “Do Now: delegate” and provide decision guidance below.
+<Do Now guidelines>
+If the active plan phase is Evidence, Do Now SHALL be evidence‑only: run the authoritative reference reproduction commands and capture the required artifacts; at most run the project’s test discovery (no execution). Do not include runnable tests.
+Validation Preflight (tests): Before listing any test file/identifier in Do Now, validate that it resolves via the project’s documented test discovery; if validation fails, omit tests and note “(none — evidence‑only this loop)” and add a TODO in docs/fix_plan.md documenting the missing mapping.
+</Do Now guidelines>
 - If Blocked: fallback action (what to run/capture, how to record it in Attempts History).
 - Priorities & Rationale: 3–6 bullets with file pointers (specs/arch/tests/plan) justifying the Do Now.
 - How-To Map: exact commands (pytest, nb-compare), env vars, ROI/thresholds, and where to store artifacts; prefer using `scripts/validation/*` when available.
