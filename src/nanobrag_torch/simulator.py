@@ -209,6 +209,36 @@ def compute_physics_for_position(
         F_cell = F_cell.to(device=h.device)
 
     # Calculate lattice structure factor
+    #
+    # C-Code Implementation Reference (from nanoBragg.c, lines 3062-3081):
+    # ```c
+    # /* structure factor of the lattice (paralelpiped crystal)
+    #     F_latt = sin(M_PI*Na*h)*sin(M_PI*Nb*k)*sin(M_PI*Nc*l)/sin(M_PI*h)/sin(M_PI*k)/sin(M_PI*l);
+    # */
+    # F_latt = 1.0;
+    # if(xtal_shape == SQUARE)
+    # {
+    #     /* xtal is a paralelpiped */
+    #     double F_latt_a = 1.0, F_latt_b = 1.0, F_latt_c = 1.0;
+    #     if(Na>1){
+    #         F_latt_a = sincg(M_PI*h,Na);
+    #         F_latt *= F_latt_a;
+    #     }
+    #     if(Nb>1){
+    #         F_latt_b = sincg(M_PI*k,Nb);
+    #         F_latt *= F_latt_b;
+    #     }
+    #     if(Nc>1){
+    #         F_latt_c = sincg(M_PI*l,Nc);
+    #         F_latt *= F_latt_c;
+    #     }
+    # }
+    # ```
+    #
+    # Per specs/spec-a-core.md §4.3:
+    # "SQUARE (grating): F_latt = sincg(π·h, Na) · sincg(π·k, Nb) · sincg(π·l, Nc)"
+    #
+    # CRITICAL: Use fractional h,k,l directly (NOT h-h0), unlike ROUND/GAUSS/TOPHAT shapes.
     Na = N_cells_a
     Nb = N_cells_b
     Nc = N_cells_c
@@ -216,9 +246,10 @@ def compute_physics_for_position(
     fudge = crystal_fudge
 
     if shape == CrystalShape.SQUARE:
-        F_latt_a = sincg(torch.pi * (h - h0), Na)
-        F_latt_b = sincg(torch.pi * (k - k0), Nb)
-        F_latt_c = sincg(torch.pi * (l - l0), Nc)
+        # Note: sincg internally handles Na/Nb/Nc > 1 guards per C implementation
+        F_latt_a = sincg(torch.pi * h, Na)
+        F_latt_b = sincg(torch.pi * k, Nb)
+        F_latt_c = sincg(torch.pi * l, Nc)
         F_latt = F_latt_a * F_latt_b * F_latt_c
     elif shape == CrystalShape.ROUND:
         h_frac = h - h0
@@ -1256,14 +1287,16 @@ class Simulator:
                     print(f"TRACE_PY: hkl_rounded {h0} {k0} {l0}")
 
                     # Calculate F_latt components (SQUARE shape assumed)
+                    # Per specs/spec-a-core.md §4.3 and nanoBragg.c:3071-3079:
+                    # Use fractional h,k,l directly (NOT h-h0) for SQUARE lattice factor
                     Na = self.crystal.N_cells_a
                     Nb = self.crystal.N_cells_b
                     Nc = self.crystal.N_cells_c
 
                     from nanobrag_torch.utils import sincg
-                    F_latt_a = sincg(torch.pi * torch.tensor(h - h0), Na).item()
-                    F_latt_b = sincg(torch.pi * torch.tensor(k - k0), Nb).item()
-                    F_latt_c = sincg(torch.pi * torch.tensor(l - l0), Nc).item()
+                    F_latt_a = sincg(torch.pi * torch.tensor(h), Na).item()
+                    F_latt_b = sincg(torch.pi * torch.tensor(k), Nb).item()
+                    F_latt_c = sincg(torch.pi * torch.tensor(l), Nc).item()
                     F_latt = F_latt_a * F_latt_b * F_latt_c
 
                     print(f"TRACE_PY: F_latt_a {F_latt_a:.15g}")

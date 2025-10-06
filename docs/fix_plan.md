@@ -982,6 +982,25 @@
       - **New Suspects:** (1) Scattering vector calculation - H2 showed 0.06% difference (may be too loose); (2) Pixel position calculation - pix0_vector differs at mm scale; (3) Reciprocal vector rotation needs revalidation
       - F_latt sign/magnitude errors are **symptoms** not root cause - fixing Miller indices will resolve lattice factors
     Next Actions: (1) Compare latest PyTorch trace (trace_py_after_H3.log) with C trace to verify current Miller indices after H2 beam fix; (2) Trace backwards from Miller index calculation: review `h = q·a*` computation in simulator; (3) If scattering vector 0.06% delta is suspect, investigate `q = (k_out - k_in)/λ` calculation; (4) Check if pix0_vector difference needs addressing before lattice work; (5) No code changes until evidence gathering complete per Phase H3 mandate.
+  * [2025-10-24] Attempt #34 (ralph loop) — Result: **CODE FIX COMPLETE** (Phase K1). **SQUARE lattice factor formula corrected from sincg(π·(h-h0), Na) to sincg(π·h, Na).**
+    Metrics: Crystal geometry tests 22/22 passed in 6.47s. CLI scaling test created but parity test fails (correlation=0.173, sum_ratio=1.46, max_ratio=2.16), indicating additional issues beyond F_latt bug.
+    Artifacts:
+      - `src/nanobrag_torch/simulator.py:211-253` - Added C-code reference docstring (nanoBragg.c:3062-3081) and fixed SQUARE branch to use `sincg(torch.pi * h, Na)` instead of `sincg(torch.pi * (h - h0), Na)` per specs/spec-a-core.md §4.3
+      - `src/nanobrag_torch/simulator.py:1289-1300` - Fixed trace block to match production code (removed (h-h0) offset)
+      - `tests/test_cli_scaling.py` - Created new test file with `test_f_latt_square_matches_c` for C↔PyTorch F_latt parity validation
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/test_metrics_failure.json` - Test failure metrics showing poor correlation (0.173) despite correct F_latt formula
+    Observations/Hypotheses:
+      - **Formula Bug Fixed:** PyTorch now matches C reference exactly: `F_latt = sincg(π·h, Na) · sincg(π·k, Nb) · sincg(π·l, Nc)` for SQUARE shape
+      - **C Reference Added:** Embedded nanoBragg.c:3062-3081 snippet in docstring per Core Rule #11 (mandatory C-code reference template)
+      - **Test Failure Indicates Upstream Issues:** Poor correlation (0.173 vs expected ~0.999) suggests remaining geometry/configuration mismatches beyond F_latt:
+        - Possible causes: pix0 geometry errors (Phase H5 still incomplete), Miller index calculation deltas (Phase H3 identified), beam vector issues, or other unresolved Phase H/I items
+      - **Correct Implementation Verified:** sincg function already handles N>1 guards internally; PyTorch formula now matches spec/C exactly
+      - **No Regression:** All crystal geometry tests pass; existing functionality preserved
+    Next Actions:
+      1. **Complete Phase H5 geometry fixes** before expecting F_latt parity test to pass - the 1.14mm pix0 delta from Attempt #32 will cascade into Miller indices and lattice factors
+      2. After Phase H5 complete, re-run `tests/test_cli_scaling.py::test_f_latt_square_matches_c` to verify F_latt parity with corrected geometry
+      3. Phase K2/K3: Extend to ROUND/GAUSS/TOPHAT shapes once SQUARE parity achieved
+      4. Record Attempt #35 metrics after Phase H5 geometry fixes applied
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; **(viii) Phase F3 parity evidence captured** ✅ (Attempt #12); **(ix) Phase G2 MOSFLM orientation ingestion complete** ✅ (Attempt #17); **(x) Phase G3 trace verification complete with transpose fix** ✅ (Attempt #18); (xi) Phase H lattice structure factor alignment ✅ (Attempt #25); (xii) Phase F3 parity rerun with lattice fix ❌; (xiii) Phase I polarization alignment ❌; (xiv) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌.
 
