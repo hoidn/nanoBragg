@@ -21,7 +21,15 @@ def _abort_rebase(log_print) -> None:
         pass
 
 
-def safe_pull(log_print) -> None:
+def safe_pull(log_print) -> bool:
+    """
+    Attempt to update the current branch with a rebase pull.
+
+    Returns True on success. On failure, logs details and attempts a
+    non-rebase pull as a recovery path. Detects and fast-fails on
+    untracked-file overwrite collisions so callers can surface clear
+    remediation guidance instead of silently stalling.
+    """
     if _rebase_in_progress():
         _abort_rebase(log_print)
     try:
@@ -30,7 +38,19 @@ def safe_pull(log_print) -> None:
             log_print(cp.stdout.rstrip())
         if cp.stderr:
             log_print(cp.stderr.rstrip())
-        return
+        # Fast-fail when untracked files would be overwritten
+        err = (cp.stderr or "").lower()
+        if (
+            "untracked working tree files would be overwritten" in err
+            or "would be overwritten by merge" in err
+            or "would be overwritten by checkout" in err
+        ):
+            log_print(
+                "ERROR: Pull blocked by untracked-file collisions. "
+                "Move/remove conflicting files and retry."
+            )
+            return False
+        return cp.returncode == 0
     except Exception as e:
         log_print(f"git pull --rebase failed or timed out: {e}")
 
@@ -41,6 +61,18 @@ def safe_pull(log_print) -> None:
         log_print(cp2.stdout.rstrip())
     if cp2.stderr:
         log_print(cp2.stderr.rstrip())
+    err2 = (cp2.stderr or "").lower()
+    if (
+        "untracked working tree files would be overwritten" in err2
+        or "would be overwritten by merge" in err2
+        or "would be overwritten by checkout" in err2
+    ):
+        log_print(
+            "ERROR: Pull blocked by untracked-file collisions. "
+            "Move/remove conflicting files and retry."
+        )
+        return False
+    return cp2.returncode == 0
 
 
 def add(paths: Iterable[str]) -> None:

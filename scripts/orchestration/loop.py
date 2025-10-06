@@ -71,11 +71,18 @@ def main() -> int:
         branch_target = current_branch()
 
     # Always keep up to date
-    safe_pull(logp)
+    ok_initial = safe_pull(logp)
+    if not ok_initial:
+        print("[sync] ERROR: git pull failed; see iter log for details (likely untracked-file collisions).")
+        print("[sync] Remediation: move or remove the conflicting untracked files, then re-run the loop.")
+        return 1
 
     for _ in range(args.sync_loops):
         # Compute per-iteration log path (branch/prompt aware)
-        safe_pull(lambda m: None)
+        ok_probe = safe_pull(lambda m: None)
+        if not ok_probe:
+            print("[sync] ERROR: git pull failed before iteration probe; see iter log.")
+            return 1
         st_probe = OrchestrationState.read(str(args.state_file))
         itnum = st_probe.iteration
         ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
@@ -92,7 +99,9 @@ def main() -> int:
             logp("[SYNC] Waiting for expected_actor=ralph...")
             start = time.time()
             while True:
-                safe_pull(logp)
+                if not safe_pull(logp):
+                    print("[sync] ERROR: git pull failed during polling; see iter log (likely untracked-file collisions).")
+                    return 1
                 st = OrchestrationState.read(str(args.state_file))
                 if st.expected_actor == "ralph":
                     break
@@ -116,7 +125,9 @@ def main() -> int:
         rc = tee_run([args.claude_cmd, "-p", "--dangerously-skip-permissions", "--verbose", "--output-format", "stream-json"], prompt_path, iter_log)
 
         # Complete handoff
-        safe_pull(logp)
+        if not safe_pull(logp):
+            print("[sync] ERROR: git pull failed during handoff; see iter log.")
+            return 1
         sha = short_head()
         st = OrchestrationState.read(str(args.state_file))
 
