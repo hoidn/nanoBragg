@@ -1319,3 +1319,9 @@ Follow-ups for Ralph:
 - Updated `plans/active/cli-noise-pix0/plan.md` Phase K3f (rows marked `[D]`) and added Phase K3g tasks for implementing the MOSFLM rescale pipeline + regression coverage; docs/fix_plan Next Actions now call out K3g1–K3g3.
 - Issued Implementation-phase `input.md` (Do Now = K3g1) instructing Ralph to document root cause, mirror C’s MOSFLM real-vector rebuild, add scaling tests, refresh parity traces, and rerun `tests/test_cli_scaling.py::test_f_latt_square_matches_c` with the proper env vars.
 - Long-term goal #2 (vectorization) left untouched this loop; revisit after CLI parity is recovered.
+
+## 2025-11-08 (galph loop — K3g3 evidence staging)
+- Verified commit 46ba36b’s MOSFLM rescale branch by running Crystal.compute_cell_tensors() (float64 CPU). Added `reports/2025-10-cli-flags/phase_k/base_lattice/post_fix/cell_tensors_py.txt` and appended base_lattice summary with 2025-11-08 update.
+- Updated `plans/active/cli-noise-pix0/plan.md` (K3f4 → [D], K3g1/K3g2 → [D]) and refreshed fix_plan Attempt #47 with evidence + next steps focused on Phase K3g3 parity rerun.
+- Authored `input.md` directing Ralph to execute K3g3: rerun `tests/test_cli_scaling.py::test_f_latt_square_matches_c`, regenerate nb-compare metrics, refresh traces, and document results under phase_k/f_latt_fix/.
+- Follow-up for Ralph: Complete K3g3 tasks per memo, update scaling_chain.md + summary.md with new metrics, and capture nb-compare/trace diffs before we attempt Phase L.
