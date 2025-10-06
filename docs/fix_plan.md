@@ -664,14 +664,14 @@
 ## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
 - Spec/AT: specs/spec-a-cli.md flag catalogue, docs/architecture/detector.md §5 (pix0 workflow), docs/development/c_to_pytorch_config_map.md (pivot rules), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860
 - Priority: High
-- Status: in_progress (Phase A ✅, Phase B ✅, Phase C2 ✅, Phase D3 ✅ — docs + Phase E trace pending)
+- Status: in_progress (Phases A/B/C2/D3/E ✅; documentation + Phases F–H implementation pending)
 - Owner/Date: ralph/2025-10-05
 - Plan Reference: `plans/active/cli-noise-pix0/plan.md`
 - Reproduction (C & PyTorch):
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
-- First Divergence (if known): Phase C2 parity run exposed a 2.58e2× intensity scaling mismatch (PyTorch max_I≈1.15e5 vs C max_I≈4.46e2) despite successful CLI execution. Follow-up diagnostics (Phase D3/E, 2025-10-16) show **two geometry gaps**: (a) PyTorch applies the raw `-pix0_vector_mm` override without the CUSTOM-convention transform that C performs (1.14 mm error in the Y component, confirmed by traces); (b) CLI currently ignores `-beam_vector`, leaving the beam direction at the default `[0, 0, 1]` while C uses `0.00051387949, 0, -0.99999986`.
-- Next Actions: (1) Execute plan task C3 to update documentation/parameter tables, (2) log fix-plan closure steps in C4, (3) complete plan Phase E (E0–E3) by capturing beam-vector evidence plus the mandated C/PyTorch traces and documenting the first divergence, then (4) implement detector/beam fixes that port CUSTOM pix0 transforms **and** custom beam vector support before rerunning parity.
+- First Divergence (if known): Phase C2 parity run exposed a 2.58e2× intensity scaling mismatch (PyTorch max_I≈1.15e5 vs C max_I≈4.46e2). Phase D3/E diagnostics (2025-10-16) confirm three blocking geometry gaps: (a) PyTorch applies the raw `-pix0_vector_mm` override without the CUSTOM transform used in C (1.14 mm Y error); (b) CLI ignores `-beam_vector`, leaving the incident ray at the convention default `[0,0,1]`; (c) `-mat A.mat` handling discards the MOSFLM orientation, so Crystal falls back to canonical upper-triangular vectors while C uses the supplied A*. Traces also show a polarization delta (C Kahn factor ≈0.9126 vs PyTorch 1.0) to revisit after geometry fixes.
+- Next Actions: (1) Execute plan task C3 to update documentation tables, and record closure in C4; (2) Drive plan Phase F (F1–F3) — thread custom beam vector, port CUSTOM pix0 transform, rerun parity smoke; (3) Execute plan Phase G (G1–G3) to retain MOSFLM orientation and verify crystal traces; (4) Once geometry aligns, address polarization via Phase H and run final parity/documentation sweeps.
 - Attempts History:
   * [2025-10-05] Phase A Complete — Tasks A1-A3 executed per plan.
     Metrics: C reference behavior captured for both flags via parallel command execution.
@@ -819,9 +819,19 @@
       - **PRIMARY BUG (NEW):** PyTorch crystal lattice vectors don't match C. PyTorch: `rot_a=[25.63, -9.11, 6.50]`, `rot_b=[0, 31.02, 10.55]`, `rot_c=[0, 0, 31.21]` (upper triangular). C: `rot_a=[-14.36, -21.88, -5.55]`, `rot_b=[-11.50, 0.67, -29.11]`, `rot_c=[21.07, -24.40, -9.71]` (general orientation from A.mat). This causes completely wrong reflections: C sees (2,2,-13), PyTorch sees (-11,5,3).
       - **SECONDARY BUG:** pix0_vector Y-component error of 1.14 mm (PyTorch uses raw input, C applies CUSTOM convention transform).
       - **TERTIARY BUG:** Polarization factor defaults to 1.0 in PyTorch vs 0.913 in C.
-      - Beam vector incident direction **DOES match** (Attempt #6 hypothesis refuted; beam_vector is correctly threaded through).
+      - Beam vector incident direction **DOES match** in the trace because the harness explicitly sets `simulator.incident_beam_direction`; CLI wiring still ignores `custom_beam_vector` (see Attempt #7 evidence).
       - Intensity error (446 vs 4.5e-6) is consequence of wrong crystal orientation → wrong reflection → wrong structure factor (300.58 vs 42.98).
     Next Actions: (1) **URGENT:** Investigate A.mat loading in PyTorch - verify file is read, orientation matrix extracted, and applied to lattice vectors (compare with C TRACE lines 11-51 showing matrix loading); (2) Port CUSTOM pix0 transformation from C code; (3) Fix polarization calculation; (4) Re-run Phase E traces after fixes to verify alignment.
+  * [2025-10-16] Attempt #9 (galph) — Result: analysis update. Phase E artifacts reviewed; plan extended with detector (Phase F), orientation (Phase G), and polarization (Phase H) implementation tracks.
+    Metrics: `trace_summary.md` confirms PyTorch `rot_a=[25.63,-9.11,6.50]` vs C `rot_a=[-14.36,-21.88,-5.55]`; `trace_side_by_side.tsv` shows pix0 Y delta 1.1375e-3 m; `beam_vector_check.txt` still reports `[0.,0.,1.]` for CLI instantiation (manual override only in harness).
+    Artifacts: No new runs; consumed `reports/2025-10-cli-flags/phase_e/trace_summary.md`, `trace_side_by_side.tsv`, `beam_vector_check.txt`.
+    Observations/Hypotheses:
+      - CLI must retain MOSFLM reciprocal vectors from `-mat` and thread them into `Crystal`; current conversion to cell params loses orientation entirely.
+      - Detector override path must adopt CUSTOM transform instead of returning early; needs to share pivot/rotation logic with standard path.
+      - `custom_beam_vector` wiring absent in Detector/Simulator; harness `simulator.incident_beam_direction = ...` is a stopgap that masks the gap.
+      - Polarization mismatch persists (0.9126 vs 1.0) but defer until geometry parity returns.
+      - Residual repo hygiene note: duplicate `scaled.hkl.1` still present; remove once implementation loop lands to keep Protected Assets policy satisfied.
+    Next Actions: Follow `plans/active/cli-noise-pix0/plan.md` Phase F (thread beam vector, port pix0 transform, rerun parity), then Phase G (retain A*, update Crystal, re-trace). Log Attempt #10 once implementation changes begin; clean up `scaled.hkl.1` during that pass.
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; (vi) Geometry bug identified and fixed ❌ next loop; (vii) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌ blocked on geometry fix.
 

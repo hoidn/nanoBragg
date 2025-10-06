@@ -960,3 +960,10 @@ Follow-ups for Ralph:
 - Confirmed Ralph's last commit (750fc74) added `reports/2025-10-cli-flags/phase_e/beam_vector_check.txt` **and** an unintended duplicate `scaled.hkl.1` (byte-identical to `scaled.hkl`). Documented cleanup requirement in `docs/fix_plan.md` Attempt #7 observations.
 - Regenerated `input.md` directing Ralph to capture full C and PyTorch traces (pixel 1039,685) and diff them, storing outputs under `reports/2025-10-cli-flags/phase_e/` before any implementation edits; emphasized evidence-only loop per plan Phase E.
 - No new multi-turn plan needed; existing `plans/active/cli-noise-pix0/plan.md` still governs. Next supervisor check: verify trace artifacts exist, confirm Attempt #8 added in fix_plan, and ensure stray `scaled.hkl.1` is deleted once evidence work lands.
+
+## 2025-10-06 (galph loop — Phase F kickoff)
+- `timeout 30 git pull --rebase` timed out; no rebase in progress, fallback `git pull --no-rebase` left repo at `c1588b7`.
+- Reviewed Phase E artifacts (`trace_summary.md`, `beam_vector_check.txt`) confirming pix0, beam, and orientation gaps; plan updated with new Phases F–H to cover detector wiring, MOSFLM orientation, and polarization follow-up.
+- Updated docs/fix_plan.md `[CLI-FLAGS-003]` with refreshed first-divergence summary, Attempt #9 (analysis loop), and new next actions aligned with Phases F/G/H.
+- Wrote input.md directing Ralph to implement Phase F1 (thread `custom_beam_vector`) and capture verification snippet under `reports/2025-10-cli-flags/phase_f/` before touching pix0.
+- Outstanding: `scaled.hkl.1` duplicate remains (defer removal to implementation loop); pix0 transform and matrix orientation fixes queued for subsequent phases after beam vector wiring lands.

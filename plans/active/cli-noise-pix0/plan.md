@@ -2,8 +2,8 @@
 - Initiative: CLI Parity for nanoBragg PyTorch vs C (supports long-term goal in prompts/supervisor.md)
 - Phase Goal: Accept `-nonoise` and `-pix0_vector_mm` flags with C-equivalent semantics so the parallel comparison command in prompts/supervisor.md executes end-to-end.
 - Dependencies: specs/spec-a-cli.md §§3.2–3.4, docs/architecture/detector.md §5, docs/development/c_to_pytorch_config_map.md (detector pivot + noise), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860 (flag behavior), docs/debugging/detector_geometry_checklist.md (pix0 validation), docs/development/testing_strategy.md §2 (CLI parity tests).
-- Current gap snapshot: CLI flag parsing and detector override handling now land; remaining gaps are documentation updates (Phase C3/C4) and unresolved physics parity — Phase D3 showed geometry mismatch requiring Phase E trace comparison before implementation fixes.
-- Newly observed gap (2025-10-16): CLI ignores `-beam_vector`, so PyTorch runs retain the default +Z beam direction instead of the custom vector (`0.00051387949, 0, -0.99999986`) used by the supervisor command. This must be captured in Phase E evidence and resolved alongside the pix0 transform port.
+- Current gap snapshot (2025-10-16 refresh): Evidence from Phases A/B/D3/E confirms three blocking physics gaps before implementation: pix0 overrides skip the CUSTOM transform applied in C, CLI stores `custom_beam_vector` but Detector/Simulator never consume it, and `-mat` handling discards the MOSFLM orientation (Crystal falls back to canonical upper-triangular vectors). Polarization also diverges (C Kahn factor ≈0.913 vs PyTorch default 1.0) and will need alignment after geometry.
+- Evidence status: Phase E artifacts (`reports/2025-10-cli-flags/phase_e/`) hold C/PyTorch traces, diffs, and beam-vector checks. Current harness injects the custom beam vector manually; CLI parity requires native wiring.
 
 ### Phase A — Requirements & Trace Alignment
 Goal: Confirm the authoritative semantics for both flags and capture the C reference behavior (including unit expectations) before touching implementation.
@@ -61,7 +61,40 @@ Exit Criteria: Trace comparison identifies first divergent variable; findings lo
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| E0 | Verify beam vector parity | [ ] | Execute a one-off snippet (e.g. `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python - <<'PY' …`) that instantiates the CLI configs for the supervisor command and prints `Detector(...).beam_vector`; capture stdout under `reports/2025-10-cli-flags/phase_e/beam_vector_check.txt`. Expect C trace beam direction `0.00051387949 0 -0.99999986`; PyTorch currently returns `[0, 0, 1]`, marking the earliest divergence before pix0 transforms. |
-| E1 | Instrument C trace for peak pixel | [ ] | Add temporary `TRACE_C:` prints (pix0_vector, incident_beam_direction, scattering_vector, h/k/l, F_cell, F_latt, omega) for pixel (slow=1039, fast=685); build via `make -C golden_suite_generator`. Store log at `reports/2025-10-cli-flags/phase_e/c_trace.log`. |
-| E2 | Generate matching PyTorch trace | [ ] | Use `scripts/debug_pixel_trace.py` (or purpose-built harness) to log identical variables for the same pixel; respect `KMP_DUPLICATE_LIB_OK=TRUE`. Save to `reports/2025-10-cli-flags/phase_e/pytorch_trace.log`. |
-| E3 | Diff traces and identify first divergence | [ ] | Perform line-by-line comparison (e.g., `diff -u`) and document the first mismatched value in `trace_comparison.md`, including hypotheses referencing spec lines. Update docs/fix_plan.md `[CLI-FLAGS-003]` Attempt history with divergence summary. |
+| E0 | Verify beam vector parity | [D] | ✅ 2025-10-16: `reports/2025-10-cli-flags/phase_e/beam_vector_check.txt` shows PyTorch Detector beam direction `[0., 0., 1.]` vs C trace override `[0.00051387949, 0, -0.99999986]`; confirms CLI wiring gap. |
+| E1 | Instrument C trace for peak pixel | [D] | ✅ 2025-10-16: `c_trace_beam.log` captured via instrumented binary (pixel 1039,685) with pix0, beam, scattering, h/k/l, F_latt entries. |
+| E2 | Generate matching PyTorch trace | [D] | ✅ 2025-10-16: `pytorch_trace_beam.log` generated with `trace_harness.py` (double precision). Harness currently overrides beam vector manually to mimic the supervisor command. |
+| E3 | Diff traces and identify first divergence | [D] | ✅ 2025-10-16: `trace_diff_beam.txt` + `trace_summary.md` pinpoint pix0 mismatch (1.14 mm Y error) and reveal lost crystal orientation + polarization delta. docs/fix_plan.md Attempts updated with evidence requirements for implementation phases. |
+
+### Phase F — Detector Implementation (beam + pix0 parity)
+Goal: Port CUSTOM detector wiring so CLI overrides reproduce C behavior without ad-hoc harness patches.
+Prereqs: Phase E traces complete; docs/fix_plan.md Attempt log captures pix0/beam/orientation findings.
+Exit Criteria: Detector trace matches C for pix0 and incident beam; CLI parity run no longer relies on manual overrides.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| F1 | Thread `custom_beam_vector` through Detector | [ ] | Route CLI `custom_beam_vector` into `DetectorConfig` and `Detector.get_geometry()`, mirroring C logic (nanoBragg.c:1180-1195). Preserve differentiability/device neutrality; capture post-fix snippet in `reports/2025-10-cli-flags/phase_f/beam_vector_after_fix.txt`. |
+| F2 | Port CUSTOM pix0 transform for overrides | [ ] | Replace the early-return override path with the CUSTOM convention math from nanoBragg.c:1730-1860 (apply pivot formulas, rotations, and distance correction before setting `pix0_vector`). Confirm via refreshed trace (`trace_beam_after_pix0.log`) that line 1 matches C. |
+| F3 | Re-run Phase C2 parity smoke | [ ] | Execute the supervisor command for both binaries after F1/F2. Store outputs under `reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/` and summarize results in docs/fix_plan.md Attempts. |
+
+### Phase G — MOSFLM Matrix Orientation Support
+Goal: Preserve full crystal orientation from `-mat` files so PyTorch matches C lattice vectors and downstream physics.
+Prereqs: Detector parity (Phase F) achieved or at least traced; clarity on orientation data flow.
+Exit Criteria: Crystal trace (rotated a/b/c vectors) aligns with C for the supervisor command; CLI accepts orientation without manual overrides.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
+| G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+| G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+
+### Phase H — Polarization Alignment (follow-up)
+Goal: Match C’s Kahn polarization factor once geometry aligns.
+Prereqs: Phases F and G complete; traces confirm geometry parity.
+Exit Criteria: Polarization entries in C/PyTorch traces agree (≈0.9126 for supervisor command) and parity smoke stays green.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| H1 | Audit polarization inputs | [ ] | Review CLI defaults/flags (`-polar`, `-nopolar`) and C calculations (nanoBragg.c:2080-2155); map them to PyTorch simulator inputs. |
+| H2 | Implement polarization parity | [ ] | Update simulator polarization handling to compute Kahn factor per spec/C reference. Document conversions and add targeted regression tests. |
+| H3 | Final parity sweep | [ ] | Rerun supervisor command traces verifying polarization parity; update docs/fix_plan.md with closure summary and archive plan. |
