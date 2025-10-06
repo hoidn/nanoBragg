@@ -11,8 +11,8 @@ Autonomy & Interaction Policy (No‑Question Mode)
 - If an item is already `in_progress`, continue it OR switch to the `input.md` Do Now if provided and justified; in either case, ensure exactly one item is attempted this loop.
 - Produce brief preambles and then act: read files, search, run tests, generate traces, update plan, and commit per gates.
 - Only two messages per loop: a short “next action” preamble before the first command, and the final Loop Output checklist. No idle greetings.
-- Include the exact pytest command(s) in the Do Now and use them for reproduction; if no test exists, write the minimal targeted test first and then run it.
-- Prefer using `scripts/validation/*` scripts for reproducible validations; do not embed ad‑hoc Python in `input.md`.
+ - Include the exact pytest command(s) in the Do Now and use them for reproduction; if no test exists, write the minimal targeted test first and then run it.
+ - Prefer using `scripts/validation/*` scripts for reproducible validations when available.
 
 Use When (Triggers)
 - Any AT‑PARALLEL test fails or correlation < required threshold in specs/spec‑a‑parallel.md
@@ -41,7 +41,7 @@ Non‑Negotiable Guardrails
     - Confirm `tests/test_parity_matrix.py` imports cleanly; if the import fails or the file is missing, return to Step 0 and bootstrap the harness before proceeding.
 10) Test cadence: run targeted tests first; execute the full test suite at most once per loop at the end if code changed. For prompt/docs‑only loops, use `pytest --collect-only -q`.
    - If NB_C_BIN is unset/invalid, resolve to `./golden_suite_generator/nanoBragg` or fallback `./nanoBragg` if the former is absent; verify it exists before running tests.
-10) Contradiction Rule — Parity Wins:
+11) Contradiction Rule — Parity Wins:
    - **⚠️⚠️⚠️ IMPORTANT — STOP IMMEDIATELY IF PARITY FAILS!**
    - If any mapped parity path (pytest or harness) reports under‑threshold metrics for an AT with a parity threshold, the loop is a **FAILURE** regardless of pytest green on PyTorch‑only tests.
    - Do **NOT** commit. Do **NOT** exit the loop. Reopen fix_plan, capture artifacts (metrics, traces, diff heatmaps), and proceed directly to trace‑first debugging until the canonical parity command passes.

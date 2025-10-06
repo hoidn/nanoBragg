@@ -126,16 +126,16 @@ Render and write ./input.md (supervisor→engineer steering memo). Overwrite the
 - Do Now: 1 line naming the exact docs/fix_plan.md item (ID and title) to execute this loop, plus the exact pytest command/env to reproduce it. If no such test exists, the Do Now MUST be to author the minimal targeted test first and then run it. If you intend to delegate the choice, write “Do Now: delegate” and provide decision guidance below.
 - If Blocked: fallback action (what to run/capture, how to record it in Attempts History).
 - Priorities & Rationale: 3–6 bullets with file pointers (specs/arch/tests/plan) justifying the Do Now.
-- How-To Map: exact commands (pytest, nb-compare), env vars, ROI/thresholds, and where to store artifacts; prefer using `scripts/validation/*` over embedding ad-hoc code in `input.md`.
+- How-To Map: exact commands (pytest, nb-compare), env vars, ROI/thresholds, and where to store artifacts; prefer using `scripts/validation/*` when available.
 - Pitfalls To Avoid: 5–10 crisp do/don’t reminders (device/dtype neutrality, vectorization, Protected Assets, two‑message loop policy, no ad‑hoc scripts).
 - Pointers: file paths with line anchors to the most relevant spec/arch/testing_strategy/fix_plan entries for this loop.
 - Next Up (optional): 1–2 candidates Ralph may choose next loop if he finishes early (still one thing per loop).
 
-Rules:
-- Ralph must not edit input.md. You (galph) are the single writer.
-- If input.md’s Do Now conflicts with an existing in_progress selection in fix_plan.md, Ralph is allowed to switch; he must record the change in Attempts History.
+ Rules:
+ - Ralph must not edit input.md. You (galph) are the single writer.
+ - If input.md’s Do Now conflicts with an existing in_progress selection in fix_plan.md, Ralph is allowed to switch; he must record the change in Attempts History.
 - Do not instruct Ralph to run the full test suite more than once per turn. Require targeted tests first; run the full suite once at the end only if code changed. For prompt/docs‑only loops, require `pytest --collect-only -q` instead.
-- Prefer referencing reusable scripts under `scripts/validation/` from Do Now; do not embed large code snippets directly in `input.md`.
+- Prefer referencing reusable scripts under `scripts/validation/` from Do Now when available.
 - Commit input.md each run as part of step <4> (commit only if the content changed).
 </3.5>
 <4>
