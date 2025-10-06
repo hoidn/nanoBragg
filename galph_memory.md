@@ -1252,3 +1252,13 @@ Follow-ups for Ralph:
 - Updated `docs/fix_plan.md` Next Actions for CLI-FLAGS-003 to mark H6e done, add H6f-prep cleanup, and call H6f/H6g/H6 progressions (Attempt #40 reserved for post-fix evidence).
 - Issued new implementation memo (`input.md`) directing Ralph to move the stray images under `reports/2025-10-cli-flags/phase_h6/visuals/`, enforce SAMPLE pivot selection in `DetectorConfig`, add a targeted regression test, rerun focused pytest, and capture post-fix trace output for H6g.
 - Follow-up for Ralph: execute H6f per memo, log Attempt update + regression artifacts, then pause for supervisor review before H6g.
+
+## 2025-10-06 (galph loop — H6g evidence kickoff)
+- `timeout 30 git pull --rebase` returned "Already up to date"; no conflicts encountered.
+- Reviewed CLI-FLAGS-003 entry (`docs/fix_plan.md:448-462`) and Phase H6 table (`plans/active/cli-noise-pix0/plan.md:131-145`); confirmed Attempt #40 landed pivot forcing but H6g artifacts remain outstanding.
+- Updated `plans/active/cli-noise-pix0/plan.md` context with Attempt #40 recap and marked H6f as `[D]`; rewrote H6g guidance to require post-fix trace + nb-compare artifacts under `reports/…/phase_h6/post_fix/` and to log Attempt #41.
+- Refreshed `docs/fix_plan.md` Next Actions so list now centers on H6g verification → K2 scaling-chain rerun → K3 regression test → Phase L gating.
+- Coin flip → tails, so skipped historical commit audit; focused on evidence planning.
+- Authored new `input.md` (Evidence phase) instructing Ralph to rerun the trace harness with pivot fix, capture diff vs C trace, compute deltas, run ROI nb-compare, and prepare Attempt #41 notes; memo also emphasises no pytest this loop.
+- Key gap notes: normalization tasks K2/K3 still blocked pending H6g; vectorization plan untouched (Phase A baseline scripts outstanding).
+- Follow-up for Ralph: execute H6g evidence capture, archive artifacts under `reports/2025-10-cli-flags/phase_h6/post_fix/`, then log Attempt #41 in `docs/fix_plan.md` with measured |Δpix0| before touching normalization.

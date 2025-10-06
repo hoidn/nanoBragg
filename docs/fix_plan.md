@@ -448,20 +448,18 @@
 ## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
 - Spec/AT: specs/spec-a-cli.md flag catalogue, docs/architecture/detector.md §5 (pix0 workflow), docs/development/c_to_pytorch_config_map.md (pivot rules), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860
 - Priority: High
-- Status: in_progress (Phases A-H complete; polarization Phase I pending)
+- Status: in_progress (Phases A–H complete; pivot fix landed via H6f, pending H6g traces + Phase K normalization)
 - Owner/Date: ralph/2025-10-05
 - Plan Reference: `plans/active/cli-noise-pix0/plan.md`
 - Reproduction (C & PyTorch):
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase C2 parity run exposed a 2.58e2× intensity scaling mismatch (PyTorch max_I≈1.15e5 vs C max_I≈4.46e2). Phase D3/E diagnostics (2025-10-16) confirm three blocking geometry gaps: (a) PyTorch applies the raw `-pix0_vector_mm` override without the CUSTOM transform used in C (1.14 mm Y error); (b) CLI ignores `-beam_vector`, leaving the incident ray at the convention default `[0,0,1]`; (c) `-mat A.mat` handling discards the MOSFLM orientation, so Crystal falls back to canonical upper-triangular vectors while C uses the supplied A*. Traces also show a polarization delta (C Kahn factor ≈0.9126 vs PyTorch 1.0) to revisit after geometry fixes.
-- Next Actions (2025-10-06 refresh): Pivot evidence (H6e) is complete; concentrate on enforcement + cleanup before resuming normalization work:
-  1. Phase H6f-prep — relocate the parity visuals (`img*_*.png`, `intimage_*.jpeg`, `noiseimage_preview.jpeg`) into `reports/2025-10-cli-flags/phase_h6/visuals/` (update references in `pivot_parity.md` and parity_summary) so follow-up attempts keep artifacts under `reports/`.
-  2. Phase H6f — update `DetectorConfig` pivot selection so any custom detector vectors or pix0 override force SAMPLE (matching nanoBragg), add a targeted regression test, and log implementation notes under `phase_h6/pivot_fix.md` with pytest evidence.
-  3. Phase H6g — rerun the PyTorch trace harness and nb-compare smoke to verify |Δpix0| < 5e-5 m before closing H6; archive artifacts under `phase_h6/post_fix/` and record Attempt #40 in this ledger.
-  4. Once pivot and pix0 parity are confirmed, resume Phase K2 — regenerate the scaling chain with the updated traces (`phase_k/f_latt_fix/trace_py_after.log`) and refresh `reports/2025-10-cli-flags/phase_j/scaling_chain.md`.
-  5. Phase K3 — when H5c/H6g/K2 evidence is green, run `env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v`, archive the log under `phase_k/f_latt_fix/pytest.log`, and update the lattice notes in `docs/architecture/pytorch_design.md`.
-  6. Do not advance to Phase L until these artifacts land; keep normalization blocked on the refreshed traces.
+- Next Actions (2025-10-26 refresh): Pivot forcing (H6f) is complete; focus on verification + normalization before attempting the supervisor command again:
+  1. Phase H6g — rerun the PyTorch trace harness with the pivot fix (`PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_h/trace_harness.py --out reports/2025-10-cli-flags/phase_h6/post_fix/trace_py.log`), diff against the C trace, and require |Δpix0| < 5e-5 m. Store artifacts under `phase_h6/post_fix/`, execute the nb-compare smoke in the same directory, and log Attempt #41 in this ledger.
+  2. Phase K2 — once pix0 parity is confirmed, regenerate the scaling-chain analysis with the refreshed PyTorch trace (`phase_k/f_latt_fix/trace_py_after.log`) and update `reports/2025-10-cli-flags/phase_j/scaling_chain.md` plus Attempt history.
+  3. Phase K3 — run the targeted scaling regression (`env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v`), archive the log under `phase_k/f_latt_fix/pytest.log`, and revise `docs/architecture/pytorch_design.md` lattice-factor notes as needed.
+  4. Phase L gating — only after K2/K3 evidence is green should Ralph rerun the full supervisor command parity sweep and close the plan; keep normalization blocked until H6g/K2 artifacts land.
 - Attempts History:
   * [2025-10-06] Attempt #27 (ralph) — Result: **PARITY FAILURE** (Phase I3 supervisor command). **Intensity scaling discrepancy: 124,538× sum ratio.**
     Metrics: Correlation=0.9978 (< 0.999 threshold), sum_ratio=124,538 (should be ~1.0), C max_I=446, PyTorch max_I=5.411e7 (121,000× discrepancy), mean_peak_distance=37.79 px (> 1 px threshold).
