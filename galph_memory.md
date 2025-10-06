@@ -1236,3 +1236,11 @@ Follow-ups for Ralph:
 - Refreshed `docs/fix_plan.md` Next Actions so bullet #1 now targets H6c diff/analysis rather than instrumentation.
 - Authored new `input.md` (Evidence phase) directing Ralph to produce the trace diff, document findings, and log Attempt #38.
 - Follow-up for Ralph: execute H6c diff per memo, update `reports/2025-10-cli-flags/phase_h6/analysis.md` + `reports/2025-10-cli-flags/phase_h5/parity_summary.md`, then record Attempt #38 in fix_plan before moving to H6d/H5c.
+
+## 2025-10-26 (galph loop — H6e pivot evidence setup)
+- `git pull --rebase` clean; reviewed Phase H6 artifacts plus docs/index/spec/arch/config map per SOP.
+- Deep dive on pix0 traces shows C runs supervisor command in SAMPLE pivot while PyTorch config still defaults to BEAM when custom detector vectors are provided; this aligns with Attempt #38 residual deltas.
+- Updated `plans/active/cli-noise-pix0/plan.md` Phase H6 to mark H6c done and add new rows H6e–H6g covering pivot evidence, config fix, and post-fix trace reruns.
+- Refreshed `docs/fix_plan.md` Next Actions to require H6e pivot proof, H6f pivot logic change + regression test, then H6g trace rerun before resuming Phase K work.
+- Issued new Evidence-phase memo (`input.md`) directing Ralph to capture pivot parity evidence and log it under `reports/2025-10-cli-flags/phase_h6/pivot_parity.md` (no code edits yet).
+- Next follow-up for Ralph: execute H6e (document pivot mismatch), update parity_summary + fix_plan Attempt log, then proceed to H6f implementation in a subsequent loop.
