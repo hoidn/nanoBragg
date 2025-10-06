@@ -1298,3 +1298,10 @@ Follow-ups for Ralph:
 - Synced `docs/fix_plan.md` Next Actions with new tasks (per-φ trace capture & sampling fix); status line now reflects K3a/K3b/K3d completion.
 - Authored `input.md` (Implementation phase) directing Ralph to extend `analyze_scaling.py` with `--per-phi`, instrument nanoBragg.c, and dump matched C/PyTorch φ traces under `reports/…/per_phi/`.
 - Follow-up for Ralph: execute K3e per memo, produce per-φ JSON/MD logs, then we can plan the φ sampling fix (K3f) next loop.
+
+## 2025-11-07 (galph loop — K3f baseline instrumentation)
+- `git pull --rebase` clean; reviewed latest Attempt logs and vectorization backlog.
+- Deep dive confirmed long-term Goal #1 still blocked by Δk≈6 gap (CLI-FLAGS-003); F_latt parity depends on capturing base lattice & scattering traces before φ rotation.
+- Refreshed `plans/active/cli-noise-pix0/plan.md` Phase K3f with checklist K3f1–K3f4 (instrument C/Py, diff traces, document root cause) and synced `docs/fix_plan.md` Next Actions to match.
+- Issued new Evidence-phase input.md directing Ralph to execute K3f1 (C trace run) and stage matching PyTorch harness output under `reports/2025-10-cli-flags/phase_k/base_lattice/`.
+- Next Ralph steps: add TRACE_C_BASE instrumentation, run the supervisor command into `base_lattice/c_trace.log`, extend the Py harness for `TRACE_PY_BASE`, and prep for K3f3 diff once both logs exist.
