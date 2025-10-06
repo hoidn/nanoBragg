@@ -1277,3 +1277,10 @@ Follow-ups for Ralph:
 - Evidence review shows PyTorch still rescales MOSFLM cross products; C only does so when `user_cell` is set. Root cause for F_latt_b ≈ +21.6% identified. K2b added to plan with required `mosflm_rescale.py` artifact.
 - Noted BeamConfig Kahn factor should default to 0.0 (C `polarization`). Reopened Phase I2 and updated fix_plan next steps to include default realignment during K3.
 - Issued new Evidence memo (input.md) directing Ralph to rerun trace harness, refresh scaling markdown, and capture orientation deltas before touching normalization code.
+
+## 2025-11-05 (galph loop — Phase K3 prep)
+- Reviewed CLI parity backlog vs long-term goal #1; confirmed `Crystal.compute_cell_tensors` still rescales MOSFLM cross-products and `BeamConfig.polarization_factor` remains 1.0, explaining the lingering F_latt and polar deltas.
+- Refreshed `plans/active/cli-noise-pix0/plan.md` context with a new 2025-11-05 recap and rewrote Phase K into a checklist (K3a–K3c) covering rescale gating, polarization defaults, and regression/docs closure.
+- Updated `docs/fix_plan.md` CLI-FLAGS-003 Next Actions to point at the new Phase K3 tasks and the exact scripts/tests Ralph must run after code changes.
+- Issued `input.md` (Implementation phase) instructing Ralph to land K3a–K3c, capture mosflm_rescale + scaling_chain artifacts under `reports/2025-10-cli-flags/phase_k/f_latt_fix/`, and rerun the targeted scaling pytest.
+- Follow-up for Ralph: implement the rescale guard + polarization default fix, regenerate scaling evidence, run `pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c`, then log Attempt #43 before moving to Phase L.
