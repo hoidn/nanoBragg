@@ -1,0 +1,17 @@
+Mon Oct  6 12:58:26 PM PDT 2025
+5ffe578bc6232a7836e1af878e62ba6643fac5cc
+
+Python version: 3.13.7 | packaged by Anaconda, Inc. | (main, Sep  9 2025, 19:59:03) [GCC 11.2.0]
+PyTorch version: 2.8.0+cu128
+CUDA available: True
+Default dtype: torch.float32
+CUDA device: NVIDIA GeForce RTX 3090
+NB_C_BIN=<not set>
+Mon Oct  6 01:14:38 PM PDT 2025
+921780a29a18762d4e4f56c4a819348259afb9bd
+Python version: 3.13.7 | packaged by Anaconda, Inc. | (main, Sep  9 2025, 19:59:03) [GCC 11.2.0]
+PyTorch version: 2.8.0+cu128
+CUDA available: True
+Default dtype: torch.float32
+CUDA device: NVIDIA GeForce RTX 3090
+NB_C_BIN=not set

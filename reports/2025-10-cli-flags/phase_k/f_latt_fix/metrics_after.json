@@ -1,0 +1,95 @@
+{
+  "environment": {
+    "python_version": "3.13.7 | packaged by Anaconda, Inc. | (main, Sep  9 2025, 19:59:03) [GCC 11.2.0]",
+    "torch_version": "2.8.0+cu128",
+    "cuda_available": true,
+    "default_dtype": "torch.float32",
+    "commit_hash": "3d03af4f501f78462a626d15b04a955e5f839b8d"
+  },
+  "scaling_ratios": {
+    "F_cell": {
+      "c_value": 300.58,
+      "py_value": 300.58,
+      "ratio": 1.0,
+      "abs_delta": 0.0,
+      "rel_error": 0.0
+    },
+    "F_latt": {
+      "c_value": 35636.0822038919,
+      "py_value": 44715.9601587609,
+      "ratio": 1.2547945058303116,
+      "abs_delta": 9079.877954869,
+      "rel_error": 0.25479450583031166
+    },
+    "F_latt_a": {
+      "c_value": 35.8890618450812,
+      "py_value": 35.9573598805798,
+      "ratio": 1.0019030320656865,
+      "abs_delta": 0.06829803549860003,
+      "rel_error": 0.0019030320656866283
+    },
+    "F_latt_b": {
+      "c_value": 38.6324938361129,
+      "py_value": 46.9838162313509,
+      "ratio": 1.2161735255990993,
+      "abs_delta": 8.351322395238,
+      "rel_error": 0.21617352559909936
+    },
+    "F_latt_c": {
+      "c_value": 25.7024842831081,
+      "py_value": 26.4683259730135,
+      "ratio": 1.0297964072838173,
+      "abs_delta": 0.7658416899054004,
+      "rel_error": 0.02979640728381724
+    },
+    "I_before_scaling": {
+      "c_value": 1480792010454060.0,
+      "py_value": 180653042948677.0,
+      "ratio": 0.12199758080358819,
+      "abs_delta": -1300138967505383.0,
+      "rel_error": 0.8780024191964118
+    },
+    "steps": {
+      "c_value": 10.0,
+      "py_value": 10.0,
+      "ratio": 1.0,
+      "abs_delta": 0.0,
+      "rel_error": 0.0
+    },
+    "r_e_sqr": {
+      "c_value": 7.94079248018965e-30,
+      "py_value": 7.94079248018965e-30,
+      "ratio": 1.0,
+      "abs_delta": 0.0,
+      "rel_error": 0.0
+    },
+    "fluence": {
+      "c_value": 1e+24,
+      "py_value": 1e+24,
+      "ratio": 1.0,
+      "abs_delta": 0.0,
+      "rel_error": 0.0
+    },
+    "polar": {
+      "c_value": 0.912575818665327,
+      "py_value": 1.0,
+      "ratio": 1.095799362142352,
+      "abs_delta": 0.087424181334673,
+      "rel_error": 0.09579936214235199
+    },
+    "omega": {
+      "c_value": 4.15867865980257e-07,
+      "py_value": 4.15860421194165e-07,
+      "ratio": 0.9999820981934383,
+      "abs_delta": -7.444786092001082e-12,
+      "rel_error": 1.7901806561689277e-05
+    },
+    "I_final": {
+      "c_value": 446.254110667806,
+      "py_value": 497.176575451482,
+      "ratio": 1.1141109147599157,
+      "abs_delta": 50.92246478367599,
+      "rel_error": 0.11411091475991568
+    }
+  }
+}

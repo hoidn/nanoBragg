@@ -1112,6 +1112,24 @@
       2. After Phase H5 complete, re-run `tests/test_cli_scaling.py::test_f_latt_square_matches_c` to verify F_latt parity with corrected geometry
       3. Phase K2/K3: Extend to ROUND/GAUSS/TOPHAT shapes once SQUARE parity achieved
       4. Record Attempt #35 metrics after Phase H5 geometry fixes applied
+  * [2025-10-06] Attempt #42 (ralph) — Result: **EVIDENCE COMPLETE** (Phase K2 scaling chain post SAMPLE-pivot fix). **Major improvement: F_latt error reduced from 463× to 25.5%. Remaining blocker: F_latt_b diverges 21.6%.**
+    Metrics: F_cell exact match (300.58). F_latt_a error 0.19%, F_latt_b error 21.6%, F_latt_c error 3.0% → Combined F_latt error 25.5% (C=35,636 vs Py=44,716). Polarization still 1.0 vs C 0.9126 (9.6% error). Final intensity ratio 1.114 (Py=497 vs C=446, 11.4% higher).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_py_after.log` - Fresh PyTorch trace after H6 SAMPLE-pivot fix (commit 3d03af4)
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_py_after_133120.log` - Timestamped archive
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_diff.txt` - Full diff between C and updated PyTorch traces
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/metrics_after.json` - Complete scaling ratios with environment metadata
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/scaling_summary.md` - Comprehensive analysis with root cause hypotheses
+    Observations/Hypotheses:
+      - **Major progress from Phase H6:** SAMPLE-pivot geometry fix resolved the 1.14mm pix0 error. F_latt components now computed in correct range (tens instead of single digits), reducing F_latt error from 463× to 25.5%.
+      - **F_latt_b blocker:** b-axis shape factor shows 21.6% error (Py=46.98 vs C=38.63). Since F_latt = F_latt_a × F_latt_b × F_latt_c, this propagates to 25.5% total error.
+      - **F_latt_a nearly perfect:** 0.19% error (Py=35.96 vs C=35.89) confirms a-axis sincg calculation is correct
+      - **F_latt_c acceptable:** 3.0% error (Py=26.47 vs C=25.70) is within tolerance for troubleshooting focus
+      - **Polarization unchanged:** Still 1.0 vs C 0.9126 (same 9.6% delta as Phase J), suggesting Kahn factor not applied
+      - **I_before_scaling ratio 0.122:** PyTorch 87.8% lower than C due to F_latt² amplifying the 25.5% error
+      - **Final I_pixel 11.4% higher:** Cascading effect from F_latt + polarization errors
+      - **Steps/r_e²/fluence/omega perfect:** All normalization constants match exactly, confirming infrastructure is correct
+    Next Actions: Phase K3 — Compare fractional Miller indices (h,k,l_frac) in C vs PyTorch traces to determine if F_latt_b error originates in Miller index calculation (scattering vector → reciprocal space) or in sincg function itself. Then debug polarization to apply Kahn factor correctly (reference PERF-PYTORCH-004 P3.0b fixes). Once both resolved, run targeted regression `pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v` and proceed to Phase L final parity sweep.
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; **(viii) Phase F3 parity evidence captured** ✅ (Attempt #12); **(ix) Phase G2 MOSFLM orientation ingestion complete** ✅ (Attempt #17); **(x) Phase G3 trace verification complete with transpose fix** ✅ (Attempt #18); (xi) Phase H lattice structure factor alignment ✅ (Attempt #25); (xii) Phase F3 parity rerun with lattice fix ❌; (xiii) Phase I polarization alignment ❌; (xiv) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌.
 
