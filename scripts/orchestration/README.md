@@ -72,11 +72,18 @@ This README documents the cross‑machine orchestration for the supervisor (galp
   - `--branch NAME` (abort if not on this branch)
   - `--logdir PATH` (per‑iteration logs)
   - `--verbose` · `--heartbeat-secs N`
+  - `--auto-commit-docs` / `--no-auto-commit-docs` (default: on)
+    - When enabled, supervisor will auto‑stage+commit changes limited to a doc/meta whitelist after a successful run and before handing off:
+      - Whitelist (globs): `input.md`, `galph_memory.md`, `docs/fix_plan.md`, `plans/**/*.md`, `prompts/**/*.md`
+      - Files must be ≤ `--max-autocommit-bytes` (default 1,048,576 bytes)
+      - Any dirty tracked changes outside the whitelist cause a clear error and the handoff is aborted (no state flip)
+    - Configure whitelist via `--autocommit-whitelist a,b,c` and size via `--max-autocommit-bytes N`
 - Loop
   - `--sync-via-git` · `--sync-loops N` · `--poll-interval S` · `--max-wait-sec S`
   - `--branch NAME` · `--logdir PATH` · `--prompt {main,debug}`
 
 ## Troubleshooting
+- Pull failures: both orchestrators now fail fast on git pull errors (including untracked‑file or local‑modification collisions). Read the console/log message, resolve locally (commit/stash/move), and rerun.
 - Push rejected / rebase in progress: orchestrators auto‑abort in‑progress rebase before pulling. If conflicts arise, fix them locally, commit, and rerun.
 - Branch mismatch: checkout the correct branch or adjust `--branch`.
 - Missing prompt: ensure `prompts/<name>.md` exists (default is `main`).
