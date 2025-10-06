@@ -517,6 +517,22 @@
       - **Documentation:** Reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/diff_notes.md documents the baseline 1.1mm ΔF error that this fix resolves
       - **Phase H5 Tasks:** H5a (C precedence) ✅, H5b (revert override for custom vectors) ✅, H5d (fix_plan update) ✅, H5e (unit correction) ✅; H5c (post-fix trace capture) pending
     Next Actions: Execute Phase H5c trace harness to capture post-fix PyTorch traces showing pix0 parity with C, then proceed to Phase K1 (F_latt SQUARE sincg fix)
+  * [2025-10-24] Attempt #35 (ralph) — Result: **EVIDENCE COMPLETE** (Phase H5c trace capture). **Critical finding: Attempt #33's beam-center mm→m fix had NO impact on pix0 calculation. Pix0 deltas IDENTICAL to 2025-10-22 baseline.**
+    Metrics: Pix0 parity NOT achieved. ΔF = -1136.4 μm (exceeds <50 μm threshold), ΔS = +139.3 μm (exceeds threshold), ΔO = -5.6 μm (within threshold). Total magnitude Δ = 1.145 mm. All deltas identical to pre-Attempt #33 baseline.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/trace_py.stdout` - Fresh PyTorch trace post-Attempt #33 (wall-clock: ~3s)
+      - `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/README.md` - Trace command, environment, git context
+      - `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/git_context.txt` - Git commit hash and log
+      - `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/env_snapshot.txt` - Environment variables snapshot
+      - `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/trace_py.stdout.sha256` - Trace checksum for reproducibility
+      - `reports/2025-10-cli-flags/phase_h5/parity_summary.md` - Updated with 2025-10-24 metrics and Phase H6 proposal
+    Observations/Hypotheses:
+      - **Attempt #33 ineffective for custom-vector path:** Beam-center fix applied to BEAM pivot calculation in `_configure_geometry()`, but pix0 in custom-vector scenarios is computed via `_calculate_pix0_vector()` which uses a **different code path** not touched by H5e.
+      - **Pix0 discrepancy root cause still unknown:** The 1.1mm fast-axis error persists despite H5b (custom-vector guard) and H5e (beam-center unit fix). Detector basis vectors match C exactly, ruling out orientation issues.
+      - **Systematic bias pattern:** Fast-axis error (1136 μm) is 10× larger than slow-axis error (139 μm), suggesting targeted calculation error rather than global scaling issue.
+      - **Hypothesis:** `_calculate_pix0_vector()` likely has unit conversion error when using custom vectors OR pivot mode (SAMPLE) calculation differs from C implementation despite identical detector_pivot setting.
+      - **Phase K blocked:** The 1.1mm pix0 error will cascade into incorrect Miller index calculations (h/k/l off by several tenths) and invalidate F_latt comparisons.
+    Next Actions: **Phase H6 required** — Instrument `_calculate_pix0_vector()` with targeted print statements, generate comparative pix0 trace (Python vs C), identify first divergence, fix root cause, verify ΔF/ΔS/ΔO all below 50μm. Phase K normalization work cannot proceed until pix0 parity is achieved.
   * [2025-10-06] Attempt #29 (ralph loop) — Result: Phase H5a EVIDENCE-ONLY COMPLETE. **C-code pix0 override behavior with custom vectors documented.**
     Metrics: Evidence-only loop. Two C runs executed: WITH override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m) and WITHOUT override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m). Identical geometry values confirm override is ignored when custom vectors are present.
     Artifacts:
