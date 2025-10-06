@@ -1,0 +1,9 @@
+{
+  "pix0_vector_m": {
+    "x": -0.216475836204836,
+    "y": 0.216343050492215,
+    "z": -0.230192414300537
+  },
+  "source": "reports/2025-10-cli-flags/phase_a/pix0_trace/trace.log",
+  "note": "Expected DETECTOR_PIX0_VECTOR from C trace with pix0_override applied in BEAM pivot mode"
+}

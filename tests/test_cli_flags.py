@@ -469,3 +469,107 @@ class TestCLIPix0Override:
         # Also verify device/dtype preservation
         assert det.pix0_vector.device.type == device
         assert det.pix0_vector.dtype == dtype
+
+    @pytest.mark.parametrize("device", ["cpu", pytest.param("cuda", marks=pytest.mark.skipif(
+        not torch.cuda.is_available(), reason="CUDA not available"))])
+    def test_pix0_vector_mm_beam_pivot(self, device):
+        """
+        Regression test for CLI-FLAGS-003 Phase H3b.
+
+        Verifies that when -pix0_vector_mm is provided via CLI with BEAM pivot,
+        the detector applies the correct transformation:
+        1. Subtract beam term from override
+        2. Project onto detector axes to derive Fbeam/Sbeam
+        3. Apply standard BEAM formula
+
+        Expected pix0 vector from C trace (phase_a):
+        -0.216475836204836, 0.216343050492215, -0.230192414300537 meters
+
+        Reference: plans/active/cli-noise-pix0/plan.md Phase H3b
+        Evidence: reports/2025-10-cli-flags/phase_a/pix0_trace/trace.log
+        """
+        import json
+        from pathlib import Path
+
+        # Load expected C pix0 vector
+        expected_json_path = Path("reports/2025-10-cli-flags/phase_h/implementation/pix0_expected.json")
+        with open(expected_json_path) as f:
+            expected_data = json.load(f)
+
+        expected_pix0 = torch.tensor([
+            expected_data["pix0_vector_m"]["x"],
+            expected_data["pix0_vector_m"]["y"],
+            expected_data["pix0_vector_m"]["z"]
+        ], device=device, dtype=torch.float32)
+
+        # CLI args matching supervisor command (from phase_a README)
+        # -pix0_vector_mm -216.336293 215.205512 -230.200866
+        pix0_override_mm = (-216.336293, 215.205512, -230.200866)
+        pix0_override_m = tuple(v / 1000.0 for v in pix0_override_mm)
+
+        # Create config via CLI parsing to ensure full integration
+        # Note: -beam_vector and -pix0_vector_mm will trigger CUSTOM convention automatically
+        config = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-distance', '100',  # mm, forces BEAM pivot
+            '-pixel', '0.1',     # mm
+            '-detpixels', '1024',
+            '-pix0_vector_mm', str(pix0_override_mm[0]), str(pix0_override_mm[1]), str(pix0_override_mm[2]),
+            '-beam_vector', '0.00051387949', '0.0', '-0.99999986'  # Custom beam from supervisor command
+        ])
+
+        # Build DetectorConfig from parsed CLI config
+        from nanobrag_torch.config import DetectorConfig, DetectorConvention, DetectorPivot
+
+        # Convert string convention to enum
+        convention_str = config.get('convention', 'MOSFLM')
+        convention_map = {
+            'MOSFLM': DetectorConvention.MOSFLM,
+            'XDS': DetectorConvention.XDS,
+            'CUSTOM': DetectorConvention.CUSTOM,
+            'ADXV': DetectorConvention.ADXV,
+            'DENZO': DetectorConvention.DENZO,
+            'DIALS': DetectorConvention.DIALS
+        }
+        convention = convention_map.get(convention_str.upper() if isinstance(convention_str, str) else convention_str, DetectorConvention.CUSTOM)
+
+        # Convert string pivot to enum
+        pivot_str = config.get('pivot', 'BEAM')
+        pivot_map = {'BEAM': DetectorPivot.BEAM, 'SAMPLE': DetectorPivot.SAMPLE}
+        pivot = pivot_map.get(pivot_str.upper() if isinstance(pivot_str, str) else pivot_str, DetectorPivot.BEAM)
+
+        detector_config = DetectorConfig(
+            distance_mm=config.get('distance_mm', 100.0),
+            pixel_size_mm=config.get('pixel_size_mm', 0.1),
+            spixels=config.get('spixels', 1024),
+            fpixels=config.get('fpixels', 1024),
+            detector_convention=convention,
+            detector_pivot=pivot,
+            pix0_override_m=config.get('pix0_override_m'),
+            custom_beam_vector=config.get('custom_beam_vector')
+        )
+        det = Detector(detector_config, device=device, dtype=torch.float32)
+
+        # Verify pix0_vector matches C expectation within tolerance
+        pix0_delta = torch.abs(det.pix0_vector - expected_pix0)
+        max_error = torch.max(pix0_delta).item()
+
+        assert max_error <= 5e-5, \
+            f"pix0 delta exceeds 5e-5 m threshold: max_error={max_error:.6e} m\n" \
+            f"Expected (C trace): {expected_pix0.cpu().numpy()}\n" \
+            f"Actual (PyTorch):   {det.pix0_vector.cpu().numpy()}\n" \
+            f"Delta (per component): {pix0_delta.cpu().numpy()}"
+
+        # Verify close_distance is recalculated and finite
+        assert torch.isfinite(det.close_distance), "close_distance must be finite"
+
+        # Verify beam_center tensors were updated and remain differentiable
+        # (pix0_override path should update them)
+        if hasattr(det, 'beam_center_f') and hasattr(det, 'beam_center_s'):
+            assert isinstance(det.beam_center_f, torch.Tensor), "beam_center_f must be tensor"
+            assert isinstance(det.beam_center_s, torch.Tensor), "beam_center_s must be tensor"
+            # Don't check requires_grad here as config tensors may not have it set
+
+        # Device/dtype preservation
+        assert det.pix0_vector.device.type == device
+        assert det.pix0_vector.dtype == torch.float32

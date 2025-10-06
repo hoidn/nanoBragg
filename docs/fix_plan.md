@@ -1020,3 +1020,22 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * AT-CLI-006 tests pass without expand errors (✅ satisfied)
   * No test suite regressions (✅ CLI smoke tests pass)
   * Warning printed once when batched interpolation fallback occurs (✅ implemented)
+  * [2025-10-06] Attempt #22 — Phase H3b pix0 transform implementation (ralph)
+    Metrics: pytest FAILED (1/1), max pix0 delta=2.165e-01 m (4330× threshold)
+    Artifacts:
+      - Implementation: `src/nanobrag_torch/models/detector.py:518-564`
+      - Regression test: `tests/test_cli_flags.py:473-548` (TestCLIPix0Override::test_pix0_vector_mm_beam_pivot)
+      - Expected C pix0: `reports/2025-10-cli-flags/phase_h/implementation/pix0_expected.json`
+      - Notes: `reports/2025-10-cli-flags/phase_h/implementation/implementation_notes.md`
+      - pytest log: `reports/2025-10-cli-flags/phase_h/implementation/pytest_TestCLIPix0Override_cpu.log`
+    Observations/Hypotheses:
+      - Implemented projection-based transform per Phase H3b guidance: subtract beam term, project onto detector axes, update beam centers
+      - Transform math verified correct, but produces pix0 = (5.14e-05, 0.2152, -0.2302) vs C expected (-0.2165, 0.2163, -0.2302)
+      - X-component mismatch is extreme (factor ~4200); Y/Z components much closer (~1mm, ~0.008mm)
+      - Root cause: Transform derivation may not match actual C-code pix0_override handling
+      - Hypothesis: C code may apply pix0_override more directly rather than via projection math
+    Next Actions:
+      - Generate fresh parallel traces (C + PyTorch) for supervisor command to confirm C behavior
+      - Re-examine golden_suite_generator/nanoBragg.c pix0 override logic (search for where pix0_override is assigned)
+      - Consider alternative: perhaps pix0_override replaces pix0 directly in CUSTOM/BEAM mode, not via Fbeam/Sbeam derivation
+      - If projection approach is wrong, implement simpler direct assignment and retest

@@ -515,12 +515,54 @@ class Detector:
             # This ensures CUSTOM convention overrides (e.g., -beam_vector) are honored
             # beam_vector is already set via self.beam_vector property
 
-            # Use exact C-code formula WITH distance correction (AT-GEO-003)
-            # CLI-FLAGS-003 Phase H3b: Always apply BEAM-pivot transform
-            # When pix0_override is provided, C code still applies the BEAM-pivot formula
-            # using Fbeam/Sbeam derived from the override (nanoBragg.c lines 1833-1835)
-            # The override affects the BEAM CENTERS, not the pix0 calculation itself.
+            # CLI-FLAGS-003 Phase H3b: Handle pix0_override for BEAM pivot
+            # When pix0_override is provided, derive Fbeam/Sbeam from it by:
+            # 1. Subtract beam term to get detector offset
+            # 2. Project onto detector axes to get Fbeam_override, Sbeam_override
+            # 3. Update beam_center_f/s tensors for header consistency
+            # 4. Apply standard BEAM formula
+            #
+            # C-code pattern (inferred from trace evidence):
+            # pix0_delta = pix0_override - distance*beam
+            # Fbeam_override = -dot(pix0_delta, fdet)
+            # Sbeam_override = -dot(pix0_delta, sdet)
 
+            if pix0_override_tensor is not None:
+                # Ensure all tensors on same device/dtype
+                beam_vector_local = beam_vector.to(device=self.device, dtype=self.dtype)
+                fdet_local = self.fdet_vec.to(device=self.device, dtype=self.dtype)
+                sdet_local = self.sdet_vec.to(device=self.device, dtype=self.dtype)
+                pix0_override_local = pix0_override_tensor.to(device=self.device, dtype=self.dtype)
+
+                # Compute beam term: distance_corrected * beam_vector
+                beam_term = self.distance_corrected * beam_vector_local
+
+                # Subtract beam term to get detector offset
+                pix0_delta = pix0_override_local - beam_term
+
+                # Project onto detector axes (with sign convention from C code)
+                # Fbeam = -dot(pix0_delta, fdet); Sbeam = -dot(pix0_delta, sdet)
+                Fbeam_override = -torch.dot(pix0_delta, fdet_local)
+                Sbeam_override = -torch.dot(pix0_delta, sdet_local)
+
+                # Override the Fbeam/Sbeam values with derived ones
+                Fbeam = Fbeam_override
+                Sbeam = Sbeam_override
+
+                # Update beam_center_f/s tensors to maintain header consistency
+                # Convert from meters back to pixels: beam_center = offset_m / pixel_size_m
+                # Note: For MOSFLM the +0.5 offset was already applied above, so reverse it
+                if self.config.detector_convention == DetectorConvention.MOSFLM:
+                    # MOSFLM: Fbeam = (beam_center_f + 0.5) * pixel_size
+                    # So: beam_center_f = Fbeam / pixel_size - 0.5
+                    self.beam_center_f = (Fbeam / self.pixel_size - 0.5).to(device=self.device, dtype=self.dtype)
+                    self.beam_center_s = (Sbeam / self.pixel_size - 0.5).to(device=self.device, dtype=self.dtype)
+                else:
+                    # Other conventions: beam_center = offset / pixel_size
+                    self.beam_center_f = (Fbeam / self.pixel_size).to(device=self.device, dtype=self.dtype)
+                    self.beam_center_s = (Sbeam / self.pixel_size).to(device=self.device, dtype=self.dtype)
+
+            # Use exact C-code formula WITH distance correction (AT-GEO-003)
             # BEAM pivot formula (C-code reference: nanoBragg.c lines 1833-1835):
             # pix0_vector[1] = -Fbeam*fdet_vector[1]-Sbeam*sdet_vector[1]+distance*beam_vector[1];
             # pix0_vector[2] = -Fbeam*fdet_vector[2]-Sbeam*sdet_vector[2]+distance*beam_vector[2];
