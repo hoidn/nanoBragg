@@ -455,7 +455,7 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase C2 parity run exposed a 2.58e2× intensity scaling mismatch (PyTorch max_I≈1.15e5 vs C max_I≈4.46e2). Phase D3/E diagnostics (2025-10-16) confirm three blocking geometry gaps: (a) PyTorch applies the raw `-pix0_vector_mm` override without the CUSTOM transform used in C (1.14 mm Y error); (b) CLI ignores `-beam_vector`, leaving the incident ray at the convention default `[0,0,1]`; (c) `-mat A.mat` handling discards the MOSFLM orientation, so Crystal falls back to canonical upper-triangular vectors while C uses the supplied A*. Traces also show a polarization delta (C Kahn factor ≈0.9126 vs PyTorch 1.0) to revisit after geometry fixes.
-- Next Actions: (1) Execute Phase H3b1 by rerunning `trace_harness.py` with and without `-pix0_vector_mm`, logging the C/PyTorch `Fbeam`/`Sbeam`/`Fclose`/`Sclose`/`close_distance` values into `reports/2025-10-cli-flags/phase_h/implementation/pix0_mapping_analysis.md`; (2) Apply the findings in H3b2 to rewrite `Detector._calculate_pix0_vector` for CUSTOM+BEAM so it mirrors the C relationship (ditch the projection math), refreshing beam-centre tensors, `close_distance`, caches, and capturing validation notes in `pix0_override_validation.md`; (3) Unblock H3b3 by fixing the CLI regression test (include `-default_F 1` or equivalent), updating `pix0_expected.json`, and archiving pytest logs under `phase_h/implementation/` before attempting Phase H4 parity.
+- Next Actions: (1) ✅ H3b1 complete — evidence captured in `pix0_mapping_analysis.md` reveals C-code IGNORES `-pix0_vector_mm` when custom vectors provided; (2) Execute H3b2 to implement correct precedence: `custom_vectors > pix0_override > standard_calculation` in `Detector._calculate_pix0_vector` so pix0_override is only applied when custom vectors are absent (matching C behavior); (3) Update H3b3 regression test to verify that pix0_override has NO EFFECT when custom vectors present (C-matching precedence); (4) Rerun H4 parity validation with corrected precedence implementation.
 - Attempts History:
   * [2025-10-05] Phase A Complete — Tasks A1-A3 executed per plan.
     Metrics: C reference behavior captured for both flags via parallel command execution.
@@ -1039,3 +1039,22 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - Re-examine golden_suite_generator/nanoBragg.c pix0 override logic (search for where pix0_override is assigned)
       - Consider alternative: perhaps pix0_override replaces pix0 directly in CUSTOM/BEAM mode, not via Fbeam/Sbeam derivation
       - If projection approach is wrong, implement simpler direct assignment and retest
+  * [2025-10-06] Attempt #23 — Phase H3b1 complete (ralph) **CRITICAL DISCOVERY: C-code ignores `-pix0_vector_mm` when custom vectors provided**
+    Metrics: C traces WITH/WITHOUT `-pix0_vector_mm` are IDENTICAL; PyTorch delta is sub-micron (<0.5µm); C vs PyTorch pix0 Y-error remains 1.14mm
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_h/implementation/c_trace_with_override.log` — C run WITH `-pix0_vector_mm` flag
+      - `reports/2025-10-cli-flags/phase_h/implementation/c_trace_without_override.log` — C run WITHOUT `-pix0_vector_mm` flag
+      - `reports/2025-10-cli-flags/phase_h/implementation/trace_py_with_override.log` — PyTorch run WITH `pix0_override_m`
+      - `reports/2025-10-cli-flags/phase_h/implementation/trace_py_without_override.log` — PyTorch run WITHOUT `pix0_override_m`
+      - `reports/2025-10-cli-flags/phase_h/implementation/pix0_mapping_analysis.md` — Complete comparative analysis and implementation guidance
+      - `reports/2025-10-cli-flags/phase_h/trace_harness_no_override.py` — Modified trace harness for no-override case
+    Observations/Hypotheses:
+      - **C-code behavior**: When custom detector vectors (`-odet_vector`, `-sdet_vector`, `-fdet_vector`) are provided, the C code produces IDENTICAL geometry whether `-pix0_vector_mm` is present or not. All values (pix0_vector, Fbeam, Sbeam, Fclose, Sclose, distance) are byte-for-byte identical in both traces.
+      - **Precedence rule**: Custom detector vectors OVERRIDE and render `-pix0_vector_mm` inert. The custom vectors already encode detector position/orientation implicitly; C derives pix0 FROM custom vectors, not from the pix0_vector flag.
+      - **PyTorch delta**: WITH vs WITHOUT pix0_override shows <0.5µm differences (X:0.115µm, Y:0.474µm, Z:0.005µm) - essentially numerical noise.
+      - **Cross-platform gap**: C pix0_vector vs PyTorch (with override) shows 1.14mm Y-axis error, exactly matching prior Phase H3a/Attempt #22 findings.
+      - **Root cause of Attempt #22 failure**: Implementation tried to apply pix0_override via projection math, but C-code precedence means the override should be IGNORED when custom vectors are present. The supervisor command provides BOTH custom vectors AND `-pix0_vector_mm`, so C ignores the latter.
+    Next Actions:
+      - **H3b2**: Implement correct precedence in `Detector._calculate_pix0_vector`: IF `custom_fdet_vector` is set, derive pix0 from custom vectors (existing CUSTOM pathway) and IGNORE `pix0_override_m`. ONLY apply `pix0_override_m` when custom vectors are absent.
+      - **H3b3**: Update regression test `test_pix0_vector_mm_beam_pivot` to verify C-matching behavior: when custom vectors + pix0_override both provided, pix0_override has NO EFFECT.
+      - **H4**: After precedence fix lands, rerun supervisor command parity to confirm 1.14mm Y-error disappears (since PyTorch will now ignore the override just like C does).
