@@ -999,3 +999,10 @@ Follow-ups for Ralph:
 - Refreshed `[CLI-FLAGS-003]` next actions in docs/fix_plan.md to mandate the F2 refit + parity redo prior to Phase G orientation work; added supervisor note flagging F2’s incomplete state.
 - Issued new input.md directing Ralph to implement the transform, rerun pix0 tests, capture traces, and only then loop back to parity. No new plans required; vectorization roadmap unchanged.
 - Feedback for Ralph: formality around parity artifacts is good, but we still need the CUSTOM transform and A* orientation before metrics improve.
+## 2025-10-06 (galph loop — CLI Phase G prep)
+- Synced clean (`git pull --rebase` up to date). Reviewed core docs plus plans; long-term focus stays on CLI parity + vectorization roadmap.
+- Deep dive confirmed `[CLI-FLAGS-003]` now blocked on Phase G orientation: CLI still discards MOSFLM A* vectors, parity metrics remain ≈−5e-06 (reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/metrics.json).
+- Detected new regression from Phase F2: `Detector.close_distance` now stored via `.item()`, severing gradients. Logged remediation in docs/fix_plan.md:448 and updated plan Phase F row to flag tensor retention.
+- Updated plans/active/cli-noise-pix0/plan.md (F2 → [D], F3 marked pending orientation) and refreshed fix_plan next actions to push G1–G3 plus gradient fix.
+- Rewrote input.md (Do Now = Phase G1 orientation + grad hygiene, mapped pytest command, parity harness instructions) with artifact expectations under reports/2025-10-cli-flags/phase_g/.
+- Upcoming asks for Ralph: preserve MOSFLM A* in config/Crystal, keep close_distance differentiable, rerun supervisor parity with new traces, then proceed toward Phase H.
