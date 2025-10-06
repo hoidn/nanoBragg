@@ -1215,3 +1215,10 @@ Follow-ups for Ralph:
 - Refreshed CLI-FLAGS-003 Next Actions in `docs/fix_plan.md` to mandate H6 evidence before resuming normalization (K2/K3).
 - Issued new `input.md` (Evidence phase) directing Ralph to instrument nanoBragg.c and the PyTorch trace harness, capture logs under `reports/2025-10-cli-flags/phase_h6/`, and log Attempt #36.
 - Follow-up for Ralph: execute Phase H6a/H6b/H6c tasks, update parity_summary + docs/fix_plan (Attempt #36), then coordinate a targeted fix to collapse pix0 deltas <5e-5 m before returning to Phase K.
+
+## 2025-10-25 (galph loop — H6 harness alignment)
+- Ran `git pull --rebase` (clean) and reviewed Phase H6 context. Noted PyTorch harness still forces `detector_pivot=BEAM` and likely executes the stale site-package build when `PYTHONPATH` is missing.
+- Updated `plans/active/cli-noise-pix0/plan.md` to mark H6a/H6d complete and to call out two guardrails for H6b: import via `PYTHONPATH=src` and fix the BEAM hardcode.
+- Added matching guidance to `docs/fix_plan.md` Next Actions so CLI-FLAGS-003 explicitly requires the editable install + SAMPLE pivot trace.
+- Rewrote `input.md` (Evidence phase) directing Ralph to patch `trace_harness.py`, capture the new TRACE_PY log under `reports/2025-10-cli-flags/phase_h6/py_trace/`, and stash env/git context before diffing.
+- Follow-up for Ralph: deliver Phase H6b artifacts (trace, stderr, env snapshot, git context) and update parity_summary.md; Phase H6c diff comes next.
