@@ -1100,3 +1100,11 @@ Follow-ups for Ralph:
 - Updated `plans/active/cli-noise-pix0/plan.md` context + Phase H3b2/H3b3 entries to reflect completion and refocused H4 guidance on C beam-centre recomputation. Synced docs/fix_plan.md Next Actions and refreshed pix0_mapping_analysis.md checklist.
 - Authored new input.md (100 lines) directing Ralph to port C’s post-rotation Fbeam/Sbeam recomputation, rerun traces, tighten pytest tolerances, and archive artifacts under `reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/`.
 - Reminder for next loop: verify H4 implementation lands, tighten test tolerance to ≤5e-5 m, capture Attempt #25 evidence. Vectorization plan remains frozen until CLI parity cleared.
+## 2025-10-17 (galph loop — H4 decomposition)
+- Coin flip → tails; skipped retrospective commit audit per instructions.
+- Deep-dive vs long-term goals: Goal 1 still blocked by pix0 parity; traced 1.14 mm Y delta to missing post-rotation `newvector` projection and stale `distance_corrected` updates in `src/nanobrag_torch/models/detector.py:326`. Goal 2 (vectorization) unchanged—Phase A evidence pending once CLI parity unblocks bandwidth.
+- Debugging hypotheses documented for Ralph: (1) Absence of C’s `newvector` recomputation keeps Fbeam/Sbeam stale (highest confidence; next step is to port nanoBragg.c:1822-1859). (2) `distance_corrected` not refreshed after recompute may subtly skew downstream geometry—verify once H4a lands. (3) Beam-centre tensors may retain MOSFLM offsets under CUSTOM; confirm during implementation. Highest-confidence path is hypothesis #1 with direct code port as confirming step.
+- Updated `plans/active/cli-noise-pix0/plan.md` Phase H to split H4 into H4a/H4b/H4c with explicit artifacts, tolerance targets, and pytest expectations for the pix0 recomputation work.
+- Synced `docs/fix_plan.md` Next Actions with the new H4a–H4c breakdown so the ledger points Ralph to the updated plan.
+- Regenerated `input.md` (100 lines) instructing Ralph to execute CLI-FLAGS-003 Phase H4a implementation, gather parity traces, tighten regression tolerances, and log Attempt #25 once complete.
+- Follow-ups for Ralph: implement H4a per plan, capture parity evidence under `reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/`, tighten tests/test_cli_flags tolerance, and update docs/fix_plan.md with Attempt #25 metrics before moving to H4b.
