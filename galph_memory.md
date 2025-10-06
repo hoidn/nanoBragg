@@ -1016,3 +1016,10 @@ Follow-ups for Ralph:
 - Updated `plans/active/cli-noise-pix0/plan.md` marking Phase G1 as [D] with commit 28fc584 context; highlighted G2 as the next actionable blocker.
 - Replaced `input.md` directing Ralph to execute Phase G2 (Crystal orientation ingestion), with explicit artifact directory, trace workflow, and pytest commands.
 - No new plans required; vectorization roadmap stands. Next follow-ups for Ralph: implement Crystal orientation per Core Rules 12–13, capture trace evidence under `reports/2025-10-cli-flags/phase_g/`, then proceed to Phase G3 parity rerun.
+
+## 2025-10-06 (galph loop — Phase G3 orientation prep)
+- Repo already up to date (6a0d252); refreshed required specs, arch, testing docs, fix_plan, and active plans.
+- Confirmed `[CLI-FLAGS-003]` status: Phase G1/G2 complete; G3 trace + parity rerun remains the blocker before polarization work.
+- Updated docs/fix_plan.md Next Actions to focus on executing Phase G3, refreshing parity artifacts, and sequencing Phase H afterwards.
+- Authored new input.md guiding Ralph through MOSFLM-aware trace harness updates, regenerated C/Py traces, nb-compare parity rerun, regression tests, and docs/fix_plan Attempt #18 logging.
+- Determined no additional planning document required; vectorization roadmap stays queued until CLI parity artifacts turn green.
