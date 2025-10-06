@@ -1332,3 +1332,10 @@ Follow-ups for Ralph:
 - Hypotheses: (1) Parity should succeed once traces regenerated; (2) residual discrepancies most likely from polarization factor default if it still logs 1.0. Await evidence.
 - Authored Evidence-phase input.md (lines 1-100) directing Ralph to rerun `tests/test_cli_scaling.py::test_f_latt_square_matches_c`, capture nb-compare artifacts, refresh `scaling_chain.md` & `base_lattice/summary.md`, and log Attempt update.
 - Follow-up: Ralph to complete K3g3 tasks, archive artifacts under `reports/2025-10-cli-flags/phase_k/f_latt_fix/`, and update docs/fix_plan.md before we schedule Phase L parity runs.
+
+## 2025-11-08 (galph loop — K3g3 parity rerun directive)
+- Coin flip → tails; skipped retrospective review per SOP.
+- Re-read CLI parity artifacts: scaling_chain.md still frozen at Oct-06 failure; trace_diff compares old C log vs Py trace (no post-fix diff yet).
+- Selected focus issue: CLI-FLAGS-003 Phase K3g3. Emphasised rerunning tests/test_cli_scaling.py::test_f_latt_square_matches_c and nb-compare with timestamped outputs under reports/2025-10-cli-flags/phase_k/f_latt_fix/post_fix/.
+- Input memo instructs Ralph to regenerate C & Py base traces (run_c_trace.sh + trace_harness.py) using shared stamp, update scaling_chain.md + summary.md, and record Attempt update in docs/fix_plan.md.
+- Validated pytest selector via collect-only (env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1).
