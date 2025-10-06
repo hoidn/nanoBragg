@@ -1034,7 +1034,7 @@ Follow-ups for Ralph:
 - Authored new 106-line input.md directing Ralph to clone the trace harness, remove manual beam override, capture fresh PyTorch traces/diffs, and log findings (reports/2025-10-cli-flags/phase_h/*). Added reporting checklist + reference metrics.
 - Follow-ups for Ralph next loop: execute Phase H1 evidence capture, then tackle Phase H2 sincg/NaNbNc diagnosis, defer polarization (Phase I) and `scaled.hkl.1` cleanup until lattice parity improves.
 
-## 2025-10-06 (galph loop)
+## 2025-11-06 (galph loop — K3d dtype evidence prep)
 - Coin flip=heads → reviewed Ralph commits d150858, b73f0e2; work productive (Phase H1 evidence, Phase G3 orientation fix).
 - Updated plans/active/cli-noise-pix0/plan.md Phase H goal + tasks (H1 marked done; new H2 beam propagation, H3 lattice, H4 parity).
 - docs/fix_plan.md Next Actions now call out H2–H4 sequence; reinforced beam-vector fix as first deliverable.
@@ -1284,3 +1284,9 @@ Follow-ups for Ralph:
 - Updated `docs/fix_plan.md` CLI-FLAGS-003 Next Actions to point at the new Phase K3 tasks and the exact scripts/tests Ralph must run after code changes.
 - Issued `input.md` (Implementation phase) instructing Ralph to land K3a–K3c, capture mosflm_rescale + scaling_chain artifacts under `reports/2025-10-cli-flags/phase_k/f_latt_fix/`, and rerun the targeted scaling pytest.
 - Follow-up for Ralph: implement the rescale guard + polarization default fix, regenerate scaling evidence, run `pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c`, then log Attempt #43 before moving to Phase L.
+
+## 2025-11-06 (galph loop — K3d dtype evidence prep)
+- Reviewed CLI-FLAGS-003 parity status: traces still show F_latt drift (Py F_latt_b≈46.98 vs C 38.63) despite SAMPLE pivot parity. Fractional h shifts (2.0012→1.9993) line up with ~2.8 µm close-distance delta.
+- Hypothesis: float32 rounding in detector geometry/scattering vector pipeline drives the sincg amplification; added Phase K3d dtype sweep to plan and fix_plan (dtype_sensitivity.md artifacts under reports/2025-10-cli-flags/phase_k/f_latt_fix/dtype_sweep/).
+- Updated supervisor memo targeting evidence-only float64 rerun; no pytest this loop.
+- Follow-up: Ralph to execute K3d command, archive dtype comparison, then resume K3a/K3c implementation once rounding impact is quantified.

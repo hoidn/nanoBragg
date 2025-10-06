@@ -1,36 +1,42 @@
-Summary: Finish Phase K3 so MOSFLM scaling matches C before rerunning the supervisor command.
-Phase: Implementation
-Focus: CLI-FLAGS-003 Handle -nonoise and -pix0_vector_mm
-Branch: feature/spec-based-2
-Mapped tests: tests/test_cli_scaling.py::test_f_latt_square_matches_c
-Artifacts: reports/2025-10-cli-flags/phase_k/f_latt_fix/orientation_delta_post_fix.md; reports/2025-10-cli-flags/phase_k/f_latt_fix/scaling_chain_post_fix.md; reports/2025-10-cli-flags/phase_k/f_latt_fix/pytest_post_fix.log
-Do Now: CLI-FLAGS-003 Phase K3a–K3c — env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v
-If Blocked: Capture current mosflm_rescale.py output to reports/2025-10-cli-flags/phase_k/f_latt_fix/blocker.log and log the obstacle in docs/fix_plan.md Attempts before changing code.
+Summary: Quantify float32 vs float64 impact on the CLI scaling chain before touching normalization code.
+Phase: Evidence
+Focus: CLI-FLAGS-003 — Phase K3d dtype-sensitivity sweep
+Branch: main
+Mapped tests: none — evidence-only
+Artifacts: reports/2025-10-cli-flags/phase_k/f_latt_fix/dtype_sweep/
+Do Now: CLI-FLAGS-003 K3d dtype sensitivity; NB_PYTORCH_DTYPE=float64 PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_k/f_latt_fix/analyze_scaling.py
+If Blocked: If the float64 run crashes, capture stdout/stderr to dtype_sweep/attempt_failed.log, rerun once at default dtype for comparison, and log config + traceback in Attempt History.
 Priorities & Rationale:
-- src/nanobrag_torch/models/crystal.py:681 still rescales cross products even when MOSFLM matrices are supplied, so F_latt_b stays 21.6% high.
-- src/nanobrag_torch/config.py:504 leaves polarization_factor at 1.0; C resets polar to 0.0 each pixel so the dynamic factor is recomputed (≈0.9126) and parity fails until we match it.
-- plans/active/cli-noise-pix0/plan.md:173-185 spells out K3a–K3c deliverables we just updated; stay within that guidance.
-- docs/fix_plan.md:448-461 now calls for MOSFLM rescale gating, polarization realignment, and the targeted scaling pytest before returning to Phase L.
-- specs/spec-a-cli.md:1-120 documents the implicit MOSFLM pivot rules we must preserve while changing normalization.
+- plans/active/cli-noise-pix0/plan.md:173 — K3d demands dtype evidence before we reopen implementation work on normalization.
+- docs/fix_plan.md:448 — New Next Actions gate K3a/K3c on confirming whether rounding causes the 21.6% F_latt drift.
+- reports/2025-10-cli-flags/phase_k/f_latt_fix/scaling_chain.md — Current float32 ratios show F_latt_b≈46.98 vs C 38.63, so we need a dtype control run.
+- reports/2025-10-cli-flags/phase_j/trace_c_scaling.log — C baseline keeps h=2.0012, so compare PyTorch float64 traces against this reference.
+- src/nanobrag_torch/simulator.py:250 — sincg inputs depend on precise h/k/l; confirming dtype sensitivity de-risks code changes here.
 How-To Map:
-- PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_k/f_latt_fix/mosflm_rescale.py > reports/2025-10-cli-flags/phase_k/f_latt_fix/orientation_delta_post_fix.md
-- PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_h/trace_harness.py > reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_py_post_fix.log (reuse the supervisor command inputs baked into the harness)
-- PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_j/analyze_scaling.py --c-log reports/2025-10-cli-flags/phase_j/trace_c_scaling.log --py-log reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_py_post_fix.log --out reports/2025-10-cli-flags/phase_k/f_latt_fix/scaling_chain_post_fix.md
-- env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v | tee reports/2025-10-cli-flags/phase_k/f_latt_fix/pytest_post_fix.log
+- Ensure editable install is active and NB_C_BIN remains pointed at golden_suite_generator/nanoBragg.
+- From repo root run:
+  1) `NB_PYTORCH_DTYPE=float64 PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_k/f_latt_fix/analyze_scaling.py`.
+  2) Move generated logs/JSON into `reports/2025-10-cli-flags/phase_k/f_latt_fix/dtype_sweep/` (stamp subdir).
+  3) Record key deltas (hkl_frac, F_latt_*, polar) comparing float32 vs float64 in `dtype_sweep/dtype_sensitivity.md`.
+- Note the environment snapshot (commit hash, torch version) alongside results.
 Pitfalls To Avoid:
-- Do not reintroduce the cross-product rescale for MOSFLM orientations; gate it strictly per plan.
-- Keep device/dtype neutrality—no hard-coded .cpu()/.cuda(), and avoid creating new CPU tensors mid-path.
-- Preserve differentiability (no .item(), no detaching) when adjusting polarization defaults.
-- Obey the Protected Assets rule; avoid touching files listed in docs/index.md.
-- Keep parity scripts under reports/…; do not drop new artifacts in repo root.
-- When updating BeamConfig defaults, ensure CLI flags still override correctly (respect config map precedence).
-- Record new evidence in docs/fix_plan.md Attempts once tasks finish; avoid silent progress.
-- Maintain vectorization discipline—no scalar loops when editing cell tensors or scaling paths.
-- Run only the targeted pytest listed; full suite waits until parity closes.
+- Do not edit source this loop; gather evidence only.
+- No pytest runs while Phase=Evidence.
+- Keep Protected Assets untouched (docs/index.md references).
+- Avoid clobbering existing reports—create timestamped subdirectories.
+- Ensure NB_PYTORCH_DTYPE override is cleared afterward.
+- Respect device/dtype neutrality—no hard-coded `.cpu()`/`.cuda()` in probes.
+- Capture stdout/stderr for reproducibility; don’t rely on scrollback.
+- Do not delete prior scaling artifacts; we still need baseline comparisons.
+- Refrain from pushing until supervisor review closes the loop.
 Pointers:
-- src/nanobrag_torch/models/crystal.py:681
-- src/nanobrag_torch/config.py:504
 - plans/active/cli-noise-pix0/plan.md:173
-- docs/fix_plan.md:448
-- specs/spec-a-cli.md:1
-Next Up: Phase L — rerun the supervisor nb-compare command once K3 artifacts are archived.
+- reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_py_after.log
+- reports/2025-10-cli-flags/phase_j/trace_c_scaling.log
+- src/nanobrag_torch/models/crystal.py:681
+- src/nanobrag_torch/simulator.py:250
+- docs/development/c_to_pytorch_config_map.md
+- specs/spec-a-core.md
+Next Up:
+1. If dtype drift is confirmed, tackle K3a (mosflm rescale guard) with post-fix orientation traces.
+2. If float64 matches C, proceed to K3c regression/docs updates after implementing the needed float32 fix.
