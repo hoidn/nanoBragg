@@ -1185,3 +1185,9 @@ Follow-ups for Ralph:
 - Issued new input.md (Evidence phase) directing Ralph to run the trace harness and archive metrics before code changes.
 - Key finding: PyTorch SQUARE lattice factor still feeds sincg with `(h-h0)` (src/nanobrag_torch/simulator.py) vs C’s `sincg(M_PI*h, Na)` (`golden_suite_generator/nanoBragg.c:3063-3080`); Phase K1 must correct this.
 - Follow-up expectations: Ralph generates H5c PyTorch traces under `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/`, updates parity_summary metrics, and drafts Attempt #32.
+
+## 2025-10-24 (galph loop — Phase H5 unit fix directive)
+- Reconfirmed pix0 fast-axis delta (≈1.1 mm) persists post-H5b revert; traced root cause to Detector BEAM pivot still treating beam_center_f/s as pixel counts (mm×m bug).
+- Added Phase H5e row to `plans/active/cli-noise-pix0/plan.md` directing mm→m conversion with new trace artifacts; refreshed docs/fix_plan.md Next Actions to prioritise H5a/H5c/H5e sequence before Phase K.
+- Issued `input.md` (Implementation phase) instructing Ralph to implement unit fix, capture trace evidence under `reports/2025-10-cli-flags/phase_h5/unit_fix/`, run `tests/test_cli_flags.py::TestCLIPix0Override`, and log Attempt #33.
+- No code changes made this loop; planning/docs only. Next follow-up: verify H5e Attempt captures <5e-5 m pix0 deltas, then greenlight Phase K1 (sincg update).

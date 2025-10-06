@@ -455,10 +455,11 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase C2 parity run exposed a 2.58e2× intensity scaling mismatch (PyTorch max_I≈1.15e5 vs C max_I≈4.46e2). Phase D3/E diagnostics (2025-10-16) confirm three blocking geometry gaps: (a) PyTorch applies the raw `-pix0_vector_mm` override without the CUSTOM transform used in C (1.14 mm Y error); (b) CLI ignores `-beam_vector`, leaving the incident ray at the convention default `[0,0,1]`; (c) `-mat A.mat` handling discards the MOSFLM orientation, so Crystal falls back to canonical upper-triangular vectors while C uses the supplied A*. Traces also show a polarization delta (C Kahn factor ≈0.9126 vs PyTorch 1.0) to revisit after geometry fixes.
-- Next Actions (2025-10-22): Execute `plans/active/cli-noise-pix0/plan.md` Phase H5 before resuming normalization work:
+- Next Actions (2025-10-24 refresh): Follow `plans/active/cli-noise-pix0/plan.md` Phase H5 items before resuming normalization work:
   1. Refresh C precedence evidence (H5a): rerun the supervisor command with and without `-pix0_vector_mm`, stash logs under `reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-21/`, and update `phase_h5/c_precedence.md` to document that C recomputes `Fbeam/Sbeam` when the override is supplied alongside custom vectors.
   2. Capture PyTorch traces with the reinstated override (H5c): extend/execute the Phase H trace harness so it logs `pix0_vector`, derived `Fbeam/Sbeam`, fractional h/k/l, and `F_latt` components. Archive outputs to `reports/2025-10-cli-flags/phase_h5/py_traces/` and append the C vs PyTorch deltas to `phase_h5/parity_summary.md`.
-  3. Once geometry parity is verified, log the follow-up attempt in this entry (H5d) and then transition to Phase K normalization tasks.
+  3. Implement the unit correction for beam-center mapping (H5e): confirm `DetectorConfig.beam_center_*` remains in mm, update `Detector._configure_geometry` to convert to meters before computing F/S beams, and capture before/after traces under `reports/2025-10-cli-flags/phase_h5/unit_fix/` with Attempt #33 logging Δpix0 < 5e-5 m.
+  4. Once geometry parity is verified (H5d), transition to Phase K normalization tasks.
 - Attempts History:
   * [2025-10-06] Attempt #27 (ralph) — Result: **PARITY FAILURE** (Phase I3 supervisor command). **Intensity scaling discrepancy: 124,538× sum ratio.**
     Metrics: Correlation=0.9978 (< 0.999 threshold), sum_ratio=124,538 (should be ~1.0), C max_I=446, PyTorch max_I=5.411e7 (121,000× discrepancy), mean_peak_distance=37.79 px (> 1 px threshold).
@@ -506,8 +507,8 @@
       - **Phase I Tasks:** I1 (audit) ✅, I2 (implement) ✅; I3 (final parity sweep) remains pending
     Next Actions:
       1. Complete Phase H5c by regenerating PyTorch traces (post-revert) and updating `reports/2025-10-cli-flags/phase_h5/parity_summary.md` with pix0/F_latt deltas (<5e-5 m, <1e-3).
-      2. Tackle Phase K1 (`plans/active/cli-noise-pix0/plan.md`) to swap the SQUARE lattice factor to sincg(π·h, Na) form, capture trace evidence under `phase_k/f_latt_fix/`, and refresh `phase_j/scaling_chain.md`.
-      3. Add the targeted regression noted in Phase K3 (e.g., `tests/test_cli_scaling.py::test_f_latt_square_matches_c`) before reattempting the supervisor command parity sweep.
+      2. Implement the H5e unit correction so BEAM-pivot F/S values convert mm→m before pix0 assembly; document the change under `phase_h5/unit_fix/` with Attempt #33.
+      3. After geometry parity is restored (H5d), proceed to Phase K1 (sincg(π·h, Na) swap) and capture updated scaling traces, then add the regression noted in Phase K3 before attempting the supervisor command parity sweep.
   * [2025-10-06] Attempt #29 (ralph loop) — Result: Phase H5a EVIDENCE-ONLY COMPLETE. **C-code pix0 override behavior with custom vectors documented.**
     Metrics: Evidence-only loop. Two C runs executed: WITH override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m) and WITHOUT override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m). Identical geometry values confirm override is ignored when custom vectors are present.
     Artifacts:
