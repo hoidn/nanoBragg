@@ -73,7 +73,7 @@ Exit Criteria: Detector trace matches C for pix0 and incident beam; CLI parity r
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| F1 | Thread `custom_beam_vector` through Detector | [P] | ✅ 2025-10-16: CLI threads `custom_beam_vector` into Detector (see `src/nanobrag_torch/config.py:212`, `models/detector.py:848-871`) **but** `_calculate_pix0_vector()` still hardcodes convention defaults. Update that helper to reuse `self.beam_vector` (so CUSTOM overrides apply during r-factor/pix0 math), then repopulate `reports/2025-10-cli-flags/phase_f/beam_vector_after_fix.txt` via the validation snippet. |
+| F1 | Thread `custom_beam_vector` through Detector | [D] | ✅ 2025-10-05 (ralph): Refactored `_calculate_pix0_vector()` to use `self.beam_vector` property instead of hardcoded beam vectors (lines 438-440, 519-521). Beam vector now exactly matches C trace. Artifacts in `reports/2025-10-cli-flags/phase_f/`. See docs/fix_plan.md Attempt #11. |
 | F2 | Port CUSTOM pix0 transform for overrides | [ ] | Replace the early-return override path with the CUSTOM convention math from nanoBragg.c:1730-1860 (apply pivot formulas, rotations, and distance correction before setting `pix0_vector`). Confirm via refreshed trace (`trace_beam_after_pix0.log`) that line 1 matches C. |
 | F3 | Re-run Phase C2 parity smoke | [ ] | Execute the supervisor command for both binaries after F1/F2. Store outputs under `reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/` and summarize results in docs/fix_plan.md Attempts. |
 

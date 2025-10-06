@@ -801,6 +801,20 @@
     Metrics: `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python - <<'PY' …` instantiating the supervisor command shows `Detector(...).beam_vector = tensor([0., 0., 1.])`; C trace reports `incident_beam= 0.000513879 0 -0.99999986`.
     Artifacts: (to capture) `reports/2025-10-cli-flags/phase_e/beam_vector_check.txt` (pending once Ralph reruns snippet per plan task E0).
     Observations/Hypotheses: CLI parser stores `custom_beam_vector`, but `Detector` and the divergence/dispersion harness select hard-coded convention defaults, so the supervisor command never threads its custom beam direction through. This invalidates assumptions from the earlier trace that incident_vec matched C—the alignment was coincidental because downstream code normalised geometry using `[0,0,1]`.
+  * [2025-10-05] Attempt #11 (ralph) — Result: success. **Phase F1 complete: `_calculate_pix0_vector()` now honors `custom_beam_vector` from CLI.**
+    Metrics: Beam vector exact match (delta < 1e-12): C = `[0.00051387949, 0.0, -0.99999986]`, PyTorch = `[0.00051387949, 0.0, -0.99999986]`. Pix0 vector Y-axis discrepancy reduced but still ~0.84mm (was 1.14mm): C = `[-0.216475836, 0.216343050, -0.230192414]`, PyTorch = `[-0.216336293, 0.215205512, -0.230200866]`.
+    Artifacts:
+      - `src/nanobrag_torch/models/detector.py:438-440` - Replaced hardcoded beam vector with `self.beam_vector` property call
+      - `src/nanobrag_torch/models/detector.py:519-521` - Removed redundant beam vector instantiation in BEAM pivot branch
+      - `reports/2025-10-cli-flags/phase_f/beam_vector_after_fix.txt` - Validation artifact showing custom beam vector now used
+      - `reports/2025-10-cli-flags/phase_f/pix0_vector_after_fix.txt` - Validation artifact showing current pix0 state
+      - `reports/2025-10-cli-flags/phase_f/beam_vector_check.md` - Complete verification report with deltas
+    Observations/Hypotheses:
+      - Root cause: `_calculate_pix0_vector()` instantiated convention-default beam vectors at lines 439-450 and 530-548, bypassing `self.beam_vector` property that honors CUSTOM overrides
+      - Fix: Two edits—(1) r-factor calculation now uses `self.beam_vector` directly; (2) BEAM pivot branch reuses same `beam_vector` variable instead of re-instantiating
+      - Beam vector fix complete (CLI `-beam_vector` now drives r-factor and pix0 calculations)
+      - Remaining pix0 discrepancy (~0.84mm Y) indicates Phase F2 (CUSTOM pix0 transform) still needed per plan
+    Next Actions: Execute plan Phase F2 (port CUSTOM pix0 transform from nanoBragg.c:1730-1860), then Phase F3 parity rerun. After F2 complete, pix0 should match C within ≤1e-12 and geometry correlation should exceed 0.999.
     Next Actions: Update plan Phase E guidance to document beam-vector evidence (done) and prioritize implementation work that (1) threads `custom_beam_vector` into Detector/BeamConfig while preserving differentiability and device/dtype neutrality, and (2) re-runs Phase E traces to confirm both pix0 and beam vectors match before reattempting parity.
   * [2025-10-16] Attempt #7 (ralph) — Result: Phase E0 complete (evidence captured). Beam-vector divergence confirmed.
     Metrics: PyTorch beam_vector = `tensor([0., 0., 1.], dtype=torch.float64)` (CUSTOM/XDS default); C log reports user-supplied `-beam_vector 0.00051387949 0.0 -0.99999986`. Confirms CLI parser stores but does not thread `custom_beam_vector` through to detector instantiation.

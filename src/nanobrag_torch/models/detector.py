@@ -435,19 +435,9 @@ class Detector:
         elif detector_twotheta.device != self.device or detector_twotheta.dtype != self.dtype:
             detector_twotheta = detector_twotheta.to(device=self.device, dtype=self.dtype)
 
-        # Get beam vector based on convention
-        if self.config.detector_convention == DetectorConvention.MOSFLM:
-            # MOSFLM: beam along +X axis
-            beam_vector = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
-        elif self.config.detector_convention == DetectorConvention.DENZO:
-            # DENZO: Same as MOSFLM, beam along +X axis
-            beam_vector = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
-        elif self.config.detector_convention == DetectorConvention.ADXV:
-            # ADXV: beam along +Z axis
-            beam_vector = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
-        else:
-            # XDS, DIALS, CUSTOM: beam along +Z axis
-            beam_vector = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
+        # Get beam vector using self.beam_vector property
+        # This honors CUSTOM convention overrides from CLI (e.g., -beam_vector)
+        beam_vector = self.beam_vector
 
         # Always calculate r-factor to preserve gradient flow
         # When rotations are zero, the rotation matrix will be identity
@@ -526,27 +516,10 @@ class Detector:
                 Fbeam = self.beam_center_f * self.pixel_size
                 Sbeam = self.beam_center_s * self.pixel_size
 
-            # Set beam vector based on convention
-            if self.config.detector_convention == DetectorConvention.MOSFLM:
-                beam_vector = torch.tensor(
-                    [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
-                )
-            elif self.config.detector_convention == DetectorConvention.DENZO:
-                # DENZO: Same as MOSFLM, beam along +X axis
-                beam_vector = torch.tensor(
-                    [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
-                )
-            elif self.config.detector_convention == DetectorConvention.ADXV:
-                # ADXV: beam along +Z axis
-                beam_vector = torch.tensor(
-                    [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
-                )
-            else:
-                # XDS, DIALS, CUSTOM convention uses [0, 0, 1] as beam vector
-                beam_vector = torch.tensor(
-                    [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
-                )
-            
+            # Reuse beam_vector from r-factor calculation above
+            # This ensures CUSTOM convention overrides (e.g., -beam_vector) are honored
+            # beam_vector is already set via self.beam_vector property
+
             # Use exact C-code formula WITH distance correction (AT-GEO-003)
             self.pix0_vector = (
                 -Fbeam * self.fdet_vec
