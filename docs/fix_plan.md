@@ -696,6 +696,24 @@
       - Beam center convention handling now correct: MOSFLM adds +0.5, CUSTOM/XDS/DIALS use as-is
       - Tests updated to reflect correct behavior: close_distance from recalculation, not override assumptions
     Next Actions: (1) Execute Phase F3 parity rerun with supervisor command now that pivot logic correct; (2) Continue to Phase G for crystal orientation if parity still fails; (3) Update plan status: Phase F2 ✅ complete.
+  * [2025-09-30] Attempt #3 — Result: PASS. Fixed peak detection by casting PyTorch output to float32 to match golden data precision.
+    Metrics: simple_cubic: corr=1.0, matches=50/50 (100%), mean_dist=0.0px; triclinic_P1: PASS; cubic_tilted: PASS.
+    Artifacts: reports/2025-09-30-AT-012-peakmatch/final_summary.json, reports/2025-09-30-AT-012-peakmatch/peak_detection_summary.json
+    First Divergence: Not a physics divergence — float64 precision breaks plateau ties. Golden C output (float32) has 8 unique peak values creating plateaus. PyTorch float64 has 38 unique values due to numerical noise, causing scipy.ndimage.maximum_filter to find 45 local maxima instead of 52.
+    Solution: Cast pytorch_image.astype(np.float32) before find_peaks() in all three test methods. This matches golden data precision and restores plateau ties, achieving 50/50 peak matches (100%) vs spec requirement of 48/50 (95%).
+    Next Actions: None — AT-PARALLEL-012 complete and passing. Updated test assertions from 86% threshold to spec-required 95%.
+  * [2025-10-17] Attempt #14 (ralph loop i=17) — Result: success. Completed Phase G prep - restored close_distance tensor differentiability per input.md directive.
+    Metrics: Mapped tests 26/26 passed in 2.51s (tests/test_cli_flags.py tests/test_at_geo_003.py). Gradient flow preserved through detector distance calculations.
+    Artifacts:
+      - src/nanobrag_torch/models/detector.py:630 - Removed `.item()` call, keeping close_distance as tensor
+      - tests/test_cli_flags.py:142,178 - Updated assertions to handle tensor close_distance with `.item()`
+      - Commit b049227 - Phase G prep differentiability fix
+    Observations/Hypotheses:
+      - self.close_distance was using `.item()` breaking autograd (Core Rule #9 violation)
+      - Simulator already handles tensor close_distance via torch.as_tensor() wrapper at lines 936, 1014
+      - Test assertions needed update to call `.cpu().item()` for CUDA tensors in pytest.approx comparisons
+      - Fix unblocks Phase G orientation work where Crystal parameters must flow gradients
+    Next Actions: Execute Phase G tasks G1-G3 per input.md: (1) Extend CLI to cache MOSFLM A* vectors from -mat file; (2) Wire orientation through CrystalConfig/Crystal initialization applying misset pipeline + metric duality; (3) Validate lattice-vector parity with trace comparison and rerun supervisor parity.
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; **(viii) Phase F3 parity evidence captured** ✅ (Attempt #12); (ix) Phase G crystal orientation ❌ next loop (unblocked); (x) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌ blocked on G.
 
