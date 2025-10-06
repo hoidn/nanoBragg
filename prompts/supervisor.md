@@ -51,7 +51,6 @@ READ the following files:
 - $PLAN: `./fix_plan.md` (living, prioritized to‑do; keep it up to date)
 - $TESTS: `./docs/development/testing_strategy.md` (testing philosophy, tiers, seeds/tolerances, commands)
 - Set `AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md` (or project‑specific path) and consult it for authoritative reference commands and test discovery.
-- Defer specifics: rely on the project’s documented testing and debugging workflows (as linked from the docs index) to map commands/tests/traces; do not hard‑code project details into this prompt.
 <0>
 <1>
 do a deep analysis of the codebase in light of the <current long term goals>. What are some current issues / gaps and possible approaches to resolving them? Review docs/fix_plan.md and plans/active/, as previous iterations of you may have already done some legwork.
@@ -60,8 +59,6 @@ Phase Gate (Evidence): If the active plan phase is Evidence, Do Now SHALL be evi
 
 Validation Preflight (tests): Before listing any test file/identifier in Do Now, validate that it resolves via the project’s documented test discovery; if validation fails, omit tests and note “(none — evidence‑only this loop)” and add a TODO in docs/fix_plan.md documenting the missing mapping.
 
-Visual Inspection (when applicable): If outputs are visually interpretable (e.g., images/plots), include a quick visual inspection or diff in the evidence artifacts to ground hypotheses; keep it lightweight and reproducible.
-
 Human Summary (input.md header): Prepend a short summary block with the following lines (validated where applicable):
 - Summary: <one‑sentence goal for this loop>
 - Phase: <Evidence | Implementation | Validation>
@@ -69,6 +66,11 @@ Human Summary (input.md header): Prepend a short summary block with the followin
 - Branch: <expected branch>
 - Mapped tests: <validated list | none — evidence‑only>
 - Artifacts: <key paths to produce under reports/>
+
+Debugging Items — Hypothesis + Triage (initial pass):
+- Only when the selected item is a debugging or parity analysis task, formulate 1–3 plausible hypotheses for the observed gap/issue.
+- Triage each with lightweight checks using existing artifacts or quick, low‑cost runs; record outcomes succinctly in the evidence.
+- For the top hypothesis, state confidence and the single confirming step to run next.
 </1>
 <2>
 flip a coin using python. if it comes up <heads>:
