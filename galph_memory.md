@@ -1229,3 +1229,10 @@ Follow-ups for Ralph:
 - Issued new implementation memo (`input.md`) directing Ralph to monkey-patch `_calculate_pix0_vector` via the harness, drop the BEAM hardcode, log TRACE_PY with C-style precision, and archive stdout/stderr + env/git metadata under `reports/2025-10-cli-flags/phase_h6/py_trace/`.
 - Reviewed Ralph commits 9ee2ada / bf9925b — C instrumentation captured clean, no regressions; remind future loop to unwind trace hooks once parity closes.
 - Next follow-up: ensure Phase H6b artifacts land, then proceed to H6c diff analysis before reopening normalization work.
+## 2025-10-06 (galph loop — Phase H6c prep)
+- `git pull --rebase` clean; no incoming changes.
+- Reviewed CLI parity status vs long-term goal #1. Diffed `phase_h6` traces and confirmed first divergence occurs at `beam_center_m` (PyTorch logging millimetres vs C metres).
+- Updated `plans/active/cli-noise-pix0/plan.md` to mark H6b complete (Attempt #37) and refocused H6c task description on trace analysis.
+- Refreshed `docs/fix_plan.md` Next Actions so bullet #1 now targets H6c diff/analysis rather than instrumentation.
+- Authored new `input.md` (Evidence phase) directing Ralph to produce the trace diff, document findings, and log Attempt #38.
+- Follow-up for Ralph: execute H6c diff per memo, update `reports/2025-10-cli-flags/phase_h6/analysis.md` + `reports/2025-10-cli-flags/phase_h5/parity_summary.md`, then record Attempt #38 in fix_plan before moving to H6d/H5c.
