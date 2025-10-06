@@ -130,6 +130,27 @@ def main() -> int:
             # Do not push here; let subsequent logic push state or later commits
         return committed, []
 
+    def _pull_with_error(log_func, ctx: str) -> bool:
+        """Run safe_pull while capturing log lines; on failure, print last error."""
+        buf: list[str] = []
+        def _cap(msg: str) -> None:
+            if log_func:
+                log_func(msg)
+            buf.append(msg)
+        ok = safe_pull(_cap)
+        if not ok:
+            err_line = None
+            for line in reversed(buf):
+                low = line.lower()
+                if ("error" in low) or ("fatal" in low) or ("would be overwritten" in low):
+                    err_line = line
+                    break
+            if err_line:
+                print(f"[sync] ERROR ({ctx}): {err_line}")
+            else:
+                print(f"[sync] ERROR ({ctx}): git pull failed; see iter log.")
+        return ok
+
     # per-iteration logger factory
     def make_logger(path: Path):
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -161,19 +182,18 @@ def main() -> int:
     for _ in range(args.sync_loops):
         # Determine iteration-specific log file
         # Use current state when available to derive iteration number
-        if not safe_pull(lambda m: None):
+        if not _pull_with_error(lambda m: None, "pre-pull"):
             # Pre-pull fallback: attempt doc/meta auto-commit if enabled, then retry pull
             if args.prepull_auto_commit_docs:
                 committed, forbidden = _supervisor_autocommit_docs(args, lambda m: None)
                 if committed and not forbidden:
-                    if not safe_pull(lambda m: None):
-                        print("[sync] ERROR: git pull failed after pre-pull auto-commit; see iter log.")
+                    if not _pull_with_error(lambda m: None, "pre-pull (after autocommit)"):
                         return 1
                 else:
-                    print("[sync] ERROR: git pull failed; pre-pull auto-commit not applicable or blocked. See iter log.")
+                    print("[sync] ERROR: git pull failed; pre-pull auto-commit not applicable or blocked.")
                     return 1
             else:
-                print("[sync] ERROR: git pull failed; see iter log for details.")
+                # Error already printed by _pull_with_error
                 return 1
         st_probe = OrchestrationState.read(str(args.state_file))
         itnum = st_probe.iteration
@@ -181,18 +201,17 @@ def main() -> int:
         iter_log = args.logdir / branch_target.replace('/', '-') / "galph" / f"iter-{itnum:05d}_{ts}.log"
         logp = make_logger(iter_log)
 
-        if not safe_pull(logp):
+        if not _pull_with_error(logp, "pre-wait"):
             if args.prepull_auto_commit_docs:
                 committed, forbidden = _supervisor_autocommit_docs(args, logp)
                 if committed and not forbidden:
-                    if not safe_pull(logp):
-                        print("[sync] ERROR: git pull failed after pre-pull auto-commit; see iter log.")
+                    if not _pull_with_error(logp, "pre-wait (after autocommit)"):
                         return 1
                 else:
-                    print("[sync] ERROR: git pull failed; pre-pull auto-commit not applicable or blocked. See iter log.")
+                    print("[sync] ERROR: git pull failed; pre-pull auto-commit not applicable or blocked.")
                     return 1
             else:
-                print("[sync] ERROR: git pull failed; see iter log for details.")
+                # Error already printed by _pull_with_error
                 return 1
 
         # Resume mode: if a local stamped handoff exists but isn't pushed yet, publish and skip work
@@ -221,8 +240,7 @@ def main() -> int:
         last_hb = start
         prev_state = None
         while True:
-            if not safe_pull(logp):
-                print("[sync] ERROR: git pull failed during polling; see iter log.")
+            if not _pull_with_error(logp, "polling"):
                 return 1
             st = OrchestrationState.read(str(args.state_file))
             cur_state = (st.expected_actor, st.status, st.iteration)
@@ -292,8 +310,7 @@ def main() -> int:
         last_hb2 = start2
         prev_state2 = None
         while True:
-            if not safe_pull(logp):
-                print("[sync] ERROR: git pull failed while waiting for Ralph; see iter log.")
+            if not _pull_with_error(logp, "wait-for-ralph"):
                 return 1
             st2 = OrchestrationState.read(str(args.state_file))
             cur_state2 = (st2.expected_actor, st2.status, st2.iteration)
