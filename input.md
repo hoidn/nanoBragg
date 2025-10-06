@@ -1,100 +1,100 @@
-timestamp: 2025-10-06 08:31:05Z
-commit: 85d5e45
-author: galph
-focus: CLI-FLAGS-003 Phase H4 pix0 parity
-Do Now: CLI-FLAGS-003 Handle -nonoise and -pix0_vector_mm — env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot -v
-If Blocked: Capture current pix0 delta via KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_h/trace_harness.py --mode pix0-only --outdir reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/blocked && append metrics + stacktrace to reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/blocked.md
+Summary: Port the nanoBragg.c post-rotation beam-centre recomputation so pix0 parity closes to ≤5e-5 m.
+Phase: Implementation
+Focus: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
+Branch: feature/spec-based-2
+Mapped tests: tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot[cpu|cuda]
+Artifacts: reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/
+Do Now: CLI-FLAGS-003 Handle -nonoise and -pix0_vector_mm — KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot -v
+If Blocked: Capture current mismatch via KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_h/trace_harness.py --mode pix0 --no-polar --outdir reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/blocked && log deltas plus traceback in reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/blocked.md, then notify supervisor.
 Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md:95 anchors this loop in Phase H4 with explicit success metrics (≤5e-5 m pix0 delta, <0.5% F_latt drift, <10× intensity ratio).
-  The plan also lists mandatory artifacts under reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/ that we must produce before closing the phase.
-- plans/active/cli-noise-pix0/plan.md:99-113 now marks H3b2/H3b3 as ✅, highlighting the remaining 3.9 mm Y-offset and pointing to the C recomputation we have to port.
-  This keeps the precedence work locked in while flagging the geometry gap we are tackling today.
-- docs/fix_plan.md:448-465 reconfirms CLI-FLAGS-003 is in progress and elevates the post-rotation beam-centre recomputation as the highest-priority next action.
-  Updating this entry after we finish ensures the broader ledger sees H4 progress.
-- reports/2025-10-cli-flags/phase_h/implementation/pix0_mapping_analysis.md:116-123 records the precedence evidence and leaves H4 unchecked.
-  Treat it as the evidence source we must close out with the new parity logs.
-- golden_suite_generator/nanoBragg.c:1822-1860 contains the canonical `newvector` projection and dot products that recalculate Fbeam/Sbeam.
-  Porting this sequence exactly (tensorised) is the key to eliminating the 3.9 mm delta.
-- tests/test_cli_flags.py:439-520 encodes both precedence scenarios and currently tolerates 5 mm error.
-  Tightening that tolerance after the fix is part of the Do Now pytest run.
-- reports/2025-10-cli-flags/phase_h/trace_comparison.md documents the current divergence cascade (pix0 → Miller indices → F_latt), giving us a baseline for validation.
-  Refresh this report once the new trace pair is captured so downstream phases inherit accurate context.
+- plans/active/cli-noise-pix0/plan.md:106 anchors Phase H4a deliverables (≤5e-5 m pix0 delta, refreshed beam centres) so implementation must satisfy those exit criteria before moving on.
+- plans/active/cli-noise-pix0/plan.md:107 mandates the parity_after_lattice_fix/ trace bundle (C + PyTorch logs, diff summary) which doubles as evidence for docs/fix_plan.md Attempt #25.
+- plans/active/cli-noise-pix0/plan.md:108 requires tightening the regression tolerance in tests/test_cli_flags.py alongside the targeted pytest rerun; leaving 5 mm tolerance would violate the plan.
+- docs/fix_plan.md:448 keeps CLI-FLAGS-003 top priority and now lists H4a–H4c as the next actions, so closing this loop depends on updating the Attempts section with fresh metrics.
+- reports/2025-10-cli-flags/phase_h/implementation/pix0_mapping_analysis.md:66 documents the 1.14 mm Y delta and will be the before/after comparison anchor once parity is restored.
+- golden_suite_generator/nanoBragg.c:1822 preserves the authoritative `newvector` projection math; porting this sequence verbatim prevents the sign mistakes that caused earlier MOSFLM regressions.
+- docs/development/c_to_pytorch_config_map.md:70 reiterates BEAM pivot expectations (Fbeam ← Ybeam, Sbeam ← Xbeam with offsets) which the updated code must continue to honour after recomputation.
+- docs/development/testing_strategy.md:33 enforces device/dtype neutrality; the new path must keep gradients and avoid CPU-only tensors so CUDA smoke continues to pass.
 How-To Map:
-1. Review the C implementation:
-   Read golden_suite_generator/nanoBragg.c lines 1180-1860, focusing on how `Fbeam`, `Sbeam`, `pix0_vector`, and `newvector` interact for CUSTOM detectors with BEAM pivot.
-   Pay attention to the order of `rotate`, `dot_product`, and `unitize` calls to avoid subtle sign errors.
-2. Mirror the logic in Detector:
-   In src/nanobrag_torch/models/detector.py inside `_calculate_pix0_vector`, extend the CUSTOM + BEAM branch to recompute Fbeam/Sbeam/beam centres after pix0 is formed.
-   Reuse tensor operations (torch.dot, torch.matmul) and ensure values stay on `self.device` with dtype `self.dtype`.
-3. Maintain precedence safeguards:
-   Keep the existing `has_custom_vectors` gating, but insert the recomputation immediately after pix0 assignment so overrides remain skipped in CUSTOM mode.
-   Confirm that all new tensors respect differentiability (no .item / .cpu).
-4. Refresh dependent state:
-   Update `self.beam_center_f/s`, `self.r_factor`, `self.distance_corrected`, and `self.close_distance` using tensor math.
-   Refresh `_cached_pix0_vector` and `_geometry_version` so cached grids stay accurate.
-5. Regenerate PyTorch trace:
-   Run `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_h/trace_harness.py --mode pix0 --no-polar --outdir reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/`.
-   This writes `py_trace.log`, JSON metrics, and summary scaffolding in the parity_after_lattice_fix folder.
-6. Gather C reference:
-   Execute `timeout 180 env NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE python scripts/c_reference_runner.py --config prompts/supervisor_command.yaml --out reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/c_trace.log`.
-   Reusing the same command ensures 1:1 trace structure for diffing.
-7. Diff the traces:
-   Use `python scripts/validation/diff_traces.py --c reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/c_trace.log --py reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/py_trace.log --out reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/trace_diff.txt`.
-   Validate that pix0, Fbeam, Sbeam, F_latt, and intensity rows align within plan tolerances (<5e-5 m, <0.5%, <10×).
-8. Run targeted pytest:
-   Execute the Do Now command on CPU first.
-   If CUDA is available, rerun with `CUDA_VISIBLE_DEVICES=0 PYTORCH_TEST_DEVICE=cuda` to ensure device neutrality.
-   After the fix, tighten the tolerance inside the test to ≤5e-5 m and commit the change as part of this loop.
-9. Summarise evidence:
-   Update `reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/summary.md` with component-wise pix0 deltas, relative F_latt errors, and intensity ratios.
-   Include command transcripts or references to the logs stored in the same directory.
-10. Log attempts:
-    Append Attempt #25 to docs/fix_plan.md under CLI-FLAGS-003, referencing the new summary, traces, and pytest log.
-    Note both CPU and CUDA (if run) results and any remaining discrepancies.
+- Step 1: Re-read golden_suite_generator/nanoBragg.c:1822-1859 and note the order of operations (pix0 calc → Fclose/Sclose → newvector projection → updated distance) so the PyTorch port mirrors every intermediate.
+- Step 2: Open src/nanobrag_torch/models/detector.py and locate `_calculate_pix0_vector`; confirm current logic stops after setting `self.pix0_vector` and `self.close_distance` without recomputing `Fbeam/Sbeam`.
+- Step 3: Introduce tensor variables `close_distance_tensor = torch.dot(self.pix0_vector, self.odet_vec)` and `beam_term = (close_distance_tensor / self.r_factor) * beam_vector` immediately after pix0 assignment to mirror the C ratio update.
+- Step 4: Form `newvector = beam_term - self.pix0_vector` using tensor math (no view/as_tensor shenanigans) and project onto detector axes via `Fbeam_recomputed = torch.dot(self.fdet_vec, newvector)` and the matching slow-axis projection.
+- Step 5: Replace the interim Fbeam/Sbeam used earlier with the recomputed values, then update `self.beam_center_f` and `self.beam_center_s` by dividing through `self.pixel_size` and subtracting the MOSFLM 0.5 offset when the convention dictates.
+- Step 6: Reset `self.distance_corrected` to `close_distance_tensor / self.r_factor`, keeping `self.close_distance = close_distance_tensor` so later obliquity math matches the C trace.
+- Step 7: Ensure all newly created tensors are coerced via `.to(device=self.device, dtype=self.dtype)` to maintain device/dtype neutrality; unit-test by constructing a CUDA detector in the REPL if available.
+- Step 8: Touch `_cached_pix0_vector` / `_geometry_version` only through existing helpers (call `invalidate_cache()` if necessary) to avoid desynchronising cached grids.
+- Step 9: Run KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_h/trace_harness.py --mode pix0 --no-polar --outdir reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/ to refresh the PyTorch trace, metrics JSON, and default summary.md scaffold.
+- Step 10: Generate the C reference via timeout 180 env NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE python scripts/c_reference_runner.py --config prompts/supervisor_command.yaml --out reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/c_trace.log so the trace formats stay aligned.
+- Step 11: Diff the traces with python scripts/validation/diff_traces.py --c reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/c_trace.log --py reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/py_trace.log --out reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/trace_diff.txt and verify pix0 deltas ≤5e-5 m, `F_latt` relative error <0.5%, and intensity ratio <10×; document results in summary.md.
+- Step 12: Update tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot to assert ≤5e-5 m tolerance for both CPU and CUDA parametrisations, keeping existing custom/no-custom coverage intact.
+- Step 13: Execute the Do Now pytest command (KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot -v) and watch for CUDA skip messaging; if CUDA fails unexpectedly, capture the traceback under parity_after_lattice_fix/pytest_failures/.
+- Step 14: Record Attempt #25 in docs/fix_plan.md with pix0 component deltas, Fbeam/Sbeam values, regression outcome, and key artifact paths; link back to the parity_after_lattice_fix/ summary for traceability.
+- Step 15: Append implementation notes (covering tensor ops, device handling, and any refactors) to reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/implementation.md so future loops understand the change rationale.
 Pitfalls To Avoid:
-- Do not loosen tolerances—only tighten them once geometry aligns.
-  Regressions here mask real discrepancies and contradict the plan’s exit criteria.
-- Avoid `.item()`, `.cpu()`, `.detach()`, or numpy conversions in the recomputation path.
-  These sever gradients and violate differentiability requirements in docs/architecture/pytorch_design.md.
-- Keep tensors on the detector’s device/dtype when recomputing beam centres and distances.
-  Implicit CPU allocations will break CUDA runs.
-- Do not touch `_pixel_coords_cache` invalidation beyond refreshing it after pix0 changes.
-  Extra invalidations can cause unnecessary recomputations and perf regressions.
-- Preserve Protected Assets (docs/index.md). Never rename/delete loop.sh, supervisor.sh, input.md, or other listed files during cleanup.
-- Resist running the entire pytest suite; rely on the targeted node plus the trace harness to keep the loop focused.
-- Always set `KMP_DUPLICATE_LIB_OK=TRUE` before importing torch to avoid libomp crashes (see CLAUDE.md Rule 6).
-- When editing trace scripts, keep filenames and formats consistent so diff tooling continues to work.
-- Document each command in reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/summary.md or attempt_log.txt to preserve reproducibility.
-- If a discrepancy remains, stop after evidence capture and flag it; do not forge ahead with half-fixed geometry.
+- Do not touch files listed in docs/index.md (Protected Assets policy); no renames or deletions.
+- Avoid `.item()`, `.numpy()`, or `.cpu()` on tensors that require gradients; keep all scalars as tensors.
+- Preserve vectorization—never introduce Python loops over detector axes or sources in `_calculate_pix0_vector`.
+- Maintain the precedence guard (`has_custom_vectors`) so pix0_override remains ignored when custom vectors are present.
+- Keep MOSFLM +0.5 pixel adjustments and CUSTOM behaviour intact after updating beam centres.
+- Ensure new tensors respect device/dtype neutrality; no hard-coded CPU allocations.
+- Skip modifying polarization logic (Phase I) until H4 evidence is complete to prevent scope creep.
+- Remember KMP_DUPLICATE_LIB_OK=TRUE on every PyTorch invocation to avoid MKL crashes.
+- Archive logs under parity_after_lattice_fix/; stray temp files in repo root violate hygiene plans.
+- Do not relax regression tolerances before parity proof; tighten only after confirming the Δ ≤5e-5 m.
 Pointers:
-- plans/active/cli-noise-pix0/plan.md:95-117 — authoritative Phase H guidance and checklist.
-  Use it to verify prerequisites and exit criteria before concluding the loop.
-- docs/development/c_to_pytorch_config_map.md: detector section — confirms CUSTOM pivot precedence and unit expectations.
-  Helpful when validating beam centre conversions.
-- docs/architecture/detector.md:310-410 — explains pix0 derivation, CUSTOM vectors, and BEAM pivot specifics.
-  Align your implementation details with this contract.
-- reports/2025-10-cli-flags/phase_h/trace_comparison.md — current PyTorch vs C delta summary.
-  Refresh after generating new traces to keep historical context accurate.
-- specs/spec-a-cli.md:120-185 — normative description of `-pix0_vector_mm`, `-Xbeam`, `-Ybeam`, and detector conventions.
-  Use it to double-check CLI parsing assumptions if new edge cases appear.
-- prompts/supervisor.md — stores the parallel comparison command to reproduce end-to-end scenarios.
-  Always rerun this command when verifying parity changes.
-Next Up:
-- After pix0 parity and tightened tolerances land, proceed to Phase H parity rerun per plan.
-  Archive the parity artifacts under reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/ and update docs/fix_plan.md accordingly.
-- Once Phase H exit criteria are satisfied, queue Phase I (polarization alignment) as described in plans/active/cli-noise-pix0/plan.md:121-132.
-  Gather preliminary evidence (Kahn factor traces) but defer implementation until H4 is officially closed.
-- Before handing off to Phase I, ensure `reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/summary.md` captures device/dtype coverage and notes any residual quirks (e.g., tolerance adjustments).
-- Prepare a CUDA smoke command (`env KMP_DUPLICATE_LIB_OK=TRUE PYTORCH_TEST_DEVICE=cuda python -m nanobrag_torch ...`) for the eventual parity rerun so we can reuse it in the final validation pass.
-- Start outlining the polarization audit by bookmarking nanoBragg.c lines 2080-2155 and documenting expected Kahn factors in reports/2025-10-cli-flags/phase_i/notes.md (create directory on demand, no code yet).
-- Catalogue any follow-on cleanups (e.g., removing pix0 fallback comments) in plans/active/cli-noise-pix0/plan.md so we can close the plan cleanly once Phase I finishes.
-- Flag any surprises (trace mismatches, command failures) immediately in docs/fix_plan.md Attempts so supervisor can adjust the plan before the next loop starts.
-- Leave a short note in reports/2025-10-cli-flags/phase_h/attempt_log.txt summarising commands, hashes, and outcomes to keep the evidence trail unbroken.
-- If time remains, stage a draft of polarization trace harness inputs (device, dtype) but do not modify code; just note expected files so the next loop can start quickly.
-- Double-check reports/2025-10-cli-flags/phase_h directories for stray `.DS_Store` or duplicate HKL files and clean them up if created during this loop (respect Protected Assets rule).
-- Capture the final pix0/F_latt numbers in both JSON and Markdown form so they are machine- and human-readable for regression tracking.
-- Ensure commit message references the parity work (e.g., "CLI pix0 recomputation") so history stays searchable for future regressions.
-- Maintain the habit of running `git status` after each major step to catch accidental file churn (e.g., generated binary blobs) before staging.
-- Keep `prompts/main.md` untouched unless explicitly instructed; routing automation depends on it staying stable.
-- Verify that `scaled.hkl` remains the only HKL artifact in the repo root; delete `scaled.hkl.1` clones if tests regenerate them (document the removal in Attempt log).
-- Before exiting, re-open plans/active/cli-noise-pix0/plan.md to ensure the checklist still mirrors the updated state (no regressions in the markdown tables).
+- plans/active/cli-noise-pix0/plan.md:106
+- plans/active/cli-noise-pix0/plan.md:107
+- plans/active/cli-noise-pix0/plan.md:108
+- docs/fix_plan.md:448
+- reports/2025-10-cli-flags/phase_h/implementation/pix0_mapping_analysis.md:66
+- golden_suite_generator/nanoBragg.c:1822
+- src/nanobrag_torch/models/detector.py:326
+- tests/test_cli_flags.py:439
+- docs/development/c_to_pytorch_config_map.md:70
+- docs/development/testing_strategy.md:33
+Next Up: If H4 completes ahead of schedule, prep Phase H4b by drafting parity-after-fix metrics in reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/summary.md and stage commands for Kahn polarization analysis in Phase I.
+Validation Checklist:
+- Verify pix0 component deltas (X, Y, Z) all fall within ±5e-5 m when comparing C vs PyTorch traces.
+- Confirm recomputed `Fbeam` and `Sbeam` values match C within ≤1e-6 m using trace_diff.txt metrics.
+- Ensure `distance_corrected` equals C trace within ≤1e-6 m and note value in summary.md.
+- Check that `F_latt` relative errors stay below 0.5% for the supervisor ROI; log actual percentages.
+- Record the peak intensity ratio and verify it is <10×; if higher, freeze implementation and revisit calculations.
+- Run pytest node on CPU and observe CUDA skip or pass result; document both outcomes in Attempt #25.
+- Rerun `pytest --collect-only` for the node if the test fails to ensure no naming drift occurred post-edit.
+- Inspect reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/ for stray intermediate files and remove before commit.
+Reporting Requirements:
+- Update reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/summary.md with a table of C vs PyTorch pix0, Fbeam, Sbeam, distance values plus percentage errors.
+- Append a short narrative (3–5 sentences) to implementation.md explaining tensor operations added and how device neutrality was preserved.
+- In docs/fix_plan.md Attempt #25, include command transcripts (trimmed) for trace harness, C runner, diff tool, and pytest.
+- Note any skipped CUDA test in the attempt log; justify skip reason (e.g., hardware absent) per testing_strategy.md guidelines.
+- Cross-link Attempt #25 entry back to pix0_mapping_analysis.md so historical context stays intact.
+- Add a TODO in docs/fix_plan.md if any metrics narrowly miss targets with rationale and follow-up plan.
+Metrics Targets:
+- pix0_vector delta ≤5e-5 m on each axis.
+- `Fbeam` and `Sbeam` absolute error ≤1e-6 m.
+- `close_distance` absolute error ≤5e-6 m.
+- Relative error for `F_latt_a/b/c` ≤0.5%.
+- Peak intensity ratio PyTorch/C ≤10×.
+- pytest node success on CPU and skip-or-pass on CUDA with no unexpected failures.
+- Zero additional lint/test regressions triggered by the change.
+Command Log Template:
+- Record `PYTORCH_TRACE_CMD=KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_h/trace_harness.py --mode pix0 --no-polar --outdir reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/` in summary.md under a labeled code block.
+- Document `timeout 180 env NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE python scripts/c_reference_runner.py --config prompts/supervisor_command.yaml --out reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/c_trace.log` with runtime and exit status.
+- Capture `python scripts/validation/diff_traces.py --c ... --py ... --out ...` stdout, especially the first divergence line, and paste into trace_diff.txt.
+- Note pytest command output verbatim; include lines highlighting tolerance assertions to show tightened bounds.
+Rollback Plan:
+- If pix0 deltas remain >5e-5 m after port, revert `_calculate_pix0_vector` edits locally and stash under reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/attempt_failures/`<timestamp>`.
+- Re-run trace harness against the previous commit to confirm baseline still shows 1.14 mm delta; attach evidence for comparison.
+- Draft a short blocker note in docs/fix_plan.md explaining why H4 could not close and list hypotheses for next loop.
+Quality Gates:
+- Ensure unit tests touched by change (tests/test_cli_flags.py) preserve parameter coverage for custom/no-custom vectors.
+- Update any doctstrings or inline comments to maintain ASCII only and keep them concise per repo guidelines.
+- Run `python -m compileall src/nanobrag_torch/models/detector.py` if time permits to catch syntax errors before handing off.
+Notes:
+- The supervisor command definition lives in prompts/supervisor_command.yaml; confirm no drift before running c_reference_runner.py.
+- Keep an eye on newvector projection orientation; if sign mismatches surface, re-check DetectorConvention-specific basis ordering in detector.py:560.
+- Remember that CUSTOM convention removes the +0.5 pixel offset; ensure recompute path honours this by interrogating `self.config.detector_convention` after precedence guard.
+- If CUDA is available, consider running torch.set_printoptions(precision=15) while debugging to inspect tensor deltas without rounding loss.
+- Preserve existing logging structure in trace_harness.py; do not modify script output unless absolutely necessary for parity evidence.
+- Confirm Attempt #25 references the exact git commit hash once changes are ready for review.
