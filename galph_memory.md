@@ -1325,3 +1325,10 @@ Follow-ups for Ralph:
 - Updated `plans/active/cli-noise-pix0/plan.md` (K3f4 → [D], K3g1/K3g2 → [D]) and refreshed fix_plan Attempt #47 with evidence + next steps focused on Phase K3g3 parity rerun.
 - Authored `input.md` directing Ralph to execute K3g3: rerun `tests/test_cli_scaling.py::test_f_latt_square_matches_c`, regenerate nb-compare metrics, refresh traces, and document results under phase_k/f_latt_fix/.
 - Follow-up for Ralph: Complete K3g3 tasks per memo, update scaling_chain.md + summary.md with new metrics, and capture nb-compare/trace diffs before we attempt Phase L.
+
+## 2025-11-08 (galph loop — K3g3 evidence prep)
+- `git pull --rebase` clean; reviewed CLI-FLAGS-003 status and vectorization plan (no updates needed yet).
+- Identified open gap: Phase K3g3 still needs post-fix scaling evidence; MOSFLM rescale landed in 46ba36b but traces/nb-compare not refreshed.
+- Hypotheses: (1) Parity should succeed once traces regenerated; (2) residual discrepancies most likely from polarization factor default if it still logs 1.0. Await evidence.
+- Authored Evidence-phase input.md (lines 1-100) directing Ralph to rerun `tests/test_cli_scaling.py::test_f_latt_square_matches_c`, capture nb-compare artifacts, refresh `scaling_chain.md` & `base_lattice/summary.md`, and log Attempt update.
+- Follow-up: Ralph to complete K3g3 tasks, archive artifacts under `reports/2025-10-cli-flags/phase_k/f_latt_fix/`, and update docs/fix_plan.md before we schedule Phase L parity runs.
