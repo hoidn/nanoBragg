@@ -69,7 +69,7 @@ Human Summary (input.md header): Prepend a short summary block with the followin
 
 Debugging Items — Hypothesis + Triage (initial pass):
 - Only when the selected item is a debugging or parity analysis task, formulate 1–3 plausible hypotheses for the observed gap/issue.
-- Triage each with checks appropriate to scope using existing artifacts or quick, documented reproductions; this triage may constitute the primary work for the loop. Record outcomes succinctly in the evidence.
+- Triage each with checks appropriate to scope using existing artifacts or quick, documented reproductions; this triage may constitute the primary work for the iteration. Record outcomes succinctly in the evidence.
 - For the top hypothesis, state confidence and the single confirming step to run next. Deliver 1–3 ranked hypotheses with supporting evidence, artifact paths, and the next confirming step.
 </1>
 <2>
