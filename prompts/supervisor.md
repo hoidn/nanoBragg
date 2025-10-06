@@ -13,7 +13,7 @@ this will require first adding support for the following cli params to pytorch n
 
 </1>
 <2>
-review and firm up if needed plans/active/vectorization.md. then implement it, starting with the tricubic interpolation vectorization 
+review and firm up if needed plans/active/vectorization.md. then implement it (or rather, delegate its implementation to ralph), starting with the tricubic interpolation vectorization 
 </2>
 </current long-term goals>
 </past long term goals>
