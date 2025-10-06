@@ -1108,3 +1108,12 @@ Follow-ups for Ralph:
 - Synced `docs/fix_plan.md` Next Actions with the new H4a–H4c breakdown so the ledger points Ralph to the updated plan.
 - Regenerated `input.md` (100 lines) instructing Ralph to execute CLI-FLAGS-003 Phase H4a implementation, gather parity traces, tighten regression tolerances, and log Attempt #25 once complete.
 - Follow-ups for Ralph: implement H4a per plan, capture parity evidence under `reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/`, tighten tests/test_cli_flags tolerance, and update docs/fix_plan.md with Attempt #25 metrics before moving to H4b.
+
+## 2025-10-18 (galph loop — Phase H4 staging)
+- `git pull --rebase` clean; reviewed CLI-FLAGS-003 plan/fix_plan, confirmed H4a–H4c remain the critical blocker for Goal 1.
+- Pix0 mismatch analysis: PyTorch never mirrors nanoBragg.c’s post-rotation `newvector` projection, leaving Fbeam/Sbeam stale (≈3.9 mm Y delta). High confidence that porting lines 1822–1859 plus refreshing `distance_corrected` will close parity.
+- Secondary watch-outs: ensure recompute updates cached beam centres/geometry and maintains MOSFLM +0.5 offsets; tighten regression tolerance to 5e-5 m once traces align.
+- Vectorization plan (`plans/active/vectorization.md`) reviewed—structure is sound, but Phase A evidence capture still outstanding before Ralph touches tricubic refactor.
+- docs/fix_plan.md now 1080 lines; flagged the need for a future archival pass once CLI parity lands.
+- Regenerated `input.md` (Implementation phase) directing Ralph to execute CLI-FLAGS-003 Phase H4a–H4c, capture parity_after_lattice_fix traces, and rerun the targeted pytest node; added fallback trace harness guidance.
+- Follow-ups for Ralph: implement the `newvector` recompute exactly as in C, refresh traces + summary, tighten test tolerance, log Attempt #25, then proceed to polarization (Phase I) after supervisor review.
