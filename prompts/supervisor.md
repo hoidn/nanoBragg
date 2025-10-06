@@ -122,10 +122,11 @@ Header:
 - Branch: <expected branch>
 - Mapped tests: <validated list | none — evidence‑only>
 - Artifacts: <key paths to produce under reports/>
-- Do Now: 1 line naming the exact docs/fix_plan.md item (ID and title) to execute this loop, plus the exact pytest command/env to reproduce it. If no such test exists, the Do Now MUST be to author the minimal targeted test first and then run it. If you intend to delegate the choice, write “Do Now: delegate” and provide decision guidance below.
+- Do Now: 1 line naming the exact docs/fix_plan.md item (ID and title) to execute this loop, plus the exact pytest command/env to reproduce it (only when an authoritative mapping exists). If no such test exists, the Do Now MUST be to author the minimal targeted test first and then run it. If you intend to delegate the choice, write “Do Now: delegate” and provide decision guidance below.
+  - Note: When the Phase is Evidence, you must not execute tests; any pytest command included here is provided for Ralph’s subsequent loop.
 <Do Now guidelines>
-If the active plan phase is Evidence, Do Now SHALL be evidence‑only: run the authoritative reference reproduction commands and capture the required artifacts; at most run the project’s test discovery (no execution). Do not include runnable tests.
-Validation Preflight (tests): Before listing any test file/identifier in Do Now, validate that it resolves via the project’s documented test discovery; if validation fails, omit tests and note “(none — evidence‑only this loop)” and add a TODO in docs/fix_plan.md documenting the missing mapping.
+Phase Gate (Evidence): If the active plan phase is Evidence, do not run pytest at all (including collection). Limit evidence gathering to non-test probes and command‑line tooling (e.g., scripts/validation/*, minimal parity CLIs). Do not include runnable tests in this loop.
+Command Sourcing (tests): Only include an exact pytest command in Do Now when sourced from an authoritative mapping (e.g., docs/development/testing_strategy.md) or an existing, known test file/identifier. If no authoritative mapping exists, set the Do Now task to author the minimal targeted test first; do not guess at a pytest selector here.
 </Do Now guidelines>
 - If Blocked: fallback action (what to run/capture, how to record it in Attempts History).
 - Priorities & Rationale: 3–6 bullets with file pointers (specs/arch/tests/plan) justifying the Do Now.
