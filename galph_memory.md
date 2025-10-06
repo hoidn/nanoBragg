@@ -980,3 +980,16 @@ Follow-ups for Ralph:
 - Updated `plans/active/cli-noise-pix0/plan.md` (Phase F snapshot now flags F1 as [P] with guidance to reuse `self.beam_vector`) and refreshed `[CLI-FLAGS-003]` Next Actions accordingly.
 - Reissued `input.md` to keep Ralph on Phase F1, bundling a validation harness that writes beam/pix0 tensors under `reports/2025-10-cli-flags/phase_f/`.
 - Follow-up: Ralph to refactor `_calculate_pix0_vector()` to consume `self.beam_vector`, regenerate artifacts, and log Attempt #11 before tackling Phase F2.
+## 2025-10-06 (galph loop — CLI pix0 + vectorization plan)
+- Trimmed docs/fix_plan.md (821 lines) by archiving completed GOLDEN-DATA-001 / GRADIENT-MISSET-001 / AT-PARALLEL-012-PEAKMATCH / DTYPE-DEFAULT-001 entries to archive/fix_plan_archive.md with summaries.
+- Rebuilt plans/active/vectorization.md into phased roadmap (A–G) covering tricubic evidence → implementation → validation, then detector absorption vectorization & documentation closure.
+- Added new fix-plan item `[VECTOR-TRICUBIC-001]` linking to the refreshed plan; status `in_planning` pending Phase A evidence.
+- Refreshed `[CLI-FLAGS-003]` focus via input.md: Do Now = Phase F2 CUSTOM pix0 transform (pytest pix0 subset + parity rerun + pix0 vector artifact). Command scaffolding recorded for C & PyTorch runs under `reports/2025-10-cli-flags/phase_f/`.
+- Outstanding follow-ups for Ralph: implement plan Phase F2, capture pix0/beam artifact, rerun parity harness, then progress to Phase G orientation once geometry aligns.
+## 2025-10-17 (galph loop — Phase F3 parity prep)
+- Stashed galph_memory to satisfy startup pull, repo synced clean, then restored local edits.
+- Read required specs/arch/testing docs plus latest plan/memory; confirmed pix0 override still bypasses CUSTOM transform and -mat orientation remains absent.
+- Updated `plans/active/cli-noise-pix0/plan.md` context to note F1/F2 completion and focus on F3 parity before Phase G; refreshed `[CLI-FLAGS-003]` status/next-actions in docs/fix_plan.md.
+- Rewrote input.md directing Ralph to capture C & PyTorch parity runs (Phase F3) and log Attempt #12 artifacts; highlighted follow-up orientation and polarization tasks.
+- Follow-up: Ralph to run the parity commands, store logs/images under `reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/`, update docs/fix_plan Attempts, then proceed to plan Phase G. Clean up `scaled.hkl.1` once parity + documentation land together.
+
