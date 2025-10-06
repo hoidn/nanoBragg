@@ -1117,3 +1117,10 @@ Follow-ups for Ralph:
 - docs/fix_plan.md now 1080 lines; flagged the need for a future archival pass once CLI parity lands.
 - Regenerated `input.md` (Implementation phase) directing Ralph to execute CLI-FLAGS-003 Phase H4a–H4c, capture parity_after_lattice_fix traces, and rerun the targeted pytest node; added fallback trace harness guidance.
 - Follow-ups for Ralph: implement the `newvector` recompute exactly as in C, refresh traces + summary, tighten test tolerance, log Attempt #25, then proceed to polarization (Phase I) after supervisor review.
+## 2025-10-18 (galph loop — Phase I staging)
+- Marked CLI-FLAGS-003 Phase H4 complete in plans/active/cli-noise-pix0/plan.md and updated the snapshot to focus on Phase I polarization; H4a–H4c rows now reference Attempt #25 artifacts under reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/.
+- Synced docs/fix_plan.md: CLI-FLAGS-003 status now calls out Phase A-H done with Phase I pending; Next Actions rewritten for polarization Attempt #26 and exit-criteria item (xi) flipped to ✅.
+- Noted root cause for remaining parity gap: PyTorch BeamConfig defaults polarization_factor=0.0 while nanoBragg.c uses 1.0 (golden_suite_generator/nanoBragg.c:308); Ralph must realign defaults and capture new traces/tests.
+- Regenerated input.md (Phase: Implementation) directing Ralph to execute Phase I (I1–I3), add a CLI polarization regression test, rerun targeted pytest nodes, and stash evidence under reports/2025-10-cli-flags/phase_i/.
+- Vectorization plan untouched; Phase A baseline capture still pending once CLI parity clears.
+- Follow-ups for Ralph: implement polarization parity per plan, update docs/fix_plan.md Attempt #26 with metrics, and only then advance to nb-compare / vectorization work.
