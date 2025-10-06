@@ -126,9 +126,11 @@ Header:
 - Mapped tests: <validated list | none — evidence‑only>
 - Artifacts: <key paths to produce under reports/>
 - Do Now: 1 line naming the exact docs/fix_plan.md item (ID and title) to execute this loop, plus the exact pytest command/env to reproduce it (only when an authoritative mapping exists). If no such test exists, the Do Now MUST be to author the minimal targeted test first and then run it. If you intend to delegate the choice, write “Do Now: delegate” and provide decision guidance below.
-  - Note: any pytest command included here is provided for verification / feedback in Ralph’s subsequent loop.
+  - Note: In Evidence, do not run the full suite. Allowed: pytest --collect-only to validate selectors; in TDD mode only, run one targeted selector to confirm a new failing test. All other test execution is deferred to Ralph.
 <Do Now guidelines>
-Phase Gate (Evidence, supervisor-scoped): When you (galph) select an Evidence-phase task, focus on information collection and do not change the implementation or introduce new tests (with the exception of verification scripts). This gate applies only to galph. Ralph is exempt.
+Phase Gate (Evidence, supervisor-scoped): No full pytest runs. Allowed: non-mutating probes and CLI validation tools (e.g., scripts/validation/*, nb-compare, pixel trace); pytest --collect-only to validate selectors; and in TDD mode only, a single targeted pytest run to confirm the newly authored test fails. Do not change production code. This gate applies only to galph. Ralph is exempt.
+Verification scripts: You may run nb-compare and scripts/validation/* to collect metrics and artifacts (no code changes). Record outputs under reports/.
+Mapped tests in Evidence: Include exact selectors in input.md; validate with --collect-only; do not run them (except the TDD failure confirmation).
 Mode flags: Mode flags are combinable and refine execution within the selected Phase. Keep Phase mutually exclusive.
 TDD mode (supervisor-scoped): When Phase=Evidence, author/update a single minimal failing test that encodes the acceptance criterion. Confirm it fails via a targeted pytest selector; record the selector and expected failure text in input.md. Do not change production code.
 Command Sourcing (tests): Only include an exact pytest command in Do Now when sourced from an authoritative mapping (e.g., docs/development/testing_strategy.md) or an existing, known test file/identifier. If no authoritative mapping exists, set the Do Now task to author the minimal targeted test first; do not guess at a pytest selector here.
