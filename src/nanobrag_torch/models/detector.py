@@ -516,7 +516,12 @@ class Detector:
             # beam_vector is already set via self.beam_vector property
 
             # CLI-FLAGS-003 Phase H3b: Handle pix0_override for BEAM pivot
-            # When pix0_override is provided, derive Fbeam/Sbeam from it by:
+            # CRITICAL PRECEDENCE (from Phase H3b1 evidence):
+            # When custom detector vectors are present, C code IGNORES -pix0_vector_mm entirely.
+            # The custom vectors already define the detector geometry completely.
+            # Only apply pix0_override when NO custom vectors are provided.
+            #
+            # When pix0_override IS applied (no custom vectors case), derive Fbeam/Sbeam from it by:
             # 1. Subtract beam term to get detector offset
             # 2. Project onto detector axes to get Fbeam_override, Sbeam_override
             # 3. Update beam_center_f/s tensors for header consistency
@@ -527,7 +532,14 @@ class Detector:
             # Fbeam_override = -dot(pix0_delta, fdet)
             # Sbeam_override = -dot(pix0_delta, sdet)
 
-            if pix0_override_tensor is not None:
+            # Check if custom detector vectors are present - if so, ignore pix0_override
+            has_custom_vectors = (
+                self.config.custom_fdet_vector is not None or
+                self.config.custom_sdet_vector is not None or
+                self.config.custom_odet_vector is not None
+            )
+
+            if pix0_override_tensor is not None and not has_custom_vectors:
                 # Ensure all tensors on same device/dtype
                 beam_vector_local = beam_vector.to(device=self.device, dtype=self.dtype)
                 fdet_local = self.fdet_vec.to(device=self.device, dtype=self.dtype)
