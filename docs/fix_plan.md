@@ -505,20 +505,21 @@
       - **Test Coverage:** Validates default matches C (1.0), -nopolar flag behavior, and -polar <value> override
       - **Phase I Tasks:** I1 (audit) ✅, I2 (implement) ✅; I3 (final parity sweep) remains pending
     Next Actions: Execute Phase I3 final parity sweep by running the supervisor command end-to-end (PyTorch CLI + C reference), stash logs under `reports/2025-10-cli-flags/phase_i/supervisor_command/`, document polarization metrics in Attempt #27, then close CLI-FLAGS-003.
-  * [2025-10-21] Attempt #29 (ralph loop) — Result: Phase H5b COMPLETE. **Restored pix0 override application in custom-vector path.**
-    Metrics: Regression suite 57/57 passed (CLI flags 26/26, detector 12/12, crystal 19/19). No test failures or collection errors.
+  * [2025-10-06] Attempt #29 (ralph loop) — Result: Phase H5a EVIDENCE-ONLY COMPLETE. **C-code pix0 override behavior with custom vectors documented.**
+    Metrics: Evidence-only loop. Two C runs executed: WITH override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m) and WITHOUT override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m). Identical geometry values confirm override is ignored when custom vectors are present.
     Artifacts:
-      - `src/nanobrag_torch/models/detector.py:540` - Removed `and not has_custom_vectors` gate from pix0_override application
-      - `reports/2025-10-cli-flags/phase_h5/implementation_notes.md` - Implementation rationale and expected impact
-      - `reports/2025-10-cli-flags/phase_h5/parity_summary.md` - Regression test results and verification status
-      - `reports/2025-10-cli-flags/phase_h5/pytest_regression.log` - Full test suite output
+      - `reports/2025-10-cli-flags/phase_h5/c_traces/with_override.log` - C run WITH -pix0_vector_mm flag
+      - `reports/2025-10-cli-flags/phase_h5/c_traces/without_override.log` - C run WITHOUT -pix0_vector_mm flag
+      - `reports/2025-10-cli-flags/phase_h5/c_traces/diff.log` - Diff showing only filename difference
+      - `reports/2025-10-cli-flags/phase_h5/c_precedence.md` - Complete evidence report with precedence analysis
     Observations/Hypotheses:
-      - **Root cause addressed:** PyTorch was skipping pix0_override when custom detector vectors present due to Phase H3b1 understanding (Oct 6) that C ignored the override
-      - **Updated evidence from Phase J (Oct 21):** C DOES honor override by deriving Fbeam/Sbeam from pix0_override value
-      - **Fix:** Removed has_custom_vectors condition, allowing override to flow through projection logic (lines 541-575) that computes Fbeam_override/Sbeam_override
-      - **Device/dtype neutrality preserved:** All tensor operations maintain `.to(device=self.device, dtype=self.dtype)` coercion
-      - **Expected impact:** Should close 1.14 mm pix0 Y-axis gap and align F_latt components (C: 35.9/38.6/25.7 vs current PyTorch: -2.4/11.8/-2.7)
-    Next Actions: Phase H5c parity verification (run supervisor command, extract pix0/Fbeam/Sbeam/F_latt from C and PyTorch traces, document deltas). If parity achieved, proceed to Phase K normalization work; if gaps remain, capture diagnostic traces before next iteration.
+      - **Critical finding:** When custom detector vectors (`-odet_vector`, `-sdet_vector`, `-fdet_vector`) are supplied, C code computes pix0 from Xbeam/Ybeam and IGNORES `-pix0_vector_mm` override
+      - **Geometry identical:** pix0_vector, Fbeam, Sbeam all match exactly between WITH/WITHOUT override runs
+      - **Only diff:** Output filename (img.bin vs img_no_override.bin)
+      - **Contradicts Attempt #23 (Phase H3b1):** Prior evidence suggested different Fbeam/Sbeam values; current evidence shows identical values
+      - **Implies precedence:** `if (custom_vectors) { compute_from_custom_vectors(); ignore_override(); } else if (override) { apply_override(); } else { use_convention(); }`
+      - **PyTorch status:** Current PyTorch implementation CORRECTLY skips override when custom vectors present (matches C behavior)
+    Next Actions: **NO IMPLEMENTATION CHANGES NEEDED.** PyTorch already matches C semantics. Update Phase H5b guidance to document this finding instead of "restoring" override application. Consider adding a CLI warning when both override and custom vectors are supplied (override will be silently ignored). Proceed to Phase I normalization work without geometry changes.
   * [2025-10-17] Attempt #25 (ralph) — Result: success (Phase H4a-c complete). **Post-rotation beam-centre recomputation implemented and verified.**
     Metrics: pix0_vector parity achieved - C vs PyTorch deltas < 2e-8 m (well within 5e-5 m tolerance). Test suite: test_cli_flags.py 23/23 passed, test_detector_geometry.py 12/12 passed, test_crystal_geometry.py 19/19 passed (54 total).
     Artifacts:
