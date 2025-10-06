@@ -127,7 +127,7 @@ Header:
 - Do Now: 1 line naming the exact docs/fix_plan.md item (ID and title) to execute this loop, plus the exact pytest command/env to reproduce it (only when an authoritative mapping exists). If no such test exists, the Do Now MUST be to author the minimal targeted test first and then run it. If you intend to delegate the choice, write “Do Now: delegate” and provide decision guidance below.
   - Note: When the Phase is Evidence, you must not execute tests; any pytest command included here is provided for Ralph’s subsequent loop.
 <Do Now guidelines>
-Phase Gate (Evidence): If the active plan phase is Evidence, do not run pytest at all (including collection). Limit evidence gathering to non-test probes and command‑line tooling (e.g., scripts/validation/*, minimal parity CLIs). Do not include runnable tests in this loop.
+Phase Gate (Evidence, supervisor-scoped): When you (galph) select an Evidence-phase task, focus on information collection and do not change the implementation or introduce new tests (with the exception of verification scripts). This gate applies only to galph. Ralph is exempt.
 Command Sourcing (tests): Only include an exact pytest command in Do Now when sourced from an authoritative mapping (e.g., docs/development/testing_strategy.md) or an existing, known test file/identifier. If no authoritative mapping exists, set the Do Now task to author the minimal targeted test first; do not guess at a pytest selector here.
 </Do Now guidelines>
 - If Blocked: fallback action (what to run/capture, how to record it in Attempts History).

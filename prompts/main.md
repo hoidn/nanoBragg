@@ -36,6 +36,7 @@ IMPORTANT
     This entire operation must be validated by the Comprehensive Testing gate below.
 
 - Test execution scope: Only run tests via `pytest` in `./tests/`. Do not execute ad‑hoc scripts in the repo root or elsewhere as part of validation.
+ - Ralph is exempt from the supervisor’s Evidence-only phase.
 
 - **Project Hygiene**: All code, especially test runners and scripts, MUST assume the project is installed in editable mode (`pip install -e .`). Scripts MUST NOT manipulate `sys.path`. Tests MUST be runnable via standard tools like `pytest` from the project root. Refer to `CLAUDE.md` for setup instructions.
  
