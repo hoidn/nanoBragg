@@ -1140,3 +1140,10 @@ Follow-ups for Ralph:
 - Synced `docs/fix_plan.md` Next Actions with the Phase J checklist and noted that Attempt #27 directives are superseded; Phase K work now gated on Attempt #28 evidence.
 - Regenerated `input.md` (Evidence phase) instructing Ralph to capture C/Py scaling traces, build `scaling_chain.md`, and log Attempt #28 before any simulator edits.
 - Follow-ups for Ralph: deliver plan tasks J1–J3 (logs + analysis + fix_plan update) under `reports/2025-10-cli-flags/phase_j/`, then pause for supervisor review before touching normalization code.
+
+## 2025-10-21 (galph loop — Phase H5 reopen)
+- Phase J scaling traces revealed C honours `-pix0_vector_mm` even with custom detector vectors; PyTorch still skips override in that path → 1.14 mm pix0 delta, h/k/l drift, F_latt collapse.
+- Updated `plans/active/cli-noise-pix0/plan.md` with Phase H5 (C evidence, override reinstatement, trace verification, fix_plan logging) and corrected the prior note that C ignored overrides.
+- Synced `docs/fix_plan.md` Next Actions to require H5a–H5c before Phase K; Attempt #28 observations now document the confirmed driver (missing override in custom-vector path).
+- Regenerated `input.md` (Implementation phase) directing Ralph to execute Phase H5b with fresh C/PyTorch traces and targeted pytest.
+- Follow-up: Expect Attempt #29 after override fix; pause Phase K normalization work until H5 parity evidence lands.

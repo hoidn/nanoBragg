@@ -455,10 +455,10 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase C2 parity run exposed a 2.58e2× intensity scaling mismatch (PyTorch max_I≈1.15e5 vs C max_I≈4.46e2). Phase D3/E diagnostics (2025-10-16) confirm three blocking geometry gaps: (a) PyTorch applies the raw `-pix0_vector_mm` override without the CUSTOM transform used in C (1.14 mm Y error); (b) CLI ignores `-beam_vector`, leaving the incident ray at the convention default `[0,0,1]`; (c) `-mat A.mat` handling discards the MOSFLM orientation, so Crystal falls back to canonical upper-triangular vectors while C uses the supplied A*. Traces also show a polarization delta (C Kahn factor ≈0.9126 vs PyTorch 1.0) to revisit after geometry fixes.
-- Next Actions (2025-10-19): Follow `plans/active/cli-noise-pix0/plan.md` Phase J before any implementation:
-  1. Capture C/PyTorch scaling traces for pixel (1039,685) logging `steps`, `I_before_scaling`, `omega`, `polarization`, `r_e²`, and `fluence` (artifact: `reports/2025-10-cli-flags/phase_j/trace_*_scaling.log`).
-  2. Produce `reports/2025-10-cli-flags/phase_j/scaling_chain.md` with ratio analysis pinpointing the first mismatched factor; raise Attempt #28 once published.
-  3. Only after Phase J evidence, proceed to Phase K implementation tasks (normalization fix, regression tests, doc updates) and rerun Phase L parity command to retire Attempt #27 failure.
+- Next Actions (2025-10-21): Execute `plans/active/cli-noise-pix0/plan.md` Phase H5 before resuming normalization work:
+  1. Re-run the supervisor command with/without `-pix0_vector_mm`, capturing C traces (`reports/2025-10-cli-flags/phase_h5/c_traces/`) that prove the override updates `Fbeam/Sbeam` even with custom vectors.
+  2. Restore the pix0 override path inside `Detector._calculate_pix0_vector` for custom vectors, ensuring device/dtype neutrality, and document rationale in `phase_h5/implementation_notes.md`.
+  3. Regenerate PyTorch traces (store under `reports/2025-10-cli-flags/phase_h5/py_traces/`), compare against C to confirm pix0/Fbeam/Sbeam/hkl/`F_latt` parity, then log Attempt #29 in this entry before advancing to Phase K normalization tasks.
 - Attempts History:
   * [2025-10-06] Attempt #27 (ralph) — Result: **PARITY FAILURE** (Phase I3 supervisor command). **Intensity scaling discrepancy: 124,538× sum ratio.**
     Metrics: Correlation=0.9978 (< 0.999 threshold), sum_ratio=124,538 (should be ~1.0), C max_I=446, PyTorch max_I=5.411e7 (121,000× discrepancy), mean_peak_distance=37.79 px (> 1 px threshold).
@@ -492,8 +492,8 @@
       - **Secondary issues (non-blocking):** Polarization C=0.9126 vs PyTorch=1.0 (9.6% discrepancy), omega C=4.16e-7 vs PyTorch=4.17e-7 (0.2% difference, within tolerance)
       - **Steps, r_e², fluence all match exactly:** Confirms normalization infrastructure is correct; issue is in physics computation upstream
       - **F_cell matches perfectly (300.58):** Structure factor lookup/interpolation working correctly
-      - **Hypothesis:** F_latt calculation (sincg lattice shape factor) may have sign errors, incorrect fractional Miller index handling, or wrong lattice vector magnitudes
-    Next Actions: Phase K implementation per plan - investigate F_latt calculation in PyTorch simulator (likely `_compute_physics_for_position` lattice shape factor section), compare against C nanoBragg.c sincg implementation, fix discrepancy, add targeted regression test for F_latt components, then rerun Phase L parity command.
+      - **Confirmed driver:** Pix0 override is skipped in the custom-vector branch, leaving PyTorch `Fbeam/Sbeam` near 0.0369 m vs C ≈0.2179 m and producing 1.14 mm pixel-position error that cascades into h/k/l and `F_latt`.
+    Next Actions: Phase H5 (new) reinstates the override precedence, then Phase K will address any residual normalization deltas once lattice parity is restored.
   * [2025-10-17] Attempt #26 (ralph) — Result: success (Phase I polarization defaults complete). **BeamConfig.polarization_factor default aligned with C polar=1.0.**
     Metrics: CLI polarization tests 3/3 passed. Core tests: cli_flags 26/26, detector_geometry 12/12, crystal_geometry 19/19 (57 passed, 1 warning). Test collection: 632 tests collected.
     Artifacts:

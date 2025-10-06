@@ -94,7 +94,7 @@ Goal: Ensure the CLI-provided beam vector propagates through Detector→Simulato
 Prereqs: Phases F and G complete; orientation traces captured (Phase G3 artifacts in place).
 Exit Criteria: Trace comparison shows `pix0_vector` components matching C within 5e-5 m, `h`, `k`, `l` fractional components within 1e-3, `F_latt_a/b/c` within 0.5% (signed), and a parity rerun demonstrates ≥0.95 correlation improvement attributable to lattice fixes (polarization still disabled).
 
-Update 2025-10-17: Attempt #22 proved the projection-based override mapping pushes pix0 off by 2.16e-1 m; Attempt #23 shows the C code ignores `-pix0_vector_mm` when custom detector vectors are present, so Phase H3b2 must enforce the precedence (custom vectors > pix0 override > standard calculation).
+Update 2025-10-17: Attempt #22 proved the projection-based override mapping pushes pix0 off by 2.16e-1 m; Attempt #23 (now superseded) inferred the C code ignored `-pix0_vector_mm` when custom detector vectors are present. Phase J traces captured on 2025-10-21 demonstrate the override IS honoured (C recomputes `Fbeam/Sbeam` ≈0.2179/0.2139 m), so PyTorch must re-apply overrides even in the custom-vector path.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
@@ -107,6 +107,18 @@ Update 2025-10-17: Attempt #22 proved the projection-based override mapping push
 | H4a | Port post-rotation beam-centre recomputation | [D] | ✅ 2025-10-17 Attempt #25: Ported nanoBragg.c lines 1846-1860 into `Detector._calculate_pix0_vector`; see `reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/implementation.md`. |
 | H4b | Refresh traces and parity evidence | [D] | ✅ 2025-10-17 Attempt #25: Stored C/PyTorch traces in `reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/trace_c.log` and `trace_py.log`; `summary.md` records pix0 deltas ≤1.3e-8 m and `F_latt` agreement <0.2%. |
 | H4c | Tighten regression test + targeted pytest | [D] | ✅ 2025-10-17 Attempt #25: Updated regression tolerance to 5e-5 m (CPU and CUDA parametrised) and captured `pytest_h4c.log`; Attempt #25 logged in docs/fix_plan.md. |
+
+### Phase H5 — Custom Vector Pix0 Override Reinstatement
+Goal: Reconcile the newly observed 1.14 mm pix0 delta when both custom detector vectors and `-pix0_vector_mm` are supplied so PyTorch mirrors C’s override precedence.
+Prereqs: Phase H4 artifacts available; Phase J scaling report (`reports/2025-10-cli-flags/phase_j/scaling_chain.md`) pinpointing the divergence.
+Exit Criteria: Detector traces with custom vectors show `pix0_vector`, `Fbeam`, and `Sbeam` matching C within 5e-5 m, and fractional h/k/l plus `F_latt_a/b/c` align within 1e-3 relative difference before resuming normalization work.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| H5a | Verify C precedence with explicit derivation | [ ] | Re-run the supervisor command twice (with and without `-pix0_vector_mm`) capturing C traces under `reports/2025-10-cli-flags/phase_h5/c_traces/`. Confirm C recomputes `Fbeam/Sbeam` from the override even with custom vectors and document the dot-product derivation in `phase_h5/c_precedence.md`. |
+| H5b | Restore pix0 override application in PyTorch custom-vector path | [ ] | Update `Detector._calculate_pix0_vector` so custom vectors still honour `pix0_override_tensor`, keeping device/dtype neutrality and vectorization. Reuse the existing projection logic; capture rationale + code references in `phase_h5/implementation_notes.md`. |
+| H5c | Capture updated PyTorch traces & compare | [ ] | Extend `phase_h/trace_harness.py` for Phase H5 to log `pix0_vector`, `Fbeam/Sbeam`, fractional h/k/l, and `F_latt` components. Store outputs in `reports/2025-10-cli-flags/phase_h5/py_traces/` and summarise deltas in `phase_h5/parity_summary.md`. |
+| H5d | Update fix_plan Attempt log | [ ] | Record Attempt #29 in `docs/fix_plan.md` once traces align, noting restored override precedence and residual normalization gaps feeding Phase K. |
 
 ### Phase I — Polarization Alignment (follow-up)
 Goal: Match C’s Kahn polarization factor once lattice geometry aligns.
