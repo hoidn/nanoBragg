@@ -763,8 +763,23 @@
       - Note: Intensity scales differ (C ~446 vs PyTorch ~115000) - requires investigation in separate issue but both produced valid output
       - Note: PyTorch CLI does not support `-floatlog` flag used in supervisor command (removed for PyTorch run)
     Next Actions: Complete Phase C tasks C3-C4 (documentation updates: specs/spec-a-cli.md, README_PYTORCH.md, c_parameter_dictionary.md; then close fix_plan item). Flag missing `-floatlog` support as separate issue if needed.
-- Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. Intensity scale difference noted in C2 needs separate parity investigation.
-- Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete).
+  * [2025-10-06] Attempt #5 (ralph) — Result: success (Phase D3 evidence). Executed intensity gap analysis per supervisor directive.
+    Metrics: C max_I=446.3, PyTorch max_I=115,000 (257.7× gap). **Critical finding:** Zero correlation (r=-5e-6), peaks 1538 pixels apart, C has 99.22% non-zero pixels vs PyTorch 1.88%. This is NOT a scaling issue - fundamentally different diffraction patterns.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_d/intensity_gap.md` - Complete analysis report with hypotheses
+      - `reports/2025-10-cli-flags/phase_d/intensity_gap_stats.json` - Quantitative statistics
+      - `reports/2025-10-cli-flags/phase_d/analyze_intensity.py` - Analysis script
+      - `reports/2025-10-cli-flags/phase_d/compare_peak_locations.py` - Peak location comparison
+    Observations/Hypotheses:
+      - **Root cause likely geometry/scattering vector error, NOT normalization:** Zero correlation proves outputs are fundamentally different diffraction patterns
+      - PyTorch peaks at (1145, 2220) vs C peaks at (1039, 685) - 1538 pixel displacement
+      - PyTorch produces sparse concentrated peaks (1.88% non-zero), C produces dense diffuse pattern (99.22% non-zero)
+      - Intensity ratio ≈256 suspicious (2⁸) but likely coincidental given geometry mismatch
+      - Steps normalization verified correct: `steps = 1×10×1×1 = 10` (line 831)
+      - **Likely causes:** (1) pix0_vector override not applied, (2) CUSTOM basis vectors wrong, (3) SAMPLE pivot calculation error, (4) incident_beam_direction wrong, (5) Miller index/scattering vector bug
+    Next Actions: **MANDATORY parallel trace comparison** per `docs/debugging/debugging.md` §2.1 - instrument C to print pix0_vector, incident_beam_direction, scattering_vector, h/k/l, F_cell, F_latt, omega for pixel (1039,685); generate matching PyTorch trace; compare line-by-line to find first divergence. Only after trace identifies root cause should implementation fixes begin.
+- Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
+- Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); **(iv) Phase D3 evidence report completed with hypothesis and trace recipe** ✅; (v) Geometry bug identified via parallel trace and fixed; (vi) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌ blocked on geometry fix.
 
 ### Completed Items — Key Reference
 (See `docs/fix_plan_archive.md` for the full historical ledger.)
