@@ -1154,3 +1154,9 @@ Follow-ups for Ralph:
 - Identified outstanding gap: need fresh C traces with and without -pix0_vector_mm to validate override precedence (Phase J evidence shows F_latt divergence from pix0 mismatch). Hypotheses logged in supervisor summary; implementation deferred until traces captured.
 - input.md rewritten (Evidence phase) directing Ralph to run long-form C command twice and archive logs under reports/2025-10-cli-flags/phase_h5/c_traces/, plus document derivation in c_precedence.md before touching PyTorch.
 - No code/doc changes yet; awaiting H5a artifacts. Next follow-up: after Ralph captures traces, greenlight H5b override reapplication and revisit docs/fix_plan Attempt log.
+
+## 2025-10-22 (galph loop — Phase H5 evidence refresh)
+- Updated plans/active/cli-noise-pix0/plan.md: marked H5b [D], set H5a to [P] with new requirement to refresh C traces dated 2025-10-21, clarified H5c/H5d deliverables.
+- docs/fix_plan.md now points Next Actions to C trace reruns + PyTorch parity capture; logged new Attempt #29 (2025-10-21) noting override reinstatement pending evidence.
+- input.md reissued (Evidence phase) directing Ralph to run NB_C_BIN command with/without override, update c_precedence.md, extend Phase H harness for H5c, and archive outputs under reports/2025-10-cli-flags/phase_h5/.
+- Next follow-up: Expect refreshed C logs in reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-21/ plus PyTorch parity log; after evidence lands, revisit Phase K normalization tasks.
