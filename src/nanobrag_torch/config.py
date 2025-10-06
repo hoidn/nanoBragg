@@ -504,7 +504,10 @@ class BeamConfig:
     # Beam polarization
     # C defaults: polar=1.0, polarization=0.0, nopolar=0 (golden_suite_generator/nanoBragg.c:308-309)
     # polar controls the Kahn factor application; polarization is the E-vector rotation angle
-    polarization_factor: float = 1.0  # Kahn polarization factor K in [0,1] (1.0 = fully polarized, matches C default polar=1.0)
+    # CRITICAL (CLI-FLAGS-003 Phase K3b): C code initializes polar=1.0 but resets polarization=0.0
+    # per pixel (nanoBragg.c:3732), computing ~0.9126 dynamically. PyTorch default 0.0 triggers
+    # this same computation path, matching C behavior. User can override via -polar flag.
+    polarization_factor: float = 0.0  # Kahn polarization factor K in [0,1] (0.0 = compute from geometry, matches C default behavior)
     nopolar: bool = False  # If True, force polarization factor to 1 (disable polarization)
     polarization_axis: tuple[float, float, float] = (0.0, 0.0, 1.0)  # Polarization E-vector direction
 

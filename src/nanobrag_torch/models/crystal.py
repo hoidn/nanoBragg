@@ -671,38 +671,53 @@ class Crystal:
         # This uses formula volume V_cell throughout (not V_actual from vectors).
         #
         # C-code reference (lines 2076-2080):
-        #   vector_rescale(b_star_cross_c_star, b_star_cross_c_star, a[0]/V_cell);
-        #   vector_rescale(c_star_cross_a_star, c_star_cross_a_star, b[0]/V_cell);
-        #   vector_rescale(a_star_cross_b_star, a_star_cross_b_star, c[0]/V_cell);
-        #   V_star = 1.0/V_cell;
+        #   if (user_cell != 0) {  // Only rescale when cell parameters were explicitly provided
+        #     vector_rescale(b_star_cross_c_star, b_star_cross_c_star, a[0]/V_cell);
+        #     vector_rescale(c_star_cross_a_star, c_star_cross_a_star, b[0]/V_cell);
+        #     vector_rescale(a_star_cross_b_star, a_star_cross_b_star, c[0]/V_cell);
+        #     V_star = 1.0/V_cell;
+        #   }
         #
         # vector_rescale normalizes and scales: new_vec = (target_mag / |old_vec|) * old_vec
+        #
+        # CRITICAL (CLI-FLAGS-003 Phase K3a): The C code sets user_cell=0 when MOSFLM matrices
+        # are provided via -mat, which SKIPS this rescale path. When MOSFLM reciprocal vectors
+        # are supplied, they already encode the exact orientation and should not be altered.
 
-        # User-supplied cell parameters (always true in our case)
-        a_mag = self.config.cell_a
-        b_mag = self.config.cell_b
-        c_mag = self.config.cell_c
+        # Check if MOSFLM orientation was provided - if so, skip rescale
+        mosflm_provided = (
+            hasattr(self.config, "mosflm_a_star") and self.config.mosflm_a_star is not None
+            and hasattr(self.config, "mosflm_b_star") and self.config.mosflm_b_star is not None
+            and hasattr(self.config, "mosflm_c_star") and self.config.mosflm_c_star is not None
+        )
 
-        # Rescale cross products to enforce: |(b* × c*)| = |a| / V_cell
-        # This ensures real vectors will have exact user-specified magnitudes
-        mag_b_star_cross_c_star = torch.norm(b_star_cross_c_star)
-        mag_c_star_cross_a_star = torch.norm(c_star_cross_a_star)
-        mag_a_star_cross_b_star = torch.norm(a_star_cross_b_star)
+        if not mosflm_provided:
+            # User-supplied cell parameters (not MOSFLM matrix)
+            # Rescale cross products to enforce exact cell lengths
+            a_mag = self.config.cell_a
+            b_mag = self.config.cell_b
+            c_mag = self.config.cell_c
 
-        # Avoid division by zero
-        # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
-        mag_b_star_cross_c_star = mag_b_star_cross_c_star.clamp_min(1e-12)
-        mag_c_star_cross_a_star = mag_c_star_cross_a_star.clamp_min(1e-12)
-        mag_a_star_cross_b_star = mag_a_star_cross_b_star.clamp_min(1e-12)
+            # Rescale cross products to enforce: |(b* × c*)| = |a| / V_cell
+            # This ensures real vectors will have exact user-specified magnitudes
+            mag_b_star_cross_c_star = torch.norm(b_star_cross_c_star)
+            mag_c_star_cross_a_star = torch.norm(c_star_cross_a_star)
+            mag_a_star_cross_b_star = torch.norm(a_star_cross_b_star)
 
-        # Rescale to target magnitudes
-        target_mag_b_star_cross_c_star = a_mag / V
-        target_mag_c_star_cross_a_star = b_mag / V
-        target_mag_a_star_cross_b_star = c_mag / V
+            # Avoid division by zero
+            # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
+            mag_b_star_cross_c_star = mag_b_star_cross_c_star.clamp_min(1e-12)
+            mag_c_star_cross_a_star = mag_c_star_cross_a_star.clamp_min(1e-12)
+            mag_a_star_cross_b_star = mag_a_star_cross_b_star.clamp_min(1e-12)
 
-        b_star_cross_c_star = b_star_cross_c_star * (target_mag_b_star_cross_c_star / mag_b_star_cross_c_star)
-        c_star_cross_a_star = c_star_cross_a_star * (target_mag_c_star_cross_a_star / mag_c_star_cross_a_star)
-        a_star_cross_b_star = a_star_cross_b_star * (target_mag_a_star_cross_b_star / mag_a_star_cross_b_star)
+            # Rescale to target magnitudes
+            target_mag_b_star_cross_c_star = a_mag / V
+            target_mag_c_star_cross_a_star = b_mag / V
+            target_mag_a_star_cross_b_star = c_mag / V
+
+            b_star_cross_c_star = b_star_cross_c_star * (target_mag_b_star_cross_c_star / mag_b_star_cross_c_star)
+            c_star_cross_a_star = c_star_cross_a_star * (target_mag_c_star_cross_a_star / mag_c_star_cross_a_star)
+            a_star_cross_b_star = a_star_cross_b_star * (target_mag_a_star_cross_b_star / mag_a_star_cross_b_star)
 
         # Real-space vectors: a = (b* × c*) × V_cell
         # After rescaling, these will have exactly the user-specified magnitudes

@@ -593,19 +593,21 @@ class TestCLIPolarization:
 
     def test_default_polarization_parity(self):
         """
-        Verify BeamConfig.polarization_factor defaults to 1.0 to match C polar=1.0.
+        Verify BeamConfig.polarization_factor defaults to 0.0 to match C dynamic computation.
 
-        C reference: golden_suite_generator/nanoBragg.c:308-309
-            double polar=1.0,polarization=0.0;
+        C reference: golden_suite_generator/nanoBragg.c:308-309, 3732
+            double polar=1.0,polarization=0.0;  # Initial values
             int nopolar = 0;
+            # Per-pixel: polarization = 0.0; triggers dynamic Kahn factor computation
 
-        PyTorch parity requirement:
-            BeamConfig.polarization_factor must default to 1.0 (fully polarized)
-            BeamConfig.nopolar must default to False
+        CRITICAL UPDATE (CLI-FLAGS-003 Phase K3b):
+        C code initializes polar=1.0 but resets polarization=0.0 per pixel (nanoBragg.c:3732),
+        which triggers dynamic Kahn factor computation (≈0.9126) based on pixel geometry.
+        PyTorch must default polarization_factor=0.0 to match this behavior.
 
-        Evidence: reports/2025-10-cli-flags/phase_e/trace_summary.md lines 133-139
-            Shows PyTorch using 1.0 vs C using ~0.91 (calculated Kahn factor)
-            Root cause was PyTorch defaulting to 0.0 instead of 1.0
+        Evidence: reports/2025-10-cli-flags/phase_k/f_latt_fix/scaling_chain.md
+            Shows C computing polar≈0.9126 dynamically, not using the initial 1.0 value
+            Previous Phase E analysis was incomplete - it missed the per-pixel reset
         """
         # Parse minimal command with no explicit polarization flags
         config = run_parse([
@@ -617,7 +619,7 @@ class TestCLIPolarization:
         ])
 
         # When no polarization flags provided, config dict should not contain polarization keys
-        # BeamConfig() constructor will use its default polarization_factor=1.0
+        # BeamConfig() constructor will use its default polarization_factor=0.0 (triggers dynamic computation)
         assert 'polarization_factor' not in config, \
             "Config should not contain polarization_factor when no -polar flag provided"
         assert config.get('nopolar', False) is False, \
@@ -626,8 +628,8 @@ class TestCLIPolarization:
         # Verify BeamConfig default directly by importing and instantiating
         from nanobrag_torch.config import BeamConfig
         beam_config = BeamConfig()
-        assert beam_config.polarization_factor == 1.0, \
-            f"Expected BeamConfig default polarization_factor=1.0 (C polar=1.0), got {beam_config.polarization_factor}"
+        assert beam_config.polarization_factor == 0.0, \
+            f"Expected BeamConfig default polarization_factor=0.0 (triggers dynamic Kahn computation), got {beam_config.polarization_factor}"
         assert beam_config.nopolar is False, \
             f"Expected BeamConfig default nopolar=False (C nopolar=0), got {beam_config.nopolar}"
 

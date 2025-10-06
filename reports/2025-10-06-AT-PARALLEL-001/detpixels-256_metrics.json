@@ -1,0 +1,15 @@
+{
+  "correlation": 0.39805057644844055,
+  "mse": 10.359012603759766,
+  "rmse": 3.2185420989990234,
+  "max_abs_diff": 33.240509033203125,
+  "c_sum": 82870.703125,
+  "py_sum": 35831.4609375,
+  "sum_ratio": 0.4323779042088344,
+  "case_id": "AT-PARALLEL-001",
+  "run_name": "detpixels-256",
+  "args": "-default_F 100 -cell 100 100 100 90 90 90 -lambda 6.2 -N 3 -pixel 0.1 -distance 100 -mosflm -seed 1 -detpixels 256 -Xbeam 12.8 -Ybeam 12.8",
+  "c_binary": "/home/ollie/Documents/tmp/nanoBragg/golden_suite_generator/nanoBragg",
+  "pytorch_cli": "/home/ollie/miniconda3/envs/myenv/bin/python3.13 -m nanobrag_torch",
+  "timestamp": "2025-10-06T14:24:32.481262"
+}
