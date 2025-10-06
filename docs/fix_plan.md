@@ -504,7 +504,10 @@
       - **C Reference:** golden_suite_generator/nanoBragg.c:308-309 sets polar=1.0, polarization=0.0, nopolar=0
       - **Test Coverage:** Validates default matches C (1.0), -nopolar flag behavior, and -polar <value> override
       - **Phase I Tasks:** I1 (audit) ✅, I2 (implement) ✅; I3 (final parity sweep) remains pending
-    Next Actions: Execute Phase I3 final parity sweep by running the supervisor command end-to-end (PyTorch CLI + C reference), stash logs under `reports/2025-10-cli-flags/phase_i/supervisor_command/`, document polarization metrics in Attempt #27, then close CLI-FLAGS-003.
+    Next Actions:
+      1. Complete Phase H5c by regenerating PyTorch traces (post-revert) and updating `reports/2025-10-cli-flags/phase_h5/parity_summary.md` with pix0/F_latt deltas (<5e-5 m, <1e-3).
+      2. Tackle Phase K1 (`plans/active/cli-noise-pix0/plan.md`) to swap the SQUARE lattice factor to sincg(π·h, Na) form, capture trace evidence under `phase_k/f_latt_fix/`, and refresh `phase_j/scaling_chain.md`.
+      3. Add the targeted regression noted in Phase K3 (e.g., `tests/test_cli_scaling.py::test_f_latt_square_matches_c`) before reattempting the supervisor command parity sweep.
   * [2025-10-06] Attempt #29 (ralph loop) — Result: Phase H5a EVIDENCE-ONLY COMPLETE. **C-code pix0 override behavior with custom vectors documented.**
     Metrics: Evidence-only loop. Two C runs executed: WITH override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m) and WITHOUT override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m). Identical geometry values confirm override is ignored when custom vectors are present.
     Artifacts:

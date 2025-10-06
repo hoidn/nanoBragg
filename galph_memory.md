@@ -1177,3 +1177,11 @@ Follow-ups for Ralph:
 - Reissued `input.md` (131 lines, Implementation phase) directing Ralph to remove the override for custom vectors, rerun targeted pytest + trace harness, update parity_summary.md, and log Attempt #31 before touching Phase K.
 - Hypotheses for remaining intensity gap now hinge on normalization once geometry parity returns; no new plan beyond existing Phase K tasks.
 - Follow-ups for Ralph: execute Do Now revert + tests, capture PyTorch traces under `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/`, update parity_summary.md and docs/fix_plan Attempt history, then pause for supervisor review before Phase K work.
+
+## 2025-10-24 (galph loop — H5c evidence prep)
+- Refreshed CLI-FLAGS-003 plan: marked H5b/H5d done, inserted doc anchor list, and rewrote Phase K tasks to target the sincg(h) bug (`plans/active/cli-noise-pix0/plan.md`).
+- Updated fix_plan next actions to focus on H5c traces then Phase K1 lattice-factor fix (`docs/fix_plan.md:448-510`).
+- Replaced `reports/2025-10-cli-flags/phase_h5/parity_summary.md` with post-revert guidance pointing Ralph to regenerate TRACE_PY logs (2025-10-22 baseline).
+- Issued new input.md (Evidence phase) directing Ralph to run the trace harness and archive metrics before code changes.
+- Key finding: PyTorch SQUARE lattice factor still feeds sincg with `(h-h0)` (src/nanobrag_torch/simulator.py) vs C’s `sincg(M_PI*h, Na)` (`golden_suite_generator/nanoBragg.c:3063-3080`); Phase K1 must correct this.
+- Follow-up expectations: Ralph generates H5c PyTorch traces under `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/`, updates parity_summary metrics, and drafts Attempt #32.
