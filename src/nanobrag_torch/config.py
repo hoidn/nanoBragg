@@ -209,6 +209,7 @@ class DetectorConfig:
     custom_fdet_vector: Optional[Tuple[float, float, float]] = None  # Fast axis direction
     custom_sdet_vector: Optional[Tuple[float, float, float]] = None  # Slow axis direction
     custom_odet_vector: Optional[Tuple[float, float, float]] = None  # Normal direction
+    custom_beam_vector: Optional[Tuple[float, float, float]] = None  # Incident beam direction (unit vector)
 
     # Detector absorption parameters (AT-ABS-001)
     detector_abs_um: Optional[Union[float, torch.Tensor]] = None  # Attenuation depth in micrometers

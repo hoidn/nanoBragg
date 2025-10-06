@@ -867,6 +867,7 @@ def main():
             custom_fdet_vector=config.get('custom_fdet_vector'),
             custom_sdet_vector=config.get('custom_sdet_vector'),
             custom_odet_vector=config.get('custom_odet_vector'),
+            custom_beam_vector=config.get('custom_beam_vector'),
             # Detector origin override (CLI-FLAGS-003)
             pix0_override_m=config.get('pix0_override_m')
         )

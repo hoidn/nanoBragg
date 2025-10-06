@@ -848,13 +848,26 @@ class Detector:
         """
         Get the beam vector based on detector convention.
 
+        For CUSTOM convention with user-supplied custom_beam_vector, use that.
+        Otherwise use convention defaults.
+
         Returns:
             torch.Tensor: Unit beam vector pointing from sample toward source
         """
-        if self.config.detector_convention == DetectorConvention.MOSFLM:
+        # CUSTOM convention with user override
+        if (self.config.detector_convention == DetectorConvention.CUSTOM
+            and self.config.custom_beam_vector is not None):
+            # Convert tuple to tensor on correct device/dtype
+            return torch.tensor(
+                self.config.custom_beam_vector,
+                device=self.device,
+                dtype=self.dtype
+            )
+        # Convention defaults
+        elif self.config.detector_convention == DetectorConvention.MOSFLM:
             return torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
         else:
-            # XDS, DIALS, and CUSTOM conventions use beam along +Z
+            # XDS, DIALS, and CUSTOM (without override) conventions use beam along +Z
             return torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
 
     def get_r_factor(self) -> torch.Tensor:
