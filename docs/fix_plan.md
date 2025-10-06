@@ -448,18 +448,17 @@
 ## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
 - Spec/AT: specs/spec-a-cli.md flag catalogue, docs/architecture/detector.md §5 (pix0 workflow), docs/development/c_to_pytorch_config_map.md (pivot rules), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860
 - Priority: High
-- Status: in_progress (Phases A–H complete; pivot fix landed via H6f, pending H6g traces + Phase K normalization)
+- Status: in_progress (Phases A–H complete; K3a/K3b/K3d landed via Attempts #43–44, pending per-φ evidence + normalization closure)
 - Owner/Date: ralph/2025-10-05
 - Plan Reference: `plans/active/cli-noise-pix0/plan.md`
 - Reproduction (C & PyTorch):
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
-- First Divergence (if known): Phase C2 parity run exposed a 2.58e2× intensity scaling mismatch (PyTorch max_I≈1.15e5 vs C max_I≈4.46e2). Post-pivot traces (2025-10-31) show two remaining blockers: (a) PyTorch always rescales MOSFLM cross products to user-provided cell lengths, whereas C skips `vector_rescale` unless `-cell` was supplied, yielding ~4.6×10⁻² Å error in `rot_b` and F_latt_b ≈ +21.6 %; (b) BeamConfig still defaults the Kahn factor to 1.0, while C leaves `polarization=0.0`, producing polar=1.0 vs 0.9126.
-- Next Actions (2025-11-06 refresh): Phase K3 is the remaining blocker before rerunning the supervisor command — execute these plan tasks in order:
-  1. Phase K3a — update `Crystal.compute_cell_tensors` to skip the cross-product rescale whenever MOSFLM reciprocal vectors are supplied, then rerun `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_k/f_latt_fix/mosflm_rescale.py` and archive the deltas as `orientation_delta_post_fix.md`.
-  2. Phase K3b — set `BeamConfig.polarization_factor` default to 0.0, keep `-polar`/`-nopolar` wiring intact, and capture a fresh scaling-chain delta report (`scaling_chain_post_fix.md`) showing `polar≈0.9126` to match C.
-  3. Phase K3d — run the dtype sweep (`NB_PYTORCH_DTYPE=float64 PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_k/f_latt_fix/analyze_scaling.py`), stash outputs under `reports/2025-10-cli-flags/phase_k/f_latt_fix/dtype_sweep/`, and summarize the float32 vs float64 impact on `hkl_frac`/`F_latt_*` in `dtype_sensitivity.md`.
-  4. Phase K3c — run `env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v`, update `docs/architecture/pytorch_design.md` + `docs/development/testing_strategy.md`, and log Attempt #43 with artifacts in `reports/2025-10-cli-flags/phase_k/f_latt_fix/`.
+- First Divergence (if known): Phase C2 parity run exposed a 2.58e2× intensity scaling mismatch (PyTorch max_I≈1.15e5 vs C max_I≈4.46e2). After SAMPLE-pivot parity (Attempts #40–41) and MOSFLM/polarization fixes (Attempt #43) the remaining blocker is a φ-grid mismatch: PyTorch traces report `k≈1.9997` (φ=0°) while C reports `k≈1.9928` (φ=0.09°), inflating `F_latt_b` by ≈21.6% and leaving final intensity ≈11% high.
+- Next Actions (2025-11-07 refresh):
+  1. Phase K3e — extend `reports/2025-10-cli-flags/phase_k/f_latt_fix/analyze_scaling.py` to dump per-φ (`φ_tic=0…9`) Miller indices and lattice factors for both implementations; rerun C with augmented TRACE_C logging and file the comparison under `reports/2025-10-cli-flags/phase_k/f_latt_fix/per_phi/` (include diff + summary markdown).
+  2. Phase K3f — once K3e isolates the offset, adjust PyTorch φ sampling (`Crystal.get_rotated_real_vectors` / simulator loop) to mirror nanoBragg.c, regenerate the scaling-chain memo, and stage code/tests/docs updates.
+  3. Phase K3c — after K3f lands, rerun `env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v`, refresh documentation (`docs/architecture/pytorch_design.md`, `docs/development/testing_strategy.md`), and log Attempt #45 with post-fix metrics.
 - Attempts History:
   * [2025-10-06] Attempt #27 (ralph) — Result: **PARITY FAILURE** (Phase I3 supervisor command). **Intensity scaling discrepancy: 124,538× sum ratio.**
     Metrics: Correlation=0.9978 (< 0.999 threshold), sum_ratio=124,538 (should be ~1.0), C max_I=446, PyTorch max_I=5.411e7 (121,000× discrepancy), mean_peak_distance=37.79 px (> 1 px threshold).

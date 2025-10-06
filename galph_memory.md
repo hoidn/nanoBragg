@@ -1290,3 +1290,11 @@ Follow-ups for Ralph:
 - Hypothesis: float32 rounding in detector geometry/scattering vector pipeline drives the sincg amplification; added Phase K3d dtype sweep to plan and fix_plan (dtype_sensitivity.md artifacts under reports/2025-10-cli-flags/phase_k/f_latt_fix/dtype_sweep/).
 - Updated supervisor memo targeting evidence-only float64 rerun; no pytest this loop.
 - Follow-up: Ralph to execute K3d command, archive dtype comparison, then resume K3a/K3c implementation once rounding impact is quantified.
+
+## 2025-11-07 (galph loop — K3e per-φ parity setup)
+- `git pull --rebase` clean at start; reviewed plan/fix_plan, dtype sweep confirmed precision not root cause.
+- Deep dive: PyTorch trace logs `k≈1.9997` (φ=0°) while C logs `k≈1.9928` (φ=0.09°); rotating PyTorch `b` by 0.09° reproduces C values ⇒ φ-grid mismatch now primary blocker.
+- Updated `plans/active/cli-noise-pix0/plan.md` Phase K3a/K3b/K3d to `[D]`, added K3e (per-φ evidence) & K3f (φ sampling fix) plus new gap snapshot noting φ issue.
+- Synced `docs/fix_plan.md` Next Actions with new tasks (per-φ trace capture & sampling fix); status line now reflects K3a/K3b/K3d completion.
+- Authored `input.md` (Implementation phase) directing Ralph to extend `analyze_scaling.py` with `--per-phi`, instrument nanoBragg.c, and dump matched C/PyTorch φ traces under `reports/…/per_phi/`.
+- Follow-up for Ralph: execute K3e per memo, produce per-φ JSON/MD logs, then we can plan the φ sampling fix (K3f) next loop.
