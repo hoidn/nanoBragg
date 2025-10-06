@@ -1071,3 +1071,10 @@ Follow-ups for Ralph:
 - Goal 2: Vectorization plan unchanged—Phase A evidence still outstanding; keep queued until CLI parity unblocks bandwidth.
 - Coin flip = heads: reviewed Ralph’s latest evidence commits (`4e0e36e`, `0f18548`); both were productive (manual sincg rejection, pix0 reproduction) with no regressions.
 - Follow-ups for Ralph: execute Phase H3b implementation per new memo, then proceed to H4 parity once regression test passes.
+
+## 2025-10-06 (galph loop — Phase H3b implementation prep)
+- `git pull --rebase` clean; no upstream changes to reconcile. Coin flip → tails, so skipped retrospective commit audit per instructions.
+- Refined `plans/active/cli-noise-pix0/plan.md` H3b guidance to spell out the projection workflow (`pix0_override - distance·beam` → F/S beam offsets, beam-centre tensor updates) and mandated artifact targets (`pix0_expected.json`, regression log, implementation notes).
+- Updated `docs/fix_plan.md` `[CLI-FLAGS-003]` Next Actions to mirror the new projection math, regression expectations, and artifact checklist ahead of Attempt #22.
+- Rewrote `input.md` (114 lines) directing Ralph to implement the BEAM-pivot transform, add the targeted pytest node, capture traces/logs under `reports/2025-10-cli-flags/phase_h/implementation/`, and log Attempt #22 once complete.
+- No code edits performed; awaiting Ralph’s implementation pass before moving to Phase H4 parity.
