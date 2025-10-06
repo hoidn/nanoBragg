@@ -1,0 +1,15 @@
+Running simulation...
+  Detector: 2463x2527 pixels
+  Crystal: 26.8x31.3x33.7 Å
+  Wavelength: 0.98 Å
+  Device: cpu, Dtype: torch.float32
+  Convention: CUSTOM (using custom detector basis vectors)
+
+Statistics:
+  Max intensity: 8.068e+04 at pixel (1543, 2457)
+  Mean: 6.488e-02
+  RMS: 5.304e+01
+  RMSD: 5.304e+01
+Wrote float image to /tmp/tmpf4wcv763_py.bin
+
+Simulation complete.

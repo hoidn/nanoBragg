@@ -85,7 +85,11 @@ def main():
         phi_steps=phisteps,
         mosaic_spread_deg=0.0,
         mosaic_domains=1,
-        spindle_axis=tuple(spindle_axis)
+        spindle_axis=tuple(spindle_axis),
+        # Phase G: Pass MOSFLM orientation
+        mosflm_a_star=a_star,
+        mosflm_b_star=b_star,
+        mosflm_c_star=c_star
     )
 
     # Create detector config with CUSTOM convention
