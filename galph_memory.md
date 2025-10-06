@@ -1313,3 +1313,9 @@ Follow-ups for Ralph:
 - Chosen focus: CLI-FLAGS-003 Phase K3f base-lattice parity. Hypotheses recorded (primary: trace harness bug; secondary: confirm real/reciprocal vectors + scattering after harness fix). Next confirming step: capture corrected C/Py base traces per plan.
 - Authored Evidence-phase `input.md` directing Ralph to instrument `golden_suite_generator/nanoBragg.c`, rebuild, run the supervisor CLI command, and add a corrected PyTorch harness under `reports/2025-10-cli-flags/phase_k/base_lattice/` with comparison tooling.
 - No additional plan work required for vectorization yet; Phase A still pending once CLI parity unblocks bandwidth.
+
+## 2025-11-08 (galph loop — MOSFLM rescale implementation prep)
+- Verified base-lattice traces: PyTorch keeps placeholder `V≈1 Å^3` when MOSFLM A* is present, giving |a|≈5.8×10^3 Å and Δh≈6; C rescales with `V_cell≈2.4682×10^4 Å^3` before metric duality.
+- Updated `plans/active/cli-noise-pix0/plan.md` Phase K3f (rows marked `[D]`) and added Phase K3g tasks for implementing the MOSFLM rescale pipeline + regression coverage; docs/fix_plan Next Actions now call out K3g1–K3g3.
+- Issued Implementation-phase `input.md` (Do Now = K3g1) instructing Ralph to document root cause, mirror C’s MOSFLM real-vector rebuild, add scaling tests, refresh parity traces, and rerun `tests/test_cli_scaling.py::test_f_latt_square_matches_c` with the proper env vars.
+- Long-term goal #2 (vectorization) left untouched this loop; revisit after CLI parity is recovered.
