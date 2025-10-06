@@ -455,8 +455,8 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase K3e evidence reveals a **fundamental lattice/geometry mismatch**, not a φ-grid offset. C reports `k_frac≈−3.857` across all φ steps while PyTorch reports `k_frac≈−9.899` (Δk≈6.04 at φ=0°). This 6-unit discrepancy indicates the base reciprocal lattice vectors or scattering geometry differ before any φ rotation is applied.
-- Next Actions (2025-11-07 refresh):
-  1. Phase K3f1–K3f3 — Generate matching C/PyTorch baseline traces for MOSFLM vectors, real lattice vectors, and φ=0 scattering components under `reports/2025-10-cli-flags/phase_k/base_lattice/`, then diff them to pinpoint the first component deviating beyond 5e-4.
+ - Next Actions (2025-11-07 refresh, amended 2025-11-08):
+  1. Phase K3f1–K3f3 — Generate matching C/PyTorch baseline traces for MOSFLM vectors, real lattice vectors, and φ=0 scattering components under `reports/2025-10-cli-flags/phase_k/base_lattice/`, then diff them to pinpoint the first component deviating beyond 5e-4. While capturing the PyTorch trace, ensure the harness uses `detector.get_pixel_coords()` directly (no secondary subtraction of `pix0_vector`) so the scattering path matches the C geometry.
   2. Phase K3f4 — Document the diagnosed root cause and planned remediation in the new `base_lattice/summary.md`, update this plan + fix_plan with the chosen implementation approach before touching simulator/detector code.
   3. Phase K3c — After K3f resolves the Δk≈6 gap, rerun `env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v`, refresh normalization docs, and log the closure attempt.
 - Attempts History:

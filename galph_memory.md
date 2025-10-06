@@ -1305,3 +1305,11 @@ Follow-ups for Ralph:
 - Refreshed `plans/active/cli-noise-pix0/plan.md` Phase K3f with checklist K3f1–K3f4 (instrument C/Py, diff traces, document root cause) and synced `docs/fix_plan.md` Next Actions to match.
 - Issued new Evidence-phase input.md directing Ralph to execute K3f1 (C trace run) and stage matching PyTorch harness output under `reports/2025-10-cli-flags/phase_k/base_lattice/`.
 - Next Ralph steps: add TRACE_C_BASE instrumentation, run the supervisor command into `base_lattice/c_trace.log`, extend the Py harness for `TRACE_PY_BASE`, and prep for K3f3 diff once both logs exist.
+
+## 2025-11-08 (galph loop — K3f harness correction)
+- `git pull --rebase` clean; read docs/index.md, spec shards, arch.md, config map, debugging SOP, testing strategy, fix_plan, vectorization plan.
+- Reviewed Ralph’s recent evidence commits (271e2b6, 2467064): instrumentation valuable but per-φ script subtracts `pix0_vector` from `detector.get_pixel_coords()`, yielding plane-relative vectors and explaining the 6-unit Δk seen in Attempt #45.
+- Updated `plans/active/cli-noise-pix0/plan.md` (K3f context + K3f2 guidance) and `docs/fix_plan.md` next actions to require sample-to-pixel vectors with no double subtraction before new traces are captured.
+- Chosen focus: CLI-FLAGS-003 Phase K3f base-lattice parity. Hypotheses recorded (primary: trace harness bug; secondary: confirm real/reciprocal vectors + scattering after harness fix). Next confirming step: capture corrected C/Py base traces per plan.
+- Authored Evidence-phase `input.md` directing Ralph to instrument `golden_suite_generator/nanoBragg.c`, rebuild, run the supervisor CLI command, and add a corrected PyTorch harness under `reports/2025-10-cli-flags/phase_k/base_lattice/` with comparison tooling.
+- No additional plan work required for vectorization yet; Phase A still pending once CLI parity unblocks bandwidth.
