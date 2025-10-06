@@ -74,8 +74,8 @@ Exit Criteria: Detector trace matches C for pix0 and incident beam; CLI parity r
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | F1 | Thread `custom_beam_vector` through Detector | [D] | ✅ 2025-10-05 (ralph): Refactored `_calculate_pix0_vector()` to use `self.beam_vector` property instead of hardcoded beam vectors (lines 438-440, 519-521). Beam vector now exactly matches C trace. Artifacts in `reports/2025-10-cli-flags/phase_f/`. See docs/fix_plan.md Attempt #11. |
-| F2 | Port CUSTOM pix0 transform for overrides | [D] | ✅ 2025-10-06 (ralph): Removed early return, pix0_override now used as final value but r_factor/close_distance still calculated. close_distance derived via dot(pix0_vector, odet_vec) matching C:1846. All tests pass (pix0 CLI 10/10, detector geometry 30/30). Artifacts in `reports/2025-10-cli-flags/phase_f2/`. See docs/fix_plan.md Attempt #11. |
-| F3 | Re-run Phase C2 parity smoke | [ ] | Execute the supervisor command for both binaries after F1/F2. Store outputs under `reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/` and summarize results in docs/fix_plan.md Attempts. |
+| F2 | Port CUSTOM pix0 transform for overrides | [P] | Attempt #11 removed the early return, but PyTorch still emits the raw override (`-0.216336, 0.215205, -0.230201`) instead of C's transformed pix0 (`-0.216476, 0.216343, -0.230192`). Reimplement the CUSTOM pathway from nanoBragg.c:1739-1846 (compute Fclose/Sclose, rotate, then recalc distance_corrected) and capture a validation snippet under `reports/2025-10-cli-flags/phase_f2/pix0_transform_refit.txt` before marking done. |
+| F3 | Re-run Phase C2 parity smoke | [P] | 2025-10-17 Attempt #12 captured C vs PyTorch artifacts under `reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/`; correlation ≈−5e-06 confirms geometry still diverges. Blocked until F2’s transform and Phase G orientation support land, then rerun parity and update metrics. |
 
 ### Phase G — MOSFLM Matrix Orientation Support
 Goal: Preserve full crystal orientation from `-mat` files so PyTorch matches C lattice vectors and downstream physics.

@@ -993,3 +993,9 @@ Follow-ups for Ralph:
 - Rewrote input.md directing Ralph to capture C & PyTorch parity runs (Phase F3) and log Attempt #12 artifacts; highlighted follow-up orientation and polarization tasks.
 - Follow-up: Ralph to run the parity commands, store logs/images under `reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/`, update docs/fix_plan Attempts, then proceed to plan Phase G. Clean up `scaled.hkl.1` once parity + documentation land together.
 
+## 2025-10-06 (galph loop — F2 audit)
+- Reviewed latest sync (commit 4c8bda2). Attempt #12 parity artifacts confirm near-zero correlation; geometry gap persists. Ralph’s Phase F2 change still emits the raw override vector and never recomputes `distance_corrected` after dotting pix0 with odet.
+- Updated `plans/active/cli-noise-pix0/plan.md` to mark F2 as [P] and F3 as [P]; guidance now requires porting the full CUSTOM transform from nanoBragg.c:1739-1846 before rerunning parity.
+- Refreshed `[CLI-FLAGS-003]` next actions in docs/fix_plan.md to mandate the F2 refit + parity redo prior to Phase G orientation work; added supervisor note flagging F2’s incomplete state.
+- Issued new input.md directing Ralph to implement the transform, rerun pix0 tests, capture traces, and only then loop back to parity. No new plans required; vectorization roadmap unchanged.
+- Feedback for Ralph: formality around parity artifacts is good, but we still need the CUSTOM transform and A* orientation before metrics improve.

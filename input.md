@@ -1,86 +1,53 @@
-timestamp: 2025-10-06T03:34:14Z
-commit: f581141
-author: galph
-active focus: CLI-FLAGS-003 Phase F3 parity rerun
+Timestamp: 2025-10-06 03:51:50Z
+Commit: 2c424ed
+Author: galph
+Active Focus: [CLI-FLAGS-003] Phase F2 CUSTOM pix0 transform + parity rerun prep
 
-Summary: Capture C vs PyTorch parity evidence after detector fixes (Phase F3).
-Phase: Evidence
-Focus: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
-Branch: feature/spec-based-2
-Mapped tests: none — evidence-only
-Artifacts: reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/
+Do Now: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm — env AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py -k pix0 -v
 
-Do Now: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm — env KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only
-If Blocked: Re-run the pix0/beam vector Python snippet and log Attempt #12 with the resulting artifact under reports/2025-10-cli-flags/phase_f/ before escalating.
+If Blocked: Capture a fresh C/PyTorch parallel trace for the supervisor command, store it as reports/2025-10-cli-flags/phase_f/pix0_transform_blocked.md, and note the exact divergence before touching code again.
 
 Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md:78 keeps F3 open; parity evidence is required before advancing to Phase G.
-- docs/fix_plan.md:458 calls for F3 artifacts and an Attempt #12 log prior to any orientation refactor.
-- specs/spec-a-core.md:487 enforces the BEAM pivot pix0 formula that we must prove via C/PyTorch agreement.
-- specs/spec-a-cli.md:14 mandates -mat parity with MOSFLM A*, so the recorded run must mirror the C configuration.
-- docs/development/testing_strategy.md:162 requires parity artifacts before moving implementation forward.
+- plans/active/cli-noise-pix0/plan.md:74-79 — Phase F2 remains [P]; we must mirror nanoBragg.c CUSTOM math (Fclose/Sclose, rotations, distance recompute) before parity can move forward.
+- docs/fix_plan.md:448-458 — Fix-plan next actions now explicitly demand F2 refit and fresh parity evidence; failing to follow breaks our coordination loop.
+- docs/architecture/detector.md:35-120 — This section defines pivot-specific pix0 flows and coordinate conventions; implementation must align exactly to satisfy Core Rules 12–15.
+- golden_suite_generator/nanoBragg.c:1733-1849 — The C reference shows the precise order of operations (ratio, close_distance, rotations, pix0 logging) we are missing; use it as the ground truth.
+- reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/metrics.json — Attempt #12 shows correlation ≈−5e-06 and 116× intensity ratio; we must improve on that artifact and archive the follow-up run.
+- docs/development/testing_strategy.md:25-92 — Authoritative commands + trace-first debugging reminders; keep AUTHORITATIVE_CMDS_DOC exported for every run.
 
 How-To Map:
-- `mkdir -p reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/c_reference && NB_C_BIN=./golden_suite_generator/nanoBragg \
-  nanoBragg  -mat A.mat -floatfile reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/c_reference/img.bin \
-  -hkl scaled.hkl  -nonoise  -nointerpolate -oversample 1  -exposure 1  -flux 1e18 -beamsize 1.0 \
-  -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080  -distance 231.274660 -lambda 0.976800 \
-  -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 \
-  -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 \
-  -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866 \
-  -beam_vector 0.00051387949 0.0 -0.99999986  -Na 36  -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 \
-  -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0 > \
-  reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/c_reference/command.log 2>&1`
-- `mkdir -p reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/pytorch && \
-  env KMP_DUPLICATE_LIB_OK=TRUE nanoBragg  -mat A.mat -floatfile \
-  reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/pytorch/torch_img.bin \
-  -hkl scaled.hkl  -nonoise  -nointerpolate -oversample 1  -exposure 1  -flux 1e18 -beamsize 1.0 \
-  -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080  -distance 231.274660 -lambda 0.976800 \
-  -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 \
-  -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 \
-  -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866 \
-  -beam_vector 0.00051387949 0.0 -0.99999986  -Na 36  -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 \
-  -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0 > \
-  reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/pytorch/command.log 2>&1`
-- `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY'
-from pathlib import Path
-from nanobrag_torch.__main__ import create_parser, parse_and_validate_args
-parser = create_parser()
-argv = "-mat A.mat -floatfile torch_img.bin -hkl scaled.hkl -nonoise -nointerpolate -oversample 1 -exposure 1 -flux 1e18 -beamsize 1.0 -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080 -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866 -beam_vector 0.00051387949 0.0 -0.99999986 -Na 36 -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0".split()
-args = parser.parse_args(argv)
-config = parse_and_validate_args(args)
-detector = config['detector']
-beam_vec = detector.beam_vector.detach().cpu().tolist()
-pix0_vec = detector.pix0_vector.detach().cpu().tolist()
-Path('reports/2025-10-cli-flags/phase_f/parity_after_detector_fix').mkdir(parents=True, exist_ok=True)
-with open('reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/pytorch_pix0_beam.txt','w') as f:
-    f.write(f"beam_vector {beam_vec}\n")
-    f.write(f"pix0_vector {pix0_vec}\n")
-PY`
-- `env KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only | tee reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/pytest_collect.log`
+- Export NB_C_BIN first: `export NB_C_BIN=./golden_suite_generator/nanoBragg` to guarantee we hit the instrumented C binary when reproducing traces.
+- Reproduce the C baseline using the full supervisor command (stored in docs/fix_plan.md and prompts/supervisor.md); capture stdout/stderr into reports/2025-10-cli-flags/phase_f2/c_baseline.log and copy DETECTOR_PIX0_VECTOR into the same directory.
+- Implement the CUSTOM pix0 transform inside `_calculate_pix0_vector`: compute Fclose/Sclose from dot products, run through rotate/rotate_axis for SAMPLE pivot, and recompute `distance_corrected = close_distance / ratio` after you override close_distance.
+- After code edits, run `env AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py -k pix0 -v` (CPU) to ensure CLI coverage stays green; attach the log under reports/2025-10-cli-flags/phase_f2/pytest_pix0.log.
+- If CUDA is available, repeat with `device=cuda` (`pytest tests/test_cli_flags.py -k pix0 --device cuda -v`) to respect device neutrality, or document unavailability in reports/2025-10-cli-flags/phase_f2/pytest_pix0_cuda.log.
+- Validate geometry numerically: `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py --config reports/2025-10-cli-flags/phase_e/trace_harness.yaml --pixel 1039 685 --out reports/2025-10-cli-flags/phase_f2/trace_after_transform.txt` and confirm pix0 + beam entries match C within ≤1e-12.
+- Re-run parity smoke once F2 passes: `env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest --collect-only` (evidence step) followed by the full supervisor command in both C and PyTorch; stash metrics under reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/attempt13_metrics.json.
+- Update docs/fix_plan.md Attempts and plans/active/cli-noise-pix0/plan.md (F2/F3 rows) with findings before ending the coding loop.
 
 Pitfalls To Avoid:
-- Do not edit source files; this loop is evidence-only.
-- Keep all commands within the repo; honor Protected Assets and leave docs/index.md untouched.
-- Always set KMP_DUPLICATE_LIB_OK=TRUE before importing torch or running pytest.
-- Use the plan’s report directories; avoid scattering artifacts elsewhere or overwriting existing evidence.
-- Ensure NB_C_BIN points at golden_suite_generator/nanoBragg to match the traced C binary.
-- Maintain device/dtype neutrality if running Python snippets (no `.cpu()` on differentiable tensors except for logging copies).
-- Capture stdout/stderr to the specified logs so fix_plan attempts can cite them.
-- Do not delete `scaled.hkl.1` until parity evidence and documentation updates land together.
-- Skip running heavy pytest suites beyond `--collect-only`; this loop gathers evidence, not regression results.
-- Verify both commands complete without divergence before proceeding to Phase G.
+- Do not re-introduce the early return in `_calculate_pix0_vector`; the override must flow through the shared pivot logic.
+- Keep tensors on caller-supplied device/dtype; no `.cpu()`, `.numpy()`, or `.item()` in differentiable paths.
+- Maintain vectorization; avoid new Python loops over pixels, phi steps, or thicksteps.
+- Respect Protected Assets (docs/index.md) before editing or deleting referenced files.
+- Follow prompts/debug.md rules for parity debugging; no ad-hoc shortcuts or trace-only rewrites.
+- Do not delete or rename `scaled.hkl`, `scaled.hkl.1`, or other inputs until supervisor explicitly schedules hygiene.
+- Ensure AUTHORITATIVE_CMDS_DOC stays exported for every pytest or parity invocation.
+- Avoid inventing new scripts outside `scripts/`; reuse debug_pixel_trace.py and existing harnesses.
+- Capture every significant run under `reports/2025-10-cli-flags/phase_f2/` or `/phase_f/` so plan evidence remains auditable.
+- Remember -nonoise only suppresses noise image generation; base float/int outputs must still be written.
 
 Pointers:
-- plans/active/cli-noise-pix0/plan.md:5 highlights the outstanding F3 parity gap and orientation follow-up.
-- plans/active/cli-noise-pix0/plan.md:78 details the F3 task and artifact expectations.
-- docs/fix_plan.md:458 enumerates the required Attempt #12 actions tied to this evidence run.
-- specs/spec-a-cli.md:14 documents the -mat contract that must be honored in both runs.
-- specs/spec-a-core.md:487 defines the BEAM pivot pix0 formula we are validating.
-- docs/development/testing_strategy.md:162 reminds us to store parity artifacts alongside authoritative commands.
-- src/nanobrag_torch/models/detector.py:520 shows the current pix0_override handling we are validating against the C trace.
-- src/nanobrag_torch/__main__.py:425 converts A.mat into cell parameters but drops orientation, explaining the Phase G follow-up.
+- plans/active/cli-noise-pix0/plan.md:74-99
+- docs/fix_plan.md:448-520
+- docs/architecture/detector.md:35-180
+- docs/development/testing_strategy.md:25-120
+- docs/debugging/debugging.md:20-120
+- golden_suite_generator/nanoBragg.c:1733-1855
+- reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/metrics.json
+- reports/2025-10-cli-flags/phase_e/trace_summary.md
+- prompts/supervisor.md: command block for parity harness
 
 Next Up:
-- [CLI-FLAGS-003] Phase G — retain MOSFLM A* orientation and refresh traces.
-- [VECTOR-TRICUBIC-001] Phase A — capture tricubic/absorption baseline artifacts once parity evidence is banked.
+- Phase G — MOSFLM A* orientation retention (plan tasks G1–G3) once pix0 transform parity and parity smoke succeed.
+- Phase H — Polarization parity (tasks H1–H3) after geometry aligns.
