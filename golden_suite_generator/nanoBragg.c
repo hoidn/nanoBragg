@@ -3153,6 +3153,11 @@ if(! debug_printed_thread) {
                                             printf("TRACE_C: F_latt_c %.15g\n", F_latt_c);
                                             printf("TRACE_C: F_latt %.15g\n", F_latt);
                                         }
+                                        /* Per-phi trace for CLI-FLAGS-003 Phase K3e */
+                                        if(fpixel==trace_fpixel && spixel==trace_spixel && source==0 && mos_tic==0) {
+                                            printf("TRACE_C_PHI phi_tic=%d phi_deg=%.15g k_frac=%.15g F_latt_b=%.15g F_latt=%.15g\n",
+                                                   phi_tic, phi*RTD, k, F_latt_b, F_latt);
+                                        }
                                     }
                                     else
                                     {

@@ -454,10 +454,10 @@
 - Reproduction (C & PyTorch):
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
-- First Divergence (if known): Phase C2 parity run exposed a 2.58e2× intensity scaling mismatch (PyTorch max_I≈1.15e5 vs C max_I≈4.46e2). After SAMPLE-pivot parity (Attempts #40–41) and MOSFLM/polarization fixes (Attempt #43) the remaining blocker is a φ-grid mismatch: PyTorch traces report `k≈1.9997` (φ=0°) while C reports `k≈1.9928` (φ=0.09°), inflating `F_latt_b` by ≈21.6% and leaving final intensity ≈11% high.
-- Next Actions (2025-11-07 refresh):
-  1. Phase K3e — extend `reports/2025-10-cli-flags/phase_k/f_latt_fix/analyze_scaling.py` to dump per-φ (`φ_tic=0…9`) Miller indices and lattice factors for both implementations; rerun C with augmented TRACE_C logging and file the comparison under `reports/2025-10-cli-flags/phase_k/f_latt_fix/per_phi/` (include diff + summary markdown).
-  2. Phase K3f — once K3e isolates the offset, adjust PyTorch φ sampling (`Crystal.get_rotated_real_vectors` / simulator loop) to mirror nanoBragg.c, regenerate the scaling-chain memo, and stage code/tests/docs updates.
+- First Divergence (if known): Phase K3e evidence reveals a **fundamental lattice/geometry mismatch**, not a φ-grid offset. C reports `k_frac≈−3.857` across all φ steps while PyTorch reports `k_frac≈−9.899` (Δk≈6.04 at φ=0°). This 6-unit discrepancy indicates the base reciprocal lattice vectors or scattering geometry differ before any φ rotation is applied.
+- Next Actions (2025-10-06 refresh):
+  1. Phase K3f — K3e evidence proves Δk≈6 at **all** φ steps, ruling out φ-sampling as the root cause. Instead, debug base lattice vectors: compare `a_star/b_star/c_star` from MOSFLM matrix loading, verify reciprocal→real conversion, and trace `a/b/c` vectors before φ rotation to identify where the 6-unit k offset originates.
+  2. Phase K3f (continued) — Once base lattice parity is restored, regenerate scaling-chain memo and confirm Δk<5e-4 across φ steps, then stage code/tests/docs updates.
   3. Phase K3c — after K3f lands, rerun `env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v`, refresh documentation (`docs/architecture/pytorch_design.md`, `docs/development/testing_strategy.md`), and log Attempt #45 with post-fix metrics.
 - Attempts History:
   * [2025-10-06] Attempt #27 (ralph) — Result: **PARITY FAILURE** (Phase I3 supervisor command). **Intensity scaling discrepancy: 124,538× sum ratio.**
@@ -674,6 +674,22 @@
       - **Root cause remains:** Geometric/orientation discrepancy (likely MOSFLM rescaling mismatch per Phase K2b) is the driver, not numerical precision.
       - **Phase K3a still critical:** The MOSFLM rescale guard is the next blocking step; dtype sweep confirms this is the right path.
     Next Actions: **Phase K3a remains blocking** - implement MOSFLM rescale guard per plan.md task, then rerun dtype sweep to verify F_latt_b moves closer to C's 38.63. If still divergent after K3a, investigate MOSFLM → real-space conversion formula and reciprocal vector recalculation sequence (CLAUDE.md Rule #13).
+  * [2025-10-06] Attempt #45 (ralph loop) — Result: **EVIDENCE COMPLETE** (Phase K3e per-φ Miller index parity). **Root cause identified: fundamental lattice/geometry mismatch (Δk≈6.0 at all φ steps), NOT a φ-sampling offset.**
+    Metrics: Evidence-only loop. Per-φ traces captured for pixel (133, 134) across φ ∈ [0°, 0.1°] with 10 steps. C reports k_frac≈−3.857 (constant across all φ) while PyTorch reports k_frac≈−9.899 (varying −9.899 to −9.863). Δk≈6.042 at φ=0°, persists at all φ_tic=0…9. ΔF_latt_b ranges 0.27–1.91. First divergence occurs at φ_tic=0, ruling out φ-grid mismatch as the root cause.
+    Artifacts:
+      - `scripts/trace_per_phi.py` - Per-φ trace generation tool (reuses production paths per CLAUDE.md Rule #0.3)
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/per_phi/per_phi_pytorch_20251006-151228.json` - PyTorch per-φ trace (metadata + 10 φ steps)
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/per_phi/per_phi_summary_20251006-151228.md` - PyTorch trace summary table
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/per_phi/per_phi_c_20251006-151228.log` - C per-φ trace (TRACE_C_PHI instrumentation)
+      - `scripts/compare_per_phi_traces.py` - C vs PyTorch comparison tool
+      - `reports/2025-10-cli-flags/phase_k/f_latt_fix/per_phi/comparison_summary.md` - Full comparison with Δk table
+      - `golden_suite_generator/nanoBragg.c:3156-3160` - Added TRACE_C_PHI instrumentation to log phi_tic, phi_deg, k_frac, F_latt_b, F_latt per φ step
+    Observations/Hypotheses:
+      - **Critical finding:** C k_frac is CONSTANT (−3.857) across all φ steps while PyTorch k_frac VARIES (−9.899 → −9.863). This indicates the base reciprocal lattice vectors or scattering geometry differ fundamentally before ANY φ rotation is applied.
+      - **φ-sampling ruled out:** The supervisor steering hypothesis of a φ-grid mismatch is incorrect. The 6-unit k offset exists at φ=0° where no rotation has occurred yet.
+      - **Likely root causes:** (1) MOSFLM matrix loading produces different a_star/b_star/c_star, (2) reciprocal→real conversion differs, or (3) scattering vector S calculation uses different geometry.
+      - **Plan pivot required:** Phase K3f must now debug base lattice vectors (compare a_star/b_star/c_star from MOSFLM matrix loading, verify reciprocal→real formula, trace a/b/c before φ rotation) instead of φ-sampling adjustments.
+    Next Actions: **Phase K3f redirected** - Compare base lattice vectors between C and PyTorch: (1) Log MOSFLM a_star/b_star/c_star after matrix loading, (2) Trace reciprocal→real conversion (cell_a/b/c calculation), (3) Log a/b/c vectors BEFORE φ rotation, (4) Verify scattering vector S = (d - i)/λ uses identical geometry. Once base lattice parity achieved, regenerate scaling-chain memo and confirm Δk<5e-4 at all φ steps.
   * [2025-10-06] Attempt #29 (ralph loop) — Result: Phase H5a EVIDENCE-ONLY COMPLETE. **C-code pix0 override behavior with custom vectors documented.**
     Metrics: Evidence-only loop. Two C runs executed: WITH override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m) and WITHOUT override (pix0=-0.216476 m, Fbeam=0.217889 m, Sbeam=0.215043 m). Identical geometry values confirm override is ignored when custom vectors are present.
     Artifacts:
