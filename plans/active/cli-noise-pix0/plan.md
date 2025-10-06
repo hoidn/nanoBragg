@@ -74,7 +74,7 @@ Exit Criteria: Detector trace matches C for pix0 and incident beam; CLI parity r
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | F1 | Thread `custom_beam_vector` through Detector | [D] | ✅ 2025-10-05 (ralph): Refactored `_calculate_pix0_vector()` to use `self.beam_vector` property instead of hardcoded beam vectors (lines 438-440, 519-521). Beam vector now exactly matches C trace. Artifacts in `reports/2025-10-cli-flags/phase_f/`. See docs/fix_plan.md Attempt #11. |
-| F2 | Port CUSTOM pix0 transform for overrides | [ ] | Replace the early-return override path with the CUSTOM convention math from nanoBragg.c:1730-1860 (apply pivot formulas, rotations, and distance correction before setting `pix0_vector`). Confirm via refreshed trace (`trace_beam_after_pix0.log`) that line 1 matches C. |
+| F2 | Port CUSTOM pix0 transform for overrides | [D] | ✅ 2025-10-06 (ralph): Removed early return, pix0_override now used as final value but r_factor/close_distance still calculated. close_distance derived via dot(pix0_vector, odet_vec) matching C:1846. All tests pass (pix0 CLI 10/10, detector geometry 30/30). Artifacts in `reports/2025-10-cli-flags/phase_f2/`. See docs/fix_plan.md Attempt #11. |
 | F3 | Re-run Phase C2 parity smoke | [ ] | Execute the supervisor command for both binaries after F1/F2. Store outputs under `reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/` and summarize results in docs/fix_plan.md Attempts. |
 
 ### Phase G — MOSFLM Matrix Orientation Support

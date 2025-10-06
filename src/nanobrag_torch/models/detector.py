@@ -388,23 +388,18 @@ class Detector:
         from ..utils.geometry import angles_to_rotation_matrix, rotate_axis
         from ..utils.units import degrees_to_radians
 
-        # CLI-FLAGS-003: Handle pix0_override_m if provided
+        # Convert pix0_override to tensor if provided (CLI-FLAGS-003 Phase F2)
+        # This will be used instead of calculating pix0 from pivot formulas,
+        # but we still need to calculate r_factor and derive close_distance from it
+        pix0_override_tensor = None
         if self.config.pix0_override_m is not None:
             override = self.config.pix0_override_m
             if isinstance(override, (tuple, list)):
-                self.pix0_vector = torch.tensor(override, device=self.device, dtype=self.dtype)
+                pix0_override_tensor = torch.tensor(override, device=self.device, dtype=self.dtype)
             elif isinstance(override, torch.Tensor):
-                self.pix0_vector = override.to(device=self.device, dtype=self.dtype)
+                pix0_override_tensor = override.to(device=self.device, dtype=self.dtype)
             else:
                 raise TypeError(f"pix0_override_m must be tuple, list, or Tensor, got {type(override)}")
-
-            # Also need to set distance_corrected and r_factor for compatibility
-            # When override is provided, we don't have meaningful distance correction
-            # Set r_factor to 1.0 (no correction) and use nominal distance
-            self.r_factor = torch.tensor(1.0, device=self.device, dtype=self.dtype)
-            self.distance_corrected = self.distance
-            self.close_distance = self.distance
-            return  # Early return after setting attributes
 
         # Calculate r-factor for distance correction (AT-GEO-003)
         c = self.config
@@ -521,11 +516,15 @@ class Detector:
             # beam_vector is already set via self.beam_vector property
 
             # Use exact C-code formula WITH distance correction (AT-GEO-003)
-            self.pix0_vector = (
-                -Fbeam * self.fdet_vec
-                - Sbeam * self.sdet_vec
-                + self.distance_corrected * beam_vector
-            )
+            # CLI-FLAGS-003 Phase F2: Use override if provided, otherwise calculate
+            if pix0_override_tensor is not None:
+                self.pix0_vector = pix0_override_tensor
+            else:
+                self.pix0_vector = (
+                    -Fbeam * self.fdet_vec
+                    - Sbeam * self.sdet_vec
+                    + self.distance_corrected * beam_vector
+                )
         else:
             # SAMPLE pivot mode: detector rotates around the sample
             # IMPORTANT: Compute pix0 BEFORE rotating, using the same formula as C:
@@ -597,7 +596,21 @@ class Detector:
             # When detector_twotheta is zero, this will be identity
             pix0_rotated = rotate_axis(pix0_rotated, twotheta_axis, detector_twotheta)
 
-            self.pix0_vector = pix0_rotated
+            # CLI-FLAGS-003 Phase F2: Use override if provided, otherwise use calculated
+            if pix0_override_tensor is not None:
+                self.pix0_vector = pix0_override_tensor
+            else:
+                self.pix0_vector = pix0_rotated
+
+        # CLI-FLAGS-003 Phase F2: When pix0_override is provided, derive close_distance from it
+        # This matches C code (nanoBragg.c:1844-1846):
+        #   Fclose         = -dot_product(pix0_vector,fdet_vector);
+        #   Sclose         = -dot_product(pix0_vector,sdet_vector);
+        #   close_distance =  dot_product(pix0_vector,odet_vector);
+        if pix0_override_tensor is not None:
+            # Calculate close_distance as the projection of pix0 onto the detector normal
+            # Use the ROTATED odet_vec (self.odet_vec) since pix0_override is in final coordinates
+            self.close_distance = torch.dot(self.pix0_vector, self.odet_vec)
 
     def get_pixel_coords(self) -> torch.Tensor:
         """
