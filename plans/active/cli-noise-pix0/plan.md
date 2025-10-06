@@ -38,7 +38,7 @@ Exit Criteria: Tests and documentation changes landed; supervisor command succes
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | C1 | Add CLI regression tests | [D] | ✅ 2025-10-16 (commit b6c6a61). `tests/test_cli_flags.py` covers meters/mm aliases, mutual exclusion, override persistence (CPU/CUDA), dtype preservation, and `-nonoise` suppression. |
-| C2 | Golden parity smoke | [ ] | Execute the supervisor command twice: once using C reference (`NB_C_BIN`), once via PyTorch CLI. Confirm CLI completes image generation; stash outputs under `reports/2025-10-cli-flags/phase_c/`. |
+| C2 | Golden parity smoke | [D] | ✅ 2025-10-05: Supervisor command executed for both binaries. C max_I=446.254 (img.bin), PyTorch max_I≈1.15e5 (torch_img.bin). Logs + float images archived under `reports/2025-10-cli-flags/phase_c/parity/`. Intensity scale mismatch noted for follow-up. |
 | C3 | Update documentation | [ ] | Refresh `specs/spec-a-cli.md` and `README_PYTORCH.md` flag tables, note alias in `docs/architecture/c_parameter_dictionary.md`, and reference this plan from `docs/fix_plan.md` (new item) so future loops close it. |
 | C4 | Fix-plan & plan closure | [ ] | Add new fix_plan entry (e.g., `[CLI-FLAGS-003]`) pointing to this plan; set completion criteria (tests, docs, command run). Once tasks pass, close plan and archive per SOP. |
 
@@ -51,3 +51,4 @@ Exit Criteria: Regression sweep documented, outstanding risks rolled into releva
 | --- | --- | --- | --- |
 | D1 | Run targeted regression suite | [ ] | Execute `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_noise_generation.py tests/test_detector_pix0.py -v`; ensure existing tolerances hold with overrides. |
 | D2 | Record residual risks | [ ] | Append summary to `reports/2025-10-cli-flags/phase_d/notes.md` covering any limitations (e.g., lack of `_mm` alias upstream, CUSTOM convention edge cases). Link to relevant active plans if work remains. |
+| D3 | Investigate intensity scaling gap | [ ] | Compare C vs PyTorch outputs from Phase C2 (max/mean). Identify missing normalization factors (phi_steps, mosaic, etc.) and document findings in `reports/2025-10-cli-flags/phase_d/intensity_gap.md`; propose remediation path before plan closure. |

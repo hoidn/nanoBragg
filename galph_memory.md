@@ -932,3 +932,8 @@ Follow-ups for Ralph:
 - Updated `plans/active/cli-noise-pix0/plan.md` Phase C table (C1 → [D]) and added parity risk reminder about potential mm→m double conversion; Phase C2 parity run now primary focus.
 - Regenerated `input.md` directing Phase C2 parity captures (C + PyTorch runs + pytest) with explicit log paths under `reports/2025-10-cli-flags/phase_c/parity/`.
 - Next actions for Ralph: execute C/PyTorch CLI runs per input.md, archive outputs, record attempt in `[CLI-FLAGS-003]`, then proceed to Phase C3 documentation once evidence reviewed.
+## 2025-10-06 (galph loop — Phase C2 review)
+- Sync clean; parity artifacts from commit ca3f8df confirmed that C max_I=4.46e2 vs PyTorch max_I≈1.15e5 (≈2.58e2× gap) despite matching pix0 vectors. Logged intensity delta as new First Divergence for `[CLI-FLAGS-003]` in docs/fix_plan.md.
+- Updated `plans/active/cli-noise-pix0/plan.md` Phase C table (C2 → [D]) and introduced Phase D3 task to diagnose scaling mismatch using existing logs. Fix-plan item now calls for documentation updates (C3/C4) plus D3 analysis before closure.
+- Regenerated `input.md` (100 lines) directing Ralph to execute Phase D3 evidence loop: compute detailed stats comparing `c_img.bin` vs `torch_img.bin`, capture simulator normalization dumps, and summarize in `reports/2025-10-cli-flags/phase_d/intensity_gap.md` before any code changes.
+- No new plans opened; existing CLI plan now governs intensity investigation. Next loop should produce D3 artifacts, update fix_plan Attempts, and only then proceed to doc updates (C3) and regression sweeps (D1).
