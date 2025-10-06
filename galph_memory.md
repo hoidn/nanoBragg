@@ -967,3 +967,9 @@ Follow-ups for Ralph:
 - Updated docs/fix_plan.md `[CLI-FLAGS-003]` with refreshed first-divergence summary, Attempt #9 (analysis loop), and new next actions aligned with Phases F/G/H.
 - Wrote input.md directing Ralph to implement Phase F1 (thread `custom_beam_vector`) and capture verification snippet under `reports/2025-10-cli-flags/phase_f/` before touching pix0.
 - Outstanding: `scaled.hkl.1` duplicate remains (defer removal to implementation loop); pix0 transform and matrix orientation fixes queued for subsequent phases after beam vector wiring lands.
+## 2025-10-16 (galph loop — Phase F2 prep)
+- `git pull --rebase` clean; reviewed docs + active plan per SOP and confirmed we remain on `feature/spec-based-2`.
+- Coin flip ⇒ heads: inspected Ralph’s last commits (581444a, d5eeb5c). Beam-vector threading looks sound but `reports/2025-10-cli-flags/phase_f/beam_vector_after_fix.txt` is empty; parity gap (pix0/orientation) still open.
+- Updated `plans/active/cli-noise-pix0/plan.md` (Phase F1 → [D], added note to repopulate artifact) and refreshed `docs/fix_plan.md` Next Actions accordingly.
+- Rewrote `input.md` directing Ralph to implement Phase F2 (CUSTOM pix0 transform), repopulate the beam-vector artifact, and rerun the full parity harness; documented command scaffolding + artifact paths under `reports/2025-10-cli-flags/phase_f/`.
+- No new plan created; CLI plan remains authoritative. Pending follow-up: Phase F2 implementation + parity rerun, then proceed to Phase G.
