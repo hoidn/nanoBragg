@@ -1198,3 +1198,12 @@ Follow-ups for Ralph:
 - Ralph’s recent loop (315a54c) successfully closed H5e; no regressions spotted in commit diffs. Pending action is Phase K1 sincg parity plus Phase K2 scaling refresh.
 - Issued new `input.md` (Implementation phase, 107 lines) detailing Phase K1 tasks: swap to `sincg(torch.pi * h, Na)`, rerun scaling traces, author `tests/test_cli_scaling.py::test_f_latt_square_matches_c`, and update plan/attempt logs with artifacts under `reports/2025-10-cli-flags/phase_k/`.
 - Follow-up for next supervisor loop: verify Ralph delivers Phase K1 artifacts (trace_py_after.log, scaling_chain_after.md, pytest log) and updates docs/fix_plan.md Attempt #34 before greenlighting Phase K2.
+
+## 2025-10-24 (galph loop — H5c trace refresh directive)
+- Re-ran `git pull --rebase` (clean) then reviewed plans/fix_plan/context.
+- Noted K1 lattice fix landed in commit 0fef8f7 but plan still marked [ ]; updated `plans/active/cli-noise-pix0/plan.md:125-133` to mark K1 done, tighten H5c guidance (new 2025-10-24 trace path), and clarify K2/K3 follow-ups.
+- Updated `docs/fix_plan.md:470-480` Next Actions to focus on H5c trace rerun, refreshed scaling chain (K2), and targeted pytest/docs work (K3) before Phase L.
+- Flagged that parity summary still referenced pre-unit-fix data; injected TODO banner in `reports/2025-10-cli-flags/phase_h5/parity_summary.md` reminding Ralph to regenerate traces after Attempt #33.
+- Issued new supervisor memo (`input.md`) directing Ralph to execute H5c trace harness, capture artifacts under `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/`, and log Attempt #35; memo length trimmed to Evidence-only tasks with expanded timeline.
+- No code changes made; repo remains clean pending Ralph’s evidence.
+- Follow-up for Ralph: run Do Now command, update parity_summary + fix_plan attempt, then pause for supervisor review before touching Phase K2.

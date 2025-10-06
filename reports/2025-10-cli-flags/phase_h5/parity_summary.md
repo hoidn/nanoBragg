@@ -5,6 +5,8 @@
 **Goal:** Confirm the revert that skips `-pix0_vector_mm` whenever custom detector vectors are present, then capture matching PyTorch traces so Phase K normalization work starts from a geometry-accurate baseline.
 
 ## Implementation Snapshot
+⚠️ **Update queued (2025-10-24):** Metrics below still reference the 2025-10-22 PyTorch trace captured before Attempt #33. Rerun Phase H5c to regenerate `py_traces/2025-10-24/` and refresh this summary once the new pix0/F/S deltas land.
+
 
 ### Code Changes
 **File:** `src/nanobrag_torch/models/detector.py`

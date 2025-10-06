@@ -1,107 +1,111 @@
-Summary: Align the PyTorch SQUARE lattice factor with the nanoBragg.c reference so the supervisor command can finally run end-to-end.
-Phase: Implementation
-Focus: CLI-FLAGS-003 Handle -nonoise and -pix0_vector_mm (Phase K1 SQUARE F_latt fix)
+Summary: Capture post-unit-fix pix0 traces so Phase K consumes fresh geometry evidence before any new code.
+Phase: Evidence
+Focus: CLI-FLAGS-003 Phase H5c trace refresh
 Branch: feature/spec-based-2
-Mapped tests: planned tests/test_cli_scaling.py::test_f_latt_square_matches_c | existing tests/test_cli_flags.py::TestCLIPix0Override (sanity)
-Artifacts: reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_py_after.log
-Artifacts: reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_c_after.log
-Artifacts: reports/2025-10-cli-flags/phase_k/f_latt_fix/scaling_chain_after.md
-Artifacts: reports/2025-10-cli-flags/phase_k/f_latt_fix/pytest.log
-Do Now: CLI-FLAGS-003 Phase K1 — Align SQUARE F_latt with C; author tests/test_cli_scaling.py::test_f_latt_square_matches_c then run `env KMP_DUPLICATE_LIB_OK=TRUE NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v`
-If Blocked: Capture a delta table with `scripts/debug_flatt_difference.py` and park the attempt under reports/2025-10-cli-flags/phase_k/f_latt_fix/attempts/, then log the stall and metrics in docs/fix_plan.md before calling for help.
+Mapped tests: none — evidence-only
+Artifacts: reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/trace_py.log
+Artifacts: reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/trace_py.stdout
+Artifacts: reports/2025-10-cli-flags/phase_h5/parity_summary.md
+Do Now: CLI-FLAGS-003 Phase H5c — Capture post-unit-fix trace; run `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_h/trace_harness.py --out reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/trace_py.log`
+If Blocked: Log the failure (command + stderr) to reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/attempt_log.md and halt for supervisor guidance.
+
+Timeline:
+01. Confirm `NB_C_BIN=./golden_suite_generator/nanoBragg` remains exported in the shell; note it in attempt log.
+02. Ensure editable install still active; no reinstall needed unless torch import fails.
+03. Create `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/` before running harness.
+04. Execute the Do Now trace harness; tee stdout to trace_py.stdout for later diffing.
+05. Immediately copy `trace_py.log` to a scratch diff view against the 2025-10-22 baseline to spot unit-fix deltas.
+06. Compute Δpix0, ΔFbeam, ΔSbeam manually (spreadsheet or python) and jot them into attempt log.
+07. Verify the trace still reports the corrected `incident_vec` and rotated reciprocal vectors; flag any regressions.
+08. Update `reports/2025-10-cli-flags/phase_h5/parity_summary.md` with the new numeric deltas and tolerance checks.
+09. Note in the summary whether `F_latt` ratios now fall inside 1e-3; this informs Phase K2 readiness.
+10. Stage screenshots or diff snippets only if values look suspicious; otherwise keep artifacts textual.
+11. Append Attempt #35 to docs/fix_plan.md with metrics, deltas, and artifact paths.
+12. Mark H5c as done in plans/active/cli-noise-pix0/plan.md once evidence is committed.
+13. Leave a short README stub in the new trace directory summarising the command, git hash, and environment variables.
+14. Double-check no new binary files (e.g., .npy) were produced—cleanup immediately if so.
+15. Signal completion in Attempts History and pause before touching Phase K2 tasks.
+16. Re-run the harness if stdout shows missing TRACE_PY lines; stale caches can drop signals.
+17. Capture a quick checksum (`shasum`) of trace_py.log and add it to the attempt log for reproducibility.
+18. Note current git commit (`git rev-parse HEAD`) inside the trace README.
+19. Record wall-clock runtime of the harness; large drifts may hint at hidden device switches.
+20. Verify locks on reports directory (no leftover write permissions issues) before proceeding.
+21. Snapshot `env | sort` into the attempt log to document environment variables used.
+22. After editing docs, re-open them to confirm UTF-8 encoding only—no stray BOM characters.
+23. Stage files incrementally and run `git diff --cached` to ensure only evidence files appear.
+24. Draft the docs/fix_plan attempt entry in a scratch buffer before committing to avoid typos.
+25. Re-read the updated plan row to make sure guidance still matches the recorded artifacts.
 
 Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md:160 spells out Phase K1, so finishing that row is prerequisite to every downstream parity task.
-- specs/spec-a-core.md:218 defines SQUARE lattice factor as Π sincg(π·h, Na), making `(h-h0)` a spec violation that we must remove.
-- golden_suite_generator/nanoBragg.c:3069-3079 is the authoritative C loop; the PyTorch branch has to match those sincg arguments exactly.
-- docs/fix_plan.md:484-497 (Attempt #28) already diagnosed the 463× F_latt gap; ignoring it blocks the top long-term goal.
-- reports/2025-10-cli-flags/phase_j/trace_py_scaling.log still shows F_latt≈7.69e1 instead of 3.56e4, proving the bug remains live.
-- docs/development/testing_strategy.md:37-120 requires targeted pytest automation and evidence, not manual screenshots.
+- plans/active/cli-noise-pix0/plan.md:127 keeps H5c open; new traces are prerequisite for K2/K3.
+- docs/fix_plan.md:470-517 demands refreshed pix0 evidence plus scaling reruns before normalization continues.
+- reports/2025-10-cli-flags/phase_h5/parity_summary.md:6-18 now warns that current metrics predate Attempt #33.
+- specs/spec-a-core.md:70-120 mandates <5e-5 m pix0 tolerance; we must document compliance.
 
 How-To Map:
-- Step 0a — Ensure editable install is current (`pip install -e .` already done; rerun only if dependencies changed last loop).
-- Step 0b — Export `NB_C_BIN=./golden_suite_generator/nanoBragg` before any parity command.
-- Step 0c — Every python/pytest invocation must include `KMP_DUPLICATE_LIB_OK=TRUE` to avoid MKL conflicts.
-- Step 1a — Copy baseline traces (`trace_py_scaling.log`, `trace_c_scaling.log`) into the Phase K directory so before/after comparisons sit next to each other.
-- Step 1b — Note the baseline F_latt components from Attempt #28 in a scratchpad for later diffing.
-- Step 2a — In `src/nanobrag_torch/simulator.py:200-280`, replace each `sincg(torch.pi * (h - h0), Na)` with `sincg(torch.pi * h, Na)` while preserving Na>1 guards.
-- Step 2b — Do the same for k and l branches; double-check that temporary tensors stay on `h.device` to maintain device neutrality.
-- Step 2c — Update the block docstring right above the lattice factor to include the nanoBragg.c snippet per Core Rule #11 before touching code.
-- Step 2d — Ensure the diagnostic trace block (the one gated by debug flag near line 1258) also prints the updated values using the same formula.
-- Step 3a — Run `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_flatt_difference.py > reports/2025-10-cli-flags/phase_k/f_latt_fix/delta_table.txt` to confirm old vs new ratios collapse to ~1.
-- Step 3b — Execute `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_flatt_implementation.py > reports/2025-10-cli-flags/phase_k/f_latt_fix/implementation_check.txt` for sanity on triclinic samples.
-- Step 4a — Regenerate the PyTorch scaling trace: `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_scaling_pipeline.py --pixel 1039 685 --out reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_py_after.log`.
-- Step 4b — Regenerate the matching C trace via `KMP_DUPLICATE_LIB_OK=TRUE NB_C_BIN=./golden_suite_generator/nanoBragg ./scripts/trace_c_at012_pixel.sh 1039 685 > reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_c_after.log` (adjust script params if required and note it in README).
-- Step 4c — Run `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_j/analyze_scaling.py --py reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_py_after.log --c reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_c_after.log --out reports/2025-10-cli-flags/phase_k/f_latt_fix/scaling_chain_after.md` to confirm the first divergence disappears.
-- Step 5a — Author `tests/test_cli_scaling.py` (if absent) with `test_f_latt_square_matches_c`, parametrize over device (cpu/cuda) and dtype (float32/float64) when feasible.
-- Step 5b — Within that test, drive PyTorch + C via the existing scaling harness (respect NB_C_BIN) and assert |ratio-1| < 1e-3 for F_latt and I_before_scaling as spelled out in plan row K3.
-- Step 5c — Run `env KMP_DUPLICATE_LIB_OK=TRUE NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v | tee reports/2025-10-cli-flags/phase_k/f_latt_fix/pytest.log`.
-- Step 5d — Re-run `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py::TestCLIPix0Override -v | tee -a reports/2025-10-cli-flags/phase_k/f_latt_fix/pytest.log` as a guardrail to ensure the pix0 work stays green.
-- Step 6a — Update `reports/2025-10-cli-flags/phase_k/README.md` with bullet points summarising trace results, ratios, and pytest outcomes.
-- Step 6b — Add Attempt #34 to docs/fix_plan.md (CLI-FLAGS-003 section) capturing metrics, trace paths, and the new regression test.
-- Step 6c — Flip Phase K1 to [D] in plans/active/cli-noise-pix0/plan.md and note readiness for Phase K2.
-- Step 6d — Commit artifacts under reports/…; do not store large binaries outside this folder hierarchy.
+- Export `KMP_DUPLICATE_LIB_OK=TRUE` for every python invocation; without it the harness may trip MKL.
+- Run the Do Now command from repo root so relative paths resolve; capture stdout with `tee` to keep a textual artifact.
+- Use `python -m filecmp` or `diff -u` to compare new trace against `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/trace_py.log`; record key differences.
+- Update `parity_summary.md` by replacing the dated metrics table with the new numbers, noting pass/fail for pix0, F/S beams, and F_latt.
+- In docs/fix_plan.md, add Attempt #35 under CLI-FLAGS-003 with metrics (Δpix0, ΔFbeam, ΔSbeam, F_latt ratio) plus artifact references.
+- Stage only report/doc updates; leave git tree clean except for these evidence files.
+
+Trace Checklist:
+- pix0_vector_meters (three components) — confirm Δ < 5e-5 m vs C trace.
+- Fbeam/Sbeam scalars — ensure conversion now matches C within tolerance.
+- hkl_frac triplet — verify rounding to (2,2,-13) persists.
+- F_latt_a/b/c and product — expect close agreement with C once K1 fix in place.
+- omega_pixel_sr and polar — note values but defer detailed analysis to Phase K2.
 
 Pitfalls To Avoid:
-- Leaving `(h-h0)` anywhere in code or traces will reintroduce the 463× error—double-check before final diff.
-- Creating new CPU tensors during CUDA runs will crash the targeted pytest; always reuse device from existing tensors.
-- Forgetting Na>1 guards will yield NaN/Inf when reflections sit exactly on integers; copy C conditional logic precisely.
-- Adding unconditional print statements in hot loops will tank performance and break vectorization tests.
-- Skipping the docstring C snippet violates Core Rule #11; add it before editing implementation lines.
-- Running nb-compare now wastes time; parity check happens after Phase K completes.
-- Forgetting to set `NB_C_BIN` will silently fall back to the wrong binary; always export before commands.
-- Missing Attempt log or plan updates will force redo loops; capture evidence before pushing.
-- Deleting or moving anything listed in docs/index.md (Protected Assets) is prohibited.
-- Introducing `.item()` on differentiable tensors (e.g., Na) would break gradients; stay tensor-native.
+- Do not rerun C trace; existing 2025-10-22 artifacts remain the comparator for this loop.
+- Skip pytest/nb-compare entirely—Evidence gate forbids test execution.
+- Resist tweaking simulator code; today is documentation + trace capture only.
+- Avoid creating new directories outside `reports/2025-10-cli-flags/phase_h5/`.
+- Keep device/dtype neutral commentary; trace harness already respects configs.
+- Protect docs/index.md and other protected assets per CLAUDE.md instructions.
+- Document every command in attempt log to maintain reproducibility.
+- If CUDA warms up unexpectedly, note it but do not debug—you’re on CPU path here.
+- Leave NB_RUN_PARALLEL unset so parity pytest stays skipped.
+- Don’t forget to commit/push the updated reports; supervisor automation expects clean git after run.
+
+Data Notes:
+- Baseline C trace: reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/with_override.log (use for diffing).
+- Previous PyTorch trace: reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/trace_py.log (contains pre-unit-fix pix0 error).
+- Attempt log template: reports/2025-10-cli-flags/phase_h5/py_traces/attempt_log_template.md (copy if blank).
+- Target tolerances: pix0 < 5e-5 m, F_latt ratio within 1e-3, h/k/l residuals < 1e-6.
+- Post-run checklist: update plan, fix_plan, parity_summary, and artifact README.
+
+Command Log Template:
+cmd01: export NB_C_BIN=./golden_suite_generator/nanoBragg
+cmd02: export KMP_DUPLICATE_LIB_OK=TRUE
+cmd03: mkdir -p reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24
+cmd04: PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_h/trace_harness.py --out reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/trace_py.log
+cmd05: tee reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/trace_py.stdout
+cmd06: diff -u reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/with_override.log reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/trace_py.log
+cmd07: python reports/2025-10-cli-flags/phase_j/analyze_scaling.py --py reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/trace_py.log --c reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/with_override.log --out reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/quick_ratio.md
+cmd08: git status --short
+cmd09: git add reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-24/*.log reports/2025-10-cli-flags/phase_h5/parity_summary.md docs/fix_plan.md plans/active/cli-noise-pix0/plan.md
+cmd10: git commit -m "CLI-FLAGS-003 H5c trace refresh"
+
+Post-Run Questions:
+- Did Δpix0 fall below 5e-5 m on all components?
+- Are F_latt ratios now within 1e-3 of C?
+- Did h,k,l fractional differences stay under 1e-6?
+- Any anomalies in omega or polar that require Phase K follow-up?
+
+Telemetry Checklist:
+log01: Harness wall-clock runtime (seconds).
+log02: SHA of trace_py.log (shasum -a 256).
+log03: Git commit hash recorded in attempt log.
+log04: Environment snapshot (`env | sort > ...`).
+log05: Notes on CPU vs GPU usage (should remain CPU).
+
 
 Pointers:
-- plans/active/cli-noise-pix0/plan.md:160-162 — Phase K checklist we are executing now.
-- specs/spec-a-core.md:218 — Formal SQUARE lattice factor formula to cite in docstring.
-- golden_suite_generator/nanoBragg.c:3069-3079 — C code to mirror inside simulator.
-- docs/fix_plan.md:484-511 — Attempt history confirming F_latt as root cause and listing required artifacts.
-- reports/2025-10-cli-flags/phase_j/scaling_chain.md — Baseline ratios to update post-fix.
-- src/nanobrag_torch/simulator.py:200-280 — Current PyTorch implementation to adjust.
-- docs/architecture/pytorch_design.md:420-470 — Physics pipeline narrative to keep aligned with code changes.
-- docs/debugging/debugging.md:1-160 — Parallel trace SOP; follow during trace comparison.
-- docs/development/testing_strategy.md:37-120 — Command sourcing and targeted test policy.
-- scripts/debug_flatt_implementation.py:1-160 — Supplemental harness verifying sincg parity.
-- scripts/debug_scaling_pipeline.py:1-200 — Scaling trace generator referenced above.
+- plans/active/cli-noise-pix0/plan.md:120-133
+- docs/fix_plan.md:470-517
+- reports/2025-10-cli-flags/phase_h5/parity_summary.md:6-18
+- specs/spec-a-core.md:70-120
 
-Next Up: After Phase K1 passes, move straight to Phase K2 (scaling-chain refresh) before attempting Phase L nb-compare.
-
-Evidence Targets:
-- F_latt ratio (Py/C) within 1e-3 at pixel (1039,685) documented in scaling_chain_after.md.
-- I_before_scaling ratio (Py/C) within 1e-3 recorded in the same report.
-- Traces should show `TRACE_PY: F_latt` ≈ 3.56e4; diff against C trace must read `< 5e-3 relative` in each component line.
-- pytest log must include both cpu and cuda parametrisations with a `@pytest.mark.cuda` skip guard.
-- Attempt #34 entry should list artifact paths and cite reports/2025-10-cli-flags/phase_k/f_latt_fix/.
-- Updated docstring should embed the exact nanoBragg.c snippet with line numbers to simplify future audits.
-
-Gradient Safeguards:
-- Run `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_gradients.py::TestCrystal::test_tricubic_gradient -k "square"` if available to confirm no regressions.
-- If gradients fail, stash the diff, revert to previous commit locally, and log the failure before proceeding.
-- Ensure new tensors are created via `torch.as_tensor(Na, device=h.device, dtype=h.dtype)` rather than bare constructors.
-
-Reporting Checklist:
-- Update reports/2025-10-cli-flags/phase_k/README.md with bullet points for implementation notes, metrics, and follow-up.
-- Store any scratch notebooks under reports/…/notebooks/ to keep repo tidy.
-- If scripts needed tweaks, capture those diffs and mention them explicitly in docs/fix_plan.md.
-
-Communication Notes:
-- Mention in docs/fix_plan.md whether CUDA run was executed or skipped (with reason) for transparency.
-- Flag any lingering pix0 deltas in parity_summary.md even if below tolerance to preserve traceability.
-- Call out in plan update whether normalization work (Phase K2) is now unblocked.
-
-Sanity Cross-Checks:
-- Compare new sincg outputs against numpy equivalent in debug harness to guard against dtype surprises.
-- Verify that `Simulator._compute_physics_for_position` still returns the same shape tensors when oversample>1.
-- Confirm the code path remains compilation-friendly (no new Python loops) for future torch.compile work.
-
-Archive Guidance:
-- Do not delete existing Phase J artifacts; create Phase K directory sibling and cross-link from README.
-- Include md5 sums or short metrics table in scaling_chain_after.md for easier diffing later.
-- If new helper functions are necessary, place them in `nanobrag_torch/utils/physics.py` with tests and doc citations.
-
-Ready-to-Publish Signals:
-- `nb-compare` should not be touched yet; wait for supervisor go/no-go after reviewing scaling_chain_after.md.
-- Once supervisor signs off, prepare to trigger Phase K2 tasks (re-run scaling chain on other shapes) immediately.
+Next Up: Phase K2 scaling-chain refresh after H5c evidence lands (stay on this focus until supervisor review).
