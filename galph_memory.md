@@ -1086,3 +1086,10 @@ Follow-ups for Ralph:
 - Synced `docs/fix_plan.md` Next Actions to align with the new H3b1–H3b3 scope (trace collection → implementation → regression test repair).
 - Authored new input.md directing Ralph to gather paired C/Py traces, stash logs under `reports/2025-10-cli-flags/phase_h/implementation/`, and summarise deltas in `pix0_mapping_analysis.md` before touching detector code.
 - Follow-up for Ralph next loop: execute H3b1 evidence capture (both NB_C_BIN and Py harness runs, override on/off), document findings, then proceed to H3b2 using measured relationships.
+
+## 2025-10-06 (galph loop — H3b2 readiness)
+- Reviewed CLI-FLAGS-003 status; confirmed Attempt #23 evidence proves C ignores `-pix0_vector_mm` when custom vectors present, leaving 1.14 mm pix0 Y delta from PyTorch.
+- Updated plans/active/cli-noise-pix0/plan.md Phase H3b: marked H3b1 complete, rewrote H3b2/H3b3 guidance to enforce precedence (custom vectors > override) and to adjust regression test expectations.
+- Regenerated input.md (100 lines) directing Ralph to implement the precedence fix, update tests/test_cli_flags.py, capture artifacts under reports/2025-10-cli-flags/phase_h/implementation/, and log Attempt #24.
+- No code changes performed; repo remains clean aside from plan/input updates.
+- Follow-ups for Ralph: execute H3b2 implementation + H3b3 regression rewrite, rerun targeted pytest node, update docs/fix_plan.md Attempt log with metrics, and stash validation artifacts before moving to Phase H4.
