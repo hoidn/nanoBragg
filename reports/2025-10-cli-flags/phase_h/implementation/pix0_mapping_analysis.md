@@ -143,9 +143,9 @@ The test `test_pix0_vector_mm_beam_pivot` should verify that when custom vectors
 ## Next Actions
 
 1. ✅ H3b1 complete - Evidence captured and analyzed
-2. [ ] H3b2 - Implement correct precedence: custom_vectors > pix0_override > standard calculation
-3. [ ] H3b3 - Update regression test to verify C-matching precedence behavior
-4. [ ] H4 - Run parity validation with corrected implementation
+2. ✅ H3b2 - Precedence implemented in commit d6f158c; override now skipped whenever custom detector vectors are present
+3. ✅ H3b3 - Regression test updated (tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot) to cover both precedence cases and reference `pix0_expected.json`
+4. [ ] H4 - Port C’s post-rotation beam-centre recomputation so pix0 deltas collapse (<5e-5 m) before parity rerun
 
 ## References
 

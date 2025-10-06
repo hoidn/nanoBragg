@@ -1093,3 +1093,10 @@ Follow-ups for Ralph:
 - Regenerated input.md (100 lines) directing Ralph to implement the precedence fix, update tests/test_cli_flags.py, capture artifacts under reports/2025-10-cli-flags/phase_h/implementation/, and log Attempt #24.
 - No code changes performed; repo remains clean aside from plan/input updates.
 - Follow-ups for Ralph: execute H3b2 implementation + H3b3 regression rewrite, rerun targeted pytest node, update docs/fix_plan.md Attempt log with metrics, and stash validation artifacts before moving to Phase H4.
+## 2025-10-06 (galph loop — Phase H4 prep)
+- `git pull --rebase` clean; reviewed required docs and active plans.
+- Phase analysis: CLI parity still blocked by +3.9 mm pix0 Y delta despite H3b2 precedence fix; vectorization plan untouched (Phase A evidence pending).
+- Coin flip = heads → reviewed Ralph’s last iterations (commits 5a9a9ea, d6f158c, 60852bb). Precedence implementation productive but regression test currently tolerates 5 mm delta — flagged for tightening post-fix.
+- Updated `plans/active/cli-noise-pix0/plan.md` context + Phase H3b2/H3b3 entries to reflect completion and refocused H4 guidance on C beam-centre recomputation. Synced docs/fix_plan.md Next Actions and refreshed pix0_mapping_analysis.md checklist.
+- Authored new input.md (100 lines) directing Ralph to port C’s post-rotation Fbeam/Sbeam recomputation, rerun traces, tighten pytest tolerances, and archive artifacts under `reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/`.
+- Reminder for next loop: verify H4 implementation lands, tighten test tolerance to ≤5e-5 m, capture Attempt #25 evidence. Vectorization plan remains frozen until CLI parity cleared.
