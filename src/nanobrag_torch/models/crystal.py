@@ -148,6 +148,16 @@ class Crystal:
         # Clear geometry cache when moving devices
         self._geometry_cache = {}
 
+        # Migrate or invalidate φ cache tensors (CLI-FLAGS-003 Phase L3k.3c.3)
+        # When device/dtype changes, cached tensors must migrate to stay consistent
+        if self._phi_last_cache is not None:
+            a_cached, b_cached, c_cached = self._phi_last_cache
+            self._phi_last_cache = (
+                a_cached.to(device=self.device, dtype=self.dtype),
+                b_cached.to(device=self.device, dtype=self.dtype),
+                c_cached.to(device=self.device, dtype=self.dtype)
+            )
+
         return self
 
     def _validate_cell_parameters(self):
@@ -1067,7 +1077,11 @@ class Crystal:
         if self._phi_last_cache is None and config.phi_steps > 0:
             # Compute the last phi angle
             last_phi_deg = config.phi_start_deg + (config.osc_range_deg / config.phi_steps) * (config.phi_steps - 1)
-            last_phi_deg_tensor = torch.tensor(last_phi_deg, device=self.device, dtype=self.dtype)
+            # Preserve gradients: use .to() instead of torch.tensor() when input is already a tensor
+            if isinstance(last_phi_deg, torch.Tensor):
+                last_phi_deg_tensor = last_phi_deg.to(device=self.device, dtype=self.dtype)
+            else:
+                last_phi_deg_tensor = torch.tensor(last_phi_deg, device=self.device, dtype=self.dtype)
             last_phi_rad = torch.deg2rad(last_phi_deg_tensor)
 
             # Rotate base vectors by the last phi angle
