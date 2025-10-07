@@ -14,7 +14,7 @@ this will require first adding support for the following cli params to pytorch n
 
 </1>
 <2>
-review docs/bugs/verified_c_bugs.md and specs/. Make sure that none of the C implementation bugs were propagated to the specs. Update the specs and pytorch implementation if needed.
+review docs/bugs/verified_c_bugs.md and specs/. Make sure that the phi 0 carryover C implementation bug wasnt propagated to the specs. Update the specs (if needed) and pytorch implementation to fix this bug, if it was propagated.
 </2>
 <3>
 review and firm up if needed plans/active/vectorization.md. then implement it (or rather, delegate its implementation to ralph), starting with the tricubic interpolation vectorization 
