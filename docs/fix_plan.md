@@ -518,6 +518,33 @@
       2. Compare C trace against PyTorch probe using scripts/compare_per_phi_traces.py to compute Δb_y and Δk_frac
       3. Update diagnosis.md with delta values
       4. If deltas ≈ 0: Proceed to Phase L3k.4 normalization closure
+  * [2025-10-07] Attempt #109 (ralph loop i=108, Mode: Parity/Evidence) — Result: **SUCCESS** (Phase L3k.3b VG-1 TRACE REGENERATION COMPLETE). **C and PyTorch per-φ traces captured under 20251123 timestamp; VG-1 deltas computed; diagnosis.md updated.**
+    Metrics: Evidence-only loop (no tests executed; pytest collection: 0 tests collected in 0.02s — expected for evidence-only loop). C TRACE_C_PHI: 10 phi steps captured; PyTorch TRACE_PY_PHI: 10 entries captured; comparison script: 1 DIVERGE (φ=0), 9 OK (φ≥0.01°).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/c_trace_phi_20251123.log` — C TRACE_C_PHI output (342 lines, SHA256: 98c65f3d...)
+      - `reports/2025-10-cli-flags/phase_l/per_phi/reports/.../20251123/trace_py_rot_vector_20251123_per_phi.json` — PyTorch per-φ JSON trace
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/trace_py_rot_vector_20251123.log` — PyTorch main trace (SHA256: ea063786...)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/comparison_stdout_20251123.txt` — Comparison script output (SHA256: affab6bb...)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/delta_metrics.json` — VG-1 delta metrics (SHA256: 0c699daa..., status="ok")
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/commands.txt` — Full command transcript with timestamps
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/sha256.txt` — SHA256 checksums for all artifacts
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md` — Updated with L3k.3c.2 section documenting φ=0 divergence findings
+    Observations/Hypotheses:
+      - **φ=0 Divergence Confirmed**: Δk_frac = 1.8117×10⁻² at φ_tic=0 (36× above tolerance)
+        - C k_frac @ φ_tic=0: -0.6073 (matches φ_tic=9: -0.6073)
+        - PyTorch k_frac @ φ_tic=0: -0.5891 (base vector, not rotated)
+      - **φ>0 Parity Achieved**: Δk_frac ≈ 2.8×10⁻⁵ for φ_tic=1…9 (within 5e-4 tolerance)
+      - **Root Cause Confirmed**: Rotation fix (Attempt #97) successfully aligns φ>0 but φ=0 still returns base vector instead of carrying forward prior rotation state
+      - **C Behavior**: C preserves rotated state even at φ=0 (k_frac consistent across φ_tic=0 and φ_tic=9)
+      - **PyTorch Behavior**: Resets to base vector when φ=0, then correctly rotates for φ>0
+      - **Remediation Required**: Implement φ==0 carryover mechanism (vectorized mask or equivalent) matching C behavior
+    First Divergence: φ_tic=0 (φ=0.0°), variable: k_frac, delta: 1.8117×10⁻² (PyTorch: -0.5891, C: -0.6073)
+    Next Actions:
+      1. Proceed to Phase L3k.3c.3: Implement φ==0 carryover fix in `Crystal.get_rotated_real_vectors`
+      2. Rerun per-φ harness and comparison script to verify Δk ≤ 1e-6 for all φ steps
+      3. Update `fix_checklist.md` VG-1.4 to ✅ once thresholds met
+      4. Execute Phase L3k.3d (nb-compare ROI parity) and L3k.3e (documentation finalization)
+      5. Log Phase L3k.4 attempt entry and proceed to Phase L4 supervisor command rerun
       5. If deltas ≠ 0: Implement vectorized φ=0 carryover fix per proposed remediation, re-verify with VG-1 gates
     Observations/Hypotheses:
       - **Root cause confirmed fixed**: Removed lines 1014-1022 (independent reciprocal rotation), replaced with cross product recomputation (lines 1019-1035)

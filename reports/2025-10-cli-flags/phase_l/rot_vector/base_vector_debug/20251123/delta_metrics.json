@@ -1,13 +1,13 @@
 {
-  "status": "BLOCKED",
-  "reason": "C trace file missing (reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/202510070839/c_trace_phi_202510070839.log does not exist)",
-  "action_required": "Generate C trace using instrumented golden_suite_generator/nanoBragg binary as specified in Phase L3k.3b",
-  "pytorch_values_captured": {
-    "b_base_y": 0.7173197865486145,
-    "rot_b_phi0_y": 0.7173197865486145,
-    "rot_b_phi1_y": 0.7122385501861572,
-    "k_frac_placeholder": 980.31396484375
+  "status": "ok",
+  "phi0": {
+    "py_k_frac": -0.589139352775903,
+    "c_k_frac": -0.607255839576692,
+    "delta_k": 0.018116486800789033
   },
-  "expected_c_reference": "reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/202510070839/c_trace_phi_202510070839.log",
-  "note": "Delta computation deferred until C trace is available. Per input.md 'If Blocked' guidance, documenting the gap and proceeding with analysis memo."
+  "phi9": {
+    "py_k_frac": -0.607227388110849,
+    "c_k_frac": -0.607255839576692,
+    "delta_k": 2.8451465843071233e-05
+  }
 }
