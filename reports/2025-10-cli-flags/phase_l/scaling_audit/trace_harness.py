@@ -147,6 +147,8 @@ def main():
     cell_a, cell_b, cell_c, cell_alpha, cell_beta, cell_gamma = cell_params
 
     # Build crystal config with cell params and MOSFLM vectors
+    # Each MOSFLM reciprocal vector must be assigned to its own config field
+    # (not packed into a single list) so Crystal uses the specified orientation
     crystal_config = CrystalConfig(
         cell_a=cell_a,
         cell_b=cell_b,
@@ -154,11 +156,9 @@ def main():
         cell_alpha=cell_alpha,
         cell_beta=cell_beta,
         cell_gamma=cell_gamma,
-        mosflm_a_star=[
-            torch.tensor(a_star, dtype=dtype, device=device),
-            torch.tensor(b_star, dtype=dtype, device=device),
-            torch.tensor(c_star, dtype=dtype, device=device)
-        ],
+        mosflm_a_star=torch.tensor(a_star, dtype=dtype, device=device),
+        mosflm_b_star=torch.tensor(b_star, dtype=dtype, device=device),
+        mosflm_c_star=torch.tensor(c_star, dtype=dtype, device=device),
         **params['crystal']
     )
 

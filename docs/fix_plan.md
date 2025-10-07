@@ -473,6 +473,19 @@
       - **Scaling infrastructure correct:** r_e², fluence, steps, capture_fraction, polar, omega_pixel all match C within tolerances (<0.002% delta)
       - **Test coverage maintained:** tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics passes all parametrized variants
     Next Actions: Phase L3 — Investigate why F_cell=0 for reflection (1,12,3). Check HKL file contents, structure factor lookup logic, and interpolation behavior. Update Phase L plan status to [L2b=D, L2c=D].
+  * [2025-10-17] Attempt #72 (ralph loop) — Result: **SUCCESS** (Phase L2b harness MOSFLM orientation fix). **Corrected `trace_harness.py` to assign each MOSFLM reciprocal vector to its own config field instead of packing all three into `mosflm_a_star`.**
+    Metrics: Harness now produces non-zero F_latt values (F_latt=1.351 vs previous 0), confirming proper orientation. Test suite passes 4/4 variants (tests/test_trace_pixel.py). Comparison script completed successfully (2 divergent factors identified).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:159-161` - Fixed MOSFLM vector assignment (mosflm_a_star, mosflm_b_star, mosflm_c_star as separate tensors)
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/scaling_audit_summary.md:1-76` - Updated L2c comparison report confirming first divergence at I_before_scaling
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log` - Regenerated trace showing live polarization and omega values
+    Observations/Hypotheses:
+      - **Fix confirmed:** Switching from `mosflm_a_star=[a*, b*, c*]` (list) to individual tensor assignments (mosflm_a_star=tensor(a*), mosflm_b_star=tensor(b*), mosflm_c_star=tensor(c*)) enables Crystal.compute_cell_tensors to use the MOSFLM orientation properly
+      - **F_latt now non-zero:** Lattice shape factors are computed correctly (F_latt_a=-2.405, F_latt_b=-0.861, F_latt_c=0.652, product=1.351)
+      - **F_cell still zero:** This is expected—pixel (685,1039) computes h=-7,k=-1,l=-14 but scaled.hkl only contains (1,12,3), so structure factor lookup correctly returns 0
+      - **Scaling factors verified:** All intermediate scaling terms (r_e², fluence, steps, capture_fraction, polar, omega_pixel) match C within tolerance (Δ<0.002%)
+      - **Test coverage maintained:** tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics passes all parametrized variants (4/4)
+    Next Actions: Phase L2b complete; L2c evidence captured. Supervisor to proceed with Phase L3 structure-factor investigation based on comparison summary showing I_before_scaling as first divergence.
   * [2025-10-07] Attempt #69 (ralph loop) — Result: **SUCCESS** (Phase L2b harness refresh complete). **Updated trace harness to use live simulator TRACE_PY output; generated fresh trace_py_scaling.log with 40 real values.**
     Metrics: 40 TRACE_PY lines captured from stdout; test suite passes 4/4 variants (cpu/cuda × float32/float64).
     Artifacts:
