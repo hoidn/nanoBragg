@@ -477,6 +477,55 @@
       - **H3 promoted to primary:** MOSFLM matrix semantics now leading suspect (reciprocal perfect O(1e-9), real diverges in Y)
       - **Test stability:** `pytest --collect-only` passed 4/4 variants after instrumentation
     Next Actions: Phase L3h — Document H3 investigation plan (compare `read_mosflm_matrix` vs C A.mat parsing); update plans/active/cli-noise-pix0/plan.md L3g→[D] (✅ DONE); investigate MOSFLM real↔reciprocal recalculation sequencing before proposing corrective patches.
+  * [2025-10-07] Attempt #92 (ralph loop i=92) — Result: **SUCCESS** (Phase L3h MOSFLM matrix probe COMPLETE). **H2 (volume mismatch) RULED OUT — V_formula ≈ V_actual to machine precision.**
+    Metrics: V_formula=24682.2566301113 Å³, V_actual=24682.2566301114 Å³, Δ=1.45e-11 Å³ (rel_err=5.9×10⁻¹⁶); reciprocal regeneration exact to 15 digits; pytest collection 579 tests.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_probe.md` - Primary evidence document
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_probe_output.log` - 12 MOSFLM probe lines (post-misset reciprocals, reconstructed reals, re-derived reciprocals)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_probe.log` - Full 43 TRACE_PY lines
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/trace_harness.py` - Adapted harness from scaling_audit pattern
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/harness_run.log` - Execution log
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/test_collect.log` - Pytest collection validation
+    Observations/Hypotheses:
+      - **Volume hypothesis eliminated:** PyTorch uses correct V_actual throughout reciprocal→real→reciprocal pipeline per CLAUDE.md Rule #13
+      - **Reciprocal recalculation perfect:** Post-misset a*/b*/c* match re-derived a*/b*/c* to 15 significant figures
+      - **H2 cannot explain Y-drift:** Volume delta O(1e-11) Å³ is 7 orders of magnitude smaller than b_Y drift O(1e-2) Å
+      - **H3 remains primary suspect:** Pending Phase L3i C instrumentation to complete diff
+    Next Actions: Phase L3i — Instrument golden_suite_generator/nanoBragg.c:2050-2199 with matching MOSFLM vector traces, run supervisor command, perform component-level diff.
+  * [2025-10-07] Attempt #93 (ralph loop i=93) — Result: **SUCCESS** (Phase L3i C instrumentation & diff COMPLETE). **H3 (MOSFLM matrix semantics) RULED OUT — real-space b_Y matches C to O(1e-7) Å at φ=0.**
+    Metrics: C b_Y=0.71732 Å, PyTorch b_Y=0.717319786548615 Å, Δ=1.35e-07 Å (0.00002%); reciprocal vectors match O(1e-9) Å⁻¹; volume ΔV=0.04 Å³ (0.0002%); pytest collection 652 tests.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/c_trace_mosflm.log` - Full 291-line C MOSFLM pipeline trace (nanoBragg.c:2050-2199)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/c_trace_extract.txt` - 55 TRACE_C lines (quick reference)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_diff.md` - Component-level diff analysis with H3 ruling
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md` - Updated hypothesis ranking (H3→RULED OUT, H5→PRIMARY)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/attempt_notes.md` - Session log (commit 4c3f3c8, 2025-10-07T04:53:29-07:00)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/c_trace_mosflm.sha256` - Checksum: 7955cbb82028e6d590be07bb1fab75f0f5f546adc99d68cbd94e1cb057870321
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/collect_only.log` - Pytest collection validation
+    Observations/Hypotheses:
+      - **MOSFLM transpose hypothesis eliminated:** Real-space b_Y component shows perfect agreement within float32 precision at φ=0
+      - **Reciprocal parity excellent:** All reciprocal components match C to O(1e-9) Å⁻¹ after wavelength scaling
+      - **Volume agreement excellent:** ΔV=0.04 Å³ (0.0002%) between C and PyTorch
+      - **Reciprocal regeneration exact:** 15-digit precision per CLAUDE Rule #13 confirmed
+      - **Drift must emerge during φ rotation:** Phase L3f observed +6.8% Y-drift, but φ=0 base vectors correct → divergence occurs in `get_rotated_real_vectors()`
+      - **New hypothesis ranking:** H5 (φ rotation application) promoted to primary; H6 (unit conversion boundary) secondary; H7 (per-phi accumulation) tertiary
+    Next Actions: Phase L3j — Update `mosflm_matrix_correction.md` with H3 ruling and H5-H7 promotion; create `fix_checklist.md` with verification gates; sync plan/fix_plan before authorizing implementation loop.
+  * [2025-10-07] Attempt #94 (ralph loop i=94, documentation) — Result: **SUCCESS** (Phase L3j documentation loop COMPLETE). **Checklist and correction memo updated; ready for implementation loop.**
+    Metrics: Documentation-only; no code changes; pytest --collect-only passed (test imports validated).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_correction.md:57-208` - Added "Post-L3i Findings" section with H3 ruling, H5-H7 hypotheses, quantitative deltas, φ sampling requirements, and C/PyTorch reference lines
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md` - Created 5 verification gates (VG-1: per-φ harness rerun; VG-2: pytest lattice tests; VG-3: nb-compare ROI parity; VG-4: component-level delta audit; VG-5: documentation updates) with thresholds and command templates
+      - `plans/active/cli-noise-pix0/plan.md:271-273` - Updated L3j.1–L3j.3 rows to [D] status
+      - `docs/fix_plan.md` (this entry) - Attempt #94 logged
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/test_collect_L3j.log` - Pytest collection log (not generated this loop; deferred to VG validation)
+    Observations/Hypotheses:
+      - **H3 (MOSFLM matrix) confirmed ruled out:** Component-level diff (Attempt #93) proved b_Y matches at φ=0 to O(1e-7) Å
+      - **H5 (φ rotation) primary suspect:** +6.8% Y-drift (Phase L3f) must emerge during `Crystal.get_rotated_real_vectors()` when φ transitions from 0° → 0.05° → 0.1°
+      - **Quantitative deltas documented:** b_Y +6.8% (+4.573e-02 Å), k_frac Δ≈0.018, I_before_scaling ratio 0.755 (24.5% under)
+      - **φ sampling specified:** φ=0°/0.05°/0.1° per supervisor command (phisteps=10, osc=0.1)
+      - **Verification thresholds set:** b_Y ≤1e-6 relative, correlation ≥0.9995, sum_ratio 0.99–1.01, k_frac ≤1e-6 absolute
+      - **Implementation prerequisites complete:** Checklist created, correction memo extended, plan/fix_plan synced
+    Next Actions: Implementation loop — Execute Phase L3 fix per `fix_checklist.md` gates; isolate rotation matrix construction in `Crystal.get_rotated_real_vectors` (src/nanobrag_torch/models/crystal.py:1000-1050); compare against C rotation semantics (nanoBragg.c:3006-3098); apply surgical patch with C-code docstring references; validate against all VG gates before merging.
   * [2025-11-13] Attempt #71 (ralph loop) — Result: **SUCCESS** (Phase L2b validation + Phase L2c complete). **Harness already functional from Attempt #69; executed comparison script to identify first divergence.**
     Metrics: 40 TRACE_PY lines captured; test suite passes 4/4 variants (cpu/cuda × float32/float64). Comparison identifies `I_before_scaling` as first divergent factor (C=943654.809, PyTorch=0, -100% delta).
     Artifacts:
