@@ -1747,3 +1747,10 @@ Follow-ups for Ralph:
 - Issued fresh `input.md` (Parity mode) directing Ralph to implement L3k.3c.3, regenerate per-φ traces, and run the targeted φ parity tests; parity shim + doc refresh queued under Next Up.
 - Commit `5eda539` pushed on `feature/spec-based-2`. No tests run in supervisor loop (planning only).
 - Follow-up for Ralph: remove `_phi_last_cache` from the default rotation path, capture new Δk/Δb_y ≤1e-6 artifacts, then proceed to design the opt-in carryover shim per plan.
+
+## 2025-11-27 (galph loop — spec baselines + test tightening)
+- Reviewed Ralph’s commit 518fd75: spec rotation landed, but `test_k_frac_phi0_matches_c` only asserts divergence from the C bug. Need exact spec constants recorded before VG-1 can close.
+- Updated `plans/active/cli-noise-pix0/plan.md` L3k.3 and L3k.3c.3 guidance to focus on locking rot_b_y=0.7173197865 Å and k_frac=1.6756687164 with ≤1e-6 deltas on CPU+CUDA, plus explicit artifact expectations.
+- Adjusted `docs/fix_plan.md` Next Actions (Phase L3k.3c.3 → “lock spec φ=0 baselines”) to remove stale `_phi_last_cache` language.
+- Replaced `input.md` with a Parity-mode memo directing Ralph to regenerate per-φ traces via `trace_harness.py`, update pytest expectations to the spec numbers, run targeted selectors, and archive new `delta_metrics.json` under a timestamped directory before flipping VG-1.
+- Next supervisor checkpoint: confirm new artifacts exist, pytest asserts the spec constants, and plan row L3k.3c.3 is marked [D] before proceeding to the parity shim design tasks.
