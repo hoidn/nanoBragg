@@ -629,6 +629,20 @@
       - **Scaling factors validated:** r_e², fluence, steps, capture_fraction match C exactly (PASS status ≤1e-6); polar/omega/cos_2theta show MINOR deltas (≤2e-5 rel)
       - **Phase L3e exit criteria satisfied:** Per-φ JSON + scaling validation artifacts captured with current git SHA; comparison script enforces ≤1e-6 tolerance per plan guidance; pytest confirms instrumentation stability
     Next Actions: Phase L3f rotation-vector audit — capture aligned rot vectors for φ=0 under the new harness, document deltas in `reports/2025-10-cli-flags/phase_l/rot_vector/`, and frame hypotheses (L3g) before modifying simulator normalization or rotation code.
+  * [2025-10-07] Attempt #87 (ralph loop) — Result: **SUCCESS** (Phase L3f rotation-vector audit COMPLETE per input.md "Do Now"). **Captured side-by-side C vs PyTorch rotation vectors for φ=0, built comparison table, and documented hypotheses in analysis.md.**
+    Metrics: Evidence-only loop; no production code changes. Pytest collection stable (4 tests collected from test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics). Reciprocal vectors match to ~9 decimal places (Δ≈10^-9 Angstrom^-1); real-space vectors show O(10^-2) Å drift primarily in Y/Z components.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log` — PyTorch rotation vector trace (6 TRACE_PY rot lines)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md` — Comparison table showing C vs PyTorch with Δ components
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md` — Phase L3f/L3g analysis document with hypotheses (reciprocal→real conversion, spindle axis normalization, metric duality recalculation)
+    Observations/Hypotheses:
+      - **Reciprocal vectors EXCELLENT:** rot_a_star/b_star/c_star match C to 9 decimal places (~10^-9 Angstrom^-1 delta) — near-perfect agreement
+      - **Real-space vectors DIVERGENT:** rot_a/b/c show O(10^-2) Å differences, primarily in Y/Z components (e.g., rot_a: Δy=+8.74e-3 Å, Δz=-3.44e-2 Å)
+      - **Magnitude preserved:** Vector magnitudes differ by <0.12% (rot_a: 26.906→26.938 Å, rot_c: 33.498→33.528 Å), indicating **directional drift** rather than scale error
+      - **Primary hypothesis:** Divergence occurs in **real-space reconstitution** from reciprocal vectors (Crystal.get_real_from_reciprocal or equivalent), not in reciprocal vector calculation
+      - **Suspected causes:** (1) Cross-product order in a=(b*×c*)×V conversion, (2) Use of formula volume instead of V_actual per CLAUDE Rule #13, (3) Spindle axis normalization before rotation matrix construction
+      - **Phase L3f exit criteria satisfied:** Rotation vector comparison table captured with <5e-4 target exceeded in real-space (but reciprocal space excellent); analysis document frames three testable hypotheses
+    Next Actions: Phase L3g hypothesis validation — Add trace lines for `cell_volume_formula` vs `cell_volume_actual`, verify cross-product order in reciprocal→real conversion (Crystal.py ~400-450 vs nanoBragg.c:3006-3098), check spindle axis ||·|| normalization. If drift persists after probes, escalate to supervisor before modifying simulator.
   * [2025-10-07] Attempt #74 (ralph loop) — Result: **SUCCESS** (Phase L2b harness fix + L2c comparison complete). **Corrected harness to attach `crystal.hkl_data` and `crystal.hkl_metadata` instead of ad-hoc attributes; structure factor lookup now functional.**
     Metrics: Harness probe confirms hkl_data attached (lookup returns F=100 for (1,12,3), F=0 for out-of-range). Comparison identifies I_before_scaling as first divergence. Test suite passes 4/4 variants (tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics).
     Artifacts:
