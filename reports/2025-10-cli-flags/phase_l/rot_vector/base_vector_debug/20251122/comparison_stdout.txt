@@ -1,0 +1,20 @@
+================================================================================
+CLI-FLAGS-003 Phase K3e: Per-φ Parity Comparison
+================================================================================
+
+PyTorch: reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251122/trace_py_rot_vector_20251122_per_phi.json
+C:       reports/2025-10-cli-flags/phase_l/rot_vector/c_trace_mosflm.log
+
+--------------------------------------------------------------------------------
+φ_tic   φ (deg)    Δk              ΔF_latt_b       Status    
+--------------------------------------------------------------------------------
+
+================================================================================
+Summary
+================================================================================
+
+✅ All φ steps within tolerance (Δk < 5e-4)
+   Max Δk = 0.000000e+00
+
+✅ Comparison summary saved to: reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251122/comparison_summary.md
+

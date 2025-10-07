@@ -37,7 +37,8 @@ def main():
     # Load traces
     with open(pytorch_file) as f:
         py_data = json.load(f)
-    py_traces = py_data['traces']
+    # Support both 'traces' and 'per_phi_entries' keys
+    py_traces = py_data.get('traces') or py_data.get('per_phi_entries', [])
 
     c_traces = parse_c_trace(c_file)
 
