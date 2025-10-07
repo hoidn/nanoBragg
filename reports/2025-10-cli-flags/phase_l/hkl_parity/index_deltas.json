@@ -1,0 +1,38 @@
+{
+  "hkl_bounds": [
+    -24,
+    24,
+    -28,
+    28,
+    -31,
+    30
+  ],
+  "fdump_bounds": [
+    -24,
+    24,
+    -28,
+    28,
+    -31,
+    30
+  ],
+  "hkl_grid_dimensions": [
+    49,
+    57,
+    62
+  ],
+  "fdump_grid_dimensions": [
+    49,
+    57,
+    62
+  ],
+  "expected_grid_size": 173166,
+  "actual_grid_size": 173166,
+  "actual_grid_size_with_padding": 182700,
+  "hkl_entry_count": 64333,
+  "fdump_entry_count": 173166,
+  "mismatch_count": 0,
+  "delta_h_histogram": {},
+  "delta_k_histogram": {},
+  "delta_l_histogram": {},
+  "mismatch_sample": []
+}

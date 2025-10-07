@@ -1,0 +1,285 @@
+nanoBragg nanocrystal diffraction simulator - James Holton and Ken Frankel 5-17-17
+mosflm convention selected.
+TRACE_C:fdet_after_rotz=0 0 1
+TRACE_C:sdet_after_rotz=0 -1 0
+TRACE_C:odet_after_rotz=1 0 0
+TRACE_C:twotheta_axis=0 0 -1
+TRACE_C:fdet_after_twotheta=0 0 1
+TRACE_C:sdet_after_twotheta=0 -1 0
+TRACE_C:odet_after_twotheta=1 0 0
+DETECTOR_FAST_AXIS 0 0 1
+DETECTOR_SLOW_AXIS 0 -1 0
+DETECTOR_NORMAL_AXIS 1 0 0
+pivoting detector around direct beam spot
+TRACE_C:detector_convention=MOSFLM
+TRACE_C:angles_rad=rotx:0 roty:0 rotz:0 twotheta:0
+TRACE_C:beam_center_m=X:8.5e-07 Y:8.5e-07 pixel_mm:0.1
+TRACE_C:initial_fdet=0 0 1
+TRACE_C:initial_sdet=0 -1 0
+TRACE_C:initial_odet=1 0 0
+TRACE_C:Rx=[1 0 0; 0 1 -0; 0 0 1]
+TRACE_C:Ry=[1 0 0; 0 1 0; -0 0 1]
+TRACE_C:Rz=[1 -0 0; 0 1 0; 0 0 1]
+TRACE_C:R_total=[1 0 0; 0 1 0; 0 0 1]
+TRACE_C:fdet_after_rotz=0 0 1
+TRACE_C:sdet_after_rotz=0 -1 0
+TRACE_C:odet_after_rotz=1 0 0
+TRACE_C:twotheta_axis=0 0 -1
+TRACE_C:fdet_after_twotheta=0 0 1
+TRACE_C:sdet_after_twotheta=0 -1 0
+TRACE_C:odet_after_twotheta=1 0 0
+TRACE_C:convention_mapping=Fbeam←Ybeam_mm(+0.5px),Sbeam←Xbeam_mm(+0.5px),beam_vec=[1 0 0]
+TRACE_C:Fbeam_m=0.0009
+TRACE_C:Sbeam_m=0.0009
+TRACE_C:distance_m=0.05
+TRACE_C:term_fast=-0 -0 -0.0009
+TRACE_C:term_slow=-0 0.0009 -0
+TRACE_C:term_beam=0.05 0 0
+TRACE_C:pix0_vector=0.05 0.0009 -0.0009
+DETECTOR_PIX0_VECTOR 0.05 0.0009 -0.0009
+XDS incident beam: 0 0 1
+reading A.mat
+TRACE: Raw matrix values from file:
+TRACE:   a_star (raw) = [-0.0283771, -0.0287139, 0.0105005]
+TRACE:   b_star (raw) = [-0.00305386, 0.0101955, -0.0320944]
+TRACE:   c_star (raw) = [0.0253582, -0.0140005, -0.0103605]
+TRACE:   lambda0 = 1 Angstroms
+TRACE:   scaling factor = 1e-10/lambda0 = 1
+TRACE: After wavelength correction:
+TRACE:   a_star = [-0.0283771, -0.0287139, 0.0105005] |a_star| = 0.0417134
+TRACE:   b_star = [-0.00305386, 0.0101955, -0.0320944] |b_star| = 0.0338131
+TRACE:   c_star = [0.0253582, -0.0140005, -0.0103605] |c_star| = 0.0307635
+TRACE: Computing cross products of reciprocal vectors:
+TRACE:   Input vectors for cross products:
+TRACE:     a_star = [-0.0283771, -0.0287139, 0.0105005]
+TRACE:     b_star = [-0.00305386, 0.0101955, -0.0320944]
+TRACE:     c_star = [0.0253582, -0.0140005, -0.0103605]
+TRACE:   Cross product results:
+TRACE:     a_star x b_star = [0.000814498, -0.000942813, -0.000377007]
+TRACE:     b_star x c_star = [-0.000554968, -0.000845495, -0.000215783]
+TRACE:     c_star x a_star = [-0.000444503, 2.77293e-05, -0.00112543]
+TRACE: Reciprocal cell volume calculation:
+TRACE:   V_star = a_star . (b_star x c_star) = 3.776e-05
+TRACE: Direct-space cell volume: V_cell = 1/V_star = 26483
+TRACE: Before computing real-space vectors:
+TRACE:   b_star_cross_c_star = [-0.000554968, -0.000845495, -0.000215783]
+TRACE:   c_star_cross_a_star = [-0.000444503, 2.77293e-05, -0.00112543]
+TRACE:   a_star_cross_b_star = [0.000814498, -0.000942813, -0.000377007]
+TRACE:   V_cell = 26483, V_star = 3.776e-05
+TRACE: After computing real-space vectors:
+TRACE:   a = [-14.6972, -22.3913, -5.7146] |a| = 27.3868
+TRACE:   b = [-11.7718, 0.734357, -29.8047] |b| = 32.0536
+TRACE:   c = [21.5704, -24.9686, -9.98429] |c| = 34.4731
+TRACE: Re-generating reciprocal vectors from real-space vectors:
+TRACE:   Before re-generation: a_star = [-0.0283771, -0.0287139, 0.0105005] |a_star| = 0.0417134
+TRACE:   Before re-generation: b_star = [-0.00305386, 0.0101955, -0.0320944] |b_star| = 0.0338131
+TRACE:   Before re-generation: c_star = [0.0253582, -0.0140005, -0.0103605] |c_star| = 0.0307635
+TRACE:   Cross products: b_cross_c = [-751.512, -760.431, 278.085]
+TRACE:   Cross products: c_cross_a = [-80.8755, 270.008, -849.957]
+TRACE:   Cross products: a_cross_b = [671.561, -370.776, -274.379]
+TRACE:   After re-generation: a_star = [-0.0283771, -0.0287139, 0.0105005] |a_star| = 0.0417134
+TRACE:   After re-generation: b_star = [-0.00305386, 0.0101955, -0.0320944] |b_star| = 0.0338131
+TRACE:   After re-generation: c_star = [0.0253582, -0.0140005, -0.0103605] |c_star| = 0.0307635
+Unit Cell: 27.3868 32.0536 34.4731 88.687 71.5295 68.1375
+Recp Cell: 0.0417134 0.0338131 0.0307635 83.8005 109.406 112.647
+volume = 26483 A^3
+real-space cell vectors (Angstrom):
+     a           b           c         
+X: -14.69724512 -11.77180267 21.57038292
+Y: -22.39127032  0.73435712 -24.96856700
+Z: -5.71459954 -29.80468344 -9.98428713
+reciprocal-space cell vectors (Angstrom^-1):
+     a_star      b_star      c_star    
+X: -0.02837711 -0.00305386  0.02535816
+Y: -0.02871390  0.01019549 -0.01400049
+Z:  0.01050048 -0.03209440 -0.01036054
+TRACE: Converting real-space vectors from Angstroms to meters:
+TRACE:   Before conversion: a = [-14.6972, -22.3913, -5.7146] |a| = 27.3868 Angstroms
+TRACE:   Before conversion: b = [-11.7718, 0.734357, -29.8047] |b| = 32.0536 Angstroms
+TRACE:   Before conversion: c = [21.5704, -24.9686, -9.98429] |c| = 34.4731 Angstroms
+TRACE:   After conversion: a = [-1.46972e-09, -2.23913e-09, -5.7146e-10] |a| = 2.73868e-09 meters
+TRACE:   After conversion: b = [-1.17718e-09, 7.34357e-11, -2.98047e-09] |b| = 3.20536e-09 meters
+TRACE:   After conversion: c = [2.15704e-09, -2.49686e-09, -9.98429e-10] |c| = 3.44731e-09 meters
+TRACE: Copying vectors to a0, b0, c0 (phi=0 mosaic=0 reference):
+TRACE:   a0 = [-1.46972e-09, -2.23913e-09, -5.7146e-10] |a0| = 2.73868e-09 meters
+TRACE:   b0 = [-1.17718e-09, 7.34357e-11, -2.98047e-09] |b0| = 3.20536e-09 meters
+TRACE:   c0 = [2.15704e-09, -2.49686e-09, -9.98429e-10] |c0| = 3.44731e-09 meters
+TRACE: Copying vectors to ap, bp, cp (phi=0 working copy):
+TRACE:   ap = [-1.46972e-09, -2.23913e-09, -5.7146e-10] |ap| = 2.73868e-09 meters
+TRACE:   bp = [-1.17718e-09, 7.34357e-11, -2.98047e-09] |bp| = 3.20536e-09 meters
+TRACE:   cp = [2.15704e-09, -2.49686e-09, -9.98429e-10] |cp| = 3.44731e-09 meters
+crystal is 0.00273868 x 0.00320536 x 0.00344731 microns
+approximate MW = 21869.1
+counting entries in scaled.hkl
+re-reading scaled.hkl
+writing dump file for next time: Fdump.bin
+thick0 = 0 um
+phi0 = 0
+divergence deviation: 0 0
+lambda0 = 1e-10
+  created a total of 1 sources:
+-10 -0 0   1 1e-10
+  created a total of 1 mosaic domains
+  64333 initialized hkls (all others =0)
+  parallelpiped xtal: 1x1x1 cells
+  wave=1e-10 meters +/- 0% in 1 steps
+  Kahn polarization factor: 0.000000
+  incident fluence: 1.25932e+29 photons/m^2
+  distance=0.05 detsize=0.0016x0.0016  pixel=0.0001 meters (16x16 pixels)
+  sensor is 0 m thick in 1 layers with mu= -1
+  Xbeam=0.00085 Ybeam=0.00085
+  Fbeam=0.0009 Sbeam=0.0009
+  Xclose=0.0008 Yclose=0.0008
+  Fclose=0.0009 Sclose=0.0009
+  DIRECTION_OF_DETECTOR_X-AXIS= 0 0 1
+  DIRECTION_OF_DETECTOR_Y-AXIS= 0 -1 0
+  DIRECTION_OF_DETECTOR_Z-AXIS= 1 0 0
+  INCIDENT_BEAM_DIRECTION= 1 0 0
+  spindle ROTATION_AXIS= 0 0 1
+  POLARIZATION_PLANE_NORMAL= 0 -1 0
+  dials origin= -0.9 0.9 -50
+  roi: 0 < x < 16 && 0 < y < 16
+  hdivrange=0 hdivstep=0  radians
+  vdivrange=0 vdivstep=0  radians
+  1 divergence steps
+  1 sources
+  1 mosaic domains over mosaic spread of 0 degrees
+  1 phi steps from 0 to 0 degrees
+  1x1 pixel oversample steps
+0% done
+0% done
+0% done
+0% done
+1% done
+2% done
+2% done
+3% done
+4% done
+4% done
+0% done
+0% done
+1% done
+2% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+1% done
+0% done
+2% done
+1% done
+0% done
+0% done
+0% done
+1% done
+2% done
+2% done
+0% done
+3% done
+0% done
+0% done
+0% done
+1% done
+2% done
+1% done
+2% done
+2% done
+3% done
+4% done
+4% done
+0% done
+1% done
+0% done
+0% done
+1% done
+2% done
+2% done
+2% done
+3% done
+2% done
+0% done
+3% done
+1% done
+0% done
+1% done
+1% done
+2% done
+2% done
+1% done
+3% done
+4% done
+2% done
+3% done
+4% done
+4% done
+2% done
+2% done
+2% done
+4% done
+4% done
+0% done
+4% done
+2% done
+4% done
+2% done
+0% done
+0% done
+3% done
+4% done
+1% done
+4% done
+1% done
+4% done
+2% done
+2% done
+3% done
+4% done
+4% done
+4% done
+2% done
+2% done
+3% done
+4% done
+3% done
+4% done
+2% done
+3% done
+3% done
+4% done
+4% done
+4% done
+4% done
+4% done
+4% done
+4% done
+2% done
+2% done
+2% done
+1% done
+2% done
+3% done
+2% done
+4% done
+2% done
+3% done
+3% done
+4% done
+4% done
+4% done
+4% done
+4% done
+
+solid angle subtended by detector = 0.00102373 steradian ( 0.00814656% sphere)
+writing /tmp/fdump_probe_20251006181401.bin as 256 4-byte floats
+max_I = 0.0590702  at 5e-05 0.00115
+mean= 0.00346123 rms= 0.014325 rmsd= 0.0138988
+intfile_scale = 931095
+writing intimage.img as 2-byte integers
+pgm_scale = 3597.43
+writing image.pgm as 1-byte integers
