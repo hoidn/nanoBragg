@@ -1617,3 +1617,9 @@ Follow-ups for Ralph:
 - Refreshed `docs/fix_plan.md:1889-1892` Next Actions so they now call out C2, C3, and the Phase C close-out handoff instead of repeating the already-finished gather task.
 - Replaced `input.md` with a Docs-mode memo steering Ralph toward authoring `tests/test_tricubic_vectorized.py::test_oob_warning_single_fire`, logging the targeted pytest run, and parking artifacts under `reports/2025-10-vectorization/phase_c/`.
 - No production code changes; edits limited to planning docs and supervisor memo. Expect Ralph to execute Phase C2 next and log a new Attempt entry once the regression test and warning evidence land.
+
+## 2025-11-21 (galph loop — CLI L3k implementation prep)
+- Added Phase L3k to `plans/active/cli-noise-pix0/plan.md` with tasks for memo, code fix, gate execution, and logging prior to Phase L4.
+- Updated `docs/fix_plan.md:450-463` (Attempt #95) so Next Actions now target L3k.1–L3k.4 and the new checklist-driven workflow.
+- Replaced `input.md` (Docs mode, 100 lines) to steer Ralph toward executing Phase L3k, running pytest/nb-compare with the canonical command, and documenting VG-1⇢VG-5 artifacts.
+- Expect Ralph to draft the implementation memo, add the docstring reference, implement the φ rotation patch, drive `fix_checklist.md` to ✅, and log Attempt #96 before attempting Phase L4 parity.

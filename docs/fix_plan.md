@@ -457,11 +457,20 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
-- Next Actions (2025-11-20 refresh → updated by galph):
- 1. Phase L3j.1 — Update `mosflm_matrix_correction.md` with Attempt #93 evidence (H3 ruled out, H5–H7 promoted) and cite the relevant trace line numbers plus φ sampling requirements.
- 2. Phase L3j.2 — Draft `reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md` listing per-φ trace, targeted pytest (`tests/test_cli_scaling.py -k lattice -v`), and nb-compare ROI commands with ≤1e-6 tolerances and artifact paths.
- 3. Phase L3j.3 — Refresh docs/fix_plan.md Attempt history once the checklist exists and log the evidence paths before scheduling simulator code changes.
+- Next Actions (2025-11-21 refresh → galph):
+ 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+ 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+ 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
 - Attempts History:
+  * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+    Metrics: Planning-only (no tests executed).
+    Artifacts:
+      - `plans/active/cli-noise-pix0/plan.md` — New Phase L3k section outlining implementation gates.
+      - `docs/fix_plan.md` — Next Actions retargeted to Phase L3k; checklist referenced.
+    Observations/Hypotheses:
+      - Phase L3 instrumentation/memo/checklist complete; implementation gate now formalised.
+      - Outstanding work: execute Phase L3k.1–L3k.4 to deliver φ rotation fix before Phase L4 parity rerun.
+    Next Actions: Follow refreshed Next Actions (Phase L3k.1–L3k.4), then proceed to Phase L4 once gates pass.
   * [2025-10-07] Attempt #91 (ralph loop i=91) — Result: **SUCCESS** (Phase L3g spindle instrumentation COMPLETE). **H1 (spindle normalization) RULED OUT as root cause of Y-drift.**
     Metrics: Spindle Δ(magnitude)=0.0 (tolerance ≤5e-4); trace captured 43 TRACE_PY lines (was 40, +3 spindle lines); test collection 4/4 passed.
     Artifacts:
