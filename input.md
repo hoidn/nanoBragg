@@ -1,100 +1,48 @@
-Summary: Document φ-rotation parity evidence so future simulator fixes have a locked checklist and spec citations.
-Mode: Parity
-Focus: CLI-FLAGS-003 Handle -nonoise and -pix0_vector_mm
+Summary: Drive Phase C2 of tricubic vectorization by locking regression coverage for the OOB fallback before moving on to shape assertions.
+Mode: Docs
+Focus: VECTOR-TRICUBIC-001 Vectorize tricubic interpolation and detector absorption
 Branch: feature/spec-based-2
-Mapped tests: pytest --collect-only -q
-Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_correction.md; reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md; docs/fix_plan.md; plans/active/cli-noise-pix0/plan.md; reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md; reports/2025-10-cli-flags/phase_l/rot_vector/test_collect_L3j.log; reports/2025-10-cli-flags/phase_l/rot_vector/attempt_notes.md
-Do Now: CLI-FLAGS-003 Phase L3j.1–L3j.2 — pytest --collect-only -q
-If Blocked: Capture a short narrative in reports/2025-10-cli-flags/phase_l/rot_vector/attempt_notes.md, stash any harness stdout under the same folder, and note the blocker plus file paths in docs/fix_plan.md Attempts for traceability.
-
-Context Recap:
-- Attempt #93 proved MOSFLM base vectors align within float32 precision and shifted suspicion to φ rotation (H5) per reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md.
-- L3a–L3i tasks are ✅; per-φ traces and spindle audits exist, but no implementation checklist yet guards the upcoming fix.
-- The supervisor command relies on phisteps=10, osc=0.1, so φ sampling at 0°, 0.05°, 0.1° captures the full motion envelope.
-- docs/fix_plan.md Next Actions still reference L3i instrumentation; updating them prevents future loops from repeating now-complete evidence tasks.
-- Long-term Goal #1 (run C vs PyTorch parity command) is blocked until φ rotation parity is restored, making this documentation loop a prerequisite.
-- Vectorization backlog is paused; documenting CLI progress clarifies when resources can return to VECTOR-TRICUBIC-001.
-- Protected Assets rule demands we leave docs/index.md references untouched; all new content must live in allowed directories (plans/, docs/, reports/).
-- Mode Parity forbids running full pytest; only collect-only validation is expected after doc edits.
-- Prior evidence loops already generated heavy traces; reuse them, avoid generating new large logs unless absolutely necessary.
+Mapped tests: tests/test_tricubic_vectorized.py::test_oob_warning_single_fire; tests/test_at_str_002.py::test_tricubic_interpolation_enabled
+Artifacts: reports/2025-10-vectorization/phase_c/test_tricubic_vectorized.log; reports/2025-10-vectorization/phase_c/implementation_notes.md; reports/2025-10-vectorization/phase_c/status_snapshot.txt; plans/active/vectorization.md; docs/fix_plan.md
+Do Now: VECTOR-TRICUBIC-001 Phase C2 — author `tests/test_tricubic_vectorized.py::test_oob_warning_single_fire` to pin the single-warning behavior, then run `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py::test_oob_warning_single_fire -v`
+If Blocked: Run `env KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only tests/test_tricubic_vectorized.py -q`, log the failure plus traceback in `reports/2025-10-vectorization/phase_c/attempt_notes.md`, and note the blocker under docs/fix_plan.md Attempts.
 
 Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md:260 keeps Phase L3 sequencing; finishing memo/checklist flips L3j rows to [D], signalling readiness for code changes.
-  Tie the memo content directly to the plan so future readers map doc artifacts to plan IDs without guessing.
-- docs/fix_plan.md:450 needs Next Actions aligned to L3j.1–L3j.3; without this, automation scripts may queue stale instrumentation tasks.
-  When updating fix_plan, cite artifact paths explicitly to maintain reproducibility.
-- specs/spec-a-cli.md:1 enumerates CLI semantics; referencing §3.3 prevents documentation drift when summarising pix0 overrides and noise suppression expectations.
-  Connect -nonoise behavior with the existing plan to remind reviewers the flag already works at CLI level.
-- docs/architecture/detector.md:35 supplies BEAM/SAMPLE formulas; quoting them in the checklist anchors tolerances to the geometry spec and clarifies which components are meter-based.
-  Include note about how these formulas interact with CUSTOM convention when pix0 overrides are present.
-- docs/development/c_to_pytorch_config_map.md:42 documents implicit pivot/unit rules; the memo must cite it to explain why φ rotation is the remaining unmatched stage and to avoid re-litigating pivot logic.
-  Highlight the pivot implications (twotheta implies SAMPLE) so checklist readers recall the default.
-- docs/development/testing_strategy.md:120 standardises targeted pytest usage; the checklist needs explicit selectors drawn from this guidance to stay in compliance with testing SOP.
-  Mention Tier 1 parity context to tie the collect-only run to spec-driven expectations.
-- reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md:12 tracks current hypothesis ordering (H5 primary, H6/H7 secondary); memo must echo this so later loops continue where we left off.
-  Carry over the quantitative deltas (e.g., k_frac mismatch, F_latt sign flip) into the new memo section.
-- reports/2025-10-cli-flags/phase_l/rot_vector/c_trace_mosflm.log:63 and trace_py_rot_vector.log:16 form the evidence pair; quote them in the memo to justify threshold choices.
-  Keep raw precision (up to 1e-12) when transcribing values.
-- prompts/supervisor.md:18 houses the authoritative CLI command; the checklist should reference it verbatim for nb-compare reproduction to avoid parameter drift.
-  Clarify environment variables (NB_C_BIN, KMP_DUPLICATE_LIB_OK) alongside the command.
-- plans/active/vectorization.md:31 is non-blocking but stays queued; documenting CLI parity progress clarifies when we can pivot to tricubic work without mixing initiatives.
-  Mention this in memo conclusions for cross-team visibility.
+- plans/active/vectorization.md:5 — Latest snapshot shows Phase C1 is complete and Phase C2 is the first remaining blocker; executing it keeps the plan on script.
+- docs/fix_plan.md:1889 — Next Actions enumerate C2/C3; closing C2 supplies the evidence needed before reshaping caches.
+- reports/2025-10-vectorization/phase_b/design_notes.md:52 — Section 2 spells out the `(B,4,4,4)` gather contract that the new test must respect.
+- reports/2025-10-vectorization/phase_c/gather_notes.md:63 — Documents current fallback path and warning; leverage those details when codifying the regression.
+- docs/development/testing_strategy.md:105 — Reinforces that targeted pytest selectors and logged outputs are mandatory for Tier 1 parity work.
+- docs/development/pytorch_runtime_checklist.md:1 — Keep device/dtype neutrality explicit while authoring the test and any helper shims.
 
 How-To Map:
-- Re-read Attempt #93 artifacts (c_trace_mosflm.log, mosflm_matrix_diff.md) and extend mosflm_matrix_correction.md with a "Post-L3i Findings" section stating H3 is ruled out, H5 remains primary, H6/H7 secondary.
-  Cite golden_suite_generator/nanoBragg.c:2050-2199 for C reference and src/nanobrag_torch/models/crystal.py:568-780 for PyTorch behavior.
-- Summarise quantitative deltas: include b_Y delta 1.35e-07 Å, k_frac shift ≈0.018, F_latt sign flip, linking each to trace line numbers.
-  Explain how these deltas propagate into intensity mismatches (I_before_scaling ~7.13e5 vs 9.44e5) referencing scaling logs.
-- Outline φ sampling requirements (0°, 0.05°, 0.1°) and relate them to phisteps, osc, and beamsize to justify coverage.
-  Note that per-φ JSON already exists; instruct checklist users to regenerate it only after applying code changes.
-- Draft fix_checklist.md with table `[ID | Requirement | Owner | Artifact Path | Threshold / Notes]` containing at least three rows: per-φ harness rerun, targeted pytest, nb-compare ROI.
-  For each row, list spec/doc references (specs/spec-a-cli.md §3.3, docs/debugging/debugging.md §Parallel Trace, docs/development/testing_strategy.md §1.5) and required thresholds (≤1e-6 relative, correlation ≥0.9995, etc.).
-- Include an entry reminding future implementers to update docs/index.md references only if new artifacts become canonical, respecting Protected Assets Rule.
-- After doc edits, run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q` from repo root, capture output into reports/2025-10-cli-flags/phase_l/rot_vector/test_collect_L3j.log, and mention it in fix_plan Attempt.
-  Do not upgrade to full pytest; collect-only suffices for import validation in this planning loop.
-- Update docs/fix_plan.md CLI-FLAGS-003 Attempts with a new entry (“Attempt #94 — documentation loop”) summarising memo updates, checklist creation, and collect-only log.
-  In Observations, reiterate H5 dominance and note that implementation is blocked pending checklist completion; list artifact paths in Artifacts subsection.
-- Adjust plans/active/cli-noise-pix0/plan.md L3j guidance if the checklist adds new thresholds or artifact directories; maintain table formatting and state `[D]` only after verifying docs exist.
-  Keep plan references to spec and doc paths aligned with actual file names.
-- Commit only doc/report changes; leave src/ untouched. Prepare for future implementation loop by mentioning the new artifacts in galph_memory once done.
+- Inspect `src/nanobrag_torch/models/crystal.py` around the interpolation warning to capture the exact message and flag state (`_interpolation_warning_shown`).
+- Draft `tests/test_tricubic_vectorized.py` (new file if absent) with fixtures that trigger one batched interpolation plus a repeat call to assert the warning fires exactly once and interpolation disables thereafter.
+- Capture collection evidence first: `env KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only tests/test_tricubic_vectorized.py -q` → save to `reports/2025-10-vectorization/phase_c/test_tricubic_vectorized.collect.log`.
+- After implementing the test, run `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py::test_oob_warning_single_fire -v` and store the verbose log at `reports/2025-10-vectorization/phase_c/test_tricubic_vectorized.log`.
+- Update `reports/2025-10-vectorization/phase_c/status_snapshot.txt` with a short summary (date, git SHA, warning toggle behavior) and extend `implementation_notes.md` with any helper edits needed for deterministic warning capture.
+- When satisfied, append Attempt entry under docs/fix_plan.md referencing the new artifacts and mark Phase C2 as complete in plans/active/vectorization.md.
 
 Pitfalls To Avoid:
-- Do not modify src/ or scripts/ code; this is strictly a planning/documentation turn.
-- Avoid regenerating large traces; reuse existing logs to quote values unless a blocker demands reruns.
-- Keep all new doc references unit-consistent (meters for geometry, Å for physics) to avoid confusion.
-- Do not collapse plan tables or reorder completed tasks; append notes if necessary.
-- Skip running nb-compare or the supervisor command; checklist should document commands without executing them this loop.
-- Guard against losing precision when transcribing values; use full numeric strings from logs.
-- Respect Protected Assets (docs/index.md references); do not rename or delete listed files.
-- Avoid editing prompts/main.md or automation harness scripts; not part of this scope.
-- Do not relax tolerances below spec thresholds; maintain ≤1e-6 relative for scaling factors.
-- Refrain from adding TODO markers without context; reference plan IDs or spec clauses when noting follow-ups.
-- Ensure collect-only command runs with KMP_DUPLICATE_LIB_OK=TRUE to avoid MKL crashes; mention env var in logs.
-- When editing markdown, keep ASCII characters only; follow repository editing constraints.
+- Do not delete or rename any file referenced in docs/index.md (Protected Assets rule).
+- No `.item()` or dtype/device hardcoding inside tests or helpers—respect gradient flow even in assertions.
+- Avoid adding ad-hoc scripts; reuse `reports/2025-10-vectorization/phase_c/` for logs instead of new directories.
+- Keep warning capture deterministic; don’t rely on global stdout without asserting the exact message string.
+- Ensure the test leaves global plan state untouched (`Crystal._interpolation_warning_shown` should reset via fixture teardown).
+- No broad `pytest -k` sweeps beyond the specified selector without prior supervisor approval.
+- Preserve existing Phase C1 artifacts; do not overwrite `gather_notes.md` except to append references if necessary.
+- Maintain vectorization — no reintroducing pixel-level Python loops just to exercise the test case.
+- Watch for torch.compile graph breaks; report them instead of disabling compile silently.
+- Respect repo cleanliness: stage only intentional changes and capture new logs before exiting the loop.
 
 Pointers:
-- specs/spec-a-cli.md:1 — Normative CLI rules for -nonoise and pix0 overrides.
-- specs/spec-a-core.md:400 — Lattice factor equations and acceptance criteria to cite for F_latt thresholds.
-- docs/architecture/detector.md:35 — pix0_vector derivation (BEAM/SAMPLE formulas) referenced in memo/checklist.
-- docs/development/c_to_pytorch_config_map.md:42 — Detector pivot/unit mapping tied to φ rotation decisions.
-- docs/development/testing_strategy.md:120 — Targeted pytest workflow (Tier 1 parity guidance) for checklist selectors.
-- docs/debugging/debugging.md:24 — Parallel trace SOP; cite when directing per-φ harness reruns.
-- plans/active/cli-noise-pix0/plan.md:271 — Detailed definitions of L3j.1–L3j.3 tasks to mirror in doc updates.
-- docs/fix_plan.md:450 — CLI-FLAGS-003 ledger entry awaiting Attempt #94 documentation.
-- reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md:12 — Current hypothesis ranking (H5 primary).
-- reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_diff.md:40 — Component-level deltas backing the memo.
-- reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_env.json:1 — Environment snapshot for reproducibility metadata.
-- prompts/supervisor.md:18 — Exact supervisor command parameters; include in checklist.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/analysis_20251119.md:22 — Context for k_frac divergence to restate.
-- reports/2025-10-cli-flags/phase_l/rot_vector/spindle_audit.log:5 — Evidence ruling out spindle normalization; mention in memo recap.
-- reports/2025-10-cli-flags/phase_l/rot_vector/per_phi/trace_py_scaling_20251119_per_phi.json:1 — JSON structure to reference in checklist instructions.
-- history/2025-10/cli-flags/README.md:1 — Prior archival summary if cross-links help orient reviewers (optional).
+- plans/active/vectorization.md:30 — Phase C task table and artifact expectations.
+- docs/fix_plan.md:1889 — Official Next Actions checklist for VECTOR-TRICUBIC-001.
+- reports/2025-10-vectorization/phase_b/design_notes.md:122 — Out-of-bounds handling and warning semantics from Phase B design.
+- reports/2025-10-vectorization/phase_c/gather_notes.md:92 — Current fallback description plus scalar vs batched behavior notes.
+- docs/development/testing_strategy.md:150 — Targeted pytest and artifact logging conventions.
+- docs/development/pytorch_runtime_checklist.md:5 — Device/dtype guardrails to cite in implementation notes.
 
-Next Up: 1) Once L3j checklist is in place, schedule the implementation loop targeting φ rotation parity per plan Phase L3; 2) If time remains, gather outstanding evidence for VECTOR-TRICUBIC-001 Phase C1 (gather fallback semantics) without touching production code.
-
-Evidence Reminders:
-- Keep numeric precision consistent (≥12 significant digits) when quoting trace outputs; mismatched rounding complicates parity comparisons later.
-- When saving collect-only log, prepend timestamp and git SHA at top for reproducibility (see reports/2025-10-cli-flags/phase_l/rot_vector/test_collect_template.txt if helpful).
-- Cross-link new memo sections with galph_memory entry once committed so future supervisor loops pick up the context without rereading whole plan.
-- Ensure nb-compare command in checklist mentions expected output directory and correlation thresholds (≥0.9995) so implementer knows pass criteria before running it.
-- If you identify any missing documentation references while drafting, note them inline with TODO[doc] markers tied to plan IDs for easy follow-up.
+Next Up:
+1. Phase C3 — Add shape assertions and device-aware caching once the warning regression is locked.
+2. Phase D1 — Begin vectorizing `polint` after C2/C3 evidence is merged and documented.

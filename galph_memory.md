@@ -1611,3 +1611,9 @@ Follow-ups for Ralph:
 - Updated `docs/fix_plan.md` Next Actions to point at the new L3j workflow; removed stale L3i instrumentation steps.
 - Authored `input.md` (Parity mode, 100 lines) instructing Ralph to update mosflm_matrix_correction.md, draft `fix_checklist.md`, run pytest --collect-only, and log artifacts under rot_vector/ before touching code.
 - No production code changes performed; expect Ralph’s Attempt #94 to document memo/checklist completion plus collect-only log before proceeding to φ-rotation implementation.
+
+## 2025-11-21 (galph loop — VECTOR-TRICUBIC-001 Phase C2 prep)
+- Updated `plans/active/vectorization.md:5-36` to record Phase C1 completion and spotlight C2/C3 as the remaining blockers before polynomial work.
+- Refreshed `docs/fix_plan.md:1889-1892` Next Actions so they now call out C2, C3, and the Phase C close-out handoff instead of repeating the already-finished gather task.
+- Replaced `input.md` with a Docs-mode memo steering Ralph toward authoring `tests/test_tricubic_vectorized.py::test_oob_warning_single_fire`, logging the targeted pytest run, and parking artifacts under `reports/2025-10-vectorization/phase_c/`.
+- No production code changes; edits limited to planning docs and supervisor memo. Expect Ralph to execute Phase C2 next and log a new Attempt entry once the regression test and warning evidence land.
