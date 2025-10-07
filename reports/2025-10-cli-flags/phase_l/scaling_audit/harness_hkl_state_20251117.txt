@@ -1,0 +1,9 @@
+h_max: 24
+h_min: -24
+h_range: 49
+k_max: 28
+k_min: -28
+k_range: 57
+l_max: 30
+l_min: -31
+l_range: 62

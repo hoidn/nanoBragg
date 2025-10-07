@@ -509,6 +509,22 @@
       - **Root cause remains configuration/loading:** The F_cell=0 divergence in trace_py_scaling.log stems from harness/CLI not loading/attaching HKL data, NOT from missing reflections or broken lookup logic
       - **Phase L3a exit criteria satisfied:** Fresh probe log and analysis captured with current environment metadata; HKL coverage ranges documented and reconciled
     Next Actions: Phase L3c harness audit per plan guidance (review trace_harness.py lines 206-236, compare against probe successful pattern, fix HKL attachment). NO simulator.py changes needed (scaling math correct per L2c, lookup logic works per L3a probe).
+  * [2025-11-17] Attempt #78 (ralph loop) — Result: **SUCCESS** (Phase L3c harness audit COMPLETE). **Executed supervisor command via trace harness; confirmed HKL data properly loaded with F_cell=190.27 matching probe.**
+    Metrics: Evidence-only loop (no production code changed). Harness run successful: 40 TRACE_PY lines captured, F_cell=190.270004272461 retrieved, pixel intensity=2.38e-07. Test collection stable (2 tests in test_cli_scaling.py).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling_20251117.log` — Fresh trace with F_cell=190.27
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/config_snapshot_20251117.json` — Configuration snapshot
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_env_20251117.json` — Environment metadata (git SHA acab43b, Torch 2.8.0+cu128)
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/harness_hkl_state_20251117.txt` — HKL grid metadata (49×57×62, ranges confirmed)
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/collect_cli_scaling_20251117.log` — Test collection verification
+      - `reports/2025-10-cli-flags/phase_l/structure_factor/analysis_20251117.md` — Updated analysis with Phase L3c confirmation section
+    Observations/Hypotheses:
+      - **Harness functional:** trace_harness.py lines 233-236 properly attach `crystal.hkl_data = F_grid_tensor` and `crystal.hkl_metadata = hkl_metadata` per Attempt #74 fix
+      - **F_cell retrieval confirmed:** Structure factor lookup returns 190.27 for hkl=(-7,-1,-14), matching C reference within 4.27e-06 delta (≈0.000002%)
+      - **Scaling chain operational:** Non-zero pixel intensity (2.38e-07) confirms proper scaling pipeline integration
+      - **Metadata parity:** HKL grid ranges (h∈[-24,24], k∈[-28,28], l∈[-31,30]) match probe findings exactly
+      - **Phase L3a+L3c complete:** Both probe verification and harness audit demonstrate correct HKL loading; ready for CLI verification (L3d)
+    Next Actions: Phase L3d CLI verification — Audit `src/nanobrag_torch/__main__.py` HKL-loading path to ensure CLI follows the same `hkl_data`/`hkl_metadata` attachment pattern as the harness; document in `cli_hkl_audit.md` before proceeding to regression tests (L3d) and scaling validation (L3e).
   * [2025-10-17] Attempt #72 (ralph loop) — Result: **SUCCESS** (Phase L2b harness MOSFLM orientation fix). **Corrected `trace_harness.py` to assign each MOSFLM reciprocal vector to its own config field instead of packing all three into `mosflm_a_star`.**
     Metrics: Harness now produces non-zero F_latt values (F_latt=1.351 vs previous 0), confirming proper orientation. Test suite passes 4/4 variants (tests/test_trace_pixel.py). Comparison script completed successfully (2 divergent factors identified).
     Artifacts:
