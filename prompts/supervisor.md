@@ -61,6 +61,27 @@ READ the following files:
 <1>
 do a deep analysis of the codebase in light of the <current long term goals>. What are some current issues / gaps and possible approaches to resolving them? Review docs/fix_plan.md and plans/active/, as previous iterations of you may have already done some legwork.
  
+At this point, select a single <focus issue> and one <Action type> for this turn. Mode flags may be combined as needed.
+
+<Action type> list:
+<1>
+Evidence collection (i.e. Evidence task)
+— Evidence-only. No production code edits. Prefer non‑mutating probes and CLI validation tools.
+— Allowed: scripts/validation/*, nb-compare, pixel trace; pytest --collect-only to validate selectors; and in TDD mode only, a single targeted pytest run to confirm a newly authored minimal failing test.
+— See “Callchain Tracing (Evidence Task)” below for the standardized artifacts, tap points, and guardrails.
+</1>
+<2>
+<Debug> Hypothesis + Triage (initial pass)
+— Use when investigating parity or unexpected behavior. Formulate 1–3 hypotheses, triage with quick checks and existing artifacts, then nominate one next confirming step.
+</2>
+<3>
+<Planning>
+— Use when work spans multiple turns or requires coordination/refactoring. Author or refresh a phased plan under plans/active/, cross‑reference it from docs/fix_plan.md, and define exit criteria and reproduction commands.
+</3>
+<4>
+<Review or housekeeping>
+— Use to evaluate recent work, clean up priorities, or fix drift in docs/fix_plan.md. Consider pruning, archiving, and clarifying conflicting items.
+</4>
 
 
 Debugging Items — Hypothesis + Triage (initial pass):
