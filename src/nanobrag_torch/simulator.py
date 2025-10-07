@@ -1441,7 +1441,9 @@ class Simulator:
                         phi_steps = self.crystal.config.phi_steps
 
                         # Compute phi angles for each step
-                        phi_step_size = osc_range_deg / max(phi_steps - 1, 1) if phi_steps > 1 else 0.0
+                        # Match C formula: phi = phi_start + (osc_range / phi_steps) * phi_tic
+                        # where phi_tic ranges from 0 to (phi_steps - 1)
+                        phi_step_size = osc_range_deg / phi_steps if phi_steps > 0 else 0.0
 
                         # Loop over phi steps (first mosaic domain [phi_tic, 0])
                         for phi_tic in range(phi_steps):

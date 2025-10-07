@@ -117,6 +117,12 @@ class Crystal:
             self.N_cells_c.item()
         ])
 
+        # φ=0 carryover cache for CLI-FLAGS-003 Phase L3k.3c.3
+        # Caches the last rotated real vectors to replicate C behavior where
+        # ap/bp/cp working vectors persist across pixels when phi==0
+        # (nanoBragg.c:3044-3066 phi rotation loop)
+        self._phi_last_cache: Optional[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]] = None
+
     def to(self, device=None, dtype=None):
         """Move crystal to specified device and/or dtype."""
         if device is not None:
@@ -1054,6 +1060,32 @@ class Crystal:
         # CRITICAL: C code skips rotation when phi==0. We must replicate this exactly.
         # Shape: (N_phi, 3)
 
+        # Initialize φ=0 carryover cache if this is the first call (CLI-FLAGS-003 L3k.3c.3)
+        # The C code's ap/bp/cp variables persist from the previous pixel's last phi step.
+        # To replicate this for the FIRST pixel, we need to pre-populate the cache with
+        # vectors rotated by the LAST phi angle (phi_last = phi_start + osc_range * (phi_steps-1)/phi_steps).
+        if self._phi_last_cache is None and config.phi_steps > 0:
+            # Compute the last phi angle
+            last_phi_deg = config.phi_start_deg + (config.osc_range_deg / config.phi_steps) * (config.phi_steps - 1)
+            last_phi_deg_tensor = torch.tensor(last_phi_deg, device=self.device, dtype=self.dtype)
+            last_phi_rad = torch.deg2rad(last_phi_deg_tensor)
+
+            # Rotate base vectors by the last phi angle
+            from ..utils.geometry import rotate_axis
+            spindle_axis_temp = torch.tensor(
+                config.spindle_axis, device=self.device, dtype=self.dtype
+            )
+
+            a_last = rotate_axis(self.a.unsqueeze(0), spindle_axis_temp.unsqueeze(0), last_phi_rad.unsqueeze(0))
+            b_last = rotate_axis(self.b.unsqueeze(0), spindle_axis_temp.unsqueeze(0), last_phi_rad.unsqueeze(0))
+            c_last = rotate_axis(self.c.unsqueeze(0), spindle_axis_temp.unsqueeze(0), last_phi_rad.unsqueeze(0))
+
+            self._phi_last_cache = (
+                a_last.squeeze(0),
+                b_last.squeeze(0),
+                c_last.squeeze(0)
+            )
+
         # Initialize output tensors to hold rotated vectors
         a_phi = []
         b_phi = []
@@ -1067,10 +1099,22 @@ class Crystal:
             # Use a small tolerance for floating-point comparison
             # phi_val is in degrees, so 1e-10 degrees is effectively zero
             if torch.abs(phi_val) < 1e-10:
-                # φ=0: Use base vectors directly (no rotation)
-                a_phi.append(self.a.unsqueeze(0))
-                b_phi.append(self.b.unsqueeze(0))
-                c_phi.append(self.c.unsqueeze(0))
+                # φ=0: Replicate C behavior where ap/bp/cp persist from previous pixel
+                # When the C code skips rotation at phi==0, the working vectors (ap/bp/cp)
+                # retain values from the last phi step of the PREVIOUS pixel (due to
+                # OpenMP private variables not being reset between iterations).
+                # We cache the last rotated vectors and reuse them at phi==0.
+                # Reference: nanoBragg.c:3044-3066, test comment at test_cli_scaling_phi0.py:35-40
+                if self._phi_last_cache is not None:
+                    # Use cached vectors from last phi step
+                    a_phi.append(self._phi_last_cache[0].unsqueeze(0))
+                    b_phi.append(self._phi_last_cache[1].unsqueeze(0))
+                    c_phi.append(self._phi_last_cache[2].unsqueeze(0))
+                else:
+                    # No cache yet (first call) - use base vectors
+                    a_phi.append(self.a.unsqueeze(0))
+                    b_phi.append(self.b.unsqueeze(0))
+                    c_phi.append(self.c.unsqueeze(0))
             else:
                 # φ≠0: Apply rotation
                 phi_rad_single = phi_rad[i].unsqueeze(0)
@@ -1128,6 +1172,16 @@ class Crystal:
         a_star_final = rotate_umat(a_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
         b_star_final = rotate_umat(b_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
         c_star_final = rotate_umat(c_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
+
+        # Cache the last phi step's vectors for φ=0 carryover (CLI-FLAGS-003 Phase L3k.3c.3)
+        # This replicates C behavior where ap/bp/cp persist across pixels
+        # Store the rotated vectors (before mosaic) from the LAST phi step
+        if config.phi_steps > 0:
+            self._phi_last_cache = (
+                a_phi[-1].clone(),  # Last phi step
+                b_phi[-1].clone(),
+                c_phi[-1].clone()
+            )
 
         return (a_final, b_final, c_final), (a_star_final, b_star_final, c_star_final)
 
