@@ -537,6 +537,18 @@
       - **Scaling factors verified:** All intermediate scaling terms (r_e², fluence, steps, capture_fraction, polar, omega_pixel) match C within tolerance (Δ<0.002%)
       - **Test coverage maintained:** tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics passes all parametrized variants (4/4)
     Next Actions: Phase L2b complete; L2c evidence captured. Supervisor to proceed with Phase L3 structure-factor investigation based on comparison summary showing I_before_scaling as first divergence.
+  * [2025-10-07] Attempt #79 (ralph loop) — Result: **SUCCESS** (Phase L3c device audit COMPLETE per supervisor "Do Now"). **Evidence-only loop; confirmed device handling gap: HKL tensor remains on CPU despite `-device cuda` flag.**
+    Metrics: Pytest collection stable (2 tests from test_cli_scaling.py collected). No production code changes.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/structure_factor/cli_hkl_device_probe.json` - Device probe showing HKL tensor on cpu for both cpu and cuda configs
+      - `reports/2025-10-cli-flags/phase_l/structure_factor/cli_hkl_env.json` - Environment snapshot (SHA a91cb10, Python 3.13.0, Torch 2.5.1+cu124, cuda_available=true)
+      - `reports/2025-10-cli-flags/phase_l/structure_factor/collect_cli_scaling_post_audit.log` - Pytest collection validation
+      - `reports/2025-10-cli-flags/phase_l/structure_factor/cli_hkl_audit.md:3-44` - Updated audit documentation with device probe findings
+    Observations/Hypotheses:
+      - **Device gap confirmed:** CLI calls `.to(dtype=dtype)` without `.to(device=device)` when attaching HKL data (src/nanobrag_torch/__main__.py approx line 1068-1076)
+      - **Impact scoped:** Will cause device mismatch when `-device cuda` runs reach structure factor lookup in compute_physics_for_position
+      - **2025-11-17 galph audit cross-referenced:** Aligns with findings in docs/fix_plan.md:460-462 (galph previously identified the same gap)
+    Next Actions: Supervisor to continue with Phase L3c harness audit (per plan.md:461 task 1) before implementing HKL device fix; document in fix_plan that HKL device transfer issue is now blocking CUDA parity and queue for L3d regression test.
   * [2025-10-07] Attempt #74 (ralph loop) — Result: **SUCCESS** (Phase L2b harness fix + L2c comparison complete). **Corrected harness to attach `crystal.hkl_data` and `crystal.hkl_metadata` instead of ad-hoc attributes; structure factor lookup now functional.**
     Metrics: Harness probe confirms hkl_data attached (lookup returns F=100 for (1,12,3), F=0 for out-of-range). Comparison identifies I_before_scaling as first divergence. Test suite passes 4/4 variants (tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics).
     Artifacts:

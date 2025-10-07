@@ -1,5 +1,50 @@
 # CLI HKL Ingestion Audit — Phase L3c
 
+## 2025-10-07 Device Handling Probe (ralph Attempt #79)
+
+- **SHA**: a91cb10b2e34e7c42cd62f8d9a6ec3a2d9965e4d
+- **Scope**: Capture concrete device/dtype behavior when CLI is invoked with `-device cuda` flag (Phase L3c device audit per supervisor guidance).
+
+### Critical Finding: Device Handling Gap
+
+**Observation**: When `-device cuda` is specified on the CLI, the HKL tensor remains on CPU despite the user-requested device transfer.
+
+**Evidence**:
+```json
+{
+  "cpu": {
+    "dtype": "torch.float32",
+    "device": "cpu",
+    "shape": [49, 57, 62],
+    "metadata": { ... }
+  },
+  "cuda": {
+    "dtype": "torch.float32",
+    "device": "cpu",  ⚠️ STILL CPU despite -device cuda
+    "shape": [49, 57, 62],
+    "metadata_match": true
+  }
+}
+```
+
+**Root Cause (from 2025-11-17 galph audit)**: CLI converts HKL tensors to the requested dtype but never moves them to the requested device. The problematic line is `src/nanobrag_torch/__main__.py` (approx line 1068-1076) where `crystal.hkl_data = hkl_array.clone().detach().to(dtype=dtype)` is called without `.to(device=device)`.
+
+**Impact**: When `-device cuda` is used, `compute_physics_for_position()` (GPU) attempts to index `self.hkl_data` (CPU), which will cause a device mismatch error once we reach Phase L parity validation on CUDA.
+
+### Probe Artifacts
+
+- **Device probe JSON**: `reports/2025-10-cli-flags/phase_l/structure_factor/cli_hkl_device_probe.json`
+- **Environment snapshot**: `reports/2025-10-cli-flags/phase_l/structure_factor/cli_hkl_env.json`
+- **Test collection validation**: `reports/2025-10-cli-flags/phase_l/structure_factor/collect_cli_scaling_post_audit.log` (2 tests collected successfully)
+
+### Next Actions
+
+1. Fix CLI HKL device transfer in `src/nanobrag_torch/__main__.py` to apply both dtype AND device (change `.to(dtype=dtype)` to `.to(device=device, dtype=dtype)`)
+2. Add regression test exercising `-device cuda` with HKL loading to verify fix
+3. Re-run device probe after fix to confirm HKL tensor moves to CUDA when requested
+
+---
+
 ## 2025-11-17 Re-audit (galph)
 
 - **SHA**: fc600dbdbb7f77adf49280fdd73f14d0ca889166
