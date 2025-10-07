@@ -597,6 +597,23 @@
     Observations/Hypotheses:
       - Removed `_phi_last_cache` mechanism completely per specs/spec-a-core.md:211-214 (fresh rotation each φ step)
       - Default path now applies identity rotation at φ=0, yielding base vectors (0.71732 Å) instead of C buggy stale carryover (0.671588 Å)
+  * [2025-10-22] Attempt #116 (ralph loop CLI-FLAGS-003 L3k.3c.3) — Result: **VG-1 LOCKED** ✅ (**Phase L3k.3c.3 COMPLETE**). Updated test expectations with 10-digit spec baselines and ≤1e-6 tolerances.
+    Metrics: Targeted tests 2/2 PASSED (rot_b=0.7173197865 Å, k_frac=1.6756687164, Δ<1e-6); Crystal geometry regression 49/49 PASSED in 2.45s.
+    Artifacts:
+      - `tests/test_cli_scaling_phi0.py:125-128` — Updated rot_b test: expected_rot_b_y=0.7173197865, tolerance=1e-6 (was 0.71732, 5e-5)
+      - `tests/test_cli_scaling_phi0.py:258-269` — Updated k_frac test: expected_k_frac=1.6756687164, tolerance=1e-6; replaced "differs from C bug" with spec-compliant assertion
+      - `tests/test_cli_scaling_phi0.py:139-153` — Updated k_frac docstring with spec baseline and VG-1 reference
+      - `/tmp/pytest_phi0_spec_baseline.log` — Targeted pytest evidence (2 passed in 2.16s)
+    Observations/Hypotheses:
+      - Spec baselines now locked per input.md:42-43 (rot_b_y=0.7173197865 Å, k_frac=1.6756687164)
+      - Both CPU values meet ≤1e-6 tolerance (rot_b Δ≈4.86e-11 Å, k_frac Δ≈3.07e-11)
+      - No regressions in crystal geometry smoke tests
+      - VG-1.4 verification gate now satisfied for CPU float32; CUDA smoke pending
+    First Divergence: N/A (spec baselines now locked; C buggy values documented but not used for assertions)
+    Next Actions:
+      1. Phase L3k.3c.4 — Design opt-in C-parity shim (cite docs/bugs/verified_c_bugs.md:166-204)
+      2. Phase L3k.3c.5 — Update docs/tests to reflect dual-mode behavior
+      3. Phase L3k.3d — Resolve nb-compare ROI anomaly and rerun VG-3/VG-4
       - Vectorization preserved via broadcasted `rotate_axis()` calls; gradient flow verified via test_crystal_geometry.py::test_gradient_flow
       - Device/dtype neutrality maintained (no `.cpu()`, `.cuda()`, or `.item()` in differentiable paths)
       - Tests updated: `test_rot_b_matches_c` now expects 0.71732 Å (spec-compliant base vector); `test_k_frac_phi0_matches_c` verifies divergence from C bug (TODO: replace with exact value after spec-compliant C trace generated)

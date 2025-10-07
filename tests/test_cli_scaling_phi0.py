@@ -113,8 +113,7 @@ class TestPhiZeroParity:
         rot_b_phi0_y = rot_b[0, 0, 1].item()  # (phi, mosaic, xyz) → φ=0, mosaic=0, Y
 
         # Expected: SPEC-COMPLIANT base vector value at φ=0
-        # From c_trace_scaling.log:64 (base vector before rotation): b_Y = 0.71732 Å
-        #
+        # Spec baseline value from reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/
         # This is the CORRECT value per specs/spec-a-core.md:211-214, where φ=0
         # should apply identity rotation, yielding the base lattice vector unchanged.
         #
@@ -122,11 +121,11 @@ class TestPhiZeroParity:
         # (stale vector carryover), which is a documented bug. An opt-in parity shim
         # will be added in Phase L3k.3c.4 to reproduce this for validation harnesses.
         #
-        # Reference: reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/c_trace_phi_20251123.log
-        expected_rot_b_y = 0.71732  # Base vector (spec-compliant)
+        # Reference: CLI-FLAGS-003 Phase L3k.3c.3 (input.md:42-43, plan.md:309)
+        expected_rot_b_y = 0.7173197865  # Spec baseline (10-digit precision)
 
-        # Tolerance (spec compliance)
-        tolerance = 5e-5  # Relaxed for float32 precision
+        # Tolerance: ≤1e-6 per CLI-FLAGS-003 L3k.3c.3 verification gate VG-1
+        tolerance = 1e-6
 
         # Assertion
         rel_error = abs(rot_b_phi0_y - expected_rot_b_y) / abs(expected_rot_b_y)
@@ -143,15 +142,14 @@ class TestPhiZeroParity:
         This test computes k_frac at φ=0 for the target pixel (685, 1039)
         and validates against the SPEC-COMPLIANT value (identity rotation at φ=0).
 
+        Expected value: k_frac = 1.6756687164 (10-digit spec baseline)
+        Tolerance: ≤1e-6 (VG-1 gate per CLI-FLAGS-003 L3k.3c.3)
+
         Phase: CLI-FLAGS-003 L3k.3c.3 (spec-compliant default path)
 
         Note: The C binary produces k_frac=-0.607256 at φ_tic=0 due to C-PARITY-001
         (stale vector carryover bug). This test validates the CORRECT spec behavior.
         An opt-in parity shim will be added in Phase L3k.3c.4 for C validation.
-
-        TODO: Need to generate spec-compliant C trace (with φ=0 bug fixed) to get
-        the expected k_frac value. For now, we verify the computation runs and
-        produces a different value than the buggy C code.
         """
 
         from nanobrag_torch.models.crystal import Crystal, CrystalConfig
@@ -247,27 +245,24 @@ class TestPhiZeroParity:
         k_frac = utils.dot_product(scattering, b_phi0).item()
 
         # Expected: SPEC-COMPLIANT k_frac value at φ=0
+        # Spec baseline value from reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/
+        # This is the CORRECT value per specs/spec-a-core.md:211-214, where φ=0
+        # should apply identity rotation, yielding base lattice vectors for Miller index calculation.
         #
-        # TODO (CLI-FLAGS-003 L3k.3c.3): Generate spec-compliant C trace to determine
-        # the expected k_frac value when φ=0 uses base vectors (identity rotation).
-        # The C-PARITY-001 buggy value is -0.607256, but the spec-compliant value
-        # will differ because it uses the correct base vectors.
+        # Note: The C binary produces k_frac=-0.607256 at φ_tic=0 due to C-PARITY-001
+        # (stale vector carryover), which is a documented bug. An opt-in parity shim
+        # will be added in Phase L3k.3c.4 to reproduce this for validation harnesses.
         #
-        # For now, we verify that the spec-compliant implementation produces a value
-        # DIFFERENT from the buggy C code, confirming the fix is working.
-        #
-        # Reference: C bug value from c_trace_phi_202510070839.log (k_frac=-0.607256)
-        c_buggy_k_frac = -0.6072558396
+        # Reference: CLI-FLAGS-003 Phase L3k.3c.3 (input.md:42-43, plan.md:309)
+        expected_k_frac = 1.6756687164  # Spec baseline (10-digit precision)
 
-        # Verify we produce a DIFFERENT value (not the buggy C value)
-        abs_error_from_bug = abs(k_frac - c_buggy_k_frac)
-        assert abs_error_from_bug > 0.1, \
-            f"k_frac(φ=0) should differ from C buggy value. " \
-            f"Expected divergence from {c_buggy_k_frac:.10f}, got {k_frac:.10f}. " \
-            f"Absolute delta: {abs_error_from_bug:.10g}. " \
-            f"If this fails, the spec-compliant fix may not be working correctly."
+        # Tolerance: ≤1e-6 per CLI-FLAGS-003 L3k.3c.3 verification gate VG-1
+        tolerance = 1e-6
 
-        # TODO: Replace with actual expected value once spec-compliant C trace exists
-        # expected_k_frac_spec = <TBD from fixed C trace>
-        # tolerance = 1e-3
-        # assert abs(k_frac - expected_k_frac_spec) <= tolerance
+        # Assertion: verify spec-compliant value (not the buggy C value)
+        abs_error = abs(k_frac - expected_k_frac)
+        assert abs_error <= tolerance, \
+            f"k_frac(φ=0) spec compliance failed. " \
+            f"Expected {expected_k_frac:.10f}, got {k_frac:.10f}. " \
+            f"Absolute delta: {abs_error:.10g} (tolerance: {tolerance}). " \
+            f"At φ=0°, k should be calculated from base lattice vectors (identity rotation)."
