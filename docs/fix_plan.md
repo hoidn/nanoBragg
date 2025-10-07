@@ -536,6 +536,26 @@
       1. Phase L3k.3c.2 — Log Δk and forthcoming Δb_y in diagnosis/checklist; design the vectorized carryover strategy before editing code.
       2. Phase L3k.3c.3 — Implement φ==0 carryover fix in `Crystal.get_rotated_real_vectors`, rerun per-φ harness, and hit VG-1 thresholds (Δk, Δb_y ≤ 1e-6).
       3. Continue with L3k.3d/L3k.3e once VG-1 is green.
+  * [2025-10-07] Attempt #109 (ralph loop i=109, Phase L3k.3c.2) — Result: **EVIDENCE COMPLETE** (Phase L3k.3c.2 metrics documentation). **Δk and Δb_y captured; remediation outlined.**
+    Metrics: Evidence-only loop (no code changes). Δk(φ₀)=1.811649e-02 (threshold <1e-6 NOT MET); Δb_y=0.045731552549 Å. Per-φ comparison: 1 DIVERGE (φ_tic=0), 9 OK (φ_tic=1-9, Δk<3e-5). Pytest collection: 655 tests.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/diagnosis.md` — Full metrics table, remediation outline (φ=0 carryover via cached φ_last state)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/compare_latest.txt` — Per-φ comparison output from `compare_per_phi_traces.py`
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/delta_by.txt` — Δb_y measurement: 0.045731552549 Å (units: Angstroms)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md:19` — Updated VG-1.4 with Attempt #103 metrics and artifact paths
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/sha256.txt` — Updated checksums (appended)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/pytest_collect.log` — Test collection successful
+    Observations/Hypotheses:
+      - **Root Cause Confirmed**: PyTorch φ=0 initialization uses unrotated base vectors; C uses φ_last rotated state
+      - **Per-φ Parity Trend**: φ_tic=1-9 show Δk<3e-5 (2-3 orders of magnitude better than φ_tic=0), confirming φ rotation math is correct for φ>0
+      - **Component-Level Gap**: Δb_y=0.0457 Å (6.4% relative to b_Y≈0.717 Å) quantifies the base vector Y-component discrepancy at φ=0
+      - **Remediation Strategy**: Implement φ=0 carryover in `Crystal.get_rotated_real_vectors` to cache φ_last state and reuse when φ_tic resets to 0 (matching C semantics from nanoBragg.c:3006-3098 loop structure)
+      - **VG-1.4 Threshold**: NOT MET but root cause isolated and documented; ready for Phase L3k.3c.3 implementation
+    First Divergence: φ_tic=0 (φ=0.0°) — Δk=1.811649e-02, Δb_y=0.045731552549 Å (documented in diagnosis.md metrics table)
+    Next Actions:
+      1. Phase L3k.3c.3 — Implement φ=0 carryover fix in `Crystal.get_rotated_real_vectors` per remediation outline; regenerate per-φ traces and confirm VG-1 thresholds met (Δk, Δb_y ≤ 1e-6)
+      2. Phase L3k.3d — Re-run nb-compare ROI analysis once φ carryover lands and VG-1 passes; resolve C sum≈0 anomaly if present
+      3. Phase L3k.4 — Document full implementation attempt in fix_plan with post-fix metrics, update plan phase table, prepare Phase L4 supervisor command parity rerun
       - **Test stability**: All crystal geometry, rotation, and lattice tests pass without regression
       - **Metric duality preserved**: V_actual computed from rotated real vectors, used to regenerate reciprocal vectors per CLAUDE Rule #13
       - **Vectorization maintained**: Batched tensor operations across phi/mosaic dimensions, device-neutral implementation
