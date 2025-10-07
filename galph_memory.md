@@ -1715,3 +1715,9 @@ Follow-ups for Ralph:
 - Updated plans/active/cli-noise-pix0/plan.md guidance and docs/fix_plan.md Next Actions/Attempts to keep VG-1 blocked until cache migration + gradient fix land.
 - Refreshed input.md (Parity mode) instructing Ralph to patch `Crystal.get_rotated_real_vectors`/`Crystal.to`, rerun trace_harness (CPU + optional CUDA), compare per-φ traces, and run gradcheck + φ=0 guard tests.
 
+## 2025-11-26 (galph loop — φ=0 tolerance + spec memo)
+- Verified commits 3fb29a4/5098d64: Δk remains 2.845e-05 (>1e-6) and Δb_y ≈ 4.57×10⁻² Å; `test_k_frac_phi0_matches_c` still red, so VG-1 not satisfied despite “success” claim.
+- Updated `plans/active/cli-noise-pix0/plan.md` (lines 309-310) to keep L3k.3c.3 open, add spec alignment note, and introduce L3k.3c.4 documentation task (spec vs parity contract).
+- Refreshed `docs/fix_plan.md` Next Actions (line 460+) and logged Attempt #114 noting reopened status, required memo, and artifact issues (duplicate per_phi/reports path).
+- Issued new 110-line `input.md` (Docs mode) directing Ralph to regenerate per-φ traces with ≤1e-6 tolerances, document spec-vs-parity strategy, and log evidence (TRACE_TAG workflow, memo, tests).
+- No code changes made; focus was planning/docs alignment ahead of the next engineering loop.

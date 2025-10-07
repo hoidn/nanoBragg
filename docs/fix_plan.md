@@ -457,10 +457,11 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
-- Next Actions (2025-11-23 refresh → ralph Attempt #111):
-1. **Reopen Phase L3k.3c.3** — galph loop 2025-11-24 flagged that `_phi_last_cache` never migrates during `Crystal.to()` and `torch.tensor(last_phi_deg, …)` detaches gradients. Patch the φ=0 carryover so cache tensors respect device/dtype neutrality and gradient flow, regenerate per-φ traces, and keep VG-1 red until Δk ≤ 1e-6 on both CPU+CUDA.
-2. Phase L3k.3d — Resolve the nb-compare ROI anomaly (C sum≈0) before repeating VG-3/VG-4; capture the corrected summary.json/logs under `nb_compare_phi_fix/` once correlation ≥0.9995 and sum_ratio 0.99–1.01. After VG-1/VG-3/VG-4 pass, proceed to L3k.3e → L3k.4 documentation and fix_plan logging ahead of the Phase L4 supervisor-command rerun.
-3. Phase L3k.3e — Once VG-1/VG-3/VG-4 are green, close out documentation/checklist chores (VG-5) and log the implementation Attempt before moving to the Phase L4 supervisor command rerun.
+- Next Actions (2025-11-26 refresh → galph loop i=112):
+1. **Phase L3k.3c.3 still failing** — Attempts #111/#113 improved gradients but Δk remains 2.845e-05 (>1e-6) and `test_k_frac_phi0_matches_c` stays red. Regenerate per-φ traces after fixing the cache so both Δk and Δb_y ≤1e-6 (CPU+CUDA), then update `comparison_summary.md`, `delta_metrics.json`, and the VG-1 checklist before proceeding.
+2. **Phase L3k.3c.4 documentation** — Capture a short memo (reports/…/diagnosis.md) citing specs/spec-a-core.md §4 and docs/bugs/verified_c_bugs.md §C-PARITY-001 to clarify the spec-mandated behavior (no carryover) vs the C reference bug, and outline how PyTorch will deliver spec-compliant defaults with an explicit parity shim if needed. Link the memo in this fix-plan entry.
+3. Phase L3k.3d — Resolve the nb-compare ROI anomaly (C sum≈0) before repeating VG-3/VG-4; capture the corrected summary.json/logs under `nb_compare_phi_fix/` once correlation ≥0.9995 and sum_ratio 0.99–1.01. After VG-1/VG-3/VG-4 pass, proceed to L3k.3e → L3k.4 documentation and fix_plan logging ahead of the Phase L4 supervisor-command rerun.
+4. Phase L3k.3e — Once VG-1/VG-3/VG-4 are green, close out documentation/checklist chores (VG-5) and log the implementation Attempt before moving to the Phase L4 supervisor command rerun.
 - Attempts History:
   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
     Metrics: Planning-only (no tests executed).
@@ -2041,6 +2042,18 @@
       - Mark plan.md Phase L3k.3c as [D] complete
       - Update test_k_frac_phi0_matches_c to use CUSTOM convention with supervisor command's custom vectors (detector_convention=CUSTOM, custom_beam_vector, custom_fdet/sdet/odet vectors)
       - Proceed to L3k.3d (resolve nb-compare ROI parity for VG-3/VG-4 gates)
+  * [2025-11-26] Attempt #114 (galph loop i=112 — review) — Result: **REOPENED**. Verified attempts #111/#113: per-φ traces still report max Δk = 2.845e-05 and Δb_y ≈ 4.57×10⁻² Å, exceeding the VG-1 tolerance (≤1e-6). `tests/test_cli_scaling_phi0.py::test_k_frac_phi0_matches_c` remains red, and the generated artifact path `reports/2025-10-cli-flags/phase_l/per_phi/reports/...` duplicates directory segments. Plan and fix-plan updated to keep L3k.3c.3 open, require refreshed traces with tighter tolerances, and add a documentation task to record the spec-vs-parity contract before implementation proceeds.
+    Metrics: Evidence-only review; no code executed this loop. Δk=2.845147e-05 from `comparison_summary.md` (Attempt #111); Δb_y from `delta_by.txt` = 4.573155×10⁻² Å. Pytest status unchanged (test_k_frac_phi0_matches_c FAIL expected but unresolved).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251207/comparison_summary.md` (attempt #113) — confirms Δk=2.845147e-05
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/delta_metrics.json` — Δb_y magnitude 4.573155e-02 Å
+      - Updated plan: `plans/active/cli-noise-pix0/plan.md` (L3k.3c.3/L3k.3c.4 guidance)
+      - Updated fix-plan Next Actions (this entry)
+    Observations/Hypotheses:
+      - VG-1 threshold in `fix_checklist.md` is 1e-6, so the 2.84e-05 result is insufficient despite being <5e-4. Need higher-precision carryover (or spec-compliant default + parity shim).
+      - Artifact directories should avoid nested `.../per_phi/reports/...` duplication to keep future comparisons sane.
+      - Spec review required: specs/spec-a-core.md §4 mandates no φ=0 carryover; PyTorch must offer spec-compliant default behavior while optionally emulating the C trace for parity workflows.
+    Next Actions: Keep L3k.3c.3 open, produce new per-φ traces post-fix, author the spec/bug memo (L3k.3c.4), and only then move on to ROI/normalization gates.
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; **(viii) Phase F3 parity evidence captured** ✅ (Attempt #12); **(ix) Phase G2 MOSFLM orientation ingestion complete** ✅ (Attempt #17); **(x) Phase G3 trace verification complete with transpose fix** ✅ (Attempt #18); (xi) Phase H lattice structure factor alignment ✅ (Attempt #25); (xii) Phase F3 parity rerun with lattice fix ❌; (xiii) Phase I polarization alignment ❌; (xiv) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌.
 
