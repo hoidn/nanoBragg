@@ -352,61 +352,81 @@ class Crystal:
             # Return default_F for this evaluation
             return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
 
-        # Build the 4x4x4 neighborhood indices
-        # h_interp[0]=h0_flr-1, h_interp[1]=h0_flr, h_interp[2]=h0_flr+1, h_interp[3]=h0_flr+2
-        # Vectorized version: build indices directly without Python loops
-        offsets = torch.arange(-1, 3, device=self.device, dtype=torch.long)  # [-1, 0, 1, 2]
+        # Phase C1: Batched Neighborhood Gather Implementation
+        # Following design_notes.md Section 2: flatten all batch dimensions, build (B,4,4,4) neighborhoods
 
-        # Build coordinate arrays for interpolation (as float for polin3)
-        h_indices = (h_flr + offsets).to(dtype=self.dtype)
-        k_indices = (k_flr + offsets).to(dtype=self.dtype)
-        l_indices = (l_flr + offsets).to(dtype=self.dtype)
+        # Store original shape for final reshape
+        original_shape = h.shape
 
-        # Build the 4x4x4 subcube of structure factors using vectorized indexing
+        # Flatten all dimensions to (B,) for batched processing
+        h_flat = h.reshape(-1)
+        k_flat = k.reshape(-1)
+        l_flat = l.reshape(-1)
+        B = h_flat.shape[0]
+
+        # Recompute floor indices for flattened tensors
+        h_flr_flat = torch.floor(h_flat).long()
+        k_flr_flat = torch.floor(k_flat).long()
+        l_flr_flat = torch.floor(l_flat).long()
+
+        # Build offset array [-1, 0, 1, 2] for neighborhood gathering
+        offsets = torch.arange(-1, 3, device=self.device, dtype=torch.long)  # (4,)
+
+        # Build coordinate grids for each query point: (B, 4)
+        # h_grid[i] = [h_flr[i]-1, h_flr[i], h_flr[i]+1, h_flr[i]+2]
+        h_grid_coords = h_flr_flat.unsqueeze(-1) + offsets  # (B, 4)
+        k_grid_coords = k_flr_flat.unsqueeze(-1) + offsets  # (B, 4)
+        l_grid_coords = l_flr_flat.unsqueeze(-1) + offsets  # (B, 4)
+
+        # Build the batched 4x4x4 subcubes of structure factors
         if self.hkl_data is None:
-            # If no HKL data loaded, use default_F everywhere
-            sub_Fhkl = torch.full((4, 4, 4), self.config.default_F, dtype=self.dtype, device=self.device)
+            # If no HKL data loaded, use default_F everywhere: shape (B, 4, 4, 4)
+            sub_Fhkl = torch.full((B, 4, 4, 4), self.config.default_F, dtype=self.dtype, device=self.device)
+            # Coordinate arrays for polin3 (float, for interpolation): (B, 4)
+            h_indices = h_grid_coords.to(dtype=self.dtype)
+            k_indices = k_grid_coords.to(dtype=self.dtype)
+            l_indices = l_grid_coords.to(dtype=self.dtype)
         else:
-            # Calculate grid indices into hkl_data array
-            # Need to broadcast to create 4x4x4 indexing grid
-            h_grid = (h_flr.long() + offsets) - h_min  # shape: (4,)
-            k_grid = (k_flr.long() + offsets) - k_min  # shape: (4,)
-            l_grid = (l_flr.long() + offsets) - l_min  # shape: (4,)
+            # Convert to array indices (relative to hkl_data origin)
+            h_array_grid = h_grid_coords - h_min  # (B, 4)
+            k_array_grid = k_grid_coords - k_min  # (B, 4)
+            l_array_grid = l_grid_coords - l_min  # (B, 4)
 
-            # Use advanced indexing with broadcasting:
-            # h_grid[:, None, None] broadcasts to (4, 1, 1)
-            # k_grid[None, :, None] broadcasts to (1, 4, 1)
-            # l_grid[None, None, :] broadcasts to (1, 1, 4)
-            # Result: (4, 4, 4) gathered from hkl_data
-            sub_Fhkl = self.hkl_data[h_grid[:, None, None], k_grid[None, :, None], l_grid[None, None, :]]
+            # Advanced indexing to build (B, 4, 4, 4) neighborhoods
+            # Following design_notes.md Section 2.6 broadcasting pattern:
+            # h_array_grid[:, :, None, None] → (B, 4, 1, 1)
+            # k_array_grid[:, None, :, None] → (B, 1, 4, 1)
+            # l_array_grid[:, None, None, :] → (B, 1, 1, 4)
+            # Result: (B, 4, 4, 4)
+            sub_Fhkl = self.hkl_data[
+                h_array_grid[:, :, None, None],
+                k_array_grid[:, None, :, None],
+                l_array_grid[:, None, None, :]
+            ]
+
+            # Coordinate arrays for polin3 (float Miller indices): (B, 4)
+            h_indices = h_grid_coords.to(dtype=self.dtype)
+            k_indices = k_grid_coords.to(dtype=self.dtype)
+            l_indices = l_grid_coords.to(dtype=self.dtype)
 
         # Perform tricubic interpolation
-        # CRITICAL BUG: The current polin3/polin2/polint implementation cannot handle
-        # batched tensor inputs. It expects scalar/1D inputs only. Additionally, the code
-        # above builds a single 4x4x4 neighborhood (sub_Fhkl) but different query points
-        # need different neighborhoods based on their Miller indices.
-        #
-        # This is a known limitation documented in PERF-PYTORCH-004 fix plan.
-        # For now, fall back to nearest-neighbor when batched inputs are detected.
-        #
-        # TODO: Implement fully vectorized tricubic interpolation that handles:
-        #   1. Batched inputs (arbitrary shape tensors)
-        #   2. Per-point neighborhoods (each query needs its own 4x4x4 subcube)
-        #   3. torch.compile compatibility
-        if h.numel() > 1:
-            # Batched input detected - fall back to nearest neighbor
+        # Phase C1 deliverable: batched gather complete
+        # Phase D (polynomial vectorization) will consume these (B,4,4,4) neighborhoods
+        # For now, maintain scalar path for single-element case and fall back for batched
+        if B == 1:
+            # Scalar case: use existing polin3 (squeeze to remove batch dim)
+            F_cell = polin3(h_indices.squeeze(0), k_indices.squeeze(0), l_indices.squeeze(0),
+                            sub_Fhkl.squeeze(0), h_flat.squeeze(0), k_flat.squeeze(0), l_flat.squeeze(0))
+            return F_cell.reshape(original_shape)
+        else:
+            # Batched case: Phase D will vectorize polin3; for now fall back to nearest-neighbor
+            # This preserves existing behavior while delivering Phase C1 (batched gather infrastructure)
             if not self._interpolation_warning_shown:
-                print("WARNING: tricubic interpolation not yet supported for batched inputs")
-                print("WARNING: falling back to nearest-neighbor lookup")
+                print("WARNING: tricubic interpolation batched gather implemented")
+                print("WARNING: polynomial evaluation not yet vectorized; falling back to nearest-neighbor")
                 print("WARNING: this warning will only be shown once")
                 self._interpolation_warning_shown = True
             return self._nearest_neighbor_lookup(h, k, l)
-
-        # Scalar case: polin3 can handle this
-        F_cell = polin3(h_indices.squeeze(), k_indices.squeeze(), l_indices.squeeze(),
-                        sub_Fhkl, h.squeeze(), k.squeeze(), l.squeeze())
-
-        return F_cell.reshape(h.shape)
 
 
     def compute_cell_tensors(self) -> dict:
