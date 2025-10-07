@@ -1590,3 +1590,8 @@ Follow-ups for Ralph:
 - Captured current artifacts (rot_vector_comparison.md, invariant_probe.md) and confirmed trace_harness.py emits full TRACE_PY data; next evidence must log spindle-axis norm + V_formula/V_actual for PyTorch vs C.
 - Authored input.md (Parity mode) directing Ralph to refresh the trace, build spindle_probe + volume_probe outputs under reports/2025-10-cli-flags/phase_l/rot_vector/, rerun collect-only pytest, and update docs/fix_plan.md Attempt with quantified deltas.
 - No plan rewrites needed yet; expect Ralph to append new evidence then adjust plan L3 items if hypotheses shift.
+
+## 2025-11-20 (galph loop — CLI spindle instrumentation setup)
+- Recorded new context line in `plans/active/cli-noise-pix0/plan.md` for Attempt #89 (spindle + volume probe). Marked L3f ✅, kept L3g `[P]` with explicit instruction to surface `TRACE_PY: spindle_axis` before simulator edits; L3h now depends on that evidence.
+- Updated `docs/fix_plan.md` Next Actions (CLI-FLAGS-003) to focus on spindle-axis instrumentation → doc/plan sync → eventual nb-compare rerun. input.md refreshed accordingly.
+- Expect Ralph to extend `trace_harness.py` (or TRACE_PY hooks) with raw/normalized spindle logging, rerun the φ=0 trace, append results to `spindle_audit.log`, and update fix_plan/plan entries before shifting to implementation.
