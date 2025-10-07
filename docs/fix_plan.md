@@ -549,6 +549,24 @@
       3. Consider test gap: add per-φ k_frac stability assertion to test_f_latt_square_matches_c or create new test
       4. VG-4 audit blocked until VG-1/VG-3 root causes resolved
       5. Phase L4 supervisor command rerun deferred pending VG gate completion
+  * [2025-10-07] Attempt #100 (ralph loop i=100) — Result: **EVIDENCE** (Phase L3k.3 targeted pytest created). **Captured φ=0 base-vector drift in failing tests per input.md Do Now.**
+    Metrics: Test collection 2/2 tests; rot_b[0,0,1] rel_error=0.0681 (expected 0.6716 Å, got 0.7173 Å, Δ=+0.0457 Å); k_frac abs_error=2.28 (expected -0.607, got 1.676, Δ=+2.28).
+    Artifacts:
+      - tests/test_cli_scaling_phi0.py — New pytest module with TestPhiZeroParity class (2 tests documenting φ=0 drift)
+      - reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/pytest_phi0.log — Red test output (EXPECTED failures per TDD)
+      - reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/pytest_collect.log — Collection verification (2 tests collected)
+      - reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/sha256.txt — Artifact checksums
+    Observations/Hypotheses:
+      - **rot_b Y component drift**: 6.8% relative error at φ=0 (expected 0.6716 Å from c_trace_scaling.log:266, got 0.7173 Å from Py trace)
+      - **k_frac drift**: Absolute error 2.28 (expected -0.607 from c_trace_scaling.log:271, actual 1.676) — sign flip + magnitude change
+      - **Tests document bug via TDD**: Both tests EXPECTED to fail until φ rotation fix implemented; red output proves bug exists
+      - **Quantitative evidence captured**: Deltas match prior Phase L3 observations (trace_py_scaling_20251119.log:15,20 showed similar Δb_Y≈+0.046 Å)
+      - **Evidence-only mode honored**: No code changes this loop per input.md guidance; tests ready for fix validation in next implementation loop
+    Next Actions:
+      1. Implementation loop (next turn): Fix Crystal.get_rotated_real_vectors to rotate only real vectors, recompute reciprocal from cross products (per Phase L3k.2 implementation memo)
+      2. After fix lands: Rerun tests/test_cli_scaling_phi0.py::TestPhiZeroParity — expect both tests to PASS (green) when thresholds met
+      3. Once tests green: Execute remaining VG gates (VG-1 per-φ traces, VG-3 nb-compare, VG-4 component audit) per fix_checklist.md
+      4. After all VG gates pass: Update fix_plan Attempt with full metrics, mark Phase L3k complete, proceed to Phase L4 supervisor command parity rerun
   * [2025-10-07] Attempt #91 (ralph loop i=91) — Result: **SUCCESS** (Phase L3g spindle instrumentation COMPLETE). **H1 (spindle normalization) RULED OUT as root cause of Y-drift.**
     Metrics: Spindle Δ(magnitude)=0.0 (tolerance ≤5e-4); trace captured 43 TRACE_PY lines (was 40, +3 spindle lines); test collection 4/4 passed.
     Artifacts:
