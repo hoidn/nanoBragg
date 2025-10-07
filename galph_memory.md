@@ -1644,3 +1644,7 @@ Follow-ups for Ralph:
 - Noted nb-compare summary (reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/summary.json) still reports sum_ratio ≈ 1.16e5, so we cannot trust intensity metrics until φ=0 parity is fixed.
 - Authored new input.md directing Ralph to capture a failing pytest (`TestPhiZeroParity::test_rot_b_matches_c`) plus fresh Py/C traces under reports/.../base_vector_debug/ before touching simulator code.
 - No repo hygiene performed; tree contains only input.md modifications staged later.
+## 2025-11-21 (galph loop — CLI axis triage)
+- Investigated Phase L3k VG-1 failure: PyTorch `rot_b` at φ=0 equals 0.7173 Å, but C trace plateau lists 0.6716 Å. Confirmed via `Crystal.get_rotated_real_vectors` that φ=9 (0.09°) reproduces the 0.6716 Å value, implying the current pytest harness is misaligned with the supervisor spindle axis / φ indexing.
+- Found `tests/test_cli_scaling_phi0.py:87` still initializes `spindle_axis=[0.0, 1.0, 0.0]`, diverging from the supervisor command (`-spindle_axis -1 0 0`). Logged this mismatch as the leading hypothesis for VG-1 drift.
+- Refreshed `input.md` (Parity mode) directing Ralph to realign the φ=0 test with spindle_axis = (-1,0,0), rerun the targeted pytest selector, and capture new per-φ artifacts under `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/` before touching nb-compare again.
