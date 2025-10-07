@@ -229,11 +229,11 @@ def main():
     # Instantiate components (Step 5 per input.md, honour -nonoise)
     detector = Detector(detector_config, dtype=dtype, device=device)
     crystal = Crystal(crystal_config, dtype=dtype, device=device)
-    crystal.F_grid = F_grid_tensor
-    crystal.h_min, crystal.h_max = h_min, h_min + h_range
-    crystal.k_min, crystal.k_max = k_min, k_min + k_range
-    crystal.l_min, crystal.l_max = l_min, l_min + l_range
-    crystal.h_range, crystal.k_range, crystal.l_range = h_range, k_range, l_range
+
+    # Attach HKL grid and metadata to Crystal (Phase L2b fix)
+    # Crystal.get_structure_factor consults hkl_data and hkl_metadata, not ad-hoc attributes
+    crystal.hkl_data = F_grid_tensor
+    crystal.hkl_metadata = hkl_metadata
 
     # Run simulator with debug_config to capture live TRACE_PY output (Step 5)
     # Per Attempt #67 (2025-10-06): Simulator with debug_config={'trace_pixel': [s, f]}

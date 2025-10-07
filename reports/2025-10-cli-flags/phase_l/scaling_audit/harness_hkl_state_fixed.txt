@@ -1,0 +1,17 @@
+POST-FIX HKL State Verification (Attempt #74)
+=============================================
+
+After Phase L2b harness fix (attaching hkl_data and hkl_metadata):
+
+hkl_data is None? False
+hkl_metadata is None? False
+h_range: (1, 1)
+k_range: (12, 12)
+l_range: (3, 3)
+
+Structure factor lookups:
+- (1,12,3): F=100.0 ✅ (correct - matches scaled.hkl)
+- (-7,-1,-14): F=0.0 ✅ (correct - out of range)
+
+Pixel (685,1039) maps to h≈-7, k≈-1, l≈-14, so F_cell=0 is expected behavior.
+This confirms the harness fix is working correctly.

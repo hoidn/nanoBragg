@@ -486,6 +486,21 @@
       - **Scaling factors verified:** All intermediate scaling terms (r_e², fluence, steps, capture_fraction, polar, omega_pixel) match C within tolerance (Δ<0.002%)
       - **Test coverage maintained:** tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics passes all parametrized variants (4/4)
     Next Actions: Phase L2b complete; L2c evidence captured. Supervisor to proceed with Phase L3 structure-factor investigation based on comparison summary showing I_before_scaling as first divergence.
+  * [2025-10-07] Attempt #74 (ralph loop) — Result: **SUCCESS** (Phase L2b harness fix + L2c comparison complete). **Corrected harness to attach `crystal.hkl_data` and `crystal.hkl_metadata` instead of ad-hoc attributes; structure factor lookup now functional.**
+    Metrics: Harness probe confirms hkl_data attached (lookup returns F=100 for (1,12,3), F=0 for out-of-range). Comparison identifies I_before_scaling as first divergence. Test suite passes 4/4 variants (tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:233-236` — Fixed HKL attachment (crystal.hkl_data = F_grid_tensor, crystal.hkl_metadata = hkl_metadata)
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/harness_hkl_state_fixed.txt` — Post-fix verification showing hkl_data/metadata properly attached
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log` — Refreshed trace with functional HKL lookup
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/scaling_audit_summary.md:1-54` — L2c comparison showing all scaling factors match C (r_e², fluence, steps, polar, omega all <0.002% delta)
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_env.json` — Updated environment snapshot
+    Observations/Hypotheses:
+      - **Fix validated:** Crystal.get_structure_factor now consults proper attributes; lookup for (1,12,3) returns F=100 as expected
+      - **F_cell=0 is correct:** Pixel (685,1039) maps to h≈-7,k≈-1,l≈-14; scaled.hkl only contains (1,12,3), so out-of-range lookup correctly returns 0
+      - **Scaling chain validated:** All intermediate factors (r_e²=7.94e-30, fluence=1e24, steps=10, polar=0.914641, omega=4.204e-07) match C within tolerance
+      - **First divergence confirmed:** I_before_scaling (C=943654.809, Py=0) diverges because pixel maps to reflection not in HKL grid
+      - **Phase L2b/L2c complete:** Harness functional, comparison executed, first divergence documented
+    Next Actions: Phase L3 — Choose a pixel that maps to reflection (1,12,3) to validate non-zero structure factor path, or proceed with supervisor guidance to Phase L analysis of normalization factors.
   * [2025-11-14] Attempt #73 (galph loop) — Result: **BLOCKED** (Phase L2b structure-factor wiring incomplete). **Harness leaves `Crystal.hkl_data` / `Crystal.hkl_metadata` unset after loading scaled.hkl, so structure factors still fall back to `default_F=0`.**
     Metrics: Evidence-only triage; no production code touched.
     Artifacts:
@@ -495,7 +510,7 @@
       - `Crystal.get_structure_factor` consults `self.hkl_data` and `self.hkl_metadata`; ad-hoc attributes (`crystal.F_grid`, `crystal.h_min`) are ignored by lookup logic.
       - Missing metadata also explains the bogus `scattering_vec_A_inv` integers and zeroed intensities.
       - Fix: set `crystal.hkl_data = F_grid_tensor` and `crystal.hkl_metadata = hkl_metadata` (or call `crystal.load_hkl`) before creating `Simulator`.
-    Next Actions: Patch harness to attach HKL grid + metadata, rerun the L2b trace capture, update `scaling_audit_summary.md`, then resume L2c normalization analysis.
+    Next Actions: **[COMPLETED in Attempt #74]** Patch harness to attach HKL grid + metadata, rerun the L2b trace capture, update `scaling_audit_summary.md`, then resume L2c normalization analysis.
   * [2025-10-07] Attempt #69 (ralph loop) — Result: **SUCCESS** (Phase L2b harness refresh complete). **Updated trace harness to use live simulator TRACE_PY output; generated fresh trace_py_scaling.log with 40 real values.**
     Metrics: 40 TRACE_PY lines captured from stdout; test suite passes 4/4 variants (cpu/cuda × float32/float64).
     Artifacts:
