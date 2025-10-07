@@ -1,0 +1,59 @@
+{
+  "files": {
+    "hkl": "scaled.hkl",
+    "fdump": "Fdump_scaled_20251006175032.bin",
+    "hkl_sha256": "65b668b3fa5c4de14c9049d9262945453d982ff193b572358846f38b173855ba",
+    "fdump_sha256": "29a427209e14ce2f1fc8e4f5f61eacc194f6c4cb1f5c6a6ca20bf19c244978c5"
+  },
+  "metadata": {
+    "hkl": {
+      "h_min": -24,
+      "h_max": 24,
+      "k_min": -28,
+      "k_max": 28,
+      "l_min": -31,
+      "l_max": 30,
+      "h_range": 48,
+      "k_range": 56,
+      "l_range": 61
+    },
+    "fdump": {
+      "h_min": -24,
+      "h_max": 24,
+      "k_min": -28,
+      "k_max": 28,
+      "l_min": -31,
+      "l_max": 30,
+      "h_range": 48,
+      "k_range": 56,
+      "l_range": 61
+    },
+    "match": true
+  },
+  "shapes": {
+    "hkl": [
+      49,
+      57,
+      62
+    ],
+    "fdump": [
+      49,
+      57,
+      62
+    ],
+    "match": true
+  },
+  "numerical": {
+    "max_abs_diff": 522.35,
+    "rms_diff": 50.96469437587801,
+    "relative_rms": 1.1808092103985008,
+    "mismatches_above_tolerance": 99209,
+    "tolerance": 1e-06,
+    "hkl_min": 0.0,
+    "hkl_max": 522.35,
+    "fdump_min": 0.0,
+    "fdump_max": 522.35
+  },
+  "device": "cpu",
+  "dtype": "float64"
+}

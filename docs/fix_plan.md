@@ -1258,6 +1258,31 @@
       - **Final I_pixel 11.4% higher:** Cascading effect from F_latt + polarization errors
       - **Steps/r_e²/fluence/omega perfect:** All normalization constants match exactly, confirming infrastructure is correct
     Next Actions: Phase K3 — Compare fractional Miller indices (h,k,l_frac) in C vs PyTorch traces to determine if F_latt_b error originates in Miller index calculation (scattering vector → reciprocal space) or in sincg function itself. Then debug polarization to apply Kahn factor correctly (reference PERF-PYTORCH-004 P3.0b fixes). Once both resolved, run targeted regression `pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v` and proceed to Phase L final parity sweep.
+  * [2025-10-06] Attempt #50 (ralph) — Result: **PARITY FAILURE** (Phase L1 HKL ingestion evidence complete). **Critical discrepancy: PyTorch and C load HKL/Fdump data with significant numerical differences (max |ΔF|=522 electrons, 99k mismatched voxels), but investigation reveals this is NOT a fundamental ingestion bug.**
+    Metrics: Max |ΔF|=5.224e2 electrons (>> 1e-6 target), Relative RMS error=1.181 (>> 1e-8 target), mismatched voxels=99,209 (expect 0), metadata match ✅, shape match ✅. HKL has 64,333 non-zero entries, Fdump has 64,117 (216 fewer). Value ranges: both sources show min=0, max=522.35.
+    Artifacts:
+      - `scripts/validation/compare_structure_factors.py` — New validation script implementing HKL parity comparison per Phase L1 requirements
+      - `reports/2025-10-cli-flags/phase_l/hkl_parity/summary_20251006175032.md` — Markdown evidence report with parity failure documentation
+      - `reports/2025-10-cli-flags/phase_l/hkl_parity/metrics_20251006175032.json` — Complete JSON metrics with SHA256 hashes
+      - `reports/2025-10-cli-flags/phase_l/hkl_parity/run_20251006175032.log` — Execution log
+      - `reports/2025-10-cli-flags/phase_l/hkl_parity/c_fdump_20251006175032.log` — C binary execution log showing "64333 initialized hkls"
+      - `reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175032.bin` — Generated Fdump binary (1.4M)
+      - `reports/2025-10-cli-flags/phase_l/hkl_parity/summary.md` → symlink to timestamped summary
+    Observations/Hypotheses:
+      - **Diagnostic investigation shows this is NOT an ingestion bug:** Analysis reveals ~35k voxels non-zero in HKL but zero in Fdump, and ~35k vice versa. This pattern indicates a **data ordering/indexing mismatch**, not value corruption.
+      - **Evidence shows values are swapped, not corrupted:** When checking specific Miller indices from the HKL file (e.g., (23,15,-1) with F=23.00), PyTorch reads them correctly into the grid but Fdump shows 0.0 at those grid positions. The reverse is also true - Fdump's first non-zero value (Miller (-24,-16,5) = 19.44) appears at a different grid position than expected.
+      - **This is likely a transpose/indexing artifact:** The metadata matches perfectly (h_min=-24, h_max=24, k_min=-28, k_max=28, l_min=-31, l_max=30), shapes match (49×57×62), and max values match (522.35), but the grid positions don't align. This suggests either:
+        1. The C code writes Fdump in a different array order than documented (not [h][k][l] with l varying fastest)
+        2. The PyTorch reader has an axis permutation bug
+        3. There's a subtle off-by-one index shift
+      - **C log shows normal operation:** C reports "reading scaled.hkl", "64333 initialized hkls", "writing dump file for next time: Fdump.bin" with no errors
+      - **SHA256 hashes captured for reproducibility:** HKL=65b668b3..., Fdump=29a427209...
+    Next Actions: **Phase L1b required before L2** — This evidence shows the comparison script works correctly and exposes a real issue, but the discrepancy is in data layout/indexing, not a normalization bug. Before proceeding to Phase L2 scaling traces:
+      1. Read the C code Fdump write logic (nanoBragg.c around "writing dump file") to understand exact array layout
+      2. Compare with `src/nanobrag_torch/io/hkl.py` read_fdump() implementation to find the mismatch
+      3. Add a targeted unit test that writes a small known HKL grid, generates Fdump via C, reads it back via PyTorch, and verifies exact value-for-value match
+      4. Fix the indexing bug and rerun this Phase L1 script to verify max |ΔF| < 1e-6
+      5. Only then proceed to Phase L2 scaling chain traces, as Fdump parity is a prerequisite for trustworthy structure factor comparisons
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; **(viii) Phase F3 parity evidence captured** ✅ (Attempt #12); **(ix) Phase G2 MOSFLM orientation ingestion complete** ✅ (Attempt #17); **(x) Phase G3 trace verification complete with transpose fix** ✅ (Attempt #18); (xi) Phase H lattice structure factor alignment ✅ (Attempt #25); (xii) Phase F3 parity rerun with lattice fix ❌; (xiii) Phase I polarization alignment ❌; (xiv) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌.
 
