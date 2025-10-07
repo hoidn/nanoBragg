@@ -1754,6 +1754,28 @@
       - Outlined OOB mask approach: detect invalid neighborhoods, emit warning once, apply fallback `default_F` for invalid points
       - Established validation plan: AT-STR-002 parity, unit-level gradcheck, CPU/CUDA benchmarks with ≥10× speedup target vs scalar baseline
     Next Actions: Execute Phase C tasks (C1–C3) to implement batched neighborhood gather with OOB handling; then Phase D (D1–D3) to vectorize polynomial helpers; finally Phase E (E1–E3) validation suite. All implementation must reference this design memo for shape contracts and gradient requirements.
+  * [2025-10-07] Attempt #4 (ralph loop) — Result: **Phase C1 COMPLETE** (batched neighborhood gather implemented and validated). All tests passing.
+    Metrics:
+      - New test suite: 4/4 tests passed in test_tricubic_vectorized.py (test_vectorized_matches_scalar, test_neighborhood_gathering_internals, test_device_neutrality[cpu], test_device_neutrality[cuda])
+      - Regression tests: 3/3 tests passed in test_at_str_002.py (test_tricubic_interpolation_enabled, test_tricubic_out_of_bounds_fallback, test_auto_enable_interpolation)
+      - Core suite: 38/38 tests passed (crystal geometry, detector geometry, vectorized gather)
+      - Shape validation: Scalar (B=1) → (1,4,4,4), Batch (B=3) → (3,4,4,4), Grid (2×3) → (6,4,4,4) neighborhoods all correct
+      - Device propagation: CPU and CUDA execution confirmed with correct device inheritance
+    Artifacts:
+      - `src/nanobrag_torch/models/crystal.py` lines 355–429 — Batched neighborhood gather implementation using advanced PyTorch indexing
+      - `tests/test_tricubic_vectorized.py` — 4 new test cases validating gather infrastructure (white-box coordinate validation, device neutrality)
+      - `reports/2025-10-vectorization/phase_c/implementation_notes.md` — Complete Phase C1 implementation documentation
+      - Git commit: 88fd76a
+    Observations/Hypotheses:
+      - Successfully implemented `(B, 4, 4, 4)` neighborhood gather using broadcasting pattern from design_notes.md §2: `h_array_grid[:, :, None, None]`, `k_array_grid[:, None, :, None]`, `l_array_grid[:, None, None, :]`
+      - Scalar path (B=1) preserved: continues to use existing `polin3` helper with correct interpolation
+      - Batched path (B>1) falls back to nearest-neighbor pending Phase D polynomial vectorization (intentional staging per design)
+      - OOB handling preserved: single warning emission, default_F fallback logic intact
+      - No memory issues: 1024² detector (268 MB neighborhoods) well within GPU/CPU limits
+      - Coordinate grid construction validated: `h=1.5` (floor=1) → grid `[0,1,2,3]` as expected (floor + offsets [-1,0,1,2])
+      - Device comparison fix applied: use `.device.type` string comparison instead of direct `torch.device` object comparison to handle `cuda` vs `cuda:0` variants
+      - Implementation follows all design contracts: no `.item()` calls, device-neutral offset construction, differentiability preserved
+    Next Actions: Execute Phase D tasks (D1–D3) to vectorize `polint`, `polin2`, `polin3` helpers, enabling batched interpolation path for B>1 cases. Once polynomial evaluation is vectorized, the gathered `(B,4,4,4)` neighborhoods can be consumed to complete the tricubic vectorization pipeline.
 - Risks/Assumptions: Must maintain differentiability (no `.item()`, no `torch.linspace` with tensor bounds), preserve device/dtype neutrality (CPU/CUDA parity), and obey Protected Assets rule (all new scripts under `scripts/benchmarks/`). Large tensor indexing may increase memory pressure; ensure ROI caching still works.
 - Exit Criteria (quote thresholds from spec):
   * specs/spec-a-parallel.md §2.3 tricubic acceptance tests run without warnings and match C parity within documented tolerances (corr≥0.9995, ≤1e-12 structural duality where applicable).
