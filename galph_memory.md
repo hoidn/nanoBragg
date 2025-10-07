@@ -1661,3 +1661,9 @@ Follow-ups for Ralph:
 - Updated `docs/fix_plan.md` Next Actions to target L3k.3b diagnosis, L3k.3d ROI repair, and the L3k.3e→L3k.4 documentation/logging handoff.
 - Authored new `input.md` (Parity mode) directing Ralph to regenerate per-φ traces via `trace_harness.py`, move the per_phi outputs into `base_vector_debug/20251122/`, run `compare_per_phi_traces.py`, log findings in diagnosis.md, update fix_checklist VG-1.4, and capture pytest collect-only evidence.
 - Follow-up for Ralph: execute L3k.3b per instructions, store artifacts under the 20251122 subdir, update `fix_checklist.md` + diagnosis memo, and keep tests red until physics fix lands.
+## 2025-11-22 (galph loop — L3k.3b instrumentation guard)
+- Detected Attempt #101 left per-φ comparison artifacts claiming parity despite missing C TRACE_C_PHI data; `comparison_summary.md` showed ✅ with an empty table.
+- Updated `plans/active/cli-noise-pix0/plan.md` to require C instrumentation before any per-φ diff, explicitly mandating BLOCKED status when C entries are absent.
+- Synced `docs/fix_plan.md` Next Actions with the new instrumentation guard so L3k.3b focuses on emitting TRACE_C_PHI and regenerating traces under a fresh timestamp.
+- Replaced `input.md` (Parity) directing Ralph to add TRACE_C_PHI prints in `golden_suite_generator/nanoBragg.c`, rebuild, rerun the supervisor command, regenerate PyTorch traces, fix the misleading comparison summary, and capture updated diagnosis + checklist notes.
+- Follow-up: Expect Ralph to land the instrumentation, produce `c_trace_phi_<timestamp>.log`, update comparison_summary to BLOCKED (until data present), refresh VG-1.4, and only then proceed toward VG-3/VG-4.

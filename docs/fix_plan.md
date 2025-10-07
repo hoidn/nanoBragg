@@ -458,7 +458,7 @@
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
 - Next Actions (2025-11-22 refresh → galph):
-1. Phase L3k.3b — Re-run the per-φ harness (store under `rot_vector/base_vector_debug/20251122/`), diff against `c_trace_scaling.log`, and document the first divergent tensor in `diagnosis.md` + `fix_checklist.md` (VG-1.4 notes).
+1. Phase L3k.3b — Instrument the golden C binary to emit `TRACE_C_PHI` for the supervisor pixel, rebuild, then regenerate PyTorch traces under a fresh `base_vector_debug/<timestamp>/`. Run `scripts/compare_per_phi_traces.py` and ensure the comparison artifacts flag **BLOCKED** when C data is missing (no ✅ banner). Document the outcome in `diagnosis.md` and refresh `fix_checklist.md` VG-1.4.
 2. Phase L3k.3d — Resolve the nb-compare ROI anomaly (C sum≈0) before repeating VG-3/VG-4; capture the corrected summary.json/logs under `nb_compare_phi_fix/` once correlation ≥0.9995 and sum_ratio 0.99–1.01.
 3. Phase L3k.3e → L3k.4 — After VG-1/VG-3/VG-4 pass, flip the remaining checklist rows, update `mosflm_matrix_correction.md`, then log the new attempt here with metrics (correlation, sum_ratio, b_Y, k_frac) ahead of the Phase L4 supervisor-command rerun.
 - Attempts History:
