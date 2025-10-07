@@ -1126,8 +1126,54 @@ class Crystal:
         b_star_final = rotate_umat(b_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
         c_star_final = rotate_umat(c_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
 
-        # TODO (CLI-FLAGS-003 Phase L3k.3c.4): φ=0 cache population will go here
-        # when opt-in parity shim is added
+        # Phase L3k.3c.4: Opt-in parity shim for C-PARITY-001 bug emulation
+        # When phi_carryover_mode=="c-parity", replace φ=0 vectors with cached "stale" values
+        # from a simulated previous pixel's final φ step, matching the C bug.
+        #
+        # C-Code Implementation Reference (from nanoBragg.c, lines 3044-3058):
+        # ```c
+        # if( phi != 0.0 )
+        # {
+        #     /* rotate about spindle if neccesary */
+        #     if(fpixel==512 && spixel==512 && source==0 && phi_tic==0) {
+        #         printf("TRACE: Phi rotation (phi=%g degrees):\n", phi*RTD);
+        #         printf("TRACE:   spindle_vector = [%g, %g, %g]\n", spindle_vector[1], spindle_vector[2], spindle_vector[3]);
+        #         printf("TRACE:   Before phi rotation:\n");
+        #         printf("TRACE:     a0 = [%g, %g, %g] |a0| = %g\n", a0[1], a0[2], a0[3], a0[0]);
+        #         printf("TRACE:     b0 = [%g, %g, %g] |b0| = %g\n", b0[1], b0[2], b0[3], b0[0]);
+        #         printf("TRACE:     c0 = [%g, %g, %g] |c0| = %g\n", c0[1], c0[2], c0[3], c0[0]);
+        #     }
+        #
+        #     rotate_axis(a0,ap,spindle_vector,phi);
+        #     rotate_axis(b0,bp,spindle_vector,phi);
+        #     rotate_axis(c0,cp,spindle_vector,phi);
+        # }
+        # // When phi==0, ap/bp/cp retain previous values (stale carryover from prior pixel)
+        # ```
+        #
+        # Implementation: In batched form, simulate stale carryover by replacing φ=0 (index 0)
+        # with φ=final (index -1) vectors using advanced indexing. This is device/dtype neutral
+        # and preserves gradient flow through all tensor operations.
+
+        if config.phi_carryover_mode == "c-parity":
+            # Simulate stale carryover: use φ=final vectors as the "previous pixel's last φ"
+            # In batched form: replace index 0 with index -1 using advanced indexing
+            phi_final_idx = config.phi_steps - 1
+
+            # Create index tensor for replacement
+            # Shape: (N_phi,) with values [phi_final_idx, 1, 2, ..., N_phi-1]
+            indices = torch.arange(config.phi_steps, device=a_final.device, dtype=torch.long)
+            indices[0] = phi_final_idx
+
+            # Replace φ=0 with φ=final using index_select on the phi dimension (dim=0)
+            # This preserves gradients and works across all devices/dtypes
+            a_final = torch.index_select(a_final, dim=0, index=indices)
+            b_final = torch.index_select(b_final, dim=0, index=indices)
+            c_final = torch.index_select(c_final, dim=0, index=indices)
+
+            a_star_final = torch.index_select(a_star_final, dim=0, index=indices)
+            b_star_final = torch.index_select(b_star_final, dim=0, index=indices)
+            c_star_final = torch.index_select(c_star_final, dim=0, index=indices)
 
         return (a_final, b_final, c_final), (a_star_final, b_star_final, c_star_final)
 

@@ -560,6 +560,32 @@
       3. → Phase L3k.3c.5 — Dual-mode documentation/tests after implementation
       4. → Phase L3k.3d — nb-compare ROI parity (VG-3/VG-4) using c-parity mode
       4. Update `plans/active/cli-noise-pix0/plan.md` L3k.3c.3 state from [ ] to [D] with this attempt reference
+  * [2025-10-07] Attempt #120 (ralph loop i=120) — Result: ✅ **SUCCESS** (Phase C1-C2 parity shim implementation COMPLETE). **Opt-in φ=0 carryover mode implemented with batched tensor operations, CLI flag wired, validation complete.**
+    Metrics: Targeted tests PASSED (6/6 in 4.25s). Smoke tests: test_cli_scaling_phi0.py 2/2 passed, test_at_geo_001.py 1/1 passed, test_at_crystal_absolute.py 3/3 passed. Config validation: phi_carryover_mode invalid rejection working. No regressions detected.
+    Artifacts:
+      - `src/nanobrag_torch/config.py:56-59` — Added `phi_carryover_mode: str = "spec"` field to CrystalConfig
+      - `src/nanobrag_torch/config.py:69-73` — Added validation in `__post_init__` to reject invalid modes
+      - `src/nanobrag_torch/models/crystal.py:1080-1128` — Implemented parity shim using `torch.index_select` for batched φ=0 replacement (lines 1109-1128)
+      - `src/nanobrag_torch/models/crystal.py:1084-1103` — Added C-code reference (nanoBragg.c:3044-3058) per CLAUDE Rule #11
+      - `src/nanobrag_torch/__main__.py:377-385` — Added `--phi-carryover-mode {spec,c-parity}` CLI flag with help text
+      - `src/nanobrag_torch/__main__.py:859` — Wired flag through to CrystalConfig instantiation
+      - Test logs: `/tmp/phi0_test.log` (2 passed), smoke test output (6 passed, 3 warnings)
+    Observations/Hypotheses:
+      - **Batched implementation verified**: Uses `torch.index_select` on phi dimension (dim=0) to replace index 0 with index -1; no Python loops
+      - **Gradient flow preserved**: No `.detach()`, `.item()`, or `.cpu()` calls in shim; gradients flow through index_select
+      - **Device/dtype neutral**: Indices tensor created on same device as input (`a_final.device`); dtype long for indices
+      - **Default is spec-compliant**: phi_carryover_mode="spec" produces fresh rotations; validates against C-PARITY-001 documentation
+      - **C-code reference included**: Lines 1084-1103 contain exact C code from nanoBragg.c per CLAUDE Rule #11
+      - **Validation working**: Invalid mode "invalid" correctly rejected with ValueError
+      - **No regressions**: Crystal geometry tests pass (6/6), phi0 tests pass (2/2)
+      - Phase C1-C2 complete per `plans/active/cli-phi-parity-shim/plan.md`
+    First Divergence: N/A (implementation validates spec-compliant default; c-parity mode enables C bug reproduction)
+    Next Actions:
+      1. ✅ Phase C1-C2 complete — opt-in shim implemented, CLI wired, validation passing
+      2. → Phase C3 — Add parity-mode tests to `test_cli_scaling_phi0.py` (parametrize over mode, assert c-parity reproduces C bug values)
+      3. → Phase C4 — Capture per-φ traces for both modes using `scripts/compare_per_phi_traces.py`
+      4. → Phase C5 — Update documentation (`docs/bugs/verified_c_bugs.md`, `diagnosis.md`) with shim availability
+      5. → Phase D — nb-compare ROI parity sweep with `--py-args "--phi-carryover-mode c-parity"`
   * [2025-11-21] Attempt #97 (ralph loop i=97) — Result: **SUCCESS** (Phase L3k.2 implementation COMPLETE). **φ rotation fix applied: removed independent reciprocal vector rotation, added reciprocal recomputation from rotated real vectors per CLAUDE Rule #13.**
     Metrics: Targeted tests pass (test_f_latt_square_matches_c PASSED, 57/57 crystal/geometry tests PASSED); test collection succeeds (653 tests); Python syntax valid.
     Artifacts:
