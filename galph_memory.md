@@ -1363,3 +1363,17 @@ Follow-ups for Ralph:
 - Synced `docs/fix_plan.md` with Phase L1b–L1d focus and recorded Attempt #51 (evidence update). Added layout-analysis to next actions block.
 - Authored `input.md` directing Ralph to implement Phase L1b via a new `scripts/validation/analyze_fdump_layout.py` helper and to stash findings in `reports/2025-10-cli-flags/phase_l/hkl_parity/` before moving to L1c.
 - Follow-up: Ralph to build the layout-analysis script, document axis/order findings in `layout_analysis.md`, update fix_plan attempt log, then proceed to L1c once structure-factor parity holds.
+
+## 2025-11-09 (galph loop — L1c alignment prep)
+- Re-ran repo sync (already clean); reviewed docs/index.md, specs/spec-a shards, arch.md, config map, debugging + testing strategies, fix_plan, and plans/active/.*
+- Deep-dive findings vs goals:
+  * CLI parity: HKL mismatch traced to nanoBragg padding `(range+2)` along each axis; PyTorch `read_fdump`/`write_fdump` still assume compact grids, so structure-factor parity blocks supervisor command. Need to drop padded planes on read and write the padded layout.
+  * Normalization gap: Once HKL parity lands, revisit scaling chain — current blockers remain Phase L2+, but no new divergences found today.
+  * Vectorization backlog: `plans/active/vectorization.md` still stuck in Phase A; zero artefacts under `reports/2025-10-vectorization/phase_a/`.
+- Hypotheses + triage (CLI parity):
+  1. H1 (high confidence): PyTorch Fdump loader ignores the padded plane nanoBragg emits, causing index shifts (Δk≈+10, Δl≈−2…−8). Next confirming step: update read/write to handle padding, then rerun structure-factor parity script. Evidence: analyze_fdump_layout.py, compare_structure_factors metrics (max |ΔF|=5.22e2).
+  2. H2 (medium): Even after HKL alignment, residual F_latt differences could stem from remaining MOSFLM real-vector rescale logic—confirm once L1d passes by replaying Phase K base trace. Next step: rerun base_lattice traces post-L1d if mismatch persists.
+  3. H3 (medium-low): Cache metadata might desync when multiple caches exist; ensure new regression test guards header vs tensor consistency. Quick check: include metadata assertions in L1c test.
+- Coin flip: heads → Reviewed Ralph’s last loops (`85f7606`, `4e73062`). Work is on track: evidence-only commits built `compare_structure_factors.py` and `analyze_fdump_layout.py`, no regressions spotted, attempt logs thorough.
+- Plan updates: Marked Phase L1b as complete in `plans/active/cli-noise-pix0/plan.md`, refreshed docs/fix_plan.md next-actions to call out padded layout fix, and emitted new input.md (Do Now = Phase L1c parity implementation + regression test).
+- Follow-up for Ralph: Implement Phase L1c per new input.md — add roundtrip pytest, adjust HKL IO to mirror padded layout, regenerate parity artefacts, and update fix_plan/plan tables. Proceed to L1d once parity metrics hit ≤1e-6.
