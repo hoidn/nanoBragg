@@ -1407,3 +1407,11 @@ Follow-ups for Ralph:
 - Coin flip (heads): reviewed Ralph’s latest commits (`3e47b38`, `f3f116b`). Progress solid—HKL parity verified, C scaling trace captured with thorough artifacts, no regressions observed.
 - Plan maintenance: Marked Phase L2a as complete in `plans/active/cli-noise-pix0/plan.md`; refreshed `docs/fix_plan.md` Next Actions to focus on L2b/L2c. input.md now directs Ralph to deliver the PyTorch scaling trace (Phase L2b).
 - Follow-up for Ralph: implement Phase L2b per new memo, archive artifacts under `reports/2025-10-cli-flags/phase_l/scaling_audit/`, then proceed to L2c diff once trace captured.
+
+## 2025-11-10 (galph loop — Phase L2b instrumentation)
+- Synced cleanly; re-read docs/index.md, specs/spec-a.md shards pointer, arch.md, c_to_pytorch_config_map.md, debugging/debugging.md, docs/fix_plan.md, testing_strategy.md, and plans/active/* for continuity before analysis.
+- Deep dive vs long-term Goal #1 found TRACE_PY still emits placeholder scaling data (`polar=1`, `capture_fraction=1`, `steps=phi_steps`) so Phase L2b cannot progress; identified need to thread real tensors from `_apply_polarization` and `_apply_detector_absorption` through the debug path.
+- Coin flip → heads: Reviewed Ralph’s recent commits (`3e47b38`, `f3f116b`, `f466b39`); C trace capture solid, but evidence-only harness attempt stalled because instrumentation can’t expose values—no regressions spotted.
+- Updated `plans/active/cli-noise-pix0/plan.md` Phase L2 context and table to require simulator instrumentation fixes, a new TRACE_PY regression test, and harness rerun sequencing; synced `docs/fix_plan.md` next actions accordingly.
+- Authored new `input.md` directing Ralph to patch TRACE_PY, add `tests/test_trace_pixel.py`, rerun the scaling harness, and archive comparison artifacts under `reports/2025-10-cli-flags/phase_l/scaling_audit/`.
+- Follow-up for Ralph: Execute Phase L2b per updated plan—implement real scaling trace output, add the regression test, regenerate PyTorch trace + comparison JSON, and log Attempt update before moving to L2c.

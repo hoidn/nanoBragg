@@ -455,10 +455,11 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase K3e evidence reveals a **fundamental lattice/geometry mismatch**, not a φ-grid offset. C reports `k_frac≈−3.857` across all φ steps while PyTorch reports `k_frac≈−9.899` (Δk≈6.04 at φ=0°). This 6-unit discrepancy indicates the base reciprocal lattice vectors or scattering geometry differ before any φ rotation is applied.
-- Next Actions (2025-10-06 refresh):
-  1. Phase L2b — Extend the PyTorch trace harness to emit the same scaling quantities (I_before_scaling, ω, polarization, capture_fraction, steps, r_e², fluence) and save the log as `trace_py_scaling.log` under `reports/2025-10-cli-flags/phase_l/scaling_audit/`.
-  2. Phase L2c — Diff TRACE_C vs TRACE_PY via `compare_scaling_traces.py`, summarize deltas in `scaling_audit_summary.md`, and log Attempt #55 with quantified first divergence.
-  3. Prep L3 design notes once the divergent factor is confirmed (update plan Phase L3 guidance + identify targeted regression selector).
+- Next Actions (2025-11-10 refresh):
+  1. Phase L2b — Patch `src/nanobrag_torch/simulator.py` trace output so `TRACE_PY` surfaces the *actual* scaling factors: total `steps` (sources×mosaic×φ×oversample²), real polarization (reuse `_apply_polarization` tensor instead of hardcoded 1.0), and capture_fraction from `_apply_detector_absorption`. Keep tensors device/dtype neutral and gate the logging behind `trace_pixel` only.
+  2. Phase L2b — After instrumentation is fixed, add a targeted regression test (plan suggests `tests/test_trace_pixel.py::test_scaling_trace_matches_physics`) so future trace regressions surface immediately, then rerun/finish `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py` to capture `trace_py_scaling.log`, env/config snapshots, and notes for pixel (685,1039) using the supervisor command parameters.
+  3. Phase L2c — Diff TRACE_C vs TRACE_PY via `compare_scaling_traces.py`, summarize deltas in `scaling_audit_summary.md`, and log Attempt #55 with quantified first divergence.
+  4. Prep L3 design notes once the divergent factor is confirmed (update plan Phase L3 guidance + identify targeted regression selector).
 - Attempts History:
   * [2025-10-06] Attempt #27 (ralph) — Result: **PARITY FAILURE** (Phase I3 supervisor command). **Intensity scaling discrepancy: 124,538× sum ratio.**
     Metrics: Correlation=0.9978 (< 0.999 threshold), sum_ratio=124,538 (should be ~1.0), C max_I=446, PyTorch max_I=5.411e7 (121,000× discrepancy), mean_peak_distance=37.79 px (> 1 px threshold).
