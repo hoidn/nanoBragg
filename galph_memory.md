@@ -1484,3 +1484,9 @@ Follow-ups for Ralph:
 - Loaded `reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin` via `read_fdump`; grid spans h∈[-24,24], k∈[-28,28], l∈[-31,30] and returns `F_cell=190.27` for the supervisor pixel. This confirms sourcing the C-generated Fdump reproduces the trace amplitude.
 - Implication: Phase L3 must treat the archived Fdump as the authoritative dataset (or regenerate an equivalent cache) before normalization work; running the CLI with the stub HKL will overwrite the cache with zeros.
 - Next supervisor handoff: instruct Ralph to rerun `reports/.../structure_factor/probe.py` including `--fdump reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin`, capture the refreshed probe.log/analysis.md, and decide whether to stage that Fdump alongside the supervisor command or regenerate it from the original HKL source.
+
+## 2025-11-16 (galph loop — VECTOR-TRICUBIC-001 kickoff)
+- Refreshed `plans/active/vectorization.md` Context/Phase A guidance to flag the Phase A evidence push (collect-only log, env snapshot) and reinforced harness locations under `scripts/benchmarks/`.
+- Updated `docs/fix_plan.md` next-actions list for VECTOR-TRICUBIC-001 with the env.json + collect-only requirements so the fix-plan matches the plan.
+- Authored input.md handing Ralph Phase A1–A3 tasks (capture tricubic/absorption baselines, build benchmark harnesses, persist logs in `reports/2025-10-vectorization/phase_a/`).
+- Follow-up for Ralph: execute the outlined commands, write harness stubs, drop Attempt #1 evidence into fix_plan once artifacts exist, then proceed to Phase B design when Phase A closes.
