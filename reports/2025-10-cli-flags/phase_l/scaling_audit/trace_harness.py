@@ -270,7 +270,8 @@ def main():
         raise RuntimeError("No TRACE_PY output captured. Simulator may not have emitted trace for pixel.")
 
     # Write main trace to file (Step 8)
-    trace_path = Path('reports/2025-10-cli-flags/phase_l/scaling_audit') / args.out
+    trace_path = Path(args.out)
+    trace_path.parent.mkdir(parents=True, exist_ok=True)
     with open(trace_path, 'w') as f:
         f.write('\n'.join(trace_lines))
         f.write('\n')
