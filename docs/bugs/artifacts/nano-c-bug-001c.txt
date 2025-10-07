@@ -1,0 +1,136 @@
+nanoBragg nanocrystal diffraction simulator - James Holton and Ken Frankel 5-17-17
+custom convention selected.
+DETECTOR_FAST_AXIS 0 0 1
+DETECTOR_SLOW_AXIS 0 -1 0
+DETECTOR_NORMAL_AXIS 1 0 0
+pivoting detector around direct beam spot
+TRACE_C:detector_convention=MOSFLM
+TRACE_C:angles_rad=rotx:0 roty:0 rotz:0 twotheta:0
+TRACE_C:beam_center_m=X:1e-07 Y:1e-07 pixel_mm:0.1
+TRACE_C:initial_fdet=0 0 1
+TRACE_C:initial_sdet=0 -1 0
+TRACE_C:initial_odet=1 0 0
+TRACE_C:Rx=[1 0 0; 0 1 -0; 0 0 1]
+TRACE_C:Ry=[1 0 0; 0 1 0; -0 0 1]
+TRACE_C:Rz=[1 -0 0; 0 1 0; 0 0 1]
+TRACE_C:R_total=[1 0 0; 0 1 0; 0 0 1]
+TRACE_C:fdet_after_rotz=0 0 1
+TRACE_C:sdet_after_rotz=0 -1 0
+TRACE_C:odet_after_rotz=1 0 0
+TRACE_C:twotheta_axis=0 1 0
+TRACE_C:fdet_after_twotheta=0 0 1
+TRACE_C:sdet_after_twotheta=0 -1 0
+TRACE_C:odet_after_twotheta=1 0 0
+TRACE_C:convention_mapping=Fbeam←Ybeam_mm(+0.5px),Sbeam←Xbeam_mm(+0.5px),beam_vec=[1 0 0]
+TRACE_C:Fbeam_m=0.0001
+TRACE_C:Sbeam_m=0.0001
+TRACE_C:distance_m=0.1
+TRACE_C:term_fast=-0 -0 -0.0001
+TRACE_C:term_slow=-0 0.0001 -0
+TRACE_C:term_beam=0.1 0 0
+TRACE_C:pix0_vector=0.1 0.0001 -0.0001
+DETECTOR_PIX0_VECTOR 0.1 0.0001 -0.0001
+XDS incident beam: 0 0 1
+auto-selected tricubic interpolation of structure factors
+TRACE: Computing cross products of reciprocal vectors:
+TRACE:   Input vectors for cross products:
+TRACE:     a_star = [0.0142857, 0, 0]
+TRACE:     b_star = [-8.74748e-19, 0.0142857, 0]
+TRACE:     c_star = [-8.74748e-19, -8.74748e-19, 0.0142857]
+TRACE:   Cross product results:
+TRACE:     a_star x b_star = [0, -0, 0.000204082]
+TRACE:     b_star x c_star = [0.000204082, 1.24964e-20, 1.24964e-20]
+TRACE:     c_star x a_star = [-0, 0.000204082, 1.24964e-20]
+TRACE: Reciprocal cell volume calculation:
+TRACE:   V_star = a_star . (b_star x c_star) = 2.91545e-06
+TRACE: Direct-space cell volume: V_cell = 1/V_star = 343000
+TRACE: Before computing real-space vectors:
+TRACE:   b_star_cross_c_star = [0.000204082, 1.24964e-20, 1.24964e-20]
+TRACE:   c_star_cross_a_star = [-0, 0.000204082, 1.24964e-20]
+TRACE:   a_star_cross_b_star = [0, -0, 0.000204082]
+TRACE:   V_cell = 343000, V_star = 2.91545e-06
+TRACE: After computing real-space vectors:
+TRACE:   a = [70, 4.28626e-15, 4.28626e-15] |a| = 70
+TRACE:   b = [-0, 70, 4.28626e-15] |b| = 70
+TRACE:   c = [0, -0, 70] |c| = 70
+TRACE: Re-generating reciprocal vectors from real-space vectors:
+TRACE:   Before re-generation: a_star = [0.0142857, 0, 0] |a_star| = 0.0142857
+TRACE:   Before re-generation: b_star = [-8.74748e-19, 0.0142857, 0] |b_star| = 0.0142857
+TRACE:   Before re-generation: c_star = [-8.74748e-19, -8.74748e-19, 0.0142857] |c_star| = 0.0142857
+TRACE:   Cross products: b_cross_c = [4900, 0, 0]
+TRACE:   Cross products: c_cross_a = [-3.00038e-13, 4900, 0]
+TRACE:   Cross products: a_cross_b = [-3.00038e-13, -3.00038e-13, 4900]
+TRACE:   After re-generation: a_star = [0.0142857, 0, 0] |a_star| = 0.0142857
+TRACE:   After re-generation: b_star = [-8.74748e-19, 0.0142857, 0] |b_star| = 0.0142857
+TRACE:   After re-generation: c_star = [-8.74748e-19, -8.74748e-19, 0.0142857] |c_star| = 0.0142857
+Unit Cell: 70 70 70 90 90 90
+Recp Cell: 0.0142857 0.0142857 0.0142857 90 90 90
+volume = 343000 A^3
+real-space cell vectors (Angstrom):
+     a           b           c         
+X: 70.00000000 -0.00000000  0.00000000
+Y:  0.00000000 70.00000000 -0.00000000
+Z:  0.00000000  0.00000000 70.00000000
+reciprocal-space cell vectors (Angstrom^-1):
+     a_star      b_star      c_star    
+X:  0.01428571 -0.00000000 -0.00000000
+Y:  0.00000000  0.01428571 -0.00000000
+Z:  0.00000000  0.00000000  0.01428571
+TRACE: Converting real-space vectors from Angstroms to meters:
+TRACE:   Before conversion: a = [70, 4.28626e-15, 4.28626e-15] |a| = 70 Angstroms
+TRACE:   Before conversion: b = [-0, 70, 4.28626e-15] |b| = 70 Angstroms
+TRACE:   Before conversion: c = [0, -0, 70] |c| = 70 Angstroms
+TRACE:   After conversion: a = [7e-09, 4.28626e-25, 4.28626e-25] |a| = 7e-09 meters
+TRACE:   After conversion: b = [-0, 7e-09, 4.28626e-25] |b| = 7e-09 meters
+TRACE:   After conversion: c = [0, -0, 7e-09] |c| = 7e-09 meters
+TRACE: Copying vectors to a0, b0, c0 (phi=0 mosaic=0 reference):
+TRACE:   a0 = [7e-09, 4.28626e-25, 4.28626e-25] |a0| = 7e-09 meters
+TRACE:   b0 = [-0, 7e-09, 4.28626e-25] |b0| = 7e-09 meters
+TRACE:   c0 = [0, -0, 7e-09] |c0| = 7e-09 meters
+TRACE: Copying vectors to ap, bp, cp (phi=0 working copy):
+TRACE:   ap = [7e-09, 4.28626e-25, 4.28626e-25] |ap| = 7e-09 meters
+TRACE:   bp = [-0, 7e-09, 4.28626e-25] |bp| = 7e-09 meters
+TRACE:   cp = [0, -0, 7e-09] |cp| = 7e-09 meters
+crystal is 0.007 x 0.007 x 0.007 microns
+auto-selected 1-fold oversampling
+approximate MW = 247871
+thick0 = 0 um
+phi0 = 0
+divergence deviation: 0 0
+lambda0 = 1e-10
+  created a total of 1 sources:
+-10 -0 0   1 1e-10
+  created a total of 1 mosaic domains
+  0 initialized hkls (all others =1)
+  parallelpiped xtal: 1x1x1 cells
+  wave=1e-10 meters +/- 0% in 1 steps
+  Kahn polarization factor: 0.000000
+  incident fluence: 1.25932e+29 photons/m^2
+  distance=0.1 detsize=0.0002x0.0002  pixel=0.0001 meters (2x2 pixels)
+  sensor is 0 m thick in 1 layers with mu= -1
+  Xbeam=0.0001 Ybeam=0.0001
+  Fbeam=0.0001 Sbeam=0.0001
+  Xclose=0.0001 Yclose=0.0001
+  Fclose=0.0001 Sclose=0.0001
+  DIRECTION_OF_DETECTOR_X-AXIS= 0 0 1
+  DIRECTION_OF_DETECTOR_Y-AXIS= 0 -1 0
+  DIRECTION_OF_DETECTOR_Z-AXIS= 1 0 0
+  INCIDENT_BEAM_DIRECTION= 1 0 0
+  spindle ROTATION_AXIS= 0 0 1
+  POLARIZATION_PLANE_NORMAL= 0 -1 0
+  dials origin= -0.1 0.1 -100
+  roi: 0 < x < 2 && 0 < y < 2
+  hdivrange=0 hdivstep=0  radians
+  vdivrange=0 vdivstep=0  radians
+  1 divergence steps
+  1 sources
+  1 mosaic domains over mosaic spread of 0 degrees
+  1 phi steps from 0 to 0 degrees
+  1x1 pixel oversample steps
+
+solid angle subtended by detector = 4e-06 steradian ( 3.1831e-05% sphere)
+writing /tmp/pix0c_float.bin as 4 4-byte floats
+max_I = 9.99999e-07  at 5e-05 5e-05
+mean= 9.99999e-07 rms= 1.1547e-06 rmsd= 0
+intfile_scale = 5.50001e+10
+writing /tmp/pix0c_int.img as 2-byte integers

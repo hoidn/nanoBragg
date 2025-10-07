@@ -1,0 +1,136 @@
+nanoBragg nanocrystal diffraction simulator - James Holton and Ken Frankel 5-17-17
+mosflm convention selected.
+DETECTOR_FAST_AXIS 0 0 1
+DETECTOR_SLOW_AXIS 0 -1 0
+DETECTOR_NORMAL_AXIS 1 0 0
+pivoting detector around direct beam spot
+TRACE_C:detector_convention=MOSFLM
+TRACE_C:angles_rad=rotx:0 roty:0 rotz:0 twotheta:0
+TRACE_C:beam_center_m=X:2.5e-07 Y:2.5e-07 pixel_mm:0.1
+TRACE_C:initial_fdet=0 0 1
+TRACE_C:initial_sdet=0 -1 0
+TRACE_C:initial_odet=1 0 0
+TRACE_C:Rx=[1 0 0; 0 1 -0; 0 0 1]
+TRACE_C:Ry=[1 0 0; 0 1 0; -0 0 1]
+TRACE_C:Rz=[1 -0 0; 0 1 0; 0 0 1]
+TRACE_C:R_total=[1 0 0; 0 1 0; 0 0 1]
+TRACE_C:fdet_after_rotz=0 0 1
+TRACE_C:sdet_after_rotz=0 -1 0
+TRACE_C:odet_after_rotz=1 0 0
+TRACE_C:twotheta_axis=0 0 -1
+TRACE_C:fdet_after_twotheta=0 0 1
+TRACE_C:sdet_after_twotheta=0 -1 0
+TRACE_C:odet_after_twotheta=1 0 0
+TRACE_C:convention_mapping=Fbeam←Ybeam_mm(+0.5px),Sbeam←Xbeam_mm(+0.5px),beam_vec=[1 0 0]
+TRACE_C:Fbeam_m=0.0003
+TRACE_C:Sbeam_m=0.0003
+TRACE_C:distance_m=0.1
+TRACE_C:term_fast=-0 -0 -0.0003
+TRACE_C:term_slow=-0 0.0003 -0
+TRACE_C:term_beam=0.1 0 0
+TRACE_C:pix0_vector=0.1 0.0003 -0.0003
+DETECTOR_PIX0_VECTOR 0.1 0.0003 -0.0003
+XDS incident beam: 0 0 1
+auto-selected tricubic interpolation of structure factors
+TRACE: Computing cross products of reciprocal vectors:
+TRACE:   Input vectors for cross products:
+TRACE:     a_star = [0.0142857, 0, 0]
+TRACE:     b_star = [-7.65404e-19, 0.0125, 0]
+TRACE:     c_star = [-6.80359e-19, -6.80359e-19, 0.0111111]
+TRACE:   Cross product results:
+TRACE:     a_star x b_star = [0, -0, 0.000178571]
+TRACE:     b_star x c_star = [0.000138889, 8.50449e-21, 8.50449e-21]
+TRACE:     c_star x a_star = [-0, 0.00015873, 9.71942e-21]
+TRACE: Reciprocal cell volume calculation:
+TRACE:   V_star = a_star . (b_star x c_star) = 1.98413e-06
+TRACE: Direct-space cell volume: V_cell = 1/V_star = 504000
+TRACE: Before computing real-space vectors:
+TRACE:   b_star_cross_c_star = [0.000138889, 8.50449e-21, 8.50449e-21]
+TRACE:   c_star_cross_a_star = [-0, 0.00015873, 9.71942e-21]
+TRACE:   a_star_cross_b_star = [0, -0, 0.000178571]
+TRACE:   V_cell = 504000, V_star = 1.98413e-06
+TRACE: After computing real-space vectors:
+TRACE:   a = [70, 4.28626e-15, 4.28626e-15] |a| = 70
+TRACE:   b = [-0, 80, 4.89859e-15] |b| = 80
+TRACE:   c = [0, -0, 90] |c| = 90
+TRACE: Re-generating reciprocal vectors from real-space vectors:
+TRACE:   Before re-generation: a_star = [0.0142857, 0, 0] |a_star| = 0.0142857
+TRACE:   Before re-generation: b_star = [-7.65404e-19, 0.0125, 0] |b_star| = 0.0125
+TRACE:   Before re-generation: c_star = [-6.80359e-19, -6.80359e-19, 0.0111111] |c_star| = 0.0111111
+TRACE:   Cross products: b_cross_c = [7200, 0, 0]
+TRACE:   Cross products: c_cross_a = [-3.85764e-13, 6300, 0]
+TRACE:   Cross products: a_cross_b = [-3.42901e-13, -3.42901e-13, 5600]
+TRACE:   After re-generation: a_star = [0.0142857, 0, 0] |a_star| = 0.0142857
+TRACE:   After re-generation: b_star = [-7.65404e-19, 0.0125, 0] |b_star| = 0.0125
+TRACE:   After re-generation: c_star = [-6.80359e-19, -6.80359e-19, 0.0111111] |c_star| = 0.0111111
+Unit Cell: 70 80 90 90 90 90
+Recp Cell: 0.0142857 0.0125 0.0111111 90 90 90
+volume = 504000 A^3
+real-space cell vectors (Angstrom):
+     a           b           c         
+X: 70.00000000 -0.00000000  0.00000000
+Y:  0.00000000 80.00000000 -0.00000000
+Z:  0.00000000  0.00000000 90.00000000
+reciprocal-space cell vectors (Angstrom^-1):
+     a_star      b_star      c_star    
+X:  0.01428571 -0.00000000 -0.00000000
+Y:  0.00000000  0.01250000 -0.00000000
+Z:  0.00000000  0.00000000  0.01111111
+TRACE: Converting real-space vectors from Angstroms to meters:
+TRACE:   Before conversion: a = [70, 4.28626e-15, 4.28626e-15] |a| = 70 Angstroms
+TRACE:   Before conversion: b = [-0, 80, 4.89859e-15] |b| = 80 Angstroms
+TRACE:   Before conversion: c = [0, -0, 90] |c| = 90 Angstroms
+TRACE:   After conversion: a = [7e-09, 4.28626e-25, 4.28626e-25] |a| = 7e-09 meters
+TRACE:   After conversion: b = [-0, 8e-09, 4.89859e-25] |b| = 8e-09 meters
+TRACE:   After conversion: c = [0, -0, 9e-09] |c| = 9e-09 meters
+TRACE: Copying vectors to a0, b0, c0 (phi=0 mosaic=0 reference):
+TRACE:   a0 = [7e-09, 4.28626e-25, 4.28626e-25] |a0| = 7e-09 meters
+TRACE:   b0 = [-0, 8e-09, 4.89859e-25] |b0| = 8e-09 meters
+TRACE:   c0 = [0, -0, 9e-09] |c0| = 9e-09 meters
+TRACE: Copying vectors to ap, bp, cp (phi=0 working copy):
+TRACE:   ap = [7e-09, 4.28626e-25, 4.28626e-25] |ap| = 7e-09 meters
+TRACE:   bp = [-0, 8e-09, 4.89859e-25] |bp| = 8e-09 meters
+TRACE:   cp = [0, -0, 9e-09] |cp| = 9e-09 meters
+crystal is 0.007 x 0.008 x 0.009 microns
+auto-selected 1-fold oversampling
+approximate MW = 364219
+thick0 = 0 um
+phi0 = 0
+divergence deviation: 0 0
+lambda0 = 1e-10
+  created a total of 1 sources:
+-10 -0 0   1 1e-10
+  created a total of 1 mosaic domains
+  0 initialized hkls (all others =1)
+  parallelpiped xtal: 1x1x1 cells
+  wave=1e-10 meters +/- 0% in 1 steps
+  Kahn polarization factor: 0.000000
+  incident fluence: 1.25932e+29 photons/m^2
+  distance=0.1 detsize=0.0004x0.0004  pixel=0.0001 meters (4x4 pixels)
+  sensor is 0 m thick in 1 layers with mu= -1
+  Xbeam=0.00025 Ybeam=0.00025
+  Fbeam=0.0003 Sbeam=0.0003
+  Xclose=0.0002 Yclose=0.0002
+  Fclose=0.0003 Sclose=0.0003
+  DIRECTION_OF_DETECTOR_X-AXIS= 0 0 1
+  DIRECTION_OF_DETECTOR_Y-AXIS= 0 -1 0
+  DIRECTION_OF_DETECTOR_Z-AXIS= 1 0 0
+  INCIDENT_BEAM_DIRECTION= 1 0 0
+  spindle ROTATION_AXIS= 0 0 1
+  POLARIZATION_PLANE_NORMAL= 0 -1 0
+  dials origin= -0.3 0.3 -100
+  roi: 0 < x < 4 && 0 < y < 4
+  hdivrange=0 hdivstep=0  radians
+  vdivrange=0 vdivstep=0  radians
+  1 divergence steps
+  1 sources
+  1 mosaic domains over mosaic spread of 0 degrees
+  1 phi steps from 0 to 0 degrees
+  1x1 pixel oversample steps
+
+solid angle subtended by detector = 1.59999e-05 steradian ( 0.000127323% sphere)
+writing /tmp/d1_float.bin as 16 4-byte floats
+max_I = 9.99999e-07  at 0.00025 0.00025
+mean= 9.99991e-07 rms= 1.03279e-06 rmsd= 7.15188e-12
+intfile_scale = 5.50001e+10
+writing /tmp/d1_int.img as 2-byte integers
