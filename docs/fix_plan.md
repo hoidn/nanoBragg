@@ -572,6 +572,20 @@
       - **Device comparison quirk handled:** `.device.type` comparison used instead of direct `.device ==` to handle PyTorch's cuda:0 resolution
       - **Phase L3d exit criteria satisfied:** Device transfer patch landed, regression test covers CLI→Crystal HKL flow, smoke tests pass
     Next Actions: Phase L3e scaling validation per plan (extend compare_scaling_chain.py to diff TRACE_C/TRACE_PY with ≤1e-6 deltas for all scaling factors). Supervisor should update fix_plan with this attempt and proceed to L3e or L4 parity rerun.
+  * [2025-10-07] Attempt #82 (ralph loop) — Result: **SUCCESS** (Phase L3e scaling validation script extension COMPLETE). **Extended compare_scaling_traces.py to emit structured JSON metrics + run metadata with ≤1e-6 tolerance enforcement per Phase L3e guidance.**
+    Metrics: Script successfully generates 3 artifacts (markdown, metrics.json, run_metadata.json); reports 5 divergent factors (I_before_scaling CRITICAL, polar/omega_pixel/cos_2theta MINOR, I_pixel_final CRITICAL) with I_before_scaling as first divergence. Pytest collection stable (50+ tests collected).
+    Artifacts:
+      - `scripts/validation/compare_scaling_traces.py:1-322` - Extended script with JSON output, sub-micro tolerance enforcement, git SHA + torch version capture
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/scaling_validation_summary.md` - Phase L3e markdown summary with tolerance header (≤1.00e-06 relative), fractional deltas (scientific notation), and updated phase label
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/metrics.json` - Structured per-factor metrics (c_value, py_value, abs_delta, rel_delta, status) plus tolerance_rel, first_divergence, num_divergent
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/run_metadata.json` - Run metadata (timestamp ISO 8601, git_sha 22233b8, torch 2.8.0+cu128, command, c_trace/py_trace absolute paths, tolerance_rel)
+    Observations/Hypotheses:
+      - **JSON artifacts satisfy input.md requirements:** metrics.json contains per-factor deltas with ≤1e-6 relative threshold enforcement; run_metadata.json captures env snapshot and command invocation for reproducibility
+      - **Tolerance enforcement updated:** Changed assessment from percentage-based (0.001%/1%/10%) to fractional (1e-6 PASS/1e-4 MINOR/1e-2 DIVERGENT) per Phase L3e spec
+      - **Relative deltas now fractional:** Output format changed from percentage (`+0.003%`) to scientific notation (`+3.094e-08`) for consistency with threshold
+      - **Deprecation warning fixed:** Replaced datetime.utcnow() with datetime.now().astimezone() to avoid Python 3.13+ deprecation warning
+      - **No production code changes:** Evidence-only loop per input.md Parity mode; script updates are tooling-layer only
+    Next Actions: Phase L3f documentation sync — Update analysis.md + architectural docs with finalized ingestion/normalization flow once scaling validation passes (per input.md lines 462-463).
   * [2025-10-07] Attempt #74 (ralph loop) — Result: **SUCCESS** (Phase L2b harness fix + L2c comparison complete). **Corrected harness to attach `crystal.hkl_data` and `crystal.hkl_metadata` instead of ad-hoc attributes; structure factor lookup now functional.**
     Metrics: Harness probe confirms hkl_data attached (lookup returns F=100 for (1,12,3), F=0 for out-of-range). Comparison identifies I_before_scaling as first divergence. Test suite passes 4/4 variants (tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics).
     Artifacts:
