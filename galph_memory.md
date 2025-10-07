@@ -1726,3 +1726,9 @@ Follow-ups for Ralph:
 - Confirmed spec mandate (`specs/spec-a-core.md:211`) requires fresh φ rotations each step; C-PARITY-001 documents nanoBragg.c’s stale-vector carryover (`docs/bugs/verified_c_bugs.md:166`).
 - PyTorch currently mirrors the bug via `_phi_last_cache` in `src/nanobrag_torch/models/crystal.py:1115-1198`; this contradicts the spec and the long-term goal to eliminate the carryover.
 - CLI plan still instructs emulating the bug (L3k.3c.3). Issued new input.md directing Ralph to refresh `diagnosis.md` (L3k.3c.4) with spec-vs-parity guidance, log an Attempt, and run collect-only pytest. Expect next loop to revise the plan and design a spec-compliant default plus optional parity shim.
+
+## 2025-10-07 (galph loop — φ=0 spec alignment)
+- Reconfirmed spec mandate (`specs/spec-a-core.md:211-214`) that every φ step re-rotates the lattice and that C’s carryover bug is quarantined in `docs/bugs/verified_c_bugs.md:166-204`.
+- Noted PyTorch still mirrors the bug via `_phi_last_cache` (`src/nanobrag_torch/models/crystal.py:1097-1198`); updated `docs/fix_plan.md` Next Actions and `plans/active/cli-noise-pix0/plan.md` context to call this out and require a parity shim decision.
+- Issued new `input.md` (Docs mode) directing Ralph to refresh `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md`, log the attempt, cross-link the plan, and run the collect-only selector with `KMP_DUPLICATE_LIB_OK=TRUE`.
+- No tests run; repo clean after commit `10333c0`.
