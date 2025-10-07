@@ -565,7 +565,7 @@
     Artifacts:
       - `src/nanobrag_torch/__main__.py:1073,1075` — Fixed HKL device transfer: `.to(device=device, dtype=dtype)` for both tensor and array branches
       - `tests/test_cli_scaling.py:252-347` — New TestHKLDevice class with parametrized test_hkl_tensor_respects_device covering all device/dtype combinations
-      - Git SHA at commit: (to be recorded post-commit)
+      - Git SHA at commit: 279aa3c
     Observations/Hypotheses:
       - **Fix confirmed working:** HKL tensor device matches requested device (validated via `.device.type` comparison to handle cuda vs cuda:0)
       - **Structure factor lookup validated:** Target reflection (-7,-1,-14) returns F_cell≈190.27 matching Phase L3b probe results (tolerance 1%)
