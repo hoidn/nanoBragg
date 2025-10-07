@@ -455,8 +455,8 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase K3e evidence reveals a **fundamental lattice/geometry mismatch**, not a φ-grid offset. C reports `k_frac≈−3.857` across all φ steps while PyTorch reports `k_frac≈−9.899` (Δk≈6.04 at φ=0°). This 6-unit discrepancy indicates the base reciprocal lattice vectors or scattering geometry differ before any φ rotation is applied.
-- Next Actions (2025-10-07 update):
-  1. ✅ Phase L2b harness refresh complete (Attempt #69) — Updated `trace_harness.py` to use `Simulator(..., debug_config={'trace_pixel': [685, 1039]})` with `contextlib.redirect_stdout`, regenerated `trace_py_scaling.log` with 40 live TRACE_PY lines (no placeholders), and captured `trace_py_env.json` + `notes.md` with real values.
+- Next Actions (2025-11-13 refresh):
+  1. Phase L2b harness fix — Update `trace_harness.py` to consume the current `read_hkl_file` `(F_grid, metadata)` signature, rebuild HKL ranges without tuple unpack errors, and capture live TRACE_PY output (`trace_py_scaling.log`) with non-placeholder polarization/absorption values.
   2. Phase L2c rerun — Re-execute `scripts/validation/compare_scaling_traces.py` against the refreshed logs, update `scaling_audit_summary.md`, and record the earliest divergent factor in docs/fix_plan.md Attempt history.
   3. Phase L3 prep — With real deltas in hand, outline the normalization fix scope (expected focus: polarization application order and F_latt mismatch) and queue targeted regression selectors.
 - Attempts History:
@@ -474,6 +474,15 @@
       - **Ready for comparison:** trace_py_scaling.log now has live values suitable for Phase L2c diff against c_trace_scaling.log
       - **Test coverage maintained:** tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics passes all parametrized variants
     Next Actions: Proceed to Phase L2c — run `scripts/validation/compare_scaling_traces.py` to identify first divergent scaling factor between C and PyTorch implementations.
+  * [2025-11-13] Attempt #70 (galph audit) — Result: **BLOCKED** (Phase L2b regression). **Trace harness still expects the legacy seven-value `read_hkl_file` return signature and aborts before emitting TRACE_PY.**
+    Metrics: Evidence-only. Harness run ends with `ValueError: not enough values to unpack (expected 7, got 2)`.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_fullrun.log` — stack trace showing the unpack failure.
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling_refreshed.log` — latest output still populated with placeholders (`I_before_scaling NOT_EXTRACTED`, `polar 0`, `I_pixel_final 0`).
+    Observations/Hypotheses:
+      - Harness must adapt to the new `(F_grid, metadata)` return, reconstruct `h_min`/`k_min`/`l_min` from metadata, and then pass the grid into the simulator.
+      - Until live TRACE_PY values are captured again, Phase L2c cannot identify the first divergent scaling factor.
+    Next Actions: Patch `trace_harness.py` to use the updated loader API, rerun the supervisor command capture, and confirm `trace_py_scaling.log` records real physics scalars before resuming comparison work.
   * [2025-10-06] Attempt #68 (ralph loop) — Result: **PARTIAL SUCCESS** (Phase L2c comparison tooling complete). **Created `compare_scaling_traces.py` script and executed initial comparison; identified that old PyTorch trace has stale placeholder values.**
     Metrics: Initial comparison shows 4 divergent factors (I_before_scaling=MISSING, polar=CRITICAL 0 vs 0.9146, cos_2theta=MISSING, I_pixel_final=CRITICAL 0 vs 2.88e-7). Perfect matches for r_e_sqr, fluence, steps, capture_fraction, omega_pixel.
     Artifacts:
