@@ -1498,3 +1498,9 @@ Follow-ups for Ralph:
 - Refreshed docs/fix_plan.md VECTOR-TRICUBIC-001 status to `in_progress`, tightened next actions to focus on creating tricubic/absorption baseline scripts.
 - Authored expanded input.md (Perf mode) directing Ralph to implement Phase A2/A3 benchmark harnesses, capture timing artifacts (JSON/Markdown/run_log/env.json), and log metrics in fix_plan.
 - No code changes; focus next loop: ensure harness scripts and reports land, then proceed to Phase B design memo.
+
+## 2025-11-17 (galph loop — CLI-FLAGS L3 readiness)
+- Sync clean; revisited docs/index.md, spec shards, arch.md, config map, debugging SOP, testing strategy, fix_plan, and active plans.
+- Noted inconsistency: `structure_factor/probe.log` shows scaled.hkl spans [-24,24]×[-28,28]×[-31,30] with F_cell=190.27, but `scaling_audit/config_snapshot.json` still reports h/k/l ranges (1,12,3) and TRACE_PY keeps F_cell=0.
+- Updated docs/fix_plan.md: CLI-FLAGS-003 Next Actions now start with a fresh Phase L3a probe rerun plus harness/CLI audits; VECTOR-TRICUBIC-001 Next Actions point to Phase B design tasks (B1–B3).
+- No new evidence generated; left instructions for Ralph to recapture HKL coverage on the current machine, reconcile harness metadata, then proceed with Phase L3 scaling fixes once F_cell matches C.

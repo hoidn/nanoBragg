@@ -455,11 +455,12 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
-- Next Actions (2025-10-07 refresh after Attempt #76):
-  1. Phase L3c harness audit — Review `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py` to identify why HKL data isn't loaded despite scaled.hkl containing 168k reflections. Compare against probe.py successful pattern (lines 206-236). Fix attachment to mirror: `F_grid, metadata = read_hkl_file(...); crystal.hkl_data = F_grid; crystal.hkl_metadata = metadata`.
-  2. Phase L3c CLI verification — Audit `src/nanobrag_torch/__main__.py` to ensure `-hkl` flag loading follows same pattern. NO simulator.py changes needed (scaling math is correct per L2c; lookup logic works per L3b probe).
-  3. Phase L3d regression — Extend `tests/test_cli_scaling.py` with structure-factor lookup assertion for hkl=(-7,-1,-14) using scaled.hkl, validating retrieval of F=190.27 and end-to-end intensity matching C reference (≤1e-6 relative tolerance, CPU/CUDA parametrised).
-  4. Phase L4 parity rerun — Execute supervisor command end-to-end, capture nb-compare metrics, confirm correlation ≥0.9995 + sum_ratio 0.99-1.01, archive results, and close CLI-FLAGS-003.
+- Next Actions (2025-11-17 parity refresh):
+  1. Phase L3a coverage re-verification — Re-run `reports/2025-10-cli-flags/phase_l/structure_factor/probe.py` on the current workstation against repo-root `scaled.hkl` and archived Fdump snapshots; capture fresh `probe.log`/`analysis.md` showing the h/k/l ranges so we can reconcile the probe evidence with `config_snapshot.json` (which still reports h/k/l=(1,12,3)).
+  2. Phase L3c harness audit — Review `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py` to identify why HKL data isn't loaded despite scaled.hkl containing 168k reflections. Compare against probe.py successful pattern (lines 206-236). Fix attachment to mirror: `F_grid, metadata = read_hkl_file(...); crystal.hkl_data = F_grid; crystal.hkl_metadata = metadata`.
+  3. Phase L3c CLI verification — Audit `src/nanobrag_torch/__main__.py` to ensure `-hkl` flag loading follows same pattern. NO simulator.py changes needed (scaling math is correct per L2c; lookup logic works per L3b probe).
+  4. Phase L3d regression — Extend `tests/test_cli_scaling.py` with structure-factor lookup assertion for hkl=(-7,-1,-14) using scaled.hkl, validating retrieval of F=190.27 and end-to-end intensity matching C reference (≤1e-6 relative tolerance, CPU/CUDA parametrised).
+  5. Phase L4 parity rerun — Execute supervisor command end-to-end, capture nb-compare metrics, confirm correlation ≥0.9995 + sum_ratio 0.99-1.01, archive results, and close CLI-FLAGS-003.
 - Attempts History:
   * [2025-11-13] Attempt #71 (ralph loop) — Result: **SUCCESS** (Phase L2b validation + Phase L2c complete). **Harness already functional from Attempt #69; executed comparison script to identify first divergence.**
     Metrics: 40 TRACE_PY lines captured; test suite passes 4/4 variants (cpu/cuda × float32/float64). Comparison identifies `I_before_scaling` as first divergent factor (C=943654.809, PyTorch=0, -100% delta).
@@ -1669,7 +1670,7 @@
       - Test collection confirmed 3 tricubic tests exist and are discoverable
       - CUDA is available in test environment for future GPU benchmarking
       - Phase A1 complete per plan guidance (`plans/active/vectorization.md` tasks A1 complete)
-    Next Actions: Proceed to Phase A2 (tricubic microbenchmark harness) and Phase A3 (absorption microbenchmark harness) to capture timing baselines before any code changes. Create `scripts/benchmarks/tricubic_baseline.py` and `scripts/benchmarks/absorption_baseline.py` per plan guidance.
+    Next Actions: Log Phase A1 evidence in fix_plan and begin Phase B design work—specifically draft the tensor-shape broadcast plan (B1), map C polin3 semantics to batched tensor ops (B2), and outline the gradient/device checklist (B3) in `reports/2025-10-vectorization/phase_b/design_notes.md` before touching implementation code.
   * [2025-10-07] Attempt #2 (ralph loop) — Result: **Phase A2/A3 COMPLETE** (tricubic and absorption baseline harnesses created and executed). Both CPU and CUDA timings captured.
     Metrics:
       - Tricubic (CPU): 100 scalar calls @ ~1402 μs/call (~713 calls/sec); sizes 256, 512
@@ -1693,7 +1694,7 @@
       - Absorption CPU shows large cold-run overhead (1.9s for 256²) likely from torch.compile warmup; warm runs are very fast (5.2ms)
       - Current non-vectorized tricubic: ~1.4 ms/call × 256×256 pixels = ~92 seconds for full detector (if called per-pixel)
       - Vectorization opportunity: eliminate Python loop over pixels, process entire detector grid in batched tensor ops
-    Next Actions: Phase A complete. Next loop should proceed to Phase B (design memo for tensor shapes and broadcasting strategy) per plans/active/vectorization.md before any code changes.
+    Next Actions: With Phase A complete, execute Phase B tasks in order: (1) capture the `(S,F,4,4,4)` gather and broadcast plan (B1), (2) translate nanoBragg polin/polin2/polin3 algebra into tensor expressions (B2), and (3) record the differentiability/device checklist (B3). Store outputs under `reports/2025-10-vectorization/phase_b/` and update this entry with links once the memo is ready.
 - Risks/Assumptions: Must maintain differentiability (no `.item()`, no `torch.linspace` with tensor bounds), preserve device/dtype neutrality (CPU/CUDA parity), and obey Protected Assets rule (all new scripts under `scripts/benchmarks/`). Large tensor indexing may increase memory pressure; ensure ROI caching still works.
 - Exit Criteria (quote thresholds from spec):
   * specs/spec-a-parallel.md §2.3 tricubic acceptance tests run without warnings and match C parity within documented tolerances (corr≥0.9995, ≤1e-12 structural duality where applicable).
