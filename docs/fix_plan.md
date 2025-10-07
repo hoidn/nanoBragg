@@ -457,10 +457,10 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
-- Next Actions (2025-11-19 refresh):
-  1. Phase L3f rotation-vector audit — Capture aligned `TRACE_C` vs `TRACE_PY` rot-vector dumps for φ=0 using the updated harness, write `rot_vector_comparison.md` under `reports/2025-10-cli-flags/phase_l/rot_vector/`, and quantify Δ components that explain the `k_frac` offset (target <5e-4).
-  2. Phase L3g hypothesis framing — Summarize likely causes of the φ=0 drift (spindle axis, reciprocal reconstitution, phi step sizing) in `rot_vector/analysis.md`, cite supporting traces, and update this plan/fix_plan before touching simulator code.
-  3. Phase L4 parity rerun — After alignment fixes land and documentation is refreshed, execute the supervisor command end-to-end, capture nb-compare metrics (correlation ≥0.9995, sum_ratio 0.99–1.01), archive results, and close CLI-FLAGS-003.
+- Next Actions (2025-11-20 refresh):
+  1. Phase L3g instrumentation — Extend the trace harness (or simulator TRACE_PY hooks) to emit raw + normalized `spindle_axis` vectors for the supervisor command, rerun the φ=0 trace, and append results to `reports/2025-10-cli-flags/phase_l/rot_vector/spindle_audit.log` alongside the volume table.
+  2. Phase L3h doc/plan alignment — Once spindle evidence lands, update `rot_vector/analysis.md`, this plan entry, and `plans/active/cli-noise-pix0/plan.md` with the chosen corrective approach before green-lighting simulator edits.
+  3. Phase L4 parity rerun — After the spindle normalization fix is implemented and documentation refreshed, execute the supervisor command end-to-end, capture nb-compare metrics (correlation ≥0.9995, sum_ratio 0.99–1.01), archive results, and close CLI-FLAGS-003.
 - Attempts History:
   * [2025-11-13] Attempt #71 (ralph loop) — Result: **SUCCESS** (Phase L2b validation + Phase L2c complete). **Harness already functional from Attempt #69; executed comparison script to identify first divergence.**
     Metrics: 40 TRACE_PY lines captured; test suite passes 4/4 variants (cpu/cuda × float32/float64). Comparison identifies `I_before_scaling` as first divergent factor (C=943654.809, PyTorch=0, -100% delta).
