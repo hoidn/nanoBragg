@@ -569,6 +569,29 @@
       1. Phase L3k.3 continuation (next loop): Execute VG-1 checklist refresh per input.md:16—refresh per-φ traces and mark VG-1.4 status based on new spindle parity
       2. After VG-1 refresh: Execute remaining VG gates (VG-3 nb-compare ROI with supervisor command, VG-4 component delta audit)
       3. Once all VG gates pass (or if hypothesis changes): Update mosflm_matrix_correction.md and fix_checklist.md, then proceed to Phase L3k.4 (log full metrics)
+  * [2025-10-07] Attempt #101 (ralph loop i=101) — Result: **EVIDENCE-ONLY** (Phase L3k.3b per-φ trace regeneration). **Identified C trace gap: no TRACE_C_PHI instrumentation exists.**
+    Metrics: PyTorch k_frac drift Δk=0.018088 (exceeds threshold <1e-6); C comparison BLOCKED (zero TRACE_C_PHI lines); pytest collection 653 tests (no regression).
+    Artifacts:
+      - reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251122/trace_py_rot_vector_20251122.log (2.1K, 43 TRACE_PY lines)
+      - reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251122/trace_py_rot_vector_20251122_per_phi.{log,json} (10 φ entries, φ=0°→0.1°)
+      - reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251122/diagnosis.md (full findings and hypothesis documentation)
+      - reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251122/comparison_stdout.txt (comparison script output showing zero C traces)
+      - reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251122/pytest_collect.log (653 tests collected successfully)
+      - scripts/compare_per_phi_traces.py — Fixed to handle 'per_phi_entries' JSON key (compatibility with harness output)
+      - reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md VG-1.4 — Updated with Attempt #101 notes
+    Observations/Hypotheses:
+      - **φ rotation drift persists**: PyTorch traces show k_frac span=0.018088 (from -0.589139 at φ=0° to -0.607227 at φ=0.1°), exceeding threshold <1e-6
+      - **F_latt oscillation**: F_latt_b varies -0.861 → +1.051 (swing ~1.91), sign changes at φ_tic ≥4, consistent with Miller index drift
+      - **C instrumentation gap identified**: Existing c_trace_mosflm.log contains only static detector geometry traces (TRACE_C:detector_convention, pix0_vector, etc.), NO per-φ iteration traces
+      - **Comparison blocked**: scripts/compare_per_phi_traces.py found zero TRACE_C_PHI lines, making C vs PyTorch per-φ diff impossible
+      - **H2 hypothesis status**: φ rotation implementation divergence (independent real+reciprocal rotation) remains primary suspect but UNCONFIRMED without C reference traces
+      - **Test suite health**: 653 tests collected cleanly, harness executed successfully, no import/collection errors
+    Next Actions:
+      1. **[DECISION REQUIRED]** Either: (A) Instrument C binary for per-φ traces (golden_suite_generator/nanoBragg.c emit TRACE_C_PHI lines for pixel 685,1039 across φ grid), OR (B) Proceed directly to L3k.3c with targeted φ rotation fix based on H2 hypothesis, deferring C comparison to post-fix validation
+      2. If (A): Rerun comparison with new C traces and isolate first divergent tensor (per plan L3k.3b guidance)
+      3. If (B): Execute L3k.3c patch implementation, rerun VG-1/VG-3, then generate C traces for post-fix validation
+      4. After resolution: Update fix_checklist.md VG-1.4 with divergence findings and proceed to L3k.3d (nb-compare ROI fix) or L3k.3e (documentation)
+    Blocked On: C per-φ instrumentation (if decision is to proceed with parallel C comparison before fix)
   * [2025-10-07] Attempt #91 (ralph loop i=91) — Result: **SUCCESS** (Phase L3g spindle instrumentation COMPLETE). **H1 (spindle normalization) RULED OUT as root cause of Y-drift.**
     Metrics: Spindle Δ(magnitude)=0.0 (tolerance ≤5e-4); trace captured 43 TRACE_PY lines (was 40, +3 spindle lines); test collection 4/4 passed.
     Artifacts:
