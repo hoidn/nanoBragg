@@ -17,9 +17,9 @@ This checklist enumerates verification gates for implementing the φ rotation pa
 | VG-1.2 | φ=0.05° trace generation | Implementation Loop | ⏸️ | `per_phi/trace_py_phi_0.05.log` | Mid-oscillation; b_Y drift ≤1e-6 relative (currently ~6.8%, FAIL pre-fix) |
 | VG-1.3 | φ=0.1° trace generation | Implementation Loop | ⏸️ | `per_phi/trace_py_phi_0.10.log` | Full oscillation; b_Y drift ≤1e-6 relative |
 | VG-1.4 | Per-φ JSON stability | Implementation Loop | ⏸️ | `per_phi/trace_py_scaling_per_phi.json` | k_frac drift <1e-6 across phi steps; F_latt signs match C |
-| **VG-2** | **Targeted Pytest (Lattice Factors)** | Implementation Loop | ⏸️ | Test run log | Regression coverage for lattice vector parity |
-| VG-2.1 | Execute test command | Implementation Loop | ⏸️ | `reports/.../pytest_lattice_$(date +%Y%m%d).log` | `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py -k lattice -v` |
-| VG-2.2 | All tests pass | Implementation Loop | ⏸️ | Same as VG-2.1 | Zero failures; captures rotation parity across test matrix |
+| **VG-2** | **Targeted Pytest (Lattice Factors)** | Implementation Loop | ✅ (Attempt #98, 2025-11-21) | `reports/2025-10-cli-flags/phase_l/rot_vector/pytest_vg2.log` | Regression coverage for lattice vector parity; refresh log if missing |
+| VG-2.1 | Execute test command | Implementation Loop | ✅ | `reports/2025-10-cli-flags/phase_l/rot_vector/pytest_vg2.log` | `env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::TestFlattSquareMatchesC::test_f_latt_square_matches_c -v` |
+| VG-2.2 | All tests pass | Implementation Loop | ✅ | Same as VG-2.1 | Zero failures; captures rotation parity across test matrix |
 | **VG-3** | **nb-compare ROI Parity** | Implementation Loop | ⏸️ | `reports/.../nb_compare_phi_fix/` | End-to-end C↔PyTorch visual + metrics validation |
 | VG-3.1 | Execute supervisor command | Implementation Loop | ⏸️ | `nb_compare_phi_fix/summary.json` | `nb-compare --roi 100 156 100 156 --resample --outdir reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/ -- [supervisor flags]` |
 | VG-3.2 | Correlation ≥0.9995 | Implementation Loop | ⏸️ | `nb_compare_phi_fix/summary.json` | Image correlation meets spec threshold (specs/spec-a-parallel.md) |
@@ -253,8 +253,8 @@ Rotation matrix construction or application differs between C (`nanoBragg.c:3006
 ## Checklist Status
 
 - **Created:** 2025-10-07 (ralph loop i=94, CLI-FLAGS-003 Phase L3j documentation)
-- **Last Updated:** 2025-10-07 (initial creation)
-- **Completion:** ⏸️ Awaiting implementation loop
-- **Owner:** Implementation loop (post-L3j.3 sync)
+- **Last Updated:** 2025-11-21 (galph loop; VG-2 confirmed)
+- **Completion:** ⏸️ VG-1/VG-3/VG-4/VG-5 pending; VG-2 complete via Attempt #98
+- **Owner:** Implementation loop (post-L3k.3 coordination)
 
-**Next Step:** Complete Phase L3j.3 (sync plan + fix_plan), then authorize implementation loop with this checklist.
+**Next Step:** Continue Phase L3k.3 by regenerating per-φ traces (VG-1) and nb-compare/trace deltas (VG-3/VG-4), then close documentation gates (VG-5) before logging L3k.4.

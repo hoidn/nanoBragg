@@ -1634,3 +1634,8 @@ Follow-ups for Ralph:
 - Updated `docs/fix_plan.md:458-460` so Next Actions now point at L3k.2 implementation, L3k.3 verification, and L3k.4 logging; no other ledger edits.
 - Rewrote `input.md` (Parity mode) to focus Ralph on executing L3k.2 with the targeted pytest selector and checklist-driven nb-compare/trace steps; artifacts to stay under `reports/2025-10-cli-flags/phase_l/`.
 - Expect Ralph to deliver the φ-rotation patch next loop, follow fix_checklist VG-1..VG-5, and record a new Attempt before we reopen Phase L4 parity testing.
+## 2025-11-21 (galph loop — L3k.3 evidence prep)
+- Refreshed CLI-FLAGS-003 Next Actions (docs/fix_plan.md:458) to focus on completing VG-1/VG-3/VG-4 and the VG-5 doc updates before logging L3k.4.
+- Marked VG-2 ✅ in rot_vector/fix_checklist.md and updated status block with 2025-11-21 timestamp; remaining gates explicit for Ralph.
+- Rewrote input.md (Parity mode) steering Ralph through per-φ harness capture, compare_per_phi_traces.py, nb-compare metrics, checksum/env snapshots, and documentation updates.
+- Expect Ralph to generate new per_phi_postfix/ artefacts, flip VG-1⇢VG-5, append Attempt entry, then proceed to Phase L4 rerun next loop.

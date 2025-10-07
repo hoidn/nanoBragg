@@ -458,9 +458,9 @@
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
 - Next Actions (2025-11-21 refresh → galph):
-1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
-2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
-3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+1. Phase L3k.3 — Finish the outstanding verification gates: regenerate per-φ traces (VG-1), run the supervisor ROI nb-compare (VG-3), and refresh the component delta audit (VG-4) with artifacts under `reports/2025-10-cli-flags/phase_l/rot_vector/`. Update `fix_checklist.md` as each gate turns ✅.
+2. Phase L3k.3/VG-5 — Once VG-1/VG-3/VG-4 evidence lands, update `mosflm_matrix_correction.md`, the checklist, and plan notes to flip the VG-5 documentation rows.
+3. Phase L3k.4 — After all VG gates pass, record the new Attempt in this entry (metrics: correlation, sum_ratio, b_Y, k_frac) and sync plan/fix_plan ahead of the Phase L4 supervisor-command parity rerun.
 - Attempts History:
   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
     Metrics: Planning-only (no tests executed).
