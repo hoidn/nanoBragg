@@ -1667,3 +1667,8 @@ Follow-ups for Ralph:
 - Synced `docs/fix_plan.md` Next Actions with the new instrumentation guard so L3k.3b focuses on emitting TRACE_C_PHI and regenerating traces under a fresh timestamp.
 - Replaced `input.md` (Parity) directing Ralph to add TRACE_C_PHI prints in `golden_suite_generator/nanoBragg.c`, rebuild, rerun the supervisor command, regenerate PyTorch traces, fix the misleading comparison summary, and capture updated diagnosis + checklist notes.
 - Follow-up: Expect Ralph to land the instrumentation, produce `c_trace_phi_<timestamp>.log`, update comparison_summary to BLOCKED (until data present), refresh VG-1.4, and only then proceed toward VG-3/VG-4.
+## 2025-10-07 (galph loop — L3k.3c prep)
+- Synced repo (no conflicts) and reviewed docs/specs per SOP; coin flip→heads so Ralph’s last commit ee83081 confirmed TRACE_C_PHI instrumentation success (φ_tic=0 delta only).
+- Updated `plans/active/cli-noise-pix0/plan.md` to mark L3k.3b DONE and clarified L3k.3c guidance (refresh comparison summary, hold φ_tic=0 focus). Input.md now steers Ralph to land the φ=0 rotation fix, regenerate per-φ traces, and flip VG-1.4 once Δk ≤1e-6.
+- No code changes made; staged plan/input updates committed (`ddf68e4`).
+- Follow-up for Ralph: implement L3k.3c φ=0 parity fix, capture new per-φ traces/tests per input.md, then proceed to L3k.3d nb-compare work once VG-1 is green.
