@@ -1601,3 +1601,8 @@ Follow-ups for Ralph:
 - Authored `input.md` (Parity mode, 100 lines) directing Ralph to capture `mosflm_matrix_probe.log/md`, log env metadata, and prepare outlines for `mosflm_matrix_correction.md` + `fix_checklist.md` before any code edits.
 - Expectation for Ralph: run the harness with MOSFLM vector dumps, document the deltas, update fix_plan Attempt history, and leave code untouched until the memo/checklist exist.
 - No production code changes made; commit 3232549 contains plan/fix_plan/input refresh (tests: not run).
+## 2025-11-20 (galph loop — CLI L3i corrective memo)
+- Authored `reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_correction.md` summarizing nanoBragg.c vs PyTorch MOSFLM pipeline; plan L3i marked [D] with instrumentation marching orders.
+- Updated `docs/fix_plan.md` Next Actions to focus on C TRACE_C taps, Py harness dumps, and diff memo before implementation; input.md now directs Ralph to capture those traces and document deltas.
+- Expect Ralph to instrument `golden_suite_generator/nanoBragg.c`, run the supervisor command to generate `c_trace_mosflm.log`, extend the Py harness for raw/tensor dumps, and produce `mosflm_matrix_diff.md` prior to touching simulator code.
+
