@@ -40,22 +40,22 @@ All reciprocal components match within **O(1e-09)** (nanometer-scale precision),
 ## Hypotheses for Y-Component Drift (Phase L3g Input)
 
 ### H1: Spindle Axis Normalization
-**Status**: Primary suspect
-**Evidence**: Y-component drift pattern matches spindle-axis orientation (spec default: [0,1,0])
-**Mechanism**: If PyTorch normalizes spindle vector before φ rotation while C uses raw input, small magnitude errors amplify into real-space Y drift after cross-product reconstruction
-**Test**: Compare `spindle_axis` magnitude in traces; verify `Crystal.get_rotated_real_vectors` normalization path
+**Status**: ~~Primary suspect~~ **RULED OUT** (Attempt #91, 2025-10-07)
+**Evidence**: ~~Y-component drift pattern matches spindle-axis orientation (spec default: [0,1,0])~~ Phase L3g spindle probe confirms spindle axis is exact unit vector [-1,0,0] with Δ(magnitude)=0.0 (tolerance ≤5e-4). Normalization is a no-op.
+**Mechanism**: ~~If PyTorch normalizes spindle vector before φ rotation while C uses raw input, small magnitude errors amplify into real-space Y drift after cross-product reconstruction~~ Spindle normalization is NOT the source of drift.
+**Test**: ~~Compare `spindle_axis` magnitude in traces; verify `Crystal.get_rotated_real_vectors` normalization path~~ **COMPLETE**: `spindle_audit.log` proves exact unit vector, no drift from normalization.
 
 ### H2: Reciprocal→Real Reconstruction Volume
-**Status**: Secondary suspect
-**Evidence**: Volume delta (+3.3e-03 Å³) suggests different V_actual usage
-**Mechanism**: Spec (CLAUDE.md Rule #13) mandates V_actual = a·(b×c) for reconstruction. If C uses formula volume while PyTorch uses V_actual, cross-products acquire systematic bias
-**Test**: Log V_formula vs V_actual in both implementations; check if C bypasses recalculation
+**Status**: ~~Secondary suspect~~ **RULED OUT** (Attempt #92, 2025-10-07)
+**Evidence**: ~~Volume delta (+3.3e-03 Å³) suggests different V_actual usage~~ Phase L3h probe shows V_formula and V_actual match to machine precision (Δ=1.5e-11 Å³, relative error 5.9×10⁻¹⁶). PyTorch uses correct volume throughout reconstruction pipeline.
+**Mechanism**: ~~Spec (CLAUDE.md Rule #13) mandates V_actual = a·(b×c) for reconstruction. If C uses formula volume while PyTorch uses V_actual, cross-products acquire systematic bias~~ Volume calculation is NOT the source of Y-component drift.
+**Test**: ~~Log V_formula vs V_actual in both implementations; check if C bypasses recalculation~~ **COMPLETE**: `mosflm_matrix_probe_output.log` lines 10-12 prove V_formula ≈ V_actual.
 
-### H3: Phi Step Initialization
-**Status**: Unlikely (φ=0 case)
-**Evidence**: Phi-independent drift would require base vector misalignment
-**Mechanism**: At φ=0, rotation matrix is identity—drift must stem from pre-rotation state
-**Test**: Extend probe to φ>0 steps; if drift is phi-invariant, rule out rotation code
+### H3: MOSFLM Matrix Semantics
+**Status**: **Primary suspect** (promoted after H1/H2 ruled out in Attempts #91/#92)
+**Evidence**: Phase L3h probe shows PyTorch reciprocal→real→reciprocal pipeline preserves 15-digit precision, but real-space Y-components still drift +6.8% (b_y) vs C. Reciprocal vectors match C to O(1e-9).
+**Mechanism**: Drift must originate in how PyTorch interprets or applies the MOSFLM matrix during the reciprocal→real reconstruction phase, despite correct volume and spindle normalization. Hypothesis: misset application order or base-vector calculation differs from nanoBragg.c MOSFLM path.
+**Test**: Instrument C code with matching MOSFLM vector traces (Phase L3i), diff component-by-component to identify first divergence point in the reconstruction pipeline.
 
 ### H4: Float32 Precision Loss
 **Status**: Ruled out
@@ -240,3 +240,62 @@ PyTorch's `unitize()` call in `rotate_axis` (src/nanobrag_torch/utils/geometry.p
 2. Update plans/active/cli-noise-pix0/plan.md Phase L3g status to [D]
 3. Update docs/fix_plan.md Attempt history with spindle evidence
 4. Investigate MOSFLM A.mat parsing (compare read_mosflm_matrix vs C equivalent)
+
+---
+
+## 2025-10-07 MOSFLM Matrix Probe (ralph loop i=92 - CLI-FLAGS-003 Phase L3h)
+
+### Summary
+Completed Phase L3h evidence loop per input.md directive. Created `trace_harness.py` adapted from scaling_audit pattern, captured MOSFLM reciprocal vectors at 3 pipeline stages (post-misset, reconstructed real, re-derived reciprocal), and proved V_formula ≈ V_actual to machine precision.
+
+### Key Findings
+
+#### Volume Hypothesis (H2) - RULED OUT
+- **V_formula**: 24682.2566301113 Å³
+- **V_actual**: 24682.2566301114 Å³
+- **Delta**: 1.45519152283669e-11 Å³
+- **Relative Error**: 5.9×10⁻¹⁶ (machine precision for float64)
+
+**Verdict:** PyTorch uses the correct volume throughout the reciprocal→real→reciprocal pipeline. Hypothesis H2 (volume mismatch causing Y-drift) is **eliminated**.
+
+#### Reciprocal Vector Recalculation (CLAUDE Rule #13)
+**Post-misset reciprocals:**
+- a*: (-0.0290510954135954, -0.0293958845208845, 0.0107498771498771) Å⁻¹
+- b*: (-0.0031263923013923, 0.0104376433251433, -0.0328566748566749) Å⁻¹
+- c*: (0.0259604422604423, -0.014333015970516, -0.0106066134316134) Å⁻¹
+
+**Re-derived from real-space vectors:**
+- a*: (-0.0290510954135954, -0.0293958845208845, 0.0107498771498771) Å⁻¹
+- b*: (-0.0031263923013923, 0.0104376433251433, -0.0328566748566749) Å⁻¹
+- c*: (0.0259604422604423, -0.014333015970516, -0.0106066134316134) Å⁻¹
+
+**Match:** **Exact to 15 significant figures** - confirms PyTorch correctly implements the circular recalculation per CLAUDE.md Rule #13.
+
+#### Hypothesis Status Update
+- **H1 (Spindle Normalization):** RULED OUT (Attempt #91)
+- **H2 (Volume Mismatch):** RULED OUT (Attempt #92)
+- **H3 (MOSFLM Matrix Semantics):** **Promoted to primary suspect**
+- **H4 (Float32 Precision):** Previously ruled out (Attempt #71)
+
+### Artifacts
+- Primary evidence: `mosflm_matrix_probe.md`
+- MOSFLM probe log: `mosflm_matrix_probe_output.log` (12 lines)
+- Full trace: `mosflm_matrix_probe.log` (43 TRACE_PY lines)
+- Per-φ trace: `mosflm_matrix_probe_per_phi.{log,json}` (10 lines)
+- Harness source: `trace_harness.py`
+- Execution log: `harness_run.log`
+- Test collection: `test_collect.log` (579 tests)
+
+### Next Actions (Phase L3i)
+1. Instrument nanoBragg.c with matching MOSFLM vector traces at identical pipeline stages
+2. Run C binary with supervisor command parameters to generate parallel evidence
+3. Diff C vs PyTorch MOSFLM logs component-by-component
+4. Quantify Y-component drift (expected: b_y ≈+6.8% per Phase L3f)
+5. Identify first divergence point in MOSFLM reconstruction pipeline
+6. Document root cause and corrective approach in `mosflm_matrix_correction.md`
+
+### References
+- Supervisor directive: `input.md` 2025-10-07 (galph loop i=92 replayed as ralph evidence-only)
+- Plan: `plans/active/cli-noise-pix0/plan.md` Phase L3h (now marked [D])
+- Prior probes: `spindle_audit.log` (L3g), `rot_vector_comparison.md` (L3f)
+- CLAUDE Rules: #12 (Misset Pipeline), #13 (Reciprocal Recalculation)

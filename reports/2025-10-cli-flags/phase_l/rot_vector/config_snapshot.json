@@ -1,0 +1,52 @@
+{
+  "crystal": {
+    "N_cells": [
+      36,
+      47,
+      29
+    ],
+    "phi_start_deg": 0.0,
+    "osc_range_deg": 0.1,
+    "phi_steps": 10,
+    "mosaic_spread_deg": 0.0,
+    "mosaic_domains": 1,
+    "spindle_axis": [
+      -1.0,
+      0.0,
+      0.0
+    ]
+  },
+  "detector": {
+    "distance_mm": 231.27466,
+    "pixel_size_mm": 0.172,
+    "spixels": 2527,
+    "fpixels": 2463,
+    "beam_center_s": 213.90708,
+    "beam_center_f": 217.742295,
+    "convention": "DetectorConvention.CUSTOM",
+    "pivot": "DetectorPivot.SAMPLE",
+    "oversample": 1
+  },
+  "beam": {
+    "wavelength_A": 0.9768,
+    "polarization_factor": 0.0,
+    "flux": 1e+18,
+    "exposure": 1.0,
+    "beamsize_mm": 1.0
+  },
+  "hkl": {
+    "path": "scaled.hkl",
+    "h_range": [
+      -24,
+      25
+    ],
+    "k_range": [
+      -28,
+      29
+    ],
+    "l_range": [
+      -31,
+      31
+    ]
+  }
+}
