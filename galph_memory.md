@@ -1595,3 +1595,9 @@ Follow-ups for Ralph:
 - Recorded new context line in `plans/active/cli-noise-pix0/plan.md` for Attempt #89 (spindle + volume probe). Marked L3f ✅, kept L3g `[P]` with explicit instruction to surface `TRACE_PY: spindle_axis` before simulator edits; L3h now depends on that evidence.
 - Updated `docs/fix_plan.md` Next Actions (CLI-FLAGS-003) to focus on spindle-axis instrumentation → doc/plan sync → eventual nb-compare rerun. input.md refreshed accordingly.
 - Expect Ralph to extend `trace_harness.py` (or TRACE_PY hooks) with raw/normalized spindle logging, rerun the φ=0 trace, append results to `spindle_audit.log`, and update fix_plan/plan entries before shifting to implementation.
+## 2025-11-20 (galph loop — CLI-FLAGS MOSFLM probe setup)
+- Updated `plans/active/cli-noise-pix0/plan.md` Phase L3 with new tasks L3h–L3j covering MOSFLM matrix probe, corrective memo, and implementation checklist; prior L3a–L3g remain [D].
+- Adjusted `docs/fix_plan.md` Next Actions for CLI-FLAGS-003 to align with the new Phase L3h–L3j workflow (probe → memo → checklist).
+- Authored `input.md` (Parity mode, 100 lines) directing Ralph to capture `mosflm_matrix_probe.log/md`, log env metadata, and prepare outlines for `mosflm_matrix_correction.md` + `fix_checklist.md` before any code edits.
+- Expectation for Ralph: run the harness with MOSFLM vector dumps, document the deltas, update fix_plan Attempt history, and leave code untouched until the memo/checklist exist.
+- No production code changes made; commit 3232549 contains plan/fix_plan/input refresh (tests: not run).
