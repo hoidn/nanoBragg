@@ -458,9 +458,9 @@
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
 - Next Actions (2025-11-23 refresh → galph):
-1. Phase L3k.3c.2 — Write up the measured parity gap: record Δk=1.8116×10⁻² and (once computed) Δb_y≈4.4×10⁻² Å in `diagnosis.md` and `fix_checklist.md`, reference `c_trace_phi_20251123.log`, and spell out the carryover emulation plan (cache φ_{last} state to reuse when φ_tic=0).
-2. Phase L3k.3c.3 — Implement the φ=0 carryover fix in `Crystal.get_rotated_real_vectors`, rerun the per-φ harness, and confirm VG-1 metrics fall below 1e-6 (Δk and Δb_y) before updating `comparison_summary.md` / VG-1 checklist entries to ✅.
-3. Phase L3k.3d — Resolve the nb-compare ROI anomaly (C sum≈0) before repeating VG-3/VG-4; capture the corrected summary.json/logs under `nb_compare_phi_fix/` once correlation ≥0.9995 and sum_ratio 0.99–1.01. After VG-1/VG-3/VG-4 pass, proceed to L3k.3e → L3k.4 documentation and fix_plan logging ahead of the Phase L4 supervisor-command rerun.
+1. Phase L3k.3c.3 — Implement the φ=0 carryover fix in `Crystal.get_rotated_real_vectors` **and** correct the per-φ instrumentation (`simulator.py:1444`) to use `phi = phi_start + (osc/phisteps)*phi_tic`; rerun the per-φ harness so VG-1 metrics (Δk, Δb_y) fall below 1e-6 and update `comparison_summary.md` / VG-1 checklist entries to ✅.
+2. Phase L3k.3d — Resolve the nb-compare ROI anomaly (C sum≈0) before repeating VG-3/VG-4; capture the corrected summary.json/logs under `nb_compare_phi_fix/` once correlation ≥0.9995 and sum_ratio 0.99–1.01. After VG-1/VG-3/VG-4 pass, proceed to L3k.3e → L3k.4 documentation and fix_plan logging ahead of the Phase L4 supervisor-command rerun.
+3. Phase L3k.3e — Once VG-1/VG-3/VG-4 are green, close out documentation/checklist chores (VG-5) and log the implementation Attempt before moving to the Phase L4 supervisor command rerun.
 - Attempts History:
   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
     Metrics: Planning-only (no tests executed).
@@ -533,9 +533,8 @@
       - The remaining parity gap is therefore the φ=0 carryover: we must persist the φ_{last} rotated state (or equivalent) when φ_tic loops back to zero
     First Divergence: φ_tic=0 (φ=0°) — Δk=1.8116×10⁻² (PyTorch -0.5891393528 vs C -0.6072558396), ΔF_latt_b=1.912228
     Next Actions:
-      1. Phase L3k.3c.2 — Log Δk and forthcoming Δb_y in diagnosis/checklist; design the vectorized carryover strategy before editing code.
-      2. Phase L3k.3c.3 — Implement φ==0 carryover fix in `Crystal.get_rotated_real_vectors`, rerun per-φ harness, and hit VG-1 thresholds (Δk, Δb_y ≤ 1e-6).
-      3. Continue with L3k.3d/L3k.3e once VG-1 is green.
+      1. Phase L3k.3c.3 — Implement φ==0 carryover fix in `Crystal.get_rotated_real_vectors`, rerun per-φ harness, and hit VG-1 thresholds (Δk, Δb_y ≤ 1e-6).
+      2. Keep nb-compare (L3k.3d) and documentation (L3k.3e) queued until VG-1 is green.
   * [2025-10-07] Attempt #109 (ralph loop i=109, Phase L3k.3c.2) — Result: **EVIDENCE COMPLETE** (Phase L3k.3c.2 metrics documentation). **Δk and Δb_y captured; remediation outlined.**
     Metrics: Evidence-only loop (no code changes). Δk(φ₀)=1.811649e-02 (threshold <1e-6 NOT MET); Δb_y=0.045731552549 Å. Per-φ comparison: 1 DIVERGE (φ_tic=0), 9 OK (φ_tic=1-9, Δk<3e-5). Pytest collection: 655 tests.
     Artifacts:

@@ -1703,3 +1703,9 @@ Follow-ups for Ralph:
 - Refreshed docs/fix_plan.md Next Actions to focus on documenting Δk/Δb_y and follow-on carryover fix; added Attempt #109 summary.
 - Issued new input.md (Parity mode) directing Ralph to run compare_per_phi_traces.py, compute Δb_y, update diagnosis/fix_checklist, and capture pytest collect-only evidence before implementation.
 - Follow-up for Ralph: capture Δb_y via helper snippet, document metrics in diagnosis.md + fix_checklist.md, log Attempt for L3k.3c.2, keep artifacts under base_vector_debug/20251123/.
+
+## 2025-11-23 (galph loop — φ carryover evidence synthesis)
+- Verified VG-1 deltas: C `rot_b_y(φ₀)=0.671588233999813` vs PyTorch `0.7173197865486145` from reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/{c_trace_phi_20251123.log,trace_py_rot_vector_20251123.log}; Δk(φ₀)=1.8116e-02 captured in delta_metrics.json.
+- Found tooling bug: `src/nanobrag_torch/simulator.py:1444` divides osc_range by `(phi_steps-1)` for TRACE_PY_PHI, yielding φ=0.011111° samples; added requirement to align with C loop formula when Ralph refreshes traces.
+- Marked L3k.3c.2 DONE and updated plan/fix_plan Next Actions to focus on L3k.3c.3 carryover implementation + instrumentation fix before nb-compare work resumes.
+- input.md now directs Ralph to implement φ carryover, adjust instrumentation, rerun compare_per_phi_traces.py, and close the red pytest guard.
