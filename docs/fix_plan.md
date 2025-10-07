@@ -511,6 +511,19 @@
       - **Root cause remains configuration/loading:** The F_cell=0 divergence in trace_py_scaling.log stems from harness/CLI not loading/attaching HKL data, NOT from missing reflections or broken lookup logic
       - **Phase L3a exit criteria satisfied:** Fresh probe log and analysis captured with current environment metadata; HKL coverage ranges documented and reconciled
     Next Actions: Phase L3c harness audit per plan guidance (review trace_harness.py lines 206-236, compare against probe successful pattern, fix HKL attachment). NO simulator.py changes needed (scaling math correct per L2c, lookup logic works per L3a probe).
+  * [2025-10-17] Attempt #78 (ralph loop) — Result: **SUCCESS** (Phase L3c CLI ingestion audit COMPLETE). **Audit confirms CLI successfully loads HKL grid with correct metadata; root cause of F_cell=0 is downstream from parsing.**
+    Metrics: CLI loads HKL grid (49×57×62) with dtype=float32, device=cpu; all 9 metadata keys present (h_min/max/range, k_min/max/range, l_min/max/range); target reflection (-7,-1,-14) is IN RANGE; pytest collection successful (2 tests collected from test_cli_scaling.py).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/structure_factor/cli_hkl_audit.md` — Complete audit summary with comparison to Phase L3b probe
+      - `reports/2025-10-cli-flags/phase_l/structure_factor/cli_hkl_audit_raw.txt` — Raw JSON output from CLI parsing
+      - `reports/2025-10-cli-flags/phase_l/structure_factor/cli_hkl_env.json` — Environment metadata (SHA ce51e1c, Python 3.13.7, Torch 2.8.0+cu128)
+      - `reports/2025-10-cli-flags/phase_l/structure_factor/collect_cli_scaling_post_audit.log` — Pytest collection validation
+    Observations/Hypotheses:
+      - **CLI parsing works:** `parse_and_validate_args` correctly extracts HKL grid and metadata from scaled.hkl
+      - **Dtype/device as expected:** float32 CPU default per DTYPE-DEFAULT-001 (no silent coercion)
+      - **Grid coverage matches probe:** CLI audit shows identical grid shape/ranges as Phase L3b probe (49×57×62, h∈[-24,24], k∈[-28,28], l∈[-31,30])
+      - **Root cause is downstream:** The F_cell=0 discrepancy is NOT in CLI parsing (which works correctly), but rather in: (1) Harness attachment pattern, (2) Crystal initialization with HKL data, or (3) Structure factor lookup logic
+    Next Actions: Phase L3c continuation — Inspect `src/nanobrag_torch/__main__.py` HKL→Crystal flow, review harness attachment pattern comparison, add debug probe to `Crystal.get_structure_factor`, write minimal structure factor query test to isolate the handoff issue.
   * [2025-10-17] Attempt #72 (ralph loop) — Result: **SUCCESS** (Phase L2b harness MOSFLM orientation fix). **Corrected `trace_harness.py` to assign each MOSFLM reciprocal vector to its own config field instead of packing all three into `mosflm_a_star`.**
     Metrics: Harness now produces non-zero F_latt values (F_latt=1.351 vs previous 0), confirming proper orientation. Test suite passes 4/4 variants (tests/test_trace_pixel.py). Comparison script completed successfully (2 divergent factors identified).
     Artifacts:

@@ -1,0 +1,31 @@
+{
+  "dtype": "torch.float32",
+  "device": "cpu",
+  "shape": [
+    49,
+    57,
+    62
+  ],
+  "metadata": {
+    "h_min": -24,
+    "h_max": 24,
+    "k_min": -28,
+    "k_max": 28,
+    "l_min": -31,
+    "l_max": 30,
+    "h_range": 49,
+    "k_range": 57,
+    "l_range": 62
+  },
+  "has_metadata_keys": [
+    "h_max",
+    "h_min",
+    "h_range",
+    "k_max",
+    "k_min",
+    "k_range",
+    "l_max",
+    "l_min",
+    "l_range"
+  ]
+}
