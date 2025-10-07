@@ -233,4 +233,4 @@ Before finishing the loop, enforce git hygiene:
 - ignore 'routing violations'. these are out of scope.
 - ignore AT parallel 012-related items for now
 </notes>
-Now carefully and exhaustively follow your <instructions>.
+Now carefully and exhaustively follow your <instructions>, while keeping in mind the <task> directives.
