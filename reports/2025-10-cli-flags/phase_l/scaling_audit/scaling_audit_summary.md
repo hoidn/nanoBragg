@@ -1,156 +1,54 @@
-# Phase L2b Scaling Audit Summary
+# Scaling Chain Comparison: C vs PyTorch
 
-**Date:** 2025-10-17
-**Engineer:** Ralph (Loop i=64, evidence-only mode)
-**Plan Reference:** `plans/active/cli-noise-pix0/plan.md` Phase L2b
-**Task:** Compare C vs PyTorch scaling chain for pixel (685, 1039)
+**Phase L2c Analysis** (CLI-FLAGS-003)
 
----
+## Summary
 
-## Executive Summary
+Comparing scaling factors for supervisor command pixel (685, 1039).
 
-✅ **Phase L2b COMPLETE:** PyTorch scaling trace successfully captured via CLI `-trace_pixel` flag.
+## Detailed Comparison
 
-**Key Finding:** Three major scaling factor divergences identified:
-1. **Steps:** PyTorch=160 vs C=10 (16× factor from auto-oversample 4²)
-2. **Fluence:** PyTorch=1.26e+29 vs C=1e+24 (~100,000× error)
-3. **Polarization:** PyTorch=1.0 vs C=0.9146 (9.3% error)
+| Factor | C Value | PyTorch Value | Δ (abs) | Δ (%) | Status |
+|--------|---------|---------------|---------|-------|--------|
+| I_before_scaling | 943654.809 | 0.000000e+00 | -943654.809 | -100.000 | CRITICAL |
+| r_e_sqr | 7.940792e-30 | 7.940793e-30 | 2.457168e-37 | +0.000 | MATCH |
+| fluence_photons_per_m2 | 1.000000e+24 | 1.000000e+24 | 1.384843e+16 | +0.000 | MATCH |
+| steps | 10 | 10 | 0.000000e+00 | +0.000 | MATCH |
+| capture_fraction | 1 | 1 | 0.000000e+00 | +0.000 | MATCH |
+| polar | 0.914639699 | 0.91464138 | 1.68136555e-06 | +0.000 | MATCH |
+| omega_pixel | 4.204127e-07 | 4.204049e-07 | -7.825097e-12 | -0.002 | MINOR |
+| cos_2theta | 0.91064779 | 0.910649598 | 1.80739381e-06 | +0.000 | MATCH |
+| I_pixel_final | 2.881395e-07 | 0.000000e+00 | -2.881395e-07 | -100.000 | CRITICAL |
 
-**First Divergence:** Fluence calculation (5 orders of magnitude)
+## First Divergence
 
----
+**I_before_scaling** (Raw accumulated intensity before normalization)
 
-## Comparison Table
+- C value: `943654.809`
+- PyTorch value: `0.000000e+00`
+- Absolute delta: `-943654.809`
+- Relative delta: `-100.000%`
+- Status: **CRITICAL**
 
-| Factor | C Value | PyTorch Value | Δ (%) | Match? |
-|--------|---------|---------------|-------|--------|
-| `steps` | 10 | 160 | 1500% | ✗ |
-| `r_e_sqr` (m²) | 7.94079248e-30 | 7.94079273e-30 | 0.0003% | ✓ |
-| `fluence` (ph/m²) | 1.0e+24 | 1.26e+29 | ~100,000× | ✗ |
-| `omega_pixel` (sr) | 4.20413e-07 | 4.18050e-07 | 0.56% | ✓ |
-| `polar` | 0.91463969 | 1.0 | 9.3% | ✗ |
-| `capture_fraction` | 1.0 | 1.0 | 0% | ✓ |
-| `oversample_thick` | 0 | 0 | 0% | ✓ |
-| `oversample_polar` | 0 | 0 | 0% | ✓ |
-| `oversample_omega` | 0 | 0 | 0% | ✓ |
+## All Divergent Factors
 
----
+### I_before_scaling
+- Description: Raw accumulated intensity before normalization
+- C: `943654.809`
+- PyTorch: `0.000000e+00`
+- Δ: `-943654.809` (-100.000% if available)
+- Status: **CRITICAL**
 
-## Detailed Findings
+### I_pixel_final
+- Description: Final normalized pixel intensity
+- C: `2.881395e-07`
+- PyTorch: `0.000000e+00`
+- Δ: `-2.881395e-07` (-100.000% if available)
+- Status: **CRITICAL**
 
-### 1. Steps Normalization (16× factor)
+## Next Actions
 
-**C Implementation:**
-```
-steps = 10  (sources=1 × mosaic=1 × phisteps=10 × oversample=1²)
-```
-
-**PyTorch Implementation:**
-```
-steps = 160  (sources=1 × mosaic=1 × phisteps=10 × oversample=4²)
-auto-selected 4-fold oversampling
-```
-
-**Root Cause:** PyTorch CLI auto-selects 4× oversample when none specified; C defaults to 1×.
-
-**Implication:** PyTorch intensities are 16× dimmer due to excessive normalization.
-
----
-
-### 2. Fluence Calculation (~100,000× error)
-
-**C Implementation:**
-```c
-fluence = 1e24  // explicitly set via command line or default
-```
-
-**PyTorch Implementation:**
-```python
-# BeamConfig calculates fluence from flux/exposure/beamsize
-fluence = flux * exposure / (beamsize^2)
-        = 1e18 * 1.0 / (1.0mm² → m²)
-        = 1e18 / 1e-6
-        = 1e24 expected, but got 1.26e+29
-```
-
-**Root Cause:** Likely beam_size unit conversion error (mm vs meters) or area calculation.
-
-**Calculation Check:**
-```
-Expected: flux × exposure / (π × (beamsize/2)²)
-        = 1e18 × 1.0 / (π × (0.0005)²)
-        = 1e18 / 7.85e-7
-        = 1.27e+24 ✓ (if using radius)
-        
-Observed: 1.26e+29 = 1e5× higher
-        → suggests beamsize was treated as 1e-5 meters instead of 1mm
-```
-
----
-
-### 3. Polarization Factor (9.3% error)
-
-**C Implementation:**
-```c
-polar = 0.91463969894451  // Kahn formula with cos²(2θ) term
-```
-
-**PyTorch Implementation:**
-```python
-polar = 1.0  // appears to be nopolar behavior despite K=0 in config
-```
-
-**Root Cause:** PyTorch may not be applying polarization when `polarization_factor=0.0`.
-
-**Expected Behavior:** Even with K=0, the Kahn formula should still compute the geometric term:
-```
-polar = 0.5 * (1 + cos²(2θ) - K×cos(2ψ)×sin²(2θ))
-      = 0.5 * (1 + cos²(2θ))  when K=0
-```
-
-For `cos(2θ) = -0.130070`:
-```
-polar = 0.5 * (1 + (-0.130070)²)
-      = 0.5 * (1 + 0.01692)
-      = 0.50846  ≠ 1.0 ✗
-```
-
-**Issue:** PyTorch is bypassing polarization calculation entirely.
-
----
-
-## Artifacts
-
-- C trace: `c_trace_scaling.log` (12,852 bytes, 172 lines)
-- PyTorch trace: `trace_py_scaling.log` (40 lines, TRACE_PY only)
-- Full PyTorch output: `trace_py_cli_full.log` (64 lines with context)
-- Environment: `trace_py_env.json`
-- Config: `config_snapshot_final.json`
-- Notes: `notes.md` (updated with execution summary)
-- pytest collection: `pytest_collect_final.log` (4 tests collected)
-
----
-
-## Next Actions (Phase L2c)
-
-1. Build `compare_scaling_traces.py` script to automate line-by-line diff
-2. Extract C trace values programmatically for comparison
-3. Generate `compare_scaling_traces.json` with parsed deltas
-4. Update `docs/fix_plan.md` CLI-FLAGS-003 Attempt history with:
-   - First Divergence: Fluence (~100,000× error)
-   - Metrics: steps=160 vs 10, fluence=1.26e+29 vs 1e+24, polar=1.0 vs 0.9146
-   - Artifacts: All files under `reports/2025-10-cli-flags/phase_l/scaling_audit/`
-   - Hypotheses: beam_size unit error, auto-oversample divergence, polarization bypass
-   - Next Actions: Phase L3 normalization fixes
-
----
-
-## Exit Criteria Status
-
-✅ Phase L2b exit criteria MET:
-- [x] C and PyTorch traces captured under `reports/2025-10-cli-flags/phase_l/scaling_audit/`
-- [x] Comparison summary identifies first mismatched term (fluence, ~100,000× delta)
-- [x] docs/fix_plan.md Attempt log ready for update (see artifacts section above)
-
-**Ready to proceed to Phase L2c (comparison script) and Phase L3 (fixes).**
-
+1. Investigate root cause of I_before_scaling mismatch
+2. Implement fix in Phase L3
+3. Regenerate PyTorch trace after fix
+4. Rerun this comparison to verify

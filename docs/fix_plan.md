@@ -460,6 +460,19 @@
   2. Phase L2c rerun — Re-execute `scripts/validation/compare_scaling_traces.py` against the refreshed logs, update `scaling_audit_summary.md`, and record the earliest divergent factor in docs/fix_plan.md Attempt history.
   3. Phase L3 prep — With real deltas in hand, outline the normalization fix scope (expected focus: polarization application order and F_latt mismatch) and queue targeted regression selectors.
 - Attempts History:
+  * [2025-11-13] Attempt #71 (ralph loop) — Result: **SUCCESS** (Phase L2b validation + Phase L2c complete). **Harness already functional from Attempt #69; executed comparison script to identify first divergence.**
+    Metrics: 40 TRACE_PY lines captured; test suite passes 4/4 variants (cpu/cuda × float32/float64). Comparison identifies `I_before_scaling` as first divergent factor (C=943654.809, PyTorch=0, -100% delta).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log:1-41` - Refreshed trace with live values (polar=0.91464138, omega_pixel=4.20404859e-07 sr, F_cell=0, I_before_scaling=0)
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/scaling_audit_summary.md:1-54` - Phase L2c comparison report showing first divergence and all divergent factors
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_env.json` - Updated environment snapshot (git_sha current, torch version, device/dtype)
+    Observations/Hypotheses:
+      - **Harness functional:** Attempt #70 audit was stale; Attempt #69 already resolved the `(F_grid, metadata)` API change
+      - **First divergence confirmed:** `I_before_scaling=0` in PyTorch vs `943654.809` in C indicates missing structure factor (F_cell=0 for reflection 1,12,3)
+      - **Root cause hypothesis:** HKL file may be missing this reflection, or structure factor lookup/interpolation failing silently
+      - **Scaling infrastructure correct:** r_e², fluence, steps, capture_fraction, polar, omega_pixel all match C within tolerances (<0.002% delta)
+      - **Test coverage maintained:** tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics passes all parametrized variants
+    Next Actions: Phase L3 — Investigate why F_cell=0 for reflection (1,12,3). Check HKL file contents, structure factor lookup logic, and interpolation behavior. Update Phase L plan status to [L2b=D, L2c=D].
   * [2025-10-07] Attempt #69 (ralph loop) — Result: **SUCCESS** (Phase L2b harness refresh complete). **Updated trace harness to use live simulator TRACE_PY output; generated fresh trace_py_scaling.log with 40 real values.**
     Metrics: 40 TRACE_PY lines captured from stdout; test suite passes 4/4 variants (cpu/cuda × float32/float64).
     Artifacts:
