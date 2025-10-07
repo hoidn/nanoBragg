@@ -1464,3 +1464,10 @@ Follow-ups for Ralph:
 - Updated `plans/active/cli-noise-pix0/plan.md` L2b guidance and `docs/fix_plan.md` Next Actions / Attempt notes to call out the MOSFLM injection bug as the gating fix.
 - Rewrote `input.md` directing Ralph to patch the harness, rerun the supervisor trace command, refresh artifacts, then proceed to L2c comparison.
 - Follow-up for Ralph: apply the harness fix (`mosflm_a_star/b_star/c_star` assignments), rerun trace harness with supervisor flags, archive refreshed `trace_py_scaling.log`, execute `compare_scaling_traces.py`, and log the new Attempt entry before tackling normalization.
+
+## 2025-11-14 (galph loop — L2b HKL wiring)
+- `git pull --rebase` clean; reviewed core docs plus CLI plan and fix_plan before analysis.
+- Evidence run (`reports/.../harness_hkl_state.txt`) shows `trace_harness.py` never assigns `Crystal.hkl_data`/`hkl_metadata`, leaving structure factors at default_F=0 and keeping F_cell=0 in TRACE_PY.
+- Updated docs/fix_plan.md (Attempt #73) and plans/active/cli-noise-pix0/plan.md L2b guidance to call out the missing HKL attachment; next action is to set `crystal.hkl_data = F_grid` and `crystal.hkl_metadata = metadata` before simulator construction.
+- Authored new input.md instructing Ralph to wire HKL metadata into the harness, rerun the supervisor trace command, refresh scaling_audit_summary.md, and validate via targeted pytest collection + compare_scaling_traces.
+- Follow-up for Ralph: patch harness HKL assignment, rerun L2b command, update artifacts (trace_py_scaling.log, notes.md, harness_hkl_state.txt), then rerun the comparison tool to re-enter Phase L2c.

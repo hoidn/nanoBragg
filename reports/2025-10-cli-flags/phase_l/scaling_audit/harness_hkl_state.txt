@@ -1,0 +1,5 @@
+initial hkl_data is None? True
+after harness-style assignment: hkl_data is None? True
+hkl_metadata attribute present? False
+F_grid attribute exists? True
+h_range stored as? 1

@@ -456,7 +456,7 @@
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase K3e evidence reveals a **fundamental lattice/geometry mismatch**, not a φ-grid offset. C reports `k_frac≈−3.857` across all φ steps while PyTorch reports `k_frac≈−9.899` (Δk≈6.04 at φ=0°). This 6-unit discrepancy indicates the base reciprocal lattice vectors or scattering geometry differ before any φ rotation is applied.
 - Next Actions (2025-11-13 refresh):
-  1. Phase L2b harness fix — Update `trace_harness.py` to consume the current `read_hkl_file` `(F_grid, metadata)` signature, rebuild HKL ranges without tuple unpack errors, and capture live TRACE_PY output (`trace_py_scaling.log`) with non-placeholder polarization/absorption values. While touching the harness, mirror the CLI MOSFLM handling by assigning each reciprocal vector to `mosflm_a_star`, `mosflm_b_star`, and `mosflm_c_star` individually; the current harness packs all three into `mosflm_a_star`, leaving the others `None` and forcing default orientation (`F_cell` prints as 0 for hkl=1,12,3).
+  1. Phase L2b harness fix — Update `trace_harness.py` to consume the current `read_hkl_file` `(F_grid, metadata)` signature, rebuild HKL ranges without tuple unpack errors, and capture live TRACE_PY output (`trace_py_scaling.log`) with non-placeholder polarization/absorption values. While touching the harness, mirror the CLI MOSFLM handling by assigning each reciprocal vector to `mosflm_a_star`, `mosflm_b_star`, and `mosflm_c_star` individually; the current harness packs all three into `mosflm_a_star`, leaving the others `None` and forcing default orientation (`F_cell` prints as 0 for hkl=1,12,3). **After the read, attach the grid/metadata to the Crystal (`crystal.hkl_data = F_grid`, `crystal.hkl_metadata = metadata`) — evidence in `reports/2025-10-cli-flags/phase_l/scaling_audit/harness_hkl_state.txt` shows the harness leaves `hkl_data` as `None`, so structure-factor lookup still falls back to `default_F=0`.**
   2. Phase L2c rerun — Re-execute `scripts/validation/compare_scaling_traces.py` against the refreshed logs, update `scaling_audit_summary.md`, and record the earliest divergent factor in docs/fix_plan.md Attempt history.
   3. Phase L3 prep — With real deltas in hand, outline the normalization fix scope (expected focus: polarization application order and F_latt mismatch) and queue targeted regression selectors.
 - Attempts History:
@@ -486,6 +486,16 @@
       - **Scaling factors verified:** All intermediate scaling terms (r_e², fluence, steps, capture_fraction, polar, omega_pixel) match C within tolerance (Δ<0.002%)
       - **Test coverage maintained:** tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics passes all parametrized variants (4/4)
     Next Actions: Phase L2b complete; L2c evidence captured. Supervisor to proceed with Phase L3 structure-factor investigation based on comparison summary showing I_before_scaling as first divergence.
+  * [2025-11-14] Attempt #73 (galph loop) — Result: **BLOCKED** (Phase L2b structure-factor wiring incomplete). **Harness leaves `Crystal.hkl_data` / `Crystal.hkl_metadata` unset after loading scaled.hkl, so structure factors still fall back to `default_F=0`.**
+    Metrics: Evidence-only triage; no production code touched.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/harness_hkl_state.txt` — Repro script output confirming `crystal.hkl_data is None` and metadata missing after harness setup.
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log:1-35` — TRACE_PY run showing `F_cell=0` / `I_before_scaling=0` even though hkl=(1,12,3) exists in scaled.hkl.
+    Observations/Hypotheses:
+      - `Crystal.get_structure_factor` consults `self.hkl_data` and `self.hkl_metadata`; ad-hoc attributes (`crystal.F_grid`, `crystal.h_min`) are ignored by lookup logic.
+      - Missing metadata also explains the bogus `scattering_vec_A_inv` integers and zeroed intensities.
+      - Fix: set `crystal.hkl_data = F_grid_tensor` and `crystal.hkl_metadata = hkl_metadata` (or call `crystal.load_hkl`) before creating `Simulator`.
+    Next Actions: Patch harness to attach HKL grid + metadata, rerun the L2b trace capture, update `scaling_audit_summary.md`, then resume L2c normalization analysis.
   * [2025-10-07] Attempt #69 (ralph loop) — Result: **SUCCESS** (Phase L2b harness refresh complete). **Updated trace harness to use live simulator TRACE_PY output; generated fresh trace_py_scaling.log with 40 real values.**
     Metrics: 40 TRACE_PY lines captured from stdout; test suite passes 4/4 variants (cpu/cuda × float32/float64).
     Artifacts:
