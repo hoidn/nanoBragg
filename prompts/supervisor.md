@@ -51,7 +51,11 @@ No full pytest runs. Allowed: non-mutating probes and CLI validation tools (e.g.
 Evidence collection includes the following subtype:
     Callchain Tracing (Evidence subtype)
     - When to use: before code edits when the pipeline/factor order relevant to the current issue is unclear; when onboarding a new surface; or upon parity failures where the locus is unknown.
-    - Directive: run `prompts/callchain.md` with a question‑driven invocation and produce standardized artifacts under `reports/<initiative_id>/`.
+    - Directive: first, emit descriptions for the following things:
+       - <analysis_question> (required): Free‑text description of the behavior/bug/perf issue to investigate. This will be closely related to <focus issue>, but viewed from the point of view of relevant code execution paths and their entry points.
+       - <initiative_id> and <scope_hints> 
+
+    - Directive: then read and carefully follow the instructions in `prompts/callchain.md` with the question‑driven invocation (<analysis_question>) and produce standardized artifacts under `reports/<initiative_id>/`.
     - Example invocation variables (fill at run time):
       analysis_question: "<what are we trying to understand or fix?>"
       initiative_id: "<short‑slug>"

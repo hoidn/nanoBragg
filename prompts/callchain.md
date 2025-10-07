@@ -8,9 +8,9 @@ Use this when you need to understand “where the work happens” for a specific
 
 ## Inputs (provided at invocation)
 
-- `analysis_question` (required): Free‑text description of the behavior/bug/perf issue to investigate.
-- `initiative_id` (required): Short slug for the output folder under `reports/` (e.g., `cli-scaling`).
-- `scope_hints` (optional): Hints like “CLI flags”, “normalization/scaling”, “IO”, “perf”, “latency hotspot”.
+- <analysis_question> (required): Free‑text description of the behavior/bug/perf issue to investigate.
+- <initiative_id> (required): Short slug for the output folder under `reports/` (e.g., `cli-scaling`).
+- <scope_hints> (optional): Hints like “CLI flags”, “normalization/scaling”, “IO”, “perf”, “latency hotspot”.
 - `roi_hint` (optional): Minimal input/ROI to exercise the path (e.g., a single pixel, a tiny record, or a 1‑request sample).
 - `namespace_filter` (optional): Primary module/package prefix for dynamic tracing/profiling (reduces noise).
 - `time_budget_minutes` (optional, default 30): Cap exploration and dynamic tracing accordingly.
