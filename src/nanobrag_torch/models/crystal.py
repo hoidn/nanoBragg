@@ -1065,6 +1065,7 @@ class Crystal:
 
             # Match C code's "if( phi != 0.0 )" check (nanoBragg.c:3044)
             # Use a small tolerance for floating-point comparison
+            # phi_val is in degrees, so 1e-10 degrees is effectively zero
             if torch.abs(phi_val) < 1e-10:
                 # φ=0: Use base vectors directly (no rotation)
                 a_phi.append(self.a.unsqueeze(0))
