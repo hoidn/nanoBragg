@@ -497,6 +497,18 @@
       - **Root cause is configuration, not coverage:** The F_cell=0 divergence stems from harness/CLI not loading/attaching HKL data, NOT from missing reflections
       - **Attempt #75 misdiagnosis explained:** Previous analysis confused scaled.hkl with a different file or misread metadata; actual file is full binary grid
     Next Actions: Phase L3c — Audit `trace_harness.py` to find why HKL data isn't loaded despite file existing; fix harness to mirror probe's successful attachment pattern (crystal.hkl_data = F_grid, crystal.hkl_metadata = metadata); verify CLI __main__.py follows same pattern when -hkl provided; NO simulator.py changes needed.
+  * [2025-11-17] Attempt #77 (ralph loop) — Result: **SUCCESS** (Phase L3a coverage re-verification COMPLETE). **Re-executed probe on current workstation, confirmed HKL coverage with timestamped artifacts.**
+    Metrics: Evidence-only loop; no production code changed. Pytest collection successful (tests/test_cli_scaling.py collected cleanly). Probe confirms F_cell=190.27 retrieved from scaled.hkl with delta 4.27e-06 (≈0.000002%).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/structure_factor/probe_20251117.log` - Fresh probe execution log with current git SHA acab43b, Torch 2.8.0+cu128, Linux platform
+      - `reports/2025-10-cli-flags/phase_l/structure_factor/analysis_20251117.md` - Updated analysis documenting HKL coverage confirmation and L3c next actions
+      - `reports/2025-10-cli-flags/phase_l/structure_factor/collect_cli_scaling_20251117.log` - Pytest collection validation (successful)
+    Observations/Hypotheses:
+      - **HKL data confirmed present:** scaled.hkl contains 49×57×62 grid, h∈[-24,24], k∈[-28,28], l∈[-31,30], covering target hkl=(-7,-1,-14)
+      - **Lookup infrastructure works:** Probe retrieves F_cell=190.27 when HKL data properly attached via `crystal.hkl_data = F_grid; crystal.hkl_metadata = metadata` pattern
+      - **Root cause remains configuration/loading:** The F_cell=0 divergence in trace_py_scaling.log stems from harness/CLI not loading/attaching HKL data, NOT from missing reflections or broken lookup logic
+      - **Phase L3a exit criteria satisfied:** Fresh probe log and analysis captured with current environment metadata; HKL coverage ranges documented and reconciled
+    Next Actions: Phase L3c harness audit per plan guidance (review trace_harness.py lines 206-236, compare against probe successful pattern, fix HKL attachment). NO simulator.py changes needed (scaling math correct per L2c, lookup logic works per L3a probe).
   * [2025-10-17] Attempt #72 (ralph loop) — Result: **SUCCESS** (Phase L2b harness MOSFLM orientation fix). **Corrected `trace_harness.py` to assign each MOSFLM reciprocal vector to its own config field instead of packing all three into `mosflm_a_star`.**
     Metrics: Harness now produces non-zero F_latt values (F_latt=1.351 vs previous 0), confirming proper orientation. Test suite passes 4/4 variants (tests/test_trace_pixel.py). Comparison script completed successfully (2 divergent factors identified).
     Artifacts:

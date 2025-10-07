@@ -1,3 +1,7 @@
+/home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/structure_factor/probe.py:149: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  log(f"Timestamp: {datetime.utcnow().isoformat()}Z")
+/home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/structure_factor/probe.py:316: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  **Date:** {datetime.utcnow().isoformat()}Z
 ================================================================================
 Structure-Factor Coverage Probe
 CLI-FLAGS-003 Phase L3a Evidence
@@ -34,3 +38,8 @@ SKIP: File not found
 ================================================================================
 Probe complete
 ================================================================================
+
+Log saved to: /home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/structure_factor/probe.log
+Analysis template saved to: /home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/structure_factor/analysis.md
+
+Next step: Review probe.log and complete analysis.md with findings
