@@ -1310,6 +1310,17 @@ class Simulator:
                     print(f"TRACE_PY: rot_b_angstroms {b_vec[0].item():.15g} {b_vec[1].item():.15g} {b_vec[2].item():.15g}")
                     print(f"TRACE_PY: rot_c_angstroms {c_vec[0].item():.15g} {c_vec[1].item():.15g} {c_vec[2].item():.15g}")
 
+                    # Spindle-axis instrumentation (CLI-FLAGS-003 Phase L3g)
+                    # Emit raw spindle axis from config and normalized axis used by rotate_axis
+                    from nanobrag_torch.utils.geometry import unitize
+                    spindle_raw = self.crystal.config.spindle_axis
+                    if isinstance(spindle_raw, (list, tuple)):
+                        spindle_raw = torch.tensor(spindle_raw, device=self.device, dtype=self.dtype)
+                    spindle_norm, spindle_magnitude = unitize(spindle_raw)
+                    print(f"TRACE_PY: spindle_axis_raw {spindle_raw[0].item():.15g} {spindle_raw[1].item():.15g} {spindle_raw[2].item():.15g}")
+                    print(f"TRACE_PY: spindle_axis_normalized {spindle_norm[0].item():.15g} {spindle_norm[1].item():.15g} {spindle_norm[2].item():.15g}")
+                    print(f"TRACE_PY: spindle_magnitude {spindle_magnitude.item():.15g}")
+
                     a_star_vec = rot_a_star[0, 0] if len(rot_a_star.shape) > 1 else rot_a_star
                     b_star_vec = rot_b_star[0, 0] if len(rot_b_star.shape) > 1 else rot_b_star
                     c_star_vec = rot_c_star[0, 0] if len(rot_c_star.shape) > 1 else rot_c_star
@@ -1420,6 +1431,46 @@ class Simulator:
                     I_pixel_final = physical_intensity[target_slow, target_fast].item()
                     print(f"TRACE_PY: I_pixel_final {I_pixel_final:.15g}")
                     print(f"TRACE_PY: floatimage_accumulated {I_pixel_final:.15g}")
+
+                    # Per-φ lattice trace (Phase L3e per plans/active/cli-noise-pix0/plan.md)
+                    # Emit TRACE_PY_PHI for each φ step to enable per-φ parity validation
+                    if rot_a.shape[0] > 1:  # Check if we have multiple phi steps
+                        # Get phi parameters from crystal config
+                        phi_start_deg = self.crystal.config.phi_start_deg
+                        osc_range_deg = self.crystal.config.osc_range_deg
+                        phi_steps = self.crystal.config.phi_steps
+
+                        # Compute phi angles for each step
+                        # Match C formula: phi = phi_start + (osc_range / phi_steps) * phi_tic
+                        # where phi_tic ranges from 0 to (phi_steps - 1)
+                        phi_step_size = osc_range_deg / phi_steps if phi_steps > 0 else 0.0
+
+                        # Loop over phi steps (first mosaic domain [phi_tic, 0])
+                        for phi_tic in range(phi_steps):
+                            # Calculate phi angle for this step
+                            phi_deg = phi_start_deg + phi_tic * phi_step_size
+
+                            # Get rotated real-space vectors for this phi step
+                            a_vec_phi = rot_a[phi_tic, 0]  # First mosaic domain
+                            b_vec_phi = rot_b[phi_tic, 0]
+                            c_vec_phi = rot_c[phi_tic, 0]
+
+                            # Compute Miller indices for this phi orientation
+                            # Reuse scattering vector from above (doesn't change with phi)
+                            from nanobrag_torch.utils.geometry import dot_product
+                            h_phi = dot_product(scattering_vec.unsqueeze(0), a_vec_phi.unsqueeze(0)).item()
+                            k_phi = dot_product(scattering_vec.unsqueeze(0), b_vec_phi.unsqueeze(0)).item()
+                            l_phi = dot_product(scattering_vec.unsqueeze(0), c_vec_phi.unsqueeze(0)).item()
+
+                            # Compute F_latt components for this phi (SQUARE shape)
+                            from nanobrag_torch.utils import sincg
+                            F_latt_a_phi = sincg(torch.pi * torch.tensor(h_phi), Na).item()
+                            F_latt_b_phi = sincg(torch.pi * torch.tensor(k_phi), Nb).item()
+                            F_latt_c_phi = sincg(torch.pi * torch.tensor(l_phi), Nc).item()
+                            F_latt_phi = F_latt_a_phi * F_latt_b_phi * F_latt_c_phi
+
+                            # Emit TRACE_PY_PHI matching C trace format
+                            print(f"TRACE_PY_PHI phi_tic={phi_tic} phi_deg={phi_deg:.15g} k_frac={k_phi:.15g} F_latt_b={F_latt_b_phi:.15g} F_latt={F_latt_phi:.15g}")
 
                 # Trace factors
                 if omega_pixel is not None:

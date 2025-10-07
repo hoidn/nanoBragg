@@ -117,6 +117,12 @@ class Crystal:
             self.N_cells_c.item()
         ])
 
+        # φ=0 carryover cache for CLI-FLAGS-003 Phase L3k.3c.3
+        # Caches the last rotated real vectors to replicate C behavior where
+        # ap/bp/cp working vectors persist across pixels when phi==0
+        # (nanoBragg.c:3044-3066 phi rotation loop)
+        self._phi_last_cache: Optional[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]] = None
+
     def to(self, device=None, dtype=None):
         """Move crystal to specified device and/or dtype."""
         if device is not None:
@@ -352,61 +358,117 @@ class Crystal:
             # Return default_F for this evaluation
             return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
 
-        # Build the 4x4x4 neighborhood indices
-        # h_interp[0]=h0_flr-1, h_interp[1]=h0_flr, h_interp[2]=h0_flr+1, h_interp[3]=h0_flr+2
-        # Vectorized version: build indices directly without Python loops
-        offsets = torch.arange(-1, 3, device=self.device, dtype=torch.long)  # [-1, 0, 1, 2]
+        # Phase C1: Batched Neighborhood Gather Implementation
+        # Following design_notes.md Section 2: flatten all batch dimensions, build (B,4,4,4) neighborhoods
 
-        # Build coordinate arrays for interpolation (as float for polin3)
-        h_indices = (h_flr + offsets).to(dtype=self.dtype)
-        k_indices = (k_flr + offsets).to(dtype=self.dtype)
-        l_indices = (l_flr + offsets).to(dtype=self.dtype)
+        # Store original shape for final reshape
+        original_shape = h.shape
 
-        # Build the 4x4x4 subcube of structure factors using vectorized indexing
+        # Flatten all dimensions to (B,) for batched processing
+        h_flat = h.reshape(-1)
+        k_flat = k.reshape(-1)
+        l_flat = l.reshape(-1)
+        B = h_flat.shape[0]
+
+        # Recompute floor indices for flattened tensors
+        h_flr_flat = torch.floor(h_flat).long()
+        k_flr_flat = torch.floor(k_flat).long()
+        l_flr_flat = torch.floor(l_flat).long()
+
+        # Build offset array [-1, 0, 1, 2] for neighborhood gathering
+        offsets = torch.arange(-1, 3, device=self.device, dtype=torch.long)  # (4,)
+
+        # Build coordinate grids for each query point: (B, 4)
+        # h_grid[i] = [h_flr[i]-1, h_flr[i], h_flr[i]+1, h_flr[i]+2]
+        h_grid_coords = h_flr_flat.unsqueeze(-1) + offsets  # (B, 4)
+        k_grid_coords = k_flr_flat.unsqueeze(-1) + offsets  # (B, 4)
+        l_grid_coords = l_flr_flat.unsqueeze(-1) + offsets  # (B, 4)
+
+        # Build the batched 4x4x4 subcubes of structure factors
         if self.hkl_data is None:
-            # If no HKL data loaded, use default_F everywhere
-            sub_Fhkl = torch.full((4, 4, 4), self.config.default_F, dtype=self.dtype, device=self.device)
+            # If no HKL data loaded, use default_F everywhere: shape (B, 4, 4, 4)
+            sub_Fhkl = torch.full((B, 4, 4, 4), self.config.default_F, dtype=self.dtype, device=self.device)
+            # Coordinate arrays for polin3 (float, for interpolation): (B, 4)
+            h_indices = h_grid_coords.to(dtype=self.dtype)
+            k_indices = k_grid_coords.to(dtype=self.dtype)
+            l_indices = l_grid_coords.to(dtype=self.dtype)
         else:
-            # Calculate grid indices into hkl_data array
-            # Need to broadcast to create 4x4x4 indexing grid
-            h_grid = (h_flr.long() + offsets) - h_min  # shape: (4,)
-            k_grid = (k_flr.long() + offsets) - k_min  # shape: (4,)
-            l_grid = (l_flr.long() + offsets) - l_min  # shape: (4,)
+            # Convert to array indices (relative to hkl_data origin)
+            h_array_grid = h_grid_coords - h_min  # (B, 4)
+            k_array_grid = k_grid_coords - k_min  # (B, 4)
+            l_array_grid = l_grid_coords - l_min  # (B, 4)
 
-            # Use advanced indexing with broadcasting:
-            # h_grid[:, None, None] broadcasts to (4, 1, 1)
-            # k_grid[None, :, None] broadcasts to (1, 4, 1)
-            # l_grid[None, None, :] broadcasts to (1, 1, 4)
-            # Result: (4, 4, 4) gathered from hkl_data
-            sub_Fhkl = self.hkl_data[h_grid[:, None, None], k_grid[None, :, None], l_grid[None, None, :]]
+            # Advanced indexing to build (B, 4, 4, 4) neighborhoods
+            # Following design_notes.md Section 2.6 broadcasting pattern:
+            # h_array_grid[:, :, None, None] → (B, 4, 1, 1)
+            # k_array_grid[:, None, :, None] → (B, 1, 4, 1)
+            # l_array_grid[:, None, None, :] → (B, 1, 1, 4)
+            # Result: (B, 4, 4, 4)
+            sub_Fhkl = self.hkl_data[
+                h_array_grid[:, :, None, None],
+                k_array_grid[:, None, :, None],
+                l_array_grid[:, None, None, :]
+            ]
+
+            # Coordinate arrays for polin3 (float Miller indices): (B, 4)
+            h_indices = h_grid_coords.to(dtype=self.dtype)
+            k_indices = k_grid_coords.to(dtype=self.dtype)
+            l_indices = l_grid_coords.to(dtype=self.dtype)
+
+        # Phase C3: Shape assertions to prevent silent regressions
+        # Verify neighborhood tensor has correct shape for polynomial evaluation
+        assert sub_Fhkl.shape == (B, 4, 4, 4), \
+            f"Neighborhood shape mismatch: expected ({B}, 4, 4, 4), got {sub_Fhkl.shape}"
+
+        # Verify coordinate arrays have correct shape
+        assert h_indices.shape == (B, 4), f"h_indices shape mismatch: expected ({B}, 4), got {h_indices.shape}"
+        assert k_indices.shape == (B, 4), f"k_indices shape mismatch: expected ({B}, 4), got {k_indices.shape}"
+        assert l_indices.shape == (B, 4), f"l_indices shape mismatch: expected ({B}, 4), got {l_indices.shape}"
+
+        # Phase C3: Device/dtype consistency check
+        # Ensure all tensors are on the same device as the input query tensors
+        assert sub_Fhkl.device == h.device, \
+            f"Device mismatch: sub_Fhkl on {sub_Fhkl.device}, input on {h.device}"
+        assert h_indices.device == h.device, \
+            f"Device mismatch: h_indices on {h_indices.device}, input on {h.device}"
 
         # Perform tricubic interpolation
-        # CRITICAL BUG: The current polin3/polin2/polint implementation cannot handle
-        # batched tensor inputs. It expects scalar/1D inputs only. Additionally, the code
-        # above builds a single 4x4x4 neighborhood (sub_Fhkl) but different query points
-        # need different neighborhoods based on their Miller indices.
-        #
-        # This is a known limitation documented in PERF-PYTORCH-004 fix plan.
-        # For now, fall back to nearest-neighbor when batched inputs are detected.
-        #
-        # TODO: Implement fully vectorized tricubic interpolation that handles:
-        #   1. Batched inputs (arbitrary shape tensors)
-        #   2. Per-point neighborhoods (each query needs its own 4x4x4 subcube)
-        #   3. torch.compile compatibility
-        if h.numel() > 1:
-            # Batched input detected - fall back to nearest neighbor
+        # Phase C1 deliverable: batched gather complete
+        # Phase D (polynomial vectorization) will consume these (B,4,4,4) neighborhoods
+        # For now, maintain scalar path for single-element case and fall back for batched
+        if B == 1:
+            # Scalar case: use existing polin3 (squeeze to remove batch dim)
+            F_cell = polin3(h_indices.squeeze(0), k_indices.squeeze(0), l_indices.squeeze(0),
+                            sub_Fhkl.squeeze(0), h_flat.squeeze(0), k_flat.squeeze(0), l_flat.squeeze(0))
+
+            # Phase C3: Output shape assertion (scalar path)
+            # polin3 may return scalar [] or [1], both are acceptable for single-element batch
+            assert F_cell.numel() == 1, \
+                f"Scalar interpolation output must have 1 element, got {F_cell.numel()} (shape {F_cell.shape})"
+
+            result = F_cell.reshape(original_shape)
+
+            # Phase C3: Verify final output shape matches original input shape
+            assert result.shape == original_shape, \
+                f"Output shape mismatch: expected {original_shape}, got {result.shape}"
+
+            return result
+        else:
+            # Batched case: Phase D will vectorize polin3; for now fall back to nearest-neighbor
+            # This preserves existing behavior while delivering Phase C1 (batched gather infrastructure)
             if not self._interpolation_warning_shown:
-                print("WARNING: tricubic interpolation not yet supported for batched inputs")
-                print("WARNING: falling back to nearest-neighbor lookup")
+                print("WARNING: tricubic interpolation batched gather implemented")
+                print("WARNING: polynomial evaluation not yet vectorized; falling back to nearest-neighbor")
                 print("WARNING: this warning will only be shown once")
                 self._interpolation_warning_shown = True
-            return self._nearest_neighbor_lookup(h, k, l)
 
-        # Scalar case: polin3 can handle this
-        F_cell = polin3(h_indices.squeeze(), k_indices.squeeze(), l_indices.squeeze(),
-                        sub_Fhkl, h.squeeze(), k.squeeze(), l.squeeze())
+            result = self._nearest_neighbor_lookup(h, k, l)
 
-        return F_cell.reshape(h.shape)
+            # Phase C3: Verify fallback output shape matches original input shape
+            assert result.shape == original_shape, \
+                f"Fallback output shape mismatch: expected {original_shape}, got {result.shape}"
+
+            return result
 
 
     def compute_cell_tensors(self) -> dict:
@@ -985,21 +1047,103 @@ class Crystal:
             config.spindle_axis, device=self.device, dtype=self.dtype
         )
 
-        # Apply spindle rotation to both real and reciprocal vectors
+        # Step 1: Apply spindle rotation to ONLY real-space vectors (a, b, c)
+        # This follows the C-code semantics where reciprocal vectors are NOT independently rotated.
+        # C-code reference (nanoBragg.c:3044-3058):
+        #   phi = phi0 + phistep*phi_tic;
+        #   if( phi != 0.0 )
+        #   {
+        #       rotate_axis(a0,ap,spindle_vector,phi);
+        #       rotate_axis(b0,bp,spindle_vector,phi);
+        #       rotate_axis(c0,cp,spindle_vector,phi);
+        #   }
+        # CRITICAL: C code skips rotation when phi==0. We must replicate this exactly.
         # Shape: (N_phi, 3)
-        a_phi = rotate_axis(self.a.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
-        b_phi = rotate_axis(self.b.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
-        c_phi = rotate_axis(self.c.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
 
-        a_star_phi = rotate_axis(
-            self.a_star.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad
-        )
-        b_star_phi = rotate_axis(
-            self.b_star.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad
-        )
-        c_star_phi = rotate_axis(
-            self.c_star.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad
-        )
+        # Initialize φ=0 carryover cache if this is the first call (CLI-FLAGS-003 L3k.3c.3)
+        # The C code's ap/bp/cp variables persist from the previous pixel's last phi step.
+        # To replicate this for the FIRST pixel, we need to pre-populate the cache with
+        # vectors rotated by the LAST phi angle (phi_last = phi_start + osc_range * (phi_steps-1)/phi_steps).
+        if self._phi_last_cache is None and config.phi_steps > 0:
+            # Compute the last phi angle
+            last_phi_deg = config.phi_start_deg + (config.osc_range_deg / config.phi_steps) * (config.phi_steps - 1)
+            last_phi_deg_tensor = torch.tensor(last_phi_deg, device=self.device, dtype=self.dtype)
+            last_phi_rad = torch.deg2rad(last_phi_deg_tensor)
+
+            # Rotate base vectors by the last phi angle
+            from ..utils.geometry import rotate_axis
+            spindle_axis_temp = torch.tensor(
+                config.spindle_axis, device=self.device, dtype=self.dtype
+            )
+
+            a_last = rotate_axis(self.a.unsqueeze(0), spindle_axis_temp.unsqueeze(0), last_phi_rad.unsqueeze(0))
+            b_last = rotate_axis(self.b.unsqueeze(0), spindle_axis_temp.unsqueeze(0), last_phi_rad.unsqueeze(0))
+            c_last = rotate_axis(self.c.unsqueeze(0), spindle_axis_temp.unsqueeze(0), last_phi_rad.unsqueeze(0))
+
+            self._phi_last_cache = (
+                a_last.squeeze(0),
+                b_last.squeeze(0),
+                c_last.squeeze(0)
+            )
+
+        # Initialize output tensors to hold rotated vectors
+        a_phi = []
+        b_phi = []
+        c_phi = []
+
+        # Process each φ angle individually to match C's phi!=0.0 guard
+        for i in range(config.phi_steps):
+            phi_val = phi_angles[i]
+
+            # Match C code's "if( phi != 0.0 )" check (nanoBragg.c:3044)
+            # Use a small tolerance for floating-point comparison
+            # phi_val is in degrees, so 1e-10 degrees is effectively zero
+            if torch.abs(phi_val) < 1e-10:
+                # φ=0: Replicate C behavior where ap/bp/cp persist from previous pixel
+                # When the C code skips rotation at phi==0, the working vectors (ap/bp/cp)
+                # retain values from the last phi step of the PREVIOUS pixel (due to
+                # OpenMP private variables not being reset between iterations).
+                # We cache the last rotated vectors and reuse them at phi==0.
+                # Reference: nanoBragg.c:3044-3066, test comment at test_cli_scaling_phi0.py:35-40
+                if self._phi_last_cache is not None:
+                    # Use cached vectors from last phi step
+                    a_phi.append(self._phi_last_cache[0].unsqueeze(0))
+                    b_phi.append(self._phi_last_cache[1].unsqueeze(0))
+                    c_phi.append(self._phi_last_cache[2].unsqueeze(0))
+                else:
+                    # No cache yet (first call) - use base vectors
+                    a_phi.append(self.a.unsqueeze(0))
+                    b_phi.append(self.b.unsqueeze(0))
+                    c_phi.append(self.c.unsqueeze(0))
+            else:
+                # φ≠0: Apply rotation
+                phi_rad_single = phi_rad[i].unsqueeze(0)
+                a_phi.append(rotate_axis(self.a.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad_single))
+                b_phi.append(rotate_axis(self.b.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad_single))
+                c_phi.append(rotate_axis(self.c.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad_single))
+
+        # Stack results: (N_phi, 3)
+        a_phi = torch.cat(a_phi, dim=0)
+        b_phi = torch.cat(b_phi, dim=0)
+        c_phi = torch.cat(c_phi, dim=0)
+
+        # Step 2: Recompute reciprocal vectors from rotated real vectors
+        # This ensures metric duality is preserved: a·a* = 1 exactly (CLAUDE Rule #13)
+        # Formula: a* = (b × c) / V_actual, where V_actual = a · (b × c)
+        # This matches the C-code's implicit reciprocal vector calculation during Miller index lookup.
+        b_cross_c = torch.cross(b_phi, c_phi, dim=-1)
+        c_cross_a = torch.cross(c_phi, a_phi, dim=-1)
+        a_cross_b = torch.cross(a_phi, b_phi, dim=-1)
+
+        # Compute actual volume from rotated real vectors
+        # Shape: (N_phi, 1)
+        V_actual = torch.sum(a_phi * b_cross_c, dim=-1, keepdim=True)
+
+        # Recompute reciprocal vectors to maintain metric duality
+        # Shape: (N_phi, 3)
+        a_star_phi = b_cross_c / V_actual
+        b_star_phi = c_cross_a / V_actual
+        c_star_phi = a_cross_b / V_actual
 
         # Generate mosaic rotation matrices
         # Assume config.mosaic_spread_deg is a tensor (enforced at call site)
@@ -1028,6 +1172,16 @@ class Crystal:
         a_star_final = rotate_umat(a_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
         b_star_final = rotate_umat(b_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
         c_star_final = rotate_umat(c_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
+
+        # Cache the last phi step's vectors for φ=0 carryover (CLI-FLAGS-003 Phase L3k.3c.3)
+        # This replicates C behavior where ap/bp/cp persist across pixels
+        # Store the rotated vectors (before mosaic) from the LAST phi step
+        if config.phi_steps > 0:
+            self._phi_last_cache = (
+                a_phi[-1].clone(),  # Last phi step
+                b_phi[-1].clone(),
+                c_phi[-1].clone()
+            )
 
         return (a_final, b_final, c_final), (a_star_final, b_star_final, c_star_final)
 
