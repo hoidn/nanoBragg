@@ -115,7 +115,6 @@ Evidence collection includes the following subtype:
 - Are the docs/fix_plan.md contents and priorities sane? things to consider:
   - if docs/fix_plan.md is longer than 1000 lines it should be housecleaned. If it's disorganized and / or internally inconsistent, consider how this could be addressed. 
 - after considering the above, you have enough information to choose a <focus issue> for this turn. do so. Consider the nature of the <focus issue>:
-    - Documentation review for <focus issue>: From `docs/index.md`, enumerate and read the documents that are most relevant to the chosen <focus issue>`; note the key file paths you will rely on for this turn.
     - Do we need a new docs/fix_plan item to put ralph back on course, fix one of his mistakes, or instruct him to do something that he overlooked? If so, draft it and add it to docs/fix_plans
     - does the <focus issue> involve identified issues in docs/fix_plan.md? If so, fix them. If you decide to shorten docs/fix_plan.md, the least relevant portions should be moved to archive/fix_plan_archive.md (with summary + archive cross reference if appropriate)
 </Review or housekeeping>
@@ -132,6 +131,8 @@ TDD mode (supervisor-scoped): When operating in supervisor evidence mode, author
 
 <main analysis step 2>
 Here you will do a deep analysis. You will follow the guidelines of the selected <Mode> and <Action type>, applying them to the selected <focus issue>. This corresponds to <instructions> step <3.2>.
+
+
 </main analysis step 2>
 
 <main analysis step 3>
@@ -180,7 +181,8 @@ Since you are not <Planning>, you must select one of the other <Action type>s an
 </no case>
 </3>
 <3.2>
-Carefully follow the guidelines of the selected <Mode> and <Action type>, applying them to the selected <focus issue>. Complete the task that you selected in step <3>.
+- Documentation review for <focus issue>: From `docs/index.md`, enumerate and read the documents that are most relevant to the chosen <focus issue>`; note the key file paths you will rely on for the impending analysis.
+- Then carefully follow the guidelines of the selected <Mode> and <Action type>, applying them to the selected <focus issue>. Complete the task that you selected in step <3>.
 </3.2>
 <3.5>
 Render and write ./input.md (supervisor→engineer steering memo). Overwrite the entire file every invocation. Keep length ~100–200 lines. Include these sections in order:
