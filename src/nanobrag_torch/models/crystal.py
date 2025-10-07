@@ -1005,21 +1005,34 @@ class Crystal:
             config.spindle_axis, device=self.device, dtype=self.dtype
         )
 
-        # Apply spindle rotation to both real and reciprocal vectors
+        # Step 1: Apply spindle rotation to ONLY real-space vectors (a, b, c)
+        # This follows the C-code semantics where reciprocal vectors are NOT independently rotated.
+        # C-code reference (nanoBragg.c:3056-3058):
+        #   rotate_axis(a0,ap,spindle_vector,phi);
+        #   rotate_axis(b0,bp,spindle_vector,phi);
+        #   rotate_axis(c0,cp,spindle_vector,phi);
         # Shape: (N_phi, 3)
         a_phi = rotate_axis(self.a.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
         b_phi = rotate_axis(self.b.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
         c_phi = rotate_axis(self.c.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
 
-        a_star_phi = rotate_axis(
-            self.a_star.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad
-        )
-        b_star_phi = rotate_axis(
-            self.b_star.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad
-        )
-        c_star_phi = rotate_axis(
-            self.c_star.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad
-        )
+        # Step 2: Recompute reciprocal vectors from rotated real vectors
+        # This ensures metric duality is preserved: a·a* = 1 exactly (CLAUDE Rule #13)
+        # Formula: a* = (b × c) / V_actual, where V_actual = a · (b × c)
+        # This matches the C-code's implicit reciprocal vector calculation during Miller index lookup.
+        b_cross_c = torch.cross(b_phi, c_phi, dim=-1)
+        c_cross_a = torch.cross(c_phi, a_phi, dim=-1)
+        a_cross_b = torch.cross(a_phi, b_phi, dim=-1)
+
+        # Compute actual volume from rotated real vectors
+        # Shape: (N_phi, 1)
+        V_actual = torch.sum(a_phi * b_cross_c, dim=-1, keepdim=True)
+
+        # Recompute reciprocal vectors to maintain metric duality
+        # Shape: (N_phi, 3)
+        a_star_phi = b_cross_c / V_actual
+        b_star_phi = c_cross_a / V_actual
+        c_star_phi = a_cross_b / V_actual
 
         # Generate mosaic rotation matrices
         # Assume config.mosaic_spread_deg is a tensor (enforced at call site)
