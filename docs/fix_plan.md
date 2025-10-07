@@ -455,10 +455,10 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase K3e evidence reveals a **fundamental lattice/geometry mismatch**, not a φ-grid offset. C reports `k_frac≈−3.857` across all φ steps while PyTorch reports `k_frac≈−9.899` (Δk≈6.04 at φ=0°). This 6-unit discrepancy indicates the base reciprocal lattice vectors or scattering geometry differ before any φ rotation is applied.
-- Next Actions (2025-10-17 sync):
-  1. Phase L1b ✅ — Layout analysis complete (Attempt #52). `scripts/validation/analyze_fdump_layout.py` + `reports/2025-10-cli-flags/phase_l/hkl_parity/layout_analysis.md` document that nanoBragg writes `(h_range+2)×(k_range+2)×(l_range+2)` voxels via the `for(h0=0; h0<=h_range; h0++)` loops, leaving 9,534 zero-padded entries per cache.
-  2. Phase L1c ✅ — (Attempt #53) Updated PyTorch HKL cache IO (`src/nanobrag_torch/io/hkl.py::read_fdump`/`write_fdump`) to match C padding layout exactly. Added regression test `tests/test_cli_flags.py::TestHKLFdumpParity::test_scaled_hkl_roundtrip` achieving max |ΔF| = 0.0 (perfect parity). Fixed h_range calculation to C-style (h_max - h_min + 1), padded writes to (range+1)³, trimmed reads to range³.
-  3. Phase L1d ✅ — (Attempt #54) Regenerated C cache using supervisor command flags, achieved perfect HKL parity (max |ΔF|=0.0, 0 mismatches). Artifacts: `reports/2025-10-cli-flags/phase_l/hkl_parity/{Fdump_c_20251109.bin, summary_20251109.md, metrics_20251109.json}`. Phase L2 prerequisites now met—structure factors match C exactly.
+- Next Actions (2025-11-09 refresh):
+  1. Phase L2a — Instrument nanoBragg.c scaling chain and capture TRACE_C logs under `reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log` (commit instrumentation separately, then revert per SOP).
+  2. Phase L2b — Extend PyTorch trace harness to log identical scaling terms (I_before_scaling, ω, polarization, capture_fraction, steps, r_e², fluence) and store output as `trace_py_scaling.log` in the same directory.
+  3. Phase L2c — Diff the traces via `compare_scaling_traces.py`, author `scaling_audit_summary.md` with first-divergence metrics, and log Attempt #55 referencing plan Phase L2.
 - Attempts History:
   * [2025-10-06] Attempt #27 (ralph) — Result: **PARITY FAILURE** (Phase I3 supervisor command). **Intensity scaling discrepancy: 124,538× sum ratio.**
     Metrics: Correlation=0.9978 (< 0.999 threshold), sum_ratio=124,538 (should be ~1.0), C max_I=446, PyTorch max_I=5.411e7 (121,000× discrepancy), mean_peak_distance=37.79 px (> 1 px threshold).

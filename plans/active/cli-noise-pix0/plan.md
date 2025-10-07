@@ -227,3 +227,37 @@ Exit Criteria: Structure-factor grids, scaling chain, and final intensities matc
 | L1b | Diagnose binary-layout mismatch between HKL and Fdump | [D] | ✅ Attempt #52 (2025-10-06) produced `scripts/validation/analyze_fdump_layout.py` plus `reports/2025-10-cli-flags/phase_l/hkl_parity/layout_analysis.md`. Confirmed nanoBragg writes `(h_range+2)×(k_range+2)×(l_range+2)` voxels via `for(h0=0; h0<=h_range; h0++)` loops (see `nanoBragg.c:2400-2486`), leaving 9,534 zero-padded entries. PyTorch reader must drop the padded plane per axis. |
 | L1c | Align PyTorch HKL cache reader/writer with confirmed layout | [D] | ✅ Attempt #53 (2025-10-17): Updated `src/nanobrag_torch/io/hkl.py` to honour `(range+1)` padding, added C-code docstring quotes per Rule #11, and introduced `tests/test_cli_flags.py::TestHKLFdumpParity::test_scaled_hkl_roundtrip` (max |ΔF| = 0.0, mismatches = 0). |
 | L1d | Re-run parity script after fixes and update artefacts | [D] | ✅ Attempt #54 (2025-10-17): Regenerated C cache using supervisor command flags, achieved perfect HKL parity (max |ΔF|=0.0, 0 mismatches). Artifacts: `reports/2025-10-cli-flags/phase_l/hkl_parity/{Fdump_c_20251109.bin, summary_20251109.md, metrics_20251109.json}`. Phase L2 prerequisites now met—structure factors match C exactly. |
+
+### Phase L2 — Scaling Chain Audit
+Goal: Capture a side-by-side breakdown of the intensity scaling pipeline (I_before_scaling → ω → polarization → r_e² → fluence → steps) for the supervisor command to isolate the first divergence that drives the 1.26×10⁵ sum ratio.
+Prereqs: Phase L1d artifacts in place; Ralph working under `prompts/debug.md`; C binary instrumentable via `golden_suite_generator/` per CLAUDE Rule #0.3.
+Exit Criteria: C and PyTorch traces capturing scaling factors are stored under `reports/2025-10-cli-flags/phase_l/scaling_audit/`, a comparison summary identifies the first mismatched term with quantitative deltas, and docs/fix_plan.md Attempt log references the findings.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| L2a | Instrument C scaling chain | [ ] | Add TRACE_C lines around nanoBragg.c intensity scaling loop (lines 3005-3095, 3240-3335). Recompile via `make -C golden_suite_generator`. Run the supervisor command with `NB_C_BIN=./golden_suite_generator/nanoBragg` and stash stdout under `reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log`. Document edits in `instrumentation_notes.md` before removing instrumentation. |
+| L2b | Extend PyTorch trace harness | [ ] | Update `reports/2025-10-cli-flags/phase_i/supervisor_command/trace_harness.py` (or create `phase_l/scaling_audit/trace_harness.py`) to log the same quantities: I_before_scaling, ω, polarization, capture_fraction, steps, r_e², fluence, final intensity. Execute with `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python trace_harness.py` and store output as `trace_py_scaling.log`. |
+| L2c | Diff traces & record first divergence | [ ] | Build a comparison notebook or script (`compare_scaling_traces.py`) that aligns TRACE_C vs TRACE_PY lines and reports percentage deltas per factor. Summarize findings in `scaling_audit_summary.md`, explicitly calling out the earliest divergent term and hypothesized root cause. Update docs/fix_plan.md Attempt #55 with key metrics. |
+
+### Phase L3 — Normalization Fix Implementation
+Goal: Patch the PyTorch scaling pipeline so every factor (omega, polarization, capture_fraction, r_e², fluence, steps) matches the C implementation within 1e-6 relative error.
+Prereqs: L2 comparison summary pointing to the exact divergent factor; relevant C references documented; regression tests identified.
+Exit Criteria: PyTorch source changes with inline C-code docstring references are merged, targeted regression tests cover the corrected scaling semantics, and new artifacts demonstrate matching intermediate values. docs/fix_plan.md records the fix attempt and resulting metrics.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| L3a | Implement scaling fix in simulator | [ ] | Modify `src/nanobrag_torch/simulator.py` (likely around lines 930-1085) to mirror the C normalization order confirmed in L2. Include mandatory C-code quote per Rule #11. Ensure device/dtype neutrality (no `.cpu()`/`.item()` in differentiable paths). |
+| L3b | Add targeted regression test | [ ] | Extend `tests/test_cli_scaling.py` with a supervisor-command fixture that asserts PyTorch I_before_scaling, ω, polarization, and final intensity match pre-recorded C values within tolerances (≤1e-6 relative). Parametrise over CPU/CUDA when available. |
+| L3c | Validate scaling via script | [ ] | Create `scripts/validation/compare_scaling_chain.py` that consumes the C/Py traces from L2 and reports pass/fail deltas. Run `KMP_DUPLICATE_LIB_OK=TRUE python scripts/validation/compare_scaling_chain.py --c-log ... --py-log ...` and archive output JSON under `reports/2025-10-cli-flags/phase_l/scaling_validation/metrics.json`. |
+| L3d | Update documentation & plans | [ ] | Refresh `docs/fix_plan.md` Attempt history with fix summary, link artifacts, and update this plan table to `[D]` where applicable. If scaling logic touches spec details, annotate `docs/architecture/pytorch_design.md` accordingly. |
+
+### Phase L4 — Supervisor Command Parity Rerun
+Goal: Demonstrate end-to-end parity for the supervisor command (correlation ≥ 0.9995, sum_ratio 0.99–1.01, mean_peak_distance ≤ 1 px) and close CLI-FLAGS-003.
+Prereqs: L3 validation artifacts show ≤1e-6 deltas for scaling factors; regression tests green.
+Exit Criteria: nb-compare metrics meet thresholds, artifacts stored under `reports/2025-10-cli-flags/phase_l/supervisor_command_rerun/`, docs/fix_plan.md Attempt #56 documents the pass, and this plan is ready for archival.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| L4a | Rerun supervisor command parity | [ ] | Execute the authoritative command from `reports/2025-10-cli-flags/phase_i/supervisor_command/README.md`, writing outputs to a new timestamped directory. Capture `summary.json`, stdout/stderr, and SHA256 hashes. |
+| L4b | Analyze results & log attempt | [ ] | Update `supervisor_command_rerun/README.md` with metrics, confirm thresholds met, and log Attempt #56 in docs/fix_plan.md summarizing deltas. |
+| L4c | Finalize documentation | [ ] | If parity passes, move key artifacts to `reports/archive/` per SOP, update plan status to ready-for-archive, and prepare closing notes for CLI-FLAGS-003. If parity fails, loop back to L2 with findings. |

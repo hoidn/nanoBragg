@@ -1385,3 +1385,14 @@ Follow-ups for Ralph:
 - Authored new `input.md` (Mode=Parity) directing Ralph to regenerate the C Fdump cache and rerun `scripts/validation/compare_structure_factors.py` for Phase L1d, storing outputs under `reports/2025-10-cli-flags/phase_l/hkl_parity/`.
 - Hypotheses refined: (1) With padding fix, expect HKL parity to hit max |ΔF| ≤ 1e-6 once rerun; (2) if Δk≈6 persists afterward, capture fresh per-φ traces (Plan K3f/K3g) to isolate reciprocal-vector drift; (3) remaining intensity gap likely tied to sincg normalization order pending new evidence.
 - Follow-up for Ralph: Execute L1d per memo, update docs/fix_plan Attempts with metrics, and prep Phase L2 scaling diagnostics if parity clears.
+
+## 2025-11-09 (galph loop — Phase L2 kickoff)
+- Coin flip landed heads; reviewed recent Ralph commits (`572217b`, `3e47b38`) — HKL padding/parity artifacts look solid, no regressions observed.
+- Deep-dive into CLI parity status: scaling mismatch (sum_ratio≈1.26e5) still open; plan lacked Phase L coverage beyond L1. Vectorization initiative remains untouched pending CLI closure.
+- Updated `plans/active/cli-noise-pix0/plan.md` with Phases L2–L4 (scaling audit → normalization fix → supervisor rerun) including checklist tasks and artifact targets under `reports/2025-10-cli-flags/phase_l/`.
+- Refreshed `docs/fix_plan.md` Next Actions to point Ralph at Phase L2a–L2c; authored new `input.md` instructing instrumentation + C trace capture for the scaling audit.
+- Hypotheses (scaling divergence):
+  1. Missing capture_fraction/omega application during oversample=1 path (Confidence: medium; C LOG shows capture_fraction=1 even when oversample flags off). Next confirming step: inspect TRACE_C vs TRACE_PY ordering once L2 traces exist.
+  2. Misapplied steps divisor (possible double divide) leading to ×10 discrepancy that compounds with other factors (Confidence: low-medium). Next step: compare `steps` values logged in L2 traces.
+  3. Fluence scaling mismatch (BeamConfig vs C computed area) causing ×~1.27e5 ratio (Confidence: medium-high, matches numeric magnitude). Next step: verify fluence logged from C vs PyTorch traces in L2a/L2b.
+- Follow-up for Ralph: execute new input.md focusing on Phase L2a; once traces captured, proceed through L2b/L2c before touching implementation.
