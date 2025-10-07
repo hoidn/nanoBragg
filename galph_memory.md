@@ -1629,3 +1629,8 @@ Follow-ups for Ralph:
 - Selected Debug/Parity focus on CLI-FLAGS-003; next confirm step is to implement Phase L3k reciprocal recompute, then re-run per-φ traces, targeted pytest lattice selector, and ROI nb-compare per checklist.
 - Authored `input.md` (Parity) directing Ralph to add the nanoBragg.c docstring, rotate only real vectors, recompute reciprocals, run harness + pytest + nb-compare, update fix_checklist + fix_plan, and archive old traces. Artifacts to land under `reports/2025-10-cli-flags/phase_l/rot_vector/` subfolders.
 - No new plans required; vectorization plan already current (Phase C2/C3). Await Phase L3k evidence before scheduling Phase L4 rerun.
+## 2025-11-21 (galph loop — CLI-FLAGS Next Actions refresh)
+- Validated Phase L3k memo + plan remain authoritative; noted docs/fix_plan.md still referenced L3k.1 even though memo is complete.
+- Updated `docs/fix_plan.md:458-460` so Next Actions now point at L3k.2 implementation, L3k.3 verification, and L3k.4 logging; no other ledger edits.
+- Rewrote `input.md` (Parity mode) to focus Ralph on executing L3k.2 with the targeted pytest selector and checklist-driven nb-compare/trace steps; artifacts to stay under `reports/2025-10-cli-flags/phase_l/`.
+- Expect Ralph to deliver the φ-rotation patch next loop, follow fix_checklist VG-1..VG-5, and record a new Attempt before we reopen Phase L4 parity testing.
