@@ -1452,3 +1452,8 @@ Follow-ups for Ralph:
 - Updated `plans/active/cli-noise-pix0/plan.md` L2b/L2c rows to mark simulator instrumentation/regression complete and call out the remaining harness rerun requirement. Refreshed `docs/fix_plan.md` next actions to center on harness refresh → comparison rerun → L3 prep.
 - Authored new `input.md` instructing Ralph to stream live TRACE_PY output via `debug_config={'trace_pixel': [685,1039]}`, rerun the harness, and validate with the targeted trace test before proceeding to comparison.
 - Follow-up for Ralph: execute L2b Step 3 (harness refresh + rerun), archive updated logs/env snapshots under `reports/2025-10-cli-flags/phase_l/scaling_audit/`, run the trace regression selector, update Attempts History, then rerun `compare_scaling_traces.py` once real data exists.
+
+## 2025-11-13 (galph loop — CLI harness regression triage)
+- Synced clean; traced Phase L2b blockage to `trace_harness.py` still unpacking legacy `read_hkl_file` outputs. Logged the regression as Attempt #70 in docs/fix_plan.md:458-484 and updated the plan gap snapshot / L2b guidance (`plans/active/cli-noise-pix0/plan.md:13-18`, `:239-242`).
+- Authored new input.md (100 lines) directing Ralph to adapt the harness to the `(F_grid, metadata)` API, rerun the supervisor command capture, and archive refreshed TRACE_PY artifacts before Phase L2c resumes.
+- Focus next loop: confirm harness patch lands, collect live trace data, then execute compare_scaling_traces.py to re-enter normalization analysis.
