@@ -1,0 +1,64 @@
+Running simulation...
+  Detector: 2463x2527 pixels
+  Crystal: 26.8x31.3x33.7 Å
+  Wavelength: 0.98 Å
+  Device: cpu, Dtype: torch.float32
+  Convention: CUSTOM (using custom detector basis vectors)
+  Tracing pixel (slow=685, fast=1039)
+auto-selected 4-fold oversampling
+TRACE_PY: pix0_vector_meters 0.231274664402008 0.217322006821632 -0.211817994713783
+TRACE_PY: fdet_vec 0 0 1
+TRACE_PY: sdet_vec 0 -1 0
+TRACE_PY: pixel_pos_meters 0.231274664402008 0.099416010081768 -0.0330239981412888
+TRACE_PY: R_distance_meters 0.253893882036209
+TRACE_PY: omega_pixel_sr 4.18050007056081e-07
+TRACE_PY: close_distance_meters 0.231274664402008
+TRACE_PY: obliquity_factor 0.910910725593567
+TRACE_PY: diffracted_vec 0.910910785198212 0.391565203666687 -0.130070075392723
+TRACE_PY: incident_vec 0 0 1
+TRACE_PY: lambda_meters 9.7680002450943e-11
+TRACE_PY: lambda_angstroms 0.97680002450943
+TRACE_PY: scattering_vec_A_inv 9325458432 4008652544 -11569103872
+TRACE_PY: rot_a_angstroms -14.3562698364258 -21.8717937469482 -5.58202123641968
+TRACE_PY: rot_b_angstroms -11.4986982345581 0.717319786548615 -29.1132164001465
+TRACE_PY: rot_c_angstroms 21.0699501037598 -24.3892974853516 -9.75265312194824
+TRACE_PY: rot_a_star_A_inv -0.0290510933846235 -0.0293958801776171 0.010749876499176
+TRACE_PY: rot_b_star_A_inv -0.00312639237381518 0.0104376431554556 -0.0328566692769527
+TRACE_PY: rot_c_star_A_inv 0.0259604379534721 -0.0143330143764615 -0.0106066130101681
+TRACE_PY: hkl_frac -15.6976222991943 23.24587059021 21.1548194885254
+TRACE_PY: hkl_rounded -16 23 21
+TRACE_PY: F_latt_a 0.432551294565201
+TRACE_PY: F_latt_b -1.41084396839142
+TRACE_PY: F_latt_c 2.13825917243958
+TRACE_PY: F_latt -1.30489914222961
+TRACE_PY: F_cell 0
+TRACE_PY: I_before_scaling 0
+TRACE_PY: r_e_meters 2.81794118441937e-15
+TRACE_PY: r_e_sqr 7.9407927259064e-30
+TRACE_PY: fluence_photons_per_m2 1.25932017574725e+29
+TRACE_PY: steps 160
+TRACE_PY: oversample_thick 0
+TRACE_PY: oversample_polar 0
+TRACE_PY: oversample_omega 0
+TRACE_PY: capture_fraction 1
+TRACE_PY: polar 1
+TRACE_PY: omega_pixel 4.18050007056081e-07
+TRACE_PY: cos_2theta -0.130070075392723
+TRACE_PY: I_pixel_final 0
+TRACE_PY: floatimage_accumulated 0
+TRACE: r_e^2 = 7.940792725906e-30
+TRACE: Fluence = 1.259320175747e+29
+TRACE: Oversample = 4
+
+TRACE: Intensity calculation chain:
+  normalized * r_e^2 * fluence
+  = 0.000000000000e+00 * 7.940792725906e-30 * 1.259320175747e+29
+  = 0.000000000000e+00
+
+Statistics:
+  Max intensity: 0.000e+00 at pixel (2526, 2462)
+  Mean: 0.000e+00
+  RMS: 0.000e+00
+  RMSD: 0.000e+00
+
+Simulation complete.

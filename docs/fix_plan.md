@@ -1373,6 +1373,29 @@
       - **Backward Compatibility:** steps parameter defaults to None with fallback to phi_steps only; capture_fraction defaults to 1.0 when absorption not configured; polarization defaults to 1.0 when nopolar is set
       - **Test Coverage:** test_scaling_trace_matches_physics validates steps calculation matches expected value (sources×mosaic×φ×oversample²), capture_fraction is 1.0 when no absorption configured; test_scaling_trace_with_absorption validates capture_fraction < 1.0 when absorption enabled
     Next Actions: Execute Phase L2b Step 3 - run updated trace harness (`reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py`) to capture `trace_py_scaling.log` for pixel (685,1039) using supervisor command parameters, then proceed to Phase L2c diff analysis.
+  * [2025-10-17] Attempt #58 (ralph loop i=64) — Result: **PHASE L2b COMPLETE** (evidence-only pass). **PyTorch scaling trace successfully captured via CLI `-trace_pixel` flag.**
+    Metrics: PyTorch steps=160 vs C steps=10 (16× auto-oversample factor); fluence=1.26e+29 vs C=1e+24 (~100,000× error); polar=1.0 vs C=0.9146 (9.3% error); omega=4.18e-7 vs C=4.20e-7 (0.56%, within tolerance); r_e_sqr match within 0.0003%.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log` - 40 lines of TRACE_PY output for pixel (685,1039)
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_cli_full.log` - Complete CLI output with trace context (64 lines)
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_env.json` - Environment snapshot (Python 3.13, PyTorch 2.x, cpu/float32)
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/config_snapshot_final.json` - Supervisor command parameters
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/scaling_audit_summary.md` - Comparison table with detailed findings
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/notes.md` - Execution workflow log (updated)
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/pytest_collect_final.log` - Test collection check (4 tests collected)
+    Observations/Hypotheses:
+      - **First Divergence: Fluence calculation** - PyTorch fluence is ~100,000× higher than C. Calculation check suggests beamsize unit error (treated as 1e-5 m instead of 1 mm).
+      - **Steps normalization mismatch** - PyTorch auto-selects 4× oversample when none specified, yielding steps=160 (10 φ × 1 mosaic × 4²). C defaults to oversample=1, yielding steps=10. This creates an additional 16× dimming factor.
+      - **Polarization bypass** - PyTorch reports polar=1.0 instead of applying Kahn formula. Even with K=0, geometric term should yield polar≈0.508 for cos(2θ)=-0.130070.
+      - **Previous L2b blocker resolved** - Ralph's earlier attempt (#56, documented in `L2b_blocker.md`) failed because the trace harness tried to construct Simulator directly from configs. Current approach uses the CLI with `-trace_pixel` flag, which handles all object construction internally.
+      - **Trace support already implemented** - The `Simulator` class already emits TRACE_PY lines when `debug_config['trace_pixel']` is set (see `simulator.py:1243-1410`). No production code changes needed for evidence gathering.
+    Next Actions:
+      - Phase L2c: Build `compare_scaling_traces.py` to automate C vs PyTorch line-by-line diff and generate `compare_scaling_traces.json` with parsed deltas.
+      - Phase L3a: Fix fluence calculation (likely BeamConfig beam_size unit conversion in `config.py` or fluence derivation).
+      - Phase L3a: Fix steps normalization to respect CLI oversample=1 default (or match C's default).
+      - Phase L3a: Fix polarization to apply Kahn formula even when K=0 (ensure geometric cos²(2θ) term is computed).
+      - Phase L3b: Add targeted regression tests for scaling chain (plan references `tests/test_cli_scaling.py`).
+      - Phase L4: Rerun supervisor command parity after fixes land to verify correlation ≥0.9995 and sum_ratio 0.99–1.01.
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; **(viii) Phase F3 parity evidence captured** ✅ (Attempt #12); **(ix) Phase G2 MOSFLM orientation ingestion complete** ✅ (Attempt #17); **(x) Phase G3 trace verification complete with transpose fix** ✅ (Attempt #18); (xi) Phase H lattice structure factor alignment ✅ (Attempt #25); (xii) Phase F3 parity rerun with lattice fix ❌; (xiii) Phase I polarization alignment ❌; (xiv) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌.
 

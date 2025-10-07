@@ -188,3 +188,91 @@ git status --short
 - Append Phase L2b summary to docs/fix_plan.md Attempt history
 
 ---
+
+---
+
+## Execution Log — Final Attempt (2025-10-17)
+
+### Run Timestamp: 2025-10-17
+
+**Command:**
+```bash
+export PYTHONPATH=src && export KMP_DUPLICATE_LIB_OK=TRUE && python -m nanobrag_torch \
+  -mat A.mat -hkl scaled.hkl -lambda 0.9768 -distance 231.27466 -pixel 0.172 \
+  -detpixels_s 2527 -detpixels_f 2463 -Xclose 211.818 -Yclose 217.322 \
+  -phi 0.0 -osc 0.1 -phisteps 10 -Na 36 -Nb 47 -Nc 29 \
+  -mosaic 0.0 -mosaic_dom 1 -flux 1e18 -exposure 1.0 -beamsize 1.0 \
+  -spindle_axis -1 0 0 -trace_pixel 685 1039
+```
+
+**Execution status:** ✅ SUCCESS
+
+**Artifacts created:**
+1. `trace_py_scaling.log` — 40 lines of TRACE_PY output ✅
+2. `trace_py_env.json` — Environment snapshot ✅
+3. `config_snapshot_final.json` — CLI parameters ✅
+4. `trace_py_cli_full.log` — Complete stdout/stderr capture ✅
+
+### Key Findings
+
+**Convention Detection:**
+- PyTorch auto-selected CUSTOM convention with basis vectors:
+  - fdet: [0, 0, 1]
+  - sdet: [0, -1, 0]
+  - pix0: [0.231275, 0.217322, -0.211818] meters
+
+**Oversample Auto-Selection:**
+- System auto-selected 4-fold oversampling
+- Steps = 160 (10 φ steps × 1 mosaic × 4² oversample)
+
+**Scaling Chain Values:**
+- `r_e_sqr` = 7.9407927259064e-30 m²
+- `fluence_photons_per_m2` = 1.25932017574725e+29
+- `steps` = 160
+- `capture_fraction` = 1.0
+- `polar` = 1.0 (nopolar not set, but K=0?)
+- `omega_pixel` = 4.18050007056081e-07 sr
+
+**Divergence from C Trace:**
+- PyTorch `steps` = 160 vs C `steps` = 10 (4× factor from auto-oversample)
+- PyTorch `fluence` = 1.259e+29 vs C fluence = 1e+24 (beam_size difference?)
+- Beam vector: PyTorch uses [0, 0, 1] vs C expects convention-dependent beam
+
+### Issues Noted
+
+1. **Zero Intensity:** F_cell = 0, indicating the HKL lookup failed or reflection is missing
+2. **Fluence Mismatch:** 5 orders of magnitude difference suggests beam_size or flux calculation divergence
+3. **Steps Mismatch:** Auto-oversample adds factor of 16 (4²) not present in C trace
+4. **Polarization:** polar=1.0 suggests nopolar behavior despite K=0 in beam config
+
+### Verification Status
+
+**Selector Check:**
+```bash
+pytest --collect-only -q tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics
+```
+Status: [TO BE RUN]
+
+**Sanity checks against C trace:**
+- `steps == 10` ✗ (PyTorch: 160, C: 10) — auto-oversample divergence
+- `fluence ≈ 1e24` ✗ (PyTorch: 1.26e+29, C: 1e+24) — 5 OOM difference
+- `omega_pixel ≈ 4.2e-7` ✓ (PyTorch: 4.18e-7, C: 4.20e-7) — within 0.5%
+- `polar ≈ 0.9146` ✗ (PyTorch: 1.0, C: 0.9146) — wrong polarization
+
+**Major Deviations:**
+1. Fluence: ~100,000× too high
+2. Steps: 16× too high (auto-oversample)
+3. Polarization: 9.3% error
+
+---
+
+## Next Actions (for fix_plan.md Attempt)
+
+1. Compare trace_py_scaling.log with c_trace_scaling.log line-by-line
+2. Identify first divergent factor (likely fluence or beam_size)
+3. Update docs/fix_plan.md CLI-FLAGS-003 Attempt history with:
+   - Metrics: steps=160 vs 10, fluence=1.26e+29 vs 1e+24, polar=1.0 vs 0.9146
+   - Artifacts: reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log
+   - Observations: Auto-oversample adds 4² factor; fluence calc diverges; polarization wrong
+   - Next Actions: Phase L2c comparison script, then L3 normalization fix
+

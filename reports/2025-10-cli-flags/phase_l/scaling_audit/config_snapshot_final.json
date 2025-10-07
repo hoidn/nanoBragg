@@ -1,0 +1,30 @@
+{
+  "crystal": {
+    "N_cells": [36, 47, 29],
+    "phi_start_deg": 0.0,
+    "osc_range_deg": 0.1,
+    "phi_steps": 10,
+    "mosaic_spread_deg": 0.0,
+    "mosaic_domains": 1,
+    "spindle_axis": [-1.0, 0.0, 0.0]
+  },
+  "detector": {
+    "distance_mm": 231.27466,
+    "pixel_size_mm": 0.172,
+    "spixels": 2527,
+    "fpixels": 2463,
+    "Xclose_mm": 211.818,
+    "Yclose_mm": 217.322,
+    "oversample": 4
+  },
+  "beam": {
+    "wavelength_A": 0.9768,
+    "flux": 1e18,
+    "exposure_s": 1.0,
+    "beam_size_mm": 1.0
+  },
+  "trace": {
+    "pixel_slow": 685,
+    "pixel_fast": 1039
+  }
+}

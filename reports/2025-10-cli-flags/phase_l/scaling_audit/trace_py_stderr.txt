@@ -1,0 +1,12 @@
+/home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:124: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  'timestamp_iso': datetime.utcnow().isoformat() + 'Z'
+Traceback (most recent call last):
+  File "/home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py", line 302, in <module>
+    main()
+    ~~~~^^
+  File "/home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py", line 239, in main
+    simulator = Simulator(crystal_config, detector_config, beam_config, dtype=dtype, device=device)
+  File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py", line 498, in __init__
+    self.incident_beam_direction = self.detector.beam_vector.clone()
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DetectorConfig' object has no attribute 'beam_vector'
