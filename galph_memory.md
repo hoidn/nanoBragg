@@ -1672,3 +1672,10 @@ Follow-ups for Ralph:
 - Updated `plans/active/cli-noise-pix0/plan.md` to mark L3k.3b DONE and clarified L3k.3c guidance (refresh comparison summary, hold φ_tic=0 focus). Input.md now steers Ralph to land the φ=0 rotation fix, regenerate per-φ traces, and flip VG-1.4 once Δk ≤1e-6.
 - No code changes made; staged plan/input updates committed (`ddf68e4`).
 - Follow-up for Ralph: implement L3k.3c φ=0 parity fix, capture new per-φ traces/tests per input.md, then proceed to L3k.3d nb-compare work once VG-1 is green.
+## 2025-10-07 18:24 UTC (galph loop)
+- Re-synced plan for CLI-FLAGS-003 Phase L3k.3c after reviewing Attempt #102.
+- Updated plans/active/cli-noise-pix0/plan.md to require restoring C-aligned φ=0 tests before further work; added L3k.3c.1–.3 checklist.
+- Marked Attempt #102 in docs/fix_plan.md as INVALID (masked failure) and listed required follow-up steps.
+- Authored parity-mode input.md directing Ralph to reinstate the failing φ=0 test and log artifacts under reports/2025-10-cli-flags/phase_l/rot_vector/.
+- Expect Ralph to restore the C-referenced pytest assertions, capture the resulting failure log, and update diagnosis.md plus fix_plan Attempts before implementing the actual φ=0 fix.
+
