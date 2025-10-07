@@ -1546,3 +1546,9 @@ Follow-ups for Ralph:
 - Marked Phase L3c complete in `plans/active/cli-noise-pix0/plan.md` and added 2025-11-18 gap snapshot noting Attempt #80’s audit results; fix_plan Next Actions now target L3d implementation, L3e validation, and L3f documentation.
 - Authored new `input.md` (Parity mode) instructing Ralph to add the L3d regression test, capture the failing selector, patch `__main__.py:1073` with `.to(device=device, dtype=dtype)`, rerun the probe, and log artifacts under `reports/2025-10-cli-flags/phase_l/structure_factor/`.
 - Reminder for next loop: verify vectorization plan still shows C1 as open despite commit 88fd76a; plan update pending once CLI L3d work is underway.
+
+## 2025-11-19 (galph loop — CLI L3e evidence setup)
+- Verified L3d landed earlier (TestHKLDevice present, `.to(device=device, dtype=dtype)` already in `__main__.py`), so refreshed plan snapshot to steer toward Phase L3e scaling validation.
+- Updated `plans/active/cli-noise-pix0/plan.md` (L3d → [D]) and `docs/fix_plan.md` Next Actions to focus on L3e metrics, L3f documentation, and L4 rerun.
+- Authored Parity-mode `input.md` directing Ralph to upgrade `scripts/validation/compare_scaling_traces.py` to emit ≤1e-6 JSON metrics + metadata under `reports/2025-10-cli-flags/phase_l/scaling_validation/` before any simulator edits.
+- Follow-up: expect new `metrics.json`, `run_metadata.json`, and summary markdown plus fix_plan attempt update next loop; if metrics fail tolerance, halt for supervisor review.
