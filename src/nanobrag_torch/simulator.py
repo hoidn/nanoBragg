@@ -974,6 +974,9 @@ class Simulator:
             # Shape: (S, F)
             accumulated_intensity = torch.sum(intensity_all, dim=2)
 
+            # Save pre-normalization intensity for trace (before last-value multiplication)
+            I_before_normalization = accumulated_intensity.clone()
+
             # Apply last-value semantics if omega flag is not set
             if not oversample_omega:
                 # Get the last subpixel's omega (last in flattened order)
@@ -1008,6 +1011,9 @@ class Simulator:
                 intensity = self._compute_physics_for_position(
                     pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star
                 )
+
+            # Save pre-normalization intensity for trace
+            I_before_normalization = intensity.clone()
 
             # Normalize by steps
             normalized_intensity = intensity / steps
@@ -1047,17 +1053,36 @@ class Simulator:
             normalized_intensity = normalized_intensity * omega_pixel
 
         # Apply detector absorption if configured (AT-ABS-001)
+        # Cache capture_fraction for trace output if trace_pixel is set
+        capture_fraction_for_trace = None
         if (self.detector.config.detector_thick_um is not None and
             self.detector.config.detector_thick_um > 0 and
             self.detector.config.detector_abs_um is not None and
             self.detector.config.detector_abs_um > 0):
 
             # Apply absorption calculation
-            normalized_intensity = self._apply_detector_absorption(
-                normalized_intensity,
-                pixel_coords_meters,
-                oversample_thick
-            )
+            if self.trace_pixel:
+                # When tracing, we need to cache the capture fraction
+                # Call the absorption method and extract the per-pixel value
+                intensity_before_absorption = normalized_intensity.clone()
+                normalized_intensity = self._apply_detector_absorption(
+                    normalized_intensity,
+                    pixel_coords_meters,
+                    oversample_thick
+                )
+                # Compute capture fraction as ratio (avoiding division by zero)
+                capture_fraction_tensor = torch.where(
+                    intensity_before_absorption > 1e-20,
+                    normalized_intensity / intensity_before_absorption,
+                    torch.ones_like(normalized_intensity)
+                )
+                capture_fraction_for_trace = capture_fraction_tensor
+            else:
+                normalized_intensity = self._apply_detector_absorption(
+                    normalized_intensity,
+                    pixel_coords_meters,
+                    oversample_thick
+                )
 
         # Final intensity with all physical constants in meters
         # Units: [dimensionless] × [steradians] × [m²] × [photons/m²] × [dimensionless] = [photons·steradians]
@@ -1108,16 +1133,35 @@ class Simulator:
         # Apply debug output if requested
         if self.printout or self.trace_pixel:
             # For debug output, compute polarization for single pixel case
+            # Also cache total steps for accurate trace output
             polarization_value = None
             if not oversample or oversample == 1:
-                # Calculate polarization factor for the entire detector
+                # Calculate polarization factor for the entire detector when needed for trace
                 if self.beam_config.nopolar:
                     polarization_value = torch.ones_like(omega_pixel)
-                else:
-                    # Compute incident and diffracted vectors for debug output
-                    # These are already calculated in the main flow but not available here
-                    # Since this is only for debug output, we can skip it for now
-                    polarization_value = None
+                elif self.trace_pixel:
+                    # Recompute polarization for the trace pixel
+                    # This matches the calculation in compute_physics_for_position
+                    # Get pixel coordinates
+                    pixel_coord_ang = pixel_coords_meters * 1e10  # meters to Angstroms
+
+                    # Compute diffracted beam direction (normalized)
+                    pixel_squared_sum = torch.sum(pixel_coord_ang * pixel_coord_ang, dim=-1, keepdim=True)
+                    pixel_squared_sum = pixel_squared_sum.clamp_min(1e-12)
+                    pixel_magnitudes = torch.sqrt(pixel_squared_sum)
+                    diffracted_beam_unit = pixel_coord_ang / pixel_magnitudes
+
+                    # Use incident beam direction
+                    incident = self.incident_beam_direction
+
+                    # Calculate polarization for all pixels
+                    from .utils.physics import polarization_factor
+                    polarization_value = polarization_factor(
+                        self.kahn_factor,
+                        incident.unsqueeze(0).unsqueeze(0).expand(diffracted_beam_unit.shape[0], diffracted_beam_unit.shape[1], -1).reshape(-1, 3),
+                        diffracted_beam_unit.reshape(-1, 3),
+                        self.polarization_axis
+                    ).reshape(diffracted_beam_unit.shape[0], diffracted_beam_unit.shape[1])
 
             self._apply_debug_output(
                 physical_intensity,
@@ -1127,7 +1171,10 @@ class Simulator:
                 rot_a_star, rot_b_star, rot_c_star,
                 oversample,
                 omega_pixel if not oversample or oversample == 1 else None,
-                polarization_value
+                polarization_value,
+                steps,
+                capture_fraction_for_trace,
+                I_before_normalization  # Pass pre-normalization accumulated intensity for trace
             )
 
         # PERF-PYTORCH-006: Ensure output matches requested dtype
@@ -1142,7 +1189,10 @@ class Simulator:
                            rot_a_star, rot_b_star, rot_c_star,
                            oversample,
                            omega_pixel=None,
-                           polarization=None):
+                           polarization=None,
+                           steps=None,
+                           capture_fraction=None,
+                           I_total=None):
         """Apply debug output for -printout and -trace_pixel options.
 
         Args:
@@ -1153,6 +1203,8 @@ class Simulator:
             rot_a_star, rot_b_star, rot_c_star: Rotated reciprocal vectors (Angstroms^-1)
             oversample: Oversampling factor
             omega_pixel: Solid angle (if computed)
+            steps: Total steps calculation (sources × mosaic × φ × oversample²)
+            capture_fraction: Detector absorption capture fraction tensor (if computed)
             polarization: Polarization factor (if computed)
         """
 
@@ -1312,8 +1364,13 @@ class Simulator:
                     ).item()
                     print(f"TRACE_PY: F_cell {F_cell:.15g}")
 
-                    # Calculate I_before_scaling (this is before r_e^2 * fluence / steps)
-                    I_before_scaling = (F_cell * F_latt) ** 2
+                    # Get I_before_scaling from the actual accumulated intensity (before normalization/scaling)
+                    # This is I_total passed from run() - the sum before division by steps
+                    if I_total is not None and isinstance(I_total, torch.Tensor):
+                        I_before_scaling = I_total[target_slow, target_fast].item()
+                    else:
+                        # Fallback: compute from F_cell and F_latt (less accurate)
+                        I_before_scaling = (F_cell * F_latt) ** 2
                     print(f"TRACE_PY: I_before_scaling {I_before_scaling:.15g}")
 
                     # Physical constants and scaling factors
@@ -1321,23 +1378,34 @@ class Simulator:
                     print(f"TRACE_PY: r_e_meters {r_e_m:.15g}")
                     print(f"TRACE_PY: r_e_sqr {self.r_e_sqr.item():.15g}")
                     print(f"TRACE_PY: fluence_photons_per_m2 {self.fluence.item():.15g}")
-                    print(f"TRACE_PY: steps {self.crystal.config.phi_steps}")
+
+                    # Use actual steps value passed from run() method
+                    # This is the full calculation: sources × mosaic × φ × oversample²
+                    if steps is not None:
+                        print(f"TRACE_PY: steps {steps}")
+                    else:
+                        # Fallback to phi_steps only if not provided (backward compatibility)
+                        print(f"TRACE_PY: steps {self.crystal.config.phi_steps}")
 
                     # Oversample flags
                     print(f"TRACE_PY: oversample_thick {1 if self.detector.config.oversample_thick else 0}")
                     print(f"TRACE_PY: oversample_polar {1 if self.detector.config.oversample_polar else 0}")
                     print(f"TRACE_PY: oversample_omega {1 if self.detector.config.oversample_omega else 0}")
 
-                    # Capture fraction and polarization
-                    print(f"TRACE_PY: capture_fraction 1")
+                    # Capture fraction from detector absorption (actual value, not placeholder)
+                    if capture_fraction is not None and isinstance(capture_fraction, torch.Tensor):
+                        capture_frac_val = capture_fraction[target_slow, target_fast].item()
+                    else:
+                        # If absorption is not configured, capture fraction is 1.0
+                        capture_frac_val = 1.0
+                    print(f"TRACE_PY: capture_fraction {capture_frac_val:.15g}")
 
-                    # Calculate polarization for this pixel
+                    # Calculate polarization for this pixel (actual value, not placeholder)
                     # This matches the polarization_factor calculation in the main physics
                     if polarization is not None and isinstance(polarization, torch.Tensor):
                         polar_val = polarization[target_slow, target_fast].item()
                     else:
-                        # Recalculate using same method as main code
-                        # For now, use a placeholder
+                        # If polarization was not computed or nopolar is set, default to 1.0
                         polar_val = 1.0
 
                     print(f"TRACE_PY: polar {polar_val:.15g}")

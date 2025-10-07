@@ -63,6 +63,25 @@ def main() -> int:
         with open(log_path, "a", encoding="utf-8") as f:
             f.write(msg + "\n")
 
+    def _pull_with_error(logger, ctx: str) -> bool:
+        buf: list[str] = []
+        def cap(m: str) -> None:
+            logger(m)
+            buf.append(m)
+        ok = safe_pull(cap)
+        if not ok:
+            err_line = None
+            for line in reversed(buf):
+                low = line.lower()
+                if ("error" in low) or ("fatal" in low) or ("would be overwritten" in low):
+                    err_line = line
+                    break
+            if err_line:
+                print(f"[sync] ERROR ({ctx}): {err_line}")
+            else:
+                print(f"[sync] ERROR ({ctx}): git pull failed; see iter log.")
+        return ok
+
     # Branch guard / resolution
     if args.branch:
         assert_on_branch(args.branch, lambda m: None)
@@ -71,7 +90,7 @@ def main() -> int:
         branch_target = current_branch()
 
     # Always keep up to date
-    ok_initial = safe_pull(logp)
+    ok_initial = _pull_with_error(logp, "initial")
     if not ok_initial:
         print("[sync] ERROR: git pull failed; see iter log for details (likely untracked-file collisions).")
         print("[sync] Remediation: move or remove the conflicting untracked files, then re-run the loop.")
@@ -79,9 +98,9 @@ def main() -> int:
 
     for _ in range(args.sync_loops):
         # Compute per-iteration log path (branch/prompt aware)
-        ok_probe = safe_pull(lambda m: None)
+        ok_probe = _pull_with_error(lambda m: None, "probe")
         if not ok_probe:
-            print("[sync] ERROR: git pull failed before iteration probe; see iter log.")
+            # Error line already printed
             return 1
         st_probe = OrchestrationState.read(str(args.state_file))
         itnum = st_probe.iteration
@@ -99,8 +118,8 @@ def main() -> int:
             logp("[SYNC] Waiting for expected_actor=ralph...")
             start = time.time()
             while True:
-                if not safe_pull(logp):
-                    print("[sync] ERROR: git pull failed during polling; see iter log (likely untracked-file collisions).")
+                if not _pull_with_error(logp, "polling"):
+                    # Error line already printed
                     return 1
                 st = OrchestrationState.read(str(args.state_file))
                 if st.expected_actor == "ralph":
@@ -125,8 +144,8 @@ def main() -> int:
         rc = tee_run([args.claude_cmd, "-p", "--dangerously-skip-permissions", "--verbose", "--output-format", "stream-json"], prompt_path, iter_log)
 
         # Complete handoff
-        if not safe_pull(logp):
-            print("[sync] ERROR: git pull failed during handoff; see iter log.")
+        if not _pull_with_error(logp, "handoff"):
+            # Error line already printed
             return 1
         sha = short_head()
         st = OrchestrationState.read(str(args.state_file))
