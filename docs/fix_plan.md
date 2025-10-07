@@ -537,6 +537,28 @@
       1. ✅ Phase L3k.3c.3 complete — spec baselines locked with evidence artifacts
       2. → Phase L3k.3c.4 — Design opt-in C-parity shim for validation harnesses (defer to next implementation loop)
       3. → Phase L3k.3d — Resolve nb-compare ROI parity (VG-3/VG-4) after shim work
+  * [2025-10-07] Attempt #119 (ralph loop i=119, Mode: Docs) — Result: ✅ **SUCCESS** (Phase L3k.3c.4 parity shim design COMPLETE). **No code changes.**
+    Metrics: Design-only loop (no code/tests modified). Test collection: 2/2 tests discovered in 0.80s (test_rot_b_matches_c, test_k_frac_phi0_matches_c).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251007T232657Z/design.md` — Complete parity shim design note (496 lines, 10 sections): executive summary, C-PARITY-001 background (nanoBragg.c:3044-3066 quoted per CLAUDE Rule #11), opt-in trigger (`--phi-carryover-mode {spec,c-parity}`), batched tensor implementation strategy, validation plan (tests + traces + nb-compare), risk assessment, documentation updates, implementation roadmap
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251007T232657Z/collect_only.log` — pytest collect-only output confirming tests are discoverable
+      - `plans/active/cli-phi-parity-shim/plan.md` — Phase B tasks (B1-B3) marked [D] complete with artifact references
+    Observations/Hypotheses:
+      - **Opt-in API designed**: CLI flag `--phi-carryover-mode` with default="spec" (spec-compliant) and opt-in="c-parity" (C bug reproduction)
+      - **Config plumbing**: `CrystalConfig.phi_carryover_mode` field; parser updates in `__main__.py`
+      - **Vectorization preserved**: Implementation uses `torch.where` + `torch.cat` for per-step masking (no Python loops); maintains (phi_steps, 3) tensor shapes
+      - **Gradient flow**: All operations differentiable (where/cat/unsqueeze); gradcheck tests planned for both modes
+      - **Device/dtype neutrality**: Inherits from phi_rad tensor; CPU+CUDA parametrized tests documented
+      - **C-code reference**: nanoBragg.c:3040-3066 extracted verbatim per CLAUDE Rule #11
+      - **Validation strategy enumerated**: (a) Extended test suite (`TestPhiCarryoverParity`), (b) Per-φ traces (spec vs c-parity vs C), (c) nb-compare with `--py-args "--phi-carryover-mode c-parity"`, (d) VG-3/VG-4 gates (correlation ≥0.9995, sum_ratio 0.99-1.01)
+      - **Risk mitigation**: Default is spec-compliant; parity mode opt-in only; comprehensive test coverage to prevent regressions
+      - Mode: Docs → implementation deferred to next code-focused loop
+    First Divergence: N/A (design document — no parity data yet)
+    Next Actions:
+      1. ✅ Phase L3k.3c.4 (Phase B of parity shim plan) complete — design approved, ready for implementation
+      2. → Phase C of `plans/active/cli-phi-parity-shim/plan.md`: Implement opt-in carryover (C1), wire CLI (C2), add tests (C3), capture traces (C4), log attempt (C5)
+      3. → Phase L3k.3c.5 — Dual-mode documentation/tests after implementation
+      4. → Phase L3k.3d — nb-compare ROI parity (VG-3/VG-4) using c-parity mode
       4. Update `plans/active/cli-noise-pix0/plan.md` L3k.3c.3 state from [ ] to [D] with this attempt reference
   * [2025-11-21] Attempt #97 (ralph loop i=97) — Result: **SUCCESS** (Phase L3k.2 implementation COMPLETE). **φ rotation fix applied: removed independent reciprocal vector rotation, added reciprocal recomputation from rotated real vectors per CLAUDE Rule #13.**
     Metrics: Targeted tests pass (test_f_latt_square_matches_c PASSED, 57/57 crystal/geometry tests PASSED); test collection succeeds (653 tests); Python syntax valid.

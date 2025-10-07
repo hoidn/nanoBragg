@@ -30,9 +30,9 @@ Exit Criteria: Design note approved, interface decisions captured in plan + fix_
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Draft design note (`design.md`) | [ ] | Create `parity_shim/<timestamp>/design.md` summarising: (1) Opt-in trigger surface (CLI flag vs environment vs config field); (2) Data flow sketch showing when stale vectors should replace spec vectors; (3) Gradient/torch.compile considerations; (4) Interaction with batching (phi × mosaic). Include direct C-code excerpts per CLAUDE Rule #11. |
-| B2 | Choose API & config plumbing | [ ] | Decide naming/location (e.g., `CrystalConfig.phi_carryover_mode` or `SimulatorConfig.c_parity`). Document default (`spec`) vs legacy (`c`) modes; ensure CLI mapping is unambiguous and does not repurpose existing flags. Update `design.md` and note required changes to `src/nanobrag_torch/__main__.py` and config dataclasses. |
-| B3 | Define validation strategy | [ ] | Enumerate required tests & scripts: (a) extend `tests/test_cli_scaling_phi0.py` with parity-toggle cases; (b) targeted pytest selectors (CPU and CUDA); (c) per-φ trace capture using `scripts/compare_per_phi_traces.py`; (d) nb-compare/ROI expectations if needed. Add these to `design.md` with commands and artifact targets. |
+| B1 | Draft design note (`design.md`) | [D] | ✅ Created `reports/2025-10-cli-flags/phase_l/parity_shim/20251007T232657Z/design.md` (10 sections, 496 lines): opt-in trigger (`--phi-carryover-mode {spec,c-parity}`), data flow, batched implementation strategy, validation plan, C-code excerpts per CLAUDE Rule #11. |
+| B2 | Choose API & config plumbing | [D] | ✅ Documented in `design.md` §2-3: CLI flag `--phi-carryover-mode`, `CrystalConfig.phi_carryover_mode` field (default="spec"), parser updates in `__main__.py`. Unambiguous naming; no flag collision. |
+| B3 | Define validation strategy | [D] | ✅ Documented in `design.md` §4: (a) Extended test classes `TestPhiCarryoverParity`, (b) CPU+CUDA parametrized tests, (c) Per-φ trace commands (`scripts/compare_per_phi_traces.py`), (d) nb-compare integration with `--py-args` flag. Artifact targets enumerated. |
 
 ### Phase C — Implementation & Verification Tasks
 Goal: Implement the parity shim and prove both modes behave as intended without regressing vectorization, gradients, or devices.
