@@ -1457,3 +1457,10 @@ Follow-ups for Ralph:
 - Synced clean; traced Phase L2b blockage to `trace_harness.py` still unpacking legacy `read_hkl_file` outputs. Logged the regression as Attempt #70 in docs/fix_plan.md:458-484 and updated the plan gap snapshot / L2b guidance (`plans/active/cli-noise-pix0/plan.md:13-18`, `:239-242`).
 - Authored new input.md (100 lines) directing Ralph to adapt the harness to the `(F_grid, metadata)` API, rerun the supervisor command capture, and archive refreshed TRACE_PY artifacts before Phase L2c resumes.
 - Focus next loop: confirm harness patch lands, collect live trace data, then execute compare_scaling_traces.py to re-enter normalization analysis.
+
+## 2025-11-14 (galph loop — Phase L2b orientation fix)
+- Verified repo up to date; reviewed core docs plus CLI plan & latest scaling artifacts.
+- Diagnosed F_cell=0 in trace harness: `trace_harness.py` feeds all MOSFLM vectors into `mosflm_a_star` and leaves the other slots `None`, so Crystal falls back to default orientation during Phase L2b.
+- Updated `plans/active/cli-noise-pix0/plan.md` L2b guidance and `docs/fix_plan.md` Next Actions / Attempt notes to call out the MOSFLM injection bug as the gating fix.
+- Rewrote `input.md` directing Ralph to patch the harness, rerun the supervisor trace command, refresh artifacts, then proceed to L2c comparison.
+- Follow-up for Ralph: apply the harness fix (`mosflm_a_star/b_star/c_star` assignments), rerun trace harness with supervisor flags, archive refreshed `trace_py_scaling.log`, execute `compare_scaling_traces.py`, and log the new Attempt entry before tackling normalization.
