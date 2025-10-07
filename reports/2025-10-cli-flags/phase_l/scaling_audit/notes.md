@@ -276,3 +276,111 @@ Status: [TO BE RUN]
    - Observations: Auto-oversample adds 4² factor; fluence calc diverges; polarization wrong
    - Next Actions: Phase L2c comparison script, then L3 normalization fix
 
+
+---
+
+## Execution Log — Phase L2b0 Rerun (2025-10-07, commit a36b0be)
+
+### Run Timestamp: 2025-10-07T03:39:26.126195Z
+
+**Command:**
+```bash
+export PYTHONPATH=src && export KMP_DUPLICATE_LIB_OK=TRUE && \
+python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py \
+  --config supervisor --pixel 685 1039 --out trace_py_scaling.log \
+  --device cpu --dtype float32
+```
+
+**Execution status:** ✅ SUCCESS (trace generated with harness fix)
+
+**Artifacts created:**
+1. `trace_py_scaling.log` — 11 lines of TRACE_PY output ✅
+2. `trace_py_env.json` — Environment snapshot ✅
+3. `config_snapshot.json` — Harness parameters ✅
+4. `harness_run.log` — Execution log ✅
+
+### Key Findings
+
+**Trace Harness Fix Applied:**
+- Fixed Simulator initialization to pass Crystal and Detector *objects* instead of Config objects
+- Removed duplicate detector instantiation
+
+**Scaling Chain Values (from trace_py_scaling.log):**
+- `I_before_scaling` = NOT_EXTRACTED (placeholder — requires instrumentation update per Phase L2b)
+- `r_e_sqr` = 7.94079248018965e-30 m² ✓ (matches C exactly)
+- `fluence_photons_per_m2` = 1.00000001384843e+24 ✓ (matches C 1e+24)
+- `steps` = 10 ✓ (matches C exactly)
+- `oversample_thick` = 0 ✓
+- `oversample_polar` = 0 ✓
+- `oversample_omega` = 0 ✓
+- `capture_fraction` = 1.0 ✓
+- `polar` = 0.0 (C expects 0.91463969894451 from line 297) ✗
+- `omega_pixel` = 4.20412684465831e-07 sr (placeholder — not extracted from simulator)
+- `I_pixel_final` = 0 ✗ (C expects 2.88139542684698e-07)
+
+**Divergence from C Trace (c_trace_scaling.log):**
+- ✓ PyTorch `steps` = 10 (matches C exactly)
+- ✓ PyTorch `fluence` = 1.00000001384843e+24 (matches C 1e+24 within float32 precision)
+- ✓ PyTorch `r_e_sqr` matches C exactly
+- ✗ PyTorch `polar` = 0.0 vs C polar = 0.91463969894451 (100% error — placeholder not real value)
+- ✗ PyTorch `I_pixel_final` = 0 vs C I_pixel_final = 2.88139542684698e-07 (zero intensity)
+- ? PyTorch `omega_pixel` placeholder value (not extracted from actual simulator computation)
+
+### Confirmed Per input.md Instructions
+
+**Beam Vector Presence:**
+- Harness `get_supervisor_params` includes `custom_beam_vector: (0.00051387949, 0.0, -0.99999986)` ✓
+- C trace shows `INCIDENT_BEAM_DIRECTION= 0.000513879 0 -1` ✓
+
+**Oversample Setting:**
+- Harness sets `oversample: 1` ✓
+- C trace confirms `1x1 pixel oversample steps` (line 154) ✓
+
+**Flux/Beamsize Settings:**
+- Harness sets `flux: 1e18`, `exposure: 1.0`, `beamsize_mm: 1.0` ✓
+- C trace confirms `incident fluence: 1e+24 photons/m^2` (derived from flux/beamsize) ✓
+
+**Zero Intensity Root Cause:**
+- Pixel (685, 1039) final intensity = 0 suggests either:
+  - F_cell lookup failed (HKL grid missing reflection)
+  - F_latt calculation diverged to produce zero
+  - Geometric mismatch left pixel outside Bragg condition
+
+### Observations
+
+1. **Fluence/Steps Parity Achieved:** With full supervisor flags present, PyTorch now matches C for `fluence` and `steps`.
+2. **Placeholder Polarization:** The trace harness emits `polar = beam_config.polarization_factor` (default 0.0) instead of extracting the computed Kahn factor from the simulator. This must be fixed per Phase L2b instrumentation requirements.
+3. **Placeholder omega_pixel:** The harness emits a hardcoded value instead of extracting the actual solid angle computed in the simulator.
+4. **I_before_scaling Not Extracted:** The harness cannot access internal simulator state without instrumentation changes.
+5. **Zero Final Intensity:** The simulation completed but pixel (685, 1039) has zero intensity. This either indicates a geometry/lattice divergence (see Phase K3e evidence showing k_frac mismatch) or an HKL lookup failure.
+
+### Verification Status
+
+**Sanity checks against C trace:**
+- `steps == 10` ✓ (PyTorch: 10, C: 10)
+- `fluence ≈ 1e24` ✓ (PyTorch: 1.00000001384843e+24, C: 1e+24)
+- `omega_pixel ≈ 4.2e-7` ? (PyTorch: placeholder 4.20412684465831e-07, C: 4.20412684465831e-07 — exact match suggests copy-paste)
+- `polar ≈ 0.9146` ✗ (PyTorch: 0.0, C: 0.91463969894451 — placeholder not real)
+
+**Major Remaining Gaps:**
+1. **Polarization:** Placeholder `0.0` instead of computed Kahn factor (~0.9146)
+2. **Omega Pixel:** Hardcoded placeholder instead of extracted solid angle
+3. **I_before_scaling:** Not accessible without simulator instrumentation changes
+4. **Zero Intensity:** Final intensity is zero, indicating upstream physics divergence (likely k_frac mismatch per Phase K3e)
+
+### Git Commit
+
+**SHA:** a36b0be1cd60f17fbadc288fabbbce5d96ac57c6
+
+---
+
+## Next Actions (for docs/fix_plan.md Attempt Update)
+
+1. ✅ **Phase L2b0 Complete** — Rerun with full supervisor flags confirms steps/fluence parity
+2. **Phase L2b (blocked)** — Instrumentation required to extract real `polar`, `omega_pixel`, `I_before_scaling` from Simulator.run()
+   - Must patch `src/nanobrag_torch/simulator.py` to surface actual values instead of placeholders
+   - Gate behind `trace_pixel` debug flag to avoid runtime overhead
+   - Update trace harness to pull from instrumented paths
+3. **Phase L2c (pending L2b)** — Diff TRACE_C vs TRACE_PY once real scaling factors are available
+4. **Phase L3 (pending L2c)** — Root cause zero intensity and fix normalization chain
+

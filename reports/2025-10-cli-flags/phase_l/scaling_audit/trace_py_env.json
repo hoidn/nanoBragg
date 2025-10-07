@@ -1,9 +1,10 @@
 {
-  "python_version": "3.13",
-  "pytorch_version": "2.x",
+  "python_version": "3.13.7 | packaged by Anaconda, Inc. | (main, Sep  9 2025, 19:59:03) [GCC 11.2.0]",
+  "torch_version": "2.8.0+cu128",
+  "platform": "Linux-6.14.0-29-generic-x86_64-with-glibc2.39",
+  "cuda_available": true,
   "device": "cpu",
-  "dtype": "torch.float32",
-  "command": "python -m nanobrag_torch -mat A.mat -hkl scaled.hkl -lambda 0.9768 -distance 231.27466 -pixel 0.172 -detpixels_s 2527 -detpixels_f 2463 -Xclose 211.818 -Yclose 217.322 -phi 0.0 -osc 0.1 -phisteps 10 -Na 36 -Nb 47 -Nc 29 -mosaic 0.0 -mosaic_dom 1 -flux 1e18 -exposure 1.0 -beamsize 1.0 -spindle_axis -1 0 0 -trace_pixel 685 1039",
-  "timestamp": "2025-10-17",
-  "git_sha": "3f376d6"
+  "dtype": "float32",
+  "git_sha": "a36b0be1cd60f17fbadc288fabbbce5d96ac57c6",
+  "timestamp_iso": "2025-10-07T03:39:26.126195Z"
 }

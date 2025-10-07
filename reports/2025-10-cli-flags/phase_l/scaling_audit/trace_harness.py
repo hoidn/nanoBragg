@@ -236,9 +236,8 @@ def main():
     crystal.h_range, crystal.k_range, crystal.l_range = h_range, k_range, l_range
 
     # Run simulator (Step 5)
-    simulator = Simulator(crystal_config, detector_config, beam_config, dtype=dtype, device=device)
-    simulator.detector = detector
-    simulator.crystal = crystal
+    # Simulator expects Crystal and Detector objects, not configs
+    simulator = Simulator(crystal, detector, beam_config=beam_config, dtype=dtype, device=device)
 
     # Execute simulation
     intensities = simulator.run()

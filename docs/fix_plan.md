@@ -1397,6 +1397,25 @@
       - Phase L3a: Fix polarization to apply Kahn formula even when K=0 (ensure geometric cos²(2θ) term is computed).
       - Phase L3b: Add targeted regression tests for scaling chain (plan references `tests/test_cli_scaling.py`).
       - Phase L4: Rerun supervisor command parity after fixes land to verify correlation ≥0.9995 and sum_ratio 0.99–1.01.
+  * [2025-10-07] Attempt #59 (ralph loop i=65) — Result: **PHASE L2b0 COMPLETE** (evidence-only). **Trace harness refreshed with full supervisor flags; fluence/steps now match C exactly.**
+    Metrics: PyTorch steps=10 (matches C exactly); fluence=1.00000001384843e+24 (matches C 1e+24 within float32 precision); polar=0.0 (placeholder, C=0.91463969894451); omega=4.20412684465831e-07 (placeholder hardcoded value); r_e_sqr matches C exactly; I_pixel_final=0 (C=2.88139542684698e-07).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py` - Fixed Simulator initialization bug (pass Crystal/Detector objects, not configs)
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log` - Refreshed PyTorch trace (11 lines of TRACE_PY)
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_env.json` - Environment snapshot (commit a36b0be, Python 3.13, PyTorch 2.8, cpu/float32)
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/harness_run.log` - Execution log showing successful run
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/notes.md` - Updated with Phase L2b0 rerun findings (lines 282-386)
+    Observations/Hypotheses:
+      - **Fluence/Steps Parity Achieved**: With `-beam_vector`, `-oversample 1`, `-flux 1e18`, and `-beamsize 1.0` flags now present in harness config, PyTorch matches C for fluence and steps (resolving Attempt #58 divergences).
+      - **Placeholder Scaling Values**: Current trace harness emits hardcoded placeholders for `polar` (0.0), `omega_pixel` (4.20412684465831e-07), and `I_before_scaling` (NOT_EXTRACTED) because it cannot access internal Simulator state without instrumentation. These must be fixed per Phase L2b proper (pending instrumentation work).
+      - **Zero Final Intensity**: I_pixel_final=0 indicates upstream physics divergence (likely k_frac mismatch documented in Phase K3e evidence showing Δk≈6.04 units).
+      - **Harness Fix Applied**: Fixed bug where harness passed DetectorConfig/CrystalConfig objects to Simulator.__init__ instead of Detector/Crystal instances, causing AttributeError on `self.detector.beam_vector`.
+      - **Input.md "Do Now" Satisfied**: Executed rerun command with full supervisor flag set; confirmed beam_vector, oversample, flux, and beamsize parameters are now present and match C trace exactly.
+    Next Actions:
+      - **Phase L2b (blocked)** — Instrumentation required to extract real `polar`, `omega_pixel`, `I_before_scaling` from Simulator.run(). Must patch `src/nanobrag_torch/simulator.py` to surface actual computed values instead of placeholders, gated behind `trace_pixel` debug flag.
+      - **Phase L2b blocker noted** — Cannot verify incident beam direction without adding `TRACE_PY: incident_vec` output. Add to instrumentation requirements.
+      - **Phase L2c (pending L2b)** — Once real scaling factors are available, build `compare_scaling_traces.py` to diff TRACE_C vs TRACE_PY and identify first divergence.
+      - **Phase L3 (pending L2c)** — Root cause zero intensity (likely geometry/lattice mismatch causing pixel to fall outside Bragg condition) and fix normalization chain.
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; **(viii) Phase F3 parity evidence captured** ✅ (Attempt #12); **(ix) Phase G2 MOSFLM orientation ingestion complete** ✅ (Attempt #17); **(x) Phase G3 trace verification complete with transpose fix** ✅ (Attempt #18); (xi) Phase H lattice structure factor alignment ✅ (Attempt #25); (xii) Phase F3 parity rerun with lattice fix ❌; (xiii) Phase I polarization alignment ❌; (xiv) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌.
 

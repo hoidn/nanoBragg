@@ -1,0 +1,9 @@
+/home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:124: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  'timestamp_iso': datetime.utcnow().isoformat() + 'Z'
+/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/models/crystal.py:984: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.detach().clone() or sourceTensor.detach().clone().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  spindle_axis = torch.tensor(
+Trace written to reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log
+Environment snapshot: reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_env.json
+Config snapshot: reports/2025-10-cli-flags/phase_l/scaling_audit/config_snapshot.json
+
+Pixel (685, 1039) final intensity: 0
