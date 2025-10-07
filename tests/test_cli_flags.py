@@ -794,3 +794,93 @@ class TestCLIPivotSelection:
         # (exact parity verification happens in Phase H6g after this fix)
         assert max_delta < 0.005, \
             f"pix0 delta {max_delta:.6f} m exceeds 5mm threshold (expected rough agreement)"
+
+
+class TestHKLFdumpParity:
+    """
+    Test HKL/Fdump roundtrip parity (CLI-FLAGS-003 Phase L1c).
+
+    Verifies that:
+    1. read_hkl_file() produces same grid as read_fdump() for C-generated cache
+    2. write_fdump() matches C binary layout exactly (with padding)
+    3. Structure factors remain lossless through the roundtrip
+
+    References:
+    - specs/spec-a-core.md §Structure Factors & Fdump (line 474)
+    - golden_suite_generator/nanoBragg.c:2359-2486 (C writer loops)
+    - reports/2025-10-cli-flags/phase_l/hkl_parity/layout_analysis.md
+    """
+
+    def test_scaled_hkl_roundtrip(self):
+        """
+        Roundtrip test: HKL text → PyTorch grid → Fdump → PyTorch grid.
+
+        Expected failure (before fix):
+        - read_fdump will fail to match HKL grid due to padding mismatch
+        - C allocates (range+1) dimensions but PyTorch currently uses range
+
+        After fix:
+        - Both readers should produce identical grids
+        - Max |ΔF| ≤ 1e-6 electrons (spec-a-core.md:460)
+        """
+        from pathlib import Path
+        import tempfile
+        from nanobrag_torch.io.hkl import read_hkl_file, write_fdump, read_fdump
+
+        # Input files from Phase L1b analysis
+        hkl_path = "scaled.hkl"
+        c_fdump_path = "reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006181401.bin"
+
+        # Verify files exist
+        assert Path(hkl_path).exists(), f"Missing {hkl_path}"
+        assert Path(c_fdump_path).exists(), f"Missing C-generated Fdump cache"
+
+        # Read HKL text file
+        F_hkl, meta_hkl = read_hkl_file(hkl_path, default_F=0.0, dtype=torch.float64)
+
+        # Read C-generated Fdump cache
+        F_c_fdump, meta_c = read_fdump(c_fdump_path, dtype=torch.float64)
+
+        # Metadata should match exactly
+        for key in ['h_min', 'h_max', 'k_min', 'k_max', 'l_min', 'l_max']:
+            assert meta_hkl[key] == meta_c[key], \
+                f"Metadata mismatch: {key} HKL={meta_hkl[key]} vs C={meta_c[key]}"
+
+        # Grid shapes should match (accounting for C padding)
+        # According to layout_analysis.md, C allocates (range+1)^3
+        # But only uses indices 0..range (inclusive), so we need to handle this
+        assert F_hkl.shape == F_c_fdump.shape, \
+            f"Shape mismatch: HKL={F_hkl.shape} vs C={F_c_fdump.shape}"
+
+        # Structure factors should match within tolerance
+        # Per spec-a-core.md:460, acceptable tolerance is <1e-6 electrons
+        delta_F = torch.abs(F_hkl - F_c_fdump)
+        max_delta = torch.max(delta_F).item()
+
+        # Count mismatches beyond tolerance
+        mismatches = torch.sum(delta_F > 1e-6).item()
+
+        assert max_delta <= 1e-6, \
+            f"Max |ΔF| = {max_delta:.2e} exceeds tolerance (1e-6); {mismatches} mismatches"
+        assert mismatches == 0, \
+            f"Found {mismatches} mismatches beyond 1e-6 tolerance"
+
+        # Write roundtrip: HKL → PyTorch Fdump → read back
+        with tempfile.NamedTemporaryFile(suffix=".bin", delete=False) as tmp:
+            tmp_path = tmp.name
+
+        try:
+            write_fdump(F_hkl, meta_hkl, tmp_path)
+            F_roundtrip, meta_roundtrip = read_fdump(tmp_path, dtype=torch.float64)
+
+            # Verify roundtrip preserves data exactly
+            assert F_hkl.shape == F_roundtrip.shape
+            delta_roundtrip = torch.abs(F_hkl - F_roundtrip)
+            max_roundtrip = torch.max(delta_roundtrip).item()
+
+            assert max_roundtrip == 0.0, \
+                f"Roundtrip introduced error: max |ΔF| = {max_roundtrip:.2e}"
+
+        finally:
+            # Cleanup
+            Path(tmp_path).unlink(missing_ok=True)
