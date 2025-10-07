@@ -117,11 +117,9 @@ class Crystal:
             self.N_cells_c.item()
         ])
 
-        # φ=0 carryover cache for CLI-FLAGS-003 Phase L3k.3c.3
-        # Caches the last rotated real vectors to replicate C behavior where
-        # ap/bp/cp working vectors persist across pixels when phi==0
-        # (nanoBragg.c:3044-3066 phi rotation loop)
-        self._phi_last_cache: Optional[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]] = None
+        # TODO (CLI-FLAGS-003 Phase L3k.3c.4): Add opt-in C-parity carryover shim here
+        # Future work will introduce a flag to enable φ=0 cache for validation harnesses
+        # that need to reproduce nanoBragg.c's C-PARITY-001 bug (docs/bugs/verified_c_bugs.md:166)
 
     def to(self, device=None, dtype=None):
         """Move crystal to specified device and/or dtype."""
@@ -148,15 +146,8 @@ class Crystal:
         # Clear geometry cache when moving devices
         self._geometry_cache = {}
 
-        # Migrate or invalidate φ cache tensors (CLI-FLAGS-003 Phase L3k.3c.3)
-        # When device/dtype changes, cached tensors must migrate to stay consistent
-        if self._phi_last_cache is not None:
-            a_cached, b_cached, c_cached = self._phi_last_cache
-            self._phi_last_cache = (
-                a_cached.to(device=self.device, dtype=self.dtype),
-                b_cached.to(device=self.device, dtype=self.dtype),
-                c_cached.to(device=self.device, dtype=self.dtype)
-            )
+        # TODO (CLI-FLAGS-003 Phase L3k.3c.4): φ cache migration will go here
+        # when opt-in parity shim is added
 
         return self
 
@@ -1058,88 +1049,36 @@ class Crystal:
         )
 
         # Step 1: Apply spindle rotation to ONLY real-space vectors (a, b, c)
-        # This follows the C-code semantics where reciprocal vectors are NOT independently rotated.
-        # C-code reference (nanoBragg.c:3044-3058):
-        #   phi = phi0 + phistep*phi_tic;
-        #   if( phi != 0.0 )
-        #   {
-        #       rotate_axis(a0,ap,spindle_vector,phi);
-        #       rotate_axis(b0,bp,spindle_vector,phi);
-        #       rotate_axis(c0,cp,spindle_vector,phi);
-        #   }
-        # CRITICAL: C code skips rotation when phi==0. We must replicate this exactly.
+        # This follows spec-compliant semantics where each φ step gets a fresh rotation.
+        # Spec reference (specs/spec-a-core.md:211-214):
+        #   "φ step: φ = φ0 + (step index)*phistep; rotate the reference cell (a0,b0,c0)
+        #    about u by φ to get (ap,bp,cp)."
+        #
+        # NOTE: This is the SPEC-COMPLIANT path. The C code (nanoBragg.c:3044-3058) contains
+        # a bug where it skips rotation when phi==0, causing ap/bp/cp to carry over stale
+        # values from the previous pixel's last φ step. This is documented as C-PARITY-001
+        # in docs/bugs/verified_c_bugs.md:166-204. An opt-in parity shim will be added in
+        # Phase L3k.3c.4 for validation harnesses that need to reproduce the C bug.
+        #
         # Shape: (N_phi, 3)
 
-        # Initialize φ=0 carryover cache if this is the first call (CLI-FLAGS-003 L3k.3c.3)
-        # The C code's ap/bp/cp variables persist from the previous pixel's last phi step.
-        # To replicate this for the FIRST pixel, we need to pre-populate the cache with
-        # vectors rotated by the LAST phi angle (phi_last = phi_start + osc_range * (phi_steps-1)/phi_steps).
-        if self._phi_last_cache is None and config.phi_steps > 0:
-            # Compute the last phi angle
-            last_phi_deg = config.phi_start_deg + (config.osc_range_deg / config.phi_steps) * (config.phi_steps - 1)
-            # Preserve gradients: use .to() instead of torch.tensor() when input is already a tensor
-            if isinstance(last_phi_deg, torch.Tensor):
-                last_phi_deg_tensor = last_phi_deg.to(device=self.device, dtype=self.dtype)
-            else:
-                last_phi_deg_tensor = torch.tensor(last_phi_deg, device=self.device, dtype=self.dtype)
-            last_phi_rad = torch.deg2rad(last_phi_deg_tensor)
-
-            # Rotate base vectors by the last phi angle
-            from ..utils.geometry import rotate_axis
-            spindle_axis_temp = torch.tensor(
-                config.spindle_axis, device=self.device, dtype=self.dtype
-            )
-
-            a_last = rotate_axis(self.a.unsqueeze(0), spindle_axis_temp.unsqueeze(0), last_phi_rad.unsqueeze(0))
-            b_last = rotate_axis(self.b.unsqueeze(0), spindle_axis_temp.unsqueeze(0), last_phi_rad.unsqueeze(0))
-            c_last = rotate_axis(self.c.unsqueeze(0), spindle_axis_temp.unsqueeze(0), last_phi_rad.unsqueeze(0))
-
-            self._phi_last_cache = (
-                a_last.squeeze(0),
-                b_last.squeeze(0),
-                c_last.squeeze(0)
-            )
-
-        # Initialize output tensors to hold rotated vectors
-        a_phi = []
-        b_phi = []
-        c_phi = []
-
-        # Process each φ angle individually to match C's phi!=0.0 guard
-        for i in range(config.phi_steps):
-            phi_val = phi_angles[i]
-
-            # Match C code's "if( phi != 0.0 )" check (nanoBragg.c:3044)
-            # Use a small tolerance for floating-point comparison
-            # phi_val is in degrees, so 1e-10 degrees is effectively zero
-            if torch.abs(phi_val) < 1e-10:
-                # φ=0: Replicate C behavior where ap/bp/cp persist from previous pixel
-                # When the C code skips rotation at phi==0, the working vectors (ap/bp/cp)
-                # retain values from the last phi step of the PREVIOUS pixel (due to
-                # OpenMP private variables not being reset between iterations).
-                # We cache the last rotated vectors and reuse them at phi==0.
-                # Reference: nanoBragg.c:3044-3066, test comment at test_cli_scaling_phi0.py:35-40
-                if self._phi_last_cache is not None:
-                    # Use cached vectors from last phi step
-                    a_phi.append(self._phi_last_cache[0].unsqueeze(0))
-                    b_phi.append(self._phi_last_cache[1].unsqueeze(0))
-                    c_phi.append(self._phi_last_cache[2].unsqueeze(0))
-                else:
-                    # No cache yet (first call) - use base vectors
-                    a_phi.append(self.a.unsqueeze(0))
-                    b_phi.append(self.b.unsqueeze(0))
-                    c_phi.append(self.c.unsqueeze(0))
-            else:
-                # φ≠0: Apply rotation
-                phi_rad_single = phi_rad[i].unsqueeze(0)
-                a_phi.append(rotate_axis(self.a.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad_single))
-                b_phi.append(rotate_axis(self.b.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad_single))
-                c_phi.append(rotate_axis(self.c.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad_single))
-
-        # Stack results: (N_phi, 3)
-        a_phi = torch.cat(a_phi, dim=0)
-        b_phi = torch.cat(b_phi, dim=0)
-        c_phi = torch.cat(c_phi, dim=0)
+        # Apply rotation to base vectors for all φ angles
+        # When phi=0, rotate_axis applies identity rotation, yielding base vectors
+        a_phi = rotate_axis(
+            self.a.unsqueeze(0).expand(config.phi_steps, -1),
+            spindle_axis.unsqueeze(0).expand(config.phi_steps, -1),
+            phi_rad
+        )
+        b_phi = rotate_axis(
+            self.b.unsqueeze(0).expand(config.phi_steps, -1),
+            spindle_axis.unsqueeze(0).expand(config.phi_steps, -1),
+            phi_rad
+        )
+        c_phi = rotate_axis(
+            self.c.unsqueeze(0).expand(config.phi_steps, -1),
+            spindle_axis.unsqueeze(0).expand(config.phi_steps, -1),
+            phi_rad
+        )
 
         # Step 2: Recompute reciprocal vectors from rotated real vectors
         # This ensures metric duality is preserved: a·a* = 1 exactly (CLAUDE Rule #13)
@@ -1187,15 +1126,8 @@ class Crystal:
         b_star_final = rotate_umat(b_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
         c_star_final = rotate_umat(c_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
 
-        # Cache the last phi step's vectors for φ=0 carryover (CLI-FLAGS-003 Phase L3k.3c.3)
-        # This replicates C behavior where ap/bp/cp persist across pixels
-        # Store the rotated vectors (before mosaic) from the LAST phi step
-        if config.phi_steps > 0:
-            self._phi_last_cache = (
-                a_phi[-1].clone(),  # Last phi step
-                b_phi[-1].clone(),
-                c_phi[-1].clone()
-            )
+        # TODO (CLI-FLAGS-003 Phase L3k.3c.4): φ=0 cache population will go here
+        # when opt-in parity shim is added
 
         return (a_final, b_final, c_final), (a_star_final, b_star_final, c_star_final)
 
