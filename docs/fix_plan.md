@@ -510,6 +510,22 @@
       2. Generate per-φ traces at φ=0°, 0.05°, 0.1° to validate b_Y drift eliminated
       3. Run nb-compare with supervisor command to verify correlation ≥0.9995, sum_ratio 0.99–1.01
       4. After gates pass: Execute Phase L3k.4 (complete Attempt with full metrics, mark fix_checklist rows, prepare Phase L4)
+  * [2025-10-07] Attempt #98 (ralph loop i=98) — Result: **VALIDATION** (Phase L3k.3 VG-2 gate PASSED). **φ rotation fix validated via targeted lattice test.**
+    Metrics: VG-2 test_f_latt_square_matches_c PASSED (5.79s) with NB_RUN_PARALLEL=1; test collection 653 tests; no code changes.
+    Artifacts:
+      - VG-2 test log: tests/test_cli_scaling.py::TestFlattSquareMatchesC::test_f_latt_square_matches_c PASSED
+      - Test collection: 653 tests collected successfully (pytest --collect-only)
+      - Targeted test execution: KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_cli_scaling.py::TestFlattSquareMatchesC -v
+    Observations/Hypotheses:
+      - **VG-2.1 PASS**: Targeted pytest command from input.md Do Now executed successfully
+      - **VG-2.2 PASS**: test_f_latt_square_matches_c passed without regressions (5.79s runtime matches Attempt #97)
+      - **Test stability confirmed**: Collection count unchanged at 653 tests
+      - **Implementation validated**: φ rotation fix (Attempt #97) maintains lattice factor parity with C code
+      - **Ready for VG-1, VG-3, VG-4**: Remaining verification gates (per-φ traces, nb-compare ROI, component delta audit) deferred to next loop per scope discipline
+    Next Actions:
+      1. Phase L3k.3 continuation — Execute remaining verification gates: VG-1 (per-φ traces at 0°, 0.05°, 0.1°), VG-3 (nb-compare with supervisor command), VG-4 (component delta audit)
+      2. After VG-1/VG-3/VG-4 pass: Execute Phase L3k.4 (mark fix_checklist rows ✅, complete Attempt documentation with full metrics, prepare Phase L4)
+      3. Update fix_checklist.md to mark VG-2.1 ✅ and VG-2.2 ✅
   * [2025-10-07] Attempt #91 (ralph loop i=91) — Result: **SUCCESS** (Phase L3g spindle instrumentation COMPLETE). **H1 (spindle normalization) RULED OUT as root cause of Y-drift.**
     Metrics: Spindle Δ(magnitude)=0.0 (tolerance ≤5e-4); trace captured 43 TRACE_PY lines (was 40, +3 spindle lines); test collection 4/4 passed.
     Artifacts:
