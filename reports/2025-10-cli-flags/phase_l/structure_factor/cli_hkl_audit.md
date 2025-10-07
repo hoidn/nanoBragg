@@ -1,5 +1,78 @@
 # CLI HKL Ingestion Audit — Phase L3c
 
+## 2025-10-18 Refresh (ralph Attempt #80)
+
+- **SHA**: 68ea7b490ca7837125b7f919e04d3e7d3a178f0b
+- **Scope**: Phase L3c device audit refresh per supervisor input.md guidance. Document device/dtype gap before Phase L3d regression tests.
+
+### Critical Finding Confirmed: Device Transfer Missing
+
+**Location**: `src/nanobrag_torch/__main__.py:1073`
+
+**Current Code**:
+```python
+crystal.hkl_data = hkl_array.clone().detach().to(dtype=dtype)
+```
+
+**Problem**: HKL tensor receives dtype conversion but never moves to the CLI-requested device. When `-device cuda` is specified, the HKL grid remains on CPU.
+
+**Impact**:
+- Phase L3d/L4 CUDA parity runs will fail when `compute_physics_for_position()` (GPU) attempts to index `self.hkl_data` (CPU)
+- Device mismatch error will occur at first structure factor lookup
+
+**Evidence from Existing Probe** (Attempt #79):
+- Probe JSON (`cli_hkl_device_probe.json`) shows `device: "cpu"` for both CPU and CUDA configs
+- Shape/metadata correct: (49×57×62), h∈[-24,24], k∈[-28,28], l∈[-31,30]
+- Dtype handling works: `torch.float32` applied correctly
+
+**Code Flow Analysis**:
+1. `parse_and_validate_args()` loads HKL tuple via `read_hkl_file()` or `try_load_hkl_or_fdump()` (lines 446-448)
+2. `main()` unpacks tuple and attaches to Crystal instance (lines 1068-1076)
+3. Attachment applies `.to(dtype=dtype)` only - **missing `.to(device=device)`**
+
+**Required Fix**:
+```python
+# Change line 1073 from:
+crystal.hkl_data = hkl_array.clone().detach().to(dtype=dtype)
+
+# To:
+crystal.hkl_data = hkl_array.clone().detach().to(device=device, dtype=dtype)
+```
+
+### Test Collection Validation
+
+**Selector**: `tests/test_cli_scaling.py`
+**Result**: ✅ Collection successful
+```
+tests/test_cli_scaling.py::TestMOSFLMCellVectors::test_mosflm_cell_vectors
+tests/test_cli_scaling.py::TestFlattSquareMatchesC::test_f_latt_square_matches_c
+
+2 tests collected
+```
+
+### Phase L3c Exit Criteria Status
+
+- ✅ Device/dtype gap documented with exact line number
+- ✅ Existing probe artifacts reference confirmed (`cli_hkl_device_probe.json` still valid)
+- ✅ Test collection stable
+- ⏳ Fix implementation (queued for Phase L3d per plan guidance - "Do not edit simulator or config code during this audit loop")
+
+### Next Actions (Phase L3d)
+
+Per `plans/active/cli-noise-pix0/plan.md:462-463`:
+
+1. **Implement device fix**: Update line 1073 to apply both dtype AND device transfer
+2. **Add regression test**: Extend `tests/test_cli_scaling.py` with `-device cuda` + HKL loading case
+3. **Re-run probe**: Confirm HKL tensor moves to CUDA after fix
+
+### Artifacts Referenced
+
+- Device probe: `cli_hkl_device_probe.json` (Attempt #79, still valid)
+- Environment snapshot: `cli_hkl_env.json` (Attempt #79)
+- Test collection log: `collect_cli_scaling_20251118.log` (this attempt)
+
+---
+
 ## 2025-10-07 Device Handling Probe (ralph Attempt #79)
 
 - **SHA**: a91cb10b2e34e7c42cd62f8d9a6ec3a2d9965e4d

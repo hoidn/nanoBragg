@@ -549,6 +549,18 @@
       - **Impact scoped:** Will cause device mismatch when `-device cuda` runs reach structure factor lookup in compute_physics_for_position
       - **2025-11-17 galph audit cross-referenced:** Aligns with findings in docs/fix_plan.md:460-462 (galph previously identified the same gap)
     Next Actions: Supervisor to continue with Phase L3c harness audit (per plan.md:461 task 1) before implementing HKL device fix; document in fix_plan that HKL device transfer issue is now blocking CUDA parity and queue for L3d regression test.
+  * [2025-10-18] Attempt #80 (ralph loop) — Result: **SUCCESS** (Phase L3c CLI HKL audit refresh COMPLETE per input.md "Do Now"). **Evidence-only loop; refreshed audit documentation with precise line references and confirmed device gap.**
+    Metrics: Pytest collection stable (2 tests from test_cli_scaling.py collected). No production code changes.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/structure_factor/cli_hkl_audit.md:3-72` - Refreshed 2025-10-18 audit section with exact line number (1073), code flow analysis, and required fix
+      - `reports/2025-10-cli-flags/phase_l/structure_factor/collect_cli_scaling_20251118.log` - Fresh test collection validation (2 tests collected)
+      - `reports/2025-10-cli-flags/phase_l/structure_factor/cli_hkl_env_20251118.json` - Updated environment snapshot (SHA 68ea7b4, Python 3.13.7, Torch 2.8.0+cu128, CUDA available)
+    Observations/Hypotheses:
+      - **Precise location identified:** Device gap at `src/nanobrag_torch/__main__.py:1073` where `.to(dtype=dtype)` is called without `.to(device=device)`
+      - **Code flow documented:** HKL data flows from `parse_and_validate_args()` (lines 446-448) → `main()` unpacking (lines 1068-1076) → Crystal attachment with dtype-only conversion
+      - **Fix requirement clear:** Change line 1073 from `.to(dtype=dtype)` to `.to(device=device, dtype=dtype)`
+      - **Phase L3c exit criteria met:** Device/dtype gap documented with exact line number, existing probe artifacts confirmed valid, test collection stable
+    Next Actions: Phase L3d implementation per plan (implement device fix, add regression test, re-run probe). Current attempt was evidence-only per supervisor directive ("Do not edit simulator or config code during this audit loop").
   * [2025-10-07] Attempt #74 (ralph loop) — Result: **SUCCESS** (Phase L2b harness fix + L2c comparison complete). **Corrected harness to attach `crystal.hkl_data` and `crystal.hkl_metadata` instead of ad-hoc attributes; structure factor lookup now functional.**
     Metrics: Harness probe confirms hkl_data attached (lookup returns F=100 for (1,12,3), F=0 for out-of-range). Comparison identifies I_before_scaling as first divergence. Test suite passes 4/4 variants (tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics).
     Artifacts:

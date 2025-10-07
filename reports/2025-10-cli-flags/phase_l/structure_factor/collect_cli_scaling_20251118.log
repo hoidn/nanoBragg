@@ -1,0 +1,4 @@
+tests/test_cli_scaling.py::TestMOSFLMCellVectors::test_mosflm_cell_vectors
+tests/test_cli_scaling.py::TestFlattSquareMatchesC::test_f_latt_square_matches_c
+
+2 tests collected in 0.06s
