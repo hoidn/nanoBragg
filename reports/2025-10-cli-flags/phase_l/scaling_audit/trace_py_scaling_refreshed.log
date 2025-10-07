@@ -1,0 +1,11 @@
+TRACE_PY: I_before_scaling NOT_EXTRACTED
+TRACE_PY: r_e_sqr 7.94079248018965e-30
+TRACE_PY: fluence_photons_per_m2 1.00000001384843e+24
+TRACE_PY: steps 10
+TRACE_PY: oversample_thick 0
+TRACE_PY: oversample_polar 0
+TRACE_PY: oversample_omega 0
+TRACE_PY: capture_fraction 1
+TRACE_PY: polar 0
+TRACE_PY: omega_pixel 4.20412684465831e-07
+TRACE_PY: I_pixel_final 0
