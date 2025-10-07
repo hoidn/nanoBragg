@@ -1889,6 +1889,24 @@
       - Device comparison fix applied: use `.device.type` string comparison instead of direct `torch.device` object comparison to handle `cuda` vs `cuda:0` variants
       - Implementation follows all design contracts: no `.item()` calls, device-neutral offset construction, differentiability preserved
     Next Actions: Execute Phase D tasks (D1–D3) to vectorize `polint`, `polin2`, `polin3` helpers, enabling batched interpolation path for B>1 cases. Once polynomial evaluation is vectorized, the gathered `(B,4,4,4)` neighborhoods can be consumed to complete the tricubic vectorization pipeline.
+  * [2025-10-17] Attempt #5 — Result: **Phase C1 validation complete**. No code changes; validation-only loop per input.md guidance.
+    Metrics: AT-STR-002 tests: 3/3 passed in 2.15s (test_tricubic_interpolation_enabled, test_tricubic_out_of_bounds_fallback, test_auto_enable_interpolation). Max numerical delta: 0.0 (scalar path unchanged). Warning count: 0 (tests use B=1 scalar path).
+    Artifacts:
+      - `reports/2025-10-vectorization/phase_c/collect_log.txt` — Test collection output (3 tests found)
+      - `reports/2025-10-vectorization/phase_c/test_tricubic_interpolation_enabled.log` — Primary test execution log
+      - `reports/2025-10-vectorization/phase_c/test_tricubic_out_of_bounds_fallback.log` — OOB fallback test log
+      - `reports/2025-10-vectorization/phase_c/gather_notes.md` — Comprehensive Phase C1 implementation notes
+      - `reports/2025-10-vectorization/phase_c/diff_snapshot.json` — Validation status and test results
+      - `reports/2025-10-vectorization/phase_c/runtime_probe.json` — Environment and timing metadata
+      - `reports/2025-10-vectorization/phase_c/status_snapshot.txt` — Git status at loop completion
+    Observations/Hypotheses:
+      - Phase C1 batched gather infrastructure confirmed working (implemented in Attempt #4)
+      - Tests exercise scalar path (B=1) which calls existing polin3, verifying neighborhood gathering correctness
+      - Batched path (B>1) correctly falls back to nearest-neighbor pending Phase D polynomial vectorization
+      - Device/dtype neutrality preserved; no `.item()` calls or gradient breaks introduced
+      - Memory footprint acceptable (268 MB for 1024² detector at float32)
+      - gather_notes.md documents implementation details, tensor shapes, and validation evidence
+    Next Actions: Phase C1 complete per plan exit criteria. Proceed to Phase C2 (OOB warning validation) and C3 (shape assertions/caching), then Phase D polynomial vectorization.
 - Risks/Assumptions: Must maintain differentiability (no `.item()`, no `torch.linspace` with tensor bounds), preserve device/dtype neutrality (CPU/CUDA parity), and obey Protected Assets rule (all new scripts under `scripts/benchmarks/`). Large tensor indexing may increase memory pressure; ensure ROI caching still works.
 - Exit Criteria (quote thresholds from spec):
   * specs/spec-a-parallel.md §2.3 tricubic acceptance tests run without warnings and match C parity within documented tolerances (corr≥0.9995, ≤1e-12 structural duality where applicable).

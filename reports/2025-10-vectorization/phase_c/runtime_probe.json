@@ -1,0 +1,35 @@
+{
+  "timestamp": "2025-10-17T00:00:00Z",
+  "loop": "ralph i=89",
+  "phase": "C1",
+  "test_suite": "AT-STR-002",
+  "environment": {
+    "python_version": "3.13.7",
+    "pytorch_version": "2.8.0+cu128",
+    "pytest_version": "8.4.2",
+    "KMP_DUPLICATE_LIB_OK": "TRUE"
+  },
+  "test_timing": {
+    "test_tricubic_interpolation_enabled": "2.15s",
+    "test_tricubic_out_of_bounds_fallback": "2.15s",
+    "test_auto_enable_interpolation": "2.15s",
+    "full_suite": "2.15s (3 tests)"
+  },
+  "implementation_status": {
+    "batched_gather": "complete",
+    "scalar_path_B_equals_1": "active",
+    "batched_path_B_greater_1": "falls back to nearest-neighbor (Phase D pending)",
+    "polynomial_vectorization": "not_implemented (Phase D work)"
+  },
+  "performance_notes": {
+    "baseline_from_phase_a": "~1.4 ms/call (CPU), ~5.5 ms/call (CUDA) for scalar interpolation",
+    "memory_footprint_256x256": "~17 MB neighborhoods (float32)",
+    "memory_footprint_1024x1024": "~268 MB neighborhoods (float32)",
+    "warning_behavior": "Single warning emission for batched cases (B>1)"
+  },
+  "next_phase": {
+    "phase": "D",
+    "tasks": ["D1: Vectorize polint", "D2: Vectorize polin2/polin3", "D3: Gradient audit"],
+    "blockers": "None - Phase C1 complete"
+  }
+}

@@ -1,0 +1,7 @@
+## feature/spec-based-2...origin/feature/spec-based-2
+?? reports/2025-10-vectorization/phase_c/collect_log.txt
+?? reports/2025-10-vectorization/phase_c/gather_notes.md
+?? reports/2025-10-vectorization/phase_c/gradient_smoke.log
+?? reports/2025-10-vectorization/phase_c/status_snapshot.txt
+?? reports/2025-10-vectorization/phase_c/test_tricubic_interpolation_enabled.log
+?? reports/2025-10-vectorization/phase_c/test_tricubic_out_of_bounds_fallback.log

@@ -1,0 +1,10 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/myenv/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+collecting ... collected 1 item
+
+tests/test_at_str_002.py::test_tricubic_out_of_bounds_fallback PASSED    [100%]
+
+============================== 1 passed in 2.15s ===============================
