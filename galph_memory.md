@@ -1639,3 +1639,8 @@ Follow-ups for Ralph:
 - Marked VG-2 ✅ in rot_vector/fix_checklist.md and updated status block with 2025-11-21 timestamp; remaining gates explicit for Ralph.
 - Rewrote input.md (Parity mode) steering Ralph through per-φ harness capture, compare_per_phi_traces.py, nb-compare metrics, checksum/env snapshots, and documentation updates.
 - Expect Ralph to generate new per_phi_postfix/ artefacts, flip VG-1⇢VG-5, append Attempt entry, then proceed to Phase L4 rerun next loop.
+## 2025-11-21 (galph loop — L3k φ=0 parity evidence request)
+- Re-read Phase L3k evidence: Py per-φ traces still show `rot_b_y` ≈ 0.7173 and `k_frac` ≈ −0.589 at φ=0 (reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling_20251119.log:15-20) vs C’s 0.671588/−0.607256 (c_trace_scaling.log:266-277). Root cause for VG-1 failure is upstream of φ rotation, likely the real-vector reconstruction.
+- Noted nb-compare summary (reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/summary.json) still reports sum_ratio ≈ 1.16e5, so we cannot trust intensity metrics until φ=0 parity is fixed.
+- Authored new input.md directing Ralph to capture a failing pytest (`TestPhiZeroParity::test_rot_b_matches_c`) plus fresh Py/C traces under reports/.../base_vector_debug/ before touching simulator code.
+- No repo hygiene performed; tree contains only input.md modifications staged later.
