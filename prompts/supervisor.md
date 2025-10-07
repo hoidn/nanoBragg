@@ -228,6 +228,5 @@ Before finishing the loop, enforce git hygiene:
 <notes>
 - ignore 'routing violations'. these are out of scope.
 - ignore AT parallel 012-related items for now
-- I updated scaled.hkl so it might be necessary to recalculate downstream artifacts
 </notes>
 Now carefully and exhaustively follow your <instructions>.
