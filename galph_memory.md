@@ -1762,3 +1762,11 @@ Follow-ups for Ralph:
 - Emphasised reuse of the 202510070839 C trace, protected-assets compliance, SHA256 logging, and deferral of L3k.3c.4 shim/nb-compare work until VG-1 evidence is archived.
 - No repository code or docs changed beyond input.md/memory update.
 - Expect Ralph to execute the outlined evidence capture, mark VG-1 rows complete, and advance plan/fix_plan focus to L3k.3c.4 for the next engineering loop.
+
+## 2025-11-28 (galph loop — parity shim planning)
+- Added dedicated plan `plans/active/cli-phi-parity-shim/plan.md` with Phases A–D covering design, implementation, and documentation for the φ=0 carryover shim; Phase B now gates API selection and validation strategy.
+- Updated `plans/active/cli-noise-pix0/plan.md:L3k.3c.4-5` to point at the new plan and clarified evidence expectations (reports/2025-10-cli-flags/phase_l/parity_shim/...).
+- Refreshed `docs/fix_plan.md:450-463` Next Actions to align with the new plan (execute Phases B–D before resuming nb-compare work).
+- Issued `input.md` (Docs mode) directing Ralph to author the design note, choose the opt-in trigger, and run the collect-only selector before coding. Command: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_phi0.py --collect-only -q`.
+- Commit `7ef88d2` pushed on `feature/spec-based-2`; no tests run in supervisor loop.
+
