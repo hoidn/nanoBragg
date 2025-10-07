@@ -1349,3 +1349,10 @@ Follow-ups for Ralph:
 - Updated `plans/active/vectorization.md` with a 2025-11-09 gap snapshot and refreshed `docs/fix_plan.md` VECTOR-TRICUBIC-001 next actions to highlight Phase A A1–A3 as blocking.
 - Authored new supervisor `input.md` directing Ralph to execute K3g3 (targeted pytest + nb-compare + trace refresh) with stamped artifacts and to update scaling_chain/summary plus fix_plan Attempt log.
 - Follow-up for Ralph: run the specified pytest node under parity env, regenerate nb-compare + base-lattice traces, refresh reports/summary, and record Attempt update; if blocked, capture trace logs under `base_lattice/blocked/` and document stall.
+
+## 2025-11-09 (galph loop — Phase L1 HKL parity prep)
+- `timeout 30 git pull --rebase` clean; coin toss = tails so no retrospective audit.
+- CLI-FLAGS-003 still blocked by supervisor command parity (corr≈0.9965, sum_ratio≈1.26e5). Updated `plans/active/cli-noise-pix0/plan.md` Phase L with explicit L1–L4 tasks (HKL parity → scaling trace → diagnosis → rerun) and synced docs/fix_plan Next Actions to those steps.
+- Authored new `input.md` (Mode=Parity) directing Ralph to execute Phase L1 by building `scripts/validation/compare_structure_factors.py`, regenerating a stamped `Fdump_scaled` cache, and logging HKL parity metrics under `reports/2025-10-cli-flags/phase_l/hkl_parity/`.
+- Hypotheses for 1.26e5× intensity gap: (H1) HKL ingestion mismatch (PyTorch grid defaults vs C’s Fdump) — high confidence; next confirming step is L1 comparison script. (H2) Residual scaling-chain divergence post-MOSFLM fix (fluence/polar chain) — medium confidence; confirmation via Phase L2 traces after HKL parity passes.
+- Vectorization goal remains untouched; plan `plans/active/vectorization.md` still at Phase A baseline because `_tricubic_interpolation` falls back to nearest-neighbor for batched tensors (see src/nanobrag_torch/models/crystal.py:272+). Keep on radar once CLI parity clears.

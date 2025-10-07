@@ -455,10 +455,10 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase K3e evidence reveals a **fundamental lattice/geometry mismatch**, not a φ-grid offset. C reports `k_frac≈−3.857` across all φ steps while PyTorch reports `k_frac≈−9.899` (Δk≈6.04 at φ=0°). This 6-unit discrepancy indicates the base reciprocal lattice vectors or scattering geometry differ before any φ rotation is applied.
-- Next Actions (2025-10-06 ralph update):
-  1. ✅ Phase K3g3 COMPLETE (Attempt #49) — Test `test_f_latt_square_matches_c` PASSES after Fdump.bin cleanup and test isolation fix. Ready for plan archival per K3g3 exit criteria.
-  2. Phase L1 (blocked) — Supervisor nb-compare command shows 126,467× sum ratio with `-hkl scaled.hkl` parameters, indicating separate normalization/HKL-loading issue. Requires dedicated Phase L investigation (defer to next loop).
-  3. Phase K3c closeout — Update plan status K3g3 to [D], document Attempt #49 findings in `phase_k/base_lattice/summary.md`, and archive artifacts before Phase L work begins.
+- Next Actions (2025-11-09 galph update):
+  1. Phase L1 — Capture HKL ingestion parity by comparing `scaled.hkl` grids between C’s Fdump and PyTorch (`reports/2025-10-cli-flags/phase_l/hkl_parity/`); fail if max |ΔF| > 1e-6.
+  2. Phase L2 — Regenerate scaling-chain traces for the supervisor command (store under `phase_l/scaling_trace/`) and rerun `analyze_scaling.py` to pinpoint the first divergent factor.
+  3. Phase L3 — Summarise the diagnosed normalization bug and proposed remediation in `phase_l/diagnosis.md`, then proceed to implementation before rerunning nb-compare in L4.
 - Attempts History:
   * [2025-10-06] Attempt #27 (ralph) — Result: **PARITY FAILURE** (Phase I3 supervisor command). **Intensity scaling discrepancy: 124,538× sum ratio.**
     Metrics: Correlation=0.9978 (< 0.999 threshold), sum_ratio=124,538 (should be ~1.0), C max_I=446, PyTorch max_I=5.411e7 (121,000× discrepancy), mean_peak_distance=37.79 px (> 1 px threshold).
