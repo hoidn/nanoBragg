@@ -3,8 +3,8 @@ Structure-Factor Coverage Probe
 CLI-FLAGS-003 Phase L3a Evidence
 ================================================================================
 
-Timestamp: 2025-10-07T06:29:16.689418Z
-Git SHA: a6ed279c6d32118c5e25d4caec3881165b386da8
+Timestamp: 2025-10-07T06:43:36.570545Z
+Git SHA: b8ad45a1e43ae42dc8c34dbce92023b63ada72cf
 Torch version: 2.8.0+cu128
 Platform: Linux-6.14.0-29-generic-x86_64-with-glibc2.39
 Device: cpu
@@ -19,12 +19,35 @@ C reference F_cell: 190.27
 ================================================================================
 Source 1: HKL file (scaled.hkl)
 ================================================================================
-Grid shape: torch.Size([1, 1, 1])
-H range: [1, 1]
-K range: [12, 12]
-L range: [3, 3]
-Target in range: False
-Target reflection is OUT OF RANGE
+Grid shape: torch.Size([49, 57, 62])
+H range: [-24, 24]
+K range: [-28, 28]
+L range: [-31, 30]
+Target in range: True
+Retrieved F_cell: 190.27
+Delta from C: 0.0
+
+================================================================================
+Source 2: Fdump binary (reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006181401.bin)
+================================================================================
+Grid shape: torch.Size([49, 57, 62])
+H range: [-24, 24]
+K range: [-28, 28]
+L range: [-31, 30]
+Target in range: True
+Retrieved F_cell: 190.27
+Delta from C: 0.0
+
+================================================================================
+Source 3: Fdump binary (reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_c_20251109.bin)
+================================================================================
+Grid shape: torch.Size([49, 57, 62])
+H range: [-24, 24]
+K range: [-28, 28]
+L range: [-31, 30]
+Target in range: True
+Retrieved F_cell: 190.27
+Delta from C: 0.0
 
 ================================================================================
 Probe complete
