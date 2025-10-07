@@ -1691,3 +1691,9 @@ Follow-ups for Ralph:
 - Refreshed `docs/fix_plan.md` Next Actions to (1) rerun TRACE_C_PHI for 20251123, (2) compute Δb_y/Δk_frac, (3) then return to nb-compare repairs.
 - Authored new input.md steering Ralph to rebuild the C binary, rerun the supervisor command with `-trace_pixel 685 1039`, regenerate Py per-φ traces, run `scripts/compare_per_phi_traces.py`, update `delta_metrics.json`, and log the results before moving back to nb-compare.
 - Feedback on Ralph’s recent work: Attempt #103 correctly restored the red guard tests; Attempt #108 gathered Py-only data but stalled without the paired C trace. Next loop should focus on producing the coeval TRACE_C_PHI artifact so VG-1.4 can flip from ⚠️ to actionable metrics.
+
+## 2025-11-23 (galph loop — vectorization plan refresh)
+- Synced repo (no conflicts). Action type: Planning; refreshed `plans/active/vectorization.md` context to note Phase C completion and queued Phase D polynomial vectorization.
+- Updated `docs/fix_plan.md` › VECTOR-TRICUBIC-001: added Attempt #7 documenting Phase C3 assertions/device audit and rewrote Next Actions toward Phase D1–D3.
+- Reissued `input.md` (Parity mode) directing Ralph to rerun Phase L3k.3b TRACE_C_PHI with full artifact capture; command map mirrors previous loop with typo fixes.
+- Expect Ralph to produce the 20251123 C trace, update diagnosis + delta metrics, then proceed to L3k.3d per plan. Vectorization tasks now gate on new Phase D notes once CLI work unblocks.

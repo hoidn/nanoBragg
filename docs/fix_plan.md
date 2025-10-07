@@ -2065,18 +2065,18 @@
 ## [VECTOR-TRICUBIC-001] Vectorize tricubic interpolation and detector absorption
 - Spec/AT: specs/spec-a-core.md §4 (structure factor sampling), specs/spec-a-parallel.md §2.3 (tricubic acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4 (vectorization strategy), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, nanoBragg.c lines 2604–3278 (polin3/polin2/polint) and 3375–3450 (detector absorption loop).
 - Priority: High
-- Status: in_progress (Phases A–B complete; Phase C implementation pending)
+- Status: in_progress (Phases A–C complete; Phase D polynomial vectorization pending)
 - Owner/Date: galph/2025-10-17
 - Plan Reference: `plans/active/vectorization.md`
 - Reproduction (C & PyTorch):
   * PyTorch baseline tests: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py tests/test_at_abs_001.py -v`
-  * Optional microbenchmarks (to be created per plan Phase A): `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/sample_tricubic_baseline.py`
+  * Optional microbenchmarks: `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --device cpu` (and `--device cuda`), plus `scripts/benchmarks/absorption_baseline.py` for detector absorption timing.
   * Shapes/ROI: 256² & 512² detectors for microbench; oversample 1; structure-factor grid enabling tricubic.
 - First Divergence (if known): Current tricubic path drops to nearest-neighbour fallback for batched pixel grids, emitting warnings and forfeiting accuracy/performance; detector absorption still loops over `thicksteps`, preventing full vectorization and creating hotspots in profiler traces (see reports/benchmarks/20250930-165726-compile-cache/analysis.md).
-- Next Actions (2025-11-21 refresh):
- 1. Phase C3 — implement the shape assertions + device-aware caching updates (see plan checklist C3.1/C3.2), recording line references in `reports/2025-10-vectorization/phase_c/implementation_notes.md`.
- 2. Phase C3 evidence — capture targeted pytest logs (`env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -k "gather" -v` and `pytest tests/test_at_str_002.py::test_tricubic_interpolation_enabled -v`) under `reports/2025-10-vectorization/phase_c/`, then flip checklist items C3.1–C3.3 to ✅.
- 3. Phase C close-out — once C3 artifacts land, update this entry with Attempt # (include assertion/caching diff + log hashes) and coordinate Phase D kickoff via plan + input.md.
+- Next Actions (2025-11-23 refresh):
+ 1. Phase D1 — implement batched `polint` vectorization following design_notes §3; capture targeted regression proof (`pytest tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polint_vectorized_matches_scalar`) on CPU + CUDA and document tensor-shape math in `reports/2025-10-vectorization/phase_d/polynomial_validation.md`.
+ 2. Phase D2 — extend the batched polynomial path to `polin2`/`polin3`, update gather fallback to consume vectorized outputs, and add unit tests covering multi-pixel batches plus OOB mask retention.
+ 3. Phase D3 — run gradient + device regression sweep (`env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py tests/test_at_str_002.py -v`) and update plan/fix_plan with metrics before proceeding to Phase E validation.
 - Attempts History:
   * [2025-10-06] Attempt #1 (ralph loop) — Result: **Phase A1 COMPLETE** (test collection & execution baseline captured). All tricubic and absorption tests passing.
     Metrics: AT-STR-002: 3/3 tests passed in 2.12s (test_tricubic_interpolation_enabled, test_tricubic_out_of_bounds_fallback, test_auto_enable_interpolation). AT-ABS-001: 5/5 tests passed in 5.88s. Collection: 3 tricubic tests found.
@@ -2192,6 +2192,17 @@
       - No code changes to production paths; test-only addition preserves existing behavior
       - All existing tricubic acceptance tests (AT-STR-002) remain passing after test addition
     Next Actions: Execute Phase C3 (shape assertions + device-aware caching) with implementation notes in `phase_c/implementation_notes.md`, then proceed to Phase D polynomial vectorization.
+  * [2025-10-07] Attempt #7 (ralph loop, Mode: Code) — Result: **Phase C3 COMPLETE** (shape assertions/device audit landed). Pipeline now ready for Phase D polynomial work.
+    Metrics: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -k "gather" -v` (5/5 passed in 2.33s) and `pytest tests/test_at_str_002.py::test_tricubic_interpolation_enabled -v` (1/1 passed). Test collection: 653 tests.
+    Artifacts:
+      - `src/nanobrag_torch/models/crystal.py:414-462` — Added `(B,4,4,4)` neighborhood assertions, device consistency checks, and output-shape guards (scalar + batched paths).
+      - `reports/2025-10-vectorization/phase_c/implementation_notes.md` — New Phase C3 section detailing assertion rationale, device audit findings, and hand-off requirements for Phase D.
+      - `reports/2025-10-vectorization/phase_c/test_tricubic_vectorized.log`, `test_at_str_002_phi.log`, `status_snapshot.txt` — Targeted pytest evidence with hashes.
+    Observations/Hypotheses:
+      - Assertions guard against silent regressions once polynomial vectorization lands by enforcing `(B,4,4,4)` tensor layout and output shape parity.
+      - Device checks confirmed gather outputs stay on the caller’s device (CPU/CUDA), eliminating hidden host/device drift before Phase D.
+      - Audit verified `_tricubic_interpolation` performs no caching; notes instruct future caching layers to mirror the device assertions.
+    Next Actions: Advance to Phase D tasks (vectorize `polint`/`polin2`/`polin3`) and capture new artifacts under `reports/2025-10-vectorization/phase_d/` prior to executing Phase E validation.
 - Risks/Assumptions: Must maintain differentiability (no `.item()`, no `torch.linspace` with tensor bounds), preserve device/dtype neutrality (CPU/CUDA parity), and obey Protected Assets rule (all new scripts under `scripts/benchmarks/`). Large tensor indexing may increase memory pressure; ensure ROI caching still works.
 - Exit Criteria (quote thresholds from spec):
   * specs/spec-a-parallel.md §2.3 tricubic acceptance tests run without warnings and match C parity within documented tolerances (corr≥0.9995, ≤1e-12 structural duality where applicable).

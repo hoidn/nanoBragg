@@ -7,11 +7,11 @@ Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/202511
 Do Now: CLI-FLAGS-003 (Handle -nonoise and -pix0_vector_mm) — execute Phase L3k.3b by rebuilding the instrumented C binary, rerunning the supervisor command with -trace_pixel 685 1039 to capture `c_trace_phi_20251123.log`, regenerating the PyTorch per-φ trace via `trace_harness.py`, and re-running `scripts/compare_per_phi_traces.py` so VG-1 deltas populate under the 20251123 timestamp before recording the updated metrics in diagnosis.md. Finish with env KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q.
 If Blocked: If the instrumented C binary is missing TRACE_C_PHI output, re-apply the instrumentation patch (see golden_suite_generator/nanoBragg.c:3156-3160), rerun `make -C golden_suite_generator`, and retry the command. If C still cannot be rebuilt on this machine, copy `c_trace_phi_202510070839.log` into the 20251123 directory, document the reuse decision in diagnosis.md, flag the delta computation as provisional inside delta_metrics.json, and stop after updating commands.txt + sha256.txt.
 Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md:288 — L3k.3 requires a fresh TRACE_C_PHI run paired with the 20251123 PyTorch probe before VG-1 can progress.
-- plans/active/cli-noise-pix0/plan.md:300 — L3k.3c.2 stays [P] until Δb_y/Δk_frac are measured and logged.
-- docs/fix_plan.md:458 — Next actions explicitly call for regenerating the C per-φ trace and updating diagnosis.md before moving on to nb-compare.
-- docs/development/c_to_pytorch_config_map.md — Confirms the supervisor spindle axis / detector parameters that must match when regenerating parity traces.
-- docs/debugging/debugging.md §Parallel Trace Comparison Rule — Governs the trace capture workflow and artifact naming.
+- plans/active/cli-noise-pix0/plan.md:288-307 — L3k.3 checklist keeps VG-1 blocked until a fresh TRACE_C_PHI run pairs with the 20251123 Py probe.
+- docs/fix_plan.md:461-517 — Active item Next Actions demand regenerated C trace + updated diagnosis before nb-compare resumes.
+- reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md#L200 — Notes the missing C trace and pending Δb_y/Δk logging required for Phase L3k.3c.2.
+- docs/development/testing_strategy.md:24-61 — Parallel trace workflow mandates C/Py logs before implementing physics fixes.
+- specs/spec-a-cli.md:1-160 — Confirms -pix0_vector_mm semantics we must verify when capturing parity artifacts.
 How-To Map:
 - mkdir -p reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123
 - date '+%F %T TRACE START' | tee -a reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/commands.txt
@@ -76,9 +76,9 @@ Pitfalls To Avoid:
 - Regenerate sha256.txt after all files are in place to avoid stale hashes.
 - Keep delta_metrics.json formatted as JSON (no trailing comments) for future automation.
 Pointers:
-- plans/active/cli-noise-pix0/plan.md:288-307 — Current L3k.3 checklist and subtasks.
-- docs/fix_plan.md:458-466 — Next actions aligned with this loop.
-- reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/202510070839/diagnosis.md — Reference commands from the prior successful TRACE_C_PHI run.
+- plans/active/cli-noise-pix0/plan.md:288-307 — Current L3k.3 tasks and success criteria.
+- docs/fix_plan.md:461-517 — Next Actions and recent attempts capturing the missing C trace.
+- reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/202510070839/diagnosis.md — Reference C trace instrumentation commands from the earlier successful run.
 - golden_suite_generator/nanoBragg.c:3156-3160 — TRACE_C_PHI instrumentation hook.
-- reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md#L19 — VG-1.4 acceptance thresholds to update after deltas recorded.
-Next Up: Once VG-1 deltas are in place, move to Phase L3k.3d to repair the nb-compare ROI totals.
+- docs/debugging/debugging.md:28-118 — Parallel trace SOP you must follow.
+Next Up: After VG-1 deltas are recorded, move to Phase L3k.3d to repair the nb-compare ROI totals (focus docs/fix_plan.md:470, plan table rows L3k.3d/L3k.3e).
