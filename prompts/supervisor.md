@@ -99,7 +99,7 @@ Evidence collection includes the following subtype:
     Prereqs: <artifacts or measurements required before starting>
     Exit Criteria: <verifiable completion signal>
 
-    | ID | Task Description | State | How/Why & Guidance |
+    | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
     | --- | --- | --- | --- |
     | A1 | <Key diagnostic or implementation step> | [ ] | Run `<command>`; capture results under `reports/<date>/...`. |
     | A2 | <Follow-up validation> | [ ] | Compare against `<artifact>`; stop if deviation > threshold. |
