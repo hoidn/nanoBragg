@@ -45,7 +45,7 @@ During the main, central phase of invocation you will be doing essentially three
 An initial analysis pass in which you gather and review information in order to choose a <focus issue> for the turn, corresponding to <instructions> steps <0> through <3>. This will involve a multi-category selection process. You will choose both a <focus issue> and an associated <Action type> for the remainder of the iteration. The available <Action type>s are the following:
 <Action type> list:
 <1>
-Evidence collection (i.e. Evidence task)
+<Evidence collection> (i.e. Evidence task)
 No full pytest runs. Allowed: non-mutating probes and CLI validation tools (e.g., scripts/validation/*, nb-compare, pixel trace); pytest --collect-only to validate selectors; and in TDD mode only, a single targeted pytest run to confirm the newly authored test fails. Do not change production code. This gate applies only to galph. Ralph is exempt. Do not include any Phase label in input.md.
 
 Evidence collection includes the following subtype:
@@ -66,6 +66,7 @@ Evidence collection includes the following subtype:
       - `reports/<initiative_id>/summary.md` (question‑oriented narrative + next steps)
       - `reports/<initiative_id>/env/trace_env.json`
     - Guardrails: evidence‑only (no prod edits), module/device/dtype neutrality, small ROI, respect Protected Assets, stable key names in traces.
+</Evidence collection>
 </1>
 <2>
 <Debug> i.e. Debugging — Hypothesis + Triage (initial pass):
@@ -191,7 +192,7 @@ Header:
 - Mapped tests: <validated list | none — evidence‑only>
 - Artifacts: <key paths to produce under reports/>
 - Do Now: 1 line naming the exact docs/fix_plan.md item (ID and title) to execute this loop, plus the exact pytest command/env to reproduce it (only when an authoritative mapping exists). If no such test exists, the Do Now MUST be to author the minimal targeted test first and then run it. If you intend to delegate the choice, write “Do Now: delegate” and provide decision guidance below.
-  - Note: If operating in supervisor evidence mode (internal-only), do not run the full suite. Allowed: pytest --collect-only to validate selectors; in TDD mode only, run one targeted selector to confirm a new failing test. All other test execution is deferred to Ralph. Do not include any Phase label in input.md.
+  - Note: If operating in supervisor <Evidence collection> (internal-only), do not run the full suite. Allowed: pytest --collect-only to validate selectors; in TDD mode only, run one targeted selector to confirm a new failing test. All other test execution is deferred to Ralph. Do not include any Phase label in input.md.
 <Do Now guidelines>
 Verification scripts: You may run nb-compare and scripts/validation/* to collect metrics and artifacts (no code changes). Record outputs under reports/.
 Mapped tests under supervisor evidence mode: Include exact selectors in input.md; validate with --collect-only; do not run them (except the TDD failure confirmation). Do not include any Phase label in input.md.
