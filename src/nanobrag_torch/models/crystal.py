@@ -1043,14 +1043,44 @@ class Crystal:
 
         # Step 1: Apply spindle rotation to ONLY real-space vectors (a, b, c)
         # This follows the C-code semantics where reciprocal vectors are NOT independently rotated.
-        # C-code reference (nanoBragg.c:3056-3058):
-        #   rotate_axis(a0,ap,spindle_vector,phi);
-        #   rotate_axis(b0,bp,spindle_vector,phi);
-        #   rotate_axis(c0,cp,spindle_vector,phi);
+        # C-code reference (nanoBragg.c:3044-3058):
+        #   phi = phi0 + phistep*phi_tic;
+        #   if( phi != 0.0 )
+        #   {
+        #       rotate_axis(a0,ap,spindle_vector,phi);
+        #       rotate_axis(b0,bp,spindle_vector,phi);
+        #       rotate_axis(c0,cp,spindle_vector,phi);
+        #   }
+        # CRITICAL: C code skips rotation when phi==0. We must replicate this exactly.
         # Shape: (N_phi, 3)
-        a_phi = rotate_axis(self.a.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
-        b_phi = rotate_axis(self.b.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
-        c_phi = rotate_axis(self.c.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
+
+        # Initialize output tensors to hold rotated vectors
+        a_phi = []
+        b_phi = []
+        c_phi = []
+
+        # Process each φ angle individually to match C's phi!=0.0 guard
+        for i in range(config.phi_steps):
+            phi_val = phi_angles[i]
+
+            # Match C code's "if( phi != 0.0 )" check (nanoBragg.c:3044)
+            # Use a small tolerance for floating-point comparison
+            if torch.abs(phi_val) < 1e-10:
+                # φ=0: Use base vectors directly (no rotation)
+                a_phi.append(self.a.unsqueeze(0))
+                b_phi.append(self.b.unsqueeze(0))
+                c_phi.append(self.c.unsqueeze(0))
+            else:
+                # φ≠0: Apply rotation
+                phi_rad_single = phi_rad[i].unsqueeze(0)
+                a_phi.append(rotate_axis(self.a.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad_single))
+                b_phi.append(rotate_axis(self.b.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad_single))
+                c_phi.append(rotate_axis(self.c.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad_single))
+
+        # Stack results: (N_phi, 3)
+        a_phi = torch.cat(a_phi, dim=0)
+        b_phi = torch.cat(b_phi, dim=0)
+        c_phi = torch.cat(c_phi, dim=0)
 
         # Step 2: Recompute reciprocal vectors from rotated real vectors
         # This ensures metric duality is preserved: a·a* = 1 exactly (CLAUDE Rule #13)
