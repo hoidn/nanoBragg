@@ -1,0 +1,7 @@
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_vectorized_matches_scalar
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_neighborhood_gathering_internals
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_oob_warning_single_fire
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_device_neutrality[cpu]
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_device_neutrality[cuda]
+
+5 tests collected in 2.09s

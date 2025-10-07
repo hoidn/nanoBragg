@@ -2334,6 +2334,20 @@
       - Device checks confirmed gather outputs stay on the caller’s device (CPU/CUDA), eliminating hidden host/device drift before Phase D.
       - Audit verified `_tricubic_interpolation` performs no caching; notes instruct future caching layers to mirror the device assertions.
     Next Actions: Advance to Phase D tasks (vectorize `polint`/`polin2`/`polin3`) and capture new artifacts under `reports/2025-10-vectorization/phase_d/` prior to executing Phase E validation.
+  * [2025-10-07] Attempt #8 (ralph loop #115, Mode: Docs) — Result: **Phase D1 COMPLETE** (polynomial validation worksheet drafted; D2 implementation contract ready).
+    Metrics: `pytest --collect-only -q tests/test_tricubic_vectorized.py` successful (5 tests collected). Documentation-only loop; no code changes.
+    Artifacts:
+      - `reports/2025-10-vectorization/phase_d/polynomial_validation.md` — 15-section worksheet specifying tensor shapes `(B,4)→(B,)` for polint, `(B,4,4)→(B,)` for polin2, `(B,4,4,4)→(B,)` for polin3; C-code docstring templates per CLAUDE Rule #11 (nanoBragg.c lines 4150-4187); gradient validation strategy (gradcheck with float64, eps=1e-6, atol=1e-4); device coverage plan (CPU+CUDA parametrised tests); tap point inventory for parity debugging; performance baselines from Phase A (CPU ~1.4ms/call, CUDA ~5.5ms/call) with ≥10× speedup target; masking/NaN handling strategies; 10 new unit tests enumerated.
+      - `reports/2025-10-vectorization/phase_d/collect.log` — Test collection proof (5 gather tests from Phase C).
+    Observations/Hypotheses:
+      - Worksheet defines complete binding contract between Phase C gather infrastructure `(B,4,4,4)` outputs and Phase D polynomial evaluation requirements.
+      - All three helpers (polint/polin2/polin3) follow nested structure from C-code: polin2 stacks 4× polint, polin3 stacks 4× polin2, enabling torch.compile fusion.
+      - Gradient flow ensured via explicit anti-patterns: no `.item()`, no `torch.linspace` with tensor endpoints, clamp denominators to avoid NaN.
+      - Device neutrality enforced via parametrised tests (`@pytest.mark.parametrize("device", ["cpu", "cuda"])`) and environment contract (`KMP_DUPLICATE_LIB_OK=TRUE`).
+      - Memory footprint acceptable: 512² detector = 262k points × 64 neighbors × 4 bytes = ~67 MB neighborhoods.
+      - OOB masking delegated to Phase C caller; polynomials assume all inputs valid (simplifies implementation).
+      - Tap points planned for env-gated logging (`NANOBRAG_DEBUG_POLIN3=1`) if parity drifts in Phase E.
+    Next Actions: Phase D2 — Implement vectorized `polint`/`polin2`/`polin3` in `utils/physics.py` following worksheet Section 3 docstring templates and Section 2 shape specs; add 10 unit tests from Section 9.1 to `test_tricubic_vectorized.py`; run CPU+CUDA smoke tests and capture logs under `phase_d/pytest_{cpu,cuda}.log`; update this fix_plan entry with metrics + commit SHA.
 - Risks/Assumptions: Must maintain differentiability (no `.item()`, no `torch.linspace` with tensor bounds), preserve device/dtype neutrality (CPU/CUDA parity), and obey Protected Assets rule (all new scripts under `scripts/benchmarks/`). Large tensor indexing may increase memory pressure; ensure ROI caching still works.
 - Exit Criteria (quote thresholds from spec):
   * specs/spec-a-parallel.md §2.3 tricubic acceptance tests run without warnings and match C parity within documented tolerances (corr≥0.9995, ≤1e-12 structural duality where applicable).
