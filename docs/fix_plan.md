@@ -1,6 +1,6 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-17 (galph loop)
+**Last Updated:** 2025-10-22 (ralph loop #103)
 **Active Focus:**
 - ROUTING: Close the reopened guard plan by capturing a fresh regression audit referencing commit `c49e3be` and re-confirming the guarded `loop.sh` flow (`plans/active/routing-loop-guard/plan.md` Phases A–C) before automation resumes.
 - ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md`, then drive Phase B guard work (B2–B4) and new task B5 to add `supervisor.sh` to docs/index.md so Protected-Asset policy covers the script before automation runs again.
@@ -606,6 +606,27 @@
       1. Restore the C-aligned expectations in `tests/test_cli_scaling_phi0.py` so the parity gap remains visible.
       2. Diagnose whether PyTorch should emulate the C state carryover or if a C-side fix is feasible without breaking golden data.
       3. Re-run the per-φ traces and document the first divergence once the assertions are reinstated.
+  * [2025-10-22] Attempt #103 (ralph loop #103) — Result: **SUCCESS** (Phase L3k.3c φ=0 guard restoration COMPLETE). **C-aligned assertions restored; both φ=0 parity tests now fail as expected, exposing the 6.8% rotation-vector drift.**
+    Metrics: 2/2 targeted tests FAIL (test_rot_b_matches_c: 6.8% rel_error, test_k_frac_phi0_matches_c: 2.28 abs_error); test collection 655 tests (no regression).
+    Test failures (C parity reference restored):
+      - test_rot_b_matches_c: rot_b[0,0,1] rel_error=0.0680946 (>1e-5 threshold); expected 0.6715882339 Å (C φ_tic=0), got 0.7173197865 Å (Py φ=0°), Δ=+0.04573155265 Å
+      - test_k_frac_phi0_matches_c: k_frac abs_error=2.28292 (>1e-3 threshold); expected -0.6072558396 (C φ_tic=0), got 1.6756687164 (Py φ=0°), Δ=+2.282924556
+    Artifacts:
+      - tests/test_cli_scaling_phi0.py:116-132 — Restored C trace reference for rot_b_y (expected=0.6715882339 from c_trace_phi_202510070839.log)
+      - tests/test_cli_scaling_phi0.py:142-153 — Removed skip, restored C parity validation for k_frac test
+      - tests/test_cli_scaling_phi0.py:247-261 — Restored C trace reference for k_frac (expected=-0.6072558396 from c_trace_phi_202510070839.log)
+      - reports/2025-10-cli-flags/phase_l/rot_vector/pytest_phi0_regression.log — Full pytest output (both tests FAILED; 289 lines; SHA256: c935cdc9b836ca4b0f07f6bc1f71972735d10dc28e441688ca4c00984a089169)
+    Observations/Hypotheses:
+      - **Regression captured**: Both tests now expose the φ=0 parity gap quantitatively (rot_b_y Δ=+0.0457 Å, k_frac Δ=+2.28)
+      - **C reference documented**: Comments reference authoritative C trace (c_trace_phi_202510070839.log TRACE_C_PHI phi_tic=0)
+      - **PyTorch behavior confirmed**: PyTorch produces 0.7173 Å (base vector value) at φ=0, while C produces 0.6716 Å (stale from previous pixel)
+      - **Test suite health**: Collection count unchanged (655 tests); no import/syntax regressions
+      - **VG-1 readiness**: Phase L3k.3c complete per input.md Do Now; ready for VG-1 checklist refresh in next loop
+      - **Follow-up scope**: Diagnosis of whether PyTorch should emulate C state carryover or fix C implementation deferred to Phase L3k.3c.2 after VG-1 evidence
+    Next Actions:
+      1. Phase L3k.3c.2 — Investigate PyTorch φ rotation implementation (crystal.py:~1008-1035) to determine if φ=0 guard is needed
+      2. Phase L3k.3d — Resolve nb-compare ROI anomaly (C sum≈0 from Attempt #99) before re-running VG-3
+      3. After VG-1/VG-3/VG-4 pass: Execute Phase L3k.4 (mark fix_checklist rows ✅, complete Attempt with full metrics, prepare Phase L4)
   * [2025-10-07] Attempt #91 (ralph loop i=91) — Result: **SUCCESS** (Phase L3g spindle instrumentation COMPLETE). **H1 (spindle normalization) RULED OUT as root cause of Y-drift.**
     Metrics: Spindle Δ(magnitude)=0.0 (tolerance ≤5e-4); trace captured 43 TRACE_PY lines (was 40, +3 spindle lines); test collection 4/4 passed.
     Artifacts:

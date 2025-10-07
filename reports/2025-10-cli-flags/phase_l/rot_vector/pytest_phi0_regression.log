@@ -1,42 +1,32 @@
-"""
-CLI Scaling φ=0 Parity Tests for CLI-FLAGS-003 Phase L3k.3
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/myenv/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+collecting ... collected 1 item
 
-Tests φ=0 rotated lattice vectors and Miller indices to capture the base-vector
-drift before implementing the fix for independent real/reciprocal rotation.
+tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_rot_b_matches_c FAILED [100%]
 
-Evidence base: reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/
-Plan reference: plans/active/cli-noise-pix0/plan.md Phase L3k.3
-Supervisor memo: input.md:22-45 (Do Now for Phase L3k.3)
-"""
-import os
-import sys
-from pathlib import Path
-import pytest
-import torch
-import numpy as np
+=================================== FAILURES ===================================
+____________________ TestPhiZeroParity.test_rot_b_matches_c ____________________
 
-# Set required environment variable
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
-
-
-class TestPhiZeroParity:
-    """Capture φ=0 lattice-vector drift against C trace expectations."""
+self = <tests.test_cli_scaling_phi0.TestPhiZeroParity object at 0x79babc987d90>
 
     def test_rot_b_matches_c(self):
         """
         Verify φ=0 rot_b[0,0,1] equals base vector (no rotation applied).
-
+    
         This test validates that at φ=0°, the rotated lattice vectors equal the
         base lattice vectors, since no spindle rotation should be applied.
-
+    
         Evidence:
         - C trace (c_trace_scaling.log:64): base b_Y = 0.71732 Å
         - PyTorch returns: rot_b[0,0,1] = 0.71732 Å at φ=0
-
+    
         The C code's φ_tic=0 value (0.671588 Å) is INCORRECT due to a bug where
         ap/bp/cp working vectors are not reset between pixels, causing φ=0 iterations
         to reuse stale values from the previous pixel's last phi step (φ=0.09°).
-
+    
         This test validates PyTorch's CORRECT behavior.
         """
         from nanobrag_torch.models.crystal import Crystal, CrystalConfig
@@ -44,12 +34,12 @@ class TestPhiZeroParity:
         from nanobrag_torch.config import BeamConfig
         from nanobrag_torch.io.mosflm import read_mosflm_matrix
         from nanobrag_torch import utils
-
+    
         # Supervisor command configuration (from input.md and Phase L scaling audit)
         # Command: nanoBragg -mat A.mat -hkl scaled.hkl -lambda 0.9768 -N 36 47 29
         #                    -distance 100 -detpixels 2124 -pixel 0.1 -phi 0 -osc 0.1
         #                    -phisteps 10 -mosaic_dom 1 -oversample 1 -floatfile out.bin
-
+    
         # Check prerequisites
         mat_file = Path('A.mat')
         hkl_file = Path('scaled.hkl')
@@ -57,18 +47,18 @@ class TestPhiZeroParity:
             pytest.skip("A.mat not found (required for supervisor command reproduction)")
         if not hkl_file.exists():
             pytest.skip("scaled.hkl not found (required for supervisor command reproduction)")
-
+    
         # Device and dtype (CPU float32 per input.md guidance)
         device = torch.device('cpu')
         dtype = torch.float32
-
+    
         # Beam configuration
         wavelength_A = 0.976800
         beam_config = BeamConfig(wavelength_A=wavelength_A)
-
+    
         # Load MOSFLM matrix
         a_star, b_star, c_star = read_mosflm_matrix(str(mat_file), wavelength_A)
-
+    
         # Crystal configuration (supervisor command)
         crystal_config = CrystalConfig(
             cell_a=100.0,  # placeholder (overridden by MOSFLM)
@@ -88,7 +78,7 @@ class TestPhiZeroParity:
             misset_deg=[0.0, 0.0, 0.0],
             spindle_axis=[-1.0, 0.0, 0.0],  # supervisor command convention
         )
-
+    
         # Detector configuration (supervisor command)
         from nanobrag_torch.config import DetectorConvention
         detector_config = DetectorConfig(
@@ -98,21 +88,21 @@ class TestPhiZeroParity:
             fpixels=2124,
             detector_convention=DetectorConvention.MOSFLM,
         )
-
+    
         # Instantiate Crystal
         crystal = Crystal(crystal_config, beam_config=beam_config, device=device, dtype=dtype)
-
+    
         # Get rotated real vectors (includes φ rotation)
         # Returns tuple of (real_vectors, reciprocal_vectors)
         (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = crystal.get_rotated_real_vectors(crystal_config)
-
+    
         # Verify φ dimensions match config
         assert rot_b.shape[0] == crystal_config.phi_steps, \
             f"φ count mismatch: expected {crystal_config.phi_steps}, got {rot_b.shape[0]}"
-
+    
         # Extract φ=0 b-vector Y component
         rot_b_phi0_y = rot_b[0, 0, 1].item()  # (phi, mosaic, xyz) → φ=0, mosaic=0, Y
-
+    
         # Expected: C trace reference value at φ=0 from authoritative instrumentation
         # From c_trace_phi_202510070839.log: TRACE_C_PHI phi_tic=0 phi_deg=0
         #
@@ -127,37 +117,58 @@ class TestPhiZeroParity:
         # Reference: reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/202510070839/c_trace_phi_202510070839.log
         # C produces: rot_b_y ≈ 0.6715882339 at φ_tic=0 (correlates with k_frac=-0.607256)
         expected_rot_b_y = 0.6715882339
-
+    
         # Tolerance (C parity reference)
         tolerance = 1e-5
-
+    
         # Assertion
         rel_error = abs(rot_b_phi0_y - expected_rot_b_y) / abs(expected_rot_b_y)
-        assert rel_error <= tolerance, \
+>       assert rel_error <= tolerance, \
             f"rot_b[0,0,1] (φ=0 Y component) relative error {rel_error:.6g} > {tolerance}. " \
             f"Expected {expected_rot_b_y:.10f}, got {rot_b_phi0_y:.10f} Å. " \
             f"Absolute delta: {rot_b_phi0_y - expected_rot_b_y:.10g} Å. " \
             f"At φ=0°, rotated vectors should equal base vectors (no rotation applied)."
+E       AssertionError: rot_b[0,0,1] (φ=0 Y component) relative error 0.0680946 > 1e-05. Expected 0.6715882339, got 0.7173197865 Å. Absolute delta: 0.04573155265 Å. At φ=0°, rotated vectors should equal base vectors (no rotation applied).
+E       assert 0.06809463051942623 <= 1e-05
+
+tests/test_cli_scaling_phi0.py:136: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_rot_b_matches_c - AssertionError: rot_b[0,0,1] (φ=0 Y component) relative error 0.0680946 > 1e-05. Expected 0.6715882339, got 0.7173197865 Å. Absolute delta: 0.04573155265 Å. At φ=0°, rotated vectors should equal base vectors (no rotation applied).
+assert 0.06809463051942623 <= 1e-05
+============================== 1 failed in 2.10s ===============================
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/myenv/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+collecting ... collected 1 item
+
+tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_k_frac_phi0_matches_c FAILED [100%]
+
+=================================== FAILURES ===================================
+_________________ TestPhiZeroParity.test_k_frac_phi0_matches_c _________________
+
+self = <tests.test_cli_scaling_phi0.TestPhiZeroParity object at 0x7c37262a8190>
 
     def test_k_frac_phi0_matches_c(self):
         """
         Verify φ=0 fractional Miller index k matches C reference value.
-
+    
         This test computes k_frac at φ=0 for the target pixel (685, 1039)
         and validates against the C trace value from the authoritative instrumentation.
-
+    
         The C binary at φ_tic=0 produces k_frac=-0.607256, which is the reference
         value for parity validation regardless of whether it represents ideal physics.
         Phase L3k.3c requires capturing this regression to expose the underlying
         rotation-vector initialization issue.
         """
-
+    
         from nanobrag_torch.models.crystal import Crystal, CrystalConfig
         from nanobrag_torch.models.detector import Detector, DetectorConfig
         from nanobrag_torch.config import BeamConfig, DetectorConvention
         from nanobrag_torch.io.mosflm import read_mosflm_matrix
         from nanobrag_torch import utils
-
+    
         # Check prerequisites
         mat_file = Path('A.mat')
         hkl_file = Path('scaled.hkl')
@@ -165,18 +176,18 @@ class TestPhiZeroParity:
             pytest.skip("A.mat not found")
         if not hkl_file.exists():
             pytest.skip("scaled.hkl not found")
-
+    
         # Device and dtype
         device = torch.device('cpu')
         dtype = torch.float32
-
+    
         # Beam configuration
         wavelength_A = 0.976800
         beam_config = BeamConfig(wavelength_A=wavelength_A)
-
+    
         # Load MOSFLM matrix
         a_star, b_star, c_star = read_mosflm_matrix(str(mat_file), wavelength_A)
-
+    
         # Crystal configuration
         crystal_config = CrystalConfig(
             cell_a=100.0,
@@ -196,7 +207,7 @@ class TestPhiZeroParity:
             misset_deg=[0.0, 0.0, 0.0],
             spindle_axis=[-1.0, 0.0, 0.0],  # supervisor command convention
         )
-
+    
         # Detector configuration
         detector_config = DetectorConfig(
             distance_mm=100.0,
@@ -205,45 +216,45 @@ class TestPhiZeroParity:
             fpixels=2124,
             detector_convention=DetectorConvention.MOSFLM,
         )
-
+    
         # Instantiate models
         crystal = Crystal(crystal_config, beam_config=beam_config, device=device, dtype=dtype)
         detector = Detector(detector_config, device=device, dtype=dtype)
-
+    
         # Get rotated vectors at φ=0
         # Returns tuple of (real_vectors, reciprocal_vectors)
         (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = crystal.get_rotated_real_vectors(crystal_config)
-
+    
         # Target pixel from C trace (slow=685, fast=1039)
         # These are the indices from c_trace_scaling.log
         target_s = 685
         target_f = 1039
-
+    
         # Get pixel position for target
         # detector.get_pixel_coords() returns (S, F, 3) in meters
         pixel_coords = detector.get_pixel_coords()  # (2124, 2124, 3)
         pixel_pos_m = pixel_coords[target_s, target_f, :]  # (3,) meters
-
+    
         # Convert to Angstroms for physics
         pixel_pos_A = pixel_pos_m * 1e10  # m → Å
-
+    
         # Compute scattering vector (supervisor command uses -lambda 0.9768)
         wavelength_m = wavelength_A * 1e-10  # Å → m
-
+    
         # Incident beam (MOSFLM convention: [1, 0, 0])
         incident = torch.tensor([1.0, 0.0, 0.0], device=device, dtype=dtype)
-
+    
         # Diffracted direction (unit vector to pixel)
         diffracted = pixel_pos_A / torch.norm(pixel_pos_A)
-
+    
         # Scattering vector S = (d - i) / λ (in Å⁻¹)
         scattering = (diffracted - incident) / wavelength_A
-
+    
         # Compute Miller indices at φ=0 using dot product
         # k_frac = b · S (where b is the φ=0, mosaic=0 real-space vector)
         b_phi0 = rot_b[0, 0, :]  # (3,) Å
         k_frac = utils.dot_product(scattering, b_phi0).item()
-
+    
         # Expected: C trace reference value at φ=0 from authoritative instrumentation
         # From c_trace_phi_202510070839.log: TRACE_C_PHI phi_tic=0 phi_deg=0 k_frac=-0.607255839576692
         #
@@ -256,14 +267,22 @@ class TestPhiZeroParity:
         #
         # Reference: reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/202510070839/c_trace_phi_202510070839.log
         expected_k_frac = -0.6072558396
-
+    
         # Tolerance (C parity reference)
         tolerance = 1e-3
-
+    
         # Assertion
         abs_error = abs(k_frac - expected_k_frac)
-        assert abs_error <= tolerance, \
+>       assert abs_error <= tolerance, \
             f"k_frac(φ=0) absolute error {abs_error:.6g} > {tolerance}. " \
             f"Expected {expected_k_frac:.10f}, got {k_frac:.10f}. " \
             f"Absolute delta: {k_frac - expected_k_frac:.10g}. " \
             f"At φ=0°, k_frac should be computed from base vectors (no rotation applied)."
+E       AssertionError: k_frac(φ=0) absolute error 2.28292 > 0.001. Expected -0.6072558396, got 1.6756687164. Absolute delta: 2.282924556. At φ=0°, k_frac should be computed from base vectors (no rotation applied).
+E       assert 2.282924556030664 <= 0.001
+
+tests/test_cli_scaling_phi0.py:265: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_k_frac_phi0_matches_c - AssertionError: k_frac(φ=0) absolute error 2.28292 > 0.001. Expected -0.6072558396, got 1.6756687164. Absolute delta: 2.282924556. At φ=0°, k_frac should be computed from base vectors (no rotation applied).
+assert 2.282924556030664 <= 0.001
+============================== 1 failed in 2.13s ===============================
