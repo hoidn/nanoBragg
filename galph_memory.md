@@ -1697,3 +1697,9 @@ Follow-ups for Ralph:
 - Updated `docs/fix_plan.md` › VECTOR-TRICUBIC-001: added Attempt #7 documenting Phase C3 assertions/device audit and rewrote Next Actions toward Phase D1–D3.
 - Reissued `input.md` (Parity mode) directing Ralph to rerun Phase L3k.3b TRACE_C_PHI with full artifact capture; command map mirrors previous loop with typo fixes.
 - Expect Ralph to produce the 20251123 C trace, update diagnosis + delta metrics, then proceed to L3k.3d per plan. Vectorization tasks now gate on new Phase D notes once CLI work unblocks.
+
+## 2025-10-07 19:37 UTC (galph loop — L3k.3c.2 prep)
+- Confirmed Attempt #109 artifacts: Δk(φ₀)=1.8116e-2, φ>0 deltas ≤2.845e-5; updated plans/active/cli-noise-pix0/plan.md (L3k.3b [D], refreshed L3k.3c.2 guidance).
+- Refreshed docs/fix_plan.md Next Actions to focus on documenting Δk/Δb_y and follow-on carryover fix; added Attempt #109 summary.
+- Issued new input.md (Parity mode) directing Ralph to run compare_per_phi_traces.py, compute Δb_y, update diagnosis/fix_checklist, and capture pytest collect-only evidence before implementation.
+- Follow-up for Ralph: capture Δb_y via helper snippet, document metrics in diagnosis.md + fix_checklist.md, log Attempt for L3k.3c.2, keep artifacts under base_vector_debug/20251123/.
