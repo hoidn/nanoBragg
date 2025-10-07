@@ -1558,3 +1558,11 @@ Follow-ups for Ralph:
 - Key finding: HKL ingestion now matches C (F_cell≈190.27) but lattice factor remains divergent (C `F_latt=-2.3832` vs Py `+1.35136`). Per-φ `TRACE_C_PHI` entries show the sign oscillation missing from PyTorch traces.
 - Authored `analysis_20251119.md` recommending per-φ instrumentation; updated input.md to direct Ralph to extend the trace harness, emit `TRACE_PY_PHI`, and compare against archived C per-φ logs before touching simulator code.
 - Expect Ralph to capture new per-φ PyTorch trace/JSON under `reports/2025-10-cli-flags/phase_l/per_phi/`, run the targeted pytest selector for scaling traces, and append findings to docs/fix_plan.md Attempt history.
+
+## 2025-11-19 (galph loop — CLI L3e per-φ refresh setup)
+- Confirmed `git pull --rebase` succeeded without conflicts.
+- Reviewed Phase L3 evidence: `analysis_20251119.md` still shows F_cell parity yet `trace_py_scaling_per_phi.log` lacks any `TRACE_PY_PHI`, indicating the harness output is stale.
+- Updated `docs/fix_plan.md` next actions to call for a 2025-11-19 per-φ trace rerun and noted the empty log under Attempt #83 observations.
+- Refreshed `plans/active/cli-noise-pix0/plan.md` gap snapshot and revised the L3e task description to emphasise regenerating per-φ artifacts before scaling validation can pass.
+- Authored new `input.md` (Parity mode) instructing Ralph to rerun `trace_harness.py` with `--out trace_py_scaling_20251119.log`, regenerate per-φ comparison data, rerun `compare_scaling_traces.py`, and capture the targeted pytest output.
+- Follow-up: expect refreshed logs/JSON under `reports/2025-10-cli-flags/phase_l/per_phi/`, updated scaling_validation metrics, and a docs/fix_plan.md attempt summarising whether the Δk≈6 offset persists.

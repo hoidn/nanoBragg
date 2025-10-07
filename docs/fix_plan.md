@@ -457,9 +457,9 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
-- Next Actions (2025-11-18 parity refresh):
-  1. Phase L3e scaling validation — Extend or author `scripts/validation/compare_scaling_chain.py` to diff TRACE_C/TRACE_PY after the HKL fix, storing JSON/markdown under `reports/2025-10-cli-flags/phase_l/scaling_validation/` with ≤1e-6 deltas for ω, polarization, capture_fraction, r_e², fluence, steps, `I_before_scaling`, and final intensity.
-  2. Phase L3f documentation sync — Update `analysis.md`, `docs/fix_plan.md` attempts, and architectural docs with the finalized ingestion/normalization flow once scaling validation passes.
+- Next Actions (2025-11-19 evidence refresh):
+  1. Phase L3e per-φ + scaling validation — Refresh the trace harness so the current supervisor run emits `TRACE_PY_PHI` lines (existing `trace_py_scaling_per_phi.log` contains none), capture `trace_py_per_phi_20251119.log`/`.json`, and rerun `compare_scaling_traces.py` (≤1e-6 tolerances) with outputs stored under `reports/2025-10-cli-flags/phase_l/per_phi/` and `.../scaling_validation/`.
+  2. Phase L3f documentation sync — Update `analysis.md`, `docs/fix_plan.md` attempts, and architectural docs with the finalized ingestion/normalization flow once the refreshed scaling validation passes.
   3. Phase L4 parity rerun — Execute the supervisor command end-to-end, capture nb-compare metrics, confirm correlation ≥0.9995 + sum_ratio 0.99-1.01, archive results, and close CLI-FLAGS-003.
 - Attempts History:
   * [2025-11-13] Attempt #71 (ralph loop) — Result: **SUCCESS** (Phase L2b validation + Phase L2c complete). **Harness already functional from Attempt #69; executed comparison script to identify first divergence.**
@@ -611,7 +611,7 @@
     Observations/Hypotheses:
       - **Structure factors now aligned:** `F_cell=190.270004272461` in TRACE_PY (`trace_py_scaling_20251117.log:26`) matches C within 2.4e-6, proving HKL ingestion fixes held
       - **First divergence moves downstream:** Raw accumulation gap is driven by lattice factor parity — C logs `F_latt=-2.3832` (`c_trace_scaling.log:288`) while PyTorch reports `F_latt=+1.35136` (`trace_py_scaling_20251117.log:24`)
-      - **Per-φ evidence missing:** C trace shows oscillating `TRACE_C_PHI` entries (lines 280-287) that sum to the negative lattice factor; PyTorch lacks equivalent `TRACE_PY_PHI` output, obscuring where the sign flip is lost
+      - **Per-φ evidence missing:** C trace shows oscillating `TRACE_C_PHI` entries (lines 280-287) that sum to the negative lattice factor; the current PyTorch artifact (`reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling_per_phi.log`) contains no `TRACE_PY_PHI` lines despite simulator hooks, so the harness/instrumentation needs to be rerun or repaired
       - **Downstream scalars validated:** Fluence, steps, capture_fraction, polarization, omega remain within L3e tolerances, narrowing focus to lattice accumulation
     Next Actions: Instrument per-φ `TRACE_PY_PHI` logging for `_compute_structure_factor_components`, compare against `TRACE_C_PHI` (same pixel), and update plan tasks L3e/L3f before touching simulator code.
   * [2025-10-07] Attempt #74 (ralph loop) — Result: **SUCCESS** (Phase L2b harness fix + L2c comparison complete). **Corrected harness to attach `crystal.hkl_data` and `crystal.hkl_metadata` instead of ad-hoc attributes; structure factor lookup now functional.**
