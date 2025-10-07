@@ -259,23 +259,74 @@ def main():
 
     # Extract TRACE_PY lines from captured output (Step 7)
     trace_lines = []
+    trace_py_phi_lines = []
     for line in stdout_capture.getvalue().splitlines():
-        if line.startswith('TRACE_PY:'):
+        if line.startswith('TRACE_PY_PHI'):
+            trace_py_phi_lines.append(line)
+        elif line.startswith('TRACE_PY:'):
             trace_lines.append(line)
 
     if not trace_lines:
         raise RuntimeError("No TRACE_PY output captured. Simulator may not have emitted trace for pixel.")
 
-    # Write trace to file (Step 8)
+    # Write main trace to file (Step 8)
     trace_path = Path('reports/2025-10-cli-flags/phase_l/scaling_audit') / args.out
     with open(trace_path, 'w') as f:
         f.write('\n'.join(trace_lines))
         f.write('\n')
 
+    # Write per-φ trace lines if captured
+    if trace_py_phi_lines:
+        phi_trace_name = args.out.replace('.log', '_per_phi.log')
+        phi_trace_path = Path('reports/2025-10-cli-flags/phase_l/per_phi') / phi_trace_name
+        phi_trace_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with open(phi_trace_path, 'w') as f:
+            f.write('\n'.join(trace_py_phi_lines))
+            f.write('\n')
+
+        # Parse per-φ lines into structured JSON
+        per_phi_data = []
+        for line in trace_py_phi_lines:
+            # Parse: TRACE_PY_PHI phi_tic=0 phi_deg=0 k_frac=-3.857... F_latt_b=1.779... F_latt=-0.0625...
+            parts = line.split()
+            if len(parts) >= 6:
+                entry = {}
+                for part in parts[1:]:  # Skip "TRACE_PY_PHI" prefix
+                    if '=' in part:
+                        key, value = part.split('=', 1)
+                        # Convert to appropriate type
+                        if key in ['phi_tic']:
+                            entry[key] = int(value)
+                        else:
+                            entry[key] = float(value)
+                per_phi_data.append(entry)
+
+        # Write structured JSON
+        json_name = args.out.replace('.log', '_per_phi.json')
+        json_path = Path('reports/2025-10-cli-flags/phase_l/per_phi') / json_name
+
+        timestamp = datetime.utcnow().isoformat() + 'Z'
+        json_output = {
+            'timestamp': timestamp,
+            'pixel': {'slow': slow, 'fast': fast},
+            'config': args.config,
+            'device': str(device),
+            'dtype': args.dtype,
+            'per_phi_entries': per_phi_data
+        }
+
+        with open(json_path, 'w') as f:
+            json.dump(json_output, f, indent=2)
+
+        print(f"Per-φ trace written to {phi_trace_path}")
+        print(f"Per-φ JSON written to {json_path}")
+        print(f"Captured {len(trace_py_phi_lines)} TRACE_PY_PHI lines")
+
     # Extract final intensity for verification
     pixel_intensity = intensities[slow, fast].item()
 
-    print(f"Trace written to {trace_path}")
+    print(f"Main trace written to {trace_path}")
     print(f"Environment snapshot: {env_path}")
     print(f"Config snapshot: {config_path}")
     print(f"Captured {len(trace_lines)} TRACE_PY lines")

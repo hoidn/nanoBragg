@@ -509,6 +509,21 @@
       - **Root cause remains configuration/loading:** The F_cell=0 divergence in trace_py_scaling.log stems from harness/CLI not loading/attaching HKL data, NOT from missing reflections or broken lookup logic
       - **Phase L3a exit criteria satisfied:** Fresh probe log and analysis captured with current environment metadata; HKL coverage ranges documented and reconciled
     Next Actions: Phase L3c harness audit per plan guidance (review trace_harness.py lines 206-236, compare against probe successful pattern, fix HKL attachment). NO simulator.py changes needed (scaling math correct per L2c, lookup logic works per L3a probe).
+  * [2025-10-07] Attempt #85 (ralph loop) — Result: **SUCCESS** (Phase L3e per-φ instrumentation COMPLETE). **Extended Simulator and trace harness to emit TRACE_PY_PHI entries for all φ steps, enabling per-φ parity validation.**
+    Metrics: 10 TRACE_PY_PHI lines captured (φ=0.0° to φ=0.1°), structured JSON generated, test suite collection passes (652 tests), targeted scaling trace test passes 4/4 variants.
+    Artifacts:
+      - `src/nanobrag_torch/simulator.py:1424-1460` - Per-φ tracing block emitting k_frac, F_latt_b, F_latt for each phi step
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:260-333` - Harness updates to capture and parse TRACE_PY_PHI lines
+      - `reports/2025-10-cli-flags/phase_l/per_phi/trace_py_per_phi_20251007.log` - PyTorch per-φ trace (10 entries)
+      - `reports/2025-10-cli-flags/phase_l/per_phi/per_phi_py_20251007.json` - Structured JSON with phi_tic, phi_deg, k_frac, F_latt_b, F_latt
+      - `reports/2025-10-cli-flags/phase_l/per_phi/comparison_summary_20251119.md` - Comparison summary documenting instrumentation and next steps
+    Observations/Hypotheses:
+      - **Instrumentation complete:** Simulator now emits per-φ lattice entries reusing existing rotated vectors from Crystal.get_rotated_real_vectors
+      - **Test coverage maintained:** tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics passes all parametrized variants (4/4)
+      - **k_frac mismatch confirmed:** PyTorch k_frac ≈ -0.59 vs C reference k_frac ≈ -3.86 (Δk ≈ 3.27), consistent with Phase K3e findings
+      - **Design decision:** Reuses production helpers (rotated vectors, sincg) per CLAUDE Rule #0.3 (no parallel trace-only physics reimplementation)
+      - **Structured output:** JSON format enables comparison tooling integration per input.md Step 4
+    Next Actions: Phase L3e comparison — Run scripts/compare_per_phi_traces.py to generate delta analysis; if Δk persists, revisit base lattice parity (Phase K3f) before proceeding to scaling validation (Phase L3e full chain).
   * [2025-10-17] Attempt #78 (ralph loop) — Result: **SUCCESS** (Phase L3c CLI ingestion audit COMPLETE). **Audit confirms CLI successfully loads HKL grid with correct metadata; root cause of F_cell=0 is downstream from parsing.**
     Metrics: CLI loads HKL grid (49×57×62) with dtype=float32, device=cpu; all 9 metadata keys present (h_min/max/range, k_min/max/range, l_min/max/range); target reflection (-7,-1,-14) is IN RANGE; pytest collection successful (2 tests collected from test_cli_scaling.py).
     Artifacts:
