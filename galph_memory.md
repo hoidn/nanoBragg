@@ -1504,3 +1504,8 @@ Follow-ups for Ralph:
 - Noted inconsistency: `structure_factor/probe.log` shows scaled.hkl spans [-24,24]×[-28,28]×[-31,30] with F_cell=190.27, but `scaling_audit/config_snapshot.json` still reports h/k/l ranges (1,12,3) and TRACE_PY keeps F_cell=0.
 - Updated docs/fix_plan.md: CLI-FLAGS-003 Next Actions now start with a fresh Phase L3a probe rerun plus harness/CLI audits; VECTOR-TRICUBIC-001 Next Actions point to Phase B design tasks (B1–B3).
 - No new evidence generated; left instructions for Ralph to recapture HKL coverage on the current machine, reconcile harness metadata, then proceed with Phase L3 scaling fixes once F_cell matches C.
+## 2025-11-17 (galph loop — L3 harness alignment)
+- `git pull --rebase` clean; reviewed docs/index.md, specs/spec-a.md shards, arch.md, config map, debugging SOP, testing strategy, fix_plan, and active plans before selecting focus.
+- Focused on CLI-FLAGS-003 after Attempt #77; updated `plans/active/cli-noise-pix0/plan.md` (added 2025-11-17 gap snapshot, marked L3a [D], clarified evidence expectations) and refreshed `docs/fix_plan.md` next-actions list to center L3c harness/CLI audits and L3e validation script.
+- Authored new `input.md` (Parity mode) directing Ralph to rerun the scaling trace harness with scaled.hkl attached, capture HKL metadata in `harness_hkl_state_20251117.txt`, promote new trace/env snapshots, and update `analysis.md` before touching simulator code.
+- Key follow-up for Ralph: execute the harness audit command, preserve timestamped artifacts, summarise findings in analysis.md, and log outcomes in fix_plan prior to proceeding to the CLI ingestion audit (L3c) next loop.
