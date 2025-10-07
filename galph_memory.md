@@ -1739,3 +1739,11 @@ Follow-ups for Ralph:
 - Issued new `input.md` (Docs mode) directing Ralph to complete Phase D1 documentation, capture collect-only proof, and log tensor-shape/C-reference requirements.
 - Follow-up: Ralph to author `reports/2025-10-vectorization/phase_d/polynomial_validation.md`, run collect-only selector, and prepare tap_points.md if needed before coding D2.
 
+
+## 2025-11-27 (galph loop — φ rotation plan refresh)
+- Rebased with origin (no conflicts) and reviewed CLI-FLAGS-003 scope vs long-term goal #1.
+- Updated `plans/active/cli-noise-pix0/plan.md` L3k.3c tasks: default path now mandates spec-compliant φ rotation (no `_phi_last_cache`), added new rows for parity shim design (L3k.3c.4) and dual-mode docs/tests (L3k.3c.5), preserved documentation row as L3k.3c.6.
+- Synced `docs/fix_plan.md` Next Actions to match the new gating order (spec fix → parity shim → docs/tests) and clarified historical attempt references.
+- Issued fresh `input.md` (Parity mode) directing Ralph to implement L3k.3c.3, regenerate per-φ traces, and run the targeted φ parity tests; parity shim + doc refresh queued under Next Up.
+- Commit `5eda539` pushed on `feature/spec-based-2`. No tests run in supervisor loop (planning only).
+- Follow-up for Ralph: remove `_phi_last_cache` from the default rotation path, capture new Δk/Δb_y ≤1e-6 artifacts, then proceed to design the opt-in carryover shim per plan.
