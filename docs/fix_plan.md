@@ -462,6 +462,21 @@
   2. Phase L3h doc/plan alignment — Once spindle evidence lands, update `rot_vector/analysis.md`, this plan entry, and `plans/active/cli-noise-pix0/plan.md` with the chosen corrective approach before green-lighting simulator edits.
   3. Phase L4 parity rerun — After the spindle normalization fix is implemented and documentation refreshed, execute the supervisor command end-to-end, capture nb-compare metrics (correlation ≥0.9995, sum_ratio 0.99–1.01), archive results, and close CLI-FLAGS-003.
 - Attempts History:
+  * [2025-10-07] Attempt #91 (ralph loop i=91) — Result: **SUCCESS** (Phase L3g spindle instrumentation COMPLETE). **H1 (spindle normalization) RULED OUT as root cause of Y-drift.**
+    Metrics: Spindle Δ(magnitude)=0.0 (tolerance ≤5e-4); trace captured 43 TRACE_PY lines (was 40, +3 spindle lines); test collection 4/4 passed.
+    Artifacts:
+      - `src/nanobrag_torch/simulator.py:1313-1322` - Spindle instrumentation (emit raw/normalized/magnitude)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log` - Refreshed φ=0 trace with spindle data
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/spindle_audit.log` - Normalization audit summary
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md` - Updated hypothesis ranking (H1→RULED OUT, H3→PRIMARY)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/trace_run.log` - Harness execution log
+    Observations/Hypotheses:
+      - **Spindle vectors identical:** Raw=[-1.0,0.0,0.0], Normalized=[-1.0,0.0,0.0], Magnitude=1.0 (exact unit vector)
+      - **H1 verdict:** PyTorch's `unitize()` call in `rotate_axis` (utils/geometry.py:91) is a no-op; cannot explain Y-drift O(1e-2) Å
+      - **H2 confirmed ruled out:** Volume delta O(1e-3) Å³ << Y-drift magnitude
+      - **H3 promoted to primary:** MOSFLM matrix semantics now leading suspect (reciprocal perfect O(1e-9), real diverges in Y)
+      - **Test stability:** `pytest --collect-only` passed 4/4 variants after instrumentation
+    Next Actions: Phase L3h — Document H3 investigation plan (compare `read_mosflm_matrix` vs C A.mat parsing); update plans/active/cli-noise-pix0/plan.md L3g→[D] (✅ DONE); investigate MOSFLM real↔reciprocal recalculation sequencing before proposing corrective patches.
   * [2025-11-13] Attempt #71 (ralph loop) — Result: **SUCCESS** (Phase L2b validation + Phase L2c complete). **Harness already functional from Attempt #69; executed comparison script to identify first divergence.**
     Metrics: 40 TRACE_PY lines captured; test suite passes 4/4 variants (cpu/cuda × float32/float64). Comparison identifies `I_before_scaling` as first divergent factor (C=943654.809, PyTorch=0, -100% delta).
     Artifacts:

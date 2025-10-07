@@ -1,190 +1,46 @@
-================================================================================
-Spindle-Axis & Volume Audit for CLI-FLAGS-003 Phase L3g
-================================================================================
+# Spindle-Axis Audit for CLI-FLAGS-003 Phase L3g
+# Date: 2025-10-07
+# Engineer: Ralph (loop i=91)
+# Command: CLI-FLAGS-003 supervisor command (φ=0 trace)
 
-## Spindle-Axis Comparison
+## Spindle-Axis Evidence
 
-### C Reference
-From c_trace_scaling.log:
-  spindle ROTATION_AXIS= -1 0 0
+### PyTorch (from trace_py_rot_vector.log)
+- Raw spindle_axis: [-1.0, 0.0, 0.0]
+- Normalized spindle_axis: [-1.0, 0.0, 0.0]
+- Magnitude: 1.0
 
-Raw vector: (-1.0, 0.0, 0.0)
-Norm: 1.0 (exact, unit vector)
+### C Reference (from c_trace_scaling.log)
+- spindle ROTATION_AXIS: [-1, 0, 0]
+- Magnitude: 1.0 (implicit unit vector)
 
-### PyTorch
-LIMITATION: Current TRACE_PY output does not explicitly log spindle_axis vector.
-The harness configuration uses default spindle_axis=[0, 1, 0] per specs/spec-a-core.md,
-but the supervisor command may override this via `-spindle_axis -1 0 0`.
+## Analysis
 
-**Required Action:** Add `TRACE_PY: spindle_axis` line to simulator instrumentation
-or trace harness config dump to verify runtime value matches C.
+### Normalization Delta
+- Δ(magnitude): 0.0 (both implementations use exact unit vector)
+- Tolerance threshold: ≤5e-4 (from input.md)
+- **Verdict: PASS** - No normalization mismatch detected
 
-### Component Analysis (if PyTorch spindle = [-1, 0, 0])
-Assuming PyTorch uses same input:
-  ΔX: 0.0 (0.0%)
-  ΔY: 0.0 (0.0%)
-  ΔZ: 0.0 (0.0%)
-  Norm delta: 0.0
+### Hypothesis H1 Assessment: RULED OUT
+The spindle-axis normalization hypothesis (H1 from analysis.md) is **RULED OUT** as the root cause of Y-component drift:
+- Both C and PyTorch use identical unit vector [-1, 0, 0]
+- Magnitude delta = 0.0 (well within tolerance)
+- PyTorch's `unitize()` call in `rotate_axis` (geometry.py:91) is a no-op for this case
 
-✓ CONDITIONAL PASS: If PyTorch spindle matches C input, norm delta=0 (within ≤5e-4 tolerance)
+## Remaining Suspects
 
-### Normalization Hypothesis (H1 - PRIMARY SUSPECT)
-The Y-component drift pattern (from rot_vector_comparison.md) suggests systematic error
-along the spindle axis direction:
-  - b_y: +6.8% drift (largest real-space component error)
-  - a_y: -0.04%
-  - c_y: -0.06%
+With H1/H2 ruled out, the Y-drift must stem from:
+1. **Reciprocal→real recalculation sequencing** (Rule #13 implementation delta)
+2. **Float32 accumulation in cross-products** (despite good reciprocal alignment)
+3. **MOSFLM matrix loading semantics** (A.mat interpretation)
 
-If PyTorch normalizes spindle vector during phi rotation while C uses raw input (or vice versa),
-magnitude errors accumulate into real-space drift after cross-product reconstruction.
+## Artifacts
+- PyTorch trace: reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log (43 lines)
+- C reference: reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log
+- Volume analysis: reports/2025-10-cli-flags/phase_l/rot_vector/volume_probe.md
+- Rotation deltas: reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md
 
-**Test Required:** Add TRACE_C/TRACE_PY lines showing:
-  1. spindle_axis (raw input from config)
-  2. spindle_axis_normalized (used in rotation matrix)
-  3. Confirm both implementations apply same normalization step
-
-================================================================================
-
-## Volume Analysis
-
-### PyTorch (float32, CPU)
-V_formula: 24682.256629943848 Å³  (from cell param formula)
-V_actual:  24682.259976654053 Å³  (from a·(b×c) with rotated vectors)
-Delta:     +3.347e-03 Å³
-Rel err:   0.000014%
-
-### C Reference
-V_formula: 24682.256629943848 Å³
-V_actual:  24682.256629943848 Å³
-Delta:     0.000 Å³  (perfect match)
-Rel err:   0.000000%
-
-### Cross-Implementation Comparison
-Δ(V_formula): 0.000 Å³ (0.000000%)  ← Perfect cell param parsing parity
-Δ(V_actual):  +3.347e-03 Å³ (0.000014%)  ← Small accumulated precision error
-
-✗ FAIL: V_actual delta exceeds tolerance (>1e-6 Å³)
-However, this delta is ~1000× smaller than the Y-component drift magnitude.
-
-### Hypothesis H2 Assessment: RULED OUT
-Volume choice (V_actual vs V_formula) cannot explain observed Y-drift:
-  - V_actual delta: O(1e-3) Å³ (parts per billion)
-  - Y-component drift: O(1e-2) Å (b_y: +4.573e-02 Å)
-  - Magnitude ratio: ~1000:1
-
-**Conclusion:** V_actual usage is correct per CLAUDE Rule #13 and explains perfect
-metric duality (a·a* ≈ 1.0 within 7.5e-05) in PyTorch. C's O(1e-3) metric duality
-errors suggest it may use formula volume, but this is unrelated to Y-drift.
-
-================================================================================
-
-## Metric Duality Evidence
-
-From invariant_probe.md:
-
-| Metric | C | PyTorch | Δ (Py-C) |
-| --- | --- | --- | --- |
-| a · a* | 1.000626354 | 0.999999925 | -6.264e-04 |
-| b · b* | 0.999558509 | 0.999999893 | +4.414e-04 |
-| c · c* | 0.999812669 | 0.999999901 | +1.872e-04 |
-
-**Interpretation:**
-- PyTorch achieves near-perfect metric duality (≈1.0 within 7.5e-05)
-- C shows systematic O(1e-3) deviations (accumulated drift from formula volume?)
-- **PyTorch implementation is more accurate** for reciprocal↔real consistency
-
-================================================================================
-
-## Real-Space Drift Summary
-
-From rot_vector_comparison.md (φ=0):
-
-### Y-Component Systematic Drift (CRITICAL)
-| Vector | C | PyTorch | Δ (Py-C) | Δ% |
-| --- | --- | --- | --- | --- |
-| a_y | -21.8805340764 Å | -21.8717937469 Å | +8.740e-03 Å | -0.040% |
-| b_y | 0.6715882340 Å | 0.7173197865 Å | +4.573e-02 Å | +6.810% |
-| c_y | -24.4045855811 Å | -24.3892974854 Å | +1.529e-02 Å | -0.063% |
-
-### Z-Component Moderate Drift
-| Vector | C | PyTorch | Δ (Py-C) | Δ% |
-| --- | --- | --- | --- | --- |
-| a_z | -5.5476578307 Å | -5.5820212364 Å | -3.436e-02 Å | +0.619% |
-| b_z | -29.1143056269 Å | -29.1132164001 Å | +1.089e-03 Å | -0.004% |
-| c_z | -9.7143290320 Å | -9.7526531219 Å | -3.832e-02 Å | +0.395% |
-
-### X-Component EXCELLENT
-All X deltas < 1.4e-06 Å (<0.0001%)
-
-**Pattern:** Y-drift dominates, Z-drift moderate, X-excellent. This aligns with
-spindle axis orientation (spec default [0,1,0] or supervisor override [-1,0,0]).
-
-================================================================================
-
-## Reciprocal Vectors: EXCELLENT PARITY
-
-From rot_vector_comparison.md:
-All reciprocal components (a*, b*, c*) match C within O(1e-09) Å⁻¹ (nanometer scale).
-This indicates **initial reciprocal vector construction is identical** between
-implementations. Divergence occurs during real→reciprocal recalculation or phi rotation.
-
-================================================================================
-
-## Hypothesis Priority Ranking
-
-1. **H1: Spindle-Axis Normalization** (PRIMARY - NEEDS INSTRUMENTATION)
-   - Symptom: Y-component drift pattern matches spindle orientation
-   - Test: Add TRACE_C/PY for raw and normalized spindle vectors
-   - Expected: Magnitude difference amplifies into Y-drift via cross-products
-
-2. **H3: Phi Initialization Offset** (MEDIUM - VERIFY C phi VALUE)
-   - Per-phi JSON shows φ=0.0 for first step (consistent expectation)
-   - Verify C trace also logs φ=0.0 (not explicitly shown in c_trace_scaling.log)
-
-3. **H4: Precision (fp32 vs fp64)** (RULED OUT)
-   - Reciprocal vectors match to O(1e-09) Å⁻¹
-   - Precision is excellent; not a contributing factor
-
-4. **H2: V_actual vs V_formula** (RULED OUT)
-   - Volume delta O(1e-3) Å³ << Y-drift O(1e-2) Å (1000× smaller)
-   - Cannot explain observed magnitude
-
-================================================================================
-
-## Next Actions (from input.md Step 7 guidance)
-
-1. **Phase L3f COMPLETE** ✓
-   - Captured spindle/volume evidence
-   - Documented tolerance failures and hypotheses
-   - Ready for L3g hypothesis framing
-
-2. **Phase L3g: Hypothesis validation probes**
-   - Add `TRACE_PY: spindle_axis (raw)` and `TRACE_PY: spindle_axis_normalized` to harness
-   - Rerun trace with --dtype float64 to populate fp64 volume row (for completeness)
-   - Extract C phi value from c_trace_scaling.log or regenerate with phi logging
-
-3. **Phase L3h: Implementation decision**
-   - Once H1 probe confirms normalization mismatch, patch Crystal.get_rotated_real_vectors
-   - Add inline C-code docstring reference per CLAUDE Rule #11
-   - Update docs/fix_plan.md with corrective action and artifact paths
-
-================================================================================
-
-## Execution Metadata
-
-PyTorch trace: reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log
-C trace:       reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log
-Per-phi data:  reports/2025-10-cli-flags/phase_l/per_phi/.../trace_py_rot_vector_per_phi.json
-Volume probe:  reports/2025-10-cli-flags/phase_l/rot_vector/volume_probe.md
-Invariants:    reports/2025-10-cli-flags/phase_l/rot_vector/invariant_probe.md
-Rot vectors:   reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md
-
-Tolerance thresholds (from input.md):
-- Spindle norm delta: ≤5e-4
-- Volume delta: ≤1e-6 Å³
-
-Phi angle: 0.0° (from per-phi JSON entry 0)
-Device: CPU
-Dtype: float32
-
-================================================================================
+## Next Actions (Phase L3h)
+- Update analysis.md to reflect H1 ruling
+- Document remaining hypotheses ranking
+- Propose corrective investigation (likely MOSFLM matrix or cross-product ordering)

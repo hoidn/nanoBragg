@@ -1310,6 +1310,17 @@ class Simulator:
                     print(f"TRACE_PY: rot_b_angstroms {b_vec[0].item():.15g} {b_vec[1].item():.15g} {b_vec[2].item():.15g}")
                     print(f"TRACE_PY: rot_c_angstroms {c_vec[0].item():.15g} {c_vec[1].item():.15g} {c_vec[2].item():.15g}")
 
+                    # Spindle-axis instrumentation (CLI-FLAGS-003 Phase L3g)
+                    # Emit raw spindle axis from config and normalized axis used by rotate_axis
+                    from nanobrag_torch.utils.geometry import unitize
+                    spindle_raw = self.crystal.config.spindle_axis
+                    if isinstance(spindle_raw, (list, tuple)):
+                        spindle_raw = torch.tensor(spindle_raw, device=self.device, dtype=self.dtype)
+                    spindle_norm, spindle_magnitude = unitize(spindle_raw)
+                    print(f"TRACE_PY: spindle_axis_raw {spindle_raw[0].item():.15g} {spindle_raw[1].item():.15g} {spindle_raw[2].item():.15g}")
+                    print(f"TRACE_PY: spindle_axis_normalized {spindle_norm[0].item():.15g} {spindle_norm[1].item():.15g} {spindle_norm[2].item():.15g}")
+                    print(f"TRACE_PY: spindle_magnitude {spindle_magnitude.item():.15g}")
+
                     a_star_vec = rot_a_star[0, 0] if len(rot_a_star.shape) > 1 else rot_a_star
                     b_star_vec = rot_b_star[0, 0] if len(rot_b_star.shape) > 1 else rot_b_star
                     c_star_vec = rot_c_star[0, 0] if len(rot_c_star.shape) > 1 else rot_c_star

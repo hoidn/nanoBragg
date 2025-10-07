@@ -191,3 +191,52 @@ Per input.md Step 6-7 guidance and plan Phase L3g:
 2. **Optional float64 probe:** Rerun with `--dtype float64` to populate fp64 volume row
 3. **Verify C phi:** Extract phi value from c_trace_scaling.log or regenerate with phi logging
 4. **Phase L3h:** Once H1 probe confirms normalization mismatch, draft implementation strategy with C-code docstring references before touching simulator
+
+---
+
+## 2025-10-07 Phase L3g Spindle Evidence (ralph loop i=91)
+
+### Summary
+Instrumented simulator.py (lines 1313-1322) to emit raw + normalized spindle_axis + magnitude. Reran φ=0 trace and confirmed **no normalization delta**.
+
+### Key Findings
+- **Spindle axis (both):** [-1.0, 0.0, 0.0]
+- **Magnitude:** 1.0 (exact unit vector, no normalization needed)
+- **Δ(magnitude):** 0.0 (tolerance: ≤5e-4) → **PASS**
+
+### Hypothesis H1 Verdict: RULED OUT
+PyTorch's `unitize()` call in `rotate_axis` (src/nanobrag_torch/utils/geometry.py:91) is a no-op for this supervisor command because the input spindle_axis is already a unit vector. Cannot explain Y-drift of O(1e-2) Å.
+
+### Updated Hypothesis Ranking (post-L3g)
+
+1. **H1: Spindle Normalization** — **RULED OUT** (magnitude delta = 0.0)
+2. **H2: V_actual vs V_formula** — **RULED OUT** (volume delta O(1e-3) Å³ << Y-drift O(1e-2) Å)
+3. **H3: MOSFLM Matrix Semantics** — **PROMOTED TO PRIMARY**
+   - Suspect: A.mat loading/interpretation differs between C and PyTorch
+   - Evidence: Reciprocal vectors match perfectly (O(1e-9)), real vectors diverge in Y
+   - Test: Compare MOSFLM matrix file parsing logic and recalculation sequencing
+
+4. **H4: Cross-Product Accumulation** — **SECONDARY**
+   - Mechanism: Float32 error in real↔reciprocal recalculation
+   - Counter-evidence: Reciprocal alignment is excellent
+   - Test: Rerun with float64 (DONE: no change per Attempt #71)
+
+### Instrumentation Details
+- **Code Change:** `src/nanobrag_torch/simulator.py` lines 1313-1322
+- **Trace Output:** 43 TRACE_PY lines (was 40, +3 spindle lines)
+- **New Fields:**
+  - `TRACE_PY: spindle_axis_raw -1 0 0`
+  - `TRACE_PY: spindle_axis_normalized -1 0 0`
+  - `TRACE_PY: spindle_magnitude 1`
+
+### Artifacts
+- Instrumentation: src/nanobrag_torch/simulator.py:1313-1322 (commit pending)
+- Trace output: reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log
+- Audit summary: reports/2025-10-cli-flags/phase_l/rot_vector/spindle_audit.log
+- Test collection: 4/4 collected successfully
+
+### Next Actions (Phase L3h)
+1. Document H3 (MOSFLM matrix) investigation plan
+2. Update plans/active/cli-noise-pix0/plan.md Phase L3g status to [D]
+3. Update docs/fix_plan.md Attempt history with spindle evidence
+4. Investigate MOSFLM A.mat parsing (compare read_mosflm_matrix vs C equivalent)

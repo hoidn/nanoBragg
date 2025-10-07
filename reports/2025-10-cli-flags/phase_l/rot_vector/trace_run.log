@@ -10,6 +10,6 @@ Captured 10 TRACE_PY_PHI lines
 Main trace written to reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log
 Environment snapshot: reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_env.json
 Config snapshot: reports/2025-10-cli-flags/phase_l/scaling_audit/config_snapshot.json
-Captured 40 TRACE_PY lines
+Captured 43 TRACE_PY lines
 
 Pixel (685, 1039) final intensity: 2.38167999100369e-07
