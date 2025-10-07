@@ -10,7 +10,7 @@ tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_rot_b_matches_c FAILED [
 =================================== FAILURES ===================================
 ____________________ TestPhiZeroParity.test_rot_b_matches_c ____________________
 
-self = <tests.test_cli_scaling_phi0.TestPhiZeroParity object at 0x703c91a7fed0>
+self = <tests.test_cli_scaling_phi0.TestPhiZeroParity object at 0x7d9a1ea7fd90>
 
     def test_rot_b_matches_c(self):
         """
@@ -74,16 +74,17 @@ self = <tests.test_cli_scaling_phi0.TestPhiZeroParity object at 0x703c91a7fed0>
             phi_steps=10,
             mosaic_domains=1,
             misset_deg=[0.0, 0.0, 0.0],
-            spindle_axis=[0.0, 1.0, 0.0],  # default Y-axis
+            spindle_axis=[-1.0, 0.0, 0.0],  # supervisor command convention
         )
     
         # Detector configuration (supervisor command)
+        from nanobrag_torch.config import DetectorConvention
         detector_config = DetectorConfig(
             distance_mm=100.0,
             pixel_size_mm=0.1,
             spixels=2124,
             fpixels=2124,
-            detector_convention='MOSFLM',
+            detector_convention=DetectorConvention.MOSFLM,
         )
     
         # Instantiate Crystal
@@ -116,10 +117,10 @@ self = <tests.test_cli_scaling_phi0.TestPhiZeroParity object at 0x703c91a7fed0>
 E       AssertionError: rot_b[0,0,1] (φ=0 Y component) relative error 0.0680946 > 0.0005. Expected 0.6715882339, got 0.7173197865 Å. Absolute delta: 0.04573155265 Å. This documents the φ rotation bug (independent real/reciprocal drift).
 E       assert 0.06809463051942623 <= 0.0005
 
-tests/test_cli_scaling_phi0.py:121: AssertionError
+tests/test_cli_scaling_phi0.py:122: AssertionError
 =========================== short test summary info ============================
 FAILED tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_rot_b_matches_c
-============================== 1 failed in 2.11s ===============================
+============================== 1 failed in 2.09s ===============================
 ============================= test session starts ==============================
 platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/myenv/bin/python3.13
 cachedir: .pytest_cache
@@ -132,7 +133,7 @@ tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_k_frac_phi0_matches_c FA
 =================================== FAILURES ===================================
 _________________ TestPhiZeroParity.test_k_frac_phi0_matches_c _________________
 
-self = <tests.test_cli_scaling_phi0.TestPhiZeroParity object at 0x788403bac2d0>
+self = <tests.test_cli_scaling_phi0.TestPhiZeroParity object at 0x73351ccac190>
 
     def test_k_frac_phi0_matches_c(self):
         """
@@ -148,7 +149,7 @@ self = <tests.test_cli_scaling_phi0.TestPhiZeroParity object at 0x788403bac2d0>
         """
         from nanobrag_torch.models.crystal import Crystal, CrystalConfig
         from nanobrag_torch.models.detector import Detector, DetectorConfig
-        from nanobrag_torch.config import BeamConfig
+        from nanobrag_torch.config import BeamConfig, DetectorConvention
         from nanobrag_torch.io.mosflm import read_mosflm_matrix
         from nanobrag_torch import utils
     
@@ -188,7 +189,7 @@ self = <tests.test_cli_scaling_phi0.TestPhiZeroParity object at 0x788403bac2d0>
             phi_steps=10,
             mosaic_domains=1,
             misset_deg=[0.0, 0.0, 0.0],
-            spindle_axis=[0.0, 1.0, 0.0],
+            spindle_axis=[-1.0, 0.0, 0.0],  # supervisor command convention
         )
     
         # Detector configuration
@@ -197,224 +198,64 @@ self = <tests.test_cli_scaling_phi0.TestPhiZeroParity object at 0x788403bac2d0>
             pixel_size_mm=0.1,
             spixels=2124,
             fpixels=2124,
-            detector_convention='MOSFLM',
+            detector_convention=DetectorConvention.MOSFLM,
         )
     
         # Instantiate models
         crystal = Crystal(crystal_config, beam_config=beam_config, device=device, dtype=dtype)
->       detector = Detector(detector_config, device=device, dtype=dtype)
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        detector = Detector(detector_config, device=device, dtype=dtype)
+    
+        # Get rotated vectors at φ=0
+        # Returns tuple of (real_vectors, reciprocal_vectors)
+        (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = crystal.get_rotated_real_vectors(crystal_config)
+    
+        # Target pixel from C trace (slow=685, fast=1039)
+        # These are the indices from c_trace_scaling.log
+        target_s = 685
+        target_f = 1039
+    
+        # Get pixel position for target
+        # detector.get_pixel_coords() returns (S, F, 3) in meters
+        pixel_coords = detector.get_pixel_coords()  # (2124, 2124, 3)
+        pixel_pos_m = pixel_coords[target_s, target_f, :]  # (3,) meters
+    
+        # Convert to Angstroms for physics
+        pixel_pos_A = pixel_pos_m * 1e10  # m → Å
+    
+        # Compute scattering vector (supervisor command uses -lambda 0.9768)
+        wavelength_m = wavelength_A * 1e-10  # Å → m
+    
+        # Incident beam (MOSFLM convention: [1, 0, 0])
+        incident = torch.tensor([1.0, 0.0, 0.0], device=device, dtype=dtype)
+    
+        # Diffracted direction (unit vector to pixel)
+        diffracted = pixel_pos_A / torch.norm(pixel_pos_A)
+    
+        # Scattering vector S = (d - i) / λ (in Å⁻¹)
+        scattering = (diffracted - incident) / wavelength_A
+    
+        # Compute Miller indices at φ=0 using dot product
+        # k_frac = b · S (where b is the φ=0, mosaic=0 real-space vector)
+        b_phi0 = rot_b[0, 0, :]  # (3,) Å
+        k_frac = utils.dot_product(scattering, b_phi0).item()
+    
+        # Expected from C trace (c_trace_scaling.log:271)
+        expected_k_frac = -0.6072558396
+    
+        # Tolerance (absolute for fractional indices)
+        tolerance = 5e-4
+    
+        # Assertion (EXPECTED TO FAIL)
+        abs_error = abs(k_frac - expected_k_frac)
+>       assert abs_error <= tolerance, \
+            f"k_frac(φ=0) absolute error {abs_error:.6g} > {tolerance}. " \
+            f"Expected {expected_k_frac:.10f}, got {k_frac:.10f}. " \
+            f"Absolute delta: {k_frac - expected_k_frac:.10g}. " \
+            f"This documents the φ rotation bug affecting Miller indices."
+E       AssertionError: k_frac(φ=0) absolute error 2.28292 > 0.0005. Expected -0.6072558396, got 1.6756687164. Absolute delta: 2.282924556. This documents the φ rotation bug affecting Miller indices.
+E       assert 2.282924556030664 <= 0.0005
 
-tests/test_cli_scaling_phi0.py:195: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-src/nanobrag_torch/models/detector.py:131: in __init__
-    self._calculate_basis_vectors()
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-self = <nanobrag_torch.models.detector.Detector object at 0x7883e6a24d70>
-
-    def _calculate_basis_vectors(
-        self,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """
-        Calculate detector basis vectors from configuration.
-    
-        This method dynamically computes the detector's fast, slow, and
-        normal basis vectors based on user-provided configuration, such as
-        detector rotations (`-detector_rot*`) and the two-theta angle.
-    
-        The calculation follows this exact sequence:
-        1. Initialize basis vectors according to detector convention (MOSFLM or XDS)
-        2. Apply detector rotations in order: X-axis, Y-axis, Z-axis
-        3. Apply two-theta rotation around the specified axis (if non-zero)
-    
-        All rotations preserve the orthonormality of the basis vectors and
-        maintain differentiability when rotation angles are provided as tensors
-        with requires_grad=True.
-    
-        Note: This method takes no parameters as it uses self.config and
-        self.device/dtype. The returned vectors are guaranteed to be on the
-        same device and have the same dtype as the detector.
-    
-        C-Code Implementation Reference (from nanoBragg.c, lines 1319-1412):
-        The C code performs these calculations in a large block within main()
-        after parsing arguments. The key operations to replicate are:
-    
-        ```c
-            /* initialize detector origin from a beam center and distance */
-            /* there are two conventions here: mosflm and XDS */
-            // ... logic to handle different conventions ...
-    
-            if(detector_pivot == SAMPLE){
-                printf("pivoting detector around sample\n");
-                /* initialize detector origin before rotating detector */
-                pix0_vector[1] = -Fclose*fdet_vector[1]-Sclose*sdet_vector[1]+close_distance*odet_vector[1];
-                pix0_vector[2] = -Fclose*fdet_vector[2]-Sclose*sdet_vector[2]+close_distance*odet_vector[2];
-                pix0_vector[3] = -Fclose*fdet_vector[3]-Sclose*sdet_vector[3]+close_distance*odet_vector[3];
-    
-                /* now swing the detector origin around */
-                rotate(pix0_vector,pix0_vector,detector_rotx,detector_roty,detector_rotz);
-                rotate_axis(pix0_vector,pix0_vector,twotheta_axis,detector_twotheta);
-            }
-            /* now orient the detector plane */
-            rotate(fdet_vector,fdet_vector,detector_rotx,detector_roty,detector_rotz);
-            rotate(sdet_vector,sdet_vector,detector_rotx,detector_roty,detector_rotz);
-            rotate(odet_vector,odet_vector,detector_rotx,detector_roty,detector_rotz);
-    
-            /* also apply orientation part of twotheta swing */
-            rotate_axis(fdet_vector,fdet_vector,twotheta_axis,detector_twotheta);
-            rotate_axis(sdet_vector,sdet_vector,twotheta_axis,detector_twotheta);
-            rotate_axis(odet_vector,odet_vector,twotheta_axis,detector_twotheta);
-    
-            /* make sure beam center is preserved */
-            if(detector_pivot == BEAM){
-                printf("pivoting detector around direct beam spot\n");
-                pix0_vector[1] = -Fbeam*fdet_vector[1]-Sbeam*sdet_vector[1]+distance*beam_vector[1];
-                pix0_vector[2] = -Fbeam*fdet_vector[2]-Sbeam*sdet_vector[2]+distance*beam_vector[2];
-                pix0_vector[3] = -Fbeam*fdet_vector[3]-Sbeam*sdet_vector[3]+distance*beam_vector[3];
-            }
-        ```
-    
-        Returns:
-            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]: The calculated
-            (fdet_vec, sdet_vec, odet_vec) basis vectors, each with shape (3,)
-        """
-        from ..utils.geometry import angles_to_rotation_matrix, rotate_axis
-    
-        # Get configuration parameters
-        c = self.config
-    
-        # Convert rotation angles to radians (handling both scalar and tensor inputs)
-        detector_rotx = degrees_to_radians(c.detector_rotx_deg)
-        detector_roty = degrees_to_radians(c.detector_roty_deg)
-        detector_rotz = degrees_to_radians(c.detector_rotz_deg)
-        detector_twotheta = degrees_to_radians(c.detector_twotheta_deg)
-    
-        # Ensure all angles are tensors for consistent handling
-        if not isinstance(detector_rotx, torch.Tensor):
-            detector_rotx = torch.tensor(
-                detector_rotx, device=self.device, dtype=self.dtype
-            )
-        elif detector_rotx.device != self.device or detector_rotx.dtype != self.dtype:
-            detector_rotx = detector_rotx.to(device=self.device, dtype=self.dtype)
-    
-        if not isinstance(detector_roty, torch.Tensor):
-            detector_roty = torch.tensor(
-                detector_roty, device=self.device, dtype=self.dtype
-            )
-        elif detector_roty.device != self.device or detector_roty.dtype != self.dtype:
-            detector_roty = detector_roty.to(device=self.device, dtype=self.dtype)
-    
-        if not isinstance(detector_rotz, torch.Tensor):
-            detector_rotz = torch.tensor(
-                detector_rotz, device=self.device, dtype=self.dtype
-            )
-        elif detector_rotz.device != self.device or detector_rotz.dtype != self.dtype:
-            detector_rotz = detector_rotz.to(device=self.device, dtype=self.dtype)
-    
-        if not isinstance(detector_twotheta, torch.Tensor):
-            detector_twotheta = torch.tensor(
-                detector_twotheta, device=self.device, dtype=self.dtype
-            )
-        elif detector_twotheta.device != self.device or detector_twotheta.dtype != self.dtype:
-            detector_twotheta = detector_twotheta.to(device=self.device, dtype=self.dtype)
-    
-        # Initialize basis vectors based on detector convention
-        from ..config import DetectorConvention
-    
-        if c.detector_convention == DetectorConvention.MOSFLM:
-            # PHASE 1 FIX: Corrected MOSFLM basis vectors to match C implementation
-            fdet_vec = torch.tensor(
-                [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype  # Fast along +Z (CORRECT)
-            )
-            sdet_vec = torch.tensor(
-                [0.0, -1.0, 0.0], device=self.device, dtype=self.dtype  # Slow along -Y (CORRECT)
-            )
-            odet_vec = torch.tensor(
-                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype   # Normal along +X (CORRECT)
-            )
-        elif c.detector_convention == DetectorConvention.XDS:
-            # XDS convention: detector surface normal points away from source
-            fdet_vec = torch.tensor(
-                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
-            )
-            sdet_vec = torch.tensor(
-                [0.0, 1.0, 0.0], device=self.device, dtype=self.dtype
-            )
-            odet_vec = torch.tensor(
-                [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
-            )
-        elif c.detector_convention == DetectorConvention.DIALS:
-            # DIALS convention: beam [0,0,1], f=[1,0,0], s=[0,1,0], o=[0,0,1]
-            # Similar to XDS but with specific beam and twotheta axis conventions
-            fdet_vec = torch.tensor(
-                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype  # Fast along +X
-            )
-            sdet_vec = torch.tensor(
-                [0.0, 1.0, 0.0], device=self.device, dtype=self.dtype  # Slow along +Y
-            )
-            odet_vec = torch.tensor(
-                [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype  # Normal along +Z
-            )
-        elif c.detector_convention == DetectorConvention.ADXV:
-            # ADXV convention per spec: beam b = [0 0 1]; f = [1 0 0]; s = [0 -1 0]; o = [0 0 1]
-            fdet_vec = torch.tensor(
-                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype  # Fast along +X
-            )
-            sdet_vec = torch.tensor(
-                [0.0, -1.0, 0.0], device=self.device, dtype=self.dtype  # Slow along -Y (like MOSFLM)
-            )
-            odet_vec = torch.tensor(
-                [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype  # Normal along +Z (beam direction)
-            )
-        elif c.detector_convention == DetectorConvention.DENZO:
-            # DENZO convention per spec: Same as MOSFLM bases (beam [1,0,0], f=[0,0,1], s=[0,-1,0], o=[1,0,0])
-            # Note: Different beam center mapping but same basis vectors as MOSFLM
-            fdet_vec = torch.tensor(
-                [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype  # Fast along +Z (same as MOSFLM)
-            )
-            sdet_vec = torch.tensor(
-                [0.0, -1.0, 0.0], device=self.device, dtype=self.dtype  # Slow along -Y (same as MOSFLM)
-            )
-            odet_vec = torch.tensor(
-                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype   # Normal along +X (same as MOSFLM)
-            )
-        elif c.detector_convention == DetectorConvention.CUSTOM:
-            # CUSTOM convention uses user-provided vectors or defaults to MOSFLM
-            if c.custom_fdet_vector is not None:
-                fdet_vec = torch.tensor(
-                    c.custom_fdet_vector, device=self.device, dtype=self.dtype
-                )
-            else:
-                # Default to MOSFLM fast vector
-                fdet_vec = torch.tensor(
-                    [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
-                )
-    
-            if c.custom_sdet_vector is not None:
-                sdet_vec = torch.tensor(
-                    c.custom_sdet_vector, device=self.device, dtype=self.dtype
-                )
-            else:
-                # Default to MOSFLM slow vector
-                sdet_vec = torch.tensor(
-                    [0.0, -1.0, 0.0], device=self.device, dtype=self.dtype
-                )
-    
-            if c.custom_odet_vector is not None:
-                odet_vec = torch.tensor(
-                    c.custom_odet_vector, device=self.device, dtype=self.dtype
-                )
-            else:
-                # Default to MOSFLM normal vector
-                odet_vec = torch.tensor(
-                    [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
-                )
-        else:
->           raise ValueError(f"Unknown detector convention: {c.detector_convention}")
-E           ValueError: Unknown detector convention: MOSFLM
-
-src/nanobrag_torch/models/detector.py:1284: ValueError
+tests/test_cli_scaling_phi0.py:240: AssertionError
 =========================== short test summary info ============================
 FAILED tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_k_frac_phi0_matches_c
-============================== 1 failed in 2.10s ===============================
+============================== 1 failed in 2.14s ===============================

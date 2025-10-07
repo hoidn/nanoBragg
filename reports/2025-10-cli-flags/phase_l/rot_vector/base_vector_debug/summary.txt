@@ -1,0 +1,47 @@
+CLI-FLAGS-003 Phase L3k.3 — Spindle Axis Alignment Results
+===========================================================
+
+Date: 2025-10-07
+Loop: ralph i=100
+Task: Align φ=0 lattice-vector test with supervisor command
+
+Configuration Change:
+- Updated spindle_axis from [0, 1, 0] (Y-axis) to [-1, 0, 0] (negative X-axis)
+- Files modified: tests/test_cli_scaling_phi0.py (lines 87, 182)
+
+Test Results (with spindle_axis = [-1, 0, 0]):
+----------------------------------------------
+
+1. test_rot_b_matches_c:
+   - Status: FAILED (expected - documents φ rotation bug)
+   - rot_b[0,0,1] φ=0 Y component:
+     * Expected (C trace): 0.6715882339 Å
+     * Got (PyTorch):      0.7173197865 Å
+     * Absolute delta:     0.04573155265 Å
+     * Relative error:     0.0680946 (6.8%)
+     * Threshold:          0.0005 (0.05%)
+   - Conclusion: PyTorch φ rotation does NOT match C behavior with supervisor spindle axis
+
+2. test_k_frac_phi0_matches_c:
+   - Status: FAILED (expected - documents φ rotation bug)
+   - k_frac at φ=0 for pixel (685, 1039):
+     * Expected (C trace): -0.6072558396
+     * Got (PyTorch):       1.6756687164
+     * Absolute delta:      2.282924556
+     * Threshold:           0.0005
+   - Conclusion: Miller index k diverges significantly with supervisor spindle axis
+
+Test Collection:
+- 2 tests collected successfully
+
+Artifacts Stored:
+- pytest_phi0.log — Full test output for both tests
+- pytest_collect.log — Test collection verification
+- summary.txt — This summary
+
+Next Actions (per input.md):
+1. If pytest setup succeeds (✓), proceed to VG-1 checklist refresh
+2. If blocked, run trace harness (fallback)
+3. Document numeric gap in vg1_phi_grid_{py,c}.log
+
+Status: READY for VG-1 checklist update

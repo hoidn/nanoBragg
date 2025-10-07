@@ -84,7 +84,7 @@ class TestPhiZeroParity:
             phi_steps=10,
             mosaic_domains=1,
             misset_deg=[0.0, 0.0, 0.0],
-            spindle_axis=[0.0, 1.0, 0.0],  # default Y-axis
+            spindle_axis=[-1.0, 0.0, 0.0],  # supervisor command convention
         )
 
         # Detector configuration (supervisor command)
@@ -179,7 +179,7 @@ class TestPhiZeroParity:
             phi_steps=10,
             mosaic_domains=1,
             misset_deg=[0.0, 0.0, 0.0],
-            spindle_axis=[0.0, 1.0, 0.0],
+            spindle_axis=[-1.0, 0.0, 0.0],  # supervisor command convention
         )
 
         # Detector configuration

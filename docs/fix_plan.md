@@ -549,24 +549,26 @@
       3. Consider test gap: add per-φ k_frac stability assertion to test_f_latt_square_matches_c or create new test
       4. VG-4 audit blocked until VG-1/VG-3 root causes resolved
       5. Phase L4 supervisor command rerun deferred pending VG gate completion
-  * [2025-10-07] Attempt #100 (ralph loop i=100) — Result: **EVIDENCE** (Phase L3k.3 targeted pytest created). **Captured φ=0 base-vector drift in failing tests per input.md Do Now.**
-    Metrics: Test collection 2/2 tests; rot_b[0,0,1] rel_error=0.0681 (expected 0.6716 Å, got 0.7173 Å, Δ=+0.0457 Å); k_frac abs_error=2.28 (expected -0.607, got 1.676, Δ=+2.28).
+  * [2025-10-07] Attempt #100 (ralph loop i=100) — Result: **SPINDLE AXIS ALIGNED** (Phase L3k.3 VG-1 preflight). **Updated tests to match supervisor command spindle_axis = (-1, 0, 0).**
+    Metrics: Test collection 655 tests (+2 from 653); crystal/geometry regression check 52/52 passed; both phi0 tests FAIL as expected (TDD red baseline).
+    Test failures (with correct spindle axis):
+      - test_rot_b_matches_c: rot_b[0,0,1] rel_error=0.0681 (6.8%, threshold 0.05%); expected 0.6716 Å (C), got 0.7173 Å (Py), Δ=+0.0457 Å
+      - test_k_frac_phi0_matches_c: k_frac abs_error=2.28; expected -0.607 (C), got 1.676 (Py), Δ=+2.28
     Artifacts:
-      - tests/test_cli_scaling_phi0.py — New pytest module with TestPhiZeroParity class (2 tests documenting φ=0 drift)
-      - reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/pytest_phi0.log — Red test output (EXPECTED failures per TDD)
-      - reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/pytest_collect.log — Collection verification (2 tests collected)
-      - reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/sha256.txt — Artifact checksums
+      - tests/test_cli_scaling_phi0.py:87,182 — Updated spindle_axis from [0,1,0] (Y-axis) to [-1,0,0] (supervisor convention)
+      - reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/pytest_phi0.log — Full test output (both tests FAILED as expected)
+      - reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/pytest_collect.log — Collection verification (2 tests)
+      - reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/summary.txt — Configuration change summary
     Observations/Hypotheses:
-      - **rot_b Y component drift**: 6.8% relative error at φ=0 (expected 0.6716 Å from c_trace_scaling.log:266, got 0.7173 Å from Py trace)
-      - **k_frac drift**: Absolute error 2.28 (expected -0.607 from c_trace_scaling.log:271, actual 1.676) — sign flip + magnitude change
-      - **Tests document bug via TDD**: Both tests EXPECTED to fail until φ rotation fix implemented; red output proves bug exists
-      - **Quantitative evidence captured**: Deltas match prior Phase L3 observations (trace_py_scaling_20251119.log:15,20 showed similar Δb_Y≈+0.046 Å)
-      - **Evidence-only mode honored**: No code changes this loop per input.md guidance; tests ready for fix validation in next implementation loop
+      - **Spindle axis parity restored**: Tests now use supervisor command's spindle_axis = (-1, 0, 0) per input.md:16 and c_to_pytorch_config_map.md:42
+      - **Failure evidence captured**: Quantitative deltas document φ rotation bug with correct spindle convention
+      - **No regressions**: Crystal/geometry tests (52/52) pass; test collection green (655 total)
+      - **Ready for VG-1**: Per input.md:16 Do Now, test alignment complete; next step is VG-1 checklist refresh (per-φ traces, pytest with NB_RUN_PARALLEL=1)
+      - **Tests align with C trace**: Both use -spindle_axis corresponding to [-1,0,0], matching supervisor command and C expectations
     Next Actions:
-      1. Implementation loop (next turn): Fix Crystal.get_rotated_real_vectors to rotate only real vectors, recompute reciprocal from cross products (per Phase L3k.2 implementation memo)
-      2. After fix lands: Rerun tests/test_cli_scaling_phi0.py::TestPhiZeroParity — expect both tests to PASS (green) when thresholds met
-      3. Once tests green: Execute remaining VG gates (VG-1 per-φ traces, VG-3 nb-compare, VG-4 component audit) per fix_checklist.md
-      4. After all VG gates pass: Update fix_plan Attempt with full metrics, mark Phase L3k complete, proceed to Phase L4 supervisor command parity rerun
+      1. Phase L3k.3 continuation (next loop): Execute VG-1 checklist refresh per input.md:16—refresh per-φ traces and mark VG-1.4 status based on new spindle parity
+      2. After VG-1 refresh: Execute remaining VG gates (VG-3 nb-compare ROI with supervisor command, VG-4 component delta audit)
+      3. Once all VG gates pass (or if hypothesis changes): Update mosflm_matrix_correction.md and fix_checklist.md, then proceed to Phase L3k.4 (log full metrics)
   * [2025-10-07] Attempt #91 (ralph loop i=91) — Result: **SUCCESS** (Phase L3g spindle instrumentation COMPLETE). **H1 (spindle normalization) RULED OUT as root cause of Y-drift.**
     Metrics: Spindle Δ(magnitude)=0.0 (tolerance ≤5e-4); trace captured 43 TRACE_PY lines (was 40, +3 spindle lines); test collection 4/4 passed.
     Artifacts:
