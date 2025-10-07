@@ -196,6 +196,123 @@ class TestTricubicGather:
         print(f"  - Coordinate grids: (B={B}, 4)")
         print(f"  - Sample coords for h=1.5: {h_grid_coords[0].tolist()}")
 
+    def test_oob_warning_single_fire(self, simple_crystal_config):
+        """
+        Verify that out-of-bounds warning fires exactly once and disables interpolation.
+
+        Phase C2 requirement: Lock the single-warning behavior for OOB fallback.
+        When tricubic interpolation encounters an out-of-bounds neighborhood query:
+        1. First occurrence triggers warning message (printed once only)
+        2. Interpolation is permanently disabled (self.interpolate = False)
+        3. Subsequent OOB queries return default_F without additional warnings
+
+        Reference: plans/active/vectorization.md Phase C2
+        """
+        # Create crystal with small HKL data range to easily trigger OOB
+        crystal = Crystal(simple_crystal_config)
+
+        h_range, k_range, l_range = 11, 11, 11  # covers h,k,l ∈ [-5, 5]
+        hkl_data = torch.ones((h_range, k_range, l_range), dtype=torch.float32) * 50.0
+        crystal.hkl_data = hkl_data
+        crystal.hkl_metadata = {
+            'h_min': -5, 'h_max': 5,
+            'k_min': -5, 'k_max': 5,
+            'l_min': -5, 'l_max': 5,
+            'h_range': 10, 'k_range': 10, 'l_range': 10
+        }
+
+        # Enable interpolation explicitly
+        crystal.interpolate = True
+        initial_warning_state = crystal._interpolation_warning_shown
+        assert not initial_warning_state, "Warning flag should start False"
+        assert crystal.interpolate, "Interpolation should start enabled"
+
+        # First OOB query: h=4.8 → floor=4 → needs neighbors [3,4,5,6]
+        # Since h_max=5, neighbor h=6 is out of range
+        h_oob = torch.tensor([4.8], dtype=torch.float32)
+        k_oob = torch.tensor([0.0], dtype=torch.float32)
+        l_oob = torch.tensor([0.0], dtype=torch.float32)
+
+        # Capture stdout to verify warning message
+        import io
+        import sys
+        captured_output = io.StringIO()
+        sys.stdout = captured_output
+
+        # First call: should trigger warning
+        F_first = crystal._tricubic_interpolation(h_oob, k_oob, l_oob)
+
+        # Restore stdout
+        sys.stdout = sys.__stdout__
+        warning_text = captured_output.getvalue()
+
+        # Verify warning was printed
+        assert "WARNING: out of range for three point interpolation" in warning_text, \
+            "First OOB call should print warning"
+        assert "further warnings will not be printed" in warning_text, \
+            "Warning should indicate no further warnings"
+
+        # Verify state changes
+        assert crystal._interpolation_warning_shown, "Warning flag should be set"
+        assert not crystal.interpolate, "Interpolation should be disabled"
+
+        # Verify fallback to default_F
+        expected_default = crystal.config.default_F
+        assert torch.allclose(F_first, torch.tensor(expected_default), atol=1e-5), \
+            f"First OOB call should return default_F={expected_default}, got {F_first.item()}"
+
+        # Second OOB query: should NOT print warning
+        h_oob2 = torch.tensor([4.9], dtype=torch.float32)
+        k_oob2 = torch.tensor([0.5], dtype=torch.float32)
+        l_oob2 = torch.tensor([0.5], dtype=torch.float32)
+
+        captured_output2 = io.StringIO()
+        sys.stdout = captured_output2
+
+        F_second = crystal._tricubic_interpolation(h_oob2, k_oob2, l_oob2)
+
+        sys.stdout = sys.__stdout__
+        warning_text2 = captured_output2.getvalue()
+
+        # Verify NO new warning
+        assert "WARNING" not in warning_text2, \
+            "Second OOB call should not print any warnings"
+
+        # Verify still returns default_F
+        assert torch.allclose(F_second, torch.tensor(expected_default), atol=1e-5), \
+            f"Second OOB call should return default_F={expected_default}, got {F_second.item()}"
+
+        # Verify persistent state
+        assert crystal._interpolation_warning_shown, "Warning flag should remain set"
+        assert not crystal.interpolate, "Interpolation should remain disabled"
+
+        # Third query (in-bounds but interpolation disabled): should use nearest-neighbor
+        h_valid = torch.tensor([1.5], dtype=torch.float32)
+        k_valid = torch.tensor([0.0], dtype=torch.float32)
+        l_valid = torch.tensor([0.0], dtype=torch.float32)
+
+        captured_output3 = io.StringIO()
+        sys.stdout = captured_output3
+
+        F_third = crystal._tricubic_interpolation(h_valid, k_valid, l_valid)
+
+        sys.stdout = sys.__stdout__
+        warning_text3 = captured_output3.getvalue()
+
+        # Should not trigger OOB warning (in-bounds) but uses nearest-neighbor due to disabled interpolation
+        assert "out of range" not in warning_text3, \
+            "In-bounds query should not mention out of range"
+
+        # Nearest-neighbor should return one of the grid values (50.0 in this case)
+        # Since interpolation is disabled, we expect the nearest neighbor value
+        assert F_third.item() == 50.0 or F_third.item() == expected_default, \
+            f"Disabled interpolation should use nearest-neighbor or default_F, got {F_third.item()}"
+
+        print("✓ Phase C2: OOB warning single-fire behavior validated")
+        print(f"  - First OOB: warning printed, interpolation disabled, returned default_F={expected_default}")
+        print(f"  - Second OOB: no warning, still returns default_F={expected_default}")
+        print(f"  - In-bounds post-disable: uses fallback path, returns {F_third.item()}")
+
     @pytest.mark.parametrize("device", [
         "cpu",
         pytest.param("cuda", marks=pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available"))

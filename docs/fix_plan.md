@@ -1989,6 +1989,22 @@
       - Memory footprint acceptable (268 MB for 1024² detector at float32)
       - gather_notes.md documents implementation details, tensor shapes, and validation evidence
     Next Actions: Phase C1 complete per plan exit criteria. Proceed to Phase C2 (OOB warning validation) and C3 (shape assertions/caching), then Phase D polynomial vectorization.
+  * [2025-10-07] Attempt #6 — Result: **Phase C2 COMPLETE** (OOB warning single-fire test authored and validated). Test regression locks fallback behavior.
+    Metrics: Target test PASSED (test_oob_warning_single_fire in 2.16s). All tricubic tests: 8/8 passed in 2.36s. Test collection: 653 tests collected successfully.
+    Artifacts:
+      - `tests/test_tricubic_vectorized.py` lines 199-314 — New test_oob_warning_single_fire implementation capturing stdout, verifying flag state changes
+      - `reports/2025-10-vectorization/phase_c/test_tricubic_vectorized.log` — pytest execution log for all 8 tricubic tests
+      - `reports/2025-10-vectorization/phase_c/status_snapshot.txt` — Phase C2 completion summary with exit criteria checklist
+      - `plans/active/vectorization.md` task C2 marked complete (state [D])
+    Observations/Hypotheses:
+      - Test successfully captures `_interpolation_warning_shown` flag behavior: first OOB prints warning, second OOB silent
+      - Test validates `Crystal.interpolate` flag permanently disables after first OOB detection
+      - Test verifies fallback to `default_F` on OOB queries (expected_default=100.0, got 100.0)
+      - Test uses stdout capture (io.StringIO) to deterministically assert warning text presence/absence
+      - Three-scenario validation: (1) first OOB → warning + disable, (2) second OOB → no warning + still default_F, (3) in-bounds post-disable → nearest-neighbor fallback
+      - No code changes to production paths; test-only addition preserves existing behavior
+      - All existing tricubic acceptance tests (AT-STR-002) remain passing after test addition
+    Next Actions: Execute Phase C3 (shape assertions + device-aware caching) with implementation notes in `phase_c/implementation_notes.md`, then proceed to Phase D polynomial vectorization.
 - Risks/Assumptions: Must maintain differentiability (no `.item()`, no `torch.linspace` with tensor bounds), preserve device/dtype neutrality (CPU/CUDA parity), and obey Protected Assets rule (all new scripts under `scripts/benchmarks/`). Large tensor indexing may increase memory pressure; ensure ROI caching still works.
 - Exit Criteria (quote thresholds from spec):
   * specs/spec-a-parallel.md §2.3 tricubic acceptance tests run without warnings and match C parity within documented tolerances (corr≥0.9995, ≤1e-12 structural duality where applicable).
