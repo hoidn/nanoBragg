@@ -1,0 +1,6 @@
+total 16K
+-rw-rw-r-- 1 ollie ollie    0 Oct  7 07:01 listing.txt
+-rw-rw-r-- 1 ollie ollie  295 Oct  7 07:01 sha256.txt
+-rw-rw-r-- 1 ollie ollie 1.9K Oct  7 07:01 trace_py_rot_vector_per_phi.json
+-rw-rw-r-- 1 ollie ollie 1.3K Oct  7 07:01 trace_py_rot_vector_per_phi.log
+-rw-rw-r-- 1 ollie ollie 2.2K Oct  7 07:00 trace_py_rot_vector_postfix.log

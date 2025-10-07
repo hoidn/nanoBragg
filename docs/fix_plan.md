@@ -526,6 +526,29 @@
       1. Phase L3k.3 continuation — Execute remaining verification gates: VG-1 (per-φ traces at 0°, 0.05°, 0.1°), VG-3 (nb-compare with supervisor command), VG-4 (component delta audit)
       2. After VG-1/VG-3/VG-4 pass: Execute Phase L3k.4 (mark fix_checklist rows ✅, complete Attempt documentation with full metrics, prepare Phase L4)
       3. Update fix_checklist.md to mark VG-2.1 ✅ and VG-2.2 ✅
+  * [2025-10-07] Attempt #99 (ralph loop i=99) — Result: **EVIDENCE COLLECTED** (Phase L3k.3 VG-1/VG-3 FAIL). **φ rotation fix did NOT meet parity thresholds.**
+    Metrics: VG-1 k_frac span=0.018088 (threshold <1e-6 FAIL); VG-3 correlation=0.985405 (threshold ≥0.9995 FAIL), sum_ratio=115558 (threshold 0.99–1.01 FAIL).
+    Artifacts:
+      - VG-1 per-φ traces: reports/2025-10-cli-flags/phase_l/rot_vector/per_phi_postfix/{trace_py_rot_vector_per_phi.{log,json}, trace_py_rot_vector_postfix.log}
+      - VG-1 SHA256: reports/2025-10-cli-flags/phase_l/rot_vector/per_phi_postfix/sha256.txt
+      - VG-1 env: reports/2025-10-cli-flags/phase_l/rot_vector/per_phi_postfix/env_snapshot.txt
+      - VG-3 nb-compare: reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/{summary.json, *.png, c_stdout.txt, nb_compare.log}
+      - VG-3 metrics doc: reports/2025-10-cli-flags/phase_l/rot_vector/per_phi_postfix/vg3_metrics.txt
+      - VG-2 pytest refresh: reports/2025-10-cli-flags/phase_l/rot_vector/per_phi_postfix/pytest_vg2_refresh.log (PASSED 5.76s, still green)
+      - Updated checklist: reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md (VG-1 ⚠️, VG-2 ✅, VG-3 ⚠️)
+    Observations/Hypotheses:
+      - **VG-1.4 FAIL**: k_frac span across 10 φ steps = 0.018088 (expect <1e-6); φ rotation implementation did NOT eliminate drift
+      - **VG-3.2/3.3 FAIL**: Correlation=0.985 (expect ≥0.9995), sum_ratio=115558 (expect 0.99–1.01); C sum≈0 while C stdout reports max_I=446
+      - **VG-2 PASS**: test_f_latt_square_matches_c still passes → test coverage may not exercise full φ sweep or thresholds are too lenient
+      - **Root cause hypothesis**: Attempt #97's φ rotation fix (rotate only real, recompute reciprocal) is incomplete or incorrect
+      - **Alternative hypothesis**: nb-compare has a data loading/ROI extraction bug causing C sum≈0 despite max_I>0 in stdout
+      - **Test gap**: VG-2 test passes but doesn't catch VG-1.4/VG-3 failures → need tighter integration test with per-φ assertions
+    Next Actions:
+      1. Escalate to galph supervisor: VG-1.4/VG-3 failures indicate Attempt #97 implementation incomplete; requires deeper investigation
+      2. Investigate nb-compare C sum≈0 anomaly (C stdout shows max_I=446 but extracted ROI has sum≈0)
+      3. Consider test gap: add per-φ k_frac stability assertion to test_f_latt_square_matches_c or create new test
+      4. VG-4 audit blocked until VG-1/VG-3 root causes resolved
+      5. Phase L4 supervisor command rerun deferred pending VG gate completion
   * [2025-10-07] Attempt #91 (ralph loop i=91) — Result: **SUCCESS** (Phase L3g spindle instrumentation COMPLETE). **H1 (spindle normalization) RULED OUT as root cause of Y-drift.**
     Metrics: Spindle Δ(magnitude)=0.0 (tolerance ≤5e-4); trace captured 43 TRACE_PY lines (was 40, +3 spindle lines); test collection 4/4 passed.
     Artifacts:

@@ -1,0 +1,1 @@
+NB_C_BIN=./golden_suite_generator/nanoBragg PYTHONPATH=src TORCH_VERSION=2.8.0+cu128

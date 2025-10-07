@@ -1,0 +1,28 @@
+VG-3 nb-compare Metrics (Phase L3k.3):
+=====================================
+Command: nb-compare --roi 100 156 100 156 --resample --outdir reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix -- [supervisor flags]
+Timestamp: 2025-10-07 07:02 UTC
+
+Metrics:
+- Correlation: 0.985405 (threshold: ≥0.9995) ❌ BELOW THRESHOLD
+- RMSE: 0.380357  
+- Max |Δ|: 6.262880
+- C sum: 0.0015 (nearly zero - potential issue with C binary output redirection)
+- Py sum: 176.14
+- Sum ratio (Py/C): 115558.38 ❌ FAR OUTSIDE 0.99-1.01 RANGE
+- Mean peak distance: 0.00 px ✓
+- Max peak distance: 0.00 px ✓
+
+Artifacts:
+- Summary JSON: reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/summary.json
+- C float.bin: reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/c_float.bin
+- Py float.bin: reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/py_float.bin
+- PNG previews: reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/{c.png,py.png,diff.png}
+- C stdout: reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/c_stdout.txt
+- Log: reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/nb_compare.log
+
+Observations:
+- C binary did generate intensity (max_I=446.254 reported in c_stdout.txt line 286)
+- C sum discrepancy suggests ROI extraction or float loading issue in nb_compare
+- Correlation 0.985 is reasonable but below AT-PARALLEL threshold of 0.9995
+- Further investigation needed to understand C sum=0 vs max_I=446 discrepancy
