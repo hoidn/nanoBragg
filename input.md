@@ -1,102 +1,57 @@
-Summary: Probe the supervisor pixel’s structure-factor source so PyTorch can match C’s I_before_scaling.
+Summary: Source the supervisor pixel’s structure factor by probing the archived C Fdump so Phase L3 can unblock normalization work.
 Mode: Parity
-Focus: CLI-FLAGS-003 › Phase L3a structure-factor verification
+Focus: CLI-FLAGS-003 › Phase L3b structure-factor ingestion analysis
 Branch: feature/spec-based-2
 Mapped tests: none — evidence-only
-Artifacts: reports/2025-10-cli-flags/phase_l/structure_factor/probe.py; reports/2025-10-cli-flags/phase_l/structure_factor/probe.log; reports/2025-10-cli-flags/phase_l/structure_factor/analysis.md; reports/2025-10-cli-flags/phase_l/structure_factor/blocked.md (only if needed)
-Do Now: CLI-FLAGS-003 › Phase L3a Verify structure-factor coverage — author the probe detailed below, then run `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/structure_factor/probe.py --pixel 685 1039 --hkl scaled.hkl --fdump golden_suite_generator/Fdump.bin --fdump tmp/Fdump.bin`
-If Blocked: Log the failure (command, stderr, git SHA) to `reports/2025-10-cli-flags/phase_l/structure_factor/blocked.md` and run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_trace_pixel.py` to verify imports remain stable.
+Artifacts: reports/2025-10-cli-flags/phase_l/structure_factor/probe.log; reports/2025-10-cli-flags/phase_l/structure_factor/analysis.md; reports/2025-10-cli-flags/phase_l/structure_factor/hkl_inventory.md (if you enumerate files)
+Do Now: CLI-FLAGS-003 › Phase L3b Analyze structure-factor sources — run `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/structure_factor/probe.py --pixel 685 1039 --hkl scaled.hkl --fdump reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin --fdump golden_suite_generator/Fdump.bin --fdump tmp/Fdump.bin --dtype float64 --device cpu` and update analysis.md with findings.
+If Blocked: Record command, stderr, and `git rev-parse HEAD` in `reports/2025-10-cli-flags/phase_l/structure_factor/blocked.md`, then run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_flags.py` to verify imports and log the selector + result in Attempts History.
 
 Context Snapshot
-- Phase L2 is complete; TRACE_C and TRACE_PY scaling chains live under `reports/2025-10-cli-flags/phase_l/scaling_audit/` with all factors aligned except I_before_scaling.
-- The supervisor pixel (slow=685, fast=1039) maps to hkl≈(−7,−1,−14) per `c_trace_scaling.log:143-164`.
-- PyTorch currently reports `F_cell=0` for that hkl while C reports `F_cell=190.27`, driving I_before_scaling to zero on the Py side.
-- Existing HKL/Fdump assets in repo appear to cover only a tiny grid (ranges -2..2), so the C amplitude must stem from additional logic.
-- Plan Phase L3 (plans/active/cli-noise-pix0/plan.md) now targets structure-factor ingestion before normalization code changes.
-- docs/fix_plan.md entry CLI-FLAGS-003 has refreshed Next Actions (lines 457-461) aligning to this probe-first strategy.
-- We must keep detector/beam configs identical to the supervisor command (`trace_harness.get_supervisor_params`) so comparisons remain valid.
-- All work stays evidence-only this loop; no production module changes or new tests yet.
+- Phase L2 artifacts show every scaling factor except `I_before_scaling` now matches C (`reports/2025-10-cli-flags/phase_l/scaling_audit/scaling_audit_summary.md`).
+- `c_trace_scaling.log:143-164` reports `F_cell=190.27` for hkl=(-7,-1,-14); PyTorch trace still shows `F_cell=0` for the same pixel (`trace_py_scaling.log:18-32`).
+- Repo-local `scaled.hkl` is a 13-byte stub (only `(1,12,3)`), and both `golden_suite_generator/Fdump.bin` and `tmp/Fdump.bin` are 2×2×2 caches generated from that stub.
+- `reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin` is a 1.4 MB C-generated cache with ranges h∈[-24,24], k∈[-28,28], l∈[-31,30]; it contains the supervisor reflection with amplitude 190.27.
+- Phase L3 requires determining how the C run sourced that cache (reuse vs regenerate) before touching simulator code.
+- docs/fix_plan.md:457-461 and plans/active/cli-noise-pix0/plan.md:255-262 both gate further work on documenting the structure-factor source.
 
 Success Criteria
-- Probe captures HKL-grid coverage and reports whether (-7,-1,-14) exists in either `scaled.hkl` or generated Fdump caches.
-- Output log clearly lists the amplitude returned by `Crystal.get_structure_factor` for each data source and device/dtype used.
-- `analysis.md` summarises findings, cites the C reference value, and states whether further ingestion work is required.
-- Any blockers are documented with enough data for the next loop to resume without repeating work.
+- `probe.log` lists each data source (HKL + Fdump paths), its h/k/l ranges, whether (-7,-1,-14) is in range, and the retrieved amplitude.
+- `analysis.md` summarises which source matches the C amplitude and flags any gaps (e.g., need to restore the full HKL file or stage the large Fdump before running CLI parity).
+- Any decision/next-step notes for L3c (copy vs regenerate cache) are captured for the next supervisor loop.
 
 Priorities & Rationale
-- plans/active/cli-noise-pix0/plan.md:255 mandates L3a before touching simulator code; satisfying that plan gate keeps the initiative on track.
-- docs/fix_plan.md:457 documents the current divergence (I_before_scaling) and explicitly calls for L3a/L3b evidence.
-- specs/spec-a-cli.md:1 establishes that CLI parity depends on identical HKL/Fdump handling; diverging here explains the PyTorch zero amplitude.
-- reports/2025-10-cli-flags/phase_l/scaling_audit/scaling_audit_summary.md:1 already proves all other scaling factors align, isolating the structure-factor gap.
-- c_trace_scaling.log:143-164 is the authoritative C reference for the target hkl and F_cell; we must reproduce or explain that value.
-- trace_harness.py lines 65-206 keep the configuration canonical; reusing it prevents accidental drift (beam, detector, or crystal mismatches).
-
-Execution Sequence
-- Create the directory `reports/2025-10-cli-flags/phase_l/structure_factor/` if missing.
-- Copy or import `get_supervisor_params` from the scaling harness to guarantee identical configs.
-- Build a small CLI around torch + numpy that accepts `--pixel`, `--hkl`, and multiple `--fdump` paths for experimentation.
-- Load HKL data via `read_hkl_file`, attach to a `Crystal` constructed with the supervisor config, and query `crystal.get_structure_factor` for the rounded hkl from the C trace.
-- Repeat the query for each provided Fdump path using `read_fdump` (note that some may not contain the hkl; report index status).
-- Consider toggling dtype/device (float64 cpu vs float32 cpu) to show that the amplitude mismatch is not precision-driven; record both runs if feasible.
-- Print and log metadata: min/max ranges, whether the hkl falls inside each grid, and the amplitude retrieved.
-- Summarise findings and hypotheses in `analysis.md`, referencing any anomalies (e.g., if C amplitude cannot be reproduced from available data).
-
-Tooling Prep
-- Ensure editable install is in place (`pip install -e .`) so the probe can import `nanobrag_torch` modules without PYTHONPATH hacks beyond `PYTHONPATH=src`.
-- Export `NB_C_BIN=./golden_suite_generator/nanoBragg` to keep future C comparisons consistent.
-- Verify both `golden_suite_generator/Fdump.bin` and `tmp/Fdump.bin` exist before running the probe; list their `ls -l` output in the log for provenance.
-- Run `git rev-parse HEAD` and record the SHA at the top of `probe.log`.
-- Capture `torch.__version__`, `platform.platform()`, and device availability in the probe output to maintain context for later parity checks.
-- If you need additional Fdump snapshots from C, document the exact command used to regenerate them (copy/paste from `c_trace_scaling.log` header) and store the binary copy under `reports/.../structure_factor/`.
-
-Evidence Sources
-- `reports/2025-10-cli-flags/phase_l/scaling_audit/instrumentation_notes.md` for prior harness setup steps.
-- `docs/architecture/c_code_overview.md:310` (HKL handling) to cross-check the C ingestion pipeline while analysing probe results.
-- `docs/architecture/pytorch_design.md:180` for the expected PyTorch HKL workflow; note any deltas when explaining outcomes.
-- `reports/2025-10-cli-flags/phase_l/hkl_parity/summary_20251109.md` summarises prior HKL vs Fdump parity work—cite it if ranges conflict.
-- `reports/2025-10-cli-flags/phase_k/base_lattice/summary.md` contains notes on MOSFLM scaling decisions that might influence structure-factor expectations.
-- `tests/test_cli_scaling.py` (search for `TestHKLFdumpParity`) to understand existing coverage and gaps.
-
-Open Questions to Address in analysis.md
-- Does any existing Fdump (or a freshly generated one) actually contain the (-7,-1,-14) reflection, or is C deriving it procedurally?
-- If the reflection is absent, which section of `nanoBragg.c` fabricates the amplitude (default_F fallback, symmetry expansion, or sinc evaluation)?
-- Are there command-line flags (`-nonorm`, `-nointerpolate`) altering the structure-factor lookup in C that PyTorch is not mirroring?
-- What hypotheses should Phase L3b test next (e.g., loading the on-disk Fdump vs synthesising a wider HKL grid)?
+- docs/fix_plan.md:455-461 — current Next Actions require confirming structure-factor coverage before modifying normalization code.
+- plans/active/cli-noise-pix0/plan.md:255 — Phase L3a/L3b checklist explicitly calls for this probe and ingestion analysis.
+- specs/spec-a-cli.md (HKL caching section) — parity depends on mirroring C’s HKL/Fdump precedence; present data shows mismatch.
+- reports/2025-10-cli-flags/phase_l/hkl_parity/layout_analysis.md — documents C cache layout; cross-check results to avoid misinterpreting ranges.
+- src/nanobrag_torch/io/hkl.py:250-310 — PyTorch’s `try_load_hkl_or_fdump` currently overwrites caches when an HKL file is present; probing informs whether we need alternate flow.
 
 How-To Map
-- Command template: `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/structure_factor/probe.py --pixel 685 1039 --hkl scaled.hkl --fdump golden_suite_generator/Fdump.bin --fdump tmp/Fdump.bin --dtype float64 --device cpu`.
-- Inside the probe, after loading tensors, compute rounded hkl from detector geometry by calling the same helper as the harness (`Simulator` or `Crystal` as needed) to double-check indices.
-- Use `Path('reports/.../probe.log')` to write a structured log (JSON or plain text) capturing source name, in-range flag, amplitude, and metadata; also echo to stdout.
-- Store CLI invocation, git SHA, torch version, and timestamp in the log header for reproducibility.
-- Append a markdown table to `analysis.md` with columns `[source, in_range, amplitude]` and note whether any source matches the C value.
-- If the probe discovers a new data dependency (e.g., C writes a fresh Fdump during the command), note the path and copy it under `reports/.../structure_factor/` for archival.
-
-Reporting Checklist
-- Update `analysis.md` with bullet conclusions plus open questions for Phase L3b.
-- Add a short paragraph to `docs/fix_plan.md` Attempts History only after supervisor review (defer for now unless instructed).
-- Ensure `git status` is clean of unexpected files before handing off; only the new probe artifacts should appear.
-- Record the executed command(s) and SHA in `probe.log` for traceability.
+- Command: `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/structure_factor/probe.py --pixel 685 1039 --hkl scaled.hkl --fdump reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin --fdump golden_suite_generator/Fdump.bin --fdump tmp/Fdump.bin --dtype float64 --device cpu`.
+- Before running, `ls -lh` each input (HKL + Fdump paths) and capture sizes in the log for provenance.
+- Let the probe reuse `get_supervisor_params` so detector/beam/crystal configs stay aligned with scaling traces.
+- After execution, append a markdown table in `analysis.md` with columns `[source, in_range?, F_cell]` and annotate which source reproduces 190.27.
+- Note whether pointing `try_load_hkl_or_fdump` at the large cache would avoid overwriting (e.g., by omitting `-hkl` or copying the big cache to working `Fdump.bin` before CLI runs).
+- If you discover missing large HKL text or need to regenerate the cache, outline the C command (with env vars) required and list it in `analysis.md`.
 
 Pitfalls To Avoid
-- Forgetting `KMP_DUPLICATE_LIB_OK=TRUE` will crash the probe; set it early.
-- Do not relocate or edit protected assets named in docs/index.md while working.
-- Avoid instantiating `Simulator` with altered oversample or beam parameters; stay aligned with the supervisor command.
-- No edits to production HKL readers this loop; evidence first, implementation later.
-- Skip GPU runs unless needed; parity proof starts on CPU float64 for clarity.
-- Do not delete existing scaling audit artifacts; future loops rely on them for comparisons.
-- Keep the probe deterministic; seed torch/numpy if random numbers are introduced.
-- Document any assumptions about the Fdump path—if the file is missing, note it instead of silently failing.
-- Avoid `.item()` on tensors that might later require gradients in the simulator; extraction is fine inside the isolated probe only.
-- Respect vectorization rules: if you loop over hkl indices in the probe, keep it clearly separate from production pipelines.
+- Don’t run the probe without `KMP_DUPLICATE_LIB_OK=TRUE` (MKL crash) or `PYTHONPATH=src` (import failure).
+- Avoid overwriting the archived C Fdump; copy it if you need to experiment.
+- No production code edits this loop—stay evidence-only per plan gating.
+- Do not delete or rename files listed in docs/index.md while staging artifacts.
+- Keep tensors on CPU float64 for this evidence pass; CUDA is unnecessary and may hide precision issues.
+- If the probe script regenerates `analysis.md`, ensure your updates include previous conclusions (don’t leave placeholder text).
+- Ensure `git status` only shows intentional report updates before ending the loop.
 
 Pointers
-- docs/fix_plan.md:448 for the refreshed Next Actions and divergence context.
-- plans/active/cli-noise-pix0/plan.md:255 detailing the L3a/L3b deliverables.
-- reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log:143 for the C-side reference amplitude.
-- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log:21 showing PyTorch’s current zero amplitude.
-- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:70-220 for the canonical config helper.
-- specs/spec-a-core.md:200 (structure-factor section) for the expected physical contract.
+- docs/fix_plan.md:448-522 — active item history and current divergence write-up.
+- plans/active/cli-noise-pix0/plan.md:243-266 — detailed Phase L3 task descriptions.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log:143-164 — authoritative C reference values.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log:18-34 — current PyTorch zeros for comparison.
+- reports/2025-10-cli-flags/phase_l/hkl_parity/summary.md — previous HKL/Fdump parity investigation.
+- src/nanobrag_torch/io/hkl.py:250-310 — current cache loading logic to keep in mind for ingestion strategy.
 
 Next Up (if time allows)
-- Initiate Phase L3b by diffing the probe outputs against the newly generated C Fdump (if any) and drafting the ingestion strategy.
-- Queue notes for Phase L3c describing the normalization adjustments once the structure-factor source is resolved.
+- Determine whether to stage the archived Fdump as `Fdump.bin` or to restore the original HKL file, and capture the plan in `analysis.md` for Phase L3c implementation.
+- Outline regression coverage ideas for Phase L3d (e.g., targeted `tests/test_cli_scaling.py` assertions using the confirmed dataset).

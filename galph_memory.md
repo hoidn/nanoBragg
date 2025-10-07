@@ -1478,3 +1478,9 @@ Follow-ups for Ralph:
 - Noted Fdump snapshots currently in repo do not cover (-7,-1,-14); follow-up question recorded for L3b to locate/replicate C’s data source.
 - Follow-up for Ralph: implement the probe per input.md, store outputs in reports/2025-10-cli-flags/phase_l/structure_factor/, and feed findings into L3b planning.
 
+
+## 2025-11-15 (galph loop — Phase L3 structure-factor sourcing)
+- Confirmed repo-local `scaled.hkl` is a 13-byte stub containing only `(1,12,3)`; golden_suite_generator/Fdump.bin and tmp/Fdump.bin are tiny (≤2×2×2 grids) and cannot supply F_cell for (-7,-1,-14).
+- Loaded `reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin` via `read_fdump`; grid spans h∈[-24,24], k∈[-28,28], l∈[-31,30] and returns `F_cell=190.27` for the supervisor pixel. This confirms sourcing the C-generated Fdump reproduces the trace amplitude.
+- Implication: Phase L3 must treat the archived Fdump as the authoritative dataset (or regenerate an equivalent cache) before normalization work; running the CLI with the stub HKL will overwrite the cache with zeros.
+- Next supervisor handoff: instruct Ralph to rerun `reports/.../structure_factor/probe.py` including `--fdump reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin`, capture the refreshed probe.log/analysis.md, and decide whether to stage that Fdump alongside the supervisor command or regenerate it from the original HKL source.
