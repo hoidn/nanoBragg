@@ -1428,3 +1428,10 @@ Follow-ups for Ralph:
 - Updated Phase L2b guidance to require rerunning trace_harness.py with the authoritative supervisor command before analysing scaling factors; docs/fix_plan.md now lists Phase L2b0 as step 1.
 - Issued input.md loop instructions directing Ralph to regenerate trace_py_scaling.log via `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --pixel 685 1039 --out reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log --device cpu --dtype float32` and capture fresh notes.
 - Expect Ralph to refresh trace_py_env.json/notes.md, then proceed to instrumentation regression test (tests/test_trace_pixel.py) once Phase L2b0 evidence lands.
+
+## 2025-10-06 (galph loop — Phase L2b instrumentation prep)
+- Synced clean; coin flip tails so no commit review.
+- Confirmed Attempt #66 harness rerun now passes full supervisor flags: `trace_py_scaling.log` reports steps=10, fluence≈1e24, yet `I_before_scaling` remains absent and polar=0, so intensity still zero.
+- Updated `plans/active/cli-noise-pix0/plan.md` gap snapshot + L2b row to mark L2b0 complete and emphasize instrumentation work; refreshed `docs/fix_plan.md` next actions (2025-11-12 refresh).
+- Authored new `input.md` directing Ralph to thread real scaling tensors through TRACE_PY, add regression test, rerun harness, and diff against C trace.
+- Focus next loop: complete Phase L2b instrumentation, record comparison metrics, then proceed to L2c.
