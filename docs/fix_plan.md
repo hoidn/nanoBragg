@@ -455,11 +455,25 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase K3e evidence reveals a **fundamental lattice/geometry mismatch**, not a φ-grid offset. C reports `k_frac≈−3.857` across all φ steps while PyTorch reports `k_frac≈−9.899` (Δk≈6.04 at φ=0°). This 6-unit discrepancy indicates the base reciprocal lattice vectors or scattering geometry differ before any φ rotation is applied.
-- Next Actions (2025-11-12 refresh):
-  1. Phase L2b harness refresh — Update `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py` to stream the simulator's live `TRACE_PY` output (`debug_config={'trace_pixel': [685, 1039]}`), regenerate `trace_py_scaling.log`, and capture updated `trace_py_env.json`/`notes.md` with non-placeholder values.
+- Next Actions (2025-10-07 update):
+  1. ✅ Phase L2b harness refresh complete (Attempt #69) — Updated `trace_harness.py` to use `Simulator(..., debug_config={'trace_pixel': [685, 1039]})` with `contextlib.redirect_stdout`, regenerated `trace_py_scaling.log` with 40 live TRACE_PY lines (no placeholders), and captured `trace_py_env.json` + `notes.md` with real values.
   2. Phase L2c rerun — Re-execute `scripts/validation/compare_scaling_traces.py` against the refreshed logs, update `scaling_audit_summary.md`, and record the earliest divergent factor in docs/fix_plan.md Attempt history.
   3. Phase L3 prep — With real deltas in hand, outline the normalization fix scope (expected focus: polarization application order and F_latt mismatch) and queue targeted regression selectors.
 - Attempts History:
+  * [2025-10-07] Attempt #69 (ralph loop) — Result: **SUCCESS** (Phase L2b harness refresh complete). **Updated trace harness to use live simulator TRACE_PY output; generated fresh trace_py_scaling.log with 40 real values.**
+    Metrics: 40 TRACE_PY lines captured from stdout; test suite passes 4/4 variants (cpu/cuda × float32/float64).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:238-282` - Modified to use Simulator with debug_config and contextlib.redirect_stdout
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log:1-40` - Fresh trace with real computed values: polar=0.9146 (not 0.0), omega_pixel=4.204e-07 sr, steps=10, fluence=1.00e+24
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_env.json` - Environment snapshot (git_sha=1cc1f1ea6, torch=2.8.0+cu128, dtype=float32, device=cpu)
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/notes.md:1-68` - Summary with key observations
+    Observations/Hypotheses:
+      - **Harness instrumentation successful:** Removed placeholder logic (lines 252-286 old version); now captures stdout from Simulator.run() with debug_config={'trace_pixel': [685, 1039]}
+      - **Real scaling factors confirmed:** polar=0.914641380310059 (computed Kahn factor), capture_fraction=1 (no absorption), omega_pixel=4.20404859369228e-07 sr (actual solid angle)
+      - **Pixel intensity zero:** I_before_scaling=0, I_pixel_final=0 indicates F_cell=0 for this pixel, matching trace line 26
+      - **Ready for comparison:** trace_py_scaling.log now has live values suitable for Phase L2c diff against c_trace_scaling.log
+      - **Test coverage maintained:** tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics passes all parametrized variants
+    Next Actions: Proceed to Phase L2c — run `scripts/validation/compare_scaling_traces.py` to identify first divergent scaling factor between C and PyTorch implementations.
   * [2025-10-06] Attempt #68 (ralph loop) — Result: **PARTIAL SUCCESS** (Phase L2c comparison tooling complete). **Created `compare_scaling_traces.py` script and executed initial comparison; identified that old PyTorch trace has stale placeholder values.**
     Metrics: Initial comparison shows 4 divergent factors (I_before_scaling=MISSING, polar=CRITICAL 0 vs 0.9146, cos_2theta=MISSING, I_pixel_final=CRITICAL 0 vs 2.88e-7). Perfect matches for r_e_sqr, fluence, steps, capture_fraction, omega_pixel.
     Artifacts:

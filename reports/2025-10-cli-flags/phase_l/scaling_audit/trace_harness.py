@@ -235,55 +235,36 @@ def main():
     crystal.l_min, crystal.l_max = l_min, l_min + l_range
     crystal.h_range, crystal.k_range, crystal.l_range = h_range, k_range, l_range
 
-    # Run simulator (Step 5)
-    # Simulator expects Crystal and Detector objects, not configs
-    simulator = Simulator(crystal, detector, beam_config=beam_config, dtype=dtype, device=device)
-
-    # Execute simulation
-    intensities = simulator.run()
-
-    # Extract scaling quantities for target pixel (Step 6 per input.md)
+    # Run simulator with debug_config to capture live TRACE_PY output (Step 5)
+    # Per Attempt #67 (2025-10-06): Simulator with debug_config={'trace_pixel': [s, f]}
+    # automatically emits TRACE_PY lines to stdout containing real computed values
     slow, fast = args.pixel
-    pixel_intensity = intensities[slow, fast].item()
+    debug_config = {'trace_pixel': [slow, fast]}
 
-    # Access internal scaling factors from simulator
-    # NOTE: This is a trace harness so we access internals for debugging
-    # (per instrumentation_notes.md lines 35-48)
-    steps = crystal_config.phi_steps  # sources × mosaic × phi × oversample² = 1×1×10×1
-    r_e_sqr = 7.94079248018965e-30  # Thomson cross section constant
-    fluence = simulator.fluence.item() if hasattr(simulator.fluence, 'item') else float(simulator.fluence)
+    simulator = Simulator(
+        crystal, detector,
+        beam_config=beam_config,
+        dtype=dtype, device=device,
+        debug_config=debug_config
+    )
 
-    # Extract last-value corrections (per ADR-07)
-    # These should be scalars after simulation
-    oversample_thick = 0  # No thickness (per c_stdout line 293)
-    oversample_polar = 0  # Last-value multiply (per c_stdout line 294)
-    oversample_omega = 0  # Last-value multiply (per c_stdout line 295)
+    # Capture stdout during simulation run (Step 6 per input.md)
+    # Use contextlib.redirect_stdout to capture TRACE_PY output
+    import io
+    from contextlib import redirect_stdout
 
-    # Extract capture_fraction, polar, omega_pixel for traced pixel
-    # These would come from simulator internals if available
-    # For now, use placeholder values matching expected structure
-    capture_fraction = 1.0  # No detector absorption
-    polar = beam_config.polarization_factor  # Should be computed Kahn factor
-    omega_pixel = 4.20412684465831e-07  # Placeholder - should extract from simulator
+    stdout_capture = io.StringIO()
+    with redirect_stdout(stdout_capture):
+        intensities = simulator.run()
 
-    # We don't have direct access to I_before_scaling from the public API
-    # This is the raw accumulated intensity before normalization
-    # For trace purposes, back-calculate from final intensity
-    I_before_scaling = "NOT_EXTRACTED"  # Would need internal access
-
-    # Format trace output (Step 7 per input.md - use TRACE_PY prefix with :.15g precision)
+    # Extract TRACE_PY lines from captured output (Step 7)
     trace_lines = []
-    trace_lines.append(f"TRACE_PY: I_before_scaling {I_before_scaling}")
-    trace_lines.append(f"TRACE_PY: r_e_sqr {r_e_sqr:.15g}")
-    trace_lines.append(f"TRACE_PY: fluence_photons_per_m2 {fluence:.15g}")
-    trace_lines.append(f"TRACE_PY: steps {steps}")
-    trace_lines.append(f"TRACE_PY: oversample_thick {oversample_thick}")
-    trace_lines.append(f"TRACE_PY: oversample_polar {oversample_polar}")
-    trace_lines.append(f"TRACE_PY: oversample_omega {oversample_omega}")
-    trace_lines.append(f"TRACE_PY: capture_fraction {capture_fraction:.15g}")
-    trace_lines.append(f"TRACE_PY: polar {polar:.15g}")
-    trace_lines.append(f"TRACE_PY: omega_pixel {omega_pixel:.15g}")
-    trace_lines.append(f"TRACE_PY: I_pixel_final {pixel_intensity:.15g}")
+    for line in stdout_capture.getvalue().splitlines():
+        if line.startswith('TRACE_PY:'):
+            trace_lines.append(line)
+
+    if not trace_lines:
+        raise RuntimeError("No TRACE_PY output captured. Simulator may not have emitted trace for pixel.")
 
     # Write trace to file (Step 8)
     trace_path = Path('reports/2025-10-cli-flags/phase_l/scaling_audit') / args.out
@@ -291,9 +272,13 @@ def main():
         f.write('\n'.join(trace_lines))
         f.write('\n')
 
+    # Extract final intensity for verification
+    pixel_intensity = intensities[slow, fast].item()
+
     print(f"Trace written to {trace_path}")
     print(f"Environment snapshot: {env_path}")
     print(f"Config snapshot: {config_path}")
+    print(f"Captured {len(trace_lines)} TRACE_PY lines")
     print(f"\nPixel ({slow}, {fast}) final intensity: {pixel_intensity:.15g}")
 
 
