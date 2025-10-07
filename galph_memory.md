@@ -1356,3 +1356,10 @@ Follow-ups for Ralph:
 - Authored new `input.md` (Mode=Parity) directing Ralph to execute Phase L1 by building `scripts/validation/compare_structure_factors.py`, regenerating a stamped `Fdump_scaled` cache, and logging HKL parity metrics under `reports/2025-10-cli-flags/phase_l/hkl_parity/`.
 - Hypotheses for 1.26e5× intensity gap: (H1) HKL ingestion mismatch (PyTorch grid defaults vs C’s Fdump) — high confidence; next confirming step is L1 comparison script. (H2) Residual scaling-chain divergence post-MOSFLM fix (fluence/polar chain) — medium confidence; confirmation via Phase L2 traces after HKL parity passes.
 - Vectorization goal remains untouched; plan `plans/active/vectorization.md` still at Phase A baseline because `_tricubic_interpolation` falls back to nearest-neighbor for batched tensors (see src/nanobrag_torch/models/crystal.py:272+). Keep on radar once CLI parity clears.
+
+## 2025-11-09 (galph loop — L1b prep)
+- Reproduced Phase L1 parity run with a fresh cache (`Fdump_scaled_20251006175946.bin`); mismatch persists (max |ΔF| 5.22e2, 99,209 voxels). File encodes 182,700 doubles (≈9.5k extra) and shifts reflections (Δk≈+10–12, Δl≈−2…−8), pointing to a layout/ordering discrepancy rather than corruption.
+- Updated `plans/active/cli-noise-pix0/plan.md` Phase L table (L1a–L1d) to capture completed evidence and new layout-analysis + IO alignment tasks. Logged the addendum referencing the new cache.
+- Synced `docs/fix_plan.md` with Phase L1b–L1d focus and recorded Attempt #51 (evidence update). Added layout-analysis to next actions block.
+- Authored `input.md` directing Ralph to implement Phase L1b via a new `scripts/validation/analyze_fdump_layout.py` helper and to stash findings in `reports/2025-10-cli-flags/phase_l/hkl_parity/` before moving to L1c.
+- Follow-up: Ralph to build the layout-analysis script, document axis/order findings in `layout_analysis.md`, update fix_plan attempt log, then proceed to L1c once structure-factor parity holds.
