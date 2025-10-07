@@ -1,0 +1,30 @@
+# Phase L3k.3c.2: φ=0 Carryover Evidence Collection
+# Date: 2025-10-07
+# Loop: ralph i=107
+
+# Step 1: PyTorch φ=0 state probe
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python - > rot_vector_state_probe.log 2>&1 <<'PY'
+from pathlib import Path
+import torch
+from nanobrag_torch.models.crystal import Crystal, CrystalConfig
+from nanobrag_torch.config import BeamConfig
+from nanobrag_torch.io.mosflm import read_mosflm_matrix
+mat = Path('A.mat')
+if not mat.exists():
+    raise SystemExit('A.mat missing')
+a_star, b_star, c_star = read_mosflm_matrix(str(mat), 0.9768)
+config = CrystalConfig(cell_a=100.0, cell_b=100.0, cell_c=100.0,
+    cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+    N_cells=(36,47,29), mosflm_a_star=a_star, mosflm_b_star=b_star, mosflm_c_star=c_star,
+    phi_start_deg=0.0, osc_range_deg=0.1, phi_steps=10, mosaic_domains=1,
+    misset_deg=[0.0,0.0,0.0], spindle_axis=[-1.0,0.0,0.0])
+beam = BeamConfig(wavelength_A=0.9768)
+crystal = Crystal(config, beam_config=beam, device=torch.device('cpu'), dtype=torch.float32)
+(rot_a, rot_b, rot_c), _ = crystal.get_rotated_real_vectors(config)
+print('b_base_y', crystal.b[1].item())
+print('rot_b_phi0_y', rot_b[0,0,1].item())
+print('rot_b_phi1_y', rot_b[1,0,1].item())
+print('k_frac_placeholder', torch.dot(rot_b[0,0], rot_b[0,0]).item())
+PY
+
+no tests collected in 0.02s

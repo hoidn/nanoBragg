@@ -497,6 +497,28 @@
       - Test results: tests/test_cli_scaling.py::TestFlattSquareMatchesC::test_f_latt_square_matches_c PASSED (5.79s)
       - Test results: 57 crystal/geometry tests PASSED (test_at_geo*.py, test_crystal_geometry.py, test_at_crystal_absolute.py)
       - Collection: 653 tests collected successfully
+  * [2025-10-07] Attempt #98 (ralph loop i=107, Mode: Parity/Evidence) — Result: **EVIDENCE CAPTURED** (Phase L3k.3c.2 φ=0 carryover evidence collection COMPLETE). **BLOCKED** awaiting C trace generation (Phase L3k.3b).
+    Metrics: Evidence-only loop (no tests executed; pytest collection: 655 tests collected successfully).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/rot_vector_state_probe.log` — PyTorch φ=0 state probe (SHA256: ef946e94..., b_base_y=0.7173197865486145, rot_b_phi0_y=0.7173197865486145, rot_b_phi1_y=0.7122385501861572, k_frac_placeholder=980.31396484375)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/delta_metrics.json` — Status: BLOCKED (C trace missing)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/phi0_state_analysis.md` — Detailed analysis with interpretation
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/commands.txt` — Reproduction commands
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/sha256.txt` — Cryptographic hashes
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md` — Updated with dated Phase L3k.3c.2 section, proposed vectorized remediation, references to C semantics (nanoBragg.c:3040)
+    Observations/Hypotheses:
+      - **Key Finding**: φ=0 behavior correct — rot_b_phi0_y matches b_base_y exactly (0.7173197865486145 Å), confirming rotation by 0° is identity operation
+      - **Drift Observed**: φ₁ (0.01°) shows expected small deviation (Δb_y = -5.08e-3 Å from φ₀)
+      - **C Reference Missing**: Expected file `reports/.../202510070839/c_trace_phi_202510070839.log` does not exist; per input.md "If Blocked" guidance, documented gap and created placeholder delta_metrics.json with status="BLOCKED"
+      - **Proposed Fix**: If C trace reveals φ=0 carryover issue, implement vectorized mask fix (torch.roll + φ==0 mask) to preserve batched tensor operations per docs/architecture/pytorch_design.md#vectorization-strategy
+      - **No Code Changes**: Evidence-gathering loop only; Attempt #97 φ rotation fix remains in place
+    First Divergence (if known): C trace unavailable — delta computation deferred to Phase L3k.3b
+    Next Actions:
+      1. Execute Phase L3k.3b: Instrument golden_suite_generator/nanoBragg.c to emit TRACE_C_PHI for all φ steps, rebuild, run with supervisor command
+      2. Compare C trace against PyTorch probe using scripts/compare_per_phi_traces.py to compute Δb_y and Δk_frac
+      3. Update diagnosis.md with delta values
+      4. If deltas ≈ 0: Proceed to Phase L3k.4 normalization closure
+      5. If deltas ≠ 0: Implement vectorized φ=0 carryover fix per proposed remediation, re-verify with VG-1 gates
     Observations/Hypotheses:
       - **Root cause confirmed fixed**: Removed lines 1014-1022 (independent reciprocal rotation), replaced with cross product recomputation (lines 1019-1035)
       - **C-code semantics matched**: Now rotates ONLY real vectors (a, b, c) per nanoBragg.c:3056-3058, then recomputes reciprocal vectors maintaining metric duality

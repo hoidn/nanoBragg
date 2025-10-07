@@ -1,0 +1,5 @@
+2025-10-07 11:46:17
+# Phase L3k.3c.2: φ=0 Carryover Evidence Collection
+# pytest collection check
+env KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q
+Result: 653 tests collected successfully
