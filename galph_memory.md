@@ -1471,3 +1471,10 @@ Follow-ups for Ralph:
 - Updated docs/fix_plan.md (Attempt #73) and plans/active/cli-noise-pix0/plan.md L2b guidance to call out the missing HKL attachment; next action is to set `crystal.hkl_data = F_grid` and `crystal.hkl_metadata = metadata` before simulator construction.
 - Authored new input.md instructing Ralph to wire HKL metadata into the harness, rerun the supervisor trace command, refresh scaling_audit_summary.md, and validate via targeted pytest collection + compare_scaling_traces.
 - Follow-up for Ralph: patch harness HKL assignment, rerun L2b command, update artifacts (trace_py_scaling.log, notes.md, harness_hkl_state.txt), then rerun the comparison tool to re-enter Phase L2c.
+## 2025-10-06 (galph loop — CLI-FLAGS structure-factor probe)
+- Marked Phase L2 as complete in plans/active/cli-noise-pix0/plan.md and refreshed Phase L3 task list (L3a/L3b now target supervisor pixel F_cell evidence).
+- Updated docs/fix_plan.md Next Actions to focus on structure-factor ingestion; clarified divergence as F_cell=0 vs 190.27 at hkl≈(-7,-1,-14).
+- Authored new input.md (L3a instructions) directing Ralph to build a probe under reports/.../structure_factor and log HKL vs Fdump amplitudes.
+- Noted Fdump snapshots currently in repo do not cover (-7,-1,-14); follow-up question recorded for L3b to locate/replicate C’s data source.
+- Follow-up for Ralph: implement the probe per input.md, store outputs in reports/2025-10-cli-flags/phase_l/structure_factor/, and feed findings into L3b planning.
+
