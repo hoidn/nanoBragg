@@ -165,9 +165,7 @@ READ the following files:
 <1>
 do a deep analysis of the codebase in light of the <current long term goals>. What are some current issues / gaps and possible approaches to resolving them? Review docs/fix_plan.md and plans/active/, as previous iterations of you may have already done some legwork.
  
-
-
-At this point, you can do a <Callchain tracing> or <Debug> action.
+At this point, you can do a premature <Callchain tracing> action ahead of time, if it helps you gather information needed for this analysis.
 </1>
 <2>
 flip a coin using python. if it comes up <heads>:
@@ -178,10 +176,11 @@ if it comes up <tails>: proceed to step <3>
 <3>
 Given your findings in <1> and <2>, think about whether there's any need for a multi-turn planning effort -- i.e. ralph can't see the forest for the trees and may struggle with major refactorings and multi-turn implementation efforts unless they are coordinated by you. Is there a need for such planning *right now*? If such a plan is already spoken for (plans/active/ or wherever else past galph might have saved to), does that plan require updates or is it up to date / high quality and simply pending? IFF you determine the need for a new plan or modification of an existing one:
 <yes case>
-follow the <Planning> <Action type> instructions
+This plan-related work is now your <focus issue>.
+You will be following the <Planning> <Action type> instructions. Think about what this will entail but don't execute the <Planning> instructions yet.
 </yes case>
 </no case>
-Since you are not <Planning>, you must select one of the other <Action type>s and follow its instructions.
+Since you are not <Planning>, you must select one of the other <Action type>s and an associated <focus issue> based on what you think is the most productive work increment for this iteration. Think about the associated work, but don't execute it yet.
 </no case>
 </3>
 <3.2>
