@@ -1,9 +1,9 @@
 {
-  "timestamp": "2025-10-07T02:16:22.975494-07:00",
-  "git_sha": "1de11dfba4fe9b10033092c6d04a7402d6c31160",
-  "torch_version": "2.7.1",
-  "command": "scripts/validation/compare_scaling_traces.py --c reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log --py reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling_20251117.log --out reports/2025-10-cli-flags/phase_l/scaling_validation/scaling_validation_summary_20251119.md",
-  "c_trace": "/Users/ollie/Documents/nanoBragg3/reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log",
-  "py_trace": "/Users/ollie/Documents/nanoBragg3/reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling_20251117.log",
+  "timestamp": "2025-10-07T02:45:25.384910-07:00",
+  "git_sha": "f3e65b8e74dc9bf824cf69f34f43315aac247d8f",
+  "torch_version": "2.8.0+cu128",
+  "command": "scripts/validation/compare_scaling_traces.py --c reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log --py reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling_20251119.log --out reports/2025-10-cli-flags/phase_l/scaling_validation/scaling_validation_summary_20251119.md",
+  "c_trace": "/home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log",
+  "py_trace": "/home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling_20251119.log",
   "tolerance_rel": 1e-06
 }
