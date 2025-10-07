@@ -1,101 +1,102 @@
-Summary: Capture spec φ=0 baselines (rot_b_y, k_frac) and tighten VG-1 checks before parity shim work
+Summary: Lock the spec φ=0 baselines (rot_b_y, k_frac) with fresh traces, document ≤1e-6 deltas, and keep parity shim work gated
 Mode: Parity
 Focus: CLI-FLAGS-003 / L3k.3c.3 lock spec φ=0 baselines
 Branch: feature/spec-based-2
 Mapped tests: env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_rot_b_matches_c tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_k_frac_phi0_matches_c -v
-Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/<ts>/trace_py_rot_vector.log; reports/2025-10-cli-flags/phase_l/per_phi/trace_py_rot_vector_per_phi.json; reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/<ts>/comparison_summary.md; reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/<ts>/delta_metrics.json; reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/<ts>/pytest_phi0.log
+Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/<ts>/trace_py_rot_vector.log, reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/<ts>/trace_harness_cpu.log, reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/<ts>/trace_py_rot_vector_per_phi.json, reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/<ts>/comparison_summary.md, reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/<ts>/delta_metrics.json, reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/<ts>/pytest_phi0.log, reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/<ts>/collect_only.log, reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/<ts>/config_snapshot.json, reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/<ts>/sha256.txt
 Do Now: CLI-FLAGS-003 L3k.3c.3 — env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_phi0.py::TestPhiZeroParity -v
-If Blocked: Run env KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.py | tee reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/<ts>/collect_only.log, log current k_frac/rot_b outputs from the harness in diagnosis.md, and pause for supervisor guidance
+If Blocked: env KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.py | tee ${TS}/collect_only.log, dump current φ=0 deltas into reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md, stash harness stdout, and pause for supervisor review before modifying implementation
 
 Priorities & Rationale:
-- specs/spec-a-core.md:211-214 — φ sampling must rotate the reference cell freshly each step; spec values (rot_b_y, k_frac) are normative
-- docs/bugs/verified_c_bugs.md:166-204 — C-PARITY-001 stays quarantined behind the future shim; default tests must no longer rely on the buggy plateau
-- plans/active/cli-noise-pix0/plan.md:288-313 — L3k.3/L3k.3c.3 now require capturing spec baselines and proving ≤1e-6 deltas before nb-compare
-- docs/fix_plan.md:450-464 — Next Actions call for recording rot_b_y=0.7173197865 Å, k_frac=1.6756687164 and updating pytest expectations accordingly
-- reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251007154213/comparison_summary.md — Source of the current spec numbers; use it to confirm new captures match prior evidence
-- reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md:116-353 — Memo spells out VG-1 tolerances and trace workflow; keep it synchronized with new artifacts
-- tests/test_cli_scaling_phi0.py:25-273 — Active assertions need to shift from “differs from C” to spec constants with tight tolerances
-- reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md:15-56 — VG checklist records pass/fail state; update rows with new timestamps once ≤1e-6 is demonstrated
-- docs/development/testing_strategy.md:1.4 — Reinforces CPU+CUDA smoke expectations; apply when running targeted pytest after edits
-- CLAUDE.md Core Implementation Rules (Rule 11 & 13) — Keep C-code references intact and ensure reciprocal/real recalculation stays metrically consistent while editing
-- reports/2025-10-cli-flags/phase_l/per_phi/trace_py_rot_vector_per_phi.json — Current source for per-φ data; confirm it aligns with the newly captured copy under the timestamped directory
-- reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/delta_metrics.json — Previous baseline; use it as an A/B comparison when confirming ≤1e-6 deltas
-- galph_memory.md (latest entries) — Ensure follow-on notes stay consistent with the decisions captured there when logging new attempts
-- docs/architecture/pytorch_design.md §2.2-§2.4 — Reiterate vectorization requirements while touching the rotation utilities
-- docs/development/pytorch_runtime_checklist.md — Checklist to cite when documenting CPU+CUDA coverage in the attempt log
-- reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/summary.json — Will need consistency once VG-1 unlocks nb-compare work; keep future metrics aligned
-- reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251207/comparison_summary.md — Most recent exploratory capture; compare patterns to ensure naming stays consistent
-- tests/test_cli_scaling_phi0.py::TestPhiZeroParity (class overview) — Document test intent after updating expectations so future audits understand dual-mode plan
+- specs/spec-a-core.md:211-214 mandate φ=0 identity rotation, so rot_b_y and k_frac must be recorded against the 0.7173197865 Å and 1.6756687164 targets
+- docs/bugs/verified_c_bugs.md:166-204 isolates the nanoBragg C carryover defect; keeping PyTorch default spec-compliant is non-negotiable until the shim exists
+- plans/active/cli-noise-pix0/plan.md:288-320 leaves L3k.3c.3 open until CPU (and CUDA) traces show ≤1e-6 deltas plus refreshed pytest evidence
+- docs/fix_plan.md:450-520 calls for updated comparison_summary.md, delta_metrics.json, and checklist rows before advancing to parity shim tasks
+- tests/test_cli_scaling_phi0.py:25-273 already assert the spec baselines; passing them confirms the simulator still honors the spec after recent merges
+- reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md:116-353 enumerates VG gates and artifact expectations you must satisfy this loop
+- docs/development/testing_strategy.md:1.4 enforces CPU+CUDA smoke coverage for tensor math edits; cite it when logging the Attempt metadata
+- CLAUDE.md Rule 13 (metric duality) and Rule 11 (C reference docstrings) remain in force; do not regress the cross-product recalculation while gathering evidence
+- galph_memory.md latest entry reiterates that the shim work is deferrable; respect the standing decision to finish L3k.3c.3 before new implementation
+- reports/2025-10-cli-flags/phase_l/fix_checklist.md VG-1 rows (lines 18-46) still marked pending; your artifacts should let you tick them
+- reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251007154213/comparison_summary.md contains the historic deltas; supersede it with the new timestamped capture
+- CLAUDE.md Protected Assets Rule forces us to keep docs/index.md consistent; storing outputs under reports/ preserves compliance during evidence capture
+- Project long-term goal #1 (parallel supervisor command) depends on this gate; clearing it unlocks downstream normalization and parity reruns
+- Long-term goal #2 (ensuring spec rejects the C bug) requires this loop to confirm that the default behavior remains spec-aligned post-fixes
 
--How-To Map:
-- Pick a new ISO-style timestamp (e.g., `20251201T1530Z`) and export `TS=reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/$TS` so every command writes into the same folder
-- Ensure editable import path is active: `export PYTHONPATH=src` and keep `KMP_DUPLICATE_LIB_OK=TRUE` in the environment before importing torch
-- Generate CPU traces: `KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_l/rot_vector/trace_harness.py --config supervisor --pixel 685 1039 --out ${TS}/trace_py_rot_vector.log --device cpu --dtype float32`
-- Capture the harness stdout to `${TS}/trace_harness_cpu.log` (redirect with `| tee`) so deltas and metadata are preserved for the summary
-- Snapshot the HKL/metadata payload by copying `reports/2025-10-cli-flags/phase_l/rot_vector/config_snapshot.json` into `${TS}/config_snapshot.json` to document the run configuration
-- If CUDA is available, repeat with `--device cuda` and write to `${TS}/trace_py_rot_vector_cuda.log`; note the device in the filename to keep artifacts unambiguous
-- Optionally run a float64 CPU trace (`--dtype float64`) to confirm the spec constants remain stable; archive as `${TS}/trace_py_rot_vector_float64.log`
-- Run `python -m json.tool reports/2025-10-cli-flags/phase_l/per_phi/trace_py_rot_vector_per_phi.json > ${TS}/trace_py_rot_vector_per_phi.json` to capture a pretty-printed copy in the timestamped folder before comparisons
-- Compare against the 20251123 C trace: `KMP_DUPLICATE_LIB_OK=TRUE python scripts/compare_per_phi_traces.py ${TS}/trace_py_rot_vector_per_phi.json reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/c_trace_phi_20251123.log | tee ${TS}/comparison_stdout.txt`
-- Inspect the comparison output and record the max Δk/Δb_y in `${TS}/comparison_summary.md`; add a table with both CPU and CUDA results if both were run
-- Generate a quick diff vs the 20251007 baseline: `diff -u reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251007154213/delta_metrics.json ${TS}/delta_metrics.json > ${TS}/delta_metrics.diff`
-- Update `tests/test_cli_scaling_phi0.py` so `test_rot_b_matches_c` asserts `pytest.approx(0.7173197865, abs=1e-6)` and `test_k_frac_phi0_matches_c` asserts `pytest.approx(1.6756687164, abs=1e-6)`; remove the `> 0.1` divergence guard and add comments referencing the spec citation
-- Drop `pytest.approx` into local variables (e.g., `expected_rot_b = pytest.approx(...)`) to keep assertions readable and to log the numeric constants in docstrings
-- Refresh the docstrings in that test module to reference the new evidence path (timestamp folder + comparison summary) so future readers know where the numbers came from
-- Run `git diff tests/test_cli_scaling_phi0.py` before executing pytest to confirm only the expected assertions/docstrings changed
-- Run targeted pytest with `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_rot_b_matches_c tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_k_frac_phi0_matches_c -v | tee ${TS}/pytest_phi0.log`; repeat on CUDA via `--maxfail=1 -k TestPhiZeroParity` guard if GPU-only code is touched
-- If pytest fails, capture the stderr to `${TS}/pytest_phi0_fail.log`, revert any code edits, and document the failure in `diagnosis.md` before attempting fixes
-- Run `env KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.py | tee ${TS}/collect_only.log` after test edits to demonstrate selector stability per testing_strategy.md §1.5
-- Append the targeted pytest command and outcome to `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/attempt_log.md` (create if missing) to keep historical breadcrumbs
-- Rebuild `delta_metrics.json` (either by editing manually or reusing the script output) so it records `max_delta_k` and `max_delta_rot_b` ≤1e-6; cross-link the numeric evidence in `fix_checklist.md`
-- Once tests and metrics pass, update `comparison_summary.md` with a “Spec baseline locked” section, cite the exact commands run, and tick VG-1.4 inside `reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md`
-- Add a short summary to `docs/fix_plan.md` Attempt history (Attempt #116) referencing the new timestamp, metrics, and targeted tests so the ledger stays current
-- Update `plans/active/cli-noise-pix0/plan.md` checklist row L3k.3c.3 with the new timestamp and mark `[D]` only after both CPU and CUDA (if available) traces agree within tolerance
-- Update `galph_memory.md` with any surprises (e.g., new tolerances, missing CUDA) so the next supervisor loop has context
-- Ping the parity shim tasks (L3k.3c.4/L3k.3c.5) by adding “ready to start” notes once VG-1 turns green
+How-To Map:
+- export TS="reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/$(date -u +%Y%m%dT%H%M%SZ)" && mkdir -p "$TS" && printf "timestamp=%s\n" "$TS" >> ${TS}/metadata.txt
+- cp reports/2025-10-cli-flags/phase_l/rot_vector/config_snapshot.json ${TS}/config_snapshot.json to capture the supervisor command parameters used for this run
+- echo NB_C_BIN=${NB_C_BIN:-./golden_suite_generator/nanoBragg} >> ${TS}/metadata.txt to document the C binary provenance
+- Ensure editable import path and MKL guard: export PYTHONPATH=src; export KMP_DUPLICATE_LIB_OK=TRUE; verify `which nanoBragg` points to the editable install before running harnesses
+- KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/rot_vector/trace_harness.py --config supervisor --pixel 685 1039 --out ${TS}/trace_py_rot_vector.log --device cpu --dtype float32 | tee ${TS}/trace_harness_cpu.log
+- Verify trace_harness exit code and file sizes; if trace_py_rot_vector_per_phi.json is missing, rerun with --emit-per-phi to regenerate the JSON payload expected by compare_per_phi_traces.py
+- shasum -a 256 ${TS}/trace_py_rot_vector.log ${TS}/trace_harness_cpu.log > ${TS}/sha256.txt for reproducibility
+- KMP_DUPLICATE_LIB_OK=TRUE python scripts/compare_per_phi_traces.py ${TS}/trace_py_rot_vector_per_phi.json reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/202510070839/c_trace_phi_202510070839.log > ${TS}/comparison_stdout.txt
+- jq '.per_phi_entries' ${TS}/trace_py_rot_vector_per_phi.json > ${TS}/per_phi_entries.json to document the raw values before summarising deltas
+- python scripts/summarise_phi_deltas.py ${TS}/trace_py_rot_vector_per_phi.json --out ${TS}/delta_metrics.json --threshold 1e-6 >> ${TS}/comparison_stdout.txt
+- env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_rot_b_matches_c -v | tee ${TS}/pytest_rot_b.log
+- env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_k_frac_phi0_matches_c -v | tee ${TS}/pytest_k_frac.log
+- cat ${TS}/pytest_rot_b.log ${TS}/pytest_k_frac.log > ${TS}/pytest_phi0.log to simplify fix_plan references; record CPU runtime in metadata.txt
+- If CUDA is available, rerun the harness with --device cuda --dtype float32, store outputs as ${TS}/trace_py_rot_vector_cuda.log and delta_metrics_cuda.json, and capture pytest logs with `env KMP_DUPLICATE_LIB_OK=TRUE pytest -k TestPhiZeroParity --device cuda -v | tee ${TS}/pytest_phi0_cuda.log`
+- Append device availability, torch version, and git SHA via `python -c "import torch, subprocess; print(f'device={torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu"}')" >> ${TS}/metadata.txt`
+- Update reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md with a new section summarising metrics, referencing ${TS}/delta_metrics*.json, pytest logs, and comparison_stdout.txt
+- Mark VG-1 entries in reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md as complete with timestamp, device, and delta figures; include both CPU and CUDA rows when applicable
+- Append Attempt details to docs/fix_plan.md under CLI-FLAGS-003 with metrics (rot_b delta, k_frac delta, pytest runtimes), artifact paths (TS folder), references to spec lines, and confirmation that Next Actions move to L3k.3c.4
+- Run `git status --short reports/2025-10-cli-flags/phase_l/rot_vector` to confirm no stray temp files remain before committing artifacts
 
 Pitfalls To Avoid:
-- Do not rely on “differs from C” assertions; lock the actual spec values in tests
-- Keep vectorization intact (no manual φ loops) and avoid device-conditional branches
-- Ensure CPU and CUDA traces live under the same timestamped directory with device noted in filenames
-- Maintain device/dtype neutrality; no `.cpu()`, `.numpy()`, or `.item()` on tensors that require grad
-- Leave C carryover emulation for L3k.3c.4; default path must remain spec-true
-- Run collect-only before edits if pytest selectors change; archive logs under the new timestamp
-- Respect Protected Assets; never move/delete paths referenced in docs/index.md while reorganising artifacts
-- Confirm `compare_per_phi_traces.py` input paths exist; script does not create directories for typos
-- Keep HKL cache untouched; reruns must reuse `scaled.hkl` without regeneration
-- Note the current C trace timestamp (20251123); update instructions if a newer trace is captured
-- Don’t forget to propagate new constants into docstrings/comments so future readers know the provenance of 0.7173197865 Å / 1.6756687164
-- Avoid overwriting previous timestamp directories; create a new folder even when re-running on the same day
-- When running CUDA harness, guard with `torch.cuda.is_available()` to avoid noisy stack traces in reports
-- Ensure pytest output includes the device/dtype markers (param IDs) so we can prove CPU+CUDA coverage in the attempt log
-- Update `galph_memory.md` if unexpected artifacts appear or if plan assumptions change mid-loop
-- Keep commit boundaries clean; do not bundle spec baseline work with shim design changes
-- Avoid editing `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251007154213/` except for read-only comparisons; all new evidence goes under the fresh timestamp
-- Keep a copy of the raw harness stdout; missing it makes later debugging harder
-- Verify the `TS` variable each time before running commands to avoid polluting prior runs
-- Do not forget to restore `PYTHONPATH`/env vars after the loop if they were temporarily changed in shell profile
-- Avoid committing `collect_only.log` paths outside the timestamped folder; reruns should overwrite within the same directory
+- Do not reintroduce `_phi_last_cache` or any cached φ state in production code while collecting evidence
+- Avoid hard-coding CPU tensors when running CUDA validation; use `.to(device)` based on harness arguments
+- Never touch docs/index.md assets when creating timestamp folders; keep all outputs under reports/...
+- Skip nb-compare or normalization reruns; focus strictly on per-φ baselines this loop
+- Do not loosen pytest tolerances; maintain abs=1e-6 assertions in tests/test_cli_scaling_phi0.py
+- Keep harness RNG seeds stable; do not modify mosaic seed inputs while capturing traces
+- Confirm NB_C_BIN still points to golden_suite_generator/nanoBragg before invoking compare_per_phi_traces.py so the C trace reference remains valid
+- Capture SHA256 hashes with `shasum -a 256 ${TS}/trace_py_rot_vector.log` to make future audits replicable
+- Log CUDA availability in metadata.txt to clarify skipped GPU runs if hardware is absent
+- Ensure KMP_DUPLICATE_LIB_OK=TRUE is exported before importing torch inside ad-hoc shells or scripts
+- Do not delete historical timestamp folders; new evidence should be additive for auditability
+- Avoid editing plan status markers prematurely; update plans/active and fix_plan only after the evidence is stored
+- Keep vectorized rotate_axis calls intact; no Python loops around phi or mosaic dimensions
+- Resist the temptation to regenerate the C trace; rely on the checked-in 202510070839 log unless the supervisor instructs otherwise
+- Document skipped steps explicitly in metadata if CUDA or other resources are unavailable, to prevent re-opened attempts later
 
 Pointers:
-- specs/spec-a-core.md:211-214
-- docs/bugs/verified_c_bugs.md:166-204
-- plans/active/cli-noise-pix0/plan.md:288-312
-- docs/fix_plan.md:450-468
-- reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251007154213/comparison_summary.md
-- reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md:15-56
-- tests/test_cli_scaling_phi0.py:25-273
-- reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/c_trace_phi_20251123.log
-- reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md:116-353
-- prompts/supervisor.md (for the canonical CLI command parameters referenced by the harness)
-- reports/2025-10-cli-flags/phase_l/per_phi/README.md
-- reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/attempt_log.md (create/update during this loop)
-- arch.md §2a-§3
-- docs/index.md (Protected Assets reminder)
-- docs/development/pytorch_runtime_checklist.md
-- reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/<ts>/comparison_summary.md (to be produced this loop)
-- docs/fix_plan.md Attempt #115 entry (current status reference)
+- specs/spec-a-core.md:211
+- docs/bugs/verified_c_bugs.md:166
+- plans/active/cli-noise-pix0/plan.md:309
+- docs/fix_plan.md:461
+- tests/test_cli_scaling_phi0.py:257
+- reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md:116
+- reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md:18
+- scripts/compare_per_phi_traces.py:1
+- scripts/summarise_phi_deltas.py:1
+- galph_memory.md:1753
+- reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251007154213/comparison_summary.md:12
+- docs/development/testing_strategy.md:37
+- CLAUDE.md:210
+- docs/development/pytorch_runtime_checklist.md:10
+- docs/architecture/pytorch_design.md:120
+- reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/delta_metrics.json:1
 
 Next Up:
-1. L3k.3c.4 — design the opt-in C carryover shim and add parity-only tests once VG-1 is green
-2. L3k.3d — revisit nb-compare ROI metrics with the updated per-φ baselines
+- Phase L3k.3c.4 — design and document the opt-in C parity shim once VG-1 evidence is archived
+- Phase L3k.3d — rerun nb-compare ROI parity with the refreshed φ baselines to unblock Phase L4 supervisor command rerun
+Attempts Log Expectations:
+- Record Attempt number, plan row (L3k.3c.3), and precise timestamp from ${TS}
+- Include CPU and CUDA (if run) device names, torch version, and git SHA in the Attempt entry
+- Cite comparison_stdout.txt, delta_metrics.json, pytest_phi0.log, and fix_checklist rows explicitly in the attempt narrative
+- Note whether scripts/summarise_phi_deltas.py threshold checks passed (≤1e-6) and attach the CLI output snippet
+- Mention any skipped CUDA steps with rationale (hardware unavailable, driver mismatch, etc.)
+- Reference docs/development/testing_strategy.md:1.4 in the Attempt to satisfy device coverage policy
+- Confirm that no code changes were made during evidence capture (documentation-only loop)
+- State that parity shim tasks remain TODO (L3k.3c.4 onward) to prevent premature closure
+- Cross-link galph_memory.md entry from this supervisor loop for future context
+- Update docs/fix_plan.md Next Actions so L3k.3c.3 is marked done and L3k.3c.4 becomes the active focus after evidence is stored
+Notes:
+- Keep ${TS} consistent across all commands to avoid mixing artifacts from separate runs
+- Double-check that reports/2025-10-cli-flags/phase_l/rot_vector/per_phi_postfix/ remains untouched; new data should live only in the timestamped directory
+- Retain prior artifacts for comparison; do not delete or overwrite older delta_metrics.json files from historical runs
+- If you discover discrepancies beyond tolerance, stop after capturing evidence and escalate rather than proceeding to shim work
+- Share any unexpected tool output (stderr warnings, runtime anomalies) in the attempt narrative for traceability
+- Sync with git after archiving artifacts to keep the repository clean for the next supervisor invocation

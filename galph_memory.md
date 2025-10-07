@@ -1754,3 +1754,11 @@ Follow-ups for Ralph:
 - Adjusted `docs/fix_plan.md` Next Actions (Phase L3k.3c.3 → “lock spec φ=0 baselines”) to remove stale `_phi_last_cache` language.
 - Replaced `input.md` with a Parity-mode memo directing Ralph to regenerate per-φ traces via `trace_harness.py`, update pytest expectations to the spec numbers, run targeted selectors, and archive new `delta_metrics.json` under a timestamped directory before flipping VG-1.
 - Next supervisor checkpoint: confirm new artifacts exist, pytest asserts the spec constants, and plan row L3k.3c.3 is marked [D] before proceeding to the parity shim design tasks.
+
+## 2025-11-27 (galph loop — φ=0 spec baselines evidence push)
+- Re-read spec/core docs + CLI-FLAGS plan; confirmed Next Action remains L3k.3c.3 despite historic success notes because VG-1 artifacts need fresh capture post-rotation refactor.
+- Selected focus = CLI-FLAGS-003 L3k.3c.3; staying in Parity mode, evidence-only loop (no code edits planned).
+- Rewrote input.md (102 lines) directing Ralph to regenerate per-φ traces under a new timestamp, run compare_per_phi_traces.py + summarise_phi_deltas.py, rerun TestPhiZeroParity selectors on CPU (and CUDA if available), and update diagnosis.md, fix_checklist.md, and docs/fix_plan.md with ≤1e-6 deltas (rot_b_y 0.7173197865 Å, k_frac 1.6756687164).
+- Emphasised reuse of the 202510070839 C trace, protected-assets compliance, SHA256 logging, and deferral of L3k.3c.4 shim/nb-compare work until VG-1 evidence is archived.
+- No repository code or docs changed beyond input.md/memory update.
+- Expect Ralph to execute the outlined evidence capture, mark VG-1 rows complete, and advance plan/fix_plan focus to L3k.3c.4 for the next engineering loop.
