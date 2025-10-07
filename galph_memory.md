@@ -1291,24 +1291,24 @@ Follow-ups for Ralph:
 - Updated supervisor memo targeting evidence-only float64 rerun; no pytest this loop.
 - Follow-up: Ralph to execute K3d command, archive dtype comparison, then resume K3a/K3c implementation once rounding impact is quantified.
 
-## 2025-11-07 (galph loop — K3e per-φ parity setup)
+## 2025-11-07 (galph loop — K3e per-phi parity setup)
 - `git pull --rebase` clean at start; reviewed plan/fix_plan, dtype sweep confirmed precision not root cause.
-- Deep dive: PyTorch trace logs `k≈1.9997` (φ=0°) while C logs `k≈1.9928` (φ=0.09°); rotating PyTorch `b` by 0.09° reproduces C values ⇒ φ-grid mismatch now primary blocker.
-- Updated `plans/active/cli-noise-pix0/plan.md` Phase K3a/K3b/K3d to `[D]`, added K3e (per-φ evidence) & K3f (φ sampling fix) plus new gap snapshot noting φ issue.
-- Synced `docs/fix_plan.md` Next Actions with new tasks (per-φ trace capture & sampling fix); status line now reflects K3a/K3b/K3d completion.
-- Authored `input.md` (Implementation phase) directing Ralph to extend `analyze_scaling.py` with `--per-phi`, instrument nanoBragg.c, and dump matched C/PyTorch φ traces under `reports/…/per_phi/`.
-- Follow-up for Ralph: execute K3e per memo, produce per-φ JSON/MD logs, then we can plan the φ sampling fix (K3f) next loop.
+- Deep dive: PyTorch trace logs `k≈1.9997` (phi=0°) while C logs `k≈1.9928` (phi=0.09°); rotating PyTorch `b` by 0.09° reproduces C values ⇒ phi-grid mismatch now primary blocker.
+- Updated `plans/active/cli-noise-pix0/plan.md` Phase K3a/K3b/K3d to `[D]`, added K3e (per-phi evidence) & K3f (phi sampling fix) plus new gap snapshot noting phi issue.
+- Synced `docs/fix_plan.md` Next Actions with new tasks (per-phi trace capture & sampling fix); status line now reflects K3a/K3b/K3d completion.
+- Authored `input.md` (Implementation phase) directing Ralph to extend `analyze_scaling.py` with `--per-phi`, instrument nanoBragg.c, and dump matched C/PyTorch phi traces under `reports/…/per_phi/`.
+- Follow-up for Ralph: execute K3e per memo, produce per-phi JSON/MD logs, then we can plan the phi sampling fix (K3f) next loop.
 
 ## 2025-11-07 (galph loop — K3f baseline instrumentation)
 - `git pull --rebase` clean; reviewed latest Attempt logs and vectorization backlog.
-- Deep dive confirmed long-term Goal #1 still blocked by Δk≈6 gap (CLI-FLAGS-003); F_latt parity depends on capturing base lattice & scattering traces before φ rotation.
+- Deep dive confirmed long-term Goal #1 still blocked by Δk≈6 gap (CLI-FLAGS-003); F_latt parity depends on capturing base lattice & scattering traces before phi rotation.
 - Refreshed `plans/active/cli-noise-pix0/plan.md` Phase K3f with checklist K3f1–K3f4 (instrument C/Py, diff traces, document root cause) and synced `docs/fix_plan.md` Next Actions to match.
 - Issued new Evidence-phase input.md directing Ralph to execute K3f1 (C trace run) and stage matching PyTorch harness output under `reports/2025-10-cli-flags/phase_k/base_lattice/`.
 - Next Ralph steps: add TRACE_C_BASE instrumentation, run the supervisor command into `base_lattice/c_trace.log`, extend the Py harness for `TRACE_PY_BASE`, and prep for K3f3 diff once both logs exist.
 
 ## 2025-11-08 (galph loop — K3f harness correction)
 - `git pull --rebase` clean; read docs/index.md, spec shards, arch.md, config map, debugging SOP, testing strategy, fix_plan, vectorization plan.
-- Reviewed Ralph’s recent evidence commits (271e2b6, 2467064): instrumentation valuable but per-φ script subtracts `pix0_vector` from `detector.get_pixel_coords()`, yielding plane-relative vectors and explaining the 6-unit Δk seen in Attempt #45.
+- Reviewed Ralph’s recent evidence commits (271e2b6, 2467064): instrumentation valuable but per-phi script subtracts `pix0_vector` from `detector.get_pixel_coords()`, yielding plane-relative vectors and explaining the 6-unit Δk seen in Attempt #45.
 - Updated `plans/active/cli-noise-pix0/plan.md` (K3f context + K3f2 guidance) and `docs/fix_plan.md` next actions to require sample-to-pixel vectors with no double subtraction before new traces are captured.
 - Chosen focus: CLI-FLAGS-003 Phase K3f base-lattice parity. Hypotheses recorded (primary: trace harness bug; secondary: confirm real/reciprocal vectors + scattering after harness fix). Next confirming step: capture corrected C/Py base traces per plan.
 - Authored Evidence-phase `input.md` directing Ralph to instrument `golden_suite_generator/nanoBragg.c`, rebuild, run the supervisor CLI command, and add a corrected PyTorch harness under `reports/2025-10-cli-flags/phase_k/base_lattice/` with comparison tooling.
@@ -1383,7 +1383,7 @@ Follow-ups for Ralph:
 - Coin flip = heads: reviewed Ralph’s latest work (`4e73062`, `572217b`) — HKL layout analysis + padding fix landed with good regression coverage; no regressions spotted.
 - Updated `plans/active/cli-noise-pix0/plan.md` Phase L snapshot (L1c → [D], new note on Attempt #53) and synced `docs/fix_plan.md` Next Actions to show L1c completion; left L1d as the active blocker.
 - Authored new `input.md` (Mode=Parity) directing Ralph to regenerate the C Fdump cache and rerun `scripts/validation/compare_structure_factors.py` for Phase L1d, storing outputs under `reports/2025-10-cli-flags/phase_l/hkl_parity/`.
-- Hypotheses refined: (1) With padding fix, expect HKL parity to hit max |ΔF| ≤ 1e-6 once rerun; (2) if Δk≈6 persists afterward, capture fresh per-φ traces (Plan K3f/K3g) to isolate reciprocal-vector drift; (3) remaining intensity gap likely tied to sincg normalization order pending new evidence.
+- Hypotheses refined: (1) With padding fix, expect HKL parity to hit max |ΔF| ≤ 1e-6 once rerun; (2) if Δk≈6 persists afterward, capture fresh per-phi traces (Plan K3f/K3g) to isolate reciprocal-vector drift; (3) remaining intensity gap likely tied to sincg normalization order pending new evidence.
 - Follow-up for Ralph: Execute L1d per memo, update docs/fix_plan Attempts with metrics, and prep Phase L2 scaling diagnostics if parity clears.
 
 ## 2025-11-09 (galph loop — Phase L2 kickoff)
@@ -1555,14 +1555,19 @@ Follow-ups for Ralph:
 
 ## 2025-11-19 (galph loop — CLI-FLAGS L3e parity snapshot)
 - Ran `compare_scaling_traces.py` against `trace_py_scaling_20251117.log`; generated `scaling_validation_summary_20251119.md`, refreshed metrics/run_metadata, and logged Attempt #83 under CLI-FLAGS-003.
-- Key finding: HKL ingestion now matches C (F_cell≈190.27) but lattice factor remains divergent (C `F_latt=-2.3832` vs Py `+1.35136`). Per-φ `TRACE_C_PHI` entries show the sign oscillation missing from PyTorch traces.
-- Authored `analysis_20251119.md` recommending per-φ instrumentation; updated input.md to direct Ralph to extend the trace harness, emit `TRACE_PY_PHI`, and compare against archived C per-φ logs before touching simulator code.
-- Expect Ralph to capture new per-φ PyTorch trace/JSON under `reports/2025-10-cli-flags/phase_l/per_phi/`, run the targeted pytest selector for scaling traces, and append findings to docs/fix_plan.md Attempt history.
+- Key finding: HKL ingestion now matches C (F_cell≈190.27) but lattice factor remains divergent (C `F_latt=-2.3832` vs Py `+1.35136`). Per-phi `TRACE_C_PHI` entries show the sign oscillation missing from PyTorch traces.
+- Authored `analysis_20251119.md` recommending per-phi instrumentation; updated input.md to direct Ralph to extend the trace harness, emit `TRACE_PY_PHI`, and compare against archived C per-phi logs before touching simulator code.
+- Expect Ralph to capture new per-phi PyTorch trace/JSON under `reports/2025-10-cli-flags/phase_l/per_phi/`, run the targeted pytest selector for scaling traces, and append findings to docs/fix_plan.md Attempt history.
 
-## 2025-11-19 (galph loop — CLI L3e per-φ refresh setup)
+## 2025-11-19 (galph loop — CLI L3e per-phi refresh setup)
 - Confirmed `git pull --rebase` succeeded without conflicts.
 - Reviewed Phase L3 evidence: `analysis_20251119.md` still shows F_cell parity yet `trace_py_scaling_per_phi.log` lacks any `TRACE_PY_PHI`, indicating the harness output is stale.
-- Updated `docs/fix_plan.md` next actions to call for a 2025-11-19 per-φ trace rerun and noted the empty log under Attempt #83 observations.
-- Refreshed `plans/active/cli-noise-pix0/plan.md` gap snapshot and revised the L3e task description to emphasise regenerating per-φ artifacts before scaling validation can pass.
-- Authored new `input.md` (Parity mode) instructing Ralph to rerun `trace_harness.py` with `--out trace_py_scaling_20251119.log`, regenerate per-φ comparison data, rerun `compare_scaling_traces.py`, and capture the targeted pytest output.
+- Updated `docs/fix_plan.md` next actions to call for a 2025-11-19 per-phi trace rerun and noted the empty log under Attempt #83 observations.
+- Refreshed `plans/active/cli-noise-pix0/plan.md` gap snapshot and revised the L3e task description to emphasise regenerating per-phi artifacts before scaling validation can pass.
+- Authored new `input.md` (Parity mode) instructing Ralph to rerun `trace_harness.py` with `--out trace_py_scaling_20251119.log`, regenerate per-phi comparison data, rerun `compare_scaling_traces.py`, and capture the targeted pytest output.
 - Follow-up: expect refreshed logs/JSON under `reports/2025-10-cli-flags/phase_l/per_phi/`, updated scaling_validation metrics, and a docs/fix_plan.md attempt summarising whether the Δk≈6 offset persists.
+## 2025-11-19 (galph loop — CLI rotation audit setup)
+- Updated CLI-FLAGS-003 next actions + plan Phase L3 to reflect Attempt #86 per-phi evidence and new phi=0 rotation mismatch; L3e marked done, new tasks L3f (rot-vector comparison) and L3g (hypothesis framing) added.
+- Input.md now directs Ralph to capture rotation vectors via trace_harness, build `rot_vector_comparison.md`, and log hypotheses before touching simulator code.
+- Key observation logged: PyTorch rot_b at phi=0 uses k_frac ≈ -0.589 vs C -0.607, flipping F_latt_b sign; rotation-vector audit required before normalization changes.
+
