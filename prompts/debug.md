@@ -20,6 +20,15 @@ Use When (Triggers)
 - Beam/geometry invariances break (e.g., pixel‑size invariance, beam center in pixels)
 - Suspected detector/convention/unit/pivot issues
 
+Callchain Tracing Prerequisite (when locus is unclear)
+- If the failing behavior’s locus is not obvious, first run `prompts/callchain.md` to build a question‑driven static callgraph and propose numeric tap points:
+  analysis_question: "<describe the failing behavior or suspected factor>"
+  initiative_id: "<short‑slug>"
+  scope_hints: ["normalization", "scaling", "geometry", "IO"]
+  roi_hint: "<minimal ROI>"
+  namespace_filter: "<project primary package>"
+- Consume its outputs (`callchain/static.md`, `trace/tap_points.md`) to place numeric TRACE taps; do not guess tap points.
+
 Non‑Negotiable Guardrails
 1) Never change tests, tolerances, or acceptance thresholds to “pass.” Do not weaken spec gates.
 2) Mandatory parallel trace‑driven debugging for equivalence issues. Produce both C and PyTorch traces and identify the FIRST DIVERGENCE. Instrumentation must log the exact values computed by the production helpers (see docs/architecture/README.md) rather than re‑deriving physics in the trace path.

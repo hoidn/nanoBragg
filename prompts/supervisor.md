@@ -147,7 +147,25 @@ Command Sourcing (tests): Only include an exact pytest command in Do Now when so
 - Do not instruct Ralph to run the full test suite more than once per turn. Require targeted tests first; run the full suite once at the end only if code changed. For prompt/docs‑only loops, require `pytest --collect-only -q` instead.
 - Prefer referencing reusable scripts under `scripts/validation/` from Do Now when available.
 - Commit input.md each run as part of step <4> (commit only if the content changed).
-</3.5>
+ </3.5>
+
+Callchain Tracing (Evidence Task)
+- When to use: before code edits when the pipeline/factor order relevant to the current issue is unclear; when onboarding a new surface; or upon parity failures where the locus is unknown.
+- Directive: run `prompts/callchain.md` with a question‑driven invocation and produce standardized artifacts under `reports/<initiative_id>/`.
+- Example invocation variables (fill at run time):
+  analysis_question: "<what are we trying to understand or fix?>"
+  initiative_id: "<short‑slug>"
+  scope_hints: ["CLI flags", "normalization", "scaling"]
+  roi_hint: "<minimal input/ROI>"
+  namespace_filter: "<project primary package>"
+  time_budget_minutes: 30
+- Expected outputs:
+  - `reports/<initiative_id>/callchain/static.md` (entry→sink with file:line anchors)
+  - `reports/<initiative_id>/callgraph/dynamic.txt` (optional, module‑filtered)
+  - `reports/<initiative_id>/trace/tap_points.md` (proposed numeric taps with owners)
+  - `reports/<initiative_id>/summary.md` (question‑oriented narrative + next steps)
+  - `reports/<initiative_id>/env/trace_env.json`
+- Guardrails: evidence‑only (no prod edits), module/device/dtype neutrality, small ROI, respect Protected Assets, stable key names in traces.
 <4>
 Before finishing the loop, enforce git hygiene:
 - Run `git status --short` to inspect new or modified files that appeared during this invocation.
