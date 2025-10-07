@@ -1655,3 +1655,9 @@ Follow-ups for Ralph:
 - Synced `docs/fix_plan.md` Next Actions with the new checklist, dropping the stale C2 reminder and focusing on C3 deliverables + Attempt logging.
 - Rewrote `input.md` (Perf mode) steering Ralph to implement the C3 updates, run the two targeted selectors, update implementation notes, and flip checklist items before moving to Phase D.
 - Expect Ralph to land Phase C3 code/tests, capture logs under `reports/2025-10-vectorization/phase_c/`, and append a new Attempt entry prior to starting D1 polynomial vectorization.
+## 2025-11-22 (galph loop — L3k.3b φ drift diagnosis)
+- Confirmed repo synced; reviewed docs/index, spec shards, arch.md, c_to_pytorch_config_map.md, debugging guide, testing strategy, fix_plan, and plan CLI notes.
+- Refreshed `plans/active/cli-noise-pix0/plan.md` Gap snapshot to capture Attempt #99 VG failures and Attempt #100 spindle-axis alignment; added an L3k.3 recovery checklist (tasks L3k.3a–L3k.3e) spelling out φ-trace regeneration, ROI fix, and documentation gates.
+- Updated `docs/fix_plan.md` Next Actions to target L3k.3b diagnosis, L3k.3d ROI repair, and the L3k.3e→L3k.4 documentation/logging handoff.
+- Authored new `input.md` (Parity mode) directing Ralph to regenerate per-φ traces via `trace_harness.py`, move the per_phi outputs into `base_vector_debug/20251122/`, run `compare_per_phi_traces.py`, log findings in diagnosis.md, update fix_checklist VG-1.4, and capture pytest collect-only evidence.
+- Follow-up for Ralph: execute L3k.3b per instructions, store artifacts under the 20251122 subdir, update `fix_checklist.md` + diagnosis memo, and keep tests red until physics fix lands.
