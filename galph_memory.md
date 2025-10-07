@@ -1684,3 +1684,10 @@ Follow-ups for Ralph:
 - Noted commit 6f822dd introduced a Python loop over `phi_steps` (src/nanobrag_torch/models/crystal.py:1057-1084); plan instructs Ralph to document vectorized remediation so we can restore batched flow post-fix.
 - Updated input.md to drive CLI-FLAGS-003 Phase L3k.3c.2 evidence capture: new artifacts to land under `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/`, add delta_metrics.json + hashes, and extend diagnosis.md with vectorized fix outline.
 - No code edits made; awaiting Ralph’s documentation run before authorising implementation of the carryover emulation.
+
+## 2025-11-23 (galph loop — L3k.3b rerun planning)
+- Reviewed Attempt #108 (commit 526f56d) — evidence captured the Py φ=0 probe but `delta_metrics.json` stayed BLOCKED because no fresh TRACE_C_PHI log accompanied the new timestamp; prior c-trace lives under 202510070839.
+- Updated `plans/active/cli-noise-pix0/plan.md` (L3k.3 row + checklist) to reopen L3k.3b and mark L3k.3c.1 complete, with L3k.3c.2 now pointing at the pending Δk computation once C trace is regenerated.
+- Refreshed `docs/fix_plan.md` Next Actions to (1) rerun TRACE_C_PHI for 20251123, (2) compute Δb_y/Δk_frac, (3) then return to nb-compare repairs.
+- Authored new input.md steering Ralph to rebuild the C binary, rerun the supervisor command with `-trace_pixel 685 1039`, regenerate Py per-φ traces, run `scripts/compare_per_phi_traces.py`, update `delta_metrics.json`, and log the results before moving back to nb-compare.
+- Feedback on Ralph’s recent work: Attempt #103 correctly restored the red guard tests; Attempt #108 gathered Py-only data but stalled without the paired C trace. Next loop should focus on producing the coeval TRACE_C_PHI artifact so VG-1.4 can flip from ⚠️ to actionable metrics.
