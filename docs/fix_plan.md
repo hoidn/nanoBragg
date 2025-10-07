@@ -458,7 +458,7 @@
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
 - Next Actions (2025-11-23 refresh → ralph Attempt #111):
-1. ✅ Phase L3k.3c.3 — COMPLETE (Attempt #111). φ=0 carryover fix validated; per-φ traces show max Δk=2.85e-05, all φ steps within VG-1 thresholds.
+1. **Reopen Phase L3k.3c.3** — galph loop 2025-11-24 flagged that `_phi_last_cache` never migrates during `Crystal.to()` and `torch.tensor(last_phi_deg, …)` detaches gradients. Patch the φ=0 carryover so cache tensors respect device/dtype neutrality and gradient flow, regenerate per-φ traces, and keep VG-1 red until Δk ≤ 1e-6 on both CPU+CUDA.
 2. Phase L3k.3d — Resolve the nb-compare ROI anomaly (C sum≈0) before repeating VG-3/VG-4; capture the corrected summary.json/logs under `nb_compare_phi_fix/` once correlation ≥0.9995 and sum_ratio 0.99–1.01. After VG-1/VG-3/VG-4 pass, proceed to L3k.3e → L3k.4 documentation and fix_plan logging ahead of the Phase L4 supervisor-command rerun.
 3. Phase L3k.3e — Once VG-1/VG-3/VG-4 are green, close out documentation/checklist chores (VG-5) and log the implementation Attempt before moving to the Phase L4 supervisor command rerun.
 - Attempts History:
@@ -489,6 +489,7 @@
       1. Implementation loop (Mode: TDD or standard): Execute Phase L3k.2 (add C-code docstring per CLAUDE Rule #11, implement reciprocal recomputation)
       2. After code changes: Execute Phase L3k.3 (VG-1⇢VG-5 verification gates with per-φ traces, pytest lattice, nb-compare, delta audit)
       3. After gates pass: Execute Phase L3k.4 (log implementation Attempt with metrics, update plan/fix_plan, prepare Phase L4)
+  * [2025-11-24] Attempt #112 (galph — review) — Result: **REOPENED**. No tests run. Reviewed commit 6487e46 (φ=0 carryover) and found `_phi_last_cache` stays on the original device and `torch.tensor(last_phi_deg, …)` severs gradients. Updated `plans/active/cli-noise-pix0/plan.md` task L3k.3c.3 plus this fix-plan entry to keep VG-1 red until device/dtype neutrality and grad flow are restored; artifacts: plan diff + docs/fix_plan.md Next Actions update.
   * [2025-11-21] Attempt #97 (ralph loop i=97) — Result: **SUCCESS** (Phase L3k.2 implementation COMPLETE). **φ rotation fix applied: removed independent reciprocal vector rotation, added reciprocal recomputation from rotated real vectors per CLAUDE Rule #13.**
     Metrics: Targeted tests pass (test_f_latt_square_matches_c PASSED, 57/57 crystal/geometry tests PASSED); test collection succeeds (653 tests); Python syntax valid.
     Artifacts:

@@ -1709,3 +1709,9 @@ Follow-ups for Ralph:
 - Found tooling bug: `src/nanobrag_torch/simulator.py:1444` divides osc_range by `(phi_steps-1)` for TRACE_PY_PHI, yielding φ=0.011111° samples; added requirement to align with C loop formula when Ralph refreshes traces.
 - Marked L3k.3c.2 DONE and updated plan/fix_plan Next Actions to focus on L3k.3c.3 carryover implementation + instrumentation fix before nb-compare work resumes.
 - input.md now directs Ralph to implement φ carryover, adjust instrumentation, rerun compare_per_phi_traces.py, and close the red pytest guard.
+
+## 2025-11-24 (galph loop — φ=0 carryover audit)
+- Reopened CLI-FLAGS-003 L3k.3c.3 after spotting device/dtype + gradient regression in commit 6487e46 (`_phi_last_cache` stays on CPU and `torch.tensor(last_phi_deg, …)` detaches).
+- Updated plans/active/cli-noise-pix0/plan.md guidance and docs/fix_plan.md Next Actions/Attempts to keep VG-1 blocked until cache migration + gradient fix land.
+- Refreshed input.md (Parity mode) instructing Ralph to patch `Crystal.get_rotated_real_vectors`/`Crystal.to`, rerun trace_harness (CPU + optional CUDA), compare per-φ traces, and run gradcheck + φ=0 guard tests.
+
