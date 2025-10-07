@@ -1,101 +1,100 @@
-Summary: Kick off tricubic vectorization by completing Phase C1’s batched neighbor gather with thorough evidence for VECTOR-TRICUBIC-001.
-Mode: Perf
-Focus: VECTOR-TRICUBIC-001 – Vectorize tricubic interpolation and detector absorption
+Summary: Capture spindle-axis magnitude and volume evidence for the φ=0 rotation drift so Phase L3g can conclude with documented hypotheses before any simulator edits.
+Mode: Parity
+Focus: CLI-FLAGS-003 / Phase L3g rotation-vector drift
 Branch: feature/spec-based-2
-Mapped tests:
-- pytest --collect-only tests/test_at_str_002.py -q
-- tests/test_at_str_002.py::test_tricubic_interpolation_enabled
-- tests/test_tricubic_interpolation.py::test_auto_enable_interpolation (sanity sweep after gather change)
-- tests/test_at_str_002.py::test_tricubic_out_of_bounds_fallback (ensures single-warning semantics are intact)
-- tests/test_gradients.py::TestCrystal::test_tricubic_gradient (sanity check that gradients survive gather change)
-Artifacts:
-- reports/2025-10-vectorization/phase_c/gather_notes.md
-- reports/2025-10-vectorization/phase_c/collect_log.txt
-- reports/2025-10-vectorization/phase_c/test_tricubic_interpolation_enabled.log
-- reports/2025-10-vectorization/phase_c/test_tricubic_out_of_bounds_fallback.log
-- reports/2025-10-vectorization/phase_c/diff_snapshot.json
-- reports/2025-10-vectorization/phase_c/runtime_probe.json
-- reports/2025-10-vectorization/phase_c/gradient_smoke.log
-- reports/2025-10-vectorization/phase_c/cuda_collect_log.txt
-- docs/fix_plan.md Attempt update for VECTOR-TRICUBIC-001
-Do Now: VECTOR-TRICUBIC-001 – Phase C1 batched gather; run pytest --collect-only tests/test_at_str_002.py -q, then env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py::test_tricubic_interpolation_enabled -v
-If Blocked: Record the failing selector output in collect_log.txt + gather_notes.md, capture the offending tensor shapes, and stop before touching Phase C2; flag the blockage at docs/fix_plan.md:1811 with a succinct Attempt entry referencing the artifacts.
+Mapped tests: tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics (collect-only)
+Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/spindle_audit.log; reports/2025-10-cli-flags/phase_l/rot_vector/volume_probe.md; reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md; docs/fix_plan.md attempt update (CLI-FLAGS-003)
+Do Now: CLI-FLAGS-003 Handle -nonoise and -pix0_vector_mm — pytest --collect-only -q tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics
+If Blocked: Capture the failing harness stdout/stderr under reports/2025-10-cli-flags/phase_l/rot_vector/blocked.log, note the exact exception + command, and record the blocker (with artifact path) in docs/fix_plan.md Attempts before stopping.
 Priorities & Rationale:
-- docs/fix_plan.md:1796-1810 elevates Phase C1 as the next executable task for VECTOR-TRICUBIC-001 and requires artifact links under reports/2025-10-vectorization/phase_c/.
-- plans/active/vectorization.md:1-120 now prescribes gather_notes.md, collect logs, runtime probes, and pytest selectors to unblock implementation—follow it verbatim to avoid plan drift.
-- specs/spec-a-core.md:470-488 mandates that tricubic out-of-range lookups revert to default_F and emit only a single warning; vectorization must retain that contract.
-- docs/development/testing_strategy.md:18-57 reinforces device/dtype discipline and the collect-first test cadence used in this loop, matching the `pytest --collect-only` requirement in Do Now.
-- reports/2025-10-vectorization/phase_a/tricubic_baseline.md documents scalar runtimes; use these numbers as the baseline in gather_notes.md for quick before/after comparisons and to flag regressions.
-- reports/2025-10-vectorization/phase_b/design_notes.md §2 diagrams the `(B,4,4,4)` gather layout—treat this as authoritative for shaping the batched tensor and index order.
-- archive/fix_plan_archive.md:62 shows prior failures when gather fell back to scalar loops; avoid repeating those mistakes by validating masks early and logging results.
-- src/nanobrag_torch/models/crystal.py:272-410 is the implementation surface—keep diffs focused there so review stays surgical and cache invalidation logic remains localised.
-- docs/architecture/pytorch_design.md:5-12 captures the differentiability vs performance balance; vectorization must respect these guardrails.
-- docs/development/pytorch_runtime_checklist.md:12-68 reiterates GPU/CPU parity expectations relevant to the new batched path.
+- specs/spec-a-core.md:120 — Direct↔reciprocal reconstruction mandates V_actual; the audit must quantify PyTorch vs C usage before touching the implementation.
+- arch.md:170 — CrystalConfig spindle_axis contract expects unit vectors, so we confirm runtime normalization for CLI inputs (especially -spindle_axis -1 0 0).
+- docs/debugging/debugging.md:15 — Parallel trace workflow is required; fresh TRACE_PY data is prerequisite to any fix.
+- docs/development/testing_strategy.md:184 — Rotation pipeline details guide which tensors to log (phi→mosaic order).
+- docs/architecture/c_code_overview.md:310 — Highlights where C re-normalizes spindle vectors; use it to cross-check harness outputs.
+- plans/active/cli-noise-pix0/plan.md:253 — Phase L3 checklist lists rot-vector audit and hypothesis framing as blocking tasks.
+- docs/fix_plan.md:460 — Next Actions already call for this probe; keeping ledger evidence up to date prevents redundant loops.
+- reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md:1 — Existing hypotheses (spindle norm, V reuse) require confirming evidence.
 How-To Map:
-- Step 0: Ensure editable install remains active (`pip install -e .` already done previously) and export `KMP_DUPLICATE_LIB_OK=TRUE` for every PyTorch command.
-- Step 1: `pytest --collect-only tests/test_at_str_002.py -q | tee reports/2025-10-vectorization/phase_c/collect_log.txt` to confirm new tests register; note any warnings in gather_notes.md.
-- Step 2: Snapshot the current scalar gather logic (copy/paste pseudocode) into gather_notes.md for reference before edits.
-- Step 3: Implement the batched `(S,F,4,4,4)` gather using torch indexing/broadcasting per design_notes §2—support arbitrary leading batch dims (oversample, phisteps, mosaic, sources, ROI).
-- Step 4: During implementation, drop temporary assertions comparing scalar vs batched values for a small ROI; log the diff/ratio into diff_snapshot.json (use `torch.max(abs(diff))`).
-- Step 5: Double-check fallback logic (`needs_default_F`) still masks OOB neighborhoods and triggers the `disable_tricubic` flag exactly once.
-- Step 6: After edits, rerun `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py::test_tricubic_interpolation_enabled -v | tee reports/2025-10-vectorization/phase_c/test_tricubic_interpolation_enabled.log`.
-- Step 7: Re-run `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_interpolation.py::test_auto_enable_interpolation -v` to ensure auto-enable heuristics remain intact; append the exit status to gather_notes.md.
-- Step 8: Summarize before/after runtimes, numerical diffs, and warning counts in gather_notes.md; reference any new helper functions introduced.
-- Step 9: Run `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py::test_tricubic_out_of_bounds_fallback -v | tee reports/2025-10-vectorization/phase_c/test_tricubic_out_of_bounds_fallback.log` to demonstrate the single-warning behavior survived vectorization.
-- Step 10: Optionally execute `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --repeats 50 --device cpu --mode compare --outdir reports/2025-10-vectorization/phase_c` if runtime regressions appear; note results in runtime_probe.json.
-- Step 11: Summarize before/after runtimes, numerical diffs, and warning counts in gather_notes.md; reference any new helper functions introduced.
-- Step 12: Update docs/fix_plan.md Attempt history with metrics (max delta, runtime delta, warning count) and cross-link the artifacts created in reports/2025-10-vectorization/phase_c/.
-- Step 13: Stage changes but do not commit; stop for supervisor review once artifacts and Attempt entry are in place.
-- Step 14: Execute `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_gradients.py::TestCrystal::test_tricubic_gradient -v | tee reports/2025-10-vectorization/phase_c/gradient_smoke.log` to confirm autograd remains intact.
-- Step 15: If CUDA is available, repeat Steps 1, 6, 7, 9 on GPU by prefixing commands with `CUDA_VISIBLE_DEVICES=0`; archive the collect output as cuda_collect_log.txt and note any device-specific warnings.
-- Step 16: Document any skipped CUDA runs (with reason) inside gather_notes.md to maintain auditability per testing_strategy.md.
-- Step 17: Capture `git diff --stat` and `pytest --version` outputs at loop end, append both to gather_notes.md for traceability.
-- Step 18: Snapshot modified file list with `git status -sb > reports/2025-10-vectorization/phase_c/status_snapshot.txt` before staging.
-- Step 19: Add a “Next questions” subsection to gather_notes.md enumerating follow-ups for Phase C2/C3 so context is preserved across loops.
+- Step 0 (environment prep):
+  - export KMP_DUPLICATE_LIB_OK=TRUE
+  - export PYTHONPATH=src
+  - ls -l A.mat scaled.hkl
+  - sha256sum A.mat scaled.hkl > reports/2025-10-cli-flags/phase_l/rot_vector/input_files.sha256
+  - git rev-parse HEAD >> reports/2025-10-cli-flags/phase_l/rot_vector/input_files.sha256
+  - date -Iseconds >> reports/2025-10-cli-flags/phase_l/rot_vector/input_files.sha256
+- Step 1 (pytest guard):
+  - pytest --collect-only -q tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics | tee reports/2025-10-cli-flags/phase_l/rot_vector/test_collect.log
+  - confirm the log shows the node and exit code 0; otherwise repair collection first.
+- Step 2 (refresh TRACE_PY):
+  - PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py \
+    --pixel 685 1039 --config supervisor --device cpu --dtype float32 \
+    --out reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log \
+    | tee reports/2025-10-cli-flags/phase_l/rot_vector/trace_run.log
+  - verify the run mentions “Captured 40 TRACE_PY lines” and that per-φ JSON was written; if missing, fix harness instrumentation.
+- Step 3 (spindle-axis probe):
+  - Implement reports/2025-10-cli-flags/phase_l/rot_vector/spindle_probe.py (or extend harness) to parse TRACE_PY and TRACE_C spindle lines.
+  - Command:
+    PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/rot_vector/spindle_probe.py \
+      --trace reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log \
+      --ctrace reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log \
+      --out reports/2025-10-cli-flags/phase_l/rot_vector/spindle_audit.log
+  - Log raw vectors, norms, Δ(norm), Δ(component), device/dtype, and tolerance verdict (≤5e-4).
+- Step 4 (volume analysis):
+  - Write a python snippet to compute V_formula (reciprocal cross product) and V_actual (real vectors triple product) for both traces.
+  - Save results into reports/2025-10-cli-flags/phase_l/rot_vector/volume_probe.md with sections: Inputs, PyTorch float32, PyTorch float64, C reference, delta table.
+  - Run the harness again with --dtype float64 to populate the float64 section.
+- Step 5 (rot-vector table refresh):
+  - Update reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md with the refreshed values; highlight components exceeding tolerance and tie them to k_frac.
+  - Mention per-component Δ and relative error percentages for clarity.
+- Step 6 (analysis narrative):
+  - Append a dated section to reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md summarizing spindle norms, volume deltas, dtype comparisons, and updated hypothesis.
+  - Include a “Next diagnostic” bullet (e.g., log ap/bp before mosaic) to guide the following loop.
+- Step 7 (plan + ledger sync):
+  - Add an Attempt entry to docs/fix_plan.md under CLI-FLAGS-003 capturing metrics, artifacts, thresholds, and hypothesis outcome.
+  - If Phase L3 text needs refinement (e.g., new spindle normalization task), update plans/active/cli-noise-pix0/plan.md lines 265-267 accordingly.
+- Step 8 (optional cross-check):
+  - If CUDA is available, repeat Step 2 with --device cuda --dtype float32; append the results to spindle_audit.log and document them in fix_plan.
+  - If CUDA is unavailable or fails, log the reason in blocked.log and fix_plan attempt.
+- Step 9 (per-φ verification):
+  - Ensure the per-φ JSON under reports/2025-10-cli-flags/phase_l/per_phi/ includes k_frac entries; reference it in analysis.md to show φ dependence (or lack thereof).
+- Step 10 (cleanup):
+  - Keep new files under reports/2025-10-cli-flags/phase_l/rot_vector/; avoid temporary directories.
+  - Run git status to confirm only intended files changed; no simulator sources touched.
+- Step 11 (documentation proof):
+  - Cross-reference new artifacts in docs/fix_plan.md (list paths in the attempt entry).
+  - State tolerance thresholds (norm ≤5e-4, volume ≤1e-6) so future comparisons are deterministic.
+  - Mention any dtype/device coverage in the attempt summary.
 Pitfalls To Avoid:
-- No `.cpu()`/`.cuda()` shims inside the gather—use `.type_as` or `device = lattice_values.device` patterns when coercion is necessary.
-- Do not mutate cached tensors in-place; create new tensors or clone before modification to preserve autograd and caching semantics.
-- Keep broadcasting explicit; avoid implicit expansion via mismatched shapes that could hide bugs on CUDA.
-- Retain the one-time warning behavior for interpolation disablement; multiple emissions indicate regression.
-- Ensure OOB masking clamps the exact 64 neighbors needed by polin3 and does not request 3×3×3 subsets.
-- Guard against negative indices by clamping before gather; do not rely on PyTorch wraparound semantics.
-- Preserve dtype neutrality—no hard-coded float64 when the caller provides float32; mirror the input tensor dtype everywhere.
-- Do not edit polynomial helpers (`polint`, `polin2`, `polin3`) in this loop; they belong to Phase D and require separate evidence.
-- Avoid adding logging prints in hot paths; use notes in gather_notes.md instead of stdout.
-- Keep new tests lean (<1s) so the suite remains quick for iterative work; rely on existing fixtures.
-- Remember to clear cached tensors or call `invalidate_cache()` if cache keys change; stale caches will hide correctness bugs.
-- Verify gradients still propagate by spot-checking `.requires_grad` on outputs when running the targeted tests; document observations.
-- If CUDA is unavailable, note it explicitly in gather_notes.md; otherwise run tests on both CPU and CUDA before closing the loop.
-- Maintain Protected Assets discipline—do not relocate scripts/benchmarks or reports directories.
-- Capture hash of modified files (`git diff --stat`) in gather_notes.md for future reference.
-- Leave TODOs out of production code; use gather_notes.md for residual questions.
-- Keep default_F pathways untouched; altering initialization risks diverging from spec.
-- Do not downcast to half precision during experiments—stick to float32/float64 until vectorization is validated.
-- Avoid pushing commits mid-loop; supervisor will consolidate once Phase C1 evidence is reviewed.
-- Make sure new tensors inherit `device` and `dtype` from `self.hkl_data` rather than global defaults.
-- Resist adding temporary global flags; confine experimentation to local scope and remove debug hooks before final diff.
-- Confirm that the gathered tensor ordering matches C polin3 expectations (fast axis first); mismatched ordering silently corrupts interpolation.
-- Keep report filenames ASCII; supervisor automation depends on predictable names.
-- Do not touch docs/index.md—Protected Assets rule prohibits accidental edits while focusing on vectorization.
-- Avoid editing unrelated modules; restrict diff to `crystal.py`, tests, and documentation updates linked to plan outputs.
-- Ensure new tensors use `contiguous()` only when necessary; superfluous calls can hurt perf.
-- Remember to un-pin any temporary environment variables (e.g., ROI overrides) before running final tests.
-- Check for accidental `torch.stack([...], dim=-1)` vs `dim=-2` mismatches; highlight chosen order in gather_notes.md.
-- Keep assertions behind `if debug:` style guards temporary; remove them before staging to avoid runtime overhead.
+- Forgetting to export KMP_DUPLICATE_LIB_OK causes MKL failures; set it before every harness run.
+- Hard-coding .cpu()/.cuda() in probes breaks device neutrality; keep probes parameterized.
+- Overwriting trace files without preserving older copies will erase evidence; archive first.
+- Writing artifacts outside reports/2025-10-cli-flags/phase_l/rot_vector/ fragments audit history; stay within that directory tree.
+- Editing simulator/crystal code during this evidence pass is off-limits; gather data only.
+- Skipping timestamps and git SHA in new artifacts impairs reproducibility; include them explicitly.
+- Ignoring float64 probes risks missing dtype regressions; capture at least one double-precision run if possible.
+- Leaving pytest output in the terminal history risks loss; tee logs into the reports directory.
+- Failing to document tolerance thresholds makes later comparisons ambiguous; write them next to the numbers.
+- Neglecting to update docs/fix_plan.md and plan.md leaves the ledger stale after evidence capture.
+- Using relative imports without PYTHONPATH=src may import stale modules; set the env var first.
+- Assuming A.mat/scaled.hkl integrity without checksums can mislead if files change; record sha256 upfront.
+- Forgetting to note device/dtype in spindle_audit.log reduces its diagnostic value; print both explicitly.
+- Removing existing analysis context instead of appending will lose historical rationale; always append.
+- Failing to mention per-φ findings in analysis.md leaves Phase L3e context unclear; reference the JSON explicitly.
+- Skipping CUDA note when unavailable can waste future time; document availability status.
 Pointers:
-- docs/fix_plan.md:1796-1810
-- plans/active/vectorization.md:1-160
-- specs/spec-a-core.md:470-488
-- docs/development/testing_strategy.md:18-57
-- reports/2025-10-vectorization/phase_b/design_notes.md
-- reports/2025-10-vectorization/phase_a/tricubic_baseline.md
-- scripts/benchmarks/tricubic_baseline.py
-- src/nanobrag_torch/models/crystal.py:272
-- archive/fix_plan_archive.md:62
-- docs/architecture/pytorch_design.md:5
-- docs/development/pytorch_runtime_checklist.md:12
-- reports/2025-10-vectorization/phase_c/ (directory overview)
-- docs/development/testing_strategy.md:90
-- reports/2025-10-vectorization/phase_c/gather_notes.md (living log for this loop)
-- src/nanobrag_torch/models/crystal.py:310 (fallback disablement logic)
-Next Up: Phase C2 – implement and run `tests/test_tricubic_vectorized.py::test_oob_warning_single_fire`, archive the `pytest -k oob_warning -v` log to reports/2025-10-vectorization/phase_c/test_tricubic_vectorized.log, and then progress to C3 device-aware caching notes.
+- specs/spec-a-core.md:120 — Reciprocal→real reconstruction / V_actual rule.
+- arch.md:170 — CrystalConfig spindle-axis expectation (unit vector contract).
+- docs/debugging/debugging.md:15 — Parallel trace SOP (C vs Py traces first).
+- docs/development/testing_strategy.md:184 — Phi rotation workflow relevant to the audit.
+- docs/architecture/c_code_overview.md:310 — C spindle normalization notes.
+- docs/development/c_to_pytorch_config_map.md:1 — Parameter parity reminders for CLI flags.
+- plans/active/cli-noise-pix0/plan.md:260 — Phase L3 checklist and deliverables.
+- docs/fix_plan.md:460 — CLI-FLAGS-003 Next Actions tied to this audit.
+- reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md:1 — Existing hypothesis log to extend.
+- reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md:1 — Baseline table for update.
+- reports/2025-10-cli-flags/phase_l/per_phi/trace_py_rot_vector_per_phi.log:1 — Current per-φ evidence to cite.
+- reports/2025-10-cli-flags/phase_l/rot_vector/spindle_audit.log:1 — New log location to populate.
+- reports/2025-10-cli-flags/phase_l/rot_vector/volume_probe.md:1 — Markdown summary to extend.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log:1 — C reference trace for comparison.
+Next Up: 1) Refresh per-φ scaling validation (Phase L3e artifacts) with the new spindle/volume metrics to confirm k_frac impact across phi steps; 2) Draft the implementation strategy for the normalization correction (Phase L3h) once evidence isolates the precise mismatch; 3) After L3h delivers matching scalings, schedule the nb-compare rerun and sum-ratio analysis required to close CLI-FLAGS-003; 4) Only then revisit long-term Goal #1 full command execution.

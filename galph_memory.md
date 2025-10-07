@@ -1584,3 +1584,9 @@ Follow-ups for Ralph:
 - Updated `plans/active/vectorization.md` (lines 1-120) with 2025-11-20 gap snapshot plus explicit artifact paths and pytest/benchmark commands for Phase C1–C3. Mirrored instructions in `docs/fix_plan.md:1796-1810` so Next Actions now reference gather_notes.md, diff_snapshot.json, and new test selectors.
 - Authored `input.md` (Perf mode, 101 lines) directing Ralph to tackle Phase C1: collect-only run, implement batched `(S,F,4,4,4)` gather, capture diff/runtime artifacts, rerun targeted tricubic tests (including fallback + gradient smoke), and log results under `reports/2025-10-vectorization/phase_c/` before staging.
 - Follow-up expectations: Ralph executes Do Now, populates gather_notes + Attempt entry, and leaves polynomial work for later phases. Next supervisor loop should verify new artifacts, ensure docs/fix_plan Attempt logged, and then pivot to CLI L3f or Phase C2 depending on progress.
+
+## 2025-11-20 (galph loop — CLI L3g spindle audit prep)
+- Reviewed CLI-FLAGS-003 status: Phase L3f/L3g remain open despite prior rot_vector artifacts; residual k_frac drift traced to Y-component deltas and potential spindle/volume mismatch.
+- Captured current artifacts (rot_vector_comparison.md, invariant_probe.md) and confirmed trace_harness.py emits full TRACE_PY data; next evidence must log spindle-axis norm + V_formula/V_actual for PyTorch vs C.
+- Authored input.md (Parity mode) directing Ralph to refresh the trace, build spindle_probe + volume_probe outputs under reports/2025-10-cli-flags/phase_l/rot_vector/, rerun collect-only pytest, and update docs/fix_plan.md Attempt with quantified deltas.
+- No plan rewrites needed yet; expect Ralph to append new evidence then adjust plan L3 items if hypotheses shift.
