@@ -1643,7 +1643,7 @@
 ## [VECTOR-TRICUBIC-001] Vectorize tricubic interpolation and detector absorption
 - Spec/AT: specs/spec-a-core.md §4 (structure factor sampling), specs/spec-a-parallel.md §2.3 (tricubic acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4 (vectorization strategy), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, nanoBragg.c lines 2604–3278 (polin3/polin2/polint) and 3375–3450 (detector absorption loop).
 - Priority: High
-- Status: in_planning (Phase A evidence outstanding)
+- Status: in_progress (Phase A1 complete; A2/A3 evidence outstanding)
 - Owner/Date: galph/2025-10-17
 - Plan Reference: `plans/active/vectorization.md`
 - Reproduction (C & PyTorch):
@@ -1651,8 +1651,8 @@
   * Optional microbenchmarks (to be created per plan Phase A): `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/sample_tricubic_baseline.py`
   * Shapes/ROI: 256² & 512² detectors for microbench; oversample 1; structure-factor grid enabling tricubic.
 - First Divergence (if known): Current tricubic path drops to nearest-neighbour fallback for batched pixel grids, emitting warnings and forfeiting accuracy/performance; detector absorption still loops over `thicksteps`, preventing full vectorization and creating hotspots in profiler traces (see reports/benchmarks/20250930-165726-compile-cache/analysis.md).
-- Next Actions (2025-11-16 refresh):
- 1. Execute plan Phase A tasks A1–A3: add the reusable `scripts/benchmarks/tricubic_baseline.py` and `absorption_baseline.py` harnesses, capture pytest + timing artifacts (including any `--collect-only` logs and `env.json` snapshot) under `reports/2025-10-vectorization/phase_a/`, and record Attempt #1 in this entry — this remains the gating blocker.
+- Next Actions (2025-11-17 refresh):
+ 1. Execute plan Phase A tasks A2–A3: add the reusable `scripts/benchmarks/tricubic_baseline.py` and `absorption_baseline.py` harnesses, capture timing artifacts (CPU and CUDA when available) plus `phase_a/env.json`, and update this entry when logs land. These harnesses remain the gating blocker before design work resumes.
  2. Complete Phase B design memo (tensor shapes, broadcasting, gradients) before editing code; update this item with design references (`phase_b/design_notes.md`).
  3. Prioritise Phase C/D implementation work on tricubic interpolation, followed by Phase E parity/perf validation. Detector absorption vectorization (Phase F) follows once tricubic work is stable.
 - Attempts History:

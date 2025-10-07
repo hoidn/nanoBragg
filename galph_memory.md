@@ -1490,3 +1490,11 @@ Follow-ups for Ralph:
 - Updated `docs/fix_plan.md` next-actions list for VECTOR-TRICUBIC-001 with the env.json + collect-only requirements so the fix-plan matches the plan.
 - Authored input.md handing Ralph Phase A1–A3 tasks (capture tricubic/absorption baselines, build benchmark harnesses, persist logs in `reports/2025-10-vectorization/phase_a/`).
 - Follow-up for Ralph: execute the outlined commands, write harness stubs, drop Attempt #1 evidence into fix_plan once artifacts exist, then proceed to Phase B design when Phase A closes.
+
+## 2025-11-17 (galph loop — Phase A2/A3 planning refresh)
+- `git pull --rebase` clean; reviewed core docs plus vectorization plan/fix_plan entries before analysis.
+- Coin flip = heads → reviewed Ralph’s recent commits (142230b, 6e12854). Evidence collection and baseline logs look solid; no regressions spotted. Noted that tests/test_at_str_002.py and absorption logs already captured in reports/2025-10-vectorization/phase_a/.
+- Updated plans/active/vectorization.md gap snapshot and Phase A table to mark A1 complete and highlight missing A2/A3 harnesses.
+- Refreshed docs/fix_plan.md VECTOR-TRICUBIC-001 status to `in_progress`, tightened next actions to focus on creating tricubic/absorption baseline scripts.
+- Authored expanded input.md (Perf mode) directing Ralph to implement Phase A2/A3 benchmark harnesses, capture timing artifacts (JSON/Markdown/run_log/env.json), and log metrics in fix_plan.
+- No code changes; focus next loop: ensure harness scripts and reports land, then proceed to Phase B design memo.
