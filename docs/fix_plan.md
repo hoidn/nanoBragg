@@ -1355,8 +1355,8 @@
   * Optional microbenchmarks (to be created per plan Phase A): `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/sample_tricubic_baseline.py`
   * Shapes/ROI: 256² & 512² detectors for microbench; oversample 1; structure-factor grid enabling tricubic.
 - First Divergence (if known): Current tricubic path drops to nearest-neighbour fallback for batched pixel grids, emitting warnings and forfeiting accuracy/performance; detector absorption still loops over `thicksteps`, preventing full vectorization and creating hotspots in profiler traces (see reports/benchmarks/20250930-165726-compile-cache/analysis.md).
-- Next Actions:
-  1. Execute plan Phase A tasks A1–A3: author the reusable `scripts/benchmarks/tricubic_baseline.py` and `absorption_baseline.py` harnesses, capture pytest + timing artifacts under `reports/2025-10-vectorization/phase_a/`, and record Attempt #1 in this entry.
+- Next Actions (2025-11-09 refresh):
+  1. Execute plan Phase A tasks A1–A3: author the reusable `scripts/benchmarks/tricubic_baseline.py` and `absorption_baseline.py` harnesses, capture pytest + timing artifacts under `reports/2025-10-vectorization/phase_a/`, and record Attempt #1 in this entry (currently no artifacts exist, so this is blocking).
   2. Complete Phase B design memo (tensor shapes, broadcasting, gradients) before editing code; update this item with design references (`phase_b/design_notes.md`).
   3. Prioritise Phase C/D implementation work on tricubic interpolation, followed by Phase E parity/perf validation. Detector absorption vectorization (Phase F) follows once tricubic work is stable.
 - Attempts History:

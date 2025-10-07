@@ -1339,3 +1339,13 @@ Follow-ups for Ralph:
 - Selected focus issue: CLI-FLAGS-003 Phase K3g3. Emphasised rerunning tests/test_cli_scaling.py::test_f_latt_square_matches_c and nb-compare with timestamped outputs under reports/2025-10-cli-flags/phase_k/f_latt_fix/post_fix/.
 - Input memo instructs Ralph to regenerate C & Py base traces (run_c_trace.sh + trace_harness.py) using shared stamp, update scaling_chain.md + summary.md, and record Attempt update in docs/fix_plan.md.
 - Validated pytest selector via collect-only (env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1).
+
+## 2025-11-09 (galph loop — K3g3 evidence prep + vectorization reminder)
+- `git pull --rebase` clean; reviewed docs/index.md, specs/spec-a shards, arch.md, config map, debugging SOP, testing strategy, fix_plan.
+- Long-term goal check:
+  * CLI parity: MOSFLM rescale/polarization fixes landed but scaling evidence still missing; base_lattice summary shows post-fix addendum yet main diff logs remain pre-fix.
+  * Vectorization: Phase A artifacts never created; no reports under `reports/2025-10-vectorization/phase_a/`.
+- Hypotheses logged: (1) K3g3 pytest/nb-compare likely pass now that MOSFLM rescale is fixed (confidence medium); (2) If mismatch persists, trace regeneration will expose lingering normalization gaps; (3) Remaining variance could stem from pix0/beam vector interplay, so trace-first debugging stays mandatory.
+- Updated `plans/active/vectorization.md` with a 2025-11-09 gap snapshot and refreshed `docs/fix_plan.md` VECTOR-TRICUBIC-001 next actions to highlight Phase A A1–A3 as blocking.
+- Authored new supervisor `input.md` directing Ralph to execute K3g3 (targeted pytest + nb-compare + trace refresh) with stamped artifacts and to update scaling_chain/summary plus fix_plan Attempt log.
+- Follow-up for Ralph: run the specified pytest node under parity env, regenerate nb-compare + base-lattice traces, refresh reports/summary, and record Attempt update; if blocked, capture trace logs under `base_lattice/blocked/` and document stall.
