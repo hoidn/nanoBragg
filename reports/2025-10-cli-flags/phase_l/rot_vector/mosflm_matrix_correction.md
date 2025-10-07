@@ -179,8 +179,122 @@ Phase L3i instrumentation captured full C MOSFLM pipeline trace (291 lines) usin
 
 Per `plans/active/cli-noise-pix0/plan.md` Phase L3j:
 - [x] **L3j.1**: Update `mosflm_matrix_correction.md` with Attempt #93 findings ✅ **THIS SECTION**
-- [ ] **L3j.2**: Create `fix_checklist.md` enumerating verification gates with thresholds
+- [x] **L3j.2**: Create `fix_checklist.md` enumerating verification gates with thresholds ✅ **COMPLETE**
 - [ ] **L3j.3**: Update plan and `docs/fix_plan.md` Attempt history with artifact paths
+
+---
+
+## Phase L3k Implementation Memo (Attempt #96, 2025-11-21)
+
+### Problem Statement
+
+The current PyTorch implementation of `Crystal.get_rotated_real_vectors` (lines 976-1052) rotates both real-space vectors (a, b, c) **and** reciprocal-space vectors (a*, b*, c*) independently during φ rotation. This violates the C-code semantics and causes systematic drift in lattice vectors during oscillation.
+
+**Root Cause:** Independent rotation of real and reciprocal vectors breaks the crystallographic relationship between them. When φ changes, small numerical differences compound, causing the +6.8% Y-drift observed in Phase L3f.
+
+### C-Code Reference (nanoBragg.c:3044-3066)
+
+```c
+/* sweep over phi angles */
+for(phi_tic = 0; phi_tic < phisteps; ++phi_tic)
+{
+    phi = phi0 + phistep*phi_tic;
+
+    if( phi != 0.0 )
+    {
+        /* rotate about spindle if neccesary */
+        rotate_axis(a0,ap,spindle_vector,phi);
+        rotate_axis(b0,bp,spindle_vector,phi);
+        rotate_axis(c0,cp,spindle_vector,phi);
+    }
+
+    /* ... later code derives reciprocal vectors from Miller index calculation ... */
+}
+```
+
+**Key Observation:** The C code rotates **only** the real-space vectors (a0→ap, b0→bp, c0→cp). Reciprocal vectors are implicitly maintained through the lattice geometry and used during Miller index calculation (h·a*, k·b*, l·c*), but are not independently rotated during the φ loop.
+
+### Current PyTorch Implementation (crystal.py:1008-1022)
+
+```python
+# WRONG: Rotates both real and reciprocal vectors independently
+a_phi = rotate_axis(self.a.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
+b_phi = rotate_axis(self.b.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
+c_phi = rotate_axis(self.c.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
+
+a_star_phi = rotate_axis(
+    self.a_star.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad
+)
+b_star_phi = rotate_axis(
+    self.b_star.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad
+)
+c_star_phi = rotate_axis(
+    self.c_star.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad
+)
+```
+
+### Proposed Fix
+
+The PyTorch implementation should:
+1. Rotate **only** the real-space vectors (a, b, c) using the spindle axis and φ angle
+2. **Recompute** reciprocal vectors from the rotated real vectors using the standard crystallographic formula
+3. Apply mosaic rotations to the recomputed vectors (current behavior is correct for this step)
+
+**Implementation Strategy:**
+```python
+# Step 1: Rotate only real vectors
+a_phi = rotate_axis(self.a.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
+b_phi = rotate_axis(self.b.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
+c_phi = rotate_axis(self.c.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad)
+
+# Step 2: Recompute reciprocal vectors from rotated real vectors
+# Use the same formula as in compute_cell_tensors (crystal.py:714-768)
+# a* = (b × c) / V_actual, etc.
+# This ensures metric duality is preserved: a·a* = 1 exactly
+b_cross_c = torch.cross(b_phi, c_phi, dim=-1)
+c_cross_a = torch.cross(c_phi, a_phi, dim=-1)
+a_cross_b = torch.cross(a_phi, b_phi, dim=-1)
+
+V_actual = torch.sum(a_phi * b_cross_c, dim=-1, keepdim=True)
+a_star_phi = b_cross_c / V_actual
+b_star_phi = c_cross_a / V_actual
+c_star_phi = a_cross_b / V_actual
+
+# Step 3: Apply mosaic rotations (current implementation is correct)
+# ... mosaic rotation code unchanged ...
+```
+
+### Verification Strategy
+
+Per `fix_checklist.md`, the fix must pass all VG-1 through VG-5 gates:
+- **VG-1**: Per-φ traces at φ=0°, 0.05°, 0.1° showing b_Y drift ≤1e-6 relative
+- **VG-2**: `pytest tests/test_cli_scaling.py -k lattice` passes
+- **VG-3**: nb-compare ROI parity ≥0.9995 correlation, sum_ratio 0.99–1.01
+- **VG-4**: Component deltas (b_Y, k_frac, F_latt, I_before_scaling) meet thresholds
+- **VG-5**: Documentation updates (this memo, plan, fix_plan) completed
+
+### Implementation Notes
+
+1. **Preserve vectorization**: The fix must maintain batched tensor operations across phi/mosaic dimensions
+2. **Device neutrality**: Ensure all intermediate tensors stay on the same device as input vectors
+3. **Differentiability**: The cross product and division operations preserve gradient flow
+4. **CLAUDE Rule #11**: Add C-code docstring reference to `get_rotated_real_vectors` before implementation
+5. **CLAUDE Rule #13**: This fix extends the reciprocal recalculation principle to dynamic φ rotation
+
+### File Locations
+
+- **Target Method**: `src/nanobrag_torch/models/crystal.py:976-1052` (`get_rotated_real_vectors`)
+- **C Reference**: `golden_suite_generator/nanoBragg.c:3044-3066` (φ rotation loop)
+- **Helper Methods**: `src/nanobrag_torch/utils/geometry.py:rotate_axis`, `torch.cross`
+- **Verification Scripts**: `reports/2025-10-cli-flags/phase_l/rot_vector/trace_harness.py`
+
+### Next Steps (Phase L3k.2)
+
+1. Add mandatory C-code docstring reference to `get_rotated_real_vectors`
+2. Implement reciprocal vector recomputation after φ rotation
+3. Remove independent reciprocal vector rotation
+4. Execute verification gates VG-1 through VG-5
+5. Log implementation Attempt in `docs/fix_plan.md` with metrics
 
 ### References
 

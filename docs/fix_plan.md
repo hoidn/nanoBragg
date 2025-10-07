@@ -471,6 +471,24 @@
       - Phase L3 instrumentation/memo/checklist complete; implementation gate now formalised.
       - Outstanding work: execute Phase L3k.1–L3k.4 to deliver φ rotation fix before Phase L4 parity rerun.
     Next Actions: Follow refreshed Next Actions (Phase L3k.1–L3k.4), then proceed to Phase L4 once gates pass.
+  * [2025-11-21] Attempt #96 (ralph Mode: Docs) — Result: **DOCUMENTATION COMPLETE** (Phase L3k.1 implementation memo). **No code changes.**
+    Metrics: Documentation-only (no tests executed; pytest --collect-only deferred to implementation loop).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_correction.md:187-297` — Phase L3k Implementation Memo section
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md` — Complete 5-gate verification checklist (5 VG gates, 19 verification rows)
+      - `plans/active/cli-noise-pix0/plan.md:276-287` — Phase L3k tasks documented with exit criteria
+      - C reference extracted: `golden_suite_generator/nanoBragg.c:3044-3066` (φ rotation loop)
+    Observations/Hypotheses:
+      - **Root cause identified**: Current PyTorch implementation rotates real AND reciprocal vectors independently during φ rotation (crystal.py:1008-1022)
+      - **C semantics**: C code rotates ONLY real vectors (nanoBragg.c:3056-3058), reciprocal vectors implicit through Miller index calculation
+      - **Proposed fix**: Rotate only real vectors, recompute reciprocal from rotated real using cross products and V_actual (preserves metric duality per CLAUDE Rule #13)
+      - **Implementation strategy**: Remove lines 1014-1022 (independent reciprocal rotation), add cross product computation after real rotation (lines ~1012)
+      - **Verification thresholds documented**: b_Y drift ≤1e-6, k_frac ≤1e-6, correlation ≥0.9995, sum_ratio 0.99–1.01 (fix_checklist.md VG-1⇢VG-5)
+      - Mode: Docs → implementation deferred to next code-focused loop per input.md guidance
+    Next Actions:
+      1. Implementation loop (Mode: TDD or standard): Execute Phase L3k.2 (add C-code docstring per CLAUDE Rule #11, implement reciprocal recomputation)
+      2. After code changes: Execute Phase L3k.3 (VG-1⇢VG-5 verification gates with per-φ traces, pytest lattice, nb-compare, delta audit)
+      3. After gates pass: Execute Phase L3k.4 (log implementation Attempt with metrics, update plan/fix_plan, prepare Phase L4)
   * [2025-10-07] Attempt #91 (ralph loop i=91) — Result: **SUCCESS** (Phase L3g spindle instrumentation COMPLETE). **H1 (spindle normalization) RULED OUT as root cause of Y-drift.**
     Metrics: Spindle Δ(magnitude)=0.0 (tolerance ≤5e-4); trace captured 43 TRACE_PY lines (was 40, +3 spindle lines); test collection 4/4 passed.
     Artifacts:
