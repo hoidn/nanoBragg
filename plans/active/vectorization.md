@@ -2,8 +2,8 @@
 - Initiative: PERF-PYTORCH-004 vectorization backlog; supports long-term goal "Parallel parity + performance" from docs/fix_plan.md.
 - Phase Goal: Deliver a production-ready, fully vectorized tricubic interpolation pipeline (gather + polynomial evaluation) and follow with detector absorption vectorization without regressing physics, gradients, or device neutrality.
 - Dependencies: specs/spec-a-core.md §4 (Structure factors), specs/spec-a-parallel.md §2.3 (Interpolation acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4, docs/architecture/c_code_overview.md (tricubic routines), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, `nanoBragg.c` lines 2604–3278 (polin3/polin2/polint + detector absorption), `tests/test_at_str_002.py`, `tests/test_at_abs_001.py`, `reports/benchmarks/20250930-165726-compile-cache/` (current performance references). No dedicated tricubic/absorption microbenchmarks exist yet; Phase A will author reusable harnesses under `scripts/benchmarks/` so future loops can rerun baselines without ad-hoc snippets.
-- Gap Snapshot (2025-11-18): Phase A1–A3 evidence captured under `reports/2025-10-vectorization/phase_a/` (pytest logs plus tricubic/absorption baselines). No Phase B design memo exists yet—`reports/2025-10-vectorization/phase_b/design_notes.md` is still missing—so Ralph must focus on B1–B3 shape/broadcast/gradient notes before touching implementation work. docs/fix_plan.md item VECTOR-TRICUBIC-001 now lists Phase B as the gating next action block.
-- Supervisory note (2025-11-18): fix_plan#VECTOR-TRICUBIC-001 now gates on the Phase B design memo (tasks B1–B3). Complete those notes before touching implementation; assume a clean editable install with `KMP_DUPLICATE_LIB_OK=TRUE` exported.
+- Gap Snapshot (2025-11-18): Phase A1–A3 evidence captured under `reports/2025-10-vectorization/phase_a/` (pytest logs plus tricubic/absorption baselines). **Phase B design memo landed in Attempt #3 (`reports/2025-10-vectorization/phase_b/design_notes.md`) covering tensor shapes, polynomial mapping, and gradient/device checklists.** Next blocker is executing Phase C implementation tasks using that design as the contract.
+- Supervisory note (2025-11-18 → refreshed 2025-11-18b): fix_plan#VECTOR-TRICUBIC-001 now pivots to Phase C execution (tasks C1–C3). Keep `KMP_DUPLICATE_LIB_OK=TRUE` exported, reuse the design memo’s Section 2/3 diagrams, and stage changes behind feature-flag-friendly commits to ease review if batching becomes necessary.
 
 ### Phase A — Evidence & Baseline Capture
 Goal: Document the current (non-vectorized) behavior, warnings, and performance so we can prove the impact of the refactor.
@@ -23,9 +23,9 @@ Exit Criteria: Design memo (`reports/2025-10-vectorization/phase_b/design_notes.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Derive tensor shapes & broadcasting plan | [ ] | Document how `(S,F)` Miller grids expand to `(S,F,4,4,4)` neighborhoods; include diagrams referencing c_code_overview.md appendix; note device/dtype handling requirements. |
-| B2 | Map C polin3 semantics to PyTorch ops | [ ] | Translate nanoBragg.c polynomial evaluation to tensor algebra; identify reuse opportunities (e.g., precomputed vandermonde weights). Capture equations + references in design memo. |
-| B3 | Gradient & dtype checklist | [ ] | Cross-check docs/development/pytorch_runtime_checklist.md so the forthcoming implementation keeps gradients (no `.item()`, no `torch.linspace`) and works on CPU/CUDA; list explicit assertions/tests to add in Phase E. |
+| B1 | Derive tensor shapes & broadcasting plan | [D] | ✅ Attempt #3 (2025-10-07) captured the `(B,4,4,4)` gather layout plus memory envelope; see `design_notes.md` §2 with diagrams + OOB masking guidance. |
+| B2 | Map C polin3 semantics to PyTorch ops | [D] | ✅ Attempt #3 recorded Lagrange polynomial translation and reuse strategy (design_notes §3, referencing `nanoBragg.c` lines 4021-4058). |
+| B3 | Gradient & dtype checklist | [D] | ✅ Attempt #3 consolidated differentiability/device rules (design_notes §4) aligning with `pytorch_runtime_checklist.md`; reuse table when authoring Phase E regression tests. |
 
 ### Phase C — Implementation: Neighborhood Gather
 Goal: Replace scalar neighbor gathering with fully batched advanced indexing inside `Crystal._tricubic_interpolation` while keeping fallbacks for out-of-range queries.

@@ -1683,7 +1683,7 @@
 ## [VECTOR-TRICUBIC-001] Vectorize tricubic interpolation and detector absorption
 - Spec/AT: specs/spec-a-core.md §4 (structure factor sampling), specs/spec-a-parallel.md §2.3 (tricubic acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4 (vectorization strategy), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, nanoBragg.c lines 2604–3278 (polin3/polin2/polint) and 3375–3450 (detector absorption loop).
 - Priority: High
-- Status: in_progress (Phase A complete; Phase B design memo outstanding)
+- Status: in_progress (Phases A–B complete; Phase C implementation pending)
 - Owner/Date: galph/2025-10-17
 - Plan Reference: `plans/active/vectorization.md`
 - Reproduction (C & PyTorch):
@@ -1691,10 +1691,10 @@
   * Optional microbenchmarks (to be created per plan Phase A): `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/sample_tricubic_baseline.py`
   * Shapes/ROI: 256² & 512² detectors for microbench; oversample 1; structure-factor grid enabling tricubic.
 - First Divergence (if known): Current tricubic path drops to nearest-neighbour fallback for batched pixel grids, emitting warnings and forfeiting accuracy/performance; detector absorption still loops over `thicksteps`, preventing full vectorization and creating hotspots in profiler traces (see reports/benchmarks/20250930-165726-compile-cache/analysis.md).
-- Next Actions (2025-11-18 refresh):
- 1. Author the Phase B design memo (`reports/2025-10-vectorization/phase_b/design_notes.md`) covering tasks B1–B3—shape/broadcast diagrams, polin3 tensor equations, and gradient/device checklist.
- 2. Update `plans/active/vectorization.md`/docs/fix_plan attempts once the memo lands (mark B1–B3 in-progress/complete with references) so implementation tasks can proceed in Phase C.
- 3. Outline the targeted regression/benchmark plan within the memo (tests for tricubic + absorption, CPU/CUDA baselines) to unblock Phase C/E validation steps.
+- Next Actions (2025-11-18b refresh):
+ 1. Execute Phase C1 — implement the batched `(B,4,4,4)` neighborhood gather in `Crystal._tricubic_interpolation` per design_notes §2, preserving device/dtype neutrality.
+ 2. Execute Phase C2 — revalidate out-of-bounds fallback semantics (single warning, default_F substitution) with a new targeted pytest covering forced OOB queries.
+ 3. Execute Phase C3 — add shape assertions/caching notes and log implementation details under `reports/2025-10-vectorization/phase_c/implementation_notes.md`, then prepare feature branch for Phase D polynomial vectorization.
 - Attempts History:
   * [2025-10-06] Attempt #1 (ralph loop) — Result: **Phase A1 COMPLETE** (test collection & execution baseline captured). All tricubic and absorption tests passing.
     Metrics: AT-STR-002: 3/3 tests passed in 2.12s (test_tricubic_interpolation_enabled, test_tricubic_out_of_bounds_fallback, test_auto_enable_interpolation). AT-ABS-001: 5/5 tests passed in 5.88s. Collection: 3 tricubic tests found.
