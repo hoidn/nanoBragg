@@ -1,0 +1,31 @@
+================================================================================
+Structure-Factor Coverage Probe
+CLI-FLAGS-003 Phase L3a Evidence
+================================================================================
+
+Timestamp: 2025-10-07T06:29:16.689418Z
+Git SHA: a6ed279c6d32118c5e25d4caec3881165b386da8
+Torch version: 2.8.0+cu128
+Platform: Linux-6.14.0-29-generic-x86_64-with-glibc2.39
+Device: cpu
+Dtype: torch.float64
+
+Loading supervisor command configuration...
+Crystal config initialized
+
+Target Miller index: h=-7, k=-1, l=-14
+C reference F_cell: 190.27
+
+================================================================================
+Source 1: HKL file (scaled.hkl)
+================================================================================
+Grid shape: torch.Size([1, 1, 1])
+H range: [1, 1]
+K range: [12, 12]
+L range: [3, 3]
+Target in range: False
+Target reflection is OUT OF RANGE
+
+================================================================================
+Probe complete
+================================================================================

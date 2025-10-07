@@ -455,10 +455,11 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C’s trace records `F_cell=190.27`. The remaining delta is therefore rooted in structure-factor ingestion rather than normalization math.
-- Next Actions (2025-11-15 refresh):
-  1. Phase L3a probe — Capture the supervisor pixel’s structure factor using both the HKL reader and `read_fdump` to confirm which data source produces C’s `F_cell=190.27`. Archive probe code/logs under `reports/2025-10-cli-flags/phase_l/structure_factor/`.
-  2. Phase L3b analysis — Document how nanoBragg.c synthesizes that reflection (review `nanoBragg.c:2333-2490` and the generated Fdump). Decide whether the PyTorch harness must load the C Fdump, expand the HKL grid, or adjust interpolation flags before implementation. Update the plan once the ingestion strategy is agreed.
-  3. Phase L3c onward — After structure-factor parity is proven, proceed with the normalization refactor and regression additions (plan tasks L3c–L3f) before rerunning the supervisor parity suite in Phase L4.
+- Next Actions (2025-10-07 refresh after Attempt #75):
+  1. Phase L3b evidence — Run supervisor command via instrumented C binary and capture whether Fdump.bin is generated. If yes, copy to `reports/.../structure_factor/` and rerun probe with `--fdump` flag. Compare retrieved amplitude against C reference F=190.27. Document findings in `analysis.md` and update plan with ingestion strategy (Fdump loading vs HKL expansion vs sinc fallback).
+  2. Phase L3c implementation — Once structure-factor source confirmed, patch `src/nanobrag_torch/simulator.py` scaling chain (lines ~930-1085) to match C ordering with mandatory C-code docstring references per Rule #11. Keep vectorized/device-neutral.
+  3. Phase L3d regression — Extend `tests/test_cli_scaling.py` with structure-factor lookup assertion for hkl=(-7,-1,-14) and supervisor-command regression validating I_before_scaling/ω/polarization/final intensity against C values (≤1e-6 relative tolerance, CPU/CUDA parametrised).
+  4. Phase L4 parity rerun — Execute supervisor command end-to-end, capture nb-compare metrics, confirm correlation ≥0.9995 + sum_ratio 0.99-1.01, archive results, and close CLI-FLAGS-003.
 - Attempts History:
   * [2025-11-13] Attempt #71 (ralph loop) — Result: **SUCCESS** (Phase L2b validation + Phase L2c complete). **Harness already functional from Attempt #69; executed comparison script to identify first divergence.**
     Metrics: 40 TRACE_PY lines captured; test suite passes 4/4 variants (cpu/cuda × float32/float64). Comparison identifies `I_before_scaling` as first divergent factor (C=943654.809, PyTorch=0, -100% delta).
@@ -473,6 +474,23 @@
       - **Scaling infrastructure correct:** r_e², fluence, steps, capture_fraction, polar, omega_pixel all match C within tolerances (<0.002% delta)
       - **Test coverage maintained:** tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics passes all parametrized variants
     Next Actions: Phase L3 — Follow plan tasks L3a/L3b to trace how the supervisor pixel acquires `F_cell=190.27` in C (HKL vs Fdump), then proceed with the normalization/refactor steps once the ingestion gap is understood.
+  * [2025-10-07] Attempt #75 (ralph loop) — Result: **SUCCESS** (Phase L3a probe complete). **Created structure-factor coverage probe confirming target reflection (-7,-1,-14) is completely absent from scaled.hkl.**
+    Metrics: Evidence-only loop; no production code changed. Pytest collection stable (50+ tests collected).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/structure_factor/probe.py` - Standalone probe script with HKL/Fdump grid interrogation
+      - `reports/2025-10-cli-flags/phase_l/structure_factor/probe.log` - Execution log showing HKL grid [1,1]×[12,12]×[3,3] vs target (-7,-1,-14)
+      - `reports/2025-10-cli-flags/phase_l/structure_factor/analysis.md` - Complete findings summary with 4 hypotheses for C amplitude source
+    Observations/Hypotheses:
+      - **HKL coverage gap confirmed:** scaled.hkl contains exactly ONE reflection `(1,12,3)` with F=100.0
+      - **Target OUT OF RANGE:** Supervisor pixel maps to h=-7, k=-1, l=-14 which falls completely outside grid bounds
+      - **PyTorch retrieval correct:** PyTorch correctly returns `default_F=0.0` for out-of-range query
+      - **C must synthesize F=190.27:** Since scaled.hkl does not contain the target reflection, C code must generate amplitudes via:
+        1. Runtime Fdump generation (most likely - nanoBragg.c:2333-2490 may write full grid)
+        2. Symmetry expansion (unlikely given P1-only spec)
+        3. Sinc fallback evaluation
+        4. External Fdump loading
+      - **Phase L2c delta explained:** The I_before_scaling divergence (C=943654.809, Py=0) stems from structure-factor ingestion gap, NOT normalization math (all scaling factors r_e²/fluence/steps/polar/omega match C within 0.2%)
+    Next Actions: Phase L3b — Capture C-generated Fdump.bin (if it exists), rerun probe with --fdump flag, compare grid ranges and retrieved amplitude against C reference F=190.27, then decide PyTorch ingestion strategy (load Fdump, expand HKL, or add sinc fallback) before touching production code.
   * [2025-10-17] Attempt #72 (ralph loop) — Result: **SUCCESS** (Phase L2b harness MOSFLM orientation fix). **Corrected `trace_harness.py` to assign each MOSFLM reciprocal vector to its own config field instead of packing all three into `mosflm_a_star`.**
     Metrics: Harness now produces non-zero F_latt values (F_latt=1.351 vs previous 0), confirming proper orientation. Test suite passes 4/4 variants (tests/test_trace_pixel.py). Comparison script completed successfully (2 divergent factors identified).
     Artifacts:
