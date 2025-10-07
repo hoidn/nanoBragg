@@ -1523,3 +1523,10 @@ Follow-ups for Ralph:
 - Added note in `docs/fix_plan.md` (CLI-FLAGS-003 Next Actions) flagging the device gap so L3c implementation covers it.
 - Authored new `input.md` (Parity mode) instructing Ralph to capture `cli_hkl_device_probe.json`, record env metadata, update the audit doc, and log Attempt #79 before any simulator edits.
 - Open questions: confirm whether CUDA probe reproduces the device mismatch on the local machine; plan to queue CLI-side fix once evidence is captured.
+
+## 2025-11-18 (galph loop — VECTOR-TRICUBIC Phase B prep)
+- `git pull --rebase` already up to date; no conflicts.
+- Updated `plans/active/vectorization.md` gap snapshot + supervisory note to reflect Phase A completion and highlight Phase B design memo as the new blocker.
+- Synced `docs/fix_plan.md` status/index for VECTOR-TRICUBIC-001 (Phase A complete, Phase B outstanding) and refreshed Next Actions to call for the Phase B design memo.
+- Authored new `input.md` (Docs mode) directing Ralph to draft `reports/2025-10-vectorization/phase_b/design_notes.md` covering tasks B1–B3, including tensor shapes, polin3 tensorization, and gradient/device checklist.
+- Follow-up for Ralph: produce the memo, cite baseline artifacts, outline regression/benchmark plan, and log the attempt in fix_plan before attempting any implementation work.

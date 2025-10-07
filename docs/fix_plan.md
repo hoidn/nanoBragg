@@ -16,7 +16,7 @@
 | [REPO-HYGIENE-002](#repo-hygiene-002-restore-canonical-nanobraggc) | Restore canonical nanoBragg.c | Medium | in_progress |
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
 | [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | in_progress |
-| [VECTOR-TRICUBIC-001](#vector-tricubic-001-vectorize-tricubic-interpolation-and-detector-absorption) | Vectorize tricubic interpolation and detector absorption | High | in_planning |
+| [VECTOR-TRICUBIC-001](#vector-tricubic-001-vectorize-tricubic-interpolation-and-detector-absorption) | Vectorize tricubic interpolation and detector absorption | High | in_progress |
 | [ABS-OVERSAMPLE-001](#abs-oversample-001-fix-oversample_thick-subpixel-absorption) | Fix -oversample_thick subpixel absorption | High | in_planning |
 | [CLI-DTYPE-002](#cli-dtype-002-cli-dtype-parity) | CLI dtype parity | High | in_progress |
 | [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | in_progress |
@@ -1683,7 +1683,7 @@
 ## [VECTOR-TRICUBIC-001] Vectorize tricubic interpolation and detector absorption
 - Spec/AT: specs/spec-a-core.md §4 (structure factor sampling), specs/spec-a-parallel.md §2.3 (tricubic acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4 (vectorization strategy), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, nanoBragg.c lines 2604–3278 (polin3/polin2/polint) and 3375–3450 (detector absorption loop).
 - Priority: High
-- Status: in_progress (Phase A1 complete; A2/A3 evidence outstanding)
+- Status: in_progress (Phase A complete; Phase B design memo outstanding)
 - Owner/Date: galph/2025-10-17
 - Plan Reference: `plans/active/vectorization.md`
 - Reproduction (C & PyTorch):
@@ -1691,10 +1691,10 @@
   * Optional microbenchmarks (to be created per plan Phase A): `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/sample_tricubic_baseline.py`
   * Shapes/ROI: 256² & 512² detectors for microbench; oversample 1; structure-factor grid enabling tricubic.
 - First Divergence (if known): Current tricubic path drops to nearest-neighbour fallback for batched pixel grids, emitting warnings and forfeiting accuracy/performance; detector absorption still loops over `thicksteps`, preventing full vectorization and creating hotspots in profiler traces (see reports/benchmarks/20250930-165726-compile-cache/analysis.md).
-- Next Actions (2025-11-17 refresh):
- 1. Execute plan Phase A tasks A2–A3: add the reusable `scripts/benchmarks/tricubic_baseline.py` and `absorption_baseline.py` harnesses, capture timing artifacts (CPU and CUDA when available) plus `phase_a/env.json`, and update this entry when logs land. These harnesses remain the gating blocker before design work resumes.
- 2. Complete Phase B design memo (tensor shapes, broadcasting, gradients) before editing code; update this item with design references (`phase_b/design_notes.md`).
- 3. Prioritise Phase C/D implementation work on tricubic interpolation, followed by Phase E parity/perf validation. Detector absorption vectorization (Phase F) follows once tricubic work is stable.
+- Next Actions (2025-11-18 refresh):
+ 1. Author the Phase B design memo (`reports/2025-10-vectorization/phase_b/design_notes.md`) covering tasks B1–B3—shape/broadcast diagrams, polin3 tensor equations, and gradient/device checklist.
+ 2. Update `plans/active/vectorization.md`/docs/fix_plan attempts once the memo lands (mark B1–B3 in-progress/complete with references) so implementation tasks can proceed in Phase C.
+ 3. Outline the targeted regression/benchmark plan within the memo (tests for tricubic + absorption, CPU/CUDA baselines) to unblock Phase C/E validation steps.
 - Attempts History:
   * [2025-10-06] Attempt #1 (ralph loop) — Result: **Phase A1 COMPLETE** (test collection & execution baseline captured). All tricubic and absorption tests passing.
     Metrics: AT-STR-002: 3/3 tests passed in 2.12s (test_tricubic_interpolation_enabled, test_tricubic_out_of_bounds_fallback, test_auto_enable_interpolation). AT-ABS-001: 5/5 tests passed in 5.88s. Collection: 3 tricubic tests found.
