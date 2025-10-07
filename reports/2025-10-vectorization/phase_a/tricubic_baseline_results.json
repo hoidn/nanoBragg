@@ -1,0 +1,68 @@
+{
+  "environment": {
+    "timestamp": "2025-10-07T00:09:17.633094",
+    "python_version": "3.13.7 | packaged by Anaconda, Inc. | (main, Sep  9 2025, 19:59:03) [GCC 11.2.0]",
+    "torch_version": "2.8.0+cu128",
+    "cuda_available": true,
+    "device_requested": "cuda",
+    "device_actual": "cuda",
+    "dtype": "torch.float32",
+    "cuda_device_count": 1,
+    "cuda_device_name": "NVIDIA GeForce RTX 3090"
+  },
+  "benchmark_config": {
+    "sizes": [
+      256,
+      512
+    ],
+    "repeats": 5
+  },
+  "results": [
+    {
+      "size": 256,
+      "device": "cuda",
+      "dtype": "torch.float32",
+      "interpolation_enabled": true,
+      "scalar_calls": 100,
+      "note": "Current implementation only supports scalar interpolation",
+      "cold_time_s": 0.5586598368827254,
+      "warm_times_s": [
+        0.5587332670111209,
+        0.5540168520528823,
+        0.5536754699423909,
+        0.5547750201076269,
+        0.5531955151818693
+      ],
+      "mean_warm_s": 0.5548792248591781,
+      "median_warm_s": 0.5540168520528823,
+      "std_warm_s": 0.001994597231191753,
+      "min_warm_s": 0.5531955151818693,
+      "max_warm_s": 0.5587332670111209,
+      "time_per_call_us": 5548.792248591781,
+      "throughput_calls_per_sec": 180.2193982400023
+    },
+    {
+      "size": 512,
+      "device": "cuda",
+      "dtype": "torch.float32",
+      "interpolation_enabled": true,
+      "scalar_calls": 100,
+      "note": "Current implementation only supports scalar interpolation",
+      "cold_time_s": 0.5514590879902244,
+      "warm_times_s": [
+        0.5535391578450799,
+        0.5524725080467761,
+        0.5522641050629318,
+        0.5529615529812872,
+        0.5527231490705162
+      ],
+      "mean_warm_s": 0.5527920946013183,
+      "median_warm_s": 0.5527231490705162,
+      "std_warm_s": 0.0004410173777593524,
+      "min_warm_s": 0.5522641050629318,
+      "max_warm_s": 0.5535391578450799,
+      "time_per_call_us": 5527.920946013183,
+      "throughput_calls_per_sec": 180.89983734684458
+    }
+  ]
+}

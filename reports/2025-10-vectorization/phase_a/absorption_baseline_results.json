@@ -1,0 +1,77 @@
+{
+  "environment": {
+    "timestamp": "2025-10-07T00:09:35.768044",
+    "python_version": "3.13.7 | packaged by Anaconda, Inc. | (main, Sep  9 2025, 19:59:03) [GCC 11.2.0]",
+    "torch_version": "2.8.0+cu128",
+    "cuda_available": true,
+    "device_requested": "cuda",
+    "device_actual": "cuda",
+    "dtype": "torch.float32",
+    "cuda_device_count": 1,
+    "cuda_device_name": "NVIDIA GeForce RTX 3090"
+  },
+  "benchmark_config": {
+    "sizes": [
+      256,
+      512
+    ],
+    "thicksteps": [
+      5
+    ],
+    "repeats": 5
+  },
+  "results": [
+    {
+      "size": 256,
+      "device": "cuda",
+      "dtype": "torch.float32",
+      "thicksteps": 5,
+      "pixels": 65536,
+      "detector_abs_um": 500.0,
+      "detector_thick_um": 100.0,
+      "oversample_thick": true,
+      "cold_time_s": 0.005814705975353718,
+      "warm_times_s": [
+        0.00589969614520669,
+        0.005743074929341674,
+        0.005761265056207776,
+        0.005764015018939972,
+        0.005767044145613909
+      ],
+      "mean_warm_s": 0.0057870190590620044,
+      "median_warm_s": 0.005764015018939972,
+      "std_warm_s": 5.695377769936722e-05,
+      "min_warm_s": 0.005743074929341674,
+      "max_warm_s": 0.00589969614520669,
+      "throughput_pixels_per_sec": 11324655.981109293,
+      "mean_intensity": 0.5982033610343933,
+      "max_intensity": 28.03373908996582
+    },
+    {
+      "size": 512,
+      "device": "cuda",
+      "dtype": "torch.float32",
+      "thicksteps": 5,
+      "pixels": 262144,
+      "detector_abs_um": 500.0,
+      "detector_thick_um": 100.0,
+      "oversample_thick": true,
+      "cold_time_s": 0.005952856037765741,
+      "warm_times_s": [
+        0.005831175949424505,
+        0.005928095895797014,
+        0.005839695921167731,
+        0.005820164922624826,
+        0.00583474594168365
+      ],
+      "mean_warm_s": 0.005850775726139545,
+      "median_warm_s": 0.00583474594168365,
+      "std_warm_s": 3.919004272228298e-05,
+      "min_warm_s": 0.005820164922624826,
+      "max_warm_s": 0.005928095895797014,
+      "throughput_pixels_per_sec": 44804998.90447308,
+      "mean_intensity": 0.17283394932746887,
+      "max_intensity": 28.03373908996582
+    }
+  ]
+}

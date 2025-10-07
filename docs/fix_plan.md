@@ -1670,6 +1670,30 @@
       - CUDA is available in test environment for future GPU benchmarking
       - Phase A1 complete per plan guidance (`plans/active/vectorization.md` tasks A1 complete)
     Next Actions: Proceed to Phase A2 (tricubic microbenchmark harness) and Phase A3 (absorption microbenchmark harness) to capture timing baselines before any code changes. Create `scripts/benchmarks/tricubic_baseline.py` and `scripts/benchmarks/absorption_baseline.py` per plan guidance.
+  * [2025-10-07] Attempt #2 (ralph loop) — Result: **Phase A2/A3 COMPLETE** (tricubic and absorption baseline harnesses created and executed). Both CPU and CUDA timings captured.
+    Metrics:
+      - Tricubic (CPU): 100 scalar calls @ ~1402 μs/call (~713 calls/sec); sizes 256, 512
+      - Tricubic (CUDA): 100 scalar calls @ ~5548 μs/call (~180 calls/sec); sizes 256, 512
+      - Absorption (CPU, 256²): 5.2 ms warm run (12.6M pixels/sec); 5 thicksteps
+      - Absorption (CPU, 512²): 31.5 ms warm run (8.3M pixels/sec); 5 thicksteps
+      - Absorption (CUDA, 256²): 5.8 ms warm run (11.3M pixels/sec); 5 thicksteps
+      - Absorption (CUDA, 512²): 5.9 ms warm run (44.8M pixels/sec); 5 thicksteps
+    Artifacts:
+      - `scripts/benchmarks/tricubic_baseline.py` — Reusable tricubic interpolation benchmark harness with argparse (--sizes, --repeats, --device, --dtype, --outdir)
+      - `scripts/benchmarks/absorption_baseline.py` — Reusable detector absorption benchmark harness with argparse (--sizes, --thicksteps, --repeats, --device, --dtype, --outdir)
+      - `reports/2025-10-vectorization/phase_a/tricubic_baseline.md` — CPU & CUDA tricubic baseline summary (markdown)
+      - `reports/2025-10-vectorization/phase_a/tricubic_baseline_results.json` — CPU & CUDA tricubic raw timing data (JSON)
+      - `reports/2025-10-vectorization/phase_a/absorption_baseline.md` — CPU & CUDA absorption baseline summary (markdown)
+      - `reports/2025-10-vectorization/phase_a/absorption_baseline_results.json` — CPU & CUDA absorption raw timing data (JSON)
+      - `reports/2025-10-vectorization/phase_a/run_log.txt` — Combined execution log from all benchmark runs
+    Observations/Hypotheses:
+      - Tricubic baseline reveals current scalar-only limitation: implementation only supports one Miller index at a time, requiring Python loop over all detector pixels
+      - CUDA tricubic performance ~4× slower than CPU (5548 μs vs 1402 μs per call), likely due to kernel launch overhead dominating scalar operations
+      - Absorption shows good GPU scaling for larger detectors (512²: 44.8M px/s vs CPU 8.3M px/s = 5.4× speedup)
+      - Absorption CPU shows large cold-run overhead (1.9s for 256²) likely from torch.compile warmup; warm runs are very fast (5.2ms)
+      - Current non-vectorized tricubic: ~1.4 ms/call × 256×256 pixels = ~92 seconds for full detector (if called per-pixel)
+      - Vectorization opportunity: eliminate Python loop over pixels, process entire detector grid in batched tensor ops
+    Next Actions: Phase A complete. Next loop should proceed to Phase B (design memo for tensor shapes and broadcasting strategy) per plans/active/vectorization.md before any code changes.
 - Risks/Assumptions: Must maintain differentiability (no `.item()`, no `torch.linspace` with tensor bounds), preserve device/dtype neutrality (CPU/CUDA parity), and obey Protected Assets rule (all new scripts under `scripts/benchmarks/`). Large tensor indexing may increase memory pressure; ensure ROI caching still works.
 - Exit Criteria (quote thresholds from spec):
   * specs/spec-a-parallel.md §2.3 tricubic acceptance tests run without warnings and match C parity within documented tolerances (corr≥0.9995, ≤1e-12 structural duality where applicable).
