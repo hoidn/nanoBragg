@@ -455,12 +455,27 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase K3e evidence reveals a **fundamental lattice/geometry mismatch**, not a φ-grid offset. C reports `k_frac≈−3.857` across all φ steps while PyTorch reports `k_frac≈−9.899` (Δk≈6.04 at φ=0°). This 6-unit discrepancy indicates the base reciprocal lattice vectors or scattering geometry differ before any φ rotation is applied.
-- Next Actions (2025-11-12 refresh):
-  1. Phase L2b instrumentation — Now that Attempt #66 completed L2b0 (harness emits correct supervisor flags and confirms steps/fluence parity), patch `src/nanobrag_torch/simulator.py` so `TRACE_PY` records real `I_before_scaling`, polarization, capture_fraction, and total steps instead of placeholders; keep tensors device/dtype neutral and reuse existing intermediates.
-  2. Phase L2b regression — Add the targeted `tests/test_trace_pixel.py::test_scaling_trace_matches_physics` regression (CPU/CUDA when available) and rerun the harness to regenerate `trace_py_scaling.log`, `trace_py_env.json`, and `harness_run.log` with nonzero intensity.
-  3. Phase L2c comparison — Use `compare_scaling_traces.py` to align TRACE_C vs TRACE_PY outputs, record percentage deltas in `scaling_audit_summary.md`, and log Attempt #55 with the first divergent factor.
-  4. Phase L3 prep — Update plan Phase L3 guidance and identify the regression selector(s) that will guard the scaling fix once the divergent factor is confirmed.
+- Next Actions (2025-10-06 refresh):
+  1. Phase L2b regression — ✅ COMPLETE (Attempt #67). Regression test `tests/test_trace_pixel.py::test_scaling_trace_matches_physics` exists and passes (4/4 variants). Rerun the trace harness (`reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py`) to regenerate `trace_py_scaling.log` with real I_before_scaling values instead of "NOT_EXTRACTED".
+  2. Phase L2c comparison — Use `compare_scaling_traces.py` to align TRACE_C vs TRACE_PY outputs, record percentage deltas in `scaling_audit_summary.md`, and log the first divergent scaling factor.
+  3. Phase L3 prep — Update plan Phase L3 guidance and identify the regression selector(s) that will guard the scaling fix once the divergent factor is confirmed.
 - Attempts History:
+  * [2025-10-06] Attempt #67 (ralph loop) — Result: **SUCCESS** (Phase L2b instrumentation complete). **TRACE_PY now emits real I_before_scaling, polarization, capture_fraction values from simulator internals.**
+    Metrics: Test suite 36/36 passed (test_cli_flags.py 31/31, test_trace_pixel.py 5/5). All 4 parametrized variants of test_scaling_trace_matches_physics passing (cpu/cuda × float32/float64). Target pixel trace successfully extracts I_before_normalization from physics pipeline.
+    Artifacts:
+      - `src/nanobrag_torch/simulator.py:977-978,1015-1016` - Saved I_before_normalization in both oversample and no-oversample paths before normalization/omega multiplication
+      - `src/nanobrag_torch/simulator.py:1166-1178` - Threaded I_before_normalization through to _apply_debug_output
+      - `src/nanobrag_torch/simulator.py:1189` - Added I_total parameter to _apply_debug_output signature
+      - `src/nanobrag_torch/simulator.py:1363-1368` - Modified trace extraction to use I_total tensor instead of computing (F_cell * F_latt)**2
+      - `tests/test_trace_pixel.py:22-243` - Regression tests validating trace output contains real values (not placeholders)
+    Observations/Hypotheses:
+      - **Root Implementation:** Pre-normalization intensity captured at two points: (1) oversample path: accumulated_intensity before last-value omega multiplication, (2) no-oversample path: intensity before division by steps
+      - **Device/dtype neutral:** I_before_normalization tensor preserves caller's device/dtype through clone() operation
+      - **Polarization extraction:** Already working correctly via polarization_value computed in lines 1131-1158
+      - **Capture fraction extraction:** Already working correctly via capture_fraction_for_trace computed in lines 1051-1073
+      - **Test coverage:** Validates steps calculation, polarization computation, capture_fraction with/without absorption
+      - **Phase L2b0 blocker resolved:** Trace harness can now emit real scaling factors matching C output format
+    Next Actions: Update Phase L2b plan status to [D], proceed to Phase L2b regression to add targeted test (tests/test_trace_pixel.py::test_scaling_trace_matches_physics already exists and passes), then Phase L2c comparison to align TRACE_C vs TRACE_PY outputs.
   * [2025-10-06] Attempt #27 (ralph) — Result: **PARITY FAILURE** (Phase I3 supervisor command). **Intensity scaling discrepancy: 124,538× sum ratio.**
     Metrics: Correlation=0.9978 (< 0.999 threshold), sum_ratio=124,538 (should be ~1.0), C max_I=446, PyTorch max_I=5.411e7 (121,000× discrepancy), mean_peak_distance=37.79 px (> 1 px threshold).
     Artifacts:

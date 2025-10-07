@@ -974,6 +974,9 @@ class Simulator:
             # Shape: (S, F)
             accumulated_intensity = torch.sum(intensity_all, dim=2)
 
+            # Save pre-normalization intensity for trace (before last-value multiplication)
+            I_before_normalization = accumulated_intensity.clone()
+
             # Apply last-value semantics if omega flag is not set
             if not oversample_omega:
                 # Get the last subpixel's omega (last in flattened order)
@@ -1008,6 +1011,9 @@ class Simulator:
                 intensity = self._compute_physics_for_position(
                     pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star
                 )
+
+            # Save pre-normalization intensity for trace
+            I_before_normalization = intensity.clone()
 
             # Normalize by steps
             normalized_intensity = intensity / steps
@@ -1167,7 +1173,8 @@ class Simulator:
                 omega_pixel if not oversample or oversample == 1 else None,
                 polarization_value,
                 steps,
-                capture_fraction_for_trace
+                capture_fraction_for_trace,
+                I_before_normalization  # Pass pre-normalization accumulated intensity for trace
             )
 
         # PERF-PYTORCH-006: Ensure output matches requested dtype
@@ -1184,7 +1191,8 @@ class Simulator:
                            omega_pixel=None,
                            polarization=None,
                            steps=None,
-                           capture_fraction=None):
+                           capture_fraction=None,
+                           I_total=None):
         """Apply debug output for -printout and -trace_pixel options.
 
         Args:
@@ -1356,8 +1364,13 @@ class Simulator:
                     ).item()
                     print(f"TRACE_PY: F_cell {F_cell:.15g}")
 
-                    # Calculate I_before_scaling (this is before r_e^2 * fluence / steps)
-                    I_before_scaling = (F_cell * F_latt) ** 2
+                    # Get I_before_scaling from the actual accumulated intensity (before normalization/scaling)
+                    # This is I_total passed from run() - the sum before division by steps
+                    if I_total is not None and isinstance(I_total, torch.Tensor):
+                        I_before_scaling = I_total[target_slow, target_fast].item()
+                    else:
+                        # Fallback: compute from F_cell and F_latt (less accurate)
+                        I_before_scaling = (F_cell * F_latt) ** 2
                     print(f"TRACE_PY: I_before_scaling {I_before_scaling:.15g}")
 
                     # Physical constants and scaling factors
