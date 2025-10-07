@@ -235,7 +235,7 @@ Exit Criteria: C and PyTorch traces capturing scaling factors are stored under `
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| L2a | Instrument C scaling chain | [ ] | Add TRACE_C lines around nanoBragg.c intensity scaling loop (lines 3005-3095, 3240-3335). Recompile via `make -C golden_suite_generator`. Run the supervisor command with `NB_C_BIN=./golden_suite_generator/nanoBragg` and stash stdout under `reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log`. Document edits in `instrumentation_notes.md` before removing instrumentation. |
+| L2a | Instrument C scaling chain | [D] | ✅ 2025-10-06 Attempt #55: Reused existing TRACE_C hooks (nanoBragg.c 3367-3382), captured `c_trace_scaling.log` for pixel (685,1039), and recorded setup in `instrumentation_notes.md`. Artifacts live under `reports/2025-10-cli-flags/phase_l/scaling_audit/`; ready to mirror fields on the PyTorch side. |
 | L2b | Extend PyTorch trace harness | [ ] | Update `reports/2025-10-cli-flags/phase_i/supervisor_command/trace_harness.py` (or create `phase_l/scaling_audit/trace_harness.py`) to log the same quantities: I_before_scaling, ω, polarization, capture_fraction, steps, r_e², fluence, final intensity. Execute with `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python trace_harness.py` and store output as `trace_py_scaling.log`. |
 | L2c | Diff traces & record first divergence | [ ] | Build a comparison notebook or script (`compare_scaling_traces.py`) that aligns TRACE_C vs TRACE_PY lines and reports percentage deltas per factor. Summarize findings in `scaling_audit_summary.md`, explicitly calling out the earliest divergent term and hypothesized root cause. Update docs/fix_plan.md Attempt #55 with key metrics. |
 

@@ -1396,3 +1396,14 @@ Follow-ups for Ralph:
   2. Misapplied steps divisor (possible double divide) leading to ×10 discrepancy that compounds with other factors (Confidence: low-medium). Next step: compare `steps` values logged in L2 traces.
   3. Fluence scaling mismatch (BeamConfig vs C computed area) causing ×~1.27e5 ratio (Confidence: medium-high, matches numeric magnitude). Next step: verify fluence logged from C vs PyTorch traces in L2a/L2b.
 - Follow-up for Ralph: execute new input.md focusing on Phase L2a; once traces captured, proceed through L2b/L2c before touching implementation.
+
+## 2025-10-06 (galph loop — Phase L2b trace directive)
+- Synced cleanly; reviewed docs/index.md, specs/spec-a.md, arch.md, c_to_pytorch_config_map.md, debugging.md, testing_strategy.md, docs/fix_plan.md, and plans/active/* (CLI + vectorization) per SOP.
+- Deep analysis: long-term Goal #1 still blocked in Phase L; C scaling trace captured (Attempt #55) but PyTorch trace missing. Goal #2 vectorization remains at Phase A with no artifacts.
+- Hypotheses (CLI scaling mismatch):
+  1. Missing capture_fraction logging/logic parity between C and PyTorch (confidence: medium; C trace shows capture=1.0, Py harness must confirm). Next step: complete L2b harness and compare capture terms.
+  2. Potential omission of polarization factor in Py normalization (confidence: medium-low; previous phases reset default but need trace evidence). Next step: include polarization in Py trace and inspect delta vs C log.
+  3. Residual steps normalization drift for oversample=1 (confidence: low; subpixel path divides by steps but needs confirmation). Next step: ensure steps printed from Py trace match C=10.
+- Coin flip (heads): reviewed Ralph’s latest commits (`3e47b38`, `f3f116b`). Progress solid—HKL parity verified, C scaling trace captured with thorough artifacts, no regressions observed.
+- Plan maintenance: Marked Phase L2a as complete in `plans/active/cli-noise-pix0/plan.md`; refreshed `docs/fix_plan.md` Next Actions to focus on L2b/L2c. input.md now directs Ralph to deliver the PyTorch scaling trace (Phase L2b).
+- Follow-up for Ralph: implement Phase L2b per new memo, archive artifacts under `reports/2025-10-cli-flags/phase_l/scaling_audit/`, then proceed to L2c diff once trace captured.
