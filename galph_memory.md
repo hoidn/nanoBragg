@@ -1517,3 +1517,9 @@ Follow-ups for Ralph:
 - Authored input.md (Parity mode) directing Ralph to run the CLI audit script and capture findings under `reports/2025-10-cli-flags/phase_l/structure_factor/` before touching simulator code.
 - Follow-up: expect CLI ingestion audit results + `cli_hkl_audit.md` artifacts next loop, then proceed to regression tests (L3d).
 - Logged new fix_plan items ABS-OVERSAMPLE-001 and SOURCE-WEIGHT-001 with dedicated plans (`plans/active/oversample-thick-subpixel.md`, `plans/active/source-weight-normalization.md`) to track oversample_thick bug and source-weight normalization bug.
+
+## 2025-11-17 (galph loop — CLI L3c device probe)
+- Re-audited CLI HKL attachment after harness fixes; updated `reports/2025-10-cli-flags/phase_l/structure_factor/cli_hkl_audit.md` with fc600db findings showing dtype+metadata are wired but tensors never move to `-device cuda`.
+- Added note in `docs/fix_plan.md` (CLI-FLAGS-003 Next Actions) flagging the device gap so L3c implementation covers it.
+- Authored new `input.md` (Parity mode) instructing Ralph to capture `cli_hkl_device_probe.json`, record env metadata, update the audit doc, and log Attempt #79 before any simulator edits.
+- Open questions: confirm whether CUDA probe reproduces the device mismatch on the local machine; plan to queue CLI-side fix once evidence is captured.

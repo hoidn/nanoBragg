@@ -1,5 +1,41 @@
 # CLI HKL Ingestion Audit — Phase L3c
 
+## 2025-11-17 Re-audit (galph)
+
+- **SHA**: fc600dbdbb7f77adf49280fdd73f14d0ca889166
+- **Scope**: Re-verify CLI HKL ingestion after harness updates (Attempts #74–78) and capture any diverging behavior that Phase L3c still needs to address.
+
+### Findings
+
+1. **Flag → Tensor plumbing still intact**
+   - `parse_and_validate_args()` assigns `config['hkl_data'] = read_hkl_file(...)` or the cached `try_load_hkl_or_fdump(...)` tuple (`src/nanobrag_torch/__main__.py:442-448`).
+   - `main()` unpacks that tuple and attaches both `crystal.hkl_data` and `crystal.hkl_metadata` before constructing the simulator (`src/nanobrag_torch/__main__.py:1068-1076`).
+   - The tuple survives through `config` unchanged; no intermediate code overwrites the metadata.
+
+2. **Device handling gap for CUDA runs**
+   - CLI converts HKL tensors to the requested dtype but never moves them to the requested device (`crystal.hkl_data = hkl_array.clone().detach().to(dtype=dtype)`).
+   - When `-device cuda` is used, `compute_physics_for_position()` (GPU) indexes `self.hkl_data` (CPU), triggering a device mismatch once we reach Phase L parity on CUDA.
+   - The simulator currently mitigates by copying the returned `F_cell` tensor onto `h.device`, but the advanced indexing before that copy will already fail. Ralph will need to update the CLI attach step (or call `crystal.to(device, dtype)`) during L3 implementation work.
+
+3. **Interpolation flag regression spotted**
+   - CLI still writes `crystal.interpolation_enabled = config['interpolate']` (`__main__.py:1078-1080`) while the `Crystal` API expects `self.interpolate`. This is unrelated to L3c but worth logging so we do not forget that `-interpolate/-nointerpolate` CLI flags are no-ops at present.
+
+### Evidence Collected
+
+- Code references: `src/nanobrag_torch/__main__.py:442-448`, `src/nanobrag_torch/__main__.py:1068-1076`
+- Simulator usage reference: `src/nanobrag_torch/simulator.py:204-208`
+- Prior audit artifacts remain valid; no new runtime captures were generated this loop.
+
+### Next Actions for Phase L3c
+
+1. Update CLI attachment to move HKL tensors to the CLI-requested device (or run `crystal.to(device, dtype)` immediately after instantiation) and record the change with C-code references in docstrings.
+2. Add a targeted regression test that exercises `-device cuda` with `scaled.hkl` to confirm `crystal.get_structure_factor` works once the device fix lands.
+3. Track the interpolation setter mismatch under the appropriate fix-plan item so Phase L can close without leaving CLI flags in a broken state.
+
+---
+
+## 2025-10-07 Audit (historical)
+
 **Date**: 2025-10-07
 **SHA**: ce51e1cb4f3b5ef43eb5fbde465dc7635df36810
 **Purpose**: Audit CLI HKL tensor ingestion to verify dtype/device handling and metadata extraction
