@@ -519,6 +519,26 @@
       2. If threshold adjustment approved: Update fix_checklist.md VG-1 gate, document rationale, mark L3k.3c.6 complete in plan
       3. If strict spec enforcement required: Proceed to Phase L3k.3c.3 implementation loop to remove `_phi_last_cache`
       4. After L3k.3c gates resolved: Execute Phase L3k.4 (documentation/checklist closure) and Phase L4 (supervisor command parity rerun)
+  * [2025-10-07] Attempt #118 (ralph loop i=118, Mode: Parity/Evidence) — Result: ✅ **SUCCESS** (Phase L3k.3c.3 φ=0 spec baseline evidence COMPLETE). **No code changes.**
+    Metrics: Evidence-only loop. Tests PASSED (2/2 in 2.14s). Spec baselines locked: rot_b[0,0,1]=0.7173197865 Å (≤1e-6 ✓), k_frac(φ=0)=1.6756687164 (≤1e-6 ✓).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251007T231515Z/metadata.txt` — Environment metadata (torch 2.8.0+cu128, CUDA available, git SHA 4cb561b, CPU device)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251007T231515Z/pytest_phi0.log` — Test execution output (2 passed)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251007T231515Z/sha256.txt` — Cryptographic hashes (eea25db..., 84bd30b...)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251007T231515Z/comparison_summary.md` — Full evidence summary with interpretation, C-PARITY-001 note, next actions
+    Observations/Hypotheses:
+      - **Spec compliance confirmed**: Both tests pass, proving φ=0 rotation is identity transformation per specs/spec-a-core.md:211-214
+      - **test_rot_b_matches_c PASSED**: rot_b[0,0,1] Y component = 0.7173197865 Å at φ=0, confirming base vector unchanged by identity rotation
+      - **test_k_frac_phi0_matches_c PASSED**: k_frac = 1.6756687164 at φ=0 for pixel (685,1039), confirming Miller indices use base vectors
+      - **C-PARITY-001 divergence documented**: C binary produces rot_b_y=0.6715882339 Å and k_frac=-0.607256 due to stale vector carryover bug (docs/bugs/verified_c_bugs.md:166-204)
+      - **VG-1 gate satisfied**: Both spec baselines locked with ≤1e-6 tolerances on CPU (CUDA smoke test deferred to next loop per input.md pitfall guidance)
+      - **Mode: Parity/Evidence** — Tests exist and pass; no code changes needed this loop per input.md:1-8 "Do Now" directive
+    First Divergence: N/A (spec-compliant behavior validated; C-parity divergence is documented bug, not PyTorch regression)
+    Next Actions:
+      1. ✅ Phase L3k.3c.3 complete — spec baselines locked with evidence artifacts
+      2. → Phase L3k.3c.4 — Design opt-in C-parity shim for validation harnesses (defer to next implementation loop)
+      3. → Phase L3k.3d — Resolve nb-compare ROI parity (VG-3/VG-4) after shim work
+      4. Update `plans/active/cli-noise-pix0/plan.md` L3k.3c.3 state from [ ] to [D] with this attempt reference
   * [2025-11-21] Attempt #97 (ralph loop i=97) — Result: **SUCCESS** (Phase L3k.2 implementation COMPLETE). **φ rotation fix applied: removed independent reciprocal vector rotation, added reciprocal recomputation from rotated real vectors per CLAUDE Rule #13.**
     Metrics: Targeted tests pass (test_f_latt_square_matches_c PASSED, 57/57 crystal/geometry tests PASSED); test collection succeeds (653 tests); Python syntax valid.
     Artifacts:

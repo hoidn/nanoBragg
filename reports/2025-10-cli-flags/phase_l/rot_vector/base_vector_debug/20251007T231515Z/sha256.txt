@@ -1,0 +1,2 @@
+eea25db36e260f452b7878ad7d5fb0fe4dc573277ae2a8abfe075e628936f336  reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251007T231515Z/pytest_phi0.log
+84bd30b14fca85956757efc09167ccad45877921450fddd106e850fdc6c6fe8e  reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251007T231515Z/metadata.txt

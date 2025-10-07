@@ -1,0 +1,5 @@
+timestamp=reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251007T231431Z
+NB_C_BIN=./golden_suite_generator/nanoBragg
+torch_version=2.8.0+cu128
+cuda_available=True
+git_sha=4cb561b4e3e28184d2c8cb7a4662114389bfdf8d
