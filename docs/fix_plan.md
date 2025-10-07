@@ -586,6 +586,19 @@
       - **Deprecation warning fixed:** Replaced datetime.utcnow() with datetime.now().astimezone() to avoid Python 3.13+ deprecation warning
       - **No production code changes:** Evidence-only loop per input.md Parity mode; script updates are tooling-layer only
     Next Actions: Phase L3f documentation sync — Update analysis.md + architectural docs with finalized ingestion/normalization flow once scaling validation passes (per input.md lines 462-463).
+  * [2025-11-19] Attempt #83 (galph loop) — Result: **EVIDENCE UPDATE** (Phase L3e parity snapshot). **Reran scaling comparison with latest PyTorch trace (`trace_py_scaling_20251117.log`) and documented the surviving lattice-factor gap.**
+    Metrics: Comparison reports 5 divergent factors with `I_before_scaling` still CRITICAL (−0.24397 relative). `r_e^2`, `fluence`, `steps`, `capture_fraction` remain PASS; `polar`, `omega_pixel`, `cos_2theta` MINOR. `I_pixel_final` mirrors the raw accumulation delta (−0.17343 relative).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/scaling_validation_summary_20251119.md` — Updated markdown table using the new TRACE_PY capture
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/metrics.json` — Refreshed structured metrics (overwrites prior Phase L2c output with latest deltas)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/run_metadata.json` — Updated run metadata (git SHA 1de11df, torch 2.7.1, command/path snapshot)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/analysis_20251119.md` — Narrative linking residual error to `F_latt` sign/magnitude mismatch and recommending per-φ TRACE instrumentation
+    Observations/Hypotheses:
+      - **Structure factors now aligned:** `F_cell=190.270004272461` in TRACE_PY (`trace_py_scaling_20251117.log:26`) matches C within 2.4e-6, proving HKL ingestion fixes held
+      - **First divergence moves downstream:** Raw accumulation gap is driven by lattice factor parity — C logs `F_latt=-2.3832` (`c_trace_scaling.log:288`) while PyTorch reports `F_latt=+1.35136` (`trace_py_scaling_20251117.log:24`)
+      - **Per-φ evidence missing:** C trace shows oscillating `TRACE_C_PHI` entries (lines 280-287) that sum to the negative lattice factor; PyTorch lacks equivalent `TRACE_PY_PHI` output, obscuring where the sign flip is lost
+      - **Downstream scalars validated:** Fluence, steps, capture_fraction, polarization, omega remain within L3e tolerances, narrowing focus to lattice accumulation
+    Next Actions: Instrument per-φ `TRACE_PY_PHI` logging for `_compute_structure_factor_components`, compare against `TRACE_C_PHI` (same pixel), and update plan tasks L3e/L3f before touching simulator code.
   * [2025-10-07] Attempt #74 (ralph loop) — Result: **SUCCESS** (Phase L2b harness fix + L2c comparison complete). **Corrected harness to attach `crystal.hkl_data` and `crystal.hkl_metadata` instead of ad-hoc attributes; structure factor lookup now functional.**
     Metrics: Harness probe confirms hkl_data attached (lookup returns F=100 for (1,12,3), F=0 for out-of-range). Comparison identifies I_before_scaling as first divergence. Test suite passes 4/4 variants (tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics).
     Artifacts:

@@ -1552,3 +1552,9 @@ Follow-ups for Ralph:
 - Updated `plans/active/cli-noise-pix0/plan.md` (L3d → [D]) and `docs/fix_plan.md` Next Actions to focus on L3e metrics, L3f documentation, and L4 rerun.
 - Authored Parity-mode `input.md` directing Ralph to upgrade `scripts/validation/compare_scaling_traces.py` to emit ≤1e-6 JSON metrics + metadata under `reports/2025-10-cli-flags/phase_l/scaling_validation/` before any simulator edits.
 - Follow-up: expect new `metrics.json`, `run_metadata.json`, and summary markdown plus fix_plan attempt update next loop; if metrics fail tolerance, halt for supervisor review.
+
+## 2025-11-19 (galph loop — CLI-FLAGS L3e parity snapshot)
+- Ran `compare_scaling_traces.py` against `trace_py_scaling_20251117.log`; generated `scaling_validation_summary_20251119.md`, refreshed metrics/run_metadata, and logged Attempt #83 under CLI-FLAGS-003.
+- Key finding: HKL ingestion now matches C (F_cell≈190.27) but lattice factor remains divergent (C `F_latt=-2.3832` vs Py `+1.35136`). Per-φ `TRACE_C_PHI` entries show the sign oscillation missing from PyTorch traces.
+- Authored `analysis_20251119.md` recommending per-φ instrumentation; updated input.md to direct Ralph to extend the trace harness, emit `TRACE_PY_PHI`, and compare against archived C per-φ logs before touching simulator code.
+- Expect Ralph to capture new per-φ PyTorch trace/JSON under `reports/2025-10-cli-flags/phase_l/per_phi/`, run the targeted pytest selector for scaling traces, and append findings to docs/fix_plan.md Attempt history.
