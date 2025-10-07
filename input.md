@@ -1,76 +1,101 @@
-Summary: Quantify the φ=0 rotation invariants so we can nail the real-space drift before touching simulator code.
-Mode: Parity
-Focus: CLI-FLAGS-003 – Handle -nonoise and -pix0_vector_mm
+Summary: Kick off tricubic vectorization by completing Phase C1’s batched neighbor gather with thorough evidence for VECTOR-TRICUBIC-001.
+Mode: Perf
+Focus: VECTOR-TRICUBIC-001 – Vectorize tricubic interpolation and detector absorption
 Branch: feature/spec-based-2
-Mapped tests: [tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics]
+Mapped tests:
+- pytest --collect-only tests/test_at_str_002.py -q
+- tests/test_at_str_002.py::test_tricubic_interpolation_enabled
+- tests/test_tricubic_interpolation.py::test_auto_enable_interpolation (sanity sweep after gather change)
+- tests/test_at_str_002.py::test_tricubic_out_of_bounds_fallback (ensures single-warning semantics are intact)
+- tests/test_gradients.py::TestCrystal::test_tricubic_gradient (sanity check that gradients survive gather change)
 Artifacts:
-- reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log
-- reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md
-- reports/2025-10-cli-flags/phase_l/rot_vector/invariant_probe.md
-- reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md
-Do Now: CLI-FLAGS-003 — mkdir -p reports/2025-10-cli-flags/phase_l/rot_vector && PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --device cpu --dtype float32 --out reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log && python - <<'PY'
-from pathlib import Path
-import numpy as np
-root = Path('reports/2025-10-cli-flags/phase_l')
-log_c = root / 'scaling_audit/c_trace_scaling.log'
-log_py = root / 'rot_vector/trace_py_rot_vector.log'
-
-def grab(path, prefix):
-    real, recip = {}, {}
-    for parts in (line.split() for line in path.read_text().splitlines()):
-        if len(parts) < 5 or parts[0] != f'TRACE_{prefix}:' or not parts[1].startswith('rot_'):
-            continue
-        vec = np.array(list(map(float, parts[2:5])))
-        (recip if '_star_' in parts[1] else real)[parts[1]] = vec
-    return real, recip
-real_c, recip_c = grab(log_c, 'C')
-real_py, recip_py = grab(log_py, 'PY')
-
-def volume(real):
-    return float(np.dot(real['rot_a_angstroms'], np.cross(real['rot_b_angstroms'], real['rot_c_angstroms'])))
-vol_c = volume(real_c)
-vol_py = volume(real_py)
-
-def dot_map(real, recip):
-    out = {}
-    for axis in 'abc':
-        out[axis] = float(np.dot(real[f'rot_{axis}_angstroms'], recip[f'rot_{axis}_star_A_inv']))
-    return out
-dots_c = dot_map(real_c, recip_c)
-dots_py = dot_map(real_py, recip_py)
-rows = ['# Rotation Invariants Probe', '', f'| Metric | C | PyTorch | Δ (Py-C) |', '| --- | --- | --- | --- |', f"| Unit-cell volume (Å^3) | {vol_c:.6f} | {vol_py:.6f} | {vol_py - vol_c:+.6e} |"]
-for axis in 'abc':
-    rows.append(f"| {axis} · {axis}* | {dots_c[axis]:.9f} | {dots_py[axis]:.9f} | {dots_py[axis] - dots_c[axis]:+.3e} |")
-rows.extend(['', 'Source logs:', f'- C trace: {log_c}', f'- PyTorch trace: {log_py}'])
-Path(root / 'rot_vector' / 'invariant_probe.md').write_text('\n'.join(rows) + '\n', encoding='utf-8')
-PY
- && KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics
-If Blocked: If the harness fails or missing TRACE lines, dump stdout/stderr to reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector_raw.txt, note which key is absent, update docs/fix_plan.md Attempt history, and pause for supervisor review.
+- reports/2025-10-vectorization/phase_c/gather_notes.md
+- reports/2025-10-vectorization/phase_c/collect_log.txt
+- reports/2025-10-vectorization/phase_c/test_tricubic_interpolation_enabled.log
+- reports/2025-10-vectorization/phase_c/test_tricubic_out_of_bounds_fallback.log
+- reports/2025-10-vectorization/phase_c/diff_snapshot.json
+- reports/2025-10-vectorization/phase_c/runtime_probe.json
+- reports/2025-10-vectorization/phase_c/gradient_smoke.log
+- reports/2025-10-vectorization/phase_c/cuda_collect_log.txt
+- docs/fix_plan.md Attempt update for VECTOR-TRICUBIC-001
+Do Now: VECTOR-TRICUBIC-001 – Phase C1 batched gather; run pytest --collect-only tests/test_at_str_002.py -q, then env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py::test_tricubic_interpolation_enabled -v
+If Blocked: Record the failing selector output in collect_log.txt + gather_notes.md, capture the offending tensor shapes, and stop before touching Phase C2; flag the blockage at docs/fix_plan.md:1811 with a succinct Attempt entry referencing the artifacts.
 Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md:265 states Phase L3f must supply aligned rot vectors ahead of normalization changes.
-- plans/active/cli-noise-pix0/plan.md:266 requires hypotheses plus confirming probes before simulator edits.
-- docs/fix_plan.md:450-463 pins the φ=0 k_frac drift as the blocker for getting -nonoise/-pix0_vector_mm parity.
-- specs/spec-a-cli.md:1-120 anchor the CUSTOM convention precedence we are auditing.
-- docs/development/c_to_pytorch_config_map.md:36-78 remind us beam/pivot mapping and volume rules must stay in lockstep with C.
+- docs/fix_plan.md:1796-1810 elevates Phase C1 as the next executable task for VECTOR-TRICUBIC-001 and requires artifact links under reports/2025-10-vectorization/phase_c/.
+- plans/active/vectorization.md:1-120 now prescribes gather_notes.md, collect logs, runtime probes, and pytest selectors to unblock implementation—follow it verbatim to avoid plan drift.
+- specs/spec-a-core.md:470-488 mandates that tricubic out-of-range lookups revert to default_F and emit only a single warning; vectorization must retain that contract.
+- docs/development/testing_strategy.md:18-57 reinforces device/dtype discipline and the collect-first test cadence used in this loop, matching the `pytest --collect-only` requirement in Do Now.
+- reports/2025-10-vectorization/phase_a/tricubic_baseline.md documents scalar runtimes; use these numbers as the baseline in gather_notes.md for quick before/after comparisons and to flag regressions.
+- reports/2025-10-vectorization/phase_b/design_notes.md §2 diagrams the `(B,4,4,4)` gather layout—treat this as authoritative for shaping the batched tensor and index order.
+- archive/fix_plan_archive.md:62 shows prior failures when gather fell back to scalar loops; avoid repeating those mistakes by validating masks early and logging results.
+- src/nanobrag_torch/models/crystal.py:272-410 is the implementation surface—keep diffs focused there so review stays surgical and cache invalidation logic remains localised.
+- docs/architecture/pytorch_design.md:5-12 captures the differentiability vs performance balance; vectorization must respect these guardrails.
+- docs/development/pytorch_runtime_checklist.md:12-68 reiterates GPU/CPU parity expectations relevant to the new batched path.
 How-To Map:
-- Refresh `reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md` with the invariant results (volume deltas, dot products) and call out which Phase L3g hypothesis looks most likely.
-- Append docs/fix_plan.md Attempt #88 with the command, key metrics (Δvolume ≈ +3.3e-03 Å^3, dot deltas), and the follow-up probes you select.
-- Cross-check the invariant numbers against `reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md` so the tables tell a consistent story.
-- Keep all new helper snippets under `reports/…/rot_vector/`; do not introduce ad-hoc scripts elsewhere.
+- Step 0: Ensure editable install remains active (`pip install -e .` already done previously) and export `KMP_DUPLICATE_LIB_OK=TRUE` for every PyTorch command.
+- Step 1: `pytest --collect-only tests/test_at_str_002.py -q | tee reports/2025-10-vectorization/phase_c/collect_log.txt` to confirm new tests register; note any warnings in gather_notes.md.
+- Step 2: Snapshot the current scalar gather logic (copy/paste pseudocode) into gather_notes.md for reference before edits.
+- Step 3: Implement the batched `(S,F,4,4,4)` gather using torch indexing/broadcasting per design_notes §2—support arbitrary leading batch dims (oversample, phisteps, mosaic, sources, ROI).
+- Step 4: During implementation, drop temporary assertions comparing scalar vs batched values for a small ROI; log the diff/ratio into diff_snapshot.json (use `torch.max(abs(diff))`).
+- Step 5: Double-check fallback logic (`needs_default_F`) still masks OOB neighborhoods and triggers the `disable_tricubic` flag exactly once.
+- Step 6: After edits, rerun `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py::test_tricubic_interpolation_enabled -v | tee reports/2025-10-vectorization/phase_c/test_tricubic_interpolation_enabled.log`.
+- Step 7: Re-run `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_interpolation.py::test_auto_enable_interpolation -v` to ensure auto-enable heuristics remain intact; append the exit status to gather_notes.md.
+- Step 8: Summarize before/after runtimes, numerical diffs, and warning counts in gather_notes.md; reference any new helper functions introduced.
+- Step 9: Run `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py::test_tricubic_out_of_bounds_fallback -v | tee reports/2025-10-vectorization/phase_c/test_tricubic_out_of_bounds_fallback.log` to demonstrate the single-warning behavior survived vectorization.
+- Step 10: Optionally execute `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --repeats 50 --device cpu --mode compare --outdir reports/2025-10-vectorization/phase_c` if runtime regressions appear; note results in runtime_probe.json.
+- Step 11: Summarize before/after runtimes, numerical diffs, and warning counts in gather_notes.md; reference any new helper functions introduced.
+- Step 12: Update docs/fix_plan.md Attempt history with metrics (max delta, runtime delta, warning count) and cross-link the artifacts created in reports/2025-10-vectorization/phase_c/.
+- Step 13: Stage changes but do not commit; stop for supervisor review once artifacts and Attempt entry are in place.
+- Step 14: Execute `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_gradients.py::TestCrystal::test_tricubic_gradient -v | tee reports/2025-10-vectorization/phase_c/gradient_smoke.log` to confirm autograd remains intact.
+- Step 15: If CUDA is available, repeat Steps 1, 6, 7, 9 on GPU by prefixing commands with `CUDA_VISIBLE_DEVICES=0`; archive the collect output as cuda_collect_log.txt and note any device-specific warnings.
+- Step 16: Document any skipped CUDA runs (with reason) inside gather_notes.md to maintain auditability per testing_strategy.md.
+- Step 17: Capture `git diff --stat` and `pytest --version` outputs at loop end, append both to gather_notes.md for traceability.
+- Step 18: Snapshot modified file list with `git status -sb > reports/2025-10-vectorization/phase_c/status_snapshot.txt` before staging.
+- Step 19: Add a “Next questions” subsection to gather_notes.md enumerating follow-ups for Phase C2/C3 so context is preserved across loops.
 Pitfalls To Avoid:
-- Do not alter production simulator code during this evidence pass.
-- Leave C trace artifacts untouched; only regenerate the PyTorch side.
-- Maintain device/dtype neutrality—no `.cpu()` or `.item()` on tensors in harness updates.
-- Respect Protected Assets: never move/delete files referenced by docs/index.md.
-- Don’t skip the pytest collect check; it’s our guardrail that the selector stays valid.
-- Avoid mixing new logs with existing scaling_audit artifacts; keep outputs in rot_vector/.
-- Document every command verbatim in docs/fix_plan.md to preserve reproducibility.
-- Keep temporary calculations ASCII and inside the reports tree; no root-level clutter.
-- If you touch trace_harness.py, follow docs/debugging/debugging.md trace schema exactly.
+- No `.cpu()`/`.cuda()` shims inside the gather—use `.type_as` or `device = lattice_values.device` patterns when coercion is necessary.
+- Do not mutate cached tensors in-place; create new tensors or clone before modification to preserve autograd and caching semantics.
+- Keep broadcasting explicit; avoid implicit expansion via mismatched shapes that could hide bugs on CUDA.
+- Retain the one-time warning behavior for interpolation disablement; multiple emissions indicate regression.
+- Ensure OOB masking clamps the exact 64 neighbors needed by polin3 and does not request 3×3×3 subsets.
+- Guard against negative indices by clamping before gather; do not rely on PyTorch wraparound semantics.
+- Preserve dtype neutrality—no hard-coded float64 when the caller provides float32; mirror the input tensor dtype everywhere.
+- Do not edit polynomial helpers (`polint`, `polin2`, `polin3`) in this loop; they belong to Phase D and require separate evidence.
+- Avoid adding logging prints in hot paths; use notes in gather_notes.md instead of stdout.
+- Keep new tests lean (<1s) so the suite remains quick for iterative work; rely on existing fixtures.
+- Remember to clear cached tensors or call `invalidate_cache()` if cache keys change; stale caches will hide correctness bugs.
+- Verify gradients still propagate by spot-checking `.requires_grad` on outputs when running the targeted tests; document observations.
+- If CUDA is unavailable, note it explicitly in gather_notes.md; otherwise run tests on both CPU and CUDA before closing the loop.
+- Maintain Protected Assets discipline—do not relocate scripts/benchmarks or reports directories.
+- Capture hash of modified files (`git diff --stat`) in gather_notes.md for future reference.
+- Leave TODOs out of production code; use gather_notes.md for residual questions.
+- Keep default_F pathways untouched; altering initialization risks diverging from spec.
+- Do not downcast to half precision during experiments—stick to float32/float64 until vectorization is validated.
+- Avoid pushing commits mid-loop; supervisor will consolidate once Phase C1 evidence is reviewed.
+- Make sure new tensors inherit `device` and `dtype` from `self.hkl_data` rather than global defaults.
+- Resist adding temporary global flags; confine experimentation to local scope and remove debug hooks before final diff.
+- Confirm that the gathered tensor ordering matches C polin3 expectations (fast axis first); mismatched ordering silently corrupts interpolation.
+- Keep report filenames ASCII; supervisor automation depends on predictable names.
+- Do not touch docs/index.md—Protected Assets rule prohibits accidental edits while focusing on vectorization.
+- Avoid editing unrelated modules; restrict diff to `crystal.py`, tests, and documentation updates linked to plan outputs.
+- Ensure new tensors use `contiguous()` only when necessary; superfluous calls can hurt perf.
+- Remember to un-pin any temporary environment variables (e.g., ROI overrides) before running final tests.
+- Check for accidental `torch.stack([...], dim=-1)` vs `dim=-2` mismatches; highlight chosen order in gather_notes.md.
+- Keep assertions behind `if debug:` style guards temporary; remove them before staging to avoid runtime overhead.
 Pointers:
-- reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md — current C vs Py rotation deltas.
-- reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md — hypotheses for Phase L3g.
-- docs/debugging/debugging.md:34-88 — required TRACE naming/precision rules.
-- plans/active/cli-noise-pix0/plan.md:253-274 — Phase L3 context and exit criteria.
-- docs/architecture/pytorch_design.md:120-188 — rotation/misset data flow that must stay intact.
-Next Up: If invariants confirm the issue lies in real-space reconstruction, prepare a trace patch plan for Crystal.get_real_from_reciprocal before any simulator edits.
+- docs/fix_plan.md:1796-1810
+- plans/active/vectorization.md:1-160
+- specs/spec-a-core.md:470-488
+- docs/development/testing_strategy.md:18-57
+- reports/2025-10-vectorization/phase_b/design_notes.md
+- reports/2025-10-vectorization/phase_a/tricubic_baseline.md
+- scripts/benchmarks/tricubic_baseline.py
+- src/nanobrag_torch/models/crystal.py:272
+- archive/fix_plan_archive.md:62
+- docs/architecture/pytorch_design.md:5
+- docs/development/pytorch_runtime_checklist.md:12
+- reports/2025-10-vectorization/phase_c/ (directory overview)
+- docs/development/testing_strategy.md:90
+- reports/2025-10-vectorization/phase_c/gather_notes.md (living log for this loop)
+- src/nanobrag_torch/models/crystal.py:310 (fallback disablement logic)
+Next Up: Phase C2 – implement and run `tests/test_tricubic_vectorized.py::test_oob_warning_single_fire`, archive the `pytest -k oob_warning -v` log to reports/2025-10-vectorization/phase_c/test_tricubic_vectorized.log, and then progress to C3 device-aware caching notes.

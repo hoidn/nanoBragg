@@ -4,6 +4,7 @@
 - Dependencies: specs/spec-a-core.md §4 (Structure factors), specs/spec-a-parallel.md §2.3 (Interpolation acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4, docs/architecture/c_code_overview.md (tricubic routines), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, `nanoBragg.c` lines 2604–3278 (polin3/polin2/polint + detector absorption), `tests/test_at_str_002.py`, `tests/test_at_abs_001.py`, `reports/benchmarks/20250930-165726-compile-cache/` (current performance references). No dedicated tricubic/absorption microbenchmarks exist yet; Phase A will author reusable harnesses under `scripts/benchmarks/` so future loops can rerun baselines without ad-hoc snippets.
 - Gap Snapshot (2025-11-18): Phase A1–A3 evidence captured under `reports/2025-10-vectorization/phase_a/` (pytest logs plus tricubic/absorption baselines). **Phase B design memo landed in Attempt #3 (`reports/2025-10-vectorization/phase_b/design_notes.md`) covering tensor shapes, polynomial mapping, and gradient/device checklists.** Next blocker is executing Phase C implementation tasks using that design as the contract.
 - Supervisory note (2025-11-18 → refreshed 2025-11-18b): fix_plan#VECTOR-TRICUBIC-001 now pivots to Phase C execution (tasks C1–C3). Keep `KMP_DUPLICATE_LIB_OK=TRUE` exported, reuse the design memo’s Section 2/3 diagrams, and stage changes behind feature-flag-friendly commits to ease review if batching becomes necessary.
+- Gap snapshot refresh (2025-11-20): No code changes have landed since the design memo; Phase C remains unstarted. The updated guidance below locks in artifact destinations (`reports/2025-10-vectorization/phase_c/`) and reproduction commands so Ralph can take the first implementation step without further supervisor clarification.
 
 ### Phase A — Evidence & Baseline Capture
 Goal: Document the current (non-vectorized) behavior, warnings, and performance so we can prove the impact of the refactor.
@@ -31,12 +32,13 @@ Exit Criteria: Design memo (`reports/2025-10-vectorization/phase_b/design_notes.
 Goal: Replace scalar neighbor gathering with fully batched advanced indexing inside `Crystal._tricubic_interpolation` while keeping fallbacks for out-of-range queries.
 Prereqs: Phase B design finalized; create feature branch per SOP if needed.
 Exit Criteria: Vectorized gather merged, unit tests covering neighborhood assembly added, and plan task C1–C3 marked done with artifact references.
+Implementation notes: capture all Phase C artifacts under `reports/2025-10-vectorization/phase_c/` (see table for filenames). Confirm every new test collects via `pytest --collect-only` before running the selector.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Implement batched neighborhood gather | [ ] | Replace Python loops with broadcasting + advanced indexing to build `(S,F,4,4,4)` `sub_Fhkl` tensor; ensure compatibility with arbitrary batch dims (e.g., oversample, mosaic). |
-| C2 | Preserve fallback semantics | [ ] | Maintain existing out-of-bounds detection and warning (single emission); verify fallback path still works by forcing OOB indices in a targeted unit test saved under `tests/test_tricubic_vectorized.py`. |
-| C3 | Add shape assertions & cache hooks | [ ] | Introduce lightweight assertions to catch unexpected shapes; ensure any caching stays device-aware to avoid CPU allocations when running on CUDA. Document in `reports/2025-10-vectorization/phase_c/implementation_notes.md`. |
+| C1 | Implement batched neighborhood gather | [ ] | Replace Python loops with broadcasting + advanced indexing to build `(S,F,4,4,4)` `sub_Fhkl` tensor; validate against scalar path by instrumenting a temporary assertion comparing the first pixel batch. Store rationale + before/after snippets in `phase_c/gather_notes.md`, and run `pytest --collect-only tests/test_at_str_002.py -q` before executing the suite. |
+| C2 | Preserve fallback semantics | [ ] | Maintain existing out-of-bounds detection and warning (single emission); add/extend regression `tests/test_tricubic_vectorized.py::test_oob_warning_single_fire` that forces one OOB lookup and asserts interpolation disables thereafter. Record test logs in `phase_c/test_tricubic_vectorized.log` (`pytest -k oob_warning -v`). |
+| C3 | Add shape assertions & cache hooks | [ ] | Introduce lightweight assertions to catch unexpected shapes; ensure caches remain device-aware (use `.type_as` instead of `.cpu()`). Summarize tensor shapes + cache invalidation rules in `phase_c/implementation_notes.md`, and include `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py::test_tricubic_interpolation_enabled -v` output once assertions are in place. |
 
 ### Phase D — Implementation: Polynomial Evaluation
 Goal: Vectorize `polint`, `polin2`, and `polin3` so they consume batches from Phase C without Python loops.

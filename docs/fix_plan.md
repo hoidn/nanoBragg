@@ -1804,10 +1804,10 @@
   * Optional microbenchmarks (to be created per plan Phase A): `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/sample_tricubic_baseline.py`
   * Shapes/ROI: 256² & 512² detectors for microbench; oversample 1; structure-factor grid enabling tricubic.
 - First Divergence (if known): Current tricubic path drops to nearest-neighbour fallback for batched pixel grids, emitting warnings and forfeiting accuracy/performance; detector absorption still loops over `thicksteps`, preventing full vectorization and creating hotspots in profiler traces (see reports/benchmarks/20250930-165726-compile-cache/analysis.md).
-- Next Actions (2025-11-18b refresh):
- 1. Execute Phase C1 — implement the batched `(B,4,4,4)` neighborhood gather in `Crystal._tricubic_interpolation` per design_notes §2, preserving device/dtype neutrality.
- 2. Execute Phase C2 — revalidate out-of-bounds fallback semantics (single warning, default_F substitution) with a new targeted pytest covering forced OOB queries.
- 3. Execute Phase C3 — add shape assertions/caching notes and log implementation details under `reports/2025-10-vectorization/phase_c/implementation_notes.md`, then prepare feature branch for Phase D polynomial vectorization.
+- Next Actions (2025-11-20 refresh):
+ 1. Execute Phase C1 — implement the batched `(B,4,4,4)` gather per design_notes §2 and capture rationale/validation snippets in `reports/2025-10-vectorization/phase_c/gather_notes.md` before running the updated tests.
+ 2. Execute Phase C2 — add/extend the targeted pytest (`tests/test_tricubic_vectorized.py::test_oob_warning_single_fire`) to confirm the warning fires once and interpolation disables; store the `pytest -k oob_warning -v` log under `phase_c/test_tricubic_vectorized.log`.
+ 3. Execute Phase C3 — add shape assertions + device-aware caching, record findings in `phase_c/implementation_notes.md`, and attach the post-assertion `pytest tests/test_at_str_002.py::test_tricubic_interpolation_enabled -v` output as evidence.
 - Attempts History:
   * [2025-10-06] Attempt #1 (ralph loop) — Result: **Phase A1 COMPLETE** (test collection & execution baseline captured). All tricubic and absorption tests passing.
     Metrics: AT-STR-002: 3/3 tests passed in 2.12s (test_tricubic_interpolation_enabled, test_tricubic_out_of_bounds_fallback, test_auto_enable_interpolation). AT-ABS-001: 5/5 tests passed in 5.88s. Collection: 3 tricubic tests found.

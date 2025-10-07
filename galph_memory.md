@@ -1577,3 +1577,10 @@ Follow-ups for Ralph:
 - Parsed new rot_vector artifacts: real-space vectors drift O(1e-2 Å) while reciprocal vectors align ≈1e-9 Å⁻¹; computed volumes (C 24682.25663 Å³ vs Py 24682.25998 Å³) and dot products (C deviates ≤4.4e-4, Py ≈1.0) to focus on reciprocal→real reconstruction.
 - Directed Ralph to update `analysis.md` plus fix_plan Attempt #88 with invariant metrics and to keep snippets under reports/rot_vector/ before any simulator edits.
 - Next follow-up: after invariants are logged, decide whether Crystal.get_real_from_reciprocal needs instrumentation or spindle-axis normalization fixes before code changes.
+
+## 2025-11-20 (galph loop — Vectorization Phase C kickoff)
+- `git pull --rebase` clean; no new conflicts encountered.
+- Reviewed long-term goals: CLI parity remains in Phase L3f (rotation vectors outstanding), while vectorization backlog stalled at Phase C. Determined VECTOR-TRICUBIC-001 needs refreshed guidance before Ralph can implement C1.
+- Updated `plans/active/vectorization.md` (lines 1-120) with 2025-11-20 gap snapshot plus explicit artifact paths and pytest/benchmark commands for Phase C1–C3. Mirrored instructions in `docs/fix_plan.md:1796-1810` so Next Actions now reference gather_notes.md, diff_snapshot.json, and new test selectors.
+- Authored `input.md` (Perf mode, 101 lines) directing Ralph to tackle Phase C1: collect-only run, implement batched `(S,F,4,4,4)` gather, capture diff/runtime artifacts, rerun targeted tricubic tests (including fallback + gradient smoke), and log results under `reports/2025-10-vectorization/phase_c/` before staging.
+- Follow-up expectations: Ralph executes Do Now, populates gather_notes + Attempt entry, and leaves polynomial work for later phases. Next supervisor loop should verify new artifacts, ensure docs/fix_plan Attempt logged, and then pivot to CLI L3f or Phase C2 depending on progress.
