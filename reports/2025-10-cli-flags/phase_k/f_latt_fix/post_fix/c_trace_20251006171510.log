@@ -1,0 +1,120 @@
+TRACE_C:fdet_after_rotz=0 0 1
+TRACE_C:sdet_after_rotz=0 -1 0
+TRACE_C:odet_after_rotz=1 0 0
+TRACE_C:twotheta_axis=0 0 -1
+TRACE_C:fdet_after_twotheta=0 0 1
+TRACE_C:sdet_after_twotheta=0 -1 0
+TRACE_C:odet_after_twotheta=1 0 0
+TRACE_C:detector_convention=MOSFLM
+TRACE_C:angles_rad=rotx:0 roty:0 rotz:0 twotheta:0
+TRACE_C:beam_center_m=X:2.565e-05 Y:2.565e-05 pixel_mm:0.1
+TRACE_C:initial_fdet=0 0 1
+TRACE_C:initial_sdet=0 -1 0
+TRACE_C:initial_odet=1 0 0
+TRACE_C:Rx=[1 0 0; 0 1 -0; 0 0 1]
+TRACE_C:Ry=[1 0 0; 0 1 0; -0 0 1]
+TRACE_C:Rz=[1 -0 0; 0 1 0; 0 0 1]
+TRACE_C:R_total=[1 0 0; 0 1 0; 0 0 1]
+TRACE_C:fdet_after_rotz=0 0 1
+TRACE_C:sdet_after_rotz=0 -1 0
+TRACE_C:odet_after_rotz=1 0 0
+TRACE_C:twotheta_axis=0 0 -1
+TRACE_C:fdet_after_twotheta=0 0 1
+TRACE_C:sdet_after_twotheta=0 -1 0
+TRACE_C:odet_after_twotheta=1 0 0
+TRACE_C:convention_mapping=Fbeam←Ybeam_mm(+0.5px),Sbeam←Xbeam_mm(+0.5px),beam_vec=[1 0 0]
+TRACE_C:Fbeam_m=0.0257
+TRACE_C:Sbeam_m=0.0257
+TRACE_C:distance_m=0.1
+TRACE_C:term_fast=-0 -0 -0.0257
+TRACE_C:term_slow=-0 0.0257 -0
+TRACE_C:term_beam=0.1 0 0
+TRACE_C:pix0_vector=0.1 0.0257 -0.0257
+TRACE: Computing cross products of reciprocal vectors:
+TRACE:   Input vectors for cross products:
+TRACE:     a_star = [0.01, 0, 0]
+TRACE:     b_star = [-6.12323e-19, 0.01, 0]
+TRACE:     c_star = [-6.12323e-19, -6.12323e-19, 0.01]
+TRACE:   Cross product results:
+TRACE:     a_star x b_star = [0, -0, 0.0001]
+TRACE:     b_star x c_star = [0.0001, 6.12323e-21, 6.12323e-21]
+TRACE:     c_star x a_star = [-0, 0.0001, 6.12323e-21]
+TRACE: Reciprocal cell volume calculation:
+TRACE:   V_star = a_star . (b_star x c_star) = 1e-06
+TRACE: Direct-space cell volume: V_cell = 1/V_star = 1e+06
+TRACE: Before computing real-space vectors:
+TRACE:   b_star_cross_c_star = [0.0001, 6.12323e-21, 6.12323e-21]
+TRACE:   c_star_cross_a_star = [-0, 0.0001, 6.12323e-21]
+TRACE:   a_star_cross_b_star = [0, -0, 0.0001]
+TRACE:   V_cell = 1e+06, V_star = 1e-06
+TRACE: After computing real-space vectors:
+TRACE:   a = [100, 6.12323e-15, 6.12323e-15] |a| = 100
+TRACE:   b = [-0, 100, 6.12323e-15] |b| = 100
+TRACE:   c = [0, -0, 100] |c| = 100
+TRACE: Re-generating reciprocal vectors from real-space vectors:
+TRACE:   Before re-generation: a_star = [0.01, 0, 0] |a_star| = 0.01
+TRACE:   Before re-generation: b_star = [-6.12323e-19, 0.01, 0] |b_star| = 0.01
+TRACE:   Before re-generation: c_star = [-6.12323e-19, -6.12323e-19, 0.01] |c_star| = 0.01
+TRACE:   Cross products: b_cross_c = [10000, 0, 0]
+TRACE:   Cross products: c_cross_a = [-6.12323e-13, 10000, 0]
+TRACE:   Cross products: a_cross_b = [-6.12323e-13, -6.12323e-13, 10000]
+TRACE:   After re-generation: a_star = [0.01, 0, 0] |a_star| = 0.01
+TRACE:   After re-generation: b_star = [-6.12323e-19, 0.01, 0] |b_star| = 0.01
+TRACE:   After re-generation: c_star = [-6.12323e-19, -6.12323e-19, 0.01] |c_star| = 0.01
+TRACE: Converting real-space vectors from Angstroms to meters:
+TRACE:   Before conversion: a = [100, 6.12323e-15, 6.12323e-15] |a| = 100 Angstroms
+TRACE:   Before conversion: b = [-0, 100, 6.12323e-15] |b| = 100 Angstroms
+TRACE:   Before conversion: c = [0, -0, 100] |c| = 100 Angstroms
+TRACE:   After conversion: a = [1e-08, 6.12323e-25, 6.12323e-25] |a| = 1e-08 meters
+TRACE:   After conversion: b = [-0, 1e-08, 6.12323e-25] |b| = 1e-08 meters
+TRACE:   After conversion: c = [0, -0, 1e-08] |c| = 1e-08 meters
+TRACE: Copying vectors to a0, b0, c0 (phi=0 mosaic=0 reference):
+TRACE:   a0 = [1e-08, 6.12323e-25, 6.12323e-25] |a0| = 1e-08 meters
+TRACE:   b0 = [-0, 1e-08, 6.12323e-25] |b0| = 1e-08 meters
+TRACE:   c0 = [0, -0, 1e-08] |c0| = 1e-08 meters
+TRACE: Copying vectors to ap, bp, cp (phi=0 working copy):
+TRACE:   ap = [1e-08, 6.12323e-25, 6.12323e-25] |ap| = 1e-08 meters
+TRACE:   bp = [-0, 1e-08, 6.12323e-25] |bp| = 1e-08 meters
+TRACE:   cp = [0, -0, 1e-08] |cp| = 1e-08 meters
+TRACE_CONFIG: tracing pixel (spixel=236, fpixel=398)
+TRACE_C: pix0_vector_meters 0.1 0.0257 -0.0257
+TRACE_C: fdet_vec 0 0 1
+TRACE_C: sdet_vec 0 -1 0
+TRACE_C: pixel_pos_meters 0.1 0.00205 0.01415
+TRACE_C: R_distance_meters 0.10101695402258
+TRACE_C: omega_pixel_sr 9.70101537500914e-07
+TRACE_C: close_distance_meters 0.1
+TRACE_C: obliquity_factor 0.989932838181277
+TRACE_C: diffracted_vec 0.989932838181277 0.0202936231827162 0.140075496602651
+TRACE_C: incident_vec 1 0 -0
+TRACE_C: lambda_meters 1e-10
+TRACE_C: lambda_angstroms 1
+TRACE_C: scattering_vec_A_inv -100671618.187229 202936231.827162 1400754966.02651
+TRACE_C: rot_a_angstroms 100 6.12323399573677e-15 6.12323399573677e-15
+TRACE_C: rot_b_angstroms -0 100 6.12323399573677e-15
+TRACE_C: rot_c_angstroms 0 -0 100
+TRACE_C: rot_a_star_A_inv 0.01 0 0
+TRACE_C: rot_b_star_A_inv -6.12323399573677e-19 0.01 0
+TRACE_C: rot_c_star_A_inv -6.12323399573677e-19 -6.12323399573677e-19 0.01
+TRACE_C: hkl_frac -1.00671618187229 2.02936231827162 14.0075496602651
+TRACE_C: hkl_rounded -1 2 14
+TRACE_C: F_latt_a -9.92670330969807
+TRACE_C: F_latt_b 8.65322202878548
+TRACE_C: F_latt_c 9.90743530646676
+TRACE_C: F_latt -851.028558466814
+TRACE_C_PHI phi_tic=0 phi_deg=0 k_frac=2.02936231827162 F_latt_b=8.65322202878548 F_latt=-851.028558466814
+TRACE_C: F_cell 197.64
+TRACE_C: I_before_scaling 28290326444.3413
+TRACE_C: r_e_meters 2.81794117756025e-15
+TRACE_C: r_e_sqr 7.94079248018965e-30
+TRACE_C: fluence_photons_per_m2 1.25932015286227e+29
+TRACE_C: steps 1
+TRACE_C: oversample_thick 0
+TRACE_C: oversample_polar 0
+TRACE_C: oversample_omega 0
+TRACE_C: capture_fraction 1
+TRACE_C: polar 0.989983512054819
+TRACE_C: omega_pixel 9.70101537500914e-07
+TRACE_C: cos_2theta 0.989932838181277
+TRACE_C: I_pixel_final 27169.5917850245
+TRACE_C: floatimage_accumulated 27169.591796875

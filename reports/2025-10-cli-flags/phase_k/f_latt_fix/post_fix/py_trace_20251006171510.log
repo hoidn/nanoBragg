@@ -1,0 +1,17 @@
+=== CRYSTAL LATTICE COMPUTATION ===
+TRACE_PY: Initial reciprocal vectors (Å^-1):
+TRACE_PY:   a_star = [0.01, 0, 0]
+TRACE_PY:   b_star = [-6.12323399573677e-19, 0.01, 0]
+TRACE_PY:   c_star = [-6.12323399573677e-19, -6.12323399573677e-19, 0.01]
+TRACE_PY: V_star = 1e-06 Å^-3
+TRACE_PY: V_cell = 1000000 Å^3
+TRACE_PY: Real-space vectors (Å):
+TRACE_PY:   a = [100, 6.12323399573677e-15, 6.12323399573677e-15] |a| = 100
+TRACE_PY:   b = [-0, 100, 6.12323399573677e-15] |b| = 100
+TRACE_PY:   c = [0, -0, 100] |c| = 100
+TRACE_PY: Real-space vectors (meters):
+TRACE_PY:   a_m = [1e-08, 6.12323399573677e-25, 6.12323399573677e-25] |a_m| = 1e-08
+TRACE_PY:   b_m = [-0, 1e-08, 6.12323399573677e-25] |b_m| = 1e-08
+TRACE_PY:   c_m = [0, -0, 1e-08] |c_m| = 1e-08
+
+=== DETECTOR GEOMETRY ===

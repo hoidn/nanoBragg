@@ -176,15 +176,17 @@ class TestFlattSquareMatchesC:
             c_out = tmpdir / 'c_image.bin'
             py_out = tmpdir / 'py_image.bin'
 
-            # Run C
-            c_cmd = [c_bin] + common_args + ['-floatfile', str(c_out)]
-            result_c = subprocess.run(c_cmd, capture_output=True, text=True)
+            # Run C (in tmpdir to avoid Fdump.bin contamination)
+            # Convert c_bin to absolute path before changing directory
+            c_bin_abs = str(Path(c_bin).resolve())
+            c_cmd = [c_bin_abs] + common_args + ['-floatfile', str(c_out)]
+            result_c = subprocess.run(c_cmd, capture_output=True, text=True, cwd=tmpdir)
             if result_c.returncode != 0:
                 pytest.fail(f"C simulation failed:\n{result_c.stderr}")
 
-            # Run PyTorch
+            # Run PyTorch (in tmpdir to avoid Fdump.bin contamination)
             py_cmd = py_cli.split() + common_args + ['-floatfile', str(py_out)]
-            result_py = subprocess.run(py_cmd, capture_output=True, text=True)
+            result_py = subprocess.run(py_cmd, capture_output=True, text=True, cwd=tmpdir)
             if result_py.returncode != 0:
                 pytest.fail(f"PyTorch simulation failed:\n{result_py.stderr}")
 
