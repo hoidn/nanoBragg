@@ -1377,3 +1377,11 @@ Follow-ups for Ralph:
 - Coin flip: heads → Reviewed Ralph’s last loops (`85f7606`, `4e73062`). Work is on track: evidence-only commits built `compare_structure_factors.py` and `analyze_fdump_layout.py`, no regressions spotted, attempt logs thorough.
 - Plan updates: Marked Phase L1b as complete in `plans/active/cli-noise-pix0/plan.md`, refreshed docs/fix_plan.md next-actions to call out padded layout fix, and emitted new input.md (Do Now = Phase L1c parity implementation + regression test).
 - Follow-up for Ralph: Implement Phase L1c per new input.md — add roundtrip pytest, adjust HKL IO to mirror padded layout, regenerate parity artefacts, and update fix_plan/plan tables. Proceed to L1d once parity metrics hit ≤1e-6.
+
+## 2025-11-09 (galph loop — L1d parity rerun prep)
+- `timeout 30 git pull --rebase` clean; re-read docs/index.md, specs/spec-a-cli.md, arch.md, c_to_pytorch_config_map, debugging SOP, testing_strategy, docs/fix_plan.md, and plans/active/cli-noise-pix0.md/vectorization.md for continuity.
+- Coin flip = heads: reviewed Ralph’s latest work (`4e73062`, `572217b`) — HKL layout analysis + padding fix landed with good regression coverage; no regressions spotted.
+- Updated `plans/active/cli-noise-pix0/plan.md` Phase L snapshot (L1c → [D], new note on Attempt #53) and synced `docs/fix_plan.md` Next Actions to show L1c completion; left L1d as the active blocker.
+- Authored new `input.md` (Mode=Parity) directing Ralph to regenerate the C Fdump cache and rerun `scripts/validation/compare_structure_factors.py` for Phase L1d, storing outputs under `reports/2025-10-cli-flags/phase_l/hkl_parity/`.
+- Hypotheses refined: (1) With padding fix, expect HKL parity to hit max |ΔF| ≤ 1e-6 once rerun; (2) if Δk≈6 persists afterward, capture fresh per-φ traces (Plan K3f/K3g) to isolate reciprocal-vector drift; (3) remaining intensity gap likely tied to sincg normalization order pending new evidence.
+- Follow-up for Ralph: Execute L1d per memo, update docs/fix_plan Attempts with metrics, and prep Phase L2 scaling diagnostics if parity clears.
