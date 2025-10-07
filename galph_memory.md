@@ -1648,3 +1648,10 @@ Follow-ups for Ralph:
 - Investigated Phase L3k VG-1 failure: PyTorch `rot_b` at φ=0 equals 0.7173 Å, but C trace plateau lists 0.6716 Å. Confirmed via `Crystal.get_rotated_real_vectors` that φ=9 (0.09°) reproduces the 0.6716 Å value, implying the current pytest harness is misaligned with the supervisor spindle axis / φ indexing.
 - Found `tests/test_cli_scaling_phi0.py:87` still initializes `spindle_axis=[0.0, 1.0, 0.0]`, diverging from the supervisor command (`-spindle_axis -1 0 0`). Logged this mismatch as the leading hypothesis for VG-1 drift.
 - Refreshed `input.md` (Parity mode) directing Ralph to realign the φ=0 test with spindle_axis = (-1,0,0), rerun the targeted pytest selector, and capture new per-φ artifacts under `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/` before touching nb-compare again.
+
+## 2025-11-21 (galph loop — Vectorization Phase C3 prep)
+- Reviewed `plans/active/vectorization.md` and `reports/2025-10-vectorization/phase_c/` artifacts; confirmed C1/C2 are complete and only C3 remains before polynomial work.
+- Updated plan snapshot and added a Phase C3 verification checklist (assertions, cache audit, targeted pytest logs) so evidence expectations are explicit.
+- Synced `docs/fix_plan.md` Next Actions with the new checklist, dropping the stale C2 reminder and focusing on C3 deliverables + Attempt logging.
+- Rewrote `input.md` (Perf mode) steering Ralph to implement the C3 updates, run the two targeted selectors, update implementation notes, and flip checklist items before moving to Phase D.
+- Expect Ralph to land Phase C3 code/tests, capture logs under `reports/2025-10-vectorization/phase_c/`, and append a new Attempt entry prior to starting D1 polynomial vectorization.

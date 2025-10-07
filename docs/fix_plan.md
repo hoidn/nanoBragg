@@ -1994,9 +1994,9 @@
   * Shapes/ROI: 256² & 512² detectors for microbench; oversample 1; structure-factor grid enabling tricubic.
 - First Divergence (if known): Current tricubic path drops to nearest-neighbour fallback for batched pixel grids, emitting warnings and forfeiting accuracy/performance; detector absorption still loops over `thicksteps`, preventing full vectorization and creating hotspots in profiler traces (see reports/benchmarks/20250930-165726-compile-cache/analysis.md).
 - Next Actions (2025-11-21 refresh):
- 1. Phase C2 — add/extend the targeted pytest (`tests/test_tricubic_vectorized.py::test_oob_warning_single_fire`) to confirm the warning fires once and interpolation disables; store the `pytest -k oob_warning -v` log under `reports/2025-10-vectorization/phase_c/test_tricubic_vectorized.log`.
- 2. Phase C3 — add shape assertions + device-aware caching, record findings in `phase_c/implementation_notes.md`, and attach the post-assertion `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py::test_tricubic_interpolation_enabled -v` output as evidence.
- 3. Phase C close-out — after C2/C3 artifacts land, update this plan and the fix_plan attempts with the new evidence before scheduling Phase D polynomial vectorization.
+ 1. Phase C3 — implement the shape assertions + device-aware caching updates (see plan checklist C3.1/C3.2), recording line references in `reports/2025-10-vectorization/phase_c/implementation_notes.md`.
+ 2. Phase C3 evidence — capture targeted pytest logs (`env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -k "gather" -v` and `pytest tests/test_at_str_002.py::test_tricubic_interpolation_enabled -v`) under `reports/2025-10-vectorization/phase_c/`, then flip checklist items C3.1–C3.3 to ✅.
+ 3. Phase C close-out — once C3 artifacts land, update this entry with Attempt # (include assertion/caching diff + log hashes) and coordinate Phase D kickoff via plan + input.md.
 - Attempts History:
   * [2025-10-06] Attempt #1 (ralph loop) — Result: **Phase A1 COMPLETE** (test collection & execution baseline captured). All tricubic and absorption tests passing.
     Metrics: AT-STR-002: 3/3 tests passed in 2.12s (test_tricubic_interpolation_enabled, test_tricubic_out_of_bounds_fallback, test_auto_enable_interpolation). AT-ABS-001: 5/5 tests passed in 5.88s. Collection: 3 tricubic tests found.
