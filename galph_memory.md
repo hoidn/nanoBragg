@@ -1571,3 +1571,9 @@ Follow-ups for Ralph:
 - Input.md now directs Ralph to capture rotation vectors via trace_harness, build `rot_vector_comparison.md`, and log hypotheses before touching simulator code.
 - Key observation logged: PyTorch rot_b at phi=0 uses k_frac ≈ -0.589 vs C -0.607, flipping F_latt_b sign; rotation-vector audit required before normalization changes.
 
+
+## 2025-11-19 (galph loop — CLI L3g invariants setup)
+- Refreshed input.md (Parity) to drive Phase L3g evidence: rerun φ=0 harness, generate `rot_vector/invariant_probe.md`, and capture pytest collect.
+- Parsed new rot_vector artifacts: real-space vectors drift O(1e-2 Å) while reciprocal vectors align ≈1e-9 Å⁻¹; computed volumes (C 24682.25663 Å³ vs Py 24682.25998 Å³) and dot products (C deviates ≤4.4e-4, Py ≈1.0) to focus on reciprocal→real reconstruction.
+- Directed Ralph to update `analysis.md` plus fix_plan Attempt #88 with invariant metrics and to keep snippets under reports/rot_vector/ before any simulator edits.
+- Next follow-up: after invariants are logged, decide whether Crystal.get_real_from_reciprocal needs instrumentation or spindle-axis normalization fixes before code changes.

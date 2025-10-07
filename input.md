@@ -1,4 +1,4 @@
-Summary: Capture φ=0 rotation vectors and frame hypotheses for the residual k_frac drift before touching simulator code.
+Summary: Quantify the φ=0 rotation invariants so we can nail the real-space drift before touching simulator code.
 Mode: Parity
 Focus: CLI-FLAGS-003 – Handle -nonoise and -pix0_vector_mm
 Branch: feature/spec-based-2
@@ -6,66 +6,71 @@ Mapped tests: [tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_m
 Artifacts:
 - reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log
 - reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md
+- reports/2025-10-cli-flags/phase_l/rot_vector/invariant_probe.md
 - reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md
-Do Now: CLI-FLAGS-003 — mkdir -p reports/2025-10-cli-flags/phase_l/rot_vector && PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --device cpu --dtype float32 --out reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log && KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics
-If Blocked: Capture harness stdout/stderr to reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector_raw.txt, note missing TRACE_PY rot lines plus commands in docs/fix_plan.md Attempt history, and halt for supervisor review.
-Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md:264-267 elevates Phase L3f/L3g as the current blockers before touching normalization code.
-- docs/fix_plan.md:450-463 lists the rotation-vector audit and hypothesis framing as the top next actions for CLI-FLAGS-003.
-- reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log anchors the C-side rot vectors that must be matched.
-- reports/2025-10-cli-flags/phase_l/per_phi/trace_py_scaling_20251119_per_phi.json shows φ sweep data confirming convergence after the initial step—use it as context when analysing the φ=0 drift.
-- specs/spec-a-cli.md §3 and docs/development/c_to_pytorch_config_map.md outline the normative rotation/pivot rules the audit must respect.
-How-To Map:
-- Ensure env vars: `export PYTHONPATH=src` and `export KMP_DUPLICATE_LIB_OK=TRUE` before running tooling.
-- Harness capture: `PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --device cpu --dtype float32 --out reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log` (creates new main + per-φ traces alongside env metadata).
-- Build comparison table: `python - <<'PY'
+Do Now: CLI-FLAGS-003 — mkdir -p reports/2025-10-cli-flags/phase_l/rot_vector && PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --device cpu --dtype float32 --out reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log && python - <<'PY'
 from pathlib import Path
-import re
+import numpy as np
 root = Path('reports/2025-10-cli-flags/phase_l')
-py_lines = Path(root, 'rot_vector/trace_py_rot_vector.log').read_text().splitlines()
-c_lines = Path(root, 'scaling_audit/c_trace_scaling.log').read_text().splitlines()
-pattern = re.compile(r'TRACE_(?P<src>C|PY): (?P<key>rot_[abc](?:_star)?_angstroms|rot_[abc]_star_A_inv) (?P<x>-?\S+) (?P<y>-?\S+) (?P<z>-?\S+)')
-def extract(lines, prefix):
+log_c = root / 'scaling_audit/c_trace_scaling.log'
+log_py = root / 'rot_vector/trace_py_rot_vector.log'
+
+def grab(path, prefix):
+    real, recip = {}, {}
+    for parts in (line.split() for line in path.read_text().splitlines()):
+        if len(parts) < 5 or parts[0] != f'TRACE_{prefix}:' or not parts[1].startswith('rot_'):
+            continue
+        vec = np.array(list(map(float, parts[2:5])))
+        (recip if '_star_' in parts[1] else real)[parts[1]] = vec
+    return real, recip
+real_c, recip_c = grab(log_c, 'C')
+real_py, recip_py = grab(log_py, 'PY')
+
+def volume(real):
+    return float(np.dot(real['rot_a_angstroms'], np.cross(real['rot_b_angstroms'], real['rot_c_angstroms'])))
+vol_c = volume(real_c)
+vol_py = volume(real_py)
+
+def dot_map(real, recip):
     out = {}
-    for line in lines:
-        m = pattern.match(line)
-        if m and m.group('src') == prefix:
-            out[m.group('key')] = [float(m.group('x')), float(m.group('y')), float(m.group('z'))]
+    for axis in 'abc':
+        out[axis] = float(np.dot(real[f'rot_{axis}_angstroms'], recip[f'rot_{axis}_star_A_inv']))
     return out
-py = extract(py_lines, 'PY')
-c = extract(c_lines, 'C')
-rows = [
-    ('rot_a_angstroms', 'Angstrom'),
-    ('rot_b_angstroms', 'Angstrom'),
-    ('rot_c_angstroms', 'Angstrom'),
-    ('rot_a_star_A_inv', 'Angstrom^-1'),
-    ('rot_b_star_A_inv', 'Angstrom^-1'),
-    ('rot_c_star_A_inv', 'Angstrom^-1')
-]
-lines = ['| Vector | Units | C | PyTorch | Δ (Py-C) |', '| --- | --- | --- | --- | --- |']
-for key, units in rows:
-    cx, cy, cz = c.get(key, (float('nan'),)*3)
-    px, pyv, pz = py.get(key, (float('nan'),)*3)
-    dx, dy, dz = (px-cx, pyv-cy, pz-cz)
-    lines.append(f"| {key} | {units} | ({cx:.9f}, {cy:.9f}, {cz:.9f}) | ({px:.9f}, {pyv:.9f}, {pz:.9f}) | ({dx:.3e}, {dy:.3e}, {dz:.3e}) |")
-Path(root, 'rot_vector/rot_vector_comparison.md').write_text('\n'.join(lines) + '\n')
-PY`
-- Hypothesis log: Summarize takeaways (δrot components, suspected causes, follow-up probes) in `reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md`.
-- Record findings + commands in docs/fix_plan.md Attempts once artifacts exist.
+dots_c = dot_map(real_c, recip_c)
+dots_py = dot_map(real_py, recip_py)
+rows = ['# Rotation Invariants Probe', '', f'| Metric | C | PyTorch | Δ (Py-C) |', '| --- | --- | --- | --- |', f"| Unit-cell volume (Å^3) | {vol_c:.6f} | {vol_py:.6f} | {vol_py - vol_c:+.6e} |"]
+for axis in 'abc':
+    rows.append(f"| {axis} · {axis}* | {dots_c[axis]:.9f} | {dots_py[axis]:.9f} | {dots_py[axis] - dots_c[axis]:+.3e} |")
+rows.extend(['', 'Source logs:', f'- C trace: {log_c}', f'- PyTorch trace: {log_py}'])
+Path(root / 'rot_vector' / 'invariant_probe.md').write_text('\n'.join(rows) + '\n', encoding='utf-8')
+PY
+ && KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics
+If Blocked: If the harness fails or missing TRACE lines, dump stdout/stderr to reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector_raw.txt, note which key is absent, update docs/fix_plan.md Attempt history, and pause for supervisor review.
+Priorities & Rationale:
+- plans/active/cli-noise-pix0/plan.md:265 states Phase L3f must supply aligned rot vectors ahead of normalization changes.
+- plans/active/cli-noise-pix0/plan.md:266 requires hypotheses plus confirming probes before simulator edits.
+- docs/fix_plan.md:450-463 pins the φ=0 k_frac drift as the blocker for getting -nonoise/-pix0_vector_mm parity.
+- specs/spec-a-cli.md:1-120 anchor the CUSTOM convention precedence we are auditing.
+- docs/development/c_to_pytorch_config_map.md:36-78 remind us beam/pivot mapping and volume rules must stay in lockstep with C.
+How-To Map:
+- Refresh `reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md` with the invariant results (volume deltas, dot products) and call out which Phase L3g hypothesis looks most likely.
+- Append docs/fix_plan.md Attempt #88 with the command, key metrics (Δvolume ≈ +3.3e-03 Å^3, dot deltas), and the follow-up probes you select.
+- Cross-check the invariant numbers against `reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md` so the tables tell a consistent story.
+- Keep all new helper snippets under `reports/…/rot_vector/`; do not introduce ad-hoc scripts elsewhere.
 Pitfalls To Avoid:
-- Do not edit production simulator code during this evidence pass.
-- Keep harness commands on CPU/float32 unless explicitly testing GPU; avoid accidental dtype/device drift.
-- Preserve existing trace artifacts—write new outputs under `rot_vector/` rather than overwriting `scaling_audit/` logs.
-- Respect Protected Assets rule: never move/delete files listed in docs/index.md.
-- Maintain vectorization guardrails—no new Python loops or `.item()` usage in production paths if later edits are required.
-- Capture commands verbatim in Attempts history; no paraphrasing.
-- Ensure all temporary scripts/snippets are stored under `reports/…/` (not at repo root) and kept ASCII.
-- Run `pytest --collect-only` before leaving the loop to confirm the selector remains valid.
-- Avoid committing artifacts until supervisor review; keep git status clean apart from expected report/doc updates.
-- Follow trace schema from docs/debugging/debugging.md when adding new trace lines.
+- Do not alter production simulator code during this evidence pass.
+- Leave C trace artifacts untouched; only regenerate the PyTorch side.
+- Maintain device/dtype neutrality—no `.cpu()` or `.item()` on tensors in harness updates.
+- Respect Protected Assets: never move/delete files referenced by docs/index.md.
+- Don’t skip the pytest collect check; it’s our guardrail that the selector stays valid.
+- Avoid mixing new logs with existing scaling_audit artifacts; keep outputs in rot_vector/.
+- Document every command verbatim in docs/fix_plan.md to preserve reproducibility.
+- Keep temporary calculations ASCII and inside the reports tree; no root-level clutter.
+- If you touch trace_harness.py, follow docs/debugging/debugging.md trace schema exactly.
 Pointers:
-- plans/active/cli-noise-pix0/plan.md:264-267 — Phase L3f/L3g task definitions and success criteria.
-- docs/fix_plan.md:450-463 — CLI-FLAGS-003 next actions and evidence expectations.
-- reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log — C reference rot vectors & lattice factors.
-- reports/2025-10-cli-flags/phase_l/per_phi/trace_py_scaling_20251119_per_phi.json — PyTorch per-φ reference for context.
-Next Up: 1) If rotation vectors align, draft `rot_vector/analysis.md` conclusions and update docs/fix_plan.md; 2) Prepare code-edit plan for the identified rotation discrepancy (Phase L3g follow-up).
+- reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md — current C vs Py rotation deltas.
+- reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md — hypotheses for Phase L3g.
+- docs/debugging/debugging.md:34-88 — required TRACE naming/precision rules.
+- plans/active/cli-noise-pix0/plan.md:253-274 — Phase L3 context and exit criteria.
+- docs/architecture/pytorch_design.md:120-188 — rotation/misset data flow that must stay intact.
+Next Up: If invariants confirm the issue lies in real-space reconstruction, prepare a trace patch plan for Crystal.get_real_from_reciprocal before any simulator edits.
