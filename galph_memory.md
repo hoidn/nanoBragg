@@ -1721,3 +1721,8 @@ Follow-ups for Ralph:
 - Refreshed `docs/fix_plan.md` Next Actions (line 460+) and logged Attempt #114 noting reopened status, required memo, and artifact issues (duplicate per_phi/reports path).
 - Issued new 110-line `input.md` (Docs mode) directing Ralph to regenerate per-φ traces with ≤1e-6 tolerances, document spec-vs-parity strategy, and log evidence (TRACE_TAG workflow, memo, tests).
 - No code changes made; focus was planning/docs alignment ahead of the next engineering loop.
+
+## 2025-11-27 (galph loop — φ=0 spec audit)
+- Confirmed spec mandate (`specs/spec-a-core.md:211`) requires fresh φ rotations each step; C-PARITY-001 documents nanoBragg.c’s stale-vector carryover (`docs/bugs/verified_c_bugs.md:166`).
+- PyTorch currently mirrors the bug via `_phi_last_cache` in `src/nanobrag_torch/models/crystal.py:1115-1198`; this contradicts the spec and the long-term goal to eliminate the carryover.
+- CLI plan still instructs emulating the bug (L3k.3c.3). Issued new input.md directing Ralph to refresh `diagnosis.md` (L3k.3c.4) with spec-vs-parity guidance, log an Attempt, and run collect-only pytest. Expect next loop to revise the plan and design a spec-compliant default plus optional parity shim.
