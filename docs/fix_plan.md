@@ -500,6 +500,25 @@
       - Crystal geometry regression suite: 49/49 passed (test_crystal_geometry.py + test_at_geo*.py)
     Observations/Hypotheses: Cache now respects device/dtype neutrality. Gradient flow preserved (torch.tensor() warning eliminated). The k_frac test failure is NOT a regression—it's the physics bug that Phase L3k.3c.3 is meant to expose and Phase L3k.3d will fix. VG-1 gate remains red until the rotation-vector initialization issue is resolved.
     Next Actions: Proceed to Phase L3k.3d (fix underlying φ rotation physics) and rerun VG-1 to achieve Δk ≤ 1e-6.
+  * [2025-10-07] Attempt #114 (ralph loop i=114, Mode: Docs) — Result: **DOCUMENTATION COMPLETE** (Phase L3k.3c.4 spec-vs-parity analysis memo). **No code changes.**
+    Metrics: Documentation-only loop (no tests executed beyond collect-only). Test collection: 2 tests collected successfully (tests/test_cli_scaling_phi0.py).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md:116-353` — Complete Phase L3k.3c.4 section with 6 subsections: (1) Normative spec behavior (specs/spec-a-core.md:211 quote), (2) C-PARITY-001 evidence (docs/bugs/verified_c_bugs.md:166), (3) Current PyTorch behavior (crystal.py:1115 cache mechanism), (4) Compatibility plan (spec-compliant default vs optional C-parity shim), (5) Verification checklist (5 VG gates + 4 documentation gates), (6) References & next actions
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/collect_only_20251007.log` — pytest collect-only output (2 tests: test_rot_b_matches_c, test_k_frac_phi0_matches_c)
+      - `docs/fix_plan.md` (this file) — Attempt #114 entry added with artifacts and observations
+    Observations/Hypotheses:
+      - **Spec mandate clarified**: specs/spec-a-core.md:211 requires fresh rotations each step ("rotate the reference cell (a0,b0,c0) about u by φ"), no carryover semantics
+      - **C bug quarantined**: docs/bugs/verified_c_bugs.md §C-PARITY-001 documents the `if(phi!=0.0)` guard causing stale-vector carryover; this is a known deviation from spec
+      - **Current implementation status**: PyTorch emulates C-parity via `_phi_last_cache`; device/dtype issues resolved in Attempt #113; gradient flow preserved
+      - **Recommended path forward**: Keep current C-parity implementation to complete CLI-FLAGS-003 validation; post-cleanup, introduce `--c-parity-mode` flag and default to spec-compliant behavior
+      - **VG gates unchanged**: Phase L3k.3c.4 is pure documentation; VG-1 through VG-5 remain pending implementation completion
+      - Mode: Docs → deferred implementation work to next code-focused loop per input.md guidance (lines 2, 21)
+    First Divergence: N/A (documentation loop — no new parity data generated)
+    Next Actions:
+      1. Supervisor review (galph loop): Decide on threshold adjustment (relax VG-1 to Δk≤5e-5) vs strict parity shim requirement
+      2. If threshold adjustment approved: Update fix_checklist.md VG-1 gate, document rationale, mark L3k.3c.4 complete in plan
+      3. If strict parity required: Queue Phase L3k.3d implementation loop to address remaining k_frac test failure
+      4. After L3k.3c gates resolved: Execute Phase L3k.4 (documentation/checklist closure) and Phase L4 (supervisor command parity rerun)
   * [2025-11-21] Attempt #97 (ralph loop i=97) — Result: **SUCCESS** (Phase L3k.2 implementation COMPLETE). **φ rotation fix applied: removed independent reciprocal vector rotation, added reciprocal recomputation from rotated real vectors per CLAUDE Rule #13.**
     Metrics: Targeted tests pass (test_f_latt_square_matches_c PASSED, 57/57 crystal/geometry tests PASSED); test collection succeeds (653 tests); Python syntax valid.
     Artifacts:
