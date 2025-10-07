@@ -1623,3 +1623,9 @@ Follow-ups for Ralph:
 - Updated `docs/fix_plan.md:450-463` (Attempt #95) so Next Actions now target L3k.1–L3k.4 and the new checklist-driven workflow.
 - Replaced `input.md` (Docs mode, 100 lines) to steer Ralph toward executing Phase L3k, running pytest/nb-compare with the canonical command, and documenting VG-1⇢VG-5 artifacts.
 - Expect Ralph to draft the implementation memo, add the docstring reference, implement the φ rotation patch, drive `fix_checklist.md` to ✅, and log Attempt #96 before attempting Phase L4 parity.
+## 2025-11-21 (galph loop — CLI-FLAGS L3k triage)
+- Reviewed Phase L3k memo + recent traces; PyTorch still rotates reciprocal vectors during φ, yielding k_frac drift (≈−0.59 vs C −0.607) and F_latt sign flip (+1.35 vs −2.38) in `trace_py_scaling_20251117.log`. Root cause remains mismatched φ rotation pipeline.
+- Identified secondary nuisance: per-φ harness already built; thresholds summarized (k_frac Δ≤1e-6, F_latt sign match, b_Y Δ≤1e-6) for VG-1; instrumentation command retained.
+- Selected Debug/Parity focus on CLI-FLAGS-003; next confirm step is to implement Phase L3k reciprocal recompute, then re-run per-φ traces, targeted pytest lattice selector, and ROI nb-compare per checklist.
+- Authored `input.md` (Parity) directing Ralph to add the nanoBragg.c docstring, rotate only real vectors, recompute reciprocals, run harness + pytest + nb-compare, update fix_checklist + fix_plan, and archive old traces. Artifacts to land under `reports/2025-10-cli-flags/phase_l/rot_vector/` subfolders.
+- No new plans required; vectorization plan already current (Phase C2/C3). Await Phase L3k evidence before scheduling Phase L4 rerun.
