@@ -1,0 +1,6 @@
+tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics[dtype0-cpu]
+tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics[dtype0-cuda]
+tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics[dtype1-cpu]
+tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics[dtype1-cuda]
+
+4 tests collected in 2.14s
