@@ -409,6 +409,23 @@ class Crystal:
             k_indices = k_grid_coords.to(dtype=self.dtype)
             l_indices = l_grid_coords.to(dtype=self.dtype)
 
+        # Phase C3: Shape assertions to prevent silent regressions
+        # Verify neighborhood tensor has correct shape for polynomial evaluation
+        assert sub_Fhkl.shape == (B, 4, 4, 4), \
+            f"Neighborhood shape mismatch: expected ({B}, 4, 4, 4), got {sub_Fhkl.shape}"
+
+        # Verify coordinate arrays have correct shape
+        assert h_indices.shape == (B, 4), f"h_indices shape mismatch: expected ({B}, 4), got {h_indices.shape}"
+        assert k_indices.shape == (B, 4), f"k_indices shape mismatch: expected ({B}, 4), got {k_indices.shape}"
+        assert l_indices.shape == (B, 4), f"l_indices shape mismatch: expected ({B}, 4), got {l_indices.shape}"
+
+        # Phase C3: Device/dtype consistency check
+        # Ensure all tensors are on the same device as the input query tensors
+        assert sub_Fhkl.device == h.device, \
+            f"Device mismatch: sub_Fhkl on {sub_Fhkl.device}, input on {h.device}"
+        assert h_indices.device == h.device, \
+            f"Device mismatch: h_indices on {h_indices.device}, input on {h.device}"
+
         # Perform tricubic interpolation
         # Phase C1 deliverable: batched gather complete
         # Phase D (polynomial vectorization) will consume these (B,4,4,4) neighborhoods
@@ -417,7 +434,19 @@ class Crystal:
             # Scalar case: use existing polin3 (squeeze to remove batch dim)
             F_cell = polin3(h_indices.squeeze(0), k_indices.squeeze(0), l_indices.squeeze(0),
                             sub_Fhkl.squeeze(0), h_flat.squeeze(0), k_flat.squeeze(0), l_flat.squeeze(0))
-            return F_cell.reshape(original_shape)
+
+            # Phase C3: Output shape assertion (scalar path)
+            # polin3 may return scalar [] or [1], both are acceptable for single-element batch
+            assert F_cell.numel() == 1, \
+                f"Scalar interpolation output must have 1 element, got {F_cell.numel()} (shape {F_cell.shape})"
+
+            result = F_cell.reshape(original_shape)
+
+            # Phase C3: Verify final output shape matches original input shape
+            assert result.shape == original_shape, \
+                f"Output shape mismatch: expected {original_shape}, got {result.shape}"
+
+            return result
         else:
             # Batched case: Phase D will vectorize polin3; for now fall back to nearest-neighbor
             # This preserves existing behavior while delivering Phase C1 (batched gather infrastructure)
@@ -426,7 +455,14 @@ class Crystal:
                 print("WARNING: polynomial evaluation not yet vectorized; falling back to nearest-neighbor")
                 print("WARNING: this warning will only be shown once")
                 self._interpolation_warning_shown = True
-            return self._nearest_neighbor_lookup(h, k, l)
+
+            result = self._nearest_neighbor_lookup(h, k, l)
+
+            # Phase C3: Verify fallback output shape matches original input shape
+            assert result.shape == original_shape, \
+                f"Fallback output shape mismatch: expected {original_shape}, got {result.shape}"
+
+            return result
 
 
     def compute_cell_tensors(self) -> dict:

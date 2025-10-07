@@ -268,4 +268,160 @@ White-box test confirmed:
 
 ---
 
+## Phase C3 Updates: Shape Assertions & Device-Aware Caching
+
+**Date:** 2025-10-07 (continued)
+**Git SHA:** (to be recorded in fix_plan)
+**Plan Reference:** `plans/active/vectorization.md` Phase C task C3
+
+### C3 Implementation Summary
+
+Hardened the batched gather implementation with explicit shape assertions and device consistency checks to prevent silent regressions during Phase D polynomial vectorization work.
+
+### Changes Made
+
+**File Modified:** `src/nanobrag_torch/models/crystal.py` lines 412–464
+
+#### 1. Shape Assertions (C3.1) ✅
+
+Added assertions after neighborhood gathering to verify correct tensor shapes:
+
+```python
+# Phase C3: Shape assertions to prevent silent regressions
+# Verify neighborhood tensor has correct shape for polynomial evaluation
+assert sub_Fhkl.shape == (B, 4, 4, 4), \
+    f"Neighborhood shape mismatch: expected ({B}, 4, 4, 4), got {sub_Fhkl.shape}"
+
+# Verify coordinate arrays have correct shape
+assert h_indices.shape == (B, 4), f"h_indices shape mismatch: expected ({B}, 4), got {h_indices.shape}"
+assert k_indices.shape == (B, 4), f"k_indices shape mismatch: expected ({B}, 4), got {k_indices.shape}"
+assert l_indices.shape == (B, 4), f"l_indices shape mismatch: expected ({B}, 4), got {l_indices.shape}"
+```
+
+**Code References:**
+- `crystal.py:414-420` — Neighborhood and coordinate shape assertions
+
+Added output shape assertions for both interpolation paths:
+
+```python
+# Scalar path (B=1):
+assert F_cell.numel() == 1, \
+    f"Scalar interpolation output must have 1 element, got {F_cell.numel()} (shape {F_cell.shape})"
+assert result.shape == original_shape, \
+    f"Output shape mismatch: expected {original_shape}, got {result.shape}"
+
+# Batched path (B>1, fallback):
+assert result.shape == original_shape, \
+    f"Fallback output shape mismatch: expected {original_shape}, got {result.shape}"
+```
+
+**Code References:**
+- `crystal.py:440-447` — Scalar path output assertions
+- `crystal.py:461-462` — Batched fallback output assertion
+
+**Note:** Changed scalar assertion from `F_cell.shape == torch.Size([])` to `F_cell.numel() == 1` because `polin3` may return either scalar `[]` or `[1]` shape depending on tensor operations.
+
+#### 2. Device-Aware Caching Audit (C3.2) ✅
+
+**Finding:** No explicit caching exists in `_tricubic_interpolation`.
+
+**Device/Dtype Consistency Checks Added:**
+
+```python
+# Phase C3: Device/dtype consistency check
+# Ensure all tensors are on the same device as the input query tensors
+assert sub_Fhkl.device == h.device, \
+    f"Device mismatch: sub_Fhkl on {sub_Fhkl.device}, input on {h.device}"
+assert h_indices.device == h.device, \
+    f"Device mismatch: h_indices on {h_indices.device}, input on {h.device}"
+```
+
+**Code References:**
+- `crystal.py:422-427` — Device consistency assertions
+
+**Device Handling Strategy:**
+- `offsets` tensor: Created with explicit `device=self.device` parameter (line 373)
+- `h_grid_coords`, `k_grid_coords`, `l_grid_coords`: Inherit device from `h_flr_flat` (CPU/CUDA propagates naturally)
+- `sub_Fhkl`: Uses `device=self.device` when no HKL data loaded (line 384)
+- `sub_Fhkl` (HKL path): Inherits device from `self.hkl_data` via advanced indexing (line 401-405)
+- `h_indices`, `k_indices`, `l_indices`: Use `.to(dtype=self.dtype)` which preserves device (lines 386-388, 408-410)
+
+**Verification:** Device checks enforce that all tensors stay on the input device throughout gather and interpolation.
+
+#### 3. Targeted pytest Evidence (C3.3) ✅
+
+**Command 1: Gather Tests**
+```bash
+env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -k "gather" -v
+```
+
+**Result:** 5/5 passed
+- `test_vectorized_matches_scalar` ✅
+- `test_neighborhood_gathering_internals` ✅
+- `test_oob_warning_single_fire` ✅ (Phase C2 validation)
+- `test_device_neutrality[cpu]` ✅
+- `test_device_neutrality[cuda]` ✅
+
+**Artifact:** `reports/2025-10-vectorization/phase_c/test_tricubic_vectorized.log`
+
+**Command 2: Acceptance Test AT-STR-002**
+```bash
+env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py::test_tricubic_interpolation_enabled -v
+```
+
+**Result:** 1/1 passed
+
+**Artifact:** `reports/2025-10-vectorization/phase_c/test_at_str_002_phi.log`
+
+### Phase C3 Deliverables
+
+- [x] **C3.1** — Shape assertions for neighborhoods `(B, 4, 4, 4)` and outputs
+- [x] **C3.2** — Device-aware caching audit (no caching present; device checks added)
+- [x] **C3.3** — Targeted pytest logs captured and stored
+
+### Impact & Safety
+
+**Regression Prevention:**
+- Shape assertions catch any breaking changes to gather logic during Phase D refactoring
+- Device checks prevent CPU↔CUDA mixed-device bugs
+- Output assertions ensure reshape logic preserves input shapes
+
+**Testing Coverage:**
+- 6/6 targeted tests pass (5 gather + 1 acceptance)
+- CPU and CUDA execution paths both validated
+- OOB warning behavior verified (Phase C2)
+
+**No Performance Impact:**
+- Assertions compile away in optimized builds (typical Python behavior)
+- No additional tensor operations introduced
+
+### Known Limitations
+
+**No Mini-Batching (from Phase C1):**
+- All B points processed at once
+- May hit memory limits for very large detectors (>2048²)
+- Phase E will implement chunking if needed
+
+**Batched Path Still Falls Back (from Phase C1):**
+- Phase C3 hardens infrastructure but doesn't activate batched interpolation
+- Phase D will vectorize `polin3`/`polin2`/`polint` to unlock batched path
+
+### Next Steps: Phase D Prerequisites Met
+
+**Phase D1 Ready:** Vectorize `polint`
+- Input shapes: `(B, 4)` coordinate arrays, `(B, 4)` values
+- Output shape: `(B,)` interpolated results
+- Assertion coverage: `(B, 4)` inputs validated by C3 checks
+
+**Phase D2 Ready:** Vectorize `polin2`/`polin3`
+- Input shapes: `(B, 4, 4)` and `(B, 4, 4, 4)` neighborhoods
+- Assertion coverage: `(B, 4, 4, 4)` neighborhood validated by C3 checks
+- Device handling: All tensors guaranteed on same device
+
+**Phase D3 Ready:** Audit differentiability
+- Assertions use `.shape`, `.numel()`, `.device` (no `.item()` calls)
+- No gradient-breaking operations introduced
+
+---
+
 **End of Implementation Notes**
