@@ -1535,3 +1535,9 @@ Follow-ups for Ralph:
 - Updated `plans/active/vectorization.md` context + Phase B table to mark B1–B3 complete, steering focus to Phase C implementation (C1–C3). Refreshed `docs/fix_plan.md` next-actions accordingly.
 - Authored new `input.md` (Perf mode) directing Ralph to implement Phase C1 batched tricubic gather with a fresh targeted pytest and to log implementation notes under phase_c/.
 - Expect Ralph next loop to land the gather vectorization, add the new test, and document deltas before moving to Phase C2 fallback validation. CLI-FLAGS-003 remains pending after gather work.
+## 2025-11-18 (galph loop — CLI-FLAGS L3c audit prep)
+- Chose Evidence focus on CLI-FLAGS-003 Phase L3c to unblock the supervisor-command parity goal.
+- Reviewed src/nanobrag_torch/__main__.py:438-450 and 1068-1076; confirmed CLI still attaches HKL data after Crystal construction but leaves tensors on CPU and instantiates Crystal without propagating the CLI device/dtype.
+- Noted interpolation flag wiring mismatch (cli writes `crystal.interpolation_enabled`) for follow-up once L3c closes.
+- Replaced input.md with Parity-mode guidance directing Ralph to refresh the CLI HKL device probe, update cli_hkl_audit.md with current code references, and run pytest --collect-only for tests/test_cli_scaling.py.
+- Expect Ralph to capture new probe artifacts under reports/2025-10-cli-flags/phase_l/structure_factor/, update the audit doc with 2025-11-18 findings, and log the attempt in docs/fix_plan.md before proceeding to L3d.
