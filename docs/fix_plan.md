@@ -457,10 +457,10 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
-- Next Actions (2025-11-19 evidence refresh):
-  1. Phase L3e per-φ + scaling validation — Refresh the trace harness so the current supervisor run emits `TRACE_PY_PHI` lines (existing `trace_py_scaling_per_phi.log` contains none), capture `trace_py_per_phi_20251119.log`/`.json`, and rerun `compare_scaling_traces.py` (≤1e-6 tolerances) with outputs stored under `reports/2025-10-cli-flags/phase_l/per_phi/` and `.../scaling_validation/`.
-  2. Phase L3f documentation sync — Update `analysis.md`, `docs/fix_plan.md` attempts, and architectural docs with the finalized ingestion/normalization flow once the refreshed scaling validation passes.
-  3. Phase L4 parity rerun — Execute the supervisor command end-to-end, capture nb-compare metrics, confirm correlation ≥0.9995 + sum_ratio 0.99-1.01, archive results, and close CLI-FLAGS-003.
+- Next Actions (2025-11-19 refresh):
+  1. Phase L3f rotation-vector audit — Capture aligned `TRACE_C` vs `TRACE_PY` rot-vector dumps for φ=0 using the updated harness, write `rot_vector_comparison.md` under `reports/2025-10-cli-flags/phase_l/rot_vector/`, and quantify Δ components that explain the `k_frac` offset (target <5e-4).
+  2. Phase L3g hypothesis framing — Summarize likely causes of the φ=0 drift (spindle axis, reciprocal reconstitution, phi step sizing) in `rot_vector/analysis.md`, cite supporting traces, and update this plan/fix_plan before touching simulator code.
+  3. Phase L4 parity rerun — After alignment fixes land and documentation is refreshed, execute the supervisor command end-to-end, capture nb-compare metrics (correlation ≥0.9995, sum_ratio 0.99–1.01), archive results, and close CLI-FLAGS-003.
 - Attempts History:
   * [2025-11-13] Attempt #71 (ralph loop) — Result: **SUCCESS** (Phase L2b validation + Phase L2c complete). **Harness already functional from Attempt #69; executed comparison script to identify first divergence.**
     Metrics: 40 TRACE_PY lines captured; test suite passes 4/4 variants (cpu/cuda × float32/float64). Comparison identifies `I_before_scaling` as first divergent factor (C=943654.809, PyTorch=0, -100% delta).
@@ -625,10 +625,10 @@
       - `reports/2025-10-cli-flags/phase_l/scaling_validation/run_metadata.json` — Run metadata (SHA f3e65b8, torch 2.8.0+cu128, command snapshot)
     Observations/Hypotheses:
       - **Harness operational:** Per-φ instrumentation from Attempt #85 working correctly; captured k_frac ≈ -0.59 (φ=0°) to -0.607 (φ=0.1°), F_latt ranges 1.351 to -2.351
-      - **First divergence remains lattice-driven:** I_before_scaling delta (-24.4% rel) stems from F_latt mismatch (PyTorch summed F_latt=1.351 at φ=0° vs C trace showing F_latt=-2.3832)
+      - **φ=0 drift isolated:** Comparing `TRACE_C` vs `TRACE_PY` shows φ=0 vectors misaligned (`rot_b_y` 0.7173 Py vs 0.6716 C), yielding k_frac -0.589 instead of -0.607 and flipping F_latt_b’s sign. Later φ steps converge, so the error occurs before/at the initial phi orientation.
       - **Scaling factors validated:** r_e², fluence, steps, capture_fraction match C exactly (PASS status ≤1e-6); polar/omega/cos_2theta show MINOR deltas (≤2e-5 rel)
       - **Phase L3e exit criteria satisfied:** Per-φ JSON + scaling validation artifacts captured with current git SHA; comparison script enforces ≤1e-6 tolerance per plan guidance; pytest confirms instrumentation stability
-    Next Actions: Phase L3f documentation sync — Update analysis.md + architectural docs with finalized per-φ evidence and scaling validation summary; Phase L4 parity rerun after lattice factor root cause is addressed (F_latt sign/magnitude discrepancy blocking nb-compare correlation ≥0.9995).
+    Next Actions: Phase L3f rotation-vector audit — capture aligned rot vectors for φ=0 under the new harness, document deltas in `reports/2025-10-cli-flags/phase_l/rot_vector/`, and frame hypotheses (L3g) before modifying simulator normalization or rotation code.
   * [2025-10-07] Attempt #74 (ralph loop) — Result: **SUCCESS** (Phase L2b harness fix + L2c comparison complete). **Corrected harness to attach `crystal.hkl_data` and `crystal.hkl_metadata` instead of ad-hoc attributes; structure factor lookup now functional.**
     Metrics: Harness probe confirms hkl_data attached (lookup returns F=100 for (1,12,3), F=0 for out-of-range). Comparison identifies I_before_scaling as first divergence. Test suite passes 4/4 variants (tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics).
     Artifacts:
