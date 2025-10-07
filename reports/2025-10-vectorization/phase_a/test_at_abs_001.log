@@ -1,0 +1,14 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/myenv/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+collecting ... collected 5 items
+
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_disabled_when_zero PASSED [ 20%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_capture_fraction_calculation PASSED [ 40%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_last_value_vs_accumulation_semantics PASSED [ 60%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_parallax_dependence PASSED [ 80%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_with_tilted_detector PASSED [100%]
+
+============================== 5 passed in 5.88s ===============================

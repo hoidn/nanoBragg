@@ -1,0 +1,5 @@
+tests/test_at_str_002.py::test_tricubic_interpolation_enabled
+tests/test_at_str_002.py::test_tricubic_out_of_bounds_fallback
+tests/test_at_str_002.py::test_auto_enable_interpolation
+
+3 tests collected in 2.11s

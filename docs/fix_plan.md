@@ -1656,7 +1656,20 @@
  2. Complete Phase B design memo (tensor shapes, broadcasting, gradients) before editing code; update this item with design references (`phase_b/design_notes.md`).
  3. Prioritise Phase C/D implementation work on tricubic interpolation, followed by Phase E parity/perf validation. Detector absorption vectorization (Phase F) follows once tricubic work is stable.
 - Attempts History:
-  * (pending) — Capture Phase A baseline artifacts and update this log.
+  * [2025-10-06] Attempt #1 (ralph loop) — Result: **Phase A1 COMPLETE** (test collection & execution baseline captured). All tricubic and absorption tests passing.
+    Metrics: AT-STR-002: 3/3 tests passed in 2.12s (test_tricubic_interpolation_enabled, test_tricubic_out_of_bounds_fallback, test_auto_enable_interpolation). AT-ABS-001: 5/5 tests passed in 5.88s. Collection: 3 tricubic tests found.
+    Artifacts:
+      - `reports/2025-10-vectorization/phase_a/test_at_str_002.collect.log` — Test collection output confirming 3 tests collected
+      - `reports/2025-10-vectorization/phase_a/test_at_str_002.log` — Full pytest execution log for tricubic tests
+      - `reports/2025-10-vectorization/phase_a/test_at_abs_001.log` — Full pytest execution log for absorption tests
+      - `reports/2025-10-vectorization/phase_a/env.json` — Environment snapshot (Python 3.13.7, PyTorch 2.8.0+cu128, CUDA available)
+    Observations/Hypotheses:
+      - Current tricubic implementation passes all acceptance tests without warnings, indicating it works correctly for existing test cases
+      - No evidence yet of fallback warnings or performance issues in these specific tests
+      - Test collection confirmed 3 tricubic tests exist and are discoverable
+      - CUDA is available in test environment for future GPU benchmarking
+      - Phase A1 complete per plan guidance (`plans/active/vectorization.md` tasks A1 complete)
+    Next Actions: Proceed to Phase A2 (tricubic microbenchmark harness) and Phase A3 (absorption microbenchmark harness) to capture timing baselines before any code changes. Create `scripts/benchmarks/tricubic_baseline.py` and `scripts/benchmarks/absorption_baseline.py` per plan guidance.
 - Risks/Assumptions: Must maintain differentiability (no `.item()`, no `torch.linspace` with tensor bounds), preserve device/dtype neutrality (CPU/CUDA parity), and obey Protected Assets rule (all new scripts under `scripts/benchmarks/`). Large tensor indexing may increase memory pressure; ensure ROI caching still works.
 - Exit Criteria (quote thresholds from spec):
   * specs/spec-a-parallel.md §2.3 tricubic acceptance tests run without warnings and match C parity within documented tolerances (corr≥0.9995, ≤1e-12 structural duality where applicable).
