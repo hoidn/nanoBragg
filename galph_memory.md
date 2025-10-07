@@ -1541,3 +1541,8 @@ Follow-ups for Ralph:
 - Noted interpolation flag wiring mismatch (cli writes `crystal.interpolation_enabled`) for follow-up once L3c closes.
 - Replaced input.md with Parity-mode guidance directing Ralph to refresh the CLI HKL device probe, update cli_hkl_audit.md with current code references, and run pytest --collect-only for tests/test_cli_scaling.py.
 - Expect Ralph to capture new probe artifacts under reports/2025-10-cli-flags/phase_l/structure_factor/, update the audit doc with 2025-11-18 findings, and log the attempt in docs/fix_plan.md before proceeding to L3d.
+
+## 2025-11-18 (galph loop — CLI L3d planning refresh)
+- Marked Phase L3c complete in `plans/active/cli-noise-pix0/plan.md` and added 2025-11-18 gap snapshot noting Attempt #80’s audit results; fix_plan Next Actions now target L3d implementation, L3e validation, and L3f documentation.
+- Authored new `input.md` (Parity mode) instructing Ralph to add the L3d regression test, capture the failing selector, patch `__main__.py:1073` with `.to(device=device, dtype=dtype)`, rerun the probe, and log artifacts under `reports/2025-10-cli-flags/phase_l/structure_factor/`.
+- Reminder for next loop: verify vectorization plan still shows C1 as open despite commit 88fd76a; plan update pending once CLI L3d work is underway.
