@@ -458,9 +458,9 @@
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
 - Next Actions (2025-11-20 refresh → updated by galph):
-  1. Phase L3i.a — Instrument `nanoBragg.c` around lines 2050-2169 to emit `TRACE_C` logs for the MOSFLM cross products, `V_cell`, and real-space vectors; stash the run at `reports/2025-10-cli-flags/phase_l/rot_vector/c_trace_mosflm.log`.
-  2. Phase L3i.b — Extend `trace_harness.py` to capture the raw numpy MOSFLM vectors and the tensor views before/after `Crystal.compute_cell_tensors`; produce `rot_vector/mosflm_matrix_diff.md` aligning PyTorch vs C per-component deltas.
-  3. Phase L3j — Author `rot_vector/fix_checklist.md` (tests + tolerances) once the diff isolates the fault, then queue the implementation loop to restore lattice-vector parity prior to rerunning nb-compare.
+ 1. Phase L3j.1 — Update `mosflm_matrix_correction.md` with Attempt #93 evidence (H3 ruled out, H5–H7 promoted) and cite the relevant trace line numbers plus φ sampling requirements.
+ 2. Phase L3j.2 — Draft `reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md` listing per-φ trace, targeted pytest (`tests/test_cli_scaling.py -k lattice -v`), and nb-compare ROI commands with ≤1e-6 tolerances and artifact paths.
+ 3. Phase L3j.3 — Refresh docs/fix_plan.md Attempt history once the checklist exists and log the evidence paths before scheduling simulator code changes.
 - Attempts History:
   * [2025-10-07] Attempt #91 (ralph loop i=91) — Result: **SUCCESS** (Phase L3g spindle instrumentation COMPLETE). **H1 (spindle normalization) RULED OUT as root cause of Y-drift.**
     Metrics: Spindle Δ(magnitude)=0.0 (tolerance ≤5e-4); trace captured 43 TRACE_PY lines (was 40, +3 spindle lines); test collection 4/4 passed.

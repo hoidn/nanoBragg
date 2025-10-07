@@ -1606,3 +1606,8 @@ Follow-ups for Ralph:
 - Updated `docs/fix_plan.md` Next Actions to focus on C TRACE_C taps, Py harness dumps, and diff memo before implementation; input.md now directs Ralph to capture those traces and document deltas.
 - Expect Ralph to instrument `golden_suite_generator/nanoBragg.c`, run the supervisor command to generate `c_trace_mosflm.log`, extend the Py harness for raw/tensor dumps, and produce `mosflm_matrix_diff.md` prior to touching simulator code.
 
+## 2025-11-20 (galph loop — CLI L3j checklist alignment)
+- Extended `plans/active/cli-noise-pix0/plan.md` Phase L3 with sub-tasks L3j.1–L3j.3 (memo refresh, fix checklist, plan/fix_plan sync) so implementation has explicit gates.
+- Updated `docs/fix_plan.md` Next Actions to point at the new L3j workflow; removed stale L3i instrumentation steps.
+- Authored `input.md` (Parity mode, 100 lines) instructing Ralph to update mosflm_matrix_correction.md, draft `fix_checklist.md`, run pytest --collect-only, and log artifacts under rot_vector/ before touching code.
+- No production code changes performed; expect Ralph’s Attempt #94 to document memo/checklist completion plus collect-only log before proceeding to φ-rotation implementation.

@@ -1,100 +1,100 @@
-Summary: Capture aligned nanoBragg C and PyTorch MOSFLM traces so we can pinpoint the real-space lattice drift before modifying simulator code.
+Summary: Document φ-rotation parity evidence so future simulator fixes have a locked checklist and spec citations.
 Mode: Parity
 Focus: CLI-FLAGS-003 Handle -nonoise and -pix0_vector_mm
 Branch: feature/spec-based-2
 Mapped tests: pytest --collect-only -q
-Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/c_trace_mosflm.log
-Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/c_trace_mosflm.sha256
-Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/py_raw_vectors.json
-Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/py_tensor_vectors.json
-Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_diff.md
-Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/attempt_notes.md
-Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/collect_only.log
-Do Now: CLI-FLAGS-003 Phase L3i.a instrumentation — rebuild `golden_suite_generator/nanoBragg` with detailed `TRACE_C` taps around the MOSFLM pipeline and run `NB_C_BIN=./golden_suite_generator/nanoBragg "$NB_C_BIN" -mat A.mat -floatfile img.bin -hkl scaled.hkl -nonoise -nointerpolate -oversample 1 -exposure 1 -flux 1e18 -beamsize 1.0 -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080 -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866 -beam_vector 0.00051387949 0.0 -0.99999986 -Na 36 -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0 > reports/2025-10-cli-flags/phase_l/rot_vector/c_trace_mosflm.log 2>&1`
-If Blocked: If the C build or trace command fails, capture stdout/stderr under `reports/2025-10-cli-flags/phase_l/rot_vector/attempt_log.txt`, revert instrumentation, and log the failure (command, exit code, artifact path) as a new CLI-FLAGS-003 Attempt before moving on.
+Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_correction.md; reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md; docs/fix_plan.md; plans/active/cli-noise-pix0/plan.md; reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md; reports/2025-10-cli-flags/phase_l/rot_vector/test_collect_L3j.log; reports/2025-10-cli-flags/phase_l/rot_vector/attempt_notes.md
+Do Now: CLI-FLAGS-003 Phase L3j.1–L3j.2 — pytest --collect-only -q
+If Blocked: Capture a short narrative in reports/2025-10-cli-flags/phase_l/rot_vector/attempt_notes.md, stash any harness stdout under the same folder, and note the blocker plus file paths in docs/fix_plan.md Attempts for traceability.
+
+Context Recap:
+- Attempt #93 proved MOSFLM base vectors align within float32 precision and shifted suspicion to φ rotation (H5) per reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md.
+- L3a–L3i tasks are ✅; per-φ traces and spindle audits exist, but no implementation checklist yet guards the upcoming fix.
+- The supervisor command relies on phisteps=10, osc=0.1, so φ sampling at 0°, 0.05°, 0.1° captures the full motion envelope.
+- docs/fix_plan.md Next Actions still reference L3i instrumentation; updating them prevents future loops from repeating now-complete evidence tasks.
+- Long-term Goal #1 (run C vs PyTorch parity command) is blocked until φ rotation parity is restored, making this documentation loop a prerequisite.
+- Vectorization backlog is paused; documenting CLI progress clarifies when resources can return to VECTOR-TRICUBIC-001.
+- Protected Assets rule demands we leave docs/index.md references untouched; all new content must live in allowed directories (plans/, docs/, reports/).
+- Mode Parity forbids running full pytest; only collect-only validation is expected after doc edits.
+- Prior evidence loops already generated heavy traces; reuse them, avoid generating new large logs unless absolutely necessary.
+
 Priorities & Rationale:
-- `plans/active/cli-noise-pix0/plan.md:147` shows Phase L3i/L3j blocking the supervisor parity rerun; instrumentation is the first checkbox.
-- `reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_correction.md:1` documents the suspected transpose/rescale bug and explicitly calls for the diff you’ll capture.
-- `docs/fix_plan.md:462` now lists instrumentation and the Py diff as top priorities; completing them keeps fix_plan credible.
-- `specs/spec-a-cli.md:63` nails the MOSFLM convention (beam along +X, +0.5 pixel offset) you must preserve when validating trace output.
-- `docs/architecture/detector.md:56` provides the BEAM pivot formula so you can sanity-check `pix0` lines in the new trace.
-- `docs/development/c_to_pytorch_config_map.md:29` reminds us how CLI flags map to config fields; ensures both traces share configuration parity.
-- `reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log:265` already exposes the mismatched real vectors; a refreshed log with richer taps lets us explain the difference.
-- `reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md:1` maintains hypothesis history; update it after the diff to keep context in sync.
-- `arch.md:189` reinforces the misset pipeline (reciprocal → real → reciprocal); your logs should confirm each stage stays intact.
+- plans/active/cli-noise-pix0/plan.md:260 keeps Phase L3 sequencing; finishing memo/checklist flips L3j rows to [D], signalling readiness for code changes.
+  Tie the memo content directly to the plan so future readers map doc artifacts to plan IDs without guessing.
+- docs/fix_plan.md:450 needs Next Actions aligned to L3j.1–L3j.3; without this, automation scripts may queue stale instrumentation tasks.
+  When updating fix_plan, cite artifact paths explicitly to maintain reproducibility.
+- specs/spec-a-cli.md:1 enumerates CLI semantics; referencing §3.3 prevents documentation drift when summarising pix0 overrides and noise suppression expectations.
+  Connect -nonoise behavior with the existing plan to remind reviewers the flag already works at CLI level.
+- docs/architecture/detector.md:35 supplies BEAM/SAMPLE formulas; quoting them in the checklist anchors tolerances to the geometry spec and clarifies which components are meter-based.
+  Include note about how these formulas interact with CUSTOM convention when pix0 overrides are present.
+- docs/development/c_to_pytorch_config_map.md:42 documents implicit pivot/unit rules; the memo must cite it to explain why φ rotation is the remaining unmatched stage and to avoid re-litigating pivot logic.
+  Highlight the pivot implications (twotheta implies SAMPLE) so checklist readers recall the default.
+- docs/development/testing_strategy.md:120 standardises targeted pytest usage; the checklist needs explicit selectors drawn from this guidance to stay in compliance with testing SOP.
+  Mention Tier 1 parity context to tie the collect-only run to spec-driven expectations.
+- reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md:12 tracks current hypothesis ordering (H5 primary, H6/H7 secondary); memo must echo this so later loops continue where we left off.
+  Carry over the quantitative deltas (e.g., k_frac mismatch, F_latt sign flip) into the new memo section.
+- reports/2025-10-cli-flags/phase_l/rot_vector/c_trace_mosflm.log:63 and trace_py_rot_vector.log:16 form the evidence pair; quote them in the memo to justify threshold choices.
+  Keep raw precision (up to 1e-12) when transcribing values.
+- prompts/supervisor.md:18 houses the authoritative CLI command; the checklist should reference it verbatim for nb-compare reproduction to avoid parameter drift.
+  Clarify environment variables (NB_C_BIN, KMP_DUPLICATE_LIB_OK) alongside the command.
+- plans/active/vectorization.md:31 is non-blocking but stays queued; documenting CLI parity progress clarifies when we can pivot to tricubic work without mixing initiatives.
+  Mention this in memo conclusions for cross-team visibility.
+
 How-To Map:
-- Step 0 — Baseline checks:
-  - `git status --short` (note any pre-existing dirt in `attempt_notes.md`).
-  - `export KMP_DUPLICATE_LIB_OK=TRUE`
-  - `export NB_C_BIN=./golden_suite_generator/nanoBragg`
-  - `export PYTHONPATH=src`
-  - Record the git SHA via `git rev-parse HEAD >> reports/2025-10-cli-flags/phase_l/rot_vector/attempt_notes.md`.
-- Step 1 — Instrument nanoBragg.c:
-  - Add `TRACE_C` logs after raw matrix read (`golden_suite_generator/nanoBragg.c:2054`), after wavelength scaling, and after misset rotation.
-  - Inject logs for each cross product and for `V_star`/`V_cell` computations (`golden_suite_generator/nanoBragg.c:2121-2153`).
-  - Append logs for the scaled real vectors and regenerated reciprocals (`golden_suite_generator/nanoBragg.c:2162-2185`).
-  - Keep new logs grouped and comment the block with `/* Phase L3i instrumentation */` for reviewers.
-- Step 2 — Rebuild and verify the binary:
-  - `make -C golden_suite_generator`
-  - `ls -lh golden_suite_generator/nanoBragg`
-  - `grep -n "TRACE_C:" golden_suite_generator/nanoBragg.c`
-  - Note the rebuild completion time in `attempt_notes.md`.
-- Step 3 — Capture the C trace:
-  - Run the full supervisor command using the instrumented binary (command in Do Now).
-  - `sha256sum reports/2025-10-cli-flags/phase_l/rot_vector/c_trace_mosflm.log > reports/2025-10-cli-flags/phase_l/rot_vector/c_trace_mosflm.sha256`
-  - `tail -n 40 reports/2025-10-cli-flags/phase_l/rot_vector/c_trace_mosflm.log` (confirm new logs exist).
-  - Record runtime duration in `attempt_notes.md` for reproducibility.
-- Step 4 — Extend the Py harness:
-  - In `reports/2025-10-cli-flags/phase_l/rot_vector/trace_harness.py:39`, dump the raw numpy `a_star/b_star/c_star` arrays (with wavelength and scaling factor) to `py_raw_vectors.json`.
-  - Capture tensor equivalents immediately before the cross products and after real-vector reconstruction in `py_tensor_vectors.json`.
-  - Write helper functions inside the harness to keep logging tidy (e.g., `_serialize_vector(name, tensor)`).
-- Step 5 — Run the Py harness with float64 CPU:
-  - `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/rot_vector/trace_harness.py --pixel 685 1039 --config supervisor --device cpu --dtype float64`
-  - `python -m json.tool reports/2025-10-cli-flags/phase_l/rot_vector/py_raw_vectors.json > /dev/null`
-  - `python -m json.tool reports/2025-10-cli-flags/phase_l/rot_vector/py_tensor_vectors.json > /dev/null`
-  - Add a short summary of key numbers (a few vector components) to `attempt_notes.md` for quick reference.
-- Step 6 — Build the diff memo:
-  - Compare C and Py values stage by stage; emphasise the first divergence (expect `b` Y component).
-  - Document findings in `reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_diff.md` (include tables + commentary).
-  - Update `reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md` with a concise hypothesis update referencing the diff.
-- Step 7 — Guard-rail commands:
-  - `pytest --collect-only -q | tee reports/2025-10-cli-flags/phase_l/rot_vector/collect_only.log`
-  - Record the exit code in `attempt_notes.md`.
-- Step 8 — Fix-plan updates:
-  - Add a new CLI-FLAGS-003 Attempt in `docs/fix_plan.md` summarising artifacts, first divergence, and next recommended actions.
-  - Confirm `plans/active/cli-noise-pix0/plan.md` shows L3i as `[D]` and note any prerequisites for L3j.
-- Step 9 — Optional sanity passes:
-  - `sed -n '260,320p reports/2025-10-cli-flags/phase_l/rot_vector/c_trace_mosflm.log'` (verify k_frac lines).
-  - `sed -n '12,40p reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log'` (cross-check Py outputs).
-  - `diff -u reports/2025-10-cli-flags/phase_l/rot_vector/c_trace_mosflm.log reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log | head` (spot-check instrumentation vs legacy trace).
+- Re-read Attempt #93 artifacts (c_trace_mosflm.log, mosflm_matrix_diff.md) and extend mosflm_matrix_correction.md with a "Post-L3i Findings" section stating H3 is ruled out, H5 remains primary, H6/H7 secondary.
+  Cite golden_suite_generator/nanoBragg.c:2050-2199 for C reference and src/nanobrag_torch/models/crystal.py:568-780 for PyTorch behavior.
+- Summarise quantitative deltas: include b_Y delta 1.35e-07 Å, k_frac shift ≈0.018, F_latt sign flip, linking each to trace line numbers.
+  Explain how these deltas propagate into intensity mismatches (I_before_scaling ~7.13e5 vs 9.44e5) referencing scaling logs.
+- Outline φ sampling requirements (0°, 0.05°, 0.1°) and relate them to phisteps, osc, and beamsize to justify coverage.
+  Note that per-φ JSON already exists; instruct checklist users to regenerate it only after applying code changes.
+- Draft fix_checklist.md with table `[ID | Requirement | Owner | Artifact Path | Threshold / Notes]` containing at least three rows: per-φ harness rerun, targeted pytest, nb-compare ROI.
+  For each row, list spec/doc references (specs/spec-a-cli.md §3.3, docs/debugging/debugging.md §Parallel Trace, docs/development/testing_strategy.md §1.5) and required thresholds (≤1e-6 relative, correlation ≥0.9995, etc.).
+- Include an entry reminding future implementers to update docs/index.md references only if new artifacts become canonical, respecting Protected Assets Rule.
+- After doc edits, run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q` from repo root, capture output into reports/2025-10-cli-flags/phase_l/rot_vector/test_collect_L3j.log, and mention it in fix_plan Attempt.
+  Do not upgrade to full pytest; collect-only suffices for import validation in this planning loop.
+- Update docs/fix_plan.md CLI-FLAGS-003 Attempts with a new entry (“Attempt #94 — documentation loop”) summarising memo updates, checklist creation, and collect-only log.
+  In Observations, reiterate H5 dominance and note that implementation is blocked pending checklist completion; list artifact paths in Artifacts subsection.
+- Adjust plans/active/cli-noise-pix0/plan.md L3j guidance if the checklist adds new thresholds or artifact directories; maintain table formatting and state `[D]` only after verifying docs exist.
+  Keep plan references to spec and doc paths aligned with actual file names.
+- Commit only doc/report changes; leave src/ untouched. Prepare for future implementation loop by mentioning the new artifacts in galph_memory once done.
+
 Pitfalls To Avoid:
-- Do not delete existing `TRACE_C` lines; append new logs to keep diffs reviewable.
-- Keep harness updates local to the script; production modules should remain untouched this loop.
-- Ensure all dumps include device and dtype metadata to aid future GPU validation.
-- Rebuild the C binary after every instrumentation tweak; stale binaries produce misleading logs.
-- Run the Py harness with float64 CPU to minimise precision drift during comparison.
-- Respect the Protected Assets list in `docs/index.md`; avoid moving or deleting listed files.
-- Store every artifact under `reports/2025-10-cli-flags/phase_l/rot_vector/` with descriptive filenames.
-- Document environment variables and command timings in `attempt_notes.md` for reproducibility.
-- Skip full pytest runs; `--collect-only` is mandatory in evidence mode.
-- Stage intentional changes before finishing; highlight any intentional dirt in your handoff note.
-- Avoid mixing tabs and spaces in the new C logs; stick to existing formatting for consistency.
-- Document any TODOs left in code comments so reviewers know they are intentional.
-- Back up the original nanoBragg.c snippet before instrumentation in case you need to revert quickly.
+- Do not modify src/ or scripts/ code; this is strictly a planning/documentation turn.
+- Avoid regenerating large traces; reuse existing logs to quote values unless a blocker demands reruns.
+- Keep all new doc references unit-consistent (meters for geometry, Å for physics) to avoid confusion.
+- Do not collapse plan tables or reorder completed tasks; append notes if necessary.
+- Skip running nb-compare or the supervisor command; checklist should document commands without executing them this loop.
+- Guard against losing precision when transcribing values; use full numeric strings from logs.
+- Respect Protected Assets (docs/index.md references); do not rename or delete listed files.
+- Avoid editing prompts/main.md or automation harness scripts; not part of this scope.
+- Do not relax tolerances below spec thresholds; maintain ≤1e-6 relative for scaling factors.
+- Refrain from adding TODO markers without context; reference plan IDs or spec clauses when noting follow-ups.
+- Ensure collect-only command runs with KMP_DUPLICATE_LIB_OK=TRUE to avoid MKL crashes; mention env var in logs.
+- When editing markdown, keep ASCII characters only; follow repository editing constraints.
+
 Pointers:
-- `plans/active/cli-noise-pix0/plan.md:147` — Phase L3i/L3j checklist.
-- `reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_correction.md:1` — corrective strategy memo.
-- `golden_suite_generator/nanoBragg.c:2054` — MOSFLM matrix load/scaling block.
-- `golden_suite_generator/nanoBragg.c:2121` — cross-product and real-vector reconstruction section.
-- `src/nanobrag_torch/models/crystal.py:568` — PyTorch MOSFLM branch (reference only).
-- `reports/2025-10-cli-flags/phase_l/rot_vector/trace_harness.py:39` — harness entry point for new dumps.
-- `reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log:265` — legacy C trace highlighting the drift.
-- `reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md:1` — hypothesis tracker to update.
-- `docs/development/c_to_pytorch_config_map.md:29` — parity guardrails for CLI flags.
-- `specs/spec-a-cli.md:63` — MOSFLM acceptance tests.
-- `docs/architecture/detector.md:56` — BEAM pivot formula reference.
-- `arch.md:189` — misset pipeline reminder.
-- `docs/debugging/debugging.md:18` — Parallel trace SOP (useful checklist while diffing).
-- `reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_probe.md:1` — Prior MOSFLM probe outputs for context.
-- `reports/2025-10-cli-flags/phase_l/rot_vector/spindle_audit.log:1` — Confirms spindle normalization is ruled out.
-Next Up: (1) Author `reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md` with verification thresholds so the implementation loop can proceed safely; (2) Once the checklist exists, execute the simulator fix and rerun nb-compare per Phase L4.
+- specs/spec-a-cli.md:1 — Normative CLI rules for -nonoise and pix0 overrides.
+- specs/spec-a-core.md:400 — Lattice factor equations and acceptance criteria to cite for F_latt thresholds.
+- docs/architecture/detector.md:35 — pix0_vector derivation (BEAM/SAMPLE formulas) referenced in memo/checklist.
+- docs/development/c_to_pytorch_config_map.md:42 — Detector pivot/unit mapping tied to φ rotation decisions.
+- docs/development/testing_strategy.md:120 — Targeted pytest workflow (Tier 1 parity guidance) for checklist selectors.
+- docs/debugging/debugging.md:24 — Parallel trace SOP; cite when directing per-φ harness reruns.
+- plans/active/cli-noise-pix0/plan.md:271 — Detailed definitions of L3j.1–L3j.3 tasks to mirror in doc updates.
+- docs/fix_plan.md:450 — CLI-FLAGS-003 ledger entry awaiting Attempt #94 documentation.
+- reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md:12 — Current hypothesis ranking (H5 primary).
+- reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_diff.md:40 — Component-level deltas backing the memo.
+- reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_env.json:1 — Environment snapshot for reproducibility metadata.
+- prompts/supervisor.md:18 — Exact supervisor command parameters; include in checklist.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/analysis_20251119.md:22 — Context for k_frac divergence to restate.
+- reports/2025-10-cli-flags/phase_l/rot_vector/spindle_audit.log:5 — Evidence ruling out spindle normalization; mention in memo recap.
+- reports/2025-10-cli-flags/phase_l/rot_vector/per_phi/trace_py_scaling_20251119_per_phi.json:1 — JSON structure to reference in checklist instructions.
+- history/2025-10/cli-flags/README.md:1 — Prior archival summary if cross-links help orient reviewers (optional).
+
+Next Up: 1) Once L3j checklist is in place, schedule the implementation loop targeting φ rotation parity per plan Phase L3; 2) If time remains, gather outstanding evidence for VECTOR-TRICUBIC-001 Phase C1 (gather fallback semantics) without touching production code.
+
+Evidence Reminders:
+- Keep numeric precision consistent (≥12 significant digits) when quoting trace outputs; mismatched rounding complicates parity comparisons later.
+- When saving collect-only log, prepend timestamp and git SHA at top for reproducibility (see reports/2025-10-cli-flags/phase_l/rot_vector/test_collect_template.txt if helpful).
+- Cross-link new memo sections with galph_memory entry once committed so future supervisor loops pick up the context without rereading whole plan.
+- Ensure nb-compare command in checklist mentions expected output directory and correlation thresholds (≥0.9995) so implementer knows pass criteria before running it.
+- If you identify any missing documentation references while drafting, note them inline with TODO[doc] markers tied to plan IDs for easy follow-up.
