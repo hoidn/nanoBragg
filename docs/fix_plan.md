@@ -1734,6 +1734,26 @@
       - Current non-vectorized tricubic: ~1.4 ms/call × 256×256 pixels = ~92 seconds for full detector (if called per-pixel)
       - Vectorization opportunity: eliminate Python loop over pixels, process entire detector grid in batched tensor ops
     Next Actions: With Phase A complete, execute Phase B tasks in order: (1) capture the `(S,F,4,4,4)` gather and broadcast plan (B1), (2) translate nanoBragg polin/polin2/polin3 algebra into tensor expressions (B2), and (3) record the differentiability/device checklist (B3). Store outputs under `reports/2025-10-vectorization/phase_b/` and update this entry with links once the memo is ready.
+  * [2025-10-07] Attempt #3 (ralph loop) — Result: **Phase B1–B3 COMPLETE** (design notes document drafted covering tensor shapes, polynomial semantics, gradient/device requirements). Documentation-only loop per input.md Mode: Docs.
+    Metrics: Test collection passed (`pytest --collect-only -q` succeeded with 463 tests discovered). No code changes; docs-only validation.
+    Artifacts:
+      - `reports/2025-10-vectorization/phase_b/design_notes.md` — Comprehensive 12-section design memo covering:
+        * Section 2: Tensor shape design with `(B, 4, 4, 4)` neighborhood structure and memory footprint estimates
+        * Section 3: C-code polynomial semantics mapping (polint/polin2/polin3 Lagrange basis functions → vectorized PyTorch ops)
+        * Section 4: Gradient & device checklist (differentiability requirements, device neutrality, torch.compile compatibility)
+        * Section 5: Failure modes & mitigation (OOB handling, memory pressure, numerical stability)
+        * Section 6–7: Validation strategy and implementation roadmap (Phase C gather, Phase D polynomial evaluation, Phase E validation)
+        * Sections 8–12: Glossary, dependencies, risk assessment, open questions, appendix with sample broadcast calculation
+    Observations/Hypotheses:
+      - Adopted two-stage vectorization: Phase C batched neighborhood gather to build `(B, 4, 4, 4)` subcubes; Phase D vectorize polint/polin2/polin3 to consume batched inputs
+      - Key design decision: Flatten arbitrary leading dims `(S, F, oversample, ...)` into single batch `B` to simplify indexing and preserve flexibility
+      - Memory footprint analysis: 1024² detector = ~268 MB for neighborhoods at float32; 1024² with oversample=2 = ~1.07 GB (acceptable)
+      - Identified critical device harmonization requirement: HKL data (typically CPU) must move to query device (may be CUDA) at first call
+      - Documented Lagrange basis vectorization strategy with explicit loop structure (4 terms, fixed iteration count, torch.compile-friendly)
+      - Captured gradient flow requirements: avoid `.item()`, avoid `torch.linspace` with tensor endpoints, use `torch.floor(...).to(dtype=torch.long)` pattern
+      - Outlined OOB mask approach: detect invalid neighborhoods, emit warning once, apply fallback `default_F` for invalid points
+      - Established validation plan: AT-STR-002 parity, unit-level gradcheck, CPU/CUDA benchmarks with ≥10× speedup target vs scalar baseline
+    Next Actions: Execute Phase C tasks (C1–C3) to implement batched neighborhood gather with OOB handling; then Phase D (D1–D3) to vectorize polynomial helpers; finally Phase E (E1–E3) validation suite. All implementation must reference this design memo for shape contracts and gradient requirements.
 - Risks/Assumptions: Must maintain differentiability (no `.item()`, no `torch.linspace` with tensor bounds), preserve device/dtype neutrality (CPU/CUDA parity), and obey Protected Assets rule (all new scripts under `scripts/benchmarks/`). Large tensor indexing may increase memory pressure; ensure ROI caching still works.
 - Exit Criteria (quote thresholds from spec):
   * specs/spec-a-parallel.md §2.3 tricubic acceptance tests run without warnings and match C parity within documented tolerances (corr≥0.9995, ≤1e-12 structural duality where applicable).
