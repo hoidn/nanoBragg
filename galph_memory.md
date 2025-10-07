@@ -1423,3 +1423,8 @@ Follow-ups for Ralph:
 - Hypotheses logged: (1) fractional Miller index mismatch leading to runaway `F_latt`; (2) polarization factor still diverges despite new instrumentation. Both require a fresh PyTorch scaling trace to quantify.
 - Rewrote `input.md` directing Ralph to rerun `trace_harness.py` with the supervisor command (slow=685, fast=1039), capture stdout/stderr, parse key factors into `scaling_audit_summary.md`, and keep `pytest --collect-only` in evidence mode; set “Mapped tests: none — evidence-only”.
 - Next steps for Ralph: execute Phase L2b Step 3 (harness rerun), document deltas in notes/summary JSON, then move to Phase L2c comparison once numbers land. No new planning artifacts created; existing plan remains authoritative.
+## 2025-11-11 (galph loop — Phase L2b0 harness reminder)
+- Added new gap snapshot in plans/active/cli-noise-pix0/plan.md noting prior Py trace omitted -beam_vector/-oversample/-flux/-beamsize, which forced auto oversample=4 and +Z beam.
+- Updated Phase L2b guidance to require rerunning trace_harness.py with the authoritative supervisor command before analysing scaling factors; docs/fix_plan.md now lists Phase L2b0 as step 1.
+- Issued input.md loop instructions directing Ralph to regenerate trace_py_scaling.log via `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --pixel 685 1039 --out reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log --device cpu --dtype float32` and capture fresh notes.
+- Expect Ralph to refresh trace_py_env.json/notes.md, then proceed to instrumentation regression test (tests/test_trace_pixel.py) once Phase L2b0 evidence lands.
