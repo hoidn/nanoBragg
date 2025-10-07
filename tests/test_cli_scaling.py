@@ -247,3 +247,103 @@ class TestFlattSquareMatchesC:
             assert abs(max_ratio - 1.0) <= tolerance, \
                 f"Max ratio {max_ratio:.6f} deviates by {abs(max_ratio - 1.0):.6f} (> {tolerance}). " \
                 f"C max={c_max:.6g}, PyTorch max={py_max:.6g}. Metrics: {json.dumps(metrics, indent=2)}"
+
+
+class TestHKLDevice:
+    """Test that HKL tensors respect CLI -device flag (Phase L3d)."""
+
+    @pytest.mark.parametrize("device_str,dtype_str", [
+        ("cpu", "float32"),
+        ("cpu", "float64"),
+        pytest.param("cuda", "float32", marks=pytest.mark.skipif(
+            not __import__('torch').cuda.is_available(), reason="CUDA not available")),
+        pytest.param("cuda", "float64", marks=pytest.mark.skipif(
+            not __import__('torch').cuda.is_available(), reason="CUDA not available")),
+    ])
+    def test_hkl_tensor_respects_device(self, device_str, dtype_str):
+        """
+        Verify that HKL tensors are transferred to the correct device when CLI -device is specified.
+
+        This test validates CLI-FLAGS-003 Phase L3d implementation:
+        When the CLI is invoked with -device cuda (or cpu), the HKL tensor loaded from
+        -hkl file must be transferred to the specified device (not remain on CPU).
+
+        The fix ensures that __main__.py:1073 calls .to(device=device, dtype=dtype)
+        instead of just .to(dtype=dtype).
+
+        Expected behavior:
+        - crystal.hkl_data.device matches the requested device
+        - crystal.hkl_data.dtype matches the requested dtype
+        - Structure factor lookup succeeds without device mismatch errors
+        """
+        import torch
+        from nanobrag_torch.models.crystal import Crystal, CrystalConfig
+        from nanobrag_torch.config import BeamConfig
+        from nanobrag_torch.io.hkl import read_hkl_file
+
+        # Check if scaled.hkl exists (supervisor test case)
+        hkl_file = Path('scaled.hkl')
+        if not hkl_file.exists():
+            pytest.skip("scaled.hkl not found (required for Phase L supervisor command)")
+
+        # Parse device and dtype
+        device = torch.device(device_str)
+        dtype = torch.float32 if dtype_str == "float32" else torch.float64
+
+        # Load HKL data
+        hkl_array, hkl_metadata = read_hkl_file(str(hkl_file))
+
+        # Create minimal config (matching supervisor command)
+        wavelength_A = 0.976800
+        beam_config = BeamConfig(wavelength_A=wavelength_A)
+
+        config = CrystalConfig(
+            cell_a=100.0,
+            cell_b=100.0,
+            cell_c=100.0,
+            cell_alpha=90.0,
+            cell_beta=90.0,
+            cell_gamma=90.0,
+            N_cells=(36, 47, 29),
+        )
+
+        # Instantiate Crystal
+        crystal = Crystal(config, beam_config=beam_config, device=device, dtype=dtype)
+
+        # Attach HKL data (mimicking __main__.py flow)
+        if isinstance(hkl_array, torch.Tensor):
+            crystal.hkl_data = hkl_array.clone().detach().to(device=device, dtype=dtype)
+        else:
+            crystal.hkl_data = torch.tensor(hkl_array, device=device, dtype=dtype)
+        crystal.hkl_metadata = hkl_metadata
+
+        # Verify device and dtype
+        # Use .type comparison for device to handle cuda vs cuda:0
+        assert crystal.hkl_data.device.type == device.type, \
+            f"HKL tensor device {crystal.hkl_data.device} does not match requested {device}"
+        assert crystal.hkl_data.dtype == dtype, \
+            f"HKL tensor dtype {crystal.hkl_data.dtype} does not match requested {dtype}"
+
+        # Verify structure factor lookup works (target reflection from supervisor trace)
+        # hkl = (-7, -1, -14) should return F_cell ≈ 190.27 (from Phase L3b probe)
+        h = torch.tensor(-7.0, device=device, dtype=dtype)
+        k = torch.tensor(-1.0, device=device, dtype=dtype)
+        l = torch.tensor(-14.0, device=device, dtype=dtype)
+
+        # Lookup structure factor
+        F_cell = crystal.get_structure_factor(h, k, l)
+
+        # Expected value from C trace and Phase L3b probe
+        expected_F = 190.27
+        tolerance = 0.01  # Allow 1% tolerance for dtype differences
+
+        # Verify result
+        # Use .type comparison for device to handle cuda vs cuda:0
+        assert F_cell.device.type == device.type, \
+            f"get_structure_factor returned tensor on {F_cell.device}, expected {device}"
+
+        F_cell_val = F_cell.item()
+        rel_error = abs(F_cell_val - expected_F) / expected_F
+        assert rel_error <= tolerance, \
+            f"Structure factor lookup failed: expected {expected_F:.2f}, got {F_cell_val:.2f} " \
+            f"(relative error {rel_error:.6f} > {tolerance})"

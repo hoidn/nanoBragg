@@ -1070,9 +1070,9 @@ def main():
             # Check if we actually got data (not just (None, None))
             if hkl_array is not None:
                 if isinstance(hkl_array, torch.Tensor):
-                    crystal.hkl_data = hkl_array.clone().detach().to(dtype=dtype)
+                    crystal.hkl_data = hkl_array.clone().detach().to(device=device, dtype=dtype)
                 else:
-                    crystal.hkl_data = torch.tensor(hkl_array, dtype=dtype)
+                    crystal.hkl_data = torch.tensor(hkl_array, device=device, dtype=dtype)
                 crystal.hkl_metadata = hkl_metadata
 
         # Check interpolation settings

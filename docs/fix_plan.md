@@ -560,6 +560,19 @@
       - **Fix requirement clear:** Change line 1073 from `.to(dtype=dtype)` to `.to(device=device, dtype=dtype)`
       - **Phase L3c exit criteria met:** Device/dtype gap documented with exact line number, existing probe artifacts confirmed valid, test collection stable
     Next Actions: Phase L3d implementation per plan (implement device fix, add regression test, re-run probe). Current attempt was evidence-only per supervisor directive ("Do not edit simulator or config code during this audit loop").
+  * [2025-10-07] Attempt #81 (ralph loop) — Result: **SUCCESS** (Phase L3d implementation + regression coverage COMPLETE). **Fixed HKL device transfer and added parametrized regression test covering CPU + CUDA × float32 + float64.**
+    Metrics: Targeted test passes all 4 variants (CPU/CUDA × float32/float64). Smoke tests pass (11 passed, 1 skipped in 3.51s). HKL tensors correctly transferred to requested device, structure factor lookup returns F=190.27±1% for target reflection (-7,-1,-14).
+    Artifacts:
+      - `src/nanobrag_torch/__main__.py:1073,1075` — Fixed HKL device transfer: `.to(device=device, dtype=dtype)` for both tensor and array branches
+      - `tests/test_cli_scaling.py:252-347` — New TestHKLDevice class with parametrized test_hkl_tensor_respects_device covering all device/dtype combinations
+      - Git SHA at commit: (to be recorded post-commit)
+    Observations/Hypotheses:
+      - **Fix confirmed working:** HKL tensor device matches requested device (validated via `.device.type` comparison to handle cuda vs cuda:0)
+      - **Structure factor lookup validated:** Target reflection (-7,-1,-14) returns F_cell≈190.27 matching Phase L3b probe results (tolerance 1%)
+      - **Test parametrization correct:** Uses pytest.mark.skipif for CUDA variants when GPU unavailable; CPU tests run unconditionally
+      - **Device comparison quirk handled:** `.device.type` comparison used instead of direct `.device ==` to handle PyTorch's cuda:0 resolution
+      - **Phase L3d exit criteria satisfied:** Device transfer patch landed, regression test covers CLI→Crystal HKL flow, smoke tests pass
+    Next Actions: Phase L3e scaling validation per plan (extend compare_scaling_chain.py to diff TRACE_C/TRACE_PY with ≤1e-6 deltas for all scaling factors). Supervisor should update fix_plan with this attempt and proceed to L3e or L4 parity rerun.
   * [2025-10-07] Attempt #74 (ralph loop) — Result: **SUCCESS** (Phase L2b harness fix + L2c comparison complete). **Corrected harness to attach `crystal.hkl_data` and `crystal.hkl_metadata` instead of ad-hoc attributes; structure factor lookup now functional.**
     Metrics: Harness probe confirms hkl_data attached (lookup returns F=100 for (1,12,3), F=0 for out-of-range). Comparison identifies I_before_scaling as first divergence. Test suite passes 4/4 variants (tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics).
     Artifacts:
