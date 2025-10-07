@@ -1,0 +1,10 @@
+/home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:124: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  'timestamp_iso': datetime.utcnow().isoformat() + 'Z'
+Traceback (most recent call last):
+  File "/home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py", line 293, in <module>
+    main()
+    ~~~~^^
+  File "/home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py", line 175, in main
+    F_grid, h_range, k_range, l_range, h_min, k_min, l_min = read_hkl_file(str(hkl_path))
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: not enough values to unpack (expected 7, got 2)

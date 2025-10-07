@@ -1,0 +1,3 @@
+tests/test_cli_scaling.py::TestFlattSquareMatchesC::test_f_latt_square_matches_c
+
+1 test collected in 0.06s
