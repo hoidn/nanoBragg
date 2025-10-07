@@ -2202,10 +2202,12 @@
   * Optional microbenchmarks: `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --device cpu` (and `--device cuda`), plus `scripts/benchmarks/absorption_baseline.py` for detector absorption timing.
   * Shapes/ROI: 256² & 512² detectors for microbench; oversample 1; structure-factor grid enabling tricubic.
 - First Divergence (if known): Current tricubic path drops to nearest-neighbour fallback for batched pixel grids, emitting warnings and forfeiting accuracy/performance; detector absorption still loops over `thicksteps`, preventing full vectorization and creating hotspots in profiler traces (see reports/benchmarks/20250930-165726-compile-cache/analysis.md).
-- Next Actions (2025-11-23 refresh):
- 1. Phase D1 — implement batched `polint` vectorization following design_notes §3; capture targeted regression proof (`pytest tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polint_vectorized_matches_scalar`) on CPU + CUDA and document tensor-shape math in `reports/2025-10-vectorization/phase_d/polynomial_validation.md`.
- 2. Phase D2 — extend the batched polynomial path to `polin2`/`polin3`, update gather fallback to consume vectorized outputs, and add unit tests covering multi-pixel batches plus OOB mask retention.
- 3. Phase D3 — run gradient + device regression sweep (`env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py tests/test_at_str_002.py -v`) and update plan/fix_plan with metrics before proceeding to Phase E validation.
+- Next Actions (2025-11-27 refresh → galph supervision):
+  1. Phase D1 — Follow `plans/active/vectorization.md` (Phase D table) to author `reports/2025-10-vectorization/phase_d/polynomial_validation.md` with tensor-shape derivations and C references before code edits. Include tap-point plan and cite design_notes §3.
+  2. Phase D2 — Implement vectorised `polint`/`polin2`/`polin3` per plan guidance, adding CLAUDE Rule #11 docstrings and ensuring differentiability/device neutrality.
+  3. Phase D3 — Extend `tests/test_tricubic_vectorized.py` with `TestTricubicPoly` and capture collect-only evidence under `phase_d/collect.log` prior to targeted pytest runs.
+  4. Phase D4 — Execute CPU + CUDA sweeps (`env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py tests/test_at_str_002.py -v`) storing logs under `phase_d/pytest_cpu.log` & `phase_d/pytest_cuda.log`; summarise timings in `polynomial_validation.md`.
+  5. Phase E staging — After D1–D4 pass, prep `reports/2025-10-vectorization/phase_e/` (collect log, benchmark command templates) before launching E1–E3 validation tasks.
 - Attempts History:
   * [2025-10-06] Attempt #1 (ralph loop) — Result: **Phase A1 COMPLETE** (test collection & execution baseline captured). All tricubic and absorption tests passing.
     Metrics: AT-STR-002: 3/3 tests passed in 2.12s (test_tricubic_interpolation_enabled, test_tricubic_out_of_bounds_fallback, test_auto_enable_interpolation). AT-ABS-001: 5/5 tests passed in 5.88s. Collection: 3 tricubic tests found.
