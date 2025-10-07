@@ -1,0 +1,56 @@
+TRACE: Raw matrix values from file:
+TRACE:   a_star (raw) = [-0.0283771, -0.0287139, 0.0105005]
+TRACE:   b_star (raw) = [-0.00305386, 0.0101955, -0.0320944]
+TRACE:   c_star (raw) = [0.0253582, -0.0140005, -0.0103605]
+TRACE:   lambda0 = 0.9768 Angstroms
+TRACE:   scaling factor = 1e-10/lambda0 = 1.02375
+TRACE: After wavelength correction:
+TRACE:   a_star = [-0.0290511, -0.0293959, 0.0107499] |a_star| = 0.0427041
+TRACE:   b_star = [-0.00312639, 0.0104376, -0.0328567] |b_star| = 0.0346162
+TRACE:   c_star = [0.0259604, -0.014333, -0.0106066] |c_star| = 0.0314941
+TRACE: Computing cross products of reciprocal vectors:
+TRACE:   Input vectors for cross products:
+TRACE:     a_star = [-0.0290511, -0.0293959, 0.0107499]
+TRACE:     b_star = [-0.00312639, 0.0104376, -0.0328567]
+TRACE:     c_star = [0.0259604, -0.014333, -0.0106066]
+TRACE:   Cross product results:
+TRACE:     a_star x b_star = [0.000853648, -0.000988131, -0.000395128]
+TRACE:     b_star x c_star = [-0.000581643, -0.000886134, -0.000226155]
+TRACE:     c_star x a_star = [-0.000465869, 2.90622e-05, -0.00117952]
+TRACE: Reciprocal cell volume calculation:
+TRACE:   V_star = a_star . (b_star x c_star) = 4.05149e-05
+TRACE: Direct-space cell volume: V_cell = 1/V_star = 24682.3
+TRACE: Before computing real-space vectors:
+TRACE:   b_star_cross_c_star = [-0.000581643, -0.000886134, -0.000226155]
+TRACE:   c_star_cross_a_star = [-0.000465869, 2.90622e-05, -0.00117952]
+TRACE:   a_star_cross_b_star = [0.000853648, -0.000988131, -0.000395128]
+TRACE:   V_cell = 24682.3, V_star = 4.05149e-05
+TRACE: After computing real-space vectors:
+TRACE:   a = [-14.3563, -21.8718, -5.58202] |a| = 26.7514
+TRACE:   b = [-11.4987, 0.71732, -29.1132] |b| = 31.31
+TRACE:   c = [21.07, -24.3893, -9.75265] |c| = 33.6734
+TRACE: Re-generating reciprocal vectors from real-space vectors:
+TRACE:   Before re-generation: a_star = [-0.0290511, -0.0293959, 0.0107499] |a_star| = 0.0427041
+TRACE:   Before re-generation: b_star = [-0.00312639, 0.0104376, -0.0328567] |b_star| = 0.0346162
+TRACE:   Before re-generation: c_star = [0.0259604, -0.014333, -0.0106066] |c_star| = 0.0314941
+TRACE:   Cross products: b_cross_c = [-717.047, -725.557, 265.331]
+TRACE:   Cross products: c_cross_a = [-77.1664, 257.625, -810.977]
+TRACE:   Cross products: a_cross_b = [640.762, -353.771, -261.795]
+TRACE:   After re-generation: a_star = [-0.0290511, -0.0293959, 0.0107499] |a_star| = 0.0427041
+TRACE:   After re-generation: b_star = [-0.00312639, 0.0104376, -0.0328567] |b_star| = 0.0346162
+TRACE:   After re-generation: c_star = [0.0259604, -0.014333, -0.0106066] |c_star| = 0.0314941
+TRACE: Converting real-space vectors from Angstroms to meters:
+TRACE:   Before conversion: a = [-14.3563, -21.8718, -5.58202] |a| = 26.7514 Angstroms
+TRACE:   Before conversion: b = [-11.4987, 0.71732, -29.1132] |b| = 31.31 Angstroms
+TRACE:   Before conversion: c = [21.07, -24.3893, -9.75265] |c| = 33.6734 Angstroms
+TRACE:   After conversion: a = [-1.43563e-09, -2.18718e-09, -5.58202e-10] |a| = 2.67514e-09 meters
+TRACE:   After conversion: b = [-1.14987e-09, 7.1732e-11, -2.91132e-09] |b| = 3.131e-09 meters
+TRACE:   After conversion: c = [2.107e-09, -2.43893e-09, -9.75265e-10] |c| = 3.36734e-09 meters
+TRACE: Copying vectors to a0, b0, c0 (phi=0 mosaic=0 reference):
+TRACE:   a0 = [-1.43563e-09, -2.18718e-09, -5.58202e-10] |a0| = 2.67514e-09 meters
+TRACE:   b0 = [-1.14987e-09, 7.1732e-11, -2.91132e-09] |b0| = 3.131e-09 meters
+TRACE:   c0 = [2.107e-09, -2.43893e-09, -9.75265e-10] |c0| = 3.36734e-09 meters
+TRACE: Copying vectors to ap, bp, cp (phi=0 working copy):
+TRACE:   ap = [-1.43563e-09, -2.18718e-09, -5.58202e-10] |ap| = 2.67514e-09 meters
+TRACE:   bp = [-1.14987e-09, 7.1732e-11, -2.91132e-09] |bp| = 3.131e-09 meters
+TRACE:   cp = [2.107e-09, -2.43893e-09, -9.75265e-10] |cp| = 3.36734e-09 meters

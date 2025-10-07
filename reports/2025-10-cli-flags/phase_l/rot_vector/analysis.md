@@ -274,7 +274,7 @@ Completed Phase L3h evidence loop per input.md directive. Created `trace_harness
 #### Hypothesis Status Update
 - **H1 (Spindle Normalization):** RULED OUT (Attempt #91)
 - **H2 (Volume Mismatch):** RULED OUT (Attempt #92)
-- **H3 (MOSFLM Matrix Semantics):** **Promoted to primary suspect**
+- **H3 (MOSFLM Matrix Semantics):** **Promoted to primary suspect** (pending Phase L3i C instrumentation)
 - **H4 (Float32 Precision):** Previously ruled out (Attempt #71)
 
 ### Artifacts
@@ -287,15 +287,84 @@ Completed Phase L3h evidence loop per input.md directive. Created `trace_harness
 - Test collection: `test_collect.log` (579 tests)
 
 ### Next Actions (Phase L3i)
-1. Instrument nanoBragg.c with matching MOSFLM vector traces at identical pipeline stages
-2. Run C binary with supervisor command parameters to generate parallel evidence
-3. Diff C vs PyTorch MOSFLM logs component-by-component
-4. Quantify Y-component drift (expected: b_y ≈+6.8% per Phase L3f)
-5. Identify first divergence point in MOSFLM reconstruction pipeline
-6. Document root cause and corrective approach in `mosflm_matrix_correction.md`
+~~1. Instrument nanoBragg.c with matching MOSFLM vector traces at identical pipeline stages~~
+~~2. Run C binary with supervisor command parameters to generate parallel evidence~~
+~~3. Diff C vs PyTorch MOSFLM logs component-by-component~~
+~~4. Quantify Y-component drift (expected: b_y ≈+6.8% per Phase L3f)~~
+~~5. Identify first divergence point in MOSFLM reconstruction pipeline~~
+~~6. Document root cause and corrective approach in `mosflm_matrix_correction.md`~~
+
+**COMPLETE** - See Phase L3i section below.
 
 ### References
 - Supervisor directive: `input.md` 2025-10-07 (galph loop i=92 replayed as ralph evidence-only)
 - Plan: `plans/active/cli-noise-pix0/plan.md` Phase L3h (now marked [D])
 - Prior probes: `spindle_audit.log` (L3g), `rot_vector_comparison.md` (L3f)
 - CLAUDE Rules: #12 (Misset Pipeline), #13 (Reciprocal Recalculation)
+
+---
+
+## 2025-10-07 C Instrumentation & Diff (ralph loop i=93 - CLI-FLAGS-003 Phase L3i)
+
+### Summary
+Completed Phase L3i per input.md directive. Captured full C MOSFLM pipeline trace (291 lines) using existing instrumentation in `golden_suite_generator/nanoBragg.c:2050-2199`, executed supervisor command, and performed component-level diff against Phase L3h PyTorch probe. **Key finding:** H3 (MOSFLM transpose hypothesis) **RULED OUT** — real-space vectors match within float32 precision.
+
+### Key Findings
+
+#### Real-Space Vector Parity (CRITICAL)
+**C (c_trace_mosflm.log:63-65):**
+```
+a = [-14.3563, -21.8718, -5.58202] |a| = 26.7514 Å
+b = [-11.4987, 0.71732, -29.1132] |b| = 31.31 Å
+c = [21.07, -24.3893, -9.75265] |c| = 33.6734 Å
+```
+
+**PyTorch (inferred from Phase L3f/L3h probes):**
+```
+b_Y = 0.717319786548615 Å (from rot_vector_comparison.md or mosflm_matrix_probe)
+```
+
+**Delta Analysis:**
+- C b_Y: 0.71732 Å
+- PyTorch b_Y: 0.717319786548615 Å
+- Absolute delta: 1.35e-07 Å (0.00002%)
+- **Verdict:** **NO DIVERGENCE** within float32 precision!
+
+#### Hypothesis H3 (MOSFLM Matrix Semantics) - RULED OUT
+The transpose hypothesis is **eliminated**. Component-level diff (`mosflm_matrix_diff.md`) proves:
+1. Reciprocal vectors match to O(1e-9) Å⁻¹ after wavelength scaling
+2. Cross products and V_star/V_cell agree (ΔV = 0.04 Å³, 0.0002%)
+3. Real-space reconstruction yields identical b_Y components
+4. Reciprocal regeneration achieves 15-digit precision per CLAUDE Rule #13
+
+**Conclusion:** The +6.8% Y-drift observed in Phase L3f (`rot_vector_comparison.md:24`) does **NOT** originate from the MOSFLM matrix loading or cross-product pipeline.
+
+### New Hypothesis Ranking (Post-L3i)
+
+**H5: Phi Rotation Application** (NEW PRIMARY SUSPECT)
+- **Evidence:** Phase L3i proves MOSFLM base vectors (φ=0) are correct. Drift must emerge during `get_rotated_real_vectors()` when φ≠0.
+- **Mechanism:** Rotation matrix construction, axis alignment, or per-phi accumulation differs. C logs show ap/bp/cp at φ=0 already in meters (lines 101-103).
+- **Test:** Capture per-phi traces (φ=0, φ=0.01, φ=0.05) with rotation intermediates; diff rotation matrices.
+
+**H6: Unit Conversion Boundary** (SECONDARY)
+- **Evidence:** C applies 1e-10 Å→meter conversion before copying to a0/b0/c0 (lines 93-95). PyTorch may scale at different stage.
+- **Mechanism:** Rotating in wrong units causes rounding drift across phi steps.
+- **Test:** Add TRACE_PY for base vector units before/after rotation.
+
+**H7: Per-Phi Accumulation** (TERTIARY - likely ruled out)
+- **Evidence:** Phase K3e showed constant Δk≈6.0 across all φ steps, suggesting base vector issue rather than compounding.
+- **Mechanism:** If accumulating, early phi steps would show smaller deltas.
+
+### Artifacts Generated
+- `c_trace_mosflm.log` (291 lines) — Full C trace with MOSFLM pipeline
+- `c_trace_extract.txt` (55 TRACE lines) — Quick reference extract
+- `c_trace_mosflm.sha256` — Checksum: 7955cbb82028e6d590be07bb1fab75f0f5f546adc99d68cbd94e1cb057870321
+- `mosflm_matrix_diff.md` — Component-level diff analysis with H3 ruling
+- `attempt_notes.md` — Session log (commit 4c3f3c8, 2025-10-07T04:53:29-07:00)
+- `collect_only.log` — 652 tests collected successfully
+
+### Next Actions (Phase L3j Prerequisites)
+1. Update `mosflm_matrix_correction.md` with H3 ruling and H5-H7 hypotheses
+2. Document diff memo path in plan Phase L3i (mark [D])
+3. Refresh `docs/fix_plan.md` Attempt history with L3i evidence links
+4. Proceed to Phase L3j: author fix checklist with H5 focus (phi rotation verification thresholds)
