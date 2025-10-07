@@ -27,6 +27,17 @@ IMPORTANT:
 IMPORTANT
 
 
+Callchain Snapshot (analysis aid)
+- If `input.md` includes an `analysis_question`, or the factor/order relevant to your selected item is unclear, you MAY run `prompts/callchain.md` first to build a minimal, question‑driven callgraph and propose numeric tap points — without editing production code. Keep the ROI minimal and write artifacts to `reports/<initiative_id>/`.
+- Example variables:
+  analysis_question: "<what are you trying to understand or fix?>"
+  initiative_id: "<short‑slug>"
+  scope_hints: ["normalization", "scaling", "CLI flags"]
+  roi_hint: "<minimal case>"
+  namespace_filter: "<project primary package>"
+- Consume its outputs (`callchain/static.md`, `trace/tap_points.md`) to focus your implementation/debugging. If you already have sufficient context, skip this aid.
+
+
 - **Refactoring Discipline**: If you move or rename a module, file, class, or function, you MUST treat it as a single, atomic operation within the loop. This requires:
     a. Creating the new file/module structure.
     b. Moving the code to its new location.
