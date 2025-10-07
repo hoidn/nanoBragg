@@ -454,11 +454,11 @@
 - Reproduction (C & PyTorch):
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
-- First Divergence (if known): Phase K3e evidence reveals a **fundamental lattice/geometry mismatch**, not a φ-grid offset. C reports `k_frac≈−3.857` across all φ steps while PyTorch reports `k_frac≈−9.899` (Δk≈6.04 at φ=0°). This 6-unit discrepancy indicates the base reciprocal lattice vectors or scattering geometry differ before any φ rotation is applied.
-- Next Actions (2025-11-13 refresh):
-  1. Phase L2b harness fix — Update `trace_harness.py` to consume the current `read_hkl_file` `(F_grid, metadata)` signature, rebuild HKL ranges without tuple unpack errors, and capture live TRACE_PY output (`trace_py_scaling.log`) with non-placeholder polarization/absorption values. While touching the harness, mirror the CLI MOSFLM handling by assigning each reciprocal vector to `mosflm_a_star`, `mosflm_b_star`, and `mosflm_c_star` individually; the current harness packs all three into `mosflm_a_star`, leaving the others `None` and forcing default orientation (`F_cell` prints as 0 for hkl=1,12,3). **After the read, attach the grid/metadata to the Crystal (`crystal.hkl_data = F_grid`, `crystal.hkl_metadata = metadata`) — evidence in `reports/2025-10-cli-flags/phase_l/scaling_audit/harness_hkl_state.txt` shows the harness leaves `hkl_data` as `None`, so structure-factor lookup still falls back to `default_F=0`.**
-  2. Phase L2c rerun — Re-execute `scripts/validation/compare_scaling_traces.py` against the refreshed logs, update `scaling_audit_summary.md`, and record the earliest divergent factor in docs/fix_plan.md Attempt history.
-  3. Phase L3 prep — With real deltas in hand, outline the normalization fix scope (expected focus: polarization application order and F_latt mismatch) and queue targeted regression selectors.
+- First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C’s trace records `F_cell=190.27`. The remaining delta is therefore rooted in structure-factor ingestion rather than normalization math.
+- Next Actions (2025-11-15 refresh):
+  1. Phase L3a probe — Capture the supervisor pixel’s structure factor using both the HKL reader and `read_fdump` to confirm which data source produces C’s `F_cell=190.27`. Archive probe code/logs under `reports/2025-10-cli-flags/phase_l/structure_factor/`.
+  2. Phase L3b analysis — Document how nanoBragg.c synthesizes that reflection (review `nanoBragg.c:2333-2490` and the generated Fdump). Decide whether the PyTorch harness must load the C Fdump, expand the HKL grid, or adjust interpolation flags before implementation. Update the plan once the ingestion strategy is agreed.
+  3. Phase L3c onward — After structure-factor parity is proven, proceed with the normalization refactor and regression additions (plan tasks L3c–L3f) before rerunning the supervisor parity suite in Phase L4.
 - Attempts History:
   * [2025-11-13] Attempt #71 (ralph loop) — Result: **SUCCESS** (Phase L2b validation + Phase L2c complete). **Harness already functional from Attempt #69; executed comparison script to identify first divergence.**
     Metrics: 40 TRACE_PY lines captured; test suite passes 4/4 variants (cpu/cuda × float32/float64). Comparison identifies `I_before_scaling` as first divergent factor (C=943654.809, PyTorch=0, -100% delta).
@@ -468,11 +468,11 @@
       - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_env.json` - Updated environment snapshot (git_sha current, torch version, device/dtype)
     Observations/Hypotheses:
       - **Harness functional:** Attempt #70 audit was stale; Attempt #69 already resolved the `(F_grid, metadata)` API change
-      - **First divergence confirmed:** `I_before_scaling=0` in PyTorch vs `943654.809` in C indicates missing structure factor (F_cell=0 for reflection 1,12,3)
-      - **Root cause hypothesis (updated 2025-11-14):** Harness injects MOSFLM vectors incorrectly (`mosflm_a_star=[a*, b*, c*]`, other slots `None`), so `Crystal.compute_cell_tensors` falls back to default orientation and `F_cell` resolves to the default 0.0 despite the HKL grid containing hkl=(1,12,3)
+      - **First divergence confirmed:** `I_before_scaling=0` in PyTorch vs `943654.809` in C stems from the targeted pixel (685,1039) mapping to hkl≈(−7,−1,−14), where PyTorch reports `F_cell=0` but C’s trace records `F_cell=190.27`.
+      - **Root cause hypothesis (updated 2025-11-15):** Harness instrumentation is now correct; the discrepancy arises from structure-factor ingestion (HKL grid vs generated Fdump) rather than MOSFLM vector wiring.
       - **Scaling infrastructure correct:** r_e², fluence, steps, capture_fraction, polar, omega_pixel all match C within tolerances (<0.002% delta)
       - **Test coverage maintained:** tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics passes all parametrized variants
-    Next Actions: Phase L3 — Investigate why F_cell=0 for reflection (1,12,3). Check HKL file contents, structure factor lookup logic, and interpolation behavior. Update Phase L plan status to [L2b=D, L2c=D].
+    Next Actions: Phase L3 — Follow plan tasks L3a/L3b to trace how the supervisor pixel acquires `F_cell=190.27` in C (HKL vs Fdump), then proceed with the normalization/refactor steps once the ingestion gap is understood.
   * [2025-10-17] Attempt #72 (ralph loop) — Result: **SUCCESS** (Phase L2b harness MOSFLM orientation fix). **Corrected `trace_harness.py` to assign each MOSFLM reciprocal vector to its own config field instead of packing all three into `mosflm_a_star`.**
     Metrics: Harness now produces non-zero F_latt values (F_latt=1.351 vs previous 0), confirming proper orientation. Test suite passes 4/4 variants (tests/test_trace_pixel.py). Comparison script completed successfully (2 divergent factors identified).
     Artifacts:
