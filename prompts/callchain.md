@@ -1,10 +1,6 @@
 # Callchain Tracing (Evidence‑Only, Question‑Driven)
 
-This prompt drives an active, question‑oriented exploration of the codebase to map and explain the hot path (Entry → Config → Core Pipeline → Normalization/Scaling → Sink), produce a concise callgraph with file:line anchors, and propose numeric tap points for parity/debugging — without modifying production code.
-
-Use this when you need to understand “where the work happens” for a specific behavior, bug, or performance question before any fixes or refactors.
-
----
+These instructions drive an active, question‑oriented exploration of the codebase to map and explain the hot path (Entry → Config → Core Pipeline → Normalization/Scaling → Sink), produce a concise callgraph with file:line anchors, and propose numeric tap points for parity/debugging — without modifying production code.
 
 ## Inputs (provided at invocation)
 
