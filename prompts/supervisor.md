@@ -119,20 +119,19 @@ Given your findings in <1> and <2>, think about whether there's any need for a m
 Render and write ./input.md (supervisor→engineer steering memo). Overwrite the entire file every invocation. Keep length ~100–200 lines. Include these sections in order:
 Header:
 - Summary: <one‑sentence goal for this loop>
- - Phase: <Evidence | Implementation | Validation>
  - Mode: <TDD | Parity | Perf | Docs | none>
 - Focus: <plan item ID/title from docs/fix_plan.md>
 - Branch: <expected branch>
 - Mapped tests: <validated list | none — evidence‑only>
 - Artifacts: <key paths to produce under reports/>
 - Do Now: 1 line naming the exact docs/fix_plan.md item (ID and title) to execute this loop, plus the exact pytest command/env to reproduce it (only when an authoritative mapping exists). If no such test exists, the Do Now MUST be to author the minimal targeted test first and then run it. If you intend to delegate the choice, write “Do Now: delegate” and provide decision guidance below.
-  - Note: In Evidence, do not run the full suite. Allowed: pytest --collect-only to validate selectors; in TDD mode only, run one targeted selector to confirm a new failing test. All other test execution is deferred to Ralph.
+  - Note: If operating in supervisor evidence mode (internal-only), do not run the full suite. Allowed: pytest --collect-only to validate selectors; in TDD mode only, run one targeted selector to confirm a new failing test. All other test execution is deferred to Ralph. Do not include any Phase label in input.md.
 <Do Now guidelines>
-Phase Gate (Evidence, supervisor-scoped): No full pytest runs. Allowed: non-mutating probes and CLI validation tools (e.g., scripts/validation/*, nb-compare, pixel trace); pytest --collect-only to validate selectors; and in TDD mode only, a single targeted pytest run to confirm the newly authored test fails. Do not change production code. This gate applies only to galph. Ralph is exempt.
+Supervisor Evidence Gate (internal-only): No full pytest runs. Allowed: non-mutating probes and CLI validation tools (e.g., scripts/validation/*, nb-compare, pixel trace); pytest --collect-only to validate selectors; and in TDD mode only, a single targeted pytest run to confirm the newly authored test fails. Do not change production code. This gate applies only to galph. Ralph is exempt. Do not include any Phase label in input.md.
 Verification scripts: You may run nb-compare and scripts/validation/* to collect metrics and artifacts (no code changes). Record outputs under reports/.
-Mapped tests in Evidence: Include exact selectors in input.md; validate with --collect-only; do not run them (except the TDD failure confirmation).
-Mode flags: Mode flags are combinable and refine execution within the selected Phase. Keep Phase mutually exclusive.
-TDD mode (supervisor-scoped): When Phase=Evidence, author/update a single minimal failing test that encodes the acceptance criterion. Confirm it fails via a targeted pytest selector; record the selector and expected failure text in input.md. Do not change production code.
+Mapped tests under supervisor evidence mode: Include exact selectors in input.md; validate with --collect-only; do not run them (except the TDD failure confirmation). Do not include any Phase label in input.md.
+Mode flags: Mode flags are combinable and refine execution; do not include any Phase label in input.md.
+TDD mode (supervisor-scoped): When operating in supervisor evidence mode, author/update a single minimal failing test that encodes the acceptance criterion. Confirm it fails via a targeted pytest selector; record the selector and expected failure text in input.md. Do not change production code, and do not include any Phase label in input.md.
 Command Sourcing (tests): Only include an exact pytest command in Do Now when sourced from an authoritative mapping (e.g., docs/development/testing_strategy.md) or an existing, known test file/identifier. If no authoritative mapping exists, set the Do Now task to author the minimal targeted test first; do not guess at a pytest selector here.
 </Do Now guidelines>
 - If Blocked: fallback action (what to run/capture, how to record it in Attempts History).
