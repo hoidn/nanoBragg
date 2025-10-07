@@ -2054,6 +2054,24 @@
       - Artifact directories should avoid nested `.../per_phi/reports/...` duplication to keep future comparisons sane.
       - Spec review required: specs/spec-a-core.md §4 mandates no φ=0 carryover; PyTorch must offer spec-compliant default behavior while optionally emulating the C trace for parity workflows.
     Next Actions: Keep L3k.3c.3 open, produce new per-φ traces post-fix, author the spec/bug memo (L3k.3c.4), and only then move on to ROI/normalization gates.
+  * [2025-10-07] Attempt #115 (ralph Mode: Docs — Phase L3k.3c.4) — Result: **DOCUMENTATION COMPLETE** (Spec vs Parity Contract memo). **No code changes.**
+    Metrics: Documentation-only (no tests executed; pytest --collect-only succeeds with 655 tests collected).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md:116-262` — New "Phase L3k.3c.4 — Spec vs Parity Contract" section
+      - Git SHA at completion: (to be recorded at commit)
+    Observations/Hypotheses:
+      - **Spec-compliant behavior** (specs/spec-a-core.md:211): φ sampling formula mandates no φ=0 carryover; each rotation step is independent
+      - **C-code bug** (docs/bugs/verified_c_bugs.md:166 — C-PARITY-001): C implementation contains `if(phi != 0.0)` guard causing stale vector carryover from previous pixel
+      - **Current parity delta** (Δk=2.845e-05) is **expected divergence**, not implementation bug; PyTorch correctly implements spec while C has documented bug
+      - **Recommendation**: Either (a) relax VG-1 threshold to Δk ≤ 5e-5 and document as known divergence, OR (b) implement optional `--c-parity-phi-carryover` flag for validation-only C-bug emulation
+      - **Memo structure**: Normative behavior, observed bug, current evidence, implementation strategy (default vs parity mode), recommendation, references, next actions
+    Next Actions (per diagnosis.md § "Next Actions"):
+      - **Immediate**: Review memo with galph (supervisor loop) to decide threshold adjustment vs parity shim implementation
+      - If threshold adjustment: Update VG-1 gate in `fix_checklist.md` to Δk ≤ 5e-5, document rationale linking to C-PARITY-001
+      - If parity shim required: Implement `--c-parity-phi-carryover` flag per strategy in diagnosis.md (cache `_phi_last_vectors`, conditional reuse at φ=0)
+      - Regenerate traces and update `comparison_summary.md`, `delta_metrics.json` to reflect chosen approach
+      - Rerun pytest guard tests (`test_rot_b_matches_c`, `test_k_frac_phi0_matches_c`) and nb-compare
+      - **Long-term**: Add spec clarification PR, deprecate C-parity modes post-validation, document case study in lessons_learned.md
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; **(viii) Phase F3 parity evidence captured** ✅ (Attempt #12); **(ix) Phase G2 MOSFLM orientation ingestion complete** ✅ (Attempt #17); **(x) Phase G3 trace verification complete with transpose fix** ✅ (Attempt #18); (xi) Phase H lattice structure factor alignment ✅ (Attempt #25); (xii) Phase F3 parity rerun with lattice fix ❌; (xiii) Phase I polarization alignment ❌; (xiv) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌.
 

@@ -113,6 +113,154 @@ Based on the φ rotation fix implemented in Attempt #97 (src/nanobrag_torch/mode
 
 ---
 
+## 2025-10-07: Phase L3k.3c.4 — Spec vs Parity Contract
+
+**Summary**: This section establishes the normative φ rotation behavior per spec versus the C-code parity bug, and defines the implementation strategy for PyTorch.
+
+### Normative Behavior (Spec)
+
+**Source**: `specs/spec-a-core.md:211`
+
+The spec defines φ sampling as:
+```
+φ step: φ = φ0 + (step index)*phistep; rotate the reference cell (a0,b0,c0)
+about u by φ to get (ap,bp,cp).
+```
+
+**Key Points**:
+1. **Direct formula**: φ is computed explicitly from φ₀, step index, and phistep
+2. **No conditional logic**: The spec does not introduce any `if(φ != 0)` guards
+3. **No carryover**: Each φ step is independent; there is no dependence on prior-step state
+4. **Identity rotation at φ=0**: When φ=0°, the rotation is identity: rotated vectors = base vectors
+
+**Normative Expectation**: At φ_tic=0, φ=φ₀+0·phistep=φ₀. If φ₀=0°, then the rotated vectors should equal the base vectors (identity rotation). This is the **correct mathematical behavior** and matches the spec.
+
+### Observed C-Code Bug (C-PARITY-001)
+
+**Source**: `docs/bugs/verified_c_bugs.md:166-174`
+
+```
+C-PARITY-001 — φ=0 Uses Stale Crystal Vectors (Medium)
+Summary: Inside the φ loop, the rotated vectors `ap/bp/cp` are only updated
+when `phi != 0.0`; otherwise, they retain the previous state (often from the
+prior pixel's final φ step). This produces step-0 Miller fractions that mirror
+the previous pixel rather than the unrotated lattice.
+```
+
+**C-Code Implementation** (golden_suite_generator/nanoBragg.c:3040-3095):
+The C code contains an `if(phi != 0.0)` guard that prevents rotation at φ=0, causing vectors to carry over stale state from the previous pixel's final φ step.
+
+**Impact on Parity**:
+- When reproducing C-code output for validation, PyTorch must **replicate this bug** to achieve numerical equivalence
+- This is a **parity shim** requirement, not normative behavior
+- The bug affects per-pixel consistency but averages out across many pixels, making it difficult to detect in full-image comparisons
+
+### Current Evidence (2025-10-07)
+
+**Latest Trace Results** (`reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251207/compare_latest.txt`):
+
+```
+φ_tic   φ (deg)    Δk              ΔF_latt_b       Status
+--------------------------------------------------------------
+0       0.000000   2.845147e-05    0.000529        OK
+```
+
+**Observations**:
+1. **Δk = 2.845e-05** — Above VG-1 threshold (≤1e-6)
+2. **ΔF_latt_b = 0.000529** — Lattice factor deviation is small but non-zero
+3. **PyTorch behavior**: Currently implements spec-compliant identity rotation at φ=0
+4. **Mismatch source**: PyTorch uses fresh base vectors; C uses stale vectors from previous pixel
+
+**Conclusion**: The parity delta is **not an implementation bug** in PyTorch. It is evidence that PyTorch correctly implements the spec while C-code has a documented bug (C-PARITY-001).
+
+### Implementation Strategy
+
+**Goal**: Support **both** spec-compliant behavior (default) and C-parity reproduction (opt-in).
+
+#### Default Mode (Spec-Compliant, Recommended)
+
+**Behavior**:
+- Compute φ = φ₀ + tic·phistep for all steps
+- Apply rotation matrix to base vectors for all φ values (including φ=0)
+- No special-casing or carryover logic
+- Preserves gradient flow and mathematical clarity
+
+**Advantages**:
+- ✅ Correct per spec
+- ✅ Deterministic and reproducible
+- ✅ Clean implementation (no state carryover)
+- ✅ Gradient-safe (no conditional logic breaking autograd)
+
+**Disadvantages**:
+- ❌ Does not match C-code pixel-level output when φ₀=0
+
+#### Parity Mode (C-Bug Emulation, Validation Only)
+
+**Behavior**:
+- Introduce optional `--c-parity-phi-carryover` flag (or environment variable `NB_C_PARITY_PHI=1`)
+- When enabled: cache `_phi_last_vectors` and reuse at φ_tic=0 if φ==0.0
+- Emulate the C-code `if(phi != 0.0)` guard to reproduce stale-vector behavior
+
+**Implementation Approach**:
+```python
+# In Crystal.get_rotated_real_vectors():
+if self._c_parity_phi_carryover and phi_value == 0.0:
+    # Reuse cached vectors from previous pixel's last phi step
+    rotated_vectors = self._phi_last_vectors
+else:
+    # Spec-compliant: fresh rotation from base vectors
+    rotated_vectors = self._apply_phi_rotation(base_vectors, phi_value)
+    self._phi_last_vectors = rotated_vectors  # Cache for next pixel
+```
+
+**Advantages**:
+- ✅ Achieves C-parity for validation tests
+- ✅ Isolated behind feature flag (no impact on default behavior)
+- ✅ Allows AT-PARALLEL tests to pass with correlation ≥0.9995
+
+**Disadvantages**:
+- ❌ Adds complexity
+- ❌ Requires careful gradient handling (cache invalidation on device/dtype change)
+- ❌ Not recommended for production use
+
+### Recommendation
+
+**Phase L3k.3c.3 Implementation**:
+1. **Do NOT implement the parity shim immediately**
+2. First verify that the spec-compliant implementation is correct (gradcheck passes, physics tests pass)
+3. Document the Δk=2.845e-05 parity delta as **expected divergence** due to C-PARITY-001
+4. If AT-PARALLEL tests require stricter parity, implement the optional `--c-parity-phi-carryover` flag as a **separate follow-up task**
+
+**Rationale**:
+- The VG-1 gate (Δk ≤ 1e-6) was set assuming perfect C-parity was achievable
+- Now that we've identified C-PARITY-001 as a verified bug, we should **relax the threshold** or **accept the delta** as a known divergence
+- Implementing a bug emulation shim increases code complexity and maintenance burden
+- Better approach: Update VG-1 threshold to reflect realistic parity expectations (e.g., Δk ≤ 5e-5) and document the divergence
+
+### References
+
+- Normative spec: `specs/spec-a-core.md:211` (φ sampling formula)
+- C-code bug: `docs/bugs/verified_c_bugs.md:166` (C-PARITY-001)
+- Implementation plan: `plans/active/cli-noise-pix0/plan.md:310` (L3k.3c.4)
+- Current evidence: `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251207/compare_latest.txt`
+- Prior analysis: `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/diagnosis.md`
+
+### Next Actions
+
+**Immediate** (Phase L3k.3c.3 refinement):
+1. Review this memo with galph (supervisor) to decide on threshold adjustment vs parity shim
+2. If threshold adjustment: Update VG-1 gate in `fix_checklist.md` to Δk ≤ 5e-5, document rationale
+3. If parity shim required: Implement `--c-parity-phi-carryover` flag per strategy above
+4. Regenerate traces and update `comparison_summary.md`, `delta_metrics.json`
+5. Rerun pytest guard tests and nb-compare to validate chosen approach
+
+**Long-Term** (Post-CLI-FLAGS-003):
+- Add spec clarification PR to explicitly state φ=0 behavior expectations
+- Consider deprecating C-parity modes once validation suite is complete
+- Document this case study in `docs/development/lessons_learned.md` as an example of spec-vs-implementation divergence handling
+
+---
+
 ## Previous Phases
 
 (Prior diagnosis entries preserved below for continuity — see analysis.md for detailed investigations)
