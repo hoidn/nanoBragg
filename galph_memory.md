@@ -1509,3 +1509,11 @@ Follow-ups for Ralph:
 - Focused on CLI-FLAGS-003 after Attempt #77; updated `plans/active/cli-noise-pix0/plan.md` (added 2025-11-17 gap snapshot, marked L3a [D], clarified evidence expectations) and refreshed `docs/fix_plan.md` next-actions list to center L3c harness/CLI audits and L3e validation script.
 - Authored new `input.md` (Parity mode) directing Ralph to rerun the scaling trace harness with scaled.hkl attached, capture HKL metadata in `harness_hkl_state_20251117.txt`, promote new trace/env snapshots, and update `analysis.md` before touching simulator code.
 - Key follow-up for Ralph: execute the harness audit command, preserve timestamped artifacts, summarise findings in analysis.md, and log outcomes in fix_plan prior to proceeding to the CLI ingestion audit (L3c) next loop.
+
+## 2025-11-17 (galph loop — CLI-FLAGS L3c update)
+- `git pull --rebase` clean; reviewed specs/spec-a-cli.md, docs/architecture/detector.md, config map, testing strategy, plan/fix_plan entries, and latest Phase L artifacts before selecting focus.
+- Marked Plan L3b complete and redirected L3c toward auditing `__main__.py` HKL ingestion; added new gap snapshot note about Attempt #78 harness parity.
+- Updated docs/fix_plan.md Next Actions + Attempt #78 to reflect harness success and to queue the CLI ingestion audit, regression coverage, validation script, and parity rerun.
+- Authored input.md (Parity mode) directing Ralph to run the CLI audit script and capture findings under `reports/2025-10-cli-flags/phase_l/structure_factor/` before touching simulator code.
+- Follow-up: expect CLI ingestion audit results + `cli_hkl_audit.md` artifacts next loop, then proceed to regression tests (L3d).
+- Logged new fix_plan items ABS-OVERSAMPLE-001 and SOURCE-WEIGHT-001 with dedicated plans (`plans/active/oversample-thick-subpixel.md`, `plans/active/source-weight-normalization.md`) to track oversample_thick bug and source-weight normalization bug.

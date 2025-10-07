@@ -17,8 +17,10 @@
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
 | [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | in_progress |
 | [VECTOR-TRICUBIC-001](#vector-tricubic-001-vectorize-tricubic-interpolation-and-detector-absorption) | Vectorize tricubic interpolation and detector absorption | High | in_planning |
+| [ABS-OVERSAMPLE-001](#abs-oversample-001-fix-oversample_thick-subpixel-absorption) | Fix -oversample_thick subpixel absorption | High | in_planning |
 | [CLI-DTYPE-002](#cli-dtype-002-cli-dtype-parity) | CLI dtype parity | High | in_progress |
 | [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | in_progress |
+| [SOURCE-WEIGHT-001](#source-weight-001-correct-weighted-source-normalization) | Correct weighted source normalization | Medium | in_planning |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | in_progress |
 
@@ -509,22 +511,6 @@
       - **Root cause remains configuration/loading:** The F_cell=0 divergence in trace_py_scaling.log stems from harness/CLI not loading/attaching HKL data, NOT from missing reflections or broken lookup logic
       - **Phase L3a exit criteria satisfied:** Fresh probe log and analysis captured with current environment metadata; HKL coverage ranges documented and reconciled
     Next Actions: Phase L3c harness audit per plan guidance (review trace_harness.py lines 206-236, compare against probe successful pattern, fix HKL attachment). NO simulator.py changes needed (scaling math correct per L2c, lookup logic works per L3a probe).
-  * [2025-11-17] Attempt #78 (ralph loop) — Result: **SUCCESS** (Phase L3c harness audit COMPLETE). **Executed supervisor command via trace harness; confirmed HKL data properly loaded with F_cell=190.27 matching probe.**
-    Metrics: Evidence-only loop (no production code changed). Harness run successful: 40 TRACE_PY lines captured, F_cell=190.270004272461 retrieved, pixel intensity=2.38e-07. Test collection stable (2 tests in test_cli_scaling.py).
-    Artifacts:
-      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling_20251117.log` — Fresh trace with F_cell=190.27
-      - `reports/2025-10-cli-flags/phase_l/scaling_audit/config_snapshot_20251117.json` — Configuration snapshot
-      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_env_20251117.json` — Environment metadata (git SHA acab43b, Torch 2.8.0+cu128)
-      - `reports/2025-10-cli-flags/phase_l/scaling_audit/harness_hkl_state_20251117.txt` — HKL grid metadata (49×57×62, ranges confirmed)
-      - `reports/2025-10-cli-flags/phase_l/scaling_audit/collect_cli_scaling_20251117.log` — Test collection verification
-      - `reports/2025-10-cli-flags/phase_l/structure_factor/analysis_20251117.md` — Updated analysis with Phase L3c confirmation section
-    Observations/Hypotheses:
-      - **Harness functional:** trace_harness.py lines 233-236 properly attach `crystal.hkl_data = F_grid_tensor` and `crystal.hkl_metadata = hkl_metadata` per Attempt #74 fix
-      - **F_cell retrieval confirmed:** Structure factor lookup returns 190.27 for hkl=(-7,-1,-14), matching C reference within 4.27e-06 delta (≈0.000002%)
-      - **Scaling chain operational:** Non-zero pixel intensity (2.38e-07) confirms proper scaling pipeline integration
-      - **Metadata parity:** HKL grid ranges (h∈[-24,24], k∈[-28,28], l∈[-31,30]) match probe findings exactly
-      - **Phase L3a+L3c complete:** Both probe verification and harness audit demonstrate correct HKL loading; ready for CLI verification (L3d)
-    Next Actions: Phase L3d CLI verification — Audit `src/nanobrag_torch/__main__.py` HKL-loading path to ensure CLI follows the same `hkl_data`/`hkl_metadata` attachment pattern as the harness; document in `cli_hkl_audit.md` before proceeding to regression tests (L3d) and scaling validation (L3e).
   * [2025-10-17] Attempt #72 (ralph loop) — Result: **SUCCESS** (Phase L2b harness MOSFLM orientation fix). **Corrected `trace_harness.py` to assign each MOSFLM reciprocal vector to its own config field instead of packing all three into `mosflm_a_star`.**
     Metrics: Harness now produces non-zero F_latt values (F_latt=1.351 vs previous 0), confirming proper orientation. Test suite passes 4/4 variants (tests/test_trace_pixel.py). Comparison script completed successfully (2 divergent factors identified).
     Artifacts:
@@ -1757,6 +1743,48 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * "Precision-critical operations (gradient checks, metric duality validation) override to float64 explicitly where required" (arch.md:313) ✅ satisfied
   * All geometry/gradient tests pass with explicit dtype overrides ✅ satisfied (27+ tests)
   * Test failures reduced from 36 to <10 ✅ satisfied (reduced to ~9 remaining, only 4 dtype-related in IO module)
+
+---
+
+## [ABS-OVERSAMPLE-001] Fix -oversample_thick subpixel absorption
+- Spec/AT: `specs/spec-a-core.md` §4.2 (Oversampling & absorption), `docs/architecture/pytorch_design.md` §2.4, AT-ABS-001 acceptance test, nanoBragg.c lines 3008-3098 (subpixel parallax loop).
+- Priority: High
+- Status: in_planning
+- Owner/Date: galph/2025-11-17
+- Plan Reference: `plans/active/oversample-thick-subpixel.md`
+- Reproduction (C & PyTorch):
+  * C: `"$NB_C_BIN" -mat A.mat -floatfile c_abs.bin -hkl scaled.hkl -nonoise -nointerpolate -oversample 2 -oversample_thick -detector_abs 320 -detector_thick 500 -detector_thicksteps 5 -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527` (restrict ROI in plan to keep runtime manageable).
+  * PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE nanoBragg --config supervisor.yaml --oversample 2 --oversample-thick` with ROI matching C run.
+  * Shapes/ROI: Oversample 2, oblique detector vectors from supervisor command, ROI ≈ 64×64 around a Bragg peak.
+- First Divergence (if known): PyTorch intensity identical whether `oversample_thick` is enabled; C nanoBragg increases capture fraction on oblique pixels by ≥3%, confirming PyTorch path skips per-subpixel geometry.
+- Next Actions:
+  1. Execute plan Phase A (A1–A3) to capture failing pytest evidence, C comparison, and contract summary under `reports/2025-11-oversample-thick/`.
+  2. Complete Phase B design notes describing tensor flow for `subpixel_coords_all` into `_apply_detector_absorption` and expected performance impact.
+  3. Implement per-subpixel absorption (Phase C) with regression tests and run parity/perf validation plus documentation updates (Phase D).
+- Attempts History:
+  * [2025-11-17] Attempt #0 — Result: backlog entry. Logged bug description (pixel centers forwarded to absorption) and created plan `plans/active/oversample-thick-subpixel.md`; no code changes yet.
+- Risks/Assumptions: Ensure GPU/CPU parity; avoid introducing Python loops; maintain differentiability by keeping tensor operations (no `.item()`/`.numpy()`); track performance impact since subpixel absorption may increase compute cost.
+
+---
+
+## [SOURCE-WEIGHT-001] Correct weighted source normalization
+- Spec/AT: `specs/spec-a-core.md` §5 (Source intensity), `docs/architecture/pytorch_design.md` §2.3, `docs/development/c_to_pytorch_config_map.md` (flux/fluence), nanoBragg.c lines 2480-2595 (source weighting loop).
+- Priority: Medium
+- Status: in_planning
+- Owner/Date: galph/2025-11-17
+- Plan Reference: `plans/active/source-weight-normalization.md`
+- Reproduction (C & PyTorch):
+  * C: `"$NB_C_BIN" -mat A.mat -floatfile c_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources.txt -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -nonoise -nointerpolate`.
+  * PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE nanoBragg -mat A.mat -floatfile py_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources.txt ...` (matching geometry).
+  * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
+- First Divergence (if known): PyTorch divides through by `n_sources` (2) after weighting, producing ~40% underestimation relative to C (which scales by total flux = sum(weights)).
+- Next Actions:
+  1. Phase A (A1–A3): Build weighted source fixture, reproduce PyTorch bias, capture C reference.
+  2. Phase B: Document normalization flow and determine whether to normalise via `source_weights.sum()` or pre-normalisation.
+  3. Phases C/D: Implement corrected scaling, add regression tests, refresh scaling traces, and update docs before closing the item.
+- Attempts History:
+  * [2025-11-17] Attempt #0 — Result: backlog entry. Issue documented and plan `plans/active/source-weight-normalization.md` created; awaiting evidence collection.
+- Risks/Assumptions: Maintain equal-weight behaviour, ensure device/dtype neutrality, and avoid double application of weights when accumulating source contributions.
 
 ---
 
