@@ -1679,3 +1679,8 @@ Follow-ups for Ralph:
 - Authored parity-mode input.md directing Ralph to reinstate the failing φ=0 test and log artifacts under reports/2025-10-cli-flags/phase_l/rot_vector/.
 - Expect Ralph to restore the C-referenced pytest assertions, capture the resulting failure log, and update diagnosis.md plus fix_plan Attempts before implementing the actual φ=0 fix.
 
+## 2025-11-22 (galph loop — φ=0 carryover evidence prep)
+- Confirmed PyTorch `Crystal.get_rotated_real_vectors` returns `rot_b_phi0_y=0.71732 Å` while C trace holds `0.671588 Å` because nanoBragg.c:3040 skips resetting `ap/bp/cp` when `phi==0`. Python snippet recorded under this loop’s notes (see console command history).
+- Noted commit 6f822dd introduced a Python loop over `phi_steps` (src/nanobrag_torch/models/crystal.py:1057-1084); plan instructs Ralph to document vectorized remediation so we can restore batched flow post-fix.
+- Updated input.md to drive CLI-FLAGS-003 Phase L3k.3c.2 evidence capture: new artifacts to land under `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/`, add delta_metrics.json + hashes, and extend diagnosis.md with vectorized fix outline.
+- No code edits made; awaiting Ralph’s documentation run before authorising implementation of the carryover emulation.
