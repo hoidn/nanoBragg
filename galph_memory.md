@@ -1435,3 +1435,11 @@ Follow-ups for Ralph:
 - Updated `plans/active/cli-noise-pix0/plan.md` gap snapshot + L2b row to mark L2b0 complete and emphasize instrumentation work; refreshed `docs/fix_plan.md` next actions (2025-11-12 refresh).
 - Authored new `input.md` directing Ralph to thread real scaling tensors through TRACE_PY, add regression test, rerun harness, and diff against C trace.
 - Focus next loop: complete Phase L2b instrumentation, record comparison metrics, then proceed to L2c.
+
+## 2025-10-06 (galph loop — Phase L2b harness focus)
+- Sync clean (git pull --rebase no-op). Reviewed docs/index.md, specs/spec-a.md shards pointer, arch.md, config map, debugging SOP, testing strategy, docs/fix_plan.md, and plans/active/* per SOP.
+- Long-term Goal #1 status: CLI-FLAGS-003 remains blocked at Phase L2b because `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py` still fabricates TRACE_PY lines (`I_before_scaling NOT_EXTRACTED`, `polar 0`, `I_pixel_final 0`). Simulator instrumentation already emits real values (see `tests/test_trace_pixel.py`), so harness must capture stdout instead of synthesizing constants.
+- Hypothesis summary: (1) Harness bypass writes placeholders → confirmed by lines 263-283 in trace_harness.py; (2) Missing stdout capture leaves trace_py_stdout.txt empty, so scaling_audit_summary.md lacks real numbers. Next step is to pipe the actual TRACE_PY output into trace_py_scaling.log before comparing to C.
+- Long-term Goal #2 check: `plans/active/vectorization.md` is still valid; Phase A evidence artifacts remain absent, so no plan rewrite yet. Ensure Ralph captures tricubic/absorption baselines before implementation when that goal activates.
+- No new plan drafted; existing CLI plan already captures Phase L2b work. Updated input.md directing Ralph to fix the harness (collect live TRACE_PY output) and rerun targeted regression test.
+- Follow-up for Ralph: execute revised input.md — update trace_harness.py to record real simulator output, refresh `trace_py_scaling.log`, update scaling_audit_summary.md with live values, then proceed to Phase L2c comparison once numbers land.
