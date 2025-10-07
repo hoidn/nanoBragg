@@ -1770,3 +1770,8 @@ Follow-ups for Ralph:
 - Issued `input.md` (Docs mode) directing Ralph to author the design note, choose the opt-in trigger, and run the collect-only selector before coding. Command: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_phi0.py --collect-only -q`.
 - Commit `7ef88d2` pushed on `feature/spec-based-2`; no tests run in supervisor loop.
 
+
+## 2025-11-28 (galph loop — CLI parity shim push)
+- Re-synced (no upstream changes) and reviewed CLI-FLAGS-003 + parity-shim plan; spec remains φ=0 carryover-free (specs/spec-a-core.md:211-214) while C bug stays quarantined in docs/bugs/verified_c_bugs.md:166-182.
+- Selected focus = CLI-FLAGS-003 Phase L3k.3c.4; no new plan needed. Input memo now steers Ralph to implement the opt-in φ carryover shim (Plan Phase C1–C5) with per-φ trace evidence and dual-mode tests.
+- No fix_plan or plan edits required this turn; parity shim plan already authoritative. Next supervisor check: confirm reports/2025-10-cli-flags/phase_l/parity_shim/... artifacts exist, docs/fix_plan attempt logged, and tests cover both spec/parity modes before advancing to L3k.3c.5.
