@@ -988,3 +988,10 @@
 - Synced `docs/fix_plan.md` Next Actions bullet 4 with the same citation so the documentation follow-up stays on the radar alongside the Option 1 cache work.
 - Authored `input.md` directing Ralph to complete M2g.1 (Option 1 design refresh) as a docs-only loop with collect-only pytest and a new memo under `reports/2025-10-cli-flags/phase_l/scaling_validation/20251208_option1_refresh/`.
 - Follow-up for Ralph: run the collect-only command, revisit `phi_carryover_diagnosis.md`, produce the updated analysis memo citing the spec section, and prepare to propose the Option 1 architecture decision next loop.
+
+## 2025-12-09 (galph loop — Phase M2g Option B setup)
+- Re-read core docs plus `phi_carryover_diagnosis.md` and the 20251208 Option 1 refresh memo; confirmed we will pursue Option B (batch-indexed cache) for CLI-FLAGS-003.
+- Updated `plans/active/cli-noise-pix0/plan.md` Status Snapshot and Next Actions to note sequential fallback removal (Attempt #155) and to direct Option B cache plumbing; marked M2g.2 [D] and rewrote M2g description to emphasise batched `(slow_indices, fast_indices)` support.
+- Synced `docs/fix_plan.md` CLI-FLAGS-003 Next Actions with the Option B decision so the ledger matches the refreshed plan.
+- Authored new `input.md` (Parity mode) instructing Ralph to implement the batch-indexed cache, thread pixel indices through the simulator, update trace tooling, run the targeted pytest selector, capture gradcheck/trace artifacts, and document the work in diagnosis notes plus fix_plan Attempt.
+- Follow-up for Ralph: land Option B cache plumbing (M2g.3–M2g.6), update tooling + documentation, complete the validation bundle (M2h, M2i), and log artifacts under new timestamped directories before moving to Phase M3.
