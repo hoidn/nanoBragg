@@ -14,11 +14,12 @@
   - `docs/bugs/verified_c_bugs.md:166-204 (C-PARITY-001)` — Source of the φ carryover bug that parity mode must emulate.
   - `plans/active/cli-phi-parity-shim/plan.md` — Companion plan governing the opt-in parity shim (Phase C complete, Phase D docs pending).
   - `reports/2025-10-cli-flags/phase_l/` — Canonical evidence directory (rot_vector, parity_shim, scaling_audit, nb_compare, supervisor_command).
-- Status Snapshot (2025-12-02):
+- Status Snapshot (2025-12-06 refresh):
   - `-nonoise` CLI plumbing merged and covered by tests; noise writers are skipped when flag present.
   - pix0 precedence fixes landed; SAMPLE pivot error corrected to ≤0.2 µm (Attempt #129).
   - Spec-compliant φ rotation restored; optional C-parity shim implemented with dual tolerance decision (|Δk| ≤ 1e-6 spec, ≤5e-5 c-parity) pending documentation sync.
-  - Scaling audit still shows first divergence at `I_before_scaling` (F_latt mismatch around HKL ≈ (−7,−1,−14)). Normalization fix + ROI nb-compare remain blocking.
+  - Scaling audit still shows first divergence at `I_before_scaling` (F_latt mismatch around HKL ≈ (−7,−1,−14)); automation currently blocked because `scripts/validation/compare_scaling_traces.py` regressed to a SIGKILL after the Phase M1 instrumentation pass (see `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T060721Z/commands.txt`).
+  - Manual parity summaries exist (e.g., `.../20251008T060721Z/manual_summary.md`), but canonical artifacts must be regenerated once the script is repaired; supervisor command nb-compare remains pending.
   - Supervisor command parity run still outstanding; latest nb-compare attempt shows correlation ≈0.9965 and intensity ratio ≈1.26e5.
 - Artifact Storage Convention: place new work in `reports/2025-10-cli-flags/phase_l/<phase_folder>/<timestamp>/` with `commands.txt`, raw logs, metrics JSON, and SHA256 hashes. Reference these paths in docs/fix_plan.md attempt logs and `fix_checklist.md`.
 
@@ -61,10 +62,18 @@ Exit Criteria: `trace_harness.py` comparisons show `F_cell`, `F_latt`, and `I_be
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| M1 | Audit HKL lookup parity | [D] | ✅ **COMPLETE** (2025-10-08T07:25:13Z). `compare_scaling_traces.py` verified operational. Script successfully processes traces, generates metrics.json, and identifies I_before_scaling as first divergence (Δrel -2.086e-03, ~0.2%). All scaling factors downstream match C within tolerance (≤1e-6). Latest evidence: `20251008T072513Z` with validation_report.md, metrics.json, scaling_validation_summary.md. Previous SIGKILL issues resolved. Targeted tests 35/35 pass. Artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T072513Z/`. |
+| M1 | Audit HKL lookup parity | [P] | Script regression reopened this gate on 2025-12-06. Recent runs (`reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T055257Z/…/060721Z/`) show `compare_scaling_traces.py` exiting via SIGKILL, forcing manual summaries. Re-establish the scripted workflow (metrics.json + summary.md + run_metadata.json) before proceeding to lattice fixes. Preserve prior success artifacts (`20251008T072513Z`) for reference while treating them as stale until the crash is resolved. |
 | M2 | Fix lattice factor propagation | [ ] | Investigate `_compute_structure_factors` and `Crystal._tricubic_interpolation` for cases returning zero F_cell. Implement fix with nanoBragg.c reference (lines 2604–3278). Add targeted pytest (`tests/test_cli_scaling_phi0.py::test_I_before_scaling_matches_c`) covering the problematic HKL. |
 | M3 | Re-run scaling comparison | [ ] | Execute `python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039` (CPU + CUDA). Confirm `metrics.json` reports first_divergence=None. Update Attempt log and `scaling_audit/scaling_comparison.md`. |
 | M4 | Documentation + checklist | [ ] | Summarize findings in `scaling_audit/summary.md`, update `fix_checklist.md` VG-2 row, and log Attempt with metrics (I_before_scaling ratio, F_latt deltas). |
+
+#### M1 Tooling Checklist — Restore Scripted Scaling Comparison
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| M1a | Capture failing repro | [ ] | Preserve the current SIGKILL evidence by rerunning the documented command (see `reports/.../20251008T060721Z/commands.txt`) into a fresh timestamp under `reports/.../scaling_validation/<ts>/commands.txt`. Record exit code, stdout/stderr, and git SHA before touching the script. |
+| M1b | Patch `compare_scaling_traces.py` | [ ] | Fix the crash while maintaining CLI/JSON schema. Cite relevant C trace expectations in comments (nanoBragg.c lines 2604–2700). Ensure the script handles TRACE_PY_TRICUBIC lines emitted since Attempt #142. |
+| M1c | Regenerate canonical artifacts | [ ] | Re-run the supervisor trace harness (spec + c-parity) and call the repaired script for each run, producing `scaling_validation_summary.md`, `metrics.json`, and `run_metadata.json` under a new timestamp. Validate with targeted pytest selectors (`tests/test_cli_scaling_phi0.py`, `tests/test_phi_carryover_mode.py`) and update `sha256.txt`. |
+| M1d | Update plan + ledger | [ ] | Once the script is stable, flip M1 back to [D], append a fix-plan Attempt detailing the repair + artifacts, and note the new timestamp in this checklist. |
 
 ### Phase N — ROI nb-compare Parity (VG‑3 & VG‑4)
 Goal: Once scaling is fixed, prove end-to-end image parity on the supervisor ROI using nb-compare and refreshed C/PyTorch outputs.

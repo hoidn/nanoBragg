@@ -908,3 +908,10 @@
 - Focus: CLI-FLAGS-003 Phase M1 follow-up. Marked plan Phase M0 tasks [D] with Attempt #144 artifact references and refreshed docs/fix_plan Next Actions to prioritize the compare_scaling_traces.py repair.
 - Rewrote input.md (Parity mode, 100 lines) directing Ralph to fix the scaling comparison script, capture a new RUN_DIR trace, rerun targeted pytest suites, and log artifacts for Phase M2.
 - Working tree now holds plan/fix_plan/input updates; expect Ralph to stabilise the script, produce new scaling_validation artifacts, update plan Attempt log, and then advance to lattice investigation next loop.
+
+## 2025-12-06 (galph loop — Phase M1 checklist reopen)
+- `git pull --rebase` clean; re-read specs/index/arch/config/testing docs plus CLI-FLAGS plan + fix_plan before analysis.
+- Found `plans/active/cli-noise-pix0/plan.md` still marked M1 [D] even though compare_scaling_traces.py regressed to SIGKILL (Attempts #140/#141, commands.txt). Reopened M1 → [P], added checklist M1a–M1d, and refreshed status snapshot with 2025-12-06 context.
+- Updated `docs/fix_plan.md` Next Actions (2025-12-06 refresh) and logged Attempt #146 documenting the plan reopen; no code/tests run.
+- Replaced input.md with Parity-mode memo pointing Ralph to execute M1a first: capture fresh crash evidence under a new timestamp, record exit codes, and log artifacts before touching the script.
+- Follow-up for Ralph: deliver M1a artifacts (commands.txt, trace, stdout, env, sha catalog), update plan M1a row + fix_plan Attempt; stop before implementing script fix so next supervisor loop can review.

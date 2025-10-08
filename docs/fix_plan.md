@@ -458,8 +458,8 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): ✅ **Instrumentation aligned (2025-10-07).** Pre-polarization `I_before_scaling` now matches C within ~0.2% (941698.5 vs 943654.8), confirming the prior −8.7% delta was a trace measurement artifact. PyTorch emits both `I_before_scaling_pre_polar` (canonical C comparison point) and `I_before_scaling_post_polar` (diagnostic). The ~0.2% residual is expected per galph debug memo (float32 + F_latt drift). See `reports/2025-10-cli-flags/phase_l/scaling_validation/20251007T222548Z/phase_m1_summary.md`.
-- Next Actions (2025-12-05 refresh):
-1. **Stabilise scaling comparison tooling** — Reproduce and fix the `scripts/validation/compare_scaling_traces.py` SIGKILL observed in Attempts #137/#141 so Phase M evidence can be generated via the canonical script instead of inline Python. Capture the patched command + sha catalog in a fresh `reports/.../scaling_validation/<timestamp>/` directory.
+- Next Actions (2025-12-06 refresh):
+1. **Phase M1 tooling recovery** — Execute the newly added checklist in `plans/active/cli-noise-pix0/plan.md` (rows M1a–M1d): capture a fresh SIGKILL repro, patch `scripts/validation/compare_scaling_traces.py` to handle TRACE_PY_TRICUBIC lines, regenerate metrics/summary/run_metadata under a new timestamp, then flip M1 back to [D] with an Attempt entry.
 2. **Phase M1 instrumentation follow-up** — Augment the trace harness (if needed) to log 4×4×4 neighbourhood weights / `sincg` inputs alongside the existing traces, then update `plans/active/cli-noise-pix0/plan.md` M1 guidance with the 20251008T070513Z audit path and the new metrics. Document results in `docs/fix_plan.md` Attempt log.
 3. **Phase M2 lattice investigation** — Use the refreshed instrumentation to isolate the φ₀ `F_latt` drift (≈0.13%). Compare against `nanoBragg.c` accumulation loops, implement the fix, and add a targeted pytest (`tests/test_cli_scaling_phi0.py::TestScalingParity::test_I_before_scaling_matches_c`).
 4. **Phase N/O readiness** — Once scaling deltas ≤1e-6, regenerate nb-compare ROI artifacts and schedule the supervisor command closure run with SHA256 manifests under `reports/2025-10-cli-flags/phase_l/`.
@@ -587,6 +587,17 @@
       - Proceed to Phase M2 (lattice factor investigation) per plan task M2 guidance
       - Use refreshed 20251008T072513Z artifacts as baseline for M2 HKL/F_latt debugging
       - Update `plans/active/cli-noise-pix0/plan.md` Phase M1 task with success timestamp and artifact path
+  * [2025-12-06] Attempt #146 (galph loop — Phase M1 plan reopen, Mode: Planning) — Result: **PLAN UPDATE** (tooling regression logged; no code/tests executed).
+    Metrics: Planning-only.
+    Artifacts:
+      - `plans/active/cli-noise-pix0/plan.md` — Status snapshot refreshed to 2025-12-06; M1 row reset to [P] with new checklist items (M1a–M1d) referencing `reports/.../20251008T060721Z` SIGKILL evidence and 20251008T072513Z baseline docs.
+      - `docs/fix_plan.md` — Next Actions updated (2025-12-06) to mirror the reopened M1 tooling tasks.
+    Observations/Hypotheses:
+      - Despite Attempt #145, subsequent harness runs (Attempts #140/#141 evidence) still reproduce SIGKILL when TRACE_PY_TRICUBIC lines are present; automation must be restored before VG‑2 can advance.
+      - Manual summaries from `reports/.../20251008T060721Z/` remain valid for context but cannot satisfy the scripted artifact requirement.
+    Next Actions:
+      - Ralph to execute M1 checklist items (capture fresh repro, patch script, regenerate canonical artifacts, log Attempt) before touching Phase M2.
+      - Supervisor to verify new artifacts resolve the crash and then green-light Phase M2 lattice investigation.
   * [2025-10-07] Attempt #139 (ralph loop i=139, Mode: Docs) — Result: ✅ **SUCCESS** (Phase M1 COMPLETE — Pre-Polar Trace Instrumentation). **Code changes: simulator trace + comparison script.**
     Metrics: Test collection: 699 tests in 2.68s. Trace: 44 TRACE_PY lines (2 new labels). Comparison: pre-polar (941698.5) vs C (943654.8) → −0.207% delta (within expected tolerance).
     Artifacts:
