@@ -629,6 +629,29 @@
       1. Restore TRACE_C_PHI logging in golden_suite_generator/nanoBragg and regenerate fresh C trace aligned with current binary.
       2. Investigate φ=0 replacement path for numerical drift (check reciprocal recalc, broadcasting precision) to drive Δk ≤ 1e-6.
       3. Keep `plans/active/cli-phi-parity-shim/plan.md` C4 in [P] state; update parity shim design/diagnosis docs once fix identified.
+  * [2025-10-08] Attempt #123 (ralph loop i=125, Mode: Parity/Evidence) — Result: **EVIDENCE COMPLETE** (Phase C4 fresh parity evidence captured). **VG-1 remains unmet (Δk=2.845e-05 > 1e-6 target), but dual-mode validation successful and all tests pass.**
+    Metrics: Spec mode φ=0 Δk=1.811649e-02 (EXPECTED divergence per spec); φ=1..9 max Δk=2.845e-05 (OK). C-parity mode all φ steps max Δk=2.845e-05 (reproduces C-PARITY-001 but >1e-6). Targeted tests: TestPhiCarryoverBehavior 12/12 passed (2.56s), TestPhiZeroParity 2/2 passed (2.13s). Focused suite: 54/54 passed (2.74s). Test collection: 699 tests collected successfully.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T013345Z/trace_py_spec.log` & `_per_phi.json` — Spec mode PyTorch trace
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T013345Z/trace_py_c_parity.log` & `_per_phi.json` — C-parity mode PyTorch trace
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T013345Z/c_trace_phi.log` — Reference C trace (copied from 20251008T005247Z)
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T013345Z/delta_metrics.json` — VG-1 metrics (c-parity passes old 5e-4 threshold, fails new 1e-6)
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T013345Z/per_phi_summary_{spec,c_parity}.txt` — Per-φ comparison summaries
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T013345Z/pytest_phi_carryover.log` — 12/12 carryover tests passed
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T013345Z/pytest_phi0.log` — 2/2 phi0 tests passed
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T013345Z/summary.md` — Complete analysis with hypotheses for 2.8e-5 drift
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T013345Z/sha256.txt` — Cryptographic verification
+    Observations/Hypotheses:
+      - **Spec mode correct:** φ=0 divergence (Δk=1.811649e-02) confirms normative spec behavior (fresh rotation each step, no carryover)
+      - **C-parity mode functional:** Successfully reproduces C-PARITY-001 bug; all φ steps have consistent ~2.845e-05 drift
+      - **Residual drift systematic:** The plateau pattern suggests numerical precision issue rather than logic bug
+      - **Tests validate behavior:** Dual-mode tests (CPU+CUDA, float32+float64) pass; device/dtype neutrality confirmed
+      - **VG-1 gate blocked:** Cannot meet ≤1e-6 without either (a) relaxing tolerance (supervisor decision), (b) regenerating C trace with TRACE_C_PHI, or (c) investigating precision paths (reciprocal recalc, rotation ops)
+    Next Actions:
+      1. Regenerate C trace with TRACE_C_PHI instrumentation to rule out staleness (per input.md:16-21)
+      2. Profile reciprocal vector recomputation (cross products, V_actual division) to identify 2.8e-5 source
+      3. Supervisor decision: Accept 2.8e-5 parity for validation purposes (relax VG-1), OR continue investigation
+      4. Phase C5 documentation can proceed with current evidence while C4 parity refinement continues
   * [2025-11-21] Attempt #97 (ralph loop i=97) — Result: **SUCCESS** (Phase L3k.2 implementation COMPLETE). **φ rotation fix applied: removed independent reciprocal vector rotation, added reciprocal recomputation from rotated real vectors per CLAUDE Rule #13.**
     Metrics: Targeted tests pass (test_f_latt_square_matches_c PASSED, 57/57 crystal/geometry tests PASSED); test collection succeeds (653 tests); Python syntax valid.
     Artifacts:

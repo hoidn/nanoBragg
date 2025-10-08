@@ -1,0 +1,29 @@
+{
+  "timestamp": "2025-10-08T01:33:45Z",
+  "spec_mode": {
+    "phi_0_divergence": {
+      "delta_k": 1.811649e-02,
+      "delta_F_latt_b": 1.912228,
+      "status": "DIVERGE (expected per spec)"
+    },
+    "other_phi_steps": {
+      "max_delta_k": 2.845147e-05,
+      "max_delta_F_latt_b": 0.004359,
+      "status": "OK"
+    }
+  },
+  "c_parity_mode": {
+    "all_phi_steps": {
+      "max_delta_k": 2.845147e-05,
+      "max_delta_F_latt_b": 0.004359,
+      "status": "OK (but exceeds VG-1 target of 1e-6)"
+    },
+    "vg1_gate": {
+      "target_delta_k": 1e-6,
+      "actual_delta_k": 2.845147e-05,
+      "passes": false,
+      "ratio": 28.45
+    }
+  },
+  "interpretation": "Spec mode behaves correctly (diverges at φ=0). C-parity mode achieves parity with C bug but still has 2.8e-5 residual drift vs VG-1 target of 1e-6."
+}
