@@ -3318,3 +3318,23 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - Phase M2: Compare PyTorch's 64-value grid against C-code grid for the same pixel (685, 1039) to isolate which neighborhood values contribute to F_latt drift
       - Phase M2a: Extend instrumentation to emit per-coefficient polynomial weights (beyond raw grid values) for full interpolation audit
       - Phase M3: Fix the identified 0.13% F_latt mismatch and verify I_before_scaling delta ≤ 1e-6
+  * [2025-10-22] Attempt #151 (ralph loop i=151, Mode: Parity) — Result: ✅ **DIAGNOSIS COMPLETE** (Phase M2 cache architecture mismatch identified). **Code changes: Test configuration fix only.**
+    Metrics: Test result: F_cell PASSES (config parity restored), F_latt FAILS with 157.88% relative error (cache architecture issue). Expected F_latt: -2.383196653, Got: 1.379483851.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md` — Complete architectural diagnosis with 3 solution options
+      - `tests/test_cli_scaling_parity.py:92-112` — Configuration fix (CUSTOM convention, correct dimensions 2527×2463, custom vectors)
+      - Pytest output showing F_latt failure (captured in diagnosis doc)
+    Code Changes:
+      - `tests/test_cli_scaling_parity.py:95-112` — Changed detector config from MOSFLM to CUSTOM convention, swapped spixels/fpixels dimensions (2527×2463), added custom detector vectors (fdet/sdet/odet/beam), added pix0_override_m per trace_harness.py configuration
+    Observations/Hypotheses:
+      - **Configuration parity bug FIXED**: Test now uses CUSTOM convention matching C trace; F_cell passes (config-dependent values now match)
+      - **Cache architecture mismatch IDENTIFIED**: Current cache operates per-Simulator.run() invocation, but C-PARITY-001 requires per-pixel carryover WITHIN a single image
+      - **Root cause**: `Simulator.run()` calls `get_rotated_real_vectors()` ONCE, computing all pixels' φ steps in single vectorized batch → no per-pixel state → cache only works between different images, not between consecutive pixels
+      - **Gradient breaking**: Current implementation uses `.detach().clone()` (line 1308) which severs gradient flow, violating Core Rule #7
+      - **Architectural constraint**: Vectorization is mandatory (Core Rule #16) → cannot introduce per-pixel Python loops
+      - **Recommended solution**: Option 1 (Pixel-Indexed Cache) — store φ=final vectors per-pixel in shape (S,F,N_mos,3), apply carryover during physics computation without breaking vectorization or gradients
+    Next Actions:
+      - Phase M2 implementation (next loop): Design pixel-indexed cache structure, implement cache in Crystal.__init__, add apply_phi_carryover() method, wire into _compute_physics_for_position()
+      - Phase M2 testing: Add multi-pixel test (pixels 684,1039 → 685,1039) to verify cache hits, run test_cli_scaling_parity.py (should pass after impl), regenerate trace_harness.py with TRACE_PY_ROTSTAR showing cache activity
+      - Memory budget: Accept ~4-8 GB cache for full 2527×2463 detector at float32 (acceptable for modern hardware)
+      - Document decision: Update plans/active/cli-noise-pix0/plan.md Phase M2 with architecture choice and rationale

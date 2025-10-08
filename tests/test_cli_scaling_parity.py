@@ -90,17 +90,25 @@ class TestScalingParity:
         )
 
         # Detector configuration (supervisor command)
+        # CRITICAL: Must use CUSTOM convention with custom vectors to match C trace
+        # Per trace_harness.py lines 79-99 and subagent analysis
         detector_config = DetectorConfig(
             distance_mm=231.274660,
             pixel_size_mm=0.172,
-            spixels=2463,
-            fpixels=2527,
-            detector_convention=DetectorConvention.MOSFLM,
-            # Match supervisor command beam center (Xbeam=217.742295, Ybeam=213.907080)
-            # In MOSFLM convention, beam_center_f corresponds to Xbeam and beam_center_s to Ybeam
+            spixels=2527,  # Corrected from 2463 - matches C trace dimensions
+            fpixels=2463,  # Corrected from 2527
+            detector_convention=DetectorConvention.CUSTOM,  # Changed from MOSFLM
+            # Match supervisor command beam center
             beam_center_f=217.742295,
             beam_center_s=213.907080,
             oversample=1,
+            # Custom detector vectors (from trace_harness.py lines 93-99)
+            custom_fdet_vector=(0.999982, -0.005998, -0.000118),
+            custom_sdet_vector=(-0.005998, -0.999970, -0.004913),
+            custom_odet_vector=(-0.000088, 0.004914, -0.999988),
+            custom_beam_vector=(0.00051387949, 0.0, -0.99999986),
+            # Custom pix0 override (mm→m conversion from trace_harness.py line 98)
+            pix0_override_m=(-0.216336293, 0.215205512, -0.230200866)
         )
 
         # Instantiate models
