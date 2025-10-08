@@ -92,6 +92,32 @@ Output structure:
 </logs>
 ```
 
+### Manual state handoff (without running a loop)
+
+Use the stamper to flip sync/state.json to the next actor and publish it without executing a supervisor/loop body:
+
+```bash
+# Supervisor hands off to Ralph (success)
+python -m scripts.orchestration.stamp_handoff galph ok --branch feature/spec-based-2
+
+# Supervisor marks failure (no handoff)
+python -m scripts.orchestration.stamp_handoff galph fail --branch feature/spec-based-2
+
+# Ralph hands off to Supervisor (success; increments iteration)
+python -m scripts.orchestration.stamp_handoff ralph ok --branch feature/spec-based-2
+
+# Ralph marks failure (no increment)
+python -m scripts.orchestration.stamp_handoff ralph fail --branch feature/spec-based-2
+```
+
+Flags:
+- `--no-pull` to skip pre-stamp pull; `--no-push` to skip push (local-only)
+- `--allow-dirty` to bypass dirty-tree guard (not recommended)
+
+Notes:
+- Messages and iteration semantics match the orchestrators: Supervisor stamps at the current iteration; Ralph stamps success at the next iteration.
+- The tool updates `last_update`, `lease_expires_at`, and `galph_commit`/`ralph_commit` using the current HEAD.
+
 ## Flag Reference
 - Supervisor
   - `--sync-via-git` · `--sync-loops N` · `--poll-interval S` · `--max-wait-sec S`
