@@ -1195,6 +1195,13 @@
 - Refreshed `docs/fix_plan.md:461-468` Next Actions bullet to reference the checklist and fix_<timestamp> artifact bundle requirements.
 - Authored new `input.md` (Mode: Parity) instructing Ralph to execute M4a–M4d, run targeted pytest + compare_scaling_traces commands, and store artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/`.
 - Follow-up for Ralph: implement the normalization division in `src/nanobrag_torch/simulator.py` with required `nanoBragg.c` snippet, extend per-φ logging, regenerate traces, update fix_plan/plan entries, then advance to Phase M5 after evidence is green.
+## 2025-12-17 (galph loop — Phase M4d evidence planning)
+- Coin flip = heads; reviewed Ralph commits 8b4c15a (initial normalization patch), d8648be (docs refresh), and fe3a328 (double-division fix). No regressions; final commit restores single `/ steps` division while preserving vectorization.
+- Updated `plans/active/cli-noise-pix0/plan.md` to mark M4b/M4c [D], keep M4 overall [P], and narrow M4d guidance to the outstanding compare_scaling_traces + hypotheses artifacts.
+- Refreshed `docs/fix_plan.md` CLI-FLAGS-003 section to acknowledge Attempts #188–#189 landing the fix, reframe Next Actions around M4d evidence capture, and remove obsolete double-division warnings.
+- Authored new `input.md` (Mode: Parity, 100 lines) directing Ralph to rerun `trace_harness.py`, execute `scripts/validation/compare_scaling_traces.py`, capture diff_trace + updated lattice_hypotheses, refresh sha256 manifests, and log Attempt #190 before moving to Phase M5.
+- No new plan files opened; focus stays on completing Phase M4d evidence before CUDA/gradcheck (M5) begins.
+- Follow-up: Ralph to populate `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/` with trace, metrics, diff summary, updated commands/env/sha256, close Hypothesis H4, and update fix_plan/galph_memory accordingly.
 
 ## 2025-12-16 (galph loop — Phase M4 normalization planning)
 - Git sync remained clean; revisited core spec/arch/testing docs plus active plans per SOP.

@@ -1,100 +1,100 @@
-Summary: Deliver the CLI-FLAGS-003 Phase M4 normalization correction so PyTorch matches the nanoBragg.c scaling chain again.
+Summary: Capture the Phase M4d parity evidence bundle so the CLI-FLAGS-003 normalization fix is backed by current traces, metrics, and ledger updates.
 Mode: Parity
 Focus: CLI-FLAGS-003 Handle -nonoise and -pix0_vector_mm
 Branch: feature/spec-based-2
 Mapped tests:
-- tests/test_cli_scaling_phi0.py::TestScalingParity::test_rot_b_matches_c
-- tests/test_cli_scaling_phi0.py::TestScalingParity::test_k_frac_phi0_matches_c
-- tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c
-- tests/test_suite.py::TestTier1TranslationCorrectness::test_cli_scaling_trace_cpu
-- tests/test_suite.py::TestTier1TranslationCorrectness::test_cli_scaling_trace_cuda
+- pytest --collect-only -q tests/test_cli_scaling_phi0.py
+- python -m pytest --collect-only tests/test_suite.py::TestTier1TranslationCorrectness::test_cli_scaling_trace_cpu
+- (Do not execute targeted pytest or CUDA runs this loop; collect-only logs satisfy evidence requirements.)
 Artifacts:
-- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/summary.md — recap of normalization change, parity metrics, follow-on steps.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/trace_py_fix.log — TRACE_PY lines matching TRACE_C ordering.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/trace_py_phi.log — per-φ instrumentation from M3a schema.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/trace_c_baseline.log — either fresh capture or pointer to reused baseline.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/compare_scaling_traces.json — factor-by-factor deltas with first_divergence None.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/compare_scaling_traces.txt — human-readable diff summary.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/pytest.log — full CPU run including targeted selectors.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/pytest_collect.log — proof of discovery for mapped tests.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/commands.txt — chronological reproduction commands.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/env.json — python/torch/device/dtype snapshot.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/sha256.txt — checksum table for bundle validation.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/git_sha.txt — commit hash after landing fix.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/lattice_hypotheses.md — Hypothesis H4 closure note with before/after intensities.
-- docs/fix_plan.md Attempt #??? update — describe Phase M4 completion, metrics, artifact paths, next steps.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/run_metadata.json — CLI harness metadata (device, dtype, oversample, steps).
-- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/diff_trace.md — first-divergence narrative confirming parity.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/metrics.json — machine-readable factor table for regression tracking.
-Do Now: CLI-FLAGS-003 Phase M4b normalization fix — KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py
-If Blocked: Capture a partial bundle under reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/summary.md describing the blocker, run pytest --collect-only -q tests/test_cli_scaling_phi0.py, attach both paths to docs/fix_plan.md Attempt history, then pause.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/trace_py_scaling.log
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/compare_scaling_traces.txt
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/compare_scaling_traces.md (optional pretty version if you prefer markdown extension)
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/metrics.json
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/run_metadata.json
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/diff_trace.md
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/commands.txt (append new steps)
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/pytest_collect.log
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/env.json (update only if versions changed)
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/sha256.txt (refreshed after edits)
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/summary_pre_refresh.md (optional backup)
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md (Hypothesis H4 closure)
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/sha256.txt (refreshed after edit)
+- reports/2025-10-cli-flags/phase_l/scaling_validation/scaling_validation_summary.md (updated if compare script regenerates global summary)
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/trace_py_scaling.log (reference path cited in documentation)
+- docs/fix_plan.md (Attempt #190 entry with artifact pointers)
+- galph_memory.md (add short note if new findings emerge)
+Do Now: CLI-FLAGS-003 Phase M4d — KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --pixel 685 1039 --device cpu --dtype float64 --out reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/
+If Blocked: Record the failing command and stderr in fix_20251008T223805Z/blockers.md, refresh sha256.txt, run pytest --collect-only -q tests/test_cli_scaling_phi0.py, append the blocker context to docs/fix_plan.md, and pause for supervisor guidance.
 Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md:60-71 keeps M4b–M4d ahead of CUDA and nb-compare, so finishing them is mandatory before any other CLI work.
-- docs/fix_plan.md:451-480 records M4a closure and explicitly calls for eliminating the double `/ steps` regression.
-- specs/spec-a-core.md:247-254 mandates a single `S = r_e^2 · fluence · I / steps` scaling stage with last-value semantics for capture_fraction/polar/omega.
-- golden_suite_generator/nanoBragg.c:3336-3364 is the authoritative reference sequence for the normalization we need to mirror exactly.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/analysis_20251008T212459Z.md quantifies the current −14.6% I_before_scaling deficit that this fix must eliminate.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T223046Z/design_memo.md documents the double-division root cause and provides citations for implementation.
-- docs/development/c_to_pytorch_config_map.md:34-56 reiterates the scaling parity expectations between C and PyTorch simulators.
+- plans/active/cli-noise-pix0/plan.md:60-79 keeps Phase M4 flagged [P] until M4d artifacts land; completing this unblocks Phase M5.
+- docs/fix_plan.md:466-520 now call for compare_scaling_traces outputs, diff trace narrative, and hypotheses closure before CUDA/gradcheck work resumes.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/summary.md documents Attempts #188-#189 and explicitly requests the trace refresh and diff summary you will capture.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/c_trace_scaling.log is the canonical C trace; pairing it with the new Py trace keeps the comparison authoritative.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/metrics.json codifies the -14.6% deficit we expect to eliminate.
+- galph_memory.md (2025-12-16 entry) identifies Phase M4d evidence as the last blocker before CUDA smoke tests; closing it keeps long-term goal #1 on track.
+- plans/active/vectorization.md remains gated on CLI parity; finishing M4d removes that dependency so long-term goal #3 can proceed when scheduled.
+- specs/spec-a-core.md:247-254 codifies the single-division normalization rule; parity metrics must reflect a null divergence to show compliance.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/commands.txt needs today’s command history appended prior to checksum refresh so the bundle remains reproducible.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/scaling_validation_summary.md should be refreshed if the compare script regenerates the consolidated markdown.
+- prompts/supervisor.md references the CLI parity workflow; updated evidence ensures future loops cite current artifacts instead of stale bundles.
+- plans/archive/cli-phi-parity-shim/plan.md remains as historical context; this evidence demonstrates the spec-only rotation path is now validated.
 How-To Map:
-- Re-read the spec + C snippet: sed -n '240,270p' specs/spec-a-core.md && nl -ba golden_suite_generator/nanoBragg.c | sed -n '3332,3368p'.
-- Inspect the current PyTorch normalization pipeline: nl -ba src/nanobrag_torch/simulator.py | sed -n '940,1140p'.
-- Adjust the physics path so normalization divides by `steps` exactly once alongside `self.r_e_sqr * self.fluence`, updating TRACE_PY emission to log the pre-division accumulator.
-- Use /tmp/m3a_instrumentation_design.md for TRACE_PY_PHI format while refreshing per-φ logging after the fix.
-- Run KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py on CPU float64; if CUDA available, repeat with --device cuda.
-- Regenerate PyTorch trace: KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --pixel 685 1039 --device cpu --dtype float64 --out reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/.
-- Reuse or refresh the C trace with NB_C_BIN=./golden_suite_generator/nanoBragg bash -lc "python reports/2025-10-cli-flags/phase_l/scaling_audit/run_c_trace.py --pixel 685 1039 --out reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/trace_c_baseline.log".
-- Compare scaling factors: python scripts/validation/compare_scaling_traces.py --bundle reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/ --c-bundle reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/.
-- Summarise results in summary.md, update lattice_hypotheses.md (close Hypothesis H4), and log docs/fix_plan.md Attempt #??? with metrics + artifact list.
-- Prepare CUDA smoke + gradcheck re-run plan (Phase M5) once CPU parity confirmed; note prerequisites in summary.md.
-- Capture new sha256.txt after all artifacts are in place: find reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp> -type f | sort | xargs shasum -a 256 > sha256.txt.
-- Store git status snapshot: git status -sb > reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/git_status.txt prior to commit.
-- Document test runtime + device in summary.md so future regressions can spot performance anomalies.
-- Queue CUDA rerun command template (Phase M5) inside summary.md for future reference.
-- Record trace harness command with explicit RNG seed (if applicable) inside commands.txt for reproducibility.
-- Run python scripts/validation/compare_scaling_traces.py --bundle ... --emit-table to produce additional CSV if needed for Phase M6 ledger.
-- Validate that lattice_hypotheses.md includes cross-reference to fix_<timestamp> bundle with new delta values.
+- Prepare fix_20251008T223805Z/: ensure it is writable; copy summary.md to summary_pre_refresh.md if you want a before/after snapshot.
+- Execute the Do Now harness command (CPU float64) so trace_py_scaling.log reflects commit fe3a328 with the corrected normalization path.
+- Run compare_scaling_traces:
+  python scripts/validation/compare_scaling_traces.py \
+    --c reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/c_trace_scaling.log \
+    --py reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/trace_py_scaling.log \
+    --out reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/compare_scaling_traces.txt
+- Inspect compare_scaling_traces.txt and metrics.json; if any factor remains divergent, capture the offending rows in diff_trace.md and halt for supervisor input.
+- Draft diff_trace.md summarising the comparison, explicitly calling out that first_divergence is None once confirmed.
+- Append the harness and compare commands (with timestamps) to commands.txt before recalculating sha256.txt.
+- Update summary.md with a short Phase M4d addendum referencing the new trace, metrics files, and diff summary.
+- Update reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md by closing Hypothesis H4 and citing the new compare_scaling_traces output.
+- Refresh sha256.txt in fix_20251008T223805Z/ after all new files are staged.
+- Refresh sha256.txt in 20251008T075949Z/ after editing lattice_hypotheses.md.
+- Re-run pytest discovery: pytest --collect-only -q tests/test_cli_scaling_phi0.py | tee reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/pytest_collect.log
+- Run python -c "import json, sys, torch; print(json.dumps({'python': sys.version, 'torch': torch.__version__, 'device': 'cpu', 'dtype': 'float64'}, indent=2))" and append the result to env.json if versions differ from the previous snapshot.
+- If plan requires, regenerate scaling_validation_summary.md using the new compare output so downstream analysis stays aligned.
+- Update docs/fix_plan.md with Attempt #190 (metrics, artifact paths, next steps) and note that Phase M5 moves to CUDA + gradcheck evidence.
+- Add a short note to galph_memory.md confirming Phase M4d completion or documenting any blocker discovered.
+- Capture git metadata for run_metadata.json: git rev-parse HEAD >> run_metadata.json if the script did not capture the correct SHA.
+- Take a quick `ls -R` listing within fix_20251008T223805Z/ and stash it as dir_listing.txt if you add new files; this aids future audits.
 Pitfalls To Avoid:
-- Do not reintroduce `.item()` on tensors that must remain differentiable except inside trace-only guards that mirror C logging.
-- Avoid `.cpu()` or fresh CPU tensor allocations inside hot loops; maintain device neutrality for GPU execution.
-- Preserve vectorization—no per-pixel Python loops when modifying normalization or logging.
-- Keep TRACE_PY ordering identical to TRACE_C so diff tooling works without manual alignment.
-- Respect Protected Assets (docs/index.md, loop.sh, supervisor.sh, input.md) when editing files.
-- Do not overwrite prior evidence bundles—create a fresh fix_<timestamp> directory.
-- Ensure compare_scaling_traces.py is run after the fix so first_divergence resolves to None before closing Phase M4.
-- Update sha256.txt after all artifacts are in place; stale checksums block future audits.
-- Record git SHA and environment details so repro metadata stays verifiable.
-- Leave `normalize_intensity` helper untouched unless absolutely necessary; scope change to simulator main path only.
-- Do not adjust capture_fraction or polarization semantics—they already match spec and C trace.
-- Keep logging strings ASCII-only to preserve diff stability.
-- Avoid editing archived bundles referenced by docs/fix_plan.md to maintain audit trails.
-- Refrain from altering trace harness defaults beyond normalization; upstream tools expect current formatting.
-- Skip nb-compare until Phase M5/M6 mark green to avoid mixing evidence stages.
+- Do not touch the spec_baseline directory beyond reading inputs; preserve historical evidence intact.
+- Keep the harness run on CPU float64 to match the reference C trace values; no CUDA for this loop.
+- Avoid modifying simulator or other production modules; this is an evidence-only iteration.
+- Always set PYTHONPATH=src when invoking the harness or comparison script to prevent import drift.
+- Refresh sha256.txt after every new file or modification; stale checksums invalidate the bundle.
+- Maintain the Protected Assets list in docs/index.md; do not rename or remove any protected files.
+- Capture complete command output in commands.txt, including ENV variables, so the bundle is reproducible.
+- Do not introduce .cpu()/.item() calls in any helper edits; maintain device/dtype neutrality.
+- Append new sections to summary.md instead of rewriting prior analysis to preserve historical context.
+- Treat compare_scaling_traces divergences as blocking; stop and escalate rather than editing values by hand.
+- Keep blockers.md updated if anything fails so future loops inherit accurate context.
+- Preserve existing trace files; add new ones alongside rather than overwriting unless required by the script.
+- Leave reports permissions unchanged; they are shared for future audits.
+- Skip CUDA execution and targeted pytest until Phase M5 explicitly directs those checks.
+- Do not edit archived plan files; all updates belong in active plan traces.
+- Double-check commands.txt for chronological order; do not reorder historical entries.
 Pointers:
-- specs/spec-a-core.md:247
-- golden_suite_generator/nanoBragg.c:3358
-- src/nanobrag_torch/simulator.py:954
-- plans/active/cli-noise-pix0/plan.md:68
-- docs/fix_plan.md:466
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T223046Z/design_memo.md:1
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/analysis_20251008T212459Z.md:1
-- docs/development/c_to_pytorch_config_map.md:1
-- scripts/validation/compare_scaling_traces.py:1
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md:1
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T043438Z/trace_py_scaling_cpu.log:1
-- /tmp/m3a_instrumentation_design.md:1
-- tests/test_cli_scaling_phi0.py:1
-- tests/test_cli_scaling_parity.py:1
-- docs/bugs/verified_c_bugs.md:182
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T070513Z/summary.md:1
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T070513Z/commands.txt:1
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T070513Z/sha256.txt:1
-Next Up:
-- Phase M4c/M4d parity evidence capture with full artifact bundle.
-- Phase M5 CUDA + gradcheck smoke once CPU normalization fix lands cleanly.
-- Phase M6 ledger/doc sync followed by Phase N nb-compare and Phase O supervisor rerun.
-- Prep STATIC-PYREFLY-001 Phase A once normalization is green to unblock the static analysis backlog.
-- Refresh docs/development/pytorch_runtime_checklist.md with normalization notes after Phase M6.
-- Coordinate with VECTOR-TRICUBIC-001 to ensure detector absorption timelines stay aligned once scaling parity is restored.
-- Schedule supervisor follow-up to review fix bundle and update galph_memory.md with closure details.
-- Revisit perf plan (PERF-PYTORCH-004) once normalization impact is measured to verify no regressions in runtime traces.
+- plans/active/cli-noise-pix0/plan.md:60-86 (Phase M4 checklist and guidance)
+- docs/fix_plan.md:466-520 (Next Actions and Attempts log for CLI-FLAGS-003)
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/summary.md
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/commands.txt
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/commands.txt
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md
+- reports/2025-10-cli-flags/phase_l/scaling_validation/scaling_validation_summary.md
+- specs/spec-a-core.md:247-254
+- galph_memory.md (latest supervisor notes on Phase M4 status)
+- prompts/supervisor.md (CLI parity workflow references)
+Next Up: After this Phase M4d bundle is green, advance to Phase M5 (CUDA parity + gradcheck reruns) per plans/active/cli-noise-pix0/plan.md:87-96.
+Notes:
+- After finishing, run git status to ensure only documentation/report files changed; no code edits expected.
+- Capture git diff of docs/fix_plan.md and plans/active/cli-noise-pix0/plan.md for supervisor review if requested.
+- If you create temporary files (e.g., intermediate diffs), remove them before refreshing sha256 manifests.
+- Leave a breadcrumb in commands.txt when you regenerate any file so future loops know why timestamps changed.
+- Ping supervisor if compare_scaling_traces reports divergence despite code fix; do not attempt further changes solo.
+- Add report paths to Attempt #190 in chronological order (M1 baseline -> M4d fix).
+- Update commands.txt end marker with a blank line so future entries stay separated.
