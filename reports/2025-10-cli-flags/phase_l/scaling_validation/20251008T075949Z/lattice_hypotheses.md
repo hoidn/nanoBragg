@@ -46,3 +46,12 @@
 3. **Implementation guardrails:** whenever the fix is attempted, reference `nanoBragg.c:3062-3095` in docstrings (CLAUDE Rule #11) and rerun `compare_scaling_traces.py` so `metrics.json` reports `first_divergence=None`.
 
 Document authored 2025-12-06 by galph (supervisor loop).
+
+## 2025-12-07 Update — Carryover Shim Hypothesis
+- Fresh inspection of `Crystal.get_rotated_real_vectors` shows the c-parity shim replaces φ=0 with the **current** pixel's φ=final vectors (advanced indexing over the φ dimension).
+- C trace (`TRACE_C_PHI`) confirms φ=0 reuses the **previous** pixel's final φ state because `ap/bp/cp` persist across pixel iterations.
+- Direct dumps from the harness (`python -m nanobrag_torch` snippet in supervisor loop 2025-12-07) show:
+  - spec mode: φ=0 reciprocal vectors match the MOSFLM base orientation.
+  - c-parity mode: φ=0 vectors exactly equal spec φ=9 vectors (`a*_y` delta ≈ +1.69e-05), which matches the lattice drift recorded in `trace_py_scaling.log`.
+- Consequence: `k_frac` in c-parity mode is biased by ≈6.8e-06 for this pixel, producing the observed 0.13% `F_latt` deficit and keeping `I_before_scaling` outside the ≤1e-6 gate.
+- Next probe: Capture consecutive-pixel traces (e.g., pixel 684,1039 then 685,1039) to quantify the true C carryover vector and decide whether to cache φ-final state between pixels or introduce a deterministic seed to mimic the C bug exactly.

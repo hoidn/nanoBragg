@@ -934,3 +934,10 @@
 - Hypothesis: `Crystal.compute_cell_tensors()` MOSFLM branch not enforcing nanoBragg reciprocal/real recomputation sequence; need to re-derive from MOSFLM vectors using exact C formulas so metric duality holds. Secondary: verify no residual pix0/close_distance rounding after fix.
 - Wrote Parity-mode input.md targeting CLI-FLAGS-003 Phase M2 fix: reproduce drift, correct MOSFLM reciprocal vectors, rerun trace harness, run targeted pytest, update evidence/logs.
 - Next supervisor follow-up: confirm new timestamp under `reports/2025-10-cli-flags/phase_l/scaling_validation/`, metrics.json shows first_divergence=None, docs/fix_plan attempt logged, and plan Phase M2 marked [D] before advancing to Phase M3.
+
+## 2025-12-07 (galph loop — Phase M2 carryover focus)
+- Identified that residual F_latt delta stems from c-parity shim copying the current pixel’s φ-final vectors instead of the previous pixel’s state; added 2025-12-07 note to `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md`.
+- Updated `plans/active/cli-noise-pix0/plan.md` (M2 row retargeted to carryover parity, new checklist item M2d for consecutive-pixel traces).
+- Refreshed `docs/fix_plan.md` Next Actions to require the carryover probe + simulator fix.
+- Rewrote input.md directing Ralph to capture the carryover evidence, update the shim to persist prior-pixel φ state, rerun the trace harness, and close with the targeted pytest.
+- Expect Ralph to log new artifacts under `reports/.../carryover_probe/`, implement the stateful cache, and bring `I_before_scaling` into the ≤1e-6 envelope before moving to Phase M3.
