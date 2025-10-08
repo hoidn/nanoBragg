@@ -132,7 +132,7 @@ Notes:
     - Configure whitelist via `--autocommit-whitelist a,b,c` and size via `--max-autocommit-bytes N`
   - Reports auto-commit (publishes Galph's evidence by file type)
     - `--auto-commit-reports` / `--no-auto-commit-reports` (default: on)
-    - `--report-extensions ".png,.jpeg,.npy,.txt,.md,.json,.log"` — allowed file types (logs included)
+    - `--report-extensions ".png,.jpeg,.npy,.txt,.md,.json,.log,.py,.c,.h,.sh"` — allowed file types (logs + source files/scripts)
     - `--report-path-globs "glob1,glob2"` — optional glob allowlist (default allows any path); logs/`tmp/` are always skipped
     - `--max-report-file-bytes N` (default 5 MiB) · `--max-report-total-bytes N` (default 20 MiB)
     - `--force-add-reports` (default: on) — force-add files even if ignored by .gitignore
@@ -145,7 +145,7 @@ Notes:
   - `--branch NAME` · `--logdir PATH` · `--prompt {main,debug}`
   - Reports auto-commit (publishes Ralph's evidence by file type)
     - `--auto-commit-reports` / `--no-auto-commit-reports` (default: on)
-    - `--report-extensions ".png,.jpeg,.npy,.log,.txt,.md,.json"` — allowed file types
+    - `--report-extensions ".png,.jpeg,.npy,.log,.txt,.md,.json,.py,.c,.h,.sh"` — allowed file types (including code diffs/scripts)
     - `--report-path-globs "glob1,glob2"` — optional glob allowlist (default allows any path); logs/`tmp/` are always skipped
     - `--max-report-file-bytes N` (default 5 MiB) · `--max-report-total-bytes N` (default 20 MiB)
     - `--force-add-reports` (default: on) — force-add files even if ignored by .gitignore

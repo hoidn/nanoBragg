@@ -63,7 +63,7 @@ def main() -> int:
                     help="Disable auto commit of report artifacts")
     ap.set_defaults(auto_commit_reports=True)
     ap.add_argument("--report-extensions", type=str,
-                    default=os.getenv("REPORT_EXTENSIONS", ".png,.jpeg,.npy,.log,.txt,.md,.json"),
+                    default=os.getenv("REPORT_EXTENSIONS", ".png,.jpeg,.npy,.log,.txt,.md,.json,.py,.c,.h,.sh"),
                     help="Comma-separated list of allowed report file extensions (lowercase, with dots)")
     ap.add_argument("--max-report-file-bytes", type=int, default=int(os.getenv("MAX_REPORT_FILE_BYTES", "5242880")),
                     help="Maximum per-file size (bytes) eligible for reports auto-commit (default 5 MiB)")
