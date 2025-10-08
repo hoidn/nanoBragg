@@ -20,6 +20,7 @@
 | [ABS-OVERSAMPLE-001](#abs-oversample-001-fix-oversample_thick-subpixel-absorption) | Fix -oversample_thick subpixel absorption | High | in_planning |
 | [CLI-DTYPE-002](#cli-dtype-002-cli-dtype-parity) | CLI dtype parity | High | in_progress |
 | [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | in_progress |
+| [STATIC-PYREFLY-001](#static-pyrefly-001-run-pyrefly-analysis-and-triage) | Run pyrefly analysis and triage | Medium | in_planning |
 | [SOURCE-WEIGHT-001](#source-weight-001-correct-weighted-source-normalization) | Correct weighted source normalization | Medium | in_planning |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | in_progress |
@@ -457,9 +458,10 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
-- Next Actions (2025-10-07 refresh → supervisor verification needed):
-1. **BLOCKED: Verify initiative context** — `input.md` references non-existent plans (`cli-noise-pix0/plan.md`, `cli-phi-parity-shim/plan.md`), artifacts (`reports/2025-10-cli-flags/phase_l/`), and tests (`test_cli_scaling_phi0.py`). These appear to be from a prior/different branch not merged into `feature/spec-based-2`. Supervisor should clarify whether this work is complete/archived or provide updated task directive. See Attempt #135 for documentation.
-2. **Alternative focus** — If CLI-FLAGS-003 is complete, select new priority from fix_plan Index (e.g., PERF-PYTORCH-004, AT-TIER2-GRADCHECK, or VECTOR-TRICUBIC-001).
+- Next Actions (2025-12-02 refresh → galph supervision):
+1. **Phase L documentation sync** — Execute `plans/active/cli-noise-pix0/plan.md` tasks L1–L3 to propagate the spec vs c-parity dual-threshold guidance across `plans/active/cli-phi-parity-shim/plan.md`, `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md`, and `fix_checklist.md` (VG-1 row). Confirm the spec shards (`specs/spec-a-core.md` / `specs/spec-a-cli.md`) remain unchanged so the φ carryover bug stays quarantined in docs/bugs.
+2. **Phase M scaling parity** — Drive plan tasks M1–M3: run `trace_harness.py` for the supervisor ROI, fix the missing `F_cell` fetch within `_tricubic_interpolation`, and add the targeted regression in `tests/test_cli_scaling_phi0.py` so `I_before_scaling` matches C within ≤1e-6 relative error on CPU+CUDA.
+3. **Phase N/O readiness** — After scaling passes, regenerate ROI artifacts with `nb-compare` (plan tasks N1–N3) and schedule the supervisor command closure run (O1–O3), capturing metrics + SHA256 manifests under `reports/2025-10-cli-flags/phase_l/`.
 - Attempts History:
   * [2025-10-07] Attempt #135 (ralph loop i=135, Mode: Docs) — Result: **BLOCKED** (Phase L1–L3 stale plan references). **No code changes.**
     Metrics: Test collection: 448 tests collected successfully (pytest --collect-only -q). Documentation-only loop. Blocking condition identified.
@@ -469,18 +471,11 @@
       - `reports/2025-10-cli-flags/phase_l/rot_vector/20251202_tolerance_sync/commands.txt` — Command provenance
       - `reports/2025-10-cli-flags/phase_l/rot_vector/20251202_tolerance_sync/sha256.txt` — Artifact checksums
     Observations/Hypotheses:
-      - **Blocking condition**: `input.md` directives reference multiple non-existent files:
-        - Plans: `plans/active/cli-noise-pix0/plan.md`, `plans/active/cli-phi-parity-shim/plan.md`
-        - Artifacts: `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md`, `fix_checklist.md`, `parity_shim/20251201_dtype_probe/analysis_summary.md`
-        - Tests: `tests/test_cli_scaling_phi0.py`
-      - **Evidence**: Repository search confirms none of these files exist on `feature/spec-based-2` branch
-      - **Hypothesis**: These references appear to be from a prior initiative or different branch never merged
-      - **Current repo state**: 448 tests exist and collect successfully; test suite is healthy but doesn't match `input.md` expectations
-      - **Compliance with blocking protocol**: Per `input.md` lines 13-14 ("If Blocked" guidance), created `blocked.md` documenting the issue, captured available evidence (pytest collection), and updated Next Actions to request supervisor clarification
+      - **Blocking condition (historical)**: At the time, `input.md` referenced plans/artifacts/tests that were absent on the working branch, so the loop documented the miss.
+      - **Resolution (2025-12-02)**: After repo sync, `plans/active/cli-noise-pix0/plan.md`, `plans/active/cli-phi-parity-shim/plan.md`, `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md`, and `tests/test_cli_scaling_phi0.py` are present in-tree. Keep the attempt for provenance but treat the blocker as cleared.
+      - **Compliance with blocking protocol**: Per `input.md` lines 13-14 ("If Blocked" guidance), created `blocked.md`, captured pytest collection output, and escalated to supervisor. No code changes occurred.
     Next Actions:
-      - Supervisor should verify whether CLI-FLAGS-003 Phase L work is complete/archived or provide corrected task directive
-      - If Phase L is complete, select new high-priority item from fix_plan Index
-      - If Phase L artifacts should exist, identify correct branch/commit to merge
+      - Superseded by the updated Next Actions above (Phase L–O). No further action required for this historical blocker.
   * [2025-10-08] Attempt #128 (galph loop — parity evidence) — Result: **EVIDENCE UPDATE** (Phase L3k.3c.4 diagnostics). **No tests executed** (analysis-only).
     Metrics: Evidence-only.
     Artifacts:
@@ -2827,6 +2822,22 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 - Risks/Assumptions: Ensure GPU/CPU parity; avoid introducing Python loops; maintain differentiability by keeping tensor operations (no `.item()`/`.numpy()`); track performance impact since subpixel absorption may increase compute cost.
 
 ---
+
+## [STATIC-PYREFLY-001] Run pyrefly analysis and triage
+- Spec/AT: `prompts/pyrefly.md` (static-analysis SOP), `prompts/supervisor.md` (pyrefly directive), `docs/development/testing_strategy.md` §1.5 (command sourcing), `pyproject.toml` `[tool.pyrefly]` configuration.
+- Priority: Medium
+- Status: in_planning
+- Owner/Date: galph/2025-12-02
+- Plan Reference: n/a — follow `prompts/pyrefly.md` (author plan if scope expands)
+- Reproduction (PyTorch):
+  * Static analysis: `pyrefly check src` from repo root; archive stdout/stderr + exit code to `reports/pyrefly/<YYYYMMDD>/pyrefly.log`.
+  * Verification tests: Map future fixes to targeted pytest selectors; during supervisor evidence loops capture `pytest --collect-only -q <selector>` output.
+- First Divergence (if known): Pyrefly has not been executed since the float32 migration; current lint violations are unknown, blocking targeted delegation.
+- Next Actions (galph supervision):
+1. **Verify prerequisites** — Confirm `pyproject.toml` exposes `[tool.pyrefly]` and `command -v pyrefly` succeeds. If unavailable, log a blocking Attempt with guidance (document install path or alternative linting strategy) without introducing new tools mid-loop.
+2. **Run baseline scan** — Execute `pyrefly check src`, store logs and metadata under `reports/pyrefly/<date>/`, and summarise diagnostics (errors/warnings) in `summary.md` for traceability.
+3. **Delegate fixes** — Update `input.md` and this entry with prioritized findings (rule, file, severity) plus mapped pytest selectors so Ralph can address them; record progress in Attempts.
+- Attempts History: _None yet_
 
 ## [SOURCE-WEIGHT-001] Correct weighted source normalization
 - Spec/AT: `specs/spec-a-core.md` §5 (Source intensity), `docs/architecture/pytorch_design.md` §2.3, `docs/development/c_to_pytorch_config_map.md` (flux/fluence), nanoBragg.c lines 2480-2595 (source weighting loop).

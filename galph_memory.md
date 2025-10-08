@@ -1860,3 +1860,10 @@ Follow-ups for Ralph:
 - Rebuilt `plans/active/cli-noise-pix0/plan.md` around new Phases L–O so tolerance/doc sync (L1–L3), scaling parity (M1–M4), nb-compare (N1–N3), and supervisor rerun (O1–O3) are explicit. Prior phases collapsed into a completed summary for easier navigation.
 - Updated `docs/fix_plan.md:460-463` Next Actions to align with the new phase IDs (L1–L3, M1–M3, N1–N3) and staged `input.md` with Docs-mode guidance pointing Ralph at Phase L1–L3 deliverables.
 - Expect Ralph to produce artifacts under `reports/2025-10-cli-flags/phase_l/rot_vector/20251202_tolerance_sync/`, update diagnosis/checklists/bug log, add a fresh Attempt entry, and run the mapped collect-only pytest before we revisit scaling parity (Phase M).
+
+## 2025-12-02 (galph loop — CLI docs sync + pyrefly backlog)
+- Updated `docs/fix_plan.md` Next Actions for CLI-FLAGS-003 to remove the stale blocker note and focus on Phase L documentation sync, Phase M scaling parity, and Phase N/O readiness while reaffirming spec shards + bug quarantine references.
+- Annotated Attempt #135 in `docs/fix_plan.md` as historical, clarifying that the referenced plans/tests now exist post-sync.
+- Added new fix-plan entry `[STATIC-PYREFLY-001]` to capture the impending static-analysis baseline (verify tool availability, run `pyrefly check src`, delegate fixes).
+- Authored Docs-mode `input.md` (~100 lines) directing Ralph to execute Phase L1–L3 doc updates, run collect-only selectors, refresh plans/checklists/bug doc, and store artifacts in a new `reports/2025-10-cli-flags/phase_l/rot_vector/<timestamp>/` folder before advancing to Phase M.
+- Next expectations: Ralph completes the documentation sync, logs a fresh CLI-FLAGS-003 Attempt with commands + artifact links, keeps spec untouched, and lines up Phase M scaling parity work for the following loop.
