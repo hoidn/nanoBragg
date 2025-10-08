@@ -1846,3 +1846,8 @@ Follow-ups for Ralph:
 - Cross-checked docs/bugs/verified_c_bugs.md:166-204 to ensure C-PARITY-001 remains quarantined; architecture notes (arch.md:204-216) align with spec.
 - Issued new Parity-mode input (Phase L3k.3c.4) instructing Ralph to regenerate per-φ traces via `trace_per_phi.py` and `compare_per_phi_traces.py`, capture artifacts under `reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/`, and update diagnosis/fix_plan attempts.
 - Next expectation: Ralph delivers fresh Δk/ΔF_latt_b metrics; if thresholds met, proceed to Phase L3k.3c.5 documentation/tests before nb-compare rerun.
+
+## 2025-12-01 (galph loop — dtype plateau probe setup)
+- Refreshed `plans/active/cli-phi-parity-shim/plan.md` to reflect post-Attempt #127 state: parity shim landed, pix0 parity confirmed, residual Δk≈2.845e-05 treated as precision issue; C4 checklist now targets float32/float64 sweeps (rows C4b–C4d).
+- Updated `docs/fix_plan.md` Next Actions for CLI-FLAGS-003 to point at the dtype sensitivity pass instead of the old pix0 offset work; annotated Attempts #128/#129 with notes that later evidence supersedes the pix0 focus.
+- Issued `input.md` (Parity mode) directing Ralph to run `trace_harness.py` for supervisor pixel (685,1039) across float32/float64 c-parity runs, capture compare_per_phi outputs under `reports/2025-10-cli-flags/phase_l/parity_shim/20251201_dtype_probe/`, and append findings to `diagnosis.md` before making the VG-1 tolerance call.
