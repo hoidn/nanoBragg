@@ -526,6 +526,23 @@
       2. Extend Phase M1 instrumentation to log per-φ `F_latt` deltas against C directly (e.g., capture absolute difference in manual metrics) so Phase M2 can target the φ₀ lattice mismatch.
       3. Update `plans/active/cli-noise-pix0/plan.md` Phase M1 checklist with the new artifact timestamps and note that parity delta is down to 0.21% but still above ≤1e-6 gate.
       4. Hand off to Ralph: rerun the c-parity harness on CUDA once the script issue is fixed, then proceed with Phase M2 lattice-factor fix.
+  * [2025-10-08] Attempt #141 (galph loop — Phase M1 F_latt delta audit, Mode: Parity/Evidence) — Result: **EVIDENCE UPDATE** (manual comparison table + refreshed per-φ trace). **No code changes.**
+    Metrics:
+      - `I_before_scaling` PyTorch 941686.23598 vs C 943654.80924 ⇒ −0.2086% (Δ −1.97×10³); `I_pixel_final` mirrors the same drop (2.875383e-07 vs 2.881395e-07).
+      - `F_latt` PyTorch −2.38013414214 vs C −2.38319665299 ⇒ +0.1285% relative; component deltas: F_latt_a +0.0819%, F_latt_b −0.0123%, F_latt_c −0.0344%.
+      - Fractional h component drift: −1.4360×10⁻⁵ (relative +2.09×10⁻⁶); k/l differences remain at the 1e-5 level, matching prior harness output.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T060721Z/trace_py_scaling.log` (44 TRACE_PY lines) with matching per-φ log/JSON copied to the same directory.
+      - `reports/.../manual_summary.md`, `manual_metrics.json`, `commands.txt`, `sha256.txt`, `trace_py_env.json`, `config_snapshot.json` — SHA256 catalog updated after evidence capture.
+      - Commands file records the reproducible SIGKILL when invoking `scripts/validation/compare_scaling_traces.py`; inline Python fallback documented in-place.
+    Observations/Hypotheses:
+      - Scaling factors downstream of lattice interpolation (r_e², fluence, steps, capture_fraction, polar, omega_pixel) continue to match within 5×10⁻⁷, reinforcing that the remaining 0.21% intensity gap originates in the lattice factor/HKL alignment.
+      - F_latt component deltas of 1–3×10⁻³ point toward `_tricubic_interpolation` neighbourhood weighting rather than scalar accumulation; reciprocal vector drift at the 1e-5 level persists across φ steps.
+      - `compare_scaling_traces.py` still exits via SIGKILL on the new traces; resolution remains a prerequisite before Phase M2 automation can resume.
+    Next Actions:
+      1. Extend Phase M1 instrumentation to log the 4×4×4 neighbourhood weights (or single-pixel `sincg` inputs) alongside the C trace so we can isolate the exact term contributing the 0.1% F_latt error.
+      2. Patch or replace `scripts/validation/compare_scaling_traces.py` so summary generation no longer depends on manual Python snippets; keep the failing command in commands.txt as repro evidence.
+      3. Update `plans/active/cli-noise-pix0/plan.md` Phase M1 guidance with the 20251008T060721Z artifact paths and highlight the quantified F_latt deltas to steer Ralph toward `_tricubic_interpolation` vs HKL indexing review.
   * [2025-10-07] Attempt #139 (ralph loop i=139, Mode: Docs) — Result: ✅ **SUCCESS** (Phase M1 COMPLETE — Pre-Polar Trace Instrumentation). **Code changes: simulator trace + comparison script.**
     Metrics: Test collection: 699 tests in 2.68s. Trace: 44 TRACE_PY lines (2 new labels). Comparison: pre-polar (941698.5) vs C (943654.8) → −0.207% delta (within expected tolerance).
     Artifacts:

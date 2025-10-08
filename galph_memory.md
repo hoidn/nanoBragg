@@ -1908,3 +1908,9 @@ Follow-ups for Ralph:
 - `compare_scaling_traces.py` currently exits via SIGKILL on the new traces; manual summaries were generated as a stopgap. Ralph needs to debug the script before Phase M2 lattice fixes proceed.
 - Next steps for Ralph: fix the comparison script, regenerate the scaling summary in a new timestamped directory (CPU float64, c-parity), then continue Phase M2 by targeting the φ₀ lattice-factor drift.
 - Working tree note: legacy galph log (`logs/feature-spec-based-2/galph/iter-00141_20251008_054647.log`) stayed untouched per policy; left uncommitted.
+
+## 2025-10-08 (galph loop — Phase M1 lattice delta audit)
+- Captured fresh c-parity trace via `trace_harness.py` (float64/CPU) and stored manual summary + metrics under `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T060721Z/`; F_latt drift is ~0.13% and drives the 0.2086% `I_before_scaling` deficit.
+- `scripts/validation/compare_scaling_traces.py` still dies via SIGKILL; left the failing command in commands.txt and regenerated the summary with inline Python.
+- Updated `docs/fix_plan.md` (Attempt #141) and `plans/active/cli-noise-pix0/plan.md` Phase M1 guidance to reference the new evidence and emphasise tricubic neighbourhood instrumentation.
+- `input.md` now pushes Ralph to extend the harness with 4×4×4 weight logging and to stabilise the comparison script before moving to Phase M2.

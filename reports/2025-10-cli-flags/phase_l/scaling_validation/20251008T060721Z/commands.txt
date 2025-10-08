@@ -1,0 +1,100 @@
+# Phase M1 evidence capture (20251008T060721Z)
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src \
+  python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py \
+    --pixel 685 1039 \
+    --out reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T060721Z/trace_py_scaling.log \
+    --config supervisor --device cpu --dtype float64 --phi-mode c-parity
+python - <<'PY'
+# Extract key scaling deltas until compare_scaling_traces.py crash is resolved
+# (see manual_summary.md for the generated table)
+from pathlib import Path
+import math
+from datetime import datetime, timezone
+c_path = Path('reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log')
+py_path = Path('reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T060721Z/trace_py_scaling.log')
+summary_path = Path('reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T060721Z/manual_summary.md')
+metrics_path = summary_path.with_name('manual_metrics.json')
+keys = [
+    ('hkl_frac', 'Fractional HKL (h component shown)'),
+    ('F_latt_a', 'Lattice factor along a'),
+    ('F_latt_b', 'Lattice factor along b'),
+    ('F_latt_c', 'Lattice factor along c'),
+    ('F_latt', 'Composite lattice factor'),
+    ('F_cell', 'Structure factor amplitude'),
+    ('I_before_scaling', 'Accumulated intensity before scaling (C pre-polar vs Py pre-polar)'),
+    ('polar', 'Polarization factor'),
+    ('omega_pixel_sr', 'Solid angle (steradians)'),
+    ('capture_fraction', 'Detector capture fraction'),
+    ('steps', 'Normalization divisor'),
+    ('fluence_photons_per_m2', 'Incident fluence'),
+]
+
+def parse(path, prefix):
+    vals = {}
+    for line in path.read_text().splitlines():
+        if line.startswith(prefix):
+            parts = line.split()
+            if len(parts) >= 3:
+                try:
+                    vals[parts[1]] = float(parts[2])
+                except ValueError:
+                    pass
+    return vals
+c_vals = parse(c_path, 'TRACE_C:')
+py_vals = parse(py_path, 'TRACE_PY:')
+if 'I_before_scaling' not in py_vals and 'I_before_scaling_pre_polar' in py_vals:
+    py_vals['I_before_scaling'] = py_vals['I_before_scaling_pre_polar']
+if 'omega_pixel' in py_vals:
+    py_vals['omega_pixel_sr'] = py_vals['omega_pixel']
+rows = []
+metrics = {}
+for key, desc in keys:
+    c_val = c_vals.get(key)
+    py_val = py_vals.get(key)
+    status = 'delta'
+    delta = rel = None
+    if c_val is None:
+        status = 'missing_c'
+    elif py_val is None:
+        status = 'missing_py'
+    else:
+        delta = py_val - c_val
+        rel = delta / c_val if c_val != 0 else math.nan
+        status = 'delta' if abs(rel or 0) > 1e-6 else 'ok'
+    metrics[key] = {
+        'description': desc,
+        'c_value': c_val,
+        'py_value': py_val,
+        'delta': delta,
+        'relative_delta': rel,
+        'status': status,
+    }
+    rows.append((key, desc, c_val, py_val, delta, rel, status))
+ts = datetime.now(timezone.utc).isoformat()
+lines = ['# Phase M1 Manual Scaling Comparison', '', f'- Timestamp: {ts}',
+         f'- C trace: {c_path}', f'- PyTorch trace: {py_path}', '',
+         '## Table', '', '| Key | Description | C Value | PyTorch Value | Δ (abs) | Δ (rel) | Status |',
+         '| --- | --- | --- | --- | --- | --- | --- |']
+for key, desc, c_val, py_val, delta, rel, status in rows:
+    def fmt(v):
+        if v is None: return 'N/A'
+        if isinstance(v, float):
+            if math.isfinite(v):
+                return f'{v:.6e}' if abs(v) < 1e-6 or abs(v) >= 1e6 else f'{v:.9g}'
+            return str(v)
+        return str(v)
+    lines.append(f"| {key} | {desc} | {fmt(c_val)} | {fmt(py_val)} | {fmt(delta)} | {fmt(rel)} | {status} |")
+lines += ['', '## Notes', '- Relative deltas > 1e-6 remain open gaps (see metrics).',
+          '- `I_before_scaling` uses the pre-polar value for parity with the C trace.',
+          '- Largest residuals: `F_latt` (~0.13%) and `I_before_scaling` (~0.21%).']
+summary_path.write_text('\n'.join(lines))
+import json
+metrics_path.write_text(json.dumps({'timestamp': ts, 'metrics': metrics}, indent=2))
+PY
+
+# Known issue: compare_scaling_traces.py still crashes (SIGKILL) on current traces
+# PYTHONPATH=src python scripts/validation/compare_scaling_traces.py \
+#   --c reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log \
+#   --py reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T060721Z/trace_py_scaling.log \
+#   --out reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T060721Z/phase_m1_summary.md \
+#   --tolerance 1e-6
