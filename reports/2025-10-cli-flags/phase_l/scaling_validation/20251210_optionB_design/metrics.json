@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-10-08T15:15:28.927646Z",
+  "device": "cpu",
+  "dtype": "torch.float32",
+  "pytorch_version": "2.8.0+cu128",
+  "cache_shape": [
+    4,
+    4,
+    3
+  ],
+  "cache_memory_kb": 0.1875,
+  "image_shape": [
+    4,
+    4
+  ],
+  "image_mean_intensity": 385.14678955078125,
+  "gradcheck_passed": true,
+  "gradient_magnitude": 31.60113188990828
+}

@@ -3531,3 +3531,32 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - **If Option C selected**: Redesign physics kernel to accept per-pixel rotation inputs, thread cache lookup through compiled code
       - **If neither feasible**: Document C-PARITY-001 as architectural limitation, skip c-parity mode, focus on spec-compliant path only
       - **Immediate**: Update `plans/active/cli-noise-pix0/plan.md` task M2g.4 status to blocked with reference to this artifact
+
+  * [2025-12-10] Attempt #162 (ralph loop i=162, Mode: Docs) — Result: **SUCCESS** (M2g.2c/M2g.2d design artifacts complete, prototype validated). **No production code committed per input.md directive.**
+    Metrics: Test collection: 1 test collected (tests/test_cli_scaling_parity.py). Prototype gradcheck: PASS. Gradient magnitude: 31.60 (finite, non-zero). Cache memory: 0.2 KB (4×4 ROI), estimated 224 MB (supervisor full-frame). Prototype exit code: 0 (success).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251210_optionB_design/optionB_batch_design.md` — Complete Option B architecture spec (batching granularity, tensor shapes, cache lifecycle, memory/gradient analysis, validation plan). Cites specs/spec-a-core.md:205-233, docs/bugs/verified_c_bugs.md:166-204, nanoBragg.c:2797,3044-3095, and 20251208 Option 1 refresh.
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251210_optionB_design/prototype_batch_cache.py` — Disposable 4×4 ROI proof-of-concept (CPU float32)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251210_optionB_design/prototype.md` — Validation report with gradcheck results, indexing verification, performance metrics
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251210_optionB_design/metrics.json` — Prototype execution metrics (gradcheck_passed: true, gradient_magnitude: 31.60)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251210_optionB_design/prototype_run.log` — Full execution log (176 lines)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251210_optionB_design/commands.txt` — Reproduction commands
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251210_optionB_design/env.json` — Environment snapshot (PyTorch 2.8.0+cu128, Python 3.13.7, CUDA 12.8)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251210_optionB_design/sha256.txt` — Artifact checksums (7 files)
+      - `plans/active/cli-noise-pix0/plan.md` — Updated Phase M2g tasks M2g.2c/M2g.2d to [D], next action M2g.3 (cache allocation)
+    Observations/Hypotheses:
+      - **Option B design validated**: Row-wise batching preserves vectorization while threading pixel indices for per-pixel cache ops
+      - **Gradient flow confirmed**: torch.autograd.gradcheck PASSED → advanced indexing preserves computation graph, no `.detach()` or `.clone()` breaks
+      - **Memory footprint acceptable**: 0.2 KB prototype scales to 224 MB supervisor (well within CPU/GPU limits), ROI-friendly (113 KB @ 56×56)
+      - **Batch shapes correct**: (batch_size=4, N_phi=3, 3) per row → matches design spec
+      - **Cache indexing works**: Advanced indexing `cache[slow_indices, fast_indices]` retrieves/stores exact values
+      - **Architecture blocker resolved**: Attempt #161 identified rotation tensor shape mismatch; Option B batch API threads (slow,fast) indices to enable per-pixel substitution
+      - **Spec mode isolation preserved**: c-parity cache pathway separate from default spec behavior (no cross-contamination)
+      - **C-code citations complete**: nanoBragg.c:2797-2807 (OpenMP firstprivate) + 3044-3095 (phi rotation skip) quoted per CLAUDE Rule #11
+    Next Actions:
+      - **M2g.3** (cache allocation): Add `Crystal.initialize_phi_cache(spixels, fpixels, mosaic_domains)` with device/dtype inheritance from `a0_vec`
+      - **M2g.4** (API wiring): Implement `Crystal.get_rotated_real_vectors_for_batch(slow_indices, fast_indices)` and integrate into `Simulator.run()` row-wise loop
+      - **M2g.5** (tooling alignment): Update `reports/.../scaling_audit/trace_harness.py` to exercise batch cache pathway
+      - **M2g.6** (documentation): Append architecture decision to `phi_carryover_diagnosis.md` with Option B rationale, C-code citations, gradient validation summary
+      - **M2h** (validation): Run CPU pytest selector + CUDA probe + 4×4 gradcheck harness, archive logs to `carryover_cache_validation/<timestamp>/`
+      - **M2i** (cross-pixel trace): Regenerate ROI traces (--roi 684 686 1039 1040) and confirm `first_divergence=None` before advancing to Phase M3

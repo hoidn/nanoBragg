@@ -1,0 +1,209 @@
+/home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/scaling_validation/20251210_optionB_design/prototype_batch_cache.py:324: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  "timestamp": datetime.utcnow().isoformat() + "Z",
+================================================================================
+Option B Batch Cache Prototype — 4×4 ROI
+================================================================================
+Device: cpu
+Dtype: torch.float32
+PyTorch version: 2.8.0+cu128
+
+
+================================================================================
+1. Cache Allocation & Indexing Test
+================================================================================
+Allocated cache: shape=torch.Size([4, 4, 3]), memory=0.2 KB
+
+Cache shape: torch.Size([4, 4, 3])
+Expected: (4, 4, 3)
+
+================================================================================
+2. Batch Indexing Test
+================================================================================
+  Stored φ=final: slow=[0, 0, 0, 0], fast=[0, 1, 2, 3], stored_mean=-0.038477
+
+Stored values:
+tensor([[ 2.0114, -1.1351,  1.0282],
+        [ 0.4457, -0.6181, -0.4147],
+        [-1.4999,  0.5174, -0.8206],
+        [-0.0194, -0.1218,  0.1651]])
+Retrieved values:
+tensor([[ 2.0114, -1.1351,  1.0282],
+        [ 0.4457, -0.6181, -0.4147],
+        [-1.4999,  0.5174, -0.8206],
+        [-0.0194, -0.1218,  0.1651]])
+Match: True
+
+================================================================================
+3. Full Simulation with Carryover
+================================================================================
+Allocated cache: shape=torch.Size([4, 4, 3]), memory=0.2 KB
+
+--- Processing row 0 ---
+  Fresh rotations: shape=torch.Size([4, 5, 3])
+  Applied carryover: slow=[0, 0, 0, 0], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[0, 0, 0, 0], fast=[0, 1, 2, 3], stored_mean=30.702032
+
+--- Processing row 1 ---
+  Fresh rotations: shape=torch.Size([4, 5, 3])
+  Applied carryover: slow=[1, 1, 1, 1], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[1, 1, 1, 1], fast=[0, 1, 2, 3], stored_mean=30.702032
+
+--- Processing row 2 ---
+  Fresh rotations: shape=torch.Size([4, 5, 3])
+  Applied carryover: slow=[2, 2, 2, 2], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[2, 2, 2, 2], fast=[0, 1, 2, 3], stored_mean=30.702032
+
+--- Processing row 3 ---
+  Fresh rotations: shape=torch.Size([4, 5, 3])
+  Applied carryover: slow=[3, 3, 3, 3], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[3, 3, 3, 3], fast=[0, 1, 2, 3], stored_mean=30.702032
+
+Simulated image shape: torch.Size([4, 4])
+Image mean intensity: 385.146790
+Image (4×4 intensities):
+tensor([[385.1468, 385.1468, 385.1468, 385.1468],
+        [385.1468, 385.1468, 385.1468, 385.1468],
+        [385.1468, 385.1468, 385.1468, 385.1468],
+        [385.1468, 385.1468, 385.1468, 385.1468]])
+
+================================================================================
+Gradient Check: Lattice Parameter (cell_a)
+================================================================================
+Allocated cache: shape=torch.Size([4, 4, 3]), memory=0.2 KB
+
+--- Processing row 0 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[0, 0, 0, 0], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[0, 0, 0, 0], fast=[0, 1, 2, 3], stored_mean=32.668886
+
+--- Processing row 1 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[1, 1, 1, 1], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[1, 1, 1, 1], fast=[0, 1, 2, 3], stored_mean=32.668886
+
+--- Processing row 2 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[2, 2, 2, 2], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[2, 2, 2, 2], fast=[0, 1, 2, 3], stored_mean=32.668886
+
+--- Processing row 3 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[3, 3, 3, 3], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[3, 3, 3, 3], fast=[0, 1, 2, 3], stored_mean=32.668886
+
+Backprop gradient: dL/d(cell_a) = 3.160113e+01
+Gradient is finite: True
+
+Running torch.autograd.gradcheck (may take 10-20 sec)...
+Allocated cache: shape=torch.Size([4, 4, 3]), memory=0.2 KB
+
+--- Processing row 0 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[0, 0, 0, 0], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[0, 0, 0, 0], fast=[0, 1, 2, 3], stored_mean=32.668886
+
+--- Processing row 1 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[1, 1, 1, 1], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[1, 1, 1, 1], fast=[0, 1, 2, 3], stored_mean=32.668886
+
+--- Processing row 2 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[2, 2, 2, 2], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[2, 2, 2, 2], fast=[0, 1, 2, 3], stored_mean=32.668886
+
+--- Processing row 3 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[3, 3, 3, 3], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[3, 3, 3, 3], fast=[0, 1, 2, 3], stored_mean=32.668886
+Allocated cache: shape=torch.Size([4, 4, 3]), memory=0.2 KB
+
+--- Processing row 0 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[0, 0, 0, 0], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[0, 0, 0, 0], fast=[0, 1, 2, 3], stored_mean=32.668886
+
+--- Processing row 1 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[1, 1, 1, 1], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[1, 1, 1, 1], fast=[0, 1, 2, 3], stored_mean=32.668886
+
+--- Processing row 2 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[2, 2, 2, 2], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[2, 2, 2, 2], fast=[0, 1, 2, 3], stored_mean=32.668886
+
+--- Processing row 3 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[3, 3, 3, 3], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[3, 3, 3, 3], fast=[0, 1, 2, 3], stored_mean=32.668886
+Allocated cache: shape=torch.Size([4, 4, 3]), memory=0.2 KB
+
+--- Processing row 0 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[0, 0, 0, 0], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[0, 0, 0, 0], fast=[0, 1, 2, 3], stored_mean=32.668886
+
+--- Processing row 1 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[1, 1, 1, 1], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[1, 1, 1, 1], fast=[0, 1, 2, 3], stored_mean=32.668886
+
+--- Processing row 2 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[2, 2, 2, 2], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[2, 2, 2, 2], fast=[0, 1, 2, 3], stored_mean=32.668886
+
+--- Processing row 3 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[3, 3, 3, 3], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[3, 3, 3, 3], fast=[0, 1, 2, 3], stored_mean=32.668886
+Allocated cache: shape=torch.Size([4, 4, 3]), memory=0.2 KB
+
+--- Processing row 0 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[0, 0, 0, 0], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[0, 0, 0, 0], fast=[0, 1, 2, 3], stored_mean=32.668886
+
+--- Processing row 1 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[1, 1, 1, 1], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[1, 1, 1, 1], fast=[0, 1, 2, 3], stored_mean=32.668886
+
+--- Processing row 2 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[2, 2, 2, 2], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[2, 2, 2, 2], fast=[0, 1, 2, 3], stored_mean=32.668886
+
+--- Processing row 3 ---
+  Fresh rotations: shape=torch.Size([4, 3, 3])
+  Applied carryover: slow=[3, 3, 3, 3], fast=[0, 1, 2, 3], cached_mean=0.000000
+  Stored φ=final: slow=[3, 3, 3, 3], fast=[0, 1, 2, 3], stored_mean=32.668886
+Gradcheck result: PASS
+
+================================================================================
+Summary Metrics
+================================================================================
+{
+  "timestamp": "2025-10-08T15:15:28.927646Z",
+  "device": "cpu",
+  "dtype": "torch.float32",
+  "pytorch_version": "2.8.0+cu128",
+  "cache_shape": [
+    4,
+    4,
+    3
+  ],
+  "cache_memory_kb": 0.1875,
+  "image_shape": [
+    4,
+    4
+  ],
+  "image_mean_intensity": 385.14678955078125,
+  "gradcheck_passed": true,
+  "gradient_magnitude": 31.60113188990828
+}
+
+Metrics saved to metrics.json
+
+✅ PROTOTYPE VALIDATION SUCCESSFUL
