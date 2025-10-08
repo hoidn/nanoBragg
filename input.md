@@ -1,42 +1,101 @@
-Summary: Bring the c-parity shim within VG-1 by eliminating the 2.845e-05 residual Δk drift vs the C trace.
-Mode: Parity
-Focus: CLI-FLAGS-003 — Phase L3k.3c.4 parity shim evidence capture
+Summary: Capture CPU/GPU parity evidence for the vectorized tricubic path to unlock Phase E.
+Mode: Perf
+Focus: VECTOR-TRICUBIC-001 — Phase E1 parity/perf validation kickoff
 Branch: feature/spec-based-2
-Mapped tests: tests/test_phi_carryover_mode.py::TestPhiCarryoverBehavior; tests/test_cli_scaling_phi0.py::TestPhiZeroParity
-Artifacts: reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/trace_py_spec*.{log,json}; reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/trace_py_c_parity*.{log,json}; reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/c_trace_phi.log; reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/delta_metrics.json; reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/pytest_phi*.log; reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/sha256.txt
-Do Now: CLI-FLAGS-003 Phase L3k.3c.4 — after fixing the φ carryover logic, rerun the parity trace harness for both modes via `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_l/rot_vector/trace_harness.py --config supervisor --pixel 685 1039 --dtype float64 --device cpu --phi-mode <mode> --out reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/trace_py_<mode>.log` and regenerate the matching `TRACE_C_PHI` log, then recompute `delta_metrics.json`.
-If Blocked: Capture failing command + stderr to `<outdir>/attempt_fail.log`, keep the tree untouched, and document the blocker + hypothesis in docs/fix_plan.md Attempt history before stopping.
+Mapped tests: tests/test_tricubic_vectorized.py; tests/test_at_str_002.py
+Artifacts: reports/2025-10-vectorization/phase_e/collect.log; reports/2025-10-vectorization/phase_e/pytest_cpu.log; reports/2025-10-vectorization/phase_e/pytest_cuda.log; reports/2025-10-vectorization/phase_e/env.json
+Do Now: VECTOR-TRICUBIC-001 Phase E1 — KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py tests/test_at_str_002.py -v
+If Blocked: Run KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only tests/test_tricubic_vectorized.py tests/test_at_str_002.py -q | tee reports/2025-10-vectorization/phase_e/collect.log, log the failure + hypothesis in docs/fix_plan.md Attempt history, and stop.
 Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md:309 marks L3k.3c.4 as [P]; VG-1 requires Δk, ΔF_latt_b ≤1e-6/1e-4 before we can advance to documentation and nb-compare phases.
-- plans/active/cli-phi-parity-shim/plan.md:47-55 calls for ≤1e-6 parity in c-parity mode; today’s run (20251008T011326Z) still sits at 2.845e-05, so shim logic needs refinement.
-- docs/fix_plan.md Attempt #122 records the regression and the missing TRACE_C_PHI instrumentation; resolving both is prerequisite for credible parity evidence.
-- docs/bugs/verified_c_bugs.md:166-204 defines the C reference behavior—use it to ensure the optional shim matches the bug without altering the spec-default path.
-- specs/spec-a-core.md:211-214 keep the primary contract (identity rotation at φ=0); any fix must leave spec mode untouched while tightening the parity mode.
+- docs/fix_plan.md:2369 flags Phase E as the current gate after Phase D completion; logs now need to move under phase_e/.
+  Revisit this paragraph when logging the Attempt so the status snapshot remains accurate.
+- plans/active/vectorization.md:1 updates the status snapshot to “Phases A–D complete; Phase E pending”, so E1 must land before microbenchmarks can proceed.
+  Without these artifacts the plan cannot progress to E2/E3 tasks.
+- docs/development/testing_strategy.md:17 mandates device/dtype neutrality checks on CPU and CUDA before claiming success.
+  Use parameterised test outputs to show both devices are executing without unexpected skips.
+- docs/development/pytorch_runtime_checklist.md:8 requires capturing GPU smoke evidence whenever tensor math paths change.
+  Cite the checklist explicitly in the Attempt to demonstrate compliance with runtime guardrails.
+- specs/spec-a-parallel.md:220 enforces tricubic acceptance tolerances (corr ≥ 0.9995) that the Phase E summary must cite.
+  Keep these thresholds handy when interpreting parity metrics later in Phase E3.
+- reports/2025-10-vectorization/phase_d/polynomial_validation.md:1 already tracks Phase D metrics; Phase E evidence must append to that log for audit continuity.
+  Add a new subsection referencing `phase_e/pytest_cpu.log` and `phase_e/pytest_cuda.log` once the runs complete.
+- arch.md:94 keeps vectorization an explicit ADR; running the acceptance tests now verifies the ADR remains true after the new batched helpers landed.
+  Mention ADR-11 in the Attempt summary to connect architecture intent with observed behaviour.
+- specs/spec-a-core.md:205 spells out the φ loop ordering that the tricubic path uses; confirming unchanged behaviour ensures we stay within spec after vectorization.
+  If failures appear, reread this spec section to confirm the rotation pipeline is still compliant.
+- reports/2025-10-vectorization/phase_d/env.json preserves the baseline environment snapshot from Phase D.
+  Mirroring its format in Phase E ensures reviewers can diff environments quickly.
 How-To Map:
-- Restore TRACE_C instrumentation if needed: `pushd golden_suite_generator && patch -p1 < ../c_instrumentation.patch && make && popd` (or re-apply the existing TRACE_C_PHI edits manually, then rebuild). Confirm `TRACE_C_PHI` appears before re-running comparisons.
-- Prepare outdir: `timestamp=$(date -u +%Y%m%dT%H%M%SZ); outdir=reports/2025-10-cli-flags/phase_l/parity_shim/$timestamp; mkdir -p "$outdir"`.
-- Spec run: `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_l/rot_vector/trace_harness.py --config supervisor --pixel 685 1039 --dtype float64 --device cpu --phi-mode spec --out "$outdir/trace_py_spec.log"`.
-- C-parity run: same command with `--phi-mode c-parity` and output `trace_py_c_parity.log`.
-- Copy per-φ JSON/log/env/config into `$outdir` (rename with `_spec` / `_c_parity` suffixes) before the second run overwrites them.
-- Fresh C trace: `NB_C_BIN=./golden_suite_generator/nanoBragg ./golden_suite_generator/nanoBragg ... -trace_pixel 685 1039 > "$outdir/c_trace_phi.log" 2>&1` (use the supervisor command arguments exactly as in docs/fix_plan.md).
-- Comparisons: `KMP_DUPLICATE_LIB_OK=TRUE python scripts/compare_per_phi_traces.py "$outdir/trace_py_<mode>_per_phi.json" "$outdir/c_trace_phi.log" | tee "$outdir/per_phi_summary_<mode>.txt"` for both modes; follow with a small Python snippet to rebuild `$outdir/delta_metrics.json` capturing max deltas.
-- Tests: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_phi_carryover_mode.py::TestPhiCarryoverBehavior -v > "$outdir/pytest_phi_carryover.log"` and `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_phi0.py::TestPhiZeroParity -v > "$outdir/pytest_phi0.log"`.
-- Hashes: `(cd "$outdir" && shasum -a 256 *.log *.json *.txt > sha256.txt)`.
+- mkdir -p reports/2025-10-vectorization/phase_e and clear stale logs before starting.
+  Remove any prior scratch logs so the new evidence set is unambiguous.
+- Run the Do Now command first, piping output to tee to populate reports/2025-10-vectorization/phase_e/pytest_cpu.log.
+  Keep the raw terminal output as well in case additional parsing is needed later.
+- Re-run with CUDA by prefixing `CUDA_VISIBLE_DEVICES=0 PYTORCH_TEST_DEVICE=cuda` (or the project’s preferred override) and tee to reports/2025-10-vectorization/phase_e/pytest_cuda.log; note skipped tests if GPU unavailable.
+  Annotate the top of the log with a short comment explaining why skips occurred, if any.
+- Capture collection metadata via `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only tests/test_tricubic_vectorized.py tests/test_at_str_002.py -q > reports/2025-10-vectorization/phase_e/collect.log`.
+  This establishes the selector list for the Attempt record without executing the tests again.
+- Record environment details by reusing the Phase D inline snippet (`python - <<'PY' ... PY`) and redirecting it to reports/2025-10-vectorization/phase_e/env.json so the format stays consistent.
+  Ensure the snippet prints Python, PyTorch, CUDA availability, and commit SHA if convenient.
+- After runs, annotate timings/tensors in reports/2025-10-vectorization/phase_d/polynomial_validation.md for continuity, noting new Phase E evidence paths.
+  Append references near the top of the Phase E section so reviewers see them immediately.
+- Append brief command provenance into reports/2025-10-vectorization/phase_e/README.md (create if absent) so later reviewers can replay E1 without hunting through logs.
+  Include both CPU and CUDA command variants verbatim in that README.
+- Diff the new `pytest_cpu.log` against Phase D equivalents to highlight any warning text changes before filing the Attempt entry.
+  Capture the diff output (or note "no diff") in the Attempt narrative to document diligence.
+- If CUDA skips occur, capture `nvidia-smi` output into reports/2025-10-vectorization/phase_e/nvidia_smi.txt to document availability status.
+  Mention this file in the Attempt entry when explaining any skipped tests.
+- Once logs exist, sha256sum all artifacts in phase_e/ and stash the hash listing alongside the env file for reproducibility.
+  Follow the Phase D naming convention (`sha256.txt`) so tooling recognises it automatically.
+- After recording hashes, update docs/fix_plan.md Attempt draft with placeholder bullet points so nothing is forgotten when the Run completes.
+  This keeps the log while context is still fresh.
 Pitfalls To Avoid:
-- Do not loosen VG-1 tolerances; fixing the shim must hit ≤1e-6 without altering the spec-default branch.
-- Keep spec mode untouched; any quick fix that regresses TestPhiZeroParity will be backed out.
-- Ensure all tensors stay device/dtype neutral—no hard-coded `.cpu()` / `.double()` calls when adjusting phi rotation.
-- Don’t rely on the stale 20251008T005247Z C log; regenerate TRACE_C_PHI so evidence reflects the current binary.
-- Avoid deleting or renaming protected assets referenced in docs/index.md (trace harness, reports directories, loop scripts).
-- Preserve vectorization inside `Crystal.get_rotated_real_vectors`; no per-φ Python loops to patch the carryover path.
-- Re-run only the mapped targeted tests; defer nb-compare until VG-1 tolerances pass.
-- Document any shim adjustments with updated CLAUDE Rule #11 citations if you touch the core function.
-- Capture both CPU and (if available) CUDA behavior when adding diagnostics; note skips explicitly in logs.
-- Keep the worktree clean; log intermediate artifacts under `reports/` rather than leaving temp files elsewhere.
+- Do not regress vectorization by toggling nearest-neighbour fallbacks; keep batched helpers active.
+  Any reinstated fallback will reintroduce the warnings that Phase D removed.
+- No `.to()`/`.cpu()` calls inside hot loops—maintain device/dtype neutrality per runtime checklist.
+  Introduce conversions outside the compiled region if temporary coercion is needed.
+- Avoid overwriting Phase D artifacts; store new logs exclusively under phase_e/.
+  If reruns are required, version the filenames with timestamps instead of clobbering evidence.
+- Keep CUDA run even if tests skip; document skips explicitly in the log and fix_plan Attempt notes.
+  Skipping documentation is treated as lack of evidence, so capture the reason in writing.
+- Ensure KMP_DUPLICATE_LIB_OK remains set for every pytest/benchmark invocation.
+  Missing the variable can crash mid-run, wasting time and producing partial logs.
+- Don’t loosen tricubic tolerances; if assertions fail, investigate rather than patching tests.
+  Loosened tolerances hide regressions and contradict the spec baseline set in Phase D.
+- Maintain clean working tree; no ad-hoc script copies outside scripts/ or reports/.
+  Temporary scripts should live inside reports/phase_e if they must exist at all.
+- Follow CLAUDE Rule #11 if additional instrumentation is required—quote nanoBragg.c before coding.
+  This protects future parity debugging from drifting away from the C reference.
+- Refrain from running full pytest suite; stay targeted per testing_strategy.md.
+  Save time and keep logs focused on the selectors tied to this plan item.
+- Do not modify `tests/test_tricubic_vectorized.py` expectations; the goal is evidence gathering, not behaviour change this loop.
+  Any behavioural edits would need separate supervisor approval and likely delay Phase E progress.
+- Resist the urge to start Phase E2 benchmarks before attaching E1 logs, otherwise the performance data lacks a validated baseline.
+  The plan makes Phase E2 contingent on E1 artifacts—respect that gating.
+- Capture gradcheck failures verbatim if they surface; rerunning without fixing root causes hides real regressions.
+  Include failing stack traces in reports/phase_e/debug.log if encountered.
 Pointers:
-- docs/fix_plan.md:450-574 — CLI-FLAGS-003 context + latest Attempt #122 notes.
-- plans/active/cli-phi-parity-shim/plan.md:39-55 — Phase C4 requirements and tolerances.
-- plans/active/cli-noise-pix0/plan.md:306-314 — L3k.3c sub-phase checklist (now [P]).
-- docs/bugs/verified_c_bugs.md:166-204 — Definition of C-PARITY-001 bug to reproduce.
-- src/nanobrag_torch/models/crystal.py:1070-1175 — Current φ rotation + carryover shim implementation.
-Next Up: 1) Update docs (`docs/bugs/verified_c_bugs.md`, diagnosis) once VG-1 passes; 2) Proceed to L3k.3d nb-compare ROI analysis with `--phi-carryover-mode c-parity`.
+- docs/fix_plan.md:2369 — VECTOR-TRICUBIC-001 entry with refreshed Next Actions.
+  Reference this section when logging progress so the plan ledger stays synchronised.
+- plans/active/vectorization.md:48 — Phase E task table detailing E1–E3 deliverables.
+  Double-check the exit criteria there before marking any row as done.
+- reports/2025-10-vectorization/phase_d/polynomial_validation.md:1 — Prior evidence context; append Phase E notes here after runs.
+  Add a "Phase E1" subsection with bullet links to each new artifact.
+- docs/development/pytorch_runtime_checklist.md:1 — Device/dtype guardrails to cite in Attempt summary.
+  Mention the checklist item numbers to prove compliance.
+- specs/spec-a-core.md:200 — Normative tricubic/phi loop context underpinning the acceptance thresholds.
+  Useful if parity metrics look off; reconfirm the rotation pipeline from the spec.
+- docs/architecture/pytorch_design.md:70 — Broadcast strategy reminders when interpreting parity logs.
+  The tensor-shape diagrams help decode per-batch logging output.
+- reports/2025-10-vectorization/phase_d/pytest_d4_cpu.log:1 — Reference log for expected pass output format.
+  Use it as a baseline to spot warning text regressions.
+- docs/development/testing_strategy.md:32 — Guidance on logging targeted pytest selectors in Attempt entries.
+  Align the Attempt narrative with these requirements for future audits.
+- reports/2025-10-vectorization/phase_e — Directory that will host the new CPU/GPU logs and metadata.
+  Keep the structure consistent (logs, env, hashes, README) to simplify later reviews.
+Next Up:
+- Phase E2 microbenchmark sweep with scripts/benchmarks/tricubic_baseline.py once E1 logs are committed.
+  Capture both CPU and CUDA runs, then compare against Phase A metrics before logging Attempt.
+- Phase E3 parity/perf summary consolidation (nb-compare optional) before moving into Phase F planning.
+  Draft summary.md alongside fix_plan updates so the documentation trail stays tight.
+- Phase F1 design prep once Phase E closes, focusing on detector absorption batching strategy and doc references.
+  Start sketching tensor layouts so the follow-on loop can move immediately into implementation.

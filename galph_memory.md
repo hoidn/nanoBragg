@@ -1808,3 +1808,9 @@ Follow-ups for Ralph:
 - TRACE_C_PHI logging missing in current golden binary; reused older log to complete comparison. Logged this gap and marked plan row L3k.3c.4 as [P].
 - Updated `plans/active/cli-phi-parity-shim/plan.md` + `docs/fix_plan.md` Attempt #122 with metrics and next steps (restore instrumentation, diagnose residual drift).
 - Issued new Parity-mode input directing Ralph to tighten shim tolerances and regenerate traces with fresh C instrumentation.
+
+## 2025-11-30 (galph loop — vectorization Phase E kickoff)
+- Synced `plans/active/vectorization.md` to note Phases A–D complete and rewrote Phase E task guidance (CPU/CUDA pytest logs, perf summary expectations).
+- Updated `docs/fix_plan.md` Next Actions for VECTOR-TRICUBIC-001 so Ralph targets Phase E1–E3 evidence and begins Phase F design once parity/perf metrics land.
+- Issued new Perf-mode `input.md` pointing Ralph at Phase E1 (`tests/test_tricubic_vectorized.py` + `tests/test_at_str_002.py`) with explicit log destinations under `reports/2025-10-vectorization/phase_e/`.
+- Follow-up: Expect Ralph to produce Phase E1 CPU/GPU logs, capture env metadata, and append Phase E notes to `polynomial_validation.md` before proceeding to E2 benchmarks.

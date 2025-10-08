@@ -2369,7 +2369,7 @@
 ## [VECTOR-TRICUBIC-001] Vectorize tricubic interpolation and detector absorption
 - Spec/AT: specs/spec-a-core.md §4 (structure factor sampling), specs/spec-a-parallel.md §2.3 (tricubic acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4 (vectorization strategy), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, nanoBragg.c lines 2604–3278 (polin3/polin2/polint) and 3375–3450 (detector absorption loop).
 - Priority: High
-- Status: in_progress (Phases A–C complete; Phase D polynomial vectorization pending)
+- Status: in_progress (Phases A–D complete; Phase E parity/performance validation pending)
 - Owner/Date: galph/2025-10-17
 - Plan Reference: `plans/active/vectorization.md`
 - Reproduction (C & PyTorch):
@@ -2377,11 +2377,11 @@
   * Optional microbenchmarks: `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --device cpu` (and `--device cuda`), plus `scripts/benchmarks/absorption_baseline.py` for detector absorption timing.
   * Shapes/ROI: 256² & 512² detectors for microbench; oversample 1; structure-factor grid enabling tricubic.
 - First Divergence (if known): Current tricubic path drops to nearest-neighbour fallback for batched pixel grids, emitting warnings and forfeiting accuracy/performance; detector absorption still loops over `thicksteps`, preventing full vectorization and creating hotspots in profiler traces (see reports/benchmarks/20250930-165726-compile-cache/analysis.md).
-- Next Actions (2025-11-29 refresh → galph supervision):
-  1. Phase D4 — Execute CPU + CUDA sweeps (`env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py tests/test_at_str_002.py -v`) storing logs under `phase_d/pytest_cpu.log` & `phase_d/pytest_cuda.log`; record timings + device metadata in `polynomial_validation.md`.
-  2. Phase E staging — Populate `reports/2025-10-vectorization/phase_e/` with collect-only output, benchmark command templates, and ROI notes ahead of parity/perf validation.
-  3. Phase E1–E3 — Re-run tricubic acceptance & regression suites post-vectorization, execute `scripts/benchmarks/tricubic_baseline.py` (CPU+CUDA) to compare against Phase A baselines, and summarise results in `phase_e/summary.md`.
-  4. Phase F design prep — Draft absorption vectorization design note (`phase_f/design_notes.md`) so detector absorption work can start immediately after Phase E closure.
+- Next Actions (2025-11-30 refresh → galph supervision):
+  1. Phase E1 — Re-run `tests/test_tricubic_vectorized.py` (full suite) and `tests/test_at_str_002.py` on CPU + CUDA, capturing logs to `reports/2025-10-vectorization/phase_e/pytest_{cpu,cuda}.log` plus `phase_e/collect.log` and recording environment metadata (`phase_e/env.json`).
+  2. Phase E2 — Execute `scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --device {cpu,cuda} --repeats 200 --outdir reports/2025-10-vectorization/phase_e/perf` to establish pre/post timing deltas; summarise results in `phase_e/perf_summary.md` and update `phase_e/perf_results.json`.
+  3. Phase E3 — Draft `phase_e/summary.md` consolidating correlation metrics (target corr ≥ 0.9995), gradient/device neutrality notes, and any nb-compare parity evidence before logging the next Attempt.
+  4. Phase F1 — Begin detector absorption vectorization planning with `phase_f/design_notes.md`, citing `nanoBragg.c:3375-3450` and capturing differentiation/device risks ahead of implementation.
 - Attempts History:
   * [2025-10-06] Attempt #1 (ralph loop) — Result: **Phase A1 COMPLETE** (test collection & execution baseline captured). All tricubic and absorption tests passing.
     Metrics: AT-STR-002: 3/3 tests passed in 2.12s (test_tricubic_interpolation_enabled, test_tricubic_out_of_bounds_fallback, test_auto_enable_interpolation). AT-ABS-001: 5/5 tests passed in 5.88s. Collection: 3 tricubic tests found.

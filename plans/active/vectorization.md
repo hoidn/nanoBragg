@@ -9,7 +9,7 @@
   - docs/development/pytorch_runtime_checklist.md (device/vectorization guardrails)
   - `nanoBragg.c` lines 2604–3278 (polin3/polin2/polint) & 3375–3450 (detector absorption loop)
   - Existing artifacts under `reports/2025-10-vectorization/phase_*/`
-- Status Snapshot (2025-11-27): Phases A–C complete with gather vectorization merged (commit 12742e5). Phase D1 worksheet captured under `reports/2025-10-vectorization/phase_d/polynomial_validation.md`; polynomial helpers remain scalar (D2–D4 pending) and detector absorption is still looped. Phase D is the active gate before parity/perf validation (Phase E) and absorption work (Phase F).
+- Status Snapshot (2025-11-30): Phases A–D complete — gather vectorization (commit 12742e5) and batched polynomials (commit f796861) are merged with CPU+CUDA evidence in `reports/2025-10-vectorization/phase_d/`. Parity/perf validation (Phase E) is the active gate before detector absorption vectorization (Phase F).
 - Execution Notes: Store new evidence under `reports/2025-10-vectorization/phase_<letter>/` directories; every implementation task must quote the matching C snippet per CLAUDE Rule #11. Maintain CPU+CUDA parity and include `pytest --collect-only` proof before targeted runs.
 
 ### Phase A — Evidence & Baseline Capture
@@ -54,8 +54,8 @@ Exit Criteria: Vectorised polynomial helpers integrated, CPU+CUDA tests passing,
 | --- | --- | --- | --- |
 | D1 | Draft polynomial validation worksheet | [D] | ✅ Attempt #8 (2025-10-07). Worksheet lives at `reports/2025-10-vectorization/phase_d/polynomial_validation.md` with tensor-shape specs, C references (`nanoBragg.c:4150-4187`), gradcheck plan, and tap-point notes. |
 | D2 | Implement batched `polint`/`polin2`/`polin3` | [D] | ✅ Attempt #10 (2025-10-07) landed `polint_vectorized`/`polin2_vectorized`/`polin3_vectorized` in `src/nanobrag_torch/utils/physics.py` (commit f796861). CLAUDE Rule #11 docstrings cite `nanoBragg.c:4150-4187`; gradients/device/dtype neutrality validated in `reports/2025-10-vectorization/phase_d/pytest_cpu_pass.log` with supplementary notes in `polynomial_validation.md`. `_tricubic_interpolation` now calls the batched helper (no fallback warning). |
-| D3 | Add polynomial regression tests | [D] | ✅ Attempt #9 (2025-10-07). Extended `tests/test_tricubic_vectorized.py` with `TestTricubicPoly` (11 tests: scalar equivalence, gradient flow, device/dtype parametrisation, batch shape preservation). All marked `xfail(strict=True)`. Artifacts: `phase_d/collect.log` (11 tests), `phase_d/pytest_cpu.log` (11 xfailed), `phase_d/implementation_notes.md`. |
-| D4 | Execute targeted pytest sweep | [D] | ✅ Attempt #11 (2025-10-07). CPU: 11/11 passed (2.37s), CUDA: 11/11 passed (2.36s), AT-STR-002: 3/3 passed (2.13s). Artifacts: `phase_d/pytest_d4_{cpu,cuda,acceptance}.log`, `collect_d4.log`. Metrics appended to `polynomial_validation.md` with device metadata (CUDA 12.8, PyTorch 2.8.0+cu128). |
+| D3 | Add polynomial regression tests | [D] | ✅ Attempt #9 (2025-10-07). Extended `tests/test_tricubic_vectorized.py` with `TestTricubicPoly` (11 tests covering scalar equivalence, gradient flow, device/dtype parametrisation, batch-shape preservation). XFail markers removed after Phase D2 landing; live logs in `phase_d/pytest_cpu_pass.log`. Artifacts: `phase_d/collect.log`, `phase_d/pytest_cpu.log`, `phase_d/implementation_notes.md`. |
+| D4 | Execute targeted pytest sweep | [D] | ✅ Attempt #11 (2025-10-07). CPU: 11/11 passed (2.37s), CUDA: 11/11 passed (2.36s), AT-STR-002: 3/3 passed (2.13s). Artifacts: `phase_d/pytest_d4_cpu.log`, `phase_d/pytest_d4_cuda.log`, `phase_d/pytest_d4_acceptance.log`, `collect_d4.log`. Metrics appended to `polynomial_validation.md` with device metadata (CUDA 12.8, PyTorch 2.8.0+cu128). |
 
 ### Phase E — Integration, Parity, and Performance Validation
 Goal: Confirm the full tricubic interpolation path stays vectorised, maintains parity, and improves performance per PERF-PYTORCH-004 objectives.
@@ -64,9 +64,9 @@ Exit Criteria: Parity metrics (tests + nb-compare/ROI) pass, microbenchmarks sho
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| E1 | Verify acceptance & regression tests | [ ] | Re-run `tests/test_at_str_002.py`, `tests/test_tricubic_vectorized.py`, and any affected gradient suites. Capture CPU/CUDA logs under `phase_e/pytest_cpu.log` & `phase_e/pytest_cuda.log`. Ensure `pytest --collect-only` evidence stored (`phase_e/collect.log`). |
-| E2 | Run microbenchmarks post-vectorization | [ ] | Execute `scripts/benchmarks/tricubic_baseline.py` with `--outdir reports/2025-10-vectorization/phase_e/perf` (before/after metrics). Summarise deltas in `phase_e/perf_summary.md` and update `benchmark_results.json`. |
-| E3 | Document parity/perf summary | [ ] | Produce `phase_e/summary.md` noting corr/Δ metrics vs scalar path, reference nb-compare outputs if used, and record gradient/device neutrality confirmation. Update docs/fix_plan attempt with metrics + artifact links. |
+| E1 | Verify acceptance & regression tests | [ ] | Re-run `tests/test_tricubic_vectorized.py` (full class) and `tests/test_at_str_002.py` on CPU+CUDA; include gradcheck markers if present. Capture logs to `phase_e/pytest_cpu.log`, `phase_e/pytest_cuda.log`, and `phase_e/collect.log` (collect-only proof). Note torch/cuda versions in `phase_e/env.json`. |
+| E2 | Run microbenchmarks post-vectorization | [ ] | Execute `scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --device {cpu,cuda} --repeats 200 --outdir reports/2025-10-vectorization/phase_e/perf` to compare against Phase A baselines. Summarise warm/cold timings and speedups in `phase_e/perf_summary.md`, updating `phase_e/perf_results.json`. |
+| E3 | Document parity/perf summary | [ ] | Produce `phase_e/summary.md` capturing correlation metrics (target corr≥0.9995 vs scalar baseline), highlight any tolerance deltas, and record gradient/device neutrality confirmation. Reference nb-compare artifacts if generated. Update docs/fix_plan Next Actions with the new evidence paths. |
 
 ### Phase F — Detector Absorption Vectorization
 Goal: Batch detector absorption loops over `detector_thicksteps` and oversample dimensions, reusing the tricubic vectorization patterns while keeping physics parity.
