@@ -981,3 +981,10 @@
 - Action type: Review/housekeeping on CLI-FLAGS-003 M2g; refreshed input.md (Parity mode) directing Ralph to remove the sequential fallback, implement the Option 1 pixel-indexed cache, and rerun the targeted parity pytest.
 - No plan/fix_plan edits required today; both already call for M2g regression cleanup. Input now cross-references the same checkpoints and adds detailed cache implementation steps.
 - Follow-up for Ralph: excise sequential branch, land pixel-indexed cache per Option 1 design, capture pytest + trace artifacts under new timestamp, update docs/fix_plan.md Attempt.
+
+## 2025-12-08 (galph loop — CLI-FLAGS-003 doc check)
+- Verified `specs/spec-a-core.md:205-233` still enforces fresh φ rotations; no carryover semantics crept into the spec or parity shim docs.
+- Updated `plans/active/cli-phi-parity-shim/plan.md` (lines 11-12, C5a row) to record the spec review and remind Ralph that C5 `summary.md` must cite those lines when documenting the shim.
+- Synced `docs/fix_plan.md` Next Actions bullet 4 with the same citation so the documentation follow-up stays on the radar alongside the Option 1 cache work.
+- Authored `input.md` directing Ralph to complete M2g.1 (Option 1 design refresh) as a docs-only loop with collect-only pytest and a new memo under `reports/2025-10-cli-flags/phase_l/scaling_validation/20251208_option1_refresh/`.
+- Follow-up for Ralph: run the collect-only command, revisit `phi_carryover_diagnosis.md`, produce the updated analysis memo citing the spec section, and prepare to propose the Option 1 architecture decision next loop.

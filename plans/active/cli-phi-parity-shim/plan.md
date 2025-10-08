@@ -8,7 +8,8 @@
   - `tests/test_cli_scaling_phi0.py` — Spec compliance tests that must remain green.
   - `src/nanobrag_torch/models/crystal.py:1070-1130` — Current spec-compliant rotation implementation.
   - `scripts/compare_per_phi_traces.py` and `reports/2025-10-cli-flags/phase_l/` harness notes — Required for parity validation.
-- Current Status (2025-12-01 refresh): Spec baseline locked, opt-in parity shim landed (Attempts #120/#121), and the dtype sensitivity probe in `reports/2025-10-cli-flags/phase_l/parity_shim/20251201_dtype_probe/` confirmed the Δk≈2.845e-05 plateau is inherent to the C carryover bug. Decision logged to relax the VG-1 tolerance for c-parity mode to |Δk| ≤ 5e-5; documentation/test updates (Phase C5/D) remain outstanding.
+- Current Status (2025-12-08 refresh): Spec baseline locked, opt-in parity shim landed (Attempts #120/#121), and the dtype sensitivity probe in `reports/2025-10-cli-flags/phase_l/parity_shim/20251201_dtype_probe/` confirmed the Δk≈2.845e-05 plateau is inherent to the C carryover bug. Decision logged to relax the VG-1 tolerance for c-parity mode to |Δk| ≤ 5e-5; documentation/test updates (Phase C5/D) remain outstanding.
+- 2025-12-08 (galph review): `specs/spec-a-core.md:205-233` still mandates fresh φ rotations each step; no spec text incorporates the carryover bug. C5 `summary.md` must cite this section to show PyTorch default remains spec-compliant while the shim is C-only.
 - Artifact Directory: Use `reports/2025-10-cli-flags/phase_l/parity_shim/<YYYYMMDDTHHMMSSZ>/` for new evidence (traces, logs, design notes, checksums).
 - Guardrails: Preserve vectorization (no per-step Python loops), maintain device/dtype neutrality, obey Protected Assets (do not move files listed in `docs/index.md`).
 
@@ -50,7 +51,7 @@ Exit Criteria: Production code contains opt-in shim, tests/logs stored, fix_plan
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C5a | Confirm spec isolation | [ ] | In `summary.md`, cite `specs/spec-a-core.md:205-233` showing φ rotations recompute from the reference lattice each step; note that carryover exists only in c-parity shim and capture diffs if the spec ever changes. |
+| C5a | Confirm spec isolation | [ ] | In `summary.md`, cite `specs/spec-a-core.md:205-233` showing φ rotations recompute from the reference lattice each step; note that carryover exists only in c-parity shim and capture diffs if the spec ever changes. (Galph 2025-12-08 review confirmed these lines remain unchanged.) |
 | C5b | Sync bug ledger | [ ] | Ensure `docs/bugs/verified_c_bugs.md` retains C-only classification for C-PARITY-001 and links to the new `summary.md`; note parity shim availability for PyTorch. |
 | C5c | Update fix plan entry | [ ] | Append metrics, spec citations, shim mode notes, and the new artifact path to `docs/fix_plan.md` (CLI-FLAGS-003 Attempt); include git SHA and timestamp. |
 

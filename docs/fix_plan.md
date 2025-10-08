@@ -463,7 +463,7 @@
 1. **M2g pixel-indexed cache (Plan M2g.3–M2g.6)** — BLOCKED until architecture decision made. Current cache methods exist but cannot integrate without (s,f) pixel indexing in rotation tensors. See Attempt #155 observations.
 2. **M2h validation bundle (Plan M2h.1–M2h.4)** — BLOCKED pending M2g cache integration.
 3. **M2i traces & metrics (Plan M2i.1–M2i.3)** — BLOCKED pending M2g cache integration.
-4. **M4+ downstream checks** — Once VG-2 is green, move to scaling docs/norm updates (M4) and the nb-compare + supervisor command closure (Phases N/O); keep parity shim documentation tasks (Phase C5/D3) queued for final sync.
+4. **M4+ downstream checks** — Once VG-2 is green, move to scaling docs/norm updates (M4) and the nb-compare + supervisor command closure (Phases N/O); keep parity shim documentation tasks (Phase C5/D3) queued for final sync. (Galph 2025-12-08 verified `specs/spec-a-core.md:205-233` still prohibit φ carryover; ensure C5 `summary.md` cites this when documenting the shim.)
 - Attempts History:
   * [2025-10-07] Attempt #136 (ralph loop i=135, Mode: Docs) — Result: ✅ **SUCCESS** (Phase L Documentation Sync COMPLETE). **No code changes.**
     Metrics: Test collection: 35 tests collected successfully in 2.16s (test_cli_scaling_phi0.py + test_phi_carryover_mode.py). Documentation-only loop per input.md Mode: Docs.
