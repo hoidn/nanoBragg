@@ -1,0 +1,32 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/myenv/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+collecting ... collected 19 items
+
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_vectorized_matches_scalar PASSED [  5%]
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_neighborhood_gathering_internals PASSED [ 10%]
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_oob_warning_single_fire ✓ Phase C2: OOB warning single-fire behavior validated
+  - First OOB: warning printed, interpolation disabled, returned default_F=100.0
+  - Second OOB: no warning, still returns default_F=100.0
+  - In-bounds post-disable: uses fallback path, returns 50.0
+PASSED [ 15%]
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_device_neutrality[cpu] PASSED [ 21%]
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_device_neutrality[cuda] PASSED [ 26%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polint_matches_scalar_batched PASSED [ 31%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polint_gradient_flow PASSED [ 36%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin2_matches_scalar_batched PASSED [ 42%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin2_gradient_flow PASSED [ 47%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin3_matches_scalar_batched PASSED [ 52%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin3_gradient_flow PASSED [ 57%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin3_batch_shape_preserved PASSED [ 63%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_support_float64[dtype0] PASSED [ 68%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_support_float64[dtype1] PASSED [ 73%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_device_neutral[cpu] PASSED [ 78%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_device_neutral[cuda] PASSED [ 84%]
+tests/test_at_str_002.py::test_tricubic_interpolation_enabled PASSED     [ 89%]
+tests/test_at_str_002.py::test_tricubic_out_of_bounds_fallback PASSED    [ 94%]
+tests/test_at_str_002.py::test_auto_enable_interpolation PASSED          [100%]
+
+============================== 19 passed in 2.40s ==============================

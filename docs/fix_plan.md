@@ -2558,6 +2558,25 @@
       - Scalar path (B==1) preserved for backward compatibility, continues using existing `polin3` helper
       - Shape assertions in `crystal.py` ensure `(B,)` output from vectorized helpers matches expected detector grid after reshape
     Next Actions: Phase D4 — Execute full CPU+CUDA sweeps with timing measurements (deferred from D2); Phase E — Performance validation with benchmarks comparing vectorized vs scalar baselines from Phase A (target ≥10× speedup); update `plans/active/vectorization.md` to mark D2 as [D].
+  * [2025-10-07] Attempt #11 (ralph loop #126, Mode: Perf) — Result: **Phase E1 COMPLETE** (CPU/CUDA parity evidence captured). Both devices pass all tricubic + structure factor tests with no warnings.
+    Metrics: CPU: 19/19 passed in 2.40s. CUDA: 19/19 passed in 2.39s. Collection: 19 tests collected (test_tricubic_vectorized.py: 16 tests, test_at_str_002.py: 3 tests). Zero skipped tests - both devices fully exercised. All gradient flow tests passed, all device neutrality tests passed.
+    Artifacts:
+      - `reports/2025-10-vectorization/phase_e/pytest_cpu.log` — Full CPU test execution log
+      - `reports/2025-10-vectorization/phase_e/pytest_cuda.log` — Full CUDA test execution log
+      - `reports/2025-10-vectorization/phase_e/collect.log` — Test collection metadata
+      - `reports/2025-10-vectorization/phase_e/env.json` — Environment snapshot (Python 3.13.7, PyTorch 2.8.0+cu128, CUDA available: True, commit SHA)
+      - `reports/2025-10-vectorization/phase_e/sha256.txt` — SHA256 hashes of all artifacts for reproducibility
+      - `reports/2025-10-vectorization/phase_e/README.md` — Complete Phase E1 provenance documentation with reproduction commands
+    Observations/Hypotheses:
+      - Vectorized tricubic path now exercises on both CPU and CUDA without device-specific issues
+      - Device neutrality tests (test_device_neutrality[cpu], test_device_neutrality[cuda]) confirm tensor operations preserve caller's device
+      - Polynomial tests validate batched operations work identically on both devices (test_polynomials_device_neutral[cpu/cuda])
+      - OOB warning behavior validated (test_oob_warning_single_fire) - single-fire mechanism working correctly
+      - Gradient flow preserved across all polynomial helpers (test_polint_gradient_flow, test_polin2_gradient_flow, test_polin3_gradient_flow)
+      - AT-STR-002 acceptance tests (3/3) pass on both devices confirming spec compliance
+      - No compile warnings, no dtype mismatches, no device transfer errors
+      - Runtime checklist compliance verified: vectorization maintained (ADR-11), device/dtype neutrality preserved (docs/development/pytorch_runtime_checklist.md §1.4)
+    Next Actions: Execute Phase E2 microbenchmarks with `scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --device cpu,cuda --repeats 200` to quantify performance vs Phase A baselines; then Phase E3 summary consolidation before Phase F planning.
 - Risks/Assumptions: Must maintain differentiability (no `.item()`, no `torch.linspace` with tensor bounds), preserve device/dtype neutrality (CPU/CUDA parity), and obey Protected Assets rule (all new scripts under `scripts/benchmarks/`). Large tensor indexing may increase memory pressure; ensure ROI caching still works.
 - Exit Criteria (quote thresholds from spec):
   * specs/spec-a-parallel.md §2.3 tricubic acceptance tests run without warnings and match C parity within documented tolerances (corr≥0.9995, ≤1e-12 structural duality where applicable).
