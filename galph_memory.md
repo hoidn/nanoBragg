@@ -947,3 +947,10 @@
 - Updated plans/active/cli-noise-pix0/plan.md (Status Snapshot 2025-12-07 refresh, M2→[P], M2d→[P], new M2e test task) and docs/fix_plan.md Next Actions + Attempt #150 documenting the partial fix and remaining gaps.
 - Authored input.md (Parity mode, 97 lines) directing Ralph to capture new carryover evidence, redesign the cache for vectorised execution without `.detach()`, rerun scaling metrics, and keep the new regression test failing until Δ≤1e-6.
 - Follow-up for Ralph: produce consecutive-pixel traces under a new timestamp, refactor the cache logic to achieve ≤1e-6 parity, update metrics.json/test logs, and log outcomes in docs/fix_plan.md + plan checklist before advancing to Phase M3.
+
+## 2025-12-07 (galph loop — Phase M2 Option 1 planning refresh)
+- Coin flip=heads → Reviewed Ralph commits 3269f6d (carryover cache) and 89dcd66 (diagnosis). Confirmed cache never fires within a run, `.detach().clone()` breaks gradients, and Option 1 pixel-indexed cache is required.
+- Updated `plans/active/cli-noise-pix0/plan.md` status snapshot and Phase M2: added M2 Implementation checklist (M2f–M2i) covering design, vectorised plumbing, gradient validation, and post-fix traces; noted Attempt #151 diagnosis.
+- Refreshed `docs/fix_plan.md` Next Actions to align with new checklist (cross-pixel probe, Option 1 design detail, implementation + validation bundle, downstream scaling/nb-compare).
+- Authored new `input.md` (Parity mode) directing Ralph to run the consecutive-pixel trace harness (M2d), archive artifacts, extend `phi_carryover_diagnosis.md` with Option 1 tensor shapes, and keep work evidence-only this loop.
+- No production code touched; focus stays on evidence/design prep before cache reimplementation.
