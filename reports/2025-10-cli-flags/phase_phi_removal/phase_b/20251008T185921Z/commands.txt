@@ -1,0 +1,29 @@
+# Phase B0 Design Review Commands
+# Executed: 2025-10-08T18:59:21Z
+
+# Step 1: Create timestamped artifact directory
+mkdir -p reports/2025-10-cli-flags/phase_phi_removal/phase_b/$(date -u +%Y%m%dT%H%M%SZ)
+
+# Step 2: Run pytest collection baseline (as specified by input.md)
+pytest --collect-only -q tests/test_cli_scaling_phi0.py > reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T185921Z/collect.log 2>&1
+
+# Step 3: Search for phi_carryover_mode references
+grep -r "phi_carryover_mode\|phi-carryover-mode" --include="*.py" --include="*.md" . | grep -v ".git" > /tmp/phi_refs.txt
+grep -r "c-parity\|c_parity" --include="*.py" . | grep -v ".git" > /tmp/cparity_refs.txt
+
+# Step 4: Examine key production files
+grep -n -C 3 "phi_carryover_mode\|phi-carryover-mode" src/nanobrag_torch/__main__.py
+grep -n -C 3 "phi_carryover_mode" src/nanobrag_torch/config.py
+grep -n -C 3 "phi_carryover\|c_parity" src/nanobrag_torch/models/crystal.py
+grep -n -C 3 "phi_carryover" src/nanobrag_torch/simulator.py
+
+# Step 5: Capture environment state
+git log -1 --format='%H %s'
+python -c "import sys, json, platform; print(json.dumps({'python': sys.version, 'platform': platform.platform()}, indent=2))"
+
+# Next Steps (Phase B1-B5, NOT executed in this loop):
+# - Phase B1: Remove --phi-carryover-mode from __main__.py
+# - Phase B2: Remove phi_carryover_mode from config.py, crystal.py, simulator.py
+# - Phase B3: Delete tests/test_phi_carryover_mode.py
+# - Phase B4: Run pytest -v tests/test_cli_scaling_phi0.py (CPU + GPU)
+# - Phase B5: Update docs/fix_plan.md and plan files

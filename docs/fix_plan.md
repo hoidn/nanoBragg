@@ -458,9 +458,8 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): 🔴 **2025-12-11 regression.** Option B cache wiring (commit `fa0167b`) allows the targeted parity test to hit the cache but `F_latt` still diverges (relative error 1.57884 versus ≤1e-6) and the omega trace tap now throws tensor indexing errors. Evidence captured in `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T153142Z_carryover_cache_plumbing/`.
-- Next Actions (2025-12-13 refresh):
-0. **Phase B design review (Plan B0)** — Produce `reports/2025-10-cli-flags/phase_phi_removal/phase_b/<ts>/design_review.md` + `commands.txt` cataloguing impacted code/docs/tests and capturing `pytest --collect-only -q tests/test_cli_scaling_phi0.py` as the pre-change baseline.
-1. **Execute Plan B1–B3 removals** — Drop `--phi-carryover-mode` from CLI help, remove config/model plumbing (`Crystal._apply_phi_carryover`, config fields), and retire shim tooling/tests per the plan guidance while preserving vectorization and spec behavior.
+- Next Actions (2025-10-08, post-B0):
+1. **Execute Plan B1–B3 removals** — Drop `--phi-carryover-mode` from CLI help, remove config/model plumbing (`Crystal.apply_phi_carryover`, config fields), and retire shim tooling/tests per the plan guidance while preserving vectorization and spec behavior.
 2. **Plan B4 regression sweep** — Run `pytest -v tests/test_cli_scaling_phi0.py` (CPU, and CUDA if available) with logs stored under the Phase B artifact directory; ensure spec-mode assertions remain within ≤1e-6 tolerances.
 3. **Ledger sync (Plan B5)** — Append Attempt entry referencing the Phase B bundle, flip plan rows B0–B4 to `[D]`, and update `plans/active/cli-noise-pix0/plan.md` Next Actions to point at Phase C once removal is complete.
 
@@ -3900,3 +3899,24 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - **Phase A closure**: Freeze memo now published; no further inventory work required unless shim touchpoints expand
       - **Phase B handoff**: Await supervisor approval of Phase A artifacts and updated `input.md` Do Now for tasks B1-B3 execution
       - **CLI-FLAGS-003 scope pivot**: Future work focuses on `-nonoise`/`-pix0` deliverables; φ carryover emulation is deprecated and will be removed per removal plan phases
+  * [2025-10-08] Attempt #176 (ralph loop i=173, Mode: Docs, Focus: CLI-FLAGS-003 Phase B0) — Result: ✅ **SUCCESS** (Phase B0 design review complete). **No code changes.**
+    Metrics: Test collection: 2 tests collected successfully in 0.79s (tests/test_cli_scaling_phi0.py). Documentation-only loop per input.md guidance.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T185921Z/design_review.md` — Comprehensive design review documenting all 4 production files, 2 test files, 5+ docs to modify; removal order (B1→B2→B3); validation plan with acceptance gates
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T185921Z/collect.log` — pytest collection baseline (2 tests)
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T185921Z/commands.txt` — Shell history with Next Steps guidance for B1–B5
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T185921Z/env.json` — Git SHA (72fe352), Python version (3.13.7), platform (Linux), phase references
+    Observations/Hypotheses:
+      - **Shim surface area confirmed**: 4 production files (`__main__.py`, `config.py`, `crystal.py`, `simulator.py`), 1 test file to delete (`test_phi_carryover_mode.py`), 1 test file to keep (`test_cli_scaling_phi0.py`)
+      - **Spec compliance preserved**: Default behavior (`--phi-carryover-mode spec`) implements fresh φ rotations per `specs/spec-a-core.md:211-214`; removal eliminates c-parity mode entirely
+      - **Protected Assets compliance**: No index-referenced files targeted for deletion; `loop.sh`, `supervisor.sh`, `input.md` untouched
+      - **Vectorization/gradient flow safe**: Removal affects only c-parity branching; spec-mode path (vectorized, differentiable) remains unchanged
+      - **Dependencies mapped**: B1 (CLI) → B2 (config/model) → B3 (tests/tooling) → B4 (regression) → B5 (ledger)
+      - Mode: Docs → No pytest execution beyond collect-only per gate requirements
+    Next Actions (recorded in design_review.md):
+      - Phase B1: Remove `--phi-carryover-mode` from `__main__.py` (lines 377-380, 859)
+      - Phase B2: Remove `phi_carryover_mode` field from `config.py` (lines 154, 165-168); delete `apply_phi_carryover()` method from `crystal.py` (lines 245-388); remove c-parity branching from `simulator.py` (line 767)
+      - Phase B3: Delete `tests/test_phi_carryover_mode.py`; verify `tests/test_cli_scaling_phi0.py` remains green
+      - Phase B4: Run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py` on CPU (and CUDA if available); capture logs in Phase B artifact directory
+      - Phase B5: Update `docs/fix_plan.md` (Attempt entry), `plans/active/phi-carryover-removal/plan.md` (mark B0–B4 done), `plans/active/cli-noise-pix0/plan.md` (pivot to Phase C)
+
