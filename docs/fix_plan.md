@@ -457,13 +457,13 @@
 - Reproduction (C & PyTorch):
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
-- First Divergence (if known): ✅ **Instrumentation aligned (2025-10-07).** Pre-polarization `I_before_scaling` now matches C within ~0.2% (941698.5 vs 943654.8), confirming the prior −8.7% delta was a trace measurement artifact. PyTorch emits both `I_before_scaling_pre_polar` (canonical C comparison point) and `I_before_scaling_post_polar` (diagnostic). The ~0.2% residual is expected per galph debug memo (float32 + F_latt drift). See `reports/2025-10-cli-flags/phase_l/scaling_validation/20251007T222548Z/phase_m1_summary.md`.
-- Next Actions (2025-12-10 refresh):
-0. **M2g.1 design review checkpoint** — Re-read `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T100653Z/analysis.md`, `reports/.../phi_carryover_diagnosis.md`, and the new `reports/.../20251210_optionB_design/optionB_batch_design.md`; append a dated note capturing implementation deltas before touching code.
-1. **M2g.3 cache allocation** — Implement pixel-indexed cache tensors in `Crystal` with device/dtype inheritance and invalidation hooks; cite `nanoBragg.c:2797,3044-3095` inline per CLAUDE Rule #11.
-2. **M2g.4 simulator wiring** — Thread `(slow_indices, fast_indices)` through `_compute_physics_for_position` (row-wise batches) so φ=0 slices read from the cache without Python loops. Preserve spec mode behavior, keep Option B isolated, and document tensor shapes.
-3. **M2g.5/M2g.6 tooling + docs** — Update `trace_harness.py`/parity scripts to exercise the cache, then extend `phi_carryover_diagnosis.md` with the Option B implementation summary, gradient evidence, and updated tolerances before proceeding to Phase M2h validation.
-4. **Phase M2h onward** — After wiring, run the validation bundle (CPU pytest selector, CUDA smoke if available, gradcheck) and refresh scaling traces (M2i). Follow with Phases N and O for nb-compare + supervisor rerun.
+- First Divergence (if known): 🔴 **2025-12-11 regression.** Option B cache wiring (commit `fa0167b`) allows the targeted parity test to hit the cache but `F_latt` still diverges (relative error 1.57884 versus ≤1e-6) and the omega trace tap now throws tensor indexing errors. Evidence captured in `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T153142Z_carryover_cache_plumbing/`.
+- Next Actions (2025-12-11 refresh):
+0. **Archive Attempt #163** — Record git SHA `fa0167b`, targeted pytest failure, and artifact folder above in the Attempts ledger; mirror these notes in `plans/active/cli-noise-pix0/plan.md` (M2g.3/M2g.4 remain [P]).
+1. **M2h.1 CPU parity capture** — Re-run `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c -q`, saving stdout to `pytest_cpu.log` under a fresh `reports/.../carryover_cache_validation/<timestamp>/` alongside `commands.txt`, `env.json`, and `sha256.txt`.
+2. **M2h.2 CUDA / M2h.3 gradcheck** — Execute the CUDA parity smoke (`trace_harness.py --pixel 685 1039 --phi-mode c-parity --device cuda --dtype float64`) when hardware permits and log availability; follow with the 2×2 ROI gradcheck probe to confirm cache gradients survive.
+3. **M2h.4 fix_plan update** — Summarize parity deltas, trace failures, and device coverage in a new Attempt entry once diagnostics land.
+4. **M2i.1 trace rerun** — With logs in place, regenerate the c-parity trace (`trace_harness.py --roi 684 686 1039 1040 --phi-mode c-parity`) to locate the earliest divergence before advancing to nb-compare (Phase N).
 - Attempts History:
   * [2025-10-07] Attempt #136 (ralph loop i=135, Mode: Docs) — Result: ✅ **SUCCESS** (Phase L Documentation Sync COMPLETE). **No code changes.**
     Metrics: Test collection: 35 tests collected successfully in 2.16s (test_cli_scaling_phi0.py + test_phi_carryover_mode.py). Documentation-only loop per input.md Mode: Docs.
@@ -3561,3 +3561,26 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - **M2g.6** (documentation): Append architecture decision to `phi_carryover_diagnosis.md` with Option B rationale, C-code citations, gradient validation summary
       - **M2h** (validation): Run CPU pytest selector + CUDA probe + 4×4 gradcheck harness, archive logs to `carryover_cache_validation/<timestamp>/`
       - **M2i** (cross-pixel trace): Regenerate ROI traces (--roi 684 686 1039 1040) and confirm `first_divergence=None` before advancing to Phase M3
+
+  * [2025-12-11] Attempt #163 (ralph loop i=163, Mode: Code) — Result: **PARTIAL** (M2g.3/M2g.4 cache wiring lands, parity still fails). **Code changes: `models/crystal.py`, `simulator.py`. Commit: `fa0167b`.**
+    Metrics:
+      - Targeted parity test: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c -q`
+        - Status: **FAIL** — `F_latt` relative error 1.57884 (expected ≤1e-6). Expected -2.383196653, observed 1.3794838506 (Δ = 3.762680504).
+        - Stdout: `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T153142Z_carryover_cache_plumbing/pytest_run2.log`
+      - Full suite smoke: `pytest -v` (captured in `pytest_full_suite.log`) — multiple detector convention regressions triggered by trace fallback trying to index 1-D omega tensor with 2-D indices (IndexError).
+      - Git status clean; cache tensors allocated lazily via `Crystal.initialize_phi_cache`, size (2527, 2463, mosaic, 3) per design memo.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T153142Z_carryover_cache_plumbing/commands.txt`
+      - `.../pytest.log` (initial AttributeError: `Simulator` lacked `_phi_cache_initialized`, fixed within attempt)
+      - `.../pytest_run2.log` (current failure with IndexError + F_latt delta)
+      - `.../pytest_full_suite.log` (trace tap IndexError + follow-on detector parity failures)
+      - `.../env.json`, `.../sha256.txt`
+    Observations/Hypotheses:
+      - Row-wise batching path now live: `Simulator.run()` iterates slow dimension, threads `(slow_indices, fast_indices)` into `Crystal.get_rotated_real_vectors_for_batch()`.
+      - Cache substitution occurs, but φ=0 still reflects fresh vectors (sign flip missing) → focus on φ carryover mask or store timing.
+      - Omega trace tap still assumes global tensor, leading to 1-D indexing errors when running row batches; tooling must branch on `use_row_batching`.
+      - Full suite failures stem from trace crash rather than detector regressions; once omega tap fixed, expect detector tests to pass again.
+      - No gradients broken (no `.detach()`/`.clone()` introduced); gradcheck pending (M2h.3).
+    Next Actions:
+      - Follow refreshed Next Actions list above (M2h). First priority: capture new parity logs under `carryover_cache_validation/<timestamp>/`, update plan/ledger, and patch trace harness indexing before additional physics edits.
+      - After diagnostics, root-cause `F_latt` mismatch (likely φ=0 substitution using stale cache contents or cache reset cadence) and address prior to nb-compare.

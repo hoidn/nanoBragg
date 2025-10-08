@@ -1033,3 +1033,10 @@
 - Authored `input.md` (Mode: Parity, 101 lines) instructing Ralph to implement Option B cache tensors/wiring, capture artifacts under `carryover_cache_plumbing/<ts>/`, run the targeted pytest selector, and log diagnostics for M2g.5 preparation.
 - Commit `1ac720e` pushed (`SUPERVISOR: CLI-FLAGS-003 M2g planning update - tests: not run`).
 - Follow-up: Ralph to deliver M2g.3/M2g.4 implementation with artifacts + pytest log, update fix_plan Attempts, and prep notes for upcoming M2g.5 tooling changes.
+
+## 2025-12-11 (galph loop — M2h evidence redirect)
+- Confirmed commit `fa0167b` wires Option B cache but parity still fails (`F_latt` rel err 1.57884) and omega trace tap crashes; ran targeted pytest locally to verify.
+- Updated `plans/active/cli-noise-pix0/plan.md` status snapshot with Attempt #163, set M2g.3/M2g.4 to [P], and rewrote Next Actions toward M2h diagnostics.
+- Refreshed `docs/fix_plan.md` (First Divergence + Next Actions) and logged Attempt #163 with artifact paths and failure analysis.
+- Replaced `input.md` to direct Ralph to build a new `carryover_cache_validation/<ts>/` bundle (CPU pytest log, env metadata, diagnostics) before touching simulator code.
+- Follow-up for Ralph: capture the CPU parity log with full metadata, document current F_latt/omega issues, append results to fix_plan Attempts, then proceed to CUDA/gradcheck probes once evidence is archived.
