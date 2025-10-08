@@ -106,3 +106,4 @@ reports/benchmarks/
 reports/pyrefly/
 commands
 Fdump.bin
+logs/
