@@ -1,0 +1,12 @@
+# CLI-FLAGS-003 Phase L3k.3c.4 dtype sensitivity probe
+# Date: 2025-10-08
+# Git SHA: 2fe36ec749e08465d37372a2f21fa3848de6a700
+
+# Run 1: c-parity mode, float32
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/rot_vector/trace_harness.py --config supervisor --pixel 685 1039 --phi-mode c-parity --dtype float32 --out reports/2025-10-cli-flags/phase_l/parity_shim/20251201_dtype_probe/trace_py_c_parity_float32.log
+
+# Run 2: c-parity mode, float64
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/rot_vector/trace_harness.py --config supervisor --pixel 685 1039 --phi-mode c-parity --dtype float64 --out reports/2025-10-cli-flags/phase_l/parity_shim/20251201_dtype_probe/trace_py_c_parity_float64.log
+
+# Run 3: spec mode, float32 (baseline)
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/rot_vector/trace_harness.py --config supervisor --pixel 685 1039 --phi-mode spec --dtype float32 --out reports/2025-10-cli-flags/phase_l/parity_shim/20251201_dtype_probe/trace_py_spec_float32.log

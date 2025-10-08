@@ -1,0 +1,28 @@
+{
+  "analysis_date": "2025-10-08",
+  "git_sha": "2fe36ec749e08465d37372a2f21fa3848de6a700",
+  "dtype_sensitivity": {
+    "delta_k_fp32_vs_fp64_c_parity": 1.42091450594517e-06,
+    "delta_k_c_parity_vs_spec_fp32": 0.01808834075927801,
+    "delta_F_latt_b_fp32_vs_fp64_c_parity": 2.764469353011556e-05,
+    "is_dtype_sensitive": true
+  },
+  "raw_values": {
+    "c_parity_fp32": {
+      "k_frac_phi0": -0.607264041900635,
+      "F_latt_b_phi0": 1.0506397485733,
+      "F_latt_phi0": -2.37995349706422
+    },
+    "c_parity_fp64": {
+      "k_frac_phi0": -0.607262620986129,
+      "F_latt_b_phi0": 1.05066739326683,
+      "F_latt_phi0": -2.38013414214076
+    },
+    "spec_fp32": {
+      "k_frac_phi0": -0.589175701141357,
+      "F_latt_b_phi0": -0.858312010765076,
+      "F_latt_phi0": 1.37924090081021
+    }
+  },
+  "recommendation": "precision_remediation"
+}
