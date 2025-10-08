@@ -458,9 +458,9 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): 🔴 **2025-12-11 regression.** Option B cache wiring (commit `fa0167b`) allows the targeted parity test to hit the cache but `F_latt` still diverges (relative error 1.57884 versus ≤1e-6) and the omega trace tap now throws tensor indexing errors. Evidence captured in `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T153142Z_carryover_cache_plumbing/`.
-- Next Actions (2025-12-14 refresh):
+- Next Actions (2025-10-08 refresh):
   - ✅ Phase D1 complete — Attempt #183; see `plans/active/phi-carryover-removal/plan.md` status snapshot and bundle `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/`.
-  - **Phase D2 ledger sync (OPEN)** — Update this entry’s Attempts + Next Actions with the Phase D bundle path, then archive `plans/active/cli-phi-parity-shim/plan.md` once references clear.
+  - ✅ Phase D2 complete — Update this entry’s Attempts + Next Actions with the Phase D bundle path, then archive `plans/active/cli-phi-parity-shim/plan.md` once references clear.
   - **Phase D3 supervisor handoff (OPEN)** — Next input.md must pivot Ralph toward `plans/active/cli-noise-pix0/plan.md` Phase L scaling work; log the closure in `galph_memory.md`.
 
 - Attempts History:
