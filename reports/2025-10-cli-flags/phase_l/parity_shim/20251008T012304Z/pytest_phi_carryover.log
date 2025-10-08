@@ -1,0 +1,21 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/myenv/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+collecting ... collected 12 items
+
+tests/test_phi_carryover_mode.py::TestPhiCarryoverBehavior::test_spec_mode_fresh_rotation[cpu-dtype0] PASSED [  8%]
+tests/test_phi_carryover_mode.py::TestPhiCarryoverBehavior::test_spec_mode_fresh_rotation[cpu-dtype1] PASSED [ 16%]
+tests/test_phi_carryover_mode.py::TestPhiCarryoverBehavior::test_spec_mode_fresh_rotation[cuda-dtype2] PASSED [ 25%]
+tests/test_phi_carryover_mode.py::TestPhiCarryoverBehavior::test_spec_mode_fresh_rotation[cuda-dtype3] PASSED [ 33%]
+tests/test_phi_carryover_mode.py::TestPhiCarryoverBehavior::test_c_parity_mode_stale_carryover[cpu-dtype0] PASSED [ 41%]
+tests/test_phi_carryover_mode.py::TestPhiCarryoverBehavior::test_c_parity_mode_stale_carryover[cpu-dtype1] PASSED [ 50%]
+tests/test_phi_carryover_mode.py::TestPhiCarryoverBehavior::test_c_parity_mode_stale_carryover[cuda-dtype2] PASSED [ 58%]
+tests/test_phi_carryover_mode.py::TestPhiCarryoverBehavior::test_c_parity_mode_stale_carryover[cuda-dtype3] PASSED [ 66%]
+tests/test_phi_carryover_mode.py::TestPhiCarryoverBehavior::test_modes_differ_at_phi_zero[cpu-dtype0] PASSED [ 75%]
+tests/test_phi_carryover_mode.py::TestPhiCarryoverBehavior::test_modes_differ_at_phi_zero[cpu-dtype1] PASSED [ 83%]
+tests/test_phi_carryover_mode.py::TestPhiCarryoverBehavior::test_modes_differ_at_phi_zero[cuda-dtype2] PASSED [ 91%]
+tests/test_phi_carryover_mode.py::TestPhiCarryoverBehavior::test_modes_differ_at_phi_zero[cuda-dtype3] PASSED [100%]
+
+============================== 12 passed in 2.54s ==============================

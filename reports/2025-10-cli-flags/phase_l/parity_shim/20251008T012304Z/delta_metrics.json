@@ -1,0 +1,50 @@
+{
+  "timestamp": "2025-10-08T01:23:04Z",
+  "git_commit": "4cb561b",
+  "spec_mode": {
+    "max_delta_k": 5.336516e-02,
+    "max_delta_F_latt_b": 1.319737,
+    "phi_tic_first_diverge": 0,
+    "phi_deg_first_diverge": 0.0,
+    "delta_k_at_phi0": 3.527712e-02,
+    "c_k_frac_phi0": -0.553862232680661,
+    "py_k_frac_phi0": -0.589139352775903,
+    "status": "DIVERGE",
+    "note": "Spec mode diverges at φ=0 as expected - fresh rotation vs C bug"
+  },
+  "c_parity_mode": {
+    "max_delta_k": 5.336516e-02,
+    "max_delta_F_latt_b": 1.319737,
+    "phi_tic_first_diverge": 0,
+    "phi_deg_first_diverge": 0.0,
+    "delta_k_at_phi0": 5.336516e-02,
+    "c_k_frac_phi0": -0.553862232680661,
+    "py_k_frac_phi0": -0.607227388110849,
+    "status": "DIVERGE",
+    "note": "C-parity mode FAILS parity - larger divergence than spec mode"
+  },
+  "vg1_gate": {
+    "target_tolerance": 1.0e-6,
+    "spec_mode_passes": false,
+    "c_parity_mode_passes": false,
+    "blocking": true,
+    "reason": "Both modes diverge far beyond VG-1 tolerance; root cause investigation required"
+  },
+  "pytest_results": {
+    "test_phi_carryover_mode": "12/12 PASSED",
+    "test_cli_scaling_phi0": "2/2 PASSED"
+  },
+  "root_cause_hypothesis": [
+    "C trace shows TWO sets of TRACE_C_PHI entries (likely from source sweeps)",
+    "PyTorch trace may be from single source position",
+    "Mismatch in source sampling or flux/exposure normalization",
+    "Both C k_frac values (-0.554 and -0.555) differ from PyTorch (-0.589/-0.607)",
+    "Need to verify C command used same parameters as PyTorch trace harness"
+  ],
+  "next_actions": [
+    "Verify C command parameters match PyTorch harness exactly",
+    "Check if source sampling (flux/exposure) affects k_frac",
+    "Regenerate C trace with single source or matching source parameters",
+    "Review trace harness for any implicit parameters not passed to C binary"
+  ]
+}

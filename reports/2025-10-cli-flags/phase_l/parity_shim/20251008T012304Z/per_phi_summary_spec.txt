@@ -1,0 +1,44 @@
+================================================================================
+CLI-FLAGS-003 Phase K3e: Per-φ Parity Comparison
+================================================================================
+
+PyTorch: reports/2025-10-cli-flags/phase_l/parity_shim/20251008T012304Z/trace_py_spec_per_phi.json
+C:       reports/2025-10-cli-flags/phase_l/parity_shim/20251008T012304Z/c_trace_phi.log
+
+--------------------------------------------------------------------------------
+φ_tic   φ (deg)    Δk              ΔF_latt_b       Status    
+--------------------------------------------------------------------------------
+0       0.000000   3.527712e-02    0.668331        DIVERGE   
+1       0.010000   4.338961e-02    0.126303        DIVERGE   
+2       0.020000   4.463703e-02    0.333484        DIVERGE   
+3       0.030000   4.588431e-02    0.570310        DIVERGE   
+4       0.040000   4.713146e-02    0.811130        DIVERGE   
+5       0.050000   4.837847e-02    1.029411        DIVERGE   
+6       0.060000   4.962534e-02    1.200167        DIVERGE   
+7       0.070000   5.087208e-02    1.302149        DIVERGE   
+8       0.080000   5.211869e-02    1.319737        DIVERGE   
+9       0.090000   5.336516e-02    1.244426        DIVERGE   
+
+================================================================================
+Summary
+================================================================================
+
+❌ First divergence at φ_tic=0
+   φ = 0.000000°
+   Δk = 3.527712e-02
+
+Root Cause Analysis:
+
+C implementation:
+  k_frac @ φ_tic=0: -0.553862232680661
+  k_frac @ φ_tic=9: -0.553862232680661
+
+PyTorch implementation:
+  k_frac @ φ_tic=0: -0.589139352775903
+  k_frac @ φ_tic=9: -0.607227388110849
+
+Hypothesis: The φ sampling grid or rotation calculation differs
+between C and PyTorch, leading to different k_frac values at all φ steps.
+
+✅ Comparison summary saved to: reports/2025-10-cli-flags/phase_l/parity_shim/20251008T012304Z/comparison_summary.md
+
