@@ -9,7 +9,7 @@
   - docs/development/pytorch_runtime_checklist.md (device/vectorization guardrails)
   - `nanoBragg.c` lines 2604–3278 (polin3/polin2/polint) & 3375–3450 (detector absorption loop)
   - Existing artifacts under `reports/2025-10-vectorization/phase_*/`
-- Status Snapshot (2025-11-30): Phases A–D complete — gather vectorization (commit 12742e5) and batched polynomials (commit f796861) are merged with CPU+CUDA evidence in `reports/2025-10-vectorization/phase_d/`. Parity/perf validation (Phase E) is the active gate before detector absorption vectorization (Phase F).
+- Status Snapshot (2025-12-02): Phases A–D complete — gather vectorization (commit 12742e5) and batched polynomials (commit f796861) are merged with CPU+CUDA evidence in `reports/2025-10-vectorization/phase_d/`. Phase E1 regression sweep finished (artifacts under `reports/2025-10-vectorization/phase_e/`); Phase E2–E3 remain open ahead of detector absorption vectorization (Phase F).
 - Execution Notes: Store new evidence under `reports/2025-10-vectorization/phase_<letter>/` directories; every implementation task must quote the matching C snippet per CLAUDE Rule #11. Maintain CPU+CUDA parity and include `pytest --collect-only` proof before targeted runs.
 
 ### Phase A — Evidence & Baseline Capture
@@ -64,7 +64,7 @@ Exit Criteria: Parity metrics (tests + nb-compare/ROI) pass, microbenchmarks sho
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| E1 | Verify acceptance & regression tests | [ ] | Re-run `tests/test_tricubic_vectorized.py` (full class) and `tests/test_at_str_002.py` on CPU+CUDA; include gradcheck markers if present. Capture logs to `phase_e/pytest_cpu.log`, `phase_e/pytest_cuda.log`, and `phase_e/collect.log` (collect-only proof). Note torch/cuda versions in `phase_e/env.json`. |
+| E1 | Verify acceptance & regression tests | [D] | ✅ Attempt #11 (2025-10-07). CPU & CUDA logs stored in `reports/2025-10-vectorization/phase_e/{pytest_cpu.log,pytest_cuda.log,collect.log,env.json,sha256.txt}`; 19/19 tests passed per device with gradcheck markers intact. |
 | E2 | Run microbenchmarks post-vectorization | [ ] | Execute `scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --device {cpu,cuda} --repeats 200 --outdir reports/2025-10-vectorization/phase_e/perf` to compare against Phase A baselines. Summarise warm/cold timings and speedups in `phase_e/perf_summary.md`, updating `phase_e/perf_results.json`. |
 | E3 | Document parity/perf summary | [ ] | Produce `phase_e/summary.md` capturing correlation metrics (target corr≥0.9995 vs scalar baseline), highlight any tolerance deltas, and record gradient/device neutrality confirmation. Reference nb-compare artifacts if generated. Update docs/fix_plan Next Actions with the new evidence paths. |
 

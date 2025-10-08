@@ -1878,3 +1878,7 @@ Follow-ups for Ralph:
 - Diagnosis: trace_harness.py still instantiates CrystalConfig in spec mode; per-φ log (`reports/2025-10-cli-flags/phase_l/per_phi/reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T043438Z/trace_py_scaling_cpu_per_phi.log:1`) shows φ₀ F_latt=+1.379 vs C’s −2.383. Existing c-parity shim (`trace_py_c_parity_per_phi.log:1 (reports/2025-10-cli-flags/phase_l/per_phi)`) reproduces the C values.
 - Action for Ralph: add a `--phi-mode` override (default spec, parity run uses c-parity), rerun the harness + compare_scaling_traces.py, and capture new artifacts under `phase_l/scaling_validation/<timestamp>/` before moving to Phase M2.
 - No other assets touched; docs/index.md remains authoritative.
+## 2025-12-03 (galph loop — CLI-FLAGS-003 Phase M1 evidence refresh)
+- Updated `plans/active/vectorization.md` context to the 2025-12-02 snapshot and marked Phase E1 [D]; remaining work now tracks E2/E3 perf validation before detector absorption vectorization.
+- Issued new Parity-mode input.md directing Ralph to rerun the scaling harness with `--phi-mode c-parity`, capture trace/summary/metrics under a fresh timestamp, and hold compare_scaling_traces tolerance at 1e-6 per Phase M1.
+- Reinforced evidence-only expectations (no prod edits) and enumerated required artifacts (commands.txt, metrics.json, env.json, sha256.txt) so Phase M2 debugging starts with clean data; flagged follow-up for Phase M2/M3 and vectorization Phase E2/E3 once scaling parity stabilises.
