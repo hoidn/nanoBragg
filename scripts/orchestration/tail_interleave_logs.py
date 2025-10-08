@@ -5,6 +5,7 @@ import argparse
 import re
 import sys
 from pathlib import Path
+from subprocess import run, PIPE
 from typing import Dict, List, Tuple
 
 LOG_NAME_RE = re.compile(r"^iter-(\d+)_.*\.log$")
@@ -39,6 +40,9 @@ def interleave_last(prefix: Path, count: int, out) -> int:
     galph_logs = find_logs(galph_dir)
     ralph_logs = find_logs(ralph_dir)
 
+    # Load recent SYNC commits to annotate post-state commits
+    post_commit = load_post_state_commits()
+
     if not galph_logs and not ralph_logs:
         print(f"No logs found under {galph_dir} or {ralph_dir}", file=sys.stderr)
         return 2
@@ -61,7 +65,9 @@ def interleave_last(prefix: Path, count: int, out) -> int:
                 content = p.read_text(encoding="utf-8", errors="replace")
             except Exception as e:
                 content = f"<error reading {p}: {e}>\n"
-            out.write(f"  <log role=\"galph\" iter=\"{it}\" path=\"{p}\">\n")
+            csha, csubj = resolve_post_commit("galph", it, post_commit)
+            commit_attr = f" commit=\"{csha}\" commit_subject=\"{xml_attr_escape(csubj)}\"" if csha else ""
+            out.write(f"  <log role=\"galph\" iter=\"{it}\" path=\"{p}\"{commit_attr}>\n")
             out.write("    <![CDATA[\n")
             out.write(content)
             if not content.endswith("\n"):
@@ -75,7 +81,9 @@ def interleave_last(prefix: Path, count: int, out) -> int:
                 content = p.read_text(encoding="utf-8", errors="replace")
             except Exception as e:
                 content = f"<error reading {p}: {e}>\n"
-            out.write(f"  <log role=\"ralph\" iter=\"{it}\" path=\"{p}\">\n")
+            csha, csubj = resolve_post_commit("ralph", it, post_commit)
+            commit_attr = f" commit=\"{csha}\" commit_subject=\"{xml_attr_escape(csubj)}\"" if csha else ""
+            out.write(f"  <log role=\"ralph\" iter=\"{it}\" path=\"{p}\"{commit_attr}>\n")
             out.write("    <![CDATA[\n")
             out.write(content)
             if not content.endswith("\n"):
@@ -85,6 +93,62 @@ def interleave_last(prefix: Path, count: int, out) -> int:
 
     out.write("</logs>\n")
     return 0
+
+
+def xml_attr_escape(text: str) -> str:
+    return (text or "").replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def load_post_state_commits(max_commits: int = 2000):
+    """
+    Parse recent SYNC/state commits to map post-state commits for galph and ralph.
+    Returns a dict with keys:
+      { ('galph','ok',iter): (sha, subj), ('galph','fail',iter): (...),
+        ('ralph','ok_for_log',iter): (sha, subj), ('ralph','fail',iter): (...) }
+    Note: ralph OK commits appear at iter+1; we pre-map them to the log's iter via 'ok_for_log'.
+    """
+    cmd = [
+        "git", "log", f"--max-count={max_commits}", "--pretty=format:%h\t%s", "--", "sync/state.json"
+    ]
+    cp = run(cmd, stdout=PIPE, stderr=PIPE, text=True)
+    lines = (cp.stdout or "").splitlines()
+    mapping = {}
+    re_sync = re.compile(r"\[SYNC i=(\d+)\]\s+actor=(galph|ralph)(?:\s+→ next=(galph|ralph)\s+status=(\w+))?\s*(.*)")
+    for line in lines:
+        try:
+            sha, subj = line.split("\t", 1)
+        except ValueError:
+            continue
+        m = re_sync.search(subj)
+        if not m:
+            continue
+        it = int(m.group(1))
+        actor = m.group(2)
+        next_actor = m.group(3)
+        status = m.group(4) or ""
+        # Success handoff commits have the arrow; failure are 'status=fail'
+        if actor == "galph":
+            if next_actor == "ralph":  # success at same iter
+                mapping[("galph", "ok", it)] = (sha, subj)
+            elif "status=fail" in subj:
+                mapping[("galph", "fail", it)] = (sha, subj)
+        elif actor == "ralph":
+            if next_actor == "galph":  # success appears at iter+1; map to log iter (iter-1)
+                mapping[("ralph", "ok_for_log", it - 1)] = (sha, subj)
+            elif "status=fail" in subj:
+                mapping[("ralph", "fail", it)] = (sha, subj)
+    return mapping
+
+
+def resolve_post_commit(role: str, log_iter: int, mapping) -> Tuple[str, str]:
+    """Return (sha, subject) for the post-state commit associated with this log.
+    - galph: prefer ('galph','ok',iter), else ('galph','fail',iter)
+    - ralph: prefer ('ralph','ok_for_log',iter), else ('ralph','fail',iter)
+    """
+    if role == "galph":
+        return mapping.get(("galph", "ok", log_iter), mapping.get(("galph", "fail", log_iter), ("", "")))
+    else:
+        return mapping.get(("ralph", "ok_for_log", log_iter), mapping.get(("ralph", "fail", log_iter), ("", "")))
 
 
 def main() -> int:
@@ -103,4 +167,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
