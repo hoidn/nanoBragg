@@ -1079,3 +1079,9 @@
 - Added Attempt #170 to `docs/fix_plan.md` and refreshed Next Actions bullet 1 plus plan rows (M2i table) to reference the new artifacts while keeping M2i.2 gate open.
 - Authored new input.md (Parity mode) directing Ralph to implement M2g.5 trace tooling patch, rerun CPU/CUDA harnesses into `trace_tooling_patch/<timestamp>/`, and update fix_plan attempts after capturing artifacts.
 - Follow-up: Ralph to patch `trace_harness.py` for cache-aware taps, produce the new trace_tooling_patch bundle, and log Attempt #171 before moving on to M2g.6/M2g.5 documentation.
+
+## 2025-12-12 (galph loop — M2g.6 documentation prep)
+- Git already up to date; reviewed required spec/arch/testing docs plus active plans before analysis. Coin flip=heads → commit review limited to evidence-only Attempt #171 (trace tooling verification) and prior sync commits; no regressions observed.
+- Updated `plans/active/cli-noise-pix0/plan.md` status snapshot to acknowledge Attempt #171 and rewrote the Next Actions list to remove the completed M2g.5 tooling task. M2g.6, cache index audit, and Phase N prep are now the leading items; M2g.5 row marked [D] with artifact path `trace_tooling_patch/20251008T175913Z/`.
+- Revised `docs/fix_plan.md` CLI-FLAGS-003 Next Actions to mirror the plan (emphasising documentation sync, cache index diagnostics, and Phase N preparation). Authored a new 100-line input.md (Mode: Docs) directing Ralph to update `phi_carryover_diagnosis.md`, flip plan row M2g.6 to [D], add a ledger attempt entry, and rerun collect-only pytest for CLI scaling tests.
+- Follow-up for Ralph: perform the M2g.6 documentation sync citing Attempt #171 evidence, update plan/fix_plan accordingly, and keep M2i.2 metrics gate noted as red before advancing to the cache index audit bundle.
