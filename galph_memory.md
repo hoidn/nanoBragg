@@ -922,3 +922,7 @@
 - Refreshed `docs/fix_plan.md` Next Actions (Phase M2 forward) and logged Attempt #147 documenting the verification.
 - Replaced supervisor memo with Phase M2 parity focus (new RUN_DIR, sincg analysis script, hypotheses capture).
 - Expect Ralph to execute M2a–M2c commands, produce `manual_sincg.md` + `lattice_hypotheses.md`, and update plan/Fix Plan attempts accordingly.
+
+## 2025-12-06 (galph loop — Phase M2 lattice hypotheses)
+- Authored `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md` summarising F_latt vs HKL deltas and three follow-up probes (rotated-vector taps, V_actual check, float64 rerun). Plan `cli-noise-pix0` M2c now [D]; logged Attempt #149 in docs/fix_plan.md.
+- Input memo (Parity mode) directs Ralph to add φ-step trace taps + run float64 harness with new flag; artifacts to land under fresh timestamp before lattice fixes begin.

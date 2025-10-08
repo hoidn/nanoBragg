@@ -642,6 +642,20 @@
         3. Check if C's h_frac calculation includes the rounding subtraction or applies it differently
       - **Phase M2 implementation**: Based on hypotheses, implement fix in `Crystal._compute_structure_factors` or lattice factor helpers
       - **Phase M3**: After fix, regenerate trace with updated code and verify metrics.json shows first_divergence=None
+  * [2025-12-06] Attempt #149 (galph supervisor loop, Mode: Parity/Evidence) — Result: **EVIDENCE UPDATE** (Phase M2c lattice hypotheses captured). **No code changes.**
+    Metrics: Evidence-only; no tests executed (pytest --collect-only deferred per supervisor guidelines).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md` — HKL/F_latt delta table, rotated-vector mismatches, and follow-up probes.
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/manual_sincg.md` — Referenced for sanity check (unchanged, cited in hypotheses doc).
+      - `reports/2025-10-cli-flags/phase_l/per_phi/reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/trace_py_scaling_per_phi.log` — Existing per-φ trace used to confirm systematic 0.13% drift.
+    Observations/Hypotheses:
+      - PyTorch vs C `F_latt` differs by +3.06e-03 (−1.29e-03 relative) with per-axis deltas O(1e-3); Δk_frac ≈ −6.78e-06 explains the residual 0.13% intensity error.
+      - Rotated reciprocal components (`rot_a_star_y`, `rot_c_star_y`) diverge by ~1.7e-05 while `rot_b_star_y` matches, implicating the φ rotation + metric-duality pipeline rather than sincg itself.
+      - Hypotheses logged: (H1) rotated reciprocal vectors drift after spindle rotation, (H2) per-φ recomputation may skip the V_actual duality step, (H3) mixed precision in sincg inputs amplifies rounding error.
+    Next Actions:
+      1. Capture enhanced traces logging `ap/bp/cp`, `rot_*_star`, and `V_actual` per φ tick, and diff against `TRACE_C_PHI` (tests harness located at `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py`).
+      2. Run a float64-only harness (override dtype) to see if lattice delta collapses; record results under a new timestamp.
+      3. Once evidence pinpoints the locus, implement Phase M2 fix referencing `nanoBragg.c:3062-3095` and rerun `compare_scaling_traces.py` so `metrics.json` reports `first_divergence=None`.
   * [2025-10-07] Attempt #139 (ralph loop i=139, Mode: Docs) — Result: ✅ **SUCCESS** (Phase M1 COMPLETE — Pre-Polar Trace Instrumentation). **Code changes: simulator trace + comparison script.**
     Metrics: Test collection: 699 tests in 2.68s. Trace: 44 TRACE_PY lines (2 new labels). Comparison: pre-polar (941698.5) vs C (943654.8) → −0.207% delta (within expected tolerance).
     Artifacts:
