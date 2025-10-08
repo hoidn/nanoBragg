@@ -1427,6 +1427,73 @@ class Crystal:
 
         return (a_final, b_final, c_final), (a_star_final, b_star_final, c_star_final)
 
+    def get_rotated_real_vectors_for_batch(
+        self,
+        config: "CrystalConfig",
+        slow_indices: torch.Tensor,
+        fast_indices: torch.Tensor,
+    ) -> Tuple[
+        Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
+        Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
+    ]:
+        """
+        Get rotated lattice vectors for a batch of pixels with φ carryover cache interaction.
+
+        This method implements Option B (batch-indexed pixel cache) for emulating C-PARITY-001
+        bug behavior. It computes fresh rotations, applies cached φ=0 substitution when
+        c-parity mode is enabled, and stores φ=final for the next pixel.
+
+        C-Code Implementation Reference (from nanoBragg.c, lines 2797, 3044-3095):
+        ```c
+        #pragma omp parallel for ... firstprivate(ap,bp,cp,...)
+        for(pixel_i=0; pixel_i < num_pixels; ++pixel_i) {
+            for(phi_tic=0; phi_tic<phisteps; ++phi_tic) {
+                phi = phi0 + phistep*phi_tic;
+                if( phi != 0.0 ) {
+                    rotate_axis(a0,ap,spindle_vector,phi);
+                    rotate_axis(b0,bp,spindle_vector,phi);
+                    rotate_axis(c0,cp,spindle_vector,phi);
+                }
+                // When phi==0: ap/bp/cp retain previous pixel's final φ values (carryover)
+            }
+        }
+        ```
+
+        Args:
+            config: CrystalConfig containing rotation parameters and phi_carryover_mode
+            slow_indices: Pixel slow (row) indices, shape (batch_size,) or scalar tensor
+            fast_indices: Pixel fast (column) indices, shape (batch_size,) or scalar tensor
+
+        Returns:
+            Tuple containing:
+            - First tuple: rotated (a, b, c) real-space vectors, shape (N_phi, N_mos, 3)
+            - Second tuple: rotated (a*, b*, c*) reciprocal-space vectors, shape (N_phi, N_mos, 3)
+
+        Note: Unlike get_rotated_real_vectors(), this method does NOT add a batch dimension.
+        It returns global (N_phi, N_mos, 3) tensors but with φ=0 modified by cache when
+        c-parity mode is active. The caller is responsible for broadcasting to batch dimension.
+        """
+        # Step 1: Compute fresh rotations (spec-compliant path)
+        (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = \
+            self.get_rotated_real_vectors(config)
+        # Shape: (N_phi, N_mos, 3)
+
+        # Step 2: Apply c-parity carryover if enabled (Option B cache interaction)
+        if config.phi_carryover_mode == "c-parity" and self._phi_cache_initialized:
+            (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = \
+                self.apply_phi_carryover(
+                    slow_indices, fast_indices,
+                    (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star)
+                )
+
+            # Step 3: Store φ=final for next pixel's φ=0
+            self.store_phi_final(
+                slow_indices, fast_indices,
+                (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star)
+            )
+
+        return (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star)
+
     def _generate_mosaic_rotations(self, config: "CrystalConfig") -> torch.Tensor:
         """
         Generate random rotation matrices for mosaic domains.

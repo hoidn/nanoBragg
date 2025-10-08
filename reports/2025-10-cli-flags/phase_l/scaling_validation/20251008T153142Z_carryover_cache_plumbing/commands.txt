@@ -1,0 +1,14 @@
+# M2g.4 Implementation - Row-wise φ Carryover Cache Wiring
+
+## Targeted Test
+env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c -q
+
+## Test Collection Verification
+env KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q
+
+## Git SHA (pre-commit)
+git rev-parse HEAD
+
+## Implementation Files Modified
+- src/nanobrag_torch/models/crystal.py (added get_rotated_real_vectors_for_batch method)
+- src/nanobrag_torch/simulator.py (added row-wise batching for c-parity mode)

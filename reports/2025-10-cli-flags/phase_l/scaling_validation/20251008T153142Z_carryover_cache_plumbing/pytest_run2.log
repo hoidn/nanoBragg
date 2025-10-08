@@ -1,0 +1,623 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________ TestScalingParity.test_I_before_scaling_matches_c _______________
+
+self = <tests.test_cli_scaling_parity.TestScalingParity object at 0x7c8bc727bd90>
+
+    def test_I_before_scaling_matches_c(self):
+        """
+        Verify that PyTorch scaling chain matches C reference for target pixel.
+    
+        This test validates that when using phi_carryover_mode='c-parity' (which
+        emulates the C code's φ=0 vector carryover bug), the PyTorch implementation
+        produces F_cell, F_latt, and I_before_scaling values that match the C trace
+        within ≤1e-6 relative tolerance.
+    
+        Expected Values (from C trace at pixel 685,1039, φ_tic=0):
+        - F_cell: 190.27 (HKL nearest-neighbor lookup)
+        - F_latt: -2.383196653 (lattice factor)
+        - I_before_scaling: 943654.809 (pre-polarization intensity)
+    
+        Phase: CLI-FLAGS-003 M2 (Fix φ=0 carryover parity)
+        Reference: reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log
+        Bug: docs/bugs/verified_c_bugs.md (C-PARITY-001)
+        """
+        from nanobrag_torch.models.crystal import Crystal, CrystalConfig
+        from nanobrag_torch.models.detector import Detector, DetectorConfig
+        from nanobrag_torch.config import BeamConfig, DetectorConvention
+        from nanobrag_torch.io.mosflm import read_mosflm_matrix
+        from nanobrag_torch.simulator import Simulator
+    
+        # Check prerequisites
+        mat_file = Path('A.mat')
+        hkl_file = Path('scaled.hkl')
+        if not mat_file.exists():
+            pytest.skip("A.mat not found (required for supervisor command reproduction)")
+        if not hkl_file.exists():
+            pytest.skip("scaled.hkl not found (required for supervisor command reproduction)")
+    
+        # Device and dtype (float64 per test guidance for precision)
+        device = torch.device('cpu')
+        dtype = torch.float64
+    
+        # Beam configuration
+        wavelength_A = 0.976800
+        beam_config = BeamConfig(wavelength_A=wavelength_A)
+    
+        # Load MOSFLM matrix
+        a_star, b_star, c_star = read_mosflm_matrix(str(mat_file), wavelength_A)
+    
+        # Crystal configuration (supervisor command)
+        crystal_config = CrystalConfig(
+            cell_a=100.0,  # placeholder (overridden by MOSFLM)
+            cell_b=100.0,
+            cell_c=100.0,
+            cell_alpha=90.0,
+            cell_beta=90.0,
+            cell_gamma=90.0,
+            N_cells=(36, 47, 29),
+            mosflm_a_star=a_star,
+            mosflm_b_star=b_star,
+            mosflm_c_star=c_star,
+            phi_start_deg=0.0,
+            osc_range_deg=0.1,
+            phi_steps=10,
+            mosaic_domains=1,
+            misset_deg=[0.0, 0.0, 0.0],
+            spindle_axis=[-1.0, 0.0, 0.0],  # supervisor command convention
+            # CRITICAL: Use c-parity mode to emulate C bug
+            phi_carryover_mode="c-parity"
+        )
+    
+        # Detector configuration (supervisor command)
+        # CRITICAL: Must use CUSTOM convention with custom vectors to match C trace
+        # Per trace_harness.py lines 79-99 and subagent analysis
+        detector_config = DetectorConfig(
+            distance_mm=231.274660,
+            pixel_size_mm=0.172,
+            spixels=2527,  # Corrected from 2463 - matches C trace dimensions
+            fpixels=2463,  # Corrected from 2527
+            detector_convention=DetectorConvention.CUSTOM,  # Changed from MOSFLM
+            # Match supervisor command beam center
+            beam_center_f=217.742295,
+            beam_center_s=213.907080,
+            oversample=1,
+            # Custom detector vectors (from trace_harness.py lines 93-99)
+            custom_fdet_vector=(0.999982, -0.005998, -0.000118),
+            custom_sdet_vector=(-0.005998, -0.999970, -0.004913),
+            custom_odet_vector=(-0.000088, 0.004914, -0.999988),
+            custom_beam_vector=(0.00051387949, 0.0, -0.99999986),
+            # Custom pix0 override (mm→m conversion from trace_harness.py line 98)
+            pix0_override_m=(-0.216336293, 0.215205512, -0.230200866)
+        )
+    
+        # Instantiate models
+        crystal = Crystal(crystal_config, beam_config=beam_config, device=device, dtype=dtype)
+        detector = Detector(detector_config, device=device, dtype=dtype)
+    
+        # Load HKL data
+        crystal.load_hkl(str(hkl_file))
+    
+        # Create simulator with trace enabled for target pixel
+        simulator = Simulator(
+            crystal=crystal,
+            detector=detector,
+            beam_config=beam_config,
+            device=device,
+            dtype=dtype,
+            debug_config={'trace_pixel': [685, 1039]}  # Enable trace for target pixel
+        )
+    
+        # Run simulation and capture trace output
+        # The trace output will go to stdout, so we capture it
+        old_stdout = sys.stdout
+        sys.stdout = captured_output = io.StringIO()
+    
+        try:
+            # Run simulation
+>           image = simulator.run()
+                    ^^^^^^^^^^^^^^^
+
+tests/test_cli_scaling_parity.py:138: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/nanobrag_torch/simulator.py:1289: in run
+    self._apply_debug_output(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <nanobrag_torch.simulator.Simulator object at 0x7c8badc2d010>
+physical_intensity = tensor([[2.8860e-06, 1.5982e-06, 7.2981e-07,  ..., 9.2936e-03, 4.9521e-03,
+         3.3745e-02],
+        [1.4806e-06, ...
+        [0.0000e+00, 0.0000e+00, 0.0000e+00,  ..., 3.3750e-06, 1.3957e-05,
+         5.1677e-06]], dtype=torch.float64)
+normalized_intensity = tensor([[2.8860e-06, 1.5982e-06, 7.2981e-07,  ..., 9.2936e-03, 4.9521e-03,
+         3.3745e-02],
+        [1.4806e-06, ...
+        [0.0000e+00, 0.0000e+00, 0.0000e+00,  ..., 3.3750e-06, 1.3957e-05,
+         5.1677e-06]], dtype=torch.float64)
+pixel_coords_meters = tensor([[[-0.2164,  0.2163, -0.2302],
+         [-0.2162,  0.2163, -0.2302],
+         [-0.2160,  0.2163, -0.2302],
+    ..., -0.2207, -0.2324],
+         [ 0.2043, -0.2207, -0.2324],
+         [ 0.2045, -0.2207, -0.2324]]], dtype=torch.float64)
+rot_a = tensor([[[-14.3563, -21.8718,  -5.5820]],
+
+        [[-14.3563, -21.8728,  -5.5782]],
+
+        [[-14.3563, -21.8737,  -... -5.5553]],
+
+        [[-14.3563, -21.8796,  -5.5515]],
+
+        [[-14.3563, -21.8805,  -5.5477]]], dtype=torch.float64)
+rot_b = tensor([[[-11.4987,   0.7173, -29.1132]],
+
+        [[-11.4987,   0.7122, -29.1133]],
+
+        [[-11.4987,   0.7072, -2...-29.1141]],
+
+        [[-11.4987,   0.6767, -29.1142]],
+
+        [[-11.4987,   0.6716, -29.1143]]], dtype=torch.float64)
+rot_c = tensor([[[ 21.0700, -24.3893,  -9.7527]],
+
+        [[ 21.0700, -24.3910,  -9.7484]],
+
+        [[ 21.0700, -24.3927,  -... -9.7228]],
+
+        [[ 21.0700, -24.4029,  -9.7186]],
+
+        [[ 21.0700, -24.4046,  -9.7143]]], dtype=torch.float64)
+rot_a_star = tensor([[[-0.0291, -0.0294,  0.0107]],
+
+        [[-0.0291, -0.0294,  0.0108]],
+
+        [[-0.0291, -0.0294,  0.0108]],....0294,  0.0108]],
+
+        [[-0.0291, -0.0294,  0.0108]],
+
+        [[-0.0291, -0.0294,  0.0108]]], dtype=torch.float64)
+rot_b_star = tensor([[[-0.0031,  0.0104, -0.0329]],
+
+        [[-0.0031,  0.0104, -0.0329]],
+
+        [[-0.0031,  0.0104, -0.0329]],....0104, -0.0329]],
+
+        [[-0.0031,  0.0104, -0.0329]],
+
+        [[-0.0031,  0.0104, -0.0329]]], dtype=torch.float64)
+rot_c_star = tensor([[[ 0.0260, -0.0143, -0.0106]],
+
+        [[ 0.0260, -0.0143, -0.0106]],
+
+        [[ 0.0260, -0.0143, -0.0106]],....0143, -0.0106]],
+
+        [[ 0.0260, -0.0143, -0.0106]],
+
+        [[ 0.0260, -0.0143, -0.0106]]], dtype=torch.float64)
+oversample = 1
+omega_pixel = tensor([1.1831e-07, 1.1840e-07, 1.1848e-07,  ..., 1.2470e-07, 1.2461e-07,
+        1.2452e-07], dtype=torch.float64)
+polarization = tensor([[0.6806, 0.6807, 0.6808,  ..., 0.6876, 0.6875, 0.6874],
+        [0.6807, 0.6808, 0.6809,  ..., 0.6877, 0.6876,..., 0.6873, 0.6872, 0.6871],
+        [0.6803, 0.6804, 0.6805,  ..., 0.6872, 0.6871, 0.6870]],
+       dtype=torch.float64)
+steps = 10, capture_fraction = None
+I_total = tensor([[2.8860e-05, 1.5982e-05, 7.2981e-06,  ..., 9.2936e-02, 4.9521e-02,
+         3.3745e-01],
+        [1.4806e-05, ...
+        [0.0000e+00, 0.0000e+00, 0.0000e+00,  ..., 3.3750e-05, 1.3957e-04,
+         5.1677e-05]], dtype=torch.float64)
+I_total_pre_polar = tensor([[2.8860e-05, 1.5982e-05, 7.2981e-06,  ..., 9.2936e-02, 4.9521e-02,
+         3.3745e-01],
+        [1.4806e-05, ...
+        [0.0000e+00, 0.0000e+00, 0.0000e+00,  ..., 3.3750e-05, 1.3957e-04,
+         5.1677e-05]], dtype=torch.float64)
+
+    def _apply_debug_output(self,
+                           physical_intensity,
+                           normalized_intensity,
+                           pixel_coords_meters,
+                           rot_a, rot_b, rot_c,
+                           rot_a_star, rot_b_star, rot_c_star,
+                           oversample,
+                           omega_pixel=None,
+                           polarization=None,
+                           steps=None,
+                           capture_fraction=None,
+                           I_total=None,
+                           I_total_pre_polar=None):
+        """Apply debug output for -printout and -trace_pixel options.
+    
+        Args:
+            physical_intensity: Final intensity values
+            normalized_intensity: Intensity before final scaling
+            pixel_coords_meters: Pixel coordinates in meters
+            rot_a, rot_b, rot_c: Rotated real-space lattice vectors (Angstroms)
+            rot_a_star, rot_b_star, rot_c_star: Rotated reciprocal vectors (Angstroms^-1)
+            oversample: Oversampling factor
+            omega_pixel: Solid angle (if computed)
+            steps: Total steps calculation (sources × mosaic × φ × oversample²)
+            capture_fraction: Detector absorption capture fraction tensor (if computed)
+            polarization: Polarization factor (if computed)
+        """
+    
+        # Check if we should limit output to specific pixel
+        if self.printout_pixel:
+            # printout_pixel is [fast, slow] from CLI
+            target_fast = self.printout_pixel[0]
+            target_slow = self.printout_pixel[1]
+    
+            # Only output for this specific pixel
+            if 0 <= target_slow < physical_intensity.shape[0] and 0 <= target_fast < physical_intensity.shape[1]:
+                print(f"\n=== Pixel ({target_fast}, {target_slow}) [fast, slow] ===")
+                print(f"  Final intensity: {physical_intensity[target_slow, target_fast].item():.6e}")
+                print(f"  Normalized intensity: {normalized_intensity[target_slow, target_fast].item():.6e}")
+                if pixel_coords_meters is not None:
+                    coords = pixel_coords_meters[target_slow, target_fast]
+                    print(f"  Position (meters): ({coords[0].item():.6e}, {coords[1].item():.6e}, {coords[2].item():.6e})")
+                    # Convert to Angstroms for physics display
+                    coords_ang = coords * 1e10
+                    print(f"  Position (Å): ({coords_ang[0].item():.3f}, {coords_ang[1].item():.3f}, {coords_ang[2].item():.3f})")
+                if omega_pixel is not None:
+                    print(f"  Solid angle: {omega_pixel[target_slow, target_fast].item():.6e}")
+                if polarization is not None:
+                    print(f"  Polarization: {polarization[target_slow, target_fast].item():.4f}")
+        elif self.printout:
+            # General verbose output - print statistics for all pixels
+            print(f"\n=== Debug Output ===")
+            print(f"  Image shape: {physical_intensity.shape[0]} x {physical_intensity.shape[1]} pixels")
+            print(f"  Max intensity: {physical_intensity.max().item():.6e}")
+            print(f"  Min intensity: {physical_intensity.min().item():.6e}")
+            print(f"  Mean intensity: {physical_intensity.mean().item():.6e}")
+    
+            # Find and report brightest pixel
+            max_val = physical_intensity.max()
+            max_pos = (physical_intensity == max_val).nonzero()[0]
+            print(f"  Brightest pixel: ({max_pos[1].item()}, {max_pos[0].item()}) [fast, slow] = {max_val.item():.6e}")
+    
+        # Handle trace_pixel for detailed single-pixel trace
+        if self.trace_pixel:
+            # trace_pixel is [slow, fast] from CLI
+            target_slow = self.trace_pixel[0]
+            target_fast = self.trace_pixel[1]
+    
+            if 0 <= target_slow < physical_intensity.shape[0] and 0 <= target_fast < physical_intensity.shape[1]:
+                # Output pix0_vector first
+                pix0 = self.detector.pix0_vector
+                print(f"TRACE_PY: pix0_vector_meters {pix0[0].item():.15g} {pix0[1].item():.15g} {pix0[2].item():.15g}")
+    
+                # Output detector basis vectors
+                fdet = self.detector.fdet_vec
+                sdet = self.detector.sdet_vec
+                print(f"TRACE_PY: fdet_vec {fdet[0].item():.15g} {fdet[1].item():.15g} {fdet[2].item():.15g}")
+                print(f"TRACE_PY: sdet_vec {sdet[0].item():.15g} {sdet[1].item():.15g} {sdet[2].item():.15g}")
+    
+                # Trace coordinate information
+                if pixel_coords_meters is not None:
+                    coords = pixel_coords_meters[target_slow, target_fast]
+                    print(f"TRACE_PY: pixel_pos_meters {coords[0].item():.15g} {coords[1].item():.15g} {coords[2].item():.15g}")
+    
+                    # Calculate airpath and omega
+                    airpath_m = torch.sqrt(torch.sum(coords * coords)).item()
+                    print(f"TRACE_PY: R_distance_meters {airpath_m:.15g}")
+    
+                    # Calculate omega (same formula as in main calculation)
+                    pixel_size_m = self.detector.pixel_size  # already in meters
+                    close_distance_m = self.detector.close_distance  # already in meters
+                    if self.detector.config.point_pixel:
+                        omega_pixel_val = 1.0 / (airpath_m * airpath_m)
+                    else:
+                        omega_pixel_val = (pixel_size_m * pixel_size_m) / (airpath_m * airpath_m) * close_distance_m / airpath_m
+    
+                    print(f"TRACE_PY: omega_pixel_sr {omega_pixel_val:.15g}")
+                    print(f"TRACE_PY: close_distance_meters {close_distance_m:.15g}")
+                    print(f"TRACE_PY: obliquity_factor {close_distance_m/airpath_m:.15g}")
+    
+                    # Calculate diffracted and incident vectors
+                    coords_ang = coords * 1e10  # m to Å
+                    pixel_mag = torch.sqrt(torch.sum(coords_ang * coords_ang))
+                    diffracted_vec = coords_ang / pixel_mag
+                    incident_vec = self.incident_beam_direction
+    
+                    print(f"TRACE_PY: diffracted_vec {diffracted_vec[0].item():.15g} {diffracted_vec[1].item():.15g} {diffracted_vec[2].item():.15g}")
+                    print(f"TRACE_PY: incident_vec {incident_vec[0].item():.15g} {incident_vec[1].item():.15g} {incident_vec[2].item():.15g}")
+    
+                    # Wavelength
+                    lambda_m = self.wavelength.item() * 1e-10
+                    print(f"TRACE_PY: lambda_meters {lambda_m:.15g}")
+                    print(f"TRACE_PY: lambda_angstroms {self.wavelength.item():.15g}")
+    
+                    # Scattering vector (in m^-1, not Å^-1!)
+                    scattering_vec_ang_inv = (diffracted_vec - incident_vec) / self.wavelength
+                    scattering_vec_m_inv = scattering_vec_ang_inv * 1e10  # Å^-1 to m^-1
+                    print(f"TRACE_PY: scattering_vec_A_inv {scattering_vec_m_inv[0].item():.15g} {scattering_vec_m_inv[1].item():.15g} {scattering_vec_m_inv[2].item():.15g}")
+    
+                # Trace reciprocal space information if available
+                if rot_a_star is not None and rot_b_star is not None and rot_c_star is not None:
+                    # Output rotated real and reciprocal vectors (first phi/mosaic domain)
+                    a_vec = rot_a[0, 0] if len(rot_a.shape) > 1 else rot_a
+                    b_vec = rot_b[0, 0] if len(rot_b.shape) > 1 else rot_b
+                    c_vec = rot_c[0, 0] if len(rot_c.shape) > 1 else rot_c
+    
+                    print(f"TRACE_PY: rot_a_angstroms {a_vec[0].item():.15g} {a_vec[1].item():.15g} {a_vec[2].item():.15g}")
+                    print(f"TRACE_PY: rot_b_angstroms {b_vec[0].item():.15g} {b_vec[1].item():.15g} {b_vec[2].item():.15g}")
+                    print(f"TRACE_PY: rot_c_angstroms {c_vec[0].item():.15g} {c_vec[1].item():.15g} {c_vec[2].item():.15g}")
+    
+                    # Spindle-axis instrumentation (CLI-FLAGS-003 Phase L3g)
+                    # Emit raw spindle axis from config and normalized axis used by rotate_axis
+                    from nanobrag_torch.utils.geometry import unitize
+                    spindle_raw = self.crystal.config.spindle_axis
+                    if isinstance(spindle_raw, (list, tuple)):
+                        spindle_raw = torch.tensor(spindle_raw, device=self.device, dtype=self.dtype)
+                    spindle_norm, spindle_magnitude = unitize(spindle_raw)
+                    print(f"TRACE_PY: spindle_axis_raw {spindle_raw[0].item():.15g} {spindle_raw[1].item():.15g} {spindle_raw[2].item():.15g}")
+                    print(f"TRACE_PY: spindle_axis_normalized {spindle_norm[0].item():.15g} {spindle_norm[1].item():.15g} {spindle_norm[2].item():.15g}")
+                    print(f"TRACE_PY: spindle_magnitude {spindle_magnitude.item():.15g}")
+    
+                    a_star_vec = rot_a_star[0, 0] if len(rot_a_star.shape) > 1 else rot_a_star
+                    b_star_vec = rot_b_star[0, 0] if len(rot_b_star.shape) > 1 else rot_b_star
+                    c_star_vec = rot_c_star[0, 0] if len(rot_c_star.shape) > 1 else rot_c_star
+    
+                    print(f"TRACE_PY: rot_a_star_A_inv {a_star_vec[0].item():.15g} {a_star_vec[1].item():.15g} {a_star_vec[2].item():.15g}")
+                    print(f"TRACE_PY: rot_b_star_A_inv {b_star_vec[0].item():.15g} {b_star_vec[1].item():.15g} {b_star_vec[2].item():.15g}")
+                    print(f"TRACE_PY: rot_c_star_A_inv {c_star_vec[0].item():.15g} {c_star_vec[1].item():.15g} {c_star_vec[2].item():.15g}")
+    
+                    # Calculate Miller indices using scattering vector and real-space vectors
+                    # Following nanoBragg.c convention: h = dot(a, scattering)
+                    coords_ang = pixel_coords_meters[target_slow, target_fast] * 1e10  # m to Å
+                    pixel_mag = torch.sqrt(torch.sum(coords_ang * coords_ang))
+                    diffracted_unit = coords_ang / pixel_mag
+                    incident_unit = self.incident_beam_direction
+                    scattering_vec = (diffracted_unit - incident_unit) / self.wavelength
+    
+                    from nanobrag_torch.utils.geometry import dot_product
+                    h = dot_product(scattering_vec.unsqueeze(0), a_vec.unsqueeze(0)).item()
+                    k = dot_product(scattering_vec.unsqueeze(0), b_vec.unsqueeze(0)).item()
+                    l = dot_product(scattering_vec.unsqueeze(0), c_vec.unsqueeze(0)).item()
+    
+                    h0 = round(h)
+                    k0 = round(k)
+                    l0 = round(l)
+    
+                    print(f"TRACE_PY: hkl_frac {h:.15g} {k:.15g} {l:.15g}")
+                    print(f"TRACE_PY: hkl_rounded {h0} {k0} {l0}")
+    
+                    # Calculate F_latt components (SQUARE shape assumed)
+                    # Per specs/spec-a-core.md §4.3 and nanoBragg.c:3071-3079:
+                    # Use fractional h,k,l directly (NOT h-h0) for SQUARE lattice factor
+                    Na = self.crystal.N_cells_a
+                    Nb = self.crystal.N_cells_b
+                    Nc = self.crystal.N_cells_c
+    
+                    from nanobrag_torch.utils import sincg
+                    F_latt_a = sincg(torch.pi * torch.tensor(h), Na).item()
+                    F_latt_b = sincg(torch.pi * torch.tensor(k), Nb).item()
+                    F_latt_c = sincg(torch.pi * torch.tensor(l), Nc).item()
+                    F_latt = F_latt_a * F_latt_b * F_latt_c
+    
+                    print(f"TRACE_PY: F_latt_a {F_latt_a:.15g}")
+                    print(f"TRACE_PY: F_latt_b {F_latt_b:.15g}")
+                    print(f"TRACE_PY: F_latt_c {F_latt_c:.15g}")
+                    print(f"TRACE_PY: F_latt {F_latt:.15g}")
+    
+                    # CLI-FLAGS-003 Phase M1: Force interpolation for debug trace
+                    # Temporarily enable interpolation to capture 4×4×4 neighborhood for analysis
+                    interpolate_saved = self.crystal.interpolate
+                    try:
+                        # Force interpolation on for this debug query
+                        self.crystal.interpolate = True
+    
+                        # Call with fractional indices to use tricubic interpolation
+                        F_cell_interp = self.crystal.get_structure_factor(
+                            torch.tensor([[h]], dtype=torch.float64),
+                            torch.tensor([[k]], dtype=torch.float64),
+                            torch.tensor([[l]], dtype=torch.float64)
+                        ).item()
+                        print(f"TRACE_PY: F_cell_interpolated {F_cell_interp:.15g}")
+    
+                        # Restore original interpolate flag
+                        self.crystal.interpolate = interpolate_saved
+    
+                        # Also get nearest-neighbor for comparison
+                        F_cell_nearest = self.crystal.get_structure_factor(
+                            torch.tensor([[h0]]),
+                            torch.tensor([[k0]]),
+                            torch.tensor([[l0]])
+                        ).item()
+                        print(f"TRACE_PY: F_cell_nearest {F_cell_nearest:.15g}")
+    
+                        # Use nearest-neighbor value to match production run behavior
+                        F_cell = F_cell_nearest
+                    finally:
+                        # Ensure flag is restored even if error occurs
+                        self.crystal.interpolate = interpolate_saved
+    
+                    # CLI-FLAGS-003 Phase M1: Emit 4×4×4 tricubic interpolation neighborhood
+                    # This captures the exact weights used for F_latt calculation to diagnose drift
+                    if hasattr(self.crystal, '_last_tricubic_neighborhood') and self.crystal._last_tricubic_neighborhood:
+                        neighborhood = self.crystal._last_tricubic_neighborhood
+                        # Emit compact 4×4×4 grid (64 values) for comparison with C trace
+                        # Format: TRACE_PY_TRICUBIC_GRID: [i,j,k]=value for all i,j,k in 0..3
+                        sub_Fhkl = neighborhood['sub_Fhkl']
+                        if sub_Fhkl.shape[0] == 1:  # Single query point (debug case)
+                            grid_3d = sub_Fhkl[0]  # Extract (4,4,4) from (1,4,4,4)
+                            # Emit as flattened list with indices for C comparison
+                            print("TRACE_PY_TRICUBIC_GRID_START")
+                            for i in range(4):
+                                for j in range(4):
+                                    for k in range(4):
+                                        val = grid_3d[i, j, k].item()
+                                        print(f"TRACE_PY_TRICUBIC: [{i},{j},{k}]={val:.15g}")
+                            print("TRACE_PY_TRICUBIC_GRID_END")
+                            # Also emit the coordinate arrays used for interpolation
+                            h_coords = neighborhood['h_indices'][0].tolist()  # (4,) array
+                            k_coords = neighborhood['k_indices'][0].tolist()
+                            l_coords = neighborhood['l_indices'][0].tolist()
+                            print(f"TRACE_PY_TRICUBIC_H_COORDS: {h_coords}")
+                            print(f"TRACE_PY_TRICUBIC_K_COORDS: {k_coords}")
+                            print(f"TRACE_PY_TRICUBIC_L_COORDS: {l_coords}")
+    
+                    # CLI-FLAGS-003 Phase M1: Emit both pre-polar and post-polar I_before_scaling
+                    # This aligns PyTorch trace with C-code which logs pre-polarization value
+    
+                    # Pre-polarization intensity (matches C-code TRACE_C: I_before_scaling)
+                    if I_total_pre_polar is not None and isinstance(I_total_pre_polar, torch.Tensor):
+                        I_before_scaling_pre_polar = I_total_pre_polar[target_slow, target_fast].item()
+                    elif I_total is not None and isinstance(I_total, torch.Tensor):
+                        # Fallback: use post-polar if pre-polar not available (backward compat)
+                        I_before_scaling_pre_polar = I_total[target_slow, target_fast].item()
+                    else:
+                        # Fallback: compute from F_cell and F_latt (less accurate)
+                        I_before_scaling_pre_polar = (F_cell * F_latt) ** 2
+                    print(f"TRACE_PY: I_before_scaling_pre_polar {I_before_scaling_pre_polar:.15g}")
+    
+                    # Post-polarization intensity (current I_total)
+                    if I_total is not None and isinstance(I_total, torch.Tensor):
+                        I_before_scaling_post_polar = I_total[target_slow, target_fast].item()
+                    else:
+                        # Fallback: compute from F_cell and F_latt (less accurate)
+                        I_before_scaling_post_polar = (F_cell * F_latt) ** 2
+                    print(f"TRACE_PY: I_before_scaling_post_polar {I_before_scaling_post_polar:.15g}")
+    
+                    # Physical constants and scaling factors
+                    r_e_m = torch.sqrt(self.r_e_sqr).item()
+                    print(f"TRACE_PY: r_e_meters {r_e_m:.15g}")
+                    print(f"TRACE_PY: r_e_sqr {self.r_e_sqr.item():.15g}")
+                    print(f"TRACE_PY: fluence_photons_per_m2 {self.fluence.item():.15g}")
+    
+                    # Use actual steps value passed from run() method
+                    # This is the full calculation: sources × mosaic × φ × oversample²
+                    if steps is not None:
+                        print(f"TRACE_PY: steps {steps}")
+                    else:
+                        # Fallback to phi_steps only if not provided (backward compatibility)
+                        print(f"TRACE_PY: steps {self.crystal.config.phi_steps}")
+    
+                    # Oversample flags
+                    print(f"TRACE_PY: oversample_thick {1 if self.detector.config.oversample_thick else 0}")
+                    print(f"TRACE_PY: oversample_polar {1 if self.detector.config.oversample_polar else 0}")
+                    print(f"TRACE_PY: oversample_omega {1 if self.detector.config.oversample_omega else 0}")
+    
+                    # Capture fraction from detector absorption (actual value, not placeholder)
+                    if capture_fraction is not None and isinstance(capture_fraction, torch.Tensor):
+                        capture_frac_val = capture_fraction[target_slow, target_fast].item()
+                    else:
+                        # If absorption is not configured, capture fraction is 1.0
+                        capture_frac_val = 1.0
+                    print(f"TRACE_PY: capture_fraction {capture_frac_val:.15g}")
+    
+                    # Calculate polarization for this pixel (actual value, not placeholder)
+                    # This matches the polarization_factor calculation in the main physics
+                    if polarization is not None and isinstance(polarization, torch.Tensor):
+                        polar_val = polarization[target_slow, target_fast].item()
+                    else:
+                        # If polarization was not computed or nopolar is set, default to 1.0
+                        polar_val = 1.0
+    
+                    print(f"TRACE_PY: polar {polar_val:.15g}")
+                    print(f"TRACE_PY: omega_pixel {omega_pixel_val:.15g}")
+    
+                    # Calculate cos_2theta
+                    # cos(2θ) = incident · diffracted
+                    cos_2theta = torch.dot(incident_unit, diffracted_unit).item()
+                    print(f"TRACE_PY: cos_2theta {cos_2theta:.15g}")
+    
+                    # Final intensity
+                    I_pixel_final = physical_intensity[target_slow, target_fast].item()
+                    print(f"TRACE_PY: I_pixel_final {I_pixel_final:.15g}")
+                    print(f"TRACE_PY: floatimage_accumulated {I_pixel_final:.15g}")
+    
+                    # Per-φ lattice trace (Phase L3k.3c.4 per plans/active/cli-phi-parity-shim/plan.md Task C4)
+                    # Emit TRACE_PY_PHI for each φ step to enable per-φ parity validation
+                    # Enhanced with scattering vector, reciprocal vectors, and volume per input.md 2025-10-08
+                    if rot_a.shape[0] > 1:  # Check if we have multiple phi steps
+                        # Get phi parameters from crystal config
+                        phi_start_deg = self.crystal.config.phi_start_deg
+                        osc_range_deg = self.crystal.config.osc_range_deg
+                        phi_steps = self.crystal.config.phi_steps
+    
+                        # Compute phi angles for each step
+                        # Match C formula: phi = phi_start + (osc_range / phi_steps) * phi_tic
+                        # where phi_tic ranges from 0 to (phi_steps - 1)
+                        phi_step_size = osc_range_deg / phi_steps if phi_steps > 0 else 0.0
+    
+                        # Loop over phi steps (first mosaic domain [phi_tic, 0])
+                        for phi_tic in range(phi_steps):
+                            # Calculate phi angle for this step
+                            phi_deg = phi_start_deg + phi_tic * phi_step_size
+    
+                            # Get rotated real-space vectors for this phi step
+                            a_vec_phi = rot_a[phi_tic, 0]  # First mosaic domain
+                            b_vec_phi = rot_b[phi_tic, 0]
+                            c_vec_phi = rot_c[phi_tic, 0]
+    
+                            # Compute reciprocal vectors from rotated real-space vectors
+                            # C-Code Reference (from nanoBragg.c, lines 3044-3058):
+                            # ```c
+                            # if(phi != 0.0) {
+                            #   rotate_axis(a0, spindle, phi, ap);
+                            #   rotate_axis(b0, spindle, phi, bp);
+                            #   rotate_axis(c0, spindle, phi, cp);
+                            # }
+                            # /* compute reciprocal-space cell vectors */
+                            # cross_product(bp,cp,&ap_mag);
+                            # cross_product(cp,ap,&bp_mag);
+                            # cross_product(ap,bp,&cp_mag);
+                            # /* volume of unit cell */
+                            # V_cell = dot_product(ap,&ap_mag);
+                            # /* reciprocal cell vectors */
+                            # a_star[1] = ap_mag.x/V_cell; a_star[2] = ap_mag.y/V_cell; a_star[3] = ap_mag.z/V_cell;
+                            # b_star[1] = bp_mag.x/V_cell; b_star[2] = bp_mag.y/V_cell; b_star[3] = bp_mag.z/V_cell;
+                            # c_star[1] = cp_mag.x/V_cell; c_star[2] = cp_mag.y/V_cell; c_star[3] = cp_mag.z/V_cell;
+                            # ```
+                            from nanobrag_torch.utils.geometry import cross_product as cross_prod_util
+                            b_cross_c_phi = cross_prod_util(b_vec_phi.unsqueeze(0), c_vec_phi.unsqueeze(0)).squeeze(0)
+                            c_cross_a_phi = cross_prod_util(c_vec_phi.unsqueeze(0), a_vec_phi.unsqueeze(0)).squeeze(0)
+                            a_cross_b_phi = cross_prod_util(a_vec_phi.unsqueeze(0), b_vec_phi.unsqueeze(0)).squeeze(0)
+    
+                            from nanobrag_torch.utils.geometry import dot_product
+                            V_actual_phi = dot_product(a_vec_phi.unsqueeze(0), b_cross_c_phi.unsqueeze(0)).item()
+    
+                            a_star_phi = b_cross_c_phi / V_actual_phi
+                            b_star_phi = c_cross_a_phi / V_actual_phi
+                            c_star_phi = a_cross_b_phi / V_actual_phi
+    
+                            # Compute Miller indices for this phi orientation
+                            # Reuse scattering vector from above (doesn't change with phi)
+                            h_phi = dot_product(scattering_vec.unsqueeze(0), a_vec_phi.unsqueeze(0)).item()
+                            k_phi = dot_product(scattering_vec.unsqueeze(0), b_vec_phi.unsqueeze(0)).item()
+                            l_phi = dot_product(scattering_vec.unsqueeze(0), c_vec_phi.unsqueeze(0)).item()
+    
+                            # Compute F_latt components for this phi (SQUARE shape)
+                            from nanobrag_torch.utils import sincg
+                            F_latt_a_phi = sincg(torch.pi * torch.tensor(h_phi), Na).item()
+                            F_latt_b_phi = sincg(torch.pi * torch.tensor(k_phi), Nb).item()
+                            F_latt_c_phi = sincg(torch.pi * torch.tensor(l_phi), Nc).item()
+                            F_latt_phi = F_latt_a_phi * F_latt_b_phi * F_latt_c_phi
+    
+                            # Emit enhanced TRACE_PY_PHI with scattering vector, reciprocal vectors, and volume
+                            # Format matches C trace (TRACE_C_PHI) for direct comparison
+                            print(f"TRACE_PY_PHI phi_tic={phi_tic} phi_deg={phi_deg:.15g} "
+                                  f"k_frac={k_phi:.15g} F_latt_b={F_latt_b_phi:.15g} F_latt={F_latt_phi:.15g} "
+                                  f"S_x={scattering_vec[0].item():.15g} S_y={scattering_vec[1].item():.15g} S_z={scattering_vec[2].item():.15g} "
+                                  f"a_star_y={a_star_phi[1].item():.15g} b_star_y={b_star_phi[1].item():.15g} c_star_y={c_star_phi[1].item():.15g} "
+                                  f"V_actual={V_actual_phi:.15g}")
+    
+                            # Phase M2 (2025-12-06): Emit real-space vectors if requested
+                            # This helps diagnose lattice factor drift by comparing ap/bp/cp directly
+                            if self.debug_config.get('emit_rot_stars', False):
+                                print(f"TRACE_PY_ROTSTAR phi_tic={phi_tic} "
+                                      f"ap_y={a_vec_phi[1].item():.15g} bp_y={b_vec_phi[1].item():.15g} cp_y={c_vec_phi[1].item():.15g}")
+    
+                # Trace factors
+                if omega_pixel is not None:
+                    if isinstance(omega_pixel, torch.Tensor):
+>                       print(f"TRACE: Omega (solid angle) = {omega_pixel[target_slow, target_fast].item():.12e}")
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                       IndexError: too many indices for tensor of dimension 1
+
+src/nanobrag_torch/simulator.py:1707: IndexError
+=========================== short test summary info ============================
+FAILED tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c
+1 failed in 11.88s
