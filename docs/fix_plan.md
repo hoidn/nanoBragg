@@ -3477,3 +3477,31 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - **Prototype validation**: Simulate 4×4 ROI with batch approach, measure memory vs vectorized baseline, run gradcheck on cell parameter, profile runtime
       - **M2g.3-M2g.6 unblocked**: Once Option B validates, proceed with implementation (pixel-indexed cache, apply_phi_carryover, multi-pixel test, trace instrumentation)
       - **Phase C5 handoff**: Incorporate findings into parity shim `summary.md` citing spec lines 211-213 and linking this design refresh memo
+  * [2025-10-08] Attempt #160 (ralph loop i=159, Mode: Code) — Result: ✅ **SUCCESS** (Phase M2g.2b batched cache signatures restored). **Code changes: Crystal.**
+    Metrics: Test collection: 1 test collected successfully (pytest --collect-only -q tests/test_cli_scaling_parity.py). Target test still fails as expected (cache methods not yet wired to simulator).
+    Artifacts:
+      - Git commit: 678cbf4
+      - `src/nanobrag_torch/models/crystal.py:245-342` — Restored batched tensor signatures for `apply_phi_carryover()` and `store_phi_final()`
+      - `src/nanobrag_torch/models/crystal.py:303` — Removed `.item()` call, replaced with tensor-native validity check using `.any()` to preserve differentiability
+      - `tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c` — Still fails (expected; F_latt relative error 157.88%, cache not yet integrated)
+    Code Changes:
+      - Changed `apply_phi_carryover(slow_index: int, fast_index: int, ...)` → `apply_phi_carryover(slow_indices: torch.Tensor, fast_indices: torch.Tensor, ...)`
+      - Changed `store_phi_final(slow_index: int, fast_index: int, ...)` → `store_phi_final(slow_indices: torch.Tensor, fast_indices: torch.Tensor, ...)`
+      - Replaced scalar `.item()` validity check with tensor-native `cache_valid.any()` pattern
+      - Updated docstrings to cite M2g.2b design and maintain C-code references per CLAUDE Rule #11
+      - Preserved gradient flow by keeping batched advanced indexing without `.detach()` or `.clone()`
+    Observations/Hypotheses:
+      - **Scalar regression reversed**: Commit f84fd5e's scalar API now superseded with tensor batched signatures
+      - **Differentiability restored**: No `.item()` calls on cache tensors; validity checks use `.any()` on boolean tensor
+      - **Integration still pending**: Methods accept batched indices but simulator doesn't call them yet (M2g.3-M2g.6 tasks)
+      - **Syntax verified**: `python -m compileall src/nanobrag_torch/models/crystal.py` passes without errors
+      - **Collection passes**: `pytest --collect-only` succeeds for target test file
+      - **API aligned with Option B**: Batched indexing pattern matches `reports/.../phi_carryover_diagnosis.md` design
+      - **PyTorch runtime discipline**: No `.cpu()` or `.cuda()` hard-coding; cache tensors inherit device/dtype from detector config
+    Next Actions:
+      - **M2g.3**: Allocate pixel-indexed caches with correct shape `(detector.spixels, detector.fpixels, mosaic_domains, 3)`
+      - **M2g.4**: Thread batched `(slow_indices, fast_indices)` through simulator's `_compute_physics_for_position` to enable per-pixel cache application
+      - **M2g.5**: Update trace harness and parity tooling to exercise new cache pathway
+      - **M2g.6**: Document architecture decision in `phi_carryover_diagnosis.md` with implementation notes
+      - **M2h**: Execute validation bundle (CPU pytest, CUDA probe when available, gradcheck)
+      - **M2i**: Regenerate cross-pixel traces expecting φ=0 carryover to work
