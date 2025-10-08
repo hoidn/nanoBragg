@@ -1814,3 +1814,10 @@ Follow-ups for Ralph:
 - Updated `docs/fix_plan.md` Next Actions for VECTOR-TRICUBIC-001 so Ralph targets Phase E1–E3 evidence and begins Phase F design once parity/perf metrics land.
 - Issued new Perf-mode `input.md` pointing Ralph at Phase E1 (`tests/test_tricubic_vectorized.py` + `tests/test_at_str_002.py`) with explicit log destinations under `reports/2025-10-vectorization/phase_e/`.
 - Follow-up: Expect Ralph to produce Phase E1 CPU/GPU logs, capture env metadata, and append Phase E notes to `polynomial_validation.md` before proceeding to E2 benchmarks.
+
+## 2025-10-08 (galph loop — parity shim evidence refresh)
+- Captured fresh C and PyTorch per-φ traces under `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T021659Z/` using the supervisor command + trace harness (spec + c-parity modes).
+- New C log includes 10 `TRACE_C_PHI` lines; c-parity rot_b_y now matches C exactly, but Δk stays at 2.8451466e-05 and ΔF_latt_b at 4.36e-03, leaving VG-1 unmet.
+- Updated `plans/active/cli-phi-parity-shim/plan.md` C4 row and `docs/fix_plan.md` (Attempt #124, line ~684) to record metrics + next diagnostic steps (instrument scattering vector taps, audit reciprocal recompute).
+- Issued Parity-mode `input.md` directing Ralph to add scattering-vector/V_actual taps, rerun harness, and regenerate comparison artifacts before trying another shim tweak.
+- Expect Ralph to extend instrumentation (while citing nanoBragg.c:3044-3058), run both spec and parity harness passes, update `delta_metrics.json`, and iterate until Δk ≤ 1e-6.

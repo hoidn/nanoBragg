@@ -1,0 +1,11 @@
+MOSFLM matrix probe written to reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_probe_output.log
+Captured 12 MOSFLM probe lines
+Per-φ trace written to reports/2025-10-cli-flags/phase_l/per_phi/reports/2025-10-cli-flags/phase_l/parity_shim/20251008T021659Z/trace_py_c_parity_per_phi.log
+Per-φ JSON written to reports/2025-10-cli-flags/phase_l/per_phi/reports/2025-10-cli-flags/phase_l/parity_shim/20251008T021659Z/trace_py_c_parity_per_phi.json
+Captured 10 TRACE_PY_PHI lines
+Main trace written to reports/2025-10-cli-flags/phase_l/parity_shim/20251008T021659Z/trace_py_c_parity.log
+Environment snapshot: reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_env.json
+Config snapshot: reports/2025-10-cli-flags/phase_l/rot_vector/config_snapshot.json
+Captured 43 TRACE_PY lines
+
+Pixel (685, 1039) final intensity: 2.7907574142844e-07

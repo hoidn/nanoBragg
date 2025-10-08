@@ -458,7 +458,7 @@
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
 - Next Actions (2025-11-27 refresh → galph loop i=118):
-1. **Phase L3k.3c.4 (parity shim evidence capture)** — Follow `plans/active/cli-phi-parity-shim/plan.md` Phase C4 to rerun `scripts/compare_per_phi_traces.py` for both spec and `--phi-carryover-mode c-parity`; store logs, delta metrics, and SHA256 hashes under a new `reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/` directory and confirm VG-1 tolerances (Δrot_b_y, Δk ≤ 1e-6) in parity mode. Include targeted pytest output (`tests/test_phi_carryover_mode.py`, `tests/test_cli_scaling_phi0.py`) alongside traces.
+1. **Phase L3k.3c.4 (parity shim evidence capture)** — Latest run (`reports/2025-10-cli-flags/phase_l/parity_shim/20251008T021659Z/`) produced fresh C/Torch traces, but c-parity still plateaus at Δk=2.8451466e-05 and ΔF_latt_b=4.36e-03 (>1e-6/1e-4). Diagnose the residual φ₀ drift (compare scattering vector + reciprocal recompute against C, capture tap points) before attempting another shim tweak. Keep capturing targeted pytest collect logs and SHA256 hashes for each iteration.
 2. **Phase L3k.3c.5 (dual-mode documentation/tests)** — After traces land, execute Phase C5 and Phase D1 of the parity-shim plan: update `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md`, `docs/bugs/verified_c_bugs.md`, and related checklists to document the opt-in shim, and ensure collect-only evidence exists for both spec/parity selectors.
 3. Phase L3k.3d — Resolve the nb-compare ROI anomaly (C sum≈0) before repeating VG-3/VG-4; capture the corrected summary.json/logs under `nb_compare_phi_fix/` once correlation ≥0.9995 and sum_ratio 0.99–1.01. After VG-1/VG-3/VG-4 pass, proceed to L3k.3e → L3k.4 documentation and fix_plan logging ahead of the Phase L4 supervisor-command rerun.
 - Attempts History:
@@ -681,6 +681,20 @@
       2. Compare C trace against PyTorch probe using scripts/compare_per_phi_traces.py to compute Δb_y and Δk_frac
       3. Update diagnosis.md with delta values
       4. If deltas ≈ 0: Proceed to Phase L3k.4 normalization closure
+  * [2025-10-08] Attempt #124 (galph loop, Mode: Parity/Evidence) — Result: **VG-1 STILL FAILING** (fresh C+Py traces captured; tolerances remain unmet).
+    Metrics: Spec mode Δk(φ₀)=1.811649e-02 (expected spec divergence); c-parity max Δk=2.8451466e-05 (>1e-6) and max ΔF_latt_b=4.36e-03 (>1e-4). Targeted pytest `--collect-only` for `tests/test_cli_scaling_phi0.py` and `tests/test_phi_carryover_mode.py` succeeded (699 tests collected).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T021659Z/c_trace_phi.log` — newly generated TRACE_C_PHI log (10 φ entries)
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T021659Z/trace_py_spec*.{log,json}` & `trace_py_c_parity*.{log,json}` — dual-mode PyTorch traces
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T021659Z/delta_metrics.json`, `comparison_summary_{spec,c_parity}.md`, `comparison_*_stdout*.txt`, `sha256.txt`, `pytest_collect.log`
+    Observations/Hypotheses:
+      - Rebuilding the golden_suite_generator binary restored `TRACE_C_PHI`, eliminating the earlier dependency on archived C traces.
+      - C-parity rotation vectors (e.g., rot_b_y=0.671588233999813 Å) now mirror C exactly; residual Δk and ΔF_latt_b originate from the scattering-vector / lattice-factor recompute in the φ₀ cache path.
+      - The persistent 2.845e-05 plateau points toward rounding in reciprocal vector regeneration or h·a dot-product evaluation; additional tap points are required to locate the mismatch.
+    Next Actions:
+      1. Extend the trace harness to log scattering-vector components (`TRACE_PY_PHI` S-values), hkl rounding inputs, and V_actual for both modes to isolate the first divergent scalar.
+      2. Audit `Crystal.get_rotated_real_vectors` parity branch for dtype/device conversions (avoid redundant `torch.tensor(...)` casts) and confirm cached tensors reuse float64 precision.
+      3. Re-run the parity shim harness after adjustments and verify Δk ≤ 1e-6 and ΔF_latt_b ≤ 1e-4 before promoting Phase C4 to [D] and proceeding with Phase C5 documentation.
   * [2025-11-23] Attempt #109 (ralph loop i=109, Mode: Parity/Evidence) — Result: **EVIDENCE COMPLETE** (Phase L3k.3b per-φ trace regeneration). **VG-1 metrics populated; φ=0 carryover gap quantified.**
     Metrics: Evidence-only loop (no pytest execution). `scripts/compare_per_phi_traces.py` reported 1 DIVERGE (φ=0), 9 OK (φ≥0.01°); Δk(φ₀)=1.8116×10⁻², Δk(φ₁…φ₉)≤2.845×10⁻⁵.
     Artifacts:

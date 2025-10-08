@@ -1,0 +1,10 @@
+{
+  "python_version": "3.13.1 | packaged by conda-forge | (main, Dec  5 2024, 08:44:03) [Clang 18.1.8 ]",
+  "torch_version": "2.7.1",
+  "platform": "macOS-15.2-arm64-arm-64bit-Mach-O",
+  "cuda_available": false,
+  "device": "cpu",
+  "dtype": "float64",
+  "git_sha": "baeb8464b74577d737c0ec57dbdb47814ea89fbb",
+  "timestamp_iso": "2025-10-08T02:20:17.033344Z"
+}
