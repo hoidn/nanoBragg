@@ -6,7 +6,7 @@ import os
 import sys
 import time
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePath
 from subprocess import Popen, PIPE
 
 from .state import OrchestrationState
@@ -97,6 +97,14 @@ def main() -> int:
                     help="Do not force-add ignored report files")
     ap.set_defaults(force_add_reports=True)
     args, unknown = ap.parse_known_args()
+
+    logdir_prefix_parts = tuple(part for part in PurePath(args.logdir).parts if part not in {"", "."})
+
+    def _skip_reports(path: str) -> bool:
+        if not logdir_prefix_parts:
+            return False
+        parts = PurePath(path).parts
+        return parts[:len(logdir_prefix_parts)] == logdir_prefix_parts
 
     # Helpers shared by pre-pull and post-run auto-commit paths
     def _list(cmd: list[str]) -> list[str]:
@@ -303,6 +311,7 @@ def main() -> int:
                 force_add=args.force_add_reports,
                 logger=logp,
                 commit_message_prefix="SUPERVISOR AUTO: reports evidence — tests: not run",
+                skip_predicate=_skip_reports,
             )
 
         # Determine post-run success without early-returning

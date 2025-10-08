@@ -5,7 +5,7 @@ import os
 import sys
 import time
 from datetime import datetime
-from pathlib import Path
+from pathlib import Path, PurePath
 from subprocess import Popen, PIPE
 
 from .state import OrchestrationState
@@ -78,6 +78,13 @@ def main() -> int:
     args, unknown = ap.parse_known_args()
 
     log_path = _log_file("claudelog")
+    logdir_prefix_parts = tuple(part for part in PurePath(args.logdir).parts if part not in {"", "."})
+
+    def _skip_reports(path: str) -> bool:
+        if not logdir_prefix_parts:
+            return False
+        parts = PurePath(path).parts
+        return parts[:len(logdir_prefix_parts)] == logdir_prefix_parts
 
     def logp(msg: str) -> None:
         with open(log_path, "a", encoding="utf-8") as f:
@@ -188,6 +195,7 @@ def main() -> int:
                 force_add=args.force_add_reports,
                 logger=logp,
                 commit_message_prefix="RALPH AUTO: reports evidence — tests: not run",
+                skip_predicate=_skip_reports,
             )
 
         # Complete handoff (stamp-first, idempotent)

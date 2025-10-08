@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from subprocess import run, PIPE
-from typing import Callable, Iterable, Tuple, List, Set
+from typing import Callable, Iterable, Tuple, List, Set, Optional
 
 
 def _run_list(cmd: Iterable[str]) -> List[str]:
@@ -35,9 +35,11 @@ def autocommit_reports(
     force_add: bool,
     logger: Callable[[str], None],
     commit_message_prefix: str = "AUTO: reports evidence — tests: not run",
+    skip_predicate: Optional[Callable[[str], bool]] = None,
 ) -> Tuple[bool, List[str], List[str]]:
     """
     Stage and commit report-like artifacts filtered by extension and size caps.
+    The optional skip_predicate can suppress specific paths from staging.
     Returns (committed, staged_paths, skipped_paths).
     """
     # Normalize extensions
@@ -55,6 +57,9 @@ def autocommit_reports(
     total_bytes = 0
 
     for p in dirty_all:
+        if skip_predicate and skip_predicate(p):
+            skipped.append(p)
+            continue
         # Determine extension
         ext = os.path.splitext(p)[1].lower()
         if ext not in allowed_exts:
