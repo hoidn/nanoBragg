@@ -457,11 +457,30 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
-- Next Actions (2025-12-02 refresh → galph loop current):
-1. **Phase L1–L3 (documentation + checklist sync)** — Update this plan, `plans/active/cli-phi-parity-shim/plan.md` (Phase D), `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md`, and `fix_checklist.md` with the dual tolerance (spec ≤1e-6, c-parity ≤5e-5). Capture `pytest --collect-only -q tests/test_cli_scaling_phi0.py` and log the documentation Attempt once artifacts exist.
-2. **Phase M1–M3 (scaling parity)** — Use `trace_harness.py` to audit HKL lookups, fix the `F_cell`/`F_latt` pipeline so `I_before_scaling` matches C within 1e-6, rerun scaling metrics on CPU+CUDA, and update `scaling_audit/summary.md` plus Attempt history.
-3. **Phase N1–N3 (nb-compare ROI parity)** — After scaling is green, regenerate C/PyTorch outputs, execute `nb-compare` on the 100×100 ROI, analyze results, and record VG-3/VG-4 completion before scheduling the final supervisor command rerun (Phase O).
+- Next Actions (2025-10-07 refresh → supervisor verification needed):
+1. **BLOCKED: Verify initiative context** — `input.md` references non-existent plans (`cli-noise-pix0/plan.md`, `cli-phi-parity-shim/plan.md`), artifacts (`reports/2025-10-cli-flags/phase_l/`), and tests (`test_cli_scaling_phi0.py`). These appear to be from a prior/different branch not merged into `feature/spec-based-2`. Supervisor should clarify whether this work is complete/archived or provide updated task directive. See Attempt #135 for documentation.
+2. **Alternative focus** — If CLI-FLAGS-003 is complete, select new priority from fix_plan Index (e.g., PERF-PYTORCH-004, AT-TIER2-GRADCHECK, or VECTOR-TRICUBIC-001).
 - Attempts History:
+  * [2025-10-07] Attempt #135 (ralph loop i=135, Mode: Docs) — Result: **BLOCKED** (Phase L1–L3 stale plan references). **No code changes.**
+    Metrics: Test collection: 448 tests collected successfully (pytest --collect-only -q). Documentation-only loop. Blocking condition identified.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/20251202_tolerance_sync/blocked.md` — Comprehensive blocking analysis
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/20251202_tolerance_sync/collect_only.log` — Full pytest collection output (448 tests)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/20251202_tolerance_sync/commands.txt` — Command provenance
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/20251202_tolerance_sync/sha256.txt` — Artifact checksums
+    Observations/Hypotheses:
+      - **Blocking condition**: `input.md` directives reference multiple non-existent files:
+        - Plans: `plans/active/cli-noise-pix0/plan.md`, `plans/active/cli-phi-parity-shim/plan.md`
+        - Artifacts: `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md`, `fix_checklist.md`, `parity_shim/20251201_dtype_probe/analysis_summary.md`
+        - Tests: `tests/test_cli_scaling_phi0.py`
+      - **Evidence**: Repository search confirms none of these files exist on `feature/spec-based-2` branch
+      - **Hypothesis**: These references appear to be from a prior initiative or different branch never merged
+      - **Current repo state**: 448 tests exist and collect successfully; test suite is healthy but doesn't match `input.md` expectations
+      - **Compliance with blocking protocol**: Per `input.md` lines 13-14 ("If Blocked" guidance), created `blocked.md` documenting the issue, captured available evidence (pytest collection), and updated Next Actions to request supervisor clarification
+    Next Actions:
+      - Supervisor should verify whether CLI-FLAGS-003 Phase L work is complete/archived or provide corrected task directive
+      - If Phase L is complete, select new high-priority item from fix_plan Index
+      - If Phase L artifacts should exist, identify correct branch/commit to merge
   * [2025-10-08] Attempt #128 (galph loop — parity evidence) — Result: **EVIDENCE UPDATE** (Phase L3k.3c.4 diagnostics). **No tests executed** (analysis-only).
     Metrics: Evidence-only.
     Artifacts:
