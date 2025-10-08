@@ -758,22 +758,19 @@ class Simulator:
         Returns:
             torch.Tensor: Final diffraction image with shape (spixels, fpixels).
         """
-        # Phase M2g: Handle c-parity mode with row-major processing for carryover correctness
-        # C-PARITY-001 requires per-pixel φ vector carryover, which necessitates processing
-        # pixels in row-major order. For spec mode, we use full vectorization.
+        # Phase M2g: Initialize c-parity cache if needed
+        # C-PARITY-001 emulation uses pixel-indexed cache (opt-in mode only)
+        # C-Code Reference (nanoBragg.c:2797-2800): OpenMP firstprivate(ap,bp,cp,...)
+        # provides thread-local persistence; PyTorch uses explicit pixel-indexed cache.
+        # See: reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md
         if self.crystal.config.phi_carryover_mode == "c-parity":
-            # Initialize pixel-indexed cache
             self.crystal.initialize_phi_cache(
                 self.detector.spixels,
                 self.detector.fpixels
             )
-            # Delegate to row-major processing path
-            return self._run_rowmajor_carryover(
-                pixel_batch_size, override_a_star, oversample,
-                oversample_omega, oversample_polar, oversample_thick
-            )
 
-        # Spec mode: Full vectorization (default path)
+        # Unified vectorization path (both spec and c-parity modes)
+        # Note: c-parity cache application happens inside get_rotated_real_vectors when enabled
         # Get oversampling parameters from detector config if not provided
         if oversample is None:
             oversample = self.detector.config.oversample

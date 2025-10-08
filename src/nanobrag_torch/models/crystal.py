@@ -388,12 +388,14 @@ class Crystal:
         # Store in cache using advanced indexing
         # Cache shape: (S, F, N_mos, 3)
         # Indexing with slow_indices, fast_indices sets shape (batch, N_mos, 3)
-        self._phi_cache_real_a[slow_indices, fast_indices] = final_real_a.detach()
-        self._phi_cache_real_b[slow_indices, fast_indices] = final_real_b.detach()
-        self._phi_cache_real_c[slow_indices, fast_indices] = final_real_c.detach()
-        self._phi_cache_recip_a[slow_indices, fast_indices] = final_recip_a.detach()
-        self._phi_cache_recip_b[slow_indices, fast_indices] = final_recip_b.detach()
-        self._phi_cache_recip_c[slow_indices, fast_indices] = final_recip_c.detach()
+        # Phase M2g: Remove .detach() to preserve gradient flow per diagnosis document
+        # See: reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md
+        self._phi_cache_real_a[slow_indices, fast_indices] = final_real_a
+        self._phi_cache_real_b[slow_indices, fast_indices] = final_real_b
+        self._phi_cache_real_c[slow_indices, fast_indices] = final_real_c
+        self._phi_cache_recip_a[slow_indices, fast_indices] = final_recip_a
+        self._phi_cache_recip_b[slow_indices, fast_indices] = final_recip_b
+        self._phi_cache_recip_c[slow_indices, fast_indices] = final_recip_c
 
     def _validate_cell_parameters(self):
         """Validate cell parameters for numerical stability."""
