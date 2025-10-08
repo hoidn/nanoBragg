@@ -28,7 +28,7 @@ def find_logs(root: Path) -> Dict[int, Path]:
     return found
 
 
-def interleave_last(prefix: Path, count: int, out) -> int:
+def interleave_last(prefix: Path, count: int, out, include_ls: bool = True, ls_roots: List[str] | None = None) -> int:
     """Print last N interleaved galph & ralph logs under logs/<prefix>/*.
 
     Output uses XML-like tags per log with CDATA wrapping.
@@ -42,6 +42,9 @@ def interleave_last(prefix: Path, count: int, out) -> int:
 
     # Load recent SYNC commits to annotate post-state commits
     post_commit = load_post_state_commits()
+    ls_cache: Dict[str, Dict[str, List[str]]] = {}
+    if ls_roots is None:
+        ls_roots = ["docs", "plans", "reports"]
 
     if not galph_logs and not ralph_logs:
         print(f"No logs found under {galph_dir} or {ralph_dir}", file=sys.stderr)
@@ -73,6 +76,19 @@ def interleave_last(prefix: Path, count: int, out) -> int:
             if not content.endswith("\n"):
                 out.write("\n")
             out.write("    ]]>\n")
+            if include_ls and csha:
+                ls_map = ls_cache.get(csha)
+                if ls_map is None:
+                    ls_map = ls_tree_at(csha, ls_roots)
+                    ls_cache[csha] = ls_map
+                for root in ls_roots:
+                    files = ls_map.get(root, [])
+                    out.write(f"    <ls path=\"{root}\" commit=\"{csha}\">\n")
+                    out.write("      <![CDATA[\n")
+                    for f in files:
+                        out.write(f"{f}\n")
+                    out.write("      ]]>\n")
+                    out.write("    </ls>\n")
             out.write("  </log>\n")
 
         if it in ralph_logs:
@@ -89,6 +105,19 @@ def interleave_last(prefix: Path, count: int, out) -> int:
             if not content.endswith("\n"):
                 out.write("\n")
             out.write("    ]]>\n")
+            if include_ls and csha:
+                ls_map = ls_cache.get(csha)
+                if ls_map is None:
+                    ls_map = ls_tree_at(csha, ls_roots)
+                    ls_cache[csha] = ls_map
+                for root in ls_roots:
+                    files = ls_map.get(root, [])
+                    out.write(f"    <ls path=\"{root}\" commit=\"{csha}\">\n")
+                    out.write("      <![CDATA[\n")
+                    for f in files:
+                        out.write(f"{f}\n")
+                    out.write("      ]]>\n")
+                    out.write("    </ls>\n")
             out.write("  </log>\n")
 
     out.write("</logs>\n")
@@ -151,10 +180,31 @@ def resolve_post_commit(role: str, log_iter: int, mapping) -> Tuple[str, str]:
         return mapping.get(("ralph", "ok_for_log", log_iter), mapping.get(("ralph", "fail", log_iter), ("", "")))
 
 
+def ls_tree_at(sha: str, roots: List[str]) -> Dict[str, List[str]]:
+    """Return {root: files} for the given commit sha using git ls-tree.
+    Roots should be top-level paths like 'docs', 'plans', 'reports'.
+    """
+    if not sha:
+        return {}
+    # Prepare args; only include existing roots to avoid noisy stderr
+    args = ["git", "ls-tree", "-r", "--name-only", sha, "--", *roots]
+    cp = run(args, stdout=PIPE, stderr=PIPE, text=True)
+    files = [ln for ln in (cp.stdout or "").splitlines() if ln.strip()]
+    by_root: Dict[str, List[str]] = {r: [] for r in roots}
+    for f in files:
+        for r in roots:
+            if f == r or f.startswith(r + "/"):
+                by_root[r].append(f)
+                break
+    return by_root
+
+
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Interleave the last N galph/ralph logs with matching iteration numbers.")
+    ap = argparse.ArgumentParser(description="Interleave the last N galph/ralph logs with matching iteration numbers, and annotate with post-state commits and file listings.")
     ap.add_argument("prefix", type=str, help="Branch prefix under logs/ (e.g., 'feature-spec-based-2')")
     ap.add_argument("-n", "--count", type=int, default=5, help="How many iterations to include (default: 5)")
+    ap.add_argument("--no-ls", dest="include_ls", action="store_false", help="Do not include git ls-tree listings for docs/plans/reports")
+    ap.add_argument("--ls-paths", type=str, default="docs,plans,reports", help="Comma-separated roots to ls-tree (default: docs,plans,reports)")
     args = ap.parse_args()
 
     prefix = Path(args.prefix)
@@ -162,7 +212,8 @@ def main() -> int:
         # Accept both 'feature-...' and 'logs/feature-...'
         prefix = Path(*prefix.parts[1:])
 
-    return interleave_last(prefix, args.count, sys.stdout)
+    ls_roots = [p.strip() for p in args.ls_paths.split(',') if p.strip()]
+    return interleave_last(prefix, args.count, sys.stdout, include_ls=args.include_ls, ls_roots=ls_roots)
 
 
 if __name__ == "__main__":

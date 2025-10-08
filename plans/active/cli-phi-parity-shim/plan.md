@@ -45,7 +45,15 @@ Exit Criteria: Production code contains opt-in shim, tests/logs stored, fix_plan
 | C2 | Update CLI / configs | [D] | ✅ CLI flag `--phi-carryover-mode {spec,c-parity}` and `CrystalConfig.phi_carryover_mode` field landed (`src/nanobrag_torch/__main__.py:377-386`, `config.py:154-171`); validation rejects invalid modes (Attempt #120). |
 | C3 | Add regression & parity tests | [D] | ✅ `tests/test_phi_carryover_mode.py` exercises parsing, config wiring, and device/dtype behavior for both modes; `tests/test_cli_scaling_phi0.py` still enforces spec baselines (documented in docs/fix_plan.md Attempt #120). |
 | C4 | Capture per-φ traces & resolve tolerance | [D] | ✅ Attempts #127/#130 captured enhanced traces plus float32/float64 sweeps; `analysis_summary.md` (20251201) recommends relaxing VG-1 to |Δk| ≤ 5e-5 for c-parity while keeping spec at ≤1e-6. Decision recorded in docs/fix_plan.md Attempt #130; next work shifts to documentation (C5/D). |
-| C5 | Summarise metrics & log attempt | [ ] | Write `summary.md` describing test outcomes, trace comparisons, and any tolerances. Update `docs/fix_plan.md` Attempt history (CLI-FLAGS-003) with metrics, references, and git commit SHA. |
+| C5 | Summarise metrics & log attempt | [ ] | Draft `summary.md` capturing spec-vs-parity behavior, cite `specs/spec-a-core.md:205-233` to confirm φ resets each step, and document tolerances for both modes. Update `docs/fix_plan.md` Attempt history (CLI-FLAGS-003) with metrics, spec references, and git commit SHA. |
+#### C5 Evidence Checklist
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| C5a | Confirm spec isolation | [ ] | In `summary.md`, cite `specs/spec-a-core.md:205-233` showing φ rotations recompute from the reference lattice each step; note that carryover exists only in c-parity shim and capture diffs if the spec ever changes. |
+| C5b | Sync bug ledger | [ ] | Ensure `docs/bugs/verified_c_bugs.md` retains C-only classification for C-PARITY-001 and links to the new `summary.md`; note parity shim availability for PyTorch. |
+| C5c | Update fix plan entry | [ ] | Append metrics, spec citations, shim mode notes, and the new artifact path to `docs/fix_plan.md` (CLI-FLAGS-003 Attempt); include git SHA and timestamp. |
+
 
 #### C4 Diagnostic Checklist — Quantify Precision Plateau
 
@@ -65,4 +73,4 @@ Exit Criteria: Docs refreshed, plan cross-references updated, Next Actions ready
 | --- | --- | --- | --- |
 | D1 | Update documentation | [D] | ✅ Refreshed `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md` with Phase L sync note (2025-10-07), updated `docs/bugs/verified_c_bugs.md` C-PARITY-001 to note parity shim availability. Spec documents unchanged (bug quarantined). CLI flag `--phi-carryover-mode` already documented in code. |
 | D2 | Sync plans/fix_plan | [D] | ✅ Marked Phase D/L tasks complete in both plans. Logged Attempt #136 in `docs/fix_plan.md` CLI-FLAGS-003 with tolerance sync, artifacts linked to `reports/.../20251007T212159Z/`. |
-| D3 | Prepare handoff to supervisor command rerun | [ ] | Document in `summary.md` next steps (Phase M: structure-factor parity, Phase N: nb-compare ROI, Phase O: supervisor command). Provide Do Now guidance once Phase L Attempt logged. |
+| D3 | Prepare handoff to supervisor command rerun | [ ] | Extend `summary.md` with explicit next-step callouts (Phase M scaling parity, Phase N nb-compare, Phase O supervisor rerun), ensure `plans/active/cli-noise-pix0/plan.md` cross-references the new summary, and note in the next `input.md` draft which artifacts/tests Ralph must pick up. |

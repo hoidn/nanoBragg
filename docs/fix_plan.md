@@ -463,6 +463,7 @@
 1. ✅ **Phase M1 complete** — Instrumentation aligned (pre-polar trace now canonical C comparison point, ~0.2% residual as expected)
 2. **Phase M2 investigation** — The ~0.2% I_before_scaling residual (941698.5 vs 943654.8) is within galph debug memo tolerance but should be understood. Investigate whether F_latt accumulation or float32 conversion contributes to the drift. No urgent action required unless downstream tests fail.
 3. **Phase N/O readiness** — Regenerate ROI artifacts with `nb-compare` and schedule supervisor command closure run, capturing metrics + SHA256 manifests under `reports/2025-10-cli-flags/phase_l/`.
+4. **Parity shim documentation follow-up** — Complete `plans/active/cli-phi-parity-shim/plan.md` Phase C5 checklist (spec citation, bug ledger, fix_plan Attempt) and Phase D3 handoff before resuming full Phase M parity runs.
 - Attempts History:
   * [2025-10-07] Attempt #136 (ralph loop i=135, Mode: Docs) — Result: ✅ **SUCCESS** (Phase L Documentation Sync COMPLETE). **No code changes.**
     Metrics: Test collection: 35 tests collected successfully in 2.16s (test_cli_scaling_phi0.py + test_phi_carryover_mode.py). Documentation-only loop per input.md Mode: Docs.

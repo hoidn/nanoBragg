@@ -895,3 +895,9 @@
 - Key expectations: capture new trace evidence under `reports/2025-10-cli-flags/phase_l/scaling_validation/<ts>/`, verify device/dtype neutrality, document results in instrumentation_audit.md, and log Attempt for M0a–M0c.
 - Follow-up: next loop confirm M0 tasks marked [D], ensure guard prevents memory bloat on production runs, and decide when to resume Phase M1 HKL parity.
 - Working tree note: `logs/feature-spec-based-2/galph/iter-00142_20251008_062157.log` remains modified from prior runs; left uncommitted per log-retention policy.
+
+## 2025-12-05 (galph loop — C5 documentation prep)
+- Reviewed spec/arch/testing documents plus plans: confirmed φ rotation spec (specs/spec-a-core.md:205-233) is bug-free and parity shim remains optional.
+- Updated `plans/active/cli-phi-parity-shim/plan.md` Phase C5 with evidence checklist (spec citation, bug ledger sync, fix_plan update) and expanded D3 handoff guidance to tie into CLI plan.
+- Added Next Action bullet in `docs/fix_plan.md:460` reminding Ralph to complete parity shim summary before returning to Phase M runs; refreshed `input.md` Do Now for Phase M0 instrumentation hygiene with references to new checklist.
+- Expect Ralph to capture instrumentation audit artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/<ts>/`, guard `_last_tricubic_neighborhood`, and then proceed to C5 summary per new checklist.
