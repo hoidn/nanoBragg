@@ -1,0 +1,5 @@
+/home/ollie/Documents/tmp/nanoBragg
+e72f26e5ffdebe937e89b05855b0248b26b6c887
+Python 3.13.7
+torch 2.8.0+cu128
+CUDA available: True

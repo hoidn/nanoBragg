@@ -1,0 +1,26 @@
+================================================================================
+CLI-FLAGS-003 Phase M2h.3: Gradcheck Probe
+================================================================================
+
+Device: cuda, dtype: torch.float64
+Initializing 2×2 phi cache...
+Storing phi final vectors...
+Retrieving cached vectors via apply_phi_carryover...
+Loss: 1.199520e+03
+Backpropagating...
+
+Gradient present: True
+cell_a.grad: 3.997600e+00
+
+Result JSON:
+{
+  "timestamp": "2025-10-08T17:00:31Z",
+  "device": "cuda",
+  "dtype": "torch.float64",
+  "grad_present": true,
+  "loss": 1199.5199400000001,
+  "grad_value": 3.9976002,
+  "success": true
+}
+
+✓ GRADCHECK PASS: Gradient flow maintained through cache

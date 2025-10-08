@@ -1,0 +1,4 @@
+ERROR: file or directory not found: tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c
+
+
+no tests collected in 0.00s
