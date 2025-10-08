@@ -1,0 +1,27 @@
+# Phase D1a Commands Log
+# Timestamp: 2025-10-08T20:11:25Z
+# Task: Generate spec-mode traces for phi_carryover removal proof
+
+## Attempted Command (D1a - PyTorch trace):
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py \
+  --config supervisor \
+  --phi-mode spec \
+  --pixel 685 1039 \
+  --device cpu \
+  --dtype float64 \
+  --out reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T201125Z/trace_py_spec.log
+
+## Result:
+BLOCKED - TypeError: CrystalConfig.__init__() got an unexpected keyword argument 'phi_carryover_mode'
+
+## Root Cause:
+The trace harness (reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:167)
+still references the removed phi_carryover_mode parameter. Production code has been cleaned
+(shim removal complete per Attempts #179-180), but the diagnostic harness is stale.
+
+## Blocker Classification:
+Infrastructure tooling dependency - the harness must be updated to align with the spec-only
+rotation path before Phase D evidence can be captured.
+
+## Exit Status:
+Non-zero (TypeError exception)

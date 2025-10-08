@@ -467,6 +467,23 @@
 6. **Phase D3 supervisor handoff** — In the next `input.md`, steer Ralph toward `plans/active/cli-noise-pix0/plan.md` Phase L scaling tasks (spec mode only) and record the closure note in `galph_memory.md`
 
 - Attempts History:
+  * [2025-10-08] Attempt #181 (ralph loop i=178, Mode: Parity) — Result: ⛔ **BLOCKED** (Phase D1a trace harness blocker). **No code changes** (evidence-only loop).
+    Metrics: N/A - execution blocked before trace generation
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T201125Z/summary.md` — Blocker analysis and recommended fix
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T201125Z/commands.txt` — Failed command log
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T201125Z/d1a_py_stdout.txt` — Error traceback
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T201125Z/env.json` — Environment metadata
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T201125Z/sha256.txt` — Artifact checksums
+    Observations/Hypotheses:
+      - **Blocker:** `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:167` still passes `phi_carryover_mode=args.phi_mode` to `CrystalConfig.__init__()`
+      - **Root Cause:** Diagnostic harness predates shim removal (Phases B-C); production code is clean but tooling infrastructure is stale
+      - **Impact:** Cannot capture Phase D1a/D1b/D1c evidence until harness updated to use spec-only rotation path
+      - **Production Status:** ✅ Clean - All `phi_carryover_mode` references removed from `src/`, `tests/`, `docs/` per Attempts #179-180
+    Next Actions:
+      - Update `trace_harness.py` to remove `phi_carryover_mode` parameter (line 167) and related CLI parsing for `--phi-mode`
+      - Re-execute Phase D tasks D1a-D1c once harness compatible with spec-only path
+      - Continue ledger sync (D2) and supervisor handoff (D3) after evidence bundle complete
   * [2025-10-08] Attempt #180 (ralph loop i=177, Mode: Docs) — Result: ✅ **SUCCESS** (Phase C2/C3 Doc Sweep COMPLETE). **No code changes** (docs/tests only).
     Metrics: Test collection: 2 tests collected successfully in 0.79s (tests/test_cli_scaling_phi0.py). Documentation-only loop per input.md Mode: Docs.
     Artifacts:
