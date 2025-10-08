@@ -1432,8 +1432,9 @@ class Simulator:
                     print(f"TRACE_PY: I_pixel_final {I_pixel_final:.15g}")
                     print(f"TRACE_PY: floatimage_accumulated {I_pixel_final:.15g}")
 
-                    # Per-φ lattice trace (Phase L3e per plans/active/cli-noise-pix0/plan.md)
+                    # Per-φ lattice trace (Phase L3k.3c.4 per plans/active/cli-phi-parity-shim/plan.md Task C4)
                     # Emit TRACE_PY_PHI for each φ step to enable per-φ parity validation
+                    # Enhanced with scattering vector, reciprocal vectors, and volume per input.md 2025-10-08
                     if rot_a.shape[0] > 1:  # Check if we have multiple phi steps
                         # Get phi parameters from crystal config
                         phi_start_deg = self.crystal.config.phi_start_deg
@@ -1455,9 +1456,39 @@ class Simulator:
                             b_vec_phi = rot_b[phi_tic, 0]
                             c_vec_phi = rot_c[phi_tic, 0]
 
+                            # Compute reciprocal vectors from rotated real-space vectors
+                            # C-Code Reference (from nanoBragg.c, lines 3044-3058):
+                            # ```c
+                            # if(phi != 0.0) {
+                            #   rotate_axis(a0, spindle, phi, ap);
+                            #   rotate_axis(b0, spindle, phi, bp);
+                            #   rotate_axis(c0, spindle, phi, cp);
+                            # }
+                            # /* compute reciprocal-space cell vectors */
+                            # cross_product(bp,cp,&ap_mag);
+                            # cross_product(cp,ap,&bp_mag);
+                            # cross_product(ap,bp,&cp_mag);
+                            # /* volume of unit cell */
+                            # V_cell = dot_product(ap,&ap_mag);
+                            # /* reciprocal cell vectors */
+                            # a_star[1] = ap_mag.x/V_cell; a_star[2] = ap_mag.y/V_cell; a_star[3] = ap_mag.z/V_cell;
+                            # b_star[1] = bp_mag.x/V_cell; b_star[2] = bp_mag.y/V_cell; b_star[3] = bp_mag.z/V_cell;
+                            # c_star[1] = cp_mag.x/V_cell; c_star[2] = cp_mag.y/V_cell; c_star[3] = cp_mag.z/V_cell;
+                            # ```
+                            from nanobrag_torch.utils.geometry import cross_product as cross_prod_util
+                            b_cross_c_phi = cross_prod_util(b_vec_phi.unsqueeze(0), c_vec_phi.unsqueeze(0)).squeeze(0)
+                            c_cross_a_phi = cross_prod_util(c_vec_phi.unsqueeze(0), a_vec_phi.unsqueeze(0)).squeeze(0)
+                            a_cross_b_phi = cross_prod_util(a_vec_phi.unsqueeze(0), b_vec_phi.unsqueeze(0)).squeeze(0)
+
+                            from nanobrag_torch.utils.geometry import dot_product
+                            V_actual_phi = dot_product(a_vec_phi.unsqueeze(0), b_cross_c_phi.unsqueeze(0)).item()
+
+                            a_star_phi = b_cross_c_phi / V_actual_phi
+                            b_star_phi = c_cross_a_phi / V_actual_phi
+                            c_star_phi = a_cross_b_phi / V_actual_phi
+
                             # Compute Miller indices for this phi orientation
                             # Reuse scattering vector from above (doesn't change with phi)
-                            from nanobrag_torch.utils.geometry import dot_product
                             h_phi = dot_product(scattering_vec.unsqueeze(0), a_vec_phi.unsqueeze(0)).item()
                             k_phi = dot_product(scattering_vec.unsqueeze(0), b_vec_phi.unsqueeze(0)).item()
                             l_phi = dot_product(scattering_vec.unsqueeze(0), c_vec_phi.unsqueeze(0)).item()
@@ -1469,8 +1500,13 @@ class Simulator:
                             F_latt_c_phi = sincg(torch.pi * torch.tensor(l_phi), Nc).item()
                             F_latt_phi = F_latt_a_phi * F_latt_b_phi * F_latt_c_phi
 
-                            # Emit TRACE_PY_PHI matching C trace format
-                            print(f"TRACE_PY_PHI phi_tic={phi_tic} phi_deg={phi_deg:.15g} k_frac={k_phi:.15g} F_latt_b={F_latt_b_phi:.15g} F_latt={F_latt_phi:.15g}")
+                            # Emit enhanced TRACE_PY_PHI with scattering vector, reciprocal vectors, and volume
+                            # Format matches C trace (TRACE_C_PHI) for direct comparison
+                            print(f"TRACE_PY_PHI phi_tic={phi_tic} phi_deg={phi_deg:.15g} "
+                                  f"k_frac={k_phi:.15g} F_latt_b={F_latt_b_phi:.15g} F_latt={F_latt_phi:.15g} "
+                                  f"S_x={scattering_vec[0].item():.15g} S_y={scattering_vec[1].item():.15g} S_z={scattering_vec[2].item():.15g} "
+                                  f"a_star_y={a_star_phi[1].item():.15g} b_star_y={b_star_phi[1].item():.15g} c_star_y={c_star_phi[1].item():.15g} "
+                                  f"V_actual={V_actual_phi:.15g}")
 
                 # Trace factors
                 if omega_pixel is not None:
