@@ -1900,3 +1900,11 @@ Follow-ups for Ralph:
 - Actions this loop: refreshed `input.md` with Docs-mode guidance covering Phase B1–B3 deliverables (pyrefly.log, env.json, summary.md, fix_plan Attempt update) and reiterated artifact/timestamp reuse under `reports/pyrefly/20251008T053652Z/`.
 - No changes to docs/fix_plan.md this turn; expect Ralph to record Attempt #2 after the baseline run and keep the working tree clean.
 - Follow-up: next supervisor loop should inspect the new summary, decide on Phase C triage scope, and ensure pyrefly findings are mapped to owners/tests before delegating fixes.
+
+## 2025-12-04 (galph loop — CLI-FLAGS-003 Phase M1 refresh)
+- Re-ran `trace_harness.py` in both spec and c-parity modes (float64/CPU) and stored evidence under `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T055257Z/` (spec) and `.../20251008T055533Z/` (c-parity). Spec path diverges 14.6% as expected; c-parity delta shrank to 0.2086%.
+- Added Attempt #140 to `docs/fix_plan.md:510` capturing the new metrics plus the crash encountered when invoking `scripts/validation/compare_scaling_traces.py` on these traces.
+- Updated `plans/active/cli-noise-pix0/plan.md:53` with the fresh timestamps and noted that Phase M1 remains open pending ≤1e-6 parity.
+- `compare_scaling_traces.py` currently exits via SIGKILL on the new traces; manual summaries were generated as a stopgap. Ralph needs to debug the script before Phase M2 lattice fixes proceed.
+- Next steps for Ralph: fix the comparison script, regenerate the scaling summary in a new timestamped directory (CPU float64, c-parity), then continue Phase M2 by targeting the φ₀ lattice-factor drift.
+- Working tree note: legacy galph log (`logs/feature-spec-based-2/galph/iter-00141_20251008_054647.log`) stayed untouched per policy; left uncommitted.
