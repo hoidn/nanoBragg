@@ -656,6 +656,30 @@
       1. Capture enhanced traces logging `ap/bp/cp`, `rot_*_star`, and `V_actual` per φ tick, and diff against `TRACE_C_PHI` (tests harness located at `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py`).
       2. Run a float64-only harness (override dtype) to see if lattice delta collapses; record results under a new timestamp.
       3. Once evidence pinpoints the locus, implement Phase M2 fix referencing `nanoBragg.c:3062-3095` and rerun `compare_scaling_traces.py` so `metrics.json` reports `first_divergence=None`.
+  * [2025-10-08] Attempt #150 (ralph loop i=150, Mode: Parity/Evidence) — Result: **INSTRUMENTATION COMPLETE** (Phase M2 real-space vector taps added). **Code changes: trace_harness.py + simulator.py trace taps.**
+    Metrics: Evidence-only loop per input.md Do Now directive. Test collection: 35 tests (verified via pytest --collect-only).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T081932Z/trace_py_scaling.log` — Main trace (124 lines) with 10 NEW TRACE_PY_ROTSTAR lines
+      - `reports/2025-10-cli-flags/phase_l/per_phi/reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T081932Z/trace_py_scaling_per_phi.log` — Per-φ reciprocal vectors (10 TRACE_PY_PHI lines)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T081932Z/trace_harness.log` — Execution log
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T081932Z/summary.md` — Instrumentation summary
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T081932Z/commands.txt` — Reproduction commands
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T081932Z/git_sha.txt` — Git commit: 4a4eff58634937b43a75ca973f58cf0a1d171e58
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T081932Z/sha256.txt` — Artifact checksums
+    Code Changes:
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:53-54` — Added `--emit-rot-stars` CLI flag
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:250-253` — Pass emit_rot_stars to simulator debug_config
+      - `src/nanobrag_torch/simulator.py:1597-1601` — Added TRACE_PY_ROTSTAR emission (ap_y, bp_y, cp_y per φ tick)
+    Observations/Hypotheses:
+      - **Instrumentation complete**: TRACE_PY_ROTSTAR now emits real-space vectors (ap_y, bp_y, cp_y) per φ tick when `--emit-rot-stars` flag is set
+      - **Sample output (phi_tic=0)**: ap_y=-21.8805340763623, bp_y=0.671588233999813, cp_y=-24.4045855811067
+      - **Non-intrusive design**: Gated by debug_config, defaults off in production; no existing TRACE_PY lines removed
+      - **Trace separation maintained**: TRACE_PY_PHI filtered to per_phi/ by harness; TRACE_PY_ROTSTAR stays in main trace
+    Next Actions:
+      1. ✅ Action #656.1 COMPLETE — Enhanced traces now capture ap/bp/cp per φ tick
+      2. Compare TRACE_PY_ROTSTAR against C TRACE_C_PHI equivalents to validate real-space vector parity
+      3. Run float64-only harness (next loop) to isolate precision effects
+      4. Once evidence pinpoints drift locus, implement Phase M2 fix and verify metrics.json shows first_divergence=None
   * [2025-10-07] Attempt #139 (ralph loop i=139, Mode: Docs) — Result: ✅ **SUCCESS** (Phase M1 COMPLETE — Pre-Polar Trace Instrumentation). **Code changes: simulator trace + comparison script.**
     Metrics: Test collection: 699 tests in 2.68s. Trace: 44 TRACE_PY lines (2 new labels). Comparison: pre-polar (941698.5) vs C (943654.8) → −0.207% delta (within expected tolerance).
     Artifacts:

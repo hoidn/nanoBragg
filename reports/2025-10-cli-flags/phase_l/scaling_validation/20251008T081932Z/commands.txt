@@ -1,0 +1,21 @@
+# Phase M2 Lattice Evidence Collection
+# Generated: 2025-10-08 (Ralph loop i=150)
+# Goal: Capture per-φ real-space vectors (ap/bp/cp) to diagnose F_latt drift
+
+# Trace harness with --emit-rot-stars flag
+KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py \
+  --pixel 685 1039 \
+  --dtype float64 \
+  --emit-rot-stars \
+  --phi-mode c-parity \
+  --config supervisor \
+  --out reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T081932Z/trace_py_scaling.log \
+  > reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T081932Z/trace_harness.log 2>&1
+
+# Verify enhanced trace output
+grep "TRACE_PY_ROTSTAR" reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T081932Z/trace_py_scaling.log | head -3
+grep "TRACE_PY_PHI" reports/2025-10-cli-flags/phase_l/per_phi/reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T081932Z/trace_py_scaling_per_phi.log | head -3
+
+# Record git state
+git rev-parse HEAD
+git status --short

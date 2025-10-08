@@ -1594,6 +1594,12 @@ class Simulator:
                                   f"a_star_y={a_star_phi[1].item():.15g} b_star_y={b_star_phi[1].item():.15g} c_star_y={c_star_phi[1].item():.15g} "
                                   f"V_actual={V_actual_phi:.15g}")
 
+                            # Phase M2 (2025-12-06): Emit real-space vectors if requested
+                            # This helps diagnose lattice factor drift by comparing ap/bp/cp directly
+                            if self.debug_config.get('emit_rot_stars', False):
+                                print(f"TRACE_PY_ROTSTAR phi_tic={phi_tic} "
+                                      f"ap_y={a_vec_phi[1].item():.15g} bp_y={b_vec_phi[1].item():.15g} cp_y={c_vec_phi[1].item():.15g}")
+
                 # Trace factors
                 if omega_pixel is not None:
                     if isinstance(omega_pixel, torch.Tensor):

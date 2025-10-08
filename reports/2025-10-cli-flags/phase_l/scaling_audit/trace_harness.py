@@ -50,6 +50,8 @@ def create_parser():
                         help='Tensor dtype (default float32)')
     parser.add_argument('--phi-mode', type=str, default='spec', choices=['spec', 'c-parity'],
                         help='Phi carryover mode: spec=compliant (default), c-parity=emulate C bug')
+    parser.add_argument('--emit-rot-stars', action='store_true',
+                        help='Emit per-phi real-space vectors (ap/bp/cp) via TRACE_PY_ROTSTAR lines')
     return parser
 
 
@@ -243,8 +245,12 @@ def main():
     # Run simulator with debug_config to capture live TRACE_PY output (Step 5)
     # Per Attempt #67 (2025-10-06): Simulator with debug_config={'trace_pixel': [s, f]}
     # automatically emits TRACE_PY lines to stdout containing real computed values
+    # Phase M2 (2025-12-06): Add emit_rot_stars flag to enable TRACE_PY_ROTSTAR output
     slow, fast = args.pixel
-    debug_config = {'trace_pixel': [slow, fast]}
+    debug_config = {
+        'trace_pixel': [slow, fast],
+        'emit_rot_stars': args.emit_rot_stars
+    }
 
     simulator = Simulator(
         crystal, detector,
