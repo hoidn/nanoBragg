@@ -1,0 +1,88 @@
+python scripts used (run from repo root):
+python - <<'PY'
+import re
+from pathlib import Path
+import json
+
+base = Path('reports/2025-10-cli-flags/phase_l/parity_shim/20251008T021659Z')
+py_log = base / 'trace_py_c_parity.log'
+c_log = base / 'c_run.log'
+
+pat = re.compile(r'^TRACE_(PY|C):\s*([^\s]+)\s*(.*)$')
+
+def parse_values(rest):
+    values = []
+    for token in rest.split():
+        if ':' in token:
+            token = token.split(':')[-1]
+        try:
+            values.append(float(token))
+        except ValueError:
+            pass
+    return values
+
+py_data = {}
+order = []
+for line in py_log.read_text().splitlines():
+    m = pat.match(line)
+    if not m:
+        continue
+    _, name, rest = m.groups()
+    values = parse_values(rest)
+    py_data[name] = values
+    order.append(name)
+
+c_data = {}
+for line in c_log.read_text().splitlines():
+    m = pat.match(line)
+    if not m:
+        continue
+    _, name, rest = m.groups()
+    values = parse_values(rest)
+    c_data[name] = values
+
+results = []
+for name in order:
+    if name not in c_data:
+        continue
+    py_vals = py_data[name]
+    c_vals = c_data[name]
+    if len(py_vals) != len(c_vals) or not py_vals:
+        diff = None
+        max_diff = None
+    else:
+        diff = [abs(a-b) for a,b in zip(py_vals, c_vals)]
+        max_diff = max(diff)
+    results.append({
+        'name': name,
+        'py': py_vals,
+        'c': c_vals,
+        'diff': diff,
+        'max_diff': max_diff,
+    })
+
+TOL = 1e-6
+first_exceeds = next((item for item in results if item['max_diff'] is not None and item['max_diff'] > TOL), None)
+
+out_dir = Path('reports/2025-10-cli-flags/phase_l/parity_shim/20251008T023956Z')
+out_dir.mkdir(parents=True, exist_ok=True)
+(out_dir / 'diff_results.json').write_text(json.dumps(results, indent=2))
+summary_lines = []
+summary_lines.append('# PyTorch vs C Trace Diff Summary (phi_tic=0, c-parity mode)')
+summary_lines.append(f'- Source Py log: {py_log}')
+summary_lines.append(f'- Source C log: {c_log}')
+summary_lines.append(f'- Tolerance for first divergence check: {TOL:g}')
+if first_exceeds is None:
+    summary_lines.append('- No differences exceeded tolerance of 1e-6 in these traces.')
+else:
+    summary_lines.append('- First variable exceeding tolerance:')
+    summary_lines.append(f'  - name: {first_exceeds["name"]}')
+    summary_lines.append(f'  - max abs diff: {first_exceeds["max_diff"]:.6e}')
+    summary_lines.append(f'  - PyTorch values: {first_exceeds["py"]}')
+    summary_lines.append(f'  - C values: {first_exceeds["c"]}')
+summary_lines.append('\n## Top 10 Differences by magnitude')
+sorted_results = sorted([r for r in results if r['max_diff'] is not None], key=lambda r: r['max_diff'], reverse=True)
+for item in sorted_results[:10]:
+    summary_lines.append(f"- {item['name']}: max diff {item['max_diff']:.6e}; PyTorch={item['py']}; C={item['c']}")
+(out_dir / 'diff_summary.md').write_text('\n'.join(summary_lines) + '\n')
+PY

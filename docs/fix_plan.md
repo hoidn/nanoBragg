@@ -458,10 +458,23 @@
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
 - Next Actions (2025-11-27 refresh → galph loop i=118):
-1. **Phase L3k.3c.4 (parity shim evidence capture)** — Latest run (`reports/2025-10-cli-flags/phase_l/parity_shim/20251008T021659Z/`) produced fresh C/Torch traces, but c-parity still plateaus at Δk=2.8451466e-05 and ΔF_latt_b=4.36e-03 (>1e-6/1e-4). Diagnose the residual φ₀ drift (compare scattering vector + reciprocal recompute against C, capture tap points) before attempting another shim tweak. Keep capturing targeted pytest collect logs and SHA256 hashes for each iteration.
+1. **Phase L3k.3c.4 (parity shim evidence capture)** — Latest run (`reports/2025-10-cli-flags/phase_l/parity_shim/20251008T021659Z/`) still plateaus at Δk≈2.845e-05. Fresh diff analysis (Attempt #128) shows the first >1e-6 divergence occurs at `pix0_vector_meters` (2.85 µm along detector normal), cascading to `pixel_pos_meters`, `diffracted_vec`, and the scattering vector. Focus diagnostics on eliminating the pix0_z offset (pivot/distance conversions) before rerunning the shim traces, and continue to log pytest collect output + SHA256 hashes each iteration.
 2. **Phase L3k.3c.5 (dual-mode documentation/tests)** — After traces land, execute Phase C5 and Phase D1 of the parity-shim plan: update `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md`, `docs/bugs/verified_c_bugs.md`, and related checklists to document the opt-in shim, and ensure collect-only evidence exists for both spec/parity selectors.
 3. Phase L3k.3d — Resolve the nb-compare ROI anomaly (C sum≈0) before repeating VG-3/VG-4; capture the corrected summary.json/logs under `nb_compare_phi_fix/` once correlation ≥0.9995 and sum_ratio 0.99–1.01. After VG-1/VG-3/VG-4 pass, proceed to L3k.3e → L3k.4 documentation and fix_plan logging ahead of the Phase L4 supervisor-command rerun.
 - Attempts History:
+  * [2025-10-08] Attempt #128 (galph loop — parity evidence) — Result: **EVIDENCE UPDATE** (Phase L3k.3c.4 diagnostics). **No tests executed** (analysis-only).
+    Metrics: Evidence-only.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T023956Z/diff_summary.md`
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T023956Z/diff_results.json`
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T023956Z/commands.txt`
+    Observations/Hypotheses:
+      - Automated diff against `trace_py_c_parity.log` vs `c_run.log` shows the first >1e-6 delta at `pix0_vector_meters` (2.85 µm along detector normal).
+      - The pix0_z offset propagates to `pixel_pos_meters`, `diffracted_vec`, `scattering_vec_A_inv`, yielding the fixed Δk≈2.845e-05 and ΔF_latt drift observed in VG-1 metrics.
+      - `I_before_scaling` differs by 1.08e5 because the lattice factors diverge once the scattering vector shifts.
+    Next Actions:
+      - Audit pix0 normalization/distances in Phase L3k.3c.4: confirm detector pivot math and distance conversions (mm→m) to eliminate the 2.85 µm z-offset.
+      - Once pix0 matches exactly, rerun per-φ trace harness to verify Δk ≤ 1e-6 and update VG-1 artifacts.
   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
     Metrics: Planning-only (no tests executed).
     Artifacts:

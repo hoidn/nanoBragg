@@ -1821,3 +1821,10 @@ Follow-ups for Ralph:
 - Updated `plans/active/cli-phi-parity-shim/plan.md` C4 row and `docs/fix_plan.md` (Attempt #124, line ~684) to record metrics + next diagnostic steps (instrument scattering vector taps, audit reciprocal recompute).
 - Issued Parity-mode `input.md` directing Ralph to add scattering-vector/V_actual taps, rerun harness, and regenerate comparison artifacts before trying another shim tweak.
 - Expect Ralph to extend instrumentation (while citing nanoBragg.c:3044-3058), run both spec and parity harness passes, update `delta_metrics.json`, and iterate until Δk ≤ 1e-6.
+
+## 2025-10-08 02:47:39Z (galph loop — pix0 parity evidence)
+- Ran trace diff on c-parity φ=0 logs; new artifacts under `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T023956Z/`.
+- First divergence now confirmed at `pix0_vector_meters` (2.85 µm along detector normal), cascading to scattering vector and Δk≈2.845e-05.
+- Updated `docs/fix_plan.md` (Attempt #128 + Next Actions) to focus Phase L3k.3c.4 on eliminating pix0_z offset before re-running parity.
+- Refreshed `input.md` (Parity mode) directing Ralph to regenerate traces via `trace_harness.py`, capture C trace with `-trace_pixel 685 1039`, rerun `compare_per_phi_traces.py`, and keep docs/spec references aligned.
+- Follow-up: Ralph to audit detector pix0 pipeline (distance/pivot math) so VG-1 hits ≤1e-6, then progress to plan Phase C5.
