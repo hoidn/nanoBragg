@@ -1,10 +1,10 @@
 {
-  "python_version": "3.13.7 | packaged by Anaconda, Inc. | (main, Sep  9 2025, 19:59:03) [GCC 11.2.0]",
-  "torch_version": "2.8.0+cu128",
-  "platform": "Linux-6.14.0-29-generic-x86_64-with-glibc2.39",
-  "cuda_available": true,
+  "python_version": "3.13.1 | packaged by conda-forge | (main, Dec  5 2024, 08:44:03) [Clang 18.1.8 ]",
+  "torch_version": "2.7.1",
+  "platform": "macOS-15.2-arm64-arm-64bit-Mach-O",
+  "cuda_available": false,
   "device": "cpu",
-  "dtype": "float32",
-  "git_sha": "51657540514d2c1aa8d406d0a9d218e580872647",
-  "timestamp_iso": "2025-10-08T05:26:04.508909Z"
+  "dtype": "float64",
+  "git_sha": "154f58ac36bad4ed61698852d32fff21456e5990",
+  "timestamp_iso": "2025-10-08T05:55:35.229803Z"
 }

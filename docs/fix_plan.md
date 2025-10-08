@@ -507,6 +507,25 @@
       - Phase M2a: Compare per-φ trace structure against C-code loop nesting in nanoBragg.c:2500–2700 (pixel intensity accumulation)
       - Phase M3: Once the accumulation bug is isolated, implement fix and regenerate evidence to verify ≤1e-6 relative error on I_before_scaling
   * [2025-10-08] Attempt #138 (ralph loop i=138, Mode: Parity) — Result: **EVIDENCE** (Phase M1 scaling trace refreshed with current git state). **No code changes.**
+  * [2025-10-08] Attempt #140 (galph loop — Phase M1 parity metrics refresh, Mode: Parity/Evidence) — Result: **EVIDENCE UPDATE** (spec vs c-parity scaling audit rerun with float64 harness). **No code changes.**
+    Metrics:
+      - `--phi-mode spec` (expected divergence): `I_before_scaling` PyTorch 805473.787 vs C 943654.809 ⇒ −14.643% (Δ −1.38e5); `I_pixel_final` PyTorch 2.459466e-07 vs C 2.881395e-07 ⇒ −14.643%. Demonstrates spec-compliant path disagrees with C bug as intended.
+      - `--phi-mode c-parity`: `I_before_scaling` PyTorch 941686.236 vs C 943654.809 ⇒ −0.2086%; `I_pixel_final` PyTorch 2.875383e-07 vs C 2.881395e-07 ⇒ −0.2087%. First divergence remains the raw pre-polar intensity.
+    Artifacts:
+      - Spec run: `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T055257Z/trace_py_scaling.log` (44 TRACE_PY lines), `.../manual_scaling_summary.md`, `.../manual_metrics.json`, `.../trace_py_scaling_per_phi.log/json` (nested under `per_phi/.../20251008T055257Z/`).
+      - C-parity run: `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T055533Z/trace_py_scaling.log`, `.../manual_scaling_summary.md`, `.../manual_metrics.json`, companion per-φ logs at `per_phi/.../20251008T055533Z/`.
+      - Harness provenance: `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_env.json` (updated timestamp) and `config_snapshot.json` (float64 CPU run).
+      - Failed comparison command log (SIGKILL while invoking `python scripts/validation/compare_scaling_traces.py`); manual summaries generated via inline Python to unblock reporting.
+    Observations/Hypotheses:
+      - Spec mode mismatch confirms C’s φ=0 carryover bug is still the dominant delta; per-φ trace shows PyTorch `F_latt(φ₀)=+1.379` vs C `−2.383`, matching documentation that spec mode should not emulate the bug.
+      - C-parity per-φ data now mirrors C’s sign pattern; residual 0.208% delta traces to φ₀ lattice amplitude drift (`F_latt` PyTorch −2.380134 vs C −2.383196, Δ≈3.1×10⁻³) while later φ steps align to <1e-3.
+      - `scripts/validation/compare_scaling_traces.py` exits via SIGKILL when run on the new traces (reproducible twice). Needs follow-up before Phase M2 automation resumes; manual metrics substitute for now.
+      - Both runs executed with `dtype=float64`, `device=cpu` to decouple float32 rounding; confirms remaining error is algorithmic rather than precision noise.
+    Next Actions:
+      1. Diagnose `compare_scaling_traces.py` crash (likely unhandled trace schema edge case); restore scripted summary generation before the next engineer loop.
+      2. Extend Phase M1 instrumentation to log per-φ `F_latt` deltas against C directly (e.g., capture absolute difference in manual metrics) so Phase M2 can target the φ₀ lattice mismatch.
+      3. Update `plans/active/cli-noise-pix0/plan.md` Phase M1 checklist with the new artifact timestamps and note that parity delta is down to 0.21% but still above ≤1e-6 gate.
+      4. Hand off to Ralph: rerun the c-parity harness on CUDA once the script issue is fixed, then proceed with Phase M2 lattice-factor fix.
   * [2025-10-07] Attempt #139 (ralph loop i=139, Mode: Docs) — Result: ✅ **SUCCESS** (Phase M1 COMPLETE — Pre-Polar Trace Instrumentation). **Code changes: simulator trace + comparison script.**
     Metrics: Test collection: 699 tests in 2.68s. Trace: 44 TRACE_PY lines (2 new labels). Comparison: pre-polar (941698.5) vs C (943654.8) → −0.207% delta (within expected tolerance).
     Artifacts:

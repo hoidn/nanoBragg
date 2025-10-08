@@ -84,6 +84,12 @@ This README documents the cross‑machine orchestration for the supervisor (galp
 - Loop
   - `--sync-via-git` · `--sync-loops N` · `--poll-interval S` · `--max-wait-sec S`
   - `--branch NAME` · `--logdir PATH` · `--prompt {main,debug}`
+  - Reports auto-commit (publishes Ralph's evidence by file type)
+    - `--auto-commit-reports` / `--no-auto-commit-reports` (default: on)
+    - `--report-extensions ".png,.jpeg,.npy,.log,.txt,.md,.json"` — allowed file types
+    - `--max-report-file-bytes N` (default 5 MiB) · `--max-report-total-bytes N` (default 20 MiB)
+    - `--force-add-reports` (default: on) — force-add files even if ignored by .gitignore
+    - Notes: stamp-first handoff ensures reports + state publish together; logs are allowed by extension here, but size caps apply to avoid bloat.
 
 ## Troubleshooting
 - Pull failures: both orchestrators now fail fast on git pull errors (including untracked‑file or local‑modification collisions). Read the console/log message, resolve locally (commit/stash/move), and rerun.

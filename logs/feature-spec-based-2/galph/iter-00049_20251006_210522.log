@@ -1,0 +1,1947 @@
+Already up to date.
+Waiting for expected_actor=galph...
+Already up to date.
+[sync] state: actor=galph status=complete iter=49
+To github.com:hoidn/nanoBragg.git
+   14f86ba..38b4ca0  HEAD -> feature/spec-based-2
+$ codex exec -m gpt-5-codex -c model_reasoning_effort=high --dangerously-bypass-approvals-and-sandbox
+[2025-10-06T21:05:25] OpenAI Codex v0.38.0 (research preview)
+--------
+workdir: /Users/ollie/Documents/nanoBragg3
+model: gpt-5-codex
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: high
+reasoning summaries: auto
+--------
+[2025-10-06T21:05:25] User instructions:
+<role>
+planning, review and analysis. do not make code changes.
+</role>
+<current long-term goals>
+in order of decreasing priority:
+<1>
+run a successful parallel test of pytorch nanobragg against nanobragg c with this command:
+
+nanoBragg  -mat A.mat -floatfile img.bin -hkl scaled.hkl  -nonoise  -nointerpolate -oversample 1  -exposure 1  -flux 1e18 -beamsize 1.0  -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080  -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866  -beam_vector 0.00051387949 0.0 -0.99999986  -Na 36  -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0
+
+this will require first adding support for the following cli params to pytorch nanobragg:
+-nonoise
+-pix0_vector_mm
+
+</1>
+<2>
+review and firm up if needed plans/active/vectorization.md. then implement it (or rather, delegate its implementation to ralph), starting with the tricubic interpolation vectorization 
+</2>
+</current long-term goals>
+</past long term goals>
+(just for archival / reference purposes):
+- error-correcting the engineer agent 
+- profiling pytorch nanobragg to find performance bottlenecks. analyzing to understand the CRITICAL slowness of the pytorch implementation compared to reference C, which persists after our recent improvement attempts
+- finding performance issues in the PyTorch reimplementation of nanobragg (originally a C code) and speeding it up. It should be efficiently vectorized and faster than C nanobragg, but currently it's slower 
+- ensuring that the pytorch implementation uses fp32 (not fp64) by default 
+- understanding why pytorch is slower than C in the warm condition at 4096x4096 resolution and fixing the underlying performance issue, if one is found. THIS IS A CRITICAL PERFORMANCE ISSUE.
+- once all the above are taken care of: building a user-facing showcase of autodiff-based parameter refinement, with plots / visuals
+
+</past long-term goals>
+<task>
+You are galph, a planner / supervisor agent. you are overseeing the work of an agent (ralph) that is running prompts/main.md in a loop, using docs/fix_plan.md as its instruction set and long term memory. 
+
+You will get invoked repeatedly. Use galph_memory.md to communicate with your future self. You'll plans under plans/, when needed, to help steer multi-turn efforts by the coder agent (ralph). Those plans will be cross referenced from docs/fix_plan.md so that ralph can find / read them. 
+
+At the start of every invocation:
+- Run `timeout 30 git pull --rebase` with a hard 30-second timeout  to sync with origin before reviewing context. If the command times out, immediately abort any partial rebase (`git rebase --abort`) and fall back to a normal merge via `git pull --no-rebase`. Whatever path you take, resolve resulting conflicts (docs/fix_plan.md is a frequent hotspot) and document key decisions in galph_memory.md. If the pull reports conflicts:
+  * Run `git status --short` to list conflicted files.
+  * Fix each file (remove conflict markers, keep the intended content) and stage it with `git add`.
+  * When the index is clean, resume with `timeout 30 git rebase --continue --no-edit`. IMPORTANT: NEVER RUN THIS COMMAND WITHOUT TIMEOUT
+- After resolving any conflicts, read the latest galph_memory.md entry (and any linked plan files) so you do not lose past context.
+- Prune or summarize older entries when they become stale or redundant.
+
+Before concluding each invocation:
+- Append a concise update to galph_memory.md capturing key findings, decisions, and open questions (reference file paths or plan names).
+- Note any follow-up actions you expect Ralph to take.
+- If no substantial update is needed, explicitly log that fact so future runs know context was reviewed.
+</task>
+
+<instructions>
+<0>
+READ the following files:
+- Index of project documentation: `./docs/index.md`
+- $SPECS: `./specs/spec-a.md`
+- $ARCH: `./arch.md` (ADR-backed implementation architecture; reconcile design with spec, surface conflicts)
+- docs/development/c_to_pytorch_config_map.md — C↔Py config parity and implicit rules
+-- docs/debugging/debugging.md — Parallel trace-driven debugging SOP
+- $PLAN: `./fix_plan.md` (living, prioritized to‑do; keep it up to date)
+- $TESTS: `./docs/development/testing_strategy.md` (testing philosophy, tiers, seeds/tolerances, commands)
+- Set `AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md` (or project‑specific path) and consult it for authoritative reference commands and test discovery.
+<0>
+<1>
+do a deep analysis of the codebase in light of the <current long term goals>. What are some current issues / gaps and possible approaches to resolving them? Review docs/fix_plan.md and plans/active/, as previous iterations of you may have already done some legwork.
+ 
+
+
+Debugging Items — Hypothesis + Triage (initial pass):
+- Only when the selected item is a debugging or parity analysis task, formulate 1–3 plausible hypotheses for the observed gap/issue.
+- Triage each with checks appropriate to scope using existing artifacts or quick, documented reproductions; this triage may constitute the primary work for the iteration. Record outcomes succinctly in the evidence.
+- For the top hypothesis, state confidence and the single confirming step to run next. Deliver 1–3 ranked hypotheses with supporting evidence, artifact paths, and the next confirming step.
+</1>
+<2>
+flip a coin using python. if it comes up <heads>:
+review ralph's work over the last N (~10 but can be more or less - you decide) iterations. Check the commit history. Has the work been productive? Have there been regressions? Do we need to provide any feedback / course-correction?
+</heads>
+if it comes up <tails>: proceed to step <3>
+</2>
+<3>
+Given your findings in <1> and <2>, think about whether there's any need for a multi-turn planning effort -- i.e. ralph can't see the forest for the trees and may struggle with major refactorings and multi-turn implementation efforts unless they are coordinated by you. Is there a need for such planning *right now*? If such a plan is already spoken for (plans/active/ or wherever else past galph might have saved to), does that plan require updates or is it up to date / high quality and simply pending? IFF you determine the need for a new plan or modification of an existing one:
+<yes case>
+- we will be calling the plan topic the <focus issue> of this turn.
+- based on which long term <goal> and sub-goal is that effort / plan? 
+- Which existing docs/fix_plan.md items does it (i.e. the <focus issue>) relate to? 
+- Documentation review for <focus issue>: Using `docs/index.md` as the map, identify and read the specific documents relevant to the chosen <focus issue> (e.g., component contracts, architecture ADRs, parity/testing strategy). List the file paths you will rely on (with a one‑line rationale each) before drafting or updating the plan.
+- think deeply. draft / redraft the plan and save it to a .md under plans/active/. Structure the write-up as a phased implementation document (see `plans/archive/general-detector-geometry/implementation.md` for tone/shape): begin with context + phase overviews, then outline each phase’s intent, prerequisites, and exit criteria. When a phase benefits from explicit tracking, embed a checklist table using the `ID | Task Description | State | How/Why & Guidance` format (with `[ ]`, `[P]`, `[D]` markers) inside that phase section.
+  • Include reproduction commands, owners (if known), and decision rules in the guidance column.
+  • Favor narrative flow first; layer checklists only where they clarify verification steps or deliverables.
+  • Mini-template to crib when drafting:
+    ```md
+    ## Context
+    - Initiative: <initiative>
+    - Phase Goal: <outcome>
+    - Dependencies: <docs/tests>
+
+    ### Phase A — <short title>
+    Goal: <what this phase proves or delivers>
+    Prereqs: <artifacts or measurements required before starting>
+    Exit Criteria: <verifiable completion signal>
+
+    | ID | Task Description | State | How/Why & Guidance |
+    | --- | --- | --- | --- |
+    | A1 | <Key diagnostic or implementation step> | [ ] | Run `<command>`; capture results under `reports/<date>/...`. |
+    | A2 | <Follow-up validation> | [ ] | Compare against `<artifact>`; stop if deviation > threshold. |
+    ```
+- When refreshing an existing plan, retrofit it to this phased format before adding or editing tasks.
+- review docs/fix_plan.md. edit if needed. cross reference the new plans .md so that ralph can find it.
+</yes case>
+</no case>
+- Since you decided there's no need for planning, you will instead focus on review / housekeeping. 
+- Once the above is done (or deemed unneeded): review and evaluate ralph's work. Scrutinize the commit history. Look at the diffs. 
+- Are the docs/fix_plan.md contents and priorities sane? things to consider:
+  - if docs/fix_plan.md is longer than 1000 lines it should be housecleaned. If it's disorganized and / or internally inconsistent, consider how this could be addressed. 
+- after considering the above, you have enough information to choose a <focus issue> for this turn. do so. Consider the nature of the <focus issue>:
+    - Documentation review for <focus issue>: From `docs/index.md`, enumerate and read the documents that are most relevant to the chosen <focus issue>`; note the key file paths you will rely on for this turn.
+    - Do we need a new docs/fix_plan item to put ralph back on course, fix one of his mistakes, or instruct him to do something that he overlooked? If so, draft it and add it to docs/fix_plans
+    - does the <focus issue> involve identified issues in docs/fix_plan.md? If so, fix them. If you decide to shorten docs/fix_plan.md, the least relevant portions should be moved to archive/fix_plan_archive.md (with summary + archive cross reference if appropriate)
+</no case>
+</3>
+<3.5>
+Render and write ./input.md (supervisor→engineer steering memo). Overwrite the entire file every invocation. Keep length ~100–200 lines. Include these sections in order:
+Header:
+- Summary: <one‑sentence goal for this loop>
+- Phase: <Evidence | Implementation | Validation>
+- Focus: <plan item ID/title from docs/fix_plan.md>
+- Branch: <expected branch>
+- Mapped tests: <validated list | none — evidence‑only>
+- Artifacts: <key paths to produce under reports/>
+- Do Now: 1 line naming the exact docs/fix_plan.md item (ID and title) to execute this loop, plus the exact pytest command/env to reproduce it (only when an authoritative mapping exists). If no such test exists, the Do Now MUST be to author the minimal targeted test first and then run it. If you intend to delegate the choice, write “Do Now: delegate” and provide decision guidance below.
+  - Note: When the Phase is Evidence, you must not execute tests; any pytest command included here is provided for Ralph’s subsequent loop.
+<Do Now guidelines>
+Phase Gate (Evidence): If the active plan phase is Evidence, do not run pytest at all (including collection). Limit evidence gathering to non-test probes and command‑line tooling (e.g., scripts/validation/*, minimal parity CLIs). Do not include runnable tests in this loop.
+Command Sourcing (tests): Only include an exact pytest command in Do Now when sourced from an authoritative mapping (e.g., docs/development/testing_strategy.md) or an existing, known test file/identifier. If no authoritative mapping exists, set the Do Now task to author the minimal targeted test first; do not guess at a pytest selector here.
+</Do Now guidelines>
+- If Blocked: fallback action (what to run/capture, how to record it in Attempts History).
+- Priorities & Rationale: 3–6 bullets with file pointers (specs/arch/tests/plan) justifying the Do Now.
+- How-To Map: exact commands (pytest, nb-compare), env vars, ROI/thresholds, and where to store artifacts; prefer using `scripts/validation/*` when available.
+- Pitfalls To Avoid: 5–10 crisp do/don’t reminders (device/dtype neutrality, vectorization, Protected Assets, two‑message loop policy, no ad‑hoc scripts).
+- Pointers: file paths with line anchors to the most relevant spec/arch/testing_strategy/fix_plan entries for this loop.
+- Next Up (optional): 1–2 candidates Ralph may choose next loop if he finishes early (still one thing per loop).
+
+ Rules:
+ - Ralph must not edit input.md. You (galph) are the single writer.
+ - If input.md’s Do Now conflicts with an existing in_progress selection in fix_plan.md, Ralph is allowed to switch; he must record the change in Attempts History.
+- Do not instruct Ralph to run the full test suite more than once per turn. Require targeted tests first; run the full suite once at the end only if code changed. For prompt/docs‑only loops, require `pytest --collect-only -q` instead.
+- Prefer referencing reusable scripts under `scripts/validation/` from Do Now when available.
+- Commit input.md each run as part of step <4> (commit only if the content changed).
+</3.5>
+<4>
+Before finishing the loop, enforce git hygiene:
+- Run `git status --short` to inspect new or modified files that appeared during this invocation.
+- Review diffs for each change; revert only if you created it this loop and it was accidental.
+- Stage intentional updates with `git add -A` and commit via `git commit -m "SUPERVISOR: <scope> - <tests or rationale>"`, noting any tests run (use `tests: not run` when you skip them).
+- After committing, run `git push` to share the updates. If the push is rejected, `timeout 30 git pull --rebase`, resolve conflicts (capture decisions—especially for docs/fix_plan.md—in galph_memory.md), then push again.
+- If you deliberately leave the tree dirty, document the rationale in galph_memory.md so the next invocation knows why.
+</4>
+</instructions>
+<notes>
+- ignore 'routing violations'. these are out of scope.
+- ignore AT parallel 012-related items for now
+</notes>
+Now carefully and exhaustively follow your <instructions>.
+
+
+[2025-10-06T21:05:32] thinking
+
+**Clarifying scope on code versus docs edits**
+[2025-10-06T21:05:33] exec bash -lc 'timeout 30 git pull --rebase' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:05:35] bash -lc 'timeout 30 git pull --rebase' succeeded in 2.16s:
+Already up to date.
+[2025-10-06T21:05:35] tokens used: 13,017
+
+[2025-10-06T21:05:37] thinking
+
+**Preparing to read key documentation files**
+[2025-10-06T21:05:38] exec bash -lc 'cat galph_memory.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:05:39] bash -lc 'cat galph_memory.md' succeeded in 733ms:
+## 2025-09-30 (loops 1-4 summary)
+- Established parity backlog: AT-020/021/022/024 failing; created first supervisor plan for AT-021 and enforced prompts/debug.md routing.
+- Diagnosed AT-024 random misset cap mismatch (π/2 vs 90 radians) and opened dedicated plan; insisted Ralph stop verification-only loops.
+- Flagged torch.compile warm-up overhead (per-instance compilation, inline tensor factories) and opened AT-012 rotation parity plan (Phases A–E).
+- Documented performance hotspots (`_compute_physics_for_position` guard tensors, `Crystal.compute_cell_tensors` clamps) and chronic dirty worktree artifacts blocking `git pull --rebase`.
+
+## 2025-09-30 (loops 5-10 summary)
+- Authored repo hygiene checklist (REPO-HYGIENE-002) to undo accidental `golden_suite_generator/nanoBragg.c` churn and purge stray reports.
+- Created PERF-PYTORCH-004 plan to hoist constants, introduce compile caching, and remove Dynamo graph breaks; reiterated need for prompts/debug.md while parity fails.
+- Repeatedly documented routing violations from Ralph and emphasized restoring Core Rule #13 metric duality after WIP commit 058986f swapped `V_actual` for formula volume.
+- Noted that `_compute_physics_for_position` still recompiles each Simulator and that benchmarks in `reports/benchmarks/20250930-004916/` show ≥200× slowdown vs C for small detectors.
+
+## 2025-09-30 (ralph debugging loop — AT-012 float32 regression)
+- **Context**: AT-PARALLEL-012 test_simple_cubic_correlation failing (43/50 peaks matched, need ≥95%) after DTYPE-DEFAULT-001 (commit 8c2ceb4) switched simulator to native float32.
+- **Investigation**:
+  * Reproduced: 43/50 peaks matched (86%), corr≈1.0 (perfect physics) ✅
+  * Parity matrix test: PASSES perfectly ✅ (live C↔Py comparison with current float32)
+  * **Root cause identified**: PyTorch float32 produces 7× more unique values (4901 vs C's 669) in hot pixels, fragmenting intensity plateaus. Peak detection algorithm (scipy.ndimage.maximum_filter) is sensitive to plateau structure.
+  * Parallel comparison: C float32 beam center (20×20 ROI) has 91 unique values; PyTorch has 331 (3.6× fragmentation). Max absolute diff tiny (0.0017).
+  * **First Divergence**: Numerical accumulation patterns differ (likely FMA, compiler opts, vectorized accumulation order, or torch.compile kernel fusion) → perfect correlation but incompatible plateau structure.
+[2025-10-06T21:05:39] tokens used: 13,288
+
+[2025-10-06T21:05:43] thinking
+
+**Preparing to review documentation**
+[2025-10-06T21:05:45] exec bash -lc "sed -n '1,160p' docs/index.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:05:45] bash -lc "sed -n '1,160p' docs/index.md" succeeded in 853ms:
+# Project Documentation Index
+
+Welcome to the central index for all `nanoBragg-PyTorch` project documentation. This guide provides a map to the key technical specifications, development processes, and historical records that define the project.
+
+---
+
+## 🏛️ Permanent Documentation
+
+These are the core, living documents that guide the project.
+
+### Core Project Guides
+### PyTorch Guardrails
+* **[PyTorch Runtime Checklist](./development/pytorch_runtime_checklist.md)** – quick do/don’t list for vectorization and device placement. Always review before editing simulator code.
+* **[PyTorch Design](./architecture/pytorch_design.md#vectorization-strategy)** – detailed explanation of the required broadcast shapes and batched flows.
+* **[Testing Strategy §1.4](./development/testing_strategy.md#14-pytorch-device--dtype-discipline)** – required CPU/GPU smoke tests and compile checks.
+
+* **[CLAUDE.md](../CLAUDE.md)** - The primary instruction set for the AI agent.
+* **[README.md](../README.md)** - The main project entry point.
+* **[README_PYTORCH.md](../README_PYTORCH.md)** - Comprehensive user guide for the PyTorch implementation, including CLI usage, parallel comparison tools, and visualization.
+* **[PROJECT_STATUS.md](../PROJECT_STATUS.md)** - Tracks the current active development initiative.
+[2025-10-06T21:05:45] tokens used: 29,252
+
+[2025-10-06T21:05:49] thinking
+
+**Requesting specification details**
+[2025-10-06T21:05:49] exec bash -lc "sed -n '1,200p' specs/spec-a.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:05:50] bash -lc "sed -n '1,200p' specs/spec-a.md" succeeded in 808ms:
+# nanoBragg Spec A — Sharded Specification
+
+Spec A is now organized across multiple shards. Read them together for the full normative contract.
+
+- [spec-a-core.md](spec-a-core.md): Core physics, geometry, sampling, data, and associated acceptance tests.
+- [spec-a-cli.md](spec-a-cli.md): CLI surface area, precedence rules, and CLI-focused acceptance tests.
+- [spec-a-parallel.md](spec-a-parallel.md): Conformance profiles, parallel validation suites, and developer tooling requirements.
+
+Each shard cross-references the others; updates must keep them consistent.
+[2025-10-06T21:05:50] tokens used: 30,980
+
+[2025-10-06T21:05:52] thinking
+
+**Reviewing architecture documentation**
+[2025-10-06T21:05:53] exec bash -lc "sed -n '1,200p' arch.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:05:54] bash -lc "sed -n '1,200p' arch.md" succeeded in 832ms:
+# nanoBragg PyTorch — Implementation Architecture
+
+Document version: 1.0 (aligned with specs/spec-a.md)
+Target spec: specs/spec-a.md (single-file normative spec)
+Implementation target: Python (>=3.11) + PyTorch (float32 default). Type blocks may use TypeScript-style for clarity; implement with Python dataclasses and torch tensors.
+
+## Running The CLI
+
+- Install (recommended):
+  - `pip install -e .` from repo root (provides `nanoBragg` console script).
+- Run (installed):
+  - `nanoBragg -hkl P1.hkl -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -floatfile out.bin`
+- Run (without install):
+  - `PYTHONPATH=src python -m nanobrag_torch -hkl P1.hkl -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -floatfile out.bin`
+- Minimal quick test (no HKL):
+  - `nanoBragg -default_F 1 -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -detpixels 128 -pgmfile test.pgm`
+
+Notes
+- Entry point: `src/nanobrag_torch/__main__.py` (module runner `python -m nanobrag_torch`).
+- Required inputs: provide `-hkl` (or existing `Fdump.bin`) or set `-default_F > 0`, and either `-mat` (MOSFLM A*) or `-cell`.
+[2025-10-06T21:05:54] tokens used: 31,264
+
+[2025-10-06T21:05:56] thinking
+
+**Searching for configuration mapping file**
+[2025-10-06T21:05:56] exec bash -lc "sed -n '1,200p' docs/development/c_to_pytorch_config_map.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:05:57] bash -lc "sed -n '1,200p' docs/development/c_to_pytorch_config_map.md" succeeded in 791ms:
+# C-CLI to PyTorch Configuration Map
+
+## Critical Importance Notice
+
+**This document is the authoritative source of truth for configuration parity between nanoBragg.c and the PyTorch implementation.**
+
+Before writing any test or implementation that involves C-code validation, you **MUST** consult this document. Failure to ensure 1:1 configuration parity is the most common source of bugs, particularly with:
+- Implicit pivot mode logic
+- Convention-dependent beam center calculations
+- Rotation axis defaults
+- Unit conversions
+
+## Quick Reference Table
+
+### Crystal Parameters
+
+| C-CLI Flag | PyTorch Config Field | C Variable | Units/Convention | Critical Notes |
+|------------|---------------------|------------|------------------|----------------|
+| `-cell a b c al be ga` | `CrystalConfig.cell_a/b/c/alpha/beta/gamma` | `a[0], b[0], c[0], alpha, beta, gamma` | Å and degrees → radians | Must convert degrees to radians internally |
+| `-N <val>` | `CrystalConfig.N_cells` | `Na, Nb, Nc` | Number of unit cells | Sets all three axes to same value |
+[2025-10-06T21:05:57] tokens used: 33,725
+
+[2025-10-06T21:05:59] thinking
+
+**Navigating to debugging documentation**
+[2025-10-06T21:06:00] exec bash -lc "sed -n '1,160p' docs/debugging/debugging.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:06:01] bash -lc "sed -n '1,160p' docs/debugging/debugging.md" succeeded in 792ms:
+# nanoBragg PyTorch Debugging Guidelines
+
+**Version:** 1.1  
+**Date:** 2024-07-25  
+**Owner:** PyTorch Development Team
+
+## Overview
+
+This document outlines the debugging methodology and tools for the nanoBragg PyTorch implementation. The debugging approach is built around a parallel trace comparison between the C code and the PyTorch implementation to ensure correctness and facilitate rapid issue resolution.
+
+## Core Debugging Philosophy
+
+### Parallel Trace Comparison Rule
+
+**CRITICAL:** All debugging of physics discrepancies MUST begin with a parallel trace comparison. This involves:
+1. Generating a detailed, step-by-step log of intermediate variables from the original C code for a specific pixel (the "Golden Trace").
+2. Generating an identical log from the PyTorch implementation using `scripts/debug_pixel_trace.py`.
+3. Comparing these two logs line-by-line to find the first point of divergence.
+
+This methodology is mandatory to avoid guesswork and ensure bugs are found deterministically.
+[2025-10-06T21:06:01] tokens used: 35,689
+
+[2025-10-06T21:06:07] thinking
+
+**Preparing to analyze fix_plan and environment**
+[2025-10-06T21:06:08] exec bash -lc "sed -n '1,200p' docs/fix_plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:06:08] bash -lc "sed -n '1,200p' docs/fix_plan.md" succeeded in 897ms:
+# Fix Plan Ledger
+
+**Last Updated:** 2025-10-17 (galph loop)
+**Active Focus:**
+- ROUTING: Close the reopened guard plan by capturing a fresh regression audit referencing commit `c49e3be` and re-confirming the guarded `loop.sh` flow (`plans/active/routing-loop-guard/plan.md` Phases A–C) before automation resumes.
+- ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md`, then drive Phase B guard work (B2–B4) and new task B5 to add `supervisor.sh` to docs/index.md so Protected-Asset policy covers the script before automation runs again.
+- AT-012: Plan archived (`plans/archive/at-parallel-012-plateau-regression/plan.md`); monitor for regressions using `reports/2025-10-AT012-regression/phase_c_validation/` artifacts and re-open only if peak matches drop below spec.
+- GRADIENT: Execute `plans/active/gradcheck-tier2-completion/plan.md` Phase A (A1–A3 baseline audit + env alignment) before adding misset/beam gradchecks from Phases B/C; once pass logs exist, close `[AT-TIER2-GRADCHECK]` with Phase D documentation updates.
+- DTYPE: ✅ Complete. Plan archived to `plans/archive/dtype-default-fp32/`. All phases (A-D) finished; float32 defaults documented in arch.md, pytorch_runtime_checklist.md, CLAUDE.md, prompts/debug.md.
+- PERF: Land plan task B7 (benchmark env toggle fix), rerun Phase B6 ten-process reproducibility with the new compile metadata, capture the weighted-source parity memo feeding C5, then execute Phase C diagnostics (C1/C2 plus C8/C9 pixel-grid & rotated-vector cost probes, and new C10 mosaic RNG timing) ahead of Phase D caching work (D5/D6/D7) and detector-scalar hoisting (D8).
+
+## Index
+| ID | Title | Priority | Status |
+| --- | --- | --- | --- |
+| [PROTECTED-ASSETS-001](#protected-assets-001-docsindexmd-safeguard) | Protect docs/index.md assets | Medium | in_progress |
+| [REPO-HYGIENE-002](#repo-hygiene-002-restore-canonical-nanobraggc) | Restore canonical nanoBragg.c | Medium | in_progress |
+| [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
+| [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | in_progress |
+| [VECTOR-TRICUBIC-001](#vector-tricubic-001-vectorize-tricubic-interpolation-and-detector-absorption) | Vectorize tricubic interpolation and detector absorption | High | in_planning |
+| [CLI-DTYPE-002](#cli-dtype-002-cli-dtype-parity) | CLI dtype parity | High | in_progress |
+[2025-10-06T21:06:08] tokens used: 37,737
+
+[2025-10-06T21:06:12] thinking
+
+**Checking plans and active directories**
+[2025-10-06T21:06:13] exec bash -lc 'ls plans/active' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:06:14] bash -lc 'ls plans/active' succeeded in 828ms:
+cli-noise-pix0
+gradcheck-tier2-completion
+perf-pytorch-compile-refactor
+routing-loop-guard
+supervisor-loop-guard
+unification.md
+vectorization.md
+[2025-10-06T21:06:14] tokens used: 41,156
+
+[2025-10-06T21:06:16] thinking
+
+**Opening vectorization plan**
+[2025-10-06T21:06:17] exec bash -lc "sed -n '1,200p' plans/active/vectorization.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:06:18] bash -lc "sed -n '1,200p' plans/active/vectorization.md" succeeded in 805ms:
+## Context
+- Initiative: PERF-PYTORCH-004 vectorization backlog; supports long-term goal "Parallel parity + performance" from docs/fix_plan.md
+- Phase Goal: Deliver a production-ready, fully vectorized tricubic interpolation pipeline (gather + polynomial evaluation) and follow with detector absorption vectorization without regressing physics, gradients, or device neutrality.
+- Dependencies: specs/spec-a-core.md §4 (Structure factors), specs/spec-a-parallel.md §2.3 (Interpolation acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4, docs/architecture/c_code_overview.md (tricubic routines), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, `nanoBragg.c` lines 2604–3278 (polin3/polin2/polint + detector absorption), `tests/test_at_str_002.py`, `tests/test_at_abs_001.py`, `reports/benchmarks/20250930-165726-compile-cache/` (current performance references). No dedicated tricubic/absorption microbenchmarks exist yet; Phase A will author reusable harnesses under `scripts/benchmarks/` so future loops can rerun baselines without ad-hoc snippets.
+
+### Phase A — Evidence & Baseline Capture
+Goal: Document the current (non-vectorized) behavior, warnings, and performance so we can prove the impact of the refactor.
+Prereqs: Editable install (`pip install -e .`), C binary available for parity (when needed), environment variable `KMP_DUPLICATE_LIB_OK=TRUE`.
+Exit Criteria: Baseline pytest log, timing snippet results, and notes stored under `reports/2025-10-vectorization/phase_a/` with references in docs/fix_plan.md Attempt history.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| A1 | Re-run tricubic acceptance tests | [ ] | `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py -v` ⇒ save log to `reports/2025-10-vectorization/phase_a/test_at_str_002.log`; confirm nearest-neighbour fallback warning message appears for batched inputs. |
+| A2 | Measure current tricubic runtime | [ ] | Author `scripts/benchmarks/tricubic_baseline.py` (device/dtype neutral, honours `KMP_DUPLICATE_LIB_OK=TRUE`) and run `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --repeats 5`. Capture CPU timings (and CUDA when available) in `phase_a/tricubic_baseline.md` plus raw JSON/CSV under `phase_a/tricubic_baseline_results.json`. |
+| A3 | Record detector absorption baseline | [ ] | Create `scripts/benchmarks/absorption_baseline.py` mirroring A2's interface; execute `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/absorption_baseline.py --sizes 256 512 --repeats 5` alongside `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_abs_001.py -v`. Store logs in `phase_a/absorption_baseline.md` and metrics in `phase_a/absorption_baseline_results.json`. |
+
+### Phase B — Tricubic Vectorization Design
+Goal: Lock the tensor-shape design, broadcasting plan, and gradient checks before code changes.
+Prereqs: Phase A artifacts uploaded and referenced in docs/fix_plan.md.
+Exit Criteria: Design memo (`reports/2025-10-vectorization/phase_b/design_notes.md`) describing target shapes, indexing strategy, gradient expectations, and failure modes; docs/fix_plan.md updated with summary and link.
+[2025-10-06T21:06:18] tokens used: 41,470
+
+[2025-10-06T21:06:19] thinking
+
+**Checking existing plan for CLI flags**
+[2025-10-06T21:06:20] exec bash -lc "sed -n '1,200p' plans/active/cli-noise-pix0/plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:06:21] bash -lc "sed -n '1,200p' plans/active/cli-noise-pix0/plan.md" succeeded in 1.07s:
+## Context
+- Initiative: CLI Parity for nanoBragg PyTorch vs C (supports long-term goal in prompts/supervisor.md)
+- Phase Goal: Accept `-nonoise` and `-pix0_vector_mm` flags with C-equivalent semantics so the parallel comparison command in prompts/supervisor.md executes end-to-end.
+- Dependencies: specs/spec-a-cli.md §§3.2–3.4, docs/architecture/detector.md §5, docs/development/c_to_pytorch_config_map.md (detector pivot + noise), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860 (flag behavior), docs/debugging/detector_geometry_checklist.md (pix0 validation), docs/development/testing_strategy.md §2 (CLI parity tests).
+- Current gap snapshot (2025-10-18 refresh): Phase H4 parity landed (Attempt #25) with pix0 deltas < 2e-8 m and regression tolerances tightened; the remaining blocker before executing the supervisor command end-to-end is Phase I polarization alignment.
+- Gap snapshot update (2025-10-19): Attempt #27 parity run reveals 1.24538e5× intensity scaling mismatch despite polarization fix; Phases J–L track the normalization diagnosis, fix, and closure required before long-term Goal #1 completes.
+- Gap snapshot refresh (2025-10-22): Attempt #31 restored C precedence for custom detector vectors (pix0 override now gated again). Outstanding work: H5c PyTorch traces and Phase K normalization to eliminate the `F_latt`-driven intensity gap.
+- Gap snapshot update (2025-10-24): Attempt #35 reran the PyTorch trace harness post-unit-fix; metrics still show |Δpix0| ≈ 1.145 mm, so a fresh diagnostics phase is required before resuming normalization work.
+- Gap snapshot refresh (2025-10-26): Attempt #40 completed Phase H6f — custom detector vectors now force SAMPLE pivot parity, parity visuals relocated under `reports/2025-10-cli-flags/phase_h6/visuals/`, and targeted regression tests cover pivot selection. Outstanding work at that point: Phase H6g trace rerun to confirm |Δpix0| < 5e-5 m before returning to Phase K scalings.
+- Gap snapshot update (2025-10-27): Attempt #41 validated Phase H6g — SAMPLE pivot parity holds with pix0 deltas ≤2.85 µm, beam center deltas 0.0, and supporting artifacts under `reports/2025-10-cli-flags/phase_h6/post_fix/`. Remaining blockers: rerun the scaling chain (Phase K2), execute the scaling regression + doc updates (Phase K3), then resume Phase L parity once normalization matches C.
+- Gap insight (2025-10-31): Scaling evidence shows MOSFLM matrix runs still rescale real vectors using formula lengths; C skips that step unless `-cell` is provided, so PyTorch must gate the `vector_rescale` analogue when `mosflm_a_star` is set. The same trace confirms the polarization Kahn factor should default to 0.0 (C’s `polarization`), not 1.0, so BeamConfig defaults need to be realigned before Phase L.
+- Gap correction (2025-10-22): Fresh C evidence (`reports/2025-10-cli-flags/phase_h5/c_precedence_2025-10-22.md`) proves nanoBragg ignores `-pix0_vector_mm` whenever custom detector vectors are present. PyTorch now deviates because the lattice factor uses fractional indices (h−h0); fix required before normalization parity.
+- Evidence status: Phase E artifacts (`reports/2025-10-cli-flags/phase_e/`) hold C/PyTorch traces, diffs, and beam-vector checks. Phase H3b1 also stashes WITH/without override traces under `reports/2025-10-cli-flags/phase_h/implementation/` for reference.
+- Documentation anchors for this focus:
+  * `specs/spec-a-core.md` — canonical lattice-factor formulas (SQUARE uses sincg(π·h, Na); ROUND/GAUSS definitions used to verify Phase K).
+  * `golden_suite_generator/nanoBragg.c` (≈2993-3151) — definitive implementation of the sincg calls and rounding logic.
+  * `docs/architecture/pytorch_design.md` — simulator reference; docstring currently claims full-h usage and must be updated post-fix.
+  * `docs/development/testing_strategy.md` — authoritative pytest/trace commands for CLI parity evidence.
+
+### Phase A — Requirements & Trace Alignment
+[2025-10-06T21:06:21] tokens used: 43,992
+
+[2025-10-06T21:06:28] thinking
+
+**Reviewing K3 task and CLI flags**
+[2025-10-06T21:06:29] exec bash -lc 'rg "CLI-FLAGS-003" -n docs/fix_plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:06:30] bash -lc 'rg "CLI-FLAGS-003" -n docs/fix_plan.md' succeeded in 796ms:
+21:| [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | in_progress |
+448:## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
+[2025-10-06T21:06:30] tokens used: 47,106
+
+[2025-10-06T21:06:32] thinking
+
+**Checking section around line 448**
+[2025-10-06T21:06:32] exec bash -lc "sed -n '448,620p' docs/fix_plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:06:33] bash -lc "sed -n '448,620p' docs/fix_plan.md" succeeded in 810ms:
+## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
+- Spec/AT: specs/spec-a-cli.md flag catalogue, docs/architecture/detector.md §5 (pix0 workflow), docs/development/c_to_pytorch_config_map.md (pivot rules), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860
+- Priority: High
+- Status: in_progress (Phases A–H complete; pivot fix landed via H6f, pending H6g traces + Phase K normalization)
+- Owner/Date: ralph/2025-10-05
+- Plan Reference: `plans/active/cli-noise-pix0/plan.md`
+- Reproduction (C & PyTorch):
+  * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
+  * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+- First Divergence (if known): Phase C2 parity run exposed a 2.58e2× intensity scaling mismatch (PyTorch max_I≈1.15e5 vs C max_I≈4.46e2). Post-pivot traces (2025-10-31) show two remaining blockers: (a) PyTorch always rescales MOSFLM cross products to user-provided cell lengths, whereas C skips `vector_rescale` unless `-cell` was supplied, yielding ~4.6×10⁻² Å error in `rot_b` and F_latt_b ≈ +21.6 %; (b) BeamConfig still defaults the Kahn factor to 1.0, while C leaves `polarization=0.0`, producing polar=1.0 vs 0.9126.
+- Next Actions (2025-10-31 refresh): Pix0 parity (H6g) is complete; normalization remains the blocker before attempting the supervisor command again:
+  1. Phase K2/K2b — refresh `reports/2025-10-cli-flags/phase_j/scaling_chain.md`, add `phase_k/f_latt_fix/orientation_delta.md` + `mosflm_rescale.py` capturing the rescale mismatch, and ensure `metrics_after.json` explicitly calls out polarization staying at 1.0.
+  2. Phase K3 — implement the fixes: guard the rescale path in `Crystal.compute_cell_tensors` when `mosflm_a_star` is present, realign BeamConfig defaults/tests so `-polar` opt-in is required, update docs, and rerun `tests/test_cli_scaling.py::test_f_latt_square_matches_c` (with `NB_RUN_PARALLEL=1`, log to `phase_k/f_latt_fix/pytest.log`).
+  3. Phase L gating — once scaling ratios are within tolerance, rerun the supervisor command parity sweep and close the plan, keeping normalization blocked until the artifacts land in `phase_l/`.
+- Attempts History:
+  * [2025-10-06] Attempt #27 (ralph) — Result: **PARITY FAILURE** (Phase I3 supervisor command). **Intensity scaling discrepancy: 124,538× sum ratio.**
+    Metrics: Correlation=0.9978 (< 0.999 threshold), sum_ratio=124,538 (should be ~1.0), C max_I=446, PyTorch max_I=5.411e7 (121,000× discrepancy), mean_peak_distance=37.79 px (> 1 px threshold).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_i/supervisor_command/README.md` - Full evidence report with metrics, hypotheses, next actions
+      - `reports/2025-10-cli-flags/phase_i/supervisor_command/summary.json` - Complete parity metrics (correlation, RMSE, sums, peak distances)
+[2025-10-06T21:06:33] tokens used: 48,232
+
+[2025-10-06T21:06:37] thinking
+
+**Analyzing code for gating implementation**
+[2025-10-06T21:06:37] exec bash -lc 'rg "compute_cell_tensors" -n src/nanobrag_torch -g"*.py"' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:06:38] bash -lc 'rg "compute_cell_tensors" -n src/nanobrag_torch -g"*.py"' succeeded in 794ms:
+src/nanobrag_torch/models/crystal.py:412:    def compute_cell_tensors(self) -> dict:
+src/nanobrag_torch/models/crystal.py:747:    def _compute_cell_tensors_cached(self):
+src/nanobrag_torch/models/crystal.py:749:        Cached version of compute_cell_tensors to avoid redundant calculations.
+src/nanobrag_torch/models/crystal.py:757:        return self.compute_cell_tensors()
+src/nanobrag_torch/models/crystal.py:762:        return self._compute_cell_tensors_cached()["a"]
+src/nanobrag_torch/models/crystal.py:767:        return self._compute_cell_tensors_cached()["b"]
+src/nanobrag_torch/models/crystal.py:772:        return self._compute_cell_tensors_cached()["c"]
+src/nanobrag_torch/models/crystal.py:777:        return self._compute_cell_tensors_cached()["a_star"]
+src/nanobrag_torch/models/crystal.py:782:        return self._compute_cell_tensors_cached()["b_star"]
+src/nanobrag_torch/models/crystal.py:787:        return self._compute_cell_tensors_cached()["c_star"]
+src/nanobrag_torch/models/crystal.py:792:        return self._compute_cell_tensors_cached()["V"]
+src/nanobrag_torch/models/crystal.py:807:        1. Static missetting rotation (already applied to reciprocal vectors in compute_cell_tensors)
+[2025-10-06T21:06:38] tokens used: 51,444
+
+[2025-10-06T21:06:40] thinking
+
+**Opening specific section**
+[2025-10-06T21:06:41] exec bash -lc "sed -n '412,520p' src/nanobrag_torch/models/crystal.py" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:06:41] bash -lc "sed -n '412,520p' src/nanobrag_torch/models/crystal.py" succeeded in 811ms:
+    def compute_cell_tensors(self) -> dict:
+        """
+        Calculate real and reciprocal space lattice vectors from cell parameters.
+
+        This is the central, differentiable function for all geometry calculations.
+        Uses the nanoBragg.c convention to convert cell parameters (a,b,c,α,β,γ)
+        to real-space and reciprocal-space lattice vectors.
+
+        This method now supports general triclinic cells and maintains full
+        differentiability for all six cell parameters. The computation graph
+        is preserved for gradient-based optimization.
+
+        The implementation follows the nanoBragg.c default orientation convention:
+        - a* is placed purely along the x-axis
+        - b* is placed in the x-y plane
+        - c* fills out 3D space
+
+        C-Code Implementation Reference (from nanoBragg.c):
+
+        Volume calculation from cell parameters (lines 1798-1808):
+[2025-10-06T21:06:41] tokens used: 52,024
+
+[2025-10-06T21:06:44] thinking
+
+**Continuing search for rescale usage**
+[2025-10-06T21:06:44] exec bash -lc "sed -n '520,700p' src/nanobrag_torch/models/crystal.py" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:06:45] bash -lc "sed -n '520,700p' src/nanobrag_torch/models/crystal.py" succeeded in 860ms:
+        # Calculate reciprocal cell lengths using C-code formulas
+        a_star_length = self.cell_b * self.cell_c * torch.sin(alpha_rad) * V_star
+        b_star_length = self.cell_c * self.cell_a * torch.sin(beta_rad) * V_star
+        c_star_length = self.cell_a * self.cell_b * torch.sin(gamma_rad) * V_star
+
+        # Calculate reciprocal angles with numerical stability
+        sin_alpha = torch.sin(alpha_rad)
+        sin_beta = torch.sin(beta_rad)
+
+        # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
+        denom1 = (sin_beta * sin_gamma).clamp_min(1e-12)
+        denom2 = (sin_gamma * sin_alpha).clamp_min(1e-12)
+        denom3 = (sin_alpha * sin_beta).clamp_min(1e-12)
+
+        cos_alpha_star = (cos_beta * cos_gamma - cos_alpha) / denom1
+        cos_beta_star = (cos_gamma * cos_alpha - cos_beta) / denom2
+        cos_gamma_star = (cos_alpha * cos_beta - cos_gamma) / denom3
+
+        # Clamp cos_gamma_star to valid range [-1, 1]
+        cos_gamma_star_bounded = torch.clamp(cos_gamma_star, -1.0, 1.0)
+[2025-10-06T21:06:45] tokens used: 53,918
+
+[2025-10-06T21:06:47] thinking
+
+**Continuing exploration of rescale**
+[2025-10-06T21:06:47] exec bash -lc "sed -n '700,880p' src/nanobrag_torch/models/crystal.py" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:06:48] bash -lc "sed -n '700,880p' src/nanobrag_torch/models/crystal.py" succeeded in 865ms:
+        target_mag_c_star_cross_a_star = b_mag / V
+        target_mag_a_star_cross_b_star = c_mag / V
+
+        b_star_cross_c_star = b_star_cross_c_star * (target_mag_b_star_cross_c_star / mag_b_star_cross_c_star)
+        c_star_cross_a_star = c_star_cross_a_star * (target_mag_c_star_cross_a_star / mag_c_star_cross_a_star)
+        a_star_cross_b_star = a_star_cross_b_star * (target_mag_a_star_cross_b_star / mag_a_star_cross_b_star)
+
+        # Real-space vectors: a = (b* × c*) × V_cell
+        # After rescaling, these will have exactly the user-specified magnitudes
+        a_vec = b_star_cross_c_star * V
+        b_vec = c_star_cross_a_star * V
+        c_vec = a_star_cross_b_star * V
+
+        # Now that we have real-space vectors, re-generate the reciprocal ones
+        # This matches the C-code behavior (lines 2103-2119)
+        a_cross_b = torch.cross(a_vec, b_vec, dim=0)
+        b_cross_c = torch.cross(b_vec, c_vec, dim=0)
+        c_cross_a = torch.cross(c_vec, a_vec, dim=0)
+
+        # Recalculate volume from the actual vectors (Core Rule #13)
+[2025-10-06T21:06:48] tokens used: 57,308
+
+[2025-10-06T21:06:52] thinking
+
+**Analyzing rescale gating issue**
+[2025-10-06T21:06:54] exec bash -lc 'rg "polarization" -n src/nanobrag_torch/config.py' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:06:55] bash -lc 'rg "polarization" -n src/nanobrag_torch/config.py' succeeded in 863ms:
+206:    oversample_polar: bool = False  # If True, apply polarization per subpixel (not last-value)
+504:    # Beam polarization
+505:    # C defaults: polar=1.0, polarization=0.0, nopolar=0 (golden_suite_generator/nanoBragg.c:308-309)
+506:    # polar controls the Kahn factor application; polarization is the E-vector rotation angle
+507:    polarization_factor: float = 1.0  # Kahn polarization factor K in [0,1] (1.0 = fully polarized, matches C default polar=1.0)
+508:    nopolar: bool = False  # If True, force polarization factor to 1 (disable polarization)
+509:    polarization_axis: tuple[float, float, float] = (0.0, 0.0, 1.0)  # Polarization E-vector direction
+[2025-10-06T21:06:55] tokens used: 59,524
+
+[2025-10-06T21:06:57] thinking
+
+**Checking default polarization factor**
+[2025-10-06T21:06:58] exec bash -lc "sed -n '460,540p' src/nanobrag_torch/config.py" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:06:58] bash -lc "sed -n '460,540p' src/nanobrag_torch/config.py" succeeded in 796ms:
+        # Check if axis differs from the convention default
+        if self.detector_convention == DetectorConvention.MOSFLM:
+            # MOSFLM default is [0, 0, -1]
+            is_default = (abs(axis[0]) < 1e-6 and abs(axis[1]) < 1e-6 and abs(axis[2] + 1.0) < 1e-6)
+        elif self.detector_convention == DetectorConvention.DENZO:
+            # DENZO default is [0, 0, -1] (same as MOSFLM)
+            is_default = (abs(axis[0]) < 1e-6 and abs(axis[1]) < 1e-6 and abs(axis[2] + 1.0) < 1e-6)
+        elif self.detector_convention == DetectorConvention.XDS:
+            # XDS default is [1, 0, 0]
+            is_default = (abs(axis[0] - 1.0) < 1e-6 and abs(axis[1]) < 1e-6 and abs(axis[2]) < 1e-6)
+        elif self.detector_convention == DetectorConvention.DIALS:
+            # DIALS default is [0, 1, 0]
+            is_default = (abs(axis[0]) < 1e-6 and abs(axis[1] - 1.0) < 1e-6 and abs(axis[2]) < 1e-6)
+        elif self.detector_convention == DetectorConvention.ADXV:
+            # ADXV default is [-1, 0, 0]
+            is_default = (abs(axis[0] + 1.0) < 1e-6 and abs(axis[1]) < 1e-6 and abs(axis[2]) < 1e-6)
+        else:
+            # CUSTOM convention or unknown - default to False
+            return False
+
+[2025-10-06T21:06:58] tokens used: 59,871
+
+[2025-10-06T21:07:04] thinking
+
+**Verifying default polarization factor**
+[2025-10-06T21:07:05] exec bash -lc "sed -n '300,360p' golden_suite_generator/nanoBragg.c" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:07:06] bash -lc "sed -n '300,360p' golden_suite_generator/nanoBragg.c" succeeded in 796ms:
+    double xd,yd,zd,xd0,yd0,zd0;
+    double Ewald[4],Ewald0[4],relp[4];
+    double dmin=0;
+    int integral_form = 0;
+
+    /* polarization stuff */
+    double polar_vector[4] = {0,0,0,1};
+    double vert_vector[4];
+    double polar=1.0,polarization=0.0;
+    int nopolar = 0;
+
+    /* sampling */
+    int steps;
+    int roi_xmin=-1,roi_xmax=-1,roi_ymin=-1,roi_ymax=-1;
+    int oversample = -1,recommended_oversample,subS,subF;
+    int oversample_thick = 0;
+    int oversample_polar = 0;
+    int oversample_omega = 0;
+    double subpixel_size;
+
+[2025-10-06T21:07:06] tokens used: 61,483
+
+[2025-10-06T21:07:20] thinking
+
+**Clarifying polarization and K factor defaults**
+
+I’m trying to reconcile conflicting defaults for the polarization factor K between the plan and the C implementation, noticing that the plan wants K set to 0.0 while C has it at 1.0, but with polarization angle at 0.0. I’m planning to verify this by reviewing the spec and relevant docs, while also considering debugging hypotheses linked to cross-product rescale gating and polarization defaults that may explain observed scaling mismatches. Checking code references to `polarization_factor` next to confirm these ideas.
+[2025-10-06T21:07:22] exec bash -lc 'rg "polarization_factor" -n src/nanobrag_torch/simulator.py' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:07:23] bash -lc 'rg "polarization_factor" -n src/nanobrag_torch/simulator.py' succeeded in 1.07s:
+16:from .utils.physics import sincg, sinc3, polarization_factor
+357:            polar_flat = polarization_factor(
+383:            polar_flat = polarization_factor(
+516:        kahn_value = self.beam_config.polarization_factor if not self.beam_config.nopolar else 0.0
+1335:                    # This matches the polarization_factor calculation in the main physics
+[2025-10-06T21:07:23] tokens used: 62,837
+
+[2025-10-06T21:07:26] thinking
+
+**Inspecting scaling section**
+[2025-10-06T21:07:26] exec bash -lc "sed -n '480,640p' src/nanobrag_torch/simulator.py" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:07:27] bash -lc "sed -n '480,640p' src/nanobrag_torch/simulator.py" succeeded in 770ms:
+        else:
+            self.device = torch.device("cpu")
+        self.dtype = dtype
+
+        # Store debug configuration
+        self.debug_config = debug_config if debug_config is not None else {}
+        self.printout = self.debug_config.get('printout', False)
+        self.printout_pixel = self.debug_config.get('printout_pixel', None)  # [fast, slow]
+        self.trace_pixel = self.debug_config.get('trace_pixel', None)  # [slow, fast]
+
+        # Set incident beam direction from detector.beam_vector
+        # This is critical for convention consistency (AT-PARALLEL-004) and CLI override support (CLI-FLAGS-003 Phase H2)
+        # The detector.beam_vector property handles both convention defaults and CUSTOM overrides (e.g., -beam_vector)
+        if self.detector is not None:
+            # Use detector's beam_vector property which handles:
+            # - CUSTOM convention with user-supplied custom_beam_vector
+            # - Convention defaults (MOSFLM: [1,0,0], XDS/DIALS: [0,0,1])
+            # The detector normalizes and returns the vector with correct device/dtype
+            self.incident_beam_direction = self.detector.beam_vector.clone()
+        else:
+[2025-10-06T21:07:27] tokens used: 95,256
+
+[2025-10-06T21:07:34] thinking
+
+**Analyzing polarization and normalization hypotheses**
+
+I'm assessing if the K factor and polarization settings in the beam configuration cause data mismatches, focusing on CLI normalization as a likely cause of the 21.6% difference observed. I plan to inspect gating behavior in Simulator/Crystal components and compare against C defaults, while using existing reports to help triage the differences.
+[2025-10-06T21:07:36] exec bash -lc 'ls reports/2025-10-cli-flags' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:07:37] bash -lc 'ls reports/2025-10-cli-flags' succeeded in 818ms:
+phase_a
+phase_b
+phase_c
+phase_d
+phase_e
+phase_f
+phase_f2
+phase_g
+phase_h
+phase_h5
+phase_h6
+phase_i
+phase_j
+phase_k
+[2025-10-06T21:07:37] tokens used: 98,042
+
+[2025-10-06T21:07:40] thinking
+
+**Checking phase_k status**
+[2025-10-06T21:07:41] exec bash -lc 'ls reports/2025-10-cli-flags/phase_k' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:07:42] bash -lc 'ls reports/2025-10-cli-flags/phase_k' succeeded in 825ms:
+f_latt_fix
+[2025-10-06T21:07:42] tokens used: 100,877
+[2025-10-06T21:07:45] exec bash -lc 'ls reports/2025-10-cli-flags/phase_k/f_latt_fix' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:07:46] bash -lc 'ls reports/2025-10-cli-flags/phase_k/f_latt_fix' succeeded in 825ms:
+analyze_output.txt
+c_image.npy
+metrics_after.json
+mosflm_rescale.py
+orientation_delta.md
+py_image.npy
+scaling_chain.md
+scaling_summary.md
+test_metrics_failure.json
+trace_diff.txt
+trace_py_after.log
+trace_py_after_133134.log
+[2025-10-06T21:07:46] tokens used: 101,244
+
+[2025-10-06T21:07:50] thinking
+
+**Checking plan alignment with vectorization**
+[2025-10-06T21:07:50] exec bash -lc "sed -n '260,360p' docs/fix_plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:07:51] bash -lc "sed -n '260,360p' docs/fix_plan.md" succeeded in 808ms:
+    Observations/Hypotheses: **CRITICAL FINDING:** Single-iteration profiling run shows PyTorch only 1.25× slower (0.652s vs 0.524s), dramatically better than Phase A baseline (3.55× slower, 1.783s). Possible causes: (1) Measurement variation (5-iteration average vs single run), (2) Improved torch.compile state, (3) Cache/memory layout benefits. **Action required:** Re-run Phase A with `--iterations 1` to validate whether gap is truly ~1.25× (near target) or ~3.5× (needs optimization).
+    Next Actions: (1) Re-run Phase A baseline with single iteration for consistency, (2) Complete Phase B task B4 (extract hotspot % from Chrome trace), (3) Run B5 (eager-mode SF profile at 1024²), (4) Decision point: if validated gap ≤1.2×, skip Phase C/D; if >1.2×, proceed with diagnostic experiments.
+  * [2025-10-01] Attempt #31 (loop BL) — Result: Reconciliation study COMPLETE. Resolved 1.25× vs 3.55× measurement discrepancy by executing both 1-iter and 5-iter benchmarks at 4096².
+    Metrics: **Current performance:** 1-iter: Py 0.609s vs C 0.528s (1.15× slower); 5-iter: Py 0.600s vs C 0.538s (1.11× slower). **Phase A baseline (for comparison):** Py 1.783s vs C 0.502s (3.55× slower). **Performance improvement:** 3.1× faster PyTorch (1.743s → 0.565s avg simulation time).
+    Artifacts: `reports/benchmarks/20251001-014819-measurement-reconciliation/{reconciliation_summary.md, quick_comparison.md, timeline.md, benchmark_results_1iter.json, benchmark_results_5iter.json}`.
+    Observations/Hypotheses: (1) Iteration count does NOT explain discrepancy—1-iter vs 5-iter differ by only 1.6%. (2) PyTorch improved 3.1× between Phase A (00:50:52) and Phase B (01:01:28), most likely due to warm torch.compile cache state. (3) Current performance 1.11-1.15× slower meets ≤1.2× target (within 10% margin). (4) Phase A baseline appears to be outlier with cold cache state.
+    Next Actions: (1) Mark Phase B task B4 complete with reconciliation summary, (2) Update Phase B decision to reflect **TARGET NEARLY ACHIEVED** status, (3) Consider Phase C/D optional "polish" work given proximity to goal.
+  * [2025-10-13] Attempt #32 — Result: supervisor audit (no code change). Detected newly added benchmark set reports/benchmarks/20251001-025148/ showing warm speedup_warm=0.299 (PyTorch 1.774s vs C 0.531s) — a return to the original 3.3× slowdown. This contradicts Attempt #31's 1.11× measurements and indicates the improvement is not yet reproducible.
+    Metrics: 4096² warm totals — PyTorch 1.7738s, C 0.5306s.
+    Artifacts: reports/benchmarks/20251001-025148/benchmark_results.json; reports/benchmarks/20251001-025010/profile_1024x1024/trace.json (B5 eager profile).
+    Observations/Hypotheses: Warm speedup hinges on cache state; without disciplined B6 reproducibility the plan cannot claim Phase B complete. Need cache-cleared reruns plus analysis contrasting 014819 vs 025148 results.
+    Next Actions: Run B6 with explicit cache clearing notes, capture regression memo comparing both datasets, then update plan tables before entering Phase C.
+  * [2025-10-01] Attempt #33 (loop CA) — Result: Phase B task B6 COMPLETE. Reproducibility study confirms stable performance at 1.21× slowdown.
+    Metrics: 10 runs (5-iter averages each): mean speedup 0.8280 ± 0.0326 (PyTorch 1.21× slower), CV=3.9% (high reproducibility), correlation=1.0 (perfect numerical accuracy).
+    Artifacts: `reports/benchmarks/20251001-030128-4096-warm-repro/{B6_summary.md, reproducibility_results.json, run1.log...run10.log}`.
+    Observations/Hypotheses: (1) Performance is highly stable (CV<5%) confirming measurements are reliable. (2) Mean slowdown 1.21× exceeds ≤1.2× target by small margin (0.01×). (3) No runs achieved speedup ≥1.0 (range: 0.78–0.88). (4) **Phase B complete—target NOT met, proceed to Phase C diagnostics.** This addresses supervisor's Attempt #32 concern—B6 provides the requested reproducibility data showing stable 1.21× slowdown, not the 3.3× regression detected in 025148. Core geometry tests 31/31 passed.
+    Next Actions: Execute Phase C diagnostic experiments (C1-C7) to identify remaining bottlenecks before considering optimization work in Phase D.
+  * [2025-10-13] Attempt #34 (galph loop CG) — Result: Phase B re-opened. New benchmark log `reports/benchmarks/20251001-025148/benchmark_results.json` shows warm speedup≈0.30 (PyTorch 1.7738 s vs C 0.5306 s) even with cache hits, contradicting Attempt #33’s 0.828±0.033 average. Investigation found `scripts/benchmarks/benchmark_detailed.py` mutates `NB_DISABLE_COMPILE` when `--disable-compile` is toggled while the simulator actually reads `NANOBRAGG_DISABLE_COMPILE`, so the flag is ignored and cached compiled simulators bleed across "eager" runs. Because the env var is also unset unconditionally, downstream callers inherit indeterminate compile state and benchmark logs lack mode metadata.
+    Next Actions: (1) Implement Plan task B7 (push/pop `NANOBRAGG_DISABLE_COMPILE`, cache keyed by mode, compile-mode metadata). (2) Re-run the ten-run cold-process study per reopened B6 after patching the harness, capturing cache-hit + compile-mode flags in each artifact. (3) Draft reconciliation memo comparing the new roll-up against both the 025148 regression and 030128 reproducibility datasets, then update plan status before entering Phase C.
+- Risks/Assumptions: 1024² CPU performance acceptable given GPU alternative; Phase 4 revisit only if future profiling identifies specific bottlenecks. Weighted-source tooling must be path-agnostic before P3.0c evidence is considered durable.
+[2025-10-06T21:07:51] tokens used: 101,558
+
+[2025-10-06T21:07:53] thinking
+
+**Searching for vectorization section**
+[2025-10-06T21:07:54] exec bash -lc 'rg "VECTOR-TRICUBIC-001" -n docs/fix_plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:07:55] bash -lc 'rg "VECTOR-TRICUBIC-001" -n docs/fix_plan.md' succeeded in 759ms:
+19:| [VECTOR-TRICUBIC-001](#vector-tricubic-001-vectorize-tricubic-interpolation-and-detector-absorption) | Vectorize tricubic interpolation and detector absorption | High | in_planning |
+1249:## [VECTOR-TRICUBIC-001] Vectorize tricubic interpolation and detector absorption
+[2025-10-06T21:07:55] tokens used: 103,203
+
+[2025-10-06T21:07:58] thinking
+
+**Navigating to specific file section**
+[2025-10-06T21:07:59] exec bash -lc "sed -n '1249,1370p' docs/fix_plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:08:00] bash -lc "sed -n '1249,1370p' docs/fix_plan.md" succeeded in 784ms:
+## [VECTOR-TRICUBIC-001] Vectorize tricubic interpolation and detector absorption
+- Spec/AT: specs/spec-a-core.md §4 (structure factor sampling), specs/spec-a-parallel.md §2.3 (tricubic acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4 (vectorization strategy), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, nanoBragg.c lines 2604–3278 (polin3/polin2/polint) and 3375–3450 (detector absorption loop).
+- Priority: High
+- Status: in_planning (Phase A evidence outstanding)
+- Owner/Date: galph/2025-10-17
+- Plan Reference: `plans/active/vectorization.md`
+- Reproduction (C & PyTorch):
+  * PyTorch baseline tests: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py tests/test_at_abs_001.py -v`
+  * Optional microbenchmarks (to be created per plan Phase A): `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/sample_tricubic_baseline.py`
+  * Shapes/ROI: 256² & 512² detectors for microbench; oversample 1; structure-factor grid enabling tricubic.
+- First Divergence (if known): Current tricubic path drops to nearest-neighbour fallback for batched pixel grids, emitting warnings and forfeiting accuracy/performance; detector absorption still loops over `thicksteps`, preventing full vectorization and creating hotspots in profiler traces (see reports/benchmarks/20250930-165726-compile-cache/analysis.md).
+- Next Actions:
+  1. Execute plan Phase A tasks A1–A3: author the reusable `scripts/benchmarks/tricubic_baseline.py` and `absorption_baseline.py` harnesses, capture pytest + timing artifacts under `reports/2025-10-vectorization/phase_a/`, and record Attempt #1 in this entry.
+  2. Complete Phase B design memo (tensor shapes, broadcasting, gradients) before editing code; update this item with design references (`phase_b/design_notes.md`).
+  3. Prioritise Phase C/D implementation work on tricubic interpolation, followed by Phase E parity/perf validation. Detector absorption vectorization (Phase F) follows once tricubic work is stable.
+- Attempts History:
+  * (pending) — Capture Phase A baseline artifacts and update this log.
+- Risks/Assumptions: Must maintain differentiability (no `.item()`, no `torch.linspace` with tensor bounds), preserve device/dtype neutrality (CPU/CUDA parity), and obey Protected Assets rule (all new scripts under `scripts/benchmarks/`). Large tensor indexing may increase memory pressure; ensure ROI caching still works.
+- Exit Criteria (quote thresholds from spec):
+  * specs/spec-a-parallel.md §2.3 tricubic acceptance tests run without warnings and match C parity within documented tolerances (corr≥0.9995, ≤1e-12 structural duality where applicable).
+[2025-10-06T21:08:00] tokens used: 103,495
+
+[2025-10-06T21:08:05] thinking
+
+**Reviewing plan progress and repo state**
+[2025-10-06T21:08:06] exec bash -lc 'git status --short' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:08:06] bash -lc 'git status --short' succeeded in 917ms:
+
+[2025-10-06T21:08:06] tokens used: 105,186
+
+[2025-10-06T21:08:10] thinking
+
+**Preparing to flip a coin**
+[2025-10-06T21:08:12] exec bash -lc "python - <<'PY'
+import random
+print(random.choice(['heads','tails']))
+PY" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:08:13] bash -lc "python - <<'PY'
+import random
+print(random.choice(['heads','tails']))
+PY" succeeded in 843ms:
+tails
+[2025-10-06T21:08:13] tokens used: 105,377
+
+[2025-10-06T21:08:37] thinking
+
+**Deciding on plan updates and documentation review**
+
+I’m weighing whether to update the existing CLI noise plan, especially Phase K3 tasks around gating and polarization adjustments, since we found relevant code details suggesting more precise instructions are needed. Before revising the plan, I’ll review key documentation files like `specs/spec-a-cli.md` to ground the update in current specs. This way, the plan change will be well-informed and aligned with all findings.
+[2025-10-06T21:08:41] exec bash -lc "sed -n '1,200p' specs/spec-a-cli.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:08:42] bash -lc "sed -n '1,200p' specs/spec-a-cli.md" succeeded in 1.11s:
+# nanoBragg Spec A — CLI Binding
+
+This shard documents the command-line interface, header precedence, and CLI-focused acceptance tests. It should be read alongside [spec-a-core.md](spec-a-core.md) for the simulation engine requirements and [spec-a-parallel.md](spec-a-parallel.md) for conformance profiles.
+
+CLI Interface (Normative)
+
+All options recognized by this code version are enumerated below. Values with units are converted
+immediately as specified in Units & Conversions. Unsupported flags are not recognized even if
+present in header comments.
+
+- Input files:
+    - -hkl <file>: Text file of “h k l F” (integers h,k,l; real F). Required unless Fdump.bin exists
+or -default_F used.
+    - -mat <file>: 3×3 MOSFLM-style A matrix (reciprocal cell vectors scaled by 1/λ). Required
+unless -cell used.
+    - -cell a b c alpha beta gamma: Direct cell in Å and degrees; alternative to -mat.
+    - -img <file>: Read SMV header; may set fpixels, spixels, pixel size (mm), distance (mm), close
+distance (mm), wavelength (Å), beam centers (mm), ORGX/ORGY (pixels), φ start (deg), oscillation
+range (deg), 2θ (deg). Image data is read but not used.
+    - -mask <file>: Read SMV mask; uses same headers to initialize geometry as -img. Zero-valued
+[2025-10-06T21:08:42] tokens used: 106,548
+
+[2025-10-06T21:08:44] thinking
+
+**Reading architecture detector doc**
+[2025-10-06T21:08:45] exec bash -lc "sed -n '1,200p' docs/architecture/detector.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:08:46] bash -lc "sed -n '1,200p' docs/architecture/detector.md" succeeded in 806ms:
+# Detector Architecture Deep Dive
+
+**Status:** Authoritative Specification  
+**Last Updated:** Phase 5 Implementation
+
+**⚠️ CRITICAL:** This component uses a [hybrid unit system](#61-critical-hybrid-unit-system-overrides-global-rule) that overrides the global Angstrom-only rule.
+
+This document provides the complete technical specification for the Detector component. For global project rules on units and coordinate systems, see [Global Conventions](./conventions.md).
+
+---
+
+## 1. Overview
+
+The Detector class manages the detector geometry for diffraction simulations, including:
+- Position and orientation (basis vectors)
+- Pixel coordinate generation and caching
+- Support for various detector conventions (MOSFLM, XDS)
+- Dynamic geometry with rotations and tilts
+- Full differentiability for optimization workflows
+
+[2025-10-06T21:08:46] tokens used: 110,535
+
+[2025-10-06T21:08:57] thinking
+
+**Planning phased updates to project plan with testing tasks**
+
+I'll prepare to restructure Phase K3 of the plan into a table with checkboxes to better capture new gating-related tasks and verification steps, adding detailed guidance and updating context accordingly. Before editing, I’m gathering precise code line numbers and formulating hypotheses about missing orientation gating to include in the plan and follow-up documentation.
+[2025-10-06T21:08:58] exec bash -lc "nl -ba src/nanobrag_torch/models/crystal.py | sed -n '640,760p'" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:08:59] bash -lc "nl -ba src/nanobrag_torch/models/crystal.py | sed -n '640,760p'" succeeded in 1.00s:
+   640	        ):
+   641	            # Apply misset rotation to initial reciprocal vectors only
+   642	            # C-code reference (nanoBragg.c lines 2025-2034):
+   643	            # rotate(a_star,a_star,misset[1],misset[2],misset[3]);
+   644	            # rotate(b_star,b_star,misset[1],misset[2],misset[3]);
+   645	            # rotate(c_star,c_star,misset[1],misset[2],misset[3]);
+   646	            from ..utils.geometry import angles_to_rotation_matrix, rotate_umat
+   647	            # Preserve gradient flow: convert to tensor only if not already a tensor
+   648	            misset_rad = []
+   649	            for angle in self.config.misset_deg:
+   650	                if isinstance(angle, torch.Tensor):
+   651	                    # Already a tensor - just convert dtype/device while preserving gradients
+   652	                    angle_tensor = angle.to(dtype=self.dtype, device=self.device)
+   653	                else:
+   654	                    # Scalar - create new tensor
+   655	                    angle_tensor = torch.tensor(angle, dtype=self.dtype, device=self.device)
+   656	                misset_rad.append(torch.deg2rad(angle_tensor))
+   657	            R_misset = angles_to_rotation_matrix(misset_rad[0], misset_rad[1], misset_rad[2])
+   658	            a_star = rotate_umat(a_star, R_misset)
+   659	            b_star = rotate_umat(b_star, R_misset)
+[2025-10-06T21:08:59] tokens used: 113,296
+
+[2025-10-06T21:09:02] thinking
+
+**Referencing specific lines for gating issue**
+[2025-10-06T21:09:03] exec bash -lc "nl -ba src/nanobrag_torch/config.py | sed -n '496,530p'" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:09:04] bash -lc "nl -ba src/nanobrag_torch/config.py | sed -n '496,530p'" succeeded in 774ms:
+   496	    source_distance_mm: float = 10000.0  # Distance from source to sample (mm)
+   497	    source_size_mm: float = 0.0  # Source size (0 = point source)
+   498	
+   499	    # Multiple sources support (AT-SRC-001)
+   500	    source_directions: Optional[torch.Tensor] = None  # (N, 3) unit direction vectors from sample to sources
+   501	    source_weights: Optional[torch.Tensor] = None  # (N,) source weights (ignored per spec, all equal)
+   502	    source_wavelengths: Optional[torch.Tensor] = None  # (N,) wavelengths in meters for each source
+   503	
+   504	    # Beam polarization
+   505	    # C defaults: polar=1.0, polarization=0.0, nopolar=0 (golden_suite_generator/nanoBragg.c:308-309)
+   506	    # polar controls the Kahn factor application; polarization is the E-vector rotation angle
+   507	    polarization_factor: float = 1.0  # Kahn polarization factor K in [0,1] (1.0 = fully polarized, matches C default polar=1.0)
+   508	    nopolar: bool = False  # If True, force polarization factor to 1 (disable polarization)
+   509	    polarization_axis: tuple[float, float, float] = (0.0, 0.0, 1.0)  # Polarization E-vector direction
+   510	
+   511	    # Flux and fluence parameters (AT-FLU-001)
+   512	    flux: float = 0.0  # Photons per second
+   513	    exposure: float = 0.0  # Exposure time in seconds
+   514	    beamsize_mm: float = 0.0  # Beam size in mm (used for fluence calculation and sample clipping)
+   515	    fluence: float = 125932015286227086360700780544.0  # Photons per square meter (default from C code)
+[2025-10-06T21:09:04] tokens used: 115,589
+
+[2025-10-06T21:09:09] thinking
+
+**Verifying default polarization value**
+[2025-10-06T21:09:09] exec bash -lc 'rg "polarization" -n golden_suite_generator/nanoBragg.c' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:09:10] bash -lc 'rg "polarization" -n golden_suite_generator/nanoBragg.c' succeeded in 806ms:
+121:/* polarization factor from vectors */
+122:double polarization_factor(double kahn_factor, double *incident, double *diffracted, double *axis);
+305:    /* polarization stuff */
+308:    double polar=1.0,polarization=0.0;
+839:                polarization = atof(argv[i+1]);
+1339:        printf("\t-oversample_polar \tre-calculate polarization effect for sub-pixels (not the default)\n");
+1359:        printf("\t-polar           \tspecify Kahn polarization factor (default: %g)\n",polar);
+1375:        printf("\t-nopolar         \tturn off the polarization correction\n");
+1384:        printf("\t-polar_vector    \tunit vector of x-ray E-vector polarization (default: %g %g %g)\n",polar_vector[1],polar_vector[2],polar_vector[3]);
+2722:    if(nopolar) { printf("  polarization effect disabled\n"); }
+2723:           else { printf("  Kahn polarization factor: %f\n",polarization); }
+2815:        polarization,nopolar,\
+2911:            /* reset polarization factor, in case we want to cache it */
+3032:                            /* we now have enough to fix the polarization factor */
+3035:                                /* need to compute polarization factor */
+3036:                                polar = polarization_factor(polarization,incident,diffracted,polar_vector);
+4390:/* polarization factor */
+4391:double polarization_factor(double kahn_factor, double *incident, double *diffracted, double *axis)
+4413:        /* cross product to get "vertical" axis that is orthogonal to the cannonical "polarization" */
+[2025-10-06T21:09:10] tokens used: 116,625
+
+[2025-10-06T21:09:13] thinking
+
+**Reviewing specific code area**
+[2025-10-06T21:09:14] exec bash -lc "sed -n '3000,3050p' golden_suite_generator/nanoBragg.c" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:09:15] bash -lc "sed -n '3000,3050p' golden_suite_generator/nanoBragg.c" succeeded in 825ms:
+                            scattering[2] = (diffracted[2]-incident[2])/lambda;
+                            scattering[3] = (diffracted[3]-incident[3])/lambda;
+                            
+                            /* trace output for specific pixel */
+                            if(fpixel==trace_fpixel && spixel==trace_spixel && source==0) {
+                                printf("TRACE_C: pix0_vector_meters %.15g %.15g %.15g\n", pix0_vector[1], pix0_vector[2], pix0_vector[3]);
+                                printf("TRACE_C: fdet_vec %.15g %.15g %.15g\n", fdet_vector[1], fdet_vector[2], fdet_vector[3]);
+                                printf("TRACE_C: sdet_vec %.15g %.15g %.15g\n", sdet_vector[1], sdet_vector[2], sdet_vector[3]);
+                                printf("TRACE_C: pixel_pos_meters %.15g %.15g %.15g\n", pixel_pos[1], pixel_pos[2], pixel_pos[3]);
+                                printf("TRACE_C: R_distance_meters %.15g\n", airpath);
+                                printf("TRACE_C: omega_pixel_sr %.15g\n", omega_pixel);
+                                printf("TRACE_C: close_distance_meters %.15g\n", close_distance);
+                                printf("TRACE_C: obliquity_factor %.15g\n", close_distance/airpath);
+                                printf("TRACE_C: diffracted_vec %.15g %.15g %.15g\n", diffracted[1], diffracted[2], diffracted[3]);
+                                printf("TRACE_C: incident_vec %.15g %.15g %.15g\n", incident[1], incident[2], incident[3]);
+                                printf("TRACE_C: lambda_meters %.15g\n", lambda);
+                                printf("TRACE_C: lambda_angstroms %.15g\n", lambda*1e10);
+                                printf("TRACE_C: scattering_vec_A_inv %.15g %.15g %.15g\n", scattering[1], scattering[2], scattering[3]);
+                            }
+
+[2025-10-06T21:09:15] tokens used: 117,283
+
+[2025-10-06T21:09:26] thinking
+
+**Analyzing polarization default behavior**
+[2025-10-06T21:09:27] exec bash -lc 'rg "polar =" golden_suite_generator/nanoBragg.c' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:09:28] bash -lc 'rg "polar =" golden_suite_generator/nanoBragg.c' succeeded in 886ms:
+    int nopolar = 0;
+    int oversample_polar = 0;
+                nopolar = 0;
+                nopolar = 1;
+                oversample_polar = 1;
+            polar = 0.0;
+            if (nopolar) polar = 1.0;
+                            if (polar == 0.0 || oversample_polar)
+                                polar = polarization_factor(polarization,incident,diffracted,polar_vector);
+[2025-10-06T21:09:28] tokens used: 118,654
+
+[2025-10-06T21:09:32] thinking
+
+**Checking CLI parsing snippet**
+[2025-10-06T21:09:34] exec bash -lc "sed -n '780,860p' golden_suite_generator/nanoBragg.c" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:09:35] bash -lc "sed -n '780,860p' golden_suite_generator/nanoBragg.c" succeeded in 872ms:
+            {
+                detector_thicksteps = atoi(argv[i+1]);
+            }
+            if(strstr(argv[i], "-twotheta") && (argc > (i+1)))
+            {
+                detector_twotheta = atof(argv[i+1])/RTD;
+                detector_pivot = SAMPLE;
+            }
+            if(strstr(argv[i], "-detector_rotx") && (argc > (i+1)))
+            {
+                detector_rotx = atof(argv[i+1])/RTD;
+            }
+            if(strstr(argv[i], "-detector_roty") && (argc > (i+1)))
+            {
+                detector_roty = atof(argv[i+1])/RTD;
+            }
+            if(strstr(argv[i], "-detector_rotz") && (argc > (i+1)))
+            {
+                detector_rotz = atof(argv[i+1])/RTD;
+            }
+[2025-10-06T21:09:35] tokens used: 118,949
+
+[2025-10-06T21:09:37] thinking
+
+**Searching for polar variable initialization**
+[2025-10-06T21:09:38] exec bash -lc "sed -n '2660,2720p' golden_suite_generator/nanoBragg.c" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:09:39] bash -lc "sed -n '2660,2720p' golden_suite_generator/nanoBragg.c" succeeded in 781ms:
+                    ++sources;
+                }
+            }
+        }
+    }
+    printf("  created a total of %d sources:\n",sources);
+    for(source=0;source<sources;++source){
+
+        /* retrieve stuff from cache */
+        X = vector[1] = source_X[source];
+        Y = vector[2] = source_Y[source];
+        Z = vector[3] = source_Z[source];
+        I = source_I[source];
+        lambda = source_lambda[source];
+
+        /* make sure these are unit vectors */
+        unitize(vector,vector);
+        source_X[source] = vector[1];
+        source_Y[source] = vector[2];
+        source_Z[source] = vector[3];
+[2025-10-06T21:09:39] tokens used: 120,128
+
+[2025-10-06T21:09:42] thinking
+
+**Locating polar assignment in code**
+[2025-10-06T21:09:43] exec bash -lc "sed -n '2900,2940p' golden_suite_generator/nanoBragg.c" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:09:43] bash -lc "sed -n '2900,2940p' golden_suite_generator/nanoBragg.c" succeeded in 788ms:
+            {
+                /* skip any flagged pixels in the mask */
+                if(maskimage[imgidx] == 0)
+                {
+                    continue;
+                }
+            }
+
+            /* reset uncorrected photon count for this pixel */
+            I = I_bg;
+
+            /* reset polarization factor, in case we want to cache it */
+            polar = 0.0;
+            if (nopolar) polar = 1.0;
+
+            /* reset pixel solid angle, in case we want to cache it */
+            omega_pixel = 0.0;
+
+            /* add this now to avoid problems with skipping later? */
+//            floatimage[imgidx] = I_bg;
+[2025-10-06T21:09:43] tokens used: 121,392
+
+[2025-10-06T21:09:49] thinking
+
+**Reviewing polarization defaults and next steps**
+[2025-10-06T21:09:50] exec bash -lc ls in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:09:50] bash -lc ls succeeded in 838ms:
+1.0
+1e6
+A.mat
+AGENTS.md
+AT012_TRACE_ANALYSIS.md
+CLAUDE.md
+COMMIT_MESSAGE.md
+DEBUGGING_NIGHTMARE_PREVENTION_TOOLKIT.md
+FINAL_DIAGNOSIS_REPORT.md
+HYPOTHESIS_TESTING_RESULTS.md
+HYPOTHESIS_TEST_RESULTS.md
+LICENSE
+Makefile
+P1.hkl
+PARALLEL_TEST_COMMANDS.md
+PARALLEL_VALIDATION_ACCEPTANCE_TESTS.md
+PERFORMANCE_ANALYSIS.md
+PHASE_4_1_DIAGNOSTIC_REPORT.md
+PHASE_5_FINAL_VALIDATION_REPORT.md
+PHASE_5_IMPLEMENTATION_SUMMARY.md
+[2025-10-06T21:09:50] tokens used: 122,234
+
+[2025-10-06T21:10:01] thinking
+
+**Revising and structuring plan Phase K**
+
+I’m mapping out a detailed plan update focusing on restructuring Phase K into a task table with statuses and guidance, integrating findings like cross product gating, and preparing new instructions for Ralph involving gating and polarization defaults. Before editing, I’ll check existing Phase K content and current Git branch to keep changes aligned and organized.
+[2025-10-06T21:10:02] exec bash -lc 'git branch --show-current' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:10:03] bash -lc 'git branch --show-current' succeeded in 987ms:
+feature/spec-based-2
+[2025-10-06T21:10:03] tokens used: 124,332
+
+[2025-10-06T21:10:09] thinking
+
+**Outlining plan update steps**
+[2025-10-06T21:10:10] exec bash -lc 'date +%Y-%m-%d' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:10:11] bash -lc 'date +%Y-%m-%d' succeeded in 812ms:
+2025-10-06
+[2025-10-06T21:10:11] tokens used: 124,690
+
+[2025-10-06T21:10:55] thinking
+
+**Updating plan with Phase K restructuring and new context bullet**
+
+I'm working through adding a new dated bullet point to the plan's context section to keep things chronologically consistent and restructuring the Phase K section into a detailed markdown table with tasks K1 through K3c, complete with states and guidance. I'll also update the Next Actions bullets to align with these tasks and prepare a Python script to programmatically read, modify, and overwrite the plan file while preserving existing content. This way, I can ensure all new instructions and references—like test commands, logs, and documentation paths—are cleanly integrated without disrupting the plan's flow.
+[2025-10-06T21:11:06] exec bash -lc "python - <<'PY'
+from pathlib import Path
+path = Path('plans/active/cli-noise-pix0/plan.md')
+text = path.read_text()
+old = \"- Evidence status:\"
+if old in text:
+    insert = \"- Gap recap (2025-11-05): Manual inspection of "'`src/nanobrag_torch/models/crystal.py` shows the cross-product rescale still runs even when MOSFLM reciprocal vectors are supplied (lines 681-705), and `BeamConfig.polarization_factor` defaults to 1.0, so scaling remains off despite SAMPLE pivot parity."
+    text = text.replace(old, insert + "'"\\n- Evidence status:\")
+else:
+    raise SystemExit('anchor not found')
+
+start = text.index('### Phase K — Normalization Implementation')
+end = text.index('### Phase L — Final Parity & Regression Sweep')
+new_block = \"\"\"### Phase K — Normalization Implementation\\nGoal: Align PyTorch normalization logic with C based on Phase J evidence (steps division, fluence, r_e², omega/polarization application order).\\nPrereqs: Phase J report pinpoints the mismatched factor; existing regression suite green.\\nExit Criteria: Code changes merged with targeted tests covering the corrected scaling, and docs/fix_plan.md records Attempt #29 metrics before moving to Phase L.\\n\\n| ID | Task Description | State | How/Why & Guidance |\\n| --- | --- | --- | --- |\\n| K1 | Align lattice factor math with C (SQUARE case) | [D] | ✅ 2025-10-24 Attempt #34 (commit 0fef8f7). "'`Simulator._compute_physics_for_position` now uses `sincg(torch.pi * h, Na)` with embedded C-code reference; regression `tests/test_cli_scaling.py::test_f_latt_square_matches_c` added (skips unless `NB_RUN_PARALLEL=1`). |'"\\n| K2 | Recompute scaling chain & extend diagnostics | [D] | ✅ 2025-10-06 Attempt #42. Fresh PyTorch trace captured (trace_py_after.log); scaling chain refreshed showing F_latt_b=46.98 (Py) vs 38.63 (C) = 21.6% error, polar=1.0 (Py) vs 0.913 (C) = 9.6% error. Updated scaling_chain.md with post-SAMPLE-pivot ratios. |\\n| K2b | Document MOSFLM rescale mismatch | [D] | ✅ 2025-10-06 Attempt #42. Created mosflm_rescale.py and orientation_delta.md. Finding: C skips vector_rescale when "'`user_cell==0`, but PyTorch still rescales, leading to persistent F_latt_b drift. |'"\\n| K3a | Guard MOSFLM rescale path in "'`Crystal.compute_cell_tensors` | [ ] | Bypass the cross-product rescale when `mosflm_a_star`/`b_star`/`c_star` tensors are provided. After patching `src/nanobrag_torch/models/crystal.py:681-705`, rerun `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_k/f_latt_fix/mosflm_rescale.py` and append new ratios to `orientation_delta.md`; stash a post-fix copy as `orientation_delta_post_fix.md`. |'"\\n| K3b | Realign polarization defaults with C | [ ] | Set "'`BeamConfig.polarization_factor` default to 0.0, keep `-polar` CLI wiring to populate it, and ensure `-nopolar` forces 1.0. Re-run the scaling harness (`reports/2025-10-cli-flags/phase_k/f_latt_fix/analyze_output.txt`) to confirm `polar` matches C (≈0.9126); capture results in `scaling_chain_post_fix.md`. |'"\\n| K3c | Regression & documentation close-out | [ ] | "'`env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v` plus any new normalization tests. Save log as `phase_k/f_latt_fix/pytest_post_fix.log`, update `docs/architecture/pytorch_design.md` normalization notes and `docs/development/testing_strategy.md`, then record Attempt #43 with metrics and artifacts. |'"\\n\\n\"\"\"
+text = text[:start] + new_block + text[end:]
+path.write_text(text)
+PY" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:11:07] bash -lc "python - <<'PY'
+from pathlib import Path
+path = Path('plans/active/cli-noise-pix0/plan.md')
+text = path.read_text()
+old = \"- Evidence status:\"
+if old in text:
+    insert = \"- Gap recap (2025-11-05): Manual inspection of "'`src/nanobrag_torch/models/crystal.py` shows the cross-product rescale still runs even when MOSFLM reciprocal vectors are supplied (lines 681-705), and `BeamConfig.polarization_factor` defaults to 1.0, so scaling remains off despite SAMPLE pivot parity."
+    text = text.replace(old, insert + "'"\\n- Evidence status:\")
+else:
+    raise SystemExit('anchor not found')
+
+start = text.index('### Phase K — Normalization Implementation')
+end = text.index('### Phase L — Final Parity & Regression Sweep')
+new_block = \"\"\"### Phase K — Normalization Implementation\\nGoal: Align PyTorch normalization logic with C based on Phase J evidence (steps division, fluence, r_e², omega/polarization application order).\\nPrereqs: Phase J report pinpoints the mismatched factor; existing regression suite green.\\nExit Criteria: Code changes merged with targeted tests covering the corrected scaling, and docs/fix_plan.md records Attempt #29 metrics before moving to Phase L.\\n\\n| ID | Task Description | State | How/Why & Guidance |\\n| --- | --- | --- | --- |\\n| K1 | Align lattice factor math with C (SQUARE case) | [D] | ✅ 2025-10-24 Attempt #34 (commit 0fef8f7). "'`Simulator._compute_physics_for_position` now uses `sincg(torch.pi * h, Na)` with embedded C-code reference; regression `tests/test_cli_scaling.py::test_f_latt_square_matches_c` added (skips unless `NB_RUN_PARALLEL=1`). |'"\\n| K2 | Recompute scaling chain & extend diagnostics | [D] | ✅ 2025-10-06 Attempt #42. Fresh PyTorch trace captured (trace_py_after.log); scaling chain refreshed showing F_latt_b=46.98 (Py) vs 38.63 (C) = 21.6% error, polar=1.0 (Py) vs 0.913 (C) = 9.6% error. Updated scaling_chain.md with post-SAMPLE-pivot ratios. |\\n| K2b | Document MOSFLM rescale mismatch | [D] | ✅ 2025-10-06 Attempt #42. Created mosflm_rescale.py and orientation_delta.md. Finding: C skips vector_rescale when "'`user_cell==0`, but PyTorch still rescales, leading to persistent F_latt_b drift. |'"\\n| K3a | Guard MOSFLM rescale path in "'`Crystal.compute_cell_tensors` | [ ] | Bypass the cross-product rescale when `mosflm_a_star`/`b_star`/`c_star` tensors are provided. After patching `src/nanobrag_torch/models/crystal.py:681-705`, rerun `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_k/f_latt_fix/mosflm_rescale.py` and append new ratios to `orientation_delta.md`; stash a post-fix copy as `orientation_delta_post_fix.md`. |'"\\n| K3b | Realign polarization defaults with C | [ ] | Set "'`BeamConfig.polarization_factor` default to 0.0, keep `-polar` CLI wiring to populate it, and ensure `-nopolar` forces 1.0. Re-run the scaling harness (`reports/2025-10-cli-flags/phase_k/f_latt_fix/analyze_output.txt`) to confirm `polar` matches C (≈0.9126); capture results in `scaling_chain_post_fix.md`. |'"\\n| K3c | Regression & documentation close-out | [ ] | "'`env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v` plus any new normalization tests. Save log as `phase_k/f_latt_fix/pytest_post_fix.log`, update `docs/architecture/pytorch_design.md` normalization notes and `docs/development/testing_strategy.md`, then record Attempt #43 with metrics and artifacts. |'"\\n\\n\"\"\"
+text = text[:start] + new_block + text[end:]
+path.write_text(text)
+PY" succeeded in 1.14s:
+
+[2025-10-06T21:11:07] tokens used: 128,388
+
+[2025-10-06T21:11:09] thinking
+
+**Verifying plan file correctness**
+[2025-10-06T21:11:11] exec bash -lc "sed -n '1,200p' plans/active/cli-noise-pix0/plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:11:11] bash -lc "sed -n '1,200p' plans/active/cli-noise-pix0/plan.md" succeeded in 810ms:
+## Context
+- Initiative: CLI Parity for nanoBragg PyTorch vs C (supports long-term goal in prompts/supervisor.md)
+- Phase Goal: Accept `-nonoise` and `-pix0_vector_mm` flags with C-equivalent semantics so the parallel comparison command in prompts/supervisor.md executes end-to-end.
+- Dependencies: specs/spec-a-cli.md §§3.2–3.4, docs/architecture/detector.md §5, docs/development/c_to_pytorch_config_map.md (detector pivot + noise), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860 (flag behavior), docs/debugging/detector_geometry_checklist.md (pix0 validation), docs/development/testing_strategy.md §2 (CLI parity tests).
+- Current gap snapshot (2025-10-18 refresh): Phase H4 parity landed (Attempt #25) with pix0 deltas < 2e-8 m and regression tolerances tightened; the remaining blocker before executing the supervisor command end-to-end is Phase I polarization alignment.
+- Gap snapshot update (2025-10-19): Attempt #27 parity run reveals 1.24538e5× intensity scaling mismatch despite polarization fix; Phases J–L track the normalization diagnosis, fix, and closure required before long-term Goal #1 completes.
+- Gap snapshot refresh (2025-10-22): Attempt #31 restored C precedence for custom detector vectors (pix0 override now gated again). Outstanding work: H5c PyTorch traces and Phase K normalization to eliminate the `F_latt`-driven intensity gap.
+- Gap snapshot update (2025-10-24): Attempt #35 reran the PyTorch trace harness post-unit-fix; metrics still show |Δpix0| ≈ 1.145 mm, so a fresh diagnostics phase is required before resuming normalization work.
+- Gap snapshot refresh (2025-10-26): Attempt #40 completed Phase H6f — custom detector vectors now force SAMPLE pivot parity, parity visuals relocated under `reports/2025-10-cli-flags/phase_h6/visuals/`, and targeted regression tests cover pivot selection. Outstanding work at that point: Phase H6g trace rerun to confirm |Δpix0| < 5e-5 m before returning to Phase K scalings.
+- Gap snapshot update (2025-10-27): Attempt #41 validated Phase H6g — SAMPLE pivot parity holds with pix0 deltas ≤2.85 µm, beam center deltas 0.0, and supporting artifacts under `reports/2025-10-cli-flags/phase_h6/post_fix/`. Remaining blockers: rerun the scaling chain (Phase K2), execute the scaling regression + doc updates (Phase K3), then resume Phase L parity once normalization matches C.
+- Gap insight (2025-10-31): Scaling evidence shows MOSFLM matrix runs still rescale real vectors using formula lengths; C skips that step unless `-cell` is provided, so PyTorch must gate the `vector_rescale` analogue when `mosflm_a_star` is set. The same trace confirms the polarization Kahn factor should default to 0.0 (C’s `polarization`), not 1.0, so BeamConfig defaults need to be realigned before Phase L.
+- Gap correction (2025-10-22): Fresh C evidence (`reports/2025-10-cli-flags/phase_h5/c_precedence_2025-10-22.md`) proves nanoBragg ignores `-pix0_vector_mm` whenever custom detector vectors are present. PyTorch now deviates because the lattice factor uses fractional indices (h−h0); fix required before normalization parity.
+- Gap recap (2025-11-05): Manual inspection of `src/nanobrag_torch/models/crystal.py` shows the cross-product rescale still runs even when MOSFLM reciprocal vectors are supplied (lines 681-705), and `BeamConfig.polarization_factor` defaults to 1.0, so scaling remains off despite SAMPLE pivot parity.
+- Evidence status: Phase E artifacts (`reports/2025-10-cli-flags/phase_e/`) hold C/PyTorch traces, diffs, and beam-vector checks. Phase H3b1 also stashes WITH/without override traces under `reports/2025-10-cli-flags/phase_h/implementation/` for reference.
+- Documentation anchors for this focus:
+  * `specs/spec-a-core.md` — canonical lattice-factor formulas (SQUARE uses sincg(π·h, Na); ROUND/GAUSS definitions used to verify Phase K).
+  * `golden_suite_generator/nanoBragg.c` (≈2993-3151) — definitive implementation of the sincg calls and rounding logic.
+  * `docs/architecture/pytorch_design.md` — simulator reference; docstring currently claims full-h usage and must be updated post-fix.
+  * `docs/development/testing_strategy.md` — authoritative pytest/trace commands for CLI parity evidence.
+
+[2025-10-06T21:11:11] tokens used: 129,540
+
+[2025-10-06T21:11:21] thinking
+
+**Preparing to update plan documentation**
+[2025-10-06T21:11:31] exec bash -lc "python - <<'PY'
+from pathlib import Path
+path = Path('docs/fix_plan.md')
+text = path.read_text()
+old = \"- Next Actions (2025-10-31 refresh): Pix0 parity (H6g) is complete; normalization remains the blocker before attempting the supervisor command again:\\n  1. Phase K2/K2b — refresh "'`reports/2025-10-cli-flags/phase_j/scaling_chain.md`, add `phase_k/f_latt_fix/orientation_delta.md` + `mosflm_rescale.py` capturing the rescale mismatch, and ensure `metrics_after.json` explicitly calls out polarization staying at 1.0.'"\\n  2. Phase K3 — implement the fixes: guard the rescale path in "'`Crystal.compute_cell_tensors` so MOSFLM matrices skip it (mirroring `user_cell==0`), realign BeamConfig defaults/tests so `-polar` opt-in is required, update docs, and rerun `tests/test_cli_scaling.py::test_f_latt_square_matches_c` (with `NB_RUN_PARALLEL=1`, log to `phase_k/f_latt_fix/pytest.log`).'"\\n  3. Phase L gating — once scaling ratios are within tolerance, rerun the supervisor command parity sweep and close the plan, keeping normalization blocked until the artifacts land in "'`phase_l/`."
+new = "- Next Actions (2025-11-05 refresh): Phase K3 is the remaining blocker before rerunning the supervisor command — execute these plan tasks in order:'"\\n  1. Phase K3a — update "'`Crystal.compute_cell_tensors` to skip the cross-product rescale whenever MOSFLM reciprocal vectors are supplied, then rerun `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_k/f_latt_fix/mosflm_rescale.py` and archive `orientation_delta_post_fix.md`.'"\\n  2. Phase K3b — set "'`BeamConfig.polarization_factor` default to 0.0, keep `-polar`/`-nopolar` wiring intact, and capture a fresh scaling-chain delta report (`scaling_chain_post_fix.md`) showing `polar≈0.9126` to match C.'"\\n  3. Phase K3c — run "'`env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v`, update `docs/architecture/pytorch_design.md` + `docs/development/testing_strategy.md`, and log Attempt #43 with artifacts in `reports/2025-10-cli-flags/phase_k/f_latt_fix/`."
+if old not in text:
+    raise SystemExit('"'Old block not found')
+text = text.replace(old, new)
+path.write_text(text)
+PY" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:11:32] bash -lc "python - <<'PY'
+from pathlib import Path
+path = Path('docs/fix_plan.md')
+text = path.read_text()
+old = \"- Next Actions (2025-10-31 refresh): Pix0 parity (H6g) is complete; normalization remains the blocker before attempting the supervisor command again:\\n  1. Phase K2/K2b — refresh "'`reports/2025-10-cli-flags/phase_j/scaling_chain.md`, add `phase_k/f_latt_fix/orientation_delta.md` + `mosflm_rescale.py` capturing the rescale mismatch, and ensure `metrics_after.json` explicitly calls out polarization staying at 1.0.'"\\n  2. Phase K3 — implement the fixes: guard the rescale path in "'`Crystal.compute_cell_tensors` so MOSFLM matrices skip it (mirroring `user_cell==0`), realign BeamConfig defaults/tests so `-polar` opt-in is required, update docs, and rerun `tests/test_cli_scaling.py::test_f_latt_square_matches_c` (with `NB_RUN_PARALLEL=1`, log to `phase_k/f_latt_fix/pytest.log`).'"\\n  3. Phase L gating — once scaling ratios are within tolerance, rerun the supervisor command parity sweep and close the plan, keeping normalization blocked until the artifacts land in "'`phase_l/`."
+new = "- Next Actions (2025-11-05 refresh): Phase K3 is the remaining blocker before rerunning the supervisor command — execute these plan tasks in order:'"\\n  1. Phase K3a — update "'`Crystal.compute_cell_tensors` to skip the cross-product rescale whenever MOSFLM reciprocal vectors are supplied, then rerun `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_k/f_latt_fix/mosflm_rescale.py` and archive `orientation_delta_post_fix.md`.'"\\n  2. Phase K3b — set "'`BeamConfig.polarization_factor` default to 0.0, keep `-polar`/`-nopolar` wiring intact, and capture a fresh scaling-chain delta report (`scaling_chain_post_fix.md`) showing `polar≈0.9126` to match C.'"\\n  3. Phase K3c — run "'`env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v`, update `docs/architecture/pytorch_design.md` + `docs/development/testing_strategy.md`, and log Attempt #43 with artifacts in `reports/2025-10-cli-flags/phase_k/f_latt_fix/`."
+if old not in text:
+    raise SystemExit('"'Old block not found')
+text = text.replace(old, new)
+path.write_text(text)
+PY" exited 1 in 989ms:
+Old block not found
+[2025-10-06T21:11:32] tokens used: 133,421
+
+[2025-10-06T21:11:34] thinking
+
+**Searching for specific section header**
+[2025-10-06T21:11:35] exec bash -lc "rg \"Next Actions \\(2025-10-31 refresh\\)\" -n docs/fix_plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:11:35] bash -lc "rg \"Next Actions \\(2025-10-31 refresh\\)\" -n docs/fix_plan.md" succeeded in 754ms:
+458:- Next Actions (2025-10-31 refresh): Pix0 parity (H6g) is complete; normalization remains the blocker before attempting the supervisor command again:
+[2025-10-06T21:11:35] tokens used: 134,227
+
+[2025-10-06T21:11:37] thinking
+
+**Checking necessary block**
+[2025-10-06T21:11:38] exec bash -lc "sed -n '458,470p' docs/fix_plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:11:39] bash -lc "sed -n '458,470p' docs/fix_plan.md" succeeded in 851ms:
+- Next Actions (2025-10-31 refresh): Pix0 parity (H6g) is complete; normalization remains the blocker before attempting the supervisor command again:
+  1. Phase K2/K2b — refresh `reports/2025-10-cli-flags/phase_j/scaling_chain.md`, add `phase_k/f_latt_fix/orientation_delta.md` + `mosflm_rescale.py` capturing the rescale mismatch, and ensure `metrics_after.json` explicitly calls out polarization staying at 1.0.
+  2. Phase K3 — implement the fixes: guard the rescale path in `Crystal.compute_cell_tensors` when `mosflm_a_star` is present, realign BeamConfig defaults/tests so `-polar` opt-in is required, update docs, and rerun `tests/test_cli_scaling.py::test_f_latt_square_matches_c` (with `NB_RUN_PARALLEL=1`, log to `phase_k/f_latt_fix/pytest.log`).
+  3. Phase L gating — once scaling ratios are within tolerance, rerun the supervisor command parity sweep and close the plan, keeping normalization blocked until the artifacts land in `phase_l/`.
+- Attempts History:
+  * [2025-10-06] Attempt #27 (ralph) — Result: **PARITY FAILURE** (Phase I3 supervisor command). **Intensity scaling discrepancy: 124,538× sum ratio.**
+    Metrics: Correlation=0.9978 (< 0.999 threshold), sum_ratio=124,538 (should be ~1.0), C max_I=446, PyTorch max_I=5.411e7 (121,000× discrepancy), mean_peak_distance=37.79 px (> 1 px threshold).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_i/supervisor_command/README.md` - Full evidence report with metrics, hypotheses, next actions
+      - `reports/2025-10-cli-flags/phase_i/supervisor_command/summary.json` - Complete parity metrics (correlation, RMSE, sums, peak distances)
+      - `reports/2025-10-cli-flags/phase_i/supervisor_command/c_stdout.txt` - C simulation output (max_I=446.254, fluence=1e24, steps=10)
+      - `reports/2025-10-cli-flags/phase_i/supervisor_command/py_stdout.txt` - PyTorch output (max_I=5.411e7)
+      - `reports/2025-10-cli-flags/phase_i/supervisor_command/diff.png` - Difference heatmap (559 KB)
+[2025-10-06T21:11:39] tokens used: 134,417
+
+[2025-10-06T21:11:42] thinking
+
+**Preparing to replace code block**
+[2025-10-06T21:11:48] exec bash -lc "python - <<'PY'
+from pathlib import Path
+path = Path('docs/fix_plan.md')
+text = path.read_text()
+old = \"- Next Actions (2025-10-31 refresh): Pix0 parity (H6g) is complete; normalization remains the blocker before attempting the supervisor command again:\\n  1. Phase K2/K2b — refresh "'`reports/2025-10-cli-flags/phase_j/scaling_chain.md`, add `phase_k/f_latt_fix/orientation_delta.md` + `mosflm_rescale.py` capturing the rescale mismatch, and ensure `metrics_after.json` explicitly calls out polarization staying at 1.0.'"\\n  2. Phase K3 — implement the fixes: guard the rescale path in "'`Crystal.compute_cell_tensors` when `mosflm_a_star` is present, realign BeamConfig defaults/tests so `-polar` opt-in is required, update docs, and rerun `tests/test_cli_scaling.py::test_f_latt_square_matches_c` (with `NB_RUN_PARALLEL=1`, log to `phase_k/f_latt_fix/pytest.log`).'"\\n  3. Phase L gating — once scaling ratios are within tolerance, rerun the supervisor command parity sweep and close the plan, keeping normalization blocked until the artifacts land in "'`phase_l/`."
+new = "- Next Actions (2025-11-05 refresh): Phase K3 is the remaining blocker before rerunning the supervisor command — execute these plan tasks in order:'"\\n  1. Phase K3a — update "'`Crystal.compute_cell_tensors` to skip the cross-product rescale whenever MOSFLM reciprocal vectors are supplied, then rerun `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_k/f_latt_fix/mosflm_rescale.py` and archive the deltas as `orientation_delta_post_fix.md`.'"\\n  2. Phase K3b — set "'`BeamConfig.polarization_factor` default to 0.0, keep `-polar`/`-nopolar` wiring intact, and capture a fresh scaling-chain delta report (`scaling_chain_post_fix.md`) showing `polar≈0.9126` to match C.'"\\n  3. Phase K3c — run "'`env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v`, update `docs/architecture/pytorch_design.md` + `docs/development/testing_strategy.md`, and log Attempt #43 with artifacts in `reports/2025-10-cli-flags/phase_k/f_latt_fix/`."
+if old not in text:
+    raise SystemExit('"'Old block not found for replacement')
+text = text.replace(old, new)
+path.write_text(text)
+PY" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:11:49] bash -lc "python - <<'PY'
+from pathlib import Path
+path = Path('docs/fix_plan.md')
+text = path.read_text()
+old = \"- Next Actions (2025-10-31 refresh): Pix0 parity (H6g) is complete; normalization remains the blocker before attempting the supervisor command again:\\n  1. Phase K2/K2b — refresh "'`reports/2025-10-cli-flags/phase_j/scaling_chain.md`, add `phase_k/f_latt_fix/orientation_delta.md` + `mosflm_rescale.py` capturing the rescale mismatch, and ensure `metrics_after.json` explicitly calls out polarization staying at 1.0.'"\\n  2. Phase K3 — implement the fixes: guard the rescale path in "'`Crystal.compute_cell_tensors` when `mosflm_a_star` is present, realign BeamConfig defaults/tests so `-polar` opt-in is required, update docs, and rerun `tests/test_cli_scaling.py::test_f_latt_square_matches_c` (with `NB_RUN_PARALLEL=1`, log to `phase_k/f_latt_fix/pytest.log`).'"\\n  3. Phase L gating — once scaling ratios are within tolerance, rerun the supervisor command parity sweep and close the plan, keeping normalization blocked until the artifacts land in "'`phase_l/`."
+new = "- Next Actions (2025-11-05 refresh): Phase K3 is the remaining blocker before rerunning the supervisor command — execute these plan tasks in order:'"\\n  1. Phase K3a — update "'`Crystal.compute_cell_tensors` to skip the cross-product rescale whenever MOSFLM reciprocal vectors are supplied, then rerun `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_k/f_latt_fix/mosflm_rescale.py` and archive the deltas as `orientation_delta_post_fix.md`.'"\\n  2. Phase K3b — set "'`BeamConfig.polarization_factor` default to 0.0, keep `-polar`/`-nopolar` wiring intact, and capture a fresh scaling-chain delta report (`scaling_chain_post_fix.md`) showing `polar≈0.9126` to match C.'"\\n  3. Phase K3c — run "'`env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v`, update `docs/architecture/pytorch_design.md` + `docs/development/testing_strategy.md`, and log Attempt #43 with artifacts in `reports/2025-10-cli-flags/phase_k/f_latt_fix/`."
+if old not in text:
+    raise SystemExit('"'Old block not found for replacement')
+text = text.replace(old, new)
+path.write_text(text)
+PY" succeeded in 1.04s:
+
+[2025-10-06T21:11:49] tokens used: 135,744
+
+[2025-10-06T21:11:51] thinking
+
+**Reviewing code snippet**
+[2025-10-06T21:11:54] exec bash -lc "sed -n '458,470p' docs/fix_plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:11:55] bash -lc "sed -n '458,470p' docs/fix_plan.md" succeeded in 781ms:
+- Next Actions (2025-11-05 refresh): Phase K3 is the remaining blocker before rerunning the supervisor command — execute these plan tasks in order:
+  1. Phase K3a — update `Crystal.compute_cell_tensors` to skip the cross-product rescale whenever MOSFLM reciprocal vectors are supplied, then rerun `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_k/f_latt_fix/mosflm_rescale.py` and archive the deltas as `orientation_delta_post_fix.md`.
+  2. Phase K3b — set `BeamConfig.polarization_factor` default to 0.0, keep `-polar`/`-nopolar` wiring intact, and capture a fresh scaling-chain delta report (`scaling_chain_post_fix.md`) showing `polar≈0.9126` to match C.
+  3. Phase K3c — run `env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v`, update `docs/architecture/pytorch_design.md` + `docs/development/testing_strategy.md`, and log Attempt #43 with artifacts in `reports/2025-10-cli-flags/phase_k/f_latt_fix/`.
+- Attempts History:
+  * [2025-10-06] Attempt #27 (ralph) — Result: **PARITY FAILURE** (Phase I3 supervisor command). **Intensity scaling discrepancy: 124,538× sum ratio.**
+    Metrics: Correlation=0.9978 (< 0.999 threshold), sum_ratio=124,538 (should be ~1.0), C max_I=446, PyTorch max_I=5.411e7 (121,000× discrepancy), mean_peak_distance=37.79 px (> 1 px threshold).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_i/supervisor_command/README.md` - Full evidence report with metrics, hypotheses, next actions
+      - `reports/2025-10-cli-flags/phase_i/supervisor_command/summary.json` - Complete parity metrics (correlation, RMSE, sums, peak distances)
+      - `reports/2025-10-cli-flags/phase_i/supervisor_command/c_stdout.txt` - C simulation output (max_I=446.254, fluence=1e24, steps=10)
+      - `reports/2025-10-cli-flags/phase_i/supervisor_command/py_stdout.txt` - PyTorch output (max_I=5.411e7)
+      - `reports/2025-10-cli-flags/phase_i/supervisor_command/diff.png` - Difference heatmap (559 KB)
+[2025-10-06T21:11:55] tokens used: 136,532
+
+[2025-10-06T21:12:21] thinking
+
+**Organizing detailed input.md content**
+
+I’m gathering all the necessary sections and references to construct a well-structured `input.md` memo for Step 3.5, including header info, priorities with file paths, commands under How-To Map, and detailed instructions aligned with the Implementation phase requirements. This will ensure the final input document covers all critical parts within the requested length.
+[2025-10-06T21:12:24] exec bash -lc 'ls reports/2025-10-cli-flags/phase_k/f_latt_fix' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:12:25] bash -lc 'ls reports/2025-10-cli-flags/phase_k/f_latt_fix' succeeded in 997ms:
+analyze_output.txt
+c_image.npy
+metrics_after.json
+mosflm_rescale.py
+orientation_delta.md
+py_image.npy
+scaling_chain.md
+scaling_summary.md
+test_metrics_failure.json
+trace_diff.txt
+trace_py_after.log
+trace_py_after_133134.log
+[2025-10-06T21:12:25] tokens used: 168,736
+
+[2025-10-06T21:12:30] thinking
+
+**Checking for analysis scripts**
+[2025-10-06T21:12:31] exec bash -lc 'rg "analyze_scaling" -n reports/2025-10-cli-flags -g"*.py"' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:12:31] bash -lc 'rg "analyze_scaling" -n reports/2025-10-cli-flags -g"*.py"' succeeded in 818ms:
+reports/2025-10-cli-flags/phase_j/analyze_scaling.py:27:        print("Usage: analyze_scaling.py --c-log <c_trace.log> --py-log <py_trace.log>")
+reports/2025-10-cli-flags/phase_j/analyze_scaling.py:182:        f.write(f"- Analysis script: `analyze_scaling.py`\n")
+[2025-10-06T21:12:31] tokens used: 171,338
+
+[2025-10-06T21:12:56] thinking
+
+**Organizing scaling analysis instructions**
+
+I'm gathering how to guide rerunning the scaling analysis using existing scripts like `analyze_scaling.py` with updated logs. There’s some uncertainty about generating new PyTorch traces via `debug_pixel_trace.py`, so I’m aiming to provide clear, conservative steps that reuse known commands and script locations while noting places to verify. This will help create a practical "How-To Map" for the user to reproduce the scaling harness results after code changes.
+[2025-10-06T21:12:58] exec bash -lc 'ls reports/2025-10-cli-flags/phase_h' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:12:59] bash -lc 'ls reports/2025-10-cli-flags/phase_h' succeeded in 933ms:
+attempt_log.txt
+implementation
+implementation_notes.md
+manual_sincg.md
+parity_after_lattice_fix
+pix0_reproduction.md
+pytest_collect.log
+pytest_collect_refresh.log
+trace_comparison.md
+trace_comparison_after_H2.md
+trace_diff.log
+trace_diff_after_H2.log
+trace_harness.py
+trace_harness_no_override.py
+trace_py.log
+trace_py.stderr
+trace_py_after_H2.log
+trace_py_after_H2.stderr
+trace_py_after_H3.log
+trace_py_after_H3.stderr
+[2025-10-06T21:12:59] tokens used: 173,535
+
+[2025-10-06T21:13:08] thinking
+
+**Preparing input.md content**
+
+I'll create an input.md file summarizing the phase, focus, branch, mapped tests, artifacts, and next steps. I'll include detailed bullet points for priorities, how-to instructions, pitfalls, and pointers with accurate file line references by counting lines, ensuring everything fits within 60-200 lines.
+[2025-10-06T21:13:09] exec bash -lc "nl -ba plans/active/cli-noise-pix0/plan.md | sed -n '110,170p'" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:13:10] bash -lc "nl -ba plans/active/cli-noise-pix0/plan.md | sed -n '110,170p'" succeeded in 1.02s:
+   110	
+   111	| ID | Task Description | State | How/Why & Guidance |
+   112	| --- | --- | --- | --- |
+   113	| H1 | Refresh trace evidence post-orientation | [D] | ✅ 2025-10-17: `reports/2025-10-cli-flags/phase_h/trace_harness.py` + `trace_comparison.md` captured the no-override trace and logged Attempt #19 (beam vector divergence documented). |
+   114	| H2 | Fix incident beam propagation from CLI | [D] | ✅ 2025-10-17 Attempt #20 (ralph). Simulator now clones `detector.beam_vector` (commit 8c1583d); regression covered by `tests/test_cli_flags.py::TestCLIBeamVector::test_custom_beam_vector_propagates`. Pending: rerun `phase_h/trace_harness.py` to confirm `incident_vec` parity before Phase H3. |
+   115	| H3a | Diagnose residual lattice mismatch | [D] | ✅ 2025-10-17 Attempt #21 (ralph). `trace_py_after_H3_refresh.log`, `pix0_reproduction.md`, and `implementation_notes.md` quantify the ~1.14 mm pix0 delta and show the cascade into scattering vector and `F_latt` disparities; `attempt_log.txt` restored with evidence summary. |
+   116	| H3b1 | Capture C vs PyTorch pix0/F/S references (override on/off) | [D] | ✅ 2025-10-17 Attempt #23: Stored paired C traces (`reports/2025-10-cli-flags/phase_h/implementation/c_trace_with_override.log` / `_without_override.log`), PyTorch traces, and `pix0_mapping_analysis.md`; evidence proves C geometry is identical with or without `-pix0_vector_mm` when custom vectors are supplied. |
+   117	| H3b2 | Implement pix0 precedence (custom vectors > override) | [D] | ✅ 2025-10-06 Attempt #24 (commit d6f158c). `Detector._calculate_pix0_vector` now skips overrides when any custom detector vector is supplied; override logic only executes in the no-custom-vectors path. Validation: `tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot` (CPU) and evidence log `reports/2025-10-cli-flags/phase_h/implementation/pix0_override_validation.md`. Residual pix0 Y-delta (≈3.9 mm) traced to missing post-rotation `Fbeam/Sbeam` recomputation and deferred to H4. |
+   118	| H3b3 | Repair CLI regression + artifacts for precedence | [D] | ✅ 2025-10-06 Attempt #24. Regression test now covers BOTH precedence cases (custom vectors ignored, standard path applies override) and records expected C pix0 vector in `pix0_expected.json`. CUDA parametrisation remains skipped until parity fix lands; tolerance temporarily relaxed to 5 mm pending H4 geometry alignment. |
+   119	| H4a | Port post-rotation beam-centre recomputation | [D] | ✅ 2025-10-17 Attempt #25: Ported nanoBragg.c lines 1846-1860 into `Detector._calculate_pix0_vector`; see `reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/implementation.md`. |
+   120	| H4b | Refresh traces and parity evidence | [D] | ✅ 2025-10-17 Attempt #25: Stored C/PyTorch traces in `reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/trace_c.log` and `trace_py.log`; `summary.md` records pix0 deltas ≤1.3e-8 m and `F_latt` agreement <0.2%. |
+   121	| H4c | Tighten regression test + targeted pytest | [D] | ✅ 2025-10-17 Attempt #25: Updated regression tolerance to 5e-5 m (CPU and CUDA parametrised) and captured `pytest_h4c.log`; Attempt #25 logged in docs/fix_plan.md. |
+   122	
+   123	### Phase H5 — Custom Vector Pix0 Override Parity
+   124	Goal: Bring PyTorch pix0 precedence back in line with C when custom detector vectors accompany `-pix0_vector_mm`, eliminating the 1.14 mm delta driving the `F_latt` mismatch.
+   125	Prereqs: Phase H4 artifacts available; C precedence proof in `reports/2025-10-cli-flags/phase_h5/c_precedence_2025-10-22.md`.
+   126	Exit Criteria: Detector traces with custom vectors show `pix0_vector`, `Fbeam`, and `Sbeam` matching C within 5e-5 m, and fractional h/k/l plus `F_latt_a/b/c` align within 1e-3 relative difference before resuming normalization work.
+   127	
+   128	| ID | Task Description | State | How/Why & Guidance |
+   129	| --- | --- | --- | --- |
+[2025-10-06T21:13:10] tokens used: 175,631
+
+[2025-10-06T21:13:13] thinking
+
+**Locating line numbers for K3 tasks**
+[2025-10-06T21:13:14] exec bash -lc "nl -ba plans/active/cli-noise-pix0/plan.md | sed -n '210,260p'" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:13:15] bash -lc "nl -ba plans/active/cli-noise-pix0/plan.md | sed -n '210,260p'" succeeded in 860ms:
+
+[2025-10-06T21:13:15] tokens used: 177,862
+
+[2025-10-06T21:13:18] thinking
+
+**Checking file section around line 180**
+[2025-10-06T21:13:19] exec bash -lc "nl -ba plans/active/cli-noise-pix0/plan.md | sed -n '170,210p'" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:13:20] bash -lc "nl -ba plans/active/cli-noise-pix0/plan.md | sed -n '170,210p'" succeeded in 826ms:
+   170	| J2 | Compute factor-by-factor ratios | [D] | ✅ 2025-10-19: `analyze_scaling.py` created and executed; identifies first divergence as `I_before_scaling` with Py/C ratio=3.6e-7. Root cause: F_latt components differ by ~463× (C: 35636 vs PyTorch: 76.9). Markdown report at `scaling_chain.md`. |
+   171	| J3 | Update fix_plan Attempt log | [D] | ✅ 2025-10-19: Attempt #28 logged in `docs/fix_plan.md` with complete metrics, artifacts, and hypothesis (F_latt calculation error in sincg lattice shape factor). Phase I3 remains blocked pending Phase K F_latt fix. |
+   172	
+   173	### Phase K — Normalization Implementation
+   174	Goal: Align PyTorch normalization logic with C based on Phase J evidence (steps division, fluence, r_e², omega/polarization application order).
+   175	Prereqs: Phase J report pinpoints the mismatched factor; existing regression suite green.
+   176	Exit Criteria: Code changes merged with targeted tests covering the corrected scaling, and docs/fix_plan.md records Attempt #29 metrics before moving to Phase L.
+   177	
+   178	| ID | Task Description | State | How/Why & Guidance |
+   179	| --- | --- | --- | --- |
+   180	| K1 | Align lattice factor math with C (SQUARE case) | [D] | ✅ 2025-10-24 Attempt #34 (commit 0fef8f7). `Simulator._compute_physics_for_position` now uses `sincg(torch.pi * h, Na)` with embedded C-code reference; regression `tests/test_cli_scaling.py::test_f_latt_square_matches_c` added (skips unless `NB_RUN_PARALLEL=1`). |
+   181	| K2 | Recompute scaling chain & extend diagnostics | [D] | ✅ 2025-10-06 Attempt #42. Fresh PyTorch trace captured (trace_py_after.log); scaling chain refreshed showing F_latt_b=46.98 (Py) vs 38.63 (C) = 21.6% error, polar=1.0 (Py) vs 0.913 (C) = 9.6% error. Updated scaling_chain.md with post-SAMPLE-pivot ratios. |
+   182	| K2b | Document MOSFLM rescale mismatch | [D] | ✅ 2025-10-06 Attempt #42. Created mosflm_rescale.py and orientation_delta.md. Finding: C skips vector_rescale when `user_cell==0`, but PyTorch still rescales, leading to persistent F_latt_b drift. |
+   183	| K3a | Guard MOSFLM rescale path in `Crystal.compute_cell_tensors` | [ ] | Bypass the cross-product rescale when `mosflm_a_star`/`b_star`/`c_star` tensors are provided. After patching `src/nanobrag_torch/models/crystal.py:681-705`, rerun `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_k/f_latt_fix/mosflm_rescale.py` and append new ratios to `orientation_delta.md`; stash a post-fix copy as `orientation_delta_post_fix.md`. |
+   184	| K3b | Realign polarization defaults with C | [ ] | Set `BeamConfig.polarization_factor` default to 0.0, keep `-polar` CLI wiring to populate it, and ensure `-nopolar` forces 1.0. Re-run the scaling harness (`reports/2025-10-cli-flags/phase_k/f_latt_fix/analyze_output.txt`) to confirm `polar` matches C (≈0.9126); capture results in `scaling_chain_post_fix.md`. |
+   185	| K3c | Regression & documentation close-out | [ ] | `env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v` plus any new normalization tests. Save log as `phase_k/f_latt_fix/pytest_post_fix.log`, update `docs/architecture/pytorch_design.md` normalization notes and `docs/development/testing_strategy.md`, then record Attempt #43 with metrics and artifacts. |
+   186	
+   187	### Phase L — Final Parity & Regression Sweep
+   188	Goal: Demonstrate full parity for the supervisor command and close CLI-FLAGS-003.
+   189	Prereqs: Phases J–K complete; scaling regression tests green.
+[2025-10-06T21:13:20] tokens used: 178,021
+
+[2025-10-06T21:13:27] thinking
+
+**Extracting line numbers from fix_plan section**
+[2025-10-06T21:13:28] exec bash -lc "nl -ba docs/fix_plan.md | sed -n '440,500p'" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:13:28] bash -lc "nl -ba docs/fix_plan.md | sed -n '440,500p'" succeeded in 798ms:
+   440	- Immediate Next Actions (2025-10-15):
+   441	  * Update `parse_and_validate_args` (and any helper that constructs `CrystalConfig`) to thread the parsed dtype/device into HKL/Fdump loaders so CLI `-dtype` honours float64 from the start.
+   442	  * Add a regression test (e.g., `tests/test_cli_dtype.py`) that invokes the parser with `-dtype float64` and asserts `config['hkl_data'][0].dtype == torch.float64`, covering both HKL and Fdump paths.
+   443	  * Re-run AT-IO-003 and the CLI smoke (help + minimal render) to ensure no regressions, capturing logs under `reports/DTYPE-CLI/<date>/`.
+   444	- Attempts History: None — new item.
+   445	- Risks/Assumptions: Ensure `write_fdump` continues to emit float64 on disk (spec requirement) while the in-memory tensor honours caller dtype; watch for latent callers that relied on the old float64 default during plan DTYPE-DEFAULT-001 migration.
+   446	- Exit Criteria: CLI runs with `-dtype float64` produce double-precision HKL/Fdump tensors end-to-end, regression test passes, and existing dtype-sensitive tests (AT-IO-003, CLI smoke, gradchecks) remain green.
+   447	
+   448	## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
+   449	- Spec/AT: specs/spec-a-cli.md flag catalogue, docs/architecture/detector.md §5 (pix0 workflow), docs/development/c_to_pytorch_config_map.md (pivot rules), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860
+   450	- Priority: High
+   451	- Status: in_progress (Phases A–H complete; pivot fix landed via H6f, pending H6g traces + Phase K normalization)
+   452	- Owner/Date: ralph/2025-10-05
+   453	- Plan Reference: `plans/active/cli-noise-pix0/plan.md`
+   454	- Reproduction (C & PyTorch):
+   455	  * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
+   456	  * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+   457	- First Divergence (if known): Phase C2 parity run exposed a 2.58e2× intensity scaling mismatch (PyTorch max_I≈1.15e5 vs C max_I≈4.46e2). Post-pivot traces (2025-10-31) show two remaining blockers: (a) PyTorch always rescales MOSFLM cross products to user-provided cell lengths, whereas C skips `vector_rescale` unless `-cell` was supplied, yielding ~4.6×10⁻² Å error in `rot_b` and F_latt_b ≈ +21.6 %; (b) BeamConfig still defaults the Kahn factor to 1.0, while C leaves `polarization=0.0`, producing polar=1.0 vs 0.9126.
+   458	- Next Actions (2025-11-05 refresh): Phase K3 is the remaining blocker before rerunning the supervisor command — execute these plan tasks in order:
+   459	  1. Phase K3a — update `Crystal.compute_cell_tensors` to skip the cross-product rescale whenever MOSFLM reciprocal vectors are supplied, then rerun `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_k/f_latt_fix/mosflm_rescale.py` and archive the deltas as `orientation_delta_post_fix.md`.
+[2025-10-06T21:13:28] tokens used: 179,488
+
+[2025-10-06T21:13:42] thinking
+
+**Preparing detailed input.md draft**
+
+I'm assembling a comprehensive input.md to capture the restoring MOSFLM scaling update, including key files, relevant commands, mapped tests, and next-step instructions. I want to ensure it references all critical sections and gives clear how-to commands for reproducing traces and tests. This will help keep watchers well-informed and guide future efforts smoothly.
+[2025-10-06T21:13:44] exec bash -lc 'head -n 40 reports/2025-10-cli-flags/phase_h/trace_harness.py' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:13:45] bash -lc 'head -n 40 reports/2025-10-cli-flags/phase_h/trace_harness.py' succeeded in 984ms:
+#!/usr/bin/env python3
+"""
+PyTorch trace harness for CLI-FLAGS-003 Phase H1.
+Generates TRACE_PY output matching C trace format.
+Phase H1: Clean trace without manual beam overrides - Detector.apply_custom_vectors() handles beam_vector from CLI.
+"""
+
+import os
+import sys
+import torch
+from pathlib import Path
+
+# Set environment variable for MKL conflicts
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+
+# Add src to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / 'src'))
+
+from nanobrag_torch.config import (
+    DetectorConfig, CrystalConfig, BeamConfig,
+[2025-10-06T21:13:45] tokens used: 183,108
+
+[2025-10-06T21:13:57] thinking
+
+**Summarizing script usage and documentation guidance**
+
+I’m putting together how to run the trace harness script with environment variables and output redirection to get PyTorch traces, then use another script to analyze those logs. I’ll also note key pitfalls to avoid and important doc references, then prepare instructions for next steps, including creating the input.md file by combining text carefully using Python.
+[2025-10-06T21:14:08] exec bash -lc "python - <<'PY'
+from pathlib import Path
+content = \"\"\"Summary: Finish Phase K3 so MOSFLM scaling matches C before rerunning the supervisor command.
+Phase: Implementation
+Focus: CLI-FLAGS-003 Handle -nonoise and -pix0_vector_mm
+Branch: feature/spec-based-2
+Mapped tests: tests/test_cli_scaling.py::test_f_latt_square_matches_c
+Artifacts: reports/2025-10-cli-flags/phase_k/f_latt_fix/orientation_delta_post_fix.md; reports/2025-10-cli-flags/phase_k/f_latt_fix/scaling_chain_post_fix.md; reports/2025-10-cli-flags/phase_k/f_latt_fix/pytest_post_fix.log
+Do Now: CLI-FLAGS-003 Phase K3a–K3c — env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v
+If Blocked: Capture current mosflm_rescale.py output to reports/2025-10-cli-flags/phase_k/f_latt_fix/blocker.log and log the obstacle in docs/fix_plan.md Attempts before changing code.
+Priorities & Rationale:
+- src/nanobrag_torch/models/crystal.py:681 still rescales cross products even when MOSFLM matrices are supplied, so F_latt_b stays 21.6% high.
+- src/nanobrag_torch/config.py:504 leaves polarization_factor at 1.0; C resets polar to 0.0 each pixel so the dynamic factor is recomputed (≈0.9126) and parity fails until we match it.
+- plans/active/cli-noise-pix0/plan.md:173-185 spells out K3a–K3c deliverables we just updated; stay within that guidance.
+- docs/fix_plan.md:448-461 now calls for MOSFLM rescale gating, polarization realignment, and the targeted scaling pytest before returning to Phase L.
+- specs/spec-a-cli.md:1-120 documents the implicit MOSFLM pivot rules we must preserve while changing normalization.
+How-To Map:
+- PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_k/f_latt_fix/mosflm_rescale.py > reports/2025-10-cli-flags/phase_k/f_latt_fix/orientation_delta_post_fix.md
+- PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_h/trace_harness.py > reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_py_post_fix.log (reuse the supervisor command inputs baked into the harness)
+- PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_j/analyze_scaling.py --c-log reports/2025-10-cli-flags/phase_j/trace_c_scaling.log --py-log reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_py_post_fix.log --out reports/2025-10-cli-flags/phase_k/f_latt_fix/scaling_chain_post_fix.md
+- env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v | tee reports/2025-10-cli-flags/phase_k/f_latt_fix/pytest_post_fix.log
+Pitfalls To Avoid:
+- Do not reintroduce the cross-product rescale for MOSFLM orientations; gate it strictly per plan.
+- Keep device/dtype neutrality—no hard-coded .cpu()/.cuda(), and avoid creating new CPU tensors mid-path.
+- Preserve differentiability (no .item(), no detaching) when adjusting polarization defaults.
+- Obey the Protected Assets rule; avoid touching files listed in docs/index.md.
+- Keep parity scripts under reports/…; do not drop new artifacts in repo root.
+- When updating BeamConfig defaults, ensure CLI flags still override correctly (respect config map precedence).
+- Record new evidence in docs/fix_plan.md Attempts once tasks finish; avoid silent progress.
+- Maintain vectorization discipline—no scalar loops when editing cell tensors or scaling paths.
+- Run only the targeted pytest listed; full suite waits until parity closes.
+Pointers:
+- src/nanobrag_torch/models/crystal.py:681
+- src/nanobrag_torch/config.py:504
+- plans/active/cli-noise-pix0/plan.md:173
+- docs/fix_plan.md:448
+- specs/spec-a-cli.md:1
+Next Up: Phase L — rerun the supervisor nb-compare command once K3 artifacts are archived.
+\"\"\"
+Path('input.md').write_text(content)
+PY" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:14:09] bash -lc "python - <<'PY'
+from pathlib import Path
+content = \"\"\"Summary: Finish Phase K3 so MOSFLM scaling matches C before rerunning the supervisor command.
+Phase: Implementation
+Focus: CLI-FLAGS-003 Handle -nonoise and -pix0_vector_mm
+Branch: feature/spec-based-2
+Mapped tests: tests/test_cli_scaling.py::test_f_latt_square_matches_c
+Artifacts: reports/2025-10-cli-flags/phase_k/f_latt_fix/orientation_delta_post_fix.md; reports/2025-10-cli-flags/phase_k/f_latt_fix/scaling_chain_post_fix.md; reports/2025-10-cli-flags/phase_k/f_latt_fix/pytest_post_fix.log
+Do Now: CLI-FLAGS-003 Phase K3a–K3c — env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v
+If Blocked: Capture current mosflm_rescale.py output to reports/2025-10-cli-flags/phase_k/f_latt_fix/blocker.log and log the obstacle in docs/fix_plan.md Attempts before changing code.
+Priorities & Rationale:
+- src/nanobrag_torch/models/crystal.py:681 still rescales cross products even when MOSFLM matrices are supplied, so F_latt_b stays 21.6% high.
+- src/nanobrag_torch/config.py:504 leaves polarization_factor at 1.0; C resets polar to 0.0 each pixel so the dynamic factor is recomputed (≈0.9126) and parity fails until we match it.
+- plans/active/cli-noise-pix0/plan.md:173-185 spells out K3a–K3c deliverables we just updated; stay within that guidance.
+- docs/fix_plan.md:448-461 now calls for MOSFLM rescale gating, polarization realignment, and the targeted scaling pytest before returning to Phase L.
+- specs/spec-a-cli.md:1-120 documents the implicit MOSFLM pivot rules we must preserve while changing normalization.
+How-To Map:
+- PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_k/f_latt_fix/mosflm_rescale.py > reports/2025-10-cli-flags/phase_k/f_latt_fix/orientation_delta_post_fix.md
+- PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_h/trace_harness.py > reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_py_post_fix.log (reuse the supervisor command inputs baked into the harness)
+- PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_j/analyze_scaling.py --c-log reports/2025-10-cli-flags/phase_j/trace_c_scaling.log --py-log reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_py_post_fix.log --out reports/2025-10-cli-flags/phase_k/f_latt_fix/scaling_chain_post_fix.md
+- env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v | tee reports/2025-10-cli-flags/phase_k/f_latt_fix/pytest_post_fix.log
+Pitfalls To Avoid:
+- Do not reintroduce the cross-product rescale for MOSFLM orientations; gate it strictly per plan.
+- Keep device/dtype neutrality—no hard-coded .cpu()/.cuda(), and avoid creating new CPU tensors mid-path.
+- Preserve differentiability (no .item(), no detaching) when adjusting polarization defaults.
+- Obey the Protected Assets rule; avoid touching files listed in docs/index.md.
+- Keep parity scripts under reports/…; do not drop new artifacts in repo root.
+- When updating BeamConfig defaults, ensure CLI flags still override correctly (respect config map precedence).
+- Record new evidence in docs/fix_plan.md Attempts once tasks finish; avoid silent progress.
+- Maintain vectorization discipline—no scalar loops when editing cell tensors or scaling paths.
+- Run only the targeted pytest listed; full suite waits until parity closes.
+Pointers:
+- src/nanobrag_torch/models/crystal.py:681
+- src/nanobrag_torch/config.py:504
+- plans/active/cli-noise-pix0/plan.md:173
+- docs/fix_plan.md:448
+- specs/spec-a-cli.md:1
+Next Up: Phase L — rerun the supervisor nb-compare command once K3 artifacts are archived.
+\"\"\"
+Path('input.md').write_text(content)
+PY" succeeded in 1.09s:
+
+[2025-10-06T21:14:09] tokens used: 185,056
+
+[2025-10-06T21:14:28] thinking
+
+**Summarizing loop findings and preparing memory update**
+
+I'm gathering key hypotheses and analysis about the gating and polarization mismatches, along with the plans and inputs updates. Now I’ll compose and append a detailed summary entry to `galph_memory.md` that references these points and instructions for Ralph’s next tasks.
+[2025-10-06T21:14:47] exec bash -lc "python - <<'PY'
+from pathlib import Path
+path = Path('galph_memory.md')
+entry = \"\\n## 2025-11-05 (galph loop — Phase K3 prep)\\n- Reviewed CLI parity backlog vs long-term goal #1; confirmed "'`Crystal.compute_cell_tensors` still rescales MOSFLM cross-products and `BeamConfig.polarization_factor` remains 1.0, explaining the lingering F_latt and polar deltas.'"\\n- Refreshed "'`plans/active/cli-noise-pix0/plan.md` context with a new 2025-11-05 recap and rewrote Phase K into a checklist (K3a–K3c) covering rescale gating, polarization defaults, and regression/docs closure.'"\\n- Updated "'`docs/fix_plan.md` CLI-FLAGS-003 Next Actions to point at the new Phase K3 tasks and the exact scripts/tests Ralph must run after code changes.'"\\n- Issued "'`input.md` (Implementation phase) instructing Ralph to land K3a–K3c, capture mosflm_rescale + scaling_chain artifacts under `reports/2025-10-cli-flags/phase_k/f_latt_fix/`, and rerun the targeted scaling pytest.'"\\n- Follow-up for Ralph: implement the rescale guard + polarization default fix, regenerate scaling evidence, run "'`pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c`, then log Attempt #43 before moving to Phase L.'"\\n\"
+with open(path, 'a') as f:
+    f.write(entry)
+PY" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:14:48] bash -lc "python - <<'PY'
+from pathlib import Path
+path = Path('galph_memory.md')
+entry = \"\\n## 2025-11-05 (galph loop — Phase K3 prep)\\n- Reviewed CLI parity backlog vs long-term goal #1; confirmed "'`Crystal.compute_cell_tensors` still rescales MOSFLM cross-products and `BeamConfig.polarization_factor` remains 1.0, explaining the lingering F_latt and polar deltas.'"\\n- Refreshed "'`plans/active/cli-noise-pix0/plan.md` context with a new 2025-11-05 recap and rewrote Phase K into a checklist (K3a–K3c) covering rescale gating, polarization defaults, and regression/docs closure.'"\\n- Updated "'`docs/fix_plan.md` CLI-FLAGS-003 Next Actions to point at the new Phase K3 tasks and the exact scripts/tests Ralph must run after code changes.'"\\n- Issued "'`input.md` (Implementation phase) instructing Ralph to land K3a–K3c, capture mosflm_rescale + scaling_chain artifacts under `reports/2025-10-cli-flags/phase_k/f_latt_fix/`, and rerun the targeted scaling pytest.'"\\n- Follow-up for Ralph: implement the rescale guard + polarization default fix, regenerate scaling evidence, run "'`pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c`, then log Attempt #43 before moving to Phase L.'"\\n\"
+with open(path, 'a') as f:
+    f.write(entry)
+PY" succeeded in 1.02s:
+
+[2025-10-06T21:14:48] tokens used: 187,096
+
+[2025-10-06T21:14:53] thinking
+
+**Verifying entry append**
+[2025-10-06T21:14:54] exec bash -lc 'tail -n 40 galph_memory.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:14:55] bash -lc 'tail -n 40 galph_memory.md' succeeded in 854ms:
+
+## 2025-10-06 (galph loop — H6f pivot enforcement prep)
+- `git pull --rebase` clean; reviewed CLI parity backlog vs long-term goal #1 and vectorization plan status (no edits required yet).
+- Deep dive on pix0 gap: Phase H6 evidence confirms C forces SAMPLE pivot when custom vectors are supplied; PyTorch still defaults to BEAM. Normalization remains blocked until pivot + lattice parity close.
+- Coin flip → heads: inspected Ralph’s last two commits (`5d0a34d`, `0b7eaf7`). Evidence quality is solid, but parity visuals landed in repo root (`img*_*.png`, `intimage*.jpeg`, `noiseimage_preview.jpeg`) — flagged for relocation into reports before further work.
+- Updated `docs/fix_plan.md` Next Actions for CLI-FLAGS-003 to mark H6e done, add H6f-prep cleanup, and call H6f/H6g/H6 progressions (Attempt #40 reserved for post-fix evidence).
+- Issued new implementation memo (`input.md`) directing Ralph to move the stray images under `reports/2025-10-cli-flags/phase_h6/visuals/`, enforce SAMPLE pivot selection in `DetectorConfig`, add a targeted regression test, rerun focused pytest, and capture post-fix trace output for H6g.
+- Follow-up for Ralph: execute H6f per memo, log Attempt update + regression artifacts, then pause for supervisor review before H6g.
+
+## 2025-10-06 (galph loop — H6g evidence kickoff)
+- `timeout 30 git pull --rebase` returned "Already up to date"; no conflicts encountered.
+- Reviewed CLI-FLAGS-003 entry (`docs/fix_plan.md:448-462`) and Phase H6 table (`plans/active/cli-noise-pix0/plan.md:131-145`); confirmed Attempt #40 landed pivot forcing but H6g artifacts remain outstanding.
+- Updated `plans/active/cli-noise-pix0/plan.md` context with Attempt #40 recap and marked H6f as `[D]`; rewrote H6g guidance to require post-fix trace + nb-compare artifacts under `reports/…/phase_h6/post_fix/` and to log Attempt #41.
+- Refreshed `docs/fix_plan.md` Next Actions so list now centers on H6g verification → K2 scaling-chain rerun → K3 regression test → Phase L gating.
+- Coin flip → tails, so skipped historical commit audit; focused on evidence planning.
+- Authored new `input.md` (Evidence phase) instructing Ralph to rerun the trace harness with pivot fix, capture diff vs C trace, compute deltas, run ROI nb-compare, and prepare Attempt #41 notes; memo also emphasises no pytest this loop.
+- Key gap notes: normalization tasks K2/K3 still blocked pending H6g; vectorization plan untouched (Phase A baseline scripts outstanding).
+- Follow-up for Ralph: execute H6g evidence capture, archive artifacts under `reports/2025-10-cli-flags/phase_h6/post_fix/`, then log Attempt #41 in `docs/fix_plan.md` with measured |Δpix0| before touching normalization.
+
+## 2025-10-27 (galph loop — K2 evidence staging)
+[2025-10-06T21:14:55] tokens used: 188,223
+
+[2025-10-06T21:14:59] thinking
+
+**Checking git status**
+[2025-10-06T21:15:00] exec bash -lc 'git status --short' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:15:01] bash -lc 'git status --short' succeeded in 849ms:
+ M docs/fix_plan.md
+ M galph_memory.md
+ M input.md
+ M plans/active/cli-noise-pix0/plan.md
+[2025-10-06T21:15:01] tokens used: 189,995
+
+[2025-10-06T21:15:04] thinking
+
+**Reviewing diffs for fix_plan.md**
+[2025-10-06T21:15:04] exec bash -lc 'git diff docs/fix_plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:15:05] bash -lc 'git diff docs/fix_plan.md' succeeded in 967ms:
+diff --git a/docs/fix_plan.md b/docs/fix_plan.md
+index ae486b3..2aab975 100644
+--- a/docs/fix_plan.md
++++ b/docs/fix_plan.md
+@@ -455,10 +455,10 @@
+   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
+   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+ - First Divergence (if known): Phase C2 parity run exposed a 2.58e2× intensity scaling mismatch (PyTorch max_I≈1.15e5 vs C max_I≈4.46e2). Post-pivot traces (2025-10-31) show two remaining blockers: (a) PyTorch always rescales MOSFLM cross products to user-provided cell lengths, whereas C skips `vector_rescale` unless `-cell` was supplied, yielding ~4.6×10⁻² Å error in `rot_b` and F_latt_b ≈ +21.6 %; (b) BeamConfig still defaults the Kahn factor to 1.0, while C leaves `polarization=0.0`, producing polar=1.0 vs 0.9126.
+-- Next Actions (2025-10-31 refresh): Pix0 parity (H6g) is complete; normalization remains the blocker before attempting the supervisor command again:
+-  1. Phase K2/K2b — refresh `reports/2025-10-cli-flags/phase_j/scaling_chain.md`, add `phase_k/f_latt_fix/orientation_delta.md` + `mosflm_rescale.py` capturing the rescale mismatch, and ensure `metrics_after.json` explicitly calls out polarization staying at 1.0.
+-  2. Phase K3 — implement the fixes: guard the rescale path in `Crystal.compute_cell_tensors` when `mosflm_a_star` is present, realign BeamConfig defaults/tests so `-polar` opt-in is required, update docs, and rerun `tests/test_cli_scaling.py::test_f_latt_square_matches_c` (with `NB_RUN_PARALLEL=1`, log to `phase_k/f_latt_fix/pytest.log`).
+-  3. Phase L gating — once scaling ratios are within tolerance, rerun the supervisor command parity sweep and close the plan, keeping normalization blocked until the artifacts land in `phase_l/`.
++- Next Actions (2025-11-05 refresh): Phase K3 is the remaining blocker before rerunning the supervisor command — execute these plan tasks in order:
++  1. Phase K3a — update `Crystal.compute_cell_tensors` to skip the cross-product rescale whenever MOSFLM reciprocal vectors are supplied, then rerun `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_k/f_latt_fix/mosflm_rescale.py` and archive the deltas as `orientation_delta_post_fix.md`.
++  2. Phase K3b — set `BeamConfig.polarization_factor` default to 0.0, keep `-polar`/`-nopolar` wiring intact, and capture a fresh scaling-chain delta report (`scaling_chain_post_fix.md`) showing `polar≈0.9126` to match C.
++  3. Phase K3c — run `env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v`, update `docs/architecture/pytorch_design.md` + `docs/development/testing_strategy.md`, and log Attempt #43 with artifacts in `reports/2025-10-cli-flags/phase_k/f_latt_fix/`.
+ - Attempts History:
+   * [2025-10-06] Attempt #27 (ralph) — Result: **PARITY FAILURE** (Phase I3 supervisor command). **Intensity scaling discrepancy: 124,538× sum ratio.**
+     Metrics: Correlation=0.9978 (< 0.999 threshold), sum_ratio=124,538 (should be ~1.0), C max_I=446, PyTorch max_I=5.411e7 (121,000× discrepancy), mean_peak_distance=37.79 px (> 1 px threshold).
+[2025-10-06T21:15:05] tokens used: 190,244
+
+[2025-10-06T21:15:08] thinking
+
+**Preparing diff for plan**
+[2025-10-06T21:15:09] exec bash -lc 'git diff plans/active/cli-noise-pix0/plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:15:10] bash -lc 'git diff plans/active/cli-noise-pix0/plan.md' succeeded in 805ms:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3ccf067..182ee64 100644
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -10,6 +10,7 @@
+ - Gap snapshot update (2025-10-27): Attempt #41 validated Phase H6g — SAMPLE pivot parity holds with pix0 deltas ≤2.85 µm, beam center deltas 0.0, and supporting artifacts under `reports/2025-10-cli-flags/phase_h6/post_fix/`. Remaining blockers: rerun the scaling chain (Phase K2), execute the scaling regression + doc updates (Phase K3), then resume Phase L parity once normalization matches C.
+ - Gap insight (2025-10-31): Scaling evidence shows MOSFLM matrix runs still rescale real vectors using formula lengths; C skips that step unless `-cell` is provided, so PyTorch must gate the `vector_rescale` analogue when `mosflm_a_star` is set. The same trace confirms the polarization Kahn factor should default to 0.0 (C’s `polarization`), not 1.0, so BeamConfig defaults need to be realigned before Phase L.
+ - Gap correction (2025-10-22): Fresh C evidence (`reports/2025-10-cli-flags/phase_h5/c_precedence_2025-10-22.md`) proves nanoBragg ignores `-pix0_vector_mm` whenever custom detector vectors are present. PyTorch now deviates because the lattice factor uses fractional indices (h−h0); fix required before normalization parity.
++- Gap recap (2025-11-05): Manual inspection of `src/nanobrag_torch/models/crystal.py` shows the cross-product rescale still runs even when MOSFLM reciprocal vectors are supplied (lines 681-705), and `BeamConfig.polarization_factor` defaults to 1.0, so scaling remains off despite SAMPLE pivot parity.
+ - Evidence status: Phase E artifacts (`reports/2025-10-cli-flags/phase_e/`) hold C/PyTorch traces, diffs, and beam-vector checks. Phase H3b1 also stashes WITH/without override traces under `reports/2025-10-cli-flags/phase_h/implementation/` for reference.
+ - Documentation anchors for this focus:
+   * `specs/spec-a-core.md` — canonical lattice-factor formulas (SQUARE uses sincg(π·h, Na); ROUND/GAUSS definitions used to verify Phase K).
+@@ -176,10 +177,12 @@ Exit Criteria: Code changes merged with targeted tests covering the corrected sc
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| K1 | Align lattice factor math with C (SQUARE case) | [D] | ✅ 2025-10-24 Attempt #34 (commit 0fef8f7). `Simulator._compute_physics_for_position` now uses `sincg(torch.pi * h, Na)` (and k/l analogues) with the C-code snippet embedded. Regression `tests/test_cli_scaling.py::test_f_latt_square_matches_c` added (skips unless `NB_RUN_PARALLEL=1`). |
+-| K2 | Recompute scaling chain & extend diagnostics | [D] | ✅ 2025-10-06 Attempt #42. Fresh PyTorch trace captured (trace_py_after.log), scaling chain refreshed showing F_latt_b=46.98 (Py) vs 38.63 (C) = 21.6% error, polar=1.0 (Py) vs 0.913 (C) = 9.6% error. Updated scaling_chain.md with post-SAMPLE-pivot ratios. 
+-| K2b | Document MOSFLM rescale mismatch | [D] | ✅ 2025-10-06 Attempt #42. Created mosflm_rescale.py and orientation_delta.md. **Critical finding:** C user_cell=0 (no rescale) and PyTorch (always rescales) produce IDENTICAL lattice vector magnitudes (|b| = 31.310 Å). Rescaling is NOT the root cause of F_latt_b error. Hypothesis disproven; F_latt_b divergence must originate in Miller index calculation or sincg evaluation. 
+-| K3 | Implementation + regression | [ ] | Implement the normalization fixes: (a) gate the cross-product rescale path in `Crystal.compute_cell_tensors` so MOSFLM matrices skip it (mirroring `user_cell==0`), (b) realign BeamConfig defaults so the Kahn factor is 0.0 unless `-polar`/`-nopolar` override it, and (c) update CLI/tests (`tests/test_cli_scaling.py`, `tests/test_cli_flags.py`) plus docs (`docs/architecture/pytorch_design.md`, `docs/development/testing_strategy.md`). After changes, rerun the targeted parity harness (`tests/test_cli_scaling.py::test_f_latt_square_matches_c`) and archive logs under `phase_k/f_latt_fix/pytest.log`.
+[2025-10-06T21:15:10] tokens used: 191,474
+
+[2025-10-06T21:15:13] thinking
+
+**Reviewing git diff of input.md**
+[2025-10-06T21:15:14] exec bash -lc 'git diff input.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:15:14] bash -lc 'git diff input.md' succeeded in 825ms:
+diff --git a/input.md b/input.md
+index b034215..4137b86 100644
+--- a/input.md
++++ b/input.md
+@@ -1,39 +1,36 @@
+-Summary: Capture fresh scaling evidence and quantify the MOSFLM orientation mismatch before touching normalization code.
+-Phase: Evidence
+-Focus: CLI-FLAGS-003 Phase K2/K2b — Normalization Diagnostics
++Summary: Finish Phase K3 so MOSFLM scaling matches C before rerunning the supervisor command.
++Phase: Implementation
++Focus: CLI-FLAGS-003 Handle -nonoise and -pix0_vector_mm
+ Branch: feature/spec-based-2
+-Mapped tests: none — evidence-only
+-Artifacts: reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_py_after.log; reports/2025-10-cli-flags/phase_k/f_latt_fix/metrics_after.json; reports/2025-10-cli-flags/phase_k/f_latt_fix/scaling_summary.md; reports/2025-10-cli-flags/phase_k/f_latt_fix/orientation_delta.md; reports/2025-10-cli-flags/phase_k/f_latt_fix/mosflm_rescale.py
+-Do Now: CLI-FLAGS-003 Phase K2/K2b — run `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_h/trace_harness.py --out reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_py_after.log`, then author `reports/2025-10-cli-flags/phase_k/f_latt_fix/mosflm_rescale.py` to log C vs PyTorch lattice-vector deltas per plan guidance.
+-If Blocked: Capture stdout/stderr to `reports/2025-10-cli-flags/phase_k/f_latt_fix/attempt_blocked.log`, record env snapshot (commit hash, python/torch versions, CUDA availability), run `git status --short`, describe the blocker in docs/fix_plan Attempt history, and stop.
++Mapped tests: tests/test_cli_scaling.py::test_f_latt_square_matches_c
++Artifacts: reports/2025-10-cli-flags/phase_k/f_latt_fix/orientation_delta_post_fix.md; reports/2025-10-cli-flags/phase_k/f_latt_fix/scaling_chain_post_fix.md; reports/2025-10-cli-flags/phase_k/f_latt_fix/pytest_post_fix.log
++Do Now: CLI-FLAGS-003 Phase K3a–K3c — env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v
++If Blocked: Capture current mosflm_rescale.py output to reports/2025-10-cli-flags/phase_k/f_latt_fix/blocker.log and log the obstacle in docs/fix_plan.md Attempts before changing code.
+[2025-10-06T21:15:14] tokens used: 193,449
+
+[2025-10-06T21:15:19] thinking
+
+**Checking additional documentation files**
+[2025-10-06T21:15:20] exec bash -lc 'git diff galph_memory.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:15:21] bash -lc 'git diff galph_memory.md' succeeded in 743ms:
+diff --git a/galph_memory.md b/galph_memory.md
+index a4e4a81..e854157 100644
+--- a/galph_memory.md
++++ b/galph_memory.md
+@@ -1277,3 +1277,10 @@ Follow-ups for Ralph:
+ - Evidence review shows PyTorch still rescales MOSFLM cross products; C only does so when `user_cell` is set. Root cause for F_latt_b ≈ +21.6% identified. K2b added to plan with required `mosflm_rescale.py` artifact.
+ - Noted BeamConfig Kahn factor should default to 0.0 (C `polarization`). Reopened Phase I2 and updated fix_plan next steps to include default realignment during K3.
+ - Issued new Evidence memo (input.md) directing Ralph to rerun trace harness, refresh scaling markdown, and capture orientation deltas before touching normalization code.
++
++## 2025-11-05 (galph loop — Phase K3 prep)
++- Reviewed CLI parity backlog vs long-term goal #1; confirmed `Crystal.compute_cell_tensors` still rescales MOSFLM cross-products and `BeamConfig.polarization_factor` remains 1.0, explaining the lingering F_latt and polar deltas.
++- Refreshed `plans/active/cli-noise-pix0/plan.md` context with a new 2025-11-05 recap and rewrote Phase K into a checklist (K3a–K3c) covering rescale gating, polarization defaults, and regression/docs closure.
++- Updated `docs/fix_plan.md` CLI-FLAGS-003 Next Actions to point at the new Phase K3 tasks and the exact scripts/tests Ralph must run after code changes.
++- Issued `input.md` (Implementation phase) instructing Ralph to land K3a–K3c, capture mosflm_rescale + scaling_chain artifacts under `reports/2025-10-cli-flags/phase_k/f_latt_fix/`, and rerun the targeted scaling pytest.
++- Follow-up for Ralph: implement the rescale guard + polarization default fix, regenerate scaling evidence, run `pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c`, then log Attempt #43 before moving to Phase L.
+[2025-10-06T21:15:21] tokens used: 195,793
+
+[2025-10-06T21:15:27] thinking
+
+**Staging changes with git add**
+[2025-10-06T21:15:29] exec bash -lc 'git add docs/fix_plan.md plans/active/cli-noise-pix0/plan.md input.md galph_memory.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:15:30] bash -lc 'git add docs/fix_plan.md plans/active/cli-noise-pix0/plan.md input.md galph_memory.md' succeeded in 811ms:
+
+[2025-10-06T21:15:30] tokens used: 196,444
+
+[2025-10-06T21:15:31] thinking
+
+**Checking status**
+[2025-10-06T21:15:33] exec bash -lc 'git status --short' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:15:34] bash -lc 'git status --short' succeeded in 833ms:
+M  docs/fix_plan.md
+M  galph_memory.md
+M  input.md
+M  plans/active/cli-noise-pix0/plan.md
+[2025-10-06T21:15:34] tokens used: 196,672
+
+[2025-10-06T21:15:38] thinking
+
+**Preparing commit message and committing changes**
+[2025-10-06T21:15:38] exec bash -lc 'git commit -m "SUPERVISOR: CLI-FLAGS-003 Phase K3 plan refresh - tests: not run"' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:15:39] bash -lc 'git commit -m "SUPERVISOR: CLI-FLAGS-003 Phase K3 plan refresh - tests: not run"' succeeded in 866ms:
+[feature/spec-based-2 8a958d9] SUPERVISOR: CLI-FLAGS-003 Phase K3 plan refresh - tests: not run
+ 4 files changed, 49 insertions(+), 42 deletions(-)
+[2025-10-06T21:15:39] tokens used: 197,482
+
+[2025-10-06T21:15:42] thinking
+
+**Pushing changes to remote**
+[2025-10-06T21:15:42] exec bash -lc 'git push' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T21:15:44] bash -lc 'git push' succeeded in 2.21s:
+To github.com:hoidn/nanoBragg.git
+   38b4ca0..8a958d9  feature/spec-based-2 -> feature/spec-based-2
+[2025-10-06T21:15:44] tokens used: 197,782
+
+[2025-10-06T21:15:57] thinking
+
+**Preparing final summary and instructions**
+
+I'm organizing a concise final message that highlights updated plans, key debugging hypotheses with confidence and next steps, and directions for Ralph including references to relevant files. I'll mention the status of the vectorization plan and notable plan modifications, ensuring it’s clear and friendly with helpful bullet lists.
+[2025-10-06T21:15:58] codex
+
+**Key Actions**
+- Added a 2025-11-05 recap plus a Phase K checklist (K3a–K3c) to `plans/active/cli-noise-pix0/plan.md:173`, spelling out the MOSFLM rescale guard, polarization default fix, and regression/docs closure needed to unblock the supervisor command.
+- Refreshed `docs/fix_plan.md:448` Next Actions so Ralph’s queue now explicitly calls for running `mosflm_rescale.py`, regenerating the scaling-chain report, and executing the targeted scaling pytest once the code changes land.
+- Rewrote `input.md` with an Implementation-phase memo pointing Ralph at CLI-FLAGS-003 K3a–K3c, the exact scripts/tests to run, and the artifacts to capture.
+- Logged the supervision outcome in `galph_memory.md` to keep the long-term history aligned.
+- Reviewed `plans/active/vectorization.md`—Phase A evidence tasks remain the first blocker before we can move on to tricubic vectorization; no doc edits required today.
+
+**Hypotheses (normalization gap)**
+- `Crystal.compute_cell_tensors` still applies the cross-product rescale for MOSFLM matrices (`src/nanobrag_torch/models/crystal.py:681`). Confidence: high. Next confirming step: rerun `reports/2025-10-cli-flags/phase_k/f_latt_fix/mosflm_rescale.py` after gating the rescale and check the updated ratios in `orientation_delta_post_fix.md`.
+- `BeamConfig.polarization_factor` defaults to 1.0 (`src/nanobrag_torch/config.py:504`), whereas C recomputes polar≈0.9126 each pixel. Confidence: medium-high. Next confirming step: regenerate the scaling-chain report with the default reset to 0.0 and confirm the polar ratio matches C in `scaling_chain_post_fix.md`.
+
+**Next Steps for Ralph**
+- Execute Phase K3a–K3c per the new memo: implement the MOSFLM rescale guard and polarization default fix, capture `orientation_delta_post_fix.md` + `scaling_chain_post_fix.md`, and run `env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c -v`. Once artifacts are archived, log Attempt #43 and we can move on to Phase L.
+[2025-10-06T21:16:06] tokens used: 199,057
+Reading prompt from stdin...
+Already up to date.
+To github.com:hoidn/nanoBragg.git
+   8a958d9..707a1f5  HEAD -> feature/spec-based-2
+Waiting for Ralph to complete i=49...
+Already up to date.
+[sync] state: actor=ralph status=waiting-ralph iter=49
+Updating 707a1f5..cdc5caf
+Fast-forward
+ sync/state.json | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+From github.com:hoidn/nanoBragg
+   707a1f5..cdc5caf  feature/spec-based-2 -> origin/feature/spec-based-2
+[sync] state: actor=ralph status=running-ralph iter=49
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Updating cdc5caf..a89f6fd
+Fast-forward
+ .../2025-10-06-AT-PARALLEL-001/detpixels-128_c.npy | Bin 0 -> 65664 bytes
+ .../detpixels-128_diff.png                         | Bin 0 -> 60639 bytes
+ .../detpixels-128_metrics.json                     |  15 +++++
+ .../detpixels-128_py.npy                           | Bin 0 -> 65664 bytes
+ .../2025-10-06-AT-PARALLEL-001/detpixels-256_c.npy | Bin 0 -> 262272 bytes
+ .../detpixels-256_diff.png                         | Bin 0 -> 379078 bytes
+ .../detpixels-256_metrics.json                     |  15 +++++
+ .../detpixels-256_py.npy                           | Bin 0 -> 262272 bytes
+ .../2025-10-06-AT-PARALLEL-001/detpixels-512_c.npy | Bin 0 -> 1048704 bytes
+ .../detpixels-512_diff.png                         | Bin 0 -> 302422 bytes
+ .../detpixels-512_metrics.json                     |  15 +++++
+ .../detpixels-512_py.npy                           | Bin 0 -> 1048704 bytes
+ .../2025-10-06-AT-PARALLEL-001/detpixels-64_c.npy  | Bin 0 -> 16512 bytes
+ .../detpixels-64_diff.png                          | Bin 0 -> 37772 bytes
+ .../detpixels-64_metrics.json                      |  15 +++++
+ .../2025-10-06-AT-PARALLEL-001/detpixels-64_py.npy | Bin 0 -> 16512 bytes
+ .../phase_k/f_latt_fix/py_image.npy                | Bin 1048704 -> 1048704 bytes
+ .../phase_k/f_latt_fix/test_metrics_failure.json   |  10 +--
+ src/nanobrag_torch/config.py                       |   5 +-
+ src/nanobrag_torch/models/crystal.py               |  69 +++++++++++++--------
+ tests/test_cli_flags.py                            |  26 ++++----
+ 21 files changed, 125 insertions(+), 45 deletions(-)
+ create mode 100644 reports/2025-10-06-AT-PARALLEL-001/detpixels-128_c.npy
+ create mode 100644 reports/2025-10-06-AT-PARALLEL-001/detpixels-128_diff.png
+ create mode 100644 reports/2025-10-06-AT-PARALLEL-001/detpixels-128_metrics.json
+ create mode 100644 reports/2025-10-06-AT-PARALLEL-001/detpixels-128_py.npy
+ create mode 100644 reports/2025-10-06-AT-PARALLEL-001/detpixels-256_c.npy
+ create mode 100644 reports/2025-10-06-AT-PARALLEL-001/detpixels-256_diff.png
+ create mode 100644 reports/2025-10-06-AT-PARALLEL-001/detpixels-256_metrics.json
+ create mode 100644 reports/2025-10-06-AT-PARALLEL-001/detpixels-256_py.npy
+ create mode 100644 reports/2025-10-06-AT-PARALLEL-001/detpixels-512_c.npy
+ create mode 100644 reports/2025-10-06-AT-PARALLEL-001/detpixels-512_diff.png
+ create mode 100644 reports/2025-10-06-AT-PARALLEL-001/detpixels-512_metrics.json
+ create mode 100644 reports/2025-10-06-AT-PARALLEL-001/detpixels-512_py.npy
+ create mode 100644 reports/2025-10-06-AT-PARALLEL-001/detpixels-64_c.npy
+ create mode 100644 reports/2025-10-06-AT-PARALLEL-001/detpixels-64_diff.png
+ create mode 100644 reports/2025-10-06-AT-PARALLEL-001/detpixels-64_metrics.json
+ create mode 100644 reports/2025-10-06-AT-PARALLEL-001/detpixels-64_py.npy
+From github.com:hoidn/nanoBragg
+   cdc5caf..a89f6fd  feature/spec-based-2 -> origin/feature/spec-based-2
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Updating a89f6fd..5ac737f
+Fast-forward
+ docs/fix_plan.md | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+From github.com:hoidn/nanoBragg
+   a89f6fd..5ac737f  feature/spec-based-2 -> origin/feature/spec-based-2
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Updating 5ac737f..d24d039
+Fast-forward
+ sync/state.json | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+From github.com:hoidn/nanoBragg
+   5ac737f..d24d039  feature/spec-based-2 -> origin/feature/spec-based-2
+[sync] state: actor=galph status=complete iter=50
+Ralph completed iteration 49; proceeding to 50

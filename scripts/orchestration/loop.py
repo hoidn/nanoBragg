@@ -55,6 +55,25 @@ def main() -> int:
     ap.add_argument("--prompt", type=str, choices=["main", "debug"], default=os.getenv("LOOP_PROMPT", "main"), help="Select which prompt to run (default: main)")
     ap.add_argument("--branch", type=str, default=os.getenv("ORCHESTRATION_BRANCH", ""))
     ap.add_argument("--logdir", type=Path, default=Path("logs"), help="Base directory for per-iteration logs (default: logs/)")
+    # Reports auto-commit (engineer evidence publishing)
+    ap.add_argument("--auto-commit-reports", dest="auto_commit_reports", action="store_true",
+                    help="Auto-stage+commit report artifacts by file extension after run (default: on)")
+    ap.add_argument("--no-auto-commit-reports", dest="auto_commit_reports", action="store_false",
+                    help="Disable auto commit of report artifacts")
+    ap.set_defaults(auto_commit_reports=True)
+    ap.add_argument("--report-extensions", type=str,
+                    default=os.getenv("REPORT_EXTENSIONS", ".png,.jpeg,.npy,.log,.txt,.md,.json"),
+                    help="Comma-separated list of allowed report file extensions (lowercase, with dots)")
+    ap.add_argument("--max-report-file-bytes", type=int, default=int(os.getenv("MAX_REPORT_FILE_BYTES", "5242880")),
+                    help="Maximum per-file size (bytes) eligible for reports auto-commit (default 5 MiB)")
+    ap.add_argument("--max-report-total-bytes", type=int, default=int(os.getenv("MAX_REPORT_TOTAL_BYTES", "20971520")),
+                    help="Maximum total size (bytes) staged per iteration for reports (default 20 MiB)")
+    ap.add_argument("--force-add-reports", dest="force_add_reports", action="store_true",
+                    help="Force-add report files even if ignored (.gitignore) (default: on)")
+    ap.add_argument("--no-force-add-reports", dest="force_add_reports", action="store_false",
+                    help="Do not force-add ignored report files")
+    ap.set_defaults(force_add_reports=True)
+
     args, unknown = ap.parse_known_args()
 
     log_path = _log_file("claudelog")
@@ -81,6 +100,84 @@ def main() -> int:
             else:
                 print(f"[sync] ERROR ({ctx}): git pull failed; see iter log.")
         return ok
+
+    def _list(cmd: list[str]) -> list[str]:
+        from subprocess import run, PIPE
+        cp = run(cmd, stdout=PIPE, stderr=PIPE, text=True)
+        if cp.returncode != 0:
+            return []
+        return [p for p in (cp.stdout or "").splitlines() if p.strip()]
+
+    def _loop_autocommit_reports(args_ns, logger) -> tuple[bool, list[str], list[str]]:
+        """
+        Attempt to auto-stage+commit report artifacts filtered by file extension and size caps.
+        Returns (committed: bool, staged_paths: list[str], skipped_paths: list[str]).
+        """
+        allowed_exts = {e.strip().lower() for e in args_ns.report_extensions.split(',') if e.strip()}
+        max_file = args_ns.max_report_file_bytes
+        max_total = args_ns.max_report_total_bytes
+
+        # Gather dirty paths (modified + staged + untracked)
+        unstaged_mod = _list(["git", "diff", "--name-only", "--diff-filter=M"])
+        staged_mod = _list(["git", "diff", "--cached", "--name-only", "--diff-filter=AM"])
+        untracked = _list(["git", "ls-files", "--others", "--exclude-standard"])
+        dirty_all = []
+        seen = set()
+        for p in unstaged_mod + staged_mod + untracked:
+            if p not in seen:
+                dirty_all.append(p)
+                seen.add(p)
+
+        staged: list[str] = []
+        skipped: list[str] = []
+        total_bytes = 0
+
+        # Staging logic with ignore check
+        from subprocess import run as prun, PIPE as PPIPE
+        for p in dirty_all:
+            ext = ("." + p.split(".", 1)[-1]).lower() if "." in p else ""
+            if ext not in allowed_exts:
+                skipped.append(p)
+                continue
+            try:
+                if not os.path.isfile(p):
+                    skipped.append(p)
+                    continue
+                size = os.path.getsize(p)
+                if size > max_file or (total_bytes + size) > max_total:
+                    skipped.append(p)
+                    continue
+            except FileNotFoundError:
+                skipped.append(p)
+                continue
+
+            # Check if ignored and force-add if requested
+            ignored = False
+            if args_ns.force_add_reports:
+                cp_chk = prun(["git", "check-ignore", "-q", p])
+                ignored = (cp_chk.returncode == 0)
+            if ignored and args_ns.force_add_reports:
+                cp_add = prun(["git", "add", "-f", p], stdout=PPIPE, stderr=PPIPE, text=True)
+                if cp_add.returncode != 0:
+                    skipped.append(p)
+                    continue
+            else:
+                cp_add = prun(["git", "add", p], stdout=PPIPE, stderr=PPIPE, text=True)
+                if cp_add.returncode != 0:
+                    skipped.append(p)
+                    continue
+            staged.append(p)
+            total_bytes += size
+
+        committed = False
+        if staged:
+            body = "\n\nFiles:\n" + "\n".join(f" - {x}" for x in staged)
+            committed = commit(f"RALPH AUTO: reports evidence — tests: not run{body}")
+            if committed:
+                logger(f"[reports] Auto-committed {len(staged)} files ({total_bytes} bytes)")
+            else:
+                logger("[reports] WARNING: git commit failed; staged files remain staged")
+        return committed, staged, skipped
 
     # Branch guard / resolution
     if args.branch:
@@ -155,6 +252,10 @@ def main() -> int:
             logp(f"ERROR: prompt file not found: {prompt_path}")
             return 2
         rc = tee_run([args.claude_cmd, "-p", "--dangerously-skip-permissions", "--verbose", "--output-format", "stream-json"], prompt_path, iter_log)
+
+        # Auto-commit reports evidence (before stamping) — constrained by extension and size caps
+        if args.auto_commit_reports:
+            _loop_autocommit_reports(args, logp)
 
         # Complete handoff (stamp-first, idempotent)
         sha = short_head()

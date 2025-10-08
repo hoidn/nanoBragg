@@ -1,0 +1,1866 @@
+Already up to date.
+Waiting for expected_actor=galph...
+Already up to date.
+[sync] state: actor=galph status=complete iter=18
+To github.com:hoidn/nanoBragg.git
+   8b59ea4..58b1412  HEAD -> feature/spec-based-2
+$ codex exec -m gpt-5-codex -c model_reasoning_effort=high --dangerously-bypass-approvals-and-sandbox
+[2025-10-06T04:35:54] OpenAI Codex v0.38.0 (research preview)
+--------
+workdir: /Users/ollie/Documents/nanoBragg3
+model: gpt-5-codex
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: high
+reasoning summaries: auto
+--------
+[2025-10-06T04:35:54] User instructions:
+<role>
+planning, review and analysis. do not make code changes.
+</role>
+<current long-term goals>
+in order of decreasing priority:
+<1>
+run a successful parallel test of pytorch nanobragg against nanobragg c with this command:
+
+nanoBragg  -mat A.mat -floatfile img.bin -hkl scaled.hkl  -nonoise  -nointerpolate -oversample 1  -exposure 1  -flux 1e18 -beamsize 1.0  -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080  -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866  -beam_vector 0.00051387949 0.0 -0.99999986  -Na 36  -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0
+
+this will require first adding support for the following cli params to pytorch nanobragg:
+-nonoise
+-pix0_vector_mm
+
+</1>
+<2>
+review and firm up if needed plans/active/vectorization.md. then implement it (or rather, delegate its implementation to ralph), starting with the tricubic interpolation vectorization 
+</2>
+</current long-term goals>
+</past long term goals>
+(just for archival / reference purposes):
+- error-correcting the engineer agent 
+- profiling pytorch nanobragg to find performance bottlenecks. analyzing to understand the CRITICAL slowness of the pytorch implementation compared to reference C, which persists after our recent improvement attempts
+- finding performance issues in the PyTorch reimplementation of nanobragg (originally a C code) and speeding it up. It should be efficiently vectorized and faster than C nanobragg, but currently it's slower 
+- ensuring that the pytorch implementation uses fp32 (not fp64) by default 
+- understanding why pytorch is slower than C in the warm condition at 4096x4096 resolution and fixing the underlying performance issue, if one is found. THIS IS A CRITICAL PERFORMANCE ISSUE.
+- once all the above are taken care of: building a user-facing showcase of autodiff-based parameter refinement, with plots / visuals
+
+</past long-term goals>
+<task>
+You are galph, a planner / supervisor agent. you are overseeing the work of an agent (ralph) that is running prompts/main.md in a loop, using docs/fix_plan.md as its instruction set and long term memory. 
+
+You will get invoked repeatedly. Use galph_memory.md to communicate with your future self. You'll plans under plans/, when needed, to help steer multi-turn efforts by the coder agent (ralph). Those plans will be cross referenced from docs/fix_plan.md so that ralph can find / read them. 
+
+At the start of every invocation:
+- Run `timeout 30 git pull --rebase` with a hard 30-second timeout  to sync with origin before reviewing context. If the command times out, immediately abort any partial rebase (`git rebase --abort`) and fall back to a normal merge via `git pull --no-rebase`. Whatever path you take, resolve resulting conflicts (docs/fix_plan.md is a frequent hotspot) and document key decisions in galph_memory.md. If the pull reports conflicts:
+  * Run `git status --short` to list conflicted files.
+  * Fix each file (remove conflict markers, keep the intended content) and stage it with `git add`.
+  * When the index is clean, resume with `timeout 30 git rebase --continue --no-edit`. IMPORTANT: NEVER RUN THIS COMMAND WITHOUT TIMEOUT
+- After resolving any conflicts, read the latest galph_memory.md entry (and any linked plan files) so you do not lose past context.
+- Prune or summarize older entries when they become stale or redundant.
+
+Before concluding each invocation:
+- Append a concise update to galph_memory.md capturing key findings, decisions, and open questions (reference file paths or plan names).
+- Note any follow-up actions you expect Ralph to take.
+- If no substantial update is needed, explicitly log that fact so future runs know context was reviewed.
+</task>
+
+<instructions>
+<0>
+READ the following files:
+- Index of project documentation: `./docs/index.md`
+- $SPECS: `./specs/spec-a.md`
+- $ARCH: `./arch.md` (ADR-backed implementation architecture; reconcile design with spec, surface conflicts)
+- docs/development/c_to_pytorch_config_map.md — C↔Py config parity and implicit rules
+-- docs/debugging/debugging.md — Parallel trace-driven debugging SOP
+- $PLAN: `./fix_plan.md` (living, prioritized to‑do; keep it up to date)
+- $TESTS: `./docs/development/testing_strategy.md` (testing philosophy, tiers, seeds/tolerances, commands)
+- Set `AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md` (or project‑specific path) and consult it for authoritative reference commands and test discovery.
+<0>
+<1>
+do a deep analysis of the codebase in light of the <current long term goals>. What are some current issues / gaps and possible approaches to resolving them? Review docs/fix_plan.md and plans/active/, as previous iterations of you may have already done some legwork.
+ 
+Phase Gate (Evidence): If the active plan phase is Evidence, Do Now SHALL be evidence‑only: run the authoritative reference reproduction commands and capture the required artifacts; at most run the project’s test discovery (no execution). Do not include runnable tests.
+
+Validation Preflight (tests): Before listing any test file/identifier in Do Now, validate that it resolves via the project’s documented test discovery; if validation fails, omit tests and note “(none — evidence‑only this loop)” and add a TODO in docs/fix_plan.md documenting the missing mapping.
+
+Human Summary (input.md header): Prepend a short summary block with the following lines (validated where applicable):
+- Summary: <one‑sentence goal for this loop>
+- Phase: <Evidence | Implementation | Validation>
+- Focus: <plan item ID/title from docs/fix_plan.md>
+- Branch: <expected branch>
+- Mapped tests: <validated list | none — evidence‑only>
+- Artifacts: <key paths to produce under reports/>
+
+Debugging Items — Hypothesis + Triage (initial pass):
+- Only when the selected item is a debugging or parity analysis task, formulate 1–3 plausible hypotheses for the observed gap/issue.
+- Triage each with checks appropriate to scope using existing artifacts or quick, documented reproductions; this triage may constitute the primary work for the iteration. Record outcomes succinctly in the evidence.
+- For the top hypothesis, state confidence and the single confirming step to run next. Deliver 1–3 ranked hypotheses with supporting evidence, artifact paths, and the next confirming step.
+</1>
+<2>
+flip a coin using python. if it comes up <heads>:
+review ralph's work over the last N (~10 but can be more or less - you decide) iterations. Check the commit history. Has the work been productive? Have there been regressions? Do we need to provide any feedback / course-correction?
+</heads>
+if it comes up <tails>: proceed to step <3>
+</2>
+<3>
+Given your findings in <1> and <2>, think about whether there's any need for a multi-turn planning effort -- i.e. ralph can't see the forest for the trees and may struggle with major refactorings and multi-turn implementation efforts unless they are coordinated by you. Is there a need for such planning *right now*? If such a plan is already spoken for (plans/active/ or wherever else past galph might have saved to), does that plan require updates or is it up to date / high quality and simply pending? IFF you determine the need for a new plan or modification of an existing one:
+<yes case>
+- based on which long term <goal> and sub-goal is that effort / plan? 
+- Which existing docs/fix_plan.md items does it relate to? 
+- think deeply. draft / redraft the plan and save it to a .md under plans/active/. Structure the write-up as a phased implementation document (see `plans/archive/general-detector-geometry/implementation.md` for tone/shape): begin with context + phase overviews, then outline each phase’s intent, prerequisites, and exit criteria. When a phase benefits from explicit tracking, embed a checklist table using the `ID | Task Description | State | How/Why & Guidance` format (with `[ ]`, `[P]`, `[D]` markers) inside that phase section.
+  • Include reproduction commands, owners (if known), and decision rules in the guidance column.
+  • Favor narrative flow first; layer checklists only where they clarify verification steps or deliverables.
+  • Mini-template to crib when drafting:
+    ```md
+    ## Context
+    - Initiative: <initiative>
+    - Phase Goal: <outcome>
+    - Dependencies: <docs/tests>
+
+    ### Phase A — <short title>
+    Goal: <what this phase proves or delivers>
+    Prereqs: <artifacts or measurements required before starting>
+    Exit Criteria: <verifiable completion signal>
+
+    | ID | Task Description | State | How/Why & Guidance |
+    | --- | --- | --- | --- |
+    | A1 | <Key diagnostic or implementation step> | [ ] | Run `<command>`; capture results under `reports/<date>/...`. |
+    | A2 | <Follow-up validation> | [ ] | Compare against `<artifact>`; stop if deviation > threshold. |
+    ```
+- When refreshing an existing plan, retrofit it to this phased format before adding or editing tasks.
+- review docs/fix_plan.md. edit if needed. cross reference the new plans .md so that ralph can find it.
+</yes case>
+</no case>
+- Since you decided there's no need for planning, you will instead focus on review / housekeeping. 
+- Once the above is done (or deemed unneeded): review and evaluate ralph's work. Scrutinize the commit history. Look at the diffs. 
+- Are the docs/fix_plan.md contents and priorities sane? if not, fix. things to consider:
+  - if docs/fix_plan.md is longer than 1000 lines it should be housecleaned. If it's disorganized and / or internally inconsistent, this should be addressed. If you decide to shorten docs/fix_plan.md, the least relevant portions should be moved to archive/fix_plan_archive.md (with summary + archive cross reference if appropriate)
+- Do we need a new docs/fix_plan item to put ralph back on course, fix one of his mistakes, or instruct him to do something that he overlooked? If so, draft it and add it to docs/fix_plans
+</no case>
+</3>
+<3.5>
+Render and write ./input.md (supervisor→engineer steering memo). Overwrite the entire file every invocation. Keep length ~100–200 lines. Include these sections in order:
+- Header: timestamp, current commit hash (short), author “galph”, and Active Focus summary.
+- Do Now: 1 line naming the exact docs/fix_plan.md item (ID and title) to execute this loop, plus the authoritative pytest command/env. If you intend to delegate the choice, write “Do Now: delegate” and provide decision guidance below.
+- If Blocked: fallback action (what to run/capture, how to record it in Attempts History).
+- Priorities & Rationale: 3–6 bullets with file pointers (specs/arch/tests/plan) justifying the Do Now.
+- How-To Map: exact commands (pytest, nb-compare), env vars, ROI/thresholds, and where to store artifacts.
+- Pitfalls To Avoid: 5–10 crisp do/don’t reminders (device/dtype neutrality, vectorization, Protected Assets, two‑message loop policy, no ad‑hoc scripts).
+- Pointers: file paths with line anchors to the most relevant spec/arch/testing_strategy/fix_plan entries for this loop.
+- Next Up (optional): 1–2 candidates Ralph may choose next loop if he finishes early (still one thing per loop).
+
+Rules:
+- Ralph must not edit input.md. You (galph) are the single writer.
+- If input.md’s Do Now conflicts with an existing in_progress selection in fix_plan.md, Ralph is allowed to switch; he must record the change in Attempts History.
+- Commit input.md each run as part of step <4> (commit only if the content changed).
+</3.5>
+<4>
+Before finishing the loop, enforce git hygiene:
+- Run `git status --short` to inspect new or modified files that appeared during this invocation.
+- Review diffs for each change; revert only if you created it this loop and it was accidental.
+- Stage intentional updates with `git add -A` and commit via `git commit -m "SUPERVISOR: <scope> - <tests or rationale>"`, noting any tests run (use `tests: not run` when you skip them).
+- After committing, run `git push` to share the updates. If the push is rejected, `timeout 30 git pull --rebase`, resolve conflicts (capture decisions—especially for docs/fix_plan.md—in galph_memory.md), then push again.
+- If you deliberately leave the tree dirty, document the rationale in galph_memory.md so the next invocation knows why.
+</4>
+</instructions>
+<notes>
+- ignore 'routing violations'. these are out of scope.
+- ignore AT parallel 012-related items for now
+</notes>
+Now carefully and exhaustively follow your <instructions>.
+
+
+[2025-10-06T04:35:57] thinking
+
+**Preparing for git pull with timeout**
+[2025-10-06T04:35:58] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && timeout 30 git pull --rebase' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:36:00] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && timeout 30 git pull --rebase' succeeded in 2.33s:
+Already up to date.
+[2025-10-06T04:36:00] tokens used: 12,581
+
+[2025-10-06T04:36:02] thinking
+
+**Preparing to read galph_memory files**
+[2025-10-06T04:36:03] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat galph_memory.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:36:04] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat galph_memory.md' succeeded in 709ms:
+## 2025-09-30 (loops 1-4 summary)
+- Established parity backlog: AT-020/021/022/024 failing; created first supervisor plan for AT-021 and enforced prompts/debug.md routing.
+- Diagnosed AT-024 random misset cap mismatch (π/2 vs 90 radians) and opened dedicated plan; insisted Ralph stop verification-only loops.
+- Flagged torch.compile warm-up overhead (per-instance compilation, inline tensor factories) and opened AT-012 rotation parity plan (Phases A–E).
+- Documented performance hotspots (`_compute_physics_for_position` guard tensors, `Crystal.compute_cell_tensors` clamps) and chronic dirty worktree artifacts blocking `git pull --rebase`.
+
+## 2025-09-30 (loops 5-10 summary)
+- Authored repo hygiene checklist (REPO-HYGIENE-002) to undo accidental `golden_suite_generator/nanoBragg.c` churn and purge stray reports.
+- Created PERF-PYTORCH-004 plan to hoist constants, introduce compile caching, and remove Dynamo graph breaks; reiterated need for prompts/debug.md while parity fails.
+- Repeatedly documented routing violations from Ralph and emphasized restoring Core Rule #13 metric duality after WIP commit 058986f swapped `V_actual` for formula volume.
+- Noted that `_compute_physics_for_position` still recompiles each Simulator and that benchmarks in `reports/benchmarks/20250930-004916/` show ≥200× slowdown vs C for small detectors.
+
+## 2025-09-30 (ralph debugging loop — AT-012 float32 regression)
+- **Context**: AT-PARALLEL-012 test_simple_cubic_correlation failing (43/50 peaks matched, need ≥95%) after DTYPE-DEFAULT-001 (commit 8c2ceb4) switched simulator to native float32.
+- **Investigation**:
+  * Reproduced: 43/50 peaks matched (86%), corr≈1.0 (perfect physics) ✅
+  * Parity matrix test: PASSES perfectly ✅ (live C↔Py comparison with current float32)
+  * **Root cause identified**: PyTorch float32 produces 7× more unique values (4901 vs C's 669) in hot pixels, fragmenting intensity plateaus. Peak detection algorithm (scipy.ndimage.maximum_filter) is sensitive to plateau structure.
+  * Parallel comparison: C float32 beam center (20×20 ROI) has 91 unique values; PyTorch has 331 (3.6× fragmentation). Max absolute diff tiny (0.0017).
+  * **First Divergence**: Numerical accumulation patterns differ (likely FMA, compiler opts, vectorized accumulation order, or torch.compile kernel fusion) → perfect correlation but incompatible plateau structure.
+[2025-10-06T04:36:04] tokens used: 12,923
+
+[2025-10-06T04:36:08] thinking
+
+**Planning to review key docs**
+[2025-10-06T04:36:09] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat docs/index.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:36:09] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat docs/index.md' succeeded in 682ms:
+# Project Documentation Index
+
+Welcome to the central index for all `nanoBragg-PyTorch` project documentation. This guide provides a map to the key technical specifications, development processes, and historical records that define the project.
+
+---
+
+## 🏛️ Permanent Documentation
+
+These are the core, living documents that guide the project.
+
+### Core Project Guides
+### PyTorch Guardrails
+* **[PyTorch Runtime Checklist](./development/pytorch_runtime_checklist.md)** – quick do/don’t list for vectorization and device placement. Always review before editing simulator code.
+* **[PyTorch Design](./architecture/pytorch_design.md#vectorization-strategy)** – detailed explanation of the required broadcast shapes and batched flows.
+* **[Testing Strategy §1.4](./development/testing_strategy.md#14-pytorch-device--dtype-discipline)** – required CPU/GPU smoke tests and compile checks.
+
+* **[CLAUDE.md](../CLAUDE.md)** - The primary instruction set for the AI agent.
+* **[README.md](../README.md)** - The main project entry point.
+* **[README_PYTORCH.md](../README_PYTORCH.md)** - Comprehensive user guide for the PyTorch implementation, including CLI usage, parallel comparison tools, and visualization.
+* **[PROJECT_STATUS.md](../PROJECT_STATUS.md)** - Tracks the current active development initiative.
+[2025-10-06T04:36:09] tokens used: 15,988
+
+[2025-10-06T04:36:12] thinking
+
+**Preparing to read spec-a.md file**
+[2025-10-06T04:36:12] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat specs/spec-a.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:36:13] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat specs/spec-a.md' succeeded in 675ms:
+# nanoBragg Spec A — Sharded Specification
+
+Spec A is now organized across multiple shards. Read them together for the full normative contract.
+
+- [spec-a-core.md](spec-a-core.md): Core physics, geometry, sampling, data, and associated acceptance tests.
+- [spec-a-cli.md](spec-a-cli.md): CLI surface area, precedence rules, and CLI-focused acceptance tests.
+- [spec-a-parallel.md](spec-a-parallel.md): Conformance profiles, parallel validation suites, and developer tooling requirements.
+
+Each shard cross-references the others; updates must keep them consistent.
+[2025-10-06T04:36:13] tokens used: 17,983
+
+[2025-10-06T04:36:16] thinking
+
+**Considering referenced spec shards**
+[2025-10-06T04:36:16] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat arch.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:36:17] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat arch.md' succeeded in 695ms:
+# nanoBragg PyTorch — Implementation Architecture
+
+Document version: 1.0 (aligned with specs/spec-a.md)
+Target spec: specs/spec-a.md (single-file normative spec)
+Implementation target: Python (>=3.11) + PyTorch (float32 default). Type blocks may use TypeScript-style for clarity; implement with Python dataclasses and torch tensors.
+
+## Running The CLI
+
+- Install (recommended):
+  - `pip install -e .` from repo root (provides `nanoBragg` console script).
+- Run (installed):
+  - `nanoBragg -hkl P1.hkl -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -floatfile out.bin`
+- Run (without install):
+  - `PYTHONPATH=src python -m nanobrag_torch -hkl P1.hkl -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -floatfile out.bin`
+- Minimal quick test (no HKL):
+  - `nanoBragg -default_F 1 -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -detpixels 128 -pgmfile test.pgm`
+
+Notes
+- Entry point: `src/nanobrag_torch/__main__.py` (module runner `python -m nanobrag_torch`).
+- Required inputs: provide `-hkl` (or existing `Fdump.bin`) or set `-default_F > 0`, and either `-mat` (MOSFLM A*) or `-cell`.
+[2025-10-06T04:36:17] tokens used: 19,309
+
+[2025-10-06T04:36:19] thinking
+
+**Locating configuration documentation**
+[2025-10-06T04:36:19] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat docs/development/c_to_pytorch_config_map.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:36:20] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat docs/development/c_to_pytorch_config_map.md' succeeded in 681ms:
+# C-CLI to PyTorch Configuration Map
+
+## Critical Importance Notice
+
+**This document is the authoritative source of truth for configuration parity between nanoBragg.c and the PyTorch implementation.**
+
+Before writing any test or implementation that involves C-code validation, you **MUST** consult this document. Failure to ensure 1:1 configuration parity is the most common source of bugs, particularly with:
+- Implicit pivot mode logic
+- Convention-dependent beam center calculations
+- Rotation axis defaults
+- Unit conversions
+
+## Quick Reference Table
+
+### Crystal Parameters
+
+| C-CLI Flag | PyTorch Config Field | C Variable | Units/Convention | Critical Notes |
+|------------|---------------------|------------|------------------|----------------|
+| `-cell a b c al be ga` | `CrystalConfig.cell_a/b/c/alpha/beta/gamma` | `a[0], b[0], c[0], alpha, beta, gamma` | Å and degrees → radians | Must convert degrees to radians internally |
+| `-N <val>` | `CrystalConfig.N_cells` | `Na, Nb, Nc` | Number of unit cells | Sets all three axes to same value |
+[2025-10-06T04:36:20] tokens used: 22,005
+
+[2025-10-06T04:36:21] thinking
+
+**Opening debugging documentation**
+[2025-10-06T04:36:23] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat docs/debugging/debugging.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:36:23] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat docs/debugging/debugging.md' succeeded in 721ms:
+# nanoBragg PyTorch Debugging Guidelines
+
+**Version:** 1.1  
+**Date:** 2024-07-25  
+**Owner:** PyTorch Development Team
+
+## Overview
+
+This document outlines the debugging methodology and tools for the nanoBragg PyTorch implementation. The debugging approach is built around a parallel trace comparison between the C code and the PyTorch implementation to ensure correctness and facilitate rapid issue resolution.
+
+## Core Debugging Philosophy
+
+### Parallel Trace Comparison Rule
+
+**CRITICAL:** All debugging of physics discrepancies MUST begin with a parallel trace comparison. This involves:
+1. Generating a detailed, step-by-step log of intermediate variables from the original C code for a specific pixel (the "Golden Trace").
+2. Generating an identical log from the PyTorch implementation using `scripts/debug_pixel_trace.py`.
+3. Comparing these two logs line-by-line to find the first point of divergence.
+
+This methodology is mandatory to avoid guesswork and ensure bugs are found deterministically.
+[2025-10-06T04:36:23] tokens used: 23,963
+
+[2025-10-06T04:36:25] thinking
+
+**Identifying missing documentation file**
+[2025-10-06T04:36:26] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat docs/development/testing_strategy.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:36:26] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat docs/development/testing_strategy.md' succeeded in 763ms:
+# nanoBragg PyTorch Testing Strategy
+
+**Version:** 1.1  
+**Date:** 2024-07-25  
+**Owner:** [Your Name/Team]
+
+## 1. Introduction & Philosophy
+
+This document outlines the comprehensive testing strategy for the PyTorch implementation of nanoBragg. The primary goal is to ensure that the new application is a correct, verifiable, and trustworthy scientific tool.
+Our testing philosophy is a three-tiered hybrid approach, designed to build confidence layer by layer:
+
+1. **Tier 1: Translation Correctness:** We first prove that the PyTorch code is a faithful, numerically precise reimplementation of the original C code's physical model. The C code is treated as the "ground truth" specification.
+2. **Tier 2: Gradient Correctness:** We then prove that the new differentiable capabilities are mathematically sound.
+3. **Tier 3: Scientific Validation:** Finally, we validate the model against objective physical principles.
+
+All tests will be implemented using the PyTest framework.
+
+### 1.4 PyTorch Device & Dtype Discipline
+
+- **Device-neutral code:** Every PyTorch path MUST operate correctly on both CPU and CUDA tensors and across supported dtypes. Do not hard-code `.cpu()`/`.cuda()` calls, create CPU-only constants, or assume float64 execution when the caller may supply float32/half tensors.
+[2025-10-06T04:36:26] tokens used: 26,494
+
+[2025-10-06T04:36:30] thinking
+
+**Preparing to inspect large docs file**
+[2025-10-06T04:36:30] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && wc -l docs/fix_plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:36:31] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && wc -l docs/fix_plan.md' succeeded in 802ms:
+     906 docs/fix_plan.md
+[2025-10-06T04:36:31] tokens used: 30,088
+
+[2025-10-06T04:36:34] thinking
+
+**Planning to read large file**
+[2025-10-06T04:36:34] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat docs/fix_plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:36:35] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat docs/fix_plan.md' succeeded in 764ms:
+# Fix Plan Ledger
+
+**Last Updated:** 2025-10-17 (galph loop)
+**Active Focus:**
+- ROUTING: Close the reopened guard plan by capturing a fresh regression audit referencing commit `c49e3be` and re-confirming the guarded `loop.sh` flow (`plans/active/routing-loop-guard/plan.md` Phases A–C) before automation resumes.
+- ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md`, then drive Phase B guard work (B2–B4) and new task B5 to add `supervisor.sh` to docs/index.md so Protected-Asset policy covers the script before automation runs again.
+- AT-012: Plan archived (`plans/archive/at-parallel-012-plateau-regression/plan.md`); monitor for regressions using `reports/2025-10-AT012-regression/phase_c_validation/` artifacts and re-open only if peak matches drop below spec.
+- GRADIENT: Execute `plans/active/gradcheck-tier2-completion/plan.md` Phase A (A1–A3 baseline audit + env alignment) before adding misset/beam gradchecks from Phases B/C; once pass logs exist, close `[AT-TIER2-GRADCHECK]` with Phase D documentation updates.
+- DTYPE: ✅ Complete. Plan archived to `plans/archive/dtype-default-fp32/`. All phases (A-D) finished; float32 defaults documented in arch.md, pytorch_runtime_checklist.md, CLAUDE.md, prompts/debug.md.
+- PERF: Land plan task B7 (benchmark env toggle fix), rerun Phase B6 ten-process reproducibility with the new compile metadata, capture the weighted-source parity memo feeding C5, then execute Phase C diagnostics (C1/C2 plus C8/C9 pixel-grid & rotated-vector cost probes, and new C10 mosaic RNG timing) ahead of Phase D caching work (D5/D6/D7) and detector-scalar hoisting (D8).
+
+## Index
+| ID | Title | Priority | Status |
+| --- | --- | --- | --- |
+| [PROTECTED-ASSETS-001](#protected-assets-001-docsindexmd-safeguard) | Protect docs/index.md assets | Medium | in_progress |
+| [REPO-HYGIENE-002](#repo-hygiene-002-restore-canonical-nanobraggc) | Restore canonical nanoBragg.c | Medium | in_progress |
+| [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
+| [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | in_progress |
+| [VECTOR-TRICUBIC-001](#vector-tricubic-001-vectorize-tricubic-interpolation-and-detector-absorption) | Vectorize tricubic interpolation and detector absorption | High | in_planning |
+| [CLI-DTYPE-002](#cli-dtype-002-cli-dtype-parity) | CLI dtype parity | High | in_progress |
+[2025-10-06T04:36:35] tokens used: 30,365
+
+[2025-10-06T04:36:37] thinking
+
+**Checking plans/active directory**
+[2025-10-06T04:36:38] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && ls plans/active' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:36:39] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && ls plans/active' succeeded in 800ms:
+cli-noise-pix0
+gradcheck-tier2-completion
+perf-pytorch-compile-refactor
+routing-loop-guard
+supervisor-loop-guard
+unification.md
+vectorization.md
+[2025-10-06T04:36:39] tokens used: 33,418
+
+[2025-10-06T04:36:41] thinking
+
+**Reviewing plan files**
+[2025-10-06T04:36:41] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat plans/active/vectorization.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:36:42] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat plans/active/vectorization.md' succeeded in 700ms:
+## Context
+- Initiative: PERF-PYTORCH-004 vectorization backlog; supports long-term goal "Parallel parity + performance" from docs/fix_plan.md
+- Phase Goal: Deliver a production-ready, fully vectorized tricubic interpolation pipeline (gather + polynomial evaluation) and follow with detector absorption vectorization without regressing physics, gradients, or device neutrality.
+- Dependencies: specs/spec-a-core.md §4 (Structure factors), specs/spec-a-parallel.md §2.3 (Interpolation acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4, docs/architecture/c_code_overview.md (tricubic routines), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, `nanoBragg.c` lines 2604–3278 (polin3/polin2/polint + detector absorption), `tests/test_at_str_002.py`, `tests/test_at_abs_001.py`, `reports/benchmarks/20250930-165726-compile-cache/` (current performance references).
+
+### Phase A — Evidence & Baseline Capture
+Goal: Document the current (non-vectorized) behavior, warnings, and performance so we can prove the impact of the refactor.
+Prereqs: Editable install (`pip install -e .`), C binary available for parity (when needed), environment variable `KMP_DUPLICATE_LIB_OK=TRUE`.
+Exit Criteria: Baseline pytest log, timing snippet results, and notes stored under `reports/2025-10-vectorization/phase_a/` with references in docs/fix_plan.md Attempt history.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| A1 | Re-run tricubic acceptance tests | [ ] | `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py -v` ⇒ save log to `reports/2025-10-vectorization/phase_a/test_at_str_002.log`; confirm nearest-neighbour fallback warning message appears for batched inputs. |
+| A2 | Measure current tricubic runtime | [ ] | `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/sample_tricubic_baseline.py` (create minimal harness if missing) to capture CPU timings for 256² and 512² detectors; record outputs in `phase_a/tricubic_baseline.md`. |
+| A3 | Record detector absorption baseline | [ ] | `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_abs_001.py -v` plus a microbenchmark (`python scripts/benchmarks/sample_absorption_baseline.py`) so we have pre-refactor timings; store under `phase_a/absorption_baseline.md`. |
+
+### Phase B — Tricubic Vectorization Design
+Goal: Lock the tensor-shape design, broadcasting plan, and gradient checks before code changes.
+Prereqs: Phase A artifacts uploaded and referenced in docs/fix_plan.md.
+Exit Criteria: Design memo (`reports/2025-10-vectorization/phase_b/design_notes.md`) describing target shapes, indexing strategy, gradient expectations, and failure modes; docs/fix_plan.md updated with summary and link.
+[2025-10-06T04:36:42] tokens used: 34,043
+
+[2025-10-06T04:36:44] thinking
+
+**Checking CLI-related plans**
+[2025-10-06T04:36:44] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat plans/active/cli-noise-pix0/plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:36:45] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat plans/active/cli-noise-pix0/plan.md' succeeded in 687ms:
+## Context
+- Initiative: CLI Parity for nanoBragg PyTorch vs C (supports long-term goal in prompts/supervisor.md)
+- Phase Goal: Accept `-nonoise` and `-pix0_vector_mm` flags with C-equivalent semantics so the parallel comparison command in prompts/supervisor.md executes end-to-end.
+- Dependencies: specs/spec-a-cli.md §§3.2–3.4, docs/architecture/detector.md §5, docs/development/c_to_pytorch_config_map.md (detector pivot + noise), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860 (flag behavior), docs/debugging/detector_geometry_checklist.md (pix0 validation), docs/development/testing_strategy.md §2 (CLI parity tests).
+- Current gap snapshot (2025-10-17 refresh): Phase F1/F2 delivered custom beam-vector wiring and the full CUSTOM pix0 transform, with validation artifacts under `reports/2025-10-cli-flags/phase_f*/`. The parity rerun (F3) remains outstanding, and C traces continue to show the MOSFLM orientation missing because `-mat` still collapses to canonical vectors. Polarization (C Kahn ≈0.913 vs PyTorch 1.0) stays deferred until geometry parity lands.
+- Evidence status: Phase E artifacts (`reports/2025-10-cli-flags/phase_e/`) hold C/PyTorch traces, diffs, and beam-vector checks. Current harness injects the custom beam vector manually; CLI parity requires native wiring.
+
+### Phase A — Requirements & Trace Alignment
+Goal: Confirm the authoritative semantics for both flags and capture the C reference behavior (including unit expectations) before touching implementation.
+Prereqs: Ability to run instrumented C binary via `NB_C_BIN` and collect traces.
+Exit Criteria: Documented parity notes under `reports/2025-10-cli-flags/phase_a/` with explicit decisions on unit conversions and noise toggle ordering.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| A1 | Extract C reference for `-nonoise` | [D] | ✅ 2025-10-05: Supervisor command captured with/without `-nonoise`; logs stored under `reports/2025-10-cli-flags/phase_a/`. |
+| A2 | Capture pix0 vector ground truth | [D] | ✅ 2025-10-05: Instrumented C trace recorded pix0 vector values; confirms outputs remain in meters even for `_mm` flag. |
+| A3 | Update findings memo | [D] | ✅ 2025-10-05: Phase A summary authored in `reports/2025-10-cli-flags/phase_a/README.md` documenting semantics and CUSTOM convention side effects. |
+
+### Phase B — CLI & Config Wiring
+Goal: Teach the PyTorch CLI to parse both flags, thread them through configs, and respect overrides in Detector/Noise handling without breaking existing behavior.
+[2025-10-06T04:36:45] tokens used: 36,507
+
+[2025-10-06T04:36:47] thinking
+
+**Checking plan status**
+[2025-10-06T04:36:47] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat plans/active/gradcheck-tier2-completion/plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:36:48] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat plans/active/gradcheck-tier2-completion/plan.md' succeeded in 738ms:
+# Plan: AT-TIER2-GRADCHECK Completion
+
+**Status:** Active (new 2025-10-15)
+**Priority:** High — spec compliance blocker (testing_strategy §4.1)
+**Related fix_plan item:** `[AT-TIER2-GRADCHECK]` — docs/fix_plan.md
+**Created:** 2025-10-15 by galph
+
+## Context
+- Initiative: Ensure differentiability guarantees (long-term goal: autodiff-based refinement showcase).
+- Phase Goal: Close the remaining Tier-2 gradcheck gaps called out in testing_strategy.md §4.1: `misset_rot_x`, beam `lambda_A`, and `fluence`.
+- Current State: Commit 0e3054c implemented gradchecks for unit-cell lengths/angles and detector distance/beam_center_f. Commit d45a0f3 introduced `NANOBRAGG_DISABLE_COMPILE` to work around torch.compile bugs. However, no coverage exists yet for misset rotations or beam parameters, and the harness still emits contradictory compile-mode toggles (`NB_DISABLE_COMPILE` vs `NANOBRAGG_DISABLE_COMPILE`). The spec remains unmet.
+- Dependencies: `tests/test_gradients.py`, `tests/test_suite.py::TestTier2GradientCorrectness`, `docs/development/testing_strategy.md §4.1`, `arch.md §15`, perf plan task B7 (env-var alignment for compile toggles).
+
+### Phase A — Baseline Audit & Environment Alignment
+Goal: Capture authoritative evidence of current coverage gaps and ensure the compile-disable switch is consistent across harnesses before adding new tests.
+Prereqs: None.
+Exit Criteria: Audit note summarising missing parameters, baseline gradcheck log attached, and env-var naming decision recorded (either standardise on `NANOBRAGG_DISABLE_COMPILE` or support both).
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+[2025-10-06T04:36:48] tokens used: 38,134
+
+[2025-10-06T04:36:50] thinking
+
+**Checking related plan file**
+[2025-10-06T04:36:50] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat plans/active/perf-pytorch-compile-refactor/plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:36:51] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat plans/active/perf-pytorch-compile-refactor/plan.md' succeeded in 701ms:
+# Plan: PERF-PYTORCH-004 4096² Warm Performance Recovery
+
+**Status:** Active (reopened 2025-10-10)
+**Priority:** Critical — long-term goal blocker (PyTorch still 3.4× slower than C at 4096² warm)
+**Related fix_plan item:** `[PERF-PYTORCH-004]` Fuse physics kernels — docs/fix_plan.md
+**Created:** 2025-09-30 (refreshed 2025-10-10 by galph)
+
+## Context
+- Initiative: Speed up PyTorch nanoBragg so the warm run at 4096×4096 outperforms the C reference.
+- Current baseline (reports/benchmarks/20250930-230702/benchmark_results.json):
+  - C warm: **0.527 s**; PyTorch warm: **1.793 s** (speedup_warm≈0.29 → PyTorch is 3.4× slower).
+  - Cold timings are dominated by torch.compile warm-up (>1.94 s) but warm latency remains unacceptable.
+- Previous partial fixes (kernel hoisting, torch.compile caching) improved ≤1024² sizes but never addressed large-detector warm behavior; benchmarks marked “complete” were captured before weighted-source parity was verified.
+- Dependencies: `docs/architecture/pytorch_design.md` §§2.4–3.3, `docs/development/pytorch_runtime_checklist.md`, `scripts/benchmarks/benchmark_detailed.py`, torch profiler tooling, `docs/fix_plan.md` `[PERF-PYTORCH-004]` attempt history, plan `plans/active/dtype-default-fp32/plan.md` (ensures float32 context), plateau plan for AT-012 (must not regress peak parity).
+
+## Target Outcome
+Drive PyTorch warm-run latency at 4096² (CPU) below the C binary (speedup_warm ≥ 1.0 with ≤5% regression margin) while preserving parity/gradient guarantees and without regressing CUDA performance. Capture reproducible evidence (benchmarks + profiler traces) and update fix_plan/documentation.
+
+---
+
+[2025-10-06T04:36:51] tokens used: 40,264
+
+[2025-10-06T04:36:53] thinking
+
+**Preparing to review routing-loop plan**
+[2025-10-06T04:36:54] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat plans/active/routing-loop-guard/plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:36:55] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat plans/active/routing-loop-guard/plan.md' succeeded in 714ms:
+# Plan: ROUTING-LOOP-001 Automation Guard Reinstatement (Oct 2025)
+
+**Status:** COMPLETE (verified compliant at HEAD 611cc12 on 2025-10-01)
+**Priority:** High — prevents unsupervised prompt loops and push spam
+**Related fix_plan item:** `[ROUTING-LOOP-001]` loop.sh routing guard — see docs/fix_plan.md
+**Created:** 2025-10-13 by galph (reopened after regression)
+**Completed:** 2025-10-01 by ralph (audit verification confirms compliance)
+
+## Context
+- Initiative: Error-correcting the engineer agent / automation hygiene
+- Phase Goal: Restore the guarded single-run automation flow (`prompts/debug.md`, timeouted `git pull --rebase`, conditional `git push`) and capture fresh audit evidence before automation restarts.
+- Dependencies: `prompts/meta.md` routing rules, `docs/index.md` Protected Assets list (`loop.sh`), previous guard baseline (`ffd9a5c`), `reports/routing/20251001-loop-audit.txt` & `reports/routing/20251001-compliance-verified.txt` for reference.
+
+### Phase A — Regression Audit & Scope
+Goal: Document the current violation so we have traceable evidence before touching `loop.sh`.
+Prerqs: None.
+Exit Criteria: Timestamped audit under `reports/routing/` linked from fix_plan attempts, capturing both the broken script and diff vs guarded baseline.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+[2025-10-06T04:36:55] tokens used: 42,909
+
+[2025-10-06T04:36:58] thinking
+
+**Reviewing supervisor loop guard plan**
+[2025-10-06T04:36:58] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat plans/active/supervisor-loop-guard/plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:36:59] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat plans/active/supervisor-loop-guard/plan.md' succeeded in 713ms:
+# Plan: ROUTING-SUPERVISOR-001 Supervisor Automation Guard
+
+**Status:** Active (new 2025-10-13)
+**Priority:** High — prevents runaway supervisor loops and unsafeguarded pushes
+**Related fix_plan item:** `[ROUTING-SUPERVISOR-001]` supervisor.sh automation guard — see docs/fix_plan.md
+**Created:** 2025-10-13 by galph
+
+## Context
+- Initiative: Error-correcting the engineer agent / automation hygiene
+- Phase Goal: Bring `supervisor.sh` up to the same guarded, single-iteration standard as `loop.sh` (timeouted pull, single prompt execution, conditional push) before the supervisor harness runs again.
+- Dependencies: `prompts/meta.md` routing rules, `docs/index.md` (Protected Assets — currently only `loop.sh`; Phase B must add `supervisor.sh` so the guard is enforced by policy), `plans/active/routing-loop-guard/plan.md` (reference implementation), commit `853cf08` (`loop.sh` guard), existing audit logs in `reports/routing/`.
+
+---
+
+### Phase A — Regression Audit & Scope Definition
+Goal: Capture authoritative evidence of the current violation before editing `supervisor.sh`.
+Prereqs: None.
+Exit Criteria: Timestamped audit under `reports/routing/` capturing script snapshot + guard diff, and `[ROUTING-SUPERVISOR-001]` attempts log updated with the artifact path.
+
+| ID | Task Description | State | How/Why & Guidance |
+[2025-10-06T04:36:59] tokens used: 44,901
+
+[2025-10-06T04:37:02] thinking
+
+**Considering reading unification plan**
+[2025-10-06T04:37:03] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat plans/active/unification.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:37:04] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat plans/active/unification.md' succeeded in 721ms:
+# Oversample Unification Refactor Plan
+Goal
+Unify the oversample==1 and oversample>1 code paths in simulator.py to enable whole-function torch.compile optimization and reduce code duplication.
+Success Criteria
+
+ All existing tests pass bit-for-bit
+ <5% performance regression for oversample==1 case
+ Compilation time reduced or neutral
+ ~100 lines of duplicate code removed
+ Single code path handles all oversample values
+
+
+Phase 1: Infrastructure (1-2 days)
+1.1 Add Unified Offset Generation
+File: simulator.py
+Location: New helper method in Simulator class
+pythondef _generate_subpixel_offsets(
+    self, 
+    oversample: int,
+    pixel_size_m: torch.Tensor
+[2025-10-06T04:37:04] tokens used: 47,384
+
+[2025-10-06T04:37:08] thinking
+
+**Reviewing project context and requirements**
+[2025-10-06T04:37:08] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git status --short' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:37:09] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git status --short' succeeded in 796ms:
+
+[2025-10-06T04:37:09] tokens used: 49,728
+
+[2025-10-06T04:37:12] thinking
+
+**Preparing deep analysis and summary**
+[2025-10-06T04:37:12] exec bash -lc "cd /Users/ollie/Documents/nanoBragg3 && rg \"\\[CLI-FLAGS-003\" -n docs/fix_plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:37:13] bash -lc "cd /Users/ollie/Documents/nanoBragg3 && rg \"\\[CLI-FLAGS-003\" -n docs/fix_plan.md" succeeded in 740ms:
+21:| [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | in_progress |
+448:## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
+[2025-10-06T04:37:13] tokens used: 50,068
+
+[2025-10-06T04:37:15] thinking
+
+**Continuing file review**
+[2025-10-06T04:37:16] exec bash -lc "cd /Users/ollie/Documents/nanoBragg3 && sed -n '448,620p' docs/fix_plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:37:17] bash -lc "cd /Users/ollie/Documents/nanoBragg3 && sed -n '448,620p' docs/fix_plan.md" succeeded in 698ms:
+## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
+- Spec/AT: specs/spec-a-cli.md flag catalogue, docs/architecture/detector.md §5 (pix0 workflow), docs/development/c_to_pytorch_config_map.md (pivot rules), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860
+- Priority: High
+- Status: in_progress (Phases A/B/C2/D3/E/F1/F2 ✅; Phase F3 parity + Phases G–H pending)
+- Owner/Date: ralph/2025-10-05
+- Plan Reference: `plans/active/cli-noise-pix0/plan.md`
+- Reproduction (C & PyTorch):
+  * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
+  * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+- First Divergence (if known): Phase C2 parity run exposed a 2.58e2× intensity scaling mismatch (PyTorch max_I≈1.15e5 vs C max_I≈4.46e2). Phase D3/E diagnostics (2025-10-16) confirm three blocking geometry gaps: (a) PyTorch applies the raw `-pix0_vector_mm` override without the CUSTOM transform used in C (1.14 mm Y error); (b) CLI ignores `-beam_vector`, leaving the incident ray at the convention default `[0,0,1]`; (c) `-mat A.mat` handling discards the MOSFLM orientation, so Crystal falls back to canonical upper-triangular vectors while C uses the supplied A*. Traces also show a polarization delta (C Kahn factor ≈0.9126 vs PyTorch 1.0) to revisit after geometry fixes.
+- Next Actions: (1) Execute plan Phase G (G1–G3) to retain MOSFLM A* orientation through the Crystal pipeline; (2) Leave Phase F3 parity blocked until orientation wiring is complete, then rerun the supervisor harness and update `reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/`; (3) Address the Phase F2 regression where `self.close_distance` now calls `.item()`—restore a tensor-based value so detector distance remains differentiable before layering additional changes. (4) After geometry parity holds, proceed to Phase H polarization alignment and tidy residual artifacts (e.g., `scaled.hkl.1`).
+- Attempts History:
+  * [2025-10-05] Phase A Complete — Tasks A1-A3 executed per plan.
+    Metrics: C reference behavior captured for both flags via parallel command execution.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_a/c_with_nonoise.log` - C run WITH -nonoise
+      - `reports/2025-10-cli-flags/phase_a/c_with_noise.log` - C run WITHOUT -nonoise
+      - `reports/2025-10-cli-flags/phase_a/pix0_trace/trace.log` - pix0 vector analysis
+      - `reports/2025-10-cli-flags/phase_a/README.md` - Complete Phase A findings
+    Observations/Hypotheses:
+[2025-10-06T04:37:17] tokens used: 50,361
+
+[2025-10-06T04:37:24] thinking
+
+**Reviewing long-term goals and code status**
+
+I'm focusing on the user's long-term goals around CLI parity for specific flags and plan vectorization, so I'm analyzing relevant code areas and instructions carefully. I'll inspect code directories like `src/nanobrag_torch` and review recent commit history to understand current status and identify gaps before moving onto deeper plan steps.
+[2025-10-06T04:37:26] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git log --oneline -n 10' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:37:27] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git log --oneline -n 10' succeeded in 1.07s:
+58b1412 [SYNC i=18] actor=galph status=running
+8b59ea4 [SYNC i=18] actor=ralph → next=galph status=ok ralph_commit=53850ee
+53850ee [SYNC i=17] actor=ralph → next=galph status=ok ralph_commit=28fc584
+28fc584 [CLI-FLAGS-003] Phase G1 complete - Wire MOSFLM orientation through config
+ab16575 [SYNC i=17] actor=ralph status=running
+b049227 [CLI-FLAGS-003] Phase G prep - Restore close_distance differentiability
+8b4d44a [SYNC i=17] actor=ralph status=running
+4b39ced [SYNC i=17] actor=galph → next=ralph status=ok galph_commit=1af9e63
+1af9e63 SUPERVISOR: CLI Phase G prep - tests: not run
+1fcf3d3 [SYNC i=17] actor=galph status=running
+[2025-10-06T04:37:27] tokens used: 53,663
+
+[2025-10-06T04:37:29] thinking
+
+**Reviewing recent commit and documentation**
+[2025-10-06T04:37:30] exec bash -lc "cd /Users/ollie/Documents/nanoBragg3 && sed -n '300,430p' docs/fix_plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:37:31] bash -lc "cd /Users/ollie/Documents/nanoBragg3 && sed -n '300,430p' docs/fix_plan.md" succeeded in 701ms:
+    Metrics: n/a (run aborted).
+    Artifacts: /tmp/cuda_benchmark_20250930-214118.log.
+    Observations/Hypotheses: Aliased views of `incident_beam_direction` violate CUDA graphs memory safety. Options considered: clone tensors, restructure broadcast, disable graphs, or mark graph step boundaries.
+    Next Actions: Prototype clone-based fix prior to disabling graphs.
+  * [2025-09-30] Attempt #2 — Result: failed. Added clone in `_compute_physics_for_position` wrapper, but graph still reported aliasing.
+    Metrics: CPU smoke tests green; CUDA benchmark still crashes.
+    Artifacts: src/nanobrag_torch/simulator.py lines 612-622.
+    Observations/Hypotheses: Wrapper itself is traced; clone alone insufficient. Need explicit graph step boundary marker.
+    Next Actions: Try `torch.compiler.cudagraph_mark_step_begin()` before invoking compiled function.
+  * [2025-09-30] Attempt #3 — Result: success. Combined clone + `torch.compiler.cudagraph_mark_step_begin()` cleared aliasing and preserved gradients.
+    Metrics: CUDA warm speedups — 256²: 1.55×, 512²: 1.69×, 1024²: 3.33× faster than C. Gradient smoke: `distance_mm.grad = -70.37`.
+    Artifacts: reports/benchmarks/20250930-220739/benchmark_results.json; reports/benchmarks/20250930-220755/benchmark_results.json.
+    Observations/Hypotheses: Clone prevents aliasing; step marker informs CUDA graphs about tensor reuse. No CPU regression observed.
+    Next Actions: Keep guard in place and unblock PERF-PYTORCH-004 Phase 3 benchmarks.
+- Risks/Assumptions: Clone overhead <1%; cudagraph marker is a no-op on CPU. Ensure future refactors retain clone before graph capture.
+- Exit Criteria (quote thresholds from spec):
+  * ✅ Clone + step boundary marker implemented without device-specific branches.
+  * ✅ Core CPU gradient/physics tests remain green post-fix.
+  * ✅ CUDA benchmarks run successfully without aliasing error.
+  * ✅ CUDA gradient smoke shows stable derivative (-70.37).
+[2025-10-06T04:37:31] tokens used: 54,211
+
+[2025-10-06T04:37:33] thinking
+
+**Preparing to run coin flip script**
+[2025-10-06T04:37:34] exec bash -lc "cd /Users/ollie/Documents/nanoBragg3 && python -c 'import random; print(\"heads\" if random.random() < 0.5 else \"tails\")'" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:37:35] bash -lc "cd /Users/ollie/Documents/nanoBragg3 && python -c 'import random; print(\"heads\" if random.random() < 0.5 else \"tails\")'" succeeded in 766ms:
+tails
+[2025-10-06T04:37:35] tokens used: 55,990
+
+[2025-10-06T04:37:43] thinking
+
+**Evaluating plan phase and update need**
+[2025-10-06T04:37:44] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && rg "Phase G" -n plans/active/cli-noise-pix0/plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:37:45] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && rg "Phase G" -n plans/active/cli-noise-pix0/plan.md' succeeded in 853ms:
+3:- Phase Goal: Accept `-nonoise` and `-pix0_vector_mm` flags with C-equivalent semantics so the parallel comparison command in prompts/supervisor.md executes end-to-end.
+78:| F3 | Re-run Phase C2 parity smoke | [P] | 2025-10-17 Attempt #12 captured C vs PyTorch artifacts under `reports/2025-10-cli-flags/phase_f/parity_after_detector_fix/`; correlation ≈−5e-06 confirms geometry still diverges. Defer rerun until Phase G (A* orientation) lands so parity failure isn’t repeated; once orientation is wired, rerun parity and refresh metrics. |
+80:### Phase G — MOSFLM Matrix Orientation Support
+[2025-10-06T04:37:45] tokens used: 56,534
+
+[2025-10-06T04:37:47] thinking
+
+**Opening Phase G section**
+[2025-10-06T04:37:49] exec bash -lc "cd /Users/ollie/Documents/nanoBragg3 && sed -n '80,220p' plans/active/cli-noise-pix0/plan.md'], " 'timeout_ms":10000,' "workdir\": \"/Users/ollie/Documents/nanoBragg3\"} Error: Invalid JSON format or arguments. Please provide the arguments in JSON format. We'll re-run with proper JSON. We'll need to specify "'`command` as string list; double-check quoting. We'"'ll use double quotes for command string but need to escape properly. We'll re-run: to display lines 80-220: use "'`sed -n '"'80,220p'"'`. Need to ensure proper JSON. Done. continuous. We'"'ll run.}" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:37:49] bash -lc "cd /Users/ollie/Documents/nanoBragg3 && sed -n '80,220p' plans/active/cli-noise-pix0/plan.md'], " 'timeout_ms":10000,' "workdir\": \"/Users/ollie/Documents/nanoBragg3\"} Error: Invalid JSON format or arguments. Please provide the arguments in JSON format. We'll re-run with proper JSON. We'll need to specify "'`command` as string list; double-check quoting. We'"'ll use double quotes for command string but need to escape properly. We'll re-run: to display lines 80-220: use "'`sed -n '"'80,220p'"'`. Need to ensure proper JSON. Done. continuous. We'"'ll run.}" exited 2 in 699ms:
+timeout_ms":10000,: -c: line 1: unexpected EOF while looking for matching `''
+[2025-10-06T04:37:49] tokens used: 57,096
+
+[2025-10-06T04:37:53] thinking
+
+**Correcting command quoting**
+[2025-10-06T04:37:54] exec bash -lc "cd /Users/ollie/Documents/nanoBragg3 && sed -n '80,220p' plans/active/cli-noise-pix0/plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:37:54] bash -lc "cd /Users/ollie/Documents/nanoBragg3 && sed -n '80,220p' plans/active/cli-noise-pix0/plan.md" succeeded in 710ms:
+### Phase G — MOSFLM Matrix Orientation Support
+Goal: Preserve full crystal orientation from `-mat` files so PyTorch matches C lattice vectors and downstream physics.
+Prereqs: Detector parity (Phase F) achieved or at least traced; clarity on orientation data flow.
+Exit Criteria: Crystal trace (rotated a/b/c vectors) aligns with C for the supervisor command; CLI accepts orientation without manual overrides.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
+| G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+| G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+
+### Phase H — Polarization Alignment (follow-up)
+Goal: Match C’s Kahn polarization factor once geometry aligns.
+Prereqs: Phases F and G complete; traces confirm geometry parity.
+Exit Criteria: Polarization entries in C/PyTorch traces agree (≈0.9126 for supervisor command) and parity smoke stays green.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| H1 | Audit polarization inputs | [ ] | Review CLI defaults/flags (`-polar`, `-nopolar`) and C calculations (nanoBragg.c:2080-2155); map them to PyTorch simulator inputs. |
+| H2 | Implement polarization parity | [ ] | Update simulator polarization handling to compute Kahn factor per spec/C reference. Document conversions and add targeted regression tests. |
+[2025-10-06T04:37:54] tokens used: 58,245
+
+[2025-10-06T04:37:59] thinking
+
+**Reviewing plan versus commit status**
+[2025-10-06T04:38:00] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git show 28fc584' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:38:01] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git show 28fc584' succeeded in 737ms:
+commit 28fc584b4b9362095ef3f3f70276a596297c14e9
+Author: ollie <ohoidn>
+Date:   Sun Oct 5 21:34:13 2025 -0700
+
+    [CLI-FLAGS-003] Phase G1 complete - Wire MOSFLM orientation through config
+    
+    Extended CLI and CrystalConfig to retain MOSFLM A* orientation vectors from -mat files.
+    When -mat is provided, a*, b*, c* (in Å⁻¹) are now stored alongside cell parameters.
+    
+    Changes:
+    - src/nanobrag_torch/__main__.py:430-434 - Cache MOSFLM reciprocal vectors in config
+    - src/nanobrag_torch/__main__.py:844-846 - Pass orientation vectors to CrystalConfig
+    - src/nanobrag_torch/config.py:65 - Add numpy import
+    - src/nanobrag_torch/config.py:122-127 - Add mosflm_*_star fields to CrystalConfig
+    
+    Tests: 26 passed in 2.50s (tests/test_cli_flags.py tests/test_at_geo_003.py)
+    
+    Refs: plans/active/cli-noise-pix0/plan.md Phase G1, input.md supervisor directive
+    Next: Phase G2 - Update Crystal.__init__ to use MOSFLM orientation per Core Rules 12-13
+
+[2025-10-06T04:38:01] tokens used: 59,289
+
+[2025-10-06T04:38:05] thinking
+
+**Reviewing plan and commit status**
+[2025-10-06T04:38:05] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && rg "Phase G1" docs/fix_plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:38:06] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && rg "Phase G1" docs/fix_plan.md' succeeded in 713ms:
+  * [2025-10-17] Attempt #15 (ralph loop i=17) — Result: success. Completed Phase G1 - MOSFLM orientation wiring through config pipeline.
+      - Commit 28fc584 - Phase G1 complete
+[2025-10-06T04:38:06] tokens used: 60,800
+
+[2025-10-06T04:38:16] thinking
+
+**Updating plan states and notes for progress**
+[2025-10-06T04:38:18] apply_patch auto_approved=true:
+M /Users/ollie/Documents/nanoBragg3/plans/active/cli-noise-pix0/plan.md
+@@ -86,3 +86,3 @@
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; regression tests logged under `reports/2025-10-cli-flags/phase_g/` (see Attempt #15). |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+[2025-10-06T04:38:18] apply_patch(auto_approved=true) exited 0 in 15ms:
+Success. Updated the following files:
+M plans/active/cli-noise-pix0/plan.md
+[2025-10-06T04:38:18] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..62a6d8259a585b81c9279ae10b0afad0541b436b
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; regression tests logged under `reports/2025-10-cli-flags/phase_g/` (see Attempt #15). |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+[2025-10-06T04:38:18] tokens used: 61,829
+[2025-10-06T04:38:18] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..62a6d8259a585b81c9279ae10b0afad0541b436b
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; regression tests logged under `reports/2025-10-cli-flags/phase_g/` (see Attempt #15). |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:38:20] thinking
+
+**Verifying directory existence**
+[2025-10-06T04:38:21] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && ls reports' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:38:22] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && ls reports' succeeded in 888ms:
+2025-09-29-AT-PARALLEL-002
+2025-09-29-AT-PARALLEL-004
+2025-09-29-AT-PARALLEL-006
+2025-09-29-AT-PARALLEL-012
+2025-09-29-debug-traces-002
+2025-09-29-debug-traces-006
+2025-09-29-debug-traces-012
+2025-09-30-AT-012-debug
+2025-09-30-AT-012-peakmatch
+2025-09-30-AT-PARALLEL-012
+2025-09-30-AT-PARALLEL-020
+2025-09-30-AT-PARALLEL-021
+2025-09-30-AT-PARALLEL-022
+2025-09-30-AT-PARALLEL-023
+2025-09-30-AT-PARALLEL-024
+2025-10-AT012-regression
+2025-10-cli-flags
+DTYPE-DEFAULT-001
+POSTMORTEM_AT_PARALLEL_002_PARITY.md
+archive
+[2025-10-06T04:38:22] tokens used: 62,326
+[2025-10-06T04:38:22] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..62a6d8259a585b81c9279ae10b0afad0541b436b
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; regression tests logged under `reports/2025-10-cli-flags/phase_g/` (see Attempt #15). |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:38:24] thinking
+
+**Exploring report directory**
+[2025-10-06T04:38:24] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && ls reports/2025-10-cli-flags' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:38:25] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && ls reports/2025-10-cli-flags' succeeded in 733ms:
+phase_a
+phase_b
+phase_c
+phase_d
+phase_e
+phase_f
+phase_f2
+[2025-10-06T04:38:25] tokens used: 62,919
+[2025-10-06T04:38:25] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..62a6d8259a585b81c9279ae10b0afad0541b436b
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; regression tests logged under `reports/2025-10-cli-flags/phase_g/` (see Attempt #15). |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:38:28] thinking
+
+**Adjusting commit message and plan references**
+[2025-10-06T04:38:30] apply_patch auto_approved=true:
+M /Users/ollie/Documents/nanoBragg3/plans/active/cli-noise-pix0/plan.md
+@@ -86,3 +86,3 @@
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; regression tests logged under `reports/2025-10-cli-flags/phase_g/` (see Attempt #15). |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+[2025-10-06T04:38:30] apply_patch(auto_approved=true) exited 0 in 32ms:
+Success. Updated the following files:
+M plans/active/cli-noise-pix0/plan.md
+[2025-10-06T04:38:30] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+[2025-10-06T04:38:30] tokens used: 63,345
+[2025-10-06T04:38:30] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:38:38] thinking
+
+**Assessing plan updates and deep analysis preparation**
+[2025-10-06T04:38:39] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git show b049227' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:38:40] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git show b049227' succeeded in 920ms:
+commit b049227a3aeaa3598be9b042da38ea67666e5d17
+Author: ollie <ohoidn>
+Date:   Sun Oct 5 21:31:04 2025 -0700
+
+    [CLI-FLAGS-003] Phase G prep - Restore close_distance differentiability
+    
+    Fixed gradient regression where self.close_distance used .item() breaking autograd.
+    Now keeps close_distance as tensor throughout (Core Rule #9).
+    
+    Changes:
+    - src/nanobrag_torch/models/detector.py:630 - Remove .item() call, keep tensor
+    - tests/test_cli_flags.py:142,178 - Update tests to handle tensor close_distance
+    
+    Tests: 26 passed in 2.51s (tests/test_cli_flags.py tests/test_at_geo_003.py)
+    
+    Refs: input.md Phase G prep, docs/fix_plan.md [CLI-FLAGS-003]
+
+diff --git a/src/nanobrag_torch/models/detector.py b/src/nanobrag_torch/models/detector.py
+index 843d210..1cc0808 100644
+--- a/src/nanobrag_torch/models/detector.py
+[2025-10-06T04:38:40] tokens used: 64,067
+[2025-10-06T04:38:40] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:38:44] thinking
+
+**Summarizing goal progress and planning next steps**
+
+I'm reviewing the status of long-term goals, confirming Goal 1's CLI plan is mostly done except for Crystal orientation, which needs more investigation and code updates. Goal 2’s vectorization phase hasn’t started, so I'll need to gather evidence and verify its status in the docs before proceeding. This deep analysis will inform the final summary and input.md writing.
+[2025-10-06T04:38:47] exec bash -lc "cd /Users/ollie/Documents/nanoBragg3 && sed -n '620,760p' docs/fix_plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:38:48] bash -lc "cd /Users/ollie/Documents/nanoBragg3 && sed -n '620,760p' docs/fix_plan.md" succeeded in 701ms:
+      - Beam vector incident direction **DOES match** in the trace because the harness explicitly sets `simulator.incident_beam_direction`; CLI wiring still ignores `custom_beam_vector` (see Attempt #7 evidence).
+      - Intensity error (446 vs 4.5e-6) is consequence of wrong crystal orientation → wrong reflection → wrong structure factor (300.58 vs 42.98).
+    Next Actions: (1) **URGENT:** Investigate A.mat loading in PyTorch - verify file is read, orientation matrix extracted, and applied to lattice vectors (compare with C TRACE lines 11-51 showing matrix loading); (2) Port CUSTOM pix0 transformation from C code; (3) Fix polarization calculation; (4) Re-run Phase E traces after fixes to verify alignment.
+  * [2025-10-16] Attempt #9 (galph) — Result: analysis update. Phase E artifacts reviewed; plan extended with detector (Phase F), orientation (Phase G), and polarization (Phase H) implementation tracks.
+    Metrics: `trace_summary.md` confirms PyTorch `rot_a=[25.63,-9.11,6.50]` vs C `rot_a=[-14.36,-21.88,-5.55]`; `trace_side_by_side.tsv` shows pix0 Y delta 1.1375e-3 m; `beam_vector_check.txt` still reports `[0.,0.,1.]` for CLI instantiation (manual override only in harness).
+    Artifacts: No new runs; consumed `reports/2025-10-cli-flags/phase_e/trace_summary.md`, `trace_side_by_side.tsv`, `beam_vector_check.txt`.
+    Observations/Hypotheses:
+      - CLI must retain MOSFLM reciprocal vectors from `-mat` and thread them into `Crystal`; current conversion to cell params loses orientation entirely.
+      - Detector override path must adopt CUSTOM transform instead of returning early; needs to share pivot/rotation logic with standard path.
+      - `custom_beam_vector` wiring absent in Detector/Simulator; harness `simulator.incident_beam_direction = ...` is a stopgap that masks the gap.
+      - Polarization mismatch persists (0.9126 vs 1.0) but defer until geometry parity returns.
+      - Residual repo hygiene note: duplicate `scaled.hkl.1` still present; remove once implementation loop lands to keep Protected Assets policy satisfied.
+    Next Actions: Follow `plans/active/cli-noise-pix0/plan.md` Phase F (thread beam vector, port pix0 transform, rerun parity), then Phase G (retain A*, update Crystal, re-trace). Log Attempt #10 once implementation changes begin; clean up `scaled.hkl.1` during that pass.
+  * [2025-10-16] Attempt #10 (ralph) — Result: success (Phase F1 complete). **custom_beam_vector threading implemented and validated.**
+    Metrics: Supervisor command snippet confirms correct beam_vector retrieval: `tensor([5.1388e-04, 0.0000e+00, -1.0000e+00])` matches expected `(0.00051387949, 0.0, -0.99999986)`.
+    Artifacts:
+      - `src/nanobrag_torch/config.py:212` - Added `custom_beam_vector` field to DetectorConfig
+      - `src/nanobrag_torch/models/detector.py:846-871` - Updated `beam_vector` property to use custom override for CUSTOM convention
+      - `src/nanobrag_torch/__main__.py:870` - Threaded `custom_beam_vector` from CLI parser to DetectorConfig
+      - `reports/2025-10-cli-flags/phase_f/beam_vector_after_fix.txt` - Validation output
+[2025-10-06T04:38:48] tokens used: 65,468
+[2025-10-06T04:38:48] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:38:50] thinking
+
+**Reviewing input.md format**
+[2025-10-06T04:38:51] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat input.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:38:51] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat input.md' succeeded in 745ms:
+Timestamp: 2025-10-06 04:21:10Z
+Commit: 1fcf3d3
+Author: galph
+Active Focus: [CLI-FLAGS-003] Phase G orientation + detector gradient hygiene
+Summary: Implement Phase G orientation wiring and restore differentiable close_distance
+Phase: Implementation
+Focus: [CLI-FLAGS-003] Phase G — MOSFLM matrix orientation
+Branch: feature/spec-based-2
+Mapped tests: env AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py tests/test_at_geo_003.py -v
+Artifacts: reports/2025-10-cli-flags/phase_g/
+
+Do Now: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm (Phase G1) — env AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py tests/test_at_geo_003.py -v
+
+If Blocked: Capture C & PyTorch crystal-vector traces for the supervisor command at pixel (1039,685); save diff as reports/2025-10-cli-flags/phase_g/orientation_blocked_trace.md and add the divergence summary to docs/fix_plan.md Attempts.
+
+Priorities & Rationale:
+- plans/active/cli-noise-pix0/plan.md:80 — Phase G (G1–G3) is the bottleneck preventing parity rerun; orientation from -mat must reach Crystal intact.
+- docs/fix_plan.md:448 — Fix-plan next actions call out MOSFLM A* retention and the close_distance tensor regression; both must be cleared before Phase H.
+- docs/architecture/pytorch_design.md:140 — Architecture requires reciprocal vectors to remain tensor-valued and reusable across rotations; orientation wiring must honor this.
+- docs/development/c_to_pytorch_config_map.md:40 — CLI↔PyTorch parity mandates storing MOSFLM A* exactly as parsed; use this mapping when threading through configs.
+[2025-10-06T04:38:51] tokens used: 68,219
+[2025-10-06T04:38:51] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:38:54] thinking
+
+**Preparing to update input.md with new scenario**
+[2025-10-06T04:38:54] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git rev-parse --short HEAD' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:38:55] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git rev-parse --short HEAD' succeeded in 806ms:
+58b1412
+[2025-10-06T04:38:55] tokens used: 71,248
+[2025-10-06T04:38:55] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:38:58] thinking
+
+**Preparing timestamp command**
+[2025-10-06T04:39:00] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && date -u +"%Y-%m-%d %H:%M:%SZ"' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:39:01] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && date -u +"%Y-%m-%d %H:%M:%SZ"' succeeded in 693ms:
+2025-10-06 04:39:01Z
+[2025-10-06T04:39:01] tokens used: 71,499
+[2025-10-06T04:39:01] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:39:06] thinking
+
+**Determining next focus task**
+[2025-10-06T04:39:06] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git rev-parse --abbrev-ref HEAD' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:39:07] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git rev-parse --abbrev-ref HEAD' succeeded in 726ms:
+feature/spec-based-2
+[2025-10-06T04:39:07] tokens used: 71,949
+[2025-10-06T04:39:07] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:39:15] thinking
+
+**Preparing test strategy and documentation details**
+
+I’m putting together a plan that includes listing validated tests and relevant environment variables, like `AUTHORITATIVE_CMDS_DOC` and `KMP_DUPLICATE_LIB_OK`. I’m considering how to map commands to docs, include pitfalls and pointers, and handle fallback actions if orientation can’t be implemented. I’ll also figure out if I need hypotheses for debugging parity issues and inspect source files to understand the current orientation state before writing the final input.
+[2025-10-06T04:39:17] exec bash -lc "cd /Users/ollie/Documents/nanoBragg3 && sed -n '1,240p' src/nanobrag_torch/models/crystal.py" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:39:17] bash -lc "cd /Users/ollie/Documents/nanoBragg3 && sed -n '1,240p' src/nanobrag_torch/models/crystal.py" succeeded in 762ms:
+"""
+Crystal model for nanoBragg PyTorch implementation.
+
+This module defines the Crystal class responsible for managing unit cell,
+orientation, and structure factor data.
+
+NOTE: The default parameters in this file are configured to match the 'simple_cubic'
+golden test case, which uses a 10 Å unit cell and a 500×500×500 cell crystal size.
+"""
+
+from typing import Optional, Tuple
+
+import math
+import torch
+
+from ..config import CrystalConfig, BeamConfig
+from ..utils.geometry import angles_to_rotation_matrix
+from ..io.hkl import read_hkl_file, try_load_hkl_or_fdump
+
+
+[2025-10-06T04:39:17] tokens used: 73,077
+[2025-10-06T04:39:17] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:39:19] thinking
+
+**Searching for orientation handling in mosflm**
+[2025-10-06T04:39:20] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && rg "mosflm" -n src/nanobrag_torch/models/crystal.py' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:39:21] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && rg "mosflm" -n src/nanobrag_torch/models/crystal.py' exited 1 in 729ms:
+
+[2025-10-06T04:39:21] tokens used: 75,808
+[2025-10-06T04:39:21] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:39:22] thinking
+
+**Checking CrystalConfig for new fields**
+[2025-10-06T04:39:23] exec bash -lc "cd /Users/ollie/Documents/nanoBragg3 && sed -n '1,220p' src/nanobrag_torch/config.py" in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:39:24] bash -lc "cd /Users/ollie/Documents/nanoBragg3 && sed -n '1,220p' src/nanobrag_torch/config.py" succeeded in 683ms:
+"""
+Configuration dataclasses for nanoBragg PyTorch implementation.
+
+This module defines strongly-typed configuration objects that are intended to
+replace the large set of local variables and command-line parsing logic found
+in the original C main() function. Each dataclass will correspond to a physical
+component of the simulation (Crystal, Detector, Beam).
+
+For a detailed mapping of these dataclass fields to the original nanoBragg.c 
+command-line flags, including implicit conventions and common pitfalls, see:
+docs/development/c_to_pytorch_config_map.md
+
+C-Code Implementation Reference (from nanoBragg.c):
+The configuration is currently handled by a large argument-parsing loop
+in main(). The future dataclasses will encapsulate the variables set
+in this block.
+
+Representative examples from nanoBragg.c (lines 506-1101):
+
+// Crystal Parameters
+[2025-10-06T04:39:24] tokens used: 76,097
+[2025-10-06T04:39:24] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:39:40] thinking
+
+**Preparing input.md with detailed plan**
+
+I’m organizing all the orientation-related updates, test instructions, environment setups, pitfalls, and reference pointers into a structured input.md file around 130 lines. I’ll ensure clear commands, mapped tests, focus tags, and helpful notes are included to guide next-phase work and debugging.
+[2025-10-06T04:40:03] exec bash -lc "cd /Users/ollie/Documents/nanoBragg3 && cat <<'EOF' > input.md
+Timestamp: 2025-10-06 04:39:01Z
+Commit: 58b1412
+Author: galph
+Active Focus: [CLI-FLAGS-003] Phase G2 orientation ingestion before parity rerun
+Summary: Preserve MOSFLM A* orientation through Crystal so the supervisor parity command can run end-to-end.
+Phase: Implementation
+Focus: [CLI-FLAGS-003] Phase G2 — Teach Crystal to ingest MOSFLM orientation
+Branch: feature/spec-based-2
+Mapped tests: env AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py tests/test_at_geo_003.py -v
+Artifacts: reports/2025-10-cli-flags/phase_g/
+
+Do Now: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm (Phase G2) — env AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py tests/test_at_geo_003.py -v
+
+If Blocked: Capture C vs PyTorch lattice-vector traces for the supervisor command (pixel 1039,685) and write summary to reports/2025-10-cli-flags/phase_g/orientation_blocked.md; log the divergence in docs/fix_plan.md Attempts before exiting.
+
+Priorities & Rationale:
+- plans/active/cli-noise-pix0/plan.md:84 — Phase G2 is the next blocker; without Crystal ingesting MOSFLM A* the parity command cannot succeed.
+- docs/fix_plan.md:448 — Fix-plan attempts flag A* loss as the “PRIMARY BUG”; clearing Phase G2 is required before Phase F3 parity rerun.
+- docs/architecture/pytorch_design.md:182 — Reciprocal vectors must be tensorized and reusable; orientation path must comply with vectorization rules.
+- docs/development/c_to_pytorch_config_map.md:40 — Config map confirms MOSFLM matrices are authoritative for CUSTOM pivot; we must honor them verbatim.
+- docs/debugging/debugging.md:32 — Trace-first debugging remains mandatory; Phase G3 validation will rely on these traces.
+- reports/2025-10-cli-flags/phase_e/trace_summary.md — Existing evidence lists the wrong rot_a/rot_b/rot_c; Phase G2 must eliminate this delta.
+- src/nanobrag_torch/config.py:128 — CrystalConfig already stores mosflm_*_star; Crystal must consume them without "'`.item()` detaches.
+
+How-To Map:
+- Export env vars before any commands:
+- `export AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md`
+- `export KMP_DUPLICATE_LIB_OK=TRUE`
+- `export NB_C_BIN=./golden_suite_generator/nanoBragg`
+- Create Phase G artefact directory: `mkdir -p reports/2025-10-cli-flags/phase_g/{design,pytest,traces,parity}`
+- Design prep:
+- Summarize intended orientation flow in `reports/2025-10-cli-flags/phase_g/design/mosflm_orientation.md` (include Core Rules 12–13 checklist).
+- Implementation steps:
+- In `src/nanobrag_torch/models/crystal.py`, detect `config.mosflm_a_star`/`b_star`/`c_star` and convert to tensors on the active device/dtype (`torch.as_tensor(..., device=self.device, dtype=self.dtype)`); keep gradient expectations documented even if arrays start as numpy.
+- Replace canonical reciprocal-vector bootstrap when MOSFLM data is present: use vectors as the starting point for Core Rule 12 misset pipeline, then recompute real vectors and re-derived reciprocal vectors per Core Rule 13 (metric duality with `V_actual`).
+- Ensure caches (`_geometry_cache`) invalidate when orientation tensors injected; avoid mixing numpy arrays inside cache keys.
+- Add lightweight helper (if needed) under `Crystal` to rebuild volume using `torch.dot(rot_a, torch.cross(rot_b, rot_c))` and assert `a·a* ≈ 1` etc.
+- Maintain differentiability: no `.item()`, `.detach()`, `.numpy()` or device hard-coding; rely on `.to()` and dtype inherited from config.
+- Validation sequence (record logs under `reports/2025-10-cli-flags/phase_g/pytest/`):
+- `env AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py -v | tee reports/2025-10-cli-flags/phase_g/pytest/test_cli_flags.log`
+- `env AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_geo_003.py -v | tee reports/2025-10-cli-flags/phase_g/pytest/test_at_geo_003.log`
+- If CUDA is available, rerun the CLI suite with `--maxfail=1 -k pix0` under `device=cuda` and note availability in design log.
+- Evidence capture:
+- Generate PyTorch lattice vector dump via `python scripts/debug_pixel_trace.py --config configs/supervisor_phase_g.yaml > reports/2025-10-cli-flags/phase_g/traces/trace_py.log` (create temp config mirroring the parity command).
+- Run equivalent C trace using instrumented binary, store as `trace_c.log`, and diff with `diff -u trace_c.log trace_py.log > trace_diff.log`.
+- Once vectors align, queue Phase G3 parity (next loop) with `nb-compare --outdir reports/2025-10-cli-flags/phase_g/parity -- -mat A.mat ...` (full args in prompts/supervisor.md).
+- Documentation tasks:
+- Update `docs/fix_plan.md` Attempt history with Phase G2 summary (include metrics, artifact paths) once implementation validated.
+- Mark plan task G2 as `[D]` with artifact references after commit.
+- Note any remaining gaps (e.g., polarization) under “Next Actions” in fix_plan entry.
+
+Pitfalls To Avoid:
+- Recomputing canonical reciprocal axes when MOSFLM data exists; this erases orientation and reintroduces the regression.
+- Leaving MOSFLM vectors as numpy arrays; convert once and keep tensors device/dtype aware.
+- Forgetting to recalc real vectors after misset rotation — violates Core Rule 12 and breaks metric duality.
+- Skipping reciprocal re-derivation (Core Rule 13); failing to recompute a*/b*/c* from real vectors will drift dot products.
+- Introducing `.item()` on tensors like `close_distance` or volumes; this severs gradients and breaks long-term goal #1 guardrails.
+- Allocating new CPU tensors inside CUDA runs; always use `.to(self.device)`.
+- Neglecting to invalidate geometry caches after injecting orientation; stale cache entries will mask fixes.
+- Ignoring trace comparison; without TRACE logs we cannot prove parity gains.
+- Overwriting or deleting Protected Assets listed in docs/index.md (input.md, loop.sh, supervisor.sh, etc.).
+- Leaving artefacts unstaged/unreferenced; Protected Assets policy requires clean documentation.
+
+Pointers:
+- plans/active/cli-noise-pix0/plan.md:80 — Phase G task table with exit criteria.
+- docs/fix_plan.md:448 — Current attempts and next actions for `[CLI-FLAGS-003]`.
+- docs/architecture/pytorch_design.md:186 — Reciprocal/real vector recalculation guidance.
+- docs/development/c_to_pytorch_config_map.md:41 — MOSFLM orientation mapping details.
+- docs/debugging/debugging.md:30 — Trace SOP to follow during parity triage.
+- docs/architecture/detector.md:120 — Context for CUSTOM pivot handling impacting pix0/beam vector logic.
+- specs/spec-a-cli.md:75 — CLI contract for `-mat`, `-pix0_vector_mm`, and related flags.
+- src/nanobrag_torch/models/crystal.py:200 — Current reciprocal vector bootstrap that needs orientation branching.
+- reports/2025-10-cli-flags/phase_e/trace_summary.md — Evidence of present orientation mismatch for reference.
+- prompts/supervisor.md:18 — Authoritative parity command arguments.
+
+Next Up:
+- Phase G3 parity rerun once lattice vectors match C (same reports directory).
+- [VECTOR-TRICUBIC-001] Phase A evidence capture after CLI parity unblocks (prepare reports/2025-10-vectorization/phase_a/ baseline logs).
+EOF
+' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:40:04] bash -lc "cd /Users/ollie/Documents/nanoBragg3 && cat <<'EOF' > input.md
+Timestamp: 2025-10-06 04:39:01Z
+Commit: 58b1412
+Author: galph
+Active Focus: [CLI-FLAGS-003] Phase G2 orientation ingestion before parity rerun
+Summary: Preserve MOSFLM A* orientation through Crystal so the supervisor parity command can run end-to-end.
+Phase: Implementation
+Focus: [CLI-FLAGS-003] Phase G2 — Teach Crystal to ingest MOSFLM orientation
+Branch: feature/spec-based-2
+Mapped tests: env AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py tests/test_at_geo_003.py -v
+Artifacts: reports/2025-10-cli-flags/phase_g/
+
+Do Now: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm (Phase G2) — env AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py tests/test_at_geo_003.py -v
+
+If Blocked: Capture C vs PyTorch lattice-vector traces for the supervisor command (pixel 1039,685) and write summary to reports/2025-10-cli-flags/phase_g/orientation_blocked.md; log the divergence in docs/fix_plan.md Attempts before exiting.
+
+Priorities & Rationale:
+- plans/active/cli-noise-pix0/plan.md:84 — Phase G2 is the next blocker; without Crystal ingesting MOSFLM A* the parity command cannot succeed.
+- docs/fix_plan.md:448 — Fix-plan attempts flag A* loss as the “PRIMARY BUG”; clearing Phase G2 is required before Phase F3 parity rerun.
+- docs/architecture/pytorch_design.md:182 — Reciprocal vectors must be tensorized and reusable; orientation path must comply with vectorization rules.
+- docs/development/c_to_pytorch_config_map.md:40 — Config map confirms MOSFLM matrices are authoritative for CUSTOM pivot; we must honor them verbatim.
+- docs/debugging/debugging.md:32 — Trace-first debugging remains mandatory; Phase G3 validation will rely on these traces.
+- reports/2025-10-cli-flags/phase_e/trace_summary.md — Existing evidence lists the wrong rot_a/rot_b/rot_c; Phase G2 must eliminate this delta.
+- src/nanobrag_torch/config.py:128 — CrystalConfig already stores mosflm_*_star; Crystal must consume them without "'`.item()` detaches.
+
+How-To Map:
+- Export env vars before any commands:
+- `export AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md`
+- `export KMP_DUPLICATE_LIB_OK=TRUE`
+- `export NB_C_BIN=./golden_suite_generator/nanoBragg`
+- Create Phase G artefact directory: `mkdir -p reports/2025-10-cli-flags/phase_g/{design,pytest,traces,parity}`
+- Design prep:
+- Summarize intended orientation flow in `reports/2025-10-cli-flags/phase_g/design/mosflm_orientation.md` (include Core Rules 12–13 checklist).
+- Implementation steps:
+- In `src/nanobrag_torch/models/crystal.py`, detect `config.mosflm_a_star`/`b_star`/`c_star` and convert to tensors on the active device/dtype (`torch.as_tensor(..., device=self.device, dtype=self.dtype)`); keep gradient expectations documented even if arrays start as numpy.
+- Replace canonical reciprocal-vector bootstrap when MOSFLM data is present: use vectors as the starting point for Core Rule 12 misset pipeline, then recompute real vectors and re-derived reciprocal vectors per Core Rule 13 (metric duality with `V_actual`).
+- Ensure caches (`_geometry_cache`) invalidate when orientation tensors injected; avoid mixing numpy arrays inside cache keys.
+- Add lightweight helper (if needed) under `Crystal` to rebuild volume using `torch.dot(rot_a, torch.cross(rot_b, rot_c))` and assert `a·a* ≈ 1` etc.
+- Maintain differentiability: no `.item()`, `.detach()`, `.numpy()` or device hard-coding; rely on `.to()` and dtype inherited from config.
+- Validation sequence (record logs under `reports/2025-10-cli-flags/phase_g/pytest/`):
+- `env AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py -v | tee reports/2025-10-cli-flags/phase_g/pytest/test_cli_flags.log`
+- `env AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_geo_003.py -v | tee reports/2025-10-cli-flags/phase_g/pytest/test_at_geo_003.log`
+- If CUDA is available, rerun the CLI suite with `--maxfail=1 -k pix0` under `device=cuda` and note availability in design log.
+- Evidence capture:
+- Generate PyTorch lattice vector dump via `python scripts/debug_pixel_trace.py --config configs/supervisor_phase_g.yaml > reports/2025-10-cli-flags/phase_g/traces/trace_py.log` (create temp config mirroring the parity command).
+- Run equivalent C trace using instrumented binary, store as `trace_c.log`, and diff with `diff -u trace_c.log trace_py.log > trace_diff.log`.
+- Once vectors align, queue Phase G3 parity (next loop) with `nb-compare --outdir reports/2025-10-cli-flags/phase_g/parity -- -mat A.mat ...` (full args in prompts/supervisor.md).
+- Documentation tasks:
+- Update `docs/fix_plan.md` Attempt history with Phase G2 summary (include metrics, artifact paths) once implementation validated.
+- Mark plan task G2 as `[D]` with artifact references after commit.
+- Note any remaining gaps (e.g., polarization) under “Next Actions” in fix_plan entry.
+
+Pitfalls To Avoid:
+- Recomputing canonical reciprocal axes when MOSFLM data exists; this erases orientation and reintroduces the regression.
+- Leaving MOSFLM vectors as numpy arrays; convert once and keep tensors device/dtype aware.
+- Forgetting to recalc real vectors after misset rotation — violates Core Rule 12 and breaks metric duality.
+- Skipping reciprocal re-derivation (Core Rule 13); failing to recompute a*/b*/c* from real vectors will drift dot products.
+- Introducing `.item()` on tensors like `close_distance` or volumes; this severs gradients and breaks long-term goal #1 guardrails.
+- Allocating new CPU tensors inside CUDA runs; always use `.to(self.device)`.
+- Neglecting to invalidate geometry caches after injecting orientation; stale cache entries will mask fixes.
+- Ignoring trace comparison; without TRACE logs we cannot prove parity gains.
+- Overwriting or deleting Protected Assets listed in docs/index.md (input.md, loop.sh, supervisor.sh, etc.).
+- Leaving artefacts unstaged/unreferenced; Protected Assets policy requires clean documentation.
+
+Pointers:
+- plans/active/cli-noise-pix0/plan.md:80 — Phase G task table with exit criteria.
+- docs/fix_plan.md:448 — Current attempts and next actions for `[CLI-FLAGS-003]`.
+- docs/architecture/pytorch_design.md:186 — Reciprocal/real vector recalculation guidance.
+- docs/development/c_to_pytorch_config_map.md:41 — MOSFLM orientation mapping details.
+- docs/debugging/debugging.md:30 — Trace SOP to follow during parity triage.
+- docs/architecture/detector.md:120 — Context for CUSTOM pivot handling impacting pix0/beam vector logic.
+- specs/spec-a-cli.md:75 — CLI contract for `-mat`, `-pix0_vector_mm`, and related flags.
+- src/nanobrag_torch/models/crystal.py:200 — Current reciprocal vector bootstrap that needs orientation branching.
+- reports/2025-10-cli-flags/phase_e/trace_summary.md — Evidence of present orientation mismatch for reference.
+- prompts/supervisor.md:18 — Authoritative parity command arguments.
+
+Next Up:
+- Phase G3 parity rerun once lattice vectors match C (same reports directory).
+- [VECTOR-TRICUBIC-001] Phase A evidence capture after CLI parity unblocks (prepare reports/2025-10-vectorization/phase_a/ baseline logs).
+EOF
+' succeeded in 861ms:
+
+[2025-10-06T04:40:04] tokens used: 81,591
+[2025-10-06T04:40:04] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:40:08] thinking
+
+**Preparing files for commit**
+[2025-10-06T04:40:09] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat input.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:40:09] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && cat input.md' succeeded in 713ms:
+Timestamp: 2025-10-06 04:39:01Z
+Commit: 58b1412
+Author: galph
+Active Focus: [CLI-FLAGS-003] Phase G2 orientation ingestion before parity rerun
+Summary: Preserve MOSFLM A* orientation through Crystal so the supervisor parity command can run end-to-end.
+Phase: Implementation
+Focus: [CLI-FLAGS-003] Phase G2 — Teach Crystal to ingest MOSFLM orientation
+Branch: feature/spec-based-2
+Mapped tests: env AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py tests/test_at_geo_003.py -v
+Artifacts: reports/2025-10-cli-flags/phase_g/
+
+Do Now: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm (Phase G2) — env AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_flags.py tests/test_at_geo_003.py -v
+
+If Blocked: Capture C vs PyTorch lattice-vector traces for the supervisor command (pixel 1039,685) and write summary to reports/2025-10-cli-flags/phase_g/orientation_blocked.md; log the divergence in docs/fix_plan.md Attempts before exiting.
+
+Priorities & Rationale:
+- plans/active/cli-noise-pix0/plan.md:84 — Phase G2 is the next blocker; without Crystal ingesting MOSFLM A* the parity command cannot succeed.
+- docs/fix_plan.md:448 — Fix-plan attempts flag A* loss as the “PRIMARY BUG”; clearing Phase G2 is required before Phase F3 parity rerun.
+- docs/architecture/pytorch_design.md:182 — Reciprocal vectors must be tensorized and reusable; orientation path must comply with vectorization rules.
+- docs/development/c_to_pytorch_config_map.md:40 — Config map confirms MOSFLM matrices are authoritative for CUSTOM pivot; we must honor them verbatim.
+[2025-10-06T04:40:09] tokens used: 83,671
+[2025-10-06T04:40:09] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:40:12] thinking
+
+**Preparing to update galph_memory.md**
+[2025-10-06T04:40:13] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && tail -n 40 galph_memory.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:40:14] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && tail -n 40 galph_memory.md' succeeded in 706ms:
+- Outstanding: `scaled.hkl.1` duplicate remains (defer removal to implementation loop); pix0 transform and matrix orientation fixes queued for subsequent phases after beam vector wiring lands.
+## 2025-10-16 (galph loop — Phase F2 prep)
+- `git pull --rebase` clean; reviewed docs + active plan per SOP and confirmed we remain on `feature/spec-based-2`.
+- Coin flip ⇒ heads: inspected Ralph’s last commits (581444a, d5eeb5c). Beam-vector threading looks sound but `reports/2025-10-cli-flags/phase_f/beam_vector_after_fix.txt` is empty; parity gap (pix0/orientation) still open.
+- Updated `plans/active/cli-noise-pix0/plan.md` (Phase F1 → [D], added note to repopulate artifact) and refreshed `docs/fix_plan.md` Next Actions accordingly.
+- Rewrote `input.md` directing Ralph to implement Phase F2 (CUSTOM pix0 transform), repopulate the beam-vector artifact, and rerun the full parity harness; documented command scaffolding + artifact paths under `reports/2025-10-cli-flags/phase_f/`.
+- No new plan created; CLI plan remains authoritative. Pending follow-up: Phase F2 implementation + parity rerun, then proceed to Phase G.
+
+## 2025-10-16 (galph loop — F1 beam-vector wiring audit)
+- Repo synced clean; no upstream changes before analysis.
+- Verified `_calculate_pix0_vector()` still instantiates convention-default beam vectors, so CUSTOM overrides never influence r-factor/pix0 math despite CLI wiring.
+- Updated `plans/active/cli-noise-pix0/plan.md` (Phase F snapshot now flags F1 as [P] with guidance to reuse `self.beam_vector`) and refreshed `[CLI-FLAGS-003]` Next Actions accordingly.
+- Reissued `input.md` to keep Ralph on Phase F1, bundling a validation harness that writes beam/pix0 tensors under `reports/2025-10-cli-flags/phase_f/`.
+- Follow-up: Ralph to refactor `_calculate_pix0_vector()` to consume `self.beam_vector`, regenerate artifacts, and log Attempt #11 before tackling Phase F2.
+## 2025-10-06 (galph loop — CLI pix0 + vectorization plan)
+- Trimmed docs/fix_plan.md (821 lines) by archiving completed GOLDEN-DATA-001 / GRADIENT-MISSET-001 / AT-PARALLEL-012-PEAKMATCH / DTYPE-DEFAULT-001 entries to archive/fix_plan_archive.md with summaries.
+- Rebuilt plans/active/vectorization.md into phased roadmap (A–G) covering tricubic evidence → implementation → validation, then detector absorption vectorization & documentation closure.
+- Added new fix-plan item `[VECTOR-TRICUBIC-001]` linking to the refreshed plan; status `in_planning` pending Phase A evidence.
+- Refreshed `[CLI-FLAGS-003]` focus via input.md: Do Now = Phase F2 CUSTOM pix0 transform (pytest pix0 subset + parity rerun + pix0 vector artifact). Command scaffolding recorded for C & PyTorch runs under `reports/2025-10-cli-flags/phase_f/`.
+- Outstanding follow-ups for Ralph: implement plan Phase F2, capture pix0/beam artifact, rerun parity harness, then progress to Phase G orientation once geometry aligns.
+[2025-10-06T04:40:14] tokens used: 85,793
+[2025-10-06T04:40:14] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:40:19] thinking
+
+**Appending dated project update entry**
+[2025-10-06T04:40:24] exec bash -lc "cd /Users/ollie/Documents/nanoBragg3 && cat <<'EOF' >> galph_memory.md
+
+## 2025-10-06 (galph loop — Phase G2 orientation prep)
+- "'`git pull --rebase` fast-forward; no conflicts. Reviewed required specs/arch/testing docs plus `plans/active/*` and fix_plan per SOP.
+- Deep analysis vs long-term goals:
+  * Goal 1 (CLI parity) still blocked by missing MOSFLM orientation in `Crystal`; commit 28fc584 wired A* through the CLI/config but Crystal ignores it, keeping canonical vectors → parity metrics ≈−5e-06.
+  * Goal 1 also needs sustained differentiability—close_distance tensor fix (b049227) confirmed, but parity harness remains pending Phase G2/G3.
+  * Goal 2 (vectorization) untouched since roadmap rewrite; Phase A evidence not yet captured, so we deferred until CLI parity stabilises.
+- Updated `plans/active/cli-noise-pix0/plan.md` marking Phase G1 as [D] with commit 28fc584 context; highlighted G2 as the next actionable blocker.
+- Replaced `input.md` directing Ralph to execute Phase G2 (Crystal orientation ingestion), with explicit artifact directory, trace workflow, and pytest commands.
+- No new plans required; vectorization roadmap stands. Next follow-ups for Ralph: implement Crystal orientation per Core Rules 12–13, capture trace evidence under `reports/2025-10-cli-flags/phase_g/`, then proceed to Phase G3 parity rerun.
+EOF
+' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:40:24] bash -lc "cd /Users/ollie/Documents/nanoBragg3 && cat <<'EOF' >> galph_memory.md
+
+## 2025-10-06 (galph loop — Phase G2 orientation prep)
+- "'`git pull --rebase` fast-forward; no conflicts. Reviewed required specs/arch/testing docs plus `plans/active/*` and fix_plan per SOP.
+- Deep analysis vs long-term goals:
+  * Goal 1 (CLI parity) still blocked by missing MOSFLM orientation in `Crystal`; commit 28fc584 wired A* through the CLI/config but Crystal ignores it, keeping canonical vectors → parity metrics ≈−5e-06.
+  * Goal 1 also needs sustained differentiability—close_distance tensor fix (b049227) confirmed, but parity harness remains pending Phase G2/G3.
+  * Goal 2 (vectorization) untouched since roadmap rewrite; Phase A evidence not yet captured, so we deferred until CLI parity stabilises.
+- Updated `plans/active/cli-noise-pix0/plan.md` marking Phase G1 as [D] with commit 28fc584 context; highlighted G2 as the next actionable blocker.
+- Replaced `input.md` directing Ralph to execute Phase G2 (Crystal orientation ingestion), with explicit artifact directory, trace workflow, and pytest commands.
+- No new plans required; vectorization roadmap stands. Next follow-ups for Ralph: implement Crystal orientation per Core Rules 12–13, capture trace evidence under `reports/2025-10-cli-flags/phase_g/`, then proceed to Phase G3 parity rerun.
+EOF
+' succeeded in 758ms:
+
+[2025-10-06T04:40:24] tokens used: 88,012
+[2025-10-06T04:40:24] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:40:27] thinking
+
+**Checking git status for hygiene**
+[2025-10-06T04:40:28] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git status --short' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:40:28] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git status --short' succeeded in 732ms:
+ M galph_memory.md
+ M input.md
+ M plans/active/cli-noise-pix0/plan.md
+[2025-10-06T04:40:28] tokens used: 88,528
+[2025-10-06T04:40:28] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:40:30] thinking
+
+**Reviewing code differences**
+[2025-10-06T04:40:31] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git diff' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:40:31] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git diff' succeeded in 684ms:
+diff --git a/galph_memory.md b/galph_memory.md
+index df8d156..27fb364 100644
+--- a/galph_memory.md
++++ b/galph_memory.md
+@@ -1006,3 +1006,13 @@ Follow-ups for Ralph:
+ - Updated plans/active/cli-noise-pix0/plan.md (F2 → [D], F3 marked pending orientation) and refreshed fix_plan next actions to push G1–G3 plus gradient fix.
+ - Rewrote input.md (Do Now = Phase G1 orientation + grad hygiene, mapped pytest command, parity harness instructions) with artifact expectations under reports/2025-10-cli-flags/phase_g/.
+ - Upcoming asks for Ralph: preserve MOSFLM A* in config/Crystal, keep close_distance differentiable, rerun supervisor parity with new traces, then proceed toward Phase H.
++
++## 2025-10-06 (galph loop — Phase G2 orientation prep)
++- `git pull --rebase` fast-forward; no conflicts. Reviewed required specs/arch/testing docs plus `plans/active/*` and fix_plan per SOP.
++- Deep analysis vs long-term goals:
++  * Goal 1 (CLI parity) still blocked by missing MOSFLM orientation in `Crystal`; commit 28fc584 wired A* through the CLI/config but Crystal ignores it, keeping canonical vectors → parity metrics ≈−5e-06.
++  * Goal 1 also needs sustained differentiability—close_distance tensor fix (b049227) confirmed, but parity harness remains pending Phase G2/G3.
++  * Goal 2 (vectorization) untouched since roadmap rewrite; Phase A evidence not yet captured, so we deferred until CLI parity stabilises.
++- Updated `plans/active/cli-noise-pix0/plan.md` marking Phase G1 as [D] with commit 28fc584 context; highlighted G2 as the next actionable blocker.
++- Replaced `input.md` directing Ralph to execute Phase G2 (Crystal orientation ingestion), with explicit artifact directory, trace workflow, and pytest commands.
++- No new plans required; vectorization roadmap stands. Next follow-ups for Ralph: implement Crystal orientation per Core Rules 12–13, capture trace evidence under `reports/2025-10-cli-flags/phase_g/`, then proceed to Phase G3 parity rerun.
+diff --git a/input.md b/input.md
+index 5aae920..15121cf 100644
+[2025-10-06T04:40:31] tokens used: 88,798
+[2025-10-06T04:40:31] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:40:34] thinking
+
+**Staging and committing changes**
+[2025-10-06T04:40:35] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git add input.md galph_memory.md plans/active/cli-noise-pix0/plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:40:35] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git add input.md galph_memory.md plans/active/cli-noise-pix0/plan.md' succeeded in 714ms:
+
+[2025-10-06T04:40:35] tokens used: 91,741
+[2025-10-06T04:40:35] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:40:38] thinking
+
+**Committing with descriptive message**
+[2025-10-06T04:40:38] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git commit -m "SUPERVISOR: Phase G2 orientation prep - tests: not run"' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:40:39] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git commit -m "SUPERVISOR: Phase G2 orientation prep - tests: not run"' succeeded in 739ms:
+[feature/spec-based-2 d8bedc9] SUPERVISOR: Phase G2 orientation prep - tests: not run
+ 3 files changed, 70 insertions(+), 82 deletions(-)
+[2025-10-06T04:40:39] tokens used: 92,021
+[2025-10-06T04:40:39] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:40:42] thinking
+
+**Pushing changes to repository**
+[2025-10-06T04:40:43] exec bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git push' in /Users/ollie/Documents/nanoBragg3
+[2025-10-06T04:40:47] bash -lc 'cd /Users/ollie/Documents/nanoBragg3 && git push' succeeded in 3.05s:
+To github.com:hoidn/nanoBragg.git
+   58b1412..d8bedc9  feature/spec-based-2 -> feature/spec-based-2
+[2025-10-06T04:40:47] tokens used: 92,335
+[2025-10-06T04:40:47] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+
+[2025-10-06T04:40:55] thinking
+
+**Preparing final summary message**
+
+I'll organize a clear, friendly final response that highlights key analysis points like marking Phase G1 done, input rewrites, and vectorization status. I'll include debugging hypotheses about the orientation parity gap, cite relevant file paths for evidence, and wrap up with concise next steps mentioning tests weren't run. This will ensure the user gets a structured, actionable overview.
+[2025-10-06T04:40:56] codex
+
+Marked Phase G1 as complete in `plans/active/cli-noise-pix0/plan.md:84` so the roadmap now points Ralph squarely at Phase G2, and rewrote `input.md` with concrete commands, artifact layout, and guardrails for ingesting MOSFLM orientation inside `Crystal`. Logged the turn in `galph_memory.md:1006` so future loops know G1 is done, G2 is the blocker, and vectorization stays queued until parity recovers.
+
+**Parity hypotheses**
+- Orientation loss in `Crystal` (config stores A* but `crystal.py` still boots canonical vectors) — confidence high. First divergence already documented in `reports/2025-10-cli-flags/phase_e/trace_summary.md`; confirming fix requires re-running the trace harness after wiring tensors through Core Rules 12–13.
+- Residual detector gradient issues — mitigated: commit b049227 keeps `close_distance` tensor-valued, so no further action unless new regressions appear.
+- Polarization mismatch (0.9126 vs 1.0) — acknowledged but deferred until Phase G unblocks parity.
+
+Tests: not run (supervisor planning loop).
+
+Next steps for Ralph:
+1. Follow the new `input.md` Do Now to implement Phase G2, capture trace evidence, and update fix_plan once rot_a/b/c align with C.
+2. Once traces match, proceed to Phase G3 parity rerun and store metrics under `reports/2025-10-cli-flags/phase_g/`.
+3. Keep vectorization plan (`plans/active/vectorization.md`) parked until CLI parity stabilises, then kick off Phase A evidence capture.
+[2025-10-06T04:41:00] tokens used: 93,199
+[2025-10-06T04:41:00] turn diff:
+diff --git a/plans/active/cli-noise-pix0/plan.md b/plans/active/cli-noise-pix0/plan.md
+index 3c4d24032ce2ab4240db7570b6324d73fb4aaa95..edd01aabc29e76a334ca1ab8790ad77efc01dd0a
+--- a/plans/active/cli-noise-pix0/plan.md
++++ b/plans/active/cli-noise-pix0/plan.md
+@@ -84,7 +84,7 @@
+ 
+ | ID | Task Description | State | How/Why & Guidance |
+ | --- | --- | --- | --- |
+-| G1 | Extend CLI config to retain A* vectors | [ ] | Adjust `parse_and_validate_args` to cache the wavelength-scaled MOSFLM reciprocal vectors (Å⁻¹) alongside cell params so prompts/main loops can hand them to Crystal. |
++| G1 | Extend CLI config to retain A* vectors | [D] | ✅ Commit 28fc584 stores MOSFLM reciprocal vectors from `-mat` in `parse_and_validate_args` and threads them into `CrystalConfig`; 26-case CLI regression sweep captured in Attempt #15 notes. |
+ | G2 | Teach `Crystal` to ingest orientation | [ ] | Update `CrystalConfig`/`Crystal` initialization to accept stored reciprocal vectors, apply Core Rules 12–13 (misset pipeline + metric duality), and rebuild real/reciprocal vectors using the supplied orientation. Reference nanoBragg.c:3135-3278. |
+ | G3 | Trace verification + parity rerun | [ ] | Repeat Phase E harness post-G1/G2; document lattice-vector parity in `reports/2025-10-cli-flags/phase_g/trace_summary_orientation.md` and rerun supervisor parity (artifacts under `phase_g/parity/`). |
+ 
+
+Reading prompt from stdin...
+Already up to date.
+To github.com:hoidn/nanoBragg.git
+   d8bedc9..aba84f4  HEAD -> feature/spec-based-2
+Waiting for Ralph to complete i=18...
+Already up to date.
+[sync] state: actor=ralph status=waiting-ralph iter=18
+Updating aba84f4..3691435
+Fast-forward
+ sync/state.json | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+From github.com:hoidn/nanoBragg
+   aba84f4..3691435  feature/spec-based-2 -> origin/feature/spec-based-2
+[sync] state: actor=ralph status=running-ralph iter=18
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Updating 3691435..2bc6f4e
+Fast-forward
+ docs/fix_plan.md                            | 18 +++++-
+ plans/active/cli-noise-pix0/plan.md         |  2 +-
+ pyproject.toml                              |  6 +-
+ reports/2025-10-cli-flags/phase_g/README.md | 85 +++++++++++++++++++++++++++
+ src/nanobrag_torch/models/crystal.py        | 89 ++++++++++++++++++-----------
+ 5 files changed, 165 insertions(+), 35 deletions(-)
+ create mode 100644 reports/2025-10-cli-flags/phase_g/README.md
+From github.com:hoidn/nanoBragg
+   3691435..2bc6f4e  feature/spec-based-2 -> origin/feature/spec-based-2
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Updating 2bc6f4e..bd94c53
+Fast-forward
+ sync/state.json | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+From github.com:hoidn/nanoBragg
+   2bc6f4e..bd94c53  feature/spec-based-2 -> origin/feature/spec-based-2
+[sync] state: actor=galph status=complete iter=19
+Ralph completed iteration 18; proceeding to 19

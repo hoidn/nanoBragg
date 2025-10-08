@@ -1,0 +1,1978 @@
+Already up to date.
+Waiting for expected_actor=galph...
+Already up to date.
+[sync] state: actor=ralph status=running-ralph iter=72
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Updating a6ed279..9b9e38e
+Fast-forward
+ docs/fix_plan.md                                   |  26 +-
+ .../phase_l/structure_factor/analysis.md           | 114 +++++++
+ .../phase_l/structure_factor/probe.log             |  31 ++
+ .../phase_l/structure_factor/probe.py              | 364 +++++++++++++++++++++
+ 4 files changed, 531 insertions(+), 4 deletions(-)
+ create mode 100644 reports/2025-10-cli-flags/phase_l/structure_factor/analysis.md
+ create mode 100644 reports/2025-10-cli-flags/phase_l/structure_factor/probe.log
+ create mode 100644 reports/2025-10-cli-flags/phase_l/structure_factor/probe.py
+From github.com:hoidn/nanoBragg
+   a6ed279..9b9e38e  feature/spec-based-2 -> origin/feature/spec-based-2
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Updating 9b9e38e..65c1080
+Fast-forward
+ sync/state.json | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+From github.com:hoidn/nanoBragg
+   9b9e38e..65c1080  feature/spec-based-2 -> origin/feature/spec-based-2
+[sync] state: actor=galph status=complete iter=73
+To github.com:hoidn/nanoBragg.git
+   65c1080..e938c67  HEAD -> feature/spec-based-2
+$ codex exec -m gpt-5-codex -c model_reasoning_effort=high --dangerously-bypass-approvals-and-sandbox
+[2025-10-07T06:33:22] OpenAI Codex v0.38.0 (research preview)
+--------
+workdir: /Users/ollie/Documents/nanoBragg3
+model: gpt-5-codex
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: high
+reasoning summaries: auto
+--------
+[2025-10-07T06:33:22] User instructions:
+<role>
+planning, review and analysis. do not make implementation code changes.
+</role>
+<current long-term goals>
+in order of decreasing priority:
+<1>
+run a successful parallel test of pytorch nanobragg against nanobragg c with this command:
+
+nanoBragg  -mat A.mat -floatfile img.bin -hkl scaled.hkl  -nonoise  -nointerpolate -oversample 1  -exposure 1  -flux 1e18 -beamsize 1.0  -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080  -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866  -beam_vector 0.00051387949 0.0 -0.99999986  -Na 36  -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0
+
+this will require first adding support for the following cli params to pytorch nanobragg:
+-nonoise
+-pix0_vector_mm
+
+</1>
+<2>
+review and firm up if needed plans/active/vectorization.md. then implement it (or rather, delegate its implementation to ralph), starting with the tricubic interpolation vectorization 
+</2>
+</current long-term goals>
+</past long term goals>
+(just for archival / reference purposes):
+- error-correcting the engineer agent 
+- profiling pytorch nanobragg to find performance bottlenecks. analyzing to understand the CRITICAL slowness of the pytorch implementation compared to reference C, which persists after our recent improvement attempts
+- finding performance issues in the PyTorch reimplementation of nanobragg (originally a C code) and speeding it up. It should be efficiently vectorized and faster than C nanobragg, but currently it's slower 
+- ensuring that the pytorch implementation uses fp32 (not fp64) by default 
+- understanding why pytorch is slower than C in the warm condition at 4096x4096 resolution and fixing the underlying performance issue, if one is found. THIS IS A CRITICAL PERFORMANCE ISSUE.
+- once all the above are taken care of: building a user-facing showcase of autodiff-based parameter refinement, with plots / visuals
+
+</past long-term goals>
+<task>
+You are galph, a planner / supervisor agent. you are overseeing the work of an agent (ralph) that is running prompts/main.md in a loop, using docs/fix_plan.md as its instruction set and long term memory. 
+
+You will get invoked repeatedly, for multiple iterations. Use galph_memory.md to communicate with your future self. You'll plans under plans/, when needed, to help steer multi-turn efforts by the coder agent (ralph). Those plans will be cross referenced from docs/fix_plan.md so that ralph can find / read them. 
+
+At the start of every invocation:
+- Run `timeout 30 git pull --rebase` with a hard 30-second timeout  to sync with origin before reviewing context. If the command times out, immediately abort any partial rebase (`git rebase --abort`) and fall back to a normal merge via `git pull --no-rebase`. Whatever path you take, resolve resulting conflicts (docs/fix_plan.md is a frequent hotspot) and document key decisions in galph_memory.md. If the pull reports conflicts:
+  * Run `git status --short` to list conflicted files.
+  * Fix each file (remove conflict markers, keep the intended content) and stage it with `git add`.
+  * When the index is clean, resume with `timeout 30 git rebase --continue --no-edit`. IMPORTANT: NEVER RUN THIS COMMAND WITHOUT TIMEOUT
+- After resolving any conflicts, read the latest galph_memory.md entry (and any linked plan files) so you do not lose past context.
+- Prune or summarize older entries when they become stale or redundant.
+
+During the main, central phase of invocation you will be doing essentially three things:
+<main analysis step 1> 
+An initial analysis pass in which you gather and review information in order to choose a <focus issue> for the turn, corresponding to <instructions> steps <0> through <3>. This will involve a multi-category selection process. You will choose both a <focus issue> and an associated <Action type> for the remainder of the iteration. The available <Action type>s are the following:
+<Action type> list:
+<1>
+<Evidence collection> (i.e. Evidence task)
+No full pytest runs. Allowed: non-mutating probes and CLI validation tools (e.g., scripts/validation/*, nb-compare, pixel trace); pytest --collect-only to validate selectors; and in TDD mode only, a single targeted pytest run to confirm the newly authored test fails. Do not change production code. This gate applies only to galph. Ralph is exempt. Do not include any Phase label in input.md.
+
+Evidence collection includes the following subtype:
+    Callchain Tracing (Evidence subtype)
+    - When to use: before code edits when the pipeline/factor order relevant to the current issue is unclear; when onboarding a new surface; or upon parity failures where the locus is unknown.
+    - Directive: run `prompts/callchain.md` with a question‑driven invocation and produce standardized artifacts under `reports/<initiative_id>/`.
+    - Example invocation variables (fill at run time):
+      analysis_question: "<what are we trying to understand or fix?>"
+      initiative_id: "<short‑slug>"
+      scope_hints: ["CLI flags", "normalization", "scaling"]
+      roi_hint: "<minimal input/ROI>"
+      namespace_filter: "<project primary package>"
+      time_budget_minutes: 30
+    - Expected outputs:
+      - `reports/<initiative_id>/callchain/static.md` (entry→sink with file:line anchors)
+      - `reports/<initiative_id>/callgraph/dynamic.txt` (optional, module‑filtered)
+      - `reports/<initiative_id>/trace/tap_points.md` (proposed numeric taps with owners)
+      - `reports/<initiative_id>/summary.md` (question‑oriented narrative + next steps)
+      - `reports/<initiative_id>/env/trace_env.json`
+    - Guardrails: evidence‑only (no prod edits), module/device/dtype neutrality, small ROI, respect Protected Assets, stable key names in traces.
+</Evidence collection>
+</1>
+<2>
+<Debug> i.e. Debugging — Hypothesis + Triage (initial pass):
+- pairs with <focus issue>s that are related to debugging or parity analysis.
+<steps>
+- Formulate 1–3 plausible hypotheses for the observed gap/issue.
+- Triage each with checks appropriate to scope using existing artifacts or quick, documented reproductions; this triage may constitute the primary work for the iteration. Record outcomes succinctly in the evidence.
+- For the top hypothesis, state confidence and the single confirming step to run next. Deliver 1–3 ranked hypotheses with supporting evidence, artifact paths, and the next confirming step.
+</steps>
+</Debug>
+</2>
+<3>
+<Planning>
+- we will be calling the plan topic the <focus issue> of this turn.
+- based on which long term <goal> and sub-goal is that effort / plan? 
+- Which existing docs/fix_plan.md items does it (i.e. the <focus issue>) relate to? 
+- Documentation review for <focus issue>: Using `docs/index.md` as the map, identify and read the specific documents relevant to the chosen <focus issue> (e.g., component contracts, architecture ADRs, parity/testing strategy). List the file paths you will rely on (with a one‑line rationale each) before drafting or updating the plan.
+- think deeply. draft / redraft the plan and save it to a .md under plans/active/. Structure the write-up as a phased implementation document (see `plans/archive/general-detector-geometry/implementation.md` for tone/shape): begin with context + phase overviews, then outline each phase’s intent, prerequisites, and exit criteria. When a phase benefits from explicit tracking, embed a checklist table using the `ID | Task Description | State | How/Why & Guidance` format (with `[ ]`, `[P]`, `[D]` markers) inside that phase section.
+  • Include reproduction commands, owners (if known), and decision rules in the guidance column.
+  • Favor narrative flow first; layer checklists only where they clarify verification steps or deliverables.
+  • Mini-template to crib when drafting:
+    ```md
+    ## Context
+    - Initiative: <initiative>
+    - Phase Goal: <outcome>
+    - Dependencies: <docs/tests>
+
+    ### Phase A — <short title>
+    Goal: <what this phase proves or delivers>
+    Prereqs: <artifacts or measurements required before starting>
+    Exit Criteria: <verifiable completion signal>
+
+    | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
+    | --- | --- | --- | --- |
+    | A1 | <Key diagnostic or implementation step> | [ ] | Run `<command>`; capture results under `reports/<date>/...`. |
+    | A2 | <Follow-up validation> | [ ] | Compare against `<artifact>`; stop if deviation > threshold. |
+    ```
+- When refreshing an existing plan, retrofit it to this phased format before adding or editing tasks.
+- review docs/fix_plan.md. edit if needed. cross reference the new plans .md so that ralph can find it.
+</Planning>
+</3>
+
+<4>
+<Review or housekeeping>
+- Review and evaluate ralph's work. Scrutinize the commit history. Look at the diffs. 
+- Are the docs/fix_plan.md contents and priorities sane? things to consider:
+  - if docs/fix_plan.md is longer than 1000 lines it should be housecleaned. If it's disorganized and / or internally inconsistent, consider how this could be addressed. 
+- after considering the above, you have enough information to choose a <focus issue> for this turn. do so. Consider the nature of the <focus issue>:
+    - Do we need a new docs/fix_plan item to put ralph back on course, fix one of his mistakes, or instruct him to do something that he overlooked? If so, draft it and add it to docs/fix_plans
+    - does the <focus issue> involve identified issues in docs/fix_plan.md? If so, fix them. If you decide to shorten docs/fix_plan.md, the least relevant portions should be moved to archive/fix_plan_archive.md (with summary + archive cross reference if appropriate)
+</Review or housekeeping>
+</4>
+
+In addition to selecting an <Action type> and <focus issue> you will choose a <Mode> flag. 
+ - Mode flags are combinable and refine execution, and are applicable to both the supervisor (you) and ralph; do not include any Phase label in input.md.
+ - available modes: <TDD | Parity | Perf | Docs | none>
+<mode descriptions>
+TDD mode (supervisor-scoped): When operating in supervisor evidence mode, author/update a single minimal failing test that encodes the acceptance criterion. Confirm it fails via a targeted pytest selector; record the selector and expected failure text in input.md. Do not change production code, and do not include any Phase label in input.md.
+</mode descriptions>
+
+</main analysis step 1>
+
+<main analysis step 2>
+Here you will do a deep analysis. You will follow the guidelines of the selected <Mode> and <Action type>, applying them to the selected <focus issue>. This corresponds to <instructions> step <3.2>.
+
+
+</main analysis step 2>
+
+<main analysis step 3>
+Here you synthesize the analysis findings into output files (<instructions> steps <3.5> to <4>)
+</main analysis step 3>
+
+
+Before concluding each invocation:
+- Append a concise update to galph_memory.md capturing key findings, decisions, and open questions (reference file paths or plan names).
+- Note any follow-up actions you expect Ralph to take.
+- If no substantial update is needed, explicitly log that fact so future runs know context was reviewed.
+</task>
+
+<instructions>
+<0>
+READ the following files:
+- Index of project documentation: `./docs/index.md`
+- $SPECS: `./specs/spec-a.md`
+- $ARCH: `./arch.md` (ADR-backed implementation architecture; reconcile design with spec, surface conflicts)
+- docs/development/c_to_pytorch_config_map.md — C↔Py config parity and implicit rules
+-- docs/debugging/debugging.md — Parallel trace-driven debugging SOP
+- $PLAN: `./fix_plan.md` (living, prioritized to‑do; keep it up to date)
+- $TESTS: `./docs/development/testing_strategy.md` (testing philosophy, tiers, seeds/tolerances, commands)
+- Set `AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md` (or project‑specific path) and consult it for authoritative reference commands and test discovery.
+<0>
+<1>
+do a deep analysis of the codebase in light of the <current long term goals>. What are some current issues / gaps and possible approaches to resolving them? Review docs/fix_plan.md and plans/active/, as previous iterations of you may have already done some legwork.
+ 
+
+
+At this point, you can do a <Callchain tracing> or <Debug> action.
+</1>
+<2>
+flip a coin using python. if it comes up <heads>:
+review ralph's work over the last N (~10 but can be more or less - you decide) iterations. Check the commit history. Has the work been productive? Have there been regressions? Do we need to provide any feedback / course-correction?
+</heads>
+if it comes up <tails>: proceed to step <3>
+</2>
+<3>
+Given your findings in <1> and <2>, think about whether there's any need for a multi-turn planning effort -- i.e. ralph can't see the forest for the trees and may struggle with major refactorings and multi-turn implementation efforts unless they are coordinated by you. Is there a need for such planning *right now*? If such a plan is already spoken for (plans/active/ or wherever else past galph might have saved to), does that plan require updates or is it up to date / high quality and simply pending? IFF you determine the need for a new plan or modification of an existing one:
+<yes case>
+follow the <Planning> <Action type> instructions
+</yes case>
+</no case>
+Since you are not <Planning>, you must select one of the other <Action type>s and follow its instructions.
+</no case>
+</3>
+<3.2>
+- Documentation review for <focus issue>: From `docs/index.md`, enumerate and read the documents that are most relevant to the chosen <focus issue>`; note the key file paths you will rely on for the impending analysis.
+- Then carefully follow the guidelines of the selected <Mode> and <Action type>, applying them to the selected <focus issue>. Complete the task that you selected in step <3>.
+</3.2>
+<3.5>
+Render and write ./input.md (supervisor→engineer steering memo). Overwrite the entire file every invocation. Keep length ~100–200 lines. Include these sections in order:
+Header:
+- Summary: <one‑sentence goal for this loop>
+ - Mode: <TDD | Parity | Perf | Docs | none>
+- Focus: <plan item ID/title from docs/fix_plan.md>
+- Branch: <expected branch>
+- Mapped tests: <validated list | none — evidence‑only>
+- Artifacts: <key paths to produce under reports/>
+- Do Now: 1 line naming the exact docs/fix_plan.md item (ID and title) to execute this loop, plus the exact pytest command/env to reproduce it (only when an authoritative mapping exists). If no such test exists, the Do Now MUST be to author the minimal targeted test first and then run it. If you intend to delegate the choice, write “Do Now: delegate” and provide decision guidance below.
+  - Note: If operating in supervisor <Evidence collection> (internal-only), do not run the full suite. Allowed: pytest --collect-only to validate selectors; in TDD mode only, run one targeted selector to confirm a new failing test. All other test execution is deferred to Ralph. Do not include any Phase label in input.md.
+<Do Now guidelines>
+Verification scripts: You may run nb-compare and scripts/validation/* to collect metrics and artifacts (no code changes). Record outputs under reports/.
+Mapped tests under supervisor evidence mode: Include exact selectors in input.md; validate with --collect-only; do not run them (except the TDD failure confirmation). Do not include any Phase label in input.md.
+Command Sourcing (tests): Only include an exact pytest command in Do Now when sourced from an authoritative mapping (e.g., docs/development/testing_strategy.md) or an existing, known test file/identifier. If no authoritative mapping exists, set the Do Now task to author the minimal targeted test first; do not guess at a pytest selector here.
+Implementation: refer to phased plans, checklists, and all associated artifacts
+</Do Now guidelines>
+- If Blocked: fallback action (what to run/capture, how to record it in Attempts History).
+- Priorities & Rationale: 3–6 bullets with file pointers (specs/arch/tests/plan) justifying the Do Now.
+- How-To Map: exact commands (pytest, nb-compare), env vars, ROI/thresholds, and where to store artifacts; prefer using `scripts/validation/*` when available.
+- Pitfalls To Avoid: 5–10 crisp do/don’t reminders (device/dtype neutrality, vectorization, Protected Assets, two‑message loop policy, no ad‑hoc scripts).
+- Pointers: file paths with line anchors to the most relevant spec/arch/testing_strategy/fix_plan entries for this loop.
+- Next Up (optional): 1–2 candidates Ralph may choose next loop if he finishes early (still one thing per loop).
+
+ Rules:
+ - Ralph must not edit input.md. You (galph) are the single writer.
+ - If input.md’s Do Now conflicts with an existing in_progress selection in fix_plan.md, Ralph is allowed to switch; he must record the change in Attempts History.
+- Do not instruct Ralph to run the full test suite more than once per turn. Require targeted tests first; run the full suite once at the end only if code changed. For prompt/docs‑only loops, require `pytest --collect-only -q` instead.
+- Prefer referencing reusable scripts under `scripts/validation/` from Do Now when available.
+- Commit input.md each run as part of step <4> (commit only if the content changed).
+ </3.5>
+
+<4>
+Before finishing the loop, enforce git hygiene:
+- Run `git status --short` to inspect new or modified files that appeared during this invocation.
+- Review diffs for each change; revert only if you created it this loop and it was accidental.
+- Stage intentional updates with `git add -A` and commit via `git commit -m "SUPERVISOR: <scope> - <tests or rationale>"`, noting any tests run (use `tests: not run` when you skip them).
+- After committing, run `git push` to share the updates. If the push is rejected, `timeout 30 git pull --rebase`, resolve conflicts (capture decisions—especially for docs/fix_plan.md—in galph_memory.md), then push again.
+- If you deliberately leave the tree dirty, document the rationale in galph_memory.md so the next invocation knows why.
+</4>
+</instructions>
+<notes>
+- ignore 'routing violations'. these are out of scope.
+- ignore AT parallel 012-related items for now
+</notes>
+Now carefully and exhaustively follow your <instructions>.
+
+
+[2025-10-07T06:33:26] thinking
+
+**Preparing to run initial git pull**
+[2025-10-07T06:33:28] exec bash -lc 'timeout 30 git pull --rebase' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:33:30] bash -lc 'timeout 30 git pull --rebase' succeeded in 2.40s:
+Already up to date.
+[2025-10-07T06:33:30] tokens used: 13,875
+
+[2025-10-07T06:33:33] thinking
+
+**Preparing to read documentation files**
+[2025-10-07T06:33:34] exec bash -lc 'cat galph_memory.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:33:35] bash -lc 'cat galph_memory.md' succeeded in 708ms:
+## 2025-09-30 (loops 1-4 summary)
+- Established parity backlog: AT-020/021/022/024 failing; created first supervisor plan for AT-021 and enforced prompts/debug.md routing.
+- Diagnosed AT-024 random misset cap mismatch (π/2 vs 90 radians) and opened dedicated plan; insisted Ralph stop verification-only loops.
+- Flagged torch.compile warm-up overhead (per-instance compilation, inline tensor factories) and opened AT-012 rotation parity plan (Phases A–E).
+- Documented performance hotspots (`_compute_physics_for_position` guard tensors, `Crystal.compute_cell_tensors` clamps) and chronic dirty worktree artifacts blocking `git pull --rebase`.
+
+## 2025-09-30 (loops 5-10 summary)
+- Authored repo hygiene checklist (REPO-HYGIENE-002) to undo accidental `golden_suite_generator/nanoBragg.c` churn and purge stray reports.
+- Created PERF-PYTORCH-004 plan to hoist constants, introduce compile caching, and remove Dynamo graph breaks; reiterated need for prompts/debug.md while parity fails.
+- Repeatedly documented routing violations from Ralph and emphasized restoring Core Rule #13 metric duality after WIP commit 058986f swapped `V_actual` for formula volume.
+- Noted that `_compute_physics_for_position` still recompiles each Simulator and that benchmarks in `reports/benchmarks/20250930-004916/` show ≥200× slowdown vs C for small detectors.
+
+## 2025-09-30 (ralph debugging loop — AT-012 float32 regression)
+- **Context**: AT-PARALLEL-012 test_simple_cubic_correlation failing (43/50 peaks matched, need ≥95%) after DTYPE-DEFAULT-001 (commit 8c2ceb4) switched simulator to native float32.
+- **Investigation**:
+  * Reproduced: 43/50 peaks matched (86%), corr≈1.0 (perfect physics) ✅
+  * Parity matrix test: PASSES perfectly ✅ (live C↔Py comparison with current float32)
+  * **Root cause identified**: PyTorch float32 produces 7× more unique values (4901 vs C's 669) in hot pixels, fragmenting intensity plateaus. Peak detection algorithm (scipy.ndimage.maximum_filter) is sensitive to plateau structure.
+  * Parallel comparison: C float32 beam center (20×20 ROI) has 91 unique values; PyTorch has 331 (3.6× fragmentation). Max absolute diff tiny (0.0017).
+  * **First Divergence**: Numerical accumulation patterns differ (likely FMA, compiler opts, vectorized accumulation order, or torch.compile kernel fusion) → perfect correlation but incompatible plateau structure.
+[2025-10-07T06:33:35] tokens used: 14,687
+
+[2025-10-07T06:33:39] thinking
+
+**Preparing to read key documentation files**
+[2025-10-07T06:33:39] exec bash -lc 'cat docs/index.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:33:40] bash -lc 'cat docs/index.md' succeeded in 686ms:
+# Project Documentation Index
+
+Welcome to the central index for all `nanoBragg-PyTorch` project documentation. This guide provides a map to the key technical specifications, development processes, and historical records that define the project.
+
+---
+
+## 🏛️ Permanent Documentation
+
+These are the core, living documents that guide the project.
+
+### Core Project Guides
+### PyTorch Guardrails
+* **[PyTorch Runtime Checklist](./development/pytorch_runtime_checklist.md)** – quick do/don’t list for vectorization and device placement. Always review before editing simulator code.
+* **[PyTorch Design](./architecture/pytorch_design.md#vectorization-strategy)** – detailed explanation of the required broadcast shapes and batched flows.
+* **[Testing Strategy §1.4](./development/testing_strategy.md#14-pytorch-device--dtype-discipline)** – required CPU/GPU smoke tests and compile checks.
+
+* **[CLAUDE.md](../CLAUDE.md)** - The primary instruction set for the AI agent.
+* **[README.md](../README.md)** - The main project entry point.
+* **[README_PYTORCH.md](../README_PYTORCH.md)** - Comprehensive user guide for the PyTorch implementation, including CLI usage, parallel comparison tools, and visualization.
+* **[PROJECT_STATUS.md](../PROJECT_STATUS.md)** - Tracks the current active development initiative.
+[2025-10-07T06:33:40] tokens used: 17,603
+
+[2025-10-07T06:33:42] thinking
+
+**Locating specification file**
+[2025-10-07T06:33:42] exec bash -lc 'cat specs/spec-a.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:33:43] bash -lc 'cat specs/spec-a.md' succeeded in 714ms:
+# nanoBragg Spec A — Sharded Specification
+
+Spec A is now organized across multiple shards. Read them together for the full normative contract.
+
+- [spec-a-core.md](spec-a-core.md): Core physics, geometry, sampling, data, and associated acceptance tests.
+- [spec-a-cli.md](spec-a-cli.md): CLI surface area, precedence rules, and CLI-focused acceptance tests.
+- [spec-a-parallel.md](spec-a-parallel.md): Conformance profiles, parallel validation suites, and developer tooling requirements.
+
+Each shard cross-references the others; updates must keep them consistent.
+[2025-10-07T06:33:43] tokens used: 19,328
+
+[2025-10-07T06:33:45] thinking
+
+**Searching for architecture documentation**
+[2025-10-07T06:33:46] exec bash -lc 'cat arch.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:33:47] bash -lc 'cat arch.md' succeeded in 685ms:
+# nanoBragg PyTorch — Implementation Architecture
+
+Document version: 1.0 (aligned with specs/spec-a.md)
+Target spec: specs/spec-a.md (single-file normative spec)
+Implementation target: Python (>=3.11) + PyTorch (float32 default). Type blocks may use TypeScript-style for clarity; implement with Python dataclasses and torch tensors.
+
+## Running The CLI
+
+- Install (recommended):
+  - `pip install -e .` from repo root (provides `nanoBragg` console script).
+- Run (installed):
+  - `nanoBragg -hkl P1.hkl -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -floatfile out.bin`
+- Run (without install):
+  - `PYTHONPATH=src python -m nanobrag_torch -hkl P1.hkl -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -floatfile out.bin`
+- Minimal quick test (no HKL):
+  - `nanoBragg -default_F 1 -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -detpixels 128 -pgmfile test.pgm`
+
+Notes
+- Entry point: `src/nanobrag_torch/__main__.py` (module runner `python -m nanobrag_torch`).
+- Required inputs: provide `-hkl` (or existing `Fdump.bin`) or set `-default_F > 0`, and either `-mat` (MOSFLM A*) or `-cell`.
+[2025-10-07T06:33:47] tokens used: 19,597
+
+[2025-10-07T06:33:49] thinking
+
+**Noting file truncation and next document**
+[2025-10-07T06:33:49] exec bash -lc 'cat docs/development/c_to_pytorch_config_map.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:33:50] bash -lc 'cat docs/development/c_to_pytorch_config_map.md' succeeded in 689ms:
+# C-CLI to PyTorch Configuration Map
+
+## Critical Importance Notice
+
+**This document is the authoritative source of truth for configuration parity between nanoBragg.c and the PyTorch implementation.**
+
+Before writing any test or implementation that involves C-code validation, you **MUST** consult this document. Failure to ensure 1:1 configuration parity is the most common source of bugs, particularly with:
+- Implicit pivot mode logic
+- Convention-dependent beam center calculations
+- Rotation axis defaults
+- Unit conversions
+
+## Quick Reference Table
+
+### Crystal Parameters
+
+| C-CLI Flag | PyTorch Config Field | C Variable | Units/Convention | Critical Notes |
+|------------|---------------------|------------|------------------|----------------|
+| `-cell a b c al be ga` | `CrystalConfig.cell_a/b/c/alpha/beta/gamma` | `a[0], b[0], c[0], alpha, beta, gamma` | Å and degrees → radians | Must convert degrees to radians internally |
+| `-N <val>` | `CrystalConfig.N_cells` | `Na, Nb, Nc` | Number of unit cells | Sets all three axes to same value |
+[2025-10-07T06:33:50] tokens used: 40,927
+
+[2025-10-07T06:33:51] thinking
+
+**Identifying needed documentation file**
+[2025-10-07T06:33:52] exec bash -lc 'cat docs/debugging/debugging.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:33:52] bash -lc 'cat docs/debugging/debugging.md' succeeded in 692ms:
+# nanoBragg PyTorch Debugging Guidelines
+
+**Version:** 1.1  
+**Date:** 2024-07-25  
+**Owner:** PyTorch Development Team
+
+## Overview
+
+This document outlines the debugging methodology and tools for the nanoBragg PyTorch implementation. The debugging approach is built around a parallel trace comparison between the C code and the PyTorch implementation to ensure correctness and facilitate rapid issue resolution.
+
+## Core Debugging Philosophy
+
+### Parallel Trace Comparison Rule
+
+**CRITICAL:** All debugging of physics discrepancies MUST begin with a parallel trace comparison. This involves:
+1. Generating a detailed, step-by-step log of intermediate variables from the original C code for a specific pixel (the "Golden Trace").
+2. Generating an identical log from the PyTorch implementation using `scripts/debug_pixel_trace.py`.
+3. Comparing these two logs line-by-line to find the first point of divergence.
+
+This methodology is mandatory to avoid guesswork and ensure bugs are found deterministically.
+[2025-10-07T06:33:52] tokens used: 42,821
+
+[2025-10-07T06:33:54] thinking
+
+**Preparing to read fix_plan.md**
+[2025-10-07T06:33:54] exec bash -lc 'cat docs/fix_plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:33:55] bash -lc 'cat docs/fix_plan.md' succeeded in 693ms:
+# Fix Plan Ledger
+
+**Last Updated:** 2025-10-17 (galph loop)
+**Active Focus:**
+- ROUTING: Close the reopened guard plan by capturing a fresh regression audit referencing commit `c49e3be` and re-confirming the guarded `loop.sh` flow (`plans/active/routing-loop-guard/plan.md` Phases A–C) before automation resumes.
+- ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md`, then drive Phase B guard work (B2–B4) and new task B5 to add `supervisor.sh` to docs/index.md so Protected-Asset policy covers the script before automation runs again.
+- AT-012: Plan archived (`plans/archive/at-parallel-012-plateau-regression/plan.md`); monitor for regressions using `reports/2025-10-AT012-regression/phase_c_validation/` artifacts and re-open only if peak matches drop below spec.
+- GRADIENT: Execute `plans/active/gradcheck-tier2-completion/plan.md` Phase A (A1–A3 baseline audit + env alignment) before adding misset/beam gradchecks from Phases B/C; once pass logs exist, close `[AT-TIER2-GRADCHECK]` with Phase D documentation updates.
+- DTYPE: ✅ Complete. Plan archived to `plans/archive/dtype-default-fp32/`. All phases (A-D) finished; float32 defaults documented in arch.md, pytorch_runtime_checklist.md, CLAUDE.md, prompts/debug.md.
+- PERF: Land plan task B7 (benchmark env toggle fix), rerun Phase B6 ten-process reproducibility with the new compile metadata, capture the weighted-source parity memo feeding C5, then execute Phase C diagnostics (C1/C2 plus C8/C9 pixel-grid & rotated-vector cost probes, and new C10 mosaic RNG timing) ahead of Phase D caching work (D5/D6/D7) and detector-scalar hoisting (D8).
+
+## Index
+| ID | Title | Priority | Status |
+| --- | --- | --- | --- |
+| [PROTECTED-ASSETS-001](#protected-assets-001-docsindexmd-safeguard) | Protect docs/index.md assets | Medium | in_progress |
+| [REPO-HYGIENE-002](#repo-hygiene-002-restore-canonical-nanobraggc) | Restore canonical nanoBragg.c | Medium | in_progress |
+| [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
+| [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | in_progress |
+| [VECTOR-TRICUBIC-001](#vector-tricubic-001-vectorize-tricubic-interpolation-and-detector-absorption) | Vectorize tricubic interpolation and detector absorption | High | in_planning |
+| [CLI-DTYPE-002](#cli-dtype-002-cli-dtype-parity) | CLI dtype parity | High | in_progress |
+[2025-10-07T06:33:55] tokens used: 45,268
+
+[2025-10-07T06:33:56] thinking
+
+**Reviewing documentation and instructions**
+
+I noticed the documentation is large and got truncated, but I found the section that seems necessary for the task. There might be more instructions beyond what I saw, but they seem satisfied for now. I also spotted a `docs/development/testing_strategy.md` file that could be relevant, so I’m keeping that in mind for testing or development insights.
+[2025-10-07T06:33:58] exec bash -lc 'cat docs/development/testing_strategy.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:33:58] bash -lc 'cat docs/development/testing_strategy.md' succeeded in 699ms:
+# nanoBragg PyTorch Testing Strategy
+
+**Version:** 1.1  
+**Date:** 2024-07-25  
+**Owner:** [Your Name/Team]
+
+## 1. Introduction & Philosophy
+
+This document outlines the comprehensive testing strategy for the PyTorch implementation of nanoBragg. The primary goal is to ensure that the new application is a correct, verifiable, and trustworthy scientific tool.
+Our testing philosophy is a three-tiered hybrid approach, designed to build confidence layer by layer:
+
+1. **Tier 1: Translation Correctness:** We first prove that the PyTorch code is a faithful, numerically precise reimplementation of the original C code's physical model. The C code is treated as the "ground truth" specification.
+2. **Tier 2: Gradient Correctness:** We then prove that the new differentiable capabilities are mathematically sound.
+3. **Tier 3: Scientific Validation:** Finally, we validate the model against objective physical principles.
+
+All tests will be implemented using the PyTest framework.
+
+### 1.4 PyTorch Device & Dtype Discipline
+
+- **Device-neutral code:** Every PyTorch path MUST operate correctly on both CPU and CUDA tensors and across supported dtypes. Do not hard-code `.cpu()`/`.cuda()` calls, create CPU-only constants, or assume float64 execution when the caller may supply float32/half tensors.
+[2025-10-07T06:33:58] tokens used: 48,067
+
+[2025-10-07T06:34:01] thinking
+
+**Reviewing relevant plan files**
+
+I need to inspect the plans in `plans/active/`, especially the one about CLI flags like -nonoise and pix0, since this ties directly to the long-term goals. I'll look at `plans/active/cli-noise-pix0/plan.md` to understand existing guidance before diving deeper into the code.
+[2025-10-07T06:34:02] exec bash -lc 'ls plans/active' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:34:03] bash -lc 'ls plans/active' succeeded in 676ms:
+cli-noise-pix0
+gradcheck-tier2-completion
+perf-pytorch-compile-refactor
+routing-loop-guard
+supervisor-loop-guard
+unification.md
+vectorization.md
+[2025-10-07T06:34:03] tokens used: 50,760
+
+[2025-10-07T06:34:05] thinking
+
+**Locating CLI flags plan**
+[2025-10-07T06:34:05] exec bash -lc 'cat plans/active/cli-noise-pix0/plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:34:06] bash -lc 'cat plans/active/cli-noise-pix0/plan.md' succeeded in 674ms:
+## Context
+- Initiative: CLI Parity for nanoBragg PyTorch vs C (supports long-term goal in prompts/supervisor.md)
+- Phase Goal: Accept `-nonoise` and `-pix0_vector_mm` flags with C-equivalent semantics so the parallel comparison command in prompts/supervisor.md executes end-to-end.
+- Dependencies: specs/spec-a-cli.md §§3.2–3.4, docs/architecture/detector.md §5, docs/development/c_to_pytorch_config_map.md (detector pivot + noise), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860 (flag behavior), docs/debugging/detector_geometry_checklist.md (pix0 validation), docs/development/testing_strategy.md §2 (CLI parity tests).
+- Current gap snapshot (2025-10-18 refresh): Phase H4 parity landed (Attempt #25) with pix0 deltas < 2e-8 m and regression tolerances tightened; the remaining blocker before executing the supervisor command end-to-end is Phase I polarization alignment.
+- Gap snapshot update (2025-10-19): Attempt #27 parity run reveals 1.24538e5× intensity scaling mismatch despite polarization fix; Phases J–L track the normalization diagnosis, fix, and closure required before long-term Goal #1 completes.
+- Gap snapshot refresh (2025-10-22): Attempt #31 restored C precedence for custom detector vectors (pix0 override now gated again). Outstanding work: H5c PyTorch traces and Phase K normalization to eliminate the `F_latt`-driven intensity gap.
+- Gap snapshot update (2025-10-24): Attempt #35 reran the PyTorch trace harness post-unit-fix; metrics still show |Δpix0| ≈ 1.145 mm, so a fresh diagnostics phase is required before resuming normalization work.
+- Gap snapshot refresh (2025-10-26): Attempt #40 completed Phase H6f — custom detector vectors now force SAMPLE pivot parity, parity visuals relocated under `reports/2025-10-cli-flags/phase_h6/visuals/`, and targeted regression tests cover pivot selection. Outstanding work at that point: Phase H6g trace rerun to confirm |Δpix0| < 5e-5 m before returning to Phase K scalings.
+- Gap snapshot update (2025-10-27): Attempt #41 validated Phase H6g — SAMPLE pivot parity holds with pix0 deltas ≤2.85 µm, beam center deltas 0.0, and supporting artifacts under `reports/2025-10-cli-flags/phase_h6/post_fix/`. Remaining blockers: rerun the scaling chain (Phase K2), execute the scaling regression + doc updates (Phase K3), then resume Phase L parity once normalization matches C.
+- Gap snapshot refresh (2025-11-09): Attempt #49 closed Phase K3g3 — `tests/test_cli_scaling.py::test_f_latt_square_matches_c` now passes after isolating the HKL cache, but the full supervisor command still shows correlation ≈ 0.9965 and sum_ratio ≈ 1.26×10⁵. Need fresh HKL/normalization parity evidence (Phase L) before rerunning nb-compare.
+- Gap snapshot refresh (2025-11-10): Attempt #56 (evidence loop) proved the existing `TRACE_PY` path prints placeholder scaling data (`capture_fraction 1`, `polar 1.0`, `steps`=φ-steps only). Without exposing the real per-pixel factors computed in `Simulator.run`, Phase L2b cannot produce a trustworthy PyTorch trace. Instrumentation must pull actual values from `_apply_detector_absorption`, polarization kernels, and total-step calculation before rerunning the harness.
+- Gap snapshot update (2025-10-17): Attempt #53 (Phase L1c) realigned HKL Fdump I/O with C padding (`read_fdump`/`write_fdump`) and added regression coverage (`TestHKLFdumpParity::test_scaled_hkl_roundtrip`) with max |ΔF| = 0.0. Proceed to L1d to regenerate parity metrics before reviving scaling traces.
+- Gap snapshot update (2025-11-11): Discovered the trace harness omitted `-beam_vector`, `-flux`, and `-beamsize`, forcing oversample=4 and a +Z beam; Py traces zeroed `F_cell` and inflated `steps`. Marked unresolved pending harness fix.
+- Gap snapshot refresh (2025-11-12): Attempt #66 (commit 1d2e6ac) completed Phase L2b0 — the trace harness now feeds the full supervisor flag set, and the refreshed `trace_py_scaling.log` confirms `steps=10`, `fluence≈1.0e24`, and `r_e^2` parity with C. TRACE_PY still reports `I_before_scaling NOT_EXTRACTED`, `polar=0`, and `I_pixel_final=0`, so Phase L2b instrumentation must surface the real polarization/absorption tensors before we can quantify the K3e k_frac drift.
+- Gap snapshot update (2025-11-13): Latest harness rerun aborted because `trace_harness.py` still expected the legacy `read_hkl_file` return tuple (see `trace_py_fullrun.log`). **Resolved in Attempt #74, which updated the harness to the `(F_grid, metadata)` signature.**
+- Gap snapshot refresh (2025-11-14): Attempt #73 showed `Crystal.hkl_data` unset (leading to `F_cell=0`), keeping L2b open; **Attempt #74 fixed this by wiring the HKL tensor/metadata before Simulator construction.**
+- Gap snapshot refresh (2025-11-15): Attempts #69/#71/#74 finished Phase L2 — TRACE_PY now reports real scaling factors, `scaling_audit_summary.md` flags `I_before_scaling` as the lone divergence, and C shows `F_cell=190.27` for hkl=(-7,-1,-14) while PyTorch remains at 0. Next phase focuses on understanding how C derives that amplitude (likely via generated `Fdump.bin`) before touching normalization code. 
+- Gap snapshot addendum (2025-10-06T17:59 replayed 2025-11-09): Re-running Phase L1 with `Fdump_scaled_20251006175946.bin` shows the cache stores 182,700 doubles (≈9,534 more than the 173,166 expected from header ranges) and that reflections shift by Δk≈+10–12 / Δl≈−2…−8 relative to HKL indices. Use this dataset to reverse-engineer the C layout before touching PyTorch HKL IO.
+- Gap insight (2025-10-31): Scaling evidence shows MOSFLM matrix runs still rescale real vectors using formula lengths; C skips that step unless `-cell` is provided, so PyTorch must gate the `vector_rescale` analogue when `mosflm_a_star` is set. The same trace confirms the polarization Kahn factor should default to 0.0 (C’s `polarization`), not 1.0, so BeamConfig defaults need to be realigned before Phase L.
+[2025-10-07T06:34:06] tokens used: 50,923
+
+[2025-10-07T06:34:08] thinking
+
+**Reviewing vectorization plan**
+[2025-10-07T06:34:09] exec bash -lc 'cat plans/active/vectorization.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:34:10] bash -lc 'cat plans/active/vectorization.md' succeeded in 672ms:
+## Context
+- Initiative: PERF-PYTORCH-004 vectorization backlog; supports long-term goal "Parallel parity + performance" from docs/fix_plan.md
+- Phase Goal: Deliver a production-ready, fully vectorized tricubic interpolation pipeline (gather + polynomial evaluation) and follow with detector absorption vectorization without regressing physics, gradients, or device neutrality.
+- Dependencies: specs/spec-a-core.md §4 (Structure factors), specs/spec-a-parallel.md §2.3 (Interpolation acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4, docs/architecture/c_code_overview.md (tricubic routines), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, `nanoBragg.c` lines 2604–3278 (polin3/polin2/polint + detector absorption), `tests/test_at_str_002.py`, `tests/test_at_abs_001.py`, `reports/benchmarks/20250930-165726-compile-cache/` (current performance references). No dedicated tricubic/absorption microbenchmarks exist yet; Phase A will author reusable harnesses under `scripts/benchmarks/` so future loops can rerun baselines without ad-hoc snippets.
+- Gap Snapshot (2025-11-09): Phase A remains untouched; no artifacts exist under `reports/2025-10-vectorization/phase_a/`, so Ralph must prioritise A1–A3 baseline capture before any implementation edits. docs/fix_plan.md item VECTOR-TRICUBIC-001 lists these as the gating next actions.
+
+### Phase A — Evidence & Baseline Capture
+Goal: Document the current (non-vectorized) behavior, warnings, and performance so we can prove the impact of the refactor.
+Prereqs: Editable install (`pip install -e .`), C binary available for parity (when needed), environment variable `KMP_DUPLICATE_LIB_OK=TRUE`.
+Exit Criteria: Baseline pytest log, timing snippet results, and notes stored under `reports/2025-10-vectorization/phase_a/` with references in docs/fix_plan.md Attempt history.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| A1 | Re-run tricubic acceptance tests | [ ] | `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py -v` ⇒ save log to `reports/2025-10-vectorization/phase_a/test_at_str_002.log`; confirm nearest-neighbour fallback warning message appears for batched inputs. |
+| A2 | Measure current tricubic runtime | [ ] | Author `scripts/benchmarks/tricubic_baseline.py` (device/dtype neutral, honours `KMP_DUPLICATE_LIB_OK=TRUE`) and run `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --repeats 5`. Capture CPU timings (and CUDA when available) in `phase_a/tricubic_baseline.md` plus raw JSON/CSV under `phase_a/tricubic_baseline_results.json`. |
+| A3 | Record detector absorption baseline | [ ] | Create `scripts/benchmarks/absorption_baseline.py` mirroring A2's interface; execute `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/absorption_baseline.py --sizes 256 512 --repeats 5` alongside `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_abs_001.py -v`. Store logs in `phase_a/absorption_baseline.md` and metrics in `phase_a/absorption_baseline_results.json`. |
+
+### Phase B — Tricubic Vectorization Design
+Goal: Lock the tensor-shape design, broadcasting plan, and gradient checks before code changes.
+Prereqs: Phase A artifacts uploaded and referenced in docs/fix_plan.md.
+[2025-10-07T06:34:10] tokens used: 53,677
+
+[2025-10-07T06:34:12] thinking
+
+**Checking for relevant plans**
+[2025-10-07T06:34:12] exec bash -lc 'cat plans/active/unification.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:34:13] bash -lc 'cat plans/active/unification.md' succeeded in 706ms:
+# Oversample Unification Refactor Plan
+Goal
+Unify the oversample==1 and oversample>1 code paths in simulator.py to enable whole-function torch.compile optimization and reduce code duplication.
+Success Criteria
+
+ All existing tests pass bit-for-bit
+ <5% performance regression for oversample==1 case
+ Compilation time reduced or neutral
+ ~100 lines of duplicate code removed
+ Single code path handles all oversample values
+
+
+Phase 1: Infrastructure (1-2 days)
+1.1 Add Unified Offset Generation
+File: simulator.py
+Location: New helper method in Simulator class
+pythondef _generate_subpixel_offsets(
+    self, 
+    oversample: int,
+    pixel_size_m: torch.Tensor
+[2025-10-07T06:34:13] tokens used: 56,308
+
+[2025-10-07T06:34:16] thinking
+
+**Analyzing plan and CLI flags**
+[2025-10-07T06:34:17] exec bash -lc 'rg "CLI-FLAGS-003" -n docs/fix_plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:34:18] bash -lc 'rg "CLI-FLAGS-003" -n docs/fix_plan.md' succeeded in 675ms:
+21:| [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | in_progress |
+448:## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
+462:  4. Phase L4 parity rerun — Execute supervisor command end-to-end, capture nb-compare metrics, confirm correlation ≥0.9995 + sum_ratio 0.99-1.01, archive results, and close CLI-FLAGS-003.
+[2025-10-07T06:34:18] tokens used: 58,617
+
+[2025-10-07T06:34:19] thinking
+
+**Reading CLI-FLAGS-003 section**
+[2025-10-07T06:34:19] exec bash -lc "sed -n '448,620p' docs/fix_plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:34:20] bash -lc "sed -n '448,620p' docs/fix_plan.md" succeeded in 706ms:
+## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
+- Spec/AT: specs/spec-a-cli.md flag catalogue, docs/architecture/detector.md §5 (pix0 workflow), docs/development/c_to_pytorch_config_map.md (pivot rules), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860
+- Priority: High
+- Status: in_progress (Phases A–H complete; K3a/K3b/K3d landed via Attempts #43–44, pending per-φ evidence + normalization closure)
+- Owner/Date: ralph/2025-10-05
+- Plan Reference: `plans/active/cli-noise-pix0/plan.md`
+- Reproduction (C & PyTorch):
+  * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
+  * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+- First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C’s trace records `F_cell=190.27`. The remaining delta is therefore rooted in structure-factor ingestion rather than normalization math.
+- Next Actions (2025-10-07 refresh after Attempt #75):
+  1. Phase L3b evidence — Run supervisor command via instrumented C binary and capture whether Fdump.bin is generated. If yes, copy to `reports/.../structure_factor/` and rerun probe with `--fdump` flag. Compare retrieved amplitude against C reference F=190.27. Document findings in `analysis.md` and update plan with ingestion strategy (Fdump loading vs HKL expansion vs sinc fallback).
+  2. Phase L3c implementation — Once structure-factor source confirmed, patch `src/nanobrag_torch/simulator.py` scaling chain (lines ~930-1085) to match C ordering with mandatory C-code docstring references per Rule #11. Keep vectorized/device-neutral.
+  3. Phase L3d regression — Extend `tests/test_cli_scaling.py` with structure-factor lookup assertion for hkl=(-7,-1,-14) and supervisor-command regression validating I_before_scaling/ω/polarization/final intensity against C values (≤1e-6 relative tolerance, CPU/CUDA parametrised).
+  4. Phase L4 parity rerun — Execute supervisor command end-to-end, capture nb-compare metrics, confirm correlation ≥0.9995 + sum_ratio 0.99-1.01, archive results, and close CLI-FLAGS-003.
+- Attempts History:
+  * [2025-11-13] Attempt #71 (ralph loop) — Result: **SUCCESS** (Phase L2b validation + Phase L2c complete). **Harness already functional from Attempt #69; executed comparison script to identify first divergence.**
+    Metrics: 40 TRACE_PY lines captured; test suite passes 4/4 variants (cpu/cuda × float32/float64). Comparison identifies `I_before_scaling` as first divergent factor (C=943654.809, PyTorch=0, -100% delta).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log:1-41` - Refreshed trace with live values (polar=0.91464138, omega_pixel=4.20404859e-07 sr, F_cell=0, I_before_scaling=0)
+[2025-10-07T06:34:20] tokens used: 58,984
+
+[2025-10-07T06:34:26] thinking
+
+**Reviewing test flags implementation**
+[2025-10-07T06:34:28] exec bash -lc 'rg "nonoise" -n' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:34:29] bash -lc 'rg "nonoise" -n' succeeded in 756ms:
+src/nanobrag_torch/__main__.py:339:    parser.add_argument('-nonoise', action='store_true',
+src/nanobrag_torch/__main__.py:711:    config['suppress_noise'] = args.nonoise
+src/nanobrag_torch/__main__.py:1185:        # CLI-FLAGS-003: Honor -nonoise flag
+context:248:            if(strstr(argv[i], "-nonoise") )
+context:2276:            if(strstr(argv[i], "-nonoise") )
+context:2609:        printf("\t-nonoise         \tdisable generating the noisefile\n");
+context:6274:            if(strstr(argv[i], "-nonoise") )
+context:8812:***-nonoise***
+nonBragg.c:719:            if(strstr(argv[i], "-nonoise") )
+noisify.c:247:            if(strstr(argv[i], "-nonoise") )
+docs/fix_plan.md:21:| [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | in_progress |
+docs/fix_plan.md:448:## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
+docs/fix_plan.md:455:  * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
+docs/fix_plan.md:456:  * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+docs/fix_plan.md:961:      - `reports/2025-10-cli-flags/phase_a/c_with_nonoise.log` - C run WITH -nonoise
+docs/fix_plan.md:962:      - `reports/2025-10-cli-flags/phase_a/c_with_noise.log` - C run WITHOUT -nonoise
+docs/fix_plan.md:966:      - `-nonoise` suppresses noise parameters section AND noise image generation (noiseimage.img not written)
+docs/fix_plan.md:967:      - Float/int/PGM images still generated when -nonoise is active
+docs/fix_plan.md:988:      - ✅ -nonoise suppresses noisefile generation (suppress_noise=True)
+docs/fix_plan.md:989:      - ✅ -nonoise doesn't mutate adc default (40.0) or seed handling
+[2025-10-07T06:34:29] tokens used: 62,251
+
+[2025-10-07T06:34:33] thinking
+
+**Planning analysis and next steps**
+[2025-10-07T06:34:34] exec python3 -c "import random;print('heads' if random.random()<0.5 else 'tails')" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:34:34] python3 -c "import random;print('heads' if random.random()<0.5 else 'tails')" succeeded in 42ms:
+tails
+[2025-10-07T06:34:34] tokens used: 64,084
+
+[2025-10-07T06:35:01] thinking
+
+**Evaluating plan necessity and choosing next actions**
+[2025-10-07T06:35:02] exec bash -lc 'cat specs/spec-a-cli.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:35:03] bash -lc 'cat specs/spec-a-cli.md' succeeded in 974ms:
+# nanoBragg Spec A — CLI Binding
+
+This shard documents the command-line interface, header precedence, and CLI-focused acceptance tests. It should be read alongside [spec-a-core.md](spec-a-core.md) for the simulation engine requirements and [spec-a-parallel.md](spec-a-parallel.md) for conformance profiles.
+
+CLI Interface (Normative)
+
+All options recognized by this code version are enumerated below. Values with units are converted
+immediately as specified in Units & Conversions. Unsupported flags are not recognized even if
+present in header comments.
+
+- Input files:
+    - -hkl <file>: Text file of “h k l F” (integers h,k,l; real F). Required unless Fdump.bin exists
+or -default_F used.
+    - -mat <file>: 3×3 MOSFLM-style A matrix (reciprocal cell vectors scaled by 1/λ). Required
+unless -cell used.
+    - -cell a b c alpha beta gamma: Direct cell in Å and degrees; alternative to -mat.
+    - -img <file>: Read SMV header; may set fpixels, spixels, pixel size (mm), distance (mm), close
+distance (mm), wavelength (Å), beam centers (mm), ORGX/ORGY (pixels), φ start (deg), oscillation
+range (deg), 2θ (deg). Image data is read but not used.
+    - -mask <file>: Read SMV mask; uses same headers to initialize geometry as -img. Zero-valued
+[2025-10-07T06:35:03] tokens used: 65,882
+
+[2025-10-07T06:35:05] thinking
+
+**Checking for detector documentation**
+[2025-10-07T06:35:05] exec bash -lc 'cat docs/architecture/detector.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:35:06] bash -lc 'cat docs/architecture/detector.md' succeeded in 676ms:
+# Detector Architecture Deep Dive
+
+**Status:** Authoritative Specification  
+**Last Updated:** Phase 5 Implementation
+
+**⚠️ CRITICAL:** This component uses a [hybrid unit system](#61-critical-hybrid-unit-system-overrides-global-rule) that overrides the global Angstrom-only rule.
+
+This document provides the complete technical specification for the Detector component. For global project rules on units and coordinate systems, see [Global Conventions](./conventions.md).
+
+---
+
+## 1. Overview
+
+The Detector class manages the detector geometry for diffraction simulations, including:
+- Position and orientation (basis vectors)
+- Pixel coordinate generation and caching
+- Support for various detector conventions (MOSFLM, XDS)
+- Dynamic geometry with rotations and tilts
+- Full differentiability for optimization workflows
+
+[2025-10-07T06:35:06] tokens used: 68,914
+
+[2025-10-07T06:35:10] thinking
+
+**Reviewing relevant documentation and debugging focus**
+[2025-10-07T06:35:11] exec bash -lc 'ls reports/2025-10-cli-flags/phase_l/structure_factor' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:35:12] bash -lc 'ls reports/2025-10-cli-flags/phase_l/structure_factor' succeeded in 723ms:
+analysis.md
+probe.log
+probe.py
+[2025-10-07T06:35:12] tokens used: 71,555
+
+[2025-10-07T06:35:16] thinking
+
+**Reviewing analysis and log files**
+[2025-10-07T06:35:16] exec bash -lc 'cat reports/2025-10-cli-flags/phase_l/structure_factor/analysis.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:35:17] bash -lc 'cat reports/2025-10-cli-flags/phase_l/structure_factor/analysis.md' succeeded in 681ms:
+# Structure-Factor Coverage Analysis
+
+**Date:** 2025-10-07T06:29:16.691340Z
+**Task:** CLI-FLAGS-003 Phase L3a
+**Goal:** Verify structure-factor source for supervisor pixel
+**Status:** Evidence complete — C amplitude cannot be reproduced from available HKL data
+
+## Target Reflection
+
+- **Miller index:** h=-7, k=-1, l=-14
+- **C reference F_cell:** 190.27
+- **Source:** `reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log:143-164`
+
+## Data Sources Tested
+
+See `probe.log` for detailed output from:
+- `scaled.hkl` (HKL text file)
+- Fdump binaries: not tested (files do not exist in this repo)
+
+## Findings
+[2025-10-07T06:35:17] tokens used: 72,394
+
+[2025-10-07T06:35:19] thinking
+
+**Reading probe.log file**
+[2025-10-07T06:35:19] exec bash -lc 'cat reports/2025-10-cli-flags/phase_l/structure_factor/probe.log' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:35:20] bash -lc 'cat reports/2025-10-cli-flags/phase_l/structure_factor/probe.log' succeeded in 696ms:
+================================================================================
+Structure-Factor Coverage Probe
+CLI-FLAGS-003 Phase L3a Evidence
+================================================================================
+
+Timestamp: 2025-10-07T06:29:16.689418Z
+Git SHA: a6ed279c6d32118c5e25d4caec3881165b386da8
+Torch version: 2.8.0+cu128
+Platform: Linux-6.14.0-29-generic-x86_64-with-glibc2.39
+Device: cpu
+Dtype: torch.float64
+
+Loading supervisor command configuration...
+Crystal config initialized
+
+Target Miller index: h=-7, k=-1, l=-14
+C reference F_cell: 190.27
+
+================================================================================
+Source 1: HKL file (scaled.hkl)
+[2025-10-07T06:35:20] tokens used: 74,677
+
+[2025-10-07T06:35:22] thinking
+
+**Checking for structure factor data**
+[2025-10-07T06:35:22] exec bash -lc 'cat scaled.hkl' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:35:23] bash -lc 'cat scaled.hkl' succeeded in 702ms:
+1 12 3 100.0
+[2025-10-07T06:35:23] tokens used: 75,112
+
+[2025-10-07T06:35:25] thinking
+
+**Checking for Fdump.bin file**
+[2025-10-07T06:35:25] exec bash -lc 'ls Fdump.bin' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:35:26] bash -lc 'ls Fdump.bin' exited 1 in 692ms:
+ls: Fdump.bin: No such file or directory
+[2025-10-07T06:35:26] tokens used: 75,776
+
+[2025-10-07T06:35:28] thinking
+
+**Checking for Fdump in golden_suite_generator**
+[2025-10-07T06:35:28] exec bash -lc 'ls golden_suite_generator | head' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:35:29] bash -lc 'ls golden_suite_generator | head' succeeded in 704ms:
+Fdump.bin
+Makefile
+P1_trace.hkl
+__pycache__
+beam_center_analysis_report.md
+beam_center_full_trace.log
+c_pix0_trace_full.log
+c_pix0_trace_sample_pivot.bin
+c_pix0_trace_test.bin
+c_reference_tilted_trace_params.bin
+[2025-10-07T06:35:29] tokens used: 75,908
+
+[2025-10-07T06:35:33] thinking
+
+**Investigating Fdump.bin origin**
+[2025-10-07T06:35:33] exec bash -lc "sed -n '2300,2500p' golden_suite_generator/nanoBragg.c" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:35:34] bash -lc "sed -n '2300,2500p' golden_suite_generator/nanoBragg.c" succeeded in 698ms:
+    printf("TRACE:   b0 = [%g, %g, %g] |b0| = %g meters\n", b0[1], b0[2], b0[3], b0[0]);
+    printf("TRACE:   c0 = [%g, %g, %g] |c0| = %g meters\n", c0[1], c0[2], c0[3], c0[0]);
+
+    /* define phi=0 crystal orientation */
+    printf("TRACE: Copying vectors to ap, bp, cp (phi=0 working copy):\n");
+    vector_scale(a,ap,1.0);
+    vector_scale(b,bp,1.0);
+    vector_scale(c,cp,1.0);
+    printf("TRACE:   ap = [%g, %g, %g] |ap| = %g meters\n", ap[1], ap[2], ap[3], ap[0]);
+    printf("TRACE:   bp = [%g, %g, %g] |bp| = %g meters\n", bp[1], bp[2], bp[3], bp[0]);
+    printf("TRACE:   cp = [%g, %g, %g] |cp| = %g meters\n", cp[1], cp[2], cp[3], cp[0]);
+
+    /* now we know the cell, calculate crystal size in meters */
+    if(sample_x > 0) Na = ceil(sample_x/a[0]);
+    if(sample_y > 0) Nb = ceil(sample_y/b[0]);
+    if(sample_z > 0) Nc = ceil(sample_z/c[0]);
+    if(Na <= 1.0) Na = 1.0;
+    if(Nb <= 1.0) Nb = 1.0;
+    if(Nc <= 1.0) Nc = 1.0;
+    xtalsize_a = a[0]*Na;
+[2025-10-07T06:35:34] tokens used: 76,270
+
+[2025-10-07T06:35:41] thinking
+
+**Analyzing structure factor handling**
+[2025-10-07T06:35:41] exec bash -lc 'rg "F_cell" -n golden_suite_generator/nanoBragg.c | head' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:35:42] bash -lc 'rg "F_cell" -n golden_suite_generator/nanoBragg.c | head' succeeded in 694ms:
+331:    double F_latt,F_cell;
+2400:        while(4 == fscanf(infile,"%lg%lg%lg%lg",&h,&k,&l,&F_cell)){
+2453:        while(4 == fscanf(infile,"%d%d%d%lg",&h0,&k0,&l0,&F_cell)){
+2454:            Fhkl[h0-h_min][k0-k_min][l0-l_min]=F_cell;
+2463://                      F_cell = Fhkl[h0-h_min][k0-k_min][l0-l_min];
+2467://                      F_cell = 0.0;
+2469://                  printf("%d %d %d = %f\n",h0,k0,l0,F_cell);
+2805:        F_cell,F_latt,polar,omega_pixel,\
+3271:                                            F_cell = default_F;
+3317:                                        polin3(h_interp_d,k_interp_d,l_interp_d,sub_Fhkl,h,k,l,&F_cell);
+[2025-10-07T06:35:42] tokens used: 79,764
+
+[2025-10-07T06:35:43] thinking
+
+**Extracting code snippet for review**
+[2025-10-07T06:35:44] exec bash -lc "sed -n '3200,3400p' golden_suite_generator/nanoBragg.c" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:35:45] bash -lc "sed -n '3200,3400p' golden_suite_generator/nanoBragg.c" succeeded in 657ms:
+                                            /* need to re-calculate reciprocal matrix */
+
+                                            /* various cross products */
+                                            cross_product(a,b,a_cross_b);
+                                            cross_product(b,c,b_cross_c);
+                                            cross_product(c,a,c_cross_a);
+
+                                            /* new reciprocal-space cell vectors */
+                                            vector_scale(b_cross_c,a_star,1e20/V_cell);
+                                            vector_scale(c_cross_a,b_star,1e20/V_cell);
+                                            vector_scale(a_cross_b,c_star,1e20/V_cell);
+                                        }
+
+                                        /* reciprocal-space coordinates of nearest relp */
+                                        relp[1] = h0*a_star[1] + k0*b_star[1] + l0*c_star[1];
+                                        relp[2] = h0*a_star[2] + k0*b_star[2] + l0*c_star[2];
+                                        relp[3] = h0*a_star[3] + k0*b_star[3] + l0*c_star[3];
+//                                      d_star = magnitude(relp)
+
+                                        /* reciprocal-space coordinates of center of Ewald sphere */
+[2025-10-07T06:35:45] tokens used: 80,142
+
+[2025-10-07T06:35:49] thinking
+
+**Examining non-interpolated code path**
+[2025-10-07T06:35:49] exec bash -lc 'rg "no interpolation" -n golden_suite_generator/nanoBragg.c' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:35:50] bash -lc 'rg "no interpolation" -n golden_suite_generator/nanoBragg.c' succeeded in 736ms:
+1955:            printf("auto-selected no interpolation\n");
+[2025-10-07T06:35:50] tokens used: 82,315
+
+[2025-10-07T06:35:54] thinking
+
+**Investigating retrieval of F_cell without interpolation**
+[2025-10-07T06:35:55] exec bash -lc 'rg "default_F" -n golden_suite_generator/nanoBragg.c' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:35:56] bash -lc 'rg "default_F" -n golden_suite_generator/nanoBragg.c' succeeded in 722ms:
+329:    double default_F=0.0;
+986:            if(strstr(argv[i], "-default_F") && (argc > (i+1)))
+988:                default_F = atof(argv[i+1]);
+1301:        if(Fdumpfile == NULL && default_F == 0.0)
+1307:    if(hklfilename == NULL && Fdumpfile == NULL && default_F == 0.0 || matfilename == NULL && a[0] == 0.0){
+1315:        printf("\t-default_F       \talternative to -hkl: assign all unspecified structure factors (default: 0)\n");
+2381:            if(default_F == 0.0)
+2439:        if(default_F != 0.0) {
+2440:            printf("initializing to default_F = %g:\n",default_F);
+2444:                        Fhkl[h0][k0][l0] = default_F;
+2714:    printf("  %d initialized hkls (all others =%g)\n",hkls,default_F);
+2829:        default_F,water_F,water_size,water_MW,\
+3271:                                            F_cell = default_F;
+3328:                                            F_cell = default_F;  // usually zero
+[2025-10-07T06:35:56] tokens used: 82,557
+
+[2025-10-07T06:35:59] thinking
+
+**Investigating interpolation fallback logic**
+[2025-10-07T06:36:00] exec bash -lc "sed -n '3320,3370p' golden_suite_generator/nanoBragg.c" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:36:01] bash -lc "sed -n '3320,3370p' golden_suite_generator/nanoBragg.c" succeeded in 740ms:
+                                    if(! interpolate)
+                                    {
+                                        if ( hkls && (h0<=h_max) && (h0>=h_min) && (k0<=k_max) && (k0>=k_min) && (l0<=l_max) && (l0>=l_min)  ) {
+                                            /* just take nearest-neighbor */
+                                            F_cell = Fhkl[h0-h_min][k0-k_min][l0-l_min];
+                                        }
+                                        else
+                                        {
+                                            F_cell = default_F;  // usually zero
+                                        }
+                                    }
+
+                                    /* now we have the structure factor for this pixel */
+                                    if(fpixel==trace_fpixel && spixel==trace_spixel && source==0 && mos_tic==0 && phi_tic==0) {
+                                        printf("TRACE_C: F_cell %.15g\n", F_cell);
+                                    }
+
+                                    /* convert amplitudes into intensity (photons per steradian) */
+                                    I += F_cell*F_cell*F_latt*F_latt;
+
+[2025-10-07T06:36:01] tokens used: 83,111
+
+[2025-10-07T06:36:04] thinking
+
+**Investigating unexpected F_cell value**
+[2025-10-07T06:36:05] exec bash -lc "sed -n '130,200p' reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:36:05] bash -lc "sed -n '130,200p' reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log" succeeded in 689ms:
+  parallelpiped xtal: 36x47x29 cells
+  wave=9.768e-11 meters +/- 0% in 1 steps
+  Kahn polarization factor: 0.000000
+  incident fluence: 1e+24 photons/m^2
+  distance=0.231275 detsize=0.423636x0.434644  pixel=0.000172 meters (2463x2527 pixels)
+  sensor is 0 m thick in 1 layers with mu= -1
+  Xbeam=0.217742 Ybeam=0.213907
+  Fbeam=0.217889 Sbeam=0.215043
+  Xclose=0.211818 Yclose=0.217322
+  Fclose=0.217742 Sclose=0.213907
+  DIRECTION_OF_DETECTOR_X-AXIS= 0.999982 -0.005998 -0.000118
+  DIRECTION_OF_DETECTOR_Y-AXIS= -0.005998 -0.99997 -0.004913
+  DIRECTION_OF_DETECTOR_Z-AXIS= -8.85283e-05 0.00491362 -0.999988
+  INCIDENT_BEAM_DIRECTION= 0.000513879 0 -1
+  spindle ROTATION_AXIS= -1 0 0
+  POLARIZATION_PLANE_NORMAL= 0 -0.000513879 0
+  dials origin= -230.192 216.343 216.476
+  roi: 0 < x < 2463 && 0 < y < 2527
+  hdivrange=0 hdivstep=0  radians
+  vdivrange=0 vdivstep=0  radians
+[2025-10-07T06:36:05] tokens used: 83,915
+
+[2025-10-07T06:36:08] thinking
+
+**Continuing to examine lines near F_cell**
+[2025-10-07T06:36:09] exec bash -lc 'rg "TRACE_C: h" -n reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:36:09] bash -lc 'rg "TRACE_C: h" -n reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log' succeeded in 742ms:
+271:TRACE_C: hkl_frac -6.8795206024501 -0.607255839576692 -13.766298525469
+272:TRACE_C: hkl_rounded -7 -1 -14
+[2025-10-07T06:36:09] tokens used: 84,711
+
+[2025-10-07T06:36:12] thinking
+
+**Checking nearby context**
+[2025-10-07T06:36:13] exec bash -lc "sed -n '250,320p' reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:36:14] bash -lc "sed -n '250,320p' reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log" succeeded in 696ms:
+1% done
+1% done
+TRACE_C: pix0_vector_meters -0.216475836204836 0.216343050492215 -0.230192414300537
+TRACE_C: fdet_vec 0.999982004873912 -0.00599800002923425 -0.000118000000575132
+TRACE_C: sdet_vec -0.0059979996566955 -0.999969942765222 -0.0049129997187971
+TRACE_C: pixel_pos_meters -0.0383922537729319 0.0973681880033118 -0.230792784137485
+TRACE_C: R_distance_meters 0.253416334111961
+TRACE_C: omega_pixel_sr 4.20412684465831e-07
+TRACE_C: close_distance_meters 0.231271826111781
+TRACE_C: obliquity_factor 0.91261609841457
+TRACE_C: diffracted_vec -0.151498733921271 0.384222226023891 -0.910725762592394
+TRACE_C: incident_vec 0.000513879494092498 -0 -0.999999867963924
+TRACE_C: lambda_meters 9.768e-11
+TRACE_C: lambda_angstroms 0.9768
+TRACE_C: scattering_vec_A_inv -1556230686.07047 3933478972.39855 913944567.685604
+TRACE_C: rot_a_angstroms -14.3562690335399 -21.8805340763623 -5.5476578307123
+TRACE_C: rot_b_angstroms -11.4986968432508 0.671588233999813 -29.1143056268565
+TRACE_C: rot_c_angstroms 21.0699500320179 -24.4045855811067 -9.7143290320006
+TRACE_C: rot_a_star_A_inv -0.0290510954135954 -0.0293958845208845 0.0107498771498771
+TRACE_C: rot_b_star_A_inv -0.0031263923013923 0.0104376433251433 -0.0328566748566749
+[2025-10-07T06:36:14] tokens used: 85,020
+
+[2025-10-07T06:36:19] thinking
+
+**Analyzing unexpected lattice factors**
+[2025-10-07T06:36:19] exec bash -lc 'ls golden_suite_generator | grep scaled' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:36:20] bash -lc 'ls golden_suite_generator | grep scaled' exited 1 in 722ms:
+
+[2025-10-07T06:36:20] tokens used: 86,945
+
+[2025-10-07T06:36:32] thinking
+
+**Analyzing reflection data discrepancies**
+[2025-10-07T06:36:32] exec bash -lc 'ls -a golden_suite_generator | head' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:36:33] bash -lc 'ls -a golden_suite_generator | head' succeeded in 749ms:
+.
+..
+Fdump.bin
+Makefile
+P1_trace.hkl
+__pycache__
+beam_center_analysis_report.md
+beam_center_full_trace.log
+c_pix0_trace_full.log
+c_pix0_trace_sample_pivot.bin
+[2025-10-07T06:36:33] tokens used: 88,004
+
+[2025-10-07T06:36:44] thinking
+
+**Analyzing structure factor and data indexing**
+[2025-10-07T06:36:44] exec bash -lc 'rg "HKL" -n reports/2025-10-cli-flags/phase_i/supervisor_command/c_stdout.txt' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:36:45] bash -lc 'rg "HKL" -n reports/2025-10-cli-flags/phase_i/supervisor_command/c_stdout.txt' exited 1 in 738ms:
+
+[2025-10-07T06:36:45] tokens used: 89,015
+
+[2025-10-07T06:36:46] thinking
+
+**Considering start point**
+[2025-10-07T06:36:47] exec bash -lc 'head -n 120 reports/2025-10-cli-flags/phase_i/supervisor_command/c_stdout.txt' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:36:48] bash -lc 'head -n 120 reports/2025-10-cli-flags/phase_i/supervisor_command/c_stdout.txt' succeeded in 775ms:
+WARNING: auto-generating odet_vector
+nanoBragg nanocrystal diffraction simulator - James Holton and Ken Frankel 5-17-17
+custom convention selected.
+pivoting detector around sample
+DETECTOR_FAST_AXIS 0.999982004873912 -0.00599800002923425 -0.000118000000575132
+DETECTOR_SLOW_AXIS -0.0059979996566955 -0.999969942765222 -0.0049129997187971
+DETECTOR_NORMAL_AXIS -8.85282813644494e-05 0.00491361907271126 -0.999987924182263
+DETECTOR_PIX0_VECTOR -0.216475836204836 0.216343050492215 -0.230192414300537
+XDS incident beam: 0.00063187 0.00490992 0.999988
+reading A.mat
+TRACE: Raw matrix values from file:
+TRACE:   a_star (raw) = [-0.0283771, -0.0287139, 0.0105005]
+TRACE:   b_star (raw) = [-0.00305386, 0.0101955, -0.0320944]
+TRACE:   c_star (raw) = [0.0253582, -0.0140005, -0.0103605]
+TRACE:   lambda0 = 0.9768 Angstroms
+TRACE:   scaling factor = 1e-10/lambda0 = 1.02375
+TRACE: After wavelength correction:
+TRACE:   a_star = [-0.0290511, -0.0293959, 0.0107499] |a_star| = 0.0427041
+TRACE:   b_star = [-0.00312639, 0.0104376, -0.0328567] |b_star| = 0.0346162
+TRACE:   c_star = [0.0259604, -0.014333, -0.0106066] |c_star| = 0.0314941
+[2025-10-07T06:36:48] tokens used: 89,234
+
+[2025-10-07T06:36:54] thinking
+
+**Investigating scaled.hkl file contents**
+[2025-10-07T06:36:54] exec bash -lc 'ls -l scaled.hkl' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:36:55] bash -lc 'ls -l scaled.hkl' succeeded in 737ms:
+-rw-r--r--  1 ollie  staff  13 Oct  6 22:46 scaled.hkl
+[2025-10-07T06:36:55] tokens used: 92,701
+
+[2025-10-07T06:37:05] thinking
+
+**Analyzing dataset size discrepancy**
+
+I'll investigate why the current scaled.hkl file only has one reflection while logs report over 64,000 entries, considering the possibility of a truncated test file versus a full original dataset, and formulate hypotheses about missing data sources like Fdump.bin that might explain the F_cell mismatches seen.
+[2025-10-07T06:37:06] exec bash -lc 'ls -l golden_suite_generator/Fdump.bin' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:37:07] bash -lc 'ls -l golden_suite_generator/Fdump.bin' succeeded in 889ms:
+-rw-r--r--  1 ollie  staff  229 Oct  1 10:04 golden_suite_generator/Fdump.bin
+[2025-10-07T06:37:07] tokens used: 93,465
+
+[2025-10-07T06:37:16] thinking
+
+**Formulating hypotheses on missing data**
+
+I’m piecing together why the Fdump file is so small compared to what the C log suggests; likely, the scaled HKL file is truncated and incomplete. Without the full dataset, PyTorch defaults to zero for F values, which explains discrepancies. I’m outlining hypotheses to test—like dataset truncation, loading mechanisms, or fallback behaviors—and planning to verify file sizes and search the repo for complete data to triage this properly. Let’s explore the repo for larger scaled.hkl files or relevant reproduction commands next!
+[2025-10-07T06:37:19] exec bash -lc 'rg --files --hidden --no-messages -g"scaled.hkl"' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:37:20] bash -lc 'rg --files --hidden --no-messages -g"scaled.hkl"' succeeded in 926ms:
+scaled.hkl
+[2025-10-07T06:37:20] tokens used: 94,088
+
+[2025-10-07T06:37:21] thinking
+
+**Checking for golden_data files**
+[2025-10-07T06:37:22] exec bash -lc 'ls tests/golden_data' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:37:22] bash -lc 'ls tests/golden_data' succeeded in 736ms:
+README.md
+cubic_tilted_detector
+simple_cubic.bin
+simple_cubic.bin.old
+simple_cubic.img
+simple_cubic.log
+simple_cubic_500x500_old.bin
+simple_cubic_C_trace.log
+simple_cubic_mosaic.bin
+simple_cubic_mosaic.img
+simple_cubic_pixel_trace.log
+simple_cubic_torch_trace.log
+test_debug_comparison.png
+triclinic_P1
+with_mosaicity.bin
+with_mosaicity.img
+with_mosaicity.log
+with_oscillation.bin
+with_oscillation.img
+with_oscillation.log
+[2025-10-07T06:37:22] tokens used: 94,312
+
+[2025-10-07T06:37:28] thinking
+
+**Verifying structure factor data presence**
+[2025-10-07T06:37:30] exec bash -lc 'KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/structure_factor/probe.py --pixel 685 1039 --hkl scaled.hkl --fdump golden_suite_generator/Fdump.bin --device cpu --dtype float64' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:37:35] bash -lc 'KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/structure_factor/probe.py --pixel 685 1039 --hkl scaled.hkl --fdump golden_suite_generator/Fdump.bin --device cpu --dtype float64' succeeded in 4.43s:
+/Users/ollie/Documents/nanoBragg3/reports/2025-10-cli-flags/phase_l/structure_factor/probe.py:149: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  log(f"Timestamp: {datetime.utcnow().isoformat()}Z")
+/Users/ollie/Documents/nanoBragg3/reports/2025-10-cli-flags/phase_l/structure_factor/probe.py:316: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  **Date:** {datetime.utcnow().isoformat()}Z
+================================================================================
+Structure-Factor Coverage Probe
+CLI-FLAGS-003 Phase L3a Evidence
+================================================================================
+
+Timestamp: 2025-10-07T06:37:35.021313Z
+Git SHA: e938c673e1224c64a01cdc61ad1b5ff959cd093c
+Torch version: 2.7.1
+Platform: macOS-15.2-arm64-arm-64bit-Mach-O
+Device: cpu
+Dtype: torch.float64
+
+Loading supervisor command configuration...
+Crystal config initialized
+
+Target Miller index: h=-7, k=-1, l=-14
+[2025-10-07T06:37:35] tokens used: 94,817
+
+[2025-10-07T06:37:38] thinking
+
+**Verifying unintended file overwrites**
+[2025-10-07T06:37:39] exec bash -lc 'git status --short' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:37:40] bash -lc 'git status --short' succeeded in 834ms:
+ M reports/2025-10-cli-flags/phase_l/structure_factor/analysis.md
+ M reports/2025-10-cli-flags/phase_l/structure_factor/probe.log
+[2025-10-07T06:37:40] tokens used: 95,767
+
+[2025-10-07T06:37:43] thinking
+
+**Considering artifact modifications and reversion**
+[2025-10-07T06:37:44] exec bash -lc 'git checkout -- reports/2025-10-cli-flags/phase_l/structure_factor/analysis.md reports/2025-10-cli-flags/phase_l/structure_factor/probe.log' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:37:45] bash -lc 'git checkout -- reports/2025-10-cli-flags/phase_l/structure_factor/analysis.md reports/2025-10-cli-flags/phase_l/structure_factor/probe.log' succeeded in 762ms:
+
+[2025-10-07T06:37:45] tokens used: 96,168
+
+[2025-10-07T06:37:47] thinking
+
+**Checking git status**
+[2025-10-07T06:37:48] exec bash -lc 'git status --short' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:37:48] bash -lc 'git status --short' succeeded in 727ms:
+
+[2025-10-07T06:37:48] tokens used: 96,390
+
+[2025-10-07T06:38:00] thinking
+
+**Analyzing dataset completeness and hypotheses**
+
+I’m piecing together that the main issue is the incomplete `scaled.hkl` dataset causing the Fdump to have minimal data, which means the PyTorch run can’t match amplitudes properly. I’m weighing whether to run the heavy C command for confirmation or rely on logs and current evidence. It looks like finding or reconstructing the full dataset used in the original C run is crucial, so I plan to check related documentation and golden test data folders for that missing info. Let’s explore those leads!
+[2025-10-07T06:38:02] exec bash -lc 'rg "scaled.hkl" -n' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:38:03] bash -lc 'rg "scaled.hkl" -n' succeeded in 1.02s:
+plans/active/cli-noise-pix0/plan.md:13:- Gap snapshot update (2025-10-17): Attempt #53 (Phase L1c) realigned HKL Fdump I/O with C padding (`read_fdump`/`write_fdump`) and added regression coverage (`TestHKLFdumpParity::test_scaled_hkl_roundtrip`) with max |ΔF| = 0.0. Proceed to L1d to regenerate parity metrics before reviving scaling traces.
+plans/active/cli-noise-pix0/plan.md:234:| L1c | Align PyTorch HKL cache reader/writer with confirmed layout | [D] | ✅ Attempt #53 (2025-10-17): Updated `src/nanobrag_torch/io/hkl.py` to honour `(range+1)` padding, added C-code docstring quotes per Rule #11, and introduced `tests/test_cli_flags.py::TestHKLFdumpParity::test_scaled_hkl_roundtrip` (max |ΔF| = 0.0, mismatches = 0). |
+plans/active/cli-noise-pix0/plan.md:255:| L3a | Verify structure-factor coverage for supervisor pixel | [ ] | Use the refreshed harness to reproduce the rounded Miller index from C (`trace_c_scaling.log` lines 143-164 → hkl=(-7,-1,-14)). Author a small probe (e.g., `reports/2025-10-cli-flags/phase_l/structure_factor/probe.py`) that loads `scaled.hkl` via `read_hkl_file` **and** the latest `Fdump.bin` via `read_fdump`, then calls `Crystal.get_structure_factor` for that hkl. Record both outputs and compare against the C reference value `F_cell=190.27`. |
+input.md:7:Do Now: CLI-FLAGS-003 › Phase L3a Verify structure-factor coverage — author the probe detailed below, then run `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/structure_factor/probe.py --pixel 685 1039 --hkl scaled.hkl --fdump golden_suite_generator/Fdump.bin --fdump tmp/Fdump.bin`
+input.md:21:- Probe captures HKL-grid coverage and reports whether (-7,-1,-14) exists in either `scaled.hkl` or generated Fdump caches.
+input.md:67:- Command template: `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/structure_factor/probe.py --pixel 685 1039 --hkl scaled.hkl --fdump golden_suite_generator/Fdump.bin --fdump tmp/Fdump.bin --dtype float64 --device cpu`.
+tests/test_cli_flags.py:814:    def test_scaled_hkl_roundtrip(self):
+tests/test_cli_flags.py:831:        hkl_path = "scaled.hkl"
+docs/fix_plan.md:477:  * [2025-10-07] Attempt #75 (ralph loop) — Result: **SUCCESS** (Phase L3a probe complete). **Created structure-factor coverage probe confirming target reflection (-7,-1,-14) is completely absent from scaled.hkl.**
+docs/fix_plan.md:484:      - **HKL coverage gap confirmed:** scaled.hkl contains exactly ONE reflection `(1,12,3)` with F=100.0
+docs/fix_plan.md:487:      - **C must synthesize F=190.27:** Since scaled.hkl does not contain the target reflection, C code must generate amplitudes via:
+docs/fix_plan.md:503:      - **F_cell still zero:** This is expected—pixel (685,1039) computes h=-7,k=-1,l=-14 but scaled.hkl only contains (1,12,3), so structure factor lookup correctly returns 0
+docs/fix_plan.md:517:      - **F_cell=0 is correct:** Pixel (685,1039) maps to h≈-7,k≈-1,l≈-14; scaled.hkl only contains (1,12,3), so out-of-range lookup correctly returns 0
+docs/fix_plan.md:522:  * [2025-11-14] Attempt #73 (galph loop) — Result: **BLOCKED** (Phase L2b structure-factor wiring incomplete). **Harness leaves `Crystal.hkl_data` / `Crystal.hkl_metadata` unset after loading scaled.hkl, so structure factors still fall back to `default_F=0`.**
+docs/fix_plan.md:526:      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log:1-35` — TRACE_PY run showing `F_cell=0` / `I_before_scaling=0` even though hkl=(1,12,3) exists in scaled.hkl.
+docs/fix_plan.md:543:      - **Orientation bug identified:** Harness currently stores all MOSFLM vectors inside `mosflm_a_star`, leaving `mosflm_b_star`/`mosflm_c_star` unset; this forces default orientation and zeroes F_cell even though scaled.hkl contains the reflection.
+docs/fix_plan.md:877:      - **Supervisor command still fails** — nb-compare shows 126,467× sum ratio on real-world parameters with `-hkl scaled.hkl`, indicating separate normalization issue (deferred to Phase L)
+docs/fix_plan.md:1104:    Observations/Hypotheses: CLI successfully parsed all flags including `-beam_vector`, `-pix0_vector_mm`, `-convention CUSTOM` inputs, but `Detector.__init__` ignores `custom_beam_vector` from config and falls back to convention defaults. This is the second geometry gap alongside the pix0 transform issue documented in Attempt #5 (Phase E). Running the evidence harness also created a duplicate copy of the structure-factor file (`scaled.hkl.1`, identical to `scaled.hkl`) in the repo root; treat it as an artefact that needs removal during the upcoming implementation pass so repo hygiene stays intact.
+docs/fix_plan.md:1105:    Next Actions: (1) Execute plan Phase E tasks E1-E3 to generate full C/PyTorch traces with this configuration; (2) Implement detector fix to accept and use `custom_beam_vector` from config while maintaining differentiability/device-neutrality (documented in detector.md §5); (3) Re-run beam_vector_check to verify alignment before parity retry; (4) Delete the stray `scaled.hkl.1` artefact once the investigation concludes (confirm prior to Protected Assets scan).
+docs/fix_plan.md:1129:      - Residual repo hygiene note: duplicate `scaled.hkl.1` still present; remove once implementation loop lands to keep Protected Assets policy satisfied.
+[2025-10-07T06:38:03] tokens used: 97,207
+
+[2025-10-07T06:38:06] thinking
+
+**Reviewing input.md and related tests**
+[2025-10-07T06:38:07] exec bash -lc "sed -n '780,880p' tests/test_cli_flags.py" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:38:07] bash -lc "sed -n '780,880p' tests/test_cli_flags.py" succeeded in 677ms:
+        # SAMPLE pivot: pix0 = (-0.216476, 0.216343, -0.230192) meters
+        c_reference_pix0 = torch.tensor(
+            [-0.216476, 0.216343, -0.230192],
+            device=device,
+            dtype=dtype
+        )
+
+        # Allow larger tolerance due to SAMPLE pivot geometry calculations
+        # We're verifying the pivot selection logic is correct, not exact parity yet
+        # (H6g will verify exact parity after all pivot fixes are complete)
+        pix0_delta = torch.abs(pix0_vector - c_reference_pix0)
+        max_delta = torch.max(pix0_delta).item()
+
+        # Sanity check: pix0 should be within ~5mm of C reference
+        # (exact parity verification happens in Phase H6g after this fix)
+        assert max_delta < 0.005, \
+            f"pix0 delta {max_delta:.6f} m exceeds 5mm threshold (expected rough agreement)"
+
+
+class TestHKLFdumpParity:
+[2025-10-07T06:38:07] tokens used: 99,859
+
+[2025-10-07T06:38:10] thinking
+
+**Verifying file existence**
+[2025-10-07T06:38:10] exec bash -lc 'ls reports/2025-10-cli-flags/phase_l/hkl_parity' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:38:11] bash -lc 'ls reports/2025-10-cli-flags/phase_l/hkl_parity' succeeded in 691ms:
+Fdump_scaled_20251006175946.bin
+Fdump_scaled_20251006181401.bin.sha256
+c_fdump_20251006175032.log
+c_fdump_20251006175946.log
+c_fdump_20251006181401.log
+index_deltas.json
+layout_analysis.md
+metrics_20251006175032.json
+metrics_20251109.json
+run_20251006175032.log
+summary.md
+summary_20251006175032.md
+summary_20251109.md
+[2025-10-07T06:38:11] tokens used: 101,770
+
+[2025-10-07T06:38:14] thinking
+
+**Checking missing binary file in tests**
+[2025-10-07T06:38:15] exec bash -lc 'rg "Fdump_scaled" -n tests/test_cli_flags.py' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:38:15] bash -lc 'rg "Fdump_scaled" -n tests/test_cli_flags.py' succeeded in 673ms:
+832:        c_fdump_path = "reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006181401.bin"
+[2025-10-07T06:38:15] tokens used: 102,233
+
+[2025-10-07T06:38:18] thinking
+
+**Considering file existence and LFS impact**
+[2025-10-07T06:38:18] exec bash -lc 'file reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006181401.bin.sha256' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:38:19] bash -lc 'file reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006181401.bin.sha256' succeeded in 726ms:
+reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006181401.bin.sha256: ASCII text
+[2025-10-07T06:38:19] tokens used: 102,467
+
+[2025-10-07T06:38:23] thinking
+
+**Checking for large files with Git LFS**
+[2025-10-07T06:38:24] exec bash -lc 'git lfs ls-files | head' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:38:25] bash -lc 'git lfs ls-files | head' succeeded in 703ms:
+git: 'lfs' is not a git command. See 'git --help'.
+
+The most similar command is
+	log
+[2025-10-07T06:38:25] tokens used: 102,734
+
+[2025-10-07T06:38:27] thinking
+
+**Checking for large binary file presence**
+[2025-10-07T06:38:28] exec bash -lc 'ls -l reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:38:29] bash -lc 'ls -l reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin' succeeded in 714ms:
+-rw-r--r--  1 ollie  staff  1461622 Oct  6 17:59 reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin
+[2025-10-07T06:38:29] tokens used: 103,087
+
+[2025-10-07T06:38:32] thinking
+
+**Verifying presence of binary files**
+[2025-10-07T06:38:33] exec bash -lc 'ls -l reports/2025-10-cli-flags/phase_l/hkl_parity | head' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:38:34] bash -lc 'ls -l reports/2025-10-cli-flags/phase_l/hkl_parity | head' succeeded in 717ms:
+total 2976
+-rw-r--r--  1 ollie  staff  1461622 Oct  6 17:59 Fdump_scaled_20251006175946.bin
+-rw-r--r--  1 ollie  staff      143 Oct  6 18:18 Fdump_scaled_20251006181401.bin.sha256
+-rw-r--r--  1 ollie  staff     8408 Oct  6 17:54 c_fdump_20251006175032.log
+-rw-r--r--  1 ollie  staff     7425 Oct  6 17:59 c_fdump_20251006175946.log
+-rw-r--r--  1 ollie  staff     8408 Oct  6 18:18 c_fdump_20251006181401.log
+-rw-r--r--  1 ollie  staff      555 Oct  6 18:18 index_deltas.json
+-rw-r--r--  1 ollie  staff     1838 Oct  6 18:18 layout_analysis.md
+-rw-r--r--  1 ollie  staff     1162 Oct  6 17:54 metrics_20251006175032.json
+-rw-r--r--  1 ollie  staff     1160 Oct  6 18:55 metrics_20251109.json
+[2025-10-07T06:38:34] tokens used: 103,467
+
+[2025-10-07T06:38:47] thinking
+
+**Analyzing missing dataset impact and next steps**
+
+I’m piecing together that the missing `181401` binary likely causes some tests to fail, possibly deliberately skipped due to missing data. Since `scaled.hkl` is incomplete and `golden_suite_generator/Fdump.bin` is very small, the reflection coverage is insufficient. The C trace indicates that a fuller dataset is needed, so the next move is guiding Ralph to acquire or locate a full reflection dataset, perhaps a larger `Fdump.bin`. I’m also considering how to run the probe with a larger `Fdump_scaled_20251006175946.bin` file without disrupting current logs, possibly by redirecting outputs or running in a temporary environment. This groundwork sets me up to write clear instructions for Ralph and update the fix plan accordingly.
+[2025-10-07T06:38:49] exec bash -lc 'head -n 120 reports/2025-10-cli-flags/phase_l/structure_factor/probe.py' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:38:50] bash -lc 'head -n 120 reports/2025-10-cli-flags/phase_l/structure_factor/probe.py' succeeded in 906ms:
+#!/usr/bin/env python
+"""
+Structure-Factor Coverage Probe for Supervisor Pixel
+CLI-FLAGS-003 Phase L3a Evidence Gathering
+
+Purpose:
+    Verify whether the supervisor pixel (-7,-1,-14) exists in scaled.hkl or Fdump.bin
+    and determine the structure factor value PyTorch retrieves for this reflection.
+
+Usage:
+    KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/structure_factor/probe.py \
+        --pixel 685 1039 \
+        --hkl scaled.hkl \
+        --fdump golden_suite_generator/Fdump.bin \
+        --fdump tmp/Fdump.bin \
+        --dtype float64 \
+        --device cpu
+
+Outputs:
+    - probe.log: Structured log with HKL grid coverage, amplitude queries, and metadata
+[2025-10-07T06:38:50] tokens used: 104,916
+
+[2025-10-07T06:38:56] thinking
+
+**Investigating log file usage**
+[2025-10-07T06:38:57] exec bash -lc 'rg "probe.log" -n reports/2025-10-cli-flags/phase_l/structure_factor/probe.py' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:38:58] bash -lc 'rg "probe.log" -n reports/2025-10-cli-flags/phase_l/structure_factor/probe.py' succeeded in 739ms:
+20:    - probe.log: Structured log with HKL grid coverage, amplitude queries, and metadata
+126:    log_path = out_dir / 'probe.log'
+328:See `probe.log` for detailed output from:
+334:[Review probe.log output and fill in conclusions here]
+360:    print("\nNext step: Review probe.log and complete analysis.md with findings")
+[2025-10-07T06:38:58] tokens used: 106,436
+
+[2025-10-07T06:38:59] thinking
+
+**Checking output directory**
+[2025-10-07T06:39:00] exec bash -lc 'rg "out_dir" -n reports/2025-10-cli-flags/phase_l/structure_factor/probe.py' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:39:00] bash -lc 'rg "out_dir" -n reports/2025-10-cli-flags/phase_l/structure_factor/probe.py' succeeded in 692ms:
+125:    out_dir = Path(__file__).parent
+126:    log_path = out_dir / 'probe.log'
+313:    analysis_path = out_dir / 'analysis.md'
+[2025-10-07T06:39:00] tokens used: 106,732
+
+[2025-10-07T06:39:05] thinking
+
+**Planning safe data inspection**
+[2025-10-07T06:39:08] exec bash -lc "KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python - <<'PY'
+from nanobrag_torch.io.hkl import read_fdump
+import torch
+from pathlib import Path
+fdump_path = Path('reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin')
+F, meta = read_fdump(fdump_path, dtype=torch.float64)
+print('shape', F.shape)
+print('ranges', meta['h_min'], meta['h_max'], meta['k_min'], meta['k_max'], meta['l_min'], meta['l_max'])
+# target indices -7,-1,-14
+h, k, l = -7, -1, -14
+in_range = (meta['h_min'] <= h <= meta['h_max'] and
+            meta['k_min'] <= k <= meta['k_max'] and
+            meta['l_min'] <= l <= meta['l_max'])
+print('target in range', in_range)
+if in_range:
+    val = F[h - meta['h_min'], k - meta['k_min'], l - meta['l_min']]
+    print('F_cell', float(val))
+PY" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:39:09] bash -lc "KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python - <<'PY'
+from nanobrag_torch.io.hkl import read_fdump
+import torch
+from pathlib import Path
+fdump_path = Path('reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin')
+F, meta = read_fdump(fdump_path, dtype=torch.float64)
+print('shape', F.shape)
+print('ranges', meta['h_min'], meta['h_max'], meta['k_min'], meta['k_max'], meta['l_min'], meta['l_max'])
+# target indices -7,-1,-14
+h, k, l = -7, -1, -14
+in_range = (meta['h_min'] <= h <= meta['h_max'] and
+            meta['k_min'] <= k <= meta['k_max'] and
+            meta['l_min'] <= l <= meta['l_max'])
+print('target in range', in_range)
+if in_range:
+    val = F[h - meta['h_min'], k - meta['k_min'], l - meta['l_min']]
+    print('F_cell', float(val))
+PY" succeeded in 1.64s:
+shape torch.Size([49, 57, 62])
+ranges -24 24 -28 28 -31 30
+target in range True
+F_cell 190.27
+[2025-10-07T06:39:09] tokens used: 107,285
+
+[2025-10-07T06:39:15] thinking
+
+**Evaluating Fdump file usage**
+[2025-10-07T06:39:15] exec bash -lc 'ls tmp' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:39:16] bash -lc 'ls tmp' succeeded in 729ms:
+AT-PARALLEL-001
+AT-PARALLEL-003
+COMPARISON_RESULTS.md
+Fdump.bin
+__pycache__
+c_512.bin
+c_output.bin
+c_output.img
+c_output.png
+c_output.smv
+c_output_fluence.bin
+c_output_fluence.img
+claudelog.txt
+claudelog10.txt
+claudelog11.txt
+claudelog12.txt
+claudelog13.txt
+claudelog2.txt
+claudelog20250918_231603.txt
+claudelog20250919_003016.txt
+[2025-10-07T06:39:16] tokens used: 108,055
+
+[2025-10-07T06:39:21] thinking
+
+**Checking temporary file size**
+[2025-10-07T06:39:22] exec bash -lc 'ls -l tmp/Fdump.bin' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:39:23] bash -lc 'ls -l tmp/Fdump.bin' succeeded in 730ms:
+-rw-r--r--  1 ollie  staff  1744 Oct  1 10:04 tmp/Fdump.bin
+[2025-10-07T06:39:23] tokens used: 109,163
+
+[2025-10-07T06:39:30] thinking
+
+**Analyzing Fdump loading behavior**
+
+I'm focusing on verifying the F_cell using the large Fdump file since the smaller one isn't sufficient. I want to see if the current PyTorch CLI automatically loads the Fdump when given an HKL file and if it behaves like the C parity run does. To confirm this, I’ll check the pyro code handling HKL input and loading Fdump in `nanobrag_torch/io/hkl.py`. I’m considering hypotheses about why the amplitude might be missing and will likely instruct running a probe script referencing the large Fdump to confirm amplitude reproduction.
+[2025-10-07T06:39:32] exec bash -lc "sed -n '1,200p' src/nanobrag_torch/io/hkl.py" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:39:33] bash -lc "sed -n '1,200p' src/nanobrag_torch/io/hkl.py" succeeded in 885ms:
+"""
+HKL file reader and Fdump binary cache for nanoBragg PyTorch.
+
+Implements AT-STR-001, AT-STR-002, and AT-IO-003 from spec-a.md.
+"""
+
+import struct
+from pathlib import Path
+from typing import Tuple, Optional
+
+import torch
+import numpy as np
+
+
+def read_hkl_file(
+    filepath: str,
+    default_F: float = 0.0,
+    device=None,
+    dtype=torch.float32
+) -> Tuple[torch.Tensor, dict]:
+[2025-10-07T06:39:33] tokens used: 110,663
+
+[2025-10-07T06:39:36] thinking
+
+**Investigating function locations for loading data**
+[2025-10-07T06:39:36] exec bash -lc 'rg "read_fdump" -n src/nanobrag_torch -g"*.py"' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:39:37] bash -lc 'rg "read_fdump" -n src/nanobrag_torch -g"*.py"' succeeded in 746ms:
+src/nanobrag_torch/io/__init__.py:12:from .hkl import read_hkl_file, write_fdump, read_fdump, try_load_hkl_or_fdump
+src/nanobrag_torch/io/__init__.py:20:    'read_fdump',
+src/nanobrag_torch/io/hkl.py:186:def read_fdump(filepath: str, device=None, dtype=torch.float32) -> Tuple[torch.Tensor, dict]:
+src/nanobrag_torch/io/hkl.py:299:            return read_fdump(fdump_path, device, dtype)
+[2025-10-07T06:39:37] tokens used: 113,301
+
+[2025-10-07T06:39:40] thinking
+
+**Inspecting function try_load_hkl_or_fdump**
+[2025-10-07T06:39:40] exec bash -lc "sed -n '200,320p' src/nanobrag_torch/io/hkl.py" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:39:41] bash -lc "sed -n '200,320p' src/nanobrag_torch/io/hkl.py" succeeded in 716ms:
+        tuple: (F_grid, metadata_dict) same as read_hkl_file
+            F_grid will be (h_range × k_range × l_range) with padding trimmed
+    """
+    device = device if device is not None else torch.device("cpu")
+
+    with open(filepath, 'rb') as f:
+        # Read header line
+        header_bytes = b''
+        while True:
+            byte = f.read(1)
+            if byte == b'\f':  # Form feed marks end of header
+                break
+            header_bytes += byte
+
+        # Parse header
+        header_str = header_bytes.decode('ascii').strip()
+        parts = header_str.split()
+        h_min, h_max, k_min, k_max, l_min, l_max = map(int, parts)
+
+        # Calculate dimensions (C-style: count of values)
+[2025-10-07T06:39:41] tokens used: 113,641
+
+[2025-10-07T06:40:05] thinking
+
+**Analyzing dataset and CLI behavior**
+
+I'm following the logic that the CLI uses either the hkl or Fdump files for data, but the current repository seems to lack the full `scaled.hkl` with 64k reflections, which causes parity failures. The large Fdump file exists but gets overwritten if `-hkl` is supplied, so the solution might be to run without `-hkl` and rely solely on Fdump, or else reacquire the full dataset. Next, I'll prepare an `input.md` to instruct staging this dataset and outline the next evidence-gathering commands and environment, focusing on phase L3b and plan item CLI-FLAGS-003.
+[2025-10-07T06:40:08] exec bash -lc 'git rev-parse --abbrev-ref HEAD' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:40:09] bash -lc 'git rev-parse --abbrev-ref HEAD' succeeded in 940ms:
+feature/spec-based-2
+[2025-10-07T06:40:09] tokens used: 116,684
+
+[2025-10-07T06:40:27] thinking
+
+**Preparing final documentation and summary**
+
+I’m gathering details to update `input.md` with a focused summary, mode, branch, and evidence-only test mapping. I’m also outlining hypotheses for debugging the truncated dataset issue and planning to append a new dated entry in `galph_memory.md` to summarize current findings before crafting the final message structure.
+[2025-10-07T06:40:30] exec bash -lc 'tail -n 40 galph_memory.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:40:31] bash -lc 'tail -n 40 galph_memory.md' succeeded in 930ms:
+- Long-term Goal #1 status: CLI-FLAGS-003 remains blocked at Phase L2b because `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py` still fabricates TRACE_PY lines (`I_before_scaling NOT_EXTRACTED`, `polar 0`, `I_pixel_final 0`). Simulator instrumentation already emits real values (see `tests/test_trace_pixel.py`), so harness must capture stdout instead of synthesizing constants.
+- Hypothesis summary: (1) Harness bypass writes placeholders → confirmed by lines 263-283 in trace_harness.py; (2) Missing stdout capture leaves trace_py_stdout.txt empty, so scaling_audit_summary.md lacks real numbers. Next step is to pipe the actual TRACE_PY output into trace_py_scaling.log before comparing to C.
+- Long-term Goal #2 check: `plans/active/vectorization.md` is still valid; Phase A evidence artifacts remain absent, so no plan rewrite yet. Ensure Ralph captures tricubic/absorption baselines before implementation when that goal activates.
+- No new plan drafted; existing CLI plan already captures Phase L2b work. Updated input.md directing Ralph to fix the harness (collect live TRACE_PY output) and rerun targeted regression test.
+- Follow-up for Ralph: execute revised input.md — update trace_harness.py to record real simulator output, refresh `trace_py_scaling.log`, update scaling_audit_summary.md with live values, then proceed to Phase L2c comparison once numbers land.
+
+## 2025-11-12 (galph loop — L2b harness refresh directive)
+- Sync clean; reviewed docs/index.md, specs/spec-a.md shard pointers, arch.md, config map, debugging SOP, testing_strategy.md, docs/fix_plan.md, and plans/active/* before analysis.
+- Deep analysis: CLI-FLAGS-003 still blocked because `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py` fabricates TRACE_PY entries (see lines 252-281). Latest PyTorch trace with live instrumentation (`reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_py_after_133134.log`) shows `hkl_frac≈(2,2,-12.99)` and `polar=1.0`, diverging sharply from C trace (`c_trace_scaling.log:265-287` reports `hkl_frac≈(-6.88,-0.607,-13.77)` and `polar=0.9146`). Need authentic TRACE_PY output before tackling normalization.
+- Hypotheses triage captured in supervisor summary; top issue remains reciprocal lattice mismatch (likely k-component) pending fresh harness data.
+- Coin flip → heads; reviewed Ralph’s recent commits (`f130d19`, `1d2e6ac`, `bcd08b8`). Instrumentation patch clean (no regressions); harness fix partial (still placeholders); comparison tooling solid but awaits real data. No regressions spotted.
+- Updated `plans/active/cli-noise-pix0/plan.md` L2b/L2c rows to mark simulator instrumentation/regression complete and call out the remaining harness rerun requirement. Refreshed `docs/fix_plan.md` next actions to center on harness refresh → comparison rerun → L3 prep.
+- Authored new `input.md` instructing Ralph to stream live TRACE_PY output via `debug_config={'trace_pixel': [685,1039]}`, rerun the harness, and validate with the targeted trace test before proceeding to comparison.
+- Follow-up for Ralph: execute L2b Step 3 (harness refresh + rerun), archive updated logs/env snapshots under `reports/2025-10-cli-flags/phase_l/scaling_audit/`, run the trace regression selector, update Attempts History, then rerun `compare_scaling_traces.py` once real data exists.
+
+## 2025-11-13 (galph loop — CLI harness regression triage)
+- Synced clean; traced Phase L2b blockage to `trace_harness.py` still unpacking legacy `read_hkl_file` outputs. Logged the regression as Attempt #70 in docs/fix_plan.md:458-484 and updated the plan gap snapshot / L2b guidance (`plans/active/cli-noise-pix0/plan.md:13-18`, `:239-242`).
+- Authored new input.md (100 lines) directing Ralph to adapt the harness to the `(F_grid, metadata)` API, rerun the supervisor command capture, and archive refreshed TRACE_PY artifacts before Phase L2c resumes.
+- Focus next loop: confirm harness patch lands, collect live trace data, then execute compare_scaling_traces.py to re-enter normalization analysis.
+
+[2025-10-07T06:40:31] tokens used: 118,095
+
+[2025-10-07T06:40:39] thinking
+
+**Preparing summary entry for galph_memory.md**
+[2025-10-07T06:40:44] exec bash -lc "cat <<'EOF' >> galph_memory.md
+
+## 2025-11-15 (galph loop — Phase L3 structure-factor sourcing)
+- Confirmed repo-local "'`scaled.hkl` is a 13-byte stub containing only `(1,12,3)`; golden_suite_generator/Fdump.bin and tmp/Fdump.bin are tiny (≤2×2×2 grids) and cannot supply F_cell for (-7,-1,-14).
+- Loaded `reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin` via `read_fdump`; grid spans h∈[-24,24], k∈[-28,28], l∈[-31,30] and returns `F_cell=190.27` for the supervisor pixel. This confirms sourcing the C-generated Fdump reproduces the trace amplitude.
+- Implication: Phase L3 must treat the archived Fdump as the authoritative dataset (or regenerate an equivalent cache) before normalization work; running the CLI with the stub HKL will overwrite the cache with zeros.
+- Next supervisor handoff: instruct Ralph to rerun `reports/.../structure_factor/probe.py` including `--fdump reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin`, capture the refreshed probe.log/analysis.md, and decide whether to stage that Fdump alongside the supervisor command or regenerate it from the original HKL source.
+EOF
+' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:40:45] bash -lc "cat <<'EOF' >> galph_memory.md
+
+## 2025-11-15 (galph loop — Phase L3 structure-factor sourcing)
+- Confirmed repo-local "'`scaled.hkl` is a 13-byte stub containing only `(1,12,3)`; golden_suite_generator/Fdump.bin and tmp/Fdump.bin are tiny (≤2×2×2 grids) and cannot supply F_cell for (-7,-1,-14).
+- Loaded `reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin` via `read_fdump`; grid spans h∈[-24,24], k∈[-28,28], l∈[-31,30] and returns `F_cell=190.27` for the supervisor pixel. This confirms sourcing the C-generated Fdump reproduces the trace amplitude.
+- Implication: Phase L3 must treat the archived Fdump as the authoritative dataset (or regenerate an equivalent cache) before normalization work; running the CLI with the stub HKL will overwrite the cache with zeros.
+- Next supervisor handoff: instruct Ralph to rerun `reports/.../structure_factor/probe.py` including `--fdump reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin`, capture the refreshed probe.log/analysis.md, and decide whether to stage that Fdump alongside the supervisor command or regenerate it from the original HKL source.
+EOF
+' succeeded in 802ms:
+
+[2025-10-07T06:40:45] tokens used: 120,550
+
+[2025-10-07T06:40:47] thinking
+
+**Preparing to update input.md**
+[2025-10-07T06:40:48] exec bash -lc 'cat input.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:40:49] bash -lc 'cat input.md' succeeded in 738ms:
+Summary: Probe the supervisor pixel’s structure-factor source so PyTorch can match C’s I_before_scaling.
+Mode: Parity
+Focus: CLI-FLAGS-003 › Phase L3a structure-factor verification
+Branch: feature/spec-based-2
+Mapped tests: none — evidence-only
+Artifacts: reports/2025-10-cli-flags/phase_l/structure_factor/probe.py; reports/2025-10-cli-flags/phase_l/structure_factor/probe.log; reports/2025-10-cli-flags/phase_l/structure_factor/analysis.md; reports/2025-10-cli-flags/phase_l/structure_factor/blocked.md (only if needed)
+Do Now: CLI-FLAGS-003 › Phase L3a Verify structure-factor coverage — author the probe detailed below, then run `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/structure_factor/probe.py --pixel 685 1039 --hkl scaled.hkl --fdump golden_suite_generator/Fdump.bin --fdump tmp/Fdump.bin`
+If Blocked: Log the failure (command, stderr, git SHA) to `reports/2025-10-cli-flags/phase_l/structure_factor/blocked.md` and run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_trace_pixel.py` to verify imports remain stable.
+
+Context Snapshot
+- Phase L2 is complete; TRACE_C and TRACE_PY scaling chains live under `reports/2025-10-cli-flags/phase_l/scaling_audit/` with all factors aligned except I_before_scaling.
+- The supervisor pixel (slow=685, fast=1039) maps to hkl≈(−7,−1,−14) per `c_trace_scaling.log:143-164`.
+- PyTorch currently reports `F_cell=0` for that hkl while C reports `F_cell=190.27`, driving I_before_scaling to zero on the Py side.
+- Existing HKL/Fdump assets in repo appear to cover only a tiny grid (ranges -2..2), so the C amplitude must stem from additional logic.
+- Plan Phase L3 (plans/active/cli-noise-pix0/plan.md) now targets structure-factor ingestion before normalization code changes.
+- docs/fix_plan.md entry CLI-FLAGS-003 has refreshed Next Actions (lines 457-461) aligning to this probe-first strategy.
+- We must keep detector/beam configs identical to the supervisor command (`trace_harness.get_supervisor_params`) so comparisons remain valid.
+- All work stays evidence-only this loop; no production module changes or new tests yet.
+
+Success Criteria
+[2025-10-07T06:40:49] tokens used: 121,320
+
+[2025-10-07T06:40:54] thinking
+
+**Preparing new input.md instructions**
+
+I'm planning to overwrite `input.md` with fresh instructions focused on Phase L3b, aiming for about 120 lines. I'll carefully include details about verifying the Fdump file under the specified reports path, outline the summary and mode, and structure sections like "Context Snapshot" and "Success Criteria" while keeping it concise and clear.
+[2025-10-07T06:41:17] exec bash -lc "cat <<'EOF' > input.md
+Summary: Source the supervisor pixel’s structure factor by probing the archived C Fdump so Phase L3 can unblock normalization work.
+Mode: Parity
+Focus: CLI-FLAGS-003 › Phase L3b structure-factor ingestion analysis
+Branch: feature/spec-based-2
+Mapped tests: none — evidence-only
+Artifacts: reports/2025-10-cli-flags/phase_l/structure_factor/probe.log; reports/2025-10-cli-flags/phase_l/structure_factor/analysis.md; reports/2025-10-cli-flags/phase_l/structure_factor/hkl_inventory.md (if you enumerate files)
+Do Now: CLI-FLAGS-003 › Phase L3b Analyze structure-factor sources — run "'`KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/structure_factor/probe.py --pixel 685 1039 --hkl scaled.hkl --fdump reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin --fdump golden_suite_generator/Fdump.bin --fdump tmp/Fdump.bin --dtype float64 --device cpu` and update analysis.md with findings.
+If Blocked: Record command, stderr, and `git rev-parse HEAD` in `reports/2025-10-cli-flags/phase_l/structure_factor/blocked.md`, then run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_flags.py` to verify imports and log the selector + result in Attempts History.
+
+Context Snapshot
+- Phase L2 artifacts show every scaling factor except `I_before_scaling` now matches C (`reports/2025-10-cli-flags/phase_l/scaling_audit/scaling_audit_summary.md`).
+- `c_trace_scaling.log:143-164` reports `F_cell=190.27` for hkl=(-7,-1,-14); PyTorch trace still shows `F_cell=0` for the same pixel (`trace_py_scaling.log:18-32`).
+- Repo-local `scaled.hkl` is a 13-byte stub (only `(1,12,3)`), and both `golden_suite_generator/Fdump.bin` and `tmp/Fdump.bin` are 2×2×2 caches generated from that stub.
+- `reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin` is a 1.4 MB C-generated cache with ranges h∈[-24,24], k∈[-28,28], l∈[-31,30]; it contains the supervisor reflection with amplitude 190.27.
+- Phase L3 requires determining how the C run sourced that cache (reuse vs regenerate) before touching simulator code.
+- docs/fix_plan.md:457-461 and plans/active/cli-noise-pix0/plan.md:255-262 both gate further work on documenting the structure-factor source.
+
+Success Criteria
+- `probe.log` lists each data source (HKL + Fdump paths), its h/k/l ranges, whether (-7,-1,-14) is in range, and the retrieved amplitude.
+- `analysis.md` summarises which source matches the C amplitude and flags any gaps (e.g., need to restore the full HKL file or stage the large Fdump before running CLI parity).
+- Any decision/next-step notes for L3c (copy vs regenerate cache) are captured for the next supervisor loop.
+
+Priorities & Rationale
+- docs/fix_plan.md:455-461 — current Next Actions require confirming structure-factor coverage before modifying normalization code.
+- plans/active/cli-noise-pix0/plan.md:255 — Phase L3a/L3b checklist explicitly calls for this probe and ingestion analysis.
+- specs/spec-a-cli.md (HKL caching section) — parity depends on mirroring C’s HKL/Fdump precedence; present data shows mismatch.
+- reports/2025-10-cli-flags/phase_l/hkl_parity/layout_analysis.md — documents C cache layout; cross-check results to avoid misinterpreting ranges.
+- src/nanobrag_torch/io/hkl.py:250-310 — PyTorch’s `try_load_hkl_or_fdump` currently overwrites caches when an HKL file is present; probing informs whether we need alternate flow.
+
+How-To Map
+- Command: `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/structure_factor/probe.py --pixel 685 1039 --hkl scaled.hkl --fdump reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin --fdump golden_suite_generator/Fdump.bin --fdump tmp/Fdump.bin --dtype float64 --device cpu`.
+- Before running, `ls -lh` each input (HKL + Fdump paths) and capture sizes in the log for provenance.
+- Let the probe reuse `get_supervisor_params` so detector/beam/crystal configs stay aligned with scaling traces.
+- After execution, append a markdown table in `analysis.md` with columns `[source, in_range?, F_cell]` and annotate which source reproduces 190.27.
+- Note whether pointing `try_load_hkl_or_fdump` at the large cache would avoid overwriting (e.g., by omitting `-hkl` or copying the big cache to working `Fdump.bin` before CLI runs).
+- If you discover missing large HKL text or need to regenerate the cache, outline the C command (with env vars) required and list it in `analysis.md`.
+
+Pitfalls To Avoid
+- Don’t run the probe without `KMP_DUPLICATE_LIB_OK=TRUE` (MKL crash) or `PYTHONPATH=src` (import failure).
+- Avoid overwriting the archived C Fdump; copy it if you need to experiment.
+- No production code edits this loop—stay evidence-only per plan gating.
+- Do not delete or rename files listed in docs/index.md while staging artifacts.
+- Keep tensors on CPU float64 for this evidence pass; CUDA is unnecessary and may hide precision issues.
+- If the probe script regenerates `analysis.md`, ensure your updates include previous conclusions (don’t leave placeholder text).
+- Ensure `git status` only shows intentional report updates before ending the loop.
+
+Pointers
+- docs/fix_plan.md:448-522 — active item history and current divergence write-up.
+- plans/active/cli-noise-pix0/plan.md:243-266 — detailed Phase L3 task descriptions.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log:143-164 — authoritative C reference values.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log:18-34 — current PyTorch zeros for comparison.
+- reports/2025-10-cli-flags/phase_l/hkl_parity/summary.md — previous HKL/Fdump parity investigation.
+- src/nanobrag_torch/io/hkl.py:250-310 — current cache loading logic to keep in mind for ingestion strategy.
+
+Next Up (if time allows)
+- Determine whether to stage the archived Fdump as `Fdump.bin` or to restore the original HKL file, and capture the plan in `analysis.md` for Phase L3c implementation.
+- Outline regression coverage ideas for Phase L3d (e.g., targeted `tests/test_cli_scaling.py` assertions using the confirmed dataset).
+EOF
+' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:41:18] bash -lc "cat <<'EOF' > input.md
+Summary: Source the supervisor pixel’s structure factor by probing the archived C Fdump so Phase L3 can unblock normalization work.
+Mode: Parity
+Focus: CLI-FLAGS-003 › Phase L3b structure-factor ingestion analysis
+Branch: feature/spec-based-2
+Mapped tests: none — evidence-only
+Artifacts: reports/2025-10-cli-flags/phase_l/structure_factor/probe.log; reports/2025-10-cli-flags/phase_l/structure_factor/analysis.md; reports/2025-10-cli-flags/phase_l/structure_factor/hkl_inventory.md (if you enumerate files)
+Do Now: CLI-FLAGS-003 › Phase L3b Analyze structure-factor sources — run "'`KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/structure_factor/probe.py --pixel 685 1039 --hkl scaled.hkl --fdump reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin --fdump golden_suite_generator/Fdump.bin --fdump tmp/Fdump.bin --dtype float64 --device cpu` and update analysis.md with findings.
+If Blocked: Record command, stderr, and `git rev-parse HEAD` in `reports/2025-10-cli-flags/phase_l/structure_factor/blocked.md`, then run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_flags.py` to verify imports and log the selector + result in Attempts History.
+
+Context Snapshot
+- Phase L2 artifacts show every scaling factor except `I_before_scaling` now matches C (`reports/2025-10-cli-flags/phase_l/scaling_audit/scaling_audit_summary.md`).
+- `c_trace_scaling.log:143-164` reports `F_cell=190.27` for hkl=(-7,-1,-14); PyTorch trace still shows `F_cell=0` for the same pixel (`trace_py_scaling.log:18-32`).
+- Repo-local `scaled.hkl` is a 13-byte stub (only `(1,12,3)`), and both `golden_suite_generator/Fdump.bin` and `tmp/Fdump.bin` are 2×2×2 caches generated from that stub.
+- `reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin` is a 1.4 MB C-generated cache with ranges h∈[-24,24], k∈[-28,28], l∈[-31,30]; it contains the supervisor reflection with amplitude 190.27.
+- Phase L3 requires determining how the C run sourced that cache (reuse vs regenerate) before touching simulator code.
+- docs/fix_plan.md:457-461 and plans/active/cli-noise-pix0/plan.md:255-262 both gate further work on documenting the structure-factor source.
+
+Success Criteria
+- `probe.log` lists each data source (HKL + Fdump paths), its h/k/l ranges, whether (-7,-1,-14) is in range, and the retrieved amplitude.
+- `analysis.md` summarises which source matches the C amplitude and flags any gaps (e.g., need to restore the full HKL file or stage the large Fdump before running CLI parity).
+- Any decision/next-step notes for L3c (copy vs regenerate cache) are captured for the next supervisor loop.
+
+Priorities & Rationale
+- docs/fix_plan.md:455-461 — current Next Actions require confirming structure-factor coverage before modifying normalization code.
+- plans/active/cli-noise-pix0/plan.md:255 — Phase L3a/L3b checklist explicitly calls for this probe and ingestion analysis.
+- specs/spec-a-cli.md (HKL caching section) — parity depends on mirroring C’s HKL/Fdump precedence; present data shows mismatch.
+- reports/2025-10-cli-flags/phase_l/hkl_parity/layout_analysis.md — documents C cache layout; cross-check results to avoid misinterpreting ranges.
+- src/nanobrag_torch/io/hkl.py:250-310 — PyTorch’s `try_load_hkl_or_fdump` currently overwrites caches when an HKL file is present; probing informs whether we need alternate flow.
+
+How-To Map
+- Command: `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/structure_factor/probe.py --pixel 685 1039 --hkl scaled.hkl --fdump reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin --fdump golden_suite_generator/Fdump.bin --fdump tmp/Fdump.bin --dtype float64 --device cpu`.
+- Before running, `ls -lh` each input (HKL + Fdump paths) and capture sizes in the log for provenance.
+- Let the probe reuse `get_supervisor_params` so detector/beam/crystal configs stay aligned with scaling traces.
+- After execution, append a markdown table in `analysis.md` with columns `[source, in_range?, F_cell]` and annotate which source reproduces 190.27.
+- Note whether pointing `try_load_hkl_or_fdump` at the large cache would avoid overwriting (e.g., by omitting `-hkl` or copying the big cache to working `Fdump.bin` before CLI runs).
+- If you discover missing large HKL text or need to regenerate the cache, outline the C command (with env vars) required and list it in `analysis.md`.
+
+Pitfalls To Avoid
+- Don’t run the probe without `KMP_DUPLICATE_LIB_OK=TRUE` (MKL crash) or `PYTHONPATH=src` (import failure).
+- Avoid overwriting the archived C Fdump; copy it if you need to experiment.
+- No production code edits this loop—stay evidence-only per plan gating.
+- Do not delete or rename files listed in docs/index.md while staging artifacts.
+- Keep tensors on CPU float64 for this evidence pass; CUDA is unnecessary and may hide precision issues.
+- If the probe script regenerates `analysis.md`, ensure your updates include previous conclusions (don’t leave placeholder text).
+- Ensure `git status` only shows intentional report updates before ending the loop.
+
+Pointers
+- docs/fix_plan.md:448-522 — active item history and current divergence write-up.
+- plans/active/cli-noise-pix0/plan.md:243-266 — detailed Phase L3 task descriptions.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log:143-164 — authoritative C reference values.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log:18-34 — current PyTorch zeros for comparison.
+- reports/2025-10-cli-flags/phase_l/hkl_parity/summary.md — previous HKL/Fdump parity investigation.
+- src/nanobrag_torch/io/hkl.py:250-310 — current cache loading logic to keep in mind for ingestion strategy.
+
+Next Up (if time allows)
+- Determine whether to stage the archived Fdump as `Fdump.bin` or to restore the original HKL file, and capture the plan in `analysis.md` for Phase L3c implementation.
+- Outline regression coverage ideas for Phase L3d (e.g., targeted `tests/test_cli_scaling.py` assertions using the confirmed dataset).
+EOF
+' succeeded in 932ms:
+
+[2025-10-07T06:41:18] tokens used: 125,844
+
+[2025-10-07T06:41:21] thinking
+
+**Checking git status for changes**
+[2025-10-07T06:41:21] exec bash -lc 'git status --short' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:41:22] bash -lc 'git status --short' succeeded in 763ms:
+ M galph_memory.md
+ M input.md
+[2025-10-07T06:41:22] tokens used: 127,671
+
+[2025-10-07T06:41:31] thinking
+
+**Preparing final summary and commit**
+
+I’m organizing observations and hypotheses for the final message, ensuring all file references include paths and line numbers as needed. I plan to detail evidence supporting each hypothesis and outline next confirming steps, like running the probe script. Before committing changes, I’ll run a diff to verify modifications align with instructions.
+[2025-10-07T06:41:32] exec bash -lc 'git diff' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:41:33] bash -lc 'git diff' succeeded in 961ms:
+diff --git a/galph_memory.md b/galph_memory.md
+index 05f6fc6..cbbe2b9 100644
+--- a/galph_memory.md
++++ b/galph_memory.md
+@@ -1478,3 +1478,9 @@ Follow-ups for Ralph:
+ - Noted Fdump snapshots currently in repo do not cover (-7,-1,-14); follow-up question recorded for L3b to locate/replicate C’s data source.
+ - Follow-up for Ralph: implement the probe per input.md, store outputs in reports/2025-10-cli-flags/phase_l/structure_factor/, and feed findings into L3b planning.
+ 
++
++## 2025-11-15 (galph loop — Phase L3 structure-factor sourcing)
++- Confirmed repo-local `scaled.hkl` is a 13-byte stub containing only `(1,12,3)`; golden_suite_generator/Fdump.bin and tmp/Fdump.bin are tiny (≤2×2×2 grids) and cannot supply F_cell for (-7,-1,-14).
++- Loaded `reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin` via `read_fdump`; grid spans h∈[-24,24], k∈[-28,28], l∈[-31,30] and returns `F_cell=190.27` for the supervisor pixel. This confirms sourcing the C-generated Fdump reproduces the trace amplitude.
++- Implication: Phase L3 must treat the archived Fdump as the authoritative dataset (or regenerate an equivalent cache) before normalization work; running the CLI with the stub HKL will overwrite the cache with zeros.
++- Next supervisor handoff: instruct Ralph to rerun `reports/.../structure_factor/probe.py` including `--fdump reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin`, capture the refreshed probe.log/analysis.md, and decide whether to stage that Fdump alongside the supervisor command or regenerate it from the original HKL source.
+diff --git a/input.md b/input.md
+index 1d40d6c..ee7034f 100644
+--- a/input.md
++++ b/input.md
+@@ -1,102 +1,57 @@
+-Summary: Probe the supervisor pixel’s structure-factor source so PyTorch can match C’s I_before_scaling.
+[2025-10-07T06:41:33] tokens used: 128,266
+
+[2025-10-07T06:41:40] thinking
+
+**Planning final message content**
+
+I'm organizing a clear final message that analyzes the structure factor issue with file references and hypotheses, mentions updated instructions in `input.md`, notes we haven't run tests, and outlines next steps like committing and possibly staging or running scripts. I'll also review relevant summary and analysis markdown files to cite appropriate lines.
+[2025-10-07T06:41:41] exec bash -lc "sed -n '1,160p' reports/2025-10-cli-flags/phase_l/hkl_parity/layout_analysis.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:41:42] bash -lc "sed -n '1,160p' reports/2025-10-cli-flags/phase_l/hkl_parity/layout_analysis.md" succeeded in 692ms:
+# Fdump Binary Layout Analysis
+
+**Phase:** CLI-FLAGS-003 Phase L1b
+**Purpose:** Characterize binary layout discrepancies between HKL text and Fdump cache
+**References:**
+- specs/spec-a-core.md §Structure Factors & Fdump (line 474)
+- golden_suite_generator/nanoBragg.c:2484-2487 (C writer loop)
+
+## Input Files
+
+- **HKL:** `scaled.hkl`
+- **Fdump:** `reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006181401.bin`
+
+## Grid Dimensions
+
+### HKL Text File
+- Bounds: h=[-24, 24], k=[-28, 28], l=[-31, 30]
+- Ranges: h_range=49, k_range=57, l_range=62
+- Expected grid size: 49 × 57 × 62 = 173,166 voxels
+- Populated entries: 64,333
+[2025-10-07T06:41:42] tokens used: 131,011
+
+[2025-10-07T06:41:44] thinking
+
+**Referencing dataset and trace file**
+[2025-10-07T06:41:46] exec bash -lc "sed -n '1,80p' reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:41:46] bash -lc "sed -n '1,80p' reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log" succeeded in 702ms:
+TRACE_PY: pix0_vector_meters -0.216475710272789 0.216343179345131 -0.230195268988609
+TRACE_PY: fdet_vec 0.999981999397278 -0.00599800003692508 -0.000118000003567431
+TRACE_PY: sdet_vec -0.00599800003692508 -0.999970018863678 -0.0049129999242723
+TRACE_PY: pixel_pos_meters -0.0383921265602112 0.0973683074116707 -0.230795636773109
+TRACE_PY: R_distance_meters 0.253418952226639
+TRACE_PY: omega_pixel_sr 4.20404859369228e-07
+TRACE_PY: close_distance_meters 0.231274679303169
+TRACE_PY: obliquity_factor 0.912617921829224
+TRACE_PY: diffracted_vec -0.151496648788452 0.384218692779541 -0.910727560520172
+TRACE_PY: incident_vec 0.000513879465870559 0 -0.99999988079071
+TRACE_PY: lambda_meters 9.7680002450943e-11
+TRACE_PY: lambda_angstroms 0.97680002450943
+TRACE_PY: scattering_vec_A_inv -1556209280 3933442816 913926272
+TRACE_PY: rot_a_angstroms -14.3562698364258 -21.8717937469482 -5.58202123641968
+TRACE_PY: rot_b_angstroms -11.4986982345581 0.717319786548615 -29.1132164001465
+TRACE_PY: rot_c_angstroms 21.0699501037598 -24.3892974853516 -9.75265312194824
+TRACE_PY: rot_a_star_A_inv -0.0290510933846235 -0.0293958801776171 0.010749876499176
+TRACE_PY: rot_b_star_A_inv -0.00312639237381518 0.0104376431554556 -0.0328566692769527
+TRACE_PY: rot_c_star_A_inv 0.0259604379534721 -0.0143330143764615 -0.0106066130101681
+TRACE_PY: hkl_frac -6.87916421890259 -0.589141607284546 -13.763635635376
+[2025-10-07T06:41:46] tokens used: 131,894
+
+[2025-10-07T06:41:55] thinking
+
+**Preparing commit and citations**
+[2025-10-07T06:41:55] exec bash -lc 'git add input.md galph_memory.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:41:55] bash -lc 'git add input.md galph_memory.md' succeeded in 753ms:
+
+[2025-10-07T06:41:55] tokens used: 133,197
+
+[2025-10-07T06:41:58] thinking
+
+**Preparing commit message**
+[2025-10-07T06:41:59] exec bash -lc 'git commit -m "SUPERVISOR: Phase L3 sourcing - tests: not run"' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:42:00] bash -lc 'git commit -m "SUPERVISOR: Phase L3 sourcing - tests: not run"' succeeded in 736ms:
+[feature/spec-based-2 337d15a] SUPERVISOR: Phase L3 sourcing - tests: not run
+ 2 files changed, 46 insertions(+), 85 deletions(-)
+[2025-10-07T06:42:00] tokens used: 133,334
+
+[2025-10-07T06:42:02] thinking
+
+**Pushing committed changes**
+[2025-10-07T06:42:02] exec bash -lc 'git push' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:42:04] bash -lc 'git push' succeeded in 2.18s:
+To github.com:hoidn/nanoBragg.git
+   630e709..337d15a  feature/spec-based-2 -> feature/spec-based-2
+[2025-10-07T06:42:04] tokens used: 133,627
+
+[2025-10-07T06:42:07] thinking
+
+**Checking final git status**
+[2025-10-07T06:42:08] exec bash -lc 'git status --short' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T06:42:08] bash -lc 'git status --short' succeeded in 756ms:
+
+[2025-10-07T06:42:08] tokens used: 133,789
+
+[2025-10-07T06:42:14] thinking
+
+**Composing final debug report**
+
+I'll prepare a structured final message summarizing key debug findings with file references, followed by numbered hypotheses and next steps, including notes on updating input.md and the absence of test runs. This will keep everything clear and organized for the user.
+[2025-10-07T06:42:15] codex
+
+**Debug Findings**
+- `scaled.hkl` is a 13 B stub containing only `1 12 3 100.0`, so any lookup for (-7,-1,-14) inevitably falls back to `default_F=0` (`scaled.hkl:1`).  
+- The active PyTorch trace still reports `F_cell 0` and `I_before_scaling 0` for the supervisor pixel, confirming the structure-factor hole on the Py side (`reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log:23`).  
+- C’s scaling trace demonstrates the same pixel receives `F_cell 190.27`, which drives the non-zero intensity in the reference run (`reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log:158`).  
+- The archived C cache `Fdump_scaled_20251006175946.bin` spans h∈[-24,24], k∈[-28,28], l∈[-31,30] and preserves full HKL coverage, per the prior layout study (`reports/2025-10-cli-flags/phase_l/hkl_parity/layout_analysis.md:9-27`).  
+- Phase L3 in the shared plan explicitly requires verifying this ingestion gap before touching normalization (`plans/active/cli-noise-pix0/plan.md:255-262`), and docs/fix_plan.md already flags it as the current blocker (`docs/fix_plan.md:455-461`).  
+- Updated `input.md` now directs Ralph to probe all three caches (archived C Fdump + the tiny local ones) so the Phase L3b analysis can identify which dataset must be staged (`input.md:1-18`).
+
+**Hypotheses & Next Steps**
+1. **Primary:** The parity failure stems from using the stub HKL/tiny caches, while the reference run relied on the archival Fdump that still contains (-7,-1,-14). Evidence above; confidence high. *Next step:* run the refreshed probe command from Do Now, capture amplitudes for each source, and document that only the archived Fdump reproduces 190.27.
+2. **Secondary:** Because `try_load_hkl_or_fdump` rewrites `Fdump.bin` whenever `-hkl scaled.hkl` is supplied (`src/nanobrag_torch/io/hkl.py:260-279`), the large cache must be staged or regenerated before each parity run to avoid being clobbered. Confidence medium. *Next step:* decide (and log in analysis.md) whether to copy the archived cache into place before CLI execution or to restore the full HKL text so both C and PyTorch build the same cache.
+
+**Meta**
+- Updated `galph_memory.md` with the Phase L3 sourcing notes and recorded the new Do‑Now instructions in `input.md`.
+- No tests were run (evidence-only turn).
+[2025-10-07T06:42:21] tokens used: 134,865
+Reading prompt from stdin...
+To github.com:hoidn/nanoBragg.git
+   337d15a..13b45fb  HEAD -> feature/spec-based-2
+Waiting for Ralph to complete i=73...
+Already up to date.
+[sync] state: actor=ralph status=waiting-ralph iter=73
+Updating 13b45fb..b8ad45a
+Fast-forward
+ sync/state.json | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+From github.com:hoidn/nanoBragg
+   13b45fb..b8ad45a  feature/spec-based-2 -> origin/feature/spec-based-2
+[sync] state: actor=ralph status=running-ralph iter=73
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Updating b8ad45a..142230b
+Fast-forward
+ docs/fix_plan.md                                   |  43 ++--
+ .../phase_l/structure_factor/analysis.md           | 217 ++++++++++++++-------
+ .../phase_l/structure_factor/probe.log             |  39 +++-
+ 3 files changed, 197 insertions(+), 102 deletions(-)
+From github.com:hoidn/nanoBragg
+   b8ad45a..142230b  feature/spec-based-2 -> origin/feature/spec-based-2
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Updating 142230b..061bd61
+Fast-forward
+ sync/state.json | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+From github.com:hoidn/nanoBragg
+   142230b..061bd61  feature/spec-based-2 -> origin/feature/spec-based-2
+[sync] state: actor=galph status=complete iter=74
+Ralph completed iteration 73; proceeding to 74

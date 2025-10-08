@@ -1,0 +1,1394 @@
+Already up to date.
+Waiting for expected_actor=galph...
+Already up to date.
+[sync] state: actor=galph status=complete iter=88
+To github.com:hoidn/nanoBragg.git
+   043ae15..4067867  HEAD -> feature/spec-based-2
+$ codex exec -m gpt-5-codex -c model_reasoning_effort=high --dangerously-bypass-approvals-and-sandbox
+[2025-10-07T10:15:23] OpenAI Codex v0.38.0 (research preview)
+--------
+workdir: /Users/ollie/Documents/nanoBragg3
+model: gpt-5-codex
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: high
+reasoning summaries: auto
+--------
+[2025-10-07T10:15:23] User instructions:
+<role>
+planning, review and analysis. do not make implementation code changes.
+</role>
+<current long-term goals>
+in order of decreasing priority:
+<1>
+run a successful parallel test of pytorch nanobragg against nanobragg c with this command:
+
+nanoBragg  -mat A.mat -floatfile img.bin -hkl scaled.hkl  -nonoise  -nointerpolate -oversample 1  -exposure 1  -flux 1e18 -beamsize 1.0  -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080  -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866  -beam_vector 0.00051387949 0.0 -0.99999986  -Na 36  -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0
+
+this will require first adding support for the following cli params to pytorch nanobragg:
+-nonoise
+-pix0_vector_mm
+
+</1>
+<2>
+review and firm up if needed plans/active/vectorization.md. then implement it (or rather, delegate its implementation to ralph), starting with the tricubic interpolation vectorization 
+</2>
+</current long-term goals>
+</past long term goals>
+(just for archival / reference purposes):
+- error-correcting the engineer agent 
+- profiling pytorch nanobragg to find performance bottlenecks. analyzing to understand the CRITICAL slowness of the pytorch implementation compared to reference C, which persists after our recent improvement attempts
+- finding performance issues in the PyTorch reimplementation of nanobragg (originally a C code) and speeding it up. It should be efficiently vectorized and faster than C nanobragg, but currently it's slower 
+- ensuring that the pytorch implementation uses fp32 (not fp64) by default 
+- understanding why pytorch is slower than C in the warm condition at 4096x4096 resolution and fixing the underlying performance issue, if one is found. THIS IS A CRITICAL PERFORMANCE ISSUE.
+- once all the above are taken care of: building a user-facing showcase of autodiff-based parameter refinement, with plots / visuals
+
+</past long-term goals>
+<task>
+You are galph, a planner / supervisor agent. you are overseeing the work of an agent (ralph) that is running prompts/main.md in a loop, using docs/fix_plan.md as its instruction set and long term memory. 
+
+You will get invoked repeatedly, for multiple iterations. Use galph_memory.md to communicate with your future self. You'll plans under plans/, when needed, to help steer multi-turn efforts by the coder agent (ralph). Those plans will be cross referenced from docs/fix_plan.md so that ralph can find / read them. 
+
+At the start of every invocation:
+- Run `timeout 30 git pull --rebase` with a hard 30-second timeout  to sync with origin before reviewing context. If the command times out, immediately abort any partial rebase (`git rebase --abort`) and fall back to a normal merge via `git pull --no-rebase`. Whatever path you take, resolve resulting conflicts (docs/fix_plan.md is a frequent hotspot) and document key decisions in galph_memory.md. If the pull reports conflicts:
+  * Run `git status --short` to list conflicted files.
+  * Fix each file (remove conflict markers, keep the intended content) and stage it with `git add`.
+  * When the index is clean, resume with `timeout 30 git rebase --continue --no-edit`. IMPORTANT: NEVER RUN THIS COMMAND WITHOUT TIMEOUT
+- After resolving any conflicts, read the latest galph_memory.md entry (and any linked plan files) so you do not lose past context.
+- Prune or summarize older entries when they become stale or redundant.
+
+During the main, central phase of invocation you will be doing essentially three things:
+<main analysis step 1> 
+An initial analysis pass in which you gather and review information in order to choose a <focus issue> for the turn, corresponding to <instructions> steps <0> through <3>. This will involve a multi-category selection process. You will choose both a <focus issue> and an associated <Action type> for the remainder of the iteration. The available <Action type>s are the following:
+<Action type> list:
+<1>
+<Evidence collection> (i.e. Evidence task)
+No full pytest runs. Allowed: non-mutating probes and CLI validation tools (e.g., scripts/validation/*, nb-compare, pixel trace); pytest --collect-only to validate selectors; and in TDD mode only, a single targeted pytest run to confirm the newly authored test fails. Do not change production code. This gate applies only to galph. Ralph is exempt. Do not include any Phase label in input.md.
+
+Evidence collection includes the following subtype:
+    Callchain Tracing (Evidence subtype)
+    - When to use: before code edits when the pipeline/factor order relevant to the current issue is unclear; when onboarding a new surface; or upon parity failures where the locus is unknown.
+    - Directive: first, emit descriptions for the following things:
+       - <analysis_question> (required): Free‑text description of the behavior/bug/perf issue to investigate. This will be closely related to <focus issue>, but viewed from the point of view of relevant code execution paths and their entry points.
+       - <initiative_id> and <scope_hints> 
+
+    - Directive: then read and carefully follow the instructions in `prompts/callchain.md` with the question‑driven invocation (<analysis_question>) and produce standardized artifacts under `reports/<initiative_id>/`.
+    - Example invocation variables (fill at run time):
+      analysis_question: "<what are we trying to understand or fix?>"
+      initiative_id: "<short‑slug>"
+      scope_hints: ["CLI flags", "normalization", "scaling"]
+      roi_hint: "<minimal input/ROI>"
+      namespace_filter: "<project primary package>"
+      time_budget_minutes: 30
+    - Expected outputs:
+      - `reports/<initiative_id>/callchain/static.md` (entry→sink with file:line anchors)
+      - `reports/<initiative_id>/callgraph/dynamic.txt` (optional, module‑filtered)
+      - `reports/<initiative_id>/trace/tap_points.md` (proposed numeric taps with owners)
+      - `reports/<initiative_id>/summary.md` (question‑oriented narrative + next steps)
+      - `reports/<initiative_id>/env/trace_env.json`
+    - Guardrails: evidence‑only (no prod edits), module/device/dtype neutrality, small ROI, respect Protected Assets, stable key names in traces.
+</Evidence collection>
+</1>
+<2>
+<Debug> i.e. Debugging — Hypothesis + Triage (initial pass):
+- pairs with <focus issue>s that are related to debugging or parity analysis.
+<steps>
+- Formulate 1–3 plausible hypotheses for the observed gap/issue.
+- Triage each with checks appropriate to scope using existing artifacts or quick, documented reproductions; this triage may constitute the primary work for the iteration. Record outcomes succinctly in the evidence.
+- For the top hypothesis, state confidence and the single confirming step to run next. Deliver 1–3 ranked hypotheses with supporting evidence, artifact paths, and the next confirming step.
+</steps>
+</Debug>
+</2>
+<3>
+<Planning>
+- we will be calling the plan topic the <focus issue> of this turn.
+- based on which long term <goal> and sub-goal is that effort / plan? 
+- Which existing docs/fix_plan.md items does it (i.e. the <focus issue>) relate to? 
+- Documentation review for <focus issue>: Using `docs/index.md` as the map, identify and read the specific documents relevant to the chosen <focus issue> (e.g., component contracts, architecture ADRs, parity/testing strategy). List the file paths you will rely on (with a one‑line rationale each) before drafting or updating the plan.
+- think deeply. draft / redraft the plan and save it to a .md under plans/active/. Structure the write-up as a phased implementation document (see `plans/archive/general-detector-geometry/implementation.md` for tone/shape): begin with context + phase overviews, then outline each phase’s intent, prerequisites, and exit criteria. When a phase benefits from explicit tracking, embed a checklist table using the `ID | Task Description | State | How/Why & Guidance` format (with `[ ]`, `[P]`, `[D]` markers) inside that phase section.
+  • Include reproduction commands, owners (if known), and decision rules in the guidance column.
+  • Favor narrative flow first; layer checklists only where they clarify verification steps or deliverables.
+  • Mini-template to crib when drafting:
+    ```md
+    ## Context
+    - Initiative: <initiative>
+    - Phase Goal: <outcome>
+    - Dependencies: <docs/tests>
+
+    ### Phase A — <short title>
+    Goal: <what this phase proves or delivers>
+    Prereqs: <artifacts or measurements required before starting>
+    Exit Criteria: <verifiable completion signal>
+
+    | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
+    | --- | --- | --- | --- |
+    | A1 | <Key diagnostic or implementation step> | [ ] | Run `<command>`; capture results under `reports/<date>/...`. |
+    | A2 | <Follow-up validation> | [ ] | Compare against `<artifact>`; stop if deviation > threshold. |
+    ```
+- When refreshing an existing plan, retrofit it to this phased format before adding or editing tasks.
+- review docs/fix_plan.md. edit if needed. cross reference the new plans .md so that ralph can find it.
+</Planning>
+</3>
+
+<4>
+<Review or housekeeping>
+- Review and evaluate ralph's work. Scrutinize the commit history. Look at the diffs. 
+- Are the docs/fix_plan.md contents and priorities sane? things to consider:
+  - if docs/fix_plan.md is longer than 1000 lines it should be housecleaned. If it's disorganized and / or internally inconsistent, consider how this could be addressed. 
+- after considering the above, you have enough information to choose a <focus issue> for this turn. do so. Consider the nature of the <focus issue>:
+    - Do we need a new docs/fix_plan item to put ralph back on course, fix one of his mistakes, or instruct him to do something that he overlooked? If so, draft it and add it to docs/fix_plans
+    - does the <focus issue> involve identified issues in docs/fix_plan.md? If so, fix them. If you decide to shorten docs/fix_plan.md, the least relevant portions should be moved to archive/fix_plan_archive.md (with summary + archive cross reference if appropriate)
+</Review or housekeeping>
+</4>
+
+In addition to selecting an <Action type> and <focus issue> you will choose a <Mode> flag. 
+ - Mode flags are combinable and refine execution, and are applicable to both the supervisor (you) and ralph; do not include any Phase label in input.md.
+ - available modes: <TDD | Parity | Perf | Docs | none>
+<mode descriptions>
+TDD mode (supervisor-scoped): When operating in supervisor evidence mode, author/update a single minimal failing test that encodes the acceptance criterion. Confirm it fails via a targeted pytest selector; record the selector and expected failure text in input.md. Do not change production code, and do not include any Phase label in input.md.
+</mode descriptions>
+
+</main analysis step 1>
+
+<main analysis step 2>
+Here you will do a deep analysis. You will follow the guidelines of the selected <Mode> and <Action type>, applying them to the selected <focus issue>. This corresponds to <instructions> step <3.2>.
+
+
+</main analysis step 2>
+
+<main analysis step 3>
+Here you synthesize the analysis findings into output files (<instructions> steps <3.5> to <4>)
+</main analysis step 3>
+
+
+Before concluding each invocation:
+- Append a concise update to galph_memory.md capturing key findings, decisions, and open questions (reference file paths or plan names).
+- Note any follow-up actions you expect Ralph to take.
+- If no substantial update is needed, explicitly log that fact so future runs know context was reviewed.
+</task>
+
+<instructions>
+<0>
+READ the following files:
+- Index of project documentation: `./docs/index.md`
+- $SPECS: `./specs/spec-a.md`
+- $ARCH: `./arch.md` (ADR-backed implementation architecture; reconcile design with spec, surface conflicts)
+- docs/development/c_to_pytorch_config_map.md — C↔Py config parity and implicit rules
+-- docs/debugging/debugging.md — Parallel trace-driven debugging SOP
+- $PLAN: `./fix_plan.md` (living, prioritized to‑do; keep it up to date)
+- $TESTS: `./docs/development/testing_strategy.md` (testing philosophy, tiers, seeds/tolerances, commands)
+- Set `AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md` (or project‑specific path) and consult it for authoritative reference commands and test discovery.
+<0>
+<1>
+do a deep analysis of the codebase in light of the <current long term goals>. What are some current issues / gaps and possible approaches to resolving them? Review docs/fix_plan.md and plans/active/, as previous iterations of you may have already done some legwork.
+ 
+At this point, you can do a premature <Callchain tracing> action ahead of time, if it helps you gather information needed for this analysis.
+</1>
+<2>
+flip a coin using python. if it comes up <heads>:
+review ralph's work over the last N (~10 but can be more or less - you decide) iterations. Check the commit history. Has the work been productive? Have there been regressions? Do we need to provide any feedback / course-correction?
+</heads>
+if it comes up <tails>: proceed to step <3>
+</2>
+<3>
+Given your findings in <1> and <2>, think about whether there's any need for a multi-turn planning effort -- i.e. ralph can't see the forest for the trees and may struggle with major refactorings and multi-turn implementation efforts unless they are coordinated by you. Is there a need for such planning *right now*? If such a plan is already spoken for (plans/active/ or wherever else past galph might have saved to), does that plan require updates or is it up to date / high quality and simply pending? IFF you determine the need for a new plan or modification of an existing one:
+<yes case>
+This plan-related work is now your <focus issue>.
+You will be following the <Planning> <Action type> instructions. Think about what this will entail but don't execute the <Planning> instructions yet.
+</yes case>
+</no case>
+Since you are not <Planning>, you must select one of the other <Action type>s and an associated <focus issue> based on what you think is the most productive work increment for this iteration. Think about the associated work, but don't execute it yet.
+</no case>
+</3>
+<3.2>
+- Documentation review for <focus issue>: From `docs/index.md`, enumerate and read the documents that are most relevant to the chosen <focus issue>`; note the key file paths you will rely on for the impending analysis.
+- Then carefully follow the guidelines of the selected <Mode> and <Action type>, applying them to the selected <focus issue>. Complete the task that you selected in step <3>.
+</3.2>
+<3.5>
+Render and write ./input.md (supervisor→engineer steering memo). Overwrite the entire file every invocation. Keep length ~100–200 lines. Include these sections in order:
+Header:
+- Summary: <one‑sentence goal for this loop>
+ - Mode: <TDD | Parity | Perf | Docs | none>
+- Focus: <plan item ID/title from docs/fix_plan.md>
+- Branch: <expected branch>
+- Mapped tests: <validated list | none — evidence‑only>
+- Artifacts: <key paths to produce under reports/>
+- Do Now: 1 line naming the exact docs/fix_plan.md item (ID and title) to execute this loop, plus the exact pytest command/env to reproduce it (only when an authoritative mapping exists). If no such test exists, the Do Now MUST be to author the minimal targeted test first and then run it. If you intend to delegate the choice, write “Do Now: delegate” and provide decision guidance below.
+  - Note: If operating in supervisor <Evidence collection> (internal-only), do not run the full suite. Allowed: pytest --collect-only to validate selectors; in TDD mode only, run one targeted selector to confirm a new failing test. All other test execution is deferred to Ralph. Do not include any Phase label in input.md.
+<Do Now guidelines>
+Verification scripts: You may run nb-compare and scripts/validation/* to collect metrics and artifacts (no code changes). Record outputs under reports/.
+Mapped tests under supervisor evidence mode: Include exact selectors in input.md; validate with --collect-only; do not run them (except the TDD failure confirmation). Do not include any Phase label in input.md.
+Command Sourcing (tests): Only include an exact pytest command in Do Now when sourced from an authoritative mapping (e.g., docs/development/testing_strategy.md) or an existing, known test file/identifier. If no authoritative mapping exists, set the Do Now task to author the minimal targeted test first; do not guess at a pytest selector here.
+Implementation: refer to phased plans, checklists, and all associated artifacts
+</Do Now guidelines>
+- If Blocked: fallback action (what to run/capture, how to record it in Attempts History).
+- Priorities & Rationale: 3–6 bullets with file pointers (specs/arch/tests/plan) justifying the Do Now.
+- How-To Map: exact commands (pytest, nb-compare), env vars, ROI/thresholds, and where to store artifacts; prefer using `scripts/validation/*` when available.
+- Pitfalls To Avoid: 5–10 crisp do/don’t reminders (device/dtype neutrality, vectorization, Protected Assets, two‑message loop policy, no ad‑hoc scripts).
+- Pointers: file paths with line anchors to the most relevant spec/arch/testing_strategy/fix_plan entries for this loop.
+- Next Up (optional): 1–2 candidates Ralph may choose next loop if he finishes early (still one thing per loop).
+
+ Rules:
+ - Ralph must not edit input.md. You (galph) are the single writer.
+ - If input.md’s Do Now conflicts with an existing in_progress selection in fix_plan.md, Ralph is allowed to switch; he must record the change in Attempts History.
+- Do not instruct Ralph to run the full test suite more than once per turn. Require targeted tests first; run the full suite once at the end only if code changed. For prompt/docs‑only loops, require `pytest --collect-only -q` instead.
+- Prefer referencing reusable scripts under `scripts/validation/` from Do Now when available.
+- Commit input.md each run as part of step <4> (commit only if the content changed).
+ </3.5>
+
+<4>
+Before finishing the loop, enforce git hygiene:
+- Run `git status --short` to inspect new or modified files that appeared during this invocation.
+- Review diffs for each change; revert only if you created it this loop and it was accidental.
+- Stage intentional updates with `git add -A` and commit via `git commit -m "SUPERVISOR: <scope> - <tests or rationale>"`, noting any tests run (use `tests: not run` when you skip them).
+- After committing, run `git push` to share the updates. If the push is rejected, `timeout 30 git pull --rebase`, resolve conflicts (capture decisions—especially for docs/fix_plan.md—in galph_memory.md), then push again.
+- If you deliberately leave the tree dirty, document the rationale in galph_memory.md so the next invocation knows why.
+</4>
+</instructions>
+<notes>
+- ignore 'routing violations'. these are out of scope.
+- ignore AT parallel 012-related items for now
+</notes>
+Now carefully and exhaustively follow your <instructions>, while keeping in mind the <task> directives.
+
+
+[2025-10-07T10:15:27] thinking
+
+**Executing git pull with timeout**
+[2025-10-07T10:15:27] exec bash -lc 'timeout 30 git pull --rebase' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:15:30] bash -lc 'timeout 30 git pull --rebase' succeeded in 2.21s:
+Already up to date.
+[2025-10-07T10:15:30] tokens used: 14,043
+
+[2025-10-07T10:15:32] thinking
+
+**Preparing to review memory file**
+[2025-10-07T10:15:33] exec bash -lc 'cat galph_memory.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:15:33] bash -lc 'cat galph_memory.md' succeeded in 722ms:
+## 2025-09-30 (loops 1-4 summary)
+- Established parity backlog: AT-020/021/022/024 failing; created first supervisor plan for AT-021 and enforced prompts/debug.md routing.
+- Diagnosed AT-024 random misset cap mismatch (π/2 vs 90 radians) and opened dedicated plan; insisted Ralph stop verification-only loops.
+- Flagged torch.compile warm-up overhead (per-instance compilation, inline tensor factories) and opened AT-012 rotation parity plan (Phases A–E).
+- Documented performance hotspots (`_compute_physics_for_position` guard tensors, `Crystal.compute_cell_tensors` clamps) and chronic dirty worktree artifacts blocking `git pull --rebase`.
+
+## 2025-09-30 (loops 5-10 summary)
+- Authored repo hygiene checklist (REPO-HYGIENE-002) to undo accidental `golden_suite_generator/nanoBragg.c` churn and purge stray reports.
+- Created PERF-PYTORCH-004 plan to hoist constants, introduce compile caching, and remove Dynamo graph breaks; reiterated need for prompts/debug.md while parity fails.
+- Repeatedly documented routing violations from Ralph and emphasized restoring Core Rule #13 metric duality after WIP commit 058986f swapped `V_actual` for formula volume.
+- Noted that `_compute_physics_for_position` still recompiles each Simulator and that benchmarks in `reports/benchmarks/20250930-004916/` show ≥200× slowdown vs C for small detectors.
+
+## 2025-09-30 (ralph debugging loop — AT-012 float32 regression)
+- **Context**: AT-PARALLEL-012 test_simple_cubic_correlation failing (43/50 peaks matched, need ≥95%) after DTYPE-DEFAULT-001 (commit 8c2ceb4) switched simulator to native float32.
+- **Investigation**:
+  * Reproduced: 43/50 peaks matched (86%), corr≈1.0 (perfect physics) ✅
+  * Parity matrix test: PASSES perfectly ✅ (live C↔Py comparison with current float32)
+  * **Root cause identified**: PyTorch float32 produces 7× more unique values (4901 vs C's 669) in hot pixels, fragmenting intensity plateaus. Peak detection algorithm (scipy.ndimage.maximum_filter) is sensitive to plateau structure.
+  * Parallel comparison: C float32 beam center (20×20 ROI) has 91 unique values; PyTorch has 331 (3.6× fragmentation). Max absolute diff tiny (0.0017).
+  * **First Divergence**: Numerical accumulation patterns differ (likely FMA, compiler opts, vectorized accumulation order, or torch.compile kernel fusion) → perfect correlation but incompatible plateau structure.
+[2025-10-07T10:15:33] tokens used: 14,222
+
+[2025-10-07T10:15:38] thinking
+
+**Opening specified documentation files**
+[2025-10-07T10:15:39] exec bash -lc 'cat docs/index.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:15:40] bash -lc 'cat docs/index.md' succeeded in 764ms:
+# Project Documentation Index
+
+Welcome to the central index for all `nanoBragg-PyTorch` project documentation. This guide provides a map to the key technical specifications, development processes, and historical records that define the project.
+
+---
+
+## 🏛️ Permanent Documentation
+
+These are the core, living documents that guide the project.
+
+### Core Project Guides
+### PyTorch Guardrails
+* **[PyTorch Runtime Checklist](./development/pytorch_runtime_checklist.md)** – quick do/don’t list for vectorization and device placement. Always review before editing simulator code.
+* **[PyTorch Design](./architecture/pytorch_design.md#vectorization-strategy)** – detailed explanation of the required broadcast shapes and batched flows.
+* **[Testing Strategy §1.4](./development/testing_strategy.md#14-pytorch-device--dtype-discipline)** – required CPU/GPU smoke tests and compile checks.
+
+* **[CLAUDE.md](../CLAUDE.md)** - The primary instruction set for the AI agent.
+* **[README.md](../README.md)** - The main project entry point.
+* **[README_PYTORCH.md](../README_PYTORCH.md)** - Comprehensive user guide for the PyTorch implementation, including CLI usage, parallel comparison tools, and visualization.
+* **[PROJECT_STATUS.md](../PROJECT_STATUS.md)** - Tracks the current active development initiative.
+[2025-10-07T10:15:40] tokens used: 31,262
+
+[2025-10-07T10:15:42] thinking
+
+**Reading spec file**
+[2025-10-07T10:15:42] exec bash -lc 'cat specs/spec-a.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:15:43] bash -lc 'cat specs/spec-a.md' succeeded in 689ms:
+# nanoBragg Spec A — Sharded Specification
+
+Spec A is now organized across multiple shards. Read them together for the full normative contract.
+
+- [spec-a-core.md](spec-a-core.md): Core physics, geometry, sampling, data, and associated acceptance tests.
+- [spec-a-cli.md](spec-a-cli.md): CLI surface area, precedence rules, and CLI-focused acceptance tests.
+- [spec-a-parallel.md](spec-a-parallel.md): Conformance profiles, parallel validation suites, and developer tooling requirements.
+
+Each shard cross-references the others; updates must keep them consistent.
+[2025-10-07T10:15:43] tokens used: 32,995
+
+[2025-10-07T10:15:45] thinking
+
+**Preparing to review specifications**
+[2025-10-07T10:15:45] exec bash -lc 'cat arch.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:15:46] bash -lc 'cat arch.md' succeeded in 718ms:
+# nanoBragg PyTorch — Implementation Architecture
+
+Document version: 1.0 (aligned with specs/spec-a.md)
+Target spec: specs/spec-a.md (single-file normative spec)
+Implementation target: Python (>=3.11) + PyTorch (float32 default). Type blocks may use TypeScript-style for clarity; implement with Python dataclasses and torch tensors.
+
+## Running The CLI
+
+- Install (recommended):
+  - `pip install -e .` from repo root (provides `nanoBragg` console script).
+- Run (installed):
+  - `nanoBragg -hkl P1.hkl -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -floatfile out.bin`
+- Run (without install):
+  - `PYTHONPATH=src python -m nanobrag_torch -hkl P1.hkl -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -floatfile out.bin`
+- Minimal quick test (no HKL):
+  - `nanoBragg -default_F 1 -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -detpixels 128 -pgmfile test.pgm`
+
+Notes
+- Entry point: `src/nanobrag_torch/__main__.py` (module runner `python -m nanobrag_torch`).
+- Required inputs: provide `-hkl` (or existing `Fdump.bin`) or set `-default_F > 0`, and either `-mat` (MOSFLM A*) or `-cell`.
+[2025-10-07T10:15:46] tokens used: 51,837
+
+[2025-10-07T10:15:48] thinking
+
+**Navigating project documents**
+[2025-10-07T10:15:48] exec bash -lc 'cat docs/development/c_to_pytorch_config_map.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:15:49] bash -lc 'cat docs/development/c_to_pytorch_config_map.md' succeeded in 803ms:
+# C-CLI to PyTorch Configuration Map
+
+## Critical Importance Notice
+
+**This document is the authoritative source of truth for configuration parity between nanoBragg.c and the PyTorch implementation.**
+
+Before writing any test or implementation that involves C-code validation, you **MUST** consult this document. Failure to ensure 1:1 configuration parity is the most common source of bugs, particularly with:
+- Implicit pivot mode logic
+- Convention-dependent beam center calculations
+- Rotation axis defaults
+- Unit conversions
+
+## Quick Reference Table
+
+### Crystal Parameters
+
+| C-CLI Flag | PyTorch Config Field | C Variable | Units/Convention | Critical Notes |
+|------------|---------------------|------------|------------------|----------------|
+| `-cell a b c al be ga` | `CrystalConfig.cell_a/b/c/alpha/beta/gamma` | `a[0], b[0], c[0], alpha, beta, gamma` | Å and degrees → radians | Must convert degrees to radians internally |
+| `-N <val>` | `CrystalConfig.N_cells` | `Na, Nb, Nc` | Number of unit cells | Sets all three axes to same value |
+[2025-10-07T10:15:49] tokens used: 54,521
+
+[2025-10-07T10:15:50] thinking
+
+**Opening debugging documentation**
+[2025-10-07T10:15:50] exec bash -lc 'cat docs/debugging/debugging.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:15:51] bash -lc 'cat docs/debugging/debugging.md' succeeded in 767ms:
+# nanoBragg PyTorch Debugging Guidelines
+
+**Version:** 1.1  
+**Date:** 2024-07-25  
+**Owner:** PyTorch Development Team
+
+## Overview
+
+This document outlines the debugging methodology and tools for the nanoBragg PyTorch implementation. The debugging approach is built around a parallel trace comparison between the C code and the PyTorch implementation to ensure correctness and facilitate rapid issue resolution.
+
+## Core Debugging Philosophy
+
+### Parallel Trace Comparison Rule
+
+**CRITICAL:** All debugging of physics discrepancies MUST begin with a parallel trace comparison. This involves:
+1. Generating a detailed, step-by-step log of intermediate variables from the original C code for a specific pixel (the "Golden Trace").
+2. Generating an identical log from the PyTorch implementation using `scripts/debug_pixel_trace.py`.
+3. Comparing these two logs line-by-line to find the first point of divergence.
+
+This methodology is mandatory to avoid guesswork and ensure bugs are found deterministically.
+[2025-10-07T10:15:51] tokens used: 56,455
+
+[2025-10-07T10:15:54] thinking
+
+**Locating fix_plan document**
+[2025-10-07T10:15:54] exec bash -lc 'cat docs/fix_plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:15:55] bash -lc 'cat docs/fix_plan.md' succeeded in 725ms:
+# Fix Plan Ledger
+
+**Last Updated:** 2025-10-17 (galph loop)
+**Active Focus:**
+- ROUTING: Close the reopened guard plan by capturing a fresh regression audit referencing commit `c49e3be` and re-confirming the guarded `loop.sh` flow (`plans/active/routing-loop-guard/plan.md` Phases A–C) before automation resumes.
+- ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md`, then drive Phase B guard work (B2–B4) and new task B5 to add `supervisor.sh` to docs/index.md so Protected-Asset policy covers the script before automation runs again.
+- AT-012: Plan archived (`plans/archive/at-parallel-012-plateau-regression/plan.md`); monitor for regressions using `reports/2025-10-AT012-regression/phase_c_validation/` artifacts and re-open only if peak matches drop below spec.
+- GRADIENT: Execute `plans/active/gradcheck-tier2-completion/plan.md` Phase A (A1–A3 baseline audit + env alignment) before adding misset/beam gradchecks from Phases B/C; once pass logs exist, close `[AT-TIER2-GRADCHECK]` with Phase D documentation updates.
+- DTYPE: ✅ Complete. Plan archived to `plans/archive/dtype-default-fp32/`. All phases (A-D) finished; float32 defaults documented in arch.md, pytorch_runtime_checklist.md, CLAUDE.md, prompts/debug.md.
+- PERF: Land plan task B7 (benchmark env toggle fix), rerun Phase B6 ten-process reproducibility with the new compile metadata, capture the weighted-source parity memo feeding C5, then execute Phase C diagnostics (C1/C2 plus C8/C9 pixel-grid & rotated-vector cost probes, and new C10 mosaic RNG timing) ahead of Phase D caching work (D5/D6/D7) and detector-scalar hoisting (D8).
+
+## Index
+| ID | Title | Priority | Status |
+| --- | --- | --- | --- |
+| [PROTECTED-ASSETS-001](#protected-assets-001-docsindexmd-safeguard) | Protect docs/index.md assets | Medium | in_progress |
+| [REPO-HYGIENE-002](#repo-hygiene-002-restore-canonical-nanobraggc) | Restore canonical nanoBragg.c | Medium | in_progress |
+| [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
+| [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | in_progress |
+| [VECTOR-TRICUBIC-001](#vector-tricubic-001-vectorize-tricubic-interpolation-and-detector-absorption) | Vectorize tricubic interpolation and detector absorption | High | in_progress |
+| [ABS-OVERSAMPLE-001](#abs-oversample-001-fix-oversample_thick-subpixel-absorption) | Fix -oversample_thick subpixel absorption | High | in_planning |
+[2025-10-07T10:15:55] tokens used: 68,931
+
+[2025-10-07T10:15:57] thinking
+
+**Reviewing testing strategy document**
+[2025-10-07T10:15:57] exec bash -lc 'cat docs/development/testing_strategy.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:15:58] bash -lc 'cat docs/development/testing_strategy.md' succeeded in 780ms:
+# nanoBragg PyTorch Testing Strategy
+
+**Version:** 1.1  
+**Date:** 2024-07-25  
+**Owner:** [Your Name/Team]
+
+## 1. Introduction & Philosophy
+
+This document outlines the comprehensive testing strategy for the PyTorch implementation of nanoBragg. The primary goal is to ensure that the new application is a correct, verifiable, and trustworthy scientific tool.
+Our testing philosophy is a three-tiered hybrid approach, designed to build confidence layer by layer:
+
+1. **Tier 1: Translation Correctness:** We first prove that the PyTorch code is a faithful, numerically precise reimplementation of the original C code's physical model. The C code is treated as the "ground truth" specification.
+2. **Tier 2: Gradient Correctness:** We then prove that the new differentiable capabilities are mathematically sound.
+3. **Tier 3: Scientific Validation:** Finally, we validate the model against objective physical principles.
+
+All tests will be implemented using the PyTest framework.
+
+### 1.4 PyTorch Device & Dtype Discipline
+
+- **Device-neutral code:** Every PyTorch path MUST operate correctly on both CPU and CUDA tensors and across supported dtypes. Do not hard-code `.cpu()`/`.cuda()` calls, create CPU-only constants, or assume float64 execution when the caller may supply float32/half tensors.
+[2025-10-07T10:15:58] tokens used: 74,227
+
+[2025-10-07T10:16:02] thinking
+
+**Organizing sequential analysis steps**
+[2025-10-07T10:16:03] exec bash -lc 'ls plans' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:16:04] bash -lc 'ls plans' succeeded in 815ms:
+active
+archive
+cellparams
+rotation
+[2025-10-07T10:16:04] tokens used: 76,965
+
+[2025-10-07T10:16:06] thinking
+
+**Listing active items**
+[2025-10-07T10:16:07] exec bash -lc 'ls plans/active' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:16:07] bash -lc 'ls plans/active' succeeded in 718ms:
+cli-noise-pix0
+gradcheck-tier2-completion
+oversample-thick-subpixel.md
+perf-pytorch-compile-refactor
+routing-loop-guard
+source-weight-normalization.md
+supervisor-loop-guard
+unification.md
+vectorization.md
+[2025-10-07T10:16:07] tokens used: 77,119
+
+[2025-10-07T10:16:10] thinking
+
+**Checking CLI noise and pix0 options**
+[2025-10-07T10:16:12] exec bash -lc 'cat plans/active/cli-noise-pix0/plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:16:12] bash -lc 'cat plans/active/cli-noise-pix0/plan.md' succeeded in 742ms:
+## Context
+- Initiative: CLI Parity for nanoBragg PyTorch vs C (supports long-term goal in prompts/supervisor.md)
+- Phase Goal: Accept `-nonoise` and `-pix0_vector_mm` flags with C-equivalent semantics so the parallel comparison command in prompts/supervisor.md executes end-to-end.
+- Dependencies: specs/spec-a-cli.md §§3.2–3.4, docs/architecture/detector.md §5, docs/development/c_to_pytorch_config_map.md (detector pivot + noise), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860 (flag behavior), docs/debugging/detector_geometry_checklist.md (pix0 validation), docs/development/testing_strategy.md §2 (CLI parity tests).
+- Current gap snapshot (2025-10-18 refresh): Phase H4 parity landed (Attempt #25) with pix0 deltas < 2e-8 m and regression tolerances tightened; the remaining blocker before executing the supervisor command end-to-end is Phase I polarization alignment.
+- Gap snapshot update (2025-10-19): Attempt #27 parity run reveals 1.24538e5× intensity scaling mismatch despite polarization fix; Phases J–L track the normalization diagnosis, fix, and closure required before long-term Goal #1 completes.
+- Gap snapshot refresh (2025-10-22): Attempt #31 restored C precedence for custom detector vectors (pix0 override now gated again). Outstanding work: H5c PyTorch traces and Phase K normalization to eliminate the `F_latt`-driven intensity gap.
+- Gap snapshot update (2025-10-24): Attempt #35 reran the PyTorch trace harness post-unit-fix; metrics still show |Δpix0| ≈ 1.145 mm, so a fresh diagnostics phase is required before resuming normalization work.
+- Gap snapshot refresh (2025-10-26): Attempt #40 completed Phase H6f — custom detector vectors now force SAMPLE pivot parity, parity visuals relocated under `reports/2025-10-cli-flags/phase_h6/visuals/`, and targeted regression tests cover pivot selection. Outstanding work at that point: Phase H6g trace rerun to confirm |Δpix0| < 5e-5 m before returning to Phase K scalings.
+- Gap snapshot update (2025-10-27): Attempt #41 validated Phase H6g — SAMPLE pivot parity holds with pix0 deltas ≤2.85 µm, beam center deltas 0.0, and supporting artifacts under `reports/2025-10-cli-flags/phase_h6/post_fix/`. Remaining blockers: rerun the scaling chain (Phase K2), execute the scaling regression + doc updates (Phase K3), then resume Phase L parity once normalization matches C.
+- Gap snapshot refresh (2025-11-09): Attempt #49 closed Phase K3g3 — `tests/test_cli_scaling.py::test_f_latt_square_matches_c` now passes after isolating the HKL cache, but the full supervisor command still shows correlation ≈ 0.9965 and sum_ratio ≈ 1.26×10⁵. Need fresh HKL/normalization parity evidence (Phase L) before rerunning nb-compare.
+- Gap snapshot refresh (2025-11-10): Attempt #56 (evidence loop) proved the existing `TRACE_PY` path prints placeholder scaling data (`capture_fraction 1`, `polar 1.0`, `steps`=φ-steps only). Without exposing the real per-pixel factors computed in `Simulator.run`, Phase L2b cannot produce a trustworthy PyTorch trace. Instrumentation must pull actual values from `_apply_detector_absorption`, polarization kernels, and total-step calculation before rerunning the harness.
+- Gap snapshot update (2025-10-17): Attempt #53 (Phase L1c) realigned HKL Fdump I/O with C padding (`read_fdump`/`write_fdump`) and added regression coverage (`TestHKLFdumpParity::test_scaled_hkl_roundtrip`) with max |ΔF| = 0.0. Proceed to L1d to regenerate parity metrics before reviving scaling traces.
+- Gap snapshot update (2025-11-11): Discovered the trace harness omitted `-beam_vector`, `-flux`, and `-beamsize`, forcing oversample=4 and a +Z beam; Py traces zeroed `F_cell` and inflated `steps`. Marked unresolved pending harness fix.
+- Gap snapshot refresh (2025-11-12): Attempt #66 (commit 1d2e6ac) completed Phase L2b0 — the trace harness now feeds the full supervisor flag set, and the refreshed `trace_py_scaling.log` confirms `steps=10`, `fluence≈1.0e24`, and `r_e^2` parity with C. TRACE_PY still reports `I_before_scaling NOT_EXTRACTED`, `polar=0`, and `I_pixel_final=0`, so Phase L2b instrumentation must surface the real polarization/absorption tensors before we can quantify the K3e k_frac drift.
+- Gap snapshot update (2025-11-13): Latest harness rerun aborted because `trace_harness.py` still expected the legacy `read_hkl_file` return tuple (see `trace_py_fullrun.log`). **Resolved in Attempt #74, which updated the harness to the `(F_grid, metadata)` signature.**
+- Gap snapshot refresh (2025-11-14): Attempt #73 showed `Crystal.hkl_data` unset (leading to `F_cell=0`), keeping L2b open; **Attempt #74 fixed this by wiring the HKL tensor/metadata before Simulator construction.**
+- Gap snapshot refresh (2025-11-15): Attempts #69/#71/#74 finished Phase L2 — TRACE_PY now reports real scaling factors, `scaling_audit_summary.md` flags `I_before_scaling` as the lone divergence, and C shows `F_cell=190.27` for hkl=(-7,-1,-14) while PyTorch remains at 0. Next phase focuses on understanding how C derives that amplitude (likely via generated `Fdump.bin`) before touching normalization code.
+- Gap snapshot refresh (2025-11-17): Attempt #77 reran Phase L3a probe on the current workstation, logged `probe_20251117.log` (F_cell=190.270004 for hkl=(-7,-1,-14)), and confirmed scaled.hkl already covers the supervisor reflection. Remaining blockers shift to wiring that data through the harness/CLI path (Phase L3c onward).
+- Gap snapshot update (2025-11-17 late): Attempt #78 completed the Phase L3c harness rerun; TRACE_PY now reports F_cell=190.27 with matching metadata, so the immediate focus moves to auditing CLI ingestion (L3c) and adding regression coverage (L3d).
+[2025-10-07T10:16:12] tokens used: 77,420
+
+[2025-10-07T10:16:14] thinking
+
+**Planning to review vectorization documentation**
+[2025-10-07T10:16:15] exec bash -lc 'cat plans/active/vectorization.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:16:16] bash -lc 'cat plans/active/vectorization.md' succeeded in 742ms:
+## Context
+- Initiative: PERF-PYTORCH-004 vectorization backlog; supports long-term goal "Parallel parity + performance" from docs/fix_plan.md.
+- Phase Goal: Deliver a production-ready, fully vectorized tricubic interpolation pipeline (gather + polynomial evaluation) and follow with detector absorption vectorization without regressing physics, gradients, or device neutrality.
+- Dependencies: specs/spec-a-core.md §4 (Structure factors), specs/spec-a-parallel.md §2.3 (Interpolation acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4, docs/architecture/c_code_overview.md (tricubic routines), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, `nanoBragg.c` lines 2604–3278 (polin3/polin2/polint + detector absorption), `tests/test_at_str_002.py`, `tests/test_at_abs_001.py`, `reports/benchmarks/20250930-165726-compile-cache/` (current performance references). No dedicated tricubic/absorption microbenchmarks exist yet; Phase A will author reusable harnesses under `scripts/benchmarks/` so future loops can rerun baselines without ad-hoc snippets.
+- Gap Snapshot (2025-11-18): Phase A1–A3 evidence captured under `reports/2025-10-vectorization/phase_a/` (pytest logs plus tricubic/absorption baselines). **Phase B design memo landed in Attempt #3 (`reports/2025-10-vectorization/phase_b/design_notes.md`) covering tensor shapes, polynomial mapping, and gradient/device checklists.** Next blocker is executing Phase C implementation tasks using that design as the contract.
+- Supervisory note (2025-11-18 → refreshed 2025-11-18b): fix_plan#VECTOR-TRICUBIC-001 now pivots to Phase C execution (tasks C1–C3). Keep `KMP_DUPLICATE_LIB_OK=TRUE` exported, reuse the design memo’s Section 2/3 diagrams, and stage changes behind feature-flag-friendly commits to ease review if batching becomes necessary.
+
+### Phase A — Evidence & Baseline Capture
+Goal: Document the current (non-vectorized) behavior, warnings, and performance so we can prove the impact of the refactor.
+Prereqs: Editable install (`pip install -e .`), C binary available for parity (when needed), environment variable `KMP_DUPLICATE_LIB_OK=TRUE`.
+Exit Criteria: Baseline pytest log, timing snippet results, and notes stored under `reports/2025-10-vectorization/phase_a/` with references in docs/fix_plan.md Attempt history.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| A1 | Re-run tricubic acceptance tests | [D] | ✅ Completed 2025-10-06 (`reports/2025-10-vectorization/phase_a/test_at_str_002.log`, `.collect.log`, `test_at_abs_001.log`, `env.json`). Re-run only if dependencies change or new warnings appear. |
+| A2 | Measure current tricubic runtime | [D] | ✅ Completed 2025-10-07 (`scripts/benchmarks/tricubic_baseline.py` created; CPU & CUDA baselines captured in `phase_a/tricubic_baseline.md` and `phase_a/tricubic_baseline_results.json`). Key finding: scalar-only implementation @ ~1.4 ms/call (CPU), ~5.5 ms/call (CUDA). |
+| A3 | Record detector absorption baseline | [D] | ✅ Completed 2025-10-07 (`scripts/benchmarks/absorption_baseline.py` created; CPU & CUDA baselines captured in `phase_a/absorption_baseline.md` and `phase_a/absorption_baseline_results.json`). GPU shows 5.4× speedup for 512² detector. |
+
+### Phase B — Tricubic Vectorization Design
+Goal: Lock the tensor-shape design, broadcasting plan, and gradient checks before code changes.
+[2025-10-07T10:16:16] tokens used: 80,271
+
+[2025-10-07T10:16:21] thinking
+
+**Reviewing goals and preparing to run Python coin flip**
+[2025-10-07T10:16:22] exec bash -lc "python - <<'PY'
+import random
+print('heads' if random.random() < 0.5 else 'tails')
+PY" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:16:22] bash -lc "python - <<'PY'
+import random
+print('heads' if random.random() < 0.5 else 'tails')
+PY" succeeded in 758ms:
+tails
+[2025-10-07T10:16:22] tokens used: 82,999
+
+[2025-10-07T10:16:28] thinking
+
+**Assessing need for planning update**
+[2025-10-07T10:16:29] exec bash -lc 'cat input.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:16:30] bash -lc 'cat input.md' succeeded in 798ms:
+Summary: Capture φ=0 rotation vectors and frame hypotheses for the residual k_frac drift before touching simulator code.
+Mode: Parity
+Focus: CLI-FLAGS-003 – Handle -nonoise and -pix0_vector_mm
+Branch: feature/spec-based-2
+Mapped tests: [tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics]
+Artifacts:
+- reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log
+- reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md
+- reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md
+Do Now: CLI-FLAGS-003 — mkdir -p reports/2025-10-cli-flags/phase_l/rot_vector && PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --device cpu --dtype float32 --out reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log && KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics
+If Blocked: Capture harness stdout/stderr to reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector_raw.txt, note missing TRACE_PY rot lines plus commands in docs/fix_plan.md Attempt history, and halt for supervisor review.
+Priorities & Rationale:
+- plans/active/cli-noise-pix0/plan.md:264-267 elevates Phase L3f/L3g as the current blockers before touching normalization code.
+- docs/fix_plan.md:450-463 lists the rotation-vector audit and hypothesis framing as the top next actions for CLI-FLAGS-003.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log anchors the C-side rot vectors that must be matched.
+- reports/2025-10-cli-flags/phase_l/per_phi/trace_py_scaling_20251119_per_phi.json shows φ sweep data confirming convergence after the initial step—use it as context when analysing the φ=0 drift.
+- specs/spec-a-cli.md §3 and docs/development/c_to_pytorch_config_map.md outline the normative rotation/pivot rules the audit must respect.
+How-To Map:
+- Ensure env vars: `export PYTHONPATH=src` and `export KMP_DUPLICATE_LIB_OK=TRUE` before running tooling.
+- Harness capture: `PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --device cpu --dtype float32 --out reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log` (creates new main + per-φ traces alongside env metadata).
+[2025-10-07T10:16:30] tokens used: 83,417
+
+[2025-10-07T10:16:34] thinking
+
+**Reviewing Phase L3f and CLI plans**
+[2025-10-07T10:16:35] exec bash -lc 'rg --line-number "CLI-FLAGS-003" docs/fix_plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:16:35] bash -lc 'rg --line-number "CLI-FLAGS-003" docs/fix_plan.md' succeeded in 749ms:
+22:| [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | in_progress |
+450:## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
+463:  3. Phase L4 parity rerun — After alignment fixes land and documentation is refreshed, execute the supervisor command end-to-end, capture nb-compare metrics (correlation ≥0.9995, sum_ratio 0.99–1.01), archive results, and close CLI-FLAGS-003.
+[2025-10-07T10:16:35] tokens used: 85,435
+
+[2025-10-07T10:16:39] thinking
+
+**Navigating to specific file section**
+[2025-10-07T10:16:40] exec bash -lc "sed -n '450,620p' docs/fix_plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:16:41] bash -lc "sed -n '450,620p' docs/fix_plan.md" succeeded in 743ms:
+## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
+- Spec/AT: specs/spec-a-cli.md flag catalogue, docs/architecture/detector.md §5 (pix0 workflow), docs/development/c_to_pytorch_config_map.md (pivot rules), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860
+- Priority: High
+- Status: in_progress (Phases A–H complete; K3a/K3b/K3d landed via Attempts #43–44, pending per-φ evidence + normalization closure)
+- Owner/Date: ralph/2025-10-05
+- Plan Reference: `plans/active/cli-noise-pix0/plan.md`
+- Reproduction (C & PyTorch):
+  * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
+  * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+- First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+- Next Actions (2025-11-19 refresh):
+  1. Phase L3f rotation-vector audit — Capture aligned `TRACE_C` vs `TRACE_PY` rot-vector dumps for φ=0 using the updated harness, write `rot_vector_comparison.md` under `reports/2025-10-cli-flags/phase_l/rot_vector/`, and quantify Δ components that explain the `k_frac` offset (target <5e-4).
+  2. Phase L3g hypothesis framing — Summarize likely causes of the φ=0 drift (spindle axis, reciprocal reconstitution, phi step sizing) in `rot_vector/analysis.md`, cite supporting traces, and update this plan/fix_plan before touching simulator code.
+  3. Phase L4 parity rerun — After alignment fixes land and documentation is refreshed, execute the supervisor command end-to-end, capture nb-compare metrics (correlation ≥0.9995, sum_ratio 0.99–1.01), archive results, and close CLI-FLAGS-003.
+- Attempts History:
+  * [2025-11-13] Attempt #71 (ralph loop) — Result: **SUCCESS** (Phase L2b validation + Phase L2c complete). **Harness already functional from Attempt #69; executed comparison script to identify first divergence.**
+    Metrics: 40 TRACE_PY lines captured; test suite passes 4/4 variants (cpu/cuda × float32/float64). Comparison identifies `I_before_scaling` as first divergent factor (C=943654.809, PyTorch=0, -100% delta).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log:1-41` - Refreshed trace with live values (polar=0.91464138, omega_pixel=4.20404859e-07 sr, F_cell=0, I_before_scaling=0)
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/scaling_audit_summary.md:1-54` - Phase L2c comparison report showing first divergence and all divergent factors
+[2025-10-07T10:16:41] tokens used: 99,354
+
+[2025-10-07T10:16:47] thinking
+
+**Assessing plan relevance and next actions**
+
+I'm reviewing whether the existing CLI plan is still up to date or needs updating based on current outstanding tasks, particularly around vectorization and rotation vector traces. Since the plan looks fairly recent and detailed, I’m leaning toward focusing on verifying evidence like checking for artifacts in the specified reports directory before deciding to update or create a new plan.
+[2025-10-07T10:16:48] exec bash -lc 'ls reports/2025-10-cli-flags/phase_l/rot_vector' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:16:49] bash -lc 'ls reports/2025-10-cli-flags/phase_l/rot_vector' succeeded in 904ms:
+analysis.md
+rot_vector_comparison.md
+trace_py_rot_vector.log
+[2025-10-07T10:16:49] tokens used: 102,897
+
+[2025-10-07T10:16:59] thinking
+
+**Evaluating artifacts for evidence analysis**
+[2025-10-07T10:17:02] exec bash -lc 'cat reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:17:03] bash -lc 'cat reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md' succeeded in 922ms:
+| Vector | Units | C | PyTorch | Δ (Py-C) |
+| --- | --- | --- | --- | --- |
+| rot_a_angstroms | Angstrom | (-14.356269034, -21.880534076, -5.547657831) | (-14.356269836, -21.871793747, -5.582021236) | (-8.029e-07, 8.740e-03, -3.436e-02) |
+| rot_b_angstroms | Angstrom | (-11.498696843, 0.671588234, -29.114305627) | (-11.498698235, 0.717319787, -29.113216400) | (-1.391e-06, 4.573e-02, 1.089e-03) |
+| rot_c_angstroms | Angstrom | (21.069950032, -24.404585581, -9.714329032) | (21.069950104, -24.389297485, -9.752653122) | (7.174e-08, 1.529e-02, -3.832e-02) |
+| rot_a_star_A_inv | Angstrom^-1 | (-0.029051095, -0.029395885, 0.010749877) | (-0.029051093, -0.029395880, 0.010749876) | (2.029e-09, 4.343e-09, -6.507e-10) |
+| rot_b_star_A_inv | Angstrom^-1 | (-0.003126392, 0.010437643, -0.032856675) | (-0.003126392, 0.010437643, -0.032856669) | (-7.242e-11, -1.697e-10, 5.580e-09) |
+| rot_c_star_A_inv | Angstrom^-1 | (0.025960442, -0.014333016, -0.010606613) | (0.025960438, -0.014333014, -0.010606613) | (-4.307e-09, 1.594e-09, 4.214e-10) |
+[2025-10-07T10:17:03] tokens used: 104,266
+
+[2025-10-07T10:17:05] thinking
+
+**Noticing large difference in vectors**
+[2025-10-07T10:17:06] exec bash -lc 'cat reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:17:07] bash -lc 'cat reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md' succeeded in 708ms:
+# Rotation Vector Analysis — Phase L3f/L3g
+
+**Date:** 2025-10-07
+**Context:** CLI-FLAGS-003 Phase L3f/L3g rotation-vector audit to explain residual k_frac drift at φ=0
+
+## Summary
+
+Captured side-by-side rotation vectors from C (`c_trace_scaling.log`) and PyTorch (`trace_py_rot_vector.log`) for pixel (685, 1039) at φ=0. Analysis reveals significant differences in **real-space** rotation vectors (Angstrom scale) while **reciprocal-space** vectors show excellent agreement (~10^-9 Angstrom^-1).
+
+## Key Findings
+
+### Reciprocal Vectors (Excellent Agreement)
+- `rot_a_star_A_inv`: Δ ≈ 2-4e-9 Angstrom^-1 (within numerical precision)
+- `rot_b_star_A_inv`: Δ ≈ 7e-11 to 5e-9 Angstrom^-1 (excellent)
+- `rot_c_star_A_inv`: Δ ≈ 4e-10 to 4e-9 Angstrom^-1 (excellent)
+
+**Result:** Reciprocal vectors match C to ~9 decimal places — this is near-perfect agreement.
+
+### Real-Space Vectors (Significant Drift)
+- `rot_a_angstroms`: Δy = +8.740e-03 Å, Δz = -3.436e-02 Å
+[2025-10-07T10:17:07] tokens used: 104,981
+
+[2025-10-07T10:17:12] thinking
+
+**Analyzing vector data dates and logs**
+[2025-10-07T10:17:12] exec bash -lc 'head -n 40 reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:17:13] bash -lc 'head -n 40 reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log' succeeded in 750ms:
+TRACE_PY: pix0_vector_meters -0.216475710272789 0.216343179345131 -0.230195268988609
+TRACE_PY: fdet_vec 0.999981999397278 -0.00599800003692508 -0.000118000003567431
+TRACE_PY: sdet_vec -0.00599800003692508 -0.999970018863678 -0.0049129999242723
+TRACE_PY: pixel_pos_meters -0.0383921265602112 0.0973683074116707 -0.230795636773109
+TRACE_PY: R_distance_meters 0.253418952226639
+TRACE_PY: omega_pixel_sr 4.20404859369228e-07
+TRACE_PY: close_distance_meters 0.231274679303169
+TRACE_PY: obliquity_factor 0.912617921829224
+TRACE_PY: diffracted_vec -0.151496648788452 0.384218692779541 -0.910727560520172
+TRACE_PY: incident_vec 0.000513879465870559 0 -0.99999988079071
+TRACE_PY: lambda_meters 9.7680002450943e-11
+TRACE_PY: lambda_angstroms 0.97680002450943
+TRACE_PY: scattering_vec_A_inv -1556209280 3933442816 913926272
+TRACE_PY: rot_a_angstroms -14.3562698364258 -21.8717937469482 -5.58202123641968
+TRACE_PY: rot_b_angstroms -11.4986982345581 0.717319786548615 -29.1132164001465
+TRACE_PY: rot_c_angstroms 21.0699501037598 -24.3892974853516 -9.75265312194824
+TRACE_PY: rot_a_star_A_inv -0.0290510933846235 -0.0293958801776171 0.010749876499176
+TRACE_PY: rot_b_star_A_inv -0.00312639237381518 0.0104376431554556 -0.0328566692769527
+TRACE_PY: rot_c_star_A_inv 0.0259604379534721 -0.0143330143764615 -0.0106066130101681
+TRACE_PY: hkl_frac -6.87916421890259 -0.589141607284546 -13.763635635376
+[2025-10-07T10:17:13] tokens used: 106,832
+
+[2025-10-07T10:17:16] thinking
+
+**Examining potential data truncation issue**
+[2025-10-07T10:17:17] exec bash -lc 'head -n 40 reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:17:17] bash -lc 'head -n 40 reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log' succeeded in 741ms:
+WARNING: auto-generating odet_vector
+nanoBragg nanocrystal diffraction simulator - James Holton and Ken Frankel 5-17-17
+custom convention selected.
+pivoting detector around sample
+TRACE_C:detector_convention=CUSTOM
+TRACE_C:angles_rad=rotx:0 roty:0 rotz:0 twotheta:0
+TRACE_C:beam_center_m=Xclose:0.000211818 Yclose:0.000217322 pixel_mm:0.172
+TRACE_C:initial_fdet=0.999982004873912 -0.00599800002923425 -0.000118000000575132
+TRACE_C:initial_sdet=-0.0059979996566955 -0.999969942765222 -0.0049129997187971
+TRACE_C:initial_odet=-8.85282813644494e-05 0.00491361907271126 -0.999987924182263
+TRACE_C:Fclose_m=0.217742295
+TRACE_C:Sclose_m=0.21390708
+TRACE_C:close_distance_m=0.231271826111781
+TRACE_C:ratio=0.999987746654913
+TRACE_C:distance_m=0.23127466
+TRACE_C:term_fast_before_rot=-0.217738376699947 0.00130601829177553 2.56935909352306e-05
+TRACE_C:term_slow_before_rot=0.00128301459240474 0.213900650544676 0.00105092542388871
+TRACE_C:term_close_before_rot=-2.04740972936938e-05 0.00113638165576361 -0.231269033315361
+TRACE_C:pix0_before_rotation=-0.216475836204836 0.216343050492215 -0.230192414300537
+TRACE_C:pix0_after_rotz=-0.216475836204836 0.216343050492215 -0.230192414300537
+[2025-10-07T10:17:17] tokens used: 108,004
+
+[2025-10-07T10:17:21] thinking
+
+**Searching for rotation vectors**
+[2025-10-07T10:17:21] exec bash -lc 'rg -n "rot_a" reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:17:22] bash -lc 'rg -n "rot_a" reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log' succeeded in 730ms:
+265:TRACE_C: rot_a_angstroms -14.3562690335399 -21.8805340763623 -5.5476578307123
+268:TRACE_C: rot_a_star_A_inv -0.0290510954135954 -0.0293958845208845 0.0107498771498771
+[2025-10-07T10:17:22] tokens used: 109,286
+
+[2025-10-07T10:17:28] thinking
+
+**Preparing instructions for volume difference analysis**
+[2025-10-07T10:17:32] exec bash -lc "python - <<'PY'
+from pathlib import Path
+import re
+root = Path('reports/2025-10-cli-flags/phase_l')
+def extract_vectors(path, prefix):
+    text = Path(path).read_text()
+    data = {}
+    for match in re.finditer(rf\"TRACE_{prefix}: (rot_[abc]_angstroms) (["'^'"\\n]+)\", text):
+        key = match.group(1)
+        vals = [float(x) for x in match.group(2).split()]
+        data[key] = vals
+    return data
+c = extract_vectors(root/'scaling_audit/c_trace_scaling.log', 'C')
+py = extract_vectors(root/'rot_vector/trace_py_rot_vector.log', 'PY')
+from itertools import product
+
+import numpy as np
+
+def volume(vectors):
+    import numpy as np
+    a = np.array(vectors['rot_a_angstroms'])
+    b = np.array(vectors['rot_b_angstroms'])
+    c = np.array(vectors['rot_c_angstroms'])
+    return float(np.dot(a, np.cross(b, c)))
+print('C volume actual:', volume(c))
+print('Py volume actual:', volume(py))
+PY" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:17:33] bash -lc "python - <<'PY'
+from pathlib import Path
+import re
+root = Path('reports/2025-10-cli-flags/phase_l')
+def extract_vectors(path, prefix):
+    text = Path(path).read_text()
+    data = {}
+    for match in re.finditer(rf\"TRACE_{prefix}: (rot_[abc]_angstroms) (["'^'"\\n]+)\", text):
+        key = match.group(1)
+        vals = [float(x) for x in match.group(2).split()]
+        data[key] = vals
+    return data
+c = extract_vectors(root/'scaling_audit/c_trace_scaling.log', 'C')
+py = extract_vectors(root/'rot_vector/trace_py_rot_vector.log', 'PY')
+from itertools import product
+
+import numpy as np
+
+def volume(vectors):
+    import numpy as np
+    a = np.array(vectors['rot_a_angstroms'])
+    b = np.array(vectors['rot_b_angstroms'])
+    c = np.array(vectors['rot_c_angstroms'])
+    return float(np.dot(a, np.cross(b, c)))
+print('C volume actual:', volume(c))
+print('Py volume actual:', volume(py))
+PY" succeeded in 834ms:
+C volume actual: 24682.25663011132
+Py volume actual: 24682.25997666361
+[2025-10-07T10:17:33] tokens used: 110,123
+
+[2025-10-07T10:17:54] thinking
+
+**Synthesizing analysis and planning updates**
+
+I'm gathering all insights from volume and vector difference computations to update the supervisor docs and generate precise instructions for Ralph’s next phase, including crafting an input.md detailing tasks like harness instrumentation to gather more evidence while carefully updating fix_plan with a new attempt entry summarizing these findings.
+[2025-10-07T10:17:56] exec bash -lc "sed -n '620,780p' docs/fix_plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:17:57] bash -lc "sed -n '620,780p' docs/fix_plan.md" succeeded in 984ms:
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling_20251119.log` — Fresh main trace (40 lines, F_cell=190.27, I_before_scaling=713431)
+      - `reports/2025-10-cli-flags/phase_l/per_phi/trace_py_scaling_20251119_per_phi.log` — Per-φ trace (10 TRACE_PY_PHI entries)
+      - `reports/2025-10-cli-flags/phase_l/per_phi/trace_py_scaling_20251119_per_phi.json` — Structured per-φ JSON with phi_tic, phi_deg, k_frac, F_latt_b, F_latt
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/scaling_validation_summary_20251119.md` — Phase L3e markdown summary with ≤1e-6 tolerance enforcement
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/metrics.json` — Structured per-factor metrics with first_divergence="I_before_scaling"
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/run_metadata.json` — Run metadata (SHA f3e65b8, torch 2.8.0+cu128, command snapshot)
+    Observations/Hypotheses:
+      - **Harness operational:** Per-φ instrumentation from Attempt #85 working correctly; captured k_frac ≈ -0.59 (φ=0°) to -0.607 (φ=0.1°), F_latt ranges 1.351 to -2.351
+      - **φ=0 drift isolated:** Comparing `TRACE_C` vs `TRACE_PY` shows φ=0 vectors misaligned (`rot_b_y` 0.7173 Py vs 0.6716 C), yielding k_frac -0.589 instead of -0.607 and flipping F_latt_b’s sign. Later φ steps converge, so the error occurs before/at the initial phi orientation.
+      - **Scaling factors validated:** r_e², fluence, steps, capture_fraction match C exactly (PASS status ≤1e-6); polar/omega/cos_2theta show MINOR deltas (≤2e-5 rel)
+      - **Phase L3e exit criteria satisfied:** Per-φ JSON + scaling validation artifacts captured with current git SHA; comparison script enforces ≤1e-6 tolerance per plan guidance; pytest confirms instrumentation stability
+    Next Actions: Phase L3f rotation-vector audit — capture aligned rot vectors for φ=0 under the new harness, document deltas in `reports/2025-10-cli-flags/phase_l/rot_vector/`, and frame hypotheses (L3g) before modifying simulator normalization or rotation code.
+  * [2025-10-07] Attempt #87 (ralph loop) — Result: **SUCCESS** (Phase L3f rotation-vector audit COMPLETE per input.md "Do Now"). **Captured side-by-side C vs PyTorch rotation vectors for φ=0, built comparison table, and documented hypotheses in analysis.md.**
+    Metrics: Evidence-only loop; no production code changes. Pytest collection stable (4 tests collected from test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics). Reciprocal vectors match to ~9 decimal places (Δ≈10^-9 Angstrom^-1); real-space vectors show O(10^-2) Å drift primarily in Y/Z components.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log` — PyTorch rotation vector trace (6 TRACE_PY rot lines)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md` — Comparison table showing C vs PyTorch with Δ components
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md` — Phase L3f/L3g analysis document with hypotheses (reciprocal→real conversion, spindle axis normalization, metric duality recalculation)
+    Observations/Hypotheses:
+      - **Reciprocal vectors EXCELLENT:** rot_a_star/b_star/c_star match C to 9 decimal places (~10^-9 Angstrom^-1 delta) — near-perfect agreement
+[2025-10-07T10:17:57] tokens used: 111,758
+
+[2025-10-07T10:18:20] thinking
+
+**Formulating detailed plan instructions**
+
+I'm piecing together a thorough set of next-step instructions focused on Phase L3g tasks—like measuring volume differences and verifying metric duality—while balancing what can be done in code versus documentation. I want to guide running harness scripts with added instrumentation or post-processing logs, updating analysis docs with new numeric findings, and specifying exact commands for the user to follow in a clear, methodical way.
+[2025-10-07T10:18:22] exec bash -lc 'cat specs/spec-a-cli.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:18:23] bash -lc 'cat specs/spec-a-cli.md' succeeded in 897ms:
+# nanoBragg Spec A — CLI Binding
+
+This shard documents the command-line interface, header precedence, and CLI-focused acceptance tests. It should be read alongside [spec-a-core.md](spec-a-core.md) for the simulation engine requirements and [spec-a-parallel.md](spec-a-parallel.md) for conformance profiles.
+
+CLI Interface (Normative)
+
+All options recognized by this code version are enumerated below. Values with units are converted
+immediately as specified in Units & Conversions. Unsupported flags are not recognized even if
+present in header comments.
+
+- Input files:
+    - -hkl <file>: Text file of “h k l F” (integers h,k,l; real F). Required unless Fdump.bin exists
+or -default_F used.
+    - -mat <file>: 3×3 MOSFLM-style A matrix (reciprocal cell vectors scaled by 1/λ). Required
+unless -cell used.
+    - -cell a b c alpha beta gamma: Direct cell in Å and degrees; alternative to -mat.
+    - -img <file>: Read SMV header; may set fpixels, spixels, pixel size (mm), distance (mm), close
+distance (mm), wavelength (Å), beam centers (mm), ORGX/ORGY (pixels), φ start (deg), oscillation
+range (deg), 2θ (deg). Image data is read but not used.
+    - -mask <file>: Read SMV mask; uses same headers to initialize geometry as -img. Zero-valued
+[2025-10-07T10:18:23] tokens used: 116,276
+
+[2025-10-07T10:18:27] thinking
+
+**Reviewing documentation and planning computations**
+[2025-10-07T10:18:31] exec bash -lc "python - <<'PY'
+from pathlib import Path
+import re
+import numpy as np
+root = Path('reports/2025-10-cli-flags/phase_l')
+
+def extract(path, prefix):
+    lines = Path(path).read_text().splitlines()
+    data = {}
+    for line in lines:
+        if line.startswith(f'TRACE_{prefix}: rot_'):
+            parts = line.split()
+            key = parts[1]
+            vals = list(map(float, parts[2:5]))
+            data.setdefault('real', {})[key] = np.array(vals)
+        if line.startswith(f'TRACE_{prefix}: rot_') and '_star_' in line:
+            parts = line.split()
+            key = parts[1]
+            vals = list(map(float, parts[2:5]))
+            data.setdefault('recip', {})[key] = np.array(vals)
+    return data
+c = extract(root/'scaling_audit/c_trace_scaling.log', 'C')
+py = extract(root/'rot_vector/trace_py_rot_vector.log', 'PY')
+for label, dataset in [('C', c), ('Py', py)]:
+    real = dataset['real']
+    recip = dataset['recip']
+    print(label)
+    for axis in 'abc':
+        dot = float(np.dot(real[f'rot_{axis}_angstroms'], recip[f'rot_{axis}_star_A_inv']))
+        print(f'  {axis} dot: {dot}')
+PY" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:18:32] bash -lc "python - <<'PY'
+from pathlib import Path
+import re
+import numpy as np
+root = Path('reports/2025-10-cli-flags/phase_l')
+
+def extract(path, prefix):
+    lines = Path(path).read_text().splitlines()
+    data = {}
+    for line in lines:
+        if line.startswith(f'TRACE_{prefix}: rot_'):
+            parts = line.split()
+            key = parts[1]
+            vals = list(map(float, parts[2:5]))
+            data.setdefault('real', {})[key] = np.array(vals)
+        if line.startswith(f'TRACE_{prefix}: rot_') and '_star_' in line:
+            parts = line.split()
+            key = parts[1]
+            vals = list(map(float, parts[2:5]))
+            data.setdefault('recip', {})[key] = np.array(vals)
+    return data
+c = extract(root/'scaling_audit/c_trace_scaling.log', 'C')
+py = extract(root/'rot_vector/trace_py_rot_vector.log', 'PY')
+for label, dataset in [('C', c), ('Py', py)]:
+    real = dataset['real']
+    recip = dataset['recip']
+    print(label)
+    for axis in 'abc':
+        dot = float(np.dot(real[f'rot_{axis}_angstroms'], recip[f'rot_{axis}_star_A_inv']))
+        print(f'  {axis} dot: {dot}')
+PY" succeeded in 881ms:
+C
+  a dot: 1.0006263542909262
+  b dot: 0.9995585093941207
+  c dot: 0.9998126689143616
+Py
+  a dot: 0.9999999250204145
+  b dot: 0.9999998932776355
+  c dot: 0.9999999013276629
+[2025-10-07T10:18:32] tokens used: 119,795
+
+[2025-10-07T10:18:58] thinking
+
+**Preparing detailed instructions and scripts**
+
+I’m pulling together precise instructions, a new input.md template, and a runnable script to produce detailed volume and dot product invariants from existing logs. I want to ensure the user can regenerate consistent results comparing Py and C traces, with clear commands and notes on priorities, pitfalls, and required updates to docs and plans. It looks like thorough cross-checks and careful orchestration of reruns and validations are key here.
+[2025-10-07T10:19:02] exec bash -lc "nl -ba plans/active/cli-noise-pix0/plan.md | sed -n '240,320p'" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:19:03] bash -lc "nl -ba plans/active/cli-noise-pix0/plan.md | sed -n '240,320p'" succeeded in 924ms:
+   240	| L1d | Re-run parity script after fixes and update artefacts | [D] | ✅ Attempt #54 (2025-10-17): Regenerated C cache using supervisor command flags, achieved perfect HKL parity (max |ΔF|=0.0, 0 mismatches). Artifacts: `reports/2025-10-cli-flags/phase_l/hkl_parity/{Fdump_c_20251109.bin, summary_20251109.md, metrics_20251109.json}`. Phase L2 prerequisites now met—structure factors match C exactly. |
+   241	
+   242	### Phase L2 — Scaling Chain Audit
+   243	Goal: Capture a side-by-side breakdown of the intensity scaling pipeline (I_before_scaling → ω → polarization → r_e² → fluence → steps) for the supervisor command to isolate the first divergence that drives the 1.26×10⁵ sum ratio.
+   244	Prereqs: Phase L1d artifacts in place; Ralph working under `prompts/debug.md`; C binary instrumentable via `golden_suite_generator/` per CLAUDE Rule #0.3.
+   245	Exit Criteria: C and PyTorch traces capturing scaling factors are stored under `reports/2025-10-cli-flags/phase_l/scaling_audit/`, a comparison summary identifies the first mismatched term with quantitative deltas, and docs/fix_plan.md Attempt log references the findings.
+   246	
+   247	| ID | Task Description | State | How/Why & Guidance |
+   248	| --- | --- | --- | --- |
+   249	| L2a | Instrument C scaling chain | [D] | ✅ 2025-10-06 Attempt #55: Reused existing TRACE_C hooks (nanoBragg.c 3367-3382), captured `c_trace_scaling.log` for pixel (685,1039), and recorded setup in `instrumentation_notes.md`. Artifacts live under `reports/2025-10-cli-flags/phase_l/scaling_audit/`; ready to mirror fields on the PyTorch side. |
+   250	| L2b | Expose and log PyTorch scaling factors | [D] | ✅ Attempts #69, #72, and #74 (commits `1cf77b5`, `0f3de26`) now drive the harness through the updated HKL API, attach `crystal.hkl_data` / `crystal.hkl_metadata`, and capture live TRACE_PY output for pixel (685,1039). `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log` shows real polarization/omega/steps, and `harness_hkl_state_fixed.txt` confirms the HKL tensor lives on the simulator device. |
+   251	| L2c | Diff traces & record first divergence | [D] | ✅ Attempt #71 refreshed `scaling_audit_summary.md` via `scripts/validation/compare_scaling_traces.py`, highlighting `I_before_scaling` as the first divergence (C=9.4365e5, Py=0) while all downstream scaling factors match within 2e-3%. This establishes that the remaining gap stems from missing structure-factor coverage rather than normalization math. |
+   252	
+   253	### Phase L3 — Normalization Fix Implementation
+   254	Goal: Patch the PyTorch scaling pipeline so every factor (omega, polarization, capture_fraction, r_e², fluence, steps) matches the C implementation within 1e-6 relative error.
+   255	Prereqs: L2 comparison summary pointing to the exact divergent factor; relevant C references documented; regression tests identified.
+   256	Exit Criteria: PyTorch source changes with inline C-code docstring references are merged, targeted regression tests cover the corrected scaling semantics, and new artifacts demonstrate matching intermediate values. docs/fix_plan.md records the fix attempt and resulting metrics.
+   257	
+   258	| ID | Task Description | State | How/Why & Guidance |
+   259	| --- | --- | --- | --- |
+[2025-10-07T10:19:03] tokens used: 122,114
+
+[2025-10-07T10:19:44] thinking
+
+**Preparing detailed input and script instructions**
+[2025-10-07T10:19:59] exec bash -lc "cat <<'EOF' > input.md
+Summary: Quantify the φ=0 rotation invariants so we can nail the real-space drift before touching simulator code.
+Mode: Parity
+Focus: CLI-FLAGS-003 – Handle -nonoise and -pix0_vector_mm
+Branch: feature/spec-based-2
+Mapped tests: [tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics]
+Artifacts:
+- reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log
+- reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md
+- reports/2025-10-cli-flags/phase_l/rot_vector/invariant_probe.md
+- reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md
+Do Now: CLI-FLAGS-003 — mkdir -p reports/2025-10-cli-flags/phase_l/rot_vector && PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --device cpu --dtype float32 --out reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log && python - <<'PY'
+from pathlib import Path
+import numpy as np
+root = Path('reports/2025-10-cli-flags/phase_l')
+log_c = root / 'scaling_audit/c_trace_scaling.log'
+log_py = root / 'rot_vector/trace_py_rot_vector.log'
+
+def grab(path, prefix):
+    real, recip = {}, {}
+    for parts in (line.split() for line in path.read_text().splitlines()):
+        if len(parts) < 5 or parts[0] "'!= f'"'TRACE_{prefix}:' or not parts[1].startswith('rot_'):
+            continue
+        vec = np.array(list(map(float, parts[2:5])))
+        (recip if '_star_' in parts[1] else real)[parts[1]] = vec
+    return real, recip
+real_c, recip_c = grab(log_c, 'C')
+real_py, recip_py = grab(log_py, 'PY')
+
+def volume(real):
+    return float(np.dot(real['rot_a_angstroms'], np.cross(real['rot_b_angstroms'], real['rot_c_angstroms'])))
+vol_c = volume(real_c)
+vol_py = volume(real_py)
+
+def dot_map(real, recip):
+    out = {}
+    for axis in 'abc':
+        out[axis] = float(np.dot(real[f'rot_{axis}_angstroms'], recip[f'rot_{axis}_star_A_inv']))
+    return out
+dots_c = dot_map(real_c, recip_c)
+dots_py = dot_map(real_py, recip_py)
+rows = ['# Rotation Invariants Probe', '', f'| Metric | C | PyTorch | Δ (Py-C) |', '| --- | --- | --- | --- |', f\"| Unit-cell volume (Å"'^3) | {vol_c:.6f} | {vol_py:.6f} | {vol_py - vol_c:+.6e} |"]
+for axis in '"'abc':
+    rows.append(f\"| {axis} · {axis}* | {dots_c[axis]:.9f} | {dots_py[axis]:.9f} | {dots_py[axis] - dots_c[axis]:+.3e} |\")
+(rows := rows + ['', 'Source logs:', f'- C trace: {log_c}', f'- PyTorch trace: {log_py}'])
+Path(root / 'rot_vector' / 'invariant_probe.md').write_text('\\n'.join(rows) + '\\n', encoding='utf-8')
+PY
+ && KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics
+If Blocked: If the harness fails or missing TRACE lines, dump stdout/stderr to reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector_raw.txt, note which key is absent, update docs/fix_plan.md Attempt history, and pause for supervisor review.
+Priorities & Rationale:
+- plans/active/cli-noise-pix0/plan.md:265 states Phase L3f must supply aligned rot vectors ahead of normalization changes.
+- plans/active/cli-noise-pix0/plan.md:266 requires hypotheses plus confirming probes before simulator edits.
+- docs/fix_plan.md:450-463 pins the φ=0 k_frac drift as the blocker for getting -nonoise/-pix0_vector_mm parity.
+- specs/spec-a-cli.md:1-120 anchor the CUSTOM convention precedence we are auditing.
+- docs/development/c_to_pytorch_config_map.md:36-78 remind us beam/pivot mapping and volume rules must stay in lockstep with C.
+How-To Map:
+- Refresh "'`reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md` with the invariant results (volume deltas, dot products) and call out which Phase L3g hypothesis looks most likely.
+- Append docs/fix_plan.md Attempt #88 with the command, key metrics (Δvolume ≈ +3.3e-03 Å''^3, dot deltas), and the follow-up probes you select.
+- Cross-check the invariant numbers against `reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md` so the tables tell a consistent story.
+- Keep all new helper snippets under `reports/…/rot_vector/`; do not introduce ad-hoc scripts elsewhere.
+Pitfalls To Avoid:
+- Do not alter production simulator code during this evidence pass.
+- Leave C trace artifacts untouched; only regenerate the PyTorch side.
+- Maintain device/dtype neutrality—no `.cpu()` or `.item()` on tensors in harness updates.
+- Respect Protected Assets: never move/delete files referenced by docs/index.md.
+- Don’t skip the pytest collect check; it’s our guardrail that the selector stays valid.
+- Avoid mixing new logs with existing scaling_audit artifacts; keep outputs in rot_vector/.
+- Document every command verbatim in docs/fix_plan.md to preserve reproducibility.
+- Keep temporary calculations ASCII and inside the reports tree; no root-level clutter.
+- If you touch trace_harness.py, follow docs/debugging/debugging.md trace schema exactly.
+Pointers:
+- reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md — current C vs Py rotation deltas.
+- reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md — hypotheses for Phase L3g.
+- docs/debugging/debugging.md:34-88 — required TRACE naming/precision rules.
+- plans/active/cli-noise-pix0/plan.md:253-274 — Phase L3 context and exit criteria.
+- docs/architecture/pytorch_design.md:120-188 — rotation/misset data flow that must stay intact.
+Next Up: If invariants confirm the issue lies in real-space reconstruction, prepare a trace patch plan for Crystal.get_real_from_reciprocal before any simulator edits.
+EOF
+' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:20:00] bash -lc "cat <<'EOF' > input.md
+Summary: Quantify the φ=0 rotation invariants so we can nail the real-space drift before touching simulator code.
+Mode: Parity
+Focus: CLI-FLAGS-003 – Handle -nonoise and -pix0_vector_mm
+Branch: feature/spec-based-2
+Mapped tests: [tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics]
+Artifacts:
+- reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log
+- reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md
+- reports/2025-10-cli-flags/phase_l/rot_vector/invariant_probe.md
+- reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md
+Do Now: CLI-FLAGS-003 — mkdir -p reports/2025-10-cli-flags/phase_l/rot_vector && PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --device cpu --dtype float32 --out reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log && python - <<'PY'
+from pathlib import Path
+import numpy as np
+root = Path('reports/2025-10-cli-flags/phase_l')
+log_c = root / 'scaling_audit/c_trace_scaling.log'
+log_py = root / 'rot_vector/trace_py_rot_vector.log'
+
+def grab(path, prefix):
+    real, recip = {}, {}
+    for parts in (line.split() for line in path.read_text().splitlines()):
+        if len(parts) < 5 or parts[0] "'!= f'"'TRACE_{prefix}:' or not parts[1].startswith('rot_'):
+            continue
+        vec = np.array(list(map(float, parts[2:5])))
+        (recip if '_star_' in parts[1] else real)[parts[1]] = vec
+    return real, recip
+real_c, recip_c = grab(log_c, 'C')
+real_py, recip_py = grab(log_py, 'PY')
+
+def volume(real):
+    return float(np.dot(real['rot_a_angstroms'], np.cross(real['rot_b_angstroms'], real['rot_c_angstroms'])))
+vol_c = volume(real_c)
+vol_py = volume(real_py)
+
+def dot_map(real, recip):
+    out = {}
+    for axis in 'abc':
+        out[axis] = float(np.dot(real[f'rot_{axis}_angstroms'], recip[f'rot_{axis}_star_A_inv']))
+    return out
+dots_c = dot_map(real_c, recip_c)
+dots_py = dot_map(real_py, recip_py)
+rows = ['# Rotation Invariants Probe', '', f'| Metric | C | PyTorch | Δ (Py-C) |', '| --- | --- | --- | --- |', f\"| Unit-cell volume (Å"'^3) | {vol_c:.6f} | {vol_py:.6f} | {vol_py - vol_c:+.6e} |"]
+for axis in '"'abc':
+    rows.append(f\"| {axis} · {axis}* | {dots_c[axis]:.9f} | {dots_py[axis]:.9f} | {dots_py[axis] - dots_c[axis]:+.3e} |\")
+(rows := rows + ['', 'Source logs:', f'- C trace: {log_c}', f'- PyTorch trace: {log_py}'])
+Path(root / 'rot_vector' / 'invariant_probe.md').write_text('\\n'.join(rows) + '\\n', encoding='utf-8')
+PY
+ && KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics
+If Blocked: If the harness fails or missing TRACE lines, dump stdout/stderr to reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector_raw.txt, note which key is absent, update docs/fix_plan.md Attempt history, and pause for supervisor review.
+Priorities & Rationale:
+- plans/active/cli-noise-pix0/plan.md:265 states Phase L3f must supply aligned rot vectors ahead of normalization changes.
+- plans/active/cli-noise-pix0/plan.md:266 requires hypotheses plus confirming probes before simulator edits.
+- docs/fix_plan.md:450-463 pins the φ=0 k_frac drift as the blocker for getting -nonoise/-pix0_vector_mm parity.
+- specs/spec-a-cli.md:1-120 anchor the CUSTOM convention precedence we are auditing.
+- docs/development/c_to_pytorch_config_map.md:36-78 remind us beam/pivot mapping and volume rules must stay in lockstep with C.
+How-To Map:
+- Refresh "'`reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md` with the invariant results (volume deltas, dot products) and call out which Phase L3g hypothesis looks most likely.
+- Append docs/fix_plan.md Attempt #88 with the command, key metrics (Δvolume ≈ +3.3e-03 Å''^3, dot deltas), and the follow-up probes you select.
+- Cross-check the invariant numbers against `reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md` so the tables tell a consistent story.
+- Keep all new helper snippets under `reports/…/rot_vector/`; do not introduce ad-hoc scripts elsewhere.
+Pitfalls To Avoid:
+- Do not alter production simulator code during this evidence pass.
+- Leave C trace artifacts untouched; only regenerate the PyTorch side.
+- Maintain device/dtype neutrality—no `.cpu()` or `.item()` on tensors in harness updates.
+- Respect Protected Assets: never move/delete files referenced by docs/index.md.
+- Don’t skip the pytest collect check; it’s our guardrail that the selector stays valid.
+- Avoid mixing new logs with existing scaling_audit artifacts; keep outputs in rot_vector/.
+- Document every command verbatim in docs/fix_plan.md to preserve reproducibility.
+- Keep temporary calculations ASCII and inside the reports tree; no root-level clutter.
+- If you touch trace_harness.py, follow docs/debugging/debugging.md trace schema exactly.
+Pointers:
+- reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md — current C vs Py rotation deltas.
+- reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md — hypotheses for Phase L3g.
+- docs/debugging/debugging.md:34-88 — required TRACE naming/precision rules.
+- plans/active/cli-noise-pix0/plan.md:253-274 — Phase L3 context and exit criteria.
+- docs/architecture/pytorch_design.md:120-188 — rotation/misset data flow that must stay intact.
+Next Up: If invariants confirm the issue lies in real-space reconstruction, prepare a trace patch plan for Crystal.get_real_from_reciprocal before any simulator edits.
+EOF
+' succeeded in 1.00s:
+
+[2025-10-07T10:20:00] tokens used: 128,232
+
+[2025-10-07T10:20:05] thinking
+
+**Revising script to avoid walrus misuse**
+[2025-10-07T10:20:06] exec bash -lc "python - <<'PY'
+from pathlib import Path
+text = Path('input.md').read_text()
+text = text.replace(\"(rows := rows + ['', 'Source logs:', f'- C trace: {log_c}', f'- PyTorch trace: {log_py}'])\", \"rows.extend(['', 'Source logs:', f'- C trace: {log_c}', f'- PyTorch trace: {log_py}'])\")
+Path('input.md').write_text(text)
+PY" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:20:07] bash -lc "python - <<'PY'
+from pathlib import Path
+text = Path('input.md').read_text()
+text = text.replace(\"(rows := rows + ['', 'Source logs:', f'- C trace: {log_c}', f'- PyTorch trace: {log_py}'])\", \"rows.extend(['', 'Source logs:', f'- C trace: {log_c}', f'- PyTorch trace: {log_py}'])\")
+Path('input.md').write_text(text)
+PY" succeeded in 706ms:
+
+[2025-10-07T10:20:07] tokens used: 130,429
+
+[2025-10-07T10:20:09] thinking
+
+**Verifying script corrections**
+[2025-10-07T10:20:09] exec bash -lc "sed -n '1,120p' input.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:20:10] bash -lc "sed -n '1,120p' input.md" succeeded in 710ms:
+Summary: Quantify the φ=0 rotation invariants so we can nail the real-space drift before touching simulator code.
+Mode: Parity
+Focus: CLI-FLAGS-003 – Handle -nonoise and -pix0_vector_mm
+Branch: feature/spec-based-2
+Mapped tests: [tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics]
+Artifacts:
+- reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log
+- reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md
+- reports/2025-10-cli-flags/phase_l/rot_vector/invariant_probe.md
+- reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md
+Do Now: CLI-FLAGS-003 — mkdir -p reports/2025-10-cli-flags/phase_l/rot_vector && PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --device cpu --dtype float32 --out reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log && python - <<'PY'
+from pathlib import Path
+import numpy as np
+root = Path('reports/2025-10-cli-flags/phase_l')
+log_c = root / 'scaling_audit/c_trace_scaling.log'
+log_py = root / 'rot_vector/trace_py_rot_vector.log'
+
+def grab(path, prefix):
+    real, recip = {}, {}
+    for parts in (line.split() for line in path.read_text().splitlines()):
+[2025-10-07T10:20:10] tokens used: 130,721
+
+[2025-10-07T10:20:13] thinking
+
+**Preparing update for galph_memory.md**
+[2025-10-07T10:20:16] exec bash -lc "cat <<'EOF' >> galph_memory.md
+
+## 2025-11-19 (galph loop — CLI L3g invariants setup)
+- Refreshed input.md (Parity) to drive Phase L3g evidence: rerun φ=0 harness, generate "'`rot_vector/invariant_probe.md`, and capture pytest collect.
+- Parsed new rot_vector artifacts: real-space vectors drift O(1e-2 Å) while reciprocal vectors align ≈1e-9 Å⁻¹; computed volumes (C 24682.25663 Å³ vs Py 24682.25998 Å³) and dot products (C deviates ≤4.4e-4, Py ≈1.0) to focus on reciprocal→real reconstruction.
+- Directed Ralph to update `analysis.md` plus fix_plan Attempt #88 with invariant metrics and to keep snippets under reports/rot_vector/ before any simulator edits.
+- Next follow-up: after invariants are logged, decide whether Crystal.get_real_from_reciprocal needs instrumentation or spindle-axis normalization fixes before code changes.
+EOF
+' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:20:17] bash -lc "cat <<'EOF' >> galph_memory.md
+
+## 2025-11-19 (galph loop — CLI L3g invariants setup)
+- Refreshed input.md (Parity) to drive Phase L3g evidence: rerun φ=0 harness, generate "'`rot_vector/invariant_probe.md`, and capture pytest collect.
+- Parsed new rot_vector artifacts: real-space vectors drift O(1e-2 Å) while reciprocal vectors align ≈1e-9 Å⁻¹; computed volumes (C 24682.25663 Å³ vs Py 24682.25998 Å³) and dot products (C deviates ≤4.4e-4, Py ≈1.0) to focus on reciprocal→real reconstruction.
+- Directed Ralph to update `analysis.md` plus fix_plan Attempt #88 with invariant metrics and to keep snippets under reports/rot_vector/ before any simulator edits.
+- Next follow-up: after invariants are logged, decide whether Crystal.get_real_from_reciprocal needs instrumentation or spindle-axis normalization fixes before code changes.
+EOF
+' succeeded in 704ms:
+
+[2025-10-07T10:20:17] tokens used: 132,864
+
+[2025-10-07T10:20:20] thinking
+
+**Confirming record append**
+[2025-10-07T10:20:22] exec bash -lc 'tail -n 40 galph_memory.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:20:23] bash -lc 'tail -n 40 galph_memory.md' succeeded in 716ms:
+- Reviewed src/nanobrag_torch/__main__.py:438-450 and 1068-1076; confirmed CLI still attaches HKL data after Crystal construction but leaves tensors on CPU and instantiates Crystal without propagating the CLI device/dtype.
+- Noted interpolation flag wiring mismatch (cli writes `crystal.interpolation_enabled`) for follow-up once L3c closes.
+- Replaced input.md with Parity-mode guidance directing Ralph to refresh the CLI HKL device probe, update cli_hkl_audit.md with current code references, and run pytest --collect-only for tests/test_cli_scaling.py.
+- Expect Ralph to capture new probe artifacts under reports/2025-10-cli-flags/phase_l/structure_factor/, update the audit doc with 2025-11-18 findings, and log the attempt in docs/fix_plan.md before proceeding to L3d.
+
+## 2025-11-18 (galph loop — CLI L3d planning refresh)
+- Marked Phase L3c complete in `plans/active/cli-noise-pix0/plan.md` and added 2025-11-18 gap snapshot noting Attempt #80’s audit results; fix_plan Next Actions now target L3d implementation, L3e validation, and L3f documentation.
+- Authored new `input.md` (Parity mode) instructing Ralph to add the L3d regression test, capture the failing selector, patch `__main__.py:1073` with `.to(device=device, dtype=dtype)`, rerun the probe, and log artifacts under `reports/2025-10-cli-flags/phase_l/structure_factor/`.
+- Reminder for next loop: verify vectorization plan still shows C1 as open despite commit 88fd76a; plan update pending once CLI L3d work is underway.
+
+## 2025-11-19 (galph loop — CLI L3e evidence setup)
+- Verified L3d landed earlier (TestHKLDevice present, `.to(device=device, dtype=dtype)` already in `__main__.py`), so refreshed plan snapshot to steer toward Phase L3e scaling validation.
+- Updated `plans/active/cli-noise-pix0/plan.md` (L3d → [D]) and `docs/fix_plan.md` Next Actions to focus on L3e metrics, L3f documentation, and L4 rerun.
+- Authored Parity-mode `input.md` directing Ralph to upgrade `scripts/validation/compare_scaling_traces.py` to emit ≤1e-6 JSON metrics + metadata under `reports/2025-10-cli-flags/phase_l/scaling_validation/` before any simulator edits.
+- Follow-up: expect new `metrics.json`, `run_metadata.json`, and summary markdown plus fix_plan attempt update next loop; if metrics fail tolerance, halt for supervisor review.
+
+## 2025-11-19 (galph loop — CLI-FLAGS L3e parity snapshot)
+- Ran `compare_scaling_traces.py` against `trace_py_scaling_20251117.log`; generated `scaling_validation_summary_20251119.md`, refreshed metrics/run_metadata, and logged Attempt #83 under CLI-FLAGS-003.
+- Key finding: HKL ingestion now matches C (F_cell≈190.27) but lattice factor remains divergent (C `F_latt=-2.3832` vs Py `+1.35136`). Per-phi `TRACE_C_PHI` entries show the sign oscillation missing from PyTorch traces.
+- Authored `analysis_20251119.md` recommending per-phi instrumentation; updated input.md to direct Ralph to extend the trace harness, emit `TRACE_PY_PHI`, and compare against archived C per-phi logs before touching simulator code.
+[2025-10-07T10:20:23] tokens used: 133,227
+
+[2025-10-07T10:20:25] thinking
+
+**Checking git status before staging**
+[2025-10-07T10:20:25] exec bash -lc 'git status --short' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:20:26] bash -lc 'git status --short' succeeded in 740ms:
+ M galph_memory.md
+ M input.md
+[2025-10-07T10:20:26] tokens used: 134,943
+
+[2025-10-07T10:20:28] thinking
+
+**Staging changes for commit**
+[2025-10-07T10:20:29] exec bash -lc 'git add galph_memory.md input.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:20:29] bash -lc 'git add galph_memory.md input.md' succeeded in 696ms:
+
+[2025-10-07T10:20:29] tokens used: 135,144
+
+[2025-10-07T10:20:32] thinking
+
+**Committing with SUPERVISOR message**
+[2025-10-07T10:20:33] exec bash -lc 'git commit -m "SUPERVISOR: CLI L3g invariants - tests: not run"' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:20:34] bash -lc 'git commit -m "SUPERVISOR: CLI L3g invariants - tests: not run"' succeeded in 763ms:
+[feature/spec-based-2 7034733] SUPERVISOR: CLI L3g invariants - tests: not run
+ 2 files changed, 68 insertions(+), 57 deletions(-)
+[2025-10-07T10:20:34] tokens used: 135,329
+
+[2025-10-07T10:20:36] thinking
+
+**Pushing commit**
+[2025-10-07T10:20:36] exec bash -lc 'git push' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:20:38] bash -lc 'git push' exited 124 in 2.02s:
+
+[2025-10-07T10:20:38] tokens used: 135,565
+
+[2025-10-07T10:20:41] thinking
+
+**Handling push timeout by retrying with timeout**
+[2025-10-07T10:20:42] exec bash -lc 'timeout 30 git push' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:20:44] bash -lc 'timeout 30 git push' exited 124 in 2.28s:
+To github.com:hoidn/nanoBragg.git
+   4067867..7034733  feature/spec-based-2 -> feature/spec-based-2
+[2025-10-07T10:20:44] tokens used: 135,829
+
+[2025-10-07T10:20:48] thinking
+
+**Analyzing push timeout with exit code 124**
+[2025-10-07T10:20:49] exec bash -lc 'git status --short' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T10:20:50] bash -lc 'git status --short' succeeded in 986ms:
+
+[2025-10-07T10:20:50] tokens used: 136,130
+
+[2025-10-07T10:21:01] thinking
+
+**Preparing final summary message**
+
+I'm organizing a clear final message that highlights the focus issue CLI-FLAGS-003, references updated files with line numbers, summarizes key differences like real vector versus reciprocal from reports, mentions the new input instructions and commit ID, and outlines next steps including running the Do Now command and updating the fix plan. I'll include a bullet list under a **Focus Update** header to structure everything clearly.
+[2025-10-07T10:21:02] codex
+
+**Focus Update**
+- Parsed the fresh φ=0 trace in `reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector.log:1` and confirmed the reciprocal vectors already agree with C at the 1e-9 Å⁻¹ scale while the real-space basis drifts O(10⁻² Å); see the deltas logged in `reports/2025-10-cli-flags/phase_l/rot_vector/rot_vector_comparison.md:1`.
+- Anchored Phase L3f/L3g guidance in `input.md:1-84`, keeping the loop on CLI-FLAGS-003 with a Parity evidence pass instead of code edits.
+- Added an invariants probe command (volume + dot products) to the Do Now so Ralph can quantify the reciprocal→real reconstruction error before touching simulator code, with results to roll into `reports/2025-10-cli-flags/phase_l/rot_vector/invariant_probe.md`.
+
+**Next Steps for Ralph**
+- Follow the Do Now chain in `input.md:10-40` to rerun the φ=0 harness, emit `invariant_probe.md`, and re-collect the targeted pytest selector.
+- Update `reports/2025-10-cli-flags/phase_l/rot_vector/analysis.md:1` and log docs/fix_plan Attempt #88 with the new invariant metrics, pointing to volumes and dot products.
+- Use the refreshed evidence to decide whether the fixes belong in `Crystal.get_real_from_reciprocal` (Rule #13) or spindle-axis normalization before any production edits.
+
+**Repo**
+- Committed `input.md` and `galph_memory.md` as `SUPERVISOR: CLI L3g invariants - tests: not run` (7034733) on `feature/spec-based-2`; push completed (timeout exited but remote shows updated ref).
+[2025-10-07T10:21:06] tokens used: 137,271
+Reading prompt from stdin...
+To github.com:hoidn/nanoBragg.git
+   7034733..ff6b382  HEAD -> feature/spec-based-2
+Waiting for Ralph to complete i=88...
+Already up to date.
+[sync] state: actor=ralph status=waiting-ralph iter=88
+Updating ff6b382..79dafb0
+Fast-forward
+ sync/state.json | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+From github.com:hoidn/nanoBragg
+   ff6b382..79dafb0  feature/spec-based-2 -> origin/feature/spec-based-2
+[sync] state: actor=ralph status=running-ralph iter=88
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Updating 79dafb0..35b5971
+Fast-forward
+ docs/fix_plan.md                                   |  19 +++
+ .../rot_vector/trace_py_rot_vector_per_phi.json    |  82 +++++++++++
+ .../rot_vector/trace_py_rot_vector_per_phi.log     |  10 ++
+ .../phase_l/rot_vector/analysis.md                 | 154 +++++++++------------
+ .../phase_l/rot_vector/invariant_probe.md          |  12 ++
+ .../phase_l/rot_vector/rot_vector_comparison.md    |  69 +++++++--
+ .../phase_l/scaling_audit/trace_harness.py         |   3 +-
+ .../phase_l/scaling_audit/trace_py_env.json        |   4 +-
+ 8 files changed, 255 insertions(+), 98 deletions(-)
+ create mode 100644 reports/2025-10-cli-flags/phase_l/per_phi/reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector_per_phi.json
+ create mode 100644 reports/2025-10-cli-flags/phase_l/per_phi/reports/2025-10-cli-flags/phase_l/rot_vector/trace_py_rot_vector_per_phi.log
+ create mode 100644 reports/2025-10-cli-flags/phase_l/rot_vector/invariant_probe.md
+From github.com:hoidn/nanoBragg
+   79dafb0..35b5971  feature/spec-based-2 -> origin/feature/spec-based-2
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Updating 35b5971..3798453
+Fast-forward
+ sync/state.json | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+From github.com:hoidn/nanoBragg
+   35b5971..3798453  feature/spec-based-2 -> origin/feature/spec-based-2
+[sync] state: actor=galph status=complete iter=89
+Ralph completed iteration 88; proceeding to 89

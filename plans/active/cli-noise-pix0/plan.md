@@ -50,7 +50,7 @@ Exit Criteria: `trace_harness.py` comparisons show `F_cell`, `F_latt`, and `I_be
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| M1 | Audit HKL lookup parity | [ ] | Use `trace_harness.py` to log `hkl_frac`, integer HKL indices, and fetched amplitudes for pixel (685,1039). Compare against C trace (`c_trace_phi_20251123.log`). Store diff in `reports/.../scaling_validation/<timestamp>/hkldata.md`. |
+| M1 | Audit HKL lookup parity | [ ] | Use `trace_harness.py` to log `hkl_frac`, integer HKL indices, and fetched amplitudes for pixel (685,1039). Compare against C trace (`c_trace_phi_20251123.log`). Store diff in `reports/.../scaling_validation/<timestamp>/hkldata.md`. Latest evidence: `20251008T055257Z` (spec, ΔI_before_scaling ≈ −14.6%) and `20251008T055533Z` (c-parity, Δ ≈ −0.21%) with manual summaries due to `compare_scaling_traces.py` crash. |
 | M2 | Fix lattice factor propagation | [ ] | Investigate `_compute_structure_factors` and `Crystal._tricubic_interpolation` for cases returning zero F_cell. Implement fix with nanoBragg.c reference (lines 2604–3278). Add targeted pytest (`tests/test_cli_scaling_phi0.py::test_I_before_scaling_matches_c`) covering the problematic HKL. |
 | M3 | Re-run scaling comparison | [ ] | Execute `python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039` (CPU + CUDA). Confirm `metrics.json` reports first_divergence=None. Update Attempt log and `scaling_audit/scaling_comparison.md`. |
 | M4 | Documentation + checklist | [ ] | Summarize findings in `scaling_audit/summary.md`, update `fix_checklist.md` VG-2 row, and log Attempt with metrics (I_before_scaling ratio, F_latt deltas). |

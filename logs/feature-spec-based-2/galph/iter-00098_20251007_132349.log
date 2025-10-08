@@ -1,0 +1,1756 @@
+Already up to date.
+Waiting for expected_actor=galph...
+Already up to date.
+[sync] state: actor=galph status=complete iter=98
+To github.com:hoidn/nanoBragg.git
+   63328e3..54688a5  HEAD -> feature/spec-based-2
+$ codex exec -m gpt-5-codex -c model_reasoning_effort=high --dangerously-bypass-approvals-and-sandbox
+[2025-10-07T13:23:54] OpenAI Codex v0.38.0 (research preview)
+--------
+workdir: /Users/ollie/Documents/nanoBragg3
+model: gpt-5-codex
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: high
+reasoning summaries: auto
+--------
+[2025-10-07T13:23:54] User instructions:
+<role>
+planning, review and analysis. do not make implementation code changes.
+</role>
+<current long-term goals>
+in order of decreasing priority:
+<1>
+run a successful parallel test of pytorch nanobragg against nanobragg c with this command:
+
+nanoBragg  -mat A.mat -floatfile img.bin -hkl scaled.hkl  -nonoise  -nointerpolate -oversample 1  -exposure 1  -flux 1e18 -beamsize 1.0  -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080  -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866  -beam_vector 0.00051387949 0.0 -0.99999986  -Na 36  -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0
+
+this will require first adding support for the following cli params to pytorch nanobragg:
+-nonoise
+-pix0_vector_mm
+
+</1>
+<2>
+review and firm up if needed plans/active/vectorization.md. then implement it (or rather, delegate its implementation to ralph), starting with the tricubic interpolation vectorization 
+</2>
+</current long-term goals>
+</past long term goals>
+(just for archival / reference purposes):
+- error-correcting the engineer agent 
+- profiling pytorch nanobragg to find performance bottlenecks. analyzing to understand the CRITICAL slowness of the pytorch implementation compared to reference C, which persists after our recent improvement attempts
+- finding performance issues in the PyTorch reimplementation of nanobragg (originally a C code) and speeding it up. It should be efficiently vectorized and faster than C nanobragg, but currently it's slower 
+- ensuring that the pytorch implementation uses fp32 (not fp64) by default 
+- understanding why pytorch is slower than C in the warm condition at 4096x4096 resolution and fixing the underlying performance issue, if one is found. THIS IS A CRITICAL PERFORMANCE ISSUE.
+- once all the above are taken care of: building a user-facing showcase of autodiff-based parameter refinement, with plots / visuals
+
+</past long-term goals>
+<task>
+You are galph, a planner / supervisor agent. you are overseeing the work of an agent (ralph) that is running prompts/main.md in a loop, using docs/fix_plan.md as its instruction set and long term memory. 
+
+You will get invoked repeatedly, for multiple iterations. Use galph_memory.md to communicate with your future self. You'll plans under plans/, when needed, to help steer multi-turn efforts by the coder agent (ralph). Those plans will be cross referenced from docs/fix_plan.md so that ralph can find / read them. 
+
+At the start of every invocation:
+- Run `timeout 30 git pull --rebase` with a hard 30-second timeout  to sync with origin before reviewing context. If the command times out, immediately abort any partial rebase (`git rebase --abort`) and fall back to a normal merge via `git pull --no-rebase`. Whatever path you take, resolve resulting conflicts (docs/fix_plan.md is a frequent hotspot) and document key decisions in galph_memory.md. If the pull reports conflicts:
+  * Run `git status --short` to list conflicted files.
+  * Fix each file (remove conflict markers, keep the intended content) and stage it with `git add`.
+  * When the index is clean, resume with `timeout 30 git rebase --continue --no-edit`. IMPORTANT: NEVER RUN THIS COMMAND WITHOUT TIMEOUT
+- After resolving any conflicts, read the latest galph_memory.md entry (and any linked plan files) so you do not lose past context.
+- Prune or summarize older entries when they become stale or redundant.
+
+During the main, central phase of invocation you will be doing essentially three things:
+<main analysis step 1> 
+An initial analysis pass in which you gather and review information in order to choose a <focus issue> for the turn, corresponding to <instructions> steps <0> through <3>. This will involve a multi-category selection process. You will choose both a <focus issue> and an associated <Action type> for the remainder of the iteration. The available <Action type>s are the following:
+<Action type> list:
+<1>
+<Evidence collection> (i.e. Evidence task)
+No full pytest runs. Allowed: non-mutating probes and CLI validation tools (e.g., scripts/validation/*, nb-compare, pixel trace); pytest --collect-only to validate selectors; and in TDD mode only, a single targeted pytest run to confirm the newly authored test fails. Do not change production code. This gate applies only to galph. Ralph is exempt. Do not include any Phase label in input.md.
+
+Evidence collection includes the following subtype:
+    Callchain Tracing (Evidence subtype)
+    - When to use: before code edits when the pipeline/factor order relevant to the current issue is unclear; when onboarding a new surface; or upon parity failures where the locus is unknown.
+    - Directive: first, emit descriptions for the following things:
+       - <analysis_question> (required): Free‑text description of the behavior/bug/perf issue to investigate. This will be closely related to <focus issue>, but viewed from the point of view of relevant code execution paths and their entry points.
+       - <initiative_id> and <scope_hints> 
+
+    - Directive: then read and carefully follow the instructions in `prompts/callchain.md` with the question‑driven invocation (<analysis_question>) and produce standardized artifacts under `reports/<initiative_id>/`.
+    - Example invocation variables (fill at run time):
+      analysis_question: "<what are we trying to understand or fix?>"
+      initiative_id: "<short‑slug>"
+      scope_hints: ["CLI flags", "normalization", "scaling"]
+      roi_hint: "<minimal input/ROI>"
+      namespace_filter: "<project primary package>"
+      time_budget_minutes: 30
+    - Expected outputs:
+      - `reports/<initiative_id>/callchain/static.md` (entry→sink with file:line anchors)
+      - `reports/<initiative_id>/callgraph/dynamic.txt` (optional, module‑filtered)
+      - `reports/<initiative_id>/trace/tap_points.md` (proposed numeric taps with owners)
+      - `reports/<initiative_id>/summary.md` (question‑oriented narrative + next steps)
+      - `reports/<initiative_id>/env/trace_env.json`
+    - Guardrails: evidence‑only (no prod edits), module/device/dtype neutrality, small ROI, respect Protected Assets, stable key names in traces.
+</Evidence collection>
+</1>
+<2>
+<Debug> i.e. Debugging — Hypothesis + Triage (initial pass):
+- pairs with <focus issue>s that are related to debugging or parity analysis.
+<steps>
+- Formulate 1–3 plausible hypotheses for the observed gap/issue.
+- Triage each with checks appropriate to scope using existing artifacts or quick, documented reproductions; this triage may constitute the primary work for the iteration. Record outcomes succinctly in the evidence.
+- For the top hypothesis, state confidence and the single confirming step to run next. Deliver 1–3 ranked hypotheses with supporting evidence, artifact paths, and the next confirming step.
+</steps>
+</Debug>
+</2>
+<3>
+<Planning>
+- we will be calling the plan topic the <focus issue> of this turn.
+- based on which long term <goal> and sub-goal is that effort / plan? 
+- Which existing docs/fix_plan.md items does it (i.e. the <focus issue>) relate to? 
+- Documentation review for <focus issue>: Using `docs/index.md` as the map, identify and read the specific documents relevant to the chosen <focus issue> (e.g., component contracts, architecture ADRs, parity/testing strategy). List the file paths you will rely on (with a one‑line rationale each) before drafting or updating the plan.
+- think deeply. draft / redraft the plan and save it to a .md under plans/active/. Structure the write-up as a phased implementation document (see `plans/archive/general-detector-geometry/implementation.md` for tone/shape): begin with context + phase overviews, then outline each phase’s intent, prerequisites, and exit criteria. When a phase benefits from explicit tracking, embed a checklist table using the `ID | Task Description | State | How/Why & Guidance` format (with `[ ]`, `[P]`, `[D]` markers) inside that phase section.
+  • Include reproduction commands, owners (if known), and decision rules in the guidance column.
+  • Favor narrative flow first; layer checklists only where they clarify verification steps or deliverables.
+  • Mini-template to crib when drafting:
+    ```md
+    ## Context
+    - Initiative: <initiative>
+    - Phase Goal: <outcome>
+    - Dependencies: <docs/tests>
+
+    ### Phase A — <short title>
+    Goal: <what this phase proves or delivers>
+    Prereqs: <artifacts or measurements required before starting>
+    Exit Criteria: <verifiable completion signal>
+
+    | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
+    | --- | --- | --- | --- |
+    | A1 | <Key diagnostic or implementation step> | [ ] | Run `<command>`; capture results under `reports/<date>/...`. |
+    | A2 | <Follow-up validation> | [ ] | Compare against `<artifact>`; stop if deviation > threshold. |
+    ```
+- When refreshing an existing plan, retrofit it to this phased format before adding or editing tasks.
+- review docs/fix_plan.md. edit if needed. cross reference the new plans .md so that ralph can find it.
+</Planning>
+</3>
+
+<4>
+<Review or housekeeping>
+- Review and evaluate ralph's work. Scrutinize the commit history. Look at the diffs. 
+- Are the docs/fix_plan.md contents and priorities sane? things to consider:
+  - if docs/fix_plan.md is longer than 1000 lines it should be housecleaned. If it's disorganized and / or internally inconsistent, consider how this could be addressed. 
+- after considering the above, you have enough information to choose a <focus issue> for this turn. do so. Consider the nature of the <focus issue>:
+    - Do we need a new docs/fix_plan item to put ralph back on course, fix one of his mistakes, or instruct him to do something that he overlooked? If so, draft it and add it to docs/fix_plans
+    - does the <focus issue> involve identified issues in docs/fix_plan.md? If so, fix them. If you decide to shorten docs/fix_plan.md, the least relevant portions should be moved to archive/fix_plan_archive.md (with summary + archive cross reference if appropriate)
+</Review or housekeeping>
+</4>
+
+In addition to selecting an <Action type> and <focus issue> you will choose a <Mode> flag. 
+ - Mode flags are combinable and refine execution, and are applicable to both the supervisor (you) and ralph; do not include any Phase label in input.md.
+ - available modes: <TDD | Parity | Perf | Docs | none>
+<mode descriptions>
+TDD mode (supervisor-scoped): When operating in supervisor evidence mode, author/update a single minimal failing test that encodes the acceptance criterion. Confirm it fails via a targeted pytest selector; record the selector and expected failure text in input.md. Do not change production code, and do not include any Phase label in input.md.
+</mode descriptions>
+
+</main analysis step 1>
+
+<main analysis step 2>
+Here you will do a deep analysis. You will follow the guidelines of the selected <Mode> and <Action type>, applying them to the selected <focus issue>. This corresponds to <instructions> step <3.2>.
+
+
+</main analysis step 2>
+
+<main analysis step 3>
+Here you synthesize the analysis findings into output files (<instructions> steps <3.5> to <4>)
+</main analysis step 3>
+
+
+Before concluding each invocation:
+- Append a concise update to galph_memory.md capturing key findings, decisions, and open questions (reference file paths or plan names).
+- Note any follow-up actions you expect Ralph to take.
+- If no substantial update is needed, explicitly log that fact so future runs know context was reviewed.
+</task>
+
+<instructions>
+<0>
+READ the following files:
+- Index of project documentation: `./docs/index.md`
+- $SPECS: `./specs/spec-a.md`
+- $ARCH: `./arch.md` (ADR-backed implementation architecture; reconcile design with spec, surface conflicts)
+- docs/development/c_to_pytorch_config_map.md — C↔Py config parity and implicit rules
+-- docs/debugging/debugging.md — Parallel trace-driven debugging SOP
+- $PLAN: `./fix_plan.md` (living, prioritized to‑do; keep it up to date)
+- $TESTS: `./docs/development/testing_strategy.md` (testing philosophy, tiers, seeds/tolerances, commands)
+- Set `AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md` (or project‑specific path) and consult it for authoritative reference commands and test discovery.
+<0>
+<1>
+do a deep analysis of the codebase in light of the <current long term goals>. What are some current issues / gaps and possible approaches to resolving them? Review docs/fix_plan.md and plans/active/, as previous iterations of you may have already done some legwork.
+ 
+At this point, you can do a premature <Callchain tracing> action ahead of time, if it helps you gather information needed for this analysis.
+</1>
+<2>
+flip a coin using python. if it comes up <heads>:
+review ralph's work over the last N (~10 but can be more or less - you decide) iterations. Check the commit history. Has the work been productive? Have there been regressions? Do we need to provide any feedback / course-correction?
+</heads>
+if it comes up <tails>: proceed to step <3>
+</2>
+<3>
+Given your findings in <1> and <2>, think about whether there's any need for a multi-turn planning effort -- i.e. ralph can't see the forest for the trees and may struggle with major refactorings and multi-turn implementation efforts unless they are coordinated by you. Is there a need for such planning *right now*? If such a plan is already spoken for (plans/active/ or wherever else past galph might have saved to), does that plan require updates or is it up to date / high quality and simply pending? IFF you determine the need for a new plan or modification of an existing one:
+<yes case>
+This plan-related work is now your <focus issue>.
+You will be following the <Planning> <Action type> instructions. Think about what this will entail but don't execute the <Planning> instructions yet.
+</yes case>
+</no case>
+Since you are not <Planning>, you must select one of the other <Action type>s and an associated <focus issue> based on what you think is the most productive work increment for this iteration. Think about the associated work, but don't execute it yet.
+</no case>
+</3>
+<3.2>
+- Documentation review for <focus issue>: From `docs/index.md`, enumerate and read the documents that are most relevant to the chosen <focus issue>`; note the key file paths you will rely on for the impending analysis.
+- Then carefully follow the guidelines of the selected <Mode> and <Action type>, applying them to the selected <focus issue>. Complete the task that you selected in step <3>.
+</3.2>
+<3.5>
+Render and write ./input.md (supervisor→engineer steering memo). Overwrite the entire file every invocation. Keep length ~100–200 lines. Include these sections in order:
+Header:
+- Summary: <one‑sentence goal for this loop>
+ - Mode: <TDD | Parity | Perf | Docs | none>
+- Focus: <plan item ID/title from docs/fix_plan.md>
+- Branch: <expected branch>
+- Mapped tests: <validated list | none — evidence‑only>
+- Artifacts: <key paths to produce under reports/>
+- Do Now: 1 line naming the exact docs/fix_plan.md item (ID and title) to execute this loop, plus the exact pytest command/env to reproduce it (only when an authoritative mapping exists). If no such test exists, the Do Now MUST be to author the minimal targeted test first and then run it. If you intend to delegate the choice, write “Do Now: delegate” and provide decision guidance below.
+  - Note: If operating in supervisor <Evidence collection> (internal-only), do not run the full suite. Allowed: pytest --collect-only to validate selectors; in TDD mode only, run one targeted selector to confirm a new failing test. All other test execution is deferred to Ralph. Do not include any Phase label in input.md.
+<Do Now guidelines>
+Verification scripts: You may run nb-compare and scripts/validation/* to collect metrics and artifacts (no code changes). Record outputs under reports/.
+Mapped tests under supervisor evidence mode: Include exact selectors in input.md; validate with --collect-only; do not run them (except the TDD failure confirmation). Do not include any Phase label in input.md.
+Command Sourcing (tests): Only include an exact pytest command in Do Now when sourced from an authoritative mapping (e.g., docs/development/testing_strategy.md) or an existing, known test file/identifier. If no authoritative mapping exists, set the Do Now task to author the minimal targeted test first; do not guess at a pytest selector here.
+Implementation: refer to phased plans, checklists, and all associated artifacts
+</Do Now guidelines>
+- If Blocked: fallback action (what to run/capture, how to record it in Attempts History).
+- Priorities & Rationale: 3–6 bullets with file pointers (specs/arch/tests/plan) justifying the Do Now.
+- How-To Map: exact commands (pytest, nb-compare), env vars, ROI/thresholds, and where to store artifacts; prefer using `scripts/validation/*` when available.
+- Pitfalls To Avoid: 5–10 crisp do/don’t reminders (device/dtype neutrality, vectorization, Protected Assets, two‑message loop policy, no ad‑hoc scripts).
+- Pointers: file paths with line anchors to the most relevant spec/arch/testing_strategy/fix_plan entries for this loop.
+- Next Up (optional): 1–2 candidates Ralph may choose next loop if he finishes early (still one thing per loop).
+
+ Rules:
+ - Ralph must not edit input.md. You (galph) are the single writer.
+ - If input.md’s Do Now conflicts with an existing in_progress selection in fix_plan.md, Ralph is allowed to switch; he must record the change in Attempts History.
+- Do not instruct Ralph to run the full test suite more than once per turn. Require targeted tests first; run the full suite once at the end only if code changed. For prompt/docs‑only loops, require `pytest --collect-only -q` instead.
+- Prefer referencing reusable scripts under `scripts/validation/` from Do Now when available.
+- Commit input.md each run as part of step <4> (commit only if the content changed).
+ </3.5>
+
+<4>
+Before finishing the loop, enforce git hygiene:
+- Run `git status --short` to inspect new or modified files that appeared during this invocation.
+- Review diffs for each change; revert only if you created it this loop and it was accidental.
+- Stage intentional updates with `git add -A` and commit via `git commit -m "SUPERVISOR: <scope> - <tests or rationale>"`, noting any tests run (use `tests: not run` when you skip them).
+- After committing, run `git push` to share the updates. If the push is rejected, `timeout 30 git pull --rebase`, resolve conflicts (capture decisions—especially for docs/fix_plan.md—in galph_memory.md), then push again.
+- If you deliberately leave the tree dirty, document the rationale in galph_memory.md so the next invocation knows why.
+</4>
+</instructions>
+<notes>
+- ignore 'routing violations'. these are out of scope.
+- ignore AT parallel 012-related items for now
+</notes>
+Now carefully and exhaustively follow your <instructions>, while keeping in mind the <task> directives.
+
+
+[2025-10-07T13:23:58] thinking
+
+**Preparing to run git pull command**
+[2025-10-07T13:23:59] exec bash -lc 'timeout 30 git pull --rebase' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:24:02] bash -lc 'timeout 30 git pull --rebase' succeeded in 2.47s:
+Already up to date.
+[2025-10-07T13:24:02] tokens used: 14,043
+
+[2025-10-07T13:24:05] thinking
+
+**Preparing to read documentation files**
+[2025-10-07T13:24:07] exec bash -lc "sed -n '1,160p' docs/index.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:24:07] bash -lc "sed -n '1,160p' docs/index.md" succeeded in 709ms:
+# Project Documentation Index
+
+Welcome to the central index for all `nanoBragg-PyTorch` project documentation. This guide provides a map to the key technical specifications, development processes, and historical records that define the project.
+
+---
+
+## 🏛️ Permanent Documentation
+
+These are the core, living documents that guide the project.
+
+### Core Project Guides
+### PyTorch Guardrails
+* **[PyTorch Runtime Checklist](./development/pytorch_runtime_checklist.md)** – quick do/don’t list for vectorization and device placement. Always review before editing simulator code.
+* **[PyTorch Design](./architecture/pytorch_design.md#vectorization-strategy)** – detailed explanation of the required broadcast shapes and batched flows.
+* **[Testing Strategy §1.4](./development/testing_strategy.md#14-pytorch-device--dtype-discipline)** – required CPU/GPU smoke tests and compile checks.
+
+* **[CLAUDE.md](../CLAUDE.md)** - The primary instruction set for the AI agent.
+* **[README.md](../README.md)** - The main project entry point.
+* **[README_PYTORCH.md](../README_PYTORCH.md)** - Comprehensive user guide for the PyTorch implementation, including CLI usage, parallel comparison tools, and visualization.
+* **[PROJECT_STATUS.md](../PROJECT_STATUS.md)** - Tracks the current active development initiative.
+[2025-10-07T13:24:07] tokens used: 28,240
+
+[2025-10-07T13:24:09] thinking
+
+**Reading specs/spec-a.md**
+[2025-10-07T13:24:10] exec bash -lc "sed -n '1,160p' specs/spec-a.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:24:10] bash -lc "sed -n '1,160p' specs/spec-a.md" succeeded in 705ms:
+# nanoBragg Spec A — Sharded Specification
+
+Spec A is now organized across multiple shards. Read them together for the full normative contract.
+
+- [spec-a-core.md](spec-a-core.md): Core physics, geometry, sampling, data, and associated acceptance tests.
+- [spec-a-cli.md](spec-a-cli.md): CLI surface area, precedence rules, and CLI-focused acceptance tests.
+- [spec-a-parallel.md](spec-a-parallel.md): Conformance profiles, parallel validation suites, and developer tooling requirements.
+
+Each shard cross-references the others; updates must keep them consistent.
+[2025-10-07T13:24:10] tokens used: 44,075
+
+[2025-10-07T13:24:13] thinking
+
+**Considering specification documents**
+[2025-10-07T13:24:14] exec bash -lc "sed -n '1,200p' arch.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:24:14] bash -lc "sed -n '1,200p' arch.md" succeeded in 675ms:
+# nanoBragg PyTorch — Implementation Architecture
+
+Document version: 1.0 (aligned with specs/spec-a.md)
+Target spec: specs/spec-a.md (single-file normative spec)
+Implementation target: Python (>=3.11) + PyTorch (float32 default). Type blocks may use TypeScript-style for clarity; implement with Python dataclasses and torch tensors.
+
+## Running The CLI
+
+- Install (recommended):
+  - `pip install -e .` from repo root (provides `nanoBragg` console script).
+- Run (installed):
+  - `nanoBragg -hkl P1.hkl -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -floatfile out.bin`
+- Run (without install):
+  - `PYTHONPATH=src python -m nanobrag_torch -hkl P1.hkl -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -floatfile out.bin`
+- Minimal quick test (no HKL):
+  - `nanoBragg -default_F 1 -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -detpixels 128 -pgmfile test.pgm`
+
+Notes
+- Entry point: `src/nanobrag_torch/__main__.py` (module runner `python -m nanobrag_torch`).
+- Required inputs: provide `-hkl` (or existing `Fdump.bin`) or set `-default_F > 0`, and either `-mat` (MOSFLM A*) or `-cell`.
+[2025-10-07T13:24:14] tokens used: 46,109
+
+[2025-10-07T13:24:16] thinking
+
+**Continuing to review configuration mapping docs**
+[2025-10-07T13:24:17] exec bash -lc "sed -n '1,200p' docs/development/c_to_pytorch_config_map.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:24:18] bash -lc "sed -n '1,200p' docs/development/c_to_pytorch_config_map.md" succeeded in 683ms:
+# C-CLI to PyTorch Configuration Map
+
+## Critical Importance Notice
+
+**This document is the authoritative source of truth for configuration parity between nanoBragg.c and the PyTorch implementation.**
+
+Before writing any test or implementation that involves C-code validation, you **MUST** consult this document. Failure to ensure 1:1 configuration parity is the most common source of bugs, particularly with:
+- Implicit pivot mode logic
+- Convention-dependent beam center calculations
+- Rotation axis defaults
+- Unit conversions
+
+## Quick Reference Table
+
+### Crystal Parameters
+
+| C-CLI Flag | PyTorch Config Field | C Variable | Units/Convention | Critical Notes |
+|------------|---------------------|------------|------------------|----------------|
+| `-cell a b c al be ga` | `CrystalConfig.cell_a/b/c/alpha/beta/gamma` | `a[0], b[0], c[0], alpha, beta, gamma` | Å and degrees → radians | Must convert degrees to radians internally |
+| `-N <val>` | `CrystalConfig.N_cells` | `Na, Nb, Nc` | Number of unit cells | Sets all three axes to same value |
+[2025-10-07T13:24:18] tokens used: 51,441
+
+[2025-10-07T13:24:20] thinking
+
+**Seeking debugging documentation**
+[2025-10-07T13:24:22] exec bash -lc "sed -n '1,200p' docs/debugging/debugging.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:24:22] bash -lc "sed -n '1,200p' docs/debugging/debugging.md" succeeded in 700ms:
+# nanoBragg PyTorch Debugging Guidelines
+
+**Version:** 1.1  
+**Date:** 2024-07-25  
+**Owner:** PyTorch Development Team
+
+## Overview
+
+This document outlines the debugging methodology and tools for the nanoBragg PyTorch implementation. The debugging approach is built around a parallel trace comparison between the C code and the PyTorch implementation to ensure correctness and facilitate rapid issue resolution.
+
+## Core Debugging Philosophy
+
+### Parallel Trace Comparison Rule
+
+**CRITICAL:** All debugging of physics discrepancies MUST begin with a parallel trace comparison. This involves:
+1. Generating a detailed, step-by-step log of intermediate variables from the original C code for a specific pixel (the "Golden Trace").
+2. Generating an identical log from the PyTorch implementation using `scripts/debug_pixel_trace.py`.
+3. Comparing these two logs line-by-line to find the first point of divergence.
+
+This methodology is mandatory to avoid guesswork and ensure bugs are found deterministically.
+[2025-10-07T13:24:22] tokens used: 55,769
+
+[2025-10-07T13:24:24] thinking
+
+**Checking for testing strategy document**
+[2025-10-07T13:24:25] exec bash -lc "sed -n '1,200p' docs/development/testing_strategy.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:24:26] bash -lc "sed -n '1,200p' docs/development/testing_strategy.md" succeeded in 686ms:
+# nanoBragg PyTorch Testing Strategy
+
+**Version:** 1.1  
+**Date:** 2024-07-25  
+**Owner:** [Your Name/Team]
+
+## 1. Introduction & Philosophy
+
+This document outlines the comprehensive testing strategy for the PyTorch implementation of nanoBragg. The primary goal is to ensure that the new application is a correct, verifiable, and trustworthy scientific tool.
+Our testing philosophy is a three-tiered hybrid approach, designed to build confidence layer by layer:
+
+1. **Tier 1: Translation Correctness:** We first prove that the PyTorch code is a faithful, numerically precise reimplementation of the original C code's physical model. The C code is treated as the "ground truth" specification.
+2. **Tier 2: Gradient Correctness:** We then prove that the new differentiable capabilities are mathematically sound.
+3. **Tier 3: Scientific Validation:** Finally, we validate the model against objective physical principles.
+
+All tests will be implemented using the PyTest framework.
+
+### 1.4 PyTorch Device & Dtype Discipline
+
+- **Device-neutral code:** Every PyTorch path MUST operate correctly on both CPU and CUDA tensors and across supported dtypes. Do not hard-code `.cpu()`/`.cuda()` calls, create CPU-only constants, or assume float64 execution when the caller may supply float32/half tensors.
+[2025-10-07T13:24:26] tokens used: 58,024
+
+[2025-10-07T13:24:28] thinking
+
+**Searching for fix_plan documentation**
+[2025-10-07T13:24:28] exec bash -lc "sed -n '1,200p' fix_plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:24:29] bash -lc "sed -n '1,200p' fix_plan.md" exited 1 in 675ms:
+sed: fix_plan.md: No such file or directory
+[2025-10-07T13:24:29] tokens used: 64,424
+
+[2025-10-07T13:24:31] thinking
+
+**Checking for fix_plan documentation**
+[2025-10-07T13:24:32] exec bash -lc ls in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:24:33] bash -lc ls succeeded in 733ms:
+1.0
+1e6
+A.mat
+AGENTS.md
+AT012_TRACE_ANALYSIS.md
+CLAUDE.md
+COMMIT_MESSAGE.md
+DEBUGGING_NIGHTMARE_PREVENTION_TOOLKIT.md
+FINAL_DIAGNOSIS_REPORT.md
+HYPOTHESIS_TESTING_RESULTS.md
+HYPOTHESIS_TEST_RESULTS.md
+LICENSE
+Makefile
+P1.hkl
+PARALLEL_TEST_COMMANDS.md
+PARALLEL_VALIDATION_ACCEPTANCE_TESTS.md
+PERFORMANCE_ANALYSIS.md
+PHASE_4_1_DIAGNOSTIC_REPORT.md
+PHASE_5_FINAL_VALIDATION_REPORT.md
+PHASE_5_IMPLEMENTATION_SUMMARY.md
+[2025-10-07T13:24:33] tokens used: 67,851
+
+[2025-10-07T13:24:35] thinking
+
+**Checking fixplan filename**
+[2025-10-07T13:24:35] exec bash -lc "sed -n '1,200p' fixplan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:24:36] bash -lc "sed -n '1,200p' fixplan.md" succeeded in 717ms:
+# Fix Plan: Detector Geometry Correlation Issue
+
+**Date**: January 20, 2025  
+**Issue**: PyTorch vs C reference correlation = 0.040 (target > 0.999)  
+**Status**: Critical - Blocking validation of detector geometry implementation  
+
+## Executive Summary
+
+Despite fixing C reference parameter bugs (-twotheta, -Xbeam/-Ybeam), the correlation between PyTorch and C implementations remains unacceptably low (0.040). The detector geometry appears correct (basis vectors match), suggesting the issue lies deeper in the simulation pipeline.
+
+## Current State Analysis
+
+### What We Know Works
+- ✅ Baseline configuration (no tilt): 0.999 correlation
+- ✅ Detector basis vectors: Identical between C and PyTorch
+- ✅ pix0_vector calculation: Matches between implementations
+- ✅ C parameter mapping: Fixed (-twotheta, -Xbeam/-Ybeam)
+
+### What Fails
+- ❌ Tilted configuration (twotheta=20°): 0.040 correlation
+[2025-10-07T13:24:36] tokens used: 69,449
+
+[2025-10-07T13:24:39] thinking
+
+**Checking for fix_plan documentation**
+[2025-10-07T13:24:41] exec bash -lc "sed -n '1,200p' docs/fix_plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:24:41] bash -lc "sed -n '1,200p' docs/fix_plan.md" succeeded in 737ms:
+# Fix Plan Ledger
+
+**Last Updated:** 2025-10-17 (galph loop)
+**Active Focus:**
+- ROUTING: Close the reopened guard plan by capturing a fresh regression audit referencing commit `c49e3be` and re-confirming the guarded `loop.sh` flow (`plans/active/routing-loop-guard/plan.md` Phases A–C) before automation resumes.
+- ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md`, then drive Phase B guard work (B2–B4) and new task B5 to add `supervisor.sh` to docs/index.md so Protected-Asset policy covers the script before automation runs again.
+- AT-012: Plan archived (`plans/archive/at-parallel-012-plateau-regression/plan.md`); monitor for regressions using `reports/2025-10-AT012-regression/phase_c_validation/` artifacts and re-open only if peak matches drop below spec.
+- GRADIENT: Execute `plans/active/gradcheck-tier2-completion/plan.md` Phase A (A1–A3 baseline audit + env alignment) before adding misset/beam gradchecks from Phases B/C; once pass logs exist, close `[AT-TIER2-GRADCHECK]` with Phase D documentation updates.
+- DTYPE: ✅ Complete. Plan archived to `plans/archive/dtype-default-fp32/`. All phases (A-D) finished; float32 defaults documented in arch.md, pytorch_runtime_checklist.md, CLAUDE.md, prompts/debug.md.
+- PERF: Land plan task B7 (benchmark env toggle fix), rerun Phase B6 ten-process reproducibility with the new compile metadata, capture the weighted-source parity memo feeding C5, then execute Phase C diagnostics (C1/C2 plus C8/C9 pixel-grid & rotated-vector cost probes, and new C10 mosaic RNG timing) ahead of Phase D caching work (D5/D6/D7) and detector-scalar hoisting (D8).
+
+## Index
+| ID | Title | Priority | Status |
+| --- | --- | --- | --- |
+| [PROTECTED-ASSETS-001](#protected-assets-001-docsindexmd-safeguard) | Protect docs/index.md assets | Medium | in_progress |
+| [REPO-HYGIENE-002](#repo-hygiene-002-restore-canonical-nanobraggc) | Restore canonical nanoBragg.c | Medium | in_progress |
+| [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
+| [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | in_progress |
+| [VECTOR-TRICUBIC-001](#vector-tricubic-001-vectorize-tricubic-interpolation-and-detector-absorption) | Vectorize tricubic interpolation and detector absorption | High | in_progress |
+| [ABS-OVERSAMPLE-001](#abs-oversample-001-fix-oversample_thick-subpixel-absorption) | Fix -oversample_thick subpixel absorption | High | in_planning |
+[2025-10-07T13:24:41] tokens used: 82,251
+
+[2025-10-07T13:24:43] thinking
+
+**Identifying key documentation files**
+[2025-10-07T13:24:46] exec bash -lc "sed -n '1,200p' galph_memory.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:24:46] bash -lc "sed -n '1,200p' galph_memory.md" succeeded in 685ms:
+## 2025-09-30 (loops 1-4 summary)
+- Established parity backlog: AT-020/021/022/024 failing; created first supervisor plan for AT-021 and enforced prompts/debug.md routing.
+- Diagnosed AT-024 random misset cap mismatch (π/2 vs 90 radians) and opened dedicated plan; insisted Ralph stop verification-only loops.
+- Flagged torch.compile warm-up overhead (per-instance compilation, inline tensor factories) and opened AT-012 rotation parity plan (Phases A–E).
+- Documented performance hotspots (`_compute_physics_for_position` guard tensors, `Crystal.compute_cell_tensors` clamps) and chronic dirty worktree artifacts blocking `git pull --rebase`.
+
+## 2025-09-30 (loops 5-10 summary)
+- Authored repo hygiene checklist (REPO-HYGIENE-002) to undo accidental `golden_suite_generator/nanoBragg.c` churn and purge stray reports.
+- Created PERF-PYTORCH-004 plan to hoist constants, introduce compile caching, and remove Dynamo graph breaks; reiterated need for prompts/debug.md while parity fails.
+- Repeatedly documented routing violations from Ralph and emphasized restoring Core Rule #13 metric duality after WIP commit 058986f swapped `V_actual` for formula volume.
+- Noted that `_compute_physics_for_position` still recompiles each Simulator and that benchmarks in `reports/benchmarks/20250930-004916/` show ≥200× slowdown vs C for small detectors.
+
+## 2025-09-30 (ralph debugging loop — AT-012 float32 regression)
+- **Context**: AT-PARALLEL-012 test_simple_cubic_correlation failing (43/50 peaks matched, need ≥95%) after DTYPE-DEFAULT-001 (commit 8c2ceb4) switched simulator to native float32.
+- **Investigation**:
+  * Reproduced: 43/50 peaks matched (86%), corr≈1.0 (perfect physics) ✅
+  * Parity matrix test: PASSES perfectly ✅ (live C↔Py comparison with current float32)
+  * **Root cause identified**: PyTorch float32 produces 7× more unique values (4901 vs C's 669) in hot pixels, fragmenting intensity plateaus. Peak detection algorithm (scipy.ndimage.maximum_filter) is sensitive to plateau structure.
+  * Parallel comparison: C float32 beam center (20×20 ROI) has 91 unique values; PyTorch has 331 (3.6× fragmentation). Max absolute diff tiny (0.0017).
+  * **First Divergence**: Numerical accumulation patterns differ (likely FMA, compiler opts, vectorized accumulation order, or torch.compile kernel fusion) → perfect correlation but incompatible plateau structure.
+[2025-10-07T13:24:46] tokens used: 85,343
+
+[2025-10-07T13:24:48] thinking
+
+**Continuing exploration**
+[2025-10-07T13:24:49] exec bash -lc "sed -n '200,400p' galph_memory.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:24:50] bash -lc "sed -n '200,400p' galph_memory.md" succeeded in 855ms:
+## 2025-10-02 (galph loop X addendum)
+- Reminder: `./fix_plan.md` is now a symlink to `docs/fix_plan.md`; always edit the canonical file and avoid recreating standalone copies.
+
+## 2025-10-02 (galph loop Y)
+- Sync: `git pull --rebase --autostash` required because existing working-tree edits blocked the standard pull; re-applied cleanly with no conflicts.
+- Deep dive: AT-012 plan still lacks Phase A artifacts; `Simulator.__init__` multi-source branch raises when `source_wavelengths` is omitted; repeated `torch.compile(...)` wrapping per instance keeps warm-up cost high and still builds guard tensors on the hot path.
+- Planning: Added Phase 3 task P3.0 in `plans/active/perf-pytorch-compile-refactor/plan.md` (multi-source defaults) and cross-referenced it in `docs/fix_plan.md` so Ralph must fix defaults before benchmarking.
+- Coin flip (heads): Reviewed commits `78be581`, `51110d4`, `cb6a761`, `a661afc`; GPU neutrality fix still leaves incident-beam tensors CPU-bound, benchmark tooling remains broken, and multi-source crash persists.
+- Next for Ralph: Execute AT-012 Plan Phase A/B (esp. dtype experiment), implement PERF P3.0 alongside benchmark fixes, and address torch.compile rewrap/device-neutrality backlog before new perf claims.
+
+## 2025-10-02 (galph loop Z)
+- Sync: `git pull --rebase` completed cleanly; no stash needed.
+- Findings vs goals:
+  * Performance: `src/nanobrag_torch/simulator.py:786-804` applies polarization after the multi-source sum using `self.incident_beam_direction`, so divergent beams never get per-source Kahn weighting; this breaks AT-SRC-001 parity and blocks trustworthy benchmarks.
+  * Stability: same file (`lines 401-414`) still dereferences `beam_config.source_wavelengths` without a fallback; multi-source configs built via CLI helpers continue to crash until defaults redirect to `wavelength_A`.
+  * Peak-match initiative stagnates—`plans/active/at-parallel-012-peakmatch/plan.md` remains untouched (Phase A checklist all [ ]), so no new artifacts exist to drive the >95% threshold fix.
+  * Tooling: `benchmark_detailed.py` issues logged earlier remain; perf plan must still harden CLI + totals before fresh numbers mean anything.
+  * Reminder: accidentally launched Python without `KMP_DUPLICATE_LIB_OK` during a quick tensor truthiness check—error reproduced, reran with env set; worth reinforcing to Ralph.
+- Actions:
+  * Updated `plans/active/perf-pytorch-compile-refactor/plan.md` (Phase 3) with task P3.0b to fix per-source polarization/weighting semantics and noted issue in discovered-issues list.
+[2025-10-07T13:24:50] tokens used: 93,750
+
+[2025-10-07T13:24:58] thinking
+
+**Preparing for codebase analysis**
+[2025-10-07T13:25:01] exec bash -lc 'rg -n "CLI-FLAGS-003" -n docs/fix_plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:25:02] bash -lc 'rg -n "CLI-FLAGS-003" -n docs/fix_plan.md' succeeded in 881ms:
+22:| [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | in_progress |
+450:## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
+[2025-10-07T13:25:02] tokens used: 96,620
+
+[2025-10-07T13:25:05] thinking
+
+**Reading section**
+[2025-10-07T13:25:06] exec bash -lc "sed -n '450,560p' docs/fix_plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:25:07] bash -lc "sed -n '450,560p' docs/fix_plan.md" succeeded in 738ms:
+## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
+- Spec/AT: specs/spec-a-cli.md flag catalogue, docs/architecture/detector.md §5 (pix0 workflow), docs/development/c_to_pytorch_config_map.md (pivot rules), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860
+- Priority: High
+- Status: in_progress (Phases A–H complete; K3a/K3b/K3d landed via Attempts #43–44, pending per-φ evidence + normalization closure)
+- Owner/Date: ralph/2025-10-05
+- Plan Reference: `plans/active/cli-noise-pix0/plan.md`
+- Reproduction (C & PyTorch):
+  * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
+  * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+- First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+- Next Actions (2025-11-21 refresh → galph):
+ 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+ 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+ 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
+- Attempts History:
+  * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+    Metrics: Planning-only (no tests executed).
+    Artifacts:
+      - `plans/active/cli-noise-pix0/plan.md` — New Phase L3k section outlining implementation gates.
+      - `docs/fix_plan.md` — Next Actions retargeted to Phase L3k; checklist referenced.
+[2025-10-07T13:25:07] tokens used: 133,451
+
+[2025-10-07T13:25:09] thinking
+
+**Checking CLI plan file**
+[2025-10-07T13:25:10] exec bash -lc "sed -n '1,200p' plans/active/cli-noise-pix0/plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:25:10] bash -lc "sed -n '1,200p' plans/active/cli-noise-pix0/plan.md" succeeded in 682ms:
+## Context
+- Initiative: CLI Parity for nanoBragg PyTorch vs C (supports long-term goal in prompts/supervisor.md)
+- Phase Goal: Accept `-nonoise` and `-pix0_vector_mm` flags with C-equivalent semantics so the parallel comparison command in prompts/supervisor.md executes end-to-end.
+- Dependencies: specs/spec-a-cli.md §§3.2–3.4, docs/architecture/detector.md §5, docs/development/c_to_pytorch_config_map.md (detector pivot + noise), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860 (flag behavior), docs/debugging/detector_geometry_checklist.md (pix0 validation), docs/development/testing_strategy.md §2 (CLI parity tests).
+- Current gap snapshot (2025-10-18 refresh): Phase H4 parity landed (Attempt #25) with pix0 deltas < 2e-8 m and regression tolerances tightened; the remaining blocker before executing the supervisor command end-to-end is Phase I polarization alignment.
+- Gap snapshot update (2025-10-19): Attempt #27 parity run reveals 1.24538e5× intensity scaling mismatch despite polarization fix; Phases J–L track the normalization diagnosis, fix, and closure required before long-term Goal #1 completes.
+- Gap snapshot refresh (2025-10-22): Attempt #31 restored C precedence for custom detector vectors (pix0 override now gated again). Outstanding work: H5c PyTorch traces and Phase K normalization to eliminate the `F_latt`-driven intensity gap.
+- Gap snapshot update (2025-10-24): Attempt #35 reran the PyTorch trace harness post-unit-fix; metrics still show |Δpix0| ≈ 1.145 mm, so a fresh diagnostics phase is required before resuming normalization work.
+- Gap snapshot refresh (2025-10-26): Attempt #40 completed Phase H6f — custom detector vectors now force SAMPLE pivot parity, parity visuals relocated under `reports/2025-10-cli-flags/phase_h6/visuals/`, and targeted regression tests cover pivot selection. Outstanding work at that point: Phase H6g trace rerun to confirm |Δpix0| < 5e-5 m before returning to Phase K scalings.
+- Gap snapshot update (2025-10-27): Attempt #41 validated Phase H6g — SAMPLE pivot parity holds with pix0 deltas ≤2.85 µm, beam center deltas 0.0, and supporting artifacts under `reports/2025-10-cli-flags/phase_h6/post_fix/`. Remaining blockers: rerun the scaling chain (Phase K2), execute the scaling regression + doc updates (Phase K3), then resume Phase L parity once normalization matches C.
+- Gap snapshot refresh (2025-11-09): Attempt #49 closed Phase K3g3 — `tests/test_cli_scaling.py::test_f_latt_square_matches_c` now passes after isolating the HKL cache, but the full supervisor command still shows correlation ≈ 0.9965 and sum_ratio ≈ 1.26×10⁵. Need fresh HKL/normalization parity evidence (Phase L) before rerunning nb-compare.
+- Gap snapshot refresh (2025-11-10): Attempt #56 (evidence loop) proved the existing `TRACE_PY` path prints placeholder scaling data (`capture_fraction 1`, `polar 1.0`, `steps`=φ-steps only). Without exposing the real per-pixel factors computed in `Simulator.run`, Phase L2b cannot produce a trustworthy PyTorch trace. Instrumentation must pull actual values from `_apply_detector_absorption`, polarization kernels, and total-step calculation before rerunning the harness.
+- Gap snapshot update (2025-10-17): Attempt #53 (Phase L1c) realigned HKL Fdump I/O with C padding (`read_fdump`/`write_fdump`) and added regression coverage (`TestHKLFdumpParity::test_scaled_hkl_roundtrip`) with max |ΔF| = 0.0. Proceed to L1d to regenerate parity metrics before reviving scaling traces.
+- Gap snapshot update (2025-11-11): Discovered the trace harness omitted `-beam_vector`, `-flux`, and `-beamsize`, forcing oversample=4 and a +Z beam; Py traces zeroed `F_cell` and inflated `steps`. Marked unresolved pending harness fix.
+- Gap snapshot refresh (2025-11-12): Attempt #66 (commit 1d2e6ac) completed Phase L2b0 — the trace harness now feeds the full supervisor flag set, and the refreshed `trace_py_scaling.log` confirms `steps=10`, `fluence≈1.0e24`, and `r_e^2` parity with C. TRACE_PY still reports `I_before_scaling NOT_EXTRACTED`, `polar=0`, and `I_pixel_final=0`, so Phase L2b instrumentation must surface the real polarization/absorption tensors before we can quantify the K3e k_frac drift.
+- Gap snapshot update (2025-11-13): Latest harness rerun aborted because `trace_harness.py` still expected the legacy `read_hkl_file` return tuple (see `trace_py_fullrun.log`). **Resolved in Attempt #74, which updated the harness to the `(F_grid, metadata)` signature.**
+- Gap snapshot refresh (2025-11-14): Attempt #73 showed `Crystal.hkl_data` unset (leading to `F_cell=0`), keeping L2b open; **Attempt #74 fixed this by wiring the HKL tensor/metadata before Simulator construction.**
+- Gap snapshot refresh (2025-11-15): Attempts #69/#71/#74 finished Phase L2 — TRACE_PY now reports real scaling factors, `scaling_audit_summary.md` flags `I_before_scaling` as the lone divergence, and C shows `F_cell=190.27` for hkl=(-7,-1,-14) while PyTorch remains at 0. Next phase focuses on understanding how C derives that amplitude (likely via generated `Fdump.bin`) before touching normalization code.
+- Gap snapshot refresh (2025-11-17): Attempt #77 reran Phase L3a probe on the current workstation, logged `probe_20251117.log` (F_cell=190.270004 for hkl=(-7,-1,-14)), and confirmed scaled.hkl already covers the supervisor reflection. Remaining blockers shift to wiring that data through the harness/CLI path (Phase L3c onward).
+- Gap snapshot update (2025-11-17 late): Attempt #78 completed the Phase L3c harness rerun; TRACE_PY now reports F_cell=190.27 with matching metadata, so the immediate focus moves to auditing CLI ingestion (L3c) and adding regression coverage (L3d).
+[2025-10-07T13:25:10] tokens used: 135,976
+
+[2025-10-07T13:25:15] thinking
+
+**Preparing analysis and initial steps**
+[2025-10-07T13:25:16] exec bash -lc "python - <<'PY'
+import random
+print(random.choice(['heads','tails']))
+PY" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:25:17] bash -lc "python - <<'PY'
+import random
+print(random.choice(['heads','tails']))
+PY" succeeded in 736ms:
+tails
+[2025-10-07T13:25:17] tokens used: 140,565
+
+[2025-10-07T13:25:23] thinking
+
+**Evaluating existing plans and focus issues**
+[2025-10-07T13:25:24] exec bash -lc 'ls plans/active' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:25:25] bash -lc 'ls plans/active' succeeded in 699ms:
+cli-noise-pix0
+gradcheck-tier2-completion
+oversample-thick-subpixel.md
+perf-pytorch-compile-refactor
+routing-loop-guard
+source-weight-normalization.md
+supervisor-loop-guard
+unification.md
+vectorization.md
+[2025-10-07T13:25:25] tokens used: 143,941
+
+[2025-10-07T13:25:27] thinking
+
+**Reviewing vectorization approach**
+[2025-10-07T13:25:30] exec bash -lc "sed -n '1,200p' plans/active/vectorization.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:25:30] bash -lc "sed -n '1,200p' plans/active/vectorization.md" succeeded in 710ms:
+## Context
+- Initiative: PERF-PYTORCH-004 vectorization backlog; supports long-term goal "Parallel parity + performance" from docs/fix_plan.md.
+- Phase Goal: Deliver a production-ready, fully vectorized tricubic interpolation pipeline (gather + polynomial evaluation) and follow with detector absorption vectorization without regressing physics, gradients, or device neutrality.
+- Dependencies: specs/spec-a-core.md §4 (Structure factors), specs/spec-a-parallel.md §2.3 (Interpolation acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4, docs/architecture/c_code_overview.md (tricubic routines), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, `nanoBragg.c` lines 2604–3278 (polin3/polin2/polint + detector absorption), `tests/test_at_str_002.py`, `tests/test_at_abs_001.py`, `reports/benchmarks/20250930-165726-compile-cache/` (current performance references). No dedicated tricubic/absorption microbenchmarks exist yet; Phase A will author reusable harnesses under `scripts/benchmarks/` so future loops can rerun baselines without ad-hoc snippets.
+- Gap Snapshot (2025-11-21): Phase C1 batched gather is COMPLETE (Attempts #4/#5; artifacts under `reports/2025-10-vectorization/phase_c/`). Remaining blockers before polynomial work are C2 (OOB fallback validation) and C3 (shape assertions + device-aware caching).
+- Supervisory note (2025-11-21): Keep the Phase B design memo (§2–§4) and `gather_notes.md` as the contract; ensure fix_plan next actions emphasise C2/C3 artifacts landing in `reports/2025-10-vectorization/phase_c/`.
+
+### Phase A — Evidence & Baseline Capture
+Goal: Document the current (non-vectorized) behavior, warnings, and performance so we can prove the impact of the refactor.
+Prereqs: Editable install (`pip install -e .`), C binary available for parity (when needed), environment variable `KMP_DUPLICATE_LIB_OK=TRUE`.
+Exit Criteria: Baseline pytest log, timing snippet results, and notes stored under `reports/2025-10-vectorization/phase_a/` with references in docs/fix_plan.md Attempt history.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| A1 | Re-run tricubic acceptance tests | [D] | ✅ Completed 2025-10-06 (`reports/2025-10-vectorization/phase_a/test_at_str_002.log`, `.collect.log`, `test_at_abs_001.log`, `env.json`). Re-run only if dependencies change or new warnings appear. |
+| A2 | Measure current tricubic runtime | [D] | ✅ Completed 2025-10-07 (`scripts/benchmarks/tricubic_baseline.py` created; CPU & CUDA baselines captured in `phase_a/tricubic_baseline.md` and `phase_a/tricubic_baseline_results.json`). Key finding: scalar-only implementation @ ~1.4 ms/call (CPU), ~5.5 ms/call (CUDA). |
+| A3 | Record detector absorption baseline | [D] | ✅ Completed 2025-10-07 (`scripts/benchmarks/absorption_baseline.py` created; CPU & CUDA baselines captured in `phase_a/absorption_baseline.md` and `phase_a/absorption_baseline_results.json`). GPU shows 5.4× speedup for 512² detector. |
+
+### Phase B — Tricubic Vectorization Design
+Goal: Lock the tensor-shape design, broadcasting plan, and gradient checks before code changes.
+[2025-10-07T13:25:30] tokens used: 161,057
+
+[2025-10-07T13:25:36] thinking
+
+**Evaluating and updating plans**
+
+I’m reviewing the current state of our long-term goals and plans, especially around CLI support and vectorization tasks. I'll check if the existing vectorization plan is still valid or needs updates and assess if the plan for CLI features including specific flags is progressing well. I also want to verify the status of related fix_plan entries to decide what should be the immediate focus.
+[2025-10-07T13:25:39] exec bash -lc 'rg -n "VECTOR-TRICUBIC-001" docs/fix_plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:25:39] bash -lc 'rg -n "VECTOR-TRICUBIC-001" docs/fix_plan.md' succeeded in 689ms:
+19:| [VECTOR-TRICUBIC-001](#vector-tricubic-001-vectorize-tricubic-interpolation-and-detector-absorption) | Vectorize tricubic interpolation and detector absorption | High | in_progress |
+1926:## [VECTOR-TRICUBIC-001] Vectorize tricubic interpolation and detector absorption
+[2025-10-07T13:25:39] tokens used: 173,560
+[2025-10-07T13:25:42] exec bash -lc "sed -n '1926,2100p' docs/fix_plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:25:43] bash -lc "sed -n '1926,2100p' docs/fix_plan.md" succeeded in 664ms:
+## [VECTOR-TRICUBIC-001] Vectorize tricubic interpolation and detector absorption
+- Spec/AT: specs/spec-a-core.md §4 (structure factor sampling), specs/spec-a-parallel.md §2.3 (tricubic acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4 (vectorization strategy), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, nanoBragg.c lines 2604–3278 (polin3/polin2/polint) and 3375–3450 (detector absorption loop).
+- Priority: High
+- Status: in_progress (Phases A–B complete; Phase C implementation pending)
+- Owner/Date: galph/2025-10-17
+- Plan Reference: `plans/active/vectorization.md`
+- Reproduction (C & PyTorch):
+  * PyTorch baseline tests: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py tests/test_at_abs_001.py -v`
+  * Optional microbenchmarks (to be created per plan Phase A): `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/sample_tricubic_baseline.py`
+  * Shapes/ROI: 256² & 512² detectors for microbench; oversample 1; structure-factor grid enabling tricubic.
+- First Divergence (if known): Current tricubic path drops to nearest-neighbour fallback for batched pixel grids, emitting warnings and forfeiting accuracy/performance; detector absorption still loops over `thicksteps`, preventing full vectorization and creating hotspots in profiler traces (see reports/benchmarks/20250930-165726-compile-cache/analysis.md).
+- Next Actions (2025-11-21 refresh):
+ 1. Phase C2 — add/extend the targeted pytest (`tests/test_tricubic_vectorized.py::test_oob_warning_single_fire`) to confirm the warning fires once and interpolation disables; store the `pytest -k oob_warning -v` log under `reports/2025-10-vectorization/phase_c/test_tricubic_vectorized.log`.
+ 2. Phase C3 — add shape assertions + device-aware caching, record findings in `phase_c/implementation_notes.md`, and attach the post-assertion `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py::test_tricubic_interpolation_enabled -v` output as evidence.
+ 3. Phase C close-out — after C2/C3 artifacts land, update this plan and the fix_plan attempts with the new evidence before scheduling Phase D polynomial vectorization.
+- Attempts History:
+  * [2025-10-06] Attempt #1 (ralph loop) — Result: **Phase A1 COMPLETE** (test collection & execution baseline captured). All tricubic and absorption tests passing.
+    Metrics: AT-STR-002: 3/3 tests passed in 2.12s (test_tricubic_interpolation_enabled, test_tricubic_out_of_bounds_fallback, test_auto_enable_interpolation). AT-ABS-001: 5/5 tests passed in 5.88s. Collection: 3 tricubic tests found.
+    Artifacts:
+      - `reports/2025-10-vectorization/phase_a/test_at_str_002.collect.log` — Test collection output confirming 3 tests collected
+[2025-10-07T13:25:43] tokens used: 176,381
+
+[2025-10-07T13:26:01] thinking
+
+**Assessing focus issue and documentation needs**
+
+I'm evaluating whether a new plan is necessary and deciding to focus on reviewing and housekeeping around the CLI flags issue (CLI-FLAGS-003). Since coding changes aren't allowed, I'll check plan alignment, fix_plan consistency, and relevant documentation—starting with opening the CLI spec to prepare for deeper analysis.
+[2025-10-07T13:26:02] exec bash -lc "sed -n '1,200p' specs/spec-a-cli.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:26:03] bash -lc "sed -n '1,200p' specs/spec-a-cli.md" succeeded in 967ms:
+# nanoBragg Spec A — CLI Binding
+
+This shard documents the command-line interface, header precedence, and CLI-focused acceptance tests. It should be read alongside [spec-a-core.md](spec-a-core.md) for the simulation engine requirements and [spec-a-parallel.md](spec-a-parallel.md) for conformance profiles.
+
+CLI Interface (Normative)
+
+All options recognized by this code version are enumerated below. Values with units are converted
+immediately as specified in Units & Conversions. Unsupported flags are not recognized even if
+present in header comments.
+
+- Input files:
+    - -hkl <file>: Text file of “h k l F” (integers h,k,l; real F). Required unless Fdump.bin exists
+or -default_F used.
+    - -mat <file>: 3×3 MOSFLM-style A matrix (reciprocal cell vectors scaled by 1/λ). Required
+unless -cell used.
+    - -cell a b c alpha beta gamma: Direct cell in Å and degrees; alternative to -mat.
+    - -img <file>: Read SMV header; may set fpixels, spixels, pixel size (mm), distance (mm), close
+distance (mm), wavelength (Å), beam centers (mm), ORGX/ORGY (pixels), φ start (deg), oscillation
+range (deg), 2θ (deg). Image data is read but not used.
+    - -mask <file>: Read SMV mask; uses same headers to initialize geometry as -img. Zero-valued
+[2025-10-07T13:26:03] tokens used: 180,951
+
+[2025-10-07T13:26:05] thinking
+
+**Checking architecture documentation**
+[2025-10-07T13:26:06] exec bash -lc "sed -n '1,200p' docs/architecture/detector.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:26:07] bash -lc "sed -n '1,200p' docs/architecture/detector.md" succeeded in 701ms:
+# Detector Architecture Deep Dive
+
+**Status:** Authoritative Specification  
+**Last Updated:** Phase 5 Implementation
+
+**⚠️ CRITICAL:** This component uses a [hybrid unit system](#61-critical-hybrid-unit-system-overrides-global-rule) that overrides the global Angstrom-only rule.
+
+This document provides the complete technical specification for the Detector component. For global project rules on units and coordinate systems, see [Global Conventions](./conventions.md).
+
+---
+
+## 1. Overview
+
+The Detector class manages the detector geometry for diffraction simulations, including:
+- Position and orientation (basis vectors)
+- Pixel coordinate generation and caching
+- Support for various detector conventions (MOSFLM, XDS)
+- Dynamic geometry with rotations and tilts
+- Full differentiability for optimization workflows
+
+[2025-10-07T13:26:07] tokens used: 187,777
+
+[2025-10-07T13:26:15] thinking
+
+**Reviewing plan consistency and documentation**
+
+I'm thinking about checking other relevant docs like the CLI-related ones, though it might not be necessary right now. The next step is to analyze the fix_plan deeply to see if it aligns with the Mode and Action type guidelines. I'll look for inconsistencies, especially around Phase L3k tasks, and update the fix_plan or related docs to keep everything consistent and properly tracked.
+[2025-10-07T13:26:17] exec bash -lc 'rg -n "Phase L3k" -n plans/active/cli-noise-pix0/plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:26:18] bash -lc 'rg -n "Phase L3k" -n plans/active/cli-noise-pix0/plan.md' succeeded in 887ms:
+32:- Gap snapshot recap (2025-11-20 late): Attempts #86–#94 closed out Phase L3 evidence work — per-φ traces, spindle audit, MOSFLM diff, corrective memo, and `fix_checklist.md` now exist. Remaining gap is the φ-rotation implementation itself: execute the new Phase L3k gates (draft C-referenced patch → rerun per-φ harness → targeted pytest → nb-compare ROI → doc updates) before advancing to Phase L4’s supervisor-command rerun.
+274:| L3j.3 | Sync plan + fix_plan | [D] | ✅ 2025-11-21 Attempt #96: Updated `docs/fix_plan.md` CLI-FLAGS-003 with Attempt #96 entry documenting Phase L3k.1 completion (implementation memo), artifact paths, root cause analysis, proposed fix strategy, and next actions for code implementation loop. Documented Mode: Docs constraint (no code changes this loop). Updated this plan to mark L3k.1 complete. pytest --collect-only deferred to implementation loop. |
+276:### Phase L3k — φ Rotation Fix Implementation
+283:| L3k.1 | Author implementation memo + docstring reference | [D] | ✅ 2025-11-21 Attempt #96 (ralph Mode: Docs): Appended Phase L3k Implementation Memo to `mosflm_matrix_correction.md:187-297` documenting root cause (independent rotation of real+reciprocal vectors), C reference (nanoBragg.c:3044-3066), proposed fix (rotate only real, recompute reciprocal from cross products), implementation strategy (preserve vectorization/device neutrality), and verification thresholds (VG-1⇢VG-5). C-code docstring reference requirement documented for L3k.2. Artifacts: implementation memo, updated fix_plan Attempt #96, updated this plan L3j.3→[D]. Mode: Docs → no code changes; docstring addition deferred to implementation loop. |
+[2025-10-07T13:26:18] tokens used: 190,169
+
+[2025-10-07T13:26:20] thinking
+
+**Continuing to check statuses**
+[2025-10-07T13:26:21] exec bash -lc "sed -n '240,360p' plans/active/cli-noise-pix0/plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:26:21] bash -lc "sed -n '240,360p' plans/active/cli-noise-pix0/plan.md" succeeded in 709ms:
+| L1a | Run HKL ↔ Fdump parity script and capture metrics | [D] | Attempt #50 (2025-10-06) produced `summary_20251006175032.md` / `metrics_20251006175032.json`; this loop repeated the run with `Fdump_scaled_20251006175946.bin`, confirming max |ΔF|=5.22e2, 99,209 mismatched voxels, and storing `c_fdump_20251006175946.log`. Artefacts live under `reports/2025-10-cli-flags/phase_l/hkl_parity/`. |
+| L1b | Diagnose binary-layout mismatch between HKL and Fdump | [D] | ✅ Attempt #52 (2025-10-06) produced `scripts/validation/analyze_fdump_layout.py` plus `reports/2025-10-cli-flags/phase_l/hkl_parity/layout_analysis.md`. Confirmed nanoBragg writes `(h_range+2)×(k_range+2)×(l_range+2)` voxels via `for(h0=0; h0<=h_range; h0++)` loops (see `nanoBragg.c:2400-2486`), leaving 9,534 zero-padded entries. PyTorch reader must drop the padded plane per axis. |
+| L1c | Align PyTorch HKL cache reader/writer with confirmed layout | [D] | ✅ Attempt #53 (2025-10-17): Updated `src/nanobrag_torch/io/hkl.py` to honour `(range+1)` padding, added C-code docstring quotes per Rule #11, and introduced `tests/test_cli_flags.py::TestHKLFdumpParity::test_scaled_hkl_roundtrip` (max |ΔF| = 0.0, mismatches = 0). |
+| L1d | Re-run parity script after fixes and update artefacts | [D] | ✅ Attempt #54 (2025-10-17): Regenerated C cache using supervisor command flags, achieved perfect HKL parity (max |ΔF|=0.0, 0 mismatches). Artifacts: `reports/2025-10-cli-flags/phase_l/hkl_parity/{Fdump_c_20251109.bin, summary_20251109.md, metrics_20251109.json}`. Phase L2 prerequisites now met—structure factors match C exactly. |
+
+### Phase L2 — Scaling Chain Audit
+Goal: Capture a side-by-side breakdown of the intensity scaling pipeline (I_before_scaling → ω → polarization → r_e² → fluence → steps) for the supervisor command to isolate the first divergence that drives the 1.26×10⁵ sum ratio.
+Prereqs: Phase L1d artifacts in place; Ralph working under `prompts/debug.md`; C binary instrumentable via `golden_suite_generator/` per CLAUDE Rule #0.3.
+Exit Criteria: C and PyTorch traces capturing scaling factors are stored under `reports/2025-10-cli-flags/phase_l/scaling_audit/`, a comparison summary identifies the first mismatched term with quantitative deltas, and docs/fix_plan.md Attempt log references the findings.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| L2a | Instrument C scaling chain | [D] | ✅ 2025-10-06 Attempt #55: Reused existing TRACE_C hooks (nanoBragg.c 3367-3382), captured `c_trace_scaling.log` for pixel (685,1039), and recorded setup in `instrumentation_notes.md`. Artifacts live under `reports/2025-10-cli-flags/phase_l/scaling_audit/`; ready to mirror fields on the PyTorch side. |
+| L2b | Expose and log PyTorch scaling factors | [D] | ✅ Attempts #69, #72, and #74 (commits `1cf77b5`, `0f3de26`) now drive the harness through the updated HKL API, attach `crystal.hkl_data` / `crystal.hkl_metadata`, and capture live TRACE_PY output for pixel (685,1039). `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log` shows real polarization/omega/steps, and `harness_hkl_state_fixed.txt` confirms the HKL tensor lives on the simulator device. |
+| L2c | Diff traces & record first divergence | [D] | ✅ Attempt #71 refreshed `scaling_audit_summary.md` via `scripts/validation/compare_scaling_traces.py`, highlighting `I_before_scaling` as the first divergence (C=9.4365e5, Py=0) while all downstream scaling factors match within 2e-3%. This establishes that the remaining gap stems from missing structure-factor coverage rather than normalization math. |
+
+### Phase L3 — Normalization Fix Implementation
+Goal: Patch the PyTorch scaling pipeline so every factor (omega, polarization, capture_fraction, r_e², fluence, steps) matches the C implementation within 1e-6 relative error.
+Prereqs: L2 comparison summary pointing to the exact divergent factor; relevant C references documented; regression tests identified.
+Exit Criteria: PyTorch source changes with inline C-code docstring references are merged, targeted regression tests cover the corrected scaling semantics, and new artifacts demonstrate matching intermediate values. docs/fix_plan.md records the fix attempt and resulting metrics.
+[2025-10-07T13:26:21] tokens used: 196,204
+
+[2025-10-07T13:26:36] thinking
+
+**Reviewing plan and fixing inconsistencies**
+
+I'm carefully comparing the fix_plan and plan documents to spot misalignments, like outdated next actions referencing already completed phases. My main focus is updating fix_plan Next Actions to reflect the current statuses accurately, ensuring tasks like L3k.1 are removed where done, and checking for alignment with documentation and restful references. I'll gather more details from the plan (especially around L3k.2) before making edits, keeping in mind the mode is Docs and action type is Review, so thorough documentation alignment is key.
+[2025-10-07T13:26:40] exec bash -lc "sed -n '276,340p' plans/active/cli-noise-pix0/plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:26:41] bash -lc "sed -n '276,340p' plans/active/cli-noise-pix0/plan.md" succeeded in 878ms:
+### Phase L3k — φ Rotation Fix Implementation
+Goal: Implement the φ rotation correction in `Crystal.get_rotated_real_vectors`, prove parity via the established verification gates, and prepare for the supervisor-command rerun.
+Prereqs: Phase L3 instrumentation/memo/checklist complete; `fix_checklist.md` available; C trace (`c_trace_mosflm.log`) and PyTorch harness outputs captured under `reports/2025-10-cli-flags/phase_l/`.
+Exit Criteria: Code patch lands with in-code C reference per CLAUDE Rule #11, all VG-1⇢VG-5 rows in `fix_checklist.md` flipped to ✅ with artifacts stored in the designated directories, and plan/fix_plan entries updated with attempt log + metrics.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| L3k.1 | Author implementation memo + docstring reference | [D] | ✅ 2025-11-21 Attempt #96 (ralph Mode: Docs): Appended Phase L3k Implementation Memo to `mosflm_matrix_correction.md:187-297` documenting root cause (independent rotation of real+reciprocal vectors), C reference (nanoBragg.c:3044-3066), proposed fix (rotate only real, recompute reciprocal from cross products), implementation strategy (preserve vectorization/device neutrality), and verification thresholds (VG-1⇢VG-5). C-code docstring reference requirement documented for L3k.2. Artifacts: implementation memo, updated fix_plan Attempt #96, updated this plan L3j.3→[D]. Mode: Docs → no code changes; docstring addition deferred to implementation loop. |
+| L3k.2 | Implement φ rotation fix | [ ] | **BLOCKED until code-focused loop.** Modify `Crystal.get_rotated_real_vectors` (src/nanobrag_torch/models/crystal.py:976-1052) to: (1) Add mandatory C-code docstring reference per CLAUDE Rule #11 citing nanoBragg.c:3044-3066, (2) Remove independent reciprocal rotation (lines 1014-1022), (3) Add reciprocal recomputation from rotated real vectors using cross products and V_actual (after line 1012), (4) Preserve vectorization across phi/mosaic dimensions and device neutrality. Implementation strategy detailed in `mosflm_matrix_correction.md:243-265`. |
+| L3k.3 | Execute verification gates VG-1⇢VG-5 | [ ] | **BLOCKED on L3k.2 completion.** Follow `fix_checklist.md` sequentially: regenerate per-φ traces at φ=0°/0.05°/0.1° (VG-1), run `pytest tests/test_cli_scaling.py -k lattice -v` (VG-2), invoke `nb-compare --roi 100 156 100 156 --resample` with supervisor command (VG-3), audit component deltas (VG-4: b_Y, k_frac, F_latt, I_before_scaling), update docs (VG-5). Store artifacts under `reports/2025-10-cli-flags/phase_l/rot_vector/per_phi/`, `nb_compare_phi_fix/`, etc. Mark each checklist row ✅ after passing threshold. |
+| L3k.4 | Log Attempt + plan sync | [ ] | **BLOCKED on L3k.3 completion.** Append new Attempt entry in `docs/fix_plan.md` CLI-FLAGS-003 with metrics (correlation, sum_ratio, b_Y delta, k_frac delta from VG artifacts), reference all artifact paths (per-φ traces, pytest log, nb-compare summary, updated checklist), document observations (H5 confirmed, thresholds met), and flip L3k.1–L3k.4 rows to [D] in this plan. Update Next Actions to proceed to Phase L4 supervisor command parity rerun. |
+
+### Phase L4 — Supervisor Command Parity Rerun
+Goal: Demonstrate end-to-end parity for the supervisor command (correlation ≥ 0.9995, sum_ratio 0.99–1.01, mean_peak_distance ≤ 1 px) and close CLI-FLAGS-003.
+Prereqs: L3 validation artifacts show ≤1e-6 deltas for scaling factors; regression tests green.
+Exit Criteria: nb-compare metrics meet thresholds, artifacts stored under `reports/2025-10-cli-flags/phase_l/supervisor_command_rerun/`, docs/fix_plan.md Attempt #56 documents the pass, and this plan is ready for archival.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| L4a | Rerun supervisor command parity | [ ] | Execute the authoritative command from `reports/2025-10-cli-flags/phase_i/supervisor_command/README.md`, writing outputs to a new timestamped directory. Capture `summary.json`, stdout/stderr, and SHA256 hashes. |
+[2025-10-07T13:26:41] tokens used: 210,877
+
+[2025-10-07T13:26:49] thinking
+
+**Updating fix_plan Next Actions**
+
+I'm preparing to revise the Next Actions section in fix_plan to reflect the current blocking tasks and phases. I want to update the bullet points to mention Phase L3k.2 onward, remove outdated references, confirm consistency across related sections, and plan to use `apply_patch` to apply these edits smoothly.
+[2025-10-07T13:26:54] apply_patch auto_approved=true:
+M /Users/ollie/Documents/nanoBragg3/docs/fix_plan.md
+@@ -460,5 +460,5 @@
+ - Next Actions (2025-11-21 refresh → galph):
+- 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+- 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+- 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
++1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
++2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
++3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+ - Attempts History:
+[2025-10-07T13:26:54] apply_patch(auto_approved=true) exited 0 in 14ms:
+Success. Updated the following files:
+M docs/fix_plan.md
+[2025-10-07T13:26:54] turn diff:
+diff --git a/docs/fix_plan.md b/docs/fix_plan.md
+index 5333a6eef1c6bead4b6a8a6f88729cf9a4092ba6..cbdfb212aa0f3cae4ac78a921957e86f98574b61
+--- a/docs/fix_plan.md
++++ b/docs/fix_plan.md
+@@ -458,9 +458,9 @@
+   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+ - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+ - Next Actions (2025-11-21 refresh → galph):
+- 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+- 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+- 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
++1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
++2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
++3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+ - Attempts History:
+   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+     Metrics: Planning-only (no tests executed).
+
+[2025-10-07T13:26:54] tokens used: 215,829
+[2025-10-07T13:26:54] turn diff:
+diff --git a/docs/fix_plan.md b/docs/fix_plan.md
+index 5333a6eef1c6bead4b6a8a6f88729cf9a4092ba6..cbdfb212aa0f3cae4ac78a921957e86f98574b61
+--- a/docs/fix_plan.md
++++ b/docs/fix_plan.md
+@@ -458,9 +458,9 @@
+   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+ - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+ - Next Actions (2025-11-21 refresh → galph):
+- 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+- 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+- 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
++1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
++2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
++3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+ - Attempts History:
+   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+     Metrics: Planning-only (no tests executed).
+
+
+[2025-10-07T13:26:56] thinking
+
+**Verifying consistency before writing input.md**
+[2025-10-07T13:26:57] exec bash -lc 'git diff' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:26:58] bash -lc 'git diff' succeeded in 976ms:
+diff --git a/docs/fix_plan.md b/docs/fix_plan.md
+index 5333a6e..cbdfb21 100644
+--- a/docs/fix_plan.md
++++ b/docs/fix_plan.md
+@@ -458,9 +458,9 @@
+   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+ - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+ - Next Actions (2025-11-21 refresh → galph):
+- 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+- 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+- 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
++1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
++2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
++3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+ - Attempts History:
+   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+     Metrics: Planning-only (no tests executed).
+[2025-10-07T13:26:58] tokens used: 220,360
+[2025-10-07T13:26:58] turn diff:
+diff --git a/docs/fix_plan.md b/docs/fix_plan.md
+index 5333a6eef1c6bead4b6a8a6f88729cf9a4092ba6..cbdfb212aa0f3cae4ac78a921957e86f98574b61
+--- a/docs/fix_plan.md
++++ b/docs/fix_plan.md
+@@ -458,9 +458,9 @@
+   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+ - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+ - Next Actions (2025-11-21 refresh → galph):
+- 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+- 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+- 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
++1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
++2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
++3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+ - Attempts History:
+   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+     Metrics: Planning-only (no tests executed).
+
+
+[2025-10-07T13:27:01] thinking
+
+**Preparing supervisor instructions**
+[2025-10-07T13:27:02] exec bash -lc 'git status -sb' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:27:02] bash -lc 'git status -sb' succeeded in 760ms:
+## feature/spec-based-2...origin/feature/spec-based-2
+ M docs/fix_plan.md
+[2025-10-07T13:27:02] tokens used: 223,284
+[2025-10-07T13:27:02] turn diff:
+diff --git a/docs/fix_plan.md b/docs/fix_plan.md
+index 5333a6eef1c6bead4b6a8a6f88729cf9a4092ba6..cbdfb212aa0f3cae4ac78a921957e86f98574b61
+--- a/docs/fix_plan.md
++++ b/docs/fix_plan.md
+@@ -458,9 +458,9 @@
+   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+ - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+ - Next Actions (2025-11-21 refresh → galph):
+- 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+- 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+- 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
++1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
++2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
++3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+ - Attempts History:
+   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+     Metrics: Planning-only (no tests executed).
+
+
+[2025-10-07T13:27:18] thinking
+
+**Preparing input.md details and structure**
+[2025-10-07T13:27:19] exec bash -lc "sed -n '1,200p' input.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:27:20] bash -lc "sed -n '1,200p' input.md" succeeded in 864ms:
+Summary: Close the φ-rotation parity gap so the supervisor CLI command stops diverging and Phase L3k can move forward.
+Mode: Parity
+Focus: CLI-FLAGS-003 Handle -nonoise and -pix0_vector_mm
+Branch: feature/spec-based-2
+Mapped tests: tests/test_cli_scaling.py::TestCLIScaling::test_f_latt_square_matches_c
+Mapped tests: tests/test_cli_scaling.py::TestCLIScaling::test_per_phi_trace_alignment
+Mapped tests: tests/test_cli_scaling.py::TestCLIPivotSelection::test_sample_pivot_custom_vectors
+Mapped tests: tests/test_cli_scaling.py::TestCLIScaling::test_nb_compare_supervisor_roi
+Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/per_phi/
+Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/scaling_delta/
+Artifacts: reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/
+Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md
+Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_correction.md
+Artifacts: docs/fix_plan.md (CLI-FLAGS-003 section)
+Artifacts: scripts/validation/compare_scaling_traces.py outputs (post-fix)
+Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/archive/ (superseded traces)
+Do Now: Step 1 — Review the Phase L3k memo (`reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_correction.md`) to refresh the intended change set, thresholds, and verification requirements.
+Note: Pay attention to the Post-Implementation checklist inside the memo (VG mapping) so no verification gate is missed later.
+Do Now: Step 2 — Insert the nanoBragg.c φ-loop excerpt (lines 3006-3098) into the `get_rotated_real_vectors` docstring before any code edits to comply with CLAUDE Rule #11.
+Note: Copy the C code exactly (no paraphrasing) and keep indentation consistent with existing docstring formatting.
+[2025-10-07T13:27:20] tokens used: 224,366
+[2025-10-07T13:27:20] turn diff:
+diff --git a/docs/fix_plan.md b/docs/fix_plan.md
+index 5333a6eef1c6bead4b6a8a6f88729cf9a4092ba6..cbdfb212aa0f3cae4ac78a921957e86f98574b61
+--- a/docs/fix_plan.md
++++ b/docs/fix_plan.md
+@@ -458,9 +458,9 @@
+   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+ - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+ - Next Actions (2025-11-21 refresh → galph):
+- 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+- 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+- 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
++1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
++2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
++3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+ - Attempts History:
+   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+     Metrics: Planning-only (no tests executed).
+
+
+[2025-10-07T13:27:49] thinking
+
+**Preparing structured input rewrite**
+[2025-10-07T13:28:04] exec bash -lc "cat <<'EOF' > input.md
+Summary: Implement the φ-rotation fix so CLI parity metrics can advance to Phase L3k verification.
+Mode: Parity
+Focus: CLI-FLAGS-003 Handle -nonoise and -pix0_vector_mm
+Branch: feature/spec-based-2
+Mapped tests: tests/test_cli_scaling.py::TestCLIScaling::test_f_latt_square_matches_c
+Mapped tests: tests/test_cli_scaling.py -k lattice -v
+Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/
+Artifacts: reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/
+Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md
+Artifacts: plans/active/cli-noise-pix0/plan.md
+Artifacts: docs/fix_plan.md
+Do Now: CLI-FLAGS-003 Phase L3k.2 φ-rotation fix — env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py -k lattice -v (VG-2) after implementing per plan.
+If Blocked: Capture fresh per-φ traces via trace_harness.py and log deltas under reports/2025-10-cli-flags/phase_l/rot_vector/blockers/ before revisiting the memo.
+Priorities & Rationale:
+- plans/active/cli-noise-pix0/plan.md:276 locks L3k.2 as the gate before parity rerun; finishing it unblocks VG-1..VG-5.
+- docs/fix_plan.md:458 now targets L3k.2–L3k.4 explicitly; clearing them retires the outstanding Next Actions for long-term goal #1.
+- reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_correction.md documents the required physics change and tolerances, so implementation must trace to it.
+- specs/spec-a-cli.md:34 ensures pix0 overrides remain aligned with CUSTOM convention; φ rotation must respect that contract.
+- docs/architecture/detector.md:80 highlights pivot handling; verifying after the fix confirms pix0 stays stable.
+How-To Map:
+- env KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_l/rot_vector/trace_harness.py --phi-seq \"0.0,0.05,0.1\" --outdir reports/2025-10-cli-flags/phase_l/rot_vector/per_phi_postfix
+- env KMP_DUPLICATE_LIB_OK=TRUE python scripts/validation/compare_scaling_traces.py --c-trace reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log --py-trace reports/2025-10-cli-flags/phase_l/rot_vector/per_phi_postfix/trace_py_phi_0.00.log --outdir reports/2025-10-cli-flags/phase_l/rot_vector/scaling_delta
+- nb-compare --roi 100 156 100 156 --resample --outdir reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/ -- -mat A.mat -floatfile img.bin -hkl scaled.hkl -nonoise -nointerpolate -oversample 1 -exposure 1 -flux 1e18 -beamsize 1.0 -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080 -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866 -beam_vector 0.00051387949 0.0 -0.99999986 -Na 36 -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0
+Pitfalls To Avoid:
+- Do not edit reciprocal vectors directly after the fix; recompute via cross products to preserve metric duality.
+- Keep tensors differentiable; avoid "'`.detach()`/`.item()` in Crystal paths.
+- Maintain vectorization (no Python loops over φ or mosaic indices).
+- Respect device neutrality—use existing tensor devices/dtypes, no hard-coded `.cpu()`.
+- Insert the nanoBragg.c snippet into the docstring before code edits to satisfy CLAUDE Rule #11.
+- Run commands with KMP_DUPLICATE_LIB_OK=TRUE to prevent MKL crashes.
+- Do not skip nb-compare; VG-3 metrics must reach the thresholds before moving on.
+- Update fix_checklist.md immediately after each gate to avoid losing traceability.
+- Avoid overwriting prior artifacts; use new timestamped folders under reports/.
+- Confirm CUSTOM convention still forces SAMPLE pivot (trace per plan) so pix0 parity holds.
+Pointers:
+- plans/active/cli-noise-pix0/plan.md:276
+- docs/fix_plan.md:458
+- reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_correction.md:187
+- reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md:1
+- specs/spec-a-cli.md:34
+Next Up: Execute Phase L3k.3 verification gates once code lands and artifacts are seeded.
+EOF
+' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:28:05] bash -lc "cat <<'EOF' > input.md
+Summary: Implement the φ-rotation fix so CLI parity metrics can advance to Phase L3k verification.
+Mode: Parity
+Focus: CLI-FLAGS-003 Handle -nonoise and -pix0_vector_mm
+Branch: feature/spec-based-2
+Mapped tests: tests/test_cli_scaling.py::TestCLIScaling::test_f_latt_square_matches_c
+Mapped tests: tests/test_cli_scaling.py -k lattice -v
+Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/
+Artifacts: reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/
+Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md
+Artifacts: plans/active/cli-noise-pix0/plan.md
+Artifacts: docs/fix_plan.md
+Do Now: CLI-FLAGS-003 Phase L3k.2 φ-rotation fix — env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py -k lattice -v (VG-2) after implementing per plan.
+If Blocked: Capture fresh per-φ traces via trace_harness.py and log deltas under reports/2025-10-cli-flags/phase_l/rot_vector/blockers/ before revisiting the memo.
+Priorities & Rationale:
+- plans/active/cli-noise-pix0/plan.md:276 locks L3k.2 as the gate before parity rerun; finishing it unblocks VG-1..VG-5.
+- docs/fix_plan.md:458 now targets L3k.2–L3k.4 explicitly; clearing them retires the outstanding Next Actions for long-term goal #1.
+- reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_correction.md documents the required physics change and tolerances, so implementation must trace to it.
+- specs/spec-a-cli.md:34 ensures pix0 overrides remain aligned with CUSTOM convention; φ rotation must respect that contract.
+- docs/architecture/detector.md:80 highlights pivot handling; verifying after the fix confirms pix0 stays stable.
+How-To Map:
+- env KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_l/rot_vector/trace_harness.py --phi-seq \"0.0,0.05,0.1\" --outdir reports/2025-10-cli-flags/phase_l/rot_vector/per_phi_postfix
+- env KMP_DUPLICATE_LIB_OK=TRUE python scripts/validation/compare_scaling_traces.py --c-trace reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log --py-trace reports/2025-10-cli-flags/phase_l/rot_vector/per_phi_postfix/trace_py_phi_0.00.log --outdir reports/2025-10-cli-flags/phase_l/rot_vector/scaling_delta
+- nb-compare --roi 100 156 100 156 --resample --outdir reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/ -- -mat A.mat -floatfile img.bin -hkl scaled.hkl -nonoise -nointerpolate -oversample 1 -exposure 1 -flux 1e18 -beamsize 1.0 -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080 -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866 -beam_vector 0.00051387949 0.0 -0.99999986 -Na 36 -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0
+Pitfalls To Avoid:
+- Do not edit reciprocal vectors directly after the fix; recompute via cross products to preserve metric duality.
+- Keep tensors differentiable; avoid "'`.detach()`/`.item()` in Crystal paths.
+- Maintain vectorization (no Python loops over φ or mosaic indices).
+- Respect device neutrality—use existing tensor devices/dtypes, no hard-coded `.cpu()`.
+- Insert the nanoBragg.c snippet into the docstring before code edits to satisfy CLAUDE Rule #11.
+- Run commands with KMP_DUPLICATE_LIB_OK=TRUE to prevent MKL crashes.
+- Do not skip nb-compare; VG-3 metrics must reach the thresholds before moving on.
+- Update fix_checklist.md immediately after each gate to avoid losing traceability.
+- Avoid overwriting prior artifacts; use new timestamped folders under reports/.
+- Confirm CUSTOM convention still forces SAMPLE pivot (trace per plan) so pix0 parity holds.
+Pointers:
+- plans/active/cli-noise-pix0/plan.md:276
+- docs/fix_plan.md:458
+- reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_correction.md:187
+- reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md:1
+- specs/spec-a-cli.md:34
+Next Up: Execute Phase L3k.3 verification gates once code lands and artifacts are seeded.
+EOF
+' succeeded in 952ms:
+
+[2025-10-07T13:28:05] tokens used: 232,084
+[2025-10-07T13:28:05] turn diff:
+diff --git a/docs/fix_plan.md b/docs/fix_plan.md
+index 5333a6eef1c6bead4b6a8a6f88729cf9a4092ba6..cbdfb212aa0f3cae4ac78a921957e86f98574b61
+--- a/docs/fix_plan.md
++++ b/docs/fix_plan.md
+@@ -458,9 +458,9 @@
+   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+ - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+ - Next Actions (2025-11-21 refresh → galph):
+- 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+- 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+- 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
++1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
++2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
++3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+ - Attempts History:
+   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+     Metrics: Planning-only (no tests executed).
+
+
+[2025-10-07T13:28:10] thinking
+
+**Preparing to update galph_memory.md**
+[2025-10-07T13:28:11] exec bash -lc 'tail -n 20 galph_memory.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:28:12] bash -lc 'tail -n 20 galph_memory.md' succeeded in 707ms:
+- Authored `input.md` (Parity mode, 100 lines) instructing Ralph to update mosflm_matrix_correction.md, draft `fix_checklist.md`, run pytest --collect-only, and log artifacts under rot_vector/ before touching code.
+- No production code changes performed; expect Ralph’s Attempt #94 to document memo/checklist completion plus collect-only log before proceeding to φ-rotation implementation.
+
+## 2025-11-21 (galph loop — VECTOR-TRICUBIC-001 Phase C2 prep)
+- Updated `plans/active/vectorization.md:5-36` to record Phase C1 completion and spotlight C2/C3 as the remaining blockers before polynomial work.
+- Refreshed `docs/fix_plan.md:1889-1892` Next Actions so they now call out C2, C3, and the Phase C close-out handoff instead of repeating the already-finished gather task.
+- Replaced `input.md` with a Docs-mode memo steering Ralph toward authoring `tests/test_tricubic_vectorized.py::test_oob_warning_single_fire`, logging the targeted pytest run, and parking artifacts under `reports/2025-10-vectorization/phase_c/`.
+- No production code changes; edits limited to planning docs and supervisor memo. Expect Ralph to execute Phase C2 next and log a new Attempt entry once the regression test and warning evidence land.
+
+## 2025-11-21 (galph loop — CLI L3k implementation prep)
+- Added Phase L3k to `plans/active/cli-noise-pix0/plan.md` with tasks for memo, code fix, gate execution, and logging prior to Phase L4.
+- Updated `docs/fix_plan.md:450-463` (Attempt #95) so Next Actions now target L3k.1–L3k.4 and the new checklist-driven workflow.
+- Replaced `input.md` (Docs mode, 100 lines) to steer Ralph toward executing Phase L3k, running pytest/nb-compare with the canonical command, and documenting VG-1⇢VG-5 artifacts.
+- Expect Ralph to draft the implementation memo, add the docstring reference, implement the φ rotation patch, drive `fix_checklist.md` to ✅, and log Attempt #96 before attempting Phase L4 parity.
+## 2025-11-21 (galph loop — CLI-FLAGS L3k triage)
+- Reviewed Phase L3k memo + recent traces; PyTorch still rotates reciprocal vectors during φ, yielding k_frac drift (≈−0.59 vs C −0.607) and F_latt sign flip (+1.35 vs −2.38) in `trace_py_scaling_20251117.log`. Root cause remains mismatched φ rotation pipeline.
+- Identified secondary nuisance: per-φ harness already built; thresholds summarized (k_frac Δ≤1e-6, F_latt sign match, b_Y Δ≤1e-6) for VG-1; instrumentation command retained.
+- Selected Debug/Parity focus on CLI-FLAGS-003; next confirm step is to implement Phase L3k reciprocal recompute, then re-run per-φ traces, targeted pytest lattice selector, and ROI nb-compare per checklist.
+- Authored `input.md` (Parity) directing Ralph to add the nanoBragg.c docstring, rotate only real vectors, recompute reciprocals, run harness + pytest + nb-compare, update fix_checklist + fix_plan, and archive old traces. Artifacts to land under `reports/2025-10-cli-flags/phase_l/rot_vector/` subfolders.
+- No new plans required; vectorization plan already current (Phase C2/C3). Await Phase L3k evidence before scheduling Phase L4 rerun.
+[2025-10-07T13:28:12] tokens used: 233,882
+[2025-10-07T13:28:12] turn diff:
+diff --git a/docs/fix_plan.md b/docs/fix_plan.md
+index 5333a6eef1c6bead4b6a8a6f88729cf9a4092ba6..cbdfb212aa0f3cae4ac78a921957e86f98574b61
+--- a/docs/fix_plan.md
++++ b/docs/fix_plan.md
+@@ -458,9 +458,9 @@
+   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+ - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+ - Next Actions (2025-11-21 refresh → galph):
+- 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+- 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+- 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
++1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
++2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
++3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+ - Attempts History:
+   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+     Metrics: Planning-only (no tests executed).
+
+
+[2025-10-07T13:28:16] thinking
+
+**Documenting update with new entry**
+[2025-10-07T13:28:24] apply_patch auto_approved=true:
+M /Users/ollie/Documents/nanoBragg3/galph_memory.md
+@@ -1631 +1631,6 @@
+ - No new plans required; vectorization plan already current (Phase C2/C3). Await Phase L3k evidence before scheduling Phase L4 rerun.
++## 2025-11-21 (galph loop — CLI-FLAGS Next Actions refresh)
++- Validated Phase L3k memo + plan remain authoritative; noted docs/fix_plan.md still referenced L3k.1 even though memo is complete.
++- Updated `docs/fix_plan.md:458-460` so Next Actions now point at L3k.2 implementation, L3k.3 verification, and L3k.4 logging; no other ledger edits.
++- Rewrote `input.md` (Parity mode) to focus Ralph on executing L3k.2 with the targeted pytest selector and checklist-driven nb-compare/trace steps; artifacts to stay under `reports/2025-10-cli-flags/phase_l/`.
++- Expect Ralph to deliver the φ-rotation patch next loop, follow fix_checklist VG-1..VG-5, and record a new Attempt before we reopen Phase L4 parity testing.
+[2025-10-07T13:28:24] apply_patch(auto_approved=true) exited 0 in 27ms:
+Success. Updated the following files:
+M galph_memory.md
+[2025-10-07T13:28:24] turn diff:
+diff --git a/docs/fix_plan.md b/docs/fix_plan.md
+index 5333a6eef1c6bead4b6a8a6f88729cf9a4092ba6..cbdfb212aa0f3cae4ac78a921957e86f98574b61
+--- a/docs/fix_plan.md
++++ b/docs/fix_plan.md
+@@ -458,9 +458,9 @@
+   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+ - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+ - Next Actions (2025-11-21 refresh → galph):
+- 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+- 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+- 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
++1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
++2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
++3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+ - Attempts History:
+   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+     Metrics: Planning-only (no tests executed).
+diff --git a/galph_memory.md b/galph_memory.md
+index bb0687d9ec25b8a6cf9eabdf587db7f4584403a6..b2934e3b9d612f51ba92c19e4ee9dd33c03c2231
+--- a/galph_memory.md
++++ b/galph_memory.md
+@@ -1629,3 +1629,8 @@
+ - Selected Debug/Parity focus on CLI-FLAGS-003; next confirm step is to implement Phase L3k reciprocal recompute, then re-run per-φ traces, targeted pytest lattice selector, and ROI nb-compare per checklist.
+ - Authored `input.md` (Parity) directing Ralph to add the nanoBragg.c docstring, rotate only real vectors, recompute reciprocals, run harness + pytest + nb-compare, update fix_checklist + fix_plan, and archive old traces. Artifacts to land under `reports/2025-10-cli-flags/phase_l/rot_vector/` subfolders.
+ - No new plans required; vectorization plan already current (Phase C2/C3). Await Phase L3k evidence before scheduling Phase L4 rerun.
++## 2025-11-21 (galph loop — CLI-FLAGS Next Actions refresh)
++- Validated Phase L3k memo + plan remain authoritative; noted docs/fix_plan.md still referenced L3k.1 even though memo is complete.
++- Updated `docs/fix_plan.md:458-460` so Next Actions now point at L3k.2 implementation, L3k.3 verification, and L3k.4 logging; no other ledger edits.
++- Rewrote `input.md` (Parity mode) to focus Ralph on executing L3k.2 with the targeted pytest selector and checklist-driven nb-compare/trace steps; artifacts to stay under `reports/2025-10-cli-flags/phase_l/`.
++- Expect Ralph to deliver the φ-rotation patch next loop, follow fix_checklist VG-1..VG-5, and record a new Attempt before we reopen Phase L4 parity testing.
+
+[2025-10-07T13:28:24] tokens used: 235,533
+[2025-10-07T13:28:24] turn diff:
+diff --git a/docs/fix_plan.md b/docs/fix_plan.md
+index 5333a6eef1c6bead4b6a8a6f88729cf9a4092ba6..cbdfb212aa0f3cae4ac78a921957e86f98574b61
+--- a/docs/fix_plan.md
++++ b/docs/fix_plan.md
+@@ -458,9 +458,9 @@
+   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+ - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+ - Next Actions (2025-11-21 refresh → galph):
+- 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+- 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+- 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
++1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
++2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
++3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+ - Attempts History:
+   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+     Metrics: Planning-only (no tests executed).
+diff --git a/galph_memory.md b/galph_memory.md
+index bb0687d9ec25b8a6cf9eabdf587db7f4584403a6..b2934e3b9d612f51ba92c19e4ee9dd33c03c2231
+--- a/galph_memory.md
++++ b/galph_memory.md
+@@ -1629,3 +1629,8 @@
+ - Selected Debug/Parity focus on CLI-FLAGS-003; next confirm step is to implement Phase L3k reciprocal recompute, then re-run per-φ traces, targeted pytest lattice selector, and ROI nb-compare per checklist.
+ - Authored `input.md` (Parity) directing Ralph to add the nanoBragg.c docstring, rotate only real vectors, recompute reciprocals, run harness + pytest + nb-compare, update fix_checklist + fix_plan, and archive old traces. Artifacts to land under `reports/2025-10-cli-flags/phase_l/rot_vector/` subfolders.
+ - No new plans required; vectorization plan already current (Phase C2/C3). Await Phase L3k evidence before scheduling Phase L4 rerun.
++## 2025-11-21 (galph loop — CLI-FLAGS Next Actions refresh)
++- Validated Phase L3k memo + plan remain authoritative; noted docs/fix_plan.md still referenced L3k.1 even though memo is complete.
++- Updated `docs/fix_plan.md:458-460` so Next Actions now point at L3k.2 implementation, L3k.3 verification, and L3k.4 logging; no other ledger edits.
++- Rewrote `input.md` (Parity mode) to focus Ralph on executing L3k.2 with the targeted pytest selector and checklist-driven nb-compare/trace steps; artifacts to stay under `reports/2025-10-cli-flags/phase_l/`.
++- Expect Ralph to deliver the φ-rotation patch next loop, follow fix_checklist VG-1..VG-5, and record a new Attempt before we reopen Phase L4 parity testing.
+
+
+[2025-10-07T13:28:26] thinking
+
+**Checking git status before commit**
+[2025-10-07T13:28:27] exec bash -lc 'git status --short' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:28:28] bash -lc 'git status --short' succeeded in 933ms:
+ M docs/fix_plan.md
+ M galph_memory.md
+ M input.md
+[2025-10-07T13:28:28] tokens used: 236,942
+[2025-10-07T13:28:28] turn diff:
+diff --git a/docs/fix_plan.md b/docs/fix_plan.md
+index 5333a6eef1c6bead4b6a8a6f88729cf9a4092ba6..cbdfb212aa0f3cae4ac78a921957e86f98574b61
+--- a/docs/fix_plan.md
++++ b/docs/fix_plan.md
+@@ -458,9 +458,9 @@
+   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+ - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+ - Next Actions (2025-11-21 refresh → galph):
+- 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+- 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+- 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
++1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
++2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
++3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+ - Attempts History:
+   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+     Metrics: Planning-only (no tests executed).
+diff --git a/galph_memory.md b/galph_memory.md
+index bb0687d9ec25b8a6cf9eabdf587db7f4584403a6..b2934e3b9d612f51ba92c19e4ee9dd33c03c2231
+--- a/galph_memory.md
++++ b/galph_memory.md
+@@ -1629,3 +1629,8 @@
+ - Selected Debug/Parity focus on CLI-FLAGS-003; next confirm step is to implement Phase L3k reciprocal recompute, then re-run per-φ traces, targeted pytest lattice selector, and ROI nb-compare per checklist.
+ - Authored `input.md` (Parity) directing Ralph to add the nanoBragg.c docstring, rotate only real vectors, recompute reciprocals, run harness + pytest + nb-compare, update fix_checklist + fix_plan, and archive old traces. Artifacts to land under `reports/2025-10-cli-flags/phase_l/rot_vector/` subfolders.
+ - No new plans required; vectorization plan already current (Phase C2/C3). Await Phase L3k evidence before scheduling Phase L4 rerun.
++## 2025-11-21 (galph loop — CLI-FLAGS Next Actions refresh)
++- Validated Phase L3k memo + plan remain authoritative; noted docs/fix_plan.md still referenced L3k.1 even though memo is complete.
++- Updated `docs/fix_plan.md:458-460` so Next Actions now point at L3k.2 implementation, L3k.3 verification, and L3k.4 logging; no other ledger edits.
++- Rewrote `input.md` (Parity mode) to focus Ralph on executing L3k.2 with the targeted pytest selector and checklist-driven nb-compare/trace steps; artifacts to stay under `reports/2025-10-cli-flags/phase_l/`.
++- Expect Ralph to deliver the φ-rotation patch next loop, follow fix_checklist VG-1..VG-5, and record a new Attempt before we reopen Phase L4 parity testing.
+
+
+[2025-10-07T13:28:31] thinking
+
+**Staging all changes**
+[2025-10-07T13:28:32] exec bash -lc 'git add -A' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:28:32] bash -lc 'git add -A' succeeded in 708ms:
+
+[2025-10-07T13:28:32] tokens used: 237,070
+[2025-10-07T13:28:32] turn diff:
+diff --git a/docs/fix_plan.md b/docs/fix_plan.md
+index 5333a6eef1c6bead4b6a8a6f88729cf9a4092ba6..cbdfb212aa0f3cae4ac78a921957e86f98574b61
+--- a/docs/fix_plan.md
++++ b/docs/fix_plan.md
+@@ -458,9 +458,9 @@
+   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+ - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+ - Next Actions (2025-11-21 refresh → galph):
+- 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+- 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+- 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
++1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
++2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
++3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+ - Attempts History:
+   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+     Metrics: Planning-only (no tests executed).
+diff --git a/galph_memory.md b/galph_memory.md
+index bb0687d9ec25b8a6cf9eabdf587db7f4584403a6..b2934e3b9d612f51ba92c19e4ee9dd33c03c2231
+--- a/galph_memory.md
++++ b/galph_memory.md
+@@ -1629,3 +1629,8 @@
+ - Selected Debug/Parity focus on CLI-FLAGS-003; next confirm step is to implement Phase L3k reciprocal recompute, then re-run per-φ traces, targeted pytest lattice selector, and ROI nb-compare per checklist.
+ - Authored `input.md` (Parity) directing Ralph to add the nanoBragg.c docstring, rotate only real vectors, recompute reciprocals, run harness + pytest + nb-compare, update fix_checklist + fix_plan, and archive old traces. Artifacts to land under `reports/2025-10-cli-flags/phase_l/rot_vector/` subfolders.
+ - No new plans required; vectorization plan already current (Phase C2/C3). Await Phase L3k evidence before scheduling Phase L4 rerun.
++## 2025-11-21 (galph loop — CLI-FLAGS Next Actions refresh)
++- Validated Phase L3k memo + plan remain authoritative; noted docs/fix_plan.md still referenced L3k.1 even though memo is complete.
++- Updated `docs/fix_plan.md:458-460` so Next Actions now point at L3k.2 implementation, L3k.3 verification, and L3k.4 logging; no other ledger edits.
++- Rewrote `input.md` (Parity mode) to focus Ralph on executing L3k.2 with the targeted pytest selector and checklist-driven nb-compare/trace steps; artifacts to stay under `reports/2025-10-cli-flags/phase_l/`.
++- Expect Ralph to deliver the φ-rotation patch next loop, follow fix_checklist VG-1..VG-5, and record a new Attempt before we reopen Phase L4 parity testing.
+
+
+[2025-10-07T13:28:36] thinking
+
+**Committing with test note**
+[2025-10-07T13:28:38] exec bash -lc 'git commit -m "SUPERVISOR: CLI L3k focus - tests: not run"' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:28:39] bash -lc 'git commit -m "SUPERVISOR: CLI L3k focus - tests: not run"' succeeded in 698ms:
+[feature/spec-based-2 f868ce1] SUPERVISOR: CLI L3k focus - tests: not run
+ 3 files changed, 39 insertions(+), 99 deletions(-)
+[2025-10-07T13:28:39] tokens used: 245,617
+[2025-10-07T13:28:39] turn diff:
+diff --git a/docs/fix_plan.md b/docs/fix_plan.md
+index 5333a6eef1c6bead4b6a8a6f88729cf9a4092ba6..cbdfb212aa0f3cae4ac78a921957e86f98574b61
+--- a/docs/fix_plan.md
++++ b/docs/fix_plan.md
+@@ -458,9 +458,9 @@
+   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+ - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+ - Next Actions (2025-11-21 refresh → galph):
+- 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+- 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+- 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
++1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
++2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
++3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+ - Attempts History:
+   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+     Metrics: Planning-only (no tests executed).
+diff --git a/galph_memory.md b/galph_memory.md
+index bb0687d9ec25b8a6cf9eabdf587db7f4584403a6..b2934e3b9d612f51ba92c19e4ee9dd33c03c2231
+--- a/galph_memory.md
++++ b/galph_memory.md
+@@ -1629,3 +1629,8 @@
+ - Selected Debug/Parity focus on CLI-FLAGS-003; next confirm step is to implement Phase L3k reciprocal recompute, then re-run per-φ traces, targeted pytest lattice selector, and ROI nb-compare per checklist.
+ - Authored `input.md` (Parity) directing Ralph to add the nanoBragg.c docstring, rotate only real vectors, recompute reciprocals, run harness + pytest + nb-compare, update fix_checklist + fix_plan, and archive old traces. Artifacts to land under `reports/2025-10-cli-flags/phase_l/rot_vector/` subfolders.
+ - No new plans required; vectorization plan already current (Phase C2/C3). Await Phase L3k evidence before scheduling Phase L4 rerun.
++## 2025-11-21 (galph loop — CLI-FLAGS Next Actions refresh)
++- Validated Phase L3k memo + plan remain authoritative; noted docs/fix_plan.md still referenced L3k.1 even though memo is complete.
++- Updated `docs/fix_plan.md:458-460` so Next Actions now point at L3k.2 implementation, L3k.3 verification, and L3k.4 logging; no other ledger edits.
++- Rewrote `input.md` (Parity mode) to focus Ralph on executing L3k.2 with the targeted pytest selector and checklist-driven nb-compare/trace steps; artifacts to stay under `reports/2025-10-cli-flags/phase_l/`.
++- Expect Ralph to deliver the φ-rotation patch next loop, follow fix_checklist VG-1..VG-5, and record a new Attempt before we reopen Phase L4 parity testing.
+
+
+[2025-10-07T13:28:41] thinking
+
+**Preparing to push changes**
+[2025-10-07T13:28:41] exec bash -lc 'git push' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:28:43] bash -lc 'git push' succeeded in 2.06s:
+To github.com:hoidn/nanoBragg.git
+   54688a5..f868ce1  feature/spec-based-2 -> feature/spec-based-2
+[2025-10-07T13:28:43] tokens used: 245,989
+[2025-10-07T13:28:43] turn diff:
+diff --git a/docs/fix_plan.md b/docs/fix_plan.md
+index 5333a6eef1c6bead4b6a8a6f88729cf9a4092ba6..cbdfb212aa0f3cae4ac78a921957e86f98574b61
+--- a/docs/fix_plan.md
++++ b/docs/fix_plan.md
+@@ -458,9 +458,9 @@
+   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+ - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+ - Next Actions (2025-11-21 refresh → galph):
+- 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+- 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+- 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
++1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
++2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
++3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+ - Attempts History:
+   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+     Metrics: Planning-only (no tests executed).
+diff --git a/galph_memory.md b/galph_memory.md
+index bb0687d9ec25b8a6cf9eabdf587db7f4584403a6..b2934e3b9d612f51ba92c19e4ee9dd33c03c2231
+--- a/galph_memory.md
++++ b/galph_memory.md
+@@ -1629,3 +1629,8 @@
+ - Selected Debug/Parity focus on CLI-FLAGS-003; next confirm step is to implement Phase L3k reciprocal recompute, then re-run per-φ traces, targeted pytest lattice selector, and ROI nb-compare per checklist.
+ - Authored `input.md` (Parity) directing Ralph to add the nanoBragg.c docstring, rotate only real vectors, recompute reciprocals, run harness + pytest + nb-compare, update fix_checklist + fix_plan, and archive old traces. Artifacts to land under `reports/2025-10-cli-flags/phase_l/rot_vector/` subfolders.
+ - No new plans required; vectorization plan already current (Phase C2/C3). Await Phase L3k evidence before scheduling Phase L4 rerun.
++## 2025-11-21 (galph loop — CLI-FLAGS Next Actions refresh)
++- Validated Phase L3k memo + plan remain authoritative; noted docs/fix_plan.md still referenced L3k.1 even though memo is complete.
++- Updated `docs/fix_plan.md:458-460` so Next Actions now point at L3k.2 implementation, L3k.3 verification, and L3k.4 logging; no other ledger edits.
++- Rewrote `input.md` (Parity mode) to focus Ralph on executing L3k.2 with the targeted pytest selector and checklist-driven nb-compare/trace steps; artifacts to stay under `reports/2025-10-cli-flags/phase_l/`.
++- Expect Ralph to deliver the φ-rotation patch next loop, follow fix_checklist VG-1..VG-5, and record a new Attempt before we reopen Phase L4 parity testing.
+
+
+[2025-10-07T13:28:50] thinking
+
+**Preparing final response details**
+[2025-10-07T13:28:51] exec bash -lc "nl -ba docs/fix_plan.md | sed -n '452,470p'" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:28:52] bash -lc "nl -ba docs/fix_plan.md | sed -n '452,470p'" succeeded in 837ms:
+   452	- Priority: High
+   453	- Status: in_progress (Phases A–H complete; K3a/K3b/K3d landed via Attempts #43–44, pending per-φ evidence + normalization closure)
+   454	- Owner/Date: ralph/2025-10-05
+   455	- Plan Reference: `plans/active/cli-noise-pix0/plan.md`
+   456	- Reproduction (C & PyTorch):
+   457	  * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
+   458	  * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+   459	- First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+   460	- Next Actions (2025-11-21 refresh → galph):
+   461	1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
+   462	2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
+   463	3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+   464	- Attempts History:
+   465	  * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+   466	    Metrics: Planning-only (no tests executed).
+   467	    Artifacts:
+   468	      - `plans/active/cli-noise-pix0/plan.md` — New Phase L3k section outlining implementation gates.
+   469	      - `docs/fix_plan.md` — Next Actions retargeted to Phase L3k; checklist referenced.
+   470	    Observations/Hypotheses:
+[2025-10-07T13:28:52] tokens used: 246,424
+[2025-10-07T13:28:52] turn diff:
+diff --git a/docs/fix_plan.md b/docs/fix_plan.md
+index 5333a6eef1c6bead4b6a8a6f88729cf9a4092ba6..cbdfb212aa0f3cae4ac78a921957e86f98574b61
+--- a/docs/fix_plan.md
++++ b/docs/fix_plan.md
+@@ -458,9 +458,9 @@
+   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+ - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+ - Next Actions (2025-11-21 refresh → galph):
+- 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+- 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+- 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
++1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
++2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
++3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+ - Attempts History:
+   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+     Metrics: Planning-only (no tests executed).
+diff --git a/galph_memory.md b/galph_memory.md
+index bb0687d9ec25b8a6cf9eabdf587db7f4584403a6..b2934e3b9d612f51ba92c19e4ee9dd33c03c2231
+--- a/galph_memory.md
++++ b/galph_memory.md
+@@ -1629,3 +1629,8 @@
+ - Selected Debug/Parity focus on CLI-FLAGS-003; next confirm step is to implement Phase L3k reciprocal recompute, then re-run per-φ traces, targeted pytest lattice selector, and ROI nb-compare per checklist.
+ - Authored `input.md` (Parity) directing Ralph to add the nanoBragg.c docstring, rotate only real vectors, recompute reciprocals, run harness + pytest + nb-compare, update fix_checklist + fix_plan, and archive old traces. Artifacts to land under `reports/2025-10-cli-flags/phase_l/rot_vector/` subfolders.
+ - No new plans required; vectorization plan already current (Phase C2/C3). Await Phase L3k evidence before scheduling Phase L4 rerun.
++## 2025-11-21 (galph loop — CLI-FLAGS Next Actions refresh)
++- Validated Phase L3k memo + plan remain authoritative; noted docs/fix_plan.md still referenced L3k.1 even though memo is complete.
++- Updated `docs/fix_plan.md:458-460` so Next Actions now point at L3k.2 implementation, L3k.3 verification, and L3k.4 logging; no other ledger edits.
++- Rewrote `input.md` (Parity mode) to focus Ralph on executing L3k.2 with the targeted pytest selector and checklist-driven nb-compare/trace steps; artifacts to stay under `reports/2025-10-cli-flags/phase_l/`.
++- Expect Ralph to deliver the φ-rotation patch next loop, follow fix_checklist VG-1..VG-5, and record a new Attempt before we reopen Phase L4 parity testing.
+
+
+[2025-10-07T13:28:57] thinking
+
+**Adding line numbers for memory entry**
+[2025-10-07T13:28:59] exec bash -lc 'nl -ba galph_memory.md | tail -n 40' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T13:29:00] bash -lc 'nl -ba galph_memory.md | tail -n 40' succeeded in 689ms:
+  1597	- Expect Ralph to extend `trace_harness.py` (or TRACE_PY hooks) with raw/normalized spindle logging, rerun the φ=0 trace, append results to `spindle_audit.log`, and update fix_plan/plan entries before shifting to implementation.
+  1598	## 2025-11-20 (galph loop — CLI-FLAGS MOSFLM probe setup)
+  1599	- Updated `plans/active/cli-noise-pix0/plan.md` Phase L3 with new tasks L3h–L3j covering MOSFLM matrix probe, corrective memo, and implementation checklist; prior L3a–L3g remain [D].
+  1600	- Adjusted `docs/fix_plan.md` Next Actions for CLI-FLAGS-003 to align with the new Phase L3h–L3j workflow (probe → memo → checklist).
+  1601	- Authored `input.md` (Parity mode, 100 lines) directing Ralph to capture `mosflm_matrix_probe.log/md`, log env metadata, and prepare outlines for `mosflm_matrix_correction.md` + `fix_checklist.md` before any code edits.
+  1602	- Expectation for Ralph: run the harness with MOSFLM vector dumps, document the deltas, update fix_plan Attempt history, and leave code untouched until the memo/checklist exist.
+  1603	- No production code changes made; commit 3232549 contains plan/fix_plan/input refresh (tests: not run).
+  1604	## 2025-11-20 (galph loop — CLI L3i corrective memo)
+  1605	- Authored `reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_correction.md` summarizing nanoBragg.c vs PyTorch MOSFLM pipeline; plan L3i marked [D] with instrumentation marching orders.
+  1606	- Updated `docs/fix_plan.md` Next Actions to focus on C TRACE_C taps, Py harness dumps, and diff memo before implementation; input.md now directs Ralph to capture those traces and document deltas.
+  1607	- Expect Ralph to instrument `golden_suite_generator/nanoBragg.c`, run the supervisor command to generate `c_trace_mosflm.log`, extend the Py harness for raw/tensor dumps, and produce `mosflm_matrix_diff.md` prior to touching simulator code.
+  1608	
+  1609	## 2025-11-20 (galph loop — CLI L3j checklist alignment)
+  1610	- Extended `plans/active/cli-noise-pix0/plan.md` Phase L3 with sub-tasks L3j.1–L3j.3 (memo refresh, fix checklist, plan/fix_plan sync) so implementation has explicit gates.
+  1611	- Updated `docs/fix_plan.md` Next Actions to point at the new L3j workflow; removed stale L3i instrumentation steps.
+  1612	- Authored `input.md` (Parity mode, 100 lines) instructing Ralph to update mosflm_matrix_correction.md, draft `fix_checklist.md`, run pytest --collect-only, and log artifacts under rot_vector/ before touching code.
+  1613	- No production code changes performed; expect Ralph’s Attempt #94 to document memo/checklist completion plus collect-only log before proceeding to φ-rotation implementation.
+  1614	
+  1615	## 2025-11-21 (galph loop — VECTOR-TRICUBIC-001 Phase C2 prep)
+  1616	- Updated `plans/active/vectorization.md:5-36` to record Phase C1 completion and spotlight C2/C3 as the remaining blockers before polynomial work.
+[2025-10-07T13:29:00] tokens used: 248,184
+[2025-10-07T13:29:00] turn diff:
+diff --git a/docs/fix_plan.md b/docs/fix_plan.md
+index 5333a6eef1c6bead4b6a8a6f88729cf9a4092ba6..cbdfb212aa0f3cae4ac78a921957e86f98574b61
+--- a/docs/fix_plan.md
++++ b/docs/fix_plan.md
+@@ -458,9 +458,9 @@
+   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+ - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+ - Next Actions (2025-11-21 refresh → galph):
+- 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+- 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+- 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
++1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
++2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
++3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+ - Attempts History:
+   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+     Metrics: Planning-only (no tests executed).
+diff --git a/galph_memory.md b/galph_memory.md
+index bb0687d9ec25b8a6cf9eabdf587db7f4584403a6..b2934e3b9d612f51ba92c19e4ee9dd33c03c2231
+--- a/galph_memory.md
++++ b/galph_memory.md
+@@ -1629,3 +1629,8 @@
+ - Selected Debug/Parity focus on CLI-FLAGS-003; next confirm step is to implement Phase L3k reciprocal recompute, then re-run per-φ traces, targeted pytest lattice selector, and ROI nb-compare per checklist.
+ - Authored `input.md` (Parity) directing Ralph to add the nanoBragg.c docstring, rotate only real vectors, recompute reciprocals, run harness + pytest + nb-compare, update fix_checklist + fix_plan, and archive old traces. Artifacts to land under `reports/2025-10-cli-flags/phase_l/rot_vector/` subfolders.
+ - No new plans required; vectorization plan already current (Phase C2/C3). Await Phase L3k evidence before scheduling Phase L4 rerun.
++## 2025-11-21 (galph loop — CLI-FLAGS Next Actions refresh)
++- Validated Phase L3k memo + plan remain authoritative; noted docs/fix_plan.md still referenced L3k.1 even though memo is complete.
++- Updated `docs/fix_plan.md:458-460` so Next Actions now point at L3k.2 implementation, L3k.3 verification, and L3k.4 logging; no other ledger edits.
++- Rewrote `input.md` (Parity mode) to focus Ralph on executing L3k.2 with the targeted pytest selector and checklist-driven nb-compare/trace steps; artifacts to stay under `reports/2025-10-cli-flags/phase_l/`.
++- Expect Ralph to deliver the φ-rotation patch next loop, follow fix_checklist VG-1..VG-5, and record a new Attempt before we reopen Phase L4 parity testing.
+
+
+[2025-10-07T13:29:09] thinking
+
+**Composing detailed final response**
+
+I'm preparing a clear final message outlining changes with file paths and line numbers, noting updated instructions and unrun tests, plus suggesting next steps numerically for easy following. I'll include concise highlights and keep the tone friendly and straightforward.
+[2025-10-07T13:29:09] codex
+
+Refocused the CLI parity queue so the pending work now explicitly targets the remaining φ-rotation tasks, and synced the supervisor memo + history with that guidance. Key notes:
+
+- `docs/fix_plan.md:460-463` now calls out L3k.2 implementation, L3k.3 verification gates, and L3k.4 logging as the only outstanding actions under CLI-FLAGS-003, removing the already-finished memo step.
+- `galph_memory.md:1632-1636` records this refresh so future loops know why the ledger changed and what outcomes are expected from Ralph next turn.
+- `input.md:1-31` replaces the prior memo with a parity-mode handoff that tells Ralph to land L3k.2 and immediately drive the VG-1..VG-5 checklist (per-φ traces, targeted pytest, nb-compare).
+
+Tests: not run (documentation-only update).
+
+Next Steps:
+1. Implement Phase L3k.2 exactly as outlined (docstring insert + reciprocal recompute) and capture VG-1 artifacts.
+2. Finish VG-2..VG-5 (pytest lattice selector, nb-compare ROI, checklist/doc updates) so L3k.3 closes cleanly.
+3. Log the new Attempt in `docs/fix_plan.md` and pivot to Phase L4 parity rerun once metrics hit the thresholds.
+[2025-10-07T13:29:15] tokens used: 259,620
+[2025-10-07T13:29:15] turn diff:
+diff --git a/docs/fix_plan.md b/docs/fix_plan.md
+index 5333a6eef1c6bead4b6a8a6f88729cf9a4092ba6..cbdfb212aa0f3cae4ac78a921957e86f98574b61
+--- a/docs/fix_plan.md
++++ b/docs/fix_plan.md
+@@ -458,9 +458,9 @@
+   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
+ - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
+ - Next Actions (2025-11-21 refresh → galph):
+- 1. Phase L3k.1/L3k.2 — Draft the φ-rotation implementation memo, add the required C-code docstring reference, and stage the `Crystal.get_rotated_real_vectors` patch that mirrors nanoBragg.c.
+- 2. Phase L3k.3 — Run `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ harness, targeted pytest, nb-compare ROI, delta audit, docs) with artifacts under `reports/2025-10-cli-flags/phase_l/`.
+- 3. Phase L3k.4 — Log the implementation Attempt in this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and update plan status before scheduling Phase L4 parity rerun.
++1. Phase L3k.2 — Implement the φ-rotation fix in `Crystal.get_rotated_real_vectors` (add the C-code docstring, remove reciprocal rotation, recompute via cross products, keep vectorization/device neutrality).
++2. Phase L3k.3 — Execute `fix_checklist.md` verification gates VG-1⇢VG-5 (per-φ traces, targeted pytest selector, nb-compare ROI run, delta audit, doc updates) and file artifacts under `reports/2025-10-cli-flags/phase_l/`.
++3. Phase L3k.4 — Append the implementation Attempt to this entry with metrics (k_frac, b_Y, nb-compare), flip checklist rows to ✅, and refresh plan status ahead of the Phase L4 parity rerun.
+ - Attempts History:
+   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
+     Metrics: Planning-only (no tests executed).
+diff --git a/galph_memory.md b/galph_memory.md
+index bb0687d9ec25b8a6cf9eabdf587db7f4584403a6..b2934e3b9d612f51ba92c19e4ee9dd33c03c2231
+--- a/galph_memory.md
++++ b/galph_memory.md
+@@ -1629,3 +1629,8 @@
+ - Selected Debug/Parity focus on CLI-FLAGS-003; next confirm step is to implement Phase L3k reciprocal recompute, then re-run per-φ traces, targeted pytest lattice selector, and ROI nb-compare per checklist.
+ - Authored `input.md` (Parity) directing Ralph to add the nanoBragg.c docstring, rotate only real vectors, recompute reciprocals, run harness + pytest + nb-compare, update fix_checklist + fix_plan, and archive old traces. Artifacts to land under `reports/2025-10-cli-flags/phase_l/rot_vector/` subfolders.
+ - No new plans required; vectorization plan already current (Phase C2/C3). Await Phase L3k evidence before scheduling Phase L4 rerun.
++## 2025-11-21 (galph loop — CLI-FLAGS Next Actions refresh)
++- Validated Phase L3k memo + plan remain authoritative; noted docs/fix_plan.md still referenced L3k.1 even though memo is complete.
++- Updated `docs/fix_plan.md:458-460` so Next Actions now point at L3k.2 implementation, L3k.3 verification, and L3k.4 logging; no other ledger edits.
++- Rewrote `input.md` (Parity mode) to focus Ralph on executing L3k.2 with the targeted pytest selector and checklist-driven nb-compare/trace steps; artifacts to stay under `reports/2025-10-cli-flags/phase_l/`.
++- Expect Ralph to deliver the φ-rotation patch next loop, follow fix_checklist VG-1..VG-5, and record a new Attempt before we reopen Phase L4 parity testing.
+
+Reading prompt from stdin...
+To github.com:hoidn/nanoBragg.git
+   f868ce1..b524c51  HEAD -> feature/spec-based-2
+Waiting for Ralph to complete i=98...
+Already up to date.
+[sync] state: actor=ralph status=waiting-ralph iter=98
+Updating b524c51..b79af0d
+Fast-forward
+ sync/state.json | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+From github.com:hoidn/nanoBragg
+   b524c51..b79af0d  feature/spec-based-2 -> origin/feature/spec-based-2
+[sync] state: actor=ralph status=running-ralph iter=98
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Updating b79af0d..e35adf1
+Fast-forward
+ docs/fix_plan.md                    | 16 ++++++++++++++++
+ plans/active/cli-noise-pix0/plan.md |  4 ++--
+ 2 files changed, 18 insertions(+), 2 deletions(-)
+From github.com:hoidn/nanoBragg
+   b79af0d..e35adf1  feature/spec-based-2 -> origin/feature/spec-based-2
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Updating e35adf1..b6cfcc0
+Fast-forward
+ sync/state.json | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+From github.com:hoidn/nanoBragg
+   e35adf1..b6cfcc0  feature/spec-based-2 -> origin/feature/spec-based-2
+[sync] state: actor=galph status=complete iter=99
+Ralph completed iteration 98; proceeding to 99
