@@ -888,3 +888,10 @@
 - `scripts/validation/compare_scaling_traces.py` still dies via SIGKILL; left the failing command in commands.txt and regenerated the summary with inline Python.
 - Updated `docs/fix_plan.md` (Attempt #141) and `plans/active/cli-noise-pix0/plan.md` Phase M1 guidance to reference the new evidence and emphasise tricubic neighbourhood instrumentation.
 - `input.md` now pushes Ralph to extend the harness with 4×4×4 weight logging and to stabilise the comparison script before moving to Phase M2.
+
+## 2025-12-04 (galph loop — Phase M0 instrumentation hygiene setup)
+- Coin flip=heads: reviewed Ralph commit 9a8c2f5; instrumentation stores `_last_tricubic_neighborhood` tensors and forces CPU tensors in trace path — flagged need for guarded usage before Phase M proceeds.
+- Updated guidance by reinforcing plan CLI-FLAGS-003 Phase M0 (already codified) and issuing Parity-mode input.md directing Ralph to audit/guard the tricubic cache before rerunning scaling parity.
+- Key expectations: capture new trace evidence under `reports/2025-10-cli-flags/phase_l/scaling_validation/<ts>/`, verify device/dtype neutrality, document results in instrumentation_audit.md, and log Attempt for M0a–M0c.
+- Follow-up: next loop confirm M0 tasks marked [D], ensure guard prevents memory bloat on production runs, and decide when to resume Phase M1 HKL parity.
+- Working tree note: `logs/feature-spec-based-2/galph/iter-00142_20251008_062157.log` remains modified from prior runs; left uncommitted per log-retention policy.
