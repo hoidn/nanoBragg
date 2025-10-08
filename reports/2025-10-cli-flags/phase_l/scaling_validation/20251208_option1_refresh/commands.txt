@@ -1,0 +1,39 @@
+# Commands for Option 1 Design Refresh (Ralph i=156, Mode: Docs)
+
+## Environment Setup
+export KMP_DUPLICATE_LIB_OK=TRUE
+
+## Test Collection (Validation)
+# Verify environment imports cleanly before documentation edits
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q 2>&1 | tee /tmp/collect_only_output.txt
+# Result: 567 tests collected successfully
+
+## File Reads (Context Gathering)
+# 1. Prior Option 1 design
+cat reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md
+
+# 2. Spec normative φ semantics
+sed -n '205,233p' specs/spec-a-core.md
+
+# 3. Parity shim plan status
+sed -n '1,100p' plans/active/cli-phi-parity-shim/plan.md
+
+## Documentation Creation (This Loop)
+mkdir -p reports/2025-10-cli-flags/phase_l/scaling_validation/20251208_option1_refresh/attempts
+
+# Main analysis memo (output of this loop)
+# → analysis.md (created via Write tool)
+
+## No Code Changes
+# Per input.md Mode: Docs, no edits to src/ or tests/ this loop
+
+## Verification Commands (Not Executed — For Reference)
+# If architecture decision proceeds to implementation (next loop):
+# 1. Run spec baseline tests
+#    KMP_DUPLICATE_LIB_OK=TRUE pytest -xvs tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_k_frac_matches_spec
+#
+# 2. Run dual-mode validation
+#    KMP_DUPLICATE_LIB_OK=TRUE pytest -xvs tests/test_phi_carryover_mode.py
+#
+# 3. Generate per-φ trace comparison
+#    python scripts/compare_per_phi_traces.py --pixel 685 1039 --modes spec c-parity

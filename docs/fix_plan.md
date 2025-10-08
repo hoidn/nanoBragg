@@ -3415,3 +3415,65 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - **Alternative approach**: Consider implementing cache at a different integration point (e.g., in `_compute_structure_factors` after rotation rather than before)
       - **Defer M2g.3-M2g.6**: Current architecture cannot support per-pixel φ carryover without significant refactor; document this finding and reassess approach
       - **M2h-M2i blocked**: Cannot validate cache functionality until architectural path forward is chosen and implemented
+  * [2025-10-08] Attempt #138 (ralph loop i=138, Mode: Parity) — Result: **EVIDENCE** (Phase M1 scaling trace refreshed with current git state). **No code changes.**
+    Metrics: Evidence-only loop (no code-modifying tests executed per input.md Phase M1 mandate).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z/trace_py_scaling_cpu.log` — Fresh PyTorch scaling trace (43 TRACE_PY lines, CPU float32, c-parity mode)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z/summary.md` — Scaling factor comparison summary (C vs PyTorch, 1e-6 tolerance)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z/metrics.json` — Quantified divergence metrics (JSON format)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z/run_metadata.json` — Run provenance metadata
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z/commands.txt` — Complete reproduction steps
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z/sha256.txt` — SHA256 checksums for all artifacts
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z/env.json` — Python/torch version and git state (SHA: c42825e)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z/git_sha.txt` — Git commit SHA
+    Observations/Hypotheses:
+      - **CRITICAL FINDING**: I_before_scaling divergence confirmed at **8.73%** relative error (C: 943654.809, PyTorch: 861314.812, Δ: -82339.997)
+      - **Improvement vs Attempt #137**: PyTorch value increased from 736750.125 to 861314.812 (+16.9%), narrowing the gap from 21.9% to 8.73% — indicates partial progress from intervening changes
+      - **All scaling factors pass**: r_e², fluence, steps, capture_fraction, polarization (Δ: -5.16e-08), omega_pixel (Δ: -1.57e-07), cos_2theta (Δ: -4.43e-08) all within 1e-6 relative tolerance
+      - **Final intensity consequence**: I_pixel_final diverges by 0.21% (C: 2.881395e-07, PyTorch: 2.875420e-07) as direct consequence of I_before_scaling error
+      - **First divergence**: I_before_scaling remains the PRIMARY divergence point; all upstream factors (HKL lookup, structure factors, geometry) must be matching
+      - **Git state**: Captured at commit c42825e on feature/spec-based-2 branch for future bisect if needed
+      - **Harness validation**: trace_harness.py --phi-mode c-parity successfully generated c-parity mode traces, validating the φ carryover shim functionality
+    Next Actions:
+      - Phase M2: Investigate lattice factor propagation and structure factor accumulation logic in `_compute_structure_factors` and `Crystal._tricubic_interpolation`
+      - Phase M2a: Generate per-φ step traces to identify if the divergence accumulates uniformly or spikes in specific φ steps
+      - Phase M2b: Compare PyTorch accumulation structure against C-code nanoBragg.c:2604-3278 (structure factor and lattice factor calculation)
+      - Phase M3: Implement fix targeting the 8.73% I_before_scaling gap, add regression test `tests/test_cli_scaling_phi0.py::test_I_before_scaling_matches_c`
+      - Phase M4: Re-run this exact harness command to verify fix brings I_before_scaling Δ ≤1e-6
+  * [2025-12-06] Attempt #151 (ralph loop i=148, Phase M2) — Result: ✅ **SUCCESS** (Phase M2 reciprocal vector calculation fixed). **Critical fix: use static V_cell instead of recalculating V_actual from rotated vectors.**
+    Metrics: Targeted tests 2/2 PASSED; crystal+detector geometry 31/31 PASSED in 5.19s.
+    Artifacts:
+      - `src/nanobrag_torch/models/crystal.py:1120-1161` — Fixed to use static `self.V` instead of per-φ `V_actual`
+      - `src/nanobrag_torch/models/crystal.py:1123-1147` — Added C-code reference (nanoBragg.c:3198-3210)
+      - Targeted pytest: `tests/test_cli_scaling_phi0.py` (2 passed in 2.13s)
+      - Regression: `tests/test_crystal_geometry.py tests/test_detector_geometry.py` (31 passed in 5.19s)
+    Observations/Hypotheses:
+      - **Root cause**: PyTorch recalculated `V_actual` from rotated vectors at each φ (line 1130); C uses STATIC `V_cell` from initialization (nanoBragg.c:2152)
+      - **C behavior**: `a* = (b × c) × (1e20 / V_cell_static)` with 1e20 for meters↔Å conversion
+      - **Fix**: Line 1155 now uses `V_cell_static = self.V` instead of `V_actual = torch.sum(...)`
+      - **Expected improvement**: Should eliminate ~0.13% F_latt drift → 0.21% I_before_scaling divergence
+    First Divergence (before fix): `I_before_scaling` (C: 943654.809, Py: 941686.236, rel: -0.002086)
+    Next Actions:
+      1. Phase M3 — Rerun trace harness with fresh metrics
+      2. Verify F_latt matches C within ≤1e-6
+      3. Update `plans/active/cli-noise-pix0/plan.md:66` task M2 to [D]
+  * [2025-12-08] Attempt #156 (ralph loop i=156, Mode: Docs) — Result: ✅ **SUCCESS** (Phase M2g.1 Option 1 design refresh COMPLETE). **No code changes.**
+    Metrics: Test collection: 567 tests collected successfully in ~3s (pytest --collect-only -q). Documentation-only loop per input.md directive.
+    Artifacts:
+      - Git commit: 9f4a544
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251208_option1_refresh/analysis.md` — Design refresh memo consolidating Option 1 requirements, spec citations (lines 205-233), architecture blocker from Attempt #155, and decision matrix (Options A/B/C)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251208_option1_refresh/commands.txt` — Reproduction steps (collect-only, file reads, no code edits)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251208_option1_refresh/env.json` — Environment snapshot (Python 3.13.7, PyTorch 2.8.0+cu128, CUDA 12.8, float32 default)
+    Observations/Hypotheses:
+      - **Spec baseline confirmed**: `specs/spec-a-core.md:211-213` mandates fresh φ rotations each step from (a0,b0,c0) → carryover is C-only bug (C-PARITY-001)
+      - **Option 1 feasibility**: Pixel-indexed cache remains architecturally sound (~224 MB supervisor case @ float32), but integration blocked by rotation tensor shape mismatch
+      - **Architecture variants enumerated**: Option A (add pixel dims → memory explosion, REJECT), Option B (batch-indexed helper → FEASIBLE), Option C (deferred per-pixel → violates vectorization, REJECT)
+      - **Memory estimates refined**: Supervisor full-frame 224 MB (N_mos=1), 2.24 GB (N_mos=10); ROI 56×56 only 113 KB
+      - **C-code reference mapped**: OpenMP `firstprivate(ap,bp,cp,...)` (nanoBragg.c:2797-2800, 3044-3095) → per-pixel cache semantics documented
+      - **Spec citation prepared**: Lines 211-213 quote ready for Phase C5 `summary.md` handoff (galph 2025-12-08 verified unchanged)
+      - **Decision matrix teed up**: Options A/B/C pros/cons documented; Option B (batch-indexed) emerges as only viable path
+    Next Actions:
+      - **Architecture decision (Action 0)**: Draft Option B detailed design (`option_b_batch_design.md`) with batch granularity, API signature, cache integration, memory/gradient tradeoffs
+      - **Prototype validation**: Simulate 4×4 ROI with batch approach, measure memory vs vectorized baseline, run gradcheck on cell parameter, profile runtime
+      - **M2g.3-M2g.6 unblocked**: Once Option B validates, proceed with implementation (pixel-indexed cache, apply_phi_carryover, multi-pixel test, trace instrumentation)
+      - **Phase C5 handoff**: Incorporate findings into parity shim `summary.md` citing spec lines 211-213 and linking this design refresh memo
