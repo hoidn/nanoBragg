@@ -455,7 +455,6 @@ class TestTricubicPoly:
             'x1_3d': x1_3d, 'x2_3d': x2_3d, 'x3_3d': x3_3d
         }
 
-    @pytest.mark.xfail(strict=True, reason="D2 implementation pending: polint_vectorized not yet implemented")
     def test_polint_matches_scalar_batched(self, poly_fixture_data):
         """
         Verify batched polint produces same results as scalar reference.
@@ -493,7 +492,6 @@ class TestTricubicPoly:
         print(f"✓ polint_vectorized matches scalar for B={B}")
         print(f"  Output: {y_batch.tolist()}")
 
-    @pytest.mark.xfail(strict=True, reason="D2 implementation pending: polint_vectorized gradients")
     def test_polint_gradient_flow(self, poly_fixture_data):
         """
         Verify gradcheck passes for vectorized polint.
@@ -530,7 +528,6 @@ class TestTricubicPoly:
 
         print("✓ polint_vectorized gradients verified")
 
-    @pytest.mark.xfail(strict=True, reason="D2 implementation pending: polin2_vectorized not yet implemented")
     def test_polin2_matches_scalar_batched(self, poly_fixture_data):
         """
         Verify batched polin2 produces same results as scalar reference.
@@ -570,7 +567,6 @@ class TestTricubicPoly:
         print(f"✓ polin2_vectorized matches scalar for B={B}")
         print(f"  Output: {y_batch.tolist()}")
 
-    @pytest.mark.xfail(strict=True, reason="D2 implementation pending: polin2_vectorized gradients")
     def test_polin2_gradient_flow(self, poly_fixture_data):
         """
         Verify gradcheck passes for vectorized polin2.
@@ -601,7 +597,6 @@ class TestTricubicPoly:
 
         print("✓ polin2_vectorized gradients verified")
 
-    @pytest.mark.xfail(strict=True, reason="D2 implementation pending: polin3_vectorized not yet implemented")
     def test_polin3_matches_scalar_batched(self, poly_fixture_data):
         """
         Verify batched polin3 (full 3D tricubic) produces same results as scalar.
@@ -643,7 +638,6 @@ class TestTricubicPoly:
         print(f"✓ polin3_vectorized matches scalar for B={B}")
         print(f"  Output: {y_batch.tolist()}")
 
-    @pytest.mark.xfail(strict=True, reason="D2 implementation pending: polin3_vectorized gradients")
     def test_polin3_gradient_flow(self, poly_fixture_data):
         """
         Verify gradcheck passes for vectorized polin3 (full 3D interpolation).
@@ -676,7 +670,6 @@ class TestTricubicPoly:
 
         print("✓ polin3_vectorized gradients verified")
 
-    @pytest.mark.xfail(strict=True, reason="D2 implementation pending: batched path shape preservation")
     def test_polin3_batch_shape_preserved(self, poly_fixture_data):
         """
         Verify batched polin3 preserves batch dimension correctly.
@@ -706,7 +699,6 @@ class TestTricubicPoly:
 
         print(f"✓ polin3_vectorized preserves batch shape correctly for B={B}")
 
-    @pytest.mark.xfail(strict=True, reason="D2 implementation pending: dtype neutrality")
     @pytest.mark.parametrize("dtype", [torch.float32, torch.float64])
     def test_polynomials_support_float64(self, poly_fixture_data, dtype):
         """
@@ -731,7 +723,6 @@ class TestTricubicPoly:
 
         print(f"✓ polint_vectorized works with {dtype}")
 
-    @pytest.mark.xfail(strict=True, reason="D2 implementation pending: device neutrality")
     @pytest.mark.parametrize("device", [
         "cpu",
         pytest.param("cuda", marks=pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available"))

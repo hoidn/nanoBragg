@@ -434,9 +434,8 @@ class Crystal:
             f"Device mismatch: h_indices on {h_indices.device}, input on {h.device}"
 
         # Perform tricubic interpolation
-        # Phase C1 deliverable: batched gather complete
-        # Phase D (polynomial vectorization) will consume these (B,4,4,4) neighborhoods
-        # For now, maintain scalar path for single-element case and fall back for batched
+        # Phase C1: batched gather complete
+        # Phase D2: vectorized polynomial helpers now available
         if B == 1:
             # Scalar case: use existing polin3 (squeeze to remove batch dim)
             F_cell = polin3(h_indices.squeeze(0), k_indices.squeeze(0), l_indices.squeeze(0),
@@ -455,19 +454,30 @@ class Crystal:
 
             return result
         else:
-            # Batched case: Phase D will vectorize polin3; for now fall back to nearest-neighbor
-            # This preserves existing behavior while delivering Phase C1 (batched gather infrastructure)
-            if not self._interpolation_warning_shown:
-                print("WARNING: tricubic interpolation batched gather implemented")
-                print("WARNING: polynomial evaluation not yet vectorized; falling back to nearest-neighbor")
-                print("WARNING: this warning will only be shown once")
-                self._interpolation_warning_shown = True
+            # Batched case: use vectorized polin3 (Phase D2 implementation)
+            from ..utils.physics import polin3_vectorized
 
-            result = self._nearest_neighbor_lookup(h, k, l)
+            # Call vectorized helper with batched inputs
+            # h_indices, k_indices, l_indices: (B, 4)
+            # sub_Fhkl: (B, 4, 4, 4)
+            # h_flat, k_flat, l_flat: (B,)
+            # Returns: (B,)
+            F_cell_flat = polin3_vectorized(
+                h_indices, k_indices, l_indices,
+                sub_Fhkl,
+                h_flat, k_flat, l_flat
+            )
 
-            # Phase C3: Verify fallback output shape matches original input shape
+            # Phase D2: Output shape assertion (batched path)
+            assert F_cell_flat.shape == (B,), \
+                f"Batched interpolation output must have shape ({B},), got {F_cell_flat.shape}"
+
+            # Reshape back to original input shape
+            result = F_cell_flat.reshape(original_shape)
+
+            # Phase D2: Verify final output shape matches original input shape
             assert result.shape == original_shape, \
-                f"Fallback output shape mismatch: expected {original_shape}, got {result.shape}"
+                f"Output shape mismatch: expected {original_shape}, got {result.shape}"
 
             return result
 

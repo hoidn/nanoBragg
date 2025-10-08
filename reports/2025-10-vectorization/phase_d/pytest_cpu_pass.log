@@ -1,0 +1,46 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/myenv/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+collecting ... collected 11 items
+
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polint_matches_scalar_batched FAILED [  9%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polint_gradient_flow PASSED [ 18%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin2_matches_scalar_batched FAILED [ 27%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin2_gradient_flow PASSED [ 36%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin3_matches_scalar_batched FAILED [ 45%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin3_gradient_flow PASSED [ 54%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin3_batch_shape_preserved PASSED [ 63%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_support_float64[dtype0] PASSED [ 72%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_support_float64[dtype1] PASSED [ 81%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_device_neutral[cpu] PASSED [ 90%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_device_neutral[cuda] PASSED [100%]
+
+=================================== FAILURES ===================================
+_____________ TestTricubicPoly.test_polint_matches_scalar_batched ______________
+tests/test_tricubic_vectorized.py:489: in test_polint_matches_scalar_batched
+    assert torch.allclose(y_batch, y_scalar, rtol=1e-10, atol=1e-12), \
+E   AssertionError: Batched vs scalar mismatch: max diff = 765611936652984.5
+E   assert False
+E    +  where False = <built-in method allclose of type object at 0x74704e3904c0>(tensor([ 2.1955e+14, -7.6561e+14,  2.1955e+14], dtype=torch.float64), tensor([2.8125, 0.1250, 3.8125], dtype=torch.float64), rtol=1e-10, atol=1e-12)
+E    +    where <built-in method allclose of type object at 0x74704e3904c0> = torch.allclose
+_____________ TestTricubicPoly.test_polin2_matches_scalar_batched ______________
+tests/test_tricubic_vectorized.py:564: in test_polin2_matches_scalar_batched
+    assert torch.allclose(y_batch, y_scalar, rtol=1e-10, atol=1e-12), \
+E   AssertionError: Batched vs scalar mismatch: max diff = 1.9395054183491911e+28
+E   assert False
+E    +  where False = <built-in method allclose of type object at 0x74704e3904c0>(tensor([-1.3744e+12, -1.9395e+28], dtype=torch.float64), tensor([3.0000, 0.7500], dtype=torch.float64), rtol=1e-10, atol=1e-12)
+E    +    where <built-in method allclose of type object at 0x74704e3904c0> = torch.allclose
+_____________ TestTricubicPoly.test_polin3_matches_scalar_batched ______________
+tests/test_tricubic_vectorized.py:635: in test_polin3_matches_scalar_batched
+    assert torch.allclose(y_batch, y_scalar, rtol=1e-10, atol=1e-12), \
+E   AssertionError: Batched vs scalar mismatch: max diff = 2.055236677496579e+42
+E   assert False
+E    +  where False = <built-in method allclose of type object at 0x74704e3904c0>(tensor([-1.4507e+26,  2.0552e+42], dtype=torch.float64), tensor([ 3.5000, 25.0000], dtype=torch.float64), rtol=1e-10, atol=1e-12)
+E    +    where <built-in method allclose of type object at 0x74704e3904c0> = torch.allclose
+=========================== short test summary info ============================
+FAILED tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polint_matches_scalar_batched
+FAILED tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin2_matches_scalar_batched
+FAILED tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin3_matches_scalar_batched
+========================= 3 failed, 8 passed in 2.44s ==========================
