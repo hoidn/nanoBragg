@@ -78,6 +78,12 @@ This README documents the cross‑machine orchestration for the supervisor (galp
       - Files must be ≤ `--max-autocommit-bytes` (default 1,048,576 bytes)
       - Any dirty tracked changes outside the whitelist cause a clear error and the handoff is aborted (no state flip)
     - Configure whitelist via `--autocommit-whitelist a,b,c` and size via `--max-autocommit-bytes N`
+  - Reports auto-commit (publishes Galph's evidence by file type)
+    - `--auto-commit-reports` / `--no-auto-commit-reports` (default: on)
+    - `--report-extensions ".png,.jpeg,.npy,.txt,.md,.json"` — allowed file types (logs excluded by default)
+    - `--max-report-file-bytes N` (default 5 MiB) · `--max-report-total-bytes N` (default 20 MiB)
+    - `--force-add-reports` (default: off) — force-add files even if ignored by .gitignore
+    - Notes: stamp-first handoff ensures reports + state publish together; exclude `.log` here by default to keep history lean; override via `--report-extensions` if needed.
   - `--prepull-auto-commit-docs` / `--no-prepull-auto-commit-docs` (default: on)
     - If the initial git pull fails (e.g., due to local modified doc/meta files), supervisor will attempt a doc/meta whitelist auto‑commit first, then retry the pull.
     - If non‑whitelisted dirty files are present, the supervisor exits with a clear error (prevents accidental commits of code/large files).

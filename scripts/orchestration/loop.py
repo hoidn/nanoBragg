@@ -10,6 +10,7 @@ from subprocess import Popen, PIPE
 
 from .state import OrchestrationState
 from .git_bus import safe_pull, add, commit, push_to, short_head, has_unpushed_commits, assert_on_branch, current_branch, push_with_rebase
+from .autocommit import autocommit_reports
 
 
 def _log_file(prefix: str) -> Path:
@@ -101,83 +102,7 @@ def main() -> int:
                 print(f"[sync] ERROR ({ctx}): git pull failed; see iter log.")
         return ok
 
-    def _list(cmd: list[str]) -> list[str]:
-        from subprocess import run, PIPE
-        cp = run(cmd, stdout=PIPE, stderr=PIPE, text=True)
-        if cp.returncode != 0:
-            return []
-        return [p for p in (cp.stdout or "").splitlines() if p.strip()]
-
-    def _loop_autocommit_reports(args_ns, logger) -> tuple[bool, list[str], list[str]]:
-        """
-        Attempt to auto-stage+commit report artifacts filtered by file extension and size caps.
-        Returns (committed: bool, staged_paths: list[str], skipped_paths: list[str]).
-        """
-        allowed_exts = {e.strip().lower() for e in args_ns.report_extensions.split(',') if e.strip()}
-        max_file = args_ns.max_report_file_bytes
-        max_total = args_ns.max_report_total_bytes
-
-        # Gather dirty paths (modified + staged + untracked)
-        unstaged_mod = _list(["git", "diff", "--name-only", "--diff-filter=M"])
-        staged_mod = _list(["git", "diff", "--cached", "--name-only", "--diff-filter=AM"])
-        untracked = _list(["git", "ls-files", "--others", "--exclude-standard"])
-        dirty_all = []
-        seen = set()
-        for p in unstaged_mod + staged_mod + untracked:
-            if p not in seen:
-                dirty_all.append(p)
-                seen.add(p)
-
-        staged: list[str] = []
-        skipped: list[str] = []
-        total_bytes = 0
-
-        # Staging logic with ignore check
-        from subprocess import run as prun, PIPE as PPIPE
-        for p in dirty_all:
-            ext = ("." + p.split(".", 1)[-1]).lower() if "." in p else ""
-            if ext not in allowed_exts:
-                skipped.append(p)
-                continue
-            try:
-                if not os.path.isfile(p):
-                    skipped.append(p)
-                    continue
-                size = os.path.getsize(p)
-                if size > max_file or (total_bytes + size) > max_total:
-                    skipped.append(p)
-                    continue
-            except FileNotFoundError:
-                skipped.append(p)
-                continue
-
-            # Check if ignored and force-add if requested
-            ignored = False
-            if args_ns.force_add_reports:
-                cp_chk = prun(["git", "check-ignore", "-q", p])
-                ignored = (cp_chk.returncode == 0)
-            if ignored and args_ns.force_add_reports:
-                cp_add = prun(["git", "add", "-f", p], stdout=PPIPE, stderr=PPIPE, text=True)
-                if cp_add.returncode != 0:
-                    skipped.append(p)
-                    continue
-            else:
-                cp_add = prun(["git", "add", p], stdout=PPIPE, stderr=PPIPE, text=True)
-                if cp_add.returncode != 0:
-                    skipped.append(p)
-                    continue
-            staged.append(p)
-            total_bytes += size
-
-        committed = False
-        if staged:
-            body = "\n\nFiles:\n" + "\n".join(f" - {x}" for x in staged)
-            committed = commit(f"RALPH AUTO: reports evidence — tests: not run{body}")
-            if committed:
-                logger(f"[reports] Auto-committed {len(staged)} files ({total_bytes} bytes)")
-            else:
-                logger("[reports] WARNING: git commit failed; staged files remain staged")
-        return committed, staged, skipped
+    # (reports auto-commit now shared via autocommit.autocommit_reports)
 
     # Branch guard / resolution
     if args.branch:
@@ -255,7 +180,15 @@ def main() -> int:
 
         # Auto-commit reports evidence (before stamping) — constrained by extension and size caps
         if args.auto_commit_reports:
-            _loop_autocommit_reports(args, logp)
+            allowed = {e.strip().lower() for e in args.report_extensions.split(',') if e.strip()}
+            autocommit_reports(
+                allowed_extensions=allowed,
+                max_file_bytes=args.max_report_file_bytes,
+                max_total_bytes=args.max_report_total_bytes,
+                force_add=args.force_add_reports,
+                logger=logp,
+                commit_message_prefix="RALPH AUTO: reports evidence — tests: not run",
+            )
 
         # Complete handoff (stamp-first, idempotent)
         sha = short_head()

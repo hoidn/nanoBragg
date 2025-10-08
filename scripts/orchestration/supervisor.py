@@ -11,6 +11,7 @@ from subprocess import Popen, PIPE
 
 from .state import OrchestrationState
 from .git_bus import safe_pull, add, commit, push_to, short_head, assert_on_branch, current_branch, has_unpushed_commits, push_with_rebase
+from .autocommit import autocommit_reports
 
 
 def _log_file(prefix: str) -> Path:
@@ -77,6 +78,24 @@ def main() -> int:
     ap.add_argument("--no-prepull-auto-commit-docs", dest="prepull_auto_commit_docs", action="store_false",
                     help="Disable pre-pull doc/meta auto-commit fallback")
     ap.set_defaults(prepull_auto_commit_docs=True)
+    # Reports auto-commit (supervisor evidence publishing)
+    ap.add_argument("--auto-commit-reports", dest="auto_commit_reports", action="store_true",
+                    help="Auto-stage+commit report artifacts by file extension after run (default: on)")
+    ap.add_argument("--no-auto-commit-reports", dest="auto_commit_reports", action="store_false",
+                    help="Disable auto commit of report artifacts")
+    ap.set_defaults(auto_commit_reports=True)
+    ap.add_argument("--report-extensions", type=str,
+                    default=os.getenv("SUPERVISOR_REPORT_EXTENSIONS", ".png,.jpeg,.npy,.txt,.md,.json"),
+                    help="Comma-separated list of allowed report file extensions (lowercase, with dots)")
+    ap.add_argument("--max-report-file-bytes", type=int, default=int(os.getenv("SUPERVISOR_MAX_REPORT_FILE_BYTES", "5242880")),
+                    help="Maximum per-file size (bytes) eligible for reports auto-commit (default 5 MiB)")
+    ap.add_argument("--max-report-total-bytes", type=int, default=int(os.getenv("SUPERVISOR_MAX_REPORT_TOTAL_BYTES", "20971520")),
+                    help="Maximum total size (bytes) staged per iteration for reports (default 20 MiB)")
+    ap.add_argument("--force-add-reports", dest="force_add_reports", action="store_true",
+                    help="Force-add report files even if ignored (.gitignore) (default: off)")
+    ap.add_argument("--no-force-add-reports", dest="force_add_reports", action="store_false",
+                    help="Do not force-add ignored report files")
+    ap.set_defaults(force_add_reports=False)
     args, unknown = ap.parse_known_args()
 
     # Helpers shared by pre-pull and post-run auto-commit paths
@@ -273,6 +292,18 @@ def main() -> int:
         rc = tee_run([args.codex_cmd, "exec", "-m", "gpt-5-codex", "-c", "model_reasoning_effort=high", "--dangerously-bypass-approvals-and-sandbox"], Path("prompts/supervisor.md"), iter_log)
 
         sha = short_head()
+
+        # Auto-commit reports evidence (before stamping)
+        if args.auto_commit_reports:
+            allowed = {e.strip().lower() for e in args.report_extensions.split(',') if e.strip()}
+            autocommit_reports(
+                allowed_extensions=allowed,
+                max_file_bytes=args.max_report_file_bytes,
+                max_total_bytes=args.max_report_total_bytes,
+                force_add=args.force_add_reports,
+                logger=logp,
+                commit_message_prefix="SUPERVISOR AUTO: reports evidence — tests: not run",
+            )
 
         # Determine post-run success without early-returning
         post_ok = (rc == 0)
