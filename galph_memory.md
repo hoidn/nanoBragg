@@ -1130,3 +1130,9 @@
 - Refreshed `plans/active/phi-carryover-removal/plan.md` Phase C rows with explicit file targets (docs entry, parity test retirement, crystal docstrings) and synced `docs/fix_plan.md` Next Actions accordingly.
 - Authored new `input.md` (Mode: Docs) directing Ralph to execute Phase C2/C3 sweep, capture artifacts under `reports/.../phase_phi_removal/phase_c/<ts>/`, run collect-only on `tests/test_cli_scaling_phi0.py`, and update fix_plan attempts.
 - Follow-up: Ralph to update docs/tests per Phase C guidance, drop or rewrite `tests/test_cli_scaling_parity.py`, scrub parity-shim diagnosis reports, and log summary + SHA256 in the new Phase C timestamp before progressing to Phase D evidence.
+
+## 2025-12-14 (galph loop — Phase D proof-of-removal planning)
+- Coin flip=heads → reviewed Ralph’s latest commit 85dc304 (Phase C2/C3 doc sweep); work remains aligned with plan and introduced no regressions.
+- Expanded `plans/active/phi-carryover-removal/plan.md` Phase D/E sections with concrete D1a–D1c checklist items (trace harness command, pytest proof, rg sweep) and optional watch tasks; refreshed `docs/fix_plan.md:451-467` Next Actions to point at the new checklist.
+- Replaced `input.md` (Mode: Parity) instructing Ralph to execute Phase D1a spec-mode trace runs, gather targeted pytest evidence, collect the `rg` scan, and stash artifacts under `reports/2025-10-cli-flags/phase_phi_removal/phase_d/${STAMP}/`.
+- Follow-up: Expect Ralph to produce the Phase D bundle next loop, update fix_plan Attempts with the timestamped directory, and prepare for D2 ledger sync.

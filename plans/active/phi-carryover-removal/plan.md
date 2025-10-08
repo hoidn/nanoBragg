@@ -49,22 +49,24 @@ Exit Criteria: Updated tests/docs focus exclusively on spec mode; parity harness
 | C3 | Adjust parity tooling docs/tests | [D] | ✅ Sweep complete (Attempt #180, 2025-10-08). Deleted `tests/test_cli_scaling_parity.py` (shim-dependent), updated `crystal.py:1219-1256` docstring to remove cache/carryover refs, added historical notice to `diagnosis.md`. Artifacts: `reports/2025-10-cli-flags/phase_phi_removal/phase_c/20251008T200154Z/`. |
 
 ### Phase D — Validation & Closure
-Goal: Demonstrate that spec-mode parity is still on track and retire the old plan items cleanly.
-Prereqs: Phases B and C complete, no dangling references to shim remain.
-Exit Criteria: New evidence bundle confirms spec-mode traces/tests pass; fix_plan and plan archives updated; CLI-FLAGS-003 scope narrowed to `-nonoise`/`-pix0` deliverables.
+Goal: Publish definitive "shim is gone" evidence, realign the ledgers, and hand supervision back to the remaining CLI scaling tasks.
+Prereqs: Phases B–C marked [D]; commit history (≥85dc304) present locally; Ralph briefed that execution must stay spec-only.
+Exit Criteria: Timestamped Phase D bundle contains real C/Py traces + targeted pytest proof with zero `phi_carryover_mode` references; docs/fix_plan.md and supervision notes reference the new evidence and scope future work to scaling only.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| D1 | Capture proof-of-removal bundle | [ ] | Run spec-mode trace harness (`scripts/trace_harness.py --phi-mode spec`) and store logs + metrics under `reports/.../phase_d/<ts>/`. Highlight absence of shim gating. |
-| D2 | Update fix_plan + archive | [ ] | Rewrite `docs/fix_plan.md` CLI-FLAGS-003 Next Actions to drop shim tasks, link to this plan. Move `plans/active/cli-phi-parity-shim/plan.md` to archive once documentation is synced. |
-| D3 | Supervisor handoff memo | [ ] | In the loop’s `input.md`, instruct Ralph to run the remaining CLI-FLAGS-003 scaling/nb-compare steps using spec mode only. Document final status in `galph_memory.md`. |
+| D1a | Regenerate spec-mode traces | [ ] | Command (CPU first): ``KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --phi-mode spec --pixel 685 1039 --device cpu --dtype float64 --out reports/2025-10-cli-flags/phase_phi_removal/phase_d/$(date -u +%Y%m%dT%H%M%SZ)/trace_py_spec.log``. Mirror the same run with `--emit-c-trace` enabled so the directory also holds the paired `trace_c_spec.log`. Capture stdout/stderr, `metrics.json`, and `commands.txt`; verify the PyTorch log contains no `phi_carryover_mode` keys and that the harness exits 0. |
+| D1b | Capture regression proof | [ ] | In the same timestamped directory, run ``pytest -v tests/test_cli_scaling_phi0.py`` (CPU only unless CUDA available). Store `pytest.log`, `collect.log`, `env.json`, and SHA256 checksums. Extract max |Δk_frac| from the log into `summary.md` (expect ≤1e-6). |
+| D1c | Confirm code/doc cleanliness | [ ] | `rg --files-with-matches "phi_carryover" src tests scripts prompts docs | sort` (exclude `reports/` and archives). Document the zero-result (or justify any residual historical reference) inside `summary.md`. |
+| D2 | Ledger + plan sync | [ ] | Update `docs/fix_plan.md` (CLI-FLAGS-003 Attempts + Next Actions) to cite the Phase D bundle path and drop all shim-related bullets. Move `plans/active/cli-phi-parity-shim/plan.md` into `plans/archive/` with a closure note once references are cleared. |
+| D3 | Supervisor handoff memo | [ ] | Write the next `input.md` instructing Ralph to resume the scaling/nb-compare track (Phase L in `plans/active/cli-noise-pix0/plan.md`) using only spec mode. Summarize Phase D completion in `galph_memory.md` so future loops know the shim closure evidence exists. |
 
 ### Phase E — Post-removal Watch (Optional)
-Goal: Define lightweight monitoring to ensure the carryover bug does not reappear.
-Prereqs: Phase D closed.
-Exit Criteria: Watch task documented; automation or manual checks scheduled.
+Goal: Install lightweight guardrails so φ carryover never sneaks back in.
+Prereqs: Phase D bundle committed and referenced in fix_plan.
+Exit Criteria: Preventative checks documented and logged in the repo for future hygiene sweeps.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| E1 | Add lint/checklist item | [ ] | Extend `docs/fix_plan.md` hygiene notes to assert "No phi carryover codepath"; reference spec lines. |
-| E2 | Schedule periodic audit | [ ] | Decide cadence (e.g., quarterly) to rerun spec-mode trace comparison; log in `reports/archive/cli-flags-003/watch.md`. |
+| E1 | Add hygiene checklist item | [ ] | Extend `docs/fix_plan.md` Protected-Assets/cleanup guidance to require `rg "phi_carryover"` before/after large refactors. Cite `specs/spec-a-core.md:204-240` as the reason. |
+| E2 | Schedule periodic audit | [ ] | Create `reports/archive/cli-flags-003/watch.md` documenting a quarterly trace-audit cadence (command + expected zero diff). Include first audit due date and owner (default Ralph). |

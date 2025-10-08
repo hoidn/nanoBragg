@@ -462,9 +462,9 @@
 1. ~~**Phase C1 coverage audit**~~ ✅ COMPLETE (Attempt #179, 2025-10-08)
 2. ~~**Phase C2 documentation updates**~~ ✅ COMPLETE (Attempt #180, 2025-10-08)
 3. ~~**Phase C3 tooling/docs sweep**~~ ✅ COMPLETE (Attempt #180, 2025-10-08)
-4. **Phase D1 proof-of-removal bundle** — Run spec-mode trace harness and capture artifacts under `reports/.../phase_d/<ts>/`
-5. **Phase D2 archive phi-parity-shim plan** — Move `plans/active/cli-phi-parity-shim/plan.md` to archive once documentation synced
-6. **Phase D3 supervisor handoff** — Update `input.md` to focus on remaining CLI-FLAGS-003 tasks (-nonoise/-pix0)
+4. **Phase D1 proof-of-removal bundle** — Follow `plans/active/phi-carryover-removal/plan.md` rows D1a–D1c: rerun the supervisor trace harness in spec mode (with paired C trace), log the targeted `pytest -v tests/test_cli_scaling_phi0.py` run, and document the zero-result `rg "phi_carryover"` sweep inside the new Phase D timestamp directory under `reports/2025-10-cli-flags/phase_phi_removal/`
+5. **Phase D2 ledger sync** — Update this entry’s Attempts + Next Actions with the Phase D bundle path, then move `plans/active/cli-phi-parity-shim/plan.md` to `plans/archive/` once no live references remain
+6. **Phase D3 supervisor handoff** — In the next `input.md`, steer Ralph toward `plans/active/cli-noise-pix0/plan.md` Phase L scaling tasks (spec mode only) and record the closure note in `galph_memory.md`
 
 - Attempts History:
   * [2025-10-08] Attempt #180 (ralph loop i=177, Mode: Docs) — Result: ✅ **SUCCESS** (Phase C2/C3 Doc Sweep COMPLETE). **No code changes** (docs/tests only).
