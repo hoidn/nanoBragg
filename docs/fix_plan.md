@@ -459,12 +459,10 @@
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): 🔴 **2025-12-11 regression.** Option B cache wiring (commit `fa0167b`) allows the targeted parity test to hit the cache but `F_latt` still diverges (relative error 1.57884 versus ≤1e-6) and the omega trace tap now throws tensor indexing errors. Evidence captured in `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T153142Z_carryover_cache_plumbing/`.
 - Next Actions (2025-12-12 refresh):
-0. ✅ **M2i.1 cross-pixel trace rerun archived** — `reports/2025-10-cli-flags/phase_l/carryover_probe/20251008T172721Z/` (CPU, float64, c-parity) contains trace logs, metrics, env metadata, and SHA256 bundle.
-1. **M2i.2 metrics refresh** — ✅ `20251008T174753Z` rerun captured (`scaling_validation/20251008T174753Z/`). `first_divergence` remains `I_before_scaling` (Δrel ≈ -0.9999995), lattice hypotheses updated 2025-10-08T17:47:53Z. Keep gate open until physics fix lands; reuse this evidence for downstream analysis.
-2. **M2g.5 trace tooling patch** — Update cache-aware taps (omega, F_latt) so CUDA/CPU harness runs without IndexError; re-run the CUDA harness to verify.
-3. **M2g.6 documentation sync** — Extend `reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md` with the Option B rationale and new evidence paths; flip plan row to [D].
-4. **Cache index audit** — Confirm `apply_phi_carryover()` consumes the previous pixel’s `(slow, fast)` entry (fast-1 with wrap) and log findings in the new diagnostics bundle ahead of simulator edits.
-5. **Phase N prep** — Stage updated C + PyTorch float images once VG-2 is green so nb-compare can execute immediately.
+0. **M2i.2 metrics gate** — Keep the 20251008T174753Z bundle as the authoritative comparison; no rerun until physics changes, but reference it in future attempts to show the `I_before_scaling` Δrel ≈ -0.9999995 baseline.
+1. **M2g.6 documentation sync** — Append Attempt #171 outcomes to `phi_carryover_diagnosis.md`, cite `reports/2025-10-cli-flags/phase_l/trace_tooling_patch/20251008T175913Z/`, and flip the plan row [D]; update this ledger once complete.
+2. **Cache index audit** — Capture a fresh diagnostics bundle logging `(slow, fast)` cache lookups (fast-1 with wrap) before/after `apply_phi_carryover()`; store under `reports/2025-10-cli-flags/phase_l/cache_index_audit/<timestamp>/` with commands, diff summary, env metadata, and SHA256 hashes.
+3. **Phase N preparation** — Draft the nb-compare harness commands and enumerate prerequisites so regenerated C/PyTorch float images can be produced immediately after VG-2 turns green; log guidance in `reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/README.md`.
 
 - Attempts History:
   * [2025-10-07] Attempt #136 (ralph loop i=135, Mode: Docs) — Result: ✅ **SUCCESS** (Phase L Documentation Sync COMPLETE). **No code changes.**

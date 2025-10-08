@@ -24,13 +24,12 @@
   - Attempt #167 (2025-10-08) executed the 2×2 ROI gradcheck harness (CPU + CUDA) stored in `20251008T165745Z_carryover_cache_validation/`; gradients remain intact (loss 1.19952e+03, ∂loss/∂cell_a = 3.9976), clearing Phase M2h.
   - Canonical scaling deltas are still captured in `20251008T072513Z/metrics.json`; subsequent timestamps document cache-enabled failures and should be referenced during diagnosis.
   - Supervisor command / nb-compare parity remains outstanding (correlation ≈0.9965, intensity ratio ≈1.26e5) pending VG-2 closure.
+- New evidence (Attempt #171, 2025-10-08): `reports/2025-10-cli-flags/phase_l/trace_tooling_patch/20251008T175913Z/` confirms cache-aware trace taps on CPU+CUDA; M2g.5 is complete and clears the tooling blocker.
 - Next Actions (2025-12-12 refresh):
-0. ✅ **M2i.1 trace rerun complete** — Evidence stored under `reports/2025-10-cli-flags/phase_l/carryover_probe/20251008T172721Z/` (CPU, float64, c-parity). Metrics: final intensity 4.06e-07, `F_latt` components logged, provenance bundle captured.
-1. **M2i.2 metrics refresh** — ✅ `20251008T174753Z` rerun captured (compare_scaling_traces.py). `first_divergence` still `I_before_scaling` (Δrel ≈ -0.9999995); lattice hypotheses note updated 2025-10-08T17:47:53Z. Keep gate open until fix lands, reuse this evidence for downstream diagnostics.
-2. **M2g.5 trace tooling patch** — Update `trace_harness.py` (and related taps) to handle row-batched caches without IndexError; re-run the CUDA harness once patched.
-3. **M2g.6 documentation sync** — Append the Option B rationale and new evidence paths to `phi_carryover_diagnosis.md`, then mark the plan row [D].
-4. **Cache index audit** — Confirm `apply_phi_carryover()` consumes the previous pixel’s `(slow, fast)` entry (fast-1 with wrap) and log findings in the diagnostics bundle ahead of simulator edits.
-5. **Phase N prep** — Once VG-2 is green, stage ROI nb-compare inputs (C + PyTorch float images) so nb-compare can run immediately after M2i.
+0. **M2i.2 metrics gate** — Keep the 20251008T174753Z bundle as the authoritative comparison; no rerun until physics changes, but reference it in future attempts to show the baseline divergence (Δrel ≈ -0.9999995 on `I_before_scaling`).
+1. **M2g.6 documentation sync** — Extend `reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md` with the Option B trace-tooling outcome and flip the plan row [D]; cite Attempt #171 artifacts and update `docs/fix_plan.md` once complete.
+2. **Cache index audit** — Build a diagnostics bundle that logs `(slow, fast)` cache lookups (fast-1 with wrap) before and after `apply_phi_carryover()`; store under `reports/2025-10-cli-flags/phase_l/cache_index_audit/<timestamp>/` with commands, diff notes, and SHA256 hashes.
+3. **Phase N preparation** — After VG-2 closes, pre-stage refreshed C & PyTorch float images so nb-compare can execute immediately; draft harness commands now and note prerequisites in `reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/README.md`.
 - Artifact Storage Convention: place new work in `reports/2025-10-cli-flags/phase_l/<phase_folder>/<timestamp>/` with `commands.txt`, raw logs, metrics JSON, and SHA256 hashes. Reference these paths in docs/fix_plan.md attempt logs and `fix_checklist.md`.
 
 ### Completed Foundations (Phases A–K)
