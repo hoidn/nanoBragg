@@ -926,3 +926,11 @@
 ## 2025-12-06 (galph loop — Phase M2 lattice hypotheses)
 - Authored `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md` summarising F_latt vs HKL deltas and three follow-up probes (rotated-vector taps, V_actual check, float64 rerun). Plan `cli-noise-pix0` M2c now [D]; logged Attempt #149 in docs/fix_plan.md.
 - Input memo (Parity mode) directs Ralph to add φ-step trace taps + run float64 harness with new flag; artifacts to land under fresh timestamp before lattice fixes begin.
+
+## 2025-12-07 (galph loop — Phase M2 lattice debug)
+- Reconfirmed CLI-FLAGS-003 Phase M2 focus after sync; reviewed specs/index/arch/config/testing docs plus recent traces.
+- Evidence review: `trace_py_scaling_per_phi.log` vs `c_trace_scaling.log` shows constant k_frac offset (~−6.78e-06) and |F_latt| rel error ≈1.3e-3; reciprocal components differ (`a_star_y` +1.69e-05, `b_star_y` −5.16e-05, `c_star_y` −1.66e-05).
+- Scattering vector deltas (S_x+5.24e3, S_y+3.04e3, S_z+331) line up with those reciprocal drifts, pointing at MOSFLM ingestion rather than φ carryover.
+- Hypothesis: `Crystal.compute_cell_tensors()` MOSFLM branch not enforcing nanoBragg reciprocal/real recomputation sequence; need to re-derive from MOSFLM vectors using exact C formulas so metric duality holds. Secondary: verify no residual pix0/close_distance rounding after fix.
+- Wrote Parity-mode input.md targeting CLI-FLAGS-003 Phase M2 fix: reproduce drift, correct MOSFLM reciprocal vectors, rerun trace harness, run targeted pytest, update evidence/logs.
+- Next supervisor follow-up: confirm new timestamp under `reports/2025-10-cli-flags/phase_l/scaling_validation/`, metrics.json shows first_divergence=None, docs/fix_plan attempt logged, and plan Phase M2 marked [D] before advancing to Phase M3.
