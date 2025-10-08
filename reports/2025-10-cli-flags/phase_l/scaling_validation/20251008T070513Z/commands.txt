@@ -1,0 +1,7 @@
+export RUN_DIR=reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T070513Z
+5a323ee15c4a93d92953f98aa86e55688b279464
+ M src/nanobrag_torch/models/crystal.py
+ M src/nanobrag_torch/simulator.py
+?? reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T070513Z/
+export KMP_DUPLICATE_LIB_OK=TRUE
+export PYTHONPATH=src

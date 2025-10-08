@@ -117,6 +117,12 @@ class Crystal:
             self.N_cells_c.item()
         ])
 
+        # Phase CLI-FLAGS-003 M0a: Trace instrumentation guard
+        # Only populate _last_tricubic_neighborhood when trace mode is explicitly enabled
+        # This prevents unconditional debug payload retention during production runs
+        self._enable_trace = False  # Set to True by Simulator when trace_pixel is active
+        self._last_tricubic_neighborhood = None  # Populated only when _enable_trace=True
+
         # TODO (CLI-FLAGS-003 Phase L3k.3c.4): Add opt-in C-parity carryover shim here
         # Future work will introduce a flag to enable φ=0 cache for validation harnesses
         # that need to reproduce nanoBragg.c's C-PARITY-001 bug (docs/bugs/verified_c_bugs.md:166)
@@ -426,18 +432,26 @@ class Crystal:
         assert k_indices.shape == (B, 4), f"k_indices shape mismatch: expected ({B}, 4), got {k_indices.shape}"
         assert l_indices.shape == (B, 4), f"l_indices shape mismatch: expected ({B}, 4), got {l_indices.shape}"
 
-        # Phase CLI-FLAGS-003 M1: Store neighborhood for debug tracing
-        # Save the 4×4×4 neighborhood for the last query point when debugging
-        # This allows the simulator's _apply_debug_output to emit tricubic weights
-        self._last_tricubic_neighborhood = {
-            'sub_Fhkl': sub_Fhkl,  # (B, 4, 4, 4) or (1, 4, 4, 4) for single query
-            'h_indices': h_indices,  # (B, 4) Miller h coordinates
-            'k_indices': k_indices,  # (B, 4) Miller k coordinates
-            'l_indices': l_indices,  # (B, 4) Miller l coordinates
-            'h_flat': h_flat,  # (B,) query h values
-            'k_flat': k_flat,  # (B,) query k values
-            'l_flat': l_flat   # (B,) query l values
-        }
+        # Phase CLI-FLAGS-003 M0a: Guarded trace instrumentation
+        # Only store neighborhood when trace mode is explicitly enabled (via Simulator.debug_config)
+        # This prevents unconditional debug payload retention and ensures B > 1 batched runs
+        # don't unnecessarily cache large intermediate tensors during production execution
+        if self._enable_trace:
+            # M0b: Ensure debug tensors respect caller's device/dtype
+            # All tensors (sub_Fhkl, indices, flattened queries) are already on the correct
+            # device/dtype from the batched gather operations above, so no explicit conversion needed
+            self._last_tricubic_neighborhood = {
+                'sub_Fhkl': sub_Fhkl,  # (B, 4, 4, 4) or (1, 4, 4, 4) for single query
+                'h_indices': h_indices,  # (B, 4) Miller h coordinates
+                'k_indices': k_indices,  # (B, 4) Miller k coordinates
+                'l_indices': l_indices,  # (B, 4) Miller l coordinates
+                'h_flat': h_flat,  # (B,) query h values
+                'k_flat': k_flat,  # (B,) query k values
+                'l_flat': l_flat   # (B,) query l values
+            }
+        else:
+            # Production mode: clear any stale trace payload to prevent memory leaks
+            self._last_tricubic_neighborhood = None
 
         # Phase C3: Device/dtype consistency check
         # Ensure all tensors are on the same device as the input query tensors

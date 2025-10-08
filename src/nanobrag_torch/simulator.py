@@ -498,6 +498,11 @@ class Simulator:
         self.printout_pixel = self.debug_config.get('printout_pixel', None)  # [fast, slow]
         self.trace_pixel = self.debug_config.get('trace_pixel', None)  # [slow, fast]
 
+        # Phase CLI-FLAGS-003 M0a: Enable trace instrumentation on Crystal when trace_pixel is active
+        # This guards _last_tricubic_neighborhood population to prevent unconditional debug payload retention
+        if self.trace_pixel is not None:
+            self.crystal._enable_trace = True
+
         # Set incident beam direction from detector.beam_vector
         # This is critical for convention consistency (AT-PARALLEL-004) and CLI override support (CLI-FLAGS-003 Phase H2)
         # The detector.beam_vector property handles both convention defaults and CUSTOM overrides (e.g., -beam_vector)

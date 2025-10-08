@@ -545,6 +545,26 @@
       1. Extend Phase M1 instrumentation to log the 4×4×4 neighbourhood weights (or single-pixel `sincg` inputs) alongside the C trace so we can isolate the exact term contributing the 0.1% F_latt error.
       2. Patch or replace `scripts/validation/compare_scaling_traces.py` so summary generation no longer depends on manual Python snippets; keep the failing command in commands.txt as repro evidence.
       3. Update `plans/active/cli-noise-pix0/plan.md` Phase M1 guidance with the 20251008T060721Z artifact paths and highlight the quantified F_latt deltas to steer Ralph toward `_tricubic_interpolation` vs HKL indexing review.
+  * [2025-10-08] Attempt #144 (ralph loop i=144, Mode: Parity) — Result: ✅ **SUCCESS** (Phase M0 COMPLETE — Instrumentation Hygiene). **Code changes: Crystal + Simulator trace guard.**
+    Metrics: Targeted tests 35/35 passed in 2.67s (test_cli_scaling_phi0.py + test_phi_carryover_mode.py); core geometry tests 66/66 passed in 8.13s. Trace harness executed successfully (114 TRACE_PY lines captured, pixel 685,1039 final intensity 2.875e-07).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T070513Z/instrumentation_audit.md` — Phase M0 completion audit
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T070513Z/trace_py_scaling.log` — Trace harness output with guarded instrumentation
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T070513Z/commands.txt` — Git state + env exports
+    Code Changes:
+      - `src/nanobrag_torch/models/crystal.py:123-124` — Added `_enable_trace` flag (default False) and initialized `_last_tricubic_neighborhood` to None
+      - `src/nanobrag_torch/models/crystal.py:439-454` — Guarded `_last_tricubic_neighborhood` population with `if self._enable_trace:` conditional; production mode clears stale payload
+      - `src/nanobrag_torch/simulator.py:501-504` — Set `crystal._enable_trace = True` when `trace_pixel` is configured in debug_config
+    Observations/Hypotheses:
+      - **M0a complete**: `_last_tricubic_neighborhood` now only populated when Simulator.debug_config contains `trace_pixel`, preventing unconditional debug payload retention during batched (B > 1) production runs
+      - **M0b complete**: All tensors in neighborhood dict (`sub_Fhkl`, `h_indices`, etc.) inherit device/dtype from batched gather operations (crystal.py:380-417); no explicit conversion needed
+      - **M0c complete**: Toggle mechanism documented; trace mode enabled via `debug_config={'trace_pixel': [s, f]}`, production runs default to `_enable_trace=False`
+      - **Device/dtype smoke**: CPU float32/float64 + CUDA float32/float64 all passed TestDeviceDtypeNeutrality (8/8 tests)
+      - **No regressions**: Core geometry tests (crystal + detector) passed without import/device errors; trace harness captured 114 TRACE_PY lines and 10 TRACE_PY_PHI lines as expected
+    Next Actions:
+      - ✅ Phase M0 exit criteria met; proceed to Phase M (M1–M4 structure-factor & normalization parity)
+      - Update `plans/active/cli-noise-pix0/plan.md` Phase M0 tasks M0a–M0c to mark [D] and log this attempt
+      - Begin Phase M1 HKL lookup parity audit per plan guidance
   * [2025-10-07] Attempt #139 (ralph loop i=139, Mode: Docs) — Result: ✅ **SUCCESS** (Phase M1 COMPLETE — Pre-Polar Trace Instrumentation). **Code changes: simulator trace + comparison script.**
     Metrics: Test collection: 699 tests in 2.68s. Trace: 44 TRACE_PY lines (2 new labels). Comparison: pre-polar (941698.5) vs C (943654.8) → −0.207% delta (within expected tolerance).
     Artifacts:
