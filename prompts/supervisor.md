@@ -19,6 +19,12 @@ review docs/bugs/verified_c_bugs.md and specs/. Make sure that the phi 0 carryov
 <3>
 review and firm up if needed plans/active/vectorization.md. then implement it (or rather, delegate its implementation to ralph), starting with the tricubic interpolation vectorization 
 </3>
+<4>
+run pyrefly check src/. triage the errors and delegate the fixing of them to ralph. be careful about test suite regressions.
+</4>
+<5>
+delegate to ralph a full run of the test suite and triage of the failing test. review, classing various errors as either implementation bugs or consequences of test deprecation. then systematically fix the failing tests.
+</5>
 </current long-term goals>
 </past long term goals>
 (just for archival / reference purposes):
