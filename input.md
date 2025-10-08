@@ -1,100 +1,100 @@
-Summary: Generate up-to-date c-parity scaling traces so Phase M1 can confirm the I_before_scaling gap with the current harness and unblock lattice-factor fixes.
+Summary: Align PyTorch `I_before_scaling` trace output with the C reference so Phase M scaling parity can move forward without false divergences.
+Summary Detail: This loop is instrumentation-only—no physics edits—focused on making the trace harness compare apples-to-apples before returning to structure-factor parity work.
+Summary Detail: Success criterion is a new trace/summary pair showing ≤1e-6 relative delta for `I_before_scaling_pre_polar` while preserving the existing post-polar field.
+Summary Detail: Record all findings in docs/fix_plan.md Attempt log immediately after completion so the supervisory history stays linear.
 Mode: Parity
-Focus: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
-Branch: feature/spec-based-2
-Mapped tests:
-- pytest tests/test_phi_carryover_mode.py::TestPhiCarryoverBehavior::test_c_parity_mode_stale_carryover
-- pytest --collect-only -q tests/test_cli_scaling_phi0.py
-Artifacts: reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/summary.md; reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_scaling_cpu.log; reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/metrics.json; reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/commands.txt; reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/sha256.txt; reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/env.json (optional but strongly encouraged)
-Do Now: CLI-FLAGS-003 Phase M1 — run reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py for pixel (685,1039) in c-parity mode on CPU float32, compare against the C trace at 1e-6 tolerance, and capture the full evidence package under a fresh timestamp directory.
-If Blocked: Preserve the failure by running the comparison anyway, archive summary.md + metrics.json + commands.txt + sha256.txt (and env.json if captured), note the blocker (e.g., delta still 21.9% or harness regression) inside summary.md, and log a docs/fix_plan.md Attempt referencing the new timestamp so we can triage next loop.
+Mode Detail: Treat every change through the lens of cross-implementation agreement; no new physics allowed until evidence proves traces line up.
+Mode Detail: Evidence over execution—capture logs, metrics, and diffs so supervisor review can proceed without re-running commands.
+Focus: CLI-FLAGS-003 — Phase M instrumentation parity (trace harness + simulator taps)
+Focus Detail: Specifically target the I_before_scaling instrumentation described in plan tasks M1–M3; defer scaling bug fixes until trace output is trustworthy.
+Branch: main (expected)
+Branch Detail: Stay on the shared branch; do not create feature branches for this instrumentation tweak unless conflicts arise during commit.
+Mapped tests: pytest --collect-only -q tests/test_cli_scaling_phi0.py
+Mapped tests Detail: Collection only this loop—full execution deferred until code paths change beyond instrumentation.
+Artifacts: reports/2025-10-cli-flags/phase_l/scaling_validation/<new_timestamp>/; reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T044933Z/galph_debug_20251203.md
+Artifacts Detail: The new directory should include trace logs, harness stdout/stderr, summary.md, metrics.json, collect.log, commands.txt, and sha256.txt; keep the previous galph memo as a reference for before/after comparison.
+Do Now: docs/fix_plan.md §CLI-FLAGS-003 Phase M — update the simulator trace so it emits both pre- and post-polarization `I_before_scaling`, then rerun the harness with `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --device cpu --dtype float32 --phi-mode c-parity --out reports/2025-10-cli-flags/phase_l/scaling_validation/<new_timestamp>/trace_py_scaling_cpu.log` followed by `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python scripts/validation/compare_scaling_traces.py --c reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log --py reports/2025-10-cli-flags/phase_l/scaling_validation/<new_timestamp>/trace_py_scaling_cpu.log --out reports/2025-10-cli-flags/phase_l/scaling_validation/<new_timestamp>/summary.md --tolerance 1e-6`.
+Do Now Detail: Ensure `<new_timestamp>` is unique (UTC ISO8601 without punctuation) and reuse the same value for all generated files so the evidence bundle remains coherent.
+Do Now Detail: After the comparison, open `summary.md` to confirm both the pre-polar and post-polar metrics are recorded and note any residual delta in docs/fix_plan.md.
+If Blocked:
+- Create `reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/attempt_failed/` and dump all logs there (stdout, stderr, partial traces, compare output).
+- Append a short README.md inside the folder summarizing the failure mode, commands executed, and suspected root cause.
+- Update docs/fix_plan.md Attempt log (CLI-FLAGS-003) with the failure summary and the new artifact path so the supervisor has immediate context.
+- Do not push partial code changes; wait for supervisor guidance once the failure package is prepared.
 Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md:46-56 keeps Phase M1 as the first gate before normalization work; fresh traces are prerequisite evidence.
-- docs/fix_plan.md:484-507 mandates rerunning the harness with the phi-carryover shim after instrumentation; the new data has not been captured yet.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T043438Z/summary.md shows the stale 21.9% gap predating the --phi-mode flag; acting on outdated data risks misdiagnosis.
-- docs/bugs/verified_c_bugs.md:166-191 clarifies C’s φ₀ carryover bug; parity investigations must therefore run in c-parity mode to stay aligned with the reference binary.
-- specs/spec-a-core.md:204-248 reiterates the normative φ rotation pipeline; spec compliance remains the default mode and c-parity is validation-only.
-- docs/development/testing_strategy.md:40-90 emphasises evidence-first workflows and device/dtype neutrality, reinforcing why we capture metrics before editing code.
-- Long-term goal #1 (supervisor parity command) depends on driving this delta to ≤1e-6; without updated traces we cannot monitor progress toward that milestone.
-- The harness and validation scripts already exist; this loop is about producing authoritative artifacts that will guide Phase M2 without guesswork.
-- Fresh evidence also sanity-checks that the phi-mode plumbing works on the current git SHA and that no regressions crept in.
-- Keeping evidence current simplifies future audits, especially when documenting Attempt entries and updating fix_checklist.md.
-- Accurate metrics let us decide whether the fix belongs in lattice factor propagation, accumulation loops, or elsewhere.
-- The timestamped artifact set continues the reproducibility story required by docs/fix_plan.md Attempts and downstream nb-compare runs.
+- plans/active/cli-noise-pix0/plan.md Phase M1–M3 block on having a trustworthy trace; without this fix the entire scaling parity chain remains stalled.
+- docs/fix_plan.md (CLI-FLAGS-003 entry) was amended this loop to highlight the polarization mismatch; acting immediately keeps plan text and reality aligned.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T044933Z/galph_debug_20251203.md contains quantified evidence (C value × polar); a new report should replace its provisional status with verified metrics.
+- specs/spec-a-core.md §Sampling & Accumulation states that `I_term` is the pre-polarization sum, so parity comparisons must occur at that stage to respect the normative contract.
+- Aligning trace taps prevents false positives and ensures subsequent debugging (F_cell, lattice factors, scaling) targets real physics gaps.
+- Updating instrumentation now will make future nb-compare runs cleaner because `compare_scaling_traces.py` will no longer flag I_before errors.
+- Resolving this also unblocks documentation updates in Phase M4 (summary + checklist) since the narrative will match collected data.
+- The longer the mismatch persists, the greater the risk that additional attempts misinterpret the data and open unnecessary follow-up tasks.
 How-To Map:
-- Step 0: export KMP_DUPLICATE_LIB_OK=TRUE to avoid MKL loader conflicts before importing torch.
-- Step 1: TS=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p reports/2025-10-cli-flags/phase_l/scaling_validation/$TS to isolate the new evidence set.
-- Step 2: Optional guard — pytest --collect-only -q tests/test_cli_scaling_phi0.py so selector drift is caught before running longer commands.
-- Step 3: Record git SHA via git rev-parse HEAD and stash it in a temporary note; metrics.json should include it.
-- Step 4: Capture current branch (git branch --show-current) and working tree status (git status -sb) for env.json completeness.
-- Step 5: PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --device cpu --dtype float32 --phi-mode c-parity --out reports/2025-10-cli-flags/phase_l/scaling_validation/$TS/trace_py_scaling_cpu.log
-- Step 6: Immediately append the exact harness command, timestamp, and pwd into commands.txt (printf '...\n' >> .../commands.txt) so provenance stays accurate.
-- Step 7: Save raw stderr/stdout if the harness emits warnings (e.g., tee the output into trace_py_scaling_cpu.log alongside the --out file).
-- Step 8: Capture environment metadata using python - <<'PY' import json, torch, platform; print(json.dumps({"python":platform.python_version(),"torch":torch.__version__,"cuda_available":torch.cuda.is_available(),"git_sha":"$SHA","branch":"$BRANCH"}, indent=2)) PY > env.json
-- Step 9: PYTHONPATH=src python scripts/validation/compare_scaling_traces.py --c reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log --py reports/2025-10-cli-flags/phase_l/scaling_validation/$TS/trace_py_scaling_cpu.log --out reports/2025-10-cli-flags/phase_l/scaling_validation/$TS/summary.md --tolerance 1e-6
-- Step 10: Review summary.md for per-field deltas; highlight whether first divergence remains "I_before_scaling" and note any change in relative delta.
-- Step 11: Construct metrics.json capturing key scalars (hkl_frac components, F_cell, F_latt parts, I_before_scaling_C, I_before_scaling_Py, relative_delta, steps, oversample, mosaic_domains, sources, first_divergence, command_hash).
-- Step 12: Add optional per-φ trace: if TRACE_PY_PHI lines exist, copy them to trace_py_scaling_cpu_per_phi.log and include in sha256.txt.
-- Step 13: Within the timestamp directory run shasum -a 256 * > sha256.txt so each artifact gains a checksum for reproducibility.
-- Step 14: Run pytest tests/test_phi_carryover_mode.py::TestPhiCarryoverBehavior::test_c_parity_mode_stale_carryover and capture the exit status; add the command to commands.txt.
-- Step 15: If time allows, run pytest --maxfail=1 --disable-warnings -q tests/test_cli_scaling_phi0.py::TestScalingParity::test_spec_mode_identity to ensure spec mode remains green (optional but nice to have).
-- Step 16: Verify the timestamp directory lists at minimum: trace_py_scaling_cpu.log, summary.md, metrics.json, commands.txt, sha256.txt, env.json (optional), trace_py_scaling_cpu_per_phi.log (optional).
-- Step 17: Do not edit docs/fix_plan.md yet; note bullet summaries for later (delta, first divergence, interesting observations).
-- Step 18: Once artifacts look complete, consider diffing summary.md against the 20251008 baseline to spot improvements/regressions quickly.
-- Step 19: Leave the working tree unchanged aside from reports/ additions so git status stays predictable for the supervisor.
-- Step 20: Back up the TS path in case we need to reference it during handoff (e.g., echo $TS for future Attempt number).
-- Step 21: Skim reports/2025-10-cli-flags/phase_l/scaling_audit/README.md (if present) to confirm no additional harness options are required.
-- Step 22: Update commands.txt with the pytest commands (collect-only and targeted run) so the full command history is preserved.
-- Step 23: Double-check that metrics.json lists units (e.g., Angstrom^-1, photons) where applicable to avoid ambiguity.
-- Step 24: Snapshot the relative path to the timestamp directory in summary.md so later loops can jump straight to the evidence.
-- Step 25: Leave a TODO comment at the end of summary.md (e.g., "TODO Phase M2: investigate accumulation order") to remind future loops of the immediate follow-up.
+- Step 0 — Preparation:
+  - Read `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T044933Z/galph_debug_20251203.md` so the numerical target (pre-polar value) is clear.
+  - Confirm working tree is clean except for intentional edits; stash or document anything unrelated before proceeding.
+- Step 1 — Simulator instrumentation:
+  - Open `src/nanobrag_torch/simulator.py` and locate `_apply_debug_output`.
+  - Identify the section where `I_total` is accepted and `TRACE_PY: I_before_scaling` is printed.
+  - Before polarization multiplies the accumulator, insert a tensor clone (on the same device/dtype) and print it using the new label `TRACE_PY: I_before_scaling_pre_polar`.
+  - Leave the existing logic in place but rename the current print statement to `TRACE_PY: I_before_scaling_post_polar` so post-factor data remains available.
+  - Guard the new prints behind the existing trace conditions; avoid extra branching that could break torch.compile caching.
+- Step 2 — Validation script alignment:
+  - Review `scripts/validation/compare_scaling_traces.py`; update token parsing to recognise the `_pre_polar` label while keeping backward compatibility (if the label is absent, fall back to the post-polar value so older logs still work).
+  - Extend the metrics dictionary so `summary.md` and any JSON output include both `pre_polar` and `post_polar` values, making it obvious which stage is compared.
+- Step 3 — Harness update:
+  - Modify `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py` to capture both values:
+    * Write both to the main log via the simulator trace (already handled after Step 1).
+    * Append the new key/value pair to the per-φ JSON structure so future analyses can see which stage is recorded.
+    * When dumping `metrics.json`, ensure the `I_before_scaling_pre_polar` value is stored separately from the post-polar number.
+- Step 4 — Evidence directory setup:
+  - Create a new directory named `reports/2025-10-cli-flags/phase_l/scaling_validation/$(date +%Y%m%dT%H%M%SZ)`.
+  - Inside the directory, touch placeholder files: `commands.txt`, `summary.md`, `metrics.json`, `sha256.txt`, `harness_stdout.log`, `harness_stderr.log`, `collect.log`.
+  - Document the intended contents at the top of `commands.txt` so the directory remains self-describing.
+- Step 5 — Harness execution:
+  - Run `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --device cpu --dtype float32 --phi-mode c-parity --out <dir>/trace_py_scaling_cpu.log` with `<dir>` replaced by the new path.
+  - Redirect stdout and stderr into `harness_stdout.log` and `harness_stderr.log` to capture warnings.
+  - Verify the generated trace now contains both `TRACE_PY: I_before_scaling_pre_polar` and `TRACE_PY: I_before_scaling_post_polar` entries.
+- Step 6 — Trace comparison:
+  - Execute `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python scripts/validation/compare_scaling_traces.py --c reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log --py <dir>/trace_py_scaling_cpu.log --out <dir>/summary.md --tolerance 1e-6`.
+  - Inspect the resulting `summary.md` to confirm the pre-polar delta is ≤1e-6 relative; highlight both pre and post values in the markdown for clarity.
+  - If the comparison emits auxiliary files (JSON, diff text), store them alongside the summary.
+- Step 7 — Test discovery & documentation:
+  - Run `pytest --collect-only -q tests/test_cli_scaling_phi0.py` and append the console output to `<dir>/collect.log`.
+  - Update `commands.txt` with every command executed (in chronological order) including environment variables and working directories.
+  - Record the current git SHA via `git rev-parse HEAD >> sha256.txt` (label the entry so it is distinguishable from file hashes).
+- Step 8 — Checksums & wrap-up:
+  - From inside `<dir>`, run `shasum -a 256 * > sha256.txt` (append mode) so each artifact is fingerprinted.
+  - Re-open `summary.md` and add a brief note referencing the polarization adjustment and linking back to the older report for context.
+  - Stage the new directory for commit once all manual inspections are complete.
 Pitfalls To Avoid:
-- Avoid rerunning the entire pytest suite; stay with the mapped selectors to conserve time and comply with plan guidance.
-- Do not alter production code, harness code, or validation helpers—this loop is evidence-only.
-- Resist tweaking compare_scaling_traces.py tolerance; 1e-6 is mandatory per Phase M exit criteria.
-- Never overwrite or delete historical directories (e.g., 20251008T043438Z); always create a new timestamp.
-- Keep tensor flows device-neutral; avoid injecting .cpu()/.cuda() calls in ad-hoc diagnostics.
-- Ensure commands.txt mirrors the actual execution order; missing steps complicate later audits.
-- Capture stderr if the harness throws warnings or exceptions; include the log in the timestamp folder.
-- Do not forget sha256.txt; fix_plan entries rely on checksums for reproducibility.
-- Maintain ASCII in summary.md, metrics.json, and commands.txt unless a referenced artifact already uses Unicode.
-- Preserve Protected Assets (docs/index.md, loop.sh, supervisor.sh, input.md) exactly as-is.
-- Defer nb-compare, Phase M2 code edits, or vectorization work until this evidence loop is complete.
-- Skip GPU or float64 experiments for now; Phase M1 explicitly targets CPU float32 evidence parity.
-- Avoid running extra harness configurations (spec mode, CUDA) in this loop; focus on the one ROI to keep analysis sharp.
-- Make sure env.json includes python, torch, CUDA availability, git SHA, and branch so future comparisons have context.
-- Double-check that metrics.json uses consistent key casing to simplify downstream parsing.
-- Remember to add newline at EOF for each text artifact; git diffs become cleaner and consistent.
-- If you spot unusual values, jot them in summary.md immediately—memory fades fast after the run.
-- When computing sha256.txt, ensure you run it in the timestamp directory so relative filenames stay correct.
-- Keep the working tree otherwise clean; evidence-only loops should not add unrelated files.
-- Do not forget to export KMP_DUPLICATE_LIB_OK=TRUE in every shell where you invoke torch programs.
+- Never overwrite `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T044933Z`; it remains a historical reference for Attempt #137.
+- Avoid adding Python-side loops or branching that reintroduce per-φ iteration—vectorization must stay intact for performance and correctness.
+- Keep all new trace labels prefixed with `TRACE_PY:` and use snake_case consistent with existing instrumentation.
+- Do not coerce tensors to CPU just for printing; rely on `.item()` sparingly and only in non-differentiable debug paths.
+- Maintain dtype/device neutrality by constructing helper tensors with `torch.as_tensor(..., device=existing.device, dtype=existing.dtype)`.
+- Respect Protected Asset policy: confirm every file you touch is absent from `docs/index.md` before moving or renaming it.
+- Limit test execution to the collect-only selector; running the full suite would violate supervisor guidance for this loop.
+- Generate SHA256 checksums from within the new directory to avoid mixing hashes from previous attempts.
+- Preserve CLI compatibility in `trace_harness.py`; new arguments must be optional and default to previous behaviour.
+- Confirm `compare_scaling_traces.py` handles the new key before committing; add explicit assertion or warning if the pre-polar label is missing.
+- Watch for interaction with torch.compile caching—if new tensors break graph capture, add explanatory comments per PERF plan guidelines.
+- Keep code comments succinct but informative, referencing plan IDs where appropriate.
+- Remember to update docs/fix_plan.md Attempt history after the run, citing the new artifact directory and summarising the pre/post polar deltas.
+- Avoid committing directly from a dirty worktree; run `git status` frequently and stage only intentional files.
+- Re-run the harness if the first pass accidentally uses an existing timestamp—each attempt must have its own directory for traceability.
 Pointers:
-- plans/active/cli-noise-pix0/plan.md:46-56 — Phase M goals, prerequisites, exit criteria, and task checklist that this loop feeds.
-- docs/fix_plan.md:484-507 — Previous scaling attempt analysis plus prescribed follow-up actions.
-- reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log:260-320 — Canonical C trace for the supervisor ROI.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T043438Z/summary.md:1-40 — Historical PyTorch summary showing the 21.9% I_before_scaling discrepancy.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T043438Z/metrics.json:1-80 — Example structure for metrics.json keys/values.
-- docs/bugs/verified_c_bugs.md:166-191 — φ carryover bug description and parity-mode tolerances to match.
-- scripts/validation/compare_scaling_traces.py:1-220 — CLI usage and expectation for 1e-6 tolerance comparisons.
-- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:40-210 — Harness options (including --phi-mode) and logging taps.
-- specs/spec-a-core.md:204-248 — Normative φ rotation pipeline to keep spec mode straight.
-- docs/development/pytorch_runtime_checklist.md:1-140 — Vectorization & device discipline checklist to remain compliant.
-- reports/2025-10-vectorization/phase_e/pytest_cpu.log:1-120 — Example of fully captured CPU test evidence for future loops.
-- reports/2025-10-vectorization/phase_e/pytest_cuda.log:1-120 — GPU counterpart; useful template for how to format logs when CLI-FLAGS reaches GPU smoke.
-- docs/fix_plan.md:2621-2680 — [VECTOR-TRICUBIC-001] status for awareness when scheduling subsequent work.
-- docs/development/c_to_pytorch_config_map.md:1-120 — Parameter parity references when verifying harness inputs.
-- reports/2025-10-cli-flags/phase_l/per_phi/trace_py_c_parity_per_phi.log:1-200 — Prior per-φ trace showing expected c-parity values.
-Next Up:
-- Phase M2 lattice-factor propagation fix using the freshly captured evidence to target the accumulation bug.
-- Phase M3 rerun of scaling comparisons on CPU and CUDA after the fix to confirm ≤1e-6 relative error across devices.
-- Phase M4 documentation updates (fix_checklist.md VG-2 row, docs/fix_plan Attempt) once metrics turn green.
-- Vectorization plan Phase E2/E3 (microbenchmarks + parity summary) once CLI-FLAGS-003 Phase M metrics fall within tolerances.
-- Begin planning for Phase N nb-compare runs after scaling parity succeeds, incorporating nb-compare guidance in docs/development/testing_strategy.md.
-- Log the new evidence under docs/fix_plan.md with Attempt details so the ledger reflects progress, then queue the Phase M2 implementation change.
-- Circulate a brief update in galph_memory.md summarising the evidence outcome and whether it affects other initiatives (e.g., vectorization timing).
-- Add a note to summary.md clarifying whether the comparison was run before or after any `torch.set_printoptions` changes, to aid reproducibility.
-- Keep watch for environment drift (e.g., different torch versions); if detected, mention it explicitly in metrics.json.
-- Ensure summary.md states explicitly whether c-parity mode was used so future readers do not assume spec mode.
-- Keep watch for environment drift (e.g., different torch versions); if detected, mention it explicitly in metrics.json.
-- Verify metrics.json numbers twice before saving; typos propagate quickly into fix_plan entries.
+- plans/active/cli-noise-pix0/plan.md — Phase M checklist plus artifact layout guidance.
+- plans/active/cli-phi-parity-shim/plan.md — background on φ carryover (ensures no inadvertent regressions while touching traces).
+- docs/fix_plan.md lines 445-520 — updated divergence note referencing the new galph debug memo.
+- docs/bugs/verified_c_bugs.md §C-PARITY-001 — reminder that φ carryover is quarantined; instrumentation changes must keep dual-mode behaviour intact.
+- specs/spec-a-core.md:190-270 — normative sampling order citing when polarization enters the chain.
+- docs/development/testing_strategy.md §2 — expectations for trace-driven validation; follow when storing artifacts.
+- scripts/validation/compare_scaling_traces.py — logic that must recognise new labels; read before editing.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py — harness to extend; comments explain required metadata.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T044933Z/trace_py_scaling_cpu.log — baseline trace to compare against once new values exist.
+- tests/test_cli_scaling_phi0.py — eventual regression target after instrumentation parity is restored (collect-only now).
+- arch.md §1 — notes on scaling factors and polarization pipeline for cross-checks.
+Next Up: After pre-polar parity is green, proceed to plan tasks M2 (HKL lookup parity diagnostic) and M3 (regression run + metrics refresh), then transition to Phase N nb-compare ROI validation and finally the supervisor command rerun in Phase O.
+Next Up Detail: When moving to M2, reuse the updated harness to capture per-φ F_cell/F_latt contributions so structure-factor mismatches can be isolated quickly.

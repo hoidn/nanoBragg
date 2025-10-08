@@ -1882,3 +1882,9 @@ Follow-ups for Ralph:
 - Updated `plans/active/vectorization.md` context to the 2025-12-02 snapshot and marked Phase E1 [D]; remaining work now tracks E2/E3 perf validation before detector absorption vectorization.
 - Issued new Parity-mode input.md directing Ralph to rerun the scaling harness with `--phi-mode c-parity`, capture trace/summary/metrics under a fresh timestamp, and hold compare_scaling_traces tolerance at 1e-6 per Phase M1.
 - Reinforced evidence-only expectations (no prod edits) and enumerated required artifacts (commands.txt, metrics.json, env.json, sha256.txt) so Phase M2 debugging starts with clean data; flagged follow-up for Phase M2/M3 and vectorization Phase E2/E3 once scaling parity stabilises.
+## 2025-12-03 (galph loop — CLI-FLAGS-003 Phase M instrumentation)
+- Identified that the 8.7% `I_before_scaling` delta is purely an instrumentation mismatch: PyTorch logs the post-polarization value while the C trace logs pre-polarization. C value × polar reproduces the PyTorch number.
+- Added debug memo `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T044933Z/galph_debug_20251203.md` documenting the finding and the expected pre- vs post-polar values.
+- Updated `docs/fix_plan.md` (CLI-FLAGS-003 first divergence + Next Actions bullet) to call out the polarization offset and require trace tap updates before continuing Phase M.
+- Issued Parity-mode `input.md` directing Ralph to emit both pre/post polarization trace lines, refresh the harness, rerun compare_scaling_traces, and keep evidence under a new timestamped directory.
+- Next supervisor follow-up: confirm Ralph captures the new trace, updates compare script if needed, and logs Attempt before moving to structure-factor parity (Plan M2/M3).
