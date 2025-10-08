@@ -1,0 +1,574 @@
+Already up to date.
+Waiting for expected_actor=galph...
+Already up to date.
+[sync] state: actor=galph status=failed iter=143
+To github.com:hoidn/nanoBragg.git
+   786dddb..e6bf956  HEAD -> feature/spec-based-2
+$ codex exec -m gpt-5-codex -c model_reasoning_effort=high --dangerously-bypass-approvals-and-sandbox
+[2025-10-08T06:42:55] OpenAI Codex v0.38.0 (research preview)
+--------
+workdir: /Users/ollie/Documents/nanoBragg3
+model: gpt-5-codex
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: high
+reasoning summaries: auto
+--------
+[2025-10-08T06:42:55] User instructions:
+<role>
+planning, review and analysis. do not make implementation code changes.
+</role>
+<current long-term goals>
+in order of decreasing priority:
+<1>
+run a successful parallel test of pytorch nanobragg against nanobragg c with this command:
+
+nanoBragg  -mat A.mat -floatfile img.bin -hkl scaled.hkl  -nonoise  -nointerpolate -oversample 1  -exposure 1  -flux 1e18 -beamsize 1.0  -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080  -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866  -beam_vector 0.00051387949 0.0 -0.99999986  -Na 36  -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0
+
+this will require first adding support for the following cli params to pytorch nanobragg:
+-nonoise
+-pix0_vector_mm
+
+</1>
+<2>
+review docs/bugs/verified_c_bugs.md and specs/. Make sure that the phi 0 carryover C implementation bug wasnt propagated to the specs. Update the specs (if needed) and pytorch implementation to fix this bug, if it was propagated.
+</2>
+<3>
+review and firm up if needed plans/active/vectorization.md. then implement it (or rather, delegate its implementation to ralph), starting with the tricubic interpolation vectorization 
+</3>
+<4>
+run pyrefly check src/. triage the errors and delegate the fixing of them to ralph. be careful about test suite regressions.
+</4>
+<5>
+delegate to ralph a full run of the test suite and triage of the failing test. review, classing various errors as either implementation bugs or consequences of test deprecation. then systematically fix the failing tests.
+</5>
+</current long-term goals>
+</past long term goals>
+(just for archival / reference purposes):
+- error-correcting the engineer agent 
+- profiling pytorch nanobragg to find performance bottlenecks. analyzing to understand the CRITICAL slowness of the pytorch implementation compared to reference C, which persists after our recent improvement attempts
+- finding performance issues in the PyTorch reimplementation of nanobragg (originally a C code) and speeding it up. It should be efficiently vectorized and faster than C nanobragg, but currently it's slower 
+- ensuring that the pytorch implementation uses fp32 (not fp64) by default 
+- understanding why pytorch is slower than C in the warm condition at 4096x4096 resolution and fixing the underlying performance issue, if one is found. THIS IS A CRITICAL PERFORMANCE ISSUE.
+- once all the above are taken care of: building a user-facing showcase of autodiff-based parameter refinement, with plots / visuals
+
+</past long-term goals>
+<task>
+You are galph, a planner / supervisor agent. you are overseeing the work of an agent (ralph) that is running prompts/main.md in a loop, using docs/fix_plan.md as its instruction set and long term memory. 
+
+You will get invoked repeatedly, for multiple iterations. Use galph_memory.md to communicate with your future self. You'll plans under plans/, when needed, to help steer multi-turn efforts by the coder agent (ralph). Those plans will be cross referenced from docs/fix_plan.md so that ralph can find / read them. 
+
+At the start of every invocation:
+- Run `timeout 30 git pull --rebase` with a hard 30-second timeout  to sync with origin before reviewing context. If the command times out, immediately abort any partial rebase (`git rebase --abort`) and fall back to a normal merge via `git pull --no-rebase`. Whatever path you take, resolve resulting conflicts (docs/fix_plan.md is a frequent hotspot) and document key decisions in galph_memory.md. If the pull reports conflicts:
+  * Run `git status --short` to list conflicted files.
+  * Fix each file (remove conflict markers, keep the intended content) and stage it with `git add`.
+  * When the index is clean, resume with `timeout 30 git rebase --continue --no-edit`. IMPORTANT: NEVER RUN THIS COMMAND WITHOUT TIMEOUT
+- After resolving any conflicts, read the latest galph_memory.md entry (and any linked plan files) so you do not lose past context.
+- Prune or summarize older entries when they become stale or redundant.
+
+During the main, central phase of invocation you will be doing essentially three things:
+<main analysis step 1> 
+An initial analysis pass in which you gather and review information in order to choose a <focus issue> for the turn, corresponding to <instructions> steps <0> through <3>. This will involve a multi-category selection process. You will choose both a <focus issue> and an associated <Action type> for the remainder of the iteration. The available <Action type>s are the following:
+<Action type> list:
+<1>
+<Evidence collection> (i.e. Evidence task)
+No full pytest runs. Allowed: non-mutating probes and CLI validation tools (e.g., scripts/validation/*, nb-compare, pixel trace); pytest --collect-only to validate selectors; and in TDD mode only, a single targeted pytest run to confirm the newly authored test fails. Do not change production code. This gate applies only to galph. Ralph is exempt. Do not include any Phase label in input.md.
+
+Evidence collection includes the following subtype:
+    Callchain Tracing (Evidence subtype)
+    - When to use: before code edits when the pipeline/factor order relevant to the current issue is unclear; when onboarding a new surface; or upon parity failures where the locus is unknown.
+    - Directive: first, emit descriptions for the following things:
+       - <analysis_question> (required): Free‑text description of the behavior/bug/perf issue to investigate. This will be closely related to <focus issue>, but viewed from the point of view of relevant code execution paths and their entry points.
+       - <initiative_id> and <scope_hints> 
+
+    - Directive: then read and carefully follow the instructions in `prompts/callchain.md` with the question‑driven invocation (<analysis_question>) and produce standardized artifacts under `reports/<initiative_id>/`.
+    - Example invocation variables (fill at run time):
+      analysis_question: "<what are we trying to understand or fix?>"
+      initiative_id: "<short‑slug>"
+      scope_hints: ["CLI flags", "normalization", "scaling"]
+      roi_hint: "<minimal input/ROI>"
+      namespace_filter: "<project primary package>"
+      time_budget_minutes: 30
+    - Expected outputs:
+      - `reports/<initiative_id>/callchain/static.md` (entry→sink with file:line anchors)
+      - `reports/<initiative_id>/callgraph/dynamic.txt` (optional, module‑filtered)
+      - `reports/<initiative_id>/trace/tap_points.md` (proposed numeric taps with owners)
+      - `reports/<initiative_id>/summary.md` (question‑oriented narrative + next steps)
+      - `reports/<initiative_id>/env/trace_env.json`
+    - Guardrails: evidence‑only (no prod edits), module/device/dtype neutrality, small ROI, respect Protected Assets, stable key names in traces.
+</Evidence collection>
+</1>
+<2>
+<Debug> i.e. Debugging — Hypothesis + Triage (initial pass):
+- pairs with <focus issue>s that are related to debugging or parity analysis.
+<steps>
+- Formulate 1–3 plausible hypotheses for the observed gap/issue.
+- Triage each with checks appropriate to scope using existing artifacts or quick, documented reproductions; this triage may constitute the primary work for the iteration. Record outcomes succinctly in the evidence.
+- For the top hypothesis, state confidence and the single confirming step to run next. Deliver 1–3 ranked hypotheses with supporting evidence, artifact paths, and the next confirming step.
+</steps>
+</Debug>
+</2>
+<3>
+<Planning>
+- we will be calling the plan topic the <focus issue> of this turn.
+- based on which long term <goal> and sub-goal is that effort / plan? 
+- Which existing docs/fix_plan.md items does it (i.e. the <focus issue>) relate to? 
+- Documentation review for <focus issue>: Using `docs/index.md` as the map, identify and read the specific documents relevant to the chosen <focus issue> (e.g., component contracts, architecture ADRs, parity/testing strategy). List the file paths you will rely on (with a one‑line rationale each) before drafting or updating the plan.
+- think deeply. draft / redraft the plan and save it to a .md under plans/active/. Structure the write-up as a phased implementation document (see `plans/archive/general-detector-geometry/implementation.md` for tone/shape): begin with context + phase overviews, then outline each phase’s intent, prerequisites, and exit criteria. When a phase benefits from explicit tracking, embed a checklist table using the `ID | Task Description | State | How/Why & Guidance` format (with `[ ]`, `[P]`, `[D]` markers) inside that phase section.
+  • Include reproduction commands, owners (if known), and decision rules in the guidance column.
+  • Favor narrative flow first; layer checklists only where they clarify verification steps or deliverables.
+  • Mini-template to crib when drafting:
+    ```md
+    ## Context
+    - Initiative: <initiative>
+    - Phase Goal: <outcome>
+    - Dependencies: <docs/tests>
+
+    ### Phase A — <short title>
+    Goal: <what this phase proves or delivers>
+    Prereqs: <artifacts or measurements required before starting>
+    Exit Criteria: <verifiable completion signal>
+
+    | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
+    | --- | --- | --- | --- |
+    | A1 | <Key diagnostic or implementation step> | [ ] | Run `<command>`; capture results under `reports/<date>/...`. |
+    | A2 | <Follow-up validation> | [ ] | Compare against `<artifact>`; stop if deviation > threshold. |
+    ```
+- When refreshing an existing plan, retrofit it to this phased format before adding or editing tasks.
+- review docs/fix_plan.md. edit if needed. cross reference the new plans .md so that ralph can find it.
+</Planning>
+</3>
+
+<4>
+<Review or housekeeping>
+- Review and evaluate ralph's work. Scrutinize the commit history. Look at the diffs. 
+- Are the docs/fix_plan.md contents and priorities sane? things to consider:
+  - if docs/fix_plan.md is longer than 1000 lines it should be housecleaned. If it's disorganized and / or internally inconsistent, consider how this could be addressed. 
+- after considering the above, you have enough information to choose a <focus issue> for this turn. do so. Consider the nature of the <focus issue>:
+    - Do we need a new docs/fix_plan item to put ralph back on course, fix one of his mistakes, or instruct him to do something that he overlooked? If so, draft it and add it to docs/fix_plans
+    - does the <focus issue> involve identified issues in docs/fix_plan.md? If so, fix them. If you decide to shorten docs/fix_plan.md, the least relevant portions should be moved to archive/fix_plan_archive.md (with summary + archive cross reference if appropriate)
+</Review or housekeeping>
+</4>
+
+In addition to selecting an <Action type> and <focus issue> you will choose a <Mode> flag. 
+ - Mode flags are combinable and refine execution, and are applicable to both the supervisor (you) and ralph; do not include any Phase label in input.md.
+ - available modes: <TDD | Parity | Perf | Docs | none>
+<mode descriptions>
+TDD mode (supervisor-scoped): When operating in supervisor evidence mode, author/update a single minimal failing test that encodes the acceptance criterion. Confirm it fails via a targeted pytest selector; record the selector and expected failure text in input.md. Do not change production code, and do not include any Phase label in input.md.
+</mode descriptions>
+
+</main analysis step 1>
+
+<main analysis step 2>
+Here you will do a deep analysis. You will follow the guidelines of the selected <Mode> and <Action type>, applying them to the selected <focus issue>. This corresponds to <instructions> step <3.2>.
+
+
+</main analysis step 2>
+
+<main analysis step 3>
+Here you synthesize the analysis findings into output files (<instructions> steps <3.5> to <4>)
+</main analysis step 3>
+
+
+Before concluding each invocation:
+- Append a concise update to galph_memory.md capturing key findings, decisions, and open questions (reference file paths or plan names).
+- Note any follow-up actions you expect Ralph to take.
+- If no substantial update is needed, explicitly log that fact so future runs know context was reviewed.
+</task>
+
+<instructions>
+<0>
+READ the following files:
+- Index of project documentation: `./docs/index.md`
+- $SPECS: `./specs/spec-a.md`
+- $ARCH: `./arch.md` (ADR-backed implementation architecture; reconcile design with spec, surface conflicts)
+- docs/development/c_to_pytorch_config_map.md — C↔Py config parity and implicit rules
+-- docs/debugging/debugging.md — Parallel trace-driven debugging SOP
+- $PLAN: `./fix_plan.md` (living, prioritized to‑do; keep it up to date)
+- $TESTS: `./docs/development/testing_strategy.md` (testing philosophy, tiers, seeds/tolerances, commands)
+- Set `AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md` (or project‑specific path) and consult it for authoritative reference commands and test discovery.
+<0>
+<1>
+do a deep analysis of the codebase in light of the <current long term goals>. What are some current issues / gaps and possible approaches to resolving them? Review docs/fix_plan.md and plans/active/, as previous iterations of you may have already done some legwork.
+ 
+At this point, you can do a premature <Callchain tracing> action ahead of time, if it helps you gather information needed for this analysis.
+</1>
+<2>
+flip a coin using python. if it comes up <heads>:
+review ralph's work over the last N (~10 but can be more or less - you decide) iterations. Check the commit history. Has the work been productive? Have there been regressions? Do we need to provide any feedback / course-correction?
+</heads>
+if it comes up <tails>: proceed to step <3>
+</2>
+<3>
+Given your findings in <1> and <2>, think about whether there's any need for a multi-turn planning effort -- i.e. ralph can't see the forest for the trees and may struggle with major refactorings and multi-turn implementation efforts unless they are coordinated by you. Is there a need for such planning *right now*? If such a plan is already spoken for (plans/active/ or wherever else past galph might have saved to), does that plan require updates or is it up to date / high quality and simply pending? IFF you determine the need for a new plan or modification of an existing one:
+<yes case>
+This plan-related work is now your <focus issue>.
+You will be following the <Planning> <Action type> instructions. Think about what this will entail but don't execute the <Planning> instructions yet.
+</yes case>
+</no case>
+Since you are not <Planning>, you must select one of the other <Action type>s and an associated <focus issue> based on what you think is the most productive work increment for this iteration. Think about the associated work, but don't execute it yet.
+</no case>
+</3>
+<3.2>
+- Documentation review for <focus issue>: From `docs/index.md`, enumerate and read the documents that are most relevant to the chosen <focus issue>`; note the key file paths you will rely on for the impending analysis.
+- Then carefully follow the guidelines of the selected <Mode> and <Action type>, applying them to the selected <focus issue>. Complete the task that you selected in step <3>.
+</3.2>
+<3.5>
+Render and write ./input.md (supervisor→engineer steering memo). Overwrite the entire file every invocation. Keep length ~100–200 lines. Include these sections in order:
+Header:
+- Summary: <one‑sentence goal for this loop>
+ - Mode: <TDD | Parity | Perf | Docs | none>
+- Focus: <plan item ID/title from docs/fix_plan.md>
+- Branch: <expected branch>
+- Mapped tests: <validated list | none — evidence‑only>
+- Artifacts: <key paths to produce under reports/>
+- Do Now: 1 line naming the exact docs/fix_plan.md item (ID and title) to execute this loop, plus the exact pytest command/env to reproduce it (only when an authoritative mapping exists). If no such test exists, the Do Now MUST be to author the minimal targeted test first and then run it. If you intend to delegate the choice, write “Do Now: delegate” and provide decision guidance below.
+  - Note: If operating in supervisor <Evidence collection> (internal-only), do not run the full suite. Allowed: pytest --collect-only to validate selectors; in TDD mode only, run one targeted selector to confirm a new failing test. All other test execution is deferred to Ralph. Do not include any Phase label in input.md.
+<Do Now guidelines>
+Verification scripts: You may run nb-compare and scripts/validation/* to collect metrics and artifacts (no code changes). Record outputs under reports/.
+Mapped tests under supervisor evidence mode: Include exact selectors in input.md; validate with --collect-only; do not run them (except the TDD failure confirmation). Do not include any Phase label in input.md.
+Command Sourcing (tests): Only include an exact pytest command in Do Now when sourced from an authoritative mapping (e.g., docs/development/testing_strategy.md) or an existing, known test file/identifier. If no authoritative mapping exists, set the Do Now task to author the minimal targeted test first; do not guess at a pytest selector here.
+Implementation: refer to phased plans, checklists, and all associated artifacts
+</Do Now guidelines>
+- If Blocked: fallback action (what to run/capture, how to record it in Attempts History).
+- Priorities & Rationale: 3–6 bullets with file pointers (specs/arch/tests/plan) justifying the Do Now.
+- How-To Map: exact commands (pytest, nb-compare), env vars, ROI/thresholds, and where to store artifacts; prefer using `scripts/validation/*` when available.
+- Pitfalls To Avoid: 5–10 crisp do/don’t reminders (device/dtype neutrality, vectorization, Protected Assets, two‑message loop policy, no ad‑hoc scripts).
+- Pointers: file paths with line anchors to the most relevant spec/arch/testing_strategy/fix_plan entries for this loop.
+- Next Up (optional): 1–2 candidates Ralph may choose next loop if he finishes early (still one thing per loop).
+
+ Rules:
+ - Ralph must not edit input.md. You (galph) are the single writer.
+ - If input.md’s Do Now conflicts with an existing in_progress selection in fix_plan.md, Ralph is allowed to switch; he must record the change in Attempts History.
+- Do not instruct Ralph to run the full test suite more than once per turn. Require targeted tests first; run the full suite once at the end only if code changed. For prompt/docs‑only loops, require `pytest --collect-only -q` instead.
+- Prefer referencing reusable scripts under `scripts/validation/` from Do Now when available.
+- Commit input.md each run as part of step <4> (commit only if the content changed).
+ </3.5>
+
+<4>
+Before finishing the loop, enforce git hygiene:
+- Run `git status --short` to inspect new or modified files that appeared during this invocation.
+- Review diffs for each change; revert only if you created it this loop and it was accidental.
+- Stage intentional updates with `git add -A` and commit via `git commit -m "SUPERVISOR: <scope> - <tests or rationale>"`, noting any tests run (use `tests: not run` when you skip them).
+- After committing, run `git push` to share the updates. If the push is rejected, `timeout 30 git pull --rebase`, resolve conflicts (capture decisions—especially for docs/fix_plan.md—in galph_memory.md), then push again.
+- If you deliberately leave the tree dirty, document the rationale in galph_memory.md so the next invocation knows why.
+</4>
+</instructions>
+<notes>
+- ignore 'routing violations'. these are out of scope.
+- ignore AT parallel 012-related items for now
+</notes>
+Now carefully and exhaustively follow your <instructions>, while keeping in mind the <task> directives.
+
+
+[2025-10-08T06:42:58] thinking
+
+**Preparing to run git pull with timeout**
+[2025-10-08T06:42:59] exec bash -lc 'timeout 30 git pull --rebase' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:43:01] bash -lc 'timeout 30 git pull --rebase' succeeded in 2.42s:
+Already up to date.
+[2025-10-08T06:43:01] tokens used: 14,185
+
+[2025-10-08T06:43:08] thinking
+
+**Preparing to read key documentation files**
+[2025-10-08T06:43:09] exec bash -lc 'cat galph_memory.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:43:09] bash -lc 'cat galph_memory.md' succeeded in 661ms:
+# Galph Memory
+
+> Entries prior to 2025-11 have been moved to `archive/galph_memory/2025-09_to_2025-10.md` (summarized on 2025-12-04).
+
+### Archived Summary (2025-09 → 2025-10)
+- Established supervisor workflow, enforced prompts/debug.md routing, and opened initial parity/performance plans (AT-021 trace parity, AT-012 rotation, PERF-PYTORCH-004, REPO-HYGIENE-002).
+- Diagnosed key issues: φ=0 carryover, metric duality regression (V_actual vs formula volume), pix0 override drift, torch.compile warm-up overhead, and float32 plateau fragmentation hurting peak matching.
+- Captured repeated reminders on Protected Assets/dirty worktree hygiene and documented long-term goals (CLI parity restoration before vectorization, Dynamo cache validation, detector pivot rules).
+- Logged recommended follow-ups: restore Core Rule #13 duality, regenerate parity traces, tighten test tolerances after fixes, and prioritize evidence artifacts under `reports/` for Ralph’s loops.
+
+## 2025-11-06 (galph loop — K3d dtype evidence prep)
+- Coin flip=heads → reviewed Ralph commits d150858, b73f0e2; work productive (Phase H1 evidence, Phase G3 orientation fix).
+- Updated plans/active/cli-noise-pix0/plan.md Phase H goal + tasks (H1 marked done; new H2 beam propagation, H3 lattice, H4 parity).
+- docs/fix_plan.md Next Actions now call out H2–H4 sequence; reinforced beam-vector fix as first deliverable.
+- Authored new input.md (Do Now: Phase H2 beam propagation + targeted pytest) and committed with message "SUPERVISOR: CLI H2 plan refresh - tests: not run".
+- Working tree clean post-push (feature/spec-based-2 @ 35cd319).
+ - Follow-up: Ralph to wire detector.beam_vector into Simulator, rerun beam trace, and land targeted pytest per input.md.
+## 2025-10-06 (galph loop — Phase H3 evidence prep)
+- git sync clean (ba649f0). Reviewed required specs/arch/testing docs plus plans/active entries before analysis per SOP.
+- Long-term Goal 1 status: beam vector fix merged (commit 8c1583d) but Phase H3 evidence missing—PyTorch trace still shows pre-fix divergence. Key gaps: rerun `trace_harness.py` without manual overrides, diff against `trace_c.log`, log first divergence; likely causes for residual lattice mismatch are either incorrect `sincg` argument (`π*(h-h0)` vs `π*h`) or Na/Nb/Nc scaling once incident vector confirmed. Goal 2 (vectorization) remains blocked until CLI parity evidence complete; Phase A baseline still outstanding.
+[2025-10-08T06:43:09] tokens used: 14,744
+
+[2025-10-08T06:43:12] thinking
+
+**Noticing truncated file output**
+[2025-10-08T06:43:13] exec bash -lc 'cat docs/index.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:43:13] bash -lc 'cat docs/index.md' succeeded in 687ms:
+# Project Documentation Index
+
+Welcome to the central index for all `nanoBragg-PyTorch` project documentation. This guide provides a map to the key technical specifications, development processes, and historical records that define the project.
+
+---
+
+## 🏛️ Permanent Documentation
+
+These are the core, living documents that guide the project.
+
+### Core Project Guides
+### PyTorch Guardrails
+* **[PyTorch Runtime Checklist](./development/pytorch_runtime_checklist.md)** – quick do/don’t list for vectorization and device placement. Always review before editing simulator code.
+* **[PyTorch Design](./architecture/pytorch_design.md#vectorization-strategy)** – detailed explanation of the required broadcast shapes and batched flows.
+* **[Testing Strategy §1.4](./development/testing_strategy.md#14-pytorch-device--dtype-discipline)** – required CPU/GPU smoke tests and compile checks.
+
+* **[CLAUDE.md](../CLAUDE.md)** - The primary instruction set for the AI agent.
+* **[README.md](../README.md)** - The main project entry point.
+* **[README_PYTORCH.md](../README_PYTORCH.md)** - Comprehensive user guide for the PyTorch implementation, including CLI usage, parallel comparison tools, and visualization.
+* **[PROJECT_STATUS.md](../PROJECT_STATUS.md)** - Tracks the current active development initiative.
+[2025-10-08T06:43:13] tokens used: 30,192
+
+[2025-10-08T06:43:16] thinking
+
+**Opening specs/spec-a.md**
+[2025-10-08T06:43:16] exec bash -lc 'cat specs/spec-a.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:43:17] bash -lc 'cat specs/spec-a.md' succeeded in 747ms:
+# nanoBragg Spec A — Sharded Specification
+
+Spec A is now organized across multiple shards. Read them together for the full normative contract.
+
+- [spec-a-core.md](spec-a-core.md): Core physics, geometry, sampling, data, and associated acceptance tests.
+- [spec-a-cli.md](spec-a-cli.md): CLI surface area, precedence rules, and CLI-focused acceptance tests.
+- [spec-a-parallel.md](spec-a-parallel.md): Conformance profiles, parallel validation suites, and developer tooling requirements.
+
+Each shard cross-references the others; updates must keep them consistent.
+[2025-10-08T06:43:17] tokens used: 31,887
+
+[2025-10-08T06:43:20] thinking
+
+**Considering specification and documentation files**
+[2025-10-08T06:43:20] exec bash -lc 'cat arch.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:43:21] bash -lc 'cat arch.md' succeeded in 685ms:
+# nanoBragg PyTorch — Implementation Architecture
+
+Document version: 1.0 (aligned with specs/spec-a.md)
+Target spec: specs/spec-a.md (single-file normative spec)
+Implementation target: Python (>=3.11) + PyTorch (float32 default). Type blocks may use TypeScript-style for clarity; implement with Python dataclasses and torch tensors.
+
+## Running The CLI
+
+- Install (recommended):
+  - `pip install -e .` from repo root (provides `nanoBragg` console script).
+- Run (installed):
+  - `nanoBragg -hkl P1.hkl -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -floatfile out.bin`
+- Run (without install):
+  - `PYTHONPATH=src python -m nanobrag_torch -hkl P1.hkl -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -floatfile out.bin`
+- Minimal quick test (no HKL):
+  - `nanoBragg -default_F 1 -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -detpixels 128 -pgmfile test.pgm`
+
+Notes
+- Entry point: `src/nanobrag_torch/__main__.py` (module runner `python -m nanobrag_torch`).
+- Required inputs: provide `-hkl` (or existing `Fdump.bin`) or set `-default_F > 0`, and either `-mat` (MOSFLM A*) or `-cell`.
+[2025-10-08T06:43:21] tokens used: 32,254
+
+[2025-10-08T06:43:22] thinking
+
+**Opening next documentation file**
+[2025-10-08T06:43:23] exec bash -lc 'cat docs/development/c_to_pytorch_config_map.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:43:23] bash -lc 'cat docs/development/c_to_pytorch_config_map.md' succeeded in 678ms:
+# C-CLI to PyTorch Configuration Map
+
+## Critical Importance Notice
+
+**This document is the authoritative source of truth for configuration parity between nanoBragg.c and the PyTorch implementation.**
+
+Before writing any test or implementation that involves C-code validation, you **MUST** consult this document. Failure to ensure 1:1 configuration parity is the most common source of bugs, particularly with:
+- Implicit pivot mode logic
+- Convention-dependent beam center calculations
+- Rotation axis defaults
+- Unit conversions
+
+## Quick Reference Table
+
+### Crystal Parameters
+
+| C-CLI Flag | PyTorch Config Field | C Variable | Units/Convention | Critical Notes |
+|------------|---------------------|------------|------------------|----------------|
+| `-cell a b c al be ga` | `CrystalConfig.cell_a/b/c/alpha/beta/gamma` | `a[0], b[0], c[0], alpha, beta, gamma` | Å and degrees → radians | Must convert degrees to radians internally |
+| `-N <val>` | `CrystalConfig.N_cells` | `Na, Nb, Nc` | Number of unit cells | Sets all three axes to same value |
+[2025-10-08T06:43:23] tokens used: 35,012
+
+[2025-10-08T06:43:25] thinking
+
+**Opening debugging documentation**
+[2025-10-08T06:43:25] exec bash -lc 'cat docs/debugging/debugging.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:43:26] bash -lc 'cat docs/debugging/debugging.md' succeeded in 745ms:
+# nanoBragg PyTorch Debugging Guidelines
+
+**Version:** 1.1  
+**Date:** 2024-07-25  
+**Owner:** PyTorch Development Team
+
+## Overview
+
+This document outlines the debugging methodology and tools for the nanoBragg PyTorch implementation. The debugging approach is built around a parallel trace comparison between the C code and the PyTorch implementation to ensure correctness and facilitate rapid issue resolution.
+
+## Core Debugging Philosophy
+
+### Parallel Trace Comparison Rule
+
+**CRITICAL:** All debugging of physics discrepancies MUST begin with a parallel trace comparison. This involves:
+1. Generating a detailed, step-by-step log of intermediate variables from the original C code for a specific pixel (the "Golden Trace").
+2. Generating an identical log from the PyTorch implementation using `scripts/debug_pixel_trace.py`.
+3. Comparing these two logs line-by-line to find the first point of divergence.
+
+This methodology is mandatory to avoid guesswork and ensure bugs are found deterministically.
+[2025-10-08T06:43:26] tokens used: 36,888
+
+[2025-10-08T06:43:27] thinking
+
+**Opening fix_plan.md file**
+[2025-10-08T06:43:28] exec bash -lc 'cat fix_plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:43:28] bash -lc 'cat fix_plan.md' exited 1 in 734ms:
+cat: fix_plan.md: No such file or directory
+[2025-10-08T06:43:28] tokens used: 39,698
+
+[2025-10-08T06:43:30] thinking
+
+**Checking fix_plan.md**
+[2025-10-08T06:43:30] exec bash -lc 'cat docs/fix_plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:43:31] bash -lc 'cat docs/fix_plan.md' succeeded in 737ms:
+# Fix Plan Ledger
+
+**Last Updated:** 2025-10-22 (ralph loop #103)
+**Active Focus:**
+- ROUTING: Close the reopened guard plan by capturing a fresh regression audit referencing commit `c49e3be` and re-confirming the guarded `loop.sh` flow (`plans/active/routing-loop-guard/plan.md` Phases A–C) before automation resumes.
+- ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md`, then drive Phase B guard work (B2–B4) and new task B5 to add `supervisor.sh` to docs/index.md so Protected-Asset policy covers the script before automation runs again.
+- AT-012: Plan archived (`plans/archive/at-parallel-012-plateau-regression/plan.md`); monitor for regressions using `reports/2025-10-AT012-regression/phase_c_validation/` artifacts and re-open only if peak matches drop below spec.
+- GRADIENT: Execute `plans/active/gradcheck-tier2-completion/plan.md` Phase A (A1–A3 baseline audit + env alignment) before adding misset/beam gradchecks from Phases B/C; once pass logs exist, close `[AT-TIER2-GRADCHECK]` with Phase D documentation updates.
+- DTYPE: ✅ Complete. Plan archived to `plans/archive/dtype-default-fp32/`. All phases (A-D) finished; float32 defaults documented in arch.md, pytorch_runtime_checklist.md, CLAUDE.md, prompts/debug.md.
+- PERF: Land plan task B7 (benchmark env toggle fix), rerun Phase B6 ten-process reproducibility with the new compile metadata, capture the weighted-source parity memo feeding C5, then execute Phase C diagnostics (C1/C2 plus C8/C9 pixel-grid & rotated-vector cost probes, and new C10 mosaic RNG timing) ahead of Phase D caching work (D5/D6/D7) and detector-scalar hoisting (D8).
+
+## Index
+| ID | Title | Priority | Status |
+| --- | --- | --- | --- |
+| [PROTECTED-ASSETS-001](#protected-assets-001-docsindexmd-safeguard) | Protect docs/index.md assets | Medium | in_progress |
+| [REPO-HYGIENE-002](#repo-hygiene-002-restore-canonical-nanobraggc) | Restore canonical nanoBragg.c | Medium | in_progress |
+| [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
+| [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | in_progress |
+| [VECTOR-TRICUBIC-001](#vector-tricubic-001-vectorize-tricubic-interpolation-and-detector-absorption) | Vectorize tricubic interpolation and detector absorption | High | in_progress |
+| [ABS-OVERSAMPLE-001](#abs-oversample-001-fix-oversample_thick-subpixel-absorption) | Fix -oversample_thick subpixel absorption | High | in_planning |
+[2025-10-08T06:43:31] tokens used: 39,925
+
+[2025-10-08T06:43:33] thinking
+
+**Planning to read testing strategy**
+[2025-10-08T06:43:34] exec bash -lc 'cat docs/development/testing_strategy.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:43:34] bash -lc 'cat docs/development/testing_strategy.md' succeeded in 697ms:
+# nanoBragg PyTorch Testing Strategy
+
+**Version:** 1.1  
+**Date:** 2024-07-25  
+**Owner:** [Your Name/Team]
+
+## 1. Introduction & Philosophy
+
+This document outlines the comprehensive testing strategy for the PyTorch implementation of nanoBragg. The primary goal is to ensure that the new application is a correct, verifiable, and trustworthy scientific tool.
+Our testing philosophy is a three-tiered hybrid approach, designed to build confidence layer by layer:
+
+1. **Tier 1: Translation Correctness:** We first prove that the PyTorch code is a faithful, numerically precise reimplementation of the original C code's physical model. The C code is treated as the "ground truth" specification.
+2. **Tier 2: Gradient Correctness:** We then prove that the new differentiable capabilities are mathematically sound.
+3. **Tier 3: Scientific Validation:** Finally, we validate the model against objective physical principles.
+
+All tests will be implemented using the PyTest framework.
+
+### 1.4 PyTorch Device & Dtype Discipline
+
+- **Device-neutral code:** Every PyTorch path MUST operate correctly on both CPU and CUDA tensors and across supported dtypes. Do not hard-code `.cpu()`/`.cuda()` calls, create CPU-only constants, or assume float64 execution when the caller may supply float32/half tensors.
+[2025-10-08T06:43:34] tokens used: 43,012
+
+[2025-10-08T06:43:37] thinking
+
+**Analyzing codebase and active plans**
+[2025-10-08T06:43:37] exec bash -lc 'ls plans/active' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:43:38] bash -lc 'ls plans/active' succeeded in 705ms:
+cli-noise-pix0
+cli-phi-parity-shim
+gradcheck-tier2-completion
+oversample-thick-subpixel.md
+perf-pytorch-compile-refactor
+routing-loop-guard
+source-weight-normalization.md
+static-pyrefly.md
+supervisor-loop-guard
+unification.md
+vectorization.md
+[2025-10-08T06:43:38] tokens used: 45,657
+
+[2025-10-08T06:43:40] thinking
+
+**Reviewing relevant CLI plans**
+[2025-10-08T06:43:41] exec bash -lc 'cat plans/active/cli-noise-pix0/plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:43:41] bash -lc 'cat plans/active/cli-noise-pix0/plan.md' succeeded in 728ms:
+## Context
+- Initiative: CLI-FLAGS-003 — unlock the supervisor parity command by aligning PyTorch CLI behavior with nanoBragg.c for `-nonoise` and `-pix0_vector_mm`.
+- Current Objective: Finish the remaining φ=0 parity, scaling, and normalization work so the authoritative command below produces ≥0.9995 correlation, sum ratio 0.99–1.01, and ≤1 px mean peak distance.
+  - Authoritative command (C + PyTorch parity harness):
+    ```bash
+    nanoBragg  -mat A.mat -floatfile img.bin -hkl scaled.hkl  -nonoise  -nointerpolate -oversample 1  -exposure 1  -flux 1e18 -beamsize 1.0  -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080  -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866  -beam_vector 0.00051387949 0.0 -0.99999986  -Na 36  -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0
+    ```
+- Dependencies & references:
+  - `specs/spec-a-cli.md` — Canonical CLI semantics for noise suppression and detector vectors.
+  - `specs/spec-a-core.md:204-240` — Normative φ rotation pipeline (no carryover).
+  - `docs/architecture/detector.md §5` — pix0 geometry formulas for BEAM/SAMPLE pivots.
+  - `docs/development/c_to_pytorch_config_map.md` — Flag mapping and implicit pivot/convention rules.
+  - `docs/development/testing_strategy.md §§1.4–2` — Required device/dtype smoke cadence and CLI acceptance tests.
+  - `docs/bugs/verified_c_bugs.md:166-204 (C-PARITY-001)` — Source of the φ carryover bug that parity mode must emulate.
+  - `plans/active/cli-phi-parity-shim/plan.md` — Companion plan governing the opt-in parity shim (Phase C complete, Phase D docs pending).
+  - `reports/2025-10-cli-flags/phase_l/` — Canonical evidence directory (rot_vector, parity_shim, scaling_audit, nb_compare, supervisor_command).
+- Status Snapshot (2025-12-02):
+  - `-nonoise` CLI plumbing merged and covered by tests; noise writers are skipped when flag present.
+  - pix0 precedence fixes landed; SAMPLE pivot error corrected to ≤0.2 µm (Attempt #129).
+  - Spec-compliant φ rotation restored; optional C-parity shim implemented with dual tolerance decision (|Δk| ≤ 1e-6 spec, ≤5e-5 c-parity) pending documentation sync.
+[2025-10-08T06:43:41] tokens used: 46,010
+
+[2025-10-08T06:43:44] thinking
+
+**Checking vectorization plan**
+[2025-10-08T06:43:44] exec bash -lc 'cat plans/active/vectorization.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:43:45] bash -lc 'cat plans/active/vectorization.md' succeeded in 684ms:
+## Context
+- Initiative: PERF-PYTORCH-004 vectorization backlog supporting docs/fix_plan.md entry [VECTOR-TRICUBIC-001].
+- Phase Goal: Deliver a production-ready batched tricubic interpolation pipeline (gather + polynomial evaluation) and subsequently vectorize detector absorption without regressing parity, gradients, or device/dtype neutrality.
+- Dependencies:
+  - specs/spec-a-core.md §4 (structure-factor sampling contract)
+  - specs/spec-a-parallel.md §2.3 (tricubic acceptance tests + tolerances)
+  - docs/architecture/pytorch_design.md §§2.2–2.4 (vectorization strategy, broadcast shapes)
+  - docs/development/testing_strategy.md §§1.4–2 (test cadence, authoritative commands)
+  - docs/development/pytorch_runtime_checklist.md (device/vectorization guardrails)
+  - `nanoBragg.c` lines 2604–3278 (polin3/polin2/polint) & 3375–3450 (detector absorption loop)
+  - Existing artifacts under `reports/2025-10-vectorization/phase_*/`
+- Status Snapshot (2025-12-02): Phases A–D complete — gather vectorization (commit 12742e5) and batched polynomials (commit f796861) are merged with CPU+CUDA evidence in `reports/2025-10-vectorization/phase_d/`. Phase E1 regression sweep finished (artifacts under `reports/2025-10-vectorization/phase_e/`); Phase E2–E3 remain open ahead of detector absorption vectorization (Phase F).
+- Execution Notes: Store new evidence under `reports/2025-10-vectorization/phase_<letter>/` directories; every implementation task must quote the matching C snippet per CLAUDE Rule #11. Maintain CPU+CUDA parity and include `pytest --collect-only` proof before targeted runs.
+
+### Phase A — Evidence & Baseline Capture
+Goal: Record baseline behaviour/warnings/timings for tricubic interpolation and detector absorption prior to vectorization.
+Prereqs: Editable install (`pip install -e .`), C binary available if parity comparisons are needed, `KMP_DUPLICATE_LIB_OK=TRUE` set.
+Exit Criteria: Baseline pytest logs + benchmark metrics archived and referenced in fix_plan.
+
+| ID | Task Description | State | How/Why & Guidance |
+[2025-10-08T06:43:45] tokens used: 47,695
+
+[2025-10-08T06:43:49] thinking
+
+**Analyzing long-term goals and codebase status**
+[2025-10-08T06:43:50] exec bash -lc 'rg -n "phi" docs/bugs/verified_c_bugs.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:43:50] bash -lc 'rg -n "phi" docs/bugs/verified_c_bugs.md' succeeded in 713ms:
+167:**Summary:** Inside the φ loop, the rotated vectors `ap/bp/cp` are only updated when `phi != 0.0`; otherwise, they retain the previous state (often from the prior pixel's final φ step). This produces step-0 Miller fractions that mirror the previous pixel rather than the unrotated lattice.
+173:  -phi 0 -osc 0.09 -phisteps 10 -trace_pixel 0 0 \
+174:  -floatfile /tmp/phi_float.bin -intfile /tmp/phi_int.img -noisefile /tmp/phi_noise.img \
+180:- The PyTorch implementation provides an **opt-in** emulation of this bug via `--phi-carryover-mode c-parity`
+181:- **Default behavior** (`--phi-carryover-mode spec`) uses spec-compliant fresh rotations (no carryover)
+186:- **Documentation Status (2025-10-07)**: Phase L sync complete; dual thresholds documented in diagnosis.md and plan files. Implementation complete per `plans/active/cli-phi-parity-shim/plan.md` Phase C; documentation handoff (Phase D) in progress. Artifacts: `reports/2025-10-cli-flags/phase_l/rot_vector/20251007T212159Z/`
+[reports] Auto-committed 84 files (20971520 bytes)
+Auto-commit blocked by forbidden dirty paths: logs/feature-spec-based-2/galph/iter-00069_20251007_050318.log, logs/feature-spec-based-2/galph/iter-00070_20251007_052939.log, logs/feature-spec-based-2/galph/iter-00071_20251007_054652.log, logs/feature-spec-based-2/galph/iter-00071_20251007_055425.log, logs/feature-spec-based-2/galph/iter-00072_20251007_062720.log, logs/feature-spec-based-2/galph/iter-00074_20251007_064740.log, logs/feature-spec-based-2/galph/iter-00075_20251007_065537.log, logs/feature-spec-based-2/galph/iter-00075_20251007_071020.log, logs/feature-spec-based-2/galph/iter-00077_20251007_072611.log, logs/feature-spec-based-2/galph/iter-00078_20251007_073720.log, logs/feature-spec-based-2/galph/iter-00079_20251007_074816.log, logs/feature-spec-based-2/galph/iter-00080_20251007_080023.log, logs/feature-spec-based-2/galph/iter-00081_20251007_081527.log, logs/feature-spec-based-2/galph/iter-00083_20251007_084214.log, logs/feature-spec-based-2/galph/iter-00084_20251007_090009.log, logs/feature-spec-based-2/galph/iter-00085_20251007_091351.log, logs/feature-spec-based-2/galph/iter-00086_20251007_093354.log, logs/feature-spec-based-2/galph/iter-00087_20251007_095436.log, logs/feature-spec-based-2/galph/iter-00088_20251007_101519.log, logs/feature-spec-based-2/galph/iter-00089_20251007_102743.log, logs/feature-spec-based-2/galph/iter-00090_20251007_104630.log, logs/feature-spec-based-2/galph/iter-00091_20251007_110439.log, logs/feature-spec-based-2/galph/iter-00092_20251007_112127.log, logs/feature-spec-based-2/galph/iter-00093_20251007_113947.log, logs/feature-spec-based-2/galph/iter-00094_20251007_115902.log, logs/feature-spec-based-2/galph/iter-00095_20251007_121724.log, logs/feature-spec-based-2/galph/iter-00096_20251007_123404.log, logs/feature-spec-based-2/galph/iter-00097_20251007_125117.log, logs/feature-spec-based-2/galph/iter-00098_20251007_132349.log, logs/feature-spec-based-2/galph/iter-00099_20251007_134459.log, logs/feature-spec-based-2/galph/iter-00100_20251007_140622.log, logs/feature-spec-based-2/galph/iter-00101_20251007_142924.log, logs/feature-spec-based-2/galph/iter-00102_20251007_145656.log, logs/feature-spec-based-2/galph/iter-00103_20251007_151605.log, logs/feature-spec-based-2/galph/iter-00104_20251007_153123.log, logs/feature-spec-based-2/galph/iter-00105_20251007_154605.log, logs/feature-spec-based-2/galph/iter-00106_20251007_181734.log, logs/feature-spec-based-2/galph/iter-00107_20251007_183211.log, logs/feature-spec-based-2/galph/iter-00107_20251007_184730.log, logs/feature-spec-based-2/galph/iter-00108_20251007_190439.log, logs/feature-spec-based-2/galph/iter-00109_20251007_192126.log, logs/feature-spec-based-2/galph/iter-00110_20251007_194416.log, logs/feature-spec-based-2/galph/iter-00111_20251007_211310.log, logs/feature-spec-based-2/galph/iter-00112_20251007_213514.log, logs/feature-spec-based-2/galph/iter-00113_20251007_215106.log, logs/feature-spec-based-2/galph/iter-00114_20251007_220127.log, logs/feature-spec-based-2/galph/iter-00115_20251007_220934.log, logs/feature-spec-based-2/galph/iter-00116_20251007_222411.log, logs/feature-spec-based-2/galph/iter-00117_20251007_224552.log, logs/feature-spec-based-2/galph/iter-00118_20251007_230711.log, logs/feature-spec-based-2/galph/iter-00119_20251007_231854.log, logs/feature-spec-based-2/galph/iter-00120_20251007_233221.log, logs/feature-spec-based-2/galph/iter-00121_20251007_235341.log, logs/feature-spec-based-2/galph/iter-00122_20251008_001237.log, logs/feature-spec-based-2/galph/iter-00123_20251008_003122.log, logs/feature-spec-based-2/galph/iter-00123_20251008_004143.log, logs/feature-spec-based-2/galph/iter-00125_20251008_010923.log, logs/feature-spec-based-2/galph/iter-00126_20251008_014509.log, logs/feature-spec-based-2/galph/iter-00127_20251008_021036.log, logs/feature-spec-based-2/galph/iter-00128_20251008_023610.log, logs/feature-spec-based-2/galph/iter-00129_20251008_030228.log, logs/feature-spec-based-2/galph/iter-00130_20251008_031144.log, logs/feature-spec-based-2/galph/iter-00131_20251008_032103.log, logs/feature-spec-based-2/galph/iter-00132_20251008_033309.log, logs/feature-spec-based-2/galph/iter-00133_20251008_034923.log, logs/feature-spec-based-2/galph/iter-00134_20251008_040211.log, logs/feature-spec-based-2/galph/iter-00135_20251008_041147.log, logs/feature-spec-based-2/galph/iter-00136_20251008_042730.log, logs/feature-spec-based-2/galph/iter-00137_20251008_043859.log, logs/feature-spec-based-2/galph/iter-00138_20251008_045442.log, logs/feature-spec-based-2/galph/iter-00139_20251008_050838.log, logs/feature-spec-based-2/galph/iter-00139_20251008_053123.log, logs/feature-spec-based-2/galph/iter-00141_20251008_053957.log, logs/feature-spec-based-2/galph/iter-00141_20251008_054647.log, logs/feature-spec-based-2/galph/iter-00142_20251008_062157.log, logs/feature-spec-based-2/galph/iter-00143_20251008_064250.log, logs/feature-spec-based-2/ralph/iter-00006_20251006_001907_main.log, logs/feature-spec-based-2/ralph/iter-00007_20251006_002630_main.log, logs/feature-spec-based-2/ralph/iter-00008_20251006_004627_main.log, logs/feature-spec-based-2/ralph/iter-00009_20251006_011300_main.log, logs/feature-spec-based-2/ralph/iter-00010_20251006_012817_main.log, logs/feature-spec-based-2/ralph/iter-00011_20251006_013837_main.log, logs/feature-spec-based-2/ralph/iter-00012_20251006_021248_main.log, logs/feature-spec-based-2/ralph/iter-00013_20251006_023229_main.log, logs/feature-spec-based-2/ralph/iter-00014_20251006_024711_main.log, logs/feature-spec-based-2/ralph/iter-00015_20251006_030851_main.log, logs/feature-spec-based-2/ralph/iter-00016_20251006_034654_main.log, logs/feature-spec-based-2/ralph/iter-00017_20251006_041459_main.log, logs/feature-spec-based-2/ralph/iter-00018_20251006_043544_main.log, logs/feature-spec-based-2/ralph/iter-00019_20251006_045200_main.log, logs/feature-spec-based-2/ralph/iter-00020_20251006_051501_main.log, logs/feature-spec-based-2/ralph/iter-00021_20251006_053432_main.log, logs/feature-spec-based-2/ralph/iter-00022_20251006_060544_main.log, logs/feature-spec-based-2/ralph/iter-00023_20251006_061754_main.log, logs/feature-spec-based-2/ralph/iter-00024_20251006_063056_main.log, logs/feature-spec-based-2/ralph/iter-00025_20251006_064521_main.log, logs/feature-spec-based-2/ralph/iter-00026_20251006_070951_main.log, logs/feature-spec-based-2/ralph/iter-00027_20251006_073508_main.log, logs/feature-spec-based-2/ralph/iter-00028_20251006_080004_main.log, logs/feature-spec-based-2/ralph/iter-00029_20251006_082420_main.log, logs/feature-spec-based-2/ralph/iter-00030_20251006_091747_main.log, logs/feature-spec-based-2/ralph/iter-00031_20251006_094139_main.log, logs/feature-spec-based-2/ralph/iter-00032_20251006_101008_main.log, logs/feature-spec-based-2/ralph/iter-00033_20251006_102731_main.log, logs/feature-spec-based-2/ralph/iter-00034_20251006_104245_main.log, logs/feature-spec-based-2/ralph/iter-00035_20251006_110014_main.log, logs/feature-spec-based-2/ralph/iter-00035_20251006_151506_main.log, logs/feature-spec-based-2/ralph/iter-00036_20251006_152954_main.log, logs/feature-spec-based-2/ralph/iter-00037_20251006_155701_main.log, logs/feature-spec-based-2/ralph/iter-00038_20251006_161648_main.log, logs/feature-spec-based-2/ralph/iter-00039_20251006_164305_main.log, logs/feature-spec-based-2/ralph/iter-00040_20251006_170232_main.log, logs/feature-spec-based-2/ralph/iter-00041_20251006_173951_main.log, logs/feature-spec-based-2/ralph/iter-00042_20251006_175416_main.log, logs/feature-spec-based-2/ralph/iter-00043_20251006_185445_main.log, logs/feature-spec-based-2/ralph/iter-00044_20251006_190654_main.log, logs/feature-spec-based-2/ralph/iter-00045_20251006_192405_main.log, logs/feature-spec-based-2/ralph/iter-00046_20251006_194756_main.log, logs/feature-spec-based-2/ralph/iter-00046_20251006_201359_main.log, logs/feature-spec-based-2/ralph/iter-00047_20251006_201800_main.log, logs/feature-spec-based-2/ralph/iter-00048_20251006_203713_main.log, logs/feature-spec-based-2/ralph/iter-00049_20251006_210516_main.log, logs/feature-spec-based-2/ralph/iter-00050_20251006_212905_main.log, logs/feature-spec-based-2/ralph/iter-00051_20251006_214913_main.log, logs/feature-spec-based-2/ralph/iter-00052_20251006_221702_main.log, logs/feature-spec-based-2/ralph/iter-00053_20251006_224745_main.log, logs/feature-spec-based-2/ralph/iter-00054_20251006_231626_main.log, logs/feature-spec-based-2/ralph/iter-00055_20251006_234849_main.log, logs/feature-spec-based-2/ralph/iter-00056_20251007_000751_main.log, logs/feature-spec-based-2/ralph/iter-00057_20251007_003806_main.log, logs/feature-spec-based-2/ralph/iter-00058_20251007_005458_main.log, logs/feature-spec-based-2/ralph/iter-00059_20251007_011911_main.log, logs/feature-spec-based-2/ralph/iter-00060_20251007_014454_main.log, logs/feature-spec-based-2/ralph/iter-00061_20251007_015601_main.log, logs/feature-spec-based-2/ralph/iter-00062_20251007_020955_main.log, logs/feature-spec-based-2/ralph/iter-00063_20251007_023110_main.log, logs/feature-spec-based-2/ralph/iter-00064_20251007_030221_main.log, logs/feature-spec-based-2/ralph/iter-00065_20251007_032028_main.log, logs/feature-spec-based-2/ralph/iter-00066_20251007_034403_main.log, logs/feature-spec-based-2/ralph/iter-00067_20251007_040316_main.log, logs/feature-spec-based-2/ralph/iter-00068_20251007_045227_main.log, logs/feature-spec-based-2/ralph/iter-00069_20251007_050317_main.log, logs/feature-spec-based-2/ralph/iter-00070_20251007_052936_main.log, logs/feature-spec-based-2/ralph/iter-00071_20251007_054650_main.log, logs/feature-spec-based-2/ralph/iter-00072_20251007_061413_main.log, logs/feature-spec-based-2/ralph/iter-00073_20251007_063430_main.log, logs/feature-spec-based-2/ralph/iter-00074_20251007_064736_main.log, logs/feature-spec-based-2/ralph/iter-00075_20251007_065533_main.log, logs/feature-spec-based-2/ralph/iter-00076_20251007_071305_main.log, logs/feature-spec-based-2/ralph/iter-00077_20251007_072605_main.log, logs/feature-spec-based-2/ralph/iter-00078_20251007_073718_main.log, logs/feature-spec-based-2/ralph/iter-00079_20251007_074811_main.log, logs/feature-spec-based-2/ralph/iter-00080_20251007_080658_main.log, logs/feature-spec-based-2/ralph/iter-00081_20251007_081525_main.log, logs/feature-spec-based-2/ralph/iter-00082_20251007_083208_main.log, logs/feature-spec-based-2/ralph/iter-00083_20251007_084211_main.log, logs/feature-spec-based-2/ralph/iter-00084_20251007_090008_main.log, logs/feature-spec-based-2/ralph/iter-00085_20251007_091344_main.log, logs/feature-spec-based-2/ralph/iter-00086_20251007_093347_main.log, logs/feature-spec-based-2/ralph/iter-00087_20251007_095432_main.log, logs/feature-spec-based-2/ralph/iter-00088_20251007_101514_main.log, logs/feature-spec-based-2/ralph/iter-00089_20251007_102737_main.log, logs/feature-spec-based-2/ralph/iter-00090_20251007_104627_main.log, logs/feature-spec-based-2/ralph/iter-00091_20251007_110434_main.log, logs/feature-spec-based-2/ralph/iter-00092_20251007_112121_main.log, logs/feature-spec-based-2/ralph/iter-00093_20251007_113946_main.log, logs/feature-spec-based-2/ralph/iter-00094_20251007_115857_main.log, logs/feature-spec-based-2/ralph/iter-00095_20251007_121723_main.log, logs/feature-spec-based-2/ralph/iter-00096_20251007_123400_main.log, logs/feature-spec-based-2/ralph/iter-00097_20251007_125111_main.log, logs/feature-spec-based-2/ralph/iter-00098_20251007_132345_main.log, logs/feature-spec-based-2/ralph/iter-00099_20251007_134455_main.log, logs/feature-spec-based-2/ralph/iter-00100_20251007_140619_main.log, logs/feature-spec-based-2/ralph/iter-00101_20251007_142917_main.log, logs/feature-spec-based-2/ralph/iter-00102_20251007_145655_main.log, logs/feature-spec-based-2/ralph/iter-00103_20251007_151603_main.log, logs/feature-spec-based-2/ralph/iter-00104_20251007_153122_main.log, logs/feature-spec-based-2/ralph/iter-00105_20251007_154558_main.log, logs/feature-spec-based-2/ralph/iter-00105_20251007_174059_main.log, logs/feature-spec-based-2/ralph/iter-00106_20251007_181101_main.log, logs/feature-spec-based-2/ralph/iter-00107_20251007_183205_main.log, logs/feature-spec-based-2/ralph/iter-00108_20251007_185217_main.log, logs/feature-spec-based-2/ralph/iter-00109_20251007_192123_main.log, logs/feature-spec-based-2/ralph/iter-00110_20251007_194415_main.log, logs/feature-spec-based-2/ralph/iter-00110_20251007_203604_main.log, logs/feature-spec-based-2/ralph/iter-00110_20251007_205732_main.log, logs/feature-spec-based-2/ralph/iter-00111_20251007_211304_main.log, logs/feature-spec-based-2/ralph/iter-00112_20251007_213514_main.log, logs/feature-spec-based-2/ralph/iter-00113_20251007_215104_main.log, logs/feature-spec-based-2/ralph/iter-00114_20251007_220121_main.log, logs/feature-spec-based-2/ralph/iter-00115_20251007_220930_main.log, logs/feature-spec-based-2/ralph/iter-00116_20251007_222409_main.log, logs/feature-spec-based-2/ralph/iter-00117_20251007_224547_main.log, logs/feature-spec-based-2/ralph/iter-00118_20251007_230705_main.log, logs/feature-spec-based-2/ralph/iter-00119_20251007_231849_main.log, logs/feature-spec-based-2/ralph/iter-00120_20251007_233215_main.log, logs/feature-spec-based-2/ralph/iter-00121_20251007_235338_main.log, logs/feature-spec-based-2/ralph/iter-00122_20251008_001231_main.log, logs/feature-spec-based-2/ralph/iter-00123_20251008_003115_main.log, logs/feature-spec-based-2/ralph/iter-00124_20251008_004200_main.log, logs/feature-spec-based-2/ralph/iter-00125_20251008_010918_main.log, logs/feature-spec-based-2/ralph/iter-00125_20251008_013221_main.log, logs/feature-spec-based-2/ralph/iter-00126_20251008_014506_main.log, logs/feature-spec-based-2/ralph/iter-00127_20251008_021034_main.log, logs/feature-spec-based-2/ralph/iter-00128_20251008_023604_main.log, logs/feature-spec-based-2/ralph/iter-00129_20251008_030222_main.log, logs/feature-spec-based-2/ralph/iter-00130_20251008_031144_main.log, logs/feature-spec-based-2/ralph/iter-00131_20251008_032101_main.log, logs/feature-spec-based-2/ralph/iter-00132_20251008_033302_main.log, logs/feature-spec-based-2/ralph/iter-00133_20251008_034916_main.log, logs/feature-spec-based-2/ralph/iter-00134_20251008_040209_main.log, logs/feature-spec-based-2/ralph/iter-00135_20251008_041143_main.log, logs/feature-spec-based-2/ralph/iter-00136_20251008_042726_main.log, logs/feature-spec-based-2/ralph/iter-00137_20251008_043857_main.log, logs/feature-spec-based-2/ralph/iter-00138_20251008_045436_main.log, logs/feature-spec-based-2/ralph/iter-00139_20251008_050833_main.log, logs/feature-spec-based-2/ralph/iter-00140_20251008_053239_main.log, logs/feature-spec-based-2/ralph/iter-00141_20251008_053956_main.log, logs/feature-spec-based-2/ralph/iter-00142_20251008_055022_main.log, logs/feature-spec-based-2/ralph/iter-00142_20251008_060531_main.log
+[sync] Doc/meta whitelist violation detected; marking post-run as failed.
+To github.com:hoidn/nanoBragg.git
+   050889b..ce86def  HEAD -> feature/spec-based-2
+Supervisor iteration failed rc=0. Stamped failure and pushed; exiting.
