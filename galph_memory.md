@@ -1788,3 +1788,10 @@ Follow-ups for Ralph:
 - Action: Maintained existing plan, but issued new Perf-mode `input.md` directing Ralph to implement `polint_vectorized`/`polin2_vectorized`/`polin3_vectorized`, wire them into the batched path, remove the fallback warning, and capture CPU/CUDA pytest logs under `reports/2025-10-vectorization/phase_d/`.
 - Expectations logged: update `implementation_notes.md`, rerun `tests/test_tricubic_vectorized.py::TestTricubicPoly`, then hit `tests/test_at_str_002.py::TestStructureFactorInterpolation::test_tricubic_interpolation_enabled`, and record a new Attempt in `docs/fix_plan.md` marking plan row D2 [D].
 - Follow-up for Ralph: land D2 implementation, produce the requested artifacts/logs, and be ready to progress to Plan Phase D4 once the vectorized helpers pass.
+
+## 2025-11-29 (galph loop — vectorization D4 prep)
+- Confirmed CLI parity plans remain pending; spec shards still reject the φ=0 carryover bug (specs/spec-a-core.md:211-214) so no spec edits required this turn.
+- Reviewed Ralph’s Phase D2 commit (f796861): vectorized polin* helpers landed with correct docstrings/tests; noted residual 4-iteration Python loops in polin2/polin3_vectorized—acceptable for now but flag for Phase E perf review.
+- Updated `plans/active/vectorization.md` (D2 marked [D], D4 guidance clarified) and refreshed `docs/fix_plan.md` Next Actions to focus on D4 evidence + Phase E staging.
+- Issued new Perf-mode `input.md` directing Ralph to capture Phase D4 CPU/CUDA pytest logs, update polynomial_validation.md with timings, and log a new Attempt when done.
+- Expect Ralph to run the specified selectors, archive logs under `reports/2025-10-vectorization/phase_d/`, and advance plan row D4 to [D] before moving into Phase E.
