@@ -1840,3 +1840,9 @@ Follow-ups for Ralph:
 - Updated `docs/fix_plan.md` Next Actions for CLI-FLAGS-003 to point explicitly at the checklist and geometry table deliverable.
 - Issued Parity-mode `input.md` directing Ralph to produce new artifacts under `reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/`, append geometry data to `rot_vector/diagnosis.md`, and log collect-only pytest output.
 - Expect Ralph to follow C4b–C4d, then update diagnosis.md and attempt history once Δk ≤ 1e-6.
+
+## 2025-10-07 (galph loop — parity evidence prep)
+- Re-read specs/spec-a-core.md:211-214 and confirmed φ rotation stays spec-compliant; no carryover language leaked into specs/spec-a-cli.md.
+- Cross-checked docs/bugs/verified_c_bugs.md:166-204 to ensure C-PARITY-001 remains quarantined; architecture notes (arch.md:204-216) align with spec.
+- Issued new Parity-mode input (Phase L3k.3c.4) instructing Ralph to regenerate per-φ traces via `trace_per_phi.py` and `compare_per_phi_traces.py`, capture artifacts under `reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/`, and update diagnosis/fix_plan attempts.
+- Next expectation: Ralph delivers fresh Δk/ΔF_latt_b metrics; if thresholds met, proceed to Phase L3k.3c.5 documentation/tests before nb-compare rerun.
