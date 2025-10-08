@@ -1,102 +1,102 @@
-Summary: Capture Phase M3 parity probes so we know whether the φ rotation pipeline or sincg evaluation causes the I_before_scaling gap.
+Summary: Implement the Phase M4 normalization fix and prove the supervisor pixel now matches nanoBragg.c within VG-2 tolerances.
 Mode: Parity
-Focus: CLI-FLAGS-003 / Phase M3 probes (plans/active/cli-noise-pix0/plan.md)
+Focus: CLI-FLAGS-003 / Phase M4 normalization fix (plans/active/cli-noise-pix0/plan.md)
 Branch: feature/spec-based-2
-Mapped tests: KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py::TestCLIScalingPhi0::test_rot_b_matches_c tests/test_cli_scaling_phi0.py::TestCLIScalingPhi0::test_k_frac_phi0_matches_c
+Mapped tests: KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py
 Artifacts:
-- reports/2025-10-cli-flags/phase_l/scaling_validation/<stamp>/phase_m3_probes/trace_py_phi.log (PyTorch per-φ trace matching C schema)
-- reports/2025-10-cli-flags/phase_l/scaling_validation/<stamp>/phase_m3_probes/trace_c_phi.log (fresh C reference for the same pixel)
-- reports/2025-10-cli-flags/phase_l/scaling_validation/<stamp>/phase_m3_probes/sincg_sweep.md (table + plot for k ∈ [-0.61,-0.58])
-- reports/2025-10-cli-flags/phase_l/scaling_validation/<stamp>/phase_m3_probes/phistep1/ (single-φ PyTorch & C traces + float images)
-- reports/2025-10-cli-flags/phase_l/scaling_validation/<stamp>/phase_m3_probes/rotation_audit.md (side-by-side basis vectors vs nanoBragg.c)
-- reports/2025-10-cli-flags/phase_l/scaling_validation/<stamp>/phase_m3_probes/summary.md (overview + open questions + git SHA)
-- reports/2025-10-cli-flags/phase_l/scaling_validation/<stamp>/phase_m3_probes/commands.txt and sha256.txt (repro + integrity)
-- reports/2025-10-cli-flags/phase_l/scaling_validation/<stamp>/phase_m3_probes/env.json (python/torch/pyrefly versions for reproducibility)
-- reports/2025-10-cli-flags/phase_l/scaling_validation/<stamp>/phase_m3_probes/git_sha.txt (commit recorded after probes land)
-- reports/2025-10-cli-flags/phase_l/scaling_validation/<stamp>/phase_m3_probes/pytest.log (stdout from mapped tests)
-- reports/2025-10-cli-flags/phase_l/scaling_validation/<stamp>/phase_m3_probes/sincg_sweep.png (optional visualization referenced in sincg_sweep.md)
-- reports/2025-10-cli-flags/phase_l/scaling_validation/<stamp>/phase_m3_probes/pytest_collect.log (collect-only output if needed)
-- reports/2025-10-cli-flags/phase_l/scaling_validation/<stamp>/phase_m3_probes/diff_trace.md (first-delta narrative between PyTorch and C per-φ logs)
-- reports/2025-10-cli-flags/phase_l/scaling_validation/<stamp>/phase_m3_probes/roi_metadata.json (pixel coordinates, detector geometry snapshot)
-- reports/2025-10-cli-flags/phase_l/scaling_validation/<stamp>/phase_m3_probes/compare_scaling_traces.json (parser output for per-factor deltas post-probes)
-- docs/fix_plan.md Attempt #187 with probe summary + artifact paths
-Do Now: CLI-FLAGS-003 Phase M3 probes; KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py::TestCLIScalingPhi0::test_rot_b_matches_c tests/test_cli_scaling_phi0.py::TestCLIScalingPhi0::test_k_frac_phi0_matches_c
-If Blocked: Record partial probes in phase_m3_probes/summary.md with blocker details, stash whatever trace data exists, run the mapped pytest in --collect-only mode to capture the failure or blockage, update docs/fix_plan.md Attempt with the partial bundle path, and stop.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/design_memo.md (spec + nanoBragg.c contract recap)
+  - Summarise spec citations (specs/spec-a-core.md:446,576,633), C loop references (nanoBragg.c:3336-3365), and the planned tensor ops for normalization + logging.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/trace_py_fix.log and trace_c_baseline.log (per-φ parity)
+  - Ensure TRACE_PY ordering matches TRACE_C, include per-step accumulators pre/post division, and note any residual <1e-9 drift.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/trace_py_phi.log (extended per-φ instrumentation output per M3a schema)
+  - Capture both raw sums and normalized outputs so future probes can validate intermediate tensors.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/summary.md, metrics.json, compare_scaling_traces.txt, compare_scaling_traces.json
+  - `summary.md` should list each factor, signed delta, and conclude with `first_divergence=None` when parity holds.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/pytest.log, pytest_collect.log, commands.txt, env.json, sha256.txt, git_sha.txt
+  - Separate CPU vs CUDA logs (if both run) and record RNG seeds; env.json should capture python, torch, cuda, device, dtype.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/lattice_hypotheses.md addendum documenting Hypothesis H4 closure
+  - Include the before/after intensity values, cite fix_<timestamp>, and mark Hypothesis H4 as closed or downgraded.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/diff_trace.md (first-divergence narrative confirming parity)
+  - Highlight the exact normalization line showing PyTorch now divides by `steps`; embed representative numeric comparison.
+- docs/fix_plan.md Attempt #??? entry summarising Phase M4 completion with artifact links
+  - Provide timestamp, git SHA, metrics (ΔI_before_scaling), list of artifacts, and note follow-on actions (Phase M5).
+Do Now: CLI-FLAGS-003 Phase M4 (run M4a–M4d) — verify with KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py once the patch is ready
+If Blocked: Capture partial progress in fix_<timestamp>/summary.md (note which M4 subtask hit issues), run pytest --collect-only -q tests/test_cli_scaling_phi0.py to document state, update docs/fix_plan.md Attempt entry with the blocker + artifact path, then stop.
 Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md:56-60 locks M3a–M3d as the gate before any simulator fix.
-- docs/fix_plan.md:461-467 demands completion of M3 probes before M4 code edits.
-- specs/spec-a-core.md:204-236 defines the φ rotation + sincg contract we need to audit.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/analysis_20251008T212459Z.md elevates Hypothesis H4 (rotation mismatch) and prescribes today’s probes.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/commands.txt captures the baseline harness invocation to reuse for new traces.
-- scripts/validation/compare_scaling_traces.py output shows current divergence limited to I_before_scaling, so probes must target lattice math.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/metrics.json lists the 14.6% delta we must explain before nb-compare reruns.
-- docs/architecture/pytorch_design.md:42-88 reiterates vectorization + device neutrality rules that the new instrumentation must respect.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md ranks H4 as HIGH confidence, making M3 probes the critical validation path.
-- galph_memory.md latest entry (2025-10-08) commits the supervisor to deliver a Phase M3 handoff next.
-- docs/development/testing_strategy.md:34-118 requires authoritative commands + artifact logs for parity evidence, so today’s bundle must be thorough.
-- prompts/pyrefly.md reminds us to capture env metadata whenever instrumentation changes surface area (env.json task).
-- reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/trace_py_spec.log confirms prior trace formats we must remain compatible with.
-- scripts/validation/compare_scaling_traces.py:12 documents expected JSON schema; today’s probes should keep output consistent for downstream automation.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T070513Z/trace_tooling_audit.md shows prior trace gating; reuse its checklist when committing new hooks.
-How-To Map:
-- Reuse the baseline harness command from spec_baseline/commands.txt, adding a fresh timestamp env var, e.g.:
-  STAMP=$(date -u +%Y%m%dT%H%M%SZ) && \
-  KMP_DUPLICATE_LIB_OK=TRUE python scripts/trace_harness.py \
-    --profile scaling --out reports/2025-10-cli-flags/phase_l/scaling_validation/${STAMP}/phase_m3_probes \
-    --trace-pixel 685 1039 --device cpu --dtype float64 --emit-per-phi
-- After wiring the PyTorch trace logging, regenerate the C trace with the same STAMP by exporting NB_C_BIN and running the supervisor command with -trace_pixel 685 1039 > trace_c_phi.log.
-- Build the sincg sweep via a short notebook or script: load torch.float64 tensors, evaluate sincg(PI*k, Nb=47) using utils.physics.sincg, and write the table/plot to sincg_sweep.md (include CSV/PNG if generated).
-- For the single-φ check, rerun both implementations with -phisteps 1 -osc 0, saving traces and float images under phistep1/ plus a note explaining observed F_latt.
-- Rotation audit: instrument Crystal.get_rotated_real_vectors to dump basis vectors before/after φ, capture values in rotation_audit.md with references to nanoBragg.c line numbers.
-- Run the mapped pytest command once probes are in place to ensure spec-mode tests still pass; capture stdout under phase_m3_probes/pytest.log.
-- Finish by updating commands.txt, sha256.txt, and docs/fix_plan.md with the new Attempt number and artifact list.
-- Guard the new trace hooks with the existing `enable_trace` context manager so normal runs stay silent.
-- After generating each artifact, append its path + SHA256 to sha256.txt immediately to avoid omissions.
-- Diff trace_py_phi.log vs trace_c_phi.log (e.g., `colordiff`) and cite first mismatch in summary.md to focus M4 work.
-- Use `rg "TRACE_PY_PHI" src` before committing to confirm instrumentation only fires under the trace flag.
-- Create env.json via `python - <<'PY'` snippet that serialises sys.version, torch.__version__, device availability, and git SHA.
-- Update lattice_hypotheses.md with probe outcomes so future loops see which hypotheses remain viable.
-- Copy the phistep1 float images into results/ alongside a checksum so nb-compare can reference them later if needed.
-- Run `pytest --collect-only -q tests/test_cli_scaling_phi0.py` before the full selector if imports break; save output to pytest_collect.log in the probe bundle.
-- Capture a short `notes.txt` in phistep1/ explaining how osc/phisteps were altered and whether any command-line deviations were necessary.
-- Use `python -m scripts.validation.compare_scaling_traces` with `--emit-json` pointing at the new per-φ logs to verify parser compatibility before summarising.
-- After each probe, update phase_m3_probes/summary.md with a numbered subsection so later readers can tie evidence to tasks M3a–M3d.
-- Verify the new instrumentation respects `KMP_DUPLICATE_LIB_OK=TRUE` by running the harness once without the env var (expect failure) and logging that in summary.md.
-- Stage only intentional code edits (`git add src/... scripts/...`) before running tests to avoid noise in Attempt logs.
-- When finished, paste the exact harness command used into docs/fix_plan.md Attempt #187 for traceability.
-- Record `torch.cuda.is_available()` status in env.json so later CUDA smoke tests can reuse the same environment expectations.
-- After instrumentation changes, run `python -m nanobrag_torch --help` to confirm CLI help output is unchanged; note the result in summary.md.
-- Package any helper scripts under scripts/validation/ if created, and link them from summary.md so they are easy to find.
+- plans/active/cli-noise-pix0/plan.md:60-71 promotes the new M4a–M4d checklist as the gate before CUDA/nb-compare work.
+- docs/fix_plan.md:461-468 now expects the checklist sequence and fix_<timestamp> bundle before moving to Phase M5.
+- specs/spec-a-core.md:446 and specs/spec-a-core.md:576/633 articulate the mandatory `intensity /= steps` normalization we must restore.
+- docs/development/c_to_pytorch_config_map.md:34-56 reinforces scaling parity expectations between C and PyTorch simulators.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/analysis_20251008T212459Z.md pins the 14.6% I_before_scaling deficit and Hypothesis H4.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T215700Z/phase_m3_probes/rotation_audit.md confirms rotation math is correct, letting us focus on normalization.
+-How-To Map:
+- Re-read spec & C contract: `sed -n '430,640p' specs/spec-a-core.md` and `rg -n "intensity" golden_suite_generator/nanoBragg.c | head` (confirm `steps` division placement).
+- Design memo: document citations + planned tensor updates in `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/design_memo.md` before editing code.
+- Code edit target: `src/nanobrag_torch/simulator.py` (normalization after per-source sum); update per-φ logging hooks per `/tmp/m3a_instrumentation_design.md`.
+- Pre-flight formatting check: run `python -m compileall src/nanobrag_torch/simulator.py` to confirm syntax before executing tests.
+- Regenerate traces: `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --pixel 685 1039 --device cpu --dtype float64 --out reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/`.
+- Capture C trace if baseline drifted: `NB_C_BIN=./golden_suite_generator/nanoBragg bash -lc "python reports/2025-10-cli-flags/phase_l/scaling_audit/run_c_trace.py --pixel 685 1039 --out reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/trace_c_baseline.log"` (or reuse archived log if git SHA unchanged).
+- Compare scaling: `python scripts/validation/compare_scaling_traces.py --c reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/c_trace_scaling.log --py reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/trace_py_fix.log --out reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/summary.md` and store JSON output alongside.
+- Tests: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py` (repeat with CUDA device if available; capture both logs).
+- Additional guard: run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_nonoise.py::TestCLINoise::test_noise_disabled_when_flag_set` to ensure no regressions from normalization changes.
+- Update hypotheses: append closure note to `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md` referencing fix_<timestamp> metrics and note Hypothesis H4 resolution.
+- Update docs/fix_plan.md Attempt with metrics + artifact paths after artifacts exist; include SHA and summarized findings.
+- Record commands/env: populate commands.txt, env.json, sha256.txt within fix_<timestamp> directory before ending loop.
+- Verify gradient behaviour (if instrumentation touched differentiable tensors): run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_autograd_phi.py::TestPhiGradients::test_phi_requires_grad` (skip gracefully if selector missing but document in summary).
+- Re-run `pytest --collect-only -q tests/test_cli_scaling_phi0.py` post-edit to confirm selectors still resolve.
+- Update docs/fix_plan.md Attempt with metrics + artifact paths only after artifacts exist; include `git rev-parse HEAD` value.
+- Append commands chronologically to commands.txt (CPU run, CUDA run, compare script, pytest) with numbering for reproducibility.
+- Dump env metadata via `python -c "import json, os, sys, torch; print(json.dumps({'python': sys.version, 'torch': torch.__version__, 'cuda': torch.version.cuda, 'device': 'cpu', 'dtype': 'float64'}, indent=2))" > env.json` (and add CUDA variant if executed).
+
+Attempts History Logging:
+- docs/fix_plan.md Attempt: include UTC timestamp, git SHA, summary of normalization change + instrumentation, parity metrics, and artifact bullet list.
+- plans/active/cli-noise-pix0/plan.md: flip M4 row to [D] with one-line status referencing fix_<timestamp> once parity is proven; mark M4a–M4d checklist states accordingly.
+- galph_memory.md: add recap of Phase M4 completion, metrics, and next-focus (Phase M5) before finishing the loop.
+- Partial loops: mark incomplete checklist rows as `[P]` with blocker description inside the plan tables before handing back.
+
+Validation Checklist:
+- [ ] Design memo written before touching code; includes spec + C references and tensor plan.
+- [ ] Simulator patch keeps operations batched (no shape regressions verified via asserts or shape dumps).
+- [ ] TRACE_PY vs TRACE_C diff returns zero first divergence (confirm via compare_scaling_traces and manual spot-check).
+- [ ] `pytest -v tests/test_cli_scaling_phi0.py` passes on CPU (and CUDA if available) with logs saved.
+- [ ] Optional guard test `tests/test_cli_nonoise.py::TestCLINoise::test_noise_disabled_when_flag_set` passes post-change.
+- [ ] `lattice_hypotheses.md` updated with Hypothesis H4 disposition + metrics.
+- [ ] docs/fix_plan.md updated with Attempt entry referencing artifact bundle.
+- [ ] Plan checklist M4a–M4d states flipped to [D] with notes.
+- [ ] galph_memory.md entry appended with summary and follow-up tasks.
 Pitfalls To Avoid:
-- Do not regress vectorization when adding trace hooks; reuse existing batched tensors and guard with trace flags.
-- Keep device/dtype neutrality; no hard-coded .cpu()/.double() in production paths.
-- Maintain CLAUDE Rule #11: include nanoBragg.c snippets in any new docstrings if you touch simulator/crystal code.
-- Respect Protected Assets; do not move or delete files listed in docs/index.md.
-- Ensure trace files distinguish Py vs C via prefixes (`TRACE_PY_PHI`, `TRACE_C_PHI`).
-- Capture environment metadata (python -V, torch version) before leaving the bundle.
-- Don’t forget to git add updated docs/fix_plan.md when logging Attempt #187.
-- Avoid running full pytest; stick to the mapped selectors after code changes.
-- Confirm hash files include every artifact you generate to keep bundles reproducible.
-- Keep phistep1 experiment deterministic (seed reuse) so comparisons to the baseline remain meaningful.
-- Avoid writing probe scripts outside scripts/validation/; keep everything inside the reports bundle or reusable tooling paths.
-- Don’t check in large binary artefacts; keep float images under 5 MB and rely on sha256 for verification instead of Git LFS.
-- Ensure sincg sweep uses float64 arithmetic; float32 will hide the zero-crossing we need to observe.
-- When editing instrumentation, avoid mixing f-strings with `%` formatting to keep trace lines consistent with C.
-- Keep summary.md concise but include direct links to every artifact so later reviewers do not hunt through the bundle.
-- Double-check that trace files end with newlines; diff tools relying on POSIX text files require it.
+- Do not introduce `.item()`, `.cpu()`, or scalar loops; keep normalization batched over ROI/phi/mosaic/sources.
+  - Verify via tensor `.shape` logging during development if unsure; remove prints before commit.
+- Preserve device/dtype neutrality (derive tensors via `.type_as(...)` or existing buffers, no implicit CPU fallbacks).
+  - Constants should be instantiated with `.new_tensor` or `.type_as` helpers to stay on caller device.
+- Maintain per-φ logging schema compatible with existing Phase M artifacts (TRACE_PY_PHI ordering, 1-based step index).
+  - Changing token names or order will break diff tooling; double-check against Phase M3 design document.
+- Include the exact `nanoBragg.c` snippet in the updated docstring before writing implementation (CLAUDE Rule #11).
+  - Snippet must be verbatim (no ellipses) and reference line numbers used in design memo.
+- Ensure `fix_<timestamp>` bundle includes commands, env, sha256 — no empty files or missing metadata.
+  - Run `find reports/.../fix_<timestamp> -maxdepth 1 -type f` to confirm required files exist before finishing.
+- Run trace harness with float64 to match existing baseline; mixing dtypes will invalidate comparisons.
+  - If CUDA run uses float32, document the dtype difference explicitly in summary.md.
+- Keep Protected Assets intact (docs/index.md references input.md, loop.sh, supervisor.sh).
+  - Never rename or delete these assets during cleanup; mention if touched for read-only access.
+- Update docs/fix_plan.md Attempt entry after artifacts exist; don't pre-commit placeholder text.
+  - Attempt entries without artifacts create audit gaps; delay update until bundle is immutable.
+- Confirm C trace reused from baseline is still valid; re-run nanoBragg if git SHA drifted.
+  - Note in commands.txt whether the baseline trace was regenerated or reused (include SHA check result).
+- Avoid deleting historical evidence directories; create a new timestamped folder for this fix.
+  - Use ISO8601 timestamp (UTC) to keep ordering consistent with earlier bundles.
 Pointers:
-- plans/active/cli-noise-pix0/plan.md:25,54-60 (status snapshot + M3 task definitions)
-- docs/fix_plan.md:461-467 (Next Actions expectations for CLI-FLAGS-003)
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/analysis_20251008T212459Z.md:1 (hypotheses + required probes)
-- specs/spec-a-core.md:204 (φ rotation + sincg contract)
-- scripts/trace_harness.py: header (existing CLI flags for trace generation)
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md:5 (current hypothesis log)
-- docs/architecture/pytorch_design.md:42 (vectorization guardrails relevant to instrumentation)
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/metrics.json:3 (numerical deficit to match)
-- plans/active/phi-carryover-removal/plan.md:68 (post-shim guard context for trace tooling)
-- docs/development/testing_strategy.md:45 (parity evidence workflow + trace storage rules)
-- reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/rg_phi_carryover.txt:1 (verify no stray carryover traces return)
-- scripts/validation/README.md:1 (baseline instructions for running validation helpers)
-- docs/bugs/verified_c_bugs.md:166 (C-only φ-carryover write-up to cite when explaining probe scope)
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/summary_addendum.md:1 (prior bundle pointer structure to mirror)
-Next Up: Phase M4 physics fix once probes confirm the rotation hypothesis.
+- plans/active/cli-noise-pix0/plan.md:60-71 (Phase M4 instructions + checklist)
+- docs/fix_plan.md:461-468 (Next Actions expectations)
+- specs/spec-a-core.md:446 (intensity accumulator) and specs/spec-a-core.md:576 (steps division requirement)
+- golden_suite_generator/nanoBragg.c:3336-3365 (reference normalization loop)
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/commands.txt (baseline harness invocation)
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md (Hypothesis ledger to update)
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T215755Z/phase_m3_probes/sincg_sweep.md (context for k_frac sensitivity)
+- /tmp/m3a_instrumentation_design.md (logging schema to follow for per-φ traces)
+- docs/architecture/pytorch_design.md:70-122 (vectorization + device/dtype guidance relevant to simulator edits)
+- docs/development/testing_strategy.md:34-118 (authoritative commands + parity evidence requirements)
+- reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/trace_py_spec.log (legacy trace format for comparison)
+- docs/development/pytorch_runtime_checklist.md:1-80 (runtime guardrails to verify before/after edits)
+Next Up:
+- Phase M5 GPU + gradcheck validation once fix_<timestamp> bundle is green.

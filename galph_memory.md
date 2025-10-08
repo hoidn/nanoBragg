@@ -1187,3 +1187,11 @@
 - Synced `docs/fix_plan.md:461-467` Next Actions with the new M3 task bundle; emphasis on storing probes under `phase_m3_probes/` with sha256 + summary.
 - Authored `input.md` (Mode: Parity) directing Ralph to execute those probes, capture fresh traces, and update fix_plan Attempt #187 after running targeted pytest.
 - Follow-up: Ralph to produce the Phase M3 artifact bundle (trace_py_phi, sincg_sweep, phistep1, rotation_audit, summary) and log results before M4 implementation begins.
+
+## 2025-12-16 (galph loop — Phase M4 normalization planning)
+- Synced with origin (no conflicts) then re-read `docs/index.md`, `specs/spec-a-core.md`, `arch.md`, `docs/development/c_to_pytorch_config_map.md`, `docs/debugging/debugging.md`, `docs/development/testing_strategy.md`, and `docs/fix_plan.md` per SOP before analysis.
+- Assessed long-term goals: φ-carryover removal closed through Phase D; CLI-FLAGS-003 Phase M normalization remains the top blocker, with vectorization/delegations queued post-parity.
+- Updated `plans/active/cli-noise-pix0/plan.md:60-71` to add a detailed Phase M4 checklist (M4a–M4d) covering design memo, simulator patch, parity tests, and evidence capture.
+- Refreshed `docs/fix_plan.md:461-468` Next Actions bullet to reference the checklist and fix_<timestamp> artifact bundle requirements.
+- Authored new `input.md` (Mode: Parity) instructing Ralph to execute M4a–M4d, run targeted pytest + compare_scaling_traces commands, and store artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/`.
+- Follow-up for Ralph: implement the normalization division in `src/nanobrag_torch/simulator.py` with required `nanoBragg.c` snippet, extend per-φ logging, regenerate traces, update fix_plan/plan entries, then advance to Phase M5 after evidence is green.
