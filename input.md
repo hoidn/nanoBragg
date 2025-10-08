@@ -1,39 +1,60 @@
-Summary: Quantify the cache-enabled trace against the C baseline (M2i.2) so we know exactly where VG-2 still diverges before touching simulator code.
+Summary: Patch the trace harness so cache-aware parity taps work for the Option B batch pipeline and capture fresh CPU/CUDA evidence.
 Mode: Parity
-Focus: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
+Focus: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm — Phase M2g.5 trace tooling patch
 Branch: feature/spec-based-2
-Mapped tests: pytest --collect-only -q
-Artifacts: reports/2025-10-cli-flags/phase_l/carryover_probe/<timestamp>/metrics_refresh/{commands.txt,summary.md,metrics.json,run_metadata.json,trace_diff.md,trace_diff_manual.patch,env.json,cpu_info.txt,sha256.txt,README.md}; reports/2025-10-cli-flags/phase_l/scaling_validation/lattice_hypotheses.md (updated section)
-Do Now: Execute `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python scripts/validation/compare_scaling_traces.py --c reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log --py reports/2025-10-cli-flags/phase_l/carryover_probe/20251008T172721Z/trace_py.log --out reports/2025-10-cli-flags/phase_l/carryover_probe/<timestamp>/metrics_refresh/summary.md` and archive the outputs under the new metrics_refresh timestamp.
-If Blocked: Capture stdout/stderr to metrics_refresh/attempt.log, record the failing command in commands.txt, and stop so we can triage the tool next loop.
+Mapped tests: pytest --collect-only -q tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c
+Artifacts: reports/2025-10-cli-flags/phase_l/trace_tooling_patch/<timestamp>/
+Do Now: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm — pytest --collect-only -q tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c
+If Blocked: Capture the failing harness run under reports/2025-10-cli-flags/phase_l/trace_tooling_patch/<timestamp>_blocked/ with commands.txt, stdout, and env.json, then log the blocker in docs/fix_plan.md Attempts before stopping.
 Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md:29 — Plan pins M2i.2 as the next gate; without fresh metrics/diff we cannot progress to cache tap fixes.
-- docs/fix_plan.md:463 — Ledger demands the metrics refresh before any new simulator edits; logging this attempt unblocks the remaining VG-2 work.
-- reports/2025-10-cli-flags/phase_l/carryover_probe/20251008T172721Z/README.md:33 — Follow-up checklist explicitly calls for trace diff + metrics extraction off the new trace.
-- scripts/validation/compare_scaling_traces.py:18 — Script already encapsulates tolerance checks; rerunning it against the new trace gives structured deltas.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md:1 — Baseline hypotheses need an updated entry so future loops can compare residuals.
+- plans/active/cli-noise-pix0/plan.md:115 keeps M2g.5 open until trace tooling handles the batched cache; without this the CUDA parity probe still crashes.
+- docs/fix_plan.md:464 lists M2g.5 as the next actionable step after the refreshed metrics bundle we captured at 20251008T174753Z.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T174753Z/scaling_validation_summary.md:1 shows `I_before_scaling` still diverging; we need working taps to diagnose the cache rather than re-running metrics.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:1 must gains device/dtype-neutral cache indexing so parity evidence can exercise Option B on both CPU and CUDA.
+- specs/spec-a-core.md:210 anchors the per-φ rotation contract we have to preserve while instrumenting the harness.
 How-To Map:
-- Preflight: ensure repo root CWD, git status clean, PYTHONPATH=src, and `KMP_DUPLICATE_LIB_OK=TRUE` exported; run `pytest --collect-only -q` before touching artifacts.
-- Timestamp: `ts=$(date -u +%Y%m%dT%H%M%SZ)` then `mkdir -p reports/2025-10-cli-flags/phase_l/carryover_probe/$ts/metrics_refresh` and note the value for all filenames.
-- Run compare tool: execute the Do Now command with the new `$ts`, redirect stdout to `metrics_refresh/compare_stdout.log`, and keep stderr for troubleshooting.
-- Diff generation: `diff -u reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log reports/2025-10-cli-flags/phase_l/carryover_probe/20251008T172721Z/trace_py.log > .../metrics_refresh/trace_diff_manual.patch` and convert to Markdown summary (e.g., pipe through `python scripts/validation/compare_scaling_traces.py --emit-markdown ...` if needed, otherwise wrap manual notes into summary.md).
-- Provenance bundle: populate commands.txt (full command, git SHA, timestamp), env.json (`python -V`, torch info, pyrefly? env), cpu_info.txt (`lscpu | head -n 20`), sha256.txt (`(cd metrics_refresh && sha256sum * > sha256.txt)`).
-- Hypothesis log: append a dated section to `reports/2025-10-cli-flags/phase_l/scaling_validation/lattice_hypotheses.md` summarizing first_divergence, F_latt deltas, and next investigative leads.
+- export AUTHORITATIVE_CMDS_DOC=docs/development/testing_strategy.md && pytest --collect-only -q tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c
+- timestamp=$(date -u +%Y%m%dT%H%M%SZ) && outdir=reports/2025-10-cli-flags/phase_l/trace_tooling_patch/${timestamp} && mkdir -p "$outdir"
+- KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --phi-mode c-parity --pixel 685 1039 --device cpu --dtype float64 --emit-rot-stars --out "$outdir/trace_cpu.log"
+- KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --phi-mode c-parity --pixel 685 1039 --device cuda --dtype float64 --emit-rot-stars --out "$outdir/trace_cuda.log"
+- tee "$outdir/commands.txt" <<'CMDS'
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --phi-mode c-parity --pixel 685 1039 --device cpu --dtype float64 --emit-rot-stars --out trace_cpu.log
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --phi-mode c-parity --pixel 685 1039 --device cuda --dtype float64 --emit-rot-stars --out trace_cuda.log
+CMDS
+- OUTDIR="$outdir" python - <<'PY'
+import json, os, platform, subprocess, sys, time
+outdir = os.environ['OUTDIR']
+meta = {
+  "timestamp": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+  "git_sha": subprocess.check_output(['git','rev-parse','HEAD']).decode().strip(),
+  "python": sys.version,
+  "torch_version": __import__('torch').__version__,
+  "device_cuda_available": __import__('torch').cuda.is_available(),
+  "platform": platform.platform(),
+}
+with open(os.path.join(outdir, 'run_metadata.json'), 'w') as fh:
+  json.dump(meta, fh, indent=2)
+PY
+- (cd "$outdir" && sha256sum commands.txt trace_cpu.log trace_cuda.log run_metadata.json > sha256.txt)
+- Update docs/fix_plan.md Attempts with a new entry (Attempt #171) summarising the tooling patch evidence and reference "$outdir"; keep plan row M2g.5 open until CUDA harness passes without index errors.
 Pitfalls To Avoid:
-- Do not overwrite the 20251008T172721Z trace; keep metrics in the new timestamp subdir.
-- No production code edits; this is strictly evidence.
-- Avoid CUDA runs this loop; CPU float64 remains the baseline.
-- Don’t skip env.json/cpu_info.txt — parity audits require provenance.
-- Ensure diff files are ASCII (no rich text) so reviewers can inspect them quickly.
-- Keep summary.md concise but include first_divergence value and any residual tolerances.
-- Verify compare_scaling_traces exit code; failures must be logged and escalated.
-- Update docs/fix_plan.md Attempt immediately; stale ledgers cause double work.
-- Re-run `pytest --collect-only -q` if you regenerate the venv mid-loop.
-- Preserve existing lattice_hypotheses context; append rather than rewrite.
+- No sequential Python fallbacks; maintain full vectorization when editing harness helpers.
+- Preserve device/dtype neutrality—no implicit `.cpu()` or host-only tensors in trace taps.
+- Keep Protected Assets intact; do not touch files listed in docs/index.md without plan updates.
+- When adding logging, reuse existing tensor outputs rather than recomputing physics values (per instrumentation rule).
+- Record every command in commands.txt and include SHA256 checksums before closing the loop.
+- Respect the Parity mode gate: only run the targeted collect-only pytest plus the two harness commands.
+- Do not downgrade existing evidence directories; create a fresh timestamped folder.
+- Ensure CUDA runs use the same phi carryover mode and dtype as CPU to keep comparisons valid.
+- Avoid editing simulator physics during this loop; focus solely on tooling and evidence capture.
+- Run scripts under KMP_DUPLICATE_LIB_OK=TRUE to prevent MKL duplication crashes.
 Pointers:
-- plans/active/cli-noise-pix0/plan.md:28
-- docs/fix_plan.md:461
-- scripts/validation/compare_scaling_traces.py:1
-- reports/2025-10-cli-flags/phase_l/carryover_probe/20251008T172721Z/README.md:33
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md:1
-Next Up: 1) M2g.5 trace tooling patch (cache-aware taps). 2) Cache index audit once metrics confirm first_divergence cleared.
+- docs/fix_plan.md:464
+- plans/active/cli-noise-pix0/plan.md:115
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T174753Z/scaling_validation_summary.md:1
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:1
+- specs/spec-a-core.md:210
+- docs/bugs/verified_c_bugs.md:166
+Next Up:
+- 1. Complete M2g.6 documentation sync once the tooling patch evidence is green.
+- 2. Start the cache index audit (Next Actions #4) to log per-pixel carryover behavior ahead of simulator fixes.

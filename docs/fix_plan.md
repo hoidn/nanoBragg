@@ -460,7 +460,7 @@
 - First Divergence (if known): 🔴 **2025-12-11 regression.** Option B cache wiring (commit `fa0167b`) allows the targeted parity test to hit the cache but `F_latt` still diverges (relative error 1.57884 versus ≤1e-6) and the omega trace tap now throws tensor indexing errors. Evidence captured in `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T153142Z_carryover_cache_plumbing/`.
 - Next Actions (2025-12-12 refresh):
 0. ✅ **M2i.1 cross-pixel trace rerun archived** — `reports/2025-10-cli-flags/phase_l/carryover_probe/20251008T172721Z/` (CPU, float64, c-parity) contains trace logs, metrics, env metadata, and SHA256 bundle.
-1. **M2i.2 metrics refresh** — Regenerate `metrics.json` + `trace_diff.md`, confirm `first_divergence=None`, and log deltas in `lattice_hypotheses.md` before touching physics code.
+1. **M2i.2 metrics refresh** — ✅ `20251008T174753Z` rerun captured (`scaling_validation/20251008T174753Z/`). `first_divergence` remains `I_before_scaling` (Δrel ≈ -0.9999995), lattice hypotheses updated 2025-10-08T17:47:53Z. Keep gate open until physics fix lands; reuse this evidence for downstream analysis.
 2. **M2g.5 trace tooling patch** — Update cache-aware taps (omega, F_latt) so CUDA/CPU harness runs without IndexError; re-run the CUDA harness to verify.
 3. **M2g.6 documentation sync** — Extend `reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md` with the Option B rationale and new evidence paths; flip plan row to [D].
 4. **Cache index audit** — Confirm `apply_phi_carryover()` consumes the previous pixel’s `(slow, fast)` entry (fast-1 with wrap) and log findings in the new diagnostics bundle ahead of simulator edits.
@@ -3763,3 +3763,22 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - Generate trace_diff manual patch analyzing first divergence
       - Update lattice_hypotheses.md with catastrophic accumulation failure finding
       - Phase M3: Fix I_before_scaling accumulation before proceeding to lattice factor analysis
+  * [2025-10-08] Attempt #170 (galph loop — Phase M2i.2 metrics refresh, Mode: Parity/Evidence) — Result: **RE-RUN COMPLETE** (divergence persists; artifacts refreshed). **No code changes.**
+    Metrics:
+      - compare_scaling_traces.py exited 0; first divergence still `I_before_scaling` (relative delta ≈ -9.999995e-01)
+      - Divergent factors: five (I_before_scaling, polar, omega_pixel, cos_2theta, I_pixel_final)
+      - Passing factors: `r_e_sqr`, `fluence_photons_per_m2`, `steps`, `capture_fraction`
+      - Test execution: pytest not run (evidence-only supervisor loop)
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T174753Z/scaling_validation_summary.md`
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T174753Z/metrics.json`
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T174753Z/run_metadata.json` (git 09c03fd, torch 2.8.0+cu128)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T174753Z/commands.txt`
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T174753Z/sha256.txt`
+    Observations/Hypotheses:
+      - Recomputing metrics against the refreshed Option B trace (`carryover_probe/20251008T172721Z/trace_py.log`) yields identical catastrophic gaps; cache wiring alone did not repair the lattice accumulation
+      - Confirms hypotheses H1/H2 in `lattice_hypotheses.md` (reciprocal vector drift / carryover semantics) remain open; dtype drift (H3) still unproven
+      - Added a 2025-10-08T17:47:53Z note to `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md` summarising the rerun outcome and pointing at M2g.5 trace tooling patch as next action
+    Next Actions:
+      - Leave Phase M2i.2 flagged open until a fix clears the divergence; proceed with plan tasks M2g.5–M2g.6 (trace tooling + documentation) and the cache index audit before any simulator edits
+      - Update plan status snapshot and docs/fix_plan Next Actions to reference the 20251008T174753Z evidence so downstream loops reuse the refreshed artifacts

@@ -90,3 +90,13 @@ env KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_cli_scaling_parity.py::TestS
 
 **Next Steps:**
 Per plan.md M2g–M2i, implement pixel-indexed cache with shape `(S,F,N_mos,3)` per Option 1 design documented in `phi_carryover_diagnosis.md`. Cache must be device/dtype neutral, gradient-preserving (no `.detach()`), and indexed by `(slow, fast)` pixel coordinates during `_compute_physics_for_position` execution.
+
+## 2025-10-08T17:47:53Z Metrics Refresh (M2i.2)
+- Artifacts: `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T174753Z/`
+- Command: see `commands.txt` in the artifact directory (Phase M2i.2 metrics rerun).
+- Result summary:
+  - `I_before_scaling` remains the first divergence (relative delta ≈ -0.9999995).
+  - Downstream scaling factors (`polar`, `omega_pixel`, `cos_2theta`, `I_pixel_final`) continue to diverge because of the upstream lattice mismatch.
+  - `r_e_sqr`, `fluence`, `steps`, and `capture_fraction` still PASS exactly (matching C within tolerance).
+- Interpretation: Replaying the comparison with the latest Option B trace (`carryover_probe/20251008T172721Z/trace_py.log`) confirms no improvement — the cache plumbing did not correct `F_latt`. Hypothesis H1/H2 (reciprocal vector drift/carryover semantics) remains active; no evidence yet that dtype (H3) is the primary driver.
+- Next step: Proceed with plan task M2g.5 (trace tooling patch) so we can instrument per-φ taps under the cache-aware pipeline; keep focus on verifying per-pixel carryover rather than recalculating metrics again.

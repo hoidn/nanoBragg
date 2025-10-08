@@ -26,7 +26,7 @@
   - Supervisor command / nb-compare parity remains outstanding (correlation ≈0.9965, intensity ratio ≈1.26e5) pending VG-2 closure.
 - Next Actions (2025-12-12 refresh):
 0. ✅ **M2i.1 trace rerun complete** — Evidence stored under `reports/2025-10-cli-flags/phase_l/carryover_probe/20251008T172721Z/` (CPU, float64, c-parity). Metrics: final intensity 4.06e-07, `F_latt` components logged, provenance bundle captured.
-1. **M2i.2 metrics refresh** — Regenerate `metrics.json` + `trace_diff.md`, confirm `first_divergence=None`, and compare against `20251008T075949Z` baseline; document residual deltas in `lattice_hypotheses.md` before touching physics code.
+1. **M2i.2 metrics refresh** — ✅ `20251008T174753Z` rerun captured (compare_scaling_traces.py). `first_divergence` still `I_before_scaling` (Δrel ≈ -0.9999995); lattice hypotheses note updated 2025-10-08T17:47:53Z. Keep gate open until fix lands, reuse this evidence for downstream diagnostics.
 2. **M2g.5 trace tooling patch** — Update `trace_harness.py` (and related taps) to handle row-batched caches without IndexError; re-run the CUDA harness once patched.
 3. **M2g.6 documentation sync** — Append the Option B rationale and new evidence paths to `phi_carryover_diagnosis.md`, then mark the plan row [D].
 4. **Cache index audit** — Confirm `apply_phi_carryover()` consumes the previous pixel’s `(slow, fast)` entry (fast-1 with wrap) and log findings in the diagnostics bundle ahead of simulator edits.
@@ -100,7 +100,7 @@ Exit Criteria: `trace_harness.py` comparisons show `F_cell`, `F_latt`, and `I_be
 | M2f | Finalise Option 1 data flow | [D] | ✅ Attempt #152 extended `phi_carryover_diagnosis.md` with cache tensor shape `(S,F,N_mos,3)`, lifecycle/reset rules, call sequence (Option 1A), gradient guarantees, and C-code citations (`nanoBragg.c:2797,3044-3095`). |
 | M2g | Implement vectorised cache plumbing | [ ] | Adopt Option B (batch-indexed pixel cache) by extending `Crystal.initialize_phi_cache/apply_phi_carryover/store_phi_final` to operate on batched `(slow_indices, fast_indices)` tensors without `.clone()`/`.detach()`, threading pixel indices through `_compute_physics_for_position`, and keeping spec mode untouched. Ensure cache tensors stay device/dtype neutral and cite `nanoBragg.c:2797,3044-3095` per CLAUDE Rule #11. |
 | M2h | Gradient & device validation | [ ] | Follow M2h.1–M2h.4 to capture the CPU pytest log, CUDA trace harness probe, gradcheck output, and a fix_plan Attempt under `reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/carryover_cache_validation/`. |
-| M2i | Regenerate cross-pixel traces | [P] | M2i.1 complete (20251008T172721Z bundle); execute M2i.2–M2i.3 next (metrics/diff refresh, documentation sync) and expect `first_divergence=None` before advancing to Phase M3. |
+| M2i | Regenerate cross-pixel traces | [P] | M2i.1 complete (20251008T172721Z bundle). M2i.2 rerun stored at `scaling_validation/20251008T174753Z/` still reports `first_divergence="I_before_scaling"`; keep metrics gate open and proceed with diagnostics (M2g.5–M2g.6) before attempting fixes. |
 
 ##### M2g Implementation Steps
 | ID | Task Description | State | How/Why & Guidance |
@@ -127,7 +127,7 @@ Exit Criteria: `trace_harness.py` comparisons show `F_cell`, `F_latt`, and `I_be
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | M2i.1 | Cross-pixel trace rerun | [D] | ✅ `reports/2025-10-cli-flags/phase_l/carryover_probe/20251008T172721Z/` archived (CPU, float64). Includes trace logs, metrics.json, env metadata, SHA256 bundle. |
-| M2i.2 | Metrics + diff update | [ ] | Regenerate `metrics.json` and `trace_diff.md`, confirm `first_divergence=None`, and log any residual deltas vs 20251008T075949Z baseline. |
+| M2i.2 | Metrics + diff update | [ ] | ✅ Rerun archived (20251008T174753Z) yet `first_divergence` remains `I_before_scaling`; hypotheses logged in `lattice_hypotheses.md`. Leave open until physics fix produces a green comparison. |
 | M2i.3 | Summaries & plan sync | [ ] | Update `lattice_hypotheses.md`, `scaling_validation_summary.md`, and mark M2 rows [D] once traces match; add Attempt entry referencing the new artifacts. |
 
 ### Phase N — ROI nb-compare Parity (VG‑3 & VG‑4)

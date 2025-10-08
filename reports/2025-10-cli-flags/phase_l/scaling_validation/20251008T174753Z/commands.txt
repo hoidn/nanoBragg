@@ -1,0 +1,5 @@
+# Scaling metrics refresh (Phase M2i.2)
+KMP_DUPLICATE_LIB_OK=TRUE python scripts/validation/compare_scaling_traces.py \
+  --c reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log \
+  --py reports/2025-10-cli-flags/phase_l/carryover_probe/20251008T172721Z/trace_py.log \
+  --out reports/2025-10-cli-flags/phase_l/scaling_validation/${timestamp}/scaling_validation_summary.md
