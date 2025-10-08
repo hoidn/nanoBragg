@@ -526,6 +526,48 @@
       - **Housekeeping note:** Identified duplicated evidence tree under `reports/2025-10-cli-flags/phase_l/per_phi/reports/...` from Attempt #189; schedule cleanup during M5d ledger sync.
     Next Actions:
       - Ralph to implement the rotation+duality pipeline in `Crystal.get_rotated_real_vectors` (Phase M5c) following the memo, then execute verification plan in M5d/M5e.
+  * [2025-10-08] Attempt #195 (ralph loop i=195, Mode: Code) — Result: ✅ **Phase M5c COMPLETE.** φ rotation + reciprocal recompute fix implemented with conditional metric duality enforcement.
+    Metrics: Targeted tests: 2/2 passed (test_cli_scaling_phi0.py); Core geometry tests: 33/33 passed in 5.27s; First implementation failed test_rot_b_matches_c with rel_error 1.58e-6 > 1e-6 tolerance; Second implementation (conditional enforcement) passed all tests.
+    Artifacts:
+      - `src/nanobrag_torch/models/crystal.py:1194-1292` — Modified `get_rotated_real_vectors()` with conditional metric duality enforcement matching C code behavior (nanoBragg.c:3198-3210)
+      - Git commit: e2bc0ed (pending full suite validation)
+    Changes:
+      - **Crystal.get_rotated_real_vectors()** — Implemented full metric duality cycle (V_star_actual → V_actual → rebuild real vectors → recompute reciprocals) with conditional application
+      - **Conditional logic** — Duality enforcement only applies when `phi != 0.0 || mosaic_domain != 0`, preserving exact base vectors at identity rotation (φ=0, mosaic=0)
+      - **Vectorization preserved** — Batched cross products, volume calculations, and masked application across (phi_steps, mosaic_domains) dimensions
+      - **Device/dtype neutrality** — All operations use input tensor device/dtype without hard-coded conversions
+    Observations/Hypotheses:
+      - **Root cause of first failure:** Unconditional duality enforcement introduced floating-point errors even at φ=0, violating C parity expectations for identity rotation
+      - **C code parity requirement:** Design memo nanoBragg.c:3198-3210 shows `if(phi != 0.0 || mos_tic > 0)` guard around duality recomputation; PyTorch must match this exactly
+      - **Vectorized mask strategy:** Created `needs_recalc` mask combining phi_nonzero and mos_nonzero conditions, then applied recalculated vectors using `torch.where()`
+      - **Test validation:** `test_rot_b_matches_c` verifies rot_b Y-component at φ=0 within 1e-6 tolerance; `test_k_frac_phi0_matches_c` checks k_frac parity
+      - **Gradient flow preserved:** All operations maintain computation graph connectivity (no .item()/.detach() in core paths)
+    Next Actions:
+      - **Phase M5d:** Run `scripts/validation/compare_scaling_traces.py` to verify first_divergence=None and capture metrics.json showing I_before_scaling parity
+      - **Evidence capture:** Archive compare_scaling_traces.md/.txt, metrics.json, run_metadata.json, updated lattice_hypotheses.md with H4/H5 closure
+      - **Phase M5e:** CUDA smoke test + gradcheck validation to confirm device neutrality and gradient correctness
+      - **Phase M6:** Final ledger sync, full pytest suite run, commit with test results, push to origin
+  * [2025-10-08] Attempt #196 (ralph loop i=196, Mode: Evidence/Blocker) — Result: ⛔ **BLOCKED** — C-PARITY-001 conflict discovered; spec-compliant implementation diverges from C trace due to documented bug.
+    Metrics: PyTorch rot_b Y=0.717320 Å matches C base b (0.71732 Å) but diverges from C trace rot_b (0.671588 Å); delta 0.0457 Å causes 14.6% I_before_scaling deficit; final intensity unchanged at 2.45946637686509e-07.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T235045Z/blocker_analysis.md` — Detailed analysis of C-PARITY-001 conflict with three resolution options
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T235045Z/trace_py_scaling.log` — Fresh PyTorch trace showing spec-compliant φ=0 behavior
+      - `src/nanobrag_torch/models/crystal.py:1204-1276` — Corrected implementation (real vectors unchanged, reciprocals recomputed from reals)
+      - Git SHA: (updated from e2bc0ed with corrected reciprocal logic)
+    Changes:
+      - **Corrected reciprocal recomputation** — Fixed Phase M5c implementation to match C exactly: keep rotated real vectors, only recompute reciprocals from them (not full duality cycle)
+      - **No behavior change** — Correction didn't affect output because issue is NOT in rotation logic but in BASE vector initialization vs C carryover bug
+    Observations/Hypotheses:
+      - **Spec-compliant behavior confirmed:** PyTorch at φ=0 uses base vectors (rot_b Y=0.71732 Å), matching C base vectors exactly
+      - **C-PARITY-001 manifests in multi-pixel traces:** C trace for pixel (685,1039) shows carryover from previous pixel, not base orientation
+      - **14.6% deficit is C BUG artifact:** The divergence is NOT a PyTorch error - it's caused by C code's documented φ=0 carryover bug
+      - **Two conflicting goals:** (A) Match C output for validation vs (B) Be spec-compliant and not reproduce bugs
+      - **H4 hypothesis resolution:** PyTorch φ-rotation implementation is CORRECT per spec; C has the bug, not PyTorch
+    Next Actions (BLOCKED - Supervisor Decision Required):
+      - **Option 1 (Recommended):** Accept spec-compliant divergence; document H4 as RESOLVED (PyTorch correct, C buggy); mark CLI-FLAGS-003 M5 complete with caveat
+      - **Option 2:** Implement optional `--c-parity-mode` flag using Phase M2g pixel-indexed cache infrastructure to emulate C bug for validation
+      - **Option 3:** Fix C code C-PARITY-001 bug, regenerate golden trace from corrected C implementation
+      - **Immediate:** Await supervisor guidance in input.md on which option to pursue before proceeding to Phase M5d/M5e
   * [2025-10-22] Attempt #186 (ralph loop, Mode: Docs) — Result: ✅ **SUCCESS** (Phase M2 Divergence Analysis COMPLETE). **Documentation-only loop (no code changes).**
     Metrics: Test collection: 2 tests collected successfully in 0.78s (tests/test_cli_scaling_phi0.py); I_before_scaling divergence quantified at -14.6% (C=943654.81, PyTorch=805473.79); F_latt sign flip identified (C=-2.383, PyTorch=+1.379, Δ_rel=+158%); rot_b Y-component error +6.8% (C=0.672 Å, PyTorch=0.717 Å); k_frac shift +3.0% (C=-0.607, PyTorch=-0.589).
     Artifacts:
