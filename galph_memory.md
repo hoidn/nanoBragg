@@ -1040,3 +1040,9 @@
 - Refreshed `docs/fix_plan.md` (First Divergence + Next Actions) and logged Attempt #163 with artifact paths and failure analysis.
 - Replaced `input.md` to direct Ralph to build a new `carryover_cache_validation/<ts>/` bundle (CPU pytest log, env metadata, diagnostics) before touching simulator code.
 - Follow-up for Ralph: capture the CPU parity log with full metadata, document current F_latt/omega issues, append results to fix_plan Attempts, then proceed to CUDA/gradcheck probes once evidence is archived.
+
+## 2025-10-08 16:24Z (galph loop — M2h CUDA/gradcheck prep)
+- Reviewed latest repo state; no upstream sync changes. Coin flip=heads → inspected Ralph commits fa0167b and 6c0d163; wiring landed but parity still fails with F_latt sign flip.
+- Analysis: row-wise Option B cache currently indexes the current `(slow, fast)` slot; no evidence of previous-pixel substitution, explaining carryover failure. Plan/fix_plan Next Actions updated with new Step 4 cache-index audit.
+- Authored input.md (Mode: Parity) directing Ralph to capture CUDA parity + gradcheck evidence under a new carryover_cache_validation timestamp, snapshot cache tensors pre/post, and log whether cached data reflects previous pixels.
+- Reminders for next loop: review new diagnostics bundle, confirm cache-index conclusions, then advance to M2i trace rerun once M2h.2/M2h.3 marked [D].

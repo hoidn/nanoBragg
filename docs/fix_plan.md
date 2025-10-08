@@ -464,6 +464,7 @@
 2. **M2h.2 CUDA / M2h.3 gradcheck** — Execute the CUDA parity smoke (`trace_harness.py --pixel 685 1039 --phi-mode c-parity --device cuda --dtype float64`) when hardware permits and log availability; follow with the 2×2 ROI gradcheck probe to confirm cache gradients survive.
 3. **M2h.4 fix_plan update** — Summarize parity deltas, trace failures, and device coverage in a new Attempt entry once diagnostics land.
 4. **M2i.1 trace rerun** — With logs in place, regenerate the c-parity trace (`trace_harness.py --roi 684 686 1039 1040 --phi-mode c-parity`) to locate the earliest divergence before advancing to nb-compare (Phase N).
+5. **Cache index audit** — After CUDA and gradcheck diagnostics are captured, inspect `apply_phi_carryover()`/`store_phi_final()` to confirm the cache reads from the previous pixel’s `(slow, fast)` slot (fast-1 with row wrap) rather than the current coordinates. Log confirmation or discrepancies in the new diagnostics bundle before any simulator edits.
 - Attempts History:
   * [2025-10-07] Attempt #136 (ralph loop i=135, Mode: Docs) — Result: ✅ **SUCCESS** (Phase L Documentation Sync COMPLETE). **No code changes.**
     Metrics: Test collection: 35 tests collected successfully in 2.16s (test_cli_scaling_phi0.py + test_phi_carryover_mode.py). Documentation-only loop per input.md Mode: Docs.
