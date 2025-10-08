@@ -995,3 +995,9 @@
 - Synced `docs/fix_plan.md` CLI-FLAGS-003 Next Actions with the Option B decision so the ledger matches the refreshed plan.
 - Authored new `input.md` (Parity mode) instructing Ralph to implement the batch-indexed cache, thread pixel indices through the simulator, update trace tooling, run the targeted pytest selector, capture gradcheck/trace artifacts, and document the work in diagnosis notes plus fix_plan Attempt.
 - Follow-up for Ralph: land Option B cache plumbing (M2g.3–M2g.6), update tooling + documentation, complete the validation bundle (M2h, M2i), and log artifacts under new timestamped directories before moving to Phase M3.
+
+## 2025-10-08 14:24:13Z (galph loop — M2g wiring evidence)
+- Focused on CLI-FLAGS-003 Phase M2g; reviewed `src/nanobrag_torch/models/crystal.py:195-386` and `simulator.py:730-1090` confirming `apply_phi_carryover`/`store_phi_final` remain single-pixel helpers and are never invoked, with `.item()` based cache validity that blocks vectorized batches.
+- Updated `plans/active/cli-noise-pix0/plan.md` status snapshot (Attempt #155 note now highlights missing simulator wiring) and expanded M2g.4 guidance to call out deriving `(slow_indices, fast_indices)` from ROI tensors using pure tensor indexing.
+- Rewrote `input.md` (Parity mode) to direct Ralph to batch the cache helpers, thread indices through `_compute_physics_for_position`, replace `.item()` logic with tensor masks, run the targeted parity pytest, and capture Option B artifacts (`optionB_impl`, `carryover_cache_validation`, `carryover_probe`).
+- Follow-up: Ralph to implement Option B cache plumbing per new memo, then execute M2h validation steps (pytest/gradcheck/trace) before advancing to scaling rerun.
