@@ -1181,3 +1181,9 @@
 - Refreshed `plans/active/cli-noise-pix0/plan.md` Phase M snapshot: marked M1 [D], noted 14.643% I_before_scaling deficit from bundle `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/`, and tightened M2 guidance (analysis_20251008T212459Z.md + lattice_hypotheses.md update + summary refresh).
 - Authored new `input.md` (Mode: Docs, 100 lines) directing Ralph to execute CLI-FLAGS-003 Phase M2 analysis: regenerate summary via `compare_scaling_traces.py`, document factor breakdown, update hypotheses ledger, refresh sha256/commands/run_metadata, log Attempt #186, and run pytest collect-only.
 - No code changes expected next loop; focus is evidence bundling under the existing spec_baseline directory.
+
+## 2025-10-08 (galph loop — Phase M3 probe planning)
+- Updated `plans/active/cli-noise-pix0/plan.md` to mark M2 [D] and expand Phase M3 into tasks M3a–M3d (per-φ logging, sincg sweep, single-φ run, rotation audit). Status snapshot now cites Attempt #186 evidence.
+- Synced `docs/fix_plan.md:461-467` Next Actions with the new M3 task bundle; emphasis on storing probes under `phase_m3_probes/` with sha256 + summary.
+- Authored `input.md` (Mode: Parity) directing Ralph to execute those probes, capture fresh traces, and update fix_plan Attempt #187 after running targeted pytest.
+- Follow-up: Ralph to produce the Phase M3 artifact bundle (trace_py_phi, sincg_sweep, phistep1, rotation_audit, summary) and log results before M4 implementation begins.

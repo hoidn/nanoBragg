@@ -462,7 +462,7 @@
   - ✅ Phase D1–D3 complete — Shim removal validated; see `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/` and galph_memory entries dated 2025-12-14.
   - ✅ **Phase M1 (COMPLETE)** — Fresh spec-mode baseline captured at `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/` with trace_harness + compare_scaling_traces; test collection verified (2 tests in test_cli_scaling_phi0.py).
   - ✅ **Phase M2 (COMPLETE)** — Analysis bundle complete with quantified F_cell/F_latt/k_frac breakdowns; see Attempt #186 (2025-10-22) — `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/analysis_20251008T212459Z.md` and updated `../20251008T075949Z/lattice_hypotheses.md`.
-  - **Phase M3 (OPEN)** — Design and execute validation probes: per-φ PyTorch trace, sincg sensitivity table, single-φ parity test, rotation matrix audit (compare `Crystal.get_rotated_real_vectors` vs nanoBragg.c:2797-3095).
+  - **Phase M3 (OPEN)** — Execute plan tasks M3a–M3d: add PyTorch `TRACE_PY_PHI` logging, publish the k-sweep sincg table, run the `-phisteps 1` parity check, and complete the rotation matrix audit vs nanoBragg.c:2797-3095. Store all probes under `reports/2025-10-cli-flags/phase_l/scaling_validation/<stamp>/phase_m3_probes/` with summary.md + sha256.
   - **Phase M4 (BLOCKED on M3)** — Implement physics fix once root cause confirmed; verify with fresh trace comparison.
   - **Phase M5–M6 (OPEN)** — Re-run CUDA + gradcheck smoke, then sync ledgers/documentation before advancing to nb-compare (Phase N).
 
