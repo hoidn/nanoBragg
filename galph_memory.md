@@ -1072,3 +1072,10 @@
 - Updated `docs/fix_plan.md` CLI-FLAGS-003 Next Actions with the same completion note so downstream loops stop re-running M2i.1.
 - Authored new Parity-mode `input.md` directing Ralph to run M2i.2 (compare_scaling_traces.py + diff bundle) and update `lattice_hypotheses.md`; artifact pattern specified under metrics_refresh/.
 - Pending follow-up: Ralph to execute the metrics refresh, produce diff/metrics + ledger updates, then we can tackle trace tap fixes (M2g.5).
+
+## 2025-10-08 (galph loop — M2g.5 tooling directive)
+- Regenerated `compare_scaling_traces.py` metrics using `carryover_probe/20251008T172721Z/trace_py.log`; new evidence stored under `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T174753Z/` with commands, metrics, metadata, and SHA256 bundle.
+- Appended 2025-10-08T17:47:53Z entry to `lattice_hypotheses.md` noting the rerun still diverges (I_before_scaling rel δ ≈ -0.9999995) and pointing next work toward trace tooling.
+- Added Attempt #170 to `docs/fix_plan.md` and refreshed Next Actions bullet 1 plus plan rows (M2i table) to reference the new artifacts while keeping M2i.2 gate open.
+- Authored new input.md (Parity mode) directing Ralph to implement M2g.5 trace tooling patch, rerun CPU/CUDA harnesses into `trace_tooling_patch/<timestamp>/`, and update fix_plan attempts after capturing artifacts.
+- Follow-up: Ralph to patch `trace_harness.py` for cache-aware taps, produce the new trace_tooling_patch bundle, and log Attempt #171 before moving on to M2g.6/M2g.5 documentation.
