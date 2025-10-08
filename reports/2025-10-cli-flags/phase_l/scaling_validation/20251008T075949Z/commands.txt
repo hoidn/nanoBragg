@@ -1,0 +1,17 @@
+# Commands
+git rev-parse HEAD
+f522958c087bd75823138bf45a6174ad931dbc94
+
+PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --phi-mode c-parity --pixel 685 1039 --device cpu --dtype float64 --out reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/trace_py_scaling.log
+
+PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/validation/compare_scaling_traces.py --c reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log --py reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/trace_py_scaling.log --out reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/scaling_validation_summary.md
+
+python - <<'PY' > reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/manual_sincg.md
+
+PYTHONPATH=src pytest --collect-only tests/test_cli_scaling_phi0.py::TestScalingParity::test_I_before_scaling_matches_c >> reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/pytest_collect.log
+
+PYTHONPATH=src pytest --collect-only tests/test_phi_carryover_mode.py >> reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/pytest_collect.log
+
+ls -1 reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z | tee reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/dir_listing.txt
+
+(cd reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z && shasum -a 256 * > sha256.txt)

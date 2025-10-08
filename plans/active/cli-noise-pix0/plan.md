@@ -78,8 +78,8 @@ Exit Criteria: `trace_harness.py` comparisons show `F_cell`, `F_latt`, and `I_be
 #### M2 Analysis Checklist — Diagnose `F_latt` Drift
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| M2a | Refresh trace & scaling summary | [ ] | Create `reports/2025-10-cli-flags/phase_l/scaling_validation/<ts>/` and rerun `trace_harness.py` (CPU, float64, `--phi-mode c-parity`) plus `scripts/validation/compare_scaling_traces.py`. Store `commands.txt`, `trace_py_scaling.log`, `scaling_validation_summary.md`, `metrics.json`, and `run_metadata.json`. |
-| M2b | Manual `sincg` reproduction | [ ] | Using the refreshed trace (or `20251008T072513Z` grid), compute per-axis `sincg(π·h, Na)` etc. Capture calculations in `<ts>/manual_sincg.md` and compare against C trace values to isolate which axis contributes the 0.13% delta. |
+| M2a | Refresh trace & scaling summary | [D] | ✅ Created `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/` and executed `trace_harness.py` (CPU, float64, `--phi-mode c-parity`) plus `scripts/validation/compare_scaling_traces.py`. All artifacts stored: `commands.txt`, `trace_py_scaling.log`, `scaling_validation_summary.md`, `metrics.json`, `run_metadata.json`, `compare_scaling_traces.stdout`, `pytest_collect.log`, `dir_listing.txt`, `sha256.txt`. Git SHA: f522958. |
+| M2b | Manual `sincg` reproduction | [D] | ✅ Generated `20251008T075949Z/manual_sincg.md` with per-axis sincg calculations. Key findings: PyTorch product using sincg(π·(frac-h0)) = 2.380125274 vs C F_latt = -2.383196653 (0.13% relative delta). Individual axis comparisons show all three axes (a, b, c) contribute small deltas to the overall 0.13% mismatch. |
 | M2c | Hypothesis log | [ ] | Summarise findings and proposed fixes in `<ts>/lattice_hypotheses.md`, referencing relevant lines in `nanoBragg.c` and PyTorch code. Record unresolved questions for the implementation loop. |
 
 ### Phase N — ROI nb-compare Parity (VG‑3 & VG‑4)

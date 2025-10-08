@@ -1,0 +1,12 @@
+commands.txt
+compare_scaling_traces.stdout
+dir_listing.txt
+git_sha.txt
+git_status.txt
+manual_sincg.md
+metrics.json
+pytest_collect.log
+run_metadata.json
+scaling_validation_summary.md
+trace_harness.log
+trace_py_scaling.log

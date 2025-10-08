@@ -609,6 +609,39 @@
     Next Actions:
       - Ralph to resume Phase M2 analysis (trace harness + lattice diagnostics) using the working comparison script.
       - Supervisor to ensure parity shim documentation tasks (Phase C5/D3) stay queued once scaling parity closes.
+  * [2025-10-08] Attempt #148 (ralph loop i=146, Mode: Parity/Evidence) — Result: **EVIDENCE** (Phase M2a–M2b COMPLETE). **No code changes.**
+    Metrics: Evidence-only loop per input.md Do Now directive. Test collection: 35 tests (2 in test_cli_scaling_phi0.py + 33 in test_phi_carryover_mode.py).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/commands.txt` — Complete reproduction script with all executed commands
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/trace_py_scaling.log` — PyTorch scaling trace (114 TRACE_PY lines, CPU float64, c-parity mode)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/trace_harness.log` — Harness execution log
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/scaling_validation_summary.md` — Detailed C vs PyTorch factor comparison
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/metrics.json` — Quantified divergence: first_divergence="I_before_scaling", num_divergent=2
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/run_metadata.json` — Run provenance
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/compare_scaling_traces.stdout` — Comparison script output
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/manual_sincg.md` — Per-axis sincg(π·frac) and sincg(π·(frac-h0)) calculations with C/PyTorch comparison
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/pytest_collect.log` — Test collection logs (test_cli_scaling_phi0.py and test_phi_carryover_mode.py)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/dir_listing.txt` — Directory contents
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/sha256.txt` — SHA256 checksums for all artifacts
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/git_sha.txt` — Git commit: f522958c087bd75823138bf45a6174ad931dbc94
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/git_status.txt` — Git status snapshot
+    Observations/Hypotheses:
+      - **I_before_scaling divergence confirmed**: C = 943654.809, PyTorch = 941686.236, Δ = -1968.573 (-0.209% relative), consistent with prior measurements.
+      - **F_latt analysis**: Manual sincg reproduction shows PyTorch product using sincg(π·(frac-h0)) = 2.380125274 vs C F_latt = -2.383196653 (0.13% relative delta).
+      - **Per-axis breakdown**: All three axes (a, b, c) contribute small individual deltas:
+        * Axis a: PyTorch sincg(π·(frac-h0)) = 2.358241334 vs C = -2.360127360 (sign mismatch indicates C uses sincg(π·frac))
+        * Axis b: PyTorch = 1.050667596 vs C = 1.050796643 (0.012% delta)
+        * Axis c: PyTorch = 0.960608070 vs C = 0.960961004 (0.037% delta)
+      - **Key finding**: C trace values match sincg(π·frac) more closely than sincg(π·(frac-h0)), suggesting PyTorch's local (frac-h0) calculation may differ from C's implementation.
+      - **Scaling chain verification**: All other factors (r_e_sqr, fluence, steps, capture_fraction, polar, omega_pixel, cos_2theta) match within tolerance (≤4.8e-07 relative).
+      - **Test availability**: test_I_before_scaling_matches_c does not exist yet (must be created in Phase M2 implementation); 35 existing tests cover CLI parsing, config validation, phi carryover behavior, and device/dtype neutrality.
+    Next Actions:
+      - **Phase M2c**: Draft `lattice_hypotheses.md` with specific hypotheses:
+        1. PyTorch uses sincg(π·(h_frac - h_rounded), N) while C may use sincg(π·h_frac, N) directly
+        2. Investigate nanoBragg.c lines 2604-3278 (lattice factor calculation) to determine exact formula
+        3. Check if C's h_frac calculation includes the rounding subtraction or applies it differently
+      - **Phase M2 implementation**: Based on hypotheses, implement fix in `Crystal._compute_structure_factors` or lattice factor helpers
+      - **Phase M3**: After fix, regenerate trace with updated code and verify metrics.json shows first_divergence=None
   * [2025-10-07] Attempt #139 (ralph loop i=139, Mode: Docs) — Result: ✅ **SUCCESS** (Phase M1 COMPLETE — Pre-Polar Trace Instrumentation). **Code changes: simulator trace + comparison script.**
     Metrics: Test collection: 699 tests in 2.68s. Trace: 44 TRACE_PY lines (2 new labels). Comparison: pre-polar (941698.5) vs C (943654.8) → −0.207% delta (within expected tolerance).
     Artifacts:

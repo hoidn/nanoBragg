@@ -1,0 +1,74 @@
+ERROR: not found: /home/ollie/Documents/tmp/nanoBragg/tests/test_cli_scaling_phi0.py::TestScalingParity::test_I_before_scaling_matches_c
+(no match in any of [<Module test_cli_scaling_phi0.py>])
+
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+collected 0 items
+
+========================= no tests collected in 0.79s ==========================
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+collected 2 items
+
+<Dir nanoBragg>
+  <Package tests>
+    <Module test_cli_scaling_phi0.py>
+      <Class TestPhiZeroParity>
+        <Function test_rot_b_matches_c>
+        <Function test_k_frac_phi0_matches_c>
+
+========================== 2 tests collected in 0.78s ==========================
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+collected 33 items
+
+<Dir nanoBragg>
+  <Package tests>
+    <Module test_phi_carryover_mode.py>
+      <Class TestPhiCarryoverModeParsing>
+        <Function test_default_mode_is_spec>
+        <Function test_spec_mode_explicit>
+        <Function test_c_parity_mode_explicit>
+        <Function test_invalid_mode_rejected>
+      <Class TestCrystalConfigValidation>
+        <Function test_default_config_mode>
+        <Function test_spec_mode_validation>
+        <Function test_c_parity_mode_validation>
+        <Function test_invalid_mode_raises_valueerror>
+      <Class TestCLIToConfigWiring>
+        <Function test_spec_mode_wiring>
+        <Function test_c_parity_mode_wiring>
+      <Class TestPhiCarryoverBehavior>
+        <Function test_spec_mode_fresh_rotation[cpu-dtype0]>
+        <Function test_spec_mode_fresh_rotation[cpu-dtype1]>
+        <Function test_spec_mode_fresh_rotation[cuda-dtype2]>
+        <Function test_spec_mode_fresh_rotation[cuda-dtype3]>
+        <Function test_c_parity_mode_stale_carryover[cpu-dtype0]>
+        <Function test_c_parity_mode_stale_carryover[cpu-dtype1]>
+        <Function test_c_parity_mode_stale_carryover[cuda-dtype2]>
+        <Function test_c_parity_mode_stale_carryover[cuda-dtype3]>
+        <Function test_modes_differ_at_phi_zero[cpu-dtype0]>
+        <Function test_modes_differ_at_phi_zero[cpu-dtype1]>
+        <Function test_modes_differ_at_phi_zero[cuda-dtype2]>
+        <Function test_modes_differ_at_phi_zero[cuda-dtype3]>
+      <Class TestDeviceDtypeNeutrality>
+        <Function test_cpu_consistency[dtype0-spec]>
+        <Function test_cpu_consistency[dtype0-c-parity]>
+        <Function test_cpu_consistency[dtype1-spec]>
+        <Function test_cpu_consistency[dtype1-c-parity]>
+        <Function test_cuda_consistency[dtype0-spec]>
+        <Function test_cuda_consistency[dtype0-c-parity]>
+        <Function test_cuda_consistency[dtype1-spec]>
+        <Function test_cuda_consistency[dtype1-c-parity]>
+      <Class TestFlagInteractions>
+        <Function test_with_misset>
+        <Function test_with_mosaic>
+        <Function test_with_single_phi_step>
+
+========================= 33 tests collected in 2.17s ==========================
