@@ -1171,3 +1171,8 @@
 - Refreshed `docs/fix_plan.md:461-466` Next Actions to record D3 completion and elevate Phase M2g/M2h as the active blockers (Option B cache fix + grad/device validation).
 - Authored new `input.md` (Mode: Parity) guiding Ralph to execute Phase M2g Option B cache plumbing, re-run the trace harness, capture metrics under `reports/2025-10-cli-flags/phase_l/scaling_validation/20251214_optionB_patch/`, and update fix_plan attempts post-fix.
 - Follow-up for Ralph: implement the pixel-indexed φ-cache per Option B design, rerun CPU/CUDA parity evidence and targeted pytest, then log Attempt # next with artifact paths before progressing to M2h.
+## 2025-12-15 (galph loop — Phase M1 spec baseline reset)
+- Rewrote `plans/active/cli-noise-pix0/plan.md` to reflect post-shim spec-only workflow; Phase M now directs fresh spec-mode baseline (M1), analysis (M2), probes (M3), fix (M4), validation (M5), and ledger sync (M6). Optional guardrails captured under Phase P.
+- Updated `docs/fix_plan.md:451-470` Next Actions to match the new plan (Phase M1–M6) and removed stale Option B cache guidance.
+- Authored `input.md` (Mode: Parity) instructing Ralph to execute Phase M1: generate a new spec-mode scaling bundle via `trace_harness.py`, run `compare_scaling_traces.py`, capture pytest collect logs, and store artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/$STAMP/spec_baseline/`.
+- Follow-up expectation: Ralph completes Phase M1 bundle, records metrics/analysis, and updates `lattice_hypotheses.md` before we move to Phase M2 diagnostics.

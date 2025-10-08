@@ -451,19 +451,19 @@
 ## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
 - Spec/AT: specs/spec-a-cli.md flag catalogue, docs/architecture/detector.md §5 (pix0 workflow), docs/development/c_to_pytorch_config_map.md (pivot rules), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860
 - Priority: High
-- Status: in_progress (pivoting from parity shim emulation to removal; -nonoise/-pix0 remain gated on scaling parity)
+- Status: in_progress (spec-mode scaling parity outstanding after φ-carryover shim retirement)
 - Owner/Date: ralph/2025-10-05
 - Plan Reference: `plans/active/phi-carryover-removal/plan.md` (shim retirement) + `plans/active/cli-noise-pix0/plan.md` (`-nonoise`/`-pix0` follow-through)
 - Reproduction (C & PyTorch):
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
-- First Divergence (if known): 🔴 **2025-12-11 regression.** Option B cache wiring (commit `fa0167b`) allows the targeted parity test to hit the cache but `F_latt` still diverges (relative error 1.57884 versus ≤1e-6) and the omega trace tap now throws tensor indexing errors. Evidence captured in `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T153142Z_carryover_cache_plumbing/`.
-- Next Actions (2025-12-14 refresh):
-  - ✅ Phase D1 complete — Attempt #183; see `plans/active/phi-carryover-removal/plan.md` status snapshot and bundle `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/`.
-  - ✅ Phase D2 complete — Attempt #184; ledger synced, shim plan archived at `plans/archive/cli-phi-parity-shim/plan.md`, pytest collection verified.
-  - ✅ Phase D3 complete — Supervisor loop 2025-12-14 issued spec-mode `input.md` and logged closure in `galph_memory.md`; shim work now fully delegated to the scaling track.
-  - **Phase M2g Option B cache fix (OPEN)** — Implement the pixel-indexed φ cache (plans/active/cli-noise-pix0/plan.md Phase M2g.1–M2g.6), cite `nanoBragg.c:2797,3044-3095`, and capture new trace harness outputs under `reports/2025-10-cli-flags/phase_l/scaling_validation/<ts>/` until `F_latt` matches C.
-  - **Phase M2h gradient/device validation (OPEN)** — After the cache fix, rerun CPU+CUDA gradchecks and targeted pytest/trace probes per plan guidance; update Attempt log with artifact bundle paths.
+- First Divergence (if known): 🔴 Latest red evidence (`reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T072513Z/metrics.json`) shows `first_divergence = "I_before_scaling"` driven by an `F_latt` relative error ≈1.58. This bundle predates the 2025-12 shim removal; a fresh spec-mode run is required in Phase M1 to confirm the current gap.
+- Next Actions (2025-12-15 refresh):
+  - ✅ Phase D1–D3 complete — Shim removal validated; see `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/` and galph_memory entries dated 2025-12-14.
+  - **Phase M1 (OPEN)** — Capture a new spec-mode scaling bundle (`plans/active/cli-noise-pix0/plan.md` Phase M row M1) with `trace_harness.py` + `compare_scaling_traces.py` and store it under `reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/spec_baseline/`.
+  - **Phase M2 (OPEN)** — Analyse the fresh bundle to separate `F_cell`, `F_latt`, `omega_pixel`, and `I_before_scaling` deltas; update `analysis.md` and `lattice_hypotheses.md` per plan guidance.
+  - **Phase M3–M4 (OPEN)** — Design validation probes, implement the physics fix once the culprit is confirmed, and keep evidence under the new timestamped bundle; cite nanoBragg.c lines 2797–3095.
+  - **Phase M5–M6 (OPEN)** — Re-run CUDA + gradcheck smoke, then sync ledgers/documentation before advancing to nb-compare (Phase N).
 
 - Attempts History:
   * [2025-10-08] Attempt #184 (ralph loop i=181, Mode: Docs) — Result: ✅ **SUCCESS** (Phase D2 Ledger Sync COMPLETE). **Documentation-only loop.**
