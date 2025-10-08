@@ -1,19 +1,13 @@
-# Phase M4c Reproduction Commands
-# Date: 2025-10-08T22:38:05Z
-# Purpose: Normalization fix validation
+# Phase M4d Evidence Capture Commands
+# Date: 2025-10-08
+# Git SHA: b2d2f64
 
-## Targeted pytest regression
-KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py
+# Step 1: Generate PyTorch trace with normalization fix
+2025-10-08T15:42:00Z KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --pixel 685 1039 --device cpu --dtype float64 --out reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/trace_py_scaling.log
 
-## Core geometry smoke tests
-KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_crystal_geometry.py tests/test_detector_geometry.py
+# Step 2: Compare PyTorch trace against C baseline
+2025-10-08T15:43:00Z python scripts/validation/compare_scaling_traces.py --c reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/c_trace_scaling.log --py reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/trace_py_scaling.log --out reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/compare_scaling_traces.txt
 
-## Code changes
-# File: src/nanobrag_torch/simulator.py
-# Lines modified: 954-956 (removed early /steps division in oversample path)
-# Lines modified: 1039-1042 (removed early /steps division in no-oversample path)
-# Single normalization now occurs at line 1130 alongside r_e_sqr * fluence per spec
+# Step 3: Run pytest collection
+2025-10-08T15:44:00Z pytest --collect-only -q tests/test_cli_scaling_phi0.py
 
-## Git details
-git rev-parse HEAD
-git diff HEAD~1 src/nanobrag_torch/simulator.py

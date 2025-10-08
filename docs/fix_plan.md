@@ -470,6 +470,29 @@
   - **Phase M5–M6 (OPEN)** — Re-run CUDA + gradcheck smoke, then sync ledgers/documentation before advancing to nb-compare (Phase N).
 
 - Attempts History:
+  * [2025-10-08] Attempt #190 (ralph loop i=190, Mode: Parity/Docs) — Result: ⚠️ **M4d EVIDENCE CAPTURED / DIVERGENCE PERSISTS.** **Documentation-only loop.**
+    Metrics: First divergence: I_before_scaling (C=943654.81, PyTorch=805473.79, delta=-14.6% - UNCHANGED from Phase M1 baseline); all downstream scaling factors pass ≤1e-6 tolerance; trace generation: 114 TRACE_PY lines captured successfully.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/trace_py_scaling.log` — PyTorch trace post-normalization fix
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/compare_scaling_traces.txt` — Detailed factor comparison showing persistent divergence
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/metrics.json` — Machine-readable comparison results
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/diff_trace.md` — Comprehensive analysis summary
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/blockers.md` — Detailed blocker documentation for supervisor escalation
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/{commands.txt,sha256.txt,run_metadata.json}` — Reproduction metadata
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md` — Appended H4 closure addendum (2025-10-08)
+    Changes: None (evidence-only loop per input.md specification)
+    Observations/Hypotheses:
+      - **Normalization fix verified:** Code inspection confirmed single `/steps` division at simulator.py:1127 with explicit comments at lines 956/1041 preventing double division
+      - **Divergence persists:** -14.6% I_before_scaling deficit unchanged from Phase M1 baseline, confirming normalization was NOT the root cause
+      - **H4 confirmed as primary:** Upstream φ-rotation inconsistency (rot_b Y-component +6.8% error) remains the blocking issue, propagating through k_frac (+3.0%) to F_latt sign flip
+      - **Downstream factors pristine:** All scaling factors after I_before_scaling (r_e², fluence, steps, capture_fraction, polar, omega_pixel, cos_2theta) match within ≤1e-6 tolerance
+      - **Normalization was red herring:** The fix addressed a legitimate spec compliance issue (AT-SAM-001) but did not eliminate the I_before_scaling divergence
+      - **Phase M3 probes remain actionable:** M3a-d findings (sincg zero-crossing, 126K× error, rot_b audit) correctly identified the rotation issue as the blocker
+    Next Actions:
+      - **Supervisor escalation:** Documented in blockers.md - should fresh C baseline be regenerated, or should rotation fix be prioritized before M4d closure?
+      - **Phase M4d status:** Evidence bundle complete but parity gate (first_divergence = None) unmet; mark as [P] (partially complete)
+      - **Phase M5-M6 deferred:** CUDA validation and ledger sync remain blocked pending rotation matrix fix
+      - **Rotation fix required:** Investigate `Crystal.get_rotated_real_vectors` vs nanoBragg.c:2797-3095 per M3d findings
   * [2025-10-08] Attempt #192 (galph loop, Mode: Docs) — Result: ✅ **M4a COMPLETE / Fix reopened.** **No code changes.**
     Metrics: n/a (documentation-only evidence pass).
     Artifacts:
