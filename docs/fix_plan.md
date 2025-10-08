@@ -457,10 +457,10 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): Phase L2c comparison shows all scaling factors (ω, polarization, r_e², fluence, steps) match C within 0.2%, but `I_before_scaling` diverges because PyTorch reports `F_cell=0` at hkl≈(−7,−1,−14) while C's trace records `F_cell=190.27`. **Phase L3b (Attempt #76) proved the data exists (scaled.hkl contains F=190.27 for this reflection); root cause is configuration/loading, NOT missing coverage.**
-- Next Actions (2025-10-08 refresh → galph loop i=118):
-1. **Phase L3k.3c.4 (plan/checklist sync)** — Propagate the tolerance decision into `plans/active/cli-noise-pix0/plan.md` and `reports/2025-10-cli-flags/phase_l/rot_vector/` (`diagnosis.md`, `fix_checklist.md`), attaching the dtype probe artifact paths so VG-1 now enforces spec ≤1e-6 and c-parity ≤5e-5.
-2. **Phase L3k.3c.5 (documentation + Attempt log)** — Update `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md` with the dual-threshold rationale, add a parity-shim note to `docs/bugs/verified_c_bugs.md`, capture `pytest --collect-only -q tests/test_cli_scaling_phi0.py` output, and log the completed step in docs/fix_plan.md with artifact references.
-3. **Phase L3k.3d** — After docs/checklists align, rerun the nb-compare ROI parity sweep (VG-3/VG-4) with c-parity enabled, store results under `reports/2025-10-cli-flags/nb_compare_phi_fix/`, and advance L3k.3e → L3k.4 ahead of the Phase L4 supervisor-command rerun.
+- Next Actions (2025-12-02 refresh → galph loop current):
+1. **Phase L1–L3 (documentation + checklist sync)** — Update this plan, `plans/active/cli-phi-parity-shim/plan.md` (Phase D), `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md`, and `fix_checklist.md` with the dual tolerance (spec ≤1e-6, c-parity ≤5e-5). Capture `pytest --collect-only -q tests/test_cli_scaling_phi0.py` and log the documentation Attempt once artifacts exist.
+2. **Phase M1–M3 (scaling parity)** — Use `trace_harness.py` to audit HKL lookups, fix the `F_cell`/`F_latt` pipeline so `I_before_scaling` matches C within 1e-6, rerun scaling metrics on CPU+CUDA, and update `scaling_audit/summary.md` plus Attempt history.
+3. **Phase N1–N3 (nb-compare ROI parity)** — After scaling is green, regenerate C/PyTorch outputs, execute `nb-compare` on the 100×100 ROI, analyze results, and record VG-3/VG-4 completion before scheduling the final supervisor command rerun (Phase O).
 - Attempts History:
   * [2025-10-08] Attempt #128 (galph loop — parity evidence) — Result: **EVIDENCE UPDATE** (Phase L3k.3c.4 diagnostics). **No tests executed** (analysis-only).
     Metrics: Evidence-only.

@@ -1856,3 +1856,7 @@ Follow-ups for Ralph:
 - Refreshed `docs/fix_plan.md` Next Actions for CLI-FLAGS-003 to focus on syncing plans/checklists, updating diagnosis + bug docs, and rerunning nb-compare afterward.
 - Issued new Docs-mode `input.md` directing Ralph to update diagnosis.md, fix_checklist.md, cli-noise plan, and docs/bugs with dual-threshold notes, capture collect-only evidence under `reports/2025-10-cli-flags/phase_l/rot_vector/20251201_dual_threshold/`, and log a new Attempt before advancing to Phase L3k.3d.
 - Expect Ralph to close out plan row C4d, complete the doc updates, run the mapped collect-only pytest, and append the evidence + Attempt entry so we can tackle nb-compare next loop.
+## 2025-12-02 (galph loop — CLI-FLAGS-003 plan refresh)
+- Rebuilt `plans/active/cli-noise-pix0/plan.md` around new Phases L–O so tolerance/doc sync (L1–L3), scaling parity (M1–M4), nb-compare (N1–N3), and supervisor rerun (O1–O3) are explicit. Prior phases collapsed into a completed summary for easier navigation.
+- Updated `docs/fix_plan.md:460-463` Next Actions to align with the new phase IDs (L1–L3, M1–M3, N1–N3) and staged `input.md` with Docs-mode guidance pointing Ralph at Phase L1–L3 deliverables.
+- Expect Ralph to produce artifacts under `reports/2025-10-cli-flags/phase_l/rot_vector/20251202_tolerance_sync/`, update diagnosis/checklists/bug log, add a fresh Attempt entry, and run the mapped collect-only pytest before we revisit scaling parity (Phase M).
