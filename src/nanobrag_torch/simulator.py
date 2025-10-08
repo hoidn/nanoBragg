@@ -1006,160 +1006,74 @@ class Simulator:
             normalized_intensity = accumulated_intensity
         else:
             # No subpixel sampling - compute physics once for pixel centers
+            # SPEC MODE: Global vectorization per specs/spec-a-core.md:204-240
+            pixel_coords_angstroms = pixel_coords_meters * 1e10
 
-            # Phase M2g.4: Row-wise batch processing for c-parity mode (Option B)
-            # This enables per-pixel φ carryover cache access while maintaining vectorization
-            # Note: use_row_batching was set at function start (line 766-773)
+            # Compute physics for pixel centers with multiple sources if available
+            if n_sources > 1:
+                # VECTORIZED Multi-source case: batch all sources together (matching subpixel path)
+                # Note: source_directions point FROM sample TO source
+                # Incident beam direction should be FROM source TO sample (negated)
+                incident_dirs_batched = -source_directions  # Shape: (n_sources, 3)
+                wavelengths_batched = source_wavelengths_A  # Shape: (n_sources,)
 
-            if use_row_batching:
-                # ROW-WISE BATCH PATH: Process one row at a time for cache interaction
-                # Design: reports/.../20251210_optionB_design/optionB_batch_design.md
-                S, F = pixel_coords_meters.shape[:2]
-
-                # Allocate output tensor
-                normalized_intensity = torch.zeros((S, F), device=self.device, dtype=self.dtype)
-
-                # Process each row
-                for slow_idx in range(S):
-                    # Create batch indices for this row
-                    fast_indices = torch.arange(F, device=self.device, dtype=torch.long)
-                    slow_indices = torch.full((F,), slow_idx, device=self.device, dtype=torch.long)
-
-                    # Get rotated vectors WITH cache interaction for this row
-                    (rot_a_row, rot_b_row, rot_c_row), (rot_a_star_row, rot_b_star_row, rot_c_star_row) = \
-                        self.crystal.get_rotated_real_vectors_for_batch(
-                            self.crystal.config, slow_indices, fast_indices
-                        )
-
-                    # Convert to correct device/dtype
-                    rot_a_row = rot_a_row.to(device=self.device, dtype=self.dtype)
-                    rot_b_row = rot_b_row.to(device=self.device, dtype=self.dtype)
-                    rot_c_row = rot_c_row.to(device=self.device, dtype=self.dtype)
-                    rot_a_star_row = rot_a_star_row.to(device=self.device, dtype=self.dtype)
-                    rot_b_star_row = rot_b_star_row.to(device=self.device, dtype=self.dtype)
-                    rot_c_star_row = rot_c_star_row.to(device=self.device, dtype=self.dtype)
-
-                    # Get pixel coords for this row and convert to Angstroms
-                    pixel_coords_row_meters = pixel_coords_meters[slow_idx, :, :]  # Shape: (F, 3)
-                    pixel_coords_row_angstroms = pixel_coords_row_meters * 1e10
-
-                    # Compute physics for this row
-                    if n_sources > 1:
-                        incident_dirs_batched = -source_directions
-                        wavelengths_batched = source_wavelengths_A
-                        row_intensity, _ = self._compute_physics_for_position(
-                            pixel_coords_row_angstroms, rot_a_row, rot_b_row, rot_c_row,
-                            rot_a_star_row, rot_b_star_row, rot_c_star_row,
-                            incident_beam_direction=incident_dirs_batched,
-                            wavelength=wavelengths_batched,
-                            source_weights=source_weights
-                        )
-                    else:
-                        row_intensity, _ = self._compute_physics_for_position(
-                            pixel_coords_row_angstroms, rot_a_row, rot_b_row, rot_c_row,
-                            rot_a_star_row, rot_b_star_row, rot_c_star_row
-                        )
-
-                    # Normalize by steps
-                    row_intensity = row_intensity / steps
-
-                    # Calculate omega for this row
-                    pixel_squared_sum = torch.sum(
-                        pixel_coords_row_angstroms * pixel_coords_row_angstroms, dim=-1, keepdim=True
-                    )
-                    pixel_squared_sum = pixel_squared_sum.clamp_min(1e-12)
-                    pixel_magnitudes = torch.sqrt(pixel_squared_sum)
-                    airpath = pixel_magnitudes.squeeze(-1)
-                    airpath_m = airpath * 1e-10
-                    close_distance_m = torch.as_tensor(self.detector.close_distance, device=airpath_m.device, dtype=airpath_m.dtype)
-                    pixel_size_m = torch.as_tensor(self.detector.pixel_size, device=airpath_m.device, dtype=airpath_m.dtype)
-
-                    if self.detector.config.point_pixel:
-                        omega_pixel = 1.0 / (airpath_m * airpath_m)
-                    else:
-                        omega_pixel = (
-                            (pixel_size_m * pixel_size_m)
-                            / (airpath_m * airpath_m)
-                            * close_distance_m
-                            / airpath_m
-                        )
-
-                    # Apply omega and store in output
-                    normalized_intensity[slow_idx, :] = row_intensity * omega_pixel
-
-                # Set I_before_normalization for compatibility (not used in c-parity validation)
-                I_before_normalization = normalized_intensity * steps
-                I_before_normalization_pre_polar = I_before_normalization
-
-            else:
-                # SPEC MODE: Global vectorization (unchanged, original implementation)
-                pixel_coords_angstroms = pixel_coords_meters * 1e10
-
-                # Compute physics for pixel centers with multiple sources if available
-                if n_sources > 1:
-                    # VECTORIZED Multi-source case: batch all sources together (matching subpixel path)
-                    # Note: source_directions point FROM sample TO source
-                    # Incident beam direction should be FROM source TO sample (negated)
-                    incident_dirs_batched = -source_directions  # Shape: (n_sources, 3)
-                    wavelengths_batched = source_wavelengths_A  # Shape: (n_sources,)
-
-                    # Single batched call for all sources
-                    # This replaces the Python loop and enables torch.compile optimization
-                    # CLI-FLAGS-003 Phase M1: Unpack both post-polar and pre-polar intensities
-                    intensity, I_before_normalization_pre_polar = self._compute_physics_for_position(
-                        pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star,
-                        incident_beam_direction=incident_dirs_batched,
-                        wavelength=wavelengths_batched,
-                        source_weights=source_weights
-                    )
-                    # The weighted sum over sources is done inside _compute_physics_for_position
-                else:
-                    # Single source case: use default beam parameters
-                    # CLI-FLAGS-003 Phase M1: Unpack both post-polar and pre-polar intensities
-                    intensity, I_before_normalization_pre_polar = self._compute_physics_for_position(
-                        pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star
-                    )
-
-                # CLI-FLAGS-003 Phase M1: Save both post-polar (current intensity) and pre-polar for trace
-                # The current intensity already has polarization applied (from compute_physics_for_position)
-                I_before_normalization = intensity.clone()
-
-                # Normalize by steps
-                normalized_intensity = intensity / steps
-
-                # PERF-PYTORCH-004 P3.0b: Polarization is now applied per-source inside compute_physics_for_position
-                # Only omega needs to be applied here
-
-                # Calculate airpath for pixel centers
-                pixel_squared_sum = torch.sum(
-                    pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True
+                # Single batched call for all sources
+                # This replaces the Python loop and enables torch.compile optimization
+                # CLI-FLAGS-003 Phase M1: Unpack both post-polar and pre-polar intensities
+                intensity, I_before_normalization_pre_polar = self._compute_physics_for_position(
+                    pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star,
+                    incident_beam_direction=incident_dirs_batched,
+                    wavelength=wavelengths_batched,
+                    source_weights=source_weights
                 )
-                # Use clamp_min to avoid creating fresh tensors in compiled graph (PERF-PYTORCH-004 P1.1)
-                pixel_squared_sum = pixel_squared_sum.clamp_min(1e-12)
-                pixel_magnitudes = torch.sqrt(pixel_squared_sum)
-                airpath = pixel_magnitudes.squeeze(-1)  # Remove last dimension for broadcasting
-                airpath_m = airpath * 1e-10  # Å to meters
-                # Convert detector properties to tensors with correct device/dtype (AT-PERF-DEVICE-001)
-                # Use as_tensor to avoid warnings when value might already be a tensor
-                close_distance_m = torch.as_tensor(self.detector.close_distance, device=airpath_m.device, dtype=airpath_m.dtype)
-                pixel_size_m = torch.as_tensor(self.detector.pixel_size, device=airpath_m.device, dtype=airpath_m.dtype)
+                # The weighted sum over sources is done inside _compute_physics_for_position
+            else:
+                # Single source case: use default beam parameters
+                # CLI-FLAGS-003 Phase M1: Unpack both post-polar and pre-polar intensities
+                intensity, I_before_normalization_pre_polar = self._compute_physics_for_position(
+                    pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star
+                )
 
-                # Calculate solid angle (omega) based on point_pixel mode
-                if self.detector.config.point_pixel:
-                    # Point pixel mode: ω = 1 / R^2
-                    omega_pixel = 1.0 / (airpath_m * airpath_m)
-                else:
-                    # Standard mode with obliquity correction
-                    # ω = (pixel_size^2 / R^2) · (close_distance/R)
-                    omega_pixel = (
-                        (pixel_size_m * pixel_size_m)
-                        / (airpath_m * airpath_m)
-                        * close_distance_m
-                        / airpath_m
-                    )
+            # CLI-FLAGS-003 Phase M1: Save both post-polar (current intensity) and pre-polar for trace
+            # The current intensity already has polarization applied (from compute_physics_for_position)
+            I_before_normalization = intensity.clone()
 
-                # Apply omega directly
-                normalized_intensity = normalized_intensity * omega_pixel
+            # Normalize by steps
+            normalized_intensity = intensity / steps
+
+            # PERF-PYTORCH-004 P3.0b: Polarization is now applied per-source inside compute_physics_for_position
+            # Only omega needs to be applied here
+
+            # Calculate airpath for pixel centers
+            pixel_squared_sum = torch.sum(
+                pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True
+            )
+            # Use clamp_min to avoid creating fresh tensors in compiled graph (PERF-PYTORCH-004 P1.1)
+            pixel_squared_sum = pixel_squared_sum.clamp_min(1e-12)
+            pixel_magnitudes = torch.sqrt(pixel_squared_sum)
+            airpath = pixel_magnitudes.squeeze(-1)  # Remove last dimension for broadcasting
+            airpath_m = airpath * 1e-10  # Å to meters
+            # Convert detector properties to tensors with correct device/dtype (AT-PERF-DEVICE-001)
+            # Use as_tensor to avoid warnings when value might already be a tensor
+            close_distance_m = torch.as_tensor(self.detector.close_distance, device=airpath_m.device, dtype=airpath_m.dtype)
+            pixel_size_m = torch.as_tensor(self.detector.pixel_size, device=airpath_m.device, dtype=airpath_m.dtype)
+
+            # Calculate solid angle (omega) based on point_pixel mode
+            if self.detector.config.point_pixel:
+                # Point pixel mode: ω = 1 / R^2
+                omega_pixel = 1.0 / (airpath_m * airpath_m)
+            else:
+                # Standard mode with obliquity correction
+                # ω = (pixel_size^2 / R^2) · (close_distance/R)
+                omega_pixel = (
+                    (pixel_size_m * pixel_size_m)
+                    / (airpath_m * airpath_m)
+                    * close_distance_m
+                    / airpath_m
+                )
+
+            # Apply omega directly
+            normalized_intensity = normalized_intensity * omega_pixel
 
         # Apply detector absorption if configured (AT-ABS-001)
         # Cache capture_fraction for trace output if trace_pixel is set

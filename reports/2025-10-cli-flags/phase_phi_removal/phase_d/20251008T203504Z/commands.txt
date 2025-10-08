@@ -1,0 +1,74 @@
+# Phase D1 Proof-of-Removal Bundle - Reproduction Commands
+# Timestamp: 20251008T203504Z
+# Branch: feature/spec-based-2
+# Commit: (to be recorded at time of execution)
+
+# Step 0: Create timestamp directory
+export STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+mkdir -p reports/2025-10-cli-flags/phase_phi_removal/phase_d/$STAMP
+
+# D1a: Generate PyTorch spec-mode trace
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py \
+  --config supervisor \
+  --pixel 685 1039 \
+  --device cpu \
+  --dtype float64 \
+  --out reports/2025-10-cli-flags/phase_phi_removal/phase_d/$STAMP/trace_py_spec.log \
+  2>&1 | tee reports/2025-10-cli-flags/phase_phi_removal/phase_d/$STAMP/d1a_py_stdout.txt
+
+# Copy environment JSON
+cp reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_env.json \
+  reports/2025-10-cli-flags/phase_phi_removal/phase_d/$STAMP/env.json
+
+# D1a: Generate C spec-mode trace
+./golden_suite_generator/nanoBragg \
+  -mat A.mat \
+  -floatfile /tmp/c_trace.bin \
+  -hkl scaled.hkl \
+  -nonoise \
+  -nointerpolate \
+  -oversample 1 \
+  -exposure 1 \
+  -flux 1e18 \
+  -beamsize 1.0 \
+  -spindle_axis -1 0 0 \
+  -Xbeam 217.742295 \
+  -Ybeam 213.907080 \
+  -distance 231.274660 \
+  -lambda 0.976800 \
+  -pixel 0.172 \
+  -detpixels_x 2463 \
+  -detpixels_y 2527 \
+  -odet_vector -0.000088 0.004914 -0.999988 \
+  -sdet_vector -0.005998 -0.999970 -0.004913 \
+  -fdet_vector 0.999982 -0.005998 -0.000118 \
+  -pix0_vector_mm -216.336293 215.205512 -230.200866 \
+  -beam_vector 0.00051387949 0.0 -0.99999986 \
+  -Na 36 \
+  -Nb 47 \
+  -Nc 29 \
+  -osc 0.1 \
+  -phi 0 \
+  -phisteps 10 \
+  -detector_rotx 0 \
+  -detector_roty 0 \
+  -detector_rotz 0 \
+  -twotheta 0 \
+  -trace_pixel 685 1039 \
+  2>&1 | tee reports/2025-10-cli-flags/phase_phi_removal/phase_d/$STAMP/trace_c_spec.log
+
+# D1b: Run pytest regression tests
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py \
+  2>&1 | tee reports/2025-10-cli-flags/phase_phi_removal/phase_d/$STAMP/pytest.log
+
+# Save collection log
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.py \
+  > reports/2025-10-cli-flags/phase_phi_removal/phase_d/$STAMP/collect.log 2>&1
+
+# D1c: Check for residual phi_carryover references
+rg --files-with-matches "phi_carryover" src tests scripts prompts docs 2>/dev/null \
+  | grep -v "reports/" | grep -v "archive/" | sort \
+  > reports/2025-10-cli-flags/phase_phi_removal/phase_d/$STAMP/rg_phi_carryover.txt
+
+# Generate checksums
+cd reports/2025-10-cli-flags/phase_phi_removal/phase_d/$STAMP && sha256sum * > sha256.txt

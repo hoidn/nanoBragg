@@ -14,8 +14,7 @@
       -1.0,
       0.0,
       0.0
-    ],
-    "phi_carryover_mode": "c-parity"
+    ]
   },
   "detector": {
     "distance_mm": 231.27466,
