@@ -1802,3 +1802,9 @@ Follow-ups for Ralph:
 - Revised `docs/fix_plan.md` Next Actions so L3k.3c.4 emphasises per-φ trace collection + targeted pytest logs before documentation work.
 - Issued new `input.md` (Parity mode) directing Ralph to extend the trace harness with a `--phi-mode` toggle, record spec vs c-parity per-φ traces, rerun tests, and log artifacts under `reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/`.
 - Expect Ralph to produce VG-1 parity evidence, update parity plan rows C4/C5, and then proceed toward Phase L3k.3d nb-compare once traces pass tolerances.
+
+## 2025-10-08 (galph loop — L3k.3c.4 parity regression)
+- Ran parity trace harness (spec & c-parity) into `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T011326Z/`; spec mode still diverges at φ₀ as expected, c-parity plateau remains Δk≈2.845e-05 > 1e-6.
+- TRACE_C_PHI logging missing in current golden binary; reused older log to complete comparison. Logged this gap and marked plan row L3k.3c.4 as [P].
+- Updated `plans/active/cli-phi-parity-shim/plan.md` + `docs/fix_plan.md` Attempt #122 with metrics and next steps (restore instrumentation, diagnose residual drift).
+- Issued new Parity-mode input directing Ralph to tighten shim tolerances and regenerate traces with fresh C instrumentation.

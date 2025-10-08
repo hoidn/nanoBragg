@@ -611,6 +611,24 @@
       1. ✅ Phase C4 complete — dual-mode traces captured, metrics validated, SHA256 hashes archived
       2. → Phase C5 — Update `docs/bugs/verified_c_bugs.md` and `reports/.../diagnosis.md` with shim availability notes
       3. → Phase D1-D3 — Sync plans/docs, prepare handoff to Phase L3k.3d nb-compare rerun with `--py-args "--phi-carryover-mode c-parity"`
+  * [2025-10-08] Attempt #122 (galph loop, Mode: Parity/Evidence) — Result: **VG-1 REGRESSION** (Phase C4 evidence recapture). **New tolerance (≤1e-6) unmet; c-parity shim still drifts by 2.845e-05 at all φ steps.**
+    Metrics: Spec mode unchanged (Δk(φ₀)=1.811649e-02, expected). C-parity mode max Δk=2.845147e-05 (>1e-6 ❌), max ΔF_latt_b=4.36e-03. Targeted pytest selectors still pass (TestPhiCarryoverBehavior 6 passed/6 skipped; TestPhiZeroParity 2 passed).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T011326Z/trace_py_spec.log` & `_per_phi.json`
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T011326Z/trace_py_c_parity.log` & `_per_phi.json`
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T011326Z/c_trace_phi.log` (copied from 20251008T005247Z; current binary missing TRACE_C_PHI instrumentation)
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T011326Z/delta_metrics.json` — spec vs parity deltas, highlights Δk plateau at 2.845e-05
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T011326Z/per_phi_summary_{spec,c_parity}.txt` — CLI summaries (spec φ₀ diverges; parity still >1e-6)
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T011326Z/pytest_phi_carryover.log`, `pytest_phi0.log`
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T011326Z/summary.md` — Evidence recap + follow-up actions
+    Observations/Hypotheses:
+      - Raising VG-1 tolerance to 1e-6 exposes residual drift; parity shim currently mirrors prior plateau (≈2.845e-05) seen in Attempt #121.
+      - Reusing historical C trace avoids missing instrumentation but blocks refreshing Δk after future C fixes; need new TRACE_C_PHI build.
+      - Suspect rounding in reciprocal recomputation or index_select path; requires deeper analysis before Phase C4 can be marked done again.
+    Next Actions:
+      1. Restore TRACE_C_PHI logging in golden_suite_generator/nanoBragg and regenerate fresh C trace aligned with current binary.
+      2. Investigate φ=0 replacement path for numerical drift (check reciprocal recalc, broadcasting precision) to drive Δk ≤ 1e-6.
+      3. Keep `plans/active/cli-phi-parity-shim/plan.md` C4 in [P] state; update parity shim design/diagnosis docs once fix identified.
   * [2025-11-21] Attempt #97 (ralph loop i=97) — Result: **SUCCESS** (Phase L3k.2 implementation COMPLETE). **φ rotation fix applied: removed independent reciprocal vector rotation, added reciprocal recomputation from rotated real vectors per CLAUDE Rule #13.**
     Metrics: Targeted tests pass (test_f_latt_square_matches_c PASSED, 57/57 crystal/geometry tests PASSED); test collection succeeds (653 tests); Python syntax valid.
     Artifacts:
