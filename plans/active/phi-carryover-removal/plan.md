@@ -62,7 +62,7 @@ Exit Criteria: Timestamped Phase D bundle contains real C/Py traces + targeted
 | D1b | Capture regression proof | [D] | ✅ Attempt #183 (2025-10-08). `pytest -v tests/test_cli_scaling_phi0.py` (CPU) recorded max |Δk_frac| ≤ 1e-6; see `pytest.log` within the Phase D bundle. |
 | D1c | Confirm code/doc cleanliness | [D] | ✅ Attempt #183 (2025-10-08). Ripgrep sweep logged in `rg_phi_carryover.txt`; only `docs/fix_plan.md` retains historical references. |
 | D2 | Ledger + plan sync | [D] | ✅ Attempt #184 (2025-10-08). Updated `docs/fix_plan.md` CLI-FLAGS-003 with Phase D2 completion, removed shim from Next Actions. Moved `plans/active/cli-phi-parity-shim/plan.md` → `plans/archive/cli-phi-parity-shim/plan.md` with closure note referencing Phase D bundle. Artifacts: ledger_sync.md, collect log. |
-| D3 | Supervisor handoff memo | [ ] | Write the next `input.md` instructing Ralph to resume the scaling/nb-compare track (Phase L in `plans/active/cli-noise-pix0/plan.md`) using only spec mode. Summarize Phase D completion in `galph_memory.md` so future loops know the shim closure evidence exists. |
+| D3 | Supervisor handoff memo | [D] | ✅ Completed 2025-12-14 (galph loop). Issued new `input.md` pointing Ralph at `plans/active/cli-noise-pix0/plan.md` Phase M2g work (spec-only path) and logged the closure in `galph_memory.md`; shim removal evidence now fully handed off. |
 
 ### Phase E — Post-removal Watch (Optional)
 Goal: Install lightweight guardrails so φ carryover never sneaks back in.

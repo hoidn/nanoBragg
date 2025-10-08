@@ -1164,3 +1164,10 @@
 - Created `reports/2025-10-cli-flags/phase_phi_removal/phase_d/ledger_sync.md` documenting changes, verification checklist, and next actions.
 - Phase D2 exit criteria met: fix_plan shows Attempt #184, Next Actions updated, shim plan archived with closure note, pytest collection verified.
 - Follow-up for next supervisor loop: Prepare Phase D3 `input.md` handoff directing Ralph to `plans/active/cli-noise-pix0/plan.md` Phase L scaling tasks; shim removal work complete, focus shifts entirely to `-nonoise`/`-pix0` deliverables.
+
+## 2025-12-14 (galph loop — D3 handoff + scaling pivot)
+- Reviewed phi-carryover removal plan and fix_plan; only D3 remained open while CLI scaling tasks waited. Long-term Goal 1 now satisfied after this handoff.
+- Updated `plans/active/phi-carryover-removal/plan.md:109` marking D3 [D] with note that today’s input redirects work to the scaling track and logs closure in galph_memory.
+- Refreshed `docs/fix_plan.md:461-466` Next Actions to record D3 completion and elevate Phase M2g/M2h as the active blockers (Option B cache fix + grad/device validation).
+- Authored new `input.md` (Mode: Parity) guiding Ralph to execute Phase M2g Option B cache plumbing, re-run the trace harness, capture metrics under `reports/2025-10-cli-flags/phase_l/scaling_validation/20251214_optionB_patch/`, and update fix_plan attempts post-fix.
+- Follow-up for Ralph: implement the pixel-indexed φ-cache per Option B design, rerun CPU/CUDA parity evidence and targeted pytest, then log Attempt # next with artifact paths before progressing to M2h.
