@@ -57,7 +57,7 @@ After choosing a <focus issue> you will consider the following:
 <post issue selection document review>
 - Which existing docs/fix_plan.md items does it (i.e. the <focus issue>) relate to? 
 - Documentation review for <focus issue>: Using `docs/index.md` as the map, identify and read the specific documents relevant to the chosen <focus issue> (e.g., component contracts, architecture ADRs, parity/testing strategy). List the file paths you will rely on (with a one‑line rationale each) before drafting or updating the plan.
-- Is the <focus issue> related to a pre-existing docs/fix_plan.md in-progress item? If so, read the artifacts (typically under reports/) that were generated in the most recent ralph iteration related to the <focus issue>. You may need to use `git log` to find these files.
+- Is the <focus issue> related to a pre-existing docs/fix_plan.md in-progress item? If so, read the artifacts (typically under reports/) that were generated in the most recent ralph iteration related to the <focus issue>. These artifacts should be recorded in the docs/fix_plan.md entry; as a fallback, you can also check the commit message history.
 </post issue selection document review>
 
 
