@@ -18,3 +18,23 @@ KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.p
 
 # 4. Record environment
 python -c "import json, os, sys, torch; print(json.dumps({'python': sys.version, 'torch': torch.__version__, 'device': 'cpu', 'dtype': 'float64'}, indent=2))"
+
+# Phase M2 Analysis (2025-10-22)
+# Git SHA: (to be updated post-commit)
+# Device: CPU, Dtype: float64
+
+# Step 1: Pytest collection verification
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.py 2>&1 | tee collect.log
+
+# Step 2: Regenerate scaling validation summary
+python scripts/validation/compare_scaling_traces.py \
+  --c reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/c_trace_scaling.log \
+  --py reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/trace_py_scaling.log \
+  --out reports/2025-10-cli-flags/phase_l/scaling_validation/scaling_validation_summary.md
+
+# Step 3: Analysis document creation
+# - Wrote analysis_20251008T212459Z.md with quantified F_cell/F_latt/k_frac breakdowns
+# - Updated ../20251008T075949Z/lattice_hypotheses.md with Phase M2 findings
+# - Regenerated scaling_validation_summary.md with fresh metrics
+
+# Step 4: Checksum updates (see sha256.txt refresh below)

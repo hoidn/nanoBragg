@@ -461,11 +461,37 @@
 - Next Actions (2025-10-08 Phase M1 complete):
   - ✅ Phase D1–D3 complete — Shim removal validated; see `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/` and galph_memory entries dated 2025-12-14.
   - ✅ **Phase M1 (COMPLETE)** — Fresh spec-mode baseline captured at `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/` with trace_harness + compare_scaling_traces; test collection verified (2 tests in test_cli_scaling_phi0.py).
-  - **Phase M2 (OPEN)** — Analyse the fresh bundle to separate `F_cell`, `F_latt`, `omega_pixel`, and `I_before_scaling` deltas; update `analysis.md` and `lattice_hypotheses.md` per plan guidance.
-  - **Phase M3–M4 (OPEN)** — Design validation probes, implement the physics fix once the culprit is confirmed, and keep evidence under the new timestamped bundle; cite nanoBragg.c lines 2797–3095.
+  - ✅ **Phase M2 (COMPLETE)** — Analysis bundle complete with quantified F_cell/F_latt/k_frac breakdowns; see Attempt #186 (2025-10-22) — `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/analysis_20251008T212459Z.md` and updated `../20251008T075949Z/lattice_hypotheses.md`.
+  - **Phase M3 (OPEN)** — Design and execute validation probes: per-φ PyTorch trace, sincg sensitivity table, single-φ parity test, rotation matrix audit (compare `Crystal.get_rotated_real_vectors` vs nanoBragg.c:2797-3095).
+  - **Phase M4 (BLOCKED on M3)** — Implement physics fix once root cause confirmed; verify with fresh trace comparison.
   - **Phase M5–M6 (OPEN)** — Re-run CUDA + gradcheck smoke, then sync ledgers/documentation before advancing to nb-compare (Phase N).
 
 - Attempts History:
+  * [2025-10-22] Attempt #186 (ralph loop, Mode: Docs) — Result: ✅ **SUCCESS** (Phase M2 Divergence Analysis COMPLETE). **Documentation-only loop (no code changes).**
+    Metrics: Test collection: 2 tests collected successfully in 0.78s (tests/test_cli_scaling_phi0.py); I_before_scaling divergence quantified at -14.6% (C=943654.81, PyTorch=805473.79); F_latt sign flip identified (C=-2.383, PyTorch=+1.379, Δ_rel=+158%); rot_b Y-component error +6.8% (C=0.672 Å, PyTorch=0.717 Å); k_frac shift +3.0% (C=-0.607, PyTorch=-0.589).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/analysis_20251008T212459Z.md` — Comprehensive quantitative breakdown with numbered sections, ranked hypotheses (H4-H8), and Phase M3 validation probe specifications
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md` — Appended 2025-10-22 update section with observation table and H4 hypothesis (φ-Rotation Application Inconsistency) elevated to HIGH CONFIDENCE, P0 priority
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/scaling_validation_summary.md` — Regenerated via compare_scaling_traces.py showing first_divergence=I_before_scaling, 2 divergent factors
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/summary_addendum.md` — Quick reference guide for future auditors
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/collect.log` — pytest --collect-only output (2 tests)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/commands.txt` — Updated with Phase M2 reproduction steps
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/sha256.txt` — Refreshed checksums (all files OK via shasum -c)
+    Changes: None (Docs-mode loop per input.md specification)
+    Observations/Hypotheses:
+      - **F_cell Parity Confirmed**: Both C and PyTorch access same HKL grid cell (-7,-1,-14) with F_cell=190.27 (exact match); interpolation NOT a divergence source
+      - **F_latt Sign Flip Root Cause**: PyTorch F_latt_b flips sign (+1.051 → -0.858) due to k_frac shift from -0.607 to -0.589; this 3% shift in k-component moves sincg(π·k, Nb=47) evaluation across zero-crossing
+      - **rot_b Y-Component Error**: Largest relative vector component difference (+6.8%); 0.0457 Å shift in rot_b propagates to k_frac via S·b dot product
+      - **Per-φ C Trace Available**: C trace shows 10 φ steps with per-tick F_latt values ranging from -2.383 to +1.099; PyTorch lacks per-φ instrumentation (only aggregate I_before_scaling)
+      - **Downstream Factors Pristine**: All scaling factors after I_before_scaling (r_e², fluence, steps, capture_fraction, polar, omega_pixel, cos_2theta) agree within ≤1e-6 relative tolerance
+      - **H4 Hypothesis (HIGH CONFIDENCE)**: φ-rotation application differs between PyTorch (`Crystal.get_rotated_real_vectors`) and C (nanoBragg.c:2797-3095); spindle axis orientation, rotation matrix order, or sign convention mismatch
+      - **Phase M2 Exit Criteria Met**: analysis.md authored with numbered sections, tables, and quantified deltas; lattice_hypotheses.md updated with ranked H4-H8; scaling_validation_summary.md regenerated; sha256.txt validated; commands.txt/collect.log captured
+    Next Actions:
+      - Phase M3 Task 1: Add per-φ instrumentation to PyTorch (`TRACE_PY_PHI` lines) matching C format; run single-pixel trace for pixel (685,1039) on CPU float64
+      - Phase M3 Task 2: Generate sincg sensitivity table for k ∈ [-0.61,-0.58] in 0.001 steps; identify zero-crossings and sign-flip boundaries
+      - Phase M3 Task 3: Execute single-φ parity test (phisteps=1, phi=0) to isolate rotation vs accumulation issues
+      - Phase M3 Task 4: Audit rotation matrix construction comparing `src/nanobrag_torch/models/crystal.py::get_rotated_real_vectors` vs nanoBragg.c:2797-3095 line-by-line
+      - All Phase M3 artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/<date>/phase_m3_probes/`
   * [2025-10-08] Attempt #185 (ralph loop i=182, Mode: Parity) — Result: ✅ **SUCCESS** (Phase M1 Spec-Mode Baseline COMPLETE). **Evidence-only loop (no code changes).**
     Metrics: First divergence: I_before_scaling (C=943654.81, Py=805473.79, delta=-14.6%); all downstream scaling factors pass ≤1e-6 tolerance; test collection: 2 tests collected successfully in 0.79s (tests/test_cli_scaling_phi0.py).
     Artifacts:
