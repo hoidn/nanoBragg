@@ -1893,3 +1893,10 @@ Follow-ups for Ralph:
 - Authored `plans/active/static-pyrefly.md` with Phases A–E covering tool verification, baseline scan, triage, delegation hooks, and closure criteria for STATIC-PYREFLY-001.
 - Updated `docs/fix_plan.md:2943-2954` to reference the new plan, set status to in_progress, and align next actions with plan phases.
 - Rewrote `input.md` (Docs mode) instructing Ralph to execute Phase A (tool audit + artifact scaffold) before any pyrefly run; emphasized artifact paths under `reports/pyrefly/`.
+
+## 2025-10-08 (galph loop — STATIC-PYREFLY-001 Phase B setup)
+- Coin flip→heads: reviewed Ralph’s recent commits (`ef1f716`, `e97a66c`) and found them productive; Phase M1 instrumentation landed cleanly and pyrefly Phase A evidence captured without regressions.
+- Chosen focus: STATIC-PYREFLY-001 Phase B baseline run; no new plan required since `plans/active/static-pyrefly.md` already governs the workflow.
+- Actions this loop: refreshed `input.md` with Docs-mode guidance covering Phase B1–B3 deliverables (pyrefly.log, env.json, summary.md, fix_plan Attempt update) and reiterated artifact/timestamp reuse under `reports/pyrefly/20251008T053652Z/`.
+- No changes to docs/fix_plan.md this turn; expect Ralph to record Attempt #2 after the baseline run and keep the working tree clean.
+- Follow-up: next supervisor loop should inspect the new summary, decide on Phase C triage scope, and ensure pyrefly findings are mapped to owners/tests before delegating fixes.
