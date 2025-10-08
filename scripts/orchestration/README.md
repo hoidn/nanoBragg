@@ -66,6 +66,32 @@ This README documents the cross‑machine orchestration for the supervisor (galp
   - `--heartbeat-secs N`: periodic heartbeat lines while polling
 - `logs/` is ignored by Git.
 
+### Viewing recent interleaved logs
+
+Use the helper script to interleave the last N galph/ralph logs for a branch prefix (matching on iteration numbers) and wrap each log in an XML-like tag with CDATA:
+
+```bash
+python -m scripts.orchestration.tail_interleave_logs feature-spec-based-2 -n 3
+```
+
+Output structure:
+
+```xml
+<logs prefix="feature-spec-based-2" count="3">
+  <log role="galph" iter="141" path="logs/feature-spec-based-2/galph/iter-00141_....log">
+    <![CDATA[
+    ...
+    ]]>
+  </log>
+  <log role="ralph" iter="141" path="logs/feature-spec-based-2/ralph/iter-00141_....log">
+    <![CDATA[
+    ...
+    ]]>
+  </log>
+  ...
+</logs>
+```
+
 ## Flag Reference
 - Supervisor
   - `--sync-via-git` · `--sync-loops N` · `--poll-interval S` · `--max-wait-sec S`

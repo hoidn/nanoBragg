@@ -1,0 +1,5 @@
+To github.com:hoidn/nanoBragg.git
+   fc31371..e88075c  HEAD -> feature/spec-based-2
+Waiting for Ralph to complete i=142...
+error: cannot pull with rebase: You have unstaged changes.
+error: Please commit or stash them.

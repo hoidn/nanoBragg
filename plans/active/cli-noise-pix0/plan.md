@@ -43,9 +43,20 @@ Exit Criteria: Updated documentation/tests/checklists reflecting the 1e-6 (spec)
 | L2 | Refresh documentation set | [D] | ✅ Edited `reports/.../diagnosis.md` with Phase L sync note, updated `docs/bugs/verified_c_bugs.md` C-PARITY-001 entry to reference parity shim. Collected test selectors in `collect.log`. Commit sha will be recorded in fix_plan Attempt. |
 | L3 | Log Attempt + fix_checklist updates | [D] | ✅ Appended Attempt #136 to `docs/fix_plan.md` CLI-FLAGS-003 with doc sync summary, tolerance thresholds (spec ≤1e-6, c-parity ≤5e-5), and artifact paths. Phase L complete. |
 
+### Phase M0 — Trace Instrumentation Hygiene
+Goal: Ensure CLI-FLAGS-003 debug instrumentation stays scoped to trace loops and remains device/dtype neutral before continuing Phase M.
+Prereqs: Phase L complete; instrumentation from commit 9a8c2f5 captured in trace harness.
+Exit Criteria: Debug helpers guarded behind the trace flag, tensors allocated on caller device/dtype, and findings logged in fix_plan with artifact paths under `reports/2025-10-cli-flags/phase_l/scaling_validation/`.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| M0a | Audit tricubic neighborhood cache scope | [ ] | Confirm `_last_tricubic_neighborhood` only retains debug payloads when tracing is active. If production runs hit `B > 1`, add guard/clear logic before returning. Capture notes in `instrumentation_audit.md` under a new timestamped directory. |
+| M0b | Keep debug tensors device/dtype neutral | [ ] | Ensure `torch.tensor` allocations inside the trace path use the current device and dtype (match `self.crystal.structure_factors`). Validate via `pytest --collect-only tests/test_cli_scaling_phi0.py` on CPU and CUDA to confirm no device mismatch occurs. |
+| M0c | Document instrumentation toggle | [ ] | Update trace harness documentation showing how to enable/disable the tricubic dump (context manager or flag). Record commands in `commands.txt` and append a fix_plan Attempt referencing commit 9a8c2f5 and the new artifact directory. |
+
 ### Phase M — Structure-Factor & Normalization Parity (VG‑2)
 Goal: Eliminate the `I_before_scaling` divergence by ensuring PyTorch fetches the same HKL amplitudes and lattice factors as C for the supervisor ROI pixels.
-Prereqs: Phase L complete so traces/tests use aligned tolerances. Instrumentation from Phase L2b (`trace_harness.py`, simulator taps) already in place.
+Prereqs: Phase L complete and Phase M0 instrumentation tasks marked [D] so traces/tests use aligned tolerances. Instrumentation from Phase L2b (`trace_harness.py`, simulator taps) already in place.
 Exit Criteria: `trace_harness.py` comparisons show `F_cell`, `F_latt`, and `I_before_scaling` deltas ≤1e-6 relative, with artifacts under `reports/.../scaling_validation/`. Regression tests cover the fixed code path.
 
 | ID | Task Description | State | How/Why & Guidance |
