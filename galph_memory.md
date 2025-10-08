@@ -1091,3 +1091,9 @@
 - Updated plans/active/cli-noise-pix0/plan.md Next Actions bullet 0 to reference the new memo; M2i.2 remains gated pending c-parity trace.
 - Authored relocation of input.md directing Ralph to rerun trace_harness.py with --phi-mode c-parity and refresh scaling metrics once rot_* vectors align.
 - Follow-up: Ralph to capture c-parity trace + compare_scaling_traces bundle, then update fix_plan Attempts with new timestamp and metrics before advancing to Phase N.
+
+## 2025-12-13 (galph loop — Shim removal planning pivot)
+- Created `plans/active/phi-carryover-removal/plan.md` to retire the φ carryover shim (Phase-format context + A–E roadmap).
+- Updated docs/fix_plan.md (CLI-FLAGS-003 status/next actions now reference the new plan) and refreshed `plans/active/cli-noise-pix0/plan.md` Next Actions to delegate to the removal effort.
+- Authored input.md (Mode: Docs, 109 lines) directing Ralph to execute Phase A inventory tasks (collect-only pytest + baseline inventory artifacts under `reports/.../phase_phi_removal/phase_a/`).
+- Follow-up: Ralph to produce Phase A artifacts (collect log, baseline_inventory.md, commands/env/sha256) and log a freeze note next loop before Phase B prep begins.

@@ -451,18 +451,18 @@
 ## [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
 - Spec/AT: specs/spec-a-cli.md flag catalogue, docs/architecture/detector.md §5 (pix0 workflow), docs/development/c_to_pytorch_config_map.md (pivot rules), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860
 - Priority: High
-- Status: in_progress (Phases A–H complete; K3a/K3b/K3d landed via Attempts #43–44, pending per-φ evidence + normalization closure)
+- Status: in_progress (pivoting from parity shim emulation to removal; -nonoise/-pix0 remain gated on scaling parity)
 - Owner/Date: ralph/2025-10-05
-- Plan Reference: `plans/active/cli-noise-pix0/plan.md`
+- Plan Reference: `plans/active/phi-carryover-removal/plan.md` (shim retirement) + `plans/active/cli-noise-pix0/plan.md` (`-nonoise`/`-pix0` follow-through)
 - Reproduction (C & PyTorch):
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): 🔴 **2025-12-11 regression.** Option B cache wiring (commit `fa0167b`) allows the targeted parity test to hit the cache but `F_latt` still diverges (relative error 1.57884 versus ≤1e-6) and the omega trace tap now throws tensor indexing errors. Evidence captured in `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T153142Z_carryover_cache_plumbing/`.
 - Next Actions (2025-12-12 refresh):
-0. **M2i.2 metrics gate** — Keep the 20251008T174753Z bundle as the authoritative comparison; no rerun until physics changes, but reference it in future attempts to show the `I_before_scaling` Δrel ≈ -0.9999995 baseline.
-1. **M2g.6 documentation sync** — Append Attempt #171 outcomes to `phi_carryover_diagnosis.md`, cite `reports/2025-10-cli-flags/phase_l/trace_tooling_patch/20251008T175913Z/`, and flip the plan row [D]; update this ledger once complete.
-2. **Cache index audit** — Capture a fresh diagnostics bundle logging `(slow, fast)` cache lookups (fast-1 with wrap) before/after `apply_phi_carryover()`; store under `reports/2025-10-cli-flags/phase_l/cache_index_audit/<timestamp>/` with commands, diff summary, env metadata, and SHA256 hashes.
-3. **Phase N preparation** — Draft the nb-compare harness commands and enumerate prerequisites so regenerated C/PyTorch float images can be produced immediately after VG-2 turns green; log guidance in `reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/README.md`.
+0. **Phase A baseline inventory** — Execute `plans/active/phi-carryover-removal/plan.md` A1–A2 to enumerate all `phi_carryover_mode` touchpoints and capture `baseline_inventory.md` plus refreshed collect-only logs.
+1. **Phase A ledger sync** — Complete plan task A3 by logging the freeze note in `docs/fix_plan.md` Attempts and cross-linking the new artifacts under `reports/2025-10-cli-flags/phase_phi_removal/phase_a/`.
+2. **Legacy plan alignment** — Update `plans/active/cli-noise-pix0/plan.md` status/Next Actions to point at the removal plan before resuming scaling parity work (ensures Ralph doesn’t reopen shim tasks).
+3. **Phase B prep** — Draft a design review checklist for tasks B1–B3 (CLI/config/model removals) so Ralph can begin implementation once Phase A evidence is merged.
 
 - Attempts History:
   * [2025-10-07] Attempt #136 (ralph loop i=135, Mode: Docs) — Result: ✅ **SUCCESS** (Phase L Documentation Sync COMPLETE). **No code changes.**
