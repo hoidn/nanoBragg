@@ -1024,3 +1024,12 @@
 - Synced `docs/fix_plan.md` Next Actions with the new design/prototype requirements and clarified downstream sequencing.
 - Authored new `input.md` (Mode: Docs) directing Ralph to produce the Option B batch-design memo + 4×4 ROI prototype, capture artifacts, and run the collect-only pytest selector before further implementation.
 - Follow-up for Ralph: create the timestamped design/prototype artifacts, update fix_plan Attempts with findings, then resume M2g.3 cache allocation once the design is validated.
+
+## 2025-12-10 16:05Z (galph loop — M2g cache implementation kickoff)
+- Git already synced; reread core specs/arch/testing docs plus Option B design/prototype artifacts before planning per SOP.
+- Coin flip=heads → reviewed Ralph commit 2cbbf65 (Option B design + prototype). Work productive and aligned with plan.
+- Updated `plans/active/cli-noise-pix0/plan.md` Status Snapshot with Attempt #162 completion, marked M2g.2c/M2g.2d [D], and expanded M2g.1 checklist guidance to reference the new design memo.
+- Refreshed `docs/fix_plan.md` Next Actions to emphasise M2g.1 checkpoint, M2g.3 cache allocation, and M2g.4 simulator wiring before tooling/docs steps.
+- Authored `input.md` (Mode: Parity, 101 lines) instructing Ralph to implement Option B cache tensors/wiring, capture artifacts under `carryover_cache_plumbing/<ts>/`, run the targeted pytest selector, and log diagnostics for M2g.5 preparation.
+- Commit `1ac720e` pushed (`SUPERVISOR: CLI-FLAGS-003 M2g planning update - tests: not run`).
+- Follow-up: Ralph to deliver M2g.3/M2g.4 implementation with artifacts + pytest log, update fix_plan Attempts, and prep notes for upcoming M2g.5 tooling changes.
