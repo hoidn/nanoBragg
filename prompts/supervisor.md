@@ -4,14 +4,7 @@ planning, review and analysis. do not make implementation code changes.
 <current long-term goals>
 in order of decreasing priority:
 <1>
-run a successful parallel test of pytorch nanobragg against nanobragg c with this command:
-
-nanoBragg  -mat A.mat -floatfile img.bin -hkl scaled.hkl  -nonoise  -nointerpolate -oversample 1  -exposure 1  -flux 1e18 -beamsize 1.0  -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080  -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866  -beam_vector 0.00051387949 0.0 -0.99999986  -Na 36  -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0
-
-this will require first adding support for the following cli params to pytorch nanobragg:
--nonoise
--pix0_vector_mm
-
+Undo the architectural complexity and performance issues that were introduced by past reproduction of the phi carryover bug in the pytorch implementation (see <past long-term goals>). Corrsepondingly, deprecate the parallel test / acceptance test that was introduced by <past long term goals> <1> and target the correct, non-buggy spec behavior instead. (relaxing the parity test expectations is acceptable as well, but either way you MUST remove the phi-carryover codepath and any associated debt)
 </1>
 <2>
 review docs/bugs/verified_c_bugs.md and specs/. Make sure that the phi 0 carryover C implementation bug wasnt propagated to the specs. Update the specs (if needed) and pytorch implementation to fix this bug, if it was propagated.
@@ -34,6 +27,16 @@ delegate to ralph a full run of the test suite and triage of the failing test. r
 - ensuring that the pytorch implementation uses fp32 (not fp64) by default 
 - understanding why pytorch is slower than C in the warm condition at 4096x4096 resolution and fixing the underlying performance issue, if one is found. THIS IS A CRITICAL PERFORMANCE ISSUE.
 - once all the above are taken care of: building a user-facing showcase of autodiff-based parameter refinement, with plots / visuals
+<1>
+run a successful parallel test of pytorch nanobragg against nanobragg c with this command:
+
+nanoBragg  -mat A.mat -floatfile img.bin -hkl scaled.hkl  -nonoise  -nointerpolate -oversample 1  -exposure 1  -flux 1e18 -beamsize 1.0  -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080  -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866  -beam_vector 0.00051387949 0.0 -0.99999986  -Na 36  -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0
+
+this will require first adding support for the following cli params to pytorch nanobragg:
+-nonoise
+-pix0_vector_mm
+
+</1>
 
 </past long-term goals>
 <task>
