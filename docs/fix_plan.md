@@ -565,6 +565,28 @@
       - ✅ Phase M0 exit criteria met; proceed to Phase M (M1–M4 structure-factor & normalization parity)
       - Update `plans/active/cli-noise-pix0/plan.md` Phase M0 tasks M0a–M0c to mark [D] and log this attempt
       - Begin Phase M1 HKL lookup parity audit per plan guidance
+  * [2025-10-08] Attempt #145 (ralph loop i=145, Mode: Parity) — Result: ✅ **VERIFICATION** (Phase M1 tooling audit — compare_scaling_traces.py operational). **No code changes.**
+    Metrics: Script execution successful; targeted tests 35/35 passed in 2.65s (test_cli_scaling_phi0.py + test_phi_carryover_mode.py). Scaling comparison: first_divergence=I_before_scaling (C: 943654.809, PyTorch: 941686.236, Δrel: -2.086e-03).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T072513Z/scaling_validation_summary.md` — Markdown comparison report
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T072513Z/metrics.json` — Structured metrics (tolerance_rel=1e-6, 2 divergent factors)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T072513Z/run_metadata.json` — Environment snapshot (git SHA df6df98c, torch 2.5.1+cu124)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T072513Z/validation_report.md` — Executive summary
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T072513Z/git_sha.txt` — Git provenance
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T072513Z/git_status.txt` — Working tree status
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T072513Z/sha256.txt` — Artifact checksums (7 files)
+    Observations/Hypotheses:
+      - **Script status**: `compare_scaling_traces.py` executes cleanly with exit code 0; previous SIGKILL issues (Attempts #140, #141) no longer reproduce
+      - **Trace parsing**: Script correctly maps `I_before_scaling_pre_polar` → `I_before_scaling` for C comparison (lines 58-62)
+      - **Metrics fidelity**: JSON output confirms I_before_scaling diverges at -2.086e-03 relative (~0.2%), matching manual calculations from prior attempts
+      - **All downstream factors PASS**: r_e_sqr, fluence, steps, capture_fraction, polar (Δrel -4.0e-08), omega_pixel (Δrel -4.8e-07), cos_2theta (Δrel -5.2e-08) all within 1e-6 tolerance
+      - **I_pixel_final divergence**: -2.087e-03 relative, consistent with I_before_scaling error propagation through scaling chain
+      - **No code edits needed**: Script was already fixed in a prior iteration (likely between Attempts #141 and #144)
+    Next Actions:
+      - ✅ Phase M1 tooling gate satisfied; scripted evidence generation restored
+      - Proceed to Phase M2 (lattice factor investigation) per plan task M2 guidance
+      - Use refreshed 20251008T072513Z artifacts as baseline for M2 HKL/F_latt debugging
+      - Update `plans/active/cli-noise-pix0/plan.md` Phase M1 task with success timestamp and artifact path
   * [2025-10-07] Attempt #139 (ralph loop i=139, Mode: Docs) — Result: ✅ **SUCCESS** (Phase M1 COMPLETE — Pre-Polar Trace Instrumentation). **Code changes: simulator trace + comparison script.**
     Metrics: Test collection: 699 tests in 2.68s. Trace: 44 TRACE_PY lines (2 new labels). Comparison: pre-polar (941698.5) vs C (943654.8) → −0.207% delta (within expected tolerance).
     Artifacts:
