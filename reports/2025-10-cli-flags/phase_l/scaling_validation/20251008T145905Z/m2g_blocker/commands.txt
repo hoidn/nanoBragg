@@ -1,0 +1,26 @@
+# Ralph Loop i=161: Phase M2g.3-M2g.4 Implementation Attempt
+# Date: 2025-10-08
+# Initiative: CLI-FLAGS-003
+# Status: BLOCKED (architectural incompatibility)
+
+# Git state before changes
+git log -1 --oneline
+# Output: 1de347c docs: add Attempt #160 to CLI-FLAGS-003 history (M2g.2b complete)
+
+# Show diff of attempted changes
+git diff src/nanobrag_torch/simulator.py
+
+# Run targeted parity test
+KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c -v
+
+# Test result: FAILED
+# F_latt relative error 1.57884 > 1e-06
+# Expected -2.3831966530, got 1.3794838506
+# Absolute delta: 3.762680504
+
+# Reason: apply_phi_carryover creates shape (N_phi, S, F, N_mos, 3) which:
+# 1. Wastes ~4.5 GB memory (100× expansion from ~240 bytes)
+# 2. Breaks downstream code expecting (N_phi, N_mos, 3)
+# 3. Cache substitution fails silently
+
+# Architecture decision needed: Option B (batched processing) or Option C (move cache to kernel)

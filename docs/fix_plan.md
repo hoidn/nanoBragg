@@ -458,12 +458,13 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): ✅ **Instrumentation aligned (2025-10-07).** Pre-polarization `I_before_scaling` now matches C within ~0.2% (941698.5 vs 943654.8), confirming the prior −8.7% delta was a trace measurement artifact. PyTorch emits both `I_before_scaling_pre_polar` (canonical C comparison point) and `I_before_scaling_post_polar` (diagnostic). The ~0.2% residual is expected per galph debug memo (float32 + F_latt drift). See `reports/2025-10-cli-flags/phase_l/scaling_validation/20251007T222548Z/phase_m1_summary.md`.
-- Next Actions (2025-12-09 refresh):
-0. **M2g Option B cache plumbing** — Undo the scalar regression from commit f84fd5e by restoring tensor `(slow_indices, fast_indices)` signatures (no `.item()` usage) in `apply_phi_carryover`/`store_phi_final`, then adopt the batch-indexed pixel cache design from `reports/2025-10-cli-flags/phase_l/scaling_validation/20251208_option1_refresh/analysis.md` by threading those tensors through the simulator, keeping `.clone()`/`.detach()` out of the path, and documenting the architecture decision in `phi_carryover_diagnosis.md` with updated C-code citations.
-1. **M2g tooling alignment** — Update `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py` (and related parity harness helpers) to exercise the new cache pathway, capturing refreshed `commands.txt`, env snapshots, and SHA256 manifests under a new timestamp.
-2. **M2h validation bundle (Plan M2h.1–M2h.4)** — After the cache implementation lands, run the targeted pytest selector (CPU mandatory, CUDA when available) plus the gradcheck harness, archiving logs in `reports/.../carryover_cache_validation/<timestamp>/` before logging the fix_plan Attempt.
-3. **M2i traces & metrics (Plan M2i.1–M2i.3)** — Regenerate the ROI traces (`--roi 684 686 1039 1040`, CPU float64, c-parity) and update `metrics.json`/`lattice_hypotheses.md` to confirm `first_divergence=None` ahead of the M3 scaling rerun.
-4. **M4+ downstream checks** — Once VG‑2 closes, refresh scaling documentation (M4), then advance to nb-compare (Phase N) and the supervisor parity rerun (Phase O); keep parity shim documentation tasks (Phase C5/D3) queued for completion.
+- Next Actions (2025-10-08 Attempt #161 blocker):
+0. **BLOCKED on architecture decision (Attempt #161)** — Phase M2g.3-M2g.4 implementation blocked by `apply_phi_carryover` shape incompatibility. Supervisor/Galph must choose: (A) Option B batched processing (moderate refactor, 2-3 loops), (B) Option C kernel refactor (large refactor, 4-6 loops), or (C) accept C-PARITY-001 as architecturally unimplementable. See blocker analysis: `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T145905Z/m2g_blocker/analysis.md`.
+1. **If Option B selected** — Design batched rotation API, refactor `Simulator.run()` to process pixel batches (e.g., row-by-row), implement cache substitution per batch using tensor indexing (no Python loops).
+2. **If Option C selected** — Move cache application inside `compute_physics_for_position` kernel, thread pixel indices through compiled code, validate gradients on batched inputs.
+3. **If neither feasible** — Document C-PARITY-001 as architectural limitation in `docs/bugs/verified_c_bugs.md`, mark M2g tasks as "won't fix", proceed with spec-compliant mode only (skip c-parity).
+4. **Once unblocked** — Execute M2h validation bundle (CPU pytest, CUDA probe, gradcheck), then M2i traces & metrics rerun expecting `first_divergence=None`.
+5. **M4+ downstream** — Once VG-2 closes, refresh scaling docs (M4), advance to nb-compare (Phase N) and supervisor parity rerun (Phase O).
 - Attempts History:
   * [2025-10-07] Attempt #136 (ralph loop i=135, Mode: Docs) — Result: ✅ **SUCCESS** (Phase L Documentation Sync COMPLETE). **No code changes.**
     Metrics: Test collection: 35 tests collected successfully in 2.16s (test_cli_scaling_phi0.py + test_phi_carryover_mode.py). Documentation-only loop per input.md Mode: Docs.
@@ -3505,3 +3506,30 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - **M2g.6**: Document architecture decision in `phi_carryover_diagnosis.md` with implementation notes
       - **M2h**: Execute validation bundle (CPU pytest, CUDA probe when available, gradcheck)
       - **M2i**: Regenerate cross-pixel traces expecting φ=0 carryover to work
+  * [2025-10-08] Attempt #161 (ralph loop i=161, Mode: Code) — Result: **BLOCKED** (Phase M2g.3-M2g.4 architectural incompatibility). **No code committed (reverted after test failure).**
+    Metrics: Test collection: 700 tests collected successfully. Target test executed and FAILED as expected (F_latt relative error 157.88%). Blocker: `apply_phi_carryover` creates `(N_phi, S, F, N_mos, 3)` tensors (4.5 GB memory expansion) that break downstream code expecting `(N_phi, N_mos, 3)`.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T145905Z/m2g_blocker/analysis.md` — Complete blocker analysis with shape incompatibility diagnosis
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T145905Z/m2g_blocker/commands.txt` — Reproduction steps and test output
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T145905Z/m2g_blocker/git_sha.txt` — Git commit: 1de347c
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T145905Z/m2g_blocker/git_status.txt` — Working tree status (reverted to clean)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T145905Z/m2g_blocker/sha256.txt` — Artifact checksums
+    Code Changes (reverted):
+      - Attempted: `src/nanobrag_torch/simulator.py:852-873` — Added φ carryover cache application using 2D pixel grid indices
+      - Created slow_grid/fast_grid tensors with shape `(S, F) = (2527, 2463)`
+      - Called `crystal.apply_phi_carryover(slow_grid, fast_grid, ...)` before physics computation
+      - Reverted: Changes removed after discovering architectural mismatch (see Observations)
+    Observations/Hypotheses:
+      - **Root cause**: `Crystal.apply_phi_carryover` (lines 245-342) performs `torch.where` broadcast that expands rotation tensors from `(N_phi, N_mos, 3)` to `(N_phi, S, F, N_mos, 3)` → 4.5 GB memory for supervisor case (100× expansion)
+      - **Shape mismatch**: Cached values indexed by `(S, F)` grid yield `(S, F, N_mos, 3)` shape; `torch.where` tries to broadcast with input `(N_phi, N_mos, 3)` → incompatible dimensions
+      - **Silent failure**: Broadcast succeeds but creates massive tensors; downstream code expects `(N_phi, N_mos, 3)` and silently fails or reshapes, losing per-pixel information
+      - **Test outcome**: `F_latt = 1.379` (fresh φ=0) instead of `-2.383` (cached φ=final) confirms cache substitution not working
+      - **Architecture blocker**: Current vectorized path computes rotations ONCE globally; per-pixel φ carryover requires either: (A) expand rotation tensors (rejected: memory explosion), (B) batched processing (requires refactor), or (C) move cache inside physics kernel (larger refactor)
+      - **Option B feasibility**: Requires refactoring `get_rotated_real_vectors` and `_compute_physics_for_position` to handle batched pixels (moderate effort, 2-3 Ralph loops)
+      - **Option C feasibility**: Requires moving cache application inside compiled physics kernel (large effort, 4-6 Ralph loops, high risk)
+    Next Actions:
+      - **BLOCKED on architecture decision**: Supervisor/Galph must choose between Option B (batched processing), Option C (kernel refactor), or accept C-PARITY-001 as unimplementable
+      - **If Option B selected**: Design batched rotation API (`get_rotated_real_vectors_for_pixels`), refactor simulator run loop to process pixel batches, implement cache substitution per batch
+      - **If Option C selected**: Redesign physics kernel to accept per-pixel rotation inputs, thread cache lookup through compiled code
+      - **If neither feasible**: Document C-PARITY-001 as architectural limitation, skip c-parity mode, focus on spec-compliant path only
+      - **Immediate**: Update `plans/active/cli-noise-pix0/plan.md` task M2g.4 status to blocked with reference to this artifact
