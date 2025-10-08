@@ -1386,13 +1386,62 @@ class Simulator:
                     print(f"TRACE_PY: F_latt_c {F_latt_c:.15g}")
                     print(f"TRACE_PY: F_latt {F_latt:.15g}")
 
-                    # Get structure factor
-                    F_cell = self.crystal.get_structure_factor(
-                        torch.tensor([[h0]]),
-                        torch.tensor([[k0]]),
-                        torch.tensor([[l0]])
-                    ).item()
-                    print(f"TRACE_PY: F_cell {F_cell:.15g}")
+                    # CLI-FLAGS-003 Phase M1: Force interpolation for debug trace
+                    # Temporarily enable interpolation to capture 4×4×4 neighborhood for analysis
+                    interpolate_saved = self.crystal.interpolate
+                    try:
+                        # Force interpolation on for this debug query
+                        self.crystal.interpolate = True
+
+                        # Call with fractional indices to use tricubic interpolation
+                        F_cell_interp = self.crystal.get_structure_factor(
+                            torch.tensor([[h]], dtype=torch.float64),
+                            torch.tensor([[k]], dtype=torch.float64),
+                            torch.tensor([[l]], dtype=torch.float64)
+                        ).item()
+                        print(f"TRACE_PY: F_cell_interpolated {F_cell_interp:.15g}")
+
+                        # Restore original interpolate flag
+                        self.crystal.interpolate = interpolate_saved
+
+                        # Also get nearest-neighbor for comparison
+                        F_cell_nearest = self.crystal.get_structure_factor(
+                            torch.tensor([[h0]]),
+                            torch.tensor([[k0]]),
+                            torch.tensor([[l0]])
+                        ).item()
+                        print(f"TRACE_PY: F_cell_nearest {F_cell_nearest:.15g}")
+
+                        # Use nearest-neighbor value to match production run behavior
+                        F_cell = F_cell_nearest
+                    finally:
+                        # Ensure flag is restored even if error occurs
+                        self.crystal.interpolate = interpolate_saved
+
+                    # CLI-FLAGS-003 Phase M1: Emit 4×4×4 tricubic interpolation neighborhood
+                    # This captures the exact weights used for F_latt calculation to diagnose drift
+                    if hasattr(self.crystal, '_last_tricubic_neighborhood') and self.crystal._last_tricubic_neighborhood:
+                        neighborhood = self.crystal._last_tricubic_neighborhood
+                        # Emit compact 4×4×4 grid (64 values) for comparison with C trace
+                        # Format: TRACE_PY_TRICUBIC_GRID: [i,j,k]=value for all i,j,k in 0..3
+                        sub_Fhkl = neighborhood['sub_Fhkl']
+                        if sub_Fhkl.shape[0] == 1:  # Single query point (debug case)
+                            grid_3d = sub_Fhkl[0]  # Extract (4,4,4) from (1,4,4,4)
+                            # Emit as flattened list with indices for C comparison
+                            print("TRACE_PY_TRICUBIC_GRID_START")
+                            for i in range(4):
+                                for j in range(4):
+                                    for k in range(4):
+                                        val = grid_3d[i, j, k].item()
+                                        print(f"TRACE_PY_TRICUBIC: [{i},{j},{k}]={val:.15g}")
+                            print("TRACE_PY_TRICUBIC_GRID_END")
+                            # Also emit the coordinate arrays used for interpolation
+                            h_coords = neighborhood['h_indices'][0].tolist()  # (4,) array
+                            k_coords = neighborhood['k_indices'][0].tolist()
+                            l_coords = neighborhood['l_indices'][0].tolist()
+                            print(f"TRACE_PY_TRICUBIC_H_COORDS: {h_coords}")
+                            print(f"TRACE_PY_TRICUBIC_K_COORDS: {k_coords}")
+                            print(f"TRACE_PY_TRICUBIC_L_COORDS: {l_coords}")
 
                     # CLI-FLAGS-003 Phase M1: Emit both pre-polar and post-polar I_before_scaling
                     # This aligns PyTorch trace with C-code which logs pre-polarization value

@@ -3142,3 +3142,25 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - Environment: Python 3.13.7, PyTorch 2.8.0+cu128, CUDA 12.8 (1 GPU available)
       - Phase D exit criteria satisfied: polynomial helpers implemented and validated, CPU+CUDA tests passing, device/dtype neutrality confirmed, gradient flow preserved
     Next Actions: Stage Phase E directory (`reports/2025-10-vectorization/phase_e/`) and execute E1-E3 tasks: (1) Re-run acceptance & regression tests post-vectorization, (2) Execute `scripts/benchmarks/tricubic_baseline.py` (CPU+CUDA) to compare against Phase A baselines (CPU ~1.4ms/call, CUDA ~5.5ms/call; target ≥10× speedup), (3) Summarise results in `phase_e/summary.md` with correlation/Δ metrics vs scalar path.
+  * [2025-10-08] Attempt #142 (ralph loop i=142, Mode: Parity/Evidence) — Result: ✅ **SUCCESS** (Phase M1 tricubic instrumentation complete). **Code changes: Crystal + Simulator trace extension + harness filter fix.**
+    Metrics: Test collection: 699 tests in 2.75s. Trace: 114 lines (69 new TRACE_PY_TRICUBIC lines). F_cell_interpolated = 156.03 vs F_cell_nearest = 190.27. F_latt drift ≈ +0.1285%.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T062540Z/trace_py_scaling.log` — PyTorch trace with 4×4×4 tricubic grid (114 lines total, 69 tricubic-related)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T062540Z/manual_summary.md` — Phase M1 summary with interpolation evidence
+      - Per-φ traces: `reports/2025-10-cli-flags/phase_l/per_phi/reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T062540Z/trace_py_scaling_per_phi.{log,json}`
+      - Updated harness: `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py` (line 271: fixed TRACE_PY filter to capture all TRACE_PY* prefixes)
+    Code Changes:
+      - `src/nanobrag_torch/models/crystal.py:429-440` — Store `_last_tricubic_neighborhood` dict with sub_Fhkl (4×4×4) and coordinate arrays for debug retrieval
+      - `src/nanobrag_torch/simulator.py:1389-1419` — Force interpolation on for debug trace; emit both F_cell_interpolated and F_cell_nearest
+      - `src/nanobrag_torch/simulator.py:1421-1442` — Emit 64-value tricubic grid as TRACE_PY_TRICUBIC: [i,j,k]=value + coordinate arrays (h/k/l ∈ [-8..-5], [-2..1], [-15..-12])
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:271` — Changed filter from `startswith('TRACE_PY:')` to `startswith('TRACE_PY')` to capture TRACE_PY_TRICUBIC* lines
+    Observations/Hypotheses:
+      - **Tricubic neighborhood captured**: 64 structure factor values from HKL grid, plus 3 coordinate arrays showing Miller index range
+      - **Interpolated vs nearest**: F_cell_interpolated (156.03) differs significantly from F_cell_nearest (190.27), confirming interpolation is active
+      - **F_latt drift quantified**: PyTorch F_latt = -2.380134 vs C ≈ -2.383197 → +0.1285% relative error
+      - **Instrumentation complete**: Harness now emits full 4×4×4 grid for C-side comparison; ready for Phase M2 coefficient-level analysis
+    Next Actions:
+      - ✅ Phase M1 complete — tricubic grid now instrumented and captured in traces
+      - Phase M2: Compare PyTorch's 64-value grid against C-code grid for the same pixel (685, 1039) to isolate which neighborhood values contribute to F_latt drift
+      - Phase M2a: Extend instrumentation to emit per-coefficient polynomial weights (beyond raw grid values) for full interpolation audit
+      - Phase M3: Fix the identified 0.13% F_latt mismatch and verify I_before_scaling delta ≤ 1e-6

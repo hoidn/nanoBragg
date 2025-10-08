@@ -268,7 +268,7 @@ def main():
     for line in stdout_capture.getvalue().splitlines():
         if line.startswith('TRACE_PY_PHI'):
             trace_py_phi_lines.append(line)
-        elif line.startswith('TRACE_PY:'):
+        elif line.startswith('TRACE_PY'):  # Includes TRACE_PY:, TRACE_PY_TRICUBIC, etc.
             trace_lines.append(line)
 
     if not trace_lines:

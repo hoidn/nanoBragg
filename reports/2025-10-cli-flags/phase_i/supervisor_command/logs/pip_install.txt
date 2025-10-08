@@ -1,0 +1,66 @@
+Obtaining file:///home/ollie/Documents/tmp/nanoBragg
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: torch>=2.3 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from nanobrag-torch==0.1.0) (2.8.0)
+Requirement already satisfied: fabio in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from nanobrag-torch==0.1.0) (2024.9.0)
+Requirement already satisfied: numpy in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from nanobrag-torch==0.1.0) (2.3.3)
+Requirement already satisfied: pytest in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from nanobrag-torch==0.1.0) (8.4.2)
+Requirement already satisfied: matplotlib in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from nanobrag-torch==0.1.0) (3.10.6)
+Requirement already satisfied: scipy in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from nanobrag-torch==0.1.0) (1.16.2)
+Requirement already satisfied: filelock in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (3.19.1)
+Requirement already satisfied: typing-extensions>=4.10.0 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (4.15.0)
+Requirement already satisfied: setuptools in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (78.1.1)
+Requirement already satisfied: sympy>=1.13.3 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (1.14.0)
+Requirement already satisfied: networkx in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (3.5)
+Requirement already satisfied: jinja2 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (3.1.6)
+Requirement already satisfied: fsspec in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (2025.9.0)
+Requirement already satisfied: nvidia-cuda-nvrtc-cu12==12.8.93 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (12.8.93)
+Requirement already satisfied: nvidia-cuda-runtime-cu12==12.8.90 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (12.8.90)
+Requirement already satisfied: nvidia-cuda-cupti-cu12==12.8.90 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (12.8.90)
+Requirement already satisfied: nvidia-cudnn-cu12==9.10.2.21 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (9.10.2.21)
+Requirement already satisfied: nvidia-cublas-cu12==12.8.4.1 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (12.8.4.1)
+Requirement already satisfied: nvidia-cufft-cu12==11.3.3.83 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (11.3.3.83)
+Requirement already satisfied: nvidia-curand-cu12==10.3.9.90 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (10.3.9.90)
+Requirement already satisfied: nvidia-cusolver-cu12==11.7.3.90 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (11.7.3.90)
+Requirement already satisfied: nvidia-cusparse-cu12==12.5.8.93 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (12.5.8.93)
+Requirement already satisfied: nvidia-cusparselt-cu12==0.7.1 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (0.7.1)
+Requirement already satisfied: nvidia-nccl-cu12==2.27.3 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (2.27.3)
+Requirement already satisfied: nvidia-nvtx-cu12==12.8.90 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (12.8.90)
+Requirement already satisfied: nvidia-nvjitlink-cu12==12.8.93 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (12.8.93)
+Requirement already satisfied: nvidia-cufile-cu12==1.13.1.3 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (1.13.1.3)
+Requirement already satisfied: triton==3.4.0 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from torch>=2.3->nanobrag-torch==0.1.0) (3.4.0)
+Requirement already satisfied: mpmath<1.4,>=1.1.0 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from sympy>=1.13.3->torch>=2.3->nanobrag-torch==0.1.0) (1.3.0)
+Requirement already satisfied: h5py in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from fabio->nanobrag-torch==0.1.0) (3.14.0)
+Requirement already satisfied: hdf5plugin in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from fabio->nanobrag-torch==0.1.0) (5.1.0)
+Requirement already satisfied: lxml in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from fabio->nanobrag-torch==0.1.0) (6.0.2)
+Requirement already satisfied: pillow in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from fabio->nanobrag-torch==0.1.0) (11.3.0)
+Requirement already satisfied: MarkupSafe>=2.0 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from jinja2->torch>=2.3->nanobrag-torch==0.1.0) (3.0.3)
+Requirement already satisfied: contourpy>=1.0.1 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from matplotlib->nanobrag-torch==0.1.0) (1.3.3)
+Requirement already satisfied: cycler>=0.10 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from matplotlib->nanobrag-torch==0.1.0) (0.12.1)
+Requirement already satisfied: fonttools>=4.22.0 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from matplotlib->nanobrag-torch==0.1.0) (4.60.1)
+Requirement already satisfied: kiwisolver>=1.3.1 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from matplotlib->nanobrag-torch==0.1.0) (1.4.9)
+Requirement already satisfied: packaging>=20.0 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from matplotlib->nanobrag-torch==0.1.0) (25.0)
+Requirement already satisfied: pyparsing>=2.3.1 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from matplotlib->nanobrag-torch==0.1.0) (3.2.5)
+Requirement already satisfied: python-dateutil>=2.7 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from matplotlib->nanobrag-torch==0.1.0) (2.9.0.post0)
+Requirement already satisfied: six>=1.5 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from python-dateutil>=2.7->matplotlib->nanobrag-torch==0.1.0) (1.17.0)
+Requirement already satisfied: iniconfig>=1 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from pytest->nanobrag-torch==0.1.0) (2.1.0)
+Requirement already satisfied: pluggy<2,>=1.5 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from pytest->nanobrag-torch==0.1.0) (1.6.0)
+Requirement already satisfied: pygments>=2.7.2 in /home/ollie/miniconda3/envs/myenv/lib/python3.13/site-packages (from pytest->nanobrag-torch==0.1.0) (2.19.2)
+Building wheels for collected packages: nanobrag-torch
+  Building editable for nanobrag-torch (pyproject.toml): started
+  Building editable for nanobrag-torch (pyproject.toml): finished with status 'done'
+  Created wheel for nanobrag-torch: filename=nanobrag_torch-0.1.0-0.editable-py3-none-any.whl size=2592 sha256=37312f21abee6e42f204fd31b18027d6b27454243ae03622e4af8c91f982f778
+  Stored in directory: /tmp/pip-ephem-wheel-cache-bbobl_xv/wheels/34/f4/7c/fc8121dd59f2d93469e8d63e6680b5a3510b549d5947d8ddd0
+Successfully built nanobrag-torch
+Installing collected packages: nanobrag-torch
+  Attempting uninstall: nanobrag-torch
+    Found existing installation: nanobrag-torch 0.1.0
+    Uninstalling nanobrag-torch-0.1.0:
+      Successfully uninstalled nanobrag-torch-0.1.0
+Successfully installed nanobrag-torch-0.1.0
