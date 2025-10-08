@@ -1,0 +1,32 @@
+# STATIC-PYREFLY-001 Phase A - Command Log
+# Timestamp: 20251008T053652Z
+# Git SHA: e71ac56c3644746cc23a518661d9d4189e4dcdbb
+# Branch: feature/spec-based-2
+
+## A1: Configuration Verification
+
+### Command 1: Check pyproject.toml configuration
+$ rg -n "^\[tool\.pyrefly\]" pyproject.toml
+11:[tool.pyrefly]
+
+Exit code: 0
+Status: SUCCESS - Configuration entry found at line 11
+
+### Command 2: Verify pyrefly tool availability
+$ pyrefly --version
+pyrefly 0.35.0
+
+Exit code: 0
+Status: SUCCESS - Tool available and functional
+
+## Phase A Conclusion
+- pyrefly configuration: PRESENT (pyproject.toml:11)
+- pyrefly tool: INSTALLED (version 0.35.0)
+- Prerequisites: SATISFIED
+- Next Phase: B (Baseline Scan Execution)
+2025-10-08T05:46:01Z
+# Phase B1: Baseline pyrefly scan
+Exit code: 
+
+# Exit code from pyrefly check src (78 errors found)
+Exit code: 1

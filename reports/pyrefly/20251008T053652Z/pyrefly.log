@@ -1,0 +1,505 @@
+ERROR `tuple[@_, ...]` is not assignable to attribute `misset_deg` with type `tuple[float, float, float]` [bad-assignment]
+   --> src/nanobrag_torch/__main__.py:863:45
+    |
+863 |                 crystal_config.misset_deg = tuple(config['misset_deg'])
+    |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+ERROR Argument `Tensor | float` is not assignable to parameter `default_wavelength_m` with type `float` in function `nanobrag_torch.io.source.read_sourcefile` [bad-argument-type]
+   --> src/nanobrag_torch/__main__.py:983:38
+    |
+983 |                 default_wavelength_m=wavelength_m,
+    |                                      ^^^^^^^^^^^^
+    |
+ERROR Argument `Tensor | float` is not assignable to parameter `central_wavelength_m` with type `float` in function `nanobrag_torch.utils.auto_selection.generate_sources_from_divergence_dispersion` [bad-argument-type]
+    --> src/nanobrag_torch/__main__.py:1028:42
+     |
+1028 |                     central_wavelength_m=wavelength_m,
+     |                                          ^^^^^^^^^^^^
+     |
+ERROR Object of class `Crystal` has no attribute `interpolation_enabled` [missing-attribute]
+    --> src/nanobrag_torch/__main__.py:1093:13
+     |
+1093 |             crystal.interpolation_enabled = config['interpolate']
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+ERROR Argument `Tensor | float` is not assignable to parameter `pixel_size_mm` with type `float` in function `nanobrag_torch.io.smv.write_smv` [bad-argument-type]
+    --> src/nanobrag_torch/__main__.py:1175:31
+     |
+1175 |                 pixel_size_mm=detector_config.pixel_size_mm,
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+ERROR Argument `Tensor | float` is not assignable to parameter `distance_mm` with type `float` in function `nanobrag_torch.io.smv.write_smv` [bad-argument-type]
+    --> src/nanobrag_torch/__main__.py:1176:29
+     |
+1176 |                 distance_mm=detector_config.distance_mm,
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+ERROR Argument `Tensor | float | None` is not assignable to parameter `beam_center_x_mm` with type `float` in function `nanobrag_torch.io.smv.write_smv` [bad-argument-type]
+    --> src/nanobrag_torch/__main__.py:1178:34
+     |
+1178 |                 beam_center_x_mm=detector_config.beam_center_s,
+     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+ERROR Argument `Tensor | float | None` is not assignable to parameter `beam_center_y_mm` with type `float` in function `nanobrag_torch.io.smv.write_smv` [bad-argument-type]
+    --> src/nanobrag_torch/__main__.py:1179:34
+     |
+1179 |                 beam_center_y_mm=detector_config.beam_center_f,
+     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+ERROR Argument `Tensor | float | None` is not assignable to parameter `close_distance_mm` with type `float | None` in function `nanobrag_torch.io.smv.write_smv` [bad-argument-type]
+    --> src/nanobrag_torch/__main__.py:1180:35
+     |
+1180 |                 close_distance_mm=detector_config.close_distance_mm,
+     |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+ERROR Argument `Tensor | float` is not assignable to parameter `pixel_size_mm` with type `float` in function `nanobrag_torch.io.smv.write_smv` [bad-argument-type]
+    --> src/nanobrag_torch/__main__.py:1248:31
+     |
+1248 |                 pixel_size_mm=detector_config.pixel_size_mm,
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+ERROR Argument `Tensor | float` is not assignable to parameter `distance_mm` with type `float` in function `nanobrag_torch.io.smv.write_smv` [bad-argument-type]
+    --> src/nanobrag_torch/__main__.py:1249:29
+     |
+1249 |                 distance_mm=detector_config.distance_mm,
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+ERROR Argument `Tensor | float | None` is not assignable to parameter `beam_center_x_mm` with type `float` in function `nanobrag_torch.io.smv.write_smv` [bad-argument-type]
+    --> src/nanobrag_torch/__main__.py:1251:34
+     |
+1251 |                 beam_center_x_mm=detector_config.beam_center_s,
+     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+ERROR Argument `Tensor | float | None` is not assignable to parameter `beam_center_y_mm` with type `float` in function `nanobrag_torch.io.smv.write_smv` [bad-argument-type]
+    --> src/nanobrag_torch/__main__.py:1252:34
+     |
+1252 |                 beam_center_y_mm=detector_config.beam_center_f,
+     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+ERROR Argument `Tensor | float | None` is not assignable to parameter `close_distance_mm` with type `float | None` in function `nanobrag_torch.io.smv.write_smv` [bad-argument-type]
+    --> src/nanobrag_torch/__main__.py:1253:35
+     |
+1253 |                 close_distance_mm=detector_config.close_distance_mm,
+     |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+ERROR `float | int` is not assignable to `int` (caused by inconsistent types when breaking cycles) [bad-assignment]
+  --> src/nanobrag_torch/io/hkl.py:51:9
+   |
+51 | /         for line in f:
+52 | |             line = line.strip()
+53 | |             if not line or line.startswith('#'):
+54 | |                 continue
+55 | |
+56 | |             parts = line.split()
+   | |_________________________________^
+   |
+ERROR `**` is not supported between `Tensor` and `Literal[2]` [unsupported-operation]
+   --> src/nanobrag_torch/io/mask.py:250:20
+    |
+250 |     dist_squared = dist_s**2 + dist_f**2
+    |                    ^^^^^^^^^
+    |
+  Argument `Literal[2]` is not assignable to parameter with type `TensorBase`
+ERROR `**` is not supported between `Tensor` and `Literal[2]` [unsupported-operation]
+   --> src/nanobrag_torch/io/mask.py:250:20
+    |
+250 |     dist_squared = dist_s**2 + dist_f**2
+    |                    ^^^^^^^^^
+    |
+  Expected 1 more positional argument
+ERROR `**` is not supported between `Tensor` and `Literal[2]` [unsupported-operation]
+   --> src/nanobrag_torch/io/mask.py:250:32
+    |
+250 |     dist_squared = dist_s**2 + dist_f**2
+    |                                ^^^^^^^^^
+    |
+  Argument `Literal[2]` is not assignable to parameter with type `TensorBase`
+ERROR `**` is not supported between `Tensor` and `Literal[2]` [unsupported-operation]
+   --> src/nanobrag_torch/io/mask.py:250:32
+    |
+250 |     dist_squared = dist_s**2 + dist_f**2
+    |                                ^^^^^^^^^
+    |
+  Expected 1 more positional argument
+ERROR Returned type `tuple[floating[Any], floating[Any], floating[Any], Any, Any, Any]` is not assignable to declared return type `tuple[float, float, float, float, float, float]` [bad-return]
+   --> src/nanobrag_torch/io/mosflm.py:156:12
+    |
+156 |     return a_length, b_length, c_length, alpha, beta, gamma
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+ERROR Attribute `device` of class `Crystal` is a read-only descriptor with no `__set__` and cannot be set [read-only]
+  --> src/nanobrag_torch/models/crystal.py:55:13
+   |
+55 |             self.device = temp.device
+   |             ^^^^^^^^^^^
+   |
+ERROR Attribute `device` of class `Crystal` is a read-only descriptor with no `__set__` and cannot be set [read-only]
+  --> src/nanobrag_torch/models/crystal.py:57:13
+   |
+57 |             self.device = torch.device("cpu")
+   |             ^^^^^^^^^^^
+   |
+ERROR Attribute `device` of class `Crystal` is a read-only descriptor with no `__set__` and cannot be set [read-only]
+   --> src/nanobrag_torch/models/crystal.py:127:13
+    |
+127 |             self.device = device
+    |             ^^^^^^^^^^^
+    |
+ERROR `Tensor | float` is not assignable to `float` (caused by inconsistent types when breaking cycles) [bad-assignment]
+   --> src/nanobrag_torch/models/crystal.py:722:13
+    |
+722 | /             for angle in self.config.misset_deg:
+723 | |                 if isinstance(angle, torch.Tensor):
+724 | |                     # Already a tensor - just convert dtype/device while preserving gradients
+725 | |                     angle_tensor = angle.to(dtype=self.dtype, device=self.device)
+726 | |                 else:
+727 | |                     # Scalar - create new tensor
+    | |_________________________________________________^
+    |
+ERROR Attribute `device` of class `Detector` is a read-only descriptor with no `__set__` and cannot be set [read-only]
+  --> src/nanobrag_torch/models/detector.py:46:13
+   |
+46 |             self.device = temp.device
+   |             ^^^^^^^^^^^
+   |
+ERROR Attribute `device` of class `Detector` is a read-only descriptor with no `__set__` and cannot be set [read-only]
+  --> src/nanobrag_torch/models/detector.py:48:13
+   |
+48 |             self.device = torch.device("cpu")
+   |             ^^^^^^^^^^^
+   |
+ERROR `/` is not supported between `None` and `float` [unsupported-operation]
+  --> src/nanobrag_torch/models/detector.py:86:32
+   |
+86 |         beam_center_s_pixels = config.beam_center_s / config.pixel_size_mm
+   |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+  Argument `None` is not assignable to parameter `value` with type `float` in function `float.__rtruediv__`
+ERROR `/` is not supported between `None` and `float` [unsupported-operation]
+  --> src/nanobrag_torch/models/detector.py:87:32
+   |
+87 |         beam_center_f_pixels = config.beam_center_f / config.pixel_size_mm
+   |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+  Argument `None` is not assignable to parameter `value` with type `float` in function `float.__rtruediv__`
+ERROR Object of class `NoneType` has no attribute `clone` [missing-attribute]
+   --> src/nanobrag_torch/models/detector.py:144:36
+    |
+144 |         self._cached_pix0_vector = self.pix0_vector.clone()
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^
+    |
+ERROR Attribute `device` of class `Detector` is a read-only descriptor with no `__set__` and cannot be set [read-only]
+   --> src/nanobrag_torch/models/detector.py:216:13
+    |
+216 |             self.device = device
+    |             ^^^^^^^^^^^
+    |
+ERROR `/` is not supported between `None` and `float` [unsupported-operation]
+   --> src/nanobrag_torch/models/detector.py:262:29
+    |
+262 |             beam_s_pixels = beam_s_mm / self.config.pixel_size_mm  # mm to pixels
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+  Argument `None` is not assignable to parameter `value` with type `float` in function `float.__rtruediv__`
+ERROR `/` is not supported between `None` and `float` [unsupported-operation]
+   --> src/nanobrag_torch/models/detector.py:263:29
+    |
+263 |             beam_f_pixels = beam_f_mm / self.config.pixel_size_mm  # mm to pixels
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+  Argument `None` is not assignable to parameter `value` with type `float` in function `float.__rtruediv__`
+ERROR `/` is not supported between `None` and `float` [unsupported-operation]
+   --> src/nanobrag_torch/models/detector.py:275:26
+    |
+275 |             adjusted_f = beam_f_mm / 1000.0  # mm to meters
+    |                          ^^^^^^^^^^^^^^^^^^
+    |
+  Argument `None` is not assignable to parameter `value` with type `float` in function `float.__rtruediv__`
+ERROR `/` is not supported between `None` and `float` [unsupported-operation]
+   --> src/nanobrag_torch/models/detector.py:276:26
+    |
+276 |             adjusted_s = beam_s_mm / 1000.0  # mm to meters
+    |                          ^^^^^^^^^^^^^^^^^^
+    |
+  Argument `None` is not assignable to parameter `value` with type `float` in function `float.__rtruediv__`
+ERROR `/` is not supported between `None` and `float` [unsupported-operation]
+   --> src/nanobrag_torch/models/detector.py:510:26
+    |
+510 |                 Fbeam = (self.config.beam_center_f / 1000.0) + (0.5 * self.pixel_size)
+    |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+  Argument `None` is not assignable to parameter `value` with type `float` in function `float.__rtruediv__`
+ERROR `/` is not supported between `None` and `float` [unsupported-operation]
+   --> src/nanobrag_torch/models/detector.py:511:26
+    |
+511 |                 Sbeam = (self.config.beam_center_s / 1000.0) + (0.5 * self.pixel_size)
+    |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+  Argument `None` is not assignable to parameter `value` with type `float` in function `float.__rtruediv__`
+ERROR `/` is not supported between `None` and `float` [unsupported-operation]
+   --> src/nanobrag_torch/models/detector.py:514:25
+    |
+514 |                 Fbeam = self.config.beam_center_f / 1000.0
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+  Argument `None` is not assignable to parameter `value` with type `float` in function `float.__rtruediv__`
+ERROR `/` is not supported between `None` and `float` [unsupported-operation]
+   --> src/nanobrag_torch/models/detector.py:515:25
+    |
+515 |                 Sbeam = self.config.beam_center_s / 1000.0
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+  Argument `None` is not assignable to parameter `value` with type `float` in function `float.__rtruediv__`
+ERROR Argument `Tensor | None` is not assignable to parameter `input` with type `Tensor` in function `torch._C._VariableFunctions.allclose` [bad-argument-type]
+   --> src/nanobrag_torch/models/detector.py:767:17
+    |
+767 |                 self.pix0_vector, cached_pix0, atol=1e-15
+    |                 ^^^^^^^^^^^^^^^^
+    |
+ERROR Object of class `NoneType` has no attribute `clone` [missing-attribute]
+   --> src/nanobrag_torch/models/detector.py:787:40
+    |
+787 |             self._cached_pix0_vector = self.pix0_vector.clone()
+    |                                        ^^^^^^^^^^^^^^^^^^^^^^
+    |
+ERROR Object of class `NoneType` has no attribute `unsqueeze` [missing-attribute]
+   --> src/nanobrag_torch/models/detector.py:812:25
+    |
+812 |         pix0_expanded = self.pix0_vector.unsqueeze(0).unsqueeze(0)  # (1, 1, 3)
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+ERROR Default `None` is not assignable to parameter `crystal_get_structure_factor` with type `(Tensor, Tensor, Tensor) -> Tensor` [bad-function-definition]
+  --> src/nanobrag_torch/simulator.py:35:104
+   |
+35 |     crystal_get_structure_factor: Callable[[torch.Tensor, torch.Tensor, torch.Tensor], torch.Tensor] = None,
+   |                                                                                                        ^^^^
+   |
+ERROR Argument `int` is not assignable to parameter `N` with type `Tensor` [bad-argument-type]
+   --> src/nanobrag_torch/simulator.py:250:40
+    |
+250 |         F_latt_a = sincg(torch.pi * h, Na)
+    |                                        ^^
+    |
+ERROR Argument `int` is not assignable to parameter `N` with type `Tensor` [bad-argument-type]
+   --> src/nanobrag_torch/simulator.py:251:40
+    |
+251 |         F_latt_b = sincg(torch.pi * k, Nb)
+    |                                        ^^
+    |
+ERROR Argument `int` is not assignable to parameter `N` with type `Tensor` [bad-argument-type]
+   --> src/nanobrag_torch/simulator.py:252:40
+    |
+252 |         F_latt_c = sincg(torch.pi * l, Nc)
+    |                                        ^^
+    |
+ERROR Object of class `bool` has no attribute `unsqueeze` [missing-attribute]
+   --> src/nanobrag_torch/simulator.py:314:26
+    |
+314 |             keep_mask = ~dmin_mask.unsqueeze(-1).unsqueeze(-1)
+    |                          ^^^^^^^^^^^^^^^^^^^
+    |
+ERROR Object of class `bool` has no attribute `unsqueeze` [missing-attribute]
+   --> src/nanobrag_torch/simulator.py:316:26
+    |
+316 |             keep_mask = ~dmin_mask.unsqueeze(-1).unsqueeze(-1)
+    |                          ^^^^^^^^^^^^^^^^^^^
+    |
+ERROR Argument `float` is not assignable to parameter `kahn_factor` with type `Tensor` [bad-argument-type]
+   --> src/nanobrag_torch/simulator.py:362:17
+    |
+362 |                 kahn_factor,
+    |                 ^^^^^^^^^^^
+    |
+ERROR Argument `Tensor | None` is not assignable to parameter `axis` with type `Tensor` [bad-argument-type]
+   --> src/nanobrag_torch/simulator.py:365:17
+    |
+365 |                 polarization_axis
+    |                 ^^^^^^^^^^^^^^^^^
+    |
+ERROR Argument `float` is not assignable to parameter `kahn_factor` with type `Tensor` [bad-argument-type]
+   --> src/nanobrag_torch/simulator.py:388:17
+    |
+388 |                 kahn_factor,
+    |                 ^^^^^^^^^^^
+    |
+ERROR Argument `Tensor | None` is not assignable to parameter `axis` with type `Tensor` [bad-argument-type]
+   --> src/nanobrag_torch/simulator.py:391:17
+    |
+391 |                 polarization_axis
+    |                 ^^^^^^^^^^^^^^^^^
+    |
+ERROR Returned type `tuple[Tensor | Unknown, Tensor | None]` is not assignable to declared return type `Tensor` [bad-return]
+   --> src/nanobrag_torch/simulator.py:425:12
+    |
+425 |     return intensity, intensity_pre_polar
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+ERROR Attribute `device` of class `Simulator` is a read-only descriptor with no `__set__` and cannot be set [read-only]
+   --> src/nanobrag_torch/simulator.py:490:13
+    |
+490 |             self.device = temp.device
+    |             ^^^^^^^^^^^
+    |
+ERROR Attribute `device` of class `Simulator` is a read-only descriptor with no `__set__` and cannot be set [read-only]
+   --> src/nanobrag_torch/simulator.py:492:13
+    |
+492 |             self.device = torch.device("cpu")
+    |             ^^^^^^^^^^^
+    |
+ERROR `Tensor` is not assignable to attribute `incident_beam_direction` with type `Never` [bad-assignment]
+   --> src/nanobrag_torch/simulator.py:512:44
+    |
+512 |               self.incident_beam_direction = torch.tensor(
+    |  ____________________________________________^
+513 | |                 [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
+514 | |             )
+    | |_____________^
+    |
+ERROR Object of class `NoneType` has no attribute `to` [missing-attribute]
+   --> src/nanobrag_torch/simulator.py:539:39
+    |
+539 |             self._source_directions = self.beam_config.source_directions.to(device=self.device, dtype=self.dtype)
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+ERROR Argument `Tensor | Unknown | None` is not assignable to parameter `obj` with type `Sized` in function `len` [bad-argument-type]
+   --> src/nanobrag_torch/simulator.py:547:33
+    |
+547 |                 n_sources = len(self.beam_config.source_directions)
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+ERROR Argument `Tensor | Unknown | None` is not assignable to parameter `obj` with type `Sized` in function `len` [bad-argument-type]
+   --> src/nanobrag_torch/simulator.py:557:55
+    |
+557 |                 self._source_weights = torch.ones(len(self.beam_config.source_directions), device=self.device, dtype=self.dtype)
+    |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+ERROR `+` is not supported between `None` and `Literal[1]` [unsupported-operation]
+   --> src/nanobrag_torch/simulator.py:585:31
+    |
+585 |         self._cached_roi_mask[roi_ymax+1:, :] = 0  # Above ymax
+    |                               ^^^^^^^^^^
+    |
+  Argument `None` is not assignable to parameter `value` with type `int` in function `int.__radd__`
+ERROR `+` is not supported between `None` and `Literal[1]` [unsupported-operation]
+   --> src/nanobrag_torch/simulator.py:587:34
+    |
+587 |         self._cached_roi_mask[:, roi_xmax+1:] = 0  # Right of xmax
+    |                                  ^^^^^^^^^^
+    |
+  Argument `None` is not assignable to parameter `value` with type `int` in function `int.__radd__`
+ERROR Argument `Tensor` is not assignable to parameter `N_cells_a` with type `int` in function `compute_physics_for_position` [bad-argument-type]
+   --> src/nanobrag_torch/simulator.py:678:23
+    |
+678 |             N_cells_a=self.crystal.N_cells_a,
+    |                       ^^^^^^^^^^^^^^^^^^^^^^
+    |
+ERROR Argument `Tensor` is not assignable to parameter `N_cells_b` with type `int` in function `compute_physics_for_position` [bad-argument-type]
+   --> src/nanobrag_torch/simulator.py:679:23
+    |
+679 |             N_cells_b=self.crystal.N_cells_b,
+    |                       ^^^^^^^^^^^^^^^^^^^^^^
+    |
+ERROR Argument `Tensor` is not assignable to parameter `N_cells_c` with type `int` in function `compute_physics_for_position` [bad-argument-type]
+   --> src/nanobrag_torch/simulator.py:680:23
+    |
+680 |             N_cells_c=self.crystal.N_cells_c,
+    |                       ^^^^^^^^^^^^^^^^^^^^^^
+    |
+ERROR Argument `Tensor` is not assignable to parameter `kahn_factor` with type `float` in function `compute_physics_for_position` [bad-argument-type]
+   --> src/nanobrag_torch/simulator.py:685:25
+    |
+685 |             kahn_factor=self.kahn_factor,
+    |                         ^^^^^^^^^^^^^^^^
+    |
+ERROR Unary `-` is not supported on `None` [unsupported-operation]
+   --> src/nanobrag_torch/simulator.py:922:41
+    |
+922 |                 incident_dirs_batched = -source_directions  # Shape: (n_sources, 3)
+    |                                         ^^^^^^^^^^^^^^^^^^
+    |
+ERROR Unary `-` is not supported on `None` [unsupported-operation]
+    --> src/nanobrag_torch/simulator.py:1010:41
+     |
+1010 |                 incident_dirs_batched = -source_directions  # Shape: (n_sources, 3)
+     |                                         ^^^^^^^^^^^^^^^^^^
+     |
+ERROR `+` is not supported between `None` and `Literal[1]` [unsupported-operation]
+    --> src/nanobrag_torch/simulator.py:1133:22
+     |
+1133 |             roi_mask[roi_ymax+1:, :] = 0
+     |                      ^^^^^^^^^^
+     |
+  Argument `None` is not assignable to parameter `value` with type `int` in function `int.__radd__`
+ERROR `+` is not supported between `None` and `Literal[1]` [unsupported-operation]
+    --> src/nanobrag_torch/simulator.py:1135:25
+     |
+1135 |             roi_mask[:, roi_xmax+1:] = 0
+     |                         ^^^^^^^^^^
+     |
+  Argument `None` is not assignable to parameter `value` with type `int` in function `int.__radd__`
+ERROR `None` is not subscriptable [unsupported-operation]
+    --> src/nanobrag_torch/simulator.py:1273:55
+     |
+1273 |                 print(f"TRACE_PY: pix0_vector_meters {pix0[0].item():.15g} {pix0[1].item():.15g} {pix0[2].item():.15g}")
+     |                                                       ^^^^^^^
+     |
+ERROR `None` is not subscriptable [unsupported-operation]
+    --> src/nanobrag_torch/simulator.py:1273:77
+     |
+1273 |                 print(f"TRACE_PY: pix0_vector_meters {pix0[0].item():.15g} {pix0[1].item():.15g} {pix0[2].item():.15g}")
+     |                                                                             ^^^^^^^
+     |
+ERROR `None` is not subscriptable [unsupported-operation]
+    --> src/nanobrag_torch/simulator.py:1273:99
+     |
+1273 |                 print(f"TRACE_PY: pix0_vector_meters {pix0[0].item():.15g} {pix0[1].item():.15g} {pix0[2].item():.15g}")
+     |                                                                                                   ^^^^^^^
+     |
+ERROR `None` is not subscriptable [unsupported-operation]
+    --> src/nanobrag_torch/simulator.py:1353:34
+     |
+1353 |                     coords_ang = pixel_coords_meters[target_slow, target_fast] * 1e10  # m to Å
+     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+ERROR `*` is not supported between `None` and `float` [unsupported-operation]
+    --> src/nanobrag_torch/simulator.py:1650:31
+     |
+1650 |         attenuation_depth_m = self.detector.config.detector_abs_um * 1e-6  # μm to meters
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+  Argument `None` is not assignable to parameter `value` with type `float` in function `float.__rmul__`
+ERROR `**` is not supported between `Tensor` and `Literal[2]` [unsupported-operation]
+    --> src/nanobrag_torch/simulator.py:1658:48
+     |
+1658 |         pixel_distances = torch.sqrt(torch.sum(pixel_coords_meters**2, dim=-1, keepdim=True))
+     |                                                ^^^^^^^^^^^^^^^^^^^^^^
+     |
+  Argument `Literal[2]` is not assignable to parameter with type `TensorBase`
+ERROR `**` is not supported between `Tensor` and `Literal[2]` [unsupported-operation]
+    --> src/nanobrag_torch/simulator.py:1658:48
+     |
+1658 |         pixel_distances = torch.sqrt(torch.sum(pixel_coords_meters**2, dim=-1, keepdim=True))
+     |                                                ^^^^^^^^^^^^^^^^^^^^^^
+     |
+  Expected 1 more positional argument
+ERROR `**` is not supported between `Tensor` and `Literal[2]` [unsupported-operation]
+    --> src/nanobrag_torch/simulator.py:1814:23
+     |
+1814 |             sum_sq = (masked_pixels ** 2).sum().item()
+     |                       ^^^^^^^^^^^^^^^^^^
+     |
+  Argument `Literal[2]` is not assignable to parameter with type `TensorBase`
+ERROR `**` is not supported between `Tensor` and `Literal[2]` [unsupported-operation]
+    --> src/nanobrag_torch/simulator.py:1814:23
+     |
+1814 |             sum_sq = (masked_pixels ** 2).sum().item()
+     |                       ^^^^^^^^^^^^^^^^^^
+     |
+  Expected 1 more positional argument
+ERROR Function declared to return `SamplingParams`, but one or more paths are missing an explicit `return` [bad-return]
+  --> src/nanobrag_torch/utils/auto_selection.py:28:6
+   |
+28 | ) -> SamplingParams:
+   |      ^^^^^^^^^^^^^^
+   |
+ INFO 78 errors (3 ignored)
