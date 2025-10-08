@@ -1015,3 +1015,12 @@
 - Synced `docs/fix_plan.md` Next Actions (lines 3383-3391) with the new focus on Option B cache plumbing so the ledger mirrors the plan after M2g.2b completion.
 - Authored fresh `input.md` (Parity mode) directing Ralph to execute M2g.3-M2g.4: allocate per-pixel caches, thread `(slow_indices, fast_indices)` through the simulator, run the mapped pytest selector, and archive artifacts under `reports/.../carryover_cache_plumbing/` with env metadata.
 - Follow-up for Ralph: build the Option B cache tensors, wire them through `_compute_physics_for_position`, capture the targeted parity test output, then proceed to M2g.5 tooling updates once cache hits are proven.
+
+## 2025-12-10 (galph loop — M2g Option B design gating)
+- Re-read required specs/arch/testing docs plus artifacts: `plans/active/cli-noise-pix0/plan.md`, `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T145905Z/m2g_blocker/analysis.md`, `reports/.../20251208_option1_refresh/analysis.md`, `docs/fix_plan.md`, `specs/spec-a-core.md:205-233`, `docs/bugs/verified_c_bugs.md:166-204`.
+- Coin flip=heads → reviewed Ralph’s recent commits (`5fbda7a`, `678cbf4`, `1de347c`); Attempt #161 reverted after documenting Option B blocker, no regressions.
+- Determined plan drift: fix_plan still waiting on architecture decision despite Option B selection; plan lacked pre-implementation design steps.
+- Updated `plans/active/cli-noise-pix0/plan.md` Next Actions to add M2g.2c design memo + M2g.2d ROI prototype prerequisites before wiring, inserted new checklist rows, and noted Attempt #161 blocker context.
+- Synced `docs/fix_plan.md` Next Actions with the new design/prototype requirements and clarified downstream sequencing.
+- Authored new `input.md` (Mode: Docs) directing Ralph to produce the Option B batch-design memo + 4×4 ROI prototype, capture artifacts, and run the collect-only pytest selector before further implementation.
+- Follow-up for Ralph: create the timestamped design/prototype artifacts, update fix_plan Attempts with findings, then resume M2g.3 cache allocation once the design is validated.
