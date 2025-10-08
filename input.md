@@ -1,46 +1,43 @@
-Summary: Land the pixel-indexed φ=0 carryover cache (Option 1) and prove parity so VG-2 can turn green.
+Summary: Replace the sequential c-parity fallback with the planned vectorised carryover cache so VG-2 parity work can resume.
 Mode: Parity
 Focus: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm
 Branch: feature/spec-based-2
-Mapped tests: tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c; tests/test_cli_scaling_parity.py::TestScalingParity::test_phi_carryover_gradcheck
-Artifacts: reports/2025-10-cli-flags/phase_l/scaling_validation/<ts>/carryover_cache_validation/; reports/2025-10-cli-flags/phase_l/scaling_validation/<ts>/carryover_probe/
-Do Now: CLI-FLAGS-003 Handle -nonoise and -pix0_vector_mm — KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c -q
-If Blocked: Capture the failing command + traceback in carryover_cache_validation/<ts>/commands.txt, run pytest --collect-only -q on the same selector for discovery proof, log the blocker (with artifact path) in docs/fix_plan.md Attempts, and halt.
-
+Mapped tests: KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c -q
+Artifacts: reports/2025-10-cli-flags/phase_l/scaling_validation/<new_ts>/{carryover_cache_validation,carryover_probe}/
+Do Now: docs/fix_plan.md › [CLI-FLAGS-003] M2g — remove `_run_sequential_c_parity`, implement the pixel-indexed carryover cache, then run `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c -q`.
+If Blocked: Capture the current failing test log (`pytest --collect-only` + `-q`) under `reports/.../attempts_blocked/<ts>/` and note the blocker in docs/fix_plan.md Attempt history before stopping.
 Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md:94 calls for M2g–M2i to unblock VG-2; executions must follow the new sub-checklists (M2g.1–M2i.3).
-- docs/fix_plan.md:461 lists the refreshed Next Actions; Option 1 cache is now the top item ahead of downstream nb-compare work.
-- specs/spec-a-core.md:210 keeps the spec path (fresh rotations each φ step) authoritative—ensure spec mode remains untouched while adding c-parity plumbing.
-- docs/bugs/verified_c_bugs.md:166 documents C-PARITY-001 as a quarantined C-only bug; parity shim must emulate it without polluting spec behavior.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T100653Z/analysis.md anchors the Option 1 design; update it once the cache is implemented.
-
+- plans/active/cli-noise-pix0/plan.md:17 — Plan now mandates removing the sequential fallback (M2g.2) before wiring Option 1 caches.
+- docs/fix_plan.md:451 — Fix plan next actions call for restoring vectorisation and delivering the cache with validation artifacts.
+- docs/development/pytorch_runtime_checklist.md:6 — Vectorisation rule forbids per-pixel Python loops; sequential path violates this.
+- docs/bugs/verified_c_bugs.md:166 — c-parity bug description requires emulation via carryover without breaking differentiability.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md — Option 1 design notes define tensor shapes and lifecycle you must implement.
+- src/nanobrag_torch/simulator.py — Current `_run_sequential_c_parity` branch must be excised while keeping spec mode untouched.
 How-To Map:
-- Allocate and wire the cache per M2g.1–M2g.4: edit src/nanobrag_torch/models/crystal.py to add pixel-indexed buffers, hook them through `_compute_physics_for_position`, and mirror the helper in reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py.
-- After coding, regenerate failing evidence then rerun the targeted test: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c -q > $RUN_DIR/pytest_cpu.log 2>&1`.
-- Add a gradcheck harness (e.g., new test `TestScalingParity::test_phi_carryover_gradcheck`) and run `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_parity.py::TestScalingParity::test_phi_carryover_gradcheck -q`.
-- Probe CUDA if available: `python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --phi-mode c-parity --device cuda --dtype float64 --out trace_py_scaling_cuda.log`.
-- Re-run the ROI trace comparison once the cache lands: `python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --roi 684 686 1039 1040 --phi-mode c-parity --dtype float64 --device cpu --out trace_py_scaling.log`.
-- Archive logs plus env metadata under carryover_cache_validation/<ts>/ (pytest_cpu.log, gradcheck.log, trace_py_scaling_cuda.log, commands.txt, env.json, sha256.txt) and carryover_probe/<ts>/ (trace_py_scaling.log, metrics.json, trace_diff.md).
-- Update reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md with an “Implementation” subsection (M2g.5) and sync lattice_hypotheses.md + scaling_validation_summary.md.
-- Record the Attempt in docs/fix_plan.md with ΔF_latt/ΔI_before_scaling and mark M2g–M2i rows [D] in plans/active/cli-noise-pix0/plan.md.
-
+- Remove sequential branch: edit src/nanobrag_torch/simulator.py to drop `_run_sequential_c_parity()` and restore unified vectorised flow; keep spec mode behaviour identical.
+- Implement cache: in src/nanobrag_torch/models/crystal.py allocate `(S,F,N_mos,3)` caches on detector-sized tensors, add `apply_phi_carryover` helper invoked from `_compute_physics_for_position` when `phi_carryover_mode=="c-parity"`.
+- Update instrumentation: mirror helper usage in reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py so traces exercise the cache.
+- Documentation: append a new dated subsection to reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md explaining removal of the sequential fallback and the cache tensor pathway.
+- Testing: run `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c -q`; if CUDA available, queue the trace harness command for M2h.2 (`python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --phi-mode c-parity --device cuda --dtype float64`).
+- Artifact capture: stash pytest log, commands.txt, env.json, updated diagnosis notes, and any trace outputs under `reports/2025-10-cli-flags/phase_l/scaling_validation/<new_ts>/carryover_cache_validation/` and `.../carryover_probe/`.
 Pitfalls To Avoid:
-- Do not leave `.detach()`, `.clone()`, or in-place writes inside the cache plumbing—this must stay autograd-safe.
-- Keep spec mode untouched; gate the new path strictly behind `phi_carryover_mode == "c-parity"`.
-- Respect device/dtype neutrality when allocating caches (no implicit `.cpu()`/`.double()` conversions).
-- Avoid shrinking existing reports; add new timestamped directories instead of overwriting.
-- Make sure trace_harness.py and the simulator share identical helper logic so evidence stays aligned.
-- Remember Protected Assets (docs/index.md); don’t rename or delete any listed file.
-- Ensure every torch import obeys KMP_DUPLICATE_LIB_OK=TRUE.
-- Don’t skip gradcheck—Option 1 must keep gradients intact for downstream optimization work.
-- Capture exit codes in commands.txt for every command (tests, traces, gradcheck).
-- Keep all markdown edits ASCII and update sha256.txt entries for new artifacts.
-
+- Do not leave any per-pixel Python loops in production paths; maintain fully batched tensor ops.
+- No `.detach()`, `.clone()` hacks, or in-place writes that sever gradients inside the carryover helper.
+- Keep spec mode behaviour unchanged; only c-parity should engage the cache.
+- Maintain device/dtype neutrality; allocate caches on the caller’s device/dtype without implicit `.cpu()`.
+- Preserve debug instrumentation gating; new trace taps must stay behind debug_config checks.
+- Include CLAUDE Rule #11 C-code snippets for any new helper implementations.
+- Update docs/fix_plan.md Attempt history after work; don’t silently change plan state.
+- Avoid touching Protected Assets listed in docs/index.md (e.g., loop.sh, supervisor.sh, input.md).
+- Run only the mapped pytest selector; defer full suite until closing loop.
+- Keep git history clean; no stray debug prints or commented-out code in final diff.
 Pointers:
-- plans/active/cli-noise-pix0/plan.md:94 — M2 implementation checklist and new M2g/M2h/M2i subtables.
-- docs/fix_plan.md:461 — Current Next Actions driving this work.
-- specs/spec-a-core.md:210 — Normative φ rotation pipeline that spec mode must preserve.
-- docs/bugs/verified_c_bugs.md:166 — C-PARITY-001 bug classification and parity-shim constraints.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md — Option 1 design record to extend post-implementation.
-
-Next Up: Once VG-2 turns green, move to Phase M4 documentation refresh and prep the nb-compare rerun (Phase N).
+- plans/active/cli-noise-pix0/plan.md:17
+- docs/fix_plan.md:451
+- docs/development/pytorch_runtime_checklist.md:6
+- docs/bugs/verified_c_bugs.md:166
+- reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md
+- src/nanobrag_torch/models/crystal.py:1000
+- src/nanobrag_torch/simulator.py:720
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:50
+Next Up: 1) Finish M2h validation bundle (CPU+CUDA traces, gradcheck); 2) Regenerate M2i cross-pixel traces and metrics once cache passes targeted tests.

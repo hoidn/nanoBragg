@@ -968,3 +968,10 @@
 - Synced `docs/fix_plan.md` Next Actions to point at the new sub-checklists (M2g–M2i) so Ralph’s next loop focuses on implementing the cache and capturing validation artifacts.
 - Rewrote `input.md` to direct Ralph to implement the cache, run the targeted parity/gradcheck commands, capture CUDA/trace evidence, and archive outputs under the refreshed carryover folders.
 - Follow-up for Ralph: implement M2g cache plumbing, produce carryover_cache_validation + carryover_probe artifacts, update phi_carryover_diagnosis.md, and flip M2g–M2i to [D] before moving to Phase M3.
+
+## 2025-12-08 (galph loop — Phase M2g regression correction)
+- Coin flip=heads → Reviewed Ralph commit f3f66a9; `_run_sequential_c_parity()` replaces the vectorised c-parity flow and violates the runtime checklist’s no-loop guardrail.
+- Updated `plans/active/cli-noise-pix0/plan.md` status snapshot, Next Actions, and M2g checklist to require deleting the sequential fallback (new M2g.2) before building the pixel-indexed cache.
+- Synced `docs/fix_plan.md` Next Actions with the rollback requirement and logged Attempt #154 capturing the plan correction.
+- Authored new `input.md` (Parity mode) instructing Ralph to remove the sequential branch, implement the Option 1 cache tensors, run the mapped parity pytest, capture artifacts under `reports/.../carryover_cache_validation/`, and document the change in `phi_carryover_diagnosis.md`.
+- Follow-up for Ralph: restore unified vectorised execution, add the pixel-indexed cache with device/dtype neutrality, refresh trace harness + diagnosis notes, run the targeted pytest selector, and update docs/fix_plan.md once evidence is captured.
