@@ -459,10 +459,10 @@
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): ✅ **Instrumentation aligned (2025-10-07).** Pre-polarization `I_before_scaling` now matches C within ~0.2% (941698.5 vs 943654.8), confirming the prior −8.7% delta was a trace measurement artifact. PyTorch emits both `I_before_scaling_pre_polar` (canonical C comparison point) and `I_before_scaling_post_polar` (diagnostic). The ~0.2% residual is expected per galph debug memo (float32 + F_latt drift). See `reports/2025-10-cli-flags/phase_l/scaling_validation/20251007T222548Z/phase_m1_summary.md`.
 - Next Actions (2025-12-07 refresh):
-1. **Phase M2 carryover parity fix** — Capture consecutive-pixel traces (e.g., pixels 684/1039 → 685/1039) comparing spec vs c-parity φ=0 vectors to confirm C reuses the prior pixel’s φ-final state. Update the c-parity shim to persist that state between pixels so `rot_*_star`, `hkl_frac`, and `F_latt` match C within ≤1e-6, and log evidence under `reports/.../phase_l/scaling_validation/<ts>/carryover_probe/` before touching simulator code.
-2. **Phase M3 scaling verification** — After the carryover fix, rerun the trace harness + `compare_scaling_traces.py` (CPU first, CUDA optional) and update `metrics.json` so `first_divergence=None`. Capture selectors for `tests/test_cli_scaling_phi0.py::TestScalingParity::test_I_before_scaling_matches_c` in the Attempt log.
-3. **Phase N/O readiness** — Once scaling deltas ≤1e-6, regenerate nb-compare ROI artifacts and schedule the supervisor command closure run with SHA256 manifests under `reports/2025-10-cli-flags/phase_l/`.
-4. **Parity shim documentation follow-up** — Complete `plans/active/cli-phi-parity-shim/plan.md` Phase C5 checklist (summary.md + spec citation + fix_plan Attempt) and Phase D3 handoff before the final parity rerun.
+1. **Phase M2 redesign evidence** — Use `trace_harness.py` with a two-pixel ROI (e.g., pixels 684/1039 → 685/1039) in c-parity mode so the cache receives a prior φ=final slice. Capture PyTorch + C traces under `reports/.../phase_l/scaling_validation/<timestamp>/carryover_probe/` and extend `lattice_hypotheses.md` with the observed deltas.
+2. **Carryover implementation fix** — Rework `Crystal.get_rotated_real_vectors` so φ=0 reuses the previous pixel’s tensors inside the vectorized pipeline without `.detach()` or in-place slice overwrites. Confirm gradients stay connected and cache state resets per run.
+3. **Scaling parity verification** — After the fix, rerun `trace_harness.py` (CPU float64, optionally CUDA) and `scripts/validation/compare_scaling_traces.py` to drive `metrics.json` to `first_divergence=None`. Update `tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c` with its passing log.
+4. **Phase N/O preparation** — With VG-2 green, regenerate nb-compare ROI artifacts and plan the supervisor command rerun; keep parity shim documentation (Phase C5/D3) queued so tolerances stay synchronized.
 - Attempts History:
   * [2025-10-07] Attempt #136 (ralph loop i=135, Mode: Docs) — Result: ✅ **SUCCESS** (Phase L Documentation Sync COMPLETE). **No code changes.**
     Metrics: Test collection: 35 tests collected successfully in 2.16s (test_cli_scaling_phi0.py + test_phi_carryover_mode.py). Documentation-only loop per input.md Mode: Docs.
@@ -643,6 +643,23 @@
       - **Phase M2 implementation**: Based on hypotheses, implement fix in `Crystal._compute_structure_factors` or lattice factor helpers
       - **Phase M3**: After fix, regenerate trace with updated code and verify metrics.json shows first_divergence=None
   * [2025-12-06] Attempt #149 (galph supervisor loop, Mode: Parity/Evidence) — Result: **EVIDENCE UPDATE** (Phase M2c lattice hypotheses captured). **No code changes.**
+  * [2025-12-07] Attempt #150 (ralph loop, Mode: Code) — Result: **PARTIAL** (carryover cache patch landed; parity still failing).
+    Metrics: `pytest --collect-only -q` (700 tests discovered). No targeted parity tests executed; new `test_cli_scaling_parity.py` currently fails due to ΔI_before_scaling ≈ -0.209%.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T081932Z/trace_py_scaling.log` — PyTorch trace with TRACE_PY_ROTSTAR taps (124 lines).
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T081932Z/summary.md` — Evidence write-up for the new instrumentation (git SHA 4a4eff58).
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T081932Z/sha256.txt` — Checksums for the run.
+      - `tests/test_cli_scaling_parity.py` — New regression test asserting ≤1e-6 agreement against C trace values.
+    Code Changes:
+      - `src/nanobrag_torch/models/crystal.py:123-145,1243-1305` — Added `_phi_carryover_cache`, `clear_phi_carryover_cache()`, cache population, and φ=0 substitution logic (uses `.detach().clone()` + in-place assignments).
+      - `src/nanobrag_torch/simulator.py:758-764` — Clear carryover cache at start of `Simulator.run`.
+      - `tests/test_cli_scaling_parity.py` — Added scaling parity regression test (CPU float64, trace capture).
+    Observations/Hypotheses:
+      - Cache never engages during the full-image vectorized run, so φ=0 still uses freshly rotated vectors; F_latt remains -2.380134 vs C -2.383196653, producing ΔI_before_scaling=-1968.57 (-0.209%).
+      - `.detach().clone()` severs gradients if the cache ever does engage; solution must preserve differentiability across pixels.
+      - New regression test will continue to fail until Δ ≤ 1e-6; keep it red while iterating on the fix.
+    Next Actions:
+      - Produce consecutive-pixel traces to validate cache behavior, redesign the carryover pipeline for the vectorized execution order, and rerun the harness/tests to confirm VG-2 closure.
     Metrics: Evidence-only; no tests executed (pytest --collect-only deferred per supervisor guidelines).
     Artifacts:
       - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md` — HKL/F_latt delta table, rotated-vector mismatches, and follow-up probes.

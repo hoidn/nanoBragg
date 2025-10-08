@@ -14,12 +14,13 @@
   - `docs/bugs/verified_c_bugs.md:166-204 (C-PARITY-001)` — Source of the φ carryover bug that parity mode must emulate.
   - `plans/active/cli-phi-parity-shim/plan.md` — Companion plan governing the opt-in parity shim (Phase C complete, Phase D docs pending).
   - `reports/2025-10-cli-flags/phase_l/` — Canonical evidence directory (rot_vector, parity_shim, scaling_audit, nb_compare, supervisor_command).
-- Status Snapshot (2025-12-06 refresh):
+- Status Snapshot (2025-12-07 refresh):
   - `-nonoise` CLI plumbing merged and covered by tests; noise writers are skipped when flag present.
   - pix0 precedence fixes landed; SAMPLE pivot error corrected to ≤0.2 µm (Attempt #129).
-  - Spec-compliant φ rotation restored; optional C-parity shim implemented with dual tolerance decision (|Δk| ≤ 1e-6 spec, ≤5e-5 c-parity) pending documentation sync.
-  - Scaling audit still shows first divergence at `I_before_scaling` (F_latt mismatch around HKL ≈ (−7,−1,−14)); the scripted comparison is operational again per `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T072513Z/validation_report.md` (Δ≈2.1e-03 relative, same residual as manual summary).
-  - Canonical artifacts (`scaling_validation_summary.md`, `metrics.json`, `run_metadata.json`) already exist under `20251008T072513Z/`; use these as the baseline while pursuing lattice parity. Supervisor command nb-compare remains pending.
+  - Spec-compliant φ rotation restored; optional c-parity shim implemented with dual tolerance decision (|Δk| ≤ 1e-6 spec, ≤5e-5 c-parity); Phase C5 documentation still pending.
+  - Commit 3269f6d (2025-10-08) introduced `_phi_carryover_cache` and `test_cli_scaling_parity`, yet the latest scaling harness (`reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T081932Z/`) still reports F_latt = -2.380134 vs C = -2.383196653 (ΔI_before_scaling = -1968.57, -0.209% relative), so VG-2 remains red.
+  - TRACE_PY_ROTSTAR taps from the same run show φ=0 continues to use freshly computed vectors; the cache never engages because the vectorized run processes all pixels simultaneously. Cross-pixel probes and cache redesign are required before rerunning metrics.
+  - Canonical artifacts (`scaling_validation_summary.md`, `metrics.json`, `run_metadata.json`) under `20251008T072513Z/` remain the last synchronized baseline; newer timestamps document the failing attempt and should be referenced when diagnosing carryover behavior.
   - Supervisor command parity run still outstanding; latest nb-compare attempt shows correlation ≈0.9965 and intensity ratio ≈1.26e5.
 - Artifact Storage Convention: place new work in `reports/2025-10-cli-flags/phase_l/<phase_folder>/<timestamp>/` with `commands.txt`, raw logs, metrics JSON, and SHA256 hashes. Reference these paths in docs/fix_plan.md attempt logs and `fix_checklist.md`.
 
@@ -63,7 +64,7 @@ Exit Criteria: `trace_harness.py` comparisons show `F_cell`, `F_latt`, and `I_be
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | M1 | Audit HKL lookup parity | [D] | Scripted workflow confirmed healthy (see `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T072513Z/validation_report.md`). Retain 20251008T060721Z manual summary for historical context, but treat 20251008T072513Z artifacts as the active baseline while chasing the F_latt delta. |
-| M2 | Fix φ=0 carryover parity | [ ] | Ensure the c-parity shim reuses the previous pixel’s φ=final vectors so `rot_*_star`, `hkl_frac`, and `F_latt` match C within ≤1e-6. Remove the placeholder that copies the current pixel’s φ=final slice and cite `nanoBragg.c:3044-3095` in docstrings per CLAUDE Rule #11. |
+| M2 | Fix φ=0 carryover parity | [P] | Commit 3269f6d added `_phi_carryover_cache` and `test_cli_scaling_parity`, but `trace_harness.py` (20251008T081932Z) still reports F_latt=-2.380134 vs C=-2.383196653 (ΔI_before_scaling=-1968.57, -0.209% relative). Vectorized execution never reads the cache because every call processes the full pixel slab, and the cached tensors are detached, so gradients would break even if they were reused. Redesign the carryover pathway to persist φ=final vectors across the pixel sweep without `.detach()`/in-place slice writes, then regenerate traces/tests to hit the ≤1e-6 gate. |
 | M3 | Re-run scaling comparison | [ ] | Execute `python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039` (CPU + CUDA). Confirm `metrics.json` reports first_divergence=None. Update Attempt log and `scaling_audit/scaling_comparison.md`. |
 | M4 | Documentation + checklist | [ ] | Summarize findings in `scaling_audit/summary.md`, update `fix_checklist.md` VG-2 row, and log Attempt with metrics (I_before_scaling ratio, F_latt deltas). |
 
@@ -81,7 +82,8 @@ Exit Criteria: `trace_harness.py` comparisons show `F_cell`, `F_latt`, and `I_be
 | M2a | Refresh trace & scaling summary | [D] | ✅ Created `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/` and executed `trace_harness.py` (CPU, float64, `--phi-mode c-parity`) plus `scripts/validation/compare_scaling_traces.py`. All artifacts stored: `commands.txt`, `trace_py_scaling.log`, `scaling_validation_summary.md`, `metrics.json`, `run_metadata.json`, `compare_scaling_traces.stdout`, `pytest_collect.log`, `dir_listing.txt`, `sha256.txt`. Git SHA: f522958. |
 | M2b | Manual `sincg` reproduction | [D] | ✅ Generated `20251008T075949Z/manual_sincg.md` with per-axis sincg calculations. Key findings: PyTorch product using sincg(π·(frac-h0)) = 2.380125274 vs C F_latt = -2.383196653 (0.13% relative delta). Individual axis comparisons show all three axes (a, b, c) contribute small deltas to the overall 0.13% mismatch. |
 | M2c | Hypothesis log | [D] | ✅ `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md` captures HKL deltas, rotated-vector mismatches, and the follow-up probes (float64 rerun + per-φ taps). Ready to progress to implementation work. |
-| M2d | Cross-pixel carryover probe | [ ] | Capture consecutive-pixel traces (e.g., pixels 684/1039 → 685/1039) comparing spec vs c-parity φ=0 vectors. Store artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/<ts>/carryover_probe/` and summarise the deltas in `lattice_hypotheses.md`. Use findings to drive the simulator change. |
+| M2d | Cross-pixel carryover probe | [P] | 20251008T081932Z added TRACE_PY_ROTSTAR taps for pixel 685/1039, confirming φ=0 vectors are freshly computed. Next: capture a paired run (e.g., pixels 684/1039 → 685/1039) so the cache receives a prior φ=final slice, record both C and PyTorch traces under `.../carryover_probe/`, and update `lattice_hypotheses.md` with the deltas. |
+| M2e | Validate scaling parity test | [ ] | Ensure `tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c` uses authoritative expected values and fails on current HEAD (Δ≈0.209%). Keep it red until the cache redesign closes the gap, then capture the passing log (CPU float64) and cite it in `docs/fix_plan.md`. |
 
 ### Phase N — ROI nb-compare Parity (VG‑3 & VG‑4)
 Goal: Once scaling is fixed, prove end-to-end image parity on the supervisor ROI using nb-compare and refreshed C/PyTorch outputs.

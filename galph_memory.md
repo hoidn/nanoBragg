@@ -941,3 +941,9 @@
 - Refreshed `docs/fix_plan.md` Next Actions to require the carryover probe + simulator fix.
 - Rewrote input.md directing Ralph to capture the carryover evidence, update the shim to persist prior-pixel φ state, rerun the trace harness, and close with the targeted pytest.
 - Expect Ralph to log new artifacts under `reports/.../carryover_probe/`, implement the stateful cache, and bring `I_before_scaling` into the ≤1e-6 envelope before moving to Phase M3.
+
+## 2025-12-07 (galph loop — Phase M2 cache redesign planning)
+- Reviewed commit 3269f6d (carryover cache + parity test); identified that cache never engages during vectorised run and `.detach().clone()` would break gradients even if it did. Latest trace (reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T081932Z/) still shows F_latt=-2.380134 vs C=-2.383196653 (ΔI=-1968.57, -0.209%).
+- Updated plans/active/cli-noise-pix0/plan.md (Status Snapshot 2025-12-07 refresh, M2→[P], M2d→[P], new M2e test task) and docs/fix_plan.md Next Actions + Attempt #150 documenting the partial fix and remaining gaps.
+- Authored input.md (Parity mode, 97 lines) directing Ralph to capture new carryover evidence, redesign the cache for vectorised execution without `.detach()`, rerun scaling metrics, and keep the new regression test failing until Δ≤1e-6.
+- Follow-up for Ralph: produce consecutive-pixel traces under a new timestamp, refactor the cache logic to achieve ≤1e-6 parity, update metrics.json/test logs, and log outcomes in docs/fix_plan.md + plan checklist before advancing to Phase M3.
