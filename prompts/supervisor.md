@@ -51,7 +51,17 @@ At the start of every invocation:
 
 During the main, central phase of invocation you will be doing essentially three things:
 <main analysis step 1> 
-An initial analysis pass in which you gather and review information in order to choose a <focus issue> for the turn, corresponding to <instructions> steps <0> through <3>. This will involve a multi-category selection process. You will choose both a <focus issue> and an associated <Action type> for the remainder of the iteration. The available <Action type>s are the following:
+An initial analysis pass in which you gather and review information in order to choose a <focus issue> for the turn, corresponding to <instructions> steps <0> through <3>. This will involve a multi-category selection process. You will choose both a <focus issue> and an associated <Action type> for the remainder of the iteration. 
+
+After choosing a <focus issue> you will consider the following:
+<post issue selection document review>
+- Which existing docs/fix_plan.md items does it (i.e. the <focus issue>) relate to? 
+- Documentation review for <focus issue>: Using `docs/index.md` as the map, identify and read the specific documents relevant to the chosen <focus issue> (e.g., component contracts, architecture ADRs, parity/testing strategy). List the file paths you will rely on (with a one‑line rationale each) before drafting or updating the plan.
+- Is the <focus issue> related to a pre-existing docs/fix_plan.md in-progress item? If so, read the artifacts (typically under reports/) that were generated in the most recent ralph iteration related to the <focus issue>. You may need to use `git log` to find these files.
+</post issue selection document review>
+
+
+The available <Action type>s are the following:
 <Action type> list:
 <1>
 <Evidence collection> (i.e. Evidence task)
@@ -95,8 +105,7 @@ Evidence collection includes the following subtype:
 <Planning>
 - we will be calling the plan topic the <focus issue> of this turn.
 - based on which long term <goal> and sub-goal is that effort / plan? 
-- Which existing docs/fix_plan.md items does it (i.e. the <focus issue>) relate to? 
-- Documentation review for <focus issue>: Using `docs/index.md` as the map, identify and read the specific documents relevant to the chosen <focus issue> (e.g., component contracts, architecture ADRs, parity/testing strategy). List the file paths you will rely on (with a one‑line rationale each) before drafting or updating the plan.
+- remember to do the <post issue selection document review>
 - think deeply. draft / redraft the plan and save it to a .md under plans/active/. Structure the write-up as a phased implementation document (see `plans/archive/general-detector-geometry/implementation.md` for tone/shape): begin with context + phase overviews, then outline each phase’s intent, prerequisites, and exit criteria. When a phase benefits from explicit tracking, embed a checklist table using the `ID | Task Description | State | How/Why & Guidance` format (with `[ ]`, `[P]`, `[D]` markers) inside that phase section.
   • Include reproduction commands, owners (if known), and decision rules in the guidance column.
   • Favor narrative flow first; layer checklists only where they clarify verification steps or deliverables.
