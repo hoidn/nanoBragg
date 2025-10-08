@@ -1,0 +1,37 @@
+# Phase B1 Commands Log - Phi Carryover Mode Removal
+# Timestamp: Wed Oct  8 07:13:17 PM UTC 2025
+# Command: pytest --collect-only -q tests/test_cli_scaling_phi0.py
+# Output: 2 tests collected successfully
+
+# Phase B1 CLI Flag Removal - Complete command log
+
+## Baseline Test (Pre-edit)
+Command: pytest --collect-only -q tests/test_cli_scaling_phi0.py
+Result: 2 tests collected successfully
+Artifact: collect_pre.log
+
+## Grep Search for References
+Command: rg "phi_carryover_mode" -n
+Result: 57 files found with references
+Artifact: grep.log
+Analysis: Production code references in config.py, crystal.py, simulator.py (Phase B2)
+          Test file test_phi_carryover_mode.py to be removed (Phase B3)
+
+## Code Edits
+Files Modified:
+  - src/nanobrag_torch/__main__.py (lines 376-385 removed, line 859 param removed)
+    * Removed --phi-carryover-mode argument definition
+    * Removed phi_carryover_mode parameter passing to CrystalConfig
+
+## Regression Test (Post-edit)
+Command: KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py
+Result: 2/2 tests PASSED in 2.14s
+  - TestPhiZeroParity::test_rot_b_matches_c PASSED
+  - TestPhiZeroParity::test_k_frac_phi0_matches_c PASSED
+Artifact: pytest_cpu.log
+Tolerance: ≤1e-6 per CLI-FLAGS-003 L3k.3c.3 verification gate
+
+## Environment Capture
+File: env.json
+Contents: Python 3.13.7, PyTorch 2.5.1, git ad39be4, CPU-only
+

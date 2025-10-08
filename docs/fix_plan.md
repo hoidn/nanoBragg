@@ -3920,3 +3920,28 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - Phase B4: Run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py` on CPU (and CUDA if available); capture logs in Phase B artifact directory
       - Phase B5: Update `docs/fix_plan.md` (Attempt entry), `plans/active/phi-carryover-removal/plan.md` (mark B0–B4 done), `plans/active/cli-noise-pix0/plan.md` (pivot to Phase C)
 
+  * [2025-10-08] Attempt #177 (ralph loop i=174, Mode: Implementation, Focus: CLI-FLAGS-003 Phase B1) — Result: ✅ **SUCCESS** (Phase B1 CLI flag removal complete). **Code changes: __main__.py flag removed.**
+    Metrics: Regression tests 2/2 PASSED in 2.14s (tests/test_cli_scaling_phi0.py). Spec-mode behavior preserved (≤1e-6 tolerance).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T191302Z/summary.md` — Complete Phase B1 summary with design references and validation results
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T191302Z/pytest_cpu.log` — Post-edit regression test (2/2 PASSED)
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T191302Z/collect_pre.log` — Baseline test collection
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T191302Z/grep.log` — Residual reference search (57 files, deferred to B2/B3)
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T191302Z/commands.txt` — Chronological command log
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T191302Z/env.json` — Environment metadata (Python 3.13.7, PyTorch 2.5.1, git ad39be4)
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T191302Z/sha256.txt` — Artifact checksums
+    Code Changes:
+      - `src/nanobrag_torch/__main__.py:376-385` — Removed `--phi-carryover-mode` argument definition (10 lines removed)
+      - `src/nanobrag_torch/__main__.py:859` — Removed `phi_carryover_mode=args.phi_carryover_mode` parameter passing to CrystalConfig (1 line removed)
+    Observations/Hypotheses:
+      - **CLI flag successfully removed**: argparse no longer exposes `--phi-carryover-mode`; attempts to use the flag will fail with unrecognized argument error
+      - **Spec-mode preserved**: Both test cases pass (test_rot_b_matches_c, test_k_frac_phi0_matches_c) with relative errors < 1e-6
+      - **Residual references documented**: 57 files contain `phi_carryover_mode` (4 production files, 2 test files, historical reports/plans); Phase B2/B3 will clean these
+      - **Protected Assets compliance**: No index-referenced files touched
+      - **Gradient flow preserved**: No changes to vectorized computation paths
+    Next Actions (per removal plan):
+      - Phase B2: Remove `phi_carryover_mode` field from `config.py` (lines 154, 165-168); delete `apply_phi_carryover()` method from `crystal.py` (lines 245-388); remove c-parity branching from `simulator.py` (line 767)
+      - Phase B3: Delete `tests/test_phi_carryover_mode.py`; update `tests/test_cli_scaling_parity.py` to remove c-parity mode usage
+      - Phase B4: Run full regression sweep on CPU and CUDA (when available)
+      - Phase B5: Mark plan rows B0–B1 [D]; update `plans/active/phi-carryover-removal/plan.md` and `plans/active/cli-noise-pix0/plan.md`
+

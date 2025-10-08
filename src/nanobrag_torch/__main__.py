@@ -373,17 +373,6 @@ Examples:
                         default='cpu',
                         help='Device for computation (cpu or cuda)')
 
-    # Phi rotation behavior (CLI-FLAGS-003 Phase C2)
-    parser.add_argument('--phi-carryover-mode', type=str,
-                        default='spec',
-                        choices=['spec', 'c-parity'],
-                        help=(
-                            'Phi rotation behavior mode. '
-                            '"spec": Fresh rotation each φ step (default, spec-compliant). '
-                            '"c-parity": φ=0 reuses stale vectors (C-PARITY-001 bug emulation for validation). '
-                            'See docs/bugs/verified_c_bugs.md for details.'
-                        ))
-
     # Explicitly handle unsupported flags from the spec
     parser.add_argument('-dispstep', dest='_unsupported_dispstep',
                         action=UnsupportedFlagAction,
@@ -854,9 +843,7 @@ def main():
                 # Phase G1: Pass MOSFLM orientation if provided
                 mosflm_a_star=config.get('mosflm_a_star'),
                 mosflm_b_star=config.get('mosflm_b_star'),
-                mosflm_c_star=config.get('mosflm_c_star'),
-                # CLI-FLAGS-003 Phase C2: Phi carryover mode
-                phi_carryover_mode=args.phi_carryover_mode
+                mosflm_c_star=config.get('mosflm_c_star')
             )
 
             if 'misset_deg' in config:
