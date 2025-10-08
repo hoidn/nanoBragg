@@ -1,100 +1,53 @@
-Summary: Fold Attempt #171 trace tooling evidence into the phi-carryover diagnosis notes and close plan row M2g.6 cleanly so cache analysis can resume.
-Mode: Docs
-Focus: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm — plans/active/cli-noise-pix0/plan.md M2g.6 documentation sync
+Summary: Capture a c-parity PyTorch trace so the rotated lattice vectors match C before rerunning scaling metrics.
+Mode: Parity
+Focus: CLI-FLAGS-003 / Handle -nonoise and -pix0_vector_mm (M2i.2)
 Branch: feature/spec-based-2
-Mapped tests: pytest --collect-only -q tests/test_cli_scaling_phi0.py tests/test_phi_carryover_mode.py
-Artifacts: reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md; plans/active/cli-noise-pix0/plan.md; docs/fix_plan.md attempts log
-Do Now: [CLI-FLAGS-003] Handle -nonoise and -pix0_vector_mm — pytest --collect-only -q tests/test_cli_scaling_phi0.py tests/test_phi_carryover_mode.py
-If Blocked: 1) Capture the blocker in docs/fix_plan.md attempts (see line 465) with timestamp + symptoms; 2) create reports/2025-10-cli-flags/phase_l/scaling_validation/cache_index_audit/<timestamp>/blocked.md summarising why M2g.6 stalled and what evidence is missing; 3) ping supervisor in galph_memory.md follow-up section.
+Mapped tests: pytest --collect-only -q tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c
+Artifacts: reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_c_parity.log; reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/scaling_validation_summary.md; reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/{commands.txt,env.json,sha256.txt,trace_harness.stdout}
+Do Now: CLI-FLAGS-003 / M2i.2 — KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 1039 685 --config supervisor --device cpu --dtype float64 --phi-mode c-parity --emit-rot-stars --out reports/2025-10-cli-flags/phase_l/scaling_validation/${timestamp}/trace_py_c_parity.log
+If Blocked: Re-run the harness in spec mode (note this explicitly in commands.txt) and archive the evidence under an `_spec_probe` suffix so we can compare cache behavior in Attempts History.
 Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md:27 records Attempt #171 evidence; we must acknowledge it formally before touching cache diagnostics.
-- plans/active/cli-noise-pix0/plan.md:115 keeps M2g.6 open, blocking the remainder of Phase M2; synchronising documentation removes that gate.
-- docs/fix_plan.md:463 names the documentation sync as the next actionable step after the metrics gate, ensuring ledger alignment.
-- docs/fix_plan.md:464-465 escalates the cache index audit; finishing M2g.6 prevents duplicated effort when that work starts.
-- reports/2025-10-cli-flags/phase_l/trace_tooling_patch/20251008T175913Z/summary.md:1 holds the CPU/CUDA parity proof we must cite for reproducibility.
-- reports/2025-10-cli-flags/phase_l/trace_tooling_patch/20251008T175913Z/run_metadata.json:1 documents environment details to embed in the memo.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md:1 already aggregates prior Option B findings; keeping a single source of truth avoids drift.
-- specs/spec-a-core.md:204-240 defines the spec rotation pipeline; the doc update must restate the contrast with C’s carryover bug.
-- docs/bugs/verified_c_bugs.md:166 anchors C-PARITY-001; referencing it keeps parity shim rationale explicit.
-- docs/development/testing_strategy.md:82-115 reiterates the evidence-first workflow; the memo should link to it when explaining why tooling proof precedes physics edits.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T174753Z/scaling_validation_summary.md:1 shows the current `I_before_scaling` failure; reiterating that status in the memo keeps the open gate visible.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/lattice_hypotheses.md:1 captures earlier diagnostic notes; reference it so the narrative stays chronological.
+- specs/spec-a-core.md:204 — Canonical φ rotation pipeline; confirms spec mode must recompute ap/bp/cp each step while parity shim is strictly optional.
+- docs/bugs/verified_c_bugs.md:166 — States the φ=0 carryover bug is C-only; PyTorch default must stay spec-compliant, so we prove bug emulation only via shim.
+- plans/active/cli-noise-pix0/plan.md:28 — M2i.2 gate remains blocked pending a c-parity trace that aligns rotated vectors; our new memo is referenced there.
+- docs/fix_plan.md:3810 — Attempt #173 captured the drift; the next attempt must supply matching rot_* vectors before metrics rerun.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T182512Z/rotated_lattice_divergence.md — Baseline numeric comparison showing Δh ≈ 0.102; your run should replace this with a parity-aligned result.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py — Harness already supports `--phi-mode c-parity`; use its CLI rather than ad-hoc scripts.
+- CLAUDE.md / PyTorch guardrails — Device/dtype neutrality + vectorization must remain intact; keep the probe float64 CPU unless instructed otherwise.
 How-To Map:
-- export AUTHORITATIVE_CMDS_DOC=docs/development/testing_strategy.md
-- pytest --collect-only -q tests/test_cli_scaling_phi0.py tests/test_phi_carryover_mode.py
-- ts=$(date -u +%Y%m%dT%H%M%SZ)
-- note_dir=reports/2025-10-cli-flags/phase_l/scaling_validation && target_doc=$note_dir/phi_carryover_diagnosis.md
-- grep -n "Attempt #171" $note_dir/phi_carryover_diagnosis.md || true  # validate insertion point (look near Option B section)
-- Append a new subsection titled "## 20251008T175913Z — Trace Tooling Verification" describing CPU+CUDA runs, referencing summary.md, trace_cpu.log, trace_cuda.log, commands.txt, run_metadata.json, sha256.txt, and restating spec vs c-parity expectations.
-- Explicitly link the subsection to specs/spec-a-core.md:204-240, docs/bugs/verified_c_bugs.md:166, and the Option B design memo in reports/2025-10-cli-flags/phase_l/scaling_validation/20251210_optionB_design/optionB_batch_design.md.
-- Capture bullet points covering: instrumentation reuse rule, device/dtype neutrality confirmation, and parity thresholds (≤5e-5 for c-parity, ≤1e-6 for spec).
-- Update plans/active/cli-noise-pix0/plan.md M2g.6 row to `[D]`, citing Attempt #171 and the refreshed diagnosis section; include artifact paths and call out that metrics gate M2i.2 remains open.
-- Ensure plans/active/cli-noise-pix0/plan.md Next Actions list (lines 20-34) no longer references M2g.6 once done; keep entries for cache index audit and Phase N preparation untouched.
-- Add a docs/fix_plan.md attempts entry under [CLI-FLAGS-003] summarising the memo update: include timestamp, plan row state change, collector command, and the new diagnosis subsection heading.
-- Re-run git status; confirm only documentation + plan + fix_plan files staged.
-- Produce a short changelog snippet (to be used later) capturing key bullets: evidence cited, spec references, plan row closure.
-- After edits, rerun pytest --collect-only -q tests/test_cli_scaling_phi0.py tests/test_phi_carryover_mode.py to ensure imports still succeed.
-- Run rg -n "Trace Tooling" $note_dir/phi_carryover_diagnosis.md to double-check that the new heading and citations render correctly.
-- Append a brief note to reports/2025-10-cli-flags/phase_l/scaling_validation/README.md (if present) pointing to the updated diagnosis subsection for future investigators.
-- Use python -m json.tool reports/2025-10-cli-flags/phase_l/trace_tooling_patch/20251008T175913Z/run_metadata.json to confirm the JSON is still valid before referencing values in prose.
-- git diff --stat to verify scope, followed by git diff to sanity-check markdown formatting before handing back to supervisor.
-- Prepare commit message draft in notes (no commit yet): "CLI-FLAGS-003: document trace tooling evidence".
-- Verify that docs/bugs/verified_c_bugs.md still references the parity shim section once your edits are complete (no duplication required).
-- Run sed -n '1,160p' $note_dir/phi_carryover_diagnosis.md after edits to confirm the new section sits near previous Option B documentation.
-- Record the pytest collect-only output path in docs/fix_plan.md attempt bullet so future loops know which command was used.
-- Cross-check reports/2025-10-cli-flags/phase_l/scaling_validation/implementation_notes.md for an existing heading; create one if missing and log the memo update there.
-- Document in galph_memory.md (only if new blockers arise) the date, command, and artifact path for trace-tooling evidence for continuity.
-- Save a local diff snapshot (git diff > /tmp/m2g6_doc_patch.diff) before reverting any temporary edits; delete the temp file after review.
-- Confirm that no new directories were created under reports/ beyond the prescribed ones by running find reports -maxdepth 4 -type d | sort | tail; remediate any stray folders.
-- Validate markdown lint (if available) with markdownlint-cli2 '**/*.md' --ignore node_modules || true to spot obvious formatting issues (do not fail the loop if the tool is unavailable).
-- Note in docs/fix_plan.md whether the collect-only pytest command exited non-zero; include stderr snippet if failures occur.
-- Review commit history (git log -1) to cite the correct git SHA in the docs/fix_plan attempt entry.
-- Update reports/2025-10-cli-flags/phase_l/scaling_validation/CHANGELOG.md if that file exists; append a bullet referencing the new diagnosis subsection.
-- After verifying all updates, remove /tmp/m2g6_doc_patch.diff to keep local filesystem clean: rm -f /tmp/m2g6_doc_patch.diff.
+- export timestamp=$(date -u +%Y%m%dT%H%M%SZ); outdir=reports/2025-10-cli-flags/phase_l/scaling_validation/${timestamp}; mkdir -p "$outdir".
+- tee "$outdir"/commands.txt with the exact commands you run (include timestamp export, harness invocation, compare script, pytest collect).
+- Ensure PYTHONPATH=src (editable install contract) and run: KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 1039 685 --config supervisor --device cpu --dtype float64 --phi-mode c-parity --emit-rot-stars --out "$outdir"/trace_py_c_parity.log |& tee "$outdir"/trace_harness.stdout.
+- Verify the harness logs `TRACE_PY_ROTSTAR` lines for all 10 φ steps; absence means the shim did not seed caches—capture this in observations if it happens.
+- Reuse the canonical C trace: reports/2025-10-cli-flags/phase_j/trace_c_scaling.log. Run `KMP_DUPLICATE_LIB_OK=TRUE python scripts/validation/compare_scaling_traces.py --c reports/2025-10-cli-flags/phase_j/trace_c_scaling.log --py "$outdir"/trace_py_c_parity.log --out "$outdir"/scaling_validation_summary.md` and append output to trace_harness.stdout.
+- Capture pytest collect evidence: pytest --collect-only -q tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c | tee "$outdir"/pytest_collect.log (keeps test selector validated without running it).
+- Record environment metadata via python - <<'PY' ... to emit git SHA, torch version, CUDA availability into "$outdir"/env.json (mirror prior attempt format) and compute sha256 sums for every artifact into "$outdir"/sha256.txt.
+- Update docs/fix_plan.md Attempts with the new timestamp, key metrics (Δh, ΔF_latt, lattice ratio), and note whether parity matched; link to the new `scaling_validation_summary.md` and trace logs.
+- If parity succeeds, rerun `compare_scaling_traces` with the old spec trace as control (optional) to demonstrate improvement; summarize findings inside the new summary.md so Phase N has clean prerequisites.
+- Keep workspace clean (git status) and do not commit during evidence loops; log all deviations in commands.txt / Attempt entry.
 Pitfalls To Avoid:
-- No simulator or harness code edits; this loop stays documentation-only.
-- Maintain ASCII formatting and heading hierarchy in phi_carryover_diagnosis.md—no smart quotes or rogue whitespace.
-- Cite artifact paths verbatim (relative paths) and include timestamps; vague references hinder reproducibility.
-- Keep Protected Assets intact; the memo lives outside docs/index.md protected list, but double-check before touching anything else.
-- Ensure the memo distinguishes spec versus c-parity tolerances; ambiguity will cause parity regressions later.
-- Avoid paraphrasing C snippets—reference existing excerpts per CLAUDE Rule #11 rather than restating them from memory.
-- Do not mark M2g.6 [D] until the memo and ledger entries are genuinely refreshed.
-- When editing markdown tables in plan/fix_plan, preserve pipe alignment and `[ ]`/`[P]`/`[D]` syntax exactly.
-- Explicitly mention that M2i.2 metrics remain red; we are not closing the physics gate yet.
-- Re-run collect-only tests after documentation edits to catch accidental import regressions.
-- Store any scratch calculations outside the repo; no temporary files under reports/ beyond the prescribed locations.
-- Make sure the new diagnosis subsection notes that no new code landed with Attempt #171, so future engineers know evidence-only loops exist.
-- Do not edit lattice_hypotheses.md during this pass; it will be updated once cache index diagnostics complete.
-- Avoid duplicating evidence paths across multiple bullets—cite them once in the memo and once in fix_plan for clarity.
-- Keep the Option B terminology consistent with the design memo; do not introduce new labels without updating that document too.
-- Mention that gradcheck evidence (Attempt #167) is unaffected—avoid implying new gradient work happened.
-- Retain chronological ordering of attempts within phi_carryover_diagnosis.md; add the new section after previously logged 2025-12-10 entry.
-- When editing docs/fix_plan.md attempts, maintain third-level indentation (two spaces) for bullet structure.
-- Avoid referencing unpublished artifacts; everything cited must exist under reports/2025-10-cli-flags/phase_l/.
+- Avoid touching simulator/crystal source files; today is diagnostics-only.
+- Do not skip `--phi-mode c-parity`; running default spec mode will recreate the mismatch we just documented.
+- Ensure harness tensors inherit the device/dtype (float64 CPU) — no `.to('cpu')` or `.float()` conversions mid-probe.
+- Store artifacts under a unique timestamp directory; never overwrite `20251008T182512Z` or earlier bundles.
+- Keep per-φ outputs enabled; we need to see cache substitution across phi_tic 0..9.
+- No full pytest runs; stick to the collect-only selector outlined above.
+- Respect Protected Assets listed in docs/index.md (loop.sh, supervisor.sh, input.md, etc.).
+- Preserve trace format (TRACE_PY prefixes) so compare_scaling_traces.py parses successfully.
+- Document any anomalies (missing shim log, unexpected tensor shapes) immediately in commands.txt and the Attempt entry.
+- Do not push commits from this loop; this is an evidence capture step.
+- Keep `env.json` and `sha256.txt` in sync with the artifact list for reproducibility.
+- When editing docs/fix_plan.md, append to Attempts History under CLI-FLAGS-003 and mention the new timestamp explicitly.
 Pointers:
-- plans/active/cli-noise-pix0/plan.md:27
-- plans/active/cli-noise-pix0/plan.md:115
-- plans/active/cli-noise-pix0/plan.md:30
-- docs/fix_plan.md:451
-- docs/fix_plan.md:463
-- docs/fix_plan.md:464
-- reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md:1
-- reports/2025-10-cli-flags/phase_l/trace_tooling_patch/20251008T175913Z/summary.md:1
-- reports/2025-10-cli-flags/phase_l/trace_tooling_patch/20251008T175913Z/run_metadata.json:1
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251210_optionB_design/optionB_batch_design.md:1
-- specs/spec-a-core.md:204
-- docs/bugs/verified_c_bugs.md:166
-- docs/development/testing_strategy.md:82
-- docs/architecture/detector.md:412
-- galph_memory.md:120 (latest directive log for CLI-FLAGS-003 context)
-- reports/2025-10-cli-flags/phase_l/scaling_validation/lattice_hypotheses.md:1
-- reports/2025-10-cli-flags/phase_l/scaling_validation/README.md:1
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T174753Z/scaling_validation_summary.md:1
-- reports/2025-10-cli-flags/phase_l/scaling_validation/implementation_notes.md:1
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T165745Z_carryover_cache_validation/summary.md:1
-- reports/2025-10-cli-flags/phase_l/scaling_validation/20251210_optionB_design/README.md:1
-- docs/architecture/pytorch_design.md:120
-- docs/development/pytorch_runtime_checklist.md:14
+- plans/active/cli-noise-pix0/plan.md:28 — M2i.2 gate + Next Actions ladder.
+- docs/fix_plan.md:3810 — Attempt #173 divergence memo to supersede.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T182512Z/rotated_lattice_divergence.md — Reference baseline comparison before your rerun.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:1-200 — Harness options and supervisor config wiring.
+- specs/spec-a-core.md:204-244 — Normative lattice computation, sincg definitions, φ rotation pipeline.
+- docs/bugs/verified_c_bugs.md:166-213 — C-PARITY-001 classification; reminds us spec remains clean.
+- reports/2025-10-cli-flags/phase_j/scaling_chain.md — Shows first divergence at `I_before_scaling`; confirm this clears after shim trace.
+- CLAUDE.md: PyTorch Runtime Guardrails §PyTorch Runtime Checklist — obey device/vectorization requirements while collecting traces.
+- input.md (this file) — follow instructions verbatim; log deviations in commands.txt.
 Next Up:
-- 1. Launch the cache index audit bundle (Next Actions item 2) once the documentation sync lands, focusing on `(slow, fast)` lookup evidence.
-- 2. Sketch nb-compare harness commands and data staging steps for Phase N so the parity rerun can execute immediately after VG-2 is fixed.
+1. When the c-parity trace reproduces C rotated vectors, re-run scripts/validation/compare_scaling_traces.py to refresh M2i.2 metrics and note VG-2 status in fix_plan.
+2. With VG-2 green, prep Phase N nb-compare harness (CPU first, CUDA optional) so the supervisor parity command can finally be executed end-to-end.

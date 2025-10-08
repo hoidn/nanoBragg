@@ -1,0 +1,4 @@
+# Provenance commands
+# PyTorch trace: reports/2025-10-cli-flags/phase_j/trace_py_scaling.log
+# C trace: reports/2025-10-cli-flags/phase_j/trace_c_scaling.log
+# Generated summary: rotated_lattice_divergence.md

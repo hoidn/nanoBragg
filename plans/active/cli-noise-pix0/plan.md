@@ -26,7 +26,7 @@
   - Supervisor command / nb-compare parity remains outstanding (correlation ≈0.9965, intensity ratio ≈1.26e5) pending VG-2 closure.
 - New evidence (Attempt #171, 2025-10-08): `reports/2025-10-cli-flags/phase_l/trace_tooling_patch/20251008T175913Z/` confirms cache-aware trace taps on CPU+CUDA; M2g.5 is complete and clears the tooling blocker.
 - Next Actions (2025-12-12 refresh):
-0. **M2i.2 metrics gate** — Keep the 20251008T174753Z bundle as the authoritative comparison; no rerun until physics changes, but reference it in future attempts to show the baseline divergence (Δrel ≈ -0.9999995 on `I_before_scaling`).
+0. **M2i.2 metrics gate** — Keep the 20251008T174753Z bundle as the authoritative baseline and now reference `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T182512Z/rotated_lattice_divergence.md` when documenting `I_before_scaling` deltas; do not rerun until the parity shim trace shows matching `rot_*` vectors (Py ↔ C).
 1. **M2g.6 documentation sync** — Extend `reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md` with the Option B trace-tooling outcome and flip the plan row [D]; cite Attempt #171 artifacts and update `docs/fix_plan.md` once complete.
 2. **Cache index audit** — Build a diagnostics bundle that logs `(slow, fast)` cache lookups (fast-1 with wrap) before and after `apply_phi_carryover()`; store under `reports/2025-10-cli-flags/phase_l/cache_index_audit/<timestamp>/` with commands, diff notes, and SHA256 hashes.
 3. **Phase N preparation** — After VG-2 closes, pre-stage refreshed C & PyTorch float images so nb-compare can execute immediately; draft harness commands now and note prerequisites in `reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/README.md`.

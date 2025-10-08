@@ -3828,3 +3828,19 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - Cache index audit — Build diagnostics bundle logging (slow, fast) cache lookups with fast-1 wrap semantics before/after apply_phi_carryover() (Next Actions item 2 from plan refresh)
       - M2i.2 reference — Keep 20251008T174753Z as authoritative baseline showing I_before_scaling Δrel ≈ -0.9999995 until physics changes land
       - Phase N preparation — Draft nb-compare harness commands for supervisor ROI parity rerun once VG-2 closes
+  * [2025-10-08] Attempt #173 (galph loop — Phase M2i.2 scaling probe, Mode: Parity/Evidence) — Result: **EVIDENCE CAPTURED** (rotated lattice divergence quantified; VG-2 still red). **No code changes.**
+    Metrics:
+      - Source traces: PyTorch `reports/2025-10-cli-flags/phase_j/trace_py_scaling.log`, C `reports/2025-10-cli-flags/phase_j/trace_c_scaling.log`.
+      - Fractional Miller offsets: Δh ≈ +0.1021, Δk ≈ +0.0240, Δl ≈ +0.1103 (Py − C).
+      - Lattice factor ratio: Py/C ≈ 2.16e-03 (spec expects 1.0 within 1e-6).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T182512Z/rotated_lattice_divergence.md` — Summary table contrasting rotated vectors, hkl, and F_latt with parity hypotheses.
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T182512Z/rotated_lattice_comparison.json` — Raw numeric capture for downstream scripts.
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T182512Z/commands.txt` — Provenance and trace pointers.
+    Observations/Hypotheses:
+      - PyTorch trace shows spec-mode rotated vectors; C trace reflects φ=0 carryover state, placing (h,k,l) much closer to integers and inflating `sincg`.
+      - Either the parity shim was not engaged for this run or `_apply_phi_carryover()` failed to seed the cache from the prior pixel. Need to confirm shim activation before additional physics edits.
+    Next Actions:
+      - Re-run `scripts/trace_harness.py` with `--phi-carryover-mode c-parity` (Phase M2i.2 gate) and archive a new pair of traces under `reports/.../scaling_validation/`.
+      - If vectors still diverge, add temporary logging around `Crystal._apply_phi_carryover()` (trace-only) to verify cache priming matches Option B design in `parity_shim/20251201_dtype_probe/analysis_summary.md`.
+      - Once rotated vectors align, rerun M2i.2 metrics to remove VG-2 blocker and proceed to Phase N nb-compare prep.

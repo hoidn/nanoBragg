@@ -1085,3 +1085,9 @@
 - Updated `plans/active/cli-noise-pix0/plan.md` status snapshot to acknowledge Attempt #171 and rewrote the Next Actions list to remove the completed M2g.5 tooling task. M2g.6, cache index audit, and Phase N prep are now the leading items; M2g.5 row marked [D] with artifact path `trace_tooling_patch/20251008T175913Z/`.
 - Revised `docs/fix_plan.md` CLI-FLAGS-003 Next Actions to mirror the plan (emphasising documentation sync, cache index diagnostics, and Phase N preparation). Authored a new 100-line input.md (Mode: Docs) directing Ralph to update `phi_carryover_diagnosis.md`, flip plan row M2g.6 to [D], add a ledger attempt entry, and rerun collect-only pytest for CLI scaling tests.
 - Follow-up for Ralph: perform the M2g.6 documentation sync citing Attempt #171 evidence, update plan/fix_plan accordingly, and keep M2i.2 metrics gate noted as red before advancing to the cache index audit bundle.
+
+## 2025-10-08 (galph loop — M2i.2 parity trace directive)
+- Logged Attempt #173 in docs/fix_plan.md with new rotated-lattice divergence analysis (reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T182512Z/).
+- Updated plans/active/cli-noise-pix0/plan.md Next Actions bullet 0 to reference the new memo; M2i.2 remains gated pending c-parity trace.
+- Authored relocation of input.md directing Ralph to rerun trace_harness.py with --phi-mode c-parity and refresh scaling metrics once rot_* vectors align.
+- Follow-up: Ralph to capture c-parity trace + compare_scaling_traces bundle, then update fix_plan Attempts with new timestamp and metrics before advancing to Phase N.
