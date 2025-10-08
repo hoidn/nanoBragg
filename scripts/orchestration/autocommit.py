@@ -12,12 +12,19 @@ def _run_list(cmd: Iterable[str]) -> List[str]:
     return [p for p in (cp.stdout or "").splitlines() if p.strip()]
 
 
-def list_dirty_paths() -> Tuple[List[str], List[str], List[str]]:
-    """Return (unstaged_mod, staged_mod, untracked) path lists."""
+def list_dirty_paths(include_ignored_untracked: bool = False) -> Tuple[List[str], List[str], List[str], List[str]]:
+    """
+    Return (unstaged_mod, staged_mod, untracked, ignored_untracked) path lists.
+    If include_ignored_untracked is True, also list ignored untracked files.
+    """
     unstaged_mod = _run_list(["git", "diff", "--name-only", "--diff-filter=M"])
     staged_mod = _run_list(["git", "diff", "--cached", "--name-only", "--diff-filter=AM"])
     untracked = _run_list(["git", "ls-files", "--others", "--exclude-standard"])
-    return unstaged_mod, staged_mod, untracked
+    ignored_untracked: List[str] = []
+    if include_ignored_untracked:
+        # list ignored, untracked files according to .gitignore
+        ignored_untracked = _run_list(["git", "ls-files", "--others", "-i", "--exclude-standard"])
+    return unstaged_mod, staged_mod, untracked, ignored_untracked
 
 
 def autocommit_reports(
@@ -35,10 +42,10 @@ def autocommit_reports(
     """
     # Normalize extensions
     allowed_exts = {e.lower() for e in allowed_extensions}
-    unstaged_mod, staged_mod, untracked = list_dirty_paths()
+    unstaged_mod, staged_mod, untracked, ignored_untracked = list_dirty_paths(include_ignored_untracked=force_add)
     dirty_all: List[str] = []
     seen: Set[str] = set()
-    for p in unstaged_mod + staged_mod + untracked:
+    for p in unstaged_mod + staged_mod + untracked + ignored_untracked:
         if p not in seen:
             dirty_all.append(p)
             seen.add(p)
@@ -91,4 +98,3 @@ def autocommit_reports(
         else:
             logger("[reports] WARNING: git commit failed; staged files remain staged")
     return committed, staged, skipped
-
