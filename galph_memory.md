@@ -1828,3 +1828,9 @@ Follow-ups for Ralph:
 - Updated `docs/fix_plan.md` (Attempt #128 + Next Actions) to focus Phase L3k.3c.4 on eliminating pix0_z offset before re-running parity.
 - Refreshed `input.md` (Parity mode) directing Ralph to regenerate traces via `trace_harness.py`, capture C trace with `-trace_pixel 685 1039`, rerun `compare_per_phi_traces.py`, and keep docs/spec references aligned.
 - Follow-up: Ralph to audit detector pix0 pipeline (distance/pivot math) so VG-1 hits ≤1e-6, then progress to plan Phase C5.
+
+## 2025-12-01 (galph loop — φ=0 spec audit)
+- Reviewed specs/spec-a-core.md:211-224 and confirmed φ loop remains spec-compliant (fresh rotations every step); no C carryover language in specs.
+- Verified docs/bugs/verified_c_bugs.md:166 continues to quarantine C-PARITY-001 as a defect and the PyTorch default path (`Crystal.get_rotated_real_vectors` lines ~1080-1170) keeps `phi_carryover_mode="spec"` as default.
+- `tests/test_cli_scaling_phi0.py` still enforces the spec baseline; instructed Ralph via input.md to rerun these selectors and capture fresh logs under `reports/2025-12-cli-flags/phase_l/spec_baseline_refresh/` before touching parity shim math.
+- Next actions for Ralph: execute the mapped tests, write `summary.md` + `commands.txt` in the new report directory, and log an Attempt update in docs/fix_plan.md so Phase C4 (parity shim traces) can resume with up-to-date documentation evidence.
