@@ -1065,3 +1065,10 @@
 - Added Attempt #167 to `docs/fix_plan.md` with gradcheck metrics and refreshed Next Actions (lines 461-467) to prioritise the CPU ROI trace, cache tooling patch, and documentation sync.
 - Authored `input.md` (Mode: Parity, 100 lines) directing Ralph to run the ROI harness, archive a complete evidence bundle under `carryover_probe/<ts>/`, and log results before touching simulator code.
 - Follow-up: Ralph to execute the harness command, capture trace/diff/metrics + provenance files, update docs/fix_plan.md Attempts with the new timestamp, and keep the workspace clean for the next parity diagnostics.
+
+## 2025-12-12 (galph loop — M2i.2 metrics prep)
+- Sync clean; coin flip=HEADS → reviewed Ralph commits 4c4b62b/882dd04 (evidence bundles only, no regressions).
+- Marked CLI-FLAGS-003 Phase M2i.1 complete in `plans/active/cli-noise-pix0/plan.md` (artifact 20251008T172721Z) and refreshed Next Actions to spotlight M2i.2 metrics work.
+- Updated `docs/fix_plan.md` CLI-FLAGS-003 Next Actions with the same completion note so downstream loops stop re-running M2i.1.
+- Authored new Parity-mode `input.md` directing Ralph to run M2i.2 (compare_scaling_traces.py + diff bundle) and update `lattice_hypotheses.md`; artifact pattern specified under metrics_refresh/.
+- Pending follow-up: Ralph to execute the metrics refresh, produce diff/metrics + ledger updates, then we can tackle trace tap fixes (M2g.5).

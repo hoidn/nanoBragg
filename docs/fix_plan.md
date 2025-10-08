@@ -459,7 +459,7 @@
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): 🔴 **2025-12-11 regression.** Option B cache wiring (commit `fa0167b`) allows the targeted parity test to hit the cache but `F_latt` still diverges (relative error 1.57884 versus ≤1e-6) and the omega trace tap now throws tensor indexing errors. Evidence captured in `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T153142Z_carryover_cache_plumbing/`.
 - Next Actions (2025-12-12 refresh):
-0. **M2i.1 cross-pixel trace rerun** — `python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --roi 684 686 1039 1040 --phi-mode c-parity --dtype float64` (CPU) and archive outputs under `carryover_probe/<timestamp>/` with env + SHA256 metadata.
+0. ✅ **M2i.1 cross-pixel trace rerun archived** — `reports/2025-10-cli-flags/phase_l/carryover_probe/20251008T172721Z/` (CPU, float64, c-parity) contains trace logs, metrics, env metadata, and SHA256 bundle.
 1. **M2i.2 metrics refresh** — Regenerate `metrics.json` + `trace_diff.md`, confirm `first_divergence=None`, and log deltas in `lattice_hypotheses.md` before touching physics code.
 2. **M2g.5 trace tooling patch** — Update cache-aware taps (omega, F_latt) so CUDA/CPU harness runs without IndexError; re-run the CUDA harness to verify.
 3. **M2g.6 documentation sync** — Extend `reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md` with the Option B rationale and new evidence paths; flip plan row to [D].
