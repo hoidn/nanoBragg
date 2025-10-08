@@ -2940,20 +2940,19 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 
 ---
 
-## [STATIC-PYREFLY-001] Run pyrefly analysis and triage
 - Spec/AT: `prompts/pyrefly.md` (static-analysis SOP), `prompts/supervisor.md` (pyrefly directive), `docs/development/testing_strategy.md` §1.5 (command sourcing), `pyproject.toml` `[tool.pyrefly]` configuration.
 - Priority: Medium
-- Status: in_planning
+- Status: in_progress
 - Owner/Date: galph/2025-12-02
-- Plan Reference: n/a — follow `prompts/pyrefly.md` (author plan if scope expands)
+- Plan Reference: `plans/active/static-pyrefly.md`
 - Reproduction (PyTorch):
   * Static analysis: `pyrefly check src` from repo root; archive stdout/stderr + exit code to `reports/pyrefly/<YYYYMMDD>/pyrefly.log`.
   * Verification tests: Map future fixes to targeted pytest selectors; during supervisor evidence loops capture `pytest --collect-only -q <selector>` output.
 - First Divergence (if known): Pyrefly has not been executed since the float32 migration; current lint violations are unknown, blocking targeted delegation.
 - Next Actions (galph supervision):
-1. **Verify prerequisites** — Confirm `pyproject.toml` exposes `[tool.pyrefly]` and `command -v pyrefly` succeeds. If unavailable, log a blocking Attempt with guidance (document install path or alternative linting strategy) without introducing new tools mid-loop.
-2. **Run baseline scan** — Execute `pyrefly check src`, store logs and metadata under `reports/pyrefly/<date>/`, and summarise diagnostics (errors/warnings) in `summary.md` for traceability.
-3. **Delegate fixes** — Update `input.md` and this entry with prioritized findings (rule, file, severity) plus mapped pytest selectors so Ralph can address them; record progress in Attempts.
+  1. Phase A (A1–A3) — execute the pre-flight checks from `plans/active/static-pyrefly.md`, create the timestamped `reports/pyrefly/` directory, and log tool availability in `docs/fix_plan.md` Attempts.
+  2. Phase B (B1–B3) — capture the baseline `pyrefly check src` run with env metadata and grouped diagnostics, storing artifacts per plan policy.
+  3. Phase C/D — synthesize a ranked findings summary, map each blocker to pytest selectors, and update `input.md` with the first batch of fixes for Ralph while documenting rerun cadence.
 - Attempts History: _None yet_
 
 ## [SOURCE-WEIGHT-001] Correct weighted source normalization

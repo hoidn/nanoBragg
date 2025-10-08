@@ -1888,3 +1888,8 @@ Follow-ups for Ralph:
 - Updated `docs/fix_plan.md` (CLI-FLAGS-003 first divergence + Next Actions bullet) to call out the polarization offset and require trace tap updates before continuing Phase M.
 - Issued Parity-mode `input.md` directing Ralph to emit both pre/post polarization trace lines, refresh the harness, rerun compare_scaling_traces, and keep evidence under a new timestamped directory.
 - Next supervisor follow-up: confirm Ralph captures the new trace, updates compare script if needed, and logs Attempt before moving to structure-factor parity (Plan M2/M3).
+
+## 2025-12-03 (galph loop — Pyrefly planning bootstrap)
+- Authored `plans/active/static-pyrefly.md` with Phases A–E covering tool verification, baseline scan, triage, delegation hooks, and closure criteria for STATIC-PYREFLY-001.
+- Updated `docs/fix_plan.md:2943-2954` to reference the new plan, set status to in_progress, and align next actions with plan phases.
+- Rewrote `input.md` (Docs mode) instructing Ralph to execute Phase A (tool audit + artifact scaffold) before any pyrefly run; emphasized artifact paths under `reports/pyrefly/`.
