@@ -1867,3 +1867,8 @@ Follow-ups for Ralph:
 - Added new fix-plan entry `[STATIC-PYREFLY-001]` to capture the impending static-analysis baseline (verify tool availability, run `pyrefly check src`, delegate fixes).
 - Authored Docs-mode `input.md` (~100 lines) directing Ralph to execute Phase L1–L3 doc updates, run collect-only selectors, refresh plans/checklists/bug doc, and store artifacts in a new `reports/2025-10-cli-flags/phase_l/rot_vector/<timestamp>/` folder before advancing to Phase M.
 - Next expectations: Ralph completes the documentation sync, logs a fresh CLI-FLAGS-003 Attempt with commands + artifact links, keeps spec untouched, and lines up Phase M scaling parity work for the following loop.
+
+## 2025-10-08 04:33:06Z (galph loop)
+- Updated docs/fix_plan.md CLI-FLAGS-003 next actions to focus on scaling audit tasks M1–M4 (trace harness + regression test).
+- Issued Parity-mode input.md directing Ralph to capture new CPU scaling traces via trace_harness.py and compare_scaling_traces.py, storing artifacts under scaling_validation/.
+- Outstanding follow-up: after CPU evidence, expand to CUDA trace and implement scaling fix + regression test per plan.

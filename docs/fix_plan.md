@@ -481,8 +481,9 @@
       - **Documentation hygiene**: All files updated maintain ASCII formatting, cross-references preserved, Protected Assets untouched
       - Mode: Docs → No pytest execution beyond collect-only per gate requirements
     Next Actions:
-      - Phase L3 complete — mark cli-noise-pix0 plan.md task L3 as [D]
-      - Advance to Phase M: Structure-factor parity investigation (tasks M1–M3 per plan)
+      - Phase L closure recorded — keep plan tasks L1–L3 marked [D] and focus forward work on scaling parity.
+      - Phase M1–M3: run `trace_harness.py --pixel 685 1039` from `reports/2025-10-cli-flags/phase_l/scaling_audit/` (CPU first, then CUDA) to log HKL/F_cell/F_latt deltas against `c_trace_scaling.log`, fix `_tricubic_interpolation` so `I_before_scaling` matches C within ≤1e-6, and add `tests/test_cli_scaling_phi0.py::TestScalingParity::test_I_before_scaling_matches_c`.
+      - Phase M4: once metrics are green, update `scaling_audit/summary.md` + `fix_checklist.md` and prepare artifacts for Phase N nb-compare.
   * [2025-10-07] Attempt #135 (ralph loop i=135, Mode: Docs) — Result: **BLOCKED** (Phase L1–L3 stale plan references). **No code changes.**
     Metrics: Test collection: 448 tests collected successfully (pytest --collect-only -q). Documentation-only loop. Blocking condition identified.
     Artifacts:
