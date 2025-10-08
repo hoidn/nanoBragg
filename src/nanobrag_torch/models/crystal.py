@@ -123,9 +123,22 @@ class Crystal:
         self._enable_trace = False  # Set to True by Simulator when trace_pixel is active
         self._last_tricubic_neighborhood = None  # Populated only when _enable_trace=True
 
-        # TODO (CLI-FLAGS-003 Phase L3k.3c.4): Add opt-in C-parity carryover shim here
-        # Future work will introduce a flag to enable φ=0 cache for validation harnesses
-        # that need to reproduce nanoBragg.c's C-PARITY-001 bug (docs/bugs/verified_c_bugs.md:166)
+        # Phase CLI-FLAGS-003 M2: φ=0 carryover cache for C-PARITY-001 bug emulation
+        # These cache the previous call's φ=final vectors to simulate C's firstprivate
+        # variable persistence across pixel iterations (see nanoBragg.c:2797 and 3044-3058)
+        # C-Code Implementation Reference (from nanoBragg.c, lines 2797, 3044-3095):
+        # The ap/bp/cp variables are declared firstprivate in the OpenMP parallel pragma,
+        # meaning each thread gets its own copy that persists across pixel iterations.
+        # When phi==0, the rotation is skipped, so ap/bp/cp retain the values from the
+        # previous pixel's final φ step.
+        self._phi_carryover_cache = {
+            'a': None,      # Previous pixel's φ=final real vector a
+            'b': None,      # Previous pixel's φ=final real vector b
+            'c': None,      # Previous pixel's φ=final real vector c
+            'a_star': None, # Previous pixel's φ=final reciprocal vector a*
+            'b_star': None, # Previous pixel's φ=final reciprocal vector b*
+            'c_star': None, # Previous pixel's φ=final reciprocal vector c*
+        }
 
     def to(self, device=None, dtype=None):
         """Move crystal to specified device and/or dtype."""
@@ -152,10 +165,48 @@ class Crystal:
         # Clear geometry cache when moving devices
         self._geometry_cache = {}
 
-        # TODO (CLI-FLAGS-003 Phase L3k.3c.4): φ cache migration will go here
-        # when opt-in parity shim is added
+        # Phase CLI-FLAGS-003 M2: Clear φ carryover cache when moving devices
+        # This ensures no cross-device contamination of cached vectors
+        self.clear_phi_carryover_cache()
 
         return self
+
+    def clear_phi_carryover_cache(self):
+        """
+        Clear the φ carryover cache.
+
+        This should be called at the start of a new simulation run to ensure
+        the first pixel doesn't use stale data from a previous run.
+
+        In the C code, this corresponds to the initial state where ap/bp/cp
+        haven't been set yet (they're firstprivate but uninitialized for the
+        first pixel in each thread).
+
+        C-Code Implementation Reference (from nanoBragg.c, lines 2797, 3044-3095):
+        ```c
+        // ap/bp/cp declared as firstprivate - each thread gets its own copy
+        #pragma omp parallel for ... firstprivate(ap,bp,cp,...)
+
+        // On first pixel iteration, ap/bp/cp are uninitialized
+        // Subsequent pixels reuse values from previous pixel's final φ step
+        if( phi != 0.0 )
+        {
+            /* rotate about spindle if neccesary */
+            rotate_axis(a0,ap,spindle_vector,phi);
+            rotate_axis(b0,bp,spindle_vector,phi);
+            rotate_axis(c0,cp,spindle_vector,phi);
+        }
+        // When phi==0, ap/bp/cp retain previous values (carryover)
+        ```
+        """
+        self._phi_carryover_cache = {
+            'a': None,
+            'b': None,
+            'c': None,
+            'a_star': None,
+            'b_star': None,
+            'c_star': None,
+        }
 
     def _validate_cell_parameters(self):
         """Validate cell parameters for numerical stability."""
@@ -1188,54 +1239,78 @@ class Crystal:
         b_star_final = rotate_umat(b_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
         c_star_final = rotate_umat(c_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
 
-        # Phase L3k.3c.4: Opt-in parity shim for C-PARITY-001 bug emulation
-        # When phi_carryover_mode=="c-parity", replace φ=0 vectors with cached "stale" values
-        # from a simulated previous pixel's final φ step, matching the C bug.
+        # Phase M2: C-PARITY-001 bug emulation via cached previous pixel carryover
+        # When phi_carryover_mode=="c-parity", replace φ=0 vectors with cached values
+        # from the previous call's φ=final vectors, matching the C bug behavior.
         #
-        # C-Code Implementation Reference (from nanoBragg.c, lines 3044-3058):
+        # C-Code Implementation Reference (from nanoBragg.c, lines 2797, 3044-3095):
+        # The ap/bp/cp variables are declared firstprivate in the OpenMP parallel pragma,
+        # meaning each thread gets its own copy that persists across pixel iterations.
+        # When phi==0, the rotation is skipped, so ap/bp/cp retain the values from the
+        # previous pixel's final φ step.
+        #
         # ```c
-        # if( phi != 0.0 )
-        # {
-        #     /* rotate about spindle if neccesary */
-        #     if(fpixel==512 && spixel==512 && source==0 && phi_tic==0) {
-        #         printf("TRACE: Phi rotation (phi=%g degrees):\n", phi*RTD);
-        #         printf("TRACE:   spindle_vector = [%g, %g, %g]\n", spindle_vector[1], spindle_vector[2], spindle_vector[3]);
-        #         printf("TRACE:   Before phi rotation:\n");
-        #         printf("TRACE:     a0 = [%g, %g, %g] |a0| = %g\n", a0[1], a0[2], a0[3], a0[0]);
-        #         printf("TRACE:     b0 = [%g, %g, %g] |b0| = %g\n", b0[1], b0[2], b0[3], b0[0]);
-        #         printf("TRACE:     c0 = [%g, %g, %g] |c0| = %g\n", c0[1], c0[2], c0[3], c0[0]);
-        #     }
+        # // ap/bp/cp declared as firstprivate (line 2797)
+        # #pragma omp parallel for ... firstprivate(ap,bp,cp,...)
         #
-        #     rotate_axis(a0,ap,spindle_vector,phi);
-        #     rotate_axis(b0,bp,spindle_vector,phi);
-        #     rotate_axis(c0,cp,spindle_vector,phi);
+        # // Inside pixel loop (lines 3044-3095):
+        # for(phi_tic=0;phi_tic<phisteps;++phi_tic)
+        # {
+        #     phi = phi0 + phistep*phi_tic;
+        #     if( phi != 0.0 )
+        #     {
+        #         /* rotate about spindle if neccesary */
+        #         rotate_axis(a0,ap,spindle_vector,phi);
+        #         rotate_axis(b0,bp,spindle_vector,phi);
+        #         rotate_axis(c0,cp,spindle_vector,phi);
+        #     }
+        #     // When phi==0, ap/bp/cp retain previous pixel's final φ values
         # }
-        # // When phi==0, ap/bp/cp retain previous values (stale carryover from prior pixel)
         # ```
         #
-        # Implementation: In batched form, simulate stale carryover by replacing φ=0 (index 0)
-        # with φ=final (index -1) vectors using advanced indexing. This is device/dtype neutral
-        # and preserves gradient flow through all tensor operations.
+        # Implementation Strategy:
+        # 1. If cache exists and mode is c-parity, use cached φ=final vectors for φ=0
+        # 2. After computing this pixel's vectors, cache the φ=final vectors for next call
+        # 3. This simulates the firstprivate variable persistence in the C code
 
         if config.phi_carryover_mode == "c-parity":
-            # Simulate stale carryover: use φ=final vectors as the "previous pixel's last φ"
-            # In batched form: replace index 0 with index -1 using advanced indexing
+            # Check if we have cached vectors from a previous call
+            cache = self._phi_carryover_cache
+            has_cache = cache['a'] is not None
+
+            if has_cache:
+                # Replace φ=0 (index 0) with cached previous pixel's φ=final vectors
+                # This matches C behavior where ap/bp/cp at phi==0 contain stale values
+
+                # Ensure cached tensors are on the correct device/dtype
+                # Use type_as to preserve gradient flow while matching device/dtype
+                cached_a = cache['a'].type_as(a_final)
+                cached_b = cache['b'].type_as(b_final)
+                cached_c = cache['c'].type_as(c_final)
+                cached_a_star = cache['a_star'].type_as(a_star_final)
+                cached_b_star = cache['b_star'].type_as(b_star_final)
+                cached_c_star = cache['c_star'].type_as(c_star_final)
+
+                # Replace φ=0 slice with cached vectors
+                # Shape: cached tensors are (N_mos, 3), final tensors are (N_phi, N_mos, 3)
+                a_final[0] = cached_a
+                b_final[0] = cached_b
+                c_final[0] = cached_c
+                a_star_final[0] = cached_a_star
+                b_star_final[0] = cached_b_star
+                c_star_final[0] = cached_c_star
+
+            # Cache this call's φ=final vectors for the next call
+            # Extract φ=final (last φ index) across all mosaic domains
+            # Clone to ensure we don't hold references to the computation graph
+            # Use detach() + clone() to create a fresh tensor that can be reattached later
             phi_final_idx = config.phi_steps - 1
-
-            # Create index tensor for replacement
-            # Shape: (N_phi,) with values [phi_final_idx, 1, 2, ..., N_phi-1]
-            indices = torch.arange(config.phi_steps, device=a_final.device, dtype=torch.long)
-            indices[0] = phi_final_idx
-
-            # Replace φ=0 with φ=final using index_select on the phi dimension (dim=0)
-            # This preserves gradients and works across all devices/dtypes
-            a_final = torch.index_select(a_final, dim=0, index=indices)
-            b_final = torch.index_select(b_final, dim=0, index=indices)
-            c_final = torch.index_select(c_final, dim=0, index=indices)
-
-            a_star_final = torch.index_select(a_star_final, dim=0, index=indices)
-            b_star_final = torch.index_select(b_star_final, dim=0, index=indices)
-            c_star_final = torch.index_select(c_star_final, dim=0, index=indices)
+            cache['a'] = a_final[phi_final_idx].detach().clone()
+            cache['b'] = b_final[phi_final_idx].detach().clone()
+            cache['c'] = c_final[phi_final_idx].detach().clone()
+            cache['a_star'] = a_star_final[phi_final_idx].detach().clone()
+            cache['b_star'] = b_star_final[phi_final_idx].detach().clone()
+            cache['c_star'] = c_star_final[phi_final_idx].detach().clone()
 
         return (a_final, b_final, c_final), (a_star_final, b_star_final, c_star_final)
 

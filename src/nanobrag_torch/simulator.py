@@ -758,6 +758,13 @@ class Simulator:
         Returns:
             torch.Tensor: Final diffraction image with shape (spixels, fpixels).
         """
+        # Phase M2: Clear φ carryover cache at start of new simulation run
+        # This ensures the first pixel doesn't use stale vectors from a previous run
+        # In c-parity mode, the first pixel will get fresh rotations (cache is empty),
+        # and subsequent pixels will use carryover from the previous pixel
+        if self.crystal.config.phi_carryover_mode == "c-parity":
+            self.crystal.clear_phi_carryover_cache()
+
         # Get oversampling parameters from detector config if not provided
         if oversample is None:
             oversample = self.detector.config.oversample
