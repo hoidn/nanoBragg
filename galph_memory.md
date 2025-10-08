@@ -1103,3 +1103,9 @@
 - Refreshed `docs/fix_plan.md` CLI-FLAGS-003 Next Actions and `plans/active/cli-noise-pix0/plan.md` Next Actions to align with the new Phase B checklist.
 - Rewrote `input.md` (Mode: Docs) to have Ralph execute Plan B0 (design review + collect-only baseline) prior to code edits.
 - Follow-up: Expect Ralph next loop to produce the Phase B design bundle and update fix_plan Attempts before starting B1–B3 implementation.
+
+## 2025-12-14 (galph loop — Phase B1 directive refresh)
+- Verified git baseline (already up to date) and reviewed B0 design bundle `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T185921Z/` plus plan/fix_plan context.
+- Marked `plans/active/phi-carryover-removal/plan.md` Phase B0 as [D] with explicit status line, and updated `plans/active/cli-noise-pix0/plan.md` Next Actions to start at B1 now that the design artifact exists.
+- Authored new 129-line `input.md` (Mode: Docs) directing Ralph to execute Phase B1 CLI surface removal with detailed artifact/test cadence and doc touchpoints; committed as `SUPERVISOR: Phase B1 directive refresh - tests: not run`.
+- Follow-ups: Ralph to remove the CLI flag per Phase B1, capture the specified artifact bundle, update docs/fix_plan.md Attempt logs, and prep inventory notes for B2 targets.
