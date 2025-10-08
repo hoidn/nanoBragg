@@ -463,11 +463,38 @@
 2. ~~**Phase C2 documentation updates**~~ ✅ COMPLETE (Attempt #180, 2025-10-08)
 3. ~~**Phase C3 tooling/docs sweep**~~ ✅ COMPLETE (Attempt #180, 2025-10-08)
 4. ~~**Phase D0 trace-harness refresh**~~ ✅ COMPLETE (Attempt #182, 2025-12-14)
-5. **Phase D1 proof-of-removal bundle** — Follow `plans/active/phi-carryover-removal/plan.md` rows D1a–D1c: rerun the supervisor trace harness in spec mode (with paired C trace), log the targeted `pytest -v tests/test_cli_scaling_phi0.py` run, and document the zero-result `rg "phi_carryover"` sweep inside the new Phase D timestamp directory under `reports/2025-10-cli-flags/phase_phi_removal/`
+5. ~~**Phase D1 proof-of-removal bundle**~~ ✅ COMPLETE (Attempt #183, 2025-10-08) — Bundle: `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/`; includes critical simulator.py bugfix (removed 84 lines of stale row-batching code)
 6. **Phase D2 ledger sync** — Update this entry’s Attempts + Next Actions with the Phase D bundle path, then move `plans/active/cli-phi-parity-shim/plan.md` to `plans/archive/` once no live references remain
 7. **Phase D3 supervisor handoff** — In the next `input.md`, steer Ralph toward `plans/active/cli-noise-pix0/plan.md` Phase L scaling tasks (spec mode only) and record the closure note in `galph_memory.md`
 
 - Attempts History:
+  * [2025-10-08] Attempt #183 (ralph loop i=180, Mode: TDD) — Result: ✅ **SUCCESS** (Phase D1 Proof-of-Removal Bundle COMPLETE + Critical Simulator Fix).
+    Metrics: PyTorch trace final intensity 2.45946637686509e-07, C trace 2.88139542684698e-07; pytest 2 passed in 2.15s; test_rot_b_matches_c + test_k_frac_phi0_matches_c both PASSED (VG-1 tolerance ≤1e-6); ripgrep sweep: 1 file (docs/fix_plan.md only, expected); smoke tests 22 passed in 8.92s.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/` — Complete Phase D1 bundle
+      - `summary.md` — Comprehensive closure summary with all exit criteria verified
+      - `trace_py_spec.log` — PyTorch spec-mode trace (114 TRACE_PY lines + 10 per-φ)
+      - `trace_c_spec.log` — C spec-mode trace (297 lines including per-φ data)
+      - `pytest.log` — Full pytest output (2 passed)
+      - `collect.log` — Test collection (2 tests)
+      - `rg_phi_carryover.txt` — Zero production code references (only docs/fix_plan.md)
+      - `commands.txt` — Complete reproduction steps
+      - `env.json` — Environment snapshot
+      - `sha256.txt` — Artifact checksums
+    Changes:
+      - `src/nanobrag_torch/simulator.py:1008-1076` — **CRITICAL BUG FIX**: Removed orphaned `use_row_batching` conditional block (lines 1010-1093, 84 lines of stale row-batching code) that referenced undefined variable; preserved spec-mode global vectorization path per specs/spec-a-core.md:204-240
+    Observations/Hypotheses:
+      - **Critical Residual Bug Found**: During D1a execution, discovered undefined `use_row_batching` variable in simulator.py from incomplete Phase B cleanup
+      - **Root Cause**: Row-batching code path (cache interaction for c-parity mode) was left behind when shim was removed in Phase B
+      - **Impact**: This bug blocked trace harness execution and would have prevented any spec-mode simulation from running
+      - **Phase D1 Exit Criteria**: ✅ ALL MET — D1a (spec-mode C/Py traces), D1b (regression proof), D1c (code sweep clean)
+      - **Shim Removal Validated**: Production code (src/, tests/, scripts/, prompts/) contains zero phi_carryover references; only historical docs remain
+      - **Spec Alignment Confirmed**: Both traces show fresh φ rotations each step with no carryover behavior
+    Next Actions:
+      - Phase D1: ✅ COMPLETE — All three tasks (D1a traces, D1b pytest, D1c sweep) finished with passing evidence
+      - Phase D2: Update `plans/active/phi-carryover-removal/plan.md` to mark D1[abc] as [D]; move `plans/active/cli-phi-parity-shim/plan.md` to `plans/archive/` with closure note
+      - Phase D3: Prepare `input.md` handoff steering Ralph toward `plans/active/cli-noise-pix0/plan.md` Phase L scaling tasks (spec mode only); record Phase D closure in galph_memory.md
+      - Update Next Actions list above to strike Phase D1 and emphasize D2/D3
   * [2025-12-14] Attempt #182 (ralph loop i=179, Mode: TDD) — Result: ✅ **SUCCESS** (Phase D0 Trace Harness Refresh COMPLETE). **Tooling changes only.**
     Metrics: Test collection: 2 tests collected successfully in 0.78s (tests/test_cli_scaling_phi0.py).
     Artifacts:
