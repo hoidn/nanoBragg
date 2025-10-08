@@ -817,6 +817,26 @@
       1. Phase L3k.3c.4 — Design opt-in C-parity shim (cite docs/bugs/verified_c_bugs.md:166-204)
       2. Phase L3k.3c.5 — Update docs/tests to reflect dual-mode behavior
       3. Phase L3k.3d — Resolve nb-compare ROI anomaly and rerun VG-3/VG-4
+  * [2025-10-07] Attempt #117 (ralph loop i=104, Mode: Docs) — Result: **DOCUMENTATION REFRESH COMPLETE** ✅ (Phase L3k.3c.3 spec baseline evidence refresh). **No code changes.**
+    Metrics: Documentation-only loop (docs-mode per input.md:2). Tests PASSED (2/2 in 2.13s). Test collection: 2 tests collected successfully (pytest --collect-only -q).
+    Artifacts:
+      - `reports/2025-12-cli-flags/phase_l/spec_baseline_refresh/pytest_cpu.log` — Targeted test evidence (test_rot_b_matches_c PASSED, test_k_frac_phi0_matches_c PASSED)
+      - `reports/2025-12-cli-flags/phase_l/spec_baseline_refresh/summary.md` — Complete evidence summary with spec compliance confirmation, artifacts list, CUDA status, next steps
+      - `reports/2025-12-cli-flags/phase_l/spec_baseline_refresh/commands.txt` — Reproduction commands (collection + CPU tests + CUDA availability check)
+    Observations/Hypotheses:
+      - **Spec compliance reconfirmed**: Default `phi_carryover_mode="spec"` behavior correct (specs/spec-a-core.md:211)
+      - **test_rot_b_matches_c**: Validates φ=0 reciprocal basis vector matches spec-mandated fresh rotations (no C-bug carryover)
+      - **test_k_frac_phi0_matches_c**: Validates fractional k-index calculations at φ=0 under spec mode
+      - **CUDA note**: Device available (torch.cuda.is_available()=True) but tests hard-code CPU execution (test_cli_scaling_phi0.py:61); GPU smoke not applicable to this validation loop
+      - **VG-1 gate evidence**: Documentation refresh satisfies VG-1 for Phase L3k.3c.3 per input.md:19-20
+      - **C-PARITY-001 quarantined**: Bug remains documented as non-normative (docs/bugs/verified_c_bugs.md:166); spec baseline unchanged
+      - **No protected assets modified**: docs/index.md honored; loop.sh, supervisor.sh, input.md remain untouched
+      - **Mode: Docs** — Evidence-only loop; implementation work deferred per input.md guidance (line 2, 21-22)
+    First Divergence: N/A (spec-compliant behavior revalidated; C-parity divergence is documented bug)
+    Next Actions:
+      1. Phase L3k.3c.4 (parity shim evidence capture) — Resume per input.md:38 once parity shim implementation ready
+      2. Phase L3k.3c.5 (dual-mode documentation/tests) — Update diagnosis.md, verified_c_bugs.md, related checklists after Phase C4 completes
+      3. Phase L3k.3d — Resolve nb-compare ROI anomaly (C sum≈0) before VG-3/VG-4 reruns
       - Vectorization preserved via broadcasted `rotate_axis()` calls; gradient flow verified via test_crystal_geometry.py::test_gradient_flow
       - Device/dtype neutrality maintained (no `.cpu()`, `.cuda()`, or `.item()` in differentiable paths)
       - Tests updated: `test_rot_b_matches_c` now expects 0.71732 Å (spec-compliant base vector); `test_k_frac_phi0_matches_c` verifies divergence from C bug (TODO: replace with exact value after spec-compliant C trace generated)
