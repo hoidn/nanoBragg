@@ -244,8 +244,8 @@ class Crystal:
 
     def apply_phi_carryover(
         self,
-        slow_indices: torch.Tensor,
-        fast_indices: torch.Tensor,
+        slow_index: int,
+        fast_index: int,
         real_vectors: Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
         recip_vectors: Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
     ) -> Tuple[
@@ -253,14 +253,15 @@ class Crystal:
         Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
     ]:
         """
-        Apply φ carryover for c-parity mode using pixel-indexed cache.
+        Apply φ carryover for c-parity mode using pixel-indexed cache (single pixel).
 
         For φ=0, replaces fresh vectors with cached φ=final vectors from the
-        previous pixel. After physics computation, the φ=final vectors are stored
-        in the cache for the next pixel.
+        previous pixel. This emulates C-PARITY-001 (nanoBragg.c OpenMP firstprivate
+        persistence).
 
-        This is a vectorized implementation of C-PARITY-001 that preserves gradients
-        and maintains device/dtype neutrality.
+        **Option B Design:** This method operates on SINGLE pixels and receives
+        the globally-computed (N_phi, N_mos, 3) rotation tensors. It modifies
+        φ=0 using functional ops (torch.where) to preserve gradients.
 
         C-Code Implementation Reference (from nanoBragg.c, lines 2797, 3044-3095):
         ```c
@@ -277,14 +278,14 @@ class Crystal:
         ```
 
         Args:
-            slow_indices: Pixel slow (row) indices, shape (batch,)
-            fast_indices: Pixel fast (column) indices, shape (batch,)
+            slow_index: Single pixel slow (row) index
+            fast_index: Single pixel fast (column) index
             real_vectors: Tuple of (a, b, c) tensors with shape (N_phi, N_mos, 3)
             recip_vectors: Tuple of (a*, b*, c*) tensors with shape (N_phi, N_mos, 3)
 
         Returns:
             Tuple of (real_vectors, recip_vectors) with φ=0 replaced by cached values
-            where cache exists (non-zero for pixels with a predecessor)
+            if cache exists for this pixel
         """
         if not self._phi_cache_initialized:
             # Cache not initialized - return vectors unchanged
@@ -293,80 +294,67 @@ class Crystal:
         a, b, c = real_vectors
         a_star, b_star, c_star = recip_vectors
 
-        # For vectorized processing, we need to handle batches of pixels
-        # The cache lookup uses advanced indexing: cache[slow_indices, fast_indices]
-        # returns shape (batch, N_mos, 3)
+        # Check if cache has valid data for this pixel (non-zero values)
+        cache_real_a = self._phi_cache_real_a[slow_index, fast_index]  # Shape: (N_mos, 3)
+        cache_valid = (cache_real_a.abs().sum() > 0).item()
 
-        # Clone to avoid modifying input tensors (preserves gradient flow)
-        a_out = a.clone()
-        b_out = b.clone()
-        c_out = c.clone()
-        a_star_out = a_star.clone()
-        b_star_out = b_star.clone()
-        c_star_out = c_star.clone()
+        if cache_valid:
+            # Retrieve cached φ=final vectors for this pixel
+            cached_real_a = self._phi_cache_real_a[slow_index, fast_index]  # (N_mos, 3)
+            cached_real_b = self._phi_cache_real_b[slow_index, fast_index]
+            cached_real_c = self._phi_cache_real_c[slow_index, fast_index]
+            cached_recip_a = self._phi_cache_recip_a[slow_index, fast_index]
+            cached_recip_b = self._phi_cache_recip_b[slow_index, fast_index]
+            cached_recip_c = self._phi_cache_recip_c[slow_index, fast_index]
 
-        # Replace φ=0 slice with cached values for this batch of pixels
-        # Cache lookup: shape (batch, N_mos, 3)
-        # Target slice: shape (1, N_mos, 3) needs to be set per pixel in batch
-        # We'll use advanced indexing to set φ=0 for each pixel
+            # Use torch.where to replace φ=0 without .clone() (preserves gradients)
+            # Create a mask for φ=0 (first phi step)
+            phi_mask = torch.zeros(a.shape[0], dtype=torch.bool, device=a.device)
+            phi_mask[0] = True  # Only φ=0
 
-        # Check if cache has non-zero values (indicates previous pixel data exists)
-        # For simplicity, check if any component is non-zero
-        cache_valid = (self._phi_cache_real_a[slow_indices, fast_indices].abs().sum(dim=(-1, -2)) > 0)
+            # Broadcast mask to match tensor shapes: (N_phi,) -> (N_phi, 1, 1)
+            phi_mask_broadcast = phi_mask.unsqueeze(-1).unsqueeze(-1)
 
-        # For pixels with valid cache, replace φ=0 with cached φ=final from previous pixel
-        if cache_valid.any():
-            # Use where to conditionally replace φ=0 vectors
-            # Need to broadcast cache_valid to match vector shapes
-            # cache_valid shape: (batch,) -> need (batch, 1, 1) for broadcasting
-            valid_mask = cache_valid.unsqueeze(-1).unsqueeze(-1)  # Shape: (batch, 1, 1)
+            # Broadcast cached vectors to match input shape: (N_mos, 3) -> (1, N_mos, 3)
+            cached_real_a_broadcast = cached_real_a.unsqueeze(0)
+            cached_real_b_broadcast = cached_real_b.unsqueeze(0)
+            cached_real_c_broadcast = cached_real_c.unsqueeze(0)
+            cached_recip_a_broadcast = cached_recip_a.unsqueeze(0)
+            cached_recip_b_broadcast = cached_recip_b.unsqueeze(0)
+            cached_recip_c_broadcast = cached_recip_c.unsqueeze(0)
 
-            # Get cached vectors for this batch
-            cached_real_a = self._phi_cache_real_a[slow_indices, fast_indices]  # (batch, N_mos, 3)
-            cached_real_b = self._phi_cache_real_b[slow_indices, fast_indices]
-            cached_real_c = self._phi_cache_real_c[slow_indices, fast_indices]
-            cached_recip_a = self._phi_cache_recip_a[slow_indices, fast_indices]
-            cached_recip_b = self._phi_cache_recip_b[slow_indices, fast_indices]
-            cached_recip_c = self._phi_cache_recip_c[slow_indices, fast_indices]
+            # Replace φ=0 using torch.where (functional, preserves gradients)
+            a_out = torch.where(phi_mask_broadcast, cached_real_a_broadcast, a)
+            b_out = torch.where(phi_mask_broadcast, cached_real_b_broadcast, b)
+            c_out = torch.where(phi_mask_broadcast, cached_real_c_broadcast, c)
+            a_star_out = torch.where(phi_mask_broadcast, cached_recip_a_broadcast, a_star)
+            b_star_out = torch.where(phi_mask_broadcast, cached_recip_b_broadcast, b_star)
+            c_star_out = torch.where(phi_mask_broadcast, cached_recip_c_broadcast, c_star)
 
-            # Replace φ=0 for valid cache entries
-            # φ=0 is index 0 in the phi dimension
-            # Need to broadcast across batch dimension
-            # NOTE: This is tricky for batched operations - we're setting φ=0 for multiple pixels
-            # The input vectors have shape (N_phi, N_mos, 3) - NOT batched
-            # So we need to return modified vectors that reflect per-pixel carryover
-
-            # CRITICAL: The current API doesn't batch over pixels in the vector tensors
-            # They're still (N_phi, N_mos, 3) for ALL pixels
-            # We need to restructure this to work with the batched pixel processing
-
-            # For now, handle single-pixel case (batch size 1)
-            if slow_indices.numel() == 1 and cache_valid[0]:
-                a_out[0] = cached_real_a[0]
-                b_out[0] = cached_real_b[0]
-                c_out[0] = cached_real_c[0]
-                a_star_out[0] = cached_recip_a[0]
-                b_star_out[0] = cached_recip_b[0]
-                c_star_out[0] = cached_recip_c[0]
-
-        return (a_out, b_out, c_out), (a_star_out, b_star_out, c_star_out)
+            return (a_out, b_out, c_out), (a_star_out, b_star_out, c_star_out)
+        else:
+            # No cached data for this pixel - return fresh vectors unchanged
+            return real_vectors, recip_vectors
 
     def store_phi_final(
         self,
-        slow_indices: torch.Tensor,
-        fast_indices: torch.Tensor,
+        slow_index: int,
+        fast_index: int,
         real_vectors: Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
         recip_vectors: Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
     ):
         """
-        Store φ=final vectors in pixel-indexed cache for next pixel's φ=0.
+        Store φ=final vectors in pixel-indexed cache for next pixel's φ=0 (single pixel).
 
         This is called after computing physics for a pixel to save its φ=final
         vectors for use by the next pixel's φ=0 step (C-PARITY-001 bug emulation).
 
+        **Option B Design:** Stores WITHOUT .detach() to preserve gradient flow.
+        Uses direct tensor indexing which maintains autograd connections.
+
         Args:
-            slow_indices: Pixel slow (row) indices, shape (batch,)
-            fast_indices: Pixel fast (column) indices, shape (batch,)
+            slow_index: Single pixel slow (row) index
+            fast_index: Single pixel fast (column) index
             real_vectors: Tuple of (a, b, c) tensors with shape (N_phi, N_mos, 3)
             recip_vectors: Tuple of (a*, b*, c*) tensors with shape (N_phi, N_mos, 3)
         """
@@ -385,17 +373,17 @@ class Crystal:
         final_recip_b = b_star[phi_final_idx]
         final_recip_c = c_star[phi_final_idx]
 
-        # Store in cache using advanced indexing
+        # Store in cache using direct indexing (preserves gradients)
         # Cache shape: (S, F, N_mos, 3)
-        # Indexing with slow_indices, fast_indices sets shape (batch, N_mos, 3)
-        # Phase M2g: Remove .detach() to preserve gradient flow per diagnosis document
+        # Indexing with single slow_index, fast_index sets shape (N_mos, 3)
+        # Phase M2g: NO .detach() to preserve gradient flow per diagnosis document
         # See: reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md
-        self._phi_cache_real_a[slow_indices, fast_indices] = final_real_a
-        self._phi_cache_real_b[slow_indices, fast_indices] = final_real_b
-        self._phi_cache_real_c[slow_indices, fast_indices] = final_real_c
-        self._phi_cache_recip_a[slow_indices, fast_indices] = final_recip_a
-        self._phi_cache_recip_b[slow_indices, fast_indices] = final_recip_b
-        self._phi_cache_recip_c[slow_indices, fast_indices] = final_recip_c
+        self._phi_cache_real_a[slow_index, fast_index] = final_real_a
+        self._phi_cache_real_b[slow_index, fast_index] = final_real_b
+        self._phi_cache_real_c[slow_index, fast_index] = final_real_c
+        self._phi_cache_recip_a[slow_index, fast_index] = final_recip_a
+        self._phi_cache_recip_b[slow_index, fast_index] = final_recip_b
+        self._phi_cache_recip_c[slow_index, fast_index] = final_recip_c
 
     def _validate_cell_parameters(self):
         """Validate cell parameters for numerical stability."""
