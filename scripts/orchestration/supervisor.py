@@ -85,17 +85,17 @@ def main() -> int:
                     help="Disable auto commit of report artifacts")
     ap.set_defaults(auto_commit_reports=True)
     ap.add_argument("--report-extensions", type=str,
-                    default=os.getenv("SUPERVISOR_REPORT_EXTENSIONS", ".png,.jpeg,.npy,.txt,.md,.json"),
+                    default=os.getenv("SUPERVISOR_REPORT_EXTENSIONS", ".png,.jpeg,.npy,.txt,.md,.json,.log"),
                     help="Comma-separated list of allowed report file extensions (lowercase, with dots)")
     ap.add_argument("--max-report-file-bytes", type=int, default=int(os.getenv("SUPERVISOR_MAX_REPORT_FILE_BYTES", "5242880")),
                     help="Maximum per-file size (bytes) eligible for reports auto-commit (default 5 MiB)")
     ap.add_argument("--max-report-total-bytes", type=int, default=int(os.getenv("SUPERVISOR_MAX_REPORT_TOTAL_BYTES", "20971520")),
                     help="Maximum total size (bytes) staged per iteration for reports (default 20 MiB)")
     ap.add_argument("--force-add-reports", dest="force_add_reports", action="store_true",
-                    help="Force-add report files even if ignored (.gitignore) (default: off)")
+                    help="Force-add report files even if ignored (.gitignore) (default: on)")
     ap.add_argument("--no-force-add-reports", dest="force_add_reports", action="store_false",
                     help="Do not force-add ignored report files")
-    ap.set_defaults(force_add_reports=False)
+    ap.set_defaults(force_add_reports=True)
     args, unknown = ap.parse_known_args()
 
     # Helpers shared by pre-pull and post-run auto-commit paths
