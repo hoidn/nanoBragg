@@ -14,10 +14,11 @@
   - `docs/bugs/verified_c_bugs.md:166-204 (C-PARITY-001)` — Source of the φ carryover bug that parity mode must emulate.
   - `plans/active/cli-phi-parity-shim/plan.md` — Companion plan governing the opt-in parity shim (Phase C complete, Phase D docs pending).
   - `reports/2025-10-cli-flags/phase_l/` — Canonical evidence directory (rot_vector, parity_shim, scaling_audit, nb_compare, supervisor_command).
-- Status Snapshot (2025-12-12 refresh):
+- Status Snapshot (2025-12-14 refresh):
   - `-nonoise` CLI plumbing merged and covered by tests; noise writers are skipped when the flag is present.
   - pix0 precedence fixes landed; SAMPLE pivot error corrected to ≤0.2 µm (Attempt #129).
   - Spec-compliant φ rotation restored; the opt-in c-parity shim keeps |Δk| ≤ 5e-5 (spec path still ≤1e-6, Phase C5 docs pending).
+  - φ carryover shim code path fully removed (Attempts #176–#178); artifact bundle `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T193106Z/` documents code/tests/doc cleanup and targeted regression run.
   - Option B carryover design is locked: `reports/2025-10-cli-flags/phase_l/scaling_validation/20251210_optionB_design/` remains the canonical memo/prototype demonstrating batch-indexed caches with gradcheck PASS.
   - Attempt #163 (fa0167b) threads row-wise `(slow, fast)` batches through `Crystal.get_rotated_real_vectors_for_batch()`, but VG-2 still fails (F_latt rel err 1.57884) and trace tooling needs cache-aware indexing.
   - Attempt #166 (8255686) fixed `_apply_debug_output` tensor factories for device/dtype neutrality, enabling CUDA parity traces under `20251008T163942Z_carryover_cache_validation/`.
@@ -25,10 +26,10 @@
   - Canonical scaling deltas are still captured in `20251008T072513Z/metrics.json`; subsequent timestamps document cache-enabled failures and should be referenced during diagnosis.
   - Supervisor command / nb-compare parity remains outstanding (correlation ≈0.9965, intensity ratio ≈1.26e5) pending VG-2 closure.
 - New evidence (Attempt #171, 2025-10-08): `reports/2025-10-cli-flags/phase_l/trace_tooling_patch/20251008T175913Z/` confirms cache-aware trace taps on CPU+CUDA; M2g.5 is complete and clears the tooling blocker.
-- Next Actions (2025-12-13 refresh):
-1. **Phase B1 doc sync + B2/B3 execution** — Finish the deferred documentation removals for `--phi-carryover-mode` (README_PYTORCH.md, prompts/supervisor.md, docs/bugs entry) using evidence bundle `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T191302Z/`, then proceed with config/model/test deletions per the plan while preserving vectorization/device neutrality and noting impacted scaling diagnostics.
-2. **Phase B4 regression sweep** — Run the spec-mode targeted pytest command(s) with logs stored alongside the artifact bundle; confirm tolerances remain ≤1e-6.
-3. **Phase B5 sync** — Update this plan’s status snapshot and Next Actions after the removal bundle is committed so downstream work can resume with Phase M scaling tasks.
+- Next Actions (2025-12-14 refresh):
+1. **Phase C1 coverage audit** — Revisit `tests/test_cli_scaling_phi0.py` to ensure spec-mode assertions capture the parity guarantees formerly guarded by `tests/test_phi_carryover_mode.py`; document gaps and rerun `pytest --collect-only -q tests/test_cli_scaling_phi0.py` with logs under `reports/2025-10-cli-flags/phase_phi_removal/phase_c/<ts>/`.
+2. **Phase C2 docs ledger update** — Amend `docs/bugs/verified_c_bugs.md` C-PARITY-001 entry and related diagnosis notes to emphasise the bug remains C-only; capture diff summary + commands in the Phase C artifact directory.
+3. **Phase C3 tooling/docs cleanup** — Sweep `docs/development/testing_strategy.md`, `reports/2025-10-cli-flags/phase_l/diagnosis.md`, and prompts for residual c-parity instructions; update them to reference spec-only flow and log changes in Phase C bundle.
 - Artifact Storage Convention: place new work in `reports/2025-10-cli-flags/phase_l/<phase_folder>/<timestamp>/` with `commands.txt`, raw logs, metrics JSON, and SHA256 hashes. Reference these paths in docs/fix_plan.md attempt logs and `fix_checklist.md`.
 
 ### Completed Foundations (Phases A–K)

@@ -458,11 +458,10 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): 🔴 **2025-12-11 regression.** Option B cache wiring (commit `fa0167b`) allows the targeted parity test to hit the cache but `F_latt` still diverges (relative error 1.57884 versus ≤1e-6) and the omega trace tap now throws tensor indexing errors. Evidence captured in `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T153142Z_carryover_cache_plumbing/`.
-- Next Actions (2025-10-08, post-B1 code removal):
-1. **Finish Phase B1 documentation sync** — Update `README_PYTORCH.md`, `prompts/supervisor.md`, and `docs/bugs/verified_c_bugs.md` to reflect that the carryover shim is gone; store artifacts alongside `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T191302Z/` and mark plan row B1 [D].
-2. **Execute Plan B2–B3 removals** — Delete `phi_carryover_mode` plumbing from `config.py`, `models/crystal.py`, `simulator.py`, and retire shim-only tests/tooling while preserving vectorization and spec behavior per plan guidance.
-3. **Plan B4 regression sweep** — Run `pytest -v tests/test_cli_scaling_phi0.py` (CPU, and CUDA if available) with logs stored under the Phase B artifact directory; ensure spec-mode assertions remain within ≤1e-6 tolerances.
-4. **Ledger sync (Plan B5)** — Append Attempt entry referencing the Phase B bundle, flip plan rows B0–B4 to `[D]`, and update `plans/active/cli-noise-pix0/plan.md` Next Actions to point at Phase C once removal is complete.
+- Next Actions (2025-12-14 refresh):
+1. **Phase C1 coverage audit** — Use `pytest --collect-only -q tests/test_cli_scaling_phi0.py` to confirm selectors; extend spec-mode assertions as needed so parity guarantees formerly guarded by `tests/test_phi_carryover_mode.py` are preserved. Capture logs plus analysis under `reports/2025-10-cli-flags/phase_phi_removal/phase_c/<ts>/coverage_audit.md`.
+2. **Phase C2 documentation updates** — Revise `docs/bugs/verified_c_bugs.md` and related diagnosis notes to flag C-PARITY-001 as C-only, removing PyTorch reproduction guidance. Record diffs/commands in the same Phase C artifact bundle.
+3. **Phase C3 tooling/docs sweep** — Update `docs/development/testing_strategy.md`, `reports/2025-10-cli-flags/phase_l/diagnosis.md`, and prompts to eliminate residual c-parity instructions, ensuring spec-only flow is the documented default. Log summary + SHA256 hashes alongside the Phase C evidence.
 
 - Attempts History:
   * [2025-10-07] Attempt #136 (ralph loop i=135, Mode: Docs) — Result: ✅ **SUCCESS** (Phase L Documentation Sync COMPLETE). **No code changes.**

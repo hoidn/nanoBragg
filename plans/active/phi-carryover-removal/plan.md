@@ -26,16 +26,16 @@ Exit Criteria: Inventoried files/tests/docs recorded, authoritative baselines no
 Goal: Remove the shim entry points while gating runtime behavior to the spec-compliant path.
 Prereqs: Phase A freeze published; Ralph briefed via `input.md` for execution loop; latest spec/docs references re-read.
 Exit Criteria: CLI/config/model code no longer exposes `phi_carryover_mode`; default behavior confirmed unchanged via targeted tests; documentation/fix_plan synced with removal artifacts under `reports/.../phase_b/`.
-Status: Phase B0 completed 2025-10-08; B1 CLI flag removal landed in commit 340683f with artifacts under `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T191302Z/`, documentation sync still pending.
+Status: Phase B fully complete as of Attempt #178 (2025-10-08) with ledger/doc sync refreshed 2025-12-14; artifact bundle `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T193106Z/` is the canonical reference. Ready to begin Phase C realignment tasks.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | B0 | Design review & artifact prep | [D] | Completed 2025-10-08 (design bundle + baseline under `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T185921Z/`). |
-| B1 | Deprecate CLI surfaces | [P] | ✅ CLI flag removed in commit 340683f (`reports/.../20251008T191302Z/`). Outstanding: update `README_PYTORCH.md`, `prompts/supervisor.md`, and `docs/bugs/verified_c_bugs.md` to reflect the shim removal, then capture doc-sync artifacts in the same bundle before marking [D]. |
-| B2 | Prune config/model plumbing | [ ] | Delete `phi_carryover_mode` parameters from `CrystalConfig`/`SimulatorConfig` (if present) and drop `_apply_phi_carryover` branches in `src/nanobrag_torch/models/crystal.py` & `simulator.py`. Ensure vectorised φ rotation path stays intact; reference the nanoBragg.c snippet per CLAUDE Rule #11 when editing docstrings/comments. |
-| B3 | Retire shim tooling/tests | [ ] | Remove parity-only helpers (e.g., `scripts/compare_per_phi_traces.py` flags) and delete or refactor `tests/test_phi_carryover_mode.py` so only spec-mode assertions remain (migrate reusable checks into `tests/test_cli_scaling_phi0.py`). Update any reports under `reports/2025-10-cli-flags/phase_l/` that the tooling depended on. |
-| B4 | Targeted regression sweep | [ ] | Run `pytest --collect-only -q tests/test_cli_scaling_phi0.py` and `pytest -v tests/test_cli_scaling_phi0.py` on CPU; if CUDA available, rerun with `CUDA_VISIBLE_DEVICES=0`. Capture logs/SHA256 in the Phase B artifact directory; document any new tolerances required by spec-mode assertions. |
-| B5 | Ledger & plan sync | [ ] | Append Attempt entry in `docs/fix_plan.md` (CLI-FLAGS-003) referencing Phase B artifacts, flip plan rows B0–B4 to `[D]`, and update `plans/active/cli-noise-pix0/plan.md` Next Actions to point at Phase C tasks. |
+| B1 | Deprecate CLI surfaces | [D] | ✅ CLI flag removed in commit 340683f with doc updates captured in `reports/.../20251008T193106Z/doc_diff.md` (README_PYTORCH.md, prompts/supervisor.md, docs/bugs entry now mark the shim as historical). |
+| B2 | Prune config/model plumbing | [D] | ✅ `phi_carryover_mode` parameters and cache hooks removed from config/crystal/simulator modules (see `reports/.../20251008T193106Z/summary.md`). Vectorised φ rotation path retained without carryover branches. |
+| B3 | Retire shim tooling/tests | [D] | ✅ Deleted parity-only test `tests/test_phi_carryover_mode.py` and associated tooling; spec-mode coverage consolidated under `tests/test_cli_scaling_phi0.py`. Evidence in `reports/.../20251008T193106Z/`. |
+| B4 | Targeted regression sweep | [D] | ✅ `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py` passes (CPU) with logs/sha256 stored in `reports/.../20251008T193106Z/pytest_cpu.log`. CUDA rerun not yet required; spec tolerances ≤1e-6 confirmed. |
+| B5 | Ledger & plan sync | [D] | ✅ 2025-12-14: Updated `docs/fix_plan.md` (CLI-FLAGS-003) and `plans/active/cli-noise-pix0/plan.md` to pivot to Phase C, referencing artifact bundle `reports/.../20251008T193106Z/`. |
 
 ### Phase C — Test & Evidence Realignment
 Goal: Adjust the automated test suite and parity expectations to reflect the non-buggy spec.
@@ -44,7 +44,7 @@ Exit Criteria: Updated tests/docs focus exclusively on spec mode; parity harness
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Update pytest coverage | [ ] | Delete `tests/test_phi_carryover_mode.py`; fold any remaining spec assertions into `tests/test_cli_scaling_phi0.py`. Validate selectors via `pytest --collect-only -q tests/test_cli_scaling_phi0.py`. |
+| C1 | Update pytest coverage | [ ] | Audit spec-mode coverage after shim removal: ensure `tests/test_cli_scaling_phi0.py` asserts the per-φ invariants previously covered by the deleted parity suite. Validate selectors via `pytest --collect-only -q tests/test_cli_scaling_phi0.py`. |
 | C2 | Refresh docs/bugs ledger | [ ] | Amend `docs/bugs/verified_c_bugs.md` C-PARITY-001 entry to emphasise "C-only" and note that PyTorch no longer exposes a reproduction mode. Record change in `summary.md`. |
 | C3 | Adjust parity tooling docs | [ ] | Update `docs/development/testing_strategy.md` and `reports/.../diagnosis.md` to remove instructions for c-parity tolerance. Ensure `prompts/supervisor.md` and `plans/active/cli-noise-pix0/plan.md` no longer reference carryover phases. |
 

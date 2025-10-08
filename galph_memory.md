@@ -1116,3 +1116,11 @@
 - Revised `docs/fix_plan.md` CLI-FLAGS-003 Next Actions to break out B1 documentation, B2/B3 removals, B4 regression sweep, and B5 ledger sync as separate bullets.
 - Replaced `input.md` (Mode: none, ~110 lines) directing Ralph to finish the B1 doc cleanup and execute Phase B2 plumbing removal, with explicit artifact/test cadence.
 - Follow-up: Ralph to update README_PYTORCH.md / prompts/supervisor.md / docs/bugs entry, delete the remaining `phi_carryover_mode` plumbing plus associated tests, capture the Phase B bundle, and log the attempt before we evaluate B3.
+
+## 2025-12-14 (galph loop — C1 coverage audit setup)
+- Confirmed repo synced (feature/spec-based-2) and reviewed phi-carryover removal artifacts (`reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T193106Z/`).
+- Updated `plans/active/phi-carryover-removal/plan.md` to mark rows B0–B5 done and shift focus to row C1 coverage audit (plan lines 29-49).
+- Refreshed `plans/active/cli-noise-pix0/plan.md` status snapshot/Next Actions to call out row C tasks (lines 17-33) and keep scaling work gated pending coverage/doc cleanup.
+- Revised `docs/fix_plan.md` CLI-FLAGS-003 Next Actions (lines 451-465) so Ralph now targets the row C1 audit + documentation sweeps; legacy B-phase bullets removed.
+- Authored new `input.md` (Mode: Docs) instructing Ralph to run collect-only pytest for row C1, capture artifacts under `reports/.../phase_phi_removal/phase_c/<ts>/`, and log coverage findings.
+- Follow-up: Ralph to execute the coverage audit per plan row C1, document gaps in `coverage_audit.md`, and update fix_plan Attempts with the new evidence; next loops can tackle rows C2/C3 once the audit passes.
