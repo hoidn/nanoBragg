@@ -460,10 +460,34 @@
 - First Divergence (if known): 🔴 **2025-12-11 regression.** Option B cache wiring (commit `fa0167b`) allows the targeted parity test to hit the cache but `F_latt` still diverges (relative error 1.57884 versus ≤1e-6) and the omega trace tap now throws tensor indexing errors. Evidence captured in `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T153142Z_carryover_cache_plumbing/`.
 - Next Actions (2025-12-14 refresh):
 1. ~~**Phase C1 coverage audit**~~ ✅ COMPLETE (Attempt #179, 2025-10-08)
-2. **Phase C2 documentation updates** — Rewrite `docs/bugs/verified_c_bugs.md:166-192` to state the carryover shim removal is DONE (reference commit `b9db0a3`), drop language about "plumbing in progress," and remove pointers to the deleted `CrystalConfig.phi_carryover_mode`. Capture commands/diff in the Phase C evidence bundle.
-3. **Phase C3 tooling/docs sweep** — Clean remaining carryover references: retire or refactor `tests/test_cli_scaling_parity.py` (now broken against the new `CrystalConfig` signature), scrub `reports/2025-10-cli-flags/phase_l/parity_shim/*/diagnosis.md`, and update `src/nanobrag_torch/models/crystal.py:1238-1274` docstrings plus plan/prompt references to reflect spec-only rotation flow. Log summary + SHA256 hashes alongside the Phase C evidence.
+2. ~~**Phase C2 documentation updates**~~ ✅ COMPLETE (Attempt #180, 2025-10-08)
+3. ~~**Phase C3 tooling/docs sweep**~~ ✅ COMPLETE (Attempt #180, 2025-10-08)
+4. **Phase D1 proof-of-removal bundle** — Run spec-mode trace harness and capture artifacts under `reports/.../phase_d/<ts>/`
+5. **Phase D2 archive phi-parity-shim plan** — Move `plans/active/cli-phi-parity-shim/plan.md` to archive once documentation synced
+6. **Phase D3 supervisor handoff** — Update `input.md` to focus on remaining CLI-FLAGS-003 tasks (-nonoise/-pix0)
 
 - Attempts History:
+  * [2025-10-08] Attempt #180 (ralph loop i=177, Mode: Docs) — Result: ✅ **SUCCESS** (Phase C2/C3 Doc Sweep COMPLETE). **No code changes** (docs/tests only).
+    Metrics: Test collection: 2 tests collected successfully in 0.79s (tests/test_cli_scaling_phi0.py). Documentation-only loop per input.md Mode: Docs.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_c/20251008T200154Z/summary.md` — Complete sweep summary
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_c/20251008T200154Z/collect.log` — pytest collection proof
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_c/20251008T200154Z/commands.txt` — Reproduction steps
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_c/20251008T200154Z/env.json` — Environment metadata
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_c/20251008T200154Z/sha256.txt` — Artifact checksums (62441590... summary, f0de06e8... commands, 37fe3e93... env, ab5cf071... collect)
+    Changes:
+      - `docs/bugs/verified_c_bugs.md:179-189` — Rewrote C-PARITY-001 PyTorch section to mark shim removal complete (commit b9db0a3), removed "plumbing in progress" language
+      - `tests/test_cli_scaling_parity.py` — DELETED (broken shim-dependent test)
+      - `src/nanobrag_torch/models/crystal.py:1219-1256` — Updated `get_rotated_real_vectors_for_batch()` docstring to remove cache/carryover references, clarify spec-compliant fresh rotations
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T023140Z/diagnosis.md:1-3` — Added historical notice banner marking c-parity shim as archived
+    Observations/Hypotheses:
+      - **Phase C completion verified**: All carryover shim references cleaned from production docs/code/tests
+      - **Spec alignment**: PyTorch now exclusively uses specs/spec-a-core.md:211-214 fresh rotation path
+      - **Coverage preserved**: 2 spec-mode tests (test_rot_b_matches_c, test_k_frac_phi0_matches_c) enforce VG-1 tolerance (≤1e-6)
+      - **Historical evidence retained**: Diagnosis files marked with historical notices, not deleted
+    Next Actions:
+      - Phase C: ✅ COMPLETE — All C2/C3 tasks finished
+      - Phase D: Run proof-of-removal bundle (spec-mode trace), archive phi-parity-shim plan, prepare supervisor handoff for -nonoise/-pix0 work
   * [2025-10-08] Attempt #179 (ralph loop i=176, Mode: Docs) — Result: ✅ **SUCCESS** (Phase C1 Coverage Audit COMPLETE). **No code changes.**
     Metrics: Test collection: 2 tests collected successfully in 0.79s (tests/test_cli_scaling_phi0.py). Documentation-only loop per input.md Mode: Docs.
     Artifacts:

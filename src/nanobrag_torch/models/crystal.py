@@ -1217,30 +1217,31 @@ class Crystal:
         Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
     ]:
         """
-        Get rotated lattice vectors for a batch of pixels with φ carryover cache interaction.
+        Get rotated lattice vectors for a batch of pixels (spec-compliant fresh rotations only).
 
-        This method implements Option B (batch-indexed pixel cache) for emulating C-PARITY-001
-        bug behavior. It computes fresh rotations, applies cached φ=0 substitution when
-        c-parity mode is enabled, and stores φ=final for the next pixel.
+        This method computes fresh rotations for all φ steps according to specs/spec-a-core.md:211-214.
+        The C-code φ carryover bug (C-PARITY-001) is NOT reproduced.
 
         C-Code Implementation Reference (from nanoBragg.c, lines 2797, 3044-3095):
         ```c
+        // C code has a bug where φ=0 reuses previous pixel's final φ vectors
         #pragma omp parallel for ... firstprivate(ap,bp,cp,...)
         for(pixel_i=0; pixel_i < num_pixels; ++pixel_i) {
             for(phi_tic=0; phi_tic<phisteps; ++phi_tic) {
                 phi = phi0 + phistep*phi_tic;
-                if( phi != 0.0 ) {
+                if( phi != 0.0 ) {  // BUG: φ=0 skipped
                     rotate_axis(a0,ap,spindle_vector,phi);
                     rotate_axis(b0,bp,spindle_vector,phi);
                     rotate_axis(c0,cp,spindle_vector,phi);
                 }
-                // When phi==0: ap/bp/cp retain previous pixel's final φ values (carryover)
             }
         }
         ```
 
+        PyTorch Implementation: Computes fresh rotations for ALL φ steps, including φ=0.
+
         Args:
-            config: CrystalConfig containing rotation parameters and phi_carryover_mode
+            config: CrystalConfig containing rotation parameters
             slow_indices: Pixel slow (row) indices, shape (batch_size,) or scalar tensor
             fast_indices: Pixel fast (column) indices, shape (batch_size,) or scalar tensor
 
@@ -1250,8 +1251,8 @@ class Crystal:
             - Second tuple: rotated (a*, b*, c*) reciprocal-space vectors, shape (N_phi, N_mos, 3)
 
         Note: Unlike get_rotated_real_vectors(), this method does NOT add a batch dimension.
-        It returns global (N_phi, N_mos, 3) tensors but with φ=0 modified by cache when
-        c-parity mode is active. The caller is responsible for broadcasting to batch dimension.
+        It returns global (N_phi, N_mos, 3) tensors. The caller is responsible for broadcasting
+        to batch dimension.
         """
         # Compute fresh rotations (spec-compliant path)
         (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = \

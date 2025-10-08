@@ -1,0 +1,54 @@
+# Phase C2/C3 Documentation Sweep — Reproduction Commands
+
+## Step 0: Verify git state
+git pull --rebase
+git status
+
+## Step 1: Create evidence directory
+mkdir -p reports/2025-10-cli-flags/phase_phi_removal/phase_c/20251008T200154Z
+cd reports/2025-10-cli-flags/phase_phi_removal/phase_c/20251008T200154Z
+
+## Step 2: Verify test collection before changes
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.py > collect_before.log 2>&1
+
+## Step 3: Update docs/bugs/verified_c_bugs.md (Phase C2)
+# Edit lines 179-189: Rewrite PyTorch section to mark C-PARITY-001 as C-only
+# Remove line 191: Delete stale PyTorch code reference
+
+## Step 4: Retire tests/test_cli_scaling_parity.py (Phase C3)
+rm tests/test_cli_scaling_parity.py
+
+## Step 5: Update src/nanobrag_torch/models/crystal.py (Phase C3)
+# Edit lines 1219-1256: Rewrite get_rotated_real_vectors_for_batch() docstring
+# Remove references to cache interaction, phi_carryover_mode argument
+
+## Step 6: Update reports/.../diagnosis.md (Phase C3)
+# Edit lines 1-3: Add historical notice banner
+
+## Step 7: Verify test collection after changes
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.py > collect_after.log 2>&1
+
+## Step 8: Capture metadata
+python3 << 'EOF'
+import json
+import sys
+import os
+import torch
+import subprocess
+
+env_data = {
+    "python_version": sys.version,
+    "pytorch_version": torch.__version__,
+    "cuda_available": torch.cuda.is_available(),
+    "timestamp": "2025-10-08T20:01:54Z",
+    "working_dir": os.getcwd(),
+    "git_sha": subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip(),
+    "git_branch": subprocess.check_output(["git", "branch", "--show-current"]).decode().strip()
+}
+
+with open("env.json", "w") as f:
+    json.dump(env_data, f, indent=2)
+EOF
+
+## Step 9: Generate SHA256 checksums
+sha256sum summary.md commands.txt env.json collect_after.log > sha256.txt

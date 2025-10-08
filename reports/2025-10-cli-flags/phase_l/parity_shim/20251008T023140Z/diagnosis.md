@@ -1,5 +1,7 @@
 # CLI-FLAGS-003 Phase L3k.3c.4: Enhanced φ Carryover Trace Diagnostics
 
+**⚠️ HISTORICAL DOCUMENT (2025-12-14): The c-parity shim described in this analysis was fully removed in commit b9db0a3 (2025-10-08) per `plans/active/phi-carryover-removal/plan.md` Phase B. This file is retained for archival evidence only. Current PyTorch behavior uses spec-compliant fresh rotations exclusively (see `docs/bugs/verified_c_bugs.md` C-PARITY-001).**
+
 **Date:** 2025-10-08
 **Engineer:** Ralph
 **Supervisor Command:** input.md (2025-10-08T02:16Z)

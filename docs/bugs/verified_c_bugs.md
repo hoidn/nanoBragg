@@ -176,19 +176,17 @@ The follow-up log contains `reading Fs from Fdump.bin`, demonstrating the implic
 ```
 The trace (`docs/bugs/artifacts/c-parity-001.txt`) includes a single `TRACE_C: hkl_frac …` entry, regardless of φ step, confirming that the φ=0 pass reused the rotated vectors. Comparing successive pixels reveals identical `k_frac` values at φ=0 and the terminal φ step.
 
-**PyTorch Parity Shim (Historical):**
-- The PyTorch implementation **previously** provided an opt-in emulation of this C bug via `--phi-carryover-mode c-parity` (removed in commit 340683f, October 2025)
-- **Current behavior**: PyTorch uses spec-compliant fresh rotations exclusively (no carryover mode available)
-- **Historical c-parity mode tolerance**: |Δk_frac| ≤ 5e-5, |Δb_y| ≤ 1e-4 (relaxed to document C bug behavior)
-- **Current spec mode tolerance**: |Δk_frac| ≤ 1e-6, |Δb_y| ≤ 1e-6 (strict, normative)
-- Dtype sensitivity analysis (2025-12-01) confirmed the ~2.8e-05 plateau was intrinsic to the carryover logic, not precision-limited
-- Evidence: `reports/2025-10-cli-flags/phase_l/parity_shim/20251201_dtype_probe/analysis_summary.md`
-- **Removal Status (2025-10-08)**: CLI flag removed (commit 340683f); config/model plumbing removal in progress per `plans/active/phi-carryover-removal/plan.md`. Documentation sync: `reports/2025-10-cli-flags/phase_phi_removal/phase_b/`
+**PyTorch Treatment:**
+- The PyTorch implementation treats this as a **C-only defect** and does NOT reproduce it
+- **Current behavior**: PyTorch uses spec-compliant fresh rotations for every φ step (specs/spec-a-core.md:211-214)
+- **Normative tolerance**: |Δk_frac| ≤ 1e-6, |Δb_y| ≤ 1e-6 (enforced in tests/test_cli_scaling_phi0.py)
+- **Historical Note**: An opt-in `--phi-carryover-mode c-parity` shim existed temporarily during CLI-FLAGS-003 development to aid debugging; this shim was **fully removed in commit b9db0a3 (2025-10-08)** per `plans/active/phi-carryover-removal/plan.md` Phase B
+- Dtype sensitivity analysis (2025-12-01) confirmed the historical c-parity plateau (~2.8e-05) was intrinsic to the carryover logic, not precision-limited
+- Evidence: `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T193106Z/` (shim removal artifacts)
 
 **Relevant code:**
 - `golden_suite_generator/nanoBragg.c:3042-3059` — rotation only applied when `phi != 0.0`; no reset path exists.
 - `golden_suite_generator/nanoBragg.c:2793-2807` — `ap/bp/cp` are captured by `firstprivate`, so stale state flows into the next pixel.
-- `src/nanobrag_torch/models/crystal.py:1084-1128` — PyTorch opt-in carryover shim (batched implementation)
 
 ---
 
