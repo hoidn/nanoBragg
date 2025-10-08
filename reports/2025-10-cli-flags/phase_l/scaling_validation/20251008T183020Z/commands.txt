@@ -1,0 +1,1 @@
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 1039 685 --config supervisor --device cpu --dtype float64 --phi-mode c-parity --emit-rot-stars --out reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T183020Z/trace_py_c_parity.log

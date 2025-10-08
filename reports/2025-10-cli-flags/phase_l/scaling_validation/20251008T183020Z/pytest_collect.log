@@ -1,0 +1,3 @@
+tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c
+
+1 test collected in 0.80s

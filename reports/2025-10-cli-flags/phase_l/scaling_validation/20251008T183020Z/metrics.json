@@ -1,0 +1,79 @@
+{
+  "tolerance_rel": 1e-06,
+  "first_divergence": "I_before_scaling",
+  "num_divergent": 2,
+  "factors": {
+    "I_before_scaling": {
+      "description": "Raw accumulated intensity before normalization",
+      "c_value": 1480792010454060.0,
+      "py_value": 587356439.452199,
+      "abs_delta": -1480791423097620.5,
+      "rel_delta": -0.9999996033498051,
+      "status": "CRITICAL"
+    },
+    "r_e_sqr": {
+      "description": "Thomson scattering cross section (r_e\u00b2)",
+      "c_value": 7.94079248018965e-30,
+      "py_value": 7.94079248018965e-30,
+      "abs_delta": 0.0,
+      "rel_delta": 0.0,
+      "status": "PASS"
+    },
+    "fluence_photons_per_m2": {
+      "description": "Incident photon fluence",
+      "c_value": 1e+24,
+      "py_value": 1e+24,
+      "abs_delta": 0.0,
+      "rel_delta": 0.0,
+      "status": "PASS"
+    },
+    "steps": {
+      "description": "Normalization divisor (sources\u00d7mosaic\u00d7\u03c6\u00d7oversample\u00b2)",
+      "c_value": 10.0,
+      "py_value": 10.0,
+      "abs_delta": 0.0,
+      "rel_delta": 0.0,
+      "status": "PASS"
+    },
+    "capture_fraction": {
+      "description": "Detector absorption capture fraction",
+      "c_value": 1.0,
+      "py_value": 1.0,
+      "abs_delta": 0.0,
+      "rel_delta": 0.0,
+      "status": "PASS"
+    },
+    "polar": {
+      "description": "Kahn polarization factor",
+      "c_value": 0.912575818665327,
+      "py_value": 0.912575953025894,
+      "abs_delta": 1.3436056700566468e-07,
+      "rel_delta": 1.4723222362189209e-07,
+      "status": "PASS"
+    },
+    "omega_pixel": {
+      "description": "Solid angle (steradians)",
+      "c_value": 4.15867865980257e-07,
+      "py_value": 4.15867923875272e-07,
+      "abs_delta": 5.7895014976445e-14,
+      "rel_delta": 1.392149278953751e-07,
+      "status": "PASS"
+    },
+    "cos_2theta": {
+      "description": "Cosine of scattering angle 2\u03b8",
+      "c_value": 0.908378575997175,
+      "py_value": 0.908378716857101,
+      "abs_delta": 1.4085992605661346e-07,
+      "rel_delta": 1.5506742428616187e-07,
+      "status": "PASS"
+    },
+    "I_pixel_final": {
+      "description": "Final normalized pixel intensity",
+      "c_value": 446.254110667806,
+      "py_value": 466.407559759299,
+      "abs_delta": 20.153449091492973,
+      "rel_delta": 0.045161374673577656,
+      "status": "CRITICAL"
+    }
+  }
+}

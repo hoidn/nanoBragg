@@ -3844,3 +3844,37 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - Re-run `scripts/trace_harness.py` with `--phi-carryover-mode c-parity` (Phase M2i.2 gate) and archive a new pair of traces under `reports/.../scaling_validation/`.
       - If vectors still diverge, add temporary logging around `Crystal._apply_phi_carryover()` (trace-only) to verify cache priming matches Option B design in `parity_shim/20251201_dtype_probe/analysis_summary.md`.
       - Once rotated vectors align, rerun M2i.2 metrics to remove VG-2 blocker and proceed to Phase N nb-compare prep.
+  * [2025-10-08] Attempt #174 (ralph loop i=171, Mode: Parity/Evidence) — Result: **ROTATED VECTORS ALIGNED** (c-parity trace shows exact match; I_before_scaling remains CRITICAL). **No code changes.**
+    Metrics:
+      - Rotated vectors: C and PyTorch **EXACT MATCH** at machine precision (all three rot_{a,b,c}_star_A_inv components identical)
+      - I_before_scaling divergence: Δrel = -0.9999996 (C: 1.480792e+15, PyTorch: 5.873564e+08)
+      - I_pixel_final divergence: Δrel = +0.04516 (C: 446.254111, PyTorch: 466.40756)
+      - Scaling factors: r_e_sqr, fluence, steps, capture_fraction all PASS (Δrel = 0.0)
+      - Geometric factors: polar, omega_pixel, cos_2theta all PASS (Δrel ≤ 1.5e-7)
+      - Per-φ TRACE_PY_ROTSTAR lines: 10 captured successfully (φ_tic 0-9)
+    Artifacts:
+      - reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T183020Z/trace_py_c_parity.log — PyTorch trace with c-parity mode, 124 TRACE_PY lines + 10 TRACE_PY_ROTSTAR lines
+      - reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T183020Z/scaling_validation_summary.md — Detailed factor-by-factor comparison showing first divergence at I_before_scaling
+      - reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T183020Z/metrics.json — Machine-readable metrics with 2 CRITICAL factors (I_before_scaling, I_pixel_final)
+      - reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T183020Z/commands.txt — Provenance: exact harness invocation with --phi-mode c-parity
+      - reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T183020Z/env.json — Environment metadata (git SHA: 680bf851, PyTorch 2.8.0+cu128, CUDA available)
+      - reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T183020Z/sha256.txt — Checksums for all artifacts
+      - C trace reference: reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log (canonical baseline from phase_l)
+    Observations/Hypotheses:
+      - **c-parity shim SUCCESS**: The --phi-mode c-parity flag successfully engaged the φ=0 carryover emulation, yielding exact vector parity.
+      - **Vector alignment confirmed**: rot_a_star_A_inv, rot_b_star_A_inv, rot_c_star_A_inv match C trace to all 16 decimal places shown.
+      - **I_before_scaling remains divergent**: Despite vector alignment, raw accumulated intensity differs by factor of ~2520x (C >> PyTorch).
+      - **Scaling chain mostly correct**: All normalization factors (r_e², fluence, steps, capture) and geometric factors (polar, omega, cos_2θ) pass with Δrel ≤ 1e-6.
+      - **Root cause hypothesis**: The I_before_scaling divergence suggests the accumulated per-φ contributions differ dramatically even though lattice vectors are correct. Possible causes:
+        1. F_latt calculation may still differ per φ step (need to verify per-φ F_latt values)
+        2. Miller indices (h,k,l) computation may not be using the aligned rotated vectors correctly
+        3. F_cell lookup or interpolation may differ between C and PyTorch
+        4. Summation order or numerical precision in accumulation loop
+      - **VG-2 gate status**: Rotated vector parity requirement is now **MET**. I_before_scaling parity requirement still **RED**.
+      - **Next diagnostic**: Need to compare per-φ F_latt values between C and PyTorch to locate where the 2520x factor emerges.
+    Next Actions:
+      - Extract per-φ F_latt values from both traces and compare (look for TRACE_PY_PHI lines in PyTorch trace, corresponding C trace lines)
+      - If F_latt values differ, verify the sincg/sinc3 calculations are using the same Miller indices
+      - If Miller indices differ, check that get_rotated_real_vectors is correctly consuming the aligned rot_*_star vectors
+      - Once I_before_scaling root cause identified, implement fix and regenerate trace
+      - After fix, rerun M2i.2 metrics to clear VG-2 blocker and proceed to Phase N
