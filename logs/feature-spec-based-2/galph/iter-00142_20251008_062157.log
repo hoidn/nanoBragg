@@ -2366,3 +2366,9 @@ I'll summarize the evaluation of Ralph's commit focusing on instrumentation issu
 Next steps for Ralph: execute the Phase M0 instrumentation hygiene tasks outlined in `input.md`, capturing the audit, guarding the tricubic neighborhood cache, and updating plan/fix_plan attempts before returning to Phase M1 parity.
 [2025-10-08T06:37:45] tokens used: 180,065
 Reading prompt from stdin...
+[reports] Auto-committed 873 files (20971520 bytes)
+Auto-commit blocked by forbidden dirty paths: logs/feature-spec-based-2/galph/iter-00142_20251008_062157.log
+[sync] Doc/meta whitelist violation detected; marking post-run as failed.
+To github.com:hoidn/nanoBragg.git
+   500a52a..efe3ffd  HEAD -> feature/spec-based-2
+Supervisor iteration failed rc=0. Stamped failure and pushed; exiting.
