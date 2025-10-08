@@ -270,8 +270,8 @@ class TestATParallel007PeakPositionWithRotations:
         intensity_ratio = sum_py / sum_c if sum_c > 0 else 0
 
         # Assertions per spec
-        assert correlation >= 0.98, (
-            f"Correlation {correlation:.4f} below required 0.98"
+        assert correlation >= 0.9995, (
+            f"Correlation {correlation:.4f} below required 0.9995"
         )
 
         assert match_percentage >= 95.0, (
@@ -284,7 +284,7 @@ class TestATParallel007PeakPositionWithRotations:
 
         # Report results
         print(f"\n=== AT-PARALLEL-007 Results ===")
-        print(f"Correlation: {correlation:.4f} (≥0.98 ✓)")
+        print(f"Correlation: {correlation:.4f} (≥0.9995 ✓)")
         print(f"Peaks matched: {len(matches)}/{min(len(peaks_c), len(peaks_py))} "
               f"({match_percentage:.1f}% ≥95% ✓)")
         print(f"Intensity ratio: {intensity_ratio:.4f} ∈ [0.9, 1.1] ✓")

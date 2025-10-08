@@ -165,3 +165,76 @@ class TestATCLI009ErrorHandling:
         # Should include various options
         assert all(x in result.stdout for x in ['-hkl', '-cell', '-lambda', '-distance']), \
             f"Help should list main options"
+
+    def test_unsupported_flag_dispstep(self):
+        """Test that unsupported flag -dispstep is rejected with clear error"""
+        args = [
+            'python', '-m', 'nanobrag_torch',
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-default_F', '100',
+            '-lambda', '1.5',
+            '-distance', '100',
+            '-dispstep', '3',  # Unsupported flag per spec
+            '-detpixels', '32',
+            '-floatfile', 'output.bin'
+        ]
+
+        result = subprocess.run(args, capture_output=True, text=True)
+
+        # Should exit with non-zero status
+        assert result.returncode != 0, f"Should reject unsupported flag, but returned {result.returncode}"
+
+        # Should print error about unrecognized argument
+        output = result.stdout + result.stderr
+        assert 'dispstep' in output or 'unrecognized' in output, \
+            f"Should mention unsupported flag -dispstep, got: {output}"
+
+        # Should include usage information
+        assert 'usage' in output.lower(), \
+            f"Should print usage information on error, got: {output}"
+
+    def test_unsupported_flag_hdiv(self):
+        """Test that unsupported flag -hdiv is rejected with clear error"""
+        args = [
+            'python', '-m', 'nanobrag_torch',
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-default_F', '100',
+            '-lambda', '1.5',
+            '-distance', '100',
+            '-hdiv', '0.28',  # Unsupported flag per spec (should be -hdivrange)
+            '-detpixels', '32',
+            '-floatfile', 'output.bin'
+        ]
+
+        result = subprocess.run(args, capture_output=True, text=True)
+
+        # Should exit with non-zero status
+        assert result.returncode != 0, f"Should reject unsupported flag, but returned {result.returncode}"
+
+        # Should print error about unrecognized argument
+        output = result.stdout + result.stderr
+        assert 'hdiv' in output or 'unrecognized' in output, \
+            f"Should mention unsupported flag -hdiv, got: {output}"
+
+    def test_unsupported_flag_vdiv(self):
+        """Test that unsupported flag -vdiv is rejected with clear error"""
+        args = [
+            'python', '-m', 'nanobrag_torch',
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-default_F', '100',
+            '-lambda', '1.5',
+            '-distance', '100',
+            '-vdiv', '0.28',  # Unsupported flag per spec (should be -vdivrange)
+            '-detpixels', '32',
+            '-floatfile', 'output.bin'
+        ]
+
+        result = subprocess.run(args, capture_output=True, text=True)
+
+        # Should exit with non-zero status
+        assert result.returncode != 0, f"Should reject unsupported flag, but returned {result.returncode}"
+
+        # Should print error about unrecognized argument
+        output = result.stdout + result.stderr
+        assert 'vdiv' in output or 'unrecognized' in output, \
+            f"Should mention unsupported flag -vdiv, got: {output}"

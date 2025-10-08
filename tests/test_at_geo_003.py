@@ -40,7 +40,7 @@ class TestATGEO003RFactorAndBeamCenter:
             detector_convention=DetectorConvention.MOSFLM,
         )
 
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
 
         # Get r-factor
         r_factor = detector.get_r_factor()
@@ -98,7 +98,7 @@ class TestATGEO003RFactorAndBeamCenter:
             detector_convention=DetectorConvention.MOSFLM,
         )
 
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
 
         # Get r-factor and corrected distance
         r_factor = detector.get_r_factor()
@@ -129,7 +129,7 @@ class TestATGEO003RFactorAndBeamCenter:
             detector_convention=DetectorConvention.MOSFLM,
         )
 
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
 
         # Verify beam center is preserved
         is_preserved, details = detector.verify_beam_center_preservation(tolerance=1e-6)
@@ -167,7 +167,7 @@ class TestATGEO003RFactorAndBeamCenter:
             detector_convention=DetectorConvention.MOSFLM,
         )
 
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
 
         # Verify beam center is preserved within expected tolerance for SAMPLE pivot
         # SAMPLE pivot has looser tolerance (~1e-2) compared to BEAM pivot (1e-6)
@@ -198,7 +198,7 @@ class TestATGEO003RFactorAndBeamCenter:
             detector_convention=DetectorConvention.MOSFLM,
         )
 
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
 
         # r-factor should be 1.0 for no rotations
         r_factor = detector.get_r_factor()
@@ -241,7 +241,7 @@ class TestATGEO003RFactorAndBeamCenter:
                 detector_convention=DetectorConvention.MOSFLM,
             )
 
-            detector = Detector(config)
+            detector = Detector(config, dtype=torch.float64)
 
             # Verify beam center is preserved
             # SAMPLE pivot has looser tolerance than BEAM pivot
@@ -277,7 +277,7 @@ class TestATGEO003RFactorAndBeamCenter:
             detector_convention=DetectorConvention.MOSFLM,
         )
 
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
 
         # Get r-factor and check it requires grad
         r_factor = detector.get_r_factor()

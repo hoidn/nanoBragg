@@ -44,8 +44,9 @@ def test_sourcefile_parsing():
         assert wavelengths[0].item() == pytest.approx(1.0e-10)
         assert wavelengths[1].item() == pytest.approx(1.5e-10)
 
-        # All weights should be 1.0 per spec
-        torch.testing.assert_close(weights, torch.ones(2, dtype=torch.float64))
+        # Check weights are preserved from file per AT-SRC-001 requirement
+        expected_weights = torch.tensor([2.0, 3.0], dtype=torch.float64)
+        torch.testing.assert_close(weights, expected_weights)
 
         print(f"✓ Source file parsing successful")
         print(f"  Directions: {directions}")

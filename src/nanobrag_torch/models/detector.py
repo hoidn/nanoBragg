@@ -36,10 +36,16 @@ class Detector:
     """
 
     def __init__(
-        self, config: Optional[DetectorConfig] = None, device=None, dtype=torch.float64
+        self, config: Optional[DetectorConfig] = None, device=None, dtype=torch.float32
     ):
         """Initialize detector from configuration."""
-        self.device = device if device is not None else torch.device("cpu")
+        # Normalize device to ensure consistency
+        if device is not None:
+            # Create a dummy tensor on the device to get the actual device with index
+            temp = torch.zeros(1, device=device)
+            self.device = temp.device
+        else:
+            self.device = torch.device("cpu")
         self.dtype = dtype
 
         # Use provided config or create default
@@ -75,14 +81,16 @@ class Detector:
         from ..config import DetectorConvention
 
         # Calculate pixel coordinates from mm values
+        # NOTE: The MOSFLM +0.5 pixel offset is already included in config.beam_center_s/f
+        # by DetectorConfig.__post_init__ (lines 259-261), so we do NOT add it here.
         beam_center_s_pixels = config.beam_center_s / config.pixel_size_mm
         beam_center_f_pixels = config.beam_center_f / config.pixel_size_mm
 
-        # Apply MOSFLM +0.5 pixel offset for stored beam centers
-        # This matches the C-code convention where beam centers include the offset
-        if config.detector_convention == DetectorConvention.MOSFLM:
-            beam_center_s_pixels = beam_center_s_pixels + 0.5
-            beam_center_f_pixels = beam_center_f_pixels + 0.5
+        # The convention-specific offsets are already applied in DetectorConfig.__post_init__
+        # nanoBragg.c lines 1218-1234:
+        #   MOSFLM: beam_center_mm includes +0.5 pixel worth of offset
+        #   DENZO/XDS/DIALS/ADXV/CUSTOM: No offset
+        # No additional offset needed here.
 
         # Convert to tensors on proper device
         if isinstance(beam_center_s_pixels, torch.Tensor):
@@ -380,6 +388,19 @@ class Detector:
         from ..utils.geometry import angles_to_rotation_matrix, rotate_axis
         from ..utils.units import degrees_to_radians
 
+        # Convert pix0_override to tensor if provided (CLI-FLAGS-003 Phase F2)
+        # This will be used instead of calculating pix0 from pivot formulas,
+        # but we still need to calculate r_factor and derive close_distance from it
+        pix0_override_tensor = None
+        if self.config.pix0_override_m is not None:
+            override = self.config.pix0_override_m
+            if isinstance(override, (tuple, list)):
+                pix0_override_tensor = torch.tensor(override, device=self.device, dtype=self.dtype)
+            elif isinstance(override, torch.Tensor):
+                pix0_override_tensor = override.to(device=self.device, dtype=self.dtype)
+            else:
+                raise TypeError(f"pix0_override_m must be tuple, list, or Tensor, got {type(override)}")
+
         # Calculate r-factor for distance correction (AT-GEO-003)
         c = self.config
 
@@ -409,11 +430,9 @@ class Detector:
         elif detector_twotheta.device != self.device or detector_twotheta.dtype != self.dtype:
             detector_twotheta = detector_twotheta.to(device=self.device, dtype=self.dtype)
 
-        # Get beam vector based on convention
-        if self.config.detector_convention == DetectorConvention.MOSFLM:
-            beam_vector = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
-        else:
-            beam_vector = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
+        # Get beam vector using self.beam_vector property
+        # This honors CUSTOM convention overrides from CLI (e.g., -beam_vector)
+        beam_vector = self.beam_vector
 
         # Always calculate r-factor to preserve gradient flow
         # When rotations are zero, the rotation matrix will be identity
@@ -465,29 +484,102 @@ class Detector:
         if self.config.detector_pivot == DetectorPivot.BEAM:
             # BEAM pivot mode: detector rotates around the direct beam spot
             # Use exact C-code formula: pix0_vector = -Fbeam*fdet_vec - Sbeam*sdet_vec + distance*beam_vec
-            
-            # Calculate Fbeam and Sbeam from beam centers
-            # For MOSFLM: Fbeam = Ybeam + 0.5*pixel, Sbeam = Xbeam + 0.5*pixel
-            # c_reference_utils now correctly maps: Xbeam=beam_center_s, Ybeam=beam_center_f
-            # Therefore: Fbeam=beam_center_f, Sbeam=beam_center_s (no swap needed)
-            # The beam centers already include the MOSFLM +0.5 pixel offset from __init__
 
-            # Direct mapping: no axis swap needed
-            Fbeam = self.beam_center_f * self.pixel_size  # F (fast coord) ← beam_f (fast param)
-            Sbeam = self.beam_center_s * self.pixel_size  # S (slow coord) ← beam_s (slow param)
-            
-            # Set beam vector based on convention
+            # Calculate Fbeam and Sbeam from beam centers
+            # For MOSFLM: Fbeam = Ybeam + 0.5*pixel_size, Sbeam = Xbeam + 0.5*pixel_size (C-code line 382)
+            # CLI-FLAGS-003 Phase H5e unit correction (2025-10-24):
+            # CRITICAL: self.beam_center_f and self.beam_center_s are stored as config values
+            # from DetectorConfig in MILLIMETERS (see config.py:186-188, __main__.py:921-922, 930-931).
+            # Must convert mm→m before use in geometry calculations.
+            #
+            # C-code reference (nanoBragg.c:1184-1239, specifically lines 1220-1221 for MOSFLM):
+            # Fbeam_m = (Ybeam_mm + 0.5*pixel_mm) / 1000
+            # Sbeam_m = (Xbeam_mm + 0.5*pixel_mm) / 1000
+            #
+            # Since __main__.py already applies the axis swap at lines 921-922, we only need to:
+            # 1. Convert beam_center_f/s from mm to m (÷ 1000)
+            # 2. Add the MOSFLM +0.5 pixel offset (in meters)
+            #
+            # Reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/diff_notes.md documents
+            # the 1.1mm ΔF that this fix resolves.
+
             if self.config.detector_convention == DetectorConvention.MOSFLM:
-                beam_vector = torch.tensor(
-                    [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
-                )
+                # MOSFLM convention: add +0.5 pixel offset (C: nanoBragg.c:1220-1221)
+                # beam_center_f/s are in mm; convert to m and add half-pixel in meters
+                # Use config values directly (they're in mm) and convert
+                Fbeam = (self.config.beam_center_f / 1000.0) + (0.5 * self.pixel_size)
+                Sbeam = (self.config.beam_center_s / 1000.0) + (0.5 * self.pixel_size)
             else:
-                # XDS convention uses [0, 0, 1] as beam vector
-                beam_vector = torch.tensor(
-                    [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
-                )
-            
+                # Other conventions: convert mm→m without offset
+                Fbeam = self.config.beam_center_f / 1000.0
+                Sbeam = self.config.beam_center_s / 1000.0
+
+            # Reuse beam_vector from r-factor calculation above
+            # This ensures CUSTOM convention overrides (e.g., -beam_vector) are honored
+            # beam_vector is already set via self.beam_vector property
+
+            # CLI-FLAGS-003 Phase H5b: Handle pix0_override for BEAM pivot
+            # PRECEDENCE RULE (Phase H5a evidence, 2025-10-22):
+            # Per reports/2025-10-cli-flags/phase_h5/c_precedence_2025-10-22.md:
+            # C code IGNORES -pix0_vector_mm when custom detector vectors are present.
+            # Custom vectors supersede pix0 overrides.
+            #
+            # pix0_override application workflow (when no custom vectors):
+            # 1. Subtract beam term to get detector offset: pix0_delta = pix0_override - distance*beam
+            # 2. Project onto detector axes to get Fbeam_override, Sbeam_override
+            #    Fbeam = -dot(pix0_delta, fdet); Sbeam = -dot(pix0_delta, sdet)
+            # 3. Update beam_center_f/s tensors for header consistency
+            # 4. Apply standard BEAM formula with derived Fbeam/Sbeam
+            #
+            # Detection of custom vectors: check if any of custom_fdet/sdet/odet_vector are supplied
+            has_custom_vectors = any([
+                self.config.custom_fdet_vector is not None,
+                self.config.custom_sdet_vector is not None,
+                self.config.custom_odet_vector is not None
+            ])
+
+            # Apply pix0 override only when NO custom vectors are present
+            if pix0_override_tensor is not None and not has_custom_vectors:
+                # Ensure all tensors on same device/dtype
+                beam_vector_local = beam_vector.to(device=self.device, dtype=self.dtype)
+                fdet_local = self.fdet_vec.to(device=self.device, dtype=self.dtype)
+                sdet_local = self.sdet_vec.to(device=self.device, dtype=self.dtype)
+                pix0_override_local = pix0_override_tensor.to(device=self.device, dtype=self.dtype)
+
+                # Compute beam term: distance_corrected * beam_vector
+                beam_term = self.distance_corrected * beam_vector_local
+
+                # Subtract beam term to get detector offset
+                pix0_delta = pix0_override_local - beam_term
+
+                # Project onto detector axes (with sign convention from C code)
+                # Fbeam = -dot(pix0_delta, fdet); Sbeam = -dot(pix0_delta, sdet)
+                Fbeam_override = -torch.dot(pix0_delta, fdet_local)
+                Sbeam_override = -torch.dot(pix0_delta, sdet_local)
+
+                # Override the Fbeam/Sbeam values with derived ones
+                Fbeam = Fbeam_override
+                Sbeam = Sbeam_override
+
+                # Update beam_center_f/s tensors to maintain header consistency
+                # Convert from meters back to pixels: beam_center = offset_m / pixel_size_m
+                # Note: For MOSFLM the +0.5 offset was already applied above, so reverse it
+                if self.config.detector_convention == DetectorConvention.MOSFLM:
+                    # MOSFLM: Fbeam = (beam_center_f + 0.5) * pixel_size
+                    # So: beam_center_f = Fbeam / pixel_size - 0.5
+                    self.beam_center_f = (Fbeam / self.pixel_size - 0.5).to(device=self.device, dtype=self.dtype)
+                    self.beam_center_s = (Sbeam / self.pixel_size - 0.5).to(device=self.device, dtype=self.dtype)
+                else:
+                    # Other conventions: beam_center = offset / pixel_size
+                    self.beam_center_f = (Fbeam / self.pixel_size).to(device=self.device, dtype=self.dtype)
+                    self.beam_center_s = (Sbeam / self.pixel_size).to(device=self.device, dtype=self.dtype)
+
             # Use exact C-code formula WITH distance correction (AT-GEO-003)
+            # BEAM pivot formula (C-code reference: nanoBragg.c lines 1833-1835):
+            # pix0_vector[1] = -Fbeam*fdet_vector[1]-Sbeam*sdet_vector[1]+distance*beam_vector[1];
+            # pix0_vector[2] = -Fbeam*fdet_vector[2]-Sbeam*sdet_vector[2]+distance*beam_vector[2];
+            # pix0_vector[3] = -Fbeam*fdet_vector[3]-Sbeam*sdet_vector[3]+distance*beam_vector[3];
+
             self.pix0_vector = (
                 -Fbeam * self.fdet_vec
                 - Sbeam * self.sdet_vec
@@ -514,6 +606,23 @@ class Detector:
                 fdet_initial = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
                 sdet_initial = torch.tensor([0.0, 1.0, 0.0], device=self.device, dtype=self.dtype)
                 odet_initial = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
+            elif self.config.detector_convention == DetectorConvention.CUSTOM:
+                # CUSTOM convention: use custom vectors if provided, otherwise use defaults
+                # C code sets defaults to MOSFLM-like values (nanoBragg.c lines 263-265)
+                if self.config.custom_fdet_vector:
+                    fdet_initial = torch.tensor(self.config.custom_fdet_vector, device=self.device, dtype=self.dtype)
+                else:
+                    fdet_initial = torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
+
+                if self.config.custom_sdet_vector:
+                    sdet_initial = torch.tensor(self.config.custom_sdet_vector, device=self.device, dtype=self.dtype)
+                else:
+                    sdet_initial = torch.tensor([0.0, -1.0, 0.0], device=self.device, dtype=self.dtype)
+
+                if self.config.custom_odet_vector:
+                    odet_initial = torch.tensor(self.config.custom_odet_vector, device=self.device, dtype=self.dtype)
+                else:
+                    odet_initial = torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
             else:
                 raise ValueError(f"Unknown detector convention: {self.config.detector_convention}")
 
@@ -527,17 +636,26 @@ class Detector:
             # - Sclose (slow coord) ← beam_center_s (slow param)
             # NOTE: The beam centers already have the +0.5 offset from __init__ for MOSFLM!
 
-            # The beam centers already include the MOSFLM +0.5 pixel offset from __init__
-            # Use consistent mapping with BEAM pivot mode: no axis swap
-            Fclose = self.beam_center_f * self.pixel_size  # F (fast coord) ← beam_f (fast param)
-            Sclose = self.beam_center_s * self.pixel_size  # S (slow coord) ← beam_s (slow param)
+            # C-code lines 1273-1276: CUSTOM convention uses Fclose=Xbeam, Sclose=Ybeam (no +0.5 offset)
+            # MOSFLM adds +0.5 pixel offset per C-code lines 1233-1234
+            if self.config.detector_convention == DetectorConvention.MOSFLM:
+                Fclose = (self.beam_center_f + 0.5) * self.pixel_size
+                Sclose = (self.beam_center_s + 0.5) * self.pixel_size
+            else:
+                # CUSTOM, XDS, DIALS: use beam centers as-is
+                Fclose = self.beam_center_f * self.pixel_size
+                Sclose = self.beam_center_s * self.pixel_size
 
             # Compute pix0 BEFORE rotations using close_distance if specified
             # When close_distance is provided, use it directly for SAMPLE pivot
+            # CLI-FLAGS-003 Phase L3k.3c.4: CRITICAL FIX - use close_distance not distance
+            # C code (nanoBragg.c:1739-1745) uses close_distance for SAMPLE pivot pix0 calc
+            # close_distance is r-factor corrected (set at line 475 above)
+            # Using nominal self.distance causes 2.85µm pix0_z error
             if hasattr(self.config, 'close_distance_mm') and self.config.close_distance_mm is not None:
                 initial_distance = self.config.close_distance_mm / 1000.0  # Convert mm to meters
             else:
-                initial_distance = self.distance  # Use nominal distance
+                initial_distance = self.close_distance  # Use r-factor corrected close_distance
 
             pix0_initial = (
                 -Fclose * fdet_initial
@@ -564,7 +682,52 @@ class Detector:
             # When detector_twotheta is zero, this will be identity
             pix0_rotated = rotate_axis(pix0_rotated, twotheta_axis, detector_twotheta)
 
+            # CLI-FLAGS-003 Phase F2: SAMPLE pivot always uses calculated pix0
+            # The C code (nanoBragg.c:1739-1745) shows that pix0_override is IGNORED for SAMPLE pivot;
+            # instead, Fclose/Sclose from beam centers are used in the standard formula, then rotated.
             self.pix0_vector = pix0_rotated
+
+        # ALWAYS recalculate close_distance from final pix0_vector (C code nanoBragg.c:1846)
+        # This ensures consistency between pix0 and close_distance for all pivot modes
+        # CRITICAL: Keep as tensor for differentiability (Core Rule #9)
+        close_dist_tensor = torch.dot(self.pix0_vector, self.odet_vec)
+        self.close_distance = close_dist_tensor
+
+        # CLI-FLAGS-003 Phase H4a: Post-rotation beam-centre recomputation
+        # Port nanoBragg.c lines 1851-1860 to update Fbeam/Sbeam and distance_corrected
+        #
+        # C-Code Implementation Reference (from nanoBragg.c, lines 1851-1860):
+        # ```c
+        # /* where is the direct beam now? */
+        # /* difference between beam impact vector and detector origin */
+        # newvector[1] = close_distance/ratio*beam_vector[1]-pix0_vector[1];
+        # newvector[2] = close_distance/ratio*beam_vector[2]-pix0_vector[2];
+        # newvector[3] = close_distance/ratio*beam_vector[3]-pix0_vector[3];
+        # /* extract components along detector vectors */
+        # Fbeam = dot_product(fdet_vector,newvector);
+        # Sbeam = dot_product(sdet_vector,newvector);
+        # distance = close_distance/ratio;
+        # ```
+        #
+        # This recomputation is crucial when custom pix0 vectors or rotations are present.
+        # The beam impact point moves relative to the detector origin after rotations,
+        # so Fbeam/Sbeam must be recalculated to maintain geometric consistency.
+
+        # Compute beam impact vector minus detector origin
+        # newvector = (close_distance / r_factor) * beam_vector - pix0_vector
+        beam_impact_term = (close_dist_tensor / self.r_factor) * beam_vector
+        newvector = beam_impact_term - self.pix0_vector
+
+        # Extract components along detector axes to get updated Fbeam/Sbeam
+        # Note: C code updates Fbeam/Sbeam variables but does NOT update Xbeam/Ybeam beam centers
+        # These recomputed values are used for subsequent geometry calculations in the C code
+        # but we don't need to store them as they're only intermediate values
+        Fbeam_recomputed = torch.dot(self.fdet_vec, newvector)
+        Sbeam_recomputed = torch.dot(self.sdet_vec, newvector)
+
+        # Update distance_corrected from close_distance and r_factor
+        # This matches C code: distance = close_distance/ratio (line 1859)
+        self.distance_corrected = close_dist_tensor / self.r_factor
 
     def get_pixel_coords(self) -> torch.Tensor:
         """
@@ -583,19 +746,25 @@ class Detector:
             self, "_cached_pix0_vector"
         ):
             # Check if basis vectors have changed
+            # Move cached vectors to current device for comparison
+            cached_f = self._cached_basis_vectors[0].to(self.device)
+            cached_s = self._cached_basis_vectors[1].to(self.device)
+            cached_o = self._cached_basis_vectors[2].to(self.device)
+
             if not (
-                torch.allclose(self.fdet_vec, self._cached_basis_vectors[0], atol=1e-15)
+                torch.allclose(self.fdet_vec, cached_f, atol=1e-15)
                 and torch.allclose(
-                    self.sdet_vec, self._cached_basis_vectors[1], atol=1e-15
+                    self.sdet_vec, cached_s, atol=1e-15
                 )
                 and torch.allclose(
-                    self.odet_vec, self._cached_basis_vectors[2], atol=1e-15
+                    self.odet_vec, cached_o, atol=1e-15
                 )
             ):
                 geometry_changed = True
             # Check if pix0_vector has changed
+            cached_pix0 = self._cached_pix0_vector.to(self.device)
             if not torch.allclose(
-                self.pix0_vector, self._cached_pix0_vector, atol=1e-15
+                self.pix0_vector, cached_pix0, atol=1e-15
             ):
                 geometry_changed = True
 
@@ -782,13 +951,26 @@ class Detector:
         """
         Get the beam vector based on detector convention.
 
+        For CUSTOM convention with user-supplied custom_beam_vector, use that.
+        Otherwise use convention defaults.
+
         Returns:
             torch.Tensor: Unit beam vector pointing from sample toward source
         """
-        if self.config.detector_convention == DetectorConvention.MOSFLM:
+        # CUSTOM convention with user override
+        if (self.config.detector_convention == DetectorConvention.CUSTOM
+            and self.config.custom_beam_vector is not None):
+            # Convert tuple to tensor on correct device/dtype
+            return torch.tensor(
+                self.config.custom_beam_vector,
+                device=self.device,
+                dtype=self.dtype
+            )
+        # Convention defaults
+        elif self.config.detector_convention == DetectorConvention.MOSFLM:
             return torch.tensor([1.0, 0.0, 0.0], device=self.device, dtype=self.dtype)
         else:
-            # XDS, DIALS, and CUSTOM conventions use beam along +Z
+            # XDS, DIALS, and CUSTOM (without override) conventions use beam along +Z
             return torch.tensor([0.0, 0.0, 1.0], device=self.device, dtype=self.dtype)
 
     def get_r_factor(self) -> torch.Tensor:
@@ -873,13 +1055,17 @@ class Detector:
         Sbeam_computed = torch.dot(R, self.sdet_vec)
 
         # Get original beam center in meters
-        # Account for the +0.5 pixel offset in MOSFLM convention
-        # beam_center_f and beam_center_s are already in pixels
-        is_custom = self._is_custom_convention()
-        # beam_center_f and beam_center_s already have the MOSFLM +0.5 pixel offset applied in __init__
-        # so we just need to convert to meters
-        Fbeam_original = self.beam_center_f * self.pixel_size
-        Sbeam_original = self.beam_center_s * self.pixel_size
+        # CRITICAL: For MOSFLM, the beam centers stored are user-provided (Xbeam/Ybeam),
+        # but the pix0_vector calculation adds +0.5 pixel to get Fbeam/Sbeam.
+        # We need to apply the same offset here for consistent comparison.
+        if self.config.detector_convention == DetectorConvention.MOSFLM:
+            # Add +0.5 pixel offset to match what's used in pix0_vector calculation
+            Fbeam_original = (self.beam_center_f + 0.5) * self.pixel_size
+            Sbeam_original = (self.beam_center_s + 0.5) * self.pixel_size
+        else:
+            # Other conventions: use beam centers as-is
+            Fbeam_original = self.beam_center_f * self.pixel_size
+            Sbeam_original = self.beam_center_s * self.pixel_size
 
         # Calculate errors
         error_f = abs(Fbeam_computed - Fbeam_original)
@@ -1044,6 +1230,29 @@ class Detector:
             odet_vec = torch.tensor(
                 [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype  # Normal along +Z
             )
+        elif c.detector_convention == DetectorConvention.ADXV:
+            # ADXV convention per spec: beam b = [0 0 1]; f = [1 0 0]; s = [0 -1 0]; o = [0 0 1]
+            fdet_vec = torch.tensor(
+                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype  # Fast along +X
+            )
+            sdet_vec = torch.tensor(
+                [0.0, -1.0, 0.0], device=self.device, dtype=self.dtype  # Slow along -Y (like MOSFLM)
+            )
+            odet_vec = torch.tensor(
+                [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype  # Normal along +Z (beam direction)
+            )
+        elif c.detector_convention == DetectorConvention.DENZO:
+            # DENZO convention per spec: Same as MOSFLM bases (beam [1,0,0], f=[0,0,1], s=[0,-1,0], o=[1,0,0])
+            # Note: Different beam center mapping but same basis vectors as MOSFLM
+            fdet_vec = torch.tensor(
+                [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype  # Fast along +Z (same as MOSFLM)
+            )
+            sdet_vec = torch.tensor(
+                [0.0, -1.0, 0.0], device=self.device, dtype=self.dtype  # Slow along -Y (same as MOSFLM)
+            )
+            odet_vec = torch.tensor(
+                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype   # Normal along +X (same as MOSFLM)
+            )
         elif c.detector_convention == DetectorConvention.CUSTOM:
             # CUSTOM convention uses user-provided vectors or defaults to MOSFLM
             if c.custom_fdet_vector is not None:
@@ -1053,7 +1262,7 @@ class Detector:
             else:
                 # Default to MOSFLM fast vector
                 fdet_vec = torch.tensor(
-                    [0.0, 1.0, 0.0], device=self.device, dtype=self.dtype
+                    [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
                 )
 
             if c.custom_sdet_vector is not None:
@@ -1063,7 +1272,7 @@ class Detector:
             else:
                 # Default to MOSFLM slow vector
                 sdet_vec = torch.tensor(
-                    [0.0, 0.0, 1.0], device=self.device, dtype=self.dtype
+                    [0.0, -1.0, 0.0], device=self.device, dtype=self.dtype
                 )
 
             if c.custom_odet_vector is not None:
