@@ -1,0 +1,3 @@
+[sync] Detected local stamped handoff with unpushed commits; attempting push-only reconciliation.
+To github.com:hoidn/nanoBragg.git
+   e6bf956..15ffd04  HEAD -> feature/spec-based-2
