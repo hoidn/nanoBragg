@@ -1176,3 +1176,8 @@
 - Updated `docs/fix_plan.md:451-470` Next Actions to match the new plan (Phase M1–M6) and removed stale Option B cache guidance.
 - Authored `input.md` (Mode: Parity) instructing Ralph to execute Phase M1: generate a new spec-mode scaling bundle via `trace_harness.py`, run `compare_scaling_traces.py`, capture pytest collect logs, and store artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/$STAMP/spec_baseline/`.
 - Follow-up expectation: Ralph completes Phase M1 bundle, records metrics/analysis, and updates `lattice_hypotheses.md` before we move to Phase M2 diagnostics.
+
+## 2025-10-08 (galph loop — M2 analysis directives)
+- Refreshed `plans/active/cli-noise-pix0/plan.md` Phase M snapshot: marked M1 [D], noted 14.643% I_before_scaling deficit from bundle `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/`, and tightened M2 guidance (analysis_20251008T212459Z.md + lattice_hypotheses.md update + summary refresh).
+- Authored new `input.md` (Mode: Docs, 100 lines) directing Ralph to execute CLI-FLAGS-003 Phase M2 analysis: regenerate summary via `compare_scaling_traces.py`, document factor breakdown, update hypotheses ledger, refresh sha256/commands/run_metadata, log Attempt #186, and run pytest collect-only.
+- No code changes expected next loop; focus is evidence bundling under the existing spec_baseline directory.

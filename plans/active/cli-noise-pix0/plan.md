@@ -22,12 +22,12 @@
   - `reports/2025-10-cli-flags/phase_l/` — canonical evidence directories (rot_vector, scaling_audit, scaling_validation, nb_compare, supervisor_command).
 - Artifact Policy: Continue storing new work under `reports/2025-10-cli-flags/phase_l/<topic>/<timestamp>/`, capturing `commands.txt`, raw logs, `summary.md`, `env.json`, and `sha256.txt` per CLI-FLAGS-003 conventions.
 - Guardrails: Preserve vectorization (no scalar φ loops), maintain device/dtype neutrality, respect Protected Assets (`docs/index.md`), and cite nanoBragg.c snippets via CLAUDE Rule #11 when touching simulator/physics code.
-- Status Snapshot (2025-12-15):
+- Status Snapshot (2025-10-08 refresh):
   - ✅ `-nonoise` plumbing merged with regression coverage (`tests/test_cli_nonoise.py`) — files: `src/nanobrag_torch/io/noise.py`, artifacts `reports/2025-10-cli-flags/phase_j/nonoise_plumbing/`.
   - ✅ pix0 precedence and SAMPLE pivot parity fixed (Attempt #129) — see `reports/2025-10-cli-flags/phase_k/pix0_precedence/20251006T231255Z/`.
   - ✅ φ carryover shim removed end-to-end (Attempts #176–#183) — definitive proof in `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/`; shim plan archived.
   - ✅ Trace tooling + instrumentation audits (Phase M0) ensure debug caches gated by trace flag and remain device/dtype neutral (`reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T070513Z/`).
-  - ⚠️ Scaling parity (VG‑2) still failing: last red bundle `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T072513Z/metrics.json` shows `first_divergence = "I_before_scaling"` with `F_latt` relative error ≈1.58e0 (pre-shim-removal traces). Fresh spec-mode evidence has not been generated since Phase D cleanup.
+  - ⚠️ Scaling parity (VG‑2) still failing: fresh spec-mode bundle `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/metrics.json` confirms `first_divergence = "I_before_scaling"` with PyTorch 14.643% low relative to C (I_before_scaling: 8.05e5 vs 9.44e5). Downstream factors (r_e², fluence, steps, capture_fraction, polar, omega, cos_2theta) remain ≤1e-6.
   - 🚩 Downstream nb-compare + supervisor command reruns remain blocked until Phase M closes.
 
 ---
@@ -50,8 +50,8 @@ Exit Criteria: Latest `trace_harness.py` comparison yields `first_divergence = N
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| M1 | Capture fresh spec-mode baseline | [ ] | Run `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --pixel 685 1039 --device cpu --dtype float64 --out reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/spec_baseline/`. Immediately follow with `python scripts/validation/compare_scaling_traces.py --trace-dir reports/.../<timestamp>/spec_baseline/`. Store `metrics.json`, `summary.md`, `commands.txt`, `env.json`, `sha256.txt`. Include `pytest --collect-only -q tests/test_cli_scaling_phi0.py` log to confirm selectors. |
-| M2 | Partition divergence contributions | [ ] | Using the M1 bundle, compute separate deltas for `F_cell`, `F_latt`, `omega_pixel`, and `I_before_scaling`. Update `reports/.../<timestamp>/spec_baseline/analysis.md` and append findings to `reports/2025-10-cli-flags/phase_l/scaling_validation_summary.md`. If `F_latt` is still dominant, populate/refresh `reports/.../lattice_hypotheses.md` with quantitative evidence. |
+| M1 | Capture fresh spec-mode baseline | [D] | ✅ Attempt #185 (2025-10-08). Bundle: `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/` with trace_harness commands, compare_scaling_traces metrics, env/sha256, and pytest collect log. First divergence remains `I_before_scaling` (Δ_rel = -1.4643e-01). |
+| M2 | Partition divergence contributions | [ ] | Use the 20251008T212459Z spec baseline to decompose `F_cell`, `F_latt`, `omega_pixel`, and `I_before_scaling`. Author `analysis_20251008T212459Z.md` (or append to existing analysis log) in the same directory capturing per-factor deltas and numerical justification. Update `reports/2025-10-cli-flags/phase_l/scaling_validation/scaling_validation_summary.md` with the new table and refresh/append `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md` (or successor) with quantified hypotheses for the 14.6% deficit. |
 | M3 | Hypothesis validation probes | [ ] | Design minimal repros (e.g., manual `sincg` table, per-φ cache probes) under `reports/.../<timestamp>/lattice_probes/` to confirm or falsify leading hypotheses. Reference `specs/spec-a-core.md` equations and cite relevant `nanoBragg.c` lines (e.g., 2797–3095) per CLAUDE Rule #11. |
 | M4 | Implement physics fix | [ ] | Once the root cause is confirmed, modify the appropriate PyTorch module (likely `src/nanobrag_torch/simulator.py`) preserving vectorization/device neutrality. Update docstrings with C references, run targeted regression tests (`pytest -v tests/test_cli_scaling_phi0.py`, plus focused unit tests), and capture CPU trace parity in a new bundle `.../fix_<timestamp>/`. |
 | M5 | Gradient + CUDA validation | [ ] | Repeat M1 parity comparison on CUDA (`--device cuda --dtype float64` if available) and re-run the 2×2 ROI gradcheck harness from `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T165745Z_carryover_cache_validation/` to ensure gradients survive. Document results in `reports/.../<timestamp>/gpu_smoke/`. |
@@ -86,4 +86,3 @@ Goal: Establish lightweight guardrails so scaling regressions are caught early.
 | --- | --- | --- | --- |
 | P1 | Add hygiene checklist item | [ ] | Extend `docs/fix_plan.md` cleanup guidance to require rerunning `trace_harness.py` (spec-mode) on a quarterly cadence; cite the latest green bundle. |
 | P2 | Schedule nb-compare smoke | [ ] | Document a biannual nb-compare smoke test command + expected metrics in `reports/archive/cli-flags-003/watch.md`. |
-
