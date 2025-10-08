@@ -1872,3 +1872,9 @@ Follow-ups for Ralph:
 - Updated docs/fix_plan.md CLI-FLAGS-003 next actions to focus on scaling audit tasks M1–M4 (trace harness + regression test).
 - Issued Parity-mode input.md directing Ralph to capture new CPU scaling traces via trace_harness.py and compare_scaling_traces.py, storing artifacts under scaling_validation/.
 - Outstanding follow-up: after CPU evidence, expand to CUDA trace and implement scaling fix + regression test per plan.
+
+## 2025-12-03 (galph loop — CLI-FLAGS-003 Phase M1 triage)
+- Replayed scaling evidence from Attempt #137: PyTorch I_before_scaling is 21.9% low even though F_cell matches C.
+- Diagnosis: trace_harness.py still instantiates CrystalConfig in spec mode; per-φ log (`reports/2025-10-cli-flags/phase_l/per_phi/reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T043438Z/trace_py_scaling_cpu_per_phi.log:1`) shows φ₀ F_latt=+1.379 vs C’s −2.383. Existing c-parity shim (`trace_py_c_parity_per_phi.log:1 (reports/2025-10-cli-flags/phase_l/per_phi)`) reproduces the C values.
+- Action for Ralph: add a `--phi-mode` override (default spec, parity run uses c-parity), rerun the harness + compare_scaling_traces.py, and capture new artifacts under `phase_l/scaling_validation/<timestamp>/` before moving to Phase M2.
+- No other assets touched; docs/index.md remains authoritative.
