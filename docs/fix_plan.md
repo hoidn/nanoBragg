@@ -459,11 +459,29 @@
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): 🔴 **2025-12-11 regression.** Option B cache wiring (commit `fa0167b`) allows the targeted parity test to hit the cache but `F_latt` still diverges (relative error 1.57884 versus ≤1e-6) and the omega trace tap now throws tensor indexing errors. Evidence captured in `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T153142Z_carryover_cache_plumbing/`.
 - Next Actions (2025-12-14 refresh):
-1. **Phase C1 coverage audit** — Use `pytest --collect-only -q tests/test_cli_scaling_phi0.py` to confirm selectors; extend spec-mode assertions as needed so parity guarantees formerly guarded by `tests/test_phi_carryover_mode.py` are preserved. Capture logs plus analysis under `reports/2025-10-cli-flags/phase_phi_removal/phase_c/<ts>/coverage_audit.md`.
+1. ~~**Phase C1 coverage audit**~~ ✅ COMPLETE (Attempt #179, 2025-10-08)
 2. **Phase C2 documentation updates** — Revise `docs/bugs/verified_c_bugs.md` and related diagnosis notes to flag C-PARITY-001 as C-only, removing PyTorch reproduction guidance. Record diffs/commands in the same Phase C artifact bundle.
 3. **Phase C3 tooling/docs sweep** — Update `docs/development/testing_strategy.md`, `reports/2025-10-cli-flags/phase_l/diagnosis.md`, and prompts to eliminate residual c-parity instructions, ensuring spec-only flow is the documented default. Log summary + SHA256 hashes alongside the Phase C evidence.
 
 - Attempts History:
+  * [2025-10-08] Attempt #179 (ralph loop i=176, Mode: Docs) — Result: ✅ **SUCCESS** (Phase C1 Coverage Audit COMPLETE). **No code changes.**
+    Metrics: Test collection: 2 tests collected successfully in 0.79s (tests/test_cli_scaling_phi0.py). Documentation-only loop per input.md Mode: Docs.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_c/20251008T125158Z/coverage_audit.md` — Comprehensive coverage analysis comparing pre/post-shim-removal test suite
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_c/20251008T125158Z/collect.log` — pytest collection output
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_c/20251008T125158Z/commands.txt` — Reproduction steps
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_c/20251008T125158Z/env.json` — Environment metadata
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_c/20251008T125158Z/sha256.txt` — Artifact checksums
+    Observations/Hypotheses:
+      - **Coverage Assessment:** ✅ SUFFICIENT — The 2 retained spec-mode tests adequately cover the normative spec requirement (φ=0 identity rotation)
+      - **Deleted Coverage Analysis:** The 33 removed tests from `test_phi_carryover_mode.py` primarily validated shim-specific behavior (CLI parsing, config validation, c-parity mode reproduction) that is no longer needed
+      - **Spec Alignment Verified:** Both current tests enforce VG-1 tolerance (≤1e-6) and validate against spec baselines from specs/spec-a-core.md:211-214
+      - **Critical Invariant Preserved:** Direct vector comparison (`test_rot_b_matches_c`) and downstream physics (`test_k_frac_phi0_matches_c`) both validate φ=0 identity rotation
+      - **Non-Blocking Improvements Identified:** Device/dtype parametrization and mosaic/misset spot checks can be added in future hygiene passes
+    Next Actions:
+      - Phase C1: ✅ COMPLETE — Spec-mode coverage is sufficient; selector validation confirms 2 tests collected
+      - Phase C2: Update `docs/bugs/verified_c_bugs.md` C-PARITY-001 entry to emphasize "C-only" and remove PyTorch reproduction guidance
+      - Phase C3: Adjust parity tooling docs to remove c-parity tolerance references from testing_strategy.md and diagnosis.md
   * [2025-10-07] Attempt #136 (ralph loop i=135, Mode: Docs) — Result: ✅ **SUCCESS** (Phase L Documentation Sync COMPLETE). **No code changes.**
     Metrics: Test collection: 35 tests collected successfully in 2.16s (test_cli_scaling_phi0.py + test_phi_carryover_mode.py). Documentation-only loop per input.md Mode: Docs.
     Artifacts:

@@ -1,0 +1,26 @@
+# CLI-FLAGS-003 Phase C1 Coverage Audit Commands
+
+## Reproduction Steps
+
+# 1. Test collection for audit
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.py
+
+# 2. View deleted test file (historical reference)
+git show 340683f:tests/test_phi_carryover_mode.py
+
+# 3. Verify shim removal (should return no matches)
+grep -r "phi_carryover_mode" src/ tests/ --exclude-dir=__pycache__
+
+## Environment
+
+- Branch: feature/spec-based-2
+- Python: $(python --version 2>&1)
+- PyTorch: $(python -c "import torch; print(torch.__version__)")
+- Device: CPU (CUDA available: $(python -c "import torch; print(torch.cuda.is_available())"))
+- Timestamp: 2025-10-08T12:51:58Z
+
+## Plan References
+
+- Plan: plans/active/phi-carryover-removal/plan.md Phase C1
+- Supervisor Memo: input.md:7 (Do Now: CLI-FLAGS-003 coverage audit per plan row C1)
+- Phase B Artifacts: reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T193106Z/

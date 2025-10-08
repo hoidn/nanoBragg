@@ -44,7 +44,7 @@ Exit Criteria: Updated tests/docs focus exclusively on spec mode; parity harness
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Update pytest coverage | [ ] | Audit spec-mode coverage after shim removal: ensure `tests/test_cli_scaling_phi0.py` asserts the per-φ invariants previously covered by the deleted parity suite. Validate selectors via `pytest --collect-only -q tests/test_cli_scaling_phi0.py`. |
+| C1 | Update pytest coverage | [D] | ✅ Coverage audit complete (Attempt #179, 2025-10-08). Spec-mode tests in `tests/test_cli_scaling_phi0.py` (2 tests) adequately cover φ=0 identity rotation invariants. Artifacts: `reports/2025-10-cli-flags/phase_phi_removal/phase_c/20251008T125158Z/coverage_audit.md`. Analysis confirms 33 removed tests from `test_phi_carryover_mode.py` validated shim-specific behavior no longer needed. |
 | C2 | Refresh docs/bugs ledger | [ ] | Amend `docs/bugs/verified_c_bugs.md` C-PARITY-001 entry to emphasise "C-only" and note that PyTorch no longer exposes a reproduction mode. Record change in `summary.md`. |
 | C3 | Adjust parity tooling docs | [ ] | Update `docs/development/testing_strategy.md` and `reports/.../diagnosis.md` to remove instructions for c-parity tolerance. Ensure `prompts/supervisor.md` and `plans/active/cli-noise-pix0/plan.md` no longer reference carryover phases. |
 
