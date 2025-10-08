@@ -3878,3 +3878,25 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - If Miller indices differ, check that get_rotated_real_vectors is correctly consuming the aligned rot_*_star vectors
       - Once I_before_scaling root cause identified, implement fix and regenerate trace
       - After fix, rerun M2i.2 metrics to clear VG-2 blocker and proceed to Phase N
+  * [2025-10-08] Attempt #175 (ralph loop i=172, Mode: Docs) — Result: ✅ **PHASE A COMPLETE** (φ carryover shim baseline inventory freeze). **No code changes.**
+    Metrics: Documentation-only loop per input.md Mode: Docs. Test collection: 2 tests discovered in 0.78s (test_cli_scaling_phi0.py).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_a/20251008T184422Z/baseline_inventory.md` — Comprehensive shim touchpoint catalogue (4 production files, 2 test files, 3 plans, 40+ reports)
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_a/20251008T184422Z/collect.log` — pytest --collect-only output for spec-mode baseline suite
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_a/20251008T184422Z/phi_carryover_refs.txt` — Raw grep results for all phi_carryover_mode references
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_a/20251008T184422Z/commands.txt` — Reproduction commands
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_a/20251008T184422Z/env.json` — Environment metadata (Python 3.13.7, PyTorch 2.8.0+cu128, git SHA a1e776fd)
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_a/20251008T184422Z/sha256.txt` — Artifact checksums
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_b/README.md` — Phase B design review checklist (prepared ahead of implementation)
+      - `plans/active/phi-carryover-removal/plan.md` — Tasks A1 [X], A2 [X] marked complete with artifact references
+    Observations/Hypotheses:
+      - **Shim surface area quantified**: 4 production files (`__main__.py`, `config.py`, `crystal.py`, `simulator.py`), 2 test files (`test_phi_carryover_mode.py`, `test_cli_scaling_parity.py`), 3 active plans, and 40+ historical report bundles reference the φ carryover shim
+      - **Spec-mode baseline stable**: `test_cli_scaling_phi0.py` collects 2 tests successfully (test_rot_b_matches_c, test_k_frac_phi0_matches_c), confirming spec-compliant coverage exists independent of c-parity mode
+      - **Removal scope defined**: Baseline inventory documents exact removal impact per file (CLI flag, config field, conditional branching, test suite deletions)
+      - **Dependencies identified**: Vectorization preservation, device/dtype neutrality, Protected Assets compliance all documented as Phase B guardrails
+      - **Phase B ready**: Design review checklist prepared covering B1 (CLI flag deprecation), B2 (config/model plumbing removal), B3 (debug harness retirement)
+      - **Cross-references established**: CLI-FLAGS-003 ledger now links to removal plan; future supervisor handoffs will delegate to `plans/active/phi-carryover-removal/plan.md` for shim work
+    Next Actions:
+      - **Phase A closure**: Freeze memo now published; no further inventory work required unless shim touchpoints expand
+      - **Phase B handoff**: Await supervisor approval of Phase A artifacts and updated `input.md` Do Now for tasks B1-B3 execution
+      - **CLI-FLAGS-003 scope pivot**: Future work focuses on `-nonoise`/`-pix0` deliverables; φ carryover emulation is deprecated and will be removed per removal plan phases

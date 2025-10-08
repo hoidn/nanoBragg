@@ -1,0 +1,16 @@
+# Commands executed during Phase A inventory (2025-10-08T18:44:22Z)
+
+# Working directory: /home/ollie/Documents/tmp/nanoBragg
+
+# Command 1: Collect test inventory for CLI scaling suite
+# Purpose: Baseline validation that spec-mode tests are still discoverable
+export KMP_DUPLICATE_LIB_OK=TRUE
+pytest --collect-only -q tests/test_cli_scaling_phi0.py
+
+# Command 2: Search for phi_carryover_mode references across codebase
+# Purpose: Inventory all files that reference the shim for removal planning
+rg -n "phi_carryover_mode"
+
+# Command 3: Search for "phi carryover" narrative references in docs
+# Purpose: Identify documentation that will need updating
+rg -n "phi carryover" docs

@@ -1,0 +1,68 @@
+# phi_carryover_mode References (50+ files)
+# Generated: 2025-10-08T18:44:22Z
+
+## Code Files
+
+src/nanobrag_torch/__main__.py
+src/nanobrag_torch/config.py
+src/nanobrag_torch/models/crystal.py
+src/nanobrag_torch/simulator.py
+
+## Test Files
+
+tests/test_phi_carryover_mode.py
+tests/test_cli_scaling_parity.py
+
+## Plans
+
+plans/active/phi-carryover-removal/plan.md
+plans/active/cli-noise-pix0/plan.md
+plans/active/cli-phi-parity-shim/plan.md
+
+## Documentation
+
+docs/fix_plan.md
+galph_memory.md
+input.md
+
+## Reports (Historical Evidence)
+
+reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md
+reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T165745Z_carryover_cache_validation/gradcheck_probe.py
+reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T160802Z_carryover_cache_validation/diagnostics.md
+reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T160802Z_carryover_cache_validation/pytest_cpu.log
+reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T153142Z_carryover_cache_plumbing/pytest_run2.log
+reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T153142Z_carryover_cache_plumbing/pytest.log
+reports/2025-10-cli-flags/phase_l/scaling_validation/20251210_optionB_design/prototype.md
+reports/2025-10-cli-flags/phase_l/scaling_validation/20251210_optionB_design/optionB_batch_design.md
+reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T145905Z/m2g_blocker/analysis.md
+reports/2025-10-cli-flags/phase_l/scaling_validation/20251208_option1_refresh/commands.txt
+reports/2025-10-cli-flags/phase_l/scaling_validation/20251208_option1_refresh/analysis.md
+reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T102155Z/parity_test_failure/pytest.log
+reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/commands.txt
+reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/pytest_collect.log
+reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T072513Z/validation_report.md
+reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T070513Z/instrumentation_audit.md
+reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T060721Z/config_snapshot.json
+reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T043438Z/collect_only.log
+reports/2025-10-cli-flags/phase_l/scaling_audit/config_snapshot.json
+reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py
+reports/2025-10-cli-flags/phase_l/rot_vector/20251007T212159Z/summary.md
+reports/2025-10-cli-flags/phase_l/rot_vector/20251007T212159Z/commands.txt
+reports/2025-10-cli-flags/phase_l/rot_vector/20251007T212159Z/collect.log
+reports/2025-10-cli-flags/phase_l/rot_vector/20251202_tolerance_sync/collect_only.log
+reports/2025-10-cli-flags/phase_l/rot_vector/trace_harness.py
+reports/2025-10-cli-flags/phase_l/parity_shim/20251201_dtype_probe/analysis_summary.md
+reports/2025-10-cli-flags/phase_l/parity_shim/20251008T032835Z/pytest_collect.log
+reports/2025-10-cli-flags/phase_l/parity_shim/pytest_collect.log
+reports/2025-10-cli-flags/phase_l/parity_shim/20251008T021659Z/pytest_collect.log
+reports/2025-10-cli-flags/phase_l/parity_shim/20251008T013345Z/summary.md
+reports/2025-10-cli-flags/phase_l/parity_shim/20251008T013345Z/pytest_phi_carryover.log
+reports/2025-10-cli-flags/phase_l/parity_shim/20251008T012304Z/delta_metrics.json
+reports/2025-10-cli-flags/phase_l/parity_shim/20251008T012304Z/pytest_phi_carryover.log
+reports/2025-10-cli-flags/phase_l/parity_shim/20251008T011326Z/pytest_phi_carryover.log
+reports/2025-10-cli-flags/phase_l/parity_shim/20251008T011326Z/summary.md
+reports/2025-10-cli-flags/phase_l/parity_shim/20251007T232657Z/design.md
+reports/2025-10-cli-flags/phase_c2/IMPLEMENTATION_CHECKLIST.md
+reports/2025-10-cli-flags/phase_c2/implementation_summary.md
+reports/2025-12-cli-flags/phase_l/spec_baseline_refresh/summary.md

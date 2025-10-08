@@ -18,9 +18,9 @@ Exit Criteria: Inventoried files/tests/docs recorded, authoritative baselines no
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| A1 | Catalogue shim touchpoints | [ ] | List code/tests/docs referencing `phi_carryover_mode` (CLI parser, configs, crystal model, debug harness, docs). Store table in `reports/.../phase_a/baseline_inventory.md` with file paths + rationale. |
-| A2 | Record normative baselines | [ ] | Re-run `pytest --collect-only -q tests/test_cli_scaling_phi0.py` and capture latest passing logs that enforce spec mode tolerances. Verify no other suites depend on `c-parity` mode. |
-| A3 | Log plan cross-links | [ ] | Update `docs/fix_plan.md` (CLI-FLAGS-003) Attempts with a freeze note pointing to this plan and document that future work moves to shim removal. |
+| A1 | Catalogue shim touchpoints | [X] | List code/tests/docs referencing `phi_carryover_mode` (CLI parser, configs, crystal model, debug harness, docs). Store table in `reports/.../phase_a/baseline_inventory.md` with file paths + rationale. **DONE:** See `reports/2025-10-cli-flags/phase_phi_removal/phase_a/20251008T184422Z/baseline_inventory.md` — catalogued 4 production files, 2 test files, 3 plans, 40+ reports. |
+| A2 | Record normative baselines | [X] | Re-run `pytest --collect-only -q tests/test_cli_scaling_phi0.py` and capture latest passing logs that enforce spec mode tolerances. Verify no other suites depend on `c-parity` mode. **DONE:** See `reports/2025-10-cli-flags/phase_phi_removal/phase_a/20251008T184422Z/collect.log` — 2 tests collected successfully (test_rot_b_matches_c, test_k_frac_phi0_matches_c). |
+| A3 | Log plan cross-links | [X] | Update `docs/fix_plan.md` (CLI-FLAGS-003) Attempts with a freeze note pointing to this plan and document that future work moves to shim removal. **DONE:** See `docs/fix_plan.md` Attempt #175 — freeze memo logged; CLI-FLAGS-003 Next Actions updated to reference removal plan; future work pivots to `-nonoise`/`-pix0` deliverables. |
 
 ### Phase B — Implementation De-scoping
 Goal: Remove the shim entry points while gating runtime behavior to the spec-compliant path.
