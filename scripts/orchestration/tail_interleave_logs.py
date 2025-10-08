@@ -28,7 +28,15 @@ def find_logs(root: Path) -> Dict[int, Path]:
     return found
 
 
-def interleave_last(prefix: Path, count: int, out, include_ls: bool = True, ls_roots: List[str] | None = None) -> int:
+def interleave_last(
+    prefix: Path,
+    count: int,
+    out,
+    include_ls: bool = True,
+    ls_roots: List[str] | None = None,
+    min_iter: int | None = None,
+    max_iter: int | None = None,
+) -> int:
     """Print last N interleaved galph & ralph logs under logs/<prefix>/*.
 
     Output uses XML-like tags per log with CDATA wrapping.
@@ -55,7 +63,21 @@ def interleave_last(prefix: Path, count: int, out, include_ls: bool = True, ls_r
     if not all_iters:
         print(f"No iter-*.log files found under {prefix}", file=sys.stderr)
         return 3
-    tail_iters = all_iters[-count:]
+    # Apply optional min/max iteration filtering
+    if min_iter is not None or max_iter is not None:
+        filt = []
+        for it in all_iters:
+            if min_iter is not None and it < min_iter:
+                continue
+            if max_iter is not None and it > max_iter:
+                continue
+            filt.append(it)
+        all_iters = filt
+        if not all_iters:
+            print("No iterations within the requested min/max bounds.", file=sys.stderr)
+            return 4
+    # Apply tail selection (count<=0 means include all)
+    tail_iters = all_iters[-count:] if count and count > 0 else all_iters
 
     # Emit a header for clarity
     out.write(f"<logs prefix=\"{prefix}\" count=\"{count}\">\n")
@@ -205,6 +227,8 @@ def main() -> int:
     ap.add_argument("-n", "--count", type=int, default=5, help="How many iterations to include (default: 5)")
     ap.add_argument("--no-ls", dest="include_ls", action="store_false", help="Do not include git ls-tree listings for docs/plans/reports")
     ap.add_argument("--ls-paths", type=str, default="docs,plans,reports", help="Comma-separated roots to ls-tree (default: docs,plans,reports)")
+    ap.add_argument("--min-iter", type=int, default=None, help="Minimum iteration to include (inclusive)")
+    ap.add_argument("--max-iter", type=int, default=None, help="Maximum iteration to include (inclusive)")
     args = ap.parse_args()
 
     prefix = Path(args.prefix)
@@ -213,7 +237,15 @@ def main() -> int:
         prefix = Path(*prefix.parts[1:])
 
     ls_roots = [p.strip() for p in args.ls_paths.split(',') if p.strip()]
-    return interleave_last(prefix, args.count, sys.stdout, include_ls=args.include_ls, ls_roots=ls_roots)
+    return interleave_last(
+        prefix,
+        args.count,
+        sys.stdout,
+        include_ls=args.include_ls,
+        ls_roots=ls_roots,
+        min_iter=args.min_iter,
+        max_iter=args.max_iter,
+    )
 
 
 if __name__ == "__main__":
