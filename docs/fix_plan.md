@@ -2419,6 +2419,27 @@
       - Regenerate traces and update `comparison_summary.md`, `delta_metrics.json` to reflect chosen approach
       - Rerun pytest guard tests (`test_rot_b_matches_c`, `test_k_frac_phi0_matches_c`) and nb-compare
       - **Long-term**: Add spec clarification PR, deprecate C-parity modes post-validation, document case study in lessons_learned.md
+  * [2025-12-01] Attempt #133 (ralph loop i=133, Mode: Docs) — Result: ✅ **SUCCESS** (Phase L3k.3c.4/5 documentation sync COMPLETE). **No code changes.**
+    Metrics: Documentation-only loop (pytest --collect-only: 2 tests collected in 0.79s — test_rot_b_matches_c, test_k_frac_phi0_matches_c).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md:389-432` — New "2025-12-01: Dual-Threshold Decision" section with normative tolerance table (spec ≤1e-6, c-parity ≤5e-5)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/fix_checklist.md:19` — VG-1.4 updated to ✅ with relaxed c-parity threshold note
+      - `docs/bugs/verified_c_bugs.md:179-186` — C-PARITY-001 updated with PyTorch parity shim availability and dual-threshold gates
+      - `plans/active/cli-phi-parity-shim/plan.md:57` — Phase C4d marked [D] complete with artifact references
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/20251201_dual_threshold/commands.txt` — Ordered command log for provenance
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/20251201_dual_threshold/collect_only.log` — pytest --collect-only output (2 tests)
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/20251201_dual_threshold/sha256.txt` — SHA256 checksums for all artifacts
+    Observations/Hypotheses:
+      - **Tolerance decision finalized**: Dtype probe (Attempt #130) confirmed ~2.8e-05 Δk plateau is intrinsic to C-PARITY-001 carryover logic, not precision-limited
+      - **Dual-mode gates established**: spec mode enforces strict ≤1e-6 (normative), c-parity mode accepts ≤5e-5 (documents C bug behavior)
+      - **Documentation propagated**: diagnosis.md §Dual-Threshold Decision, fix_checklist.md VG-1.4, verified_c_bugs.md C-PARITY-001, plan.md C4d all synchronized
+      - **Phase C4 complete**: All sub-tasks (C4a-C4d) marked [D]; ready for Phase C5 (summary + attempt log) and Phase D (handoff to nb-compare)
+      - **Test discovery verified**: Both spec baseline tests (test_rot_b_matches_c, test_k_frac_phi0_matches_c) collected successfully
+    Next Actions:
+      1. Phase L3k.3d — Rerun nb-compare ROI parity sweep with c-parity mode enabled, enforcing the relaxed VG-1 gate (≤5e-5)
+      2. Phase L3k.3e — If VG-3/VG-4 pass, advance to Phase L3k.4 (normalization closure + plan documentation)
+      3. Phase L4 — Supervisor command parity rerun with updated tolerance thresholds
+      4. Phase C5/D — Summary documentation + handoff notes per plan.md Phase D tasks
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; **(viii) Phase F3 parity evidence captured** ✅ (Attempt #12); **(ix) Phase G2 MOSFLM orientation ingestion complete** ✅ (Attempt #17); **(x) Phase G3 trace verification complete with transpose fix** ✅ (Attempt #18); (xi) Phase H lattice structure factor alignment ✅ (Attempt #25); (xii) Phase F3 parity rerun with lattice fix ❌; (xiii) Phase I polarization alignment ❌; (xiv) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌.
 

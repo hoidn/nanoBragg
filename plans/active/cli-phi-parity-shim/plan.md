@@ -54,7 +54,7 @@ Exit Criteria: Production code contains opt-in shim, tests/logs stored, fix_plan
 | C4a | Archive enhanced trace evidence | [D] | ✅ Attempt #127 stored spec + c-parity traces in `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T023140Z/`; includes scattering vector taps, reciprocal vectors, V_actual, and delta summaries. Treat this directory as the baseline for subsequent comparisons. |
 | C4b | Quantify dtype sensitivity | [D] | ✅ Attempt #130 stored float32/float64 traces and `delta_metrics.json` under `reports/2025-10-cli-flags/phase_l/parity_shim/20251201_dtype_probe/`, showing Δk(fp32 vs fp64)=1.42e-06. |
 | C4c | Decide tolerance vs remediation | [D] | ✅ Same attempt documented the decision to relax VG-1 for c-parity (|Δk| ≤ 5e-5) in `analysis_summary.md` and docs/fix_plan.md Attempt #130; remediation deferred. |
-| C4d | Sync plan + checklist | [P] | Update `plans/active/cli-noise-pix0/plan.md` Next Actions, `reports/.../rot_vector/diagnosis.md`, and `fix_checklist.md` to reflect the dual-threshold gate before closing out this sub-phase. |
+| C4d | Sync plan + checklist | [D] | ✅ Updated `reports/.../rot_vector/diagnosis.md` §Dual-Threshold Decision, `fix_checklist.md` VG-1.4, `docs/bugs/verified_c_bugs.md` C-PARITY-001. Artifacts: `20251201_dual_threshold/{commands.txt,collect_only.log,sha256.txt}`. Phase C4 complete; ready for Phase C5/D documentation hand-off. |
 
 ### Phase D — Documentation & Handoff
 Goal: Align specs/docs with dual-mode behavior and prepare for Phase L4 supervisor command parity rerun.

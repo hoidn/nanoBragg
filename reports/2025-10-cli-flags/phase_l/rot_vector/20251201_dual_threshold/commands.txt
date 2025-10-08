@@ -1,0 +1,9 @@
+Wed Oct  8 03:57:59 AM UTC 2025
+export KMP_DUPLICATE_LIB_OK=TRUE
+Step 1 - Diagnosis update
+echo 'Step 2 - fix_checklist.md updated with VG-1 relaxed tolerance note' >> reports/2025-10-cli-flags/phase_l/rot_vector/20251201_dual_threshold/commands.txt
+Step 3 - docs/bugs/verified_c_bugs.md updated with parity shim note
+Step 4 - pytest --collect-only executed and saved to collect_only.log
+Step 5 - sha256.txt generated for all artifacts
+Step 6 - plan.md C4d marked [D], Phase C5 guidance updated
+Step 7 - docs/fix_plan.md Attempt #133 logged
