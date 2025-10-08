@@ -1,41 +1,42 @@
-Summary: Validate CLI-FLAGS-003 spec-mode coverage aligns with c-parity retirement and capture the audit trail.
+Summary: Finish the φ-carryover cleanup by rewriting docs/tests to reflect spec-only rotations and prove collection stays green.
 Mode: Docs
-Focus: CLI-FLAGS-003 / coverage audit (plan row C1)
+Focus: CLI-FLAGS-003 Phase C2/C3 doc sweep
 Branch: feature/spec-based-2
 Mapped tests: KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.py
 Artifacts: reports/2025-10-cli-flags/phase_phi_removal/phase_c/<timestamp>/
-Do Now: CLI-FLAGS-003 — coverage audit per plan row C1 via `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.py`, logging output under the row-C evidence directory and noting any gaps to patch.
-If Blocked: Capture the failing collect output plus notes in coverage_audit.md, then diff against the 20251008T193106Z summary to identify missing spec assertions.
+Do Now: [CLI-FLAGS-003] Phase C2/C3 doc sweep — after updating the targeted files run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.py` and stash logs + metadata in the new Phase C directory.
+If Blocked: Capture the unresolved doc/test notes in `summary.md`, include the failing collect output (if any), and diff against `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T193106Z/summary.md` to highlight what still references c-parity.
 
 Priorities & Rationale
-- docs/fix_plan.md:462-464 — Next Actions demand coverage audit and documentation sweep before scaling work resumes.
-- plans/active/phi-carryover-removal/plan.md:29-49 — Plan rows B0–B5 are closed; table row C1 is now the active gate.
-- plans/active/cli-noise-pix0/plan.md:17-33 — Status snapshot already references the removal artifacts; Next Actions outline the same coverage/doc tasks.
-- reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T193106Z/summary.md — Confirms what changed during removal so you can verify remaining assertions.
-- tests/test_cli_scaling_phi0.py — Current spec-mode coverage needs inspection to ensure all former parity guarantees persist.
+- docs/fix_plan.md:455-466 — Next Actions now call out docs/bugs rewrite and tooling/doc scrub (tests/test_cli_scaling_parity.py, crystal docstrings).
+- plans/active/phi-carryover-removal/plan.md:40-58 — Phase C rows define the deliverables and cite the exact files that still mention carryover.
+- docs/bugs/verified_c_bugs.md:166-192 — Still claims plumbing removal is "in progress" and links to the deleted shim code; must say removal is complete.
+- tests/test_cli_scaling_parity.py:1-140 — Continues to instantiate `CrystalConfig(... phi_carryover_mode="c-parity")`, which now throws; retire or refactor during the sweep.
+- src/nanobrag_torch/models/crystal.py:1238-1274 — Docstring still describes cache-based c-parity handling; needs to reflect the fresh-rotation-only path.
 
 How-To Map
-- Run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.py > reports/2025-10-cli-flags/phase_phi_removal/phase_c/<timestamp>/collect.log` before editing; include commands.txt + env.json + sha256.txt as usual.
-- While auditing assertions, document findings in `coverage_audit.md` within the same folder; call out any Miller index or rotation checks that must be reintroduced.
-- If you add or modify tests, re-run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py` and store the execution log as `pytest_cpu.log` in the row-C directory (CUDA optional but note availability).
-- Update `docs/fix_plan.md` Attempts with the new timestamp once coverage gaps are addressed; reference the row-C artifact path.
+- mkdir -p `reports/2025-10-cli-flags/phase_phi_removal/phase_c/<timestamp>/` before edits; record shell history in `commands.txt` and capture `env.json` + `sha256.txt` when finished.
+- Update `docs/bugs/verified_c_bugs.md` (lines ~166-192) to mark C-PARITY-001 as a C-only defect, reference commit `b9db0a3`, and remove references to deleted PyTorch plumbing.
+- Sweep residual carryover references: address `tests/test_cli_scaling_parity.py`, `reports/2025-10-cli-flags/phase_l/parity_shim/*/diagnosis.md`, and the crystal rotation docstring so they describe spec-only behaviour.
+- After edits, run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.py > .../collect.log`; include stderr if the selector fails and note follow-up in `summary.md`.
+- Update `docs/fix_plan.md` Attempts with the new timestamp + artifact path once the sweep is complete.
 
 Pitfalls To Avoid
-- Do not resurrect c-parity code paths or references; spec mode is the only supported flow now.
-- Keep tests device-neutral; any new assertions must operate on CPU and CUDA once scaling work resumes.
-- Avoid editing protected assets (docs/index.md, loop.sh, supervisor.sh, input.md) beyond this memo.
-- Preserve vectorization in any helper adjustments—no scalar φ loops.
-- Remember to set `KMP_DUPLICATE_LIB_OK=TRUE` for every pytest/CLI invocation.
-- Capture SHA256 hashes for every artifact dropped into reports/.
-- Keep pytest selectors precise; no full-suite runs on this loop.
-- Maintain ASCII formatting in test/doc files.
+- Do not restore the carryover shim or reintroduce `phi_carryover_mode` arguments anywhere.
+- Keep edits ASCII-only and leave protected files (docs/index.md, loop.sh, supervisor.sh, input.md) untouched beyond required updates.
+- Maintain vectorization/dtype neutrality in any explanatory snippets; no `.cpu()` defaults.
+- When removing the parity test, also remove stale imports/helpers so pytest discovery stays clean.
+- Preserve historical evidence by moving any retired diagnosis notes to archive rather than deleting without mention.
+- Capture SHA256 hashes for every artifact you add to `reports/`.
+- Keep pytest scope targeted; no full-suite runs this loop.
+- Document every filename you touch inside `summary.md` for traceability.
 
 Pointers
-- plans/active/phi-carryover-removal/plan.md:29-49 — Coverage tasks and guidance for current gate.
-- plans/active/cli-noise-pix0/plan.md:17-33 — Mirrors required audit/document work for CLI-FLAGS-003.
-- docs/fix_plan.md:451-465 — Ledger entry defining active Next Actions and acceptable outputs.
-- reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T193106Z/summary.md — Completed removal scope for reference.
-- tests/test_cli_scaling_phi0.py — Source file to extend/specify assertions.
+- docs/fix_plan.md:451-466 — Active ledger guidance for CLI-FLAGS-003 Phase C.
+- plans/active/phi-carryover-removal/plan.md:40-58 — Detailed Phase C tasks and evidence expectations.
+- docs/bugs/verified_c_bugs.md:166-192 — C-PARITY-001 entry to rewrite.
+- tests/test_cli_scaling_parity.py:1-140 — Shim-era test that now needs retirement or rewrite.
+- src/nanobrag_torch/models/crystal.py:1238-1274 — Docstring referencing c-parity cache behaviour.
 
 Next Up
-- Plan rows C2/C3: once coverage audit is green, sweep docs/bugs and testing strategy to remove residual c-parity instructions.
+- Phase D proof-of-removal bundle (trace harness with spec mode only) once docs/tests reference solely the fresh-rotation path.

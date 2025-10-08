@@ -460,8 +460,8 @@
 - First Divergence (if known): 🔴 **2025-12-11 regression.** Option B cache wiring (commit `fa0167b`) allows the targeted parity test to hit the cache but `F_latt` still diverges (relative error 1.57884 versus ≤1e-6) and the omega trace tap now throws tensor indexing errors. Evidence captured in `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T153142Z_carryover_cache_plumbing/`.
 - Next Actions (2025-12-14 refresh):
 1. ~~**Phase C1 coverage audit**~~ ✅ COMPLETE (Attempt #179, 2025-10-08)
-2. **Phase C2 documentation updates** — Revise `docs/bugs/verified_c_bugs.md` and related diagnosis notes to flag C-PARITY-001 as C-only, removing PyTorch reproduction guidance. Record diffs/commands in the same Phase C artifact bundle.
-3. **Phase C3 tooling/docs sweep** — Update `docs/development/testing_strategy.md`, `reports/2025-10-cli-flags/phase_l/diagnosis.md`, and prompts to eliminate residual c-parity instructions, ensuring spec-only flow is the documented default. Log summary + SHA256 hashes alongside the Phase C evidence.
+2. **Phase C2 documentation updates** — Rewrite `docs/bugs/verified_c_bugs.md:166-192` to state the carryover shim removal is DONE (reference commit `b9db0a3`), drop language about "plumbing in progress," and remove pointers to the deleted `CrystalConfig.phi_carryover_mode`. Capture commands/diff in the Phase C evidence bundle.
+3. **Phase C3 tooling/docs sweep** — Clean remaining carryover references: retire or refactor `tests/test_cli_scaling_parity.py` (now broken against the new `CrystalConfig` signature), scrub `reports/2025-10-cli-flags/phase_l/parity_shim/*/diagnosis.md`, and update `src/nanobrag_torch/models/crystal.py:1238-1274` docstrings plus plan/prompt references to reflect spec-only rotation flow. Log summary + SHA256 hashes alongside the Phase C evidence.
 
 - Attempts History:
   * [2025-10-08] Attempt #179 (ralph loop i=176, Mode: Docs) — Result: ✅ **SUCCESS** (Phase C1 Coverage Audit COMPLETE). **No code changes.**

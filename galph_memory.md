@@ -1124,3 +1124,9 @@
 - Revised `docs/fix_plan.md` CLI-FLAGS-003 Next Actions (lines 451-465) so Ralph now targets the row C1 audit + documentation sweeps; legacy B-phase bullets removed.
 - Authored new `input.md` (Mode: Docs) instructing Ralph to run collect-only pytest for row C1, capture artifacts under `reports/.../phase_phi_removal/phase_c/<ts>/`, and log coverage findings.
 - Follow-up: Ralph to execute the coverage audit per plan row C1, document gaps in `coverage_audit.md`, and update fix_plan Attempts with the new evidence; next loops can tackle rows C2/C3 once the audit passes.
+
+## 2025-12-14 (galph loop — Phase C2/C3 prep)
+- Confirmed residual shim references: `docs/bugs/verified_c_bugs.md:166-192` still says plumbing "in progress", `tests/test_cli_scaling_parity.py` instantiates deleted `phi_carryover_mode`, and `src/nanobrag_torch/models/crystal.py:1238-1274` docstrings describe cache-based c-parity.
+- Refreshed `plans/active/phi-carryover-removal/plan.md` Phase C rows with explicit file targets (docs entry, parity test retirement, crystal docstrings) and synced `docs/fix_plan.md` Next Actions accordingly.
+- Authored new `input.md` (Mode: Docs) directing Ralph to execute Phase C2/C3 sweep, capture artifacts under `reports/.../phase_phi_removal/phase_c/<ts>/`, run collect-only on `tests/test_cli_scaling_phi0.py`, and update fix_plan attempts.
+- Follow-up: Ralph to update docs/tests per Phase C guidance, drop or rewrite `tests/test_cli_scaling_parity.py`, scrub parity-shim diagnosis reports, and log summary + SHA256 in the new Phase C timestamp before progressing to Phase D evidence.
