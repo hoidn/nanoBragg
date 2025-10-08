@@ -117,11 +117,43 @@ class Crystal:
             self.N_cells_c.item()
         ])
 
-        # φ=0 carryover cache for CLI-FLAGS-003 Phase L3k.3c.3
-        # Caches the last rotated real vectors to replicate C behavior where
-        # ap/bp/cp working vectors persist across pixels when phi==0
-        # (nanoBragg.c:3044-3066 phi rotation loop)
-        self._phi_last_cache: Optional[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]] = None
+        # Phase CLI-FLAGS-003 M0a: Trace instrumentation guard
+        # Only populate _last_tricubic_neighborhood when trace mode is explicitly enabled
+        # This prevents unconditional debug payload retention during production runs
+        self._enable_trace = False  # Set to True by Simulator when trace_pixel is active
+        self._last_tricubic_neighborhood = None  # Populated only when _enable_trace=True
+
+        # Phase CLI-FLAGS-003 M2g: Pixel-indexed φ carryover cache for C-PARITY-001 bug emulation
+        # Stores φ=final vectors per-pixel to simulate C's OpenMP firstprivate variable
+        # persistence across pixel iterations (nanoBragg.c:2797, 3044-3095)
+        #
+        # C-Code Implementation Reference (from nanoBragg.c, lines 2797, 3044-3095):
+        # ```c
+        # #pragma omp parallel for ... firstprivate(ap,bp,cp,...)
+        # for(pixel_i=0; pixel_i < num_pixels; ++pixel_i) {
+        #     for(phi_tic=0; phi_tic<phisteps; ++phi_tic) {
+        #         phi = phi0 + phistep*phi_tic;
+        #         if( phi != 0.0 ) {
+        #             rotate_axis(a0,ap,spindle_vector,phi);  // Update ap/bp/cp
+        #         }
+        #         // When phi==0: ap/bp/cp retain PREVIOUS PIXEL's φ=final values
+        #     }
+        # }
+        # ```
+        #
+        # Cache shape: (S, F, N_mos, 3) where:
+        #   S = slow pixels (detector.spixels)
+        #   F = fast pixels (detector.fpixels)
+        #   N_mos = mosaic domains
+        #   3 = vector components (x, y, z)
+        # Allocated on first use, cleared when detector geometry changes
+        self._phi_cache_real_a: Optional[torch.Tensor] = None
+        self._phi_cache_real_b: Optional[torch.Tensor] = None
+        self._phi_cache_real_c: Optional[torch.Tensor] = None
+        self._phi_cache_recip_a: Optional[torch.Tensor] = None
+        self._phi_cache_recip_b: Optional[torch.Tensor] = None
+        self._phi_cache_recip_c: Optional[torch.Tensor] = None
+        self._phi_cache_initialized = False
 
     def to(self, device=None, dtype=None):
         """Move crystal to specified device and/or dtype."""
@@ -148,7 +180,215 @@ class Crystal:
         # Clear geometry cache when moving devices
         self._geometry_cache = {}
 
+        # Phase CLI-FLAGS-003 M2g: Clear φ carryover cache when moving devices
+        # This ensures no cross-device contamination of cached vectors
+        self._phi_cache_initialized = False
+        self._phi_cache_real_a = None
+        self._phi_cache_real_b = None
+        self._phi_cache_real_c = None
+        self._phi_cache_recip_a = None
+        self._phi_cache_recip_b = None
+        self._phi_cache_recip_c = None
+
         return self
+
+    def initialize_phi_cache(self, spixels: int, fpixels: int):
+        """
+        Initialize pixel-indexed φ carryover cache for c-parity mode.
+
+        Allocates cache tensors with shape (S, F, N_mos, 3) to store φ=final
+        vectors for each pixel. This enables vectorized emulation of the C-PARITY-001
+        bug where φ=0 uses the previous pixel's φ=final vectors.
+
+        C-Code Implementation Reference (from nanoBragg.c, lines 2797, 3044-3095):
+        ```c
+        // ap/bp/cp declared as firstprivate - each thread gets its own copy that
+        // persists across pixel iterations
+        #pragma omp parallel for ... firstprivate(ap,bp,cp,...)
+        for(pixel_i=0; pixel_i < num_pixels; ++pixel_i) {
+            for(phi_tic=0; phi_tic<phisteps; ++phi_tic) {
+                phi = phi0 + phistep*phi_tic;
+                if( phi != 0.0 ) {
+                    rotate_axis(a0,ap,spindle_vector,phi);
+                }
+                // When phi==0: ap/bp/cp retain previous pixel's final φ values
+            }
+        }
+        ```
+
+        Args:
+            spixels: Number of slow pixels (detector rows)
+            fpixels: Number of fast pixels (detector columns)
+        """
+        # Only initialize if not already done or if dimensions changed
+        if (self._phi_cache_initialized and
+            self._phi_cache_real_a is not None and
+            self._phi_cache_real_a.shape[0] == spixels and
+            self._phi_cache_real_a.shape[1] == fpixels):
+            return  # Already initialized with correct dimensions
+
+        # Cache shape: (S, F, N_mos, 3)
+        mosaic_domains = self.config.mosaic_domains
+        cache_shape = (spixels, fpixels, mosaic_domains, 3)
+
+        # Allocate cache tensors on same device/dtype as crystal
+        # Initialize to zeros (will be populated during first pass)
+        self._phi_cache_real_a = torch.zeros(cache_shape, device=self.device, dtype=self.dtype)
+        self._phi_cache_real_b = torch.zeros(cache_shape, device=self.device, dtype=self.dtype)
+        self._phi_cache_real_c = torch.zeros(cache_shape, device=self.device, dtype=self.dtype)
+        self._phi_cache_recip_a = torch.zeros(cache_shape, device=self.device, dtype=self.dtype)
+        self._phi_cache_recip_b = torch.zeros(cache_shape, device=self.device, dtype=self.dtype)
+        self._phi_cache_recip_c = torch.zeros(cache_shape, device=self.device, dtype=self.dtype)
+
+        self._phi_cache_initialized = True
+
+    def apply_phi_carryover(
+        self,
+        slow_indices: torch.Tensor,
+        fast_indices: torch.Tensor,
+        real_vectors: Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
+        recip_vectors: Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
+    ) -> Tuple[
+        Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
+        Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
+    ]:
+        """
+        Apply φ carryover for c-parity mode using pixel-indexed cache (batched pixels).
+
+        For φ=0, replaces fresh vectors with cached φ=final vectors from the
+        previous pixel. This emulates C-PARITY-001 (nanoBragg.c OpenMP firstprivate
+        persistence).
+
+        **Option B Design (M2g.2b):** This method operates on BATCHED pixel indices
+        (tensor inputs) and receives the globally-computed (N_phi, N_mos, 3) rotation
+        tensors. It modifies φ=0 using functional ops (torch.where, advanced indexing)
+        to preserve gradients without .item(), .clone(), or .detach().
+
+        C-Code Implementation Reference (from nanoBragg.c, lines 2797, 3044-3095):
+        ```c
+        #pragma omp parallel for ... firstprivate(ap,bp,cp,...)
+        for(pixel_i=0; pixel_i < num_pixels; ++pixel_i) {
+            for(phi_tic=0; phi_tic<phisteps; ++phi_tic) {
+                phi = phi0 + phistep*phi_tic;
+                if( phi != 0.0 ) {
+                    rotate_axis(a0,ap,spindle_vector,phi);
+                }
+                // When phi==0: ap/bp/cp retain previous pixel's final φ values
+            }
+        }
+        ```
+
+        Args:
+            slow_indices: Batched pixel slow (row) indices, shape (N_pixels,) or scalar tensor
+            fast_indices: Batched pixel fast (column) indices, shape (N_pixels,) or scalar tensor
+            real_vectors: Tuple of (a, b, c) tensors with shape (N_phi, N_mos, 3)
+            recip_vectors: Tuple of (a*, b*, c*) tensors with shape (N_phi, N_mos, 3)
+
+        Returns:
+            Tuple of (real_vectors, recip_vectors) with φ=0 replaced by cached values
+            where cache exists for indexed pixels (unchanged vectors for pixels without cache)
+        """
+        if not self._phi_cache_initialized:
+            # Cache not initialized - return vectors unchanged
+            return real_vectors, recip_vectors
+
+        a, b, c = real_vectors
+        a_star, b_star, c_star = recip_vectors
+
+        # Check if cache has valid data for indexed pixels (non-zero values)
+        # Cache shape: (S, F, N_mos, 3); indexed shape: (..., N_mos, 3) where ... = slow_indices.shape
+        cache_real_a = self._phi_cache_real_a[slow_indices, fast_indices]  # Shape: (..., N_mos, 3)
+        # Tensor-native validity check: sum over mosaic and vector dims, check if any pixel has non-zero cache
+        # Result shape: (...,) bool tensor, True where cache exists
+        cache_valid = (cache_real_a.abs().sum(dim=(-1, -2)) > 0)
+
+        if cache_valid.any():
+            # Retrieve cached φ=final vectors for these pixels
+            cached_real_a = self._phi_cache_real_a[slow_indices, fast_indices]  # (..., N_mos, 3)
+            cached_real_b = self._phi_cache_real_b[slow_indices, fast_indices]
+            cached_real_c = self._phi_cache_real_c[slow_indices, fast_indices]
+            cached_recip_a = self._phi_cache_recip_a[slow_indices, fast_indices]
+            cached_recip_b = self._phi_cache_recip_b[slow_indices, fast_indices]
+            cached_recip_c = self._phi_cache_recip_c[slow_indices, fast_indices]
+
+            # Use torch.where to replace φ=0 without .clone() (preserves gradients)
+            # Create a mask for φ=0 (first phi step)
+            phi_mask = torch.zeros(a.shape[0], dtype=torch.bool, device=a.device)
+            phi_mask[0] = True  # Only φ=0
+
+            # Broadcast mask to match tensor shapes: (N_phi,) -> (N_phi, 1, 1)
+            phi_mask_broadcast = phi_mask.unsqueeze(-1).unsqueeze(-1)
+
+            # Broadcast cached vectors to match input shape: (..., N_mos, 3) -> (1, N_mos, 3)
+            # Note: For batched case, unsqueeze(0) adds N_phi dimension at front
+            cached_real_a_broadcast = cached_real_a.unsqueeze(0)
+            cached_real_b_broadcast = cached_real_b.unsqueeze(0)
+            cached_real_c_broadcast = cached_real_c.unsqueeze(0)
+            cached_recip_a_broadcast = cached_recip_a.unsqueeze(0)
+            cached_recip_b_broadcast = cached_recip_b.unsqueeze(0)
+            cached_recip_c_broadcast = cached_recip_c.unsqueeze(0)
+
+            # Replace φ=0 using torch.where (functional, preserves gradients)
+            a_out = torch.where(phi_mask_broadcast, cached_real_a_broadcast, a)
+            b_out = torch.where(phi_mask_broadcast, cached_real_b_broadcast, b)
+            c_out = torch.where(phi_mask_broadcast, cached_real_c_broadcast, c)
+            a_star_out = torch.where(phi_mask_broadcast, cached_recip_a_broadcast, a_star)
+            b_star_out = torch.where(phi_mask_broadcast, cached_recip_b_broadcast, b_star)
+            c_star_out = torch.where(phi_mask_broadcast, cached_recip_c_broadcast, c_star)
+
+            return (a_out, b_out, c_out), (a_star_out, b_star_out, c_star_out)
+        else:
+            # No cached data for any indexed pixels - return fresh vectors unchanged
+            return real_vectors, recip_vectors
+
+    def store_phi_final(
+        self,
+        slow_indices: torch.Tensor,
+        fast_indices: torch.Tensor,
+        real_vectors: Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
+        recip_vectors: Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
+    ):
+        """
+        Store φ=final vectors in pixel-indexed cache for next pixel's φ=0 (batched pixels).
+
+        This is called after computing physics for pixels to save their φ=final
+        vectors for use by subsequent pixels' φ=0 steps (C-PARITY-001 bug emulation).
+
+        **Option B Design (M2g.2b):** Stores WITHOUT .detach() to preserve gradient flow.
+        Uses direct tensor indexing with batched indices which maintains autograd connections.
+
+        Args:
+            slow_indices: Batched pixel slow (row) indices, shape (N_pixels,) or scalar tensor
+            fast_indices: Batched pixel fast (column) indices, shape (N_pixels,) or scalar tensor
+            real_vectors: Tuple of (a, b, c) tensors with shape (N_phi, N_mos, 3)
+            recip_vectors: Tuple of (a*, b*, c*) tensors with shape (N_phi, N_mos, 3)
+        """
+        if not self._phi_cache_initialized:
+            return  # Cache not initialized - nothing to store
+
+        a, b, c = real_vectors
+        a_star, b_star, c_star = recip_vectors
+
+        # Extract φ=final (last phi index) for all mosaic domains
+        phi_final_idx = -1  # Last index along phi dimension
+        final_real_a = a[phi_final_idx]  # Shape: (N_mos, 3)
+        final_real_b = b[phi_final_idx]
+        final_real_c = c[phi_final_idx]
+        final_recip_a = a_star[phi_final_idx]
+        final_recip_b = b_star[phi_final_idx]
+        final_recip_c = c_star[phi_final_idx]
+
+        # Store in cache using batched indexing (preserves gradients)
+        # Cache shape: (S, F, N_mos, 3)
+        # Indexing with batched slow_indices, fast_indices sets shape (..., N_mos, 3)
+        # Phase M2g: NO .detach() to preserve gradient flow per diagnosis document
+        # See: reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md
+        self._phi_cache_real_a[slow_indices, fast_indices] = final_real_a
+        self._phi_cache_real_b[slow_indices, fast_indices] = final_real_b
+        self._phi_cache_real_c[slow_indices, fast_indices] = final_real_c
+        self._phi_cache_recip_a[slow_indices, fast_indices] = final_recip_a
+        self._phi_cache_recip_b[slow_indices, fast_indices] = final_recip_b
+        self._phi_cache_recip_c[slow_indices, fast_indices] = final_recip_c
 
     def _validate_cell_parameters(self):
         """Validate cell parameters for numerical stability."""
@@ -425,6 +665,27 @@ class Crystal:
         assert k_indices.shape == (B, 4), f"k_indices shape mismatch: expected ({B}, 4), got {k_indices.shape}"
         assert l_indices.shape == (B, 4), f"l_indices shape mismatch: expected ({B}, 4), got {l_indices.shape}"
 
+        # Phase CLI-FLAGS-003 M0a: Guarded trace instrumentation
+        # Only store neighborhood when trace mode is explicitly enabled (via Simulator.debug_config)
+        # This prevents unconditional debug payload retention and ensures B > 1 batched runs
+        # don't unnecessarily cache large intermediate tensors during production execution
+        if self._enable_trace:
+            # M0b: Ensure debug tensors respect caller's device/dtype
+            # All tensors (sub_Fhkl, indices, flattened queries) are already on the correct
+            # device/dtype from the batched gather operations above, so no explicit conversion needed
+            self._last_tricubic_neighborhood = {
+                'sub_Fhkl': sub_Fhkl,  # (B, 4, 4, 4) or (1, 4, 4, 4) for single query
+                'h_indices': h_indices,  # (B, 4) Miller h coordinates
+                'k_indices': k_indices,  # (B, 4) Miller k coordinates
+                'l_indices': l_indices,  # (B, 4) Miller l coordinates
+                'h_flat': h_flat,  # (B,) query h values
+                'k_flat': k_flat,  # (B,) query k values
+                'l_flat': l_flat   # (B,) query l values
+            }
+        else:
+            # Production mode: clear any stale trace payload to prevent memory leaks
+            self._last_tricubic_neighborhood = None
+
         # Phase C3: Device/dtype consistency check
         # Ensure all tensors are on the same device as the input query tensors
         assert sub_Fhkl.device == h.device, \
@@ -433,9 +694,8 @@ class Crystal:
             f"Device mismatch: h_indices on {h_indices.device}, input on {h.device}"
 
         # Perform tricubic interpolation
-        # Phase C1 deliverable: batched gather complete
-        # Phase D (polynomial vectorization) will consume these (B,4,4,4) neighborhoods
-        # For now, maintain scalar path for single-element case and fall back for batched
+        # Phase C1: batched gather complete
+        # Phase D2: vectorized polynomial helpers now available
         if B == 1:
             # Scalar case: use existing polin3 (squeeze to remove batch dim)
             F_cell = polin3(h_indices.squeeze(0), k_indices.squeeze(0), l_indices.squeeze(0),
@@ -454,19 +714,30 @@ class Crystal:
 
             return result
         else:
-            # Batched case: Phase D will vectorize polin3; for now fall back to nearest-neighbor
-            # This preserves existing behavior while delivering Phase C1 (batched gather infrastructure)
-            if not self._interpolation_warning_shown:
-                print("WARNING: tricubic interpolation batched gather implemented")
-                print("WARNING: polynomial evaluation not yet vectorized; falling back to nearest-neighbor")
-                print("WARNING: this warning will only be shown once")
-                self._interpolation_warning_shown = True
+            # Batched case: use vectorized polin3 (Phase D2 implementation)
+            from ..utils.physics import polin3_vectorized
 
-            result = self._nearest_neighbor_lookup(h, k, l)
+            # Call vectorized helper with batched inputs
+            # h_indices, k_indices, l_indices: (B, 4)
+            # sub_Fhkl: (B, 4, 4, 4)
+            # h_flat, k_flat, l_flat: (B,)
+            # Returns: (B,)
+            F_cell_flat = polin3_vectorized(
+                h_indices, k_indices, l_indices,
+                sub_Fhkl,
+                h_flat, k_flat, l_flat
+            )
 
-            # Phase C3: Verify fallback output shape matches original input shape
+            # Phase D2: Output shape assertion (batched path)
+            assert F_cell_flat.shape == (B,), \
+                f"Batched interpolation output must have shape ({B},), got {F_cell_flat.shape}"
+
+            # Reshape back to original input shape
+            result = F_cell_flat.reshape(original_shape)
+
+            # Phase D2: Verify final output shape matches original input shape
             assert result.shape == original_shape, \
-                f"Fallback output shape mismatch: expected {original_shape}, got {result.shape}"
+                f"Output shape mismatch: expected {original_shape}, got {result.shape}"
 
             return result
 
@@ -1048,102 +1319,79 @@ class Crystal:
         )
 
         # Step 1: Apply spindle rotation to ONLY real-space vectors (a, b, c)
-        # This follows the C-code semantics where reciprocal vectors are NOT independently rotated.
-        # C-code reference (nanoBragg.c:3044-3058):
-        #   phi = phi0 + phistep*phi_tic;
-        #   if( phi != 0.0 )
-        #   {
-        #       rotate_axis(a0,ap,spindle_vector,phi);
-        #       rotate_axis(b0,bp,spindle_vector,phi);
-        #       rotate_axis(c0,cp,spindle_vector,phi);
-        #   }
-        # CRITICAL: C code skips rotation when phi==0. We must replicate this exactly.
+        # This follows spec-compliant semantics where each φ step gets a fresh rotation.
+        # Spec reference (specs/spec-a-core.md:211-214):
+        #   "φ step: φ = φ0 + (step index)*phistep; rotate the reference cell (a0,b0,c0)
+        #    about u by φ to get (ap,bp,cp)."
+        #
+        # NOTE: This is the SPEC-COMPLIANT path. The C code (nanoBragg.c:3044-3058) contains
+        # a bug where it skips rotation when phi==0, causing ap/bp/cp to carry over stale
+        # values from the previous pixel's last φ step. This is documented as C-PARITY-001
+        # in docs/bugs/verified_c_bugs.md:166-204. An opt-in parity shim will be added in
+        # Phase L3k.3c.4 for validation harnesses that need to reproduce the C bug.
+        #
         # Shape: (N_phi, 3)
 
-        # Initialize φ=0 carryover cache if this is the first call (CLI-FLAGS-003 L3k.3c.3)
-        # The C code's ap/bp/cp variables persist from the previous pixel's last phi step.
-        # To replicate this for the FIRST pixel, we need to pre-populate the cache with
-        # vectors rotated by the LAST phi angle (phi_last = phi_start + osc_range * (phi_steps-1)/phi_steps).
-        if self._phi_last_cache is None and config.phi_steps > 0:
-            # Compute the last phi angle
-            last_phi_deg = config.phi_start_deg + (config.osc_range_deg / config.phi_steps) * (config.phi_steps - 1)
-            last_phi_deg_tensor = torch.tensor(last_phi_deg, device=self.device, dtype=self.dtype)
-            last_phi_rad = torch.deg2rad(last_phi_deg_tensor)
-
-            # Rotate base vectors by the last phi angle
-            from ..utils.geometry import rotate_axis
-            spindle_axis_temp = torch.tensor(
-                config.spindle_axis, device=self.device, dtype=self.dtype
-            )
-
-            a_last = rotate_axis(self.a.unsqueeze(0), spindle_axis_temp.unsqueeze(0), last_phi_rad.unsqueeze(0))
-            b_last = rotate_axis(self.b.unsqueeze(0), spindle_axis_temp.unsqueeze(0), last_phi_rad.unsqueeze(0))
-            c_last = rotate_axis(self.c.unsqueeze(0), spindle_axis_temp.unsqueeze(0), last_phi_rad.unsqueeze(0))
-
-            self._phi_last_cache = (
-                a_last.squeeze(0),
-                b_last.squeeze(0),
-                c_last.squeeze(0)
-            )
-
-        # Initialize output tensors to hold rotated vectors
-        a_phi = []
-        b_phi = []
-        c_phi = []
-
-        # Process each φ angle individually to match C's phi!=0.0 guard
-        for i in range(config.phi_steps):
-            phi_val = phi_angles[i]
-
-            # Match C code's "if( phi != 0.0 )" check (nanoBragg.c:3044)
-            # Use a small tolerance for floating-point comparison
-            # phi_val is in degrees, so 1e-10 degrees is effectively zero
-            if torch.abs(phi_val) < 1e-10:
-                # φ=0: Replicate C behavior where ap/bp/cp persist from previous pixel
-                # When the C code skips rotation at phi==0, the working vectors (ap/bp/cp)
-                # retain values from the last phi step of the PREVIOUS pixel (due to
-                # OpenMP private variables not being reset between iterations).
-                # We cache the last rotated vectors and reuse them at phi==0.
-                # Reference: nanoBragg.c:3044-3066, test comment at test_cli_scaling_phi0.py:35-40
-                if self._phi_last_cache is not None:
-                    # Use cached vectors from last phi step
-                    a_phi.append(self._phi_last_cache[0].unsqueeze(0))
-                    b_phi.append(self._phi_last_cache[1].unsqueeze(0))
-                    c_phi.append(self._phi_last_cache[2].unsqueeze(0))
-                else:
-                    # No cache yet (first call) - use base vectors
-                    a_phi.append(self.a.unsqueeze(0))
-                    b_phi.append(self.b.unsqueeze(0))
-                    c_phi.append(self.c.unsqueeze(0))
-            else:
-                # φ≠0: Apply rotation
-                phi_rad_single = phi_rad[i].unsqueeze(0)
-                a_phi.append(rotate_axis(self.a.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad_single))
-                b_phi.append(rotate_axis(self.b.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad_single))
-                c_phi.append(rotate_axis(self.c.unsqueeze(0), spindle_axis.unsqueeze(0), phi_rad_single))
-
-        # Stack results: (N_phi, 3)
-        a_phi = torch.cat(a_phi, dim=0)
-        b_phi = torch.cat(b_phi, dim=0)
-        c_phi = torch.cat(c_phi, dim=0)
+        # Apply rotation to base vectors for all φ angles
+        # When phi=0, rotate_axis applies identity rotation, yielding base vectors
+        a_phi = rotate_axis(
+            self.a.unsqueeze(0).expand(config.phi_steps, -1),
+            spindle_axis.unsqueeze(0).expand(config.phi_steps, -1),
+            phi_rad
+        )
+        b_phi = rotate_axis(
+            self.b.unsqueeze(0).expand(config.phi_steps, -1),
+            spindle_axis.unsqueeze(0).expand(config.phi_steps, -1),
+            phi_rad
+        )
+        c_phi = rotate_axis(
+            self.c.unsqueeze(0).expand(config.phi_steps, -1),
+            spindle_axis.unsqueeze(0).expand(config.phi_steps, -1),
+            phi_rad
+        )
 
         # Step 2: Recompute reciprocal vectors from rotated real vectors
-        # This ensures metric duality is preserved: a·a* = 1 exactly (CLAUDE Rule #13)
-        # Formula: a* = (b × c) / V_actual, where V_actual = a · (b × c)
-        # This matches the C-code's implicit reciprocal vector calculation during Miller index lookup.
+        # Using the STATIC V_cell calculated during initialization (CLAUDE Rule #13 correction)
+        #
+        # C-Code Implementation Reference (from nanoBragg.c, lines 3198-3210):
+        # ```c
+        # if(integral_form)
+        # {
+        #     if(phi != 0.0 || mos_tic > 0)
+        #     {
+        #         /* need to re-calculate reciprocal matrix */
+        #         cross_product(a,b,a_cross_b);
+        #         cross_product(b,c,b_cross_c);
+        #         cross_product(c,a,c_cross_a);
+        #
+        #         /* new reciprocal-space cell vectors */
+        #         vector_scale(b_cross_c,a_star,1e20/V_cell);  // V_cell is STATIC
+        #         vector_scale(c_cross_a,b_star,1e20/V_cell);
+        #         vector_scale(a_cross_b,c_star,1e20/V_cell);
+        #     }
+        # }
+        # ```
+        #
+        # Critical: The C code uses the ORIGINAL V_cell calculated at initialization (line 2152)
+        # and never recalculates it from rotated vectors. The 1e20 factor accounts for unit
+        # conversion (C uses meters for real vectors, Angstroms³ for volume; PyTorch uses
+        # Angstroms throughout, so no conversion factor needed).
+        #
+        # Formula: a* = (b × c) / V_cell_static
         b_cross_c = torch.cross(b_phi, c_phi, dim=-1)
         c_cross_a = torch.cross(c_phi, a_phi, dim=-1)
         a_cross_b = torch.cross(a_phi, b_phi, dim=-1)
 
-        # Compute actual volume from rotated real vectors
-        # Shape: (N_phi, 1)
-        V_actual = torch.sum(a_phi * b_cross_c, dim=-1, keepdim=True)
+        # Use the static volume computed during initialization
+        # This matches C behavior where V_cell is calculated once and reused
+        # Shape: self.V is scalar, broadcast to (N_phi, 3)
+        V_cell_static = self.V
 
-        # Recompute reciprocal vectors to maintain metric duality
+        # Recompute reciprocal vectors using static volume
         # Shape: (N_phi, 3)
-        a_star_phi = b_cross_c / V_actual
-        b_star_phi = c_cross_a / V_actual
-        c_star_phi = a_cross_b / V_actual
+        a_star_phi = b_cross_c / V_cell_static
+        b_star_phi = c_cross_a / V_cell_static
+        c_star_phi = a_cross_b / V_cell_static
 
         # Generate mosaic rotation matrices
         # Assume config.mosaic_spread_deg is a tensor (enforced at call site)
@@ -1173,17 +1421,78 @@ class Crystal:
         b_star_final = rotate_umat(b_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
         c_star_final = rotate_umat(c_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
 
-        # Cache the last phi step's vectors for φ=0 carryover (CLI-FLAGS-003 Phase L3k.3c.3)
-        # This replicates C behavior where ap/bp/cp persist across pixels
-        # Store the rotated vectors (before mosaic) from the LAST phi step
-        if config.phi_steps > 0:
-            self._phi_last_cache = (
-                a_phi[-1].clone(),  # Last phi step
-                b_phi[-1].clone(),
-                c_phi[-1].clone()
-            )
+        # Phase M2g: C-PARITY-001 bug emulation now handled via pixel-indexed cache
+        # Carryover application happens in Simulator._compute_physics_for_position
+        # This method just computes fresh rotated vectors for all phi steps
 
         return (a_final, b_final, c_final), (a_star_final, b_star_final, c_star_final)
+
+    def get_rotated_real_vectors_for_batch(
+        self,
+        config: "CrystalConfig",
+        slow_indices: torch.Tensor,
+        fast_indices: torch.Tensor,
+    ) -> Tuple[
+        Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
+        Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
+    ]:
+        """
+        Get rotated lattice vectors for a batch of pixels with φ carryover cache interaction.
+
+        This method implements Option B (batch-indexed pixel cache) for emulating C-PARITY-001
+        bug behavior. It computes fresh rotations, applies cached φ=0 substitution when
+        c-parity mode is enabled, and stores φ=final for the next pixel.
+
+        C-Code Implementation Reference (from nanoBragg.c, lines 2797, 3044-3095):
+        ```c
+        #pragma omp parallel for ... firstprivate(ap,bp,cp,...)
+        for(pixel_i=0; pixel_i < num_pixels; ++pixel_i) {
+            for(phi_tic=0; phi_tic<phisteps; ++phi_tic) {
+                phi = phi0 + phistep*phi_tic;
+                if( phi != 0.0 ) {
+                    rotate_axis(a0,ap,spindle_vector,phi);
+                    rotate_axis(b0,bp,spindle_vector,phi);
+                    rotate_axis(c0,cp,spindle_vector,phi);
+                }
+                // When phi==0: ap/bp/cp retain previous pixel's final φ values (carryover)
+            }
+        }
+        ```
+
+        Args:
+            config: CrystalConfig containing rotation parameters and phi_carryover_mode
+            slow_indices: Pixel slow (row) indices, shape (batch_size,) or scalar tensor
+            fast_indices: Pixel fast (column) indices, shape (batch_size,) or scalar tensor
+
+        Returns:
+            Tuple containing:
+            - First tuple: rotated (a, b, c) real-space vectors, shape (N_phi, N_mos, 3)
+            - Second tuple: rotated (a*, b*, c*) reciprocal-space vectors, shape (N_phi, N_mos, 3)
+
+        Note: Unlike get_rotated_real_vectors(), this method does NOT add a batch dimension.
+        It returns global (N_phi, N_mos, 3) tensors but with φ=0 modified by cache when
+        c-parity mode is active. The caller is responsible for broadcasting to batch dimension.
+        """
+        # Step 1: Compute fresh rotations (spec-compliant path)
+        (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = \
+            self.get_rotated_real_vectors(config)
+        # Shape: (N_phi, N_mos, 3)
+
+        # Step 2: Apply c-parity carryover if enabled (Option B cache interaction)
+        if config.phi_carryover_mode == "c-parity" and self._phi_cache_initialized:
+            (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = \
+                self.apply_phi_carryover(
+                    slow_indices, fast_indices,
+                    (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star)
+                )
+
+            # Step 3: Store φ=final for next pixel's φ=0
+            self.store_phi_final(
+                slow_indices, fast_indices,
+                (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star)
+            )
+
+        return (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star)
 
     def _generate_mosaic_rotations(self, config: "CrystalConfig") -> torch.Tensor:
         """

@@ -1,0 +1,11 @@
+torch>=2.3
+fabio
+numpy
+pytest
+matplotlib
+scipy
+
+[dev]
+black
+ruff
+isort

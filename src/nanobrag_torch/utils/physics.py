@@ -441,3 +441,163 @@ def polin3(x1a: torch.Tensor, x2a: torch.Tensor, x3a: torch.Tensor,
 
     # Final interpolation along x1 direction
     return polint(x1a, ymtmp, x1)
+
+
+# ============================================================================
+# Vectorized Polynomial Interpolation Helpers (Phase D2)
+# ============================================================================
+
+
+def polint_vectorized(xa: torch.Tensor, ya: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+    """
+    Vectorized 1D 4-point Lagrange interpolation.
+
+    C-Code Implementation Reference (from nanoBragg.c, lines 4150-4158):
+    ```c
+    void polint(double *xa, double *ya, double x, double *y)
+    {
+            double x0,x1,x2,x3;
+            x0 = (x-xa[1])*(x-xa[2])*(x-xa[3])*ya[0]/((xa[0]-xa[1])*(xa[0]-xa[2])*(xa[0]-xa[3]));
+            x1 = (x-xa[0])*(x-xa[2])*(x-xa[3])*ya[1]/((xa[1]-xa[0])*(xa[1]-xa[2])*(xa[1]-xa[3]));
+            x2 = (x-xa[0])*(x-xa[1])*(x-xa[3])*ya[2]/((xa[2]-xa[0])*(xa[2]-xa[1])*(xa[2]-xa[3]));
+            x3 = (x-xa[0])*(x-xa[1])*(x-xa[2])*ya[3]/((xa[3]-xa[0])*(xa[3]-xa[1])*(xa[3]-xa[2]));
+            *y = x0+x1+x2+x3;
+    }
+    ```
+
+    Args:
+        xa: (B, 4) x-coordinates
+        ya: (B, 4) y-values
+        x:  (B,) query points
+
+    Returns:
+        (B,) interpolated values
+    """
+    # Extract coordinates (B, 4) → (B,) for each index
+    xa0 = xa[:, 0]
+    xa1 = xa[:, 1]
+    xa2 = xa[:, 2]
+    xa3 = xa[:, 3]
+
+    ya0 = ya[:, 0]
+    ya1 = ya[:, 1]
+    ya2 = ya[:, 2]
+    ya3 = ya[:, 3]
+
+    # Compute Lagrange basis functions per C-code formula
+    # Numerator for each term
+    num0 = (x - xa1) * (x - xa2) * (x - xa3) * ya0
+    num1 = (x - xa0) * (x - xa2) * (x - xa3) * ya1
+    num2 = (x - xa0) * (x - xa1) * (x - xa3) * ya2
+    num3 = (x - xa0) * (x - xa1) * (x - xa2) * ya3
+
+    # Denominators (computed directly from C-code formula)
+    denom0 = (xa0 - xa1) * (xa0 - xa2) * (xa0 - xa3)
+    denom1 = (xa1 - xa0) * (xa1 - xa2) * (xa1 - xa3)
+    denom2 = (xa2 - xa0) * (xa2 - xa1) * (xa2 - xa3)
+    denom3 = (xa3 - xa0) * (xa3 - xa1) * (xa3 - xa2)
+
+    # Compute terms (per C-code: x0 = num0/denom0, etc.)
+    x0 = num0 / denom0
+    x1 = num1 / denom1
+    x2 = num2 / denom2
+    x3 = num3 / denom3
+
+    return x0 + x1 + x2 + x3
+
+
+def polin2_vectorized(x1a: torch.Tensor, x2a: torch.Tensor, ya: torch.Tensor,
+                      x1: torch.Tensor, x2: torch.Tensor) -> torch.Tensor:
+    """
+    Vectorized 2D polynomial interpolation.
+
+    C-Code Implementation Reference (from nanoBragg.c, lines 4162-4171):
+    ```c
+    void polin2(double *x1a, double *x2a, double **ya, double x1, double x2, double *y)
+    {
+            void polint(double *xa, double *ya, double x, double *y);
+            int j;
+            double ymtmp[4];
+            for (j=1;j<=4;j++) {
+                    polint(x2a,ya[j-1],x2,&ymtmp[j-1]);
+            }
+            polint(x1a,ymtmp,x1,y);
+    }
+    ```
+
+    Args:
+        x1a: (B, 4)    first dimension coordinates
+        x2a: (B, 4)    second dimension coordinates
+        ya:  (B, 4, 4) values at grid points
+        x1:  (B,)      query point (first dim)
+        x2:  (B,)      query point (second dim)
+
+    Returns:
+        (B,) interpolated values
+    """
+    B = x1a.shape[0]
+
+    # Interpolate along x2 for each of the 4 rows (j=0,1,2,3)
+    # ymtmp will be (B, 4) after stacking
+    ymtmp_list = []
+    for j in range(4):
+        # ya[:, j, :] gives (B, 4) — the jth row for all batch elements
+        ymtmp_j = polint_vectorized(x2a, ya[:, j, :], x2)  # (B,)
+        ymtmp_list.append(ymtmp_j)
+
+    # Stack into (B, 4)
+    ymtmp = torch.stack(ymtmp_list, dim=1)  # (B, 4)
+
+    # Final interpolation along x1 dimension
+    return polint_vectorized(x1a, ymtmp, x1)
+
+
+def polin3_vectorized(x1a: torch.Tensor, x2a: torch.Tensor, x3a: torch.Tensor,
+                      ya: torch.Tensor, x1: torch.Tensor, x2: torch.Tensor, x3: torch.Tensor) -> torch.Tensor:
+    """
+    Vectorized 3D tricubic interpolation.
+
+    C-Code Implementation Reference (from nanoBragg.c, lines 4174-4187):
+    ```c
+    void polin3(double *x1a, double *x2a, double *x3a, double ***ya, double x1,
+            double x2, double x3, double *y)
+    {
+            void polint(double *xa, double ya[], double x, double *y);
+            void polin2(double *x1a, double *x2a, double **ya, double x1,double x2, double *y);
+            void polin1(double *x1a, double *ya, double x1, double *y);
+            int j;
+            double ymtmp[4];
+
+            for (j=1;j<=4;j++) {
+                polin2(x2a,x3a,&ya[j-1][0],x2,x3,&ymtmp[j-1]);
+            }
+            polint(x1a,ymtmp,x1,y);
+    }
+    ```
+
+    Args:
+        x1a: (B, 4)       h-coordinates
+        x2a: (B, 4)       k-coordinates
+        x3a: (B, 4)       l-coordinates
+        ya:  (B, 4, 4, 4) structure factors at grid points
+        x1:  (B,)         h query points
+        x2:  (B,)         k query points
+        x3:  (B,)         l query points
+
+    Returns:
+        (B,) interpolated F values
+    """
+    B = x1a.shape[0]
+
+    # Interpolate 4 2D slices (one per h index: j=0,1,2,3)
+    ymtmp_list = []
+    for j in range(4):
+        # ya[:, j, :, :] gives (B, 4, 4) — the jth h-slice for all batch elements
+        ymtmp_j = polin2_vectorized(x2a, x3a, ya[:, j, :, :], x2, x3)  # (B,)
+        ymtmp_list.append(ymtmp_j)
+
+    # Stack into (B, 4)
+    ymtmp = torch.stack(ymtmp_list, dim=1)  # (B, 4)
+
+    # Final interpolation along h dimension
+    return polint_vectorized(x1a, ymtmp, x1)
