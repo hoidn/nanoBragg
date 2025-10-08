@@ -1118,22 +1118,47 @@ class Crystal:
         )
 
         # Step 2: Recompute reciprocal vectors from rotated real vectors
-        # This ensures metric duality is preserved: a·a* = 1 exactly (CLAUDE Rule #13)
-        # Formula: a* = (b × c) / V_actual, where V_actual = a · (b × c)
-        # This matches the C-code's implicit reciprocal vector calculation during Miller index lookup.
+        # Using the STATIC V_cell calculated during initialization (CLAUDE Rule #13 correction)
+        #
+        # C-Code Implementation Reference (from nanoBragg.c, lines 3198-3210):
+        # ```c
+        # if(integral_form)
+        # {
+        #     if(phi != 0.0 || mos_tic > 0)
+        #     {
+        #         /* need to re-calculate reciprocal matrix */
+        #         cross_product(a,b,a_cross_b);
+        #         cross_product(b,c,b_cross_c);
+        #         cross_product(c,a,c_cross_a);
+        #
+        #         /* new reciprocal-space cell vectors */
+        #         vector_scale(b_cross_c,a_star,1e20/V_cell);  // V_cell is STATIC
+        #         vector_scale(c_cross_a,b_star,1e20/V_cell);
+        #         vector_scale(a_cross_b,c_star,1e20/V_cell);
+        #     }
+        # }
+        # ```
+        #
+        # Critical: The C code uses the ORIGINAL V_cell calculated at initialization (line 2152)
+        # and never recalculates it from rotated vectors. The 1e20 factor accounts for unit
+        # conversion (C uses meters for real vectors, Angstroms³ for volume; PyTorch uses
+        # Angstroms throughout, so no conversion factor needed).
+        #
+        # Formula: a* = (b × c) / V_cell_static
         b_cross_c = torch.cross(b_phi, c_phi, dim=-1)
         c_cross_a = torch.cross(c_phi, a_phi, dim=-1)
         a_cross_b = torch.cross(a_phi, b_phi, dim=-1)
 
-        # Compute actual volume from rotated real vectors
-        # Shape: (N_phi, 1)
-        V_actual = torch.sum(a_phi * b_cross_c, dim=-1, keepdim=True)
+        # Use the static volume computed during initialization
+        # This matches C behavior where V_cell is calculated once and reused
+        # Shape: self.V is scalar, broadcast to (N_phi, 3)
+        V_cell_static = self.V
 
-        # Recompute reciprocal vectors to maintain metric duality
+        # Recompute reciprocal vectors using static volume
         # Shape: (N_phi, 3)
-        a_star_phi = b_cross_c / V_actual
-        b_star_phi = c_cross_a / V_actual
-        c_star_phi = a_cross_b / V_actual
+        a_star_phi = b_cross_c / V_cell_static
+        b_star_phi = c_cross_a / V_cell_static
+        c_star_phi = a_cross_b / V_cell_static
 
         # Generate mosaic rotation matrices
         # Assume config.mosaic_spread_deg is a tensor (enforced at call site)
