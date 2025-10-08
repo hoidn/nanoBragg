@@ -9,7 +9,7 @@ from pathlib import Path
 from subprocess import Popen, PIPE
 
 from .state import OrchestrationState
-from .git_bus import safe_pull, add, commit, push_to, short_head, has_unpushed_commits, assert_on_branch, current_branch
+from .git_bus import safe_pull, add, commit, push_to, short_head, has_unpushed_commits, assert_on_branch, current_branch, push_with_rebase
 
 
 def _log_file(prefix: str) -> Path:
@@ -107,6 +107,19 @@ def main() -> int:
         ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         iter_log = args.logdir / branch_target.replace('/', '-') / "ralph" / f"iter-{itnum:05d}_{ts}_{args.prompt}.log"
 
+        # Resume mode: if a local stamped handoff exists but isn't pushed yet, publish and skip work
+        st_local = OrchestrationState.read(str(args.state_file))
+        if (st_local.expected_actor != "ralph" or st_local.status in {"complete", "failed"}) and has_unpushed_commits():
+            def logp(msg: str) -> None:
+                iter_log.parent.mkdir(parents=True, exist_ok=True)
+                with open(iter_log, "a", encoding="utf-8") as f:
+                    f.write(msg + "\n")
+            logp("[sync] Detected local stamped handoff with unpushed commits; attempting push-only reconciliation.")
+            if not push_with_rebase(branch_target, logp):
+                print("[sync] ERROR: failed to push local stamped handoff; resolve and retry.")
+                return 1
+            continue
+
         if args.sync_via_git:
             args.state_file.parent.mkdir(parents=True, exist_ok=True)
             # Logger bound to this iteration
@@ -143,27 +156,29 @@ def main() -> int:
             return 2
         rc = tee_run([args.claude_cmd, "-p", "--dangerously-skip-permissions", "--verbose", "--output-format", "stream-json"], prompt_path, iter_log)
 
-        # Complete handoff
-        if not _pull_with_error(logp, "handoff"):
-            # Error line already printed
-            return 1
+        # Complete handoff (stamp-first, idempotent)
         sha = short_head()
         st = OrchestrationState.read(str(args.state_file))
 
         if args.sync_via_git:
+            # STAMP FIRST (idempotent)
             if rc == 0:
                 st.stamp(expected_actor="galph", status="complete", increment=True, ralph_commit=sha)
                 st.write(str(args.state_file))
                 add([str(args.state_file)])
                 commit(f"[SYNC i={st.iteration}] actor=ralph → next=galph status=ok ralph_commit={sha}")
-                push_to(branch_target, logp)
             else:
                 st.stamp(expected_actor="ralph", status="failed", increment=False, ralph_commit=sha)
                 st.write(str(args.state_file))
                 add([str(args.state_file)])
                 commit(f"[SYNC i={st.iteration}] actor=ralph status=fail ralph_commit={sha}")
-                push_to(branch_target, logp)
-                logp(f"Loop failed rc={rc}; halting")
+
+            # Publish stamped state. If push fails, exit; restart resumes push.
+            if not push_with_rebase(branch_target, logp):
+                print("[sync] ERROR: failed to push stamped state; resolve and relaunch to resume push.")
+                return 1
+            if rc != 0:
+                logp(f"Loop failed rc={rc}. Stamped failure and pushed; exiting.")
                 return rc
 
         # Optional: push local commits from the loop (async hygiene)
