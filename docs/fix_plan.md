@@ -484,6 +484,28 @@
       - Phase L closure recorded — keep plan tasks L1–L3 marked [D] and focus forward work on scaling parity.
       - Phase M1–M3: run `trace_harness.py --pixel 685 1039` from `reports/2025-10-cli-flags/phase_l/scaling_audit/` (CPU first, then CUDA) to log HKL/F_cell/F_latt deltas against `c_trace_scaling.log`, fix `_tricubic_interpolation` so `I_before_scaling` matches C within ≤1e-6, and add `tests/test_cli_scaling_phi0.py::TestScalingParity::test_I_before_scaling_matches_c`.
       - Phase M4: once metrics are green, update `scaling_audit/summary.md` + `fix_checklist.md` and prepare artifacts for Phase N nb-compare.
+  * [2025-10-08] Attempt #137 (ralph loop i=136, Mode: Parity) — Result: **EVIDENCE** (Phase M1 scaling trace captured). **No code changes.**
+    Metrics: Evidence-only loop (no tests executed per input.md Do Now guidance).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T043438Z/trace_py_scaling_cpu.log` — PyTorch scaling trace (43 TRACE_PY lines)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T043438Z/summary.md` — Scaling factor comparison summary
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T043438Z/metrics.json` — Quantified divergence metrics
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T043438Z/run_metadata.json` — Run provenance
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T043438Z/commands.txt` — Reproduction steps
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T043438Z/sha256.txt` — Artifact checksums
+      - Per-φ trace: `reports/2025-10-cli-flags/phase_l/per_phi/reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T043438Z/trace_py_scaling_cpu_per_phi.log` (10 TRACE_PY_PHI lines)
+      - Per-φ JSON: `reports/2025-10-cli-flags/phase_l/per_phi/reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T043438Z/trace_py_scaling_cpu_per_phi.json`
+    Observations/Hypotheses:
+      - **CRITICAL FINDING**: F_cell values match perfectly (C: 190.27, PyTorch: 190.270004272461), eliminating the hypothesis that data loading was responsible for the divergence
+      - **Root cause narrowed**: I_before_scaling diverges by 21.9% (C: 943654.809, PyTorch: 736750.125), but all scaling factors (r_e², fluence, steps, capture_fraction, polarization, omega_pixel, cos_2theta) match C within 1e-7 relative tolerance
+      - **Lattice factors**: F_latt components match structure (F_latt_a: -2.396, F_latt_b: -0.858, F_latt_c: 0.671) → F_latt: 1.379
+      - **HKL alignment**: Miller indices match exactly (hkl_rounded: -7, -1, -14)
+      - **First divergence**: I_before_scaling is the FIRST and PRIMARY divergence; final intensity diverges as a consequence
+      - **Remaining hypothesis**: The accumulation logic (sum over phi steps, mosaic domains, sources, oversample) must have a missing term or incorrect iteration structure
+    Next Actions:
+      - Phase M2: Trace I_before_scaling accumulation across all φ steps (10 steps visible in per-φ log) to identify which component of the sum (F_cell² × F_latt² product) is missing or scaled incorrectly
+      - Phase M2a: Compare per-φ trace structure against C-code loop nesting in nanoBragg.c:2500–2700 (pixel intensity accumulation)
+      - Phase M3: Once the accumulation bug is isolated, implement fix and regenerate evidence to verify ≤1e-6 relative error on I_before_scaling
   * [2025-10-07] Attempt #135 (ralph loop i=135, Mode: Docs) — Result: **BLOCKED** (Phase L1–L3 stale plan references). **No code changes.**
     Metrics: Test collection: 448 tests collected successfully (pytest --collect-only -q). Documentation-only loop. Blocking condition identified.
     Artifacts:

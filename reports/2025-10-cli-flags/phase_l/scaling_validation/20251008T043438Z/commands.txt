@@ -1,0 +1,26 @@
+# Scaling Validation Evidence Capture
+# Date: 2025-10-08T04:34:38Z
+# Task: CLI-FLAGS-003 Phase M1 - Capture scaling-trace evidence
+
+# 1. Create output directory
+export ts=20251008T043438Z
+export out=reports/2025-10-cli-flags/phase_l/scaling_validation/$ts
+mkdir -p "$out"
+
+# 2. Run trace harness (PyTorch)
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py \
+  --pixel 685 1039 \
+  --config supervisor \
+  --device cpu \
+  --dtype float32 \
+  --out "$out"/trace_py_scaling_cpu.log
+
+# 3. Compare traces
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python scripts/validation/compare_scaling_traces.py \
+  --c reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log \
+  --py "$out"/trace_py_scaling_cpu.log \
+  --out "$out"/summary.md \
+  --tolerance 1e-6
+
+# 4. Generate checksums
+sha256sum "$out"/* > "$out"/sha256.txt
