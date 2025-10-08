@@ -1046,3 +1046,9 @@
 - Analysis: row-wise Option B cache currently indexes the current `(slow, fast)` slot; no evidence of previous-pixel substitution, explaining carryover failure. Plan/fix_plan Next Actions updated with new Step 4 cache-index audit.
 - Authored input.md (Mode: Parity) directing Ralph to capture CUDA parity + gradcheck evidence under a new carryover_cache_validation timestamp, snapshot cache tensors pre/post, and log whether cached data reflects previous pixels.
 - Reminders for next loop: review new diagnostics bundle, confirm cache-index conclusions, then advance to M2i trace rerun once M2h.2/M2h.3 marked [D].
+## 2025-10-08 16:37Z (galph loop — M2h.2 device fix gating)
+- Focused on CLI-FLAGS-003 Phase M2h after reviewing core docs, plans, and latest diagnostics; confirmed CUDA trace blocker stems from `_apply_debug_output` creating CPU tensors via bare `torch.tensor(...)` (lines 1487-1519).
+- Catalogued three hypotheses: HKL tensor factories lacking device/dtype, interpolation debug tensors inheriting CPU defaults, and sincg inputs running off-device; triage via code review + python snippets (`torch.tensor(...).device` + compiled sincg warning) corroborated each.
+- Authored new input.md directing Ralph to patch simulator debug tensor factories, rerun the CUDA trace harness, capture CPU+CUDA artifacts, and log cache snapshots before proceeding to gradcheck. `input.md` Do Now now points at the CUDA harness command and collect-only pytest selector.
+- No plan edits needed; M2h.2 guidance in plans/active/cli-noise-pix0/plan.md already reflects the blocker. Fix_plan remains aligned.
+- Follow-up for Ralph: implement device/dtype-neutral tensor creation in `_apply_debug_output`, rerun CUDA + CPU harness runs into timestamped directories, update diagnostics/env logs, and keep docs/fix_plan.md Attempts current with outcomes.
