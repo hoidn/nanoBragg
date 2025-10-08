@@ -758,19 +758,22 @@ class Simulator:
         Returns:
             torch.Tensor: Final diffraction image with shape (spixels, fpixels).
         """
-        # Phase M2: Clear φ carryover cache at start of new simulation run
-        # This ensures the first pixel doesn't use stale vectors from a previous run
-        # In c-parity mode, the first pixel will get fresh rotations (cache is empty),
-        # and subsequent pixels will use carryover from the previous pixel
+        # Phase M2g: Handle c-parity mode with row-major processing for carryover correctness
+        # C-PARITY-001 requires per-pixel φ vector carryover, which necessitates processing
+        # pixels in row-major order. For spec mode, we use full vectorization.
         if self.crystal.config.phi_carryover_mode == "c-parity":
-            self.crystal.clear_phi_carryover_cache()
-            # C-parity mode requires sequential pixel processing to emulate C bug
-            # Delegate to specialized sequential implementation
-            return self._run_sequential_c_parity(
+            # Initialize pixel-indexed cache
+            self.crystal.initialize_phi_cache(
+                self.detector.spixels,
+                self.detector.fpixels
+            )
+            # Delegate to row-major processing path
+            return self._run_rowmajor_carryover(
                 pixel_batch_size, override_a_star, oversample,
                 oversample_omega, oversample_polar, oversample_thick
             )
 
+        # Spec mode: Full vectorization (default path)
         # Get oversampling parameters from detector config if not provided
         if oversample is None:
             oversample = self.detector.config.oversample
@@ -1216,197 +1219,6 @@ class Simulator:
         # PERF-PYTORCH-006: Ensure output matches requested dtype
         # Some intermediate operations may upcast for precision, but final output should match dtype
         return physical_intensity.to(dtype=self.dtype)
-
-    def _run_sequential_c_parity(
-        self,
-        pixel_batch_size: Optional[int] = None,
-        override_a_star: Optional[torch.Tensor] = None,
-        oversample: Optional[int] = None,
-        oversample_omega: Optional[bool] = None,
-        oversample_polar: Optional[bool] = None,
-        oversample_thick: Optional[bool] = None,
-    ) -> torch.Tensor:
-        """
-        Sequential pixel-by-pixel processing for C-PARITY-001 bug emulation.
-
-        This method processes pixels sequentially (not vectorized) to emulate the
-        OpenMP firstprivate behavior in nanoBragg.c that causes φ=0 vectors to
-        carry over from the previous pixel's φ=final values.
-
-        C-Code Implementation Reference (from nanoBragg.c, lines 2785-2797, 3044-3066):
-        ```c
-        #pragma omp parallel for ... firstprivate(ap,bp,cp,...)
-        for(pixel_i=0; pixel_i < num_pixels; ++pixel_i) {
-            // ap/bp/cp persist across phi loop iterations within each thread
-            for(phi_tic=0; phi_tic<phisteps; ++phi_tic) {
-                phi = phi0 + phistep*phi_tic;
-                if( phi != 0.0 ) {
-                    rotate_axis(a0,ap,spindle_vector,phi);  // Update ap/bp/cp
-                    rotate_axis(b0,bp,spindle_vector,phi);
-                    rotate_axis(c0,cp,spindle_vector,phi);
-                }
-                // When phi==0: ap/bp/cp retain values from previous pixel's final phi
-            }
-        }
-        ```
-
-        This creates pixel-to-pixel carryover that affects lattice shape factors.
-        The sequential processing ensures each pixel sees the previous pixel's
-        φ=final vectors when computing φ=0, exactly matching the C bug.
-
-        Args:
-            Same as run() method
-
-        Returns:
-            torch.Tensor: Final diffraction image with shape (spixels, fpixels)
-        """
-        # Get oversampling parameters
-        if oversample is None:
-            oversample = self.detector.config.oversample
-        if oversample_omega is None:
-            oversample_omega = self.detector.config.oversample_omega
-        if oversample_polar is None:
-            oversample_polar = self.detector.config.oversample_polar
-        if oversample_thick is None:
-            oversample_thick = self.detector.config.oversample_thick
-
-        # Auto-select oversample if needed (same logic as main run method)
-        if oversample == -1:
-            xtalsize_max = max(
-                abs(self.crystal.config.cell_a * 1e-10 * self.crystal.config.N_cells[0]),
-                abs(self.crystal.config.cell_b * 1e-10 * self.crystal.config.N_cells[1]),
-                abs(self.crystal.config.cell_c * 1e-10 * self.crystal.config.N_cells[2])
-            )
-            wavelength_m = self.wavelength * 1e-10
-            distance_m = self.detector.config.distance_mm / 1000.0
-            pixel_size_m = self.detector.config.pixel_size_mm / 1000.0
-            reciprocal_pixel_size = wavelength_m * distance_m / pixel_size_m
-            import math
-            recommended_oversample = math.ceil(3.0 * xtalsize_max / reciprocal_pixel_size)
-            oversample = max(1, recommended_oversample)
-
-        # Calculate steps for normalization
-        n_sources = len(self._source_directions) if self._source_directions is not None else 1
-        steps = (
-            self.crystal.config.mosaic_domains
-            * self.crystal.config.phi_steps
-            * n_sources
-            * (oversample * oversample)
-        )
-
-        # Initialize output image
-        spixels = self.detector.spixels
-        fpixels = self.detector.fpixels
-        image = torch.zeros(
-            (spixels, fpixels),
-            device=self.device,
-            dtype=self.dtype
-        )
-
-        # Get ROI mask
-        roi_mask = self._cached_roi_mask
-
-        # Optimization: if trace_pixel is set, we can stop after processing it
-        # But we must process ALL pixels before it to get correct carryover
-        trace_pixel = self.debug_config.get('trace_pixel') if self.debug_config else None
-        early_exit_after_trace = trace_pixel is not None
-
-        # Sequential pixel processing
-        # Process in row-major order (slow, fast) to match C's pixel iteration
-        for slow_idx in range(spixels):
-            for fast_idx in range(fpixels):
-                # Check for early exit after trace pixel
-                if early_exit_after_trace and trace_pixel:
-                    if slow_idx > trace_pixel[0] or (slow_idx == trace_pixel[0] and fast_idx > trace_pixel[1]):
-                        # We've already processed the trace pixel, can exit early
-                        return image
-
-                # Skip if outside ROI
-                if roi_mask is not None and not roi_mask[slow_idx, fast_idx]:
-                    continue
-
-                # Get this pixel's coordinates
-                # pixel_coords_meters has shape (S, F, 3)
-                pixel_coord_m = self._cached_pixel_coords_meters[slow_idx, fast_idx, :]  # Shape: (3,)
-                pixel_coord_A = pixel_coord_m * 1e10  # Convert to Angstroms
-
-                # Get rotated vectors for this pixel
-                # This call updates the phi_carryover_cache automatically
-                (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = (
-                    self.crystal.get_rotated_real_vectors(self.crystal.config)
-                )
-
-                # Convert to correct device/dtype
-                rot_a = rot_a.to(device=self.device, dtype=self.dtype)
-                rot_b = rot_b.to(device=self.device, dtype=self.dtype)
-                rot_c = rot_c.to(device=self.device, dtype=self.dtype)
-                rot_a_star = rot_a_star.to(device=self.device, dtype=self.dtype)
-                rot_b_star = rot_b_star.to(device=self.device, dtype=self.dtype)
-                rot_c_star = rot_c_star.to(device=self.device, dtype=self.dtype)
-
-                # Compute physics for this single pixel
-                # Shape: pixel_coord_A is (3,), expand to (1, 1, 3) for batch compatibility
-                pixel_coord_batch = pixel_coord_A.unsqueeze(0).unsqueeze(0)
-
-                if self._source_directions is not None:
-                    # Multi-source case
-                    incident_dirs = -self._source_directions
-                    wavelengths = self._source_wavelengths_A
-                    weights = self._source_weights
-                    intensity, _ = self._compute_physics_for_position(
-                        pixel_coord_batch, rot_a, rot_b, rot_c,
-                        rot_a_star, rot_b_star, rot_c_star,
-                        incident_beam_direction=incident_dirs,
-                        wavelength=wavelengths,
-                        source_weights=weights
-                    )
-                else:
-                    # Single source
-                    intensity, _ = self._compute_physics_for_position(
-                        pixel_coord_batch, rot_a, rot_b, rot_c,
-                        rot_a_star, rot_b_star, rot_c_star
-                    )
-
-                # Extract scalar intensity and normalize
-                pixel_intensity = intensity.squeeze()  # Remove batch dims
-                pixel_intensity = pixel_intensity / steps
-
-                # Calculate solid angle for this pixel
-                pixel_squared_sum = torch.sum(pixel_coord_A * pixel_coord_A)
-                pixel_magnitude = torch.sqrt(pixel_squared_sum.clamp_min(1e-12))
-                airpath_m = pixel_magnitude * 1e-10
-                close_distance_m = torch.as_tensor(
-                    self.detector.close_distance,
-                    device=self.device,
-                    dtype=self.dtype
-                )
-                pixel_size_m = torch.as_tensor(
-                    self.detector.pixel_size,
-                    device=self.device,
-                    dtype=self.dtype
-                )
-
-                if self.detector.config.point_pixel:
-                    omega_pixel = 1.0 / (airpath_m * airpath_m)
-                else:
-                    omega_pixel = (
-                        (pixel_size_m * pixel_size_m)
-                        / (airpath_m * airpath_m)
-                        * close_distance_m
-                        / airpath_m
-                    )
-
-                # Apply omega if not in oversample_omega mode
-                if not oversample_omega:
-                    pixel_intensity = pixel_intensity * omega_pixel
-
-                # Apply final scaling
-                pixel_intensity = pixel_intensity * self.r_e_sqr * self.fluence
-
-                # Store in output image
-                image[slow_idx, fast_idx] = pixel_intensity
-
-        return image
 
     def _apply_debug_output(self,
                            physical_intensity,
