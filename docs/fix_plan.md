@@ -3782,3 +3782,31 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
     Next Actions:
       - Leave Phase M2i.2 flagged open until a fix clears the divergence; proceed with plan tasks M2g.5–M2g.6 (trace tooling + documentation) and the cache index audit before any simulator edits
       - Update plan status snapshot and docs/fix_plan Next Actions to reference the 20251008T174753Z evidence so downstream loops reuse the refreshed artifacts
+
+  * [2025-10-08] Attempt #171 (ralph loop i=169, Mode: Parity) — Result: ✅ **M2g.5 COMPLETE** (Trace tooling verified cache-aware without IndexError). **No code changes.**
+    Metrics:
+      - Test collection: 700 tests collected successfully in 2.71s (pytest --collect-only -q tests/)
+      - CPU trace: 124 TRACE_PY lines captured, 10 TRACE_PY_PHI per-φ lines, final intensity 2.45946637686509e-07
+      - CUDA trace: 124 TRACE_PY lines captured, 10 TRACE_PY_PHI per-φ lines, final intensity 2.45946637686447e-07
+      - CPU/CUDA parity: Δ = 6.2e-13 relative (2.52e-11 absolute) — PASS
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/trace_tooling_patch/20251008T175913Z/summary.md` — Complete M2g.5 validation report
+      - `.../trace_cpu.log` — CPU trace (124 lines, float64)
+      - `.../trace_cuda.log` — CUDA trace (124 lines, float64)
+      - `.../commands.txt` — Reproduction commands (CPU + CUDA with exit status)
+      - `.../run_metadata.json` — Environment snapshot (Python 3.13.7, PyTorch 2.8.0+cu128, CUDA 12.8, git e2c75ed)
+      - `.../sha256.txt` — Artifact checksums (4 files)
+    Observations/Hypotheses:
+      - **No IndexError encountered**: Trace harness successfully indexed omega_pixel and F_latt tensors for both CPU and CUDA runs
+      - **Device/dtype neutrality confirmed**: Attempt #166 fix (`_apply_debug_output` tensor factory device alignment) enabled CUDA traces without modification
+      - **Cache-aware taps working**: All trace fields captured including omega_pixel_sr, F_latt_{a,b,c}, I_before_scaling_{pre,post}_polar, rot_{a,b,c}_angstroms, rot_{a,b,c}_star_A_inv
+      - **Per-φ traces functional**: TRACE_PY_PHI output captured for all 10 φ steps with per-step lattice factors
+      - **Gradient-preserving**: No `.item()` calls on gradient-critical tensors; all indexing uses tensor-native operations
+      - **Attempt #163 batch cache compatibility**: Row-wise batching through `Crystal.get_rotated_real_vectors_for_batch()` does not interfere with trace indexing
+      - **No code changes required**: M2g.5 tooling patch was already complete from prior attempts (particularly #166 device-neutral fix); this run provides evidence of success
+    Next Actions:
+      - ✅ M2g.5 COMPLETE — Mark plan row [D] and update plan snapshot
+      - M2g.6 — Document Option B architecture decision in `phi_carryover_diagnosis.md` (append removal rationale, tensor pathway, spec isolation, gradient checks)
+      - Cache index audit (plan item 4) — Confirm `apply_phi_carryover()` consumes previous pixel's (slow, fast) entry with fast-1 wrap semantics
+      - M2h — Execute validation bundle (CPU pytest, CUDA probe when available, gradcheck)
+      - M2i — Regenerate cross-pixel traces expecting φ=0 carryover to work correctly after cache index fix

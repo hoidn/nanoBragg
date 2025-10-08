@@ -3,8 +3,8 @@
   "torch_version": "2.8.0+cu128",
   "platform": "Linux-6.14.0-29-generic-x86_64-with-glibc2.39",
   "cuda_available": true,
-  "device": "cpu",
+  "device": "cuda",
   "dtype": "float64",
-  "git_sha": "24062dbfb38324abe8068261b6337ed31e493c1a",
-  "timestamp_iso": "2025-10-08T17:26:54.687506Z"
+  "git_sha": "e2c75edecfc179a3cccf3c1524df51e359f54bff",
+  "timestamp_iso": "2025-10-08T17:59:54.688142Z"
 }
