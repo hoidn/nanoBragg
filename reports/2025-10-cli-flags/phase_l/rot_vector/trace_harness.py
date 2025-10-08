@@ -53,6 +53,8 @@ def create_parser():
                         help='Device (cpu or cuda)')
     parser.add_argument('--dtype', type=str, default='float32', choices=['float32', 'float64'],
                         help='Tensor dtype (default float32)')
+    parser.add_argument('--phi-mode', type=str, default='spec', choices=['spec', 'c-parity'],
+                        help='Phi rotation carryover mode (spec=fresh rotation, c-parity=C bug emulation; default spec)')
     return parser
 
 
@@ -139,6 +141,9 @@ def main():
         params = get_supervisor_params(dtype, device)
     else:
         raise ValueError(f"Unknown config: {args.config}")
+
+    # Inject phi_carryover_mode from --phi-mode flag (Phase L3k.3c.4)
+    params['crystal']['phi_carryover_mode'] = args.phi_mode
 
     # Load MOSFLM matrix (Step 3)
     mat_path = Path('A.mat')
