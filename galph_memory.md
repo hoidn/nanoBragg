@@ -975,3 +975,9 @@
 - Synced `docs/fix_plan.md` Next Actions with the rollback requirement and logged Attempt #154 capturing the plan correction.
 - Authored new `input.md` (Parity mode) instructing Ralph to remove the sequential branch, implement the Option 1 cache tensors, run the mapped parity pytest, capture artifacts under `reports/.../carryover_cache_validation/`, and document the change in `phi_carryover_diagnosis.md`.
 - Follow-up for Ralph: restore unified vectorised execution, add the pixel-indexed cache with device/dtype neutrality, refresh trace harness + diagnosis notes, run the targeted pytest selector, and update docs/fix_plan.md once evidence is captured.
+
+## 2025-12-08 (galph loop — M2g regression supervision)
+- Coin flip=heads → reviewed Ralph commit f3f66a9; sequential `_run_sequential_c_parity()` branch still present and violates vectorisation guardrail, no new evidence since Attempt #153.
+- Action type: Review/housekeeping on CLI-FLAGS-003 M2g; refreshed input.md (Parity mode) directing Ralph to remove the sequential fallback, implement the Option 1 pixel-indexed cache, and rerun the targeted parity pytest.
+- No plan/fix_plan edits required today; both already call for M2g regression cleanup. Input now cross-references the same checkpoints and adds detailed cache implementation steps.
+- Follow-up for Ralph: excise sequential branch, land pixel-indexed cache per Option 1 design, capture pytest + trace artifacts under new timestamp, update docs/fix_plan.md Attempt.
