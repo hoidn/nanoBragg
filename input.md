@@ -1,38 +1,34 @@
-Summary: Verify φ=0 rotations stay spec-compliant and capture fresh documentation before expanding the parity shim.
-Mode: Docs
-Focus: CLI-FLAGS-003 – Handle -nonoise and -pix0_vector_mm
+Summary: Regenerate per-φ parity traces and log detector geometry so we can kill the residual Δk plateau before rerunning the supervisor command.
+Mode: Parity
+Focus: CLI-FLAGS-003 – Phase L3k.3c.4 parity shim diagnostics
 Branch: feature/spec-based-2
-Mapped tests: tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_rot_b_matches_c, tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_k_frac_matches_spec
-Artifacts: reports/2025-12-cli-flags/phase_l/spec_baseline_refresh/
-Do Now: CLI-FLAGS-003 Phase L3k.3c.3 (spec baseline enforcement) — KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_rot_b_matches_c tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_k_frac_matches_spec -q
-If Blocked: Run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only tests/test_cli_scaling_phi0.py -q`, log the collector output under `reports/2025-12-cli-flags/phase_l/spec_baseline_refresh/collect.log`, and note the blockage in docs/fix_plan.md Attempt history before proceeding.
+Mapped tests: none — evidence-only (trace harness)
+Artifacts: reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/; reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md
+Do Now: CLI-FLAGS-003 L3k.3c.4 parity shim diagnostics — OUTDIR=reports/2025-10-cli-flags/phase_l/parity_shim/$(date -u +%Y%m%dT%H%M%SZ) && KMP_DUPLICATE_LIB_OK=TRUE python scripts/trace_per_phi.py --outdir "$OUTDIR" && python scripts/compare_per_phi_traces.py "$OUTDIR"/per_phi_pytorch.json reports/2025-10-cli-flags/phase_l/parity_shim/20251008T021659Z/c_trace_phi.log && pytest --collect-only -q tests/test_cli_scaling_phi0.py tests/test_phi_carryover_mode.py
+If Blocked: Capture the failing command + stderr in reports/2025-10-cli-flags/phase_l/parity_shim/ATTEMPTS.md and ping Galph before retrying.
 Priorities & Rationale:
-- specs/spec-a-core.md:211 — Normative φ loop mandates fresh rotations each step; reconfirming this guards against the C carryover bug bleeding into spec docs.
-- docs/bugs/verified_c_bugs.md:166 — Documents C-PARITY-001 as an implementation defect; the spec must continue to flag it as non-normative.
-- src/nanobrag_torch/models/crystal.py:1106 — Default code path already enforces spec rotations; capturing evidence ensures regressions are caught early.
-- tests/test_cli_scaling_phi0.py:17 — Regression tests assert the spec baseline; rerunning them satisfies the plan’s VG-1 gate.
-- plans/active/cli-phi-parity-shim/plan.md:70 — Phase C4 waits on refreshed traces/documentation; this loop feeds its prerequisites without yet touching parity math.
+- specs/spec-a-core.md:204 — spec mandates φ loop resets each step; diagnostics must confirm we stay spec-compliant.
+- docs/bugs/verified_c_bugs.md:166 — C-PARITY-001 describes the carryover bug the shim emulates; use it to justify evidence expectations.
+- plans/active/cli-phi-parity-shim/plan.md:70 — Follow the new C4 diagnostic checklist (rows C4b–C4d) so we finally eliminate the pix0_z drift.
+- docs/fix_plan.md:455 — Current Next Actions require refreshed per-φ evidence and a detector geometry table before Phase L3k progresses.
 How-To Map:
-- Set env before tests: `export AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md` and `export KMP_DUPLICATE_LIB_OK=TRUE` per runtime checklist.
-- Execute targeted spec tests (CPU first): `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_rot_b_matches_c tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_k_frac_matches_spec -q > reports/2025-12-cli-flags/phase_l/spec_baseline_refresh/pytest_cpu.log`.
-- If CUDA available, rerun with `--device cuda` fixture enabled: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_rot_b_matches_c tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_k_frac_matches_spec -q --device cuda > reports/2025-12-cli-flags/phase_l/spec_baseline_refresh/pytest_cuda.log`.
-- Capture a short narrative in `reports/2025-12-cli-flags/phase_l/spec_baseline_refresh/summary.md` citing the command(s), pass/fail status, and confirming that spec mode remains default.
-- Update docs/fix_plan.md Attempt for CLI-FLAGS-003 with log references and note that documentation refresh (Phase D1) can proceed once parity shim evidence is ready.
+- Set OUTDIR as shown in Do Now; keep each iteration under reports/2025-10-cli-flags/phase_l/parity_shim/.
+- First command emits per_phi_pytorch.json; second command regenerates delta_metrics.json & diff_summary.md in the same OUTDIR.
+- After scripts finish, append the geometry comparison table to reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md (note exact C vs Py values).
+- Store sha256 sums via `shasum -a 256 "$OUTDIR"/* > "$OUTDIR"/sha256.txt` once artifacts land.
 Pitfalls To Avoid:
-- Do not edit specs to mention the carryover bug as normative.
-- Leave `phi_carryover_mode` default set to "spec"; no testing with c-parity in this loop.
-- Avoid running the full pytest suite—stick to the mapped selectors.
-- Keep new artifacts under the `reports/2025-12-cli-flags/phase_l/spec_baseline_refresh/` timestamped subfolder; do not overwrite earlier evidence.
-- Maintain device/dtype neutrality when adding any future instrumentation (no `.cpu()` conversions in core code).
-- Respect Protected Assets: do not touch files listed in docs/index.md (e.g., loop.sh, supervisor.sh, input.md template).
-- Record timestamps/commands in a `commands.txt` alongside the logs for reproducibility.
-- If CUDA is unavailable, explicitly mention that in summary.md and skip the GPU run rather than forcing CPU fallback.
-- Do not modify parity shim implementation yet; this pass is documentation/evidence only.
-- Keep environment variables local to the session; no persistent shell RC edits.
+- Do not edit production code; this loop is evidence-only.
+- Preserve existing traces; never overwrite reports/2025-10-cli-flags/phase_l/parity_shim/20251008T021659Z/.
+- Keep tensors on their original device when running scripts (no `.cpu()` hacks).
+- Respect Protected Assets in docs/index.md (no moves/deletes of loop.sh, supervisor.sh, input.md).
+- Avoid rerunning full pytest; collect-only is sufficient this loop.
+- Document any command failures immediately in attempts history before rerunning.
+- Use UTC timestamps for new report directories.
+- Ensure KMP_DUPLICATE_LIB_OK is set for every torch script.
 Pointers:
-- specs/spec-a-core.md:211
-- docs/bugs/verified_c_bugs.md:166
-- src/nanobrag_torch/models/crystal.py:1106
-- tests/test_cli_scaling_phi0.py:17
-- plans/active/cli-noise-pix0/plan.md:309
-Next Up: Once documentation is refreshed, resume Phase C4 of the parity shim plan to tighten the c-parity per-φ trace deltas.
+- plans/active/cli-phi-parity-shim/plan.md:86
+- docs/fix_plan.md:455
+- reports/2025-10-cli-flags/phase_l/parity_shim/20251008T023956Z/diff_summary.md
+- reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md
+Next Up:
+- CLI-FLAGS-003 L3k.3c.5 — update documentation/tests once Δk ≤ 1e-6 and traces are green.

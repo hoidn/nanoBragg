@@ -1834,3 +1834,9 @@ Follow-ups for Ralph:
 - Verified docs/bugs/verified_c_bugs.md:166 continues to quarantine C-PARITY-001 as a defect and the PyTorch default path (`Crystal.get_rotated_real_vectors` lines ~1080-1170) keeps `phi_carryover_mode="spec"` as default.
 - `tests/test_cli_scaling_phi0.py` still enforces the spec baseline; instructed Ralph via input.md to rerun these selectors and capture fresh logs under `reports/2025-12-cli-flags/phase_l/spec_baseline_refresh/` before touching parity shim math.
 - Next actions for Ralph: execute the mapped tests, write `summary.md` + `commands.txt` in the new report directory, and log an Attempt update in docs/fix_plan.md so Phase C4 (parity shim traces) can resume with up-to-date documentation evidence.
+
+## 2025-12-?? (galph loop — parity diagnostics refresh)
+- Added C4 diagnostic checklist to `plans/active/cli-phi-parity-shim/plan.md` so Ralph regenerates per-φ traces via `trace_per_phi.py`, reruns `compare_per_phi_traces.py`, and captures detector geometry comparisons before touching implementation.
+- Updated `docs/fix_plan.md` Next Actions for CLI-FLAGS-003 to point explicitly at the checklist and geometry table deliverable.
+- Issued Parity-mode `input.md` directing Ralph to produce new artifacts under `reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/`, append geometry data to `rot_vector/diagnosis.md`, and log collect-only pytest output.
+- Expect Ralph to follow C4b–C4d, then update diagnosis.md and attempt history once Δk ≤ 1e-6.

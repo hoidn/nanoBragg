@@ -47,6 +47,15 @@ Exit Criteria: Production code contains opt-in shim, tests/logs stored, fix_plan
 | C4 | Capture per-φ traces | [P] | 2025-10-08T02:16Z evidence in `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T021659Z/`. Fresh C binary trace (`c_trace_phi.log`) captured with 10 `TRACE_C_PHI` lines; spec mode still diverges at φ₀ (Δk=1.8116e-02) and c-parity mode plateaus at Δk=2.845e-05, ΔF_latt_b=4.36e-03 (>VG-1 tolerances 1e-6/1e-4). Keep task open pending investigation into residual φ=0 drift (likely rounding in reciprocal recompute) and follow-up attempt once Δk ≤ 1e-6. |
 | C5 | Summarise metrics & log attempt | [ ] | Write `summary.md` describing test outcomes, trace comparisons, and any tolerances. Update `docs/fix_plan.md` Attempt history (CLI-FLAGS-003) with metrics, references, and git commit SHA. |
 
+#### C4 Diagnostic Checklist — Eliminate pix0 Drift
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| C4a | Catalogue current first-divergence evidence | [D] | ✅ `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T023956Z/diff_summary.md` confirms `pix0_vector_meters` differs by 2.85 µm (z-axis), cascading into Δk≈2.845e-05 across all φ. Reference this artifact when starting new diagnostics. |
+| C4b | Reproduce pix0 vector comparison with lightweight harness | [ ] | After each parity tweak run `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python scripts/trace_per_phi.py --outdir reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>` to emit `per_phi_pytorch.json`, then execute `python scripts/compare_per_phi_traces.py reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/per_phi_pytorch.json reports/2025-10-cli-flags/phase_l/parity_shim/20251008T021659Z/c_trace_phi.log`. Capture the regenerated `delta_metrics.json`/`diff_summary.md` and ensure the first divergence is recorded. |
+| C4c | Instrument detector geometry inputs | [ ] | Use the supervisor command geometry in `scripts/debug_detector_pix0_calc.py` (update args to match Phase L settings) to print `distance`, `close_distance`, `beam_center_(f/s)`, and `pix0_vector`. Mirror those values from the C trace (`c_run.log`) and append a comparison table to `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md`. This isolates whether the 2.85 µm offset originates in pivot math or downstream normalization. |
+| C4d | Validate reciprocal-vector recompute impact | [ ] | Once geometry inputs align, rerun the traces and check `rot_a_star_A_inv`/`rot_b_star_A_inv` deltas. If they persist, request Ralph to add optional taps around the reciprocal-to-real recompute (documented in `docs/architecture/c_function_reference.md` §§Crystal Rotations) so we can confirm whether scaling or normalization introduces the residual. |
+
 ### Phase D — Documentation & Handoff
 Goal: Align specs/docs with dual-mode behavior and prepare for Phase L4 supervisor command parity rerun.
 Prereqs: Phase C complete, evidence uploaded.
