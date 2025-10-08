@@ -1,0 +1,7 @@
+pwd: /home/ollie/Documents/tmp/nanoBragg
+git_sha: $(git rev-parse HEAD)
+python_version: $(python --version)
+torch_info: $(python -c "import torch; print(f'torch={torch.__version__}, cuda_available={torch.cuda.is_available()}')")
+
+# CUDA trace harness command
+KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --phi-mode c-parity --device cuda --dtype float64 --out ${run_dir}/trace_py_scaling_cuda.log

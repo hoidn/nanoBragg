@@ -1484,9 +1484,9 @@ class Simulator:
                     Nc = self.crystal.N_cells_c
 
                     from nanobrag_torch.utils import sincg
-                    F_latt_a = sincg(torch.pi * torch.tensor(h), Na).item()
-                    F_latt_b = sincg(torch.pi * torch.tensor(k), Nb).item()
-                    F_latt_c = sincg(torch.pi * torch.tensor(l), Nc).item()
+                    F_latt_a = sincg(torch.pi * torch.tensor(h, device=self.device, dtype=self.dtype), Na).item()
+                    F_latt_b = sincg(torch.pi * torch.tensor(k, device=self.device, dtype=self.dtype), Nb).item()
+                    F_latt_c = sincg(torch.pi * torch.tensor(l, device=self.device, dtype=self.dtype), Nc).item()
                     F_latt = F_latt_a * F_latt_b * F_latt_c
 
                     print(f"TRACE_PY: F_latt_a {F_latt_a:.15g}")
@@ -1503,9 +1503,9 @@ class Simulator:
 
                         # Call with fractional indices to use tricubic interpolation
                         F_cell_interp = self.crystal.get_structure_factor(
-                            torch.tensor([[h]], dtype=torch.float64),
-                            torch.tensor([[k]], dtype=torch.float64),
-                            torch.tensor([[l]], dtype=torch.float64)
+                            torch.tensor([[h]], device=self.device, dtype=self.dtype),
+                            torch.tensor([[k]], device=self.device, dtype=self.dtype),
+                            torch.tensor([[l]], device=self.device, dtype=self.dtype)
                         ).item()
                         print(f"TRACE_PY: F_cell_interpolated {F_cell_interp:.15g}")
 
@@ -1514,9 +1514,9 @@ class Simulator:
 
                         # Also get nearest-neighbor for comparison
                         F_cell_nearest = self.crystal.get_structure_factor(
-                            torch.tensor([[h0]]),
-                            torch.tensor([[k0]]),
-                            torch.tensor([[l0]])
+                            torch.tensor([[h0]], device=self.device, dtype=self.dtype),
+                            torch.tensor([[k0]], device=self.device, dtype=self.dtype),
+                            torch.tensor([[l0]], device=self.device, dtype=self.dtype)
                         ).item()
                         print(f"TRACE_PY: F_cell_nearest {F_cell_nearest:.15g}")
 
@@ -1684,9 +1684,9 @@ class Simulator:
 
                             # Compute F_latt components for this phi (SQUARE shape)
                             from nanobrag_torch.utils import sincg
-                            F_latt_a_phi = sincg(torch.pi * torch.tensor(h_phi), Na).item()
-                            F_latt_b_phi = sincg(torch.pi * torch.tensor(k_phi), Nb).item()
-                            F_latt_c_phi = sincg(torch.pi * torch.tensor(l_phi), Nc).item()
+                            F_latt_a_phi = sincg(torch.pi * torch.tensor(h_phi, device=self.device, dtype=self.dtype), Na).item()
+                            F_latt_b_phi = sincg(torch.pi * torch.tensor(k_phi, device=self.device, dtype=self.dtype), Nb).item()
+                            F_latt_c_phi = sincg(torch.pi * torch.tensor(l_phi, device=self.device, dtype=self.dtype), Nc).item()
                             F_latt_phi = F_latt_a_phi * F_latt_b_phi * F_latt_c_phi
 
                             # Emit enhanced TRACE_PY_PHI with scattering vector, reciprocal vectors, and volume

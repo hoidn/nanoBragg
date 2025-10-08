@@ -3643,3 +3643,44 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - **Execute M2h.3:** Run gradcheck probe (float64, 2×2 ROI, CUDA device) to verify cache gradients non-null.
       - **Update plan:** Mark M2h.2/M2h.3 as blocked pending debug path fix; reference this diagnostics.md in plan task M2h notes.
       - **Code debugging (after M2h.2 unblocked):** Investigate F_latt sign flip and φ=0 substitution behavior using CUDA + CPU trace diffs.
+
+  * [2025-10-08] Attempt #166 (ralph loop i=165, Mode: Parity) — Result: **M2h.2 SUCCESS** (Device neutrality fix restores CUDA execution). **Code changes: yes** (simulator.py debug paths).
+    Metrics:
+      - CUDA trace harness: **SUCCESS**
+        - Command: `KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --phi-mode c-parity --device cuda --dtype float64`
+        - Captured 114 TRACE_PY lines + 10 TRACE_PY_PHI lines
+        - Final intensity: 2.45946637686447e-07
+        - Runtime: ~2s
+        - No device mismatch errors
+      - CPU baseline (parity check): **SUCCESS**
+        - Captured 114 TRACE_PY lines + 10 TRACE_PY_PHI lines
+        - Final intensity: 2.45946637686509e-07
+        - Device parity: Relative difference 2.52e-11 (negligible, within float64 precision)
+      - Test collection verification: **PASS** — `pytest --collect-only tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c` (1 test collected)
+      - Smoke tests: **11 passed, 1 skipped** in 28.79s (test_at_parallel_001.py + test_at_parallel_012.py)
+      - Environment: Python 3.13.7, PyTorch 2.8.0+cu128, CUDA 12.8, GPU: RTX 3090, Driver 570.172.08
+      - Git SHA: cd123f697c1392de8e5c0a5bc94d2a1e3ca70a9d
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T163942Z_carryover_cache_validation/diagnostics.md` — Fix summary, validation results, M2h.3 next steps
+      - `.../trace_py_scaling_cuda.log` — 114-line CUDA trace
+      - `.../trace_py_scaling_cpu.log` — 114-line CPU trace
+      - `.../harness_stdout.log` — CUDA harness output
+      - `.../cpu_stdout.log` — CPU harness output
+      - `.../env.json` — Runtime metadata
+      - `.../torch_collect_env.txt` — Detailed torch environment
+      - `.../commands.txt` — Reproduction commands
+      - `.../sha256.txt` — Artifact checksums (8a114444...cpu_stdout, 7e70bccb...harness_stdout, 3115ed7a...trace_cpu, fc6a3a6d...trace_cuda)
+    Observations/Hypotheses:
+      - **Fix applied:** Modified `src/nanobrag_torch/simulator.py` lines 1487-1489, 1506-1508, 1517-1519, 1687-1689 (12 tensor construction sites) to use `torch.tensor(..., device=self.device, dtype=self.dtype)` instead of bare `torch.tensor()`.
+      - **Pattern fixed:** Debug instrumentation in `_apply_debug_output()` now inherits device/dtype from simulator, resolving CLAUDE.md Rule #16 violation.
+      - **Affected paths:** F_latt sincg arguments (lines 1487-1489), F_cell_interp HKL tensors (1506-1508), F_cell_nearest HKL tensors (1517-1519), per-φ trace F_latt_*_phi sincg arguments (1687-1689).
+      - **CUDA parity confirmed:** Both CUDA and CPU produce identical intensities (2.52e-11 relative difference), demonstrating device neutrality.
+      - **M2h.1 complete (prior attempt #164):** CPU parity test archived.
+      - **M2h.2 complete:** CUDA trace harness successful, evidence archived under 20251008T163942Z_carryover_cache_validation/.
+      - **M2h.3 unblocked:** Gradcheck probe now ready to execute per diagnostics.md next steps.
+      - **Warnings noted:** `torch.tensor(sourceTensor)` warnings in `crystal.py:1317` are separate issue (spindle_axis construction); not addressed in this loop.
+    Next Actions:
+      - M2h.3: Execute gradcheck probe (see diagnostics.md for minimal script template). Run with float64, 2×2 ROI, CUDA device, verify cache gradients non-null.
+      - M2h.4: Update fix_plan (✅ satisfied by this Attempt entry).
+      - M2i: After M2h.3 completes, regenerate ROI traces (`--roi 684 686 1039 1040`, CPU float64, c-parity) and update `metrics.json`/`lattice_hypotheses.md` expecting `first_divergence=None`.
+      - Advance to Phase M3 (scaling comparison rerun) once M2i evidence collected and VG-2 gate confirmed green.
