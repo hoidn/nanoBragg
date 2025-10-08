@@ -954,3 +954,11 @@
 - Refreshed `docs/fix_plan.md` Next Actions to align with new checklist (cross-pixel probe, Option 1 design detail, implementation + validation bundle, downstream scaling/nb-compare).
 - Authored new `input.md` (Parity mode) directing Ralph to run the consecutive-pixel trace harness (M2d), archive artifacts, extend `phi_carryover_diagnosis.md` with Option 1 tensor shapes, and keep work evidence-only this loop.
 - No production code touched; focus stays on evidence/design prep before cache reimplementation.
+
+## 2025-12-07 (galph loop — Phase M2e prep)
+- Git sync clean; refreshed required specs/arch/testing docs plus CLI-FLAGS plan before analysis.
+- Verified Ralph’s recent commits 89dcd66 and 0d22aa8: productive evidence/test updates, no regressions (targeted test intentionally red pending cache redesign).
+- Updated `plans/active/cli-noise-pix0/plan.md` (Status Snapshot + Next Actions + M2 checklist) to mark M2d/M2f [D] and focus forward work on M2e–M2i.
+- Refreshed `docs/fix_plan.md` Next Actions to match new plan (capture failing test log, then Option 1 implementation + trace reruns).
+- Authored new `input.md` (Parity mode) directing Ralph to log the failing scaling-parity test (M2e) under a fresh timestamp before touching code.
+- Follow-up for Ralph: execute Do Now command, store artifacts in `reports/.../parity_test_failure/`, update plan/fix_plan attempt entries, keep regression test red-but-documented for Option 1 implementation loop.
