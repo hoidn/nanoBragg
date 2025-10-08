@@ -1,0 +1,20 @@
+[2025-12-08T10:21:55Z] Test execution command:
+env KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c --maxfail=1
+
+Exit code: 1 (FAILED)
+
+Failure summary:
+- Test: test_I_before_scaling_matches_c
+- Failure type: F_latt relative error exceeded tolerance
+- Expected F_latt: -2.3831966530 (from C trace)
+- Actual F_latt (PyTorch): 1.3794838506
+- Relative error: 1.57884 (157.88%)
+- Absolute delta: 3.762680504
+- Root cause: φ=0 carryover cache not working correctly per-pixel
+- Tolerance: ≤1e-6 relative (CLI-FLAGS-003 VG-2 gate)
+
+Additional notes:
+- F_cell matched perfectly (190.27), eliminating HKL loading as cause
+- Test ran on CPU with float64 dtype for precision
+- Prerequisites: A.mat and scaled.hkl present in repo root
+- Phase: CLI-FLAGS-003 M2e (evidence capture before Option 1 cache implementation)

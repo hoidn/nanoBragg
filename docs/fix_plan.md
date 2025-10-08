@@ -3362,3 +3362,30 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - Phase M2 testing: Add multi-pixel test (pixels 684,1039 → 685,1039) to verify cache hits, run test_cli_scaling_parity.py (should pass after impl), regenerate trace_harness.py with TRACE_PY_ROTSTAR showing cache activity
       - Memory budget: Accept ~4-8 GB cache for full 2527×2463 detector at float32 (acceptable for modern hardware)
       - Document decision: Update plans/active/cli-noise-pix0/plan.md Phase M2 with architecture choice and rationale
+  * [2025-12-08] Attempt #153 (ralph loop i=152, Mode: Parity/Evidence) — Result: ✅ **SUCCESS** (Phase M2e COMPLETE — Parity test failure evidence captured). **No code changes.**
+    Metrics: Evidence-only loop per input.md Do Now. Test execution: test_I_before_scaling_matches_c FAILED with F_latt relative error 157.88% (1.57884 > 1e-6 tolerance). Pytest collection: 1 test discovered in 0.79s.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T102155Z/parity_test_failure/pytest.log` — Full test failure output (182 lines)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T102155Z/parity_test_failure/commands.txt` — Test command with exit code, failure summary, and root cause analysis
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T102155Z/parity_test_failure/env.json` — Environment metadata (Python 3.13.7, PyTorch 2.8.0+cu128, CUDA available, git SHA d25187b)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T102155Z/parity_test_failure/collect.log` — Test discovery output
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T102155Z/parity_test_failure/sha256.txt` — Artifact checksums
+      - Updated `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md` — Added M2e failure summary section with metrics and next steps
+    Observations/Hypotheses:
+      - **F_cell perfect match**: 190.27 (PyTorch) = 190.27 (C), confirming HKL loading and configuration parity are correct
+      - **F_latt severe divergence**: Expected -2.3831966530 (C), Got 1.3794838506 (PyTorch), Absolute delta 3.762680504
+      - **Root cause confirmed**: φ=0 carryover cache operates between separate `run()` invocations (different images), not between consecutive pixels within a single image
+      - **Per-pixel carryover missing**: M2d probe (Attempt #152) showed consecutive pixels (684,1039)→(685,1039) have identical φ=0 ROTSTAR values, proving no per-pixel state propagation
+      - **Test ran CPU float64**: Device=cpu, dtype=torch.float64 for precision; prerequisites A.mat and scaled.hkl present
+      - **Tolerance gate**: ≤1e-6 relative error (CLI-FLAGS-003 VG-2), actual error 1.57884 (157.88%)
+    Next Actions:
+      - M2g (next Ralph loop): Implement pixel-indexed cache per Option 1 design documented in `phi_carryover_diagnosis.md`
+        * Cache shape: `(S,F,N_mos,3)` per vector (ap, bp, cp, rot_a_star, rot_b_star, rot_c_star)
+        * Memory estimate: ~224 MB @ float32 for 2527×2463 detector (acceptable)
+        * Device/dtype neutral: tensors live on caller's device/dtype, no hard-coded `.cpu()`/`.cuda()`
+        * Gradient-preserving: no `.detach()` or in-place writes, use functional tensor indexing
+        * Call sequence: Initialize cache in Crystal, store φ=final values during `_compute_physics_for_position`, apply carryover when `phi_carryover_mode="c-parity"`
+        * Documentation: Include C-code references per CLAUDE Rule #11 (nanoBragg.c:2797, 3044-3095)
+      - M2h: Run targeted pytest + gradcheck (CPU and CUDA parametrizations), store validation artifacts under `reports/.../carryover_cache_validation/<timestamp>/`
+      - M2i: Regenerate cross-pixel traces (`trace_harness.py --roi 684 686 1039 1040 --phi-mode c-parity`), verify pixel 2 φ=0 matches pixel 1 φ=9 values, update `lattice_hypotheses.md` and `scaling_validation_summary.md` with `first_divergence=None`
+      - M3: Rerun full scaling comparison to confirm `I_before_scaling` within ≤1e-6 gate, update `fix_checklist.md` VG-2 row

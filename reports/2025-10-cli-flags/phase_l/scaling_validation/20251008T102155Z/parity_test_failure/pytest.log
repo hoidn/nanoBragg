@@ -1,0 +1,182 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/myenv/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+collecting ... collected 1 item
+
+tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c FAILED [100%]
+
+=================================== FAILURES ===================================
+______________ TestScalingParity.test_I_before_scaling_matches_c _______________
+
+self = <tests.test_cli_scaling_parity.TestScalingParity object at 0x7379a0c87d90>
+
+    def test_I_before_scaling_matches_c(self):
+        """
+        Verify that PyTorch scaling chain matches C reference for target pixel.
+    
+        This test validates that when using phi_carryover_mode='c-parity' (which
+        emulates the C code's φ=0 vector carryover bug), the PyTorch implementation
+        produces F_cell, F_latt, and I_before_scaling values that match the C trace
+        within ≤1e-6 relative tolerance.
+    
+        Expected Values (from C trace at pixel 685,1039, φ_tic=0):
+        - F_cell: 190.27 (HKL nearest-neighbor lookup)
+        - F_latt: -2.383196653 (lattice factor)
+        - I_before_scaling: 943654.809 (pre-polarization intensity)
+    
+        Phase: CLI-FLAGS-003 M2 (Fix φ=0 carryover parity)
+        Reference: reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log
+        Bug: docs/bugs/verified_c_bugs.md (C-PARITY-001)
+        """
+        from nanobrag_torch.models.crystal import Crystal, CrystalConfig
+        from nanobrag_torch.models.detector import Detector, DetectorConfig
+        from nanobrag_torch.config import BeamConfig, DetectorConvention
+        from nanobrag_torch.io.mosflm import read_mosflm_matrix
+        from nanobrag_torch.simulator import Simulator
+    
+        # Check prerequisites
+        mat_file = Path('A.mat')
+        hkl_file = Path('scaled.hkl')
+        if not mat_file.exists():
+            pytest.skip("A.mat not found (required for supervisor command reproduction)")
+        if not hkl_file.exists():
+            pytest.skip("scaled.hkl not found (required for supervisor command reproduction)")
+    
+        # Device and dtype (float64 per test guidance for precision)
+        device = torch.device('cpu')
+        dtype = torch.float64
+    
+        # Beam configuration
+        wavelength_A = 0.976800
+        beam_config = BeamConfig(wavelength_A=wavelength_A)
+    
+        # Load MOSFLM matrix
+        a_star, b_star, c_star = read_mosflm_matrix(str(mat_file), wavelength_A)
+    
+        # Crystal configuration (supervisor command)
+        crystal_config = CrystalConfig(
+            cell_a=100.0,  # placeholder (overridden by MOSFLM)
+            cell_b=100.0,
+            cell_c=100.0,
+            cell_alpha=90.0,
+            cell_beta=90.0,
+            cell_gamma=90.0,
+            N_cells=(36, 47, 29),
+            mosflm_a_star=a_star,
+            mosflm_b_star=b_star,
+            mosflm_c_star=c_star,
+            phi_start_deg=0.0,
+            osc_range_deg=0.1,
+            phi_steps=10,
+            mosaic_domains=1,
+            misset_deg=[0.0, 0.0, 0.0],
+            spindle_axis=[-1.0, 0.0, 0.0],  # supervisor command convention
+            # CRITICAL: Use c-parity mode to emulate C bug
+            phi_carryover_mode="c-parity"
+        )
+    
+        # Detector configuration (supervisor command)
+        # CRITICAL: Must use CUSTOM convention with custom vectors to match C trace
+        # Per trace_harness.py lines 79-99 and subagent analysis
+        detector_config = DetectorConfig(
+            distance_mm=231.274660,
+            pixel_size_mm=0.172,
+            spixels=2527,  # Corrected from 2463 - matches C trace dimensions
+            fpixels=2463,  # Corrected from 2527
+            detector_convention=DetectorConvention.CUSTOM,  # Changed from MOSFLM
+            # Match supervisor command beam center
+            beam_center_f=217.742295,
+            beam_center_s=213.907080,
+            oversample=1,
+            # Custom detector vectors (from trace_harness.py lines 93-99)
+            custom_fdet_vector=(0.999982, -0.005998, -0.000118),
+            custom_sdet_vector=(-0.005998, -0.999970, -0.004913),
+            custom_odet_vector=(-0.000088, 0.004914, -0.999988),
+            custom_beam_vector=(0.00051387949, 0.0, -0.99999986),
+            # Custom pix0 override (mm→m conversion from trace_harness.py line 98)
+            pix0_override_m=(-0.216336293, 0.215205512, -0.230200866)
+        )
+    
+        # Instantiate models
+        crystal = Crystal(crystal_config, beam_config=beam_config, device=device, dtype=dtype)
+        detector = Detector(detector_config, device=device, dtype=dtype)
+    
+        # Load HKL data
+        crystal.load_hkl(str(hkl_file))
+    
+        # Create simulator with trace enabled for target pixel
+        simulator = Simulator(
+            crystal=crystal,
+            detector=detector,
+            beam_config=beam_config,
+            device=device,
+            dtype=dtype,
+            debug_config={'trace_pixel': [685, 1039]}  # Enable trace for target pixel
+        )
+    
+        # Run simulation and capture trace output
+        # The trace output will go to stdout, so we capture it
+        old_stdout = sys.stdout
+        sys.stdout = captured_output = io.StringIO()
+    
+        try:
+            # Run simulation
+            image = simulator.run()
+        finally:
+            sys.stdout = old_stdout
+    
+        # Parse trace output
+        trace_output = captured_output.getvalue()
+    
+        # Extract values from trace using regex
+        # Look for TRACE_PY lines with the values we need
+        f_cell_match = re.search(r'TRACE_PY:.*F_cell_nearest[\s:=]+([0-9.e+-]+)', trace_output)
+        f_latt_match = re.search(r'TRACE_PY:.*F_latt[\s:=]+([0-9.e+-]+)', trace_output)
+        i_before_match = re.search(r'TRACE_PY:.*I_before_scaling_pre_polar[\s:=]+([0-9.e+-]+)', trace_output)
+    
+        # Check if we found all required values
+        if not f_cell_match:
+            pytest.fail(f"Failed to extract F_cell from trace. Trace output:\n{trace_output}")
+        if not f_latt_match:
+            pytest.fail(f"Failed to extract F_latt from trace. Trace output:\n{trace_output}")
+        if not i_before_match:
+            pytest.fail(f"Failed to extract I_before_scaling from trace. Trace output:\n{trace_output}")
+    
+        # Extract numerical values
+        f_cell_py = float(f_cell_match.group(1))
+        f_latt_py = float(f_latt_match.group(1))
+        i_before_py = float(i_before_match.group(1))
+    
+        # Expected values from C trace (c_trace_scaling.log at pixel 685,1039, φ_tic=0)
+        expected_f_cell = 190.27
+        expected_f_latt = -2.383196653
+        expected_i_before = 943654.809
+    
+        # Tolerance: ≤1e-6 relative per CLI-FLAGS-003 M2 verification gate VG-2
+        tolerance = 1e-6
+    
+        # Validate F_cell
+        f_cell_rel_error = abs(f_cell_py - expected_f_cell) / abs(expected_f_cell)
+        assert f_cell_rel_error <= tolerance, \
+            f"F_cell relative error {f_cell_rel_error:.6g} > {tolerance}. " \
+            f"Expected {expected_f_cell:.10f}, got {f_cell_py:.10f}. " \
+            f"Absolute delta: {f_cell_py - expected_f_cell:.10g}."
+    
+        # Validate F_latt
+        f_latt_rel_error = abs(f_latt_py - expected_f_latt) / abs(expected_f_latt)
+>       assert f_latt_rel_error <= tolerance, \
+            f"F_latt relative error {f_latt_rel_error:.6g} > {tolerance}. " \
+            f"Expected {expected_f_latt:.10f}, got {f_latt_py:.10f}. " \
+            f"Absolute delta: {f_latt_py - expected_f_latt:.10g}. " \
+            f"This likely indicates φ=0 carryover not working correctly."
+E       AssertionError: F_latt relative error 1.57884 > 1e-06. Expected -2.3831966530, got 1.3794838506. Absolute delta: 3.762680504. This likely indicates φ=0 carryover not working correctly.
+E       assert 1.5788376082335283 <= 1e-06
+
+tests/test_cli_scaling_parity.py:181: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c - AssertionError: F_latt relative error 1.57884 > 1e-06. Expected -2.3831966530, got 1.3794838506. Absolute delta: 3.762680504. This likely indicates φ=0 carryover not working correctly.
+assert 1.5788376082335283 <= 1e-06
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 1 failed in 5.81s ===============================

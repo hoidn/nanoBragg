@@ -55,3 +55,38 @@ Document authored 2025-12-06 by galph (supervisor loop).
   - c-parity mode: φ=0 vectors exactly equal spec φ=9 vectors (`a*_y` delta ≈ +1.69e-05), which matches the lattice drift recorded in `trace_py_scaling.log`.
 - Consequence: `k_frac` in c-parity mode is biased by ≈6.8e-06 for this pixel, producing the observed 0.13% `F_latt` deficit and keeping `I_before_scaling` outside the ≤1e-6 gate.
 - Next probe: Capture consecutive-pixel traces (e.g., pixel 684,1039 then 685,1039) to quantify the true C carryover vector and decide whether to cache φ-final state between pixels or introduce a deterministic seed to mimic the C bug exactly.
+
+## 2025-12-08 Parity Test Failure — M2e Evidence Capture
+
+**Test Run:** 2025-12-08T10:21:55Z
+**Artifacts:** `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T102155Z/parity_test_failure/`
+
+**Command:**
+```bash
+env KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c --maxfail=1
+```
+
+**Result:** FAILED (exit code 1)
+
+**Key Metrics:**
+- F_cell: Perfect match (190.27)
+- F_latt: **DIVERGED**
+  - Expected (C): -2.3831966530
+  - Actual (PyTorch): 1.3794838506
+  - Relative error: **157.88%** (1.57884)
+  - Absolute delta: 3.762680504
+- Test tolerance: ≤1e-6 relative (VG-2 gate)
+
+**Root Cause:**
+φ=0 carryover cache not working per-pixel. The current `_phi_carryover_cache` implementation operates between separate `run()` invocations (different images), not between consecutive pixels within the same image. Per M2d probe (Attempt #152), consecutive pixels show identical φ=0 ROTSTAR values, confirming no per-pixel carryover is occurring.
+
+**Environment:**
+- Python 3.13.7
+- PyTorch 2.8.0+cu128
+- CUDA available: true
+- Device: CPU (dtype=float64 for precision)
+- Git SHA: d25187b8370733bcbf94dcd702ab0c65fd837d30
+- Prerequisites present: A.mat, scaled.hkl
+
+**Next Steps:**
+Per plan.md M2g–M2i, implement pixel-indexed cache with shape `(S,F,N_mos,3)` per Option 1 design documented in `phi_carryover_diagnosis.md`. Cache must be device/dtype neutral, gradient-preserving (no `.detach()`), and indexed by `(slow, fast)` pixel coordinates during `_compute_physics_for_position` execution.
