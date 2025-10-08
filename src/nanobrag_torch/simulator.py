@@ -321,6 +321,10 @@ def compute_physics_for_position(
     intensity = torch.sum(intensity, dim=(-2, -1))
     # After sum: (S, F) or (n_sources, S, F) or (n_sources, batch)
 
+    # CLI-FLAGS-003 Phase M1: Capture pre-polarization intensity for trace parity
+    # This is the I_before_scaling value that C-code logs before multiplying by polar
+    intensity_pre_polar = intensity.clone() if apply_polarization else None
+
     # PERF-PYTORCH-004 P3.0b: Apply polarization PER-SOURCE before weighted sum
     # IMPORTANT: Apply polarization even when kahn_factor==0.0 (unpolarized case)
     # The formula 0.5*(1.0 + cos²(2θ)) is the correct unpolarized correction
@@ -407,11 +411,18 @@ def compute_physics_for_position(
             weights_broadcast = source_weights.view(*weight_shape)
             # Apply weights and sum over source dimension
             intensity = torch.sum(intensity * weights_broadcast, dim=0)
+            # CLI-FLAGS-003 Phase M1: Apply same accumulation to pre-polar intensity
+            if intensity_pre_polar is not None:
+                intensity_pre_polar = torch.sum(intensity_pre_polar * weights_broadcast, dim=0)
         else:
             # No weights provided, simple sum
             intensity = torch.sum(intensity, dim=0)
+            # CLI-FLAGS-003 Phase M1: Apply same accumulation to pre-polar intensity
+            if intensity_pre_polar is not None:
+                intensity_pre_polar = torch.sum(intensity_pre_polar, dim=0)
 
-    return intensity
+    # CLI-FLAGS-003 Phase M1: Return both post-polar (intensity) and pre-polar for trace
+    return intensity, intensity_pre_polar
 
 
 class Simulator:
@@ -913,7 +924,8 @@ class Simulator:
 
                 # Single batched call for all sources
                 # This replaces the Python loop and enables torch.compile optimization
-                physics_intensity_flat = self._compute_physics_for_position(
+                # CLI-FLAGS-003 Phase M1: Unpack both post-polar and pre-polar intensities
+                physics_intensity_flat, physics_intensity_pre_polar_flat = self._compute_physics_for_position(
                     coords_reshaped, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star,
                     incident_beam_direction=incident_dirs_batched,
                     wavelength=wavelengths_batched,
@@ -925,7 +937,8 @@ class Simulator:
                 subpixel_physics_intensity_all = physics_intensity_flat.reshape(batch_shape)
             else:
                 # Single source case: use default beam parameters
-                physics_intensity_flat = self._compute_physics_for_position(
+                # CLI-FLAGS-003 Phase M1: Unpack both post-polar and pre-polar intensities
+                physics_intensity_flat, physics_intensity_pre_polar_flat = self._compute_physics_for_position(
                     coords_reshaped, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star
                 )
 
@@ -999,7 +1012,8 @@ class Simulator:
 
                 # Single batched call for all sources
                 # This replaces the Python loop and enables torch.compile optimization
-                intensity = self._compute_physics_for_position(
+                # CLI-FLAGS-003 Phase M1: Unpack both post-polar and pre-polar intensities
+                intensity, I_before_normalization_pre_polar = self._compute_physics_for_position(
                     pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star,
                     incident_beam_direction=incident_dirs_batched,
                     wavelength=wavelengths_batched,
@@ -1008,11 +1022,13 @@ class Simulator:
                 # The weighted sum over sources is done inside _compute_physics_for_position
             else:
                 # Single source case: use default beam parameters
-                intensity = self._compute_physics_for_position(
+                # CLI-FLAGS-003 Phase M1: Unpack both post-polar and pre-polar intensities
+                intensity, I_before_normalization_pre_polar = self._compute_physics_for_position(
                     pixel_coords_angstroms, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star
                 )
 
-            # Save pre-normalization intensity for trace
+            # CLI-FLAGS-003 Phase M1: Save both post-polar (current intensity) and pre-polar for trace
+            # The current intensity already has polarization applied (from compute_physics_for_position)
             I_before_normalization = intensity.clone()
 
             # Normalize by steps
@@ -1163,6 +1179,7 @@ class Simulator:
                         self.polarization_axis
                     ).reshape(diffracted_beam_unit.shape[0], diffracted_beam_unit.shape[1])
 
+            # CLI-FLAGS-003 Phase M1: Pass both post-polar and pre-polar intensities for trace
             self._apply_debug_output(
                 physical_intensity,
                 normalized_intensity,
@@ -1174,7 +1191,8 @@ class Simulator:
                 polarization_value,
                 steps,
                 capture_fraction_for_trace,
-                I_before_normalization  # Pass pre-normalization accumulated intensity for trace
+                I_before_normalization,  # Post-polar accumulated intensity
+                I_before_normalization_pre_polar  # Pre-polar accumulated intensity
             )
 
         # PERF-PYTORCH-006: Ensure output matches requested dtype
@@ -1192,7 +1210,8 @@ class Simulator:
                            polarization=None,
                            steps=None,
                            capture_fraction=None,
-                           I_total=None):
+                           I_total=None,
+                           I_total_pre_polar=None):
         """Apply debug output for -printout and -trace_pixel options.
 
         Args:
@@ -1375,14 +1394,27 @@ class Simulator:
                     ).item()
                     print(f"TRACE_PY: F_cell {F_cell:.15g}")
 
-                    # Get I_before_scaling from the actual accumulated intensity (before normalization/scaling)
-                    # This is I_total passed from run() - the sum before division by steps
-                    if I_total is not None and isinstance(I_total, torch.Tensor):
-                        I_before_scaling = I_total[target_slow, target_fast].item()
+                    # CLI-FLAGS-003 Phase M1: Emit both pre-polar and post-polar I_before_scaling
+                    # This aligns PyTorch trace with C-code which logs pre-polarization value
+
+                    # Pre-polarization intensity (matches C-code TRACE_C: I_before_scaling)
+                    if I_total_pre_polar is not None and isinstance(I_total_pre_polar, torch.Tensor):
+                        I_before_scaling_pre_polar = I_total_pre_polar[target_slow, target_fast].item()
+                    elif I_total is not None and isinstance(I_total, torch.Tensor):
+                        # Fallback: use post-polar if pre-polar not available (backward compat)
+                        I_before_scaling_pre_polar = I_total[target_slow, target_fast].item()
                     else:
                         # Fallback: compute from F_cell and F_latt (less accurate)
-                        I_before_scaling = (F_cell * F_latt) ** 2
-                    print(f"TRACE_PY: I_before_scaling {I_before_scaling:.15g}")
+                        I_before_scaling_pre_polar = (F_cell * F_latt) ** 2
+                    print(f"TRACE_PY: I_before_scaling_pre_polar {I_before_scaling_pre_polar:.15g}")
+
+                    # Post-polarization intensity (current I_total)
+                    if I_total is not None and isinstance(I_total, torch.Tensor):
+                        I_before_scaling_post_polar = I_total[target_slow, target_fast].item()
+                    else:
+                        # Fallback: compute from F_cell and F_latt (less accurate)
+                        I_before_scaling_post_polar = (F_cell * F_latt) ** 2
+                    print(f"TRACE_PY: I_before_scaling_post_polar {I_before_scaling_post_polar:.15g}")
 
                     # Physical constants and scaling factors
                     r_e_m = torch.sqrt(self.r_e_sqr).item()

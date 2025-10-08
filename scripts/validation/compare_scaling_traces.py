@@ -54,6 +54,16 @@ def parse_trace_file(filepath: Path, prefix: str) -> Dict[str, float]:
                         # Handle special cases
                         if var_name == "I_before_scaling" and parts[2] == "NOT_EXTRACTED":
                             values[var_name] = None
+                        # CLI-FLAGS-003 Phase M1: Map pre-polar to standard I_before_scaling for C comparison
+                        elif var_name == "I_before_scaling_pre_polar":
+                            # Use pre-polar value as the canonical I_before_scaling (matches C-code)
+                            var_value = float(parts[2])
+                            values["I_before_scaling"] = var_value
+                            values[var_name] = var_value  # Keep original too
+                        elif var_name == "I_before_scaling_post_polar":
+                            # Store post-polar separately (for reference only)
+                            var_value = float(parts[2])
+                            values[var_name] = var_value
                         else:
                             var_value = float(parts[2])
                             values[var_name] = var_value

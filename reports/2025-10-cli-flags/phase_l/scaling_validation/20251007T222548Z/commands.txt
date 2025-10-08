@@ -1,0 +1,36 @@
+# Phase M1: Pre-Polar Trace Instrumentation - Reproduction Commands
+
+## 1. Test Collection (Verification)
+pytest --collect-only -q tests/test_cli_scaling_phi0.py
+
+## 2. Generate PyTorch Trace (CPU, float32, c-parity mode)
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python \
+  reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py \
+  --pixel 685 1039 \
+  --config supervisor \
+  --device cpu \
+  --dtype float32 \
+  --phi-mode c-parity \
+  --out reports/2025-10-cli-flags/phase_l/scaling_validation/20251007T222548Z/trace_py_scaling_cpu.log
+
+## 3. Compare C vs PyTorch Scaling Traces
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python \
+  scripts/validation/compare_scaling_traces.py \
+  --c reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log \
+  --py reports/2025-10-cli-flags/phase_l/scaling_validation/20251007T222548Z/trace_py_scaling_cpu.log \
+  --out reports/2025-10-cli-flags/phase_l/scaling_validation/20251007T222548Z/summary.md \
+  --tolerance 1e-6
+
+## 4. Verify Pre-Polar Values in Trace
+grep "I_before_scaling" reports/2025-10-cli-flags/phase_l/scaling_validation/20251007T222548Z/trace_py_scaling_cpu.log
+
+## Expected Output:
+# TRACE_PY: I_before_scaling_pre_polar 941698.5
+# TRACE_PY: I_before_scaling_post_polar 861314.8125
+
+## 5. Check Comparison Results
+cat reports/2025-10-cli-flags/phase_l/scaling_validation/20251007T222548Z/summary.md
+
+## Git Provenance
+# SHA: 5165754
+# Branch: feature/spec-based-2
