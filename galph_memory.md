@@ -1775,3 +1775,10 @@ Follow-ups for Ralph:
 - Re-synced (no upstream changes) and reviewed CLI-FLAGS-003 + parity-shim plan; spec remains φ=0 carryover-free (specs/spec-a-core.md:211-214) while C bug stays quarantined in docs/bugs/verified_c_bugs.md:166-182.
 - Selected focus = CLI-FLAGS-003 Phase L3k.3c.4; no new plan needed. Input memo now steers Ralph to implement the opt-in φ carryover shim (Plan Phase C1–C5) with per-φ trace evidence and dual-mode tests.
 - No fix_plan or plan edits required this turn; parity shim plan already authoritative. Next supervisor check: confirm reports/2025-10-cli-flags/phase_l/parity_shim/... artifacts exist, docs/fix_plan attempt logged, and tests cover both spec/parity modes before advancing to L3k.3c.5.
+
+## 2025-11-28 (galph loop — vectorization plan sync)
+- Reviewed spec/core docs for tricubic interpolation (specs/spec-a-core.md:230, 595) and confirmed φ carryover bug remains quarantined in docs/bugs/verified_c_bugs.md.
+- Marked Phase D1 as complete in `plans/active/vectorization.md` (Attempt #8 worksheet) and refreshed status snapshot to reference `reports/2025-10-vectorization/phase_d/polynomial_validation.md`.
+- Updated `docs/fix_plan.md` VECTOR-TRICUBIC-001 Next Actions to drop the stale D1 todo and point Ralph toward D2–D4 with the new evidence requirements.
+- Issued Perf-mode `input.md` directing Ralph to author failing `TestTricubicPoly` coverage (Phase D3) before implementing vectorized helpers.
+- Follow-up: Expect next loop to land D2 vectorized polynomials, record CPU/CUDA pytest logs under phase_d/, and log a new Attempt once tests go green.

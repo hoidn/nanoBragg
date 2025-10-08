@@ -1,101 +1,101 @@
-Summary: Add an opt-in φ=0 carryover shim so parity mode reproduces the C bug without regressing the spec-default rotation.
-Mode: Parity
-Focus: CLI-FLAGS-003 / Handle -nonoise and -pix0_vector_mm
+Summary: Establish failing tricubic polynomial vectorization tests so Phase D helpers can be implemented under strict spec, parity, and performance guardrails.
+Mode: Perf
+Focus: VECTOR-TRICUBIC-001 — Phase D polynomial vectorization
 Branch: feature/spec-based-2
-Mapped tests: tests/test_cli_scaling_phi0.py (spec + parity cases)
-Artifacts:
-- reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/per_phi_pytorch.json
-- reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/per_phi_summary.md
-- reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/trace_diff.md
-- reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/pytest_cpu.log
-- reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/pytest_cuda.log (if GPU run)
-- reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/summary.md + sha256.txt
-Do Now: CLI-FLAGS-003 — Handle -nonoise and -pix0_vector_mm; run KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_phi0.py -v
-If Blocked: Capture fresh per-φ traces via scripts/trace_per_phi.py and compare_per_phi_traces.py; log findings under reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/attempts.md before adjusting code.
+Mapped tests: none — new tests required
+Artifacts: reports/2025-10-vectorization/phase_d/collect.log; reports/2025-10-vectorization/phase_d/pytest_cpu.log; reports/2025-10-vectorization/phase_d/pytest_cuda.log; reports/2025-10-vectorization/phase_d/implementation_notes.md; reports/2025-10-vectorization/phase_d/attempts.yaml
+Do Now: VECTOR-TRICUBIC-001 Phase D3 – add polynomial regression tests; after authoring run KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py::TestTricubicPoly --maxfail=1 -vv (expect failure until D2 lands).
+If Blocked: Document the exact failure, command, and environment in reports/2025-10-vectorization/phase_d/notes.md; append an Attempt stub in docs/fix_plan.md with “blocked” status; stop before editing production modules or plan documents.
 Priorities & Rationale:
-- specs/spec-a-core.md:211-214 — Spec mandates fresh φ rotation each step; default path must stay compliant.
-- docs/bugs/verified_c_bugs.md:166-182 — Documented C-PARITY-001 bug to emulate only when parity shim enabled.
-- plans/active/cli-phi-parity-shim/plan.md:44-48 — Execute Phase C1–C5 implementation, tests, traces, summary.
-- docs/fix_plan.md:460-463 — Current Next Actions block CLI-FLAGS-003 until shim evidence lands.
-- src/nanobrag_torch/models/crystal.py:1051-1132 — Spec-compliant φ rotation to extend with opt-in caching.
-- tests/test_cli_scaling_phi0.py:1-200 — Existing spec baselines; add parity assertions alongside.
-- scripts/trace_per_phi.py:1-200 — Canonical trace harness for per-φ JSON capture.
-- scripts/compare_per_phi_traces.py:1-120 — Diff tool verifying parity shim reproduces C values.
+- specs/spec-a-core.md:230-238 requires 4×4×4 tricubic interpolation neighbourhoods.
+- specs/spec-a-core.md:595-603 enforces one-time warning and default_F fallback semantics.
+- specs/spec-a-parallel.md sections on AT-STR-002 demand parity against C for interpolated structure factors.
+- reports/2025-10-vectorization/phase_d/polynomial_validation.md §§2-4 define tensor shapes and denominator guards.
+- reports/2025-10-vectorization/phase_d/polynomial_validation.md §9 enumerates candidate tests; align coverage with that list.
+- plans/active/vectorization.md Phase D table marks D1 [D] and expects D2-D4 sequencing next.
+- docs/development/testing_strategy.md:1.4-1.5 emphasises device/dtype parity and targeted Do Now commands.
+- docs/development/pytorch_runtime_checklist.md sections on vectorization and device neutrality codify guardrails for both tests and implementation.
+- reports/2025-10-vectorization/phase_c/implementation_notes.md §3 documents gather tensor layout `(B,4,4,4)` to reuse directly.
+- docs/architecture/pytorch_design.md §§2.2–2.4 describe broadcast expectations that the new tests should validate.
+- CLAUDE Rule #11 demands C-code docstrings quoting `nanoBragg.c:4150-4187`; tests will drive readiness for that insertion.
+- docs/fix_plan.md §VECTOR-TRICUBIC-001 captures attempts history and sets expectation for this loop’s evidence.
 How-To Map:
-- Environment: export KMP_DUPLICATE_LIB_OK=TRUE before running pytest or scripts; set PYTHONPATH=src for standalone tools.
-- Implementation step 1 (Phase C1): Gate an optional parity branch in Crystal.get_rotated_real_vectors via config.phi_carryover_mode; ensure tensors stay batched.
-- Implementation step 2 (Phase C1): Store φ=0 cached vectors without `.detach()`; reuse them through tensor indexing when parity mode active.
-- Implementation step 3 (Phase C2): Extend CrystalConfig + SimulatorConfig dataclasses and CLI argparse (src/nanobrag_torch/__main__.py) with --phi-carryover-mode {spec,c-parity}; default to "spec".
-- Implementation step 4 (Phase C2): Thread new mode through simulator instantiation and ensure JSON/attempt logs reflect choice.
-- Testing step 1: KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.py (confirm selectors before edits).
-- Testing step 2: After adding parity cases, run KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_phi0.py -v (CPU baseline).
-- Testing step 3: If CUDA is available, run CUDA_VISIBLE_DEVICES=0 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_phi0.py -v --maxfail=1 -k parity --device cuda (add device parameter inside tests accordingly).
-- Trace step 1: PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/trace_per_phi.py --outdir reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/spec/ to refresh spec baseline JSON.
-- Trace step 2: Repeat trace_per_phi.py with --phi-carryover-mode c-parity (invoke CLI or config override) storing outputs under .../parity/.
-- Trace step 3: Run python scripts/compare_per_phi_traces.py reports/.../spec/per_phi_pytorch.json reports/.../c_trace_phi.log and again for parity JSON to document both modes.
-- CLI smoke: Run nanoBragg --phi-carryover-mode c-parity <supervisor command args> -roi 100 156 100 156 -floatfile /tmp/spec.bin -nonoise to prove flag toggles output choice without noise.
-- Evidence logging: Summarise metrics, tolerances, and SHA256 digests in reports/.../summary.md; copy highlights into docs/fix_plan.md Attempt entry.
+- Draft helper `make_polynomial_inputs(device, dtype, batch)` returning `sub_Fhkl`, `h_idx`, `k_idx`, `l_idx`, and `h_frac` per worksheet Table 2.1.
+- Use small integer-based tensor values to minimise rounding noise while exercising all indices.
+- Add module-level constant `POLY_FIXTURE = torch.tensor([...])` with deterministic data; annotate source referencing worksheet §2.2.
+- Introduce `TestTricubicPoly` class scoped to new tests; keep existing gather tests untouched.
+- Write `test_polint_matches_scalar_batched` expecting AttributeError or NotImplementedError until D2 adds vectorized helper.
+- Write `test_polint_scalar_equivalence_cpu` computing scalar output via list comprehension for baseline comparison.
+- Write `test_polin2_matches_scalar_batched` referencing nested interpolation; assert failure message includes helper name for clarity.
+- Write `test_polin2_grad_flow` verifying `.grad_fn` presence; mark xfail with strict True if helper missing.
+- Write `test_polin3_matches_scalar_batched` comparing full 3D interpolation; assert absence of warnings with recwarn fixture.
+- Write `test_polin3_batch_shape_preserved` verifying output shape `(batch,)` even when batched path missing (xfail).
+- Write `test_polynomials_support_float64` ensuring dtype override works; skip gracefully if dtype unsupported on CUDA.
+- Parameterise over devices using `@pytest.mark.parametrize("device", pytest_helpers.available_devices())` style pattern.
+- Parameterise over dtypes `[torch.float32, torch.float64]`; skip float64 on CUDA if hardware lacks support.
+- Guard tests with `pytest.importorskip("torch")` and `pytest.importorskip("torch.autograd")` for grad-specific cases.
+- Capture collect-only evidence with `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py::TestTricubicPoly --collect-only -q` redirected to reports/2025-10-vectorization/phase_d/collect.log.
+- Capture failing CPU run with `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py::TestTricubicPoly --maxfail=1 -vv | tee reports/2025-10-vectorization/phase_d/pytest_cpu.log`.
+- Capture CUDA run if available with `CUDA_VISIBLE_DEVICES=0 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py::TestTricubicPoly --maxfail=1 -vv -k cuda | tee reports/2025-10-vectorization/phase_d/pytest_cuda.log`.
+- Record environment metadata (Python, torch, CUDA versions) at top of implementation_notes.md to keep evidence reproducible.
+- Update reports/2025-10-vectorization/phase_d/implementation_notes.md with sections: Fixture design, Assertion strategy, Expected failure signatures, Device coverage, Follow-on steps.
+- Populate reports/2025-10-vectorization/phase_d/attempts.yaml with structured entries (timestamp, command, exit_code, log_path).
+- Append Attempt entry in docs/fix_plan.md referencing this evidence, emphasising that Phase D3 scaffolding is ready and D2 should implement helpers next.
+- Leave production code untouched this loop; D2 implementation happens after red tests exist.
+Evidence Checklist:
+- Ensure collect.log includes command, timestamp, and exit status line.
+- Ensure pytest_cpu.log captures traceback showing missing helper or assertion mismatch.
+- Ensure pytest_cuda.log either captures equivalent failure or documents skip reason clearly.
+- Ensure implementation_notes.md lists all new test names with short intent descriptions.
+- Ensure attempts.yaml records both CPU and CUDA runs individually.
+- Ensure docs/fix_plan.md Attempt entry cites polynomial_validation.md as guidance source.
+- Ensure git diff shows only test/report/doc updates; no src/ modifications should appear for this loop.
+- Ensure KMP_DUPLICATE_LIB_OK=TRUE environment variable is echoed in logs for audit.
+Reporting Steps:
+- Add SHA256 checksums for collect.log and pytest logs to implementation_notes.md or a separate hashes.txt file.
+- Update reports directory README if one exists to index new artifacts.
+- Mention in Attempt log whether gradcheck tests were added but xfailed, including tolerance values.
+- Note any skipped device/dtype combinations and articulate rerun conditions.
+- Provide pointer to scripts/benchmarks/tricubic_baseline.py for later Phase E comparisons.
+- Prepare short summary paragraph for next loop referencing red tests and target helpers (polint, polin2, polin3).
 Pitfalls To Avoid:
-- Do not regress the spec-default φ rotation; shim must be opt-in and preserve device/dtype neutrality end-to-end.
-- Avoid Python loops over φ or mosaic; rely on tensor broadcasting/masking when swapping cached values.
-- Remember CLAUDE Rule #11: include the nanoBragg.c snippet when introducing parity-specific logic.
-- Keep Protected Assets untouched (docs/index.md listings, e.g., loop.sh, supervisor.sh, input.md).
-- Preserve gradient flow (no `.item()`, `.detach()`, `.cpu()` on differentiable tensors inside simulation path).
-- Ensure new CLI flag honours config map conventions and updates help text; avoid silently enabling shim.
-- Handle serialization: update config -> dict conversions so parity mode persists in saved configs/traces.
-- Verify tests skip gracefully when A.mat or scaled.hkl missing; maintain existing skip messaging.
-- When running CUDA tests, guard with torch.cuda.is_available() to prevent false failures.
-- Document parity shim availability in reports/diagnosis.md without altering normative spec shards.
+- Avoid modifying existing gather tests or fixtures.
+- Avoid using `.item()` on tensors that participate in gradient flow.
+- Avoid large batch sizes that could exhaust GPU memory during future gradchecks.
+- Avoid running full pytest suite; stick to targeted selectors per testing_strategy.md.
+- Avoid embedding helper implementations inside tests; keep failures pointing at production gaps.
+- Avoid silent skips; always explain skip conditions in log or implementation notes.
+- Avoid overwriting previous evidence files; include timestamps or append mode when logging.
+- Avoid forgetting to set strict=True on xfail markers so accidental passes trigger action.
+- Avoid writing CUDA-specific asserts without CPU fallbacks; maintain parity across devices.
+- Avoid neglecting dtype neutrality; ensure tests convert fixtures with `.to(device=device, dtype=dtype)` once.
+- Avoid forgetting to set torch default dtype back to float32 if modified inside tests.
+- Avoid referencing protected files (docs/index.md assets); keep edits scoped to tests/reports/docs.
+- Avoid moving plan files; only reference them.
+- Avoid skipping documentation updates; record new tests in implementation_notes.md and fix_plan Attempt.
+Additional Diagnostics:
+- Capture torch.get_default_dtype() inside implementation notes to confirm baseline.
+- Record torch.backends.cuda.is_built() result in logs for context.
+- Note whether torch.set_float32_matmul_precision is set; may impact future perf checks.
+- Include summary of torch.compile status (unused this loop) for completeness.
+- Track random seeds used (if any) in attempts.yaml to ensure deterministic behaviour.
 Pointers:
-- plans/active/cli-phi-parity-shim/plan.md:44-59 — Phase C + D tasks and exit criteria.
-- docs/fix_plan.md:460-463 — CLI-FLAGS-003 Next Actions referencing this shim.
-- docs/bugs/verified_c_bugs.md:166-182 — Source of parity behaviour to emulate.
-- specs/spec-a-core.md:211-214 — Normative φ rotation description (default path reference).
-- src/nanobrag_torch/models/crystal.py:1051-1132 — Implementation hotspot for parity toggle.
-- tests/test_cli_scaling_phi0.py:1-200 — Existing tests to extend with parity mode parameterisation.
-- scripts/trace_per_phi.py:1-200 — Trace capture entry point.
-- scripts/compare_per_phi_traces.py:1-120 — Diff harness for C vs PyTorch traces.
-- docs/architecture/pytorch_design.md:94-142 — Vectorization and batching expectations to uphold.
-- docs/development/testing_strategy.md:69-120 — Device/dtype discipline for targeted parity runs.
-Next Up:
-1. Phase L3k.3c.5 documentation + dual-mode test refresh (plans/active/cli-phi-parity-shim/plan.md:55-59).
-2. Phase L3k.3d nb-compare ROI parity sweep once VG-1 & VG-3 pass with shim in place.
-3. Phase L3k.4 final supervisor command rerun after parity + normalization gates succeed.
-Execution Checklist:
-- [ ] Phase C1 parity toggle coded with tensor indexing (spec path unchanged).
-- [ ] Phase C2 CLI flag threads through CrystalConfig, SimulatorConfig, argparse help.
-- [ ] Phase C3 tests updated with param to cover mode in {spec,c-parity} across CPU+CUDA.
-- [ ] Phase C4 per-φ traces captured for both modes and compared against C log.
-- [ ] Phase C5 summary.md + docs/fix_plan Attempt entry drafted with metrics + SHA references.
-- [ ] CLI help text shows --phi-carryover-mode option with default spec.
-- [ ] nanoBragg --phi-carryover-mode spec reproduces current spec baselines exactly.
-- [ ] nanoBragg --phi-carryover-mode c-parity reproduces C-PARITY-001 metrics within ≤1e-6 for k_frac and rot_b.
-- [ ] pytest logs archived under reports/.../pytest_cpu.log and pytest_cuda.log (when run).
-- [ ] Collect-only log stored as reports/.../pytest_collect.log for traceability.
-Verification Notes:
-- Confirm the parity shim sets cached φ vectors only after spec rotations complete to avoid gradient discontinuities.
-- Validate that cached tensors respect requested dtype (float32 default, float64 when CLI dtype override provided).
-- Run torch.autograd.gradcheck on a reduced-size scenario (optional) to confirm graph continuity when shim toggled.
-- Inspect config dumps to ensure phi_carryover_mode persists through serialization/deserialization paths.
-- Use scripts/c_reference_utils.py if you need to regenerate the C command with parity flag context.
-- Double-check that per-φ JSON includes phi_tic 0-9 entries; missing rows indicate upstream trace capture failure.
-- Keep parity-mode tests marked or named clearly (e.g., test_k_frac_phi0_matches_c_parity) to distinguish from spec tests.
-- After implementation, rerun nb-compare smoke on a tiny ROI (optional) to sanity-check intensity parity before larger sweeps.
-Command Recap:
-- Spec trace refresh: PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/trace_per_phi.py --outdir reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/spec/
-- Parity trace refresh: PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE PHI_CARRYOVER_MODE=c-parity python scripts/trace_per_phi.py --outdir reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/parity/
-- Trace diff: python scripts/compare_per_phi_traces.py reports/.../spec/per_phi_pytorch.json reports/.../c_trace_phi.log
-- Trace diff parity: python scripts/compare_per_phi_traces.py reports/.../parity/per_phi_pytorch.json reports/.../c_trace_phi.log
-- CPU pytest: KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_phi0.py -v --maxfail=1
-- CUDA pytest: CUDA_VISIBLE_DEVICES=0 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_phi0.py -v --maxfail=1 -k parity --device cuda
-- CLI smoke (spec): nanoBragg --phi-carryover-mode spec @commands/supervisor_cli_flags.txt -nonoise -roi 100 156 100 156 -floatfile /tmp/spec.bin
-- CLI smoke (parity): nanoBragg --phi-carryover-mode c-parity @commands/supervisor_cli_flags.txt -nonoise -roi 100 156 100 156 -floatfile /tmp/parity.bin
-- Collect-only: KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.py > reports/.../pytest_collect.log
-- Gradcheck probe (optional): PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_scaling_pipeline.py --phi-carryover-mode c-parity --device cpu --dtype float64
-Observability Notes:
-- Update reports/.../sha256.txt with hashes for per_phi_pytorch.json, per_phi_summary.md, trace_diff.md, pytest logs, and summary.md.
-- Include metadata.json summarising command-line env vars (NB_C_BIN, PHI_CARRYOVER_MODE, devices) alongside traces.
-- Capture stdout/stderr from nanoBragg smoke runs into reports/.../cli_spec.log and cli_parity.log for auditability.
-- When editing docs/fix_plan.md, append Attempt entry with commit SHA, test commands, and artifact paths.
-- Annotate summary.md with VG gate checklist (VG-1 through VG-5) marking pass/fail per mode.
-- If nb-compare is exercised, stash outputs under reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/nb_compare/ with threshold metadata.
+- specs/spec-a-core.md:230-238 — Tricubic neighbourhood definition.
+- specs/spec-a-core.md:595-603 — OOB warning and fallback rules.
+- specs/spec-a-parallel.md (structure-factor parity section) — Acceptance thresholds for tricubic parity.
+- reports/2025-10-vectorization/phase_d/polynomial_validation.md §§2-11 — Tensor shapes, broadcast rules, tap points, open questions.
+- plans/active/vectorization.md Phase D — Updated status snapshot and remaining tasks D2-D4.
+- docs/development/testing_strategy.md:1.4-1.5 — Device/dtype discipline and targeted test policy.
+- docs/development/pytorch_runtime_checklist.md — Vectorization and device/dtype guardrails.
+- reports/2025-10-vectorization/phase_c/implementation_notes.md §3 — Gather tensor layout and device assertions.
+- src/nanobrag_torch/utils/physics.py:315-445 — Scalar polint/polin2/polin3 references for expected behaviour.
+- docs/fix_plan.md §VECTOR-TRICUBIC-001 — Attempts history, Next Actions, and context for this loop.
+- reports/2025-10-vectorization/phase_a/tricubic_baseline.md — Baseline benchmark numbers for future comparison.
+- scripts/benchmarks/tricubic_baseline.py — Command template for Phase E parity/perf validation.
+- reports/2025-10-vectorization/phase_d/polynomial_validation.md §11 — Tap-point plan for instrumentation if parity drifts.
+- docs/development/pytorch_runtime_checklist.md (Gradcheck section) — Reminder on float64 gradients.
+Coordination Notes:
+- Flag Ralph’s Attempt entry with Mode=Perf in docs/fix_plan.md for traceability.
+- Ensure communication references “VECTOR-TRICUBIC-001 Phase D3” so bookkeeping stays aligned.
+- After this loop, expect next supervisor memo to shift Do Now toward D2 implementation and rerun tests.
+Next Up: Implement VECTOR-TRICUBIC-001 Phase D2 vectorized polynomials, rerun the newly authored tests on CPU and CUDA, and extend evidence with gradcheck plus microbenchmark metrics.

@@ -9,7 +9,7 @@
   - docs/development/pytorch_runtime_checklist.md (device/vectorization guardrails)
   - `nanoBragg.c` lines 2604–3278 (polin3/polin2/polint) & 3375–3450 (detector absorption loop)
   - Existing artifacts under `reports/2025-10-vectorization/phase_*/`
-- Status Snapshot (2025-11-27): Phases A–C complete with gather vectorization merged (commit 12742e5). Polynomial helpers still scalar; detector absorption remains looped. Phase D is the active gate before parity/perf validation (Phase E) and absorption work (Phase F).
+- Status Snapshot (2025-11-27): Phases A–C complete with gather vectorization merged (commit 12742e5). Phase D1 worksheet captured under `reports/2025-10-vectorization/phase_d/polynomial_validation.md`; polynomial helpers remain scalar (D2–D4 pending) and detector absorption is still looped. Phase D is the active gate before parity/perf validation (Phase E) and absorption work (Phase F).
 - Execution Notes: Store new evidence under `reports/2025-10-vectorization/phase_<letter>/` directories; every implementation task must quote the matching C snippet per CLAUDE Rule #11. Maintain CPU+CUDA parity and include `pytest --collect-only` proof before targeted runs.
 
 ### Phase A — Evidence & Baseline Capture
@@ -52,7 +52,7 @@ Exit Criteria: Vectorised polynomial helpers integrated, CPU+CUDA tests passing,
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| D1 | Draft polynomial validation worksheet | [ ] | Create `phase_d/polynomial_validation.md` capturing tensor-shape derivations, broadcast diagrams, and mapping to `nanoBragg.c` code. Include plan for tap points (scalar vs batched) and cite design_notes §3. |
+| D1 | Draft polynomial validation worksheet | [D] | ✅ Attempt #8 (2025-10-07). Worksheet lives at `reports/2025-10-vectorization/phase_d/polynomial_validation.md` with tensor-shape specs, C references (`nanoBragg.c:4150-4187`), gradcheck plan, and tap-point notes. |
 | D2 | Implement batched `polint`/`polin2`/`polin3` | [ ] | Modify `utils/physics.py` (or dedicated helper) ensuring `(B,4)` inputs broadcast to `(B,)` outputs. Add C reference docstrings per CLAUDE Rule #11. Preserve differentiability (no `.detach()`/`.item()`). |
 | D3 | Add polynomial regression tests | [ ] | Extend `tests/test_tricubic_vectorized.py` with `TestTricubicPoly` covering scalar vs batched equivalence, gradient flow (`torch.autograd.gradcheck` in float64), and device parametrisation. Capture `pytest --collect-only` in `phase_d/collect.log` before targeted runs. |
 | D4 | Execute targeted pytest sweep | [ ] | Run `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py tests/test_at_str_002.py -v` on CPU and (if available) CUDA. Store logs under `phase_d/pytest_cpu.log` and `phase_d/pytest_cuda.log`; update `polynomial_validation.md` with timing deltas. |
