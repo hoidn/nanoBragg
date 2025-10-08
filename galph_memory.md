@@ -898,6 +898,7 @@
 
 ## 2025-12-05 (galph loop — C5 documentation prep)
 - Reviewed spec/arch/testing documents plus plans: confirmed φ rotation spec (specs/spec-a-core.md:205-233) is bug-free and parity shim remains optional.
-- Updated `plans/active/cli-phi-parity-shim/plan.md` Phase C5 with evidence checklist (spec citation, bug ledger sync, fix_plan update) and expanded D3 handoff guidance to tie into CLI plan.
-- Added Next Action bullet in `docs/fix_plan.md:460` reminding Ralph to complete parity shim summary before returning to Phase M runs; refreshed `input.md` Do Now for Phase M0 instrumentation hygiene with references to new checklist.
-- Expect Ralph to capture instrumentation audit artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/<ts>/`, guard `_last_tricubic_neighborhood`, and then proceed to C5 summary per new checklist.
+- Re-validated `plans/active/cli-phi-parity-shim/plan.md` Phase C5/D3 guidance (evidence checklist already present) and highlighted it in supervision notes instead of editing the plan.
+- Added Next Action bullet in `docs/fix_plan.md:460` reminding Ralph to complete parity shim summary before returning to Phase M runs; refreshed `input.md` Do Now for Phase M0 instrumentation hygiene with references to the checklist.
+- Expect Ralph to capture instrumentation audit artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/<ts>/`, guard `_last_tricubic_neighborhood`, and then proceed to C5 summary per existing checklist.
+- Next follow-up: verify docs/fix_plan Attempt log records the C5 checklist completion and that `reports/2025-10-cli-flags/phase_l/scaling_validation/` gains the new summary.md before advancing Phase M metrics.
