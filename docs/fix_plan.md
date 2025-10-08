@@ -3584,3 +3584,30 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
     Next Actions:
       - Follow refreshed Next Actions list above (M2h). First priority: capture new parity logs under `carryover_cache_validation/<timestamp>/`, update plan/ledger, and patch trace harness indexing before additional physics edits.
       - After diagnostics, root-cause `F_latt` mismatch (likely φ=0 substitution using stale cache contents or cache reset cadence) and address prior to nb-compare.
+
+  * [2025-10-08] Attempt #164 (ralph loop i=164, Mode: Parity) — Result: **EVIDENCE CAPTURED** (M2h.1 CPU diagnostics archived). **No code changes.**
+    Metrics:
+      - Targeted parity test: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c -q`
+        - Status: **FAIL** — `F_latt` relative error 1.57884 (expected ≤1e-6). Expected -2.3831966530, observed 1.3794838506 (Δ = 3.762680504).
+        - Runtime: 11.85s
+        - Exit status: 1
+      - Device coverage: CPU tested (float64); CUDA pending (M2h.2); gradcheck pending (M2h.3)
+      - Environment: Python 3.13.7, PyTorch 2.8.0+cu128, CUDA 12.8 available
+      - Git SHA: 9a23a4542be91de71fb28fd022cf5986560d4df2
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T160802Z_carryover_cache_validation/pytest_cpu.log` — 174-line test failure output
+      - `.../env.json` — Python/torch/git/CUDA metadata
+      - `.../commands.txt` — Reproduction steps with SHA and expected outcomes
+      - `.../diagnostics.md` — Root cause analysis, failure hypotheses, M2h.2-M2h.4 next steps
+      - `.../sha256.txt` — Artifact checksums (ee63c9ef...commands, 9c3f2356...env, 50f75b30...pytest)
+    Observations/Hypotheses:
+      - **Sign flip artifact:** C produces negative F_latt (-2.383197), PyTorch produces positive (1.379484), suggesting coordinate system or rotation direction error rather than scaling.
+      - **Cache wiring exists but inactive:** Attempt #163 landed `initialize_phi_cache()`/`apply_phi_carryover()`/`store_phi_final()` methods and row-wise batching, but φ=0 substitution not functioning. Possible causes: (1) `store_phi_final()` not invoked, (2) `apply_phi_carryover()` not called or returns stale data, (3) pixel indexing alignment issues.
+      - **Trace extraction working:** Test successfully parsed F_latt from simulator trace output; no regex/parsing issues.
+      - **M2h.1 complete:** CPU evidence archived per input.md Do Now. Ready for M2h.2 (CUDA smoke) and M2h.3 (gradcheck).
+    Next Actions:
+      - M2h.2: When CUDA available, run `trace_harness.py --pixel 685 1039 --phi-mode c-parity --device cuda --dtype float64` and archive outputs.
+      - M2h.3: Execute 2×2 ROI gradcheck harness to verify cached tensors maintain gradient connectivity (see diagnostics.md for minimal script).
+      - M2h.4: Already satisfied by this Attempt entry.
+      - M2i.1: After M2h.2-M2h.3 complete, regenerate ROI traces (`--roi 684 686 1039 1040`) and update `metrics.json`/`lattice_hypotheses.md` before advancing to Phase M3.
+      - Code debugging: Instrument `Simulator.run()` row loop to log `apply_phi_carryover()` and `store_phi_final()` invocations with pixel indices; verify φ=0 mask condition and cache retrieval correctness.

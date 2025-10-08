@@ -1,0 +1,44 @@
+# CLI-FLAGS-003 Phase M2h.1: CPU Parity Diagnostic Capture
+# Date: 2025-10-08 (ISO 8601 UTC)
+# Git SHA: 9a23a4542be91de71fb28fd022cf5986560d4df2
+# Branch: feature/spec-based-2
+# Purpose: Capture CPU parity test output after Attempt #163 carryover cache wiring
+
+# Step 1: Create timestamped artifact directory
+export ts=$(date -u +%Y%m%dT%H%M%SZ)
+mkdir -p "reports/2025-10-cli-flags/phase_l/scaling_validation/${ts}_carryover_cache_validation"
+
+# Step 2: Run targeted parity test (CPU, float64)
+KMP_DUPLICATE_LIB_OK=TRUE pytest \
+  "tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c" \
+  -q > "reports/2025-10-cli-flags/phase_l/scaling_validation/${ts}_carryover_cache_validation/pytest_cpu.log" 2>&1
+echo "Exit status: $?" >> "reports/2025-10-cli-flags/phase_l/scaling_validation/${ts}_carryover_cache_validation/pytest_cpu.log"
+
+# Step 3: Capture environment metadata
+python3 -c "
+import sys, torch, subprocess, json
+env = {
+    'python_version': sys.version.split()[0],
+    'torch_version': torch.__version__,
+    'git_sha': subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip(),
+    'git_branch': subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).decode().strip(),
+    'cuda_available': torch.cuda.is_available(),
+    'cuda_version': torch.version.cuda if torch.cuda.is_available() else 'N/A'
+}
+with open('reports/2025-10-cli-flags/phase_l/scaling_validation/${ts}_carryover_cache_validation/env.json', 'w') as f:
+    json.dump(env, f, indent=2)
+"
+
+# Step 4: Generate SHA256 checksums
+cd "reports/2025-10-cli-flags/phase_l/scaling_validation/${ts}_carryover_cache_validation"
+sha256sum * > sha256.txt
+
+# Expected Outcome:
+# - pytest_cpu.log: F_latt relative error 1.57884 (expected -2.383197, got 1.379484)
+# - Test FAILED per CLI-FLAGS-003 M2h.1 mandate
+# - Artifacts archived for Phase M2h.2-M2h.4 debugging
+
+# Next Actions (per input.md):
+# M2h.2: Run CUDA parity smoke (trace_harness.py --device cuda)
+# M2h.3: Execute 2×2 ROI gradcheck to verify cache gradient flow
+# M2h.4: Update docs/fix_plan.md Attempts History with metrics and artifact paths

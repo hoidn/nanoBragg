@@ -124,10 +124,10 @@ Exit Criteria: `trace_harness.py` comparisons show `F_cell`, `F_latt`, and `I_be
 ##### M2h Validation Steps
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| M2h.1 | CPU parity test | [ ] | `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c -q`; archive log to `reports/.../carryover_cache_validation/<ts>/pytest_cpu.log`. |
+| M2h.1 | CPU parity test | [D] | ✅ Attempt #164 (2025-10-08). Artifacts: `reports/.../20251008T160802Z_carryover_cache_validation/`. Test **FAILED**: F_latt rel err 1.57884 (expected -2.383197, got 1.379484). Runtime 11.85s. Diagnostics identify sign flip and cache substitution not occurring. |
 | M2h.2 | CUDA parity probe | [ ] | When CUDA is available, run `python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --phi-mode c-parity --device cuda --dtype float64 --out trace_py_scaling_cuda.log`; archive outputs or note unavailability. |
-| M2h.3 | Gradcheck probe | [ ] | Add/execute a minimal gradcheck harness (float64, 2×2 ROI) verifying cached tensors keep gradients; store output in `gradcheck.log`. |
-| M2h.4 | Update fix_plan attempt | [ ] | Log metrics, artifact paths, and device coverage in `docs/fix_plan.md` Attempt history when tests conclude. |
+| M2h.3 | Gradcheck probe | [ ] | Add/execute a minimal gradcheck harness (float64, 2×2 ROI) verifying cached tensors keep gradients; store output in `gradcheck.log`. Minimal script provided in `20251008T160802Z_carryover_cache_validation/diagnostics.md`. |
+| M2h.4 | Update fix_plan attempt | [D] | ✅ Attempt #164 logged to `docs/fix_plan.md:3588-3613` with metrics, artifacts (pytest_cpu.log, env.json, commands.txt, diagnostics.md, sha256.txt), observations (sign flip hypothesis, cache wiring inactive), and next actions (M2h.2-M2h.3, M2i.1, code debugging). |
 
 ##### M2i Trace & Metrics Steps
 | ID | Task Description | State | How/Why & Guidance |
