@@ -1795,3 +1795,10 @@ Follow-ups for Ralph:
 - Updated `plans/active/vectorization.md` (D2 marked [D], D4 guidance clarified) and refreshed `docs/fix_plan.md` Next Actions to focus on D4 evidence + Phase E staging.
 - Issued new Perf-mode `input.md` directing Ralph to capture Phase D4 CPU/CUDA pytest logs, update polynomial_validation.md with timings, and log a new Attempt when done.
 - Expect Ralph to run the specified selectors, archive logs under `reports/2025-10-vectorization/phase_d/`, and advance plan row D4 to [D] before moving into Phase E.
+
+## 2025-11-30 (galph loop — parity evidence focus)
+- Reviewed CLI-FLAGS-003 progress: parity shim code/tests already landed (docs/fix_plan.md Attempt #120) but plan rows still open.
+- Updated `plans/active/cli-phi-parity-shim/plan.md` C1–C3 to [D] with artifact references; marked `plans/active/cli-noise-pix0/plan.md` L3k.3c.4 as [D] and refreshed Next Actions to target Phase C4 evidence capture.
+- Revised `docs/fix_plan.md` Next Actions so L3k.3c.4 emphasises per-φ trace collection + targeted pytest logs before documentation work.
+- Issued new `input.md` (Parity mode) directing Ralph to extend the trace harness with a `--phi-mode` toggle, record spec vs c-parity per-φ traces, rerun tests, and log artifacts under `reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/`.
+- Expect Ralph to produce VG-1 parity evidence, update parity plan rows C4/C5, and then proceed toward Phase L3k.3d nb-compare once traces pass tolerances.

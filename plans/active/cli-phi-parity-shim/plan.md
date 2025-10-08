@@ -41,9 +41,9 @@ Exit Criteria: Production code contains opt-in shim, tests/logs stored, fix_plan
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Implement opt-in carryover | [ ] | Modify `Crystal.get_rotated_real_vectors` (and supporting helpers) to optionally reuse φ_{last} vectors when parity mode enabled. Must remain batched: use tensor masking/index operations rather than Python loops. Include C reference snippet (`nanoBragg.c:3044-3058`) in docstring as mandated. Ensure default path unchanged. |
-| C2 | Update CLI / configs | [ ] | Wire the chosen API through `CrystalConfig`, `SimulatorConfig`, and CLI parser. Provide unit coverage in `tests/test_cli_flags.py` (e.g., new `TestPhiParityShim`) verifying flag parsing, default mode, and interaction with existing options. |
-| C3 | Add regression & parity tests | [ ] | Extend `tests/test_cli_scaling_phi0.py` with parity-enabled assertions (expect C bug values). Parameterise over devices (CPU + CUDA when available). Capture logs under `parity_shim/<timestamp>/pytest_{cpu,cuda}.log`. Ensure spec tests still pass. |
+| C1 | Implement opt-in carryover | [D] | ✅ `src/nanobrag_torch/models/crystal.py:1084-1128` implements the batched φ=0 replacement via `torch.index_select`, preserving gradients and citing `nanoBragg.c:3044-3058` per CLAUDE Rule #11 (Attempt #120). |
+| C2 | Update CLI / configs | [D] | ✅ CLI flag `--phi-carryover-mode {spec,c-parity}` and `CrystalConfig.phi_carryover_mode` field landed (`src/nanobrag_torch/__main__.py:377-386`, `config.py:154-171`); validation rejects invalid modes (Attempt #120). |
+| C3 | Add regression & parity tests | [D] | ✅ `tests/test_phi_carryover_mode.py` exercises parsing, config wiring, and device/dtype behavior for both modes; `tests/test_cli_scaling_phi0.py` still enforces spec baselines (documented in docs/fix_plan.md Attempt #120). |
 | C4 | Capture per-φ traces | [ ] | Run `scripts/compare_per_phi_traces.py` twice (spec vs C parity, parity-shim vs C). Store outputs (`trace_summary.md`, `delta_metrics.json`, raw traces) under the new report directory. Confirm parity mode reproduces Δk/Δb from C within 1e-6 while spec mode remains at spec baselines. |
 | C5 | Summarise metrics & log attempt | [ ] | Write `summary.md` describing test outcomes, trace comparisons, and any tolerances. Update `docs/fix_plan.md` Attempt history (CLI-FLAGS-003) with metrics, references, and git commit SHA. |
 
@@ -57,4 +57,3 @@ Exit Criteria: Docs refreshed, plan cross-references updated, Next Actions ready
 | D1 | Update documentation | [ ] | Refresh `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md` (add parity shim section), `docs/bugs/verified_c_bugs.md` (note shim availability), and `README_PYTORCH.md` or CLI docs if new flag added. Ensure spec documents remain unchanged (bug stays quarantined). |
 | D2 | Sync plans/fix_plan | [ ] | Mark relevant rows in `plans/active/cli-noise-pix0/plan.md` as [D] or [P] with links to this plan’s artifacts. Update `docs/fix_plan.md` Next Actions to advance to Phase L4. |
 | D3 | Prepare handoff to supervisor command rerun | [ ] | Document in `summary.md` which commands/tests must run next (e.g., nb-compare, supervisor command). Provide clear Do Now guidance for transitioning into Phase L4 in `input.md`. |
-
