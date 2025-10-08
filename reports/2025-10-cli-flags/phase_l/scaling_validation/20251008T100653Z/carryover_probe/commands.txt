@@ -1,0 +1,15 @@
+=== Running M2d Cross-Pixel Carryover Probe ===
+Date: 2025-10-08T10:07:34Z
+Git SHA: f9ffd890cdfae1ae511f9eb9480ee16e0d28466e
+
+### Pixel 1 (684, 1039) ###
+KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 684 1039 --config supervisor --dtype float64 --phi-mode c-parity --emit-rot-stars --out reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T100653Z/carryover_probe/trace_pixel1.log
+Exit code: 0
+
+### Pixel 2 (685, 1039) ###
+KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --dtype float64 --phi-mode c-parity --emit-rot-stars --out reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T100653Z/carryover_probe/trace_pixel2.log
+Exit code: 0
+
+
+=== Probe Complete ===
+Artifacts in: reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T100653Z/carryover_probe

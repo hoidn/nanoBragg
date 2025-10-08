@@ -512,6 +512,30 @@
     Metrics:
       - `--phi-mode spec` (expected divergence): `I_before_scaling` PyTorch 805473.787 vs C 943654.809 ⇒ −14.643% (Δ −1.38e5); `I_pixel_final` PyTorch 2.459466e-07 vs C 2.881395e-07 ⇒ −14.643%. Demonstrates spec-compliant path disagrees with C bug as intended.
       - `--phi-mode c-parity`: `I_before_scaling` PyTorch 941686.236 vs C 943654.809 ⇒ −0.2086%; `I_pixel_final` PyTorch 2.875383e-07 vs C 2.881395e-07 ⇒ −0.2087%. First divergence remains the raw pre-polar intensity.
+  * [2025-10-08] Attempt #152 (ralph loop i=152, Mode: Parity/Evidence) — Result: ✅ **SUCCESS** (Phase M2d cross-pixel carryover probe COMPLETE). **No code changes.**
+    Metrics: Evidence-only loop per input.md Do Now. Pytest collection: 1 test discovered in 0.79s (test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T100653Z/carryover_probe/` — RUN_DIR for M2d probe
+      - `commands.txt` — Reproduction steps for both pixels (684,1039 and 685,1039)
+      - `trace_pixel1.log` / `trace_pixel2.log` — Full PyTorch traces with TRACE_PY_ROTSTAR
+      - `pixel1_rotstar.txt` / `pixel2_rotstar.txt` — Extracted ROTSTAR lines for comparison
+      - `analysis.md` — Carryover evidence analysis and Option 1 tensor design summary
+      - `env.json` — Python 3.13.7, PyTorch 2.8.0+cu128, git SHA f9ffd890cdfae1ae511f9eb9480ee16e0d28466e
+      - `sha256.txt` — Artifact checksums (addbfdb1... analysis.md, 0063760624cf... trace_pixel1.log, 0358dd2f... trace_pixel2.log)
+      - `pytest_collect.log` — Test discovery proof (exit code 0)
+      - Updated `reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md` with detailed Option 1 tensor layout (§ Tensor Shape & Memory Design, § Cache Lifecycle & Reset Rules, § Call Sequence & Integration Points, § Gradient Preservation Strategy, § C-Code Reference Mapping, § Changes Required)
+    Observations/Hypotheses:
+      - **CRITICAL FINDING**: Consecutive pixels (684,1039) and (685,1039) show **identical** φ=0 ROTSTAR values (`ap_y=-21.8717928453817`), proving current cache implementation does NOT achieve per-pixel carryover
+      - **Expected behavior**: If C-PARITY-001 emulation were working, pixel 2 φ_tic=0 should match pixel 1 φ_tic=9 values (`ap_y=-21.8805340763623`)
+      - **Root cause confirmed**: Cache operates between separate `run()` invocations (different images), not between consecutive pixels within the same image
+      - **Option 1 design finalized**: Cache shape `(S,F,N_mos,3)` per vector; memory ~224 MB @ float32 for supervisor case; device/dtype neutral; gradients preserved via functional indexing (no `.detach()`)
+      - **Call sequence options documented**: Option 1A (cache in Crystal, apply in Simulator) vs Option 1B (cache in Simulator, Crystal provides helpers)
+      - **C-code reference mapped**: OpenMP `firstprivate(ap,bp,cp,...)` (nanoBragg.c:2797) → per-pixel cache indexed by `(slow,fast)`
+      - **Implementation checklist**: Crystal.py modifications (initialize/store/get cache methods), Simulator.py threading pixel coordinates, test additions (allocation/carryover/gradcheck), trace instrumentation (CACHE_HIT/MISS markers)
+    Next Actions:
+      - M2e: Validate `tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c` still fails (expect F_latt assertion error with ~158% relative delta) on current HEAD; document failure in plan
+      - M2f: ✅ COMPLETE (this loop) — Extended `phi_carryover_diagnosis.md` with tensor shapes, cache lifecycle, call sequences, gradient strategy, C-code mapping, implementation checklist
+      - M2g–M2i: Implement pixel-indexed cache per Option 1 design (next Ralph loop), validate gradients/device parity, regenerate cross-pixel traces expecting pixel 2 φ=0 to match pixel 1 φ=9
     Artifacts:
       - Spec run: `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T055257Z/trace_py_scaling.log` (44 TRACE_PY lines), `.../manual_scaling_summary.md`, `.../manual_metrics.json`, `.../trace_py_scaling_per_phi.log/json` (nested under `per_phi/.../20251008T055257Z/`).
       - C-parity run: `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T055533Z/trace_py_scaling.log`, `.../manual_scaling_summary.md`, `.../manual_metrics.json`, companion per-φ logs at `per_phi/.../20251008T055533Z/`.

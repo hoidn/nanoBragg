@@ -1,0 +1,4 @@
+usage: trace_harness.py [-h] --pixel SLOW FAST --out OUT --config {supervisor}
+                        [--device DEVICE] [--dtype {float32,float64}]
+                        [--phi-mode {spec,c-parity}] [--emit-rot-stars]
+trace_harness.py: error: the following arguments are required: --pixel, --config

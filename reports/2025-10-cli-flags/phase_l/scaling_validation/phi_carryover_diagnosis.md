@@ -93,23 +93,219 @@ if config.phi_carryover_mode == "c-parity":
 
 **Concept:** Store φ=final vectors per-pixel and apply carryover during physics computation.
 
-**Changes required:**
-1. Expand cache to `(S, F, N_mos, 3)` shape for each vector
-2. Keep `get_rotated_real_vectors()` unchanged (returns fresh vectors)
-3. Add `apply_phi_carryover(vectors, pixel_s, pixel_f)` method
-4. Modify `_compute_physics_for_position()` to call carryover before Miller index calculation
+**Evidence:** M2d two-pixel probe (20251008T100653Z/carryover_probe) confirms current cache fails to achieve per-pixel carryover. Pixels (684,1039) and (685,1039) have identical φ=0 vectors, proving cache operates between separate run() calls, not consecutive pixels.
+
+#### Tensor Shape & Memory Design
+
+**Cache Storage (per vector a/b/c):**
+```
+Shape: (S, F, N_mos, 3)
+  S      = slow pixels (detector.spixels, e.g., 2527 for supervisor case)
+  F      = fast pixels (detector.fpixels, e.g., 2463)
+  N_mos  = mosaic domains (crystal_config.mosaic_domains, e.g., 1 for supervisor)
+  3      = vector components (x, y, z)
+
+Memory footprint (dtype=torch.float32):
+  - Supervisor case: 3 vectors × 2527 × 2463 × 1 × 3 × 4 bytes = 224 MB
+  - With N_mos=10: 3 × 2527 × 2463 × 10 × 3 × 4 = 2.24 GB
+  - ROI (56×56): 3 × 56 × 56 × 1 × 3 × 4 = 113 KB (negligible)
+```
+
+**Allocation Strategy:**
+- Device: Same as crystal base vectors (follows caller device)
+- Dtype: Same as crystal base vectors (float32 default, float64 for debug)
+- Timing: Allocate at first `run()` when detector dimensions are known
+- Reallocation: Clear and reallocate if detector size changes
+
+#### Cache Lifecycle & Reset Rules
+
+**Initialization (Simulator.__init__ or first run()):**
+```python
+if config.phi_carryover_mode == "c-parity":
+    crystal._phi_cache_a = torch.zeros(
+        (detector.spixels, detector.fpixels, crystal_config.mosaic_domains, 3),
+        dtype=base_a.dtype, device=base_a.device
+    )
+    # Similar for _phi_cache_b, _phi_cache_c
+    crystal._cache_initialized = True
+```
+
+**Population (after computing φ=final for each pixel):**
+```python
+# In _compute_physics_for_position or batch loop:
+if config.phi_carryover_mode == "c-parity":
+    # Store φ=final (last phi step) for this pixel
+    crystal._phi_cache_a[slow, fast, :, :] = rotated_a[-1, :, :]  # Shape: (N_mos, 3)
+    # Similar for b, c
+```
+
+**Application (when computing φ=0 for next pixel):**
+```python
+# Option A: In-place substitution (may break autograd)
+if phi_tic == 0 and config.phi_carryover_mode == "c-parity":
+    rotated_a[0, :, :] = crystal._phi_cache_a[slow, fast, :, :]
+
+# Option B: Deferred lookup (safer for gradients)
+def get_phi_vectors(slow, fast, phi_tic):
+    if phi_tic == 0 and config.phi_carryover_mode == "c-parity":
+        return (
+            crystal._phi_cache_a[slow, fast],
+            crystal._phi_cache_b[slow, fast],
+            crystal._phi_cache_c[slow, fast]
+        )
+    else:
+        return compute_fresh_rotation(phi_tic)
+```
+
+**Clear/Invalidate:**
+- On detector geometry change (basis vectors, distance, rotations)
+- On crystal cell parameter change (if re-running same detector)
+- On explicit ROI boundary change (optional optimization)
+- **NOT** cleared between pixels in same run (that's the whole point)
+
+#### Call Sequence & Integration Points
+
+**Current Flow (Broken):**
+```
+Simulator.run()
+  └─ rotated_vecs = crystal.get_rotated_real_vectors()  # Once per run, (N_phi, N_mos, 3)
+  └─ for pixel in all_pixels:
+      └─ _compute_physics_for_position(pixel, rotated_vecs)  # All pixels use same φ=0
+```
+
+**Option 1A: Cache in Crystal, Apply in Simulator (RECOMMENDED):**
+```
+Simulator.run()
+  └─ for slow in range(detector.spixels):
+      └─ for fast in range(detector.fpixels):
+          ├─ rotated_vecs = crystal.get_rotated_real_vectors()  # Fresh compute
+          ├─ if phi_carryover_mode == "c-parity":
+          │   └─ rotated_vecs = crystal.apply_phi_carryover(slow, fast, rotated_vecs)
+          ├─ _compute_physics_for_position(pixel, rotated_vecs)
+          └─ crystal.store_phi_final(slow, fast, rotated_vecs[-1])  # Save for next pixel
+```
+
+**Option 1B: Cache in Simulator, Crystal Provides Helpers:**
+```
+Simulator.run()
+  └─ self._init_phi_cache(detector, crystal)  # Allocate (S, F, N_mos, 3)
+  └─ for pixel in pixels:
+      └─ rotated_vecs = self._get_pixel_phi_vectors(slow, fast, crystal)
+          ├─ if phi=0 and cache_valid[slow, fast]:
+          │   └─ return cached_final[slow, fast]
+          ├─ else:
+          │   └─ fresh = crystal.get_rotated_real_vectors()
+          │   └─ cached_final[slow, fast] = fresh[-1]
+          │   └─ return fresh
+```
+
+#### Gradient Preservation Strategy
+
+**Critical Requirements (CLAUDE.md Rule #8-10):**
+1. **No `.detach()`**: Store tensors with `requires_grad` intact
+2. **Functional indexing**: Use `cache[s,f] = vec` (preserves computation graph)
+3. **Advanced indexing for batch**: When vectorizing, use `cache[slow_batch, fast_batch]`
+4. **Property-based access**: Avoid overwriting class attributes with computed values
+
+**Implementation Pattern:**
+```python
+# GOOD: Preserves gradients
+cache[slow, fast] = rotated_final  # rotated_final.requires_grad preserved
+
+# GOOD: Functional retrieval
+phi0_vectors = cache[slow, fast]  # Still connected to graph
+
+# BAD: Breaks gradients
+cache[slow, fast] = rotated_final.detach().clone()  # ❌ Severs graph
+
+# BAD: In-place modification may break autograd
+rotated_vecs[0] = cache[slow, fast]  # ⚠️ Risky for backward()
+```
+
+**Gradcheck Strategy (M2h validation):**
+```python
+# Test with 2×2 ROI, vary cell parameter
+def loss_fn(cell_a):
+    config = CrystalConfig(cell_a=cell_a, phi_carryover_mode="c-parity")
+    crystal = Crystal(config)
+    detector = Detector(...)  # 2×2 detector
+    simulator = Simulator(crystal, detector, beam)
+    image = simulator.run()  # Triggers cache for pixels [1,1]
+    return image.sum()
+
+torch.autograd.gradcheck(loss_fn, torch.tensor(100.0, dtype=torch.float64, requires_grad=True))
+```
+
+#### C-Code Reference Mapping (nanoBragg.c)
+
+**Cache equivalent:** OpenMP `firstprivate(ap, bp, cp, ...)` (lines 2797-2800)
+```c
+// nanoBragg.c:2797
+#pragma omp parallel for ... firstprivate(ap,bp,cp,a0p,b0p,c0p,...)
+for(pixel_i=0; pixel_i < num_pixels; ++pixel_i) {
+    // ap/bp/cp are thread-local copies that persist across phi loop iterations
+    for(phi_tic=0; phi_tic<phisteps; ++phi_tic) {
+        phi = phi0 + phistep*phi_tic;
+        if( phi != 0.0 ) {
+            rotate_axis(a0, ap, spindle_vector, phi);  // Modify ap
+            rotate_axis(b0, bp, spindle_vector, phi);  // Modify bp
+            rotate_axis(c0, cp, spindle_vector, phi);  // Modify cp
+        }
+        // When phi==0: ap/bp/cp retain values from previous pixel's final phi
+    }
+}
+```
+
+**Carryover condition:** `if (phi != 0.0)` block (lines 3044-3095)
+```c
+// nanoBragg.c:3044-3095 (condensed)
+if(phi != 0.0) {
+    // Compute fresh rotations
+} else {
+    // Reuse ap/bp/cp from previous iteration (implicit carryover)
+}
+```
+
+**Per-pixel sequential semantics:** Thread processes pixels sequentially → state persists.
+
+**PyTorch equivalent:** Explicit cache indexed by (slow, fast) to simulate thread-local persistence.
+
+#### Changes Required (Implementation Checklist)
+
+1. **Crystal.py modifications:**
+   - Add `_phi_cache_a/b/c` attributes (allocated lazily)
+   - Add `initialize_phi_cache(spixels, fpixels, mosaic_domains, dtype, device)` method
+   - Add `store_phi_final(slow, fast, rotated_vecs)` helper
+   - Add `get_cached_phi0(slow, fast)` helper
+   - **OR** Add `apply_phi_carryover(slow, fast, rotated_vecs)` that modifies φ=0 slice
+
+2. **Simulator.py modifications:**
+   - Thread `(slow, fast)` pixel coordinates into `_compute_physics_for_position`
+   - Call `crystal.initialize_phi_cache(...)` before pixel loop
+   - Call carryover helpers at appropriate points in pixel/phi loops
+
+3. **Test additions (M2h):**
+   - `test_phi_cache_allocation` - Verify cache shape/device/dtype
+   - `test_phi_cache_two_pixel_carryover` - Verify pixel2 φ=0 uses pixel1 φ=final
+   - `test_phi_cache_gradients` - Run gradcheck on 2×2 ROI
+
+4. **Trace instrumentation:**
+   - Emit `TRACE_PY_CACHE_HIT` / `TRACE_PY_CACHE_MISS` markers
+   - Log cache access patterns in debug mode
 
 **Pros:**
-- ✅ Preserves vectorization (no Python loops)
-- ✅ Maintains gradient flow (no .detach())
-- ✅ Correct per-pixel semantics
-- ✅ Device/dtype neutral
+- ✅ Preserves vectorization (cache operations are tensor ops)
+- ✅ Maintains gradient flow (no .detach(), functional indexing)
+- ✅ Correct per-pixel semantics (explicit pixel indices)
+- ✅ Device/dtype neutral (cache allocated on input device/dtype)
+- ✅ Memory acceptable (~224 MB for supervisor case @ float32)
 
 **Cons:**
-- ⚠️ Memory: ~4-8 GB for full 2527×2463 detector at float32
-- ⚠️ Complex: requires threading pixel coordinates through call stack
+- ⚠️ Moderate complexity (pixel coordinates threaded through call stack)
+- ⚠️ Memory scales with detector size (but ROIs reduce this)
+- ⚠️ Cache invalidation logic adds state management
 
-**Feasibility:** Medium-High (memory acceptable, implementation moderate complexity)
+**Feasibility:** Medium-High (well-defined requirements, clear implementation path)
 
 ### Option 2: Sequential Pixel Batching (NOT RECOMMENDED)
 
