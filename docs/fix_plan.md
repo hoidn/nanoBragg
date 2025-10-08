@@ -514,6 +514,18 @@
       - **Phase M5b:** Author rotation_fix_design.md referencing specs/spec-a-core.md:204-240, nanoBragg.c:3042-3095, and these fresh traces
       - **Phase M5c:** Implement per-φ real/reciprocal recompute with CLAUDE Rule #11 docstrings, maintaining vectorization and device/dtype neutrality
       - **Phase M5d:** Rerun compare_scaling_traces.py to achieve first_divergence=None
+  * [2025-10-08] Attempt #194 (galph loop, Mode: Docs/Evidence) — Result: ✅ **Phase M5b DESIGN MEMO COMPLETE.** No code changes.
+    Metrics: n/a — design-only analysis.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T232018Z/rotation_fix_design.md` — Detailed φ-rotation parity plan quoting `specs/spec-a-core.md:204-240` and `golden_suite_generator/nanoBragg.c:3042-3210`, with CLAUDE Rules #12/13 compliance checklist, vectorized pipeline, and verification steps.
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T232018Z/commands.txt` — Documentation of design-only loop (no runtime commands executed).
+    Changes: Updated `plans/active/cli-noise-pix0/plan.md` Phase M5b row to [D] with Attempt #194 reference.
+    Observations/Hypotheses:
+      - **Parity gap localized:** Confirmed that PyTorch reciprocal vectors diverge before sincg due to missing per-φ duality recomputation and reversed φ ordering relative to C trace.
+      - **Proposed fix:** Implement batched rotation matrices (`R_phi @ U_mos`), enforce metric duality per φ/mosaic tile (`a_real = (b*_rot × c*_rot) * V_actual`, `a*_final = (b_real × c_real) / V_actual`), and verify against C trace with ≤1e-6 tolerance.
+      - **Housekeeping note:** Identified duplicated evidence tree under `reports/2025-10-cli-flags/phase_l/per_phi/reports/...` from Attempt #189; schedule cleanup during M5d ledger sync.
+    Next Actions:
+      - Ralph to implement the rotation+duality pipeline in `Crystal.get_rotated_real_vectors` (Phase M5c) following the memo, then execute verification plan in M5d/M5e.
   * [2025-10-22] Attempt #186 (ralph loop, Mode: Docs) — Result: ✅ **SUCCESS** (Phase M2 Divergence Analysis COMPLETE). **Documentation-only loop (no code changes).**
     Metrics: Test collection: 2 tests collected successfully in 0.78s (tests/test_cli_scaling_phi0.py); I_before_scaling divergence quantified at -14.6% (C=943654.81, PyTorch=805473.79); F_latt sign flip identified (C=-2.383, PyTorch=+1.379, Δ_rel=+158%); rot_b Y-component error +6.8% (C=0.672 Å, PyTorch=0.717 Å); k_frac shift +3.0% (C=-0.607, PyTorch=-0.589).
     Artifacts:

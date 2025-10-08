@@ -1217,3 +1217,10 @@
 - Synced `docs/fix_plan.md` Next Actions with the new Phase M5 sequence and adjusted M4d guidance to require a parity-green rerun before closure.
 - Authored `input.md` (Mode: Parity) directing Ralph to execute Phase M5a: extend trace harness output, capture enhanced per-φ rot_* traces under `fix_${TS}`, run pytest collect-only, and log artifacts/attempts.
 - Follow-up: Expect enhanced rot_* traces plus updated fix_plan Attempt entry next loop; queue M5b rotation design memo afterward.
+
+## 2025-10-08 (galph loop — Phase M5b design memo)
+- git pull --rebase returned clean; reviewed core docs plus active plans before analysis per SOP.
+- Coin flip = heads: inspected Ralph commits 279b5e0 (enhanced per-φ traces) and 65a9dd2 (reports upload). Evidence loop productive; noted duplicated `reports/2025-10-cli-flags/phase_l/per_phi/reports/...` subtree to address during parity closure.
+- Authored `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T232018Z/rotation_fix_design.md` capturing φ rotation parity plan (Rules #12/#13, C snippet, verification steps).
+- Updated `plans/active/cli-noise-pix0/plan.md` marking M5b [D] with new artifact reference; docs/fix_plan.md Attempt #194 logs design memo + action items for M5c.
+- Replaced `input.md` with Parity-mode instructions directing Ralph to implement M5c (dual-rotation pipeline), rerun compare_scaling_traces, and document results; highlighted nested reports duplication for follow-up.

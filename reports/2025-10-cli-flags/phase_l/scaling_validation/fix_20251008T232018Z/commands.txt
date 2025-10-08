@@ -1,0 +1,2 @@
+# Design-only analysis; no runtime commands executed in this phase.
+# Context: CLI-FLAGS-003 Phase M5b rotation parity design memo.
