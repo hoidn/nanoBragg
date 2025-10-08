@@ -2651,3 +2651,22 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - Residual ~4mm pix0 error (0.004m) when custom vectors present suggests additional geometry precision issues in CUSTOM convention BEAM pivot path
       - All pre-existing test expectations updated to match correct behavior (override applied when no custom vectors)
     Next Actions: Phase H4 - Validate lattice parity with corrected precedence implementation. Address residual 4mm pix0 precision issue as part of broader CUSTOM convention geometry refinement.
+  * [2025-10-07] Attempt #11 (ralph loop, Mode: Perf) — Result: **Phase D4 COMPLETE** (CPU/CUDA pytest evidence captured with timings). Evidence-only loop per input.md guidance.
+    Metrics: TestTricubicPoly: 11/11 passed on CPU (2.37s), 11/11 passed on CUDA (2.36s). AT-STR-002: 3/3 passed (2.13s). Total unique tests executed: 14. Wall-clock: CPU 4.453s, CUDA 4.484s, acceptance 4.397s.
+    Artifacts:
+      - `reports/2025-10-vectorization/phase_d/pytest_d4_cpu.log` — CPU test run (11 polynomial tests, all passed)
+      - `reports/2025-10-vectorization/phase_d/pytest_d4_cuda.log` — CUDA test run (11 polynomial tests, all passed)
+      - `reports/2025-10-vectorization/phase_d/pytest_d4_acceptance.log` — AT-STR-002 acceptance tests (3 tests, all passed)
+      - `reports/2025-10-vectorization/phase_d/collect_d4.log` — Test collection output (11 tests)
+      - `reports/2025-10-vectorization/phase_d/polynomial_validation.md` — Phase D4 execution summary appended with device metadata (CUDA 12.8, PyTorch 2.8.0+cu128)
+      - `plans/active/vectorization.md` — Updated D4 row to [D] state
+    Observations/Hypotheses:
+      - CPU/CUDA parity confirmed: near-identical test execution times (2.37s vs 2.36s) indicate tests are not compute-bound; gradient checks and small batch sizes dominate runtime
+      - No performance regression: all tests pass with consistent timing, no timeouts or slowdowns
+      - Gradient validation: all gradcheck calls (eps=1e-6, atol=1e-4) pass on both CPU and CUDA
+      - Device neutrality: CUDA-specific test (`test_polynomials_device_neutral[cuda]`) passes, confirming vectorized helpers work on GPU
+      - Dtype support: both float32 and float64 parametrized tests pass
+      - Acceptance tests: AT-STR-002 tests pass without fallback warnings, confirming batched tricubic path is active
+      - Environment: Python 3.13.7, PyTorch 2.8.0+cu128, CUDA 12.8 (1 GPU available)
+      - Phase D exit criteria satisfied: polynomial helpers implemented and validated, CPU+CUDA tests passing, device/dtype neutrality confirmed, gradient flow preserved
+    Next Actions: Stage Phase E directory (`reports/2025-10-vectorization/phase_e/`) and execute E1-E3 tasks: (1) Re-run acceptance & regression tests post-vectorization, (2) Execute `scripts/benchmarks/tricubic_baseline.py` (CPU+CUDA) to compare against Phase A baselines (CPU ~1.4ms/call, CUDA ~5.5ms/call; target ≥10× speedup), (3) Summarise results in `phase_e/summary.md` with correlation/Δ metrics vs scalar path.

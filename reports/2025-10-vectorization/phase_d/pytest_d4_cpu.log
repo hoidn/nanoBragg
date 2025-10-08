@@ -1,0 +1,22 @@
+=== Phase D4 CPU Test Run ===
+Start: 2025-10-07 17:38:46
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/myenv/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+collecting ... collected 11 items
+
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polint_matches_scalar_batched PASSED [  9%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polint_gradient_flow PASSED [ 18%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin2_matches_scalar_batched PASSED [ 27%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin2_gradient_flow PASSED [ 36%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin3_matches_scalar_batched PASSED [ 45%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin3_gradient_flow PASSED [ 54%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin3_batch_shape_preserved PASSED [ 63%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_support_float64[dtype0] PASSED [ 72%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_support_float64[dtype1] PASSED [ 81%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_device_neutral[cpu] PASSED [ 90%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_device_neutral[cuda] PASSED [100%]
+
+============================== 11 passed in 2.37s ==============================

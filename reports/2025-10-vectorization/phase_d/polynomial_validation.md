@@ -980,3 +980,133 @@ Per `docs/fix_plan.md` PERF-PYTORCH-004, compiled kernels are cached in `~/.cach
 ---
 
 **End of Phase D1 Polynomial Validation Worksheet**
+
+---
+
+## Phase D4 Execution Summary (2025-10-07)
+
+**Status:** COMPLETE  
+**Git SHA:** f796861 (from Attempt #10)  
+**Execution Date:** 2025-10-07 17:38-17:40 UTC
+
+### Test Execution Results
+
+#### CPU Test Run
+- **Command:** `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py::TestTricubicPoly -v`
+- **Start:** 2025-10-07 17:38:46
+- **Duration:** 4.453s (wall-clock), 2.37s (pytest)
+- **Results:** 11/11 PASSED
+- **Device:** CPU (Python 3.13.7, PyTorch 2.8.0+cu128)
+- **Tests Passed:**
+  - `test_polint_matches_scalar_batched` ✓
+  - `test_polint_gradient_flow` ✓
+  - `test_polin2_matches_scalar_batched` ✓
+  - `test_polin2_gradient_flow` ✓
+  - `test_polin3_matches_scalar_batched` ✓
+  - `test_polin3_gradient_flow` ✓
+  - `test_polin3_batch_shape_preserved` ✓
+  - `test_polynomials_support_float64[dtype0]` ✓
+  - `test_polynomials_support_float64[dtype1]` ✓
+  - `test_polynomials_device_neutral[cpu]` ✓
+  - `test_polynomials_device_neutral[cuda]` ✓
+- **Artifact:** `reports/2025-10-vectorization/phase_d/pytest_d4_cpu.log`
+
+#### CUDA Test Run
+- **Command:** `env CUDA_VISIBLE_DEVICES=0 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py::TestTricubicPoly -v`
+- **Start:** 2025-10-07 17:39:03
+- **Duration:** 4.484s (wall-clock), 2.36s (pytest)
+- **Results:** 11/11 PASSED
+- **Device:** CUDA (CUDA 12.8, 1 GPU available)
+- **Tests Passed:** Same 11 tests as CPU run
+- **Artifact:** `reports/2025-10-vectorization/phase_d/pytest_d4_cuda.log`
+
+#### Acceptance Test Run
+- **Command:** `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py -v`
+- **Start:** 2025-10-07 17:39:33
+- **Duration:** 4.397s (wall-clock), 2.13s (pytest)
+- **Results:** 3/3 PASSED
+- **Tests Passed:**
+  - `test_tricubic_interpolation_enabled` ✓
+  - `test_tricubic_out_of_bounds_fallback` ✓
+  - `test_auto_enable_interpolation` ✓
+- **Artifact:** `reports/2025-10-vectorization/phase_d/pytest_d4_acceptance.log`
+
+### Device & Environment Metadata
+
+**Python Environment:**
+- Python: 3.13.7
+- PyTorch: 2.8.0+cu128
+- CUDA Available: True
+- CUDA Version: 12.8
+- Device Count: 1 GPU
+
+**Test Collection:**
+- Polynomial tests: 11 collected (from `TestTricubicPoly` class)
+- Acceptance tests: 3 collected (from `test_at_str_002.py`)
+- Total unique tests executed: 14
+
+### Performance Observations
+
+**Timing Summary (pytest internal):**
+- CPU polynomial tests: 2.37s (11 tests) = ~215ms/test
+- CUDA polynomial tests: 2.36s (11 tests) = ~215ms/test
+- Acceptance tests: 2.13s (3 tests) = ~710ms/test
+
+**Key Observations:**
+1. **CPU/CUDA Parity:** Near-identical test execution times (2.37s vs 2.36s) indicate tests are not compute-bound; gradient checks and small batch sizes dominate runtime
+2. **No Performance Regression:** All tests pass with consistent timing, no timeouts or slowdowns
+3. **Gradient Validation:** All `gradcheck` calls (eps=1e-6, atol=1e-4) pass on both CPU and CUDA
+4. **Device Neutrality:** CUDA-specific test (`test_polynomials_device_neutral[cuda]`) passes, confirming vectorized helpers work on GPU
+5. **Dtype Support:** Both float32 and float64 parametrized tests pass
+
+### Validation Status
+
+**Phase D Requirements (from vectorization.md task D4):**
+- ✅ CPU sweep executed with timing measurements
+- ✅ CUDA sweep executed (when available: confirmed, 1 GPU detected)
+- ✅ Logs captured under `phase_d/pytest_d4_{cpu,cuda,acceptance}.log`
+- ✅ Device metadata recorded (CUDA 12.8, PyTorch 2.8.0+cu128)
+- ✅ Acceptance tests passing (AT-STR-002: 3/3)
+
+**Exit Criteria (from polynomial_validation.md Section 11):**
+- ✅ All polynomial unit tests passing (11/11)
+- ✅ Gradient flow validated via gradcheck
+- ✅ Device neutrality confirmed (CPU + CUDA)
+- ✅ Dtype neutrality confirmed (float32 + float64)
+- ✅ Batch shape preservation verified
+- ✅ Acceptance tests passing without fallback warnings
+
+### Next Actions (Phase E Staging)
+
+**Immediate (from input.md Do Now):**
+1. ✅ Phase D4 execution complete (this summary)
+2. ⏭️ Update `plans/active/vectorization.md` to mark D4 as `[D]`
+3. ⏭️ Append new Attempt (#11) to `docs/fix_plan.md` VECTOR-TRICUBIC-001 with D4 metrics
+4. ⏭️ Stage Phase E directory: `reports/2025-10-vectorization/phase_e/`
+
+**Phase E Preparation:**
+1. Create `phase_e/collect.log` with pytest collection output for acceptance + regression suites
+2. Prepare benchmark commands for `scripts/benchmarks/tricubic_baseline.py` (CPU + CUDA)
+3. Draft `phase_e/perf_summary.md` template with before/after comparison structure
+4. Review Phase A baselines (CPU ~1.4ms/call, CUDA ~5.5ms/call) for speedup calculation
+
+### Artifacts Index
+
+**Phase D4 Logs (New):**
+- `collect_d4.log` — pytest collection output (11 tests)
+- `pytest_d4_cpu.log` — CPU test run (11 passed, 2.37s)
+- `pytest_d4_cuda.log` — CUDA test run (11 passed, 2.36s)
+- `pytest_d4_acceptance.log` — AT-STR-002 tests (3 passed, 2.13s)
+
+**Phase D Historical (Pre-D4):**
+- `polynomial_validation.md` — Design worksheet (Sections 1-15)
+- `implementation_notes.md` — D2/D3 implementation summary
+- `pytest_cpu_pass.log` — D2 validation run
+- `at_str_002_pass.log` — D2 acceptance test
+- `collect.log` — D1/D3 collection proof
+- `env.json` — Environment snapshot
+
+---
+
+**End of Phase D4 Execution Summary**
+

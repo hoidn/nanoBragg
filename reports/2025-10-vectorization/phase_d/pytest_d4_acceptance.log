@@ -1,0 +1,14 @@
+=== Phase D4 Acceptance Test Run ===
+Start: 2025-10-07 17:39:33
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/myenv/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+collecting ... collected 3 items
+
+tests/test_at_str_002.py::test_tricubic_interpolation_enabled PASSED     [ 33%]
+tests/test_at_str_002.py::test_tricubic_out_of_bounds_fallback PASSED    [ 66%]
+tests/test_at_str_002.py::test_auto_enable_interpolation PASSED          [100%]
+
+============================== 3 passed in 2.13s ===============================
