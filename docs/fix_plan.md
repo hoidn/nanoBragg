@@ -463,11 +463,9 @@
   - ✅ **Phase M1 (COMPLETE)** — Fresh spec-mode baseline captured at `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/` with trace_harness + compare_scaling_traces; test collection verified (2 tests in test_cli_scaling_phi0.py).
   - ✅ **Phase M2 (COMPLETE)** — Analysis bundle complete with quantified F_cell/F_latt/k_frac breakdowns; see Attempt #186 (2025-10-22) — `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/analysis_20251008T212459Z.md` and updated `../20251008T075949Z/lattice_hypotheses.md`.
   - ✅ **Phase M3 (COMPLETE)** — Diagnostic probes complete; see Attempt #187 (2025-10-22). M3a: instrumentation design (`/tmp/m3a_instrumentation_design.md`); M3b: sincg sweep (`20251008T215755Z/phase_m3_probes/sincg_sweep.md`); M3c: single-φ test (`20251008T215634Z/phase_m3_probes/phistep1/`); M3d: rotation audit (`20251008T215700Z/phase_m3_probes/rotation_audit.md`). Root cause: missing normalization (126,000× error) + C-PARITY-001 carryover (+6.8% rot_b).
-  - **Phase M4 (Evidence wrap-up)** — Implementation is merged (Attempts #188–#189, commit `fe3a328`); stay focused on the remaining M4d artifacts per `plans/active/cli-noise-pix0/plan.md`.
-      - Run `scripts/validation/compare_scaling_traces.py` against the supervisor ROI and stash `compare_scaling_traces.{txt,json}` under `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/`.
-      - Update `reports/2025-10-cli-flags/phase_l/scaling_validation/lattice_hypotheses.md` with a Hypothesis H4 closure entry referencing the new metrics.
-      - Extend the bundle with `diff_trace.md` summarising the post-fix trace comparison (confirm `first_divergence = None`) and refresh `sha256.txt` afterward.
-  - **Phase M5–M6 (OPEN)** — Re-run CUDA + gradcheck smoke, then sync ledgers/documentation before advancing to nb-compare (Phase N).
+  - **Phase M4 (Evidence wrap-up)** — Attempts #188–#190 landed the normalization fix and captured a divergent post-fix bundle. Keep row M4d [P] until a rerun after the φ-rotation fix produces `compare_scaling_traces.md` + `compare_scaling_traces.txt`, refreshed `metrics.json/run_metadata.json` with `first_divergence=None`, an updated `lattice_hypotheses.md` (H4 closure), and a new `sha256.txt` covering all files.
+  - **Phase M5 (φ rotation realignment)** — Newly documented in `plans/active/cli-noise-pix0/plan.md`. Sequence: (M5a) enhanced per-φ trace capture, (M5b) rotation parity design memo quoting `specs/spec-a-core.md:204-240` and `nanoBragg.c:3042-3095`, (M5c) implement the per-φ real/reciprocal recompute with CLAUDE Rule #11 docstrings, (M5d) rerun `compare_scaling_traces.py` to achieve `first_divergence=None`, (M5e) targeted pytest on CPU + CUDA. Store artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/` and log the attempt in this ledger.
+  - **Phase M6 (CUDA + gradcheck follow-through)** — Defer until M5 closes; will cover CUDA smoke, gradcheck harness, and ledger/doc sync before nb-compare (Phase N).
 
 - Attempts History:
   * [2025-10-08] Attempt #190 (ralph loop i=190, Mode: Parity/Docs) — Result: ⚠️ **M4d EVIDENCE CAPTURED / DIVERGENCE PERSISTS.** **Documentation-only loop.**
@@ -502,8 +500,8 @@
       - At the time of Attempt #192, PyTorch divided by `steps` twice (once in `normalized_intensity`, once in `physical_intensity`), creating the −14.6% I_before_scaling deficit logged in Phase M1.
       - Attempts #188–#189 patched the simulator and refreshed targeted pytest logs; only the M4d reporting tasks remain outstanding.
     Next Actions:
-      - Phase M4d: Produce the compare_scaling_traces outputs + diff summary noted above, then update `lattice_hypotheses.md` with the closure narrative.
-      - Phase M5: Rerun targeted tests on CUDA and the gradcheck harness once Phase M4d artifacts are in place.
+      - Phase M4d: On the next parity-green run, rerun `compare_scaling_traces.py` capturing both markdown + tee'd stdout, update `lattice_hypotheses.md`, and refresh `sha256.txt` per plan row M4d.
+      - Phase M5: Follow new plan rows M5a–M5e (instrumentation capture → design memo → rotation fix implementation → compare_scaling_traces rerun → targeted pytest CPU/CUDA) before advancing to CUDA/gradcheck hygiene in Phase M6.
   * [2025-10-22] Attempt #186 (ralph loop, Mode: Docs) — Result: ✅ **SUCCESS** (Phase M2 Divergence Analysis COMPLETE). **Documentation-only loop (no code changes).**
     Metrics: Test collection: 2 tests collected successfully in 0.78s (tests/test_cli_scaling_phi0.py); I_before_scaling divergence quantified at -14.6% (C=943654.81, PyTorch=805473.79); F_latt sign flip identified (C=-2.383, PyTorch=+1.379, Δ_rel=+158%); rot_b Y-component error +6.8% (C=0.672 Å, PyTorch=0.717 Å); k_frac shift +3.0% (C=-0.607, PyTorch=-0.589).
     Artifacts:

@@ -1209,3 +1209,11 @@
 - Updated `plans/active/cli-noise-pix0/plan.md` (M4a marked [D]) and logged CLI-FLAGS-003 Attempt #192 in `docs/fix_plan.md`, reopening M4b–M4d with explicit normalization fix guidance.
 - Rewrote `input.md` (Mode: Parity) steering Ralph to land the single-division normalization fix, rerun targeted pytest + compare_scaling_traces, and publish a fix_<timestamp> bundle.
 - Follow-up next loop: verify the new Phase M4 evidence bundle, then schedule CUDA/gradcheck work for Phase M5 before moving to nb-compare.
+
+## 2025-12-18 (galph loop — Phase M5a instrumentation kickoff)
+- Git pull --rebase returned "Already up to date"; repo clean before edits.
+- Coin flip = heads: reviewed recent Ralph commit 65a9dd2 (reports-only) — normalization evidence captured, no regressions.
+- Updated `plans/active/cli-noise-pix0/plan.md` by clarifying M4d [P] requirements and introducing Phase M5 (M5a–M5e) for φ-rotation realignment.
+- Synced `docs/fix_plan.md` Next Actions with the new Phase M5 sequence and adjusted M4d guidance to require a parity-green rerun before closure.
+- Authored `input.md` (Mode: Parity) directing Ralph to execute Phase M5a: extend trace harness output, capture enhanced per-φ rot_* traces under `fix_${TS}`, run pytest collect-only, and log artifacts/attempts.
+- Follow-up: Expect enhanced rot_* traces plus updated fix_plan Attempt entry next loop; queue M5b rotation design memo afterward.
