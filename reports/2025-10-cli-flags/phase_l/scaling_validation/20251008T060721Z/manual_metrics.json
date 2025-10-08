@@ -1,0 +1,101 @@
+{
+  "timestamp": "2025-10-08T06:09:38.540491+00:00",
+  "metrics": {
+    "hkl_frac": {
+      "description": "Fractional HKL (h component shown)",
+      "c_value": -6.8795206024501,
+      "py_value": -6.87953496259686,
+      "delta": -1.4360146759706538e-05,
+      "relative_delta": 2.087376081785736e-06,
+      "status": "delta"
+    },
+    "F_latt_a": {
+      "description": "Lattice factor along a",
+      "c_value": -2.36012735995387,
+      "py_value": -2.35819512010207,
+      "delta": 0.0019322398518002437,
+      "relative_delta": -0.0008187015178019928,
+      "status": "delta"
+    },
+    "F_latt_b": {
+      "description": "Lattice factor along b",
+      "c_value": 1.05079664302326,
+      "py_value": 1.05066739326683,
+      "delta": -0.00012924975643002767,
+      "relative_delta": -0.00012300168380645145,
+      "status": "delta"
+    },
+    "F_latt_c": {
+      "description": "Lattice factor along c",
+      "c_value": 0.960961003611676,
+      "py_value": 0.960630659359605,
+      "delta": -0.00033034425207101314,
+      "relative_delta": -0.0003437644720539619,
+      "status": "delta"
+    },
+    "F_latt": {
+      "description": "Composite lattice factor",
+      "c_value": -2.38319665299058,
+      "py_value": -2.38013414214076,
+      "delta": 0.0030625108498201215,
+      "relative_delta": -0.0012850432825075918,
+      "status": "delta"
+    },
+    "F_cell": {
+      "description": "Structure factor amplitude",
+      "c_value": 190.27,
+      "py_value": 190.27,
+      "delta": 0.0,
+      "relative_delta": 0.0,
+      "status": "OK"
+    },
+    "I_before_scaling": {
+      "description": "Accumulated intensity before scaling (C pre-polar vs Py pre-polar)",
+      "c_value": 943654.80923755,
+      "py_value": 941686.235979475,
+      "delta": -1968.5732580750482,
+      "relative_delta": -0.0020861158538105764,
+      "status": "delta"
+    },
+    "polar": {
+      "description": "Polarization factor",
+      "c_value": 0.91463969894451,
+      "py_value": 0.914639662310613,
+      "delta": -3.663389702701636e-08,
+      "relative_delta": -4.00528175950505e-08,
+      "status": "OK"
+    },
+    "omega_pixel_sr": {
+      "description": "Solid angle (steradians)",
+      "c_value": 4.20412684465831e-07,
+      "py_value": 4.2041248179768e-07,
+      "delta": -2.0266815101533888e-13,
+      "relative_delta": -4.820695438170366e-07,
+      "status": "OK"
+    },
+    "capture_fraction": {
+      "description": "Detector capture fraction",
+      "c_value": 1.0,
+      "py_value": 1.0,
+      "delta": 0.0,
+      "relative_delta": 0.0,
+      "status": "OK"
+    },
+    "steps": {
+      "description": "Normalization divisor",
+      "c_value": 10.0,
+      "py_value": 10.0,
+      "delta": 0.0,
+      "relative_delta": 0.0,
+      "status": "OK"
+    },
+    "fluence_photons_per_m2": {
+      "description": "Incident fluence",
+      "c_value": 1e+24,
+      "py_value": 1e+24,
+      "delta": 0.0,
+      "relative_delta": 0.0,
+      "status": "OK"
+    }
+  }
+}
