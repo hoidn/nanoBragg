@@ -1,0 +1,44 @@
+Phase M3c: Single-φ Parity Experiment
+======================================
+
+Date: 2025-10-08
+Timestamp: 20251008T215634Z
+
+Purpose
+-------
+Isolate rotation vs accumulation effects by running supervisor command with:
+- phisteps=1 (single rotation step instead of 10)
+- osc=0 (no oscillation instead of 0.1)
+
+This experiment tests whether the F_latt sign flip observed in full simulation
+(PyTorch +1.379 vs C -2.383) is due to:
+a) Rotation matrix construction error (would persist with single step)
+b) φ-step accumulation logic error (would disappear with single step)
+
+Target Pixel
+------------
+ROI pixel: (685, 1039) - the pixel showing maximum divergence in prior analysis
+
+Key Variables to Compare
+------------------------
+- F_latt: Lattice structure factor amplitude
+- k_frac: Fractional Miller index k (related to lattice spacing)
+- Rotation matrix values (from traces)
+- I_before_scaling: Pre-scaling intensity
+
+Expected Outcomes
+-----------------
+If error is in rotation matrix:
+  → Sign flip will persist even with phisteps=1
+
+If error is in accumulation:
+  → phisteps=1 will show agreement or reduced divergence
+
+Files Generated
+---------------
+- /tmp/c_phistep1.bin: C reference float image
+- /tmp/py_phistep1.bin: PyTorch float image
+- /tmp/c_phistep1_trace.log: C trace log (TRACE_C lines)
+- /tmp/py_phistep1_trace.log: PyTorch trace log (TRACE_PY lines)
+- comparison_results.txt: Pixel intensity comparison
+- summary.md: Analysis and interpretation

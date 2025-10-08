@@ -1,0 +1,15 @@
+Running simulation...
+  Detector: 2463x2527 pixels
+  Crystal: 26.8x31.3x33.7 Å
+  Wavelength: 0.98 Å
+  Device: cpu, Dtype: torch.float32
+  Convention: CUSTOM (using custom detector basis vectors)
+
+Statistics:
+  Max intensity: 6.904e+07 at pixel (1039, 685)
+  Mean: 1.334e+02
+  RMS: 4.391e+04
+  RMSD: 4.391e+04
+Wrote float image to /tmp/py_phistep1.bin
+
+Simulation complete.

@@ -1,0 +1,26 @@
+Reading C reference image...
+Total floats read: 6224001
+C image shape: (2527, 2463)
+C image stats: min=0.000000e+00, max=5.480479e+02, mean=1.059360e-03
+
+Reading PyTorch image...
+Total floats read: 6224001
+PyTorch image shape: (2527, 2463)
+PyTorch image stats: min=0.000000e+00, max=6.903750e+07, mean=1.334194e+02
+
+=== Pixel (685, 1039) Comparison ===
+C value:       2.111535e-07
+PyTorch value: 2.648173e-02
+Ratio (Py/C):  125414.562500
+Difference:    2.648151e-02
+Rel. diff:     12541357.00%
+
+PyTorch max pixel: (np.int64(1039), np.int64(685)), value: 6.903750e+07
+C max pixel: (np.int64(1039), np.int64(685)), value: 5.480479e+02
+
+=== Image-wide Statistics ===
+Max absolute difference: 6.903695e+07
+Mean absolute difference: 1.334183e+02
+Max relative difference: 1.797483e+07
+Mean relative difference: 1.259846e+05
+Correlation coefficient: 0.999999342477
