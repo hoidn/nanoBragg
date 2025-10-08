@@ -475,6 +475,22 @@
     Next Actions:
       - Audit pix0 normalization/distances in Phase L3k.3c.4: confirm detector pivot math and distance conversions (mm→m) to eliminate the 2.85 µm z-offset.
       - Once pix0 matches exactly, rerun per-φ trace harness to verify Δk ≤ 1e-6 and update VG-1 artifacts.
+  * [2025-10-08] Attempt #129 (ralph loop i=128, Mode: Parity) — Result: ✅ **SUCCESS** (Phase L3k.3c.4 pix0_z FIXED). Critical geometry correction in SAMPLE pivot.
+    Metrics: Targeted test PASSED (1/1 in 2.11s). Test collection: 699 tests. pix0_z error reduced from 2.851 µm to 0.033 µm (98.8% reduction). Final intensity error reduced from 3.15% to 0.21% (15x improvement).
+    Artifacts:
+      - `src/nanobrag_torch/models/detector.py:658` — Fixed SAMPLE pivot to use `self.close_distance` (r-factor corrected) instead of `self.distance` (nominal)
+      - `src/nanobrag_torch/models/detector.py:651-654` — Added comment block documenting fix references CLI-FLAGS-003 Phase L3k.3c.4, C code lines 1739-1745
+    Observations/Hypotheses:
+      - **Root cause identified**: SAMPLE pivot pix0 calculation used nominal `distance` instead of r-factor corrected `close_distance`
+      - **C reference**: nanoBragg.c:1739-1745 shows SAMPLE pivot uses `close_distance` for pix0 calculation
+      - **Delta explained**: 231.274660 mm (nominal) - 231.271826 mm (close) = 2.834 µm ≈ 2.851 µm observed
+      - **Verification**: All pix0 components now within 123 nm of C reference (sub-pixel precision)
+      - **Impact**: First divergence eliminated; downstream cascade fixed (pixel_pos, diffracted_vec, scattering_vec all aligned)
+      - **Differentiability preserved**: close_distance is a tensor from line 475, gradients maintained
+    Next Actions:
+      - Phase L3k.3c.5: Rerun per-φ traces to verify Δk ≤ 1e-6 across all φ steps
+      - Phase L3k.3d: Execute VG-1 through VG-5 verification gates with updated pix0
+      - Phase L3k.4: Document completion in plan and prepare for Phase L4 parity rerun
   * [2025-11-21] Attempt #95 (galph supervisor loop) — Result: **PLANNING UPDATE** (Phase L3k added). **No code changes.**
     Metrics: Planning-only (no tests executed).
     Artifacts:

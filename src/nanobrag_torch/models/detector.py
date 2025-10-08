@@ -648,10 +648,14 @@ class Detector:
 
             # Compute pix0 BEFORE rotations using close_distance if specified
             # When close_distance is provided, use it directly for SAMPLE pivot
+            # CLI-FLAGS-003 Phase L3k.3c.4: CRITICAL FIX - use close_distance not distance
+            # C code (nanoBragg.c:1739-1745) uses close_distance for SAMPLE pivot pix0 calc
+            # close_distance is r-factor corrected (set at line 475 above)
+            # Using nominal self.distance causes 2.85µm pix0_z error
             if hasattr(self.config, 'close_distance_mm') and self.config.close_distance_mm is not None:
                 initial_distance = self.config.close_distance_mm / 1000.0  # Convert mm to meters
             else:
-                initial_distance = self.distance  # Use nominal distance
+                initial_distance = self.close_distance  # Use r-factor corrected close_distance
 
             pix0_initial = (
                 -Fclose * fdet_initial
