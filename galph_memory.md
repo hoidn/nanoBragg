@@ -1136,3 +1136,9 @@
 - Expanded `plans/active/phi-carryover-removal/plan.md` Phase D/E sections with concrete D1a–D1c checklist items (trace harness command, pytest proof, rg sweep) and optional watch tasks; refreshed `docs/fix_plan.md:451-467` Next Actions to point at the new checklist.
 - Replaced `input.md` (Mode: Parity) instructing Ralph to execute Phase D1a spec-mode trace runs, gather targeted pytest evidence, collect the `rg` scan, and stash artifacts under `reports/2025-10-cli-flags/phase_phi_removal/phase_d/${STAMP}/`.
 - Follow-up: Expect Ralph to produce the Phase D bundle next loop, update fix_plan Attempts with the timestamped directory, and prepare for D2 ledger sync.
+
+## 2025-12-14 (galph loop — Phase D harness unblock)
+- Git synced clean (feature/spec-based-2 up to date) and reviewed Attempt #181 blocker before planning.
+- Updated `plans/active/phi-carryover-removal/plan.md` Phase D with new row D0 requiring the trace harness to drop `phi_carryover_mode` plumbing; refreshed `docs/fix_plan.md` and `plans/active/cli-noise-pix0/plan.md` next actions to point Ralph at D0→D1 sequence.
+- Rewrote `input.md` (Mode: Parity) directing Ralph to patch the harness, rerun Py/C traces into a fresh Phase D timestamp, execute `pytest -v tests/test_cli_scaling_phi0.py`, and capture the ``rg "phi_carryover"`` sweep.
+- Follow-up: expect Ralph to land the harness edit, produce the Phase D artifact bundle, and then update ledger entries before we pivot back to the scaling parity work.

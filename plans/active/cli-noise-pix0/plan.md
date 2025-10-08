@@ -27,9 +27,11 @@
   - Supervisor command / nb-compare parity remains outstanding (correlation ≈0.9965, intensity ratio ≈1.26e5) pending VG-2 closure.
 - New evidence (Attempt #171, 2025-10-08): `reports/2025-10-cli-flags/phase_l/trace_tooling_patch/20251008T175913Z/` confirms cache-aware trace taps on CPU+CUDA; M2g.5 is complete and clears the tooling blocker.
 - Next Actions (2025-12-14 refresh):
-1. **Phase C1 coverage audit** — Revisit `tests/test_cli_scaling_phi0.py` to ensure spec-mode assertions capture the parity guarantees formerly guarded by `tests/test_phi_carryover_mode.py`; document gaps and rerun `pytest --collect-only -q tests/test_cli_scaling_phi0.py` with logs under `reports/2025-10-cli-flags/phase_phi_removal/phase_c/<ts>/`.
-2. **Phase C2 docs ledger update** — Amend `docs/bugs/verified_c_bugs.md` C-PARITY-001 entry and related diagnosis notes to emphasise the bug remains C-only; capture diff summary + commands in the Phase C artifact directory.
-3. **Phase C3 tooling/docs cleanup** — Sweep `docs/development/testing_strategy.md`, `reports/2025-10-cli-flags/phase_l/diagnosis.md`, and prompts for residual c-parity instructions; update them to reference spec-only flow and log changes in Phase C bundle.
+1. ~~**Phase C1 coverage audit** — Revisit `tests/test_cli_scaling_phi0.py` to ensure spec-mode assertions capture the parity guarantees formerly guarded by `tests/test_phi_carryover_mode.py`; document gaps and rerun `pytest --collect-only -q tests/test_cli_scaling_phi0.py` with logs under `reports/2025-10-cli-flags/phase_phi_removal/phase_c/<ts>/`.~~
+2. ~~**Phase C2 docs ledger update** — Amend `docs/bugs/verified_c_bugs.md` C-PARITY-001 entry and related diagnosis notes to emphasise the bug remains C-only; capture diff summary + commands in the Phase C artifact directory.~~
+3. ~~**Phase C3 tooling/docs cleanup** — Sweep `docs/development/testing_strategy.md`, `reports/2025-10-cli-flags/phase_l/diagnosis.md`, and prompts for residual c-parity instructions; update them to reference spec-only flow and log changes in Phase C bundle.~~
+4. **Phase D0 trace-harness refresh** — Remove legacy `phi_carryover_mode` CLI arguments from `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py` per Attempt #181 so Phase D runs can execute without TypeErrors.
+5. **Phase D1 proof-of-removal bundle** — Re-run the refreshed harness (Py + C traces), capture targeted `pytest -v tests/test_cli_scaling_phi0.py`, and store the zero-result `rg "phi_carryover"` sweep under a new Phase D timestamp directory.
 - Artifact Storage Convention: place new work in `reports/2025-10-cli-flags/phase_l/<phase_folder>/<timestamp>/` with `commands.txt`, raw logs, metrics JSON, and SHA256 hashes. Reference these paths in docs/fix_plan.md attempt logs and `fix_checklist.md`.
 
 ### Completed Foundations (Phases A–K)
