@@ -1195,3 +1195,10 @@
 - Refreshed `docs/fix_plan.md:461-468` Next Actions bullet to reference the checklist and fix_<timestamp> artifact bundle requirements.
 - Authored new `input.md` (Mode: Parity) instructing Ralph to execute M4a–M4d, run targeted pytest + compare_scaling_traces commands, and store artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/`.
 - Follow-up for Ralph: implement the normalization division in `src/nanobrag_torch/simulator.py` with required `nanoBragg.c` snippet, extend per-φ logging, regenerate traces, update fix_plan/plan entries, then advance to Phase M5 after evidence is green.
+
+## 2025-12-16 (galph loop — Phase M4 normalization planning)
+- Git sync remained clean; revisited core spec/arch/testing docs plus active plans per SOP.
+- Authored Phase M4a design memo (`reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T223046Z/design_memo.md`) confirming Attempt #188’s double `/ steps` regression and restating the C contract.
+- Updated `plans/active/cli-noise-pix0/plan.md` (M4a marked [D]) and logged CLI-FLAGS-003 Attempt #192 in `docs/fix_plan.md`, reopening M4b–M4d with explicit normalization fix guidance.
+- Rewrote `input.md` (Mode: Parity) steering Ralph to land the single-division normalization fix, rerun targeted pytest + compare_scaling_traces, and publish a fix_<timestamp> bundle.
+- Follow-up next loop: verify the new Phase M4 evidence bundle, then schedule CUDA/gradcheck work for Phase M5 before moving to nb-compare.
