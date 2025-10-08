@@ -2965,7 +2965,26 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       2. Phase B3 — create `summary.md` with grouped diagnostics (blockers vs style) and file:line anchors
       3. Phase C — triage findings, classify as blocker/high/medium/defer, map to pytest selectors
       4. Phase D — update input.md with ranked fix batch for Ralph
-- Risks/Assumptions: None for Phase A evidence collection; future phases may reveal violations requiring architectural decisions
+  * [2025-10-08] Attempt #2 — Phase B Complete (ralph). Result: success.
+    Metrics: 78 errors detected across 8 files. Exit code: 1. No code changes made (evidence-only Mode: Docs loop).
+    Artifacts:
+      - `reports/pyrefly/20251008T053652Z/pyrefly.log` — Full pyrefly output (78 errors, 3 ignored)
+      - `reports/pyrefly/20251008T053652Z/env.json` — Environment snapshot (Python 3.13.7, pyrefly 0.35.0, git 8ca885f)
+      - `reports/pyrefly/20251008T053652Z/summary.md` — Comprehensive analysis with severity grouping, file:line anchors, and fix recommendations
+      - `reports/pyrefly/20251008T053652Z/README.md` — Updated with Phase B results
+      - `reports/pyrefly/20251008T053652Z/commands.txt` — Updated with Phase B command and exit status
+    Observations/Hypotheses:
+      - Top violation clusters: unsupported-operation (29), bad-argument-type (26), read-only (8), missing-attribute (7)
+      - Critical blockers: None-safety violations in detector.py and simulator.py (division/arithmetic on potential None values)
+      - Design decisions needed: Tensor vs scalar boundary enforcement (26 errors); device property pattern alignment (8 errors)
+      - Potential false positives: Tensor `**` operations flagged by pyrefly (13 errors); runtime tests may prove these valid
+      - Most affected files: simulator.py (36 errors), detector.py (17 errors), __main__.py (14 errors)
+    Next Actions (galph supervision):
+      1. Phase C (C1–C3) — Classify all 78 findings as blocker/high/medium/defer; map to pytest selectors; update summary.md with owner assignments
+      2. Phase D (D1–D3) — Prepare input.md Do Now with top 2–3 blocker fixes for Ralph; include exact file:line references and reproduction commands
+      3. Post-Phase-C — Archive summary.md classification table to fix_plan for quick reference; link from STATIC-PYREFLY-001 header
+      4. Future — After Ralph fixes first batch, execute Phase E validation run to measure progress and detect regressions
+- Risks/Assumptions: None-safety and type boundary violations may surface during runtime; some errors might be masked by existing tests not exercising all code paths
 
 ## [SOURCE-WEIGHT-001] Correct weighted source normalization
 - Spec/AT: `specs/spec-a-core.md` §5 (Source intensity), `docs/architecture/pytorch_design.md` §2.3, `docs/development/c_to_pytorch_config_map.md` (flux/fluence), nanoBragg.c lines 2480-2595 (source weighting loop).
