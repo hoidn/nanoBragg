@@ -1,0 +1,15 @@
+Command executed:
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 684 1039 --out trace_py.log --config supervisor --phi-mode c-parity --dtype float64 --device cpu --emit-rot-stars
+
+Git commit:
+24062dbfb38324abe8068261b6337ed31e493c1a
+
+Timestamp:
+2025-10-08T17:27:21Z
+
+ROI: 684-686 x 1039-1040 (selected pixel: 684, 1039)
+Config: supervisor
+Phi mode: c-parity
+Dtype: float64
+Device: cpu
+Additional flags: --emit-rot-stars

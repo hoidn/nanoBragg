@@ -1,0 +1,23 @@
+Trace Capture Observations
+===========================
+
+Execution Summary:
+- Harness ran successfully for pixel (684, 1039)
+- Captured 124 TRACE_PY lines in main trace
+- Captured 10 TRACE_PY_PHI lines in per-phi trace
+- Final intensity: 4.06016057371301e-07
+
+Warnings Noted:
+- datetime.utcnow() deprecation warnings (harmless, cosmetic)
+- torch.tensor() copy construct warnings (harmless, can be suppressed)
+
+Output Files:
+- trace_py.log: Main trace log with 124 lines
+- trace_py_per_phi.log: Per-phi trace with 10 lines (one per phi step)
+- trace_harness_stdout.txt: Full stdout capture including warnings
+
+Next Actions Per input.md:
+- Compare against C trace (if available)
+- Generate trace_diff.md via capture_live_trace.py
+- Create metrics.json with first_divergence, F_latt values, runtime
+- Update docs/fix_plan.md Attempt #167+ entry

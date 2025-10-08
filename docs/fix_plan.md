@@ -3702,3 +3702,34 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - Execute M2i.1 cross-pixel trace rerun and refresh metrics under a new `carryover_probe/<timestamp>/`.
       - Patch cache-aware trace taps (M2g.5) before running nb-compare or supervisor parity commands.
 
+  * [2025-10-08] Attempt #168 (ralph loop i=167, Mode: Parity) — Result: **M2i.1 SUCCESS** (Cross-pixel trace evidence captured). **No code changes.**
+    Metrics:
+      - Trace harness executed successfully for pixel (684, 1039)
+      - Captured 124 TRACE_PY lines + 10 TRACE_PY_PHI lines
+      - Final intensity: 4.06016057371301e-07
+      - F_latt components: a=1.734, b=0.092, c=1.472, product=0.234
+      - Test collection: not run (evidence-only per input.md)
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/carryover_probe/20251008T172721Z/trace_py.log` — Main PyTorch trace (124 lines)
+      - `.../trace_py_per_phi.log` — Per-φ rotated vectors trace (10 lines)
+      - `.../trace_harness_stdout.txt` — Full harness execution log
+      - `.../metrics.json` — Structured metrics with F_latt, F_cell, hkl values
+      - `.../commands.txt` — Exact reproduction command with git SHA 24062dbfb
+      - `.../env.json` — Environment metadata (Python 3.13.7, PyTorch 2.5.1)
+      - `.../cpu_info.txt` — Hardware specs
+      - `.../observations.txt` — Analysis notes
+      - `.../README.md` — Evidence bundle summary
+      - `.../sha256.txt` — Artifact integrity checksums (10 files)
+    Observations/Hypotheses:
+      - Harness ran cleanly with c-parity mode, float64, CPU device
+      - Per-φ trace with `--emit-rot-stars` captured rotated real-space vectors for all 10 φ steps
+      - Deprecation warnings (datetime.utcnow, torch.tensor copy) noted as cosmetic only
+      - Evidence directory follows input.md Step 5 bundle structure
+      - Ready for M2i.2 metrics refresh and C trace comparison
+    Next Actions:
+      - M2i.2: Generate trace_diff.md via capture_live_trace.py comparing against C trace
+      - M2i.2: Extract first_divergence from comparison and update metrics.json
+      - M2i.2: Compare F_latt values against baseline to confirm Option B cache effectiveness
+      - M2g.5: Patch cache-aware trace taps for omega/F_latt to prevent CUDA IndexError
+      - Phase M3: Once first_divergence analysis complete, proceed to scaling comparison rerun
+

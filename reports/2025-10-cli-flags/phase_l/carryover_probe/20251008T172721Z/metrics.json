@@ -1,0 +1,28 @@
+{
+  "timestamp": "2025-10-08T17:27:21Z",
+  "git_commit": "24062dbfb38324abe8068261b6337ed31e493c1a",
+  "pixel": [684, 1039],
+  "config": "supervisor",
+  "phi_mode": "c-parity",
+  "dtype": "float64",
+  "device": "cpu",
+  "trace_lines_captured": {
+    "main": 124,
+    "per_phi": 10
+  },
+  "final_intensity": 4.06016057371301e-07,
+  "F_latt": {
+    "a": 1.73448535780185,
+    "b": 0.0915914157955099,
+    "c": 1.47213575671105,
+    "product": 0.233869330097763
+  },
+  "F_cell": {
+    "interpolated": 157.023706357028,
+    "nearest": 190.27
+  },
+  "hkl_rounded": [-7, -1, -14],
+  "first_divergence": "TBD - requires C trace comparison",
+  "runtime_notes": "Deprecation warnings present (cosmetic only)",
+  "validation_status": "trace_captured"
+}
