@@ -1,5 +1,0 @@
-Updating 4ae5625..4be174b
-error: The following untracked working tree files would be overwritten by merge:
-	scaled.hkl
-Please move or remove them before you merge.
-Aborting

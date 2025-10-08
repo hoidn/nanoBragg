@@ -133,9 +133,10 @@ Notes:
   - Reports auto-commit (publishes Galph's evidence by file type)
     - `--auto-commit-reports` / `--no-auto-commit-reports` (default: on)
     - `--report-extensions ".png,.jpeg,.npy,.txt,.md,.json,.log"` — allowed file types (logs included)
+    - `--report-path-globs "glob1,glob2"` — optional glob allowlist (default allows any path); logs/`tmp/` are always skipped
     - `--max-report-file-bytes N` (default 5 MiB) · `--max-report-total-bytes N` (default 20 MiB)
     - `--force-add-reports` (default: on) — force-add files even if ignored by .gitignore
-    - Notes: stamp-first handoff ensures reports + state publish together; adjust caps/extension list as needed for your workflow.
+    - Notes: stamp-first handoff ensures reports + state publish together; adjust caps/extension list / path globs as needed for your workflow.
   - `--prepull-auto-commit-docs` / `--no-prepull-auto-commit-docs` (default: on)
     - If the initial git pull fails (e.g., due to local modified doc/meta files), supervisor will attempt a doc/meta whitelist auto‑commit first, then retry the pull.
     - If non‑whitelisted dirty files are present, the supervisor exits with a clear error (prevents accidental commits of code/large files).
@@ -145,9 +146,10 @@ Notes:
   - Reports auto-commit (publishes Ralph's evidence by file type)
     - `--auto-commit-reports` / `--no-auto-commit-reports` (default: on)
     - `--report-extensions ".png,.jpeg,.npy,.log,.txt,.md,.json"` — allowed file types
+    - `--report-path-globs "glob1,glob2"` — optional glob allowlist (default allows any path); logs/`tmp/` are always skipped
     - `--max-report-file-bytes N` (default 5 MiB) · `--max-report-total-bytes N` (default 20 MiB)
     - `--force-add-reports` (default: on) — force-add files even if ignored by .gitignore
-    - Notes: stamp-first handoff ensures reports + state publish together; logs are allowed by extension here, but size caps apply to avoid bloat.
+    - Notes: stamp-first handoff ensures reports + state publish together; adjust caps/extension list / path globs as needed for your workflow.
 
 ## Troubleshooting
 - Pull failures: both orchestrators now fail fast on git pull errors (including untracked‑file or local‑modification collisions). Read the console/log message, resolve locally (commit/stash/move), and rerun.

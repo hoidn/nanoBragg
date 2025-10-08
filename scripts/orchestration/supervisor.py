@@ -96,15 +96,24 @@ def main() -> int:
     ap.add_argument("--no-force-add-reports", dest="force_add_reports", action="store_false",
                     help="Do not force-add ignored report files")
     ap.set_defaults(force_add_reports=True)
+    ap.add_argument("--report-path-globs", type=str,
+                    default=os.getenv("SUPERVISOR_REPORT_PATH_GLOBS", ""),
+                    help="Comma-separated glob allowlist for report auto-commit paths (default: none)")
     args, unknown = ap.parse_known_args()
 
+    report_path_globs = tuple(p.strip() for p in args.report_path_globs.split(',') if p.strip())
     logdir_prefix_parts = tuple(part for part in PurePath(args.logdir).parts if part not in {"", "."})
 
+    def _within(parts: tuple[str, ...], prefix: tuple[str, ...]) -> bool:
+        return bool(prefix) and parts[:len(prefix)] == prefix
+
     def _skip_reports(path: str) -> bool:
-        if not logdir_prefix_parts:
-            return False
         parts = PurePath(path).parts
-        return parts[:len(logdir_prefix_parts)] == logdir_prefix_parts
+        if _within(parts, logdir_prefix_parts):
+            return True
+        if parts and parts[0] == "tmp":
+            return True
+        return False
 
     # Helpers shared by pre-pull and post-run auto-commit paths
     def _list(cmd: list[str]) -> list[str]:
@@ -312,6 +321,7 @@ def main() -> int:
                 logger=logp,
                 commit_message_prefix="SUPERVISOR AUTO: reports evidence — tests: not run",
                 skip_predicate=_skip_reports,
+                allowed_path_globs=report_path_globs,
             )
 
         # Determine post-run success without early-returning

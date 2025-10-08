@@ -1,5 +1,0 @@
-From github.com:hoidn/nanoBragg
-   786dddb..e6bf956  feature/spec-based-2 -> origin/feature/spec-based-2
-Rebasing (1/1)
-
-[KSuccessfully rebased and updated refs/heads/feature/spec-based-2.

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from subprocess import run, PIPE
+from pathlib import PurePosixPath
 from typing import Callable, Iterable, Tuple, List, Set, Optional
 
 
@@ -36,14 +37,16 @@ def autocommit_reports(
     logger: Callable[[str], None],
     commit_message_prefix: str = "AUTO: reports evidence — tests: not run",
     skip_predicate: Optional[Callable[[str], bool]] = None,
+    allowed_path_globs: Optional[Iterable[str]] = None,
 ) -> Tuple[bool, List[str], List[str]]:
     """
     Stage and commit report-like artifacts filtered by extension and size caps.
     The optional skip_predicate can suppress specific paths from staging.
     Returns (committed, staged_paths, skipped_paths).
     """
-    # Normalize extensions
+    # Normalize extensions and path allowlist
     allowed_exts = {e.lower() for e in allowed_extensions}
+    path_globs: Tuple[str, ...] = tuple(g for g in (allowed_path_globs or []) if g)
     unstaged_mod, staged_mod, untracked, ignored_untracked = list_dirty_paths(include_ignored_untracked=force_add)
     dirty_all: List[str] = []
     seen: Set[str] = set()
@@ -57,6 +60,11 @@ def autocommit_reports(
     total_bytes = 0
 
     for p in dirty_all:
+        if path_globs:
+            posix_path = PurePosixPath(p)
+            if not any(posix_path.match(glob) for glob in path_globs):
+                skipped.append(p)
+                continue
         if skip_predicate and skip_predicate(p):
             skipped.append(p)
             continue
