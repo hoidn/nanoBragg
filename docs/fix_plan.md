@@ -2940,20 +2940,32 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 
 ---
 
+## [STATIC-PYREFLY-001] Run pyrefly analysis and triage
 - Spec/AT: `prompts/pyrefly.md` (static-analysis SOP), `prompts/supervisor.md` (pyrefly directive), `docs/development/testing_strategy.md` §1.5 (command sourcing), `pyproject.toml` `[tool.pyrefly]` configuration.
 - Priority: Medium
 - Status: in_progress
-- Owner/Date: galph/2025-12-02
+- Owner/Date: ralph/2025-10-08
 - Plan Reference: `plans/active/static-pyrefly.md`
 - Reproduction (PyTorch):
   * Static analysis: `pyrefly check src` from repo root; archive stdout/stderr + exit code to `reports/pyrefly/<YYYYMMDD>/pyrefly.log`.
   * Verification tests: Map future fixes to targeted pytest selectors; during supervisor evidence loops capture `pytest --collect-only -q <selector>` output.
 - First Divergence (if known): Pyrefly has not been executed since the float32 migration; current lint violations are unknown, blocking targeted delegation.
-- Next Actions (galph supervision):
-  1. Phase A (A1–A3) — execute the pre-flight checks from `plans/active/static-pyrefly.md`, create the timestamped `reports/pyrefly/` directory, and log tool availability in `docs/fix_plan.md` Attempts.
-  2. Phase B (B1–B3) — capture the baseline `pyrefly check src` run with env metadata and grouped diagnostics, storing artifacts per plan policy.
-  3. Phase C/D — synthesize a ranked findings summary, map each blocker to pytest selectors, and update `input.md` with the first batch of fixes for Ralph while documenting rerun cadence.
-- Attempts History: _None yet_
+- Attempts History:
+  * [2025-10-08] Attempt #1 — Phase A Complete (ralph). Result: success.
+    Metrics: Tool verification successful. pyrefly v0.35.0 installed and functional. Configuration present at pyproject.toml:11.
+    Artifacts:
+      - `reports/pyrefly/20251008T053652Z/commands.txt` — Command execution log with exit codes
+      - `reports/pyrefly/20251008T053652Z/README.md` — Phase A summary and context
+    Observations/Hypotheses:
+      - Tool prerequisites satisfied: pyrefly configuration exists, binary available
+      - No blockers for Phase B baseline scan
+      - Git SHA e71ac56 on branch feature/spec-based-2
+    Next Actions (galph supervision):
+      1. Phase B (B1–B3) — execute baseline `pyrefly check src` run, capture environment metadata (Python/pyrefly versions, git SHA), store logs under `reports/pyrefly/20251008T053652Z/pyrefly.log`
+      2. Phase B3 — create `summary.md` with grouped diagnostics (blockers vs style) and file:line anchors
+      3. Phase C — triage findings, classify as blocker/high/medium/defer, map to pytest selectors
+      4. Phase D — update input.md with ranked fix batch for Ralph
+- Risks/Assumptions: None for Phase A evidence collection; future phases may reveal violations requiring architectural decisions
 
 ## [SOURCE-WEIGHT-001] Correct weighted source normalization
 - Spec/AT: `specs/spec-a-core.md` §5 (Source intensity), `docs/architecture/pytorch_design.md` §2.3, `docs/development/c_to_pytorch_config_map.md` (flux/fluence), nanoBragg.c lines 2480-2595 (source weighting loop).

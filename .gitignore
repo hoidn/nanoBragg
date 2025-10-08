@@ -103,6 +103,7 @@ repomix-output.xml
 
 # Runtime/benchmark artifacts
 reports/benchmarks/
+reports/pyrefly/
 commands
 logs/
 Fdump.bin
