@@ -1001,3 +1001,10 @@
 - Updated `plans/active/cli-noise-pix0/plan.md` status snapshot (Attempt #155 note now highlights missing simulator wiring) and expanded M2g.4 guidance to call out deriving `(slow_indices, fast_indices)` from ROI tensors using pure tensor indexing.
 - Rewrote `input.md` (Parity mode) to direct Ralph to batch the cache helpers, thread indices through `_compute_physics_for_position`, replace `.item()` logic with tensor masks, run the targeted parity pytest, and capture Option B artifacts (`optionB_impl`, `carryover_cache_validation`, `carryover_probe`).
 - Follow-up: Ralph to implement Option B cache plumbing per new memo, then execute M2h validation steps (pytest/gradcheck/trace) before advancing to scaling rerun.
+
+## 2025-12-10 (galph loop — M2g.2b scalar regression review)
+- Coin flip=heads → reviewed Ralph’s most recent code commit f84fd5e; it reverted `apply_phi_carryover`/`store_phi_final` to scalar indices and introduced a `.item()` validity gate, breaking the Option B batch plan and the differentiability rule.
+- Updated `plans/active/cli-noise-pix0/plan.md` status snapshot with the regression note and added checklist row M2g.2b to demand tensor `(slow_indices, fast_indices)` signatures without `.item()` before further wiring.
+- Refreshed `docs/fix_plan.md` Next Actions bullet 0 so undoing the scalar regression is explicitly the first task under CLI-FLAGS-003.
+- Authored `input.md` (Parity mode, 100 lines) instructing Ralph to complete M2g.2b: restore batched signatures, remove the `.item()` gate, capture artifacts under `reports/.../carryover_cache_plumbing/`, run the targeted parity pytest, and update diagnosis docs/attempt logs.
+- Follow-up for Ralph: refactor the helpers back to tensor indices, keep vectorised execution intact, archive logs + plan updates, then proceed to M2g.3 wiring once the parity test and documentation landing pads are ready.
