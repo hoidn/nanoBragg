@@ -902,3 +902,9 @@
 - Added Next Action bullet in `docs/fix_plan.md:460` reminding Ralph to complete parity shim summary before returning to Phase M runs; refreshed `input.md` Do Now for Phase M0 instrumentation hygiene with references to the checklist.
 - Expect Ralph to capture instrumentation audit artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/<ts>/`, guard `_last_tricubic_neighborhood`, and then proceed to C5 summary per existing checklist.
 - Next follow-up: verify docs/fix_plan Attempt log records the C5 checklist completion and that `reports/2025-10-cli-flags/phase_l/scaling_validation/` gains the new summary.md before advancing Phase M metrics.
+
+## 2025-12-06 (galph loop — CLI-FLAGS-003 Phase M1 tooling focus)
+- Synced with origin (no conflicts); reviewed core docs, CLI-FLAGS plan, and latest instrumentation evidence before analysis.
+- Focus: CLI-FLAGS-003 Phase M1 follow-up. Marked plan Phase M0 tasks [D] with Attempt #144 artifact references and refreshed docs/fix_plan Next Actions to prioritize the compare_scaling_traces.py repair.
+- Rewrote input.md (Parity mode, 100 lines) directing Ralph to fix the scaling comparison script, capture a new RUN_DIR trace, rerun targeted pytest suites, and log artifacts for Phase M2.
+- Working tree now holds plan/fix_plan/input updates; expect Ralph to stabilise the script, produce new scaling_validation artifacts, update plan Attempt log, and then advance to lattice investigation next loop.

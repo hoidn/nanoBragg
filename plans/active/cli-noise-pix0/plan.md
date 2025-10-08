@@ -50,9 +50,9 @@ Exit Criteria: Debug helpers guarded behind the trace flag, tensors allocated on
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| M0a | Audit tricubic neighborhood cache scope | [ ] | Confirm `_last_tricubic_neighborhood` only retains debug payloads when tracing is active. If production runs hit `B > 1`, add guard/clear logic before returning. Capture notes in `instrumentation_audit.md` under a new timestamped directory. |
-| M0b | Keep debug tensors device/dtype neutral | [ ] | Ensure `torch.tensor` allocations inside the trace path use the current device and dtype (match `self.crystal.structure_factors`). Validate via `pytest --collect-only tests/test_cli_scaling_phi0.py` on CPU and CUDA to confirm no device mismatch occurs. |
-| M0c | Document instrumentation toggle | [ ] | Update trace harness documentation showing how to enable/disable the tricubic dump (context manager or flag). Record commands in `commands.txt` and append a fix_plan Attempt referencing commit 9a8c2f5 and the new artifact directory. |
+| M0a | Audit tricubic neighborhood cache scope | [D] | ✅ Attempt #144 (20251008T070513Z) guarded `_last_tricubic_neighborhood` behind `Crystal._enable_trace`; production runs clear the field. Evidence: `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T070513Z/instrumentation_audit.md`. |
+| M0b | Keep debug tensors device/dtype neutral | [D] | ✅ Same attempt verified gather outputs already live on caller device/dtype; targeted pytest suite (CPU+CUDA, float32/float64) passes. Artifacts: `commands.txt`, `trace_py_scaling.log` under the 20251008T070513Z directory. |
+| M0c | Document instrumentation toggle | [D] | ✅ Harness + audit describe enabling via `debug_config={'trace_pixel': ...}` and capture commands/SHA256. Fix-plan Attempt #144 logged with git SHA + artifact path. |
 
 ### Phase M — Structure-Factor & Normalization Parity (VG‑2)
 Goal: Eliminate the `I_before_scaling` divergence by ensuring PyTorch fetches the same HKL amplitudes and lattice factors as C for the supervisor ROI pixels.
