@@ -1097,3 +1097,9 @@
 - Updated docs/fix_plan.md (CLI-FLAGS-003 status/next actions now reference the new plan) and refreshed `plans/active/cli-noise-pix0/plan.md` Next Actions to delegate to the removal effort.
 - Authored input.md (Mode: Docs, 109 lines) directing Ralph to execute Phase A inventory tasks (collect-only pytest + baseline inventory artifacts under `reports/.../phase_phi_removal/phase_a/`).
 - Follow-up: Ralph to produce Phase A artifacts (collect log, baseline_inventory.md, commands/env/sha256) and log a freeze note next loop before Phase B prep begins.
+
+## 2025-12-13 (galph loop — Phase B shim removal planning)
+- Expanded `plans/active/phi-carryover-removal/plan.md` Phase B into B0–B5 tasks (design bundle, CLI/config removal, tooling cleanup, regression sweep, ledger sync) with artifact expectations under `reports/2025-10-cli-flags/phase_phi_removal/phase_b/`.
+- Refreshed `docs/fix_plan.md` CLI-FLAGS-003 Next Actions and `plans/active/cli-noise-pix0/plan.md` Next Actions to align with the new Phase B checklist.
+- Rewrote `input.md` (Mode: Docs) to have Ralph execute Plan B0 (design review + collect-only baseline) prior to code edits.
+- Follow-up: Expect Ralph next loop to produce the Phase B design bundle and update fix_plan Attempts before starting B1–B3 implementation.

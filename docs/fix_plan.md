@@ -458,11 +458,11 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): 🔴 **2025-12-11 regression.** Option B cache wiring (commit `fa0167b`) allows the targeted parity test to hit the cache but `F_latt` still diverges (relative error 1.57884 versus ≤1e-6) and the omega trace tap now throws tensor indexing errors. Evidence captured in `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T153142Z_carryover_cache_plumbing/`.
-- Next Actions (2025-12-12 refresh):
-0. **Phase A baseline inventory** — Execute `plans/active/phi-carryover-removal/plan.md` A1–A2 to enumerate all `phi_carryover_mode` touchpoints and capture `baseline_inventory.md` plus refreshed collect-only logs.
-1. **Phase A ledger sync** — Complete plan task A3 by logging the freeze note in `docs/fix_plan.md` Attempts and cross-linking the new artifacts under `reports/2025-10-cli-flags/phase_phi_removal/phase_a/`.
-2. **Legacy plan alignment** — Update `plans/active/cli-noise-pix0/plan.md` status/Next Actions to point at the removal plan before resuming scaling parity work (ensures Ralph doesn’t reopen shim tasks).
-3. **Phase B prep** — Draft a design review checklist for tasks B1–B3 (CLI/config/model removals) so Ralph can begin implementation once Phase A evidence is merged.
+- Next Actions (2025-12-13 refresh):
+0. **Phase B design review (Plan B0)** — Produce `reports/2025-10-cli-flags/phase_phi_removal/phase_b/<ts>/design_review.md` + `commands.txt` cataloguing impacted code/docs/tests and capturing `pytest --collect-only -q tests/test_cli_scaling_phi0.py` as the pre-change baseline.
+1. **Execute Plan B1–B3 removals** — Drop `--phi-carryover-mode` from CLI help, remove config/model plumbing (`Crystal._apply_phi_carryover`, config fields), and retire shim tooling/tests per the plan guidance while preserving vectorization and spec behavior.
+2. **Plan B4 regression sweep** — Run `pytest -v tests/test_cli_scaling_phi0.py` (CPU, and CUDA if available) with logs stored under the Phase B artifact directory; ensure spec-mode assertions remain within ≤1e-6 tolerances.
+3. **Ledger sync (Plan B5)** — Append Attempt entry referencing the Phase B bundle, flip plan rows B0–B4 to `[D]`, and update `plans/active/cli-noise-pix0/plan.md` Next Actions to point at Phase C once removal is complete.
 
 - Attempts History:
   * [2025-10-07] Attempt #136 (ralph loop i=135, Mode: Docs) — Result: ✅ **SUCCESS** (Phase L Documentation Sync COMPLETE). **No code changes.**

@@ -25,11 +25,11 @@
   - Canonical scaling deltas are still captured in `20251008T072513Z/metrics.json`; subsequent timestamps document cache-enabled failures and should be referenced during diagnosis.
   - Supervisor command / nb-compare parity remains outstanding (correlation ≈0.9965, intensity ratio ≈1.26e5) pending VG-2 closure.
 - New evidence (Attempt #171, 2025-10-08): `reports/2025-10-cli-flags/phase_l/trace_tooling_patch/20251008T175913Z/` confirms cache-aware trace taps on CPU+CUDA; M2g.5 is complete and clears the tooling blocker.
-- Next Actions (2025-12-12 refresh):
-0. **Kick off shim removal Phase A** — Follow `plans/active/phi-carryover-removal/plan.md` tasks A1–A2 to inventory `phi_carryover_mode` usage and capture the baseline memo under `reports/2025-10-cli-flags/phase_phi_removal/phase_a/`.
-1. **Ledger + diagnosis sync** — Complete task A3 (freeze note) and mirror the pivot in `phi_carryover_diagnosis.md` so downstream loops stop referencing c-parity evidence.
-2. **Rewrite Phase M scope** — Once the inventory is published, refactor this plan’s Phase M table to track spec-mode scaling fixes only (remove `apply_phi_carryover()` subtasks and align with new design checklist).
-3. **Spec-only parity prep** — Draft the spec-mode `trace_harness.py` command set and nb-compare prerequisites that will run after the shim is removed; log guidance in `reports/2025-10-cli-flags/phase_phi_removal/phase_b/README.md`.
+- Next Actions (2025-12-13 refresh):
+0. **Follow Phase B0 (design review)** — Rely on `plans/active/phi-carryover-removal/plan.md` B0 to capture the Phase B design bundle (`reports/2025-10-cli-flags/phase_phi_removal/phase_b/<ts>/design_review.md`) and collect-only baseline before code edits.
+1. **Phase B1–B3 execution** — Once the design artifact lands, remove the shim surfaces/config plumbing/tests per the updated plan, keeping vectorization/device neutrality intact and noting impacted scaling diagnostics.
+2. **Phase B4 regression sweep** — Run the spec-mode targeted pytest command(s) with logs stored alongside the artifact bundle; confirm tolerances remain ≤1e-6.
+3. **Phase B5 sync** — Update this plan’s status snapshot and Next Actions after the removal bundle is committed so downstream work can resume with Phase M scaling tasks.
 - Artifact Storage Convention: place new work in `reports/2025-10-cli-flags/phase_l/<phase_folder>/<timestamp>/` with `commands.txt`, raw logs, metrics JSON, and SHA256 hashes. Reference these paths in docs/fix_plan.md attempt logs and `fix_checklist.md`.
 
 ### Completed Foundations (Phases A–K)
