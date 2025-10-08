@@ -1155,3 +1155,12 @@
 - Refreshed `docs/fix_plan.md:459-465` Next Actions to highlight D2 (ledger sync) and D3 (handoff) as the only open items while referencing the Phase D bundle.
 - Authored a new `input.md` (Mode: Docs, 104 lines) directing Ralph to execute Phase D2: update fix_plan attempts, archive `plans/active/cli-phi-parity-shim/plan.md`, append a ledger note in `reports/2025-10-cli-flags/phase_phi_removal/phase_d/`, run pytest collect-only, and log results.
 - Next loop expectation: Ralph performs the ledger sync per plan (update fix_plan attempts, move the shim plan to archive, add ledger_sync.md + commands/logs), runs `pytest --collect-only -q tests/test_cli_scaling_phi0.py`, and records the outcome before we tackle Phase D3 handoff.
+## 2025-10-08 (ralph loop i=181 — Phase D2 ledger sync)
+- Executed documentation-only loop per input.md Mode: Docs directive.
+- Updated `docs/fix_plan.md` CLI-FLAGS-003 section: added Attempt #184 entry (Phase D2 complete), updated Next Actions to mark D2 ✅ and leave only D3 open, changed refresh date from 2025-12-14 to 2025-10-08.
+- Archived shim plan: `git mv plans/active/cli-phi-parity-shim/plan.md → plans/archive/cli-phi-parity-shim/plan.md` with comprehensive 19-line closure note prepended (references Phase D1 bundle, explains archival rationale, provides cross-links).
+- Updated `plans/active/phi-carryover-removal/plan.md`: marked row D2 [D] with completion summary (line 64), refreshed Status Snapshot (line 56) to note D2 done.
+- Verified pytest collection: `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.py` → 2 tests in 0.79s.
+- Created `reports/2025-10-cli-flags/phase_phi_removal/phase_d/ledger_sync.md` documenting changes, verification checklist, and next actions.
+- Phase D2 exit criteria met: fix_plan shows Attempt #184, Next Actions updated, shim plan archived with closure note, pytest collection verified.
+- Follow-up for next supervisor loop: Prepare Phase D3 `input.md` handoff directing Ralph to `plans/active/cli-noise-pix0/plan.md` Phase L scaling tasks; shim removal work complete, focus shifts entirely to `-nonoise`/`-pix0` deliverables.

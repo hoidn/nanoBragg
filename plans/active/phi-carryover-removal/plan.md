@@ -53,7 +53,7 @@ Goal: Publish definitive "shim is gone" evidence, realign the ledgers, and hand 
 Prereqs: Phases B–C marked [D]; commit history (≥85dc304) present locally; Ralph briefed that execution must stay spec-only.
 Exit Criteria: Timestamped Phase D bundle contains real C/Py traces + targeted pytest proof with zero `phi_carryover_mode` references; docs/fix_plan.md and supervision notes reference the new evidence and scope future work to scaling only.
 
-**Status Snapshot (2025-12-14):** D0/D1 completed via Attempt #183 (`reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/`). Ledger + handoff work (D2–D3) remains.
+**Status Snapshot (2025-12-14):** D0/D1/D2 completed via Attempt #183 (`reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/`). D3 handoff work remains.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
@@ -61,7 +61,7 @@ Exit Criteria: Timestamped Phase D bundle contains real C/Py traces + targeted
 | D1a | Regenerate spec-mode traces | [D] | ✅ Attempt #183 (2025-10-08). Stored at `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/trace_py_spec.log` + `trace_c_spec.log`; `summary.md` confirms zero `phi_carryover_mode` keys. |
 | D1b | Capture regression proof | [D] | ✅ Attempt #183 (2025-10-08). `pytest -v tests/test_cli_scaling_phi0.py` (CPU) recorded max |Δk_frac| ≤ 1e-6; see `pytest.log` within the Phase D bundle. |
 | D1c | Confirm code/doc cleanliness | [D] | ✅ Attempt #183 (2025-10-08). Ripgrep sweep logged in `rg_phi_carryover.txt`; only `docs/fix_plan.md` retains historical references. |
-| D2 | Ledger + plan sync | [ ] | Update `docs/fix_plan.md` (CLI-FLAGS-003 Attempts + Next Actions) to cite the Phase D bundle path and drop all shim-related bullets. Move `plans/active/cli-phi-parity-shim/plan.md` into `plans/archive/` with a closure note once references are cleared. |
+| D2 | Ledger + plan sync | [D] | ✅ Attempt #184 (2025-10-08). Updated `docs/fix_plan.md` CLI-FLAGS-003 with Phase D2 completion, removed shim from Next Actions. Moved `plans/active/cli-phi-parity-shim/plan.md` → `plans/archive/cli-phi-parity-shim/plan.md` with closure note referencing Phase D bundle. Artifacts: ledger_sync.md, collect log. |
 | D3 | Supervisor handoff memo | [ ] | Write the next `input.md` instructing Ralph to resume the scaling/nb-compare track (Phase L in `plans/active/cli-noise-pix0/plan.md`) using only spec mode. Summarize Phase D completion in `galph_memory.md` so future loops know the shim closure evidence exists. |
 
 ### Phase E — Post-removal Watch (Optional)

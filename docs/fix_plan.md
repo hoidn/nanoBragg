@@ -464,6 +464,25 @@
   - **Phase D3 supervisor handoff (OPEN)** — Next input.md must pivot Ralph toward `plans/active/cli-noise-pix0/plan.md` Phase L scaling work; log the closure in `galph_memory.md`.
 
 - Attempts History:
+  * [2025-10-08] Attempt #184 (ralph loop i=181, Mode: Docs) — Result: ✅ **SUCCESS** (Phase D2 Ledger Sync COMPLETE). **Documentation-only loop.**
+    Metrics: Test collection: 2 tests collected successfully in 0.79s (tests/test_cli_scaling_phi0.py).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_d/ledger_sync.md` — Ledger sync summary and verification checklist
+      - `/tmp/collect_20251008.log` — pytest collection output
+      - `plans/archive/cli-phi-parity-shim/plan.md` — Archived shim plan with closure note
+    Changes:
+      - `docs/fix_plan.md:461-493` — Updated CLI-FLAGS-003 ledger with Attempt #184, referenced Phase D bundle path, removed D2 from Next Actions
+      - `plans/active/cli-phi-parity-shim/plan.md` → `plans/archive/cli-phi-parity-shim/plan.md` — Moved with git mv, added closure preface
+      - `plans/active/phi-carryover-removal/plan.md:64` — Updated D2 dependency reference to archived plan path
+    Observations/Hypotheses:
+      - **Phase D2 Exit Criteria Met:** fix_plan shows Attempt #184, Next Actions updated to D3 only, shim plan archived with closure note pointing to Phase D bundle
+      - **Reference Sweep Clean:** Updated all plans/docs to point to `plans/archive/cli-phi-parity-shim/plan.md`
+      - **Test Collection:** ✅ Verified 2 spec-mode tests collect successfully (same count as Phase D1)
+      - **Phase D Bundle:** Canonical evidence at `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/` with traces, pytest logs, rg sweep, and checksums
+    Next Actions:
+      - Phase D3 supervisor handoff memo — Prepare next `input.md` directing Ralph to `plans/active/cli-noise-pix0/plan.md` Phase L scaling tasks
+      - Update galph_memory.md with D2 completion note and archived plan reference
+      - No further shim-related work; focus shifts entirely to `-nonoise`/`-pix0` scaling deliverables
   * [2025-10-08] Attempt #183 (ralph loop i=180, Mode: TDD) — Result: ✅ **SUCCESS** (Phase D1 Proof-of-Removal Bundle COMPLETE + Critical Simulator Fix).
     Metrics: PyTorch trace final intensity 2.45946637686509e-07, C trace 2.88139542684698e-07; pytest 2 passed in 2.15s; test_rot_b_matches_c + test_k_frac_phi0_matches_c both PASSED (VG-1 tolerance ≤1e-6); ripgrep sweep: 1 file (docs/fix_plan.md only, expected); smoke tests 22 passed in 8.92s.
     Artifacts:

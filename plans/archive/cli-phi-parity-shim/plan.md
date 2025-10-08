@@ -1,3 +1,23 @@
+---
+**CLOSURE NOTE (2025-10-08):**
+
+This plan has been **ARCHIVED** following the completion of φ carryover shim removal (Phase D1, Attempt #183).
+
+**Why Archived:** The φ=0 carryover bug (C-PARITY-001) was implemented as an opt-in parity shim to enable C↔PyTorch validation during CLI-FLAGS-003 development. After rigorous validation, the shim and all related infrastructure (CLI flags, config plumbing, tests) were removed in Phase B-C of `plans/active/phi-carryover-removal/plan.md` to align the implementation with the normative spec (`specs/spec-a-core.md:204-240`), which mandates fresh φ rotations each step.
+
+**Evidence:** Phase D1 proof-of-removal bundle stored at `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/` contains C/Py traces showing spec-mode behavior, pytest proof (2 passed, VG-1 tolerance ≤1e-6), and ripgrep sweep confirming zero `phi_carryover_mode` references in production code.
+
+**Historical Context:** The work described in this plan (Phases A-D) was successfully completed during Attempts #120-#136. The shim served its purpose for parity debugging but is no longer present in the codebase as of commit 340683f (Phase B1) and subsequent cleanup.
+
+**Current Status:** PyTorch implementation now follows the spec exclusively. For scaling/parity work going forward, refer to `plans/active/cli-noise-pix0/plan.md` Phase L tasks and the canonical Phase D bundle evidence.
+
+**Cross-References:**
+- `plans/active/phi-carryover-removal/plan.md` — Shim retirement initiative
+- `docs/fix_plan.md` CLI-FLAGS-003 — Ledger with full attempt history
+- `docs/bugs/verified_c_bugs.md` C-PARITY-001 — C-only bug classification
+
+---
+
 ## Context
 - Initiative: CLI-FLAGS-003 (`-nonoise` / `-pix0_vector_mm`) — φ=0 parity shim design (Phase L3k.3c.4–L3k.3c.5 in `plans/active/cli-noise-pix0/plan.md`).
 - Phase Goal: Design and supervise implementation of an **opt-in** φ=0 carryover shim that reproduces the documented C bug (C-PARITY-001) without regressing the new spec-compliant default path. Deliver validated traces, tests, and documentation so the supervisor command can run PyTorch vs C parity with matching φ behavior.
