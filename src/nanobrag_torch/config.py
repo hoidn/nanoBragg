@@ -148,11 +148,6 @@ class CrystalConfig:
     shape: CrystalShape = CrystalShape.SQUARE  # Crystal shape model for F_latt calculation
     fudge: float = 1.0  # Shape parameter scaling factor
 
-    # Phi rotation behavior mode (CLI-FLAGS-003 Phase L3k.3c.4)
-    # "spec": Fresh rotation each φ step (default, spec-compliant)
-    # "c-parity": φ=0 reuses previous pixel's final φ vectors (C-PARITY-001 bug emulation)
-    phi_carryover_mode: str = "spec"
-
     # Sample size in meters (calculated from N_cells and unit cell dimensions)
     # These are computed in __post_init__ and potentially clipped by beam size
     sample_x: Optional[float] = None  # Sample size along a-axis (meters)
@@ -161,12 +156,6 @@ class CrystalConfig:
 
     def __post_init__(self):
         """Calculate sample dimensions from unit cell and N_cells."""
-        # Validate phi_carryover_mode
-        if self.phi_carryover_mode not in ["spec", "c-parity"]:
-            raise ValueError(
-                f"phi_carryover_mode must be 'spec' or 'c-parity', got '{self.phi_carryover_mode}'"
-            )
-
         # Calculate sample dimensions in meters (cell parameters are in Angstroms)
         # For simplicity, assume orthogonal axes for sample size calculation
         # This matches the C code behavior

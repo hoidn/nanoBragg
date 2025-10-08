@@ -1,0 +1,17 @@
+# Phase B1-B5: phi-carryover-mode removal
+# Date: 2025-10-08T19:31:06Z
+# Context: CLI flag removed in 340683f; now removing config/model plumbing
+
+# B1: Documentation sync
+git diff prompts/supervisor.md docs/bugs/verified_c_bugs.md
+
+# B2-B3: Code removal (next steps)
+# - Remove phi_carryover_mode from src/nanobrag_torch/config.py
+# - Remove _apply_phi_carryover from src/nanobrag_torch/models/crystal.py
+# - Remove carryover branches from src/nanobrag_torch/simulator.py
+# - Delete/refactor tests/test_phi_carryover_mode.py
+
+# B4: Regression tests
+pytest --collect-only -q tests/test_cli_scaling_phi0.py
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py
+

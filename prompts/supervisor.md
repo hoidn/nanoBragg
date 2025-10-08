@@ -4,7 +4,7 @@ planning, review and analysis. do not make implementation code changes.
 <current long-term goals>
 in order of decreasing priority:
 <1>
-Undo the architectural complexity and performance issues that were introduced by past reproduction of the phi carryover bug in the pytorch implementation (see <past long-term goals>). Corrsepondingly, deprecate the parallel test / acceptance test that was introduced by <past long term goals> <1> and target the correct, non-buggy spec behavior instead. (relaxing the parity test expectations is acceptable as well, but either way you MUST remove the phi-carryover codepath and any associated debt)
+Complete removal of phi-carryover technical debt from the PyTorch implementation. The CLI flag (`--phi-carryover-mode`) has been removed (commit 340683f). Remaining work: delete config/model plumbing, retire shim-specific tests, and realign documentation to reflect that PyTorch uses spec-compliant fresh rotations exclusively. See `plans/active/phi-carryover-removal/plan.md` for removal phases.
 </1>
 <2>
 review docs/bugs/verified_c_bugs.md and specs/. Make sure that the phi 0 carryover C implementation bug wasnt propagated to the specs. Update the specs (if needed) and pytorch implementation to fix this bug, if it was propagated.
