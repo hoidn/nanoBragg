@@ -1,0 +1,20 @@
+# Phase M4 Normalization Fix — Command Log
+# Date: 2025-10-22
+# Git SHA: (captured below)
+
+# 1. Design memo creation
+echo "Step M4a: Design memo written"
+
+# 2. Code fix implementation
+# File: src/nanobrag_torch/simulator.py
+# Lines: ~1110-1133
+# Change: Added `/ steps` normalization before r_e_sqr * fluence
+
+# 3. Targeted regression tests (CPU)
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py
+
+# 4. Core geometry smoke tests (CPU)
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_crystal_geometry.py tests/test_detector_geometry.py
+
+# 5. Git SHA capture
+git rev-parse HEAD

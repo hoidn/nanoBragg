@@ -1108,9 +1108,26 @@ class Simulator:
                 )
 
         # Final intensity with all physical constants in meters
-        # Units: [dimensionless] × [steradians] × [m²] × [photons/m²] × [dimensionless] = [photons·steradians]
+        # Per spec AT-SAM-001 and nanoBragg.c:3358, divide by steps for normalization
+        #
+        # C-Code Implementation Reference (from nanoBragg.c, lines 3336-3365):
+        # ```c
+        #             /* end of detector thickness loop */
+        #
+        #             /* convert pixel intensity into photon units */
+        #             test = r_e_sqr*fluence*I/steps;
+        #
+        #             /* do the corrections now, if they haven't been applied already */
+        #             if(! oversample_thick) test *= capture_fraction;
+        #             if(! oversample_polar) test *= polar;
+        #             if(! oversample_omega) test *= omega_pixel;
+        #             floatimage[imgidx] += test;
+        # ```
+        #
+        # Units: [dimensionless] / [dimensionless] × [m²] × [photons/m²] = [photons·m²]
         physical_intensity = (
             normalized_intensity
+            / steps
             * self.r_e_sqr
             * self.fluence
         )
