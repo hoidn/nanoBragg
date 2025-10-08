@@ -1,0 +1,24 @@
+# CLI-FLAGS-003 Phase L Documentation Sync Commands
+# Date: 2025-10-07
+# Loop: ralph i=135
+
+## Test Collection Command
+export KMP_DUPLICATE_LIB_OK=TRUE
+pytest --collect-only -q tests/test_cli_scaling_phi0.py tests/test_phi_carryover_mode.py
+
+## Environment
+# KMP_DUPLICATE_LIB_OK=TRUE required for PyTorch + MKL compatibility
+# No C binary required (docs-only loop, collect-only test mode)
+
+## Artifacts Generated
+# collect.log - pytest collection output
+# commands.txt - this file (reproduction steps)
+# summary.md - documentation sync summary
+# sha256.txt - artifact checksums
+
+## Documentation Files Updated
+# plans/active/cli-noise-pix0/plan.md - Phase L task states
+# plans/active/cli-phi-parity-shim/plan.md - Phase D guidance
+# reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md - dual-threshold section
+# docs/bugs/verified_c_bugs.md - C-PARITY-001 parity shim note
+# docs/fix_plan.md - Attempt history entry

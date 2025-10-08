@@ -183,6 +183,7 @@ The trace (`docs/bugs/artifacts/c-parity-001.txt`) includes a single `TRACE_C: h
 - **spec mode tolerance**: |Δk_frac| ≤ 1e-6, |Δb_y| ≤ 1e-6 (strict, normative)
 - Dtype sensitivity analysis (2025-12-01) confirmed the ~2.8e-05 plateau is intrinsic to the carryover logic, not precision-limited
 - Evidence: `reports/2025-10-cli-flags/phase_l/parity_shim/20251201_dtype_probe/analysis_summary.md`
+- **Documentation Status (2025-10-07)**: Phase L sync complete; dual thresholds documented in diagnosis.md and plan files. Implementation complete per `plans/active/cli-phi-parity-shim/plan.md` Phase C; documentation handoff (Phase D) in progress. Artifacts: `reports/2025-10-cli-flags/phase_l/rot_vector/20251007T212159Z/`
 
 **Relevant code:**
 - `golden_suite_generator/nanoBragg.c:3042-3059` — rotation only applied when `phi != 0.0`; no reset path exists.

@@ -463,6 +463,26 @@
 2. **Phase M scaling parity** — Drive plan tasks M1–M3: run `trace_harness.py` for the supervisor ROI, fix the missing `F_cell` fetch within `_tricubic_interpolation`, and add the targeted regression in `tests/test_cli_scaling_phi0.py` so `I_before_scaling` matches C within ≤1e-6 relative error on CPU+CUDA.
 3. **Phase N/O readiness** — After scaling passes, regenerate ROI artifacts with `nb-compare` (plan tasks N1–N3) and schedule the supervisor command closure run (O1–O3), capturing metrics + SHA256 manifests under `reports/2025-10-cli-flags/phase_l/`.
 - Attempts History:
+  * [2025-10-07] Attempt #136 (ralph loop i=135, Mode: Docs) — Result: ✅ **SUCCESS** (Phase L Documentation Sync COMPLETE). **No code changes.**
+    Metrics: Test collection: 35 tests collected successfully in 2.16s (test_cli_scaling_phi0.py + test_phi_carryover_mode.py). Documentation-only loop per input.md Mode: Docs.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/20251007T212159Z/collect.log` — pytest collection output
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/20251007T212159Z/commands.txt` — Reproduction steps
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/20251007T212159Z/summary.md` — Complete documentation sync summary
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/20251007T212159Z/sha256.txt` — Artifact checksums (79b9602c... collect.log, 8c8089a7... commands.txt, 81d25f57... summary.md)
+      - `plans/active/cli-noise-pix0/plan.md` — Phase L tasks L1/L2 marked [D], L3 marked [P]
+      - `plans/active/cli-phi-parity-shim/plan.md` — Phase D tasks D1 marked [D], D2 marked [P]
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md` — Added Phase L sync note to Dual-Threshold Decision section
+      - `docs/bugs/verified_c_bugs.md` — Updated C-PARITY-001 entry with Documentation Status note
+    Observations/Hypotheses:
+      - **Tolerance thresholds synchronized**: Spec mode (≤1e-6) vs c-parity mode (≤5e-5) documented across plans, diagnosis.md, and bug docs
+      - **Test coverage confirmed**: 35 tests (2 spec baselines, 4 CLI parsing, 4 config validation, 2 wiring, 12 dual-mode physics on CPU+CUDA, 8 device/dtype, 3 flag interactions)
+      - **Phase L completion**: Tasks L1–L2 complete, L3 pending only final fix_plan sync (this attempt)
+      - **Documentation hygiene**: All files updated maintain ASCII formatting, cross-references preserved, Protected Assets untouched
+      - Mode: Docs → No pytest execution beyond collect-only per gate requirements
+    Next Actions:
+      - Phase L3 complete — mark cli-noise-pix0 plan.md task L3 as [D]
+      - Advance to Phase M: Structure-factor parity investigation (tasks M1–M3 per plan)
   * [2025-10-07] Attempt #135 (ralph loop i=135, Mode: Docs) — Result: **BLOCKED** (Phase L1–L3 stale plan references). **No code changes.**
     Metrics: Test collection: 448 tests collected successfully (pytest --collect-only -q). Documentation-only loop. Blocking condition identified.
     Artifacts:

@@ -397,6 +397,8 @@ if torch.abs(phi_val) < 1e-10:
 | **spec** (default) | ≤ 1e-6 | ≤ 1e-6 | Spec-compliant fresh φ rotations per `specs/spec-a-core.md:211` |
 | **c-parity** (opt-in) | ≤ 5e-5 | ≤ 1e-4 | Emulates C-PARITY-001 bug; relaxed tolerance documents expected behavior |
 
+**Phase L Documentation Sync (2025-10-07)**: Updated `plans/active/cli-noise-pix0/plan.md` Phase L tasks, `plans/active/cli-phi-parity-shim/plan.md` Phase D guidance, and `docs/bugs/verified_c_bugs.md` C-PARITY-001 entry to reference parity shim availability. Artifacts: `reports/2025-10-cli-flags/phase_l/rot_vector/20251007T212159Z/`
+
 ### Evidence Base
 
 **Dtype Sensitivity Analysis** (`reports/2025-10-cli-flags/phase_l/parity_shim/20251201_dtype_probe/analysis_summary.md`):

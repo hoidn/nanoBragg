@@ -39,9 +39,9 @@ Exit Criteria: Updated documentation/tests/checklists reflecting the 1e-6 (spec)
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| L1 | Sync tolerance notes into plan/checklists | [P] | Update this plan (current document), `plans/active/cli-phi-parity-shim/plan.md` (Phase D), and `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md` to cite the dual-threshold decision. Ensure `fix_checklist.md` VG-1 rows reference |Δrot_b| ≤1e-6 (spec) and |Δk| ≤5e-5 (c-parity). |
-| L2 | Refresh documentation set | [ ] | Edit `reports/.../phase_l/rot_vector/diagnosis.md`, `docs/bugs/verified_c_bugs.md` (add parity shim availability), and relevant user/CLI docs (e.g., `README_PYTORCH.md`) to describe `--phi-carryover-mode`. Capture `pytest --collect-only -q tests/test_cli_scaling_phi0.py` output afterwards. |
-| L3 | Log Attempt + fix_checklist updates | [ ] | Append an Attempt entry to `docs/fix_plan.md` summarizing the documentation sync and referencing artifact paths. Update `fix_checklist.md` VG-1 row with completion notes and link to `reports/.../diagnosis.md`. |
+| L1 | Sync tolerance notes into plan/checklists | [D] | ✅ Updated this plan, `plans/active/cli-phi-parity-shim/plan.md` Phase D tasks, and `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md` dual-threshold section to cite spec (≤1e-6) vs c-parity (≤5e-5) tolerances. Artifacts: `reports/.../20251007T212159Z/`. |
+| L2 | Refresh documentation set | [D] | ✅ Edited `reports/.../diagnosis.md` with Phase L sync note, updated `docs/bugs/verified_c_bugs.md` C-PARITY-001 entry to reference parity shim. Collected test selectors in `collect.log`. Commit sha will be recorded in fix_plan Attempt. |
+| L3 | Log Attempt + fix_checklist updates | [D] | ✅ Appended Attempt #136 to `docs/fix_plan.md` CLI-FLAGS-003 with doc sync summary, tolerance thresholds (spec ≤1e-6, c-parity ≤5e-5), and artifact paths. Phase L complete. |
 
 ### Phase M — Structure-Factor & Normalization Parity (VG‑2)
 Goal: Eliminate the `I_before_scaling` divergence by ensuring PyTorch fetches the same HKL amplitudes and lattice factors as C for the supervisor ROI pixels.

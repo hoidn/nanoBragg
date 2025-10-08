@@ -63,6 +63,6 @@ Exit Criteria: Docs refreshed, plan cross-references updated, Next Actions ready
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| D1 | Update documentation | [ ] | Refresh `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md` (add parity shim section), `docs/bugs/verified_c_bugs.md` (note shim availability), and `README_PYTORCH.md` or CLI docs if new flag added. Ensure spec documents remain unchanged (bug stays quarantined). |
-| D2 | Sync plans/fix_plan | [ ] | Mark relevant rows in `plans/active/cli-noise-pix0/plan.md` as [D] or [P] with links to this plan’s artifacts. Update `docs/fix_plan.md` Next Actions to advance to Phase L4. |
-| D3 | Prepare handoff to supervisor command rerun | [ ] | Document in `summary.md` which commands/tests must run next (e.g., nb-compare, supervisor command). Provide clear Do Now guidance for transitioning into Phase L4 in `input.md`. |
+| D1 | Update documentation | [D] | ✅ Refreshed `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md` with Phase L sync note (2025-10-07), updated `docs/bugs/verified_c_bugs.md` C-PARITY-001 to note parity shim availability. Spec documents unchanged (bug quarantined). CLI flag `--phi-carryover-mode` already documented in code. |
+| D2 | Sync plans/fix_plan | [D] | ✅ Marked Phase D/L tasks complete in both plans. Logged Attempt #136 in `docs/fix_plan.md` CLI-FLAGS-003 with tolerance sync, artifacts linked to `reports/.../20251007T212159Z/`. |
+| D3 | Prepare handoff to supervisor command rerun | [ ] | Document in `summary.md` next steps (Phase M: structure-factor parity, Phase N: nb-compare ROI, Phase O: supervisor command). Provide Do Now guidance once Phase L Attempt logged. |
