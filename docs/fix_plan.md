@@ -457,15 +457,39 @@
 - Reproduction (C & PyTorch):
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
-- First Divergence (if known): 🔴 Latest red evidence (`reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T072513Z/metrics.json`) shows `first_divergence = "I_before_scaling"` driven by an `F_latt` relative error ≈1.58. This bundle predates the 2025-12 shim removal; a fresh spec-mode run is required in Phase M1 to confirm the current gap.
-- Next Actions (2025-12-15 refresh):
+- First Divergence (if known): 🔴 Phase M1 fresh evidence (`reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/metrics.json`) shows `first_divergence = "I_before_scaling"` with C value 943654.81 vs PyTorch 805473.79 (relative delta -14.6%, status CRITICAL). All downstream factors (r_e_sqr, fluence, steps, capture_fraction, polar, omega_pixel, cos_2theta) pass with ≤1e-6 tolerance.
+- Next Actions (2025-10-08 Phase M1 complete):
   - ✅ Phase D1–D3 complete — Shim removal validated; see `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/` and galph_memory entries dated 2025-12-14.
-  - **Phase M1 (OPEN)** — Capture a new spec-mode scaling bundle (`plans/active/cli-noise-pix0/plan.md` Phase M row M1) with `trace_harness.py` + `compare_scaling_traces.py` and store it under `reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/spec_baseline/`.
+  - ✅ **Phase M1 (COMPLETE)** — Fresh spec-mode baseline captured at `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/` with trace_harness + compare_scaling_traces; test collection verified (2 tests in test_cli_scaling_phi0.py).
   - **Phase M2 (OPEN)** — Analyse the fresh bundle to separate `F_cell`, `F_latt`, `omega_pixel`, and `I_before_scaling` deltas; update `analysis.md` and `lattice_hypotheses.md` per plan guidance.
   - **Phase M3–M4 (OPEN)** — Design validation probes, implement the physics fix once the culprit is confirmed, and keep evidence under the new timestamped bundle; cite nanoBragg.c lines 2797–3095.
   - **Phase M5–M6 (OPEN)** — Re-run CUDA + gradcheck smoke, then sync ledgers/documentation before advancing to nb-compare (Phase N).
 
 - Attempts History:
+  * [2025-10-08] Attempt #185 (ralph loop i=182, Mode: Parity) — Result: ✅ **SUCCESS** (Phase M1 Spec-Mode Baseline COMPLETE). **Evidence-only loop (no code changes).**
+    Metrics: First divergence: I_before_scaling (C=943654.81, Py=805473.79, delta=-14.6%); all downstream scaling factors pass ≤1e-6 tolerance; test collection: 2 tests collected successfully in 0.79s (tests/test_cli_scaling_phi0.py).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/` — Complete Phase M1 bundle
+      - `summary.md` — Scaling chain comparison (C vs PyTorch)
+      - `metrics.json` — Structured per-factor deltas with first_divergence="I_before_scaling"
+      - `trace_py_scaling.log` — PyTorch spec-mode trace (114 TRACE_PY lines including tricubic grid)
+      - `c_trace_scaling.log` — C reference trace
+      - `commands.txt` — Phase M1 reproduction steps
+      - `env.json` — Environment snapshot (Python, PyTorch, device=cpu, dtype=float64)
+      - `pytest_collect.log` — Test collection verification
+      - `git_sha.txt` — Git commit reference
+      - `sha256.txt` — Artifact checksums
+    Changes: None (evidence-only loop)
+    Observations/Hypotheses:
+      - **Fresh Baseline Captured:** Post-shim-removal spec-mode evidence confirms I_before_scaling divergence persists
+      - **First Divergence Localized:** I_before_scaling is first CRITICAL factor; all normalization/scaling/geometry factors downstream pass
+      - **Magnitude Quantified:** PyTorch produces ~14.6% lower raw intensity than C for pixel (685, 1039)
+      - **Test Collection Stable:** 2 spec-mode scaling tests (test_rot_b_matches_c, test_k_frac_phi0_matches_c) collect cleanly
+      - **Phase M1 Exit Criteria Met:** trace_harness executed with supervisor config, compare_scaling_traces generated summary + metrics.json, pytest --collect-only passed, artifacts bundled with commands/env/checksums
+    Next Actions:
+      - Phase M2: Analyse I_before_scaling components (F_cell, F_latt, per-φ accumulation) using trace data; update analysis.md with quantitative breakdown
+      - Phase M3: Design targeted probes (e.g., single-φ test, F_latt validation against nanoBragg.c sincg formulas) to isolate root cause
+      - Phase M4: Implement physics fix once hypothesis confirmed; verify with fresh trace comparison
   * [2025-10-08] Attempt #184 (ralph loop i=181, Mode: Docs) — Result: ✅ **SUCCESS** (Phase D2 Ledger Sync COMPLETE). **Documentation-only loop.**
     Metrics: Test collection: 2 tests collected successfully in 0.79s (tests/test_cli_scaling_phi0.py).
     Artifacts:

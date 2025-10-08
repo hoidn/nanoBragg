@@ -1,0 +1,20 @@
+# Phase M1: Fresh spec-mode scaling baseline (post-shim removal)
+# Date: 2025-10-08
+# Plan: plans/active/cli-noise-pix0/plan.md Phase M1
+
+# 1. Run trace harness with supervisor config
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py \
+  --config supervisor --pixel 685 1039 --device cpu --dtype float64 \
+  --out reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/
+
+# 2. Compare scaling traces (C vs PyTorch)
+python scripts/validation/compare_scaling_traces.py \
+  --c reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/c_trace_scaling.log \
+  --py reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/trace_py_scaling.log \
+  --out reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/summary.md
+
+# 3. Verify test collection
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.py
+
+# 4. Record environment
+python -c "import json, os, sys, torch; print(json.dumps({'python': sys.version, 'torch': torch.__version__, 'device': 'cpu', 'dtype': 'float64'}, indent=2))"
