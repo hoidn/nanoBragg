@@ -1052,3 +1052,9 @@
 - Authored new input.md directing Ralph to patch simulator debug tensor factories, rerun the CUDA trace harness, capture CPU+CUDA artifacts, and log cache snapshots before proceeding to gradcheck. `input.md` Do Now now points at the CUDA harness command and collect-only pytest selector.
 - No plan edits needed; M2h.2 guidance in plans/active/cli-noise-pix0/plan.md already reflects the blocker. Fix_plan remains aligned.
 - Follow-up for Ralph: implement device/dtype-neutral tensor creation in `_apply_debug_output`, rerun CUDA + CPU harness runs into timestamped directories, update diagnostics/env logs, and keep docs/fix_plan.md Attempts current with outcomes.
+
+## 2025-10-08 16:56Z (galph loop — M2h.3 gradcheck directive)
+- Marked CLI-FLAGS-003 Phase M2h.2 complete and shifted plan focus to M2h.3 gradcheck; updated plans/active/cli-noise-pix0/plan.md lines 29 & 74 to reference Attempt #166 and new artifact expectations.
+- Refreshed docs/fix_plan.md Next Actions to highlight the gradcheck probe (M2h.3) now that CUDA evidence is archived.
+- Authored input.md (Mode: Parity) directing Ralph to build a timestamped gradcheck harness, archive CUDA/CPU logs, capture metadata, and keep the loop evidence-only.
+- Follow-up for Ralph: execute M2h.3 gradcheck per input.md, store artifacts under reports/.../<timestamp>_carryover_cache_validation/, and log results in docs/fix_plan.md Attempts before moving to M2i.1.
