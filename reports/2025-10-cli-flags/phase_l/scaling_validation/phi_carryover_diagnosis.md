@@ -385,3 +385,114 @@ Rationale:
 - Memory cost acceptable (~4-8 GB) for modern hardware
 - Preserves vectorization, gradient flow, and device neutrality
 - Clear separation of concerns (generation vs substitution)
+
+---
+
+## 20251008T175913Z — Trace Tooling Verification
+
+**Date:** 2025-10-08
+**Engineer:** ralph (Attempt #171, loop i=169)
+**Plan Reference:** `plans/active/cli-noise-pix0/plan.md` M2g.5
+**Git SHA:** e2c75edecfc179a3cccf3c1524df51e359f54bff
+
+### Executive Summary
+
+Verification run confirming that the trace harness (`trace_harness.py`) works correctly with the Option B batch-indexed cache implementation (Attempt #163) and device/dtype neutrality fixes (Attempt #166). **No code changes required**; this is an evidence-only loop documenting that the tooling blocker from Attempt #164 is fully resolved.
+
+### Test Configuration
+
+- **Pixel:** (slow=685, fast=1039) — supervisor command ROI pixel
+- **Config preset:** supervisor (CLI-FLAGS-003 authoritative command)
+- **Phi carryover mode:** c-parity (emulate C-PARITY-001 bug per `docs/bugs/verified_c_bugs.md:166-204`)
+- **Devices tested:** CPU (float64), CUDA (float64)
+- **Emit rot-stars:** enabled (TRACE_PY_ROTSTAR output)
+- **Environment:** Python 3.13.7, PyTorch 2.8.0+cu128, CUDA 12.8
+
+### Results
+
+#### CPU Execution
+**Status:** ✅ SUCCESS
+
+- Command: `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --phi-mode c-parity --pixel 685 1039 --device cpu --dtype float64 --emit-rot-stars --out reports/2025-10-cli-flags/phase_l/trace_tooling_patch/20251008T175913Z/trace_cpu.log`
+- **Trace lines captured:** 124 TRACE_PY lines
+- **Per-φ traces:** 10 TRACE_PY_PHI lines
+- **Final intensity:** 2.45946637686509e-07
+- **Output:** `trace_cpu.log` (124 lines)
+
+#### CUDA Execution
+**Status:** ✅ SUCCESS
+
+- Command: Same as CPU with `--device cuda`
+- **Trace lines captured:** 124 TRACE_PY lines
+- **Per-φ traces:** 10 TRACE_PY_PHI lines
+- **Final intensity:** 2.45946637686447e-07
+- **Output:** `trace_cuda.log` (124 lines)
+- **CPU/CUDA parity:** Δ = 6.2e-13 relative (2.52e-11 absolute) — **PASS** (well within spec ≤1e-6 and c-parity ≤5e-5 tolerances)
+
+### Key Findings
+
+1. **No IndexError encountered:** The trace harness successfully indexed `omega_pixel` and `F_latt` tensors for both CPU and CUDA runs, resolving the Attempt #164 blocker.
+
+2. **Device/dtype neutrality confirmed:** Attempt #166 fix (tensor factory device alignment in `_apply_debug_output` at `simulator.py:1445-1446`) enabled CUDA traces without modification, honoring CLAUDE Rule #16.
+
+3. **Cache-aware taps working:** The harness captured all trace fields including:
+   - `omega_pixel_sr` (solid angle)
+   - `F_latt_a`, `F_latt_b`, `F_latt_c`, `F_latt` (lattice factors)
+   - `I_before_scaling_pre_polar`, `I_before_scaling_post_polar`
+   - `rot_a/b/c_angstroms` (real-space rotated vectors)
+   - `rot_a/b/c_star_A_inv` (reciprocal-space rotated vectors)
+
+4. **Per-φ traces functional:** TRACE_PY_PHI output captured for all 10 φ steps with per-step lattice factors.
+
+5. **Gradient-preserving:** No `.item()` calls on gradient-critical tensors; all indexing uses tensor-native operations per CLAUDE differentiability rules.
+
+### Spec & C-Code Alignment
+
+- **Spec reference:** `specs/spec-a-core.md:204-240` defines the normative φ rotation pipeline (no carryover)
+- **C-code bug:** `docs/bugs/verified_c_bugs.md:166-204` (C-PARITY-001) documents the φ=0 carryover bug that c-parity mode emulates
+- **Parity thresholds:**
+  - **spec mode:** |Δk| ≤ 1e-6 (normative, fresh rotations each φ step)
+  - **c-parity mode:** |Δk| ≤ 5e-5 (relaxed, emulates C bug with stale φ=0 vectors)
+- **Option B design:** `reports/2025-10-cli-flags/phase_l/scaling_validation/20251210_optionB_design/optionB_batch_design.md` describes the batch-indexed cache implementation validated in this run
+
+### Instrumentation Reuse Rule
+
+Per `docs/architecture/README.md#⚠️-trace-instrumentation-rule`, trace output **reuses production helpers and cached intermediates** rather than re-deriving physics:
+- Trace taps call `Crystal.get_rotated_real_vectors_for_batch()` and index the returned tensors directly
+- No parallel "trace-only" implementations exist; all logged values come from the same tensors the simulator uses
+- This ensures traces reflect exact production behavior and eliminates drift between debug and production paths
+
+### Observations
+
+- **Attempt #166 effect:** The device-neutral tensor factory fix eliminated the CUDA blocker from Attempt #164
+- **Attempt #163 batch cache compatibility:** Row-wise batching through `Crystal.get_rotated_real_vectors_for_batch()` does not interfere with trace indexing
+- **No code changes required:** M2g.5 tooling patch was already complete from prior attempts; this run provides evidence of success
+
+### Artifacts
+
+All artifacts stored under `reports/2025-10-cli-flags/phase_l/trace_tooling_patch/20251008T175913Z/`:
+- `commands.txt` — Reproduction commands with exit status
+- `trace_cpu.log` — CPU trace (124 lines, float64)
+- `trace_cuda.log` — CUDA trace (124 lines, float64)
+- `run_metadata.json` — Environment snapshot (Python 3.13.7, PyTorch 2.8.0+cu128, CUDA 12.8, git SHA e2c75ed)
+- `sha256.txt` — Artifact checksums
+- `summary.md` — Full validation report (source for this section)
+
+### Next Actions (per `plans/active/cli-noise-pix0/plan.md`)
+
+1. ✅ **M2g.5 COMPLETE** — Trace tooling verified cache-aware without IndexError
+2. **M2g.6** — Document Option B architecture decision (this section completes M2g.6)
+3. **M2i.2** — Keep `20251008T174753Z` bundle as authoritative baseline; reference `I_before_scaling` Δrel ≈ -0.9999995 in future diagnostics
+4. **Cache index audit** — Build next diagnostics bundle logging `(slow, fast)` cache lookups before/after `apply_phi_carryover()`
+
+### Exit Criteria Met
+
+- [x] Trace harness executes without IndexError on CPU
+- [x] Trace harness executes without IndexError on CUDA
+- [x] Omega and F_latt values captured in trace output
+- [x] Per-φ rotation traces (TRACE_PY_PHI) functional
+- [x] CPU/CUDA parity within tolerance (≤1e-10 relative)
+- [x] Device/dtype neutrality verified (CPU float64, CUDA float64)
+- [x] Instrumentation reuse rule honored (no trace-only physics)
+
+**M2g.6 Status:** Documentation sync complete. Mark plan row `[D]`.

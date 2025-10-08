@@ -3808,3 +3808,23 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - Cache index audit (plan item 4) — Confirm `apply_phi_carryover()` consumes previous pixel's (slow, fast) entry with fast-1 wrap semantics
       - M2h — Execute validation bundle (CPU pytest, CUDA probe when available, gradcheck)
       - M2i — Regenerate cross-pixel traces expecting φ=0 carryover to work correctly after cache index fix
+  * [2025-10-08] Attempt #172 (ralph loop i=170, Mode: Docs) — Result: ✅ **M2g.6 COMPLETE** (Documentation sync for Attempt #171 trace tooling evidence). **No code changes.**
+    Metrics:
+      - Test collection: 35 tests collected successfully in 2.17s (pytest --collect-only -q tests/test_cli_scaling_phi0.py tests/test_phi_carryover_mode.py)
+      - Documentation-only loop per input.md Mode: Docs
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md` — Appended "20251008T175913Z — Trace Tooling Verification" section (111 lines) documenting CPU+CUDA trace success, device/dtype neutrality, cache-aware taps, spec/C-code alignment, instrumentation reuse rule, and exit criteria
+      - `plans/active/cli-noise-pix0/plan.md` — M2g.6 row marked [D] with summary citing Attempt #171 artifacts and validation outcomes
+      - `docs/fix_plan.md` — This attempt entry (Attempt #172) logged with commit SHA 821dfd9
+    Observations/Hypotheses:
+      - **Spec references integrated**: phi_carryover_diagnosis.md now cites specs/spec-a-core.md:204-240 (normative φ rotation pipeline), docs/bugs/verified_c_bugs.md:166-204 (C-PARITY-001 bug), and Option B design memo
+      - **Parity thresholds documented**: spec mode (≤1e-6) vs c-parity mode (≤5e-5) explicitly stated in new section
+      - **Instrumentation reuse rule**: Acknowledged trace taps use production helpers (Crystal.get_rotated_real_vectors_for_batch()) per docs/architecture/README.md
+      - **Device/dtype neutrality**: CLAUDE Rule #16 compliance confirmed (CPU float64 + CUDA float64 runs without hard-coded device calls)
+      - **M2g.6 exit criteria met**: Documentation sync complete, plan row flipped [D], all artifacts referenced
+      - **Next gate**: M2i.2 metrics baseline (20251008T174753Z bundle) remains authoritative; cache index audit (Next Actions item 2) unblocked
+    Next Actions:
+      - M2g.6 COMPLETE — No further action required for this plan row
+      - Cache index audit — Build diagnostics bundle logging (slow, fast) cache lookups with fast-1 wrap semantics before/after apply_phi_carryover() (Next Actions item 2 from plan refresh)
+      - M2i.2 reference — Keep 20251008T174753Z as authoritative baseline showing I_before_scaling Δrel ≈ -0.9999995 until physics changes land
+      - Phase N preparation — Draft nb-compare harness commands for supervisor ROI parity rerun once VG-2 closes
