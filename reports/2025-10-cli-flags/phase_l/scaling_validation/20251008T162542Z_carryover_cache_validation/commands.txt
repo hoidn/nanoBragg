@@ -1,0 +1,33 @@
+44f11724513d9d84563d0a642bf7dc58699eb4fd
+44f1172 [SYNC i=164] actor=ralph status=running
+
+
+## Python Environment
+Python 3.13.7
+PyTorch: 2.8.0+cu128
+CUDA available: True
+CUDA version: 12.8
+
+
+## Commands Executed
+
+### CUDA Trace Harness (BLOCKED - device mismatch)
+KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py \
+  --pixel 685 1039 --config supervisor --phi-mode c-parity --device cuda --dtype float64 \
+  --out reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T162542Z_carryover_cache_validation/trace_py_scaling_cuda.log
+
+Result: RuntimeError - device mismatch (cuda:0 vs cpu) in debug path
+
+### CPU Fallback (per input.md "If Blocked")
+KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py \
+  --pixel 685 1039 --config supervisor --phi-mode c-parity --device cpu --dtype float64 \
+  --out reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T162542Z_carryover_cache_validation/trace_py_scaling_cpu.log
+
+Result: SUCCESS - 114 TRACE_PY lines captured, final intensity: 2.45946637686509e-07
+
+### Environment Capture
+python -m torch.utils.collect_env > torch_collect_env.txt
+
+### Checksums
+cd reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T162542Z_carryover_cache_validation
+sha256sum * > sha256.txt

@@ -1,0 +1,6 @@
+# CLI-FLAGS-003 M2h.2 CUDA + Gradcheck Diagnostics
+Wed Oct  8 04:26:21 PM UTC 2025
+44f11724513d9d84563d0a642bf7dc58699eb4fd
+Python 3.13.7
+PyTorch: 2.8.0+cu128
+CUDA: True

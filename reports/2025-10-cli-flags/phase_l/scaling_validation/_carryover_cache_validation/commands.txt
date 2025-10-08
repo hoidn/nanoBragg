@@ -1,0 +1,7 @@
+# CLI-FLAGS-003 M2h.2 CUDA + Gradcheck Diagnostics
+# Timestamp: $(date -u +%Y%m%dT%H%M%SZ)
+# Working directory: $(pwd)
+# Git SHA: $(git rev-parse HEAD)
+# Python version: $(python --version)
+# PyTorch version: $(python -c "import torch; print(torch.__version__)")
+# CUDA available: $(python -c "import torch; print(torch.cuda.is_available())")

@@ -3612,3 +3612,34 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - M2h.4: Already satisfied by this Attempt entry.
       - M2i.1: After M2h.2-M2h.3 complete, regenerate ROI traces (`--roi 684 686 1039 1040`) and update `metrics.json`/`lattice_hypotheses.md` before advancing to Phase M3.
       - Code debugging: Instrument `Simulator.run()` row loop to log `apply_phi_carryover()` and `store_phi_final()` invocations with pixel indices; verify φ=0 mask condition and cache retrieval correctness.
+
+  * [2025-10-08] Attempt #165 (ralph loop i=164, Mode: Evidence) — Result: **M2h.2 BLOCKED by device mismatch** (CUDA trace harness fails, CPU fallback captured). **No code changes.**
+    Metrics:
+      - CUDA trace harness attempt: **BLOCKED** — RuntimeError: "Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu!"
+      - CPU fallback (per input.md "If Blocked" clause): **SUCCESS**
+        - Command: `KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --phi-mode c-parity --device cpu --dtype float64`
+        - Captured 114 TRACE_PY lines
+        - Final intensity: 2.45946637686509e-07
+        - 10 TRACE_PY_PHI lines (per-φ trace)
+      - Environment: Python 3.13.7, PyTorch 2.8.0+cu128, CUDA 12.8 available (but unusable due to blocker)
+      - Git SHA: 44f11724513d9d84563d0a642bf7dc58699eb4fd
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T162542Z_carryover_cache_validation/diagnostics.md` — Root cause analysis, blocker details, CPU fallback evidence
+      - `.../trace_py_scaling_cpu.log` — 114-line PyTorch trace from CPU fallback
+      - `.../env.json` — Runtime metadata (CUDA available but not used due to blocker)
+      - `.../commands.txt` — Reproduction steps for both CUDA attempt and CPU fallback
+      - `.../torch_collect_env.txt` — Complete torch environment capture
+      - `.../sha256.txt` — Artifact checksums
+    Observations/Hypotheses:
+      - **Device mismatch blocker (CUDA):** Debug path in `simulator.py:1516` (_apply_debug_output) creates HKL tensors via bare `torch.tensor()` without inheriting device from main computation. When simulator runs on CUDA, these default to CPU, triggering device mismatch in `crystal.py:510` (_nearest_neighbor_lookup → torch.where).
+      - **CLAUDE.md Rule #16 violation:** "Accept tensors on whatever device/dtype the caller provides" — debug code allocates CPU tensors mid-pipeline instead of using `.to(device)` or `type_as()`.
+      - **Affected code paths:** `simulator.py:1516` (debug HKL construction), `crystal.py:510` (structure factor lookup), any other debug paths with bare `torch.tensor()`.
+      - **CPU fallback working:** Trace harness completes successfully on CPU, capturing 114 trace lines and producing expected final intensity. This confirms the carryover cache pathway is exercisable on CPU.
+      - **Gradcheck deferred:** M2h.3 gradcheck probe cannot proceed until CUDA path is fixed, as float64 gradcheck benefits from GPU acceleration and cross-device validation.
+      - **Stack trace:** Full error chain documented in diagnostics.md: _apply_debug_output → get_structure_factor → _nearest_neighbor_lookup → torch.where (device conflict).
+    Next Actions:
+      - **Urgent fix (M2h.2 blocker):** Update `simulator.py:1516` and all debug paths to use `torch.tensor(..., device=self.device, dtype=self.dtype)` or infer device/dtype from existing computation tensors. Audit `_apply_debug_output()` for similar bare `torch.tensor()` calls.
+      - **Resume M2h.2 after fix:** Rerun CUDA trace harness and capture `trace_py_scaling_cuda.log`, compare F_latt vs CPU baseline.
+      - **Execute M2h.3:** Run gradcheck probe (float64, 2×2 ROI, CUDA device) to verify cache gradients non-null.
+      - **Update plan:** Mark M2h.2/M2h.3 as blocked pending debug path fix; reference this diagnostics.md in plan task M2h notes.
+      - **Code debugging (after M2h.2 unblocked):** Investigate F_latt sign flip and φ=0 substitution behavior using CUDA + CPU trace diffs.
