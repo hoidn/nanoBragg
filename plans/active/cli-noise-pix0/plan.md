@@ -26,8 +26,7 @@
   - Supervisor command / nb-compare parity remains outstanding (correlation ≈0.9965, intensity ratio ≈1.26e5) pending VG-2 closure.
 - New evidence (Attempt #171, 2025-10-08): `reports/2025-10-cli-flags/phase_l/trace_tooling_patch/20251008T175913Z/` confirms cache-aware trace taps on CPU+CUDA; M2g.5 is complete and clears the tooling blocker.
 - Next Actions (2025-12-13 refresh):
-0. **Follow Phase B0 (design review)** — Rely on `plans/active/phi-carryover-removal/plan.md` B0 to capture the Phase B design bundle (`reports/2025-10-cli-flags/phase_phi_removal/phase_b/<ts>/design_review.md`) and collect-only baseline before code edits.
-1. **Phase B1–B3 execution** — Once the design artifact lands, remove the shim surfaces/config plumbing/tests per the updated plan, keeping vectorization/device neutrality intact and noting impacted scaling diagnostics.
+1. **Phase B1–B3 execution** — With the design bundle in place (`reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T185921Z/`), remove the shim surfaces/config plumbing/tests per the updated plan while preserving vectorization/device neutrality and noting impacted scaling diagnostics.
 2. **Phase B4 regression sweep** — Run the spec-mode targeted pytest command(s) with logs stored alongside the artifact bundle; confirm tolerances remain ≤1e-6.
 3. **Phase B5 sync** — Update this plan’s status snapshot and Next Actions after the removal bundle is committed so downstream work can resume with Phase M scaling tasks.
 - Artifact Storage Convention: place new work in `reports/2025-10-cli-flags/phase_l/<phase_folder>/<timestamp>/` with `commands.txt`, raw logs, metrics JSON, and SHA256 hashes. Reference these paths in docs/fix_plan.md attempt logs and `fix_checklist.md`.
