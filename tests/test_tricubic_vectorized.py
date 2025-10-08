@@ -361,6 +361,409 @@ class TestTricubicGather:
         print(f"  - Shape: {h.shape} → {F.shape}")
 
 
+class TestTricubicPoly:
+    """
+    Test suite for vectorized polynomial interpolation helpers (Phase D3).
+
+    These tests validate the batched polynomial evaluation helpers that power
+    tricubic interpolation. Tests are expected to FAIL until Phase D2 implementation
+    lands (polint_vectorized, polin2_vectorized, polin3_vectorized).
+
+    Reference: reports/2025-10-vectorization/phase_d/polynomial_validation.md
+    """
+
+    @pytest.fixture
+    def poly_fixture_data(self):
+        """
+        Create deterministic polynomial test data per worksheet Table 2.1.
+
+        Uses small integer-based tensor values to minimize rounding noise
+        while exercising all indices.
+        """
+        # 1D data for polint testing (B=3)
+        xa = torch.tensor([
+            [0.0, 1.0, 2.0, 3.0],  # Linear spacing
+            [0.0, 1.0, 2.0, 3.0],
+            [1.0, 2.0, 3.0, 4.0]
+        ], dtype=torch.float64)
+
+        ya = torch.tensor([
+            [1.0, 2.0, 4.0, 8.0],   # Power of 2 pattern
+            [0.0, 1.0, 8.0, 27.0],  # Cubic pattern
+            [2.0, 3.0, 5.0, 9.0]    # Linear + constant
+        ], dtype=torch.float64)
+
+        x = torch.tensor([1.5, 0.5, 2.5], dtype=torch.float64)
+
+        # 2D data for polin2 testing (B=2)
+        x1a_2d = torch.tensor([
+            [0.0, 1.0, 2.0, 3.0],
+            [0.0, 1.0, 2.0, 3.0]
+        ], dtype=torch.float64)
+
+        x2a_2d = torch.tensor([
+            [0.0, 1.0, 2.0, 3.0],
+            [0.0, 1.0, 2.0, 3.0]
+        ], dtype=torch.float64)
+
+        # Simple grid: ya[i,j] = i + j
+        ya_2d = torch.zeros((2, 4, 4), dtype=torch.float64)
+        for i in range(4):
+            for j in range(4):
+                ya_2d[0, i, j] = float(i + j)
+                ya_2d[1, i, j] = float(i * j)  # Different pattern for second batch
+
+        x1_2d = torch.tensor([1.5, 0.5], dtype=torch.float64)
+        x2_2d = torch.tensor([1.5, 1.5], dtype=torch.float64)
+
+        # 3D data for polin3 testing (B=2)
+        x1a_3d = torch.tensor([
+            [0.0, 1.0, 2.0, 3.0],
+            [0.0, 1.0, 2.0, 3.0]
+        ], dtype=torch.float64)
+
+        x2a_3d = torch.tensor([
+            [0.0, 1.0, 2.0, 3.0],
+            [0.0, 1.0, 2.0, 3.0]
+        ], dtype=torch.float64)
+
+        x3a_3d = torch.tensor([
+            [0.0, 1.0, 2.0, 3.0],
+            [0.0, 1.0, 2.0, 3.0]
+        ], dtype=torch.float64)
+
+        # Simple 3D grid: ya[i,j,k] = i + j + k
+        ya_3d = torch.zeros((2, 4, 4, 4), dtype=torch.float64)
+        for i in range(4):
+            for j in range(4):
+                for k in range(4):
+                    ya_3d[0, i, j, k] = float(i + j + k)
+                    ya_3d[1, i, j, k] = float(i + j + k) * 10.0  # Scaled for second batch
+
+        x1_3d = torch.tensor([1.5, 0.5], dtype=torch.float64)
+        x2_3d = torch.tensor([1.5, 1.5], dtype=torch.float64)
+        x3_3d = torch.tensor([0.5, 0.5], dtype=torch.float64)
+
+        return {
+            # 1D polint data
+            'xa': xa, 'ya': ya, 'x': x,
+            # 2D polin2 data
+            'x1a_2d': x1a_2d, 'x2a_2d': x2a_2d, 'ya_2d': ya_2d,
+            'x1_2d': x1_2d, 'x2_2d': x2_2d,
+            # 3D polin3 data
+            'x1a_3d': x1a_3d, 'x2a_3d': x2a_3d, 'x3a_3d': x3a_3d, 'ya_3d': ya_3d,
+            'x1_3d': x1_3d, 'x2_3d': x2_3d, 'x3_3d': x3_3d
+        }
+
+    @pytest.mark.xfail(strict=True, reason="D2 implementation pending: polint_vectorized not yet implemented")
+    def test_polint_matches_scalar_batched(self, poly_fixture_data):
+        """
+        Verify batched polint produces same results as scalar reference.
+
+        Expected to FAIL until D2 implementation lands.
+        Reference: polynomial_validation.md Section 3.1
+        """
+        from nanobrag_torch.utils.physics import polint_vectorized
+
+        xa = poly_fixture_data['xa']
+        ya = poly_fixture_data['ya']
+        x = poly_fixture_data['x']
+        B = xa.shape[0]
+
+        # Call vectorized implementation
+        y_batch = polint_vectorized(xa, ya, x)
+
+        # Verify shape
+        assert y_batch.shape == (B,), f"Output shape should be ({B},), got {y_batch.shape}"
+
+        # Verify no NaNs/Infs
+        assert not torch.isnan(y_batch).any(), "Batched polint output contains NaNs"
+        assert not torch.isinf(y_batch).any(), "Batched polint output contains Infs"
+
+        # Compare against scalar reference (from existing utils/physics.py)
+        from nanobrag_torch.utils.physics import polint as polint_scalar
+        y_scalar = torch.zeros(B, dtype=torch.float64)
+        for i in range(B):
+            y_scalar[i] = polint_scalar(xa[i], ya[i], x[i])
+
+        # Should match within numerical tolerance
+        assert torch.allclose(y_batch, y_scalar, rtol=1e-10, atol=1e-12), \
+            f"Batched vs scalar mismatch: max diff = {(y_batch - y_scalar).abs().max()}"
+
+        print(f"✓ polint_vectorized matches scalar for B={B}")
+        print(f"  Output: {y_batch.tolist()}")
+
+    @pytest.mark.xfail(strict=True, reason="D2 implementation pending: polint_vectorized gradients")
+    def test_polint_gradient_flow(self, poly_fixture_data):
+        """
+        Verify gradcheck passes for vectorized polint.
+
+        Expected to FAIL until D2 implementation with gradient support lands.
+        Reference: polynomial_validation.md Section 4.2
+        """
+        from nanobrag_torch.utils.physics import polint_vectorized
+
+        xa = poly_fixture_data['xa'][:1]  # B=1 for gradcheck
+        ya = poly_fixture_data['ya'][:1].requires_grad_(True)
+        x = poly_fixture_data['x'][:1].requires_grad_(True)
+
+        # Verify computation graph connectivity
+        y = polint_vectorized(xa, ya, x)
+        assert y.requires_grad, "Output should have requires_grad=True"
+        assert y.grad_fn is not None, "Output should have grad_fn (part of computation graph)"
+
+        # Gradcheck w.r.t. x
+        assert torch.autograd.gradcheck(
+            lambda x_: polint_vectorized(xa, ya, x_),
+            x,
+            eps=1e-6,
+            atol=1e-4
+        ), "Gradcheck failed w.r.t. x"
+
+        # Gradcheck w.r.t. ya
+        assert torch.autograd.gradcheck(
+            lambda ya_: polint_vectorized(xa, ya_, x),
+            ya,
+            eps=1e-6,
+            atol=1e-4
+        ), "Gradcheck failed w.r.t. ya"
+
+        print("✓ polint_vectorized gradients verified")
+
+    @pytest.mark.xfail(strict=True, reason="D2 implementation pending: polin2_vectorized not yet implemented")
+    def test_polin2_matches_scalar_batched(self, poly_fixture_data):
+        """
+        Verify batched polin2 produces same results as scalar reference.
+
+        Expected to FAIL until D2 implementation lands.
+        Reference: polynomial_validation.md Section 3.2
+        """
+        from nanobrag_torch.utils.physics import polin2_vectorized
+
+        x1a = poly_fixture_data['x1a_2d']
+        x2a = poly_fixture_data['x2a_2d']
+        ya = poly_fixture_data['ya_2d']
+        x1 = poly_fixture_data['x1_2d']
+        x2 = poly_fixture_data['x2_2d']
+        B = x1a.shape[0]
+
+        # Call vectorized implementation
+        y_batch = polin2_vectorized(x1a, x2a, ya, x1, x2)
+
+        # Verify shape
+        assert y_batch.shape == (B,), f"Output shape should be ({B},), got {y_batch.shape}"
+
+        # Verify no NaNs/Infs
+        assert not torch.isnan(y_batch).any(), "Batched polin2 output contains NaNs"
+        assert not torch.isinf(y_batch).any(), "Batched polin2 output contains Infs"
+
+        # Compare against scalar reference
+        from nanobrag_torch.utils.physics import polin2 as polin2_scalar
+        y_scalar = torch.zeros(B, dtype=torch.float64)
+        for i in range(B):
+            y_scalar[i] = polin2_scalar(x1a[i], x2a[i], ya[i], x1[i], x2[i])
+
+        # Should match within numerical tolerance
+        assert torch.allclose(y_batch, y_scalar, rtol=1e-10, atol=1e-12), \
+            f"Batched vs scalar mismatch: max diff = {(y_batch - y_scalar).abs().max()}"
+
+        print(f"✓ polin2_vectorized matches scalar for B={B}")
+        print(f"  Output: {y_batch.tolist()}")
+
+    @pytest.mark.xfail(strict=True, reason="D2 implementation pending: polin2_vectorized gradients")
+    def test_polin2_gradient_flow(self, poly_fixture_data):
+        """
+        Verify gradcheck passes for vectorized polin2.
+
+        Expected to FAIL until D2 implementation with gradient support lands.
+        Reference: polynomial_validation.md Section 4.2
+        """
+        from nanobrag_torch.utils.physics import polin2_vectorized
+
+        x1a = poly_fixture_data['x1a_2d'][:1]
+        x2a = poly_fixture_data['x2a_2d'][:1]
+        ya = poly_fixture_data['ya_2d'][:1].requires_grad_(True)
+        x1 = poly_fixture_data['x1_2d'][:1].requires_grad_(True)
+        x2 = poly_fixture_data['x2_2d'][:1].requires_grad_(True)
+
+        # Verify computation graph connectivity
+        y = polin2_vectorized(x1a, x2a, ya, x1, x2)
+        assert y.requires_grad, "Output should have requires_grad=True"
+        assert y.grad_fn is not None, "Output should have grad_fn"
+
+        # Gradcheck w.r.t. x1
+        assert torch.autograd.gradcheck(
+            lambda x1_: polin2_vectorized(x1a, x2a, ya, x1_, x2),
+            x1,
+            eps=1e-6,
+            atol=1e-4
+        ), "Gradcheck failed w.r.t. x1"
+
+        print("✓ polin2_vectorized gradients verified")
+
+    @pytest.mark.xfail(strict=True, reason="D2 implementation pending: polin3_vectorized not yet implemented")
+    def test_polin3_matches_scalar_batched(self, poly_fixture_data):
+        """
+        Verify batched polin3 (full 3D tricubic) produces same results as scalar.
+
+        Expected to FAIL until D2 implementation lands.
+        Reference: polynomial_validation.md Section 3.3
+        """
+        from nanobrag_torch.utils.physics import polin3_vectorized
+
+        x1a = poly_fixture_data['x1a_3d']
+        x2a = poly_fixture_data['x2a_3d']
+        x3a = poly_fixture_data['x3a_3d']
+        ya = poly_fixture_data['ya_3d']
+        x1 = poly_fixture_data['x1_3d']
+        x2 = poly_fixture_data['x2_3d']
+        x3 = poly_fixture_data['x3_3d']
+        B = x1a.shape[0]
+
+        # Call vectorized implementation
+        y_batch = polin3_vectorized(x1a, x2a, x3a, ya, x1, x2, x3)
+
+        # Verify shape
+        assert y_batch.shape == (B,), f"Output shape should be ({B},), got {y_batch.shape}"
+
+        # Verify no NaNs/Infs
+        assert not torch.isnan(y_batch).any(), "Batched polin3 output contains NaNs"
+        assert not torch.isinf(y_batch).any(), "Batched polin3 output contains Infs"
+
+        # Compare against scalar reference
+        from nanobrag_torch.utils.physics import polin3 as polin3_scalar
+        y_scalar = torch.zeros(B, dtype=torch.float64)
+        for i in range(B):
+            y_scalar[i] = polin3_scalar(x1a[i], x2a[i], x3a[i], ya[i], x1[i], x2[i], x3[i])
+
+        # Should match within numerical tolerance
+        assert torch.allclose(y_batch, y_scalar, rtol=1e-10, atol=1e-12), \
+            f"Batched vs scalar mismatch: max diff = {(y_batch - y_scalar).abs().max()}"
+
+        print(f"✓ polin3_vectorized matches scalar for B={B}")
+        print(f"  Output: {y_batch.tolist()}")
+
+    @pytest.mark.xfail(strict=True, reason="D2 implementation pending: polin3_vectorized gradients")
+    def test_polin3_gradient_flow(self, poly_fixture_data):
+        """
+        Verify gradcheck passes for vectorized polin3 (full 3D interpolation).
+
+        Expected to FAIL until D2 implementation with gradient support lands.
+        Reference: polynomial_validation.md Section 4.2
+        """
+        from nanobrag_torch.utils.physics import polin3_vectorized
+
+        x1a = poly_fixture_data['x1a_3d'][:1]
+        x2a = poly_fixture_data['x2a_3d'][:1]
+        x3a = poly_fixture_data['x3a_3d'][:1]
+        ya = poly_fixture_data['ya_3d'][:1].requires_grad_(True)
+        x1 = poly_fixture_data['x1_3d'][:1].requires_grad_(True)
+        x2 = poly_fixture_data['x2_3d'][:1].requires_grad_(True)
+        x3 = poly_fixture_data['x3_3d'][:1].requires_grad_(True)
+
+        # Verify computation graph connectivity
+        y = polin3_vectorized(x1a, x2a, x3a, ya, x1, x2, x3)
+        assert y.requires_grad, "Output should have requires_grad=True"
+        assert y.grad_fn is not None, "Output should have grad_fn"
+
+        # Gradcheck w.r.t. x1
+        assert torch.autograd.gradcheck(
+            lambda x1_: polin3_vectorized(x1a, x2a, x3a, ya, x1_, x2, x3),
+            x1,
+            eps=1e-6,
+            atol=1e-4
+        ), "Gradcheck failed w.r.t. x1"
+
+        print("✓ polin3_vectorized gradients verified")
+
+    @pytest.mark.xfail(strict=True, reason="D2 implementation pending: batched path shape preservation")
+    def test_polin3_batch_shape_preserved(self, poly_fixture_data):
+        """
+        Verify batched polin3 preserves batch dimension correctly.
+
+        Expected to FAIL until D2 implementation lands.
+        Reference: polynomial_validation.md Section 2.2
+        """
+        from nanobrag_torch.utils.physics import polin3_vectorized
+
+        # Create larger batch to verify shape handling
+        B = 10
+        ya = torch.randn((B, 4, 4, 4), dtype=torch.float64)
+        x1a = torch.arange(4, dtype=torch.float64).unsqueeze(0).expand(B, -1)
+        x2a = x1a.clone()
+        x3a = x1a.clone()
+        x1 = torch.rand(B, dtype=torch.float64) * 3.0
+        x2 = torch.rand(B, dtype=torch.float64) * 3.0
+        x3 = torch.rand(B, dtype=torch.float64) * 3.0
+
+        y = polin3_vectorized(x1a, x2a, x3a, ya, x1, x2, x3)
+
+        # Verify output shape matches batch size
+        assert y.shape == (B,), f"Output shape should be ({B},), got {y.shape}"
+
+        # Verify no unexpected broadcasting
+        assert y.ndim == 1, f"Output should be 1D, got {y.ndim}D"
+
+        print(f"✓ polin3_vectorized preserves batch shape correctly for B={B}")
+
+    @pytest.mark.xfail(strict=True, reason="D2 implementation pending: dtype neutrality")
+    @pytest.mark.parametrize("dtype", [torch.float32, torch.float64])
+    def test_polynomials_support_float64(self, poly_fixture_data, dtype):
+        """
+        Verify polynomial helpers work with both float32 and float64.
+
+        Expected to FAIL until D2 implementation lands.
+        Reference: polynomial_validation.md Section 5.2
+        """
+        from nanobrag_torch.utils.physics import polint_vectorized
+
+        xa = poly_fixture_data['xa'].to(dtype=dtype)
+        ya = poly_fixture_data['ya'].to(dtype=dtype)
+        x = poly_fixture_data['x'].to(dtype=dtype)
+
+        y = polint_vectorized(xa, ya, x)
+
+        # Verify dtype preservation
+        assert y.dtype == dtype, f"Output dtype should be {dtype}, got {y.dtype}"
+
+        # Verify no NaNs (could occur with float32 precision issues)
+        assert not torch.isnan(y).any(), f"Output contains NaNs with dtype={dtype}"
+
+        print(f"✓ polint_vectorized works with {dtype}")
+
+    @pytest.mark.xfail(strict=True, reason="D2 implementation pending: device neutrality")
+    @pytest.mark.parametrize("device", [
+        "cpu",
+        pytest.param("cuda", marks=pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available"))
+    ])
+    def test_polynomials_device_neutral(self, poly_fixture_data, device):
+        """
+        Verify polynomial helpers work on both CPU and CUDA.
+
+        Expected to FAIL until D2 implementation lands.
+        Reference: polynomial_validation.md Section 5.1
+        """
+        from nanobrag_torch.utils.physics import polin3_vectorized
+
+        x1a = poly_fixture_data['x1a_3d'].to(device=device)
+        x2a = poly_fixture_data['x2a_3d'].to(device=device)
+        x3a = poly_fixture_data['x3a_3d'].to(device=device)
+        ya = poly_fixture_data['ya_3d'].to(device=device)
+        x1 = poly_fixture_data['x1_3d'].to(device=device)
+        x2 = poly_fixture_data['x2_3d'].to(device=device)
+        x3 = poly_fixture_data['x3_3d'].to(device=device)
+
+        y = polin3_vectorized(x1a, x2a, x3a, ya, x1, x2, x3)
+
+        # Verify output is on correct device
+        assert y.device.type == device, f"Output device should be {device}, got {y.device.type}"
+
+        # Verify no NaNs (CUDA numerical issues)
+        assert not torch.isnan(y).any(), f"Output contains NaNs on {device}"
+
+        print(f"✓ polin3_vectorized works on {device}")
+
+
 if __name__ == "__main__":
     # Allow running this test file directly
     pytest.main([__file__, "-v"])

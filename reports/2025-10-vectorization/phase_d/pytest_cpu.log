@@ -1,0 +1,20 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/myenv/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+collecting ... collected 11 items
+
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polint_matches_scalar_batched XFAIL [  9%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polint_gradient_flow XFAIL [ 18%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin2_matches_scalar_batched XFAIL [ 27%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin2_gradient_flow XFAIL [ 36%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin3_matches_scalar_batched XFAIL [ 45%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin3_gradient_flow XFAIL [ 54%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin3_batch_shape_preserved XFAIL [ 63%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_support_float64[dtype0] XFAIL [ 72%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_support_float64[dtype1] XFAIL [ 81%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_device_neutral[cpu] XFAIL [ 90%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_device_neutral[cuda] XFAIL [100%]
+
+============================= 11 xfailed in 2.28s ==============================

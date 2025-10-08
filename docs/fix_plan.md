@@ -2457,6 +2457,24 @@
       - OOB masking delegated to Phase C caller; polynomials assume all inputs valid (simplifies implementation).
       - Tap points planned for env-gated logging (`NANOBRAG_DEBUG_POLIN3=1`) if parity drifts in Phase E.
     Next Actions: Phase D2 — Implement vectorized `polint`/`polin2`/`polin3` in `utils/physics.py` following worksheet Section 3 docstring templates and Section 2 shape specs; add 10 unit tests from Section 9.1 to `test_tricubic_vectorized.py`; run CPU+CUDA smoke tests and capture logs under `phase_d/pytest_{cpu,cuda}.log`; update this fix_plan entry with metrics + commit SHA.
+  * [2025-10-07] Attempt #9 (ralph loop, Mode: Code) — Result: **Phase D3 COMPLETE** (polynomial regression tests authored and validated). Test infrastructure ready for Phase D2 implementation.
+    Metrics: Tests authored: 11 (`TestTricubicPoly` class in test_tricubic_vectorized.py). Collection: 11 new tests collected in 2.32s. Execution: 11 xfailed in 2.28s (all ImportError as expected). Existing gather tests: 5/5 passed in 2.43s (no regressions).
+    Artifacts:
+      - `tests/test_tricubic_vectorized.py` lines 364-769 — New `TestTricubicPoly` class with 11 regression tests covering scalar equivalence (polint/polin2/polin3), gradient flow (torch.autograd.gradcheck), device parametrisation (CPU/CUDA), dtype neutrality (float32/float64), and batch shape preservation. All tests marked `@pytest.mark.xfail(strict=True)` with reason="D2 implementation pending".
+      - `reports/2025-10-vectorization/phase_d/collect.log` — pytest collection proof (11 tests collected)
+      - `reports/2025-10-vectorization/phase_d/pytest_cpu.log` — CPU test run showing 11 xfailed (all ImportError: cannot import polint_vectorized)
+      - `reports/2025-10-vectorization/phase_d/implementation_notes.md` — Complete Phase D3 documentation with test design rationale, fixture structure, assertion strategy, follow-on checklist for D2
+      - `reports/2025-10-vectorization/phase_d/env.json` — Environment snapshot (Python 3.13.7, PyTorch 2.8.0+cu128, CUDA available: True)
+    Observations/Hypotheses:
+      - All 11 tests correctly fail with ImportError since `polint_vectorized`, `polin2_vectorized`, `polin3_vectorized` do not exist yet in `utils/physics.py`
+      - Strict xfail mode ensures tests will **fail** if implementation accidentally passes before D2 completion (prevents premature claims)
+      - Fixture `poly_fixture_data` provides deterministic test data per worksheet Table 2.1: 1D (B=3), 2D (B=2), 3D (B=2) with known patterns
+      - Tests validate: shape correctness `(B,)` output, no NaNs/Infs, scalar equivalence (loop vs batched), gradient flow (gradcheck with eps=1e-6, atol=1e-4), device preservation, dtype preservation
+      - Device parametrisation includes CUDA skip condition: `pytest.param("cuda", marks=pytest.mark.skipif(not torch.cuda.is_available()))`
+      - Test suite covers all 10 planned tests from worksheet Section 9.1 plus one additional batch shape test (11 total)
+      - No regressions to Phase C infrastructure: existing `TestTricubicGather` (5 tests) all pass
+      - Implementation notes provide complete D2 checklist: add vectorized helpers to `utils/physics.py`, include C-code docstrings (CLAUDE Rule #11), preserve differentiability/device neutrality, run CPU+CUDA sweeps
+    Next Actions: Phase D2 — Implement batched `polint_vectorized`, `polin2_vectorized`, `polin3_vectorized` in `src/nanobrag_torch/utils/physics.py` following worksheet Section 3 C-code reference templates (nanoBragg.c lines 4150-4187); ensure gradient preservation (no `.item()`, clamp denominators), device neutrality (infer from inputs), and dtype neutrality; transition tests from XFAIL→PASS; capture CPU+CUDA logs under `phase_d/pytest_cpu.log` & `phase_d/pytest_cuda.log` after implementation.
 - Risks/Assumptions: Must maintain differentiability (no `.item()`, no `torch.linspace` with tensor bounds), preserve device/dtype neutrality (CPU/CUDA parity), and obey Protected Assets rule (all new scripts under `scripts/benchmarks/`). Large tensor indexing may increase memory pressure; ensure ROI caching still works.
 - Exit Criteria (quote thresholds from spec):
   * specs/spec-a-parallel.md §2.3 tricubic acceptance tests run without warnings and match C parity within documented tolerances (corr≥0.9995, ≤1e-12 structural duality where applicable).
