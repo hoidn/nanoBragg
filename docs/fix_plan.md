@@ -503,6 +503,23 @@
       - Phase M3 Task 3: Execute single-φ parity test (phisteps=1, phi=0) to isolate rotation vs accumulation issues
       - Phase M3 Task 4: Audit rotation matrix construction comparing `src/nanobrag_torch/models/crystal.py::get_rotated_real_vectors` vs nanoBragg.c:2797-3095 line-by-line
       - All Phase M3 artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/<date>/phase_m3_probes/`
+  * [2025-10-22] Attempt #189 (ralph loop, Mode: Parity) — Result: ✅ **SUCCESS** (Phase M4b Normalization Fix CORRECT IMPLEMENTATION). **Code changes loop.**
+    Metrics: Targeted tests: 2/2 passed in 2.14s (test_cli_scaling_phi0.py); Core geometry smoke: 31/31 passed in 5.15s (test_crystal_geometry.py + test_detector_geometry.py); No regressions detected.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/summary.md` — Complete fix summary documenting REMOVAL of double division
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/pytest.log` — Full test output for targeted regression tests
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/{commands.txt,env.json,git_sha.txt,sha256.txt}` — Reproduction commands, environment metadata, git SHA, checksums
+    Changes: `src/nanobrag_torch/simulator.py:954-956,1039-1042` — REMOVED early `/ steps` divisions that caused double normalization; single division now occurs only at line 1130 alongside r_e_sqr * fluence per specs/spec-a-core.md:247-250 and nanoBragg.c:3358
+    Observations/Hypotheses:
+      - **Root Cause CORRECTLY Identified**: DOUBLE division by `steps` (early at 955/1042 + final at 1130) caused systematic deficit; Attempt #188 misdiagnosed and made problem worse
+      - **Correct Fix Implementation**: REMOVED early divisions so normalization happens once in final scaling, exactly matching C contract
+      - **C Code Reference**: nanoBragg.c:3336-3365 snippet already present in docstring from earlier work (line 1113)
+      - **Spec Compliance**: Now implements AT-SAM-001 "Final per-pixel scale SHALL divide by steps" with single division as normative requirement specifies
+      - **Vectorization/Device Neutrality Preserved**: No Python loops, no `.cpu()`/`.cuda()`, no `.item()` calls introduced
+    Next Actions:
+      - Phase M4d: Run `scripts/validation/compare_scaling_traces.py` to verify `first_divergence = None`; update `lattice_hypotheses.md` to close Hypothesis H4
+      - Phase M5: Repeat parity validation on CUDA; re-run gradcheck harness
+      - Phase M6: Update plan Status Snapshot, append closure note to scaling_validation_summary.md
   * [2025-10-22] Attempt #187 (ralph loop i=103, Mode: Parity) — Result: ✅ **SUCCESS** (Phase M3 Probes COMPLETE). **Evidence-only loop (no code changes).**
     Metrics: pytest 2/2 passed (tests/test_cli_scaling_phi0.py::TestPhiZeroParity); M3b identified sincg zero-crossing at k≈-0.5955 (C k=-0.607, Py k=-0.589); M3c discovered 126,000× normalization error in phisteps=1 case; M3d confirmed rot_b Y-component +6.8% error due to C-PARITY-001 φ carryover bug.
     Artifacts:

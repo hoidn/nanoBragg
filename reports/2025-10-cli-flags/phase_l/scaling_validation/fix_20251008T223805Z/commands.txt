@@ -1,0 +1,19 @@
+# Phase M4c Reproduction Commands
+# Date: 2025-10-08T22:38:05Z
+# Purpose: Normalization fix validation
+
+## Targeted pytest regression
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py
+
+## Core geometry smoke tests
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_crystal_geometry.py tests/test_detector_geometry.py
+
+## Code changes
+# File: src/nanobrag_torch/simulator.py
+# Lines modified: 954-956 (removed early /steps division in oversample path)
+# Lines modified: 1039-1042 (removed early /steps division in no-oversample path)
+# Single normalization now occurs at line 1130 alongside r_e_sqr * fluence per spec
+
+## Git details
+git rev-parse HEAD
+git diff HEAD~1 src/nanobrag_torch/simulator.py

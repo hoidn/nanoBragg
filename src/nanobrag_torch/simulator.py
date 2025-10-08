@@ -951,11 +951,9 @@ class Simulator:
                 # Reshape back to (S, F, oversample*oversample)
                 subpixel_physics_intensity_all = physics_intensity_flat.reshape(batch_shape)
 
-            # Normalize by the total number of steps
-            subpixel_physics_intensity_all = subpixel_physics_intensity_all / steps
-
             # PERF-PYTORCH-004 P3.0b: Polarization is now applied per-source inside compute_physics_for_position
             # Only omega needs to be applied here for subpixel oversampling
+            # NOTE: Do NOT divide by steps here - normalization happens once at final scaling (line ~1130)
 
             # VECTORIZED AIRPATH AND OMEGA: Calculate for all subpixels
             sub_squared_all = torch.sum(subpixel_coords_ang_all * subpixel_coords_ang_all, dim=-1)
@@ -1038,11 +1036,10 @@ class Simulator:
             # The current intensity already has polarization applied (from compute_physics_for_position)
             I_before_normalization = intensity.clone()
 
-            # Normalize by steps
-            normalized_intensity = intensity / steps
-
             # PERF-PYTORCH-004 P3.0b: Polarization is now applied per-source inside compute_physics_for_position
             # Only omega needs to be applied here
+            # NOTE: Do NOT divide by steps here - normalization happens once at final scaling (line ~1130)
+            normalized_intensity = intensity
 
             # Calculate airpath for pixel centers
             pixel_squared_sum = torch.sum(

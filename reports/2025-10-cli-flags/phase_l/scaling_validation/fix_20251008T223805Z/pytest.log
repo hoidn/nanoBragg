@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/myenv/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+collecting ... collected 2 items
+
+tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_rot_b_matches_c PASSED [ 50%]
+tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_k_frac_phi0_matches_c PASSED [100%]
+
+============================== 2 passed in 2.17s ===============================
