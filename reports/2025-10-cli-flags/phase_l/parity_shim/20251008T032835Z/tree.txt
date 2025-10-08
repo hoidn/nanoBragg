@@ -1,0 +1,10 @@
+.:
+commands.txt
+compare_per_phi.log
+comparison_summary.md
+per_phi_pytorch_20251007-202850.json
+per_phi_summary_20251007-202850.md
+pytest_collect.log
+sha256.txt
+trace_per_phi.log
+tree.txt

@@ -565,6 +565,25 @@
       2. **Detector geometry audit**: Verify pixel (133,134) scattering vector S matches C reference (the 20251008T023956Z trace showed pix0 divergence; this may still be active)
       3. **Escalate to galph**: This regression invalidates the Attempt #129 closure claim; Phase L3k.3c.4 must reopen with updated First Divergence and reproduction commands targeting the lattice-vector delta
       4. **Block Phase L3k.3c.5/3d/4** until Δk ≤ 1e-6 at φ=0° (per VG-1 gate threshold)
+  * [2025-10-07] Attempt #131 (ralph loop i=131, Mode: Parity) — Result: **PARITY EVIDENCE RECONFIRMED** (Phase L3k.3c.4 per-φ regression persists). **Evidence-only loop — no code changes.**
+    Metrics: Test collection: 35 tests collected successfully (tests/test_cli_scaling_phi0.py + tests/test_phi_carryover_mode.py). Evidence-only — no pytest execution this loop.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T032835Z/per_phi_pytorch_20251007-202850.json` — Fresh PyTorch per-φ trace
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T032835Z/comparison_summary.md` — Fresh C vs PyTorch comparison
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T032835Z/commands.txt` — Reproduction commands
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T032835Z/sha256.txt` — SHA256 checksums (9e9231c0... commands.txt, 2b11efce... compare_per_phi.log, 0e2e2bb4... comparison_summary.md, eaf6f434... per_phi_pytorch.json, ce789c88... per_phi_summary.md, c89ad5c2... trace_per_phi.log, 79b9602c... pytest_collect.log, 0a1d744d... tree.txt)
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T032835Z/pytest_collect.log` — Test discovery verification
+    Observations/Hypotheses:
+      - **Regression reconfirmed**: Δk divergence at φ=0° remains **9.291854e+00** (identical to Attempt #130)
+      - **Evidence matches**: C k_frac @ φ=0°: `-0.607255839576692`; PyTorch k_frac @ φ=0°: `-9.899109978860011`
+      - **Pattern unchanged**: Δk~9.3 across all φ steps (φ_tic 0-9), confirming base-vector/scattering-vector error hypothesis
+      - **Data integrity**: Fresh run with new timestamp produces identical metrics to Attempt #130, validating reproducibility
+      - **Threshold violation**: Δk (9.29) >> VG-1 tolerance (1e-6) by 7 orders of magnitude — this is NOT a small parity issue but a fundamental correctness bug
+    Next Actions:
+      1. Switch to `prompts/debug.md` mode for next loop (this is a fundamental correctness issue, not a small parity adjustment)
+      2. Generate parallel traces comparing base lattice vectors (a,b,c), reciprocal (a*,b*,c*), and scattering vector S at pixel (133,134) before φ rotation
+      3. Identify which component (lattice init, misset, scattering calculation, or spindle axis) introduces the ~9.3 offset in k_frac
+      4. Block all Phase L3k.3c.5+ work until Δk ≤ 1e-6
   * [2025-10-07] Attempt #118 (ralph loop i=118, Mode: Parity/Evidence) — Result: ✅ **SUCCESS** (Phase L3k.3c.3 φ=0 spec baseline evidence COMPLETE). **No code changes.**
     Metrics: Evidence-only loop. Tests PASSED (2/2 in 2.14s). Spec baselines locked: rot_b[0,0,1]=0.7173197865 Å (≤1e-6 ✓), k_frac(φ=0)=1.6756687164 (≤1e-6 ✓).
     Artifacts:

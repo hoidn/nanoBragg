@@ -1,0 +1,16 @@
+Environment:
+export KMP_DUPLICATE_LIB_OK=TRUE
+export PYTHONPATH=src
+export OUTDIR=reports/2025-10-cli-flags/phase_l/parity_shim/20251008T032835Z
+
+Commands:
+1. PyTorch trace:
+   python scripts/trace_per_phi.py --outdir "$OUTDIR" 2>&1 | tee "$OUTDIR/trace_per_phi.log"
+
+2. Comparison against C:
+   python scripts/compare_per_phi_traces.py \
+     "$OUTDIR/per_phi_pytorch_20251007-202850.json" \
+     "reports/2025-10-cli-flags/phase_l/parity_shim/20251008T013345Z/c_trace_phi.log" \
+     2>&1 | tee "$OUTDIR/compare_per_phi.log"
+
+Working directory: /home/ollie/Documents/tmp/nanoBragg
