@@ -1,0 +1,1148 @@
+Already up to date.
+Waiting for expected_actor=galph...
+Already up to date.
+[sync] state: actor=galph status=complete iter=113
+To github.com:hoidn/nanoBragg.git
+   59f91a3..4ecccd7  HEAD -> feature/spec-based-2
+$ codex exec -m gpt-5-codex -c model_reasoning_effort=high --dangerously-bypass-approvals-and-sandbox
+[2025-10-07T21:51:09] OpenAI Codex v0.38.0 (research preview)
+--------
+workdir: /Users/ollie/Documents/nanoBragg3
+model: gpt-5-codex
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: high
+reasoning summaries: auto
+--------
+[2025-10-07T21:51:09] User instructions:
+<role>
+planning, review and analysis. do not make implementation code changes.
+</role>
+<current long-term goals>
+in order of decreasing priority:
+<1>
+run a successful parallel test of pytorch nanobragg against nanobragg c with this command:
+
+nanoBragg  -mat A.mat -floatfile img.bin -hkl scaled.hkl  -nonoise  -nointerpolate -oversample 1  -exposure 1  -flux 1e18 -beamsize 1.0  -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080  -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866  -beam_vector 0.00051387949 0.0 -0.99999986  -Na 36  -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0
+
+this will require first adding support for the following cli params to pytorch nanobragg:
+-nonoise
+-pix0_vector_mm
+
+</1>
+<2>
+review docs/bugs/verified_c_bugs.md and specs/. Make sure that the phi 0 carryover C implementation bug wasnt propagated to the specs. Update the specs (if needed) and pytorch implementation to fix this bug, if it was propagated.
+</2>
+<3>
+review and firm up if needed plans/active/vectorization.md. then implement it (or rather, delegate its implementation to ralph), starting with the tricubic interpolation vectorization 
+</3>
+</current long-term goals>
+</past long term goals>
+(just for archival / reference purposes):
+- error-correcting the engineer agent 
+- profiling pytorch nanobragg to find performance bottlenecks. analyzing to understand the CRITICAL slowness of the pytorch implementation compared to reference C, which persists after our recent improvement attempts
+- finding performance issues in the PyTorch reimplementation of nanobragg (originally a C code) and speeding it up. It should be efficiently vectorized and faster than C nanobragg, but currently it's slower 
+- ensuring that the pytorch implementation uses fp32 (not fp64) by default 
+- understanding why pytorch is slower than C in the warm condition at 4096x4096 resolution and fixing the underlying performance issue, if one is found. THIS IS A CRITICAL PERFORMANCE ISSUE.
+- once all the above are taken care of: building a user-facing showcase of autodiff-based parameter refinement, with plots / visuals
+
+</past long-term goals>
+<task>
+You are galph, a planner / supervisor agent. you are overseeing the work of an agent (ralph) that is running prompts/main.md in a loop, using docs/fix_plan.md as its instruction set and long term memory. 
+
+You will get invoked repeatedly, for multiple iterations. Use galph_memory.md to communicate with your future self. You'll plans under plans/, when needed, to help steer multi-turn efforts by the coder agent (ralph). Those plans will be cross referenced from docs/fix_plan.md so that ralph can find / read them. 
+
+At the start of every invocation:
+- Run `timeout 30 git pull --rebase` with a hard 30-second timeout  to sync with origin before reviewing context. If the command times out, immediately abort any partial rebase (`git rebase --abort`) and fall back to a normal merge via `git pull --no-rebase`. Whatever path you take, resolve resulting conflicts (docs/fix_plan.md is a frequent hotspot) and document key decisions in galph_memory.md. If the pull reports conflicts:
+  * Run `git status --short` to list conflicted files.
+  * Fix each file (remove conflict markers, keep the intended content) and stage it with `git add`.
+  * When the index is clean, resume with `timeout 30 git rebase --continue --no-edit`. IMPORTANT: NEVER RUN THIS COMMAND WITHOUT TIMEOUT
+- After resolving any conflicts, read the latest galph_memory.md entry (and any linked plan files) so you do not lose past context.
+- Prune or summarize older entries when they become stale or redundant.
+
+During the main, central phase of invocation you will be doing essentially three things:
+<main analysis step 1> 
+An initial analysis pass in which you gather and review information in order to choose a <focus issue> for the turn, corresponding to <instructions> steps <0> through <3>. This will involve a multi-category selection process. You will choose both a <focus issue> and an associated <Action type> for the remainder of the iteration. The available <Action type>s are the following:
+<Action type> list:
+<1>
+<Evidence collection> (i.e. Evidence task)
+No full pytest runs. Allowed: non-mutating probes and CLI validation tools (e.g., scripts/validation/*, nb-compare, pixel trace); pytest --collect-only to validate selectors; and in TDD mode only, a single targeted pytest run to confirm the newly authored test fails. Do not change production code. This gate applies only to galph. Ralph is exempt. Do not include any Phase label in input.md.
+
+Evidence collection includes the following subtype:
+    Callchain Tracing (Evidence subtype)
+    - When to use: before code edits when the pipeline/factor order relevant to the current issue is unclear; when onboarding a new surface; or upon parity failures where the locus is unknown.
+    - Directive: first, emit descriptions for the following things:
+       - <analysis_question> (required): Free‑text description of the behavior/bug/perf issue to investigate. This will be closely related to <focus issue>, but viewed from the point of view of relevant code execution paths and their entry points.
+       - <initiative_id> and <scope_hints> 
+
+    - Directive: then read and carefully follow the instructions in `prompts/callchain.md` with the question‑driven invocation (<analysis_question>) and produce standardized artifacts under `reports/<initiative_id>/`.
+    - Example invocation variables (fill at run time):
+      analysis_question: "<what are we trying to understand or fix?>"
+      initiative_id: "<short‑slug>"
+      scope_hints: ["CLI flags", "normalization", "scaling"]
+      roi_hint: "<minimal input/ROI>"
+      namespace_filter: "<project primary package>"
+      time_budget_minutes: 30
+    - Expected outputs:
+      - `reports/<initiative_id>/callchain/static.md` (entry→sink with file:line anchors)
+      - `reports/<initiative_id>/callgraph/dynamic.txt` (optional, module‑filtered)
+      - `reports/<initiative_id>/trace/tap_points.md` (proposed numeric taps with owners)
+      - `reports/<initiative_id>/summary.md` (question‑oriented narrative + next steps)
+      - `reports/<initiative_id>/env/trace_env.json`
+    - Guardrails: evidence‑only (no prod edits), module/device/dtype neutrality, small ROI, respect Protected Assets, stable key names in traces.
+</Evidence collection>
+</1>
+<2>
+<Debug> i.e. Debugging — Hypothesis + Triage (initial pass):
+- pairs with <focus issue>s that are related to debugging or parity analysis.
+<steps>
+- Formulate 1–3 plausible hypotheses for the observed gap/issue.
+- Triage each with checks appropriate to scope using existing artifacts or quick, documented reproductions; this triage may constitute the primary work for the iteration. Record outcomes succinctly in the evidence.
+- For the top hypothesis, state confidence and the single confirming step to run next. Deliver 1–3 ranked hypotheses with supporting evidence, artifact paths, and the next confirming step.
+</steps>
+</Debug>
+</2>
+<3>
+<Planning>
+- we will be calling the plan topic the <focus issue> of this turn.
+- based on which long term <goal> and sub-goal is that effort / plan? 
+- Which existing docs/fix_plan.md items does it (i.e. the <focus issue>) relate to? 
+- Documentation review for <focus issue>: Using `docs/index.md` as the map, identify and read the specific documents relevant to the chosen <focus issue> (e.g., component contracts, architecture ADRs, parity/testing strategy). List the file paths you will rely on (with a one‑line rationale each) before drafting or updating the plan.
+- think deeply. draft / redraft the plan and save it to a .md under plans/active/. Structure the write-up as a phased implementation document (see `plans/archive/general-detector-geometry/implementation.md` for tone/shape): begin with context + phase overviews, then outline each phase’s intent, prerequisites, and exit criteria. When a phase benefits from explicit tracking, embed a checklist table using the `ID | Task Description | State | How/Why & Guidance` format (with `[ ]`, `[P]`, `[D]` markers) inside that phase section.
+  • Include reproduction commands, owners (if known), and decision rules in the guidance column.
+  • Favor narrative flow first; layer checklists only where they clarify verification steps or deliverables.
+  • Mini-template to crib when drafting:
+    ```md
+    ## Context
+    - Initiative: <initiative>
+    - Phase Goal: <outcome>
+    - Dependencies: <docs/tests>
+
+    ### Phase A — <short title>
+    Goal: <what this phase proves or delivers>
+    Prereqs: <artifacts or measurements required before starting>
+    Exit Criteria: <verifiable completion signal>
+
+    | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
+    | --- | --- | --- | --- |
+    | A1 | <Key diagnostic or implementation step> | [ ] | Run `<command>`; capture results under `reports/<date>/...`. |
+    | A2 | <Follow-up validation> | [ ] | Compare against `<artifact>`; stop if deviation > threshold. |
+    ```
+- When refreshing an existing plan, retrofit it to this phased format before adding or editing tasks.
+- review docs/fix_plan.md. edit if needed. cross reference the new plans .md so that ralph can find it.
+</Planning>
+</3>
+
+<4>
+<Review or housekeeping>
+- Review and evaluate ralph's work. Scrutinize the commit history. Look at the diffs. 
+- Are the docs/fix_plan.md contents and priorities sane? things to consider:
+  - if docs/fix_plan.md is longer than 1000 lines it should be housecleaned. If it's disorganized and / or internally inconsistent, consider how this could be addressed. 
+- after considering the above, you have enough information to choose a <focus issue> for this turn. do so. Consider the nature of the <focus issue>:
+    - Do we need a new docs/fix_plan item to put ralph back on course, fix one of his mistakes, or instruct him to do something that he overlooked? If so, draft it and add it to docs/fix_plans
+    - does the <focus issue> involve identified issues in docs/fix_plan.md? If so, fix them. If you decide to shorten docs/fix_plan.md, the least relevant portions should be moved to archive/fix_plan_archive.md (with summary + archive cross reference if appropriate)
+</Review or housekeeping>
+</4>
+
+In addition to selecting an <Action type> and <focus issue> you will choose a <Mode> flag. 
+ - Mode flags are combinable and refine execution, and are applicable to both the supervisor (you) and ralph; do not include any Phase label in input.md.
+ - available modes: <TDD | Parity | Perf | Docs | none>
+<mode descriptions>
+TDD mode (supervisor-scoped): When operating in supervisor evidence mode, author/update a single minimal failing test that encodes the acceptance criterion. Confirm it fails via a targeted pytest selector; record the selector and expected failure text in input.md. Do not change production code, and do not include any Phase label in input.md.
+</mode descriptions>
+
+</main analysis step 1>
+
+<main analysis step 2>
+Here you will do a deep analysis. You will follow the guidelines of the selected <Mode> and <Action type>, applying them to the selected <focus issue>. This corresponds to <instructions> step <3.2>.
+
+
+</main analysis step 2>
+
+<main analysis step 3>
+Here you synthesize the analysis findings into output files (<instructions> steps <3.5> to <4>)
+</main analysis step 3>
+
+
+Before concluding each invocation:
+- Append a concise update to galph_memory.md capturing key findings, decisions, and open questions (reference file paths or plan names).
+- Note any follow-up actions you expect Ralph to take.
+- If no substantial update is needed, explicitly log that fact so future runs know context was reviewed.
+</task>
+
+<instructions>
+<0>
+READ the following files:
+- Index of project documentation: `./docs/index.md`
+- $SPECS: `./specs/spec-a.md`
+- $ARCH: `./arch.md` (ADR-backed implementation architecture; reconcile design with spec, surface conflicts)
+- docs/development/c_to_pytorch_config_map.md — C↔Py config parity and implicit rules
+-- docs/debugging/debugging.md — Parallel trace-driven debugging SOP
+- $PLAN: `./fix_plan.md` (living, prioritized to‑do; keep it up to date)
+- $TESTS: `./docs/development/testing_strategy.md` (testing philosophy, tiers, seeds/tolerances, commands)
+- Set `AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md` (or project‑specific path) and consult it for authoritative reference commands and test discovery.
+<0>
+<1>
+do a deep analysis of the codebase in light of the <current long term goals>. What are some current issues / gaps and possible approaches to resolving them? Review docs/fix_plan.md and plans/active/, as previous iterations of you may have already done some legwork.
+ 
+At this point, you can do a premature <Callchain tracing> action ahead of time, if it helps you gather information needed for this analysis.
+</1>
+<2>
+flip a coin using python. if it comes up <heads>:
+review ralph's work over the last N (~10 but can be more or less - you decide) iterations. Check the commit history. Has the work been productive? Have there been regressions? Do we need to provide any feedback / course-correction?
+</heads>
+if it comes up <tails>: proceed to step <3>
+</2>
+<3>
+Given your findings in <1> and <2>, think about whether there's any need for a multi-turn planning effort -- i.e. ralph can't see the forest for the trees and may struggle with major refactorings and multi-turn implementation efforts unless they are coordinated by you. Is there a need for such planning *right now*? If such a plan is already spoken for (plans/active/ or wherever else past galph might have saved to), does that plan require updates or is it up to date / high quality and simply pending? IFF you determine the need for a new plan or modification of an existing one:
+<yes case>
+This plan-related work is now your <focus issue>.
+You will be following the <Planning> <Action type> instructions. Think about what this will entail but don't execute the <Planning> instructions yet.
+</yes case>
+</no case>
+Since you are not <Planning>, you must select one of the other <Action type>s and an associated <focus issue> based on what you think is the most productive work increment for this iteration. Think about the associated work, but don't execute it yet.
+</no case>
+</3>
+<3.2>
+- Documentation review for <focus issue>: From `docs/index.md`, enumerate and read the documents that are most relevant to the chosen <focus issue>`; note the key file paths you will rely on for the impending analysis.
+- Then carefully follow the guidelines of the selected <Mode> and <Action type>, applying them to the selected <focus issue>. Complete the task that you selected in step <3>.
+</3.2>
+<3.5>
+Render and write ./input.md (supervisor→engineer steering memo). Overwrite the entire file every invocation. Keep length ~100–200 lines. Include these sections in order:
+Header:
+- Summary: <one‑sentence goal for this loop>
+ - Mode: <TDD | Parity | Perf | Docs | none>
+- Focus: <plan item ID/title from docs/fix_plan.md>
+- Branch: <expected branch>
+- Mapped tests: <validated list | none — evidence‑only>
+- Artifacts: <key paths to produce under reports/>
+- Do Now: 1 line naming the exact docs/fix_plan.md item (ID and title) to execute this loop, plus the exact pytest command/env to reproduce it (only when an authoritative mapping exists). If no such test exists, the Do Now MUST be to author the minimal targeted test first and then run it. If you intend to delegate the choice, write “Do Now: delegate” and provide decision guidance below.
+  - Note: If operating in supervisor <Evidence collection> (internal-only), do not run the full suite. Allowed: pytest --collect-only to validate selectors; in TDD mode only, run one targeted selector to confirm a new failing test. All other test execution is deferred to Ralph. Do not include any Phase label in input.md.
+<Do Now guidelines>
+Verification scripts: You may run nb-compare and scripts/validation/* to collect metrics and artifacts (no code changes). Record outputs under reports/.
+Mapped tests under supervisor evidence mode: Include exact selectors in input.md; validate with --collect-only; do not run them (except the TDD failure confirmation). Do not include any Phase label in input.md.
+Command Sourcing (tests): Only include an exact pytest command in Do Now when sourced from an authoritative mapping (e.g., docs/development/testing_strategy.md) or an existing, known test file/identifier. If no authoritative mapping exists, set the Do Now task to author the minimal targeted test first; do not guess at a pytest selector here.
+Implementation: refer to phased plans, checklists, and all associated artifacts
+</Do Now guidelines>
+- If Blocked: fallback action (what to run/capture, how to record it in Attempts History).
+- Priorities & Rationale: 3–6 bullets with file pointers (specs/arch/tests/plan) justifying the Do Now.
+- How-To Map: exact commands (pytest, nb-compare), env vars, ROI/thresholds, and where to store artifacts; prefer using `scripts/validation/*` when available.
+- Pitfalls To Avoid: 5–10 crisp do/don’t reminders (device/dtype neutrality, vectorization, Protected Assets, two‑message loop policy, no ad‑hoc scripts).
+- Pointers: file paths with line anchors to the most relevant spec/arch/testing_strategy/fix_plan entries for this loop.
+- Next Up (optional): 1–2 candidates Ralph may choose next loop if he finishes early (still one thing per loop).
+
+ Rules:
+ - Ralph must not edit input.md. You (galph) are the single writer.
+ - If input.md’s Do Now conflicts with an existing in_progress selection in fix_plan.md, Ralph is allowed to switch; he must record the change in Attempts History.
+- Do not instruct Ralph to run the full test suite more than once per turn. Require targeted tests first; run the full suite once at the end only if code changed. For prompt/docs‑only loops, require `pytest --collect-only -q` instead.
+- Prefer referencing reusable scripts under `scripts/validation/` from Do Now when available.
+- Commit input.md each run as part of step <4> (commit only if the content changed).
+ </3.5>
+
+<4>
+Before finishing the loop, enforce git hygiene:
+- Run `git status --short` to inspect new or modified files that appeared during this invocation.
+- Review diffs for each change; revert only if you created it this loop and it was accidental.
+- Stage intentional updates with `git add -A` and commit via `git commit -m "SUPERVISOR: <scope> - <tests or rationale>"`, noting any tests run (use `tests: not run` when you skip them).
+- After committing, run `git push` to share the updates. If the push is rejected, `timeout 30 git pull --rebase`, resolve conflicts (capture decisions—especially for docs/fix_plan.md—in galph_memory.md), then push again.
+- If you deliberately leave the tree dirty, document the rationale in galph_memory.md so the next invocation knows why.
+</4>
+</instructions>
+<notes>
+- ignore 'routing violations'. these are out of scope.
+- ignore AT parallel 012-related items for now
+</notes>
+Now carefully and exhaustively follow your <instructions>, while keeping in mind the <task> directives.
+
+
+[2025-10-07T21:51:13] thinking
+
+**Preparing to run git pull with timeout**
+[2025-10-07T21:51:14] exec bash -lc 'timeout 30 git pull --rebase' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:51:16] bash -lc 'timeout 30 git pull --rebase' succeeded in 2.41s:
+Already up to date.
+[2025-10-07T21:51:16] tokens used: 14,101
+
+[2025-10-07T21:51:20] thinking
+
+**Preparing to read galph_memory.md**
+[2025-10-07T21:51:21] exec bash -lc 'cat galph_memory.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:51:22] bash -lc 'cat galph_memory.md' succeeded in 714ms:
+## 2025-09-30 (loops 1-4 summary)
+- Established parity backlog: AT-020/021/022/024 failing; created first supervisor plan for AT-021 and enforced prompts/debug.md routing.
+- Diagnosed AT-024 random misset cap mismatch (π/2 vs 90 radians) and opened dedicated plan; insisted Ralph stop verification-only loops.
+- Flagged torch.compile warm-up overhead (per-instance compilation, inline tensor factories) and opened AT-012 rotation parity plan (Phases A–E).
+- Documented performance hotspots (`_compute_physics_for_position` guard tensors, `Crystal.compute_cell_tensors` clamps) and chronic dirty worktree artifacts blocking `git pull --rebase`.
+
+## 2025-09-30 (loops 5-10 summary)
+- Authored repo hygiene checklist (REPO-HYGIENE-002) to undo accidental `golden_suite_generator/nanoBragg.c` churn and purge stray reports.
+- Created PERF-PYTORCH-004 plan to hoist constants, introduce compile caching, and remove Dynamo graph breaks; reiterated need for prompts/debug.md while parity fails.
+- Repeatedly documented routing violations from Ralph and emphasized restoring Core Rule #13 metric duality after WIP commit 058986f swapped `V_actual` for formula volume.
+- Noted that `_compute_physics_for_position` still recompiles each Simulator and that benchmarks in `reports/benchmarks/20250930-004916/` show ≥200× slowdown vs C for small detectors.
+
+## 2025-09-30 (ralph debugging loop — AT-012 float32 regression)
+- **Context**: AT-PARALLEL-012 test_simple_cubic_correlation failing (43/50 peaks matched, need ≥95%) after DTYPE-DEFAULT-001 (commit 8c2ceb4) switched simulator to native float32.
+- **Investigation**:
+  * Reproduced: 43/50 peaks matched (86%), corr≈1.0 (perfect physics) ✅
+  * Parity matrix test: PASSES perfectly ✅ (live C↔Py comparison with current float32)
+  * **Root cause identified**: PyTorch float32 produces 7× more unique values (4901 vs C's 669) in hot pixels, fragmenting intensity plateaus. Peak detection algorithm (scipy.ndimage.maximum_filter) is sensitive to plateau structure.
+  * Parallel comparison: C float32 beam center (20×20 ROI) has 91 unique values; PyTorch has 331 (3.6× fragmentation). Max absolute diff tiny (0.0017).
+  * **First Divergence**: Numerical accumulation patterns differ (likely FMA, compiler opts, vectorized accumulation order, or torch.compile kernel fusion) → perfect correlation but incompatible plateau structure.
+[2025-10-07T21:51:22] tokens used: 14,221
+
+[2025-10-07T21:51:26] thinking
+
+**Preparing to read key documentation**
+[2025-10-07T21:51:28] exec bash -lc 'cat docs/index.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:51:29] bash -lc 'cat docs/index.md' succeeded in 693ms:
+# Project Documentation Index
+
+Welcome to the central index for all `nanoBragg-PyTorch` project documentation. This guide provides a map to the key technical specifications, development processes, and historical records that define the project.
+
+---
+
+## 🏛️ Permanent Documentation
+
+These are the core, living documents that guide the project.
+
+### Core Project Guides
+### PyTorch Guardrails
+* **[PyTorch Runtime Checklist](./development/pytorch_runtime_checklist.md)** – quick do/don’t list for vectorization and device placement. Always review before editing simulator code.
+* **[PyTorch Design](./architecture/pytorch_design.md#vectorization-strategy)** – detailed explanation of the required broadcast shapes and batched flows.
+* **[Testing Strategy §1.4](./development/testing_strategy.md#14-pytorch-device--dtype-discipline)** – required CPU/GPU smoke tests and compile checks.
+
+* **[CLAUDE.md](../CLAUDE.md)** - The primary instruction set for the AI agent.
+* **[README.md](../README.md)** - The main project entry point.
+* **[README_PYTORCH.md](../README_PYTORCH.md)** - Comprehensive user guide for the PyTorch implementation, including CLI usage, parallel comparison tools, and visualization.
+* **[PROJECT_STATUS.md](../PROJECT_STATUS.md)** - Tracks the current active development initiative.
+[2025-10-07T21:51:29] tokens used: 17,355
+
+[2025-10-07T21:51:30] thinking
+
+**Opening next spec file**
+[2025-10-07T21:51:30] exec bash -lc 'cat specs/spec-a.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:51:31] bash -lc 'cat specs/spec-a.md' succeeded in 681ms:
+# nanoBragg Spec A — Sharded Specification
+
+Spec A is now organized across multiple shards. Read them together for the full normative contract.
+
+- [spec-a-core.md](spec-a-core.md): Core physics, geometry, sampling, data, and associated acceptance tests.
+- [spec-a-cli.md](spec-a-cli.md): CLI surface area, precedence rules, and CLI-focused acceptance tests.
+- [spec-a-parallel.md](spec-a-parallel.md): Conformance profiles, parallel validation suites, and developer tooling requirements.
+
+Each shard cross-references the others; updates must keep them consistent.
+[2025-10-07T21:51:31] tokens used: 19,787
+
+[2025-10-07T21:51:33] thinking
+
+**Planning to read specs**
+[2025-10-07T21:51:34] exec bash -lc 'cat specs/spec-a-core.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:51:35] bash -lc 'cat specs/spec-a-core.md' succeeded in 689ms:
+# nanoBragg Spec A — Core Engine
+
+This shard contains the normative physics, geometry, sampling, and data handling requirements. CLI flag semantics live in [spec-a-cli.md](spec-a-cli.md); cross-implementation profiles and developer tooling are captured in [spec-a-parallel.md](spec-a-parallel.md).
+
+Overview (Normative)
+
+- Purpose: Simulates far-field diffraction from a perfect-lattice nanocrystal on a pixelated area
+detector. No near-field propagation or detector PSF beyond pixel solid-angle/obliquity is modeled.
+No symmetry is imposed; reflection indexing is P1 only (no Friedel pairing).
+- Scope: Renders pixel intensities from a set of sources (beam divergence and spectral dispersion),
+crystal orientation (including rotation oscillation and mosaic domains), and detector geometry.
+Outputs: raw float image, SMV-format integer image (with and without Poisson noise), and optional
+PGM.
+- Key constants:
+    - Classical electron radius squared r_e^2 = 7.94079248018965e-30 m^2.
+    - Avogadro’s number = 6.02214179e23 mol^-1.
+
+Units & Conversions (Normative)
+
+- Length:
+[2025-10-07T21:51:35] tokens used: 20,122
+
+[2025-10-07T21:51:37] thinking
+
+**Noticing truncated output**
+[2025-10-07T21:51:38] exec bash -lc 'cat specs/spec-a-cli.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:51:39] bash -lc 'cat specs/spec-a-cli.md' succeeded in 701ms:
+# nanoBragg Spec A — CLI Binding
+
+This shard documents the command-line interface, header precedence, and CLI-focused acceptance tests. It should be read alongside [spec-a-core.md](spec-a-core.md) for the simulation engine requirements and [spec-a-parallel.md](spec-a-parallel.md) for conformance profiles.
+
+CLI Interface (Normative)
+
+All options recognized by this code version are enumerated below. Values with units are converted
+immediately as specified in Units & Conversions. Unsupported flags are not recognized even if
+present in header comments.
+
+- Input files:
+    - -hkl <file>: Text file of “h k l F” (integers h,k,l; real F). Required unless Fdump.bin exists
+or -default_F used.
+    - -mat <file>: 3×3 MOSFLM-style A matrix (reciprocal cell vectors scaled by 1/λ). Required
+unless -cell used.
+    - -cell a b c alpha beta gamma: Direct cell in Å and degrees; alternative to -mat.
+    - -img <file>: Read SMV header; may set fpixels, spixels, pixel size (mm), distance (mm), close
+distance (mm), wavelength (Å), beam centers (mm), ORGX/ORGY (pixels), φ start (deg), oscillation
+range (deg), 2θ (deg). Image data is read but not used.
+    - -mask <file>: Read SMV mask; uses same headers to initialize geometry as -img. Zero-valued
+[2025-10-07T21:51:39] tokens used: 23,412
+
+[2025-10-07T21:51:40] thinking
+
+**Identifying need for spec-a-parallel**
+[2025-10-07T21:51:41] exec bash -lc 'cat specs/spec-a-parallel.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:51:41] bash -lc 'cat specs/spec-a-parallel.md' succeeded in 706ms:
+# nanoBragg Spec A — Conformance & Parallel Tests
+
+This shard enumerates the CLI profile acceptance tests, parallel validation suite, developer tooling expectations, and conformance profiles. Review [spec-a-core.md](spec-a-core.md) for base requirements and [spec-a-cli.md](spec-a-cli.md) for CLI semantics referenced here.
+
+Parallel Validation Tests (Profile: C-PyTorch Equivalence) — Acceptance Tests (Normative)
+
+References: ../docs/development/testing_strategy.md (parallel trace-driven validation), ../docs/debugging/debugging.md (trace SOP), ../docs/debugging/detector_geometry_checklist.md (detector geometry triage), ../docs/architecture/undocumented_conventions.md (hidden C behaviors)
+Why: testing_strategy and debugging.md define the parallel trace methodology; the detector checklist accelerates geometry debugging; undocumented_conventions flags hidden C behaviors that often break equivalence.
+
+These tests verify that PyTorch implementation produces outputs equivalent to the C reference implementation. They apply to implementations claiming the C-PyTorch Equivalence Profile. These are black-box behavioral tests comparing outputs without examining internal implementation details.
+
+- AT-PARALLEL-001 Beam Center Scales with Detector Size
+  - Setup: Test detector sizes 64x64, 128x128, 256x256, 512x512, 1024x1024 pixels with 0.1mm pixel size, cubic crystal 100Å N=3, λ=6.2Å
+  - Expectation: Beam center (mm) SHALL equal detector_pixels/2 × pixel_size_mm; Peak SHALL appear at detector center ±2 pixels; Correlation between C and PyTorch ≥0.9999
+  - Failure mode: Fixed beam center at 51.2mm regardless of detector size
+  - Implementation:
+    - Parity (canonical): `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "AT-PARALLEL-001"`
+    - Supplemental PyTorch-only regression: `pytest -v tests/test_at_parallel_001.py`
+
+- AT-PARALLEL-002 Pixel Size Independence
+[2025-10-07T21:51:41] tokens used: 48,569
+
+[2025-10-07T21:51:43] thinking
+
+**Opening architecture documentation**
+[2025-10-07T21:51:44] exec bash -lc 'cat arch.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:51:45] bash -lc 'cat arch.md' succeeded in 713ms:
+# nanoBragg PyTorch — Implementation Architecture
+
+Document version: 1.0 (aligned with specs/spec-a.md)
+Target spec: specs/spec-a.md (single-file normative spec)
+Implementation target: Python (>=3.11) + PyTorch (float32 default). Type blocks may use TypeScript-style for clarity; implement with Python dataclasses and torch tensors.
+
+## Running The CLI
+
+- Install (recommended):
+  - `pip install -e .` from repo root (provides `nanoBragg` console script).
+- Run (installed):
+  - `nanoBragg -hkl P1.hkl -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -floatfile out.bin`
+- Run (without install):
+  - `PYTHONPATH=src python -m nanobrag_torch -hkl P1.hkl -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -floatfile out.bin`
+- Minimal quick test (no HKL):
+  - `nanoBragg -default_F 1 -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -detpixels 128 -pgmfile test.pgm`
+
+Notes
+- Entry point: `src/nanobrag_torch/__main__.py` (module runner `python -m nanobrag_torch`).
+- Required inputs: provide `-hkl` (or existing `Fdump.bin`) or set `-default_F > 0`, and either `-mat` (MOSFLM A*) or `-cell`.
+[2025-10-07T21:51:45] tokens used: 54,637
+
+[2025-10-07T21:51:48] thinking
+
+**Checking for config map documentation**
+[2025-10-07T21:51:49] exec bash -lc 'cat docs/development/c_to_pytorch_config_map.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:51:50] bash -lc 'cat docs/development/c_to_pytorch_config_map.md' succeeded in 683ms:
+# C-CLI to PyTorch Configuration Map
+
+## Critical Importance Notice
+
+**This document is the authoritative source of truth for configuration parity between nanoBragg.c and the PyTorch implementation.**
+
+Before writing any test or implementation that involves C-code validation, you **MUST** consult this document. Failure to ensure 1:1 configuration parity is the most common source of bugs, particularly with:
+- Implicit pivot mode logic
+- Convention-dependent beam center calculations
+- Rotation axis defaults
+- Unit conversions
+
+## Quick Reference Table
+
+### Crystal Parameters
+
+| C-CLI Flag | PyTorch Config Field | C Variable | Units/Convention | Critical Notes |
+|------------|---------------------|------------|------------------|----------------|
+| `-cell a b c al be ga` | `CrystalConfig.cell_a/b/c/alpha/beta/gamma` | `a[0], b[0], c[0], alpha, beta, gamma` | Å and degrees → radians | Must convert degrees to radians internally |
+| `-N <val>` | `CrystalConfig.N_cells` | `Na, Nb, Nc` | Number of unit cells | Sets all three axes to same value |
+[2025-10-07T21:51:50] tokens used: 60,899
+
+[2025-10-07T21:51:51] thinking
+
+**Checking for debugging documentation**
+[2025-10-07T21:51:52] exec bash -lc 'cat docs/debugging/debugging.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:51:53] bash -lc 'cat docs/debugging/debugging.md' succeeded in 668ms:
+# nanoBragg PyTorch Debugging Guidelines
+
+**Version:** 1.1  
+**Date:** 2024-07-25  
+**Owner:** PyTorch Development Team
+
+## Overview
+
+This document outlines the debugging methodology and tools for the nanoBragg PyTorch implementation. The debugging approach is built around a parallel trace comparison between the C code and the PyTorch implementation to ensure correctness and facilitate rapid issue resolution.
+
+## Core Debugging Philosophy
+
+### Parallel Trace Comparison Rule
+
+**CRITICAL:** All debugging of physics discrepancies MUST begin with a parallel trace comparison. This involves:
+1. Generating a detailed, step-by-step log of intermediate variables from the original C code for a specific pixel (the "Golden Trace").
+2. Generating an identical log from the PyTorch implementation using `scripts/debug_pixel_trace.py`.
+3. Comparing these two logs line-by-line to find the first point of divergence.
+
+This methodology is mandatory to avoid guesswork and ensure bugs are found deterministically.
+[2025-10-07T21:51:53] tokens used: 62,812
+
+[2025-10-07T21:51:56] thinking
+
+**Planning to read large fix_plan file**
+[2025-10-07T21:51:57] exec bash -lc "sed -n '1,200p' docs/fix_plan.md'" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:51:58] bash -lc "sed -n '1,200p' docs/fix_plan.md'" exited 2 in 698ms:
+bash: -c: line 1: unexpected EOF while looking for matching `''
+[2025-10-07T21:51:58] tokens used: 65,414
+
+[2025-10-07T21:52:00] thinking
+
+**Correcting quoting mistake**
+[2025-10-07T21:52:01] exec bash -lc "sed -n '1,200p' docs/fix_plan.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:52:02] bash -lc "sed -n '1,200p' docs/fix_plan.md" succeeded in 696ms:
+# Fix Plan Ledger
+
+**Last Updated:** 2025-10-22 (ralph loop #103)
+**Active Focus:**
+- ROUTING: Close the reopened guard plan by capturing a fresh regression audit referencing commit `c49e3be` and re-confirming the guarded `loop.sh` flow (`plans/active/routing-loop-guard/plan.md` Phases A–C) before automation resumes.
+- ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md`, then drive Phase B guard work (B2–B4) and new task B5 to add `supervisor.sh` to docs/index.md so Protected-Asset policy covers the script before automation runs again.
+- AT-012: Plan archived (`plans/archive/at-parallel-012-plateau-regression/plan.md`); monitor for regressions using `reports/2025-10-AT012-regression/phase_c_validation/` artifacts and re-open only if peak matches drop below spec.
+- GRADIENT: Execute `plans/active/gradcheck-tier2-completion/plan.md` Phase A (A1–A3 baseline audit + env alignment) before adding misset/beam gradchecks from Phases B/C; once pass logs exist, close `[AT-TIER2-GRADCHECK]` with Phase D documentation updates.
+- DTYPE: ✅ Complete. Plan archived to `plans/archive/dtype-default-fp32/`. All phases (A-D) finished; float32 defaults documented in arch.md, pytorch_runtime_checklist.md, CLAUDE.md, prompts/debug.md.
+- PERF: Land plan task B7 (benchmark env toggle fix), rerun Phase B6 ten-process reproducibility with the new compile metadata, capture the weighted-source parity memo feeding C5, then execute Phase C diagnostics (C1/C2 plus C8/C9 pixel-grid & rotated-vector cost probes, and new C10 mosaic RNG timing) ahead of Phase D caching work (D5/D6/D7) and detector-scalar hoisting (D8).
+
+## Index
+| ID | Title | Priority | Status |
+| --- | --- | --- | --- |
+| [PROTECTED-ASSETS-001](#protected-assets-001-docsindexmd-safeguard) | Protect docs/index.md assets | Medium | in_progress |
+| [REPO-HYGIENE-002](#repo-hygiene-002-restore-canonical-nanobraggc) | Restore canonical nanoBragg.c | Medium | in_progress |
+| [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
+| [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | in_progress |
+| [VECTOR-TRICUBIC-001](#vector-tricubic-001-vectorize-tricubic-interpolation-and-detector-absorption) | Vectorize tricubic interpolation and detector absorption | High | in_progress |
+| [ABS-OVERSAMPLE-001](#abs-oversample-001-fix-oversample_thick-subpixel-absorption) | Fix -oversample_thick subpixel absorption | High | in_planning |
+[2025-10-07T21:52:02] tokens used: 72,484
+
+[2025-10-07T21:52:03] thinking
+
+**Reviewing file and planning next file read**
+[2025-10-07T21:52:04] exec bash -lc 'cat docs/development/testing_strategy.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:52:05] bash -lc 'cat docs/development/testing_strategy.md' succeeded in 675ms:
+# nanoBragg PyTorch Testing Strategy
+
+**Version:** 1.1  
+**Date:** 2024-07-25  
+**Owner:** [Your Name/Team]
+
+## 1. Introduction & Philosophy
+
+This document outlines the comprehensive testing strategy for the PyTorch implementation of nanoBragg. The primary goal is to ensure that the new application is a correct, verifiable, and trustworthy scientific tool.
+Our testing philosophy is a three-tiered hybrid approach, designed to build confidence layer by layer:
+
+1. **Tier 1: Translation Correctness:** We first prove that the PyTorch code is a faithful, numerically precise reimplementation of the original C code's physical model. The C code is treated as the "ground truth" specification.
+2. **Tier 2: Gradient Correctness:** We then prove that the new differentiable capabilities are mathematically sound.
+3. **Tier 3: Scientific Validation:** Finally, we validate the model against objective physical principles.
+
+All tests will be implemented using the PyTest framework.
+
+### 1.4 PyTorch Device & Dtype Discipline
+
+- **Device-neutral code:** Every PyTorch path MUST operate correctly on both CPU and CUDA tensors and across supported dtypes. Do not hard-code `.cpu()`/`.cuda()` calls, create CPU-only constants, or assume float64 execution when the caller may supply float32/half tensors.
+[2025-10-07T21:52:05] tokens used: 75,594
+
+[2025-10-07T21:52:09] thinking
+
+**Preparing for codebase analysis**
+[2025-10-07T21:52:10] exec bash -lc 'ls plans/active' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:52:10] bash -lc 'ls plans/active' succeeded in 728ms:
+cli-noise-pix0
+gradcheck-tier2-completion
+oversample-thick-subpixel.md
+perf-pytorch-compile-refactor
+routing-loop-guard
+source-weight-normalization.md
+supervisor-loop-guard
+unification.md
+vectorization.md
+[2025-10-07T21:52:10] tokens used: 78,269
+
+[2025-10-07T21:52:14] thinking
+
+**Reviewing CLI flags plan**
+[2025-10-07T21:52:15] exec bash -lc 'cat plans/active/cli-noise-pix0/plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:52:15] bash -lc 'cat plans/active/cli-noise-pix0/plan.md' succeeded in 688ms:
+## Context
+- Initiative: CLI Parity for nanoBragg PyTorch vs C (supports long-term goal in prompts/supervisor.md)
+- Phase Goal: Accept `-nonoise` and `-pix0_vector_mm` flags with C-equivalent semantics so the parallel comparison command in prompts/supervisor.md executes end-to-end.
+- Dependencies: specs/spec-a-cli.md §§3.2–3.4, docs/architecture/detector.md §5, docs/development/c_to_pytorch_config_map.md (detector pivot + noise), golden_suite_generator/nanoBragg.c lines 720–1040 & 1730–1860 (flag behavior), docs/debugging/detector_geometry_checklist.md (pix0 validation), docs/development/testing_strategy.md §2 (CLI parity tests).
+- Spec alignment note (2025-11-26): specs/spec-a-core.md §4 states φ sampling SHALL follow `phi = phi0 + phistep * tic` with no state carryover. Keep the C-side defect recorded in docs/bugs/verified_c_bugs.md (§C-PARITY-001) quarantined to parity harnesses; do not promote it to the normative spec or default PyTorch behavior.
+- Gap snapshot update (2025-11-23 PM): Attempt #109 regenerated the TRACE_C_PHI log under `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/` and re-ran `compare_per_phi_traces.py`; Δk now measures 1.8116e-2 at φ_tic=0 while φ≥1 stay within 2.85e-5, confirming the carryover mismatch and leaving VG-1 blocked until the remediation lands.
+- Gap snapshot update (2025-11-26): Attempts #111 and #113 produced per-φ traces with max Δk=2.845e-05. This still exceeds the VG-1 gate (Δk, Δb_y ≤ 1e-6). Treat those commits as partial progress until fresh traces prove the tighter tolerance.
+- Current gap snapshot (2025-10-18 refresh): Phase H4 parity landed (Attempt #25) with pix0 deltas < 2e-8 m and regression tolerances tightened; the remaining blocker before executing the supervisor command end-to-end is Phase I polarization alignment.
+- Gap snapshot refresh (2025-10-07 08:41): Attempt #101 activated TRACE_C_PHI (C instrumentation) and captured matching Py per-φ traces. Divergence isolated to φ_tic=0 (Δk≈1.81e-2) while φ>0 steps remain within 3e-5. Phase L3k.3 moves to φ=0 initialization parity (L3k.3c) plus ROI/nb-compare follow-ups.
+- Gap snapshot update (2025-10-19): Attempt #27 parity run reveals 1.24538e5× intensity scaling mismatch despite polarization fix; Phases J–L track the normalization diagnosis, fix, and closure required before long-term Goal #1 completes.
+- Gap snapshot refresh (2025-10-22): Attempt #31 restored C precedence for custom detector vectors (pix0 override now gated again). Outstanding work: H5c PyTorch traces and Phase K normalization to eliminate the `F_latt`-driven intensity gap.
+- Gap snapshot update (2025-10-24): Attempt #35 reran the PyTorch trace harness post-unit-fix; metrics still show |Δpix0| ≈ 1.145 mm, so a fresh diagnostics phase is required before resuming normalization work.
+- Gap snapshot refresh (2025-10-26): Attempt #40 completed Phase H6f — custom detector vectors now force SAMPLE pivot parity, parity visuals relocated under `reports/2025-10-cli-flags/phase_h6/visuals/`, and targeted regression tests cover pivot selection. Outstanding work at that point: Phase H6g trace rerun to confirm |Δpix0| < 5e-5 m before returning to Phase K scalings.
+- Gap snapshot update (2025-10-27): Attempt #41 validated Phase H6g — SAMPLE pivot parity holds with pix0 deltas ≤2.85 µm, beam center deltas 0.0, and supporting artifacts under `reports/2025-10-cli-flags/phase_h6/post_fix/`. Remaining blockers: rerun the scaling chain (Phase K2), execute the scaling regression + doc updates (Phase K3), then resume Phase L parity once normalization matches C.
+- Gap snapshot refresh (2025-11-09): Attempt #49 closed Phase K3g3 — `tests/test_cli_scaling.py::test_f_latt_square_matches_c` now passes after isolating the HKL cache, but the full supervisor command still shows correlation ≈ 0.9965 and sum_ratio ≈ 1.26×10⁵. Need fresh HKL/normalization parity evidence (Phase L) before rerunning nb-compare.
+- Gap snapshot refresh (2025-11-10): Attempt #56 (evidence loop) proved the existing `TRACE_PY` path prints placeholder scaling data (`capture_fraction 1`, `polar 1.0`, `steps`=φ-steps only). Without exposing the real per-pixel factors computed in `Simulator.run`, Phase L2b cannot produce a trustworthy PyTorch trace. Instrumentation must pull actual values from `_apply_detector_absorption`, polarization kernels, and total-step calculation before rerunning the harness.
+- Gap snapshot update (2025-10-17): Attempt #53 (Phase L1c) realigned HKL Fdump I/O with C padding (`read_fdump`/`write_fdump`) and added regression coverage (`TestHKLFdumpParity::test_scaled_hkl_roundtrip`) with max |ΔF| = 0.0. Proceed to L1d to regenerate parity metrics before reviving scaling traces.
+- Gap snapshot update (2025-11-11): Discovered the trace harness omitted `-beam_vector`, `-flux`, and `-beamsize`, forcing oversample=4 and a +Z beam; Py traces zeroed `F_cell` and inflated `steps`. Marked unresolved pending harness fix.
+- Gap snapshot refresh (2025-11-12): Attempt #66 (commit 1d2e6ac) completed Phase L2b0 — the trace harness now feeds the full supervisor flag set, and the refreshed `trace_py_scaling.log` confirms `steps=10`, `fluence≈1.0e24`, and `r_e^2` parity with C. TRACE_PY still reports `I_before_scaling NOT_EXTRACTED`, `polar=0`, and `I_pixel_final=0`, so Phase L2b instrumentation must surface the real polarization/absorption tensors before we can quantify the K3e k_frac drift.
+- Gap snapshot update (2025-11-13): Latest harness rerun aborted because `trace_harness.py` still expected the legacy `read_hkl_file` return tuple (see `trace_py_fullrun.log`). **Resolved in Attempt #74, which updated the harness to the `(F_grid, metadata)` signature.**
+[2025-10-07T21:52:15] tokens used: 119,344
+
+[2025-10-07T21:52:17] thinking
+
+**Checking vectorization plan**
+[2025-10-07T21:52:18] exec bash -lc 'cat plans/active/vectorization.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:52:19] bash -lc 'cat plans/active/vectorization.md' succeeded in 746ms:
+## Context
+- Initiative: PERF-PYTORCH-004 vectorization backlog; supports long-term goal "Parallel parity + performance" from docs/fix_plan.md.
+- Phase Goal: Deliver a production-ready, fully vectorized tricubic interpolation pipeline (gather + polynomial evaluation) and follow with detector absorption vectorization without regressing physics, gradients, or device neutrality.
+- Dependencies: specs/spec-a-core.md §4 (Structure factors), specs/spec-a-parallel.md §2.3 (Interpolation acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4, docs/architecture/c_code_overview.md (tricubic routines), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, `nanoBragg.c` lines 2604–3278 (polin3/polin2/polint + detector absorption), `tests/test_at_str_002.py`, `tests/test_at_abs_001.py`, `reports/benchmarks/20250930-165726-compile-cache/` (current performance references). Reusable tricubic and absorption harnesses now live under `scripts/benchmarks/` (see Phase A artifacts) for ongoing baseline comparisons.
+- Gap Snapshot (2025-11-23 refresh): Phase C1–C3 are COMPLETE with logs in `reports/2025-10-vectorization/phase_c/`; assertions and device checks landed in commit 12742e5. The next gating work is Phase D (vectorize `polint`/`polin2`/`polin3`) followed by Phase E validation before touching detector absorption (Phase F).
+- Supervisory note (2025-11-23): Before coding Phase D, ensure the polynomial vectorization tasks record explicit tensor-shape math, gradient expectations, and targeted regression selectors in `phase_d/` notes. Capture proof (CPU+CUDA) for each helper as it is batched, then roll those artifacts into the Phase E parity/perf sweep prior to resuming absorption work.
+
+### Phase A — Evidence & Baseline Capture
+Goal: Document the current (non-vectorized) behavior, warnings, and performance so we can prove the impact of the refactor.
+Prereqs: Editable install (`pip install -e .`), C binary available for parity (when needed), environment variable `KMP_DUPLICATE_LIB_OK=TRUE`.
+Exit Criteria: Baseline pytest log, timing snippet results, and notes stored under `reports/2025-10-vectorization/phase_a/` with references in docs/fix_plan.md Attempt history.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| A1 | Re-run tricubic acceptance tests | [D] | ✅ Completed 2025-10-06 (`reports/2025-10-vectorization/phase_a/test_at_str_002.log`, `.collect.log`, `test_at_abs_001.log`, `env.json`). Re-run only if dependencies change or new warnings appear. |
+| A2 | Measure current tricubic runtime | [D] | ✅ Completed 2025-10-07 (`scripts/benchmarks/tricubic_baseline.py` created; CPU & CUDA baselines captured in `phase_a/tricubic_baseline.md` and `phase_a/tricubic_baseline_results.json`). Key finding: scalar-only implementation @ ~1.4 ms/call (CPU), ~5.5 ms/call (CUDA). |
+| A3 | Record detector absorption baseline | [D] | ✅ Completed 2025-10-07 (`scripts/benchmarks/absorption_baseline.py` created; CPU & CUDA baselines captured in `phase_a/absorption_baseline.md` and `phase_a/absorption_baseline_results.json`). GPU shows 5.4× speedup for 512² detector. |
+
+### Phase B — Tricubic Vectorization Design
+Goal: Lock the tensor-shape design, broadcasting plan, and gradient checks before code changes.
+[2025-10-07T21:52:19] tokens used: 122,492
+
+[2025-10-07T21:52:22] thinking
+
+**Analyzing codebase for long-term goals**
+[2025-10-07T21:52:23] exec bash -lc 'cat docs/bugs/verified_c_bugs.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:52:23] bash -lc 'cat docs/bugs/verified_c_bugs.md' succeeded in 667ms:
+# Verified `nanoBragg.c` Bugs (2025-10)
+
+## Severity Overview
+- **High:** C-IMPL-BUG-002, C-DESIGN-FLAW-001, C-DESIGN-FLAW-003, NANO-C-BUG-001, NANO-C-BUG-002
+- **Medium:** C-DESIGN-FLAW-002, C-DESIGN-FLAW-005, C-PARITY-001
+- **Low:** C-LOGGING-BUG-001
+
+Artifact logs for the reproductions below live under `docs/bugs/artifacts/`.
+
+---
+
+### C-IMPL-BUG-002 — Incorrect Angle Units in `mosaic_rotation_umat` (High)
+**Summary:** The random misset path feeds `90.0` (degrees) into `mosaic_rotation_umat`, but the helper interprets angles in radians. The code therefore constructs rotation matrices using a 90-radian cap (≈5156°), which produces non-physical orientations.
+
+**Reproduction:**
+```bash
+./golden_suite_generator/nanoBragg \
+  -cell 50 60 70 80 90 100 \
+  -misset random \
+  -default_F 1 -N 0 \
+[2025-10-07T21:52:23] tokens used: 125,049
+
+[2025-10-07T21:52:31] thinking
+
+**Reviewing phi=0 bug status and specifications**
+
+I'm analyzing the CLI plan and specs to understand current gaps, especially around the phi=0 carryover bug. I want to confirm the specs don’t mistakenly incorporate the bug and check that the CLI flags like -nonoise and -pix0_vector_mm are supported per project goals. I'll also verify that reopened tasks related to phi=0 carryover are addressed and that vectorization efforts align with this. I'll search relevant spec files for mentions of phi sampling to be thorough.
+[2025-10-07T21:52:33] exec bash -lc 'rg "phi" -n specs/spec-a-core.md | head' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:52:34] bash -lc 'rg "phi" -n specs/spec-a-core.md | head' succeeded in 771ms:
+211:                    - φ step: φ = φ0 + (step index)*phistep; rotate the reference cell (a0,b0,c0)
+248:    - Define steps = (number of sources) · (number of mosaic domains) · (phisteps) · (oversample^2).
+414:        - Steps = (#accepted divergence points) × dispsteps × mosaic_domains × phisteps ×
+507:    - For each of horizontal divergence, vertical divergence, spectral dispersion, phi, and detector thickness sampling, missing combinations of count/range/step SHALL be resolved per the rules in “Sources, Divergence & Dispersion” and “Sampling & Accumulation”, resulting in:
+575:    - Setup: sources=1; mosaic_domains=1; oversample=1; phisteps=2 with identical physics across steps (e.g., zero mosaic and symmetric phi so F_cell and F_latt identical); disable thickness/polar/omega oversample toggles.
+[2025-10-07T21:52:34] tokens used: 128,625
+
+[2025-10-07T21:52:37] thinking
+
+**Reviewing code snippet near line 211**
+[2025-10-07T21:52:38] exec bash -lc "sed -n '180,240p' specs/spec-a-core.md" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:52:39] bash -lc "sed -n '180,240p' specs/spec-a-core.md" succeeded in 714ms:
+        - If domains set > 0 and spread < 0: force domains = 1, spread = 0.
+
+Sampling & Accumulation (Normative)
+
+- Loop order per pixel within ROI and unmasked:
+    - For each detector thickness layer index t = 0..thicksteps-1:
+        - Odet = t·(thickness/steps) (meters).
+        - For subpixel grid (oversample × oversample):
+            - Compute detector-plane coordinates (meters): Fdet and Sdet at subpixel centers.
+            - Detector point in lab frame: P = D0 + Fdet·f + Sdet·s + Odet·o. If curved detector is
+enabled, an alternative spherical mapping is used: start at distance along b and rotate about s and
+f by small angles Sdet/distance and Fdet/distance respectively.
+            - Diffracted unit vector d = unit(P); airpath R = ||P||.
+            - Solid angle per subpixel:
+                - ω = pixel^2 / R^2 · (close_distance / R).
+                - If point-pixel mode: ω = 1 / R^2.
+            - Absorption per thickness layer (if enabled):
+                - Parallax factor: ρ = d·o.
+                - Capture fraction for this layer: exp(−t·Δz·μ/ρ) − exp(−(t+1)·Δz·μ/ρ), where Δz =
+thickness/steps.
+[2025-10-07T21:52:39] tokens used: 142,906
+
+[2025-10-07T21:52:48] thinking
+
+**Confirming phi loop behavior and planning next steps**
+[2025-10-07T21:52:49] exec bash -lc "python - <<'PY'
+import random
+print(random.choice(['heads','tails']))
+PY" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:52:50] bash -lc "python - <<'PY'
+import random
+print(random.choice(['heads','tails']))
+PY" succeeded in 690ms:
+tails
+[2025-10-07T21:52:50] tokens used: 144,969
+
+[2025-10-07T21:53:17] thinking
+
+**Evaluating need for plan updates**
+[2025-10-07T21:53:18] exec bash -lc 'rg -n "get_rotated_real_vectors" -n src/nanobrag_torch/models/crystal.py' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:53:19] bash -lc 'rg -n "get_rotated_real_vectors" -n src/nanobrag_torch/models/crystal.py' succeeded in 889ms:
+949:    def get_rotated_real_vectors(self, config: "CrystalConfig") -> Tuple[
+[2025-10-07T21:53:19] tokens used: 148,838
+
+[2025-10-07T21:53:20] thinking
+
+**Reviewing partial content**
+[2025-10-07T21:53:21] exec bash -lc "sed -n '900,1100p' src/nanobrag_torch/models/crystal.py" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:53:22] bash -lc "sed -n '900,1100p' src/nanobrag_torch/models/crystal.py" succeeded in 906ms:
+
+        Note: For differentiability, we cannot use .item() or create cache keys
+        from tensor values. Instead, we simply recompute when needed, relying
+        on PyTorch's own computation graph caching.
+        """
+        # For now, just compute directly - PyTorch will handle computation graph caching
+        # A more sophisticated caching mechanism that preserves gradients could be added later
+        return self.compute_cell_tensors()
+
+    @property
+    def a(self) -> torch.Tensor:
+        """Real-space lattice vector a (Angstroms)."""
+        return self._compute_cell_tensors_cached()["a"]
+
+    @property
+    def b(self) -> torch.Tensor:
+        """Real-space lattice vector b (Angstroms)."""
+        return self._compute_cell_tensors_cached()["b"]
+
+    @property
+[2025-10-07T21:53:22] tokens used: 151,171
+
+[2025-10-07T21:53:26] thinking
+
+**Continuing to review content**
+[2025-10-07T21:53:27] exec bash -lc "sed -n '1100,1300p' src/nanobrag_torch/models/crystal.py" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:53:27] bash -lc "sed -n '1100,1300p' src/nanobrag_torch/models/crystal.py" succeeded in 707ms:
+                c_last.squeeze(0)
+            )
+
+        # Initialize output tensors to hold rotated vectors
+        a_phi = []
+        b_phi = []
+        c_phi = []
+
+        # Process each φ angle individually to match C's phi!=0.0 guard
+        for i in range(config.phi_steps):
+            phi_val = phi_angles[i]
+
+            # Match C code's "if( phi != 0.0 )" check (nanoBragg.c:3044)
+            # Use a small tolerance for floating-point comparison
+            # phi_val is in degrees, so 1e-10 degrees is effectively zero
+            if torch.abs(phi_val) < 1e-10:
+                # φ=0: Replicate C behavior where ap/bp/cp persist from previous pixel
+                # When the C code skips rotation at phi==0, the working vectors (ap/bp/cp)
+                # retain values from the last phi step of the PREVIOUS pixel (due to
+                # OpenMP private variables not being reset between iterations).
+[2025-10-07T21:53:27] tokens used: 165,938
+
+[2025-10-07T21:53:48] thinking
+
+**Analyzing carryover bug replication and spec mismatch**
+
+I’m untangling how pyro intentionally replicates a C bug involving carryover with phi=0 despite the spec stating no carryover. It looks like pyro’s current plan enforces this bug for parity, but the user wants the spec clean and pyro fixed unless parity mode is explicitly enabled. I’m gathering evidence—checking code, docs, specs, and tests—to highlight this mismatch and prepare for a plan update that separates normative behavior from parity replication. This step focuses on documenting the discrepancy clearly before proposing revisions.
+[2025-10-07T21:53:50] exec bash -lc 'cat tests/test_cli_scaling_phi0.py' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:53:51] bash -lc 'cat tests/test_cli_scaling_phi0.py' succeeded in 969ms:
+"""
+CLI Scaling φ=0 Parity Tests for CLI-FLAGS-003 Phase L3k.3
+
+Tests φ=0 rotated lattice vectors and Miller indices to capture the base-vector
+drift before implementing the fix for independent real/reciprocal rotation.
+
+Evidence base: reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/
+Plan reference: plans/active/cli-noise-pix0/plan.md Phase L3k.3
+Supervisor memo: input.md:22-45 (Do Now for Phase L3k.3)
+"""
+import os
+import sys
+from pathlib import Path
+import pytest
+import torch
+import numpy as np
+
+# Set required environment variable
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+
+[2025-10-07T21:53:51] tokens used: 169,919
+
+[2025-10-07T21:54:01] thinking
+
+**Summarizing contradictory test documentation**
+[2025-10-07T21:54:01] exec bash -lc "nl -ba specs/spec-a-core.md | sed -n '200,230p'" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:54:02] bash -lc "nl -ba specs/spec-a-core.md | sed -n '200,230p'" succeeded in 902ms:
+   200	            - For each source:
+   201	                - Incident unit vector i = −source_dir (unitized); wavelength λ from source.
+   202	                - q = (d − i) / λ (m^-1). stol = 0.5·||q||.
+   203	                - If dmin > 0 and stol > 0 and dmin > 0.5/stol: skip this subpath.
+   204	                - Polarization factor (if enabled; Kahn model):
+   205	                    - cos(2θ) = i·d; sin^2(2θ) = 1 − cos^2(2θ).
+   206	                    - Construct B_in = unit(p × i), E_in = unit(i × B_in). Project d into this EB
+   207	plane: E_out = d·E_in, B_out = d·B_in. ψ = −atan2(B_out, E_out).
+   208	                    - Polarization factor = 0.5·(1 + cos^2(2θ) − K·cos(2ψ)·sin^2(2θ)), where K is
+   209	the Kahn factor from -polar.
+   210	                - Crystal orientation:
+   211	                    - φ step: φ = φ0 + (step index)*phistep; rotate the reference cell (a0,b0,c0)
+   212	about u by φ to get (ap,bp,cp).
+   213	                    - Mosaic: for each domain, apply the domain’s rotation to (ap,bp,cp) to get
+   214	(a,b,c).
+   215	                - Fractional Miller indices: h = a·q, k = b·q, l = c·q (dimensionless).
+   216	                - Nearest integer triplet: (h0, k0, l0) = round to nearest via ceil(x − 0.5).
+   217	                - Lattice factor F_latt:
+   218	                    - SQUARE (grating): F_latt = sincg(π·h, Na) · sincg(π·k, Nb) · sincg(π·l, Nc),
+   219	where
+[2025-10-07T21:54:02] tokens used: 232,883
+
+[2025-10-07T21:54:07] thinking
+
+**Reviewing specification reference**
+[2025-10-07T21:54:08] exec bash -lc "nl -ba docs/bugs/verified_c_bugs.md | sed -n '120,190p'" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:54:09] bash -lc "nl -ba docs/bugs/verified_c_bugs.md | sed -n '120,190p'" succeeded in 742ms:
+   120	# Default: BEAM pivot
+   121	./golden_suite_generator/nanoBragg -cell 70 80 90 90 90 90 -default_F 1 -N 0 \
+   122	  -distance 100 -detpixels 4 -pixel 0.1 \
+   123	  -floatfile /tmp/pivot_default.bin -intfile /tmp/pivot_default.img -noisefile /tmp/pivot_default_noise.img \
+   124	  -nopgm -nonoise -noprogress > docs/bugs/artifacts/design-flaw-001-base.txt
+   125	
+   126	# Switching to XDS toggles SAMPLE pivot
+   127	./golden_suite_generator/nanoBragg -cell 70 80 90 90 90 90 -default_F 1 -N 0 \
+   128	  -distance 100 -detpixels 4 -pixel 0.1 -xds \
+   129	  -floatfile /tmp/pivot_xds.bin -intfile /tmp/pivot_xds.img -noisefile /tmp/pivot_xds_noise.img \
+   130	  -nopgm -nonoise -noprogress > docs/bugs/artifacts/design-flaw-002-xds.txt
+   131	```
+   132	The second log begins with `pivoting detector around sample`, confirming the hidden mode flip.
+   133	
+   134	**Relevant code:**
+   135	- `golden_suite_generator/nanoBragg.c:631-789` — individual flags mutate `detector_pivot` in different directions.
+   136	- `golden_suite_generator/nanoBragg.c:1736-1907` — pivot choice determines which geometry branch runs.
+   137	
+   138	---
+   139	
+[2025-10-07T21:54:09] tokens used: 237,433
+
+[2025-10-07T21:54:12] thinking
+
+**Searching for relevant code lines**
+[2025-10-07T21:54:12] exec bash -lc 'nl -ba plans/active/cli-noise-pix0/plan.md | rg "carryover" -n' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:54:13] bash -lc 'nl -ba plans/active/cli-noise-pix0/plan.md | rg "carryover" -n' succeeded in 710ms:
+5:     5	- Spec alignment note (2025-11-26): specs/spec-a-core.md §4 states φ sampling SHALL follow `phi = phi0 + phistep * tic` with no state carryover. Keep the C-side defect recorded in docs/bugs/verified_c_bugs.md (§C-PARITY-001) quarantined to parity harnesses; do not promote it to the normative spec or default PyTorch behavior.
+6:     6	- Gap snapshot update (2025-11-23 PM): Attempt #109 regenerated the TRACE_C_PHI log under `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/` and re-ran `compare_per_phi_traces.py`; Δk now measures 1.8116e-2 at φ_tic=0 while φ≥1 stay within 2.85e-5, confirming the carryover mismatch and leaving VG-1 blocked until the remediation lands.
+298:   298	| L3k.3c | Patch φ rotation & confirm VG-1 thresholds | [ ] | **Regression alert:** Attempt #102 rewrote `tests/test_cli_scaling_phi0.py` to treat the PyTorch base-vector output as canonical, masking the failing VG-1 gate. Attempt #103 restored the C-aligned assertions; keep them red until VG-1 passes. With the C trace refreshed (L3k.3b), implement the carryover fix, rerun the per-φ harness, ensure k_frac span ≤1e-6 and rot_b_y relative error ≤1e-6, and update `comparison_summary.md` plus `per_phi_postfix/` artifacts before flipping VG-1 rows to ✅. |
+308:   308	| L3k.3c.2 | Diagnose φ=0 state carryover | [D] | Attempt #109 captured paired traces under `base_vector_debug/20251123/`, recorded Δk=1.8116×10⁻² and Δb_y=4.573155×10⁻² Å in `diagnosis.md` + `delta_by.txt`, and documented the carryover remediation plan (cache φ_last → reuse at φ_tic=0 with nanoBragg.c:3044 guard). |
+309:   309	| L3k.3c.3 | Implement + validate fix | [ ] | **Reopened 2025-11-24 (galph loop); still failing as of Attempts #111/#113.** Device/dtype neutrality is now in place, but per-φ traces report max Δk=2.845e-05 and Δb_y≈4.6×10⁻² Å, which violates the VG-1 gate (≤1e-6). Complete the φ=0 carryover emulation in `Crystal.get_rotated_real_vectors` without detaching tensors or hard-coding devices, and confirm instrumentation uses the spec formula `phi = phi_start + (osc/phisteps)*phi_tic`. Produce fresh traces under `base_vector_debug/<timestamp>/`, rerun `python scripts/compare_per_phi_traces.py ...` until Δk and Δb_y are both ≤1e-6, and re-run `pytest tests/test_cli_scaling_phi0.py::{test_rot_b_matches_c,test_k_frac_phi0_matches_c}` so VG-1.4 can flip to ✅. Update `comparison_summary.md`, `delta_metrics.json`, and the fix checklist accordingly. |
+310:   310	| L3k.3c.4 | Document spec vs parity contract | [ ] | Draft/refresh `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md` to cite specs/spec-a-core.md §4 (φ sampling) and docs/bugs/verified_c_bugs.md (§C-PARITY-001). Clarify that the normative behavior is “no carryover” and outline the planned compatibility shim (if needed) for reproducing the C trace during parity runs. Log the decision in `docs/fix_plan.md` Next Actions so implementation can proceed with a spec-compliant default plus optional C-parity path. |
+[2025-10-07T21:54:13] tokens used: 240,209
+
+[2025-10-07T21:54:15] thinking
+
+**Identifying plan conflicts and locating code lines**
+[2025-10-07T21:54:16] exec bash -lc "nl -ba src/nanobrag_torch/models/crystal.py | sed -n '1080,1210p'" in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:54:17] bash -lc "nl -ba src/nanobrag_torch/models/crystal.py | sed -n '1080,1210p'" succeeded in 719ms:
+  1080	            # Preserve gradients: use .to() instead of torch.tensor() when input is already a tensor
+  1081	            if isinstance(last_phi_deg, torch.Tensor):
+  1082	                last_phi_deg_tensor = last_phi_deg.to(device=self.device, dtype=self.dtype)
+  1083	            else:
+  1084	                last_phi_deg_tensor = torch.tensor(last_phi_deg, device=self.device, dtype=self.dtype)
+  1085	            last_phi_rad = torch.deg2rad(last_phi_deg_tensor)
+  1086	
+  1087	            # Rotate base vectors by the last phi angle
+  1088	            from ..utils.geometry import rotate_axis
+  1089	            spindle_axis_temp = torch.tensor(
+  1090	                config.spindle_axis, device=self.device, dtype=self.dtype
+  1091	            )
+  1092	
+  1093	            a_last = rotate_axis(self.a.unsqueeze(0), spindle_axis_temp.unsqueeze(0), last_phi_rad.unsqueeze(0))
+  1094	            b_last = rotate_axis(self.b.unsqueeze(0), spindle_axis_temp.unsqueeze(0), last_phi_rad.unsqueeze(0))
+  1095	            c_last = rotate_axis(self.c.unsqueeze(0), spindle_axis_temp.unsqueeze(0), last_phi_rad.unsqueeze(0))
+  1096	
+  1097	            self._phi_last_cache = (
+  1098	                a_last.squeeze(0),
+  1099	                b_last.squeeze(0),
+[2025-10-07T21:54:17] tokens used: 241,391
+
+[2025-10-07T21:54:46] thinking
+
+**Designing input.md content**
+[2025-10-07T21:54:47] exec bash -lc 'git rev-parse --abbrev-ref HEAD' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:54:48] bash -lc 'git rev-parse --abbrev-ref HEAD' succeeded in 874ms:
+feature/spec-based-2
+[2025-10-07T21:54:48] tokens used: 248,804
+
+[2025-10-07T21:55:00] thinking
+
+**Outlining documentation task plan**
+
+I'm mapping out a structured plan for documenting CLI flags handling, specifying tests to run, artifacts to update, fallback instructions, priorities backed by spec and bug references, how-to commands, pitfalls to avoid, and relevant pointers. I'll make sure to keep instructions clear for updating docs, logging attempts, and next steps like compatibility gating.
+[2025-10-07T21:55:12] exec bash -lc "cat <<'EOF' > input.md
+Summary: Capture spec-vs-parity guidance for φ=0 so we stop perpetuating the C carryover bug.
+Mode: Docs
+Focus: CLI-FLAGS-003 — Handle -nonoise and -pix0_vector_mm
+Branch: feature/spec-based-2
+Mapped tests: pytest --collect-only -q tests/test_cli_scaling_phi0.py
+Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md (refresh), docs/fix_plan.md (Attempt log)
+Do Now: CLI-FLAGS-003 L3k.3c.4 — update reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md with spec-vs-parity analysis and log the attempt; then run "'`pytest --collect-only -q tests/test_cli_scaling_phi0.py`.
+If Blocked: Record the blocker in docs/fix_plan.md Attempt history, capture the collect-only output, and drop the raw notes under reports/2025-10-cli-flags/phase_l/rot_vector/blockers.md for follow-up.
+Priorities & Rationale:
+- specs/spec-a-core.md:211 — Spec mandates φ sampling uses fresh rotations each step; we must cite this to justify rejecting the carryover.
+- docs/bugs/verified_c_bugs.md:166 — C-PARITY-001 documents the C bug; the memo needs this pointer to keep parity work quarantined.
+- src/nanobrag_torch/models/crystal.py:1115 — Current implementation caches φ=last and reuses it, so the documentation must call out this divergence before we change code.
+- plans/active/cli-noise-pix0/plan.md:309 — Plan still tells us to emulate the carryover; the refreshed memo must drive the upcoming plan edit and guard future attempts.
+- docs/development/testing_strategy.md:1, 103 — Testing SOP requires collect-only confirmation for docs loops and references the parity harness; include the selector so the guard stays green.
+How-To Map:
+- Update reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md with sections covering: (1) normative spec quote, (2) summary of C-PARITY-001 evidence, (3) current PyTorch behavior, (4) compatibility plan (e.g., default spec path vs optional parity shim), and (5) checklist items that must flip before code edits.
+- Cross-link the memo from plans/active/cli-noise-pix0/plan.md (L3k.3c.4 guidance) and add an Attempt entry in docs/fix_plan.md citing the refreshed diagnosis.
+- After edits, run `pytest --collect-only -q tests/test_cli_scaling_phi0.py` and stash the log under reports/2025-10-cli-flags/phase_l/rot_vector/collect_only.log.
+- Keep environment variable `KMP_DUPLICATE_LIB_OK=TRUE` exported in your shell before invoking pytest (per docs/development/testing_strategy.md §1.4).
+Pitfalls To Avoid:
+- Do not touch production code or tests beyond documentation this loop.
+- Do not dilute the spec quote—cite exact language and line references.
+- Avoid reflowing unrelated sections of diagnosis.md; keep diff tight for easier review.
+- Respect Protected Assets (docs/index.md paths) when linking artifacts.
+- Do not run the full pytest suite; collect-only selector is sufficient per SOP.
+- Maintain device/dtype neutrality in any illustrative snippets (no `.cpu()` assumptions).
+- Keep fix_plan.md attempt numbering consistent; append, don’t overwrite history.
+- Store artifacts under the existing reports/2025-10-cli-flags tree; no ad-hoc directories.
+- Document any open questions at the end of diagnosis.md so we can convert them into plan tasks next loop.
+- If you need additional context, reference existing traces rather than regenerating them this turn.
+Pointers:
+- specs/spec-a-core.md:211
+- docs/bugs/verified_c_bugs.md:166
+- src/nanobrag_torch/models/crystal.py:1115
+- plans/active/cli-noise-pix0/plan.md:5
+- plans/active/cli-noise-pix0/plan.md:309
+- docs/development/testing_strategy.md:103
+Next Up (optional): 1) Draft the plan revisions that split default spec behavior from parity shim. 2) Prototype the toggle in Crystal.get_rotated_real_vectors once the memo lands.
+EOF
+' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:55:13] bash -lc "cat <<'EOF' > input.md
+Summary: Capture spec-vs-parity guidance for φ=0 so we stop perpetuating the C carryover bug.
+Mode: Docs
+Focus: CLI-FLAGS-003 — Handle -nonoise and -pix0_vector_mm
+Branch: feature/spec-based-2
+Mapped tests: pytest --collect-only -q tests/test_cli_scaling_phi0.py
+Artifacts: reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md (refresh), docs/fix_plan.md (Attempt log)
+Do Now: CLI-FLAGS-003 L3k.3c.4 — update reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md with spec-vs-parity analysis and log the attempt; then run "'`pytest --collect-only -q tests/test_cli_scaling_phi0.py`.
+If Blocked: Record the blocker in docs/fix_plan.md Attempt history, capture the collect-only output, and drop the raw notes under reports/2025-10-cli-flags/phase_l/rot_vector/blockers.md for follow-up.
+Priorities & Rationale:
+- specs/spec-a-core.md:211 — Spec mandates φ sampling uses fresh rotations each step; we must cite this to justify rejecting the carryover.
+- docs/bugs/verified_c_bugs.md:166 — C-PARITY-001 documents the C bug; the memo needs this pointer to keep parity work quarantined.
+- src/nanobrag_torch/models/crystal.py:1115 — Current implementation caches φ=last and reuses it, so the documentation must call out this divergence before we change code.
+- plans/active/cli-noise-pix0/plan.md:309 — Plan still tells us to emulate the carryover; the refreshed memo must drive the upcoming plan edit and guard future attempts.
+- docs/development/testing_strategy.md:1, 103 — Testing SOP requires collect-only confirmation for docs loops and references the parity harness; include the selector so the guard stays green.
+How-To Map:
+- Update reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md with sections covering: (1) normative spec quote, (2) summary of C-PARITY-001 evidence, (3) current PyTorch behavior, (4) compatibility plan (e.g., default spec path vs optional parity shim), and (5) checklist items that must flip before code edits.
+- Cross-link the memo from plans/active/cli-noise-pix0/plan.md (L3k.3c.4 guidance) and add an Attempt entry in docs/fix_plan.md citing the refreshed diagnosis.
+- After edits, run `pytest --collect-only -q tests/test_cli_scaling_phi0.py` and stash the log under reports/2025-10-cli-flags/phase_l/rot_vector/collect_only.log.
+- Keep environment variable `KMP_DUPLICATE_LIB_OK=TRUE` exported in your shell before invoking pytest (per docs/development/testing_strategy.md §1.4).
+Pitfalls To Avoid:
+- Do not touch production code or tests beyond documentation this loop.
+- Do not dilute the spec quote—cite exact language and line references.
+- Avoid reflowing unrelated sections of diagnosis.md; keep diff tight for easier review.
+- Respect Protected Assets (docs/index.md paths) when linking artifacts.
+- Do not run the full pytest suite; collect-only selector is sufficient per SOP.
+- Maintain device/dtype neutrality in any illustrative snippets (no `.cpu()` assumptions).
+- Keep fix_plan.md attempt numbering consistent; append, don’t overwrite history.
+- Store artifacts under the existing reports/2025-10-cli-flags tree; no ad-hoc directories.
+- Document any open questions at the end of diagnosis.md so we can convert them into plan tasks next loop.
+- If you need additional context, reference existing traces rather than regenerating them this turn.
+Pointers:
+- specs/spec-a-core.md:211
+- docs/bugs/verified_c_bugs.md:166
+- src/nanobrag_torch/models/crystal.py:1115
+- plans/active/cli-noise-pix0/plan.md:5
+- plans/active/cli-noise-pix0/plan.md:309
+- docs/development/testing_strategy.md:103
+Next Up (optional): 1) Draft the plan revisions that split default spec behavior from parity shim. 2) Prototype the toggle in Crystal.get_rotated_real_vectors once the memo lands.
+EOF
+' succeeded in 875ms:
+
+[2025-10-07T21:55:13] tokens used: 255,199
+
+[2025-10-07T21:55:18] thinking
+
+**Preparing memory update entry**
+[2025-10-07T21:55:22] exec bash -lc "cat <<'EOF' >> galph_memory.md
+
+## 2025-11-27 (galph loop — φ=0 spec audit)
+- Confirmed spec mandate ("'`specs/spec-a-core.md:211`) requires fresh φ rotations each step; C-PARITY-001 documents nanoBragg.c’s stale-vector carryover (`docs/bugs/verified_c_bugs.md:166`).
+- PyTorch currently mirrors the bug via `_phi_last_cache` in `src/nanobrag_torch/models/crystal.py:1115-1198`; this contradicts the spec and the long-term goal to eliminate the carryover.
+- CLI plan still instructs emulating the bug (L3k.3c.3). Issued new input.md directing Ralph to refresh `diagnosis.md` (L3k.3c.4) with spec-vs-parity guidance, log an Attempt, and run collect-only pytest. Expect next loop to revise the plan and design a spec-compliant default plus optional parity shim.
+EOF
+' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:55:22] bash -lc "cat <<'EOF' >> galph_memory.md
+
+## 2025-11-27 (galph loop — φ=0 spec audit)
+- Confirmed spec mandate ("'`specs/spec-a-core.md:211`) requires fresh φ rotations each step; C-PARITY-001 documents nanoBragg.c’s stale-vector carryover (`docs/bugs/verified_c_bugs.md:166`).
+- PyTorch currently mirrors the bug via `_phi_last_cache` in `src/nanobrag_torch/models/crystal.py:1115-1198`; this contradicts the spec and the long-term goal to eliminate the carryover.
+- CLI plan still instructs emulating the bug (L3k.3c.3). Issued new input.md directing Ralph to refresh `diagnosis.md` (L3k.3c.4) with spec-vs-parity guidance, log an Attempt, and run collect-only pytest. Expect next loop to revise the plan and design a spec-compliant default plus optional parity shim.
+EOF
+' succeeded in 712ms:
+
+[2025-10-07T21:55:22] tokens used: 257,039
+
+[2025-10-07T21:55:25] thinking
+
+**Checking git status and preparing commit**
+[2025-10-07T21:55:26] exec bash -lc 'git status --short' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:55:27] bash -lc 'git status --short' succeeded in 721ms:
+ M galph_memory.md
+ M input.md
+[2025-10-07T21:55:27] tokens used: 259,844
+
+[2025-10-07T21:55:29] thinking
+
+**Preparing commit with supervisor message**
+[2025-10-07T21:55:30] exec bash -lc 'git add -A' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:55:30] bash -lc 'git add -A' succeeded in 710ms:
+
+[2025-10-07T21:55:30] tokens used: 260,921
+
+[2025-10-07T21:55:32] thinking
+
+**Committing changes**
+[2025-10-07T21:55:32] exec bash -lc 'git commit -m "SUPERVISOR: CLI parity memo - tests: not run"' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:55:33] bash -lc 'git commit -m "SUPERVISOR: CLI parity memo - tests: not run"' succeeded in 705ms:
+[feature/spec-based-2 91e882d] SUPERVISOR: CLI parity memo - tests: not run
+ 2 files changed, 35 insertions(+), 102 deletions(-)
+[2025-10-07T21:55:33] tokens used: 261,321
+
+[2025-10-07T21:55:36] thinking
+
+**Pushing changes after reviewing diff**
+[2025-10-07T21:55:37] exec bash -lc 'git push' in /Users/ollie/Documents/nanoBragg3
+[2025-10-07T21:55:39] bash -lc 'git push' succeeded in 2.35s:
+To github.com:hoidn/nanoBragg.git
+   4ecccd7..91e882d  feature/spec-based-2 -> feature/spec-based-2
+[2025-10-07T21:55:39] tokens used: 261,582
+
+[2025-10-07T21:55:46] thinking
+
+**Composing final summary message**
+[2025-10-07T21:55:46] codex
+
+Refreshed the supervisor steering memo so the next loop documents the φ=0 carryover divergence before touching code. Key evidence:
+- `specs/spec-a-core.md:211` reiterates the spec requirement to recompute lattice vectors for every φ step (no carryover).
+- `docs/bugs/verified_c_bugs.md:166` records C-PARITY-001, confirming the C binary’s stale-vector bug is intentional debt.
+- `src/nanobrag_torch/models/crystal.py:1115` shows our PyTorch path caching `_phi_last_cache`, so the bug has been mirrored instead of quarantined.
+- `plans/active/cli-noise-pix0/plan.md:309` still instructs emulating the bug, which now conflicts with the spec alignment note at `plans/active/cli-noise-pix0/plan.md:5`.
+
+`input.md` now sends Ralph to update `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md`, log the attempt in `docs/fix_plan.md`, and run the collect-only selector.
+
+Tests: not run (docs loop).
+
+Next steps: once the diagnosis memo lands, revise the plan to separate spec-compliant behavior from any optional parity shim, then schedule the code changes accordingly.
+[2025-10-07T21:55:49] tokens used: 262,351
+Reading prompt from stdin...
+To github.com:hoidn/nanoBragg.git
+   91e882d..98f3a8d  HEAD -> feature/spec-based-2
+Waiting for Ralph to complete i=113...
+Already up to date.
+[sync] state: actor=ralph status=waiting-ralph iter=113
+Updating 98f3a8d..5e8885b
+Fast-forward
+ sync/state.json | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+From github.com:hoidn/nanoBragg
+   98f3a8d..5e8885b  feature/spec-based-2 -> origin/feature/spec-based-2
+[sync] state: actor=ralph status=running-ralph iter=113
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Updating 5e8885b..0a75aab
+Fast-forward
+ docs/fix_plan.md                                   |  19 ++
+ .../phase_l/rot_vector/collect_only_20251007.log   |   4 +
+ .../phase_l/rot_vector/diagnosis.md                | 248 ++++++++++++++-------
+ 3 files changed, 193 insertions(+), 78 deletions(-)
+ create mode 100644 reports/2025-10-cli-flags/phase_l/rot_vector/collect_only_20251007.log
+From github.com:hoidn/nanoBragg
+   5e8885b..0a75aab  feature/spec-based-2 -> origin/feature/spec-based-2
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Already up to date.
+Updating 0a75aab..d93a4bd
+Fast-forward
+ sync/state.json | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+From github.com:hoidn/nanoBragg
+   0a75aab..d93a4bd  feature/spec-based-2 -> origin/feature/spec-based-2
+[sync] state: actor=galph status=complete iter=114
+Ralph completed iteration 113; proceeding to 114
