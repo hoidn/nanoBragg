@@ -1459,3 +1459,910 @@ path = Path('plans/active/cli-noise-pix0/plan.md')
 data = path.read_text()
 old = 'Prereqs: Phase L complete so traces/tests use aligned tolerances. Instrumentation from Phase L2b ("'`trace_harness.py`, simulator taps) already in place.'"\\n'
 new = 'Prereqs: Phase L complete and Phase M0 instrumentation tasks marked [D] so traces/tests use aligned tolerances. Instrumentation from Phase L2b ("'`trace_harness.py`, simulator taps) already in place.'"\\n'
+if old not in data:
+    raise SystemExit('old text not found')
+data = data.replace(old, new, 1)
+path.write_text(data)
+PY" in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:32:51] bash -lc "python - <<'PY'
+from pathlib import Path
+path = Path('plans/active/cli-noise-pix0/plan.md')
+data = path.read_text()
+old = 'Prereqs: Phase L complete so traces/tests use aligned tolerances. Instrumentation from Phase L2b ("'`trace_harness.py`, simulator taps) already in place.'"\\n'
+new = 'Prereqs: Phase L complete and Phase M0 instrumentation tasks marked [D] so traces/tests use aligned tolerances. Instrumentation from Phase L2b ("'`trace_harness.py`, simulator taps) already in place.'"\\n'
+if old not in data:
+    raise SystemExit('old text not found')
+data = data.replace(old, new, 1)
+path.write_text(data)
+PY" succeeded in 715ms:
+
+[2025-10-08T06:32:51] tokens used: 143,678
+
+[2025-10-08T06:32:57] thinking
+
+**Preparing to update Next Actions in docs**
+[2025-10-08T06:33:01] exec bash -lc "python - <<'PY'
+from pathlib import Path
+path = Path('docs/fix_plan.md')
+data = path.read_text()
+old = \"- Next Actions (2025-10-07 refresh → post-M1):\\n1. ✅ **Phase M1 complete** — Instrumentation aligned (pre-polar trace now canonical C comparison point, ~0.2% residual as expected)\\n2. **Phase M2 investigation** — The ~0.2% I_before_scaling residual (941698.5 vs 943654.8) is within galph debug memo tolerance but should be understood. Investigate whether F_latt accumulation or float32 conversion contributes to the drift. No urgent action required unless downstream tests fail.\\n3. **Phase N/O readiness** — Regenerate ROI artifacts with "'`nb-compare` and schedule supervisor command closure run, capturing metrics + SHA256 manifests under `reports/2025-10-cli-flags/phase_l/`.'"\\n\"
+new = \"- Next Actions (2025-10-07 refresh → post-M1):\\n0. **Phase M0 instrumentation hygiene** — Guard the new tricubic neighborhood cache (plan tasks M0a–M0c) so debug tensors stay device/dtype neutral and do not leak giant batches. Log findings in "'`reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/instrumentation_audit.md` and append an Attempt before re-running traces.'"\\n1. ✅ **Phase M1 complete** — Instrumentation aligned (pre-polar trace now canonical C comparison point, ~0.2% residual as expected)\\n2. **Phase M2 investigation** — The ~0.2% I_before_scaling residual (941698.5 vs 943654.8) is within galph debug memo tolerance but should be understood. Investigate whether F_latt accumulation or float32 conversion contributes to the drift. No urgent action required unless downstream tests fail.\\n3. **Phase N/O readiness** — Regenerate ROI artifacts with "'`nb-compare` and schedule supervisor command closure run, capturing metrics + SHA256 manifests under `reports/2025-10-cli-flags/phase_l/`.'"\\n\"
+if old not in data:
+    raise SystemExit('old snippet not found')
+data = data.replace(old, new, 1)
+path.write_text(data)
+PY" in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:33:02] bash -lc "python - <<'PY'
+from pathlib import Path
+path = Path('docs/fix_plan.md')
+data = path.read_text()
+old = \"- Next Actions (2025-10-07 refresh → post-M1):\\n1. ✅ **Phase M1 complete** — Instrumentation aligned (pre-polar trace now canonical C comparison point, ~0.2% residual as expected)\\n2. **Phase M2 investigation** — The ~0.2% I_before_scaling residual (941698.5 vs 943654.8) is within galph debug memo tolerance but should be understood. Investigate whether F_latt accumulation or float32 conversion contributes to the drift. No urgent action required unless downstream tests fail.\\n3. **Phase N/O readiness** — Regenerate ROI artifacts with "'`nb-compare` and schedule supervisor command closure run, capturing metrics + SHA256 manifests under `reports/2025-10-cli-flags/phase_l/`.'"\\n\"
+new = \"- Next Actions (2025-10-07 refresh → post-M1):\\n0. **Phase M0 instrumentation hygiene** — Guard the new tricubic neighborhood cache (plan tasks M0a–M0c) so debug tensors stay device/dtype neutral and do not leak giant batches. Log findings in "'`reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/instrumentation_audit.md` and append an Attempt before re-running traces.'"\\n1. ✅ **Phase M1 complete** — Instrumentation aligned (pre-polar trace now canonical C comparison point, ~0.2% residual as expected)\\n2. **Phase M2 investigation** — The ~0.2% I_before_scaling residual (941698.5 vs 943654.8) is within galph debug memo tolerance but should be understood. Investigate whether F_latt accumulation or float32 conversion contributes to the drift. No urgent action required unless downstream tests fail.\\n3. **Phase N/O readiness** — Regenerate ROI artifacts with "'`nb-compare` and schedule supervisor command closure run, capturing metrics + SHA256 manifests under `reports/2025-10-cli-flags/phase_l/`.'"\\n\"
+if old not in data:
+    raise SystemExit('old snippet not found')
+data = data.replace(old, new, 1)
+path.write_text(data)
+PY" succeeded in 930ms:
+
+[2025-10-08T06:33:02] tokens used: 144,778
+
+[2025-10-08T06:33:10] thinking
+
+**Organizing input preparation details**
+[2025-10-08T06:33:11] exec bash -lc 'git rev-parse --abbrev-ref HEAD' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:33:12] bash -lc 'git rev-parse --abbrev-ref HEAD' succeeded in 747ms:
+feature/spec-based-2
+[2025-10-08T06:33:12] tokens used: 146,124
+
+[2025-10-08T06:33:18] thinking
+
+**Planning test instrumentation instructions**
+[2025-10-08T06:33:19] exec bash -lc 'cat reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:33:19] bash -lc 'cat reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py' succeeded in 774ms:
+#!/usr/bin/env python
+"""
+Phase L2b PyTorch Scaling Trace Harness
+
+Captures the PyTorch side of the scaling chain comparison for supervisor command.
+Mirrors the C trace fields from reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log.
+
+Date: 2025-10-17
+Engineer: Ralph (loop i=62, evidence-only mode)
+Plan Reference: plans/active/cli-noise-pix0/plan.md Phase L2b
+"""
+
+import argparse
+import json
+import sys
+import platform
+import os
+import torch
+from pathlib import Path
+from datetime import datetime
+[2025-10-08T06:33:19] tokens used: 146,785
+
+[2025-10-08T06:33:31] thinking
+
+**Preparing detailed instrumentation plan input**
+
+I'm organizing a comprehensive input for the plan update focusing on tricubic debug instrumentation and hygiene tasks under Phase M0. This includes detailed sections like summary, mode, branch, mapped tests with pytest collection commands, artifacts to produce, and fallback strategies if blocked. I'll also cover step-by-step "How-To Map," common pitfalls to avoid, and document relevant pointers with line number references to ensure the plan is clear, thorough, and sufficiently detailed within the required length guidelines.
+[2025-10-08T06:33:33] exec bash -lc "nl -ba plans/active/cli-noise-pix0/plan.md | sed -n '1,200p'" in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:33:34] bash -lc "nl -ba plans/active/cli-noise-pix0/plan.md | sed -n '1,200p'" succeeded in 722ms:
+     1	## Context
+     2	- Initiative: CLI-FLAGS-003 — unlock the supervisor parity command by aligning PyTorch CLI behavior with nanoBragg.c for `-nonoise` and `-pix0_vector_mm`.
+     3	- Current Objective: Finish the remaining φ=0 parity, scaling, and normalization work so the authoritative command below produces ≥0.9995 correlation, sum ratio 0.99–1.01, and ≤1 px mean peak distance.
+     4	  - Authoritative command (C + PyTorch parity harness):
+     5	    ```bash
+     6	    nanoBragg  -mat A.mat -floatfile img.bin -hkl scaled.hkl  -nonoise  -nointerpolate -oversample 1  -exposure 1  -flux 1e18 -beamsize 1.0  -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080  -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866  -beam_vector 0.00051387949 0.0 -0.99999986  -Na 36  -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0
+     7	    ```
+     8	- Dependencies & references:
+     9	  - `specs/spec-a-cli.md` — Canonical CLI semantics for noise suppression and detector vectors.
+    10	  - `specs/spec-a-core.md:204-240` — Normative φ rotation pipeline (no carryover).
+    11	  - `docs/architecture/detector.md §5` — pix0 geometry formulas for BEAM/SAMPLE pivots.
+    12	  - `docs/development/c_to_pytorch_config_map.md` — Flag mapping and implicit pivot/convention rules.
+    13	  - `docs/development/testing_strategy.md §§1.4–2` — Required device/dtype smoke cadence and CLI acceptance tests.
+    14	  - `docs/bugs/verified_c_bugs.md:166-204 (C-PARITY-001)` — Source of the φ carryover bug that parity mode must emulate.
+    15	  - `plans/active/cli-phi-parity-shim/plan.md` — Companion plan governing the opt-in parity shim (Phase C complete, Phase D docs pending).
+    16	  - `reports/2025-10-cli-flags/phase_l/` — Canonical evidence directory (rot_vector, parity_shim, scaling_audit, nb_compare, supervisor_command).
+    17	- Status Snapshot (2025-12-02):
+    18	  - `-nonoise` CLI plumbing merged and covered by tests; noise writers are skipped when flag present.
+    19	  - pix0 precedence fixes landed; SAMPLE pivot error corrected to ≤0.2 µm (Attempt #129).
+    20	  - Spec-compliant φ rotation restored; optional C-parity shim implemented with dual tolerance decision (|Δk| ≤ 1e-6 spec, ≤5e-5 c-parity) pending documentation sync.
+[2025-10-08T06:33:34] tokens used: 150,762
+
+[2025-10-08T06:33:36] thinking
+
+**Continuing to find line numbers**
+[2025-10-08T06:33:37] exec bash -lc "nl -ba plans/active/cli-noise-pix0/plan.md | sed -n '200,400p'" in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:33:37] bash -lc "nl -ba plans/active/cli-noise-pix0/plan.md | sed -n '200,400p'" succeeded in 723ms:
+
+[2025-10-08T06:33:37] tokens used: 152,604
+
+[2025-10-08T06:33:43] thinking
+
+**Preparing structured input document**
+[2025-10-08T06:33:57] exec bash -lc "cat <<'EOF' > input.md
+Summary: Harden the CLI-FLAGS-003 tricubic debug instrumentation before continuing Phase M scaling work.
+Mode: Parity
+Focus: CLI-FLAGS-003 Phase M0 instrumentation hygiene
+Branch: feature/spec-based-2
+Mapped tests:
+- pytest --collect-only tests/test_cli_scaling_phi0.py
+- pytest --collect-only tests/test_phi_carryover_mode.py
+Artifacts:
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/instrumentation_audit.md
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/commands.txt
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/env.json
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_scaling.log
+Do Now: CLI-FLAGS-003 Phase M0a–M0c instrumentation hygiene; run "'`KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --phi-mode c-parity --pixel 685 1039 --out reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_scaling.log --device cpu --dtype float64` and stage the new instrumentation audit artifacts.
+If Blocked: If trace harness crashes, capture stdout/stderr, record the failing command plus stack trace in instrumentation_audit.md, and pivot to documenting why `_last_tricubic_neighborhood` cannot yet be scoped (note this in docs/fix_plan Attempt and ping supervisor).
+Priorities & Rationale:
+- plans/active/cli-noise-pix0/plan.md:38-120 — Phase M0 precedes scaling parity; completing M0 unblocks M1 re-run.
+- docs/development/testing_strategy.md:35-86 — Device/dtype discipline demands debug tensors run on both CPU and CUDA.
+- docs/bugs/verified_c_bugs.md:166-204 — Parity shim context; instrumentation must not leak into spec mode runs.
+- docs/fix_plan.md:445-610 — CLI-FLAGS-003 ledger now calls out Phase M0 instrumentation guard.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py — authoritative harness for this audit (make sure CLI usage stays aligned).
+- specs/spec-a-core.md:200-270 — Tricubic sampling contract; instrumentation must not perturb lattice evaluation ordering.
+How-To Map:
+- Step 1: Create timestamped directory `reports/2025-10-cli-flags/phase_l/scaling_validation/$(date -u +%Y%m%dT%H%M%SZ)/` with placeholder files (commands.txt, instrumentation_audit.md).
+- Step 2: Export env `export KMP_DUPLICATE_LIB_OK=TRUE` and ensure editable install via `pip install -e .` already present; set `PYTHONPATH=src` for the harness invocation.
+- Step 3: Run `pytest --collect-only tests/test_cli_scaling_phi0.py` and `pytest --collect-only tests/test_phi_carryover_mode.py` to validate selectors before/after edits; record outputs in commands.txt.
+- Step 4: Execute harness command (CPU float64 first) pointing `--out` to the new directory; duplicate run with `--phi-mode spec` if needed to verify guard separation.
+- Step 5: Inspect `trace_py_scaling.log` to confirm new `TRACE_PY_TRICUBIC_*` lines only appear when capture flag engaged; if absent in spec mode, document the guard works.
+- Step 6: Add a short Python REPL probe confirming `_last_tricubic_neighborhood` is cleared or absent when `debug_config` is None; include snippet/observations in instrumentation_audit.md.
+- Step 7: If guard adjustments require code edits, keep them isolated (no production logic changes beyond gating) and update plan checklist before requesting review.
+- Step 8: Capture environment metadata into env.json (python/torch versions, device availability, git SHA) using `python reports/.../scaling_validation/write_env.py` or manual JSON if helper absent.
+- Step 9: Append docs/fix_plan Attempt summarizing guard behavior, device results, and artifact path; mark plan tasks M0a–M0c with current status in plan update comment.
+Pitfalls To Avoid:
+- Do not leave `_last_tricubic_neighborhood` populated during full-frame runs; ensure guard clears for `B>1` batches.
+- Avoid constructing debug tensors on CPU when running CUDA traces; reuse the caller device/dtype to stay neutral.
+- Do not remove existing TRACE_PY lines or change their order; only add guard logic.
+- No ad-hoc scripts; use the existing trace harness and update it in-place if needed.
+- Keep vectorization intact; no Python loops when dumping the 4×4×4 grid.
+- Respect Protected Assets; do not touch files referenced in docs/index.md beyond legitimate edits.
+- Ensure harness runs with `KMP_DUPLICATE_LIB_OK=TRUE`; missing env var causes MKL crash.
+- Capture SHA256 checksums in commands.txt to mirror prior evidence directories.
+- Update plan checklist tables (Phase M0) immediately after each task; no stale [ ] markers.
+- Defer nb-compare reruns until Phase M tasks close; avoid noisy artifacts.
+Pointers:
+- plans/active/cli-noise-pix0/plan.md:88-118 — Phase M0 table and prerequisites.
+- docs/fix_plan.md:451-480 — CLI-FLAGS-003 context and new Next Actions bullet 0.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:1-200 — Harness entrypoint and options.
+- docs/development/testing_strategy.md:33-110 — Device/dtype guardrails.
+- docs/bugs/verified_c_bugs.md:166-204 — C-parity bug description to cross-check spec vs parity modes.
+Next Up:
+- Phase M1 HKL lookup audit rerun once instrumentation hygiene verified.
+EOF' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:33:58] bash -lc "cat <<'EOF' > input.md
+Summary: Harden the CLI-FLAGS-003 tricubic debug instrumentation before continuing Phase M scaling work.
+Mode: Parity
+Focus: CLI-FLAGS-003 Phase M0 instrumentation hygiene
+Branch: feature/spec-based-2
+Mapped tests:
+- pytest --collect-only tests/test_cli_scaling_phi0.py
+- pytest --collect-only tests/test_phi_carryover_mode.py
+Artifacts:
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/instrumentation_audit.md
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/commands.txt
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/env.json
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_scaling.log
+Do Now: CLI-FLAGS-003 Phase M0a–M0c instrumentation hygiene; run "'`KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --phi-mode c-parity --pixel 685 1039 --out reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_scaling.log --device cpu --dtype float64` and stage the new instrumentation audit artifacts.
+If Blocked: If trace harness crashes, capture stdout/stderr, record the failing command plus stack trace in instrumentation_audit.md, and pivot to documenting why `_last_tricubic_neighborhood` cannot yet be scoped (note this in docs/fix_plan Attempt and ping supervisor).
+Priorities & Rationale:
+- plans/active/cli-noise-pix0/plan.md:38-120 — Phase M0 precedes scaling parity; completing M0 unblocks M1 re-run.
+- docs/development/testing_strategy.md:35-86 — Device/dtype discipline demands debug tensors run on both CPU and CUDA.
+- docs/bugs/verified_c_bugs.md:166-204 — Parity shim context; instrumentation must not leak into spec mode runs.
+- docs/fix_plan.md:445-610 — CLI-FLAGS-003 ledger now calls out Phase M0 instrumentation guard.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py — authoritative harness for this audit (make sure CLI usage stays aligned).
+- specs/spec-a-core.md:200-270 — Tricubic sampling contract; instrumentation must not perturb lattice evaluation ordering.
+How-To Map:
+- Step 1: Create timestamped directory `reports/2025-10-cli-flags/phase_l/scaling_validation/$(date -u +%Y%m%dT%H%M%SZ)/` with placeholder files (commands.txt, instrumentation_audit.md).
+- Step 2: Export env `export KMP_DUPLICATE_LIB_OK=TRUE` and ensure editable install via `pip install -e .` already present; set `PYTHONPATH=src` for the harness invocation.
+- Step 3: Run `pytest --collect-only tests/test_cli_scaling_phi0.py` and `pytest --collect-only tests/test_phi_carryover_mode.py` to validate selectors before/after edits; record outputs in commands.txt.
+- Step 4: Execute harness command (CPU float64 first) pointing `--out` to the new directory; duplicate run with `--phi-mode spec` if needed to verify guard separation.
+- Step 5: Inspect `trace_py_scaling.log` to confirm new `TRACE_PY_TRICUBIC_*` lines only appear when capture flag engaged; if absent in spec mode, document the guard works.
+- Step 6: Add a short Python REPL probe confirming `_last_tricubic_neighborhood` is cleared or absent when `debug_config` is None; include snippet/observations in instrumentation_audit.md.
+- Step 7: If guard adjustments require code edits, keep them isolated (no production logic changes beyond gating) and update plan checklist before requesting review.
+- Step 8: Capture environment metadata into env.json (python/torch versions, device availability, git SHA) using `python reports/.../scaling_validation/write_env.py` or manual JSON if helper absent.
+- Step 9: Append docs/fix_plan Attempt summarizing guard behavior, device results, and artifact path; mark plan tasks M0a–M0c with current status in plan update comment.
+Pitfalls To Avoid:
+- Do not leave `_last_tricubic_neighborhood` populated during full-frame runs; ensure guard clears for `B>1` batches.
+- Avoid constructing debug tensors on CPU when running CUDA traces; reuse the caller device/dtype to stay neutral.
+- Do not remove existing TRACE_PY lines or change their order; only add guard logic.
+- No ad-hoc scripts; use the existing trace harness and update it in-place if needed.
+- Keep vectorization intact; no Python loops when dumping the 4×4×4 grid.
+- Respect Protected Assets; do not touch files referenced in docs/index.md beyond legitimate edits.
+- Ensure harness runs with `KMP_DUPLICATE_LIB_OK=TRUE`; missing env var causes MKL crash.
+- Capture SHA256 checksums in commands.txt to mirror prior evidence directories.
+- Update plan checklist tables (Phase M0) immediately after each task; no stale [ ] markers.
+- Defer nb-compare reruns until Phase M tasks close; avoid noisy artifacts.
+Pointers:
+- plans/active/cli-noise-pix0/plan.md:88-118 — Phase M0 table and prerequisites.
+- docs/fix_plan.md:451-480 — CLI-FLAGS-003 context and new Next Actions bullet 0.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:1-200 — Harness entrypoint and options.
+- docs/development/testing_strategy.md:33-110 — Device/dtype guardrails.
+- docs/bugs/verified_c_bugs.md:166-204 — C-parity bug description to cross-check spec vs parity modes.
+Next Up:
+- Phase M1 HKL lookup audit rerun once instrumentation hygiene verified.
+EOF' succeeded in 929ms:
+
+[2025-10-08T06:33:58] tokens used: 154,532
+
+[2025-10-08T06:34:08] thinking
+
+**Checking file length**
+[2025-10-08T06:34:09] exec bash -lc 'wc -l input.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:34:10] bash -lc 'wc -l input.md' succeeded in 767ms:
+      50 input.md
+[2025-10-08T06:34:10] tokens used: 156,592
+
+[2025-10-08T06:34:15] thinking
+
+**Expanding content to meet length requirement**
+
+I’m working on rewriting the `input.md` file to add more detailed steps, sub-bullets, and pointers so it hits around 110 meaningful lines. This way, I’ll flesh out each section properly instead of just adding filler, maintaining the specified order and making sure it stays useful.
+[2025-10-08T06:34:32] exec bash -lc "cat <<'EOF' > input.md
+Summary: Harden the CLI-FLAGS-003 tricubic debug instrumentation before continuing Phase M scaling parity.
+Mode: Parity
+Focus: CLI-FLAGS-003 Phase M0 instrumentation hygiene
+Branch: feature/spec-based-2
+Mapped tests:
+- pytest --collect-only tests/test_cli_scaling_phi0.py
+- pytest --collect-only tests/test_phi_carryover_mode.py
+Artifacts:
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/instrumentation_audit.md
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/commands.txt
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/env.json
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_scaling.log
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_scaling_per_phi.log (if emitted)
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/sha256.txt
+Do Now: CLI-FLAGS-003 Phase M0a–M0c instrumentation hygiene; run "'`KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --phi-mode c-parity --pixel 685 1039 --out reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_scaling.log --device cpu --dtype float64`, scope the tricubic cache, and update the plan/checklist with findings.
+If Blocked: If the harness or simulator crashes, capture full stdout/stderr plus traceback into instrumentation_audit.md, preserve the failing command in commands.txt, and halt before modifying production code—then message supervisor with a brief summary and log path.
+Priorities & Rationale:
+- plans/active/cli-noise-pix0/plan.md:88-118 — Newly added Phase M0 gate must complete before returning to Phase M1 HKL parity.
+- docs/development/testing_strategy.md:35-120 — Reinforces device/dtype neutrality; instrumentation can’t assume CPU tensors.
+- docs/bugs/verified_c_bugs.md:166-204 — Documents C φ=0 carryover bug; parity instrumentation must not leak into spec mode traces.
+- docs/fix_plan.md:451-520 — CLI-FLAGS-003 ledger now calls for instrumentation hygiene Attempt logging.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py — Canonical harness controlling debug flag scope.
+- specs/spec-a-core.md:200-320 — Tricubic interpolation contract; storing neighborhoods must not disturb production evaluation order.
+- docs/architecture/pytorch_design.md:1-120 — Vectorization/branching guidance; avoid per-element guards when adding instrumentation toggles.
+- plans/active/cli-phi-parity-shim/plan.md:1-160 — Companion plan clarifies spec vs c-parity surfaces; align instrumentation with that API.
+- docs/development/pytorch_runtime_checklist.md:1-180 — Guardrails for debug instrumentation re: device moves and `.item()` usage.
+How-To Map:
+- Step 1: Mint a UTC timestamp `ts=$(date -u +%Y%m%dT%H%M%SZ)` and create `reports/2025-10-cli-flags/phase_l/scaling_validation/$ts/` with placeholder files (`touch instrumentation_audit.md commands.txt env.json`).
+- Step 2: Record baseline git SHA, branch, and working-tree status in commands.txt (`git rev-parse HEAD`, `git status --short`).
+- Step 3: Export required env vars `export KMP_DUPLICATE_LIB_OK=TRUE`, `export PYTHONPATH=src`; document both in commands.txt for reproducibility.
+- Step 4: Validate pytest selectors with `pytest --collect-only tests/test_cli_scaling_phi0.py` and `pytest --collect-only tests/test_phi_carryover_mode.py`; tee outputs into commands.txt so acceptance checks can be replayed.
+- Step 5: Run the trace harness for c-parity mode (command in Do Now) redirecting stdout to `trace_py_scaling.log`; capture exit status in commands.txt.
+- Step 6: Immediately rerun harness with `--phi-mode spec` writing to `trace_py_scaling_spec.log` to confirm instrumentation gating; optional but recommended—log result in instrumentation_audit.md.
+- Step 7: Inspect `_last_tricubic_neighborhood` via an inline REPL (e.g., add temporary assert or use Simulator debug hook) to verify it is empty/None when `debug_config` is None; describe method and outcome in instrumentation_audit.md.
+- Step 8: If guarding code requires adjustments, limit edits to toggles/context managers (no functional physics changes). After edits, re-run Steps 4–6 to ensure parity and device neutrality remain intact.
+- Step 9: Collect environment metadata with a short script: `python - <<'"'PY'"'` block dumping python/torch versions, cuda availability, device list, and git SHA into env.json; include timestamp and command list.
+- Step 10: Generate SHA256 checksums for the new files (`shasum -a 256 *.log *.md *.json > sha256.txt`) and record the command in commands.txt.
+- Step 11: Update plan tasks M0a, M0b, M0c with [D]/[P]/[ ] markers and summarize progress inline (brief note referencing artifact file) before ending the loop.
+- Step 12: Append Attempt entry in docs/fix_plan.md describing the instrumentation guard outcome, referencing the new timestamp directory and any code deltas.
+- Step 13: If device/dtype neutrality required GPU validation, queue a CUDA harness run (`--device cuda --dtype float32`) after CPU succeeds; document whether guard logic still functions and note any issues.
+- Step 14: Ensure no additional artifacts land outside the timestamped directory; audited directories should remain ignored via .gitignore.
+Pitfalls To Avoid:
+- Leaving `_last_tricubic_neighborhood` populated after production runs; clear or guard before returning from `_tricubic_interpolation`.
+- Creating CPU tensors inside simulator trace path while running CUDA traces; always reuse incoming device/dtype.
+- Removing or reordering existing TRACE_PY lines—keep historical ordering for diffing against C logs.
+- Introducing Python loops over the 4×4×4 grid in hot paths; rely on vectorized prints or guard to trace-only code.
+- Forgetting to reset `self.crystal.interpolate`; `finally` block must restore original value even on exceptions.
+- Editing files listed in docs/index.md beyond required guard logic (Protected Assets rule).
+- Skipping SHA256 metadata—previous attempts rely on checksum diffs to confirm trace freshness.
+- Neglecting to note harness command variants (spec vs c-parity) in commands.txt.
+- Allowing instrumentation to run during nb-compare or supervisor command runs; guard should depend on `debug_config`.
+- Pushing without updating plan/fix_plan; stale documentation breaks handoff to next loop.
+- Ignoring CUDA availability check before requesting GPU run; skip gracefully if torch.cuda.is_available() is False.
+Pointers:
+- plans/active/cli-noise-pix0/plan.md:88-118 — Phase M0 table and prerequisites text referencing commit 9a8c2f5 instrumentation.
+- docs/fix_plan.md:451-520 — CLI-FLAGS-003 section with updated Next Actions bullet 0 (Phase M0 instrumentation hygiene).
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:1-210 — Harness CLI flags, device/dtype handling, and trace capture logic.
+- docs/development/testing_strategy.md:35-120 — Device/dtype guardrails and evidence expectations.
+- docs/bugs/verified_c_bugs.md:166-204 — φ carryover bug reference guiding c-parity mode behavior.
+- docs/architecture/pytorch_design.md:1-80 — Branching & vectorization rules to respect while adding guards.
+- specs/spec-a-core.md:200-320 — Normative lattice sampling to ensure instrumentation remains observational.
+- plans/active/cli-phi-parity-shim/plan.md:1-160 — Shim API context for toggling spec vs c-parity.
+- docs/development/pytorch_runtime_checklist.md:1-180 — Checklist to cite in instrumentation_audit.md when confirming device neutrality.
+- reports/2025-10-cli-flags/phase_l/parity_shim/20251008T023140Z/summary.md — Prior trace evidence to compare against new logs.
+Next Up:
+- Phase M1 HKL lookup parity rerun using refreshed harness once instrumentation hygiene lands.
+EOF' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:34:33] bash -lc "cat <<'EOF' > input.md
+Summary: Harden the CLI-FLAGS-003 tricubic debug instrumentation before continuing Phase M scaling parity.
+Mode: Parity
+Focus: CLI-FLAGS-003 Phase M0 instrumentation hygiene
+Branch: feature/spec-based-2
+Mapped tests:
+- pytest --collect-only tests/test_cli_scaling_phi0.py
+- pytest --collect-only tests/test_phi_carryover_mode.py
+Artifacts:
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/instrumentation_audit.md
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/commands.txt
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/env.json
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_scaling.log
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_scaling_per_phi.log (if emitted)
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/sha256.txt
+Do Now: CLI-FLAGS-003 Phase M0a–M0c instrumentation hygiene; run "'`KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --phi-mode c-parity --pixel 685 1039 --out reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_scaling.log --device cpu --dtype float64`, scope the tricubic cache, and update the plan/checklist with findings.
+If Blocked: If the harness or simulator crashes, capture full stdout/stderr plus traceback into instrumentation_audit.md, preserve the failing command in commands.txt, and halt before modifying production code—then message supervisor with a brief summary and log path.
+Priorities & Rationale:
+- plans/active/cli-noise-pix0/plan.md:88-118 — Newly added Phase M0 gate must complete before returning to Phase M1 HKL parity.
+- docs/development/testing_strategy.md:35-120 — Reinforces device/dtype neutrality; instrumentation can’t assume CPU tensors.
+- docs/bugs/verified_c_bugs.md:166-204 — Documents C φ=0 carryover bug; parity instrumentation must not leak into spec mode traces.
+- docs/fix_plan.md:451-520 — CLI-FLAGS-003 ledger now calls for instrumentation hygiene Attempt logging.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py — Canonical harness controlling debug flag scope.
+- specs/spec-a-core.md:200-320 — Tricubic interpolation contract; storing neighborhoods must not disturb production evaluation order.
+- docs/architecture/pytorch_design.md:1-120 — Vectorization/branching guidance; avoid per-element guards when adding instrumentation toggles.
+- plans/active/cli-phi-parity-shim/plan.md:1-160 — Companion plan clarifies spec vs c-parity surfaces; align instrumentation with that API.
+- docs/development/pytorch_runtime_checklist.md:1-180 — Guardrails for debug instrumentation re: device moves and `.item()` usage.
+How-To Map:
+- Step 1: Mint a UTC timestamp `ts=$(date -u +%Y%m%dT%H%M%SZ)` and create `reports/2025-10-cli-flags/phase_l/scaling_validation/$ts/` with placeholder files (`touch instrumentation_audit.md commands.txt env.json`).
+- Step 2: Record baseline git SHA, branch, and working-tree status in commands.txt (`git rev-parse HEAD`, `git status --short`).
+- Step 3: Export required env vars `export KMP_DUPLICATE_LIB_OK=TRUE`, `export PYTHONPATH=src`; document both in commands.txt for reproducibility.
+- Step 4: Validate pytest selectors with `pytest --collect-only tests/test_cli_scaling_phi0.py` and `pytest --collect-only tests/test_phi_carryover_mode.py`; tee outputs into commands.txt so acceptance checks can be replayed.
+- Step 5: Run the trace harness for c-parity mode (command in Do Now) redirecting stdout to `trace_py_scaling.log`; capture exit status in commands.txt.
+- Step 6: Immediately rerun harness with `--phi-mode spec` writing to `trace_py_scaling_spec.log` to confirm instrumentation gating; optional but recommended—log result in instrumentation_audit.md.
+- Step 7: Inspect `_last_tricubic_neighborhood` via an inline REPL (e.g., add temporary assert or use Simulator debug hook) to verify it is empty/None when `debug_config` is None; describe method and outcome in instrumentation_audit.md.
+- Step 8: If guarding code requires adjustments, limit edits to toggles/context managers (no functional physics changes). After edits, re-run Steps 4–6 to ensure parity and device neutrality remain intact.
+- Step 9: Collect environment metadata with a short script: `python - <<'"'PY'"'` block dumping python/torch versions, cuda availability, device list, and git SHA into env.json; include timestamp and command list.
+- Step 10: Generate SHA256 checksums for the new files (`shasum -a 256 *.log *.md *.json > sha256.txt`) and record the command in commands.txt.
+- Step 11: Update plan tasks M0a, M0b, M0c with [D]/[P]/[ ] markers and summarize progress inline (brief note referencing artifact file) before ending the loop.
+- Step 12: Append Attempt entry in docs/fix_plan.md describing the instrumentation guard outcome, referencing the new timestamp directory and any code deltas.
+- Step 13: If device/dtype neutrality required GPU validation, queue a CUDA harness run (`--device cuda --dtype float32`) after CPU succeeds; document whether guard logic still functions and note any issues.
+- Step 14: Ensure no additional artifacts land outside the timestamped directory; audited directories should remain ignored via .gitignore.
+Pitfalls To Avoid:
+- Leaving `_last_tricubic_neighborhood` populated after production runs; clear or guard before returning from `_tricubic_interpolation`.
+- Creating CPU tensors inside simulator trace path while running CUDA traces; always reuse incoming device/dtype.
+- Removing or reordering existing TRACE_PY lines—keep historical ordering for diffing against C logs.
+- Introducing Python loops over the 4×4×4 grid in hot paths; rely on vectorized prints or guard to trace-only code.
+- Forgetting to reset `self.crystal.interpolate`; `finally` block must restore original value even on exceptions.
+- Editing files listed in docs/index.md beyond required guard logic (Protected Assets rule).
+- Skipping SHA256 metadata—previous attempts rely on checksum diffs to confirm trace freshness.
+- Neglecting to note harness command variants (spec vs c-parity) in commands.txt.
+- Allowing instrumentation to run during nb-compare or supervisor command runs; guard should depend on `debug_config`.
+- Pushing without updating plan/fix_plan; stale documentation breaks handoff to next loop.
+- Ignoring CUDA availability check before requesting GPU run; skip gracefully if torch.cuda.is_available() is False.
+Pointers:
+- plans/active/cli-noise-pix0/plan.md:88-118 — Phase M0 table and prerequisites text referencing commit 9a8c2f5 instrumentation.
+- docs/fix_plan.md:451-520 — CLI-FLAGS-003 section with updated Next Actions bullet 0 (Phase M0 instrumentation hygiene).
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:1-210 — Harness CLI flags, device/dtype handling, and trace capture logic.
+- docs/development/testing_strategy.md:35-120 — Device/dtype guardrails and evidence expectations.
+- docs/bugs/verified_c_bugs.md:166-204 — φ carryover bug reference guiding c-parity mode behavior.
+- docs/architecture/pytorch_design.md:1-80 — Branching & vectorization rules to respect while adding guards.
+- specs/spec-a-core.md:200-320 — Normative lattice sampling to ensure instrumentation remains observational.
+- plans/active/cli-phi-parity-shim/plan.md:1-160 — Shim API context for toggling spec vs c-parity.
+- docs/development/pytorch_runtime_checklist.md:1-180 — Checklist to cite in instrumentation_audit.md when confirming device neutrality.
+- reports/2025-10-cli-flags/phase_l/parity_shim/20251008T023140Z/summary.md — Prior trace evidence to compare against new logs.
+Next Up:
+- Phase M1 HKL lookup parity rerun using refreshed harness once instrumentation hygiene lands.
+EOF' succeeded in 806ms:
+
+[2025-10-08T06:34:33] tokens used: 158,956
+
+[2025-10-08T06:34:35] thinking
+
+**Checking line count**
+[2025-10-08T06:34:36] exec bash -lc 'wc -l input.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:34:37] bash -lc 'wc -l input.md' succeeded in 688ms:
+      66 input.md
+[2025-10-08T06:34:37] tokens used: 161,411
+
+[2025-10-08T06:34:47] thinking
+
+**Planning detailed content expansion**
+[2025-10-08T06:35:08] exec bash -lc "cat <<'EOF' > input.md
+Summary: Harden CLI-FLAGS-003 tricubic debug instrumentation before continuing Phase M scaling parity.
+Mode: Parity
+Focus: CLI-FLAGS-003 Phase M0 instrumentation hygiene
+Branch: feature/spec-based-2
+Mapped tests:
+- pytest --collect-only tests/test_cli_scaling_phi0.py
+- pytest --collect-only tests/test_phi_carryover_mode.py
+Artifacts:
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/instrumentation_audit.md
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/commands.txt
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/env.json
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_scaling.log
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_scaling_spec.log
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_scaling_per_phi.log
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/sha256.txt
+Do Now: CLI-FLAGS-003 Phase M0a–M0c instrumentation hygiene; run "'`KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --phi-mode c-parity --pixel 685 1039 --out reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_scaling.log --device cpu --dtype float64`, guard `_last_tricubic_neighborhood`, verify device/dtype neutrality, and update plan plus fix_plan with the new findings.
+If Blocked: If the harness or simulator crashes, capture stdout/stderr plus traceback into instrumentation_audit.md, note the failing command and exit code in commands.txt, stop before production edits, and alert supervisor with the log path once documented.
+Priorities & Rationale:
+- plans/active/cli-noise-pix0/plan.md:88-118 — Phase M0 is now gating Phase M1; must close to resume scaling parity.
+- docs/development/testing_strategy.md:35-120 — Device/dtype discipline applies even to debug instrumentation.
+- docs/bugs/verified_c_bugs.md:166-204 — Parity shim context; instrumentation must respect spec mode defaults.
+- docs/fix_plan.md:451-520 — Ledger next actions now include instrumentation hygiene Attempt logging.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py — Harness API controlling trace capture.
+- specs/spec-a-core.md:200-320 — Tricubic interpolation contract to keep intact.
+- docs/architecture/pytorch_design.md:1-120 — Vectorization/branching guidance relevant to guard placement.
+- plans/active/cli-phi-parity-shim/plan.md:1-160 — Shim API ensures spec vs c-parity toggles remain explicit.
+- docs/development/pytorch_runtime_checklist.md:1-180 — Debug code must still pass runtime guardrails.
+- reports/2025-10-cli-flags/phase_l/parity_shim/20251008T023140Z/summary.md — Existing trace baseline for comparison.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T060721Z/manual_summary.md — Last metrics showing 0.2086% drift.
+How-To Map:
+- Step 1: Generate UTC timestamp `ts=$(date -u +%Y%m%dT%H%M%SZ)` and make directory `reports/2025-10-cli-flags/phase_l/scaling_validation/$ts` with `mkdir -p`.
+- Step 2: Seed instrumentation_audit.md with heading, objective, and checklist referencing plan IDs.
+- Step 3: Log initial git state by running `git status --short` and `git rev-parse HEAD`; append outputs to commands.txt.
+- Step 4: Export env vars `export KMP_DUPLICATE_LIB_OK=TRUE` and `export PYTHONPATH=src`; record both lines in commands.txt.
+- Step 5: Confirm editable install by noting `pip show nanobragg-torch` or `pip list | grep nanobragg`; jot the command/result in commands.txt.
+- Step 6: Validate pytest selectors with `pytest --collect-only tests/test_cli_scaling_phi0.py`; append command and excerpt of collection output to commands.txt.
+- Step 7: Repeat collection for `pytest --collect-only tests/test_phi_carryover_mode.py`; capture runtime and exit status.
+- Step 8: Execute trace harness for c-parity per Do Now command, redirecting stdout to trace_py_scaling.log and capturing stderr separately if emitted.
+- Step 9: Immediately re-run harness with `--phi-mode spec` writing to trace_py_scaling_spec.log to ensure instrumentation stays opt-in.
+- Step 10: Optionally run harness with `--dtype float32` for parity with production defaults; document any differences.
+- Step 11: Inspect trace logs for presence of `TRACE_PY_TRICUBIC_*` lines, noting which mode emitted them in instrumentation_audit.md.
+- Step 12: Drop into a Python REPL (e.g., `python - <<'"'PY'"'`) to query simulator.crystal._last_tricubic_neighborhood after a non-debug run; confirm it is falsy or cleared.
+- Step 13: If guard adjustments are needed, edit simulator/crystal accordingly, ensuring changes stay behind debug checks; describe modifications in audit file.
+- Step 14: Re-run Steps 6–9 after edits to verify no regressions introduced by the guard logic.
+- Step 15: For CUDA coverage, if available, execute harness with `--device cuda --dtype float32` and confirm no device mismatch occurs; log results.
+- Step 16: Collect environment metadata (python version, torch version, CUDA availability, git SHA, timestamp) into env.json via a short Python script; cite the script in commands.txt.
+- Step 17: Compute SHA256 checksums across produced artifacts using `shasum -a 256 *.log *.md *.json > sha256.txt`; store command and output snippet.
+- Step 18: Summarize findings in instrumentation_audit.md including action items, whether `_last_tricubic_neighborhood` is scoped, device/dtype observations, and any follow-ups.
+- Step 19: Update plans/active/cli-noise-pix0/plan.md to flip M0a/M0b/M0c states as appropriate with brief inline notes referencing $ts.
+- Step 20: Append docs/fix_plan.md Attempt describing the instrumentation hygiene work, linking to the new timestamp directory and noting pass/fail status for each M0 subtask.
+- Step 21: Stage modifications to plan/fix_plan (and code if changed) without committing yet; verify `git diff` shows only intended files.
+- Step 22: Review logs to confirm spec mode traces remain free of tricubic dumps; add explicit statement to audit file.
+- Step 23: If instrumentation introduces new CLI options or debug flags, document them in commands.txt and mention whether scripts need updates.
+- Step 24: Before ending loop, ensure commands.txt includes reproducible sequences for CPU and CUDA runs plus SHA output lines.
+- Step 25: Backfill instrumentation_audit.md with a short risk assessment (memory retention, gradient graph impact) and mitigation notes.
+Evidence Targets:
+- TRACE_PY logs showing tricubic grid present only in c-parity debug runs.
+- Confirmation snippet demonstrating `_last_tricubic_neighborhood` absence during production runs.
+- Device/dtype matrix summarizing CPU float64, CPU float32, and CUDA float32 outcomes.
+- SHA256 manifest referencing all generated artifacts for reproducibility.
+- Plan checklist snippet proving M0 tasks updated with timestamp.
+Pitfalls To Avoid:
+- Leaving `_last_tricubic_neighborhood` populated after production runs; guard or clear before return.
+- Creating CPU-only tensors inside simulator trace path during CUDA runs; use caller device/dtype.
+- Reordering or deleting existing TRACE_PY lines needed for diffing against C.
+- Introducing Python loops in hot interpolation paths instead of restricting them to trace-only contexts.
+- Forgetting to restore `self.crystal.interpolate` back to its saved value on every path.
+- Editing Protected Assets listed in docs/index.md beyond necessary plan fixes.
+- Skipping SHA256 generation; parity audits rely on checksum history.
+- Omitting commands from commands.txt; future repro depends on full command trail.
+- Allowing trace-only instrumentation to execute during nb-compare or supervisor runs.
+- Requesting GPU runs without checking torch.cuda.is_available(); always note availability in env.json.
+Pointers:
+- plans/active/cli-noise-pix0/plan.md:88-118 — Phase M0 instrumentation hygiene tasks.
+- docs/fix_plan.md:451-520 — CLI-FLAGS-003 ledger with new instrumentation next action.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:1-210 — Harness CLI and trace flow.
+- docs/development/testing_strategy.md:35-120 — Device/dtype enforcement guidance.
+- docs/bugs/verified_c_bugs.md:166-204 — φ carryover bug documentation.
+- docs/architecture/pytorch_design.md:1-120 — Vectorization considerations for guard placement.
+- specs/spec-a-core.md:200-320 — Tricubic interpolation contract reference.
+- plans/active/cli-phi-parity-shim/plan.md:1-160 — Shim behavior for spec vs c-parity.
+- docs/development/pytorch_runtime_checklist.md:1-180 — Runtime guardrails to cite in audit.
+- reports/2025-10-cli-flags/phase_l/parity_shim/20251008T023140Z/summary.md — Prior trace comparison baseline.
+Context Reminders:
+- Attempt #142 introduced the tricubic instrumentation; verify its behavior matches assumptions recorded there.
+- Prior scaling traces showed 0.2086% I_before_scaling drift; ensure new guard does not change numeric results.
+- Ensure new artifacts stay within reports/ timestamped folder to keep git clean.
+Next Up:
+- Phase M1 HKL lookup parity rerun using refreshed harness after instrumentation hygiene completes.
+EOF' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:35:09] bash -lc "cat <<'EOF' > input.md
+Summary: Harden CLI-FLAGS-003 tricubic debug instrumentation before continuing Phase M scaling parity.
+Mode: Parity
+Focus: CLI-FLAGS-003 Phase M0 instrumentation hygiene
+Branch: feature/spec-based-2
+Mapped tests:
+- pytest --collect-only tests/test_cli_scaling_phi0.py
+- pytest --collect-only tests/test_phi_carryover_mode.py
+Artifacts:
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/instrumentation_audit.md
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/commands.txt
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/env.json
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_scaling.log
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_scaling_spec.log
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_scaling_per_phi.log
+- reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/sha256.txt
+Do Now: CLI-FLAGS-003 Phase M0a–M0c instrumentation hygiene; run "'`KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --phi-mode c-parity --pixel 685 1039 --out reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/trace_py_scaling.log --device cpu --dtype float64`, guard `_last_tricubic_neighborhood`, verify device/dtype neutrality, and update plan plus fix_plan with the new findings.
+If Blocked: If the harness or simulator crashes, capture stdout/stderr plus traceback into instrumentation_audit.md, note the failing command and exit code in commands.txt, stop before production edits, and alert supervisor with the log path once documented.
+Priorities & Rationale:
+- plans/active/cli-noise-pix0/plan.md:88-118 — Phase M0 is now gating Phase M1; must close to resume scaling parity.
+- docs/development/testing_strategy.md:35-120 — Device/dtype discipline applies even to debug instrumentation.
+- docs/bugs/verified_c_bugs.md:166-204 — Parity shim context; instrumentation must respect spec mode defaults.
+- docs/fix_plan.md:451-520 — Ledger next actions now include instrumentation hygiene Attempt logging.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py — Harness API controlling trace capture.
+- specs/spec-a-core.md:200-320 — Tricubic interpolation contract to keep intact.
+- docs/architecture/pytorch_design.md:1-120 — Vectorization/branching guidance relevant to guard placement.
+- plans/active/cli-phi-parity-shim/plan.md:1-160 — Shim API ensures spec vs c-parity toggles remain explicit.
+- docs/development/pytorch_runtime_checklist.md:1-180 — Debug code must still pass runtime guardrails.
+- reports/2025-10-cli-flags/phase_l/parity_shim/20251008T023140Z/summary.md — Existing trace baseline for comparison.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T060721Z/manual_summary.md — Last metrics showing 0.2086% drift.
+How-To Map:
+- Step 1: Generate UTC timestamp `ts=$(date -u +%Y%m%dT%H%M%SZ)` and make directory `reports/2025-10-cli-flags/phase_l/scaling_validation/$ts` with `mkdir -p`.
+- Step 2: Seed instrumentation_audit.md with heading, objective, and checklist referencing plan IDs.
+- Step 3: Log initial git state by running `git status --short` and `git rev-parse HEAD`; append outputs to commands.txt.
+- Step 4: Export env vars `export KMP_DUPLICATE_LIB_OK=TRUE` and `export PYTHONPATH=src`; record both lines in commands.txt.
+- Step 5: Confirm editable install by noting `pip show nanobragg-torch` or `pip list | grep nanobragg`; jot the command/result in commands.txt.
+- Step 6: Validate pytest selectors with `pytest --collect-only tests/test_cli_scaling_phi0.py`; append command and excerpt of collection output to commands.txt.
+- Step 7: Repeat collection for `pytest --collect-only tests/test_phi_carryover_mode.py`; capture runtime and exit status.
+- Step 8: Execute trace harness for c-parity per Do Now command, redirecting stdout to trace_py_scaling.log and capturing stderr separately if emitted.
+- Step 9: Immediately re-run harness with `--phi-mode spec` writing to trace_py_scaling_spec.log to ensure instrumentation stays opt-in.
+- Step 10: Optionally run harness with `--dtype float32` for parity with production defaults; document any differences.
+- Step 11: Inspect trace logs for presence of `TRACE_PY_TRICUBIC_*` lines, noting which mode emitted them in instrumentation_audit.md.
+- Step 12: Drop into a Python REPL (e.g., `python - <<'"'PY'"'`) to query simulator.crystal._last_tricubic_neighborhood after a non-debug run; confirm it is falsy or cleared.
+- Step 13: If guard adjustments are needed, edit simulator/crystal accordingly, ensuring changes stay behind debug checks; describe modifications in audit file.
+- Step 14: Re-run Steps 6–9 after edits to verify no regressions introduced by the guard logic.
+- Step 15: For CUDA coverage, if available, execute harness with `--device cuda --dtype float32` and confirm no device mismatch occurs; log results.
+- Step 16: Collect environment metadata (python version, torch version, CUDA availability, git SHA, timestamp) into env.json via a short Python script; cite the script in commands.txt.
+- Step 17: Compute SHA256 checksums across produced artifacts using `shasum -a 256 *.log *.md *.json > sha256.txt`; store command and output snippet.
+- Step 18: Summarize findings in instrumentation_audit.md including action items, whether `_last_tricubic_neighborhood` is scoped, device/dtype observations, and any follow-ups.
+- Step 19: Update plans/active/cli-noise-pix0/plan.md to flip M0a/M0b/M0c states as appropriate with brief inline notes referencing $ts.
+- Step 20: Append docs/fix_plan.md Attempt describing the instrumentation hygiene work, linking to the new timestamp directory and noting pass/fail status for each M0 subtask.
+- Step 21: Stage modifications to plan/fix_plan (and code if changed) without committing yet; verify `git diff` shows only intended files.
+- Step 22: Review logs to confirm spec mode traces remain free of tricubic dumps; add explicit statement to audit file.
+- Step 23: If instrumentation introduces new CLI options or debug flags, document them in commands.txt and mention whether scripts need updates.
+- Step 24: Before ending loop, ensure commands.txt includes reproducible sequences for CPU and CUDA runs plus SHA output lines.
+- Step 25: Backfill instrumentation_audit.md with a short risk assessment (memory retention, gradient graph impact) and mitigation notes.
+Evidence Targets:
+- TRACE_PY logs showing tricubic grid present only in c-parity debug runs.
+- Confirmation snippet demonstrating `_last_tricubic_neighborhood` absence during production runs.
+- Device/dtype matrix summarizing CPU float64, CPU float32, and CUDA float32 outcomes.
+- SHA256 manifest referencing all generated artifacts for reproducibility.
+- Plan checklist snippet proving M0 tasks updated with timestamp.
+Pitfalls To Avoid:
+- Leaving `_last_tricubic_neighborhood` populated after production runs; guard or clear before return.
+- Creating CPU-only tensors inside simulator trace path during CUDA runs; use caller device/dtype.
+- Reordering or deleting existing TRACE_PY lines needed for diffing against C.
+- Introducing Python loops in hot interpolation paths instead of restricting them to trace-only contexts.
+- Forgetting to restore `self.crystal.interpolate` back to its saved value on every path.
+- Editing Protected Assets listed in docs/index.md beyond necessary plan fixes.
+- Skipping SHA256 generation; parity audits rely on checksum history.
+- Omitting commands from commands.txt; future repro depends on full command trail.
+- Allowing trace-only instrumentation to execute during nb-compare or supervisor runs.
+- Requesting GPU runs without checking torch.cuda.is_available(); always note availability in env.json.
+Pointers:
+- plans/active/cli-noise-pix0/plan.md:88-118 — Phase M0 instrumentation hygiene tasks.
+- docs/fix_plan.md:451-520 — CLI-FLAGS-003 ledger with new instrumentation next action.
+- reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:1-210 — Harness CLI and trace flow.
+- docs/development/testing_strategy.md:35-120 — Device/dtype enforcement guidance.
+- docs/bugs/verified_c_bugs.md:166-204 — φ carryover bug documentation.
+- docs/architecture/pytorch_design.md:1-120 — Vectorization considerations for guard placement.
+- specs/spec-a-core.md:200-320 — Tricubic interpolation contract reference.
+- plans/active/cli-phi-parity-shim/plan.md:1-160 — Shim behavior for spec vs c-parity.
+- docs/development/pytorch_runtime_checklist.md:1-180 — Runtime guardrails to cite in audit.
+- reports/2025-10-cli-flags/phase_l/parity_shim/20251008T023140Z/summary.md — Prior trace comparison baseline.
+Context Reminders:
+- Attempt #142 introduced the tricubic instrumentation; verify its behavior matches assumptions recorded there.
+- Prior scaling traces showed 0.2086% I_before_scaling drift; ensure new guard does not change numeric results.
+- Ensure new artifacts stay within reports/ timestamped folder to keep git clean.
+Next Up:
+- Phase M1 HKL lookup parity rerun using refreshed harness after instrumentation hygiene completes.
+EOF' succeeded in 663ms:
+
+[2025-10-08T06:35:09] tokens used: 164,560
+
+[2025-10-08T06:35:12] thinking
+
+**Checking line count**
+[2025-10-08T06:35:12] exec bash -lc 'wc -l input.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:35:13] bash -lc 'wc -l input.md' succeeded in 703ms:
+      89 input.md
+[2025-10-08T06:35:13] tokens used: 167,068
+
+[2025-10-08T06:35:17] thinking
+
+**Planning content expansion**
+[2025-10-08T06:35:19] exec bash -lc "cat <<'EOF' >> input.md
+Checklist Updates:
+- Mark plan tasks M0a, M0b, M0c with detailed notes referencing new timestamp once evidence collected.
+- Add docs/fix_plan.md Attempt entry (#143 if next) summarizing instrumentation guard findings and linking artifacts.
+- Record whether CUDA harness executed; if skipped, justify in instrumentation_audit.md and plan next attempt.
+- Note any required follow-up code review (e.g., if guard changes touch simulator) so supervisor can schedule review loop.
+EOF" in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:35:19] bash -lc "cat <<'EOF' >> input.md
+Checklist Updates:
+- Mark plan tasks M0a, M0b, M0c with detailed notes referencing new timestamp once evidence collected.
+- Add docs/fix_plan.md Attempt entry (#143 if next) summarizing instrumentation guard findings and linking artifacts.
+- Record whether CUDA harness executed; if skipped, justify in instrumentation_audit.md and plan next attempt.
+- Note any required follow-up code review (e.g., if guard changes touch simulator) so supervisor can schedule review loop.
+EOF" succeeded in 657ms:
+
+[2025-10-08T06:35:19] tokens used: 167,405
+
+[2025-10-08T06:35:22] thinking
+
+**Counting lines**
+[2025-10-08T06:35:23] exec bash -lc 'wc -l input.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:35:24] bash -lc 'wc -l input.md' succeeded in 670ms:
+      94 input.md
+[2025-10-08T06:35:24] tokens used: 167,698
+
+[2025-10-08T06:35:26] thinking
+
+**Extending documentation content**
+[2025-10-08T06:35:27] exec bash -lc "cat <<'EOF' >> input.md
+Documentation Notes:
+- Update instrumentation_audit.md with cross-links to docs/development/pytorch_runtime_checklist.md and specs/spec-a-core.md citations.
+- Mention in audit whether additional trace variables are desired for Phase M1 (so supervisor can plan next loop).
+- If guard logic reveals new spec gap, note it for potential specs/spec-a update (do not edit spec yet).
+EOF" in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:35:28] bash -lc "cat <<'EOF' >> input.md
+Documentation Notes:
+- Update instrumentation_audit.md with cross-links to docs/development/pytorch_runtime_checklist.md and specs/spec-a-core.md citations.
+- Mention in audit whether additional trace variables are desired for Phase M1 (so supervisor can plan next loop).
+- If guard logic reveals new spec gap, note it for potential specs/spec-a update (do not edit spec yet).
+EOF" succeeded in 661ms:
+
+[2025-10-08T06:35:28] tokens used: 168,037
+
+[2025-10-08T06:35:30] thinking
+
+**Counting lines**
+[2025-10-08T06:35:31] exec bash -lc 'wc -l input.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:35:32] bash -lc 'wc -l input.md' succeeded in 691ms:
+      98 input.md
+[2025-10-08T06:35:32] tokens used: 168,350
+
+[2025-10-08T06:35:34] thinking
+
+**Planning documentation additions**
+[2025-10-08T06:35:35] exec bash -lc "cat <<'EOF' >> input.md
+Communication:
+- Post instrumentation summary and artifact path in docs/fix_plan.md Attempts log plus galph_memory on next supervisor loop.
+- Flag any unexpected performance impact so we can adjust Phase M benchmarks accordingly.
+EOF" in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:35:36] bash -lc "cat <<'EOF' >> input.md
+Communication:
+- Post instrumentation summary and artifact path in docs/fix_plan.md Attempts log plus galph_memory on next supervisor loop.
+- Flag any unexpected performance impact so we can adjust Phase M benchmarks accordingly.
+EOF" succeeded in 687ms:
+
+[2025-10-08T06:35:36] tokens used: 168,545
+
+[2025-10-08T06:35:38] thinking
+
+**Checking final line count**
+[2025-10-08T06:35:38] exec bash -lc 'wc -l input.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:35:39] bash -lc 'wc -l input.md' succeeded in 704ms:
+     101 input.md
+[2025-10-08T06:35:39] tokens used: 168,840
+
+[2025-10-08T06:35:42] thinking
+
+**Preparing to check git status**
+[2025-10-08T06:35:42] exec bash -lc 'git status --short' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:35:43] bash -lc 'git status --short' succeeded in 710ms:
+ M input.md
+ M logs/feature-spec-based-2/galph/iter-00142_20251008_062157.log
+[2025-10-08T06:35:43] tokens used: 169,096
+
+[2025-10-08T06:35:49] thinking
+
+**Reviewing uncommitted log and plan changes**
+[2025-10-08T06:35:49] exec bash -lc 'git diff plans/active/cli-noise-pix0/plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:35:50] bash -lc 'git diff plans/active/cli-noise-pix0/plan.md' succeeded in 699ms:
+
+[2025-10-08T06:35:50] tokens used: 169,639
+
+[2025-10-08T06:35:57] thinking
+
+**Verifying plan file changes**
+[2025-10-08T06:35:58] exec bash -lc 'git diff HEAD -- plans/active/cli-noise-pix0/plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:35:58] bash -lc 'git diff HEAD -- plans/active/cli-noise-pix0/plan.md' succeeded in 687ms:
+
+[2025-10-08T06:35:58] tokens used: 169,867
+
+[2025-10-08T06:36:02] thinking
+
+**Verifying plan file changes**
+[2025-10-08T06:36:03] exec bash -lc 'grep -n "Phase M0" -n plans/active/cli-noise-pix0/plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:36:03] bash -lc 'grep -n "Phase M0" -n plans/active/cli-noise-pix0/plan.md' succeeded in 703ms:
+46:### Phase M0 — Trace Instrumentation Hygiene
+59:Prereqs: Phase L complete and Phase M0 instrumentation tasks marked [D] so traces/tests use aligned tolerances. Instrumentation from Phase L2b (`trace_harness.py`, simulator taps) already in place.
+[2025-10-08T06:36:03] tokens used: 170,177
+
+[2025-10-08T06:36:07] thinking
+
+**Verifying file changes against HEAD**
+[2025-10-08T06:36:08] exec bash -lc 'git diff HEAD -- docs/fix_plan.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:36:09] bash -lc 'git diff HEAD -- docs/fix_plan.md' succeeded in 743ms:
+
+[2025-10-08T06:36:09] tokens used: 170,550
+
+[2025-10-08T06:36:13] thinking
+
+**Verifying plan file changes against HEAD**
+[2025-10-08T06:36:14] exec bash -lc 'git show HEAD:plans/active/cli-noise-pix0/plan.md | grep -n "Phase M0"' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:36:15] bash -lc 'git show HEAD:plans/active/cli-noise-pix0/plan.md | grep -n "Phase M0"' succeeded in 766ms:
+46:### Phase M0 — Trace Instrumentation Hygiene
+59:Prereqs: Phase L complete and Phase M0 instrumentation tasks marked [D] so traces/tests use aligned tolerances. Instrumentation from Phase L2b (`trace_harness.py`, simulator taps) already in place.
+[2025-10-08T06:36:15] tokens used: 170,892
+
+[2025-10-08T06:36:18] thinking
+
+**Verifying unchanged commit content**
+[2025-10-08T06:36:19] exec bash -lc "git show HEAD:docs/fix_plan.md | sed -n '460,480p'" in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:36:19] bash -lc "git show HEAD:docs/fix_plan.md | sed -n '460,480p'" succeeded in 703ms:
+- First Divergence (if known): ✅ **Instrumentation aligned (2025-10-07).** Pre-polarization `I_before_scaling` now matches C within ~0.2% (941698.5 vs 943654.8), confirming the prior −8.7% delta was a trace measurement artifact. PyTorch emits both `I_before_scaling_pre_polar` (canonical C comparison point) and `I_before_scaling_post_polar` (diagnostic). The ~0.2% residual is expected per galph debug memo (float32 + F_latt drift). See `reports/2025-10-cli-flags/phase_l/scaling_validation/20251007T222548Z/phase_m1_summary.md`.
+- Next Actions (2025-10-07 refresh → post-M1):
+0. **Phase M0 instrumentation hygiene** — Guard the new tricubic neighborhood cache (plan tasks M0a–M0c) so debug tensors stay device/dtype neutral and do not leak giant batches. Log findings in `reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/instrumentation_audit.md` and append an Attempt before re-running traces.
+1. ✅ **Phase M1 complete** — Instrumentation aligned (pre-polar trace now canonical C comparison point, ~0.2% residual as expected)
+2. **Phase M2 investigation** — The ~0.2% I_before_scaling residual (941698.5 vs 943654.8) is within galph debug memo tolerance but should be understood. Investigate whether F_latt accumulation or float32 conversion contributes to the drift. No urgent action required unless downstream tests fail.
+3. **Phase N/O readiness** — Regenerate ROI artifacts with `nb-compare` and schedule supervisor command closure run, capturing metrics + SHA256 manifests under `reports/2025-10-cli-flags/phase_l/`.
+- Attempts History:
+  * [2025-10-07] Attempt #136 (ralph loop i=135, Mode: Docs) — Result: ✅ **SUCCESS** (Phase L Documentation Sync COMPLETE). **No code changes.**
+    Metrics: Test collection: 35 tests collected successfully in 2.16s (test_cli_scaling_phi0.py + test_phi_carryover_mode.py). Documentation-only loop per input.md Mode: Docs.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/20251007T212159Z/collect.log` — pytest collection output
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/20251007T212159Z/commands.txt` — Reproduction steps
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/20251007T212159Z/summary.md` — Complete documentation sync summary
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/20251007T212159Z/sha256.txt` — Artifact checksums (79b9602c... collect.log, 8c8089a7... commands.txt, 81d25f57... summary.md)
+      - `plans/active/cli-noise-pix0/plan.md` — Phase L tasks L1/L2 marked [D], L3 marked [P]
+      - `plans/active/cli-phi-parity-shim/plan.md` — Phase D tasks D1 marked [D], D2 marked [P]
+      - `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md` — Added Phase L sync note to Dual-Threshold Decision section
+      - `docs/bugs/verified_c_bugs.md` — Updated C-PARITY-001 entry with Documentation Status note
+    Observations/Hypotheses:
+      - **Tolerance thresholds synchronized**: Spec mode (≤1e-6) vs c-parity mode (≤5e-5) documented across plans, diagnosis.md, and bug docs
+[2025-10-08T06:36:19] tokens used: 171,200
+
+[2025-10-08T06:36:22] thinking
+
+**Staging input.md only**
+[2025-10-08T06:36:23] exec bash -lc 'git add input.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:36:24] bash -lc 'git add input.md' succeeded in 740ms:
+
+[2025-10-08T06:36:24] tokens used: 172,453
+
+[2025-10-08T06:36:26] thinking
+
+**Checking status**
+[2025-10-08T06:36:26] exec bash -lc 'git status --short' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:36:27] bash -lc 'git status --short' succeeded in 837ms:
+M  input.md
+ M logs/feature-spec-based-2/galph/iter-00142_20251008_062157.log
+[2025-10-08T06:36:27] tokens used: 172,668
+
+[2025-10-08T06:36:30] thinking
+
+**Preparing commit with supervisor message**
+[2025-10-08T06:36:30] exec bash -lc 'git commit -m "SUPERVISOR: Phase M0 instrumentation memo - tests: not run"' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:36:31] bash -lc 'git commit -m "SUPERVISOR: Phase M0 instrumentation memo - tests: not run"' succeeded in 740ms:
+[feature/spec-based-2 4e5cefc] SUPERVISOR: Phase M0 instrumentation memo - tests: not run
+ 1 file changed, 95 insertions(+), 29 deletions(-)
+[2025-10-08T06:36:31] tokens used: 173,972
+
+[2025-10-08T06:36:34] thinking
+
+**Pushing the new commit**
+[2025-10-08T06:36:34] exec bash -lc 'git push' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:36:37] bash -lc 'git push' succeeded in 2.34s:
+To github.com:hoidn/nanoBragg.git
+   edff9f9..4e5cefc  feature/spec-based-2 -> feature/spec-based-2
+[2025-10-08T06:36:37] tokens used: 174,254
+
+[2025-10-08T06:36:43] thinking
+
+**Appending summary to memory file**
+
+I’m preparing to append a new, dated entry to `galph_memory.md` that summarizes key decisions from the current plan phase, highlights instrumentation concerns including a note on Ralph’s commit review about tensor storage risks, and references main instructions. I’ll ensure it fits smoothly near the bottom without pruning older entries and keep it concise and clear.
+[2025-10-08T06:36:47] exec bash -lc "python - <<'PY'
+from pathlib import Path
+path = Path('galph_memory.md')
+entry = \"\"\"\\n## 2025-12-04 (galph loop — Phase M0 instrumentation hygiene setup)\\n- Coin flip=heads: reviewed Ralph commit 9a8c2f5; instrumentation stores "'`_last_tricubic_neighborhood` tensors and forces CPU tensors in trace path — flagged need for guarded usage before Phase M proceeds.'"\\n- Updated guidance by reinforcing plan CLI-FLAGS-003 Phase M0 (already codified) and issuing Parity-mode input.md directing Ralph to audit/guard the tricubic cache before rerunning scaling parity.\\n- Key expectations: capture new trace evidence under "'`reports/2025-10-cli-flags/phase_l/scaling_validation/<ts>/`, verify device/dtype neutrality, document results in instrumentation_audit.md, and log Attempt for M0a–M0c.'"\\n- Follow-up: next loop confirm M0 tasks marked [D], ensure guard prevents memory bloat on production runs, and decide when to resume Phase M1 HKL parity.\\n\"\"\"
+with path.open('a') as f:
+    f.write(entry)
+PY" in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:36:48] bash -lc "python - <<'PY'
+from pathlib import Path
+path = Path('galph_memory.md')
+entry = \"\"\"\\n## 2025-12-04 (galph loop — Phase M0 instrumentation hygiene setup)\\n- Coin flip=heads: reviewed Ralph commit 9a8c2f5; instrumentation stores "'`_last_tricubic_neighborhood` tensors and forces CPU tensors in trace path — flagged need for guarded usage before Phase M proceeds.'"\\n- Updated guidance by reinforcing plan CLI-FLAGS-003 Phase M0 (already codified) and issuing Parity-mode input.md directing Ralph to audit/guard the tricubic cache before rerunning scaling parity.\\n- Key expectations: capture new trace evidence under "'`reports/2025-10-cli-flags/phase_l/scaling_validation/<ts>/`, verify device/dtype neutrality, document results in instrumentation_audit.md, and log Attempt for M0a–M0c.'"\\n- Follow-up: next loop confirm M0 tasks marked [D], ensure guard prevents memory bloat on production runs, and decide when to resume Phase M1 HKL parity.\\n\"\"\"
+with path.open('a') as f:
+    f.write(entry)
+PY" succeeded in 949ms:
+
+[2025-10-08T06:36:48] tokens used: 174,930
+
+[2025-10-08T06:36:52] thinking
+
+**Preparing to stage and commit new changes**
+[2025-10-08T06:36:53] exec bash -lc 'git add galph_memory.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:36:54] bash -lc 'git add galph_memory.md' succeeded in 719ms:
+
+[2025-10-08T06:36:54] tokens used: 176,290
+
+[2025-10-08T06:36:56] thinking
+
+**Committing code changes**
+[2025-10-08T06:36:57] exec bash -lc 'git commit -m "SUPERVISOR: Phase M0 memory update - tests: not run"' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:36:57] bash -lc 'git commit -m "SUPERVISOR: Phase M0 memory update - tests: not run"' succeeded in 821ms:
+[feature/spec-based-2 c15cdeb] SUPERVISOR: Phase M0 memory update - tests: not run
+ 1 file changed, 6 insertions(+)
+[2025-10-08T06:36:57] tokens used: 176,514
+
+[2025-10-08T06:36:59] thinking
+
+**Pushing changes to remote**
+[2025-10-08T06:37:00] exec bash -lc 'git push' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:37:02] bash -lc 'git push' succeeded in 2.00s:
+To github.com:hoidn/nanoBragg.git
+   4e5cefc..c15cdeb  feature/spec-based-2 -> feature/spec-based-2
+[2025-10-08T06:37:02] tokens used: 177,002
+
+[2025-10-08T06:37:04] thinking
+
+**Checking git status**
+[2025-10-08T06:37:04] exec bash -lc 'git status --short' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:37:05] bash -lc 'git status --short' succeeded in 761ms:
+ M logs/feature-spec-based-2/galph/iter-00142_20251008_062157.log
+[2025-10-08T06:37:05] tokens used: 177,225
+
+[2025-10-08T06:37:15] thinking
+
+**Documenting rationale for dirty tree**
+[2025-10-08T06:37:17] exec bash -lc "python - <<'PY'
+from pathlib import Path
+path = Path('galph_memory.md')
+text = path.read_text()
+append = \"- Working tree note: "'`logs/feature-spec-based-2/galph/iter-00142_20251008_062157.log` remains modified from prior runs; left uncommitted per log-retention policy.'"\\n\"
+if append.strip() not in text:
+    text += append
+    path.write_text(text)
+PY" in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:37:18] bash -lc "python - <<'PY'
+from pathlib import Path
+path = Path('galph_memory.md')
+text = path.read_text()
+append = \"- Working tree note: "'`logs/feature-spec-based-2/galph/iter-00142_20251008_062157.log` remains modified from prior runs; left uncommitted per log-retention policy.'"\\n\"
+if append.strip() not in text:
+    text += append
+    path.write_text(text)
+PY" succeeded in 741ms:
+
+[2025-10-08T06:37:18] tokens used: 178,362
+
+[2025-10-08T06:37:20] thinking
+
+**Amending previous commit**
+[2025-10-08T06:37:21] exec bash -lc 'git add galph_memory.md' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:37:21] bash -lc 'git add galph_memory.md' succeeded in 759ms:
+
+[2025-10-08T06:37:21] tokens used: 178,592
+
+[2025-10-08T06:37:23] thinking
+
+**Amending previous commit**
+[2025-10-08T06:37:24] exec bash -lc 'git commit --amend --no-edit' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:37:25] bash -lc 'git commit --amend --no-edit' succeeded in 779ms:
+[feature/spec-based-2 500a52a] SUPERVISOR: Phase M0 memory update - tests: not run
+ Date: Tue Oct 7 23:36:57 2025 -0700
+ 1 file changed, 7 insertions(+)
+[2025-10-08T06:37:25] tokens used: 178,784
+
+[2025-10-08T06:37:27] thinking
+
+**Preparing to force push amended commit**
+[2025-10-08T06:37:27] exec bash -lc 'git push --force-with-lease' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:37:29] bash -lc 'git push --force-with-lease' succeeded in 2.25s:
+To github.com:hoidn/nanoBragg.git
+ + c15cdeb...500a52a feature/spec-based-2 -> feature/spec-based-2 (forced update)
+[2025-10-08T06:37:29] tokens used: 179,010
+
+[2025-10-08T06:37:32] thinking
+
+**Verifying log file visibility**
+[2025-10-08T06:37:33] exec bash -lc 'git status --short' in /Users/ollie/Documents/nanoBragg3
+[2025-10-08T06:37:34] bash -lc 'git status --short' succeeded in 839ms:
+ M logs/feature-spec-based-2/galph/iter-00142_20251008_062157.log
+[2025-10-08T06:37:34] tokens used: 179,249
+
+[2025-10-08T06:37:41] thinking
+
+**Preparing final response details**
+
+I'll summarize the evaluation of Ralph's commit focusing on instrumentation issues, mention the plan update and input instructions, note the git status and lack of tests, and outline clear next steps for Ralph in a concise bullet list.
+[2025-10-08T06:37:42] codex
+
+- Highlighted Ralph’s 9a8c2f5 instrumentation commit during coin-flip review; noted `_last_tricubic_neighborhood` now retains large tensors and the trace path hardcodes CPU tensors, so pressing to gate it before continuing Phase M.  
+- Reaffirmed CLI-FLAGS-003 Phase M0 as the current focus and clarified expectations via a fresh Parity-mode `input.md` (101 lines) directing Ralph to audit/guard the tricubic cache, rerun the harness, and log artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/<ts>/`.  
+- Logged guidance in `galph_memory.md` (new 2025-12-04 entry) so the next supervisor loop knows to verify M0 completion and that the lingering log file is intentionally left dirty.  
+- Committed and pushed the supervisor memo (`SUPERVISOR: Phase M0 instrumentation memo - tests: not run`) and memory update (`SUPERVISOR: Phase M0 memory update - tests: not run`). No tests were executed this turn.  
+- Working tree remains dirty only because `logs/feature-spec-based-2/galph/iter-00142_20251008_062157.log` is modified by the harness; documented this in memory per policy.
+
+Next steps for Ralph: execute the Phase M0 instrumentation hygiene tasks outlined in `input.md`, capturing the audit, guarding the tricubic neighborhood cache, and updating plan/fix_plan attempts before returning to Phase M1 parity.
+[2025-10-08T06:37:45] tokens used: 180,065
+Reading prompt from stdin...
