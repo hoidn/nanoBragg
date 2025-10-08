@@ -462,8 +462,8 @@
   - ✅ Phase D1–D3 complete — Shim removal validated; see `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/` and galph_memory entries dated 2025-12-14.
   - ✅ **Phase M1 (COMPLETE)** — Fresh spec-mode baseline captured at `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/` with trace_harness + compare_scaling_traces; test collection verified (2 tests in test_cli_scaling_phi0.py).
   - ✅ **Phase M2 (COMPLETE)** — Analysis bundle complete with quantified F_cell/F_latt/k_frac breakdowns; see Attempt #186 (2025-10-22) — `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/analysis_20251008T212459Z.md` and updated `../20251008T075949Z/lattice_hypotheses.md`.
-  - **Phase M3 (OPEN)** — Execute plan tasks M3a–M3d: add PyTorch `TRACE_PY_PHI` logging, publish the k-sweep sincg table, run the `-phisteps 1` parity check, and complete the rotation matrix audit vs nanoBragg.c:2797-3095. Store all probes under `reports/2025-10-cli-flags/phase_l/scaling_validation/<stamp>/phase_m3_probes/` with summary.md + sha256.
-  - **Phase M4 (BLOCKED on M3)** — Implement physics fix once root cause confirmed; verify with fresh trace comparison.
+  - ✅ **Phase M3 (COMPLETE)** — Diagnostic probes complete; see Attempt #187 (2025-10-22). M3a: instrumentation design (`/tmp/m3a_instrumentation_design.md`); M3b: sincg sweep (`20251008T215755Z/phase_m3_probes/sincg_sweep.md`); M3c: single-φ test (`20251008T215634Z/phase_m3_probes/phistep1/`); M3d: rotation audit (`20251008T215700Z/phase_m3_probes/rotation_audit.md`). Root cause: missing normalization (126,000× error) + C-PARITY-001 carryover (+6.8% rot_b).
+  - **Phase M4 (OPEN)** — Implement normalization fix (`intensity / steps` in simulator.py) + M3a instrumentation; validate with phisteps sweep.
   - **Phase M5–M6 (OPEN)** — Re-run CUDA + gradcheck smoke, then sync ledgers/documentation before advancing to nb-compare (Phase N).
 
 - Attempts History:
@@ -492,6 +492,25 @@
       - Phase M3 Task 3: Execute single-φ parity test (phisteps=1, phi=0) to isolate rotation vs accumulation issues
       - Phase M3 Task 4: Audit rotation matrix construction comparing `src/nanobrag_torch/models/crystal.py::get_rotated_real_vectors` vs nanoBragg.c:2797-3095 line-by-line
       - All Phase M3 artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/<date>/phase_m3_probes/`
+  * [2025-10-22] Attempt #187 (ralph loop i=103, Mode: Parity) — Result: ✅ **SUCCESS** (Phase M3 Probes COMPLETE). **Evidence-only loop (no code changes).**
+    Metrics: pytest 2/2 passed (tests/test_cli_scaling_phi0.py::TestPhiZeroParity); M3b identified sincg zero-crossing at k≈-0.5955 (C k=-0.607, Py k=-0.589); M3c discovered 126,000× normalization error in phisteps=1 case; M3d confirmed rot_b Y-component +6.8% error due to C-PARITY-001 φ carryover bug.
+    Artifacts:
+      - `/tmp/m3a_instrumentation_design.md` — Detailed instrumentation strategy for per-φ logging (PyTorch TRACE_PY_PHI format)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T215755Z/phase_m3_probes/sincg_sweep.md` — Sensitivity table confirming zero-crossing (CSV + PNG visualization)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T215634Z/phase_m3_probes/phistep1/summary.md` — Single-φ experiment identifying missing normalization (Py 126,000× higher than C)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T215700Z/phase_m3_probes/rotation_audit.md` — Rotation matrix comparison isolating rot_b Y error to C-PARITY-001
+    Observations/Hypotheses:
+      - **M3a (Design Complete)**: Instrumentation design document produced; specifies two logging points (Crystal.py:1131 for rotations, Simulator.py:253 for F_latt); implementation deferred to code-change loop
+      - **M3b (Validated)**: sincg(π·k, Nb=47) crosses zero at k=-0.5955; C value (-0.607) yields +1.051, PyTorch (-0.589) yields -0.858, confirming 3% k_frac shift causes 182% F_latt_b swing
+      - **M3c (Critical Discovery)**: Single-φ run shows PyTorch 126,000× higher intensity than C (max: 6.9e7 vs 548); correlation still 0.999999; root cause is missing `I/steps` normalization in PyTorch (C nanoBragg.c:3358 divides by steps)
+      - **M3d (Root Cause Confirmed)**: rot_b Y-component error (+6.8%) traced to C-PARITY-001 carryover bug (C skips rotation at φ=0, reuses previous pixel's last φ vectors); PyTorch is spec-compliant but differs from buggy C behavior
+      - **Hypothesis Ranking Update**: H4 (φ rotation mismatch) confirmed as HIGH confidence; primary error is C-PARITY-001 carryover combined with missing normalization factor
+    Next Actions:
+      - Phase M4: Implement M3c normalization fix (`intensity / steps` after summation in simulator.py)
+      - Phase M4: Add M3a instrumentation (TRACE_PY_PHI logging) per design document
+      - Phase M4: Validate fix with fresh phisteps=1,2,5,10 sweep to verify linear scaling
+      - Phase M5: CUDA + gradcheck smoke tests
+      - Phase M6: Update ledgers and regenerate spec-mode baseline to confirm first_divergence=None
   * [2025-10-08] Attempt #185 (ralph loop i=182, Mode: Parity) — Result: ✅ **SUCCESS** (Phase M1 Spec-Mode Baseline COMPLETE). **Evidence-only loop (no code changes).**
     Metrics: First divergence: I_before_scaling (C=943654.81, Py=805473.79, delta=-14.6%); all downstream scaling factors pass ≤1e-6 tolerance; test collection: 2 tests collected successfully in 0.79s (tests/test_cli_scaling_phi0.py).
     Artifacts:
