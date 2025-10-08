@@ -1008,3 +1008,10 @@
 - Refreshed `docs/fix_plan.md` Next Actions bullet 0 so undoing the scalar regression is explicitly the first task under CLI-FLAGS-003.
 - Authored `input.md` (Parity mode, 100 lines) instructing Ralph to complete M2g.2b: restore batched signatures, remove the `.item()` gate, capture artifacts under `reports/.../carryover_cache_plumbing/`, run the targeted parity pytest, and update diagnosis docs/attempt logs.
 - Follow-up for Ralph: refactor the helpers back to tensor indices, keep vectorised execution intact, archive logs + plan updates, then proceed to M2g.3 wiring once the parity test and documentation landing pads are ready.
+
+## 2025-12-10 (galph loop — M2g cache wiring prep)
+- Coin flip=heads → reviewed Ralph commits 678cbf4/1de347c; batched cache signatures restored and Attempt #160 logged with docs update.
+- Updated `plans/active/cli-noise-pix0/plan.md` status snapshot to acknowledge commit 678cbf4 and flipped checklist item M2g.2b to [D]; emphasised that wiring (M2g.3+) remains the blocker.
+- Synced `docs/fix_plan.md` Next Actions (lines 3383-3391) with the new focus on Option B cache plumbing so the ledger mirrors the plan after M2g.2b completion.
+- Authored fresh `input.md` (Parity mode) directing Ralph to execute M2g.3-M2g.4: allocate per-pixel caches, thread `(slow_indices, fast_indices)` through the simulator, run the mapped pytest selector, and archive artifacts under `reports/.../carryover_cache_plumbing/` with env metadata.
+- Follow-up for Ralph: build the Option B cache tensors, wire them through `_compute_physics_for_position`, capture the targeted parity test output, then proceed to M2g.5 tooling updates once cache hits are proven.

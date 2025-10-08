@@ -3380,7 +3380,7 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - **Test ran CPU float64**: Device=cpu, dtype=torch.float64 for precision; prerequisites A.mat and scaled.hkl present
       - **Tolerance gate**: ≤1e-6 relative error (CLI-FLAGS-003 VG-2), actual error 1.57884 (157.88%)
     Next Actions:
-      - M2g (next Ralph loop): Implement pixel-indexed cache per Option 1 design documented in `phi_carryover_diagnosis.md`
+      - M2g (active): Continue Option B cache plumbing (tasks M2g.3-M2g.6) now that commit 678cbf4 restored batched tensor signatures. Allocate per-pixel caches in `Crystal.initialize_phi_cache`, thread `(slow_indices, fast_indices)` through `_compute_physics_for_position`, and follow the Option B design in `phi_carryover_diagnosis.md`.
         * Cache shape: `(S,F,N_mos,3)` per vector (ap, bp, cp, rot_a_star, rot_b_star, rot_c_star)
         * Memory estimate: ~224 MB @ float32 for 2527×2463 detector (acceptable)
         * Device/dtype neutral: tensors live on caller's device/dtype, no hard-coded `.cpu()`/`.cuda()`
