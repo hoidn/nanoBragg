@@ -962,3 +962,9 @@
 - Refreshed `docs/fix_plan.md` Next Actions to match new plan (capture failing test log, then Option 1 implementation + trace reruns).
 - Authored new `input.md` (Parity mode) directing Ralph to log the failing scaling-parity test (M2e) under a fresh timestamp before touching code.
 - Follow-up for Ralph: execute Do Now command, store artifacts in `reports/.../parity_test_failure/`, update plan/fix_plan attempt entries, keep regression test red-but-documented for Option 1 implementation loop.
+
+## 2025-12-08 (galph loop — Phase M2g planning refresh)
+- Expanded `plans/active/cli-noise-pix0/plan.md` Phase M2 with detailed M2g/M2h/M2i subtables and updated guidance for Option 1 pixel-indexed cache work (cache allocation, helper wiring, CUDA probe, gradcheck, documentation sync).
+- Synced `docs/fix_plan.md` Next Actions to point at the new sub-checklists (M2g–M2i) so Ralph’s next loop focuses on implementing the cache and capturing validation artifacts.
+- Rewrote `input.md` to direct Ralph to implement the cache, run the targeted parity/gradcheck commands, capture CUDA/trace evidence, and archive outputs under the refreshed carryover folders.
+- Follow-up for Ralph: implement M2g cache plumbing, produce carryover_cache_validation + carryover_probe artifacts, update phi_carryover_diagnosis.md, and flip M2g–M2i to [D] before moving to Phase M3.

@@ -96,8 +96,32 @@ Exit Criteria: `trace_harness.py` comparisons show `F_cell`, `F_latt`, and `I_be
 | --- | --- | --- | --- |
 | M2f | Finalise Option 1 data flow | [D] | ✅ Attempt #152 extended `phi_carryover_diagnosis.md` with cache tensor shape `(S,F,N_mos,3)`, lifecycle/reset rules, call sequence (Option 1A), gradient guarantees, and C-code citations (`nanoBragg.c:2797,3044-3095`). |
 | M2g | Implement vectorised cache plumbing | [ ] | Introduce a pixel-indexed cache on the crystal (shape `(S,F,N_mos,3)` per vector) that stores φ=final outputs on the active device/dtype. Add an `apply_phi_carryover(pixel_s, pixel_f, real_vecs, recip_vecs)` helper invoked from `_compute_physics_for_position` (and trace harness) when `phi_carryover_mode="c-parity"`. Use tensor indexing/scatter ops—no `.detach()`, no in-place writes that would break autograd. Document code with required C snippets per CLAUDE Rule #11. |
-| M2h | Gradient & device validation | [ ] | Run targeted selectors `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c --device=cpu` and, when CUDA available, the GPU parametrisation. Add a minimal gradcheck (float64, 2×2 ROI) to confirm carryover keeps gradients alive. Store logs under `reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/carryover_cache_validation/` with `commands.txt`, `env.json`, and exit codes. |
-| M2i | Regenerate cross-pixel traces | [ ] | After implementation, rerun `python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --roi 684 686 1039 1040 --phi-mode c-parity` (CPU float64) and stash outputs (`trace_py_scaling.log`, `metrics.json`, `diff.md`) under `reports/.../carryover_probe/<timestamp>/`. Update `lattice_hypotheses.md` and `scaling_validation_summary.md` with the new evidence (expect first_divergence=None) before moving to M3. |
+| M2h | Gradient & device validation | [ ] | Follow M2h.1–M2h.4 to capture the CPU pytest log, CUDA trace harness probe, gradcheck output, and a fix_plan Attempt under `reports/2025-10-cli-flags/phase_l/scaling_validation/<timestamp>/carryover_cache_validation/`. |
+| M2i | Regenerate cross-pixel traces | [ ] | Execute M2i.1–M2i.3 (ROI trace rerun, metrics/diff refresh, documentation sync) and expect `first_divergence=None` before advancing to Phase M3. |
+
+##### M2g Implementation Steps
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| M2g.1 | Re-read Option 1 design + C-code excerpts | [ ] | Review `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T100653Z/analysis.md`, `reports/.../phi_carryover_diagnosis.md`, and `golden_suite_generator/nanoBragg.c:2797,3044-3095`; capture any deltas in a new dated subsection before editing code. |
+| M2g.2 | Allocate pixel-indexed caches | [ ] | Add tensor buffers (shape `(detector.spixels, detector.fpixels, mosaic_domains, 3)`) for each real/reciprocal vector in `src/nanobrag_torch/models/crystal.py` ensuring device/dtype neutrality and invalidation when detector dims change. |
+| M2g.3 | Apply cached φ vectors during physics | [ ] | Inside `_compute_physics_for_position`, inject a vectorized helper (e.g., `apply_phi_carryover`) that swaps φ=0 slices using `torch.gather`/`torch.where` without `.detach()` and while preserving spec mode behavior. Reference the exact C snippet in-line per CLAUDE Rule #11. |
+| M2g.4 | Update trace + parity tooling | [ ] | Mirror the helper in `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py` (and allied scripts) so evidence paths exercise the new cache. Document command updates in `commands.txt`. |
+| M2g.5 | Document architecture decision | [ ] | Append a section to `reports/.../phi_carryover_diagnosis.md` summarizing the implemented tensor pathway, spec isolation (`specs/spec-a-core.md:204-240`), and gradients check, then flip this row to [D]. |
+
+##### M2h Validation Steps
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| M2h.1 | CPU parity test | [ ] | `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c -q`; archive log to `reports/.../carryover_cache_validation/<ts>/pytest_cpu.log`. |
+| M2h.2 | CUDA parity probe | [ ] | When CUDA is available, run `python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --phi-mode c-parity --device cuda --dtype float64 --out trace_py_scaling_cuda.log`; archive outputs or note unavailability. |
+| M2h.3 | Gradcheck probe | [ ] | Add/execute a minimal gradcheck harness (float64, 2×2 ROI) verifying cached tensors keep gradients; store output in `gradcheck.log`. |
+| M2h.4 | Update fix_plan attempt | [ ] | Log metrics, artifact paths, and device coverage in `docs/fix_plan.md` Attempt history when tests conclude. |
+
+##### M2i Trace & Metrics Steps
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| M2i.1 | Cross-pixel trace rerun | [ ] | `python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --roi 684 686 1039 1040 --phi-mode c-parity` (CPU float64) → save under `carryover_probe/<ts>/`. |
+| M2i.2 | Metrics + diff update | [ ] | Regenerate `metrics.json`, `trace_diff.md`, and confirm `first_divergence=None`; compare vs 20251008T075949Z baseline. |
+| M2i.3 | Summaries & plan sync | [ ] | Update `lattice_hypotheses.md`, `scaling_validation_summary.md`, and flip M2 rows to [D] once evidence collected. |
 
 ### Phase N — ROI nb-compare Parity (VG‑3 & VG‑4)
 Goal: Once scaling is fixed, prove end-to-end image parity on the supervisor ROI using nb-compare and refreshed C/PyTorch outputs.
