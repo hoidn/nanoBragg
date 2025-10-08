@@ -1142,3 +1142,10 @@
 - Updated `plans/active/phi-carryover-removal/plan.md` Phase D with new row D0 requiring the trace harness to drop `phi_carryover_mode` plumbing; refreshed `docs/fix_plan.md` and `plans/active/cli-noise-pix0/plan.md` next actions to point Ralph at D0→D1 sequence.
 - Rewrote `input.md` (Mode: Parity) directing Ralph to patch the harness, rerun Py/C traces into a fresh Phase D timestamp, execute `pytest -v tests/test_cli_scaling_phi0.py`, and capture the ``rg "phi_carryover"`` sweep.
 - Follow-up: expect Ralph to land the harness edit, produce the Phase D artifact bundle, and then update ledger entries before we pivot back to the scaling parity work.
+
+## 2025-12-14 (galph loop — D1 proof bundle setup)
+- Git already synced with origin; core docs + active plans reviewed per SOP before analysis.
+- Coin flip=heads → inspected Ralph commits 9f462ab (blocker summary) and 946226e (harness cleanup). Harness now spec-only; no regressions observed.
+- Updated `plans/active/phi-carryover-removal/plan.md` row D0 to [D] so the checklist reflects the completed harness refresh.
+- Authored new `input.md` (Mode: Parity) directing Ralph to capture the D1 proof-of-removal bundle: fresh Py trace via `trace_harness.py`, matching C trace with `-trace_pixel 685 1039`, run `scripts/validation/compare_scaling_traces.py`, execute `pytest -v tests/test_cli_scaling_phi0.py`, perform the `rg "phi_carryover"` sweep, and store everything under `reports/2025-10-cli-flags/phase_phi_removal/phase_d/$STAMP/` with summary/metrics/sha256.
+- Follow-up for Ralph: generate the new artifact bundle, then proceed to ledger sync (docs/fix_plan.md update + plan archival) once the proof is logged.
