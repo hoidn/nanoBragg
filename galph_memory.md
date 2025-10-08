@@ -1058,3 +1058,10 @@
 - Refreshed docs/fix_plan.md Next Actions to highlight the gradcheck probe (M2h.3) now that CUDA evidence is archived.
 - Authored input.md (Mode: Parity) directing Ralph to build a timestamped gradcheck harness, archive CUDA/CPU logs, capture metadata, and keep the loop evidence-only.
 - Follow-up for Ralph: execute M2h.3 gradcheck per input.md, store artifacts under reports/.../<timestamp>_carryover_cache_validation/, and log results in docs/fix_plan.md Attempts before moving to M2i.1.
+
+## 2025-12-12 (galph loop — M2i.1 trace directive)
+- Coin flip=heads → reviewed Ralph commits 8255686 and 4c4b62b; device-neutral debug tensors landed and gradcheck evidence now archived.
+- Updated `plans/active/cli-noise-pix0/plan.md` status snapshot (lines 20-33) to record Attempt #167 and rewrote Next Actions around M2i.1–M2g.6; Phase M2h.3 set to [D].
+- Added Attempt #167 to `docs/fix_plan.md` with gradcheck metrics and refreshed Next Actions (lines 461-467) to prioritise the CPU ROI trace, cache tooling patch, and documentation sync.
+- Authored `input.md` (Mode: Parity, 100 lines) directing Ralph to run the ROI harness, archive a complete evidence bundle under `carryover_probe/<ts>/`, and log results before touching simulator code.
+- Follow-up: Ralph to execute the harness command, capture trace/diff/metrics + provenance files, update docs/fix_plan.md Attempts with the new timestamp, and keep the workspace clean for the next parity diagnostics.

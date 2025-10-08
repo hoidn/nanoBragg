@@ -458,13 +458,14 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): 🔴 **2025-12-11 regression.** Option B cache wiring (commit `fa0167b`) allows the targeted parity test to hit the cache but `F_latt` still diverges (relative error 1.57884 versus ≤1e-6) and the omega trace tap now throws tensor indexing errors. Evidence captured in `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T153142Z_carryover_cache_plumbing/`.
-- Next Actions (2025-12-11 refresh):
-0. **Archive Attempt #163** — Record git SHA `fa0167b`, targeted pytest failure, and artifact folder above in the Attempts ledger; mirror these notes in `plans/active/cli-noise-pix0/plan.md` (M2g.3/M2g.4 remain [P]).
-1. **M2h.1 CPU parity capture** — Re-run `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c -q`, saving stdout to `pytest_cpu.log` under a fresh `reports/.../carryover_cache_validation/<timestamp>/` alongside `commands.txt`, `env.json`, and `sha256.txt`.
-2. **M2h.3 gradcheck** — With CUDA traces now green (Attempt #166), execute the 2×2 ROI gradcheck probe to confirm cache gradients survive. Prefer CUDA device (`--device cuda --dtype float64`); if unavailable, document fallback to CPU. Preserve script + `gradcheck.log` under the new evidence directory.
-3. **M2h.4 fix_plan update** — Summarize parity deltas, trace failures, and device coverage in a new Attempt entry once diagnostics land.
-4. **M2i.1 trace rerun** — With logs in place, regenerate the c-parity trace (`trace_harness.py --roi 684 686 1039 1040 --phi-mode c-parity`) to locate the earliest divergence before advancing to nb-compare (Phase N).
-5. **Cache index audit** — After CUDA and gradcheck diagnostics are captured, inspect `apply_phi_carryover()`/`store_phi_final()` to confirm the cache reads from the previous pixel’s `(slow, fast)` slot (fast-1 with row wrap) rather than the current coordinates. Log confirmation or discrepancies in the new diagnostics bundle before any simulator edits.
+- Next Actions (2025-12-12 refresh):
+0. **M2i.1 cross-pixel trace rerun** — `python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --roi 684 686 1039 1040 --phi-mode c-parity --dtype float64` (CPU) and archive outputs under `carryover_probe/<timestamp>/` with env + SHA256 metadata.
+1. **M2i.2 metrics refresh** — Regenerate `metrics.json` + `trace_diff.md`, confirm `first_divergence=None`, and log deltas in `lattice_hypotheses.md` before touching physics code.
+2. **M2g.5 trace tooling patch** — Update cache-aware taps (omega, F_latt) so CUDA/CPU harness runs without IndexError; re-run the CUDA harness to verify.
+3. **M2g.6 documentation sync** — Extend `reports/2025-10-cli-flags/phase_l/scaling_validation/phi_carryover_diagnosis.md` with the Option B rationale and new evidence paths; flip plan row to [D].
+4. **Cache index audit** — Confirm `apply_phi_carryover()` consumes the previous pixel’s `(slow, fast)` entry (fast-1 with wrap) and log findings in the new diagnostics bundle ahead of simulator edits.
+5. **Phase N prep** — Stage updated C + PyTorch float images once VG-2 is green so nb-compare can execute immediately.
+
 - Attempts History:
   * [2025-10-07] Attempt #136 (ralph loop i=135, Mode: Docs) — Result: ✅ **SUCCESS** (Phase L Documentation Sync COMPLETE). **No code changes.**
     Metrics: Test collection: 35 tests collected successfully in 2.16s (test_cli_scaling_phi0.py + test_phi_carryover_mode.py). Documentation-only loop per input.md Mode: Docs.
@@ -3684,3 +3685,20 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - M2h.4: Update fix_plan (✅ satisfied by this Attempt entry).
       - M2i: After M2h.3 completes, regenerate ROI traces (`--roi 684 686 1039 1040`, CPU float64, c-parity) and update `metrics.json`/`lattice_hypotheses.md` expecting `first_divergence=None`.
       - Advance to Phase M3 (scaling comparison rerun) once M2i evidence collected and VG-2 gate confirmed green.
+* [2025-10-08] Attempt #167 (ralph loop i=167, Mode: Parity) — Result: **M2h.3 SUCCESS** (Gradcheck evidence confirms cache gradients intact). **No code changes.**
+    Metrics:
+      - Gradcheck harness (CUDA, float64, 2×2 ROI) — **PASS**; loss 1.19952e+03; ∂loss/∂cell_a = 3.9976.
+      - CPU gradcheck (float64, same ROI) — **PASS**; loss/gradient match CUDA within 6.0e-16.
+      - Test collection: not run (evidence-only per input.md).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T165745Z_carryover_cache_validation/gradcheck_probe.py`
+      - `.../gradcheck.log` and `.../gradcheck_cpu.log` — raw outputs for CUDA/CPU runs
+      - `.../summary.md` — consolidated findings + gradient table
+      - `.../commands.txt`, `.../env.json`, `.../sha256.txt`, `.../torch_collect_env.txt` — provenance bundle
+    Observations/Hypotheses:
+      - Option B cache keeps gradient connectivity on both devices; no `.detach()`/`.clone()` regressions observed.
+      - CPU/CUDA parity holds to <1e-12 (matches Option B prototype expectations); ready to proceed to M2i trace reruns.
+    Next Actions:
+      - Execute M2i.1 cross-pixel trace rerun and refresh metrics under a new `carryover_probe/<timestamp>/`.
+      - Patch cache-aware trace taps (M2g.5) before running nb-compare or supervisor parity commands.
+
