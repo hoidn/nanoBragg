@@ -3733,3 +3733,33 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - M2g.5: Patch cache-aware trace taps for omega/F_latt to prevent CUDA IndexError
       - Phase M3: Once first_divergence analysis complete, proceed to scaling comparison rerun
 
+  * [2025-10-08] Attempt #169 (ralph loop i=168, Mode: Parity) — Result: **M2i.2 SUCCESS** (Metrics refresh complete, critical divergence quantified). **No code changes.**
+    Metrics:
+      - Comparison script executed successfully (exit code 0)
+      - First divergence: I_before_scaling (C: 943654.809, PyTorch: 0.511, Δrel: -9.999995e-01) 
+      - Divergent factors: 5 total (I_before_scaling, polar, omega_pixel, cos_2theta, I_pixel_final)
+      - All normalization factors (r_e_sqr, fluence, steps, capture_fraction) PASS at exact parity
+      - Test collection: 1.11s (no tests collected - evidence-only per input.md)
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/carryover_probe/20251008T174022Z/metrics_refresh/summary.md` — Detailed factor-by-factor comparison with status flags
+      - `.../metrics.json` — Machine-readable metrics (tolerance 1e-06, 5 divergent, 4 passing)
+      - `.../run_metadata.json` — Trace metadata
+      - `.../README.md` — Metrics refresh executive summary with next actions
+      - `.../commands.txt` — Exact reproduction command
+      - `.../env.json` — Environment (Python 3.13.7, PyTorch 2.8.0+cu128, timestamp)
+      - `.../cpu_info.txt` — CPU specifications (AMD Ryzen 9 5950X)
+      - `.../git_sha.txt` — Git commit 313f29d
+      - `.../sha256.txt` — File integrity checksums (7 files)
+    Observations/Hypotheses:
+      - **CRITICAL**: I_before_scaling shows ~1 million× mismatch (C=943654, PyTorch=0.511), indicating fundamental accumulation error
+      - This is not a minor numerical drift - PyTorch value is 6 orders of magnitude too small
+      - I_pixel_final inherits 40.9% relative error from I_before_scaling propagation
+      - Minor secondary divergences (polar -2.37e-04, omega -7.72e-04, cos_2theta -2.61e-04) are downstream noise
+      - Root cause likely: missing accumulation loop, wrong normalization order, or zeroed buffer before final write
+      - Comparison tool confirmed operational (previous SIGKILL issues resolved)
+    Next Actions:
+      - M2g.5: Investigate root cause of I_before_scaling catastrophic failure
+      - Review cache tap implementation for accumulation logic bugs
+      - Generate trace_diff manual patch analyzing first divergence
+      - Update lattice_hypotheses.md with catastrophic accumulation failure finding
+      - Phase M3: Fix I_before_scaling accumulation before proceeding to lattice factor analysis
