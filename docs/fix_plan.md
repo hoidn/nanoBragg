@@ -459,11 +459,10 @@
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): ✅ **Instrumentation aligned (2025-10-07).** Pre-polarization `I_before_scaling` now matches C within ~0.2% (941698.5 vs 943654.8), confirming the prior −8.7% delta was a trace measurement artifact. PyTorch emits both `I_before_scaling_pre_polar` (canonical C comparison point) and `I_before_scaling_post_polar` (diagnostic). The ~0.2% residual is expected per galph debug memo (float32 + F_latt drift). See `reports/2025-10-cli-flags/phase_l/scaling_validation/20251007T222548Z/phase_m1_summary.md`.
 - Next Actions (2025-12-06 refresh):
-1. **Phase M1 tooling recovery** — Execute the newly added checklist in `plans/active/cli-noise-pix0/plan.md` (rows M1a–M1d): capture a fresh SIGKILL repro, patch `scripts/validation/compare_scaling_traces.py` to handle TRACE_PY_TRICUBIC lines, regenerate metrics/summary/run_metadata under a new timestamp, then flip M1 back to [D] with an Attempt entry.
-2. **Phase M1 instrumentation follow-up** — Augment the trace harness (if needed) to log 4×4×4 neighbourhood weights / `sincg` inputs alongside the existing traces, then update `plans/active/cli-noise-pix0/plan.md` M1 guidance with the 20251008T070513Z audit path and the new metrics. Document results in `docs/fix_plan.md` Attempt log.
-3. **Phase M2 lattice investigation** — Use the refreshed instrumentation to isolate the φ₀ `F_latt` drift (≈0.13%). Compare against `nanoBragg.c` accumulation loops, implement the fix, and add a targeted pytest (`tests/test_cli_scaling_phi0.py::TestScalingParity::test_I_before_scaling_matches_c`).
-4. **Phase N/O readiness** — Once scaling deltas ≤1e-6, regenerate nb-compare ROI artifacts and schedule the supervisor command closure run with SHA256 manifests under `reports/2025-10-cli-flags/phase_l/`.
-5. **Parity shim documentation follow-up** — Complete `plans/active/cli-phi-parity-shim/plan.md` Phase C5 checklist (summary.md + spec citation + fix_plan Attempt) and Phase D3 handoff before the final parity rerun.
+1. **Phase M2 lattice investigation** — Leverage the working comparison script (`reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T072513Z/`) to dissect the ≈0.13% `F_latt` drift. Extend the existing instrumentation with lattice-weight taps if additional context is needed and log findings under `reports/.../phase_l/scaling_validation/<ts>/` before touching simulator code.
+2. **Phase M3 scaling verification** — After implementing the lattice fix, re-run the trace harness + `compare_scaling_traces.py` (CPU first, CUDA once available) and update `metrics.json` so `first_divergence=None`. Capture selectors for `tests/test_cli_scaling_phi0.py::TestScalingParity::test_I_before_scaling_matches_c` in the Attempt log.
+3. **Phase N/O readiness** — Once scaling deltas ≤1e-6, regenerate nb-compare ROI artifacts and schedule the supervisor command closure run with SHA256 manifests under `reports/2025-10-cli-flags/phase_l/`.
+4. **Parity shim documentation follow-up** — Complete `plans/active/cli-phi-parity-shim/plan.md` Phase C5 checklist (summary.md + spec citation + fix_plan Attempt) and Phase D3 handoff before the final parity rerun.
 - Attempts History:
   * [2025-10-07] Attempt #136 (ralph loop i=135, Mode: Docs) — Result: ✅ **SUCCESS** (Phase L Documentation Sync COMPLETE). **No code changes.**
     Metrics: Test collection: 35 tests collected successfully in 2.16s (test_cli_scaling_phi0.py + test_phi_carryover_mode.py). Documentation-only loop per input.md Mode: Docs.
@@ -598,6 +597,18 @@
     Next Actions:
       - Ralph to execute M1 checklist items (capture fresh repro, patch script, regenerate canonical artifacts, log Attempt) before touching Phase M2.
       - Supervisor to verify new artifacts resolve the crash and then green-light Phase M2 lattice investigation.
+  * [2025-12-06] Attempt #147 (galph loop — Phase M1 status verification, Mode: Review) — Result: **PLAN UPDATE** (tooling confirmed stable; no code/tests executed).
+    Metrics: Planning-only.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T072513Z/validation_report.md` — Re-read to confirm comparison script success (exit 0, ΔI_before_scaling ≈ -2.086e-03).
+      - `plans/active/cli-noise-pix0/plan.md` — M1 row + checklist flipped to [D], status snapshot updated to point at 20251008T072513Z artifacts.
+      - `docs/fix_plan.md` — Next Actions refreshed to focus on Phase M2 lattice investigation and downstream parity gates.
+    Observations/Hypotheses:
+      - SIGKILL reproduction from Attempt #140 remains archived for provenance, but the repaired script has been stable since Attempt #145; no additional repro required unless the crash returns.
+      - Remaining blocker is the `F_latt` mismatch (≈0.13%), so effort should pivot to Phase M2 using existing instrumentation.
+    Next Actions:
+      - Ralph to resume Phase M2 analysis (trace harness + lattice diagnostics) using the working comparison script.
+      - Supervisor to ensure parity shim documentation tasks (Phase C5/D3) stay queued once scaling parity closes.
   * [2025-10-07] Attempt #139 (ralph loop i=139, Mode: Docs) — Result: ✅ **SUCCESS** (Phase M1 COMPLETE — Pre-Polar Trace Instrumentation). **Code changes: simulator trace + comparison script.**
     Metrics: Test collection: 699 tests in 2.68s. Trace: 44 TRACE_PY lines (2 new labels). Comparison: pre-polar (941698.5) vs C (943654.8) → −0.207% delta (within expected tolerance).
     Artifacts:

@@ -915,3 +915,10 @@
 - Updated `docs/fix_plan.md` Next Actions (2025-12-06 refresh) and logged Attempt #146 documenting the plan reopen; no code/tests run.
 - Replaced input.md with Parity-mode memo pointing Ralph to execute M1a first: capture fresh crash evidence under a new timestamp, record exit codes, and log artifacts before touching the script.
 - Follow-up for Ralph: deliver M1a artifacts (commands.txt, trace, stdout, env, sha catalog), update plan M1a row + fix_plan Attempt; stop before implementing script fix so next supervisor loop can review.
+
+## 2025-12-06 (galph loop — Phase M2 prep)
+- Verified `compare_scaling_traces.py` stability via `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T072513Z/validation_report.md`; M1 checklist re-closed.
+- Updated `plans/active/cli-noise-pix0/plan.md` status snapshot, marked M1 [D], and added M2a–M2c analysis checklist.
+- Refreshed `docs/fix_plan.md` Next Actions (Phase M2 forward) and logged Attempt #147 documenting the verification.
+- Replaced supervisor memo with Phase M2 parity focus (new RUN_DIR, sincg analysis script, hypotheses capture).
+- Expect Ralph to execute M2a–M2c commands, produce `manual_sincg.md` + `lattice_hypotheses.md`, and update plan/Fix Plan attempts accordingly.
