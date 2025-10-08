@@ -458,11 +458,11 @@
   * C: Run the supervisor command from `prompts/supervisor.md` (with and without `-nonoise`) using `NB_C_BIN=./golden_suite_generator/nanoBragg`; capture whether the noisefile is skipped and log `DETECTOR_PIX0_VECTOR`.
   * PyTorch: After implementation, `nanoBragg` CLI should parse the same command, respect the pix0 override, and skip noise writes when `-nonoise` is present.
 - First Divergence (if known): ✅ **Instrumentation aligned (2025-10-07).** Pre-polarization `I_before_scaling` now matches C within ~0.2% (941698.5 vs 943654.8), confirming the prior −8.7% delta was a trace measurement artifact. PyTorch emits both `I_before_scaling_pre_polar` (canonical C comparison point) and `I_before_scaling_post_polar` (diagnostic). The ~0.2% residual is expected per galph debug memo (float32 + F_latt drift). See `reports/2025-10-cli-flags/phase_l/scaling_validation/20251007T222548Z/phase_m1_summary.md`.
-- Next Actions (2025-12-08 refresh):
-0. **Rollback sequential fallback (Plan M2g.2)** — Commit f3f66a9 introduced `_run_sequential_c_parity()` to march pixels row-by-row. This violates PyTorch vectorization guardrails (`docs/development/pytorch_runtime_checklist.md`). Remove the sequential branch, restore the unified vectorized run path, and document the rollback in `phi_carryover_diagnosis.md` before adding new cache tensors.
-1. **M2g pixel-indexed cache (Plan M2g.1–M2g.6)** — Implement the Option 1 design by following the refreshed checklist in `plans/active/cli-noise-pix0/plan.md`; re-read `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T100653Z/analysis.md` and update `phi_carryover_diagnosis.md` before wiring the cache into `src/nanobrag_torch/models/crystal.py` (no `.detach()`, spec mode untouched).
-2. **M2h validation bundle (Plan M2h.1–M2h.4)** — Run the CPU parity selector, optional CUDA variant, and the gradcheck probe; stash logs to `reports/.../carryover_cache_validation/<timestamp>/` and log the Attempt with metrics and device coverage.
-3. **M2i traces & metrics (Plan M2i.1–M2i.3)** — Regenerate the cross-pixel trace harness output, ensure `metrics.json` reports `first_divergence=None`, and update `lattice_hypotheses.md` + `scaling_validation_summary.md` prior to advancing to Phase M3.
+- Next Actions (2025-10-08 refresh - Attempt #155):
+0. **Architecture decision (M2g blocker)** — Attempt #155 removed sequential fallback per M2g.2 but revealed architectural blocker: rotation tensors lack pixel dimension needed for per-pixel φ carryover. Choose between (A) add pixel dims to rotation stack, (B) batch-process with explicit indexing, or (C) alternative integration point. Document decision and refactor plan before M2g.3–M2g.6.
+1. **M2g pixel-indexed cache (Plan M2g.3–M2g.6)** — BLOCKED until architecture decision made. Current cache methods exist but cannot integrate without (s,f) pixel indexing in rotation tensors. See Attempt #155 observations.
+2. **M2h validation bundle (Plan M2h.1–M2h.4)** — BLOCKED pending M2g cache integration.
+3. **M2i traces & metrics (Plan M2i.1–M2i.3)** — BLOCKED pending M2g cache integration.
 4. **M4+ downstream checks** — Once VG-2 is green, move to scaling docs/norm updates (M4) and the nb-compare + supervisor command closure (Phases N/O); keep parity shim documentation tasks (Phase C5/D3) queued for final sync.
 - Attempts History:
   * [2025-10-07] Attempt #136 (ralph loop i=135, Mode: Docs) — Result: ✅ **SUCCESS** (Phase L Documentation Sync COMPLETE). **No code changes.**
@@ -3395,3 +3395,23 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
     Artifacts: Plan/fix_plan refresh only (`plans/active/cli-noise-pix0/plan.md`, `docs/fix_plan.md`).
     Observations/Hypotheses: Commit f3f66a9 replaced the vectorized c-parity execution with `_run_sequential_c_parity()`, marching pixels row-by-row and calling `get_rotated_real_vectors()` per pixel. This violates the vectorization mandate (docs/development/pytorch_runtime_checklist.md §§1–2) and would never exercise the Option 1 cache. Plan updated to treat the sequential path as temporary, require its removal, and insert explicit checklist item M2g.2 for deleting the fallback before wiring the cache.
     Next Actions: Ralph to revert the sequential branch, implement the pixel-indexed cache per Option 1 design, and proceed with M2h–M2i validation per the refreshed plan.
+  * [2025-10-08] Attempt #155 (ralph loop i=155, Mode: Code) — Result: **PARTIAL** (M2g.2 sequential fallback removed; gradient preservation fixed; cache not integrated). **Code changes: Crystal + Simulator.**
+    Metrics: Test collection: 700 tests collected successfully (pytest --collect-only -q). Parity test still fails as expected (cache infrastructure exists but not integrated into physics computation).
+    Artifacts:
+      - Git commit: a855496
+      - `src/nanobrag_torch/simulator.py:718-1050` — Removed non-existent `_run_rowmajor_carryover` call (method never existed)
+      - `src/nanobrag_torch/models/crystal.py:1120-1137` — Fixed `store_phi_final()` to NOT use `.detach()`, preserving gradients per CLAUDE Rule #7
+      - `src/nanobrag_torch/models/crystal.py:1089-1119` — Added C-code references (nanoBragg.c:2797,3044-3095) and architecture doc pointers to cache methods
+      - `tests/test_cli_scaling_parity.py::TestScalingParity::test_I_before_scaling_matches_c` — Still fails (expected; ΔI ≈ 158% relative error)
+    Observations/Hypotheses:
+      - **Sequential fallback removed**: Simulator.run() no longer has conditional early return for c-parity mode; all execution uses vectorized path
+      - **Gradient flow restored**: Crystal.store_phi_final() now preserves computation graph by removing `.detach()` call
+      - **Cache scaffolding present but dormant**: Cache initialization code in Simulator.run() exists but cannot be called from current vectorized rotation methods
+      - **Architectural blocker identified**: Current rotation tensors (`rotated_real`, `rotated_reciprocal`) lack pixel dimension; they are shaped `(B, mosaic_domains, 3)` not `(B, S, F, mosaic_domains, 3)`
+      - **Integration deferred**: M2g.3-M2g.6 require either (A) adding pixel dimension to rotation computation throughout the stack, or (B) restructuring to process pixels in batches with explicit (s,f) indexing
+      - **Cache methods exist but unused**: `get_phi_final()`, `store_phi_final()`, `clear_phi_cache()` are present in Crystal but cannot substitute per-pixel φ=0 rotations without architecture refactor
+    Next Actions:
+      - **Decision required**: Choose between Option A (add pixel dims to all rotation tensors) vs Option B (batch-process pixels with explicit indexing)
+      - **Alternative approach**: Consider implementing cache at a different integration point (e.g., in `_compute_structure_factors` after rotation rather than before)
+      - **Defer M2g.3-M2g.6**: Current architecture cannot support per-pixel φ carryover without significant refactor; document this finding and reassess approach
+      - **M2h-M2i blocked**: Cannot validate cache functionality until architectural path forward is chosen and implemented
