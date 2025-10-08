@@ -497,11 +497,23 @@
       - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T223046Z/design_memo.md` — Normalization contract summary citing specs/spec-a-core.md §§4.2–4.3, `docs/development/c_to_pytorch_config_map.md`, and `nanoBragg.c:3332-3368`.
       - `plans/active/cli-noise-pix0/plan.md` — Phase M4a row now marked [D] with Attempt #192 reference.
     Observations/Hypotheses:
-      - At the time of Attempt #192, PyTorch divided by `steps` twice (once in `normalized_intensity`, once in `physical_intensity`), creating the −14.6% I_before_scaling deficit logged in Phase M1.
-      - Attempts #188–#189 patched the simulator and refreshed targeted pytest logs; only the M4d reporting tasks remain outstanding.
+  * [2025-10-08] Attempt #193 (ralph loop i=193, Mode: Parity) — Result: ✅ **Phase M5a COMPLETE.** Enhanced per-φ traces captured successfully with rot_* instrumentation before simulator code changes.
+    Metrics: 124 main trace lines + 10 per-φ detail lines; key observation: b_star_y drifts ~0.5% over 0.09° rotation (0.010438 → 0.010386); k_frac varies from -0.589 to -0.607 across phi steps causing F_latt sign flip (+1.379 vs C -2.383).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T231211Z/trace_py_scaling.log` — Main scaling trace with TRACE_PY_ROTSTAR per-φ rot_* values (ap_y, bp_y, cp_y)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T231211Z/trace_py_scaling_per_phi.log` — Per-φ detail trace with k_frac, F_latt_b, F_latt, S, a_star_y, b_star_y, c_star_y, V_actual for each phi step
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T231211Z/trace_py_scaling_per_phi.json` — Machine-readable per-φ data
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T231211Z/summary.md` — Phase M5a completion summary with rotation drift evidence
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T231211Z/{commands.txt,pytest_collect.log}` — Reproduction metadata
+    Changes: None (instrumentation-only loop per input.md guidance)
+    Observations/Hypotheses:
+      - **Rotation drift quantified:** Per-φ trace confirms systematic drift in reciprocal vector Y-components across phi steps, aligning with Hypothesis H4 (φ rotation mismatch)
+      - **Sign flip mechanism confirmed:** 3% shift in k_frac causes sincg factor to cross zero (per M3b sweep), flipping F_latt sign and creating the 14.6% I_before_scaling deficit
+      - **Traces ready for M5b:** Enhanced instrumentation provides the quantitative evidence needed for the rotation parity design memo (next phase)
     Next Actions:
-      - Phase M4d: On the next parity-green run, rerun `compare_scaling_traces.py` capturing both markdown + tee'd stdout, update `lattice_hypotheses.md`, and refresh `sha256.txt` per plan row M4d.
-      - Phase M5: Follow new plan rows M5a–M5e (instrumentation capture → design memo → rotation fix implementation → compare_scaling_traces rerun → targeted pytest CPU/CUDA) before advancing to CUDA/gradcheck hygiene in Phase M6.
+      - **Phase M5b:** Author rotation_fix_design.md referencing specs/spec-a-core.md:204-240, nanoBragg.c:3042-3095, and these fresh traces
+      - **Phase M5c:** Implement per-φ real/reciprocal recompute with CLAUDE Rule #11 docstrings, maintaining vectorization and device/dtype neutrality
+      - **Phase M5d:** Rerun compare_scaling_traces.py to achieve first_divergence=None
   * [2025-10-22] Attempt #186 (ralph loop, Mode: Docs) — Result: ✅ **SUCCESS** (Phase M2 Divergence Analysis COMPLETE). **Documentation-only loop (no code changes).**
     Metrics: Test collection: 2 tests collected successfully in 0.78s (tests/test_cli_scaling_phi0.py); I_before_scaling divergence quantified at -14.6% (C=943654.81, PyTorch=805473.79); F_latt sign flip identified (C=-2.383, PyTorch=+1.379, Δ_rel=+158%); rot_b Y-component error +6.8% (C=0.672 Å, PyTorch=0.717 Å); k_frac shift +3.0% (C=-0.607, PyTorch=-0.589).
     Artifacts:
