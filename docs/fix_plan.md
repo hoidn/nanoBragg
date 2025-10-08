@@ -506,6 +506,31 @@
       - Phase M2: Trace I_before_scaling accumulation across all φ steps (10 steps visible in per-φ log) to identify which component of the sum (F_cell² × F_latt² product) is missing or scaled incorrectly
       - Phase M2a: Compare per-φ trace structure against C-code loop nesting in nanoBragg.c:2500–2700 (pixel intensity accumulation)
       - Phase M3: Once the accumulation bug is isolated, implement fix and regenerate evidence to verify ≤1e-6 relative error on I_before_scaling
+  * [2025-10-08] Attempt #138 (ralph loop i=138, Mode: Parity) — Result: **EVIDENCE** (Phase M1 scaling trace refreshed with current git state). **No code changes.**
+    Metrics: Evidence-only loop (no code-modifying tests executed per input.md Phase M1 mandate).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z/trace_py_scaling_cpu.log` — Fresh PyTorch scaling trace (43 TRACE_PY lines, CPU float32, c-parity mode)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z/summary.md` — Scaling factor comparison summary (C vs PyTorch, 1e-6 tolerance)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z/metrics.json` — Quantified divergence metrics (JSON format)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z/run_metadata.json` — Run provenance metadata
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z/commands.txt` — Complete reproduction steps
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z/sha256.txt` — SHA256 checksums for all artifacts
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z/env.json` — Python/torch version and git state (SHA: c42825e)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z/git_sha.txt` — Git commit SHA
+    Observations/Hypotheses:
+      - **CRITICAL FINDING**: I_before_scaling divergence confirmed at **8.73%** relative error (C: 943654.809, PyTorch: 861314.812, Δ: -82339.997)
+      - **Improvement vs Attempt #137**: PyTorch value increased from 736750.125 to 861314.812 (+16.9%), narrowing the gap from 21.9% to 8.73% — indicates partial progress from intervening changes
+      - **All scaling factors pass**: r_e², fluence, steps, capture_fraction, polarization (Δ: -5.16e-08), omega_pixel (Δ: -1.57e-07), cos_2theta (Δ: -4.43e-08) all within 1e-6 relative tolerance
+      - **Final intensity consequence**: I_pixel_final diverges by 0.21% (C: 2.881395e-07, PyTorch: 2.875420e-07) as direct consequence of I_before_scaling error
+      - **First divergence**: I_before_scaling remains the PRIMARY divergence point; all upstream factors (HKL lookup, structure factors, geometry) must be matching
+      - **Git state**: Captured at commit c42825e on feature/spec-based-2 branch for future bisect if needed
+      - **Harness validation**: trace_harness.py --phi-mode c-parity successfully generated c-parity mode traces, validating the φ carryover shim functionality
+    Next Actions:
+      - Phase M2: Investigate lattice factor propagation and structure factor accumulation logic in `_compute_structure_factors` and `Crystal._tricubic_interpolation`
+      - Phase M2a: Generate per-φ step traces to identify if the divergence accumulates uniformly or spikes in specific φ steps
+      - Phase M2b: Compare PyTorch accumulation structure against C-code nanoBragg.c:2604-3278 (structure factor and lattice factor calculation)
+      - Phase M3: Implement fix targeting the 8.73% I_before_scaling gap, add regression test `tests/test_cli_scaling_phi0.py::test_I_before_scaling_matches_c`
+      - Phase M4: Re-run this exact harness command to verify fix brings I_before_scaling Δ ≤1e-6
   * [2025-10-07] Attempt #135 (ralph loop i=135, Mode: Docs) — Result: **BLOCKED** (Phase L1–L3 stale plan references). **No code changes.**
     Metrics: Test collection: 448 tests collected successfully (pytest --collect-only -q). Documentation-only loop. Blocking condition identified.
     Artifacts:

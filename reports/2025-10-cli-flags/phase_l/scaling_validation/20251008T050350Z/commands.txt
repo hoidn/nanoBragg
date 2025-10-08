@@ -1,0 +1,18 @@
+# Evidence collection run for CLI-FLAGS-003 Phase M1
+# Timestamp: 20251008T050350Z
+# Git SHA: c42825e69823a585ea40d9c8a172f7ada346f1f3
+# Branch: feature/spec-based-2
+
+# Step 1: Pytest collection check
+export KMP_DUPLICATE_LIB_OK=TRUE && pytest --collect-only -q tests/test_cli_scaling_phi0.py
+
+# Step 2: Run PyTorch trace harness
+export KMP_DUPLICATE_LIB_OK=TRUE && python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --pixel 685 1039 --config supervisor --device cpu --dtype float32 --phi-mode c-parity --out reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z/trace_py_scaling_cpu.log
+
+
+# Step 3: Compare C vs PyTorch traces
+export KMP_DUPLICATE_LIB_OK=TRUE && python scripts/validation/compare_scaling_traces.py --c reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log --py reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z/trace_py_scaling_cpu.log --out reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z/summary.md --tolerance 1e-6
+
+# Step 4: Generate checksums
+cd reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T050350Z && sha256sum * > sha256.txt
+
