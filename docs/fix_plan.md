@@ -2497,6 +2497,27 @@
       2. Phase L3k.3e — If VG-3/VG-4 pass, advance to Phase L3k.4 (normalization closure + plan documentation)
       3. Phase L4 — Supervisor command parity rerun with updated tolerance thresholds
       4. Phase C5/D — Summary documentation + handoff notes per plan.md Phase D tasks
+  * [2025-10-08] Attempt #137 (ralph loop i=137, Mode: Parity) — Result: **SUCCESS** (Phase M1 trace harness phi-mode override complete). Added `--phi-mode` flag to trace_harness.py and captured fresh c-parity evidence.
+    Metrics: Regression test PASSED (4/4 in 2.50s: test_c_parity_mode_stale_carryover). Test collection: 699 tests. Pixel (685,1039) final intensity: 2.87542036403465e-07.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:51` — Added `--phi-mode {spec,c-parity}` CLI flag
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:165` — Routed `args.phi_mode` to `crystal_config.phi_carryover_mode`
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:202` — Added phi_carryover_mode to config snapshot
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T044933Z/trace_py_scaling_cpu.log` — Fresh PyTorch trace with c-parity mode (43 TRACE_PY lines)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T044933Z/summary.md` — Comparison summary
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T044933Z/metrics.json` — Metrics: I_before_scaling diverges 8.7% (C: 943654.8, Py: 861314.8)
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T044933Z/commands.txt` — Reproduction commands
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T044933Z/sha256.txt` — Commit: 3df75f50b4b5b556f1ccaa227f30e417a1e2b6ea
+    Observations/Hypotheses:
+      - **Phase M1 complete**: Trace harness now supports phi-mode override per input.md "Do Now" guidance
+      - **Critical divergence persists**: I_before_scaling still shows 8.7% relative error despite c-parity mode, confirming issue is NOT in phi rotation carryover logic
+      - **Root cause narrowed further**: All scaling chain factors (r_e², fluence, steps, capture_fraction, polar, omega_pixel, cos_2theta) match C within tolerance (≤1.57e-07 relative)
+      - **Hypothesis updated**: The divergence is in structure factor accumulation (F_cell²×F_latt² sum across phi/mosaic) rather than rotation or scaling
+      - **Next focus**: Per-φ trace analysis needed to identify which phi step(s) contribute incorrect intensity terms
+    Next Actions:
+      - Phase M2: Execute `scripts/validation/compare_scaling_traces.py` on per-φ logs to isolate which φ step first diverges in F_latt or accumulation term
+      - Phase M2a: Add F_cell², F_latt², and per-step contribution logging to simulator trace output for granular diagnosis
+      - Phase M3: Once divergent step/term identified, implement fix and regenerate Phase M1 evidence to verify ≤1e-6 parity
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; **(viii) Phase F3 parity evidence captured** ✅ (Attempt #12); **(ix) Phase G2 MOSFLM orientation ingestion complete** ✅ (Attempt #17); **(x) Phase G3 trace verification complete with transpose fix** ✅ (Attempt #18); (xi) Phase H lattice structure factor alignment ✅ (Attempt #25); (xii) Phase F3 parity rerun with lattice fix ❌; (xiii) Phase I polarization alignment ❌; (xiv) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌.
 

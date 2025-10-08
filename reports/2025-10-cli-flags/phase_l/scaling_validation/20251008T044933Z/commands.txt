@@ -1,0 +1,23 @@
+# Phase M1 trace harness execution with c-parity mode
+# Date: 2025-10-08T04:49:33Z
+# Engineer: Ralph (loop #137)
+
+# Step 1: Run trace harness with c-parity phi carryover mode
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py \
+  --pixel 685 1039 \
+  --config supervisor \
+  --device cpu \
+  --dtype float32 \
+  --phi-mode c-parity \
+  --out reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T044933Z/trace_py_scaling_cpu.log
+
+# Step 2: Compare against C trace
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python scripts/validation/compare_scaling_traces.py \
+  --c reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log \
+  --py reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T044933Z/trace_py_scaling_cpu.log \
+  --out reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T044933Z/summary.md \
+  --tolerance 1e-6
+
+# Result: I_before_scaling still diverges by 8.7% (C: 943654.8, Py: 861314.8)
+# First divergence remains at I_before_scaling despite c-parity mode
+# This suggests the issue is in structure factor lookup or lattice factor calculation, not phi rotation
