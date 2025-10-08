@@ -547,6 +547,24 @@
       2. If threshold adjustment approved: Update fix_checklist.md VG-1 gate, document rationale, mark L3k.3c.6 complete in plan
       3. If strict spec enforcement required: Proceed to Phase L3k.3c.3 implementation loop to remove `_phi_last_cache`
       4. After L3k.3c gates resolved: Execute Phase L3k.4 (documentation/checklist closure) and Phase L4 (supervisor command parity rerun)
+  * [2025-10-08] Attempt #130 (ralph loop i=130, Mode: Parity) — Result: **CRITICAL REGRESSION DETECTED** (Phase L3k.3c.4 per-φ parity evidence). **Evidence-only loop — no code changes.**
+    Metrics: Test collection: 34 tests collected successfully (tests/test_cli_scaling_phi0.py + tests/test_phi_carryover_mode.py). Evidence-only — no pytest execution this loop.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T031911Z/per_phi_pytorch_20251007-201915.json` — PyTorch per-φ trace
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T031911Z/comparison_summary.md` — Automated C vs PyTorch per-φ comparison
+      - `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T031911Z/sha256.txt` — SHA256 checksums for all artifacts
+    Observations/Hypotheses:
+      - **CRITICAL FINDING**: k_frac divergence at φ=0° is **9.291854e+00** (not 2.845e-05 as previously assumed)
+      - **Evidence**: C k_frac @ φ=0°: `-0.607255839576692`; PyTorch k_frac @ φ=0°: `-9.899109978860011`
+      - **Pattern**: Δk remains ~9.3 across ALL φ steps (φ_tic 0-9), indicating a fundamental base-vector or scattering-vector error (NOT a rotation error)
+      - **Hypothesis invalidation**: Attempt #129 claimed pix0_z fix solved the Δk plateau, but the current per-φ trace shows PyTorch and C are computing completely different Miller indices for pixel (133, 134)
+      - **Probable root causes**: (1) Base lattice vectors (a,b,c) before φ rotation differ between C and PyTorch, (2) Scattering vector S calculation differs, (3) Misset rotation applied incorrectly, (4) Spindle axis sign convention mismatch
+      - **Impact**: The Attempt #129 "success" was based on a single-pixel trace that did not exercise per-φ parity; VG-1 gate remains WIDE OPEN
+    Next Actions:
+      1. **Immediate diagnostic**: Compare base lattice vectors (a,b,c) and reciprocal (a*,b*,c*) at φ=0° before rotation (C trace vs PyTorch trace) to identify where the ~9.3 offset originates
+      2. **Detector geometry audit**: Verify pixel (133,134) scattering vector S matches C reference (the 20251008T023956Z trace showed pix0 divergence; this may still be active)
+      3. **Escalate to galph**: This regression invalidates the Attempt #129 closure claim; Phase L3k.3c.4 must reopen with updated First Divergence and reproduction commands targeting the lattice-vector delta
+      4. **Block Phase L3k.3c.5/3d/4** until Δk ≤ 1e-6 at φ=0° (per VG-1 gate threshold)
   * [2025-10-07] Attempt #118 (ralph loop i=118, Mode: Parity/Evidence) — Result: ✅ **SUCCESS** (Phase L3k.3c.3 φ=0 spec baseline evidence COMPLETE). **No code changes.**
     Metrics: Evidence-only loop. Tests PASSED (2/2 in 2.14s). Spec baselines locked: rot_b[0,0,1]=0.7173197865 Å (≤1e-6 ✓), k_frac(φ=0)=1.6756687164 (≤1e-6 ✓).
     Artifacts:
