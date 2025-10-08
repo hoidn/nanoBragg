@@ -1782,3 +1782,9 @@ Follow-ups for Ralph:
 - Updated `docs/fix_plan.md` VECTOR-TRICUBIC-001 Next Actions to drop the stale D1 todo and point Ralph toward D2–D4 with the new evidence requirements.
 - Issued Perf-mode `input.md` directing Ralph to author failing `TestTricubicPoly` coverage (Phase D3) before implementing vectorized helpers.
 - Follow-up: Expect next loop to land D2 vectorized polynomials, record CPU/CUDA pytest logs under phase_d/, and log a new Attempt once tests go green.
+
+## 2025-11-29 (galph loop — Phase D2 kickoff)
+- Reconfirmed VECTOR-TRICUBIC-001 status: Phase D1 complete, D3 xfail tests present (`tests/test_tricubic_vectorized.py:332-735`). Scalar helpers in `src/nanobrag_torch/utils/physics.py:315-443` still unvectorized; `_tricubic_interpolation` continues to fall back to nearest-neighbour for B>1.
+- Action: Maintained existing plan, but issued new Perf-mode `input.md` directing Ralph to implement `polint_vectorized`/`polin2_vectorized`/`polin3_vectorized`, wire them into the batched path, remove the fallback warning, and capture CPU/CUDA pytest logs under `reports/2025-10-vectorization/phase_d/`.
+- Expectations logged: update `implementation_notes.md`, rerun `tests/test_tricubic_vectorized.py::TestTricubicPoly`, then hit `tests/test_at_str_002.py::TestStructureFactorInterpolation::test_tricubic_interpolation_enabled`, and record a new Attempt in `docs/fix_plan.md` marking plan row D2 [D].
+- Follow-up for Ralph: land D2 implementation, produce the requested artifacts/logs, and be ready to progress to Plan Phase D4 once the vectorized helpers pass.
