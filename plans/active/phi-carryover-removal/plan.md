@@ -26,12 +26,12 @@ Exit Criteria: Inventoried files/tests/docs recorded, authoritative baselines no
 Goal: Remove the shim entry points while gating runtime behavior to the spec-compliant path.
 Prereqs: Phase A freeze published; Ralph briefed via `input.md` for execution loop; latest spec/docs references re-read.
 Exit Criteria: CLI/config/model code no longer exposes `phi_carryover_mode`; default behavior confirmed unchanged via targeted tests; documentation/fix_plan synced with removal artifacts under `reports/.../phase_b/`.
-Status: Phase B0 completed 2025-10-08; see `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T185921Z/` design bundle.
+Status: Phase B0 completed 2025-10-08; B1 CLI flag removal landed in commit 340683f with artifacts under `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T191302Z/`, documentation sync still pending.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | B0 | Design review & artifact prep | [D] | Completed 2025-10-08 (design bundle + baseline under `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T185921Z/`). |
-| B1 | Deprecate CLI surfaces | [ ] | Remove `--phi-carryover-mode` and related help text from `src/nanobrag_torch/__main__.py` (argument parser + usage epilog). Update `README_PYTORCH.md`, `prompts/supervisor.md`, and any shim notes in `docs/bugs/verified_c_bugs.md` to clarify the mode is gone. Record exact files touched in the Phase B artifact bundle. |
+| B1 | Deprecate CLI surfaces | [P] | ✅ CLI flag removed in commit 340683f (`reports/.../20251008T191302Z/`). Outstanding: update `README_PYTORCH.md`, `prompts/supervisor.md`, and `docs/bugs/verified_c_bugs.md` to reflect the shim removal, then capture doc-sync artifacts in the same bundle before marking [D]. |
 | B2 | Prune config/model plumbing | [ ] | Delete `phi_carryover_mode` parameters from `CrystalConfig`/`SimulatorConfig` (if present) and drop `_apply_phi_carryover` branches in `src/nanobrag_torch/models/crystal.py` & `simulator.py`. Ensure vectorised φ rotation path stays intact; reference the nanoBragg.c snippet per CLAUDE Rule #11 when editing docstrings/comments. |
 | B3 | Retire shim tooling/tests | [ ] | Remove parity-only helpers (e.g., `scripts/compare_per_phi_traces.py` flags) and delete or refactor `tests/test_phi_carryover_mode.py` so only spec-mode assertions remain (migrate reusable checks into `tests/test_cli_scaling_phi0.py`). Update any reports under `reports/2025-10-cli-flags/phase_l/` that the tooling depended on. |
 | B4 | Targeted regression sweep | [ ] | Run `pytest --collect-only -q tests/test_cli_scaling_phi0.py` and `pytest -v tests/test_cli_scaling_phi0.py` on CPU; if CUDA available, rerun with `CUDA_VISIBLE_DEVICES=0`. Capture logs/SHA256 in the Phase B artifact directory; document any new tolerances required by spec-mode assertions. |

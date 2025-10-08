@@ -1,129 +1,80 @@
-Summary: Strip the obsolete φ carryover CLI surface and align docs toward spec-only behavior before touching downstream plumbing.
-Mode: Docs
+Summary: Finish removing φ-carryover from public/doc surfaces and tear out the remaining config/model plumbing so only spec-mode rotation remains.
+Mode: none
 Focus: CLI-FLAGS-003 / Handle -nonoise and -pix0_vector_mm
 Branch: feature/spec-based-2
 Context Recap:
-- Phase A inventory and Phase B0 design review are complete (reports/2025-10-cli-flags/phase_phi_removal/phase_a/, .../phase_b/20251008T185921Z/).
-- The carryover shim still exists in code but only spec mode is active; today begins the removal sequence with CLI surfaces.
-- plans/active/cli-noise-pix0/plan.md now expects B1 execution before any scaling retry, so we must unblock that plan.
-- No production edits have been committed since the design review; this loop establishes the first implementation change for removal.
-- Protected Assets guardrails remain in effect; confirm docs/index.md references before editing any documentation.
+- Phase A inventory and Phase B0 design review are archived (`reports/2025-10-cli-flags/phase_phi_removal/phase_a/`, `.../phase_b/20251008T185921Z/`).
+- Commit 340683f removed the CLI flag but left documentation and internal plumbing intact; plan row B1 is [P] until docs sync lands.
+- Plans/active/cli-noise-pix0/plan.md now expects B1 doc sync followed immediately by B2/B3 removals before any scaling retries.
+- docs/fix_plan.md Next Actions explicitly require the doc refresh plus deletion of config/test shims; we must close those gaps today.
+- Protected Assets guardrails still apply—confirm docs/index.md before touching documentation; vectorization/device neutrality remain mandatory.
 Mapped tests:
-- pytest --collect-only -q tests/test_cli_scaling_phi0.py (pre-change import sanity).
-- KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py (CPU regression after edits).
-- Optional: KMP_DUPLICATE_LIB_OK=TRUE CUDA_VISIBLE_DEVICES=0 pytest -v tests/test_cli_scaling_phi0.py (capture only if GPU accessible without delay).
+- pytest --collect-only -q tests/test_cli_scaling_phi0.py (pre-edit import sanity and post-edit structural check).
+- KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py (CPU regression after plumbing removal; add CUDA_VISIBLE_DEVICES=0 if GPU available without queueing).
+- No full-suite run; additional selectors only if debugging a regression.
 Artifacts:
-- reports/2025-10-cli-flags/phase_phi_removal/phase_b/<timestamp>/commands.txt — chronological command log including git status and sha256 step.
-- reports/2025-10-cli-flags/phase_phi_removal/phase_b/<timestamp>/collect_pre.log — pytest collect-only output before edits.
-- reports/2025-10-cli-flags/phase_phi_removal/phase_b/<timestamp>/pytest_cpu.log — targeted CPU pytest run after edits.
-- reports/2025-10-cli-flags/phase_phi_removal/phase_b/<timestamp>/pytest_cuda.log — targeted CUDA pytest run if executed.
-- reports/2025-10-cli-flags/phase_phi_removal/phase_b/<timestamp>/summary.md — narrative of edits, tests, follow-ups.
-- reports/2025-10-cli-flags/phase_phi_removal/phase_b/<timestamp>/env.json — Python/PyTorch/git/device metadata via scripted dump.
-- reports/2025-10-cli-flags/phase_phi_removal/phase_b/<timestamp>/sha256.txt — checksum list for all artifacts in the folder.
-- reports/2025-10-cli-flags/phase_phi_removal/phase_b/<timestamp>/grep.log — output of rg search for residual `phi_carryover_mode` references.
-- reports/2025-10-cli-flags/phase_phi_removal/phase_b/<timestamp>/diff.txt — optional dump of git diff for archival traceability.
-Do Now: CLI-FLAGS-003 Phase B1 — Deprecate CLI surfaces; run `pytest --collect-only -q tests/test_cli_scaling_phi0.py` before edits, then `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py` after removing the flag and refreshing docs.
-If Blocked: Document the blocker in summary.md (who/what/why), add console output to commands.txt, log a docs/fix_plan.md Attempt referencing the timestamp, and pause code changes until we align on next steps.
-Success Criteria:
-- CLI argparse help and usage text no longer mention `--phi-carryover-mode`.
-- Spec-mode regression tests in tests/test_cli_scaling_phi0.py still pass with existing tolerances.
-- No residual references to `phi_carryover_mode` remain outside components explicitly deferred to Phase B2/B3.
-- Documentation now states that PyTorch lacks a carryover reproduction mode and follows spec behavior only.
-- Artifact bundle is complete with hashes, environment metadata, and linked back to the Phase B0 design review.
+- reports/2025-10-cli-flags/phase_phi_removal/phase_b/<ts>/commands.txt — chronological command log (include git status + diff hashes).
+- reports/.../<ts>/collect_pre.log and collect_post.log — pytest collect-only outputs before/after edits.
+- reports/.../<ts>/pytest_cpu.log — targeted CPU pytest run; add pytest_cuda.log if GPU executed.
+- reports/.../<ts>/summary.md — narrative of edits, tests, open questions, follow-up gates.
+- reports/.../<ts>/doc_diff.md — concatenated diff snippets for README_PYTORCH.md, prompts/supervisor.md, docs/bugs/verified_c_bugs.md.
+- reports/.../<ts>/grep.log — `rg "phi_carryover_mode"` after edits to document residual references.
+- reports/.../<ts>/env.json — Python/PyTorch/git/device metadata (reuse Phase B bundle schema).
+- reports/.../<ts>/sha256.txt — checksums for every artifact in the directory.
+Do Now: [CLI-FLAGS-003] Phase B2 (plans/active/phi-carryover-removal/plan.md) — run `pytest --collect-only -q tests/test_cli_scaling_phi0.py` before edits, then `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py` after removing config/model/test shims and finishing the documentation sync.
+If Blocked:
+- Document the blocker in summary.md (include owner, why, external dependencies).
+- Log an Attempt in docs/fix_plan.md referencing the timestamped artifact folder.
+- Capture the completed portion (e.g., doc sync) and stop code edits until supervisor guidance arrives; note open questions in the artifact bundle.
 Priorities & Rationale:
-- plans/active/phi-carryover-removal/plan.md:29-38 elevates B1 as the next gate now that B0 is [D]; finishing it unlocks the rest of Phase B.
-- docs/fix_plan.md:461-465 directs today’s iteration to execute Plan B1–B3 in order, so B1 is mandatory.
-- specs/spec-a-core.md:211-224 mandates fresh φ rotations; deleting the CLI toggle prevents user regression to the C bug.
-- docs/bugs/verified_c_bugs.md:166-204 identifies carryover as a C-only defect; removing the shim keeps PyTorch honest to spec.
-- reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T185921Z/design_review.md defines the removal sequence; we must cite it in new evidence.
-- plans/active/cli-noise-pix0/plan.md:26-33 assumes the design bundle exists and expects B1 completion before parity work resumes.
-- CLAUDE.md Protected Assets section reminds us to respect docs/index.md and other guarded files while editing CLI docs.
+- plans/active/phi-carryover-removal/plan.md:34-38 — Phase B1 remains [P] pending doc updates; B2 instructions enumerate the exact files to excise.
+- docs/fix_plan.md:461-465 — Next Actions demand B1 doc sync followed by B2/B3 removal before regression sweeps.
+- plans/active/cli-noise-pix0/plan.md:26-35 — Snapshot states that documentation must be refreshed and plumbing removed before parity/scaling work continues.
+- docs/bugs/verified_c_bugs.md:166-186 — Current phrasing still advertises the PyTorch shim; must be updated as part of B1 completion.
+- specs/spec-a-core.md:204-233 — Normative φ rotation pipeline; all code changes must preserve vectorized fresh-rotation semantics.
+- docs/development/testing_strategy.md:118-155 — Codifies the collect-only + targeted pytest cadence we must follow.
+- reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T191302Z/summary.md — Record of what B1 already did; cite it when describing the follow-up bundle.
 How-To Map:
-- Create a UTC timestamp (`ts=$(date -u +%Y%m%dT%H%M%SZ)`) and `mkdir -p reports/2025-10-cli-flags/phase_phi_removal/phase_b/${ts}`.
-- Run `pytest --collect-only -q tests/test_cli_scaling_phi0.py | tee reports/.../${ts}/collect_pre.log` to capture the baseline state.
-- Begin commands.txt immediately (`script -q -c "your command"` or manual append) so every action is recorded chronologically.
-- Edit src/nanobrag_torch/__main__.py: remove the argument definition, help text, and config wiring for `phi_carryover_mode` while keeping formatting tidy.
-- After CLI edits, rerun `pytest --collect-only -q tests/test_cli_scaling_phi0.py` if you need a syntax check; log short outputs in commands.txt only.
-- Update README_PYTORCH.md and prompts/supervisor.md to reflect that the flag no longer exists; describe the update in summary.md.
-- Update docs/bugs/verified_c_bugs.md to clarify PyTorch no longer exposes an opt-in shim; cite the spec passage in the note.
-- Search for remaining references: `rg "phi_carryover_mode" -n | tee reports/.../${ts}/grep.log` and annotate any leftover call sites for Phase B2.
-- Execute `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py | tee reports/.../${ts}/pytest_cpu.log` and verify tolerances remain unchanged.
-- If CUDA is available, run `KMP_DUPLICATE_LIB_OK=TRUE CUDA_VISIBLE_DEVICES=0 pytest -v tests/test_cli_scaling_phi0.py | tee reports/.../${ts}/pytest_cuda.log`; otherwise note the omission in summary.md.
-- Capture environment metadata via Python (git SHA, Python version, torch version, CUDA availability) into env.json.
-- Summarize edits, tests, deferred follow-ups, and references to the design bundle inside summary.md; include explicit links to spec and bug docs.
-- Generate sha256.txt with `cd reports/.../${ts} && sha256sum * > sha256.txt` once artifacts are present.
-- Review git status to confirm only expected files changed; adjust if unexpected files appear.
-- Stage edits, craft commit message referencing Phase B1, and prepare to log results in docs/fix_plan.md Attempt once ready.
+1. `ts=$(date -u +%Y%m%dT%H%M%SZ)`; `base=reports/2025-10-cli-flags/phase_phi_removal/phase_b/$ts`; `mkdir -p "$base"`.
+2. Start `$base/commands.txt`; log every command with timestamp (shell `printf` or add via `script -q`).
+3. Baseline import check: `pytest --collect-only -q tests/test_cli_scaling_phi0.py | tee "$base/collect_pre.log"` (record exit code in commands.txt).
+4. Finish B1 doc sync before touching code:
+   - Update README_PYTORCH.md to remove `--phi-carryover-mode` mentions and clarify PyTorch is spec-only.
+   - Update prompts/supervisor.md to drop all references to the shim and adjust guidance accordingly.
+   - Update docs/bugs/verified_c_bugs.md:166-186 so the C-PARITY-001 entry states the shim existed historically but PyTorch no longer exposes it.
+   - Capture doc diffs via `git diff` snippets into `$base/doc_diff.md` (group by file for clarity).
+5. Execute B2 plumbing removal:
+   - `src/nanobrag_torch/config.py`: delete `phi_carryover_mode` fields (dataclass attributes, __post_init__, CLI mapping) while keeping tensor defaults intact.
+   - `src/nanobrag_torch/models/crystal.py`: remove `_apply_phi_carryover` branches and associated cache usage; ensure docstring retains nanoBragg.c citation.
+   - `src/nanobrag_torch/simulator.py`: eliminate carryover-mode conditionals so run() always follows spec rotation.
+6. Begin B3 cleanup where needed:
+   - Delete `tests/test_phi_carryover_mode.py` (or refactor residual spec assertions into `tests/test_cli_scaling_phi0.py`).
+   - Remove shim-only switches from debug/tooling scripts if they live under scripts/ (note findings in summary even if left for next loop).
+7. Run post-edit checks:
+   - `pytest --collect-only -q tests/test_cli_scaling_phi0.py | tee "$base/collect_post.log"`.
+   - `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py | tee "$base/pytest_cpu.log"` (add CUDA variant if executed).
+8. Capture environment metadata: `python - <<'PY' > "$base/env.json"` to dump Python/PyTorch version, CUDA availability, git SHA, platform, env flags.
+9. `rg "phi_carryover_mode" -n > "$base/grep.log"` after edits; annotate residual references (reports, archives) in summary.
+10. `(cd "$base" && sha256sum * > sha256.txt)` to finalise artifact integrity.
+11. Draft `$base/summary.md` — cover doc sync, code deletions, tests, residual items (e.g., tooling or plan updates), and cite relevant plan lines.
+12. Update docs/fix_plan.md Attempts (include `$base` path, test results, follow-ups) and adjust plan row statuses (B1→[D] once docs synced, B2 maybe [P]/[D] depending on completion).
+13. Stage changes with clear message once verified; if anything remains undone, leave notes in summary + fix_plan and stop.
 Pitfalls To Avoid:
-- Do not delete or rename files listed in docs/index.md (Protected Assets rule).
-- Do not touch Crystal or Simulator carryover plumbing yet; that is Phase B2 territory.
-- Avoid introducing scalar loops or other de-vectorized logic when editing CLI plumbing.
-- Preserve device/dtype neutrality; no implicit `.cpu()` or `.double()` conversions in argument handling.
-- Keep CLI help text grammatically correct after removal (no double spaces or dangling punctuation).
-- Capture every command in commands.txt; missing entries complicate reproducibility.
-- Stick to mapped pytest selectors; full-suite runs are out of scope for this loop.
-- Do not modify the C reference harness or reports outside the targeted directory.
-- Resist opportunistic refactors; keep diffs tightly scoped to Phase B1 requirements.
-- Log artifact hashes; skipping sha256.txt breaks archival integrity.
-- Remember to update docs/fix_plan.md only after artifacts exist; premature edits cause churn.
-- Ensure summary.md explicitly mentions the timestamped folder and references the B0 design review.
-Reporting Requirements:
-- summary.md must cross-link to reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T185921Z/design_review.md and explain how B1 fulfilled the plan.
-- commands.txt should include environment setup, test invocations, git diff, and checksum generation in chronological order.
-- env.json must state whether CUDA was used (`"cuda_available": true/false`) and include torch version strings.
-- grep.log should either be empty or list residual references annotated in summary.md as B2/B3 follow-ups.
-- When updating docs/fix_plan.md Attempts, include metrics (pass/fail, tolerances) and artifact path for traceability.
-Documentation Touchpoints:
-- README_PYTORCH.md CLI flag descriptions and usage examples.
-- prompts/supervisor.md instructions that may reference carryover modes or testing expectations.
-- docs/bugs/verified_c_bugs.md C-PARITY-001 section to clarify PyTorch behavior post-removal.
-- docs/development/testing_strategy.md passages that described dual-mode tolerances (update to spec-only wording).
-- Any user or history docs mentioning the shim; mark them as legacy or update language to past tense.
-Successor Planning:
-- Record in summary.md the config/simulator call sites still referencing `phi_carryover_mode` for Phase B2 planning.
-- Note which tests or tooling will require deletion or updates during Phase B3 (e.g., tests/test_phi_carryover_mode.py).
-- Identify documentation that will be tackled in Phase C (testing strategy, reports) and list them for future loops.
+- Do not reintroduce scalar φ loops; preserve vectorized tensor math and gradient flow.
+- Avoid `.cpu()`/`.cuda()` shims; keep tensors on caller device/dtype per PyTorch guardrails.
+- No `.item()` on tensors that require gradients; maintain differentiability across rotations.
+- Keep doc updates ASCII; touch only the files identified in plan B1 to respect Protected Assets.
+- Don’t delete archival reports referencing the shim; only update active docs.
+- Avoid broad search-and-replace that might clobber archival context—document residual references instead.
+- Stick to mapped pytest selectors; no full-suite run unless instructed later.
+- Ensure docstrings retain the C-code reference block (Rule #11) until Phase D closure.
+- Record all commands in commands.txt; missing provenance will block acceptance of the bundle.
+- If CUDA not available, state it explicitly in summary instead of leaving a gap.
 Pointers:
-- plans/active/phi-carryover-removal/plan.md:29-38 — Phase B roadmap and current status.
-- plans/active/cli-noise-pix0/plan.md:24-33 — Umbrella Next Actions expecting B1 completion.
-- docs/fix_plan.md:451-465 — Ledger directives and attempt logging requirements.
-- specs/spec-a-core.md:211-224 — Normative φ rotation rules to cite in docs.
-- docs/bugs/verified_c_bugs.md:166-204 — Bug dossier justifying removal.
-- reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T185921Z/design_review.md — B0 artifact to reference in summary.md.
-- CLAUDE.md:120-160 — Protected Assets rule refresher before editing documentation.
-- docs/development/testing_strategy.md:40-70 — Device/dtype cadence guidance for targeted tests.
-- scripts/validation/README.md — Reusable tooling overview should you need parity helpers.
-- input.md (this memo) is read-only for you; do not modify it.
-Implementation Notes:
-- Removing the flag will change argparse defaults; verify there are no downstream consumers relying on the option object.
-- Ensure usage examples in README_PYTORCH.md no longer suggest passing the flag; replace with spec-mode wording.
-- Confirm supervisor.sh or loop automation docs do not mention the flag; update if necessary.
-- Double-check that generated help text still fits within console formatting expectations (no oddly wrapped lines).
-- If argparse formatting changes, capture before/after snippet in summary.md for archival context.
-Metrics to Capture:
-- Number of references removed (from grep.log) and remaining references flagged for B2/B3.
-- Pytest runtime for CPU run (record in summary.md).
-- Git diff summary (files changed) noted in summary.md.
-- Any documentation sections updated should be listed with line anchors where practical.
-Ledger Update Checklist:
-- Add Attempt entry under CLI-FLAGS-003 with timestamp, artifact path, tests executed, and remaining work.
-- Mention in docs/fix_plan.md that Phase B1 is complete and B2/B3 remain.
-- Update plans/active/phi-carryover-removal/plan.md to flip B1 to [D] after verification.
-- Mirror any Next Actions adjustments into plans/active/cli-noise-pix0/plan.md if wording needs refreshing.
-Validation Order:
-- Baseline collect-only run before edits.
-- CLI/docs edits plus grep sweep.
-- Targeted pytest CPU run (and CUDA if possible).
-- Final documentation review and ledger updates.
-Time Budget Guidance:
-- Allocate first 10 minutes to set up artifact folder and baseline tests.
-- Spend up to 25 minutes editing CLI code and documentation with incremental checks.
-- Reserve 10 minutes for testing and artifact capture.
-- Leave final 10 minutes for summary writing, ledger updates, and git hygiene.
-Additional Reminders:
-- Maintain vectorization and differentiability principles even if edits seem benign.
-- Re-run `rg "carryover"` to ensure textual references align with new messaging.
-- Keep commit message in the SUPERVISOR format if you hand back to galph for commits.
-- Confirm `pip install -e .` is still valid after CLI change if documentation references it.
-- If you uncover doc drift unrelated to this phase, log it under open questions rather than fixing it now.
-Next Up: If you finish B1 early, inventory the config/crystal/simulator call sites requiring edits for Phase B2 and capture them in summary.md without modifying code.
+- plans/active/phi-carryover-removal/plan.md:34-38 — Phase B status and tasks.
+- docs/fix_plan.md:461-465 — Next Actions for CLI-FLAGS-003.
+- plans/active/cli-noise-pix0/plan.md:26-35 — How CLI plan depends on B1/B2 progress.
+- docs/bugs/verified_c_bugs.md:166-186 — Text to update during doc sync.
+- docs/development/testing_strategy.md:118-155 — Test cadence requirements.
+- specs/spec-a-core.md:204-233 — Normative φ rotation contract to honour.
+Next Up: If the bundle lands early, catalog remaining shim references for Phase B3 (tests/tooling) in summary.md without modifying additional code yet.

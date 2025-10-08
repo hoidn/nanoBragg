@@ -1109,3 +1109,10 @@
 - Marked `plans/active/phi-carryover-removal/plan.md` Phase B0 as [D] with explicit status line, and updated `plans/active/cli-noise-pix0/plan.md` Next Actions to start at B1 now that the design artifact exists.
 - Authored new 129-line `input.md` (Mode: Docs) directing Ralph to execute Phase B1 CLI surface removal with detailed artifact/test cadence and doc touchpoints; committed as `SUPERVISOR: Phase B1 directive refresh - tests: not run`.
 - Follow-ups: Ralph to remove the CLI flag per Phase B1, capture the specified artifact bundle, update docs/fix_plan.md Attempt logs, and prep inventory notes for B2 targets.
+
+## 2025-12-14 (galph loop — Phase B2 handoff prep)
+- Coin flip=heads → reviewed Ralph’s latest implementation commit (340683f). Change cleanly removes the CLI flag, keeps targeted tests green, and deferred doc sync; no regressions spotted.
+- Updated `plans/active/phi-carryover-removal/plan.md` to note B1’s partial completion (code done, docs pending) and kept B2/B3 guidance intact; `plans/active/cli-noise-pix0/plan.md` Next Actions now call out B1 doc sync + B2/B3 execution explicitly.
+- Revised `docs/fix_plan.md` CLI-FLAGS-003 Next Actions to break out B1 documentation, B2/B3 removals, B4 regression sweep, and B5 ledger sync as separate bullets.
+- Replaced `input.md` (Mode: none, ~110 lines) directing Ralph to finish the B1 doc cleanup and execute Phase B2 plumbing removal, with explicit artifact/test cadence.
+- Follow-up: Ralph to update README_PYTORCH.md / prompts/supervisor.md / docs/bugs entry, delete the remaining `phi_carryover_mode` plumbing plus associated tests, capture the Phase B bundle, and log the attempt before we evaluate B3.
