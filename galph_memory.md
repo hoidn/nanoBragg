@@ -1149,3 +1149,9 @@
 - Updated `plans/active/phi-carryover-removal/plan.md` row D0 to [D] so the checklist reflects the completed harness refresh.
 - Authored new `input.md` (Mode: Parity) directing Ralph to capture the D1 proof-of-removal bundle: fresh Py trace via `trace_harness.py`, matching C trace with `-trace_pixel 685 1039`, run `scripts/validation/compare_scaling_traces.py`, execute `pytest -v tests/test_cli_scaling_phi0.py`, perform the `rg "phi_carryover"` sweep, and store everything under `reports/2025-10-cli-flags/phase_phi_removal/phase_d/$STAMP/` with summary/metrics/sha256.
 - Follow-up for Ralph: generate the new artifact bundle, then proceed to ledger sync (docs/fix_plan.md update + plan archival) once the proof is logged.
+
+## 2025-12-14 (galph loop — Phase D2 ledger prep)
+- Updated `plans/active/phi-carryover-removal/plan.md:53-72` to mark D1a–D1c [D] and record the Attempt #183 evidence path; added status snapshot so remaining work clearly shows D2–D3.
+- Refreshed `docs/fix_plan.md:459-465` Next Actions to highlight D2 (ledger sync) and D3 (handoff) as the only open items while referencing the Phase D bundle.
+- Authored a new `input.md` (Mode: Docs, 104 lines) directing Ralph to execute Phase D2: update fix_plan attempts, archive `plans/active/cli-phi-parity-shim/plan.md`, append a ledger note in `reports/2025-10-cli-flags/phase_phi_removal/phase_d/`, run pytest collect-only, and log results.
+- Next loop expectation: Ralph performs the ledger sync per plan (update fix_plan attempts, move the shim plan to archive, add ledger_sync.md + commands/logs), runs `pytest --collect-only -q tests/test_cli_scaling_phi0.py`, and records the outcome before we tackle Phase D3 handoff.

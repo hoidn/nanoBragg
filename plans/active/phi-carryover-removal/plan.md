@@ -53,12 +53,14 @@ Goal: Publish definitive "shim is gone" evidence, realign the ledgers, and hand 
 Prereqs: Phases B–C marked [D]; commit history (≥85dc304) present locally; Ralph briefed that execution must stay spec-only.
 Exit Criteria: Timestamped Phase D bundle contains real C/Py traces + targeted pytest proof with zero `phi_carryover_mode` references; docs/fix_plan.md and supervision notes reference the new evidence and scope future work to scaling only.
 
+**Status Snapshot (2025-12-14):** D0/D1 completed via Attempt #183 (`reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/`). Ledger + handoff work (D2–D3) remains.
+
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | D0 | Refresh trace harness tooling | [D] | ✅ Attempt #182 (2025-12-14). Harness now instantiates spec-only `CrystalConfig`; `--phi-mode` argument and config snapshot entries removed. Ready for D1 evidence capture. |
-| D1a | Regenerate spec-mode traces | [ ] | Command (CPU first): ``KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --pixel 685 1039 --device cpu --dtype float64 --out reports/2025-10-cli-flags/phase_phi_removal/phase_d/$(date -u +%Y%m%dT%H%M%SZ)/trace_py_spec.log``. After the PyTorch run, rerun the instrumented C binary (same supervisor command with `-trace_pixel 685 1039`) and copy the resulting `trace_c_spec.log` into the Phase D directory. Capture stdout/stderr, `metrics.json`, and `commands.txt`; verify the PyTorch log contains no `phi_carryover_mode` keys and that the harness exits 0. |
-| D1b | Capture regression proof | [ ] | In the same timestamped directory, run ``pytest -v tests/test_cli_scaling_phi0.py`` (CPU only unless CUDA available). Store `pytest.log`, `collect.log`, `env.json`, and SHA256 checksums. Extract max |Δk_frac| from the log into `summary.md` (expect ≤1e-6). |
-| D1c | Confirm code/doc cleanliness | [ ] | `rg --files-with-matches "phi_carryover" src tests scripts prompts docs | sort` (exclude `reports/` and archives). Document the zero-result (or justify any residual historical reference) inside `summary.md`. |
+| D1a | Regenerate spec-mode traces | [D] | ✅ Attempt #183 (2025-10-08). Stored at `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/trace_py_spec.log` + `trace_c_spec.log`; `summary.md` confirms zero `phi_carryover_mode` keys. |
+| D1b | Capture regression proof | [D] | ✅ Attempt #183 (2025-10-08). `pytest -v tests/test_cli_scaling_phi0.py` (CPU) recorded max |Δk_frac| ≤ 1e-6; see `pytest.log` within the Phase D bundle. |
+| D1c | Confirm code/doc cleanliness | [D] | ✅ Attempt #183 (2025-10-08). Ripgrep sweep logged in `rg_phi_carryover.txt`; only `docs/fix_plan.md` retains historical references. |
 | D2 | Ledger + plan sync | [ ] | Update `docs/fix_plan.md` (CLI-FLAGS-003 Attempts + Next Actions) to cite the Phase D bundle path and drop all shim-related bullets. Move `plans/active/cli-phi-parity-shim/plan.md` into `plans/archive/` with a closure note once references are cleared. |
 | D3 | Supervisor handoff memo | [ ] | Write the next `input.md` instructing Ralph to resume the scaling/nb-compare track (Phase L in `plans/active/cli-noise-pix0/plan.md`) using only spec mode. Summarize Phase D completion in `galph_memory.md` so future loops know the shim closure evidence exists. |
 
