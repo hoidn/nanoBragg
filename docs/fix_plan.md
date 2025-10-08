@@ -462,12 +462,31 @@
 1. ~~**Phase C1 coverage audit**~~ ✅ COMPLETE (Attempt #179, 2025-10-08)
 2. ~~**Phase C2 documentation updates**~~ ✅ COMPLETE (Attempt #180, 2025-10-08)
 3. ~~**Phase C3 tooling/docs sweep**~~ ✅ COMPLETE (Attempt #180, 2025-10-08)
-4. **Phase D0 trace-harness refresh** — Update `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py` to drop the legacy `phi_carryover_mode` plumbing (`--phi-mode`, config kwargs) per Attempt #181 so tooling instantiates spec-only `CrystalConfig` before rerunning Phase D tasks
+4. ~~**Phase D0 trace-harness refresh**~~ ✅ COMPLETE (Attempt #182, 2025-12-14)
 5. **Phase D1 proof-of-removal bundle** — Follow `plans/active/phi-carryover-removal/plan.md` rows D1a–D1c: rerun the supervisor trace harness in spec mode (with paired C trace), log the targeted `pytest -v tests/test_cli_scaling_phi0.py` run, and document the zero-result `rg "phi_carryover"` sweep inside the new Phase D timestamp directory under `reports/2025-10-cli-flags/phase_phi_removal/`
 6. **Phase D2 ledger sync** — Update this entry’s Attempts + Next Actions with the Phase D bundle path, then move `plans/active/cli-phi-parity-shim/plan.md` to `plans/archive/` once no live references remain
 7. **Phase D3 supervisor handoff** — In the next `input.md`, steer Ralph toward `plans/active/cli-noise-pix0/plan.md` Phase L scaling tasks (spec mode only) and record the closure note in `galph_memory.md`
 
 - Attempts History:
+  * [2025-12-14] Attempt #182 (ralph loop i=179, Mode: TDD) — Result: ✅ **SUCCESS** (Phase D0 Trace Harness Refresh COMPLETE). **Tooling changes only.**
+    Metrics: Test collection: 2 tests collected successfully in 0.78s (tests/test_cli_scaling_phi0.py).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T202455Z/summary.md` — Phase D0 completion summary
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T202455Z/commands.txt` — Reproduction steps
+      - `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T202455Z/sha256.txt` — Artifact checksums (081bd15a... summary, ad13eb32... commands)
+    Changes:
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:51-52` — Removed `--phi-mode` CLI argument
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:167` — Removed `phi_carryover_mode=args.phi_mode` kwarg from CrystalConfig instantiation
+      - `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py:204` — Removed `'phi_carryover_mode'` from config snapshot
+    Observations/Hypotheses:
+      - **Blocker Cleared:** Harness now instantiates spec-only `CrystalConfig` per specs/spec-a-core.md:204-240
+      - **Code Sweep Clean:** Only `docs/fix_plan.md` contains `phi_carryover` references (historical/meta documentation)
+      - **Test Collection:** ✅ Verified 2 spec-mode tests collect successfully
+      - **Phase D0 Exit Criteria Met:** CLI arg removed, config kwarg removed, snapshot cleaned, test collection passes, production code clean
+    Next Actions:
+      - Phase D1: Execute D1a-D1c tasks with refreshed harness (spec-mode traces, pytest run, code sweep)
+      - Phase D2: Update ledger with Phase D1 bundle path and archive phi-parity-shim plan
+      - Phase D3: Prepare supervisor handoff for scaling/noise/pix0 work
   * [2025-10-08] Attempt #181 (ralph loop i=178, Mode: Parity) — Result: ⛔ **BLOCKED** (Phase D1a trace harness blocker). **No code changes** (evidence-only loop).
     Metrics: N/A - execution blocked before trace generation
     Artifacts:

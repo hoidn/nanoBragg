@@ -1,0 +1,19 @@
+# Phase D0 Trace Harness Refresh Commands
+# Date: 2025-12-14
+# Plan: plans/active/phi-carryover-removal/plan.md Phase D0
+
+# 1. Edit trace harness to remove --phi-mode argument
+# File: reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py
+# Lines removed: 51-52 (--phi-mode CLI arg)
+# Line 167 changed: Removed phi_carryover_mode=args.phi_mode
+# Line 204 changed: Removed 'phi_carryover_mode' from config snapshot
+
+# 2. Verify test collection still works
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.py
+
+# 3. Confirm no phi_carryover references remain in production code
+rg --files-with-matches "phi_carryover" src tests scripts prompts docs
+
+# Expected output: Only docs/fix_plan.md (historical references)
+
+# 4. Ready for Phase D1 execution with spec-only harness

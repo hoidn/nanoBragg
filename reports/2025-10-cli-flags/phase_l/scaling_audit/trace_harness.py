@@ -48,8 +48,6 @@ def create_parser():
                         help='Device (cpu or cuda)')
     parser.add_argument('--dtype', type=str, default='float32', choices=['float32', 'float64'],
                         help='Tensor dtype (default float32)')
-    parser.add_argument('--phi-mode', type=str, default='spec', choices=['spec', 'c-parity'],
-                        help='Phi carryover mode: spec=compliant (default), c-parity=emulate C bug')
     parser.add_argument('--emit-rot-stars', action='store_true',
                         help='Emit per-phi real-space vectors (ap/bp/cp) via TRACE_PY_ROTSTAR lines')
     return parser
@@ -153,7 +151,7 @@ def main():
     # Build crystal config with cell params and MOSFLM vectors
     # Each MOSFLM reciprocal vector must be assigned to its own config field
     # (not packed into a single list) so Crystal uses the specified orientation
-    # Apply phi carryover mode per input.md Phase M1 (2025-10-07)
+    # Phase D0 (2025-12-14): Spec-compliant fresh φ rotation per specs/spec-a-core.md:204-240
     crystal_config = CrystalConfig(
         cell_a=cell_a,
         cell_b=cell_b,
@@ -164,7 +162,6 @@ def main():
         mosflm_a_star=torch.tensor(a_star, dtype=dtype, device=device),
         mosflm_b_star=torch.tensor(b_star, dtype=dtype, device=device),
         mosflm_c_star=torch.tensor(c_star, dtype=dtype, device=device),
-        phi_carryover_mode=args.phi_mode,  # Phase M1: route supervisor override
         **params['crystal']
     )
 
@@ -200,8 +197,7 @@ def main():
             'phi_steps': crystal_config.phi_steps,
             'mosaic_spread_deg': crystal_config.mosaic_spread_deg,
             'mosaic_domains': crystal_config.mosaic_domains,
-            'spindle_axis': crystal_config.spindle_axis.tolist(),
-            'phi_carryover_mode': crystal_config.phi_carryover_mode
+            'spindle_axis': crystal_config.spindle_axis.tolist()
         },
         'detector': {
             'distance_mm': detector_config.distance_mm,
