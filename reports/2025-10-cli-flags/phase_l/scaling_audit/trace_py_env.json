@@ -4,7 +4,7 @@
   "platform": "Linux-6.14.0-29-generic-x86_64-with-glibc2.39",
   "cuda_available": true,
   "device": "cpu",
-  "dtype": "float64",
-  "git_sha": "0b34a0b318f38b74f3f231471b902aa61689d681",
-  "timestamp_iso": "2025-10-08T20:36:40.283202Z"
+  "dtype": "float32",
+  "git_sha": "ea503523b8386d9918812c549248a8efbef33849",
+  "timestamp_iso": "2025-10-08T21:07:39.273817Z"
 }
