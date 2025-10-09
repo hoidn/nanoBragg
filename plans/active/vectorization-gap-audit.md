@@ -31,8 +31,8 @@ Exit Criteria: Ranked backlog stored at `reports/2026-01-vectorization-gap/phase
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Capture warm-run profiler trace | [ ] | Command: `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1 --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`. Extract simulator/crystal/utils call stacks. |
-| B2 | Correlate loops with trace | [ ] | Map Phase A entries to profiler hotspots (≥1% inclusive time). Produce `hot_loops.csv` with columns: module, line, loop_id, %time, call_count, notes. Flag GPU-relevant loops lacking CPU heat. |
+| B1 | Capture warm-run profiler trace | [P] | ✅ BLOCKED on correlation fix. Profiler run complete (ralph loop #218, 2025-10-09T070458Z): 4096² warm 0.675s (C 0.78x faster), correlation 0.721 (❌ LOW vs >0.99), 1.7MB trace.json captured. BLOCKER: Low correlation (likely PERF-PYTORCH-004 P3.0b/P3.0c bugs) makes profiler hotspots untrustworthy; must fix correlation before Phase B2. Artifacts: `reports/2026-01-vectorization-gap/phase_b/20251009T070458Z/` (trace.json, benchmark_results.json, summary.md, commands.txt, env.json, pytest_collect.log). Rerun command after correlation fix: `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1`. |
+| B2 | Correlate loops with trace | [B] | BLOCKED on B1 correlation fix. After valid profiler trace: Map Phase A entries to profiler hotspots (≥1% inclusive time). Produce `hot_loops.csv` with columns: module, line, loop_id, %time, call_count, notes. Flag GPU-relevant loops lacking CPU heat. |
 | B3 | Publish prioritised backlog | [ ] | Draft `backlog.md` summarising the top 3–5 candidates (e.g., `_generate_mosaic_rotations`, ROI rebuild, RNG). Document expected speedups, affected acceptance tests, risks. Update docs/fix_plan Next Actions accordingly. |
 
 ### Phase C — Implementation Handoff & Design Prep

@@ -3781,6 +3781,28 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       1. Advance to Phase B1 to gather runtime evidence for the todo/uncertain loops.
       2. Prepare to map profiler hotspots back to inventory entries in Phase B2.
       3. Use Phase B backlog to prioritise design packets for Phase C.
+  * [2025-10-09] Attempt #3 — Result: ⚠️ Phase B1 profiler capture COMPLETE with BLOCKER identified (ralph loop #218, Mode: Perf, evidence-only).
+    Metrics: 4096² warm run (16.7M pixels): C 0.527s, PyTorch WARM 0.675s (0.78x speedup = **C is 1.28x faster**), correlation **0.721** (❌ LOW vs expected >0.99), cache speedup 79357.6x (✓ PERF-PYTORCH-005 exit criteria met). Test suite: 677 collected via `pytest --collect-only -q` (exit 0).
+    Artifacts:
+      - `reports/2026-01-vectorization-gap/phase_b/20251009T070458Z/profile/profile_4096x4096/trace.json` — 1.7 MB Chrome profiler trace (CPU activity, shapes, memory, stack traces)
+      - `reports/2026-01-vectorization-gap/phase_b/20251009T070458Z/profile/benchmark_results.json` — Detailed timing metrics (warm/cold, setup/sim/io breakdown)
+      - `reports/2026-01-vectorization-gap/phase_b/20251009T070458Z/profile_run.log` — Full stdout/stderr from benchmark run
+      - `reports/2026-01-vectorization-gap/phase_b/20251009T070458Z/commands.txt` — Reproduction command, metadata (commit b069274), key metrics, notes on low correlation
+      - `reports/2026-01-vectorization-gap/phase_b/20251009T070458Z/env.json` — Environment snapshot (Python/torch versions, CUDA availability)
+      - `reports/2026-01-vectorization-gap/phase_b/20251009T070458Z/pytest_collect.log` — Test discovery verification
+      - `reports/2026-01-vectorization-gap/phase_b/20251009T070458Z/summary.md` — Executive summary, hotspot prelim candidates, blocking issues, Phase B2 recommendations
+    Observations/Hypotheses:
+      - **CRITICAL BLOCKER:** Correlation 0.721 (vs spec >0.99) indicates PyTorch/C physics divergence; profiler hotspots untrustworthy until correlation restored. Root cause: likely PERF-PYTORCH-004 weighted source normalization/polarization bugs (P3.0b/P3.0c) per fix_plan.md:196-199.
+      - **Performance target not met:** PyTorch 0.78x C speed (warm run) confirms vectorization gaps exist but cannot quantify until correlation fix; target is PyTorch ≥1.0x C.
+      - **Cache effectiveness validated:** Warm setup 0.0ms < 50ms (PERF-PYTORCH-005 exit criteria met); simulator reuse working as designed.
+      - **Profiler artifacts ready:** 1.7 MB trace.json available for Phase B2 analysis (map ≥1% inclusive time ops to Phase A loop inventory) once correlation >0.99.
+      - **Preliminary hotspot candidates (Phase A):** noise.py:171 (LCG RNG, HIGH), simulator.py:1568 (phi-loop, MEDIUM uncertain), plus 1 uncertain loop pending B2 profiler correlation.
+    Next Actions:
+      1. **BLOCKER:** Fix PERF-PYTORCH-004 correlation issue (P3.0b per-source polarization + P3.0c normalization) before continuing Phase B2. Verify correlation >0.99 via `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "simple_cubic"`.
+      2. **After correlation fix:** Rerun profiler command (`KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1`) with valid physics.
+      3. **Phase B2 execution:** Extract profiler call stacks ≥1% inclusive time, map to Phase A loop inventory (module:line), produce `hot_loops.csv` under same stamp directory.
+      4. **Phase B3 execution:** Publish prioritised backlog (`backlog.md`) with top 3-5 targets, impact estimates, affected ATs, risks; update fix_plan Next Actions for delegation.
+      5. **Supervisor handoff:** Galph to resolve PERF-PYTORCH-004 before continuing vectorization work; Phase B1 artifacts archived and ready for B2 once correlation restored.
 
 
 ---

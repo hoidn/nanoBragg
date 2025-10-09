@@ -1,0 +1,37 @@
+# Phase B1 Profiler Capture - Vectorization Gap Audit
+# Plan: plans/active/vectorization-gap-audit.md
+# Date: 2025-10-09T07:04:58Z
+# Git Commit: b069274ceee35029d0865376a3179cc8ae9a831c
+
+## Profiler Command
+KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py \
+  --sizes 4096 \
+  --device cpu \
+  --dtype float32 \
+  --profile \
+  --keep-artifacts \
+  --iterations 1
+
+## Execution Metadata
+Start Time: 2025-10-09T00:05:40Z
+End Time: 2025-10-09T00:05:50Z
+Exit Code: 0
+Duration: ~10 seconds
+
+## Artifacts Generated
+- profile_4096x4096/trace.json (Chrome trace format)
+- benchmark_results.json (timing metrics)
+- profile_run.log (stdout/stderr capture)
+
+## Key Metrics
+- C Time: 0.527s
+- PyTorch COLD: 8.285s (15.72x slower than C)
+- PyTorch WARM: 0.675s (1.28x slower than C)
+- Correlation: 0.721175 (⚠️ LOW - expected >0.99)
+- Warm Setup: 0.0ms (✓ PERF-PYTORCH-005 exit criteria met)
+- Cache Speedup: 79357.6x
+
+## Notes
+- Low correlation (0.72 vs expected >0.99) requires investigation
+- Warm run still 1.28x slower than C (target: ≥1.0x)
+- Profiler trace available for hotspot analysis in trace.json
