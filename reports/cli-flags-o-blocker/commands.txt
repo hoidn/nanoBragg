@@ -1,0 +1,102 @@
+# Commands Executed During CLI-FLAGS-O-BLOCKER Analysis
+# Timestamp: 2025-10-09T03:05:43Z
+# Analyst: claude-sonnet-4-5
+# Initiative: cli-flags-o-blocker
+
+## File Reads (Evidence Gathering)
+
+# Read mandatory context files
+Read: /home/ollie/Documents/tmp/nanoBragg/docs/index.md
+Read: /home/ollie/Documents/tmp/nanoBragg/docs/architecture/README.md
+Read: /home/ollie/Documents/tmp/nanoBragg/docs/development/testing_strategy.md
+Read: /home/ollie/Documents/tmp/nanoBragg/specs/spec-a-core.md
+
+# Read source files for callchain analysis
+Read: /home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/__main__.py (lines 1-1261)
+Read: /home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/config.py (lines 1-566)
+Read: /home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py (lines 1-100, grepped for "steps")
+Read: /home/ollie/Documents/tmp/nanoBragg/tests/test_cli_scaling_phi0.py (lines 1-269)
+
+# Read evidence bundles
+Read: /home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z/results/summary.json
+Read: /home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/supervisor_command/20251009T024433Z/summary.json
+Read: /home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/supervisor_command/20251009T024433Z/analysis.md
+
+## Code Searches (Static Analysis)
+
+# Trace steps computation and usage
+Grep: "def _compute_scaling" in simulator.py → NO MATCHES (function doesn't exist)
+Grep: "steps" in simulator.py (context lines) → Found 14 occurrences
+  - Line 469-470: phi_steps in Crystal config update
+  - Line 732: phisteps comment
+  - Line 810: get rotated lattice vectors for all phi steps
+  - Line 854-863: CRITICAL - steps calculation
+  - Line 956, 1041: normalization notes
+  - Line 1107-1130: CRITICAL - /steps division
+  - Line 1213, 1233, 1247, 1497-1501: trace/debug output
+  - Line 1540-1552: phi_steps in trace output
+  - Line 1731-1732, 1761-1762, 1766-1767, 1779-1787: detector thicksteps
+
+Grep: "class SimulatorConfig" → NO MATCHES (class doesn't exist; config passed as dict)
+
+## Directory Listings (Evidence Bundle Navigation)
+
+ls: /home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z/
+  - inputs/, notes/, results/, tests/ subdirectories
+
+ls: /home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/supervisor_command/20251009T024433Z/
+  - analysis.md, summary.json, commands.txt, env.json, *.png, *.bin files
+
+## Git Metadata Queries
+
+git rev-parse HEAD → f03f464b972cbefd98938438aee3946863d8bc25
+git log -1 → commit by ollie ohoidn at 2025-10-08 19:59:45 -0700
+git status --short → ?? reports/cli-flags-o-blocker/ (untracked)
+
+## System Environment Queries
+
+python3 --version → Python 3.13.5
+uname -a → Linux 6.14.0-29-generic x86_64
+date -u → 2025-10-09T03:05:43Z
+
+## Outputs Generated
+
+Write: /home/ollie/Documents/tmp/nanoBragg/reports/cli-flags-o-blocker/callchain/static.md
+  - Question-driven callgraph from CLI entry to normalization sink
+  - 5 key questions answered with file:line anchors
+  - Evidence cross-reference with both bundles
+  - Root cause assessment (false alarm / C-PARITY-001)
+
+Write: /home/ollie/Documents/tmp/nanoBragg/reports/cli-flags-o-blocker/trace/tap_points.md
+  - 6 instrumentation tap points (TAP-1 through TAP-6)
+  - Environment variable activation method (NB_TRACE_STEPS=1)
+  - Expected output examples for supervisor command
+  - Validation checklist and cleanup guidance
+
+Write: /home/ollie/Documents/tmp/nanoBragg/reports/cli-flags-o-blocker/summary.md
+  - Executive summary (blocker resolved - false alarm)
+  - Evidence summary (2 bundles + targeted tests)
+  - Hypothesis evaluation (4 hypotheses)
+  - Recommended actions (immediate + follow-up)
+
+Write: /home/ollie/Documents/tmp/nanoBragg/reports/cli-flags-o-blocker/env/trace_env.json
+  - Analysis metadata (initiative, timestamp, analyst)
+  - Git metadata (commit, dirty status)
+  - System metadata (Python, OS, kernel)
+  - Evidence bundle summaries
+  - Key findings (normalization_bug=false, c_parity_001=true)
+
+Write: /home/ollie/Documents/tmp/nanoBragg/reports/cli-flags-o-blocker/commands.txt
+  - This file
+
+## Analysis Conclusion
+
+**Root Cause:** False alarm. The 126,000× sum ratio is the documented C-PARITY-001 bug, not a PyTorch normalization regression.
+
+**Normalization Logic:** Correctly applied at simulator.py:1127 (/ steps * r_e_sqr * fluence)
+
+**Effective Steps Value:** 10 (from -phisteps 10, verified in callchain analysis)
+
+**Test Coverage Gap:** Confirmed. Tests validate intermediate physics but not end-to-end intensity sums.
+
+**Recommendation:** Accept supervisor sum_ratio=126,451 as within C-PARITY-001 tolerance (110,000 ≤ ratio ≤ 130,000). Proceed to Phase O closure.

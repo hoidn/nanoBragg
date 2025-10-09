@@ -1,0 +1,51 @@
+{
+  "analysis": {
+    "initiative": "cli-flags-o-blocker",
+    "question": "Why does the supervisor CLI run miss the /steps normalization while targeted tests pass?",
+    "timestamp_utc": "2025-10-09T03:05:43Z",
+    "analyst": "claude-sonnet-4-5",
+    "time_budget_minutes": 30,
+    "exit_criteria_met": true
+  },
+  "git": {
+    "commit_sha": "f03f464b972cbefd98938438aee3946863d8bc25",
+    "commit_date": "2025-10-08 19:59:45 -0700",
+    "commit_author": "ollie ohoidn",
+    "dirty": true,
+    "untracked_files": [
+      "reports/cli-flags-o-blocker/"
+    ]
+  },
+  "system": {
+    "python_version": "3.13.5",
+    "os": "Linux",
+    "kernel": "6.14.0-29-generic",
+    "arch": "x86_64",
+    "hostname": "ollie-System-Product-Name"
+  },
+  "evidence_bundles": {
+    "roi_baseline": {
+      "path": "reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z",
+      "sum_ratio": 115922.859375,
+      "correlation": 0.985237458128688,
+      "c_sum": 0.0015242202207446098,
+      "py_sum": 176.6919708251953,
+      "roi": [100, 156, 100, 156]
+    },
+    "supervisor_command": {
+      "path": "reports/2025-10-cli-flags/phase_l/supervisor_command/20251009T024433Z",
+      "sum_ratio": 126451.6484375,
+      "correlation": 0.9965614320231929,
+      "c_sum": 6490.8203125,
+      "py_sum": 820774912.0,
+      "roi": null
+    }
+  },
+  "key_findings": {
+    "normalization_bug": false,
+    "c_parity_001_attribution": true,
+    "test_coverage_gap": true,
+    "effective_steps_value": 10,
+    "normalization_location": "src/nanobrag_torch/simulator.py:1127"
+  }
+}
