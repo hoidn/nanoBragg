@@ -1362,3 +1362,10 @@
 - Marked `plans/active/vectorization.md` Phase F2 as [D] with Attempt #14 context and clarified F3 CPU-only scope while CUDA remains blocked; focus now squarely on perf evidence capture.
 - Replaced input.md (Mode: Perf) instructing Ralph to run the Phase F3 CPU benchmark, deposit artifacts under `reports/2025-10-vectorization/phase_f/perf/<timestamp>/`, rerun CPU absorption tests, and log metrics in docs/fix_plan.md Attempt + plan.
 - Next supervisor follow-up: confirm Ralph lands the perf bundle, updates ledger/plan consistently, and evaluate whether throughput stays within ≤5% of the Phase A3 baseline before scheduling Phase F4 documentation.
+
+## 2025-12-22 (galph loop - Phase F4 summary prep)
+- Reviewed Ralph commit e15be51 (Attempt #15): Phase F3 CPU benchmarks completed with 0 % delta vs Phase A baseline; artifacts logged under `reports/2025-10-vectorization/phase_f/perf/20251009T050859Z/` and docs/fix_plan Attempt updated accordingly.
+- Updated `plans/active/vectorization.md` Status Snapshot to reflect Phases A–F3 complete and marked row F3 [D] citing the 20251009 perf bundle; remaining work scoped to F4 summary + CUDA blocker follow-up.
+- Adjusted `docs/fix_plan.md` [VECTOR-TRICUBIC-001] status to “in_progress” (Phases A–F3 complete) and rewrote Next Actions to focus on F4 summary, CUDA perf rerun once unblocked, and Phase G prep.
+- Authored new input.md (Mode: Docs, 102 lines) directing Ralph to write `reports/2025-10-vectorization/phase_f/summary.md`, append commands + collect-only proof, flip plan row F4 [D], add Attempt #16, and capture `pytest --collect-only -q` output under reports/.
+- Follow-up for Ralph: keep this loop documentation-only, cite both Phase F2/F3 bundles, update commands.txt, log the collect-only proof, and ensure fix_plan + plan align before marking F4 done. CUDA benchmarks remain deferred until the device-placement defect is fixed.

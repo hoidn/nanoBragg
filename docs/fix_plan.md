@@ -3385,7 +3385,7 @@
 ## [VECTOR-TRICUBIC-001] Vectorize tricubic interpolation and detector absorption
 - Spec/AT: specs/spec-a-core.md §4 (structure factor sampling), specs/spec-a-parallel.md §2.3 (tricubic acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4 (vectorization strategy), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, nanoBragg.c lines 2604–3278 (polin3/polin2/polint) and 3375–3450 (detector absorption loop).
 - Priority: High
-- Status: done (Phases A–F2 complete; F3 CPU benchmarks can proceed, CUDA blocked by separate device issue)
+- Status: in_progress (Phases A–F3 complete; Phase F4 summary pending; CUDA perf still blocked by the device-placement defect logged in Attempt #14)
 - Owner/Date: galph/2025-10-17 (updated 2025-12-22 by ralph)
 - Plan Reference: `plans/active/vectorization.md`
 - Reproduction (C & PyTorch):
@@ -3393,11 +3393,10 @@
   * Optional microbenchmarks: `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --device cpu` (and `--device cuda`), plus `scripts/benchmarks/absorption_baseline.py` for detector absorption timing.
   * Shapes/ROI: 256² & 512² detectors for microbench; oversample 1; structure-factor grid enabling tricubic.
 - First Divergence (if known): Current tricubic path drops to nearest-neighbour fallback for batched pixel grids, emitting warnings and forfeiting accuracy/performance; detector absorption still loops over `thicksteps`, preventing full vectorization and creating hotspots in profiler traces (see reports/benchmarks/20250930-165726-compile-cache/analysis.md).
-- Next Actions (2025-12-22 Phase F2 complete):
-  1. ✅ Phase F2 — COMPLETE (Attempt #14). C-code reference added, tests parametrized for device + oversample_thick, CPU validation 100% passing.
-  2. Phase F3 (CPU benchmarks) — Can proceed: Run `scripts/benchmarks/absorption_baseline.py --sizes 256 512 --thicksteps 5 --repeats 200 --device cpu`, archive outputs beneath `phase_f/perf/<timestamp>/` with `perf_summary.md` + `perf_results.json`.
-  3. Phase F3 (CUDA benchmarks) — BLOCKED: Device placement issue discovered in Attempt #14 (affects 6/8 CUDA tests). Requires separate fix before CUDA benchmarks can run. Issue is NOT absorption-specific.
-  4. Phase F4 — After F3 complete: Summarise Phase F evidence in `phase_f/summary.md`, refresh this fix-plan entry with final Attempt details, run targeted nb-compare smoke if behaviour changed.
+- Next Actions (2025-12-22 Phase F3 CPU evidence logged):
+  1. Phase F4 — Consolidate Phase F validation + perf artifacts into `reports/2025-10-vectorization/phase_f/summary.md`, update plan row F4, and record Attempt #16 with the summary + doc references.
+  2. Phase F3 (CUDA benchmarks) — BLOCKED until the device-placement defect (docs/fix_plan.md Attempt #14) is resolved; track blocker status and re-run the benchmark + AT-ABS-001 CUDA tests once unblocked.
+  3. Phase G1/G2 prep — After F4, refresh `docs/development/pytorch_runtime_checklist.md` / `docs/architecture/pytorch_design.md` if vectorization guidance changed, then log closure Attempt marking [VECTOR-TRICUBIC-001] done.
 - Attempts History:
   * [2025-10-06] Attempt #1 (ralph loop) — Result: **Phase A1 COMPLETE** (test collection & execution baseline captured). All tricubic and absorption tests passing.
     Metrics: AT-STR-002: 3/3 tests passed in 2.12s (test_tricubic_interpolation_enabled, test_tricubic_out_of_bounds_fallback, test_auto_enable_interpolation). AT-ABS-001: 5/5 tests passed in 5.88s. Collection: 3 tricubic tests found.

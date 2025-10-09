@@ -1,100 +1,102 @@
-Summary: Gather Phase F3 CPU absorption benchmarks, refresh the perf evidence bundle, and align plan + ledger for VECTOR-TRICUBIC-001.
-Mode: Perf
+Summary: Publish a comprehensive Phase F summary that stitches together the absorption validation and CPU performance evidence so VECTOR-TRICUBIC-001 can advance beyond F4 without ambiguity.
+Mode: Docs
 Focus: docs/fix_plan.md §[VECTOR-TRICUBIC-001]
 Branch: feature/spec-based-2
-Mapped tests: CUDA_VISIBLE_DEVICES="" KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_abs_001.py
-Artifacts: reports/2025-10-vectorization/phase_f/perf/<timestamp>/commands.txt
-Artifacts: reports/2025-10-vectorization/phase_f/perf/<timestamp>/bench.log
-Artifacts: reports/2025-10-vectorization/phase_f/perf/<timestamp>/perf_results.json
-Artifacts: reports/2025-10-vectorization/phase_f/perf/<timestamp>/perf_summary.md
-Artifacts: reports/2025-10-vectorization/phase_f/perf/<timestamp>/env.json
-Artifacts: reports/2025-10-vectorization/phase_f/perf/<timestamp>/sha256.txt
-Artifacts: reports/2025-10-vectorization/phase_f/perf/<timestamp>/pytest_cpu.log
-Artifacts: plans/active/vectorization.md (Phase F3 row updated)
-Artifacts: docs/fix_plan.md (new Attempt entry for Phase F3 CPU evidence)
-Do Now: VECTOR-TRICUBIC-001 Phase F3 (CPU benchmarks) — execute `CUDA_VISIBLE_DEVICES="" PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/absorption_baseline.py --sizes 256 512 --thicksteps 5 --repeats 200 --device cpu`, archive logs under `reports/2025-10-vectorization/phase_f/perf/<timestamp>/`, validate tests on CPU, then document the metrics in plan + ledger.
-If Blocked: Record the failure details in `reports/2025-10-vectorization/phase_f/perf/<timestamp>/attempt_notes.md`, add a docs/fix_plan.md Attempt describing the blocker (with command output + stacktrace), and leave plan row F3 marked [ ] pending resolution.
+Mapped tests: pytest --collect-only -q
+Artifacts: reports/2025-10-vectorization/phase_f/summary.md
+Artifacts: reports/2025-10-vectorization/phase_f/commands.txt (append Phase F4 actions)
+Artifacts: reports/2025-10-vectorization/phase_f/pytest_collect_phase_f4.log
+Artifacts: plans/active/vectorization.md (Phase F4 row → [D])
+Artifacts: docs/fix_plan.md (Attempt #16 capturing Phase F4)
+Artifacts: reports/2025-10-vectorization/phase_f/perf/20251009T050859Z/perf_summary.md (referenced, not modified)
+Artifacts: reports/2025-10-vectorization/phase_f/validation/20251222T000000Z/summary.md (referenced, not modified)
+Context Reminders:
+- Phase F1–F3 evidence already landed; this loop only consolidates documentation.
+- CUDA benchmarks remain blocked; do not attempt GPU runs until device-placement fix exists.
+- Keep timestamps consistent with existing Phase F bundles (20251009, 20251222) to avoid fragmenting evidence.
+Do Now: VECTOR-TRICUBIC-001 Phase F4 summary consolidation — run `pytest --collect-only -q` after drafting `reports/2025-10-vectorization/phase_f/summary.md`, appending to `commands.txt`, and syncing plan + ledger updates.
+If Blocked: Capture blocker details in `reports/2025-10-vectorization/phase_f/summary_blockers.md` with command transcripts, document the stall in docs/fix_plan.md Attempts, keep plan row F4 marked [ ], and notify supervisor in the Attempt narrative.
 Priorities & Rationale:
-- plans/active/vectorization.md:78-81 — shows F2 [D] with validation artifacts and F3 still open; next gate is CPU perf evidence.
-- docs/fix_plan.md:3396-3399 — requires running the CPU benchmark with 200 repeats and logging metrics before any CUDA retry.
-- reports/2025-10-vectorization/phase_f/validation/20251222T000000Z/summary.md — captures functional validation; perf bundle must cite this to show parity before perf tuning.
-- docs/development/testing_strategy.md#1.4 — mandates CPU proof when CUDA is deferred, ensuring device neutrality is still documented.
-- docs/development/pytorch_runtime_checklist.md — checklist to reference in fix_plan Attempt when summarising vectorization/device compliance.
-- scripts/benchmarks/absorption_baseline.py — authoritative harness; using anything else would violate plan instructions.
-- reports/2025-10-vectorization/phase_a/absorption_baseline_results.json — baseline numbers required for meaningful regression comparison.
-- docs/bugs/verified_c_bugs.md:166-204 — background on C-PARITY-001 reminding us why spec-compliant rotations remain essential when discussing perf deltas.
+- plans/active/vectorization.md:72 — F4 remains the lone open Phase F task; summary deliverable is the gate for moving to Phase G.
+  Confirm the row flips to [D] and references Attempt #16 after this loop.
+- docs/fix_plan.md:3385 — Next Actions now foreground F4 consolidation and require explicit reference to the CUDA perf blocker.
+  Keep the blocker paragraph verbatim so downstream loops know the exact condition to rerun CUDA.
+- reports/2025-10-vectorization/phase_f/perf/20251009T050859Z/perf_summary.md — Canonical CPU metrics (13.80 Mpx/s @ 256², 18.89 Mpx/s @ 512²) that must be quoted.
+  Preserve the 0.0% deltas; they prove no regression occurred.
+- reports/2025-10-vectorization/phase_f/perf/20251009T050859Z/perf_results.json — Raw data backing the summary tables (200 repeats per size).
+  Pull variance/stddev numbers directly rather than rounding them away.
+- reports/2025-10-vectorization/phase_f/validation/20251222T000000Z/summary.md — Source for the Phase F2 functional proof that needs to be cited verbatim.
+  Reference the specific tests (8/8) and oversample toggles when summarising.
+- reports/2025-10-vectorization/phase_f/validation/20251222T000000Z/env.json — Environment metadata to replicate in the combined summary.
+  Mention masked CUDA + CPU device to show device neutrality.
+- docs/development/testing_strategy.md#1.4 — Device/dtype discipline that the summary must affirm (CPU evidence complete, CUDA pending blocker).
+  The summary should explicitly state CUDA rerun is blocked, aligning with §1.4 expectations.
+- docs/development/testing_strategy.md#1.5 — Requires collect-only proof for documentation loops; hence the mapped test.
+  Include the collect log path so reviewers know the proof exists.
+- docs/development/pytorch_runtime_checklist.md — Checklist items should be ticked in the summary to show compliance.
+  Cite the checklist to demonstrate vectorization guardrails were observed.
+- docs/architecture/pytorch_design.md:70-150 — Background on vectorization expectations; cite if explaining why no perf regression occurred.
+  Pull phrasing when describing why vectorisation kept throughput flat.
+- docs/index.md — Reminder that Protected Assets must stay untouched when editing docs; ensure compliance is restated if necessary.
 How-To Map:
-- Step 1: Define `$STAMP=$(date -u +%Y%m%dT%H%M%SZ)` so directories align with existing evidence conventions.
-- Step 2: Create the destination with `mkdir -p reports/2025-10-vectorization/phase_f/perf/$STAMP` to avoid polluting older bundles.
-- Step 3: Set `export PERF_DIR=reports/2025-10-vectorization/phase_f/perf/$STAMP` for reuse across commands.
-- Step 4: Append to `$PERF_DIR/commands.txt` the git commit (`git rev-parse HEAD`), branch (`git rev-parse --abbrev-ref HEAD`), and the benchmark command you plan to run.
-- Step 5: Capture current status with `git status -sb >> $PERF_DIR/commands.txt` so reviewers see the working tree was clean before evidence collection.
-- Step 6: Run the benchmark: `CUDA_VISIBLE_DEVICES="" PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/absorption_baseline.py --sizes 256 512 --thicksteps 5 --repeats 200 --device cpu > $PERF_DIR/bench.log 2>&1`.
-- Step 7: Append the executed command to `$PERF_DIR/commands.txt` immediately after running it to preserve order.
-- Step 8: Generate a SHA checksum with `sha256sum $PERF_DIR/bench.log > $PERF_DIR/sha256.txt` and record the filename + hash inside commands.txt as well.
-- Step 9: If the benchmark writes JSON, move or copy it into `$PERF_DIR/perf_results.json`; otherwise, parse `bench.log` via `python scripts/benchmarks/parse_absorption_benchmark.py` (if available) or a small inline script to emit JSON.
-- Step 10: Compute deltas vs Phase A3 baseline: compare px/s for 256² and 512² detectors against `reports/2025-10-vectorization/phase_a/absorption_baseline_results.json` and `phase_a/absorption_baseline.md`.
-- Step 11: Summaries should include per-size mean runtime, standard deviation, throughput, and percentage delta; write these into `$PERF_DIR/perf_summary.md` with a short narrative referencing both baselines and the validation bundle.
-- Step 12: Document environment details with `python - <<'PY'` to dump platform info, Python version, torch version, CUDA availability, and MKL/OpenMP info into `$PERF_DIR/env.json`.
-- Step 13: After benchmarking, run `CUDA_VISIBLE_DEVICES="" KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_abs_001.py > $PERF_DIR/pytest_cpu.log 2>&1` to confirm the validation tests still pass on CPU.
-- Step 14: Append the pytest command and exit code to `$PERF_DIR/commands.txt`, noting that CUDA runs remain deferred per Next Actions.
-- Step 15: Run `pytest --collect-only -q > $PERF_DIR/pytest_collect.log 2>&1` and capture the command in commands.txt to satisfy the docs/testing_strategy requirement.
-- Step 16: Update `$PERF_DIR/perf_summary.md` with bullet points summarising benchmark results, pytest outcome, and the outstanding CUDA blocker reference (mention docs/fix_plan.md:3399).
-- Step 17: Edit `plans/active/vectorization.md` row F3 to set `[D]` once satisfied, referencing `$STAMP` and quoting throughput numbers; keep F4 [ ] with guidance untouched.
-- Step 18: Add a new Attempt entry in docs/fix_plan.md under VECTOR-TRICUBIC-001 capturing command(s), metrics, artifact paths, checklist references, and the note that CUDA benchmarks stay blocked by the device-placement defect.
-- Step 19: Inside the Attempt summary, cite the runtime checklist and testing strategy sections you consulted so future reviewers see compliance.
-- Step 20: Link the new perf bundle from the Attempt (commands file + summary + env + logs) and reference the validation bundle (20251222) for context.
-- Step 21: Mention in docs/fix_plan.md whether px/s improved, regressed, or matched baseline, including numeric comparisons (≤1.05× regression threshold per plan).
-- Step 22: Once ledger updates are staged, ensure `plans/active/vectorization.md` and docs/fix_plan.md both reflect the same status for F3 and reference identical artifact paths.
-- Step 23: Before finishing, run `git status -sb >> $PERF_DIR/commands.txt` again so the artifact logs a clean working tree after documentation.
-- Step 24: Prepare for commit (handled by supervisor) by leaving all changes staged but uncommitted; document in Attempt if any file remains intentionally unmodified due to blockers.
-- Step 25: Compare the new perf_results.json against historical data in `reports/2025-10-vectorization/phase_e/perf/20251009T034421Z/perf_results.json` to note any long-term drift trends.
-- Step 26: Note in perf_summary.md whether cache warm-up time differs from Phase A3, and, if so, hypothesise if compile caching or new torch version explains it.
-- Step 27: Create `$PERF_DIR/attempt_notes.md` summarising observations that do not belong in the public ledger (e.g., ideas for future optimisations) so the supervisor has raw notes for Phase F4.
-- Step 28: After all artifacts are written, run `find $PERF_DIR -maxdepth 1 -type f -print | sort >> $PERF_DIR/commands.txt` to log final file inventory.
-- Step 29: Cross-check that every file listed in commands.txt exists; run `python - <<'PY'` to assert `len(list(Path('$PERF_DIR').glob('*'))) >= 7` and capture output in commands.txt for traceability.
-- Step 30: Record wall-clock runtime for the benchmark using `/usr/bin/time -p` (repeat the command prefixed with the timer) and append the timing block to perf_summary.md to contextualise throughput numbers.
-- Step 31: Note in docs/fix_plan.md Attempt whether the benchmark triggered any warnings (search `grep -i warning $PERF_DIR/bench.log`); include the grep command in commands.txt even if no warnings found.
-- Step 32: Before wrapping, verify no `.npy` or other binary artifacts leaked into `$PERF_DIR`; list directories with `ls -Al $PERF_DIR >> $PERF_DIR/commands.txt` and confirm only text files are present.
-- Step 33: When updating docs/fix_plan.md, include a short quote from perf_summary.md to tie the ledger narrative back to the artifact bundle verbatim.
-- Step 34: After plan + ledger edits, run `rg -n "$STAMP" plans/active/vectorization.md docs/fix_plan.md` to ensure both references match the new timestamp.
-- Step 35: Stage changes with `git add plans/active/vectorization.md docs/fix_plan.md input.md` once satisfied, but avoid committing; we will handle the commit in the supervisor loop.
-- Step 36: Add a reminder in `$PERF_DIR/commands.txt` noting whether Gradcheck Tier-2 work depends on these perf numbers (just state "no" if unrelated) to aid future cross-initiative reviews.
+- Step 1: Re-read Phase F2 validation summary and environment files to extract the exact test cases, devices, and results that need to be referenced.
+  Highlight oversample toggles, tilted detector cases, and CPU-only execution in your notes.
+- Step 2: Review Phase F3 perf bundle (`perf_summary.md`, `perf_results.json`, `commands.txt`, `env.json`) and note throughput, variance, and regression thresholds for both detector sizes.
+  Capture both cold and warm timings; they belong in the summary tables.
+- Step 3: Inspect existing `reports/2025-10-vectorization/phase_f/summary.md` (if present); if absent, create it with front-matter covering initiative, timestamp, and commit SHA.
+- Step 4: Draft the summary with sections for Context, Validation Recap, Performance Recap, Runtime Checklist Compliance, CUDA Blocker Status, and Next Steps so reviewers can skim by topic.
+- Step 5: Embed markdown tables comparing Phase F2 validation outcomes and Phase F3 performance metrics against their respective baselines; cite the exact artifact paths in footnotes for reproducibility.
+- Step 6: In the validation section, list the eight AT-ABS-001 tests by name and result so the reader can see coverage breadth.
+- Step 7: In the performance section, include both throughput (Mpx/s) and mean warm runtime, plus standard deviation to reinforce stability.
+- Step 8: Explicitly reference docs/development/pytorch_runtime_checklist.md and highlight which guardrails were satisfied during F2/F3 work.
+- Step 9: Add a “Blockers & Follow-ups” section that re-states the CUDA device-placement issue (docs/fix_plan.md Attempt #14) and prescribes the trigger for rerunning GPU benchmarks.
+- Step 10: Append a “Commands & Evidence” section listing the commands executed historically (from the existing bundles) plus the new collect-only proof so evidence trails remain intact.
+- Step 11: Update `reports/2025-10-vectorization/phase_f/commands.txt` by appending git SHA, date, a note about the summary doc, and the exact `pytest --collect-only -q` command (ensure chronological order preserved).
+- Step 12: Run `pytest --collect-only -q > reports/2025-10-vectorization/phase_f/pytest_collect_phase_f4.log 2>&1` to provide discoverability proof; mention the log in the summary and Attempt.
+- Step 13: Add a short paragraph in the summary that references docs/development/testing_strategy.md#1.4-1.5 to frame why CPU-only evidence suffices today.
+- Step 14: Once the summary is finalized, flip plan row F4 to [D] with a note referencing the summary file and Attempt #16; ensure Status Snapshot remains accurate.
+- Step 15: Add Attempt #16 under docs/fix_plan.md summarizing the summary content, key metrics, commands log, collect-only output, and reiterating the CUDA blocker status (include links to both bundles).
+- Step 16: Re-read `docs/fix_plan.md` Next Actions to verify they now point at CUDA rerun + Phase G tasks after your edits and that no stale guidance remains.
+- Step 17: Double-check `git status -sb` to ensure only expected documentation files changed prior to handing off.
 Pitfalls To Avoid:
-- Avoid running the benchmark without `CUDA_VISIBLE_DEVICES=""`; otherwise the script may attempt CUDA, hitting the known blocker.
-- Do not touch the benchmark source or simulator implementation; evidence-only work should leave src/ untouched.
-- Keep outputs text-based; do not gzip logs or embed binary plots inside perf_summary.md.
-- Do not overwrite or delete `reports/2025-10-vectorization/phase_f/validation/20251222T000000Z/*`; cross-reference instead.
-- Ensure env.json captures torch + CUDA versions; skipping this impedes reproducibility.
-- Do not forget to mention the runtime checklist in docs/fix_plan.md Attempt; missing this violates the guardrail documentation rule.
-- Avoid editing unrelated plan entries; restrict changes to F3/F4 so earlier phases remain traceable.
-- Do not promote CUDA benchmarks in this loop; explicitly mark them deferred to avoid confusion with unresolved blockers.
-- Remember Protected Assets: leave docs/index.md, loop.sh, supervisor.sh untouched.
-- When parsing benchmark output, avoid floating-point rounding until after delta calculations to preserve precision in perf_results.json.
-- Skip manual timing on a warm laptop battery; plug in AC power to avoid frequency scaling skewing throughput measurements.
-- Refrain from running concurrent heavy workloads during benchmarks; close other GPU/CPU-intensive processes first.
-- Do not assume the benchmark script wrote JSON; check for the file before referencing it in docs/fix_plan.md.
-- Avoid editing `$PERF_DIR/commands.txt` retroactively; append new information instead of rewriting history.
-- Double-check timezone usage (UTC) so timestamps in directories and perf_summary.md match expectations.
+- Forgetting to cross-link both Phase F2 and Phase F3 bundles inside the new summary.
+  Each section should cite the exact timestamped directory.
+- Dropping the explicit mention of the CUDA benchmark blocker and its trigger for resolution.
+  Without it, future loops may re-run CUDA prematurely.
+- Skipping updates to `commands.txt`, which would break the evidence chain for Phase F.
+  Commands log is mandatory for every evidence bundle.
+- Rewriting or removing existing validation/perf artifacts; this loop should add references only.
+  Preserve historical files untouched.
+- Omitting the collect-only log, leading to a testing strategy violation.
+  The log proves selectors still import; keep it in reports/.
+- Leaving plan row F4 or docs/fix_plan Next Actions in an inconsistent state after documenting progress.
+  Double-check both files before committing.
+- Editing production code paths or tests; stay in documentation/plan files only.
+  Performance code changes belong to separate loops.
+- Neglecting to cite the PyTorch runtime checklist compliance in the summary narrative.
+  Explicitly state which bullets were satisfied.
+- Forgetting Protected Assets from docs/index.md when modifying documentation files.
+  Do not rename/delete files listed there.
+- Misstating metrics (e.g., rounding away the 0.0% delta that underpins the “no regression” claim).
+  Quote to at least two decimal places.
+- Allowing the summary to imply CUDA perf is complete when it remains blocked.
+  Make the blocker section prominent.
+- Losing track of timestamp conventions; all paths should stay under the existing 20251009 / 20251222 bundles.
+  New artifacts (like collect log) should match the Phase F root directory.
 Pointers:
-- plans/active/vectorization.md:78-81 — authoritative checklist for Phase F tasks (F1–F4) with status snapshot.
-- docs/fix_plan.md:3396-3400 — Next Actions enumerating CPU benchmark requirement and CUDA deferral.
-- reports/2025-10-vectorization/phase_f/validation/20251222T000000Z/summary.md — validation evidence to cite alongside performance data.
-- reports/2025-10-vectorization/phase_a/absorption_baseline_results.json — baseline metrics for delta comparisons.
-- scripts/benchmarks/absorption_baseline.py — benchmark entrypoint you must use.
-- docs/development/testing_strategy.md#1.4 — device/dtype neutrality rule requiring documentation of CPU-only execution.
-- docs/development/pytorch_runtime_checklist.md — vectorization + device guardrail reference for ledger entry.
-- docs/index.md — Protected Assets list (read-only reminder before editing documentation).
-- CLAUDE.md — compliance guardrails (especially `.item()` avoidance and vectorization mandates) worth citing if you open a follow-up issue.
-- reports/2025-10-vectorization/phase_a/absorption_baseline.md — narrative baseline description to quote when comparing perf_summary results.
-- reports/2025-10-vectorization/phase_e/perf/20251009T034421Z/perf_summary.md — previous post-vectorization perf snapshot to include in comparison tables.
-- PROMPTS: `prompts/perf_benchmark_sop.md` (if present) — cross-check for formatting expectations before finalising perf_summary.md.
-- git log -- docs/fix_plan.md history around Attempt #12 — optional reference to keep narrative consistent with earlier perf updates.
-- plans/active/perf-pytorch-compile-refactor/plan.md — sanity-check compile cache expectations if the new throughput deviates significantly.
-- reports/2025-10-vectorization/phase_f/design_notes.md — revisit Section 8 for gradient + device validation context cited in Attempt #14.
-- docs/development/implementation_plan.md — confirm downstream milestones that depend on detector absorption performance before closing VECTOR-TRICUBIC-001.
-Next Up: 1) After CPU metrics land, draft Phase F4 `phase_f/summary.md` consolidating validation + perf logs and update docs/fix_plan.md accordingly.
-Next Up: 2) Track the CUDA device-placement fix so the deferred benchmark can be scheduled immediately once the blocker clears.
-Next Up: 3) Revisit gradcheck-tier2-completion plan once perf evidence is logged to ensure detector gradients remain unaffected by absorption throughput changes.
-Next Up: 4) If throughput regresses beyond 5%, open an investigation stub in docs/fix_plan.md linking to perf results and flag it for the PERF-PYTORCH-004 initiative.
-Next Up: 5) Queue a supervisor review of benchmark harness options (scripts/benchmarks/*.py) to standardise logging before broader performance sweeps resume.
+- plans/active/vectorization.md:1-120 — Phase overview + F4 row context.
+- docs/fix_plan.md:3385-3470 — Fix-plan ledger entry and attempts list.
+- reports/2025-10-vectorization/phase_f/validation/20251222T000000Z/summary.md — Functional evidence bundle.
+- reports/2025-10-vectorization/phase_f/validation/20251222T000000Z/env.json — Validation environment snapshot.
+- reports/2025-10-vectorization/phase_f/validation/20251222T000000Z/commands.txt — Validation command provenance.
+- reports/2025-10-vectorization/phase_f/perf/20251009T050859Z/perf_summary.md — Performance narrative.
+- reports/2025-10-vectorization/phase_f/perf/20251009T050859Z/perf_results.json — Performance raw metrics.
+- reports/2025-10-vectorization/phase_f/perf/20251009T050859Z/commands.txt — Benchmark command provenance.
+- docs/development/testing_strategy.md#1.4 — Device/dtype discipline reference.
+- docs/development/testing_strategy.md#1.5 — Collect-only requirement.
+- docs/development/pytorch_runtime_checklist.md — Guardrail checklist for summary compliance.
+- docs/architecture/pytorch_design.md:70-150 — Vectorization strategy background if citations needed.
+- docs/index.md — Protected Assets list to respect during documentation edits.
+Next Up:
+- 1) Once the CUDA device-placement blocker is resolved, rerun Phase F3 benchmarks on GPU, capture a new `reports/2025-10-vectorization/phase_f/perf/<timestamp>/` bundle, and update ledger + plan accordingly.
+- 2) After the summary lands, begin Phase G documentation updates (runtime checklist, architecture notes) and log closure Attempt marking VECTOR-TRICUBIC-001 complete.
