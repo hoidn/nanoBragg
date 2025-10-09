@@ -1614,3 +1614,7 @@
 - Updated `plans/active/source-weight-normalization.md` status snapshot to mark Phase E2a [D] and refocused Phase E on diagnosing scaling/polarization gaps before rerunning parity.
 - Refreshed `docs/fix_plan.md` Next Actions for `[SOURCE-WEIGHT-001]` to require a per-source trace (source index 2) and a design note for zero-weight placeholder parity prior to code edits.
 - Next loop for Ralph: capture the source-index trace bundle + design rationale, then revisit simulator normalization once evidence narrows the 1.5e8 vs 1.0e5 divergence.
+### 2025-12-24 (galph loop - SOURCE-WEIGHT per-source trace directive)
+- Added bullet 7 to `[SOURCE-WEIGHT-001]` Next Actions (docs/fix_plan.md:4049) to require PyTorch trace instrumentation that logs per-source F_cell/F_latt/polarization before further simulator edits.
+- Replaced `input.md` with a parity-mode handoff directing Ralph to extend `_apply_debug_output` for `TRACE_PY_SOURCE` blocks, rerun TC-D1 with `-trace_pixel 158 147`, and capture aligned C/Py traces under `reports/2025-11-source-weights/phase_e/<STAMP>/trace_per_source/`.
+- Follow-up for Ralph: implement the new trace logging, run the mapped collect-only selector plus TC-D1 trace commands, diff against `TRACE_C_SOURCE2`, and record the new STAMP + observations in `[SOURCE-WEIGHT-001]` Attempts.
