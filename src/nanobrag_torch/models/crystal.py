@@ -1193,13 +1193,87 @@ class Crystal:
 
         # Apply mosaic rotations to both real and reciprocal vectors
         # Broadcast phi and mosaic dimensions: (N_phi, 1, 3) x (1, N_mos, 3, 3) -> (N_phi, N_mos, 3)
-        a_final = rotate_umat(a_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
-        b_final = rotate_umat(b_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
-        c_final = rotate_umat(c_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
+        a_phi_mos = rotate_umat(a_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
+        b_phi_mos = rotate_umat(b_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
+        c_phi_mos = rotate_umat(c_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
 
-        a_star_final = rotate_umat(a_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
-        b_star_final = rotate_umat(b_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
-        c_star_final = rotate_umat(c_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
+        a_star_phi_mos = rotate_umat(a_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
+        b_star_phi_mos = rotate_umat(b_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
+        c_star_phi_mos = rotate_umat(c_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
+
+        # Phase M5c (CLI-FLAGS-003): Reciprocal vector recomputation per C code
+        # The C code recalculates reciprocal vectors FROM rotated real vectors
+        # when phi != 0.0 OR mos_tic > 0
+        #
+        # C-Code Implementation Reference (from nanoBragg.c, lines 3198-3210):
+        # ```c
+        # if(integral_form)
+        # {
+        #     if(phi != 0.0 || mos_tic > 0)
+        #     {
+        #         /* need to re-calculate reciprocal matrix */
+        #         cross_product(a,b,a_cross_b);
+        #         cross_product(b,c,b_cross_c);
+        #         cross_product(c,a,c_cross_a);
+        #
+        #         /* new reciprocal-space cell vectors */
+        #         vector_scale(b_cross_c,a_star,1e20/V_cell);
+        #         vector_scale(c_cross_a,b_star,1e20/V_cell);
+        #         vector_scale(a_cross_b,c_star,1e20/V_cell);
+        #     }
+        # }
+        # ```
+        #
+        # At φ=0 with mos_tic=0, the C code uses the base reciprocal vectors without
+        # recalculation. This preserves the exact base vector values at identity rotation.
+        #
+        # Design Reference: Phase M5b rotation_fix_design.md §3
+        #
+        # CRITICAL: The C code KEEPS the rotated real vectors (a,b,c) unchanged and only
+        # recalculates the reciprocal vectors from them. It does NOT rebuild real vectors
+        # from reciprocals. The 1e20 factor in C compensates for meter→Angstrom conversion
+        # (C uses meters for real vectors, Angstroms³ for V_cell); PyTorch uses Angstroms
+        # throughout, so we use V_cell_static directly.
+
+        # Real vectors remain unchanged - use the rotated values
+        a_final = a_phi_mos
+        b_final = b_phi_mos
+        c_final = c_phi_mos
+
+        # Initialize reciprocal vectors with rotated values (overwritten for non-identity cases)
+        a_star_final = a_star_phi_mos
+        b_star_final = b_star_phi_mos
+        c_star_final = c_star_phi_mos
+
+        # Create a mask for cases where we need reciprocal recalculation
+        # Condition: NOT (phi==0 AND mosaic_domain==0)
+        # Shape: (N_phi, N_mos)
+        phi_nonzero = phi_rad.unsqueeze(1) != 0.0  # (N_phi, 1) broadcast to (N_phi, N_mos)
+        mos_nonzero = torch.arange(config.mosaic_domains, device=self.device).unsqueeze(0) != 0  # (1, N_mos) broadcast to (N_phi, N_mos)
+        needs_recalc = phi_nonzero | mos_nonzero  # (N_phi, N_mos)
+
+        # Recalculate reciprocal vectors from rotated real vectors where needed
+        if torch.any(needs_recalc):
+            # Compute cross products of rotated real vectors
+            a_cross_b = torch.cross(a_phi_mos, b_phi_mos, dim=-1)
+            b_cross_c = torch.cross(b_phi_mos, c_phi_mos, dim=-1)
+            c_cross_a = torch.cross(c_phi_mos, a_phi_mos, dim=-1)
+
+            # Recompute reciprocal vectors using static V_cell
+            # a* = (b × c) / V_cell (matching C: vector_scale(b_cross_c, a_star, 1/V_cell))
+            # Shape: (N_phi, N_mos, 3)
+            V_star = 1.0 / V_cell_static  # V_star = 1 / V_cell
+
+            a_star_recalc = b_cross_c * V_star
+            b_star_recalc = c_cross_a * V_star
+            c_star_recalc = a_cross_b * V_star
+
+            # Apply recalculated reciprocal vectors only where needed (using mask)
+            needs_recalc_expanded = needs_recalc.unsqueeze(-1)  # (N_phi, N_mos, 1)
+
+            a_star_final = torch.where(needs_recalc_expanded, a_star_recalc, a_star_phi_mos)
+            b_star_final = torch.where(needs_recalc_expanded, b_star_recalc, b_star_phi_mos)
+            c_star_final = torch.where(needs_recalc_expanded, c_star_recalc, c_star_phi_mos)
 
         # Phase M2g: C-PARITY-001 bug emulation now handled via pixel-indexed cache
         # Carryover application happens in Simulator._compute_physics_for_position
