@@ -3953,8 +3953,8 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 ## [SOURCE-WEIGHT-001] Correct weighted source normalization
 - Spec/AT: `specs/spec-a-core.md` §5 (Source intensity), `docs/architecture/pytorch_design.md` §2.3, `docs/development/c_to_pytorch_config_map.md` (flux/fluence), nanoBragg.c lines 2480-2595 (source weighting loop).
 - Priority: Medium
-- Status: in_progress (Phase A evidence captured; Phase B normalization design pending)
-- Owner/Date: galph/2025-11-17 (updated 2025-12-22)
+- Status: in_progress (Phase A evidence captured; Phase B design complete; Phase C implementation pending)
+- Owner/Date: galph/2025-11-17 (updated 2025-10-09)
 - Plan Reference: `plans/active/source-weight-normalization.md`
 - Reproduction (C & PyTorch):
   * C: `"$NB_C_BIN" -mat A.mat -floatfile c_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources.txt -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -nonoise -nointerpolate`.
@@ -3992,6 +3992,27 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       2. **Phase B (B2)**: Document expected normalization flow: `I_final = (sum_over_sources(weight_i × I_i)) / sum(weights)` NOT `/ n_sources`
       3. **Phase B (B3)**: Verify C code behavior at nanoBragg.c:2480-2595 to confirm it uses sum(weights) for normalization
       4. **Phase C**: Implement fix and add regression test ensuring equal-weight case (all 1.0) remains unchanged
+  * [2025-10-09] Attempt #2 — Phase B design & strategy (ralph). Result: **Phase B1–B3 COMPLETE** (documentation-only loop per input.md).
+    Metrics: Test collection passed (`pytest --collect-only -q` succeeded with 677 tests discovered). No code changes; docs-only validation per input.md instructions.
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_b/20251009T072937Z/normalization_flow.md` — Step-by-step trace of scaling path from simulator.py:557-1137 with line anchors; identified single-line fix location (line 868: `source_norm = n_sources` → `source_norm = source_weights.sum().item() if source_weights is not None else n_sources`)
+      - `reports/2025-11-source-weights/phase_b/20251009T072937Z/strategy.md` — Implementation decision (divide by sum(weights)), rationale (physical correctness, backward compatibility), edge-case handling (zero-sum/negative weights validation), and rejected alternatives (pre-normalization)
+      - `reports/2025-11-source-weights/phase_b/20251009T072937Z/tests.md` — Regression coverage plan with 5 test cases (TC-A through TC-E): non-uniform weights parity (primary), uniform weights backward compat, single-source unchanged, edge-case validation, device neutrality (CPU/CUDA). Tolerance tiers: CPU corr≥0.9999, CUDA corr≥0.999
+      - `reports/2025-11-source-weights/phase_b/20251009T072937Z/summary.md` — Phase B conclusions, blocking questions resolved (no coupling with polarization P3.0b, no other n_sources dependencies found), outstanding uncertainty on 327.9× vs expected 1.67× discrepancy (Phase D validation will clarify if additional factors compound error)
+      - `reports/2025-11-source-weights/phase_b/20251009T072937Z/env.json` — Environment metadata (Python 3.13.5, PyTorch 2.7.1+cu126, git head aafe27f, NB_C_BIN path)
+      - `reports/2025-11-source-weights/phase_b/20251009T072937Z/pytest_collect.log` — Full pytest collection output (689 lines, 677 tests)
+      - `reports/2025-11-source-weights/phase_b/20251009T072937Z/commands.txt` — Timestamped command log for reproduction
+    Observations/Hypotheses:
+      - **Root cause confirmed**: simulator.py line 868 sets `source_norm = n_sources` instead of `sum(source_weights)`, causing incorrect normalization divisor in line 1134 final scaling
+      - **Fix isolation**: Single-line change required; no ripple effects to other modules. Source weights are correctly applied during accumulation (compute_physics_for_position:413), so only normalization needs correction
+      - **Polarization independence**: PERF-PYTORCH-004 P3.0b moved polarization inside compute_physics_for_position (applied per-source before weighting). No coupling with normalization fix
+      - **Device neutrality preserved**: source_weights already on correct device/dtype (moved during __init__:559). `.sum()` operation inherits device, `.item()` extracts Python scalar (device-agnostic)
+      - **Backward compatibility guaranteed**: For uniform weights ([1,1,1]), `sum(weights)=3=n_sources`, so behavior is mathematically identical
+      - **327.9× vs 1.67× puzzle**: Phase A shows 327.9× discrepancy but normalization fix alone should cause only 1.67× difference (2.0/1.2) for weights [1.0, 0.2]. Suggests additional scaling factors (fluence, r_e_sqr, capture_fraction) may compound error; Phase D parity testing will reveal if other fixes needed
+    Next Actions:
+      1. **Phase C implementation**: Modify simulator.py:868, add BeamConfig validation (zero-sum/negative weights), implement test suite (tests/test_at_src_001.py, tests/test_config.py::TestBeamConfigValidation)
+      2. **Phase D validation**: Run TC-A (parity with C), TC-B/C (backward compat), TC-D (validation), TC-E (device neutrality). Capture metrics under `reports/.../phase_d/tests/`
+      3. **Unblock dependencies**: Once TC-A parity passes, mark [VECTOR-GAPS-002] ready to resume vectorization-gap profiling, and unblock PERF-PYTORCH-004 P3.0c completion
 - Risks/Assumptions: Maintain equal-weight behaviour, ensure device/dtype neutrality, and avoid double application of weights when accumulating source contributions.
 
 ---

@@ -1,0 +1,10 @@
+2025-10-09T07:29:37Z begin_phase_b reports/2025-11-source-weights/phase_b/20251009T072937Z
+2025-10-09T07:29:40Z pytest_collect
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q
+2025-10-09T07:29:50Z create_env_json
+KMP_DUPLICATE_LIB_OK=TRUE python3 -c "import json,os,platform,torch,pathlib,subprocess; ..."
+2025-10-09T07:30:00Z write_normalization_flow_md
+2025-10-09T07:32:00Z write_strategy_md
+2025-10-09T07:34:00Z write_tests_md
+2025-10-09T07:35:00Z write_summary_md
+2025-10-09T07:35:30Z end_phase_b

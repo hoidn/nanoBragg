@@ -23,9 +23,9 @@ Exit Criteria: Written strategy covering code changes, edge cases, and tests.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Trace normalization math | [ ] | Document the current multiplication/division path (steps, fluence, capture_fraction) and identify where weight sum should enter. Capture the annotated flow in `reports/2025-11-source-weights/phase_b/<STAMP>/normalization_flow.md` with line references (simulator.py, utils). |
-| B2 | Define update approach | [ ] | Decide between scaling by `source_weights.sum()` or pre-normalizing weights; record the decision + rationale in `phase_b/<STAMP>/strategy.md`. Note any dependencies on polarization code (PERF-PYTORCH-004 P3.0b). |
-| B3 | Plan regression coverage | [ ] | Specify pytest additions (e.g., new case in `tests/test_cli_scaling.py`) and acceptable tolerances. Enumerate targeted commands in `phase_b/<STAMP>/tests.md` (CPU/CUDA selectors, expected tolerances). |
+| B1 | Trace normalization math | [D] | DONE 2025-10-09T07:35:30Z. `reports/2025-11-source-weights/phase_b/20251009T072937Z/normalization_flow.md` — Traced simulator.py:557-1137 scaling path; identified fix location (line 868). |
+| B2 | Define update approach | [D] | DONE 2025-10-09T07:35:30Z. `reports/2025-11-source-weights/phase_b/20251009T072937Z/strategy.md` — Decision: divide by sum(source_weights). No coupling with polarization (P3.0b). |
+| B3 | Plan regression coverage | [D] | DONE 2025-10-09T07:35:30Z. `reports/2025-11-source-weights/phase_b/20251009T072937Z/tests.md` — 5 test cases defined (TC-A through TC-E), tolerance tiers specified (CPU/CUDA). |
 
 ## Phase C — Implementation
 Goal: Implement corrected weighting with minimal churn and full docstring references.
