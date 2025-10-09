@@ -1350,3 +1350,10 @@
 - Updated `docs/fix_plan.md` Attempt #2 under ROUTING-SUPERVISOR-001 with artifact path and observations; Phase A evidence now logged.
 - Authored `input.md` (Docs mode) directing Ralph to deliver Phase B1 design memo, update plan/fix_plan, and run `pytest --collect-only -q` after documentation.
 - Focus remains on supervisor guard plan; no code changes made this loop.
+
+## 2025-12-22 (galph loop - Static pyrefly Phase C prep)
+- Re-ran pyrefly availability checks (`rg` for `[tool.pyrefly]`, `pyrefly --version`); logged commands in new staging bundle `reports/pyrefly/20251009T044937Z/commands.txt`.
+- Refreshed `plans/active/static-pyrefly.md`: Phase A/B rows marked [D], added Status Snapshot noting 20251008 baseline + new staging directory, clarified Phase C deliverables.
+- Added Attempt #3 under `docs/fix_plan.md` STATIC-PYREFLY-001 summarising plan refresh and pointing at the 20251009 staging bundle.
+- Authored `input.md` (Docs mode) directing Ralph to execute Phase C triage, populate severity/owner table in `reports/pyrefly/20251009T044937Z/summary.md`, validate selectors with `pytest --collect-only -q`, and update ledger/plan rows accordingly.
+- Next Ralph step: complete Phase C triage using existing 20251008 pyrefly log, record severity buckets + owner selectors in 20251009 summary, update fix_plan & plan checklist, then run the collect-only proof.
