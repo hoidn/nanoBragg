@@ -1,105 +1,101 @@
-Summary: Record the Phase M6 skip decision and prepare Phase N parity work with new ROI artifacts.
+Summary: Generate fresh C/PyTorch float images for the supervisor ROI so Phase N nb-compare can proceed with Option 1 spec mode.
 Mode: Parity
-Focus: CLI-FLAGS-003 / Phase M6 decision & Phase N1 ROI preparation
+Focus: CLI-FLAGS-003 / Phase N1 ROI regeneration
 Branch: feature/spec-based-2
 Mapped tests:
-- tests/test_cli_scaling_phi0.py
-- tests/test_cli_scaling_phi0.py::TestCLIScalingPhi0::test_rot_b_matches_c
-- tests/test_cli_scaling_phi0.py::TestCLIScalingPhi0::test_k_frac_phi0_matches_c
-- pytest --collect-only -q tests/test_cli_scaling_phi0.py (fallback log if run fails)
+- pytest -v tests/test_cli_scaling_phi0.py
+- pytest -v tests/test_cli_scaling_phi0.py::TestCLIScalingPhi0::test_rot_b_matches_c
+- pytest -v tests/test_cli_scaling_phi0.py::TestCLIScalingPhi0::test_k_frac_phi0_matches_c
+- pytest --collect-only -q tests/test_cli_scaling_phi0.py
+Mapped tests (CUDA follow-up when available):
+- pytest -v tests/test_cli_scaling_phi0.py --device cuda --maxfail=1
 Artifacts:
-- reports/2025-10-cli-flags/phase_l/nb_compare/<timestamp>/inputs/
-- reports/2025-10-cli-flags/phase_l/nb_compare/<timestamp>/results/
-- reports/2025-10-cli-flags/phase_l/nb_compare/<timestamp>/tests/pytest_cpu.log
-- reports/2025-10-cli-flags/phase_l/nb_compare/<timestamp>/inputs/commands.txt
-- reports/2025-10-cli-flags/phase_l/nb_compare/<timestamp>/inputs/env.txt
-- reports/2025-10-cli-flags/phase_l/nb_compare/<timestamp>/inputs/git_sha.txt
-- reports/2025-10-cli-flags/phase_l/nb_compare/<timestamp>/inputs/version.txt
-- reports/2025-10-cli-flags/phase_l/nb_compare/<timestamp>/inputs/sha256.txt
-- reports/2025-10-cli-flags/phase_l/nb_compare/<timestamp>/analysis.md
-- docs/fix_plan.md (new Attempt entry referencing the timestamp)
-- plans/active/cli-noise-pix0/plan.md (Phase M6 paragraph updated)
-Do Now: CLI-FLAGS-003 / Phase N1 — run `pytest -v tests/test_cli_scaling_phi0.py` on CPU, regenerate the supervisor ROI float images for both C and PyTorch under nb_compare/<timestamp>/inputs/, and log the Phase M6 (skip) decision plus artifact paths in docs/fix_plan.md Attempts before concluding the loop.
-If Blocked: If nb-compare prerequisites (C binary, PyTorch CLI, ROI args) fail, capture the failing command output with timestamps, rerun `pytest --collect-only -q tests/test_cli_scaling_phi0.py`, document the blocker and partial artifacts in docs/fix_plan.md Attempts, and pause for supervisor review.
+- reports/2025-10-cli-flags/phase_l/nb_compare/<STAMP>/inputs/c_roi_float.bin
+- reports/2025-10-cli-flags/phase_l/nb_compare/<STAMP>/inputs/py_roi_float.bin
+- reports/2025-10-cli-flags/phase_l/nb_compare/<STAMP>/inputs/{commands.txt,env.txt,git_sha.txt,version.txt,sha256.txt,file_sizes.txt}
+- reports/2025-10-cli-flags/phase_l/nb_compare/<STAMP>/inputs/{c_cli_stdout.txt,py_cli_stdout.txt}
+- reports/2025-10-cli-flags/phase_l/nb_compare/<STAMP>/tests/{pytest_cpu.log,pytest_cuda.log}
+- reports/2025-10-cli-flags/phase_l/nb_compare/<STAMP>/notes/{template_command.txt,todo_nb_compare.md}
+- docs/fix_plan.md (new Attempt referencing <STAMP> bundle)
+- plans/active/cli-noise-pix0/plan.md (Phase N1 state update)
+Do Now: CLI-FLAGS-003 Phase N1 — `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py`; then regenerate ROI float images for both implementations in `reports/2025-10-cli-flags/phase_l/nb_compare/<STAMP>/inputs/` using the supervisor command verbatim (C via `$NB_C_BIN`, PyTorch via `PYTHONPATH=src python -m nanobrag_torch`).
+If Blocked: If pytest or either CLI run fails, capture stdout/stderr into `<STAMP>/inputs/commands.txt` and `<STAMP>/inputs/*.txt`, rerun `pytest --collect-only -q tests/test_cli_scaling_phi0.py`, record the failure signature plus environment in docs/fix_plan.md Attempt, and stop—phase progression requires supervisor review before touching nb-compare.
 Context Recap:
-- Option 1 accepted: PyTorch intentionally diverges from buggy C at I_before_scaling; carryover shim permanently removed.
-- Phase M5d–M5g completed 2025-12-20; docs/fix_plan.md and plan rows already updated this loop.
-- Phase M4d closure artifacts now live under option1_spec_compliance/20251009T013046Z/ with refreshed compare_scaling outputs.
-- Normalization fix landed in Attempt #189; only φ rotation divergence remains and is documented.
-- Tests/test_cli_scaling_phi0.py provides the spec-mode regression coverage verifying Option 1 behaviour.
-- Plan Phase N remains untouched; we are seeding prerequisites this loop.
-- Phase M6 was optional; decision today is to skip further shim work and proceed with spec-only parity.
-- Long-term Goal 1 (shim removal) is complete; this work advances Long-term Goal 2 documentation alignment and parity closure.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/ inventories hold previous trace bundles for reference; keep naming consistent.
-- Protected Assets reminder: docs/index.md lists loop.sh, supervisor.sh, input.md — ensure they remain intact while editing.
+- Phase M6 optional shim work is formally skipped (Attempt #198); spec-only Option 1 path is the canonical parity trajectory.
+- Option 1 bundle (`reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/20251009T013046Z/`) defines the expected −14.6% `I_before_scaling` delta while all downstream factors match ≤1e-6.
+- `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T014553Z/inputs/` currently holds metadata only; new float images are still required before Phase N2.
+- Beam vector plumbing (Attempt #189) and normalization fix (Attempt #189) are merged; only the φ rotation carryover delta remains as documented behavior.
+- Long-term Goal 1 (phi-carryover removal) is complete; this loop advances Goal 2 (spec/doc parity) and sets up Goal 5 (full-suite validation) by clearing CLI backlog items.
+- Protected Assets rule (docs/index.md) covers input.md, loop.sh, supervisor.sh; ensure they remain untouched aside from this memo update.
+Reference Artifacts:
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/summary.md — normalization fix history.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/analysis_20251008T212459Z.md — quantitative k_frac/rot_b divergence context.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md — H4/H5 closure rationale.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T231211Z/per_phi_trace.log — enhanced traces confirming spec rotation pipeline.
+Attempts History (recent):
+- Attempt #197 (docs) refreshed Option 1 bundle and validation script notes.
+- Attempt #198 (docs) logged Phase M6 skip decision and seeded N1 metadata stub (commands/env only).
+- No Phase N Attempts yet; this loop should create Attempt #199 (placeholder numbering) documenting ROI regeneration.
 Priorities & Rationale:
-- plans/active/cli-noise-pix0/plan.md:73–120 requires Phase M6 disposition before Phase N; recording the skip is the final gate.
-- plans/active/cli-noise-pix0/plan.md:97 makes ROI regeneration the first deliverable for Phase N1; without inputs nb-compare cannot run.
-- docs/fix_plan.md:452–540 must reflect the decision so the ledger matches the plan rows updated this loop.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/20251009T013046Z/metrics.json sets expectations for the persistent -14.6% I_before_scaling delta.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/20251009T013046Z/summary.md captures the Option 1 rationale; cite this when explaining the skip.
-- scripts/validation/compare_scaling_traces.py lines 1-40 document Option 1 context and reference compare_scaling expectations.
-- docs/bugs/verified_c_bugs.md:166-204 formally records C-PARITY-001; include this citation in Attempt and analysis write-ups.
-- specs/spec-a-cli.md detector and pix0 sections ensure CLI argument ordering remains spec compliant for both implementations.
-- docs/development/testing_strategy.md §§1.4–1.5 enforce targeted pytest cadence and logging discipline prior to bespoke tooling.
-- arch.md §§2–2a outline runtime layout and detector vector handling that informs command verification.
-- prompts/supervisor.md authoritative command block prevents flag drift when copying CLI arguments.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/summary.md records the normalization fix and serves as historical context while writing the skip rationale.
+- plans/active/cli-noise-pix0/plan.md:80–82 explicitly requires generating both ROI float files before nb-compare (VG‑3/VG‑4) can execute.
+- plans/active/cli-noise-pix0/plan.md:73–76 states Phase N exit criteria (correlation ≥0.9995) which depend on N1 outputs.
+- docs/fix_plan.md:472–510 lists Phase N1 as the active gate after the M6 skip; ledger alignment prevents duplicate effort.
+- prompts/supervisor.md:118–151 preserves the authoritative flag set; copying it prevents regression when comparing C vs PyTorch.
+- docs/development/testing_strategy.md:65–105 mandates targeted pytest before bespoke tooling and requires logs go under reports/.
+- docs/bugs/verified_c_bugs.md:166–204 provides Option 1 justification—cite in Attempt so future readers track the expected delta.
+- arch.md:52–160 summarises detector/basis behavior; use it when sanity-checking CLI arguments and env captures.
+- scripts/validation/README.md:12–80 explains report directory conventions to follow for the new bundle.
 How-To Map:
-- Export environment: `export NB_C_BIN=./golden_suite_generator/nanoBragg` and `export KMP_DUPLICATE_LIB_OK=TRUE`; note both in env.txt.
-- Snapshot git/Python versions: `git rev-parse HEAD > git_sha.txt`; `python -m nanobrag_torch --version > version.txt`.
-- Determine timestamp: `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`.
-- Create bundle directories: `mkdir -p reports/2025-10-cli-flags/phase_l/nb_compare/$STAMP/{inputs,results,tests}`.
-- Baseline test: `pytest -v tests/test_cli_scaling_phi0.py | tee reports/.../tests/pytest_cpu.log`; record pass/fail in analysis.md.
-- If pytest fails, still write collect-only log and mention failure state in Attempt.
-- Supervisor command (C): run `${NB_C_BIN}` with the documented CLI flags, redirect stdout/stderr to `inputs/c_command.log`, write float output to `inputs/c_float.bin`.
-- Supervisor command (PyTorch): `KMP_DUPLICATE_LIB_OK=TRUE python -m nanobrag_torch <args>` mirrored from the plan, log to `inputs/py_command.log`, ensure float output at `inputs/py_float.bin`.
-- Capture timing and exit codes: append to commands.txt after each run with start/end timestamps and `$?` values.
-- Store environment details: list OS/Python/PyTorch versions and CUDA availability in env.txt; mention CPU-only if GPU absent.
-- Hash outputs: `(cd inputs && sha256sum * > sha256.txt)` and verify with `sha256sum -c sha256.txt`.
-- Draft analysis.md summarising tests run, Option 1 citation, ROI command steps, differences observed (if any), and placeholder for future nb-compare metrics.
-- Update docs/fix_plan.md Attempt entry with test results, command references, new artifact path, and explicit note “Phase M6 deferred (Option 1 accepted).”
-- Update plans/active/cli-noise-pix0/plan.md Phase M6 narrative indicating skip plus timestamp (e.g., `[N/A — skipped {STAMP}]`).
-- Stage results directory but leave nb-compare execution for Phase N2; include command outline in analysis.md so future loop can resume quickly.
-- Provide TODO in analysis.md for GPU rerun if/when hardware becomes available.
-Evidence Expectations:
-- Commands.txt should include UTC timestamps for traceability.
-- env.txt (or env.json) should list OS, Python, PyTorch, CUDA status, and relevant environment variables.
-- analysis.md must quote Option 1 bundle path, docs/bugs entry, and plan rows touched this loop.
-- Attempt entry in docs/fix_plan.md should include new timestamp path, targeted pytest outcome, and explicit mention of ROI bundle contents.
-- Plan update should mark Phase M6 as skipped and reaffirm that Phase N1 inputs now exist.
-- Tests/pytest_cpu.log should be committed under the timestamp directory for reproducibility.
-- C and PyTorch command logs should capture warnings verbatim; note any differences in analysis.md.
-- sha256.txt verification result should be documented (pass/fail) in analysis.md.
-- analysis.md should include bullet list of files produced (c_float.bin, py_float.bin, commands.txt, etc.).
-- Document absence of CUDA run (if applicable) so reviewers do not assume it was attempted silently.
+- Export environment: `export NB_C_BIN=./golden_suite_generator/nanoBragg`; `export KMP_DUPLICATE_LIB_OK=TRUE`; `echo NB_C_BIN=$NB_C_BIN >> $OUT/inputs/env.txt` once `OUT` exists.
+- Verify binaries: `command -v python -m nanobrag_torch >/dev/null`; `ls -l $NB_C_BIN >> $OUT/inputs/env.txt` to confirm timestamp and permissions.
+- Establish bundle: `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; `OUT=reports/2025-10-cli-flags/phase_l/nb_compare/$STAMP`; `mkdir -p $OUT/inputs $OUT/tests $OUT/notes`.
+- Metadata capture: `git rev-parse HEAD > $OUT/inputs/git_sha.txt`; `python -m nanobrag_torch --version > $OUT/inputs/version.txt`; `python -V > $OUT/inputs/env.txt`; append `env | sort | grep -E "^(NB_C_BIN|CUDA|CONDA|PYTHONPATH|KMP_DUPLICATE_LIB_OK)" >> $OUT/inputs/env.txt`.
+- Template command: copy supervisor command block into `$OUT/notes/template_command.txt` (helps future diffs).
+- Targeted pytest (CPU): `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py | tee $OUT/tests/pytest_cpu.log`; check exit code before continuing.
+- Optional CUDA smoke: if `torch.cuda.is_available()`, run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py --device cuda --maxfail=1 | tee $OUT/tests/pytest_cuda.log`; otherwise `echo "cuda not available" > $OUT/tests/pytest_cuda.log`.
+- C reference command (tee to stdout log):
+  `"$NB_C_BIN" -mat A.mat -hkl scaled.hkl -nonoise -nointerpolate -oversample 1 -exposure 1 -flux 1e18 -beamsize 1.0 -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080 -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866 -beam_vector 0.00051387949 0.0 -0.99999986 -Na 36 -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0 -floatfile "$OUT/inputs/c_roi_float.bin" 2>&1 | tee $OUT/inputs/c_cli_stdout.txt`.
+- PyTorch CLI command (tee to stdout log):
+  `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python -m nanobrag_torch -mat A.mat -hkl scaled.hkl -nonoise -nointerpolate -oversample 1 -exposure 1 -flux 1e18 -beamsize 1.0 -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080 -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866 -beam_vector 0.00051387949 0.0 -0.99999986 -Na 36 -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0 -floatfile "$OUT/inputs/py_roi_float.bin" 2>&1 | tee $OUT/inputs/py_cli_stdout.txt`.
+- Log executed commands (with exit codes) into `$OUT/inputs/commands.txt`; include working directory and runtime seconds.
+- Validate outputs: `ls -lh $OUT/inputs/*.bin > $OUT/inputs/file_sizes.txt`; `sha256sum $OUT/inputs/*.bin > $OUT/inputs/sha256.txt`; inspect sizes roughly equal (expected ~24 MB) and note any anomalies.
+- Optional diagnostic: `python scripts/diagnostic_detector.py --summary "$OUT/inputs/py_roi_float.bin" >> $OUT/notes/todo_nb_compare.md` if script available; otherwise note TODO for Phase N2.
+- Documentation: append new Attempt to `docs/fix_plan.md` (CLI-FLAGS-003) referencing `<STAMP>` and summarising pytest + sha256 results; update `plans/active/cli-noise-pix0/plan.md` row N1 to `[P]` (ready for nb-compare) or `[D]` once N2 finishes next loop.
 Pitfalls To Avoid:
-- Do not resurrect the removed `--phi-carryover-mode`; spec compliance mandates fresh rotations.
-- Avoid `.cpu()`/`.item()` conversions in scripts; keep tensors device/dtype neutral even if CLI defaults to CPU.
-- Preserve Protected Assets (loop.sh, supervisor.sh, input.md, docs/index.md references).
-- Do not overwrite the Option 1 bundles; always use a new timestamp under nb_compare/.
-- Ensure ROI indices remain `100 156 100 156`; typos derail parity comparisons.
-- Record env metadata before running commands; missing env files forces reruns.
-- Capture stderr/stdout for both C and PyTorch to aid future debugging.
-- If GPU unavailable, explicitly note it; silent omissions are treated as regressions.
-- Reference docs/bugs/verified_c_bugs.md whenever explaining the remaining divergence.
-- Keep commands.txt, analysis.md, and Attempt entries consistent; mismatches create audit churn.
-- Do not run nb-compare until inputs exist; mention planned command instead.
-- Avoid scattershot directories; every artifact for this loop lives under the timestamp bundle.
+- Do not run `nb-compare` yet; Phase N2 should start only after verifying both float files and logs.
+- Keep `KMP_DUPLICATE_LIB_OK=TRUE` set for every PyTorch invocation to prevent MKL duplicate symbol crashes.
+- Ensure `$NB_C_BIN` points to `./golden_suite_generator/nanoBragg`; the frozen root binary lacks latest instrumentation.
+- Stay in repo root so relative paths resolve; commands assume working directory `/home/ollie/Documents/nanoBragg4/nanoBragg`.
+- Do not overwrite existing timestamp directories; always create a new `<STAMP>` for traceability.
+- Avoid adding or committing `.bin` artifacts; leave them untracked but present in the reports directory.
+- Record command exit codes (`${PIPESTATUS[0]}` when using `tee`) before claiming success in Attempt notes.
+- Verify pixel grid sizes match plan expectation (float files ~2463×2527) before proceeding to nb-compare.
+- Include Option 1 rationale in Attempt; omitting it risks future confusion about the persistent intensity delta.
+- Leave Protected Assets listed in docs/index.md untouched (input.md, loop.sh, supervisor.sh) besides this memo update.
 Pointers:
-- plans/active/cli-noise-pix0/plan.md:60-120 for Phase M6 and Phase N details.
-- docs/fix_plan.md:452-540 for Attempt templates and Next Actions context.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/20251009T013046Z/ for Option 1 evidence.
-- scripts/validation/README.md for nb-compare usage and artifact expectations.
-- scripts/validation/compare_scaling_traces.py docstring for shared narrative.
-- docs/development/testing_strategy.md §§1.4-1.5 for test cadence and logging requirements.
-- specs/spec-a-cli.md §§Detector vectors & CLI semantics for command validation.
-- arch.md §§2-3 describing runtime layout and detector vector handling.
-- docs/bugs/verified_c_bugs.md:166-204 outlining the C bug we now treat as historical.
-- plans/archive/cli-phi-parity-shim/plan.md for background on the retired shim.
-- galph_memory.md latest entry to keep supervisor ↔ engineer context aligned.
-- reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T231211Z/trace_py_scaling.log if trace naming guidance is needed.
-- prompts/supervisor.md authoritative command block for cross-checking flag order.
-Next Up:
-1. CLI-FLAGS-003 / Phase N2 — execute nb-compare with the new ROI float files, archive metrics/PNGs, and verify correlation thresholds.
-2. CLI-FLAGS-003 / Phase O1 — rerun the full supervisor command once nb-compare is green, logging parity metrics for final closure.
+- plans/active/cli-noise-pix0/plan.md:73–120 — Phase N structure, Phase M5 closure, M6 skip rationale.
+- docs/fix_plan.md:452–540 — CLI-FLAGS-003 ledger, Next Actions, Attempt logging requirements.
+- prompts/supervisor.md:118–151 — Canonical supervisor command and flag ordering.
+- docs/development/testing_strategy.md:65–105 — Test cadence, logging requirements, CPU vs CUDA expectations.
+- docs/bugs/verified_c_bugs.md:166–204 — C-PARITY-001 summary to cite in Attempt notes.
+- arch.md:52–160 — Detector/beam architecture for sanity checks upon reviewing logs.
+- scripts/validation/README.md:12–80 — Reports directory conventions and metadata expectations.
+- reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/20251009T013046Z/summary.md — Option 1 evidence to reference while documenting.
+Verification Targets (for next loop reference):
+- nb-compare correlation ≥0.9995, sum_ratio within 0.99–1.01, max intensity delta <2% within ROI.
+- CLI parity Attempt should note expected −14.6% `I_before_scaling` delta with downstream factors ≤1e-6.
+- pytest logs must show 2/2 passes on CPU; CUDA log may note “cuda not available” if skipped.
+Next Up: N2 — Run `nb-compare --roi 100 156 100 156 --resample --threshold 0.98 --outdir .../results/ -- [command args]` using the freshly generated float files, capture metrics/PNGs, and update fix_plan once Phase N1 artifacts are confirmed.
+Attempt Writeup Checklist:
+- Add Attempt # (increment sequentially) under docs/fix_plan.md CLI-FLAGS-003 with <STAMP>, pytest summary, floatfile sha hashes, Option 1 citation.
+- Note whether CUDA smoke ran (available vs skipped) and reference `$OUT/tests/pytest_cuda.log` location.
+- Link to `$OUT/inputs/commands.txt` and `$OUT/inputs/sha256.txt` so future auditors can rerun commands or verify integrity.
+- Mention that nb-compare has not yet been executed (Phase N2 pending) to prevent premature closure.
+Environment Cleanup Reminders:
+- Leave `<STAMP>` directory untracked; confirm `.gitignore` keeps `reports/**` ignored.
+- If temporary files land outside reports/, remove them before concluding (e.g., stray `img.bin`).
+- Reset exported vars (`unset NB_C_BIN KMP_DUPLICATE_LIB_OK`) only after recording them in env.txt to avoid accidental reuse next loop.
+Resource Links For Quick Access:
+- README_PYTORCH.md:210–340 — CLI usage notes if argument parsing errors occur.
+- docs/architecture/detector.md:180–320 — Pix0 vector interpretation when reviewing outputs.
+- docs/development/c_to_pytorch_config_map.md:200–310 — Flag-to-config mapping for detector/beam parameters.

@@ -8,6 +8,15 @@
 - Captured repeated reminders on Protected Assets/dirty worktree hygiene and documented long-term goals (CLI parity restoration before vectorization, Dynamo cache validation, detector pivot rules).
 - Logged recommended follow-ups: restore Core Rule #13 duality, regenerate parity traces, tighten test tolerances after fixes, and prioritize evidence artifacts under `reports/` for Ralph’s loops.
 
+## 2025-12-21 (galph loop — Phase N1 ROI prep)
+- Git up to date; re-read docs/index.md, specs/spec-a-core.md, arch.md, docs/development/c_to_pytorch_config_map.md, docs/debugging/debugging.md, docs/development/testing_strategy.md, plans/active/cli-noise-pix0/plan.md before analysis.
+- Coin flip=heads; reviewed Ralph commits c0b4b8b and 0ed4037 — documentation-only work (Phase M6 skip record + Option 1 bundle) with no regressions.
+- Focus set to CLI-FLAGS-003 Phase N1; no new plan needed (existing plan already structured).
+- Confirmed docs/fix_plan.md Next Actions point at Phase N1 ROI regeneration; plan row N1 still open and metadata-only bundle 20251009T014553Z lacks float images.
+- Authored new input.md (Parity mode, 101 lines) directing Ralph to run pytest, regenerate C/PyTorch ROI floatfiles under <STAMP>, capture commands/env/sha, and log Attempt updates for docs/fix_plan + plan row N1.
+- Long-term goals status: φ carryover removal remains complete; documentation audit (Goal 2) shows spec shards free of carryover bug; vectorization/backlog unchanged pending CLI closure.
+- Follow-up for Ralph: execute Phase N1 per input.md, produce ROI floatfiles + metadata, update fix_plan Attempt, and mark plan row N1 to [P] once artifacts exist; hold nb-compare for next loop.
+
 ## 2025-11-06 (galph loop — K3d dtype evidence prep)
 - Coin flip=heads → reviewed Ralph commits d150858, b73f0e2; work productive (Phase H1 evidence, Phase G3 orientation fix).
 - Updated plans/active/cli-noise-pix0/plan.md Phase H goal + tasks (H1 marked done; new H2 beam propagation, H3 lattice, H4 parity).
