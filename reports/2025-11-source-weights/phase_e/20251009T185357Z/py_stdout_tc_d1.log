@@ -1,0 +1,15 @@
+Loaded 2 sources from reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt
+Running simulation...
+  Detector: 256x256 pixels
+  Crystal: 26.8x31.3x33.7 Å
+  Wavelength: 0.98 Å
+  Device: cpu, Dtype: torch.float32
+
+Statistics:
+  Max intensity: 4.267e+01 at pixel (158, 147)
+  Mean: 3.955e-01
+  RMS: 2.349e+00
+  RMSD: 2.316e+00
+Wrote float image to reports/2025-11-source-weights/phase_e/20251009T185357Z/py_tc_d1.bin
+
+Simulation complete.

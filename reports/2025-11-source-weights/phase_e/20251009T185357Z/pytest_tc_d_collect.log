@@ -1,0 +1,6 @@
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_only_parity
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_divergence_warning
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_divergence_only_grid_generation
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_parity_explicit_oversample
+
+4 tests collected in 0.96s

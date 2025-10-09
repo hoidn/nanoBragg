@@ -1,0 +1,23 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 7 items
+
+tests/test_at_src_003.py::TestSourcefileLambdaOverride::test_lambda_override_single_source PASSED [ 14%]
+tests/test_at_src_003.py::TestSourcefileLambdaOverride::test_lambda_override_multiple_sources PASSED [ 28%]
+tests/test_at_src_003.py::TestSourcefileWarningEmission::test_warning_emitted_on_mismatch PASSED [ 42%]
+tests/test_at_src_003.py::TestSourcefileWarningEmission::test_no_warning_when_matching PASSED [ 57%]
+tests/test_at_src_003.py::TestSourcefileWarningEmission::test_no_warning_when_column_missing PASSED [ 71%]
+tests/test_at_src_003.py::TestStepsNormalizationParity::test_steps_count_includes_zero_weight_sources PASSED [ 85%]
+tests/test_at_src_003.py::TestStepsNormalizationParity::test_equal_weighting_preserved PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/test_at_src_003.py::TestSourcefileLambdaOverride::test_lambda_override_single_source
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_src_003.py:37: UserWarning: Sourcefile wavelength column differs from CLI -lambda value. Per spec-a-core.md:150-151, sourcefile wavelengths are ignored. All sources will use CLI wavelength 9.768000e-11 m.
+    directions, weights, wavelengths = read_sourcefile(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================= 7 passed, 1 warning in 0.83s =========================

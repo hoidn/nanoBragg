@@ -1,0 +1,19 @@
+TC-D1
+  n_sources: 2
+  phi_steps: 1
+  mosaic_domains: 1
+  oversample: 1
+  steps: 2
+  fluence: 1.2593201528622709e+29
+
+TC-D3
+  n_sources: 3
+  phi_steps: 1
+  mosaic_domains: 1
+  oversample: 1
+  steps: 3
+  fluence: 1.2593201528622709e+29
+  hdiv_count: 3
+  vdiv_count: 1
+  disp_count: 1
+

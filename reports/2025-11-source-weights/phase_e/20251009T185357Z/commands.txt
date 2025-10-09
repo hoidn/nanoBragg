@@ -1,0 +1,8 @@
+# Thu Oct  9 06:55:20 PM UTC 2025 SOURCE-WEIGHT-001 parity run
+export KMP_DUPLICATE_LIB_OK=TRUE
+export NB_RUN_PARALLEL=1
+export NB_C_BIN=./golden_suite_generator/nanoBragg
+python -m nanobrag_torch -mat A.mat -sourcefile reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt -default_F 100 -hdivsteps 0 -vdivsteps 0 -dispsteps 1 -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -oversample 1 -nonoise -nointerpolate -floatfile reports/2025-11-source-weights/phase_e/20251009T185357Z/py_tc_d1.bin
+./golden_suite_generator/nanoBragg -mat A.mat -sourcefile reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt -default_F 100 -hdivsteps 0 -vdivsteps 0 -dispsteps 1 -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -oversample 1 -nonoise -nointerpolate -floatfile reports/2025-11-source-weights/phase_e/20251009T185357Z/c_tc_d1.bin
+python -m nanobrag_torch -mat A.mat -default_F 100 -hdivrange 0.5 -hdivsteps 3 -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -oversample 1 -nonoise -nointerpolate -floatfile reports/2025-11-source-weights/phase_e/20251009T185357Z/py_tc_d3.bin
+./golden_suite_generator/nanoBragg -mat A.mat -default_F 100 -hdivrange 0.5 -hdivsteps 3 -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -oversample 1 -nonoise -nointerpolate -floatfile reports/2025-11-source-weights/phase_e/20251009T185357Z/c_tc_d3.bin

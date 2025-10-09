@@ -4196,6 +4196,39 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       2. **BLOCKER FIX REQUIRED**: Implement zero-weight source placeholder counting in simulator steps calculation per nanoBragg.c:2700-2720. Current code counts `len(self._source_directions)` but C counts total including zero-weight entries.
       3. After both fixes, rerun TC-D1/TC-D3 parity and expect sum_ratios to drop significantly (ideally to 1.0 ± 0.001).
       4. If parity still fails after steps fixes, generate parallel trace (C vs PyTorch) for single bright pixel to identify remaining divergence points (likely fluence, r_e², or capture_fraction).
+  * [2025-10-09] Attempt #21 (ralph loop #247 — Mode: Parity, Phase E evidence bundle). Result: **BLOCKED** (TC-D1/TC-D3 parity FAILED; same failure mode as Attempts #19/#20).
+    Metrics: AT-SRC-003 regression tests: 7/7 passed, 1 warning in 0.83s. TC-D1 parity: correlation=0.049 (threshold ≥0.999 FAILED), sum_ratio=46.85 (threshold |ratio-1|≤1e-3 FAILED), |sum_ratio-1|=45.85. TC-D3 parity: correlation=0.053 (threshold ≥0.999 FAILED), sum_ratio=120.06 (threshold |ratio-1|≤1e-3 FAILED), |sum_ratio-1|=119.06. Test collection: 7 tests AT-SRC-003.
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_e/20251009T185357Z/py_tc_d1.bin` — PyTorch TC-D1 output (max=42.67, mean=0.396, sum=25919.3)
+      - `reports/2025-11-source-weights/phase_e/20251009T185357Z/c_tc_d1.bin` — C TC-D1 output (max=0.0104, mean=0.00844, sum=553.2)
+      - `reports/2025-11-source-weights/phase_e/20251009T185357Z/py_tc_d3.bin` — PyTorch TC-D3 output (max=318.2, mean=1.552, sum=101694.1)
+      - `reports/2025-11-source-weights/phase_e/20251009T185357Z/c_tc_d3.bin` — C TC-D3 output (max=0.0562, mean=0.0129, sum=847.0)
+      - `reports/2025-11-source-weights/phase_e/20251009T185357Z/metrics.json` — Complete parity metrics
+      - `reports/2025-11-source-weights/phase_e/20251009T185357Z/correlation.txt` — Per-case correlations (TC-D1: 0.0486, TC-D3: 0.0530)
+      - `reports/2025-11-source-weights/phase_e/20251009T185357Z/sum_ratio.txt` — Per-case sum ratios (TC-D1: 46.85, TC-D3: 120.06)
+      - `reports/2025-11-source-weights/phase_e/20251009T185357Z/pytest_at_src_003.log` — AT-SRC-003 test run
+      - `reports/2025-11-source-weights/phase_e/20251009T185357Z/collect.log` — Test collection (7 tests AT-SRC-003)
+      - `reports/2025-11-source-weights/phase_e/20251009T185357Z/commands.txt` — Reproduction commands
+      - `reports/2025-11-source-weights/phase_e/20251009T185357Z/env.json` — Environment metadata
+      - `reports/2025-11-source-weights/phase_e/20251009T185357Z/py_stdout_tc_d1.log` — PyTorch TC-D1 stdout (2 sources from fixture)
+      - `reports/2025-11-source-weights/phase_e/20251009T185357Z/c_stdout_tc_d1.log` — C TC-D1 stdout (4 sources: 2 actual + 2 zero-weight)
+      - `reports/2025-11-source-weights/phase_e/20251009T185357Z/py_stdout_tc_d3.log` — PyTorch TC-D3 stdout (3 generated sources)
+      - `reports/2025-11-source-weights/phase_e/20251009T185357Z/c_stdout_tc_d3.log` — C TC-D3 stdout (3 sources)
+      - `reports/2025-11-source-weights/phase_e/20251009T185357Z/simulator_diagnostics.txt` — Simulator internals (TC-D1: n_sources=2, steps=2; TC-D3: n_sources=3, steps=3)
+      - `reports/2025-11-source-weights/phase_e/20251009T185357Z/diagnostics.json` — Machine-readable diagnostics
+    Observations/Hypotheses:
+      - **Metrics identical to Attempts #19/#20**: TC-D1 correlation=0.049, sum_ratio=46.85 (≈47× inflation); TC-D3 correlation=0.053, sum_ratio=120.06 (≈120× inflation). Confirms issue is reproducible and persistent.
+      - **Lambda override verified working**: PyTorch correctly uses CLI `-lambda 0.9768` and ignores sourcefile wavelength column (6.2 Å), emitting expected UserWarning. This confirms Attempt #17 Phase E1 fix is functioning correctly.
+      - **Steps count mismatch persists**: C TC-D1 creates 4 sources (2 actual + 2 zero-weight divergence placeholders per C stdout log) while PyTorch counts 2 (per simulator_diagnostics.txt). This explains ~2× of the divergence, but the 47-120× inflation suggests additional scaling bugs.
+      - **Pattern consistency**: Both TC-D1 (weighted sources) and TC-D3 (auto-generated divergence) show ~50-120× excess intensity, suggesting systemic normalization error beyond just source counting. Likely candidates: (a) fluence scaling, (b) r_e² constant, (c) steps denominator (including zero-weight source counting), (d) capture_fraction application.
+      - **Divergence source generation working correctly**: TC-D3 PyTorch stdout confirms "Generated 3 sources from divergence/dispersion: H divergence: 3 steps" which matches C stdout "created a total of 3 sources". However, simulator_diagnostics.txt shows n_sources=3, steps=3 (PyTorch) vs C likely using steps=3 (same count in this case). The 120× inflation is unexplained by source counting alone.
+      - **AT-SRC-003 regression tests green**: All 7 tests passed, confirming lambda override logic and warning emission are stable.
+    Next Actions:
+      1. **CRITICAL**: Investigate the 47-120× intensity inflation that persists AFTER lambda override fix. The magnitude is too large to be explained by 2× steps mismatch alone. Generate parallel trace for a single bright pixel (TC-D1 pixel (158,147) or TC-D3 pixel (44,42)) comparing PyTorch vs C for: (a) fluence scaling, (b) r_e² constant, (c) steps denominator calculation, (d) capture_fraction application, (e) final intensity accumulation.
+      2. **BLOCKER FIX REQUIRED**: Implement zero-weight source placeholder counting in simulator steps calculation per nanoBragg.c:2700-2720. Current code counts `len(self._source_directions)` but C counts total including zero-weight entries. This should reduce TC-D1 sum_ratio from ~47× to ~23-24×.
+      3. After steps fix, if sum_ratio still >> 2×, the parallel trace from Next Action #1 will be essential to identify the remaining scaling discrepancy.
+      4. Once correlation ≥0.999 and |sum_ratio-1| ≤1e-3 achieved, mark Phase E complete and notify [VECTOR-GAPS-002]/[VECTOR-TRICUBIC-002] of unblock.
+  * [2025-10-09] Attempt #15 (ralph loop #229 — Mode: Docs, VECTOR-TRICUBIC-002 Phase A0). Result: **SUCCESS** (Lambda semantics design note authored).
     Metrics: Test collection passed (694 tests discovered via `pytest --collect-only -q`). No code changes; documentation-only loop per input.md Do Now.
     Artifacts:
       - `reports/2025-11-source-weights/phase_e/20251009T131709Z/lambda_semantics.md` — Complete implementation design selecting Option B (CLI override), documenting file touchpoints, acceptance thresholds, C reference anchors, and implementation sequence for Ralph

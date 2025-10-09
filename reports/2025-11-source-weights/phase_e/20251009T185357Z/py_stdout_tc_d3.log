@@ -1,0 +1,18 @@
+Generated 3 sources from divergence/dispersion:
+  H divergence: 3 steps, range=0.0005 rad
+  V divergence: 1 steps, range=0.0000 rad
+  Dispersion: 1 steps, range=0.0000
+Running simulation...
+  Detector: 256x256 pixels
+  Crystal: 26.8x31.3x33.7 Å
+  Wavelength: 0.98 Å
+  Device: cpu, Dtype: torch.float32
+
+Statistics:
+  Max intensity: 3.182e+02 at pixel (44, 42)
+  Mean: 1.552e+00
+  RMS: 1.032e+01
+  RMSD: 1.020e+01
+Wrote float image to reports/2025-11-source-weights/phase_e/20251009T185357Z/py_tc_d3.bin
+
+Simulation complete.
