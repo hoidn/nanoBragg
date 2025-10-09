@@ -1500,3 +1500,9 @@
 - Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions to align with the new plan sequencing (analysis doc → design proposal → implementation bundle) and keep `[VECTOR-GAPS-002]` blocked until correlation evidence returns.
 - Issued `input.md` (Mode: Parity) directing Ralph to execute Phase D1: create a fresh timestamped `reports/2025-11-source-weights/phase_d/<STAMP>/divergence_analysis.md`, reuse the 20251009 artifacts, and capture `pytest --collect-only -q` to prove collection still passes.
 - Follow-up for Ralph: produce divergence_analysis.md + commands log + collect-only proof this loop, then report findings and open questions in docs/fix_plan.md Attempt history so we can approve the Phase D2 design direction next turn.
+### 2025-12-24 (galph loop - Source-weight Phase D3 harness prep)
+- Reviewed recent Ralph commit `b8d16b5` (SOURCE-WEIGHT-001 Phase D2 design) — documentation-only, aligns with Option B recommendation and adds Attempt #5; no regressions spotted.
+- Marked Phase D2 complete in `plans/active/source-weight-normalization.md` and refreshed D3 guidance (commands.txt + pytest log expectations) so the plan reflects the new status snapshot.
+- Updated `docs/fix_plan.md` Next Actions for `[SOURCE-WEIGHT-001]` to focus on D3 harness capture and subsequent Phase E implementation under Option B.
+- Reissued `input.md` (Mode: Docs) directing Ralph to create the Phase D3 artifact bundle (timestamped folder, commands.txt, collect-only log, targeted pytest log, warning capture, summary with acceptance metrics).
+- Follow-up for Ralph: deliver the D3 harness artifacts under `reports/2025-11-source-weights/phase_d/<STAMP>/`, document results in summary.md, and update Attempts History once complete so Phase E implementation can begin and unblock `[VECTOR-GAPS-002]` profiling.
