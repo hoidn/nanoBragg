@@ -11,7 +11,7 @@
   - plans/active/vectorization.md (Phases A–G history)
   - plans/active/perf-pytorch-compile-refactor/plan.md (4096² warm benchmark harness & profiler usage)
   - reports/2025-10-vectorization/gaps/20251009T061928Z/analysis.md (prior gap evidence: divergence/dispersion source loops)
-- Status Snapshot (2025-12-22): Phase A1/A2 complete — loop inventory script + first scan delivered under `reports/2026-01-vectorization-gap/phase_a/20251009T064345Z/`. Awaiting Phase A3 annotation before moving to profiling (Phase B).
+- Status Snapshot (2025-10-09): Phase A1/A2/A3 complete — loop inventory (20251009T064345Z) + classification (20251009T065238Z) delivered. Results: 4 vectorized, 17 safe, 2 todo (HIGH: noise.py LCG; MEDIUM: simulator.py phi-loop), 1 uncertain (pending profiler). Ready for Phase B profiling.
 
 ### Phase A — Loop Inventory & Evidence Capture
 Goal: Build an auditable inventory of remaining Python loops touching the simulator hot path, with code locations and rough complexity estimates.
@@ -22,7 +22,7 @@ Exit Criteria: `reports/2026-01-vectorization-gap/phase_a/<STAMP>/` contains loo
 | --- | --- | --- | --- |
 | A1 | Author loop-inventory script | [D] | ✅ Completed 2025-10-09 (`scripts/analysis/vectorization_inventory.py`). Script scans `src/nanobrag_torch/` for `ast.For/ast.While`, emits JSON + summary. See `reports/2026-01-vectorization-gap/phase_a/20251009T064345Z/commands.txt` for invocation. |
 | A2 | Run inventory on HEAD | [D] | ✅ Completed 2025-10-09. Artifacts: `loop_inventory.json`, `summary.md`, `pytest_collect.log`. Result: 24 loops detected; 12 flagged as likely hot (simulator/crystal/utils). |
-| A3 | Annotate findings | [ ] | Review `summary.md` and label each loop as (a) vectorized/safe, (b) IO/setup-only, or (c) requires follow-up. Capture annotated results in `summary.md` appendix + `reports/2026-01-vectorization-gap/phase_a/<STAMP>/analysis.md`. Update docs/fix_plan Attempt with classification counts. |
+| A3 | Annotate findings | [D] | ✅ Completed 2025-10-09. Artifacts: `reports/2026-01-vectorization-gap/phase_a/20251009T065238Z/{analysis.md, summary.md, checksums.txt, pytest_collect.log}`. Classification: Vectorized=4 (polin2/3 helpers), Safe=17 (I/O, config, debug), Todo=2 (noise.py:171 LCG loop [HIGH], simulator.py:1568 phi-loop [MEDIUM uncertain]), Uncertain=1 (needs Phase B profiler). Hot path coverage: 87.5% confirmed non-blocking. |
 
 ### Phase B — Profiling & Prioritisation
 Goal: Combine static loop inventory with runtime profiling to rank candidates by impact and spec criticality.

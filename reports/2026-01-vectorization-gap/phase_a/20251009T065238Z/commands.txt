@@ -1,0 +1,71 @@
+# Phase A3 Vectorization Gap Classification
+# Timestamp: 2025-10-09T06:52:38Z
+# Git Commit: $(git rev-parse HEAD)
+
+# Step 1: Create timestamped artifact directory
+export STAMP=20251009T065238Z
+mkdir -p reports/2026-01-vectorization-gap/phase_a/$STAMP
+
+# Step 2: Copy baseline loop inventory JSON
+cp reports/2026-01-vectorization-gap/phase_a/20251009T064345Z/loop_inventory.json \
+   reports/2026-01-vectorization-gap/phase_a/$STAMP/
+
+# Step 3: Manual code inspection for classification
+# Reviewed files:
+#   - src/nanobrag_torch/simulator.py (lines 1465-1590)
+#   - src/nanobrag_torch/models/crystal.py (lines 175-200, 758-773, 1345-1356)
+#   - src/nanobrag_torch/utils/physics.py (lines 390-600, with system reminders showing vectorized implementations)
+#   - src/nanobrag_torch/utils/c_random.py (lines 95-110)
+#   - src/nanobrag_torch/utils/noise.py (lines 168-175)
+#   - All io/* modules (file I/O loops)
+
+# Step 4: Classification criteria applied
+# - Vectorized: Existing batched tensor implementations (polin2_vectorized, polin3_vectorized)
+# - Safe: I/O, config, validation, debug-only, fixed small N
+# - Todo: Variable N, likely hot, vectorizable
+# - Uncertain: Needs profiler evidence to classify
+
+# Step 5: Created analysis.md with detailed classification table
+# Output: reports/2026-01-vectorization-gap/phase_a/$STAMP/analysis.md
+
+# Step 6: Created summary.md with annotated loop inventory
+# Output: reports/2026-01-vectorization-gap/phase_a/$STAMP/summary.md
+
+# Step 7: Run pytest --collect-only for validation (docs-only loop requirement)
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q > reports/2026-01-vectorization-gap/phase_a/$STAMP/pytest_collect.log 2>&1
+echo "pytest collect exit code: $?"
+
+# Step 8: Record environment
+echo "Python version:"
+python --version
+echo "PyTorch version:"
+python -c "import torch; print(torch.__version__)"
+echo "CUDA available:"
+python -c "import torch; print(torch.cuda.is_available())"
+echo "Git commit hash:"
+git rev-parse HEAD
+
+# Step 9: Calculate checksums for key artifacts
+cd reports/2026-01-vectorization-gap/phase_a/$STAMP
+sha256sum loop_inventory.json analysis.md summary.md > checksums.txt
+cat checksums.txt
+
+# Step 10: Document artifact paths in this commands file
+echo "Artifact paths (relative to repo root):"
+echo "  - Loop inventory JSON: reports/2026-01-vectorization-gap/phase_a/$STAMP/loop_inventory.json"
+echo "  - Classification analysis: reports/2026-01-vectorization-gap/phase_a/$STAMP/analysis.md"
+echo "  - Annotated summary: reports/2026-01-vectorization-gap/phase_a/$STAMP/summary.md"
+echo "  - Pytest collection log: reports/2026-01-vectorization-gap/phase_a/$STAMP/pytest_collect.log"
+echo "  - Checksums: reports/2026-01-vectorization-gap/phase_a/$STAMP/checksums.txt"
+echo "  - This command log: reports/2026-01-vectorization-gap/phase_a/$STAMP/commands.txt"
+
+# Classification results summary:
+echo "Classification counts:"
+echo "  Vectorized: 4 (16.7%)"
+echo "  Safe: 17 (70.8%)"
+echo "  Todo: 2 (8.3%)"
+echo "  Uncertain: 1 (4.2%)"
+echo "  Total: 24 loops"
+
+# Next phase: Phase B1 profiling
+echo "Next action: Run profiler capture per input.md Step B1 guidance"

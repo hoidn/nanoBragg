@@ -1,0 +1,298 @@
+{
+  "scan_timestamp": "2025-10-09T06:43:57.728423Z",
+  "package_path": "src/nanobrag_torch",
+  "total_loops": 24,
+  "hot_loops_count": 12,
+  "all_loops": [
+    {
+      "module": "src/nanobrag_torch/io/hkl.py",
+      "line": 51,
+      "col_offset": 8,
+      "loop_type": "for",
+      "loop_header": "for line in f",
+      "iteration_hint": "unknown iterable"
+    },
+    {
+      "module": "src/nanobrag_torch/io/hkl.py",
+      "line": 110,
+      "col_offset": 4,
+      "loop_type": "for",
+      "loop_header": "for (h, k, l, F) in reflections",
+      "iteration_hint": "unknown iterable"
+    },
+    {
+      "module": "src/nanobrag_torch/io/hkl.py",
+      "line": 208,
+      "col_offset": 8,
+      "loop_type": "while",
+      "loop_header": "while True",
+      "iteration_hint": "while loop (typically hard to vectorize)"
+    },
+    {
+      "module": "src/nanobrag_torch/io/mask.py",
+      "line": 52,
+      "col_offset": 8,
+      "loop_type": "for",
+      "loop_header": "for line in header_content.split(';')",
+      "iteration_hint": "unknown iterable"
+    },
+    {
+      "module": "src/nanobrag_torch/io/mask.py",
+      "line": 178,
+      "col_offset": 8,
+      "loop_type": "for",
+      "loop_header": "for line in header_content.split(';')",
+      "iteration_hint": "unknown iterable"
+    },
+    {
+      "module": "src/nanobrag_torch/io/mosflm.py",
+      "line": 59,
+      "col_offset": 8,
+      "loop_type": "for",
+      "loop_header": "for line in f",
+      "iteration_hint": "unknown iterable"
+    },
+    {
+      "module": "src/nanobrag_torch/io/mosflm.py",
+      "line": 67,
+      "col_offset": 12,
+      "loop_type": "for",
+      "loop_header": "for part in parts",
+      "iteration_hint": "unknown iterable"
+    },
+    {
+      "module": "src/nanobrag_torch/io/smv.py",
+      "line": 46,
+      "col_offset": 8,
+      "loop_type": "for",
+      "loop_header": "for line in header_content.split('\\n')",
+      "iteration_hint": "unknown iterable"
+    },
+    {
+      "module": "src/nanobrag_torch/io/smv.py",
+      "line": 240,
+      "col_offset": 4,
+      "loop_type": "for",
+      "loop_header": "for (key, value) in header.items()",
+      "iteration_hint": "dict iteration (usually small)"
+    },
+    {
+      "module": "src/nanobrag_torch/io/source.py",
+      "line": 60,
+      "col_offset": 8,
+      "loop_type": "for",
+      "loop_header": "for (line_num, line) in enumerate(f, 1)",
+      "iteration_hint": "enumerate (check underlying collection size)"
+    },
+    {
+      "module": "src/nanobrag_torch/models/crystal.py",
+      "line": 180,
+      "col_offset": 8,
+      "loop_type": "for",
+      "loop_header": "for (angle_name, angle) in [('alpha', self.cell_alpha), ('beta', self.cell_beta), ('gamma', self.cell_gamma)]",
+      "iteration_hint": "unknown iterable"
+    },
+    {
+      "module": "src/nanobrag_torch/models/crystal.py",
+      "line": 187,
+      "col_offset": 8,
+      "loop_type": "for",
+      "loop_header": "for (angle_name, angle) in [('alpha', self.cell_alpha), ('beta', self.cell_beta), ('gamma', self.cell_gamma)]",
+      "iteration_hint": "unknown iterable"
+    },
+    {
+      "module": "src/nanobrag_torch/models/crystal.py",
+      "line": 762,
+      "col_offset": 12,
+      "loop_type": "for",
+      "loop_header": "for angle in self.config.misset_deg",
+      "iteration_hint": "unknown iterable"
+    },
+    {
+      "module": "src/nanobrag_torch/models/crystal.py",
+      "line": 1350,
+      "col_offset": 8,
+      "loop_type": "for",
+      "loop_header": "for i in range(3)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    },
+    {
+      "module": "src/nanobrag_torch/simulator.py",
+      "line": 1469,
+      "col_offset": 28,
+      "loop_type": "for",
+      "loop_header": "for i in range(4)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    },
+    {
+      "module": "src/nanobrag_torch/simulator.py",
+      "line": 1470,
+      "col_offset": 32,
+      "loop_type": "for",
+      "loop_header": "for j in range(4)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    },
+    {
+      "module": "src/nanobrag_torch/simulator.py",
+      "line": 1471,
+      "col_offset": 36,
+      "loop_type": "for",
+      "loop_header": "for k in range(4)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    },
+    {
+      "module": "src/nanobrag_torch/simulator.py",
+      "line": 1568,
+      "col_offset": 24,
+      "loop_type": "for",
+      "loop_header": "for phi_tic in range(phi_steps)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    },
+    {
+      "module": "src/nanobrag_torch/utils/c_random.py",
+      "line": 100,
+      "col_offset": 12,
+      "loop_type": "for",
+      "loop_header": "for j in range(self.NTAB + 7, -1, -1)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    },
+    {
+      "module": "src/nanobrag_torch/utils/noise.py",
+      "line": 171,
+      "col_offset": 4,
+      "loop_type": "for",
+      "loop_header": "for i in range(n)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    },
+    {
+      "module": "src/nanobrag_torch/utils/physics.py",
+      "line": 393,
+      "col_offset": 4,
+      "loop_type": "for",
+      "loop_header": "for j in range(4)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    },
+    {
+      "module": "src/nanobrag_torch/utils/physics.py",
+      "line": 439,
+      "col_offset": 4,
+      "loop_type": "for",
+      "loop_header": "for j in range(4)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    },
+    {
+      "module": "src/nanobrag_torch/utils/physics.py",
+      "line": 543,
+      "col_offset": 4,
+      "loop_type": "for",
+      "loop_header": "for j in range(4)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    },
+    {
+      "module": "src/nanobrag_torch/utils/physics.py",
+      "line": 594,
+      "col_offset": 4,
+      "loop_type": "for",
+      "loop_header": "for j in range(4)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    }
+  ],
+  "hot_loops": [
+    {
+      "module": "src/nanobrag_torch/models/crystal.py",
+      "line": 180,
+      "col_offset": 8,
+      "loop_type": "for",
+      "loop_header": "for (angle_name, angle) in [('alpha', self.cell_alpha), ('beta', self.cell_beta), ('gamma', self.cell_gamma)]",
+      "iteration_hint": "unknown iterable"
+    },
+    {
+      "module": "src/nanobrag_torch/models/crystal.py",
+      "line": 187,
+      "col_offset": 8,
+      "loop_type": "for",
+      "loop_header": "for (angle_name, angle) in [('alpha', self.cell_alpha), ('beta', self.cell_beta), ('gamma', self.cell_gamma)]",
+      "iteration_hint": "unknown iterable"
+    },
+    {
+      "module": "src/nanobrag_torch/models/crystal.py",
+      "line": 762,
+      "col_offset": 12,
+      "loop_type": "for",
+      "loop_header": "for angle in self.config.misset_deg",
+      "iteration_hint": "unknown iterable"
+    },
+    {
+      "module": "src/nanobrag_torch/models/crystal.py",
+      "line": 1350,
+      "col_offset": 8,
+      "loop_type": "for",
+      "loop_header": "for i in range(3)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    },
+    {
+      "module": "src/nanobrag_torch/simulator.py",
+      "line": 1469,
+      "col_offset": 28,
+      "loop_type": "for",
+      "loop_header": "for i in range(4)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    },
+    {
+      "module": "src/nanobrag_torch/simulator.py",
+      "line": 1470,
+      "col_offset": 32,
+      "loop_type": "for",
+      "loop_header": "for j in range(4)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    },
+    {
+      "module": "src/nanobrag_torch/simulator.py",
+      "line": 1471,
+      "col_offset": 36,
+      "loop_type": "for",
+      "loop_header": "for k in range(4)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    },
+    {
+      "module": "src/nanobrag_torch/simulator.py",
+      "line": 1568,
+      "col_offset": 24,
+      "loop_type": "for",
+      "loop_header": "for phi_tic in range(phi_steps)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    },
+    {
+      "module": "src/nanobrag_torch/utils/physics.py",
+      "line": 393,
+      "col_offset": 4,
+      "loop_type": "for",
+      "loop_header": "for j in range(4)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    },
+    {
+      "module": "src/nanobrag_torch/utils/physics.py",
+      "line": 439,
+      "col_offset": 4,
+      "loop_type": "for",
+      "loop_header": "for j in range(4)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    },
+    {
+      "module": "src/nanobrag_torch/utils/physics.py",
+      "line": 543,
+      "col_offset": 4,
+      "loop_type": "for",
+      "loop_header": "for j in range(4)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    },
+    {
+      "module": "src/nanobrag_torch/utils/physics.py",
+      "line": 594,
+      "col_offset": 4,
+      "loop_type": "for",
+      "loop_header": "for j in range(4)",
+      "iteration_hint": "range-based (likely hot if large N)"
+    }
+  ]
+}

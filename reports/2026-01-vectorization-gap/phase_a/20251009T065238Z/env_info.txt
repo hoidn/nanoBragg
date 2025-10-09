@@ -1,0 +1,14 @@
+=== Environment Info ===
+Python version:
+Python 3.13.5
+
+PyTorch version:
+2.7.1+cu126
+
+CUDA available:
+True
+
+Git commit hash:
+60be6657ee4a4e059c1f85bb01e40aad69d3c900
+
+Timestamp: 2025-10-09T06:56:10Z
