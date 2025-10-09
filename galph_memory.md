@@ -1268,3 +1268,10 @@
 - Rewrote input.md (Docs mode, 100+ lines) instructing Ralph to update compare_scaling_traces.py docstrings, regenerate an Option 1 bundle with compare output + env/sha + test logs, run targeted pytest (CPU and GPU smoke when available), and sync plan/fix_plan once artifacts exist.
 - Committed as `SUPERVISOR: CLI-FLAGS Option1 follow-up - tests: not run`; no physics changes.
 - Follow-up: Ralph to execute M5e/M5f per new input, then we can close M5g and queue Phase N nb-compare once evidence lands.
+
+## 2025-12-20 (galph loop — Phase N1 staging)
+- Closed out CLI-FLAGS Phase M bookkeeping: marked Phase M4d and M5g [D] in plans/active/cli-noise-pix0/plan.md and refreshed the Status Snapshot to 2025-12-20 with Option 1 notes.
+- Updated docs/fix_plan.md Active Focus + Next Actions to reflect the Phase M6 decision gate; logged that M5e–M5g are done and the next step is choosing (or skipping) the optional C-parity shim before moving to Phase N.
+- Authored new input.md (105 lines, Parity mode) instructing Ralph to document the Phase M6 skip, regenerate C/PyTorch ROI float files under reports/2025-10-cli-flags/phase_l/nb_compare/<timestamp>/inputs/, and append the corresponding Attempt in docs/fix_plan.md.
+- No new artifacts generated this loop (docs-only). Working tree pending commit of docs/fix_plan.md, plans/active/cli-noise-pix0/plan.md, and input.md.
+- Follow-up for Ralph: execute input.md Do Now (Phase N1 ROI prep + Phase M6 skip logging), keep targeted pytest logs in the bundle, and update plan/ledger once artifacts exist.

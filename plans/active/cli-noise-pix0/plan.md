@@ -22,14 +22,14 @@
   - `reports/2025-10-cli-flags/phase_l/` — canonical evidence directories (rot_vector, scaling_audit, scaling_validation, nb_compare, supervisor_command).
 - Artifact Policy: Continue storing new work under `reports/2025-10-cli-flags/phase_l/<topic>/<timestamp>/`, capturing `commands.txt`, raw logs, `summary.md`, `env.json`, and `sha256.txt` per CLI-FLAGS-003 conventions.
 - Guardrails: Preserve vectorization (no scalar φ loops), maintain device/dtype neutrality, respect Protected Assets (`docs/index.md`), and cite nanoBragg.c snippets via CLAUDE Rule #11 when touching simulator/physics code.
-- Status Snapshot (2025-10-22 refresh):
+- Status Snapshot (2025-12-20 refresh):
   - ✅ `-nonoise` plumbing merged with regression coverage (`tests/test_cli_nonoise.py`) — files: `src/nanobrag_torch/io/noise.py`, artifacts `reports/2025-10-cli-flags/phase_j/nonoise_plumbing/`.
   - ✅ pix0 precedence and SAMPLE pivot parity fixed (Attempt #129) — see `reports/2025-10-cli-flags/phase_k/pix0_precedence/20251006T231255Z/`.
   - ✅ φ carryover shim removed end-to-end (Attempts #176–#183) — definitive proof in `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/`; shim plan archived.
   - ✅ Trace tooling + instrumentation audits (Phase M0) ensure debug caches gated by trace flag and remain device/dtype neutral (`reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T070513Z/`).
-  - ⚠️ Scaling parity (VG‑2) still failing: fresh spec-mode bundle `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/metrics.json` confirms `first_divergence = "I_before_scaling"` with PyTorch 14.643% low relative to C (I_before_scaling: 8.05e5 vs 9.44e5). Downstream factors (r_e², fluence, steps, capture_fraction, polar, omega, cos_2theta) remain ≤1e-6.
+  - ℹ️ Spec-mode scaling delta now documented under Option 1: `reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/20251009T013046Z/metrics.json` records the expected −14.6% `I_before_scaling` gap vs C-PARITY-001; downstream factors stay ≤1e-6 and `lattice_hypotheses.md` (H4/H5) closed.
   - 🧪 Phase M2 divergence analysis complete (Attempt #186) — `analysis_20251008T212459Z.md` and `lattice_hypotheses.md` isolate the F_latt sign flip (PyTorch +1.379 vs C −2.383) and elevate Hypothesis H4 (φ rotation mismatch) to HIGH confidence.
-  - 🚩 Downstream nb-compare + supervisor command reruns remain blocked until Phase M closes.
+  - 🚩 Downstream nb-compare + supervisor command reruns remain blocked until Phase M closes (Phase N pending after optional Phase M6 decision).
 
 ---
 
@@ -68,7 +68,7 @@ Exit Criteria: Latest `trace_harness.py` comparison yields `first_divergence = N
 | M4a | Confirm normalization contract | [D] | ✅ Attempt #192 (2025-10-08). Design memo recorded at `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T223046Z/design_memo.md` with spec (§§4.2–4.3) + `nanoBragg.c:3332-3368` citations and documentation of the double `/ steps` regression in `src/nanobrag_torch/simulator.py`. |
 | M4b | Patch simulator normalization | [D] | ✅ Attempts #188/189 (2025-10-22) — `src/nanobrag_torch/simulator.py` now divides by `steps` exactly once; see `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/summary.md` and commit `fe3a328`. |
 | M4c | Targeted regression & parity tests | [D] | ✅ Attempt #189 — targeted `pytest -v tests/test_cli_scaling_phi0.py` run plus geometry smoke (logs under `fix_20251008T223805Z/pytest.log`) confirmed no regressions. |
-| M4d | Capture closure artifacts | [P] | Attempt #190 (2025-10-08) produced `summary.md`, `metrics.json`, `run_metadata.json`, and `blockers.md` under `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/`, but `first_divergence` remains `"I_before_scaling"`. Keep this row [P] until a rerun after the rotation fix generates `compare_scaling_traces.md` + `metrics.json` with `first_divergence=None`, captures the stdout transcript as `compare_scaling_traces.txt` (use `... | tee .../compare_scaling_traces.txt`), updates `lattice_hypotheses.md` (H4 closure), and refreshes `sha256.txt`. |
+| M4d | Capture closure artifacts | [D] | ✅ Attempt #197 (2025-10-09) regenerated `compare_scaling_traces.txt`, `metrics.json`, and `run_metadata.json` in `reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/20251009T013046Z/`, documenting the expected φ=0 delta and updating `lattice_hypotheses.md`/`sha256.txt` per the Option 1 decision. |
 
 ### Phase N — ROI nb-compare Parity (VG‑3 & VG‑4)
 Goal: After Phase M turns green, prove image-level parity on the supervisor ROI via nb-compare.
@@ -113,4 +113,4 @@ Exit Criteria: (1) `Crystal.get_rotated_real_vectors` implementation evidence ca
 | M5d | Document Option 1 decision & close H4/H5 | [D] | ✅ Attempt #196 (2025-12-20). Bundle published at `reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/20251009T011729Z/` with summary, blocker addendum, env/sha, and commands. `lattice_hypotheses.md` updated to close H4/H5; docs/fix_plan Attempt recorded. |
 | M5e | Refresh validation scripts for spec mode | [D] | ✅ Attempt #197 (2025-10-09). Updated `scripts/validation/compare_scaling_traces.py` docstring with Option 1 note documenting expected φ=0 discrepancy; generated fresh `compare_scaling_traces.txt` stored in bundle `20251009T013046Z/` showing I_before_scaling 14.6% delta with all downstream factors ≤1e-6. |
 | M5f | Targeted regression & CUDA smoke | [D] | ✅ Attempt #197 (2025-10-09). CPU pytest passed 2/2 (`test_rot_b_matches_c`, `test_k_frac_phi0_matches_c`); CUDA smoke tests deselected (no gpu_smoke markers on test_cli_scaling_phi0.py). Logs stored in `20251009T013046Z/tests/`. Pytest collection verified clean (`--collect-only -q`). |
-| M5g | Plan & ledger sync | [ ] | Once M5e–M5f complete, mark those rows [D], refresh `docs/fix_plan.md` Next Actions toward optional Phase M6 (`--c-parity-mode`), and note closure in `galph_memory.md`/`input.md`. |
+| M5g | Plan & ledger sync | [D] | ✅ Completed 2025-12-20 (galph loop). `docs/fix_plan.md` Next Actions now point to evaluating optional Phase M6 vs advancing to Phase N; active plan/ledger entries synced and guidance recorded in galph_memory/input.md. |
