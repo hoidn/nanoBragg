@@ -466,7 +466,8 @@
   - ✅ **Phase M3 (COMPLETE)** — Diagnostic probes complete; see Attempt #187 (2025-10-22). M3a: instrumentation design (`/tmp/m3a_instrumentation_design.md`); M3b: sincg sweep (`20251008T215755Z/phase_m3_probes/sincg_sweep.md`); M3c: single-φ test (`20251008T215634Z/phase_m3_probes/phistep1/`); M3d: rotation audit (`20251008T215700Z/phase_m3_probes/rotation_audit.md`). Root cause: missing normalization (126,000× error) + C-PARITY-001 carryover (+6.8% rot_b).
   - ✅ **Phase M4d closure** — Option 1 bundle `reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/20251009T013046Z/` now hosts refreshed `compare_scaling_traces.txt`, `metrics.json`, and `run_metadata.json`; `lattice_hypotheses.md`/`sha256.txt` updated. Plan row M4d marked [D].
   - ✅ **Phase M5 (Option 1) complete** — M5d–M5g finished (Option 1 documentation, validation script note, targeted pytest logs, and ledger sync 2025-12-20). Plan + fix_plan entries updated; H4/H5 closed.
-  - 🔜 **Phase M6 decision gate** — Confirm whether to pursue optional C-parity emulation. If skipped, annotate plan accordingly and advance to Phase N (nb-compare) starting with N1 (regenerate ROI inputs) using the Option 1 spec-mode bundle as parity context.
+  - ✅ **Phase M6 (SKIPPED 20251009T014553Z)** — Decision recorded in Attempt #198: Skip optional C-parity shim; proceed to Phase N with spec-compliant Option 1. See `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T014553Z/analysis.md`.
+  - 🔜 **Phase N1 (in progress)** — ROI prerequisites captured (Attempt #198); Phase N2 (nb-compare execution) deferred to next engineer turn.
 
 - Attempts History:
   * [2025-10-08] Attempt #190 (ralph loop i=190, Mode: Parity/Docs) — Result: ⚠️ **M4d EVIDENCE CAPTURED / DIVERGENCE PERSISTS.** **Documentation-only loop.**
@@ -4339,3 +4340,21 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - **Phase M5f:** Run CUDA smoke test (pytest -v -m gpu_smoke tests/test_cli_scaling_phi0.py) if GPU available
       - **Phase M5g:** Update plans/active/cli-noise-pix0/plan.md (mark M5d–M5f as [D]) and sync ledger
       - **Future Work:** Phase M6 C-parity emulation remains optional; revisit only if validation against legacy C traces becomes critical
+  * [2025-10-09] Attempt #198 (ralph loop i=197, Mode: Parity/Docs) — Result: ✅ **Phase M6 DECISION (SKIPPED) / Phase N1 PREREQUISITES CAPTURED.** **Documentation-only loop.**
+    Metrics: Targeted tests: 2/2 passed in 2.06s (test_cli_scaling_phi0.py); Test collection verified clean.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T014553Z/analysis.md` — Phase M6 decision analysis documenting rationale for skipping optional C-parity shim
+      - `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T014553Z/inputs/{git_sha.txt,version.txt,env.txt,commands.txt,sha256.txt}` — Environment snapshot and reproduction metadata
+      - `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T014553Z/tests/pytest_cpu.log` — Targeted test baseline (2 passed)
+      - `plans/active/cli-noise-pix0/plan.md` — Phase M6 row updated to `[N/A — skipped 20251009T014553Z]` with decision rationale
+    Changes: Updated plan file only (Phase M6 status); no code changes.
+    Observations/Hypotheses:
+      - **Phase M6 Decision: SKIP** — After Option 1 validation, implementing `-phi-carryover-mode` to replicate C-PARITY-001 bug would violate `specs/spec-a-core.md:237` fresh rotation requirement and add maintenance burden for zero scientific value.
+      - **Option 1 validates spec compliance** — All downstream scaling factors ≤1e-6 tolerance; -14.6% `I_before_scaling` divergence formally documented as C bug in `docs/bugs/verified_c_bugs.md:166-204`.
+      - **Phase N prerequisites ready** — Environment captured, pytest baseline green, ROI command placeholders documented for Phase N2 nb-compare execution.
+      - **Plan alignment** — Phase M5 complete (rows M5a–M5g all [D]); Phase M6 marked skipped; Phase N1 partially complete (env/tests captured, float image generation deferred).
+    Next Actions:
+      - **Phase N2 (next engineer turn):** Execute C and PyTorch commands to generate `c_float.bin` and `py_float.bin`
+      - **Phase N2 (continued):** Run `nb-compare --roi 100 156 100 156` and capture metrics/PNGs under `results/`
+      - **Phase N3:** Update fix_plan Attempts with nb-compare correlation/RMSE metrics
+      - **Phase O1:** Final supervisor command validation if N2/N3 pass thresholds

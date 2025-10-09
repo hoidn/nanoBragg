@@ -114,3 +114,12 @@ Exit Criteria: (1) `Crystal.get_rotated_real_vectors` implementation evidence ca
 | M5e | Refresh validation scripts for spec mode | [D] | ✅ Attempt #197 (2025-10-09). Updated `scripts/validation/compare_scaling_traces.py` docstring with Option 1 note documenting expected φ=0 discrepancy; generated fresh `compare_scaling_traces.txt` stored in bundle `20251009T013046Z/` showing I_before_scaling 14.6% delta with all downstream factors ≤1e-6. |
 | M5f | Targeted regression & CUDA smoke | [D] | ✅ Attempt #197 (2025-10-09). CPU pytest passed 2/2 (`test_rot_b_matches_c`, `test_k_frac_phi0_matches_c`); CUDA smoke tests deselected (no gpu_smoke markers on test_cli_scaling_phi0.py). Logs stored in `20251009T013046Z/tests/`. Pytest collection verified clean (`--collect-only -q`). |
 | M5g | Plan & ledger sync | [D] | ✅ Completed 2025-12-20 (galph loop). `docs/fix_plan.md` Next Actions now point to evaluating optional Phase M6 vs advancing to Phase N; active plan/ledger entries synced and guidance recorded in galph_memory/input.md. |
+
+### Phase M6 — Optional C-Parity Shim (Decision: Skipped)
+Goal: Optional path to implement a `-phi-carryover-mode` flag replicating C-PARITY-001 for pixel-perfect parity, if needed.
+Status: **[N/A — skipped 20251009T014553Z]**
+Decision: After Option 1 validation, we elect to skip Phase M6. Rationale documented in `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T014553Z/analysis.md`:
+- Option 1 bundle validates spec compliance (all downstream factors ≤1e-6)
+- C-PARITY-001 formally documented as historical C bug
+- Emulating buggy behavior would violate `specs/spec-a-core.md` line 237 (fresh rotation requirement)
+- Focus redirected to Phase N (ROI nb-compare validation) with spec-compliant implementation

@@ -1,0 +1,36 @@
+# Phase N1 ROI Prerequisites — Command Log
+# Timestamp: 2025-10-09T01:45:53Z
+# Loop: ralph #197
+
+## Pytest Baseline (CPU)
+# Start: 2025-10-09T01:45:53Z
+export KMP_DUPLICATE_LIB_OK=TRUE
+pytest -v tests/test_cli_scaling_phi0.py
+# End: 2025-10-09T01:45:55Z
+# Exit: 0
+# Result: 2/2 passed in 2.06s
+
+## Environment Capture
+git rev-parse HEAD > inputs/git_sha.txt
+python -m nanobrag_torch --version > inputs/version.txt 2>&1
+# Captured env.txt with OS/Python/PyTorch/CUDA details
+
+## ROI Commands (Deferred to Phase N2)
+# C binary:
+# ${NB_C_BIN} -default_F 100 -cell 100 100 100 90 90 90 -lambda 1.0 \
+#   -distance 100 -detpixels 256 -floatfile inputs/c_float.bin
+
+# PyTorch CLI:
+# KMP_DUPLICATE_LIB_OK=TRUE python -m nanobrag_torch -default_F 100 \
+#   -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -detpixels 256 \
+#   -floatfile inputs/py_float.bin
+
+# nb-compare:
+# nb-compare --c-bin ./golden_suite_generator/nanoBragg --roi 100 156 100 156 \
+#   --outdir results/ -- -default_F 100 -cell 100 100 100 90 90 90 \
+#   -lambda 1.0 -distance 100 -detpixels 256
+
+## Phase M6 Decision
+# Status: Skipped (Option 1 accepted, C-PARITY-001 documented)
+# Timestamp: 20251009T014553Z
+# Rationale: See analysis.md
