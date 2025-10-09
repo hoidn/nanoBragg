@@ -1130,49 +1130,6 @@ class Crystal:
             phi_rad
         )
 
-        # Step 2: Recompute reciprocal vectors from rotated real vectors
-        # Using the STATIC V_cell calculated during initialization (CLAUDE Rule #13 correction)
-        #
-        # C-Code Implementation Reference (from nanoBragg.c, lines 3198-3210):
-        # ```c
-        # if(integral_form)
-        # {
-        #     if(phi != 0.0 || mos_tic > 0)
-        #     {
-        #         /* need to re-calculate reciprocal matrix */
-        #         cross_product(a,b,a_cross_b);
-        #         cross_product(b,c,b_cross_c);
-        #         cross_product(c,a,c_cross_a);
-        #
-        #         /* new reciprocal-space cell vectors */
-        #         vector_scale(b_cross_c,a_star,1e20/V_cell);  // V_cell is STATIC
-        #         vector_scale(c_cross_a,b_star,1e20/V_cell);
-        #         vector_scale(a_cross_b,c_star,1e20/V_cell);
-        #     }
-        # }
-        # ```
-        #
-        # Critical: The C code uses the ORIGINAL V_cell calculated at initialization (line 2152)
-        # and never recalculates it from rotated vectors. The 1e20 factor accounts for unit
-        # conversion (C uses meters for real vectors, Angstroms³ for volume; PyTorch uses
-        # Angstroms throughout, so no conversion factor needed).
-        #
-        # Formula: a* = (b × c) / V_cell_static
-        b_cross_c = torch.cross(b_phi, c_phi, dim=-1)
-        c_cross_a = torch.cross(c_phi, a_phi, dim=-1)
-        a_cross_b = torch.cross(a_phi, b_phi, dim=-1)
-
-        # Use the static volume computed during initialization
-        # This matches C behavior where V_cell is calculated once and reused
-        # Shape: self.V is scalar, broadcast to (N_phi, 3)
-        V_cell_static = self.V
-
-        # Recompute reciprocal vectors using static volume
-        # Shape: (N_phi, 3)
-        a_star_phi = b_cross_c / V_cell_static
-        b_star_phi = c_cross_a / V_cell_static
-        c_star_phi = a_cross_b / V_cell_static
-
         # Generate mosaic rotation matrices
         # Assume config.mosaic_spread_deg is a tensor (enforced at call site)
         if isinstance(config.mosaic_spread_deg, torch.Tensor):
@@ -1191,15 +1148,12 @@ class Crystal:
             identity[2, 2] = 1.0
             mosaic_umats = identity.unsqueeze(0).repeat(config.mosaic_domains, 1, 1)
 
-        # Apply mosaic rotations to both real and reciprocal vectors
+        # Apply mosaic rotations to ONLY real vectors (a, b, c)
+        # The C code does NOT rotate reciprocal vectors - it recomputes them from rotated real vectors
         # Broadcast phi and mosaic dimensions: (N_phi, 1, 3) x (1, N_mos, 3, 3) -> (N_phi, N_mos, 3)
         a_phi_mos = rotate_umat(a_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
         b_phi_mos = rotate_umat(b_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
         c_phi_mos = rotate_umat(c_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
-
-        a_star_phi_mos = rotate_umat(a_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
-        b_star_phi_mos = rotate_umat(b_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
-        c_star_phi_mos = rotate_umat(c_star_phi.unsqueeze(1), mosaic_umats.unsqueeze(0))
 
         # Phase M5c (CLI-FLAGS-003): Reciprocal vector recomputation per C code
         # The C code recalculates reciprocal vectors FROM rotated real vectors
@@ -1233,20 +1187,21 @@ class Crystal:
         # recalculates the reciprocal vectors from them. It does NOT rebuild real vectors
         # from reciprocals. The 1e20 factor in C compensates for meter→Angstrom conversion
         # (C uses meters for real vectors, Angstroms³ for V_cell); PyTorch uses Angstroms
-        # throughout, so we use V_cell_static directly.
+        # throughout, so we use the actual volume V_cell from rotated vectors.
 
         # Real vectors remain unchanged - use the rotated values
         a_final = a_phi_mos
         b_final = b_phi_mos
         c_final = c_phi_mos
 
-        # Initialize reciprocal vectors with rotated values (overwritten for non-identity cases)
-        a_star_final = a_star_phi_mos
-        b_star_final = b_star_phi_mos
-        c_star_final = c_star_phi_mos
+        # Initialize reciprocal vectors with base values (broadcast to (N_phi, N_mos, 3))
+        # These will be overwritten for non-identity (phi, mosaic) combinations
+        a_star_base = self.a_star.unsqueeze(0).unsqueeze(0).expand(config.phi_steps, config.mosaic_domains, -1)
+        b_star_base = self.b_star.unsqueeze(0).unsqueeze(0).expand(config.phi_steps, config.mosaic_domains, -1)
+        c_star_base = self.c_star.unsqueeze(0).unsqueeze(0).expand(config.phi_steps, config.mosaic_domains, -1)
 
         # Create a mask for cases where we need reciprocal recalculation
-        # Condition: NOT (phi==0 AND mosaic_domain==0)
+        # Condition: phi != 0.0 OR mos_tic > 0 (matching C code logic)
         # Shape: (N_phi, N_mos)
         phi_nonzero = phi_rad.unsqueeze(1) != 0.0  # (N_phi, 1) broadcast to (N_phi, N_mos)
         mos_nonzero = torch.arange(config.mosaic_domains, device=self.device).unsqueeze(0) != 0  # (1, N_mos) broadcast to (N_phi, N_mos)
@@ -1259,29 +1214,32 @@ class Crystal:
             b_cross_c = torch.cross(b_phi_mos, c_phi_mos, dim=-1)
             c_cross_a = torch.cross(c_phi_mos, a_phi_mos, dim=-1)
 
-            # CRITICAL (Rule #13): Recalculate volume from actual rotated vectors
-            # V_actual = a · (b × c) for each (phi, mosaic) combination
-            # Shape: (N_phi, N_mos)
-            V_actual_phi_mos = torch.sum(a_phi_mos * b_cross_c, dim=-1, keepdim=True)
+            # CRITICAL: The C code reuses the STATIC V_cell from the initial setup
+            # It does NOT recompute volume per-φ step! (see summary.md line 22)
+            # The volume V is already computed from the base misset-rotated vectors
+            # and stored in self.V
+            V_cell_static = self.V
+            V_star_static = 1.0 / V_cell_static
 
-            # Ensure volume is not too small (guard against numerical issues)
-            # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum
-            V_actual_phi_mos = V_actual_phi_mos.clamp_min(1e-6)
-            V_star_actual = 1.0 / V_actual_phi_mos
-
-            # Recompute reciprocal vectors using ACTUAL volume per (phi, mosaic)
-            # a* = (b × c) / V_actual (Rule #13 compliant)
+            # Recompute reciprocal vectors using the STATIC volume
+            # a* = (b × c) / V_cell (using the same V_cell for all φ steps)
             # Shape: (N_phi, N_mos, 3)
-            a_star_recalc = b_cross_c * V_star_actual
-            b_star_recalc = c_cross_a * V_star_actual
-            c_star_recalc = a_cross_b * V_star_actual
+            # Note: V_star_static is a scalar, broadcast to (N_phi, N_mos, 1) automatically
+            a_star_recalc = b_cross_c * V_star_static
+            b_star_recalc = c_cross_a * V_star_static
+            c_star_recalc = a_cross_b * V_star_static
 
             # Apply recalculated reciprocal vectors only where needed (using mask)
             needs_recalc_expanded = needs_recalc.unsqueeze(-1)  # (N_phi, N_mos, 1)
 
-            a_star_final = torch.where(needs_recalc_expanded, a_star_recalc, a_star_phi_mos)
-            b_star_final = torch.where(needs_recalc_expanded, b_star_recalc, b_star_phi_mos)
-            c_star_final = torch.where(needs_recalc_expanded, c_star_recalc, c_star_phi_mos)
+            a_star_final = torch.where(needs_recalc_expanded, a_star_recalc, a_star_base)
+            b_star_final = torch.where(needs_recalc_expanded, b_star_recalc, b_star_base)
+            c_star_final = torch.where(needs_recalc_expanded, c_star_recalc, c_star_base)
+        else:
+            # No recalculation needed - use base reciprocal vectors
+            a_star_final = a_star_base
+            b_star_final = b_star_base
+            c_star_final = c_star_base
 
         # Phase M2g: C-PARITY-001 bug emulation now handled via pixel-indexed cache
         # Carryover application happens in Simulator._compute_physics_for_position
