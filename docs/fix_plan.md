@@ -467,7 +467,8 @@
   - ✅ **Phase M4d closure** — Option 1 bundle `reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/20251009T013046Z/` now hosts refreshed `compare_scaling_traces.txt`, `metrics.json`, and `run_metadata.json`; `lattice_hypotheses.md`/`sha256.txt` updated. Plan row M4d marked [D].
   - ✅ **Phase M5 (Option 1) complete** — M5d–M5g finished (Option 1 documentation, validation script note, targeted pytest logs, and ledger sync 2025-12-20). Plan + fix_plan entries updated; H4/H5 closed.
   - ✅ **Phase M6 (SKIPPED 20251009T014553Z)** — Decision recorded in Attempt #198: Skip optional C-parity shim; proceed to Phase N with spec-compliant Option 1. See `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T014553Z/analysis.md`.
-  - 🔜 **Phase N1 (in progress)** — ROI prerequisites captured (Attempt #198); Phase N2 (nb-compare execution) deferred to next engineer turn.
+  - ✅ **Phase N1 (COMPLETE)** — ROI float images generated (Attempt #199); artifacts stored in `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z/`.
+  - 🔜 **Phase N2 (next turn)** — Execute nb-compare with generated float images; capture correlation/metrics/PNGs.
 
 - Attempts History:
   * [2025-10-08] Attempt #190 (ralph loop i=190, Mode: Parity/Docs) — Result: ⚠️ **M4d EVIDENCE CAPTURED / DIVERGENCE PERSISTS.** **Documentation-only loop.**
@@ -4358,3 +4359,27 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - **Phase N2 (continued):** Run `nb-compare --roi 100 156 100 156` and capture metrics/PNGs under `results/`
       - **Phase N3:** Update fix_plan Attempts with nb-compare correlation/RMSE metrics
       - **Phase O1:** Final supervisor command validation if N2/N3 pass thresholds
+  * [2025-10-09] Attempt #199 (ralph loop i=198, Mode: Parity) — Result: ✅ **Phase N1 COMPLETE — ROI float images generated.** **Float image generation loop.**
+    Metrics: Targeted tests: 2/2 passed in 2.06s (tests/test_cli_scaling_phi0.py); C binary runtime ~3s; PyTorch CLI runtime ~5s; Float file sizes: both 24MB (expected for 2463×2527×4 bytes).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z/inputs/c_roi_float.bin` — C reference float image (SHA256: 85b66e23fe571a628d25b69f1153b1664ba27e8c3188a3484dcf6ee0416f7fd2)
+      - `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z/inputs/py_roi_float.bin` — PyTorch float image (SHA256: dd91f34b63de8687a4c7225c860190d11102b792014912ce0faad676d8c22292)
+      - `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z/inputs/{c_cli_stdout.txt,py_cli_stdout.txt}` — Full CLI output logs from both implementations
+      - `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z/inputs/{git_sha.txt,version.txt,env.txt,commands.txt,sha256.txt,file_sizes.txt}` — Reproduction metadata (git SHA: abd2953, Python 3.13.5, conda base env)
+      - `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z/tests/pytest_cpu.log` — Targeted pytest baseline (2 passed in 2.06s)
+      - `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z/notes/template_command.txt` — Supervisor command template for reference
+      - `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z/notes/todo_nb_compare.md` — Phase N2 checklist and expected behavior notes
+    Changes: Generated float images only; no code changes.
+    Observations/Hypotheses:
+      - **Float image generation successful:** Both C and PyTorch commands completed without errors, producing ~24 MB files matching the expected size for 2463×2527 pixels × 4 bytes/float
+      - **Binary hashes differ (expected):** Different SHA256 hashes confirm the two implementations produce different numerical outputs, consistent with the documented Option 1 φ=0 carryover delta
+      - **Tests remain green:** Targeted scaling tests pass, indicating spec-compliant φ rotation behavior preserved
+      - **Environment captured:** Full reproduction metadata archived including git SHA (abd2953), Python version, conda env, and exact CLI commands with all flags
+      - **Phase N1 exit criteria met:** Both float images generated; metadata/commands/logs archived; pytest baseline green; bundle created under timestamped directory
+      - **Option 1 context preserved:** todo_nb_compare.md documents expected -14.6% I_before_scaling delta and ≤1e-6 downstream factor agreement per Option 1 spec compliance
+    Next Actions:
+      - **Phase N2 (next turn):** Run `nb-compare --roi 100 156 100 156 --resample --threshold 0.98` using the generated float images
+      - **Phase N2 (continued):** Capture correlation (target ≥0.9995), sum_ratio (target 0.99-1.01), RMSE, and peak alignment metrics
+      - **Phase N2 (verification):** Save nb-compare summary.json, PNG previews, and analysis.md under `.../results/` subdirectory
+      - **Phase N3:** Update fix_plan with N2 Attempt citing the correlation metrics and noting any deviations from thresholds
+      - **Plan sync:** Mark Phase N1 row [D] in `plans/active/cli-noise-pix0/plan.md`
