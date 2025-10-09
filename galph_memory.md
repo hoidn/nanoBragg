@@ -1338,3 +1338,9 @@
 - Updated `plans/active/vectorization.md` status snapshot to mark Phases A–E complete and marked E2/E3 [D] with Attempt #12 artifact paths; refreshed docs/fix_plan.md Next Actions to note the plan update.
 - Authored new input.md (Docs mode) directing Ralph to execute Phase F1 design memo with commands/env/checksums artifacts and pytest collect-only proof.
 - No tests run; tree updated with plan/fix_plan/input changes only.
+
+## 2025-12-22 (galph loop - Phase F2/F3 execution prep)
+- Focused on VECTOR-TRICUBIC-001 Phase F absorption validation per docs/fix_plan.md:3364-3378; confirmed design notes already scoped the “validate existing vectorised path” shift.
+- Updated docs/fix_plan.md Next Actions to drop Phase F1 (now complete) and emphasise F2 validation, F3 perf benchmarks, and F4 summarisation with explicit artifact directories (`reports/2025-10-vectorization/phase_f/...`).
+- Regenerated input.md (Perf mode, 110 lines) instructing Ralph to add the nanoBragg.c absorption snippet to `_apply_detector_absorption`, extend tests/test_at_abs_001.py with CPU/CUDA + oversample parametrisation, run targeted pytest, and capture CPU/CUDA benchmarks into `phase_f/validation/` and `phase_f/perf/` bundles.
+- No commands beyond git diff/status; working tree contains updated docs/fix_plan.md and input.md awaiting commit.

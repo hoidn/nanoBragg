@@ -3372,11 +3372,10 @@
   * Optional microbenchmarks: `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --device cpu` (and `--device cuda`), plus `scripts/benchmarks/absorption_baseline.py` for detector absorption timing.
   * Shapes/ROI: 256² & 512² detectors for microbench; oversample 1; structure-factor grid enabling tricubic.
 - First Divergence (if known): Current tricubic path drops to nearest-neighbour fallback for batched pixel grids, emitting warnings and forfeiting accuracy/performance; detector absorption still loops over `thicksteps`, preventing full vectorization and creating hotspots in profiler traces (see reports/benchmarks/20250930-165726-compile-cache/analysis.md).
-- Next Actions (2025-10-08 ralph handoff → Phase F):
-  1. Phase F1 — Draft `reports/2025-10-vectorization/phase_f/design_notes.md` for detector absorption vectorization: tensor layout for `(slow, fast, thicksteps)` broadcasting, device/dtype considerations, C-code reference from `nanoBragg.c:3375-3450`, gradient preservation strategy.
-  2. Phase F2 — Implement batched absorption in `_apply_detector_absorption` or equivalent: broadcast over detector dimensions, maintain differentiability, add C-reference docstrings per CLAUDE Rule #11.
-  3. Phase F3 — Extend `tests/test_at_abs_001.py` with device parametrization, add microbenchmarks via `scripts/benchmarks/absorption_baseline.py` targeting 10-100× speedup, capture CPU/CUDA logs.
-  4. Phase F4 — Update `phase_f/summary.md` and `docs/fix_plan.md`, confirm parity with nb-compare if needed, mark VECTOR-TRICUBIC-001 complete when all exit criteria satisfied.
+- Next Actions (2025-12-22 refresh → Phase F2–F4):
+  1. Phase F2 — Validate the existing vectorized absorption path: ensure `_apply_detector_absorption` docstring cites `nanoBragg.c:2890-2920`, capture gradient/device/dtype probes called out in `reports/2025-10-vectorization/phase_f/design_notes.md` §4/§8, and log findings under `phase_f/validation/<timestamp>/`.
+  2. Phase F3 — Extend `tests/test_at_abs_001.py` (or new helper) with CPU/CUDA parametrisation plus oversample_thick toggles, then rerun `scripts/benchmarks/absorption_baseline.py --sizes 256 512 --thicksteps 5 --repeats 200` on CPU & CUDA, archiving outputs beneath `phase_f/perf/<timestamp>/` with `perf_summary.md` + `perf_results.json`.
+  3. Phase F4 — Summarise Phase F evidence in `phase_f/summary.md`, refresh this fix-plan entry with Attempt details, and, if behaviour changed, run a targeted nb-compare smoke (same harness as Phase E) before marking VECTOR-TRICUBIC-001 ready for closure.
 - Attempts History:
   * [2025-10-06] Attempt #1 (ralph loop) — Result: **Phase A1 COMPLETE** (test collection & execution baseline captured). All tricubic and absorption tests passing.
     Metrics: AT-STR-002: 3/3 tests passed in 2.12s (test_tricubic_interpolation_enabled, test_tricubic_out_of_bounds_fallback, test_auto_enable_interpolation). AT-ABS-001: 5/5 tests passed in 5.88s. Collection: 3 tricubic tests found.
