@@ -1,0 +1,17 @@
+# Archive creation commands for Phase O VG-5 closure
+# Date: 2025-10-08
+# Executed by: ralph (loop i=204)
+
+# Create archive directory structure
+mkdir -p reports/archive/cli-flags-003/supervisor_command
+
+# Mirror supervisor bundle to archive (byte-identical copy)
+cp -a reports/2025-10-cli-flags/phase_l/supervisor_command/20251009T024433Z \
+  reports/archive/cli-flags-003/supervisor_command/
+
+# Create acceptance summary
+# (summary.md written via Edit tool)
+
+# Verify pytest collection for provenance
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_cli_scaling_phi0.py \
+  > reports/archive/cli-flags-003/supervisor_command/pytest_collect.log 2>&1

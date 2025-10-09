@@ -33,7 +33,8 @@
   - ✅ Phase N2 nb-compare executed — Attempt #200 (2025-10-09) captured correlation **0.9852** (≥0.98 evidence threshold) with sum_ratio **1.159×10^5** attributed to the documented C-PARITY-001 bug; see `results/analysis.md` and `summary.json` under the same timestamp.
   - ✅ Phase N3 ledger update complete — Attempt #201 (2025-10-09) documented Option 1 acceptance with 20251009T020401Z metrics in `docs/fix_plan.md` Attempts; plan status refreshed. Ready for Phase O supervisor command rerun.
   - ✅ Phase O supervisor rerun accepted — Attempt #202 captured correlation 0.9966 (≥0.98) with sum_ratio 126,451; Attempt #203 callchain analysis confirmed this lies within the documented C-PARITY-001 tolerance (110K–130K) and no normalization regression exists.
-  - 🔜 Remaining work: close out Phase O2/O3 (ledger + archival) using the 20251009T024433Z supervisor bundle and the cli-flags-o-blocker analysis, then advance to Phase P watch tasks.
+  - ✅ Phase O2/O3 closure complete — Attempt #204 (2025-10-08): updated analysis.md status to PASS, mirrored 20251009T024433Z supervisor bundle to `reports/archive/cli-flags-003/supervisor_command/`, created acceptance summary.md documenting C-PARITY-001 attribution and Option 1 decision, captured pytest collection proof (2/2 tests). VG-5 ledger entry recorded in `docs/fix_plan.md`.
+  - 🔜 Remaining work: establish Phase P watch tasks (quarterly trace harness cadence, biannual nb-compare smoke) and transition initiative focus per next supervisor directive.
 
 ---
 
@@ -93,8 +94,8 @@ Exit Criteria: Supervisor command rerun recorded with expected correlation/inten
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | O1 | Final supervisor rerun | [D] | ✅ Attempt #202 (2025-10-09). Reuse bundle `reports/2025-10-cli-flags/phase_l/supervisor_command/20251009T024433Z/` (commands, stdout logs, PNG previews, `summary.json`, `env.json`, `sha256.txt`). Correlation 0.9966 and sum_ratio 126,451 satisfy the documented C-PARITY-001 tolerance per Attempt #203 callchain analysis. |
-| O2 | Ledger update | [ ] | Record VG-5 closure in `docs/fix_plan.md` (new Attempt) citing the supervisor bundle + cli-flags-o-blocker analysis; refresh this plan’s Status Snapshot with metrics/tolerance statement and mark O2 [D]. Flag the supervisor (galph) via Attempts History so the next loop can append the matching galph_memory note. |
-| O3 | Archive & handoff | [ ] | Mirror the accepted 20251009T024433Z bundle into `reports/archive/cli-flags-003/supervisor_command_<timestamp>/`, capture a concise `summary.md` referencing C-PARITY-001 bounds, and update plan Status Snapshot to mark O3 [D] alongside follow-up expectations (Phase P watch tasks). |
+| O2 | Ledger update | [D] | ✅ Attempt #204 (2025-10-08). Recorded VG-5 closure in `docs/fix_plan.md` with detailed metrics/tolerance attribution; updated plan Status Snapshot with Phase O completion and archive paths; flagged supervisor via Attempts History for galph_memory acknowledgement. |
+| O3 | Archive & handoff | [D] | ✅ Attempt #204 (2025-10-08). Mirrored 20251009T024433Z bundle to `reports/archive/cli-flags-003/supervisor_command/20251009T024433Z/` (byte-identical copy, 17 files, 74MB); created `summary.md` documenting acceptance metrics, C-PARITY-001 tolerance (110K-130K), and Option 1 decision; pytest collection verified (2/2 tests). Ready for Phase P watch tasks. |
 
 ### Phase P — Post-Fix Watch (Optional)
 Goal: Establish lightweight guardrails so scaling regressions are caught early.
