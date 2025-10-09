@@ -1,0 +1,17 @@
+Vectorized Source Generation Benchmark
+==================================================
+Configuration: 25×25 divergence, 9 dispersion
+Total sources generated: 3969
+Iterations: 100
+Total time: 0.102 s
+Average time per call: 1.023 ms
+Throughput: 977.2 calls/sec
+
+Results:
+  Directions shape: torch.Size([3969, 3])
+  Weights shape: torch.Size([3969])
+  Wavelengths shape: torch.Size([3969])
+
+Performance vs baseline (120.0 ms):
+  Speedup: 117.3×
+  ✅ Target achieved (≥10× speedup)
