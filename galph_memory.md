@@ -1585,3 +1585,7 @@
 - Rewrote `input.md` directing Ralph to run `tests/test_at_src_003.py`, capture both PyTorch and C floatfiles under a fresh STAMP, compute correlation/sum_ratio, and archive artifacts/commands in `reports/2025-11-source-weights/phase_e/<STAMP>/`.
 - Next steps for Ralph: follow the new input.md (parity commands + metrics capture), then log results in `[SOURCE-WEIGHT-001]` and propagate unblock signals once thresholds are met.
 
+### 2025-12-24 (galph loop - SOURCE-WEIGHT Phase E parity run prep refresh)
+- Updated `plans/active/source-weight-normalization.md` status snapshot to acknowledge Option B is merged/tested and that Phase E is now blocked solely on capturing fresh TC-D1/TC-D3 parity metrics (corr ≥0.999, |sum_ratio−1| ≤1e-3) and propagating unblocks to vectorization plans.
+- Rewrote `input.md` (Mode: Parity) with an expanded Do Now: run targeted pytest selectors, regenerate TC-D1/TC-D3 PyTorch+C floatfiles using the canonical CLI arguments, capture diagnostics/metrics via the embedded Python helper, and archive artifacts under `reports/2025-11-source-weights/phase_e/<STAMP>/` before logging results in `[SOURCE-WEIGHT-001]`.
+- Follow-up for Ralph: execute the new handoff verbatim, ensure metrics hit thresholds, then update docs/fix_plan.md attempts and flip the corresponding plan rows so VECTOR-GAPS-002 Phase B can unblock.

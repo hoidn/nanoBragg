@@ -8,7 +8,7 @@
   - `docs/development/testing_strategy.md` §§1.4–2 — device/dtype discipline and authoritative commands for targeted pytest runs.
   - `golden_suite_generator/nanoBragg.c:2570-2720` — C reference showing weights copied from file but excluded from `steps` and accumulation.
   - Existing evidence bundles under `reports/2025-11-source-weights/phase_a/` (bias reproduction) and `phase_b/20251009T083515Z/` (spec-aligned gap confirmation).
-- Status Snapshot (2025-12-24 triage): Phases A–D remain complete and the Option B guard is live, but fresh simulator introspection shows PyTorch honouring the sourcefile wavelength column (6.2 Å) while the C reference sticks with CLI `-lambda = 0.9768 Å`, yielding ~300× intensity inflation. C also still counts two zero-weight divergence placeholders (steps=4) whereas PyTorch normalises with steps=2. Divergence auto-generation is already guarded; the current blocker is resolving the wavelength semantics before rerunning parity and documenting the outcome.
+- Status Snapshot (2025-12-24 triage): Phases A–D remain complete and Option B landed (CLI wavelength override + steps guard; verified by `tests/test_at_src_003.py` and Attempt #17). Weighted-source semantics now match the spec/C reference, but Phase E evidence has not been regenerated yet — we still need fresh TC-D1/TC-D3 PyTorch+C runs showing corr ≥ 0.999 and |sum_ratio−1| ≤ 1e-3, then propagate the metrics to docs/fix_plan.md and unblock `VECTOR-GAPS-002`/`VECTOR-TRICUBIC-002`.
 
 ### Phase A — Evidence Baseline (Complete)
 Goal: Preserve reproducible proof of the weighted-source divergence.
