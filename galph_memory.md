@@ -1306,3 +1306,9 @@
 - Refined `docs/fix_plan.md` Next Actions bullet to spell out the supervisor rerun command, required captures, and expectation that correlation≈0.985 / sum_ratio≈1.16e5 (C-PARITY-001) be documented in the forthcoming Attempt.
 - Regenerated `input.md` (Docs mode, 115 lines) directing Ralph to run the supervisor nb-compare with threshold 0.98, capture analysis/test artifacts, update plan + ledger (VG-5), and mirror the bundle to the archive; appended detailed checklists for pre-run, outputs, analysis, and optional CUDA evidence.
 - Working tree clean post-commit `SUPERVISOR: CLI-FLAGS Phase O prep - tests: not run`; ready for Ralph to execute Phase O1–O3.
+
+## 2025-12-22 (galph loop — Phase O callchain directive)
+- Git up to date; reread required spec/arch/testing docs plus CLI plan and the supervisor analysis bundle before selecting focus.
+- Chose Review/housekeeping on CLI-FLAGS-003 (Plan Phase O). Added a "Phase O Blocker Diagnostics" bullet in docs/fix_plan.md:475 directing Ralph to run the callchain workflow (initiative_id cli-flags-o-blocker) and compare steps/normalization between Option 1 ROI and supervisor bundles.
+- Authored input.md (Parity mode, 100 lines) instructing Ralph to execute prompts/callchain.md with the specified analysis question, capture artifacts under reports/cli-flags-o-blocker/, diff steps values, run pytest --collect-only, and log a new Attempt summarising findings.
+- Follow-up for Ralph: complete the callchain deliverables, document effective steps/normalization factors across ROI vs supervisor runs, update docs/fix_plan.md Attempt history, and leave the bundle ready for the next implementation loop.
