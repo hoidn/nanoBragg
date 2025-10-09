@@ -548,6 +548,13 @@ class BeamConfig:
         # Per spec-a-core.md line 151: "The weight column is read but ignored (equal weighting results)"
         # No validation needed since weights don't affect simulation output
 
+        # SOURCE-WEIGHT-001 Phase E: Sourcefile + divergence validation guard
+        # NOTE: BeamConfig doesn't have a source_file field since it's a CLI-level concept.
+        # The validation guard SHALL be implemented in __main__.py when parsing CLI arguments:
+        # When both -sourcefile and any divergence parameters (-hdivrange/-vdivrange/-dispersion)
+        # are provided, a UserWarning SHALL be emitted per Option B design
+        # (see reports/2025-11-source-weights/phase_d/20251009T103212Z/design_notes.md)
+
 
 @dataclass
 class NoiseConfig:

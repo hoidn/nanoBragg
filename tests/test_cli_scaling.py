@@ -469,6 +469,225 @@ class TestSourceWeights:
         assert result.sum().item() > 0, "Single source simulation should produce non-zero intensity"
 
 
+@pytest.mark.skipif(not is_parallel_enabled(), reason="NB_RUN_PARALLEL=1 required for C↔PyTorch parity")
+class TestSourceWeightsDivergence:
+    """Test SOURCE-WEIGHT-001 Phase E: Source weight divergence handling per Option B."""
+
+    def test_sourcefile_only_parity(self):
+        """TC-D1: Verify C↔PyTorch parity when only sourcefile is provided (no divergence)."""
+        if not is_parallel_enabled():
+            pytest.skip("NB_RUN_PARALLEL=1 required")
+
+        c_bin = get_c_binary()
+        py_cli = f"{sys.executable} -m nanobrag_torch"
+
+        # Check fixture availability
+        fixture_paths = [
+            Path('reports/2025-11-source-weights/fixtures/two_sources.txt'),
+            Path('reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt')
+        ]
+        sourcefile = None
+        for path in fixture_paths:
+            if path.exists():
+                sourcefile = path
+                break
+
+        if sourcefile is None:
+            pytest.skip("two_sources.txt fixture not found in expected locations")
+
+        mat_file = Path('A.mat')
+        if not mat_file.exists():
+            pytest.skip("A.mat not found in repository root")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+
+            # Shared parameters from commands.txt (TC-D1)
+            common_args = [
+                '-mat', str(mat_file.resolve()),
+                '-sourcefile', str(sourcefile.resolve()),
+                '-distance', '231.274660',
+                '-lambda', '0.9768',
+                '-pixel', '0.172',
+                '-detpixels_x', '256',
+                '-detpixels_y', '256',
+                '-oversample', '1',
+                '-nonoise',
+                '-nointerpolate'
+            ]
+
+            c_out = tmpdir / 'c_tc_d1.bin'
+            py_out = tmpdir / 'py_tc_d1.bin'
+
+            # Run C
+            c_bin_abs = str(Path(c_bin).resolve())
+            c_cmd = [c_bin_abs] + common_args + ['-floatfile', str(c_out)]
+            result_c = subprocess.run(c_cmd, capture_output=True, text=True, cwd=tmpdir)
+            if result_c.returncode != 0:
+                pytest.fail(f"C simulation failed:\n{result_c.stderr}")
+
+            # Run PyTorch
+            py_cmd = py_cli.split() + common_args + ['-floatfile', str(py_out)]
+            result_py = subprocess.run(py_cmd, capture_output=True, text=True, cwd=tmpdir)
+            if result_py.returncode != 0:
+                pytest.fail(f"PyTorch simulation failed:\n{result_py.stderr}")
+
+            # Load images
+            shape = (256, 256)
+            c_img = read_float_image(c_out, shape)
+            py_img = read_float_image(py_out, shape)
+
+            # Compute metrics
+            c_sum = np.sum(c_img)
+            py_sum = np.sum(py_img)
+            sum_ratio = py_sum / c_sum if c_sum > 0 else float('inf')
+
+            # Correlation
+            c_flat = c_img.flatten()
+            py_flat = py_img.flatten()
+            correlation = np.corrcoef(c_flat, py_flat)[0, 1] if np.std(c_flat) > 0 and np.std(py_flat) > 0 else 0.0
+
+            # Phase E acceptance criteria
+            tolerance_corr = 0.999
+            tolerance_ratio = 1e-3
+
+            # Save metrics on failure
+            metrics = {
+                'tc_d1_correlation': float(correlation),
+                'tc_d1_sum_ratio': float(sum_ratio),
+                'tc_d1_c_sum': float(c_sum),
+                'tc_d1_py_sum': float(py_sum),
+                'device': 'cpu',
+                'dtype': 'float32'
+            }
+
+            if abs(sum_ratio - 1.0) > tolerance_ratio or correlation < tolerance_corr:
+                from datetime import datetime
+                timestamp = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+                report_dir = Path(f'reports/2025-11-source-weights/phase_e/{timestamp}')
+                report_dir.mkdir(parents=True, exist_ok=True)
+                with open(report_dir / 'metrics.json', 'w') as f:
+                    json.dump(metrics, f, indent=2)
+
+            # Assertions
+            assert correlation >= tolerance_corr, \
+                f"TC-D1: Correlation {correlation:.6f} < {tolerance_corr}. Metrics: {json.dumps(metrics, indent=2)}"
+
+            assert abs(sum_ratio - 1.0) <= tolerance_ratio, \
+                f"TC-D1: Sum ratio {sum_ratio:.6f} deviates from 1.0 by {abs(sum_ratio - 1.0):.6f} (> {tolerance_ratio}). " \
+                f"C sum={c_sum:.6g}, PyTorch sum={py_sum:.6g}. Metrics: {json.dumps(metrics, indent=2)}"
+
+    def test_sourcefile_divergence_warning(self):
+        """TC-D2: Verify UserWarning when sourcefile + divergence parameters both present."""
+        # This test validates the validation guard at CLI level
+        # Since BeamConfig doesn't have a source_file field, this warning will be emitted
+        # from the CLI argument parser when both -sourcefile and -hdivrange are provided
+
+        # For now, we'll skip this test as a placeholder
+        # The actual validation guard needs to be implemented in __main__.py
+        pytest.skip("TC-D2: Validation guard not yet implemented in CLI (pending Phase E1)")
+
+    def test_divergence_only_grid_generation(self):
+        """TC-D3: Verify divergence grid generation when NO sourcefile provided."""
+        if not is_parallel_enabled():
+            pytest.skip("NB_RUN_PARALLEL=1 required")
+
+        c_bin = get_c_binary()
+        py_cli = f"{sys.executable} -m nanobrag_torch"
+
+        mat_file = Path('A.mat')
+        if not mat_file.exists():
+            pytest.skip("A.mat not found in repository root")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+
+            # Shared parameters from commands.txt (TC-D3)
+            common_args = [
+                '-mat', str(mat_file.resolve()),
+                '-hdivrange', '0.5',
+                '-hdivsteps', '3',
+                '-distance', '231.274660',
+                '-lambda', '0.9768',
+                '-pixel', '0.172',
+                '-detpixels_x', '256',
+                '-detpixels_y', '256',
+                '-oversample', '1',
+                '-nonoise',
+                '-nointerpolate'
+            ]
+
+            c_out = tmpdir / 'c_tc_d3.bin'
+            py_out = tmpdir / 'py_tc_d3.bin'
+
+            # Run C
+            c_bin_abs = str(Path(c_bin).resolve())
+            c_cmd = [c_bin_abs] + common_args + ['-floatfile', str(c_out)]
+            result_c = subprocess.run(c_cmd, capture_output=True, text=True, cwd=tmpdir)
+            if result_c.returncode != 0:
+                pytest.fail(f"C simulation failed:\n{result_c.stderr}")
+
+            # Run PyTorch
+            py_cmd = py_cli.split() + common_args + ['-floatfile', str(py_out)]
+            result_py = subprocess.run(py_cmd, capture_output=True, text=True, cwd=tmpdir)
+            if result_py.returncode != 0:
+                pytest.fail(f"PyTorch simulation failed:\n{result_py.stderr}")
+
+            # Load images
+            shape = (256, 256)
+            c_img = read_float_image(c_out, shape)
+            py_img = read_float_image(py_out, shape)
+
+            # Compute metrics
+            c_sum = np.sum(c_img)
+            py_sum = np.sum(py_img)
+            sum_ratio = py_sum / c_sum if c_sum > 0 else float('inf')
+
+            # Correlation
+            c_flat = c_img.flatten()
+            py_flat = py_img.flatten()
+            correlation = np.corrcoef(c_flat, py_flat)[0, 1] if np.std(c_flat) > 0 and np.std(py_flat) > 0 else 0.0
+
+            # Phase E acceptance criteria
+            tolerance_corr = 0.999
+            tolerance_ratio = 1e-3
+
+            # Save metrics on failure
+            metrics = {
+                'tc_d3_correlation': float(correlation),
+                'tc_d3_sum_ratio': float(sum_ratio),
+                'tc_d3_c_sum': float(c_sum),
+                'tc_d3_py_sum': float(py_sum)
+            }
+
+            if abs(sum_ratio - 1.0) > tolerance_ratio or correlation < tolerance_corr:
+                from datetime import datetime
+                timestamp = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+                report_dir = Path(f'reports/2025-11-source-weights/phase_e/{timestamp}')
+                report_dir.mkdir(parents=True, exist_ok=True)
+                with open(report_dir / 'metrics.json', 'w') as f:
+                    json.dump(metrics, f, indent=2)
+
+            # Assertions
+            assert correlation >= tolerance_corr, \
+                f"TC-D3: Correlation {correlation:.6f} < {tolerance_corr}. Metrics: {json.dumps(metrics, indent=2)}"
+
+            assert abs(sum_ratio - 1.0) <= tolerance_ratio, \
+                f"TC-D3: Sum ratio {sum_ratio:.6f} deviates from 1.0 by {abs(sum_ratio - 1.0):.6f} (> {tolerance_ratio}). " \
+                f"C sum={c_sum:.6g}, PyTorch sum={py_sum:.6g}. Metrics: {json.dumps(metrics, indent=2)}"
+
+    def test_c_parity_explicit_oversample(self):
+        """TC-D4: Verify C parity with explicit -oversample 1 flag."""
+        # This is essentially the same as TC-D1 but explicitly verifies
+        # that the oversample flag handling is correct
+        if not is_parallel_enabled():
+            pytest.skip("NB_RUN_PARALLEL=1 required")
+
+        # Reuse TC-D1 logic (same parameters, same expectations)
+        # This test ensures regression protection
+        self.test_sourcefile_only_parity()
+
+
 class TestHKLDevice:
     """Test that HKL tensors respect CLI -device flag (Phase L3d)."""
 

@@ -4219,6 +4219,26 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       1. Mark Phase D task D3 complete in `plans/active/source-weight-normalization.md`
       2. Phase E1-E3: Implement Option B (BeamConfig guard + TestSourceWeightsDivergence class), run pytest harness, capture metrics under `phase_e/<STAMP>/`, verify correlation ≥0.999 and warning emission
       3. Phase E4: Amend `specs/spec-a-core.md:144-162`, update `docs/architecture/pytorch_design.md` §8, mark SOURCE-WEIGHT-001 complete, notify `[VECTOR-GAPS-002]` and `[PERF-PYTORCH-004]` that profiling can resume
+  * [2025-10-09] Attempt #11 — Result: Phase E implementation complete (test scaffolding). Added TestSourceWeightsDivergence class with 4 test methods (TC-D1/D2/D3/D4) and BeamConfig documentation for CLI-level validation guard.
+    Metrics: Pytest collection: 686 tests (+4 from baseline 682). All 4 new tests skip correctly when NB_RUN_PARALLEL=1 not set. Test collection passes without errors.
+    Artifacts:
+      - `tests/test_cli_scaling.py` lines 472-620 — TestSourceWeightsDivergence class with TC-D1 (sourcefile-only parity), TC-D2 (warning validation, deferred to CLI), TC-D3 (divergence-only grid), TC-D4 (explicit oversample regression)
+      - `src/nanobrag_torch/config.py` lines 551-556 — BeamConfig documentation noting that validation guard belongs in __main__.py CLI parser
+      - Pytest collection log: 686 tests collected successfully
+    Observations/Hypotheses:
+      - TC-D1 & TC-D4 implementation complete: Uses fixture auto-detection for `two_sources.txt` (tries both `reports/2025-11-source-weights/fixtures/` and `phase_a/.../fixtures/`), runs C↔PyTorch CLI comparison, computes correlation & sum_ratio metrics, saves failure artifacts to `reports/2025-11-source-weights/phase_e/<timestamp>/metrics.json`
+      - TC-D2 skipped: Validation guard cannot be implemented in BeamConfig (no source_file field exists at config level). Warning SHALL be emitted from CLI argument parser in `__main__.py` when both `-sourcefile` and divergence parameters present. Test currently always skips pending CLI implementation.
+      - TC-D3 implementation complete: Tests divergence grid generation without sourcefile using `-hdivrange 0.5 -hdivsteps 3` parameters from Phase D commands.
+      - All tests use explicit `-oversample 1 -nonoise -nointerpolate` for determinism per Phase D harness
+      - Phase E acceptance thresholds embedded in tests: correlation ≥ 0.999, |sum_ratio - 1.0| ≤ 1e-3
+      - Device/dtype neutrality preserved: No tensor code changes, all implementation is test scaffolding only
+      - Vectorization preserved: No Python loops introduced
+    Next Actions:
+      1. **TC-D2 CLI Guard** (Phase E1 continuation): Implement validation guard in `__main__.py` where CLI arguments are parsed. When both `-sourcefile` and any of `-hdivrange`/`-vdivrange`/`-dispersion` are provided, emit `UserWarning: "Divergence/dispersion parameters ignored when sourcefile is provided. Sources are loaded from file only (see specs/spec-a-core.md:151-162)."`. Update TC-D2 test to remove skip and use `pytest.warns(UserWarning)` context manager to capture warning.
+      2. **Execute Parity Validation** (Phase E3): Run tests with `NB_RUN_PARALLEL=1` to verify correlation ≥ 0.999 for TC-D1/D3/D4. Capture metrics under `reports/2025-11-source-weights/phase_e/<STAMP>/metrics.json`.
+      3. **Spec Amendment** (Phase E4): Update `specs/spec-a-core.md` lines 144-162 per Option B design (document sourcefile precedence rule).
+      4. **Documentation Updates** (Phase E4): Update `docs/architecture/pytorch_design.md` Sources subsection and `docs/development/testing_strategy.md` to reference new tests.
+      5. **Mark Phase E Complete**: Once all acceptance criteria satisfied (correlation ≥ 0.999, warning test passing, spec updated), mark tasks E1-E4 done in `plans/active/source-weight-normalization.md` and add final Phase E attempt summarizing metrics.
 - Risks/Assumptions: Maintain equal-weight behaviour, ensure device/dtype neutrality, and avoid double application of weights when accumulating source contributions. Tolerance of 5e-3 is acceptable given perfect correlation and minor precision differences. Divergence grid auto-selection mismatch blocks Phase D1 parity validation until fixed.
 
 ---
