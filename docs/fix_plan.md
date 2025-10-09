@@ -19,6 +19,7 @@
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
 | [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | in_progress |
 | [VECTOR-TRICUBIC-001](#vector-tricubic-001-vectorize-tricubic-interpolation-and-detector-absorption) | Vectorize tricubic interpolation and detector absorption | High | in_progress |
+| [VECTOR-GAPS-002](#vector-gaps-002-vectorization-gap-audit) | Vectorization gap audit | High | in_planning |
 | [ABS-OVERSAMPLE-001](#abs-oversample-001-fix-oversample_thick-subpixel-absorption) | Fix -oversample_thick subpixel absorption | High | in_planning |
 | [CLI-DTYPE-002](#cli-dtype-002-cli-dtype-parity) | CLI dtype parity | High | in_progress |
 | [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | in_progress |
@@ -3730,6 +3731,24 @@
 
 ### Archive
 For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, early PERF fixes, routing escalation log), see `docs/fix_plan_archive.md`.
+
+## [VECTOR-GAPS-002] Vectorization gap audit
+- Spec/AT: specs/spec-a-core.md §4, specs/spec-a-parallel.md §2.3 & §4, arch.md §§2/8/15, docs/architecture/pytorch_design.md §1.1, docs/development/pytorch_runtime_checklist.md, docs/development/testing_strategy.md §§1.4–2.
+- Priority: High
+- Status: in_planning (Phase A pending; plan authored 2025-12-22)
+- Owner/Date: galph/2025-12-22
+- Plan Reference: `plans/active/vectorization-gap-audit.md`
+- Reproduction (C & PyTorch):
+  * PyTorch (profiling): `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1`
+  * Analysis (after Phase A1 lands): `python scripts/analysis/vectorization_inventory.py --package src/nanobrag_torch --outdir reports/2026-01-vectorization-gap/phase_a/<STAMP>/`
+- First Divergence (if known): No consolidated post-Phase G inventory exists; residual Python loops (e.g., mosaic rotation RNG, detector ROI rebuild, RNG shims) remain unquantified, risking regressions of the vectorization guardrails and blocking performance diagnosis.
+- Next Actions:
+  1. Execute plan Phase A tasks (A1–A3) to build the loop inventory and annotate findings.
+  2. Run Phase B1 profiler capture to tie static loops to runtime cost.
+  3. Publish the prioritised backlog (Phase B3) and update this entry with artifact links before delegating vectorization work.
+- Attempts History:
+  * [2025-12-22] Attempt #0 — Result: planning baseline. Added `plans/active/vectorization-gap-audit.md`; no code changes yet. Next Actions: Phase A1 (loop-inventory script).
+
 
 ---
 

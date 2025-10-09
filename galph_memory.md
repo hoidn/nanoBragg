@@ -2,6 +2,12 @@
 
 > Entries prior to 2025-11 have been moved to `archive/galph_memory/2025-09_to_2025-10.md` (summarized on 2025-12-04).
 
+### 2025-12-22 (galph loop - Vectorization gap planning)
+- Authored `plans/active/vectorization-gap-audit.md` to drive VECTOR-GAPS-002 (Phase A loop inventory through Phase D closure).
+- Added `[VECTOR-GAPS-002]` section + index row to `docs/fix_plan.md` with Phase A/B/C next actions and Attempt #0 placeholder.
+- Replaced input.md (Perf mode) directing Ralph to build the AST-based loop inventory script, run the new command, and log artifacts under `reports/2026-01-vectorization-gap/phase_a/<STAMP>/`.
+- Follow-up: Once script outputs land, ensure Phase A3 summary + fix_plan Attempt capture counts; prepare profiler run for Phase B1.
+
 ### 2025-12-22 (galph loop - Source grid vectorization evidence)
 - Focused on [PERF-PYTORCH-004] Goal 2 gap: logged `generate_sources_from_divergence_dispersion` triple-loop cost (~0.126 s per call for 3,969 sources).
 - Created reports/2025-10-vectorization/gaps/20251009T061928Z/{analysis.md,generate_sources_timing.txt,commands.txt,env.json}.
