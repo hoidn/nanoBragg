@@ -1,5 +1,11 @@
 # Galph Memory
 
+### 2025-12-24 (galph loop - Source-weight Phase D design prep)
+- Marked Phase D1 complete in `plans/active/source-weight-normalization.md` (evidence at `reports/2025-11-source-weights/phase_d/20251009T102319Z/`) and rewrote D2/D3 guidance to require a design_notes.md decision doc plus harness prep before implementation.
+- Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions to focus on drafting the design decision and acceptance harness prior to Phase E parity runs.
+- Issued new `input.md` (Mode: Docs) directing Ralph to create the Phase D2 design bundle: fresh timestamped folder, design_notes.md synthesising divergence options, collect-only pytest proof, and summary scaffolding.
+- Follow-up for Ralph: deliver the design_notes.md recommendation with command log + pytest collect output, then update fix_plan attempts; next loop we can green-light Phase D3 harness work.
+
 ### 2025-12-24 (galph loop - SOURCE-WEIGHT Phase D evidence gate)
 - Discovered that no Phase D artifacts exist for SOURCE-WEIGHT-001; warm-run profiler captures still show correlation 0.721. Updated docs/fix_plan.md ([SOURCE-WEIGHT-001] status, Next Actions, Attempt #7) and plans/active/source-weight-normalization.md to mark Phase C done and Phase D pending. Repointed [VECTOR-GAPS-002] Phase B1 as BLOCKED until Phase D logs correlation ≥0.99.
 - Replaced input.md with Parity-mode instructions directing Ralph to rerun the weighted-source parity test (NB_RUN_PARALLEL=1, -oversample 1), collect CLI metrics under reports/2025-11-source-weights/phase_d/<STAMP>/, and update the ledger once evidence lands.
