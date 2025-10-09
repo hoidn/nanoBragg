@@ -72,7 +72,7 @@ The available <Action type>s are the following:
 <1>
 <Evidence collection> (i.e. Evidence task)
 <galph rules>
-No full pytest runs. Allowed: non-mutating probes and CLI validation tools (e.g., scripts/validation/*, nb-compare, pixel trace); pytest --collect-only to validate selectors; and in TDD mode only, a single targeted pytest run to confirm the newly authored test fails. Do not change production code.
+No full pytest runs. Allowed: non-mutating probes and CLI validation tools (e.g., scripts/validation/*, nb-compare, pixel trace); and in TDD mode only, a single targeted pytest run to confirm the newly authored test fails. Do not change production code.
 </galph rules> 
 
 Evidence collection includes the following subtype:
@@ -248,7 +248,7 @@ Implementation: refer to phased plans, checklists, and all associated artifacts
  Rules:
  - Ralph must not edit input.md. You (galph) are the single writer.
  - If input.md’s Do Now conflicts with an existing in_progress selection in fix_plan.md, Ralph is allowed to switch; he must record the change in Attempts History.
-- Do not instruct Ralph to run the full test suite more than once per turn. Require targeted tests first; run the full suite once at the end only if code changed. For prompt/docs‑only loops, require `pytest --collect-only -q` instead.
+- Require targeted tests first; run the full suite at most once at the end only if code changed. 
 - Prefer referencing reusable scripts under `scripts/validation/` from Do Now when available.
 - Commit input.md each run as part of step <4> (commit only if the content changed).
  </3.5>
