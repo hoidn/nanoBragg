@@ -3,7 +3,7 @@
 - Phase Goal: Ensure per-source weighting matches the nanoBragg C semantics so total fluence reflects `sum(source_weights)` instead of `n_sources`.
 - Dependencies: specs/spec-a-core.md §5 (Source intensity), docs/architecture/pytorch_design.md §2.3 (Source handling), docs/development/c_to_pytorch_config_map.md §Beam/Source, `nanoBragg.c` lines 2480-2595 (source weighting), `scripts/validation/compare_scaling_traces.py` outputs for weighted sources.
 - Current gap snapshot (2025-11-17): `Simulator.run` (src/nanobrag_torch/simulator.py:837-925) divides accumulated intensity by `n_sources` even when custom `source_weights` are supplied, leading to biased fluence whenever weights ≠ 1.0.
-- Status Snapshot (2025-12-22): Phase A evidence bundle `20251009T071821Z` confirms the 327.9× scaling error and is referenced by `[VECTOR-GAPS-002]` as the blocker for profiler correlation. Phase B design work is still outstanding; completing B1–B3 will unblock PERF-PYTORCH-004 Phase P3.0b/P3.0c and allow vectorization-gap profiling to resume.
+- Status Snapshot (2025-12-22): Phases A and B complete (`20251009T071821Z` evidence, `20251009T072937Z` design bundle). Phase C implementation (C1–C3) remains outstanding; landing it will unblock PERF-PYTORCH-004 Phase P3.0c and VECTOR-GAPS-002 Phase B profiling.
 
 ## Phase A — Evidence & Reproduction
 Goal: Capture failing behaviour and establish contractual expectations.

@@ -2,6 +2,12 @@
 
 > Entries prior to 2025-11 have been moved to `archive/galph_memory/2025-09_to_2025-10.md` (summarized on 2025-12-04).
 
+### 2025-12-22 (galph loop - Source weight Phase C staging)
+- Updated `plans/active/source-weight-normalization.md` status snapshot: Phases A/B marked complete; Phase C implementation flagged as the active gate for PERF-PYTORCH-004 and VECTOR-GAPS-002.
+- Refreshed `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions to call for Phase C1–C3 implementation plus Phase D validation; recorded Attempt metadata alignment (updated owner/date, revised divergence text).
+- Rewrote `input.md` (Parity mode) to steer Ralph toward implementing the normalization fix, adding regression tests, running compare_scaling_traces, and staging artifacts under `reports/2025-11-source-weights/phase_c/` + `/phase_d/`.
+- Follow-up: Await Ralph’s Attempt #3 with implementation + validation logs before resuming vectorization-gap profiler work.
+
 ### 2025-12-22 (galph loop - Vectorization gap planning)
 - Authored `plans/active/vectorization-gap-audit.md` to drive VECTOR-GAPS-002 (Phase A loop inventory through Phase D closure).
 - Added `[VECTOR-GAPS-002]` section + index row to `docs/fix_plan.md` with Phase A/B/C next actions and Attempt #0 placeholder.
