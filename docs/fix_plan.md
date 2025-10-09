@@ -4137,6 +4137,35 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       3. After fix, rerun TC-D1/TC-D3 and verify correlation ≥0.999, |sum_ratio-1| ≤1e-3.
       4. Update `specs/spec-a-core.md` to clarify both weight AND wavelength columns are read but ignored.
   * [2025-10-09] Attempt #15 (ralph loop #229 — Mode: Docs, VECTOR-TRICUBIC-002 Phase A0). Result: **SUCCESS** (Lambda semantics design note authored).
+  * [2025-10-09] Attempt #19 (ralph loop #245 — Mode: Parity, Phase E parity evidence bundle). Result: **BLOCKED** (TC-D1/TC-D3 parity FAILED catastrophically).
+    Metrics: AT-SRC-003 regression tests: 7/7 passed, 1 warning in 1.08s. TC-D1 parity: correlation=0.049 (threshold ≥0.999), sum_ratio=46.85 (threshold |ratio-1|≤1e-3). TC-D3 parity: correlation=0.053, sum_ratio=120.06. Test collection: 693 tests (no regressions).
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_e/20251009T181948Z/py_tc_d1.bin` — PyTorch TC-D1 output (max=42.67, mean=0.396)
+      - `reports/2025-11-source-weights/phase_e/20251009T181948Z/c_tc_d1.bin` — C TC-D1 output (max=0.0104, mean=0.00844)
+      - `reports/2025-11-source-weights/phase_e/20251009T181948Z/py_tc_d3.bin` — PyTorch TC-D3 output (max=318.2, mean=1.552)
+      - `reports/2025-11-source-weights/phase_e/20251009T181948Z/c_tc_d3.bin` — C TC-D3 output (max=0.0562, mean=0.0129)
+      - `reports/2025-11-source-weights/phase_e/20251009T181948Z/metrics.txt` — Complete parity metrics
+      - `reports/2025-11-source-weights/phase_e/20251009T181948Z/correlation.txt` — Per-case correlations
+      - `reports/2025-11-source-weights/phase_e/20251009T181948Z/sum_ratio.txt` — Per-case sum ratios
+      - `reports/2025-11-source-weights/phase_e/20251009T181948Z/pytest.log` — AT-SRC-003 test run
+      - `reports/2025-11-source-weights/phase_e/20251009T181948Z/collect.log` — Test collection (693 tests)
+      - `reports/2025-11-source-weights/phase_e/20251009T181948Z/commands.txt` — Reproduction commands
+      - `reports/2025-11-source-weights/phase_e/20251009T181948Z/env.json` — Environment metadata
+      - `reports/2025-11-source-weights/phase_e/20251009T181948Z/py_stdout_tc_d1.log` — PyTorch TC-D1 stdout (2 sources from fixture)
+      - `reports/2025-11-source-weights/phase_e/20251009T181948Z/c_stdout_tc_d1.log` — C TC-D1 stdout (4 sources: 2 actual + 2 zero-weight)
+      - `reports/2025-11-source-weights/phase_e/20251009T181948Z/py_stdout_tc_d3.log` — PyTorch TC-D3 stdout (3 generated sources)
+      - `reports/2025-11-source-weights/phase_e/20251009T181948Z/c_stdout_tc_d3.log` — C TC-D3 stdout (3 sources)
+    Observations/Hypotheses:
+      - **TC-D1 magnitude anomaly**: PyTorch max=42.67 vs C max=0.0104 → 4092× inflation; mean 0.396 vs 0.00844 → 47× inflation. Correlation near zero (0.049) indicates systematic bias, not just normalization.
+      - **TC-D3 magnitude anomaly**: PyTorch max=318.2 vs C max=0.0562 → 5663× inflation; mean 1.552 vs 0.0129 → 120× inflation. Correlation also near zero (0.053).
+      - **Lambda override verified**: PyTorch correctly uses CLI `-lambda 0.9768` and ignores sourcefile wavelength column (6.2 Å), emitting expected warning. This confirms Attempt #17 fix is working.
+      - **Steps count mismatch persists**: C TC-D1 creates 4 sources (2 actual + 2 zero-weight divergence placeholders) while PyTorch counts 2. This explains ~2× of the divergence, but the 47-120× inflation suggests additional scaling bugs.
+      - **Pattern**: Both TC-D1 (weighted sources) and TC-D3 (auto-generated divergence) show ~100× excess intensity, suggesting systemic normalization error in either fluence, r_e², or steps calculation beyond just source counting.
+    Next Actions:
+      1. **CRITICAL**: Investigate the 47-120× intensity inflation that persists AFTER lambda override. Compare PyTorch vs C for: (a) fluence scaling, (b) r_e² constant, (c) steps denominator (including zero-weight source counting), (d) capture_fraction application.
+      2. Implement steps reconciliation to count ALL sources including zero-weight divergence placeholders per C convention (nanoBragg.c:2700-2720). This should reduce sum_ratio from ~50-120× to ~25-60×.
+      3. After steps fix, if sum_ratio still >> 2×, generate parallel trace for a single bright pixel to identify first divergence point in scaling chain.
+      4. Once correlation ≥0.999 and |sum_ratio-1| ≤1e-3 achieved, mark Phase E complete.
     Metrics: Test collection passed (694 tests discovered via `pytest --collect-only -q`). No code changes; documentation-only loop per input.md Do Now.
     Artifacts:
       - `reports/2025-11-source-weights/phase_e/20251009T131709Z/lambda_semantics.md` — Complete implementation design selecting Option B (CLI override), documenting file touchpoints, acceptance thresholds, C reference anchors, and implementation sequence for Ralph

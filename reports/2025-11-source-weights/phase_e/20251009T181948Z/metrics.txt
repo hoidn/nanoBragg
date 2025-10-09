@@ -1,0 +1,2 @@
+tc_d1 correlation=0.048639 sum_ratio=46.853947
+tc_d3 correlation=0.052953 sum_ratio=120.063362

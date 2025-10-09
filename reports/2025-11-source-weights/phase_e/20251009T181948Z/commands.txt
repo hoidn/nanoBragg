@@ -1,0 +1,22 @@
+# TC-D1/TC-D3 parity bundle execution
+# Timestamp: 20251009T181948Z
+
+# Test suite verification
+pytest tests/test_at_src_003.py -v
+
+# TC-D1: Weighted two-source fixture
+## PyTorch
+KMP_DUPLICATE_LIB_OK=TRUE python -m nanobrag_torch -mat A.mat -sourcefile reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt -default_F 100 -hdivsteps 0 -vdivsteps 0 -dispsteps 1 -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -oversample 1 -nonoise -nointerpolate -floatfile reports/2025-11-source-weights/phase_e/20251009T181948Z/py_tc_d1.bin
+
+## C Reference
+NB_RUN_PARALLEL=1 ./golden_suite_generator/nanoBragg -mat A.mat -sourcefile reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt -default_F 100 -hdivsteps 0 -vdivsteps 0 -dispsteps 1 -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -oversample 1 -nonoise -nointerpolate -floatfile reports/2025-11-source-weights/phase_e/20251009T181948Z/c_tc_d1.bin
+
+# TC-D3: Auto-generated hdiv divergence (3 sources)
+## PyTorch
+KMP_DUPLICATE_LIB_OK=TRUE python -m nanobrag_torch -mat A.mat -default_F 100 -hdivrange 0.5 -hdivsteps 3 -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -oversample 1 -nonoise -nointerpolate -floatfile reports/2025-11-source-weights/phase_e/20251009T181948Z/py_tc_d3.bin
+
+## C Reference
+NB_RUN_PARALLEL=1 ./golden_suite_generator/nanoBragg -mat A.mat -default_F 100 -hdivrange 0.5 -hdivsteps 3 -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -oversample 1 -nonoise -nointerpolate -floatfile reports/2025-11-source-weights/phase_e/20251009T181948Z/c_tc_d3.bin
+
+# Metrics computation
+python scripts/compute_parity_metrics.py reports/2025-11-source-weights/phase_e/20251009T181948Z
