@@ -1,0 +1,33 @@
+# Correlation Metrics — VECTOR-GAPS-002 Phase B1
+# Timestamp: 20251009T094735Z
+# Device: CPU
+# Dtype: float32
+# Detector Size: 4096x4096 (16,777,216 pixels)
+
+## C vs PyTorch Correlation
+Correlation (cold run): 0.7212
+Correlation (warm run): 0.7212
+
+## Performance Metrics
+C execution time: 0.537s
+PyTorch time (cold): 2.516s
+PyTorch time (warm): 0.675s
+
+Speedup (cold): 0.21x (C is 4.69x faster)
+Speedup (warm): 0.79x (C is 1.26x faster)
+
+## Setup Time Analysis
+Setup time (cold): 171.6ms
+Setup time (warm): 0.0ms (1.67µs)
+Setup speedup: 102,841x
+
+## Memory Usage
+C memory: 0.0 MB
+PyTorch memory (cold): 437.7 MB
+PyTorch memory (warm): 14.1 MB
+
+## Notes
+- Correlation of 0.721 is BELOW the expected threshold of ≥0.99
+- This indicates a significant parity gap that needs investigation
+- Warm run cache hit successful (PERF-PYTORCH-005 criteria met)
+- The low correlation suggests physics or numerical discrepancies

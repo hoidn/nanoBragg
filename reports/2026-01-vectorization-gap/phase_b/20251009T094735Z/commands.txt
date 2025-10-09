@@ -1,0 +1,15 @@
+# Vectorization Gap Audit — Phase B1 Profiler Capture
+# Timestamp: 20251009T094735Z
+# Branch: feature/spec-based-2
+# Commit: 8f1b96b
+
+# Git Context
+git rev-parse HEAD
+git status --short
+uname -a
+
+# Step 3: pytest collection
+pytest --collect-only -q | tee reports/2026-01-vectorization-gap/phase_b/20251009T094735Z/pytest_collect.log
+
+# Step 4: Profiler execution
+KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1 --outdir reports/2026-01-vectorization-gap/phase_b/20251009T094735Z/profile/ | tee reports/2026-01-vectorization-gap/phase_b/20251009T094735Z/profile/run.log
