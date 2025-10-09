@@ -1602,3 +1602,9 @@
 - Read `golden_suite_generator/nanoBragg.c:2570-2720` and `src/nanobrag_torch/simulator.py:824-878`; PyTorch ignores `source_I` completely while C seeds `I` with `source_I[source]`, and steps normalization differs when placeholders are absent—need trace to locate first numeric divergence.
 - Updated input.md (Mode: Parity) to capture a TC-D1 slow/fast trace at pixel (slow=158, fast=147) for both PyTorch and C, recording outputs under `reports/2025-11-source-weights/phase_e/<STAMP>/trace/` plus an automated first-diff log. Ralph now runs collect-only proofs, traces, and Python diff before updating fix_plan attempts.
 - Next loop depends on trace results: once the first divergence line is known, direct code fixes (placeholder source injection / weight handling) and rerun TC-D1/D3 parity.
+
+### 2025-10-09 (galph loop - SOURCE-WEIGHT trace gate refresh)
+- Updated docs/fix_plan.md Next Actions to add the TC-D1 trace capture as step 1 before parity reruns (aligns with Phase E row E2a).
+- Inserted new Phase E row E2a in plans/active/source-weight-normalization.md and refreshed the status snapshot to flag the trace as the active gate.
+- Regenerated input.md (Mode: Parity) directing Ralph to execute the trace bundle and log artifacts under reports/2025-11-source-weights/phase_e/<STAMP>/trace/.
+- Follow-up: Ralph runs the Do Now command, records diff.txt first divergence, and logs the Attempt referencing the new trace artifacts.
