@@ -1,0 +1,9 @@
+tests/test_at_src_003.py::TestSourcefileLambdaOverride::test_lambda_override_single_source
+tests/test_at_src_003.py::TestSourcefileLambdaOverride::test_lambda_override_multiple_sources
+tests/test_at_src_003.py::TestSourcefileWarningEmission::test_warning_emitted_on_mismatch
+tests/test_at_src_003.py::TestSourcefileWarningEmission::test_no_warning_when_matching
+tests/test_at_src_003.py::TestSourcefileWarningEmission::test_no_warning_when_column_missing
+tests/test_at_src_003.py::TestStepsNormalizationParity::test_steps_count_includes_zero_weight_sources
+tests/test_at_src_003.py::TestStepsNormalizationParity::test_equal_weighting_preserved
+
+7 tests collected in 0.82s
