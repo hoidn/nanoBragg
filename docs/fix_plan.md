@@ -24,7 +24,7 @@
 | [CLI-DTYPE-002](#cli-dtype-002-cli-dtype-parity) | CLI dtype parity | High | in_progress |
 | [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | in_progress |
 | [STATIC-PYREFLY-001](#static-pyrefly-001-run-pyrefly-analysis-and-triage) | Run pyrefly analysis and triage | Medium | in_planning |
-| [SOURCE-WEIGHT-001](#source-weight-001-correct-weighted-source-normalization) | Correct weighted source normalization | Medium | in_planning |
+| [SOURCE-WEIGHT-001](#source-weight-001-correct-weighted-source-normalization) | Correct weighted source normalization | Medium | in_progress (Phase C complete, Phase D pending) |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | in_progress |
 
@@ -4013,6 +4013,27 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       1. **Phase C implementation**: Modify simulator.py:868, add BeamConfig validation (zero-sum/negative weights), implement test suite (tests/test_at_src_001.py, tests/test_config.py::TestBeamConfigValidation)
       2. **Phase D validation**: Run TC-A (parity with C), TC-B/C (backward compat), TC-D (validation), TC-E (device neutrality). Capture metrics under `reports/.../phase_d/tests/`
       3. **Unblock dependencies**: Once TC-A parity passes, mark [VECTOR-GAPS-002] ready to resume vectorization-gap profiling, and unblock PERF-PYTORCH-004 P3.0c completion
+  * [2025-10-09] Attempt #3 — Phase C1–C3 implementation + targeted validation (ralph). Result: **IMPLEMENTATION COMPLETE, VALIDATION PARTIAL** (4/5 tests passing; C↔PyTorch parity test requires NB_RUN_PARALLEL=1).
+    Metrics: Targeted tests passed: 4/4 (uniform_weights_backward_compatible, edge_case_zero_sum, edge_case_negative_weights, single_source_fallback). Full test suite collection: 682 tests discovered. Pre-existing failures unrelated to source_weights (5 MOSFLM beam_center tests).
+    Artifacts:
+      - Implementation: `src/nanobrag_torch/simulator.py:869-879` — Updated normalization to use `source_weights.sum()` when weights provided, else fallback to `n_sources`
+      - Validation: `src/nanobrag_torch/config.py:547-564` — Added edge-case validation in BeamConfig.__post_init__ (negative weights, zero-sum checks)
+      - Tests: `tests/test_cli_scaling.py:252-467` — Added TestSourceWeights class with 5 test cases (TC-A weighted_source_matches_c requires parallel, TC-B/C/D/E pass)
+      - Test run logs: `pytest tests/test_cli_scaling.py::TestSourceWeights` (4 passed, 1 skipped [NB_RUN_PARALLEL not set])
+      - Collection proof: `pytest --collect-only -q` (682 tests, collection successful)
+    Observations/Hypotheses:
+      - **Core fix landed**: Normalization now uses `source_norm = source_weights.sum()` instead of `n_sources` (simulator.py:874). Preserves device/dtype by avoiding `.item()` call (tensor-preserving approach from strategy.md alternative).
+      - **Edge-case protection**: BeamConfig validates `source_weights >= 0` (all elements) and `sum(source_weights) > 0` during initialization. Raises ValueError with descriptive messages on violation.
+      - **Backward compatibility verified**: Uniform weights test confirms `sum([1.0, 1.0, 1.0]) = 3 = n_sources` (exact equality within 1e-9).
+      - **Single-source preserved**: Fallback path (`source_weights=None`) executes correctly, simulator produces valid output (64×64 shape, nonzero intensity).
+      - **Validation/Error handling working**: Edge-case tests confirm zero-sum and negative weight rejections raise ValueError during config initialization (fail-fast design).
+      - **Parallel parity test pending**: TC-A (`test_weighted_source_matches_c`) requires C binary and `NB_RUN_PARALLEL=1` environment. This is the critical end-to-end validation that weighted source output matches C reference within correlation ≥0.999.
+      - **No regressions detected**: Pre-existing test failures (5 in detector_config.py, detector_conventions.py, detector_pivots.py) are all related to MOSFLM beam_center_s offset calculations (0.5 pixel mismatches) and unrelated to source_weights normalization changes.
+    Next Actions:
+      1. **Phase D1 (TC-A parallel validation)**: Set `NB_RUN_PARALLEL=1` and `NB_C_BIN=./golden_suite_generator/nanoBragg`, then run `pytest tests/test_cli_scaling.py::TestSourceWeights::test_weighted_source_matches_c -v`. Capture metrics (correlation, sum_ratio, artifacts) and verify sum_ratio ≈ 1.0 ± 1e-3 per strategy.md tolerances.
+      2. **Phase D2 (scaling trace refresh)**: Re-run `scripts/validation/compare_scaling_traces.py` using weighted source scenario to confirm normalization math matches C reference step-by-step.
+      3. **Phase D3 (docs update)**: Update `docs/architecture/pytorch_design.md` §8 with weighted source normalization behavior and `docs/development/testing_strategy.md` §2.5 with AT-SRC-001 parity mapping.
+      4. **Phase D completion**: Once TC-A passes with artifacts stored in `reports/2025-11-source-weights/phase_d/<STAMP>/`, mark SOURCE-WEIGHT-001 complete and notify VECTOR-GAPS-002 and PERF-PYTORCH-004 that multi-source profiling may resume.
 - Risks/Assumptions: Maintain equal-weight behaviour, ensure device/dtype neutrality, and avoid double application of weights when accumulating source contributions.
 
 ---

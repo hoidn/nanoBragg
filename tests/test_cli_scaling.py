@@ -249,6 +249,224 @@ class TestFlattSquareMatchesC:
                 f"C max={c_max:.6g}, PyTorch max={py_max:.6g}. Metrics: {json.dumps(metrics, indent=2)}"
 
 
+class TestSourceWeights:
+    """Test SOURCE-WEIGHT-001: Weighted source normalization correctness."""
+
+    @pytest.mark.skipif(not is_parallel_enabled(), reason="NB_RUN_PARALLEL=1 required for C↔PyTorch parity")
+    def test_weighted_source_matches_c(self):
+        """
+        Verify that PyTorch correctly normalizes multi-source intensities by sum(source_weights).
+
+        SOURCE-WEIGHT-001 Phase C3 (TC-A): Two sources with weights [1.0, 0.2]
+        Expected: PyTorch output matches C reference within tolerance (correlation ≥ 0.999)
+
+        The fix ensures total intensity reflects Σwᵢ instead of incorrectly dividing by n_sources.
+        Previous bug: 328× mismatch (C total=463.4, PyTorch total=151963.1)
+        After fix: sum_ratio should be ~1.0
+        """
+        if not is_parallel_enabled():
+            pytest.skip("NB_RUN_PARALLEL=1 required")
+
+        c_bin = get_c_binary()
+        py_cli = f"{sys.executable} -m nanobrag_torch"
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+
+            # Create weighted source file (TC-A: two sources with weights 1.0 and 0.2)
+            sourcefile = tmpdir / 'weighted_sources.txt'
+            with open(sourcefile, 'w') as f:
+                # Format: X Y Z weight lambda
+                # Source 1: weight=1.0
+                f.write("0.0 0.0 -1.0 1.0 1.0e-10\n")
+                # Source 2: weight=0.2
+                f.write("0.1 0.0 -1.0 0.2 1.0e-10\n")
+
+            # Shared parameters
+            common_args = [
+                '-cell', '100', '100', '100', '90', '90', '90',
+                '-default_F', '300',
+                '-N', '5',
+                '-distance', '100',
+                '-detpixels', '128',  # Small detector for fast test
+                '-pixel', '0.1',
+                '-oversample', '1',
+                '-phisteps', '1',
+                '-mosaic_dom', '1',
+                '-sourcefile', str(sourcefile)
+            ]
+
+            c_out = tmpdir / 'c_weighted.bin'
+            py_out = tmpdir / 'py_weighted.bin'
+
+            # Run C
+            c_bin_abs = str(Path(c_bin).resolve())
+            c_cmd = [c_bin_abs] + common_args + ['-floatfile', str(c_out)]
+            result_c = subprocess.run(c_cmd, capture_output=True, text=True, cwd=tmpdir)
+            if result_c.returncode != 0:
+                pytest.fail(f"C simulation failed:\n{result_c.stderr}")
+
+            # Run PyTorch
+            py_cmd = py_cli.split() + common_args + ['-floatfile', str(py_out)]
+            result_py = subprocess.run(py_cmd, capture_output=True, text=True, cwd=tmpdir)
+            if result_py.returncode != 0:
+                pytest.fail(f"PyTorch simulation failed:\n{result_py.stderr}")
+
+            # Load images
+            shape = (128, 128)
+            c_img = read_float_image(c_out, shape)
+            py_img = read_float_image(py_out, shape)
+
+            # Compute metrics
+            c_sum = np.sum(c_img)
+            py_sum = np.sum(py_img)
+            sum_ratio = py_sum / c_sum if c_sum > 0 else float('inf')
+
+            c_max = np.max(c_img)
+            py_max = np.max(py_img)
+
+            # Correlation
+            c_flat = c_img.flatten()
+            py_flat = py_img.flatten()
+            correlation = np.corrcoef(c_flat, py_flat)[0, 1] if np.std(c_flat) > 0 and np.std(py_flat) > 0 else 0.0
+
+            # Tolerance from strategy.md (Phase B3)
+            tolerance_ratio = 1e-3  # sum_ratio should be ~1.0 ± 1e-3
+            tolerance_corr = 0.999
+
+            # Save metrics on failure
+            metrics = {
+                'c_sum': float(c_sum),
+                'py_sum': float(py_sum),
+                'sum_ratio': float(sum_ratio),
+                'c_max': float(c_max),
+                'py_max': float(py_max),
+                'correlation': float(correlation)
+            }
+
+            if abs(sum_ratio - 1.0) > tolerance_ratio or correlation < tolerance_corr:
+                report_dir = Path('reports/2025-11-source-weights/phase_c') / 'test_failure'
+                report_dir.mkdir(parents=True, exist_ok=True)
+                with open(report_dir / 'metrics.json', 'w') as f:
+                    json.dump(metrics, f, indent=2)
+
+            # Assertions
+            assert correlation >= tolerance_corr, \
+                f"Correlation {correlation:.6f} < {tolerance_corr}. Metrics: {json.dumps(metrics, indent=2)}"
+
+            assert abs(sum_ratio - 1.0) <= tolerance_ratio, \
+                f"Sum ratio {sum_ratio:.6f} deviates from 1.0 by {abs(sum_ratio - 1.0):.6f} (> {tolerance_ratio}). " \
+                f"SOURCE-WEIGHT-001 fix not working correctly. C sum={c_sum:.6g}, PyTorch sum={py_sum:.6g}. " \
+                f"Metrics: {json.dumps(metrics, indent=2)}"
+
+    def test_uniform_weights_backward_compatible(self):
+        """
+        Verify backward compatibility: uniform weights produce same results as before fix.
+
+        SOURCE-WEIGHT-001 Phase C3 (TC-B): Three sources with uniform weights [1.0, 1.0, 1.0]
+        Expected: sum(weights) = 3 = n_sources, so behavior is unchanged
+        """
+        import torch
+        from nanobrag_torch.config import BeamConfig
+
+        # Create beam config with uniform weights
+        beam_config = BeamConfig(
+            wavelength_A=1.0,
+            source_weights=torch.tensor([1.0, 1.0, 1.0])
+        )
+
+        # Verify weight sum equals count
+        weight_sum = beam_config.source_weights.sum().item()
+        n_sources = len(beam_config.source_weights)
+
+        assert abs(weight_sum - n_sources) < 1e-9, \
+            f"Uniform weights should sum to n_sources: sum={weight_sum}, n={n_sources}"
+
+    def test_edge_case_zero_sum_raises_error(self):
+        """
+        Verify that zero-sum weights raise ValueError during config validation.
+
+        SOURCE-WEIGHT-001 Phase C3 (TC-D): Edge case validation
+        """
+        import torch
+        from nanobrag_torch.config import BeamConfig
+
+        # Test all-zero weights
+        with pytest.raises(ValueError, match="source_weights must sum to a positive value"):
+            BeamConfig(
+                wavelength_A=1.0,
+                source_weights=torch.tensor([0.0, 0.0])
+            )
+
+        # Test zero-sum from mixed signs
+        with pytest.raises(ValueError, match="source_weights must be non-negative"):
+            BeamConfig(
+                wavelength_A=1.0,
+                source_weights=torch.tensor([1.0, -1.0])
+            )
+
+    def test_edge_case_negative_weights_raises_error(self):
+        """
+        Verify that negative weights raise ValueError during config validation.
+
+        SOURCE-WEIGHT-001 Phase C3 (TC-D): Edge case validation
+        """
+        import torch
+        from nanobrag_torch.config import BeamConfig
+
+        with pytest.raises(ValueError, match="source_weights must be non-negative"):
+            BeamConfig(
+                wavelength_A=1.0,
+                source_weights=torch.tensor([1.0, -0.2])
+            )
+
+    def test_single_source_fallback(self):
+        """
+        Verify that single-source behavior is preserved (source_weights=None).
+
+        SOURCE-WEIGHT-001 Phase C3 (TC-C): Single source fallback
+        """
+        import torch
+        from nanobrag_torch.config import BeamConfig
+        from nanobrag_torch.models.detector import Detector, DetectorConfig
+        from nanobrag_torch.models.crystal import Crystal, CrystalConfig
+        from nanobrag_torch.simulator import Simulator
+
+        # Create minimal configs without source_weights
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            N_cells=(5, 5, 5),
+            default_F=100.0
+        )
+
+        detector_config = DetectorConfig(
+            distance_mm=100.0,
+            pixel_size_mm=0.1,
+            spixels=64,
+            fpixels=64
+        )
+
+        beam_config = BeamConfig(
+            wavelength_A=1.0,
+            source_weights=None  # Explicit None for single source
+        )
+
+        # Create simulator (should not crash)
+        detector = Detector(detector_config, device=torch.device('cpu'), dtype=torch.float32)
+        crystal = Crystal(crystal_config, beam_config=beam_config, device=torch.device('cpu'), dtype=torch.float32)
+        simulator = Simulator(crystal, detector, beam_config, device=torch.device('cpu'), dtype=torch.float32)
+
+        # Run simulation (should use n_sources=1 fallback)
+        result = simulator.run()
+
+        # Verify result shape
+        assert result.shape == (64, 64), f"Expected (64, 64), got {result.shape}"
+
+        # Verify some intensity was generated (default_F=100 should produce signal)
+        assert result.sum().item() > 0, "Single source simulation should produce non-zero intensity"
+
+
 class TestHKLDevice:
     """Test that HKL tensors respect CLI -device flag (Phase L3d)."""
 

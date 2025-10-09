@@ -528,6 +528,9 @@ class BeamConfig:
 
         Per spec: fluence SHALL be recomputed as flux·exposure/beamsize^2 whenever
         flux != 0 and exposure > 0 and beamsize ≥ 0.
+
+        SOURCE-WEIGHT-001 Phase C2: Validate source_weights edge cases.
+        Ensures physical correctness for weighted multi-source simulations.
         """
         if self.flux != 0 and self.exposure > 0 and self.beamsize_mm >= 0:
             # Convert beamsize from mm to meters for fluence calculation
@@ -540,6 +543,25 @@ class BeamConfig:
         elif self.exposure > 0 and self.beamsize_mm > 0 and self.fluence > 0:
             beamsize_m = self.beamsize_mm / 1000.0
             self.flux = self.fluence * (beamsize_m * beamsize_m) / self.exposure
+
+        # SOURCE-WEIGHT-001 Phase C2: Validate source_weights
+        if self.source_weights is not None:
+            # Check for negative weights
+            if isinstance(self.source_weights, torch.Tensor):
+                if (self.source_weights < 0).any():
+                    raise ValueError("source_weights must be non-negative")
+                weight_sum = self.source_weights.sum().item()
+            else:
+                # Handle array-like input
+                import numpy as np
+                weights_array = np.array(self.source_weights)
+                if (weights_array < 0).any():
+                    raise ValueError("source_weights must be non-negative")
+                weight_sum = weights_array.sum()
+
+            # Check for zero or negative sum
+            if weight_sum <= 0:
+                raise ValueError("source_weights must sum to a positive value (got sum={})".format(weight_sum))
 
 
 @dataclass
