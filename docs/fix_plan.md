@@ -3742,10 +3742,10 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * PyTorch (profiling): `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1`
   * Analysis (after Phase A1 lands): `python scripts/analysis/vectorization_inventory.py --package src/nanobrag_torch --outdir reports/2026-01-vectorization-gap/phase_a/<STAMP>/`
 - First Divergence (if known): No consolidated post-Phase G inventory exists; residual Python loops (e.g., mosaic rotation RNG, detector ROI rebuild, RNG shims) remain unquantified, risking regressions of the vectorization guardrails and blocking performance diagnosis.
-- Next Actions:
-  1. Execute plan Phase A tasks (A1–A3) to build the loop inventory and annotate findings.
-  2. Run Phase B1 profiler capture to tie static loops to runtime cost.
-  3. Publish the prioritised backlog (Phase B3) and update this entry with artifact links before delegating vectorization work.
+- Next Actions (2025-12-22 status refresh):
+  1. Phase A3: annotate the existing inventory (`reports/2026-01-vectorization-gap/phase_a/20251009T064345Z/summary.md`) with vectorized/safe/todo labels and capture counts in `analysis.md`.
+  2. Once A3 is marked done, execute Phase B1 profiler capture to correlate loop hotspots (store under `reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`).
+  3. Use the profiler data to publish the prioritised backlog (Phase B3) and update this entry with artifact links before delegating implementation.
 - Attempts History:
   * [2025-12-22] Attempt #0 — Result: planning baseline. Added `plans/active/vectorization-gap-audit.md`; no code changes yet. Next Actions: Phase A1 (loop-inventory script).
   * [2025-10-09] Attempt #1 — Result: Phase A1/A2 complete (ralph). Implemented AST-based loop inventory and generated initial gap analysis.

@@ -11,7 +11,7 @@
   - plans/active/vectorization.md (Phases A–G history)
   - plans/active/perf-pytorch-compile-refactor/plan.md (4096² warm benchmark harness & profiler usage)
   - reports/2025-10-vectorization/gaps/20251009T061928Z/analysis.md (prior gap evidence: divergence/dispersion source loops)
-- Status Snapshot (2025-12-22): Phase A not started — tricubic/absorption work complete; no consolidated inventory exists for remaining scalar loops.
+- Status Snapshot (2025-12-22): Phase A1/A2 complete — loop inventory script + first scan delivered under `reports/2026-01-vectorization-gap/phase_a/20251009T064345Z/`. Awaiting Phase A3 annotation before moving to profiling (Phase B).
 
 ### Phase A — Loop Inventory & Evidence Capture
 Goal: Build an auditable inventory of remaining Python loops touching the simulator hot path, with code locations and rough complexity estimates.
@@ -20,9 +20,9 @@ Exit Criteria: `reports/2026-01-vectorization-gap/phase_a/<STAMP>/` contains loo
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| A1 | Author loop-inventory script | [ ] | Implement `scripts/analysis/vectorization_inventory.py` (AST walk over `src/nanobrag_torch/` detecting `ast.For` / `ast.While` in production modules). Emit JSON with keys: module, line, loop_header, loop_type, estimated_iteration_sources (hand-tuned heuristics). Include CLI options `--package src/nanobrag_torch --outdir <path>`. |
-| A2 | Run inventory on HEAD | [ ] | Command: `python scripts/analysis/vectorization_inventory.py --package src/nanobrag_torch --outdir reports/2026-01-vectorization-gap/phase_a/<STAMP>/` (ensure directory exists). Capture stdout to `loop_inventory.json`; keep raw AST hits plus filtered list of likely hot loops (e.g., within simulator/crystal/utils). |
-| A3 | Annotate findings | [ ] | Produce `summary.md` consolidating A2 results. For each loop mark: (a) runtime-critical guess, (b) already vectorized fallback (document why safe), (c) needs follow-up. Cross-reference existing evidence (e.g., `reports/2025-10-vectorization/gaps/*`). Log Attempt in docs/fix_plan.md with artifact paths. |
+| A1 | Author loop-inventory script | [D] | ✅ Completed 2025-10-09 (`scripts/analysis/vectorization_inventory.py`). Script scans `src/nanobrag_torch/` for `ast.For/ast.While`, emits JSON + summary. See `reports/2026-01-vectorization-gap/phase_a/20251009T064345Z/commands.txt` for invocation. |
+| A2 | Run inventory on HEAD | [D] | ✅ Completed 2025-10-09. Artifacts: `loop_inventory.json`, `summary.md`, `pytest_collect.log`. Result: 24 loops detected; 12 flagged as likely hot (simulator/crystal/utils). |
+| A3 | Annotate findings | [ ] | Review `summary.md` and label each loop as (a) vectorized/safe, (b) IO/setup-only, or (c) requires follow-up. Capture annotated results in `summary.md` appendix + `reports/2026-01-vectorization-gap/phase_a/<STAMP>/analysis.md`. Update docs/fix_plan Attempt with classification counts. |
 
 ### Phase B — Profiling & Prioritisation
 Goal: Combine static loop inventory with runtime profiling to rank candidates by impact and spec criticality.
@@ -31,9 +31,9 @@ Exit Criteria: Ranked backlog stored at `reports/2026-01-vectorization-gap/phase
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Capture warm-run profiler trace | [ ] | Command: `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1 --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`. Extract python-level call stacks from trace.json focusing on simulator/crystal/utils functions. |
-| B2 | Correlate loops with trace | [ ] | Map A2 loop entries to profiler hotspots (≥1% inclusive time). Produce `hot_loops.csv` with columns: module, line, loop_id, %time, call_count, notes. Flag loops absent from trace but potentially heavy for GPU (document rationale). |
-| B3 | Publish prioritised backlog | [ ] | Draft `backlog.md` summarising top 3–5 candidates (e.g., `_generate_mosaic_rotations`, `utils/noise.lcg_random`, detector ROI rebuild). For each: expected speedup, affected acceptance tests, risks (grad/device). Update docs/fix_plan.md Attempt with backlog link and planned owners. |
+| B1 | Capture warm-run profiler trace | [ ] | Command: `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1 --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`. Extract simulator/crystal/utils call stacks. |
+| B2 | Correlate loops with trace | [ ] | Map Phase A entries to profiler hotspots (≥1% inclusive time). Produce `hot_loops.csv` with columns: module, line, loop_id, %time, call_count, notes. Flag GPU-relevant loops lacking CPU heat. |
+| B3 | Publish prioritised backlog | [ ] | Draft `backlog.md` summarising the top 3–5 candidates (e.g., `_generate_mosaic_rotations`, ROI rebuild, RNG). Document expected speedups, affected acceptance tests, risks. Update docs/fix_plan Next Actions accordingly. |
 
 ### Phase C — Implementation Handoff & Design Prep
 Goal: Translate the prioritised list into actionable implementation packages (design notes, harnesses, delegation guidance).
@@ -54,5 +54,5 @@ Exit Criteria: Updated performance docs/tests, fix_plan entry closed (status `do
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | D1 | Capture before/after metrics | [ ] | For each loop fix, store `before.json` / `after.json` under `reports/2026-01-vectorization-gap/phase_d/<loop_slug>/` with profiler snapshots (CPU + CUDA when available). Require ≤5% regression threshold else open PERF-PYTORCH-004 follow-up. |
-| D2 | Update documentation & checklists | [ ] | Amend `docs/architecture/pytorch_design.md` (vectorization subsection) and `docs/development/pytorch_runtime_checklist.md` with new guidance/evidence. Note relevant regression commands in testing_strategy.md if new tests added. |
+| D2 | Update documentation & checklists | [ ] | Amend `docs/architecture/pytorch_design.md` (vectorization subsection) and `docs/development/pytorch_runtime_checklist.md` with new guidance/evidence. Reference new regression commands in `testing_strategy.md` if tests added. |
 | D3 | Close ledger & archive | [ ] | Once backlog cleared or deferred with rationale, add final Attempt to docs/fix_plan.md, move artifacts to `reports/archive/vectorization-gap/<STAMP>/`, and mark this plan ready for archive. |
