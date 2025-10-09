@@ -1512,3 +1512,10 @@
 - Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions to focus on Phase E1–E3 implementation + parity metrics and Phase E4/F1 documentation/notifications; removed stale D3 wording.
 - Issued new `input.md` (Mode: Parity) directing Ralph to implement Option B divergence parity, add the `TestSourceWeightsDivergence` suite, reuse Phase D3 CLI commands, and capture CPU parity metrics ≥0.999 with |sum_ratio−1| ≤1e-3 under `reports/2025-11-source-weights/phase_e/<stamp>/`.
 - Follow-up for Ralph: deliver Phase E artifacts/metrics, update fix_plan Attempts and the plan status snapshot, then notify VECTOR-GAPS-002 once parity evidence lands so profiler work can resume next loop.
+
+### 2025-12-24 (galph loop - Source-weight Phase E guard prep)
+- Synced clean; reviewed Ralph commits 6252357 (Phase D3 harness) and 22f1a4d (Phase E test scaffolding). Tests TC-D1/D3/D4 exist, TC-D2 still skips pending warning guard.
+- Updated `plans/active/source-weight-normalization.md` Phase E status to reflect partial progress and clarified that the Option B warning must live in `__main__.py`; marked E2 as `[P]` while TC-D2 remains skipped.
+- Refreshed `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions to call out the CLI guard location, removal of the TC-D2 skip, and parity evidence requirements (corr ≥0.999, |sum_ratio−1| ≤1e-3, warning capture).
+- Issued new `input.md` (Mode: Parity) directing Ralph to implement the guard, reactivate TC-D2, rerun the Phase D3 command bundle, and archive metrics/warning logs under `reports/2025-11-source-weights/phase_e/<stamp>/` before updating the ledger.
+- Follow-up for Ralph: complete Phase E1/E2 guard + test activation, capture parity artifacts + env snapshot, update fix_plan attempt history, and notify VECTOR-GAPS-002 once evidence meets thresholds; CUDA parity can remain optional but must be documented if skipped.

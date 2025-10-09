@@ -8,7 +8,7 @@
   - `docs/development/testing_strategy.md` §§1.4–2 — device/dtype discipline and authoritative commands for targeted pytest runs.
   - `golden_suite_generator/nanoBragg.c:2570-2720` — C reference showing weights copied from file but excluded from `steps` and accumulation.
   - Existing evidence bundles under `reports/2025-11-source-weights/phase_a/` (bias reproduction) and `phase_b/20251009T083515Z/` (spec-aligned gap confirmation).
-- Status Snapshot (2025-12-24): Phases A–C complete — equal-weight accumulation merged (commits 47822ce, 321c91e, dffea55) and regression tests enforce the spec rule. Phase D1 evidence (`reports/2025-11-source-weights/phase_d/20251009T102319Z/`) quantified the C vs PyTorch divergence, and Phase D2 (`reports/2025-11-source-weights/phase_d/20251009T103212Z/design_notes.md`) ratified **Option B** — spec clarification + validation guard (no tensor changes). Phase D3 now needs to stage the acceptance harness (pytest selector + CLI bundle) so Phase E implementation/verification can begin and unblock `[VECTOR-GAPS-002]` + PERF profiling.
+- Status Snapshot (2025-12-24 update): Phases A–D complete — Option B design locked, and the Phase D3 acceptance harness (commands/tolerances) now lives under `reports/2025-11-source-weights/phase_d/20251009T104310Z/`. Phase E kicked off in commit 22f1a4d: the `TestSourceWeightsDivergence` suite (TC-D1/D3/D4) is in place and skips cleanly when the guard is missing, while TC-D2 remains `pytest.skip` pending the warning implementation. Remaining work: land the CLI-level warning guard, remove the TC-D2 skip, rerun parity CLI metrics, and update spec/architecture docs before unblocking `[VECTOR-GAPS-002]` profiling.
 
 ### Phase A — Evidence Baseline (Complete)
 Goal: Preserve reproducible proof of the weighted-source divergence.
@@ -56,13 +56,14 @@ Exit Criteria: Behavioural decision recorded (spec update vs implementation chan
 
 ### Phase E — Implementation & Verification
 Goal: Apply the agreed divergence-handling behaviour, extend regression coverage, and prove CPU parity (CUDA optional) so dependent performance work can resume.
+Status note (2025-12-24): Test scaffolding for TC-D1/D3/D4 exists (commit 22f1a4d) but TC-D2 still skips because the warning guard is not implemented yet.
 Prereqs: Phase D decision/design signed off; repository clean.
 Exit Criteria: Implementation merged locally with regression tests, Phase E artifact bundle contains pytest logs + CLI metrics proving correlation ≥0.999 and |sum_ratio−1| ≤ 1e-3.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| E1 | Implement divergence parity | [ ] | Update simulator source sampling (likely `src/nanobrag_torch/simulator.py` + helpers) to honour the Phase D decision. Preserve vectorization and equal-weight normalization; add CLAUDE Rule #11 citations if new helpers mirror C code. |
-| E2 | Extend regression tests | [ ] | Add pytest coverage mixing `-sourcefile` with divergence/dispersion flags to assert identical steps and intensities. Include CPU device parameterisation; capture `pytest tests/test_cli_scaling.py::TestSourceWeightsDivergence -v` log under `phase_e/<STAMP>/pytest/`. |
+| E1 | Implement divergence parity | [ ] | Add the Option B warning/precedence guard where CLI arguments are parsed (`src/nanobrag_torch/__main__.py`) so `-sourcefile` wins over divergence/dispersion params. Keep the simulator accumulation logic weight-agnostic and vectorized; cite the nanoBragg.c snippet (lines 2570-2720) if any helper is touched. Remove the hardcoded `pytest.skip` in TC-D2 once the guard exists. |
+| E2 | Extend regression tests | [P] | Commit 22f1a4d introduced `TestSourceWeightsDivergence` (TC-D1/D3/D4). Finish the suite by enabling TC-D2 warning assertions (`pytest.warns(UserWarning)`) and ensuring all tests emit artifacts under `phase_e/<STAMP>/`. Parametrise over CPU (required) and CUDA (optional) per testing_strategy.md §1.4. |
 | E3 | Capture parity metrics | [ ] | Rerun targeted CLI commands (explicit `-oversample 1` plus divergence ranges) for C and PyTorch, store outputs in `phase_e/<STAMP>/metrics.json` + `summary.md`; expect correlation ≥0.999 and |sum_ratio−1| ≤ 1e-3. |
 | E4 | Update documentation | [ ] | Amend `docs/architecture/pytorch_design.md` (Sources subsection) and, if spec change required, submit draft updates to `specs/spec-a-core.md` with rationale. Log Attempt in `docs/fix_plan.md` referencing artifacts. |
 

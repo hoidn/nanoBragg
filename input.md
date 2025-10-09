@@ -1,90 +1,108 @@
-Summary: Land SOURCE-WEIGHT Phase E parity so vectorization profiling can resume.
+Summary: Finish SOURCE-WEIGHT Phase E by landing the CLI warning guard, reactivating TC-D2, and capturing parity metrics so VECTOR-GAPS-002 can resume.
 Mode: Parity
 Focus: [SOURCE-WEIGHT-001] Correct weighted source normalization
 Branch: feature/spec-based-2
 Mapped tests:
-- pytest tests/test_cli_scaling.py::TestSourceWeightsDivergence -v
 - pytest --collect-only -q
+- pytest tests/test_cli_scaling.py::TestSourceWeightsDivergence -v
 Artifacts:
 - reports/2025-11-source-weights/phase_e/<UTCSTAMP>/commands.txt
 - reports/2025-11-source-weights/phase_e/<UTCSTAMP>/summary.md
 - reports/2025-11-source-weights/phase_e/<UTCSTAMP>/metrics.json
 - reports/2025-11-source-weights/phase_e/<UTCSTAMP>/pytest.log
 - reports/2025-11-source-weights/phase_e/<UTCSTAMP>/pytest_collect.log
-- reports/2025-11-source-weights/phase_e/<UTCSTAMP>/c_stdout.log
-- reports/2025-11-source-weights/phase_e/<UTCSTAMP>/py_stdout.log
 - reports/2025-11-source-weights/phase_e/<UTCSTAMP>/warning.log
 - reports/2025-11-source-weights/phase_e/<UTCSTAMP>/env.json
-Do Now: [SOURCE-WEIGHT-001] Phase E — implement Option B divergence parity, then run `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeightsDivergence -v`
-If Blocked:
-- Capture TC-D1 and TC-D3 CLI outputs with current simulator behaviour.
-- Store binaries + stdout/stderr under reports/2025-11-source-weights/phase_e/<UTCSTAMP>/attempts/.
-- Record blocker context and metrics in docs/fix_plan.md Attempts History before pausing.
+Do Now: [SOURCE-WEIGHT-001] Phase E — implement the Option B CLI warning guard, remove the TC-D2 skip, then run `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeightsDivergence -v`
+If Blocked: Capture TC-D1/TC-D3 CLI outputs with the current simulator, stash binaries+stdout under reports/2025-11-source-weights/phase_e/<UTCSTAMP>/attempts/, and log blocker context + metrics in docs/fix_plan.md before pausing.
 Priorities & Rationale:
-- spec/spec-a-core.md:150-190 requires that source weights are read but ignored, so parity hinges on enforcing equal weighting even when divergence grids are requested.
-- docs/architecture/pytorch_design.md §§1.1,2.3 describe the intended batched source flow; these sections must reflect the Option B guard after implementation.
-- plans/active/source-weight-normalization.md Phase E lists exit criteria (correlation ≥0.999, |sum_ratio−1| ≤1e-3) that unblock VECTOR-GAPS-002 profiling and PERF-PYTORCH-004.
-- reports/2025-11-source-weights/phase_d/20251009T104310Z/commands.txt is the authoritative harness; reusing it preserves parity with prior evidence.
-- docs/development/testing_strategy.md §1.4 mandates CPU+CUDA device discipline; at minimum provide CPU evidence and log CUDA status.
-- docs/fix_plan.md `[SOURCE-WEIGHT-001]` needs a fresh Attempt entry summarising Phase E artefacts once complete.
+- specs/spec-a-core.md:150-190 — authoritative language that weights are read but ignored; the warning must cite this range to keep CLI behaviour traceable to the spec.
+- arch.md:§2,§8 — detector/beam architecture and broadcast expectations; ensuring the guard stays outside tensor code respects these constraints.
+- docs/development/c_to_pytorch_config_map.md — beam parameter mapping; helps verify which CLI flags imply divergence so the guard triggers correctly.
+- plans/active/source-weight-normalization.md:Phase-E — status snapshot notes TC-D1/D3/D4 scaffolding exists, TC-D2 awaits guard; closing the phase unblocks profiler work.
+- docs/fix_plan.md:[SOURCE-WEIGHT-001] — refreshed Next Actions specify guard location, parity metrics, and documentation follow-up; our Attempt must satisfy them.
+- reports/2025-11-source-weights/phase_d/20251009T103212Z/design_notes.md — Option B rationale and risk assessment; confirms no simulator changes beyond the warning are required.
+- reports/2025-11-source-weights/phase_d/20251009T104310Z/summary.md — acceptance thresholds and command bundle to reuse; maintain parity with the staged harness.
+- tests/test_cli_scaling.py:472-620 — TestSourceWeightsDivergence implementation; TC-D2 currently skips and must switch to warning assertion without disturbing TC-D1/D3/D4.
+- reports/2025-11-source-weights/phase_a/20251009T071821Z/summary.md — biased baseline metrics; helpful for before/after commentary in summary.md.
+- reports/2025-11-source-weights/phase_d/20251009T102319Z/divergence_analysis.md — documents the original C vs PyTorch divergence counts; reuse its observations when describing Phase E resolution.
+- docs/architecture/pytorch_design.md §8 — current Sources narrative; must be updated after evidence, so keep notes on wording changes while implementing the guard.
+- docs/development/testing_strategy.md §1.4 & §2.5 — mandates device/dtype neutrality and reuse of authoritative command bundles; reference it when logging skipped CUDA runs.
+- galph_memory.md (2025-12-24 entries) — previous supervisor expectations that Phase E evidence unblocks VECTOR-GAPS-002; align new Attempt notes with this context.
+- CLAUDE.md Protected Assets rule — reminder that loops through docs/index.md referenced assets cannot be moved while editing CLI/test files.
 How-To Map:
-- Environment setup:
-  - `export KMP_DUPLICATE_LIB_OK=TRUE`
-  - `export NB_C_BIN=./golden_suite_generator/nanoBragg`
-  - If the instrumented binary is unavailable, fall back to `./nanoBragg` and note it in env.json.
-- Pre-flight checks:
-  - Run `pytest --collect-only -q` and capture the log to phase_e/<stamp>/pytest_collect.log.
-  - Verify that the new `TestSourceWeightsDivergence` suite is discovered.
-- Implementation tasks:
-  - Update simulator source accumulation so weights are ignored regardless of divergence flags; keep vectorized tensor operations (no Python loops).
-  - Add a validation guard that emits `UserWarning` when a sourcefile is combined with divergence/dispersion parameters, consistent with Phase D2 design.
-  - Store guard logic at the configuration boundary (BeamConfig or Simulator initialisation) to avoid runtime branching per pixel.
-  - Maintain device/dtype neutrality; use `.type_as` or `.to` on existing tensors rather than `.cpu()`/`.cuda()`.
-  - Ensure no `.item()` calls appear on tensors that carry gradients.
-- Test authoring:
-  - Create `TestSourceWeightsDivergence` in `tests/test_cli_scaling.py` with methods for TC-D1 parity, TC-D2 warning capture, and TC-D3 divergence-only control.
-  - Parameterise tests over `device` with CPU required and CUDA conditional (`pytest.importorskip` or custom marker) to satisfy runtime checklist guidance.
-  - For TC-D2, assert that the warning message matches the text recorded in `reports/2025-11-source-weights/phase_d/20251009T104310Z/warning_capture.log`.
-- Targeted testing:
-  - Run `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeightsDivergence -v` and save stdout to phase_e/<stamp>/pytest.log.
-  - Note skipped CUDA cases explicitly in the log if GPU unavailable.
-- CLI parity runs (reuse Phase D3 commands):
-  - TC-D1 C reference and PyTorch runs using `reports/2025-11-source-weights/fixtures/A.mat`, the weighted sourcefile fixture, `-oversample 1`, `-nonoise`, `-nointerpolate`.
-  - TC-D2 PyTorch-only run that should emit the warning; pipe stderr to `warning.log`.
-  - TC-D3 C and PyTorch runs with divergence-only configuration to confirm grid parity.
-  - Optionally include TC-D4 metrics capture by repeating TC-D1 and computing correlation/sum_ratio.
-  - Copy the exact command set from the harness into phase_e/<stamp>/commands.txt with timestamps.
-- Metrics capture:
-  - Use the provided Python snippet (or equivalent) to compute correlation and sum_ratio for TC-D1; store numeric results in metrics.json.
-  - Document findings, thresholds, device info, and warning text in summary.md.
-  - Include counts of generated sources/steps from both C and PyTorch logs for traceability.
-- Documentation updates:
-  - Amend `docs/architecture/pytorch_design.md` Sources subsection to note that weights are ignored and describe the new warning behaviour.
-  - If the spec requires clarification, add draft language to `specs/spec-a-core.md` referencing Option B; coordinate with supervisor if further review needed.
-- Ledger updates:
-  - Append a new Attempt entry under `[SOURCE-WEIGHT-001]` in docs/fix_plan.md with artifact paths, metrics, warning text, CPU/GPU status, and follow-up actions.
-  - Update the Status Snapshot in plans/active/source-weight-normalization.md marking Phase E tasks complete as you finish them.
+1. Export env vars: `export KMP_DUPLICATE_LIB_OK=TRUE` and `export NB_C_BIN=./golden_suite_generator/nanoBragg`; record the chosen binary path in env.json.
+2. Confirm guard location: edit `src/nanobrag_torch/__main__.py` argument parsing where CLI options are processed; do not touch simulator core loops.
+3. Implement warning: when `-sourcefile` is provided with any of `-hdivrange`, `-vdivrange`, or `-dispersion`, emit `UserWarning("Divergence/dispersion parameters ignored when sourcefile is provided. Sources are loaded from file only (see specs/spec-a-core.md:151-162).")` with `stacklevel=2`.
+4. Document guard: add a concise code comment referencing Option B design notes and spec lines to aid future maintenance.
+5. Update TC-D2: replace `pytest.skip` with `with pytest.warns(UserWarning) as record:` and assert the warning message includes both "ignored" and the spec citation string.
+6. Preserve fixtures: keep the flexible path lookup for `two_sources.txt` so tests run without extra setup.
+7. Consider device parameterisation: if adding a `device` fixture is feasible, guard CUDA with `torch.cuda.is_available()` and log skips in pytest output.
+8. Run `pytest --collect-only -q` from repo root; redirect stdout to phase_e/<stamp>/pytest_collect.log and ensure 686 tests are discovered.
+9. Execute `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeightsDivergence -v`; tee stdout to phase_e/<stamp>/pytest.log for record.
+10. Reproduce TC-D1 via C/Py CLI runs; copy commands from `commands.txt`, route outputs to `c_stdout.log` and `py_stdout.log`, and store float images for metric computation.
+11. For TC-D2, run the PyTorch CLI command that should emit the warning; capture stderr into warning.log and ensure the message matches expectations.
+12. Repeat the harness for TC-D3 (divergence-only) and TC-D4 (explicit `-oversample 1`) so metrics cover all acceptance cases.
+13. Compute metrics with a short Python snippet (load float images, compute correlation and sum ratio); populate metrics.json with keyed entries for each test and include `tc_d2_warning_captured` boolean plus step counts.
+14. Draft summary.md with a table of test cases, measured metrics, warning confirmation, device/dtype, and any skips; mention adherence to thresholds.
+15. Record environment details (Python, PyTorch, git SHA, NB_C_BIN path, CUDA availability) in env.json; include NB_RUN_PARALLEL status.
+16. Stage documentation snippets for `specs/spec-a-core.md` and `docs/architecture/pytorch_design.md` describing the precedence rule, but defer committing until parity evidence is confirmed.
+17. Update docs/fix_plan.md with a new Attempt entry summarising metrics, warning behaviour, artifacts, and follow-up (e.g., CUDA backlog if skipped).
+18. Refresh `plans/active/source-weight-normalization.md` Phase E table, marking E1/E2 as complete once guard and tests are in place; leave E3/E4 pending until evidence/docs land.
+19. In summary.md, note that VECTOR-GAPS-002 Phase B1 is unblocked once this evidence is accepted, and flag any remaining risks (e.g., CUDA parity outstanding).
+20. Double-check that the guard is covered by unit tests in addition to CLI tests; if no direct unit test exists, justify in summary.md why CLI-level coverage is sufficient.
+21. After running parity commands, verify that `metrics.json` includes raw sums and correlation values with at least 6 decimal digits to simplify future comparisons.
+22. Capture the exact stderr output for the warning in warning.log even when pytest already validated it; maintain both automated assertion and manual artifact.
+23. Before finalising, run `git diff` to ensure only CLI/test/docs files are touched; no simulator files should change this loop.
+24. Update `.gitignore` if temporary directories cause noise (only if absolutely necessary); otherwise delete stray files before committing.
+25. Prepare a short blurb for the next supervisor handoff (input.md summary.md) noting any lingering TODOs, such as CUDA parity follow-up or spec wording proposals.
+26. Run `pytest -k "TestSourceWeights" -v` if time permits to ensure legacy tests remain green after guard changes; capture output in attempts/ if failures occur.
+27. Validate that the warning does not fire for TC-D1 (sourcefile-only) or TC-D3 (divergence-only); note these observations in summary.md to prove selective behaviour.
+28. After metrics are captured, compute relative deltas versus Phase A numbers and include them in summary.md for historical continuity.
+29. Take screenshots or textual diffs only if anomalies appear; otherwise keep evidence lean and textual as per reporting conventions.
 Pitfalls To Avoid:
-- Do not alter divergence grid auto-selection semantics beyond the agreed warning; the goal is documentation + guard, not changing source counts.
-- Avoid duplicating weight-ignore logic in multiple places; centralise behaviour to maintain traceability.
-- Keep Protected Assets listed in docs/index.md untouched (loop.sh, supervisor.sh, input.md, etc.).
-- Ensure reports directories use ASCII names and UTC timestamps (e.g., 20251009T104310Z).
-- Do not drop existing regression tests or fixtures while adding new coverage.
-- Refrain from adding ad-hoc scripts outside `scripts/` — place helpers under `scripts/validation/` if needed.
-- Capture warning text via stderr redirection; do not rely solely on pytest output for documentation.
-- When rerunning CLI commands, clean `/tmp` outputs between runs to avoid mixing artifacts.
-- For CUDA runs, guard with `torch.cuda.is_available()` and document skip reasons.
-- Maintain differentiability by avoiding in-place ops that would share storage across gradient paths.
+- Do not relocate guard logic into simulator or config classes; CLI-level enforcement keeps tensor paths stable and honours Option B design.
+- Avoid relaxing tolerances; corr ≥0.999 and |sum_ratio−1| ≤1e-3 remain non-negotiable.
+- Refrain from modifying or deleting fixtures under reports/2025-11-source-weights/; other attempts rely on them.
+- Preserve Protected Assets from docs/index.md (loop.sh, supervisor.sh, input.md, etc.).
+- Do not introduce `.item()` calls on tensors that might later require gradients; keep weight handling tensor-friendly even if CLI guard uses scalars.
+- Ensure warnings are captured from stderr; redirecting only stdout will miss them.
+- Clean temporary output paths (`/tmp`) between CLI runs to prevent stale data mixing with new evidence.
+- Document CUDA skips explicitly; silent omission conflicts with testing_strategy.md §1.4 device discipline.
+- Avoid adding ad-hoc scripts outside `scripts/`; reuse the existing harness and document commands in commands.txt.
+- Use ASCII-only filenames and UTC timestamps for new report directories.
+- Keep commit history clean; avoid unrelated changes while preparing parity evidence.
+- Verify NB_RUN_PARALLEL is set before running CLI comparisons; if missing, log the skip and resolve before retrying.
+- Do not downgrade logging verbosity in tests; keep `-v` to ensure warning lines appear in captured logs.
+- Avoid mixing absolute and relative paths inconsistently; prefer absolute paths for CLI commands to prevent cwd-related surprises.
+- Do not silence warnings globally (e.g., via `pytest.ini`); TC-D2 must rely on targeted `pytest.warns`.
+- Ensure summary.md references artifact filenames exactly; mismatched names slow down reviewers.
+- Avoid excessive tmp directory reuse; each attempt should get a fresh `phase_e/<stamp>/` folder for traceability.
+- Don't forget to update Attempt history numbering sequentially; skipped numbers cause confusion in later audits.
+- Prevent accidental git add of large binary outputs by keeping them under reports/ (already gitignored); double-check staging before commit.
+- If using notebooks for quick metrics, do not commit them; transcribe results into summary.md and metrics.json only.
+- Do not leave the warning guard active during `pytest --collect-only`; ensure it triggers only when divergence args are present.
+- Avoid catching warnings via `warnings.simplefilter` globally; rely on local context managers within tests.
+- Keep command transcripts in commands.txt chronological with timestamps; unordered entries complicate reproduction.
+- Do not assume GPU availability; gate CUDA-specific logic to avoid raising runtime errors on CPU-only hosts.
+- When editing docs later, cross-check Protected Assets rule so spec updates don't remove referenced files.
 Pointers:
-- plans/active/source-weight-normalization.md#phase-e-implementation--verification — phase checklist and acceptance criteria.
-- reports/2025-11-source-weights/phase_d/20251009T103212Z/design_notes.md — Option B decision matrix and warning copy.
-- reports/2025-11-source-weights/phase_d/20251009T104310Z/summary.md — metrics scaffold and command references for Phase E.
-- reports/2025-11-source-weights/phase_a/20251009T071821Z/summary.md — baseline bias metrics useful for before/after comparison.
-- docs/development/c_to_pytorch_config_map.md (Beam table) — ensure CLI parameters map one-to-one across implementations.
-- docs/debugging/debugging.md (Parallel Trace SOP) — follow if CLI parity metrics fall below thresholds.
-- docs/development/testing_strategy.md §1.4 — reiterates device/dtype neutrality requirements for PyTorch edits.
-- CLAUDE.md (Protected Assets rule) — reminder not to rename or delete artifacts referenced there.
-- galph_memory.md entry 2025-12-24 (Source-weight Phase D3) — prior supervisor guidance and expectations for Phase E.
-Next Up:
-- VECTOR-GAPS-002 Phase B1 profiler rerun once Phase E metrics meet thresholds and dependencies are notified.
-- PERF-PYTORCH-004 Phase B6/B7 warm benchmark once source-weight parity unblock is confirmed.
+- plans/active/source-weight-normalization.md:Phase-E — current checklist, including note that TC-D2 is pending guard implementation.
+- docs/fix_plan.md:[SOURCE-WEIGHT-001] — updated Next Actions enumerating guard location, parity metrics, and documentation follow-up.
+- reports/2025-11-source-weights/phase_d/20251009T103212Z/design_notes.md — Option B decision record with warning copy.
+- reports/2025-11-source-weights/phase_d/20251009T104310Z/commands.txt — canonical CLI bundle for TC-D1–TC-D4.
+- tests/test_cli_scaling.py:472-620 — TestSourceWeightsDivergence implementation to adjust; ensure artifact capture stays intact.
+- reports/2025-11-source-weights/phase_a/20251009T071821Z/summary.md — biased baseline metrics for before/after comparison in summary.md.
+- docs/development/testing_strategy.md §1.4 — reiterates device/dtype neutrality expectations when running parity evidence.
+- docs/architecture/pytorch_design.md §8 — Sources subsection to update once warning behaviour is implemented.
+- docs/development/pytorch_runtime_checklist.md — reminder to keep vectorization/device discipline even when editing CLI.
+- reports/2025-11-source-weights/phase_d/20251009T102319Z/divergence_analysis.md — source vs divergence auto-selection notes useful for summary.md context.
+- galph_memory.md (latest entries) — captures supervisory intent and downstream dependencies for this work.
+- CLAUDE.md — Protected Assets section to revisit before touching CLI/test files, ensuring guard work avoids restricted assets.
+- docs/index.md — confirm no newly created artifacts conflict with protected items before finalising.
+- reports/2025-11-source-weights/phase_d/20251009T104310Z/warning_capture.log — expected warning text and command example for TC-D2.
+- docs/architecture/c_parameter_dictionary.md — quick lookup for divergence flags to ensure guard covers all relevant CLI arguments.
+- scripts/validation/README.md — reminder of preferred locations if auxiliary validation scripts become necessary.
+- docs/development/implementation_plan.md §Phase 3 — broader simulator context; helpful if guard work exposes deeper implementation questions.
+- history/ (latest parity investigations) — skim if correlation anomalies persist after guard implementation.
+Next Up: VECTOR-GAPS-002 Phase B1 profiler rerun once Phase E evidence hits thresholds; notify PERF-PYTORCH-004 so Phase B6/B7 benchmarking can restart.

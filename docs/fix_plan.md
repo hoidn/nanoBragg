@@ -4015,7 +4015,7 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 ## [SOURCE-WEIGHT-001] Correct weighted source normalization
 - Spec/AT: `specs/spec-a-core.md` §4 (Sources, Divergence & Dispersion), `docs/architecture/pytorch_design.md` §§1.1/2.3, `docs/development/c_to_pytorch_config_map.md` (beam sourcing), `docs/development/testing_strategy.md` §1.4, and `golden_suite_generator/nanoBragg.c` lines 2570-2720 (source ingestion & steps computation).
 - Priority: Medium
-- Status: in_progress (Phase C code/tests merged; Phase D parity evidence and documentation capture outstanding)
+- Status: in_progress (Phases A–D complete; Phase E guard + parity metrics outstanding even though test scaffolding landed in commit 22f1a4d)
 - Owner/Date: galph/2025-11-17 (updated 2025-12-22)
 - Plan Reference: `plans/active/source-weight-normalization.md`
 - Reproduction (C & PyTorch):
@@ -4024,8 +4024,8 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
 - First Divergence (if known): Phase A showed PyTorch total intensity 3.28× larger than C for weighted sources. After commit `321c91e` reinstated division by `n_sources`, `_compute_physics_for_position` still multiplies intensity by `source_weights`, producing correlation ≈0.9155 and sum_ratio ≈0.7281 vs C for the TC-A fixture (metrics in `reports/2025-11-source-weights/phase_c/test_failure/metrics.json`).
 - Next Actions (2025-12-24 status refresh):
-  1. Phase E1–E3: Execute the divergence parity work defined in Phase D2/D3. Implement Option B (spec clarification + validation guard) in the simulator, extend regression coverage (`pytest tests/test_cli_scaling.py::TestSourceWeightsDivergence -v`), and rerun the paired CLI commands from `reports/2025-11-source-weights/phase_d/20251009T104310Z/commands.txt` with `-oversample 1`, `-nonoise`, and `-nointerpolate`. Capture correlation ≥0.999 and |sum_ratio−1| ≤1e-3 in a new `reports/2025-11-source-weights/phase_e/<STAMP>/summary.md` plus machine-readable metrics.
-  2. Phase E4/F1: Update documentation (`docs/architecture/pytorch_design.md`, `specs/spec-a-core.md` if clarification required) and notify `[VECTOR-GAPS-002]`/`[PERF-PYTORCH-004]` once parity metrics land so profiling can resume. Archive artifacts to `reports/archive/source-weights/` when complete.
+  1. Phase E1–E3: Implement the Option B warning guard in the CLI argument parser (`src/nanobrag_torch/__main__.py`) so mixing `-sourcefile` with divergence/dispersion flags emits the recorded UserWarning, then update `tests/test_cli_scaling.py::TestSourceWeightsDivergence` by removing the TC-D2 `pytest.skip` and asserting the warning via `pytest.warns`. Re-run the Phase D3 command bundle with `NB_RUN_PARALLEL=1`, capture correlation ≥0.999 and |sum_ratio−1| ≤1e-3 under `reports/2025-11-source-weights/phase_e/<STAMP>/`, and log metrics + env + pytest outputs.
+  2. Phase E4/F1: Update documentation (`docs/architecture/pytorch_design.md`, `specs/spec-a-core.md:144-162` if clarification required) and notify `[VECTOR-GAPS-002]`/`[PERF-PYTORCH-004]` once parity metrics land so profiling can resume. Archive artifacts to `reports/archive/source-weights/` when complete.
 - Attempts History:
   * [2025-11-17] Attempt #0 — Result: backlog entry. Issue documented and plan `plans/active/source-weight-normalization.md` created; awaiting evidence collection.
   * [2025-10-09] Attempt #1 — Phase A evidence capture (ralph). Result: success.
