@@ -4063,6 +4063,31 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - `reports/2025-11-source-weights/phase_g/unexpected_c_parity/metrics.json` — Captured anomaly (correlation ≈0.99999, sum_ratio ≈1.0038) triggered by XPASS path.
     Observations/Hypotheses: Evidence bundle incomplete — no `commands.txt`, metric JSONs, or C outputs were produced. XPASS indicates either a configuration error or that the divergence harness ran without expected C bug coverage; must rebuild the C binary and re-run commands from Phase F to confirm behaviour. Do **not** advance to Phase H until Phase G2/G3 deliver a validated bundle.
     Next Actions: Re-run Phase G2 with rebuilt C binary, corrected PyTorch CLI args (include `-default_F`), and full artifact capture per plan; update fix_plan once evidence is validated or a new blocker is documented.
+  * [2025-10-09] Attempt #28 (ralph loop #257 — Mode: Docs+Parity, Phase G2/G3 evidence rerun). Result: **BLOCKED (critical anomalies discovered)** — XPASS persists confirming unexpected C↔PyTorch parity, C binary segfaults on TC-D3, Phase H work halted per input.md.
+    Metrics: pytest 7 passed, 1 xpassed in 21.20s; `test_c_divergence_reference` XPASS with correlation=0.9999886, sum_ratio=1.0038. PyTorch TC-D1: sum=43162, max=76.97, nonzero=65536. C TC-D3: SEGMENTATION FAULT (no output).
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_g/20251009T214016Z/collect.log` — 8 tests collected
+      - `reports/2025-11-source-weights/phase_g/20251009T214016Z/pytest.log` — 7 pass, 1 xpass (ANOMALY)
+      - `reports/2025-11-source-weights/phase_g/20251009T214016Z/tc_d1_cmd.txt` — PyTorch CLI command
+      - `reports/2025-11-source-weights/phase_g/20251009T214016Z/py_stdout.txt` — PyTorch success output
+      - `reports/2025-11-source-weights/phase_g/20251009T214016Z/py_tc_d1.bin` — PyTorch float image
+      - `reports/2025-11-source-weights/phase_g/20251009T214016Z/py_metrics.json` — PyTorch metrics
+      - `reports/2025-11-source-weights/phase_g/20251009T214016Z/tc_d3_cmd.txt` — C CLI command
+      - `reports/2025-11-source-weights/phase_g/20251009T214016Z/c_stdout.txt` — Segfault error
+      - `reports/2025-11-source-weights/phase_g/20251009T214016Z/notes.md` — Critical findings summary
+      - `reports/2025-11-source-weights/phase_g/20251009T214016Z/commands.txt` — All executed commands
+      - `reports/2025-11-source-weights/phase_g/unexpected_c_parity/metrics.json` — XPASS metrics (correlation=0.9999886, sum_ratio=1.0038)
+    Observations/Hypotheses:
+      - **XPASS persists**: test_c_divergence_reference passed with near-perfect parity (corr=0.999989, ratio=1.0038), contradicting C-PARITY-001 bug assertion. Either (1) C code was fixed/changed, (2) PyTorch behavior regressed, or (3) original C-PARITY-001 assessment was incorrect.
+      - **C binary segfault**: TC-D3 command crashed with segmentation fault, preventing C metrics capture and correlation computation. Possible causes: sourcefile format incompatibility, memory corruption, or C binary regression.
+      - **Phase G2/G3 incomplete**: Cannot complete evidence bundle without valid C output. Correlation and sum_ratio computation blocked.
+      - **Per input.md directive**: "if it XPASSes, document immediately and halt further Phase H work" — this attempt complies by documenting anomalies and blocking Phase H progression.
+    Next Actions:
+      1. **URGENT (Supervisor)**: Investigate XPASS anomaly — check git log for changes to `golden_suite_generator/nanoBragg.c`, review C-PARITY-001 decision memo validity (`reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md`), determine if PyTorch behavior changed.
+      2. **URGENT (Ralph)**: Debug C segfault — verify sourcefile format, rebuild C binary with debug symbols, run minimal test without sourcefile, consider gdb/valgrind analysis.
+      3. **BLOCKER**: Do NOT proceed to Phase H or mark Phase G complete until: (a) XPASS explained and test expectation updated, (b) C segfault resolved and TC-D3 metrics captured, (c) Supervisor reviews findings and approves next steps.
+      4. **IF C-PARITY-001 was incorrect**: Update decision memo, remove `@pytest.mark.xfail` from `test_c_divergence_reference`, revise Phase E/F/G documentation to reflect correct understanding.
+      5. **IF C segfault persists**: Consider alternative C parity validation strategy (use different test case, fix C bug, or document as known C limitation).
   * [2025-10-09] Attempt #26 (ralph loop #253 — Mode: Docs, Phase F1–F3 test redesign packet). Result: **SUCCESS** (Design packet complete; ready for Phase G implementation).
     Metrics: `pytest --collect-only -q tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` (9 tests collected). No code changes.
     Artifacts:
