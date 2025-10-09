@@ -17,6 +17,19 @@ Usage:
         --out reports/2025-10-cli-flags/phase_l/scaling_validation/scaling_validation_summary.md
 
 Plan Reference: plans/active/cli-noise-pix0/plan.md Phase L3e
+
+IMPORTANT - Option 1 Spec-Mode Behavior:
+    When comparing spec-compliant PyTorch traces to legacy C traces, expect I_before_scaling
+    discrepancies due to C-PARITY-001 (φ=0 carryover bug, documented in
+    docs/bugs/verified_c_bugs.md:166). This is an intentional divergence per Phase M5d decision.
+    PyTorch correctly recalculates rotation matrices per φ step (specs/spec-a-core.md:204);
+    C code incorrectly caches φ=0 lattice factors.
+
+    For Option 1 validation bundles, adjust threshold expectations:
+    - I_before_scaling: expect ~14.6% delta (C legacy behavior)
+    - Downstream factors (r_e², fluence, steps, polar, omega): expect ≤1e-6
+
+    Reference: reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/
 """
 
 import argparse

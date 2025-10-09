@@ -1,0 +1,32 @@
+# Commands Executed for Option 1 Spec-Compliance Bundle
+# Date: 2025-10-09T01:30:46Z
+# Phase: M5e/M5f
+
+## Environment Setup
+export KMP_DUPLICATE_LIB_OK=TRUE
+
+## Validation Script Documentation Update
+# Updated scripts/validation/compare_scaling_traces.py docstring with Option 1 note
+# Committed as part of this loop
+
+## Generate Fresh Scaling Comparison
+python scripts/validation/compare_scaling_traces.py \
+  --c reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/c_trace_scaling.log \
+  --py reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/trace_py_scaling.log \
+  --out reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/20251009T013046Z/compare_scaling_traces.txt
+
+## Run Targeted CPU Tests
+pytest -v tests/test_cli_scaling_phi0.py > reports/.../20251009T013046Z/tests/pytest_cpu.log 2>&1
+
+## Run CUDA Smoke Tests (deselected - no gpu_smoke markers)
+pytest -v -m gpu_smoke tests/test_cli_scaling_phi0.py > reports/.../20251009T013046Z/tests/pytest_cuda.log 2>&1
+
+## Environment Snapshot
+python -c "import torch; print(f'torch version: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}')"
+
+## Git Status
+git rev-parse HEAD
+git status --short
+
+## Generate Checksums
+find reports/.../20251009T013046Z -type f -print0 | sort -z | xargs -0 sha256sum > reports/.../20251009T013046Z/sha256.txt
