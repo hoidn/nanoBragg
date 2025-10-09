@@ -1487,3 +1487,10 @@
 - Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions to direct Phase C1–C3 implementation, Phase D1–D2 parity runs, and documentation notifications once metrics land.
 - Replaced `input.md` (Mode: Parity) with Phase C execution guidance: simulator update, TestSourceWeights expansion, targeted parity pytest, CLI metric captures, and artifact paths under `reports/2025-11-source-weights/phase_c|phase_d/<STAMP>/`.
 - Follow-up for Ralph: implement Phase C tasks, capture parity metrics, update plan + fix_plan attempts, then notify `[VECTOR-GAPS-002]` when correlation ≥0.999 & sum_ratio≈1.0.
+
+### 2025-12-24 (galph loop - SOURCE-WEIGHT divergence parity planning)
+- Coin flip came up heads; reviewed recent Ralph commits (`ba9ec28`, `f93098a`) — great evidence capture but parity still blocked by divergence grid auto-selection mismatch (C builds 4 sources even with sourcefile, PyTorch only 2).
+- Refreshed `plans/active/source-weight-normalization.md` with new Phase D (divergence auto-selection parity) and shifted prior validation tasks to Phase E/F. Tasks D1–D3 now cover evidence synthesis, design decision, and harness prep before implementation.
+- Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions to align with the new plan sequencing (analysis doc → design proposal → implementation bundle) and keep `[VECTOR-GAPS-002]` blocked until correlation evidence returns.
+- Issued `input.md` (Mode: Parity) directing Ralph to execute Phase D1: create a fresh timestamped `reports/2025-11-source-weights/phase_d/<STAMP>/divergence_analysis.md`, reuse the 20251009 artifacts, and capture `pytest --collect-only -q` to prove collection still passes.
+- Follow-up for Ralph: produce divergence_analysis.md + commands log + collect-only proof this loop, then report findings and open questions in docs/fix_plan.md Attempt history so we can approve the Phase D2 design direction next turn.

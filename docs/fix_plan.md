@@ -4132,9 +4132,9 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - **No regressions**: All key test suites pass (crystal geometry, detector geometry, source weight tests)
       - **Device neutrality preserved**: No device-specific code added; tensor operations remain device-agnostic
     Next Actions:
-      1. Execute Phase D parity capture on the authoritative fixture (pytest selector + CLI commands with `-oversample 1`), record metrics under `reports/2025-11-source-weights/phase_d/<STAMP>/`.
-      2. Once evidence is archived, refresh documentation references (pytorch_design.md Sources subsection, testing_strategy.md parity notes) before marking the item complete.
-      3. Notify `[VECTOR-GAPS-002]` / `[PERF-PYTORCH-004]` only after ≥0.99 correlation is confirmed in Phase D artifacts so the warm-run profiler can resume.
+      1. Phase D1: Consolidate divergence auto-selection evidence into `reports/2025-11-source-weights/phase_d/<STAMP>/divergence_analysis.md`, citing `nanoBragg.c` loops and Phase D1 metrics (steps=4 vs 2).
+      2. Phase D2: Draft `design_notes.md` choosing the implementation direction (replicate C vs spec amendment) with device/dtype and broadcast considerations.
+      3. Phase D3: Define the acceptance harness (pytest selector + CLI bundle) for mixed sourcefile/divergence scenarios before handing implementation to Ralph.
   * [2025-12-24] Attempt #7 (galph loop — parity audit). Result: analysis only. Reviewed post-fix profiler captures (`reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/summary.md`) showing correlation still 0.721 despite Phase C implementation. Confirmed no Phase D artifacts exist under `reports/2025-11-source-weights/phase_d/`, so the warm-run profiler remains untrusted. Updated Next Actions and `[VECTOR-GAPS-002]` gating to require explicit Phase D evidence before resuming profiling.
   * [2025-10-09] Attempt #8 (ralph loop — Phase D1 parity evidence). Result: **PARTIAL** — Artifacts captured but divergence grid mismatch identified as blocker.
     Metrics: pytest test_weighted_source_matches_c PASSED (1/1 in 5.56s); CLI runs show 546× divergence (C total=463.4, PyTorch total=253271.8); correlation=-0.061; pytest collection=~600 tests; Full suite: 55 passed, 4 skipped, 0 failed.
@@ -4154,9 +4154,9 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - **546× explained**: steps mismatch (4 vs 2) = 2×, combined with other parameter differences (wavelength mismatch in fixture) → compounded to 546×
       - **Weight normalization NOT the issue**: The current `source_norm=n_sources` is correct per spec; divergence grid handling is the blocker
     Next Actions:
-      1. **Fix divergence auto-selection**: Before closing SOURCE-WEIGHT-001, must ensure PyTorch generates same divergence grid as C when sourcefile provided
-      2. **Rerun Phase D1**: After divergence fix, regenerate CLI runs with matching source counts and validate correlation ≥0.999
-      3. **Update plan**: Defer Phase D1 closure until divergence grid parity restored; may need new fix plan entry [DIVERGENCE-GRID-001]
+      1. Phase D1 deliverable: Author divergence_analysis.md (per plan) summarising why C keeps divergence grid active with sourcefile and whether the spec must change; include precise C code anchors.
+      2. Phase D2 design: Produce divergence handling proposal (add generated sources vs spec update) with risk analysis, ready for supervisor approval.
+      3. Phase E1/E2 prep: Once design approved, implement PyTorch parity, extend regression tests, then rerun CLI parity bundle to capture correlation ≥0.999 and unblock `[VECTOR-GAPS-002]` Phase B profiling.
 - Risks/Assumptions: Maintain equal-weight behaviour, ensure device/dtype neutrality, and avoid double application of weights when accumulating source contributions. Tolerance of 5e-3 is acceptable given perfect correlation and minor precision differences. Divergence grid auto-selection mismatch blocks Phase D1 parity validation until fixed.
 
 ---
