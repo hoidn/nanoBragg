@@ -1,0 +1,7 @@
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_crystal_params
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_detector_params
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_phi_rotation
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_mosaic_spread
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradient_numerical_stability
+
+5 tests collected in 2.00s

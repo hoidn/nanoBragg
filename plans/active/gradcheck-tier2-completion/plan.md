@@ -18,9 +18,9 @@ Exit Criteria: Audit note summarising missing parameters, baseline gradcheck log
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| A1 | Document current coverage vs spec | [ ] | Review `tests/test_suite.py` and `tests/test_gradients.py`; produce `reports/gradients/<date>-tier2-baseline.md` listing which §4.1 parameters have tests, citing line numbers. |
-| A2 | Capture baseline gradcheck run | [ ] | Run `env KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest tests/test_suite.py::TestTier2GradientCorrectness -vv` and archive log alongside audit. Note runtime and any skips/xfails. |
-| A3 | Align compile-disable env var | [ ] | Decide on canonical env var (recommend `NANOBRAGG_DISABLE_COMPILE`) and update harness/tests accordingly, or implement compatibility shim that mirrors to both. Coordinate with PERF plan task B7; record decision in the Phase A report. |
+| A1 | Document current coverage vs spec | [D] | Review `tests/test_suite.py` and `tests/test_gradients.py`; produce `reports/gradients/<date>-tier2-baseline.md` listing which §4.1 parameters have tests, citing line numbers. **DONE:** `reports/gradients/20251009T053900Z/tier2_baseline.md` catalogues 10 covered parameters (cell a/b/c/alpha/beta/gamma, distance_mm, beam_center_f, phi_start_deg, mosaic_spread_deg) and identifies 3 uncovered (misset_rot_x, lambda_A, fluence) with file:line anchors. |
+| A2 | Capture baseline gradcheck run | [D] | Run `env KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest tests/test_suite.py::TestTier2GradientCorrectness -vv` and archive log alongside audit. Note runtime and any skips/xfails. **DONE:** `reports/gradients/20251009T053900Z/gradcheck_phaseA.log` shows 2 passed, 3 skipped in 1.24s. Skipped tests have documented failures (shape mismatch in rotation outputs). |
+| A3 | Align compile-disable env var | [D] | Decide on canonical env var (recommend `NANOBRAGG_DISABLE_COMPILE`) and update harness/tests accordingly, or implement compatibility shim that mirrors to both. Coordinate with PERF plan task B7; record decision in the Phase A report. **DONE:** Standardized on `NANOBRAGG_DISABLE_COMPILE` per arch.md:318 and perf task B7. Decision and rationale documented in `tier2_baseline.md` § Environment Alignment Decision (A3). |
 
 ### Phase B — Misset Rotation Gradcheck
 Goal: Add gradcheck coverage for `CrystalConfig.misset_deg[0]` (rot_x) without regressing existing tests.

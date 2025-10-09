@@ -1,0 +1,16 @@
+# AT-TIER2-GRADCHECK Phase A Baseline Audit
+# Date: 2025-10-09T05:39:00Z
+# Git commit: 8717960
+# Working directory: /home/ollie/Documents/tmp/nanoBragg
+
+# Environment setup
+export KMP_DUPLICATE_LIB_OK=TRUE
+export NANOBRAGG_DISABLE_COMPILE=1
+
+# Authoritative pytest command
+env KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest tests/test_suite.py::TestTier2GradientCorrectness -vv
+
+# Exit status: 0 (2 passed, 3 skipped)
+
+# Timestamp: 2025-10-09T05:39:00Z
+# Operator: Ralph (automated loop)
