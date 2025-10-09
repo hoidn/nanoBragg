@@ -1,0 +1,24 @@
+# Vectorization Gap Audit - Phase A1/A2 Commands
+# Timestamp: 20251009T064345Z
+# Branch: feature/spec-based-2
+
+# Phase A1: Create inventory script
+# (Script created at scripts/analysis/vectorization_inventory.py)
+
+# Phase A2: Run inventory
+python scripts/analysis/vectorization_inventory.py \
+  --package src/nanobrag_torch \
+  --outdir reports/2026-01-vectorization-gap/phase_a/20251009T064345Z/
+
+# Results:
+# - Found 24 total loops
+# - Identified 12 likely hot loops
+# - JSON inventory: loop_inventory.json
+# - Summary: summary.md
+
+# Test collection verification (Phase A2 requirement)
+env KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q
+
+# Exit codes:
+# - Inventory script: 0 (success)
+# - pytest --collect-only: 0 (success, 105 tests collected)

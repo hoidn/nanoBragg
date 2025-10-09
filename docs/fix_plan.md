@@ -3748,6 +3748,24 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   3. Publish the prioritised backlog (Phase B3) and update this entry with artifact links before delegating vectorization work.
 - Attempts History:
   * [2025-12-22] Attempt #0 — Result: planning baseline. Added `plans/active/vectorization-gap-audit.md`; no code changes yet. Next Actions: Phase A1 (loop-inventory script).
+  * [2025-10-09] Attempt #1 — Result: Phase A1/A2 complete (ralph). Implemented AST-based loop inventory and generated initial gap analysis.
+    Metrics: 24 total loops detected, 12 identified as likely hot (simulator/crystal/physics modules). Test collection: 105 tests passing.
+    Artifacts:
+      - `scripts/analysis/vectorization_inventory.py` — AST walker with iteration driver heuristics
+      - `reports/2026-01-vectorization-gap/phase_a/20251009T064345Z/loop_inventory.json` — Machine-readable loop catalog
+      - `reports/2026-01-vectorization-gap/phase_a/20251009T064345Z/summary.md` — Human-readable analysis with hot path candidates
+      - `reports/2026-01-vectorization-gap/phase_a/20251009T064345Z/commands.txt` — Reproduction commands
+      - `reports/2026-01-vectorization-gap/phase_a/20251009T064345Z/pytest_collect.log` — Test discovery verification
+    Observations/Hypotheses:
+      - Hot loop candidates: simulator.py lines 1469-1471 (triple nested 4×4×4 tricubic loop), simulator.py line 1568 (phi_tic iteration), utils/physics.py lines 393/439/543/594 (4-element interpolation loops), utils/c_random.py line 100 (NTAB shuffle), utils/noise.py line 171 (Poisson generation loop)
+      - Crystal geometry loops (lines 180/187/762/1350) appear in setup paths, likely low impact
+      - I/O module loops (hkl/mask/mosflm/smv/source) are file parsing, not simulation hot path
+      - Phase A3 annotation needed to classify each loop: (a) already vectorized fallback, (b) safe scalar operation, (c) needs vectorization work
+    Next Actions:
+      1. Phase A3: Annotate findings in summary.md with manual review — mark each loop as vectorized/safe/todo
+      2. Phase B1: Run profiler capture (`benchmark_detailed.py --profile`) to correlate static loops with runtime %time
+      3. Phase B3: Publish prioritized backlog linking loops to perf impact and spec requirements
+      4. Update plan tasks A1-A2 to completed, proceed with galph handoff for A3 supervision
 
 
 ---
