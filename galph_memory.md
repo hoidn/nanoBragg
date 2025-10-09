@@ -1595,3 +1595,10 @@
 - No ledger/plan edits this loop; evidence capture remains outstanding. Focus stays on SOURCE-WEIGHT-001 Phase E.
 - Replaced input.md with a parity-mode handoff that (a) reruns the targeted pytest selectors, (b) regenerates PyTorch/C CLI outputs for TC-D1/TC-D3, and (c) runs a Python metrics script that stores metrics.json, diagnostics.json, correlation.txt, sum_ratio.txt, and simulator_diagnostics.txt under a new timestamped folder.
 - Follow-up for Ralph: execute the updated input.md exactly, ensure thresholds pass, then log metrics + artifact path in `[SOURCE-WEIGHT-001]` Attempts and flip the plan Phase E rows so VECTOR-GAPS-002 Phase B can finally unblock.
+
+### 2025-12-24 (galph loop - SOURCE-WEIGHT trace directive)
+- Reviewed Ralph’s recent parity attempts (commits 779ac9a, 73e5e2f); metrics still fail (corr ≈0.05, sum_ratio ≈47–120) and he committed large report bundles without resolving steps mismatch.
+- C logs show `created a total of 4 sources` for TC-D1 (two zero-weight placeholders) whereas PyTorch diagnostics report `n_sources=2`/`steps=2`; missing placeholders explain a 2× gap but not the full 47× inflation.
+- Read `golden_suite_generator/nanoBragg.c:2570-2720` and `src/nanobrag_torch/simulator.py:824-878`; PyTorch ignores `source_I` completely while C seeds `I` with `source_I[source]`, and steps normalization differs when placeholders are absent—need trace to locate first numeric divergence.
+- Updated input.md (Mode: Parity) to capture a TC-D1 slow/fast trace at pixel (slow=158, fast=147) for both PyTorch and C, recording outputs under `reports/2025-11-source-weights/phase_e/<STAMP>/trace/` plus an automated first-diff log. Ralph now runs collect-only proofs, traces, and Python diff before updating fix_plan attempts.
+- Next loop depends on trace results: once the first divergence line is known, direct code fixes (placeholder source injection / weight handling) and rerun TC-D1/D3 parity.
