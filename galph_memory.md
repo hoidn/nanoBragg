@@ -1608,3 +1608,9 @@
 - Inserted new Phase E row E2a in plans/active/source-weight-normalization.md and refreshed the status snapshot to flag the trace as the active gate.
 - Regenerated input.md (Mode: Parity) directing Ralph to execute the trace bundle and log artifacts under reports/2025-11-source-weights/phase_e/<STAMP>/trace/.
 - Follow-up: Ralph runs the Do Now command, records diff.txt first divergence, and logs the Attempt referencing the new trace artifacts.
+
+### 2025-10-09 (galph loop - SOURCE-WEIGHT trace analysis refresh)
+- Confirmed TC-D1 trace bundle (`reports/2025-11-source-weights/phase_e/20251009T192746Z/trace/`) shows steps mismatch (PyTorch=2, C=4) and ~1.5e8 vs 1.0e5 pre-polar intensity gap; polarization logged as 0.999 vs 0.5.
+- Updated `plans/active/source-weight-normalization.md` status snapshot to mark Phase E2a [D] and refocused Phase E on diagnosing scaling/polarization gaps before rerunning parity.
+- Refreshed `docs/fix_plan.md` Next Actions for `[SOURCE-WEIGHT-001]` to require a per-source trace (source index 2) and a design note for zero-weight placeholder parity prior to code edits.
+- Next loop for Ralph: capture the source-index trace bundle + design rationale, then revisit simulator normalization once evidence narrows the 1.5e8 vs 1.0e5 divergence.
