@@ -78,6 +78,24 @@ No cheating (important):
 
 <instructions>
 do the following in this loop:
+
+<step -1: Evidence Parameter Validation>
+Before executing evidence CLI commands from input.md:
+
+If Test Reproduction (keywords: XPASS, failure, regression, or test selectors in Mapped tests):
+1. Verify test source citation exists in input.md How-To Map (format: "from tests/foo.py:130-145")
+   - If missing: flag "Test reproduction requires source citation", halt
+2. Read cited test source, extract actual parameters
+3. Compare test params vs input.md How-To Map commands
+   - Allow semantic equivalence (e.g., -detpixels vs -detpixels_x/y)
+4. If mismatch: halt, document both param sets, request clarification
+5. Planning artifacts are NEVER authoritative for test param values
+
+If Exploratory (keywords: tracing, profiling, design, or no test selectors):
+1. Verify param rationale documented in How-To Map
+2. If spec/arch claims made: validate params against cited sections
+</step -1>
+
 <step 0>
 IMPORTANT:
 READ the following files (read them yourself. you may delegate exploration of other files, but not these, to subagents):

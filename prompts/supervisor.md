@@ -236,6 +236,19 @@ Header:
 Verification scripts: You may run nb-compare and scripts/validation/* to collect metrics and artifacts (no code changes). Record outputs under reports/.
 Mapped tests under supervisor evidence mode: Include exact selectors in input.md. 
 Command Sourcing (tests): Only include an exact pytest command in Do Now when sourced from an authoritative mapping (e.g., docs/development/testing_strategy.md) or an existing, known test file/identifier. If no authoritative mapping exists, set the Do Now task to author the minimal targeted test first; do not guess at a pytest selector here.
+
+**Evidence Parameter Sourcing:**
+
+Test Reproduction Mode (debugging XPASS, failure, regression, AT validation):
+- Input.md MUST cite test source in How-To Map: "Parameters from tests/test_foo.py:130-145: <params>"
+- Extract exact params by reading cited range (include fixture creation steps if test uses tmpdir)
+- Do NOT reference planning artifacts (phase_*/design.md, fix_plan attempts) for param values
+- If test params conflict with spec/arch: flag conflict for review before execution
+
+Exploratory Mode (callchain tracing, profiling, design validation):
+- Document param selection rationale explicitly in How-To Map
+- Cite relevant spec/arch sections and validate alignment
+
 Implementation: refer to phased plans, checklists, and all associated artifacts
 </Do Now guidelines>
 - If Blocked: fallback action (what to run/capture, how to record it in Attempts History).
