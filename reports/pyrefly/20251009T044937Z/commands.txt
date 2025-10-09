@@ -1,0 +1,2 @@
+rg -n '^\[tool\.pyrefly\]' pyproject.toml
+pyrefly --version
