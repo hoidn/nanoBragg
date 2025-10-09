@@ -1,14 +1,14 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-12-22 (galph loop #204)
+**Last Updated:** 2025-12-22 (galph loop #205)
 **Active Focus:**
 - ROUTING: Close the reopened guard plan by capturing a fresh regression audit referencing commit `c49e3be` and re-confirming the guarded `loop.sh` flow (`plans/active/routing-loop-guard/plan.md` Phases A–C) before automation resumes.
 - ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md`, then drive Phase B guard work (B2–B4) and new task B5 to add `supervisor.sh` to docs/index.md so Protected-Asset policy covers the script before automation runs again.
 - AT-012: Plan archived (`plans/archive/at-parallel-012-plateau-regression/plan.md`); monitor for regressions using `reports/2025-10-AT012-regression/phase_c_validation/` artifacts and re-open only if peak matches drop below spec.
 - GRADIENT: Execute `plans/active/gradcheck-tier2-completion/plan.md` Phase A (A1–A3 baseline audit + env alignment) before adding misset/beam gradchecks from Phases B/C; once pass logs exist, close `[AT-TIER2-GRADCHECK]` with Phase D documentation updates.
 - DTYPE: ✅ Complete. Plan archived to `plans/archive/dtype-default-fp32/`. All phases (A-D) finished; float32 defaults documented in arch.md, pytorch_runtime_checklist.md, CLAUDE.md, prompts/debug.md.
-- CLI-FLAGS: Kick off Phase P watch tasks — extend the hygiene checklist with a quarterly spec-trace cadence and document the nb-compare smoke expectations per `plans/active/cli-noise-pix0/plan.md` (P1/P2).
-- PHI-CARRYOVER: Execute `plans/active/phi-carryover-removal/plan.md` Phase E (E1/E2) so supervisor hygiene enforces the carryover sweep before initiative closure.
+- CLI-FLAGS: Phase P watch scaffolding delivered; monitor watch cadence per `reports/archive/cli-flags-003/watch.md` (next trace audit due 2026-01-08, nb-compare smoke due 2026-04-08).
+- PHI-CARRYOVER: Phase E hygiene hooks installed; ensure quarterly trace/`rg "phi_carryover"` sweeps run on schedule before archiving `plans/active/phi-carryover-removal/plan.md`.
 - PERF: Land plan task B7 (benchmark env toggle fix), rerun Phase B6 ten-process reproducibility with the new compile metadata, capture the weighted-source parity memo feeding C5, then execute Phase C diagnostics (C1/C2 plus C8/C9 pixel-grid & rotated-vector cost probes, and new C10 mosaic RNG timing) ahead of Phase D caching work (D5/D6/D7) and detector-scalar hoisting (D8).
 
 ## Index
@@ -3234,10 +3234,9 @@
       - **Phase O Completed:** Tasks O1 (supervisor rerun) ✓, O2 (ledger update) ✓, O3 (archival) ✓ per `plans/active/cli-noise-pix0/plan.md:95-98`
       - **Test Collection Verified:** pytest --collect-only confirms 2 targeted scaling tests remain loadable without regressions
     Next Actions:
-      - **Plan Status Update:** Mark O2/O3 rows [D] in `plans/active/cli-noise-pix0/plan.md` Status Snapshot with Attempt #204 reference (completed this loop)
-      - **Phase P Watch Tasks:** Establish Phase P checklist items per plan rows P1-P2 (quarterly trace_harness.py cadence, biannual nb-compare smoke test)
-      - **Galph Handoff:** Flag supervisor (galph) via galph_memory note that VG-5 closure Attempt is recorded so next loop can append matching acknowledgement
-      - **CLI-FLAGS-003 Ready for Next Initiative:** With Phase O complete, initiative can advance to optional watch phase or transition focus to next priority item
+      - **Watch Cadence Tracking:** Record the first quarterly trace harness rerun by 2026-01-08 (per `reports/archive/cli-flags-003/watch.md`) and log a new Attempt with artifact paths when executed.
+      - **Plan Archival Trigger:** After the first watch bundle is captured, relocate `plans/active/cli-noise-pix0/plan.md` to `plans/archive/` with a closure memo referencing Attempt #205.
+      - **Hygiene Enforcement:** During upcoming cleanup/refactor loops, cite the expanded Protected Assets checklist (trace audit + `rg "phi_carryover"`) before marking hygiene tasks complete.
   * [2025-10-08] Attempt #205 (ralph loop i=205, Mode: Docs) — Result: ✅ **Phase P1/P2 WATCH SCAFFOLDING COMPLETE.** **Documentation-only loop.**
     Metrics: Test collection: 666 tests collected in 2.65s (pytest --collect-only -q passed ✓).
     Artifacts:

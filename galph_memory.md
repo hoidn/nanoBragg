@@ -1324,3 +1324,9 @@
 - Updated docs/fix_plan.md Active Focus to call out Phase P watch work plus phi-carryover Phase E, and rewrote CLI-FLAGS Next Actions to point at P1/P2 alongside logging requirements.
 - Authored input.md (Docs mode) instructing Ralph to extend fix_plan hygiene guidance with the `rg "phi_carryover"` + trace cadence, create `reports/archive/cli-flags-003/watch.md` with the nb-compare smoke metrics, update plan rows P1/P2 & E1/E2, and run `pytest --collect-only -q`.
 - Expect Ralph to produce the new watch.md, update fix_plan guidance, and record a fresh Attempt covering the completed watch tasks.
+
+## 2025-12-22 (galph loop — Phase E handoff for vectorization)
+- Updated docs/fix_plan.md Active Focus so CLI-FLAGS and PHI-CARRYOVER now describe ongoing monitoring (Phase P/E complete) instead of re-running finished tasks.
+- Confirmed plans/active/cli-noise-pix0/plan.md and plans/active/phi-carryover-removal/plan.md already mark P1/P2 and E1/E2 [D]; no plan edits required.
+- Authored new input.md (Perf mode) directing Ralph to execute VECTOR-TRICUBIC-001 Phase E2/E3: run cpu(+cuda) tricubic_baseline benchmarks with repeats=200 into reports/2025-10-vectorization/phase_e/perf/$STAMP/, write perf_summary.md + summary.md, then log the Attempt with timings and pytest evidence.
+- Next steps for Ralph: follow the Perf-mode memo, capture benchmarks and summaries, update docs/fix_plan.md with the artifact bundle, and leave detector absorption Phase F ready for the following loop once perf evidence is in hand.
