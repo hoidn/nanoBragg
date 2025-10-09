@@ -1245,6 +1245,15 @@
 - Authored new `input.md` (Parity mode, 100 lines) directing Ralph to implement the duality pipeline, regenerate traces under `fix_<timestamp>`, rerun compare_scaling_traces, update lattice_hypotheses, and run targeted pytest (CPU/CUDA).
 - Follow-up for Ralph: implement Phase M5c vectorized rotation + duality, capture new artifacts, update docs/fix_plan Attempt & plan row to [D], and prepare for M5d verification.
 
+## 2025-12-20 (galph loop — Option 1 spec compliance planning)
+- Git already up to date; re-read core docs (docs/index.md, specs/spec-a-core.md:204-214, arch.md, docs/development/c_to_pytorch_config_map.md, docs/debugging/debugging.md, docs/development/testing_strategy.md) plus plans/active/cli-noise-pix0/plan.md and latest reports before analysis.
+- Long-term Goal 1 (φ carryover removal) verified complete through Phase D; remaining watch items E1/E2 noted. Attempt #195 landed Phase M5c rotation fix; Attempt #196 flagged C-PARITY-001 conflict.
+- Selected focus: CLI-FLAGS-003 Phase M5 Option 1 bundle. Adopted Option 1 (accept spec compliance, document C bug) and refreshed plan/fix_plan to steer work toward documentation rather than more simulator edits.
+- Updated `plans/active/cli-noise-pix0/plan.md` Phase M5 (M5c marked [D]; new M5d–M5g tasks for Option 1 evidence, validation script updates, regression rerun, and plan sync).
+- Refreshed `docs/fix_plan.md`: new Active Focus bullet for CLI-FLAGS Option 1, updated Next Actions, and annotated Attempt #196 with the supervisor decision.
+- Replaced `input.md` (Docs mode) directing Ralph to publish `option1_spec_compliance/<timestamp>/` bundle, update lattice_hypotheses & docs/fix_plan, and rerun targeted pytest; provided explicit metadata commands and compare_scaling guidance.
+- Next follow-up: Ralph to execute Option 1 documentation tasks (M5d–M5g), then we reassess whether optional Phase M6 shim work is needed.
+
 ## 2025-10-09 (galph loop — M5c C-reference capture)
 - Evidence task: captured nanoBragg.c snippets for misset duality and per-φ reciprocal regeneration under `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251009T005448Z/` (includes `c_phi_rotation_reference.md`, `summary.md`, `env.json`, `commands.txt`, `sha256.txt`).
 - docs/fix_plan.md: added Attempt #191 logging the new evidence bundle and rationale; CLI-FLAGS-003 history now points Ralph at the snippet before coding.

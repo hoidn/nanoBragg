@@ -1,12 +1,13 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-22 (ralph loop #103)
+**Last Updated:** 2025-12-20 (galph loop #196)
 **Active Focus:**
 - ROUTING: Close the reopened guard plan by capturing a fresh regression audit referencing commit `c49e3be` and re-confirming the guarded `loop.sh` flow (`plans/active/routing-loop-guard/plan.md` Phases A–C) before automation resumes.
 - ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md`, then drive Phase B guard work (B2–B4) and new task B5 to add `supervisor.sh` to docs/index.md so Protected-Asset policy covers the script before automation runs again.
 - AT-012: Plan archived (`plans/archive/at-parallel-012-plateau-regression/plan.md`); monitor for regressions using `reports/2025-10-AT012-regression/phase_c_validation/` artifacts and re-open only if peak matches drop below spec.
 - GRADIENT: Execute `plans/active/gradcheck-tier2-completion/plan.md` Phase A (A1–A3 baseline audit + env alignment) before adding misset/beam gradchecks from Phases B/C; once pass logs exist, close `[AT-TIER2-GRADCHECK]` with Phase D documentation updates.
 - DTYPE: ✅ Complete. Plan archived to `plans/archive/dtype-default-fp32/`. All phases (A-D) finished; float32 defaults documented in arch.md, pytorch_runtime_checklist.md, CLAUDE.md, prompts/debug.md.
+- CLI-FLAGS: Deliver Phase M5 Option 1 bundle — update `lattice_hypotheses.md` (H4/H5 closure), capture spec-compliance summary under `reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/`, refresh compare_scaling guidance, and mark plan rows M5d–M5g before evaluating optional C-parity shim in Phase M6.
 - PERF: Land plan task B7 (benchmark env toggle fix), rerun Phase B6 ten-process reproducibility with the new compile metadata, capture the weighted-source parity memo feeding C5, then execute Phase C diagnostics (C1/C2 plus C8/C9 pixel-grid & rotated-vector cost probes, and new C10 mosaic RNG timing) ahead of Phase D caching work (D5/D6/D7) and detector-scalar hoisting (D8).
 
 ## Index
@@ -463,9 +464,9 @@
   - ✅ **Phase M1 (COMPLETE)** — Fresh spec-mode baseline captured at `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/` with trace_harness + compare_scaling_traces; test collection verified (2 tests in test_cli_scaling_phi0.py).
   - ✅ **Phase M2 (COMPLETE)** — Analysis bundle complete with quantified F_cell/F_latt/k_frac breakdowns; see Attempt #186 (2025-10-22) — `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/analysis_20251008T212459Z.md` and updated `../20251008T075949Z/lattice_hypotheses.md`.
   - ✅ **Phase M3 (COMPLETE)** — Diagnostic probes complete; see Attempt #187 (2025-10-22). M3a: instrumentation design (`/tmp/m3a_instrumentation_design.md`); M3b: sincg sweep (`20251008T215755Z/phase_m3_probes/sincg_sweep.md`); M3c: single-φ test (`20251008T215634Z/phase_m3_probes/phistep1/`); M3d: rotation audit (`20251008T215700Z/phase_m3_probes/rotation_audit.md`). Root cause: missing normalization (126,000× error) + C-PARITY-001 carryover (+6.8% rot_b).
-  - **Phase M4 (Evidence wrap-up)** — Attempts #188–#190 landed the normalization fix and captured a divergent post-fix bundle. Keep row M4d [P] until a rerun after the φ-rotation fix produces `compare_scaling_traces.md` + `compare_scaling_traces.txt`, refreshed `metrics.json/run_metadata.json` with `first_divergence=None`, an updated `lattice_hypotheses.md` (H4 closure), and a new `sha256.txt` covering all files.
-  - **Phase M5 (φ rotation realignment)** — Newly documented in `plans/active/cli-noise-pix0/plan.md`. Sequence: (M5a) enhanced per-φ trace capture, (M5b) rotation parity design memo quoting `specs/spec-a-core.md:204-240` and `nanoBragg.c:3042-3095`, (M5c) implement the per-φ real/reciprocal recompute with CLAUDE Rule #11 docstrings, (M5d) rerun `compare_scaling_traces.py` to achieve `first_divergence=None`, (M5e) targeted pytest on CPU + CUDA. Store artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/` and log the attempt in this ledger.
-  - **Phase M6 (CUDA + gradcheck follow-through)** — Defer until M5 closes; will cover CUDA smoke, gradcheck harness, and ledger/doc sync before nb-compare (Phase N).
+  - **Phase M4 (Evidence wrap-up)** — Attempts #188–#190 landed the normalization fix and captured a divergent post-fix bundle. Keep row M4d [P] until the Option 1 bundle (Phase M5d) regenerates `compare_scaling_traces.{md,txt}` plus refreshed `metrics.json/run_metadata.json` documenting the expected φ=0 carryover delta with new prose linking to `docs/bugs/verified_c_bugs.md`. Ensure `sha256.txt` covers the refreshed artifacts.
+  - **Phase M5 (Option 1 spec compliance bundle)** — See `plans/active/cli-noise-pix0/plan.md` rows M5d–M5g. Tasks: capture Option 1 evidence under `reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/<timestamp>/`, update `lattice_hypotheses.md` (close H4/H5), refresh validation scripts/readme to flag the carryover caveat, re-run targeted pytest (CPU + CUDA), and sync plan/fix_plan once documentation is in place. After this bundle, CLI-FLAGS-003 treats exact C parity as optional shim work.
+  - **Phase M6 (Optional C-parity shim)** — Pending supervisor approval after Phase M5. If we elect to emulate the bug for validation, resurrect the pixel-indexed cache (`reports/.../carryover_cache_validation/`) under a new opt-in flag (e.g., `--phi-mode c-parity`) with explicit docs. Otherwise mark Phase M6 as not applicable once Option 1 is signed off.
 
 - Attempts History:
   * [2025-10-08] Attempt #190 (ralph loop i=190, Mode: Parity/Docs) — Result: ⚠️ **M4d EVIDENCE CAPTURED / DIVERGENCE PERSISTS.** **Documentation-only loop.**
@@ -581,6 +582,7 @@
       - **Option 2:** Implement optional `--c-parity-mode` flag using Phase M2g pixel-indexed cache infrastructure to emulate C bug for validation
       - **Option 3:** Fix C code C-PARITY-001 bug, regenerate golden trace from corrected C implementation
       - **Immediate:** Await supervisor guidance in input.md on which option to pursue before proceeding to Phase M5d/M5e
+      - ✅ **2025-12-20 (galph)** — Adopt Option 1. Proceed with Phase M5d–M5g Option 1 tasks (document spec compliance, update `lattice_hypotheses.md`, refresh compare_scaling guidance) before considering optional shim work in Phase M6.
   * [2025-10-22] Attempt #186 (ralph loop, Mode: Docs) — Result: ✅ **SUCCESS** (Phase M2 Divergence Analysis COMPLETE). **Documentation-only loop (no code changes).**
     Metrics: Test collection: 2 tests collected successfully in 0.78s (tests/test_cli_scaling_phi0.py); I_before_scaling divergence quantified at -14.6% (C=943654.81, PyTorch=805473.79); F_latt sign flip identified (C=-2.383, PyTorch=+1.379, Δ_rel=+158%); rot_b Y-component error +6.8% (C=0.672 Å, PyTorch=0.717 Å); k_frac shift +3.0% (C=-0.607, PyTorch=-0.589).
     Artifacts:
