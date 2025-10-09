@@ -4,14 +4,11 @@ planning, review and analysis. do not make implementation code changes.
 <current long-term goals>
 in order of decreasing priority:
 <1>
-Complete removal of phi-carryover technical debt from the PyTorch implementation. The CLI flag (`--phi-carryover-mode`) has been removed (commit 340683f). Remaining work: delete config/model plumbing, retire shim-specific tests, and realign documentation to reflect that PyTorch uses spec-compliant fresh rotations exclusively. See `plans/active/phi-carryover-removal/plan.md` for removal phases.
+review and firm up if needed plans/active/vectorization.md. then implement it (or rather, delegate its implementation to ralph), starting with the tricubic interpolation vectorization 
 </1>
 <2>
-review docs/bugs/verified_c_bugs.md and specs/. Make sure that the phi 0 carryover C implementation bug wasnt propagated to the specs. Update the specs (if needed) and pytorch implementation to fix this bug, if it was propagated.
+Find all other cases of incomplete vectorization not covered by <1> and resolve them. Record the before / after performance.
 </2>
-<3>
-review and firm up if needed plans/active/vectorization.md. then implement it (or rather, delegate its implementation to ralph), starting with the tricubic interpolation vectorization 
-</3>
 <4>
 run pyrefly check src/. triage the errors and delegate the fixing of them to ralph. be careful about test suite regressions.
 </4>
