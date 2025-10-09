@@ -431,6 +431,8 @@
     Metrics: n/a (documentation task)
     Artifacts: `reports/routing/20251009T043816Z-supervisor-regression.txt` — Snapshot of current `supervisor.sh` (first 160 lines), diff versus guarded `loop.sh` baseline (commit 853cf08), and bullet notes on missing timeout guard, conditional push, and Protected Asset listing.
     Observations/Hypotheses:
+      - **Superseded implementation**: Commit 321c91e removed the sum-of-weights normalization; future work must instead remove the weight multiplier inside `_compute_physics_for_position`.
+      - **Superseded design**: Strategy.md documents the sum-of-weights plan; keep for history, but 2025-12-22 spec realignment invalidated this approach (weights must be ignored).
       - Legacy bash path executes 20 iterations per run (`SYNC_LOOPS=20`) with no single-iteration mode, violating automation guard contract.
       - No `timeout 30 git pull --rebase` guard or fallback is present; rebase failures would leave automation in an inconsistent state.
       - Script pushes unconditionally after each iteration; conditional push guard must mirror `loop.sh` before automation resumes.
@@ -3951,20 +3953,20 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 - Risks/Assumptions: None-safety and type boundary violations may surface during runtime; some errors might be masked by existing tests not exercising all code paths. Design decision on Tensor vs scalar boundaries affects 26 errors and must align with differentiability requirements (arch.md §15). Defer bucket assumes pyrefly false positives but requires runtime verification before closing.
 
 ## [SOURCE-WEIGHT-001] Correct weighted source normalization
-- Spec/AT: `specs/spec-a-core.md` §5 (Source intensity), `docs/architecture/pytorch_design.md` §2.3, `docs/development/c_to_pytorch_config_map.md` (flux/fluence), nanoBragg.c lines 2480-2595 (source weighting loop).
+- Spec/AT: `specs/spec-a-core.md` §4 (Sources, Divergence & Dispersion), `docs/architecture/pytorch_design.md` §§1.1/2.3, `docs/development/c_to_pytorch_config_map.md` (beam sourcing), `docs/development/testing_strategy.md` §1.4, and `golden_suite_generator/nanoBragg.c` lines 2570-2720 (source ingestion & steps computation).
 - Priority: Medium
-- Status: in_progress (Phase A evidence captured; Phase B design complete; Phase C implementation pending)
+- Status: in_progress (Phase A complete; Phase B spec realignment active before Phase C implementation)
 - Owner/Date: galph/2025-11-17 (updated 2025-12-22)
 - Plan Reference: `plans/active/source-weight-normalization.md`
 - Reproduction (C & PyTorch):
   * C: `"$NB_C_BIN" -mat A.mat -floatfile c_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources.txt -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -nonoise -nointerpolate`.
   * PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE nanoBragg -mat A.mat -floatfile py_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources.txt ...` (matching geometry).
   * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
-- First Divergence (if known): Weighted source runs show PyTorch final intensities ~328× larger than the C reference, indicating the normalization divisor (`n_sources`) and downstream scaling no longer match the C semantics (which effectively ignore source weights).
-- Next Actions (2025-12-22):
-  1. Execute Phase C1–C3 from `plans/active/source-weight-normalization.md`: implement the tensor-based normalization update in `src/nanobrag_torch/simulator.py` (divide by `source_weights.sum()` without `.item()`), adjust accumulation if needed, and land regression tests; capture artifacts under `reports/2025-11-source-weights/phase_c/<STAMP>/`.
-  2. Run Phase D validation immediately after implementation (TC-A through TC-E parity/compatibility checks plus scaling-trace refresh), storing logs in `phase_d/<STAMP>/` and verifying CPU+CUDA when available.
-  3. Log Attempt #3 with implementation/validation artifacts and notify `[VECTOR-GAPS-002]` and `[PERF-PYTORCH-004]` that profiling may resume once parity metrics meet plan tolerances.
+- First Divergence (if known): Phase A showed PyTorch total intensity 3.28× larger than C for weighted sources. After commit `321c91e` reinstated division by `n_sources`, `_compute_physics_for_position` still multiplies intensity by `source_weights`, producing correlation ≈0.9155 and sum_ratio ≈0.7281 vs C for the TC-A fixture (metrics in `reports/2025-11-source-weights/phase_c/test_failure/metrics.json`).
+- Next Actions (2025-12-22 realignment):
+  1. Execute Phase B1–B3 from `plans/active/source-weight-normalization.md`: record spec quotations, document the PyTorch accumulation call chain, and refresh CLI metrics under `reports/2025-11-source-weights/phase_b/<STAMP>/` (include commands.txt, env.json, pytest collect-only proof).
+  2. After Phase B approval, implement Phase C1–C3 to remove the weight multiplier from `_compute_physics_for_position`, simplify source-weight caching, and extend the TestSourceWeights suite (artifacts under `phase_c/<STAMP>/`).
+  3. Complete Phase D validations (targeted parity pytest, CLI metrics, documentation updates) before notifying `[VECTOR-GAPS-002]` and `[PERF-PYTORCH-004]` that profiling/perf work can resume.
 - Attempts History:
   * [2025-11-17] Attempt #0 — Result: backlog entry. Issue documented and plan `plans/active/source-weight-normalization.md` created; awaiting evidence collection.
   * [2025-10-09] Attempt #1 — Phase A evidence capture (ralph). Result: success.
@@ -3981,17 +3983,15 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - `reports/2025-11-source-weights/phase_a/20251009T071821Z/commands.txt` — Exact CLI commands for reproduction
       - `reports/2025-11-source-weights/phase_a/20251009T071821Z/pytest_collect.log` — Test collection proof (677 tests)
     Observations/Hypotheses:
-      - **Massive discrepancy confirmed**: PyTorch produces ~328× larger intensity than C with weighted sources (1.0, 0.2)
-      - **Hypothesis**: PyTorch is likely summing weighted intensities but then incorrectly normalizing by n_sources=2 instead of sum(weights)=1.2
-      - **C stdout shows**: "created a total of 4 sources" (includes 2 zero-weight default sources plus 2 from file), "incident fluence: 1.25932e+29 photons/m^2"
-      - **PyTorch stdout shows**: "Loaded 2 sources" (correct), "auto-selected 1-fold oversampling", max intensity 1.011e+02 vs C max 9.050e-03
-      - **Pattern match**: Both implementations have identical nonzero pixel counts (65159), suggesting geometry is correct but scaling is wrong
-      - **Root cause likely in**: `simulator.py` lines 837-925 (final normalization) where steps division occurs
-    Next Actions:
-      1. **Phase B (B1)**: Trace normalization math in `simulator.py:run()` to identify exact line where n_sources is used instead of sum(weights)
-      2. **Phase B (B2)**: Document expected normalization flow: `I_final = (sum_over_sources(weight_i × I_i)) / sum(weights)` NOT `/ n_sources`
-      3. **Phase B (B3)**: Verify C code behavior at nanoBragg.c:2480-2595 to confirm it uses sum(weights) for normalization
-      4. **Phase C**: Implement fix and add regression test ensuring equal-weight case (all 1.0) remains unchanged
+      - **Bias confirmed**: PyTorch produces ~328× larger intensity than C with weighted sources (1.0, 0.2).
+      - **Spec insight (2025-12-22)**: `specs/spec-a-core.md:150-170` states "The weight column is read but ignored (equal weighting results)", implying parity requires disregarding weights entirely.
+      - **C stdout**: "created a total of 4 sources" (includes divergence auto-sources) yet scaling still divides by `steps = sources×mosaic×φ×oversample²` — no weight factor.
+      - **PyTorch stdout**: "Loaded 2 sources" with vectorized pipeline; `_compute_physics_for_position` multiplies intensity by `source_weights`, explaining the residual 0.728 sum_ratio after normalization reverted to `n_sources`.
+      - **Vectorization intact**: Nonzero pixel counts (65159) match, confirming geometry correctness; only scaling differs.
+    Next Actions (superseded — see 2025-12-22 refresh):
+      1. Reconfirm spec & C behavior (Phase B1) before touching implementation.
+      2. Capture PyTorch accumulation call-chain notes (Phase B2) showing where weights still influence intensity.
+      3. Refresh CLI metrics/collect-only proof under a new `phase_b/<STAMP>/` bundle to anchor the current 0.728 sum_ratio.
   * [2025-10-09] Attempt #2 — Phase B design & strategy (ralph). Result: **Phase B1–B3 COMPLETE** (documentation-only loop per input.md).
     Metrics: Test collection passed (`pytest --collect-only -q` succeeded with 677 tests discovered). No code changes; docs-only validation per input.md instructions.
     Artifacts:
@@ -4034,6 +4034,7 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       2. **Phase D2 (scaling trace refresh)**: Re-run `scripts/validation/compare_scaling_traces.py` using weighted source scenario to confirm normalization math matches C reference step-by-step.
       3. **Phase D3 (docs update)**: Update `docs/architecture/pytorch_design.md` §8 with weighted source normalization behavior and `docs/development/testing_strategy.md` §2.5 with AT-SRC-001 parity mapping.
       4. **Phase D completion**: Once TC-A passes with artifacts stored in `reports/2025-11-source-weights/phase_d/<STAMP>/`, mark SOURCE-WEIGHT-001 complete and notify VECTOR-GAPS-002 and PERF-PYTORCH-004 that multi-source profiling may resume.
+  * [2025-12-22] Attempt #4 (galph loop — planning review). Result: analysis only. Reviewed commit `321c91e` outputs (`reports/2025-11-source-weights/phase_c/test_failure/metrics.json`) showing correlation 0.9155 and sum_ratio 0.7281 despite normalization reset to `n_sources`. Confirmed spec mandate (weights ignored) and identified `_compute_physics_for_position` weight multiplier as the remaining divergence. Action: realign plan Phases B–C accordingly (see updated Next Actions).
 - Risks/Assumptions: Maintain equal-weight behaviour, ensure device/dtype neutrality, and avoid double application of weights when accumulating source contributions.
 
 ---

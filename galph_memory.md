@@ -1437,3 +1437,11 @@
 - Synced clean; reviewed spec/arch/testing docs plus `plans/active/source-weight-normalization.md`, `docs/fix_plan.md`, and existing TC-A through TC-E scaffolding in `tests/test_cli_scaling.py` before selecting focus (tails on coin flip, no commit audit).
 - Action: Review/housekeeping in Parity mode for `[SOURCE-WEIGHT-001]` — updated plan C1 guidance to require a tensor-based normalization divisor (no `.item()`), refreshed fix_plan Next Actions, and issued a new `input.md` directing Ralph to implement Phase C1–C3, run the targeted TestSourceWeights suite under NB_RUN_PARALLEL=1, and archive artifacts under `reports/2025-11-source-weights/phase_c/` and `/phase_d/`.
 - Follow-up for Ralph: implement the normalization change in `Simulator.run` keeping device/dtype neutrality, ensure parity tests pass, capture env/metrics logs, then update plan/fix_plan attempts; this unblocks VECTOR-GAPS-002 Phase B profiling once artifacts land.
+### 2025-12-22 (galph loop - Source weight spec realignment)
+- No upstream changes; branch `feature/spec-based-2` already up to date.
+- Re-read spec/core architecture docs plus `plans/active/source-weight-normalization.md`; discovered plan still assumed sum-of-weights normalization.
+- Audited recent commits (47822ce, 321c91e) and confirmed `_compute_physics_for_position` still multiplies intensities by `source_weights`, giving correlation 0.9155 / sum_ratio 0.7281 even after dividing by `n_sources`.
+- Rewrote `plans/active/source-weight-normalization.md` into phased format targeting spec-aligned behaviour (weights ignored) and added Phase B/C/D/E guidance with explicit artifact expectations.
+- Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` status, Next Actions, and Attempts (#4) to reflect the new evidence path; annotated earlier attempts as superseded.
+- Authored new `input.md` (Mode: Docs) directing Ralph to execute Phase B1–B3 evidence capture (spec quote, PyTorch call-chain, refreshed CLI metrics) before implementation.
+- Follow-up: Expect Ralph to populate `reports/2025-11-source-weights/phase_b/<STAMP>/` with the new analysis bundle, then proceed to Phase C implementation loop.

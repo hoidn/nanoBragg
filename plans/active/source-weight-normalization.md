@@ -1,50 +1,65 @@
 ## Context
-- Initiative: Simulator normalization correctness — align weighted multi-source runs with physical fluence.
-- Phase Goal: Ensure per-source weighting matches the nanoBragg C semantics so total fluence reflects `sum(source_weights)` instead of `n_sources`.
-- Dependencies: specs/spec-a-core.md §5 (Source intensity), docs/architecture/pytorch_design.md §2.3 (Source handling), docs/development/c_to_pytorch_config_map.md §Beam/Source, `nanoBragg.c` lines 2480-2595 (source weighting), `scripts/validation/compare_scaling_traces.py` outputs for weighted sources.
-- Current gap snapshot (2025-11-17): `Simulator.run` (src/nanobrag_torch/simulator.py:837-925) divides accumulated intensity by `n_sources` even when custom `source_weights` are supplied, leading to biased fluence whenever weights ≠ 1.0.
-- Status Snapshot (2025-12-22): Phases A and B complete (`20251009T071821Z` evidence, `20251009T072937Z` design bundle). Phase C implementation (C1–C3) remains outstanding; landing it will unblock PERF-PYTORCH-004 Phase P3.0c and VECTOR-GAPS-002 Phase B profiling.
+- Initiative: SOURCE-WEIGHT-001 — restore parity for weighted source runs so PyTorch matches the nanoBragg C semantics and long-term performance work can resume.
+- Phase Goal: Align the PyTorch simulator with the spec requirement that source weights are **read but ignored**, guaranteeing equal weighting regardless of user-provided values while keeping trace metadata available for future extensions.
+- Dependencies:
+  - `specs/spec-a-core.md` §4 (Sources, Divergence & Dispersion) — authoritative statement that the weight column "is read but ignored".
+  - `docs/architecture/pytorch_design.md` §1.1 & §2.3 — current description of the vectorised source pipeline.
+  - `docs/development/c_to_pytorch_config_map.md` (Beam parameters table) — mapping between CLI flags and BeamConfig fields.
+  - `docs/development/testing_strategy.md` §§1.4–2 — device/dtype discipline and authoritative commands for targeted pytest runs.
+  - `golden_suite_generator/nanoBragg.c:2570-2720` — C reference showing weights copied from file but excluded from `steps` and accumulation.
+  - Existing evidence bundles under `reports/2025-11-source-weights/phase_a/` (bias reproduction) and `phase_b/20251009T072937Z/` (outdated sum-of-weights design).
+- Status Snapshot (2025-12-22): Phase A evidence still valid (PyTorch total intensity 3.28× C when weights ≠ 1). Recent attempt `321c91e` switched normalization back to `n_sources`, but `_compute_physics_for_position` continues to multiply intensities by `source_weights`, yielding a residual sum_ratio ≈0.728 vs C. Phase B design must be rewritten to reflect the spec (weights ignored) before implementation resumes. PERF-PYTORCH-004 Phase P3.0c and VECTOR-GAPS-002 Phase B remain blocked until this plan reaches Phase D.
 
-## Phase A — Evidence & Reproduction
-Goal: Capture failing behaviour and establish contractual expectations.
-Prereqs: Editable install, access to sample source file, baseline command reference.
-Exit Criteria: Reproduction logs showing discrepancy between PyTorch and C/normative expectation.
-
-| ID | Task Description | State | How/Why & Guidance |
-| --- | --- | --- | --- |
-| A1 | Build weighted source fixture | [D] | Created `reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt` with weights 1.0 and 0.2. |
-| A2 | Reproduce bias in PyTorch | [D] | Captured PyTorch output showing max intensity 101.1, total 151963.1 under `phase_a/20251009T071821Z/py/`. |
-| A3 | Capture C baseline | [D] | Captured C output showing max intensity 0.009, total 463.4 under `phase_a/20251009T071821Z/c/`. Ratio = 327.9× discrepancy confirmed. |
-
-## Phase B — Design & Strategy
-Goal: Decide how to adjust normalization without breaking existing behaviours.
-Prereqs: Evidence captured, understanding of current scaling chain.
-Exit Criteria: Written strategy covering code changes, edge cases, and tests.
+### Phase A — Evidence Baseline (Complete)
+Goal: Preserve reproducible proof of the weighted-source divergence.
+Prereqs: Editable install; fixture committed.
+Exit Criteria: CLI runs + metrics captured under `phase_a/20251009T071821Z/`.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Trace normalization math | [D] | DONE 2025-10-09T07:35:30Z. `reports/2025-11-source-weights/phase_b/20251009T072937Z/normalization_flow.md` — Traced simulator.py:557-1137 scaling path; identified fix location (line 868). |
-| B2 | Define update approach | [D] | DONE 2025-10-09T07:35:30Z. `reports/2025-11-source-weights/phase_b/20251009T072937Z/strategy.md` — Decision: divide by sum(source_weights). No coupling with polarization (P3.0b). |
-| B3 | Plan regression coverage | [D] | DONE 2025-10-09T07:35:30Z. `reports/2025-11-source-weights/phase_b/20251009T072937Z/tests.md` — 5 test cases defined (TC-A through TC-E), tolerance tiers specified (CPU/CUDA). |
+| A1 | Build weighted source fixture | [D] | `reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt` (weights 1.0, 0.2). |
+| A2 | Capture PyTorch bias | [D] | PyTorch CLI output + metrics stored under `phase_a/.../py/`; total intensity 1.52e5. |
+| A3 | Capture C reference | [D] | C CLI output + metrics stored under `phase_a/.../c/`; total intensity 4.63e2. |
 
-## Phase C — Implementation
-Goal: Implement corrected weighting with minimal churn and full docstring references.
-Prereqs: Design approved; branch ready.
-Exit Criteria: Code updated, tests written, artifacts captured.
-
-| ID | Task Description | State | How/Why & Guidance |
-| --- | --- | --- | --- |
-| C1 | Update step normalization | [ ] | Modify `Simulator.run` to divide by `source_weights.sum()` (fallback to `n_sources` when equal weights). Keep the normalization factor as a tensor on the active device/dtype (no `.item()` detours) so gradients remain available if weights become differentiable later. |
-| C2 | Adjust weighted blending | [ ] | Revisit `Simulator._accumulate_source_contribution` (if needed) so weights are consistently applied without double scaling. |
-| C3 | Add regression tests | [ ] | Extend `tests/test_cli_scaling.py` (or new test file) to cover unequal source weights; assert PyTorch matches C within tolerance. |
-
-## Phase D — Validation & Documentation
-Goal: Validate across devices, update docs, and log closure.
-Prereqs: Implementation complete, tests passing locally.
-Exit Criteria: Evidence archived, docs updated, fix_plan closed.
+### Phase B — Spec & Gap Confirmation (Active)
+Goal: Replace the outdated "sum of weights" design with a spec-aligned analysis that documents why PyTorch must ignore weights during accumulation.
+Prereqs: Phase A artifacts reviewed; repository clean.
+Exit Criteria: `reports/2025-11-source-weights/phase_b/<STAMP>/` contains spec quotations, PyTorch call-chain notes, CLI rerun metrics, commands.txt, env.json, and pytest collection proof.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| D1 | Run targeted pytest | [ ] | `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeights -v` (CPU/CUDA). Store logs under `reports/.../phase_d/tests/`. |
-| D2 | Refresh scaling trace | [ ] | Re-run `scripts/validation/compare_scaling_traces.py` using weighted source scenario to confirm normalization. |
-| D3 | Update docs & ledger | [ ] | Amend `docs/architecture/pytorch_design.md` and `docs/development/testing_strategy.md` to document weighting behaviour, then mark fix_plan attempt completed. |
+| B1 | Document spec & C behavior | [ ] | Author `spec_alignment.md` quoting `specs/spec-a-core.md:150-190` and `golden_suite_generator/nanoBragg.c:2570-2720`; explain that C counts sources and never applies weights during accumulation. |
+| B2 | Trace PyTorch weighting path | [ ] | Produce `pytorch_accumulation.md` highlighting `src/nanobrag_torch/simulator.py:400-420` (weights_broadcast multiply) and `:850-1125` (steps normalization). Include a short call-chain table referencing `_compute_physics_for_position` inputs/outputs. |
+| B3 | Reproduce current parity delta | [ ] | Repeat the two CLI runs from Phase A plus `pytest --collect-only -q` (authoritative command). Store metrics in `analysis.md` and JSON under `phase_b/<STAMP>/`, confirming correlation ~0.916 and sum_ratio ≈0.728 after commit `321c91e`. |
+
+### Phase C — Implementation Adjustments (Pending)
+Goal: Update the simulator so multi-source runs ignore weights exactly like the C code while retaining metadata for traces and future features.
+Prereqs: Phase B artifacts approved; code pointers agreed.
+Exit Criteria: PyTorch accumulation path ignores weights; regression tests cover both weighted and unweighted cases; vectorization/dtype guardrails respected.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| C1 | Remove weighted accumulation | [ ] | Modify `src/nanobrag_torch/simulator.py` (`_compute_physics_for_position`) to bypass `weights_broadcast`; cite `nanoBragg.c:2620-2715` per CLAUDE Rule #11. Ensure equal-weight sums on CPU/CUDA and keep differentiability intact. |
+| C2 | Simplify source cache handling | [ ] | Review `Simulator.__init__` source caching (`self._source_weights`) and guard traces/logging so weights remain optional metadata without influencing physics. Update any trace outputs accordingly. |
+| C3 | Extend regression tests | [ ] | Update `tests/test_cli_scaling.py::TestSourceWeights` (TC-B/TC-D) to assert identical intensities for `[1.0, 1.0]` vs `[1.0, 0.2]` and add CUDA smoke (`pytest -k TestSourceWeights and cuda`). Store logs under `reports/2025-11-source-weights/phase_c/<STAMP>/tests/`. |
+
+### Phase D — Validation & Documentation
+Goal: Prove parity with the C reference on CPU (and CUDA when available) and refresh documentation/fix_plan entries.
+Prereqs: Phase C merged locally; lint/tests green.
+Exit Criteria: Phase D bundle contains parity metrics, pytest logs, updated docs, and fix_plan attempt recorded.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| D1 | Run targeted parity test | [ ] | `NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeights::test_weighted_source_matches_c -v`. Archive log + collect-only proof under `phase_d/<STAMP>/pytest/`. |
+| D2 | Capture CLI metrics | [ ] | Re-run C & PyTorch commands, store outputs in `phase_d/<STAMP>/metrics.json` + `summary.md`; confirm correlation ≥0.999 and |sum_ratio−1| ≤ 1e-3. |
+| D3 | Update documentation | [ ] | Amend `docs/architecture/pytorch_design.md` (Sources subsection) and, if needed, `docs/development/testing_strategy.md` to note weights are ignored. Log Attempt in `docs/fix_plan.md` referencing artifact paths. |
+
+### Phase E — Closure & Handoffs
+Goal: Unlock dependent initiatives and archive the plan once parity is stable.
+Prereqs: Phase D complete.
+Exit Criteria: Fix-plan entry marked done or deferred with rationale; dependent initiatives notified.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| E1 | Notify dependencies | [ ] | Update `[VECTOR-GAPS-002]` and `[PERF-PYTORCH-004]` attempts with sum_ratio/correlation results so profiling can resume. |
+| E2 | Archive artifacts & plan | [ ] | Move stabilized bundles to `reports/archive/source-weights/<STAMP>/`, update plan status snapshot, and migrate this file to `plans/archive/` when complete. |
