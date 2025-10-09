@@ -1369,3 +1369,10 @@
 - Adjusted `docs/fix_plan.md` [VECTOR-TRICUBIC-001] status to “in_progress” (Phases A–F3 complete) and rewrote Next Actions to focus on F4 summary, CUDA perf rerun once unblocked, and Phase G prep.
 - Authored new input.md (Mode: Docs, 102 lines) directing Ralph to write `reports/2025-10-vectorization/phase_f/summary.md`, append commands + collect-only proof, flip plan row F4 [D], add Attempt #16, and capture `pytest --collect-only -q` output under reports/.
 - Follow-up for Ralph: keep this loop documentation-only, cite both Phase F2/F3 bundles, update commands.txt, log the collect-only proof, and ensure fix_plan + plan align before marking F4 done. CUDA benchmarks remain deferred until the device-placement defect is fixed.
+
+## 2025-12-22 (galph loop - Gradcheck Phase A audit setup)
+- Re-read docs/index.md, specs/spec-a-core.md lines 204-240, docs/bugs/verified_c_bugs.md:166-204, arch.md §15, docs/development/c_to_pytorch_config_map.md, docs/debugging/debugging.md, docs/development/testing_strategy.md, docs/fix_plan.md before selecting focus; verified spec still mandates fresh φ rotations and the C-only φ-carryover bug remains quarantined in docs/bugs.
+- Focus: `[AT-TIER2-GRADCHECK]` Phase A baseline audit (Mode: none, Action: Review/housekeeping). Confirmed plan `plans/active/gradcheck-tier2-completion/plan.md` still awaiting A1–A3 and that no additional plan refresh needed.
+- Updated `input.md` (101 lines) directing Ralph to create a timestamped `reports/gradients/<STAMP>/` bundle with tier2_baseline.md, gradcheck_phaseA.log, env.json, commands.txt, sha256.txt (collect-only optional), then mark plan rows A1–A3 [D] and log a new Attempt in docs/fix_plan.md after running `env KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest tests/test_suite.py::TestTier2GradientCorrectness -vv`.
+- No repository files besides input.md were modified; committed as `SUPERVISOR: gradcheck Phase A handoff - tests: not run` and pushed.
+- Follow-up for Ralph: execute the Phase A audit exactly per input.md (capture artifacts, update plan/ledger). After completion, next loops can proceed to Phase B misset_rot_x gradcheck.
