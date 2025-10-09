@@ -1260,3 +1260,11 @@
 - plans/active/cli-noise-pix0/plan.md: M5c guidance now cites the captured snippet explicitly for Rule #11 docstrings.
 - input.md rewritten (Parity mode) directing Ralph to implement M5c with the new reference, regenerate scaling traces, and run pytest CPU/CUDA.
 - Follow-up: Ralph to implement dual rotation pipeline, produce fresh compare_scaling_traces output + per-φ trace under new timestamp, run targeted pytest, update lattice_hypotheses, and mark plan row M5c [D] once parity is green.
+
+## 2025-10-09 (galph loop — M5e/M5f planning refresh)
+- Git up to date; re-read docs/index.md, specs/spec-a-core.md, arch.md, docs/development/c_to_pytorch_config_map.md, docs/debugging/debugging.md, docs/development/testing_strategy.md, plans/active/cli-noise-pix0/plan.md, and latest Option 1 bundle before analysis.
+- Focused on CLI-FLAGS-003 Phase M5 follow-ups: marked plan row M5d [D] (Attempt #196 evidence) and tightened M5f guidance to require pytest logs under option1_spec_compliance/<stamp>/tests/.
+- Updated docs/fix_plan.md Next Actions to note M5d completion and highlight remaining tasks (validation-script note + archived pytest logs) ahead of optional Phase M6.
+- Rewrote input.md (Docs mode, 100+ lines) instructing Ralph to update compare_scaling_traces.py docstrings, regenerate an Option 1 bundle with compare output + env/sha + test logs, run targeted pytest (CPU and GPU smoke when available), and sync plan/fix_plan once artifacts exist.
+- Committed as `SUPERVISOR: CLI-FLAGS Option1 follow-up - tests: not run`; no physics changes.
+- Follow-up: Ralph to execute M5e/M5f per new input, then we can close M5g and queue Phase N nb-compare once evidence lands.
