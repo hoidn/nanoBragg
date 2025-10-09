@@ -4116,6 +4116,26 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - H3: Update `test_c_divergence_reference` to remove `@pytest.mark.xfail`, tighten tolerances to observed parity
       - H4: Align spec acceptance text (AT-SRC-001) with equal-weight behavior
       - Blocker: Must resolve C segfault to execute H1 controlled run before proceeding to H2/H3/H4
+  * [2025-10-09] Attempt #30 (ralph loop — Mode: Docs+Parity, Phase G2 evidence bundle per input.md). Result: **PARAMETER ERROR DISCOVERED** — pytest XPASS replicated (correlation=0.9999886), but manual CLI commands used incorrect parameters causing 134× divergence.
+    Metrics: `NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` — 7 passed, 1 xpassed in 21.28s. `test_c_divergence_reference` XPASS with correlation=0.9999886, sum_ratio=1.0038 (identical to Attempt #29). Manual CLI: PyTorch sum=43161.99, C sum=322.41, correlation=0.0297, sum_ratio=133.87 (**DIVERGENT** from test).
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_g/20251009T221253Z/notes.md` — Root cause analysis documenting parameter mismatch (manual CLI used `-default_F 100 -lambda 0.9768`, test uses `-default_F 300 -lambda 1.0`)
+      - `reports/2025-11-source-weights/phase_g/20251009T221253Z/logs/{collect.log,pytest.log}` — Test collection and pytest execution
+      - `reports/2025-11-source-weights/phase_g/20251009T221253Z/cli/{py_tc_weighted.bin,c_tc_weighted.bin,py_tc_weighted_stdout.txt,c_tc_weighted_stdout.txt,metrics_c_compare.json}` — CLI outputs with wrong parameters
+      - `reports/2025-11-source-weights/phase_g/20251009T221253Z/commands.txt` — Executed commands (incorrect parameters documented)
+      - `reports/2025-11-source-weights/phase_g/20251009T221253Z/env.txt` — Environment snapshot
+      - `reports/2025-11-source-weights/phase_g/unexpected_c_parity/metrics.json` — XPASS metrics (correlation=0.9999886, sum_ratio=1.0038) from test harness
+    Observations/Hypotheses:
+      - **XPASS replicated**: Test harness continues to report near-perfect C↔PyTorch parity (correlation=0.9999886, sum_ratio=1.0038), identical to Attempts #28/#29.
+      - **Manual CLI parameter error**: Commands referenced wrong test parameters. Test source (`tests/test_cli_scaling.py:591-691`) shows test uses `-default_F 300 -lambda 1.0`, but manual commands used `-default_F 100 -lambda 0.9768` (based on stale Phase F design packet).
+      - **134× divergence explained**: F² scaling means 3× difference in `-default_F` → 9× in intensity. Combined with wavelength mismatch (1.0 vs 0.9768 Å) and possible geometry differences → explains observed ~134× sum_ratio.
+      - **Test harness correctness**: The `test_c_divergence_reference` implementation is internally consistent and produces reproducible XPASS results. Manual CLI invocation error invalidates the CLI metrics from this attempt.
+      - **No C segfault**: Unlike Attempts #28/#29, C binary did NOT segfault with the (incorrect) manual parameters, suggesting segfault is configuration-dependent (may require specific HKL/interpolation settings).
+      - **Phase G2/G3 incomplete**: Evidence bundle contains correct pytest metrics but incorrect CLI metrics. Cannot proceed to Phase H until CLI commands match test parameters exactly and reproduce correlation≈0.9999886.
+    Next Actions:
+      1. **URGENT**: Re-run CLI commands with correct parameters from test source (`-default_F 300 -lambda 1.0 -N 5 -detpixels 128`) and re-compute metrics. Expect correlation≈0.9999886 to match test.
+      2. **Phase H prerequisite**: Once CLI metrics align with pytest XPASS, the C-PARITY-001 reassessment can proceed (test and CLI both showing parity confirms the divergence classification was incorrect).
+      3. **Input.md directive compliance**: Per "If Blocked" clause, this attempt documented the XPASS anomaly with artifact pointers and halted before test modification (✅ compliant).
   * [2025-10-09] Attempt #26 (ralph loop #253 — Mode: Docs, Phase F1–F3 test redesign packet). Result: **SUCCESS** (Design packet complete; ready for Phase G implementation).
     Metrics: `pytest --collect-only -q tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` (9 tests collected). No code changes.
     Artifacts:
