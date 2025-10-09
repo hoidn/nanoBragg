@@ -1,0 +1,16 @@
+Timestamp: 20251009T061025Z
+0403919f52aac3cd5f23a5863c79343645b0c73f
+Python 3.13.5
+pyrefly /bin/bash: line 1: pyrefly: command not found
+not installed
+Exit code: 
+## feature/spec-based-2...origin/feature/spec-based-2
+ M docs/fix_plan.md
+ M plans/active/static-pyrefly.md
+ M src/nanobrag_torch/models/detector.py
+ M src/nanobrag_torch/simulator.py
+Listing 'src/nanobrag_torch'...
+Listing 'src/nanobrag_torch/io'...
+Listing 'src/nanobrag_torch/models'...
+Listing 'src/nanobrag_torch/utils'...
+Compiling 'src/nanobrag_torch/utils/runtime_cache.py'...

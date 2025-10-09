@@ -83,6 +83,12 @@ class Detector:
         # Calculate pixel coordinates from mm values
         # NOTE: The MOSFLM +0.5 pixel offset is already included in config.beam_center_s/f
         # by DetectorConfig.__post_init__ (lines 259-261), so we do NOT add it here.
+        # BL-1: Guard against None values (should be set by __post_init__, but defend)
+        if config.beam_center_s is None or config.beam_center_f is None:
+            raise ValueError(
+                "beam_center_s and beam_center_f must be set. "
+                "DetectorConfig.__post_init__ should have set defaults."
+            )
         beam_center_s_pixels = config.beam_center_s / config.pixel_size_mm
         beam_center_f_pixels = config.beam_center_f / config.pixel_size_mm
 
@@ -502,6 +508,12 @@ class Detector:
             #
             # Reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/diff_notes.md documents
             # the 1.1mm ΔF that this fix resolves.
+
+            # BL-1: Guard against None (should not happen after __post_init__, but pyrefly requires it)
+            if self.config.beam_center_f is None or self.config.beam_center_s is None:
+                raise ValueError(
+                    "beam_center_f and beam_center_s must be set by DetectorConfig.__post_init__"
+                )
 
             if self.config.detector_convention == DetectorConvention.MOSFLM:
                 # MOSFLM convention: add +0.5 pixel offset (C: nanoBragg.c:1220-1221)

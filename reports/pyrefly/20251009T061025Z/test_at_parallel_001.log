@@ -1,0 +1,18 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 8 items
+
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[64] PASSED [ 12%]
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[128] PASSED [ 25%]
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[256] PASSED [ 37%]
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[512] PASSED [ 50%]
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[1024] PASSED [ 62%]
+tests/test_at_parallel_001.py::TestATParallel001::test_peak_position_at_beam_center PASSED [ 75%]
+tests/test_at_parallel_001.py::TestATParallel001::test_cli_beam_center_calculation PASSED [ 87%]
+tests/test_at_parallel_001.py::TestATParallel001::test_intensity_scaling_with_solid_angle PASSED [100%]
+
+============================== 8 passed in 18.45s ==============================

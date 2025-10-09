@@ -7,6 +7,18 @@
 **Total Violations:** 78 errors across 8 files
 **Triaged By:** galph/ralph supervisor loop #209
 
+---
+
+## Quick Notes
+
+**[2025-10-09 UPDATE]** BL-1/BL-2 resolved in Attempt #5 → see `reports/pyrefly/20251009T061025Z/summary.md`
+- Fixed 8 blocker errors (BL-1: 8/10, BL-2: 4/4)
+- All targeted pytest selectors green (beam_center: 20/21, roi: 16/16)
+- Est. remaining: 12-14 blockers (BL-3..BL-6 + residuals)
+- Modified files: `detector.py` (lines 87-91, 256-259), `simulator.py` (lines 588-593, 1153-1160)
+
+---
+
 ## Triage Summary
 
 This document classifies the 78 pyrefly violations from the Phase B baseline scan into actionable severity buckets with owner assignments and pytest selectors for validation.

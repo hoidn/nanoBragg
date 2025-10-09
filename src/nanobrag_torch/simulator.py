@@ -585,6 +585,13 @@ class Simulator:
         roi_xmin = self.detector.config.roi_xmin
         roi_xmax = self.detector.config.roi_xmax
 
+        # BL-2: Guard against None values (should be set by DetectorConfig.__post_init__, but defend)
+        if roi_ymin is None or roi_ymax is None or roi_xmin is None or roi_xmax is None:
+            raise ValueError(
+                "ROI bounds (roi_ymin, roi_ymax, roi_xmin, roi_xmax) must be set. "
+                "DetectorConfig.__post_init__ should have set defaults."
+            )
+
         # Set everything outside ROI to zero
         self._cached_roi_mask[:roi_ymin, :] = 0  # Below ymin
         self._cached_roi_mask[roi_ymax+1:, :] = 0  # Above ymax
@@ -1142,6 +1149,15 @@ class Simulator:
             # Recreate roi_mask with actual image dimensions
             actual_spixels, actual_fpixels = physical_intensity.shape
             roi_mask = torch.ones_like(physical_intensity)
+
+            # BL-2: Guard against None values before using in min()
+            if (self.detector.config.roi_ymin is None or
+                self.detector.config.roi_ymax is None or
+                self.detector.config.roi_xmin is None or
+                self.detector.config.roi_xmax is None):
+                raise ValueError(
+                    "ROI bounds must be set by DetectorConfig.__post_init__ before use"
+                )
 
             # Clamp ROI bounds to actual image size
             roi_ymin = min(self.detector.config.roi_ymin, actual_spixels - 1)

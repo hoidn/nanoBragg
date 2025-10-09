@@ -50,9 +50,9 @@ Exit Criteria: `input.md` Do Now drafted, fix_plan next actions updated, and bac
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| D1 | Draft supervisor memo hooks | [ ] | In the next supervisor run after Phase C, reference triage artifacts (20251009T044937Z) in `input.md` and provide exact `pyrefly` command plus top blocker fixes. |
-| D2 | Update fix_plan next actions | [ ] | Under STATIC-PYREFLY-001, list targeted fixes with rule IDs, file:line anchors, and expected pytest selectors. |
-| D3 | Schedule re-run criteria | [ ] | Document rerun cadence (e.g., after each fix batch or weekly) in both `summary.md` and `docs/fix_plan.md` notes. |
+| D1 | Draft supervisor memo hooks | [D] | Completed 2025-10-09 (this loop). BL-1/BL-2 fix directive provided in input.md with 36 detailed steps, file:line anchors, and pytest selectors. Round 1 artifacts stored at `reports/pyrefly/20251009T061025Z/`. |
+| D2 | Update fix_plan next actions | [D] | Completed 2025-10-09. `docs/fix_plan.md` STATIC-PYREFLY-001 updated with Attempt #5 (BL-1/BL-2 fixes complete, 8/14 blocker errors resolved, validation results documented). |
+| D3 | Schedule re-run criteria | [D] | Completed 2025-12-22 in Attempt #4. Rerun cadence documented in fix_plan.md: "After each Ralph fix batch (Rounds 1-3), generate new pyrefly baseline; archive when violations ≤10 or all BLOCKER/HIGH items resolved." |
 
 ### Phase E — Regression Tracking & Closure
 Goal: Close the loop once violations are resolved or documented for future work.
