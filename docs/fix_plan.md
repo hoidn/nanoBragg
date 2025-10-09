@@ -25,6 +25,7 @@
 | [CLI-DTYPE-002](#cli-dtype-002-cli-dtype-parity) | CLI dtype parity | High | in_progress |
 | [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | in_progress |
 | [STATIC-PYREFLY-001](#static-pyrefly-001-run-pyrefly-analysis-and-triage) | Run pyrefly analysis and triage | Medium | in_planning |
+| [TEST-INDEX-001](#test-index-001-test-suite-discovery-reference-doc) | Test suite discovery reference doc | Medium | in_planning |
 | [SOURCE-WEIGHT-001](#source-weight-001-correct-weighted-source-normalization) | Correct weighted source normalization | Medium | in_progress (Phase D/E parity evidence outstanding) |
 | [C-SOURCEFILE-001](#c-sourcefile-001-sourcefile-comment-parsing-bug) | Sourcefile comment parsing bug | Medium | in_planning |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
@@ -4043,6 +4044,23 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       3. **Dead code cleanup:** Consider removing `_apply_mosflm_beam_convention` method in detector.py (unused, has 2 unfixed BL-1 errors)
       4. **Continue Phase D:** After BL-3..BL-6 resolved, move to HIGH priority design decision (H-1 tensor/scalar boundaries)
 - Risks/Assumptions: None-safety and type boundary violations may surface during runtime; some errors might be masked by existing tests not exercising all code paths. Design decision on Tensor vs scalar boundaries affects 26 errors and must align with differentiability requirements (arch.md §15). Defer bucket assumes pyrefly false positives but requires runtime verification before closing.
+
+## [TEST-INDEX-001] Test suite discovery reference doc
+- Spec/AT: `docs/development/testing_strategy.md`, `specs/spec-a-parallel.md` §2 (test tiers and acceptance gates), `docs/index.md`, and `docs/fix_plan.md` (ledger integration).
+- Priority: Medium
+- Status: in_planning
+- Owner/Date: galph/2025-12-25
+- Plan Reference: `plans/active/test-suite-index.md`
+- Reproduction (C & PyTorch):
+  * PyTorch: `NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q` (Phase A inventory capture); follow-up selectors recorded per section once doc drafts exist.
+  * Docs: Draft lives under `docs/development/` (exact filename decided Phase C1); must be linked from `docs/index.md`.
+  * Shapes/ROI: n/a (documentation initiative).
+- First Divergence (if known): No single source describes the active pytest suite; engineers rely on ad-hoc knowledge of selectors spread across fix_plan attempts and plan checklists, slowing regression triage and delegation.
+- Next Actions (2025-12-25 planning kickoff):
+  1. Execute Phase A1–A3 in `plans/active/test-suite-index.md`: capture `pytest --collect-only` output under `reports/2026-01-test-index/phase_a/<STAMP>/`, use a subagent to derive `inventory.json`, and note existing documentation touchpoints in `summary.md`.
+  2. With inventory ready, prepare Phase B taxonomy outline and drafting checklist; ensure selectors for SOURCE-WEIGHT-001, VECTOR-TRICUBIC-002, VECTOR-GAPS-002, and PERF-PYTORCH-004 are surfaced.
+  3. Once outline approved, schedule Phase C authoring loop (parallel subagents per section) and remember to update `docs/index.md` + Protected Assets list before release.
+- Attempts History: None — new initiative opened 2025-12-25. First attempt will log Phase A inventory bundle.
 
 ## [SOURCE-WEIGHT-001] Correct weighted source normalization
 - Spec/AT: `specs/spec-a-core.md` §4 (Sources, Divergence & Dispersion), `docs/architecture/pytorch_design.md` §§1.1/2.3, `docs/development/c_to_pytorch_config_map.md` (beam sourcing), `docs/development/testing_strategy.md` §1.4, and `golden_suite_generator/nanoBragg.c` lines 2570-2720 (source ingestion & steps computation).

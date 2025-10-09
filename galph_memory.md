@@ -1684,3 +1684,7 @@
 - Reran the 4096² warm-run benchmark (`reports/benchmarks/20251009-161714/`; command in fix_plan Attempt #5) and confirmed C↔PyTorch correlation now 0.999998 (sum_ratio 0.9999876), so the old 0.721 metric was stale. Logged Attempt #5 under `[VECTOR-GAPS-002]` and updated Next Actions to keep Phase B1 blocked only on SOURCE-WEIGHT parity.
 - Refreshed input.md (Mode: Parity) to drive SOURCE-WEIGHT-001 Phase G1–G3: rebuild C, run the mapped pytest selectors, execute PyTorch + C CLIs with the sanitised fixture, compute metrics, and capture a new `<STAMP>` bundle before updating the ledger.
 - Expect Ralph to follow the new How-To map, store artifacts under `reports/2025-11-source-weights/phase_g/<STAMP>/`, and append the Phase G Attempt referencing `[C-SOURCEFILE-001]` once correlation ≥0.999 and |sum_ratio−1| ≤3e-3 are confirmed.
+### 2025-12-25 (galph loop - TEST-INDEX-001 planning kickoff)
+- Authored `plans/active/test-suite-index.md` with phased roadmap (inventory → outline → doc authoring → maintenance) and added `[TEST-INDEX-001]` entry to `docs/fix_plan.md` (Medium priority, in_planning) so the documentation effort is now tracked.
+- Refreshed `input.md` (Mode: Parity) to keep SOURCE-WEIGHT-001 Phase G front-and-centre; noted the new plan under Pointers/Next Up so Ralph can pivot once the parity bundle lands.
+- Follow-up for Ralph: finish the SOURCE-WEIGHT-001 parity capture per input.md; after logging the Attempt, begin TEST-INDEX-001 Phase A by collecting pytest inventory with subagent support.
