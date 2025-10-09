@@ -8,6 +8,13 @@
 - Replaced input.md (Perf mode) directing Ralph to build the AST-based loop inventory script, run the new command, and log artifacts under `reports/2026-01-vectorization-gap/phase_a/<STAMP>/`.
 - Follow-up: Once script outputs land, ensure Phase A3 summary + fix_plan Attempt capture counts; prepare profiler run for Phase B1.
 
+### 2025-12-22 (galph loop - Vectorization gap Phase B kickoff)
+- Verified Phase A3 artifacts (20251009T065238Z) already satisfy classification requirements; no new plan needed.
+- Updated `docs/fix_plan.md` `[VECTOR-GAPS-002]` entry to `in_progress`, refreshed Next Actions for Phase B1–B3, and logged Attempt #2 referencing the classification bundle.
+- Replaced `input.md` (Perf mode) instructing Ralph to execute Phase B1 profiler capture, store artifacts under `reports/2026-01-vectorization-gap/phase_b/<STAMP>/`, run collect-only proof, and update ledger/plan status.
+- No code changes; awaiting profiler results before adjusting plan Phase B table.
+- Follow-up: After Ralph lands B1 metrics, mark plan row B1 to [P]/[D], append Attempt #3 in fix_plan with inclusive-time data, then supervise Phase B2 loop correlation.
+
 ### 2025-12-22 (galph loop - Source grid vectorization evidence)
 - Focused on [PERF-PYTORCH-004] Goal 2 gap: logged `generate_sources_from_divergence_dispersion` triple-loop cost (~0.126 s per call for 3,969 sources).
 - Created reports/2025-10-vectorization/gaps/20251009T061928Z/{analysis.md,generate_sources_timing.txt,commands.txt,env.json}.

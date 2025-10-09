@@ -19,7 +19,7 @@
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
 | [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | in_progress |
 | [VECTOR-TRICUBIC-001](#vector-tricubic-001-vectorize-tricubic-interpolation-and-detector-absorption) | Vectorize tricubic interpolation and detector absorption | High | in_progress |
-| [VECTOR-GAPS-002](#vector-gaps-002-vectorization-gap-audit) | Vectorization gap audit | High | in_planning |
+| [VECTOR-GAPS-002](#vector-gaps-002-vectorization-gap-audit) | Vectorization gap audit | High | in_progress |
 | [ABS-OVERSAMPLE-001](#abs-oversample-001-fix-oversample_thick-subpixel-absorption) | Fix -oversample_thick subpixel absorption | High | in_planning |
 | [CLI-DTYPE-002](#cli-dtype-002-cli-dtype-parity) | CLI dtype parity | High | in_progress |
 | [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | in_progress |
@@ -3735,7 +3735,7 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 ## [VECTOR-GAPS-002] Vectorization gap audit
 - Spec/AT: specs/spec-a-core.md §4, specs/spec-a-parallel.md §2.3 & §4, arch.md §§2/8/15, docs/architecture/pytorch_design.md §1.1, docs/development/pytorch_runtime_checklist.md, docs/development/testing_strategy.md §§1.4–2.
 - Priority: High
-- Status: in_planning (Phase A pending; plan authored 2025-12-22)
+- Status: in_progress (Phase A complete; Phase B profiling pending)
 - Owner/Date: galph/2025-12-22
 - Plan Reference: `plans/active/vectorization-gap-audit.md`
 - Reproduction (C & PyTorch):
@@ -3743,9 +3743,9 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * Analysis (after Phase A1 lands): `python scripts/analysis/vectorization_inventory.py --package src/nanobrag_torch --outdir reports/2026-01-vectorization-gap/phase_a/<STAMP>/`
 - First Divergence (if known): No consolidated post-Phase G inventory exists; residual Python loops (e.g., mosaic rotation RNG, detector ROI rebuild, RNG shims) remain unquantified, risking regressions of the vectorization guardrails and blocking performance diagnosis.
 - Next Actions (2025-12-22 status refresh):
-  1. Phase A3: annotate the existing inventory (`reports/2026-01-vectorization-gap/phase_a/20251009T064345Z/summary.md`) with vectorized/safe/todo labels and capture counts in `analysis.md`.
-  2. Once A3 is marked done, execute Phase B1 profiler capture to correlate loop hotspots (store under `reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`).
-  3. Use the profiler data to publish the prioritised backlog (Phase B3) and update this entry with artifact links before delegating implementation.
+  1. Phase B1: run the warm-run profiler capture (`KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1 --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`) and record command/log/env artifacts.
+  2. Phase B2: correlate profiler hotspots (≥1% inclusive time) with the Phase A inventory; produce `hot_loops.csv` and a short narrative summarising loop IDs, %time, and proposed focus level.
+  3. Phase B3: publish the prioritised backlog under `reports/2026-01-vectorization-gap/phase_b/<STAMP>/backlog.md`, then update this entry with counts and delegate-ready guidance before implementation begins.
 - Attempts History:
   * [2025-12-22] Attempt #0 — Result: planning baseline. Added `plans/active/vectorization-gap-audit.md`; no code changes yet. Next Actions: Phase A1 (loop-inventory script).
   * [2025-10-09] Attempt #1 — Result: Phase A1/A2 complete (ralph). Implemented AST-based loop inventory and generated initial gap analysis.
@@ -3766,6 +3766,21 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       2. Phase B1: Run profiler capture (`benchmark_detailed.py --profile`) to correlate static loops with runtime %time
       3. Phase B3: Publish prioritized backlog linking loops to perf impact and spec requirements
       4. Update plan tasks A1-A2 to completed, proceed with galph handoff for A3 supervision
+  * [2025-10-09] Attempt #2 — Result: Phase A3 classification complete (ralph). Documented vectorized/safe/todo/uncertain labels and prioritised follow-up targets.
+    Metrics: 24 loops classified (Vectorized=4, Safe=17, Todo=2, Uncertain=1). No tests executed beyond collect-only (evidence-only loop).
+    Artifacts:
+      - `reports/2026-01-vectorization-gap/phase_a/20251009T065238Z/analysis.md` — Detailed classification table with executive summary and device/dtype notes.
+      - `reports/2026-01-vectorization-gap/phase_a/20251009T065238Z/summary.md` — Annotated inventory appendix referencing spec/arch guardrails.
+      - `reports/2026-01-vectorization-gap/phase_a/20251009T065238Z/commands.txt` — Command log including collect-only proof.
+      - `reports/2026-01-vectorization-gap/phase_a/20251009T065238Z/pytest_collect.log` — `pytest --collect-only -q` output.
+    Observations/Hypotheses:
+      - Highest-priority todo loops: `utils/noise.py:171` (LCG RNG; large-n loop) and `simulator.py:1568` (phi-step loop; needs profiling to confirm hotness).
+      - Phi loop currently marked Uncertain pending profiling; Phase B1 trace required to decide whether to escalate.
+      - Safe loops predominantly file I/O or fixed small-N validation; vectorization offers no measurable benefit.
+    Next Actions:
+      1. Advance to Phase B1 to gather runtime evidence for the todo/uncertain loops.
+      2. Prepare to map profiler hotspots back to inventory entries in Phase B2.
+      3. Use Phase B backlog to prioritise design packets for Phase C.
 
 
 ---
