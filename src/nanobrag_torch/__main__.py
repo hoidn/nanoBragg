@@ -1002,7 +1002,7 @@ def main():
             # Report source loading
             n_sources = len(source_directions)
             print(f"Loaded {n_sources} sources from {config['sourcefile']}")
-        elif 'sources' not in config:
+        elif 'sourcefile' not in config:
             # Auto-select divergence parameters
             hdiv_params, vdiv_params = auto_select_divergence(
                 hdivsteps=config.get('hdivsteps'),
