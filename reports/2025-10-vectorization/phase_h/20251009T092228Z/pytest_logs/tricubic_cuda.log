@@ -1,0 +1,12 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 16 items / 14 deselected / 2 selected
+
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_device_neutrality[cuda] PASSED [ 50%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_device_neutral[cuda] PASSED [100%]
+
+======================= 2 passed, 14 deselected in 2.27s =======================

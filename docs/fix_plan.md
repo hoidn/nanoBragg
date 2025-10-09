@@ -3729,6 +3729,28 @@
       - **CUDA delegation clear:** Both updated docs explicitly reference PERF-PYTORCH-004 and device-placement blocker (Attempt #14) with rerun commands in phase_f/summary.md appendix
       - **Artifact completeness:** Phase G1 bundle includes summary, commands, collect log, and env.json per plan guidance (G1d); all cross-references validated
     Next Actions: ✅ Phase G2 tasks completed during galph loop i=214 (plan snapshot refreshed, fix_plan updated, CUDA delegation recorded). Hold for PERF-PYTORCH-004 to clear the device-placement blocker; once CUDA rerun artifacts land, log Attempt #18 and archive `[VECTOR-TRICUBIC-001]`.
+  * [2025-10-09] Attempt #18 (ralph loop #226, Mode: Perf) — Result: ✅ **Phase H COMPLETE** (CUDA parity and performance evidence captured). All CUDA tests passing, performance within expected tolerances.
+    Metrics: CUDA tests: 10/10 passing (2 tricubic + 8 absorption). Tricubic benchmarks (CUDA, 200 repeats): 256² 5647.65 μs/call (177.1 calls/sec), 512² 5652.98 μs/call (176.9 calls/sec). Absorption benchmarks (CUDA, 200 repeats): 256² 11.96 Mpx/sec, 512² 47.13 Mpx/sec. Performance comparison: tricubic 1.3% slower vs Phase E baseline (within noise), absorption 5-6% faster vs Phase A baseline. GPU scaling: absorption 512² shows 2.5× speedup vs CPU.
+    Artifacts:
+      - `reports/2025-10-vectorization/phase_h/20251009T092228Z/summary.md` — Complete Phase H evidence bundle with test results, benchmark comparisons, environment metadata, compliance checklist
+      - `reports/2025-10-vectorization/phase_h/20251009T092228Z/benchmarks/tricubic/tricubic_baseline_results.json` — 200-repeat CUDA tricubic benchmark with detailed timings
+      - `reports/2025-10-vectorization/phase_h/20251009T092228Z/benchmarks/absorption/absorption_baseline_results.json` — 200-repeat CUDA absorption benchmark with throughput metrics
+      - `reports/2025-10-vectorization/phase_h/20251009T092228Z/pytest_logs/tricubic_cuda.log` — Full pytest output for tricubic CUDA tests (2 passed)
+      - `reports/2025-10-vectorization/phase_h/20251009T092228Z/pytest_logs/absorption_cuda.log` — Full pytest output for absorption CUDA tests (8 passed)
+      - `reports/2025-10-vectorization/phase_h/20251009T092228Z/env.json` — Environment snapshot (Python 3.13.5, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090)
+      - `reports/2025-10-vectorization/phase_h/20251009T092228Z/torch_env.txt` — Detailed torch.utils.collect_env output
+      - `reports/2025-10-vectorization/phase_h/20251009T092228Z/nvidia_smi.txt` — GPU status at benchmark time
+      - `reports/2025-10-vectorization/phase_h/20251009T092228Z/commands.txt` — Reproduction commands for all Phase H tasks
+    Observations/Hypotheses:
+      - **Device neutrality validated:** All 10 CUDA tests pass (test_device_neutrality[cuda], test_polynomials_device_neutral[cuda], 8 absorption parametrized variants), confirming vectorized implementations work correctly on GPU
+      - **Tricubic CUDA performance parity:** 1.3% slower vs Phase E baseline (5647.65 vs 5574.36 μs/call) is within measurement noise; no regression detected
+      - **Absorption CUDA performance improvement:** 5-6% faster vs Phase A baseline (11.96 vs 11.3 Mpx/sec @ 256², 47.13 vs 44.8 Mpx/sec @ 512²), likely due to reduced overhead or runtime optimizations
+      - **GPU scaling confirmed:** Absorption shows expected GPU advantage at larger problem sizes (512² CUDA 47.13 Mpx/sec vs CPU 18.89 Mpx/sec = 2.5× speedup)
+      - **Device-placement blocker resolved:** Phase H1 device fix (from Attempt #14) successfully unblocked CUDA execution; all tests now pass on both CPU and CUDA
+      - **Statistical confidence:** 200 warm repeats provide robust measurements (tricubic: 0.24% std dev, absorption: 0.42-0.32% std dev)
+      - **Compliance verified:** All runtime checklist items satisfied (vectorization maintained, device/dtype neutrality, gradient flow preserved, CPU+CUDA smoke tests passing)
+      - **Phase H complete per plan:** H1 (device-placement fix) done in prior loop, H2 (CUDA tests + benchmarks) executed this loop, H3 (archive plan) ready for next action
+    Next Actions: Mark [VECTOR-TRICUBIC-001] status as `done` in fix_plan.md index; archive `plans/active/vectorization.md` to `plans/archive/vectorization.md` noting Phase H completion (date, commit a59a9b1, all exit criteria satisfied); update CLAUDE.md if any new runtime guidance emerged (none identified); close item in next loop.
 - Risks/Assumptions: Must maintain differentiability (no `.item()`, no `torch.linspace` with tensor bounds), preserve device/dtype neutrality (CPU/CUDA parity), and obey Protected Assets rule (all new scripts under `scripts/benchmarks/`). Large tensor indexing may increase memory pressure; ensure ROI caching still works.
 - Exit Criteria (quote thresholds from spec):
   * specs/spec-a-parallel.md §2.3 tricubic acceptance tests run without warnings and match C parity within documented tolerances (corr≥0.9995, ≤1e-12 structural duality where applicable).

@@ -1,0 +1,17 @@
+# Phase H: CUDA Parity & Performance Evidence Capture
+# Date: 2025-10-09T09:22:28Z
+# Commit: $(git rev-parse --short HEAD)
+
+## CUDA Tests
+KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -v -k cuda
+KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_abs_001.py -v -k cuda
+
+## CUDA Benchmarks
+PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --device cuda --repeats 200 --sizes 256 512 --outdir reports/2025-10-vectorization/phase_h/20251009T092228Z/benchmarks/tricubic
+
+PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/absorption_baseline.py --device cuda --repeats 200 --sizes 256 512 --thicksteps 5 --outdir reports/2025-10-vectorization/phase_h/20251009T092228Z/benchmarks/absorption
+
+## Environment Capture
+python -m torch.utils.collect_env > reports/2025-10-vectorization/phase_h/20251009T092228Z/torch_env.txt
+nvidia-smi > reports/2025-10-vectorization/phase_h/20251009T092228Z/nvidia_smi.txt 2>&1
+a59a9b1
