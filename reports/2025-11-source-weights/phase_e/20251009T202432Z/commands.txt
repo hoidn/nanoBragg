@@ -1,0 +1,64 @@
+# SOURCE-WEIGHT-001 Phase E1 Command Log
+# Generated: 2025-10-09T20:24:32Z
+
+## Environment Setup
+export KMP_DUPLICATE_LIB_OK=TRUE
+export NB_C_BIN=./golden_suite_generator/nanoBragg  # (optional, not used in this docs-only loop)
+
+## Directory Creation
+mkdir -p reports/2025-11-source-weights/phase_e/20251009T202432Z
+
+## Test Selector Validation
+pytest --collect-only -q tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence > reports/2025-11-source-weights/phase_e/20251009T202432Z/collect.log 2>&1
+
+## Environment Metadata Capture
+python - <<'PY'
+import sys, json, subprocess, os, torch
+env = {
+    "python_version": sys.version.split()[0],
+    "torch_version": torch.__version__,
+    "git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip(),
+    "git_branch": subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).decode().strip(),
+    "nb_c_bin": os.environ.get("NB_C_BIN", "not set"),
+    "nb_run_parallel": os.environ.get("NB_RUN_PARALLEL", "not set"),
+    "kmp_duplicate_lib_ok": os.environ.get("KMP_DUPLICATE_LIB_OK", "not set")
+}
+with open("reports/2025-11-source-weights/phase_e/20251009T202432Z/env.json", "w") as f:
+    json.dump(env, f, indent=2)
+print(json.dumps(env, indent=2))
+PY
+
+## Git Status
+git status --short > reports/2025-11-source-weights/phase_e/20251009T202432Z/git_status.txt
+
+## Spec References (Manual Review)
+# specs/spec-a-core.md:151 — Source weight/wavelength handling
+# docs/development/c_to_pytorch_config_map.md:6 — Configuration parity rules
+
+## Supporting Evidence Files (Read-Only)
+# reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/trace_notes.md
+# reports/2025-11-source-weights/phase_d/20251009T102319Z/divergence_analysis.md
+# plans/active/source-weight-normalization.md
+
+## Artifact Integrity Check
+ls -lah reports/2025-11-source-weights/phase_e/20251009T202432Z/
+
+## Decision Memo Checksum (for future drift detection)
+shasum reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md
+
+## Reproducibility Note
+# This is a documentation-only loop (Phase E1).
+# No C binary execution or PyTorch simulation was performed.
+# All evidence references prior reports in phase_a through phase_e/20251009T195032Z.
+
+## Next Phase Commands (For Phase F - Not Executed This Loop)
+# pytest --collect-only -q tests/test_cli_scaling.py::test_source_weights_ignored_per_spec
+# pytest --collect-only -q tests/test_cli_scaling.py::test_cli_lambda_overrides_sourcefile
+# (Design packet to define these selectors in Phase F)
+e8bcac0220bd9ae4335641021e40b6a8eb70d37a  reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md
+reports/2025-11-source-weights/phase_e/20251009T202432Z/:
+collect.log
+commands.txt
+env.json
+git_status.txt
+spec_vs_c_decision.md
