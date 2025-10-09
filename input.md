@@ -1,110 +1,99 @@
-Summary: Validate detector absorption vectorization (Phase F2) and capture CPU/CUDA perf evidence for Phase F3.
-Mode: Perf
-Focus: VECTOR-TRICUBIC-001 Phase F absorption vectorization
+Summary: Build a comprehensive supervisor guard design memo so the next loop can implement protections without ambiguity.
+Mode: Docs
+Focus: [ROUTING-SUPERVISOR-001] supervisor.sh automation guard
 Branch: feature/spec-based-2
-Mapped tests: env KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -v tests/test_at_abs_001.py
-Artifacts: reports/2025-10-vectorization/phase_f/validation/<STAMP>/, reports/2025-10-vectorization/phase_f/perf/<STAMP>/, reports/2025-10-vectorization/phase_f/summary.md
-Do Now: VECTOR-TRICUBIC-001 Phase F2 validation – env KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -v tests/test_at_abs_001.py
-If Blocked: Run pytest --collect-only -q tests/test_at_abs_001.py and log the blocker (traceback, env, hypotheses) in reports/2025-10-vectorization/phase_f/validation/<STAMP>/blocked.md.
+Mapped tests: pytest --collect-only -q
+Artifacts: reports/routing/<STAMP>-supervisor-guard-design.md; docs/fix_plan.md Attempt update; plans/active/supervisor-loop-guard/plan.md Phase B status; pytest collect log snippet embedded in memo
+Do Now: Complete plan Phase B1 — author the supervisor guard design memo, refresh plan/fix_plan bookkeeping, then confirm pytest collection passes by running `pytest --collect-only -q` after staging documentation changes.
+If Blocked: Record the obstacle (missing data, conflicting policy, tooling issue) inside reports/routing/<STAMP>-supervisor-guard-design.md with command transcripts, and log a partial Attempt in docs/fix_plan.md describing why Phase B1 could not finish.
 
 Priorities & Rationale:
-- docs/fix_plan.md:3364-3378 lists Phase F2–F4 as the remaining blockers; landing validation + perf evidence unblocks Phase F4 closure.
-- plans/active/vectorization.md:71-81 records the scope shift (validate existing vectorized path); executing it keeps the plan aligned with real progress.
-- reports/2025-10-vectorization/phase_f/design_notes.md:1-140 already defines gradient/device probes we owe evidence for—this loop produces that bundle.
-- src/nanobrag_torch/simulator.py:1707-1789 lacks a CLAUDE Rule #11 citation; updating the docstring anchors implementation to nanoBragg.c lines 2890-2920.
-- docs/development/pytorch_runtime_checklist.md:1-28 and testing_strategy.md:40-120 demand CPU+CUDA coverage; new parametrised tests must demonstrate compliance.
-- reports/2025-10-vectorization/phase_a/absorption_baseline.md:1-120 holds the throughput baseline; Phase F3 benchmarks must compare against it to prove no regressions (>5%).
-- scripts/benchmarks/absorption_baseline.py:1-200 is the canonical harness; reusing it avoids ad-hoc benchmarking and keeps PERF initiative metrics comparable.
-- PERFPY plan B7 (docs/fix_plan.md Active Focus bullet) still expects compile toggle discipline; keeping NANOBRAGG_DISABLE_COMPILE=1 avoids torch.compile churn during validation.
-- Upcoming Phase G documentation updates depend on the validation/perf summaries produced here; capturing detail now shortens the follow-up effort.
+- plans/active/supervisor-loop-guard/plan.md:32 — Context plus dependency list clarifies that supervisor guard must mirror loop guard and cites critical documents; review this before drafting to avoid drift.
+  Re-reading the plan ensures the memo captures every mandated guard feature (timeouted pull, single-run execution, conditional push, Protected Assets update).
+- plans/active/supervisor-loop-guard/plan.md:55 — Phase B1 is explicitly a design deliverable; until it is written the code cannot change, so the memo is the highest priority artifact for unlocking implementation.
+  The exit criteria call for a documented guard design hook referenced by the plan itself; make sure the memo is linked back into the checklist.
+- docs/fix_plan.md:407 — Active Focus shows ROUTING-SUPERVISOR-001 with Phase B tasks pending; updating this ledger keeps long-term automation hygiene goals transparent.
+  Fix_plan is the canonical progress log; without updating it, other collaborators will not know that Phase B1 is complete.
+- docs/fix_plan.md Attempt #2 (2025-10-09) — Newly added evidence describes missing guard elements; the design memo should cite this attempt and expand on each finding.
+  Treat Attempt #2 as the audit baseline—pull key bullet points into the memo so the narrative remains connected to recorded evidence.
+- reports/routing/20251009T043816Z-supervisor-regression.txt — Contains the exact diff and notes; the memo should lift relevant lines (e.g., 20-iteration loop, missing timeout guard, unconditional push) and elaborate on remediation tactics.
+  Quote the file path and timestamp inside the memo header so auditors can jump back to the source artifact quickly.
+- plans/active/routing-loop-guard/plan.md:18-120 — Documented guard restoration for loop.sh is the template; mimic its verified approach so supervisor guard stays consistent across automation scripts.
+  Highlight parity requirements such as `timeout 30 git pull --rebase` with fallback, conditional push logic, and dry-run expectations.
+- prompts/meta.md:1-200 — Routing SOP spells out automation policies (single work item, authoritative commands, commit hygiene); the memo must describe how the guard enforces these automatically to prevent regressions.
+  Include a short paragraph on how the guard guarantees the two-message loop policy and prevents multi-iteration runs.
+- docs/index.md:12-40 — Protected Assets list currently omits supervisor.sh; the memo needs to plan for adding it during Phase B5 while preserving ordering and rationale in that document.
+  Mention the Protected Assets rule explicitly so design readers know why docs/index.md changes are mandatory.
+- galph_memory.md:1-120 — Historical supervisor notes flag this guard as unresolved; referencing them demonstrates continuity and avoids forgetting prior decisions.
+  Summarise the latest galph entry relevant to ROUTING-SUPERVISOR-001 within the memo’s context section.
+- docs/development/testing_strategy.md:58-120 — Provides command sourcing guidance and device/dtype discipline; cite it in the memo when describing testing expectations for implementation phases.
+  Include a reminder that even doc-only loops must record their authoritative test command.
 
-How-To Map:
-- Pre-flight sanity: env KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_at_abs_001.py (store output in validation/commands.txt with timestamp).
-- Update `_apply_detector_absorption` docstring to include the exact nanoBragg.c snippet (lines 2890-2920) inside a fenced C block plus AT-ABS-001 reference and vectorization notes.
-- Instrument quick tensor shape probes (no code changes, just logged checks) to confirm parallax `(S,F)`, capture `(T,S,F)`, and broadcast behaviour; summarise findings in validation/validation.md.
-- Extend tests/test_at_abs_001.py so each test parametrises over device (cpu plus cuda if available) and `oversample_thick` (True/False), using `pytest.mark.parametrize` with conditional skip when CUDA missing.
-- After edits, run env KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -v tests/test_at_abs_001.py; archive full log, exit code, and env.json (Python version, torch, CUDA availability) under validation/<STAMP>/.
-- Benchmark CPU throughput: PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/absorption_baseline.py --sizes 256 512 --thicksteps 5 --repeats 200 --device cpu --outdir reports/2025-10-vectorization/phase_f/perf/<STAMP>/cpu
-- Benchmark CUDA throughput: PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/absorption_baseline.py --sizes 256 512 --thicksteps 5 --repeats 200 --device cuda --outdir reports/2025-10-vectorization/phase_f/perf/<STAMP>/cuda
-- Record cold vs warm timings, throughput (pixels/sec), and any compile warm-up notes in perf/<STAMP>/perf_summary.md; dump raw stdout/stderr into perf_results.json and commands.txt.
-- Draft reports/2025-10-vectorization/phase_f/summary.md covering (1) docstring update, (2) validation findings, (3) benchmark comparison vs Phase A baseline, and (4) parity follow-ups needed for Phase F4.
-- Update docs/fix_plan.md Attempts with Attempt ID, pointer to both validation/perf bundles, and pass/fail summaries; mark F2/F3 progress inline and note upcoming F4 tasks.
-- Capture a short note in galph_memory.md summarising the new evidence bundles so the next supervisor loop has continuity.
-
-Validation Checklist:
-- Confirm `parallax` retains sign and only clamps near ±1e-10; document any pixels hitting the guard and correlate with detector geometry.
-- Verify gradients for `detector_abs_um`, `detector_thick_um`, `distance_mm`, and `odet_vec` remain non-None by running small `torch.autograd.grad` probes in a notebook or script and logging results.
-- Ensure new parametrised tests respect torch dtype (float32 default) while allowing float64 overrides for gradcheck usage; document dtype handling in validation.md.
-- Capture differences between oversample_thick True/False for at least one pixel (ratio, expected inequality) to demonstrate semantics align with AT-ABS-001.
-- Include device metadata in env.json (torch.cuda.get_device_name, capability) so benchmark comparisons remain valid across runs.
-- Write an "Open Questions" subsection for any outstanding concerns (e.g., need for additional nb-compare evidence or further gradchecks).
-
-Benchmark Reporting:
-- List CPU and CUDA cold-start durations separately from warm medians; highlight any compile warm-up overhead if present.
-- Compute throughput (pixels/sec) for each detector size and compare to Phase A baseline; flag regressions beyond 5% immediately.
-- If CUDA unavailable, record the absence explicitly and skip GPU runs with rationale in perf_summary.md.
-- Capture `nvidia-smi --query-gpu=name,utilization.gpu --format=csv` output (if accessible) to confirm GPU utilisation levels.
-- Note whether torch.compile graph breaks appear during benchmarks; if they do, include log excerpts and proposed mitigations.
-- Store perf commands and outputs with UTC timestamps and SHA256 hashes to keep audit trail reproducible.
-
-Documentation Hooks:
-- In summary.md, list any required updates to docs/development/pytorch_runtime_checklist.md or docs/architecture/pytorch_design.md (e.g., note that detector absorption now has explicit CPU/CUDA coverage).
-- Flag potential additions for docs/architecture/detector.md (clarifying oversample_thick behaviour) so Phase G can incorporate them quickly.
-- If new helper fixtures are created for device parametrisation, mention them along with suggested reuse instructions in summary.md.
-- Note whether reports/archive/cli-flags-003/watch.md should start tracking absorption perf metrics as part of the watch cadence.
-- Record any insights relevant to PERF-PYTORCH-004 (e.g., compile cache toggles, memory pressure) in summary.md under "Next Steps".
-
-Evidence Logging Steps:
-- Within validation/<STAMP>/ create commands.txt, env.json, validation.md, summary.md (if desired), and checksums.txt covering all artifacts.
-- Within perf/<STAMP>/ create cpu/ and cuda/ subdirs (when applicable) each with raw logs, commands, env, and checksum entries plus a shared perf_summary.md at the root.
-- Use `sha256sum` on logs and JSON outputs; append results to checksums.txt for reproducibility.
-- Reference both bundles explicitly in docs/fix_plan.md Attempt log (include timestamped directories and main findings).
-- Keep git status clean—stage intentional code/test/doc updates; `.gitignore` already excludes benchmarks outputs so no manual cleanup should be necessary.
-
-Risks & Mitigations:
-- If CUDA runtimes regress, capture profiler hints (e.g., torch.autograd.profiler) and propose follow-up tasks rather than ignoring shorter term issues.
-- Watch for memory spikes when thicksteps increases; note any need for tiling strategy to avoid OOM on large detectors.
-- Ensure tests remain speedy; if parametrisation doubles runtime, consider reducing detector size inside fixtures while preserving physics coverage.
-- Maintain compatibility with torch.autograd gradcheck workflows; do not bake compile-specific logic into tests that would break double precision runs.
-- If docstring updates risk merge conflict, coordinate with pending branches by highlighting the change in summary.md and Attempt log.
+Detailed Steps:
+1. Export authoritative commands reference:
+   `export AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md`
+   Document this export in the memo so readers know where pytest command sourcing came from.
+2. Capture UTC timestamp:
+   `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`
+   Use this stamp in both the memo filename and header for reproducibility.
+3. Create memo file:
+   `OUT=reports/routing/${STAMP}-supervisor-guard-design.md; touch "$OUT"`
+   Start the document with title, timestamp, git commit (current HEAD), and reference to Attempt #2.
+4. Section 1 — Context:
+   Summarise regression findings, list missing guard features, and link to relevant plan sections; explain why automation must remain paused until guard implementation completes.
+5. Section 2 — Guard Parity Table:
+   Construct a markdown table with columns: Guard Aspect | loop.sh (853cf08) | supervisor.sh (current) | Required Change.
+   Follow the table with line-by-line commentary elaborating on each delta.
+6. Section 3 — Timeout & Fallback Flow:
+   Describe required commands, logging expectations, and how to ensure the script recovers gracefully; mention integration with `sync/state.json` handling.
+7. Section 4 — Single Iteration Contract:
+   Define behavior for both SYNC_VIA_GIT=0 and SYNC_VIA_GIT=1 modes; specify how to exit after a single prompt, and how to handle exit codes.
+8. Section 5 — Conditional Push Logic:
+   Explain detection of new commits, success checks, warning paths, and parity with loop.sh guard; include pseudo-code snippet.
+9. Section 6 — Protected Assets Update Plan:
+   Outline required docs/index.md change, potential updates to CLAUDE.md or other SOPs, and mention Protected Assets policy.
+10. Section 7 — Verification Checklist:
+    List dry-run, hygiene, pytest collect, git status verification, and artifact recording requirements for phases B3/B4.
+11. Section 8 — Risks & Open Questions:
+    Capture items such as Python orchestrator interaction, environment variable defaults, state file rotation, logging expectations; assign owners or follow-up notes.
+12. Section 9 — Roadmap:
+    Provide bullet list for B2 (implementation), B3 (dry run), B4 (hygiene), B5 (Protected Assets update + documentation), including artifact directories and gating commands.
+13. Appendix — References:
+    Include file:line anchors for plan rows, fix_plan entries, audit log, prompts/meta, docs/index.md, and relevant SOPs for quick cross-checking.
+14. Once memo draft complete, update plans/active/supervisor-loop-guard/plan.md Phase B1 row to indicate completion and insert memo path into guidance column.
+15. Append Attempt #3 in docs/fix_plan.md (under ROUTING-SUPERVISOR-001) noting Phase B1 completion, listing artifacts, summarising key design elements, and enumerating next actions.
+16. Stage documentation updates (`git add reports/routing/... plans/active/supervisor-loop-guard/plan.md docs/fix_plan.md input.md`).
+17. Run `pytest --collect-only -q`; capture command and output; add a short excerpt or log path to the memo and mention success in the Attempt entry.
+18. Run `git status --short`; confirm only expected files are staged; document expected diff list in the memo for auditing.
+19. If unexpected files appear, either clean them before finishing or record them in the memo with rationale for leaving them untouched.
+20. Review the memo for ASCII-only characters, consistent formatting, and complete references before finalising.
 
 Pitfalls To Avoid:
-- Do not reintroduce Python loops or per-layer iteration; keep broadcast vectorisation intact.
-- Maintain device/dtype neutrality; avoid `.cpu()`/`.cuda()` calls inside hot paths and allocate new tensors on `intensity.device`.
-- Ensure tests skip gracefully when CUDA unavailable; never hard-fail on missing GPU.
-- Keep artifacts under reports/2025-10-vectorization/phase_f/; avoid stray files in repo root or /tmp.
-- Cite the nanoBragg.c snippet verbatim in the docstring to satisfy CLAUDE Rule #11.
-- Use repeats=200 for benchmarks per plan; note cold vs warm stats if they diverge.
-- Preserve existing tolerances in tests/test_at_abs_001.py unless deterministic evidence supports changing them.
-- Capture env.json for both validation and perf directories; reproducibility is non-negotiable.
-- Stick to mapped selectors; no full pytest suites this loop.
-- Record all commands with timestamps in commands.txt to keep the audit trail tight.
-- Rerun pytest after modifying tests; stale runs are unacceptable as evidence.
-- Avoid float64 promotion in production paths; keep runtime dtype float32 unless tests demand otherwise.
-- Keep NANOBRAGG_DISABLE_COMPILE=1 during tests to minimise torch.compile churn until PERF plan B7 resolves.
-- Do not touch Protected Assets (docs/index.md, loop.sh, supervisor.sh, input.md) beyond this memo.
-- Share reusable fixtures/utilities instead of duplicating logic inside tests.
-- Double-check that oversample_thick toggles in Simulator.run remain vectorised after your changes.
-- Confirm new docstring formatting stays ASCII-only to match repo standards.
+- No script edits during this loop; stick to documentation and planning work.
+- Do not modify docs/index.md yet; simply plan the change.
+- Avoid rearranging fix_plan history; append new entries only.
+- Keep environment variable exports confined to shell session; do not commit them.
+- Ensure memo uses fenced code blocks—not inline substitutions—to show commands.
+- Do not run automation scripts (supervisor.sh/loop.sh/Python orchestrator) while preparing the memo.
+- Keep pytest usage limited to `--collect-only`; additional testing awaits implementation loops.
+- Verify that new report files reside under reports/routing/ using the timestamped naming scheme.
+- Maintain Protected Assets awareness; reference docs/index.md without renaming or deleting protected files.
+- Double-check that the memo and plan updates retain consistent table formatting (no stray whitespace or broken columns).
 
 Pointers:
-- docs/fix_plan.md:3364-3378 — VECTOR-TRICUBIC-001 entry with refreshed Next Actions.
-- plans/active/vectorization.md:71-81 — Phase F tasks and scope shift for F2.
-- reports/2025-10-vectorization/phase_f/design_notes.md:1-140 — Gradient/device checklist to execute.
-- src/nanobrag_torch/simulator.py:1707-1789 — Absorption implementation requiring Rule #11 citation.
-- tests/test_at_abs_001.py:1-200 — Current coverage to extend for device + oversample parametrisation.
-- scripts/benchmarks/absorption_baseline.py:1-200 — Benchmark harness for perf measurements.
-- docs/development/pytorch_runtime_checklist.md:1-28 — Runtime guardrails for device/dtype neutrality.
-- docs/development/testing_strategy.md:40-120 — Device testing cadence requirements.
-- reports/2025-10-vectorization/phase_a/absorption_baseline.md:1-120 — Baseline throughput numbers.
-- docs/architecture/detector.md:150-260 — Detector absorption semantics reference.
-- reports/2025-10-vectorization/phase_e/summary.md:1-120 — Template for parity/perf summarisation.
-- docs/development/implementation_plan.md:120-200 — Detector work context within roadmap.
-- reports/benchmarks/20250930-165726-compile-cache/analysis.md:1-80 — Historical hotspot motivation.
-- docs/bugs/verified_c_bugs.md:120-170 — Confirm no C-side quirks need emulation.
-- prompts/callchain.md:1-160 — Guidance if additional absorption tap points are needed later.
+- plans/active/supervisor-loop-guard/plan.md:32-120
+- docs/fix_plan.md:407-420
+- reports/routing/20251009T043816Z-supervisor-regression.txt:1-200
+- plans/active/routing-loop-guard/plan.md:18-120
+- prompts/meta.md:1-200
+- docs/index.md:12-40
+- docs/development/testing_strategy.md:58-120
+- galph_memory.md:1-120
 
-Next Up:
-1. If Phase F2/F3 land quickly, draft Phase F4 nb-compare smoke instructions (CPU first, optional CUDA) using the existing Phase E harness.
-2. If time remains, prep notes for Phase G documentation edits—identify exact sections in runtime checklist and architecture docs that will need updates.
-3. Optional stretch: outline how absorption benchmarks integrate into PERF-PYTORCH-004 metrics dashboard once this initiative closes.
+Next Up: If time permits after Phase B1 deliverables, append to the memo a proposed execution schedule for B2-B5 (owners, commands, expected timestamps) so implementation can proceed efficiently next loop.
+
+Additional Reminders:
+- After running pytest, capture the full command line and exit status in the memo so audit trails remain complete.
+- Include a brief checklist at the memo’s end confirming: memo written, plan updated, fix_plan updated, pytest collect ran, git status clean.
+- When drafting the memo, cross-reference the relevant CLAUDE.md automation rules if any new guard logic touches supervisory policies.
+- Keep timestamps in ISO 8601 with Z suffix for consistency across reports.

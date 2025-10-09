@@ -1344,3 +1344,9 @@
 - Updated docs/fix_plan.md Next Actions to drop Phase F1 (now complete) and emphasise F2 validation, F3 perf benchmarks, and F4 summarisation with explicit artifact directories (`reports/2025-10-vectorization/phase_f/...`).
 - Regenerated input.md (Perf mode, 110 lines) instructing Ralph to add the nanoBragg.c absorption snippet to `_apply_detector_absorption`, extend tests/test_at_abs_001.py with CPU/CUDA + oversample parametrisation, run targeted pytest, and capture CPU/CUDA benchmarks into `phase_f/validation/` and `phase_f/perf/` bundles.
 - No commands beyond git diff/status; working tree contains updated docs/fix_plan.md and input.md awaiting commit.
+
+## 2025-12-22 (galph loop - Supervisor guard Phase A evidence)
+- Ran git sync (already up to date) then captured supervisor.sh regression snapshot (Phase A1/A2) in `reports/routing/20251009T043816Z-supervisor-regression.txt`.
+- Updated `docs/fix_plan.md` Attempt #2 under ROUTING-SUPERVISOR-001 with artifact path and observations; Phase A evidence now logged.
+- Authored `input.md` (Docs mode) directing Ralph to deliver Phase B1 design memo, update plan/fix_plan, and run `pytest --collect-only -q` after documentation.
+- Focus remains on supervisor guard plan; no code changes made this loop.

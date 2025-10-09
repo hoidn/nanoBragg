@@ -421,6 +421,15 @@
   * Implement the guarded flow (Phase B2–B4) and new task B5 to add `supervisor.sh` to docs/index.md so Protected Assets policy covers the script before the automation loop runs again.
 - Attempts History:
   * [2025-10-13] Attempt #1 — Result: regression documented. Confirmed `supervisor.sh` loops 40× with no pull/rebase guard and no exit criteria. No artifacts yet (pending plan Phase A). Next Actions: follow plan tasks A1–A3 to produce evidence, then proceed to Phase B implementation.
+  * [2025-10-09] Attempt #2 (galph loop, Mode: Docs — Phase A1/A2 evidence) — Result: ✅ **Guard regression captured; Phase A1–A2 complete.**
+    Metrics: n/a (documentation task)
+    Artifacts: `reports/routing/20251009T043816Z-supervisor-regression.txt` — Snapshot of current `supervisor.sh` (first 160 lines), diff versus guarded `loop.sh` baseline (commit 853cf08), and bullet notes on missing timeout guard, conditional push, and Protected Asset listing.
+    Observations/Hypotheses:
+      - Legacy bash path executes 20 iterations per run (`SYNC_LOOPS=20`) with no single-iteration mode, violating automation guard contract.
+      - No `timeout 30 git pull --rebase` guard or fallback is present; rebase failures would leave automation in an inconsistent state.
+      - Script pushes unconditionally after each iteration; conditional push guard must mirror `loop.sh` before automation resumes.
+      - `docs/index.md` still lacks `supervisor.sh`; Phase B5 must add it to Protected Assets before re-enabling the harness.
+    Next Actions: Execute plan Phase A3 bookkeeping (this ledger update satisfies it), then proceed to Phase B1 design note and implementation tasks (B2–B5) with dry-run evidence and Protected Assets update.
 - Risks/Assumptions: Treat `supervisor.sh` as a Protected Asset (Phase B5 formalises this in docs/index.md); ensure edits retain logging expectations and do not re-enable multi-iteration loops.
 - Exit Criteria: Guarded single-iteration script with audit/dry-run/compliance logs captured and plan archived.
 
