@@ -503,9 +503,15 @@ class TestSourceWeightsDivergence:
             tmpdir = Path(tmpdir)
 
             # Shared parameters from commands.txt (TC-D1)
+            # Per spec-a-core.md:152, divergence grids are generated "when no file provided"
+            # Explicitly disable divergence to match spec intent and avoid C auto-selection
             common_args = [
                 '-mat', str(mat_file.resolve()),
                 '-sourcefile', str(sourcefile.resolve()),
+                '-default_F', '100',
+                '-hdivsteps', '0',
+                '-vdivsteps', '0',
+                '-dispsteps', '1',
                 '-distance', '231.274660',
                 '-lambda', '0.9768',
                 '-pixel', '0.172',
@@ -662,8 +668,11 @@ class TestSourceWeightsDivergence:
             tmpdir = Path(tmpdir)
 
             # Shared parameters from commands.txt (TC-D3)
+            # This test explicitly WANTS divergence grid generation (no sourcefile)
+            # Keep hdivsteps=3 to generate divergence sources
             common_args = [
                 '-mat', str(mat_file.resolve()),
+                '-default_F', '100',
                 '-hdivrange', '0.5',
                 '-hdivsteps', '3',
                 '-distance', '231.274660',

@@ -1,0 +1,8 @@
+{
+  "tc_d1_correlation": -0.2967384142082391,
+  "tc_d1_sum_ratio": 302.60919189453125,
+  "tc_d1_c_sum": 179.61312866210938,
+  "tc_d1_py_sum": 54352.58203125,
+  "device": "cpu",
+  "dtype": "float32"
+}
