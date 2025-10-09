@@ -1659,3 +1659,9 @@
 - Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions to reflect the new parity targets, segfault diagnosis, and memo/test alignment tasks; legacy C-parity note now marked provisional pending Phase H.
 - Rewrote `input.md` (Mode: Docs) instructing Ralph to rebuild the debug C binary, rerun the evidence bundle, capture gdb backtrace if TC-D3 segfaults, and archive metrics for the forthcoming parity memo.
 - Follow-up for Ralph: execute Phase G2/G4 per new guidance, archive artifacts under a fresh STAMP, then transition to Phase H parity memo + test rewrite once parity metrics are confirmed.
+
+### 2025-12-25 (galph loop - SOURCE-WEIGHT Phase G bundle reset)
+- Confirmed `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference` still XPASSes (`NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest -q ...`), so parity anomaly persists and must be documented in the next evidence run.
+- Rebuilt `golden_suite_generator/nanoBragg`; noted the PyTorch-only `-mosaic_dom` shorthand and added fix-plan guidance to invoke the C CLI with `-mosaic_domains` while running commands from the STAMP directory to contain SMV/PGM side outputs.
+- Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions (bullet 4) plus a new `input.md` (Mode: Docs+Parity) that scripts the refreshed Phase G2 bundle: targeted pytest, corrected CLI commands, metrics/NaN audit, and instructions to capture gdb traces on failure.
+- Follow-up for Ralph: execute the new `input.md` workflow, populate `reports/2025-11-source-weights/phase_g/<STAMP>/` with pytest logs + Py/C metrics, record the XPASS outcome, and then queue Phase H parity memo work once evidence is complete.
