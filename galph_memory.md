@@ -1688,3 +1688,8 @@
 - Authored `plans/active/test-suite-index.md` with phased roadmap (inventory → outline → doc authoring → maintenance) and added `[TEST-INDEX-001]` entry to `docs/fix_plan.md` (Medium priority, in_planning) so the documentation effort is now tracked.
 - Refreshed `input.md` (Mode: Parity) to keep SOURCE-WEIGHT-001 Phase G front-and-centre; noted the new plan under Pointers/Next Up so Ralph can pivot once the parity bundle lands.
 - Follow-up for Ralph: finish the SOURCE-WEIGHT-001 parity capture per input.md; after logging the Attempt, begin TEST-INDEX-001 Phase A by collecting pytest inventory with subagent support.
+
+### 2025-12-26 (galph loop - SOURCE-WEIGHT Phase G handoff refresh)
+- Rechecked `plans/active/source-weight-normalization.md` G0–G3 and `docs/fix_plan.md:4047-4175`; no ledger edits needed, but confirmed sanitised fixture (`reports/2025-11-source-weights/fixtures/two_sources_nocomments.txt`) and checksum are in place for the rerun.
+- Left plan statuses unchanged (Review mode only) and refreshed `input.md` with explicit checksum verification, clarified `$STAMP` artifact paths, and reiterated metrics thresholds + `[C-SOURCEFILE-001]` linkage before Ralph updates the ledger.
+- Follow-up for Ralph: execute Phase G1–G3 exactly as scripted (collect-only proof, pytest selectors, Py/C CLI runs, metrics.json), log the new Attempt, and block further work if correlation or sum ratio fail the thresholds.
