@@ -1,0 +1,195 @@
+# SOURCE-WEIGHT-001 Phase F: Authoritative Commands
+
+## Environment Setup
+export KMP_DUPLICATE_LIB_OK=TRUE
+export NB_C_BIN=./golden_suite_generator/nanoBragg
+export NB_RUN_PARALLEL=1  # Only for C-comparison tests
+
+## Pytest Collection (Validation)
+# Verify existing test selectors
+pytest --collect-only -q tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence
+
+# Expected output (pre-Phase G):
+# tests/test_cli_scaling.py::TestSourceWeights::test_weighted_source_matches_c
+# tests/test_cli_scaling.py::TestSourceWeights::test_uniform_weights_ignored
+# tests/test_cli_scaling.py::TestSourceWeights::test_edge_case_zero_sum_accepted
+# tests/test_cli_scaling.py::TestSourceWeights::test_edge_case_negative_weights_accepted
+# tests/test_cli_scaling.py::TestSourceWeights::test_single_source_fallback
+# tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_only_parity
+# tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_divergence_warning
+# tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_divergence_only_grid_generation
+# tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_parity_explicit_oversample
+
+## Phase G Target Tests (Post-Implementation)
+# Spec compliance tests (no C comparison)
+pytest -v \
+  tests/test_cli_scaling.py::TestSourceWeights::test_source_weights_ignored_per_spec \
+  tests/test_cli_scaling.py::TestSourceWeights::test_cli_lambda_overrides_sourcefile
+
+# Full suite (with C-divergence reference marked xfail)
+pytest -v \
+  tests/test_cli_scaling.py::TestSourceWeights \
+  tests/test_cli_scaling.py::TestSourceWeightsDivergence
+
+# C-divergence reference only (expected xfail)
+NB_RUN_PARALLEL=1 pytest -v \
+  tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference
+
+## CLI Commands for Comparison Artifacts
+
+# Setup directories
+FIXTURE_DIR="reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures"
+OUT_DIR="reports/2025-11-source-weights/phase_f/20251009T203823Z/cli"
+mkdir -p "$OUT_DIR"
+
+### TC-Spec-1: PyTorch Weighted vs Equal Run
+# Run A: Weighted sourcefile
+python -m nanobrag_torch \
+  -sourcefile "$FIXTURE_DIR/two_sources.txt" \
+  -lambda 0.9768 \
+  -default_F 100 \
+  -cell 100 100 100 90 90 90 \
+  -distance 100 \
+  -detpixels 256 \
+  -pixel 0.1 \
+  -oversample 1 \
+  -phisteps 1 \
+  -mosaic_dom 1 \
+  -floatfile "$OUT_DIR/py_weighted.bin"
+
+# Create equal-weight sourcefile
+cat > "$OUT_DIR/equal_sources.txt" << 'EOF'
+# X    Y    Z    weight  lambda(m)
+0    0    10   1.0     6.2e-10
+0    0    10   1.0     6.2e-10
+EOF
+
+# Run B: Equal-weight sourcefile
+python -m nanobrag_torch \
+  -sourcefile "$OUT_DIR/equal_sources.txt" \
+  -lambda 0.9768 \
+  -default_F 100 \
+  -cell 100 100 100 90 90 90 \
+  -distance 100 \
+  -detpixels 256 \
+  -pixel 0.1 \
+  -oversample 1 \
+  -phisteps 1 \
+  -mosaic_dom 1 \
+  -floatfile "$OUT_DIR/py_equal.bin"
+
+# Compare outputs
+python << 'EOF_PYTHON'
+import numpy as np
+from pathlib import Path
+import json
+import os
+
+out_dir = Path(os.environ.get("OUT_DIR", "reports/2025-11-source-weights/phase_f/20251009T203823Z/cli"))
+weighted = np.fromfile(out_dir / "py_weighted.bin", dtype=np.float32).reshape(256, 256)
+equal = np.fromfile(out_dir / "py_equal.bin", dtype=np.float32).reshape(256, 256)
+
+sum_ratio = weighted.sum() / equal.sum()
+correlation = np.corrcoef(weighted.flatten(), equal.flatten())[0, 1]
+
+metrics = {
+    "weighted_sum": float(weighted.sum()),
+    "equal_sum": float(equal.sum()),
+    "sum_ratio": float(sum_ratio),
+    "correlation": float(correlation),
+    "tolerance": 3e-3,
+    "result": "PASS" if (abs(sum_ratio - 1.0) <= 3e-3 and correlation >= 0.999) else "FAIL"
+}
+
+with open(out_dir / "metrics_spec_compliance.json", "w") as f:
+    json.dump(metrics, f, indent=2)
+
+print(f"TC-Spec-1 Metrics:")
+print(f"  Sum ratio: {sum_ratio:.6f} (expected ~1.0)")
+print(f"  Correlation: {correlation:.6f} (expected ≥0.999)")
+print(f"  Result: {metrics['result']}")
+EOF_PYTHON
+
+### TC-Spec-2: CLI Lambda Override Validation
+python -m nanobrag_torch \
+  -sourcefile "$FIXTURE_DIR/two_sources.txt" \
+  -lambda 0.9768 \
+  -default_F 100 \
+  -cell 100 100 100 90 90 90 \
+  -distance 100 \
+  -detpixels 256 \
+  -pixel 0.1 \
+  -floatfile "$OUT_DIR/py_lambda_override.bin" \
+  2> "$OUT_DIR/py_lambda_override_stderr.txt"
+
+# Check for warning
+if grep -q "Sourcefile wavelength column differs" "$OUT_DIR/py_lambda_override_stderr.txt"; then
+    echo "TC-Spec-2: ✅ Warning emitted as expected"
+else
+    echo "TC-Spec-2: ❌ Warning NOT emitted (spec violation)"
+fi
+
+### TC-C-Divergence: C vs PyTorch Reference (Optional)
+# Run C
+./golden_suite_generator/nanoBragg \
+  -sourcefile "$FIXTURE_DIR/two_sources.txt" \
+  -lambda 0.9768 \
+  -default_F 100 \
+  -cell 100 100 100 90 90 90 \
+  -distance 100 \
+  -detpixels 256 \
+  -pixel 0.1 \
+  -floatfile "$OUT_DIR/c_weighted.bin"
+
+# Run PyTorch
+python -m nanobrag_torch \
+  -sourcefile "$FIXTURE_DIR/two_sources.txt" \
+  -lambda 0.9768 \
+  -default_F 100 \
+  -cell 100 100 100 90 90 90 \
+  -distance 100 \
+  -detpixels 256 \
+  -pixel 0.1 \
+  -floatfile "$OUT_DIR/py_weighted_for_c_compare.bin"
+
+# Compare (expected: correlation < 0.8)
+python << 'EOF_PYTHON'
+import numpy as np
+from pathlib import Path
+import json
+import os
+
+out_dir = Path(os.environ.get("OUT_DIR", "reports/2025-11-source-weights/phase_f/20251009T203823Z/cli"))
+c_img = np.fromfile(out_dir / "c_weighted.bin", dtype=np.float32).reshape(256, 256)
+py_img = np.fromfile(out_dir / "py_weighted_for_c_compare.bin", dtype=np.float32).reshape(256, 256)
+
+correlation = np.corrcoef(c_img.flatten(), py_img.flatten())[0, 1]
+sum_ratio = py_img.sum() / c_img.sum() if c_img.sum() > 0 else float('inf')
+
+metrics = {
+    "c_sum": float(c_img.sum()),
+    "py_sum": float(py_img.sum()),
+    "sum_ratio": float(sum_ratio),
+    "correlation": float(correlation),
+    "expected": "correlation < 0.8 (C-PARITY-001)",
+    "result": "EXPECTED DIVERGENCE" if correlation < 0.8 else "UNEXPECTED MATCH"
+}
+
+with open(out_dir / "metrics_c_divergence.json", "w") as f:
+    json.dump(metrics, f, indent=2)
+
+print(f"TC-C-Divergence Metrics:")
+print(f"  Correlation: {correlation:.6f} (expected < 0.8 per C-PARITY-001)")
+print(f"  Sum ratio (Py/C): {sum_ratio:.6f}")
+print(f"  Result: {metrics['result']}")
+EOF_PYTHON
+
+## Expected Metrics Summary
+# TC-Spec-1: sum_ratio ∈ [0.997, 1.003], correlation ≥ 0.999
+# TC-Spec-2: Warning emitted (grep succeeds)
+# TC-C-Divergence: correlation < 0.8, sum_ratio ~546
+
+## Reproduction Note
+# All commands assume execution from repository root
+# Fixtures MUST exist at $FIXTURE_DIR/two_sources.txt
+# Output artifacts written to $OUT_DIR/

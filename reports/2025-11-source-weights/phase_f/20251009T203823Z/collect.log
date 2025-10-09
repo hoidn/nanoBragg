@@ -1,0 +1,11 @@
+tests/test_cli_scaling.py::TestSourceWeights::test_weighted_source_matches_c
+tests/test_cli_scaling.py::TestSourceWeights::test_uniform_weights_ignored
+tests/test_cli_scaling.py::TestSourceWeights::test_edge_case_zero_sum_accepted
+tests/test_cli_scaling.py::TestSourceWeights::test_edge_case_negative_weights_accepted
+tests/test_cli_scaling.py::TestSourceWeights::test_single_source_fallback
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_only_parity
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_divergence_warning
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_divergence_only_grid_generation
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_parity_explicit_oversample
+
+9 tests collected in 0.96s

@@ -4043,13 +4043,21 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE nanoBragg -mat A.mat -floatfile py_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources.txt ...` (matching geometry).
   * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
 - First Divergence (if known): C counts divergence placeholders (steps=4) and applies source weights, while the spec mandates equal weighting. PyTorch counts only the actual sources (steps=2) and ignores weights per `specs/spec-a-core.md:151`, so the 47–120× sum_ratio gap is a documented C bug (`C-PARITY-001`). Existing traces at `reports/2025-11-source-weights/phase_e/20251009T192746Z/trace/` confirm fluence agreement and isolate the divergence to the C normalization/polarisation ordering.
-- Next Actions (2025-12-24 redesign; refreshed after Phase E1 completion):
+- Next Actions (2025-12-24 redesign; refreshed after Phase F completion):
   - Phase E1 ✅ `reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md` captures the spec-first decision and tags the C behaviour as bug `C-PARITY-001`. Reference this memo in all follow-up notes.
-  1. Phase E2 — Update this ledger, `galph_memory.md`, and dependent plans (vectorization, perf) with the decision; mark existing C correlation gaps as expected divergence and cite the memo.
-  2. Phase F1–F3 — Produce `phase_f/<STAMP>/test_plan.md` detailing affected tests, spec-aligned acceptance criteria, validated pytest selectors, and CLI artifact expectations before any implementation begins.
-  3. Phase G1–G3 — After design sign-off, rewrite the TestSourceWeights suite to compare against spec-computed references, capture the targeted pytest + CLI bundle (store under `phase_g/<STAMP>/`), and log a new Attempt noting the expected C divergence.
-  4. Phase H1–H3 — Sync permanent docs (`pytorch_design.md`, `pytorch_runtime_checklist.md`), refresh dependent plan gates, and prepare archival summary once spec-compliance evidence is in place.
+  - Phase E2 — Update this ledger, `galph_memory.md`, and dependent plans (vectorization, perf) with the decision; mark existing C correlation gaps as expected divergence and cite the memo.
+  - Phase F1–F3 ✅ `reports/2025-11-source-weights/phase_f/20251009T203823Z/test_plan.md` + `commands.txt` + `collect.log` provide complete design packet for test suite realignment per spec §4.
+  1. Phase G1–G3 — After design sign-off, rewrite the TestSourceWeights suite to compare against spec-computed references, capture the targeted pytest + CLI bundle (store under `phase_g/<STAMP>/`), and log a new Attempt noting the expected C divergence.
+  2. Phase H1–H3 — Sync permanent docs (`pytorch_design.md`, `pytorch_runtime_checklist.md`), refresh dependent plan gates, and prepare archival summary once spec-compliance evidence is in place.
 - Attempts History:
+  * [2025-10-09] Attempt #26 (ralph loop #253 — Mode: Docs, Phase F1–F3 test redesign packet). Result: **SUCCESS** (Design packet complete; ready for Phase G implementation).
+    Metrics: `pytest --collect-only -q tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` (9 tests collected). No code changes.
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_f/20251009T203823Z/test_plan.md` — Complete test redesign specification (F1: affected tests inventory, F2: new acceptance criteria, F3: pytest selectors + CLI bundle)
+      - `reports/2025-11-source-weights/phase_f/20251009T203823Z/commands.txt` — Authoritative reproduction commands for targeted tests and CLI artifact generation
+      - `reports/2025-11-source-weights/phase_f/20251009T203823Z/collect.log` — Test collection validation output (9 tests pre-Phase G)
+    Observations/Hypotheses: Design packet defines concrete test rewrites to enforce spec compliance (weighted vs equal self-consistency, CLI lambda override validation, C divergence reference). Removed tests: `test_weighted_source_matches_c`, `test_sourcefile_only_parity`, `test_c_parity_explicit_oversample`. Added tests: `test_source_weights_ignored_per_spec`, `test_cli_lambda_overrides_sourcefile`, `test_c_divergence_reference` (marked xfail). Acceptance criteria: sum_ratio ∈ [0.997, 1.003], correlation ≥0.999 for spec-based tests; no C comparison required for closure.
+    Next Actions: Execute Phase G1–G3 (implement test suite per design packet, capture evidence bundle with targeted pytest + CLI runs, update fix_plan attempts noting expected C divergence <0.8).
   * [2025-10-09] Attempt #25 (ralph loop #253 — Mode: Docs, Phase E1 decision memo). Result: **SUCCESS** (Spec-first decision documented; bug classified as `C-PARITY-001`).
     Metrics: `pytest --collect-only -q tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` (9 tests collected). No code changes.
     Artifacts:
