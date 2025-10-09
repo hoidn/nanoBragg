@@ -4049,10 +4049,11 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   3. ✅ Trace bundle complete: py/c traces, diff, trace_notes, env.json, commands.txt under `reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/`
   4. **CRITICAL DISCOVERY**: C source array contains sourcefile wavelengths (6.2 Å) but physics loop uses CLI `-lambda` (0.9768 Å) via wavelength correction. Phase E1 lambda override CORRECT and matches C behavior.
   5. **PRIMARY DIVERGENCE CONFIRMED**: Steps normalization (C: steps=4, PyTorch: steps=2) accounts for 2× intensity difference.
-  6. **SECONDARY HYPOTHESES**: F_latt calculation (~200× difference in traces), per-source polarization (C: 0.5, PyTorch likely 1.0), structure factor sampling (2.26× difference).
-  7. **Next Implementation Loop**: Review design_steps.md and trace_notes.md with galph, then implement zero-weight placeholder counting in simulator.py steps calculation per nanoBragg.c:2570-2720.
-  8. **After Steps Fix**: Rerun TC-D1/TC-D3 parity expecting sum_ratio to drop from ~47-120× to ~24-60×, then diagnose remaining gap with per-source PyTorch trace.
-  9. **Parity Target**: correlation ≥0.999, |sum_ratio−1| ≤1e-3 before marking Phase E complete.
+  6. **SECONDARY HYPOTHESES**: F_latt calculation (~200× difference in traces), per-source polarization (C: 0.5, PyTorch trace reports ≈0.9997), structure factor sampling (2.26× difference).
+  7. **Trace instrumentation gap**: Existing PyTorch trace logs only post-reduction aggregates. Before changing simulator physics, extend the trace (via `-trace_pixel` path) to emit per-source values (F_cell, F_latt components, polarization factor, intensity before/after polarization). Capture a refreshed TC-D1 source-index trace and compare against the C bundle to confirm which hypothesis drives the 47–120× inflation.
+  8. **Next Implementation Loop**: Review design_steps.md and trace_notes.md with galph, then implement zero-weight placeholder counting in simulator.py steps calculation per nanoBragg.c:2570-2720.
+  9. **After Steps Fix**: Rerun TC-D1/TC-D3 parity expecting sum_ratio to drop from ~47-120× to ~24-60×, then diagnose remaining gap with per-source PyTorch trace.
+ 10. **Parity Target**: correlation ≥0.999, |sum_ratio−1| ≤1e-3 before marking Phase E complete.
 - Attempts History:
   * [2025-10-09] Attempt #24 (ralph loop #250 — Mode: Evidence-only, Phase E source-index trace). Result: **SUCCESS** (Trace bundle complete; wavelength semantics clarified; hypotheses ranked).
     Metrics: Test collection: 693 tests (no regressions). No code changes; C instrumentation only. Wavelength handling VERIFIED CORRECT (Phase E1 matches C behavior).
