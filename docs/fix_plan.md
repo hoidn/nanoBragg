@@ -618,6 +618,26 @@
       - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T215634Z/phase_m3_probes/phistep1/summary.md` — Single-φ experiment identifying missing normalization (Py 126,000× higher than C)
   * [2025-10-22] Attempt #188 (ralph loop i=104) — Result: ✅ **SUCCESS** (Phase M4 Normalization Fix COMPLETE).
     Metrics: Targeted tests: 2/2 passed in 2.18s (test_cli_scaling_phi0.py); Core geometry smoke: 31/31 passed in 5.18s (test_crystal_geometry.py + test_detector_geometry.py); No regressions detected.
+  * [2025-10-08] Attempt #197 (ralph loop, Mode: Parity) — Result: ✅ **Phase M5c COMPLETE** — φ rotation duality fix (Rule #13 volume recalculation).
+    Metrics: Targeted tests: 2/2 passed (test_cli_scaling_phi0.py); Core parity tests: 14/14 passed in 37.71s (test_at_parallel_001.py, test_at_parallel_002.py).
+    Artifacts:
+      - `src/nanobrag_torch/models/crystal.py:1262-1277` — Implemented Rule #13 per-φ volume recalculation using V_actual = dot(a, cross(b,c))
+      - Git commit: 2705299 "CLI-FLAGS-003 M5c: Implement φ rotation duality (Rule #13 volume recalculation)"
+    Changes:
+      - **Crystal.get_rotated_real_vectors()** — Replaced static V_cell with per-(φ,mosaic) V_actual calculation via `torch.sum(a_phi_mos * b_cross_c, dim=-1, keepdim=True)`
+      - **Numerical stability** — Added clamp_min(1e-6) guard on V_actual_phi_mos to prevent division by zero
+      - **Gradient flow preserved** — All operations maintain computation graph connectivity without `.item()`/`.detach()`
+      - **Device/dtype neutrality** — Used tensor-native operations without hard-coded conversions
+    Observations/Hypotheses:
+      - **Root cause addressed:** Static volume from initialization violated metric duality for rotated vectors, causing b_star drift from 1.043764e-02 to 1.038602e-02 across φ steps
+      - **CLAUDE Rule #13 compliance:** Now recalculates volume from actual vectors (V_actual = a · (b × c)) at each (φ, mosaic) combination before computing reciprocal vectors
+      - **Parity tests pass:** test_rot_b_matches_c and test_k_frac_phi0_matches_c both pass, confirming rotation parity restored
+      - **No regressions:** AT-PARALLEL-001 (9 tests) and AT-PARALLEL-002 (4 tests) all pass without issues
+    Next Actions:
+      - **Phase M5d:** Generate fresh traces with `trace_harness.py` and run `compare_scaling_traces.py` to verify first_divergence=None
+      - **Evidence capture:** Update lattice_hypotheses.md with H4 closure and capture metrics.json showing restored parity
+      - **Phase M5e:** CUDA smoke test + gradcheck validation to confirm device neutrality
+      - **Phase M6:** Full pytest suite run, final ledger sync, nb-compare progression
     Artifacts:
       - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T221702Z/design_memo.md` — Normative contract documentation citing specs/spec-a-core.md:446,576,247-250 and nanoBragg.c:3336-3365
       - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T221702Z/summary.md` — Complete fix summary with M4a-M4d deliverables
