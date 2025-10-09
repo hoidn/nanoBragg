@@ -1384,3 +1384,8 @@
 - Refreshed `docs/fix_plan.md` `[VECTOR-TRICUBIC-001]` Next Actions to point Ralph at the new Phase G steps and clarify that the CUDA rerun stays under PERF-PYTORCH-004 Attempt #14.
 - Authored `input.md` (Docs mode, 98 lines) instructing Ralph to execute Phase G1 (doc updates + collect-only proof), log artifacts under `reports/2025-10-vectorization/phase_g/<timestamp>/`, and update ledger/plan accordingly.
 - Outstanding follow-up for Ralph: perform Phase G1-G2 tasks per updated plan, record new Attempt in docs/fix_plan.md, and document CUDA follow-up delegation.
+
+## 2025-12-22 (galph loop - Vectorization Phase G closure + Pyrefly Round 1 delegation)
+- Verified HEAD already contained Ralph’s Phase G1 documentation commit (95eab47); plan still listed G1/G2 as open. Updated `plans/active/vectorization.md` Status Snapshot to mark Phases A–G2 complete and recorded CUDA rerun dependency under PERF-PYTORCH-004. Adjusted `[VECTOR-TRICUBIC-001]` Next Actions in `docs/fix_plan.md` to focus solely on GPU follow-up and noted that G2 tasks closed in this loop.
+- Selected `STATIC-PYREFLY-001` Phase D Round 1 as the next focus. Authored new `input.md` (100 lines, Mode none) instructing Ralph to fix BL-1/BL-2 None guards, run targeted pytest selectors, capture a fresh pyrefly log under `reports/pyrefly/20251222T<stamp>/`, and update both the plan (Phase D1–D3) and fix_plan attempts.
+- No code changes this loop; pending follow-up for Ralph: implement detector/simulator safeguards, archive artifacts with commands/env summaries, log Attempt #5 in `[STATIC-PYREFLY-001]`, flip Phase D checklist to [D], and report remaining blocker counts (expect BL-3..BL-6 outstanding).

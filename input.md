@@ -1,98 +1,100 @@
-Summary: Update vectorization docs and close out VECTOR-TRICUBIC-001 Phase G
-Mode: Docs
-Focus: [VECTOR-TRICUBIC-001] Vectorize tricubic interpolation and detector absorption — Phase G documentation closure
+Summary: Clear pyrefly BLOCKER violations (beam center & ROI None guards) and log Phase D Round 1 kickoff
+Mode: none
+Focus: [STATIC-PYREFLY-001] Run pyrefly analysis and triage — Phase D delegation (Round 1 blockers)
 Branch: feature/spec-based-2
-Mapped tests: pytest --collect-only -q
+Mapped tests:
+- pytest -v tests/test_models.py::TestDetector -k "beam_center"
+- pytest -v tests/test_simulator.py -k "roi"
+- pytest -v tests/test_at_parallel_001.py
+- pytest -v tests/test_at_parallel_012.py
 Artifacts:
-- reports/2025-10-vectorization/phase_g/<timestamp>/commands.txt
-- reports/2025-10-vectorization/phase_g/<timestamp>/summary.md
-- reports/2025-10-vectorization/phase_g/<timestamp>/collect.log
-- reports/2025-10-vectorization/phase_g/<timestamp>/env.json
-Do Now: [VECTOR-TRICUBIC-001] Phase G1 (doc updates + collect proof); run: pytest --collect-only -q
-If Blocked: Capture decision notes in phase_g/summary.md and flag blocker in docs/fix_plan.md Attempts history
+- reports/pyrefly/20251222T<timestamp>/commands.txt
+- reports/pyrefly/20251222T<timestamp>/pyrefly.log
+- reports/pyrefly/20251222T<timestamp>/summary.md
+- reports/pyrefly/20251222T<timestamp>/env.json
+- reports/pyrefly/20251222T<timestamp>/beam_center.log
+- reports/pyrefly/20251222T<timestamp>/roi.log
+- reports/pyrefly/20251009T044937Z/summary.md (append progress note)
+- docs/fix_plan.md (new Attempt logging Round 1 progress)
+- plans/active/static-pyrefly.md (Phase D1–D3 state flip)
+Do Now: [STATIC-PYREFLY-001] Phase D Round 1 — implement BL-1/BL-2 None guards, rerun targeted pytest selectors, then capture a fresh `pyrefly check src` bundle under reports/pyrefly/20251222T<timestamp>/
+If Blocked: If fixes cannot land, stop editing code; instead run `pyrefly check src`, store the new log in reports/pyrefly/20251222T<timestamp>/, and document blockers (file:line, stack trace, suspected contract issue) in summary.md plus docs/fix_plan.md Attempts
 Priorities & Rationale:
-- plans/active/vectorization.md:12 — Status snapshot lists Phase G as the only open gate before retiring the initiative
-- plans/active/vectorization.md:83 — G1 checklist outlines the exact doc updates, collect-only proof, and CUDA handoff deliverables
-- docs/fix_plan.md:3397 — Next Actions require executing Phase G1/G2 and documenting the CUDA follow-up delegation
-- reports/2025-10-vectorization/phase_f/summary.md:1 — Consolidated metrics and references for tricubic/absorption work must feed the doc updates
-- docs/development/testing_strategy.md:1 — Tier-1/2 guidance needs audit so tests reflect the new vectorized suites
-- docs/development/pytorch_runtime_checklist.md:1 — Runtime guardrails have to mention the Phase F evidence and CUDA rerun expectation
+- plans/active/static-pyrefly.md:47 — Phase D tasks are the only open checklist items before moving to fix delegation
+- reports/pyrefly/20251009T044937Z/summary.md:19 — BL-1/BL-2 enumerated as immediate crashers with validation selectors
+- docs/fix_plan.md:3818 — Next Actions explicitly call for Round 1 blocker fixes and supervisor memo hooks
+- specs/spec-a-core.md:204 — Beam center defaults must resolve to convention-defined values when CLI omits overrides
+- docs/architecture/detector.md:118 — Detector pix0/beam center initialization contract for None inputs
+- docs/development/testing_strategy.md:75 — Targeted pytest selectors required before any integration sweep
+- prompts/pyrefly.md:1 — Static-analysis SOP mandates timestamped artifacts and environment capture every run
 How-To Map:
-- Step 01: Confirm you are on feature/spec-based-2 with git status before editing
-- Step 02: Create reports/2025-10-vectorization/phase_g/<timestamp>/ using mkdir -p and record the timestamp in summary.md
-- Step 03: Start commands.txt and log every action (git rev-parse HEAD, editors invoked, pytest command)
-- Step 04: Re-read plans/active/vectorization.md G1a–G1d to align scope before touching documentation
-- Step 05: Open docs/architecture/pytorch_design.md and locate the vectorization section header for insertion
-- Step 06: Draft a new subsection highlighting tricubic gather, batched polynomials, and detector absorption vectorization with citations to Phase C–F bundles
-- Step 07: Mention the CUDA blocker explicitly and reference PERF-PYTORCH-004 in that subsection
-- Step 08: Add nanoBragg.c citation numbers where you reference C code (CLAUDE Rule #11 compliance)
-- Step 09: Save the doc and record the edit in commands.txt (include line numbers touched if helpful)
-- Step 10: Edit docs/development/pytorch_runtime_checklist.md to expand the vectorization and device bullets with new evidence requirements
-- Step 11: Add explicit mention that CUDA reruns resume once the device-placement defect (Attempt #14) clears
-- Step 12: Include the new regression commands (tests/test_tricubic_vectorized.py, tests/test_at_abs_001.py -k "cpu") in the checklist notes
-- Step 13: Review docs/development/testing_strategy.md; if guidance already covers the new tests, note the rationale in phase_g/summary.md
-- Step 14: If testing_strategy needs updates, edit the Tier-1 and Tier-2 sections to name the new test modules and expected commands
-- Step 15: Capture any choice not to edit testing_strategy as an explicit “no change required” entry in phase_g/summary.md with supporting reasoning
-- Step 16: Update summary.md with bullet points for each modified doc, including git diff highlights and artifact citations
-- Step 17: Record system metadata (uname -a, python --version, torch.__version__) and store as env.json in the phase_g directory
-- Step 18: Run pytest --collect-only -q, tee the output to reports/.../collect.log, and confirm exit code 0
-- Step 19: Append the pytest command and exit code to commands.txt for reproducibility
-- Step 20: Review git diff to ensure only documentation, plan, and fix_plan changes appear—no src/ modifications
-- Step 21: Update docs/fix_plan.md by adding the new Attempt entry referencing phase_g artifacts and refreshed docs
-- Step 22: In the same Attempt, call out the CUDA follow-up delegation to PERF-PYTORCH-004 (Attempt #14) per plan row G2c
-- Step 23: Edit plans/active/vectorization.md to flip G1a–G2c states as progress is made, culminating in a refreshed Status Snapshot
-- Step 24: In commands.txt document each plan/fix_plan edit with the exact file path and rationale
-- Step 25: Ensure phase_g/summary.md lists open follow-ups (CUDA rerun) and documents the verification command outcome
-- Step 26: Verify docs/index.md references remain untouched to honor the Protected Assets rule
-- Step 27: Run pytest --collect-only -q a second time only if edits change doc imports; otherwise rely on the single logged run
-- Step 28: When satisfied, stage doc edits, plan update, and fix_plan update but defer commit until supervisor review (leave working tree staged or note in summary)
-- Step 29: If unforeseen doc drift is uncovered (e.g., outdated gradients guidance), document it in summary.md and decide whether to fix now or schedule follow-up
-- Step 30: Before handing back, double-check commands.txt and summary.md for completeness and clarity so future audits have a full trail
-- Step 31: Screenshoot git diff or copy key snippets into summary.md so reviewers can trace changes quickly
-- Step 32: Verify phase_g/summary.md links to both phase_f/summary.md and phase_e/summary.md for continuity
-- Step 33: Note in summary.md whether testing_strategy was edited or explicitly left untouched with justification
-- Step 34: Update docs/fix_plan.md Attempt description with bullet points covering each updated document and artifact path
-- Step 35: After staging, run git diff --staged to confirm only intended files are included before finalizing the loop
-- Step 36: Ensure commands.txt records the pytest command with absolute path or repository-relative path for reproducibility
-- Step 37: Include the output of git rev-parse HEAD in commands.txt to tie artifacts to a commit
-- Step 38: Add SHA256 checksums for summary.md and collect.log to the phase_g directory if time permits (optional but preferred)
-- Step 39: Note any open questions for PERF-PYTORCH-004 in summary.md so the follow-up plan has immediate context
-- Step 40: Leave TODO markers only in summary.md; avoid placing TODOs inside permanent documentation files
-- Step 41: Re-run rg "phase_g" to verify no lingering TODO placeholders remain in source docs after edits
-- Step 42: Capture git status output inside commands.txt at the end of the loop for auditability
-- Step 43: Verify that env.json includes torch.cuda.is_available() result to document the CUDA blocker context
-- Step 44: If you touch testing_strategy, update its table of contents anchors as needed to keep links valid
-- Step 45: Before finishing, reread phase_g/summary.md to ensure it calls out any deferred follow-up tasks explicitly by plan/attempt ID
+- Step 01: `git status -sb` to confirm branch feature/spec-based-2 and list staged files (record in commands.txt)
+- Step 02: Re-read reports/pyrefly/20251009T044937Z/summary.md §§“BL-1” and “BL-2” to refresh affected line numbers and validation commands
+- Step 03: `timestamp=$(date -u +"%Y%m%dT%H%M%SZ")`; `export PYREFLY_RUN=reports/pyrefly/${timestamp}`; `mkdir -p "$PYREFLY_RUN"`
+- Step 04: Initialize `$PYREFLY_RUN/commands.txt` with timestamp, git rev-parse HEAD, and environment (python --version, pyrefly --version)
+- Step 05: Annotate `$PYREFLY_RUN/summary.md` with a heading “Round 1 — BL-1/BL-2” and note baseline violation counts (22 blockers)
+- Step 06: In `src/nanobrag_torch/models/detector.py`, add explicit defaults so `beam_center_{s,f}` never propagate None past constructor; rely on convention helpers in docs/architecture/detector.md
+- Step 07: Ensure new defaults preserve differentiability by building tensors on `config_device` without `.item()`; cite spec lines in inline comments only where necessary
+- Step 08: Update pix0 cached properties so they recompute after default injection; confirm `invalidate_cache()` still fires before reuse
+- Step 09: In `src/nanobrag_torch/simulator.py`, wrap ROI arithmetic (`roi_ymax+1`, `roi_xmax+1`) with guard clauses; fall back to detector dimensions when ROI is None
+- Step 10: Add unit helper if needed (e.g., `_normalize_roi_bounds` returning inclusive slice indices) keeping vectorization intact
+- Step 11: Review ROI caching logic to ensure guard branch still constructs proper tensor slices for CPU and CUDA devices
+- Step 12: Update or add regression tests if existing suites do not cover ROI=None and beam center defaults; keep tests device-parametrised where possible
+- Step 13: Run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_models.py::TestDetector -k "beam_center" | tee "$PYREFLY_RUN/beam_center.log"` and capture exit code in commands.txt
+- Step 14: Run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_simulator.py -k "roi" | tee "$PYREFLY_RUN/roi.log"`
+- Step 15: Execute beam-center parity checks: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_001.py`; log command + status
+- Step 16: Execute ROI none/full-frame regression: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_012.py`
+- Step 17: If any selector fails, note failure output in summary.md and stop for triage before moving forward
+- Step 18: After tests pass, run full static analysis: `pyrefly check src | tee "$PYREFLY_RUN/pyrefly.log"`; record return code and compare counts vs baseline (target: 12 blocker errors remaining from BL-3..BL-6)
+- Step 19: Create `$PYREFLY_RUN/env.json` capturing `{ 'python': <version>, 'pyrefly': <version>, 'torch': <torch.__version__>, 'cuda_available': torch.cuda.is_available(), 'uname': platform.uname() }`
+- Step 20: Compute SHA256 checksums for pyrefly.log and summary.md (`sha256sum > $PYREFLY_RUN/sha256.txt`) for reproducibility
+- Step 21: Append a “Diff vs baseline” table to summary.md showing blocker/high/medium counts before/after (e.g., Blocker 22→12)
+- Step 22: Update reports/pyrefly/20251009T044937Z/summary.md quick-notes section with “BL-1/BL-2 resolved → see $PYREFLY_RUN”
+- Step 23: Add `PYREFLY_RUN` path and highlights to commands.txt for cross-turn navigation
+- Step 24: Edit `docs/fix_plan.md` `[STATIC-PYREFLY-001]` Attempts with a new entry (Attempt #5) summarizing BL-1/BL-2 fix, tests run, new counts, and pointers to `$PYREFLY_RUN`
+- Step 25: Within the same entry, adjust Next Actions to emphasise BL-3/BL-4 for the next loop and restate rerun cadence (`pyrefly check src` after each blocker batch)
+- Step 26: Modify `plans/active/static-pyrefly.md` — mark Phase D1–D3 `[D]`, quote `$PYREFLY_RUN`, and note that Phase E awaits BL-3/BL-6 completion plus rerun diff
+- Step 27: Review docs/index.md to ensure no Protected Asset touched; log the check in commands.txt
+- Step 28: Inspect `git diff` for detector.py/simulator.py to verify guards handled both CPU/CUDA flows without new loops or `.cpu()` calls
+- Step 29: Run `python -m compileall src/nanobrag_torch` quickly to ensure syntax is clean after guard additions (log in commands.txt)
+- Step 30: Stage intentional files (`git add src/nanobrag_torch/models/detector.py src/nanobrag_torch/simulator.py docs/fix_plan.md plans/active/static-pyrefly.md reports/pyrefly/${timestamp}`) but do not commit; leave staged state noted in summary.md
+- Step 31: Capture final `git status -sb` into commands.txt so auditors know tree state at handoff
+- Step 32: In summary.md, clearly list remaining blockers (BL-3..BL-6) with counts, plus any unexpected residuals uncovered by pyrefly rerun
+- Step 33: Diff `$PYREFLY_RUN/pyrefly.log` against the baseline log to quantify which errors disappeared; record highlights in summary.md and commands.txt
+- Step 34: Add a short "Verification" paragraph to summary.md confirming each mapped pytest selector succeeded (include durations where notable)
+- Step 35: Capture `git diff --stat --staged` output into commands.txt so reviewers see change scope before commit
+- Step 36: Note in summary.md whether any HIGH/MEDIUM findings regressed (should remain unchanged) and flag unexpected increases immediately
 Pitfalls To Avoid:
-- Do not modify simulator or test code during this documentation loop
-- Keep edits ASCII and preserve headings, tables, and indentation conventions in every doc
-- Cite nanoBragg.c snippets verbatim when referencing C implementation details
-- Respect Protected Assets listed in docs/index.md; no deletions or renames
-- Maintain explicit mention of CUDA follow-up rather than removing GPU guidance
-- Reference exact report timestamps from Phase E/F bundles to avoid ambiguity
-- Avoid ad-hoc helper scripts; use existing tooling and log invocations verbatim
-- Do not skip the collect-only proof even though this is a docs loop
-- Limit docs/fix_plan.md changes to one new Attempt entry describing the Phase G deliverables
-- Leave clear notes in phase_g/summary.md for anything deferred to PERF-PYTORCH-004
+- Avoid `.item()` or `.detach()` when bridging scalar config values; keep tensors differentiable
+- Do not mutate Protected Assets (docs/index.md, loop.sh, supervisor.sh, input.md) outside mandated updates
+- Ensure new guards do not change public CLI defaults; cross-check spec values when beam_center inputs missing
+- Keep ROI guard logic vectorized; no pixel-by-pixel loops permitted
+- Capture every command in commands.txt; missing provenance breaks pyrefly SOP
+- Treat pyrefly findings conservatively—if uncertain, document as residual rather than silently ignoring
+- Confirm tests are run with `KMP_DUPLICATE_LIB_OK=TRUE` to avoid MKL clashes
+- Do not rerun full pytest suite; stick to mapped selectors unless failure investigation requires more
+- Ensure pix0/beam center caches invalidate properly (no stale tensors crossing device boundaries)
+- Leave clear TODOs only in summary.md; production files must remain TODO-free
+- Keep ROI guard logic compatible with GPU execution by avoiding implicit CPU tensor creation
+- When editing detector defaults, respect MOSFLM +0.5 pixel shifts documented in docs/development/c_to_pytorch_config_map.md
 Pointers:
-- plans/active/vectorization.md:12
-- plans/active/vectorization.md:83
-- docs/fix_plan.md:3397
-- docs/architecture/pytorch_design.md:1
-- docs/development/pytorch_runtime_checklist.md:1
-- docs/development/testing_strategy.md:1
-- reports/2025-10-vectorization/phase_f/summary.md:1
-- docs/bugs/verified_c_bugs.md:166
+- reports/pyrefly/20251009T044937Z/summary.md:19
+- src/nanobrag_torch/models/detector.py:70
+- src/nanobrag_torch/models/detector.py:250
+- src/nanobrag_torch/simulator.py:560
+- src/nanobrag_torch/simulator.py:1120
+- docs/architecture/detector.md:118
+- docs/fix_plan.md:3776
+- plans/active/static-pyrefly.md:47
+- docs/development/testing_strategy.md:74
+- prompts/pyrefly.md:1
 - specs/spec-a-core.md:204
-- docs/architecture/c_function_reference.md:1
-- docs/development/pytorch_runtime_checklist.md:20
-- reports/2025-10-vectorization/phase_e/summary.md:1
-- reports/2025-10-vectorization/phase_c/implementation_notes.md:1
-- reports/2025-10-vectorization/phase_d/polynomial_validation.md:1
-- reports/2025-10-vectorization/phase_f/validation/20251222T000000Z/summary.md:1
-- docs/development/pytorch_runtime_checklist.md:40
-- docs/architecture/README.md:1
-- docs/index.md:1
-- docs/development/implementation_plan.md:1
-- plans/active/vectorization.md:1
-Next Up: Coordinate with PERF-PYTORCH-004 once the device-placement fix lands and rerun the CUDA benchmarks/tests captured in phase_f/summary.md appendix
+- docs/architecture/pytorch_design.md:80
+- reports/pyrefly/20251008T053652Z/pyrefly.log:1
+- docs/architecture/undocumented_conventions.md:94
+- docs/development/c_to_pytorch_config_map.md:120
+- src/nanobrag_torch/config.py:140
+- src/nanobrag_torch/simulator.py:900
+- src/nanobrag_torch/utils/auto_selection.py:25
+- tests/test_models.py:220
+Next Up: After BL-1/BL-2 are green, tackle BL-3/BL-4 (source direction and pix0 None handling) or begin drafting the H-1 tensor/scalar boundary refactor proposal for CLI I/O paths

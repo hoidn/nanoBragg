@@ -3405,10 +3405,9 @@
   * Optional microbenchmarks: `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --device cpu` (and `--device cuda`), plus `scripts/benchmarks/absorption_baseline.py` for detector absorption timing.
   * Shapes/ROI: 256² & 512² detectors for microbench; oversample 1; structure-factor grid enabling tricubic.
 - First Divergence (if known): Current tricubic path drops to nearest-neighbour fallback for batched pixel grids, emitting warnings and forfeiting accuracy/performance; detector absorption still loops over `thicksteps`, preventing full vectorization and creating hotspots in profiler traces (see reports/benchmarks/20250930-165726-compile-cache/analysis.md).
-- Next Actions (2025-12-22 Phase G refresh):
-  1. Phase G1 — Execute documentation updates per `plans/active/vectorization.md` rows G1a–G1d (Architecture addendum, runtime checklist, testing_strategy audit, collect-only proof). Stage artifacts under `reports/2025-10-vectorization/phase_g/<timestamp>/` with commands/env/logs.
-  2. Phase G2 — After docs land, add the closure Attempt to this ledger, update the plan Status Snapshot, and mark `[VECTOR-TRICUBIC-001]` ready for archival once the CUDA follow-up migrates to PERF-PYTORCH-004.
-  3. CUDA follow-up — Device-placement blocker tracked under PERF-PYTORCH-004 (Attempt #14). Rerun Phase F CUDA benchmarks/tests only after that fix lands; append results as an addendum without blocking Phase G completion.
+- Next Actions (2025-12-22 Phase G closure):
+  1. Monitor PERF-PYTORCH-004 (Attempt #14) for the device-placement fix. Once CUDA execution is unblocked, rerun the tricubic/absorption regression commands (`pytest tests/test_tricubic_vectorized.py -v -k cuda`, `pytest tests/test_at_abs_001.py -v -k cuda`) and the CUDA benchmarks listed in `reports/2025-10-vectorization/phase_f/summary.md` Appendix, then log the GPU bundle as Attempt #18.
+  2. Keep `[VECTOR-TRICUBIC-001]` open until CUDA evidence lands; after Attempt #18, archive this entry alongside the Phase G summary and move ongoing performance tracking fully under PERF-PYTORCH-004.
 - Attempts History:
   * [2025-10-06] Attempt #1 (ralph loop) — Result: **Phase A1 COMPLETE** (test collection & execution baseline captured). All tricubic and absorption tests passing.
     Metrics: AT-STR-002: 3/3 tests passed in 2.12s (test_tricubic_interpolation_enabled, test_tricubic_out_of_bounds_fallback, test_auto_enable_interpolation). AT-ABS-001: 5/5 tests passed in 5.88s. Collection: 3 tricubic tests found.
@@ -3715,7 +3714,7 @@
       - **Test collection stable:** 677 tests collected (vs 689 in earlier baseline due to test discovery order variance); exit code 0 confirms documentation changes introduced no import/collection failures
       - **CUDA delegation clear:** Both updated docs explicitly reference PERF-PYTORCH-004 and device-placement blocker (Attempt #14) with rerun commands in phase_f/summary.md appendix
       - **Artifact completeness:** Phase G1 bundle includes summary, commands, collect log, and env.json per plan guidance (G1d); all cross-references validated
-    Next Actions: Execute Phase G2 tasks per `plans/active/vectorization.md`: (G2a) Update this fix_plan entry to mark [VECTOR-TRICUBIC-001] ready for archival (CPU work complete), (G2b) Update plan Status Snapshot to note Phase G1 completion, (G2c) Confirm CUDA follow-up delegation to PERF-PYTORCH-004 in both docs and plan. Final closure pending only CUDA evidence collection after device-placement fix lands.
+    Next Actions: ✅ Phase G2 tasks completed during galph loop i=214 (plan snapshot refreshed, fix_plan updated, CUDA delegation recorded). Hold for PERF-PYTORCH-004 to clear the device-placement blocker; once CUDA rerun artifacts land, log Attempt #18 and archive `[VECTOR-TRICUBIC-001]`.
 - Risks/Assumptions: Must maintain differentiability (no `.item()`, no `torch.linspace` with tensor bounds), preserve device/dtype neutrality (CPU/CUDA parity), and obey Protected Assets rule (all new scripts under `scripts/benchmarks/`). Large tensor indexing may increase memory pressure; ensure ROI caching still works.
 - Exit Criteria (quote thresholds from spec):
   * specs/spec-a-parallel.md §2.3 tricubic acceptance tests run without warnings and match C parity within documented tolerances (corr≥0.9995, ≤1e-12 structural duality where applicable).

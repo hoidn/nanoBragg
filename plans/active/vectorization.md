@@ -9,7 +9,7 @@
   - docs/development/pytorch_runtime_checklist.md (device/vectorization guardrails)
   - `nanoBragg.c` lines 2604-3278 (polin3/polin2/polint) & 3375-3450 (detector absorption loop)
   - Existing artifacts under `reports/2025-10-vectorization/phase_*/`
-- Status Snapshot (2025-12-22): Phases A–F4 complete — tricubic gather/polynomial vectorization (commits 12742e5, f796861) validated in `reports/2025-10-vectorization/phase_e/summary.md`; detector absorption verification + CPU perf logged in `reports/2025-10-vectorization/phase_f/summary.md`. CUDA perf/absorption tests remain blocked by the device-placement defect (docs/fix_plan Attempt #14) and are tracked under PERF-PYTORCH-004. Outstanding work: Phase G documentation + ledger closure to retire [VECTOR-TRICUBIC-001].
+- Status Snapshot (2025-12-22): Phases A–G2 complete — tricubic/absorption vectorization documented in `docs/architecture/pytorch_design.md` §1.1 with evidence bundle `reports/2025-10-vectorization/phase_g/20251009T055116Z/`; runtime checklist refreshed and plan/ledger closed out. CUDA benchmarks/tests remain blocked by the device-placement defect (docs/fix_plan Attempt #14 → PERF-PYTORCH-004) and are the only outstanding follow-up before archiving.
 - Execution Notes: Store new evidence under `reports/2025-10-vectorization/phase_<letter>/` directories; every implementation task must quote the matching C snippet per CLAUDE Rule #11. Maintain CPU+CUDA parity and include `pytest --collect-only` proof before targeted runs.
 
 ### Phase A - Evidence & Baseline Capture
@@ -87,10 +87,10 @@ Exit Criteria: Updated documentation committed with cited artifacts, doc-only ve
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| G1a | Update `docs/architecture/pytorch_design.md` | [ ] | Add a concise subsection summarising the tricubic gather + batched polynomial path and the detector absorption vectorization, citing Phases C–F artifacts and nanoBragg.c references. Note the CUDA blocker and cross-link to PERF-PYTORCH-004. |
-| G1b | Refresh `docs/development/pytorch_runtime_checklist.md` | [ ] | Expand the vectorization/device bullets to mention the tricubic + absorption evidence, required regression commands, and the expectation to rerun CUDA once the device-placement defect clears. |
-| G1c | Audit `docs/development/testing_strategy.md` | [ ] | Confirm Tier-1/2 guidance reflects the new tests (e.g., `tests/test_tricubic_vectorized.py`, parametrised AT-ABS-001). Update the document or record “no update needed” in `reports/2025-10-vectorization/phase_g/<timestamp>/summary.md`. |
-| G1d | Capture doc-only verification | [ ] | Run `pytest --collect-only -q` (docs-only loop) and archive the log + commands under `reports/2025-10-vectorization/phase_g/<timestamp>/`. |
-| G2a | Log closure Attempt in docs/fix_plan.md | [ ] | After docs land, add Attempt #17 (or next) with links to the updated files, Phase G summary, and explicit CUDA follow-up pointer. |
-| G2b | Update this plan’s Status Snapshot | [ ] | Refresh the snapshot to note Phase G completion, then mark rows G1a–G2c accordingly. Prepare the plan for archival once CUDA work moves under PERF-PYTORCH-004. |
-| G2c | Confirm CUDA follow-up delegation | [ ] | Ensure PERF-PYTORCH-004 (or equivalent) tracks the device-placement blocker; document the handoff in both Phase G summary and fix_plan. |
+| G1a | Update `docs/architecture/pytorch_design.md` | [D] | ✅ Attempt #17 (2025-10-09). See `docs/architecture/pytorch_design.md` §1.1 and `reports/2025-10-vectorization/phase_g/20251009T055116Z/summary.md` for the tricubic/absorption vectorization addendum with C-code references and CUDA follow-up note. |
+| G1b | Refresh `docs/development/pytorch_runtime_checklist.md` | [D] | ✅ Attempt #17. Vectorization bullet now cites Phase C–F evidence and regression commands; CUDA rerun delegated to PERF-PYTORCH-004. |
+| G1c | Audit `docs/development/testing_strategy.md` | [D] | ✅ Attempt #17. Audit documented in Phase G summary (“no update required” rationale recorded under §G1c). |
+| G1d | Capture doc-only verification | [D] | ✅ Attempt #17. `pytest --collect-only -q` log stored at `reports/2025-10-vectorization/phase_g/20251009T055116Z/collect.log`. |
+| G2a | Log closure Attempt in docs/fix_plan.md | [D] | ✅ Galph loop i=214 (2025-12-22). Attempt #17 appended to `[VECTOR-TRICUBIC-001]` with links to Phase G summary and CUDA follow-up delegation. |
+| G2b | Update this plan’s Status Snapshot | [D] | ✅ Galph loop i=214. Snapshot above refreshed to record Phase G completion and remaining CUDA blocker. |
+| G2c | Confirm CUDA follow-up delegation | [D] | ✅ Galph loop i=214. PERF-PYTORCH-004 (Attempt #14) flagged as owner for CUDA rerun in both fix_plan and this plan; no further CPU/doc tasks pending here. |
