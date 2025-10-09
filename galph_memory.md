@@ -1,3 +1,8 @@
+### 2025-12-24 (galph loop - SOURCE-WEIGHT guard alignment)
+- Updated `plans/active/vectorization-gap-audit.md` status snapshot and B1 row to mark the profiler trace as BLOCKED until SOURCE-WEIGHT-001 Phase E parity evidence lands (corr ≥0.999, |sum_ratio−1| ≤1e-3), keeping fix_plan + plan in sync.
+- Replaced input.md with Parity-mode instructions emphasizing conversion of the CLI warning from stderr print to `warnings.warn(... stacklevel=2)`, reactivating TC-D2 via `pytest.warns`, and capturing the Phase D3 command bundle metrics under `reports/2025-11-source-weights/phase_e/<STAMP>/`.
+- Follow-up for Ralph: implement the guard change in `src/nanobrag_torch/__main__.py`, update TC-D2, run the mapped pytest + CLI commands with NB_RUN_PARALLEL=1, archive artifacts, then update docs/fix_plan attempts and plan Phase E rows.
+
 ### 2025-12-24 (galph loop - SOURCE-WEIGHT Phase E execution prep)
 - Reviewed plans/active/source-weight-normalization.md Phase E tasks and docs/fix_plan.md:4027-4029; no plan edits needed, but parity evidence still outstanding.
 - Reissued input.md focusing on CLI warning guard implementation, TC-D2 activation, and parity artifact capture (commands/metrics/warning logs) so VECTOR-GAPS-002 Phase B can unblock once evidence lands.
