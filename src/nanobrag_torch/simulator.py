@@ -860,21 +860,16 @@ class Simulator:
 
         # Calculate normalization factor (steps)
         # Per spec AT-SAM-001: "Final per-pixel scale SHALL divide by steps"
-        # SOURCE-WEIGHT-001 Phase C1: Divide by sum(source_weights) when custom weights are provided
-        # Physical correctness: total effective fluence is proportional to Σwᵢ, not the count of sources
-        # Backward compatibility: for uniform weights (all 1.0), sum(weights) = n_sources
+        # SOURCE-WEIGHT-001 Phase C1: C-parity requires ignoring source weights
+        # Per spec-a-core.md line 151: "The weight column is read but ignored (equal weighting results)"
+        # C code (nanoBragg.c:3358) divides by steps = sources*mosaic_domains*phisteps*oversample^2
+        # where sources is the COUNT of sources, not the sum of weights
         phi_steps = self.crystal.config.phi_steps
         mosaic_domains = self.crystal.config.mosaic_domains
 
-        # Use sum of weights as normalization factor when weights are provided
-        # For uniform weights or single source, this is equivalent to n_sources
-        if source_weights is not None:
-            # Keep source_norm as a tensor to preserve device/dtype and potential differentiability
-            # Use .sum() without .item() to avoid breaking gradient flow for future use cases
-            source_norm = source_weights.sum()
-        else:
-            # Fallback for single source or when no weights are specified
-            source_norm = n_sources
+        # Always use n_sources (count) to match C behavior
+        # The spec explicitly states source weights are "read but ignored"
+        source_norm = n_sources
 
         steps = source_norm * phi_steps * mosaic_domains * oversample * oversample  # Include sources and oversample^2
 

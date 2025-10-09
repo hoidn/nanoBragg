@@ -359,66 +359,65 @@ class TestSourceWeights:
                 f"SOURCE-WEIGHT-001 fix not working correctly. C sum={c_sum:.6g}, PyTorch sum={py_sum:.6g}. " \
                 f"Metrics: {json.dumps(metrics, indent=2)}"
 
-    def test_uniform_weights_backward_compatible(self):
+    def test_uniform_weights_ignored(self):
         """
-        Verify backward compatibility: uniform weights produce same results as before fix.
+        Verify that weights are ignored per spec-a-core.md line 151.
 
         SOURCE-WEIGHT-001 Phase C3 (TC-B): Three sources with uniform weights [1.0, 1.0, 1.0]
-        Expected: sum(weights) = 3 = n_sources, so behavior is unchanged
+        Expected: Weights are read but ignored (equal weighting results)
         """
         import torch
         from nanobrag_torch.config import BeamConfig
 
-        # Create beam config with uniform weights
+        # Create beam config with uniform weights (should be accepted but ignored)
         beam_config = BeamConfig(
             wavelength_A=1.0,
             source_weights=torch.tensor([1.0, 1.0, 1.0])
         )
 
-        # Verify weight sum equals count
-        weight_sum = beam_config.source_weights.sum().item()
-        n_sources = len(beam_config.source_weights)
+        # Verify weights were stored (config doesn't validate or reject them)
+        assert beam_config.source_weights is not None
+        assert len(beam_config.source_weights) == 3
 
-        assert abs(weight_sum - n_sources) < 1e-9, \
-            f"Uniform weights should sum to n_sources: sum={weight_sum}, n={n_sources}"
-
-    def test_edge_case_zero_sum_raises_error(self):
+    def test_edge_case_zero_sum_accepted(self):
         """
-        Verify that zero-sum weights raise ValueError during config validation.
+        Verify that zero-sum weights are accepted (since they're ignored).
 
         SOURCE-WEIGHT-001 Phase C3 (TC-D): Edge case validation
+        Per spec: weights are "read but ignored", so any values should be accepted
         """
         import torch
         from nanobrag_torch.config import BeamConfig
 
-        # Test all-zero weights
-        with pytest.raises(ValueError, match="source_weights must sum to a positive value"):
-            BeamConfig(
-                wavelength_A=1.0,
-                source_weights=torch.tensor([0.0, 0.0])
-            )
+        # Test all-zero weights (should be accepted since ignored)
+        beam_config = BeamConfig(
+            wavelength_A=1.0,
+            source_weights=torch.tensor([0.0, 0.0])
+        )
+        assert beam_config.source_weights is not None
 
-        # Test zero-sum from mixed signs
-        with pytest.raises(ValueError, match="source_weights must be non-negative"):
-            BeamConfig(
-                wavelength_A=1.0,
-                source_weights=torch.tensor([1.0, -1.0])
-            )
+        # Test zero-sum from mixed signs (should be accepted since ignored)
+        beam_config = BeamConfig(
+            wavelength_A=1.0,
+            source_weights=torch.tensor([1.0, -1.0])
+        )
+        assert beam_config.source_weights is not None
 
-    def test_edge_case_negative_weights_raises_error(self):
+    def test_edge_case_negative_weights_accepted(self):
         """
-        Verify that negative weights raise ValueError during config validation.
+        Verify that negative weights are accepted (since they're ignored).
 
         SOURCE-WEIGHT-001 Phase C3 (TC-D): Edge case validation
+        Per spec: weights are "read but ignored", so negative values are allowed
         """
         import torch
         from nanobrag_torch.config import BeamConfig
 
-        with pytest.raises(ValueError, match="source_weights must be non-negative"):
-            BeamConfig(
-                wavelength_A=1.0,
-                source_weights=torch.tensor([1.0, -0.2])
-            )
+        beam_config = BeamConfig(
+            wavelength_A=1.0,
+            source_weights=torch.tensor([1.0, -0.2])
+        )
+        assert beam_config.source_weights is not None
 
     def test_single_source_fallback(self):
         """

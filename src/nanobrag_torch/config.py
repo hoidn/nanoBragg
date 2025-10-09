@@ -544,24 +544,9 @@ class BeamConfig:
             beamsize_m = self.beamsize_mm / 1000.0
             self.flux = self.fluence * (beamsize_m * beamsize_m) / self.exposure
 
-        # SOURCE-WEIGHT-001 Phase C2: Validate source_weights
-        if self.source_weights is not None:
-            # Check for negative weights
-            if isinstance(self.source_weights, torch.Tensor):
-                if (self.source_weights < 0).any():
-                    raise ValueError("source_weights must be non-negative")
-                weight_sum = self.source_weights.sum().item()
-            else:
-                # Handle array-like input
-                import numpy as np
-                weights_array = np.array(self.source_weights)
-                if (weights_array < 0).any():
-                    raise ValueError("source_weights must be non-negative")
-                weight_sum = weights_array.sum()
-
-            # Check for zero or negative sum
-            if weight_sum <= 0:
-                raise ValueError("source_weights must sum to a positive value (got sum={})".format(weight_sum))
+        # SOURCE-WEIGHT-001 Phase C1 resolution: Source weights are read but ignored per spec
+        # Per spec-a-core.md line 151: "The weight column is read but ignored (equal weighting results)"
+        # No validation needed since weights don't affect simulation output
 
 
 @dataclass
