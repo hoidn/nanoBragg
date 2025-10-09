@@ -8,6 +8,12 @@
 - Replaced input.md (Perf mode) directing Ralph to build the AST-based loop inventory script, run the new command, and log artifacts under `reports/2026-01-vectorization-gap/phase_a/<STAMP>/`.
 - Follow-up: Once script outputs land, ensure Phase A3 summary + fix_plan Attempt capture counts; prepare profiler run for Phase B1.
 
+### 2025-12-22 (galph loop - Source weighting Phase B kickoff)
+- Updated `plans/active/source-weight-normalization.md` Status Snapshot to highlight Phase B dependency on vectorization-gap profiling and expanded B1–B3 guidance with explicit artifact paths under `phase_b/<STAMP>/`.
+- Refreshed `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions so Phase B1–B3 documentation is the immediate deliverable (Attempt #2) before implementation, noting the link to PERF-PYTORCH-004 P3.0b/P3.0c fixes.
+- Overwrote `input.md` (Parity mode) directing Ralph to execute Phase B1–B3 documentation work: collect-only proof, normalization_flow.md, strategy.md, tests.md, summary, commands, env, and update plan/fix_plan after completion.
+- Follow-up: After Ralph lands the Phase B bundle, verify plan rows B1–B3 flip to [D], log fix_plan Attempt #2 with artifacts, and prepare supervisor guidance for Phase C implementation.
+
 ### 2025-12-22 (galph loop - Vectorization gap Phase B kickoff)
 - Verified Phase A3 artifacts (20251009T065238Z) already satisfy classification requirements; no new plan needed.
 - Updated `docs/fix_plan.md` `[VECTOR-GAPS-002]` entry to `in_progress`, refreshed Next Actions for Phase B1–B3, and logged Attempt #2 referencing the classification bundle.

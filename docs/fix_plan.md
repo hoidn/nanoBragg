@@ -3953,7 +3953,7 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 ## [SOURCE-WEIGHT-001] Correct weighted source normalization
 - Spec/AT: `specs/spec-a-core.md` §5 (Source intensity), `docs/architecture/pytorch_design.md` §2.3, `docs/development/c_to_pytorch_config_map.md` (flux/fluence), nanoBragg.c lines 2480-2595 (source weighting loop).
 - Priority: Medium
-- Status: in_progress (Phase A evidence pending)
+- Status: in_progress (Phase A evidence captured; Phase B normalization design pending)
 - Owner/Date: galph/2025-11-17 (updated 2025-12-22)
 - Plan Reference: `plans/active/source-weight-normalization.md`
 - Reproduction (C & PyTorch):
@@ -3961,10 +3961,10 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE nanoBragg -mat A.mat -floatfile py_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources.txt ...` (matching geometry).
   * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
 - First Divergence (if known): PyTorch divides through by `n_sources` (2) after weighting, producing ~40% underestimation relative to C (which scales by total flux = sum(weights)).
-- Next Actions:
-  1. Phase A (A1–A3): Build the weighted source fixture, reproduce the PyTorch vs C discrepancy, and capture logs under `reports/2025-11-source-weights/phase_a/<STAMP>/` (fixture, commands, env, collect-only proof) so `[VECTOR-GAPS-002]` Phase B2 can rely on restored correlation.
-  2. Phase B: Document normalization flow and determine whether to normalise via `source_weights.sum()` or pre-normalisation.
-  3. Phases C/D: Implement corrected scaling, add regression tests, refresh scaling traces, and update docs before closing the item.
+- Next Actions (2025-12-22):
+  1. Execute Phase B1–B3 per `plans/active/source-weight-normalization.md` — produce `phase_b/<STAMP>/normalization_flow.md`, `strategy.md`, and `tests.md` capturing the current scaling math, chosen correction, and targeted regression commands. Include line anchors (simulator.py, utils, config) and note any interplay with polarization logic (PERF-PYTORCH-004 P3.0b).
+  2. Record results in docs/fix_plan.md Attempts History (Attempt #2) with artifact paths and summary of the agreed normalization rule (e.g., divide by `sum(weights)` when weights provided, else fallback to `n_sources`).
+  3. After design sign-off, prepare Phase C implementation guidance for Ralph (update plan/fix_plan with acceptance tests, parity commands, and device/dtype considerations) so the code change can proceed next loop.
 - Attempts History:
   * [2025-11-17] Attempt #0 — Result: backlog entry. Issue documented and plan `plans/active/source-weight-normalization.md` created; awaiting evidence collection.
   * [2025-10-09] Attempt #1 — Phase A evidence capture (ralph). Result: success.

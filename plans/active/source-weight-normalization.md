@@ -3,7 +3,7 @@
 - Phase Goal: Ensure per-source weighting matches the nanoBragg C semantics so total fluence reflects `sum(source_weights)` instead of `n_sources`.
 - Dependencies: specs/spec-a-core.md §5 (Source intensity), docs/architecture/pytorch_design.md §2.3 (Source handling), docs/development/c_to_pytorch_config_map.md §Beam/Source, `nanoBragg.c` lines 2480-2595 (source weighting), `scripts/validation/compare_scaling_traces.py` outputs for weighted sources.
 - Current gap snapshot (2025-11-17): `Simulator.run` (src/nanobrag_torch/simulator.py:837-925) divides accumulated intensity by `n_sources` even when custom `source_weights` are supplied, leading to biased fluence whenever weights ≠ 1.0.
-- Status Snapshot (2025-10-09): Phase A complete. Evidence captured under `reports/2025-11-source-weights/phase_a/20251009T071821Z/` showing 327.9× intensity discrepancy (PyTorch = 151963.1, C = 463.4). Ready for Phase B normalization trace analysis.
+- Status Snapshot (2025-12-22): Phase A evidence bundle `20251009T071821Z` confirms the 327.9× scaling error and is referenced by `[VECTOR-GAPS-002]` as the blocker for profiler correlation. Phase B design work is still outstanding; completing B1–B3 will unblock PERF-PYTORCH-004 Phase P3.0b/P3.0c and allow vectorization-gap profiling to resume.
 
 ## Phase A — Evidence & Reproduction
 Goal: Capture failing behaviour and establish contractual expectations.
@@ -23,9 +23,9 @@ Exit Criteria: Written strategy covering code changes, edge cases, and tests.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Trace normalization math | [ ] | Document the current multiplication/division path (steps, fluence, capture_fraction) and identify where weight sum should enter. Save notes to `reports/.../phase_b/normalization_flow.md`. |
-| B2 | Define update approach | [ ] | Decide between scaling by `source_weights.sum()` or pre-normalizing weights; handle default (all ones) efficiently. |
-| B3 | Plan regression coverage | [ ] | Specify pytest additions (e.g., new case in `tests/test_cli_scaling.py`) and acceptable tolerances. |
+| B1 | Trace normalization math | [ ] | Document the current multiplication/division path (steps, fluence, capture_fraction) and identify where weight sum should enter. Capture the annotated flow in `reports/2025-11-source-weights/phase_b/<STAMP>/normalization_flow.md` with line references (simulator.py, utils). |
+| B2 | Define update approach | [ ] | Decide between scaling by `source_weights.sum()` or pre-normalizing weights; record the decision + rationale in `phase_b/<STAMP>/strategy.md`. Note any dependencies on polarization code (PERF-PYTORCH-004 P3.0b). |
+| B3 | Plan regression coverage | [ ] | Specify pytest additions (e.g., new case in `tests/test_cli_scaling.py`) and acceptable tolerances. Enumerate targeted commands in `phase_b/<STAMP>/tests.md` (CPU/CUDA selectors, expected tolerances). |
 
 ## Phase C — Implementation
 Goal: Implement corrected weighting with minimal churn and full docstring references.
