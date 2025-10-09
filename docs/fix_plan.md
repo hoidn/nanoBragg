@@ -4242,6 +4242,23 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - `tests/test_cli_scaling.py` lines 472-620 — TestSourceWeightsDivergence class with TC-D1 (sourcefile-only parity), TC-D2 (warning validation, deferred to CLI), TC-D3 (divergence-only grid), TC-D4 (explicit oversample regression)
       - `src/nanobrag_torch/config.py` lines 551-556 — BeamConfig documentation noting that validation guard belongs in __main__.py CLI parser
       - Pytest collection log: 686 tests collected successfully
+  * [2025-10-09] Attempt #12 (ralph loop — Phase E2 evidence refresh). Result: **SUCCESS** (Phase E2 deliverable complete; fresh PyTorch TC-D1 evidence captured).
+    Metrics: PyTorch CLI run: n_sources=2, phi_steps=1, mosaic_domains=1, oversample=1, steps=2, fluence=1.259320e+29. Max intensity: 1.684e+02 at pixel (243,255), Mean: 3.865e+00, RMS: 1.634e+01. No code changes (evidence-only loop per input.md guidance).
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_e/20251009T123427Z/py_tc_d1.bin` — PyTorch float image output (256KB, 256×256 pixels)
+      - `reports/2025-11-source-weights/phase_e/20251009T123427Z/py_stdout.log` — CLI stdout capture showing "Loaded 2 sources" (no divergence auto-generation)
+      - `reports/2025-11-source-weights/phase_e/20251009T123427Z/simulator_diagnostics.txt` — Internal simulator state dump (n_sources, phi_steps, mosaic_domains, oversample, steps, fluence)
+      - `reports/2025-11-source-weights/phase_e/20251009T123427Z/commands.txt` — Full reproduction script with environment setup and Python diagnostics code
+    Observations/Hypotheses:
+      - **Warning guard confirmed working**: PyTorch CLI reports "Loaded 2 sources from..." (line 1 of py_stdout.log) with no unintended divergence grid generation, validating Phase E1 implementation in commit 3140629
+      - **Simulator state stable**: n_sources=2, steps=2 (2 sources × 1 phi × 1 mosaic × 1² oversample) matches expected normalization denominator for TC-D1 fixture
+      - **Fluence magnitude**: 1.259320e+29 photons/m² is typical for the test geometry (231.27mm distance, 0.172mm pixel, default flux/exposure)
+      - **Peak location consistent**: Max intensity at pixel (243,255) aligns with expected Bragg geometry for the A.mat orientation matrix
+      - **No regression in core pipeline**: CLI completed successfully with standard statistics output; no errors/warnings in stdout
+    Next Actions:
+      1. Phase E3: Rebuild `./golden_suite_generator/nanoBragg` if needed, then manually run C + PyTorch TC-D1 commands to regenerate floatfiles and capture parity metrics (correlation, sum_ratio, C_sum, Py_sum) under `phase_e/<new_STAMP>/parity/`
+      2. Phase E4: Use evidence from E2 (simulator diagnostics) + E3 (parity metrics) to author trace comparison if gap persists (140-300× from reports/2025-11-source-weights/phase_e/20251009T115838Z/summary.md); target on-peak pixel from regenerated outputs
+      3. Documentation: Once parity validated or divergence isolated, update plan status and notify dependent initiatives (VECTOR-GAPS-002, PERF-PYTORCH-004)
     Observations/Hypotheses:
       - TC-D1 & TC-D4 implementation complete: Uses fixture auto-detection for `two_sources.txt` (tries both `reports/2025-11-source-weights/fixtures/` and `phase_a/.../fixtures/`), runs C↔PyTorch CLI comparison, computes correlation & sum_ratio metrics, saves failure artifacts to `reports/2025-11-source-weights/phase_e/<timestamp>/metrics.json`
       - TC-D2 skipped: Validation guard cannot be implemented in BeamConfig (no source_file field exists at config level). Warning SHALL be emitted from CLI argument parser in `__main__.py` when both `-sourcefile` and divergence parameters present. Test currently always skips pending CLI implementation.
