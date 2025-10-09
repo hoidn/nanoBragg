@@ -3752,6 +3752,20 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       2. Phase D (D1–D3) — Prepare input.md Do Now with top 2–3 blocker fixes for Ralph; include exact file:line references and reproduction commands
       3. Post-Phase-C — Archive summary.md classification table to fix_plan for quick reference; link from STATIC-PYREFLY-001 header
       4. Future — After Ralph fixes first batch, execute Phase E validation run to measure progress and detect regressions
+  * [2025-12-22] Attempt #3 — Plan refresh & staging (galph). Result: success.
+    Metrics: Verified pyrefly v0.35.0 remains available; `[tool.pyrefly]` entry still present at pyproject.toml:11.
+    Artifacts:
+      - `reports/pyrefly/20251009T044937Z/commands.txt` — Revalidation commands (`rg` + `pyrefly --version`) with exit status
+      - `reports/pyrefly/20251009T044937Z/README.md` — Staging directory context for upcoming Phase C triage bundle
+      - `plans/active/static-pyrefly.md` — Phase A/B marked [D]; Status Snapshot updated for Phase C kickoff
+    Observations/Hypotheses:
+      - Baseline artifacts from 20251008 remain authoritative; no rerun needed until Phase C triage completes
+      - Prepared fresh timestamp (`20251009T044937Z`) for triage outputs so Ralph can write without clobbering baseline
+      - Remaining work: execute plan Phase C tasks before delegating fixes
+    Next Actions:
+      1. Use `reports/pyrefly/20251009T044937Z/summary.md` to capture severity buckets/owners during Phase C
+      2. Update `docs/fix_plan.md` header notes once triage is complete with rerun cadence
+      3. Prepare `input.md` hook pointing Ralph at top 2 blocker findings after triage
 - Risks/Assumptions: None-safety and type boundary violations may surface during runtime; some errors might be masked by existing tests not exercising all code paths
 
 ## [SOURCE-WEIGHT-001] Correct weighted source normalization

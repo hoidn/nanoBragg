@@ -8,6 +8,7 @@
   - `pyproject.toml` `[tool.pyrefly]` — configuration guardrail (must remain untouched).
   - Environment availability of the `pyrefly` CLI (verify via `command -v pyrefly`).
 - Artifact Policy: Store every run under `reports/pyrefly/<YYYYMMDDTHHMMSSZ>/` with `commands.txt`, raw logs, `summary.md`, and `env.json`. Never commit these directories; reference them from fix_plan attempts.
+- Status Snapshot (2025-12-22): Phases A and B completed in 2025-10 bundles (`reports/pyrefly/20251008T053652Z/`). New placeholder directory `reports/pyrefly/20251009T044937Z/` prepared this loop to stage Phase C follow-up.
 
 ### Phase A — Preconditions & Tool Audit
 Goal: Confirm pyrefly is configured and document the command surface before any analysis run.
@@ -16,9 +17,9 @@ Exit Criteria: Verified tool availability recorded, command plan captured, and r
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| A1 | Verify configuration | [ ] | Run `rg -n "^\[tool\.pyrefly\]" pyproject.toml` and `pyrefly --version`. Record outputs in `reports/pyrefly/<ts>/commands.txt`. If missing, stop and add TODO to docs/fix_plan.md per prompts/pyrefly.md. |
-| A2 | Prep artifact directory | [ ] | Create `reports/pyrefly/<ts>/` with skeleton files (`commands.txt`, `README.md` stub) so later runs stay consistent. |
-| A3 | Log preconditions in fix plan | [ ] | Update `docs/fix_plan.md` Attempt with tool availability status and pointer to this plan (Phase A). |
+| A1 | Verify configuration | [D] | Completed 2025-10-08 via Attempt #1 (ralph). Outputs captured in `reports/pyrefly/20251008T053652Z/commands.txt` (pyrefly v0.35.0, `[tool.pyrefly]` at pyproject.toml:11). Re-validated 2025-12-22 during supervisor loop; latest command noted in `reports/pyrefly/20251009T044937Z/commands.txt`. |
+| A2 | Prep artifact directory | [D] | Completed 2025-10-08 with baseline skeleton under `reports/pyrefly/20251008T053652Z/`. Additional staging directory `reports/pyrefly/20251009T044937Z/` created 2025-12-22 to host upcoming Phase C artifacts. |
+| A3 | Log preconditions in fix plan | [D] | Documented in `docs/fix_plan.md` Attempt #1 (2025-10-08). This loop (2025-12-22) added Attempt #3 to confirm tooling still available and link new staging directory. |
 
 ### Phase B — Baseline Scan Execution
 Goal: Capture the first full pyrefly diagnostic run with reproducible metadata.
@@ -27,9 +28,9 @@ Exit Criteria: `pyrefly check src` output stored, environment captured, exit cod
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Execute baseline run | [ ] | From repo root: `pyrefly check src | tee reports/pyrefly/<ts>/pyrefly.log`. Preserve exit status in `commands.txt`. |
-| B2 | Capture environment snapshot | [ ] | Record `python -V`, `pyrefly --version`, `git rev-parse HEAD`, and active virtualenv info into `reports/pyrefly/<ts>/env.json` (structured JSON preferred). |
-| B3 | Summarise diagnostics | [ ] | Create `reports/pyrefly/<ts>/summary.md` listing violations grouped by rule/severity with file:line anchors. Highlight blockers (undefined names/import errors) vs style-only findings. |
+| B1 | Execute baseline run | [D] | Completed 2025-10-08 via Attempt #2 — see `reports/pyrefly/20251008T053652Z/pyrefly.log` (exit code recorded in commands.txt). |
+| B2 | Capture environment snapshot | [D] | Completed 2025-10-08 (`env.json` capturing Python 3.13.7, pyrefly 0.35.0, git SHA 8ca885f). |
+| B3 | Summarise diagnostics | [D] | Completed 2025-10-08 — `summary.md` groups 78 findings by rule/severity with file:line anchors ready for Phase C triage. |
 
 ### Phase C — Triage & Prioritisation
 Goal: Translate raw diagnostics into actionable buckets for delegation.
@@ -38,9 +39,9 @@ Exit Criteria: Ranked list of issues with recommended handling recorded in both 
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Classify findings | [ ] | Tag each issue as `blocker`, `high`, `medium`, or `defer`. Use pyrefly rule IDs and reason phrases. |
-| C2 | Map to source owners/tests | [ ] | For each blocker/high item, identify likely module owner (e.g., detector, crystal, CLI) and candidate pytest selectors (validated via `pytest --collect-only`). Record in `summary.md`. |
-| C3 | Update fix_plan attempts | [ ] | Append Attempt to `docs/fix_plan.md` with ranked findings, artifact paths, and recommended next steps (e.g., "delegate to Ralph in next input.md"). |
+| C1 | Classify findings | [ ] | Review `reports/pyrefly/20251008T053652Z/summary.md`; add severity tags and owner/test pointers. Capture delta in new `reports/pyrefly/20251009T044937Z/summary.md`. |
+| C2 | Map to source owners/tests | [ ] | For each blocker/high item, identify module owner and pytest selectors (validated with `pytest --collect-only`). Record in updated summary and log selectors in `commands.txt`. |
+| C3 | Update fix_plan attempts | [ ] | Append triage results to `docs/fix_plan.md` (STATIC-PYREFLY-001) with severity buckets and artifact references. |
 
 ### Phase D — Delegation & Follow-up Hooks
 Goal: Ensure Ralph receives precise execution guidance and that future loops can track progress.
@@ -49,9 +50,9 @@ Exit Criteria: `input.md` Do Now drafted, fix_plan next actions updated, and bac
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| D1 | Draft supervisor memo hooks | [ ] | In `input.md` (next supervisor run), reference this plan’s Phase B/C artifacts, provide exact `pyrefly` command, and enumerate top 1–2 findings to fix. |
-| D2 | Update fix_plan next actions | [ ] | Under STATIC-PYREFLY-001, add bullet list of the immediate fixes to pursue (with rule IDs, file paths, and expected pytest selectors). |
-| D3 | Schedule re-run criteria | [ ] | Define when to rerun pyrefly (e.g., after each fix batch or weekly). Document in fix_plan and `summary.md` to avoid redundant scans. |
+| D1 | Draft supervisor memo hooks | [ ] | In the next supervisor run after Phase C, reference triage artifacts (20251009T044937Z) in `input.md` and provide exact `pyrefly` command plus top blocker fixes. |
+| D2 | Update fix_plan next actions | [ ] | Under STATIC-PYREFLY-001, list targeted fixes with rule IDs, file:line anchors, and expected pytest selectors. |
+| D3 | Schedule re-run criteria | [ ] | Document rerun cadence (e.g., after each fix batch or weekly) in both `summary.md` and `docs/fix_plan.md` notes. |
 
 ### Phase E — Regression Tracking & Closure
 Goal: Close the loop once violations are resolved or documented for future work.
