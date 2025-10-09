@@ -1671,3 +1671,7 @@
 - Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` next actions to match the plan (canonical commands, new bundle, memo/test refresh) and replaced the obsolete "expected divergence" narrative.
 - Issued `input.md` (Mode: Parity) directing Ralph to capture a new Phase G bundle with `-nointerpolate`, compute correlation/sum ratio locally, and log results plus any segfault diagnostics before advancing to the parity memo.
 - Follow-up for Ralph: execute Phase G1–G3 per input, archive artifacts under a new `<STAMP>`, update `[SOURCE-WEIGHT-001]` attempts, then we can move on to Phase H memo/test updates.
+### 2025-12-25 (galph loop - SOURCE-WEIGHT G bundle prep refresh)
+- Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions and `plans/active/source-weight-normalization.md` G1/G4 guidance to prefer `-interpolate 0` for the C CLI so the tricubic crash is avoided during parity capture.
+- Rewrote `input.md` (Mode: Parity) with an OUTDIR-based workflow: mapped pytest selectors, explicit Py/PyTorch + C CLI commands, metrics script, and reminder to log a new Attempt once thresholds are met.
+- Follow-up for Ralph: execute the refreshed instructions verbatim—collect pytest logs, run both CLIs with `-interpolate 0`, emit `metrics.json` in the new STAMP directory, and append the Attempt summary to `[SOURCE-WEIGHT-001]` before moving on to the Phase H memo.
