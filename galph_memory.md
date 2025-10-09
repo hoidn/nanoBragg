@@ -1665,3 +1665,9 @@
 - Rebuilt `golden_suite_generator/nanoBragg`; noted the PyTorch-only `-mosaic_dom` shorthand and added fix-plan guidance to invoke the C CLI with `-mosaic_domains` while running commands from the STAMP directory to contain SMV/PGM side outputs.
 - Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions (bullet 4) plus a new `input.md` (Mode: Docs+Parity) that scripts the refreshed Phase G2 bundle: targeted pytest, corrected CLI commands, metrics/NaN audit, and instructions to capture gdb traces on failure.
 - Follow-up for Ralph: execute the new `input.md` workflow, populate `reports/2025-11-source-weights/phase_g/<STAMP>/` with pytest logs + Py/C metrics, record the XPASS outcome, and then queue Phase H parity memo work once evidence is complete.
+
+### 2025-12-25 (galph loop - SOURCE-WEIGHT parity plan refresh)
+- Rewrote `plans/active/source-weight-normalization.md` to reflect the new Phase G parity recovery focus (G1–G3 open, G4 done) and staged follow-on Phase H/H3 + Phase I tasks once fresh evidence lands.
+- Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` next actions to match the plan (canonical commands, new bundle, memo/test refresh) and replaced the obsolete "expected divergence" narrative.
+- Issued `input.md` (Mode: Parity) directing Ralph to capture a new Phase G bundle with `-nointerpolate`, compute correlation/sum ratio locally, and log results plus any segfault diagnostics before advancing to the parity memo.
+- Follow-up for Ralph: execute Phase G1–G3 per input, archive artifacts under a new `<STAMP>`, update `[SOURCE-WEIGHT-001]` attempts, then we can move on to Phase H memo/test updates.

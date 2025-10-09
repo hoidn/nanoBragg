@@ -4043,20 +4043,19 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE nanoBragg -mat A.mat -floatfile py_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources.txt ...` (matching geometry).
   * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
 - First Divergence (if known): Pending parity reassessment — attempt `20251009T214016Z` observed correlation ≈0.99999 between C and PyTorch despite the historical `C-PARITY-001` classification. Treat the legacy divergence memo as provisional until Phase H confirms the true behaviour (equal weighting per `specs/spec-a-core.md:151`).
-- Next Actions (refreshed 2025-12-24 after auditing the 20251009T214016Z evidence bundle):
-  - Phase E1 ✅ `reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md` (to be superseded by Phase H parity memo).
-  - Phase E2 ✅ Ledger + dependency propagation complete.
-  - Phase F1–F3 ✅ Design packet archived at `reports/2025-11-source-weights/phase_f/20251009T203823Z/`.
-  - Phase G1 ✅ Test suite updated per design packet (spec-first assertions).
-  - Phase G2 ☐ Outstanding — capture a refreshed evidence bundle with parity metrics (expect Py ↔ C correlation ≥0.999, |sum_ratio−1| ≤3e-3); document anomalies (XPASS, segfault) if encountered.
-  - Phase G3 ☐ Outstanding — log the new Attempt with metrics, anomaly notes, and artifact references.
-  - Phase G4 ☐ Outstanding — diagnose the TC-D3 segfault (gdb/backtrace, root-cause notes).
-  - Phase H1–H4 ☐ New — reproduce parity under controlled runs, author the parity reassessment memo superseding `spec_vs_c_decision.md`, update the divergence test to expect PASS, and align spec acceptance text.
-  - Phase I1–I3 ☐ Blocked — architectural docs and dependent plans update once Phase H completes.
-  1. Rebuild the C binary with debug symbols (`make -C golden_suite_generator clean && make -C golden_suite_generator CFLAGS="-g -O0"`), rerun the Phase F command set, and archive outputs under `reports/2025-11-source-weights/phase_g/<STAMP>/` (include collect/pytest logs, CLI stdout/stderr, metrics JSONs, correlation.txt, notes.md).
-  2. If the C command segfaults, capture `gdb` backtrace and diagnostics under `reports/2025-11-source-weights/phase_g/<STAMP>/c_segfault/`, then summarise the failure in notes.md before proceeding to Phase H.
-  3. Once parity evidence exists, draft `reports/2025-11-source-weights/phase_h/<STAMP>/parity_reassessment.md`, update `test_c_divergence_reference` to enforce the new thresholds (no xfail), and refresh spec/doc references prior to reopening dependent plans.
-  4. Invoke the C CLI with the canonical flag spelling (`-mosaic_domains`) and run both C and PyTorch commands from the fresh `<STAMP>` directory so auxiliary outputs (`intimage.img`, `noiseimage.img`, etc.) stay scoped to the evidence bundle; the shorthand `-mosaic_dom` alias is PyTorch-only and caused the 20251009 Phase G attempt to segfault/emit NaN metrics.
+- Next Actions (refreshed 2025-12-24 after auditing the 20251009T215516Z bundle):
+  - Phase G1 ☐ Canonicalise PyTorch + C commands (ensure `-nointerpolate` or supply fixture HKL) and verify both binaries run without crash before recording metrics.
+  - Phase G2 ☐ Capture a fresh evidence bundle with PyTorch + C outputs (`correlation ≥ 0.999`, `|sum_ratio−1| ≤ 3e-3`); store stdout/stderr, floatfiles, metrics, and notes under a new `<STAMP>`.
+  - Phase G3 ☐ Append a new Attempt entry here summarising the bundle, metrics, segfault guardrails, and any anomalies.
+  - Phase G4 ✅ Segfault root cause documented (`reports/2025-11-source-weights/phase_g/20251009T215516Z/c_segfault/crash_analysis.md`); reference this guard in future bundles.
+  - Phase H1 ☐ Author `reports/2025-11-source-weights/phase_h/<STAMP>/parity_reassessment.md` quoting `nanoBragg.c:2570-2720` and superseding the legacy decision memo.
+  - Phase H2 ☐ Update `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference` to expect PASS (no xfail) and archive targeted pytest logs with the memo.
+  - Phase H3 ☐ Audit `docs/bugs/verified_c_bugs.md` + this ledger to remove the outdated C-PARITY-001 linkage; document the interpolation segfault if treated as a C bug.
+  - Phase I1–I3 ☐ Blocked pending Phase H; see `plans/active/source-weight-normalization.md` for details.
+  1. Rebuild the C binary with debug symbols (`make -C golden_suite_generator clean && make -C golden_suite_generator CFLAGS="-g -O0"`), run the canonical PyTorch and C commands from a fresh `reports/2025-11-source-weights/phase_g/<STAMP>/` directory, and archive `commands.txt`, stdout/stderr, floatfiles, and `metrics.json`.
+  2. If the C command fails, capture a `gdb` backtrace under `c_segfault/` and document the chosen workaround (`-nointerpolate` or HKL) inside the bundle’s `notes.md` before retrying.
+  3. After parity metrics are recorded, update this ledger with a new Attempt and queue Phase H (memo + test update) via the next supervisor input.
+  4. Once Phase H completes, propagate the new selectors/artifacts to VECTOR-TRICUBIC-002, VECTOR-GAPS-002, and PERF-PYTORCH-004 before resuming vectorization/perf initiatives.
 - Attempts History:
   * [2025-10-09] Attempt #27 (ralph loop #256 — Mode: Docs+Parity, Phase G2/G3 evidence bundle). Result: **FAILED (incomplete evidence)** — pytest run succeeded but CLI commands/metrics were not captured; C binary absent; divergence test XPASSed.
     Metrics: `pytest -v tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` — 7 passed, 1 xpassed in 21.21s. `test_c_divergence_reference` returned XPASS (correlation logged ≈0.99999) and wrote `reports/2025-11-source-weights/phase_g/unexpected_c_parity/metrics.json`. PyTorch CLI attempt emitted `Need -hkl file, Fdump.bin, or -default_F > 0` (no floatfile generated). No C CLI executed.

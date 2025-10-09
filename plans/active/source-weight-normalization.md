@@ -1,86 +1,61 @@
 ## Context
-- Initiative: SOURCE-WEIGHT-001 — align the PyTorch simulator, test suite, and documentation with the spec requirement that source weights are ignored while documenting the nanoBragg C divergence.
-- Phase Goal: Establish a spec-first contract (weights ignored, wavelength from `-lambda`), realign automated tests accordingly, and unblock downstream profiling/vectorization efforts with clearly documented C-behaviour deviations.
+- Initiative: SOURCE-WEIGHT-001 — converge the simulator, test suite, and documentation on the spec contract that **source weights are ignored** while documenting any residual C-only defects.
+- Current Objective: After the 20251009 parity evidence unexpectedly XPASSed (`correlation≈0.99999`, `sum_ratio≈1.0038`), re-establish a trustworthy parity bundle, supersede the stale "C diverges" memo, and unblock downstream vectorization/perf work.
 - Dependencies:
-  - `specs/spec-a-core.md` §4 (Sources, Divergence & Dispersion) — normative statement that weights/wavelengths in sourcefile are read but ignored.
-  - `golden_suite_generator/nanoBragg.c:2570-2720` — C reference showing divergence grid population and use of `source_I`.
-  - `tests/test_cli_scaling.py` (`TestSourceWeights*`) — current parity tests that enforce C-style weighting.
-  - `docs/architecture/pytorch_design.md` & `docs/development/pytorch_runtime_checklist.md` — design guardrails that must reflect the spec-first contract.
-  - `plans/active/vectorization.md` / `plans/active/vectorization-gap-audit.md` — profiling work gated on SOURCE-WEIGHT-001 completion.
-  - Existing evidence bundles under `reports/2025-11-source-weights/phase_{a..e}/` (baseline traces, design notes, CLI commands).
-- Status Snapshot (2025-12-24 refresh):
-  - Legacy Phases A–D are complete (fixtures, spec confirmation, implementation guard, trace instrumentation).
-  - Phase E ledger propagation finished this loop (E2/E3 ✅); spec-first stance and dependency gates now live in `docs/fix_plan.md` and the vectorization plans.
-  - Phase F design packet archived at `reports/2025-11-source-weights/phase_f/20251009T203823Z/`; Phase G implementation/evidence remains the active gate before downstream profiling can resume.
-  - Current blockers: Attempt `20251009T214016Z` surfaced two anomalies — `test_c_divergence_reference` XPASSed (C parity observed) and the TC-D3 C command segfaulted. We must (a) capture a fresh evidence bundle with parity metrics once the segfault is resolved and (b) re-assess the spec vs C decision before downstream plans may resume.
+  - `specs/spec-a-core.md` §4 — normative statement: both weight and wavelength columns in sourcefile are ignored; CLI `-lambda` is authoritative.
+  - `golden_suite_generator/nanoBragg.c:2570-2720` — C ingestion loop showing `source_I` handling (needs fresh review to confirm weights are ignored).
+  - `tests/test_cli_scaling.py` (`TestSourceWeights*`) — spec-first tests landed in Phase F; `test_c_divergence_reference` still marked xfail.
+  - `docs/architecture/pytorch_design.md` §1.1 and `docs/development/pytorch_runtime_checklist.md` — must reflect the spec-first stance once parity confirmed.
+  - Plans blocked by this initiative: `plans/active/vectorization.md` (Phase A2) and `plans/active/vectorization-gap-audit.md` (Phase B1).
+  - Evidence bundles: `reports/2025-11-source-weights/phase_{a..f}/` (baseline traces + design packet) and `reports/2025-11-source-weights/phase_g/20251009T215516Z/` (XPASS + C segfault diagnostics).
+- Status Snapshot (2025-12-24): Phases A–F remain locked; Phase G must be rerun because the current bundle lacks C output (segfault) and contradicts the legacy decision memo. Vectorization remains gated until Phase H updates land and dependent plans receive the new selectors/artifacts.
 
-### Legacy Evidence (Phases A–D) — Locked
-Goal: Preserve provenance of the already-completed investigation.
-- Phase A (Bias capture): `reports/2025-11-source-weights/phase_a/20251009T071821Z/` — fixtures + baseline metrics (`sum_ratio≈3.28e2`).
-- Phase B (Spec confirmation & callchain): `reports/2025-11-source-weights/phase_b/20251009T083515Z/` — spec quotes, PyTorch callchain, parity reproduction.
-- Phase C (Implementation adjustments): Commits 321c91e/dffea55 plus regression tests in `tests/test_cli_scaling.py`; guard landed at `src/nanobrag_torch/simulator.py:399-423`.
-- Phase D (Divergence design & harness): `reports/2025-11-source-weights/phase_d/20251009T102319Z/` & `.../20251009T104310Z/` — divergence analysis, implementation options, acceptance harness draft.
-- No further action required; treat artifacts as immutable references.
+### Legacy Phases — Archived (No Further Action)
+Goal: Preserve provenance; treat artifacts as immutable references.
+- Phase A — Bias capture: `reports/2025-11-source-weights/phase_a/20251009T071821Z/` (sum_ratio≈3.28e2 baseline).
+- Phase B — Spec confirmation & callchain: `reports/2025-11-source-weights/phase_b/20251009T083515Z/` (parallel trace + spec excerpts).
+- Phase C — Implementation guards: commits 321c91e & dffea55 plus `tests/test_cli_scaling.py` updates; guard at `src/nanobrag_torch/simulator.py:399-423`.
+- Phase D — Divergence design & harness: `reports/2025-11-source-weights/phase_d/{20251009T102319Z,20251009T104310Z}/` (options analysis, CLI harness draft).
+- Phase E — Ledger propagation: `reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md` (now superseded once Phase H completes).
+- Phase F — Test realignment design: `reports/2025-11-source-weights/phase_f/20251009T203823Z/test_plan.md` (selector inventory + acceptance criteria).
 
-### Phase E — Spec vs C Alignment Decision (In Progress)
-Goal: Codify the spec-first stance, document the C bug, and update ledgers so downstream work references the correct contract.
-Prereqs: Review spec §4, divergence traces (`phase_e/20251009T192746Z/trace*`), and existing design notes.
-Exit Criteria: Decision memo + ledger updates make it explicit that PyTorch is correct per spec and C diverges.
+### Phase G — Parity Evidence Recovery (Active)
+Goal: Capture a clean, reproducible parity evidence bundle (PyTorch + C) that avoids the tricubic segfault, verifies spec-aligned equal weighting, and updates the ledger.
+Prereqs: `NB_C_BIN` pointing at a freshly rebuilt debug binary; spec-first pytest suite already green (Phase F); review segfault write-up in `phase_g/20251009T215516Z/notes.md`.
+Exit Criteria: New `<STAMP>` bundle under `reports/2025-11-source-weights/phase_g/` containing PyTorch + C CLI outputs, metrics, and notes; fix_plan Attempt recorded with parity verdict and segfault guardrails.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| E1 | Draft decision memo | [X] | ✅ `reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md` (FINAL) captures spec citations, trace evidence, and locks the spec-first decision (C bug tagged `C-PARITY-001`). Memo inventories impacted tests (TestSourceWeights*, TC-D1/D3) and embeds reproduction commands. |
-| E2 | Update ledgers with decision | [X] | ✅ `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` now cites the spec-first decision memo (`reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md`) and classifies C correlation gaps as expected (`C-PARITY-001`). Summary logged in `galph_memory.md` (2025-12-24 loop). |
-| E3 | Propagate dependency gates | [X] | ✅ `plans/active/vectorization.md`/`plans/active/vectorization-gap-audit.md` updated to gate Phase A2/B1 on SOURCE-WEIGHT spec-compliance instead of C correlation; fix_plan cross-references now point to these phases. |
+| G1 | Canonicalise reproduction commands | [ ] | Validate PyTorch + C CLI commands that match TC-D1/TC-D3 geometry while avoiding the interpolation crash (add `-nointerpolate` or provide minimal HKL). Record both commands in `reports/2025-11-source-weights/phase_g/<STAMP>/commands.txt`; confirm `NB_C_BIN` in env and run from the bundle directory so SMV/PGM outputs stay scoped. |
+| G2 | Capture fresh parity bundle | [ ] | Execute the targeted pytest selector (`NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence`) followed by the canonical PyTorch and C CLI commands. Store stdout/stderr, floatfiles, and recomputed metrics (`metrics.json`, `correlation.txt`) under the same `<STAMP>`. Target correlation ≥0.999 and |sum_ratio−1| ≤3e-3; if parity fails, annotate in `notes.md` with hypotheses. |
+| G3 | Update fix_plan attempt | [ ] | Append a new Attempt to `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` summarising the bundle (tests run, metrics, CLI commands, anomalies). Explicitly retire the "expected divergence" narrative and mark whether parity now matches spec. |
+| G4 | Document segfault guard | [D] | ✅ Root cause captured in `reports/2025-11-source-weights/phase_g/20251009T215516Z/c_segfault/crash_analysis.md` (negative Fhkl index when interpolation auto-enables). Reference this note in new `notes.md` so future bundles pass `-nointerpolate` or ship a fixture HKL.
 
-### Phase F — Test Realignment Design (Ready)
-Goal: Produce a concrete redesign for the source-weight tests and CLI harnesses so Ralph can implement without ambiguity.
-Prereqs: Phase E ledger updates approved.
-Exit Criteria: Design packet defines new acceptance criteria, fixture usage, and pytest selectors.
-
-| ID | Task Description | State | How/Why & Guidance |
-| --- | --- | --- | --- |
-| F1 | Inventory affected tests | [X] | ✅ `reports/2025-11-source-weights/phase_f/20251009T203823Z/test_plan.md` enumerates all impacted tests (`TestSourceWeights*`) with current vs proposed assertions and fixture notes. |
-| F2 | Define new acceptance criteria | [X] | ✅ Same design packet documents spec-computed reference expectations (weights ignored, CLI lambda override) with tolerances ≤1e-3, citing `docs/development/testing_strategy.md`. |
-| F3 | Map pytest selectors & commands | [X] | ✅ `reports/2025-11-source-weights/phase_f/20251009T203823Z/commands.txt` captures `pytest --collect-only -q tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` plus the supporting CLI bundle commands. |
-
-### Phase G — Implementation & Evidence (Blocked until Phase F)
-Goal: Update the test suite and capture supporting artifacts demonstrating spec compliance.
-Prereqs: Phase F design packet approved; existing guard in `src/nanobrag_torch/simulator.py` remains untouched.
-Exit Criteria: Tests enforce spec behaviour, targeted pytest run + CLI bundle archived, fix_plan attempts updated.
+### Phase H — Parity Reassessment & Test Updates (Queued)
+Goal: Supersede the legacy spec-vs-C memo, update parity tests to expect PASS, and correct the bug ledger/docs.
+Prereqs: Phase G completed with working C output and updated fix_plan Attempt.
+Exit Criteria: New parity memo, updated tests (no xfail), and documentation reflecting that C honours equal weighting.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| G1 | Update test suite | [X] | ✅ Landed in HEAD — `tests/test_cli_scaling.py` now enforces spec-first behaviour (weighted vs equal check, CLI lambda override, C-divergence marker). Retain the Phase F design packet for provenance. |
-| G2 | Capture evidence bundle (refresh) | [ ] | Rebuild the C binary if missing (`make -C golden_suite_generator`) and rerun the Phase F command set. Archive a new timestamped folder `reports/2025-11-source-weights/phase_g/<STAMP>/` containing `collect.log`, `pytest.log`, `commands.txt`, `tc_d1_cmd.txt`, `tc_d3_cmd.txt`, `py_metrics.json`, `c_metrics.json`, `correlation.txt`, `notes.md`, and stdout/stderr captures. Expect PyTorch vs C correlation ≥0.999 and |sum_ratio−1| ≤3e-3 (spec-compliance). If `test_c_divergence_reference` XPASSes or C segfaults, record the anomaly in `notes.md`, preserve partial artifacts, and transition to Phase H without deleting the bundle. |
-| G3 | Update fix_plan attempts | [ ] | After capturing (or documenting) the refreshed bundle, log a new `[SOURCE-WEIGHT-001]` Attempt summarising pytest outcomes, CLI commands, metrics, anomaly observations, and artifact paths. Flag whether parity matched spec expectations and whether C segfault triage is still open. |
-| G4 | Diagnose TC-D3 C segfault | [ ] | Rebuild the instrumented C binary with debug symbols (`make -C golden_suite_generator clean && make -C golden_suite_generator CFLAGS="-g -O0"`). Reproduce the segfault with the TC-D3 command, capture `gdb`/`backtrace` output, and store logs under `reports/2025-11-source-weights/phase_g/<STAMP>/c_segfault/`. Identify whether the crash stems from command configuration, missing fixture, or code regression and summarise findings for Phase H. |
+| H1 | Author parity reassessment memo | [ ] | Create `reports/2025-11-source-weights/phase_h/<STAMP>/parity_reassessment.md` quoting `nanoBragg.c:2570-2720`, contrasting Phase E assumptions vs Phase G evidence, and explicitly stating that C and PyTorch ignore source weights. Mark `spec_vs_c_decision.md` as historical in the new memo. |
+| H2 | Update divergence test expectation | [ ] | Edit `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference` to remove `@pytest.mark.xfail` and assert correlation ≥0.999 with |sum_ratio−1| ≤3e-3. Validate via targeted pytest selector and archive logs beside the memo. |
+| H3 | Correct bug ledger references | [ ] | Audit `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` narrative and `docs/bugs/verified_c_bugs.md` to ensure C-PARITY-001 (phi carryover) is no longer cited for source weights. If warranted, file a new bug note for the interpolation segfault under `docs/bugs/c-parity-XXX.md`. |
 
-### Phase H — Parity Reassessment & Test Alignment (New)
-Goal: Reconcile the `C-PARITY-001` classification with new C parity evidence, update acceptance artefacts, and ensure the test suite encodes the correct expectation (pass, not xfail).
-Prereqs: Phase G bundle captured (even if anomalous) and TC-D3 segfault triage notes recorded.
-Exit Criteria: Parity memo updated, tests adjusted to expect pass, and spec acceptance references aligned.
-
-| ID | Task Description | State | How/Why & Guidance |
-| --- | --- | --- | --- |
-| H1 | Reproduce parity metrics under controlled run | [ ] | Execute the targeted selector `NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference` and the paired CLI commands in a fresh tmpdir. Capture metrics/artifacts under `reports/2025-11-source-weights/phase_h/<STAMP>/parity_reassessment/` to confirm correlation ≥0.999 and |sum_ratio−1| ≤3e-3. |
-| H2 | Author parity reassessment memo | [ ] | Draft `reports/2025-11-source-weights/phase_h/<STAMP>/parity_reassessment.md` quoting nanoBragg.c lines 2570-2720 to demonstrate weights are ignored, summarising the new evidence, and superseding `spec_vs_c_decision.md` (mark legacy memo as "historical" in the new document). Include explicit conclusions for test expectations and downstream plans. |
-| H3 | Update tests to expect pass | [ ] | Modify `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference` to remove `@pytest.mark.xfail`, tighten tolerances to correlation ≥0.999 / |sum_ratio−1| ≤3e-3, and ensure failure logs still capture `unexpected_c_parity/metrics.json`. Validate via targeted pytest selector and store logs alongside the memo. |
-| H4 | Align spec acceptance text | [ ] | Update `specs/spec-a-core.md` (AT-SRC-001) and any dependent docs to reflect the equal-weight expectation (remove lingering "applies weight" wording), citing the new parity memo. Record commands and diffs in the same reports directory. |
-
-### Phase I — Documentation & Downstream Unblocks (Blocked until Phase H)
-Goal: Sync architecture docs, runtime checklist, and dependent plans once parity reassessment and test updates are complete.
-Prereqs: Phase H completed with passing tests, updated memo, and archived artifacts.
-Exit Criteria: Documentation reflects spec-first stance and parity alignment; plan ready for archive.
+### Phase I — Documentation & Downstream Unblocks (Blocked)
+Goal: Propagate the parity decision through permanent docs and unblock dependent plans.
+Prereqs: Phase H deliverables published and tests passing.
+Exit Criteria: Architecture/runtime docs updated, dependent plans ungated, plan ready for archive.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| I1 | Update permanent docs | [ ] | Amend `docs/architecture/pytorch_design.md` (Sources subsection) and `docs/development/pytorch_runtime_checklist.md` to state weights are ignored, reference the parity reassessment memo, and remove references to the deprecated divergence classification. |
-| I2 | Notify dependent initiatives | [ ] | Update `plans/active/vectorization-gap-audit.md`, `plans/active/vectorization.md`, and `docs/fix_plan.md` entries (`VECTOR-GAPS-002`, `PERF-PYTORCH-004`) so they reference the new spec-compliance tests and parity memo instead of C divergence thresholds. |
-| I3 | Prepare archival summary | [ ] | Once I1/I2 done, draft closure note for `plans/archive/` and update `[SOURCE-WEIGHT-001]` status to `done`, noting that C/PyTorch parity has been validated and recording any remaining risks. |
+| I1 | Update permanent docs | [ ] | Revise `docs/architecture/pytorch_design.md` (sources subsection), `docs/development/pytorch_runtime_checklist.md`, and any acceptance text in `specs/spec-a-core.md` to reference the new parity memo and emphasise equal weighting. Capture diffs + commands in `reports/2025-11-source-weights/phase_i/<STAMP>/`. |
+| I2 | Ungate dependent plans | [ ] | Refresh `plans/active/vectorization.md` (Phase A2) and `plans/active/vectorization-gap-audit.md` (Phase B1) with the new selectors/artifacts, and update `docs/fix_plan.md` entries (`VECTOR-TRICUBIC-002`, `VECTOR-GAPS-002`, `PERF-PYTORCH-004`) so they cite the parity memo instead of the retired divergence thresholds. |
+| I3 | Archive initiative | [ ] | Draft closure summary for `plans/archive/source-weight-normalization.md`, update `[SOURCE-WEIGHT-001]` status to `done`, and log a final galph_memory entry noting residual risks (e.g., interpolation segfault remains a C bug). |
 
 ## Reporting Expectations
-- Store new artifacts under `reports/2025-11-source-weights/phase_e/`, `/phase_f/`, `/phase_g/`, `/phase_h/`, and `/phase_i/` with ISO timestamps. Do **not** commit report directories; reference them from fix_plan attempts.
-- All test commands must include `KMP_DUPLICATE_LIB_OK=TRUE` and validated pytest selectors (`--collect-only`).
-- Parity metrics against C should target correlation ≥0.999 and |sum_ratio−1| ≤3e-3; label anomalies explicitly and link to the parity reassessment memo.
-- Keep this plan synchronised with `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` and dependent plans whenever a phase gate flips.
+- Store new artifacts under `reports/2025-11-source-weights/phase_g/<STAMP>/`, `/phase_h/<STAMP>/`, and `/phase_i/<STAMP>/`; list paths (do not commit report dirs).
+- All tests must include `KMP_DUPLICATE_LIB_OK=TRUE`; validate selectors with `--collect-only` before execution.
+- Document CLI environment (`NB_C_BIN`, working directory) inside each bundle’s `notes.md`.
+- When parity metrics deviate from the thresholds, capture hypotheses and follow-up probes before advancing phases.
+- Keep this plan in sync with `docs/fix_plan.md` `[SOURCE-WEIGHT-001]`; update both whenever a phase gate flips.
