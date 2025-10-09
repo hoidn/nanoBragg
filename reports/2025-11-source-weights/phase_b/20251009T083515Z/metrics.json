@@ -1,0 +1,22 @@
+{
+  "timestamp": "20251009T083515Z",
+  "c_metrics": {
+    "sum": 102.41645812988281,
+    "max": 0.002006110968068242,
+    "mean": 0.001562751131132245
+  },
+  "py_metrics": {
+    "sum": 5399.71728515625,
+    "max": 5.927148342132568,
+    "mean": 0.08239314705133438
+  },
+  "comparison": {
+    "correlation": 0.2081822045309949,
+    "sum_ratio": 52.723140716552734,
+    "delta_pct": 5172.31396484375
+  },
+  "commands": {
+    "c": "./golden_suite_generator/nanoBragg -cell 100 100 100 90 90 90 -default_F 100 -floatfile c.bin -sourcefile two_sources.txt -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -nonoise -nointerpolate",
+    "py": "KMP_DUPLICATE_LIB_OK=TRUE python -m nanobrag_torch -cell 100 100 100 90 90 90 -default_F 100 -floatfile py.bin -sourcefile two_sources.txt -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -nonoise -nointerpolate"
+  }
+}
