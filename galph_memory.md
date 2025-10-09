@@ -1237,3 +1237,10 @@
 - Focused on CLI-FLAGS-003 M5 φ-rotation parity. Compared spec-baseline traces: PyTorch `rot_b` y-component differs by +4.6e-02 and drives `k_frac` shift (reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/trace_py_scaling.log:15 vs c_trace_scaling.log:266-271).
 - Logged that PyTorch still reports tricubic `F_cell` despite supervisor command using `-nointerpolate` (trace_py_scaling.log:29 vs c_trace_scaling.log:278). Ralph must confirm flag plumbing while instrumenting per-φ traces.
 - Issued input.md directing Phase M5a work: extend trace harness to emit `TRACE_PY_PHI` (k_frac, F_latt_b, F_latt) and rerun spec-mode harness into reports/.../per_phi/<stamp>/ before tackling M5c lattice fix.
+
+## 2025-12-19 (galph loop — Phase M5c φ rotation guidance)
+- Re-read mandatory specs/arch/testing docs plus Phase M5 plan; focused on CLI-FLAGS-003 scaling parity.
+- Debug assessment: confirmed `Crystal.get_rotated_real_vectors` still skips dual real/reciprocal recomputation (uses static `self.V`), causing per-φ `b_star_y` drift (fix_20251008T231211Z traces) and F_latt sign flip vs C baseline (`c_trace_scaling.log`).
+- Logged hypotheses: primary fix is enforcing Rule #12/#13 per-slice duality; alternative hypotheses (sincg, spindle axis normalization) deprioritized after trace review.
+- Authored new `input.md` (Parity mode, 100 lines) directing Ralph to implement the duality pipeline, regenerate traces under `fix_<timestamp>`, rerun compare_scaling_traces, update lattice_hypotheses, and run targeted pytest (CPU/CUDA).
+- Follow-up for Ralph: implement Phase M5c vectorized rotation + duality, capture new artifacts, update docs/fix_plan Attempt & plan row to [D], and prepare for M5d verification.
