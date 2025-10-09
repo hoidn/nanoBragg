@@ -32,7 +32,7 @@ Exit Criteria: `supervisor.sh` updated with timeouted pull (`timeout 30 git pull
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Draft guard design note | [ ] | Create `reports/routing/<stamp>-supervisor-guard-design.md` summarising required guard elements, referencing `loop.sh` (commit 853cf08) and specifying fallback logic: on timeout, run `git rebase --abort` then `git pull --no-rebase`. |
+| B1 | Draft guard design note | [D] | ✅ Complete 20251009T044254Z — Memo: `reports/routing/20251009T044254Z-supervisor-guard-design.md` (comprehensive design with guard parity table, timeout/fallback flow, single-iteration contract, conditional push logic, verification checklist, roadmap). References `loop.sh` (commit 853cf08) and specifies fallback logic: on timeout, run `git rebase --abort` then `git pull --no-rebase`. |
 | B2 | Implement guarded script | [ ] | Edit `supervisor.sh` to: (1) run the timeouted pull with fallback, (2) execute `prompts/supervisor.md` exactly once via `${CODEX_CMD}`, (3) capture exit status, (4) only `git push` when local commits exist and command succeeded. Preserve logging (`tmp/supervisorlog*.txt`) and Protected Assets constraints. |
 | B3 | Guarded dry run | [ ] | Run `CODEX_CMD=printf ./supervisor.sh > reports/routing/<stamp>-supervisor-dry-run.log 2>&1`. Confirm log shows single iteration, demonstrates fallback warning path, and no push attempt on dry run. |
 | B4 | Hygiene verification | [ ] | `bash -n supervisor.sh` (or `shellcheck` if available) and record results in `reports/routing/<stamp>-supervisor-hygiene.txt`, including `git status` output showing expected changes only. |

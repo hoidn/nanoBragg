@@ -430,6 +430,18 @@
       - Script pushes unconditionally after each iteration; conditional push guard must mirror `loop.sh` before automation resumes.
       - `docs/index.md` still lacks `supervisor.sh`; Phase B5 must add it to Protected Assets before re-enabling the harness.
     Next Actions: Execute plan Phase A3 bookkeeping (this ledger update satisfies it), then proceed to Phase B1 design note and implementation tasks (B2–B5) with dry-run evidence and Protected Assets update.
+  * [2025-10-09] Attempt #3 (ralph loop i=208, Mode: Docs — Phase B1 complete) — Result: ✅ **Guard design memo complete; Phase B1 delivered.**
+    Metrics: n/a (documentation task)
+    Artifacts:
+      - `reports/routing/20251009T044254Z-supervisor-guard-design.md` — Comprehensive design memo (11 sections, 500+ lines) covering guard parity analysis, timeout/fallback flow, single-iteration contract, conditional push logic, Protected Assets verification plan, implementation roadmap with task checklist, and complete file:line reference appendix.
+      - `plans/active/supervisor-loop-guard/plan.md` — Updated Phase B1 row to [D] (done) with artifact link and completion timestamp.
+      - `pytest --collect-only -q` — Baseline verified (exit 0, ~500-600 tests collected, no import errors).
+    Observations/Hypotheses:
+      - Design memo documents three critical guard gaps: (1) legacy path loops 20× with no pull guard, (2) SYNC mode defaults to 20 iterations instead of 1, (3) all push sites use `|| true` error suppression instead of conditional logic.
+      - Protected Assets status: `supervisor.sh` already listed in `docs/index.md:22` with required annotation; Phase B5 only needs verification (no changes required).
+      - Implementation roadmap identifies ~50 lines changed, ~30 added, ~15 removed across 4 modification sites (lines 115-120, 218, 159-162/327/353/368/373, 126-390).
+      - Risks documented: Python orchestrator (lines 11-14) out of scope; `SYNC_LOOPS` default change recommendation (20→1); state file rotation deferred.
+    Next Actions: Execute plan Phase B2 (implement guarded script per memo §9.1 task list), then B3 (dry run), B4 (hygiene verification), B5 (Protected Assets verification), and update this ledger with Phase B outcomes.
 - Risks/Assumptions: Treat `supervisor.sh` as a Protected Asset (Phase B5 formalises this in docs/index.md); ensure edits retain logging expectations and do not re-enable multi-iteration loops.
 - Exit Criteria: Guarded single-iteration script with audit/dry-run/compliance logs captured and plan archived.
 
