@@ -11,7 +11,7 @@
   - plans/active/vectorization-gap-audit.md - open gap inventory plus profiling backlog (Phase B blocked today).
   - plans/active/source-weight-normalization.md - prerequisite parity work gating profiler reliability.
   - reports/2025-10-vectorization/ and reports/2026-01-vectorization-gap/ - prior artifacts to cross-check during refresh.
-- Status Snapshot (2025-12-24): Tricubic and absorption vectorization (Phases A-H) remain archived with CUDA parity. SOURCE-WEIGHT-001 Phase E parity evidence is still pending, keeping VECTOR-GAPS-002 Phase B1 blocked. The lambda sweep evidence (reports/2025-11-source-weights/phase_e/20251009T130433Z/lambda_sweep/summary.md) and the design note (reports/2025-11-source-weights/phase_e/20251009T131709Z/lambda_semantics.md) both confirm that Option B (CLI lambda override) is the agreed fix; this plan tracks the path from consensus through refresh, backlog relaunch, and close-out.
+- Status Snapshot (2025-12-24): Tricubic and absorption vectorization (Phases A-H) remain archived with CUDA parity. SOURCE-WEIGHT-001 Option B landed (Attempt #17) but Phase E parity metrics have not been regenerated yet, so VECTOR-GAPS-002 Phase B1 stays blocked until TC-D1/TC-D3 correlation ≥0.999 evidence arrives. This plan tracks the parity capture, status propagation, backlog refresh, and eventual implementation handoff.
 
 ### Phase A - Dependency Gate And Ledger Sync
 Goal: Clear upstream blockers so downstream profiling and implementation can proceed on trustworthy baselines.
@@ -20,8 +20,8 @@ Exit Criteria: SOURCE-WEIGHT-001 Phase E artifacts captured, VECTOR-GAPS-002 Pha
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| A0 | Confirm lambda override consensus | [ ] | Review the lambda sweep summary and lambda_semantics.md design note to reconfirm Option B (CLI override plus steps reconciliation) is the chosen path. Record the consensus and implementation notes in docs/fix_plan.md under [SOURCE-WEIGHT-001] before delegating code work. |
-| A1 | Finish SOURCE-WEIGHT-001 Phase E parity bundle | [ ] | After A0, delegate implementation per the design note and rerun TC-D1/TC-D3 via `NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE python scripts/cli/run_weighted_source_parity.py --oversample 1 --outdir reports/2025-11-source-weights/phase_e/<STAMP>/`. Capture correlation.txt, sum_ratio.txt, warning log, simulator diagnostics (n_sources, steps, fluence), env.json, and commands.txt. Update the plan and ledger once corr >=0.999 and |sum_ratio-1| <= 1e-3. |
+| A0 | Confirm lambda override consensus | [D] | ✅ Attempt #16 (2025-12-24 galph loop) logged Option B as the authoritative approach, citing `reports/2025-11-source-weights/phase_e/20251009T131709Z/lambda_semantics.md` and updating `docs/fix_plan.md`/`plans/active/source-weight-normalization.md`. No further action required. |
+| A1 | Finish SOURCE-WEIGHT-001 Phase E parity bundle | [ ] | After A0, rerun TC-D1/TC-D3 using the explicit CLI commands (PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE python -m nanobrag_torch ...`; C: `NB_RUN_PARALLEL=1 "$NB_C_BIN" ...`) writing outputs under `reports/2025-11-source-weights/phase_e/<STAMP>/`. Capture correlation.txt, sum_ratio.txt, warning log, simulator diagnostics (n_sources, steps, fluence), env.json, and commands.txt. Update the plan and ledger once corr ≥0.999 and |sum_ratio−1| ≤ 1e-3. |
 | A2 | Propagate unblock signals | [ ] | When A1 metrics pass, flip plans/active/vectorization-gap-audit.md Phase B1 to ready and refresh docs/fix_plan.md [VECTOR-GAPS-002] Next Actions with the new evidence path and timestamp. |
 | A3 | Archive dependency memo | [ ] | Append a galph_memory note summarising the parity completion, metrics, and unblock status so future loops know profiling can resume. |
 

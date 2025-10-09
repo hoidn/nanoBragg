@@ -1574,4 +1574,9 @@
 - Refreshed plans/active/vectorization.md Phase A (ascii cleanup + explicit A0-A3 guidance) tying lambda_semantics.md to the parity gate.
 - Replaced input.md with Parity-mode instructions directing Ralph to implement the override, add TC-E tests, rerun parity, and archive artifacts under reports/2025-11-source-weights/phase_e/<STAMP>/.
 - Follow-up: Ralph implements Option B, adds tests/test_at_src_003.py, runs targeted pytest + parity script, updates docs per plan, then logs results in fix_plan attempts.
+### 2025-12-24 (galph loop - Source-weight parity handoff)
+- Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions (lines 4046-4050) to focus on rerunning TC-D1/TC-D3 via explicit PyTorch/C CLI commands and recording parity metrics; refreshed `[VECTOR-TRICUBIC-002]` checklist to depend on the new parity bundle.
+- Refreshed `plans/active/source-weight-normalization.md` Phase E status to note Option B is already merged, unblocked E3, and clarified documentation follow-up; `plans/active/vectorization.md` Phase A0 marked done and A1 now points at the updated parity workflow.
+- Rewrote `input.md` directing Ralph to run `tests/test_at_src_003.py`, capture both PyTorch and C floatfiles under a fresh STAMP, compute correlation/sum_ratio, and archive artifacts/commands in `reports/2025-11-source-weights/phase_e/<STAMP>/`.
+- Next steps for Ralph: follow the new input.md (parity commands + metrics capture), then log results in `[SOURCE-WEIGHT-001]` and propagate unblock signals once thresholds are met.
 
