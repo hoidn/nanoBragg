@@ -68,7 +68,9 @@ The available <Action type>s are the following:
 <Action type> list:
 <1>
 <Evidence collection> (i.e. Evidence task)
-No full pytest runs. Allowed: non-mutating probes and CLI validation tools (e.g., scripts/validation/*, nb-compare, pixel trace); pytest --collect-only to validate selectors; and in TDD mode only, a single targeted pytest run to confirm the newly authored test fails. Do not change production code. This gate applies only to galph. Ralph is exempt. Do not include any Phase label in input.md.
+<galph rules>
+No full pytest runs. Allowed: non-mutating probes and CLI validation tools (e.g., scripts/validation/*, nb-compare, pixel trace); pytest --collect-only to validate selectors; and in TDD mode only, a single targeted pytest run to confirm the newly authored test fails. Do not change production code.
+</galph rules> 
 
 Evidence collection includes the following subtype:
     Callchain Tracing (Evidence subtype)
@@ -225,10 +227,11 @@ Header:
 - Mapped tests: <validated list | none — evidence‑only>
 - Artifacts: <key paths to produce under reports/>
 - Do Now: 1 line naming the exact docs/fix_plan.md item (ID and title) to execute this loop, plus the exact pytest command/env to reproduce it (only when an authoritative mapping exists). If no such test exists, the Do Now MUST be to author the minimal targeted test first and then run it. If you intend to delegate the choice, write “Do Now: delegate” and provide decision guidance below.
-  - Note: If operating in supervisor <Evidence collection> (internal-only), do not run the full suite. Allowed: pytest --collect-only to validate selectors; in TDD mode only, run one targeted selector to confirm a new failing test. All other test execution is deferred to Ralph. Do not include any Phase label in input.md.
+  - Note: If operating in supervisor <Evidence collection>, do not run the full suite. Allowed: running pytest on a relevant subset of the test suite (no more than 10 modules in tests/) specified in input.md or judged as relevant by ralph.
+  - in TDD mode only, galph runs one targeted selector to confirm a new failing test. Subsequent test execution is deferred to Ralph. Do not include any Phase label in input.md.
 <Do Now guidelines>
 Verification scripts: You may run nb-compare and scripts/validation/* to collect metrics and artifacts (no code changes). Record outputs under reports/.
-Mapped tests under supervisor evidence mode: Include exact selectors in input.md; validate with --collect-only; do not run them (except the TDD failure confirmation). Do not include any Phase label in input.md.
+Mapped tests under supervisor evidence mode: Include exact selectors in input.md. 
 Command Sourcing (tests): Only include an exact pytest command in Do Now when sourced from an authoritative mapping (e.g., docs/development/testing_strategy.md) or an existing, known test file/identifier. If no authoritative mapping exists, set the Do Now task to author the minimal targeted test first; do not guess at a pytest selector here.
 Implementation: refer to phased plans, checklists, and all associated artifacts
 </Do Now guidelines>
