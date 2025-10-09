@@ -1,0 +1,3 @@
+make: Entering directory '/home/ollie/Documents/tmp/nanoBragg/golden_suite_generator'
+gcc -g -O0 -o nanoBragg nanoBragg.c -lm -fopenmp
+make: Leaving directory '/home/ollie/Documents/tmp/nanoBragg/golden_suite_generator'

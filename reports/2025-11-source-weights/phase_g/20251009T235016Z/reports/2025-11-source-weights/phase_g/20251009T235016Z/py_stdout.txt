@@ -1,0 +1,16 @@
+Error: [Errno 2] No such file or directory: 'reports/2025-11-source-weights/fixtures/two_sources_nocomments.txt'
+Traceback (most recent call last):
+  File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/__main__.py", line 990, in main
+    source_directions, source_weights, source_wavelengths = read_sourcefile(
+                                                            ~~~~~~~~~~~~~~~^
+        config['sourcefile'],
+        ^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        beam_direction=beam_direction
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/io/source.py", line 70, in read_sourcefile
+    with open(filepath, 'r') as f:
+         ~~~~^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'reports/2025-11-source-weights/fixtures/two_sources_nocomments.txt'

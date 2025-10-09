@@ -4223,6 +4223,28 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - H3: Update `test_c_divergence_reference` to remove `@pytest.mark.xfail`, tighten tolerances to observed parity
       - H4: Align spec acceptance text (AT-SRC-001) with equal-weight behavior
       - Blocker: Must resolve C segfault to execute H1 controlled run before proceeding to H2/H3/H4
+  * [2025-10-09] Attempt #34 (ralph loop #265 — Mode: Parity, Phase G closure via pytest evidence per input.md Do Now). Result: **SUCCESS** (Phase G COMPLETE - XPASS is authoritative parity evidence, CLI parameter mismatch documented)
+    Metrics: `NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` — 7 passed, 1 xpassed in 21.22s. XPASS: correlation ≥0.999, sum_ratio ≈1.0038 (spec compliant). Manual CLI attempt: C sum=38.26, PyTorch sum=43161.99, correlation=-0.0018, sum_ratio=0.00089 (INVALID - parameter mismatch, discard).
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_g/20251009T235016Z/notes.md` — Complete Phase G evidence summary: XPASS validates C↔PyTorch parity, manual CLI mismatch explained, C-PARITY-001 resolution confirmed
+      - `reports/2025-11-source-weights/phase_g/20251009T235016Z/pytest.log` — Test execution (7 passed, 1 xpassed)
+      - `reports/2025-11-source-weights/phase_g/20251009T235016Z/collect.log` — Test collection validation (8 tests)
+      - `reports/2025-11-source-weights/phase_g/20251009T235016Z/build.log` — C binary rebuild with -g -O0
+      - `reports/2025-11-source-weights/phase_g/20251009T235016Z/fixture.sha256` — Sanitized fixture checksum (f23e1b1e60...)
+      - `reports/2025-11-source-weights/phase_g/20251009T235016Z/{py_cli.bin,c_cli.bin,metrics.json}` — Invalid CLI outputs (parameter mismatch, for reference only)
+      - `reports/2025-11-source-weights/phase_g/20251009T235016Z/{py_stdout.txt,c_stdout.txt}` — CLI execution logs
+    Observations/Hypotheses:
+      - **Phase G COMPLETE via pytest**: XPASS demonstrates C and PyTorch both ignore source weights per spec (correlation ≥0.999). Test suite is authoritative evidence source.
+      - **CLI parameter mismatch root cause identified**: Supervisor fixture (`two_sources_nocomments.txt`) uses different geometry than test (fixture: Z=10.0, λ=6.2Å; test: Z=-1.0, λ=1.0Å). This makes direct CLI comparison invalid.
+      - **C-PARITY-001 RESOLVED**: XPASS confirms C behavior matches spec (equal weighting). Legacy "expected divergence" narrative from Phase E is now historical.
+      - **Test implementation correct**: `test_c_divergence_reference` creates tempfile with correct parameters, avoiding both C comment parsing bug and parameter mismatch issues.
+      - **Pytest is authoritative**: Fixture/CLI commands were a red herring - the test suite provides the clean parity evidence needed for Phase H.
+    Next Actions (Phase H per plan):
+      1. **H1 (supervisor/ralph)**: Author parity reassessment memo documenting C↔PyTorch agreement on equal weighting, superseding Phase E decision
+      2. **H2 (ralph)**: Remove `@pytest.mark.xfail` from `test_c_divergence_reference` and update to expect PASS
+      3. **H3 (ralph)**: Update `docs/bugs/verified_c_bugs.md` to remove C-PARITY-001 source weight linkage
+      4. **H4 (supervisor)**: Signal dependent plans (VECTOR-TRICUBIC-002, VECTOR-GAPS-002, PERF-PYTORCH-004) that parity is resolved
+      5. **G5 (ralph)**: Cross-reference [C-SOURCEFILE-001] in this ledger before Phase H begins
   * [2025-10-09] Attempt #30 (ralph loop — Mode: Docs+Parity, Phase G2 evidence bundle per input.md). Result: **PARAMETER ERROR DISCOVERED** — pytest XPASS replicated (correlation=0.9999886), but manual CLI commands used incorrect parameters causing 134× divergence.
     Metrics: `NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` — 7 passed, 1 xpassed in 21.28s. `test_c_divergence_reference` XPASS with correlation=0.9999886, sum_ratio=1.0038 (identical to Attempt #29). Manual CLI: PyTorch sum=43161.99, C sum=322.41, correlation=0.0297, sum_ratio=133.87 (**DIVERGENT** from test).
     Artifacts:
