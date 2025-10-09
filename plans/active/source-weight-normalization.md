@@ -11,8 +11,8 @@
 - Status Snapshot (2025-12-24 refresh):
   - Legacy Phases A–D are complete (fixtures, spec confirmation, implementation guard, trace instrumentation).
   - Phase E ledger propagation finished this loop (E2/E3 ✅); spec-first stance and dependency gates now live in `docs/fix_plan.md` and the vectorization plans.
-  - Phase F design packet archived at `reports/2025-11-source-weights/phase_f/20251009T203823Z/`; Phase G implementation/evidence is the active gate before downstream profiling can resume.
-  - Current blockers: The 20251009T212241Z attempt left Phase G2/G3 unresolved — PyTorch CLI aborted with "Need -hkl ... or -default_F > 0", the C binary was absent (tests XPASS instead of XFAIL), and no metrics/commands were captured. Dependent plans remain blocked until a validated evidence bundle is produced and logged.
+  - Phase F design packet archived at `reports/2025-11-source-weights/phase_f/20251009T203823Z/`; Phase G implementation/evidence remains the active gate before downstream profiling can resume.
+  - Current blockers: Attempt `20251009T214016Z` surfaced two anomalies — `test_c_divergence_reference` XPASSed (C parity observed) and the TC-D3 C command segfaulted. We must (a) capture a fresh evidence bundle with parity metrics once the segfault is resolved and (b) re-assess the spec vs C decision before downstream plans may resume.
 
 ### Legacy Evidence (Phases A–D) — Locked
 Goal: Preserve provenance of the already-completed investigation.
@@ -51,23 +51,36 @@ Exit Criteria: Tests enforce spec behaviour, targeted pytest run + CLI bundle ar
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| G1 | Update test suite | [X] | ✅ Landed in HEAD — `tests/test_cli_scaling.py` now enforces spec-first behaviour (weighted vs equal check, CLI lambda override, C-divergence xfail). Retain the Phase F design packet for provenance. |
-| G2 | Capture evidence bundle | [ ] | Rebuild the C binary if missing (`make -C golden_suite_generator`) and rerun the Phase F command set. Archive a new timestamped folder `reports/2025-11-source-weights/phase_g/<STAMP>/` containing `collect.log`, `pytest.log`, `commands.txt`, `tc_d1_cmd.txt`, `tc_d3_cmd.txt`, `py_metrics.json`, `c_metrics.json`, `correlation.txt`, `notes.md`, and stdout/stderr captures. Verify the PyTorch CLI succeeds (no "Need -hkl..."), ensure `test_c_divergence_reference` reports XFAIL (not XPASS), and record observed correlation/sum_ratio. If C parity persists (correlation ≥0.8) or C binary remains unavailable, document the anomaly in notes.md and stop for supervisor review. |
-| G3 | Update fix_plan attempts | [ ] | Once a valid bundle exists, log a new `[SOURCE-WEIGHT-001]` Attempt summarising pytest outcomes, CLI commands, metrics (include whether C divergence matched expectation), and the artifact path. Explicitly note any anomalies (e.g., C parity, missing binary) so downstream plans remain blocked until resolved. |
+| G1 | Update test suite | [X] | ✅ Landed in HEAD — `tests/test_cli_scaling.py` now enforces spec-first behaviour (weighted vs equal check, CLI lambda override, C-divergence marker). Retain the Phase F design packet for provenance. |
+| G2 | Capture evidence bundle (refresh) | [ ] | Rebuild the C binary if missing (`make -C golden_suite_generator`) and rerun the Phase F command set. Archive a new timestamped folder `reports/2025-11-source-weights/phase_g/<STAMP>/` containing `collect.log`, `pytest.log`, `commands.txt`, `tc_d1_cmd.txt`, `tc_d3_cmd.txt`, `py_metrics.json`, `c_metrics.json`, `correlation.txt`, `notes.md`, and stdout/stderr captures. Expect PyTorch vs C correlation ≥0.999 and |sum_ratio−1| ≤3e-3 (spec-compliance). If `test_c_divergence_reference` XPASSes or C segfaults, record the anomaly in `notes.md`, preserve partial artifacts, and transition to Phase H without deleting the bundle. |
+| G3 | Update fix_plan attempts | [ ] | After capturing (or documenting) the refreshed bundle, log a new `[SOURCE-WEIGHT-001]` Attempt summarising pytest outcomes, CLI commands, metrics, anomaly observations, and artifact paths. Flag whether parity matched spec expectations and whether C segfault triage is still open. |
+| G4 | Diagnose TC-D3 C segfault | [ ] | Rebuild the instrumented C binary with debug symbols (`make -C golden_suite_generator clean && make -C golden_suite_generator CFLAGS="-g -O0"`). Reproduce the segfault with the TC-D3 command, capture `gdb`/`backtrace` output, and store logs under `reports/2025-11-source-weights/phase_g/<STAMP>/c_segfault/`. Identify whether the crash stems from command configuration, missing fixture, or code regression and summarise findings for Phase H. |
 
-### Phase H — Documentation & Downstream Unblocks (Blocked until Phase G)
-Goal: Sync architecture docs, runtime checklist, and dependent plans once tests pass and evidence is archived.
-Prereqs: Phase G completed with passing tests and archived artifacts.
-Exit Criteria: Documentation reflects spec-first stance; plan ready for archive.
+### Phase H — Parity Reassessment & Test Alignment (New)
+Goal: Reconcile the `C-PARITY-001` classification with new C parity evidence, update acceptance artefacts, and ensure the test suite encodes the correct expectation (pass, not xfail).
+Prereqs: Phase G bundle captured (even if anomalous) and TC-D3 segfault triage notes recorded.
+Exit Criteria: Parity memo updated, tests adjusted to expect pass, and spec acceptance references aligned.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| H1 | Update permanent docs | [ ] | Amend `docs/architecture/pytorch_design.md` (Sources subsection) and `docs/development/pytorch_runtime_checklist.md` to state weights are ignored and cite C divergence. Cross-link to decision memo and spec section. |
-| H2 | Notify dependent initiatives | [ ] | Update `plans/active/vectorization-gap-audit.md`, `plans/active/vectorization.md`, and `docs/fix_plan.md` entries (`VECTOR-GAPS-002`, `PERF-PYTORCH-004`) so they reference the new spec-compliance tests instead of C correlation thresholds. |
-| H3 | Prepare archival summary | [ ] | Once H1/H2 done, draft closure note for `plans/archive/` and update `[SOURCE-WEIGHT-001]` status to `done`, noting residual expected C divergence in observations. |
+| H1 | Reproduce parity metrics under controlled run | [ ] | Execute the targeted selector `NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference` and the paired CLI commands in a fresh tmpdir. Capture metrics/artifacts under `reports/2025-11-source-weights/phase_h/<STAMP>/parity_reassessment/` to confirm correlation ≥0.999 and |sum_ratio−1| ≤3e-3. |
+| H2 | Author parity reassessment memo | [ ] | Draft `reports/2025-11-source-weights/phase_h/<STAMP>/parity_reassessment.md` quoting nanoBragg.c lines 2570-2720 to demonstrate weights are ignored, summarising the new evidence, and superseding `spec_vs_c_decision.md` (mark legacy memo as "historical" in the new document). Include explicit conclusions for test expectations and downstream plans. |
+| H3 | Update tests to expect pass | [ ] | Modify `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference` to remove `@pytest.mark.xfail`, tighten tolerances to correlation ≥0.999 / |sum_ratio−1| ≤3e-3, and ensure failure logs still capture `unexpected_c_parity/metrics.json`. Validate via targeted pytest selector and store logs alongside the memo. |
+| H4 | Align spec acceptance text | [ ] | Update `specs/spec-a-core.md` (AT-SRC-001) and any dependent docs to reflect the equal-weight expectation (remove lingering "applies weight" wording), citing the new parity memo. Record commands and diffs in the same reports directory. |
+
+### Phase I — Documentation & Downstream Unblocks (Blocked until Phase H)
+Goal: Sync architecture docs, runtime checklist, and dependent plans once parity reassessment and test updates are complete.
+Prereqs: Phase H completed with passing tests, updated memo, and archived artifacts.
+Exit Criteria: Documentation reflects spec-first stance and parity alignment; plan ready for archive.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| I1 | Update permanent docs | [ ] | Amend `docs/architecture/pytorch_design.md` (Sources subsection) and `docs/development/pytorch_runtime_checklist.md` to state weights are ignored, reference the parity reassessment memo, and remove references to the deprecated divergence classification. |
+| I2 | Notify dependent initiatives | [ ] | Update `plans/active/vectorization-gap-audit.md`, `plans/active/vectorization.md`, and `docs/fix_plan.md` entries (`VECTOR-GAPS-002`, `PERF-PYTORCH-004`) so they reference the new spec-compliance tests and parity memo instead of C divergence thresholds. |
+| I3 | Prepare archival summary | [ ] | Once I1/I2 done, draft closure note for `plans/archive/` and update `[SOURCE-WEIGHT-001]` status to `done`, noting that C/PyTorch parity has been validated and recording any remaining risks. |
 
 ## Reporting Expectations
-- Store new artifacts under `reports/2025-11-source-weights/phase_e/`, `/phase_f/`, `/phase_g/`, and `/phase_h/` with ISO timestamps. Do **not** commit report directories; reference them from fix_plan attempts.
+- Store new artifacts under `reports/2025-11-source-weights/phase_e/`, `/phase_f/`, `/phase_g/`, `/phase_h/`, and `/phase_i/` with ISO timestamps. Do **not** commit report directories; reference them from fix_plan attempts.
 - All test commands must include `KMP_DUPLICATE_LIB_OK=TRUE` and validated pytest selectors (`--collect-only`).
-- Parity metrics against C should be recorded but explicitly labelled as "expected divergence" citing the decision memo.
+- Parity metrics against C should target correlation ≥0.999 and |sum_ratio−1| ≤3e-3; label anomalies explicitly and link to the parity reassessment memo.
 - Keep this plan synchronised with `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` and dependent plans whenever a phase gate flips.

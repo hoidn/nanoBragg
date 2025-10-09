@@ -1654,3 +1654,8 @@
 - Updated `docs/fix_plan.md` Next Actions so Phase G2 now calls for a fresh timestamped pytest+CLI bundle and Phase G3 records the Attempt before Phase H documentation begins.
 - Replaced `input.md` with Docs+Parity guidance focused on capturing the new artifacts (`reports/2025-11-source-weights/phase_g/<STAMP>/...`) and logging the Attempt.
 - Follow-up for Ralph: execute the evidence run, populate metrics/notes, update `[SOURCE-WEIGHT-001]` Attempts, then Phase H1 doc updates can proceed next loop.
+### 2025-12-24 (galph loop - SOURCE-WEIGHT parity anomaly response)
+- Re-synced plan `plans/active/source-weight-normalization.md`: expanded Phase G guidance (expect parity ≥0.999, added G4 segfault triage) and introduced new Phase H parity reassessment + Phase I docs hand-off.
+- Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions to reflect the new parity targets, segfault diagnosis, and memo/test alignment tasks; legacy C-parity note now marked provisional pending Phase H.
+- Rewrote `input.md` (Mode: Docs) instructing Ralph to rebuild the debug C binary, rerun the evidence bundle, capture gdb backtrace if TC-D3 segfaults, and archive metrics for the forthcoming parity memo.
+- Follow-up for Ralph: execute Phase G2/G4 per new guidance, archive artifacts under a fresh STAMP, then transition to Phase H parity memo + test rewrite once parity metrics are confirmed.
