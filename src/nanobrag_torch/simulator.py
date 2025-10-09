@@ -400,26 +400,17 @@ def compute_physics_for_position(
             # Apply polarization
             intensity = intensity * polar
 
-    # Handle multi-source weighted accumulation
+    # Handle multi-source accumulation
+    # SOURCE-WEIGHT-001 Phase C1: Per specs/spec-a-core.md:151, weights are "read but ignored"
+    # (equal weighting results). Always sum without applying weights.
+    # C-code reference: golden_suite_generator/nanoBragg.c:2620-2715 ignores source_I during accumulation.
     if is_multi_source:
-        # Apply source weights and sum over sources
+        # Sum over sources with equal weighting (ignore source_weights parameter)
         # intensity: (n_sources, S, F) or (n_sources, batch)
-        # source_weights: (n_sources,) -> (n_sources, 1, 1) or (n_sources, 1)
-        if source_weights is not None:
-            # Prepare weights for broadcasting
-            weight_shape = [n_sources] + [1] * (intensity.dim() - 1)
-            weights_broadcast = source_weights.view(*weight_shape)
-            # Apply weights and sum over source dimension
-            intensity = torch.sum(intensity * weights_broadcast, dim=0)
-            # CLI-FLAGS-003 Phase M1: Apply same accumulation to pre-polar intensity
-            if intensity_pre_polar is not None:
-                intensity_pre_polar = torch.sum(intensity_pre_polar * weights_broadcast, dim=0)
-        else:
-            # No weights provided, simple sum
-            intensity = torch.sum(intensity, dim=0)
-            # CLI-FLAGS-003 Phase M1: Apply same accumulation to pre-polar intensity
-            if intensity_pre_polar is not None:
-                intensity_pre_polar = torch.sum(intensity_pre_polar, dim=0)
+        intensity = torch.sum(intensity, dim=0)
+        # CLI-FLAGS-003 Phase M1: Apply same accumulation to pre-polar intensity
+        if intensity_pre_polar is not None:
+            intensity_pre_polar = torch.sum(intensity_pre_polar, dim=0)
 
     # CLI-FLAGS-003 Phase M1: Return both post-polar (intensity) and pre-polar for trace
     return intensity, intensity_pre_polar
