@@ -1,0 +1,116 @@
+# Phase D3: SOURCE-WEIGHT-001 Acceptance Harness Commands
+# Generated: 2025-10-09T10:43:10Z
+# Purpose: Reproduction commands for Phase E parity validation
+
+# Environment Setup (mandatory)
+export KMP_DUPLICATE_LIB_OK=TRUE
+export NB_C_BIN=./golden_suite_generator/nanoBragg  # or ./nanoBragg if instrumented binary unavailable
+
+# Test Collection (preflight check)
+pytest --collect-only -q
+
+# Targeted Acceptance Test (Phase E implementation gate)
+pytest tests/test_cli_scaling.py::TestSourceWeightsDivergence -v
+
+# Fixture Path (from Phase A)
+FIXTURE="reports/2025-11-source-weights/fixtures/two_sources.txt"
+
+# Test Case TC-D1: Sourcefile-only (baseline parity)
+## C Reference
+"$NB_C_BIN" \
+  -mat reports/2025-11-source-weights/fixtures/A.mat \
+  -sourcefile "$FIXTURE" \
+  -distance 231.274660 \
+  -lambda 0.9768 \
+  -pixel 0.172 \
+  -detpixels_x 256 \
+  -detpixels_y 256 \
+  -oversample 1 \
+  -nonoise \
+  -nointerpolate \
+  -floatfile /tmp/c_tc_d1.bin
+
+## PyTorch
+KMP_DUPLICATE_LIB_OK=TRUE nanoBragg \
+  -mat reports/2025-11-source-weights/fixtures/A.mat \
+  -sourcefile "$FIXTURE" \
+  -distance 231.274660 \
+  -lambda 0.9768 \
+  -pixel 0.172 \
+  -detpixels_x 256 \
+  -detpixels_y 256 \
+  -oversample 1 \
+  -nonoise \
+  -nointerpolate \
+  -floatfile /tmp/py_tc_d1.bin
+
+# Test Case TC-D2: Sourcefile + divergence (warning validation)
+## PyTorch (should emit UserWarning)
+KMP_DUPLICATE_LIB_OK=TRUE nanoBragg \
+  -mat reports/2025-11-source-weights/fixtures/A.mat \
+  -sourcefile "$FIXTURE" \
+  -hdivrange 0.5 \
+  -hdivsteps 3 \
+  -distance 231.274660 \
+  -lambda 0.9768 \
+  -pixel 0.172 \
+  -detpixels_x 256 \
+  -detpixels_y 256 \
+  -oversample 1 \
+  -nonoise \
+  -nointerpolate \
+  -floatfile /tmp/py_tc_d2.bin 2>&1 | grep "UserWarning"
+
+# Test Case TC-D3: Divergence-only (no sourcefile, grid generation)
+## C Reference
+"$NB_C_BIN" \
+  -mat reports/2025-11-source-weights/fixtures/A.mat \
+  -hdivrange 0.5 \
+  -hdivsteps 3 \
+  -distance 231.274660 \
+  -lambda 0.9768 \
+  -pixel 0.172 \
+  -detpixels_x 256 \
+  -detpixels_y 256 \
+  -oversample 1 \
+  -nonoise \
+  -nointerpolate \
+  -floatfile /tmp/c_tc_d3.bin
+
+## PyTorch
+KMP_DUPLICATE_LIB_OK=TRUE nanoBragg \
+  -mat reports/2025-11-source-weights/fixtures/A.mat \
+  -hdivrange 0.5 \
+  -hdivsteps 3 \
+  -distance 231.274660 \
+  -lambda 0.9768 \
+  -pixel 0.172 \
+  -detpixels_x 256 \
+  -detpixels_y 256 \
+  -oversample 1 \
+  -nonoise \
+  -nointerpolate \
+  -floatfile /tmp/py_tc_d3.bin
+
+# Test Case TC-D4: C parity with explicit oversample (correlation gate)
+## Same as TC-D1 but with explicit metrics capture
+## Expected: correlation ≥ 0.999, |sum_ratio - 1.0| ≤ 1e-3
+
+# Metrics Extraction (Phase E will automate via pytest)
+python -c "
+import numpy as np
+c_img = np.fromfile('/tmp/c_tc_d1.bin', dtype=np.float32).reshape(256, 256)
+py_img = np.fromfile('/tmp/py_tc_d1.bin', dtype=np.float32).reshape(256, 256)
+corr = np.corrcoef(c_img.flatten(), py_img.flatten())[0, 1]
+sum_ratio = py_img.sum() / c_img.sum() if c_img.sum() > 0 else float('nan')
+print(f'Correlation: {corr:.6f}')
+print(f'Sum Ratio: {sum_ratio:.6f}')
+print(f'Pass: {corr >= 0.999 and abs(sum_ratio - 1.0) <= 1e-3}')
+"
+
+# Notes
+# - All commands use explicit -oversample 1 to match Phase D1 findings
+# - -nonoise and -nointerpolate flags ensure deterministic comparison
+# - TC-D2 UserWarning must be captured in stderr for Phase E acceptance
+# - Fixture path assumes execution from repository root
+# - C binary resolution: prefers ./golden_suite_generator/nanoBragg, fallback to ./nanoBragg

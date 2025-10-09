@@ -1,0 +1,98 @@
+# Phase D3: Warning Capture Scaffolding
+# Generated: 2025-10-09T10:43:10Z
+# Purpose: Document expected UserWarning text for Phase E validation
+
+## Expected Warning (Option B Design Decision)
+
+When a user provides both `-sourcefile` and divergence parameters (e.g., `-hdivrange`, `-vdivrange`, `-dispersion`), the PyTorch implementation SHALL emit the following warning:
+
+```
+UserWarning: Divergence/dispersion parameters ignored when sourcefile is provided.
+Sources are loaded from file only (see specs/spec-a-core.md:151-162).
+```
+
+## Implementation Location
+
+**File:** `src/nanobrag_torch/config.py`
+**Method:** `BeamConfig.__post_init__()`
+**Line:** After existing edge-case validation (around line 564)
+
+**Proposed Code:**
+```python
+# After existing negative weights and zero-sum checks
+if self.source_file is not None and (
+    self.hdiv_range_mrad > 0 or
+    self.vdiv_range_mrad > 0 or
+    self.dispersion_pct > 0
+):
+    warnings.warn(
+        "Divergence/dispersion parameters ignored when sourcefile is provided. "
+        "Sources are loaded from file only (see specs/spec-a-core.md:151-162).",
+        UserWarning,
+        stacklevel=2
+    )
+```
+
+## Validation Test (Phase E)
+
+**Test:** `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_divergence_warning`
+
+**Expected Behavior:**
+1. Construct `BeamConfig` with both `source_file` and `hdiv_range_mrad > 0`
+2. Capture warning using `pytest.warns(UserWarning)`
+3. Assert warning message contains "Divergence/dispersion parameters ignored"
+4. Assert warning message contains "specs/spec-a-core.md:151-162"
+
+## Current Status
+
+⚠️ **PENDING IMPLEMENTATION**
+
+- `BeamConfig.__post_init__()` does NOT yet include this validation guard
+- Phase E task E1 will add the 5-10 line code block above
+- Phase E task E2 will run `test_sourcefile_divergence_warning` to verify warning emission
+
+## Test Case TC-D2 (from commands.txt)
+
+```bash
+# This command SHOULD trigger the warning once Phase E is implemented
+KMP_DUPLICATE_LIB_OK=TRUE nanoBragg \
+  -mat reports/2025-11-source-weights/fixtures/A.mat \
+  -sourcefile reports/2025-11-source-weights/fixtures/two_sources.txt \
+  -hdivrange 0.5 \
+  -hdivsteps 3 \
+  -distance 231.274660 \
+  -lambda 0.9768 \
+  -pixel 0.172 \
+  -detpixels_x 256 \
+  -detpixels_y 256 \
+  -oversample 1 \
+  -nonoise \
+  -nointerpolate \
+  -floatfile /tmp/py_tc_d2.bin 2>&1 | grep "UserWarning"
+```
+
+**Expected stderr output (Phase E):**
+```
+UserWarning: Divergence/dispersion parameters ignored when sourcefile is provided.
+Sources are loaded from file only (see specs/spec-a-core.md:151-162).
+```
+
+## Design Rationale (Option B)
+
+- **Spec Mandate:** `specs/spec-a-core.md:151` states "The weight column is read but ignored (equal weighting results)." This implies sourcefile defines a fixed source count, incompatible with auto-generated divergence grids.
+- **User Experience:** Warning makes the precedence rule explicit, preventing confusion about why `hdivrange` is silently ignored.
+- **Implementation Simplicity:** Docs-only change (no tensor logic modifications), preserving device/dtype neutrality.
+
+## Acceptance Criteria (Phase E Gate)
+
+- [ ] Warning is emitted when BOTH `-sourcefile` and ANY divergence parameter are provided
+- [ ] Warning is NOT emitted when only `-sourcefile` is provided (TC-D1)
+- [ ] Warning is NOT emitted when only divergence parameters are provided (TC-D3)
+- [ ] Warning message text matches expected format (case-insensitive substring match acceptable)
+- [ ] `stacklevel=2` ensures warning points to user code, not BeamConfig internals
+
+## References
+
+- **Design Decision:** `reports/2025-11-source-weights/phase_d/20251009T103212Z/design_notes.md` (Option B rationale)
+- **Spec Citation:** `specs/spec-a-core.md:151-162` (to be amended in Phase E with explicit precedence rule)
+- **Testing Strategy:** `docs/development/testing_strategy.md` §2.5 (warning capture patterns)

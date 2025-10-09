@@ -4196,6 +4196,29 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       1. Mark Phase D task D1 complete in `plans/active/source-weight-normalization.md`
       2. Phase D2: Produce design_notes.md choosing Option A/B/C with implementation sketch, broadcast shape impacts, device/dtype considerations, and test coverage plan
       3. Phase D3: Define acceptance harness (pytest selector, CLI bundle, correlation threshold ≥0.999 or error/skip for Option B) before delegating implementation to Ralph
+  * [2025-10-09] Attempt #10 (ralph loop — Phase D3 acceptance harness). Result: **SUCCESS** (Phase D3 deliverable complete; harness staged for Phase E implementation).
+    Metrics: Documentation-only loop per input.md Mode: Docs. Pytest collection verified (682 tests collected, exit 0). TestSourceWeightsDivergence class not found (expected, awaits Phase E).
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_d/20251009T104310Z/commands.txt` — Explicit C/Py CLI bundles for TC-D1 (baseline parity), TC-D2 (warning validation), TC-D3 (divergence-only), TC-D4 (C parity with explicit oversample). All commands use `-oversample 1`, `-nonoise`, `-nointerpolate` for determinism.
+      - `reports/2025-11-source-weights/phase_d/20251009T104310Z/summary.md` — Acceptance metrics scaffolding: correlation ≥0.999, |sum_ratio−1| ≤1e-3, warning emission required for TC-D2. Includes test coverage matrix, current status (what exists/pending), expected warning text, metrics capture format, pytest selector, dependencies, risks, and Phase E roadmap (E1-E4 implementation checklist).
+      - `reports/2025-11-source-weights/phase_d/20251009T104310Z/warning_capture.log` — Expected UserWarning text per Option B design, implementation location (BeamConfig.__post_init__), validation test structure, TC-D2 CLI command, and acceptance criteria.
+      - `reports/2025-11-source-weights/phase_d/20251009T104310Z/pytest_collect.log` — Collection proof (682 tests, all imports successful)
+      - `reports/2025-11-source-weights/phase_d/20251009T104310Z/pytest_TestSourceWeightsDivergence.log` — Test class not found (expected; Phase E will implement)
+      - `reports/2025-11-source-weights/phase_d/20251009T104310Z/env.json` — Environment metadata (Python 3.13.5, PyTorch 2.7.1+cu126, git commit 8d84533)
+      - `plans/active/source-weight-normalization.md` — Phase D task D3 ready to mark [D]one
+    Observations/Hypotheses:
+      - **Harness fully staged**: All acceptance criteria, test cases (TC-D1/D2/D3/D4), CLI commands, thresholds, and Phase E roadmap documented in timestamped bundle
+      - **Option B implementation ready**: BeamConfig validation guard (~10 lines), spec amendment prose, and 4 test methods are the complete scope for Phase E
+      - **No code changes required for D3**: Documentation-only deliverable per plan design; all scaffolding artifacts created without touching production code
+      - **Pytest selector defined**: `pytest tests/test_cli_scaling.py::TestSourceWeightsDivergence -v` is the authoritative Phase E gate command
+      - **Warning text specified**: UserWarning with exact prose and spec citation (spec-a-core.md:151-162) for TC-D2 stderr capture
+      - **Metrics format standardized**: metrics.json schema, required files (pytest log, warning capture, summary, commands, env), and optional debug artifacts (diff heatmaps, traces) documented for Phase E reproducibility
+      - **Dependencies satisfied**: Phase D2 design approved (Option B), fixtures available, C binary accessible (NB_C_BIN), repository clean
+      - **Risk mitigation documented**: C reference behavior uncertainty, device/dtype sensitivity (CPU mandatory, CUDA optional), warning detection via pytest.warns context manager
+    Next Actions:
+      1. Mark Phase D task D3 complete in `plans/active/source-weight-normalization.md`
+      2. Phase E1-E3: Implement Option B (BeamConfig guard + TestSourceWeightsDivergence class), run pytest harness, capture metrics under `phase_e/<STAMP>/`, verify correlation ≥0.999 and warning emission
+      3. Phase E4: Amend `specs/spec-a-core.md:144-162`, update `docs/architecture/pytorch_design.md` §8, mark SOURCE-WEIGHT-001 complete, notify `[VECTOR-GAPS-002]` and `[PERF-PYTORCH-004]` that profiling can resume
 - Risks/Assumptions: Maintain equal-weight behaviour, ensure device/dtype neutrality, and avoid double application of weights when accumulating source contributions. Tolerance of 5e-3 is acceptable given perfect correlation and minor precision differences. Divergence grid auto-selection mismatch blocks Phase D1 parity validation until fixed.
 
 ---
