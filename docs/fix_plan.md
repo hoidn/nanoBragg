@@ -4045,7 +4045,7 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
 - First Divergence (if known): Pending parity reassessment — attempt `20251009T214016Z` observed correlation ≈0.99999 between C and PyTorch despite the historical `C-PARITY-001` classification. Treat the legacy divergence memo as provisional until Phase H confirms the true behaviour (equal weighting per `specs/spec-a-core.md:151`).
 - Next Actions (refreshed 2025-12-25 after auditing the 20251009T225052Z bundle and creating `[C-SOURCEFILE-001]`):
-  - Phase G0 ☐ Harmonise fixture/test parameters and publish the comment-free fixture (checksums + rationale) before re-running CLI commands.
+  - Phase G0 ✅ Harmonise fixture/test parameters and publish the comment-free fixture (checksums + rationale) before re-running CLI commands.
   - Phase G1 ☐ Canonicalise PyTorch + C commands against the sanitised fixture (force `-interpolate 0` unless a minimal HKL is supplied) and confirm both binaries run without crashing.
   - Phase G2 ☐ Capture a fresh parity bundle (`correlation ≥ 0.999`, `|sum_ratio−1| ≤ 3e-3`) with stdout/stderr, floatfiles, metrics, and notes stored under a new `<STAMP>` path.
   - Phase G3 ☐ Append a new Attempt summarising metrics, segfault guardrails, sanitised fixture path, and anomalies.
@@ -4060,6 +4060,23 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   3. After parity metrics are recorded, update this ledger with a new Attempt referencing the sanitised fixture and the `[C-SOURCEFILE-001]` hand-off; queue Phase H (memo + test update) via the next supervisor input.
   4. Once Phase H completes, propagate the new selectors/artifacts to VECTOR-TRICUBIC-002, VECTOR-GAPS-002, and PERF-PYTORCH-004 before resuming vectorization/perf initiatives.
 - Attempts History:
+  * [2025-10-09] Attempt #31 (ralph loop #262 — Mode: Docs, Phase G0 fixture harmonization). Result: **success**
+    Metrics: pytest --collect-only validation passed (8 tests). Sanitized fixture created and checksummed.
+    Artifacts:
+      - `reports/2025-11-source-weights/fixtures/two_sources_nocomments.txt` — Comment-free fixture (SHA256: f23e1b1e60412c5378ee197542e0aca1ffc658198edd4e9584a3dffb57330c44)
+      - `reports/2025-11-source-weights/phase_g/20251009T230946Z/notes.md` — Complete rationale, diff summary, and hand-off to [C-SOURCEFILE-001]
+      - `reports/2025-11-source-weights/phase_g/20251009T230946Z/fixture_diff.patch` — Unified diff showing 2 comment lines removed
+      - `reports/2025-11-source-weights/phase_g/20251009T230946Z/logs/collect.log` — pytest selector validation
+    Observations/Hypotheses:
+      - **Phase G0 complete**: Sanitized fixture preserves test geometry exactly (two sources, Z=10.0, weights [1.0, 0.2]) while removing 2 comment lines that trigger C parsing bug.
+      - **Cross-reference established**: notes.md explicitly links to [C-SOURCEFILE-001] plan and ledger entry, ensuring parity work and bug tracking remain decoupled.
+      - **Spec alignment**: Per `specs/spec-a-core.md:151`, weight and wavelength columns are ignored by design; CLI `-lambda` overrides and equal weighting applies. Fixture change does not affect normative behavior.
+    Next Actions:
+      1. **Phase G1 (galph/ralph)**: Canonicalize PyTorch + C commands using `two_sources_nocomments.txt`; force `-interpolate 0` or supply minimal HKL to avoid C segfault
+      2. **Phase G2 (ralph)**: Execute commands, capture stdout/stderr, floatfiles, and metrics.json under new timestamped directory
+      3. **Phase G3 (ralph)**: Append new Attempt with parity metrics, segfault guardrails, and anomaly notes
+      4. **Phase G5 (ralph)**: Verify cross-link to [C-SOURCEFILE-001] is present in this ledger before marking Phase G complete
+      5. **Phase H (blocked)**: After Phase G2/G3 deliver validated bundle, proceed to parity reassessment memo and test update
   * [2025-10-09] Attempt #30 (ralph loop #260 — Mode: Docs+Parity, Phase G2/G3 evidence with C parsing bug discovery). Result: **BLOCKED (C sourcefile parsing bug + test parameter mismatch)**
     Metrics: `pytest -v tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` — 7 passed, 1 xpassed in 21.24s. Phase A fixture CLI: PyTorch sum=42875.54, C sum=320.27, correlation=0.0297, sum_ratio=133.87 (FAILED parity — target corr≥0.999, ratio~1.0±0.003).
     Artifacts:
