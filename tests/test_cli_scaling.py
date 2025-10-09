@@ -579,13 +579,72 @@ class TestSourceWeightsDivergence:
 
     def test_sourcefile_divergence_warning(self):
         """TC-D2: Verify UserWarning when sourcefile + divergence parameters both present."""
-        # This test validates the validation guard at CLI level
-        # Since BeamConfig doesn't have a source_file field, this warning will be emitted
-        # from the CLI argument parser when both -sourcefile and -hdivrange are provided
+        # This test validates the CLI warning guard at argument parsing level
+        # Per SOURCE-WEIGHT-001 Phase E Option B: warn when sourcefile + divergence params coexist
+        import subprocess
+        import sys
 
-        # For now, we'll skip this test as a placeholder
-        # The actual validation guard needs to be implemented in __main__.py
-        pytest.skip("TC-D2: Validation guard not yet implemented in CLI (pending Phase E1)")
+        # Check fixture availability
+        fixture_paths = [
+            Path('reports/2025-11-source-weights/fixtures/two_sources.txt'),
+            Path('reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt')
+        ]
+        sourcefile = None
+        for path in fixture_paths:
+            if path.exists():
+                sourcefile = path
+                break
+
+        if sourcefile is None:
+            pytest.skip("two_sources.txt fixture not found in expected locations")
+
+        mat_file = Path('A.mat')
+        if not mat_file.exists():
+            pytest.skip("A.mat not found in repository root")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+            py_out = tmpdir / 'py_tc_d2.bin'
+
+            # Command that should emit warning: sourcefile + hdivrange
+            args_with_warning = [
+                '-mat', str(mat_file.resolve()),
+                '-sourcefile', str(sourcefile.resolve()),
+                '-hdivrange', '0.5',  # This should trigger the warning
+                '-distance', '231.274660',
+                '-lambda', '0.9768',
+                '-pixel', '0.172',
+                '-detpixels_x', '256',
+                '-detpixels_y', '256',
+                '-oversample', '1',
+                '-nonoise',
+                '-nointerpolate',
+                '-floatfile', str(py_out)
+            ]
+
+            # Run PyTorch CLI (no cwd change to avoid import issues)
+            py_cmd = [sys.executable, '-m', 'nanobrag_torch'] + args_with_warning
+            result_py = subprocess.run(py_cmd, capture_output=True, text=True)
+
+            # Check that warning was emitted
+            expected_warning_fragments = [
+                "Divergence/dispersion parameters ignored",
+                "sourcefile is provided",
+                "spec-a-core.md:151-162"
+            ]
+
+            stderr_output = result_py.stderr
+            for fragment in expected_warning_fragments:
+                assert fragment in stderr_output, \
+                    f"TC-D2: Expected warning fragment '{fragment}' not found in stderr.\n" \
+                    f"Full stderr:\n{stderr_output}"
+
+            # Verify simulation completed successfully
+            assert result_py.returncode == 0, \
+                f"TC-D2: PyTorch simulation failed:\n{result_py.stderr}"
+
+            # Verify output was written
+            assert py_out.exists(), "TC-D2: Output file was not created"
 
     def test_divergence_only_grid_generation(self):
         """TC-D3: Verify divergence grid generation when NO sourcefile provided."""
