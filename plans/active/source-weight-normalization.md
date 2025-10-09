@@ -3,6 +3,7 @@
 - Phase Goal: Ensure per-source weighting matches the nanoBragg C semantics so total fluence reflects `sum(source_weights)` instead of `n_sources`.
 - Dependencies: specs/spec-a-core.md §5 (Source intensity), docs/architecture/pytorch_design.md §2.3 (Source handling), docs/development/c_to_pytorch_config_map.md §Beam/Source, `nanoBragg.c` lines 2480-2595 (source weighting), `scripts/validation/compare_scaling_traces.py` outputs for weighted sources.
 - Current gap snapshot (2025-11-17): `Simulator.run` (src/nanobrag_torch/simulator.py:837-925) divides accumulated intensity by `n_sources` even when custom `source_weights` are supplied, leading to biased fluence whenever weights ≠ 1.0.
+- Status Snapshot (2025-12-22): Phase A evidence still outstanding; correlation deficit blocks `[VECTOR-GAPS-002]` Phase B2 until this plan supplies weighted-source repro data.
 
 ## Phase A — Evidence & Reproduction
 Goal: Capture failing behaviour and establish contractual expectations.

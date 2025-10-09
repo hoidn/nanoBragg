@@ -3412,7 +3412,7 @@
   * Shapes/ROI: 256² & 512² detectors for microbench; oversample 1; structure-factor grid enabling tricubic.
 - First Divergence (if known): Current tricubic path drops to nearest-neighbour fallback for batched pixel grids, emitting warnings and forfeiting accuracy/performance; detector absorption still loops over `thicksteps`, preventing full vectorization and creating hotspots in profiler traces (see reports/benchmarks/20250930-165726-compile-cache/analysis.md).
 - Next Actions (2025-12-22 Phase G closure):
-  1. Monitor PERF-PYTORCH-004 (Attempt #14) for the device-placement fix. Once CUDA execution is unblocked, rerun the tricubic/absorption regression commands (`pytest tests/test_tricubic_vectorized.py -v -k cuda`, `pytest tests/test_at_abs_001.py -v -k cuda`) and the CUDA benchmarks listed in `reports/2025-10-vectorization/phase_f/summary.md` Appendix, then log the GPU bundle as Attempt #18.
+  1. Monitor PERF-PYTORCH-004 (Attempt #14) and `[SOURCE-WEIGHT-001]` (Phase A/B weighting fix) so the multi-source correlation gap (>0.99 target) is closed before rerunning tricubic/absorption regression commands (`pytest tests/test_tricubic_vectorized.py -v -k cuda`, `pytest tests/test_at_abs_001.py -v -k cuda`) and the CUDA benchmarks listed in `reports/2025-10-vectorization/phase_f/summary.md` Appendix; once unblocked, log the GPU bundle as Attempt #18.
   2. Keep `[VECTOR-TRICUBIC-001]` open until CUDA evidence lands; after Attempt #18, archive this entry alongside the Phase G summary and move ongoing performance tracking fully under PERF-PYTORCH-004.
 - Attempts History:
   * [2025-10-06] Attempt #1 (ralph loop) — Result: **Phase A1 COMPLETE** (test collection & execution baseline captured). All tricubic and absorption tests passing.
@@ -3953,8 +3953,8 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 ## [SOURCE-WEIGHT-001] Correct weighted source normalization
 - Spec/AT: `specs/spec-a-core.md` §5 (Source intensity), `docs/architecture/pytorch_design.md` §2.3, `docs/development/c_to_pytorch_config_map.md` (flux/fluence), nanoBragg.c lines 2480-2595 (source weighting loop).
 - Priority: Medium
-- Status: in_planning
-- Owner/Date: galph/2025-11-17
+- Status: in_progress (Phase A evidence pending)
+- Owner/Date: galph/2025-11-17 (updated 2025-12-22)
 - Plan Reference: `plans/active/source-weight-normalization.md`
 - Reproduction (C & PyTorch):
   * C: `"$NB_C_BIN" -mat A.mat -floatfile c_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources.txt -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -nonoise -nointerpolate`.
@@ -3962,7 +3962,7 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
 - First Divergence (if known): PyTorch divides through by `n_sources` (2) after weighting, producing ~40% underestimation relative to C (which scales by total flux = sum(weights)).
 - Next Actions:
-  1. Phase A (A1–A3): Build weighted source fixture, reproduce PyTorch bias, capture C reference.
+  1. Phase A (A1–A3): Build the weighted source fixture, reproduce the PyTorch vs C discrepancy, and capture logs under `reports/2025-11-source-weights/phase_a/<STAMP>/` (fixture, commands, env, collect-only proof) so `[VECTOR-GAPS-002]` Phase B2 can rely on restored correlation.
   2. Phase B: Document normalization flow and determine whether to normalise via `source_weights.sum()` or pre-normalisation.
   3. Phases C/D: Implement corrected scaling, add regression tests, refresh scaling traces, and update docs before closing the item.
 - Attempts History:

@@ -1414,3 +1414,9 @@
 - Focused on `[VECTOR-GAPS-002]` Phase A3 (Mode: Docs, Action: Planning). Updated `plans/active/vectorization-gap-audit.md` to mark A1/A2 [D], clarify A3 deliverables (analysis.md + annotated summary), and refreshed status snapshot. Adjusted `docs/fix_plan.md` Next Actions to center on the A3 annotation before profiling.
 - Replaced `input.md` (100 lines, Docs mode) directing Ralph to produce a new Phase A3 report stamp with loop classifications, collect-only proof, and updated fix_plan attempt notes. Artifact paths now point at `reports/2026-01-vectorization-gap/phase_a/<STAMP>/` for summary, analysis, commands, and pytest log.
 - Follow-up for Ralph: execute Phase A3 per input.md, log vectorized/safe/todo counts in docs/fix_plan.md, call out loops needing Phase C design packets, and capture collect-only evidence. After A3 lands we can supervise Phase B profiling.
+
+### 2025-12-22 (galph loop - Weighted source evidence handoff)
+- Updated docs/fix_plan.md `[SOURCE-WEIGHT-001]` to in_progress and tied `[VECTOR-GAPS-002]` CUDA follow-up to the weighting fix; clarified Phase A artifact expectations.
+- Added status snapshot to `plans/active/source-weight-normalization.md` highlighting the correlation block.
+- Replaced `input.md` (Parity mode) instructing Ralph to execute Phase A1–A3: build the weighted two-source fixture, run PyTorch vs C CLI commands, archive artifacts under `reports/2025-11-source-weights/phase_a/<STAMP>/`, and log commands/env/collect-only proof.
+- Follow-up: After Ralph captures the parity evidence, expect fix_plan Attempt update + plan Phase A rows to flip [D], then resume `[VECTOR-GAPS-002]` Phase B2 hotspot correlation.
