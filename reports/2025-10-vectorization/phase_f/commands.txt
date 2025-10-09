@@ -77,3 +77,53 @@ PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE \
 # - CUDA tests skipped if torch.cuda.is_available() == False
 # - Benchmark --repeats=200 provides robust statistics (Phase E standard)
 # - Phase F2 may reveal current implementation is already optimal
+
+# ============================================================================
+# Phase F4 - Summary Consolidation (COMPLETE 2025-10-09)
+# ============================================================================
+# Git Context: commit 3df6c11, branch feature/spec-based-2
+# Date: 2025-10-09 (ralph loop #211)
+# Mode: Docs (evidence consolidation)
+
+# F4.1: Test collection proof (docs-only loop validation)
+pytest --collect-only -q > reports/2025-10-vectorization/phase_f/pytest_collect_phase_f4.log 2>&1
+
+# F4.2: Summary document authored
+# - Artifact: reports/2025-10-vectorization/phase_f/summary.md
+# - Stitches Phase F2 validation + Phase F3 perf bundles
+# - Includes cross-references to validation/20251222T000000Z and perf/20251009T050859Z
+# - Documents CUDA blocker status (device-placement defect from fix_plan Attempt #14)
+# - Specifies CUDA rerun trigger and commands
+
+# F4.3: Plan row F4 update
+# - plans/active/vectorization.md row F4: [ ] → [D]
+# - Cites this summary.md and Attempt #16
+
+# F4.4: Ledger update
+# - docs/fix_plan.md Attempt #16 logged
+# - References: phase_f/summary.md, commands.txt, collect log
+# - Reiterates CUDA blocker and rerun conditions
+
+# ============================================================================
+# CUDA Rerun Commands (Execute when device-placement blocker resolves)
+# ============================================================================
+
+# Prerequisites:
+# 1. Fix incident_beam_direction device placement in Simulator.__init__
+# 2. Verify CUDA absorption tests pass: pytest tests/test_at_abs_001.py -v -k "cuda"
+
+# CUDA Benchmark (200 repeats, 256² + 512²)
+env KMP_DUPLICATE_LIB_OK=TRUE \
+  python scripts/benchmarks/absorption_baseline.py \
+  --sizes 256 512 \
+  --thicksteps 5 \
+  --repeats 200 \
+  --device cuda \
+  --outdir reports/2025-10-vectorization/phase_f/perf/$(date +%Y%m%dT%H%M%SZ)_cuda
+
+# CUDA Validation Suite
+env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_abs_001.py -v -k "cuda" \
+  > reports/2025-10-vectorization/phase_f/pytest_cuda_rerun.log 2>&1
+
+# Update fix_plan.md with CUDA metrics and append to phase_f/summary.md
+
