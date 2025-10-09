@@ -1312,3 +1312,10 @@
 - Chose Review/housekeeping on CLI-FLAGS-003 (Plan Phase O). Added a "Phase O Blocker Diagnostics" bullet in docs/fix_plan.md:475 directing Ralph to run the callchain workflow (initiative_id cli-flags-o-blocker) and compare steps/normalization between Option 1 ROI and supervisor bundles.
 - Authored input.md (Parity mode, 100 lines) instructing Ralph to execute prompts/callchain.md with the specified analysis question, capture artifacts under reports/cli-flags-o-blocker/, diff steps values, run pytest --collect-only, and log a new Attempt summarising findings.
 - Follow-up for Ralph: complete the callchain deliverables, document effective steps/normalization factors across ROI vs supervisor runs, update docs/fix_plan.md Attempt history, and leave the bundle ready for the next implementation loop.
+
+## 2025-12-22 (galph loop — Phase O closure prep)
+- Updated docs/fix_plan.md Active Focus to reflect Phase O wrap-up and bumped the ledger timestamp to this loop (2025-12-22, galph #204).
+- Refreshed plans/active/cli-noise-pix0/plan.md status snapshot: Phase O supervisor rerun now accepted; O1 marked [D]; O2/O3 describe ledger + archive tasks with Attempt #202/#203 references.
+- Authored new input.md (Docs mode) directing Ralph to log the VG-5 Attempt, update the supervisor analysis banner, mirror the 20251009T024433Z bundle into reports/archive, and mark O2/O3 once complete; pytest collect-only proof remains the testing requirement.
+- No new artifacts generated; waiting on Ralph to execute the archival/ledger updates before closing CLI-FLAGS Phase O.
+

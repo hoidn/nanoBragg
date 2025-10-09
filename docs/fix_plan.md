@@ -1,13 +1,13 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-12-20 (galph loop #196)
+**Last Updated:** 2025-12-22 (galph loop #204)
 **Active Focus:**
 - ROUTING: Close the reopened guard plan by capturing a fresh regression audit referencing commit `c49e3be` and re-confirming the guarded `loop.sh` flow (`plans/active/routing-loop-guard/plan.md` Phases A–C) before automation resumes.
 - ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md`, then drive Phase B guard work (B2–B4) and new task B5 to add `supervisor.sh` to docs/index.md so Protected-Asset policy covers the script before automation runs again.
 - AT-012: Plan archived (`plans/archive/at-parallel-012-plateau-regression/plan.md`); monitor for regressions using `reports/2025-10-AT012-regression/phase_c_validation/` artifacts and re-open only if peak matches drop below spec.
 - GRADIENT: Execute `plans/active/gradcheck-tier2-completion/plan.md` Phase A (A1–A3 baseline audit + env alignment) before adding misset/beam gradchecks from Phases B/C; once pass logs exist, close `[AT-TIER2-GRADCHECK]` with Phase D documentation updates.
 - DTYPE: ✅ Complete. Plan archived to `plans/archive/dtype-default-fp32/`. All phases (A-D) finished; float32 defaults documented in arch.md, pytorch_runtime_checklist.md, CLAUDE.md, prompts/debug.md.
-- CLI-FLAGS: Post-Option 1 follow-through — record the Phase M6 go/no-go (optional C-parity shim). If we skip it, pivot immediately into Phase N (nb-compare inputs/results) using the refreshed spec-mode bundle; ensure plan/fix_plan/galph memory reflect the decision.
+- CLI-FLAGS: Phase O wrap-up — leverage Attempt #202/#203 evidence to log the VG-5 ledger entry and archive the 20251009T024433Z supervisor bundle before scheduling Phase P watch tasks (see `plans/active/cli-noise-pix0/plan.md` O2/O3).
 - PERF: Land plan task B7 (benchmark env toggle fix), rerun Phase B6 ten-process reproducibility with the new compile metadata, capture the weighted-source parity memo feeding C5, then execute Phase C diagnostics (C1/C2 plus C8/C9 pixel-grid & rotated-vector cost probes, and new C10 mosaic RNG timing) ahead of Phase D caching work (D5/D6/D7) and detector-scalar hoisting (D8).
 
 ## Index
