@@ -1357,3 +1357,8 @@
 - Added Attempt #3 under `docs/fix_plan.md` STATIC-PYREFLY-001 summarising plan refresh and pointing at the 20251009 staging bundle.
 - Authored `input.md` (Docs mode) directing Ralph to execute Phase C triage, populate severity/owner table in `reports/pyrefly/20251009T044937Z/summary.md`, validate selectors with `pytest --collect-only -q`, and update ledger/plan rows accordingly.
 - Next Ralph step: complete Phase C triage using existing 20251008 pyrefly log, record severity buckets + owner selectors in 20251009 summary, update fix_plan & plan checklist, then run the collect-only proof.
+
+## 2025-12-22 (galph loop - Phase F3 CPU perf handoff)
+- Marked `plans/active/vectorization.md` Phase F2 as [D] with Attempt #14 context and clarified F3 CPU-only scope while CUDA remains blocked; focus now squarely on perf evidence capture.
+- Replaced input.md (Mode: Perf) instructing Ralph to run the Phase F3 CPU benchmark, deposit artifacts under `reports/2025-10-vectorization/phase_f/perf/<timestamp>/`, rerun CPU absorption tests, and log metrics in docs/fix_plan.md Attempt + plan.
+- Next supervisor follow-up: confirm Ralph lands the perf bundle, updates ledger/plan consistently, and evaluate whether throughput stays within ≤5% of the Phase A3 baseline before scheduling Phase F4 documentation.
