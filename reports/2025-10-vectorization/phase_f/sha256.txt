@@ -1,0 +1,3 @@
+401f6429b51b0d2f6454b7a3fa762cbd1fbc61da5a7ff7bc2826306184f546c0  reports/2025-10-vectorization/phase_f/design_notes.md
+58ad04c4dbf2693a3b227ffa025395671381cbc0974f713dcc7e44c7c338b416  reports/2025-10-vectorization/phase_f/commands.txt
+324ad8b9bc6056ddf858b9fa0d4c3125a5037af871b60fc04a33c6f6e477f394  reports/2025-10-vectorization/phase_f/env.json

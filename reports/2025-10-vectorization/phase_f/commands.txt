@@ -1,0 +1,79 @@
+# Phase F - Detector Absorption Vectorization - Reproduction Commands
+# Generated: 2025-10-08
+# Initiative: VECTOR-TRICUBIC-001
+
+# ============================================================================
+# Prerequisites
+# ============================================================================
+export KMP_DUPLICATE_LIB_OK=TRUE
+pip install -e .  # Editable install required
+
+# ============================================================================
+# Phase F1 - Design (COMPLETE)
+# ============================================================================
+# Artifact: reports/2025-10-vectorization/phase_f/design_notes.md
+# Status: ✅ Complete
+
+# ============================================================================
+# Phase F2 - Implementation & Validation (PENDING)
+# ============================================================================
+
+# F2.1: Run targeted absorption tests
+pytest -v tests/test_at_abs_001.py
+
+# F2.2: Device parametrization tests (CPU)
+pytest -v tests/test_at_abs_001.py --device=cpu
+
+# F2.3: Device parametrization tests (CUDA, if available)
+pytest -v tests/test_at_abs_001.py --device=cuda
+
+# F2.4: Test collection verification
+pytest --collect-only -q tests/test_at_abs_001.py
+
+# ============================================================================
+# Phase F3 - Performance Benchmarks (PENDING)
+# ============================================================================
+
+# F3.1: CPU baseline benchmark
+PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE \
+  python scripts/benchmarks/absorption_baseline.py \
+  --sizes 256 512 --repeats 200 --device cpu \
+  --outdir reports/2025-10-vectorization/phase_f/perf/cpu
+
+# F3.2: CUDA benchmark (if available)
+PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE \
+  python scripts/benchmarks/absorption_baseline.py \
+  --sizes 256 512 --repeats 200 --device cuda \
+  --outdir reports/2025-10-vectorization/phase_f/perf/cuda
+
+# F3.3: Comparison against Phase A baseline
+# Manual comparison:
+# - Phase A: reports/2025-10-vectorization/phase_a/absorption_baseline_results.json
+# - Phase F: reports/2025-10-vectorization/phase_f/perf/*/absorption_baseline_results.json
+
+# ============================================================================
+# Phase F4 - Documentation (PENDING)
+# ============================================================================
+# F4.1: Author summary.md consolidating F1-F3 results
+# F4.2: Update docs/fix_plan.md Attempt history
+# F4.3: Mark VECTOR-TRICUBIC-001 Phase F complete
+
+# ============================================================================
+# Environment Snapshot (for reproducibility)
+# ============================================================================
+# Captured in: reports/2025-10-vectorization/phase_f/env.json
+# Command: python -c "import json, sys, torch; print(json.dumps({'python': sys.version, 'pytorch': torch.__version__, 'cuda': torch.version.cuda, 'cuda_available': torch.cuda.is_available()}, indent=2))"
+
+# ============================================================================
+# Checksum Verification
+# ============================================================================
+# Captured in: reports/2025-10-vectorization/phase_f/sha256.txt
+# Command: sha256sum reports/2025-10-vectorization/phase_f/*.md reports/2025-10-vectorization/phase_f/*.txt reports/2025-10-vectorization/phase_f/*.json 2>/dev/null
+
+# ============================================================================
+# Notes
+# ============================================================================
+# - All pytest commands assume KMP_DUPLICATE_LIB_OK=TRUE is set
+# - CUDA tests skipped if torch.cuda.is_available() == False
+# - Benchmark --repeats=200 provides robust statistics (Phase E standard)
+# - Phase F2 may reveal current implementation is already optimal

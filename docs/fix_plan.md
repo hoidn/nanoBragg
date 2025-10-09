@@ -3598,6 +3598,22 @@
       - **Architecture alignment:** Batched gather `(B,4,4,4)` neighborhoods operational, polynomial helpers vectorized per design_notes.md, memory footprint acceptable (268 MB for 1024² at float32)
       - **Statistical confidence:** 200 warm repeats (vs Phase A's 5) provide robust measurements with tight standard deviations (CPU: 0.49-0.31%, CUDA: 0.30%)
     Next Actions: Phase E complete; proceed to Phase F (F1 detector absorption vectorization design, F2 implementation, F3 testing, F4 summary). Plan refreshed 2025-12-22 with E2/E3 marked [D]; begin Phase F design notes in `phase_f/design_notes.md`.
+  * [2025-10-08] Attempt #13 (ralph loop #206, Mode: Docs) — Result: **Phase F1 COMPLETE** (detector absorption vectorization design document authored). Documentation-only loop per input.md Mode: Docs.
+    Metrics: Test collection passed (`pytest --collect-only -q` succeeded with 678 tests discovered). No code changes; docs-only validation.
+    Artifacts:
+      - `reports/2025-10-vectorization/phase_f/design_notes.md` — Comprehensive 13-section design memo (30.8 KB) covering: (1) Context noting current implementation already vectorized, (2) C-code reference (nanoBragg.c:2890-2920, CLAUDE Rule #11), (3) `(T,S,F)` tensor broadcast strategy with ~48 MB footprint for 1024²×10, (4) Gradient-critical parameters checklist, (5) Device/dtype neutrality requirements, (6) Integration points (detector caching, ROI masks), (7) Phase A baseline targets (11.3M px/s @ 256², 44.8M px/s @ 512² CUDA), (8) Testing templates (gradient flow, device parametrization), (9) Phase F2 implementation checklist, (10-13) Artifacts/references/open questions/summary
+      - `reports/2025-10-vectorization/phase_f/commands.txt` — Reproduction harness with pytest selectors, benchmark invocations (--repeats=200), environment capture steps
+      - `reports/2025-10-vectorization/phase_f/env.json` — Environment snapshot (Python 3.13.5, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090)
+      - `reports/2025-10-vectorization/phase_f/sha256.txt` — Artifact checksums (design_notes.md: 401f6429..., commands.txt: 58ad04c4..., env.json: 324ad8b9...)
+    Observations/Hypotheses:
+      - **Key discovery:** Current `_apply_detector_absorption` (simulator.py:1707-1798) is **already vectorized** — uses `torch.arange(thicksteps)` reshaped to `(T,1,1)` for broadcast with `(1,S,F)` parallax per lines 1764-1787; design doc confirms this matches intent
+      - Phase F2 scope shift: Will **validate** existing implementation (add gradient tests, device parametrization) instead of rewriting; any refactoring limited to clarity/documentation
+      - Memory footprint acceptable: ~48 MB for 1024²×10 layers (vs 24GB GPU = 0.2% utilization); no tiling needed for typical detectors
+      - Gradient flow sound: No `.item()` or `torch.linspace` with tensor endpoints in lines 1730-1798; all operations differentiable
+      - Device neutrality achieved: Code infers device from `intensity.device` (line 1766); no hardcoded `.cpu()`/`.cuda()` calls
+      - Phase A baseline concrete: 11.3M px/s (256² CUDA), 44.8M px/s (512² CUDA) provide ≤1.05× regression threshold for Phase F3
+      - Design artifact density: 30.8 KB for 13 sections including C-code quotes, test templates, performance expectations, integration notes
+    Next Actions: Execute Phase F2 validation — run targeted `pytest tests/test_at_abs_001.py` on CPU + CUDA, add gradient flow tests per design Section 8.2 template, extend device parametrization per Section 8.3 template, document clarity refactoring if needed, then Phase F3 benchmarks (`scripts/benchmarks/absorption_baseline.py --repeats=200`) to confirm ≤1.05× baseline.
 - Risks/Assumptions: Must maintain differentiability (no `.item()`, no `torch.linspace` with tensor bounds), preserve device/dtype neutrality (CPU/CUDA parity), and obey Protected Assets rule (all new scripts under `scripts/benchmarks/`). Large tensor indexing may increase memory pressure; ensure ROI caching still works.
 - Exit Criteria (quote thresholds from spec):
   * specs/spec-a-parallel.md §2.3 tricubic acceptance tests run without warnings and match C parity within documented tolerances (corr≥0.9995, ≤1e-12 structural duality where applicable).

@@ -75,10 +75,10 @@ Exit Criteria: Vectorised absorption in production path, tests/benchmarks passin
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| F1 | Author absorption vectorization design | [ ] | Draft `phase_f/design_notes.md` (tensor layout, broadcasting, device/dtype considerations). Cite `nanoBragg.c:3375-3450` and detector spec docs. |
-| F2 | Implement batched absorption | [ ] | Update `_apply_detector_absorption` (or equivalent) to operate on broadcast tensors (slow×fast×thicksteps). Add C reference docstrings and ensure differentiability. |
-| F3 | Add regression + perf tests | [ ] | Extend `tests/test_at_abs_001.py` with device parametrisation; add targeted benchmarks via `scripts/benchmarks/absorption_baseline.py --outdir .../phase_f/perf`. Capture CPU/CUDA logs. |
-| F4 | Summarise results + update fix_plan | [ ] | Document outcomes in `phase_f/summary.md`, note parity evidence (nb-compare if applicable), and update docs/fix_plan attempt history. |
+| F1 | Author absorption vectorization design | [D] | ✅ Attempt #13 (2025-10-08). Design notes at `reports/2025-10-vectorization/phase_f/design_notes.md` (13 sections, 30.8KB); discovered current implementation already vectorized (lines 1764-1787); design doc still valuable for validation/test templates/performance baselines. Commands/env/checksums captured. |
+| F2 | Implement batched absorption | [ ] | **Scope shift:** Validate existing vectorized implementation instead of rewriting. Add gradient flow tests per design Section 8.2, extend device parametrization per Section 8.3, verify `(T,S,F)` broadcast correctness, document clarity refactoring if needed. |
+| F3 | Add regression + perf tests | [ ] | Run `scripts/benchmarks/absorption_baseline.py --repeats=200 --device cpu,cuda` to compare vs Phase A baseline (11.3M px/s @ 256², 44.8M px/s @ 512² CUDA); extend `tests/test_at_abs_001.py` with device parametrisation; capture CPU/CUDA logs under `phase_f/perf/`. Target: ≤1.05× baseline regression. |
+| F4 | Summarise results + update fix_plan | [ ] | Document outcomes in `phase_f/summary.md`, consolidate F1-F3 artifacts, confirm gradient/device tests passing, note any parity evidence (nb-compare if applicable), and update docs/fix_plan Attempt #14 with Phase F completion metrics. |
 
 ### Phase G - Documentation & Handoff
 Goal: Ensure all vectorization changes are documented, reproducible, and integrated with performance guidance.
