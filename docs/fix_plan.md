@@ -4319,3 +4319,23 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - Mark plan `plans/active/phi-carryover-removal/plan.md` rows B0–B4 as [D] (complete)
       - Update plan Next Actions to reference Phase C (test/docs realignment)
       - CLI-FLAGS-003 now focuses exclusively on `-nonoise`/`-pix0` deliverables (scaling parity remains the blocker)
+  * [2025-12-20] Attempt #196 (ralph loop i=196, Mode: Docs) — Result: ✅ **Phase M5d COMPLETE — Option 1 bundle published.** **Documentation-only loop.**
+    Metrics: Targeted tests pass (test_cli_scaling_phi0.py: 2/2 PASSED in 2.05s); test collection: 666 tests collected in 2.64s.
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/20251009T011729Z/blocker_analysis.md` — Blocker analysis with Option 1 addendum documenting decision rationale
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/20251009T011729Z/summary.md` — Comprehensive Option 1 decision summary with evidence chain
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/20251009T011729Z/commands.txt` — Reproduction commands and documentation update steps
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/20251009T011729Z/{env.json,sha256.txt}` — Environment metadata and artifact manifest
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md` — Updated with H4/H5 closure addendum citing Option 1 decision
+    Changes: Documentation only (no code changes)
+    Observations/Hypotheses:
+      - **Option 1 Decision Documented:** PyTorch implements spec-compliant φ rotation behavior per specs/spec-a-core.md:204-214
+      - **C Divergence Expected:** C-PARITY-001 bug documented in docs/bugs/verified_c_bugs.md:166-204 explains 14.6% I_before_scaling deficit
+      - **Tests Validate Spec Compliance:** test_cli_scaling_phi0.py confirms PyTorch matches spec, not buggy C behavior
+      - **H4/H5 Hypotheses Resolved:** Both closed with spec-compliance rationale; PyTorch rotation/duality implementation correct
+      - **Phase M6 Deferred:** Optional C-parity emulation mode available but not required for spec compliance
+    Next Actions:
+      - **Phase M5e:** Update validation scripts/README to flag expected φ=0 discrepancy when comparing to legacy C traces
+      - **Phase M5f:** Run CUDA smoke test (pytest -v -m gpu_smoke tests/test_cli_scaling_phi0.py) if GPU available
+      - **Phase M5g:** Update plans/active/cli-noise-pix0/plan.md (mark M5d–M5f as [D]) and sync ledger
+      - **Future Work:** Phase M6 C-parity emulation remains optional; revisit only if validation against legacy C traces becomes critical
