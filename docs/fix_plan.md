@@ -4043,13 +4043,20 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE nanoBragg -mat A.mat -floatfile py_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources.txt ...` (matching geometry).
   * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
 - First Divergence (if known): C counts divergence placeholders (steps=4) and applies source weights, while the spec mandates equal weighting. PyTorch counts only the actual sources (steps=2) and ignores weights per `specs/spec-a-core.md:151`, so the 47–120× sum_ratio gap is a documented C bug (`C-PARITY-001`). Existing traces at `reports/2025-11-source-weights/phase_e/20251009T192746Z/trace/` confirm fluence agreement and isolate the divergence to the C normalization/polarisation ordering.
-- Next Actions (2025-12-24 redesign):
-  1. Phase E1 — Draft `spec_vs_c_decision.md` (reports/2025-11-source-weights/phase_e/<STAMP>/) summarising spec citations, trace evidence, and the decision to keep PyTorch spec-first while classifying the C behaviour as bug `C-PARITY-001`.
-  2. Phase E2 — Update this ledger, `galph_memory.md`, and dependent plans (vectorization, perf) with the decision; mark existing C correlation gaps as expected divergence and cite the memo.
-  3. Phase F1–F3 — Produce `phase_f/<STAMP>/test_plan.md` detailing affected tests, spec-aligned acceptance criteria, validated pytest selectors, and CLI artifact expectations before any implementation begins.
-  4. Phase G1–G3 — After design sign-off, rewrite the TestSourceWeights suite to compare against spec-computed references, capture the targeted pytest + CLI bundle (store under `phase_g/<STAMP>/`), and log a new Attempt noting the expected C divergence.
-  5. Phase H1–H3 — Sync permanent docs (`pytorch_design.md`, `pytorch_runtime_checklist.md`), refresh dependent plan gates, and prepare archival summary once spec-compliance evidence is in place.
+- Next Actions (2025-12-24 redesign; refreshed after Phase E1 completion):
+  - Phase E1 ✅ `reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md` captures the spec-first decision and tags the C behaviour as bug `C-PARITY-001`. Reference this memo in all follow-up notes.
+  1. Phase E2 — Update this ledger, `galph_memory.md`, and dependent plans (vectorization, perf) with the decision; mark existing C correlation gaps as expected divergence and cite the memo.
+  2. Phase F1–F3 — Produce `phase_f/<STAMP>/test_plan.md` detailing affected tests, spec-aligned acceptance criteria, validated pytest selectors, and CLI artifact expectations before any implementation begins.
+  3. Phase G1–G3 — After design sign-off, rewrite the TestSourceWeights suite to compare against spec-computed references, capture the targeted pytest + CLI bundle (store under `phase_g/<STAMP>/`), and log a new Attempt noting the expected C divergence.
+  4. Phase H1–H3 — Sync permanent docs (`pytorch_design.md`, `pytorch_runtime_checklist.md`), refresh dependent plan gates, and prepare archival summary once spec-compliance evidence is in place.
 - Attempts History:
+  * [2025-10-09] Attempt #25 (ralph loop #253 — Mode: Docs, Phase E1 decision memo). Result: **SUCCESS** (Spec-first decision documented; bug classified as `C-PARITY-001`).
+    Metrics: `pytest --collect-only -q tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` (9 tests collected). No code changes.
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md` — FINAL memo with spec citations, trace evidence, decisions, and next-phase guidance.
+      - `reports/2025-11-source-weights/phase_e/20251009T202432Z/{commands.txt,collect.log,env.json,git_status.txt,notes.md}` — Reproduction details and environment snapshot.
+    Observations/Hypotheses: Memo locks the stance that PyTorch ignores source weights/wavelengths per spec §4 while classifying the C behaviour as bug `C-PARITY-001`. Impacted tests (TestSourceWeights*, TC-D1/D3) now require spec-compliance replacements in Phase F. VECTOR-TRICUBIC-002 / VECTOR-GAPS-002 depend on Phases E2–H following this decision.
+    Next Actions: Execute Phase E2 ledger updates (this document, galph_memory, dependent plans) before drafting the Phase F test realignment design packet.
   * [2025-10-09] Attempt #24 (ralph loop #250 — Mode: Evidence-only, Phase E source-index trace). Result: **SUCCESS** (Trace bundle complete; wavelength semantics clarified; hypotheses ranked).
     Metrics: Test collection: 693 tests (no regressions). No code changes; C instrumentation only. Wavelength handling VERIFIED CORRECT (Phase E1 matches C behavior).
     Artifacts:

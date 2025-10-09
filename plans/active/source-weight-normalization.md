@@ -10,8 +10,8 @@
   - Existing evidence bundles under `reports/2025-11-source-weights/phase_{a..e}/` (baseline traces, design notes, CLI commands).
 - Status Snapshot (2025-12-24 refresh):
   - Legacy Phases A–D are complete (fixtures, spec confirmation, implementation guard, trace instrumentation).
-  - Phase E pending: record an explicit spec-vs-C decision, redesign tests around the spec contract, and propagate the decision to dependent plans.
-  - Current blockers: `tests/test_cli_scaling.py::TestSourceWeights*` still assert C-style sum(weight) normalisation, keeping parity metrics <0.8 and blocking VECTOR-* initiatives.
+  - Phase E1 done (decision memo locked 20251009T202432Z); Phase E2/E3 remain to update ledgers and dependent gates before Phase F can proceed.
+  - Current blockers: `tests/test_cli_scaling.py::TestSourceWeights*` still assert C-style sum(weight) normalisation, keeping parity metrics <0.8 and blocking VECTOR-* initiatives until Phases F–G realign the suite.
 
 ### Legacy Evidence (Phases A–D) — Locked
 Goal: Preserve provenance of the already-completed investigation.
@@ -28,9 +28,9 @@ Exit Criteria: Decision memo + ledger updates make it explicit that PyTorch is c
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| E1 | Draft decision memo | [ ] | Author `reports/2025-11-source-weights/phase_e/<STAMP>/spec_vs_c_decision.md` summarising (a) spec quotes, (b) trace evidence (steps mismatch, polarization, F_latt deltas), (c) conclusion to keep PyTorch spec-first and classify C behaviour as bug `C-PARITY-001`. Include table of impacted tests (TestSourceWeights*, TC-D1/D3). |
+| E1 | Draft decision memo | [X] | ✅ `reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md` (FINAL) captures spec citations, trace evidence, and locks the spec-first decision (C bug tagged `C-PARITY-001`). Memo inventories impacted tests (TestSourceWeights*, TC-D1/D3) and embeds reproduction commands. |
 | E2 | Update ledgers with decision | [ ] | After E1, update `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions and Observations to state the spec-first contract, cite the decision memo, and classify existing parity failures as expected. Log summary in `galph_memory.md`. |
-| E3 | Propagate dependency gates | [ ] | Refresh `plans/active/vectorization.md` Phase A1/A2 guidance so VECTOR-TRICUBIC-002 unblocks once Phase F–G deliverables land (correlation thresholds replaced by spec compliance checks). |
+| E3 | Propagate dependency gates | [ ] | Refresh `plans/active/vectorization.md` Phase A1/A2 guidance so VECTOR-TRICUBIC-002 unblocks once Phase F–G deliverables land (spec compliance replaces C correlation thresholds). |
 
 ### Phase F — Test Realignment Design (Ready)
 Goal: Produce a concrete redesign for the source-weight tests and CLI harnesses so Ralph can implement without ambiguity.

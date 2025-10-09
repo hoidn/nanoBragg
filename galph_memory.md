@@ -1625,3 +1625,9 @@
 - Adjusted `plans/active/vectorization.md` Phase A to wait on the spec decision + spec-compliance tests instead of C correlation, documenting the new dependency chain.
 - Issued `input.md` (Mode: Docs) directing Ralph to author spec_vs_c_decision.md, run collect-only selectors, and stage artifacts under `reports/2025-11-source-weights/phase_e/<STAMP>/`.
 - Follow-up: Ralph to produce the decision memo per Phase E1, log the attempt in fix_plan, then proceed to Phase F test_plan.md once the memo is approved.
+### 2025-12-24 (galph loop - SOURCE-WEIGHT Phase F design prep)
+- Logged Attempt #25 in `docs/fix_plan.md:4053` for Ralph’s spec_vs_c_decision memo and refreshed Next Actions so Phase E now points at ledger/dependency updates followed by the Phase F design packet.
+- Marked Phase E1 complete in `plans/active/source-weight-normalization.md:11-33` and updated the status snapshot to highlight that Phases E2/E3 remain before implementation resumes.
+- Propagated the spec-first gate to dependent plans: `plans/active/vectorization.md:21-26` now has A1 `[D]`, and `plans/active/vectorization-gap-audit.md:11-35` swaps the correlation blocker for the upcoming spec-compliance bundle.
+- Replaced `input.md` with Docs-mode guidance directing Ralph to author Phase F1–F3 (`reports/2025-11-source-weights/phase_f/<STAMP>/test_plan.md`) after validating selectors via collect-only.
+- Follow-up for Ralph: execute Phase F1–F3 per new input, archive artifacts under the phase_f path, and update `[SOURCE-WEIGHT-001]` attempts once the design packet is ready.

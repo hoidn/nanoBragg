@@ -21,7 +21,7 @@ Exit Criteria: SOURCE-WEIGHT-001 Phase E artifacts captured, VECTOR-GAPS-002 Pha
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | A0 | Confirm lambda override consensus | [D] | ✅ Attempt #16 (2025-12-24 galph loop) logged Option B as the authoritative approach, citing `reports/2025-11-source-weights/phase_e/20251009T131709Z/lambda_semantics.md` and updating `docs/fix_plan.md`/`plans/active/source-weight-normalization.md`. No further action required. |
-| A1 | Record SOURCE-WEIGHT spec decision | [ ] | Block profiler work until SOURCE-WEIGHT-001 Phase E1/E2 produce `spec_vs_c_decision.md` and ledger updates acknowledging spec-first behaviour. Reference the memo path in `docs/fix_plan.md` once available. |
+| A1 | Record SOURCE-WEIGHT spec decision | [D] | ✅ Decision memo available at `reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md`; fix_plan updated (2025-12-24) to cite it and tag C behaviour as bug `C-PARITY-001`. Remaining gate: complete Phase E2 ledger propagation before unlocking A2. |
 | A2 | Capture spec-compliance test availability | [ ] | After SOURCE-WEIGHT-001 Phase F/G land, log the new pytest selectors and CLI artifact paths (no C correlation gate) under `reports/2025-11-source-weights/phase_g/<STAMP>/`. Update `[VECTOR-GAPS-002]` Next Actions to cite these spec-aligned checks. |
 | A3 | Archive dependency memo | [ ] | Once A1–A2 complete, append a galph_memory note summarising readiness (spec decision, test selectors, artifact paths) so future loops can resume profiling without chasing C parity. |
 
