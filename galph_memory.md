@@ -1293,3 +1293,9 @@
 - Authored new input.md (105 lines, Parity mode) instructing Ralph to document the Phase M6 skip, regenerate C/PyTorch ROI float files under reports/2025-10-cli-flags/phase_l/nb_compare/<timestamp>/inputs/, and append the corresponding Attempt in docs/fix_plan.md.
 - No new artifacts generated this loop (docs-only). Working tree pending commit of docs/fix_plan.md, plans/active/cli-noise-pix0/plan.md, and input.md.
 - Follow-up for Ralph: execute input.md Do Now (Phase N1 ROI prep + Phase M6 skip logging), keep targeted pytest logs in the bundle, and update plan/ledger once artifacts exist.
+
+## 2025-12-21 (galph loop — CLI nb-compare ledger prep)
+- Refreshed `plans/active/cli-noise-pix0/plan.md` Phase N exit criteria to accept the documented C-PARITY-001 divergence (correlation ≥0.98, sum_ratio noted) and marked N2 [D]; N3 now directs ledger updates before the supervisor rerun.
+- Updated `docs/fix_plan.md` Next Actions to call out the Option 1 acceptance ledger entry and plan sync; no new Attempt appended yet (reserved for Ralph’s loop).
+- Authored new `input.md` (Docs mode) instructing Ralph to close N3 by adding the Attempt, marking N3 [D], running pytest --collect-only, and logging the decision in galph_memory.
+- Next steps for Ralph: execute the N3 ledger update, sync plan + memory, then we can queue the supervisor command rerun (Phase O).

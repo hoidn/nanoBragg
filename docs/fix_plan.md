@@ -469,7 +469,7 @@
   - ✅ **Phase M6 (SKIPPED 20251009T014553Z)** — Decision recorded in Attempt #198: Skip optional C-parity shim; proceed to Phase N with spec-compliant Option 1. See `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T014553Z/analysis.md`.
   - ✅ **Phase N1 (COMPLETE)** — ROI float images generated (Attempt #199); artifacts stored in `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z/`.
   - ✅ **Phase N2 (COMPLETE)** — nb-compare executed (Attempt #200); correlation 0.9852 meets threshold ≥0.98; sum_ratio 115,922 documents expected C-PARITY-001 divergence per Option 1 decision. See `analysis.md` in results directory.
-  - 🔜 **Phase N3 (next turn)** — Ledger update and supervisor decision: accept N2 with documented C bug caveat or pivot to optional M6 shim.
+  - 🔜 **Phase N3 (next turn)** — Finalise Option 1 acceptance: update `docs/fix_plan.md` Attempts (VG-3/VG-4) with the 20251009T020401Z metrics, note the documented C-PARITY-001 divergence, and sync `plans/active/cli-noise-pix0/plan.md` (mark N3 [D]) before queuing the Phase O supervisor rerun.
 
 - Attempts History:
   * [2025-10-08] Attempt #190 (ralph loop i=190, Mode: Parity/Docs) — Result: ⚠️ **M4d EVIDENCE CAPTURED / DIVERGENCE PERSISTS.** **Documentation-only loop.**
