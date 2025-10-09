@@ -1232,3 +1232,8 @@
 - Focus selection: stayed on CLI-FLAGS-003 Phase M5c since Phase M5a/M5b deliverables now complete and M5c is the next gating step toward resolving the `I_before_scaling` deficit (~14.6%). No new plan needed; existing `plans/active/cli-noise-pix0/plan.md` already captures detailed checklist.
 - Actions: refreshed `input.md` (Parity mode) directing Ralph to implement the dual real/reciprocal rotation pipeline, rerun trace harness + compare_scaling_traces, execute targeted pytest, update lattice_hypotheses, and log Attempt #195 with full artifact bundle. Highlighted required evidence paths and risk mitigations (device neutrality, Rule #12/#13, duplicate reports note).
 - Follow-up for Ralph: land M5c code changes in `crystal.py`, produce fix_<timestamp> bundle with parity-green compare output, close H4/H5 in lattice_hypotheses, update docs/fix_plan Attempt log, and document whether the per_phi directory duplication was resolved or deferred.
+
+## 2025-11-17 (galph loop — Phase M5 pre-debug)
+- Focused on CLI-FLAGS-003 M5 φ-rotation parity. Compared spec-baseline traces: PyTorch `rot_b` y-component differs by +4.6e-02 and drives `k_frac` shift (reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/trace_py_scaling.log:15 vs c_trace_scaling.log:266-271).
+- Logged that PyTorch still reports tricubic `F_cell` despite supervisor command using `-nointerpolate` (trace_py_scaling.log:29 vs c_trace_scaling.log:278). Ralph must confirm flag plumbing while instrumenting per-φ traces.
+- Issued input.md directing Phase M5a work: extend trace harness to emit `TRACE_PY_PHI` (k_frac, F_latt_b, F_latt) and rerun spec-mode harness into reports/.../per_phi/<stamp>/ before tackling M5c lattice fix.
