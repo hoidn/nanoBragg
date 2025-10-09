@@ -23,10 +23,20 @@ from src.nanobrag_torch.models.crystal import Crystal
 from src.nanobrag_torch.simulator import Simulator
 
 
+# Device parametrization: CPU + CUDA when available
+def get_devices():
+    """Return available devices for testing."""
+    devices = ['cpu']
+    if torch.cuda.is_available():
+        devices.append('cuda')
+    return devices
+
+
 class TestAT_ABS_001:
     """Test detector absorption layering per AT-ABS-001."""
 
-    def test_absorption_disabled_when_zero(self):
+    @pytest.mark.parametrize("device", get_devices())
+    def test_absorption_disabled_when_zero(self, device):
         """Test that absorption is disabled when detector_abs_um=0 or detector_thick_um=0."""
         # Setup with zero thickness
         detector_config = DetectorConfig(
@@ -41,9 +51,10 @@ class TestAT_ABS_001:
         crystal_config = CrystalConfig(default_F=100.0)  # Need non-zero intensity
         beam_config = BeamConfig()
 
+        # Create models on specified device
         detector = Detector(detector_config)
         crystal = Crystal(crystal_config)
-        simulator = Simulator(crystal, detector, crystal_config, beam_config)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config, device=device)
 
         # Run simulation
         intensity1 = simulator.run()
@@ -58,13 +69,15 @@ class TestAT_ABS_001:
             detector_thicksteps=1
         )
         detector2 = Detector(detector_config2)
-        simulator2 = Simulator(crystal, detector2, crystal_config, beam_config)
+        simulator2 = Simulator(crystal, detector2, crystal_config, beam_config, device=device)
         intensity2 = simulator2.run()
 
         # Should be identical when thickness is zero
         torch.testing.assert_close(intensity1, intensity2, rtol=1e-6, atol=1e-8)
 
-    def test_capture_fraction_calculation(self):
+    @pytest.mark.parametrize("device", get_devices())
+    @pytest.mark.parametrize("oversample_thick", [False, True])
+    def test_capture_fraction_calculation(self, device, oversample_thick):
         """Test that capture fractions follow the expected formula."""
         # Setup with specific absorption parameters
         detector_config = DetectorConfig(
@@ -74,7 +87,7 @@ class TestAT_ABS_001:
             detector_abs_um=500.0,  # Attenuation depth in micrometers
             detector_thick_um=100.0,  # 100 μm thickness
             detector_thicksteps=5,  # 5 layers
-            oversample_thick=False  # Use last-value semantics
+            oversample_thick=oversample_thick
         )
 
         crystal_config = CrystalConfig(default_F=100.0)  # Need non-zero intensity
@@ -82,7 +95,7 @@ class TestAT_ABS_001:
 
         detector = Detector(detector_config)
         crystal = Crystal(crystal_config)
-        simulator = Simulator(crystal, detector, crystal_config, beam_config)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config, device=device)
 
         # Calculate expected capture fractions manually
         thickness_m = 100e-6  # 100 μm in meters
@@ -121,7 +134,8 @@ class TestAT_ABS_001:
         # Verify the sum
         torch.testing.assert_close(total_capture, expected_total, rtol=1e-6, atol=1e-8)
 
-    def test_last_value_vs_accumulation_semantics(self):
+    @pytest.mark.parametrize("device", get_devices())
+    def test_last_value_vs_accumulation_semantics(self, device):
         """Test difference between oversample_thick=False (last-value) vs True (accumulation)."""
         # Common setup
         detector_config_base = dict(
@@ -140,13 +154,13 @@ class TestAT_ABS_001:
         # Test with oversample_thick=False (last-value semantics)
         detector_config1 = DetectorConfig(**detector_config_base, oversample_thick=False)
         detector1 = Detector(detector_config1)
-        simulator1 = Simulator(crystal, detector1, crystal_config, beam_config)
+        simulator1 = Simulator(crystal, detector1, crystal_config, beam_config, device=device)
         intensity_last_value = simulator1.run(oversample_thick=False)
 
         # Test with oversample_thick=True (accumulation)
         detector_config2 = DetectorConfig(**detector_config_base, oversample_thick=True)
         detector2 = Detector(detector_config2)
-        simulator2 = Simulator(crystal, detector2, crystal_config, beam_config)
+        simulator2 = Simulator(crystal, detector2, crystal_config, beam_config, device=device)
         intensity_accumulation = simulator2.run(oversample_thick=True)
 
         # The two should be different (last-value uses only final layer, accumulation uses all)
@@ -158,7 +172,9 @@ class TestAT_ABS_001:
         ratio = intensity_accumulation / (intensity_last_value + 1e-10)
         assert torch.median(ratio) > 1.0, "Accumulation should generally give higher intensity"
 
-    def test_parallax_dependence(self):
+    @pytest.mark.parametrize("device", get_devices())
+    @pytest.mark.parametrize("oversample_thick", [False, True])
+    def test_parallax_dependence(self, device, oversample_thick):
         """Test that absorption varies with parallax (off-axis vs on-axis pixels)."""
         # Use more extreme geometry to get measurable parallax variation
         # With 100mm distance and 2.1mm detector, variation is only ~0.025%
@@ -170,7 +186,7 @@ class TestAT_ABS_001:
             detector_abs_um=500.0,
             detector_thick_um=100.0,
             detector_thicksteps=3,
-            oversample_thick=True
+            oversample_thick=oversample_thick
         )
 
         crystal_config = CrystalConfig(default_F=100.0)  # Need non-zero intensity
@@ -178,7 +194,7 @@ class TestAT_ABS_001:
 
         detector = Detector(detector_config)
         crystal = Crystal(crystal_config)
-        simulator = Simulator(crystal, detector, crystal_config, beam_config)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config, device=device)
 
         intensity = simulator.run()
 
@@ -192,7 +208,9 @@ class TestAT_ABS_001:
         assert not torch.allclose(center_intensity, corner_intensity, rtol=1e-2), \
             "Center and corner pixels should have different absorption due to parallax"
 
-    def test_absorption_with_tilted_detector(self):
+    @pytest.mark.parametrize("device", get_devices())
+    @pytest.mark.parametrize("oversample_thick", [False, True])
+    def test_absorption_with_tilted_detector(self, device, oversample_thick):
         """Test absorption calculation works correctly with detector rotations."""
         detector_config = DetectorConfig(
             distance_mm=100.0,
@@ -203,7 +221,7 @@ class TestAT_ABS_001:
             detector_abs_um=1000.0,
             detector_thick_um=50.0,
             detector_thicksteps=2,
-            oversample_thick=False
+            oversample_thick=oversample_thick
         )
 
         crystal_config = CrystalConfig(default_F=100.0)  # Need non-zero intensity
@@ -211,7 +229,7 @@ class TestAT_ABS_001:
 
         detector = Detector(detector_config)
         crystal = Crystal(crystal_config)
-        simulator = Simulator(crystal, detector, crystal_config, beam_config)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config, device=device)
 
         # Should run without errors
         intensity = simulator.run()
@@ -232,7 +250,7 @@ class TestAT_ABS_001:
             detector_thicksteps=1
         )
         detector_no_abs = Detector(detector_config_no_abs)
-        simulator_no_abs = Simulator(crystal, detector_no_abs, crystal_config, beam_config)
+        simulator_no_abs = Simulator(crystal, detector_no_abs, crystal_config, beam_config, device=device)
         intensity_no_abs = simulator_no_abs.run()
 
         # With absorption should reduce intensity

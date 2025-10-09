@@ -1712,6 +1712,19 @@ class Simulator:
     ) -> torch.Tensor:
         """Apply detector absorption with layering (AT-ABS-001).
 
+        C-Code Implementation Reference (from nanoBragg.c, lines 2975-2983):
+        ```c
+        /* now calculate detector thickness effects */
+        if(capture_fraction == 0.0 || oversample_thick)
+        {
+            /* inverse of effective thickness increase */
+            parallax = dot_product(diffracted,odet_vector);
+            /* fraction of incoming photons absorbed by this detector layer */
+            capture_fraction = exp(-thick_tic*detector_thickstep*detector_mu/parallax)
+                              -exp(-(thick_tic+1)*detector_thickstep*detector_mu/parallax);
+        }
+        ```
+
         Args:
             intensity: Input intensity tensor [S, F]
             pixel_coords_meters: Pixel coordinates in meters [S, F, 3]
@@ -1725,6 +1738,11 @@ class Simulator:
         - Capture fraction per layer: exp(−t·Δz·μ/ρ) − exp(−(t+1)·Δz·μ/ρ)
         - With oversample_thick=False: multiply by last layer's capture fraction
         - With oversample_thick=True: accumulate with per-layer capture fractions
+
+        Vectorization Notes:
+        - Oversample_thick=True processes all detector layers in parallel using broadcasting
+        - Shape: parallax (S,F), t_indices (thicksteps,) → capture_fractions (thicksteps,S,F)
+        - Preserves gradient flow for detector_thick_um, detector_abs_um, and geometry parameters
         """
         # Get detector parameters
         thickness_m = self.detector.config.detector_thick_um * 1e-6  # μm to meters

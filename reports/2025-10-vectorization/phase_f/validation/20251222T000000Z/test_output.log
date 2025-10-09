@@ -1,0 +1,1351 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 16 items
+
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_disabled_when_zero[cpu] PASSED [  6%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_disabled_when_zero[cuda] FAILED [ 12%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_capture_fraction_calculation[False-cpu] PASSED [ 18%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_capture_fraction_calculation[False-cuda] PASSED [ 25%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_capture_fraction_calculation[True-cpu] PASSED [ 31%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_capture_fraction_calculation[True-cuda] PASSED [ 37%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_last_value_vs_accumulation_semantics[cpu] PASSED [ 43%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_last_value_vs_accumulation_semantics[cuda] FAILED [ 50%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_parallax_dependence[False-cpu] PASSED [ 56%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_parallax_dependence[False-cuda] FAILED [ 62%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_parallax_dependence[True-cpu] PASSED [ 68%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_parallax_dependence[True-cuda] FAILED [ 75%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_with_tilted_detector[False-cpu] PASSED [ 81%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_with_tilted_detector[False-cuda] FAILED [ 87%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_with_tilted_detector[True-cpu] PASSED [ 93%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_with_tilted_detector[True-cuda] FAILED [100%]
+
+=================================== FAILURES ===================================
+___________ TestAT_ABS_001.test_absorption_disabled_when_zero[cuda] ____________
+
+self = <tests.test_at_abs_001.TestAT_ABS_001 object at 0x7a54f55d2490>
+device = 'cuda'
+
+    @pytest.mark.parametrize("device", get_devices())
+    def test_absorption_disabled_when_zero(self, device):
+        """Test that absorption is disabled when detector_abs_um=0 or detector_thick_um=0."""
+        # Setup with zero thickness
+        detector_config = DetectorConfig(
+            distance_mm=100.0,
+            pixel_size_mm=0.1,
+            spixels=10, fpixels=10,
+            detector_abs_um=100.0,  # Non-zero attenuation depth
+            detector_thick_um=0.0,  # Zero thickness
+            detector_thicksteps=1
+        )
+    
+        crystal_config = CrystalConfig(default_F=100.0)  # Need non-zero intensity
+        beam_config = BeamConfig()
+    
+        # Create models on specified device
+        detector = Detector(detector_config)
+        crystal = Crystal(crystal_config)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config, device=device)
+    
+        # Run simulation
+>       intensity1 = simulator.run()
+                     ^^^^^^^^^^^^^^^
+
+tests/test_at_abs_001.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/nanobrag_torch/simulator.py:1031: in run
+    intensity, I_before_normalization_pre_polar = self._compute_physics_for_position(
+src/nanobrag_torch/simulator.py:670: in _compute_physics_for_position
+    return self._compiled_compute_physics(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+pixel_coords_angstroms = tensor([[[ 1.0000e+09,  5.5000e+06, -5.5000e+06],
+         [ 1.0000e+09,  5.5000e+06, -4.5000e+06],
+         [ 1.0000e...
+         [ 1.0000e+09, -3.5000e+06,  2.5000e+06],
+         [ 1.0000e+09, -3.5000e+06,  3.5000e+06]]], device='cuda:0')
+rot_a = tensor([[[ 1.0000e+02, -4.3711e-06, -4.3711e-06]]], device='cuda:0')
+rot_b = tensor([[[ 0.0000e+00,  1.0000e+02, -4.3711e-06]]], device='cuda:0')
+rot_c = tensor([[[  0.0000,   0.0000, 100.0000]]], device='cuda:0')
+rot_a_star = tensor([[[0.0100, -0.0000, 0.0000]]], device='cuda:0')
+rot_b_star = tensor([[[4.3711e-10, 1.0000e-02, -0.0000e+00]]], device='cuda:0')
+rot_c_star = tensor([[[4.3711e-10, 4.3711e-10, 1.0000e-02]]], device='cuda:0')
+incident_beam_direction = tensor([1., 0., 0.])
+wavelength = tensor(1., device='cuda:0'), source_weights = None, dmin = 0.0
+crystal_get_structure_factor = <bound method Crystal.get_structure_factor of <src.nanobrag_torch.models.crystal.Crystal object at 0x7a54f55d2850>>
+N_cells_a = tensor(1.), N_cells_b = tensor(1.), N_cells_c = tensor(1.)
+crystal_shape = <CrystalShape.SQUARE: 'square'>, crystal_fudge = 1.0
+apply_polarization = True, kahn_factor = tensor(0., device='cuda:0')
+polarization_axis = tensor([0., 0., 1.], device='cuda:0')
+
+    def compute_physics_for_position(
+        # Geometry inputs
+        pixel_coords_angstroms: torch.Tensor,
+        rot_a: torch.Tensor,
+        rot_b: torch.Tensor,
+        rot_c: torch.Tensor,
+        rot_a_star: torch.Tensor,
+        rot_b_star: torch.Tensor,
+        rot_c_star: torch.Tensor,
+        # Beam parameters
+        incident_beam_direction: torch.Tensor,
+        wavelength: torch.Tensor,
+        source_weights: Optional[torch.Tensor] = None,
+        # Beam configuration (dmin culling)
+        dmin: float = 0.0,
+        # Crystal structure factor function
+        crystal_get_structure_factor: Callable[[torch.Tensor, torch.Tensor, torch.Tensor], torch.Tensor] = None,
+        # Crystal parameters for lattice factor
+        N_cells_a: int = 0,
+        N_cells_b: int = 0,
+        N_cells_c: int = 0,
+        crystal_shape: CrystalShape = CrystalShape.SQUARE,
+        crystal_fudge: float = 1.0,
+        # Polarization parameters (PERF-PYTORCH-004 P3.0b)
+        apply_polarization: bool = True,
+        kahn_factor: float = 1.0,
+        polarization_axis: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        """Compute physics (Miller indices, structure factors, intensity) for given positions.
+    
+        This is a pure function with no instance state dependencies, enabling safe cross-instance
+        kernel caching for torch.compile optimization (PERF-PYTORCH-004 Phase 0).
+    
+        REFACTORING NOTE (PERF-PYTORCH-004 Phase 0):
+        This function was refactored from a bound method (`Simulator._compute_physics_for_position`)
+        to a module-level pure function to enable safe cross-instance kernel caching with torch.compile.
+        Caching bound methods is unsafe because they capture `self`, which can lead to silent
+        correctness bugs when the cached kernel is reused across different simulator instances
+        with different state.
+    
+        All required state is now passed as explicit parameters, ensuring that:
+        1. The function has no hidden dependencies on instance state
+        2. torch.compile can safely cache compiled kernels across instances
+        3. The function's behavior is fully determined by its inputs
+        4. Testing and debugging are simplified (pure function properties)
+    
+        This is the core physics calculation that must be done per-subpixel for proper
+        anti-aliasing. Each subpixel samples a slightly different position in reciprocal
+        space, leading to different Miller indices and structure factors.
+    
+        VECTORIZED OVER SOURCES: This function supports batched computation over
+        multiple sources (beam divergence/dispersion). When multiple sources are provided,
+        the computation is vectorized across the source dimension, eliminating the Python loop.
+    
+        Args:
+            pixel_coords_angstroms: Pixel/subpixel coordinates in Angstroms (S, F, 3) or (batch, 3)
+            rot_a, rot_b, rot_c: Rotated real-space lattice vectors (N_phi, N_mos, 3)
+            rot_a_star, rot_b_star, rot_c_star: Rotated reciprocal vectors (N_phi, N_mos, 3)
+            incident_beam_direction: Incident beam direction.
+                - Single source: shape (3,)
+                - Multiple sources: shape (n_sources, 3)
+            wavelength: Wavelength in Angstroms.
+                - Single source: scalar
+                - Multiple sources: shape (n_sources,) or (n_sources, 1, 1)
+            source_weights: Optional per-source weights for multi-source accumulation.
+                Shape: (n_sources,). If None, equal weighting is assumed.
+            dmin: Minimum d-spacing for resolution culling (0 = no culling)
+            crystal_get_structure_factor: Function to look up structure factors for (h0, k0, l0)
+            N_cells_a/b/c: Number of unit cells in each direction
+            crystal_shape: Crystal shape enum for lattice structure factor calculation
+            crystal_fudge: Fudge factor for lattice structure factor
+            apply_polarization: Whether to apply Kahn polarization correction (default True)
+            kahn_factor: Polarization factor for Kahn correction (0=unpolarized, 1=fully polarized)
+            polarization_axis: Polarization axis unit vector (3,) or broadcastable shape
+    
+        Returns:
+            intensity: Computed intensity |F|^2 integrated over phi and mosaic
+                - Single source: shape (S, F) or (batch,)
+                - Multiple sources: weighted sum across sources, shape (S, F) or (batch,)
+        """
+        # Detect if we have batched sources
+        is_multi_source = incident_beam_direction.dim() == 2
+        n_sources = incident_beam_direction.shape[0] if is_multi_source else 1
+    
+        # Calculate scattering vectors
+        pixel_squared_sum = torch.sum(
+            pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True
+        )
+        # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
+        pixel_squared_sum = pixel_squared_sum.clamp_min(1e-12)
+        pixel_magnitudes = torch.sqrt(pixel_squared_sum)
+        diffracted_beam_unit = pixel_coords_angstroms / pixel_magnitudes
+    
+        # Determine spatial dimensionality from original pixel_coords BEFORE multi-source expansion
+        # This tells us if we have (S, F, 3) or (batch, 3) input
+        original_n_dims = pixel_coords_angstroms.dim()  # 2 for (batch, 3), 3 for (S, F, 3)
+    
+        # PERF-PYTORCH-004 Phase 1: No .to() call needed - incident_beam_direction is already on correct device
+        # The caller (run() method) ensures source_directions are moved to self.device before calling this function
+        # This avoids graph breaks in torch.compile
+    
+        if is_multi_source:
+            # Multi-source case: broadcast over sources
+            # diffracted_beam_unit: (S, F, 3) or (batch, 3)
+            # incident_beam_direction: (n_sources, 3)
+            # Need to add source dimension to diffracted_beam_unit
+    
+            # Add source dimension: (S, F, 3) -> (1, S, F, 3) or (batch, 3) -> (1, batch, 3)
+            diffracted_expanded = diffracted_beam_unit.unsqueeze(0)
+    
+            # Handle both 2D (batch, 3) and 3D (S, F, 3) cases for incident beam expansion
+            if original_n_dims == 2:
+                # (batch, 3) case: expand incident to (n_sources, 1, 3)
+                incident_expanded = incident_beam_direction.view(n_sources, 1, 3)
+            else:
+                # (S, F, 3) case: expand incident to (n_sources, 1, 1, 3)
+                incident_expanded = incident_beam_direction.view(n_sources, 1, 1, 3)
+    
+            # Expand to match diffracted shape
+            incident_beam_unit = incident_expanded.expand(n_sources, *diffracted_beam_unit.shape)
+            diffracted_beam_unit = diffracted_expanded.expand_as(incident_beam_unit)
+        else:
+            # Single source case: broadcast as before
+            incident_beam_unit = incident_beam_direction.expand_as(diffracted_beam_unit)
+    
+        # Prepare wavelength for broadcasting
+        if is_multi_source:
+            # wavelength: (n_sources,) -> broadcast shape matching diffracted_beam_unit
+            if wavelength.dim() == 1:
+                if original_n_dims == 2:
+                    # (batch, 3) case: (n_sources,) -> (n_sources, 1, 1)
+                    wavelength = wavelength.view(n_sources, 1, 1)
+                else:
+                    # (S, F, 3) case: (n_sources,) -> (n_sources, 1, 1, 1)
+                    wavelength = wavelength.view(n_sources, 1, 1, 1)
+    
+        # Scattering vector using crystallographic convention
+>       scattering_vector = (diffracted_beam_unit - incident_beam_unit) / wavelength
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu!
+
+src/nanobrag_torch/simulator.py:156: RuntimeError
+----------------------------- Captured stdout call -----------------------------
+auto-selected 1-fold oversampling
+________ TestAT_ABS_001.test_last_value_vs_accumulation_semantics[cuda] ________
+
+self = <tests.test_at_abs_001.TestAT_ABS_001 object at 0x7a54f57db150>
+device = 'cuda'
+
+    @pytest.mark.parametrize("device", get_devices())
+    def test_last_value_vs_accumulation_semantics(self, device):
+        """Test difference between oversample_thick=False (last-value) vs True (accumulation)."""
+        # Common setup
+        detector_config_base = dict(
+            distance_mm=100.0,
+            pixel_size_mm=0.1,
+            spixels=5, fpixels=5,
+            detector_abs_um=1000.0,  # 1mm attenuation depth
+            detector_thick_um=200.0,  # 200 μm thickness
+            detector_thicksteps=4,  # 4 layers
+        )
+    
+        crystal_config = CrystalConfig(default_F=100.0)  # Need non-zero intensity
+        beam_config = BeamConfig()
+        crystal = Crystal(crystal_config)
+    
+        # Test with oversample_thick=False (last-value semantics)
+        detector_config1 = DetectorConfig(**detector_config_base, oversample_thick=False)
+        detector1 = Detector(detector_config1)
+        simulator1 = Simulator(crystal, detector1, crystal_config, beam_config, device=device)
+>       intensity_last_value = simulator1.run(oversample_thick=False)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_at_abs_001.py:158: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/nanobrag_torch/simulator.py:1031: in run
+    intensity, I_before_normalization_pre_polar = self._compute_physics_for_position(
+src/nanobrag_torch/simulator.py:670: in _compute_physics_for_position
+    return self._compiled_compute_physics(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+pixel_coords_angstroms = tensor([[[ 1.0000e+09,  3.0000e+06, -3.0000e+06],
+         [ 1.0000e+09,  3.0000e+06, -2.0000e+06],
+         [ 1.0000e...
+         [ 1.0000e+09, -1.0000e+06,  0.0000e+00],
+         [ 1.0000e+09, -1.0000e+06,  1.0000e+06]]], device='cuda:0')
+rot_a = tensor([[[ 1.0000e+02, -4.3711e-06, -4.3711e-06]]], device='cuda:0')
+rot_b = tensor([[[ 0.0000e+00,  1.0000e+02, -4.3711e-06]]], device='cuda:0')
+rot_c = tensor([[[  0.0000,   0.0000, 100.0000]]], device='cuda:0')
+rot_a_star = tensor([[[0.0100, -0.0000, 0.0000]]], device='cuda:0')
+rot_b_star = tensor([[[4.3711e-10, 1.0000e-02, -0.0000e+00]]], device='cuda:0')
+rot_c_star = tensor([[[4.3711e-10, 4.3711e-10, 1.0000e-02]]], device='cuda:0')
+incident_beam_direction = tensor([1., 0., 0.])
+wavelength = tensor(1., device='cuda:0'), source_weights = None, dmin = 0.0
+crystal_get_structure_factor = <bound method Crystal.get_structure_factor of <src.nanobrag_torch.models.crystal.Crystal object at 0x7a54f57f2cf0>>
+N_cells_a = tensor(1.), N_cells_b = tensor(1.), N_cells_c = tensor(1.)
+crystal_shape = <CrystalShape.SQUARE: 'square'>, crystal_fudge = 1.0
+apply_polarization = True, kahn_factor = tensor(0., device='cuda:0')
+polarization_axis = tensor([0., 0., 1.], device='cuda:0')
+
+    def compute_physics_for_position(
+        # Geometry inputs
+        pixel_coords_angstroms: torch.Tensor,
+        rot_a: torch.Tensor,
+        rot_b: torch.Tensor,
+        rot_c: torch.Tensor,
+        rot_a_star: torch.Tensor,
+        rot_b_star: torch.Tensor,
+        rot_c_star: torch.Tensor,
+        # Beam parameters
+        incident_beam_direction: torch.Tensor,
+        wavelength: torch.Tensor,
+        source_weights: Optional[torch.Tensor] = None,
+        # Beam configuration (dmin culling)
+        dmin: float = 0.0,
+        # Crystal structure factor function
+        crystal_get_structure_factor: Callable[[torch.Tensor, torch.Tensor, torch.Tensor], torch.Tensor] = None,
+        # Crystal parameters for lattice factor
+        N_cells_a: int = 0,
+        N_cells_b: int = 0,
+        N_cells_c: int = 0,
+        crystal_shape: CrystalShape = CrystalShape.SQUARE,
+        crystal_fudge: float = 1.0,
+        # Polarization parameters (PERF-PYTORCH-004 P3.0b)
+        apply_polarization: bool = True,
+        kahn_factor: float = 1.0,
+        polarization_axis: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        """Compute physics (Miller indices, structure factors, intensity) for given positions.
+    
+        This is a pure function with no instance state dependencies, enabling safe cross-instance
+        kernel caching for torch.compile optimization (PERF-PYTORCH-004 Phase 0).
+    
+        REFACTORING NOTE (PERF-PYTORCH-004 Phase 0):
+        This function was refactored from a bound method (`Simulator._compute_physics_for_position`)
+        to a module-level pure function to enable safe cross-instance kernel caching with torch.compile.
+        Caching bound methods is unsafe because they capture `self`, which can lead to silent
+        correctness bugs when the cached kernel is reused across different simulator instances
+        with different state.
+    
+        All required state is now passed as explicit parameters, ensuring that:
+        1. The function has no hidden dependencies on instance state
+        2. torch.compile can safely cache compiled kernels across instances
+        3. The function's behavior is fully determined by its inputs
+        4. Testing and debugging are simplified (pure function properties)
+    
+        This is the core physics calculation that must be done per-subpixel for proper
+        anti-aliasing. Each subpixel samples a slightly different position in reciprocal
+        space, leading to different Miller indices and structure factors.
+    
+        VECTORIZED OVER SOURCES: This function supports batched computation over
+        multiple sources (beam divergence/dispersion). When multiple sources are provided,
+        the computation is vectorized across the source dimension, eliminating the Python loop.
+    
+        Args:
+            pixel_coords_angstroms: Pixel/subpixel coordinates in Angstroms (S, F, 3) or (batch, 3)
+            rot_a, rot_b, rot_c: Rotated real-space lattice vectors (N_phi, N_mos, 3)
+            rot_a_star, rot_b_star, rot_c_star: Rotated reciprocal vectors (N_phi, N_mos, 3)
+            incident_beam_direction: Incident beam direction.
+                - Single source: shape (3,)
+                - Multiple sources: shape (n_sources, 3)
+            wavelength: Wavelength in Angstroms.
+                - Single source: scalar
+                - Multiple sources: shape (n_sources,) or (n_sources, 1, 1)
+            source_weights: Optional per-source weights for multi-source accumulation.
+                Shape: (n_sources,). If None, equal weighting is assumed.
+            dmin: Minimum d-spacing for resolution culling (0 = no culling)
+            crystal_get_structure_factor: Function to look up structure factors for (h0, k0, l0)
+            N_cells_a/b/c: Number of unit cells in each direction
+            crystal_shape: Crystal shape enum for lattice structure factor calculation
+            crystal_fudge: Fudge factor for lattice structure factor
+            apply_polarization: Whether to apply Kahn polarization correction (default True)
+            kahn_factor: Polarization factor for Kahn correction (0=unpolarized, 1=fully polarized)
+            polarization_axis: Polarization axis unit vector (3,) or broadcastable shape
+    
+        Returns:
+            intensity: Computed intensity |F|^2 integrated over phi and mosaic
+                - Single source: shape (S, F) or (batch,)
+                - Multiple sources: weighted sum across sources, shape (S, F) or (batch,)
+        """
+        # Detect if we have batched sources
+        is_multi_source = incident_beam_direction.dim() == 2
+        n_sources = incident_beam_direction.shape[0] if is_multi_source else 1
+    
+        # Calculate scattering vectors
+        pixel_squared_sum = torch.sum(
+            pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True
+        )
+        # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
+        pixel_squared_sum = pixel_squared_sum.clamp_min(1e-12)
+        pixel_magnitudes = torch.sqrt(pixel_squared_sum)
+        diffracted_beam_unit = pixel_coords_angstroms / pixel_magnitudes
+    
+        # Determine spatial dimensionality from original pixel_coords BEFORE multi-source expansion
+        # This tells us if we have (S, F, 3) or (batch, 3) input
+        original_n_dims = pixel_coords_angstroms.dim()  # 2 for (batch, 3), 3 for (S, F, 3)
+    
+        # PERF-PYTORCH-004 Phase 1: No .to() call needed - incident_beam_direction is already on correct device
+        # The caller (run() method) ensures source_directions are moved to self.device before calling this function
+        # This avoids graph breaks in torch.compile
+    
+        if is_multi_source:
+            # Multi-source case: broadcast over sources
+            # diffracted_beam_unit: (S, F, 3) or (batch, 3)
+            # incident_beam_direction: (n_sources, 3)
+            # Need to add source dimension to diffracted_beam_unit
+    
+            # Add source dimension: (S, F, 3) -> (1, S, F, 3) or (batch, 3) -> (1, batch, 3)
+            diffracted_expanded = diffracted_beam_unit.unsqueeze(0)
+    
+            # Handle both 2D (batch, 3) and 3D (S, F, 3) cases for incident beam expansion
+            if original_n_dims == 2:
+                # (batch, 3) case: expand incident to (n_sources, 1, 3)
+                incident_expanded = incident_beam_direction.view(n_sources, 1, 3)
+            else:
+                # (S, F, 3) case: expand incident to (n_sources, 1, 1, 3)
+                incident_expanded = incident_beam_direction.view(n_sources, 1, 1, 3)
+    
+            # Expand to match diffracted shape
+            incident_beam_unit = incident_expanded.expand(n_sources, *diffracted_beam_unit.shape)
+            diffracted_beam_unit = diffracted_expanded.expand_as(incident_beam_unit)
+        else:
+            # Single source case: broadcast as before
+            incident_beam_unit = incident_beam_direction.expand_as(diffracted_beam_unit)
+    
+        # Prepare wavelength for broadcasting
+        if is_multi_source:
+            # wavelength: (n_sources,) -> broadcast shape matching diffracted_beam_unit
+            if wavelength.dim() == 1:
+                if original_n_dims == 2:
+                    # (batch, 3) case: (n_sources,) -> (n_sources, 1, 1)
+                    wavelength = wavelength.view(n_sources, 1, 1)
+                else:
+                    # (S, F, 3) case: (n_sources,) -> (n_sources, 1, 1, 1)
+                    wavelength = wavelength.view(n_sources, 1, 1, 1)
+    
+        # Scattering vector using crystallographic convention
+>       scattering_vector = (diffracted_beam_unit - incident_beam_unit) / wavelength
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu!
+
+src/nanobrag_torch/simulator.py:156: RuntimeError
+----------------------------- Captured stdout call -----------------------------
+auto-selected 1-fold oversampling
+_____________ TestAT_ABS_001.test_parallax_dependence[False-cuda] ______________
+
+self = <tests.test_at_abs_001.TestAT_ABS_001 object at 0x7a54f529d220>
+device = 'cuda', oversample_thick = False
+
+    @pytest.mark.parametrize("device", get_devices())
+    @pytest.mark.parametrize("oversample_thick", [False, True])
+    def test_parallax_dependence(self, device, oversample_thick):
+        """Test that absorption varies with parallax (off-axis vs on-axis pixels)."""
+        # Use more extreme geometry to get measurable parallax variation
+        # With 100mm distance and 2.1mm detector, variation is only ~0.025%
+        # With 50mm distance and 21mm detector, variation is ~12%
+        detector_config = DetectorConfig(
+            distance_mm=50.0,  # Closer distance for more parallax
+            pixel_size_mm=1.0,  # Larger pixels for bigger detector
+            spixels=21, fpixels=21,  # 21mm detector size
+            detector_abs_um=500.0,
+            detector_thick_um=100.0,
+            detector_thicksteps=3,
+            oversample_thick=oversample_thick
+        )
+    
+        crystal_config = CrystalConfig(default_F=100.0)  # Need non-zero intensity
+        beam_config = BeamConfig()
+    
+        detector = Detector(detector_config)
+        crystal = Crystal(crystal_config)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config, device=device)
+    
+>       intensity = simulator.run()
+                    ^^^^^^^^^^^^^^^
+
+tests/test_at_abs_001.py:199: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <src.nanobrag_torch.simulator.Simulator object at 0x7a54aba91a30>
+pixel_batch_size = None, override_a_star = None, oversample = 7
+oversample_omega = False, oversample_polar = False, oversample_thick = False
+
+    def run(
+        self,
+        pixel_batch_size: Optional[int] = None,
+        override_a_star: Optional[torch.Tensor] = None,
+        oversample: Optional[int] = None,
+        oversample_omega: Optional[bool] = None,
+        oversample_polar: Optional[bool] = None,
+        oversample_thick: Optional[bool] = None,
+    ) -> torch.Tensor:
+        """
+        Run the diffraction simulation with crystal rotation and mosaicity.
+    
+        This method vectorizes the simulation over all detector pixels, phi angles,
+        and mosaic domains. It integrates contributions from all crystal orientations
+        to produce the final diffraction pattern.
+    
+        Important: This implementation uses the full Miller indices (h, k, l) for the
+        lattice shape factor calculation, not the fractional part (h-h0). This correctly
+        models the crystal shape transform and is consistent with the physics of
+        diffraction from a finite crystal.
+    
+        C-Code Implementation Reference (from nanoBragg.c, lines 2993-3151):
+        The vectorized implementation replaces these nested loops. The outer `source`
+        loop is future work for handling beam divergence and dispersion.
+    
+        ```c
+                        /* loop over sources now */
+                        for(source=0;source<sources;++source){
+    
+                            /* retrieve stuff from cache */
+                            incident[1] = -source_X[source];
+                            incident[2] = -source_Y[source];
+                            incident[3] = -source_Z[source];
+                            lambda = source_lambda[source];
+    
+                            /* ... scattering vector calculation ... */
+    
+                            /* sweep over phi angles */
+                            for(phi_tic = 0; phi_tic < phisteps; ++phi_tic)
+                            {
+                                /* ... crystal rotation ... */
+    
+                                /* enumerate mosaic domains */
+                                for(mos_tic=0;mos_tic<mosaic_domains;++mos_tic)
+                                {
+                                    /* ... mosaic rotation ... */
+                                    /* ... h,k,l calculation ... */
+                                    /* ... F_cell and F_latt calculation ... */
+    
+                                    /* convert amplitudes into intensity (photons per steradian) */
+                                    I += F_cell*F_cell*F_latt*F_latt;
+                                }
+                            }
+                        }
+        ```
+    
+        Args:
+            pixel_batch_size: Optional batching for memory management.
+            override_a_star: Optional override for the a_star vector for testing.
+            oversample: Number of subpixel samples per axis. Defaults to detector config.
+            oversample_omega: Apply solid angle per subpixel. Defaults to detector config.
+            oversample_polar: Apply polarization per subpixel. Defaults to detector config.
+            oversample_thick: Apply absorption per subpixel. Defaults to detector config.
+    
+        Returns:
+            torch.Tensor: Final diffraction image with shape (spixels, fpixels).
+        """
+        # Unified vectorization path (spec-compliant fresh rotations)
+        # Get oversampling parameters from detector config if not provided
+        if oversample is None:
+            oversample = self.detector.config.oversample
+        if oversample_omega is None:
+            oversample_omega = self.detector.config.oversample_omega
+        if oversample_polar is None:
+            oversample_polar = self.detector.config.oversample_polar
+        if oversample_thick is None:
+            oversample_thick = self.detector.config.oversample_thick
+    
+        # Auto-select oversample if set to -1 (matches C behavior)
+        if oversample == -1:
+            # Calculate maximum crystal dimension in meters
+            xtalsize_max = max(
+                abs(self.crystal.config.cell_a * 1e-10 * self.crystal.config.N_cells[0]),  # a*Na in meters
+                abs(self.crystal.config.cell_b * 1e-10 * self.crystal.config.N_cells[1]),  # b*Nb in meters
+                abs(self.crystal.config.cell_c * 1e-10 * self.crystal.config.N_cells[2])   # c*Nc in meters
+            )
+    
+            # Calculate reciprocal pixel size in meters
+            # reciprocal_pixel_size = λ * distance / pixel_size (all in meters)
+            wavelength_m = self.wavelength * 1e-10  # Convert from Angstroms to meters
+            distance_m = self.detector.config.distance_mm / 1000.0  # Convert from mm to meters
+            pixel_size_m = self.detector.config.pixel_size_mm / 1000.0  # Convert from mm to meters
+            reciprocal_pixel_size = wavelength_m * distance_m / pixel_size_m
+    
+            # Calculate recommended oversample using C formula
+            import math
+            recommended_oversample = math.ceil(3.0 * xtalsize_max / reciprocal_pixel_size)
+    
+            # Ensure at least 1
+            if recommended_oversample <= 0:
+                recommended_oversample = 1
+    
+            oversample = recommended_oversample
+            print(f"auto-selected {oversample}-fold oversampling")
+    
+        # For now, we'll implement the base case without oversampling for this test
+        # The full subpixel implementation will come later
+        # This matches the current implementation which doesn't yet have subpixel sampling
+    
+        # PERF-PYTORCH-004 P3.4: Use cached ROI mask instead of rebuilding every run
+        roi_mask = self._cached_roi_mask
+    
+        # PERF-PYTORCH-004 P3.4: Use cached pixel coordinates instead of fetching/converting every run
+        pixel_coords_meters = self._cached_pixel_coords_meters
+    
+        # Get rotated lattice vectors for all phi steps and mosaic domains
+        # Shape: (N_phi, N_mos, 3)
+        # PERF-PYTORCH-006: Convert crystal vectors to correct device/dtype
+        if override_a_star is None:
+            (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = (
+                self.crystal.get_rotated_real_vectors(self.crystal.config)
+            )
+            # Convert to correct dtype/device
+            rot_a = rot_a.to(device=self.device, dtype=self.dtype)
+            rot_b = rot_b.to(device=self.device, dtype=self.dtype)
+            rot_c = rot_c.to(device=self.device, dtype=self.dtype)
+            rot_a_star = rot_a_star.to(device=self.device, dtype=self.dtype)
+            rot_b_star = rot_b_star.to(device=self.device, dtype=self.dtype)
+            rot_c_star = rot_c_star.to(device=self.device, dtype=self.dtype)
+            # Cache rotated reciprocal vectors for GAUSS/TOPHAT shape models
+            self._rot_a_star = rot_a_star
+            self._rot_b_star = rot_b_star
+            self._rot_c_star = rot_c_star
+        else:
+            # For gradient testing with override, use single orientation
+            rot_a = override_a_star.view(1, 1, 3)
+            rot_b = self.crystal.b.view(1, 1, 3)
+            rot_c = self.crystal.c.view(1, 1, 3)
+            rot_a_star = override_a_star.view(1, 1, 3)
+            rot_b_star = self.crystal.b_star.view(1, 1, 3)
+            rot_c_star = self.crystal.c_star.view(1, 1, 3)
+            # Cache for shape models
+            self._rot_a_star = rot_a_star
+            self._rot_b_star = rot_b_star
+            self._rot_c_star = rot_c_star
+    
+        # PERF-PYTORCH-004 P1.2: Use pre-normalized source tensors from __init__
+        # Tensors were already moved to correct device/dtype during initialization
+        if self._source_directions is not None:
+            n_sources = len(self._source_directions)
+            source_directions = self._source_directions
+            source_wavelengths_A = self._source_wavelengths_A
+            source_weights = self._source_weights
+        else:
+            # No explicit sources, use single beam configuration
+            n_sources = 1
+            source_directions = None
+            source_wavelengths_A = None
+            source_weights = None
+    
+        # Calculate normalization factor (steps)
+        # Per spec AT-SAM-001: "Final per-pixel scale SHALL divide by steps"
+        # PERF-PYTORCH-004 P3.0c: Per AT-SRC-001 "steps = sources; intensity contributions SHALL sum with per-source λ and weight, then divide by steps"
+        # The divisor SHALL be the COUNT of sources, not the SUM of weights.
+        # Weights are applied during accumulation (inside compute_physics_for_position), then we normalize by count.
+        phi_steps = self.crystal.config.phi_steps
+        mosaic_domains = self.crystal.config.mosaic_domains
+        source_norm = n_sources
+    
+        steps = source_norm * phi_steps * mosaic_domains * oversample * oversample  # Include sources and oversample^2
+    
+        # Apply physical scaling factors (from nanoBragg.c ~line 3050)
+        # Solid angle correction, converting all units to meters for calculation
+    
+        # Check if we're doing subpixel sampling
+        if oversample > 1:
+            # VECTORIZED IMPLEMENTATION: Process all subpixels in parallel
+            # Generate subpixel offsets (centered on pixel center)
+            # Per spec: "Compute detector-plane coordinates (meters): Fdet and Sdet at subpixel centers."
+            # Create offsets in fractional pixel units
+            subpixel_step = 1.0 / oversample
+            offset_start = -0.5 + subpixel_step / 2.0
+    
+            # Use manual arithmetic to preserve gradients (avoid torch.linspace)
+            subpixel_offsets = offset_start + torch.arange(
+                oversample, device=self.device, dtype=self.dtype
+            ) * subpixel_step
+    
+            # Create grid of subpixel offsets
+            sub_s, sub_f = torch.meshgrid(subpixel_offsets, subpixel_offsets, indexing='ij')
+            # Flatten the grid for vectorized processing
+            # Shape: (oversample*oversample,)
+            sub_s_flat = sub_s.flatten()
+            sub_f_flat = sub_f.flatten()
+    
+            # Get detector basis vectors for proper coordinate transformation
+            f_axis = self.detector.fdet_vec  # Shape: [3]
+            s_axis = self.detector.sdet_vec  # Shape: [3]
+            S, F = pixel_coords_meters.shape[:2]
+    
+            # VECTORIZED: Create all subpixel positions at once
+            # Shape: (oversample*oversample, 3)
+            # Convert detector properties to tensors with correct device/dtype (AT-PERF-DEVICE-001)
+            # Use as_tensor to avoid warnings when value might already be a tensor
+            pixel_size_m_tensor = torch.as_tensor(self.detector.pixel_size, device=pixel_coords_meters.device, dtype=pixel_coords_meters.dtype)
+            delta_s_all = sub_s_flat * pixel_size_m_tensor
+            delta_f_all = sub_f_flat * pixel_size_m_tensor
+    
+            # Shape: (oversample*oversample, 3)
+>           offset_vectors = delta_s_all.unsqueeze(-1) * s_axis + delta_f_all.unsqueeze(-1) * f_axis
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu!
+
+src/nanobrag_torch/simulator.py:903: RuntimeError
+----------------------------- Captured stdout call -----------------------------
+auto-selected 7-fold oversampling
+______________ TestAT_ABS_001.test_parallax_dependence[True-cuda] ______________
+
+self = <tests.test_at_abs_001.TestAT_ABS_001 object at 0x7a54f53450f0>
+device = 'cuda', oversample_thick = True
+
+    @pytest.mark.parametrize("device", get_devices())
+    @pytest.mark.parametrize("oversample_thick", [False, True])
+    def test_parallax_dependence(self, device, oversample_thick):
+        """Test that absorption varies with parallax (off-axis vs on-axis pixels)."""
+        # Use more extreme geometry to get measurable parallax variation
+        # With 100mm distance and 2.1mm detector, variation is only ~0.025%
+        # With 50mm distance and 21mm detector, variation is ~12%
+        detector_config = DetectorConfig(
+            distance_mm=50.0,  # Closer distance for more parallax
+            pixel_size_mm=1.0,  # Larger pixels for bigger detector
+            spixels=21, fpixels=21,  # 21mm detector size
+            detector_abs_um=500.0,
+            detector_thick_um=100.0,
+            detector_thicksteps=3,
+            oversample_thick=oversample_thick
+        )
+    
+        crystal_config = CrystalConfig(default_F=100.0)  # Need non-zero intensity
+        beam_config = BeamConfig()
+    
+        detector = Detector(detector_config)
+        crystal = Crystal(crystal_config)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config, device=device)
+    
+>       intensity = simulator.run()
+                    ^^^^^^^^^^^^^^^
+
+tests/test_at_abs_001.py:199: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <src.nanobrag_torch.simulator.Simulator object at 0x7a54aba916d0>
+pixel_batch_size = None, override_a_star = None, oversample = 7
+oversample_omega = False, oversample_polar = False, oversample_thick = True
+
+    def run(
+        self,
+        pixel_batch_size: Optional[int] = None,
+        override_a_star: Optional[torch.Tensor] = None,
+        oversample: Optional[int] = None,
+        oversample_omega: Optional[bool] = None,
+        oversample_polar: Optional[bool] = None,
+        oversample_thick: Optional[bool] = None,
+    ) -> torch.Tensor:
+        """
+        Run the diffraction simulation with crystal rotation and mosaicity.
+    
+        This method vectorizes the simulation over all detector pixels, phi angles,
+        and mosaic domains. It integrates contributions from all crystal orientations
+        to produce the final diffraction pattern.
+    
+        Important: This implementation uses the full Miller indices (h, k, l) for the
+        lattice shape factor calculation, not the fractional part (h-h0). This correctly
+        models the crystal shape transform and is consistent with the physics of
+        diffraction from a finite crystal.
+    
+        C-Code Implementation Reference (from nanoBragg.c, lines 2993-3151):
+        The vectorized implementation replaces these nested loops. The outer `source`
+        loop is future work for handling beam divergence and dispersion.
+    
+        ```c
+                        /* loop over sources now */
+                        for(source=0;source<sources;++source){
+    
+                            /* retrieve stuff from cache */
+                            incident[1] = -source_X[source];
+                            incident[2] = -source_Y[source];
+                            incident[3] = -source_Z[source];
+                            lambda = source_lambda[source];
+    
+                            /* ... scattering vector calculation ... */
+    
+                            /* sweep over phi angles */
+                            for(phi_tic = 0; phi_tic < phisteps; ++phi_tic)
+                            {
+                                /* ... crystal rotation ... */
+    
+                                /* enumerate mosaic domains */
+                                for(mos_tic=0;mos_tic<mosaic_domains;++mos_tic)
+                                {
+                                    /* ... mosaic rotation ... */
+                                    /* ... h,k,l calculation ... */
+                                    /* ... F_cell and F_latt calculation ... */
+    
+                                    /* convert amplitudes into intensity (photons per steradian) */
+                                    I += F_cell*F_cell*F_latt*F_latt;
+                                }
+                            }
+                        }
+        ```
+    
+        Args:
+            pixel_batch_size: Optional batching for memory management.
+            override_a_star: Optional override for the a_star vector for testing.
+            oversample: Number of subpixel samples per axis. Defaults to detector config.
+            oversample_omega: Apply solid angle per subpixel. Defaults to detector config.
+            oversample_polar: Apply polarization per subpixel. Defaults to detector config.
+            oversample_thick: Apply absorption per subpixel. Defaults to detector config.
+    
+        Returns:
+            torch.Tensor: Final diffraction image with shape (spixels, fpixels).
+        """
+        # Unified vectorization path (spec-compliant fresh rotations)
+        # Get oversampling parameters from detector config if not provided
+        if oversample is None:
+            oversample = self.detector.config.oversample
+        if oversample_omega is None:
+            oversample_omega = self.detector.config.oversample_omega
+        if oversample_polar is None:
+            oversample_polar = self.detector.config.oversample_polar
+        if oversample_thick is None:
+            oversample_thick = self.detector.config.oversample_thick
+    
+        # Auto-select oversample if set to -1 (matches C behavior)
+        if oversample == -1:
+            # Calculate maximum crystal dimension in meters
+            xtalsize_max = max(
+                abs(self.crystal.config.cell_a * 1e-10 * self.crystal.config.N_cells[0]),  # a*Na in meters
+                abs(self.crystal.config.cell_b * 1e-10 * self.crystal.config.N_cells[1]),  # b*Nb in meters
+                abs(self.crystal.config.cell_c * 1e-10 * self.crystal.config.N_cells[2])   # c*Nc in meters
+            )
+    
+            # Calculate reciprocal pixel size in meters
+            # reciprocal_pixel_size = λ * distance / pixel_size (all in meters)
+            wavelength_m = self.wavelength * 1e-10  # Convert from Angstroms to meters
+            distance_m = self.detector.config.distance_mm / 1000.0  # Convert from mm to meters
+            pixel_size_m = self.detector.config.pixel_size_mm / 1000.0  # Convert from mm to meters
+            reciprocal_pixel_size = wavelength_m * distance_m / pixel_size_m
+    
+            # Calculate recommended oversample using C formula
+            import math
+            recommended_oversample = math.ceil(3.0 * xtalsize_max / reciprocal_pixel_size)
+    
+            # Ensure at least 1
+            if recommended_oversample <= 0:
+                recommended_oversample = 1
+    
+            oversample = recommended_oversample
+            print(f"auto-selected {oversample}-fold oversampling")
+    
+        # For now, we'll implement the base case without oversampling for this test
+        # The full subpixel implementation will come later
+        # This matches the current implementation which doesn't yet have subpixel sampling
+    
+        # PERF-PYTORCH-004 P3.4: Use cached ROI mask instead of rebuilding every run
+        roi_mask = self._cached_roi_mask
+    
+        # PERF-PYTORCH-004 P3.4: Use cached pixel coordinates instead of fetching/converting every run
+        pixel_coords_meters = self._cached_pixel_coords_meters
+    
+        # Get rotated lattice vectors for all phi steps and mosaic domains
+        # Shape: (N_phi, N_mos, 3)
+        # PERF-PYTORCH-006: Convert crystal vectors to correct device/dtype
+        if override_a_star is None:
+            (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = (
+                self.crystal.get_rotated_real_vectors(self.crystal.config)
+            )
+            # Convert to correct dtype/device
+            rot_a = rot_a.to(device=self.device, dtype=self.dtype)
+            rot_b = rot_b.to(device=self.device, dtype=self.dtype)
+            rot_c = rot_c.to(device=self.device, dtype=self.dtype)
+            rot_a_star = rot_a_star.to(device=self.device, dtype=self.dtype)
+            rot_b_star = rot_b_star.to(device=self.device, dtype=self.dtype)
+            rot_c_star = rot_c_star.to(device=self.device, dtype=self.dtype)
+            # Cache rotated reciprocal vectors for GAUSS/TOPHAT shape models
+            self._rot_a_star = rot_a_star
+            self._rot_b_star = rot_b_star
+            self._rot_c_star = rot_c_star
+        else:
+            # For gradient testing with override, use single orientation
+            rot_a = override_a_star.view(1, 1, 3)
+            rot_b = self.crystal.b.view(1, 1, 3)
+            rot_c = self.crystal.c.view(1, 1, 3)
+            rot_a_star = override_a_star.view(1, 1, 3)
+            rot_b_star = self.crystal.b_star.view(1, 1, 3)
+            rot_c_star = self.crystal.c_star.view(1, 1, 3)
+            # Cache for shape models
+            self._rot_a_star = rot_a_star
+            self._rot_b_star = rot_b_star
+            self._rot_c_star = rot_c_star
+    
+        # PERF-PYTORCH-004 P1.2: Use pre-normalized source tensors from __init__
+        # Tensors were already moved to correct device/dtype during initialization
+        if self._source_directions is not None:
+            n_sources = len(self._source_directions)
+            source_directions = self._source_directions
+            source_wavelengths_A = self._source_wavelengths_A
+            source_weights = self._source_weights
+        else:
+            # No explicit sources, use single beam configuration
+            n_sources = 1
+            source_directions = None
+            source_wavelengths_A = None
+            source_weights = None
+    
+        # Calculate normalization factor (steps)
+        # Per spec AT-SAM-001: "Final per-pixel scale SHALL divide by steps"
+        # PERF-PYTORCH-004 P3.0c: Per AT-SRC-001 "steps = sources; intensity contributions SHALL sum with per-source λ and weight, then divide by steps"
+        # The divisor SHALL be the COUNT of sources, not the SUM of weights.
+        # Weights are applied during accumulation (inside compute_physics_for_position), then we normalize by count.
+        phi_steps = self.crystal.config.phi_steps
+        mosaic_domains = self.crystal.config.mosaic_domains
+        source_norm = n_sources
+    
+        steps = source_norm * phi_steps * mosaic_domains * oversample * oversample  # Include sources and oversample^2
+    
+        # Apply physical scaling factors (from nanoBragg.c ~line 3050)
+        # Solid angle correction, converting all units to meters for calculation
+    
+        # Check if we're doing subpixel sampling
+        if oversample > 1:
+            # VECTORIZED IMPLEMENTATION: Process all subpixels in parallel
+            # Generate subpixel offsets (centered on pixel center)
+            # Per spec: "Compute detector-plane coordinates (meters): Fdet and Sdet at subpixel centers."
+            # Create offsets in fractional pixel units
+            subpixel_step = 1.0 / oversample
+            offset_start = -0.5 + subpixel_step / 2.0
+    
+            # Use manual arithmetic to preserve gradients (avoid torch.linspace)
+            subpixel_offsets = offset_start + torch.arange(
+                oversample, device=self.device, dtype=self.dtype
+            ) * subpixel_step
+    
+            # Create grid of subpixel offsets
+            sub_s, sub_f = torch.meshgrid(subpixel_offsets, subpixel_offsets, indexing='ij')
+            # Flatten the grid for vectorized processing
+            # Shape: (oversample*oversample,)
+            sub_s_flat = sub_s.flatten()
+            sub_f_flat = sub_f.flatten()
+    
+            # Get detector basis vectors for proper coordinate transformation
+            f_axis = self.detector.fdet_vec  # Shape: [3]
+            s_axis = self.detector.sdet_vec  # Shape: [3]
+            S, F = pixel_coords_meters.shape[:2]
+    
+            # VECTORIZED: Create all subpixel positions at once
+            # Shape: (oversample*oversample, 3)
+            # Convert detector properties to tensors with correct device/dtype (AT-PERF-DEVICE-001)
+            # Use as_tensor to avoid warnings when value might already be a tensor
+            pixel_size_m_tensor = torch.as_tensor(self.detector.pixel_size, device=pixel_coords_meters.device, dtype=pixel_coords_meters.dtype)
+            delta_s_all = sub_s_flat * pixel_size_m_tensor
+            delta_f_all = sub_f_flat * pixel_size_m_tensor
+    
+            # Shape: (oversample*oversample, 3)
+>           offset_vectors = delta_s_all.unsqueeze(-1) * s_axis + delta_f_all.unsqueeze(-1) * f_axis
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu!
+
+src/nanobrag_torch/simulator.py:903: RuntimeError
+----------------------------- Captured stdout call -----------------------------
+auto-selected 7-fold oversampling
+_______ TestAT_ABS_001.test_absorption_with_tilted_detector[False-cuda] ________
+
+self = <tests.test_at_abs_001.TestAT_ABS_001 object at 0x7a54f5249a50>
+device = 'cuda', oversample_thick = False
+
+    @pytest.mark.parametrize("device", get_devices())
+    @pytest.mark.parametrize("oversample_thick", [False, True])
+    def test_absorption_with_tilted_detector(self, device, oversample_thick):
+        """Test absorption calculation works correctly with detector rotations."""
+        detector_config = DetectorConfig(
+            distance_mm=100.0,
+            pixel_size_mm=0.1,
+            spixels=5, fpixels=5,
+            detector_rotx_deg=10.0,  # Tilt detector
+            detector_roty_deg=5.0,
+            detector_abs_um=1000.0,
+            detector_thick_um=50.0,
+            detector_thicksteps=2,
+            oversample_thick=oversample_thick
+        )
+    
+        crystal_config = CrystalConfig(default_F=100.0)  # Need non-zero intensity
+        beam_config = BeamConfig()
+    
+        detector = Detector(detector_config)
+        crystal = Crystal(crystal_config)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config, device=device)
+    
+        # Should run without errors
+>       intensity = simulator.run()
+                    ^^^^^^^^^^^^^^^
+
+tests/test_at_abs_001.py:235: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/nanobrag_torch/simulator.py:1031: in run
+    intensity, I_before_normalization_pre_polar = self._compute_physics_for_position(
+src/nanobrag_torch/simulator.py:670: in _compute_physics_for_position
+    return self._compiled_compute_physics(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+pixel_coords_angstroms = tensor([[[ 9.9979e+08,  3.4754e+06, -2.4242e+06],
+         [ 9.9987e+08,  3.3017e+06, -1.4432e+06],
+         [ 9.9996e...
+         [ 9.9998e+08, -9.8481e+05, -1.7299e+05],
+         [ 1.0001e+09, -1.1585e+06,  8.0807e+05]]], device='cuda:0')
+rot_a = tensor([[[ 1.0000e+02, -4.3711e-06, -4.3711e-06]]], device='cuda:0')
+rot_b = tensor([[[ 0.0000e+00,  1.0000e+02, -4.3711e-06]]], device='cuda:0')
+rot_c = tensor([[[  0.0000,   0.0000, 100.0000]]], device='cuda:0')
+rot_a_star = tensor([[[0.0100, -0.0000, 0.0000]]], device='cuda:0')
+rot_b_star = tensor([[[4.3711e-10, 1.0000e-02, -0.0000e+00]]], device='cuda:0')
+rot_c_star = tensor([[[4.3711e-10, 4.3711e-10, 1.0000e-02]]], device='cuda:0')
+incident_beam_direction = tensor([1., 0., 0.])
+wavelength = tensor(1., device='cuda:0'), source_weights = None, dmin = 0.0
+crystal_get_structure_factor = <bound method Crystal.get_structure_factor of <src.nanobrag_torch.models.crystal.Crystal object at 0x7a54abad85f0>>
+N_cells_a = tensor(1.), N_cells_b = tensor(1.), N_cells_c = tensor(1.)
+crystal_shape = <CrystalShape.SQUARE: 'square'>, crystal_fudge = 1.0
+apply_polarization = True, kahn_factor = tensor(0., device='cuda:0')
+polarization_axis = tensor([0., 0., 1.], device='cuda:0')
+
+    def compute_physics_for_position(
+        # Geometry inputs
+        pixel_coords_angstroms: torch.Tensor,
+        rot_a: torch.Tensor,
+        rot_b: torch.Tensor,
+        rot_c: torch.Tensor,
+        rot_a_star: torch.Tensor,
+        rot_b_star: torch.Tensor,
+        rot_c_star: torch.Tensor,
+        # Beam parameters
+        incident_beam_direction: torch.Tensor,
+        wavelength: torch.Tensor,
+        source_weights: Optional[torch.Tensor] = None,
+        # Beam configuration (dmin culling)
+        dmin: float = 0.0,
+        # Crystal structure factor function
+        crystal_get_structure_factor: Callable[[torch.Tensor, torch.Tensor, torch.Tensor], torch.Tensor] = None,
+        # Crystal parameters for lattice factor
+        N_cells_a: int = 0,
+        N_cells_b: int = 0,
+        N_cells_c: int = 0,
+        crystal_shape: CrystalShape = CrystalShape.SQUARE,
+        crystal_fudge: float = 1.0,
+        # Polarization parameters (PERF-PYTORCH-004 P3.0b)
+        apply_polarization: bool = True,
+        kahn_factor: float = 1.0,
+        polarization_axis: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        """Compute physics (Miller indices, structure factors, intensity) for given positions.
+    
+        This is a pure function with no instance state dependencies, enabling safe cross-instance
+        kernel caching for torch.compile optimization (PERF-PYTORCH-004 Phase 0).
+    
+        REFACTORING NOTE (PERF-PYTORCH-004 Phase 0):
+        This function was refactored from a bound method (`Simulator._compute_physics_for_position`)
+        to a module-level pure function to enable safe cross-instance kernel caching with torch.compile.
+        Caching bound methods is unsafe because they capture `self`, which can lead to silent
+        correctness bugs when the cached kernel is reused across different simulator instances
+        with different state.
+    
+        All required state is now passed as explicit parameters, ensuring that:
+        1. The function has no hidden dependencies on instance state
+        2. torch.compile can safely cache compiled kernels across instances
+        3. The function's behavior is fully determined by its inputs
+        4. Testing and debugging are simplified (pure function properties)
+    
+        This is the core physics calculation that must be done per-subpixel for proper
+        anti-aliasing. Each subpixel samples a slightly different position in reciprocal
+        space, leading to different Miller indices and structure factors.
+    
+        VECTORIZED OVER SOURCES: This function supports batched computation over
+        multiple sources (beam divergence/dispersion). When multiple sources are provided,
+        the computation is vectorized across the source dimension, eliminating the Python loop.
+    
+        Args:
+            pixel_coords_angstroms: Pixel/subpixel coordinates in Angstroms (S, F, 3) or (batch, 3)
+            rot_a, rot_b, rot_c: Rotated real-space lattice vectors (N_phi, N_mos, 3)
+            rot_a_star, rot_b_star, rot_c_star: Rotated reciprocal vectors (N_phi, N_mos, 3)
+            incident_beam_direction: Incident beam direction.
+                - Single source: shape (3,)
+                - Multiple sources: shape (n_sources, 3)
+            wavelength: Wavelength in Angstroms.
+                - Single source: scalar
+                - Multiple sources: shape (n_sources,) or (n_sources, 1, 1)
+            source_weights: Optional per-source weights for multi-source accumulation.
+                Shape: (n_sources,). If None, equal weighting is assumed.
+            dmin: Minimum d-spacing for resolution culling (0 = no culling)
+            crystal_get_structure_factor: Function to look up structure factors for (h0, k0, l0)
+            N_cells_a/b/c: Number of unit cells in each direction
+            crystal_shape: Crystal shape enum for lattice structure factor calculation
+            crystal_fudge: Fudge factor for lattice structure factor
+            apply_polarization: Whether to apply Kahn polarization correction (default True)
+            kahn_factor: Polarization factor for Kahn correction (0=unpolarized, 1=fully polarized)
+            polarization_axis: Polarization axis unit vector (3,) or broadcastable shape
+    
+        Returns:
+            intensity: Computed intensity |F|^2 integrated over phi and mosaic
+                - Single source: shape (S, F) or (batch,)
+                - Multiple sources: weighted sum across sources, shape (S, F) or (batch,)
+        """
+        # Detect if we have batched sources
+        is_multi_source = incident_beam_direction.dim() == 2
+        n_sources = incident_beam_direction.shape[0] if is_multi_source else 1
+    
+        # Calculate scattering vectors
+        pixel_squared_sum = torch.sum(
+            pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True
+        )
+        # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
+        pixel_squared_sum = pixel_squared_sum.clamp_min(1e-12)
+        pixel_magnitudes = torch.sqrt(pixel_squared_sum)
+        diffracted_beam_unit = pixel_coords_angstroms / pixel_magnitudes
+    
+        # Determine spatial dimensionality from original pixel_coords BEFORE multi-source expansion
+        # This tells us if we have (S, F, 3) or (batch, 3) input
+        original_n_dims = pixel_coords_angstroms.dim()  # 2 for (batch, 3), 3 for (S, F, 3)
+    
+        # PERF-PYTORCH-004 Phase 1: No .to() call needed - incident_beam_direction is already on correct device
+        # The caller (run() method) ensures source_directions are moved to self.device before calling this function
+        # This avoids graph breaks in torch.compile
+    
+        if is_multi_source:
+            # Multi-source case: broadcast over sources
+            # diffracted_beam_unit: (S, F, 3) or (batch, 3)
+            # incident_beam_direction: (n_sources, 3)
+            # Need to add source dimension to diffracted_beam_unit
+    
+            # Add source dimension: (S, F, 3) -> (1, S, F, 3) or (batch, 3) -> (1, batch, 3)
+            diffracted_expanded = diffracted_beam_unit.unsqueeze(0)
+    
+            # Handle both 2D (batch, 3) and 3D (S, F, 3) cases for incident beam expansion
+            if original_n_dims == 2:
+                # (batch, 3) case: expand incident to (n_sources, 1, 3)
+                incident_expanded = incident_beam_direction.view(n_sources, 1, 3)
+            else:
+                # (S, F, 3) case: expand incident to (n_sources, 1, 1, 3)
+                incident_expanded = incident_beam_direction.view(n_sources, 1, 1, 3)
+    
+            # Expand to match diffracted shape
+            incident_beam_unit = incident_expanded.expand(n_sources, *diffracted_beam_unit.shape)
+            diffracted_beam_unit = diffracted_expanded.expand_as(incident_beam_unit)
+        else:
+            # Single source case: broadcast as before
+            incident_beam_unit = incident_beam_direction.expand_as(diffracted_beam_unit)
+    
+        # Prepare wavelength for broadcasting
+        if is_multi_source:
+            # wavelength: (n_sources,) -> broadcast shape matching diffracted_beam_unit
+            if wavelength.dim() == 1:
+                if original_n_dims == 2:
+                    # (batch, 3) case: (n_sources,) -> (n_sources, 1, 1)
+                    wavelength = wavelength.view(n_sources, 1, 1)
+                else:
+                    # (S, F, 3) case: (n_sources,) -> (n_sources, 1, 1, 1)
+                    wavelength = wavelength.view(n_sources, 1, 1, 1)
+    
+        # Scattering vector using crystallographic convention
+>       scattering_vector = (diffracted_beam_unit - incident_beam_unit) / wavelength
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu!
+
+src/nanobrag_torch/simulator.py:156: RuntimeError
+----------------------------- Captured stdout call -----------------------------
+auto-selected 1-fold oversampling
+________ TestAT_ABS_001.test_absorption_with_tilted_detector[True-cuda] ________
+
+self = <tests.test_at_abs_001.TestAT_ABS_001 object at 0x7a54f52a04d0>
+device = 'cuda', oversample_thick = True
+
+    @pytest.mark.parametrize("device", get_devices())
+    @pytest.mark.parametrize("oversample_thick", [False, True])
+    def test_absorption_with_tilted_detector(self, device, oversample_thick):
+        """Test absorption calculation works correctly with detector rotations."""
+        detector_config = DetectorConfig(
+            distance_mm=100.0,
+            pixel_size_mm=0.1,
+            spixels=5, fpixels=5,
+            detector_rotx_deg=10.0,  # Tilt detector
+            detector_roty_deg=5.0,
+            detector_abs_um=1000.0,
+            detector_thick_um=50.0,
+            detector_thicksteps=2,
+            oversample_thick=oversample_thick
+        )
+    
+        crystal_config = CrystalConfig(default_F=100.0)  # Need non-zero intensity
+        beam_config = BeamConfig()
+    
+        detector = Detector(detector_config)
+        crystal = Crystal(crystal_config)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config, device=device)
+    
+        # Should run without errors
+>       intensity = simulator.run()
+                    ^^^^^^^^^^^^^^^
+
+tests/test_at_abs_001.py:235: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/nanobrag_torch/simulator.py:1031: in run
+    intensity, I_before_normalization_pre_polar = self._compute_physics_for_position(
+src/nanobrag_torch/simulator.py:670: in _compute_physics_for_position
+    return self._compiled_compute_physics(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+pixel_coords_angstroms = tensor([[[ 9.9979e+08,  3.4754e+06, -2.4242e+06],
+         [ 9.9987e+08,  3.3017e+06, -1.4432e+06],
+         [ 9.9996e...
+         [ 9.9998e+08, -9.8481e+05, -1.7299e+05],
+         [ 1.0001e+09, -1.1585e+06,  8.0807e+05]]], device='cuda:0')
+rot_a = tensor([[[ 1.0000e+02, -4.3711e-06, -4.3711e-06]]], device='cuda:0')
+rot_b = tensor([[[ 0.0000e+00,  1.0000e+02, -4.3711e-06]]], device='cuda:0')
+rot_c = tensor([[[  0.0000,   0.0000, 100.0000]]], device='cuda:0')
+rot_a_star = tensor([[[0.0100, -0.0000, 0.0000]]], device='cuda:0')
+rot_b_star = tensor([[[4.3711e-10, 1.0000e-02, -0.0000e+00]]], device='cuda:0')
+rot_c_star = tensor([[[4.3711e-10, 4.3711e-10, 1.0000e-02]]], device='cuda:0')
+incident_beam_direction = tensor([1., 0., 0.])
+wavelength = tensor(1., device='cuda:0'), source_weights = None, dmin = 0.0
+crystal_get_structure_factor = <bound method Crystal.get_structure_factor of <src.nanobrag_torch.models.crystal.Crystal object at 0x7a54abad8aa0>>
+N_cells_a = tensor(1.), N_cells_b = tensor(1.), N_cells_c = tensor(1.)
+crystal_shape = <CrystalShape.SQUARE: 'square'>, crystal_fudge = 1.0
+apply_polarization = True, kahn_factor = tensor(0., device='cuda:0')
+polarization_axis = tensor([0., 0., 1.], device='cuda:0')
+
+    def compute_physics_for_position(
+        # Geometry inputs
+        pixel_coords_angstroms: torch.Tensor,
+        rot_a: torch.Tensor,
+        rot_b: torch.Tensor,
+        rot_c: torch.Tensor,
+        rot_a_star: torch.Tensor,
+        rot_b_star: torch.Tensor,
+        rot_c_star: torch.Tensor,
+        # Beam parameters
+        incident_beam_direction: torch.Tensor,
+        wavelength: torch.Tensor,
+        source_weights: Optional[torch.Tensor] = None,
+        # Beam configuration (dmin culling)
+        dmin: float = 0.0,
+        # Crystal structure factor function
+        crystal_get_structure_factor: Callable[[torch.Tensor, torch.Tensor, torch.Tensor], torch.Tensor] = None,
+        # Crystal parameters for lattice factor
+        N_cells_a: int = 0,
+        N_cells_b: int = 0,
+        N_cells_c: int = 0,
+        crystal_shape: CrystalShape = CrystalShape.SQUARE,
+        crystal_fudge: float = 1.0,
+        # Polarization parameters (PERF-PYTORCH-004 P3.0b)
+        apply_polarization: bool = True,
+        kahn_factor: float = 1.0,
+        polarization_axis: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        """Compute physics (Miller indices, structure factors, intensity) for given positions.
+    
+        This is a pure function with no instance state dependencies, enabling safe cross-instance
+        kernel caching for torch.compile optimization (PERF-PYTORCH-004 Phase 0).
+    
+        REFACTORING NOTE (PERF-PYTORCH-004 Phase 0):
+        This function was refactored from a bound method (`Simulator._compute_physics_for_position`)
+        to a module-level pure function to enable safe cross-instance kernel caching with torch.compile.
+        Caching bound methods is unsafe because they capture `self`, which can lead to silent
+        correctness bugs when the cached kernel is reused across different simulator instances
+        with different state.
+    
+        All required state is now passed as explicit parameters, ensuring that:
+        1. The function has no hidden dependencies on instance state
+        2. torch.compile can safely cache compiled kernels across instances
+        3. The function's behavior is fully determined by its inputs
+        4. Testing and debugging are simplified (pure function properties)
+    
+        This is the core physics calculation that must be done per-subpixel for proper
+        anti-aliasing. Each subpixel samples a slightly different position in reciprocal
+        space, leading to different Miller indices and structure factors.
+    
+        VECTORIZED OVER SOURCES: This function supports batched computation over
+        multiple sources (beam divergence/dispersion). When multiple sources are provided,
+        the computation is vectorized across the source dimension, eliminating the Python loop.
+    
+        Args:
+            pixel_coords_angstroms: Pixel/subpixel coordinates in Angstroms (S, F, 3) or (batch, 3)
+            rot_a, rot_b, rot_c: Rotated real-space lattice vectors (N_phi, N_mos, 3)
+            rot_a_star, rot_b_star, rot_c_star: Rotated reciprocal vectors (N_phi, N_mos, 3)
+            incident_beam_direction: Incident beam direction.
+                - Single source: shape (3,)
+                - Multiple sources: shape (n_sources, 3)
+            wavelength: Wavelength in Angstroms.
+                - Single source: scalar
+                - Multiple sources: shape (n_sources,) or (n_sources, 1, 1)
+            source_weights: Optional per-source weights for multi-source accumulation.
+                Shape: (n_sources,). If None, equal weighting is assumed.
+            dmin: Minimum d-spacing for resolution culling (0 = no culling)
+            crystal_get_structure_factor: Function to look up structure factors for (h0, k0, l0)
+            N_cells_a/b/c: Number of unit cells in each direction
+            crystal_shape: Crystal shape enum for lattice structure factor calculation
+            crystal_fudge: Fudge factor for lattice structure factor
+            apply_polarization: Whether to apply Kahn polarization correction (default True)
+            kahn_factor: Polarization factor for Kahn correction (0=unpolarized, 1=fully polarized)
+            polarization_axis: Polarization axis unit vector (3,) or broadcastable shape
+    
+        Returns:
+            intensity: Computed intensity |F|^2 integrated over phi and mosaic
+                - Single source: shape (S, F) or (batch,)
+                - Multiple sources: weighted sum across sources, shape (S, F) or (batch,)
+        """
+        # Detect if we have batched sources
+        is_multi_source = incident_beam_direction.dim() == 2
+        n_sources = incident_beam_direction.shape[0] if is_multi_source else 1
+    
+        # Calculate scattering vectors
+        pixel_squared_sum = torch.sum(
+            pixel_coords_angstroms * pixel_coords_angstroms, dim=-1, keepdim=True
+        )
+        # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum to avoid allocating tensors inside compiled graph
+        pixel_squared_sum = pixel_squared_sum.clamp_min(1e-12)
+        pixel_magnitudes = torch.sqrt(pixel_squared_sum)
+        diffracted_beam_unit = pixel_coords_angstroms / pixel_magnitudes
+    
+        # Determine spatial dimensionality from original pixel_coords BEFORE multi-source expansion
+        # This tells us if we have (S, F, 3) or (batch, 3) input
+        original_n_dims = pixel_coords_angstroms.dim()  # 2 for (batch, 3), 3 for (S, F, 3)
+    
+        # PERF-PYTORCH-004 Phase 1: No .to() call needed - incident_beam_direction is already on correct device
+        # The caller (run() method) ensures source_directions are moved to self.device before calling this function
+        # This avoids graph breaks in torch.compile
+    
+        if is_multi_source:
+            # Multi-source case: broadcast over sources
+            # diffracted_beam_unit: (S, F, 3) or (batch, 3)
+            # incident_beam_direction: (n_sources, 3)
+            # Need to add source dimension to diffracted_beam_unit
+    
+            # Add source dimension: (S, F, 3) -> (1, S, F, 3) or (batch, 3) -> (1, batch, 3)
+            diffracted_expanded = diffracted_beam_unit.unsqueeze(0)
+    
+            # Handle both 2D (batch, 3) and 3D (S, F, 3) cases for incident beam expansion
+            if original_n_dims == 2:
+                # (batch, 3) case: expand incident to (n_sources, 1, 3)
+                incident_expanded = incident_beam_direction.view(n_sources, 1, 3)
+            else:
+                # (S, F, 3) case: expand incident to (n_sources, 1, 1, 3)
+                incident_expanded = incident_beam_direction.view(n_sources, 1, 1, 3)
+    
+            # Expand to match diffracted shape
+            incident_beam_unit = incident_expanded.expand(n_sources, *diffracted_beam_unit.shape)
+            diffracted_beam_unit = diffracted_expanded.expand_as(incident_beam_unit)
+        else:
+            # Single source case: broadcast as before
+            incident_beam_unit = incident_beam_direction.expand_as(diffracted_beam_unit)
+    
+        # Prepare wavelength for broadcasting
+        if is_multi_source:
+            # wavelength: (n_sources,) -> broadcast shape matching diffracted_beam_unit
+            if wavelength.dim() == 1:
+                if original_n_dims == 2:
+                    # (batch, 3) case: (n_sources,) -> (n_sources, 1, 1)
+                    wavelength = wavelength.view(n_sources, 1, 1)
+                else:
+                    # (S, F, 3) case: (n_sources,) -> (n_sources, 1, 1, 1)
+                    wavelength = wavelength.view(n_sources, 1, 1, 1)
+    
+        # Scattering vector using crystallographic convention
+>       scattering_vector = (diffracted_beam_unit - incident_beam_unit) / wavelength
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu!
+
+src/nanobrag_torch/simulator.py:156: RuntimeError
+----------------------------- Captured stdout call -----------------------------
+auto-selected 1-fold oversampling
+=========================== short test summary info ============================
+FAILED tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_disabled_when_zero[cuda]
+FAILED tests/test_at_abs_001.py::TestAT_ABS_001::test_last_value_vs_accumulation_semantics[cuda]
+FAILED tests/test_at_abs_001.py::TestAT_ABS_001::test_parallax_dependence[False-cuda]
+FAILED tests/test_at_abs_001.py::TestAT_ABS_001::test_parallax_dependence[True-cuda]
+FAILED tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_with_tilted_detector[False-cuda]
+FAILED tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_with_tilted_detector[True-cuda]
+========================= 6 failed, 10 passed in 2.49s =========================
