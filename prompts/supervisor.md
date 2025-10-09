@@ -139,12 +139,14 @@ Evidence collection includes the following subtype:
 - Review and evaluate ralph's work. Scrutinize the commit history. Look at the diffs. 
 - Are the docs/fix_plan.md contents and priorities sane? things to consider:
   - if docs/fix_plan.md is longer than 1000 lines it should be housecleaned. If it's disorganized and / or internally inconsistent, consider how this could be addressed. 
-- **IMPORTANT — surprise evidence gate:** When unexpected metrics or findings hit, choose this action first:
-  - Update docs/fix_plan.md **and** the relevant plan document under `plans/active/` with the follow-up gate (new phase row, decision bullet, etc.).
-  - Example: if a metric stays wildly out of tolerance just as the plan says to advance, add the follow-up phase and keep the original phase blocked until that investigative task is closed.
-- after considering the above, you have enough information to choose a <focus issue> for this turn. do so. Consider the nature of the <focus issue>:
+- **Important — surprise evidence gate:** When unexpected metrics or findings hit, consider the following:
+  - Whether to update docs/fix_plan.md and the relevant plan document under `plans/active/` with a follow-up gate (new phase row, decision bullet, etc.).
+  - Example: if a newly-generatedly is mysteriously or unexpectedly out of tolerance and yet the plan says to advance, consider the need for a follow-up step. It is better to keep the original phase blocked until investigation is complete than  
+      you have sufficient understanding of the situation and have allayed the initial surprise or confusion. 
+- after considering all of the above, you have enough information to choose a <focus issue> for this turn. do so. Consider the nature of the <focus issue>:
     - Do we need a new docs/fix_plan item to put ralph back on course, fix one of his mistakes, or instruct him to do something that he overlooked? If so, draft it and add it to docs/fix_plans
     - does the <focus issue> involve identified issues in docs/fix_plan.md? If so, fix them. If you decide to shorten docs/fix_plan.md, the least relevant portions should be moved to archive/fix_plan_archive.md (with summary + archive cross reference if appropriate)
+    - Do we need to make a minor revision of an existing plan? If so, do so. (note that <Planning> entails new plans and medium-to-large plan revisions. <Review or housekeeping> allows minor revisions.)
 </Review or housekeeping>
 </4>
 
