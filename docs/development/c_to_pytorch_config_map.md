@@ -32,7 +32,7 @@ Before writing any test or implementation that involves C-code validation, you *
 
 | C-CLI Flag | PyTorch Config Field | C Variable | Units/Convention | Critical Notes |
 |------------|---------------------|------------|------------------|----------------|
-| `-lambda <val>` | `BeamConfig.wavelength_A` | `lambda0` | Å → meters | Convert to meters internally |
+| `-lambda <val>` | `BeamConfig.wavelength_A` | `lambda0` | Å → meters | **Overrides sourcefile wavelength column**; convert to meters internally |
 | `-energy <val>` | `BeamConfig.wavelength_A` | `lambda0` | eV → Å via 12398.42/E | Alternative to `-lambda` |
 | `-fluence <val>` | `BeamConfig.fluence` | `fluence` | photons/m² | Total integrated intensity |
 | `-flux <val>` | `BeamConfig.flux` | `flux` | photons/s | Used with exposure & beamsize |

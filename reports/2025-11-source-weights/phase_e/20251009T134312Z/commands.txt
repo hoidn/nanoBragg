@@ -1,0 +1,22 @@
+# SOURCE-WEIGHT-001 Phase E Lambda Override Implementation
+# Date: 2025-10-09T13:43:12Z
+# Ralph Loop #230
+
+## Reproduction Commands
+
+# Step 1: Run TC-E1/E2/E3 regression tests
+KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_src_003.py -v
+
+# Step 2: Full test collection (verify no regressions)
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q
+
+## Expected Outcomes
+- TC-E1/E2: Lambda override tests pass (7/7)
+- Warning emission verified
+- Test collection: 693 tests
+
+## Implementation Touchpoints
+- src/nanobrag_torch/io/source.py (lambda override + warning)
+- tests/test_at_src_003.py (new file, 7 tests)
+- specs/spec-a-core.md:151-153 (clarified weight+wavelength columns ignored)
+- docs/development/c_to_pytorch_config_map.md:35 (added lambda precedence note)

@@ -148,7 +148,9 @@ fields default to:
         - Weight = 1.0.
         - λ = λ0.
     - Positions are normalized to unit direction vectors (X,Y,Z overwrites become unit direction).
-The weight column is read but ignored (equal weighting results).
+Both the weight column and the wavelength column are read but ignored: the CLI -lambda parameter
+is the sole authoritative wavelength source for all sources, and equal weighting results (all
+sources contribute equally via division by total source count in the steps normalization).
 - Generated sources (when no file provided):
     - Horizontal/vertical divergence grids are defined by ranges and either steps or step sizes.
 Elliptical trimming: with round_div on, grid points outside the ellipse (normalized squared radius >
