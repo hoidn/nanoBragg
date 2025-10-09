@@ -3597,7 +3597,7 @@
       - **Runtime checklist compliance:** Vectorization preserved (no loop reintroductions), device/dtype neutrality confirmed (CPU+CUDA tests passing), gradient flow maintained (gradcheck tests passing)
       - **Architecture alignment:** Batched gather `(B,4,4,4)` neighborhoods operational, polynomial helpers vectorized per design_notes.md, memory footprint acceptable (268 MB for 1024² at float32)
       - **Statistical confidence:** 200 warm repeats (vs Phase A's 5) provide robust measurements with tight standard deviations (CPU: 0.49-0.31%, CUDA: 0.30%)
-    Next Actions: Phase E complete; proceed to Phase F (F1 detector absorption vectorization design, F2 implementation, F3 testing, F4 summary). Update `plans/active/vectorization.md` to mark E2 [D] and E3 [D]; begin Phase F design notes in `phase_f/design_notes.md`.
+    Next Actions: Phase E complete; proceed to Phase F (F1 detector absorption vectorization design, F2 implementation, F3 testing, F4 summary). Plan refreshed 2025-12-22 with E2/E3 marked [D]; begin Phase F design notes in `phase_f/design_notes.md`.
 - Risks/Assumptions: Must maintain differentiability (no `.item()`, no `torch.linspace` with tensor bounds), preserve device/dtype neutrality (CPU/CUDA parity), and obey Protected Assets rule (all new scripts under `scripts/benchmarks/`). Large tensor indexing may increase memory pressure; ensure ROI caching still works.
 - Exit Criteria (quote thresholds from spec):
   * specs/spec-a-parallel.md §2.3 tricubic acceptance tests run without warnings and match C parity within documented tolerances (corr≥0.9995, ≤1e-12 structural duality where applicable).

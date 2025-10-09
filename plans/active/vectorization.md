@@ -4,15 +4,15 @@
 - Dependencies:
   - specs/spec-a-core.md §4 (structure-factor sampling contract)
   - specs/spec-a-parallel.md §2.3 (tricubic acceptance tests + tolerances)
-  - docs/architecture/pytorch_design.md §§2.2–2.4 (vectorization strategy, broadcast shapes)
-  - docs/development/testing_strategy.md §§1.4–2 (test cadence, authoritative commands)
+  - docs/architecture/pytorch_design.md §§2.2-2.4 (vectorization strategy, broadcast shapes)
+  - docs/development/testing_strategy.md §§1.4-2 (test cadence, authoritative commands)
   - docs/development/pytorch_runtime_checklist.md (device/vectorization guardrails)
-  - `nanoBragg.c` lines 2604–3278 (polin3/polin2/polint) & 3375–3450 (detector absorption loop)
+  - `nanoBragg.c` lines 2604-3278 (polin3/polin2/polint) & 3375-3450 (detector absorption loop)
   - Existing artifacts under `reports/2025-10-vectorization/phase_*/`
-- Status Snapshot (2025-12-02): Phases A–D complete — gather vectorization (commit 12742e5) and batched polynomials (commit f796861) are merged with CPU+CUDA evidence in `reports/2025-10-vectorization/phase_d/`. Phase E1 regression sweep finished (artifacts under `reports/2025-10-vectorization/phase_e/`); Phase E2–E3 remain open ahead of detector absorption vectorization (Phase F).
+- Status Snapshot (2025-12-22): Phases A-E complete - gather vectorization (commit 12742e5), batched polynomials (commit f796861), and Phase E validation (`reports/2025-10-vectorization/phase_e/summary.md`) are locked with CPU+CUDA evidence. Phase F detector absorption vectorization is next, using Phase A3 baselines as the authoritative pre-change metrics.
 - Execution Notes: Store new evidence under `reports/2025-10-vectorization/phase_<letter>/` directories; every implementation task must quote the matching C snippet per CLAUDE Rule #11. Maintain CPU+CUDA parity and include `pytest --collect-only` proof before targeted runs.
 
-### Phase A — Evidence & Baseline Capture
+### Phase A - Evidence & Baseline Capture
 Goal: Record baseline behaviour/warnings/timings for tricubic interpolation and detector absorption prior to vectorization.
 Prereqs: Editable install (`pip install -e .`), C binary available if parity comparisons are needed, `KMP_DUPLICATE_LIB_OK=TRUE` set.
 Exit Criteria: Baseline pytest logs + benchmark metrics archived and referenced in fix_plan.
@@ -23,7 +23,7 @@ Exit Criteria: Baseline pytest logs + benchmark metrics archived and referenced 
 | A2 | Measure current tricubic runtime | [D] | ✅ Attempt #2 (2025-10-07). Harness: `scripts/benchmarks/tricubic_baseline.py`; metrics in `phase_a/tricubic_baseline.md` & `tricubic_baseline_results.json`. |
 | A3 | Record detector absorption baseline | [D] | ✅ Attempt #2 (2025-10-07). Harness: `scripts/benchmarks/absorption_baseline.py`; metrics in `phase_a/absorption_baseline.md` & `absorption_baseline_results.json`. |
 
-### Phase B — Tricubic Vectorization Design
+### Phase B - Tricubic Vectorization Design
 Goal: Finalise tensor-shape, broadcasting, and differentiability design ahead of implementation.
 Prereqs: Phase A evidence captured and logged.
 Exit Criteria: Completed design memo plus grad/device checklist; fix_plan updated with references.
@@ -34,7 +34,7 @@ Exit Criteria: Completed design memo plus grad/device checklist; fix_plan update
 | B2 | Map C polin3 semantics to PyTorch ops | [D] | ✅ Attempt #3. Design notes §3 cites `nanoBragg.c:4021-4058`. |
 | B3 | Gradient & dtype checklist | [D] | ✅ Attempt #3. Design notes §4 aligns with `pytorch_runtime_checklist.md`. |
 
-### Phase C — Neighborhood Gather Implementation
+### Phase C - Neighborhood Gather Implementation
 Goal: Replace scalar neighbour gathering with vectorised indexing in `Crystal._tricubic_interpolation` while retaining OOB fallbacks and graph connectivity.
 Prereqs: Phase B design complete; tests discoverable.
 Exit Criteria: Batched gather merged, unit/regression tests passing on CPU+CUDA, plan/fix_plan updated with evidence.
@@ -45,7 +45,7 @@ Exit Criteria: Batched gather merged, unit/regression tests passing on CPU+CUDA,
 | C2 | Add gather-specific test suite | [D] | ✅ Attempt #15. `tests/test_tricubic_vectorized.py` + logs (`phase_c/test_tricubic_vectorized.log`, `gather_notes.md`). Includes CPU+CUDA device cases. |
 | C3 | Regression + gradient/device smoke | [D] | ✅ Attempt #16 (2025-10-08). Artifacts: `phase_c/gradient_smoke.log`, `runtime_probe.json`, `status_snapshot.txt`; targeted pytest selectors recorded. |
 
-### Phase D — Polynomial Evaluation Vectorization (Active Gate)
+### Phase D - Polynomial Evaluation Vectorization (Active Gate)
 Goal: Batch the 1D/2D/3D polynomial interpolation helpers (`polint`, `polin2`, `polin3`) so batched gathers avoid nearest-neighbour fallback.
 Prereqs: Phase C output confirmed; `design_notes.md` §3 ready; create `reports/2025-10-vectorization/phase_d/` directory.
 Exit Criteria: Vectorised polynomial helpers integrated, CPU+CUDA tests passing, documentation + metrics captured.
@@ -57,18 +57,18 @@ Exit Criteria: Vectorised polynomial helpers integrated, CPU+CUDA tests passing,
 | D3 | Add polynomial regression tests | [D] | ✅ Attempt #9 (2025-10-07). Extended `tests/test_tricubic_vectorized.py` with `TestTricubicPoly` (11 tests covering scalar equivalence, gradient flow, device/dtype parametrisation, batch-shape preservation). XFail markers removed after Phase D2 landing; live logs in `phase_d/pytest_cpu_pass.log`. Artifacts: `phase_d/collect.log`, `phase_d/pytest_cpu.log`, `phase_d/implementation_notes.md`. |
 | D4 | Execute targeted pytest sweep | [D] | ✅ Attempt #11 (2025-10-07). CPU: 11/11 passed (2.37s), CUDA: 11/11 passed (2.36s), AT-STR-002: 3/3 passed (2.13s). Artifacts: `phase_d/pytest_d4_cpu.log`, `phase_d/pytest_d4_cuda.log`, `phase_d/pytest_d4_acceptance.log`, `collect_d4.log`. Metrics appended to `polynomial_validation.md` with device metadata (CUDA 12.8, PyTorch 2.8.0+cu128). |
 
-### Phase E — Integration, Parity, and Performance Validation
+### Phase E - Integration, Parity, and Performance Validation
 Goal: Confirm the full tricubic interpolation path stays vectorised, maintains parity, and improves performance per PERF-PYTORCH-004 objectives.
-Prereqs: Phase D tasks D1–D4 complete; nearest-neighbour fallback eliminated for batched queries.
+Prereqs: Phase D tasks D1-D4 complete; nearest-neighbour fallback eliminated for batched queries.
 Exit Criteria: Parity metrics (tests + nb-compare/ROI) pass, microbenchmarks show expected speedup, documentation + fix_plan updated.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | E1 | Verify acceptance & regression tests | [D] | ✅ Attempt #11 (2025-10-07). CPU & CUDA logs stored in `reports/2025-10-vectorization/phase_e/{pytest_cpu.log,pytest_cuda.log,collect.log,env.json,sha256.txt}`; 19/19 tests passed per device with gradcheck markers intact. |
-| E2 | Run microbenchmarks post-vectorization | [ ] | Execute `scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --device {cpu,cuda} --repeats 200 --outdir reports/2025-10-vectorization/phase_e/perf` to compare against Phase A baselines. Summarise warm/cold timings and speedups in `phase_e/perf_summary.md`, updating `phase_e/perf_results.json`. |
-| E3 | Document parity/perf summary | [ ] | Produce `phase_e/summary.md` capturing correlation metrics (target corr≥0.9995 vs scalar baseline), highlight any tolerance deltas, and record gradient/device neutrality confirmation. Reference nb-compare artifacts if generated. Update docs/fix_plan Next Actions with the new evidence paths. |
+| E2 | Run microbenchmarks post-vectorization | [D] | ✅ Attempt #12 (2025-10-08). Benchmarks captured under `reports/2025-10-vectorization/phase_e/perf/20251009T034421Z/` (cpu/cuda logs, `perf_results.json`, `perf_summary.md`); 200-repeat runs show <=1.2% delta vs Phase A baseline. |
+| E3 | Document parity/perf summary | [D] | ✅ Attempt #12 (2025-10-08). `reports/2025-10-vectorization/phase_e/summary.md` consolidates E1-E3 results, notes runtime checklist compliance, and docs/fix_plan Attempt #12 threads Phase F tasks. |
 
-### Phase F — Detector Absorption Vectorization
+### Phase F - Detector Absorption Vectorization
 Goal: Batch detector absorption loops over `detector_thicksteps` and oversample dimensions, reusing the tricubic vectorization patterns while keeping physics parity.
 Prereqs: Phase E exit criteria satisfied; confirm current absorption baseline artifacts (Phase A3) on hand.
 Exit Criteria: Vectorised absorption in production path, tests/benchmarks passing, documentation updated.
@@ -80,9 +80,9 @@ Exit Criteria: Vectorised absorption in production path, tests/benchmarks passin
 | F3 | Add regression + perf tests | [ ] | Extend `tests/test_at_abs_001.py` with device parametrisation; add targeted benchmarks via `scripts/benchmarks/absorption_baseline.py --outdir .../phase_f/perf`. Capture CPU/CUDA logs. |
 | F4 | Summarise results + update fix_plan | [ ] | Document outcomes in `phase_f/summary.md`, note parity evidence (nb-compare if applicable), and update docs/fix_plan attempt history. |
 
-### Phase G — Documentation & Handoff
+### Phase G - Documentation & Handoff
 Goal: Ensure all vectorization changes are documented, reproducible, and integrated with performance guidance.
-Prereqs: Phases D–F exit criteria met.
+Prereqs: Phases D-F exit criteria met.
 Exit Criteria: Architecture/runtime docs updated; fix_plan closed; supervisor input ready for performance initiative follow-ups.
 
 | ID | Task Description | State | How/Why & Guidance |

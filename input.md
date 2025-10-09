@@ -1,103 +1,101 @@
-Summary: Capture Phase E performance evidence for the tricubic vectorization, compare it against the Phase A baseline, and draft the parity/perf narrative before tackling detector absorption.
-Mode: Perf
+Summary: Produce the detector absorption vectorization design memo for Phase F1.
+Mode: Docs
 Focus: VECTOR-TRICUBIC-001 Vectorize tricubic interpolation and detector absorption
 Branch: feature/spec-based-2
-Mapped tests: KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_tricubic_vectorized.py
-Artifacts: reports/2025-10-vectorization/phase_e/perf/$STAMP/perf_summary.md; reports/2025-10-vectorization/phase_e/perf/$STAMP/perf_results.json; reports/2025-10-vectorization/phase_e/summary.md; reports/2025-10-vectorization/phase_e/perf/$STAMP/cpu/benchmark.log; reports/2025-10-vectorization/phase_e/perf/$STAMP/cuda/benchmark.log; reports/2025-10-vectorization/phase_e/perf/$STAMP/env.json; reports/2025-10-vectorization/phase_e/perf/$STAMP/pytest_tricubic_vectorized.log
-Do Now: VECTOR-TRICUBIC-001 Phase E2/E3 — set `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; run `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --repeats 200 --device cpu --outdir reports/2025-10-vectorization/phase_e/perf/$STAMP/cpu | tee reports/2025-10-vectorization/phase_e/perf/$STAMP/cpu/benchmark.log`, repeat with `--device cuda` when `torch.cuda.is_available()` (otherwise document the absence explicitly); consolidate both runs into `reports/2025-10-vectorization/phase_e/perf/$STAMP/{perf_results.json,perf_summary.md}` plus `reports/2025-10-vectorization/phase_e/summary.md` that interprets speedups vs Phase A and restates corr≥0.9995 expectations; finish by executing `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_tricubic_vectorized.py` and append the Attempt with artifact paths + timing highlights to docs/fix_plan.md.
-If Blocked: Stash partial outputs under `reports/attempts/vectorization/phase_e/$STAMP/` (include command transcripts, env snapshot, git rev), log the failure reason + next debug idea in docs/fix_plan.md Attempts, and notify supervisor in galph_memory before exiting.
+Mapped tests: pytest --collect-only -q
+Artifacts: reports/2025-10-vectorization/phase_f/design_notes.md, reports/2025-10-vectorization/phase_f/commands.txt, reports/2025-10-vectorization/phase_f/env.json, reports/2025-10-vectorization/phase_f/sha256.txt
+Do Now: VECTOR-TRICUBIC-001 Phase F1 design - pytest --collect-only -q
+If Blocked: Capture the exact blocker in reports/2025-10-vectorization/phase_f/blockers.md and ping me via docs/fix_plan.md Attempt update.
+
 Priorities & Rationale:
-- plans/active/vectorization.md:60 spells out Phase E’s microbenchmark + summary deliverables; without them Phase F design lacks empirical grounding.
-- plans/active/vectorization.md:61 emphasises parity + performance validation as the Phase E goal, so the new summary must explicitly address both aspects.
-- plans/active/vectorization.md:68 leaves E2 unchecked, so we still lack the post-vectorization timing data needed to claim success over the scalar baseline.
-- plans/active/vectorization.md:69 keeps E3 open; the written summary is required before we can archive Phase E evidence bundles.
-- plans/active/vectorization.md:74 highlights that Phase F prerequisites include Phase E exit criteria, making this loop a hard dependency for future implementation.
-- docs/fix_plan.md:3376 enumerates the same E2/E3 tasks in the official ledger, making them the gating items on VECTOR-TRICUBIC-001’s Next Actions.
-- docs/fix_plan.md:3380 shows the Attempts history table where this loop’s timings must be recorded for traceability; skipping the entry would create drift.
-- scripts/benchmarks/tricubic_baseline.py:184 documents the CLI surface (sizes, repeats, device, dtype, outdir) we must follow to keep results comparable.
-- scripts/benchmarks/tricubic_baseline.py:52 explains the scalar baseline pattern; the new write-up should reference this when describing improvements.
-- reports/2025-10-vectorization/phase_a/tricubic_baseline_results.json provides the scalar baseline; we need to compute deltas relative to these figures in the new summary.
-- reports/2025-10-vectorization/phase_a/tricubic_baseline.md contains narrative context describing bottlenecks we expect the vectorized path to eliminate—reference it in summary.md to show improvement.
-- docs/development/testing_strategy.md:20 insists on device/dtype neutrality, so we must either run CUDA or explicitly record that the hardware is CPU-only.
-- docs/development/testing_strategy.md:24 reminds us to keep broadcast vectorization intact; the benchmark commentary should note that the new path stays fully batched.
-- docs/development/testing_strategy.md:32 reiterates we should stay with targeted tests (no full suite) after the doc updates, guiding the pytest selection.
-- docs/development/pytorch_runtime_checklist.md:18 highlights performance logging requirements that summary.md should acknowledge.
-- docs/architecture/pytorch_design.md:42 articulates the vectorization strategy; citing it in summary.md reinforces that the perf gains match the ADR.
-- docs/development/implementation_plan.md:145 flags vectorization as an open milestone, so delivering these artifacts keeps the master plan on schedule.
-- docs/fix_plan.md:21 lists VECTOR-TRICUBIC-001 as High priority; leaving Phase E incomplete blocks multiple downstream initiatives (PERF-PYTORCH-004, detector absorption refactor).
-- reports/2025-10-vectorization/phase_d/summary.md captures the implementation context we should reference when justifying the new benchmark configuration.
+- Phase F is the remaining high-priority work on `docs/fix_plan.md:3364` and now that Phase E logged parity/perf we must keep momentum.
+- `plans/active/vectorization.md` now marks E2/E3 [D]; F1 design notes are the gating deliverable before implementation tasks (F2-F4) can start.
+- specs/spec-a-core.md section 4 requires detector absorption to respect batched tensor flows; design must quote the relevant equations so Phase F2 implementations stay aligned.
+- `docs/architecture/pytorch_design.md` sections 2.2-2.4 outline the broadcast strategy; summarising the intended `(slow, fast, thicksteps)` shapes prevents regressions.
+- `docs/development/pytorch_runtime_checklist.md` sets device/dtype guardrails; we need explicit callouts in the design to keep CPU/CUDA parity when Ralph vectorises absorption.
+- `nanoBragg.c:3375-3450` is the authoritative C loop; copy the snippet into the memo per CLAUDE Rule #11 to anchor the implementation path.
+- `reports/2025-10-vectorization/phase_a/absorption_baseline.md` holds current performance baselines; cite those numbers so Phase F benchmarks have a clear target.
+- The design must document how to stage artifacts under `reports/2025-10-vectorization/phase_f/` so future attempts stay reproducible.
+- Tight coupling exists with `tests/test_at_abs_001.py`; list the selectors that will need parametrisation so Phase F3 testers know the scope.
+- Coordination note: PERF-PYTORCH-004 top-level benchmarks expect detector absorption speedups; your design should describe how batched layers unlock the promised 10-100x range.
+
 How-To Map:
-- Export `STAMP` once; reuse it for every file path so the bundle stays coherent across cpu/cuda runs, JSON, markdown artifacts, and pytest logs.
-- Create directory skeletons via `mkdir -p reports/2025-10-vectorization/phase_e/perf/$STAMP/{cpu,cuda}` before launching benchmarks to avoid interleaved outputs across devices.
-- CPU run: `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --repeats 200 --device cpu --dtype float32 --outdir reports/2025-10-vectorization/phase_e/perf/$STAMP/cpu | tee reports/2025-10-vectorization/phase_e/perf/$STAMP/cpu/benchmark.log`; capture the exit code and note it in perf_summary.md.
-- Capture the raw JSON emitted by the script (likely `benchmark_results.json`) and move it into `reports/2025-10-vectorization/phase_e/perf/$STAMP/cpu/` for archival before aggregating.
-- Record CPU warm vs cold median timings, plus calculated calls/sec; include the numbers directly in perf_summary.md.
-- CUDA run (if available): `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --repeats 200 --device cuda --dtype float32 --outdir reports/2025-10-vectorization/phase_e/perf/$STAMP/cuda | tee reports/2025-10-vectorization/phase_e/perf/$STAMP/cuda/benchmark.log`; if CUDA is missing, create the `cuda/` directory with a README explaining the absence and include that statement in perf_summary.md + summary.md.
-- After each run, record hashes via `sha256sum reports/2025-10-vectorization/phase_e/perf/$STAMP/cpu/benchmark.log > .../cpu/sha256.txt` and the same for cuda; these hashes help future loops verify artifact integrity.
-- Collect environment info with `python - <<'PY'
-import json, os, torch, platform
-print(json.dumps({
-    "stamp": os.environ.get("STAMP"),
-    "python": platform.python_version(),
-    "torch": torch.__version__,
-    "cuda_available": torch.cuda.is_available(),
-    "cuda_device_count": torch.cuda.device_count(),
-    "devices": [torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())]
-}, indent=2))
-PY > reports/2025-10-vectorization/phase_e/perf/$STAMP/env.json` so the summary can cite hardware context.
-- Generate perf_results.json by merging the new benchmark JSON fragments: compare cold/warm medians to Phase A using either a helper script (if available) or manual editing matching the Phase A schema (keys `cold_seconds`, `warm_seconds`, `calls_per_second`, `size`, `device`).
-- When computing speedups, explicitly calculate ratios like `baseline_cold / new_cold` and `baseline_calls_per_second / new_calls_per_second`; include both CPU and CUDA values in perf_summary.md.
-- Add a table in perf_summary.md that lists baseline vs vectorized timings for each size/device, along with percentage improvement.
-- Write a short “Interpretation” subsection in perf_summary.md describing whether launch overhead still dominates CUDA results and whether the batched gather removed the scalar bottleneck.
-- Author `summary.md` at the phase level covering: quick recap of the microbench results, parity confirmation (point to prior nb-compare evidence and note corr target), gradient/device neutrality statement, acknowledgement of the runtime checklist, and any follow-up questions for Phase F.
-- In summary.md include a bullet comparing CPU vs CUDA acceleration and noting any difference in relative gains.
-- Add a checklist to summary.md confirming that all open Phase E risks (parity, gradients, device neutrality, perf) are satisfied or linked to evidence.
-- Before concluding, double-check that perf_summary.md and perf_results.json reference the same set of detector sizes so downstream scripts do not misalign rows.
-- Update docs/fix_plan.md Attempts for VECTOR-TRICUBIC-001 with the new artifact paths, timings (e.g., cpu warm seconds vs baseline), GPU availability notes, the pytest log path, and highlight whether corr≥0.9995 remains satisfied based on prior evidence.
-- After documentation, run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_tricubic_vectorized.py | tee reports/2025-10-vectorization/phase_e/perf/$STAMP/pytest_tricubic_vectorized.log` so the Attempt can cite the log.
-- Once everything is tracked, confirm git status shows only documentation changes; do not stage large reports directories (we archive paths in fix_plan instead of committing them).
-- Before finishing, double-check that summary.md references baseline files with relative paths so future loops can reproduce easily.
+- Run `pytest --collect-only -q` (KMP_DUPLICATE_LIB_OK=TRUE) before writing to prove the tree imports cleanly.
+- Create `reports/2025-10-vectorization/phase_f/` if it does not exist; include subfiles design_notes.md, commands.txt, env.json, and sha256.txt.
+- In design_notes.md, start with context, goals, and prerequisites mirroring Phase E structure; outline tensor shapes for `(B, slow, fast, thicksteps)` and any reshaping helpers.
+- Paste the exact C reference from `nanoBragg.c` lines 3375-3450 inside a fenced C block per CLAUDE Rule #11 before proposing PyTorch equivalents.
+- Enumerate broadcast strategy for `detector_thicksteps`, oversample, and ROI handling; flag how to avoid reintroducing Python loops.
+- Call out gradient considerations (no `.item()`, avoid `torch.linspace`, keep computations differentiable) referencing `docs/development/pytorch_runtime_checklist.md` and `docs/architecture/pytorch_design.md`.
+- Document expected artifacts for future phases: F2 implementation commits, F3 benchmarks (`scripts/benchmarks/absorption_baseline.py` variants), F4 summaries, archive mirroring.
+- Capture relevant commands in commands.txt (pytest collect, benchmark skeletons, nb-compare placeholder if parity runs are planned).
+- Dump the current environment via `python -m json.tool` into env.json (include Python, torch, CUDA versions, device availability) so Phase F runs remain reproducible.
+- Generate sha256.txt listing checksums for design_notes.md and commands.txt to comply with existing artifact conventions.
+- After drafting, update docs/fix_plan.md Attempt history with a new entry that references the design bundle and records pytest collect output; include timestamps and SHA hashes.
+- Note in the Attempt that plans/active/vectorization.md Phase F1 remains [ ] until implementation starts; the design memo is the completion signal.
+- If you discover missing baseline data or ambiguous spec language, flag it in the memo under "Open Questions" with suggested owners or follow-ups.
+
 Pitfalls To Avoid:
-- Do not reduce `--repeats`; lower counts will reintroduce jitter and invalidate comparisons against Phase A.
-- Avoid rerunning the script with different `STAMP` values in the same loop; consistency is key for traceability.
-- Ensure `PYTHONPATH=src` is set; otherwise the benchmark may import an installed package and skew results.
-- Do not forget to set `KMP_DUPLICATE_LIB_OK=TRUE`—MKL errors will abort the run mid-way and waste time.
-- Keep benchmark output simple (no extra prints) so parsing into JSON remains trivial.
-- Do not assume CUDA availability; explicitly check and document the result rather than silently skipping.
-- Resist editing Phase A artifacts; they are the immutable baseline for this comparison.
-- Do not touch production code paths or vectorized implementations during this evidence loop.
-- Confirm the pytest run happens after artifact creation so failure would correctly reflect doc/bench changes.
-- Remember to mention corr≥0.9995 expectation in summary.md even though no new nb-compare is run; parity tracking remains part of Phase E.
-- Update docs/fix_plan.md only once—double entry will clutter the ledger.
-- Record timings in consistent units (seconds with 6 decimal places) to align with existing Phase A data.
-- Avoid summarising speedups as generic “faster”; specify quantitative ratios to match prior attempts.
-- Don’t forget to capture env.json even if CUDA is absent; the doc needs to state the hardware reality.
-- Do not leave perf_results.json half-populated; missing fields will break downstream trend analysis scripts.
-- Avoid embedding personal notes in summary.md—keep it professional and reproducible per documentation standards.
-- Do not delete or replace prior perf directories; new evidence should live alongside, not overwrite, historical bundles.
-- Avoid copying Phase A numbers blindly; always recompute ratios from raw data to avoid transcription mistakes.
-- Ensure pytest output is stored under the same STAMP so the Attempt entry can reference a single bundle.
-- Do not forget to mention whether CUDA run was skipped; silence will cause confusion during audits.
-- Avoid editing `scripts/benchmarks/tricubic_baseline.py` during the run; changes there would invalidate comparisons.
-- Keep benchmark commands identical between cpu and cuda runs except for the `--device` flag; extra flag drift complicates diffing.
+- Do not modify production code or tests in this loop; focus on documentation and evidence only.
+- Keep Protected Assets intact (no edits to docs/index.md, loop.sh, supervisor.sh, input.md).
+- Avoid introducing non-ASCII characters; stick to plain ASCII in the memo and commands.
+- Do not run full pytest or long benchmarks; collect-only is the ceiling for this docs loop.
+- Ensure every new document line cites authoritative sources (specs, arch docs, C references) so later phases have verifiable breadcrumbs.
+- Maintain device/dtype neutrality in the design narrative; no `.cpu()` shortcuts or device-specific assumptions.
+- Keep the memo aligned with vectorization principles-no proposals that resurrect scalar loops.
+- Do not forget to set `KMP_DUPLICATE_LIB_OK=TRUE` in any command that imports torch.
+- Make sure artifacts live under `reports/2025-10-vectorization/phase_f/` only; no scattered files in repo root.
+- Double-check that CLAUDE Rule #11 is satisfied-the C snippet must precede any derived implementation guidance.
+
 Pointers:
-- plans/active/vectorization.md:60 — Phase E checklist describing microbenchmark and summary deliverables we are closing out.
-- plans/active/vectorization.md:74 — Phase F prerequisites referencing Phase E completion; motivates the urgency of this loop.
-- plans/active/vectorization.md:78 — Preview of Phase F tasks; feeds the “Next Up” context once E2/E3 are complete.
-- docs/fix_plan.md:3375 — VECTOR-TRICUBIC-001 Next Actions list; confirms microbench + summary precede detector absorption.
-- docs/fix_plan.md:3380 — Attempts history section where the new entry needs to land (keep numbering consistent).
-- scripts/benchmarks/tricubic_baseline.py:200 — Argument definitions to keep CLI invocation aligned with Phase A.
-- scripts/benchmarks/tricubic_baseline.py:52 — Function comment explaining the scalar baseline the vectorized path replaces; quote it when describing improvements.
-- reports/2025-10-vectorization/phase_a/tricubic_baseline_results.json — Baseline metrics to reference in perf_summary.md when quoting speedups.
-- reports/2025-10-vectorization/phase_a/tricubic_baseline.md — Narrative baseline commentary to contrast against the new findings.
-- docs/development/testing_strategy.md:20 — Device-neutral execution rule to cite when explaining CPU/CUDA coverage in summary.md.
-- docs/development/testing_strategy.md:24 — Broadcast/vectorization reminder that should echo in the summary.
-- docs/development/testing_strategy.md:32 — Reminder on targeted pytest cadence for loops like this.
-- docs/architecture/pytorch_design.md:42 — Vectorization strategy paragraph that explains the broadcast approach underpinning these gains.
-- docs/development/pytorch_runtime_checklist.md:18 — Runtime checklist excerpt to acknowledge when documenting the measurement workflow.
-- docs/development/pytorch_runtime_checklist.md:62 — Performance logging bullet that stresses capturing both cpu and cuda metrics.
-- reports/2025-10-vectorization/phase_e/README.md (create if missing) — Optional index for future runs; mention in summary.md if you add it.
-- docs/fix_plan_archive.md:210 — Historical vectorization notes useful for cross-checking expected speedups.
-- docs/development/lessons_in_differentiability.md:75 — Reminder to maintain gradient connectivity when discussing future absorption work.
-- reports/archive/cli-flags-003/watch.md:14 — Example formatting for watch summaries; emulate the clarity when drafting perf_summary.md.
-Next Up: Draft Phase F1 design notes (`plans/active/vectorization.md:78`) once perf evidence is merged, focusing on detector absorption broadcasting and differentiability risks.
+- docs/fix_plan.md:3364 (VECTOR-TRICUBIC-001 entry - confirms Phase F scope)
+- plans/active/vectorization.md:60 (Phase F table - tasks F1-F4 definitions)
+- reports/2025-10-vectorization/phase_e/summary.md (Phase E precedent for structure and content)
+- docs/architecture/pytorch_design.md:120-220 (vectorization broadcast rules)
+- docs/development/pytorch_runtime_checklist.md (device/dtype requirements to cite)
+- specs/spec-a-core.md:400-460 (detector absorption equations and sampling weights)
+- nanoBragg.c:3375-3450 (C absorption loop for CLAUDE Rule #11 reference)
+- scripts/benchmarks/absorption_baseline.py (baseline harness to mention in the design)
+- docs/bugs/verified_c_bugs.md:120-170 (absorption-related quirks to note if relevant)
+- reports/2025-10-vectorization/phase_a/absorption_baseline.md (baseline metrics to cite in goals)
+- tests/test_at_abs_001.py (selectors to mention for future parameterisation)
+- docs/development/testing_strategy.md:70-150 (testing cadence and device expectations)
+
+Next Up:
+- If Phase F1 finishes early, queue F2 implementation planning - outline helper APIs before coding.
+- Alternatively, prep an nb-compare ROI plan for Phase F3 parity once the absorption code is vectorized.
+
+Design Outline Checklist:
+- Start the memo with a recap of Phase A baselines and Phase E validation so readers know what changed.
+- Include a dedicated section clarifying tensor dimensions for each stage (gather, polynomial eval, absorption) and how detector_thicksteps expands them.
+- Spell out the broadcast order for oversample, phi, mosaic, sources, and thickness to avoid off-by-one bugs later.
+- Provide a subsection on memory considerations (detector size versus VRAM) and propose fallback tiling for 4096x4096 detectors.
+- Describe how ROI or stripe execution should reuse cached coordinates without degrading vectorization.
+- Call out how to integrate with existing caching in `Detector.invalidate_cache()` when new tensors are introduced.
+- Document planned helper functions or class methods so the implementation phase has a concrete API sketch.
+- Highlight gradient taps that should be verified post-implementation (for example, detector_thicksteps and detector_abs_um).
+- Note potential logging hooks for debug mode (tap points for per-layer absorption factors) that stay reusable in callchain traces.
+- End the memo with explicit exit criteria mirroring Phase F table so status tracking stays consistent.
+
+Evidence Logging Steps:
+- Record every command you run in commands.txt with UTC timestamps and environment prerequisites.
+- Add the pytest collect output to commands.txt and attach the console transcript under reports if it contains warnings.
+- When saving env.json, include both torch.__version__ and torch.version.cuda plus torch.cuda.is_available() results.
+- Capture checksum lines in sha256.txt for design_notes.md, commands.txt, and env.json to maintain artifact integrity.
+- Reference the new design bundle in docs/fix_plan.md Attempt description with the exact directory path.
+- Mention in docs/fix_plan.md that plans/active/vectorization.md already carries the Phase F checklist so the engineer loop knows where to look.
+- Encourage future loops to extend the bundle with benchmark scripts; leave TODO placeholders if appropriate.
+- If you spot doc drift elsewhere (for example, runtime checklist missing absorption notes), log it in the Attempt as follow-up work.
+- Keep a short Open Questions section in design_notes.md for unresolved issues so later loops can pick them up systematically.
+- Close commands.txt with a reminder to set KMP_DUPLICATE_LIB_OK=TRUE on every Python invocation touching torch.
+
+Reference Excerpts To Cite:
+- specs/spec-a-parallel.md section 2.3.4 (tricubic acceptance metrics) even though Phase F targets absorption; note parity expectations.
+- docs/architecture/detector.md section 5.3 (absorption pipeline) for detailed geometry interplay.
+- docs/debugging/detector_geometry_checklist.md items on absorption to reiterate mandatory trace steps.
+- reports/2025-10-vectorization/phase_a/absorption_baseline_results.json average timings for CPU and CUDA.
+- reports/benchmarks/20250930-165726-compile-cache/analysis.md if you need to justify hotspot prioritisation.
+- prompts/callchain.md to align any proposed logging hooks with existing instrumentation practices.
+- docs/development/implementation_plan.md Phase 3 notes on detector work to contextualise deliverables.
+- docs/development/testing_strategy.md section 4.2 (unit versus integration gradients) for the absorber parameter checks.
+- tests/test_tricubic_vectorized.py for structure on how device parametrisation is done today.
+- reports/archive/cli-flags-003/watch.md for cadence language when you define future monitoring hooks.

@@ -8,7 +8,7 @@
 - Captured repeated reminders on Protected Assets/dirty worktree hygiene and documented long-term goals (CLI parity restoration before vectorization, Dynamo cache validation, detector pivot rules).
 - Logged recommended follow-ups: restore Core Rule #13 duality, regenerate parity traces, tighten test tolerances after fixes, and prioritize evidence artifacts under `reports/` for Ralph’s loops.
 
-## 2025-12-21 (galph loop — Phase N2 planning)
+## 2025-12-21 (galph loop - Phase N2 planning)
 - Git up to date; refreshed docs/index.md, specs/spec-a.md shards, arch.md, docs/development/c_to_pytorch_config_map.md, docs/debugging/debugging.md, docs/development/testing_strategy.md, docs/fix_plan.md, and plans/active/cli-noise-pix0/plan.md before choosing focus.
 - Coin flip=heads; reviewed Ralph commit e7ad6b6 (Attempt #199) — documentation/artifact updates only, ROI float images captured, no regressions.
 - Detected plan drift (Phase N1 still open); selected Planning action on CLI-FLAGS-003 Phase N to realign plan/status with fix_plan.
@@ -17,7 +17,7 @@
 - Long-term Goals review: Goal 1 (phi carryover removal) confirmed complete; Goal 2 (spec audit) unchanged—docs/bugs keeps C bug quarantined; Goal 3 (vectorization) plan already current, no edits today.
 - Follow-up for Ralph: run the nb-compare command exactly as documented, capture summary/PNG/diff outputs under results/, update todo_nb_compare checklist, record Attempt with metrics, and flip plan row N2 to [D].
 
-## 2025-12-21 (galph loop — Phase N1 ROI prep)
+## 2025-12-21 (galph loop - Phase N1 ROI prep)
 - Git up to date; re-read docs/index.md, specs/spec-a-core.md, arch.md, docs/development/c_to_pytorch_config_map.md, docs/debugging/debugging.md, docs/development/testing_strategy.md, plans/active/cli-noise-pix0/plan.md before analysis.
 - Coin flip=heads; reviewed Ralph commits c0b4b8b and 0ed4037 — documentation-only work (Phase M6 skip record + Option 1 bundle) with no regressions.
 - Focus set to CLI-FLAGS-003 Phase N1; no new plan needed (existing plan already structured).
@@ -26,21 +26,21 @@
 - Long-term goals status: φ carryover removal remains complete; documentation audit (Goal 2) shows spec shards free of carryover bug; vectorization/backlog unchanged pending CLI closure.
 - Follow-up for Ralph: execute Phase N1 per input.md, produce ROI floatfiles + metadata, update fix_plan Attempt, and mark plan row N1 to [P] once artifacts exist; hold nb-compare for next loop.
 
-## 2025-11-06 (galph loop — K3d dtype evidence prep)
+## 2025-11-06 (galph loop - K3d dtype evidence prep)
 - Coin flip=heads → reviewed Ralph commits d150858, b73f0e2; work productive (Phase H1 evidence, Phase G3 orientation fix).
 - Updated plans/active/cli-noise-pix0/plan.md Phase H goal + tasks (H1 marked done; new H2 beam propagation, H3 lattice, H4 parity).
 - docs/fix_plan.md Next Actions now call out H2–H4 sequence; reinforced beam-vector fix as first deliverable.
 - Authored new input.md (Do Now: Phase H2 beam propagation + targeted pytest) and committed with message "SUPERVISOR: CLI H2 plan refresh - tests: not run".
 - Working tree clean post-push (feature/spec-based-2 @ 35cd319).
  - Follow-up: Ralph to wire detector.beam_vector into Simulator, rerun beam trace, and land targeted pytest per input.md.
-## 2025-10-06 (galph loop — Phase H3 evidence prep)
+## 2025-10-06 (galph loop - Phase H3 evidence prep)
 - git sync clean (ba649f0). Reviewed required specs/arch/testing docs plus plans/active entries before analysis per SOP.
 - Long-term Goal 1 status: beam vector fix merged (commit 8c1583d) but Phase H3 evidence missing—PyTorch trace still shows pre-fix divergence. Key gaps: rerun `trace_harness.py` without manual overrides, diff against `trace_c.log`, log first divergence; likely causes for residual lattice mismatch are either incorrect `sincg` argument (`π*(h-h0)` vs `π*h`) or Na/Nb/Nc scaling once incident vector confirmed. Goal 2 (vectorization) remains blocked until CLI parity evidence complete; Phase A baseline still outstanding.
 - Coin flip → heads; reviewed last ~10 Ralph iterations. Latest commit 8c1583d correctly delegates `detector.beam_vector` into Simulator, adds regression test (`TestCLIBeamVector::test_custom_beam_vector_propagates`), no regressions observed. Work productive; advised to capture post-fix trace before touching lattice math.
 - Plan upkeep: marked `plans/active/cli-noise-pix0/plan.md` Phase H2 as [D] with Attempt #20 context and refreshed H3 guidance to require new trace evidence + hypothesis logging. Input memo rewritten (108 lines) directing Ralph to produce `trace_py_after_H2` artifacts, diff vs C, update reports/implementation notes, and run targeted pytest.
 - Follow-ups for Ralph next loop: run trace harness with env vars, store `trace_py_after_H2` + diff + comparison markdown, update docs/fix_plan Attempt log with findings, keep loop evidence-only (no code edits) before advancing to lattice fixes.
 
-## 2025-10-06 (galph loop — H3 sincg diagnosis setup)
+## 2025-10-06 (galph loop - H3 sincg diagnosis setup)
 - Git already up to date (15fdec5); mandatory spec/arch/testing docs and active plans refreshed before analysis.
 - Long-term Goal 1: New Phase H3 evidence (commit ce28187) shows `F_latt` mismatch; confirmed top hypothesis is PyTorch feeding `(h-h0)` into `sincg`. Updated `plans/active/cli-noise-pix0/plan.md` H3 guidance to require manual `sincg(M_PI*h, Na)` reproduction and hypothesis logging before any simulator edits.
 - docs/fix_plan.md `[CLI-FLAGS-003]` Next Actions now point at rerunning `trace_harness.py`, capturing manual `sincg` calculations, then executing Phase H4 once the lattice fix is staged.
@@ -48,7 +48,7 @@
 - Long-term Goal 2: `plans/active/vectorization.md` Phase A updated to author reusable tricubic/absorption benchmark harnesses under `scripts/benchmarks/` so baseline timings can be captured once CLI parity stabilises; fix_plan Next Actions adjusted accordingly.
 - Authored new input.md (Do Now: rerun trace harness, compute manual sincg table, pytest collect) and staged reporting guardrails for today’s evidence-only loop.
 - Follow-ups for Ralph: regenerate PyTorch trace under `trace_py_after_H3.log`, create `manual_sincg.md` comparing `(h-h0)` vs absolute arguments, append findings to `implementation_notes.md`, and keep Attempt log current before proposing the simulator fix.
-## 2025-10-06 (galph loop — Phase H3 pix0 evidence refresh)
+## 2025-10-06 (galph loop - Phase H3 pix0 evidence refresh)
 - Re-read core docs + active plans; long-term Goal 1 still blocked by Phase H3 lattice parity, Goal 2 (vectorization) queued until CLI parity stabilises.
 - Evidence review: trace diff shows 1.14 mm gap between PyTorch `pix0_override_m` and C’s BEAM-pivot transform, cascading to pixel_pos, scattering_vec, and h/k/l deltas. Sincg confirmed equivalent; root cause is detector pix0 override handling.
 - Plan upkeep: updated `plans/active/cli-noise-pix0/plan.md` Phase H exit criteria and H3 task to require reproducing C’s pix0 math + restoring attempt log. docs/fix_plan.md Next Actions now point at capturing `pix0_reproduction.md`, propagating deltas, and logging Attempt #21 properly before code edits.
@@ -56,7 +56,7 @@
 - Authored new input.md directing Ralph to rerun trace harness, build pix0 reproduction notebook, clean up `attempt_log.txt`, append implementation notes, and run `pytest --collect-only -q` (evidence loop).
 - Follow-ups for Ralph next loop: produce the refreshed trace + pix0 reproduction artifacts, restore the attempt log with human-readable Attempt #21, log findings in implementation_notes.md, keep work evidence-only pending detector fix design.
 
-## 2025-10-06 (galph loop — Phase H3b kick-off)
+## 2025-10-06 (galph loop - Phase H3b kick-off)
 - `git pull --rebase` clean. Reviewed core docs + active plans + testing strategy per SOP.
 - Goal 1: Phase H3 evidence (Attempt #21) now complete; updated `plans/active/cli-noise-pix0/plan.md` to split H3 into H3a (done) and new H3b implementation task, and refreshed `[CLI-FLAGS-003]` Next Actions to focus on applying the BEAM-pivot transform plus regression test.
 - Goal 1 follow-up: Authored new input.md directing Ralph to implement the pix0 transform, add a targeted CLI regression test, capture artifacts under `reports/2025-10-cli-flags/phase_h/implementation/`, and document Attempt #22 before moving to parity (Phase H4).
@@ -64,13 +64,13 @@
 - Coin flip = heads: reviewed Ralph’s latest evidence commits (`4e0e36e`, `0f18548`); both were productive (manual sincg rejection, pix0 reproduction) with no regressions.
 - Follow-ups for Ralph: execute Phase H3b implementation per new memo, then proceed to H4 parity once regression test passes.
 
-## 2025-10-06 (galph loop — Phase H3b implementation prep)
+## 2025-10-06 (galph loop - Phase H3b implementation prep)
 - `git pull --rebase` clean; no upstream changes to reconcile. Coin flip → tails, so skipped retrospective commit audit per instructions.
 - Refined `plans/active/cli-noise-pix0/plan.md` H3b guidance to spell out the projection workflow (`pix0_override - distance·beam` → F/S beam offsets, beam-centre tensor updates) and mandated artifact targets (`pix0_expected.json`, regression log, implementation notes).
 - Updated `docs/fix_plan.md` `[CLI-FLAGS-003]` Next Actions to mirror the new projection math, regression expectations, and artifact checklist ahead of Attempt #22.
 - Rewrote `input.md` (114 lines) directing Ralph to implement the BEAM-pivot transform, add the targeted pytest node, capture traces/logs under `reports/2025-10-cli-flags/phase_h/implementation/`, and log Attempt #22 once complete.
 - No code edits performed; awaiting Ralph’s implementation pass before moving to Phase H4 parity.
-## 2025-10-06 (galph loop — Phase H3b retargeted)
+## 2025-10-06 (galph loop - Phase H3b retargeted)
 - Coin flip → tails; skipped retrospective review per SOP.
 - Re-read required docs plus `plans/active/vectorization.md` and `plans/active/cli-noise-pix0/plan.md`; long-term Goal 1 still blocked on pix0 override parity, Goal 2 remains queued until CLI parity settles.
 - Evidence review: targeted pytest node now aborts during CLI parsing (missing `-default_F`), and manual Detector instantiation reproduces large X-component error (pix0 ≈1.19e-04 m vs C’s −0.2165 m). `Detector._calculate_pix0_vector` projection math yields F/S beams ≈0.2177/0.2139 m, driving unrealistic beam-centre tensors (~1.25e3 px) and failing to match C.
@@ -79,20 +79,20 @@
 - Authored new input.md directing Ralph to gather paired C/Py traces, stash logs under `reports/2025-10-cli-flags/phase_h/implementation/`, and summarise deltas in `pix0_mapping_analysis.md` before touching detector code.
 - Follow-up for Ralph next loop: execute H3b1 evidence capture (both NB_C_BIN and Py harness runs, override on/off), document findings, then proceed to H3b2 using measured relationships.
 
-## 2025-10-06 (galph loop — H3b2 readiness)
+## 2025-10-06 (galph loop - H3b2 readiness)
 - Reviewed CLI-FLAGS-003 status; confirmed Attempt #23 evidence proves C ignores `-pix0_vector_mm` when custom vectors present, leaving 1.14 mm pix0 Y delta from PyTorch.
 - Updated plans/active/cli-noise-pix0/plan.md Phase H3b: marked H3b1 complete, rewrote H3b2/H3b3 guidance to enforce precedence (custom vectors > override) and to adjust regression test expectations.
 - Regenerated input.md (100 lines) directing Ralph to implement the precedence fix, update tests/test_cli_flags.py, capture artifacts under reports/2025-10-cli-flags/phase_h/implementation/, and log Attempt #24.
 - No code changes performed; repo remains clean aside from plan/input updates.
 - Follow-ups for Ralph: execute H3b2 implementation + H3b3 regression rewrite, rerun targeted pytest node, update docs/fix_plan.md Attempt log with metrics, and stash validation artifacts before moving to Phase H4.
-## 2025-10-06 (galph loop — Phase H4 prep)
+## 2025-10-06 (galph loop - Phase H4 prep)
 - `git pull --rebase` clean; reviewed required docs and active plans.
 - Phase analysis: CLI parity still blocked by +3.9 mm pix0 Y delta despite H3b2 precedence fix; vectorization plan untouched (Phase A evidence pending).
 - Coin flip = heads → reviewed Ralph’s last iterations (commits 5a9a9ea, d6f158c, 60852bb). Precedence implementation productive but regression test currently tolerates 5 mm delta — flagged for tightening post-fix.
 - Updated `plans/active/cli-noise-pix0/plan.md` context + Phase H3b2/H3b3 entries to reflect completion and refocused H4 guidance on C beam-centre recomputation. Synced docs/fix_plan.md Next Actions and refreshed pix0_mapping_analysis.md checklist.
 - Authored new input.md (100 lines) directing Ralph to port C’s post-rotation Fbeam/Sbeam recomputation, rerun traces, tighten pytest tolerances, and archive artifacts under `reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/`.
 - Reminder for next loop: verify H4 implementation lands, tighten test tolerance to ≤5e-5 m, capture Attempt #25 evidence. Vectorization plan remains frozen until CLI parity cleared.
-## 2025-10-17 (galph loop — H4 decomposition)
+## 2025-10-17 (galph loop - H4 decomposition)
 - Coin flip → tails; skipped retrospective commit audit per instructions.
 - Deep-dive vs long-term goals: Goal 1 still blocked by pix0 parity; traced 1.14 mm Y delta to missing post-rotation `newvector` projection and stale `distance_corrected` updates in `src/nanobrag_torch/models/detector.py:326`. Goal 2 (vectorization) unchanged—Phase A evidence pending once CLI parity unblocks bandwidth.
 - Debugging hypotheses documented for Ralph: (1) Absence of C’s `newvector` recomputation keeps Fbeam/Sbeam stale (highest confidence; next step is to port nanoBragg.c:1822-1859). (2) `distance_corrected` not refreshed after recompute may subtly skew downstream geometry—verify once H4a lands. (3) Beam-centre tensors may retain MOSFLM offsets under CUSTOM; confirm during implementation. Highest-confidence path is hypothesis #1 with direct code port as confirming step.
@@ -101,7 +101,7 @@
 - Regenerated `input.md` (100 lines) instructing Ralph to execute CLI-FLAGS-003 Phase H4a implementation, gather parity traces, tighten regression tolerances, and log Attempt #25 once complete.
 - Follow-ups for Ralph: implement H4a per plan, capture parity evidence under `reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/`, tighten tests/test_cli_flags tolerance, and update docs/fix_plan.md with Attempt #25 metrics before moving to H4b.
 
-## 2025-10-18 (galph loop — Phase H4 staging)
+## 2025-10-18 (galph loop - Phase H4 staging)
 - `git pull --rebase` clean; reviewed CLI-FLAGS-003 plan/fix_plan, confirmed H4a–H4c remain the critical blocker for Goal 1.
 - Pix0 mismatch analysis: PyTorch never mirrors nanoBragg.c’s post-rotation `newvector` projection, leaving Fbeam/Sbeam stale (≈3.9 mm Y delta). High confidence that porting lines 1822–1859 plus refreshing `distance_corrected` will close parity.
 - Secondary watch-outs: ensure recompute updates cached beam centres/geometry and maintains MOSFLM +0.5 offsets; tighten regression tolerance to 5e-5 m once traces align.
@@ -109,7 +109,7 @@
 - docs/fix_plan.md now 1080 lines; flagged the need for a future archival pass once CLI parity lands.
 - Regenerated `input.md` (Implementation phase) directing Ralph to execute CLI-FLAGS-003 Phase H4a–H4c, capture parity_after_lattice_fix traces, and rerun the targeted pytest node; added fallback trace harness guidance.
 - Follow-ups for Ralph: implement the `newvector` recompute exactly as in C, refresh traces + summary, tighten test tolerance, log Attempt #25, then proceed to polarization (Phase I) after supervisor review.
-## 2025-10-18 (galph loop — Phase I staging)
+## 2025-10-18 (galph loop - Phase I staging)
 - Marked CLI-FLAGS-003 Phase H4 complete in plans/active/cli-noise-pix0/plan.md and updated the snapshot to focus on Phase I polarization; H4a–H4c rows now reference Attempt #25 artifacts under reports/2025-10-cli-flags/phase_h/parity_after_lattice_fix/.
 - Synced docs/fix_plan.md: CLI-FLAGS-003 status now calls out Phase A-H done with Phase I pending; Next Actions rewritten for polarization Attempt #26 and exit-criteria item (xi) flipped to ✅.
 - Noted root cause for remaining parity gap: PyTorch BeamConfig defaults polarization_factor=0.0 while nanoBragg.c uses 1.0 (golden_suite_generator/nanoBragg.c:308); Ralph must realign defaults and capture new traces/tests.
@@ -117,14 +117,14 @@
 - Vectorization plan untouched; Phase A baseline capture still pending once CLI parity clears.
 - Follow-ups for Ralph: implement polarization parity per plan, update docs/fix_plan.md Attempt #26 with metrics, and only then advance to nb-compare / vectorization work.
 
-## 2025-10-19 (galph loop — Phase I3 parity directive)
+## 2025-10-19 (galph loop - Phase I3 parity directive)
 - `git pull --rebase` clean; workspace already on feature/spec-based-2. Reviewed prior memory plus required docs (spec-a shards, arch.md, config map, debugging guide, testing strategy, fix_plan, docs/index).
 - Long-term goal sweep: CLI parity stalled only on Phase I3; vectorization plan Phases A–F untouched pending parity evidence. `_tricubic_interpolation` still falls back to nearest-neighbour for batched tensors, reinforcing urgency once CLI closes.
 - Hypotheses for Phase I3 parity gap (triage): (1) Polarization factor may still diverge if CLI path misses Kahn defaults despite BeamConfig fix—confirm by running nb-compare; (2) -nonoise might still emit noiseimage if simulator flag regressed; (3) pix0 override suppression with custom vectors must match C—verify stdout pix0 to ensure parity. Highest-confidence risk is #1; next step is the nb-compare command recorded in input.md (correlation + polarization metrics).
 - No new plan drafted—`plans/active/cli-noise-pix0/plan.md` remains authoritative. Updated docs/fix_plan.md next actions to focus on Attempt #27 parity run and deepened I3 guidance.
 - Regenerated input.md (143 lines, Validation phase) instructing Ralph to run nb-compare with the supervisor command, archive artifacts under `reports/2025-10-cli-flags/phase_i/supervisor_command/`, execute targeted pytest, and document Attempt #27 metrics.
 - Follow-ups for Ralph: execute Do Now nb-compare command, capture stdout/stderr + summary.json, run targeted pytest + collect-only, update README + docs/fix_plan Attempt #27, leave code untouched.
-## 2025-10-19 (galph loop — Phase J directive)
+## 2025-10-19 (galph loop - Phase J directive)
 - `git pull --rebase` was clean; reviewed CLAUDE guardrails, spec shards, arch.md, config map, debugging + testing strategy, fix_plan, and active plans before action.
 - Deep-dive confirmed Goal #1 is now blocked solely by a 1.24538e5× intensity gap even after polarization parity; Goal #2 (vectorization) remains paused until CLI parity lands (Phase A evidence still outstanding).
 - Reviewed Ralph’s recent commits (`e8146c2`, `beadffc`): polarization default fix + new tests look solid; nb-compare tooling patch captured parity failure evidence without regressions. No course correction needed, but scaling issue persists.
@@ -133,34 +133,34 @@
 - Regenerated `input.md` (Evidence phase) instructing Ralph to capture C/Py scaling traces, build `scaling_chain.md`, and log Attempt #28 before any simulator edits.
 - Follow-ups for Ralph: deliver plan tasks J1–J3 (logs + analysis + fix_plan update) under `reports/2025-10-cli-flags/phase_j/`, then pause for supervisor review before touching normalization code.
 
-## 2025-10-21 (galph loop — Phase H5 reopen)
+## 2025-10-21 (galph loop - Phase H5 reopen)
 - Phase J scaling traces revealed C honours `-pix0_vector_mm` even with custom detector vectors; PyTorch still skips override in that path → 1.14 mm pix0 delta, h/k/l drift, F_latt collapse.
 - Updated `plans/active/cli-noise-pix0/plan.md` with Phase H5 (C evidence, override reinstatement, trace verification, fix_plan logging) and corrected the prior note that C ignored overrides.
 - Synced `docs/fix_plan.md` Next Actions to require H5a–H5c before Phase K; Attempt #28 observations now document the confirmed driver (missing override in custom-vector path).
 - Regenerated `input.md` (Implementation phase) directing Ralph to execute Phase H5b with fresh C/PyTorch traces and targeted pytest.
 - Follow-up: Expect Attempt #29 after override fix; pause Phase K normalization work until H5 parity evidence lands.
 
-## 2025-10-06 (galph loop — Phase H5 evidence setup)
+## 2025-10-06 (galph loop - Phase H5 evidence setup)
 - Reviewed required guardrails (docs/index.md, specs/spec-a*, arch.md, config map, debugging guide, testing strategy, docs/fix_plan.md). Focus remains CLI-FLAGS-003 Phase H5; vectorization plan untouched until parity lands.
 - Confirmed plans/active/cli-noise-pix0/plan.md already tracks Phase H5a–H5d; no new plan needed. docs/fix_plan.md Next Actions (line 448) aligned with H5 checklist.
 - Identified outstanding gap: need fresh C traces with and without -pix0_vector_mm to validate override precedence (Phase J evidence shows F_latt divergence from pix0 mismatch). Hypotheses logged in supervisor summary; implementation deferred until traces captured.
 - input.md rewritten (Evidence phase) directing Ralph to run long-form C command twice and archive logs under reports/2025-10-cli-flags/phase_h5/c_traces/, plus document derivation in c_precedence.md before touching PyTorch.
 - No code/doc changes yet; awaiting H5a artifacts. Next follow-up: after Ralph captures traces, greenlight H5b override reapplication and revisit docs/fix_plan Attempt log.
 
-## 2025-10-22 (galph loop — Phase H5 evidence refresh)
+## 2025-10-22 (galph loop - Phase H5 evidence refresh)
 - Updated plans/active/cli-noise-pix0/plan.md: marked H5b [D], set H5a to [P] with new requirement to refresh C traces dated 2025-10-21, clarified H5c/H5d deliverables.
 - docs/fix_plan.md now points Next Actions to C trace reruns + PyTorch parity capture; logged new Attempt #29 (2025-10-21) noting override reinstatement pending evidence.
 - input.md reissued (Evidence phase) directing Ralph to run NB_C_BIN command with/without override, update c_precedence.md, extend Phase H harness for H5c, and archive outputs under reports/2025-10-cli-flags/phase_h5/.
 - Next follow-up: Expect refreshed C logs in reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-21/ plus PyTorch parity log; after evidence lands, revisit Phase K normalization tasks.
 
-## 2025-10-23 (galph loop — H5a evidence push)
+## 2025-10-23 (galph loop - H5a evidence push)
 - Confirmed Phase J traces still show pix0 Y delta ~1.14 mm and `F_latt` 7.69e1 vs C 3.56e4 (`reports/2025-10-cli-flags/phase_j/trace_py_scaling.log:1-27`, `trace_c_scaling.log:164-190`); geometry remains the blocker before normalization.
 - Expanded `plans/active/cli-noise-pix0/plan.md` context with a 2025-10-22 correction note and tightened H5c guidance to demand `F_latt` ≈3.5636e4 and pix0 <5e-5 m deltas before Phase K.
 - Clarified `docs/fix_plan.md` Attempt #29 to mark the 2025-10-06 "override ignored" conclusion as instrumentation error so future loops do not rely on it.
 - Reissued `input.md` (Evidence phase, 100 lines) instructing Ralph to rerun the C command with/without `-pix0_vector_mm`, store logs under `reports/2025-10-cli-flags/phase_h5/c_traces/2025-10-22/`, diff them, and update `c_precedence.md` with dot-product derivations.
 - Follow-ups for Ralph: deliver H5a (both C traces + precedence memo), keep prior logs untouched, then pause for supervisor review before starting H5c PyTorch traces.
 
-## 2025-10-24 (galph loop — Phase H5 revert directive)
+## 2025-10-24 (galph loop - Phase H5 revert directive)
 - `git pull --rebase` clean; re-read docs/index.md, spec shards, arch.md, config map, debugging + testing strategy, fix_plan, and active plans before proceeding.
 - Deep analysis vs long-term goals: parity still blocked by pix0 mismatch (PyTorch applies override while C ignores with custom vectors); vectorization plan untouched until CLI parity closes.
 - Reviewed Ralph’s latest loops (5878f16, 052307f): evidence solidly shows nanoBragg ignores `-pix0_vector_mm` when custom detector vectors supplied, but repo still carries Attempt #29 override change → root cause of 3.6e-7 `F_latt` ratio. Direction needed to undo that change.
@@ -170,7 +170,7 @@
 - Hypotheses for remaining intensity gap now hinge on normalization once geometry parity returns; no new plan beyond existing Phase K tasks.
 - Follow-ups for Ralph: execute Do Now revert + tests, capture PyTorch traces under `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/`, update parity_summary.md and docs/fix_plan Attempt history, then pause for supervisor review before Phase K work.
 
-## 2025-10-24 (galph loop — H5c evidence prep)
+## 2025-10-24 (galph loop - H5c evidence prep)
 - Refreshed CLI-FLAGS-003 plan: marked H5b/H5d done, inserted doc anchor list, and rewrote Phase K tasks to target the sincg(h) bug (`plans/active/cli-noise-pix0/plan.md`).
 - Updated fix_plan next actions to focus on H5c traces then Phase K1 lattice-factor fix (`docs/fix_plan.md:448-510`).
 - Replaced `reports/2025-10-cli-flags/phase_h5/parity_summary.md` with post-revert guidance pointing Ralph to regenerate TRACE_PY logs (2025-10-22 baseline).
@@ -178,20 +178,20 @@
 - Key finding: PyTorch SQUARE lattice factor still feeds sincg with `(h-h0)` (src/nanobrag_torch/simulator.py) vs C’s `sincg(M_PI*h, Na)` (`golden_suite_generator/nanoBragg.c:3063-3080`); Phase K1 must correct this.
 - Follow-up expectations: Ralph generates H5c PyTorch traces under `reports/2025-10-cli-flags/phase_h5/py_traces/2025-10-22/`, updates parity_summary metrics, and drafts Attempt #32.
 
-## 2025-10-24 (galph loop — Phase H5 unit fix directive)
+## 2025-10-24 (galph loop - Phase H5 unit fix directive)
 - Reconfirmed pix0 fast-axis delta (≈1.1 mm) persists post-H5b revert; traced root cause to Detector BEAM pivot still treating beam_center_f/s as pixel counts (mm×m bug).
 - Added Phase H5e row to `plans/active/cli-noise-pix0/plan.md` directing mm→m conversion with new trace artifacts; refreshed docs/fix_plan.md Next Actions to prioritise H5a/H5c/H5e sequence before Phase K.
 - Issued `input.md` (Implementation phase) instructing Ralph to implement unit fix, capture trace evidence under `reports/2025-10-cli-flags/phase_h5/unit_fix/`, run `tests/test_cli_flags.py::TestCLIPix0Override`, and log Attempt #33.
 - No code changes made this loop; planning/docs only. Next follow-up: verify H5e Attempt captures <5e-5 m pix0 deltas, then greenlight Phase K1 (sincg update).
 
-## 2025-10-24 (galph loop — Phase K1 directive)
+## 2025-10-24 (galph loop - Phase K1 directive)
 - Re-ran parity backlog review after clean `git pull`; active focus remains CLI-FLAGS-003. H5c traces still missing post-unit-fix, so emphasized capturing them as part of upcoming Phase K work.
 - Deep dive confirmed SQUARE lattice factor still uses `(h-h0)` in `src/nanobrag_torch/simulator.py:200-280`, violating `specs/spec-a-core.md:218` and C reference `golden_suite_generator/nanoBragg.c:3069-3079`. Phase J evidence (`reports/2025-10-cli-flags/phase_j/scaling_chain.md`) still shows 3.6e-7 intensity ratio.
 - Ralph’s recent loop (315a54c) successfully closed H5e; no regressions spotted in commit diffs. Pending action is Phase K1 sincg parity plus Phase K2 scaling refresh.
 - Issued new `input.md` (Implementation phase, 107 lines) detailing Phase K1 tasks: swap to `sincg(torch.pi * h, Na)`, rerun scaling traces, author `tests/test_cli_scaling.py::test_f_latt_square_matches_c`, and update plan/attempt logs with artifacts under `reports/2025-10-cli-flags/phase_k/`.
 - Follow-up for next supervisor loop: verify Ralph delivers Phase K1 artifacts (trace_py_after.log, scaling_chain_after.md, pytest log) and updates docs/fix_plan.md Attempt #34 before greenlighting Phase K2.
 
-## 2025-10-24 (galph loop — H5c trace refresh directive)
+## 2025-10-24 (galph loop - H5c trace refresh directive)
 - Re-ran `git pull --rebase` (clean) then reviewed plans/fix_plan/context.
 - Noted K1 lattice fix landed in commit 0fef8f7 but plan still marked [ ]; updated `plans/active/cli-noise-pix0/plan.md:125-133` to mark K1 done, tighten H5c guidance (new 2025-10-24 trace path), and clarify K2/K3 follow-ups.
 - Updated `docs/fix_plan.md:470-480` Next Actions to focus on H5c trace rerun, refreshed scaling chain (K2), and targeted pytest/docs work (K3) before Phase L.
@@ -200,7 +200,7 @@
 - No code changes made; repo remains clean pending Ralph’s evidence.
 - Follow-up for Ralph: run Do Now command, update parity_summary + fix_plan attempt, then pause for supervisor review before touching Phase K2.
 
-## 2025-10-24 (galph loop — Phase H6 spin-up)
+## 2025-10-24 (galph loop - Phase H6 spin-up)
 - Coin flip = tails → skipped retrospective review; focused on active CLI parity gap per long-term Goal #1.
 - Deep analysis confirms pix0 parity still fails after Attempt #35 (ΔF ≈ -1.136 mm, ΔS ≈ +0.139 mm) even with beam-center mm→m fix; `plans/active/cli-noise-pix0/plan.md` lacked follow-up guidance.
 - Added Phase H6 section (H6a–H6d) to `plans/active/cli-noise-pix0/plan.md` and updated H5c state to [P]; plan now requires matched C/Py instrumentation to isolate `_calculate_pix0_vector` divergence.
@@ -208,20 +208,20 @@
 - Issued new `input.md` (Evidence phase) directing Ralph to instrument nanoBragg.c and the PyTorch trace harness, capture logs under `reports/2025-10-cli-flags/phase_h6/`, and log Attempt #36.
 - Follow-up for Ralph: execute Phase H6a/H6b/H6c tasks, update parity_summary + docs/fix_plan (Attempt #36), then coordinate a targeted fix to collapse pix0 deltas <5e-5 m before returning to Phase K.
 
-## 2025-10-25 (galph loop — H6 harness alignment)
+## 2025-10-25 (galph loop - H6 harness alignment)
 - Ran `git pull --rebase` (clean) and reviewed Phase H6 context. Noted PyTorch harness still forces `detector_pivot=BEAM` and likely executes the stale site-package build when `PYTHONPATH` is missing.
 - Updated `plans/active/cli-noise-pix0/plan.md` to mark H6a/H6d complete and to call out two guardrails for H6b: import via `PYTHONPATH=src` and fix the BEAM hardcode.
 - Added matching guidance to `docs/fix_plan.md` Next Actions so CLI-FLAGS-003 explicitly requires the editable install + SAMPLE pivot trace.
 - Rewrote `input.md` (Evidence phase) directing Ralph to patch `trace_harness.py`, capture the new TRACE_PY log under `reports/2025-10-cli-flags/phase_h6/py_trace/`, and stash env/git context before diffing.
 - Follow-up for Ralph: deliver Phase H6b artifacts (trace, stderr, env snapshot, git context) and update parity_summary.md; Phase H6c diff comes next.
 
-## 2025-10-25 (galph loop — H6b harness prep refresh)
+## 2025-10-25 (galph loop - H6b harness prep refresh)
 - Confirmed repo already synced; quick editable-import script reproduces C pix0 within 3e-6 m, so the outstanding 1.14 mm delta is a harness problem.
 - Refined Phase H6b guidance in `plans/active/cli-noise-pix0/plan.md` and the CLI-FLAGS-003 Next Actions to demand editable import plus ≤5e-6 m acceptance.
 - Issued new implementation memo (`input.md`) directing Ralph to monkey-patch `_calculate_pix0_vector` via the harness, drop the BEAM hardcode, log TRACE_PY with C-style precision, and archive stdout/stderr + env/git metadata under `reports/2025-10-cli-flags/phase_h6/py_trace/`.
 - Reviewed Ralph commits 9ee2ada / bf9925b — C instrumentation captured clean, no regressions; remind future loop to unwind trace hooks once parity closes.
 - Next follow-up: ensure Phase H6b artifacts land, then proceed to H6c diff analysis before reopening normalization work.
-## 2025-10-06 (galph loop — Phase H6c prep)
+## 2025-10-06 (galph loop - Phase H6c prep)
 - `git pull --rebase` clean; no incoming changes.
 - Reviewed CLI parity status vs long-term goal #1. Diffed `phase_h6` traces and confirmed first divergence occurs at `beam_center_m` (PyTorch logging millimetres vs C metres).
 - Updated `plans/active/cli-noise-pix0/plan.md` to mark H6b complete (Attempt #37) and refocused H6c task description on trace analysis.
@@ -229,7 +229,7 @@
 - Authored new `input.md` (Evidence phase) directing Ralph to produce the trace diff, document findings, and log Attempt #38.
 - Follow-up for Ralph: execute H6c diff per memo, update `reports/2025-10-cli-flags/phase_h6/analysis.md` + `reports/2025-10-cli-flags/phase_h5/parity_summary.md`, then record Attempt #38 in fix_plan before moving to H6d/H5c.
 
-## 2025-10-26 (galph loop — H6e pivot evidence setup)
+## 2025-10-26 (galph loop - H6e pivot evidence setup)
 - `git pull --rebase` clean; reviewed Phase H6 artifacts plus docs/index/spec/arch/config map per SOP.
 - Deep dive on pix0 traces shows C runs supervisor command in SAMPLE pivot while PyTorch config still defaults to BEAM when custom detector vectors are provided; this aligns with Attempt #38 residual deltas.
 - Updated `plans/active/cli-noise-pix0/plan.md` Phase H6 to mark H6c done and add new rows H6e–H6g covering pivot evidence, config fix, and post-fix trace reruns.
@@ -237,7 +237,7 @@
 - Issued new Evidence-phase memo (`input.md`) directing Ralph to capture pivot parity evidence and log it under `reports/2025-10-cli-flags/phase_h6/pivot_parity.md` (no code edits yet).
 - Next follow-up for Ralph: execute H6e (document pivot mismatch), update parity_summary + fix_plan Attempt log, then proceed to H6f implementation in a subsequent loop.
 
-## 2025-10-06 (galph loop — H6f pivot enforcement prep)
+## 2025-10-06 (galph loop - H6f pivot enforcement prep)
 - `git pull --rebase` clean; reviewed CLI parity backlog vs long-term goal #1 and vectorization plan status (no edits required yet).
 - Deep dive on pix0 gap: Phase H6 evidence confirms C forces SAMPLE pivot when custom vectors are supplied; PyTorch still defaults to BEAM. Normalization remains blocked until pivot + lattice parity close.
 - Coin flip → heads: inspected Ralph’s last two commits (`5d0a34d`, `0b7eaf7`). Evidence quality is solid, but parity visuals landed in repo root (`img*_*.png`, `intimage*.jpeg`, `noiseimage_preview.jpeg`) — flagged for relocation into reports before further work.
@@ -245,7 +245,7 @@
 - Issued new implementation memo (`input.md`) directing Ralph to move the stray images under `reports/2025-10-cli-flags/phase_h6/visuals/`, enforce SAMPLE pivot selection in `DetectorConfig`, add a targeted regression test, rerun focused pytest, and capture post-fix trace output for H6g.
 - Follow-up for Ralph: execute H6f per memo, log Attempt update + regression artifacts, then pause for supervisor review before H6g.
 
-## 2025-10-06 (galph loop — H6g evidence kickoff)
+## 2025-10-06 (galph loop - H6g evidence kickoff)
 - `timeout 30 git pull --rebase` returned "Already up to date"; no conflicts encountered.
 - Reviewed CLI-FLAGS-003 entry (`docs/fix_plan.md:448-462`) and Phase H6 table (`plans/active/cli-noise-pix0/plan.md:131-145`); confirmed Attempt #40 landed pivot forcing but H6g artifacts remain outstanding.
 - Updated `plans/active/cli-noise-pix0/plan.md` context with Attempt #40 recap and marked H6f as `[D]`; rewrote H6g guidance to require post-fix trace + nb-compare artifacts under `reports/…/phase_h6/post_fix/` and to log Attempt #41.
@@ -255,7 +255,7 @@
 - Key gap notes: normalization tasks K2/K3 still blocked pending H6g; vectorization plan untouched (Phase A baseline scripts outstanding).
 - Follow-up for Ralph: execute H6g evidence capture, archive artifacts under `reports/2025-10-cli-flags/phase_h6/post_fix/`, then log Attempt #41 in `docs/fix_plan.md` with measured |Δpix0| before touching normalization.
 
-## 2025-10-27 (galph loop — K2 evidence staging)
+## 2025-10-27 (galph loop - K2 evidence staging)
 - `git pull --rebase` clean; synced with origin before review.
 - Read docs/index.md, specs/spec-a.*, arch.md, config map, debugging SOP, testing_strategy.md to refresh guardrails for CLI parity + scaling work.
 - Verified CLI-FLAGS-003 Attempt #41 already landed: pix0 deltas ≤2.85 µm with SAMPLE pivot. Updated `plans/active/cli-noise-pix0/plan.md` context (new 2025-10-27 snapshot) and marked H6g `[D]`; expanded Phase K2 guidance to demand quantitative ratios explaining `test_metrics_failure.json`.
@@ -265,25 +265,25 @@
 - Vectorization plan remains untouched; Phase A baselines for tricubic/absorption still pending once CLI parity unblocks bandwidth.
 - Follow-up for Ralph: execute Phase K2 per new memo, write updated scaling metrics (including F_cell vs C), keep Attempt #41 notes intact, and stage plan for K3 if ratios finally align.
 
-## 2025-10-31 (galph loop — K2 rescope)
+## 2025-10-31 (galph loop - K2 rescope)
 - Evidence review shows PyTorch still rescales MOSFLM cross products; C only does so when `user_cell` is set. Root cause for F_latt_b ≈ +21.6% identified. K2b added to plan with required `mosflm_rescale.py` artifact.
 - Noted BeamConfig Kahn factor should default to 0.0 (C `polarization`). Reopened Phase I2 and updated fix_plan next steps to include default realignment during K3.
 - Issued new Evidence memo (input.md) directing Ralph to rerun trace harness, refresh scaling markdown, and capture orientation deltas before touching normalization code.
 
-## 2025-11-05 (galph loop — Phase K3 prep)
+## 2025-11-05 (galph loop - Phase K3 prep)
 - Reviewed CLI parity backlog vs long-term goal #1; confirmed `Crystal.compute_cell_tensors` still rescales MOSFLM cross-products and `BeamConfig.polarization_factor` remains 1.0, explaining the lingering F_latt and polar deltas.
 - Refreshed `plans/active/cli-noise-pix0/plan.md` context with a new 2025-11-05 recap and rewrote Phase K into a checklist (K3a–K3c) covering rescale gating, polarization defaults, and regression/docs closure.
 - Updated `docs/fix_plan.md` CLI-FLAGS-003 Next Actions to point at the new Phase K3 tasks and the exact scripts/tests Ralph must run after code changes.
 - Issued `input.md` (Implementation phase) instructing Ralph to land K3a–K3c, capture mosflm_rescale + scaling_chain artifacts under `reports/2025-10-cli-flags/phase_k/f_latt_fix/`, and rerun the targeted scaling pytest.
 - Follow-up for Ralph: implement the rescale guard + polarization default fix, regenerate scaling evidence, run `pytest tests/test_cli_scaling.py::test_f_latt_square_matches_c`, then log Attempt #43 before moving to Phase L.
 
-## 2025-11-06 (galph loop — K3d dtype evidence prep)
+## 2025-11-06 (galph loop - K3d dtype evidence prep)
 - Reviewed CLI-FLAGS-003 parity status: traces still show F_latt drift (Py F_latt_b≈46.98 vs C 38.63) despite SAMPLE pivot parity. Fractional h shifts (2.0012→1.9993) line up with ~2.8 µm close-distance delta.
 - Hypothesis: float32 rounding in detector geometry/scattering vector pipeline drives the sincg amplification; added Phase K3d dtype sweep to plan and fix_plan (dtype_sensitivity.md artifacts under reports/2025-10-cli-flags/phase_k/f_latt_fix/dtype_sweep/).
 - Updated supervisor memo targeting evidence-only float64 rerun; no pytest this loop.
 - Follow-up: Ralph to execute K3d command, archive dtype comparison, then resume K3a/K3c implementation once rounding impact is quantified.
 
-## 2025-11-07 (galph loop — K3e per-phi parity setup)
+## 2025-11-07 (galph loop - K3e per-phi parity setup)
 - `git pull --rebase` clean at start; reviewed plan/fix_plan, dtype sweep confirmed precision not root cause.
 - Deep dive: PyTorch trace logs `k≈1.9997` (phi=0°) while C logs `k≈1.9928` (phi=0.09°); rotating PyTorch `b` by 0.09° reproduces C values ⇒ phi-grid mismatch now primary blocker.
 - Updated `plans/active/cli-noise-pix0/plan.md` Phase K3a/K3b/K3d to `[D]`, added K3e (per-phi evidence) & K3f (phi sampling fix) plus new gap snapshot noting phi issue.
@@ -291,14 +291,14 @@
 - Authored `input.md` (Implementation phase) directing Ralph to extend `analyze_scaling.py` with `--per-phi`, instrument nanoBragg.c, and dump matched C/PyTorch phi traces under `reports/…/per_phi/`.
 - Follow-up for Ralph: execute K3e per memo, produce per-phi JSON/MD logs, then we can plan the phi sampling fix (K3f) next loop.
 
-## 2025-11-07 (galph loop — K3f baseline instrumentation)
+## 2025-11-07 (galph loop - K3f baseline instrumentation)
 - `git pull --rebase` clean; reviewed latest Attempt logs and vectorization backlog.
 - Deep dive confirmed long-term Goal #1 still blocked by Δk≈6 gap (CLI-FLAGS-003); F_latt parity depends on capturing base lattice & scattering traces before phi rotation.
 - Refreshed `plans/active/cli-noise-pix0/plan.md` Phase K3f with checklist K3f1–K3f4 (instrument C/Py, diff traces, document root cause) and synced `docs/fix_plan.md` Next Actions to match.
 - Issued new Evidence-phase input.md directing Ralph to execute K3f1 (C trace run) and stage matching PyTorch harness output under `reports/2025-10-cli-flags/phase_k/base_lattice/`.
 - Next Ralph steps: add TRACE_C_BASE instrumentation, run the supervisor command into `base_lattice/c_trace.log`, extend the Py harness for `TRACE_PY_BASE`, and prep for K3f3 diff once both logs exist.
 
-## 2025-11-08 (galph loop — K3f harness correction)
+## 2025-11-08 (galph loop - K3f harness correction)
 - `git pull --rebase` clean; read docs/index.md, spec shards, arch.md, config map, debugging SOP, testing strategy, fix_plan, vectorization plan.
 - Reviewed Ralph’s recent evidence commits (271e2b6, 2467064): instrumentation valuable but per-phi script subtracts `pix0_vector` from `detector.get_pixel_coords()`, yielding plane-relative vectors and explaining the 6-unit Δk seen in Attempt #45.
 - Updated `plans/active/cli-noise-pix0/plan.md` (K3f context + K3f2 guidance) and `docs/fix_plan.md` next actions to require sample-to-pixel vectors with no double subtraction before new traces are captured.
@@ -306,33 +306,33 @@
 - Authored Evidence-phase `input.md` directing Ralph to instrument `golden_suite_generator/nanoBragg.c`, rebuild, run the supervisor CLI command, and add a corrected PyTorch harness under `reports/2025-10-cli-flags/phase_k/base_lattice/` with comparison tooling.
 - No additional plan work required for vectorization yet; Phase A still pending once CLI parity unblocks bandwidth.
 
-## 2025-11-08 (galph loop — MOSFLM rescale implementation prep)
+## 2025-11-08 (galph loop - MOSFLM rescale implementation prep)
 - Verified base-lattice traces: PyTorch keeps placeholder `V≈1 Å^3` when MOSFLM A* is present, giving |a|≈5.8×10^3 Å and Δh≈6; C rescales with `V_cell≈2.4682×10^4 Å^3` before metric duality.
 - Updated `plans/active/cli-noise-pix0/plan.md` Phase K3f (rows marked `[D]`) and added Phase K3g tasks for implementing the MOSFLM rescale pipeline + regression coverage; docs/fix_plan Next Actions now call out K3g1–K3g3.
 - Issued Implementation-phase `input.md` (Do Now = K3g1) instructing Ralph to document root cause, mirror C’s MOSFLM real-vector rebuild, add scaling tests, refresh parity traces, and rerun `tests/test_cli_scaling.py::test_f_latt_square_matches_c` with the proper env vars.
 - Long-term goal #2 (vectorization) left untouched this loop; revisit after CLI parity is recovered.
 
-## 2025-11-08 (galph loop — K3g3 evidence staging)
+## 2025-11-08 (galph loop - K3g3 evidence staging)
 - Verified commit 46ba36b’s MOSFLM rescale branch by running Crystal.compute_cell_tensors() (float64 CPU). Added `reports/2025-10-cli-flags/phase_k/base_lattice/post_fix/cell_tensors_py.txt` and appended base_lattice summary with 2025-11-08 update.
 - Updated `plans/active/cli-noise-pix0/plan.md` (K3f4 → [D], K3g1/K3g2 → [D]) and refreshed fix_plan Attempt #47 with evidence + next steps focused on Phase K3g3 parity rerun.
 - Authored `input.md` directing Ralph to execute K3g3: rerun `tests/test_cli_scaling.py::test_f_latt_square_matches_c`, regenerate nb-compare metrics, refresh traces, and document results under phase_k/f_latt_fix/.
 - Follow-up for Ralph: Complete K3g3 tasks per memo, update scaling_chain.md + summary.md with new metrics, and capture nb-compare/trace diffs before we attempt Phase L.
 
-## 2025-11-08 (galph loop — K3g3 evidence prep)
+## 2025-11-08 (galph loop - K3g3 evidence prep)
 - `git pull --rebase` clean; reviewed CLI-FLAGS-003 status and vectorization plan (no updates needed yet).
 - Identified open gap: Phase K3g3 still needs post-fix scaling evidence; MOSFLM rescale landed in 46ba36b but traces/nb-compare not refreshed.
 - Hypotheses: (1) Parity should succeed once traces regenerated; (2) residual discrepancies most likely from polarization factor default if it still logs 1.0. Await evidence.
 - Authored Evidence-phase input.md (lines 1-100) directing Ralph to rerun `tests/test_cli_scaling.py::test_f_latt_square_matches_c`, capture nb-compare artifacts, refresh `scaling_chain.md` & `base_lattice/summary.md`, and log Attempt update.
 - Follow-up: Ralph to complete K3g3 tasks, archive artifacts under `reports/2025-10-cli-flags/phase_k/f_latt_fix/`, and update docs/fix_plan.md before we schedule Phase L parity runs.
 
-## 2025-11-08 (galph loop — K3g3 parity rerun directive)
+## 2025-11-08 (galph loop - K3g3 parity rerun directive)
 - Coin flip → tails; skipped retrospective review per SOP.
 - Re-read CLI parity artifacts: scaling_chain.md still frozen at Oct-06 failure; trace_diff compares old C log vs Py trace (no post-fix diff yet).
 - Selected focus issue: CLI-FLAGS-003 Phase K3g3. Emphasised rerunning tests/test_cli_scaling.py::test_f_latt_square_matches_c and nb-compare with timestamped outputs under reports/2025-10-cli-flags/phase_k/f_latt_fix/post_fix/.
 - Input memo instructs Ralph to regenerate C & Py base traces (run_c_trace.sh + trace_harness.py) using shared stamp, update scaling_chain.md + summary.md, and record Attempt update in docs/fix_plan.md.
 - Validated pytest selector via collect-only (env KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1).
 
-## 2025-11-09 (galph loop — K3g3 evidence prep + vectorization reminder)
+## 2025-11-09 (galph loop - K3g3 evidence prep + vectorization reminder)
 - `git pull --rebase` clean; reviewed docs/index.md, specs/spec-a shards, arch.md, config map, debugging SOP, testing strategy, fix_plan.
 - Long-term goal check:
   * CLI parity: MOSFLM rescale/polarization fixes landed but scaling evidence still missing; base_lattice summary shows post-fix addendum yet main diff logs remain pre-fix.
@@ -342,21 +342,21 @@
 - Authored new supervisor `input.md` directing Ralph to execute K3g3 (targeted pytest + nb-compare + trace refresh) with stamped artifacts and to update scaling_chain/summary plus fix_plan Attempt log.
 - Follow-up for Ralph: run the specified pytest node under parity env, regenerate nb-compare + base-lattice traces, refresh reports/summary, and record Attempt update; if blocked, capture trace logs under `base_lattice/blocked/` and document stall.
 
-## 2025-11-09 (galph loop — Phase L1 HKL parity prep)
+## 2025-11-09 (galph loop - Phase L1 HKL parity prep)
 - `timeout 30 git pull --rebase` clean; coin toss = tails so no retrospective audit.
 - CLI-FLAGS-003 still blocked by supervisor command parity (corr≈0.9965, sum_ratio≈1.26e5). Updated `plans/active/cli-noise-pix0/plan.md` Phase L with explicit L1–L4 tasks (HKL parity → scaling trace → diagnosis → rerun) and synced docs/fix_plan Next Actions to those steps.
 - Authored new `input.md` (Mode=Parity) directing Ralph to execute Phase L1 by building `scripts/validation/compare_structure_factors.py`, regenerating a stamped `Fdump_scaled` cache, and logging HKL parity metrics under `reports/2025-10-cli-flags/phase_l/hkl_parity/`.
 - Hypotheses for 1.26e5× intensity gap: (H1) HKL ingestion mismatch (PyTorch grid defaults vs C’s Fdump) — high confidence; next confirming step is L1 comparison script. (H2) Residual scaling-chain divergence post-MOSFLM fix (fluence/polar chain) — medium confidence; confirmation via Phase L2 traces after HKL parity passes.
 - Vectorization goal remains untouched; plan `plans/active/vectorization.md` still at Phase A baseline because `_tricubic_interpolation` falls back to nearest-neighbor for batched tensors (see src/nanobrag_torch/models/crystal.py:272+). Keep on radar once CLI parity clears.
 
-## 2025-11-09 (galph loop — L1b prep)
+## 2025-11-09 (galph loop - L1b prep)
 - Reproduced Phase L1 parity run with a fresh cache (`Fdump_scaled_20251006175946.bin`); mismatch persists (max |ΔF| 5.22e2, 99,209 voxels). File encodes 182,700 doubles (≈9.5k extra) and shifts reflections (Δk≈+10–12, Δl≈−2…−8), pointing to a layout/ordering discrepancy rather than corruption.
 - Updated `plans/active/cli-noise-pix0/plan.md` Phase L table (L1a–L1d) to capture completed evidence and new layout-analysis + IO alignment tasks. Logged the addendum referencing the new cache.
 - Synced `docs/fix_plan.md` with Phase L1b–L1d focus and recorded Attempt #51 (evidence update). Added layout-analysis to next actions block.
 - Authored `input.md` directing Ralph to implement Phase L1b via a new `scripts/validation/analyze_fdump_layout.py` helper and to stash findings in `reports/2025-10-cli-flags/phase_l/hkl_parity/` before moving to L1c.
 - Follow-up: Ralph to build the layout-analysis script, document axis/order findings in `layout_analysis.md`, update fix_plan attempt log, then proceed to L1c once structure-factor parity holds.
 
-## 2025-11-09 (galph loop — L1c alignment prep)
+## 2025-11-09 (galph loop - L1c alignment prep)
 - Re-ran repo sync (already clean); reviewed docs/index.md, specs/spec-a shards, arch.md, config map, debugging + testing strategies, fix_plan, and plans/active/.*
 - Deep-dive findings vs goals:
   * CLI parity: HKL mismatch traced to nanoBragg padding `(range+2)` along each axis; PyTorch `read_fdump`/`write_fdump` still assume compact grids, so structure-factor parity blocks supervisor command. Need to drop padded planes on read and write the padded layout.
@@ -370,7 +370,7 @@
 - Plan updates: Marked Phase L1b as complete in `plans/active/cli-noise-pix0/plan.md`, refreshed docs/fix_plan.md next-actions to call out padded layout fix, and emitted new input.md (Do Now = Phase L1c parity implementation + regression test).
 - Follow-up for Ralph: Implement Phase L1c per new input.md — add roundtrip pytest, adjust HKL IO to mirror padded layout, regenerate parity artefacts, and update fix_plan/plan tables. Proceed to L1d once parity metrics hit ≤1e-6.
 
-## 2025-11-09 (galph loop — L1d parity rerun prep)
+## 2025-11-09 (galph loop - L1d parity rerun prep)
 - `timeout 30 git pull --rebase` clean; re-read docs/index.md, specs/spec-a-cli.md, arch.md, c_to_pytorch_config_map, debugging SOP, testing_strategy, docs/fix_plan.md, and plans/active/cli-noise-pix0.md/vectorization.md for continuity.
 - Coin flip = heads: reviewed Ralph’s latest work (`4e73062`, `572217b`) — HKL layout analysis + padding fix landed with good regression coverage; no regressions spotted.
 - Updated `plans/active/cli-noise-pix0/plan.md` Phase L snapshot (L1c → [D], new note on Attempt #53) and synced `docs/fix_plan.md` Next Actions to show L1c completion; left L1d as the active blocker.
@@ -378,7 +378,7 @@
 - Hypotheses refined: (1) With padding fix, expect HKL parity to hit max |ΔF| ≤ 1e-6 once rerun; (2) if Δk≈6 persists afterward, capture fresh per-phi traces (Plan K3f/K3g) to isolate reciprocal-vector drift; (3) remaining intensity gap likely tied to sincg normalization order pending new evidence.
 - Follow-up for Ralph: Execute L1d per memo, update docs/fix_plan Attempts with metrics, and prep Phase L2 scaling diagnostics if parity clears.
 
-## 2025-11-09 (galph loop — Phase L2 kickoff)
+## 2025-11-09 (galph loop - Phase L2 kickoff)
 - Coin flip landed heads; reviewed recent Ralph commits (`572217b`, `3e47b38`) — HKL padding/parity artifacts look solid, no regressions observed.
 - Deep-dive into CLI parity status: scaling mismatch (sum_ratio≈1.26e5) still open; plan lacked Phase L coverage beyond L1. Vectorization initiative remains untouched pending CLI closure.
 - Updated `plans/active/cli-noise-pix0/plan.md` with Phases L2–L4 (scaling audit → normalization fix → supervisor rerun) including checklist tasks and artifact targets under `reports/2025-10-cli-flags/phase_l/`.
@@ -389,7 +389,7 @@
   3. Fluence scaling mismatch (BeamConfig vs C computed area) causing ×~1.27e5 ratio (Confidence: medium-high, matches numeric magnitude). Next step: verify fluence logged from C vs PyTorch traces in L2a/L2b.
 - Follow-up for Ralph: execute new input.md focusing on Phase L2a; once traces captured, proceed through L2b/L2c before touching implementation.
 
-## 2025-10-06 (galph loop — Phase L2b trace directive)
+## 2025-10-06 (galph loop - Phase L2b trace directive)
 - Synced cleanly; reviewed docs/index.md, specs/spec-a.md, arch.md, c_to_pytorch_config_map.md, debugging.md, testing_strategy.md, docs/fix_plan.md, and plans/active/* (CLI + vectorization) per SOP.
 - Deep analysis: long-term Goal #1 still blocked in Phase L; C scaling trace captured (Attempt #55) but PyTorch trace missing. Goal #2 vectorization remains at Phase A with no artifacts.
 - Hypotheses (CLI scaling mismatch):
@@ -400,7 +400,7 @@
 - Plan maintenance: Marked Phase L2a as complete in `plans/active/cli-noise-pix0/plan.md`; refreshed `docs/fix_plan.md` Next Actions to focus on L2b/L2c. input.md now directs Ralph to deliver the PyTorch scaling trace (Phase L2b).
 - Follow-up for Ralph: implement Phase L2b per new memo, archive artifacts under `reports/2025-10-cli-flags/phase_l/scaling_audit/`, then proceed to L2c diff once trace captured.
 
-## 2025-11-10 (galph loop — Phase L2b instrumentation)
+## 2025-11-10 (galph loop - Phase L2b instrumentation)
 - Synced cleanly; re-read docs/index.md, specs/spec-a.md shards pointer, arch.md, c_to_pytorch_config_map.md, debugging/debugging.md, docs/fix_plan.md, testing_strategy.md, and plans/active/* for continuity before analysis.
 - Deep dive vs long-term Goal #1 found TRACE_PY still emits placeholder scaling data (`polar=1`, `capture_fraction=1`, `steps=phi_steps`) so Phase L2b cannot progress; identified need to thread real tensors from `_apply_polarization` and `_apply_detector_absorption` through the debug path.
 - Coin flip → heads: Reviewed Ralph’s recent commits (`3e47b38`, `f3f116b`, `f466b39`); C trace capture solid, but evidence-only harness attempt stalled because instrumentation can’t expose values—no regressions spotted.
@@ -408,27 +408,27 @@
 - Authored new `input.md` directing Ralph to patch TRACE_PY, add `tests/test_trace_pixel.py`, rerun the scaling harness, and archive comparison artifacts under `reports/2025-10-cli-flags/phase_l/scaling_audit/`.
 - Follow-up for Ralph: Execute Phase L2b per updated plan—implement real scaling trace output, add the regression test, regenerate PyTorch trace + comparison JSON, and log Attempt update before moving to L2c.
 
-## 2025-11-10 (galph loop — L2b harness rerun directive)
+## 2025-11-10 (galph loop - L2b harness rerun directive)
 - Synced clean, reviewed core docs (`docs/index.md`, specs/spec-a.md shards, arch.md, config map, debugging SOP, testing strategy), CLI plan, and fix_plan entries before analysis per SOP.
 - Confirmed Ralph’s latest work: commit 6b055dc replaced TRACE_PY placeholders with real tensors and added `tests/test_trace_pixel.py`; fix_plan Attempt #57 documents the change. Harness artifacts still missing (`trace_py_scaling.log` absent) because the prior run failed (`trace_py_fullrun.log` shows ValueError unpacking `read_hkl_file`).
 - Evidence review: C scaling trace (`reports/2025-10-cli-flags/phase_l/scaling_audit/c_trace_scaling.log:260-300`) reports `k_frac≈-0.607` and `F_latt≈-2.38`, while the latest PyTorch trace (`reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_py_after_133134.log:46-65`) still shows `hkl_frac≈(2,2,-13)` and `F_latt≈4.47e4`. Polarization also stays at 1.0 vs C’s 0.9146. Scaling gap therefore persists upstream of normalization.
 - Hypotheses logged: (1) fractional Miller index mismatch leading to runaway `F_latt`; (2) polarization factor still diverges despite new instrumentation. Both require a fresh PyTorch scaling trace to quantify.
 - Rewrote `input.md` directing Ralph to rerun `trace_harness.py` with the supervisor command (slow=685, fast=1039), capture stdout/stderr, parse key factors into `scaling_audit_summary.md`, and keep `pytest --collect-only` in evidence mode; set “Mapped tests: none — evidence-only”.
 - Next steps for Ralph: execute Phase L2b Step 3 (harness rerun), document deltas in notes/summary JSON, then move to Phase L2c comparison once numbers land. No new planning artifacts created; existing plan remains authoritative.
-## 2025-11-11 (galph loop — Phase L2b0 harness reminder)
+## 2025-11-11 (galph loop - Phase L2b0 harness reminder)
 - Added new gap snapshot in plans/active/cli-noise-pix0/plan.md noting prior Py trace omitted -beam_vector/-oversample/-flux/-beamsize, which forced auto oversample=4 and +Z beam.
 - Updated Phase L2b guidance to require rerunning trace_harness.py with the authoritative supervisor command before analysing scaling factors; docs/fix_plan.md now lists Phase L2b0 as step 1.
 - Issued input.md loop instructions directing Ralph to regenerate trace_py_scaling.log via `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py --config supervisor --pixel 685 1039 --out reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling.log --device cpu --dtype float32` and capture fresh notes.
 - Expect Ralph to refresh trace_py_env.json/notes.md, then proceed to instrumentation regression test (tests/test_trace_pixel.py) once Phase L2b0 evidence lands.
 
-## 2025-10-06 (galph loop — Phase L2b instrumentation prep)
+## 2025-10-06 (galph loop - Phase L2b instrumentation prep)
 - Synced clean; coin flip tails so no commit review.
 - Confirmed Attempt #66 harness rerun now passes full supervisor flags: `trace_py_scaling.log` reports steps=10, fluence≈1e24, yet `I_before_scaling` remains absent and polar=0, so intensity still zero.
 - Updated `plans/active/cli-noise-pix0/plan.md` gap snapshot + L2b row to mark L2b0 complete and emphasize instrumentation work; refreshed `docs/fix_plan.md` next actions (2025-11-12 refresh).
 - Authored new `input.md` directing Ralph to thread real scaling tensors through TRACE_PY, add regression test, rerun harness, and diff against C trace.
 - Focus next loop: complete Phase L2b instrumentation, record comparison metrics, then proceed to L2c.
 
-## 2025-10-06 (galph loop — Phase L2b harness focus)
+## 2025-10-06 (galph loop - Phase L2b harness focus)
 - Sync clean (git pull --rebase no-op). Reviewed docs/index.md, specs/spec-a.md shards pointer, arch.md, config map, debugging SOP, testing strategy, docs/fix_plan.md, and plans/active/* per SOP.
 - Long-term Goal #1 status: CLI-FLAGS-003 remains blocked at Phase L2b because `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py` still fabricates TRACE_PY lines (`I_before_scaling NOT_EXTRACTED`, `polar 0`, `I_pixel_final 0`). Simulator instrumentation already emits real values (see `tests/test_trace_pixel.py`), so harness must capture stdout instead of synthesizing constants.
 - Hypothesis summary: (1) Harness bypass writes placeholders → confirmed by lines 263-283 in trace_harness.py; (2) Missing stdout capture leaves trace_py_stdout.txt empty, so scaling_audit_summary.md lacks real numbers. Next step is to pipe the actual TRACE_PY output into trace_py_scaling.log before comparing to C.
@@ -436,7 +436,7 @@
 - No new plan drafted; existing CLI plan already captures Phase L2b work. Updated input.md directing Ralph to fix the harness (collect live TRACE_PY output) and rerun targeted regression test.
 - Follow-up for Ralph: execute revised input.md — update trace_harness.py to record real simulator output, refresh `trace_py_scaling.log`, update scaling_audit_summary.md with live values, then proceed to Phase L2c comparison once numbers land.
 
-## 2025-11-12 (galph loop — L2b harness refresh directive)
+## 2025-11-12 (galph loop - L2b harness refresh directive)
 - Sync clean; reviewed docs/index.md, specs/spec-a.md shard pointers, arch.md, config map, debugging SOP, testing_strategy.md, docs/fix_plan.md, and plans/active/* before analysis.
 - Deep analysis: CLI-FLAGS-003 still blocked because `reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py` fabricates TRACE_PY entries (see lines 252-281). Latest PyTorch trace with live instrumentation (`reports/2025-10-cli-flags/phase_k/f_latt_fix/trace_py_after_133134.log`) shows `hkl_frac≈(2,2,-12.99)` and `polar=1.0`, diverging sharply from C trace (`c_trace_scaling.log:265-287` reports `hkl_frac≈(-6.88,-0.607,-13.77)` and `polar=0.9146`). Need authentic TRACE_PY output before tackling normalization.
 - Hypotheses triage captured in supervisor summary; top issue remains reciprocal lattice mismatch (likely k-component) pending fresh harness data.
@@ -445,25 +445,25 @@
 - Authored new `input.md` instructing Ralph to stream live TRACE_PY output via `debug_config={'trace_pixel': [685,1039]}`, rerun the harness, and validate with the targeted trace test before proceeding to comparison.
 - Follow-up for Ralph: execute L2b Step 3 (harness refresh + rerun), archive updated logs/env snapshots under `reports/2025-10-cli-flags/phase_l/scaling_audit/`, run the trace regression selector, update Attempts History, then rerun `compare_scaling_traces.py` once real data exists.
 
-## 2025-11-13 (galph loop — CLI harness regression triage)
+## 2025-11-13 (galph loop - CLI harness regression triage)
 - Synced clean; traced Phase L2b blockage to `trace_harness.py` still unpacking legacy `read_hkl_file` outputs. Logged the regression as Attempt #70 in docs/fix_plan.md:458-484 and updated the plan gap snapshot / L2b guidance (`plans/active/cli-noise-pix0/plan.md:13-18`, `:239-242`).
 - Authored new input.md (100 lines) directing Ralph to adapt the harness to the `(F_grid, metadata)` API, rerun the supervisor command capture, and archive refreshed TRACE_PY artifacts before Phase L2c resumes.
 - Focus next loop: confirm harness patch lands, collect live trace data, then execute compare_scaling_traces.py to re-enter normalization analysis.
 
-## 2025-11-14 (galph loop — Phase L2b orientation fix)
+## 2025-11-14 (galph loop - Phase L2b orientation fix)
 - Verified repo up to date; reviewed core docs plus CLI plan & latest scaling artifacts.
 - Diagnosed F_cell=0 in trace harness: `trace_harness.py` feeds all MOSFLM vectors into `mosflm_a_star` and leaves the other slots `None`, so Crystal falls back to default orientation during Phase L2b.
 - Updated `plans/active/cli-noise-pix0/plan.md` L2b guidance and `docs/fix_plan.md` Next Actions / Attempt notes to call out the MOSFLM injection bug as the gating fix.
 - Rewrote `input.md` directing Ralph to patch the harness, rerun the supervisor trace command, refresh artifacts, then proceed to L2c comparison.
 - Follow-up for Ralph: apply the harness fix (`mosflm_a_star/b_star/c_star` assignments), rerun trace harness with supervisor flags, archive refreshed `trace_py_scaling.log`, execute `compare_scaling_traces.py`, and log the new Attempt entry before tackling normalization.
 
-## 2025-11-14 (galph loop — L2b HKL wiring)
+## 2025-11-14 (galph loop - L2b HKL wiring)
 - `git pull --rebase` clean; reviewed core docs plus CLI plan and fix_plan before analysis.
 - Evidence run (`reports/.../harness_hkl_state.txt`) shows `trace_harness.py` never assigns `Crystal.hkl_data`/`hkl_metadata`, leaving structure factors at default_F=0 and keeping F_cell=0 in TRACE_PY.
 - Updated docs/fix_plan.md (Attempt #73) and plans/active/cli-noise-pix0/plan.md L2b guidance to call out the missing HKL attachment; next action is to set `crystal.hkl_data = F_grid` and `crystal.hkl_metadata = metadata` before simulator construction.
 - Authored new input.md instructing Ralph to wire HKL metadata into the harness, rerun the supervisor trace command, refresh scaling_audit_summary.md, and validate via targeted pytest collection + compare_scaling_traces.
 - Follow-up for Ralph: patch harness HKL assignment, rerun L2b command, update artifacts (trace_py_scaling.log, notes.md, harness_hkl_state.txt), then rerun the comparison tool to re-enter Phase L2c.
-## 2025-10-06 (galph loop — CLI-FLAGS structure-factor probe)
+## 2025-10-06 (galph loop - CLI-FLAGS structure-factor probe)
 - Marked Phase L2 as complete in plans/active/cli-noise-pix0/plan.md and refreshed Phase L3 task list (L3a/L3b now target supervisor pixel F_cell evidence).
 - Updated docs/fix_plan.md Next Actions to focus on structure-factor ingestion; clarified divergence as F_cell=0 vs 190.27 at hkl≈(-7,-1,-14).
 - Authored new input.md (L3a instructions) directing Ralph to build a probe under reports/.../structure_factor and log HKL vs Fdump amplitudes.
@@ -471,19 +471,19 @@
 - Follow-up for Ralph: implement the probe per input.md, store outputs in reports/2025-10-cli-flags/phase_l/structure_factor/, and feed findings into L3b planning.
 
 
-## 2025-11-15 (galph loop — Phase L3 structure-factor sourcing)
+## 2025-11-15 (galph loop - Phase L3 structure-factor sourcing)
 - Confirmed repo-local `scaled.hkl` is a 13-byte stub containing only `(1,12,3)`; golden_suite_generator/Fdump.bin and tmp/Fdump.bin are tiny (≤2×2×2 grids) and cannot supply F_cell for (-7,-1,-14).
 - Loaded `reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin` via `read_fdump`; grid spans h∈[-24,24], k∈[-28,28], l∈[-31,30] and returns `F_cell=190.27` for the supervisor pixel. This confirms sourcing the C-generated Fdump reproduces the trace amplitude.
 - Implication: Phase L3 must treat the archived Fdump as the authoritative dataset (or regenerate an equivalent cache) before normalization work; running the CLI with the stub HKL will overwrite the cache with zeros.
 - Next supervisor handoff: instruct Ralph to rerun `reports/.../structure_factor/probe.py` including `--fdump reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006175946.bin`, capture the refreshed probe.log/analysis.md, and decide whether to stage that Fdump alongside the supervisor command or regenerate it from the original HKL source.
 
-## 2025-11-16 (galph loop — VECTOR-TRICUBIC-001 kickoff)
+## 2025-11-16 (galph loop - VECTOR-TRICUBIC-001 kickoff)
 - Refreshed `plans/active/vectorization.md` Context/Phase A guidance to flag the Phase A evidence push (collect-only log, env snapshot) and reinforced harness locations under `scripts/benchmarks/`.
 - Updated `docs/fix_plan.md` next-actions list for VECTOR-TRICUBIC-001 with the env.json + collect-only requirements so the fix-plan matches the plan.
 - Authored input.md handing Ralph Phase A1–A3 tasks (capture tricubic/absorption baselines, build benchmark harnesses, persist logs in `reports/2025-10-vectorization/phase_a/`).
 - Follow-up for Ralph: execute the outlined commands, write harness stubs, drop Attempt #1 evidence into fix_plan once artifacts exist, then proceed to Phase B design when Phase A closes.
 
-## 2025-11-17 (galph loop — Phase A2/A3 planning refresh)
+## 2025-11-17 (galph loop - Phase A2/A3 planning refresh)
 - `git pull --rebase` clean; reviewed core docs plus vectorization plan/fix_plan entries before analysis.
 - Coin flip = heads → reviewed Ralph’s recent commits (142230b, 6e12854). Evidence collection and baseline logs look solid; no regressions spotted. Noted that tests/test_at_str_002.py and absorption logs already captured in reports/2025-10-vectorization/phase_a/.
 - Updated plans/active/vectorization.md gap snapshot and Phase A table to mark A1 complete and highlight missing A2/A3 harnesses.
@@ -491,18 +491,18 @@
 - Authored expanded input.md (Perf mode) directing Ralph to implement Phase A2/A3 benchmark harnesses, capture timing artifacts (JSON/Markdown/run_log/env.json), and log metrics in fix_plan.
 - No code changes; focus next loop: ensure harness scripts and reports land, then proceed to Phase B design memo.
 
-## 2025-11-17 (galph loop — CLI-FLAGS L3 readiness)
+## 2025-11-17 (galph loop - CLI-FLAGS L3 readiness)
 - Sync clean; revisited docs/index.md, spec shards, arch.md, config map, debugging SOP, testing strategy, fix_plan, and active plans.
 - Noted inconsistency: `structure_factor/probe.log` shows scaled.hkl spans [-24,24]×[-28,28]×[-31,30] with F_cell=190.27, but `scaling_audit/config_snapshot.json` still reports h/k/l ranges (1,12,3) and TRACE_PY keeps F_cell=0.
 - Updated docs/fix_plan.md: CLI-FLAGS-003 Next Actions now start with a fresh Phase L3a probe rerun plus harness/CLI audits; VECTOR-TRICUBIC-001 Next Actions point to Phase B design tasks (B1–B3).
 - No new evidence generated; left instructions for Ralph to recapture HKL coverage on the current machine, reconcile harness metadata, then proceed with Phase L3 scaling fixes once F_cell matches C.
-## 2025-11-17 (galph loop — L3 harness alignment)
+## 2025-11-17 (galph loop - L3 harness alignment)
 - `git pull --rebase` clean; reviewed docs/index.md, specs/spec-a.md shards, arch.md, config map, debugging SOP, testing strategy, fix_plan, and active plans before selecting focus.
 - Focused on CLI-FLAGS-003 after Attempt #77; updated `plans/active/cli-noise-pix0/plan.md` (added 2025-11-17 gap snapshot, marked L3a [D], clarified evidence expectations) and refreshed `docs/fix_plan.md` next-actions list to center L3c harness/CLI audits and L3e validation script.
 - Authored new `input.md` (Parity mode) directing Ralph to rerun the scaling trace harness with scaled.hkl attached, capture HKL metadata in `harness_hkl_state_20251117.txt`, promote new trace/env snapshots, and update `analysis.md` before touching simulator code.
 - Key follow-up for Ralph: execute the harness audit command, preserve timestamped artifacts, summarise findings in analysis.md, and log outcomes in fix_plan prior to proceeding to the CLI ingestion audit (L3c) next loop.
 
-## 2025-11-17 (galph loop — CLI-FLAGS L3c update)
+## 2025-11-17 (galph loop - CLI-FLAGS L3c update)
 - `git pull --rebase` clean; reviewed specs/spec-a-cli.md, docs/architecture/detector.md, config map, testing strategy, plan/fix_plan entries, and latest Phase L artifacts before selecting focus.
 - Marked Plan L3b complete and redirected L3c toward auditing `__main__.py` HKL ingestion; added new gap snapshot note about Attempt #78 harness parity.
 - Updated docs/fix_plan.md Next Actions + Attempt #78 to reflect harness success and to queue the CLI ingestion audit, regression coverage, validation script, and parity rerun.
@@ -510,156 +510,156 @@
 - Follow-up: expect CLI ingestion audit results + `cli_hkl_audit.md` artifacts next loop, then proceed to regression tests (L3d).
 - Logged new fix_plan items ABS-OVERSAMPLE-001 and SOURCE-WEIGHT-001 with dedicated plans (`plans/active/oversample-thick-subpixel.md`, `plans/active/source-weight-normalization.md`) to track oversample_thick bug and source-weight normalization bug.
 
-## 2025-11-17 (galph loop — CLI L3c device probe)
+## 2025-11-17 (galph loop - CLI L3c device probe)
 - Re-audited CLI HKL attachment after harness fixes; updated `reports/2025-10-cli-flags/phase_l/structure_factor/cli_hkl_audit.md` with fc600db findings showing dtype+metadata are wired but tensors never move to `-device cuda`.
 - Added note in `docs/fix_plan.md` (CLI-FLAGS-003 Next Actions) flagging the device gap so L3c implementation covers it.
 - Authored new `input.md` (Parity mode) instructing Ralph to capture `cli_hkl_device_probe.json`, record env metadata, update the audit doc, and log Attempt #79 before any simulator edits.
 - Open questions: confirm whether CUDA probe reproduces the device mismatch on the local machine; plan to queue CLI-side fix once evidence is captured.
 
-## 2025-11-18 (galph loop — VECTOR-TRICUBIC Phase B prep)
+## 2025-11-18 (galph loop - VECTOR-TRICUBIC Phase B prep)
 - `git pull --rebase` already up to date; no conflicts.
 - Updated `plans/active/vectorization.md` gap snapshot + supervisory note to reflect Phase A completion and highlight Phase B design memo as the new blocker.
 - Synced `docs/fix_plan.md` status/index for VECTOR-TRICUBIC-001 (Phase A complete, Phase B outstanding) and refreshed Next Actions to call for the Phase B design memo.
 - Authored new `input.md` (Docs mode) directing Ralph to draft `reports/2025-10-vectorization/phase_b/design_notes.md` covering tasks B1–B3, including tensor shapes, polin3 tensorization, and gradient/device checklist.
 - Follow-up for Ralph: produce the memo, cite baseline artifacts, outline regression/benchmark plan, and log the attempt in fix_plan before attempting any implementation work.
-## 2025-11-18 (galph loop — VECTOR-TRICUBIC Phase C kick-off)
+## 2025-11-18 (galph loop - VECTOR-TRICUBIC Phase C kick-off)
 - Synced clean; reviewed latest plan/docs plus Ralph’s recent commits (`d30a581`, `30ab2d1`). Design memo now exists and captures B1–B3; CLI device audit revealed HKL tensors stuck on CPU but no regressions observed.
 - Updated `plans/active/vectorization.md` context + Phase B table to mark B1–B3 complete, steering focus to Phase C implementation (C1–C3). Refreshed `docs/fix_plan.md` next-actions accordingly.
 - Authored new `input.md` (Perf mode) directing Ralph to implement Phase C1 batched tricubic gather with a fresh targeted pytest and to log implementation notes under phase_c/.
 - Expect Ralph next loop to land the gather vectorization, add the new test, and document deltas before moving to Phase C2 fallback validation. CLI-FLAGS-003 remains pending after gather work.
-## 2025-11-18 (galph loop — CLI-FLAGS L3c audit prep)
+## 2025-11-18 (galph loop - CLI-FLAGS L3c audit prep)
 - Chose Evidence focus on CLI-FLAGS-003 Phase L3c to unblock the supervisor-command parity goal.
 - Reviewed src/nanobrag_torch/__main__.py:438-450 and 1068-1076; confirmed CLI still attaches HKL data after Crystal construction but leaves tensors on CPU and instantiates Crystal without propagating the CLI device/dtype.
 - Noted interpolation flag wiring mismatch (cli writes `crystal.interpolation_enabled`) for follow-up once L3c closes.
 - Replaced input.md with Parity-mode guidance directing Ralph to refresh the CLI HKL device probe, update cli_hkl_audit.md with current code references, and run pytest --collect-only for tests/test_cli_scaling.py.
 - Expect Ralph to capture new probe artifacts under reports/2025-10-cli-flags/phase_l/structure_factor/, update the audit doc with 2025-11-18 findings, and log the attempt in docs/fix_plan.md before proceeding to L3d.
 
-## 2025-11-18 (galph loop — CLI L3d planning refresh)
+## 2025-11-18 (galph loop - CLI L3d planning refresh)
 - Marked Phase L3c complete in `plans/active/cli-noise-pix0/plan.md` and added 2025-11-18 gap snapshot noting Attempt #80’s audit results; fix_plan Next Actions now target L3d implementation, L3e validation, and L3f documentation.
 - Authored new `input.md` (Parity mode) instructing Ralph to add the L3d regression test, capture the failing selector, patch `__main__.py:1073` with `.to(device=device, dtype=dtype)`, rerun the probe, and log artifacts under `reports/2025-10-cli-flags/phase_l/structure_factor/`.
 - Reminder for next loop: verify vectorization plan still shows C1 as open despite commit 88fd76a; plan update pending once CLI L3d work is underway.
 
-## 2025-11-19 (galph loop — CLI L3e evidence setup)
+## 2025-11-19 (galph loop - CLI L3e evidence setup)
 - Verified L3d landed earlier (TestHKLDevice present, `.to(device=device, dtype=dtype)` already in `__main__.py`), so refreshed plan snapshot to steer toward Phase L3e scaling validation.
 - Updated `plans/active/cli-noise-pix0/plan.md` (L3d → [D]) and `docs/fix_plan.md` Next Actions to focus on L3e metrics, L3f documentation, and L4 rerun.
 - Authored Parity-mode `input.md` directing Ralph to upgrade `scripts/validation/compare_scaling_traces.py` to emit ≤1e-6 JSON metrics + metadata under `reports/2025-10-cli-flags/phase_l/scaling_validation/` before any simulator edits.
 - Follow-up: expect new `metrics.json`, `run_metadata.json`, and summary markdown plus fix_plan attempt update next loop; if metrics fail tolerance, halt for supervisor review.
 
-## 2025-11-19 (galph loop — CLI-FLAGS L3e parity snapshot)
+## 2025-11-19 (galph loop - CLI-FLAGS L3e parity snapshot)
 - Ran `compare_scaling_traces.py` against `trace_py_scaling_20251117.log`; generated `scaling_validation_summary_20251119.md`, refreshed metrics/run_metadata, and logged Attempt #83 under CLI-FLAGS-003.
 - Key finding: HKL ingestion now matches C (F_cell≈190.27) but lattice factor remains divergent (C `F_latt=-2.3832` vs Py `+1.35136`). Per-phi `TRACE_C_PHI` entries show the sign oscillation missing from PyTorch traces.
 - Authored `analysis_20251119.md` recommending per-phi instrumentation; updated input.md to direct Ralph to extend the trace harness, emit `TRACE_PY_PHI`, and compare against archived C per-phi logs before touching simulator code.
 - Expect Ralph to capture new per-phi PyTorch trace/JSON under `reports/2025-10-cli-flags/phase_l/per_phi/`, run the targeted pytest selector for scaling traces, and append findings to docs/fix_plan.md Attempt history.
 
-## 2025-11-19 (galph loop — CLI L3e per-phi refresh setup)
+## 2025-11-19 (galph loop - CLI L3e per-phi refresh setup)
 - Confirmed `git pull --rebase` succeeded without conflicts.
 - Reviewed Phase L3 evidence: `analysis_20251119.md` still shows F_cell parity yet `trace_py_scaling_per_phi.log` lacks any `TRACE_PY_PHI`, indicating the harness output is stale.
 - Updated `docs/fix_plan.md` next actions to call for a 2025-11-19 per-phi trace rerun and noted the empty log under Attempt #83 observations.
 - Refreshed `plans/active/cli-noise-pix0/plan.md` gap snapshot and revised the L3e task description to emphasise regenerating per-phi artifacts before scaling validation can pass.
 - Authored new `input.md` (Parity mode) instructing Ralph to rerun `trace_harness.py` with `--out trace_py_scaling_20251119.log`, regenerate per-phi comparison data, rerun `compare_scaling_traces.py`, and capture the targeted pytest output.
 - Follow-up: expect refreshed logs/JSON under `reports/2025-10-cli-flags/phase_l/per_phi/`, updated scaling_validation metrics, and a docs/fix_plan.md attempt summarising whether the Δk≈6 offset persists.
-## 2025-11-19 (galph loop — CLI rotation audit setup)
+## 2025-11-19 (galph loop - CLI rotation audit setup)
 - Updated CLI-FLAGS-003 next actions + plan Phase L3 to reflect Attempt #86 per-phi evidence and new phi=0 rotation mismatch; L3e marked done, new tasks L3f (rot-vector comparison) and L3g (hypothesis framing) added.
 - Input.md now directs Ralph to capture rotation vectors via trace_harness, build `rot_vector_comparison.md`, and log hypotheses before touching simulator code.
 - Key observation logged: PyTorch rot_b at phi=0 uses k_frac ≈ -0.589 vs C -0.607, flipping F_latt_b sign; rotation-vector audit required before normalization changes.
 
 
-## 2025-11-19 (galph loop — CLI L3g invariants setup)
+## 2025-11-19 (galph loop - CLI L3g invariants setup)
 - Refreshed input.md (Parity) to drive Phase L3g evidence: rerun φ=0 harness, generate `rot_vector/invariant_probe.md`, and capture pytest collect.
 - Parsed new rot_vector artifacts: real-space vectors drift O(1e-2 Å) while reciprocal vectors align ≈1e-9 Å⁻¹; computed volumes (C 24682.25663 Å³ vs Py 24682.25998 Å³) and dot products (C deviates ≤4.4e-4, Py ≈1.0) to focus on reciprocal→real reconstruction.
 - Directed Ralph to update `analysis.md` plus fix_plan Attempt #88 with invariant metrics and to keep snippets under reports/rot_vector/ before any simulator edits.
 - Next follow-up: after invariants are logged, decide whether Crystal.get_real_from_reciprocal needs instrumentation or spindle-axis normalization fixes before code changes.
 
-## 2025-11-20 (galph loop — Vectorization Phase C kickoff)
+## 2025-11-20 (galph loop - Vectorization Phase C kickoff)
 - `git pull --rebase` clean; no new conflicts encountered.
 - Reviewed long-term goals: CLI parity remains in Phase L3f (rotation vectors outstanding), while vectorization backlog stalled at Phase C. Determined VECTOR-TRICUBIC-001 needs refreshed guidance before Ralph can implement C1.
 - Updated `plans/active/vectorization.md` (lines 1-120) with 2025-11-20 gap snapshot plus explicit artifact paths and pytest/benchmark commands for Phase C1–C3. Mirrored instructions in `docs/fix_plan.md:1796-1810` so Next Actions now reference gather_notes.md, diff_snapshot.json, and new test selectors.
 - Authored `input.md` (Perf mode, 101 lines) directing Ralph to tackle Phase C1: collect-only run, implement batched `(S,F,4,4,4)` gather, capture diff/runtime artifacts, rerun targeted tricubic tests (including fallback + gradient smoke), and log results under `reports/2025-10-vectorization/phase_c/` before staging.
 - Follow-up expectations: Ralph executes Do Now, populates gather_notes + Attempt entry, and leaves polynomial work for later phases. Next supervisor loop should verify new artifacts, ensure docs/fix_plan Attempt logged, and then pivot to CLI L3f or Phase C2 depending on progress.
 
-## 2025-11-20 (galph loop — CLI L3g spindle audit prep)
+## 2025-11-20 (galph loop - CLI L3g spindle audit prep)
 - Reviewed CLI-FLAGS-003 status: Phase L3f/L3g remain open despite prior rot_vector artifacts; residual k_frac drift traced to Y-component deltas and potential spindle/volume mismatch.
 - Captured current artifacts (rot_vector_comparison.md, invariant_probe.md) and confirmed trace_harness.py emits full TRACE_PY data; next evidence must log spindle-axis norm + V_formula/V_actual for PyTorch vs C.
 - Authored input.md (Parity mode) directing Ralph to refresh the trace, build spindle_probe + volume_probe outputs under reports/2025-10-cli-flags/phase_l/rot_vector/, rerun collect-only pytest, and update docs/fix_plan.md Attempt with quantified deltas.
 - No plan rewrites needed yet; expect Ralph to append new evidence then adjust plan L3 items if hypotheses shift.
 
-## 2025-11-20 (galph loop — CLI spindle instrumentation setup)
+## 2025-11-20 (galph loop - CLI spindle instrumentation setup)
 - Recorded new context line in `plans/active/cli-noise-pix0/plan.md` for Attempt #89 (spindle + volume probe). Marked L3f ✅, kept L3g `[P]` with explicit instruction to surface `TRACE_PY: spindle_axis` before simulator edits; L3h now depends on that evidence.
 - Updated `docs/fix_plan.md` Next Actions (CLI-FLAGS-003) to focus on spindle-axis instrumentation → doc/plan sync → eventual nb-compare rerun. input.md refreshed accordingly.
 - Expect Ralph to extend `trace_harness.py` (or TRACE_PY hooks) with raw/normalized spindle logging, rerun the φ=0 trace, append results to `spindle_audit.log`, and update fix_plan/plan entries before shifting to implementation.
-## 2025-11-20 (galph loop — CLI-FLAGS MOSFLM probe setup)
+## 2025-11-20 (galph loop - CLI-FLAGS MOSFLM probe setup)
 - Updated `plans/active/cli-noise-pix0/plan.md` Phase L3 with new tasks L3h–L3j covering MOSFLM matrix probe, corrective memo, and implementation checklist; prior L3a–L3g remain [D].
 - Adjusted `docs/fix_plan.md` Next Actions for CLI-FLAGS-003 to align with the new Phase L3h–L3j workflow (probe → memo → checklist).
 - Authored `input.md` (Parity mode, 100 lines) directing Ralph to capture `mosflm_matrix_probe.log/md`, log env metadata, and prepare outlines for `mosflm_matrix_correction.md` + `fix_checklist.md` before any code edits.
 - Expectation for Ralph: run the harness with MOSFLM vector dumps, document the deltas, update fix_plan Attempt history, and leave code untouched until the memo/checklist exist.
 - No production code changes made; commit 3232549 contains plan/fix_plan/input refresh (tests: not run).
-## 2025-11-20 (galph loop — CLI L3i corrective memo)
+## 2025-11-20 (galph loop - CLI L3i corrective memo)
 - Authored `reports/2025-10-cli-flags/phase_l/rot_vector/mosflm_matrix_correction.md` summarizing nanoBragg.c vs PyTorch MOSFLM pipeline; plan L3i marked [D] with instrumentation marching orders.
 - Updated `docs/fix_plan.md` Next Actions to focus on C TRACE_C taps, Py harness dumps, and diff memo before implementation; input.md now directs Ralph to capture those traces and document deltas.
 - Expect Ralph to instrument `golden_suite_generator/nanoBragg.c`, run the supervisor command to generate `c_trace_mosflm.log`, extend the Py harness for raw/tensor dumps, and produce `mosflm_matrix_diff.md` prior to touching simulator code.
 
-## 2025-11-20 (galph loop — CLI L3j checklist alignment)
+## 2025-11-20 (galph loop - CLI L3j checklist alignment)
 - Extended `plans/active/cli-noise-pix0/plan.md` Phase L3 with sub-tasks L3j.1–L3j.3 (memo refresh, fix checklist, plan/fix_plan sync) so implementation has explicit gates.
 - Updated `docs/fix_plan.md` Next Actions to point at the new L3j workflow; removed stale L3i instrumentation steps.
 - Authored `input.md` (Parity mode, 100 lines) instructing Ralph to update mosflm_matrix_correction.md, draft `fix_checklist.md`, run pytest --collect-only, and log artifacts under rot_vector/ before touching code.
 - No production code changes performed; expect Ralph’s Attempt #94 to document memo/checklist completion plus collect-only log before proceeding to φ-rotation implementation.
 
-## 2025-11-21 (galph loop — VECTOR-TRICUBIC-001 Phase C2 prep)
+## 2025-11-21 (galph loop - VECTOR-TRICUBIC-001 Phase C2 prep)
 - Updated `plans/active/vectorization.md:5-36` to record Phase C1 completion and spotlight C2/C3 as the remaining blockers before polynomial work.
 - Refreshed `docs/fix_plan.md:1889-1892` Next Actions so they now call out C2, C3, and the Phase C close-out handoff instead of repeating the already-finished gather task.
 - Replaced `input.md` with a Docs-mode memo steering Ralph toward authoring `tests/test_tricubic_vectorized.py::test_oob_warning_single_fire`, logging the targeted pytest run, and parking artifacts under `reports/2025-10-vectorization/phase_c/`.
 - No production code changes; edits limited to planning docs and supervisor memo. Expect Ralph to execute Phase C2 next and log a new Attempt entry once the regression test and warning evidence land.
 
-## 2025-11-21 (galph loop — CLI L3k implementation prep)
+## 2025-11-21 (galph loop - CLI L3k implementation prep)
 - Added Phase L3k to `plans/active/cli-noise-pix0/plan.md` with tasks for memo, code fix, gate execution, and logging prior to Phase L4.
 - Updated `docs/fix_plan.md:450-463` (Attempt #95) so Next Actions now target L3k.1–L3k.4 and the new checklist-driven workflow.
 - Replaced `input.md` (Docs mode, 100 lines) to steer Ralph toward executing Phase L3k, running pytest/nb-compare with the canonical command, and documenting VG-1⇢VG-5 artifacts.
 - Expect Ralph to draft the implementation memo, add the docstring reference, implement the φ rotation patch, drive `fix_checklist.md` to ✅, and log Attempt #96 before attempting Phase L4 parity.
-## 2025-11-21 (galph loop — CLI-FLAGS L3k triage)
+## 2025-11-21 (galph loop - CLI-FLAGS L3k triage)
 - Reviewed Phase L3k memo + recent traces; PyTorch still rotates reciprocal vectors during φ, yielding k_frac drift (≈−0.59 vs C −0.607) and F_latt sign flip (+1.35 vs −2.38) in `trace_py_scaling_20251117.log`. Root cause remains mismatched φ rotation pipeline.
 - Identified secondary nuisance: per-φ harness already built; thresholds summarized (k_frac Δ≤1e-6, F_latt sign match, b_Y Δ≤1e-6) for VG-1; instrumentation command retained.
 - Selected Debug/Parity focus on CLI-FLAGS-003; next confirm step is to implement Phase L3k reciprocal recompute, then re-run per-φ traces, targeted pytest lattice selector, and ROI nb-compare per checklist.
 - Authored `input.md` (Parity) directing Ralph to add the nanoBragg.c docstring, rotate only real vectors, recompute reciprocals, run harness + pytest + nb-compare, update fix_checklist + fix_plan, and archive old traces. Artifacts to land under `reports/2025-10-cli-flags/phase_l/rot_vector/` subfolders.
 - No new plans required; vectorization plan already current (Phase C2/C3). Await Phase L3k evidence before scheduling Phase L4 rerun.
-## 2025-11-21 (galph loop — CLI-FLAGS Next Actions refresh)
+## 2025-11-21 (galph loop - CLI-FLAGS Next Actions refresh)
 - Validated Phase L3k memo + plan remain authoritative; noted docs/fix_plan.md still referenced L3k.1 even though memo is complete.
 - Updated `docs/fix_plan.md:458-460` so Next Actions now point at L3k.2 implementation, L3k.3 verification, and L3k.4 logging; no other ledger edits.
 - Rewrote `input.md` (Parity mode) to focus Ralph on executing L3k.2 with the targeted pytest selector and checklist-driven nb-compare/trace steps; artifacts to stay under `reports/2025-10-cli-flags/phase_l/`.
 - Expect Ralph to deliver the φ-rotation patch next loop, follow fix_checklist VG-1..VG-5, and record a new Attempt before we reopen Phase L4 parity testing.
-## 2025-11-21 (galph loop — L3k.3 evidence prep)
+## 2025-11-21 (galph loop - L3k.3 evidence prep)
 - Refreshed CLI-FLAGS-003 Next Actions (docs/fix_plan.md:458) to focus on completing VG-1/VG-3/VG-4 and the VG-5 doc updates before logging L3k.4.
 - Marked VG-2 ✅ in rot_vector/fix_checklist.md and updated status block with 2025-11-21 timestamp; remaining gates explicit for Ralph.
 - Rewrote input.md (Parity mode) steering Ralph through per-φ harness capture, compare_per_phi_traces.py, nb-compare metrics, checksum/env snapshots, and documentation updates.
 - Expect Ralph to generate new per_phi_postfix/ artefacts, flip VG-1⇢VG-5, append Attempt entry, then proceed to Phase L4 rerun next loop.
-## 2025-11-21 (galph loop — L3k φ=0 parity evidence request)
+## 2025-11-21 (galph loop - L3k φ=0 parity evidence request)
 - Re-read Phase L3k evidence: Py per-φ traces still show `rot_b_y` ≈ 0.7173 and `k_frac` ≈ −0.589 at φ=0 (reports/2025-10-cli-flags/phase_l/scaling_audit/trace_py_scaling_20251119.log:15-20) vs C’s 0.671588/−0.607256 (c_trace_scaling.log:266-277). Root cause for VG-1 failure is upstream of φ rotation, likely the real-vector reconstruction.
 - Noted nb-compare summary (reports/2025-10-cli-flags/phase_l/nb_compare_phi_fix/summary.json) still reports sum_ratio ≈ 1.16e5, so we cannot trust intensity metrics until φ=0 parity is fixed.
 - Authored new input.md directing Ralph to capture a failing pytest (`TestPhiZeroParity::test_rot_b_matches_c`) plus fresh Py/C traces under reports/.../base_vector_debug/ before touching simulator code.
 - No repo hygiene performed; tree contains only input.md modifications staged later.
-## 2025-11-21 (galph loop — CLI axis triage)
+## 2025-11-21 (galph loop - CLI axis triage)
 - Investigated Phase L3k VG-1 failure: PyTorch `rot_b` at φ=0 equals 0.7173 Å, but C trace plateau lists 0.6716 Å. Confirmed via `Crystal.get_rotated_real_vectors` that φ=9 (0.09°) reproduces the 0.6716 Å value, implying the current pytest harness is misaligned with the supervisor spindle axis / φ indexing.
 - Found `tests/test_cli_scaling_phi0.py:87` still initializes `spindle_axis=[0.0, 1.0, 0.0]`, diverging from the supervisor command (`-spindle_axis -1 0 0`). Logged this mismatch as the leading hypothesis for VG-1 drift.
 - Refreshed `input.md` (Parity mode) directing Ralph to realign the φ=0 test with spindle_axis = (-1,0,0), rerun the targeted pytest selector, and capture new per-φ artifacts under `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/` before touching nb-compare again.
 
-## 2025-11-21 (galph loop — Vectorization Phase C3 prep)
+## 2025-11-21 (galph loop - Vectorization Phase C3 prep)
 - Reviewed `plans/active/vectorization.md` and `reports/2025-10-vectorization/phase_c/` artifacts; confirmed C1/C2 are complete and only C3 remains before polynomial work.
 - Updated plan snapshot and added a Phase C3 verification checklist (assertions, cache audit, targeted pytest logs) so evidence expectations are explicit.
 - Synced `docs/fix_plan.md` Next Actions with the new checklist, dropping the stale C2 reminder and focusing on C3 deliverables + Attempt logging.
 - Rewrote `input.md` (Perf mode) steering Ralph to implement the C3 updates, run the two targeted selectors, update implementation notes, and flip checklist items before moving to Phase D.
 - Expect Ralph to land Phase C3 code/tests, capture logs under `reports/2025-10-vectorization/phase_c/`, and append a new Attempt entry prior to starting D1 polynomial vectorization.
-## 2025-11-22 (galph loop — L3k.3b φ drift diagnosis)
+## 2025-11-22 (galph loop - L3k.3b φ drift diagnosis)
 - Confirmed repo synced; reviewed docs/index, spec shards, arch.md, c_to_pytorch_config_map.md, debugging guide, testing strategy, fix_plan, and plan CLI notes.
 - Refreshed `plans/active/cli-noise-pix0/plan.md` Gap snapshot to capture Attempt #99 VG failures and Attempt #100 spindle-axis alignment; added an L3k.3 recovery checklist (tasks L3k.3a–L3k.3e) spelling out φ-trace regeneration, ROI fix, and documentation gates.
 - Updated `docs/fix_plan.md` Next Actions to target L3k.3b diagnosis, L3k.3d ROI repair, and the L3k.3e→L3k.4 documentation/logging handoff.
 - Authored new `input.md` (Parity mode) directing Ralph to regenerate per-φ traces via `trace_harness.py`, move the per_phi outputs into `base_vector_debug/20251122/`, run `compare_per_phi_traces.py`, log findings in diagnosis.md, update fix_checklist VG-1.4, and capture pytest collect-only evidence.
 - Follow-up for Ralph: execute L3k.3b per instructions, store artifacts under the 20251122 subdir, update `fix_checklist.md` + diagnosis memo, and keep tests red until physics fix lands.
-## 2025-11-22 (galph loop — L3k.3b instrumentation guard)
+## 2025-11-22 (galph loop - L3k.3b instrumentation guard)
 - Detected Attempt #101 left per-φ comparison artifacts claiming parity despite missing C TRACE_C_PHI data; `comparison_summary.md` showed ✅ with an empty table.
 - Updated `plans/active/cli-noise-pix0/plan.md` to require C instrumentation before any per-φ diff, explicitly mandating BLOCKED status when C entries are absent.
 - Synced `docs/fix_plan.md` Next Actions with the new instrumentation guard so L3k.3b focuses on emitting TRACE_C_PHI and regenerating traces under a fresh timestamp.
 - Replaced `input.md` (Parity) directing Ralph to add TRACE_C_PHI prints in `golden_suite_generator/nanoBragg.c`, rebuild, rerun the supervisor command, regenerate PyTorch traces, fix the misleading comparison summary, and capture updated diagnosis + checklist notes.
 - Follow-up: Expect Ralph to land the instrumentation, produce `c_trace_phi_<timestamp>.log`, update comparison_summary to BLOCKED (until data present), refresh VG-1.4, and only then proceed toward VG-3/VG-4.
-## 2025-10-07 (galph loop — L3k.3c prep)
+## 2025-10-07 (galph loop - L3k.3c prep)
 - Synced repo (no conflicts) and reviewed docs/specs per SOP; coin flip→heads so Ralph’s last commit ee83081 confirmed TRACE_C_PHI instrumentation success (φ_tic=0 delta only).
 - Updated `plans/active/cli-noise-pix0/plan.md` to mark L3k.3b DONE and clarified L3k.3c guidance (refresh comparison summary, hold φ_tic=0 focus). Input.md now steers Ralph to land the φ=0 rotation fix, regenerate per-φ traces, and flip VG-1.4 once Δk ≤1e-6.
 - No code changes made; staged plan/input updates committed (`ddf68e4`).
@@ -671,68 +671,68 @@
 - Authored parity-mode input.md directing Ralph to reinstate the failing φ=0 test and log artifacts under reports/2025-10-cli-flags/phase_l/rot_vector/.
 - Expect Ralph to restore the C-referenced pytest assertions, capture the resulting failure log, and update diagnosis.md plus fix_plan Attempts before implementing the actual φ=0 fix.
 
-## 2025-11-22 (galph loop — φ=0 carryover evidence prep)
+## 2025-11-22 (galph loop - φ=0 carryover evidence prep)
 - Confirmed PyTorch `Crystal.get_rotated_real_vectors` returns `rot_b_phi0_y=0.71732 Å` while C trace holds `0.671588 Å` because nanoBragg.c:3040 skips resetting `ap/bp/cp` when `phi==0`. Python snippet recorded under this loop’s notes (see console command history).
 - Noted commit 6f822dd introduced a Python loop over `phi_steps` (src/nanobrag_torch/models/crystal.py:1057-1084); plan instructs Ralph to document vectorized remediation so we can restore batched flow post-fix.
 - Updated input.md to drive CLI-FLAGS-003 Phase L3k.3c.2 evidence capture: new artifacts to land under `reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/`, add delta_metrics.json + hashes, and extend diagnosis.md with vectorized fix outline.
 - No code edits made; awaiting Ralph’s documentation run before authorising implementation of the carryover emulation.
 
-## 2025-11-23 (galph loop — L3k.3b rerun planning)
+## 2025-11-23 (galph loop - L3k.3b rerun planning)
 - Reviewed Attempt #108 (commit 526f56d) — evidence captured the Py φ=0 probe but `delta_metrics.json` stayed BLOCKED because no fresh TRACE_C_PHI log accompanied the new timestamp; prior c-trace lives under 202510070839.
 - Updated `plans/active/cli-noise-pix0/plan.md` (L3k.3 row + checklist) to reopen L3k.3b and mark L3k.3c.1 complete, with L3k.3c.2 now pointing at the pending Δk computation once C trace is regenerated.
 - Refreshed `docs/fix_plan.md` Next Actions to (1) rerun TRACE_C_PHI for 20251123, (2) compute Δb_y/Δk_frac, (3) then return to nb-compare repairs.
 - Authored new input.md steering Ralph to rebuild the C binary, rerun the supervisor command with `-trace_pixel 685 1039`, regenerate Py per-φ traces, run `scripts/compare_per_phi_traces.py`, update `delta_metrics.json`, and log the results before moving back to nb-compare.
 - Feedback on Ralph’s recent work: Attempt #103 correctly restored the red guard tests; Attempt #108 gathered Py-only data but stalled without the paired C trace. Next loop should focus on producing the coeval TRACE_C_PHI artifact so VG-1.4 can flip from ⚠️ to actionable metrics.
 
-## 2025-11-23 (galph loop — vectorization plan refresh)
+## 2025-11-23 (galph loop - vectorization plan refresh)
 - Synced repo (no conflicts). Action type: Planning; refreshed `plans/active/vectorization.md` context to note Phase C completion and queued Phase D polynomial vectorization.
 - Updated `docs/fix_plan.md` › VECTOR-TRICUBIC-001: added Attempt #7 documenting Phase C3 assertions/device audit and rewrote Next Actions toward Phase D1–D3.
 - Reissued `input.md` (Parity mode) directing Ralph to rerun Phase L3k.3b TRACE_C_PHI with full artifact capture; command map mirrors previous loop with typo fixes.
 - Expect Ralph to produce the 20251123 C trace, update diagnosis + delta metrics, then proceed to L3k.3d per plan. Vectorization tasks now gate on new Phase D notes once CLI work unblocks.
 
-## 2025-10-07 19:37 UTC (galph loop — L3k.3c.2 prep)
+## 2025-10-07 19:37 UTC (galph loop - L3k.3c.2 prep)
 - Confirmed Attempt #109 artifacts: Δk(φ₀)=1.8116e-2, φ>0 deltas ≤2.845e-5; updated plans/active/cli-noise-pix0/plan.md (L3k.3b [D], refreshed L3k.3c.2 guidance).
 - Refreshed docs/fix_plan.md Next Actions to focus on documenting Δk/Δb_y and follow-on carryover fix; added Attempt #109 summary.
 - Issued new input.md (Parity mode) directing Ralph to run compare_per_phi_traces.py, compute Δb_y, update diagnosis/fix_checklist, and capture pytest collect-only evidence before implementation.
 - Follow-up for Ralph: capture Δb_y via helper snippet, document metrics in diagnosis.md + fix_checklist.md, log Attempt for L3k.3c.2, keep artifacts under base_vector_debug/20251123/.
 
-## 2025-11-23 (galph loop — φ carryover evidence synthesis)
+## 2025-11-23 (galph loop - φ carryover evidence synthesis)
 - Verified VG-1 deltas: C `rot_b_y(φ₀)=0.671588233999813` vs PyTorch `0.7173197865486145` from reports/2025-10-cli-flags/phase_l/rot_vector/base_vector_debug/20251123/{c_trace_phi_20251123.log,trace_py_rot_vector_20251123.log}; Δk(φ₀)=1.8116e-02 captured in delta_metrics.json.
 - Found tooling bug: `src/nanobrag_torch/simulator.py:1444` divides osc_range by `(phi_steps-1)` for TRACE_PY_PHI, yielding φ=0.011111° samples; added requirement to align with C loop formula when Ralph refreshes traces.
 - Marked L3k.3c.2 DONE and updated plan/fix_plan Next Actions to focus on L3k.3c.3 carryover implementation + instrumentation fix before nb-compare work resumes.
 - input.md now directs Ralph to implement φ carryover, adjust instrumentation, rerun compare_per_phi_traces.py, and close the red pytest guard.
 
-## 2025-11-24 (galph loop — φ=0 carryover audit)
+## 2025-11-24 (galph loop - φ=0 carryover audit)
 - Reopened CLI-FLAGS-003 L3k.3c.3 after spotting device/dtype + gradient regression in commit 6487e46 (`_phi_last_cache` stays on CPU and `torch.tensor(last_phi_deg, …)` detaches).
 - Updated plans/active/cli-noise-pix0/plan.md guidance and docs/fix_plan.md Next Actions/Attempts to keep VG-1 blocked until cache migration + gradient fix land.
 - Refreshed input.md (Parity mode) instructing Ralph to patch `Crystal.get_rotated_real_vectors`/`Crystal.to`, rerun trace_harness (CPU + optional CUDA), compare per-φ traces, and run gradcheck + φ=0 guard tests.
 
-## 2025-11-26 (galph loop — φ=0 tolerance + spec memo)
+## 2025-11-26 (galph loop - φ=0 tolerance + spec memo)
 - Verified commits 3fb29a4/5098d64: Δk remains 2.845e-05 (>1e-6) and Δb_y ≈ 4.57×10⁻² Å; `test_k_frac_phi0_matches_c` still red, so VG-1 not satisfied despite “success” claim.
 - Updated `plans/active/cli-noise-pix0/plan.md` (lines 309-310) to keep L3k.3c.3 open, add spec alignment note, and introduce L3k.3c.4 documentation task (spec vs parity contract).
 - Refreshed `docs/fix_plan.md` Next Actions (line 460+) and logged Attempt #114 noting reopened status, required memo, and artifact issues (duplicate per_phi/reports path).
 - Issued new 110-line `input.md` (Docs mode) directing Ralph to regenerate per-φ traces with ≤1e-6 tolerances, document spec-vs-parity strategy, and log evidence (TRACE_TAG workflow, memo, tests).
 - No code changes made; focus was planning/docs alignment ahead of the next engineering loop.
 
-## 2025-11-27 (galph loop — φ=0 spec audit)
+## 2025-11-27 (galph loop - φ=0 spec audit)
 - Confirmed spec mandate (`specs/spec-a-core.md:211`) requires fresh φ rotations each step; C-PARITY-001 documents nanoBragg.c’s stale-vector carryover (`docs/bugs/verified_c_bugs.md:166`).
 - PyTorch currently mirrors the bug via `_phi_last_cache` in `src/nanobrag_torch/models/crystal.py:1115-1198`; this contradicts the spec and the long-term goal to eliminate the carryover.
 - CLI plan still instructs emulating the bug (L3k.3c.3). Issued new input.md directing Ralph to refresh `diagnosis.md` (L3k.3c.4) with spec-vs-parity guidance, log an Attempt, and run collect-only pytest. Expect next loop to revise the plan and design a spec-compliant default plus optional parity shim.
 
-## 2025-10-07 (galph loop — φ=0 spec alignment)
+## 2025-10-07 (galph loop - φ=0 spec alignment)
 - Reconfirmed spec mandate (`specs/spec-a-core.md:211-214`) that every φ step re-rotates the lattice and that C’s carryover bug is quarantined in `docs/bugs/verified_c_bugs.md:166-204`.
 - Noted PyTorch still mirrors the bug via `_phi_last_cache` (`src/nanobrag_torch/models/crystal.py:1097-1198`); updated `docs/fix_plan.md` Next Actions and `plans/active/cli-noise-pix0/plan.md` context to call this out and require a parity shim decision.
 - Issued new `input.md` (Docs mode) directing Ralph to refresh `reports/2025-10-cli-flags/phase_l/rot_vector/diagnosis.md`, log the attempt, cross-link the plan, and run the collect-only selector with `KMP_DUPLICATE_LIB_OK=TRUE`.
 - No tests run; repo clean after commit `10333c0`.
 
-## 2025-10-07 22:16 UTC (galph loop — VECTOR-TRICUBIC-001 planning refresh)
+## 2025-10-07 22:16 UTC (galph loop - VECTOR-TRICUBIC-001 planning refresh)
 - Rewrote `plans/active/vectorization.md` with phased structure (A–G) and explicit Phase D/F checklists; added D1–D4/D5 guidance and future absorption tasks.
 - Updated `docs/fix_plan.md:2194-2210` Next Actions to align with the refreshed plan (Phase D1–D4 plus Phase E staging).
 - Issued new `input.md` (Docs mode) directing Ralph to complete Phase D1 documentation, capture collect-only proof, and log tensor-shape/C-reference requirements.
 - Follow-up: Ralph to author `reports/2025-10-vectorization/phase_d/polynomial_validation.md`, run collect-only selector, and prepare tap_points.md if needed before coding D2.
 
 
-## 2025-11-27 (galph loop — φ rotation plan refresh)
+## 2025-11-27 (galph loop - φ rotation plan refresh)
 - Rebased with origin (no conflicts) and reviewed CLI-FLAGS-003 scope vs long-term goal #1.
 - Updated `plans/active/cli-noise-pix0/plan.md` L3k.3c tasks: default path now mandates spec-compliant φ rotation (no `_phi_last_cache`), added new rows for parity shim design (L3k.3c.4) and dual-mode docs/tests (L3k.3c.5), preserved documentation row as L3k.3c.6.
 - Synced `docs/fix_plan.md` Next Actions to match the new gating order (spec fix → parity shim → docs/tests) and clarified historical attempt references.
@@ -740,14 +740,14 @@
 - Commit `5eda539` pushed on `feature/spec-based-2`. No tests run in supervisor loop (planning only).
 - Follow-up for Ralph: remove `_phi_last_cache` from the default rotation path, capture new Δk/Δb_y ≤1e-6 artifacts, then proceed to design the opt-in carryover shim per plan.
 
-## 2025-11-27 (galph loop — spec baselines + test tightening)
+## 2025-11-27 (galph loop - spec baselines + test tightening)
 - Reviewed Ralph’s commit 518fd75: spec rotation landed, but `test_k_frac_phi0_matches_c` only asserts divergence from the C bug. Need exact spec constants recorded before VG-1 can close.
 - Updated `plans/active/cli-noise-pix0/plan.md` L3k.3 and L3k.3c.3 guidance to focus on locking rot_b_y=0.7173197865 Å and k_frac=1.6756687164 with ≤1e-6 deltas on CPU+CUDA, plus explicit artifact expectations.
 - Adjusted `docs/fix_plan.md` Next Actions (Phase L3k.3c.3 → “lock spec φ=0 baselines”) to remove stale `_phi_last_cache` language.
 - Replaced `input.md` with a Parity-mode memo directing Ralph to regenerate per-φ traces via `trace_harness.py`, update pytest expectations to the spec numbers, run targeted selectors, and archive new `delta_metrics.json` under a timestamped directory before flipping VG-1.
 - Next supervisor checkpoint: confirm new artifacts exist, pytest asserts the spec constants, and plan row L3k.3c.3 is marked [D] before proceeding to the parity shim design tasks.
 
-## 2025-11-27 (galph loop — φ=0 spec baselines evidence push)
+## 2025-11-27 (galph loop - φ=0 spec baselines evidence push)
 - Re-read spec/core docs + CLI-FLAGS plan; confirmed Next Action remains L3k.3c.3 despite historic success notes because VG-1 artifacts need fresh capture post-rotation refactor.
 - Selected focus = CLI-FLAGS-003 L3k.3c.3; staying in Parity mode, evidence-only loop (no code edits planned).
 - Rewrote input.md (102 lines) directing Ralph to regenerate per-φ traces under a new timestamp, run compare_per_phi_traces.py + summarise_phi_deltas.py, rerun TestPhiZeroParity selectors on CPU (and CUDA if available), and update diagnosis.md, fix_checklist.md, and docs/fix_plan.md with ≤1e-6 deltas (rot_b_y 0.7173197865 Å, k_frac 1.6756687164).
@@ -755,7 +755,7 @@
 - No repository code or docs changed beyond input.md/memory update.
 - Expect Ralph to execute the outlined evidence capture, mark VG-1 rows complete, and advance plan/fix_plan focus to L3k.3c.4 for the next engineering loop.
 
-## 2025-11-28 (galph loop — parity shim planning)
+## 2025-11-28 (galph loop - parity shim planning)
 - Added dedicated plan `plans/active/cli-phi-parity-shim/plan.md` with Phases A–D covering design, implementation, and documentation for the φ=0 carryover shim; Phase B now gates API selection and validation strategy.
 - Updated `plans/active/cli-noise-pix0/plan.md:L3k.3c.4-5` to point at the new plan and clarified evidence expectations (reports/2025-10-cli-flags/phase_l/parity_shim/...).
 - Refreshed `docs/fix_plan.md:450-463` Next Actions to align with the new plan (execute Phases B–D before resuming nb-compare work).
@@ -763,97 +763,97 @@
 - Commit `7ef88d2` pushed on `feature/spec-based-2`; no tests run in supervisor loop.
 
 
-## 2025-11-28 (galph loop — CLI parity shim push)
+## 2025-11-28 (galph loop - CLI parity shim push)
 - Re-synced (no upstream changes) and reviewed CLI-FLAGS-003 + parity-shim plan; spec remains φ=0 carryover-free (specs/spec-a-core.md:211-214) while C bug stays quarantined in docs/bugs/verified_c_bugs.md:166-182.
 - Selected focus = CLI-FLAGS-003 Phase L3k.3c.4; no new plan needed. Input memo now steers Ralph to implement the opt-in φ carryover shim (Plan Phase C1–C5) with per-φ trace evidence and dual-mode tests.
 - No fix_plan or plan edits required this turn; parity shim plan already authoritative. Next supervisor check: confirm reports/2025-10-cli-flags/phase_l/parity_shim/... artifacts exist, docs/fix_plan attempt logged, and tests cover both spec/parity modes before advancing to L3k.3c.5.
 
-## 2025-11-28 (galph loop — vectorization plan sync)
+## 2025-11-28 (galph loop - vectorization plan sync)
 - Reviewed spec/core docs for tricubic interpolation (specs/spec-a-core.md:230, 595) and confirmed φ carryover bug remains quarantined in docs/bugs/verified_c_bugs.md.
 - Marked Phase D1 as complete in `plans/active/vectorization.md` (Attempt #8 worksheet) and refreshed status snapshot to reference `reports/2025-10-vectorization/phase_d/polynomial_validation.md`.
 - Updated `docs/fix_plan.md` VECTOR-TRICUBIC-001 Next Actions to drop the stale D1 todo and point Ralph toward D2–D4 with the new evidence requirements.
 - Issued Perf-mode `input.md` directing Ralph to author failing `TestTricubicPoly` coverage (Phase D3) before implementing vectorized helpers.
 - Follow-up: Expect next loop to land D2 vectorized polynomials, record CPU/CUDA pytest logs under phase_d/, and log a new Attempt once tests go green.
 
-## 2025-11-29 (galph loop — Phase D2 kickoff)
+## 2025-11-29 (galph loop - Phase D2 kickoff)
 - Reconfirmed VECTOR-TRICUBIC-001 status: Phase D1 complete, D3 xfail tests present (`tests/test_tricubic_vectorized.py:332-735`). Scalar helpers in `src/nanobrag_torch/utils/physics.py:315-443` still unvectorized; `_tricubic_interpolation` continues to fall back to nearest-neighbour for B>1.
 - Action: Maintained existing plan, but issued new Perf-mode `input.md` directing Ralph to implement `polint_vectorized`/`polin2_vectorized`/`polin3_vectorized`, wire them into the batched path, remove the fallback warning, and capture CPU/CUDA pytest logs under `reports/2025-10-vectorization/phase_d/`.
 - Expectations logged: update `implementation_notes.md`, rerun `tests/test_tricubic_vectorized.py::TestTricubicPoly`, then hit `tests/test_at_str_002.py::TestStructureFactorInterpolation::test_tricubic_interpolation_enabled`, and record a new Attempt in `docs/fix_plan.md` marking plan row D2 [D].
 - Follow-up for Ralph: land D2 implementation, produce the requested artifacts/logs, and be ready to progress to Plan Phase D4 once the vectorized helpers pass.
 
-## 2025-11-29 (galph loop — vectorization D4 prep)
+## 2025-11-29 (galph loop - vectorization D4 prep)
 - Confirmed CLI parity plans remain pending; spec shards still reject the φ=0 carryover bug (specs/spec-a-core.md:211-214) so no spec edits required this turn.
 - Reviewed Ralph’s Phase D2 commit (f796861): vectorized polin* helpers landed with correct docstrings/tests; noted residual 4-iteration Python loops in polin2/polin3_vectorized—acceptable for now but flag for Phase E perf review.
 - Updated `plans/active/vectorization.md` (D2 marked [D], D4 guidance clarified) and refreshed `docs/fix_plan.md` Next Actions to focus on D4 evidence + Phase E staging.
 - Issued new Perf-mode `input.md` directing Ralph to capture Phase D4 CPU/CUDA pytest logs, update polynomial_validation.md with timings, and log a new Attempt when done.
 - Expect Ralph to run the specified selectors, archive logs under `reports/2025-10-vectorization/phase_d/`, and advance plan row D4 to [D] before moving into Phase E.
 
-## 2025-11-30 (galph loop — parity evidence focus)
+## 2025-11-30 (galph loop - parity evidence focus)
 - Reviewed CLI-FLAGS-003 progress: parity shim code/tests already landed (docs/fix_plan.md Attempt #120) but plan rows still open.
 - Updated `plans/active/cli-phi-parity-shim/plan.md` C1–C3 to [D] with artifact references; marked `plans/active/cli-noise-pix0/plan.md` L3k.3c.4 as [D] and refreshed Next Actions to target Phase C4 evidence capture.
 - Revised `docs/fix_plan.md` Next Actions so L3k.3c.4 emphasises per-φ trace collection + targeted pytest logs before documentation work.
 - Issued new `input.md` (Parity mode) directing Ralph to extend the trace harness with a `--phi-mode` toggle, record spec vs c-parity per-φ traces, rerun tests, and log artifacts under `reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/`.
 - Expect Ralph to produce VG-1 parity evidence, update parity plan rows C4/C5, and then proceed toward Phase L3k.3d nb-compare once traces pass tolerances.
 
-## 2025-10-08 (galph loop — L3k.3c.4 parity regression)
+## 2025-10-08 (galph loop - L3k.3c.4 parity regression)
 - Ran parity trace harness (spec & c-parity) into `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T011326Z/`; spec mode still diverges at φ₀ as expected, c-parity plateau remains Δk≈2.845e-05 > 1e-6.
 - TRACE_C_PHI logging missing in current golden binary; reused older log to complete comparison. Logged this gap and marked plan row L3k.3c.4 as [P].
 - Updated `plans/active/cli-phi-parity-shim/plan.md` + `docs/fix_plan.md` Attempt #122 with metrics and next steps (restore instrumentation, diagnose residual drift).
 - Issued new Parity-mode input directing Ralph to tighten shim tolerances and regenerate traces with fresh C instrumentation.
 
-## 2025-11-30 (galph loop — vectorization Phase E kickoff)
+## 2025-11-30 (galph loop - vectorization Phase E kickoff)
 - Synced `plans/active/vectorization.md` to note Phases A–D complete and rewrote Phase E task guidance (CPU/CUDA pytest logs, perf summary expectations).
 - Updated `docs/fix_plan.md` Next Actions for VECTOR-TRICUBIC-001 so Ralph targets Phase E1–E3 evidence and begins Phase F design once parity/perf metrics land.
 - Issued new Perf-mode `input.md` pointing Ralph at Phase E1 (`tests/test_tricubic_vectorized.py` + `tests/test_at_str_002.py`) with explicit log destinations under `reports/2025-10-vectorization/phase_e/`.
 - Follow-up: Expect Ralph to produce Phase E1 CPU/GPU logs, capture env metadata, and append Phase E notes to `polynomial_validation.md` before proceeding to E2 benchmarks.
 
-## 2025-10-08 (galph loop — parity shim evidence refresh)
+## 2025-10-08 (galph loop - parity shim evidence refresh)
 - Captured fresh C and PyTorch per-φ traces under `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T021659Z/` using the supervisor command + trace harness (spec + c-parity modes).
 - New C log includes 10 `TRACE_C_PHI` lines; c-parity rot_b_y now matches C exactly, but Δk stays at 2.8451466e-05 and ΔF_latt_b at 4.36e-03, leaving VG-1 unmet.
 - Updated `plans/active/cli-phi-parity-shim/plan.md` C4 row and `docs/fix_plan.md` (Attempt #124, line ~684) to record metrics + next diagnostic steps (instrument scattering vector taps, audit reciprocal recompute).
 - Issued Parity-mode `input.md` directing Ralph to add scattering-vector/V_actual taps, rerun harness, and regenerate comparison artifacts before trying another shim tweak.
 - Expect Ralph to extend instrumentation (while citing nanoBragg.c:3044-3058), run both spec and parity harness passes, update `delta_metrics.json`, and iterate until Δk ≤ 1e-6.
 
-## 2025-10-08 02:47:39Z (galph loop — pix0 parity evidence)
+## 2025-10-08 02:47:39Z (galph loop - pix0 parity evidence)
 - Ran trace diff on c-parity φ=0 logs; new artifacts under `reports/2025-10-cli-flags/phase_l/parity_shim/20251008T023956Z/`.
 - First divergence now confirmed at `pix0_vector_meters` (2.85 µm along detector normal), cascading to scattering vector and Δk≈2.845e-05.
 - Updated `docs/fix_plan.md` (Attempt #128 + Next Actions) to focus Phase L3k.3c.4 on eliminating pix0_z offset before re-running parity.
 - Refreshed `input.md` (Parity mode) directing Ralph to regenerate traces via `trace_harness.py`, capture C trace with `-trace_pixel 685 1039`, rerun `compare_per_phi_traces.py`, and keep docs/spec references aligned.
 - Follow-up: Ralph to audit detector pix0 pipeline (distance/pivot math) so VG-1 hits ≤1e-6, then progress to plan Phase C5.
 
-## 2025-12-01 (galph loop — φ=0 spec audit)
+## 2025-12-01 (galph loop - φ=0 spec audit)
 - Reviewed specs/spec-a-core.md:211-224 and confirmed φ loop remains spec-compliant (fresh rotations every step); no C carryover language in specs.
 - Verified docs/bugs/verified_c_bugs.md:166 continues to quarantine C-PARITY-001 as a defect and the PyTorch default path (`Crystal.get_rotated_real_vectors` lines ~1080-1170) keeps `phi_carryover_mode="spec"` as default.
 - `tests/test_cli_scaling_phi0.py` still enforces the spec baseline; instructed Ralph via input.md to rerun these selectors and capture fresh logs under `reports/2025-12-cli-flags/phase_l/spec_baseline_refresh/` before touching parity shim math.
 - Next actions for Ralph: execute the mapped tests, write `summary.md` + `commands.txt` in the new report directory, and log an Attempt update in docs/fix_plan.md so Phase C4 (parity shim traces) can resume with up-to-date documentation evidence.
 
-## 2025-12-?? (galph loop — parity diagnostics refresh)
+## 2025-12-?? (galph loop - parity diagnostics refresh)
 - Added C4 diagnostic checklist to `plans/active/cli-phi-parity-shim/plan.md` so Ralph regenerates per-φ traces via `trace_per_phi.py`, reruns `compare_per_phi_traces.py`, and captures detector geometry comparisons before touching implementation.
 - Updated `docs/fix_plan.md` Next Actions for CLI-FLAGS-003 to point explicitly at the checklist and geometry table deliverable.
 - Issued Parity-mode `input.md` directing Ralph to produce new artifacts under `reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/`, append geometry data to `rot_vector/diagnosis.md`, and log collect-only pytest output.
 - Expect Ralph to follow C4b–C4d, then update diagnosis.md and attempt history once Δk ≤ 1e-6.
 
-## 2025-10-07 (galph loop — parity evidence prep)
+## 2025-10-07 (galph loop - parity evidence prep)
 - Re-read specs/spec-a-core.md:211-214 and confirmed φ rotation stays spec-compliant; no carryover language leaked into specs/spec-a-cli.md.
 - Cross-checked docs/bugs/verified_c_bugs.md:166-204 to ensure C-PARITY-001 remains quarantined; architecture notes (arch.md:204-216) align with spec.
 - Issued new Parity-mode input (Phase L3k.3c.4) instructing Ralph to regenerate per-φ traces via `trace_per_phi.py` and `compare_per_phi_traces.py`, capture artifacts under `reports/2025-10-cli-flags/phase_l/parity_shim/<timestamp>/`, and update diagnosis/fix_plan attempts.
 - Next expectation: Ralph delivers fresh Δk/ΔF_latt_b metrics; if thresholds met, proceed to Phase L3k.3c.5 documentation/tests before nb-compare rerun.
 
-## 2025-12-01 (galph loop — dtype plateau probe setup)
+## 2025-12-01 (galph loop - dtype plateau probe setup)
 - Refreshed `plans/active/cli-phi-parity-shim/plan.md` to reflect post-Attempt #127 state: parity shim landed, pix0 parity confirmed, residual Δk≈2.845e-05 treated as precision issue; C4 checklist now targets float32/float64 sweeps (rows C4b–C4d).
 - Updated `docs/fix_plan.md` Next Actions for CLI-FLAGS-003 to point at the dtype sensitivity pass instead of the old pix0 offset work; annotated Attempts #128/#129 with notes that later evidence supersedes the pix0 focus.
 - Issued `input.md` (Parity mode) directing Ralph to run `trace_harness.py` for supervisor pixel (685,1039) across float32/float64 c-parity runs, capture compare_per_phi outputs under `reports/2025-10-cli-flags/phase_l/parity_shim/20251201_dtype_probe/`, and append findings to `diagnosis.md` before making the VG-1 tolerance call.
-## 2025-12-02 (galph loop — parity doc sync setup)
+## 2025-12-02 (galph loop - parity doc sync setup)
 - Updated `plans/active/cli-phi-parity-shim/plan.md` to reflect the dtype probe decision: C4 marked [D], C4b/C4c done, C4d left [P] pending checklist/plan sync, and Current Status refreshed with the |Δk| ≤5e-5 tolerance for c-parity.
 - Refreshed `docs/fix_plan.md` Next Actions for CLI-FLAGS-003 to focus on syncing plans/checklists, updating diagnosis + bug docs, and rerunning nb-compare afterward.
 - Issued new Docs-mode `input.md` directing Ralph to update diagnosis.md, fix_checklist.md, cli-noise plan, and docs/bugs with dual-threshold notes, capture collect-only evidence under `reports/2025-10-cli-flags/phase_l/rot_vector/20251201_dual_threshold/`, and log a new Attempt before advancing to Phase L3k.3d.
 - Expect Ralph to close out plan row C4d, complete the doc updates, run the mapped collect-only pytest, and append the evidence + Attempt entry so we can tackle nb-compare next loop.
-## 2025-12-02 (galph loop — CLI-FLAGS-003 plan refresh)
+## 2025-12-02 (galph loop - CLI-FLAGS-003 plan refresh)
 - Rebuilt `plans/active/cli-noise-pix0/plan.md` around new Phases L–O so tolerance/doc sync (L1–L3), scaling parity (M1–M4), nb-compare (N1–N3), and supervisor rerun (O1–O3) are explicit. Prior phases collapsed into a completed summary for easier navigation.
 - Updated `docs/fix_plan.md:460-463` Next Actions to align with the new phase IDs (L1–L3, M1–M3, N1–N3) and staged `input.md` with Docs-mode guidance pointing Ralph at Phase L1–L3 deliverables.
 - Expect Ralph to produce artifacts under `reports/2025-10-cli-flags/phase_l/rot_vector/20251202_tolerance_sync/`, update diagnosis/checklists/bug log, add a fresh Attempt entry, and run the mapped collect-only pytest before we revisit scaling parity (Phase M).
 
-## 2025-12-02 (galph loop — CLI docs sync + pyrefly backlog)
+## 2025-12-02 (galph loop - CLI docs sync + pyrefly backlog)
 - Updated `docs/fix_plan.md` Next Actions for CLI-FLAGS-003 to remove the stale blocker note and focus on Phase L documentation sync, Phase M scaling parity, and Phase N/O readiness while reaffirming spec shards + bug quarantine references.
 - Annotated Attempt #135 in `docs/fix_plan.md` as historical, clarifying that the referenced plans/tests now exist post-sync.
 - Added new fix-plan entry `[STATIC-PYREFLY-001]` to capture the impending static-analysis baseline (verify tool availability, run `pyrefly check src`, delegate fixes).
@@ -865,35 +865,35 @@
 - Issued Parity-mode input.md directing Ralph to capture new CPU scaling traces via trace_harness.py and compare_scaling_traces.py, storing artifacts under scaling_validation/.
 - Outstanding follow-up: after CPU evidence, expand to CUDA trace and implement scaling fix + regression test per plan.
 
-## 2025-12-03 (galph loop — CLI-FLAGS-003 Phase M1 triage)
+## 2025-12-03 (galph loop - CLI-FLAGS-003 Phase M1 triage)
 - Replayed scaling evidence from Attempt #137: PyTorch I_before_scaling is 21.9% low even though F_cell matches C.
 - Diagnosis: trace_harness.py still instantiates CrystalConfig in spec mode; per-φ log (`reports/2025-10-cli-flags/phase_l/per_phi/reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T043438Z/trace_py_scaling_cpu_per_phi.log:1`) shows φ₀ F_latt=+1.379 vs C’s −2.383. Existing c-parity shim (`trace_py_c_parity_per_phi.log:1 (reports/2025-10-cli-flags/phase_l/per_phi)`) reproduces the C values.
 - Action for Ralph: add a `--phi-mode` override (default spec, parity run uses c-parity), rerun the harness + compare_scaling_traces.py, and capture new artifacts under `phase_l/scaling_validation/<timestamp>/` before moving to Phase M2.
 - No other assets touched; docs/index.md remains authoritative.
-## 2025-12-03 (galph loop — CLI-FLAGS-003 Phase M1 evidence refresh)
+## 2025-12-03 (galph loop - CLI-FLAGS-003 Phase M1 evidence refresh)
 - Updated `plans/active/vectorization.md` context to the 2025-12-02 snapshot and marked Phase E1 [D]; remaining work now tracks E2/E3 perf validation before detector absorption vectorization.
 - Issued new Parity-mode input.md directing Ralph to rerun the scaling harness with `--phi-mode c-parity`, capture trace/summary/metrics under a fresh timestamp, and hold compare_scaling_traces tolerance at 1e-6 per Phase M1.
 - Reinforced evidence-only expectations (no prod edits) and enumerated required artifacts (commands.txt, metrics.json, env.json, sha256.txt) so Phase M2 debugging starts with clean data; flagged follow-up for Phase M2/M3 and vectorization Phase E2/E3 once scaling parity stabilises.
-## 2025-12-03 (galph loop — CLI-FLAGS-003 Phase M instrumentation)
+## 2025-12-03 (galph loop - CLI-FLAGS-003 Phase M instrumentation)
 - Identified that the 8.7% `I_before_scaling` delta is purely an instrumentation mismatch: PyTorch logs the post-polarization value while the C trace logs pre-polarization. C value × polar reproduces the PyTorch number.
 - Added debug memo `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T044933Z/galph_debug_20251203.md` documenting the finding and the expected pre- vs post-polar values.
 - Updated `docs/fix_plan.md` (CLI-FLAGS-003 first divergence + Next Actions bullet) to call out the polarization offset and require trace tap updates before continuing Phase M.
 - Issued Parity-mode `input.md` directing Ralph to emit both pre/post polarization trace lines, refresh the harness, rerun compare_scaling_traces, and keep evidence under a new timestamped directory.
 - Next supervisor follow-up: confirm Ralph captures the new trace, updates compare script if needed, and logs Attempt before moving to structure-factor parity (Plan M2/M3).
 
-## 2025-12-03 (galph loop — Pyrefly planning bootstrap)
+## 2025-12-03 (galph loop - Pyrefly planning bootstrap)
 - Authored `plans/active/static-pyrefly.md` with Phases A–E covering tool verification, baseline scan, triage, delegation hooks, and closure criteria for STATIC-PYREFLY-001.
 - Updated `docs/fix_plan.md:2943-2954` to reference the new plan, set status to in_progress, and align next actions with plan phases.
 - Rewrote `input.md` (Docs mode) instructing Ralph to execute Phase A (tool audit + artifact scaffold) before any pyrefly run; emphasized artifact paths under `reports/pyrefly/`.
 
-## 2025-10-08 (galph loop — STATIC-PYREFLY-001 Phase B setup)
+## 2025-10-08 (galph loop - STATIC-PYREFLY-001 Phase B setup)
 - Coin flip→heads: reviewed Ralph’s recent commits (`ef1f716`, `e97a66c`) and found them productive; Phase M1 instrumentation landed cleanly and pyrefly Phase A evidence captured without regressions.
 - Chosen focus: STATIC-PYREFLY-001 Phase B baseline run; no new plan required since `plans/active/static-pyrefly.md` already governs the workflow.
 - Actions this loop: refreshed `input.md` with Docs-mode guidance covering Phase B1–B3 deliverables (pyrefly.log, env.json, summary.md, fix_plan Attempt update) and reiterated artifact/timestamp reuse under `reports/pyrefly/20251008T053652Z/`.
 - No changes to docs/fix_plan.md this turn; expect Ralph to record Attempt #2 after the baseline run and keep the working tree clean.
 - Follow-up: next supervisor loop should inspect the new summary, decide on Phase C triage scope, and ensure pyrefly findings are mapped to owners/tests before delegating fixes.
 
-## 2025-12-04 (galph loop — CLI-FLAGS-003 Phase M1 refresh)
+## 2025-12-04 (galph loop - CLI-FLAGS-003 Phase M1 refresh)
 - Re-ran `trace_harness.py` in both spec and c-parity modes (float64/CPU) and stored evidence under `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T055257Z/` (spec) and `.../20251008T055533Z/` (c-parity). Spec path diverges 14.6% as expected; c-parity delta shrank to 0.2086%.
 - Added Attempt #140 to `docs/fix_plan.md:510` capturing the new metrics plus the crash encountered when invoking `scripts/validation/compare_scaling_traces.py` on these traces.
 - Updated `plans/active/cli-noise-pix0/plan.md:53` with the fresh timestamps and noted that Phase M1 remains open pending ≤1e-6 parity.
@@ -901,51 +901,51 @@
 - Next steps for Ralph: fix the comparison script, regenerate the scaling summary in a new timestamped directory (CPU float64, c-parity), then continue Phase M2 by targeting the φ₀ lattice-factor drift.
 - Working tree note: legacy galph log (`logs/feature-spec-based-2/galph/iter-00141_20251008_054647.log`) stayed untouched per policy; left uncommitted.
 
-## 2025-10-08 (galph loop — Phase M1 lattice delta audit)
+## 2025-10-08 (galph loop - Phase M1 lattice delta audit)
 - Captured fresh c-parity trace via `trace_harness.py` (float64/CPU) and stored manual summary + metrics under `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T060721Z/`; F_latt drift is ~0.13% and drives the 0.2086% `I_before_scaling` deficit.
 - `scripts/validation/compare_scaling_traces.py` still dies via SIGKILL; left the failing command in commands.txt and regenerated the summary with inline Python.
 - Updated `docs/fix_plan.md` (Attempt #141) and `plans/active/cli-noise-pix0/plan.md` Phase M1 guidance to reference the new evidence and emphasise tricubic neighbourhood instrumentation.
 - `input.md` now pushes Ralph to extend the harness with 4×4×4 weight logging and to stabilise the comparison script before moving to Phase M2.
 
-## 2025-12-04 (galph loop — Phase M0 instrumentation hygiene setup)
+## 2025-12-04 (galph loop - Phase M0 instrumentation hygiene setup)
 - Coin flip=heads: reviewed Ralph commit 9a8c2f5; instrumentation stores `_last_tricubic_neighborhood` tensors and forces CPU tensors in trace path — flagged need for guarded usage before Phase M proceeds.
 - Updated guidance by reinforcing plan CLI-FLAGS-003 Phase M0 (already codified) and issuing Parity-mode input.md directing Ralph to audit/guard the tricubic cache before rerunning scaling parity.
 - Key expectations: capture new trace evidence under `reports/2025-10-cli-flags/phase_l/scaling_validation/<ts>/`, verify device/dtype neutrality, document results in instrumentation_audit.md, and log Attempt for M0a–M0c.
 - Follow-up: next loop confirm M0 tasks marked [D], ensure guard prevents memory bloat on production runs, and decide when to resume Phase M1 HKL parity.
 - Working tree note: `logs/feature-spec-based-2/galph/iter-00142_20251008_062157.log` remains modified from prior runs; left uncommitted per log-retention policy.
 
-## 2025-12-05 (galph loop — C5 documentation prep)
+## 2025-12-05 (galph loop - C5 documentation prep)
 - Reviewed spec/arch/testing documents plus plans: confirmed φ rotation spec (specs/spec-a-core.md:205-233) is bug-free and parity shim remains optional.
 - Re-validated `plans/active/cli-phi-parity-shim/plan.md` Phase C5/D3 guidance (evidence checklist already present) and highlighted it in supervision notes instead of editing the plan.
 - Added Next Action bullet in `docs/fix_plan.md:460` reminding Ralph to complete parity shim summary before returning to Phase M runs; refreshed `input.md` Do Now for Phase M0 instrumentation hygiene with references to the checklist.
 - Expect Ralph to capture instrumentation audit artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/<ts>/`, guard `_last_tricubic_neighborhood`, and then proceed to C5 summary per existing checklist.
 - Next follow-up: verify docs/fix_plan Attempt log records the C5 checklist completion and that `reports/2025-10-cli-flags/phase_l/scaling_validation/` gains the new summary.md before advancing Phase M metrics.
 
-## 2025-12-06 (galph loop — CLI-FLAGS-003 Phase M1 tooling focus)
+## 2025-12-06 (galph loop - CLI-FLAGS-003 Phase M1 tooling focus)
 - Synced with origin (no conflicts); reviewed core docs, CLI-FLAGS plan, and latest instrumentation evidence before analysis.
 - Focus: CLI-FLAGS-003 Phase M1 follow-up. Marked plan Phase M0 tasks [D] with Attempt #144 artifact references and refreshed docs/fix_plan Next Actions to prioritize the compare_scaling_traces.py repair.
 - Rewrote input.md (Parity mode, 100 lines) directing Ralph to fix the scaling comparison script, capture a new RUN_DIR trace, rerun targeted pytest suites, and log artifacts for Phase M2.
 - Working tree now holds plan/fix_plan/input updates; expect Ralph to stabilise the script, produce new scaling_validation artifacts, update plan Attempt log, and then advance to lattice investigation next loop.
 
-## 2025-12-06 (galph loop — Phase M1 checklist reopen)
+## 2025-12-06 (galph loop - Phase M1 checklist reopen)
 - `git pull --rebase` clean; re-read specs/index/arch/config/testing docs plus CLI-FLAGS plan + fix_plan before analysis.
 - Found `plans/active/cli-noise-pix0/plan.md` still marked M1 [D] even though compare_scaling_traces.py regressed to SIGKILL (Attempts #140/#141, commands.txt). Reopened M1 → [P], added checklist M1a–M1d, and refreshed status snapshot with 2025-12-06 context.
 - Updated `docs/fix_plan.md` Next Actions (2025-12-06 refresh) and logged Attempt #146 documenting the plan reopen; no code/tests run.
 - Replaced input.md with Parity-mode memo pointing Ralph to execute M1a first: capture fresh crash evidence under a new timestamp, record exit codes, and log artifacts before touching the script.
 - Follow-up for Ralph: deliver M1a artifacts (commands.txt, trace, stdout, env, sha catalog), update plan M1a row + fix_plan Attempt; stop before implementing script fix so next supervisor loop can review.
 
-## 2025-12-06 (galph loop — Phase M2 prep)
+## 2025-12-06 (galph loop - Phase M2 prep)
 - Verified `compare_scaling_traces.py` stability via `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T072513Z/validation_report.md`; M1 checklist re-closed.
 - Updated `plans/active/cli-noise-pix0/plan.md` status snapshot, marked M1 [D], and added M2a–M2c analysis checklist.
 - Refreshed `docs/fix_plan.md` Next Actions (Phase M2 forward) and logged Attempt #147 documenting the verification.
 - Replaced supervisor memo with Phase M2 parity focus (new RUN_DIR, sincg analysis script, hypotheses capture).
 - Expect Ralph to execute M2a–M2c commands, produce `manual_sincg.md` + `lattice_hypotheses.md`, and update plan/Fix Plan attempts accordingly.
 
-## 2025-12-06 (galph loop — Phase M2 lattice hypotheses)
+## 2025-12-06 (galph loop - Phase M2 lattice hypotheses)
 - Authored `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md` summarising F_latt vs HKL deltas and three follow-up probes (rotated-vector taps, V_actual check, float64 rerun). Plan `cli-noise-pix0` M2c now [D]; logged Attempt #149 in docs/fix_plan.md.
 - Input memo (Parity mode) directs Ralph to add φ-step trace taps + run float64 harness with new flag; artifacts to land under fresh timestamp before lattice fixes begin.
 
-## 2025-12-07 (galph loop — Phase M2 lattice debug)
+## 2025-12-07 (galph loop - Phase M2 lattice debug)
 - Reconfirmed CLI-FLAGS-003 Phase M2 focus after sync; reviewed specs/index/arch/config/testing docs plus recent traces.
 - Evidence review: `trace_py_scaling_per_phi.log` vs `c_trace_scaling.log` shows constant k_frac offset (~−6.78e-06) and |F_latt| rel error ≈1.3e-3; reciprocal components differ (`a_star_y` +1.69e-05, `b_star_y` −5.16e-05, `c_star_y` −1.66e-05).
 - Scattering vector deltas (S_x+5.24e3, S_y+3.04e3, S_z+331) line up with those reciprocal drifts, pointing at MOSFLM ingestion rather than φ carryover.
@@ -953,27 +953,27 @@
 - Wrote Parity-mode input.md targeting CLI-FLAGS-003 Phase M2 fix: reproduce drift, correct MOSFLM reciprocal vectors, rerun trace harness, run targeted pytest, update evidence/logs.
 - Next supervisor follow-up: confirm new timestamp under `reports/2025-10-cli-flags/phase_l/scaling_validation/`, metrics.json shows first_divergence=None, docs/fix_plan attempt logged, and plan Phase M2 marked [D] before advancing to Phase M3.
 
-## 2025-12-07 (galph loop — Phase M2 carryover focus)
+## 2025-12-07 (galph loop - Phase M2 carryover focus)
 - Identified that residual F_latt delta stems from c-parity shim copying the current pixel’s φ-final vectors instead of the previous pixel’s state; added 2025-12-07 note to `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md`.
 - Updated `plans/active/cli-noise-pix0/plan.md` (M2 row retargeted to carryover parity, new checklist item M2d for consecutive-pixel traces).
 - Refreshed `docs/fix_plan.md` Next Actions to require the carryover probe + simulator fix.
 - Rewrote input.md directing Ralph to capture the carryover evidence, update the shim to persist prior-pixel φ state, rerun the trace harness, and close with the targeted pytest.
 - Expect Ralph to log new artifacts under `reports/.../carryover_probe/`, implement the stateful cache, and bring `I_before_scaling` into the ≤1e-6 envelope before moving to Phase M3.
 
-## 2025-12-07 (galph loop — Phase M2 cache redesign planning)
+## 2025-12-07 (galph loop - Phase M2 cache redesign planning)
 - Reviewed commit 3269f6d (carryover cache + parity test); identified that cache never engages during vectorised run and `.detach().clone()` would break gradients even if it did. Latest trace (reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T081932Z/) still shows F_latt=-2.380134 vs C=-2.383196653 (ΔI=-1968.57, -0.209%).
 - Updated plans/active/cli-noise-pix0/plan.md (Status Snapshot 2025-12-07 refresh, M2→[P], M2d→[P], new M2e test task) and docs/fix_plan.md Next Actions + Attempt #150 documenting the partial fix and remaining gaps.
 - Authored input.md (Parity mode, 97 lines) directing Ralph to capture new carryover evidence, redesign the cache for vectorised execution without `.detach()`, rerun scaling metrics, and keep the new regression test failing until Δ≤1e-6.
 - Follow-up for Ralph: produce consecutive-pixel traces under a new timestamp, refactor the cache logic to achieve ≤1e-6 parity, update metrics.json/test logs, and log outcomes in docs/fix_plan.md + plan checklist before advancing to Phase M3.
 
-## 2025-12-07 (galph loop — Phase M2 Option 1 planning refresh)
+## 2025-12-07 (galph loop - Phase M2 Option 1 planning refresh)
 - Coin flip=heads → Reviewed Ralph commits 3269f6d (carryover cache) and 89dcd66 (diagnosis). Confirmed cache never fires within a run, `.detach().clone()` breaks gradients, and Option 1 pixel-indexed cache is required.
 - Updated `plans/active/cli-noise-pix0/plan.md` status snapshot and Phase M2: added M2 Implementation checklist (M2f–M2i) covering design, vectorised plumbing, gradient validation, and post-fix traces; noted Attempt #151 diagnosis.
 - Refreshed `docs/fix_plan.md` Next Actions to align with new checklist (cross-pixel probe, Option 1 design detail, implementation + validation bundle, downstream scaling/nb-compare).
 - Authored new `input.md` (Parity mode) directing Ralph to run the consecutive-pixel trace harness (M2d), archive artifacts, extend `phi_carryover_diagnosis.md` with Option 1 tensor shapes, and keep work evidence-only this loop.
 - No production code touched; focus stays on evidence/design prep before cache reimplementation.
 
-## 2025-12-07 (galph loop — Phase M2e prep)
+## 2025-12-07 (galph loop - Phase M2e prep)
 - Git sync clean; refreshed required specs/arch/testing docs plus CLI-FLAGS plan before analysis.
 - Verified Ralph’s recent commits 89dcd66 and 0d22aa8: productive evidence/test updates, no regressions (targeted test intentionally red pending cache redesign).
 - Updated `plans/active/cli-noise-pix0/plan.md` (Status Snapshot + Next Actions + M2 checklist) to mark M2d/M2f [D] and focus forward work on M2e–M2i.
@@ -981,60 +981,60 @@
 - Authored new `input.md` (Parity mode) directing Ralph to log the failing scaling-parity test (M2e) under a fresh timestamp before touching code.
 - Follow-up for Ralph: execute Do Now command, store artifacts in `reports/.../parity_test_failure/`, update plan/fix_plan attempt entries, keep regression test red-but-documented for Option 1 implementation loop.
 
-## 2025-12-08 (galph loop — Phase M2g planning refresh)
+## 2025-12-08 (galph loop - Phase M2g planning refresh)
 - Expanded `plans/active/cli-noise-pix0/plan.md` Phase M2 with detailed M2g/M2h/M2i subtables and updated guidance for Option 1 pixel-indexed cache work (cache allocation, helper wiring, CUDA probe, gradcheck, documentation sync).
 - Synced `docs/fix_plan.md` Next Actions to point at the new sub-checklists (M2g–M2i) so Ralph’s next loop focuses on implementing the cache and capturing validation artifacts.
 - Rewrote `input.md` to direct Ralph to implement the cache, run the targeted parity/gradcheck commands, capture CUDA/trace evidence, and archive outputs under the refreshed carryover folders.
 - Follow-up for Ralph: implement M2g cache plumbing, produce carryover_cache_validation + carryover_probe artifacts, update phi_carryover_diagnosis.md, and flip M2g–M2i to [D] before moving to Phase M3.
 
-## 2025-12-08 (galph loop — Phase M2g regression correction)
+## 2025-12-08 (galph loop - Phase M2g regression correction)
 - Coin flip=heads → Reviewed Ralph commit f3f66a9; `_run_sequential_c_parity()` replaces the vectorised c-parity flow and violates the runtime checklist’s no-loop guardrail.
 - Updated `plans/active/cli-noise-pix0/plan.md` status snapshot, Next Actions, and M2g checklist to require deleting the sequential fallback (new M2g.2) before building the pixel-indexed cache.
 - Synced `docs/fix_plan.md` Next Actions with the rollback requirement and logged Attempt #154 capturing the plan correction.
 - Authored new `input.md` (Parity mode) instructing Ralph to remove the sequential branch, implement the Option 1 cache tensors, run the mapped parity pytest, capture artifacts under `reports/.../carryover_cache_validation/`, and document the change in `phi_carryover_diagnosis.md`.
 - Follow-up for Ralph: restore unified vectorised execution, add the pixel-indexed cache with device/dtype neutrality, refresh trace harness + diagnosis notes, run the targeted pytest selector, and update docs/fix_plan.md once evidence is captured.
 
-## 2025-12-08 (galph loop — M2g regression supervision)
+## 2025-12-08 (galph loop - M2g regression supervision)
 - Coin flip=heads → reviewed Ralph commit f3f66a9; sequential `_run_sequential_c_parity()` branch still present and violates vectorisation guardrail, no new evidence since Attempt #153.
 - Action type: Review/housekeeping on CLI-FLAGS-003 M2g; refreshed input.md (Parity mode) directing Ralph to remove the sequential fallback, implement the Option 1 pixel-indexed cache, and rerun the targeted parity pytest.
 - No plan/fix_plan edits required today; both already call for M2g regression cleanup. Input now cross-references the same checkpoints and adds detailed cache implementation steps.
 - Follow-up for Ralph: excise sequential branch, land pixel-indexed cache per Option 1 design, capture pytest + trace artifacts under new timestamp, update docs/fix_plan.md Attempt.
 
-## 2025-12-08 (galph loop — CLI-FLAGS-003 doc check)
+## 2025-12-08 (galph loop - CLI-FLAGS-003 doc check)
 - Verified `specs/spec-a-core.md:205-233` still enforces fresh φ rotations; no carryover semantics crept into the spec or parity shim docs.
 - Updated `plans/active/cli-phi-parity-shim/plan.md` (lines 11-12, C5a row) to record the spec review and remind Ralph that C5 `summary.md` must cite those lines when documenting the shim.
 - Synced `docs/fix_plan.md` Next Actions bullet 4 with the same citation so the documentation follow-up stays on the radar alongside the Option 1 cache work.
 - Authored `input.md` directing Ralph to complete M2g.1 (Option 1 design refresh) as a docs-only loop with collect-only pytest and a new memo under `reports/2025-10-cli-flags/phase_l/scaling_validation/20251208_option1_refresh/`.
 - Follow-up for Ralph: run the collect-only command, revisit `phi_carryover_diagnosis.md`, produce the updated analysis memo citing the spec section, and prepare to propose the Option 1 architecture decision next loop.
 
-## 2025-12-09 (galph loop — Phase M2g Option B setup)
+## 2025-12-09 (galph loop - Phase M2g Option B setup)
 - Re-read core docs plus `phi_carryover_diagnosis.md` and the 20251208 Option 1 refresh memo; confirmed we will pursue Option B (batch-indexed cache) for CLI-FLAGS-003.
 - Updated `plans/active/cli-noise-pix0/plan.md` Status Snapshot and Next Actions to note sequential fallback removal (Attempt #155) and to direct Option B cache plumbing; marked M2g.2 [D] and rewrote M2g description to emphasise batched `(slow_indices, fast_indices)` support.
 - Synced `docs/fix_plan.md` CLI-FLAGS-003 Next Actions with the Option B decision so the ledger matches the refreshed plan.
 - Authored new `input.md` (Parity mode) instructing Ralph to implement the batch-indexed cache, thread pixel indices through the simulator, update trace tooling, run the targeted pytest selector, capture gradcheck/trace artifacts, and document the work in diagnosis notes plus fix_plan Attempt.
 - Follow-up for Ralph: land Option B cache plumbing (M2g.3–M2g.6), update tooling + documentation, complete the validation bundle (M2h, M2i), and log artifacts under new timestamped directories before moving to Phase M3.
 
-## 2025-10-08 14:24:13Z (galph loop — M2g wiring evidence)
+## 2025-10-08 14:24:13Z (galph loop - M2g wiring evidence)
 - Focused on CLI-FLAGS-003 Phase M2g; reviewed `src/nanobrag_torch/models/crystal.py:195-386` and `simulator.py:730-1090` confirming `apply_phi_carryover`/`store_phi_final` remain single-pixel helpers and are never invoked, with `.item()` based cache validity that blocks vectorized batches.
 - Updated `plans/active/cli-noise-pix0/plan.md` status snapshot (Attempt #155 note now highlights missing simulator wiring) and expanded M2g.4 guidance to call out deriving `(slow_indices, fast_indices)` from ROI tensors using pure tensor indexing.
 - Rewrote `input.md` (Parity mode) to direct Ralph to batch the cache helpers, thread indices through `_compute_physics_for_position`, replace `.item()` logic with tensor masks, run the targeted parity pytest, and capture Option B artifacts (`optionB_impl`, `carryover_cache_validation`, `carryover_probe`).
 - Follow-up: Ralph to implement Option B cache plumbing per new memo, then execute M2h validation steps (pytest/gradcheck/trace) before advancing to scaling rerun.
 
-## 2025-12-10 (galph loop — M2g.2b scalar regression review)
+## 2025-12-10 (galph loop - M2g.2b scalar regression review)
 - Coin flip=heads → reviewed Ralph’s most recent code commit f84fd5e; it reverted `apply_phi_carryover`/`store_phi_final` to scalar indices and introduced a `.item()` validity gate, breaking the Option B batch plan and the differentiability rule.
 - Updated `plans/active/cli-noise-pix0/plan.md` status snapshot with the regression note and added checklist row M2g.2b to demand tensor `(slow_indices, fast_indices)` signatures without `.item()` before further wiring.
 - Refreshed `docs/fix_plan.md` Next Actions bullet 0 so undoing the scalar regression is explicitly the first task under CLI-FLAGS-003.
 - Authored `input.md` (Parity mode, 100 lines) instructing Ralph to complete M2g.2b: restore batched signatures, remove the `.item()` gate, capture artifacts under `reports/.../carryover_cache_plumbing/`, run the targeted parity pytest, and update diagnosis docs/attempt logs.
 - Follow-up for Ralph: refactor the helpers back to tensor indices, keep vectorised execution intact, archive logs + plan updates, then proceed to M2g.3 wiring once the parity test and documentation landing pads are ready.
 
-## 2025-12-10 (galph loop — M2g cache wiring prep)
+## 2025-12-10 (galph loop - M2g cache wiring prep)
 - Coin flip=heads → reviewed Ralph commits 678cbf4/1de347c; batched cache signatures restored and Attempt #160 logged with docs update.
 - Updated `plans/active/cli-noise-pix0/plan.md` status snapshot to acknowledge commit 678cbf4 and flipped checklist item M2g.2b to [D]; emphasised that wiring (M2g.3+) remains the blocker.
 - Synced `docs/fix_plan.md` Next Actions (lines 3383-3391) with the new focus on Option B cache plumbing so the ledger mirrors the plan after M2g.2b completion.
 - Authored fresh `input.md` (Parity mode) directing Ralph to execute M2g.3-M2g.4: allocate per-pixel caches, thread `(slow_indices, fast_indices)` through the simulator, run the mapped pytest selector, and archive artifacts under `reports/.../carryover_cache_plumbing/` with env metadata.
 - Follow-up for Ralph: build the Option B cache tensors, wire them through `_compute_physics_for_position`, capture the targeted parity test output, then proceed to M2g.5 tooling updates once cache hits are proven.
 
-## 2025-12-10 (galph loop — M2g Option B design gating)
+## 2025-12-10 (galph loop - M2g Option B design gating)
 - Re-read required specs/arch/testing docs plus artifacts: `plans/active/cli-noise-pix0/plan.md`, `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T145905Z/m2g_blocker/analysis.md`, `reports/.../20251208_option1_refresh/analysis.md`, `docs/fix_plan.md`, `specs/spec-a-core.md:205-233`, `docs/bugs/verified_c_bugs.md:166-204`.
 - Coin flip=heads → reviewed Ralph’s recent commits (`5fbda7a`, `678cbf4`, `1de347c`); Attempt #161 reverted after documenting Option B blocker, no regressions.
 - Determined plan drift: fix_plan still waiting on architecture decision despite Option B selection; plan lacked pre-implementation design steps.
@@ -1043,7 +1043,7 @@
 - Authored new `input.md` (Mode: Docs) directing Ralph to produce the Option B batch-design memo + 4×4 ROI prototype, capture artifacts, and run the collect-only pytest selector before further implementation.
 - Follow-up for Ralph: create the timestamped design/prototype artifacts, update fix_plan Attempts with findings, then resume M2g.3 cache allocation once the design is validated.
 
-## 2025-12-10 16:05Z (galph loop — M2g cache implementation kickoff)
+## 2025-12-10 16:05Z (galph loop - M2g cache implementation kickoff)
 - Git already synced; reread core specs/arch/testing docs plus Option B design/prototype artifacts before planning per SOP.
 - Coin flip=heads → reviewed Ralph commit 2cbbf65 (Option B design + prototype). Work productive and aligned with plan.
 - Updated `plans/active/cli-noise-pix0/plan.md` Status Snapshot with Attempt #162 completion, marked M2g.2c/M2g.2d [D], and expanded M2g.1 checklist guidance to reference the new design memo.
@@ -1052,90 +1052,90 @@
 - Commit `1ac720e` pushed (`SUPERVISOR: CLI-FLAGS-003 M2g planning update - tests: not run`).
 - Follow-up: Ralph to deliver M2g.3/M2g.4 implementation with artifacts + pytest log, update fix_plan Attempts, and prep notes for upcoming M2g.5 tooling changes.
 
-## 2025-12-11 (galph loop — M2h evidence redirect)
+## 2025-12-11 (galph loop - M2h evidence redirect)
 - Confirmed commit `fa0167b` wires Option B cache but parity still fails (`F_latt` rel err 1.57884) and omega trace tap crashes; ran targeted pytest locally to verify.
 - Updated `plans/active/cli-noise-pix0/plan.md` status snapshot with Attempt #163, set M2g.3/M2g.4 to [P], and rewrote Next Actions toward M2h diagnostics.
 - Refreshed `docs/fix_plan.md` (First Divergence + Next Actions) and logged Attempt #163 with artifact paths and failure analysis.
 - Replaced `input.md` to direct Ralph to build a new `carryover_cache_validation/<ts>/` bundle (CPU pytest log, env metadata, diagnostics) before touching simulator code.
 - Follow-up for Ralph: capture the CPU parity log with full metadata, document current F_latt/omega issues, append results to fix_plan Attempts, then proceed to CUDA/gradcheck probes once evidence is archived.
 
-## 2025-10-08 16:24Z (galph loop — M2h CUDA/gradcheck prep)
+## 2025-10-08 16:24Z (galph loop - M2h CUDA/gradcheck prep)
 - Reviewed latest repo state; no upstream sync changes. Coin flip=heads → inspected Ralph commits fa0167b and 6c0d163; wiring landed but parity still fails with F_latt sign flip.
 - Analysis: row-wise Option B cache currently indexes the current `(slow, fast)` slot; no evidence of previous-pixel substitution, explaining carryover failure. Plan/fix_plan Next Actions updated with new Step 4 cache-index audit.
 - Authored input.md (Mode: Parity) directing Ralph to capture CUDA parity + gradcheck evidence under a new carryover_cache_validation timestamp, snapshot cache tensors pre/post, and log whether cached data reflects previous pixels.
 - Reminders for next loop: review new diagnostics bundle, confirm cache-index conclusions, then advance to M2i trace rerun once M2h.2/M2h.3 marked [D].
-## 2025-10-08 16:37Z (galph loop — M2h.2 device fix gating)
+## 2025-10-08 16:37Z (galph loop - M2h.2 device fix gating)
 - Focused on CLI-FLAGS-003 Phase M2h after reviewing core docs, plans, and latest diagnostics; confirmed CUDA trace blocker stems from `_apply_debug_output` creating CPU tensors via bare `torch.tensor(...)` (lines 1487-1519).
 - Catalogued three hypotheses: HKL tensor factories lacking device/dtype, interpolation debug tensors inheriting CPU defaults, and sincg inputs running off-device; triage via code review + python snippets (`torch.tensor(...).device` + compiled sincg warning) corroborated each.
 - Authored new input.md directing Ralph to patch simulator debug tensor factories, rerun the CUDA trace harness, capture CPU+CUDA artifacts, and log cache snapshots before proceeding to gradcheck. `input.md` Do Now now points at the CUDA harness command and collect-only pytest selector.
 - No plan edits needed; M2h.2 guidance in plans/active/cli-noise-pix0/plan.md already reflects the blocker. Fix_plan remains aligned.
 - Follow-up for Ralph: implement device/dtype-neutral tensor creation in `_apply_debug_output`, rerun CUDA + CPU harness runs into timestamped directories, update diagnostics/env logs, and keep docs/fix_plan.md Attempts current with outcomes.
 
-## 2025-10-08 16:56Z (galph loop — M2h.3 gradcheck directive)
+## 2025-10-08 16:56Z (galph loop - M2h.3 gradcheck directive)
 - Marked CLI-FLAGS-003 Phase M2h.2 complete and shifted plan focus to M2h.3 gradcheck; updated plans/active/cli-noise-pix0/plan.md lines 29 & 74 to reference Attempt #166 and new artifact expectations.
 - Refreshed docs/fix_plan.md Next Actions to highlight the gradcheck probe (M2h.3) now that CUDA evidence is archived.
 - Authored input.md (Mode: Parity) directing Ralph to build a timestamped gradcheck harness, archive CUDA/CPU logs, capture metadata, and keep the loop evidence-only.
 - Follow-up for Ralph: execute M2h.3 gradcheck per input.md, store artifacts under reports/.../<timestamp>_carryover_cache_validation/, and log results in docs/fix_plan.md Attempts before moving to M2i.1.
 
-## 2025-12-12 (galph loop — M2i.1 trace directive)
+## 2025-12-12 (galph loop - M2i.1 trace directive)
 - Coin flip=heads → reviewed Ralph commits 8255686 and 4c4b62b; device-neutral debug tensors landed and gradcheck evidence now archived.
 - Updated `plans/active/cli-noise-pix0/plan.md` status snapshot (lines 20-33) to record Attempt #167 and rewrote Next Actions around M2i.1–M2g.6; Phase M2h.3 set to [D].
 - Added Attempt #167 to `docs/fix_plan.md` with gradcheck metrics and refreshed Next Actions (lines 461-467) to prioritise the CPU ROI trace, cache tooling patch, and documentation sync.
 - Authored `input.md` (Mode: Parity, 100 lines) directing Ralph to run the ROI harness, archive a complete evidence bundle under `carryover_probe/<ts>/`, and log results before touching simulator code.
 - Follow-up: Ralph to execute the harness command, capture trace/diff/metrics + provenance files, update docs/fix_plan.md Attempts with the new timestamp, and keep the workspace clean for the next parity diagnostics.
 
-## 2025-12-12 (galph loop — M2i.2 metrics prep)
+## 2025-12-12 (galph loop - M2i.2 metrics prep)
 - Sync clean; coin flip=HEADS → reviewed Ralph commits 4c4b62b/882dd04 (evidence bundles only, no regressions).
 - Marked CLI-FLAGS-003 Phase M2i.1 complete in `plans/active/cli-noise-pix0/plan.md` (artifact 20251008T172721Z) and refreshed Next Actions to spotlight M2i.2 metrics work.
 - Updated `docs/fix_plan.md` CLI-FLAGS-003 Next Actions with the same completion note so downstream loops stop re-running M2i.1.
 - Authored new Parity-mode `input.md` directing Ralph to run M2i.2 (compare_scaling_traces.py + diff bundle) and update `lattice_hypotheses.md`; artifact pattern specified under metrics_refresh/.
 - Pending follow-up: Ralph to execute the metrics refresh, produce diff/metrics + ledger updates, then we can tackle trace tap fixes (M2g.5).
 
-## 2025-10-08 (galph loop — M2g.5 tooling directive)
+## 2025-10-08 (galph loop - M2g.5 tooling directive)
 - Regenerated `compare_scaling_traces.py` metrics using `carryover_probe/20251008T172721Z/trace_py.log`; new evidence stored under `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T174753Z/` with commands, metrics, metadata, and SHA256 bundle.
 - Appended 2025-10-08T17:47:53Z entry to `lattice_hypotheses.md` noting the rerun still diverges (I_before_scaling rel δ ≈ -0.9999995) and pointing next work toward trace tooling.
 - Added Attempt #170 to `docs/fix_plan.md` and refreshed Next Actions bullet 1 plus plan rows (M2i table) to reference the new artifacts while keeping M2i.2 gate open.
 - Authored new input.md (Parity mode) directing Ralph to implement M2g.5 trace tooling patch, rerun CPU/CUDA harnesses into `trace_tooling_patch/<timestamp>/`, and update fix_plan attempts after capturing artifacts.
 - Follow-up: Ralph to patch `trace_harness.py` for cache-aware taps, produce the new trace_tooling_patch bundle, and log Attempt #171 before moving on to M2g.6/M2g.5 documentation.
 
-## 2025-12-12 (galph loop — M2g.6 documentation prep)
+## 2025-12-12 (galph loop - M2g.6 documentation prep)
 - Git already up to date; reviewed required spec/arch/testing docs plus active plans before analysis. Coin flip=heads → commit review limited to evidence-only Attempt #171 (trace tooling verification) and prior sync commits; no regressions observed.
 - Updated `plans/active/cli-noise-pix0/plan.md` status snapshot to acknowledge Attempt #171 and rewrote the Next Actions list to remove the completed M2g.5 tooling task. M2g.6, cache index audit, and Phase N prep are now the leading items; M2g.5 row marked [D] with artifact path `trace_tooling_patch/20251008T175913Z/`.
 - Revised `docs/fix_plan.md` CLI-FLAGS-003 Next Actions to mirror the plan (emphasising documentation sync, cache index diagnostics, and Phase N preparation). Authored a new 100-line input.md (Mode: Docs) directing Ralph to update `phi_carryover_diagnosis.md`, flip plan row M2g.6 to [D], add a ledger attempt entry, and rerun collect-only pytest for CLI scaling tests.
 - Follow-up for Ralph: perform the M2g.6 documentation sync citing Attempt #171 evidence, update plan/fix_plan accordingly, and keep M2i.2 metrics gate noted as red before advancing to the cache index audit bundle.
 
-## 2025-10-08 (galph loop — M2i.2 parity trace directive)
+## 2025-10-08 (galph loop - M2i.2 parity trace directive)
 - Logged Attempt #173 in docs/fix_plan.md with new rotated-lattice divergence analysis (reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T182512Z/).
 - Updated plans/active/cli-noise-pix0/plan.md Next Actions bullet 0 to reference the new memo; M2i.2 remains gated pending c-parity trace.
 - Authored relocation of input.md directing Ralph to rerun trace_harness.py with --phi-mode c-parity and refresh scaling metrics once rot_* vectors align.
 - Follow-up: Ralph to capture c-parity trace + compare_scaling_traces bundle, then update fix_plan Attempts with new timestamp and metrics before advancing to Phase N.
 
-## 2025-12-13 (galph loop — Shim removal planning pivot)
+## 2025-12-13 (galph loop - Shim removal planning pivot)
 - Created `plans/active/phi-carryover-removal/plan.md` to retire the φ carryover shim (Phase-format context + A–E roadmap).
 - Updated docs/fix_plan.md (CLI-FLAGS-003 status/next actions now reference the new plan) and refreshed `plans/active/cli-noise-pix0/plan.md` Next Actions to delegate to the removal effort.
 - Authored input.md (Mode: Docs, 109 lines) directing Ralph to execute Phase A inventory tasks (collect-only pytest + baseline inventory artifacts under `reports/.../phase_phi_removal/phase_a/`).
 - Follow-up: Ralph to produce Phase A artifacts (collect log, baseline_inventory.md, commands/env/sha256) and log a freeze note next loop before Phase B prep begins.
 
-## 2025-12-13 (galph loop — Phase B shim removal planning)
+## 2025-12-13 (galph loop - Phase B shim removal planning)
 - Expanded `plans/active/phi-carryover-removal/plan.md` Phase B into B0–B5 tasks (design bundle, CLI/config removal, tooling cleanup, regression sweep, ledger sync) with artifact expectations under `reports/2025-10-cli-flags/phase_phi_removal/phase_b/`.
 - Refreshed `docs/fix_plan.md` CLI-FLAGS-003 Next Actions and `plans/active/cli-noise-pix0/plan.md` Next Actions to align with the new Phase B checklist.
 - Rewrote `input.md` (Mode: Docs) to have Ralph execute Plan B0 (design review + collect-only baseline) prior to code edits.
 - Follow-up: Expect Ralph next loop to produce the Phase B design bundle and update fix_plan Attempts before starting B1–B3 implementation.
 
-## 2025-12-14 (galph loop — Phase B1 directive refresh)
+## 2025-12-14 (galph loop - Phase B1 directive refresh)
 - Verified git baseline (already up to date) and reviewed B0 design bundle `reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T185921Z/` plus plan/fix_plan context.
 - Marked `plans/active/phi-carryover-removal/plan.md` Phase B0 as [D] with explicit status line, and updated `plans/active/cli-noise-pix0/plan.md` Next Actions to start at B1 now that the design artifact exists.
 - Authored new 129-line `input.md` (Mode: Docs) directing Ralph to execute Phase B1 CLI surface removal with detailed artifact/test cadence and doc touchpoints; committed as `SUPERVISOR: Phase B1 directive refresh - tests: not run`.
 - Follow-ups: Ralph to remove the CLI flag per Phase B1, capture the specified artifact bundle, update docs/fix_plan.md Attempt logs, and prep inventory notes for B2 targets.
 
-## 2025-12-14 (galph loop — Phase B2 handoff prep)
+## 2025-12-14 (galph loop - Phase B2 handoff prep)
 - Coin flip=heads → reviewed Ralph’s latest implementation commit (340683f). Change cleanly removes the CLI flag, keeps targeted tests green, and deferred doc sync; no regressions spotted.
 - Updated `plans/active/phi-carryover-removal/plan.md` to note B1’s partial completion (code done, docs pending) and kept B2/B3 guidance intact; `plans/active/cli-noise-pix0/plan.md` Next Actions now call out B1 doc sync + B2/B3 execution explicitly.
 - Revised `docs/fix_plan.md` CLI-FLAGS-003 Next Actions to break out B1 documentation, B2/B3 removals, B4 regression sweep, and B5 ledger sync as separate bullets.
 - Replaced `input.md` (Mode: none, ~110 lines) directing Ralph to finish the B1 doc cleanup and execute Phase B2 plumbing removal, with explicit artifact/test cadence.
 - Follow-up: Ralph to update README_PYTORCH.md / prompts/supervisor.md / docs/bugs entry, delete the remaining `phi_carryover_mode` plumbing plus associated tests, capture the Phase B bundle, and log the attempt before we evaluate B3.
 
-## 2025-12-14 (galph loop — C1 coverage audit setup)
+## 2025-12-14 (galph loop - C1 coverage audit setup)
 - Confirmed repo synced (feature/spec-based-2) and reviewed phi-carryover removal artifacts (`reports/2025-10-cli-flags/phase_phi_removal/phase_b/20251008T193106Z/`).
 - Updated `plans/active/phi-carryover-removal/plan.md` to mark rows B0–B5 done and shift focus to row C1 coverage audit (plan lines 29-49).
 - Refreshed `plans/active/cli-noise-pix0/plan.md` status snapshot/Next Actions to call out row C tasks (lines 17-33) and keep scaling work gated pending coverage/doc cleanup.
@@ -1143,32 +1143,32 @@
 - Authored new `input.md` (Mode: Docs) instructing Ralph to run collect-only pytest for row C1, capture artifacts under `reports/.../phase_phi_removal/phase_c/<ts>/`, and log coverage findings.
 - Follow-up: Ralph to execute the coverage audit per plan row C1, document gaps in `coverage_audit.md`, and update fix_plan Attempts with the new evidence; next loops can tackle rows C2/C3 once the audit passes.
 
-## 2025-12-14 (galph loop — Phase C2/C3 prep)
+## 2025-12-14 (galph loop - Phase C2/C3 prep)
 - Confirmed residual shim references: `docs/bugs/verified_c_bugs.md:166-192` still says plumbing "in progress", `tests/test_cli_scaling_parity.py` instantiates deleted `phi_carryover_mode`, and `src/nanobrag_torch/models/crystal.py:1238-1274` docstrings describe cache-based c-parity.
 - Refreshed `plans/active/phi-carryover-removal/plan.md` Phase C rows with explicit file targets (docs entry, parity test retirement, crystal docstrings) and synced `docs/fix_plan.md` Next Actions accordingly.
 - Authored new `input.md` (Mode: Docs) directing Ralph to execute Phase C2/C3 sweep, capture artifacts under `reports/.../phase_phi_removal/phase_c/<ts>/`, run collect-only on `tests/test_cli_scaling_phi0.py`, and update fix_plan attempts.
 - Follow-up: Ralph to update docs/tests per Phase C guidance, drop or rewrite `tests/test_cli_scaling_parity.py`, scrub parity-shim diagnosis reports, and log summary + SHA256 in the new Phase C timestamp before progressing to Phase D evidence.
 
-## 2025-12-14 (galph loop — Phase D proof-of-removal planning)
+## 2025-12-14 (galph loop - Phase D proof-of-removal planning)
 - Coin flip=heads → reviewed Ralph’s latest commit 85dc304 (Phase C2/C3 doc sweep); work remains aligned with plan and introduced no regressions.
 - Expanded `plans/active/phi-carryover-removal/plan.md` Phase D/E sections with concrete D1a–D1c checklist items (trace harness command, pytest proof, rg sweep) and optional watch tasks; refreshed `docs/fix_plan.md:451-467` Next Actions to point at the new checklist.
 - Replaced `input.md` (Mode: Parity) instructing Ralph to execute Phase D1a spec-mode trace runs, gather targeted pytest evidence, collect the `rg` scan, and stash artifacts under `reports/2025-10-cli-flags/phase_phi_removal/phase_d/${STAMP}/`.
 - Follow-up: Expect Ralph to produce the Phase D bundle next loop, update fix_plan Attempts with the timestamped directory, and prepare for D2 ledger sync.
 
-## 2025-12-14 (galph loop — Phase D harness unblock)
+## 2025-12-14 (galph loop - Phase D harness unblock)
 - Git synced clean (feature/spec-based-2 up to date) and reviewed Attempt #181 blocker before planning.
 - Updated `plans/active/phi-carryover-removal/plan.md` Phase D with new row D0 requiring the trace harness to drop `phi_carryover_mode` plumbing; refreshed `docs/fix_plan.md` and `plans/active/cli-noise-pix0/plan.md` next actions to point Ralph at D0→D1 sequence.
 - Rewrote `input.md` (Mode: Parity) directing Ralph to patch the harness, rerun Py/C traces into a fresh Phase D timestamp, execute `pytest -v tests/test_cli_scaling_phi0.py`, and capture the ``rg "phi_carryover"`` sweep.
 - Follow-up: expect Ralph to land the harness edit, produce the Phase D artifact bundle, and then update ledger entries before we pivot back to the scaling parity work.
 
-## 2025-12-14 (galph loop — D1 proof bundle setup)
+## 2025-12-14 (galph loop - D1 proof bundle setup)
 - Git already synced with origin; core docs + active plans reviewed per SOP before analysis.
 - Coin flip=heads → inspected Ralph commits 9f462ab (blocker summary) and 946226e (harness cleanup). Harness now spec-only; no regressions observed.
 - Updated `plans/active/phi-carryover-removal/plan.md` row D0 to [D] so the checklist reflects the completed harness refresh.
 - Authored new `input.md` (Mode: Parity) directing Ralph to capture the D1 proof-of-removal bundle: fresh Py trace via `trace_harness.py`, matching C trace with `-trace_pixel 685 1039`, run `scripts/validation/compare_scaling_traces.py`, execute `pytest -v tests/test_cli_scaling_phi0.py`, perform the `rg "phi_carryover"` sweep, and store everything under `reports/2025-10-cli-flags/phase_phi_removal/phase_d/$STAMP/` with summary/metrics/sha256.
 - Follow-up for Ralph: generate the new artifact bundle, then proceed to ledger sync (docs/fix_plan.md update + plan archival) once the proof is logged.
 
-## 2025-12-14 (galph loop — Phase D2 ledger prep)
+## 2025-12-14 (galph loop - Phase D2 ledger prep)
 - Updated `plans/active/phi-carryover-removal/plan.md:53-72` to mark D1a–D1c [D] and record the Attempt #183 evidence path; added status snapshot so remaining work clearly shows D2–D3.
 - Refreshed `docs/fix_plan.md:459-465` Next Actions to highlight D2 (ledger sync) and D3 (handoff) as the only open items while referencing the Phase D bundle.
 - Authored a new `input.md` (Mode: Docs, 104 lines) directing Ralph to execute Phase D2: update fix_plan attempts, archive `plans/active/cli-phi-parity-shim/plan.md`, append a ledger note in `reports/2025-10-cli-flags/phase_phi_removal/phase_d/`, run pytest collect-only, and log results.
@@ -1183,37 +1183,37 @@
 - Phase D2 exit criteria met: fix_plan shows Attempt #184, Next Actions updated, shim plan archived with closure note, pytest collection verified.
 - Follow-up for next supervisor loop: Prepare Phase D3 `input.md` handoff directing Ralph to `plans/active/cli-noise-pix0/plan.md` Phase L scaling tasks; shim removal work complete, focus shifts entirely to `-nonoise`/`-pix0` deliverables.
 
-## 2025-12-14 (galph loop — D3 handoff + scaling pivot)
+## 2025-12-14 (galph loop - D3 handoff + scaling pivot)
 - Reviewed phi-carryover removal plan and fix_plan; only D3 remained open while CLI scaling tasks waited. Long-term Goal 1 now satisfied after this handoff.
 - Updated `plans/active/phi-carryover-removal/plan.md:109` marking D3 [D] with note that today’s input redirects work to the scaling track and logs closure in galph_memory.
 - Refreshed `docs/fix_plan.md:461-466` Next Actions to record D3 completion and elevate Phase M2g/M2h as the active blockers (Option B cache fix + grad/device validation).
 - Authored new `input.md` (Mode: Parity) guiding Ralph to execute Phase M2g Option B cache plumbing, re-run the trace harness, capture metrics under `reports/2025-10-cli-flags/phase_l/scaling_validation/20251214_optionB_patch/`, and update fix_plan attempts post-fix.
 - Follow-up for Ralph: implement the pixel-indexed φ-cache per Option B design, rerun CPU/CUDA parity evidence and targeted pytest, then log Attempt # next with artifact paths before progressing to M2h.
-## 2025-12-15 (galph loop — Phase M1 spec baseline reset)
+## 2025-12-15 (galph loop - Phase M1 spec baseline reset)
 - Rewrote `plans/active/cli-noise-pix0/plan.md` to reflect post-shim spec-only workflow; Phase M now directs fresh spec-mode baseline (M1), analysis (M2), probes (M3), fix (M4), validation (M5), and ledger sync (M6). Optional guardrails captured under Phase P.
 - Updated `docs/fix_plan.md:451-470` Next Actions to match the new plan (Phase M1–M6) and removed stale Option B cache guidance.
 - Authored `input.md` (Mode: Parity) instructing Ralph to execute Phase M1: generate a new spec-mode scaling bundle via `trace_harness.py`, run `compare_scaling_traces.py`, capture pytest collect logs, and store artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/$STAMP/spec_baseline/`.
 - Follow-up expectation: Ralph completes Phase M1 bundle, records metrics/analysis, and updates `lattice_hypotheses.md` before we move to Phase M2 diagnostics.
 
-## 2025-10-08 (galph loop — M2 analysis directives)
+## 2025-10-08 (galph loop - M2 analysis directives)
 - Refreshed `plans/active/cli-noise-pix0/plan.md` Phase M snapshot: marked M1 [D], noted 14.643% I_before_scaling deficit from bundle `reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/`, and tightened M2 guidance (analysis_20251008T212459Z.md + lattice_hypotheses.md update + summary refresh).
 - Authored new `input.md` (Mode: Docs, 100 lines) directing Ralph to execute CLI-FLAGS-003 Phase M2 analysis: regenerate summary via `compare_scaling_traces.py`, document factor breakdown, update hypotheses ledger, refresh sha256/commands/run_metadata, log Attempt #186, and run pytest collect-only.
 - No code changes expected next loop; focus is evidence bundling under the existing spec_baseline directory.
 
-## 2025-10-08 (galph loop — Phase M3 probe planning)
+## 2025-10-08 (galph loop - Phase M3 probe planning)
 - Updated `plans/active/cli-noise-pix0/plan.md` to mark M2 [D] and expand Phase M3 into tasks M3a–M3d (per-φ logging, sincg sweep, single-φ run, rotation audit). Status snapshot now cites Attempt #186 evidence.
 - Synced `docs/fix_plan.md:461-467` Next Actions with the new M3 task bundle; emphasis on storing probes under `phase_m3_probes/` with sha256 + summary.
 - Authored `input.md` (Mode: Parity) directing Ralph to execute those probes, capture fresh traces, and update fix_plan Attempt #187 after running targeted pytest.
 - Follow-up: Ralph to produce the Phase M3 artifact bundle (trace_py_phi, sincg_sweep, phistep1, rotation_audit, summary) and log results before M4 implementation begins.
 
-## 2025-12-16 (galph loop — Phase M4 normalization planning)
+## 2025-12-16 (galph loop - Phase M4 normalization planning)
 - Synced with origin (no conflicts) then re-read `docs/index.md`, `specs/spec-a-core.md`, `arch.md`, `docs/development/c_to_pytorch_config_map.md`, `docs/debugging/debugging.md`, `docs/development/testing_strategy.md`, and `docs/fix_plan.md` per SOP before analysis.
 - Assessed long-term goals: φ-carryover removal closed through Phase D; CLI-FLAGS-003 Phase M normalization remains the top blocker, with vectorization/delegations queued post-parity.
 - Updated `plans/active/cli-noise-pix0/plan.md:60-71` to add a detailed Phase M4 checklist (M4a–M4d) covering design memo, simulator patch, parity tests, and evidence capture.
 - Refreshed `docs/fix_plan.md:461-468` Next Actions bullet to reference the checklist and fix_<timestamp> artifact bundle requirements.
 - Authored new `input.md` (Mode: Parity) instructing Ralph to execute M4a–M4d, run targeted pytest + compare_scaling_traces commands, and store artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_<timestamp>/`.
 - Follow-up for Ralph: implement the normalization division in `src/nanobrag_torch/simulator.py` with required `nanoBragg.c` snippet, extend per-φ logging, regenerate traces, update fix_plan/plan entries, then advance to Phase M5 after evidence is green.
-## 2025-12-17 (galph loop — Phase M4d evidence planning)
+## 2025-12-17 (galph loop - Phase M4d evidence planning)
 - Coin flip = heads; reviewed Ralph commits 8b4c15a (initial normalization patch), d8648be (docs refresh), and fe3a328 (double-division fix). No regressions; final commit restores single `/ steps` division while preserving vectorization.
 - Updated `plans/active/cli-noise-pix0/plan.md` to mark M4b/M4c [D], keep M4 overall [P], and narrow M4d guidance to the outstanding compare_scaling_traces + hypotheses artifacts.
 - Refreshed `docs/fix_plan.md` CLI-FLAGS-003 section to acknowledge Attempts #188–#189 landing the fix, reframe Next Actions around M4d evidence capture, and remove obsolete double-division warnings.
@@ -1221,14 +1221,14 @@
 - No new plan files opened; focus stays on completing Phase M4d evidence before CUDA/gradcheck (M5) begins.
 - Follow-up: Ralph to populate `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T223805Z/` with trace, metrics, diff summary, updated commands/env/sha256, close Hypothesis H4, and update fix_plan/galph_memory accordingly.
 
-## 2025-12-16 (galph loop — Phase M4 normalization planning)
+## 2025-12-16 (galph loop - Phase M4 normalization planning)
 - Git sync remained clean; revisited core spec/arch/testing docs plus active plans per SOP.
 - Authored Phase M4a design memo (`reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T223046Z/design_memo.md`) confirming Attempt #188’s double `/ steps` regression and restating the C contract.
 - Updated `plans/active/cli-noise-pix0/plan.md` (M4a marked [D]) and logged CLI-FLAGS-003 Attempt #192 in `docs/fix_plan.md`, reopening M4b–M4d with explicit normalization fix guidance.
 - Rewrote `input.md` (Mode: Parity) steering Ralph to land the single-division normalization fix, rerun targeted pytest + compare_scaling_traces, and publish a fix_<timestamp> bundle.
 - Follow-up next loop: verify the new Phase M4 evidence bundle, then schedule CUDA/gradcheck work for Phase M5 before moving to nb-compare.
 
-## 2025-12-18 (galph loop — Phase M5a instrumentation kickoff)
+## 2025-12-18 (galph loop - Phase M5a instrumentation kickoff)
 - Git pull --rebase returned "Already up to date"; repo clean before edits.
 - Coin flip = heads: reviewed recent Ralph commit 65a9dd2 (reports-only) — normalization evidence captured, no regressions.
 - Updated `plans/active/cli-noise-pix0/plan.md` by clarifying M4d [P] requirements and introducing Phase M5 (M5a–M5e) for φ-rotation realignment.
@@ -1236,14 +1236,14 @@
 - Authored `input.md` (Mode: Parity) directing Ralph to execute Phase M5a: extend trace harness output, capture enhanced per-φ rot_* traces under `fix_${TS}`, run pytest collect-only, and log artifacts/attempts.
 - Follow-up: Expect enhanced rot_* traces plus updated fix_plan Attempt entry next loop; queue M5b rotation design memo afterward.
 
-## 2025-10-08 (galph loop — Phase M5b design memo)
+## 2025-10-08 (galph loop - Phase M5b design memo)
 - git pull --rebase returned clean; reviewed core docs plus active plans before analysis per SOP.
 - Coin flip = heads: inspected Ralph commits 279b5e0 (enhanced per-φ traces) and 65a9dd2 (reports upload). Evidence loop productive; noted duplicated `reports/2025-10-cli-flags/phase_l/per_phi/reports/...` subtree to address during parity closure.
 - Authored `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T232018Z/rotation_fix_design.md` capturing φ rotation parity plan (Rules #12/#13, C snippet, verification steps).
 - Updated `plans/active/cli-noise-pix0/plan.md` marking M5b [D] with new artifact reference; docs/fix_plan.md Attempt #194 logs design memo + action items for M5c.
 - Replaced `input.md` with Parity-mode instructions directing Ralph to implement M5c (dual-rotation pipeline), rerun compare_scaling_traces, and document results; highlighted nested reports duplication for follow-up.
 
-## 2025-12-19 (galph loop — Phase M5c implementation prep)
+## 2025-12-19 (galph loop - Phase M5c implementation prep)
 - Sync: `timeout 30 git pull --rebase` returned "Already up to date"; no conflicts. Re-read mandatory docs (`docs/index.md`, `specs/spec-a-core.md`, `arch.md`, `docs/development/c_to_pytorch_config_map.md`, `docs/debugging/debugging.md`, `docs/development/testing_strategy.md`, `docs/fix_plan.md`) plus `plans/active/phi-carryover-removal/plan.md` and `plans/active/cli-noise-pix0/plan.md` before analysis.
 - Long-term goals: φ-carryover removal closed through Phase D with only watch tasks E1/E2 pending; primary blocker remains CLI-FLAGS-003 Phase M5 (rotation parity). Vectorization and pyrefly initiatives stay deferred until scaling parity is green.
 - Coin flip = heads: reviewed Ralph commits 279b5e0 (Phase M5a traces) and 7ad8f60 (Phase M5d evidence run); artifacts consistent, no regressions, but duplicated `reports/.../per_phi/reports/...` tree still outstanding for cleanup during M5d.
@@ -1251,19 +1251,19 @@
 - Actions: refreshed `input.md` (Parity mode) directing Ralph to implement the dual real/reciprocal rotation pipeline, rerun trace harness + compare_scaling_traces, execute targeted pytest, update lattice_hypotheses, and log Attempt #195 with full artifact bundle. Highlighted required evidence paths and risk mitigations (device neutrality, Rule #12/#13, duplicate reports note).
 - Follow-up for Ralph: land M5c code changes in `crystal.py`, produce fix_<timestamp> bundle with parity-green compare output, close H4/H5 in lattice_hypotheses, update docs/fix_plan Attempt log, and document whether the per_phi directory duplication was resolved or deferred.
 
-## 2025-11-17 (galph loop — Phase M5 pre-debug)
+## 2025-11-17 (galph loop - Phase M5 pre-debug)
 - Focused on CLI-FLAGS-003 M5 φ-rotation parity. Compared spec-baseline traces: PyTorch `rot_b` y-component differs by +4.6e-02 and drives `k_frac` shift (reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/trace_py_scaling.log:15 vs c_trace_scaling.log:266-271).
 - Logged that PyTorch still reports tricubic `F_cell` despite supervisor command using `-nointerpolate` (trace_py_scaling.log:29 vs c_trace_scaling.log:278). Ralph must confirm flag plumbing while instrumenting per-φ traces.
 - Issued input.md directing Phase M5a work: extend trace harness to emit `TRACE_PY_PHI` (k_frac, F_latt_b, F_latt) and rerun spec-mode harness into reports/.../per_phi/<stamp>/ before tackling M5c lattice fix.
 
-## 2025-12-19 (galph loop — Phase M5c φ rotation guidance)
+## 2025-12-19 (galph loop - Phase M5c φ rotation guidance)
 - Re-read mandatory specs/arch/testing docs plus Phase M5 plan; focused on CLI-FLAGS-003 scaling parity.
 - Debug assessment: confirmed `Crystal.get_rotated_real_vectors` still skips dual real/reciprocal recomputation (uses static `self.V`), causing per-φ `b_star_y` drift (fix_20251008T231211Z traces) and F_latt sign flip vs C baseline (`c_trace_scaling.log`).
 - Logged hypotheses: primary fix is enforcing Rule #12/#13 per-slice duality; alternative hypotheses (sincg, spindle axis normalization) deprioritized after trace review.
 - Authored new `input.md` (Parity mode, 100 lines) directing Ralph to implement the duality pipeline, regenerate traces under `fix_<timestamp>`, rerun compare_scaling_traces, update lattice_hypotheses, and run targeted pytest (CPU/CUDA).
 - Follow-up for Ralph: implement Phase M5c vectorized rotation + duality, capture new artifacts, update docs/fix_plan Attempt & plan row to [D], and prepare for M5d verification.
 
-## 2025-12-20 (galph loop — Option 1 spec compliance planning)
+## 2025-12-20 (galph loop - Option 1 spec compliance planning)
 - Git already up to date; re-read core docs (docs/index.md, specs/spec-a-core.md:204-214, arch.md, docs/development/c_to_pytorch_config_map.md, docs/debugging/debugging.md, docs/development/testing_strategy.md) plus plans/active/cli-noise-pix0/plan.md and latest reports before analysis.
 - Long-term Goal 1 (φ carryover removal) verified complete through Phase D; remaining watch items E1/E2 noted. Attempt #195 landed Phase M5c rotation fix; Attempt #196 flagged C-PARITY-001 conflict.
 - Selected focus: CLI-FLAGS-003 Phase M5 Option 1 bundle. Adopted Option 1 (accept spec compliance, document C bug) and refreshed plan/fix_plan to steer work toward documentation rather than more simulator edits.
@@ -1272,14 +1272,14 @@
 - Replaced `input.md` (Docs mode) directing Ralph to publish `option1_spec_compliance/<timestamp>/` bundle, update lattice_hypotheses & docs/fix_plan, and rerun targeted pytest; provided explicit metadata commands and compare_scaling guidance.
 - Next follow-up: Ralph to execute Option 1 documentation tasks (M5d–M5g), then we reassess whether optional Phase M6 shim work is needed.
 
-## 2025-10-09 (galph loop — M5c C-reference capture)
+## 2025-10-09 (galph loop - M5c C-reference capture)
 - Evidence task: captured nanoBragg.c snippets for misset duality and per-φ reciprocal regeneration under `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251009T005448Z/` (includes `c_phi_rotation_reference.md`, `summary.md`, `env.json`, `commands.txt`, `sha256.txt`).
 - docs/fix_plan.md: added Attempt #191 logging the new evidence bundle and rationale; CLI-FLAGS-003 history now points Ralph at the snippet before coding.
 - plans/active/cli-noise-pix0/plan.md: M5c guidance now cites the captured snippet explicitly for Rule #11 docstrings.
 - input.md rewritten (Parity mode) directing Ralph to implement M5c with the new reference, regenerate scaling traces, and run pytest CPU/CUDA.
 - Follow-up: Ralph to implement dual rotation pipeline, produce fresh compare_scaling_traces output + per-φ trace under new timestamp, run targeted pytest, update lattice_hypotheses, and mark plan row M5c [D] once parity is green.
 
-## 2025-10-09 (galph loop — M5e/M5f planning refresh)
+## 2025-10-09 (galph loop - M5e/M5f planning refresh)
 - Git up to date; re-read docs/index.md, specs/spec-a-core.md, arch.md, docs/development/c_to_pytorch_config_map.md, docs/debugging/debugging.md, docs/development/testing_strategy.md, plans/active/cli-noise-pix0/plan.md, and latest Option 1 bundle before analysis.
 - Focused on CLI-FLAGS-003 Phase M5 follow-ups: marked plan row M5d [D] (Attempt #196 evidence) and tightened M5f guidance to require pytest logs under option1_spec_compliance/<stamp>/tests/.
 - Updated docs/fix_plan.md Next Actions to note M5d completion and highlight remaining tasks (validation-script note + archived pytest logs) ahead of optional Phase M6.
@@ -1287,46 +1287,54 @@
 - Committed as `SUPERVISOR: CLI-FLAGS Option1 follow-up - tests: not run`; no physics changes.
 - Follow-up: Ralph to execute M5e/M5f per new input, then we can close M5g and queue Phase N nb-compare once evidence lands.
 
-## 2025-12-20 (galph loop — Phase N1 staging)
+## 2025-12-20 (galph loop - Phase N1 staging)
 - Closed out CLI-FLAGS Phase M bookkeeping: marked Phase M4d and M5g [D] in plans/active/cli-noise-pix0/plan.md and refreshed the Status Snapshot to 2025-12-20 with Option 1 notes.
 - Updated docs/fix_plan.md Active Focus + Next Actions to reflect the Phase M6 decision gate; logged that M5e–M5g are done and the next step is choosing (or skipping) the optional C-parity shim before moving to Phase N.
 - Authored new input.md (105 lines, Parity mode) instructing Ralph to document the Phase M6 skip, regenerate C/PyTorch ROI float files under reports/2025-10-cli-flags/phase_l/nb_compare/<timestamp>/inputs/, and append the corresponding Attempt in docs/fix_plan.md.
 - No new artifacts generated this loop (docs-only). Working tree pending commit of docs/fix_plan.md, plans/active/cli-noise-pix0/plan.md, and input.md.
 - Follow-up for Ralph: execute input.md Do Now (Phase N1 ROI prep + Phase M6 skip logging), keep targeted pytest logs in the bundle, and update plan/ledger once artifacts exist.
 
-## 2025-12-21 (galph loop — CLI nb-compare ledger prep)
+## 2025-12-21 (galph loop - CLI nb-compare ledger prep)
 - Refreshed `plans/active/cli-noise-pix0/plan.md` Phase N exit criteria to accept the documented C-PARITY-001 divergence (correlation ≥0.98, sum_ratio noted) and marked N2 [D]; N3 now directs ledger updates before the supervisor rerun.
 - Updated `docs/fix_plan.md` Next Actions to call out the Option 1 acceptance ledger entry and plan sync; no new Attempt appended yet (reserved for Ralph’s loop).
 - Authored new `input.md` (Docs mode) instructing Ralph to close N3 by adding the Attempt, marking N3 [D], running pytest --collect-only, and logging the decision in galph_memory.
 - Next steps for Ralph: execute the N3 ledger update, sync plan + memory, then we can queue the supervisor command rerun (Phase O).
 
-## 2025-12-22 (galph loop — Phase O supervisor prep)
+## 2025-12-22 (galph loop - Phase O supervisor prep)
 - Git remained clean; re-read required spec/arch/testing docs, CLI plan, and 20251009T020401Z nb-compare analysis before selecting focus.
 - Focus set to CLI-FLAGS-003 Phase O. Updated `plans/active/cli-noise-pix0/plan.md` Status Snapshot with expected Option 1 metrics and expanded O1–O3 guidance to include the exact nb-compare command, artifact checklist, and archival notes.
 - Refined `docs/fix_plan.md` Next Actions bullet to spell out the supervisor rerun command, required captures, and expectation that correlation≈0.985 / sum_ratio≈1.16e5 (C-PARITY-001) be documented in the forthcoming Attempt.
 - Regenerated `input.md` (Docs mode, 115 lines) directing Ralph to run the supervisor nb-compare with threshold 0.98, capture analysis/test artifacts, update plan + ledger (VG-5), and mirror the bundle to the archive; appended detailed checklists for pre-run, outputs, analysis, and optional CUDA evidence.
 - Working tree clean post-commit `SUPERVISOR: CLI-FLAGS Phase O prep - tests: not run`; ready for Ralph to execute Phase O1–O3.
 
-## 2025-12-22 (galph loop — Phase O callchain directive)
+## 2025-12-22 (galph loop - Phase O callchain directive)
 - Git up to date; reread required spec/arch/testing docs plus CLI plan and the supervisor analysis bundle before selecting focus.
 - Chose Review/housekeeping on CLI-FLAGS-003 (Plan Phase O). Added a "Phase O Blocker Diagnostics" bullet in docs/fix_plan.md:475 directing Ralph to run the callchain workflow (initiative_id cli-flags-o-blocker) and compare steps/normalization between Option 1 ROI and supervisor bundles.
 - Authored input.md (Parity mode, 100 lines) instructing Ralph to execute prompts/callchain.md with the specified analysis question, capture artifacts under reports/cli-flags-o-blocker/, diff steps values, run pytest --collect-only, and log a new Attempt summarising findings.
 - Follow-up for Ralph: complete the callchain deliverables, document effective steps/normalization factors across ROI vs supervisor runs, update docs/fix_plan.md Attempt history, and leave the bundle ready for the next implementation loop.
 
-## 2025-12-22 (galph loop — Phase O closure prep)
+## 2025-12-22 (galph loop - Phase O closure prep)
 - Updated docs/fix_plan.md Active Focus to reflect Phase O wrap-up and bumped the ledger timestamp to this loop (2025-12-22, galph #204).
 - Refreshed plans/active/cli-noise-pix0/plan.md status snapshot: Phase O supervisor rerun now accepted; O1 marked [D]; O2/O3 describe ledger + archive tasks with Attempt #202/#203 references.
 - Authored new input.md (Docs mode) directing Ralph to log the VG-5 Attempt, update the supervisor analysis banner, mirror the 20251009T024433Z bundle into reports/archive, and mark O2/O3 once complete; pytest collect-only proof remains the testing requirement.
 - No new artifacts generated; waiting on Ralph to execute the archival/ledger updates before closing CLI-FLAGS Phase O.
 
-## 2025-12-22 (galph loop — Phase P watch scaffolding)
+## 2025-12-22 (galph loop - Phase P watch scaffolding)
 - Reviewed long-term goals; identified remaining tasks as CLI-FLAGS Phase P (watch cadence) and phi-carryover removal Phase E (hygiene guard). No new plan required.
 - Updated docs/fix_plan.md Active Focus to call out Phase P watch work plus phi-carryover Phase E, and rewrote CLI-FLAGS Next Actions to point at P1/P2 alongside logging requirements.
 - Authored input.md (Docs mode) instructing Ralph to extend fix_plan hygiene guidance with the `rg "phi_carryover"` + trace cadence, create `reports/archive/cli-flags-003/watch.md` with the nb-compare smoke metrics, update plan rows P1/P2 & E1/E2, and run `pytest --collect-only -q`.
 - Expect Ralph to produce the new watch.md, update fix_plan guidance, and record a fresh Attempt covering the completed watch tasks.
 
-## 2025-12-22 (galph loop — Phase E handoff for vectorization)
+## 2025-12-22 (galph loop - Phase E handoff for vectorization)
 - Updated docs/fix_plan.md Active Focus so CLI-FLAGS and PHI-CARRYOVER now describe ongoing monitoring (Phase P/E complete) instead of re-running finished tasks.
 - Confirmed plans/active/cli-noise-pix0/plan.md and plans/active/phi-carryover-removal/plan.md already mark P1/P2 and E1/E2 [D]; no plan edits required.
 - Authored new input.md (Perf mode) directing Ralph to execute VECTOR-TRICUBIC-001 Phase E2/E3: run cpu(+cuda) tricubic_baseline benchmarks with repeats=200 into reports/2025-10-vectorization/phase_e/perf/$STAMP/, write perf_summary.md + summary.md, then log the Attempt with timings and pytest evidence.
 - Next steps for Ralph: follow the Perf-mode memo, capture benchmarks and summaries, update docs/fix_plan.md with the artifact bundle, and leave detector absorption Phase F ready for the following loop once perf evidence is in hand.
+
+## 2025-12-22 (galph loop - Vectorization Phase F planning)
+- Git already up to date. Reviewed required spec/arch/testing docs plus VECTOR-TRICUBIC plan + Phase E summary before selecting focus.
+- Heads coin flip → Reviewed Ralph commits df50298 and 7358fe1 (docs/artifacts only, no regressions detected).
+- Identified stale plan snapshot (Phase E2/E3 still open) and selected Planning action on VECTOR-TRICUBIC-001.
+- Updated `plans/active/vectorization.md` status snapshot to mark Phases A–E complete and marked E2/E3 [D] with Attempt #12 artifact paths; refreshed docs/fix_plan.md Next Actions to note the plan update.
+- Authored new input.md (Docs mode) directing Ralph to execute Phase F1 design memo with commands/env/checksums artifacts and pytest collect-only proof.
+- No tests run; tree updated with plan/fix_plan/input changes only.
