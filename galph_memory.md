@@ -1,3 +1,8 @@
+### 2025-12-24 (galph loop - SOURCE-WEIGHT parity bundle refresh)
+- Re-read plans/active/source-weight-normalization.md and docs/fix_plan.md:4046; focus stays on TC-D1/TC-D3 parity metrics before VECTOR work can unblock.
+- Replaced input.md (Mode: Parity) with explicit TC-D1/TC-D3 commands (PyTorch + C) including default_F, divergence parameters, and artifact expectations; pointed Ralph at prior diagnostic snippet (reports/2025-11-source-weights/phase_e/20251009T123427Z/commands.txt) for simulator_diagnostics capture and scripted the metrics computation.
+- No plan edits this loop; awaiting fresh parity evidence before flipping Phase E3 / VECTOR-TRICUBIC-002 Phase A2.
+
 ### 2025-12-24 (galph loop - vectorization relaunch plan)
 - Authored `plans/active/vectorization.md` to relaunch the vectorization initiative (Phase A dependency gate through Phase E closure) and logged it in `docs/fix_plan.md` as `[VECTOR-TRICUBIC-002]` with explicit Next Actions (SOURCE-WEIGHT-001 parity → regression refresh → profiler relaunch).
 - Updated `input.md` (Mode: Perf) to direct Ralph to capture SOURCE-WEIGHT-001 Phase E parity artifacts (corr ≥0.999, |sum_ratio−1| ≤1e-3) per the new plan’s Phase A1 and stored guidance in How-To Map.
