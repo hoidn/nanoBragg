@@ -12,7 +12,7 @@
   - Legacy Phases A–D are complete (fixtures, spec confirmation, implementation guard, trace instrumentation).
   - Phase E ledger propagation finished this loop (E2/E3 ✅); spec-first stance and dependency gates now live in `docs/fix_plan.md` and the vectorization plans.
   - Phase F design packet archived at `reports/2025-11-source-weights/phase_f/20251009T203823Z/`; Phase G implementation/evidence is the active gate before downstream profiling can resume.
-  - Current blockers: `tests/test_cli_scaling.py::TestSourceWeights*` still assert C-style sum(weight) normalisation, keeping parity metrics <0.8 and blocking VECTOR-* initiatives until Phase G realigns the suite.
+  - Current blockers: Phase G2/G3 evidence bundle still outstanding — the existing `phase_g/20251009T210204Z/pytest_run.log` lacks CLI metrics and command ledger, so dependent plans remain blocked until a fresh spec-compliance run is archived and logged in fix_plan.
 
 ### Legacy Evidence (Phases A–D) — Locked
 Goal: Preserve provenance of the already-completed investigation.
@@ -51,9 +51,9 @@ Exit Criteria: Tests enforce spec behaviour, targeted pytest run + CLI bundle ar
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| G1 | Update test suite | [ ] | Modify `tests/test_cli_scaling.py` per design packet: rename parity test to spec compliance, compare PyTorch weighted vs unweighted runs, ensure warnings use `pytest.warns`. Include C-run optional metrics, but mark as expected mismatch referencing decision memo. |
-| G2 | Capture evidence bundle | [ ] | Execute `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` and rerun the TC-D1/TC-D3 CLI commands capturing outputs under `reports/2025-11-source-weights/phase_g/<STAMP>/`. Store `metrics.json`, `correlation.txt`, and note expected C mismatch. |
-| G3 | Update fix_plan attempts | [ ] | Record Attempt summarising new tests, selectors, metrics, and location of artifacts. Note that correlation vs C <0.8 is expected per spec decision. |
+| G1 | Update test suite | [X] | ✅ Landed in HEAD — `tests/test_cli_scaling.py` now enforces spec-first behaviour (weighted vs equal check, CLI lambda override, C-divergence xfail). Retain the Phase F design packet for provenance. |
+| G2 | Capture evidence bundle | [ ] | Re-run the mapped pytest selector and TC-D1/TC-D3 CLI bundle, archiving a fresh timestamped folder `reports/2025-11-source-weights/phase_g/<STAMP>/` with `commands.txt`, `collect.log`, `pytest.log`, `tc_d1_cmd.txt`, `tc_d3_cmd.txt`, `py_metrics.json`, `c_metrics.json`, `correlation.txt`, and `notes.md` documenting expected C divergence. |
+| G3 | Update fix_plan attempts | [ ] | After G2 artifacts exist, add a `[SOURCE-WEIGHT-001]` Attempt noting pytest results, CLI metrics, artifact paths, and that C correlation <0.8 is expected per decision memo before advancing to Phase H. |
 
 ### Phase H — Documentation & Downstream Unblocks (Blocked until Phase G)
 Goal: Sync architecture docs, runtime checklist, and dependent plans once tests pass and evidence is archived.

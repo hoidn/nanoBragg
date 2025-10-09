@@ -3773,7 +3773,7 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * Profiling relaunch (Phase C1): `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`
 - First Divergence (if known): Workflows for post-Phase-H vectorization maintenance stalled because SOURCE-WEIGHT-001 Phase E parity evidence never landed; profiler traces therefore remained low-correlation (≈0.72) and VECTOR-GAPS-002 Phase B1 stayed blocked. No consolidated roadmap existed to sequence blocker clearance, regression refresh, gap profiling, and new vectorization fixes.
 - Next Actions (2025-12-24 refresh, spec-first gate):
-  1. Complete `[SOURCE-WEIGHT-001]` Phase G (test realignment + evidence capture) per `plans/active/source-weight-normalization.md`. Replace the legacy C-parity assertions with spec-compliance checks, run the mapped pytest selector, rerun the TC-D1/TC-D3 CLI bundle, and archive artifacts under `reports/2025-11-source-weights/phase_g/<STAMP>/` (label C divergence as expected per `C-PARITY-001`). Record the Attempt in the `[SOURCE-WEIGHT-001]` ledger once artifacts are in place.
+  1. Finish `[SOURCE-WEIGHT-001]` Phase G evidence work per `plans/active/source-weight-normalization.md`: with spec-first tests already landed, capture a fresh timestamped bundle (`reports/2025-11-source-weights/phase_g/<STAMP>/`) containing the mapped pytest log plus TC-D1/TC-D3 CLI commands and metrics, then log the Attempt in `[SOURCE-WEIGHT-001]` noting expected C divergence (`C-PARITY-001`).
   2. After Phase G Attempt is logged, mark `plans/active/vectorization-gap-audit.md` Phase B1 READY, update this entry + galph_memory with the unblock timestamp, and refresh `[VECTOR-GAPS-002]` Next Actions to cite the new spec-based tests instead of the retired correlation threshold.
   3. Execute Phase B regression refresh commands (`pytest tests/test_tricubic_vectorized.py -v`, `pytest tests/test_at_abs_001.py -v -k "cpu or cuda"`, and the paired microbenchmarks) and store outputs under `reports/2026-01-vectorization-refresh/phase_b/<STAMP>/` for comparison against the 2025-10 baselines.
   4. Resume VECTOR-GAPS-002 Phase B via plan Phase C once refresh evidence is green (profiler capture, hotspot mapping, backlog publication). Coordinate with `[PERF-PYTORCH-004]` when profiling restarts.
@@ -4048,10 +4048,13 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   - Phase E2 ✅ Ledger + dependency propagation complete.
   - Phase F1–F3 ✅ Design packet archived at `reports/2025-11-source-weights/phase_f/20251009T203823Z/`.
   - Phase G1 ✅ Test suite updated per design packet (7 passed, 1 xfail).
-  - Phase G2 ✅ Evidence bundle captured at `reports/2025-11-source-weights/phase_g/20251009T210204Z/pytest_run.log`.
-  1. Phase H1 — Update `docs/architecture/pytorch_design.md` (Sources subsection) and `docs/development/pytorch_runtime_checklist.md` to state weights are ignored and cite C divergence.
-  2. Phase H2 — Notify dependent initiatives (`plans/active/vectorization-gap-audit.md`, `plans/active/vectorization.md`) to reference new spec-compliance tests.
-  3. Phase H3 — Prepare archival summary for `plans/archive/` and mark SOURCE-WEIGHT-001 status as `done`.
+  - Phase G2 ☐ Outstanding — existing `phase_g/20251009T210204Z/pytest_run.log` lacks CLI metrics/commands, so capture a fresh bundle per plan guidance.
+  - Phase G3 ☐ Outstanding — fix_plan Attempt pending once the new evidence bundle is archived.
+  1. Phase G2 — Produce a new timestamped folder under `reports/2025-11-source-weights/phase_g/` containing `collect.log`, `pytest.log`, CLI command files, metrics JSON, correlation.txt, and notes documenting expected C divergence (`C-PARITY-001`).
+  2. Phase G3 — Record the Attempt in `[SOURCE-WEIGHT-001]` with pytest results, CLI metrics, artifact paths, and reiterate that C correlation <0.8 is expected.
+  3. Phase H1 — Update `docs/architecture/pytorch_design.md` (Sources subsection) and `docs/development/pytorch_runtime_checklist.md` to state weights are ignored and cite C divergence once Phase G completes.
+  4. Phase H2 — Notify dependent initiatives (`plans/active/vectorization-gap-audit.md`, `plans/active/vectorization.md`) to reference new spec-compliance tests.
+  5. Phase H3 — Prepare archival summary for `plans/archive/` and mark SOURCE-WEIGHT-001 status as `done`.
 - Attempts History:
   * [2025-10-09] Attempt #26 (ralph loop #253 — Mode: Docs, Phase F1–F3 test redesign packet). Result: **SUCCESS** (Design packet complete; ready for Phase G implementation).
     Metrics: `pytest --collect-only -q tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` (9 tests collected). No code changes.

@@ -1643,3 +1643,8 @@
 - Updated `docs/fix_plan.md` `[VECTOR-TRICUBIC-002]` Next Actions to reference Phase G spec-compliance evidence instead of the obsolete C-correlation thresholds; notes now point at `reports/2025-11-source-weights/phase_g/<STAMP>/` and refresh instructions for `[VECTOR-GAPS-002]` when Phase G attempt lands.
 - Reissued `input.md` (Mode: Docs+Parity) guiding Ralph through Phase G1–G2 test rewrites and artifact capture, including collect.log/notes.md expectations and explicit reminder that C divergence is expected (C-PARITY-001).
 - Follow-up: Ralph should execute Phase G test updates per the design packet, archive the evidence bundle, and log the Attempt so we can unblock VECTOR and PERF plans next loop.
+### 2025-12-24 (galph loop - SOURCE-WEIGHT Phase G evidence refresh)
+- Verified `tests/test_cli_scaling.py` already reflects spec-first behaviour; marked Phase G1 ✅ in `plans/active/source-weight-normalization.md` and clarified that G2/G3 remain open until a new evidence bundle lands.
+- Updated `docs/fix_plan.md` Next Actions so Phase G2 now calls for a fresh timestamped pytest+CLI bundle and Phase G3 records the Attempt before Phase H documentation begins.
+- Replaced `input.md` with Docs+Parity guidance focused on capturing the new artifacts (`reports/2025-11-source-weights/phase_g/<STAMP>/...`) and logging the Attempt.
+- Follow-up for Ralph: execute the evidence run, populate metrics/notes, update `[SOURCE-WEIGHT-001]` Attempts, then Phase H1 doc updates can proceed next loop.
