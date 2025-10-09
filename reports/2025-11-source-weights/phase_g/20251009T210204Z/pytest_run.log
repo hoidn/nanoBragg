@@ -1,0 +1,18 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 8 items
+
+tests/test_cli_scaling.py::TestSourceWeights::test_source_weights_ignored_per_spec PASSED [ 12%]
+tests/test_cli_scaling.py::TestSourceWeights::test_cli_lambda_overrides_sourcefile PASSED [ 25%]
+tests/test_cli_scaling.py::TestSourceWeights::test_uniform_weights_ignored PASSED [ 37%]
+tests/test_cli_scaling.py::TestSourceWeights::test_edge_case_zero_sum_accepted PASSED [ 50%]
+tests/test_cli_scaling.py::TestSourceWeights::test_edge_case_negative_weights_accepted PASSED [ 62%]
+tests/test_cli_scaling.py::TestSourceWeights::test_single_source_fallback PASSED [ 75%]
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference SKIPPED [ 87%]
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_divergence_warning PASSED [100%]
+
+======================== 7 passed, 1 skipped in 16.64s =========================
