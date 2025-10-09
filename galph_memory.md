@@ -1542,3 +1542,9 @@
 - Refreshed `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions so they now direct the `sourcefile` gate fix, rerun of `TestSourceWeightsDivergence`, and documentation/notification once fresh parity metrics meet corr ≥0.999 and |sum_ratio−1| ≤1e-3.
 - Replaced `input.md` (Mode: Parity) with guidance to patch the guard, rerun the mapped pytest selector under NB_RUN_PARALLEL + NB_C_BIN, capture a new `reports/2025-11-source-weights/phase_e/<STAMP>/` bundle, and update the plan/ledger on success.
 - Follow-up for Ralph: implement the guard fix, regenerate parity evidence that meets the thresholds, archive the artifacts, and log the attempt so VECTOR-GAPS-002 profiling can unblock once the metrics land.
+### 2025-12-24 (galph loop - Source-weight normalization evidence reset)
+- Ran local CLI reproduction of TC-D1 configuration; confirmed runtime prints `Loaded 2 sources` and no divergence auto-generation occurs, so the guard fix is already active.
+- Updated `docs/fix_plan.md` Next Actions (lines 4026-4029) to focus Phase E2/E3 on capturing fresh PyTorch-only diagnostics plus synchronized PyTorch+C parity bundles, then a pixel-trace investigation for the normalization gap.
+- Refreshed `plans/active/source-weight-normalization.md` status snapshot and Phase E rows to document the guard success and reframe blockers around normalization evidence instead of divergence auto-generation.
+- Issued new `input.md` directing Ralph to capture a timestamped TC-D1 PyTorch run (stdout, `.bin`) and simulator diagnostics (`n_sources`, `steps`, `fluence`) under `reports/2025-11-source-weights/phase_e/<STAMP>/` before attempting C parity reruns.
+- Follow-up for Ralph: execute the PyTorch command + diagnostics, archive artifacts in the new report folder, and log the attempt in docs/fix_plan.md so we can proceed to the TC-D1/TC-D3 parity reruns next loop.
