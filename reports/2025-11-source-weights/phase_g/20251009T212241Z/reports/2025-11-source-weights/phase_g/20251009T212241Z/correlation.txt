@@ -1,0 +1,9 @@
+corr=n/a (C binary not available)
+
+PyTorch vs C correlation could not be computed because C binary was not found.
+Checked locations:
+- ./golden_suite_generator/nanoBragg
+- ./nanoBragg
+
+This is expected in environments where the C reference has not been compiled.
+PyTorch spec-compliance is validated by the test suite (see pytest.log).

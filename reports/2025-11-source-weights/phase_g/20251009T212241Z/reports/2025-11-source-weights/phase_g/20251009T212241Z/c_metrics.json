@@ -1,0 +1,8 @@
+{
+  "note": "C binary not available for this run",
+  "nb_c_bin_checked": [
+    "./golden_suite_generator/nanoBragg",
+    "./nanoBragg"
+  ],
+  "skip_reason": "binary_not_found"
+}

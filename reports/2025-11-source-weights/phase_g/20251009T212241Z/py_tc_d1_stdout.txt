@@ -1,0 +1,2 @@
+Error: Need -hkl file, Fdump.bin, or -default_F > 0
+Usage: nanoBragg -hkl <file> -mat <file> [options...]

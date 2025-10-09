@@ -1,0 +1,1 @@
+-cell 100 100 100 90 90 90 -sourcefile reports/2025-11-source-weights/phase_g/20251009T212241Z/fixtures/two_sources.txt -distance 100 -lambda 1.0 -pixel 0.1 -detpixels 256 -oversample 1 -nonoise -nointerpolate -default_F 300 -N 5 -phisteps 1 -mosaic_dom 1 -floatfile reports/2025-11-source-weights/phase_g/20251009T212241Z/py_tc_d1.bin
