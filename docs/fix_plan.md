@@ -469,8 +469,9 @@
   - ✅ **Phase M6 (SKIPPED 20251009T014553Z)** — Decision recorded in Attempt #198: Skip optional C-parity shim; proceed to Phase N with spec-compliant Option 1. See `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T014553Z/analysis.md`.
   - ✅ **Phase N1 (COMPLETE)** — ROI float images generated (Attempt #199); artifacts stored in `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z/`.
   - ✅ **Phase N2 (COMPLETE)** — nb-compare executed (Attempt #200); correlation 0.9852 meets threshold ≥0.98; sum_ratio 115,922 documents expected C-PARITY-001 divergence per Option 1 decision. See `analysis.md` in results directory.
-  - 🔜 **Phase N3 (next turn)** — Finalise Option 1 acceptance: update `docs/fix_plan.md` Attempts (VG-3/VG-4) with the 20251009T020401Z metrics, note the documented C-PARITY-001 divergence, and sync `plans/active/cli-noise-pix0/plan.md` (mark N3 [D]) before queuing the Phase O supervisor rerun.
+  - ✅ **Phase N3 (COMPLETE)** — Attempt #201 finalized Option 1 acceptance: updated `docs/fix_plan.md` Attempts History (VG-3/VG-4) with 20251009T020401Z metrics (correlation 0.9852, sum_ratio 1.159e5), documented C-PARITY-001 divergence, and synced `plans/active/cli-noise-pix0/plan.md` (marked N3 [D]). Ready for Phase O supervisor command rerun.
 
+  - 🔜 **Phase O (next)** — Execute supervisor command rerun (O1), record final metrics in fix_plan (O2), and archive artifacts (O3) to close CLI-FLAGS-003 initiative.
 - Attempts History:
   * [2025-10-08] Attempt #190 (ralph loop i=190, Mode: Parity/Docs) — Result: ⚠️ **M4d EVIDENCE CAPTURED / DIVERGENCE PERSISTS.** **Documentation-only loop.**
     Metrics: First divergence: I_before_scaling (C=943654.81, PyTorch=805473.79, delta=-14.6% - UNCHANGED from Phase M1 baseline); all downstream scaling factors pass ≤1e-6 tolerance; trace generation: 114 TRACE_PY lines captured successfully.
@@ -4405,4 +4406,21 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
         1. **Accept Phase N2 as complete** with documented C-PARITY-001 caveat (recommended per Option 1), or
         2. **Pivot to Phase M6** optional shim for pixel-perfect C parity (not recommended — violates spec)
       - **Plan update:** Mark Phase N2 as [D] in `plans/active/cli-noise-pix0/plan.md` and prepare Phase O supervisor command rerun if Option 1 closure confirmed
+  * [2025-10-09] Attempt #201 (ralph loop, Mode: Docs) — Result: ✅ **Phase N3 COMPLETE — Ledger update documenting Option 1 acceptance.** **Documentation-only loop.**
+    Metrics: Test collection: verified clean (`pytest --collect-only -q`); nb-compare results from 20251009T020401Z bundle: correlation 0.9852 (≥0.98 ✅), sum_ratio 1.159e5 (C-PARITY-001 expected divergence).
+    Artifacts:
+      - `plans/active/cli-noise-pix0/plan.md` — Phase N3 row marked [D]; Status Snapshot updated with Phase N3 completion note referencing Attempt #201
+      - `docs/fix_plan.md` — Attempt #201 entry added documenting VG-3/VG-4 closure with 20251009T020401Z metrics and C-PARITY-001 attribution
+      - `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z/results/analysis.md` — Comprehensive Phase N2 analysis documenting Option 1 decision context
+    Changes: None (documentation-only per input.md guidance)
+    Observations/Hypotheses:
+      - **Option 1 acceptance:** Phase N2 correlation (0.9852) meets evidence threshold (≥0.98); sum_ratio divergence (1.159e5) is **expected and documented** per C-PARITY-001 defect dossier (`docs/bugs/verified_c_bugs.md:166-204`)
+      - **Spec-compliant implementation validated:** PyTorch correctly implements `specs/spec-a-core.md:237` fresh φ rotation requirement; divergence from C trace is due to C bug, not PyTorch error
+      - **Phase N exit criteria met:** Correlation threshold passed, sum_ratio divergence attributed to documented C bug, peak alignment perfect (0.00 px), artifacts archived, and ledger updated
+      - **Ready for Phase O:** All Phase N prerequisites complete; supervisor command rerun can proceed with documented expectations for C-PARITY-001 divergence
+    Next Actions:
+      - **Phase O1:** Execute supervisor command rerun via authoritative harness (CPU mandatory, CUDA optional) and store outputs under `reports/2025-10-cli-flags/phase_l/supervisor_command/<timestamp>/`
+      - **Phase O2:** Record final Attempt in fix_plan with correlation/sum_ratio/peak metrics and refresh plan Status Snapshot
+      - **Phase O3:** Archive stabilized artifacts to `reports/archive/cli-flags-003/` and mark plan ready for archival
+      - **Input.md update:** Supervisor should provide Phase O guidance in next handoff
 - Risks/Assumptions: Option 1 (spec-compliant) implementation produces expected C-PARITY-001 divergence; sum_ratio gate failure is documented and not a PyTorch defect.

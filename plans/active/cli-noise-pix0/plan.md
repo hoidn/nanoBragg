@@ -29,9 +29,9 @@
   - ✅ Trace tooling + instrumentation audits (Phase M0) ensure debug caches gated by trace flag and remain device/dtype neutral (`reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T070513Z/`).
   - ℹ️ Spec-mode scaling delta now documented under Option 1: `reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/20251009T013046Z/metrics.json` records the expected −14.6% `I_before_scaling` gap vs C-PARITY-001; downstream factors stay ≤1e-6 and `lattice_hypotheses.md` (H4/H5) closed.
   - 🧪 Phase M2 divergence analysis complete (Attempt #186) — `analysis_20251008T212459Z.md` and `lattice_hypotheses.md` isolate the F_latt sign flip (PyTorch +1.379 vs C −2.383) and elevate Hypothesis H4 (φ rotation mismatch) to HIGH confidence.
-  - 🚩 Supervisor command rerun (Phase O) still pending; ledger updates required after Phase N3 before closing the initiative.
   - ✅ Phase N1 float images captured — Attempt #199 (2025-10-09) generated C/PyTorch ROI bins under `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z/` with commands/env/tests metadata.
   - ✅ Phase N2 nb-compare executed — Attempt #200 (2025-10-09) captured correlation **0.9852** (≥0.98 evidence threshold) with sum_ratio **1.159×10^5** attributed to the documented C-PARITY-001 bug; see `results/analysis.md` and `summary.json` under the same timestamp.
+  - ✅ Phase N3 ledger update complete — Attempt #201 (2025-10-09) documented Option 1 acceptance with 20251009T020401Z metrics in `docs/fix_plan.md` Attempts; plan status refreshed. Ready for Phase O supervisor command rerun.
 
 ---
 
@@ -81,7 +81,7 @@ Exit Criteria: `nb-compare` bundle archived with correlation ≥0.98, sum_ratio 
 | --- | --- | --- | --- |
 | N1 | Regenerate C & PyTorch ROI outputs | [D] | ✅ Attempt #199 (2025-10-09). Float images, CLI logs, metadata, and pytest baseline stored in `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z/inputs/` (see `commands.txt`, `env.txt`, `sha256.txt`). |
 | N2 | Execute nb-compare | [D] | ✅ Attempt #200 (2025-10-09). Artifacts: `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z/results/{analysis.md,summary.json,diff.png}` with correlation 0.9852 (≥0.98) and sum_ratio 1.159×10^5 flagged as C-PARITY-001 expected divergence. |
-| N3 | Log results | [ ] | Summarise metrics in `reports/.../nb_compare/<timestamp>/analysis.md`, then update `docs/fix_plan.md` Attempts (VG-3/VG-4) and this plan’s Status Snapshot to document Option 1 acceptance before moving to Phase O. |
+| N3 | Log results | [D] | ✅ Attempt #201 (2025-10-09). Updated `docs/fix_plan.md` Attempts History (VG-3/VG-4) with 20251009T020401Z nb-compare metrics (correlation 0.9852, sum_ratio 1.159e5) and C-PARITY-001 divergence documentation. Plan Status Snapshot refreshed. Ready for Phase O supervisor command rerun. |
 
 ### Phase O — Supervisor Command Closure (VG‑5)
 Goal: Final verification that the full CLI command (spec-mode) runs cleanly and meets acceptance thresholds.
