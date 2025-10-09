@@ -1,70 +1,43 @@
-Summary: Implement the weighted-source normalization fix and prove parity vs nanoBragg C so downstream profiling can resume.
+Summary: Fix weighted source normalization so PyTorch matches C when source weights differ.
 Mode: Parity
-Focus: [SOURCE-WEIGHT-001] Correct weighted source normalization
+Focus: SOURCE-WEIGHT-001 – Correct weighted source normalization
 Branch: feature/spec-based-2
-Mapped tests: KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeights -v; KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeights::test_weighted_source_matches_c -v
-Artifacts: reports/2025-11-source-weights/phase_c/<STAMP>/implementation_notes.md
-Artifacts: reports/2025-11-source-weights/phase_c/<STAMP>/commands.txt
-Artifacts: reports/2025-11-source-weights/phase_c/<STAMP>/pytest_cpu.log
-Artifacts: reports/2025-11-source-weights/phase_c/<STAMP>/pytest_cuda.log
-Artifacts: reports/2025-11-source-weights/phase_d/<STAMP>/summary.md
-Artifacts: reports/2025-11-source-weights/phase_d/<STAMP>/compare_scaling_traces.log
-Do Now: SOURCE-WEIGHT-001 Phase C — KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeights -v (after implementing the normalization update and new regression cases).
-If Blocked: Capture partial implementation notes + failing logs under the current STAMP, add a blocking section to summary.md, and record the status in docs/fix_plan.md Attempt history before stopping.
+Mapped tests:
+- tests/test_cli_scaling.py::TestSourceWeights::test_weighted_source_matches_c
+- tests/test_cli_scaling.py::TestSourceWeights::test_uniform_weights_backward_compatible
+- tests/test_cli_scaling.py::TestSourceWeights::test_edge_case_zero_sum_raises_error
+- tests/test_cli_scaling.py::TestSourceWeights::test_edge_case_negative_weights_raises_error
+- tests/test_cli_scaling.py::TestSourceWeights::test_single_source_fallback
+Artifacts: reports/2025-11-source-weights/phase_c/<STAMP>/{implementation_notes.md,commands.txt,env.json,pytest.log}, reports/2025-11-source-weights/phase_d/<STAMP>/{pytest.log,metrics.json,env.json}
+Do Now: SOURCE-WEIGHT-001 – Correct weighted source normalization; NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeights -v
+If Blocked: Capture the failing command output plus `git diff` under reports/2025-11-source-weights/phase_c/<STAMP>/attempts/ and stop—do not workaround by editing tests.
 Priorities & Rationale:
-- plans/active/source-weight-normalization.md:5 — Status snapshot shows Phase C (C1–C3) is the remaining gate before profiling restarts.
-- docs/fix_plan.md:3963 — New First Divergence text documents the 328× mismatch; normalization fix is required before any perf/vectorization work continues.
-- plans/active/source-weight-normalization.md:33 — C1–C3 define the exact implementation + regression scope.
-- docs/development/c_to_pytorch_config_map.md:18 — Beam/source mapping requires fluence/flux parity; updates must respect config expectations.
-- specs/spec-a-core.md:142 — Source weighting rules justify the divisor change; reference when updating docstrings.
-- reports/2025-11-source-weights/phase_b/20251009T072937Z/strategy.md — Documented decision to divide by sum(weights) with edge-case handling.
+- plans/active/source-weight-normalization.md:35 — Phase C tasks demand a tensor-based normalization update plus regression coverage.
+- docs/fix_plan.md:3965 — Next Actions call for completing C1–C3 with artifacts before dependent perf/vectorization work resumes.
+- specs/spec-a-core.md:630 — AT-SRC-001 requires parity for weighted sourcefiles (Σwᵢ scaling).
+- docs/development/c_to_pytorch_config_map.md:33 — Beam parameter mappings enforce weight semantics shared with the C CLI.
+- tests/test_cli_scaling.py:252 — TC-A through TC-D scaffolding already expects the corrected normalization.
 How-To Map:
-- export STAMP=$(date -u +%Y%m%dT%H%M%SZ); base=reports/2025-11-source-weights/phase_c/$STAMP; mkdir -p "$base"; printf "%s\n%s\n" "$(date -Is) phase_c_start" "$base" >> "$base"/commands.txt
-- python - <<'PY'
-import json, os, pathlib, platform, torch
-base = pathlib.Path("$base")
-(base/"env.json").write_text(json.dumps({
-    "python": platform.python_version(),
-    "torch": torch.__version__,
-    "cuda_available": torch.cuda.is_available(),
-    "git_head": os.popen('git rev-parse HEAD').read().strip(),
-    "nb_c_bin": os.environ.get('NB_C_BIN', './golden_suite_generator/nanoBragg')
-}, indent=2))
-PY
-- Implement C1: in src/nanobrag_torch/simulator.py update the final normalization so weighted runs divide by sum(weights) (fallback to n_sources for equal weights). Preserve device/dtype neutrality; avoid `.item()` unless the tensor is non-differentiable (document rationale in code comment if used).
-- Evaluate whether `_accumulate_source_contribution` needs adjustments (C2); note findings in "$base"/implementation_notes.md with file:line anchors.
-- Extend/author regression tests (C3) under tests/test_cli_scaling.py::TestSourceWeights covering unequal weights, uniform weights, and error handling for zero/negative sums. Cite plan test cases TC-A–TC-E.
-- Run targeted tests: KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeights -v | tee "$base"/pytest_cpu.log; repeat with --device cuda when available saving to "$base"/pytest_cuda.log. Log commands in commands.txt with ISO timestamps.
-- Transition to Phase D: dst=reports/2025-11-source-weights/phase_d/$STAMP; mkdir -p "$dst"; printf "%s\n%s\n" "$(date -Is) phase_d_start" "$dst" >> "$dst"/commands.txt
-- python - <<'PY'
-import json, os, pathlib, platform, torch
-dst = pathlib.Path("$dst")
-(dst/"env.json").write_text(json.dumps({
-    "python": platform.python_version(),
-    "torch": torch.__version__,
-    "cuda_available": torch.cuda.is_available(),
-    "git_head": os.popen('git rev-parse HEAD').read().strip(),
-    "nb_c_bin": os.environ.get('NB_C_BIN', './golden_suite_generator/nanoBragg')
-}, indent=2))
-PY
-- scripts/validation/compare_scaling_traces.py --sourcefile reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt | tee "$dst"/compare_scaling_traces.log; append command + timestamp to commands.txt
-- Summarize parity metrics (correlation, sum_ratio, peak delta) in "$dst"/summary.md, explicitly calling out CPU/CUDA results and any residual gaps.
-- Update plans/active/source-weight-normalization.md Phase C rows to [D] with artifact paths, then add Attempt #3 to docs/fix_plan.md including key metrics and dependency unblocks.
+- Keep `source_norm` as a tensor on the active device/dtype: introduce a tensor sum path without `.item()` and thread it through the scaling branch (update commentary quoting nanoBragg.c lines 2480-2595 as required by CLAUDE Rule 11).
+- Revisit `_accumulate_source_contribution` only if normalization changes create double-scaling; document findings in implementation_notes.md.
+- After code edits, run `pytest --collect-only -q` once, then execute `NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeights -v` (CPU). If CUDA is available, re-run with `--device cuda` via `pytest -k "TestSourceWeights and cuda"` and log outcomes.
+- Write commands, env snapshot (`python -c "import json,platform,sys,torch; print(json.dumps({'python': sys.version, 'torch': torch.__version__, 'platform': platform.platform()}))"`), and metrics to the phase_c and phase_d artifact bundles (include correlation/sum_ratio numbers from TC-A failures/passes).
+- Update `plans/active/source-weight-normalization.md` Phase C rows and docs/fix_plan.md Attempt history when the tests pass; reference the new artifact stamp.
 Pitfalls To Avoid:
-- Do not regress uniform-weight behavior; keep legacy cases identical (unit tests should enforce this).
-- Maintain differentiability—no `.item()` on tensors that could ever require grad, and keep operations vectorized.
-- Respect device/dtype neutrality; ensure new tensors live on the simulator’s device and match dtype.
-- Include the nanoBragg.c snippet in any new helper docstring per CLAUDE Rule #11 before writing implementation code.
-- Keep commands.txt chronological with ISO timestamps and exact command lines.
-- When CUDA unavailable, note it explicitly in summary.md and skip only those validations, not the CPU set.
-- Avoid introducing ad-hoc scripts; use existing fixtures and validation tools.
-- Preserve Protected Assets (docs/index.md references) when creating or modifying files.
-- Capture environment metadata (python/torch/cuda/git/NB_C_BIN) in env.json for each phase directory.
-- After edits, rerun pytest on the targeted selectors before touching other suites; full test suite waits until final verification.
+- Do not call `.item()` or `.detach()` on tensors that might need gradients later.
+- Keep tensors on caller-provided device/dtype; never instantiate CPU-only scalars mid-run.
+- Respect Protected Assets (no edits to docs/index.md-listed files beyond plan updates already staged).
+- Leave CLI fixtures/tests intact; do not hack tolerances to mask scaling bugs.
+- Ensure NB_C_BIN resolves before running TC-A; abort if the C binary is missing instead of substituting data.
+- Re-run weighted-source parity only after reinstalling in editable mode if dependencies changed; avoid ad-hoc PYTHONPATH hacks.
+- Capture stderr/stdout for both C and PyTorch invocations if TC-A fails; store under the same report stamp.
+- Keep git worktree clean: stage only intentional changes (simulator.py, config.py if touched, tests, docs) and document in Attempts History.
+- Follow docs/development/testing_strategy.md: targeted tests first, full suite only if needed after code changes.
+- Preserve differentiability in any helper adjustments—no scalar branching that breaks vectorization.
 Pointers:
-- plans/active/source-weight-normalization.md:1
-- docs/fix_plan.md:3953
-- reports/2025-11-source-weights/phase_b/20251009T072937Z/normalization_flow.md
-- specs/spec-a-core.md:142
-- docs/architecture/pytorch_design.md:58
-Next Up: Once parity and validation artifacts land, supervise Phase D documentation + notify VECTOR-GAPS-002 to resume profiling.
+- plans/active/source-weight-normalization.md:1 — Context and Phase breakdown for this initiative.
+- docs/fix_plan.md:3953 — Ledger entry tracking SOURCE-WEIGHT-001 expectations.
+- specs/spec-a-core.md:630 — Acceptance test AT-SRC-001 framing for source weighting.
+- tests/test_cli_scaling.py:252 — Existing parity tests awaiting the fix.
+- reports/2025-11-source-weights/phase_b/20251009T072937Z/strategy.md — Historical rationale for dividing by Σwᵢ (note our tensor-based update).
+Next Up: 1) When normalization passes, re-run `scripts/validation/compare_scaling_traces.py` for the weighted fixture to refresh Phase D. 2) With SOURCE-WEIGHT-001 closed, resume VECTOR-GAPS-002 Phase B profiler capture.

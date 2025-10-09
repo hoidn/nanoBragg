@@ -34,7 +34,7 @@ Exit Criteria: Code updated, tests written, artifacts captured.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Update step normalization | [ ] | Modify `Simulator.run` to divide by `source_weights.sum()` (fallback to `n_sources` when equal weights). Ensure device/dtype neutrality. |
+| C1 | Update step normalization | [ ] | Modify `Simulator.run` to divide by `source_weights.sum()` (fallback to `n_sources` when equal weights). Keep the normalization factor as a tensor on the active device/dtype (no `.item()` detours) so gradients remain available if weights become differentiable later. |
 | C2 | Adjust weighted blending | [ ] | Revisit `Simulator._accumulate_source_contribution` (if needed) so weights are consistently applied without double scaling. |
 | C3 | Add regression tests | [ ] | Extend `tests/test_cli_scaling.py` (or new test file) to cover unequal source weights; assert PyTorch matches C within tolerance. |
 

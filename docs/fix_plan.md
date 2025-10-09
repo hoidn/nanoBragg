@@ -3962,7 +3962,7 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
 - First Divergence (if known): Weighted source runs show PyTorch final intensities ~328× larger than the C reference, indicating the normalization divisor (`n_sources`) and downstream scaling no longer match the C semantics (which effectively ignore source weights).
 - Next Actions (2025-12-22):
-  1. Execute Phase C1–C3 from `plans/active/source-weight-normalization.md`: implement the normalization update in `src/nanobrag_torch/simulator.py`, adjust accumulation if needed, and land regression tests; capture artifacts under `reports/2025-11-source-weights/phase_c/<STAMP>/`.
+  1. Execute Phase C1–C3 from `plans/active/source-weight-normalization.md`: implement the tensor-based normalization update in `src/nanobrag_torch/simulator.py` (divide by `source_weights.sum()` without `.item()`), adjust accumulation if needed, and land regression tests; capture artifacts under `reports/2025-11-source-weights/phase_c/<STAMP>/`.
   2. Run Phase D validation immediately after implementation (TC-A through TC-E parity/compatibility checks plus scaling-trace refresh), storing logs in `phase_d/<STAMP>/` and verifying CPU+CUDA when available.
   3. Log Attempt #3 with implementation/validation artifacts and notify `[VECTOR-GAPS-002]` and `[PERF-PYTORCH-004]` that profiling may resume once parity metrics meet plan tolerances.
 - Attempts History:
