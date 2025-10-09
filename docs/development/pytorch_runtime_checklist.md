@@ -7,6 +7,7 @@ Use this quick checklist before and after every PyTorch simulator edit. It disti
    - Do not reintroduce Python loops that duplicate work already handled by batched tensor code.
    - When adding a new flow (sources, phi, mosaic, oversample), extend the existing broadcast shapes instead of looping.
    - Verify `_compute_physics_for_position` receives tensors with the expected batch dimensions.
+   - **Tricubic & Absorption Evidence:** Phases C-F validated batched gather/polynomial interpolation and detector absorption with 0% performance regression on CPU (`reports/2025-10-vectorization/phase_e/`, `phase_f/`). Regression commands: `pytest tests/test_tricubic_vectorized.py -v` (19 tests) and `pytest tests/test_at_abs_001.py -v -k cpu` (8 tests). CUDA reruns resume after device-placement fix (PERF-PYTORCH-004).
 
 2. **Device & Dtype Neutrality**
    - **Default dtype is float32** for performance and memory efficiency. Precision-critical operations (gradient checks, metric duality) explicitly override to float64 where required.

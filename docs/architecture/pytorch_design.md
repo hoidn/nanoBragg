@@ -1,5 +1,95 @@
 # nanoBragg PyTorch Architecture Design (Addendum)
 
+## 1.1 Tricubic Interpolation & Detector Absorption Vectorization
+
+The core simulator physics loops have been fully vectorized to eliminate Python-level iteration and enable efficient GPU acceleration. This section documents the batched tensor flows for two critical computational paths: structure factor interpolation and detector absorption.
+
+### 1.1.1 Tricubic Interpolation Pipeline
+
+**Objective:** Sample structure factors at arbitrary fractional Miller indices using 4×4×4 neighborhood interpolation without Python loops.
+
+**Implementation:** `src/nanobrag_torch/models/crystal.py` (`_tricubic_interpolation`, commit 12742e5) and `src/nanobrag_torch/utils/physics.py` (`polint_vectorized`, `polin2_vectorized`, `polin3_vectorized`, commit f796861).
+
+**C-Code Reference:** `nanoBragg.c` lines 2604-3278 (polin3/polin2/polint implementations).
+
+**Tensor Flow:**
+
+1. **Batched Neighborhood Gather** (Phase C)
+   - Input: Fractional Miller indices `(h, k, l)` with shape `(B,)` where `B = sources × phi_steps × mosaic_domains × oversample²`
+   - Compute 64 neighbor indices: `(h0-1:h0+2, k0-1:k0+2, l0-1:l0+2)` via broadcasting
+   - Output: `neighbor_F` tensor with shape `(B, 4, 4, 4)` containing structure factors for all 64 neighbors
+   - Out-of-bounds handling: Single-pass bounds check; fallback to `default_F` for invalid queries
+
+2. **Batched Polynomial Evaluation** (Phase D)
+   - 1D interpolation (`polint_vectorized`): Processes `(B, 4)` → `(B,)` via vectorized Neville's algorithm
+   - 2D interpolation (`polin2_vectorized`): Chains four 1D passes then aggregates
+   - 3D interpolation (`polin3_vectorized`): Chains sixteen 1D passes, then four 2D passes, then final 1D
+   - All operations preserve `requires_grad=True` for differentiability
+   - Shape: `(B, 4, 4, 4)` → `(B,)` structure factors via pure tensor arithmetic
+
+**Evidence:**
+- **Correctness:** `tests/test_tricubic_vectorized.py` (19 tests, CPU + CUDA parametrization)
+- **Performance:** Phase E microbenchmarks show ≤1.2% delta vs baseline (`reports/2025-10-vectorization/phase_e/perf/20251009T034421Z/`)
+- **Parity:** AT-STR-002 acceptance tests pass with correlation >0.999
+
+**CUDA Status:** CPU validation complete. CUDA execution blocked by pre-existing device-placement defect (tracked in `docs/fix_plan.md` Attempt #14; see PERF-PYTORCH-004).
+
+### 1.1.2 Detector Absorption Vectorization
+
+**Objective:** Process detector thickness layers in parallel to compute depth-dependent capture fractions.
+
+**Implementation:** `src/nanobrag_torch/simulator.py` lines 1764-1787 (validated Phase F; already vectorized).
+
+**C-Code Reference:** `nanoBragg.c` lines 2975-2983 (detector absorption loop).
+
+**Tensor Flow:**
+
+1. **Parallax Calculation**
+   - Compute observation direction `obs_dir = pixel_pos / |pixel_pos|` for all pixels
+   - Parallax factor: `ρ = detector_normal · obs_dir` (shape: `(S, F)`)
+   - Broadcast to `(thicksteps, S, F)` for layer-wise computation
+
+2. **Layer Capture Fractions**
+   - Formula: `capture[t] = exp(−t·Δz·μ/ρ) − exp(−(t+1)·Δz·μ/ρ)` where `μ = 1/attenuation_depth`
+   - Single vectorized operation processes all layers simultaneously
+   - Shape: `(thicksteps, S, F)` capture fraction tensor
+
+3. **Integration with Main Loop**
+   - Batched over `(thicksteps, sources, phi_steps, mosaic_domains, oversample², S, F)`
+   - Device/dtype neutral via `.device` property from input tensors
+   - Preserves gradient flow (no `.item()` or detached operations)
+
+**Evidence:**
+- **Correctness:** `tests/test_at_abs_001.py` extended to 16 parametrized tests (8/8 CPU passing; CUDA blocked)
+- **Performance:** Phase F3 CPU benchmarks show 0.0% regression vs baseline (`reports/2025-10-vectorization/phase_f/perf/20251009T050859Z/`)
+- **Physics:** Capture fractions sum to `1 − exp(−thickness·μ/ρ)` within 1e-6 tolerance
+
+**CUDA Status:** CPU validation complete with zero performance regression. CUDA benchmarks deferred pending device-placement fix (see `docs/fix_plan.md` Attempt #14 and Phase F summary for rerun commands).
+
+### 1.1.3 Broadcast Shape Reference
+
+All vectorized paths follow the canonical broadcast pattern from `arch.md` §8:
+
+- **Pixel grid:** `(S, F)` for slow/fast detector dimensions
+- **Subpixel sampling:** `(oversample², S, F)` when `oversample > 1`
+- **Thickness layers:** `(thicksteps, S, F)` for detector absorption
+- **Full batch:** `(sources, phi_steps, mosaic_domains, oversample², thicksteps, S, F)` in the general case
+
+Extensions must preserve these shapes; adding a new sampling dimension requires expanding the broadcast pattern, not introducing Python loops.
+
+### 1.1.4 Follow-Up Work
+
+**CUDA Performance & Validation:** Once the device-placement defect is resolved (PERF-PYTORCH-004):
+1. Rerun `tests/test_tricubic_vectorized.py` on CUDA (expect 19/19 passing)
+2. Rerun `tests/test_at_abs_001.py -k cuda` (expect 8/8 passing)
+3. Execute CUDA benchmarks per `reports/2025-10-vectorization/phase_f/summary.md` Appendix
+4. Append metrics to Phase E/F artifacts and update `docs/fix_plan.md` with CUDA evidence
+
+**References:**
+- **Plans:** `plans/active/vectorization.md` (Phases C-F complete)
+- **Artifacts:** `reports/2025-10-vectorization/` (phase_c through phase_f evidence bundles)
+- **C-Code:** `nanoBragg.c:2604-3278` (tricubic), `nanoBragg.c:2975-2983` (absorption)
+
 ## 1.2 Differentiability vs Performance
 
 Principle: Differentiability is required; over-hardening is not. Prefer the minimal change that passes gradcheck and preserves vectorization.
