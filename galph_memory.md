@@ -1,3 +1,9 @@
+### 2025-12-24 (galph loop - SOURCE-WEIGHT Phase E execution prep)
+- Reviewed plans/active/source-weight-normalization.md Phase E tasks and docs/fix_plan.md:4027-4029; no plan edits needed, but parity evidence still outstanding.
+- Reissued input.md focusing on CLI warning guard implementation, TC-D2 activation, and parity artifact capture (commands/metrics/warning logs) so VECTOR-GAPS-002 Phase B can unblock once evidence lands.
+- Highlighted requirement to rerun Phase D3 command bundle, compute correlation/sum-ratio manually, and update docs/fix_plan + plan with new timestamp after execution.
+- Follow-up for Ralph: implement the guard in __main__.py, switch TC-D2 to pytest.warns, rerun targeted pytest + CLI commands, capture artifacts under reports/2025-11-source-weights/phase_e/<STAMP>/, then record a new Attempt in fix_plan.md and advance plan Phase E rows.
+
 # Galph Memory
 
 ### 2025-12-24 (galph loop - Source-weight Phase D design prep)
