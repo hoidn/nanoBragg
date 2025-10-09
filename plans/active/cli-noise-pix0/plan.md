@@ -32,6 +32,7 @@
   - ✅ Phase N1 float images captured — Attempt #199 (2025-10-09) generated C/PyTorch ROI bins under `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z/` with commands/env/tests metadata.
   - ✅ Phase N2 nb-compare executed — Attempt #200 (2025-10-09) captured correlation **0.9852** (≥0.98 evidence threshold) with sum_ratio **1.159×10^5** attributed to the documented C-PARITY-001 bug; see `results/analysis.md` and `summary.json` under the same timestamp.
   - ✅ Phase N3 ledger update complete — Attempt #201 (2025-10-09) documented Option 1 acceptance with 20251009T020401Z metrics in `docs/fix_plan.md` Attempts; plan status refreshed. Ready for Phase O supervisor command rerun.
+  - 🔜 Phase O rerun should reproduce the Option 1 metrics: correlation ≈0.985 (≥0.98 threshold) with sum_ratio ≈1.16×10^5 attributed to C-PARITY-001 (documented divergence, not a PyTorch defect).
 
 ---
 
@@ -90,9 +91,9 @@ Exit Criteria: Supervisor command rerun recorded with expected correlation/inten
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| O1 | Final supervisor rerun | [ ] | Execute the authoritative command via the harness (CPU mandatory, CUDA optional). Store outputs + logs in `reports/2025-10-cli-flags/phase_l/supervisor_command/<timestamp>/`. |
-| O2 | Ledger update | [ ] | Record Attempt with metrics (correlation, sum_ratio, mean_peak_distance) in `docs/fix_plan.md`, refresh this plan’s Status Snapshot, and note closure in `galph_memory.md`. |
-| O3 | Archive & handoff | [ ] | Move stabilized artifacts to `reports/archive/cli-flags-003/`, mark plan ready for archive, and provide supervisor notes for future maintenance. |
+| O1 | Final supervisor rerun | [ ] | From repo root run `KMP_DUPLICATE_LIB_OK=TRUE NB_C_BIN=./golden_suite_generator/nanoBragg python scripts/nb_compare.py --outdir reports/2025-10-cli-flags/phase_l/supervisor_command/<timestamp>/ --save-diff --resample --threshold 0.98 -- -mat A.mat -hkl scaled.hkl -nonoise -nointerpolate -oversample 1 -exposure 1 -flux 1e18 -beamsize 1.0 -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080 -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -odet_vector -0.000088 0.004914 -0.999988 -sdet_vector -0.005998 -0.999970 -0.004913 -fdet_vector 0.999982 -0.005998 -0.000118 -pix0_vector_mm -216.336293 215.205512 -230.200866 -beam_vector 0.00051387949 0.0 -0.99999986 -Na 36 -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0`; capture stdout/stderr (`nb_compare_stdout.txt`, `c_stdout.txt`, `py_stdout.txt`), `summary.json`, PNG previews, `analysis.md`, `commands.txt`, `env.json`, and `sha256.txt`. CPU run required; optional CUDA rerun may reuse the directory with `-cuda` suffix. |
+| O2 | Ledger update | [ ] | Append a VG-5 Attempt in `docs/fix_plan.md` summarising correlation (expect ≈0.985 pass), sum_ratio (~1.16×10^5 due to C-PARITY-001), and peak distances, citing the new bundle path; update this plan’s Status Snapshot with timestamp + metrics and mark O1/O2 [D]; log the decision in `galph_memory.md`. |
+| O3 | Archive & handoff | [ ] | Mirror the finalized bundle into `reports/archive/cli-flags-003/supervisor_command_<timestamp>/`, note completion in plan Status Snapshot, and document follow-up expectations (Phase P watch tasks) before preparing the plan for archival. |
 
 ### Phase P — Post-Fix Watch (Optional)
 Goal: Establish lightweight guardrails so scaling regressions are caught early.
