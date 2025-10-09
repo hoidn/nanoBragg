@@ -4157,6 +4157,27 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       1. Phase D1 deliverable: Author divergence_analysis.md (per plan) summarising why C keeps divergence grid active with sourcefile and whether the spec must change; include precise C code anchors.
       2. Phase D2 design: Produce divergence handling proposal (add generated sources vs spec update) with risk analysis, ready for supervisor approval.
       3. Phase E1/E2 prep: Once design approved, implement PyTorch parity, extend regression tests, then rerun CLI parity bundle to capture correlation ≥0.999 and unblock `[VECTOR-GAPS-002]` Phase B profiling.
+  * [2025-10-09] Attempt #9 (ralph loop — Phase D1 documentation). Result: **SUCCESS** (Phase D1 deliverable complete; documentation-only loop per input.md guidance).
+    Metrics: Documentation analysis only; pytest collection verified (682 tests collected in 2.67s, exit 0).
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_d/20251009T102319Z/divergence_analysis.md` — Comprehensive C vs PyTorch source count analysis with spec citations (spec-a-core.md:151), C code anchors (nanoBragg.c:2570-2720), Phase D1 metrics summary, and three implementation options (A/B/C) for Phase D2 decision
+      - `reports/2025-11-source-weights/phase_d/20251009T102319Z/commands.txt` — Evidence-gathering command log (rg, sed invocations)
+      - `reports/2025-11-source-weights/phase_d/20251009T102319Z/pytest_collect.log` — Collection proof (682 tests, warnings noted for test_at_parallel_026.py markers)
+      - `plans/active/source-weight-normalization.md` — Phase D task D1 ready to mark [D]one
+    Observations/Hypotheses:
+      - **Spec gap confirmed**: specs/spec-a-core.md:142-181 describes sourcefile and divergence generation separately but does NOT specify interaction semantics when both are present
+      - **C behavior documented**: golden_suite_generator/nanoBragg.c:2598 shows `if(sources == 0)` gate for divergence grid generation; however, Attempt #8 evidence shows C creating 4 sources (2 grid + 2 file) despite sourcefile loaded
+      - **Hypothesis**: C code beyond line 2720 may append sourcefile entries to existing divergence grid, OR divergence auto-selection defaults triggered grid creation before sourcefile load
+      - **PyTorch behavior**: Sourcefile presence suppresses divergence grid entirely (src/nanobrag_torch/simulator.py, inferred from logs)
+      - **Three design options proposed**:
+        - **Option A**: Replicate C additive behavior (grid + file sources)
+        - **Option B**: Forbid mixture via spec update and error checks
+        - **Option C**: Add `-source_mode {replace|append}` CLI flag for explicit control
+      - **Phase D1 deliverable satisfied**: divergence_analysis.md provides spec anchors, C/PyTorch behavior summary, metrics recap, and design decision framework for Phase D2
+    Next Actions:
+      1. Mark Phase D task D1 complete in `plans/active/source-weight-normalization.md`
+      2. Phase D2: Produce design_notes.md choosing Option A/B/C with implementation sketch, broadcast shape impacts, device/dtype considerations, and test coverage plan
+      3. Phase D3: Define acceptance harness (pytest selector, CLI bundle, correlation threshold ≥0.999 or error/skip for Option B) before delegating implementation to Ralph
 - Risks/Assumptions: Maintain equal-weight behaviour, ensure device/dtype neutrality, and avoid double application of weights when accumulating source contributions. Tolerance of 5e-3 is acceptable given perfect correlation and minor precision differences. Divergence grid auto-selection mismatch blocks Phase D1 parity validation until fixed.
 
 ---

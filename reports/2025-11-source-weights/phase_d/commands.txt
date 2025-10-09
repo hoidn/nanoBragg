@@ -1,0 +1,9 @@
+# Evidence Gathering Commands - Phase D1 Divergence Analysis
+# Generated: 
+
+# Extract spec statement on weights
+rg -n 'weight.*ignored' specs/spec-a-core.md
+
+# Extract C code source generation loop
+sed -n '2550,2750p' nanoBragg.c
+151:The weight column is read but ignored (equal weighting results).
