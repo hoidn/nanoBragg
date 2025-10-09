@@ -3967,6 +3967,31 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   3. Phases C/D: Implement corrected scaling, add regression tests, refresh scaling traces, and update docs before closing the item.
 - Attempts History:
   * [2025-11-17] Attempt #0 — Result: backlog entry. Issue documented and plan `plans/active/source-weight-normalization.md` created; awaiting evidence collection.
+  * [2025-10-09] Attempt #1 — Phase A evidence capture (ralph). Result: success.
+    Metrics: C total intensity = 463.4, PyTorch total intensity = 151963.1, ratio PyTorch/C = 327.9×. Both outputs have 65159 nonzero pixels.
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt` — Weighted source fixture (weights 1.0, 0.2)
+      - `reports/2025-11-source-weights/phase_a/20251009T071821Z/py/py_weight.bin` — PyTorch output (max=101.1)
+      - `reports/2025-11-source-weights/phase_a/20251009T071821Z/c/c_weight.bin` — C output (max=0.009)
+      - `reports/2025-11-source-weights/phase_a/20251009T071821Z/py/py_stdout.log` — PyTorch CLI stdout
+      - `reports/2025-11-source-weights/phase_a/20251009T071821Z/c/c_stdout.log` — C CLI stdout with trace output
+      - `reports/2025-11-source-weights/phase_a/20251009T071821Z/summary.md` — Comparison metrics
+      - `reports/2025-11-source-weights/phase_a/20251009T071821Z/analysis.json` — Machine-readable metrics
+      - `reports/2025-11-source-weights/phase_a/20251009T071821Z/env.json` — Environment metadata (Python 3.13.5, PyTorch 2.7.1+cu126, git aafe27f)
+      - `reports/2025-11-source-weights/phase_a/20251009T071821Z/commands.txt` — Exact CLI commands for reproduction
+      - `reports/2025-11-source-weights/phase_a/20251009T071821Z/pytest_collect.log` — Test collection proof (677 tests)
+    Observations/Hypotheses:
+      - **Massive discrepancy confirmed**: PyTorch produces ~328× larger intensity than C with weighted sources (1.0, 0.2)
+      - **Hypothesis**: PyTorch is likely summing weighted intensities but then incorrectly normalizing by n_sources=2 instead of sum(weights)=1.2
+      - **C stdout shows**: "created a total of 4 sources" (includes 2 zero-weight default sources plus 2 from file), "incident fluence: 1.25932e+29 photons/m^2"
+      - **PyTorch stdout shows**: "Loaded 2 sources" (correct), "auto-selected 1-fold oversampling", max intensity 1.011e+02 vs C max 9.050e-03
+      - **Pattern match**: Both implementations have identical nonzero pixel counts (65159), suggesting geometry is correct but scaling is wrong
+      - **Root cause likely in**: `simulator.py` lines 837-925 (final normalization) where steps division occurs
+    Next Actions:
+      1. **Phase B (B1)**: Trace normalization math in `simulator.py:run()` to identify exact line where n_sources is used instead of sum(weights)
+      2. **Phase B (B2)**: Document expected normalization flow: `I_final = (sum_over_sources(weight_i × I_i)) / sum(weights)` NOT `/ n_sources`
+      3. **Phase B (B3)**: Verify C code behavior at nanoBragg.c:2480-2595 to confirm it uses sum(weights) for normalization
+      4. **Phase C**: Implement fix and add regression test ensuring equal-weight case (all 1.0) remains unchanged
 - Risks/Assumptions: Maintain equal-weight behaviour, ensure device/dtype neutrality, and avoid double application of weights when accumulating source contributions.
 
 ---

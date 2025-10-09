@@ -1,0 +1,5 @@
+2025-10-09T00:18:28-07:00 fixture_created reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt
+2025-10-09T00:19:40-07:00 c_cli
+./golden_suite_generator/nanoBragg -mat A.mat -floatfile reports/2025-11-source-weights/phase_a/20251009T071821Z/c/c_weight.bin -sourcefile reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -nonoise -nointerpolate
+$(date -Is) pytest_collect
+pytest --collect-only -q

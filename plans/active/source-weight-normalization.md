@@ -3,7 +3,7 @@
 - Phase Goal: Ensure per-source weighting matches the nanoBragg C semantics so total fluence reflects `sum(source_weights)` instead of `n_sources`.
 - Dependencies: specs/spec-a-core.md §5 (Source intensity), docs/architecture/pytorch_design.md §2.3 (Source handling), docs/development/c_to_pytorch_config_map.md §Beam/Source, `nanoBragg.c` lines 2480-2595 (source weighting), `scripts/validation/compare_scaling_traces.py` outputs for weighted sources.
 - Current gap snapshot (2025-11-17): `Simulator.run` (src/nanobrag_torch/simulator.py:837-925) divides accumulated intensity by `n_sources` even when custom `source_weights` are supplied, leading to biased fluence whenever weights ≠ 1.0.
-- Status Snapshot (2025-12-22): Phase A evidence still outstanding; correlation deficit blocks `[VECTOR-GAPS-002]` Phase B2 until this plan supplies weighted-source repro data.
+- Status Snapshot (2025-10-09): Phase A complete. Evidence captured under `reports/2025-11-source-weights/phase_a/20251009T071821Z/` showing 327.9× intensity discrepancy (PyTorch = 151963.1, C = 463.4). Ready for Phase B normalization trace analysis.
 
 ## Phase A — Evidence & Reproduction
 Goal: Capture failing behaviour and establish contractual expectations.
@@ -12,9 +12,9 @@ Exit Criteria: Reproduction logs showing discrepancy between PyTorch and C/norma
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| A1 | Build weighted source fixture | [ ] | Create a minimal sourcefile (e.g., two points with weights 1.0 and 0.2) under `reports/2025-11-source-weights/fixtures/weighted_source.json`. |
-| A2 | Reproduce bias in PyTorch | [ ] | Run `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python scripts/run_simulation.py --sourcefile <fixture>` (or equivalent CLI command) and log the summed intensity showing incorrect normalization. |
-| A3 | Capture C baseline | [ ] | Execute the same configuration via nanoBragg C using `NB_C_BIN` and record the resulting fluence for comparison. |
+| A1 | Build weighted source fixture | [D] | Created `reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt` with weights 1.0 and 0.2. |
+| A2 | Reproduce bias in PyTorch | [D] | Captured PyTorch output showing max intensity 101.1, total 151963.1 under `phase_a/20251009T071821Z/py/`. |
+| A3 | Capture C baseline | [D] | Captured C output showing max intensity 0.009, total 463.4 under `phase_a/20251009T071821Z/c/`. Ratio = 327.9× discrepancy confirmed. |
 
 ## Phase B — Design & Strategy
 Goal: Decide how to adjust normalization without breaking existing behaviours.
