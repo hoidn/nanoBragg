@@ -1,0 +1,56 @@
+{
+  "timestamp": "2025-10-08T20:44:26",
+  "phase": "E2",
+  "commit": "vectorization Phase D complete",
+  "comparison_baseline": "reports/2025-10-vectorization/phase_a/tricubic_baseline_results.json",
+  "note": "Phase A baseline only includes CUDA measurements. Phase E measurements show comparable performance, indicating the vectorized implementation maintains parity without introducing regressions.",
+  "results": {
+    "cpu_256": {
+      "baseline": "N/A",
+      "vectorized_cold_s": 0.14626807998865843,
+      "vectorized_warm_s": 0.1447777284984477,
+      "vectorized_time_per_call_us": 1447.78,
+      "vectorized_calls_per_sec": 690.7,
+      "improvement": "N/A (no CPU baseline)"
+    },
+    "cpu_512": {
+      "baseline": "N/A",
+      "vectorized_cold_s": 0.14405107405036688,
+      "vectorized_warm_s": 0.14505566542968154,
+      "vectorized_time_per_call_us": 1450.56,
+      "vectorized_calls_per_sec": 689.4,
+      "improvement": "N/A (no CPU baseline)"
+    },
+    "cuda_256": {
+      "baseline_warm_s": 0.5548792248591781,
+      "baseline_time_per_call_us": 5548.79,
+      "baseline_calls_per_sec": 180.22,
+      "vectorized_cold_s": 0.5682707380037755,
+      "vectorized_warm_s": 0.5574361071176827,
+      "vectorized_time_per_call_us": 5574.36,
+      "vectorized_calls_per_sec": 179.39,
+      "speedup": 0.995,
+      "delta_us": 25.57,
+      "note": "Performance parity maintained (0.5% slower, within measurement noise)"
+    },
+    "cuda_512": {
+      "baseline_warm_s": 0.5527920946013183,
+      "baseline_time_per_call_us": 5527.92,
+      "baseline_calls_per_sec": 180.90,
+      "vectorized_cold_s": 0.5571621628478169,
+      "vectorized_warm_s": 0.559758617792977,
+      "vectorized_time_per_call_us": 5597.59,
+      "vectorized_calls_per_sec": 178.65,
+      "speedup": 0.988,
+      "delta_us": 69.67,
+      "note": "Performance parity maintained (1.2% slower, within measurement noise)"
+    }
+  },
+  "summary": {
+    "cpu_performance": "New CPU measurements establish baseline for future comparisons",
+    "cuda_performance": "CUDA performance maintains parity with Phase A (0.5-1.2% slower, within measurement variability)",
+    "vectorization_status": "Vectorized polynomial helpers (polint/polin2/polin3) implemented and tested",
+    "regression_status": "No significant performance regression detected",
+    "next_steps": "Phase F detector absorption vectorization will target actual speedup gains"
+  }
+}

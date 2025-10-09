@@ -1,0 +1,24 @@
+=== Tricubic Interpolation Baseline Benchmark ===
+Device: cpu
+Dtype: torch.float32
+Sizes: [256, 512]
+Repeats: 200
+
+Benchmarking size 256x256...
+  Scalar calls: 100
+  Cold run: 0.146268 s
+  Warm runs: 0.144778 ± 0.000703 s
+  Time/call: 1447.78 μs
+  Throughput: 690.7 calls/sec
+
+Benchmarking size 512x512...
+  Scalar calls: 100
+  Cold run: 0.144051 s
+  Warm runs: 0.145056 ± 0.000449 s
+  Time/call: 1450.56 μs
+  Throughput: 689.4 calls/sec
+
+Results saved to: reports/2025-10-vectorization/phase_e/perf/cpu/tricubic_baseline_results.json
+Summary saved to: reports/2025-10-vectorization/phase_e/perf/cpu/tricubic_baseline.md
+
+✅ Tricubic baseline benchmark complete!
