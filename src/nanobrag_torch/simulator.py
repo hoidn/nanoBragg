@@ -1551,6 +1551,70 @@ class Simulator:
                     print(f"TRACE_PY: I_pixel_final {I_pixel_final:.15g}")
                     print(f"TRACE_PY: floatimage_accumulated {I_pixel_final:.15g}")
 
+                    # SOURCE-WEIGHT-001 Phase E3: Per-source trace instrumentation
+                    # Emit TRACE_PY_SOURCE blocks when multi-source mode is active
+                    # This enables line-by-line comparison with TRACE_C_SOURCE2 from nanoBragg.c:3337
+                    if self._source_directions is not None and len(self._source_directions) > 1:
+                        # Multi-source trace: emit per-source physics values
+                        # Re-compute per-source intensities using single-source calls to avoid
+                        # modifying the compiled production path
+
+                        for src_idx in range(len(self._source_directions)):
+                            # Extract single source parameters
+                            src_direction = self._source_directions[src_idx:src_idx+1]  # Keep batch dim
+                            src_wavelength_A = self._source_wavelengths_A[src_idx:src_idx+1]
+                            src_weight = self._source_weights[src_idx].item() if self._source_weights is not None else 1.0
+
+                            # Get pixel coordinate for trace pixel (single point)
+                            coords_meters = pixel_coords_meters[target_slow:target_slow+1, target_fast:target_fast+1]  # (1, 1, 3)
+                            coords_ang = coords_meters * 1e10
+
+                            # Compute physics for this source only
+                            # Call the pure function directly to get per-source values
+                            from nanobrag_torch.simulator import compute_physics_for_position
+                            intensity_src, intensity_pre_polar_src = compute_physics_for_position(
+                                pixel_coords_angstroms=coords_ang.reshape(-1, 3),  # (1, 3)
+                                rot_a=rot_a,
+                                rot_b=rot_b,
+                                rot_c=rot_c,
+                                rot_a_star=rot_a_star,
+                                rot_b_star=rot_b_star,
+                                rot_c_star=rot_c_star,
+                                incident_beam_direction=-src_direction,  # Negate: source→sample direction
+                                wavelength=src_wavelength_A,
+                                source_weights=None,  # Single source, no weighting needed
+                                dmin=self.beam_config.dmin,
+                                crystal_get_structure_factor=self.crystal.get_structure_factor,
+                                N_cells_a=self.crystal.N_cells_a,
+                                N_cells_b=self.crystal.N_cells_b,
+                                N_cells_c=self.crystal.N_cells_c,
+                                crystal_shape=self.crystal.config.shape,
+                                crystal_fudge=self.crystal.config.fudge,
+                                apply_polarization=not self.beam_config.nopolar,
+                                kahn_factor=self.kahn_factor,
+                                polarization_axis=self.polarization_axis,
+                            )
+
+                            # Extract scalar values (detach from graph for logging)
+                            I_post_polar_src = intensity_src.item() if isinstance(intensity_src, torch.Tensor) else intensity_src
+                            I_pre_polar_src = intensity_pre_polar_src.item() if intensity_pre_polar_src is not None and isinstance(intensity_pre_polar_src, torch.Tensor) else I_post_polar_src
+
+                            # Compute per-source polarization factor (matches C-code calculation)
+                            # The polarization is already applied in intensity_src, so we can derive it
+                            if I_pre_polar_src > 0 and not self.beam_config.nopolar:
+                                polar_src = I_post_polar_src / I_pre_polar_src
+                            else:
+                                polar_src = 1.0
+
+                            # Emit per-source trace block matching C-code TRACE_C_SOURCE format
+                            print(f"TRACE_PY_SOURCE {src_idx}: source_index {src_idx}")
+                            print(f"TRACE_PY_SOURCE {src_idx}: source_direction {src_direction[0,0].item():.15g} {src_direction[0,1].item():.15g} {src_direction[0,2].item():.15g}")
+                            print(f"TRACE_PY_SOURCE {src_idx}: wavelength_angstroms {src_wavelength_A[0].item():.15g}")
+                            print(f"TRACE_PY_SOURCE {src_idx}: source_weight {src_weight:.15g}")
+                            print(f"TRACE_PY_SOURCE {src_idx}: I_contribution_pre_polar {I_pre_polar_src:.15g}")
+                            print(f"TRACE_PY_SOURCE {src_idx}: I_contribution_post_polar {I_post_polar_src:.15g}")
+                            print(f"TRACE_PY_SOURCE {src_idx}: polar {polar_src:.15g}")
+
                     # Per-φ lattice trace (Phase L3k.3c.4 per plans/active/cli-phi-parity-shim/plan.md Task C4)
                     # Emit TRACE_PY_PHI for each φ step to enable per-φ parity validation
                     # Enhanced with scattering vector, reciprocal vectors, and volume per input.md 2025-10-08
