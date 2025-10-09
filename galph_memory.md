@@ -1244,3 +1244,10 @@
 - Logged hypotheses: primary fix is enforcing Rule #12/#13 per-slice duality; alternative hypotheses (sincg, spindle axis normalization) deprioritized after trace review.
 - Authored new `input.md` (Parity mode, 100 lines) directing Ralph to implement the duality pipeline, regenerate traces under `fix_<timestamp>`, rerun compare_scaling_traces, update lattice_hypotheses, and run targeted pytest (CPU/CUDA).
 - Follow-up for Ralph: implement Phase M5c vectorized rotation + duality, capture new artifacts, update docs/fix_plan Attempt & plan row to [D], and prepare for M5d verification.
+
+## 2025-10-09 (galph loop — M5c C-reference capture)
+- Evidence task: captured nanoBragg.c snippets for misset duality and per-φ reciprocal regeneration under `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251009T005448Z/` (includes `c_phi_rotation_reference.md`, `summary.md`, `env.json`, `commands.txt`, `sha256.txt`).
+- docs/fix_plan.md: added Attempt #191 logging the new evidence bundle and rationale; CLI-FLAGS-003 history now points Ralph at the snippet before coding.
+- plans/active/cli-noise-pix0/plan.md: M5c guidance now cites the captured snippet explicitly for Rule #11 docstrings.
+- input.md rewritten (Parity mode) directing Ralph to implement M5c with the new reference, regenerate scaling traces, and run pytest CPU/CUDA.
+- Follow-up: Ralph to implement dual rotation pipeline, produce fresh compare_scaling_traces output + per-φ trace under new timestamp, run targeted pytest, update lattice_hypotheses, and mark plan row M5c [D] once parity is green.

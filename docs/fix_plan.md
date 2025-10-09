@@ -491,6 +491,19 @@
       - **Phase M4d status:** Evidence bundle complete but parity gate (first_divergence = None) unmet; mark as [P] (partially complete)
       - **Phase M5-M6 deferred:** CUDA validation and ledger sync remain blocked pending rotation matrix fix
       - **Rotation fix required:** Investigate `Crystal.get_rotated_real_vectors` vs nanoBragg.c:2797-3095 per M3d findings
+  * [2025-10-09] Attempt #191 (galph loop, Mode: Parity/Evidence) — Result: ✅ **M5c C-reference bundle captured.** **No code changes.**
+    Metrics: n/a (documentation-only evidence capture).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251009T005448Z/c_phi_rotation_reference.md` — Exact nanoBragg.c snippets for misset duality (lines 2053-2278) and per-φ reciprocal recompute (lines 3192-3210).
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251009T005448Z/summary.md` — Interpretation of Rules #12/#13 requirements and implementation guidance for `Crystal.get_rotated_real_vectors`.
+      - `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251009T005448Z/{commands.txt,env.json,sha256.txt}` — Reproduction metadata.
+    Observations/Hypotheses:
+      - **Docstring-ready snippet:** Captured verbatim C code required by CLAUDE Rule #11 so Ralph can cite it when implementing the per-φ duality pipeline.
+      - **Volume provenance reaffirmed:** Confirmed that actual volume `V_cell = 1/V_star` is computed after misset rotation and reused during per-φ recompute; PyTorch must preserve this ordering to close Hypothesis H4.
+      - **Scale factor audit:** Highlighted the `1e20/V_cell` rescale inside the φ loop, ensuring PyTorch reproduces the Angstrom→meter conversion in reciprocal regeneration.
+    Next Actions:
+      - Ralph to implement Phase M5c using the captured snippet for docstrings, maintaining vectorization/device neutrality.
+      - After implementation, rerun `scripts/validation/compare_scaling_traces.py` and targeted pytest per plan rows M5d–M5e.
   * [2025-10-08] Attempt #192 (galph loop, Mode: Docs) — Result: ✅ **M4a COMPLETE / Fix reopened.** **No code changes.**
     Metrics: n/a (documentation-only evidence pass).
     Artifacts:

@@ -1,0 +1,43 @@
+# Commands executed for Phase M5c reference capture (2025-10-09)
+python - <<'PY'
+from pathlib import Path
+from datetime import datetime
+base = Path('reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251009T005448Z')
+base.mkdir(parents=True, exist_ok=True)
+PY
+nl -ba golden_suite_generator/nanoBragg.c | sed -n '2040,2280p'
+nl -ba golden_suite_generator/nanoBragg.c | sed -n '3150,3320p'
+python - <<'PY'
+from datetime import datetime
+from pathlib import Path
+base = Path('reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251009T005448Z')
+base.mkdir(parents=True, exist_ok=True)
+# Read C code
+c_path = Path('golden_suite_generator/nanoBragg.c')
+lines = c_path.read_text().splitlines()
+# helper to extract 1-based inclusive slice
+def extract(start, end):
+    # start/end 1-based
+    return '\n'.join(lines[start-1:end])
+# Extract sections
+section1 = extract(2053, 2278)
+section2 = extract(3192, 3212)
+summary_path = base / 'c_phi_rotation_reference.md'
+with summary_path.open('w') as f:
+    f.write('# nanoBragg.c φ Rotation Reference Snippets\n\n')
+    f.write('## Static setup — misset + reciprocal/real recomputation (lines 2053-2278)\n\n')
+    f.write('```c\n')
+    f.write(section1)
+    f.write('\n```\n\n')
+    f.write('## Per-φ loop — reciprocal recompute inside integral form (lines 3192-3210)\n\n')
+    f.write('```c\n')
+    f.write(section2)
+    f.write('\n```\n')
+PY
+python - <<'PY'
+from pathlib import Path
+from datetime import datetime
+base = Path('reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251009T005448Z')
+summary = base / 'summary.md'
+summary.write_text("""# Phase M5c Prep — nanoBragg.c Rotation & Duality Reference\n\n## Context\n- Initiative: CLI-FLAGS-003 Phase M5c (φ rotation realignment)\n- Goal: Provide the exact nanoBragg.c snippets that enforce Rules #12/#13 so Ralph can port them with CLAUDE Rule #11 docstrings when updating `Crystal.get_rotated_real_vectors`.\n- Source files consulted: `golden_suite_generator/nanoBragg.c` lines 2053-2278 (static setup) and 3192-3210 (per-φ recompute).\n- Specs consulted: `specs/spec-a-core.md:204-240` (misset + φ rotation order), `specs/spec-a-core.md:241-252` (Rule #13 reciprocal regeneration).\n\n## Key Observations\n1. **Static misset pipeline (lines 2053-2278)**\n   - MOSFLM matrix vectors are wavelength-corrected (`vector_scale(..., 1e-10/lambda0)`).\n   - Static misset rotates the reciprocal vectors (`rotate(a_star, ...)`) before any real-space vectors exist.\n   - Real vectors `a,b,c` are rebuilt from `b_star × c_star` etc. using the *actual* direct-space volume `V_cell = 1/V_star`.\n   - Reciprocal vectors are then regenerated from the recomputed `a,b,c` using the actual volume as the scaling factor (`vector_scale(b_cross_c, a_star, V_star)`). This enforces Rule #13 duality (a·a* = 1 exactly).\n\n2. **Per-φ recompute (lines 3192-3210)**\n   - Inside the integral form branch, whenever `phi != 0.0` or a mosaic domain applies, the code recomputes `a_star/b_star/c_star` from the *current* real vectors before evaluating lattice factors.\n   - The scale factor `1e20/V_cell` is the Angstrom→meter conversion squared (Angstrom^2) baked into the volume term; PyTorch must preserve this to avoid drift.\n   - This recomputation uses the already-rotated real vectors (`a,b,c`), so the rotation ordering is: static misset on reciprocal → derive real vectors → dynamic φ rotation on real vectors → regenerate reciprocal vectors per φ/mosaic tick.\n\n3. **Volume source**\n   - `V_cell` is derived from the dot product `a_star · (b_star × c_star)` *after* misset rotation, so any φ tick must reuse the same actual volume; do not fall back to formula volume from cell parameters.\n\n## Guidance for M5c Implementation\n- Update `Crystal.get_rotated_real_vectors` (or equivalent pipeline) to: \n  1. Start from cached reciprocal vectors that already contain static misset.\n  2. Rebuild real vectors via cross products and `V_cell` computed from those reciprocal vectors.\n  3. Apply φ rotation (and mosaic rotation when enabled) to the *real* vectors.\n  4. Recompute reciprocal vectors from the rotated real vectors before computing `h,k,l`, matching the `1e20/V_cell` scale factor.\n- Maintain vectorized tensor operations across φ ticks and mosaic domains; avoid Python loops.\n- Add Rule #11 docstrings quoting the included C snippets with the exact line numbers.\n- Device/dtype neutrality: reuse the dominant tensor dtype/device when forming cross products and volumes.\n\n## Next Steps\n1. Embed these snippets into the docstring of the new helper that enforces the per-φ duality pipeline.\n2. Re-run `scripts/validation/compare_scaling_traces.py` after implementation; expect `first_divergence=None`.\n3. Update `reports/.../lattice_hypotheses.md` to close Hypothesis H4 once parity is confirmed.\n\n""")
+PY
