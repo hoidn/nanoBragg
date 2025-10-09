@@ -3766,7 +3766,27 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       1. Use `reports/pyrefly/20251009T044937Z/summary.md` to capture severity buckets/owners during Phase C
       2. Update `docs/fix_plan.md` header notes once triage is complete with rerun cadence
       3. Prepare `input.md` hook pointing Ralph at top 2 blocker findings after triage
-- Risks/Assumptions: None-safety and type boundary violations may surface during runtime; some errors might be masked by existing tests not exercising all code paths
+  * [2025-12-22] Attempt #4 — Phase C triage complete (ralph). Result: success.
+    Metrics: Classified 78 violations into severity buckets: BLOCKER(22), HIGH(26), MEDIUM(16), DEFER(14). Test collection: 677 tests in 2.64s (exit 0).
+    Artifacts:
+      - `reports/pyrefly/20251009T044937Z/summary.md` — Complete triage with severity classifications, owner assignments, pytest selectors, and fix strategies
+      - `reports/pyrefly/20251009T044937Z/commands.txt` — Validated pytest selectors and post-fix execution commands for all blocker/high/medium items
+      - `plans/active/static-pyrefly.md` — Phase C tasks C1-C3 marked [D]; ready for Phase D delegation hooks
+    Observations/Hypotheses:
+      - **Blocker clusters:** None-safety violations dominate (detector.py beam_center arithmetic: 10 errors; simulator.py ROI/source_directions: 6 errors; pix0_vector access: 4 errors; missing Crystal.interpolation_enabled: 1 error; missing return path: 1 error)
+      - **High priority design decision:** 26 bad-argument-type errors require choosing between Option A (add `.item()` at I/O boundaries → breaks gradients, violates CLAUDE.md rule 9) or Option B (refactor I/O to accept `Tensor | float` → preserves gradients per arch.md §15). Recommendation: Option B.
+      - **Medium priority refactors:** 8 read-only device property violations (assign to @property); 3 return type mismatches; 4 bad assignments; 1 bad function definition.
+      - **Defer bucket:** 14 tensor `**` operations likely false positives (pyrefly doesn't recognize `torch.Tensor.__pow__`); validate runtime and document as known limitation if tests pass.
+      - All pytest selectors validated with `--collect-only`; sample commands include `tests/ -k "beam_center"` (10 tests), `test_detector_basis_vectors.py` (12 tests), `tests/ -k "roi"`, etc.
+    Next Actions (Phase D delegation):
+      1. **Ralph Round 1 (BLOCKERS — 2-3 loops):** Fix BL-1 (detector None arithmetic, 10 errors starting with detector.py:86-87); BL-2 (ROI bounds, 4 errors); BL-4 (pix0_vector None, 4 errors); BL-3 (source_directions, 2 errors); BL-5 (missing interpolation_enabled, 1 error); BL-6 (missing return path, 1 error).
+      2. **Galph design decision (HIGH, blocks H-1a):** Choose type boundary strategy (recommend Option B: refactor I/O to accept `Tensor | float`). Document in next `input.md` with rationale.
+      3. **Ralph Round 2 (after design decision — 3-4 loops):** Implement H-1a (I/O boundaries, 10 errors), H-1b (physics kernels tensor-native, 9 errors), H-1c (validation guards, 7 errors).
+      4. **Ralph Round 3 (MEDIUM — 2 loops):** M-1 (device property refactor, 8 errors), M-2 (return types, 3 errors), M-3 (assignments, 4 errors), M-4 (function definition, 1 error).
+      5. **After Round 1 fixes:** Rerun `pyrefly check src` under new timestamped directory and compare delta against 20251008 baseline; expect 22 fewer errors if blockers resolved without regressions.
+      6. **Defer validation:** Run `pytest -v tests/ -k "mask"` and `tests/ -k "solid_angle"` to verify tensor `**` operations work at runtime; if pass, document as known pyrefly limitation in summary.md and skip fixes.
+    Rerun Cadence: After each Ralph fix batch (Rounds 1-3), generate new pyrefly baseline; archive when violations ≤10 or all BLOCKER/HIGH items resolved.
+- Risks/Assumptions: None-safety and type boundary violations may surface during runtime; some errors might be masked by existing tests not exercising all code paths. Design decision on Tensor vs scalar boundaries affects 26 errors and must align with differentiability requirements (arch.md §15). Defer bucket assumes pyrefly false positives but requires runtime verification before closing.
 
 ## [SOURCE-WEIGHT-001] Correct weighted source normalization
 - Spec/AT: `specs/spec-a-core.md` §5 (Source intensity), `docs/architecture/pytorch_design.md` §2.3, `docs/development/c_to_pytorch_config_map.md` (flux/fluence), nanoBragg.c lines 2480-2595 (source weighting loop).

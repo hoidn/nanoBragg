@@ -39,9 +39,9 @@ Exit Criteria: Ranked list of issues with recommended handling recorded in both 
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Classify findings | [ ] | Review `reports/pyrefly/20251008T053652Z/summary.md`; add severity tags and owner/test pointers. Capture delta in new `reports/pyrefly/20251009T044937Z/summary.md`. |
-| C2 | Map to source owners/tests | [ ] | For each blocker/high item, identify module owner and pytest selectors (validated with `pytest --collect-only`). Record in updated summary and log selectors in `commands.txt`. |
-| C3 | Update fix_plan attempts | [ ] | Append triage results to `docs/fix_plan.md` (STATIC-PYREFLY-001) with severity buckets and artifact references. |
+| C1 | Classify findings | [D] | Completed 2025-12-22 via Attempt #4 (ralph). Results captured in `reports/pyrefly/20251009T044937Z/summary.md` with severity buckets: BLOCKER(22), HIGH(26), MEDIUM(16), DEFER(14). |
+| C2 | Map to source owners/tests | [D] | Completed 2025-12-22. All blocker/high/medium items assigned to ralph with validated pytest selectors. Selectors logged in `reports/pyrefly/20251009T044937Z/commands.txt`; verified via `pytest --collect-only -q` (677 tests collected, exit 0). |
+| C3 | Update fix_plan attempts | [D] | Completed 2025-12-22. `docs/fix_plan.md` STATIC-PYREFLY-001 updated with Attempt #4 containing full triage summary, artifact paths, Next Actions for Rounds 1-3, and rerun cadence. |
 
 ### Phase D — Delegation & Follow-up Hooks
 Goal: Ensure Ralph receives precise execution guidance and that future loops can track progress.

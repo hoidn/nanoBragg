@@ -1,2 +1,93 @@
-rg -n '^\[tool\.pyrefly\]' pyproject.toml
-pyrefly --version
+# Pyrefly Phase C Triage Command Log
+# Generated: 2025-12-22 (supervisor loop #209)
+# Baseline: reports/pyrefly/20251008T053652Z/
+
+## Environment Snapshot
+# Python: 3.13.7
+# pyrefly: 0.35.0 (from Phase B baseline)
+# Git commit: b3738cf (current)
+# Branch: feature/spec-based-2
+
+## Phase C Triage Validation
+
+### Full Test Collection (Required by input.md §1.5)
+# Command:
+pytest --collect-only -q
+
+# Result:
+# 677 tests collected in 2.64s
+# Exit code: 0
+# Note: 1 warning about unknown pytest.mark.requires_c_binary (non-blocking)
+
+### Validated Pytest Selectors for Blocker Issues
+
+## BL-1: Detector None Arithmetic (beam_center, pix0)
+# Selector:
+pytest --collect-only -q tests/ -k "beam_center"
+# Sample tests found (10 total):
+#   tests/test_at_geo_001.py::test_at_geo_001_mosflm_beam_center_mapping
+#   tests/test_at_geo_003.py::TestATGEO003RFactorAndBeamCenter::test_beam_center_preservation_beam_pivot
+#   tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[64]
+#   (7 more)
+
+pytest --collect-only -q tests/ -k "pix0"
+
+## BL-2: ROI Bounds
+# Selector:
+pytest --collect-only -q tests/ -k "roi"
+
+## BL-3: Source Directions
+# Selector:
+pytest --collect-only -q tests/ -k "source or divergence"
+
+## BL-4: pix0_vector None
+# Covered by beam_center tests plus:
+pytest --collect-only -q tests/test_detector_basis_vectors.py
+
+## BL-5: Missing Crystal.interpolation_enabled
+# Selector:
+pytest --collect-only -q tests/ -k "interpolation or tricubic"
+
+## BL-6: Missing Return Path
+# Selector:
+pytest --collect-only -q tests/ -k "sampling"
+
+### Execution Commands for Ralph (Post-Triage)
+
+### After BL-1 Fix (Detector None Arithmetic)
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/ -k "beam_center" --tb=short
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_001.py
+
+### After BL-2 Fix (ROI Bounds)
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/ -k "roi" --tb=short
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_012.py
+
+### After BL-3 Fix (Source Directions)
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_006.py
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/ -k "divergence" --tb=short
+
+### After BL-4 Fix (pix0_vector None)
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_basis_vectors.py
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_007.py
+
+### After BL-5 Fix (interpolation_enabled)
+KMP_DUPLICATE_LIB_OK=TRUE python -m nanobrag_torch -default_F 1 -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -detpixels 128 -floatfile /tmp/test.bin
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/ -k "interpolation or tricubic" --tb=short
+
+### After BL-6 Fix (Missing Return)
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/ -k "sampling" --tb=short
+
+### After H-1 Fixes (Type Boundaries)
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_gradients.py
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/ -k "smv" --tb=short
+
+### Full Regression Check (After All Fixes)
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v
+
+## Re-run Pyrefly After Fixes
+
+mkdir -p reports/pyrefly/$(date -u +%Y%m%dT%H%M%SZ)
+pyrefly check src | tee reports/pyrefly/$(date -u +%Y%m%dT%H%M%SZ)/pyrefly.log
+
+---
+# End of Commands
