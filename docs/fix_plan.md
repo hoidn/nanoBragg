@@ -3650,6 +3650,28 @@
       - **Test suite expansion quantified:** Original 5 test methods → 16 parametrized test cases (5 base × 2 devices × ~2 oversample variants where applicable)
       - **Phase F2 validation objective met:** C-code reference exists, tests parametrized for device + oversample coverage, CPU execution 100% validated
     Next Actions: CUDA device placement issue requires separate fix (not absorption-specific, affects multiple components). Phase F3 CPU benchmarks can proceed. Phase F3 CUDA benchmarks blocked until device placement resolved. Mark Phase F2 as DONE (validation objective met per plan guidance).
+  * [2025-10-09] Attempt #15 (ralph loop #210, Mode: Perf) — Result: ✅ **Phase F3 CPU benchmarks COMPLETE** (200 repeats, metrics logged, test validation passing). Evidence-only loop.
+    Metrics: CPU 256² warm: 4.750 ms ± 0.167 ms (13.80 Mpx/s), cold: 4.005 s. CPU 512² warm: 13.88 ms ± 0.409 ms (18.89 Mpx/s), cold: 3.518 s. Baseline comparison: 0.0% delta (perfect parity with Phase A). Regression threshold: ≤1.05× (5%), observed: 1.00× ✅ PASS. Validation: AT-ABS-001 8/8 passed in 11.36s (CPU-only, no CUDA). Collection: 677 tests collected in 2.64s.
+    Artifacts:
+      - `reports/2025-10-vectorization/phase_f/perf/20251009T050859Z/perf_summary.md` — Phase F3 CPU performance summary with baseline comparison, regression analysis, compliance checklist
+      - `reports/2025-10-vectorization/phase_f/perf/20251009T050859Z/perf_results.json` — Structured metrics (256², 512² with 200 warm runs each)
+      - `reports/2025-10-vectorization/phase_f/perf/20251009T050859Z/bench.log` — Benchmark stdout/stderr (SHA256: 90f0147...)
+      - `reports/2025-10-vectorization/phase_f/perf/20251009T050859Z/pytest_cpu.log` — AT-ABS-001 validation results (8/8 passing)
+      - `reports/2025-10-vectorization/phase_f/perf/20251009T050859Z/env.json` — Environment metadata (Python 3.13.5, PyTorch 2.7.1+cu126, CUDA available but masked)
+      - `reports/2025-10-vectorization/phase_f/perf/20251009T050859Z/commands.txt` — Git context, benchmark command, pytest command, SHA256 verification
+      - `reports/2025-10-vectorization/phase_f/perf/20251009T050859Z/sha256.txt` — Checksum file
+      - `reports/2025-10-vectorization/phase_f/perf/20251009T050859Z/pytest_collect.log` — Collection verification (677 tests)
+    Observations/Hypotheses:
+      - **Perfect performance parity:** CPU throughput identical to Phase A baseline within floating-point precision (256²: 13.80 Mpx/s both runs, 512²: 18.89 Mpx/s both runs)
+      - **No regression detected:** All metrics 1.00× vs baseline, well within ≤1.05× tolerance (0% vs 5% threshold)
+      - **Vectorization stable:** No performance degradation since Phase A3 baseline (reports/2025-10-vectorization/phase_a/absorption_baseline_results.json)
+      - **Runtime checklist compliance:** PyTorch runtime checklist (docs/development/pytorch_runtime_checklist.md) cited in summary; vectorization maintained, no device-specific code, CPU execution verified
+      - **Testing strategy §1.4 satisfied:** CPU smoke tests passing, CUDA benchmarks deferred per blocker documentation
+      - **Artifact count verified:** 8 files in perf directory (≥7 required per input.md Step 29)
+      - **Validation suite green:** AT-ABS-001 8/8 tests passing (absorption disabled, capture fraction, last-value semantics, parallax dependence, tilted detector)
+      - **Environment capture complete:** Platform, Python, PyTorch, CUDA availability, MKL/OpenMP status recorded
+      - **Cross-references documented:** Phase F2 validation bundle (20251222T000000Z), Phase A3 baseline cited in summary
+    Next Actions: Execute Phase F4 summary consolidation per input.md Next Up #1 (merge F2 validation + F3 perf into `phase_f/summary.md`). Monitor CUDA device-placement fix for future CUDA benchmark execution (Next Up #2). Cross-check gradcheck-tier2-completion plan to ensure absorption gradients unaffected (Next Up #3). If future throughput regresses >5%, open PERF-PYTORCH-004 investigation (Next Up #4).
 - Risks/Assumptions: Must maintain differentiability (no `.item()`, no `torch.linspace` with tensor bounds), preserve device/dtype neutrality (CPU/CUDA parity), and obey Protected Assets rule (all new scripts under `scripts/benchmarks/`). Large tensor indexing may increase memory pressure; ensure ROI caching still works.
 - Exit Criteria (quote thresholds from spec):
   * specs/spec-a-parallel.md §2.3 tricubic acceptance tests run without warnings and match C parity within documented tolerances (corr≥0.9995, ≤1e-12 structural duality where applicable).

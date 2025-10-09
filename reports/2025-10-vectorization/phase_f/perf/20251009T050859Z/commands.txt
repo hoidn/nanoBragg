@@ -1,0 +1,43 @@
+# Phase F3 CPU Benchmark Evidence Collection
+# Generated: 2025-10-09T05:08:59Z
+# Initiative: VECTOR-TRICUBIC-001
+# Mode: Perf (evidence-only)
+
+## Git Context
+303d47f931cf79d525ddc054306a8efd2473777b
+feature/spec-based-2
+## feature/spec-based-2...origin/feature/spec-based-2
+?? reports/2025-10-vectorization/phase_f/perf/
+
+## Benchmark Command
+CUDA_VISIBLE_DEVICES="" PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/absorption_baseline.py --sizes 256 512 --thicksteps 5 --repeats 200 --device cpu
+
+## Pytest CPU Validation
+CUDA_VISIBLE_DEVICES="" KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_abs_001.py
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_disabled_when_zero[cpu] PASSED [ 12%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_capture_fraction_calculation[False-cpu] PASSED [ 25%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_capture_fraction_calculation[True-cpu] PASSED [ 37%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_last_value_vs_accumulation_semantics[cpu] PASSED [ 50%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_parallax_dependence[False-cpu] PASSED [ 62%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_parallax_dependence[True-cpu] PASSED [ 75%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_with_tilted_detector[False-cpu] PASSED [ 87%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_with_tilted_detector[True-cpu] PASSED [100%]
+
+============================== 8 passed in 11.36s ==============================
+## Pytest Collection Verification
+pytest --collect-only -q
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_026.py:116: PytestUnknownMarkWarning: Unknown pytest.mark.requires_c_binary - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.requires_c_binary
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+677 tests collected in 2.64s
+
+## Verification Check
+python - <<'PY'
+from pathlib import Path
+perf_dir = Path('reports/2025-10-vectorization/phase_f/perf/20251009T050859Z')
+file_count = len(list(perf_dir.glob('*')))
+print(f"Artifact count: {file_count}")
+assert file_count >= 7, f"Expected ≥7 files, found {file_count}"
+print("✅ Artifact inventory verification passed")
+PY

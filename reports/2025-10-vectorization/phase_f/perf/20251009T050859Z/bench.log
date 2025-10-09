@@ -1,0 +1,24 @@
+No CUDA runtime is found, using CUDA_HOME='/usr'
+=== Detector Absorption Baseline Benchmark ===
+Device: cpu
+Dtype: torch.float32
+Sizes: [256, 512]
+Thicksteps: [5]
+Repeats: 200
+
+Benchmarking size 256x256 with 5 layers...
+  Cold run: 4.005259 s
+  Warm runs: 0.004750 ± 0.000167 s
+  Throughput: 13796301.1 pixels/sec
+  Mean intensity: 5.98e-01
+
+Benchmarking size 512x512 with 5 layers...
+  Cold run: 3.518348 s
+  Warm runs: 0.013881 ± 0.000409 s
+  Throughput: 18885478.7 pixels/sec
+  Mean intensity: 1.73e-01
+
+Results saved to: reports/2025-10-vectorization/phase_a/absorption_baseline_results.json
+Summary saved to: reports/2025-10-vectorization/phase_a/absorption_baseline.md
+
+✅ Detector absorption baseline benchmark complete!
