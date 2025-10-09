@@ -1506,3 +1506,9 @@
 - Updated `docs/fix_plan.md` Next Actions for `[SOURCE-WEIGHT-001]` to focus on D3 harness capture and subsequent Phase E implementation under Option B.
 - Reissued `input.md` (Mode: Docs) directing Ralph to create the Phase D3 artifact bundle (timestamped folder, commands.txt, collect-only log, targeted pytest log, warning capture, summary with acceptance metrics).
 - Follow-up for Ralph: deliver the D3 harness artifacts under `reports/2025-11-source-weights/phase_d/<STAMP>/`, document results in summary.md, and update Attempts History once complete so Phase E implementation can begin and unblock `[VECTOR-GAPS-002]` profiling.
+
+### 2025-12-24 (galph loop - Source-weight Phase E kickoff)
+- Confirmed Ralph’s most recent commits (b8d16b5, 6252357) delivered Phase D2 design + Phase D3 harness; no regressions noted.
+- Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions to focus on Phase E1–E3 implementation + parity metrics and Phase E4/F1 documentation/notifications; removed stale D3 wording.
+- Issued new `input.md` (Mode: Parity) directing Ralph to implement Option B divergence parity, add the `TestSourceWeightsDivergence` suite, reuse Phase D3 CLI commands, and capture CPU parity metrics ≥0.999 with |sum_ratio−1| ≤1e-3 under `reports/2025-11-source-weights/phase_e/<stamp>/`.
+- Follow-up for Ralph: deliver Phase E artifacts/metrics, update fix_plan Attempts and the plan status snapshot, then notify VECTOR-GAPS-002 once parity evidence lands so profiler work can resume next loop.
