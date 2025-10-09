@@ -1299,3 +1299,10 @@
 - Updated `docs/fix_plan.md` Next Actions to call out the Option 1 acceptance ledger entry and plan sync; no new Attempt appended yet (reserved for Ralph’s loop).
 - Authored new `input.md` (Docs mode) instructing Ralph to close N3 by adding the Attempt, marking N3 [D], running pytest --collect-only, and logging the decision in galph_memory.
 - Next steps for Ralph: execute the N3 ledger update, sync plan + memory, then we can queue the supervisor command rerun (Phase O).
+
+## 2025-12-22 (galph loop — Phase O supervisor prep)
+- Git remained clean; re-read required spec/arch/testing docs, CLI plan, and 20251009T020401Z nb-compare analysis before selecting focus.
+- Focus set to CLI-FLAGS-003 Phase O. Updated `plans/active/cli-noise-pix0/plan.md` Status Snapshot with expected Option 1 metrics and expanded O1–O3 guidance to include the exact nb-compare command, artifact checklist, and archival notes.
+- Refined `docs/fix_plan.md` Next Actions bullet to spell out the supervisor rerun command, required captures, and expectation that correlation≈0.985 / sum_ratio≈1.16e5 (C-PARITY-001) be documented in the forthcoming Attempt.
+- Regenerated `input.md` (Docs mode, 115 lines) directing Ralph to run the supervisor nb-compare with threshold 0.98, capture analysis/test artifacts, update plan + ledger (VG-5), and mirror the bundle to the archive; appended detailed checklists for pre-run, outputs, analysis, and optional CUDA evidence.
+- Working tree clean post-commit `SUPERVISOR: CLI-FLAGS Phase O prep - tests: not run`; ready for Ralph to execute Phase O1–O3.
