@@ -1259,14 +1259,22 @@ class Crystal:
             b_cross_c = torch.cross(b_phi_mos, c_phi_mos, dim=-1)
             c_cross_a = torch.cross(c_phi_mos, a_phi_mos, dim=-1)
 
-            # Recompute reciprocal vectors using static V_cell
-            # a* = (b × c) / V_cell (matching C: vector_scale(b_cross_c, a_star, 1/V_cell))
-            # Shape: (N_phi, N_mos, 3)
-            V_star = 1.0 / V_cell_static  # V_star = 1 / V_cell
+            # CRITICAL (Rule #13): Recalculate volume from actual rotated vectors
+            # V_actual = a · (b × c) for each (phi, mosaic) combination
+            # Shape: (N_phi, N_mos)
+            V_actual_phi_mos = torch.sum(a_phi_mos * b_cross_c, dim=-1, keepdim=True)
 
-            a_star_recalc = b_cross_c * V_star
-            b_star_recalc = c_cross_a * V_star
-            c_star_recalc = a_cross_b * V_star
+            # Ensure volume is not too small (guard against numerical issues)
+            # PERF-PYTORCH-004 Phase 1: Use clamp_min instead of torch.maximum
+            V_actual_phi_mos = V_actual_phi_mos.clamp_min(1e-6)
+            V_star_actual = 1.0 / V_actual_phi_mos
+
+            # Recompute reciprocal vectors using ACTUAL volume per (phi, mosaic)
+            # a* = (b × c) / V_actual (Rule #13 compliant)
+            # Shape: (N_phi, N_mos, 3)
+            a_star_recalc = b_cross_c * V_star_actual
+            b_star_recalc = c_cross_a * V_star_actual
+            c_star_recalc = a_cross_b * V_star_actual
 
             # Apply recalculated reciprocal vectors only where needed (using mask)
             needs_recalc_expanded = needs_recalc.unsqueeze(-1)  # (N_phi, N_mos, 1)
