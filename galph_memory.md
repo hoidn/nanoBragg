@@ -1,3 +1,9 @@
+### 2025-12-24 (galph loop - SOURCE-WEIGHT Phase G reset)
+- Audited the 20251009T212241Z evidence bundle: PyTorch CLI aborted (`Need -hkl/-default_F`), `test_c_divergence_reference` XPASSed, and no metrics/commands were captured; reopened Phase G2/G3 and documented the anomaly (`unexpected_c_parity/metrics.json`).
+- Updated `plans/active/source-weight-normalization.md` Phase G guidance to require rebuilding the C binary, capturing full artifact sets, and halting if C parity persists; fix_plan entry `[SOURCE-WEIGHT-001]` now marks Attempt #27 as FAILED with explicit next steps.
+- Rewrote `input.md` (Mode: Docs+Parity) directing Ralph to rebuild the C binary, rerun the Phase F command set, archive a fresh `<STAMP>` bundle (logs, metrics, stdout/stderr), and log a new Attempt before proceeding.
+- Follow-up for Ralph: execute the refreshed Phase G2 instructions, ensure the CLI commands succeed with `-default_F`, collect Py/C metrics plus correlation, then update docs/fix_plan.md and leave Phase G blocked if divergence remains unresolved.
+
 ### 2025-12-24 (galph loop - SOURCE-WEIGHT parity bundle refresh)
 - Re-read plans/active/source-weight-normalization.md and docs/fix_plan.md:4046; focus stays on TC-D1/TC-D3 parity metrics before VECTOR work can unblock.
 - Replaced input.md (Mode: Parity) with explicit TC-D1/TC-D3 commands (PyTorch + C) including default_F, divergence parameters, and artifact expectations; pointed Ralph at prior diagnostic snippet (reports/2025-11-source-weights/phase_e/20251009T123427Z/commands.txt) for simulator_diagnostics capture and scripted the metrics computation.

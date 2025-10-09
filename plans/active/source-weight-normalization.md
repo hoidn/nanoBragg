@@ -12,7 +12,7 @@
   - Legacy Phases A–D are complete (fixtures, spec confirmation, implementation guard, trace instrumentation).
   - Phase E ledger propagation finished this loop (E2/E3 ✅); spec-first stance and dependency gates now live in `docs/fix_plan.md` and the vectorization plans.
   - Phase F design packet archived at `reports/2025-11-source-weights/phase_f/20251009T203823Z/`; Phase G implementation/evidence is the active gate before downstream profiling can resume.
-  - Current blockers: Phase G2/G3 evidence bundle still outstanding — the existing `phase_g/20251009T210204Z/pytest_run.log` lacks CLI metrics and command ledger, so dependent plans remain blocked until a fresh spec-compliance run is archived and logged in fix_plan.
+  - Current blockers: The 20251009T212241Z attempt left Phase G2/G3 unresolved — PyTorch CLI aborted with "Need -hkl ... or -default_F > 0", the C binary was absent (tests XPASS instead of XFAIL), and no metrics/commands were captured. Dependent plans remain blocked until a validated evidence bundle is produced and logged.
 
 ### Legacy Evidence (Phases A–D) — Locked
 Goal: Preserve provenance of the already-completed investigation.
@@ -52,8 +52,8 @@ Exit Criteria: Tests enforce spec behaviour, targeted pytest run + CLI bundle ar
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | G1 | Update test suite | [X] | ✅ Landed in HEAD — `tests/test_cli_scaling.py` now enforces spec-first behaviour (weighted vs equal check, CLI lambda override, C-divergence xfail). Retain the Phase F design packet for provenance. |
-| G2 | Capture evidence bundle | [ ] | Re-run the mapped pytest selector and TC-D1/TC-D3 CLI bundle, archiving a fresh timestamped folder `reports/2025-11-source-weights/phase_g/<STAMP>/` with `commands.txt`, `collect.log`, `pytest.log`, `tc_d1_cmd.txt`, `tc_d3_cmd.txt`, `py_metrics.json`, `c_metrics.json`, `correlation.txt`, and `notes.md` documenting expected C divergence. |
-| G3 | Update fix_plan attempts | [ ] | After G2 artifacts exist, add a `[SOURCE-WEIGHT-001]` Attempt noting pytest results, CLI metrics, artifact paths, and that C correlation <0.8 is expected per decision memo before advancing to Phase H. |
+| G2 | Capture evidence bundle | [ ] | Rebuild the C binary if missing (`make -C golden_suite_generator`) and rerun the Phase F command set. Archive a new timestamped folder `reports/2025-11-source-weights/phase_g/<STAMP>/` containing `collect.log`, `pytest.log`, `commands.txt`, `tc_d1_cmd.txt`, `tc_d3_cmd.txt`, `py_metrics.json`, `c_metrics.json`, `correlation.txt`, `notes.md`, and stdout/stderr captures. Verify the PyTorch CLI succeeds (no "Need -hkl..."), ensure `test_c_divergence_reference` reports XFAIL (not XPASS), and record observed correlation/sum_ratio. If C parity persists (correlation ≥0.8) or C binary remains unavailable, document the anomaly in notes.md and stop for supervisor review. |
+| G3 | Update fix_plan attempts | [ ] | Once a valid bundle exists, log a new `[SOURCE-WEIGHT-001]` Attempt summarising pytest outcomes, CLI commands, metrics (include whether C divergence matched expectation), and the artifact path. Explicitly note any anomalies (e.g., C parity, missing binary) so downstream plans remain blocked until resolved. |
 
 ### Phase H — Documentation & Downstream Unblocks (Blocked until Phase G)
 Goal: Sync architecture docs, runtime checklist, and dependent plans once tests pass and evidence is archived.
