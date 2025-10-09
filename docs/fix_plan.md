@@ -4043,10 +4043,24 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
 - First Divergence (if known): Phase A showed PyTorch total intensity 3.28× larger than C for weighted sources. After commit `321c91e` reinstated division by `n_sources`, `_compute_physics_for_position` still multiplies intensity by `source_weights`, producing correlation ≈0.9155 and sum_ratio ≈0.7281 vs C for the TC-A fixture (metrics in `reports/2025-11-source-weights/phase_c/test_failure/metrics.json`).
 - Next Actions (2025-12-24 status refresh):
+  0. Wavelength triage (new): Produce a control run where the sourcefile wavelengths are forced to the CLI `-lambda` value (duplicate fixture with column 5 = `9.768e-11`) and recompute TC-D1 metrics alongside the original 6.2 Å fixture. Store both metric bundles under `reports/2025-11-source-weights/phase_e/<STAMP>/lambda_sweep/` to quantify the impact of the sourcefile wavelength column. If the 0.9768 Å variant restores correlation ≥0.999, document the result in summary.md and flag the wavelength-column semantics as the primary parity blocker.
   1. Phase E2 evidence refresh: Capture a current CLI run of the TC-D1 command (PyTorch only) and store `stdout`/`commands.txt` under `reports/2025-11-source-weights/phase_e/<STAMP>/` to prove the guard now reports `"Loaded 2 sources"` with no divergence auto-generation. Include a quick script log of `n_sources`, `steps`, and `fluence` pulled from a Simulator instance for the same configuration so downstream analysis has trusted inputs.
   2. Phase E3 parity triage: Rebuild `./golden_suite_generator/nanoBragg` if missing, then run the PyTorch+C command pair from TC-D1 manually (outside pytest) to regenerate float images and metrics. Record the metrics delta (correlation, sum_ratio, sums) in `summary.md` together with the captured simulator diagnostics from step 1 so we have synchronized evidence of the remaining 140–300× gap.
   3. Phase E4 investigation follow-through: With fresh artifacts in hand, open a pixel-trace comparison (C trace vs `scripts/debug_pixel_trace.py`) targeting an on-peak pixel from the regenerated outputs to isolate the first normalization divergence, then prepare plan updates/docs once the failing stage is identified. Only after the discrepancy is understood should TC-D1/TC-D3 parity runs be reattempted and documentation/notifications finalized.
 - Attempts History:
+  * [2025-12-24] Attempt #13 (galph loop — Mode: Debug). Result: **EVIDENCE ONLY** (wavelength-column triage). No code changes.
+    Metrics: PyTorch simulator instantiated via CLI plumbing reports `n_sources=2`, `steps=2`, `_source_wavelengths_A=tensor([6.2000, 6.2000])` for the TC-D1 fixture; C reference stdout (`reports/2025-11-source-weights/phase_a/20251009T071821Z/c/c_stdout.log:117-148`) shows `4 sources` with `wave=9.768e-11 meters` (0.9768 Å) and identical `steps=4` denominator.
+    Artifacts:
+      - Ad-hoc script (not committed) executed via `python - <<'PY'` to mirror CLI parsing and print `_source_wavelengths_A` (console transcript captured in supervisor log).
+      - C reference log snippet at `reports/2025-11-source-weights/phase_a/20251009T071821Z/c/c_stdout.log:117-148` confirming lambda/step usage.
+    Observations/Hypotheses:
+      - PyTorch currently honours the sourcefile wavelength column verbatim (6.2 Å), while nanoBragg C retains the CLI `-lambda` value (0.9768 Å). This ~6.35× wavelength mismatch explains the 140–300× intensity inflation.
+      - Steps normalization differs (`steps=2` vs `steps=4`) because the C binary still counts two zero-weight divergence placeholders; this contributes a secondary 2× scaling gap once wavelengths align.
+      - Weighted accumulation remains disabled (`torch.sum` over sources with equal weighting), so the dominant regression is the wavelength semantics rather than residual weight usage.
+    Next Actions:
+      1. Author Ron (ralph) loop to execute the lambda sweep described in Next Action 0, capturing metrics for both wavelength interpretations to validate the hypothesis quantitatively.
+      2. Upon confirmation, draft a design note under `reports/2025-11-source-weights/phase_e/<STAMP>/lambda_semantics.md` clarifying the intended spec behaviour (ignore column vs override) before editing code.
+      3. Update `plans/active/source-weight-normalization.md` Phase E guidance once the lambda decision is made so downstream parity/tests target the corrected behaviour.
   * [2025-11-17] Attempt #0 — Result: backlog entry. Issue documented and plan `plans/active/source-weight-normalization.md` created; awaiting evidence collection.
   * [2025-10-09] Attempt #1 — Phase A evidence capture (ralph). Result: success.
     Metrics: C total intensity = 463.4, PyTorch total intensity = 151963.1, ratio PyTorch/C = 327.9×. Both outputs have 65159 nonzero pixels.

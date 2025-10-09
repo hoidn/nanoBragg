@@ -1554,3 +1554,10 @@
 - Refreshed `plans/active/source-weight-normalization.md` status snapshot and Phase E rows to document the guard success and reframe blockers around normalization evidence instead of divergence auto-generation.
 - Issued new `input.md` directing Ralph to capture a timestamped TC-D1 PyTorch run (stdout, `.bin`) and simulator diagnostics (`n_sources`, `steps`, `fluence`) under `reports/2025-11-source-weights/phase_e/<STAMP>/` before attempting C parity reruns.
 - Follow-up for Ralph: execute the PyTorch command + diagnostics, archive artifacts in the new report folder, and log the attempt in docs/fix_plan.md so we can proceed to the TC-D1/TC-D3 parity reruns next loop.
+
+### 2025-12-24 (galph loop - SOURCE-WEIGHT lambda sweep prep)
+- Confirmed via inline CLI plumbing script that `_source_wavelengths_A` is `[6.2, 6.2]` for TC-D1 while C stdout still reports `wave=9.768e-11` (0.9768 Å) and counts 4 sources, explaining the 140–300× parity gap. Steps denom also differs (PyTorch=2 vs C=4) because of the extra zero-weight divergence placeholders.
+- Added Attempt #13 to `docs/fix_plan.md` capturing this evidence, and inserted a new Next Action (lambda sweep) plus E2/E3 guidance updates so the first task is to run paired PyTorch jobs with 6.2 Å vs 0.9768 Å fixtures.
+- Updated `plans/active/source-weight-normalization.md` Phase E status to reflect the wavelength mismatch and blocked tasks now require the lambda sweep artifact bundle.
+- Replaced `input.md` (Mode: Parity) directing Ralph to perform the lambda sweep, capture diagnostics/metrics under `reports/2025-11-source-weights/phase_e/<STAMP>/lambda_sweep/`, and retain collect-only pytest proof.
+- Follow-up: Ralph should execute the lambda sweep commands, archive metrics for both wavelength variants, and update the fix plan attempt history once the hypothesis is confirmed.
