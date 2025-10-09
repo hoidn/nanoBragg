@@ -56,15 +56,15 @@ Exit Criteria: Behavioural decision recorded (spec update vs implementation chan
 
 ### Phase E — Implementation & Verification
 Goal: Apply the agreed divergence-handling behaviour, extend regression coverage, and prove CPU parity (CUDA optional) so dependent performance work can resume.
-Status note (2025-12-24): Test scaffolding for TC-D1/D3/D4 exists (commit 22f1a4d) but TC-D2 still skips because the warning guard is not implemented yet.
+Status note (2025-10-09 Attempt #12): TC-D2 conversion to `pytest.warns` COMPLETE and PASSING, but TC-D1/TC-D3/TC-D4 parity validation FAILED with 140-300× divergence. Root cause identified: `__main__.py:747` condition `elif 'sources' not in config:` allows divergence grid generation even when sourcefile is loaded, causing double-counting. Fix required before E3 can proceed.
 Prereqs: Phase D decision/design signed off; repository clean.
 Exit Criteria: Implementation merged locally with regression tests, Phase E artifact bundle contains pytest logs + CLI metrics proving correlation ≥0.999 and |sum_ratio−1| ≤ 1e-3.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | E1 | Implement divergence parity | [D] | ✅ Commit 3140629 adds the Option B guard in `src/nanobrag_torch/__main__.py`, emits `warnings.warn(..., stacklevel=2)`, and re-enables TC-D2. Guard behaviour captured in `reports/2025-11-source-weights/phase_e/20251009T114620Z/summary.md`. |
-| E2 | Extend regression tests | [P] | Commit 22f1a4d introduced `TestSourceWeightsDivergence` (TC-D1/D3/D4); TC-D2 currently inspects stderr from a subprocess. Update the test to call `nanobrag_torch.__main__.main()` under `pytest.warns(UserWarning)` so the warning guard is asserted in-process, then ensure artifacts land under `phase_e/<STAMP>/`. CPU coverage mandatory, CUDA optional per testing_strategy.md §1.4. |
-| E3 | Capture parity metrics | [ ] | Rerun targeted CLI commands (explicit `-oversample 1` plus divergence ranges) for C and PyTorch, store outputs in `phase_e/<STAMP>/metrics.json` + `summary.md`; expect correlation ≥0.999 and |sum_ratio−1| ≤ 1e-3. |
+| E2 | Extend regression tests | [B] | ⚠️ **BLOCKED** — TC-D2 conversion COMPLETE (`tests/test_cli_scaling.py:586-658` now uses `pytest.warns(UserWarning)` with `monkeypatch` for in-process validation, test PASSING). However, parity run revealed critical Phase C regression: TC-D1/TC-D3/TC-D4 fail with 140-300× divergence due to divergence grid generation bug at `__main__.py:747`. Bug must be fixed before E3 can capture valid metrics. Failure report: `reports/2025-11-source-weights/phase_e/20251009T115838Z/summary.md`. |
+| E3 | Capture parity metrics | [B] | ⚠️ **BLOCKED** — Cannot capture valid metrics until E2 divergence grid bug is fixed. Parity thresholds (correlation ≥0.999, |sum_ratio−1| ≤1e-3) currently unmet (TC-D1: corr=-0.297, ratio=302.6×; TC-D3: corr=0.070, ratio=141.7×). |
 | E4 | Update documentation | [ ] | Amend `docs/architecture/pytorch_design.md` (Sources subsection) and, if spec change required, submit draft updates to `specs/spec-a-core.md` with rationale. Log Attempt in `docs/fix_plan.md` referencing artifacts. |
 
 ### Phase F — Closure & Handoffs

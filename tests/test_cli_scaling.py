@@ -583,10 +583,11 @@ class TestSourceWeightsDivergence:
                 f"TC-D1: Sum ratio {sum_ratio:.6f} deviates from 1.0 by {abs(sum_ratio - 1.0):.6f} (> {tolerance_ratio}). " \
                 f"C sum={c_sum:.6g}, PyTorch sum={py_sum:.6g}. Metrics: {json.dumps(metrics, indent=2)}"
 
-    def test_sourcefile_divergence_warning(self):
+    def test_sourcefile_divergence_warning(self, monkeypatch):
         """TC-D2: Verify UserWarning when sourcefile + divergence parameters both present."""
         # This test validates the CLI warning guard at argument parsing level
         # Per SOURCE-WEIGHT-001 Phase E Option B: warn when sourcefile + divergence params coexist
+        # Updated to use in-process pytest.warns instead of subprocess stderr parsing
 
         # Check fixture availability
         fixture_paths = [
@@ -612,6 +613,7 @@ class TestSourceWeightsDivergence:
 
             # Command that should emit warning: sourcefile + hdivrange
             args_with_warning = [
+                'nanoBragg',  # Program name
                 '-mat', str(mat_file.resolve()),
                 '-sourcefile', str(sourcefile.resolve()),
                 '-hdivrange', '0.5',  # This should trigger the warning
@@ -626,28 +628,31 @@ class TestSourceWeightsDivergence:
                 '-floatfile', str(py_out)
             ]
 
-            # Run PyTorch CLI in subprocess, capturing warnings via stderr
-            # Python warnings are emitted to stderr by default
-            py_cmd = [sys.executable, '-m', 'nanobrag_torch'] + args_with_warning
-            result_py = subprocess.run(py_cmd, capture_output=True, text=True)
+            # Use monkeypatch to set sys.argv for in-process execution
+            monkeypatch.setattr(sys, 'argv', args_with_warning)
 
-            # Check that warning was emitted (warnings go to stderr in subprocess)
-            expected_warning_fragments = [
-                "UserWarning",  # Warning class name appears in stderr
+            # Import main function (local import to avoid side effects)
+            from nanobrag_torch.__main__ import main
+
+            # Execute main() under pytest.warns context
+            # The warning should be emitted from __main__.py:736-741
+            with pytest.warns(UserWarning, match="Divergence/dispersion parameters ignored") as record:
+                main()
+
+            # Verify warning message contains expected fragments
+            assert len(record) >= 1, "TC-D2: No UserWarning was raised"
+            warning_message = str(record[0].message.args[0])
+
+            expected_fragments = [
                 "Divergence/dispersion parameters ignored",
                 "sourcefile is provided",
                 "spec-a-core.md:151-162"
             ]
 
-            stderr_output = result_py.stderr
-            for fragment in expected_warning_fragments:
-                assert fragment in stderr_output, \
-                    f"TC-D2: Expected warning fragment '{fragment}' not found in stderr.\n" \
-                    f"Full stderr:\n{stderr_output}"
-
-            # Verify simulation completed successfully
-            assert result_py.returncode == 0, \
-                f"TC-D2: PyTorch simulation failed:\n{result_py.stderr}"
+            for fragment in expected_fragments:
+                assert fragment in warning_message, \
+                    f"TC-D2: Expected warning fragment '{fragment}' not found.\n" \
+                    f"Full warning: {warning_message}"
 
             # Verify output was written
             assert py_out.exists(), "TC-D2: Output file was not created"

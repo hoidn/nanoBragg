@@ -4255,6 +4255,27 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       3. **Spec Amendment** (Phase E4): Update `specs/spec-a-core.md` lines 144-162 per Option B design (document sourcefile precedence rule).
       4. **Documentation Updates** (Phase E4): Update `docs/architecture/pytorch_design.md` Sources subsection and `docs/development/testing_strategy.md` to reference new tests.
       5. **Mark Phase E Complete**: Once all acceptance criteria satisfied (correlation ≥ 0.999, warning test passing, spec updated), mark tasks E1-E4 done in `plans/active/source-weight-normalization.md` and add final Phase E attempt summarizing metrics.
+  * [2025-10-09] Attempt #12 (ralph loop — Phase E2 TC-D2 conversion). Result: **PARTIAL SUCCESS** (TC-D2 conversion COMPLETE and PASSING; TC-D1/TC-D3/TC-D4 parity FAILED with 140-300× divergence revealing regression in Phase C implementation).
+    Metrics: TC-D2 (warning test) PASSED in 5.43s; TC-D1 correlation=-0.297 sum_ratio=302.6× (C:179.6, Py:54352.6); TC-D3 correlation=0.070 sum_ratio=141.7× (C:358.2, Py:50745.9); TC-D4 failed (delegates to TC-D1).
+    Artifacts:
+      - Test update: `tests/test_cli_scaling.py:586-658` — TC-D2 converted from subprocess stderr parsing to in-process `pytest.warns(UserWarning)` using `monkeypatch` to set `sys.argv` and direct `main()` call
+      - Failure report: `reports/2025-11-source-weights/phase_e/20251009T115838Z/summary.md` — Detailed analysis of parity failures with root cause hypothesis
+      - Pytest logs: `reports/2025-11-source-weights/phase_e/20251009T115838Z/pytest.log` — Full test suite run showing TC-D2 pass and TC-D1/D3/D4 failures
+      - `reports/2025-11-source-weights/phase_e/20251009T115838Z/commands.txt` — Timestamped command log
+      - `reports/2025-11-source-weights/phase_e/20251009T115838Z/env.json` — Environment snapshot
+    Observations/Hypotheses:
+      - **TC-D2 conversion successful**: Test now uses `monkeypatch.setattr(sys, 'argv', args_with_warning)` to set CLI arguments, calls `main()` directly under `with pytest.warns(UserWarning)` context, and validates warning message contains expected fragments ("Divergence/dispersion parameters ignored", "sourcefile is provided", "spec-a-core.md:151-162")
+      - **CRITICAL REGRESSION DISCOVERED**: Phase C implementation (Attempt #6) claimed success but TC-D1/TC-D3 reveal 140-300× intensity divergence, far exceeding the 0.38% reported in Attempt #6 metrics
+      - **Root cause identified**: `__main__.py` line 747 condition `elif 'sources' not in config:` is INCORRECT — it allows divergence grid generation even when sourcefile is loaded because `sources` field won't exist in config until after this block executes. Should be `elif 'sourcefile' not in config:`
+      - **Double-counting confirmed**: Both sourcefile sources (2) AND divergence grid sources (auto-generated) are being accumulated, causing massive over-counting. C reference produces 4 sources (per Attempt #8 evidence) but with different weights/wavelengths
+      - **Phase C marked "done" prematurely**: Attempt #6 test passed because it used `-lambda` explicitly which masked the divergence grid issue. CLI runs without explicit wavelength expose the bug
+      - **Warning guard working**: TC-D2 passes, confirming the UserWarning emission from commit 3140629 is correct; the issue is orthogonal (physics bug vs diagnostic warning)
+    Next Actions:
+      1. **Fix divergence grid bug** (Phase E2 critical): Change `__main__.py` line 747 from `elif 'sources' not in config:` to `elif 'sourcefile' not in config:` to prevent divergence grid generation when sourcefile is provided
+      2. **Re-run TC-D1/TC-D3/TC-D4**: After fix, execute `NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeightsDivergence -v` and verify correlation ≥0.999, |sum_ratio−1| ≤1e-3
+      3. **Capture fresh parity metrics** (Phase E3): Archive correlation/sum_ratio results under `reports/2025-11-source-weights/phase_e/<STAMP>/metrics.json` with all required artifacts (pytest.log, warning.log, summary.md, commands.txt, env.json)
+      4. **Update Attempt #6 status**: Mark Phase C as "incomplete" in retrospect; the test coverage was insufficient (missed CLI-level divergence scenarios)
+      5. **Full suite regression**: Run complete pytest suite to ensure fix doesn't break other tests
 - Risks/Assumptions: Maintain equal-weight behaviour, ensure device/dtype neutrality, and avoid double application of weights when accumulating source contributions. Tolerance of 5e-3 is acceptable given perfect correlation and minor precision differences. Divergence grid auto-selection mismatch blocks Phase D1 parity validation until fixed.
 
 ---
