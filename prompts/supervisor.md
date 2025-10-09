@@ -12,6 +12,9 @@ review and firm up if needed plans/active/vectorization.md. then implement it (o
 <2>
 Find all other cases of incomplete vectorization not covered by <1> and resolve them. Record the before / after performance.
 </2>
+<3>
+delegate to ralph: using parallel subagents, index the test suite and write the new reference doc to a .md under docs/. this doc should be discoverable and help streamline test discovery / selection in future iterations
+</3>
 <4>
 run pyrefly check src/. triage the errors and delegate the fixing of them to ralph. be careful about test suite regressions.
 </4>
