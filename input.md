@@ -1,43 +1,36 @@
-Summary: Remove weighted-source scaling so PyTorch matches C and unblock downstream vectorization work.
+Summary: Fix simulator device placement so CUDA vectorization tests run clean and unblock Phase H closure.
 Mode: Parity
-Focus: [SOURCE-WEIGHT-001] Correct weighted source normalization
+Focus: [PERF-PYTORCH-004] Fuse physics kernels
 Branch: feature/spec-based-2
-Mapped tests: pytest tests/test_cli_scaling.py::TestSourceWeights -v | NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeights::test_weighted_source_matches_c -v
-Artifacts: reports/2025-11-source-weights/phase_c/<STAMP>/ | reports/2025-11-source-weights/phase_d/<STAMP>/
-Do Now: [SOURCE-WEIGHT-001] Correct weighted source normalization — after Phase C1–C3 edits, run NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeights::test_weighted_source_matches_c -v
-If Blocked: Capture failure logs under reports/2025-11-source-weights/phase_c/<STAMP>/attempts/ with commands.txt + env.json and note blockers in docs/fix_plan.md Attempts before pausing.
+Mapped tests: pytest tests/test_tricubic_vectorized.py -v -k cuda | pytest tests/test_at_abs_001.py -v -k cuda
+Artifacts: reports/2025-10-vectorization/phase_h/<STAMP>/{commands.txt,env.json,pytest_logs/,benchmarks/}
+Do Now: [PERF-PYTORCH-004] Fuse physics kernels — after device-placement fix run KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -v -k cuda
+If Blocked: Capture the failing CUDA traceback plus `torch.cuda.is_available()` status under reports/2025-10-vectorization/phase_h/<STAMP>/attempts/ with commands.txt and env.json, then note the blocker in docs/fix_plan.md Attempts before pausing.
 Priorities & Rationale:
-- specs/spec-a-core.md:151 – spec mandates the weight column is ignored; implementation must comply.
-- plans/active/source-weight-normalization.md:1 – Phase C is the active gate; Phase D parity unlocks VECTOR-GAPS-002 and PERF-PYTORCH-004.
-- docs/fix_plan.md:3963 – Next Actions now expect Phase C implementation and Phase D validations; keep ledger aligned.
-- reports/2025-11-source-weights/phase_b/20251009T083515Z/analysis.md – documents current parity gap and oversample caveat to control during reruns.
-- tests/test_cli_scaling.py:252 – existing TestSourceWeights cases need updates to assert equal totals for weighted inputs.
+- plans/active/vectorization.md:91 – Phase H requires clearing the device-placement blocker before CUDA reruns.
+- docs/fix_plan.md:3405 – Next Actions tie CUDA evidence to PERF-PYTORCH-004 Attempt #14 device fix.
+- docs/development/pytorch_runtime_checklist.md:12 – Enforces device/dtype neutrality when touching simulator init paths.
+- src/nanobrag_torch/simulator.py:505 – Current `torch.tensor(...)` path pins `incident_beam_direction` on CPU, breaking CUDA tests.
+- reports/2025-10-vectorization/phase_f/summary.md:84 – Documents the existing CUDA failures and expected rerun commands post-fix.
 How-To Map:
-- Implementation: Edit src/nanobrag_torch/simulator.py::_compute_physics_for_position to drop weights_broadcast from the accumulation path; adjust any cached metadata in Simulator.__init__ or run() so weights remain optional trace data. Keep tensor ops batched and gradient-friendly (no .item()).
-- Tests: `pytest tests/test_cli_scaling.py::TestSourceWeights -v` (CPU) after edits; re-run with `pytest -k TestSourceWeights --maxfail=1 --disable-warnings` if you need a quick smoke.
-- Parity proof: `NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeights::test_weighted_source_matches_c -v` (expect pass, collect log under phase_d/<STAMP>/pytest/).
-- CLI metrics: Reproduce C vs PyTorch totals using the fixture `reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt`. Set `export NB_C_BIN=./golden_suite_generator/nanoBragg` before running parity steps.
-  * C: `./golden_suite_generator/nanoBragg -mat A.mat -floatfile c_weight.bin -sourcefile reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -nonoise -nointerpolate -oversample 1 -exposure 1 -flux 1e18 -beamsize 1.0 -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0 -Na 36 -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10`.
-  * PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE nanoBragg -mat A.mat -floatfile py_weight.bin -sourcefile reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt -distance 231.274660 -lambda 0.976800 -pixel 0.172 -detpixels_x 2463 -detpixels_y 2527 -nonoise -nointerpolate -oversample 1 -exposure 1 -flux 1e18 -beamsize 1.0 -spindle_axis -1 0 0 -Xbeam 217.742295 -Ybeam 213.907080 -detector_rotx 0 -detector_roty 0 -detector_rotz 0 -twotheta 0 -Na 36 -Nb 47 -Nc 29 -osc 0.1 -phi 0 -phisteps 10`.
-  * Capture stdout/stderr, metrics.json, and env.json under phase_d/<STAMP>/metrics/.
-- Artifacts: Phase C implementation logs (collect-only proof, pytest logs, diff summary) go to reports/2025-11-source-weights/phase_c/<STAMP>/{commands.txt, implementation.md, pytest/*.log, env.json}. Phase D parity bundle goes to phase_d/<STAMP>/{pytest/, metrics/, commands.txt, summary.md}.
-- Documentation: After metrics stabilise, update docs/architecture/pytorch_design.md Sources subsection and docs/development/testing_strategy.md Tier 1 mapping; note changes in docs/fix_plan.md Attempts and plans/active/source-weight-normalization.md status snapshot.
+- Implementation: Ensure `Simulator.__init__` materialises `incident_beam_direction`, `beam_vector`, and related constants on `self.device` (reuse detector/crystal tensor devices). Replace raw `torch.tensor(...)` with `torch.as_tensor(..., device=device, dtype=dtype)` or existing cached tensors; update any caches touched by `_compute_physics_for_position` so they stay device-neutral.
+- Smoke check: `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q` before running CUDA selectors to confirm import health.
+- CUDA tests: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -v -k cuda` then `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_abs_001.py -v -k cuda`; store logs under phase_h/<STAMP>/pytest_logs/.
+- Benchmarks: After tests pass, capture `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --repeats 200 --device cuda` and `python scripts/benchmarks/absorption_baseline.py --sizes 256 512 --thicksteps 5 --repeats 200 --device cuda`; save outputs to phase_h/<STAMP>/benchmarks/ with env snapshot.
+- Documentation: Update docs/fix_plan.md [VECTOR-TRICUBIC-001] Attempt #18 with CUDA metrics and note the device-placement resolution; refresh the plan status snapshot if all Phase H tasks complete.
 Pitfalls To Avoid:
-- Do not reintroduce scalar loops; keep the batching path intact for sources × phi × mosaic × oversample.
-- Preserve device/dtype neutrality — use existing tensors’ device when creating helpers (no implicit CPU tensors).
-- Avoid .item()/.detach() on gradients; weighted paths must remain differentiable.
-- Ensure oversample factors match between C and PyTorch runs (force `-oversample 1`).
-- Keep tests parametrised for CUDA but skip gracefully if unavailable; do not hard-fail on missing GPU.
-- Retain trace metadata: weights can still be logged but must not influence physics.
-- Respect Protected Assets (docs/index.md) when editing docs; update references not deletions.
-- Capture collect-only proof before running targeted pytest to document selector validity.
-- Don’t forget to set NB_RUN_PARALLEL=1 for the parity test or it will skip.
-- Archive env.json/checksums for every artifact bundle.
+- Do not introduce `.cpu()`/`.cuda()` calls inside hot loops; move tensors to the correct device once at construction.
+- Avoid reintroducing Python loops or breaking existing vectorized broadcasts.
+- Preserve gradient flow (no `.item()` / `.detach()` on tensors propagated to physics kernels).
+- Keep CUDA skips conditional (use pytest skipif) rather than hard-failing when GPUs absent.
+- Ensure cached tensors respect dtype overrides (float64 grad checks still need to work).
+- Leave trace/instrumentation hooks intact; adjust only the data placement.
+- Capture collect-only proof before targeted CUDA runs to document selector validity.
+- Respect Protected Assets (docs/index.md) when editing documentation.
 Pointers:
-- specs/spec-a-core.md:151
-- plans/active/source-weight-normalization.md:1
-- docs/fix_plan.md:3963
-- reports/2025-11-source-weights/phase_b/20251009T083515Z/analysis.md
-- tests/test_cli_scaling.py:252
-- src/nanobrag_torch/simulator.py:400
-Next Up: 1) Once parity metrics land, notify VECTOR-GAPS-002 Phase B to resume profiling; 2) Refresh docs/development/pytorch_runtime_checklist.md if weighted-source guidance needs reinforcement.
+- plans/active/vectorization.md:91
+- docs/fix_plan.md:3405
+- docs/development/pytorch_runtime_checklist.md:12
+- reports/2025-10-vectorization/phase_f/summary.md:84
+- src/nanobrag_torch/simulator.py:505
+Next Up: 1) Re-run vectorization CPU benchmarks for regression after CUDA fix; 2) Kick `plans/active/vectorization-gap-audit.md` Phase B2 once parity ≥0.99 on GPU.

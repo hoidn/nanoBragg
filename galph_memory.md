@@ -1,5 +1,11 @@
 # Galph Memory
 
+### 2025-12-23 (galph loop - Vectorization Phase H prep)
+- Rebuilt `plans/active/vectorization.md` with phased tables (A–H) and Phase H checklist for CUDA follow-up; captured outstanding tasks H1–H3.
+- Updated `docs/fix_plan.md` `[VECTOR-TRICUBIC-001]` status/Next Actions to mirror the new plan and keep CUDA evidence pending Attempt #18.
+- Issued `input.md` (Parity mode) directing Ralph to fix simulator device placement (incident_beam_direction caching) and rerun CUDA vectorization tests/benchmarks.
+- Follow-up: Expect CUDA logs under `reports/2025-10-vectorization/phase_h/<STAMP>/` with Attempt #18 before archiving the plan.
+
 > Entries prior to 2025-11 have been moved to `archive/galph_memory/2025-09_to_2025-10.md` (summarized on 2025-12-04).
 
 ### 2025-12-22 (galph loop - Source weight Phase C staging)
@@ -1446,7 +1452,13 @@
 - Authored new `input.md` (Mode: Docs) directing Ralph to execute Phase B1–B3 evidence capture (spec quote, PyTorch call-chain, refreshed CLI metrics) before implementation.
 - Follow-up: Expect Ralph to populate `reports/2025-11-source-weights/phase_b/<STAMP>/` with the new analysis bundle, then proceed to Phase C implementation loop.
 
-### 2025-12-23 (galph loop - Source weight Phase C handoff)
+#### 2025-12-23 (galph loop - Vectorization Phase H prep)
+- Rebuilt `plans/active/vectorization.md` with phased tables (A–H) and new Phase H checklist for CUDA follow-up; captured outstanding tasks H1–H3.
+- Updated `docs/fix_plan.md` [VECTOR-TRICUBIC-001] status/Next Actions to align with the new plan (Phase H focus, CUDA evidence pending).
+- Issued input.md (Parity mode) directing Ralph to fix simulator device placement (incident_beam_direction caching) and rerun CUDA vectorization tests/benchmarks.
+- Follow-up: Once device placement is corrected, expect Attempt #18 with CUDA logs under `reports/2025-10-vectorization/phase_h/<STAMP>/`, then archive the plan.
+
+## 2025-12-23 (galph loop - Source weight Phase C handoff)
 - Status Snapshot refreshed in `plans/active/source-weight-normalization.md` to record Phases A–B complete and highlight Phase C implementation + Phase D parity as the gating work for VECTOR-GAPS-002 / PERF-PYTORCH-004.
 - Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions to direct Phase C1–C3 implementation, Phase D1–D2 parity runs, and documentation notifications once metrics land.
 - Replaced `input.md` (Mode: Parity) with Phase C execution guidance: simulator update, TestSourceWeights expansion, targeted parity pytest, CLI metric captures, and artifact paths under `reports/2025-11-source-weights/phase_c|phase_d/<STAMP>/`.
