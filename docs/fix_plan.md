@@ -3762,7 +3762,7 @@
 For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, early PERF fixes, routing escalation log), see `docs/fix_plan_archive.md`.
 
 ## [VECTOR-TRICUBIC-002] Vectorization relaunch backlog
-- Spec/AT: specs/spec-a-core.md §4–5 (sampling, source weighting, detector absorption); arch.md §§2/8/15; docs/architecture/pytorch_design.md §1.1; docs/development/pytorch_runtime_checklist.md; docs/development/testing_strategy.md §§1.4–2; plans/archive/vectorization.md (Phase A–H historical record).
+- Spec/AT: specs/spec-a-core.md Sections 4-5 (sampling, source weighting, detector absorption); arch.md Sections 2/8/15; docs/architecture/pytorch_design.md Section 1.1; docs/development/pytorch_runtime_checklist.md; docs/development/testing_strategy.md Sections 1.4-2; plans/archive/vectorization.md (Phase A-H historical record).
 - Priority: High
 - Status: in_planning (Phase A dependency gate outstanding)
 - Owner/Date: galph/2025-12-24
@@ -3772,12 +3772,12 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * Regression refresh (Phase B1): `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -v` and `pytest tests/test_at_abs_001.py -v -k "cpu or cuda"`
   * Profiling relaunch (Phase C1): `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`
 - First Divergence (if known): Workflows for post-Phase-H vectorization maintenance stalled because SOURCE-WEIGHT-001 Phase E parity evidence never landed; profiler traces therefore remained low-correlation (≈0.72) and VECTOR-GAPS-002 Phase B1 stayed blocked. No consolidated roadmap existed to sequence blocker clearance, regression refresh, gap profiling, and new vectorization fixes.
-- Next Actions (2025-12-24 kickoff, refreshed with lambda sweep evidence):
-  1. Drive SOURCE-WEIGHT-001 Phase E closure per `plans/active/vectorization.md` Phase A0/A1: confirm the implementation path for forcing CLI `-lambda` through PyTorch (or equivalent guard) and reconciling the steps denominator using the lambda sweep bundle at `reports/2025-11-source-weights/phase_e/20251009T130433Z/lambda_sweep/`. Record the agreed approach in `[SOURCE-WEIGHT-001]` Attempts before requesting fresh parity runs.
-  2. Once the fix lands, execute Phase A1–A3 (rerun TC-D1/D3 parity with corr ≥0.999 and |sum_ratio−1| ≤1e-3), propagate the unblock signal to `[VECTOR-GAPS-002]`, and log the closure in galph_memory per plan guidance.
-  3. With dependencies cleared, run Phase B refresh commands (tricubic/absorption regression + microbenchmarks) and store artifacts under `reports/2026-01-vectorization-refresh/phase_b/` with summary.md capturing deltas vs 2025-10 baselines.
-  4. Resume VECTOR-GAPS-002 Phase B via plan Phase C (profiler capture, hot loop mapping, backlog publication). Update both plans and this ledger with the new backlog ranking, tying into PERF-PYTORCH-004 where relevant.
-  5. Prepare Phase D design packets and microbenchmark harnesses so Ralph can implement the prioritised vectorization fixes without additional discovery; update input.md templates accordingly.
+- Next Actions (2025-12-24 kickoff, refreshed with lambda sweep and design note evidence):
+  1. Drive SOURCE-WEIGHT-001 Phase E closure per plans/active/vectorization.md Phase A0/A1: review the lambda sweep bundle (reports/2025-11-source-weights/phase_e/20251009T130433Z/lambda_sweep/summary.md) and the lambda_semantics.md design note, then record the Option B implementation consensus in [SOURCE-WEIGHT-001] Attempts before delegating the override/steps fix.
+  2. Once the fix lands, execute Phase A1-A3 (rerun TC-D1/D3 parity with corr >=0.999 and |sum_ratio-1| <=1e-3), propagate the unblock signal to [VECTOR-GAPS-002], and log the closure in galph_memory per plan guidance.
+  3. With dependencies cleared, run Phase B refresh commands (tricubic/absorption regression plus microbenchmarks) and store artifacts under reports/2026-01-vectorization-refresh/phase_b/ with summary.md capturing deltas versus 2025-10 baselines.
+  4. Resume VECTOR-GAPS-002 Phase B via plan Phase C (profiler capture, hot loop mapping, backlog publication). Update both plans and this ledger with the new backlog ranking, tying into PERF-PYTORCH-004 where relevant.
+  5. Prepare Phase D design packets and microbenchmark harnesses so Ralph can implement the prioritised vectorization fixes without additional discovery; update input.md templates accordingly.
 - Attempts History: None — initiative (re)opened 2025-12-24. First execution attempt will be logged after Phase A parity evidence is captured.
 
 ## [VECTOR-GAPS-002] Vectorization gap audit
@@ -4043,12 +4043,23 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE nanoBragg -mat A.mat -floatfile py_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources.txt ...` (matching geometry).
   * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
 - First Divergence (if known): Phase A showed PyTorch total intensity 3.28× larger than C for weighted sources. After commit `321c91e` reinstated division by `n_sources`, `_compute_physics_for_position` still multiplies intensity by `source_weights`, producing correlation ≈0.9155 and sum_ratio ≈0.7281 vs C for the TC-A fixture (metrics in `reports/2025-11-source-weights/phase_c/test_failure/metrics.json`).
-- Next Actions (2025-12-24 status refresh):
-  1. Convert the lambda sweep findings into a concrete implementation plan: draft `reports/2025-11-source-weights/phase_e/<STAMP>/lambda_semantics.md` (or equivalent) describing how PyTorch will ignore sourcefile wavelengths and reconcile the steps denominator. Update `[SOURCE-WEIGHT-001]` Attempts and `plans/active/vectorization.md` Phase A0 once the approach is agreed.
-  2. Phase E2 evidence refresh: Capture a current CLI run of the TC-D1 command (PyTorch only) and store `stdout`/`commands.txt` under `reports/2025-11-source-weights/phase_e/<STAMP>/` to prove the guard now reports `"Loaded 2 sources"` with no divergence auto-generation. Include a quick script log of `n_sources`, `steps`, and `fluence` pulled from a Simulator instance for the same configuration so downstream analysis has trusted inputs.
-  3. Phase E3 parity triage: Rebuild `./golden_suite_generator/nanoBragg` if missing, then run the PyTorch+C command pair from TC-D1 manually (outside pytest) to regenerate float images and metrics. Record the metrics delta (correlation, sum_ratio, sums) in `summary.md` together with the captured simulator diagnostics from step 2 so we have synchronized evidence of the remaining 140–300× gap.
-  4. Phase E4 investigation follow-through: With fresh artifacts in hand, open a pixel-trace comparison (C trace vs `scripts/debug_pixel_trace.py`) targeting an on-peak pixel from the regenerated outputs to isolate the first normalization divergence, then prepare plan updates/docs once the failing stage is identified. Only after the discrepancy is understood should TC-D1/TC-D3 parity runs be reattempted and documentation/notifications finalized.
+- Next Actions (2025-12-24 consensus update):
+  1. Implement Option B from lambda_semantics.md: override all sourcefile wavelengths with the CLI value (`src/nanobrag_torch/io/source.py`, `src/nanobrag_torch/__main__.py`), add the mismatch warning (stacklevel=2), and update steps calculation to count all sources including zero-weight entries (`src/nanobrag_torch/simulator.py`).
+  2. Add regression coverage per the design note: create `tests/test_at_src_003.py` with TC-E1/E2/E3 (warning capture, steps parity), run `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_src_003.py -v`, and store collect-only proof in the reports bundle.
+  3. Capture Phase E parity evidence: rerun TC-D1/TC-D3 via `NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE python scripts/cli/run_weighted_source_parity.py --oversample 1 --outdir reports/2025-11-source-weights/phase_e/<STAMP>/`, compute correlation and sum_ratio, and archive simulator diagnostics (n_sources, steps, fluence) plus commands/env snapshots.
+  4. Update documentation after parity passes: amend specs/spec-a-core.md (Sources) and docs/development/c_to_pytorch_config_map.md with the CLI override rule, refresh docs/architecture/pytorch_design.md if needed, then log a new Attempt summarising metrics and doc touchpoints.
 - Attempts History:
+  * [2025-12-24] Attempt #16 (galph loop - Mode: Docs). Result: **CONSENSUS LOGGED** (Option B override/steps plan recorded).
+    Metrics: Test suite not run (planning-only).
+    Artifacts:
+      - `plans/active/vectorization.md` - Phase A updated with Option B consensus tasks and ascii cleanup.
+      - `docs/fix_plan.md` - Next Actions refreshed to reference lambda_semantics.md and upcoming implementation steps.
+    Observations/Hypotheses:
+      - Design note `reports/2025-11-source-weights/phase_e/20251009T131709Z/lambda_semantics.md` remains authoritative; no alternative proposals surfaced.
+      - Recording consensus inside `[SOURCE-WEIGHT-001]` unblocks delegation of the CLI override/steps fix without additional supervisor loops.
+    Next Actions:
+      1. Implement Option B overrides/tests per refreshed Next Actions list.
+      2. Capture parity metrics and documentation updates once implementation lands.
   * [2025-12-24] Attempt #13 (galph loop — Mode: Debug). Result: **EVIDENCE ONLY** (wavelength-column triage). No code changes.
     Metrics: PyTorch simulator instantiated via CLI plumbing reports `n_sources=2`, `steps=2`, `_source_wavelengths_A=tensor([6.2000, 6.2000])` for the TC-D1 fixture; C reference stdout (`reports/2025-11-source-weights/phase_a/20251009T071821Z/c/c_stdout.log:117-148`) shows `4 sources` with `wave=9.768e-11 meters` (0.9768 Å) and identical `steps=4` denominator.
     Artifacts:

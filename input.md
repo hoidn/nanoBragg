@@ -1,36 +1,37 @@
-Summary: Capture the lambda semantics decision so VECTOR-TRICUBIC-002 Phase A can unblock SOURCE-WEIGHT parity.
-Mode: Docs
-Focus: [VECTOR-TRICUBIC-002] Vectorization relaunch backlog
+Summary: Implement the Option B lambda override and steps fix so weighted-source parity can unblock vectorization follow-ups.
+Mode: Parity
+Focus: SOURCE-WEIGHT-001 / Correct weighted source normalization
 Branch: feature/spec-based-2
-Mapped tests: pytest --collect-only -q
-Artifacts: reports/2025-11-source-weights/phase_e/<STAMP>/lambda_semantics.md
-Do Now: [VECTOR-TRICUBIC-002] Phase A0 — run `pytest --collect-only -q`; draft `reports/2025-11-source-weights/phase_e/<STAMP>/lambda_semantics.md` detailing the CLI `-lambda` override + steps reconciliation plan (reference the 20251009T130433Z lambda sweep).
-If Blocked: capture TC-D1 PyTorch diagnostics (commands, simulator `n_sources`/`steps`/`fluence`) under `reports/2025-11-source-weights/phase_e/<STAMP>/py_diagnostics/` and note blockers in docs/fix_plan Attempts.
+Mapped tests: KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_src_003.py -v
+Artifacts: reports/2025-11-source-weights/phase_e/<STAMP>/{commands.txt,collect.log,pytest.log,metrics.json,simulator_diagnostics.txt}
+Do Now: [SOURCE-WEIGHT-001] Implement Option B override, add TC-E1/E2/E3, then run KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_src_003.py -v
+If Blocked: Capture the partial command/test output under reports/2025-11-source-weights/phase_e/<STAMP>/attempts/ and log the blocker in docs/fix_plan.md attempts.
 Priorities & Rationale:
-- plans/active/vectorization.md:23 — Phase A0 now requires documenting how we force CLI `-lambda` and fix steps before parity reruns.
-- docs/fix_plan.md:3775 — VECTOR-TRICUBIC-002 next actions hinge on confirming the lambda/steps approach.
-- docs/fix_plan.md:4046 — SOURCE-WEIGHT-001 mandate to author the lambda semantics plan before fresh evidence runs.
-- plans/active/source-weight-normalization.md:65 — Phase E2 done; Phase E3 stays blocked until the lambda/steps fix path is agreed.
-- docs/development/testing_strategy.md:28 — collect-only proof required for doc-only loops.
+- docs/fix_plan.md:4046 enumerates Option B implementation, regression, parity, and doc updates that unblock dependent plans.
+- plans/active/vectorization.md:23 marks Phase A as blocked until SOURCE-WEIGHT-001 Phase E parity evidence lands.
+- plans/active/source-weight-normalization.md:65 keeps Phase E3 blocked pending the CLI lambda override and steps reconciliation.
+- reports/2025-11-source-weights/phase_e/20251009T131709Z/lambda_semantics.md documents the agreed code/test/doc touchpoints to follow.
+- specs/spec-a-core.md Section 4 reaffirms source weights (and wavelengths) are ignored in accumulation, guiding the override.
 How-To Map:
-- Create a fresh timestamped folder under `reports/2025-11-source-weights/phase_e/` (e.g., `$(date -u +%Y%m%dT%H%M%SZ)`); store `lambda_semantics.md`, `commands.txt`, and any quick helper scripts there.
-- Summarise the CLI `-lambda` override plan: entry points to touch (`src/nanobrag_torch/__main__.py`, `src/nanobrag_torch/config.py`, `src/nanobrag_torch/models/crystal.py`), how to ignore sourcefile wavelengths, and how to enforce consistent `steps` counting.
-- Reference existing evidence (`reports/2025-11-source-weights/phase_e/20251009T130433Z/lambda_sweep/`) and cite spec lines (`specs/spec-a-core.md` on sources) plus C reference log anchors.
-- Run `pytest --collect-only -q` from repo root after drafting the doc; capture output into the same report folder (`collect.log`).
-- Update docs/fix_plan.md `[SOURCE-WEIGHT-001]` Attempts with the new artifact path and summary once the note is ready; include next steps for implementation.
+- Implement override: edit src/nanobrag_torch/io/source.py, __main__.py, and simulator.py per lambda_semantics.md; emit warnings.warn(..., stacklevel=2).
+- Tests: KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_src_003.py -v (author TC-E1/E2/E3 first); store collect-only output in collect.log.
+- Parity bundle: NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE python scripts/cli/run_weighted_source_parity.py --oversample 1 --outdir reports/2025-11-source-weights/phase_e/<STAMP>/; compute correlation.txt and sum_ratio.txt.
+- Diagnostics: capture simulator diagnostics (n_sources, steps, fluence) via helper script and save to simulator_diagnostics.txt alongside env.json.
+- Docs: after parity passes, update specs/spec-a-core.md (Sources) and docs/development/c_to_pytorch_config_map.md, noting CLI lambda precedence.
 Pitfalls To Avoid:
-- Do not modify production code in this loop.
-- Keep the new plan note ASCII and reference exact file paths / command lines.
-- Do not claim parity metrics until the CLI `-lambda` fix is implemented and rerun.
-- Avoid overwriting existing report folders; always use a new timestamp.
-- Remember Protected Assets (no edits to docs/index.md referenced items).
-- Maintain device/dtype neutrality in the plan (call out CPU+CUDA expectations).
-- Do not delete or rename existing lambda sweep artifacts.
-- Keep commands ready to replay (no hard-coded local paths outside repo).
+- Do not reintroduce source_weight multipliers; equal weighting must remain vectorized.
+- Preserve device/dtype neutrality (no hardcoded .cpu()/.cuda()); respect existing tensor broadcast shapes.
+- Keep protected assets intact (docs/index.md references loop.sh, supervisor.sh, input.md).
+- Use warnings.warn with stacklevel=2; avoid print statements for user warnings.
+- Ensure new tests guard warm/cold devices with torch.cuda.is_available().
+- Record exact commands/exit codes in commands.txt for reproducibility.
+- Maintain differentiability: no .item()/.detach() on gradient-bearing tensors in simulator paths.
+- Remove any temporary scripts or debug prints before finishing.
 Pointers:
-- plans/active/vectorization.md:23
-- docs/fix_plan.md:3775
 - docs/fix_plan.md:4046
+- docs/fix_plan.md:4052
+- plans/active/vectorization.md:23
 - plans/active/source-weight-normalization.md:65
-- docs/development/testing_strategy.md:28
-Next Up (optional): Implement the CLI `-lambda` override in source parsing and regenerate TC-D1/TC-D3 parity evidence once the design note is approved.
+- reports/2025-11-source-weights/phase_e/20251009T131709Z/lambda_semantics.md:1
+- specs/spec-a-core.md:150
+Next Up: If parity succeeds early, start drafting docs updates (specs/spec-a-core.md Sources paragraph, config_map beam table).

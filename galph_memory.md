@@ -1568,3 +1568,10 @@
 - Marked `plans/active/source-weight-normalization.md` Phase E2 complete (lines 65-68) and clarified that E3 stays blocked pending the lambda/steps fix path.
 - New `input.md` (Docs mode) directs Ralph to author `reports/2025-11-source-weights/phase_e/<STAMP>/lambda_semantics.md` plus collect-only proof, aligning with VECTOR-TRICUBIC-002 Phase A0.
 - Coin review (heads): Ralph’s recent commits 303a284 → 1959182 delivered parity evidence and the lambda sweep; productive progress with no regressions, but physics fix still outstanding.
+
+### 2025-12-24 (galph loop - Option B implementation handoff)
+- Recorded Option B consensus in docs/fix_plan.md:4046-4052 and added Attempt #16 so SOURCE-WEIGHT-001 now points at concrete override/steps tasks.
+- Refreshed plans/active/vectorization.md Phase A (ascii cleanup + explicit A0-A3 guidance) tying lambda_semantics.md to the parity gate.
+- Replaced input.md with Parity-mode instructions directing Ralph to implement the override, add TC-E tests, rerun parity, and archive artifacts under reports/2025-11-source-weights/phase_e/<STAMP>/.
+- Follow-up: Ralph implements Option B, adds tests/test_at_src_003.py, runs targeted pytest + parity script, updates docs per plan, then logs results in fix_plan attempts.
+
