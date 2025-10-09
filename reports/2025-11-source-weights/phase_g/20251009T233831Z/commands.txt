@@ -1,0 +1,12 @@
+# Environment
+NB_C_BIN=./golden_suite_generator/nanoBragg
+NB_RUN_PARALLEL=1
+KMP_DUPLICATE_LIB_OK=TRUE
+STAMP=20251009T233831Z
+
+# Test Command (mapped selectors from input.md Do Now)
+pytest -v tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence
+
+# Results
+# 7 passed, 1 xpassed in 21.21s
+# test_c_divergence_reference: XPASS (correlation ≈0.999989, sum_ratio ≈1.0038)
