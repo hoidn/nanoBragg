@@ -64,12 +64,12 @@ Exit Criteria: Timestamped Phase D bundle contains real C/Py traces + targeted
 | D2 | Ledger + plan sync | [D] | ✅ Attempt #184 (2025-10-08). Updated `docs/fix_plan.md` CLI-FLAGS-003 with Phase D2 completion, removed shim from Next Actions. Moved `plans/active/cli-phi-parity-shim/plan.md` → `plans/archive/cli-phi-parity-shim/plan.md` with closure note referencing Phase D bundle. Artifacts: ledger_sync.md, collect log. |
 | D3 | Supervisor handoff memo | [D] | ✅ Completed 2025-12-14 (galph loop). Issued new `input.md` pointing Ralph at `plans/active/cli-noise-pix0/plan.md` Phase M2g work (spec-only path) and logged the closure in `galph_memory.md`; shim removal evidence now fully handed off. |
 
-### Phase E — Post-removal Watch (Optional)
+### Phase E — Post-removal Watch (Complete)
 Goal: Install lightweight guardrails so φ carryover never sneaks back in.
 Prereqs: Phase D bundle committed and referenced in fix_plan.
 Exit Criteria: Preventative checks documented and logged in the repo for future hygiene sweeps.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| E1 | Add hygiene checklist item | [ ] | Extend `docs/fix_plan.md` Protected-Assets/cleanup guidance to require `rg "phi_carryover"` before/after large refactors. Cite `specs/spec-a-core.md:204-240` as the reason. |
-| E2 | Schedule periodic audit | [ ] | Create `reports/archive/cli-flags-003/watch.md` documenting a quarterly trace-audit cadence (command + expected zero diff). Include first audit due date and owner (default Ralph). |
+| E1 | Add hygiene checklist item | [D] | ✅ Extended `docs/fix_plan.md` [PROTECTED-ASSETS-001] Hygiene Checklist with mandatory `rg "phi_carryover"` sweep requirement before/after large refactors. Cites `specs/spec-a-core.md:204-240` (fresh φ rotation contract) as rationale. |
+| E2 | Schedule periodic audit | [D] | ✅ Created `reports/archive/cli-flags-003/watch.md` § Quarterly Spec-Trace Audit documenting quarterly trace-audit cadence with canonical command from `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/commands.txt`. First audit due 2026-01-08. |

@@ -57,11 +57,23 @@
     Artifacts: plans/active/repo-hygiene-002/plan.md (pending update); verification log to be captured under `reports/repo-hygiene/` during next hygiene pass.
     Observations/Hypotheses: Without a recorded checklist and artifact, future cleanup could again delete protected files.
     Next Actions: Update plan task H4 with the mandatory docs/index.md scan, then record a compliance log during the next REPO-HYGIENE-002 execution.
+  * [2025-10-08] Attempt #4 — Result: success (hygiene guidance extended). Added comprehensive cleanup checklist to Protected Assets policy covering φ carryover sweeps and quarterly trace audit cadence.
+    Metrics: n/a (documentation only)
+    Artifacts: `reports/archive/cli-flags-003/watch.md` (watch scaffolding with quarterly/biannual commands); this fix_plan section (hygiene checklist below).
+    Observations/Hypotheses: Future hygiene sweeps and large refactors must verify zero `phi_carryover` references (excluding historical docs/reports) and periodically rerun spec-trace comparison to catch scaling regressions.
+    Next Actions: Enforce checklist during next cleanup loop; update watch.md if nanoBragg.c reference binary or test data paths change.
 - Risks/Assumptions: Future cleanup scripts must fail-safe against removing listed assets; ensure supervisor prompts reinforce this rule.
+- **Hygiene Checklist (Mandatory for Cleanup Sweeps)**:
+  - **Protected Assets Scan**: Before any file deletion, verify target files are NOT listed in `docs/index.md` (loop.sh, supervisor.sh, input.md are protected).
+  - **φ Carryover Sweep**: Before/after large refactors, run `rg "phi_carryover" src tests scripts prompts docs --files-with-matches` and expect zero hits outside `docs/fix_plan.md`, `reports/`, `plans/archive/`. Reference `specs/spec-a-core.md:204-240` (fresh φ rotation contract) as rationale for removal.
+  - **Quarterly Spec-Trace Audit**: Every 3 months, rerun canonical spec-mode trace comparison from `reports/archive/cli-flags-003/watch.md` § Quarterly Trace Harness to detect scaling regressions early. Expected diff: zero (or metadata-only changes). Divergence → reopen CLI-FLAGS-003.
+  - **Biannual nb-compare Smoke**: Every 6 months, execute full ROI parity command from `watch.md` § Biannual nb-compare Smoke Test. Expected metrics: corr≥0.98, sum_ratio 1.1e5–1.3e5 (C-PARITY-001 tolerance), mean_peak_distance<1px. Failures → reopen CLI-FLAGS-003.
+  - **Canonical Command Reference**: For spec-trace, use `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/commands.txt` as authoritative reproduction script.
 - Exit Criteria (quote thresholds from spec):
   * CLAUDE.md and docs/index.md enumerate the rule (✅ already satisfied).
   * Every hygiene-focused plan (e.g., REPO-HYGIENE-002) explicitly checks docs/index.md before deletions.
   * Verification log links demonstrating the rule was honored during the next hygiene loop.
+  * Quarterly/biannual watch tasks documented and referenced in future hygiene loops (✅ completed Attempt #4).
 
 ---
 
@@ -3226,6 +3238,30 @@
       - **Phase P Watch Tasks:** Establish Phase P checklist items per plan rows P1-P2 (quarterly trace_harness.py cadence, biannual nb-compare smoke test)
       - **Galph Handoff:** Flag supervisor (galph) via galph_memory note that VG-5 closure Attempt is recorded so next loop can append matching acknowledgement
       - **CLI-FLAGS-003 Ready for Next Initiative:** With Phase O complete, initiative can advance to optional watch phase or transition focus to next priority item
+  * [2025-10-08] Attempt #205 (ralph loop i=205, Mode: Docs) — Result: ✅ **Phase P1/P2 WATCH SCAFFOLDING COMPLETE.** **Documentation-only loop.**
+    Metrics: Test collection: 666 tests collected in 2.65s (pytest --collect-only -q passed ✓).
+    Artifacts:
+      - `reports/archive/cli-flags-003/watch.md` — Watch scaffolding document with quarterly trace harness cadence and biannual nb-compare smoke test commands, expected metrics (corr≥0.98, sum_ratio 1.1e5-1.3e5, peak_distance<1px), artifact management rules, and deviation response protocol
+      - `docs/fix_plan.md` [PROTECTED-ASSETS-001] Hygiene Checklist — Extended with φ carryover sweep requirement (`rg "phi_carryover"` before/after refactors), quarterly spec-trace audit (citing `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/commands.txt`), and biannual nb-compare smoke test (referencing watch.md § Biannual nb-compare Smoke Test)
+      - `plans/active/cli-noise-pix0/plan.md` Phase P — Marked P1/P2 rows [D] (hygiene checklist extended, watch.md created)
+      - `plans/active/phi-carryover-removal/plan.md` Phase E — Marked E1/E2 rows [D] (hygiene checklist φ sweep requirement, quarterly audit cadence documented)
+    Changes:
+      - Created `reports/archive/cli-flags-003/watch.md` documenting quarterly/biannual watch tasks
+      - Updated `docs/fix_plan.md` [PROTECTED-ASSETS-001] Attempt #4 adding Hygiene Checklist with mandatory Protected Assets scan, φ carryover sweep (citing `specs/spec-a-core.md:204-240`), quarterly spec-trace audit, biannual nb-compare smoke, and canonical command reference
+      - Updated `plans/active/cli-noise-pix0/plan.md` Phase P table header to "(Complete)" and marked P1/P2 [D]
+      - Updated `plans/active/phi-carryover-removal/plan.md` Phase E table header to "(Complete)" and marked E1/E2 [D]
+    Observations/Hypotheses:
+      - **Phase P1 Complete:** Hygiene checklist now requires quarterly `trace_harness.py` rerun (first audit due 2026-01-08) with expected zero diff (metadata-only changes allowed)
+      - **Phase P2 Complete:** watch.md biannual nb-compare documented with canonical supervisor command, expected metrics (correlation≥0.98, sum_ratio 110K-130K per C-PARITY-001), and artifact retention policy (latest 2 runs kept, older archived)
+      - **Phase E1 Complete:** φ carryover sweep (`rg "phi_carryover"`) now mandatory before/after large refactors; zero hits expected outside `docs/fix_plan.md`, `reports/`, `plans/archive/`
+      - **Phase E2 Complete:** Quarterly trace audit cadence documented in watch.md with canonical command from Phase D bundle; first audit 2026-01-08
+      - **Cross-Plan Coordination:** Both cli-noise-pix0 (Phase P) and phi-carryover-removal (Phase E) reference the same watch.md and hygiene checklist, ensuring unified guidance
+      - **Artifact Hygiene:** watch.md includes retention rules (quarterly: latest 4 runs; biannual: latest 2 runs) and deviation response protocol (capture diagnostic bundle, update fix_plan, run targeted pytest)
+    Next Actions:
+      - **CLI-FLAGS-003 Watch Phase Complete:** Phases P1/P2 delivered; initiative can now transition to monitoring-only status
+      - **Phi-Carryover Removal Complete:** Phases E1/E2 delivered; plan can be archived once galph acknowledges in next supervisor loop
+      - **Galph Handoff:** Flag supervisor that watch scaffolding is complete and ready for acknowledgement in galph_memory
+      - **Future Hygiene Loops:** Enforce new checklist items when executing cleanup/refactor work
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; **(viii) Phase F3 parity evidence captured** ✅ (Attempt #12); **(ix) Phase G2 MOSFLM orientation ingestion complete** ✅ (Attempt #17); **(x) Phase G3 trace verification complete with transpose fix** ✅ (Attempt #18); (xi) Phase H lattice structure factor alignment ✅ (Attempt #25); (xii) Phase F3 parity rerun with lattice fix ❌; (xiii) Phase I polarization alignment ❌; (xiv) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌.
 

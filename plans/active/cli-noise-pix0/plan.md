@@ -97,13 +97,13 @@ Exit Criteria: Supervisor command rerun recorded with expected correlation/inten
 | O2 | Ledger update | [D] | ✅ Attempt #204 (2025-10-08). Recorded VG-5 closure in `docs/fix_plan.md` with detailed metrics/tolerance attribution; updated plan Status Snapshot with Phase O completion and archive paths; flagged supervisor via Attempts History for galph_memory acknowledgement. |
 | O3 | Archive & handoff | [D] | ✅ Attempt #204 (2025-10-08). Mirrored 20251009T024433Z bundle to `reports/archive/cli-flags-003/supervisor_command/20251009T024433Z/` (byte-identical copy, 17 files, 74MB); created `summary.md` documenting acceptance metrics, C-PARITY-001 tolerance (110K-130K), and Option 1 decision; pytest collection verified (2/2 tests). Ready for Phase P watch tasks. |
 
-### Phase P — Post-Fix Watch (Optional)
+### Phase P — Post-Fix Watch (Complete)
 Goal: Establish lightweight guardrails so scaling regressions are caught early.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| P1 | Add hygiene checklist item | [ ] | Extend `docs/fix_plan.md` cleanup guidance to require rerunning `trace_harness.py` (spec-mode) on a quarterly cadence; cite the latest green bundle. |
-| P2 | Schedule nb-compare smoke | [ ] | Document a biannual nb-compare smoke test command + expected metrics in `reports/archive/cli-flags-003/watch.md`. |
+| P1 | Add hygiene checklist item | [D] | ✅ Extended `docs/fix_plan.md` [PROTECTED-ASSETS-001] Hygiene Checklist with quarterly spec-trace audit requirement (references `trace_harness.py` command from `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/commands.txt`). |
+| P2 | Schedule nb-compare smoke | [D] | ✅ Created `reports/archive/cli-flags-003/watch.md` documenting biannual nb-compare smoke test with expected metrics (corr≥0.98, sum_ratio 1.1e5–1.3e5, mean_peak_distance<1px) from Phase N closure bundle `20251009T020401Z/`. |
 
 ### Phase M5 — φ Rotation Realignment & Spec Compliance Declaration
 Goal: Finalise the φ rotation recalculation work, document that PyTorch now matches the normative spec (fresh vectors per φ step), and record why the legacy C trace remains divergent because of C-PARITY-001. Deliverables must capture the Option 1 decision (accept spec behaviour, treat C bug as historical) and gate any future optional shim work.
