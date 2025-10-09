@@ -18,7 +18,7 @@
 | [REPO-HYGIENE-002](#repo-hygiene-002-restore-canonical-nanobraggc) | Restore canonical nanoBragg.c | Medium | in_progress |
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
 | [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | in_progress |
-| [VECTOR-TRICUBIC-001](#vector-tricubic-001-vectorize-tricubic-interpolation-and-detector-absorption) | Vectorize tricubic interpolation and detector absorption | High | in_progress |
+| [VECTOR-TRICUBIC-001](#vector-tricubic-001-vectorize-tricubic-interpolation-and-detector-absorption) | Vectorize tricubic interpolation and detector absorption | High | done (Phase H CUDA parity archived) |
 | [VECTOR-GAPS-002](#vector-gaps-002-vectorization-gap-audit) | Vectorization gap audit | High | in_progress |
 | [ABS-OVERSAMPLE-001](#abs-oversample-001-fix-oversample_thick-subpixel-absorption) | Fix -oversample_thick subpixel absorption | High | in_planning |
 | [CLI-DTYPE-002](#cli-dtype-002-cli-dtype-parity) | CLI dtype parity | High | in_progress |
@@ -3410,18 +3410,16 @@
 ## [VECTOR-TRICUBIC-001] Vectorize tricubic interpolation and detector absorption
 - Spec/AT: specs/spec-a-core.md §4 (structure factor sampling), specs/spec-a-parallel.md §2.3 (tricubic acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4 (vectorization strategy), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, nanoBragg.c lines 2604–3278 (polin3/polin2/polint) and 3375–3450 (detector absorption loop).
 - Priority: High
-- Status: in_progress (Phase H underway — H1 device-placement fix landed; CUDA regression + benchmark capture pending).
+- Status: done (Phase H CUDA parity captured; ledger archived 2025-12-23).
 - Owner/Date: galph/2025-10-17 (updated 2025-12-23 by galph after Attempt #36)
-- Plan Reference: `plans/active/vectorization.md`
+- Plan Reference: `plans/archive/vectorization.md`
 - Reproduction (C & PyTorch):
   * PyTorch baseline tests: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py tests/test_at_abs_001.py -v`
   * CUDA parity sweep (Phase H2): `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -v -k cuda` and `pytest tests/test_at_abs_001.py -v -k cuda`
   * Microbenchmarks: `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --device {cpu,cuda}` plus `scripts/benchmarks/absorption_baseline.py --device {cpu,cuda}` with `--repeats 200`
   * Shapes/ROI: 256² & 512² detectors for microbench; oversample 1; structure-factor grid enabling tricubic.
 - First Divergence (if known): None — CPU vectorization confirmed. CUDA parity/benchmark evidence outstanding until Phase H2 runs are captured under `reports/2025-10-vectorization/phase_h/`.
-- Next Actions (Phase H per `plans/active/vectorization.md`):
-  1. Execute Phase H2 commands and archive artifacts under `reports/2025-10-vectorization/phase_h/<STAMP>/`: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -v -k cuda`, `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_abs_001.py -v -k cuda`, `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --device cuda --repeats 200`, and `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/absorption_baseline.py --device cuda --repeats 200`. Capture env.json, metrics JSON, and summary.md for parity/perf comparisons.
-  2. After CUDA metrics land, append Attempt #18 summarising CPU↔CUDA parity, refresh `plans/active/vectorization.md` Status Snapshot, and archive the plan to `plans/archive/` noting any residual PERF-PYTORCH-004 dependencies.
+- Next Actions: None — item closed after Attempt #18; continue to reference archived artifacts for future vectorization efforts.
 - Attempts History:
   * [2025-10-06] Attempt #1 (ralph loop) — Result: **Phase A1 COMPLETE** (test collection & execution baseline captured). All tricubic and absorption tests passing.
     Metrics: AT-STR-002: 3/3 tests passed in 2.12s (test_tricubic_interpolation_enabled, test_tricubic_out_of_bounds_fallback, test_auto_enable_interpolation). AT-ABS-001: 5/5 tests passed in 5.88s. Collection: 3 tricubic tests found.
@@ -3750,7 +3748,7 @@
       - **Statistical confidence:** 200 warm repeats provide robust measurements (tricubic: 0.24% std dev, absorption: 0.42-0.32% std dev)
       - **Compliance verified:** All runtime checklist items satisfied (vectorization maintained, device/dtype neutrality, gradient flow preserved, CPU+CUDA smoke tests passing)
       - **Phase H complete per plan:** H1 (device-placement fix) done in prior loop, H2 (CUDA tests + benchmarks) executed this loop, H3 (archive plan) ready for next action
-    Next Actions: Mark [VECTOR-TRICUBIC-001] status as `done` in fix_plan.md index; archive `plans/active/vectorization.md` to `plans/archive/vectorization.md` noting Phase H completion (date, commit a59a9b1, all exit criteria satisfied); update CLAUDE.md if any new runtime guidance emerged (none identified); close item in next loop.
+    Next Actions: Completed during galph loop i=228 — fix_plan index updated, plan migrated to `plans/archive/vectorization.md`, and no additional runtime guidance required.
 - Risks/Assumptions: Must maintain differentiability (no `.item()`, no `torch.linspace` with tensor bounds), preserve device/dtype neutrality (CPU/CUDA parity), and obey Protected Assets rule (all new scripts under `scripts/benchmarks/`). Large tensor indexing may increase memory pressure; ensure ROI caching still works.
 - Exit Criteria (quote thresholds from spec):
   * specs/spec-a-parallel.md §2.3 tricubic acceptance tests run without warnings and match C parity within documented tolerances (corr≥0.9995, ≤1e-12 structural duality where applicable).

@@ -8,7 +8,7 @@
   - docs/development/pytorch_runtime_checklist.md — runtime guardrails for PyTorch edits
   - docs/fix_plan.md §[VECTOR-TRICUBIC-001] — ledger history + open blockers (CUDA evidence)
   - reports/2025-10-vectorization/phase_* — evidence bundles for Phases A–G
-- Status Snapshot (2025-12-23 update): Phases A–G complete on CPU with documentation refreshed. PERF-PYTORCH-004 Attempt #36 (commit 34f319f) resolved the device-placement blocker, so Phase H execution can proceed. Await CUDA test/benchmark artifacts under `phase_h/` before archiving the plan.
+- Status Snapshot (2025-12-23 update): Phases A–H complete. PERF-PYTORCH-004 Attempt #36 cleared the device-placement blocker, Attempt #18 captured the CUDA parity + benchmarks under `reports/2025-10-vectorization/phase_h/20251009T092228Z/`, and galph loop i=228 archived the plan after updating docs/fix_plan.md.
 
 ### Phase A — Baseline Evidence Capture
 Goal: Establish pre-vectorization behaviour, warnings, and timings for tricubic interpolation and detector absorption.
@@ -88,7 +88,7 @@ Exit Criteria: Architecture/runtime docs updated, pytest collect-only proof reco
 | G1 | Update architecture & runtime docs | [D] | `docs/architecture/pytorch_design.md` §1.1 + `docs/development/pytorch_runtime_checklist.md` vectorization bullet; bundle `phase_g/20251009T055116Z/summary.md`; Attempt #17. |
 | G2 | Refresh plan snapshot & fix_plan ledger | [D] | Plan + fix_plan adjustments logged during galph loop i=214; evidence in `phase_g/20251009T055116Z/commands.txt`; Attempt #17 follow-up. |
 
-### Phase H — CUDA Follow-Up & Plan Archival (Pending)
+### Phase H — CUDA Follow-Up & Plan Archival
 Goal: Execute GPU validation now that device placement is fixed, then archive the plan.
 Prereqs: ✅ Satisfied — PERF-PYTORCH-004 Attempt #36 (commit 34f319f) moved Detector tensors onto the simulator device; source weighting parity completed in Attempt #6.
 Exit Criteria: CUDA tests/benchmarks captured, fix_plan updated with Attempt #18, plan moved to archive.
@@ -96,5 +96,5 @@ Exit Criteria: CUDA tests/benchmarks captured, fix_plan updated with Attempt #18
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | H1 | Clear device-placement blocker | [D] | ✅ Completed via PERF-PYTORCH-004 Attempt #36 (commit 34f319f). `Simulator.__init__` now calls `detector.to(device=self.device, dtype=self.dtype)`, eliminating CUDA device mismatch. Logged in `docs/fix_plan.md` Attempt #36. |
-| H2 | Rerun CUDA tests & benchmarks | [ ] | Capture fresh CUDA parity + perf evidence: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -v -k cuda`, `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_abs_001.py -v -k cuda`, `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --device cuda --repeats 200`, `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/absorption_baseline.py --device cuda --repeats 200`. Archive logs, metrics, commands, and env snapshots under `reports/2025-10-vectorization/phase_h/<STAMP>/`. |
-| H3 | Close ledger & archive plan | [ ] | After H2 artifacts land, append Attempt #18 in `docs/fix_plan.md` with CPU↔CUDA comparison, refresh this status snapshot, and migrate the plan to `plans/archive/` summarising residual risks (if any). |
+| H2 | Rerun CUDA tests & benchmarks | [D] | ✅ Completed by Ralph (Attempt #18). Artifacts: `reports/2025-10-vectorization/phase_h/20251009T092228Z/` (CUDA pytest logs, benchmarks, env metadata). Results within ±1.3% of Phase E tricubic baselines; absorption +5–6 % vs Phase A. |
+| H3 | Close ledger & archive plan | [D] | ✅ Completed by galph loop i=228 — fix_plan status flipped to `done`, plan migrated to `plans/archive/vectorization.md`, closure note recorded here. |
