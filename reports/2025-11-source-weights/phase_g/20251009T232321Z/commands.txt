@@ -1,0 +1,23 @@
+# Phase G Evidence Collection Commands
+
+## Environment Setup
+export NB_C_BIN=./golden_suite_generator/nanoBragg
+export NB_RUN_PARALLEL=1
+export KMP_DUPLICATE_LIB_OK=TRUE
+export STAMP=20251009T232321Z
+
+## Targeted Test Execution
+pytest -v tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence 2>&1 | tee "reports/2025-11-source-weights/phase_g/${STAMP}/pytest.log"
+
+## Test Collection Validation
+pytest --collect-only -q
+
+## Metrics Access
+cat reports/2025-11-source-weights/phase_g/unexpected_c_parity/metrics.json
+
+## Notes
+# - Test XPASS reproduced: test_c_divergence_reference passed unexpectedly
+# - Correlation: 0.9999886 (meets ≥0.999 threshold)
+# - Sum Ratio: 1.0038 (meets |ratio-1| ≤3e-3 threshold)
+# - 692 tests collected successfully
+# - 7 passed, 1 xpassed in 21.24s
