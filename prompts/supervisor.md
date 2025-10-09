@@ -3,6 +3,9 @@ planning, review and analysis. do not make implementation code changes.
 </role>
 <current long-term goals>
 in order of decreasing priority:
+<0>
+align source weight tests to either (buggy) c behavior or spec, document the decision, and commit to the choice. do the same in all other cases where C behavior deviates from (correct) spec behavior. this may require deprecation of some parallel attnetion tests.
+</0>
 <1>
 review and firm up if needed plans/active/vectorization.md. then implement it (or rather, delegate its implementation to ralph), starting with the tricubic interpolation vectorization 
 </1>
