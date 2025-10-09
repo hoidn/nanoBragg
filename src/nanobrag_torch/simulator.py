@@ -483,6 +483,12 @@ class Simulator:
             self.device = torch.device("cpu")
         self.dtype = dtype
 
+        # PERF-PYTORCH-004 Attempt #14: Ensure detector is on the same device/dtype as simulator
+        # This prevents device mismatch errors when detector tensors (beam_vector, pixel_coords)
+        # interact with simulator tensors (wavelength, incident_beam_direction) during compilation
+        if self.detector is not None:
+            self.detector = self.detector.to(device=self.device, dtype=self.dtype)
+
         # Store debug configuration
         self.debug_config = debug_config if debug_config is not None else {}
         self.printout = self.debug_config.get('printout', False)
