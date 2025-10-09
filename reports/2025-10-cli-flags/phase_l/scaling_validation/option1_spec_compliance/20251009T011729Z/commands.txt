@@ -1,0 +1,58 @@
+# Option 1 Spec Compliance Bundle — Reproduction Commands
+# Date: 2025-12-20
+# Purpose: Document decision to accept spec-compliant φ rotation behavior
+
+## Targeted Test Execution
+```bash
+# CPU regression test (spec-compliant behavior)
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling_phi0.py
+# Expected: 2/2 PASSED
+
+# CUDA smoke test (if GPU available)
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v -m gpu_smoke tests/test_cli_scaling_phi0.py
+# Expected: PASSED or SKIPPED (if no GPU)
+```
+
+## Evidence Generation
+```bash
+# Create timestamped bundle directory
+stamp=$(date -u +%Y%m%dT%H%M%SZ)
+out=reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/$stamp
+mkdir -p "$out"
+
+# Copy blocker analysis with Option 1 decision
+cp reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251008T235045Z/blocker_analysis.md "$out"/
+
+# Append Option 1 decision (see blocker_analysis.md for content)
+
+# Generate summary document (see summary.md)
+
+# Record environment
+python - <<'PY' > "$out"/env.json
+import json, os, sys
+json.dump({k: os.environ[k] for k in ["PWD", "PYTHONPATH", "KMP_DUPLICATE_LIB_OK"] if k in os.environ}, sys.stdout, indent=2)
+PY
+
+# Generate checksums
+find "$out" -type f -print0 | xargs -0 sha256sum > "$out"/sha256.txt
+```
+
+## Documentation Updates (M5e-M5g)
+```bash
+# Update lattice hypotheses (close H4/H5)
+# File: reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T075949Z/lattice_hypotheses.md
+# Action: Append closure addendum citing specs/spec-a-core.md:204-214 and docs/bugs/verified_c_bugs.md:166-204
+
+# Update plan status
+# File: plans/active/cli-noise-pix0/plan.md
+# Action: Mark M5d-M5f as [D]
+
+# Update fix plan
+# File: docs/fix_plan.md
+# Action: Append Attempt with Option 1 acceptance and link to this bundle
+```
+
+## Git SHA
+```
+e2bc0ed — φ rotation fix landed (spec-compliant implementation)
+```

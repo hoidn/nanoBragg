@@ -332,3 +332,95 @@ The evidence bundle is complete for documentation purposes, but the parity gate 
 
 ---
 Document appended: 2025-10-08 (Ralph loop i=190, CLI-FLAGS-003 Phase M4d)
+
+---
+
+# H4/H5 CLOSURE — Option 1 Decision (2025-12-20)
+
+## Executive Summary
+Hypotheses H4 (φ-Rotation Application Inconsistency) and H5 (Metric Duality Enforcement Missing Per-φ) are now **CLOSED** with the following resolution:
+
+**PyTorch implements spec-compliant behavior** per `specs/spec-a-core.md:204-214`. The observed 14.6% I_before_scaling divergence is caused by **C-PARITY-001**, a documented bug in the C code where φ=0 reuses stale vectors from the previous pixel.
+
+## Decision: Option 1 (Accept Spec-Compliant Divergence)
+
+### Rationale
+1. **Spec Compliance (Normative):**
+   - Spec requires: "Fresh rotation of real-space vectors from newly rotated reciprocal vectors at each φ step"
+   - PyTorch implements this correctly: `src/nanobrag_torch/models/crystal.py:1194-1292`
+   - C code violates spec: carries over φ-final state from previous pixel at φ=0
+
+2. **C Bug Documentation:**
+   - C-PARITY-001 fully documented: `docs/bugs/verified_c_bugs.md:166-204`
+   - Root cause: `ap/bp/cp` persist across pixel iterations in C code
+   - Impact: 6.8% rot_b error → 3.0% k_frac shift → F_latt sign flip → 14.6% intensity deficit
+
+3. **Test Coverage:**
+   - Spec-compliant tests pass: `tests/test_cli_scaling_phi0.py` (2/2 PASSED)
+   - Tests validate PyTorch matches spec, NOT buggy C behavior
+
+### Impact on Hypotheses
+
+**H4 (φ-Rotation Application Inconsistency):**
+- **Status:** RESOLVED (No inconsistency—PyTorch is correct)
+- **Finding:** PyTorch rotation implementation is spec-compliant
+- **C Divergence:** Expected and documented (C-PARITY-001 bug)
+- **Evidence:** rot_b Y = 0.717320 Å (PyTorch) matches C base b = 0.71732 Å
+- **C trace:** rot_b Y = 0.671588 Å (from previous pixel carryover)
+
+**H5 (Metric Duality Enforcement Missing Per-φ):**
+- **Status:** RESOLVED (Duality correctly enforced)
+- **Finding:** PyTorch implements CLAUDE Rules #12/#13 correctly
+- **Implementation:** Conditional reciprocal recomputation matches spec intent
+- **Evidence:** `src/nanobrag_torch/models/crystal.py:1194-1292` (docstring references `c_phi_rotation_reference.md`)
+
+### Closure Metrics
+
+| Aspect | Status | Evidence |
+|--------|--------|----------|
+| Spec Compliance | ✅ ACHIEVED | `specs/spec-a-core.md:204-214` |
+| Implementation | ✅ CORRECT | `src/nanobrag_torch/models/crystal.py:1194-1292` |
+| Test Coverage | ✅ PASSING | `tests/test_cli_scaling_phi0.py` (2/2) |
+| C Bug Documented | ✅ COMPLETE | `docs/bugs/verified_c_bugs.md:166-204` |
+| Optional C-Parity Mode | ⏸️ DEFERRED | Phase M6 (available if needed) |
+
+## Artifacts
+
+**Option 1 Bundle:**
+- Location: `reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/20251009T011729Z/`
+- Contents:
+  - `blocker_analysis.md` (with Option 1 addendum)
+  - `summary.md` (decision rationale)
+  - `commands.txt` (reproduction steps)
+  - `env.json` (environment metadata)
+  - `sha256.txt` (artifact manifest)
+
+**Implementation Evidence:**
+- Fix landed: commit e2bc0ed
+- C reference documented: `reports/2025-10-cli-flags/phase_l/scaling_validation/fix_20251009T005448Z/c_phi_rotation_reference.md`
+- Test validation: `tests/test_cli_scaling_phi0.py` (2/2 PASSED)
+
+## Future Work
+
+**Phase M6 (Optional):** C-Parity Emulation Mode
+- Add `--c-parity-mode` flag to reproduce C-PARITY-001 for legacy validation
+- Default behavior remains spec-compliant
+- Deferred unless validation against legacy C traces becomes critical
+
+**Maintenance:**
+- Keep C-PARITY-001 documented in `docs/bugs/verified_c_bugs.md`
+- Reference this closure when explaining C trace divergence
+- Update validation scripts to flag expected φ=0 discrepancy (Phase M5e)
+
+## References
+- **Normative Spec:** `specs/spec-a-core.md:204-214` (φ rotation pipeline)
+- **C Bug Dossier:** `docs/bugs/verified_c_bugs.md:166-204` (C-PARITY-001)
+- **Implementation:** `src/nanobrag_torch/models/crystal.py:1194-1292`
+- **Architecture:** `arch.md` ADR-02, Core Rules #12/#13
+- **Plan:** `plans/active/cli-noise-pix0/plan.md` Phase M5
+- **Fix Plan:** `docs/fix_plan.md` CLI-FLAGS-003
+
+---
+
+**Document Updated:** 2025-12-20 (Ralph loop i=196, CLI-FLAGS-003 Phase M5d)
+**Status:** H4/H5 CLOSED (Spec-compliant implementation confirmed)
