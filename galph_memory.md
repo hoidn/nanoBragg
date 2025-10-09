@@ -1432,3 +1432,8 @@
 - Added status snapshot to `plans/active/source-weight-normalization.md` highlighting the correlation block.
 - Replaced `input.md` (Parity mode) instructing Ralph to execute Phase A1–A3: build the weighted two-source fixture, run PyTorch vs C CLI commands, archive artifacts under `reports/2025-11-source-weights/phase_a/<STAMP>/`, and log commands/env/collect-only proof.
 - Follow-up: After Ralph captures the parity evidence, expect fix_plan Attempt update + plan Phase A rows to flip [D], then resume `[VECTOR-GAPS-002]` Phase B2 hotspot correlation.
+
+### 2025-12-22 (galph loop - Source weighting Phase C kickoff)
+- Synced clean; reviewed spec/arch/testing docs plus `plans/active/source-weight-normalization.md`, `docs/fix_plan.md`, and existing TC-A through TC-E scaffolding in `tests/test_cli_scaling.py` before selecting focus (tails on coin flip, no commit audit).
+- Action: Review/housekeeping in Parity mode for `[SOURCE-WEIGHT-001]` — updated plan C1 guidance to require a tensor-based normalization divisor (no `.item()`), refreshed fix_plan Next Actions, and issued a new `input.md` directing Ralph to implement Phase C1–C3, run the targeted TestSourceWeights suite under NB_RUN_PARALLEL=1, and archive artifacts under `reports/2025-11-source-weights/phase_c/` and `/phase_d/`.
+- Follow-up for Ralph: implement the normalization change in `Simulator.run` keeping device/dtype neutrality, ensure parity tests pass, capture env/metrics logs, then update plan/fix_plan attempts; this unblocks VECTOR-GAPS-002 Phase B profiling once artifacts land.
