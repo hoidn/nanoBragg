@@ -3792,7 +3792,7 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * Analysis (after Phase A1 lands): `python scripts/analysis/vectorization_inventory.py --package src/nanobrag_torch --outdir reports/2026-01-vectorization-gap/phase_a/<STAMP>/`
 - First Divergence (if known): No consolidated post-Phase G inventory exists; residual Python loops (e.g., mosaic rotation RNG, detector ROI rebuild, RNG shims) remain unquantified, risking regressions of the vectorization guardrails and blocking performance diagnosis.
 - Next Actions (2025-12-22 status refresh):
-  1. Phase B1 (BLOCKED): defer the warm-run profiler capture (`KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1 --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`) until `[SOURCE-WEIGHT-001]` Phase D parity artifacts document correlation ≥0.99 and |sum_ratio−1| ≤1e-3 for the weighted-source fixture. Once evidence exists, rerun the profiler and ensure the new capture logs correlation ≥0.99 in both `correlation.txt` and `summary.md` for downstream analysis.
+  1. Phase B1 (BLOCKED): hold the warm-run profiler capture (`KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1 --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`) until `[SOURCE-WEIGHT-001]` Phase G/H deliver the spec-compliance parity bundle (correlation ≥0.99, |sum_ratio−1| ≤1e-3 for the weighted-source fixture). Interim re-audit on 2025-10-09 (`reports/benchmarks/20251009-161714/`) shows the simple-cubic harness now returns correlation 0.999998 (sum_ratio 0.9999876), superseding the stale 0.721 capture; once weighted-source evidence lands, rerun the profiler in the plan workspace and archive metrics/commands for downstream analysis.
   2. Phase B2: correlate profiler hotspots (≥1% inclusive time) with the Phase A inventory; produce `hot_loops.csv` and a short narrative summarising loop IDs, %time, and proposed focus level.
   3. Phase B3: publish the prioritised backlog under `reports/2026-01-vectorization-gap/phase_b/<STAMP>/backlog.md`, then update this entry with counts and delegate-ready guidance before implementation begins.
 - Attempts History:
@@ -3879,6 +3879,17 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       3. **TRACE COMPARISON:** Execute parallel trace debugging per `docs/debugging/debugging.md` SOP to identify first numeric divergence.
       4. **REOPEN CANDIDATES:** Check SOURCE-WEIGHT-001 and VECTOR-TRICUBIC-001 closure criteria; if either lacks ≥0.99 correlation evidence, reopen and block Phase B1.
       5. **BLOCKED:** Phase B2/B3 remain blocked until correlation ≥0.99 captured and validated.
+  * [2025-12-25] Attempt #5 (galph loop — parity re-audit). Result: ✅ success (physics parity confirmed; prior 0.721 metric obsolete). Re-ran the warm-run benchmark harness with profiling on CPU; cold and warm correlations both 0.999998 and the sum ratio (C/Py) = 0.9999876. Outputs stored under `reports/benchmarks/20251009-161714/`.
+    Metrics: Correlation(cold)=0.999998, Correlation(warm)=0.999998, sum_ratio=0.9999876 (C sum 3.382771e6, Py sum 3.382813e6), warm setup 0.0 ms (<50 ms gate). Command: `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts`.
+    Artifacts:
+      - `reports/benchmarks/20251009-161714/benchmark_results.json` — Warm/cold timings and correlation values for the 4096² harness.
+      - `reports/benchmarks/20251009-161714/profile_4096x4096/trace.json` — Profiler trace suitable for Phase B1 once unblocked.
+    Observations/Hypotheses:
+      - Warm-run parity now satisfies the ≥0.99 threshold; the earlier 0.721 capture was likely taken before recent fixes or with a misconfigured build.
+      - Manual numpy cross-check on the generated floatfiles confirmed correlation 0.999998 and sum ratio 0.9999876 (max absolute pixel delta ≈6.65).
+      - Despite the parity recovery, Phase B1 remains blocked pending `[SOURCE-WEIGHT-001]` weighted-source parity evidence so the profiler analysis reflects the spec-compliant scenario.
+    Next Actions:
+      1. Await `[SOURCE-WEIGHT-001]` Phase G/H parity bundle (≥0.99 correlation, |sum_ratio−1| ≤1e-3) before rerunning the benchmark from the plan workspace (`reports/2026-01-vectorization-gap/phase_b/<STAMP>/`), then proceed to B2 hotspot correlation using the new trace.
 - Risks/Assumptions: Phase B2/B3 work cannot proceed until correlation restored to ≥0.99. Profiler trace is valid but untrusted for prioritization until physics parity confirmed. Supervisor must verify SOURCE-WEIGHT-001/VECTOR-TRICUBIC-001 closure claims before directing further work.
 - Exit Criteria (quote thresholds from spec):
   * Phase A: Complete loop inventory with manual classification (✓ completed Attempt #2).
