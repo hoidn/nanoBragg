@@ -3410,18 +3410,18 @@
 ## [VECTOR-TRICUBIC-001] Vectorize tricubic interpolation and detector absorption
 - Spec/AT: specs/spec-a-core.md §4 (structure factor sampling), specs/spec-a-parallel.md §2.3 (tricubic acceptance tests), docs/architecture/pytorch_design.md §§2.2–2.4 (vectorization strategy), docs/development/testing_strategy.md §§2–4, docs/development/pytorch_runtime_checklist.md, nanoBragg.c lines 2604–3278 (polin3/polin2/polint) and 3375–3450 (detector absorption loop).
 - Priority: High
-- Status: in_progress (Phases A–G complete on CPU; Phase H CUDA follow-up blocked on PERF-PYTORCH-004 Attempt #14 device placement).
-- Owner/Date: galph/2025-10-17 (updated 2025-12-22 by ralph)
+- Status: in_progress (Phase H underway — H1 device-placement fix landed; CUDA regression + benchmark capture pending).
+- Owner/Date: galph/2025-10-17 (updated 2025-12-23 by galph after Attempt #36)
 - Plan Reference: `plans/active/vectorization.md`
 - Reproduction (C & PyTorch):
   * PyTorch baseline tests: `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_str_002.py tests/test_at_abs_001.py -v`
-  * Optional microbenchmarks: `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --device cpu` (and `--device cuda`), plus `scripts/benchmarks/absorption_baseline.py` for detector absorption timing.
+  * CUDA parity sweep (Phase H2): `env KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -v -k cuda` and `pytest tests/test_at_abs_001.py -v -k cuda`
+  * Microbenchmarks: `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --device {cpu,cuda}` plus `scripts/benchmarks/absorption_baseline.py --device {cpu,cuda}` with `--repeats 200`
   * Shapes/ROI: 256² & 512² detectors for microbench; oversample 1; structure-factor grid enabling tricubic.
-- First Divergence (if known): CUDA validation remains unavailable until simulator device-placement is corrected (PERF-PYTORCH-004 Attempt #14); CPU vectorization is complete and no batched fallback warnings remain.
+- First Divergence (if known): None — CPU vectorization confirmed. CUDA parity/benchmark evidence outstanding until Phase H2 runs are captured under `reports/2025-10-vectorization/phase_h/`.
 - Next Actions (Phase H per `plans/active/vectorization.md`):
-  1. Align with `[PERF-PYTORCH-004]` to resolve the simulator device placement blocker (Attempt #14) and confirm source-weight normalization (Attempt #16) before resuming CUDA work.
-  2. Once unblocked, execute Phase H2 commands: `pytest tests/test_tricubic_vectorized.py -v -k cuda`, `pytest tests/test_at_abs_001.py -v -k cuda`, `python scripts/benchmarks/tricubic_baseline.py --device cuda --repeats 200`, and `python scripts/benchmarks/absorption_baseline.py --device cuda --repeats 200`; store artifacts under `reports/2025-10-vectorization/phase_h/<STAMP>/` and record Attempt #18.
-  3. After CUDA metrics land, update this ledger with comparative results and archive the plan to `plans/archive/`, noting any residual risks delegated to PERF-PYTORCH-004.
+  1. Execute Phase H2 commands and archive artifacts under `reports/2025-10-vectorization/phase_h/<STAMP>/`: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -v -k cuda`, `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_abs_001.py -v -k cuda`, `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --device cuda --repeats 200`, and `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/absorption_baseline.py --device cuda --repeats 200`. Capture env.json, metrics JSON, and summary.md for parity/perf comparisons.
+  2. After CUDA metrics land, append Attempt #18 summarising CPU↔CUDA parity, refresh `plans/active/vectorization.md` Status Snapshot, and archive the plan to `plans/archive/` noting any residual PERF-PYTORCH-004 dependencies.
 - Attempts History:
   * [2025-10-06] Attempt #1 (ralph loop) — Result: **Phase A1 COMPLETE** (test collection & execution baseline captured). All tricubic and absorption tests passing.
     Metrics: AT-STR-002: 3/3 tests passed in 2.12s (test_tricubic_interpolation_enabled, test_tricubic_out_of_bounds_fallback, test_auto_enable_interpolation). AT-ABS-001: 5/5 tests passed in 5.88s. Collection: 3 tricubic tests found.

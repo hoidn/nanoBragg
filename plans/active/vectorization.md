@@ -8,7 +8,7 @@
   - docs/development/pytorch_runtime_checklist.md — runtime guardrails for PyTorch edits
   - docs/fix_plan.md §[VECTOR-TRICUBIC-001] — ledger history + open blockers (CUDA evidence)
   - reports/2025-10-vectorization/phase_* — evidence bundles for Phases A–G
-- Status Snapshot (2025-12-23): Phases A–G complete on CPU with documentation refreshed; CUDA tests/benchmarks remain blocked by PERF-PYTORCH-004 Attempt #14 (device placement). Phase H tracks the follow-up once that blocker clears.
+- Status Snapshot (2025-12-23 update): Phases A–G complete on CPU with documentation refreshed. PERF-PYTORCH-004 Attempt #36 (commit 34f319f) resolved the device-placement blocker, so Phase H execution can proceed. Await CUDA test/benchmark artifacts under `phase_h/` before archiving the plan.
 
 ### Phase A — Baseline Evidence Capture
 Goal: Establish pre-vectorization behaviour, warnings, and timings for tricubic interpolation and detector absorption.
@@ -89,12 +89,12 @@ Exit Criteria: Architecture/runtime docs updated, pytest collect-only proof reco
 | G2 | Refresh plan snapshot & fix_plan ledger | [D] | Plan + fix_plan adjustments logged during galph loop i=214; evidence in `phase_g/20251009T055116Z/commands.txt`; Attempt #17 follow-up. |
 
 ### Phase H — CUDA Follow-Up & Plan Archival (Pending)
-Goal: Execute GPU validation once device placement is fixed, then archive the plan.
-Prereqs: Perf-PyTorch-004 Attempt #14 resolved (source weighting fix + device neutrality in simulator).
+Goal: Execute GPU validation now that device placement is fixed, then archive the plan.
+Prereqs: ✅ Satisfied — PERF-PYTORCH-004 Attempt #36 (commit 34f319f) moved Detector tensors onto the simulator device; source weighting parity completed in Attempt #6.
 Exit Criteria: CUDA tests/benchmarks captured, fix_plan updated with Attempt #18, plan moved to archive.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| H1 | Clear device-placement blocker | [ ] | Coordinate with `[PERF-PYTORCH-004]` Phase B diagnostics/Phase D fixes to keep `incident_beam_direction` and related tensors on caller device. Document unblock in fix_plan. |
-| H2 | Rerun CUDA tests & benchmarks | [ ] | Commands: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -v -k cuda`, `pytest tests/test_at_abs_001.py -v -k cuda`, `python scripts/benchmarks/tricubic_baseline.py --device cuda --repeats 200`, `python scripts/benchmarks/absorption_baseline.py --device cuda --repeats 200`; store under `reports/2025-10-vectorization/phase_h/<STAMP>/`. |
-| H3 | Close ledger & archive plan | [ ] | After H2, log Attempt #18 in docs/fix_plan.md, update Status Snapshot, move this plan to `plans/archive/` with summary of CUDA metrics + residual risks. |
+| H1 | Clear device-placement blocker | [D] | ✅ Completed via PERF-PYTORCH-004 Attempt #36 (commit 34f319f). `Simulator.__init__` now calls `detector.to(device=self.device, dtype=self.dtype)`, eliminating CUDA device mismatch. Logged in `docs/fix_plan.md` Attempt #36. |
+| H2 | Rerun CUDA tests & benchmarks | [ ] | Capture fresh CUDA parity + perf evidence: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -v -k cuda`, `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_abs_001.py -v -k cuda`, `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/tricubic_baseline.py --device cuda --repeats 200`, `PYTHONPATH=src KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/absorption_baseline.py --device cuda --repeats 200`. Archive logs, metrics, commands, and env snapshots under `reports/2025-10-vectorization/phase_h/<STAMP>/`. |
+| H3 | Close ledger & archive plan | [ ] | After H2 artifacts land, append Attempt #18 in `docs/fix_plan.md` with CPU↔CUDA comparison, refresh this status snapshot, and migrate the plan to `plans/archive/` summarising residual risks (if any). |
