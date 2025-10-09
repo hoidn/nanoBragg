@@ -1,5 +1,11 @@
 # Galph Memory
 
+### 2025-12-23 (galph loop - Vectorization plan archival & gap handoff)
+- Archived `plans/active/vectorization.md` to `plans/archive/vectorization.md` with Phase H status lines updated; marked `[VECTOR-TRICUBIC-001]` as done in `docs/fix_plan.md` (Attempt #18 closure recorded).
+- Refreshed `plans/active/vectorization-gap-audit.md` Status Snapshot and Phase B1 guidance to note SOURCE-WEIGHT-001 + VECTOR-TRICUBIC-001 dependencies cleared; profiler capture now unblocked.
+- Issued new `input.md` (Mode: Perf) directing Ralph to execute Phase B1 profiler run with fresh UTC-stamped artifacts, correlation ≥0.99, env snapshot, and ledger Attempt update under `reports/2026-01-vectorization-gap/phase_b/<STAMP>/`.
+- Follow-up for Ralph: run the Phase B1 command bundle, document results (commands/env/summary/correlation), append Attempt #3 in fix_plan, and flag any correlation regressions before moving to B2 hotspot mapping.
+
 ### 2025-12-23 (galph loop - Vectorization Phase H kickoff)
 - Synced clean; reviewed vectorization docs/fix_plan + recent PERF-PYTORCH-004 Attempt #36 device-placement commit. Determined Phase H blocker cleared.
 - Updated `plans/active/vectorization.md` Phase H section: marked H1 [D] with commit reference, refreshed status snapshot, expanded H2 guidance with explicit CUDA pytest/benchmark commands, clarified prereqs met.
