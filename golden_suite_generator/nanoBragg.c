@@ -3334,6 +3334,19 @@ if(! debug_printed_thread) {
                                         printf("TRACE_C: F_cell %.15g\n", F_cell);
                                     }
 
+                                    /* SOURCE-WEIGHT trace: per-source diagnostic for source index 2 */
+                                    if(fpixel==trace_fpixel && spixel==trace_spixel && source==2 && mos_tic==0 && phi_tic==0) {
+                                        printf("TRACE_C_SOURCE2: F_cell %.15g\n", F_cell);
+                                        printf("TRACE_C_SOURCE2: F_latt %.15g\n", F_latt);
+                                        printf("TRACE_C_SOURCE2: F_cell_squared %.15g\n", F_cell*F_cell);
+                                        printf("TRACE_C_SOURCE2: F_latt_squared %.15g\n", F_latt*F_latt);
+                                        printf("TRACE_C_SOURCE2: I_contribution %.15g\n", F_cell*F_cell*F_latt*F_latt);
+                                        printf("TRACE_C_SOURCE2: polar %.15g\n", polar);
+                                        printf("TRACE_C_SOURCE2: cos2theta %.15g\n", dot_product(incident,diffracted));
+                                        printf("TRACE_C_SOURCE2: lambda_angstroms %.15g\n", lambda*1e10);
+                                        printf("TRACE_C_SOURCE2: source_index %d\n", source);
+                                    }
+
                                     /* convert amplitudes into intensity (photons per steradian) */
                                     I += F_cell*F_cell*F_latt*F_latt;
 

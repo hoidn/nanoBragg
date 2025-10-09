@@ -1,0 +1,53 @@
+# SOURCE-WEIGHT-001 Phase E: Source-Index Trace Bundle
+# Date: 2025-10-09
+# Trace pixel: (158, 147) - bright on-peak pixel from TC-D1
+# Fixture: reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt
+
+export NB_C_BIN=./golden_suite_generator/nanoBragg
+export KMP_DUPLICATE_LIB_OK=TRUE
+
+# PyTorch trace command:
+python -m nanobrag_torch \
+  -mat A.mat \
+  -sourcefile reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt \
+  -default_F 100 \
+  -hdivsteps 0 \
+  -vdivsteps 0 \
+  -dispsteps 1 \
+  -distance 231.274660 \
+  -lambda 0.9768 \
+  -pixel 0.172 \
+  -detpixels_x 256 \
+  -detpixels_y 256 \
+  -oversample 1 \
+  -nonoise \
+  -nointerpolate \
+  -trace_pixel 158 147 \
+  -floatfile reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/py_tc_d1.bin \
+  > reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/py_trace_source2.txt 2>&1
+
+# C trace command:
+NB_RUN_PARALLEL=1 "$NB_C_BIN" \
+  -mat A.mat \
+  -sourcefile reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt \
+  -default_F 100 \
+  -hdivsteps 0 \
+  -vdivsteps 0 \
+  -dispsteps 1 \
+  -distance 231.274660 \
+  -lambda 0.9768 \
+  -pixel 0.172 \
+  -detpixels_x 256 \
+  -detpixels_y 256 \
+  -oversample 1 \
+  -nonoise \
+  -nointerpolate \
+  -trace_pixel 158 147 \
+  -floatfile reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/c_tc_d1.bin \
+  > reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/c_trace_source2.txt 2>&1
+
+# Diff generation:
+python scripts/compare_c_python_traces.py \
+  --py reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/py_trace_source2.txt \
+  --c reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/c_trace_source2.txt \
+  > reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/diff.txt

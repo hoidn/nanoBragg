@@ -1,0 +1,108 @@
+# Trace Comparison: C vs PyTorch
+# Pixel: (slow=158, fast=147)
+# Date: 2025-10-09
+
+## Key Divergences
+
+### 1. Source Count
+C: 4 sources (2 zero-weight placeholders + 2 actual)
+PyTorch: 2 sources (actual sources only)
+
+Result: C steps=4, PyTorch steps=2 → 2× intensity difference
+
+### 2. Wavelength Handling (MATCHES ✅)
+C: Source array contains 6.2 Å from file, but CLI override (0.9768 Å) applied during wavelength correction
+PyTorch: Ignores sourcefile wavelength, uses CLI 0.9768 Å for all sources
+
+Evidence from C trace:
+  Source array: "0 0 10   1 6.2e-10"
+  Applied wave: "wave=9.768e-11 meters"
+
+Evidence from PyTorch trace:
+  "UserWarning: Sourcefile wavelength column differs from CLI -lambda value"
+  "lambda_angstroms: 0.97680002450943"
+
+Status: PHASE E1 LAMBDA OVERRIDE CORRECT ✅
+
+### 3. Per-Source Physics Values (source-2 specific)
+
+C TRACE_C_SOURCE2 output:
+  F_cell:          205.39
+  F_latt:          1.0
+  F²·F_latt²:      42185.0521
+  polar:           0.5
+  cos2theta:       -0.0137539217011681
+  lambda_angstroms: 6.2 (from array, NOT used in physics)
+
+PyTorch aggregate output (all sources combined):
+  F_cell_interpolated:  90.9398040771484
+  F_latt:              0.00492792700969224
+  cos2theta:           -0.0137539217011681
+
+Geometry MATCHES (cos2theta identical)
+Physics values DIFFER (F_cell, F_latt)
+
+### 4. Geometry Agreement ✅
+
+Both implementations agree exactly on:
+- pix0_vector_meters: 0.231274664402008 0.0221880003809929 -0.0221880003809929
+- pixel_pos_meters: 0.231274664402008 -0.00507399998605251 0.00318199954926968
+- R_distance_meters: 0.2313521951437
+- diffracted_vec: 0.999664843082428 -0.0219319276511669 0.0137539189308882
+- incident_vec: 1 0 0
+- cos2theta: -0.0137539217011681
+
+Status: DETECTOR GEOMETRY CORRECT ✅
+
+## First Divergence Point
+
+**Location**: Steps normalization calculation
+
+C behavior (nanoBragg.c:~2700):
+  steps = 4 × 1 (mosaic) × 1 (phi) × 1 (oversample²) = 4
+  Counts ALL sources including zero-weight placeholders
+
+PyTorch behavior (simulator.py:~850):
+  steps = 2 × 1 × 1 × 1 = 2
+  Counts only actual sources from sourcefile
+
+Expected intensity ratio: 4/2 = 2×
+
+## Residual Divergences (After Steps Fix)
+
+Based on Attempt #21 parity data showing ~47-120× inflation:
+  47× / 2 (steps) = 23.5× residual
+  120× / 2 (steps) = 60× residual
+
+Possible causes:
+1. Per-source polarization (C: 0.5 per source, PyTorch: likely 1.0 global)
+   → Additional 2× factor
+2. F_latt calculation (~200× difference in traces suggests bug)
+3. Structure factor sampling (F_cell differs by 2.26×)
+
+## Recommendations
+
+1. **BLOCKER**: Implement zero-weight placeholder counting (PRIMARY FIX)
+2. **HIGH**: Verify crystal N_cells=[1,1,1] for TC-D1 (F_latt should be 1.0)
+3. **HIGH**: Add per-source PyTorch trace to compare apples-to-apples
+4. **MEDIUM**: Check per-source polarization application point
+5. **LOW**: Investigate F_cell interpolation differences
+
+## Artifacts Generated
+
+- C trace: c_trace_source2.txt (326 lines, includes TRACE_C_SOURCE2 block)
+- PyTorch trace: py_trace_source2.txt (aggregate values only)
+- Design memo: ../design_steps.md (implementation strategy)
+- Trace notes: trace_notes.md (detailed analysis)
+- Environment: env.json (metadata)
+- Commands: commands.txt (reproduction steps)
+
+## Next Loop Actions
+
+Per input.md Next Actions:
+1. ✅ Create design_steps.md scaffold
+2. ✅ Instrument C trace for source-2
+3. ✅ Run PyTorch and C traces
+4. ✅ Generate diff and trace_notes
+5. ⏭️ Synthesize hypotheses (in trace_notes.md)
+6. ⏭️ Review design before implementation

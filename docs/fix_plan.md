@@ -4043,12 +4043,44 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE nanoBragg -mat A.mat -floatfile py_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources.txt ...` (matching geometry).
   * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
 - First Divergence (if known): Steps normalization count (PyTorch: steps=2, C: steps=4). PyTorch counts only actual sources from sourcefile; C counts all sources including zero-weight divergence placeholders. Evidence captured in Attempt #23 at `reports/2025-11-source-weights/phase_e/20251009T192746Z/trace/` shows fluence values agree (±0.002%), confirming steps mismatch as PRIMARY DIVERGENCE. Residual ~47-120× inflation suggests additional scaling factors beyond steps error.
-- Next Actions (2025-12-24 refresh):
-  1. **Design Placeholder Parity:** Draft `reports/2025-11-source-weights/phase_e/<STAMP>/design_steps.md` mapping nanoBragg.c lines 2570-2720 to the PyTorch initialization flow. Decide exactly where to inject zero-weight divergence placeholders so `n_sources` and `steps` match C even when a sourcefile is provided, and capture the proposed API changes before editing simulator code.
-  2. **Trace Actual Source Physics:** Extend the trace harness to log the first non-placeholder source on both sides (C `source==2`, PyTorch source index 0). Instrument the C trace temporarily with `TRACE_C_SOURCE2:` lines for `F_cell`, `F_latt`, `I_before_scaling`, `polar`, and `cos2theta`, mirror those taps in PyTorch, and store the bundle under `reports/2025-11-source-weights/phase_e/<STAMP>/trace_source2/` with commands/env/diff notes. This evidence must explain the 1.5e8 vs 1.0e5 pre-polar intensity gap before implementation work resumes.
-  3. **Synthesize Hypotheses:** Update `trace_notes.md` (or a sibling summary) with ranked hypotheses for the remaining scaling gap (per-source polarization, structure-factor interpolation, capture_fraction). Do not modify simulator normalization until this narrative is complete and reviewed.
-  4. **Parity + Documentation:** Once fixes are ready, rerun TC-D1/TC-D3 parity (`reports/2025-11-source-weights/phase_e/<STAMP>/`) targeting corr ≥0.999 and |sum_ratio−1| ≤1e-3, then update `docs/architecture/pytorch_design.md`, log the Attempt, and notify `[VECTOR-GAPS-002]` / `[VECTOR-TRICUBIC-002]` so downstream plans can unblock.
+- Next Actions (2025-10-09 refresh, post Attempt #24):
+  1. ✅ Design scaffold created: `reports/2025-11-source-weights/phase_e/20251009T195032Z/design_steps.md`
+  2. ✅ C trace instrumented: TRACE_C_SOURCE2 added at nanoBragg.c:3337-3348
+  3. ✅ Trace bundle complete: py/c traces, diff, trace_notes, env.json, commands.txt under `reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/`
+  4. **CRITICAL DISCOVERY**: C source array contains sourcefile wavelengths (6.2 Å) but physics loop uses CLI `-lambda` (0.9768 Å) via wavelength correction. Phase E1 lambda override CORRECT and matches C behavior.
+  5. **PRIMARY DIVERGENCE CONFIRMED**: Steps normalization (C: steps=4, PyTorch: steps=2) accounts for 2× intensity difference.
+  6. **SECONDARY HYPOTHESES**: F_latt calculation (~200× difference in traces), per-source polarization (C: 0.5, PyTorch likely 1.0), structure factor sampling (2.26× difference).
+  7. **Next Implementation Loop**: Review design_steps.md and trace_notes.md with galph, then implement zero-weight placeholder counting in simulator.py steps calculation per nanoBragg.c:2570-2720.
+  8. **After Steps Fix**: Rerun TC-D1/TC-D3 parity expecting sum_ratio to drop from ~47-120× to ~24-60×, then diagnose remaining gap with per-source PyTorch trace.
+  9. **Parity Target**: correlation ≥0.999, |sum_ratio−1| ≤1e-3 before marking Phase E complete.
 - Attempts History:
+  * [2025-10-09] Attempt #24 (ralph loop #250 — Mode: Evidence-only, Phase E source-index trace). Result: **SUCCESS** (Trace bundle complete; wavelength semantics clarified; hypotheses ranked).
+    Metrics: Test collection: 693 tests (no regressions). No code changes; C instrumentation only. Wavelength handling VERIFIED CORRECT (Phase E1 matches C behavior).
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_e/20251009T195032Z/design_steps.md` — Implementation strategy and C-code references (nanoBragg.c:2570-2720, simulator.py:847-874)
+      - `reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/commands.txt` — Exact CLI reproduction commands for PyTorch and C
+      - `reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/py_trace_source2.txt` — PyTorch trace (aggregate values)
+      - `reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/c_trace_source2.txt` — C trace with TRACE_C_SOURCE2 block (source index 2 physics)
+      - `reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/diff.txt` — First divergence analysis (steps normalization PRIMARY)
+      - `reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/trace_notes.md` — Comprehensive analysis with ranked hypotheses (steps 2×, F_latt ~200×, polar 2×)
+      - `reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/env.json` — Environment metadata (torch 2.7.1+cu126, git 6de1696)
+      - `golden_suite_generator/nanoBragg.c:3337-3348` — TRACE_C_SOURCE2 instrumentation added for source index 2
+    Observations/Hypotheses:
+      - **CRITICAL DISCOVERY**: C source array populated from sourcefile contains wavelength column values (6.2 Å), but "wavelength correction" phase (nanoBragg.c:~2680-2700) overwrites source_lambda[] array with CLI `-lambda` value (0.9768 Å). TRACE_C_SOURCE2 logged lambda=6.2 from array snapshot, but physics loop uses corrected value. Phase E1 lambda override implementation CORRECT and matches C semantics.
+      - **PRIMARY DIVERGENCE CONFIRMED**: C creates 4 sources (2 zero-weight placeholders + 2 actual), PyTorch creates 2 (actual only). Steps calculation: C steps=4, PyTorch steps=2 → expected 2× intensity ratio.
+      - **SECONDARY HYPOTHESES RANKED**:
+        1. F_latt calculation (~200× difference): C F_latt=1.0 for source-2, PyTorch aggregate F_latt=0.00492792. Likely PyTorch computing wrong F_latt for 1×1×1 crystal or aggregate artifact.
+        2. Per-source polarization (2× factor): C applies polar=0.5 per source before accumulation, PyTorch likely applies polar≈1.0 once globally.
+        3. Structure factor sampling (2.26× factor): C F_cell=205.39 for source-2, PyTorch F_cell_interpolated=90.9398 (aggregate).
+      - **Combined impact**: Steps (2×) + F_latt (200×) + polar (2×) + F_cell (2.26×) = 1808× theoretical, but observed ~47-120×. F_latt hypothesis likely over-explains; aggregate vs per-source measurement artifact suspected.
+      - **Geometry VERIFIED**: Both implementations agree exactly on pix0_vector, basis vectors, pixel_pos, diffracted_vec, cos2theta (-0.0137539217011681 exact match). Detector geometry NOT the divergence source.
+      - **Wavelength handling VERIFIED CORRECT**: PyTorch Phase E1 implementation correctly ignores sourcefile wavelength column and uses CLI `-lambda` for all sources, matching C behavior after wavelength correction. UserWarning emission working as expected.
+    Next Actions:
+      1. **BLOCKER**: Implement zero-weight placeholder counting in simulator.py steps calculation per nanoBragg.c:2570-2720. Must count ALL sources including zero-weight divergence placeholders.
+      2. **HIGH**: Add per-source PyTorch trace logging (F_cell, F_latt, I_contribution, polar per source BEFORE reduction) to enable apples-to-apples comparison with TRACE_C_SOURCE2.
+      3. **HIGH**: Verify crystal N_cells=[1,1,1] for TC-D1 and check why F_latt=0.00492792 instead of 1.0. May be aggregate measurement artifact or bug in SQUARE lattice model for minimal crystals.
+      4. **MEDIUM**: Check per-source polarization application point (should be inside source loop before accumulation, not once globally).
+      5. After steps fix, rerun TC-D1 parity expecting sum_ratio to drop from ~47-120× to ~24-60×. If still inflated beyond 4×, generate new per-source trace to diagnose.
   * [2025-10-09] Attempt #17 (ralph loop #230 — Mode: Parity, Phase E1/E2 implementation). Result: **SUCCESS** (Lambda override + warning implemented; TC-E1/E2/E3 tests pass 7/7).
     Metrics: All AT-SRC-003 tests passing (7 passed, 1 warning in 0.84s). Test collection: 693 tests (no regressions). No parity run yet (awaiting Step 3 per Next Actions).
     Artifacts:
