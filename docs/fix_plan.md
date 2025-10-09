@@ -3835,10 +3835,33 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       4. Execute parallel trace comparison (`scripts/debug_pixel_trace.py` vs instrumented C) per `docs/debugging/debugging.md` §2.1.
       5. After parity fix validated (correlation ≥0.99), re-run Phase B1 profiler capture to get clean trace.
       6. ONLY THEN proceed to Phase B2 hotspot correlation with Phase A inventory.
-- Risks/Assumptions: Phase B2/B3 work cannot proceed until correlation restored to ≥0.99. Profiler trace is valid but untrusted for prioritization until physics parity confirmed.
+  * [2025-12-22] Attempt #4 — Result: ⚠️ Phase B1 profiler recapture BLOCKED AGAIN (ralph loop #228, Mode: Perf, evidence-only per input.md Do Now).
+    Metrics: Correlation=0.721175 (BELOW ≥0.99 threshold), PyTorch warm=0.639s vs C=0.534s (speedup 0.79×), cache hit successful (setup 0.0ms, speedup 73,572.8×).
+    Artifacts:
+      - `reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/summary.md` — Blocking analysis with hypothesized causes
+      - `reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/profile/trace.json` — PyTorch profiler trace (unreliable until parity fixed)
+      - `reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/profile/benchmark_results.json` — Full benchmark metrics
+      - `reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/correlation.txt` — status=BLOCKED record
+      - `reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/env.json` — Environment metadata (PyTorch 2.7.1+cu126, Python 3.11+, CUDA available, git ac94e90)
+      - `reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/torch_env.txt` — Full PyTorch environment (108 lines)
+      - `reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/commands.txt` — Reproduction commands and blocking status
+      - `reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/pytest_collect.log` — Test collection baseline (694 tests)
+    Observations/Hypotheses:
+      - **CRITICAL:** Correlation STILL 0.721175, identical to Attempt #3 from earlier session. This suggests no parity fix has landed since first B1 attempt.
+      - SOURCE-WEIGHT-001 Phase C/D and VECTOR-TRICUBIC-001 Phase H were claimed complete, but correlation unchanged.
+      - Supervisor input.md stated these blockers were "cleared" (see line 14: "SOURCE-WEIGHT-001 Phase C/D and VECTOR-TRICUBIC-001 Phase H removed the low-correlation blocker"), but profiler data contradicts this claim.
+      - Possible root causes (unchanged from Attempt #3): weighted-source normalization bug, per-source polarization issue, RNG seed mismatch, detector geometry drift, or tricubic regression.
+      - Cache effectiveness remains strong: 73,572.8× setup speedup validates PERF-PYTORCH-004 caching work.
+    Next Actions:
+      1. **IMMEDIATE:** Hand off to galph (supervisor) for triage—input.md guidance was incorrect about blockers being cleared.
+      2. **DEBUG PRIORITY:** Run AT-PARALLEL-012 (reference pattern correlation test) to validate whether 0.72 correlation is expected for this config or indicates regression.
+      3. **TRACE COMPARISON:** Execute parallel trace debugging per `docs/debugging/debugging.md` SOP to identify first numeric divergence.
+      4. **REOPEN CANDIDATES:** Check SOURCE-WEIGHT-001 and VECTOR-TRICUBIC-001 closure criteria; if either lacks ≥0.99 correlation evidence, reopen and block Phase B1.
+      5. **BLOCKED:** Phase B2/B3 remain blocked until correlation ≥0.99 captured and validated.
+- Risks/Assumptions: Phase B2/B3 work cannot proceed until correlation restored to ≥0.99. Profiler trace is valid but untrusted for prioritization until physics parity confirmed. Supervisor must verify SOURCE-WEIGHT-001/VECTOR-TRICUBIC-001 closure claims before directing further work.
 - Exit Criteria (quote thresholds from spec):
   * Phase A: Complete loop inventory with manual classification (✓ completed Attempt #2).
-  * Phase B1: Profiler trace captured with correlation ≥0.99, cache speedup ≥10× (✓ cache met, ❌ correlation BLOCKER).
+  * Phase B1: Profiler trace captured with correlation ≥0.99, cache speedup ≥10× (✓ cache met, ❌ correlation BLOCKER - attempts #3 and #4 both failed).
   * Phase B2: Hot loops mapped to inventory with %time metrics (blocked until B1 correlation restored).
   * Phase B3: Prioritized backlog published with top 3-5 targets and impact estimates (pending B2).
   * Overall: Vectorization gap audit complete when backlog actionable and no Python loops ≥1% inclusive time remain unclassified.

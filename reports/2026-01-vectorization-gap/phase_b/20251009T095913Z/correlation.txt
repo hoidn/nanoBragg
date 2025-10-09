@@ -1,0 +1,3 @@
+correlation=0.721175
+status=BLOCKED
+reason=Correlation below 0.99 threshold - parity fix required before Phase B2
