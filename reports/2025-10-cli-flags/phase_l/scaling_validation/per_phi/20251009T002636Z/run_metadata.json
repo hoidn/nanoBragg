@@ -1,0 +1,9 @@
+{
+  "timestamp": "2025-10-08T17:27:23.745420-07:00",
+  "git_sha": "05fd0e3baf3f0a3746a735c3ff53d2d13bc70f72",
+  "torch_version": "2.7.1+cu126",
+  "command": "scripts/validation/compare_scaling_traces.py --c reports/2025-10-cli-flags/phase_l/scaling_validation/per_phi/20251009T002636Z/c_trace_scaling.log --py reports/2025-10-cli-flags/phase_l/scaling_validation/per_phi/20251009T002636Z/trace_py_scaling.log --out reports/2025-10-cli-flags/phase_l/scaling_validation/per_phi/20251009T002636Z/summary.md",
+  "c_trace": "/home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/scaling_validation/per_phi/20251009T002636Z/c_trace_scaling.log",
+  "py_trace": "/home/ollie/Documents/tmp/nanoBragg/reports/2025-10-cli-flags/phase_l/scaling_validation/per_phi/20251009T002636Z/trace_py_scaling.log",
+  "tolerance_rel": 1e-06
+}

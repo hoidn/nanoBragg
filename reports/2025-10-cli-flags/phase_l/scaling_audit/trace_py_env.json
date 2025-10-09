@@ -1,10 +1,10 @@
 {
-  "python_version": "3.13.7 | packaged by Anaconda, Inc. | (main, Sep  9 2025, 19:59:03) [GCC 11.2.0]",
-  "torch_version": "2.8.0+cu128",
+  "python_version": "3.13.5 | packaged by Anaconda, Inc. | (main, Jun 12 2025, 16:09:02) [GCC 11.2.0]",
+  "torch_version": "2.7.1+cu126",
   "platform": "Linux-6.14.0-29-generic-x86_64-with-glibc2.39",
   "cuda_available": true,
   "device": "cpu",
   "dtype": "float64",
-  "git_sha": "e2bc0eda1deeb81058dcf3b3a4c61701a830d7dc",
-  "timestamp_iso": "2025-10-08T23:50:47.726257Z"
+  "git_sha": "05fd0e3baf3f0a3746a735c3ff53d2d13bc70f72",
+  "timestamp_iso": "2025-10-09T00:26:47.647043Z"
 }

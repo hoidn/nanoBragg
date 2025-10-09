@@ -1,0 +1,25 @@
+# Phase M5a execution commands (2025-10-09)
+
+# 1. Generate PyTorch trace with per-φ instrumentation
+env KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python reports/2025-10-cli-flags/phase_l/scaling_audit/trace_harness.py \
+  --config supervisor --pixel 685 1039 --device cpu --dtype float64 \
+  --out reports/2025-10-cli-flags/phase_l/scaling_validation/per_phi/20251009T002636Z/trace_py_scaling.log
+
+# 2. Copy C trace baseline
+cp reports/2025-10-cli-flags/phase_l/scaling_validation/20251008T212459Z/spec_baseline/c_trace_scaling.log \
+  reports/2025-10-cli-flags/phase_l/scaling_validation/per_phi/20251009T002636Z/
+
+# 3. Run trace comparison
+python scripts/validation/compare_scaling_traces.py \
+  --c reports/2025-10-cli-flags/phase_l/scaling_validation/per_phi/20251009T002636Z/c_trace_scaling.log \
+  --py reports/2025-10-cli-flags/phase_l/scaling_validation/per_phi/20251009T002636Z/trace_py_scaling.log \
+  --out reports/2025-10-cli-flags/phase_l/scaling_validation/per_phi/20251009T002636Z/summary.md
+
+# Artifacts generated:
+# - trace_py_scaling.log (main trace, 114 TRACE_PY lines)
+# - trace_py_scaling_per_phi.log (per-φ trace, 10 TRACE_PY_PHI lines)
+# - trace_py_scaling_per_phi.json (structured per-φ data)
+# - summary.md (comparison results)
+# - metrics.json (structured metrics)
+# - run_metadata.json (run configuration)
+# - compare_scaling_traces.txt (comparison stdout)

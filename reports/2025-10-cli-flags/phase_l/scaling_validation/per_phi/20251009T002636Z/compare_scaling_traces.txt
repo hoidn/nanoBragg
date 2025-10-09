@@ -1,0 +1,5 @@
+Comparison written to reports/2025-10-cli-flags/phase_l/scaling_validation/per_phi/20251009T002636Z/summary.md
+Metrics written to reports/2025-10-cli-flags/phase_l/scaling_validation/per_phi/20251009T002636Z/metrics.json
+Metadata written to reports/2025-10-cli-flags/phase_l/scaling_validation/per_phi/20251009T002636Z/run_metadata.json
+First divergence: I_before_scaling
+Divergent factors: 2
