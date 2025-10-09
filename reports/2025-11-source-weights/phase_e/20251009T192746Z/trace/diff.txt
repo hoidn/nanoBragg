@@ -1,0 +1,5 @@
+Found 45 Python trace lines and 72 C trace lines
+
+First divergence at trace line 0:
+PY: TRACE_PY: pix0_vector_meters 0.231274664402008 0.0221880003809929 -0.0221880003809929
+C:  TRACE_C:fdet_after_rotz=0 0 1

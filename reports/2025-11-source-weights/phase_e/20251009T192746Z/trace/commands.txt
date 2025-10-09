@@ -1,0 +1,6 @@
+# Thu Oct  9 07:28:02 PM UTC 2025 TC-D1 trace parity
+export KMP_DUPLICATE_LIB_OK=TRUE
+export NB_RUN_PARALLEL=1
+export NB_C_BIN=./golden_suite_generator/nanoBragg
+python -m nanobrag_torch -mat A.mat -sourcefile reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt -default_F 100 -hdivsteps 0 -vdivsteps 0 -dispsteps 1 -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -oversample 1 -nonoise -nointerpolate -trace_pixel 158 147 -floatfile reports/2025-11-source-weights/phase_e/20251009T192746Z/trace/py_tc_d1.bin
+./golden_suite_generator/nanoBragg -mat A.mat -sourcefile reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt -default_F 100 -hdivsteps 0 -vdivsteps 0 -dispsteps 1 -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -oversample 1 -nonoise -nointerpolate -trace_pixel 158 147 -floatfile reports/2025-11-source-weights/phase_e/20251009T192746Z/trace/c_tc_d1.bin
