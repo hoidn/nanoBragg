@@ -1,35 +1,39 @@
-Summary: Capture and document the divergence auto-selection mismatch so we can pick the correct fix path before touching simulator code.
-Mode: Parity
+Summary: Produce Phase D2 design notes so we can choose how to handle divergence sources alongside sourcefiles before re-running parity.
+Mode: Docs
 Focus: [SOURCE-WEIGHT-001] Correct weighted source normalization
 Branch: feature/spec-based-2
 Mapped tests: pytest --collect-only -q
-Artifacts: reports/2025-11-source-weights/phase_d/<STAMP>/{divergence_analysis.md,commands.txt,pytest_collect.log}
-Do Now: [SOURCE-WEIGHT-001] Phase D1 divergence analysis — create a new UTC-stamped folder under reports/2025-11-source-weights/phase_d/, write divergence_analysis.md summarising C vs PyTorch source counts (with spec + nanoBragg.c anchors), and finish by running `pytest --collect-only -q` (log to the same folder).
-If Blocked: If you cannot reconcile C vs PyTorch behaviour, capture the unresolved questions in divergence_analysis.md plus the snippets you inspected, then ping me with the open items noted in Attempts History.
+Artifacts: reports/2025-11-source-weights/phase_d/<STAMP>/{design_notes.md,commands.txt,pytest_collect.log,summary.md}
+Do Now: [SOURCE-WEIGHT-001] Correct weighted source normalization — KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q
+If Blocked: Document the roadblock in reports/2025-11-source-weights/phase_d/<STAMP>/attempts.md and run KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q to capture the failure context.
 Priorities & Rationale:
-- specs/spec-a-core.md:142 — normative statement that weights are ignored; confirm whether it forbids divergence grids when a sourcefile is present.
-- reports/2025-11-source-weights/phase_d/20251009T101247Z/summary.md — existing evidence showing steps=4 vs 2; reuse data instead of rerunning heavy CLI commands.
-- nanoBragg.c:2570 — ground-truth loop creating sources; quote exact lines to justify whatever fix direction we adopt.
-- plans/active/source-weight-normalization.md — Phase D now requires documented evidence before implementation; keep entries aligned.
-- docs/fix_plan.md:4129 — Next Actions expect divergence_analysis.md + design notes before handing off to code changes.
+- specs/spec-a-core.md:140 — Spec says weights are ignored; divergence+sourcefile semantics remain undefined and need a recommendation.
+- plans/active/source-weight-normalization.md — Phase D2 now expects a design_notes.md deliverable before implementation.
+- reports/2025-11-source-weights/phase_d/20251009T102319Z/divergence_analysis.md — D1 artifact summarises steps mismatch (4 vs 2) and enumerates remediation options A/B/C.
+- docs/fix_plan.md:4035 — Next Actions require D2 design + D3 harness before Phase E resumes.
+- docs/development/testing_strategy.md:40 — Device/dtype discipline to cite when proposing implementation touchpoints.
 How-To Map:
-- Export a UTC stamp (`export STAMP=$(date -u +%Y%m%dT%H%M%SZ)`) and mkdir `reports/2025-11-source-weights/phase_d/$STAMP` before you start writing.
-- Append every shell command you run (rg, sed, python snippets) to `commands.txt` in that folder so the evidence trail is reproducible.
-- Use `rg -n "sourcefile" specs/spec-a-core.md` and `sed -n '2550,2750p' nanoBragg.c` to pull exact wording for the analysis doc.
-- Summarise the old CLI metrics (steps, correlation, totals) in divergence_analysis.md; reference existing JSON/summary files rather than recomputing numbers.
-- After drafting the doc, run `pytest --collect-only -q | tee reports/2025-11-source-weights/phase_d/$STAMP/pytest_collect.log` to verify the harness still imports cleanly.
+- Create a fresh UTC-stamped folder under reports/2025-11-source-weights/phase_d/ (e.g. using date --utc +%Y%m%dT%H%M%SZ) and record commands in commands.txt.
+- Re-read divergence_analysis.md and extract quantitative deltas (steps, correlation, sum_ratio) plus option tradeoffs; summarise them in design_notes.md.
+- For each remediation option, list impacted modules/functions (e.g. src/nanobrag_torch/utils/auto_selection.py, src/nanobrag_torch/simulator.py:400) and outline vectorization/device risks referencing docs/development/pytorch_runtime_checklist.md.
+- Recommend one path, justify with spec adherence + parity expectations, and define acceptance metrics (correlation ≥0.999, |sum_ratio−1| ≤1e-3) plus required pytest selector (start from TestSourceWeights suite).
+- Capture pytest --collect-only -q output into pytest_collect.log to prove selectors still load; add a short summary.md framing next steps for D3 harness work.
 Pitfalls To Avoid:
-- Do not modify simulator or config code yet; this loop is documentation-only.
-- Keep the analysis doc ASCII and quote spec/C code verbatim with line anchors per Rule #11 expectations.
-- Avoid re-running the heavy CLI parity commands unless explicitly approved; reuse 20251009 artifacts.
-- Maintain device/dtype neutrality in any reasoning; call out assumptions if evidence only covers CPU.
-- Respect Protected Assets (docs/index.md references); do not move or delete existing artifacts.
-- No ad-hoc scripts outside reports/…; use built-in tools like rg/sed for evidence gathering.
-- Keep the stamped folder self-contained (divergence_analysis.md, commands.txt, pytest_collect.log).
+- Do not edit production code; this is an analysis loop.
+- Keep divergence options grounded in spec wording; avoid inventing new behaviour without noting spec deltas.
+- Maintain device/dtype neutrality in proposed changes—no `.cpu()`/`.cuda()` shims.
+- Respect Protected Assets (docs/index.md items) when creating or referencing scripts.
+- Use existing fixtures (two_sources.txt) and avoid adding new files under reports/ outside the timestamped folder.
+- Note that nb-compare / CLI runs are deferred until Phase E; do not execute them now.
+- When citing C code, use Rule #11 docstring snippets; no paraphrasing.
+- Do not change pyproject.toml or pyrefly config.
+- Avoid renaming or relocating any files referenced in docs/index.md.
+- Keep Attempt history in docs/fix_plan.md unchanged until the new artifact is ready.
 Pointers:
-- specs/spec-a-core.md:142
-- docs/fix_plan.md:4129
+- reports/2025-11-source-weights/phase_d/20251009T102319Z/divergence_analysis.md
 - plans/active/source-weight-normalization.md
-- reports/2025-11-source-weights/phase_d/20251009T101247Z/summary.md
-- nanoBragg.c:2570
-Next Up: Phase D2 design_notes.md outlining whether we mirror C’s divergence grid or seek a spec amendment.
+- docs/fix_plan.md:4029
+- specs/spec-a-core.md:140
+- docs/development/pytorch_runtime_checklist.md:10
+- docs/development/testing_strategy.md:38
+Next Up: Prepare the Phase D3 acceptance harness once the design decision lands.

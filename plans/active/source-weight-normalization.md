@@ -8,7 +8,7 @@
   - `docs/development/testing_strategy.md` §§1.4–2 — device/dtype discipline and authoritative commands for targeted pytest runs.
   - `golden_suite_generator/nanoBragg.c:2570-2720` — C reference showing weights copied from file but excluded from `steps` and accumulation.
   - Existing evidence bundles under `reports/2025-11-source-weights/phase_a/` (bias reproduction) and `phase_b/20251009T083515Z/` (spec-aligned gap confirmation).
-- Status Snapshot (2025-12-24): Phases A–C complete — equal-weight accumulation merged (commits 47822ce, 321c91e, dffea55) and regression tests enforce the spec rule. Phase D (divergence auto-selection parity) is now the active gate after the 20251009 Phase D1 capture showed C still instantiates divergence grid sources alongside a sourcefile (steps=4 vs PyTorch steps=2). We must align behaviour (or update the spec) before rerunning parity for `[VECTOR-GAPS-002]` and PERF profiling.
+- Status Snapshot (2025-12-24): Phases A–C complete — equal-weight accumulation merged (commits 47822ce, 321c91e, dffea55) and regression tests enforce the spec rule. Phase D1 evidence landed in `reports/2025-11-source-weights/phase_d/20251009T102319Z/`, confirming C continues to instantiate divergence grid sources alongside a sourcefile (steps=4 vs PyTorch steps=2) and cataloguing three remediation options. The remaining Phase D work now focuses on deciding the implementation/spec path (D2) and preparing the acceptance harness (D3) so Phase E implementation can proceed and unblock `[VECTOR-GAPS-002]` + PERF profiling.
 
 ### Phase A — Evidence Baseline (Complete)
 Goal: Preserve reproducible proof of the weighted-source divergence.
@@ -21,7 +21,7 @@ Exit Criteria: CLI runs + metrics captured under `phase_a/20251009T071821Z/`.
 | A2 | Capture PyTorch bias | [D] | PyTorch CLI output + metrics stored under `phase_a/.../py/`; total intensity 1.52e5. |
 | A3 | Capture C reference | [D] | C CLI output + metrics stored under `phase_a/.../c/`; total intensity 4.63e2. |
 
-### Phase B — Spec & Gap Confirmation (Active)
+### Phase B — Spec & Gap Confirmation (Complete)
 Goal: Replace the outdated "sum of weights" design with a spec-aligned analysis that documents why PyTorch must ignore weights during accumulation.
 Prereqs: Phase A artifacts reviewed; repository clean.
 Exit Criteria: `reports/2025-11-source-weights/phase_b/<STAMP>/` contains spec quotations, PyTorch call-chain notes, CLI rerun metrics, commands.txt, env.json, and pytest collection proof.
@@ -43,16 +43,16 @@ Exit Criteria: PyTorch accumulation path ignores weights; regression tests cover
 | C2 | Simplify source cache handling | [D] | Metadata-only handling in `Simulator.__init__` retained; comments updated in `config.py` (commit dffea55). |
 | C3 | Extend regression tests | [D] | `tests/test_cli_scaling.py::TestSourceWeights` expanded with TC-A/TC-B/TC-D coverage (CPU focus, CUDA optional). |
 
-### Phase D — Divergence Auto-Selection Parity
+### Phase D — Divergence Auto-Selection Parity (Active)
 Goal: Align PyTorch’s handling of divergence grids when a sourcefile is present with the nanoBragg C behaviour uncovered in the 20251009 Phase D1 capture, and document any spec deltas.
 Prereqs: Phase C implementation merged; artifacts from `reports/2025-11-source-weights/phase_d/20251009T101247Z/` available for reference.
 Exit Criteria: Behavioural decision recorded (spec update vs implementation change), implementation design ready for delegation, and validation harnesses scoped.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| D1 | Document C vs PyTorch divergence handling | [ ] | Summarise evidence in `reports/2025-11-source-weights/phase_d/<STAMP>/divergence_analysis.md` quoting `nanoBragg.c` (source generation loop) and Phase D1 metrics (steps=4 vs 2). Clarify whether spec needs amendment (specs/spec-a-core.md §Sources) or PyTorch must change. |
-| D2 | Decide implementation direction | [ ] | Produce `design_notes.md` detailing the chosen path: (a) replicate C by generating divergence grid plus sourcefile inputs, or (b) update spec/tests to forbid the mixture. Include device/dtype considerations and broadcast shapes. |
-| D3 | Prepare acceptance harness | [ ] | Define pytest selector (likely new test class under `tests/test_cli_scaling.py`) and CLI command bundle exercising sourcefile + divergence. Record commands in `reports/.../phase_d/<STAMP>/commands.txt`; ensure collect-only proof captured. |
+| D1 | Document C vs PyTorch divergence handling | [D] | ✅ Captured in `reports/2025-11-source-weights/phase_d/20251009T102319Z/divergence_analysis.md`. Summarises Phase D1 metrics (steps=4 vs 2), cites `specs/spec-a-core.md:150-190` and `nanoBragg.c:2570-2720`, and records remediation options A/B/C. Reference this artifact before drafting D2. |
+| D2 | Decide implementation direction | [ ] | Author `reports/2025-11-source-weights/phase_d/<STAMP>/design_notes.md` synthesising D1 findings into a single recommendation (spec change vs PyTorch change). Include: decision matrix (parity vs spec risk), required code touchpoints (e.g. `src/nanobrag_torch/utils/auto_selection.py`, `simulator.py`), device/dtype considerations, and acceptance thresholds (correlation ≥0.999, |sum_ratio−1| ≤1e-3). |
+| D3 | Prepare acceptance harness | [ ] | Finalise pytest selector (e.g. `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_with_divergence_parity`) and CLI bundle exercising `-sourcefile` with divergence flags. Store commands + expected outputs in `reports/2025-11-source-weights/phase_d/<STAMP>/commands.txt`, and capture `pytest --collect-only -q` proof alongside harness notes. |
 
 ### Phase E — Implementation & Verification
 Goal: Apply the agreed divergence-handling behaviour, extend regression coverage, and prove CPU parity (CUDA optional) so dependent performance work can resume.
