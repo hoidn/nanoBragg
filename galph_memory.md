@@ -1561,3 +1561,10 @@
 - Updated `plans/active/source-weight-normalization.md` Phase E status to reflect the wavelength mismatch and blocked tasks now require the lambda sweep artifact bundle.
 - Replaced `input.md` (Mode: Parity) directing Ralph to perform the lambda sweep, capture diagnostics/metrics under `reports/2025-11-source-weights/phase_e/<STAMP>/lambda_sweep/`, and retain collect-only pytest proof.
 - Follow-up: Ralph should execute the lambda sweep commands, archive metrics for both wavelength variants, and update the fix plan attempt history once the hypothesis is confirmed.
+
+### 2025-12-24 (galph loop - VECTOR-TRICUBIC Phase A0 alignment)
+- Added Phase A0 row to `plans/active/vectorization.md` (lines 23-26) capturing the new requirement to document the CLI `-lambda` override + steps reconciliation before requesting fresh parity runs; Status snapshot now references the 20251009T130433Z lambda sweep evidence.
+- Refreshed `docs/fix_plan.md` entries for `[VECTOR-TRICUBIC-002]` (lines 3764-3781) and `[SOURCE-WEIGHT-001]` (lines 4046-4050) so Next Actions explicitly call for the lambda semantics design note and tie back to the updated plan.
+- Marked `plans/active/source-weight-normalization.md` Phase E2 complete (lines 65-68) and clarified that E3 stays blocked pending the lambda/steps fix path.
+- New `input.md` (Docs mode) directs Ralph to author `reports/2025-11-source-weights/phase_e/<STAMP>/lambda_semantics.md` plus collect-only proof, aligning with VECTOR-TRICUBIC-002 Phase A0.
+- Coin review (heads): Ralph’s recent commits 303a284 → 1959182 delivered parity evidence and the lambda sweep; productive progress with no regressions, but physics fix still outstanding.
