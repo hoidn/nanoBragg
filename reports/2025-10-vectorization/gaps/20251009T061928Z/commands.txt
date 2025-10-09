@@ -1,0 +1,3 @@
+python - <<'PY' | tee reports/2025-10-vectorization/gaps/20251009T061928Z/generate_sources_timing.txt
+# -> timing script (see file for body)
+PY

@@ -1,0 +1,3 @@
+sources count 3969
+first call s 0.12621355056762695
+avg subsequent 0.12439348962571886

@@ -2,7 +2,13 @@
 
 > Entries prior to 2025-11 have been moved to `archive/galph_memory/2025-09_to_2025-10.md` (summarized on 2025-12-04).
 
-### Archived Summary (2025-09 → 2025-10)
+### 2025-12-22 (galph loop - Source grid vectorization evidence)
+- Focused on [PERF-PYTORCH-004] Goal 2 gap: logged `generate_sources_from_divergence_dispersion` triple-loop cost (~0.126 s per call for 3,969 sources).
+- Created reports/2025-10-vectorization/gaps/20251009T061928Z/{analysis.md,generate_sources_timing.txt,commands.txt,env.json}.
+- Input.md now directs Ralph to batch this function, capture new timings, run `pytest tests/test_divergence_culling.py -v`, and log Attempt update under fix_plan.
+- Open follow-up: update perf plan section with new sub-phase after Ralph lands implementation; ensure CUDA benchmarking queued post device-placement fix.
+
+## Archived Summary (2025-09 → 2025-10)
 - Established supervisor workflow, enforced prompts/debug.md routing, and opened initial parity/performance plans (AT-021 trace parity, AT-012 rotation, PERF-PYTORCH-004, REPO-HYGIENE-002).
 - Diagnosed key issues: φ=0 carryover, metric duality regression (V_actual vs formula volume), pix0 override drift, torch.compile warm-up overhead, and float32 plateau fragmentation hurting peak matching.
 - Captured repeated reminders on Protected Assets/dirty worktree hygiene and documented long-term goals (CLI parity restoration before vectorization, Dynamo cache validation, detector pivot rules).
