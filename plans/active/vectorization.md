@@ -11,7 +11,7 @@
   - plans/active/vectorization-gap-audit.md - open gap inventory plus profiling backlog (Phase B blocked today).
   - plans/active/source-weight-normalization.md - prerequisite parity work gating profiler reliability.
   - reports/2025-10-vectorization/ and reports/2026-01-vectorization-gap/ - prior artifacts to cross-check during refresh.
-- Status Snapshot (2025-12-24): Tricubic and absorption vectorization (Phases A-H) remain archived with CUDA parity. SOURCE-WEIGHT-001 Option B landed, but the dependent spec-first decision and test realignment (Phases E–G) are still outstanding. VECTOR-GAPS-002 Phase B1 stays blocked until the spec decision memo and new SOURCE-WEIGHT spec-compliance tests are available; C correlation thresholds are no longer the dependency gate. This plan tracks the dependency closure, status propagation, backlog refresh, and eventual implementation handoff.
+- Status Snapshot (2025-12-24): Tricubic and absorption vectorization (Phases A-H) remain archived with CUDA parity. SOURCE-WEIGHT-001 spec-first decision + ledger propagation completed; the Phase F design packet (20251009T203823Z) is archived. Phase G implementation/evidence remains outstanding and is the last gate before refreshing profiler baselines. VECTOR-GAPS-002 Phase B1 stays blocked until the spec-compliance tests land; C correlation thresholds remain retired.
 
 ### Phase A - Dependency Gate And Ledger Sync
 Goal: Clear upstream blockers so downstream profiling and implementation can proceed on trustworthy baselines.
@@ -22,7 +22,7 @@ Exit Criteria: SOURCE-WEIGHT-001 Phase E artifacts captured, VECTOR-GAPS-002 Pha
 | --- | --- | --- | --- |
 | A0 | Confirm lambda override consensus | [D] | ✅ Attempt #16 (2025-12-24 galph loop) logged Option B as the authoritative approach, citing `reports/2025-11-source-weights/phase_e/20251009T131709Z/lambda_semantics.md` and updating `docs/fix_plan.md`/`plans/active/source-weight-normalization.md`. No further action required. |
 | A1 | Record SOURCE-WEIGHT spec decision | [D] | ✅ Decision memo available at `reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md`; fix_plan updated (2025-12-24) to cite it and tag C behaviour as bug `C-PARITY-001`. Remaining gate: complete Phase E2 ledger propagation before unlocking A2. |
-| A2 | Capture spec-compliance test availability | [ ] | After SOURCE-WEIGHT-001 Phase F/G land, log the new pytest selectors and CLI artifact paths (no C correlation gate) under `reports/2025-11-source-weights/phase_g/<STAMP>/`. Update `[VECTOR-GAPS-002]` Next Actions to cite these spec-aligned checks. |
+| A2 | Capture spec-compliance test availability | [ ] | After SOURCE-WEIGHT-001 Phase G lands, log the new pytest selectors and CLI artifact paths (no C correlation gate) under `reports/2025-11-source-weights/phase_g/<STAMP>/`. Update `[VECTOR-GAPS-002]` Next Actions to cite these spec-aligned checks. |
 | A3 | Archive dependency memo | [ ] | Once A1–A2 complete, append a galph_memory note summarising readiness (spec decision, test selectors, artifact paths) so future loops can resume profiling without chasing C parity. |
 
 ### Phase B - Evidence Refresh For Existing Vectorization Paths

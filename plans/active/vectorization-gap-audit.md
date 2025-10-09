@@ -11,7 +11,7 @@
   - plans/active/vectorization.md (Phases A–G history)
   - plans/active/perf-pytorch-compile-refactor/plan.md (4096² warm benchmark harness & profiler usage)
   - reports/2025-10-vectorization/gaps/20251009T061928Z/analysis.md (prior gap evidence: divergence/dispersion source loops)
-- Status Snapshot (2025-12-24 update): Phase A evidence archived; VECTOR-TRICUBIC-001 Phase H closed. Phase B remains BLOCKED until `[SOURCE-WEIGHT-001]` delivers the Phase F/G spec-compliance redesign and evidence bundle (replacing the legacy C-correlation gate).
+- Status Snapshot (2025-12-24 update): Phase A evidence archived; VECTOR-TRICUBIC-001 Phase H closed. Phase B remains BLOCKED until `[SOURCE-WEIGHT-001]` delivers the Phase G spec-compliance implementation + evidence bundle (design packet already archived at 20251009T203823Z, replacing the legacy C-correlation gate).
 
 ### Phase A — Loop Inventory & Evidence Capture
 Goal: Build an auditable inventory of remaining Python loops touching the simulator hot path, with code locations and rough complexity estimates.

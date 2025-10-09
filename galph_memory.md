@@ -1631,3 +1631,10 @@
 - Propagated the spec-first gate to dependent plans: `plans/active/vectorization.md:21-26` now has A1 `[D]`, and `plans/active/vectorization-gap-audit.md:11-35` swaps the correlation blocker for the upcoming spec-compliance bundle.
 - Replaced `input.md` with Docs-mode guidance directing Ralph to author Phase F1–F3 (`reports/2025-11-source-weights/phase_f/<STAMP>/test_plan.md`) after validating selectors via collect-only.
 - Follow-up for Ralph: execute Phase F1–F3 per new input, archive artifacts under the phase_f path, and update `[SOURCE-WEIGHT-001]` attempts once the design packet is ready.
+
+### 2025-12-24 (galph loop - SOURCE-WEIGHT Phase G kickoff)
+- Marked Phase E2/E3 complete and Phase F rows `[X]` in `plans/active/source-weight-normalization.md`, highlighting Phase G as the active gate with design packet archived (20251009T203823Z).
+- Updated `docs/fix_plan.md:4035-4053` to record the spec-first ledger sync, retire the old parity bullets, and direct Next Actions to Phase G1–G3 with explicit pytest/CLI commands.
+- Refreshed dependency plans (`plans/active/vectorization.md`, `plans/active/vectorization-gap-audit.md`) to note Phase G evidence as the remaining blocker for profiler work.
+- Replaced `input.md` (Mode: Docs+Parity) handing Ralph the Phase G1/G2 execution plan: rewrite `tests/test_cli_scaling.py::TestSourceWeights*`, run the mapped pytest selector, rerun TC-D1/TC-D3 CLI bundles, and capture metrics/json artifacts under `reports/2025-11-source-weights/phase_g/<STAMP>/`.
+- Follow-up for Ralph: implement the test updates per design packet, gather the Phase G evidence bundle, then log a new Attempt in `[SOURCE-WEIGHT-001]` (Phase G3) before pinging for Phase H documentation sync.

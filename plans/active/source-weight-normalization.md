@@ -10,8 +10,9 @@
   - Existing evidence bundles under `reports/2025-11-source-weights/phase_{a..e}/` (baseline traces, design notes, CLI commands).
 - Status Snapshot (2025-12-24 refresh):
   - Legacy Phases A–D are complete (fixtures, spec confirmation, implementation guard, trace instrumentation).
-  - Phase E1 done (decision memo locked 20251009T202432Z); Phase E2/E3 remain to update ledgers and dependent gates before Phase F can proceed.
-  - Current blockers: `tests/test_cli_scaling.py::TestSourceWeights*` still assert C-style sum(weight) normalisation, keeping parity metrics <0.8 and blocking VECTOR-* initiatives until Phases F–G realign the suite.
+  - Phase E ledger propagation finished this loop (E2/E3 ✅); spec-first stance and dependency gates now live in `docs/fix_plan.md` and the vectorization plans.
+  - Phase F design packet archived at `reports/2025-11-source-weights/phase_f/20251009T203823Z/`; Phase G implementation/evidence is the active gate before downstream profiling can resume.
+  - Current blockers: `tests/test_cli_scaling.py::TestSourceWeights*` still assert C-style sum(weight) normalisation, keeping parity metrics <0.8 and blocking VECTOR-* initiatives until Phase G realigns the suite.
 
 ### Legacy Evidence (Phases A–D) — Locked
 Goal: Preserve provenance of the already-completed investigation.
@@ -29,8 +30,8 @@ Exit Criteria: Decision memo + ledger updates make it explicit that PyTorch is c
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | E1 | Draft decision memo | [X] | ✅ `reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md` (FINAL) captures spec citations, trace evidence, and locks the spec-first decision (C bug tagged `C-PARITY-001`). Memo inventories impacted tests (TestSourceWeights*, TC-D1/D3) and embeds reproduction commands. |
-| E2 | Update ledgers with decision | [ ] | After E1, update `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions and Observations to state the spec-first contract, cite the decision memo, and classify existing parity failures as expected. Log summary in `galph_memory.md`. |
-| E3 | Propagate dependency gates | [ ] | Refresh `plans/active/vectorization.md` Phase A1/A2 guidance so VECTOR-TRICUBIC-002 unblocks once Phase F–G deliverables land (spec compliance replaces C correlation thresholds). |
+| E2 | Update ledgers with decision | [X] | ✅ `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` now cites the spec-first decision memo (`reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md`) and classifies C correlation gaps as expected (`C-PARITY-001`). Summary logged in `galph_memory.md` (2025-12-24 loop). |
+| E3 | Propagate dependency gates | [X] | ✅ `plans/active/vectorization.md`/`plans/active/vectorization-gap-audit.md` updated to gate Phase A2/B1 on SOURCE-WEIGHT spec-compliance instead of C correlation; fix_plan cross-references now point to these phases. |
 
 ### Phase F — Test Realignment Design (Ready)
 Goal: Produce a concrete redesign for the source-weight tests and CLI harnesses so Ralph can implement without ambiguity.
@@ -39,9 +40,9 @@ Exit Criteria: Design packet defines new acceptance criteria, fixture usage, and
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| F1 | Inventory affected tests | [ ] | Document in `reports/2025-11-source-weights/phase_f/<STAMP>/test_plan.md` which tests must change (`TestSourceWeights::test_weighted_source_matches_c`, `TestSourceWeightsDivergence::test_sourcefile_only_parity`, related fixtures). Provide current assertions and proposed replacements (spec-equality, warning checks). |
-| F2 | Define new acceptance criteria | [ ] | Extend test_plan.md with explicit metrics: e.g., compare PyTorch against a spec-constructed reference (PyTorch run with weights stripped), require sum ratios within 1e-3, prohibit reliance on C totals. Reference `docs/development/testing_strategy.md` for tolerance policy. |
-| F3 | Map pytest selectors & commands | [ ] | Validate selectors via `pytest --collect-only -q tests/test_cli_scaling.py::TestSourceWeights` and record commands in `commands.txt`. Include CLI bundle for generating "spec vs C" comparison artifacts (store under `reports/2025-11-source-weights/phase_f/<STAMP>/cli/`). |
+| F1 | Inventory affected tests | [X] | ✅ `reports/2025-11-source-weights/phase_f/20251009T203823Z/test_plan.md` enumerates all impacted tests (`TestSourceWeights*`) with current vs proposed assertions and fixture notes. |
+| F2 | Define new acceptance criteria | [X] | ✅ Same design packet documents spec-computed reference expectations (weights ignored, CLI lambda override) with tolerances ≤1e-3, citing `docs/development/testing_strategy.md`. |
+| F3 | Map pytest selectors & commands | [X] | ✅ `reports/2025-11-source-weights/phase_f/20251009T203823Z/commands.txt` captures `pytest --collect-only -q tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` plus the supporting CLI bundle commands. |
 
 ### Phase G — Implementation & Evidence (Blocked until Phase F)
 Goal: Update the test suite and capture supporting artifacts demonstrating spec compliance.
