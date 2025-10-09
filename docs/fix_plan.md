@@ -4079,6 +4079,23 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       2. Add validation warning when sourcefile wavelength differs from CLI `-lambda` (inform user that column is ignored).
       3. After fix, rerun TC-D1/TC-D3 and verify correlation ≥0.999, |sum_ratio-1| ≤1e-3.
       4. Update `specs/spec-a-core.md` to clarify both weight AND wavelength columns are read but ignored.
+  * [2025-10-09] Attempt #15 (ralph loop #229 — Mode: Docs, VECTOR-TRICUBIC-002 Phase A0). Result: **SUCCESS** (Lambda semantics design note authored).
+    Metrics: Test collection passed (694 tests discovered via `pytest --collect-only -q`). No code changes; documentation-only loop per input.md Do Now.
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_e/20251009T131709Z/lambda_semantics.md` — Complete implementation design selecting Option B (CLI override), documenting file touchpoints, acceptance thresholds, C reference anchors, and implementation sequence for Ralph
+      - `reports/2025-11-source-weights/phase_e/20251009T131709Z/commands.txt` — Reproduction commands and next-loop implementation guidance
+      - `reports/2025-11-source-weights/phase_e/20251009T131709Z/collect.log` — Test collection proof (694 tests, exit code 0)
+    Observations/Hypotheses:
+      - **Design decision**: Option B (Ignore sourcefile wavelengths, enforce CLI override) selected to match C semantics and preserve golden data compatibility.
+      - **Implementation touchpoints**: `src/nanobrag_torch/io/source.py` (parse function override), `src/nanobrag_torch/__main__.py` (CLI resolution), `src/nanobrag_torch/simulator.py` (steps calculation fix to count all sources including zero-weight), `tests/test_at_src_003.py` (new regression tests TC-E1/E2/E3).
+      - **Steps reconciliation**: Must count all sources (including zero-weight divergence entries) per C convention: `steps = sources_total × mosaic_domains × phi_steps × oversample²`.
+      - **Acceptance criteria**: Post-fix TC-D1/TC-D3 parity must satisfy corr ≥0.999, |sum_ratio−1| ≤1e-3, warning emission on λ mismatch.
+    Next Actions:
+      1. Galph reviews `lambda_semantics.md` and approves Option B design (consensus gate).
+      2. Ralph implements changes in single loop: edit source parser + CLI + simulator, add TC-E1/E2/E3 regression tests, rerun TC-D1/TC-D3 parity.
+      3. Update spec (`specs/spec-a-core.md`), config map (`docs/development/c_to_pytorch_config_map.md`), and architecture docs per touchpoints.
+      4. Signal `[VECTOR-GAPS-002]` Phase B1 unblock when correlation ≥0.99 captured and validated.
+      5. Archive design note reference in `plans/active/source-weight-normalization.md` Phase E and `plans/active/vectorization.md` Phase A.
   * [2025-11-17] Attempt #0 — Result: backlog entry. Issue documented and plan `plans/active/source-weight-normalization.md` created; awaiting evidence collection.
   * [2025-10-09] Attempt #1 — Phase A evidence capture (ralph). Result: success.
     Metrics: C total intensity = 463.4, PyTorch total intensity = 151963.1, ratio PyTorch/C = 327.9×. Both outputs have 65159 nonzero pixels.

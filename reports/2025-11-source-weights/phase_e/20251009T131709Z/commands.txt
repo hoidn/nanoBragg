@@ -1,0 +1,37 @@
+# Command Log — Lambda Semantics Design Note
+# SOURCE-WEIGHT-001 Phase A0/E3
+# Date: 2025-10-09T13:17:09Z
+# Branch: feature/spec-based-2
+
+## Environment Setup
+export KMP_DUPLICATE_LIB_OK=TRUE
+export NB_C_BIN=./golden_suite_generator/nanoBragg
+
+## Test Collection (Docs-only Loop Proof)
+pytest --collect-only -q > reports/2025-11-source-weights/phase_e/20251009T131709Z/collect.log
+
+## Lambda Sweep Evidence (Referenced, Not Regenerated)
+# See: reports/2025-11-source-weights/phase_e/20251009T130433Z/lambda_sweep/
+# Artifacts: summary.md, lambda62/metrics.json, lambda09768/metrics.json
+
+## Implementation Command (For Next Loop, After Design Approval)
+# Step 1: Edit source files per lambda_semantics.md touchpoints
+# Step 2: Run new regression tests:
+KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_src_003.py -v
+
+# Step 3: Rerun parity tests (TC-D1/TC-D3):
+NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE \
+  python scripts/cli/run_weighted_source_parity.py \
+  --oversample 1 \
+  --outdir reports/2025-11-source-weights/phase_e/<NEW_STAMP>/
+
+# Step 4: Verify metrics:
+# - correlation ≥ 0.999
+# - |sum_ratio - 1| ≤ 1e-3
+# - Warning emission in pytest.warns capture
+
+## Next Actions
+# 1. Galph reviews lambda_semantics.md and approves Option B design
+# 2. Ralph implements changes in single loop (edit + test + parity)
+# 3. Update docs/fix_plan.md [SOURCE-WEIGHT-001] with new Attempt
+# 4. Signal [VECTOR-GAPS-002] Phase B1 unblock when corr ≥0.99
