@@ -1319,3 +1319,8 @@
 - Authored new input.md (Docs mode) directing Ralph to log the VG-5 Attempt, update the supervisor analysis banner, mirror the 20251009T024433Z bundle into reports/archive, and mark O2/O3 once complete; pytest collect-only proof remains the testing requirement.
 - No new artifacts generated; waiting on Ralph to execute the archival/ledger updates before closing CLI-FLAGS Phase O.
 
+## 2025-12-22 (galph loop — Phase P watch scaffolding)
+- Reviewed long-term goals; identified remaining tasks as CLI-FLAGS Phase P (watch cadence) and phi-carryover removal Phase E (hygiene guard). No new plan required.
+- Updated docs/fix_plan.md Active Focus to call out Phase P watch work plus phi-carryover Phase E, and rewrote CLI-FLAGS Next Actions to point at P1/P2 alongside logging requirements.
+- Authored input.md (Docs mode) instructing Ralph to extend fix_plan hygiene guidance with the `rg "phi_carryover"` + trace cadence, create `reports/archive/cli-flags-003/watch.md` with the nb-compare smoke metrics, update plan rows P1/P2 & E1/E2, and run `pytest --collect-only -q`.
+- Expect Ralph to produce the new watch.md, update fix_plan guidance, and record a fresh Attempt covering the completed watch tasks.

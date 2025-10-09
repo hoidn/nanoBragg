@@ -7,7 +7,8 @@
 - AT-012: Plan archived (`plans/archive/at-parallel-012-plateau-regression/plan.md`); monitor for regressions using `reports/2025-10-AT012-regression/phase_c_validation/` artifacts and re-open only if peak matches drop below spec.
 - GRADIENT: Execute `plans/active/gradcheck-tier2-completion/plan.md` Phase A (A1–A3 baseline audit + env alignment) before adding misset/beam gradchecks from Phases B/C; once pass logs exist, close `[AT-TIER2-GRADCHECK]` with Phase D documentation updates.
 - DTYPE: ✅ Complete. Plan archived to `plans/archive/dtype-default-fp32/`. All phases (A-D) finished; float32 defaults documented in arch.md, pytorch_runtime_checklist.md, CLAUDE.md, prompts/debug.md.
-- CLI-FLAGS: Phase O wrap-up — leverage Attempt #202/#203 evidence to log the VG-5 ledger entry and archive the 20251009T024433Z supervisor bundle before scheduling Phase P watch tasks (see `plans/active/cli-noise-pix0/plan.md` O2/O3).
+- CLI-FLAGS: Kick off Phase P watch tasks — extend the hygiene checklist with a quarterly spec-trace cadence and document the nb-compare smoke expectations per `plans/active/cli-noise-pix0/plan.md` (P1/P2).
+- PHI-CARRYOVER: Execute `plans/active/phi-carryover-removal/plan.md` Phase E (E1/E2) so supervisor hygiene enforces the carryover sweep before initiative closure.
 - PERF: Land plan task B7 (benchmark env toggle fix), rerun Phase B6 ten-process reproducibility with the new compile metadata, capture the weighted-source parity memo feeding C5, then execute Phase C diagnostics (C1/C2 plus C8/C9 pixel-grid & rotated-vector cost probes, and new C10 mosaic RNG timing) ahead of Phase D caching work (D5/D6/D7) and detector-scalar hoisting (D8).
 
 ## Index
@@ -608,11 +609,9 @@
       - **H4 Hypothesis (HIGH CONFIDENCE)**: φ-rotation application differs between PyTorch (`Crystal.get_rotated_real_vectors`) and C (nanoBragg.c:2797-3095); spindle axis orientation, rotation matrix order, or sign convention mismatch
       - **Phase M2 Exit Criteria Met**: analysis.md authored with numbered sections, tables, and quantified deltas; lattice_hypotheses.md updated with ranked H4-H8; scaling_validation_summary.md regenerated; sha256.txt validated; commands.txt/collect.log captured
     Next Actions:
-      - Phase M3 Task 1: Add per-φ instrumentation to PyTorch (`TRACE_PY_PHI` lines) matching C format; run single-pixel trace for pixel (685,1039) on CPU float64
-      - Phase M3 Task 2: Generate sincg sensitivity table for k ∈ [-0.61,-0.58] in 0.001 steps; identify zero-crossings and sign-flip boundaries
-      - Phase M3 Task 3: Execute single-φ parity test (phisteps=1, phi=0) to isolate rotation vs accumulation issues
-      - Phase M3 Task 4: Audit rotation matrix construction comparing `src/nanobrag_torch/models/crystal.py::get_rotated_real_vectors` vs nanoBragg.c:2797-3095 line-by-line
-      - All Phase M3 artifacts under `reports/2025-10-cli-flags/phase_l/scaling_validation/<date>/phase_m3_probes/`
+      - Phase P1: Update `docs/fix_plan.md` hygiene guidance to require a quarterly spec-mode trace rerun (`rg "phi_carryover"` sweep + `trace_harness.py`) citing plan `plans/active/phi-carryover-removal/plan.md` Phase E1.
+      - Phase P2: Author `reports/archive/cli-flags-003/watch.md` with the biannual nb-compare smoke recipe (command, expected correlation≈0.985, sum_ratio≈1.2e5) per `plans/active/cli-noise-pix0/plan.md` Phase P2.
+      - Log new Attempt once both watch tasks complete and mark plan rows P1/P2 + phi-carryover Phase E1/E2 [D].
   * [2025-10-22] Attempt #189 (ralph loop, Mode: Parity) — Result: ✅ **SUCCESS** (Phase M4b Normalization Fix CORRECT IMPLEMENTATION). **Code changes loop.**
     Metrics: Targeted tests: 2/2 passed in 2.14s (test_cli_scaling_phi0.py); Core geometry smoke: 31/31 passed in 5.15s (test_crystal_geometry.py + test_detector_geometry.py); No regressions detected.
     Artifacts:
