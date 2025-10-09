@@ -26,10 +26,10 @@ Exit Criteria: New `<STAMP>` bundle under `reports/2025-11-source-weights/phase_
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| G1 | Canonicalise reproduction commands | [ ] | Validate PyTorch + C CLI commands that match TC-D1/TC-D3 geometry while avoiding the interpolation crash (add `-nointerpolate` or provide minimal HKL). Record both commands in `reports/2025-11-source-weights/phase_g/<STAMP>/commands.txt`; confirm `NB_C_BIN` in env and run from the bundle directory so SMV/PGM outputs stay scoped. |
+| G1 | Canonicalise reproduction commands | [ ] | Validate PyTorch + C CLI commands that match TC-D1/TC-D3 geometry while avoiding the interpolation crash (add `-interpolate 0` or provide minimal HKL). Record both commands in `reports/2025-11-source-weights/phase_g/<STAMP>/commands.txt`; confirm `NB_C_BIN` in env and run from the bundle directory so SMV/PGM outputs stay scoped. |
 | G2 | Capture fresh parity bundle | [ ] | Execute the targeted pytest selector (`NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence`) followed by the canonical PyTorch and C CLI commands. Store stdout/stderr, floatfiles, and recomputed metrics (`metrics.json`, `correlation.txt`) under the same `<STAMP>`. Target correlation ≥0.999 and |sum_ratio−1| ≤3e-3; if parity fails, annotate in `notes.md` with hypotheses. |
 | G3 | Update fix_plan attempt | [ ] | Append a new Attempt to `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` summarising the bundle (tests run, metrics, CLI commands, anomalies). Explicitly retire the "expected divergence" narrative and mark whether parity now matches spec. |
-| G4 | Document segfault guard | [D] | ✅ Root cause captured in `reports/2025-11-source-weights/phase_g/20251009T215516Z/c_segfault/crash_analysis.md` (negative Fhkl index when interpolation auto-enables). Reference this note in new `notes.md` so future bundles pass `-nointerpolate` or ship a fixture HKL.
+| G4 | Document segfault guard | [D] | ✅ Root cause captured in `reports/2025-11-source-weights/phase_g/20251009T215516Z/c_segfault/crash_analysis.md` (negative Fhkl index when interpolation auto-enables). Reference this note in new `notes.md` so future bundles pass `-interpolate 0` or ship a fixture HKL.
 
 ### Phase H — Parity Reassessment & Test Updates (Queued)
 Goal: Supersede the legacy spec-vs-C memo, update parity tests to expect PASS, and correct the bug ledger/docs.

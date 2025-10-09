@@ -4044,7 +4044,7 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
 - First Divergence (if known): Pending parity reassessment — attempt `20251009T214016Z` observed correlation ≈0.99999 between C and PyTorch despite the historical `C-PARITY-001` classification. Treat the legacy divergence memo as provisional until Phase H confirms the true behaviour (equal weighting per `specs/spec-a-core.md:151`).
 - Next Actions (refreshed 2025-12-24 after auditing the 20251009T215516Z bundle):
-  - Phase G1 ☐ Canonicalise PyTorch + C commands (ensure `-nointerpolate` or supply fixture HKL) and verify both binaries run without crash before recording metrics.
+  - Phase G1 ☐ Canonicalise PyTorch + C commands (ensure `-interpolate 0` (preferred) or supply fixture HKL) and verify both binaries run without crash before recording metrics.
   - Phase G2 ☐ Capture a fresh evidence bundle with PyTorch + C outputs (`correlation ≥ 0.999`, `|sum_ratio−1| ≤ 3e-3`); store stdout/stderr, floatfiles, metrics, and notes under a new `<STAMP>`.
   - Phase G3 ☐ Append a new Attempt entry here summarising the bundle, metrics, segfault guardrails, and any anomalies.
   - Phase G4 ✅ Segfault root cause documented (`reports/2025-11-source-weights/phase_g/20251009T215516Z/c_segfault/crash_analysis.md`); reference this guard in future bundles.
@@ -4052,8 +4052,8 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   - Phase H2 ☐ Update `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference` to expect PASS (no xfail) and archive targeted pytest logs with the memo.
   - Phase H3 ☐ Audit `docs/bugs/verified_c_bugs.md` + this ledger to remove the outdated C-PARITY-001 linkage; document the interpolation segfault if treated as a C bug.
   - Phase I1–I3 ☐ Blocked pending Phase H; see `plans/active/source-weight-normalization.md` for details.
-  1. Rebuild the C binary with debug symbols (`make -C golden_suite_generator clean && make -C golden_suite_generator CFLAGS="-g -O0"`), run the canonical PyTorch and C commands from a fresh `reports/2025-11-source-weights/phase_g/<STAMP>/` directory, and archive `commands.txt`, stdout/stderr, floatfiles, and `metrics.json`.
-  2. If the C command fails, capture a `gdb` backtrace under `c_segfault/` and document the chosen workaround (`-nointerpolate` or HKL) inside the bundle’s `notes.md` before retrying.
+  1. Rebuild the C binary with debug symbols (`make -C golden_suite_generator clean && make -C golden_suite_generator CFLAGS="-g -O0"`), run the canonical PyTorch and C commands from a fresh `reports/2025-11-source-weights/phase_g/<STAMP>/` directory (include `-interpolate 0` on the C CLI unless you supply an HKL fixture), and archive `commands.txt`, stdout/stderr, floatfiles, and `metrics.json`.
+  2. If the C command fails, capture a `gdb` backtrace under `c_segfault/` and document the chosen workaround (`-interpolate 0` or HKL) inside the bundle’s `notes.md` before retrying.
   3. After parity metrics are recorded, update this ledger with a new Attempt and queue Phase H (memo + test update) via the next supervisor input.
   4. Once Phase H completes, propagate the new selectors/artifacts to VECTOR-TRICUBIC-002, VECTOR-GAPS-002, and PERF-PYTORCH-004 before resuming vectorization/perf initiatives.
 - Attempts History:
