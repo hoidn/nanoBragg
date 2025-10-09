@@ -221,7 +221,7 @@ Selection heuristic examples:
 - Then carefully follow the guidelines of the selected <Mode> and <Action type>, applying them to the selected <focus issue>. Complete the task that you selected in step <3>.
 </3.2>
 <3.5>
-Render and write ./input.md (supervisor→engineer steering memo). Overwrite the entire file every invocation. Keep length ~100–200 lines. Include these sections in order:
+Render and write ./input.md (supervisor→engineer steering memo). Overwrite the entire file every invocation. Include these sections in order:
 Header:
 - Summary: <one‑sentence goal for this loop>
  - Mode: <TDD | Parity | Perf | Docs | none>
