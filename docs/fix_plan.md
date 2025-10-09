@@ -4035,6 +4035,30 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       3. **Phase D3 (docs update)**: Update `docs/architecture/pytorch_design.md` §8 with weighted source normalization behavior and `docs/development/testing_strategy.md` §2.5 with AT-SRC-001 parity mapping.
       4. **Phase D completion**: Once TC-A passes with artifacts stored in `reports/2025-11-source-weights/phase_d/<STAMP>/`, mark SOURCE-WEIGHT-001 complete and notify VECTOR-GAPS-002 and PERF-PYTORCH-004 that multi-source profiling may resume.
   * [2025-12-22] Attempt #4 (galph loop — planning review). Result: analysis only. Reviewed commit `321c91e` outputs (`reports/2025-11-source-weights/phase_c/test_failure/metrics.json`) showing correlation 0.9155 and sum_ratio 0.7281 despite normalization reset to `n_sources`. Confirmed spec mandate (weights ignored) and identified `_compute_physics_for_position` weight multiplier as the remaining divergence. Action: realign plan Phases B–C accordingly (see updated Next Actions).
+  * [2025-10-09] Attempt #5 (ralph loop — Phase B1-B3 docs-only evidence). Result: **SUCCESS** (Phase B spec & gap confirmation COMPLETE). **Gathered authoritative spec evidence, PyTorch call-chain analysis, and fresh parity metrics with pytest collection proof.**
+    Metrics: C: sum=102.4, max=2.006e-3, mean=1.563e-3 (1× oversample, 4 sources counted); PyTorch: sum=5400, max=5.927, mean=8.239e-2 (2× oversample auto-selected, 2 sources loaded); Correlation=0.208, sum_ratio=52.7×. Pytest collection: 682 tests in 2.63s (exit 0).
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_b/20251009T083515Z/spec_alignment.md` — Spec citations (spec-a-core.md:151 "weight column is read but ignored"), C code evidence (nanoBragg.c:2570-2720 showing weights printed but never used in accumulation/steps)
+      - `reports/2025-11-source-weights/phase_b/20251009T083515Z/pytorch_accumulation.md` — Call-chain analysis documenting weighted multiply violation at simulator.py:413,416 (`intensity * weights_broadcast`) and correct `source_norm = n_sources` at line 872
+      - `reports/2025-11-source-weights/phase_b/20251009T083515Z/analysis.md` — CLI reproduction with oversample gap identified as confounding factor (C:1×, Py:2×), recommendation to align oversample before validating weight fix
+      - `reports/2025-11-source-weights/phase_b/20251009T083515Z/metrics.json` — Structured metrics (c_metrics, py_metrics, comparison)
+      - `reports/2025-11-source-weights/phase_b/20251009T083515Z/commands.txt` — Authoritative CLI commands for C & PyTorch runs
+      - `reports/2025-11-source-weights/phase_b/20251009T083515Z/env.json` — Environment snapshot (Python/PyTorch versions)
+      - `reports/2025-11-source-weights/phase_b/20251009T083515Z/pytest_collect.log` — Collection proof (682 tests, exit 0)
+      - `reports/2025-11-source-weights/phase_b/20251009T083515Z/{c.bin,py.bin,c_stdout.log,py_stdout.log}` — Binary outputs and execution logs
+      - `plans/active/source-weight-normalization.md` — Updated Phase B tasks B1-B3 marked [D]one
+    Observations/Hypotheses:
+      - **Spec normative (line 151)**: "The weight column is read but ignored (equal weighting results)" — authoritative requirement for equal weighting regardless of user-provided values
+      - **C behavior confirmed**: `steps = sources * mosaic_domains * phisteps * oversample^2` (nanoBragg.c:2710) uses count, not weight sum; weight array (`source_I`) printed but never dereferenced in accumulation loop (lines 2710-3278)
+      - **PyTorch violation pinpointed**: `_compute_physics_for_position` lines 413/416 multiply per-source intensities by `weights_broadcast` before summing, directly contradicting spec
+      - **Oversample gap confounds metrics**: C auto-selected 1× (steps=4), PyTorch auto-selected 2× (steps=8), creating 2× normalization difference that compounds with weight multiplication to yield 52.7× observed divergence instead of expected <1× underestimate
+      - **Recommendation for Phase C**: Either (1) align oversample auto-selection logic to match C, or (2) use explicit `-oversample 1` in validation commands to isolate weight-removal fix
+      - **Pytest collection stable**: No import errors, 682 tests discovered, repository in valid state for Phase C implementation
+    Next Actions:
+      1. Phase C1: Remove `* weights_broadcast` from simulator.py:413,416 to implement spec-mandated equal weighting
+      2. Phase C2: Retain `self._source_weights` as metadata-only (for potential future trace logging) without influencing physics
+      3. Phase C3: Extend regression tests to assert identical intensities for `[1.0, 1.0]` vs `[1.0, 0.2]` weight files
+      4. Phase D: Rerun parity with oversample-controlled config (`-oversample 1` explicit) and expect correlation ≥0.999, |sum_ratio - 1| ≤ 1e-3
 - Risks/Assumptions: Maintain equal-weight behaviour, ensure device/dtype neutrality, and avoid double application of weights when accumulating source contributions.
 
 ---
