@@ -730,12 +730,14 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
         ])
 
         if divergence_params_present:
-            # Use print to stderr instead of warnings.warn for CLI-level warning
-            # This ensures the warning is visible in subprocess contexts
-            print(
-                "Warning: Divergence/dispersion parameters ignored when sourcefile is provided. "
+            # SOURCE-WEIGHT-001 Phase E: Emit Python warning per Option B design
+            # This warning appears when both -sourcefile and divergence/dispersion params are provided
+            # Per specs/spec-a-core.md:151, source weights and generated sources are mutually exclusive
+            warnings.warn(
+                "Divergence/dispersion parameters ignored when sourcefile is provided. "
                 "Sources are loaded from file only (see specs/spec-a-core.md:151-162).",
-                file=sys.stderr
+                UserWarning,
+                stacklevel=2
             )
 
     # S(Q) auxiliary files (read but not used per spec)

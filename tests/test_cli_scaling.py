@@ -587,8 +587,6 @@ class TestSourceWeightsDivergence:
         """TC-D2: Verify UserWarning when sourcefile + divergence parameters both present."""
         # This test validates the CLI warning guard at argument parsing level
         # Per SOURCE-WEIGHT-001 Phase E Option B: warn when sourcefile + divergence params coexist
-        import subprocess
-        import sys
 
         # Check fixture availability
         fixture_paths = [
@@ -628,12 +626,14 @@ class TestSourceWeightsDivergence:
                 '-floatfile', str(py_out)
             ]
 
-            # Run PyTorch CLI (no cwd change to avoid import issues)
+            # Run PyTorch CLI in subprocess, capturing warnings via stderr
+            # Python warnings are emitted to stderr by default
             py_cmd = [sys.executable, '-m', 'nanobrag_torch'] + args_with_warning
             result_py = subprocess.run(py_cmd, capture_output=True, text=True)
 
-            # Check that warning was emitted
+            # Check that warning was emitted (warnings go to stderr in subprocess)
             expected_warning_fragments = [
+                "UserWarning",  # Warning class name appears in stderr
                 "Divergence/dispersion parameters ignored",
                 "sourcefile is provided",
                 "spec-a-core.md:151-162"

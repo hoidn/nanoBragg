@@ -1,0 +1,386 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 4 items
+
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_only_parity FAILED [ 25%]
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_divergence_warning PASSED [ 50%]
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_divergence_only_grid_generation FAILED [ 75%]
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_parity_explicit_oversample FAILED [100%]
+
+=================================== FAILURES ===================================
+___________ TestSourceWeightsDivergence.test_sourcefile_only_parity ____________
+
+self = <tests.test_cli_scaling.TestSourceWeightsDivergence object at 0x714f6c6d02d0>
+
+    def test_sourcefile_only_parity(self):
+        """TC-D1: Verify C↔PyTorch parity when only sourcefile is provided (no divergence)."""
+        if not is_parallel_enabled():
+            pytest.skip("NB_RUN_PARALLEL=1 required")
+    
+        c_bin = get_c_binary()
+        py_cli = f"{sys.executable} -m nanobrag_torch"
+    
+        # Check fixture availability
+        fixture_paths = [
+            Path('reports/2025-11-source-weights/fixtures/two_sources.txt'),
+            Path('reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt')
+        ]
+        sourcefile = None
+        for path in fixture_paths:
+            if path.exists():
+                sourcefile = path
+                break
+    
+        if sourcefile is None:
+            pytest.skip("two_sources.txt fixture not found in expected locations")
+    
+        mat_file = Path('A.mat')
+        if not mat_file.exists():
+            pytest.skip("A.mat not found in repository root")
+    
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+    
+            # Shared parameters from commands.txt (TC-D1)
+            # Per spec-a-core.md:152, divergence grids are generated "when no file provided"
+            # Explicitly disable divergence to match spec intent and avoid C auto-selection
+            common_args = [
+                '-mat', str(mat_file.resolve()),
+                '-sourcefile', str(sourcefile.resolve()),
+                '-default_F', '100',
+                '-hdivsteps', '0',
+                '-vdivsteps', '0',
+                '-dispsteps', '1',
+                '-distance', '231.274660',
+                '-lambda', '0.9768',
+                '-pixel', '0.172',
+                '-detpixels_x', '256',
+                '-detpixels_y', '256',
+                '-oversample', '1',
+                '-nonoise',
+                '-nointerpolate'
+            ]
+    
+            c_out = tmpdir / 'c_tc_d1.bin'
+            py_out = tmpdir / 'py_tc_d1.bin'
+    
+            # Run C
+            c_bin_abs = str(Path(c_bin).resolve())
+            c_cmd = [c_bin_abs] + common_args + ['-floatfile', str(c_out)]
+            result_c = subprocess.run(c_cmd, capture_output=True, text=True, cwd=tmpdir)
+            if result_c.returncode != 0:
+                pytest.fail(f"C simulation failed:\n{result_c.stderr}")
+    
+            # Run PyTorch
+            py_cmd = py_cli.split() + common_args + ['-floatfile', str(py_out)]
+            result_py = subprocess.run(py_cmd, capture_output=True, text=True, cwd=tmpdir)
+            if result_py.returncode != 0:
+                pytest.fail(f"PyTorch simulation failed:\n{result_py.stderr}")
+    
+            # Load images
+            shape = (256, 256)
+            c_img = read_float_image(c_out, shape)
+            py_img = read_float_image(py_out, shape)
+    
+            # Compute metrics
+            c_sum = np.sum(c_img)
+            py_sum = np.sum(py_img)
+            sum_ratio = py_sum / c_sum if c_sum > 0 else float('inf')
+    
+            # Correlation
+            c_flat = c_img.flatten()
+            py_flat = py_img.flatten()
+            correlation = np.corrcoef(c_flat, py_flat)[0, 1] if np.std(c_flat) > 0 and np.std(py_flat) > 0 else 0.0
+    
+            # Phase E acceptance criteria
+            tolerance_corr = 0.999
+            tolerance_ratio = 1e-3
+    
+            # Save metrics on failure
+            metrics = {
+                'tc_d1_correlation': float(correlation),
+                'tc_d1_sum_ratio': float(sum_ratio),
+                'tc_d1_c_sum': float(c_sum),
+                'tc_d1_py_sum': float(py_sum),
+                'device': 'cpu',
+                'dtype': 'float32'
+            }
+    
+            if abs(sum_ratio - 1.0) > tolerance_ratio or correlation < tolerance_corr:
+                from datetime import datetime
+                timestamp = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+                report_dir = Path(f'reports/2025-11-source-weights/phase_e/{timestamp}')
+                report_dir.mkdir(parents=True, exist_ok=True)
+                with open(report_dir / 'metrics.json', 'w') as f:
+                    json.dump(metrics, f, indent=2)
+    
+            # Assertions
+>           assert correlation >= tolerance_corr, \
+                f"TC-D1: Correlation {correlation:.6f} < {tolerance_corr}. Metrics: {json.dumps(metrics, indent=2)}"
+E           AssertionError: TC-D1: Correlation -0.296738 < 0.999. Metrics: {
+E               "tc_d1_correlation": -0.2967384142082391,
+E               "tc_d1_sum_ratio": 302.60919189453125,
+E               "tc_d1_c_sum": 179.61312866210938,
+E               "tc_d1_py_sum": 54352.58203125,
+E               "device": "cpu",
+E               "dtype": "float32"
+E             }
+E           assert np.float64(-0.2967384142082391) >= 0.999
+
+tests/test_cli_scaling.py:579: AssertionError
+_______ TestSourceWeightsDivergence.test_divergence_only_grid_generation _______
+
+self = <tests.test_cli_scaling.TestSourceWeightsDivergence object at 0x714f155ea3f0>
+
+    def test_divergence_only_grid_generation(self):
+        """TC-D3: Verify divergence grid generation when NO sourcefile provided."""
+        if not is_parallel_enabled():
+            pytest.skip("NB_RUN_PARALLEL=1 required")
+    
+        c_bin = get_c_binary()
+        py_cli = f"{sys.executable} -m nanobrag_torch"
+    
+        mat_file = Path('A.mat')
+        if not mat_file.exists():
+            pytest.skip("A.mat not found in repository root")
+    
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+    
+            # Shared parameters from commands.txt (TC-D3)
+            # This test explicitly WANTS divergence grid generation (no sourcefile)
+            # Keep hdivsteps=3 to generate divergence sources
+            common_args = [
+                '-mat', str(mat_file.resolve()),
+                '-default_F', '100',
+                '-hdivrange', '0.5',
+                '-hdivsteps', '3',
+                '-distance', '231.274660',
+                '-lambda', '0.9768',
+                '-pixel', '0.172',
+                '-detpixels_x', '256',
+                '-detpixels_y', '256',
+                '-oversample', '1',
+                '-nonoise',
+                '-nointerpolate'
+            ]
+    
+            c_out = tmpdir / 'c_tc_d3.bin'
+            py_out = tmpdir / 'py_tc_d3.bin'
+    
+            # Run C
+            c_bin_abs = str(Path(c_bin).resolve())
+            c_cmd = [c_bin_abs] + common_args + ['-floatfile', str(c_out)]
+            result_c = subprocess.run(c_cmd, capture_output=True, text=True, cwd=tmpdir)
+            if result_c.returncode != 0:
+                pytest.fail(f"C simulation failed:\n{result_c.stderr}")
+    
+            # Run PyTorch
+            py_cmd = py_cli.split() + common_args + ['-floatfile', str(py_out)]
+            result_py = subprocess.run(py_cmd, capture_output=True, text=True, cwd=tmpdir)
+            if result_py.returncode != 0:
+                pytest.fail(f"PyTorch simulation failed:\n{result_py.stderr}")
+    
+            # Load images
+            shape = (256, 256)
+            c_img = read_float_image(c_out, shape)
+            py_img = read_float_image(py_out, shape)
+    
+            # Compute metrics
+            c_sum = np.sum(c_img)
+            py_sum = np.sum(py_img)
+            sum_ratio = py_sum / c_sum if c_sum > 0 else float('inf')
+    
+            # Correlation
+            c_flat = c_img.flatten()
+            py_flat = py_img.flatten()
+            correlation = np.corrcoef(c_flat, py_flat)[0, 1] if np.std(c_flat) > 0 and np.std(py_flat) > 0 else 0.0
+    
+            # Phase E acceptance criteria
+            tolerance_corr = 0.999
+            tolerance_ratio = 1e-3
+    
+            # Save metrics on failure
+            metrics = {
+                'tc_d3_correlation': float(correlation),
+                'tc_d3_sum_ratio': float(sum_ratio),
+                'tc_d3_c_sum': float(c_sum),
+                'tc_d3_py_sum': float(py_sum)
+            }
+    
+            if abs(sum_ratio - 1.0) > tolerance_ratio or correlation < tolerance_corr:
+                from datetime import datetime
+                timestamp = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+                report_dir = Path(f'reports/2025-11-source-weights/phase_e/{timestamp}')
+                report_dir.mkdir(parents=True, exist_ok=True)
+                with open(report_dir / 'metrics.json', 'w') as f:
+                    json.dump(metrics, f, indent=2)
+    
+            # Assertions
+>           assert correlation >= tolerance_corr, \
+                f"TC-D3: Correlation {correlation:.6f} < {tolerance_corr}. Metrics: {json.dumps(metrics, indent=2)}"
+E           AssertionError: TC-D3: Correlation 0.070358 < 0.999. Metrics: {
+E               "tc_d3_correlation": 0.07035785935967613,
+E               "tc_d3_sum_ratio": 141.6873779296875,
+E               "tc_d3_c_sum": 358.15399169921875,
+E               "tc_d3_py_sum": 50745.8984375
+E             }
+E           assert np.float64(0.07035785935967613) >= 0.999
+
+tests/test_cli_scaling.py:740: AssertionError
+________ TestSourceWeightsDivergence.test_c_parity_explicit_oversample _________
+
+self = <tests.test_cli_scaling.TestSourceWeightsDivergence object at 0x714e4cd929e0>
+
+    def test_c_parity_explicit_oversample(self):
+        """TC-D4: Verify C parity with explicit -oversample 1 flag."""
+        # This is essentially the same as TC-D1 but explicitly verifies
+        # that the oversample flag handling is correct
+        if not is_parallel_enabled():
+            pytest.skip("NB_RUN_PARALLEL=1 required")
+    
+        # Reuse TC-D1 logic (same parameters, same expectations)
+        # This test ensures regression protection
+>       self.test_sourcefile_only_parity()
+
+tests/test_cli_scaling.py:756: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <tests.test_cli_scaling.TestSourceWeightsDivergence object at 0x714e4cd929e0>
+
+    def test_sourcefile_only_parity(self):
+        """TC-D1: Verify C↔PyTorch parity when only sourcefile is provided (no divergence)."""
+        if not is_parallel_enabled():
+            pytest.skip("NB_RUN_PARALLEL=1 required")
+    
+        c_bin = get_c_binary()
+        py_cli = f"{sys.executable} -m nanobrag_torch"
+    
+        # Check fixture availability
+        fixture_paths = [
+            Path('reports/2025-11-source-weights/fixtures/two_sources.txt'),
+            Path('reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt')
+        ]
+        sourcefile = None
+        for path in fixture_paths:
+            if path.exists():
+                sourcefile = path
+                break
+    
+        if sourcefile is None:
+            pytest.skip("two_sources.txt fixture not found in expected locations")
+    
+        mat_file = Path('A.mat')
+        if not mat_file.exists():
+            pytest.skip("A.mat not found in repository root")
+    
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+    
+            # Shared parameters from commands.txt (TC-D1)
+            # Per spec-a-core.md:152, divergence grids are generated "when no file provided"
+            # Explicitly disable divergence to match spec intent and avoid C auto-selection
+            common_args = [
+                '-mat', str(mat_file.resolve()),
+                '-sourcefile', str(sourcefile.resolve()),
+                '-default_F', '100',
+                '-hdivsteps', '0',
+                '-vdivsteps', '0',
+                '-dispsteps', '1',
+                '-distance', '231.274660',
+                '-lambda', '0.9768',
+                '-pixel', '0.172',
+                '-detpixels_x', '256',
+                '-detpixels_y', '256',
+                '-oversample', '1',
+                '-nonoise',
+                '-nointerpolate'
+            ]
+    
+            c_out = tmpdir / 'c_tc_d1.bin'
+            py_out = tmpdir / 'py_tc_d1.bin'
+    
+            # Run C
+            c_bin_abs = str(Path(c_bin).resolve())
+            c_cmd = [c_bin_abs] + common_args + ['-floatfile', str(c_out)]
+            result_c = subprocess.run(c_cmd, capture_output=True, text=True, cwd=tmpdir)
+            if result_c.returncode != 0:
+                pytest.fail(f"C simulation failed:\n{result_c.stderr}")
+    
+            # Run PyTorch
+            py_cmd = py_cli.split() + common_args + ['-floatfile', str(py_out)]
+            result_py = subprocess.run(py_cmd, capture_output=True, text=True, cwd=tmpdir)
+            if result_py.returncode != 0:
+                pytest.fail(f"PyTorch simulation failed:\n{result_py.stderr}")
+    
+            # Load images
+            shape = (256, 256)
+            c_img = read_float_image(c_out, shape)
+            py_img = read_float_image(py_out, shape)
+    
+            # Compute metrics
+            c_sum = np.sum(c_img)
+            py_sum = np.sum(py_img)
+            sum_ratio = py_sum / c_sum if c_sum > 0 else float('inf')
+    
+            # Correlation
+            c_flat = c_img.flatten()
+            py_flat = py_img.flatten()
+            correlation = np.corrcoef(c_flat, py_flat)[0, 1] if np.std(c_flat) > 0 and np.std(py_flat) > 0 else 0.0
+    
+            # Phase E acceptance criteria
+            tolerance_corr = 0.999
+            tolerance_ratio = 1e-3
+    
+            # Save metrics on failure
+            metrics = {
+                'tc_d1_correlation': float(correlation),
+                'tc_d1_sum_ratio': float(sum_ratio),
+                'tc_d1_c_sum': float(c_sum),
+                'tc_d1_py_sum': float(py_sum),
+                'device': 'cpu',
+                'dtype': 'float32'
+            }
+    
+            if abs(sum_ratio - 1.0) > tolerance_ratio or correlation < tolerance_corr:
+                from datetime import datetime
+                timestamp = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+                report_dir = Path(f'reports/2025-11-source-weights/phase_e/{timestamp}')
+                report_dir.mkdir(parents=True, exist_ok=True)
+                with open(report_dir / 'metrics.json', 'w') as f:
+                    json.dump(metrics, f, indent=2)
+    
+            # Assertions
+>           assert correlation >= tolerance_corr, \
+                f"TC-D1: Correlation {correlation:.6f} < {tolerance_corr}. Metrics: {json.dumps(metrics, indent=2)}"
+E           AssertionError: TC-D1: Correlation -0.296738 < 0.999. Metrics: {
+E               "tc_d1_correlation": -0.2967384142082391,
+E               "tc_d1_sum_ratio": 302.60919189453125,
+E               "tc_d1_c_sum": 179.61312866210938,
+E               "tc_d1_py_sum": 54352.58203125,
+E               "device": "cpu",
+E               "dtype": "float32"
+E             }
+E           assert np.float64(-0.2967384142082391) >= 0.999
+
+tests/test_cli_scaling.py:579: AssertionError
+=============================== warnings summary ===============================
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_only_parity
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_parity_explicit_oversample
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_cli_scaling.py:572: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    timestamp = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_divergence_only_grid_generation
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_cli_scaling.py:733: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    timestamp = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_only_parity
+FAILED tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_divergence_only_grid_generation
+FAILED tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_parity_explicit_oversample
+=================== 3 failed, 1 passed, 3 warnings in 19.55s ===================

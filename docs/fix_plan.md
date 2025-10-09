@@ -4122,6 +4122,22 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - `reports/2025-11-source-weights/phase_b/20251009T083515Z/metrics.json` — Structured metrics (c_metrics, py_metrics, comparison)
       - `reports/2025-11-source-weights/phase_b/20251009T083515Z/commands.txt` — Authoritative CLI commands for C & PyTorch runs
       - `reports/2025-11-source-weights/phase_b/20251009T083515Z/env.json` — Environment snapshot (Python/PyTorch versions)
+  * [2025-10-09] Attempt #6 (ralph loop — Phase E1 warning guard implementation). Result: **PARTIAL SUCCESS** (Phase E1 COMPLETE — Warning guard implemented and TC-D2 passing; TC-D1/D3/D4 parity failures indicate remaining physics issue).
+    Metrics: TC-D2 (warning test) PASSED in 5.62s; TC-D1 correlation=-0.297 sum_ratio=302.6× (C:179.6, Py:54352.6); TC-D3 correlation=0.070 sum_ratio=141.7× (C:358.2, Py:50745.9); TC-D4 failed (delegates to TC-D1).
+    Artifacts:
+      - Implementation: `src/nanobrag_torch/__main__.py:732-741` — Replaced stderr print with `warnings.warn(..., UserWarning, stacklevel=2)` per Option B design
+      - Test update: `tests/test_cli_scaling.py:586-653` — TC-D2 now validates UserWarning emission via stderr inspection in subprocess context
+      - Artifacts bundle: `reports/2025-11-source-weights/phase_e/20251009T114620Z/` — pytest.log, summary.md, commands.txt, env.json
+    Observations/Hypotheses:
+      - **E1 Exit Criteria Met:** Warning guard implemented correctly using `warnings.warn` with spec citation; TC-D2 validates UserWarning appears in stderr when `-sourcefile` + divergence params coexist
+      - **Pre-existing parity gap confirmed:** TC-D1/D3/D4 fail with ~300× and ~142× intensity mismatches, consistent with Attempt #4 findings (0.728 sum_ratio after commit 321c91e's normalization fix)
+      - **Root cause hypothesis:** Per Phase B analysis and fix_plan.md:4046, source weights are still being multiplied during intensity accumulation (`_compute_physics_for_position`), despite spec mandate that "weight column is read but ignored"
+      - **Orthogonal concerns:** Warning guard (Phase E1) is independent of physics parity fix (Phase E2 prerequisite). E1 validates user-facing diagnostic; E2 requires physics debugging
+    Next Actions:
+      1. **Phase E2 (Physics Fix):** Remove weight multiplication from `_compute_physics_for_position` (simulator.py:413,416 per Phase B call-chain analysis); ensure equal weighting per spec-a-core.md:151
+      2. **Phase E2 Validation:** Re-run TC-D1/D3/D4 after physics fix; expect correlation ≥0.999, |sum_ratio−1| ≤1e-3
+      3. **Phase E3 (Parity Metrics):** Capture full parity evidence bundle under new `phase_e/<STAMP>/` once TC-D1/D3/D4 pass
+      4. **Phase E4 (Documentation):** Update docs/architecture/pytorch_design.md Sources section, mark SOURCE-WEIGHT-001 complete, notify dependent initiatives
       - `reports/2025-11-source-weights/phase_b/20251009T083515Z/pytest_collect.log` — Collection proof (682 tests, exit 0)
       - `reports/2025-11-source-weights/phase_b/20251009T083515Z/{c.bin,py.bin,c_stdout.log,py_stdout.log}` — Binary outputs and execution logs
       - `plans/active/source-weight-normalization.md` — Updated Phase B tasks B1-B3 marked [D]one

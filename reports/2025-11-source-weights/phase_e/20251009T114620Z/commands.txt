@@ -1,0 +1,15 @@
+# SOURCE-WEIGHT-001 Phase E - Reproduction Commands
+
+## Test Collection
+pytest --collect-only -q
+
+## TC-D2 (Warning Guard Test) - PASSED
+KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_divergence_warning -v
+
+## Full TestSourceWeightsDivergence Suite
+KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest tests/test_cli_scaling.py::TestSourceWeightsDivergence -v
+
+## Environment
+export KMP_DUPLICATE_LIB_OK=TRUE
+export NB_RUN_PARALLEL=1
+export NB_C_BIN=./golden_suite_generator/nanoBragg
