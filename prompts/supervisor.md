@@ -139,7 +139,7 @@ Evidence collection includes the following subtype:
 - Review and evaluate ralph's work. Scrutinize the commit history. Look at the diffs. 
 - Are the docs/fix_plan.md contents and priorities sane? things to consider:
   - if docs/fix_plan.md is longer than 1000 lines it should be housecleaned. If it's disorganized and / or internally inconsistent, consider how this could be addressed. 
-- **Important — surprise evidence gate:** When unexpected metrics or findings hit, consider the following:
+- When unexpected metrics or findings hit, consider the following:
   - Whether to update docs/fix_plan.md and the relevant plan document under `plans/active/` with a follow-up gate (new phase row, decision bullet, etc.).
   - Example: if a newly-generatedly is mysteriously or unexpectedly out of tolerance and yet the plan says to advance, consider the need for a follow-up step. It is better to keep the original phase blocked until investigation is complete than  
       you have sufficient understanding of the situation and have allayed the initial surprise or confusion. 
@@ -207,6 +207,10 @@ You will be following the <Planning> <Action type> instructions. Think about wha
 </yes case>
 </no case>
 Since you are not <Planning>, you must select one of the other <Action type>s and an associated <focus issue> based on what you think is the most productive work increment for this iteration. Think about the associated work, but don't execute it yet.
+Selection heuristic examples:
+- If something failed in a surprising, confusing, and / or unplanned for way, consider a <Review or housekeeping> pass to set the stage for <Debug>
+- For response to more mundane failures, default to <Debug>
+- Choose <Evidence collection> when you need to gain a more complete understanding of the problem / situation before effectively pursuing <Planning> or <Debug>.
 </no case>
 </3>
 <3.2>
