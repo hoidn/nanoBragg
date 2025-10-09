@@ -1,3 +1,9 @@
+### 2025-12-24 (galph loop - vectorization relaunch plan)
+- Authored `plans/active/vectorization.md` to relaunch the vectorization initiative (Phase A dependency gate through Phase E closure) and logged it in `docs/fix_plan.md` as `[VECTOR-TRICUBIC-002]` with explicit Next Actions (SOURCE-WEIGHT-001 parity → regression refresh → profiler relaunch).
+- Updated `input.md` (Mode: Perf) to direct Ralph to capture SOURCE-WEIGHT-001 Phase E parity artifacts (corr ≥0.999, |sum_ratio−1| ≤1e-3) per the new plan’s Phase A1 and stored guidance in How-To Map.
+- Fix_plan index now includes `[VECTOR-TRICUBIC-002]` (in_planning) pointing to the new plan; dependency links to VECTOR-GAPS-002 and PERF-PYTORCH-004 clarified.
+- Follow-up for Ralph: execute the parity evidence run (pytest selector + CLI bundle), archive outputs under `reports/2025-11-source-weights/phase_e/<STAMP>/`, then update `docs/fix_plan.md` attempts so Phase A can flip to ready.
+
 ### 2025-12-24 (galph loop - SOURCE-WEIGHT Phase E parity prep)
 - Confirmed guard already landed in commit 3140629; marked Phase E1 done in `plans/active/source-weight-normalization.md` and refreshed E2 guidance to require an in-process `pytest.warns(UserWarning)` assertion plus fresh parity metrics.
 - Updated `docs/fix_plan.md` Next Actions to focus on TC-D2 pytest.warns, rebuilding the C binary if needed, and capturing TC-D1/D3 correlation ≥0.999 with |sum_ratio−1| ≤1e-3 before notifying vectorization/perf initiatives.
