@@ -1675,3 +1675,8 @@
 - Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions and `plans/active/source-weight-normalization.md` G1/G4 guidance to prefer `-interpolate 0` for the C CLI so the tricubic crash is avoided during parity capture.
 - Rewrote `input.md` (Mode: Parity) with an OUTDIR-based workflow: mapped pytest selectors, explicit Py/PyTorch + C CLI commands, metrics script, and reminder to log a new Attempt once thresholds are met.
 - Follow-up for Ralph: execute the refreshed instructions verbatim—collect pytest logs, run both CLIs with `-interpolate 0`, emit `metrics.json` in the new STAMP directory, and append the Attempt summary to `[SOURCE-WEIGHT-001]` before moving on to the Phase H memo.
+### 2025-12-25 (galph loop - SOURCE-WEIGHT G0 prep + comment-bug plan)
+- Updated `plans/active/source-weight-normalization.md` Phase G to include G0/G5 tasks (sanitised fixture + comment-bug linkage) and refreshed status snapshot; reporting expectations now require logging the fixture path + checksum.
+- Added new plan `plans/active/c-sourcefile-comment-parsing.md` and fix_plan entry `[C-SOURCEFILE-001]` so the C-only bug is tracked separately; cross-referenced from `[SOURCE-WEIGHT-001]` Next Actions.
+- Replaced `input.md` (Mode: Docs) with instructions to run collect-only selectors, generate the comment-free fixture under `reports/2025-11-source-weights/fixtures/`, diff against the original, and capture notes/sha256 before parity reruns.
+- Follow-up for Ralph: execute Phase G0 per new input, archive the fixture bundle under a fresh STAMP, and update `[SOURCE-WEIGHT-001]` attempts with sanitised fixture details + `[C-SOURCEFILE-001]` reference.
