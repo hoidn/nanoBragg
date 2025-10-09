@@ -1,0 +1,16 @@
+[TC-D1]
+n_sources: 2
+phi_steps: 1
+mosaic_domains: 1
+oversample: 1
+steps: 2
+fluence: 1.259320e+29
+
+[TC-D3]
+n_sources: 1
+phi_steps: 1
+mosaic_domains: 1
+oversample: 1
+steps: 1
+fluence: 1.259320e+29
+

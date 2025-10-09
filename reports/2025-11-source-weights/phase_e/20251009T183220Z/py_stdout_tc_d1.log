@@ -1,0 +1,17 @@
+/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/__main__.py:990: UserWarning: Sourcefile wavelength column differs from CLI -lambda value. Per spec-a-core.md:150-151, sourcefile wavelengths are ignored. All sources will use CLI wavelength 9.768000e-11 m.
+  source_directions, source_weights, source_wavelengths = read_sourcefile(
+Loaded 2 sources from reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt
+Running simulation...
+  Detector: 256x256 pixels
+  Crystal: 26.8x31.3x33.7 Å
+  Wavelength: 0.98 Å
+  Device: cpu, Dtype: torch.float32
+
+Statistics:
+  Max intensity: 4.267e+01 at pixel (158, 147)
+  Mean: 3.955e-01
+  RMS: 2.349e+00
+  RMSD: 2.316e+00
+Wrote float image to reports/2025-11-source-weights/phase_e/20251009T183220Z/py_tc_d1.bin
+
+Simulation complete.

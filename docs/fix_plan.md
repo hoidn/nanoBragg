@@ -4166,6 +4166,36 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       2. Implement steps reconciliation to count ALL sources including zero-weight divergence placeholders per C convention (nanoBragg.c:2700-2720). This should reduce sum_ratio from ~50-120× to ~25-60×.
       3. After steps fix, if sum_ratio still >> 2×, generate parallel trace for a single bright pixel to identify first divergence point in scaling chain.
       4. Once correlation ≥0.999 and |sum_ratio-1| ≤1e-3 achieved, mark Phase E complete.
+  * [2025-10-09] Attempt #20 (ralph loop #246 — Mode: Parity, Phase E parity validation rerun). Result: **BLOCKED** (TC-D1/TC-D3 parity FAILED; identical failure mode to Attempt #19).
+    Metrics: AT-SRC-003 regression tests: 7/7 passed, 1 warning in 0.84s. TC-D1 parity: correlation=0.049 (threshold ≥0.999 FAILED), sum_ratio=46.85 (threshold |ratio-1|≤1e-3 FAILED). TC-D3 parity: correlation=0.053 (threshold ≥0.999 FAILED), sum_ratio=120.06 (threshold |ratio-1|≤1e-3 FAILED). Test collection: 693 tests (no regressions).
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_e/20251009T183220Z/py_tc_d1.bin` — PyTorch TC-D1 output (max=42.67, mean=0.396)
+      - `reports/2025-11-source-weights/phase_e/20251009T183220Z/c_tc_d1.bin` — C TC-D1 output (max=0.0104, mean=0.00844)
+      - `reports/2025-11-source-weights/phase_e/20251009T183220Z/py_tc_d3.bin` — PyTorch TC-D3 output (max=318.2, mean=1.552)
+      - `reports/2025-11-source-weights/phase_e/20251009T183220Z/c_tc_d3.bin` — C TC-D3 output (max=0.0562, mean=0.0129)
+      - `reports/2025-11-source-weights/phase_e/20251009T183220Z/metrics.json` — Complete parity metrics (JSON)
+      - `reports/2025-11-source-weights/phase_e/20251009T183220Z/correlation.txt` — Per-case correlations
+      - `reports/2025-11-source-weights/phase_e/20251009T183220Z/sum_ratio.txt` — Per-case sum ratios
+      - `reports/2025-11-source-weights/phase_e/20251009T183220Z/pytest_at_src_003.log` — AT-SRC-003 test run
+      - `reports/2025-11-source-weights/phase_e/20251009T183220Z/collect.log` — Test collection (693 tests)
+      - `reports/2025-11-source-weights/phase_e/20251009T183220Z/commands.txt` — Reproduction commands
+      - `reports/2025-11-source-weights/phase_e/20251009T183220Z/env.json` — Environment metadata
+      - `reports/2025-11-source-weights/phase_e/20251009T183220Z/py_stdout_tc_d1.log` — PyTorch TC-D1 stdout (2 sources from fixture)
+      - `reports/2025-11-source-weights/phase_e/20251009T183220Z/c_stdout_tc_d1.log` — C TC-D1 stdout (4 sources total)
+      - `reports/2025-11-source-weights/phase_e/20251009T183220Z/py_stdout_tc_d3.log` — PyTorch TC-D3 stdout (3 generated divergence sources)
+      - `reports/2025-11-source-weights/phase_e/20251009T183220Z/c_stdout_tc_d3.log` — C TC-D3 stdout (3 sources)
+      - `reports/2025-11-source-weights/phase_e/20251009T183220Z/simulator_diagnostics.txt` — Simulator internals (n_sources, steps, fluence)
+    Observations/Hypotheses:
+      - **Metrics identical to Attempt #19**: TC-D1 sum_ratio=46.85, TC-D3 sum_ratio=120.06. Confirms issue is reproducible and not transient.
+      - **Critical diagnostic finding**: simulator_diagnostics.txt shows TC-D3 reports `n_sources: 1` but PyTorch stdout says "Generated 3 sources from divergence/dispersion". This indicates divergence source generation succeeds but simulator initialization discards or miscount them.
+      - **TC-D1 steps mismatch confirmed**: PyTorch steps=2 (counting actual sources only) vs C steps=4 (including zero-weight divergence placeholders). This 2× factor explains part but not all of the 47× inflation.
+      - **Lambda override working**: UserWarning correctly emitted for TC-D1 sourcefile wavelength mismatch; PyTorch uses CLI λ=0.9768 Å as intended.
+      - **Root cause hypothesis**: The 47-120× inflation persists because: (1) divergence-generated sources are created but not registered in simulator._source_directions, causing steps=1 instead of steps=3 for TC-D3; (2) steps reconciliation for weighted sources (TC-D1) still missing zero-weight placeholder counting.
+    Next Actions:
+      1. **BLOCKER FIX REQUIRED**: Debug why simulator reports `n_sources=1` for TC-D3 when 3 divergence sources were generated. Check if divergence sources are passed to Simulator constructor correctly in `__main__.py`.
+      2. **BLOCKER FIX REQUIRED**: Implement zero-weight source placeholder counting in simulator steps calculation per nanoBragg.c:2700-2720. Current code counts `len(self._source_directions)` but C counts total including zero-weight entries.
+      3. After both fixes, rerun TC-D1/TC-D3 parity and expect sum_ratios to drop significantly (ideally to 1.0 ± 0.001).
+      4. If parity still fails after steps fixes, generate parallel trace (C vs PyTorch) for single bright pixel to identify remaining divergence points (likely fluence, r_e², or capture_fraction).
     Metrics: Test collection passed (694 tests discovered via `pytest --collect-only -q`). No code changes; documentation-only loop per input.md Do Now.
     Artifacts:
       - `reports/2025-11-source-weights/phase_e/20251009T131709Z/lambda_semantics.md` — Complete implementation design selecting Option B (CLI override), documenting file touchpoints, acceptance thresholds, C reference anchors, and implementation sequence for Ralph
