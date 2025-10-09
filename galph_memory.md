@@ -1,3 +1,9 @@
+### 2025-12-24 (galph loop - SOURCE-WEIGHT Phase E parity prep)
+- Confirmed guard already landed in commit 3140629; marked Phase E1 done in `plans/active/source-weight-normalization.md` and refreshed E2 guidance to require an in-process `pytest.warns(UserWarning)` assertion plus fresh parity metrics.
+- Updated `docs/fix_plan.md` Next Actions to focus on TC-D2 pytest.warns, rebuilding the C binary if needed, and capturing TC-D1/D3 correlation ≥0.999 with |sum_ratio−1| ≤1e-3 before notifying vectorization/perf initiatives.
+- Replaced `input.md` with instructions to convert TC-D2 to pytest.warns, run the targeted parity pytest selector, reproduce the CLI bundle, and archive metrics/warning logs under a new `phase_e/<STAMP>/` directory.
+- Follow-up for Ralph: adjust the test as directed, rebuild the instrumented nanoBragg binary if absent, run the mapped pytest + CLI commands, capture metrics in the new reports folder, and update docs/fix_plan.md attempts once evidence meets the thresholds.
+
 ### 2025-12-24 (galph loop - SOURCE-WEIGHT guard alignment)
 - Updated `plans/active/vectorization-gap-audit.md` status snapshot and B1 row to mark the profiler trace as BLOCKED until SOURCE-WEIGHT-001 Phase E parity evidence lands (corr ≥0.999, |sum_ratio−1| ≤1e-3), keeping fix_plan + plan in sync.
 - Replaced input.md with Parity-mode instructions emphasizing conversion of the CLI warning from stderr print to `warnings.warn(... stacklevel=2)`, reactivating TC-D2 via `pytest.warns`, and capturing the Phase D3 command bundle metrics under `reports/2025-11-source-weights/phase_e/<STAMP>/`.
