@@ -1445,3 +1445,9 @@
 - Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` status, Next Actions, and Attempts (#4) to reflect the new evidence path; annotated earlier attempts as superseded.
 - Authored new `input.md` (Mode: Docs) directing Ralph to execute Phase B1–B3 evidence capture (spec quote, PyTorch call-chain, refreshed CLI metrics) before implementation.
 - Follow-up: Expect Ralph to populate `reports/2025-11-source-weights/phase_b/<STAMP>/` with the new analysis bundle, then proceed to Phase C implementation loop.
+
+### 2025-12-23 (galph loop - Source weight Phase C handoff)
+- Status Snapshot refreshed in `plans/active/source-weight-normalization.md` to record Phases A–B complete and highlight Phase C implementation + Phase D parity as the gating work for VECTOR-GAPS-002 / PERF-PYTORCH-004.
+- Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` Next Actions to direct Phase C1–C3 implementation, Phase D1–D2 parity runs, and documentation notifications once metrics land.
+- Replaced `input.md` (Mode: Parity) with Phase C execution guidance: simulator update, TestSourceWeights expansion, targeted parity pytest, CLI metric captures, and artifact paths under `reports/2025-11-source-weights/phase_c|phase_d/<STAMP>/`.
+- Follow-up for Ralph: implement Phase C tasks, capture parity metrics, update plan + fix_plan attempts, then notify `[VECTOR-GAPS-002]` when correlation ≥0.999 & sum_ratio≈1.0.

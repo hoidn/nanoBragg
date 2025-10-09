@@ -7,8 +7,8 @@
   - `docs/development/c_to_pytorch_config_map.md` (Beam parameters table) — mapping between CLI flags and BeamConfig fields.
   - `docs/development/testing_strategy.md` §§1.4–2 — device/dtype discipline and authoritative commands for targeted pytest runs.
   - `golden_suite_generator/nanoBragg.c:2570-2720` — C reference showing weights copied from file but excluded from `steps` and accumulation.
-  - Existing evidence bundles under `reports/2025-11-source-weights/phase_a/` (bias reproduction) and `phase_b/20251009T072937Z/` (outdated sum-of-weights design).
-- Status Snapshot (2025-12-22): Phase A evidence still valid (PyTorch total intensity 3.28× C when weights ≠ 1). Recent attempt `321c91e` switched normalization back to `n_sources`, but `_compute_physics_for_position` continues to multiply intensities by `source_weights`, yielding a residual sum_ratio ≈0.728 vs C. Phase B design must be rewritten to reflect the spec (weights ignored) before implementation resumes. PERF-PYTORCH-004 Phase P3.0c and VECTOR-GAPS-002 Phase B remain blocked until this plan reaches Phase D.
+  - Existing evidence bundles under `reports/2025-11-source-weights/phase_a/` (bias reproduction) and `phase_b/20251009T083515Z/` (spec-aligned gap confirmation).
+- Status Snapshot (2025-12-23): Phases A–B complete — spec analysis and PyTorch call-chain evidence (20251009T083515Z) confirm the simulator must ignore source weights. Phase C implementation remains pending to remove the `weights_broadcast` multiplier and harden cache metadata, after which Phase D parity runs will unblock `[VECTOR-GAPS-002]` Phase B profiling and PERF-PYTORCH-004 warm-run benchmarks.
 
 ### Phase A — Evidence Baseline (Complete)
 Goal: Preserve reproducible proof of the weighted-source divergence.
