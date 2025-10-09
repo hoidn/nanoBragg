@@ -33,6 +33,7 @@
   - ✅ Phase N2 nb-compare executed — Attempt #200 (2025-10-09) captured correlation **0.9852** (≥0.98 evidence threshold) with sum_ratio **1.159×10^5** attributed to the documented C-PARITY-001 bug; see `results/analysis.md` and `summary.json` under the same timestamp.
   - ✅ Phase N3 ledger update complete — Attempt #201 (2025-10-09) documented Option 1 acceptance with 20251009T020401Z metrics in `docs/fix_plan.md` Attempts; plan status refreshed. Ready for Phase O supervisor command rerun.
   - 🔜 Phase O rerun should reproduce the Option 1 metrics: correlation ≈0.985 (≥0.98 threshold) with sum_ratio ≈1.16×10^5 attributed to C-PARITY-001 (documented divergence, not a PyTorch defect).
+  - ⚠️ **Phase O BLOCKER (Attempt #202, 2025-10-09)**: Supervisor command executed but revealed **critical normalization regression**. Correlation 0.9966 (✓ ≥0.98) but sum_ratio **126,451** (expected ~116,000), indicating PyTorch intensities ~131,000× too high. Targeted tests pass (test_cli_scaling_phi0.py 2/2), suggesting CLI path bypasses normalization fix. See `reports/2025-10-cli-flags/phase_l/supervisor_command/20251009T024433Z/analysis.md` for hypotheses H1-H3 and Next Actions. Phase O cannot close until blocker resolved.
 
 ---
 

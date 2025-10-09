@@ -3139,6 +3139,38 @@
       - Phase M2: Execute `scripts/validation/compare_scaling_traces.py` on per-φ logs to isolate which φ step first diverges in F_latt or accumulation term
       - Phase M2a: Add F_cell², F_latt², and per-step contribution logging to simulator trace output for granular diagnosis
       - Phase M3: Once divergent step/term identified, implement fix and regenerate Phase M1 evidence to verify ≤1e-6 parity
+  * [2025-10-09] Attempt #202 (ralph loop i=202, Mode: Docs) — Result: ⚠️ **BLOCKER — Normalization regression detected in Phase O supervisor rerun.** **Documentation-only loop.**
+    Metrics: Correlation 0.9966 (✓ PASS ≥0.98); **Sum ratio 126,451** (⚠️ CRITICAL — expected ~116,000); C sum 6,490.82; Py sum 820,774,912; RMSE 42,014.24; max |Δ| 58,741,636; Mean peak dist 37.79 px (⚠️); Max peak dist 377.92 px (⚠️ CRITICAL).
+    Artifacts:
+      - `reports/2025-10-cli-flags/phase_l/supervisor_command/20251009T024433Z/analysis.md` — Comprehensive blocker analysis documenting 126,000× PyTorch intensity excess matching Phase M3c pre-fix ratio; hypotheses H1 (CLI path bypasses normalization fix), H2 (regression between N2 and O), H3 (test coverage gap)
+      - `reports/2025-10-cli-flags/phase_l/supervisor_command/20251009T024433Z/commands.txt` — Full supervisor command with metrics summary and critical observations
+      - `reports/2025-10-cli-flags/phase_l/supervisor_command/20251009T024433Z/c_stdout.txt` — C execution log (max_I=446.254)
+      - `reports/2025-10-cli-flags/phase_l/supervisor_command/20251009T024433Z/py_stdout.txt` — PyTorch execution log (max_I=5.874e+07)
+      - `reports/2025-10-cli-flags/phase_l/supervisor_command/20251009T024433Z/summary.json` — Machine-readable metrics
+      - `reports/2025-10-cli-flags/phase_l/supervisor_command/20251009T024433Z/pytest_output.txt` — Targeted tests PASS (2/2 in 2.06s: test_rot_b_matches_c, test_k_frac_phi0_matches_c)
+      - `reports/2025-10-cli-flags/phase_l/supervisor_command/20251009T024433Z/{env.json,sha256.txt}` — Environment metadata and checksums
+      - `reports/2025-10-cli-flags/phase_l/supervisor_command/20251009T024433Z/{c.png,py.png,diff.png}` — Visual comparison showing massive intensity divergence
+      - `reports/2025-10-cli-flags/phase_l/supervisor_command/20251009T024433Z/{c_float.bin,py_float.bin,diff.bin}` — Raw float images (24 MB each)
+    Changes: None (evidence-only loop per input.md specification)
+    Observations/Hypotheses:
+      - **Critical regression**: PyTorch max intensity 5.874×10⁷ vs C max 446.254 = **~131,551× excess**, matching the Phase M3c normalization bug (126,000× error) that was supposedly fixed in Attempts #188-189
+      - **Contradiction with Phase N2**: Previous nb-compare run (20251009T020401Z) showed sum_ratio 115,922 (accepted as C-PARITY-001 divergence); current run shows 126,451 (~9% higher), indicating **additional** divergence beyond documented C bug
+      - **Test-CLI discrepancy**: Targeted tests `test_cli_scaling_phi0.py` **pass cleanly** (2/2), suggesting the normalization fix is present in `simulator.py` but the **CLI path bypasses it** during argument parsing or config construction
+      - **Hypothesis H1 (HIGH confidence)**: `parse_and_validate_args` in `__main__.py` may be computing an incorrect `steps` value or skipping the normalization division when constructing `SimulatorConfig` from CLI args, while tests use simplified configs that exercise the correct code path
+      - **Hypothesis H2 (MEDIUM confidence)**: Code change between Phase N2 (timestamp 20251009T020401Z) and current commit (7f74e3aa) may have re-introduced the bug; git diff required
+      - **Hypothesis H3 (HIGH confidence)**: Test coverage gap — `test_cli_scaling_phi0.py` validates rotation matrices and Miller indices but does **not** validate absolute intensity magnitude or sum ratios against C reference
+      - **C-PARITY-001 attribution**: Documented bug accounts for ~1.16×10⁵ sum ratio; current 1.26×10⁵ is ~10,000× higher, confirming an **additional** scaling error beyond the known C bug
+    Next Actions:
+      - **Immediate (blocking Phase O closure)**:
+        1. Trace CLI path to identify where `steps` is computed in `__main__.py:parse_and_validate_args` and verify it reaches `simulator.py` correctly
+        2. Compare Phase N2 vs Phase O effective configs to identify what changed
+        3. Add CLI integration test `tests/test_cli_normalization_parity.py` that runs full CLI and compares sum ratio to C reference within tolerance [1.10e5, 1.20e5]
+        4. Git bisect between Phase N2 timestamp and current commit if regression confirmed
+      - **Follow-up (post-fix)**:
+        5. Re-run Phase O supervisor command after fix and verify sum_ratio lands in acceptable range
+        6. Update plan O1 to `[P]` (partial) with blocker reference; defer O2/O3 until fix lands
+        7. Document resolution in ledger with new VG-5 Attempt
+      - **Plan status**: CLI-FLAGS-003 remains `in_progress` with critical blocker documented; Phase O cannot close until normalization regression is resolved
 - Risks/Assumptions: Must keep pix0 override differentiable (no `.detach()` / `.cpu()`); ensure skipping noise does not regress AT-NOISE tests; confirm CUSTOM vectors remain normalised. PyTorch implementation will IMPROVE on C by properly converting mm->m for `_mm` flag. **Intensity scale difference is a symptom of incorrect geometry - fix geometry first, then revalidate scaling.**
 - Exit Criteria: (i) Plan Phases A–C completed with artifacts referenced ✅; (ii) CLI regression tests covering both flags pass ✅; (iii) supervisor command executes end-to-end under PyTorch, producing float image and matching C pix0 trace within tolerance ✅ (C2 complete); (iv) Phase D3 evidence report completed with hypothesis and trace recipe ✅; **(v) Phase E trace comparison completed, first divergence documented** ✅; **(vi) Phase F1 beam_vector threading complete** ✅; **(vii) Phase F2 pix0 CUSTOM transform complete** ✅; **(viii) Phase F3 parity evidence captured** ✅ (Attempt #12); **(ix) Phase G2 MOSFLM orientation ingestion complete** ✅ (Attempt #17); **(x) Phase G3 trace verification complete with transpose fix** ✅ (Attempt #18); (xi) Phase H lattice structure factor alignment ✅ (Attempt #25); (xii) Phase F3 parity rerun with lattice fix ❌; (xiii) Phase I polarization alignment ❌; (xiv) Parity validation shows correlation >0.999 and intensity ratio within 10% ❌.
 
