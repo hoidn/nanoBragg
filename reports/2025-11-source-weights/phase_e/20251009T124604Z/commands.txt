@@ -1,0 +1,24 @@
+# Phase E2 Evidence Capture - SOURCE-WEIGHT-001
+# Date: $(date -u +%Y-%m-%d)
+# Test Run: pytest tests/test_cli_scaling.py::TestSourceWeightsDivergence -v
+
+## Environment
+export KMP_DUPLICATE_LIB_OK=TRUE
+export NB_RUN_PARALLEL=1
+export NB_C_BIN=./golden_suite_generator/nanoBragg
+
+## Test Command (executed)
+pytest tests/test_cli_scaling.py::TestSourceWeightsDivergence -v
+
+## Results Summary
+# TC-D1: FAILED - correlation=-0.297, sum_ratio=302.6× (expected ~1.0)
+# TC-D2: PASSED - UserWarning guard working correctly
+# TC-D3: FAILED - correlation=0.070, sum_ratio=141.7× (expected ~1.0)
+# TC-D4: FAILED - same as TC-D1 (delegates to test_sourcefile_only_parity)
+
+## Next Steps (from plan Phase E2)
+# Need PyTorch-only CLI runs with stdout capture to diagnose normalization
+# Commands needed:
+# 1. TC-D1 PyTorch run with full stdout
+# 2. TC-D3 PyTorch run with full stdout
+# Check for: n_sources, steps, fluence values

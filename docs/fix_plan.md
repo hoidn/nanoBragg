@@ -4313,6 +4313,11 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       3. **Capture fresh parity metrics** (Phase E3): Archive correlation/sum_ratio results under `reports/2025-11-source-weights/phase_e/<STAMP>/metrics.json` with all required artifacts (pytest.log, warning.log, summary.md, commands.txt, env.json)
       4. **Update Attempt #6 status**: Mark Phase C as "incomplete" in retrospect; the test coverage was insufficient (missed CLI-level divergence scenarios)
       5. **Full suite regression**: Run complete pytest suite to ensure fix doesn't break other tests
+  * [2025-10-09] Attempt #13 — Result: evidence-only (Phase E2 parity baseline captured).
+    Metrics: TC-D1 corr=-0.297, ratio=302.6×; TC-D2 PASSED (guard working); TC-D3 corr=0.070, ratio=141.7×; TC-D4 (same as D1)
+    Artifacts: reports/2025-11-source-weights/phase_e/20251009T124604Z/{pytest.log,summary.md,commands.txt,env.json}
+    Observations/Hypotheses: UserWarning guard (commit 3140629) works correctly, but normalization pipeline still diverges 140-300×. Guard proves divergence auto-selection is NOT the root cause; issue lies in steps/fluence calculation. Phase E2 blocked pending PyTorch-only diagnostics to extract n_sources/steps/fluence values from CLI stdout.
+    Next Actions: Execute PyTorch-only TC-D1/TC-D3 runs with full stdout capture; extract n_sources, steps, fluence; compare to expected values (TC-D1: n_sources=2, steps=2; TC-D3: n_sources=3, steps=3). If mismatch found, add trace instrumentation to simulator.py and isolate normalization fault. Update plan with findings before attempting fix.
 - Risks/Assumptions: Maintain equal-weight behaviour, ensure device/dtype neutrality, and avoid double application of weights when accumulating source contributions. Tolerance of 5e-3 is acceptable given perfect correlation and minor precision differences. Divergence grid auto-selection mismatch blocks Phase D1 parity validation until fixed.
 
 ---
