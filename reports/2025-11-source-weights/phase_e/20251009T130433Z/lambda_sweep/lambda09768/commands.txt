@@ -1,0 +1,17 @@
+# Lambda Sweep Experiment - Phase E Task E2
+# Purpose: Confirm wavelength hypothesis (PyTorch honors sourcefile wavelength column vs CLI -lambda)
+# Timestamp: 2025-12-09T13:04:33Z
+
+# Step 1: Prepare fixtures
+cp reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt /tmp/two_sources_lambda62.txt
+sed 's/6.2e-10/9.768e-11/g' /tmp/two_sources_lambda62.txt > /tmp/two_sources_lambda09768.txt
+
+# Step 2: PyTorch run with 6.2 Å sourcefile wavelengths
+KMP_DUPLICATE_LIB_OK=TRUE nanoBragg -mat A.mat -sourcefile /tmp/two_sources_lambda62.txt -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -oversample 1 -nonoise -nointerpolate -floatfile /tmp/py_lambda62.bin
+
+# Step 3: PyTorch run with 0.9768 Å sourcefile wavelengths  
+KMP_DUPLICATE_LIB_OK=TRUE nanoBragg -mat A.mat -sourcefile /tmp/two_sources_lambda09768.txt -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -oversample 1 -nonoise -nointerpolate /tmp/py_lambda09768.bin
+
+# Step 4: Analyze results
+python /tmp/get_diagnostics2.py /tmp/py_lambda62.bin
+python /tmp/get_diagnostics2.py /tmp/py_lambda09768.bin

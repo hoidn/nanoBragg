@@ -1,0 +1,12 @@
+{
+  "fixture": "two_sources_lambda62.txt",
+  "sourcefile_wavelength_m": "6.2e-10",
+  "sourcefile_wavelength_A": 6.2,
+  "cli_lambda_A": 0.9768,
+  "total_sum": 2.532718e5,
+  "max_intensity": 1.684436e2,
+  "mean_intensity": 3.864622,
+  "non_zero_pixels": 65159,
+  "detector_size": "256x256",
+  "observation": "Significant signal - PyTorch appears to honor sourcefile wavelength (6.2 Å) instead of CLI -lambda (0.9768 Å)"
+}

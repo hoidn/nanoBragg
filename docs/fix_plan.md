@@ -4061,6 +4061,23 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       1. Author Ron (ralph) loop to execute the lambda sweep described in Next Action 0, capturing metrics for both wavelength interpretations to validate the hypothesis quantitatively.
       2. Upon confirmation, draft a design note under `reports/2025-11-source-weights/phase_e/<STAMP>/lambda_semantics.md` clarifying the intended spec behaviour (ignore column vs override) before editing code.
       3. Update `plans/active/source-weight-normalization.md` Phase E guidance once the lambda decision is made so downstream parity/tests target the corrected behaviour.
+  * [2025-12-09] Attempt #14 (ralph loop — Mode: Parity, Phase E Task E2). Result: **SUCCESS** (Lambda sweep complete — wavelength hypothesis CONFIRMED).
+    Metrics: lambda62 fixture (6.2 Å wavelengths): sum=2.53e5, max=168.4, mean=3.86, nonzero=65159. lambda09768 fixture (0.9768 Å wavelengths): sum=0.0, max=0.0, mean=0.0, nonzero=0. Wavelength ratio 6.35× causes complete signal disappearance when using CLI `-lambda` value, confirming PyTorch honors sourcefile wavelengths while C ignores them.
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_e/20251009T130433Z/lambda_sweep/summary.md` — Complete experimental findings and recommended actions
+      - `reports/2025-11-source-weights/phase_e/20251009T130433Z/lambda_sweep/lambda62/{commands.txt,py_stdout.log,metrics.json,env.json}` — 6.2 Å baseline run
+      - `reports/2025-11-source-weights/phase_e/20251009T130433Z/lambda_sweep/lambda09768/{commands.txt,py_stdout.log,metrics.json}` — 0.9768 Å control run
+      - `/tmp/py_lambda62.bin`, `/tmp/py_lambda09768.bin` — Float image outputs (not committed)
+    Observations/Hypotheses:
+      - **Root cause confirmed**: PyTorch reads sourcefile wavelength column and uses those values (6.2 Å) instead of CLI `-lambda` (0.9768 Å), causing Bragg peaks to shift completely out of detector frame. C reference ignores sourcefile wavelengths and uses only CLI value.
+      - **Spec gap**: `specs/spec-a-core.md:151` states "weight column is read but ignored" but is silent on wavelength column semantics. C behavior treats wavelength as metadata-only.
+      - **Implementation fix required**: PyTorch must ignore sourcefile wavelengths and populate `source_wavelengths` from CLI `-lambda` only, matching C semantics.
+      - **140-300× divergence explained**: TC-D1/TC-D3 parity failures are caused by wavelength mismatch (6.2 vs 0.9768), not residual weight multiplication.
+    Next Actions (Phase E2/E3):
+      1. Modify sourcefile parser to ignore wavelength column values; populate `source_wavelengths` tensor from CLI `-lambda` only (all sources get same wavelength).
+      2. Add validation warning when sourcefile wavelength differs from CLI `-lambda` (inform user that column is ignored).
+      3. After fix, rerun TC-D1/TC-D3 and verify correlation ≥0.999, |sum_ratio-1| ≤1e-3.
+      4. Update `specs/spec-a-core.md` to clarify both weight AND wavelength columns are read but ignored.
   * [2025-11-17] Attempt #0 — Result: backlog entry. Issue documented and plan `plans/active/source-weight-normalization.md` created; awaiting evidence collection.
   * [2025-10-09] Attempt #1 — Phase A evidence capture (ralph). Result: success.
     Metrics: C total intensity = 463.4, PyTorch total intensity = 151963.1, ratio PyTorch/C = 327.9×. Both outputs have 65159 nonzero pixels.

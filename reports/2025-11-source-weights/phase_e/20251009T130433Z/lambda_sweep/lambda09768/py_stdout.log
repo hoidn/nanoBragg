@@ -1,0 +1,15 @@
+Loaded 2 sources from /tmp/two_sources_lambda09768.txt
+Running simulation...
+  Detector: 256x256 pixels
+  Crystal: 26.8x31.3x33.7 Å
+  Wavelength: 0.98 Å
+  Device: cpu, Dtype: torch.float32
+
+Statistics:
+  Max intensity: 0.000e+00 at pixel (255, 255)
+  Mean: 0.000e+00
+  RMS: 0.000e+00
+  RMSD: 0.000e+00
+Wrote float image to /tmp/py_lambda09768.bin
+
+Simulation complete.

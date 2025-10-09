@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/tmp/get_diagnostics.py", line 25, in <module>
+    beam_config = BeamConfig(
+        wavelength_A=0.9768,
+        fluence=1e12,
+        sourcefile=sourcefile
+    )
+TypeError: BeamConfig.__init__() got an unexpected keyword argument 'sourcefile'

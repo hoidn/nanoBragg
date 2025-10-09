@@ -1,0 +1,12 @@
+{
+  "fixture": "two_sources_lambda09768.txt",
+  "sourcefile_wavelength_m": "9.768e-11",
+  "sourcefile_wavelength_A": 0.9768,
+  "cli_lambda_A": 0.9768,
+  "total_sum": 0.0,
+  "max_intensity": 0.0,
+  "mean_intensity": 0.0,
+  "non_zero_pixels": 0,
+  "detector_size": "256x256",
+  "observation": "ZERO signal - When sourcefile wavelength matches CLI -lambda (0.9768 Å), no diffraction peaks appear. This is inconsistent with C behavior which ignores sourcefile wavelengths."
+}
