@@ -4095,6 +4095,25 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       3. **Phase D3 (docs update)**: Update `docs/architecture/pytorch_design.md` §8 with weighted source normalization behavior and `docs/development/testing_strategy.md` §2.5 with AT-SRC-001 parity mapping.
       4. **Phase D completion**: Once TC-A passes with artifacts stored in `reports/2025-11-source-weights/phase_d/<STAMP>/`, mark SOURCE-WEIGHT-001 complete and notify VECTOR-GAPS-002 and PERF-PYTORCH-004 that multi-source profiling may resume.
   * [2025-12-22] Attempt #4 (galph loop — planning review). Result: analysis only. Reviewed commit `321c91e` outputs (`reports/2025-11-source-weights/phase_c/test_failure/metrics.json`) showing correlation 0.9155 and sum_ratio 0.7281 despite normalization reset to `n_sources`. Confirmed spec mandate (weights ignored) and identified `_compute_physics_for_position` weight multiplier as the remaining divergence. Action: realign plan Phases B–C accordingly (see updated Next Actions).
+  * [2025-10-09] Attempt #5 (ralph loop — Phase D2 design decision). Result: **SUCCESS** (Phase D2 COMPLETE — Option B recommendation finalized). **Generated design_notes.md synthesizing Phase D1 findings, produced command bundle, and captured pytest collection proof.**
+    Metrics: Pytest collection passed (682 tests discovered, exit 0). No code changes (docs-only loop per input.md Mode: Docs).
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_d/20251009T103212Z/design_notes.md` — Decision matrix, spec interpretation, quantitative impact analysis, and Phase E implementation checklist. **Recommendation: Option B (Spec Clarification + Validation Guard)**
+      - `reports/2025-11-source-weights/phase_d/20251009T103212Z/summary.md` — High-level framing of decision, blocking questions resolved, Phase E readiness assessment
+      - `reports/2025-11-source-weights/phase_d/20251009T103212Z/commands.txt` — Timestamped command log for reproduction
+      - `reports/2025-11-source-weights/phase_d/20251009T103212Z/pytest_collect.log` — Collection proof (682 tests, 18.36s)
+      - `plans/active/source-weight-normalization.md` — Phase D task D2 marked [D] pending
+    Observations/Hypotheses:
+      - **Option B chosen:** PyTorch's current sourcefile-only behavior SHALL remain unchanged; spec SHALL be amended to document this as normative; validation warning SHALL be added for sourcefile + divergence mixing
+      - **Spec alignment:** Line 151 "weights ignored" mandate implies replacement semantics (not additive). Sourcefile defines fixed source count; mixing with divergence grid would violate equal weighting by allowing grid count to influence normalization
+      - **C behavior suspect:** Phase D1 showed 4 sources where 2 had zero weight/wavelength, suggesting unintentional divergence grid generation. Replacement semantics align with spec, additive does not
+      - **Device/dtype risk eliminated:** Option B requires no tensor changes (docs + 5-line validation guard only), so no broadcast shape impacts or device coercion concerns
+      - **Implementation effort minimal:** ~20 lines total across 3 files (spec prose, BeamConfig validation, test coverage TC-D1/D2/D3/D4)
+      - **Acceptance metrics defined:** Correlation ≥0.999, |sum_ratio−1| ≤1e-3 for Phase E validation with explicit `-oversample 1` to isolate weight fix from auto-selection confounds
+    Next Actions:
+      1. Phase D3: Prepare acceptance harness — define pytest selector `tests/test_cli_scaling.py::TestSourceWeightsDivergence -v`, draft CLI command bundle (TC-D4 with explicit oversample), capture expected metrics (correlation/sum_ratio thresholds)
+      2. Phase E1-E3: After D3 sign-off, implement Option B (spec amendment, validation guard, test coverage), capture parity metrics under `phase_e/<STAMP>/`, prove correlation ≥0.999
+      3. Phase E4: Update `docs/architecture/pytorch_design.md` §8 (Sources subsection) and mark Phase D tasks D2/D3 [D] in plan
   * [2025-10-09] Attempt #5 (ralph loop — Phase B1-B3 docs-only evidence). Result: **SUCCESS** (Phase B spec & gap confirmation COMPLETE). **Gathered authoritative spec evidence, PyTorch call-chain analysis, and fresh parity metrics with pytest collection proof.**
     Metrics: C: sum=102.4, max=2.006e-3, mean=1.563e-3 (1× oversample, 4 sources counted); PyTorch: sum=5400, max=5.927, mean=8.239e-2 (2× oversample auto-selected, 2 sources loaded); Correlation=0.208, sum_ratio=52.7×. Pytest collection: 682 tests in 2.63s (exit 0).
     Artifacts:

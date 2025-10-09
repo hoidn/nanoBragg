@@ -1,0 +1,27 @@
+# Phase D2 Commands Log
+# Generated: 2025-10-09T10:32:12Z
+# Purpose: Document all commands executed during Phase D2 design loop
+
+# Step 1: Create timestamped artifact directory
+mkdir -p reports/2025-11-source-weights/phase_d/20251009T103212Z
+
+# Step 2: Run pytest collection to prove repository state
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q 2>&1 | tee reports/2025-11-source-weights/phase_d/20251009T103212Z/pytest_collect.log
+
+# Step 3: Generate design_notes.md (artifact creation via Write tool)
+# Manual: Created design_notes.md synthesizing Phase D1 findings into Option B recommendation
+
+# Step 4: Create this commands log
+# Manual: Documenting commands for reproduction
+
+# Expected Outputs:
+# - design_notes.md: Design decision document with Option B recommendation
+# - pytest_collect.log: Collection proof (682 tests discovered)
+# - commands.txt: This file
+# - summary.md: Short framing of next steps for Phase D3
+
+# Phase D3 Prerequisites (next loop):
+# 1. Read and approve design_notes.md recommendation
+# 2. Define pytest selector for TC-D1/D2/D3/D4 acceptance harness
+# 3. Draft CLI command bundle with explicit -oversample 1 and sourcefile
+# 4. Capture expected correlation ≥0.999, |sum_ratio-1| ≤1e-3 thresholds in harness notes
