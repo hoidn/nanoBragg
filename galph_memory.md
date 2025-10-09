@@ -1638,3 +1638,8 @@
 - Refreshed dependency plans (`plans/active/vectorization.md`, `plans/active/vectorization-gap-audit.md`) to note Phase G evidence as the remaining blocker for profiler work.
 - Replaced `input.md` (Mode: Docs+Parity) handing Ralph the Phase G1/G2 execution plan: rewrite `tests/test_cli_scaling.py::TestSourceWeights*`, run the mapped pytest selector, rerun TC-D1/TC-D3 CLI bundles, and capture metrics/json artifacts under `reports/2025-11-source-weights/phase_g/<STAMP>/`.
 - Follow-up for Ralph: implement the test updates per design packet, gather the Phase G evidence bundle, then log a new Attempt in `[SOURCE-WEIGHT-001]` (Phase G3) before pinging for Phase H documentation sync.
+
+### 2025-12-24 (galph loop - vectorization gating update)
+- Updated `docs/fix_plan.md` `[VECTOR-TRICUBIC-002]` Next Actions to reference Phase G spec-compliance evidence instead of the obsolete C-correlation thresholds; notes now point at `reports/2025-11-source-weights/phase_g/<STAMP>/` and refresh instructions for `[VECTOR-GAPS-002]` when Phase G attempt lands.
+- Reissued `input.md` (Mode: Docs+Parity) guiding Ralph through Phase G1–G2 test rewrites and artifact capture, including collect.log/notes.md expectations and explicit reminder that C divergence is expected (C-PARITY-001).
+- Follow-up: Ralph should execute Phase G test updates per the design packet, archive the evidence bundle, and log the Attempt so we can unblock VECTOR and PERF plans next loop.
