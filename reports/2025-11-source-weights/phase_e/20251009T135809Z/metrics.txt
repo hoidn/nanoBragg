@@ -1,0 +1,9 @@
+correlation: 0.050659083689359626
+py_sum: 101669.578125
+c_sum: 463.38726806640625
+sum_ratio: 219.4051971435547
+abs_sum_ratio_minus_1: 218.4051971435547
+py_max: 319.27398681640625
+c_max: 0.009050440974533558
+correlation_pass: False
+sum_ratio_pass: False

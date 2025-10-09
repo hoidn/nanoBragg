@@ -4071,6 +4071,30 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       2. After steps fix: Rerun TC-D1/TC-D3 parity via `NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE python scripts/cli/run_weighted_source_parity.py --oversample 1 --outdir reports/2025-11-source-weights/phase_e/<NEW_STAMP>/`
       3. Capture metrics: correlation ≥0.999, |sum_ratio−1| ≤1e-3, simulator diagnostics (n_sources, steps, fluence)
       4. Mark Phase E complete when parity thresholds met
+  * [2025-10-09] Attempt #18 (ralph loop #244 — Mode: Parity, Phase E parity validation). Result: **BLOCKED** (TC-D1 parity FAILED; steps reconciliation not yet implemented).
+    Metrics: TC-E1/E2/E3 regression tests: 7/7 passing. TC-D1 parity: correlation=0.051 (threshold ≥0.999), sum_ratio=219.4 (threshold |ratio-1|≤1e-3), |sum_ratio-1|=218.4. Test collection: 693 tests (no regressions).
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_e/20251009T135809Z/summary.md` — Complete parity analysis and root cause findings
+      - `reports/2025-11-source-weights/phase_e/20251009T135809Z/py_tc_d1.bin` — PyTorch output (max=319.3)
+      - `reports/2025-11-source-weights/phase_e/20251009T135809Z/c_tc_d1.bin` — C output (max=0.009)
+      - `reports/2025-11-source-weights/phase_e/20251009T135809Z/correlation.txt` — 0.050659
+      - `reports/2025-11-source-weights/phase_e/20251009T135809Z/sum_ratio.txt` — 219.405197
+      - `reports/2025-11-source-weights/phase_e/20251009T135809Z/metrics.txt` — Complete parity metrics
+      - `reports/2025-11-source-weights/phase_e/20251009T135809Z/c_tc_d1_stdout_full.log` — C binary trace showing 4 sources (2 zero-weight divergence + 2 actual)
+      - `reports/2025-11-source-weights/phase_e/20251009T135809Z/pytest.log` — TC-E1/E2/E3 test run
+      - `reports/2025-11-source-weights/phase_e/20251009T135809Z/collect.log` — Test collection (693 tests)
+      - `reports/2025-11-source-weights/phase_e/20251009T135809Z/commands.txt` — Reproduction commands
+      - `reports/2025-11-source-weights/phase_e/20251009T135809Z/env.json` — Environment metadata
+    Observations/Hypotheses:
+      - **Lambda override verified working:** read_sourcefile correctly ignores wavelength column (6.2e-10 m) and uses CLI value (9.768e-11 m) for all sources; UserWarning emitted as expected.
+      - **Steps count mismatch (PRIMARY BLOCKER):** PyTorch counts 2 sources → steps=2; C binary counts 4 sources (2 actual + 2 zero-weight divergence) → steps=4. This 2× normalization error is expected.
+      - **Magnitude anomaly:** Observed 219× discrepancy >> 2× expected from steps alone. After steps fix, sum_ratio should drop to ~110×. If still >> 1.0, investigate fluence/r_e²/capture_fraction.
+      - **C source listing:** C binary creates 4 sources total: "0 0 0   0 0" (2×), "0 0 10   1 6.2e-10", "0 0 10   0.2 6.2e-10". All 4 contribute to steps denominator per nanoBragg.c convention.
+      - **No regressions:** Test collection unchanged at 693 tests.
+    Next Actions:
+      1. **CRITICAL FIX REQUIRED:** Implement steps reconciliation in `src/nanobrag_torch/simulator.py` to count ALL sources (including zero-weight divergence placeholders) per C convention. See `nanoBragg.c:2700-2720` for reference.
+      2. After steps fix, rerun TC-D1 parity and expect sum_ratio to drop from 219× to ~110×. If still far from 1.0, investigate additional scaling factors (fluence, r_e², capture).
+      3. Once correlation ≥0.999 and |sum_ratio-1| ≤1e-3 achieved, mark Phase E complete and notify [VECTOR-GAPS-002]/[VECTOR-TRICUBIC-002] of unblock.
   * [2025-12-24] Attempt #16 (galph loop - Mode: Docs). Result: **CONSENSUS LOGGED** (Option B override/steps plan recorded).
     Metrics: Test suite not run (planning-only).
     Artifacts:

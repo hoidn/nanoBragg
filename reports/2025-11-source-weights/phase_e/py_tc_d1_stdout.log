@@ -1,0 +1,14 @@
+Running simulation...
+  Detector: 256x256 pixels
+  Crystal: 26.8x31.3x33.7 Å
+  Wavelength: 0.98 Å
+  Device: cpu, Dtype: torch.float32
+
+Statistics:
+  Max intensity: 3.193e+02 at pixel (44, 42)
+  Mean: 1.551e+00
+  RMS: 1.034e+01
+  RMSD: 1.022e+01
+Wrote float image to reports/2025-11-source-weights/phase_e//py_tc_d1.bin
+
+Simulation complete.

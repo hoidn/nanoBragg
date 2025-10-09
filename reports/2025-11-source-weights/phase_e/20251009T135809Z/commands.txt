@@ -1,0 +1,2 @@
+2025-10-09T06:58:51-07:00 pytest_tests_at_src_003
+KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_src_003.py -v
