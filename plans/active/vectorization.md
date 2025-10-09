@@ -11,7 +11,7 @@
   - plans/active/vectorization-gap-audit.md - open gap inventory plus profiling backlog (Phase B blocked today).
   - plans/active/source-weight-normalization.md - prerequisite parity work gating profiler reliability.
   - reports/2025-10-vectorization/ and reports/2026-01-vectorization-gap/ - prior artifacts to cross-check during refresh.
-- Status Snapshot (2025-12-24): Tricubic and absorption vectorization (Phases A-H) remain archived with CUDA parity. SOURCE-WEIGHT-001 Option B landed (Attempt #17) but Phase E parity metrics have not been regenerated yet, so VECTOR-GAPS-002 Phase B1 stays blocked until TC-D1/TC-D3 correlation ≥0.999 evidence arrives. This plan tracks the parity capture, status propagation, backlog refresh, and eventual implementation handoff.
+- Status Snapshot (2025-12-24): Tricubic and absorption vectorization (Phases A-H) remain archived with CUDA parity. SOURCE-WEIGHT-001 Option B landed, but the dependent spec-first decision and test realignment (Phases E–G) are still outstanding. VECTOR-GAPS-002 Phase B1 stays blocked until the spec decision memo and new SOURCE-WEIGHT spec-compliance tests are available; C correlation thresholds are no longer the dependency gate. This plan tracks the dependency closure, status propagation, backlog refresh, and eventual implementation handoff.
 
 ### Phase A - Dependency Gate And Ledger Sync
 Goal: Clear upstream blockers so downstream profiling and implementation can proceed on trustworthy baselines.
@@ -21,9 +21,9 @@ Exit Criteria: SOURCE-WEIGHT-001 Phase E artifacts captured, VECTOR-GAPS-002 Pha
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | A0 | Confirm lambda override consensus | [D] | ✅ Attempt #16 (2025-12-24 galph loop) logged Option B as the authoritative approach, citing `reports/2025-11-source-weights/phase_e/20251009T131709Z/lambda_semantics.md` and updating `docs/fix_plan.md`/`plans/active/source-weight-normalization.md`. No further action required. |
-| A1 | Finish SOURCE-WEIGHT-001 Phase E parity bundle | [ ] | After A0, rerun TC-D1/TC-D3 using the explicit CLI commands (PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE python -m nanobrag_torch ...`; C: `NB_RUN_PARALLEL=1 "$NB_C_BIN" ...`) writing outputs under `reports/2025-11-source-weights/phase_e/<STAMP>/`. Capture correlation.txt, sum_ratio.txt, warning log, simulator diagnostics (n_sources, steps, fluence), env.json, and commands.txt. Update the plan and ledger once corr ≥0.999 and |sum_ratio−1| ≤ 1e-3. |
-| A2 | Propagate unblock signals | [ ] | When A1 metrics pass, flip plans/active/vectorization-gap-audit.md Phase B1 to ready and refresh docs/fix_plan.md [VECTOR-GAPS-002] Next Actions with the new evidence path and timestamp. |
-| A3 | Archive dependency memo | [ ] | Append a galph_memory note summarising the parity completion, metrics, and unblock status so future loops know profiling can resume. |
+| A1 | Record SOURCE-WEIGHT spec decision | [ ] | Block profiler work until SOURCE-WEIGHT-001 Phase E1/E2 produce `spec_vs_c_decision.md` and ledger updates acknowledging spec-first behaviour. Reference the memo path in `docs/fix_plan.md` once available. |
+| A2 | Capture spec-compliance test availability | [ ] | After SOURCE-WEIGHT-001 Phase F/G land, log the new pytest selectors and CLI artifact paths (no C correlation gate) under `reports/2025-11-source-weights/phase_g/<STAMP>/`. Update `[VECTOR-GAPS-002]` Next Actions to cite these spec-aligned checks. |
+| A3 | Archive dependency memo | [ ] | Once A1–A2 complete, append a galph_memory note summarising readiness (spec decision, test selectors, artifact paths) so future loops can resume profiling without chasing C parity. |
 
 ### Phase B - Evidence Refresh For Existing Vectorization Paths
 Goal: Reconfirm the archived tricubic and absorption vectorization work remains green after dependency churn; create fresh CPU and CUDA baselines for upcoming changes.

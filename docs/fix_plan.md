@@ -4035,25 +4035,20 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 ## [SOURCE-WEIGHT-001] Correct weighted source normalization
 - Spec/AT: `specs/spec-a-core.md` §4 (Sources, Divergence & Dispersion), `docs/architecture/pytorch_design.md` §§1.1/2.3, `docs/development/c_to_pytorch_config_map.md` (beam sourcing), `docs/development/testing_strategy.md` §1.4, and `golden_suite_generator/nanoBragg.c` lines 2570-2720 (source ingestion & steps computation).
 - Priority: Medium
-- Status: in_progress (Phases A–D complete; Phase E1 guard landed in commit 3140629, parity metrics + documentation updates still outstanding)
+- Status: in_progress (Legacy Phases A–D complete; Phases E–H reorganised 2025-12-24 to enforce spec-first contract and realign tests/documentation)
 - Owner/Date: galph/2025-11-17 (updated 2025-12-22)
 - Plan Reference: `plans/active/source-weight-normalization.md`
 - Reproduction (C & PyTorch):
   * C: `"$NB_C_BIN" -mat A.mat -floatfile c_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources.txt -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -nonoise -nointerpolate`.
   * PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE nanoBragg -mat A.mat -floatfile py_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources.txt ...` (matching geometry).
   * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
-- First Divergence (if known): Steps normalization count (PyTorch: steps=2, C: steps=4). PyTorch counts only actual sources from sourcefile; C counts all sources including zero-weight divergence placeholders. Evidence captured in Attempt #23 at `reports/2025-11-source-weights/phase_e/20251009T192746Z/trace/` shows fluence values agree (±0.002%), confirming steps mismatch as PRIMARY DIVERGENCE. Residual ~47-120× inflation suggests additional scaling factors beyond steps error.
-- Next Actions (2025-10-09 refresh, post Attempt #24):
-  1. ✅ Design scaffold created: `reports/2025-11-source-weights/phase_e/20251009T195032Z/design_steps.md`
-  2. ✅ C trace instrumented: TRACE_C_SOURCE2 added at nanoBragg.c:3337-3348
-  3. ✅ Trace bundle complete: py/c traces, diff, trace_notes, env.json, commands.txt under `reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/`
-  4. **CRITICAL DISCOVERY**: C source array contains sourcefile wavelengths (6.2 Å) but physics loop uses CLI `-lambda` (0.9768 Å) via wavelength correction. Phase E1 lambda override CORRECT and matches C behavior.
-  5. **PRIMARY DIVERGENCE CONFIRMED**: Steps normalization (C: steps=4, PyTorch: steps=2) accounts for 2× intensity difference.
-  6. **SECONDARY HYPOTHESES**: F_latt calculation (~200× difference in traces), per-source polarization (C: 0.5, PyTorch trace reports ≈0.9997), structure factor sampling (2.26× difference).
-  7. **Trace instrumentation gap**: Existing PyTorch trace logs only post-reduction aggregates. Before changing simulator physics, extend the trace (via `-trace_pixel` path) to emit per-source values (F_cell, F_latt components, polarization factor, intensity before/after polarization). Capture a refreshed TC-D1 source-index trace and compare against the C bundle to confirm which hypothesis drives the 47–120× inflation.
-  8. **Next Implementation Loop**: Review design_steps.md and trace_notes.md with galph, then implement zero-weight placeholder counting in simulator.py steps calculation per nanoBragg.c:2570-2720.
-  9. **After Steps Fix**: Rerun TC-D1/TC-D3 parity expecting sum_ratio to drop from ~47-120× to ~24-60×, then diagnose remaining gap with per-source PyTorch trace.
- 10. **Parity Target**: correlation ≥0.999, |sum_ratio−1| ≤1e-3 before marking Phase E complete.
+- First Divergence (if known): C counts divergence placeholders (steps=4) and applies source weights, while the spec mandates equal weighting. PyTorch counts only the actual sources (steps=2) and ignores weights per `specs/spec-a-core.md:151`, so the 47–120× sum_ratio gap is a documented C bug (`C-PARITY-001`). Existing traces at `reports/2025-11-source-weights/phase_e/20251009T192746Z/trace/` confirm fluence agreement and isolate the divergence to the C normalization/polarisation ordering.
+- Next Actions (2025-12-24 redesign):
+  1. Phase E1 — Draft `spec_vs_c_decision.md` (reports/2025-11-source-weights/phase_e/<STAMP>/) summarising spec citations, trace evidence, and the decision to keep PyTorch spec-first while classifying the C behaviour as bug `C-PARITY-001`.
+  2. Phase E2 — Update this ledger, `galph_memory.md`, and dependent plans (vectorization, perf) with the decision; mark existing C correlation gaps as expected divergence and cite the memo.
+  3. Phase F1–F3 — Produce `phase_f/<STAMP>/test_plan.md` detailing affected tests, spec-aligned acceptance criteria, validated pytest selectors, and CLI artifact expectations before any implementation begins.
+  4. Phase G1–G3 — After design sign-off, rewrite the TestSourceWeights suite to compare against spec-computed references, capture the targeted pytest + CLI bundle (store under `phase_g/<STAMP>/`), and log a new Attempt noting the expected C divergence.
+  5. Phase H1–H3 — Sync permanent docs (`pytorch_design.md`, `pytorch_runtime_checklist.md`), refresh dependent plan gates, and prepare archival summary once spec-compliance evidence is in place.
 - Attempts History:
   * [2025-10-09] Attempt #24 (ralph loop #250 — Mode: Evidence-only, Phase E source-index trace). Result: **SUCCESS** (Trace bundle complete; wavelength semantics clarified; hypotheses ranked).
     Metrics: Test collection: 693 tests (no regressions). No code changes; C instrumentation only. Wavelength handling VERIFIED CORRECT (Phase E1 matches C behavior).

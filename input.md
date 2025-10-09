@@ -1,131 +1,81 @@
-Summary: Add per-source TC-D1 trace instrumentation so we can identify the exact physics factors causing the weighted-source parity gap before changing the simulator.
-Mode: Parity
-Focus: [SOURCE-WEIGHT-001] Phase E — parity instrumentation
+Summary: Build the authoritative SOURCE-WEIGHT spec-vs-C decision memo so future loops can stop chasing C parity.
+Mode: Docs
+Focus: [SOURCE-WEIGHT-001] Correct weighted source normalization
 Branch: feature/spec-based-2
-Mapped tests: pytest --collect-only -q tests/test_at_src_003.py
-Artifacts: reports/2025-11-source-weights/phase_e/<STAMP>/trace_per_source/
-Do Now: [SOURCE-WEIGHT-001] Phase E3 — KMP_DUPLICATE_LIB_OK=TRUE python -m nanobrag_torch -mat A.mat -sourcefile reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt -default_F 100 -hdivsteps 0 -vdivsteps 0 -dispsteps 1 -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -oversample 1 -nonoise -nointerpolate -trace_pixel 158 147 -printout -floatfile /tmp/trace_stub.bin > reports/2025-11-source-weights/phase_e/<STAMP>/trace_per_source/py_trace.txt
-If Blocked: Capture the failing command, stderr, and any stack trace into reports/2025-11-source-weights/phase_e/<STAMP>/trace_per_source/blocked.log and add a short Attempts History note in docs/fix_plan.md for [SOURCE-WEIGHT-001] before pivoting.
+Mapped tests: pytest --collect-only -q tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence
+Artifacts: reports/2025-11-source-weights/phase_e/<STAMP>/{spec_vs_c_decision.md,commands.txt,collect.log,env.json,notes.md}
+Do Now: Execute SOURCE-WEIGHT-001 Phase E1 by drafting spec_vs_c_decision.md, validating the targeted pytest selectors with --collect-only, and recording all commands + environment metadata in the new reports directory.
+Do Now Steps:
+- Step 1 — Create a fresh timestamp via `date -u +%Y%m%dT%H%M%SZ` and make reports/2025-11-source-weights/phase_e/<STAMP>/.
+- Step 2 — Inside that folder capture commands in commands.txt (shell transcripts, pytest selectors, git status summary).
+- Step 3 — Run pytest --collect-only -q tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence and pipe stdout to collect.log.
+- Step 4 — Capture environment metadata (Python, torch, git commit, NB_C_BIN value) into env.json using a small Python snippet.
+- Step 5 — Draft spec_vs_c_decision.md with structured sections: Summary, Spec Citations, C Evidence, PyTorch Evidence, Impacted Tests, Expected Outcomes, Next Steps.
+- Step 6 — Include a table that lists each impacted test (current assertion vs proposed assertion vs acceptance tolerance).
+- Step 7 — Quote specs/spec-a-core.md:151 verbatim; annotate with path references so future readers can trace the authority.
+- Step 8 — Summarise the key findings from reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/trace_notes.md.
+- Step 9 — Add a paragraph documenting the documented C bug ID (`C-PARITY-001`) and how it manifests in TC-D1/TC-D3 metadata.
+- Step 10 — Close the memo with explicit decision statements: what remains acceptable, what becomes expected divergence, what tests must change, and which downstream plans unblock.
+If Blocked:
+- Record the partial findings in notes.md within the same reports directory, including which data was missing or ambiguous.
+- Update docs/fix_plan.md `[SOURCE-WEIGHT-001]` Attempts with the blocked context so we have breadcrumbs for the next loop.
 Priorities & Rationale:
-- docs/fix_plan.md:4035 keeps Phase E in-progress until TC-D1/TC-D3 parity metrics are trustworthy; without per-source taps we cannot prove where the 47–120× inflation originates.
-
-
-- plans/active/source-weight-normalization.md:57 explicitly calls for refreshed trace evidence ahead of implementation work, so instrumentation is the immediate gate.
-
-
-- reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/trace_notes.md already shows polar≈0.9997 vs C=0.5, yet only aggregate values are logged; per-source output is needed to isolate the culprit term.
-
-
-- specs/spec-a-core.md:150 states that source weights are read but ignored; once normalization matches C, any remaining discrepancy must come from physics factors we are about to log.
-
-
-- golden_suite_generator/nanoBragg.c:3337 (TRACE_C_SOURCE2) already emits per-source C metrics, so matching PyTorch taps are required for line-by-line comparison.
-
-
-- src/nanobrag_torch/simulator.py:1240 is the consolidated trace hook; extending it keeps instrumentation aligned with the existing debugging SOP and avoids diverging helper scripts.
-
-
-- docs/debugging/debugging.md:17 mandates parallel traces before changing physics; landing this evidence is prerequisite to every other SOURCE-WEIGHT-001 Phase E task.
-
-
-- plans/active/vectorization.md:32 remains blocked on this parity evidence, so closing the instrumentation gap unblocks higher-priority profiling/Perf work once metrics pass.
-
-
+- specs/spec-a-core.md:151 — Requirement that weights are read but ignored must be cited to justify spec-first stance.
+- docs/development/c_to_pytorch_config_map.md:6 — Reinforces configuration parity rules and the weight-handling mandate.
+- plans/active/source-weight-normalization.md:24 — Phase E checkpoints define the memo as the current gate.
+- docs/fix_plan.md:4035 — Next Actions now depend on memorialising the decision before any implementation resumes.
+- plans/active/vectorization.md:12 — Vectorization remains blocked pending this memo; highlighting dependency keeps the roadmap consistent.
 How-To Map:
-- Update src/nanobrag_torch/simulator.py:1240 (`_apply_debug_output`) to detect `self._source_directions` when trace_pixel is active and emit one `TRACE_PY_SOURCE {idx}` block per source containing: source index, source direction, wavelength (Å), F_cell, F_latt_a/b/c, F_latt, polarization factor, I_before_polar, I_after_polar, and contribution before the final steps normalization.
-
-
-- Preserve existing TRACE_PY lines; append the per-source blocks after the current interpolation section so legacy tooling (diff scripts, reports) still parses earlier entries unchanged.
-
-
-- When the per-source trace uses tensors, pull scalar values with `.item()` only on debug copies derived from already detached intermediates; never mutate tensors that participate in the compiled graph.
-
-
-- Touch src/nanobrag_torch/models/crystal.py only if additional per-source metadata is needed; otherwise keep the change scoped to the simulator trace hook.
-
-
-- Prepare a timestamp for artifacts via `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)` and create the folder with `mkdir -p reports/2025-11-source-weights/phase_e/$STAMP/trace_per_source` before executing any commands.
-
-
-- Run `pytest --collect-only -q tests/test_at_src_003.py | tee reports/2025-11-source-weights/phase_e/$STAMP/trace_per_source/pytest_collect.log` to document selector validity without executing the tests.
-
-
-- Execute the PyTorch trace command from Do Now, redirect stdout to `py_trace.txt`, and capture stderr separately using `2>&1 | tee` if you need both streams for later diffing; record the exact command in `commands.txt` and capture the environment with `python -m json.tool <<<'{}'` style script if helpful.
-
-
-- Rerun the instrumented C binary: `NB_RUN_PARALLEL=1 "$NB_C_BIN" -mat A.mat -sourcefile reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt -default_F 100 -hdivsteps 0 -vdivsteps 0 -dispsteps 1 -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -oversample 1 -nonoise -nointerpolate -trace_pixel 158 147 > reports/2025-11-source-weights/phase_e/$STAMP/trace_per_source/c_trace.txt 2> reports/2025-11-source-weights/phase_e/$STAMP/trace_per_source/c_trace.stderr` so the TRACE_C output is preserved verbatim.
-
-
-- Use the existing diff helper or a simple `python - <<'PY'` script to align per-source blocks: load both traces, find the first mismatching metric, and emit the summary into `diff.txt` plus a narrative in `trace_notes.md` (emphasise step count, polarization, and lattice factor comparisons).
-
-
-- Update docs/fix_plan.md `[SOURCE-WEIGHT-001]` Attempts with the new STAMP, metrics, and the per-source observation so the ledger shows progress toward Phase E3.
-
-
-- Leave simulator physics untouched this loop; once evidence exists, the follow-on edit (zero-weight placeholders, polarization fixes) will be trivial to target in the next Do Now.
-
-
+- Command: `pytest --collect-only -q tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence > reports/.../collect.log`.
+- Command: `python - <<'PY'` block to emit env.json with python version, torch version, git rev-parse HEAD, NB_C_BIN, NB_RUN_PARALLEL.
+- Reference: use rg to gather snippets, e.g., `rg -n "source_weights" src/nanobrag_torch -g"*.py"` and log results in commands.txt.
+- Memo Outline: start with Executive Summary (3 bullet sentences), then Normative Sources, then Evidence (C trace, PyTorch diagnostics), followed by Impacted Tests, then Decision & Consequences, then Next Steps/Owners.
+- Cite Artifacts: reference prior reports (phase_a, phase_b, phase_d, trace_source2) with paths so the memo is self-contained.
+- After memo completion, update docs/fix_plan.md `[SOURCE-WEIGHT-001]` Attempts with bullet: timestamp, artifact path, summary of decision, note that C divergence is expected.
+- Keep `KMP_DUPLICATE_LIB_OK=TRUE` mention in notes for future code loops even though this turn is documentation-only.
+- Ensure all numbers (corr, sum_ratio) copied from prior reports retain scientific notation/precision when embedded in the memo.
+- Use Markdown tables for comparison (columns: Scenario, PyTorch metric, C metric, Delta, Interpretation).
+- After drafting, run `mdformat spec_vs_c_decision.md` if available or manually ensure consistent indentation.
+- Consider adding a short appendix listing outstanding questions (e.g., divergence placeholder handling) for Phase F.
+- Capture git status output into commands.txt after memo completion to show clean tree or staged files.
+- If you cite numeric deltas, include both ratio and absolute difference for clarity.
+- Note any assumptions about fixture locations (reports/2025-11-source-weights/fixtures/two_sources.txt) and verify existence via `ls` command.
+- Tag each references section in the memo with relative paths (../phase_d/..., etc.) so readers can navigate easily.
+- Add a references list at the end of the memo with bullet entries for each artifact and spec section.
+- End commands.txt with a checksum (`shasum`) of spec_vs_c_decision.md to help future runners detect drift.
+- Consider using `pandoc` locally (if installed) to preview the memo; note the command in notes.md even if pandoc missing.
+- Double-check that commands.txt logs absolute paths for fixtures (two_sources.txt) so reproduction remains trivial.
 Pitfalls To Avoid:
-- Do not remove or rename any TRACE_PY labels referenced by existing reports; append new ones with a distinct `TRACE_PY_SOURCE` prefix.
-
-
-- Avoid allocating new tensors inside the compiled region; perform any reshaping or indexing on tensors returned to `_apply_debug_output` to keep torch.compile caches valid.
-
-
-- Keep all added instrumentation device/dtype neutral—no `.cpu()`, `.cuda()`, or implicit float64 constants.
-
-
-- Remember to set `KMP_DUPLICATE_LIB_OK=TRUE` for every Python command that imports torch, including trace scripts.
-
-
-- Do not commit the generated reports directory; reference paths in docs/fix_plan.md instead.
-
-
-- Prevent `trace_per_source` logs from truncating by redirecting both stdout and stderr explicitly; large traces can exceed buffer limits if piped incorrectly.
-
-
-- Leave the existing TRACE_C instrumentation intact; if you need additional C fields, add them in a separate loop with supervisor approval.
-
-
-- Resist the temptation to tweak simulator normalization or polarization while instrumentation is in flight; evidence first, fix second.
-
-
-- Verify that new logging respects Protected Assets (docs/index.md list) and does not write to any protected file.
-
-
-- Run only the mapped collect-only pytest command this loop; defer full suite execution until code changes land.
-
-
+- Do not modify simulator, tests, or configs during this documentation loop.
+- Avoid speculative fixes; the memo must stick to observed evidence and spec quotes.
+- Do not remove or rewrite existing artifacts—reference them instead.
+- Resist the urge to chase fresh C runs; summarise existing data unless explicit gap emerges.
+- Keep memo language unambiguous—state whether behaviour is expected, bug, or follow-up.
+- Ensure any TODOs are framed as Phase F/G work items, not implicit assumptions.
+- Maintain ASCII only; avoid fancy Unicode in memo tables or bullet labels.
+- Do not commit the reports directory; leave it referenced via fix_plan and memo content.
+- Keep pytest collect-only output for future validation; do not delete.
+- Double-check git status before finishing to ensure only intended files are touched.
+- Keep docstrings and comments untouched; memo only.
+- Do not move fixtures; reference them and verify presence.
+- Avoid editing docs/fix_plan.md until memo is ready so the Attempt entry references final paths.
+- Make sure commands.txt is chronological; note retries separately.
 Pointers:
+- specs/spec-a-core.md:142
+- docs/development/c_to_pytorch_config_map.md:6
+- plans/active/source-weight-normalization.md:24
 - docs/fix_plan.md:4035
-
-
-- plans/active/source-weight-normalization.md:57
-
-
 - reports/2025-11-source-weights/phase_e/20251009T195032Z/trace_source2/trace_notes.md
-
-
-- src/nanobrag_torch/simulator.py:1240
-
-
-- golden_suite_generator/nanoBragg.c:3337
-
-
-- docs/debugging/debugging.md:17
-
-
-- docs/development/testing_strategy.md:369
-
-
-Verification Checklist:
-- Confirm TRACE_PY_SOURCE blocks exist for every source index and include F_cell, F_latt, and polarization fields.
-
-- Validate the new per-source output keeps the aggregate TRACE_PY values unchanged by running a quick diff on pre-change vs post-change logs.
-
-- Ensure reports/2025-11-source-weights/phase_e/$STAMP/trace_per_source/trace_notes.md summarises the first mismatching variable relative to TRACE_C_SOURCE.
-
-- Re-run the TC-D1 command with NB_RUN_PARALLEL=0 to double-check the PyTorch-only warning path still fires once for wavelength mismatches.
-
-
-Next Up: Implement zero-weight placeholder counting in simulator steps and re-run TC-D1/TC-D3 parity once the per-source trace confirms the polarization/lattice contributions.
+- reports/2025-11-source-weights/phase_d/20251009T102319Z/divergence_analysis.md
+- tests/test_cli_scaling.py:252
+- tests/test_cli_scaling.py:473
+- docs/architecture/pytorch_design.md:1
+- plans/active/vectorization.md:12
+Next Up:
+- Phase F design packet: draft test_plan.md enumerating new assertions and metric tolerances once the decision memo is merged.
+- Step 11 — Summarise the legacy attempts (Attempts #19-#21) in a short chronology so future readers know why we deemed parity impossible.
+- Step 12 — Include a risk section: outline consequences if someone reverts to C parity, and note testing gaps to be covered in Phase F.
+- Step 13 — Add an explicit "Decision" call-out block quoting the exact wording to use in fix_plan and galph_memory (copy/paste ready).
+- Step 14 — Cross-link the memo to plans/active/vectorization.md Phase A so the dependency trail is obvious.
+- Step 15 — Review spelling/grammar and ensure the memo renders under GitHub Markdown preview (tables, code fences, bullet nesting).
+- Step 16 — Before leaving the reports directory, `ls -R` and append the listing to commands.txt for reproducibility.
