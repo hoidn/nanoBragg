@@ -1,5 +1,11 @@
 # Galph Memory
 
+### 2025-12-24 (galph loop - Vectorization gap Phase B1 rerun prep)
+- Confirmed no fresh profiler evidence exists after SOURCE-WEIGHT-001; the latest Phase B1 bundles (20251009T070458Z/094735Z) still report 0.72 correlation, so Phase B2 remains blocked.
+- Updated `docs/fix_plan.md` `[VECTOR-GAPS-002]` Next Actions to require the Phase B1 rerun to capture ≥0.99 correlation in both `correlation.txt` and `summary.md` for downstream backlog work.
+- Reissued `input.md` (Perf mode) instructing Ralph to create a new UTC-stamped reports folder, rerun the 4096² CPU profiler, generate correlation/top-k kernel summaries via inline Python snippets, and log a new Attempt once parity is verified.
+- Follow-up for Ralph: execute the refreshed Do Now commands, archive artifacts under `reports/2026-01-vectorization-gap/phase_b/<STAMP>/`, and update docs/fix_plan.md Attempt #3 with timings, correlation, and any anomalies from top_kernels.txt before proceeding to Phase B2.
+
 ### 2025-12-23 (galph loop - Vectorization plan archival & gap handoff)
 - Archived `plans/active/vectorization.md` to `plans/archive/vectorization.md` with Phase H status lines updated; marked `[VECTOR-TRICUBIC-001]` as done in `docs/fix_plan.md` (Attempt #18 closure recorded).
 - Refreshed `plans/active/vectorization-gap-audit.md` Status Snapshot and Phase B1 guidance to note SOURCE-WEIGHT-001 + VECTOR-TRICUBIC-001 dependencies cleared; profiler capture now unblocked.

@@ -3771,7 +3771,7 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * Analysis (after Phase A1 lands): `python scripts/analysis/vectorization_inventory.py --package src/nanobrag_torch --outdir reports/2026-01-vectorization-gap/phase_a/<STAMP>/`
 - First Divergence (if known): No consolidated post-Phase G inventory exists; residual Python loops (e.g., mosaic rotation RNG, detector ROI rebuild, RNG shims) remain unquantified, risking regressions of the vectorization guardrails and blocking performance diagnosis.
 - Next Actions (2025-12-22 status refresh):
-  1. Phase B1: run the warm-run profiler capture (`KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1 --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`) and record command/log/env artifacts.
+  1. Phase B1: run the warm-run profiler capture (`KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1 --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`), record command/log/env artifacts, and verify the resulting correlation report (≥0.99 expected) is written to both `correlation.txt` and `summary.md` for downstream analysis.
   2. Phase B2: correlate profiler hotspots (≥1% inclusive time) with the Phase A inventory; produce `hot_loops.csv` and a short narrative summarising loop IDs, %time, and proposed focus level.
   3. Phase B3: publish the prioritised backlog under `reports/2026-01-vectorization-gap/phase_b/<STAMP>/backlog.md`, then update this entry with counts and delegate-ready guidance before implementation begins.
 - Attempts History:
