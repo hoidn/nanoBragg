@@ -19,6 +19,7 @@
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
 | [AT-TIER2-GRADCHECK](#at-tier2-gradcheck-implement-tier-2-gradient-correctness-tests) | Implement Tier 2 gradient correctness tests | High | in_progress |
 | [VECTOR-TRICUBIC-001](#vector-tricubic-001-vectorize-tricubic-interpolation-and-detector-absorption) | Vectorize tricubic interpolation and detector absorption | High | done (Phase H CUDA parity archived) |
+| [VECTOR-TRICUBIC-002](#vector-tricubic-002-vectorization-relaunch-backlog) | Vectorization relaunch backlog | High | in_planning |
 | [VECTOR-GAPS-002](#vector-gaps-002-vectorization-gap-audit) | Vectorization gap audit | High | in_progress |
 | [ABS-OVERSAMPLE-001](#abs-oversample-001-fix-oversample_thick-subpixel-absorption) | Fix -oversample_thick subpixel absorption | High | in_planning |
 | [CLI-DTYPE-002](#cli-dtype-002-cli-dtype-parity) | CLI dtype parity | High | in_progress |
@@ -3759,6 +3760,24 @@
 
 ### Archive
 For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, early PERF fixes, routing escalation log), see `docs/fix_plan_archive.md`.
+
+## [VECTOR-TRICUBIC-002] Vectorization relaunch backlog
+- Spec/AT: specs/spec-a-core.md §4–5 (sampling, source weighting, detector absorption); arch.md §§2/8/15; docs/architecture/pytorch_design.md §1.1; docs/development/pytorch_runtime_checklist.md; docs/development/testing_strategy.md §§1.4–2; plans/archive/vectorization.md (Phase A–H historical record).
+- Priority: High
+- Status: in_planning (Phase A dependency gate outstanding)
+- Owner/Date: galph/2025-12-24
+- Plan Reference: `plans/active/vectorization.md`
+- Reproduction (C & PyTorch):
+  * Dependency parity (Phase A1): `NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE python scripts/cli/run_weighted_source_parity.py --oversample 1 --outdir reports/2025-11-source-weights/phase_e/<STAMP>/`
+  * Regression refresh (Phase B1): `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -v` and `pytest tests/test_at_abs_001.py -v -k "cpu or cuda"`
+  * Profiling relaunch (Phase C1): `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`
+- First Divergence (if known): Workflows for post-Phase-H vectorization maintenance stalled because SOURCE-WEIGHT-001 Phase E parity evidence never landed; profiler traces therefore remained low-correlation (≈0.72) and VECTOR-GAPS-002 Phase B1 stayed blocked. No consolidated roadmap existed to sequence blocker clearance, regression refresh, gap profiling, and new vectorization fixes.
+- Next Actions (2025-12-24 kickoff):
+  1. Execute Phase A1–A3 from `plans/active/vectorization.md`: finish SOURCE-WEIGHT-001 Phase E parity capture (corr ≥0.999, |sum_ratio−1| ≤1e-3), propagate unblock signals to VECTOR-GAPS-002, and log the dependency closure in galph_memory.
+  2. Once dependencies clear, run Phase B refresh commands (tricubic/absorption regression + microbenchmarks) and store artifacts under `reports/2026-01-vectorization-refresh/phase_b/` with summary.md capturing deltas vs 2025-10 baselines.
+  3. Resume VECTOR-GAPS-002 Phase B via plan Phase C (profiler capture, hot loop mapping, backlog publication). Update both plans and this ledger with the new backlog ranking, tying into PERF-PYTORCH-004 where relevant.
+  4. Prepare Phase D design packets and microbenchmark harnesses so Ralph can implement the prioritised vectorization fixes without additional discovery; update input.md templates accordingly.
+- Attempts History: None — initiative (re)opened 2025-12-24. First execution attempt will be logged after Phase A parity evidence is captured.
 
 ## [VECTOR-GAPS-002] Vectorization gap audit
 - Spec/AT: specs/spec-a-core.md §4, specs/spec-a-parallel.md §2.3 & §4, arch.md §§2/8/15, docs/architecture/pytorch_design.md §1.1, docs/development/pytorch_runtime_checklist.md, docs/development/testing_strategy.md §§1.4–2.
