@@ -1,0 +1,67 @@
+# Phase G Parity Evidence Bundle — Canonical Commands
+# Generated: 2025-10-09T22:26:35Z
+# Objective: Capture clean C↔PyTorch parity for weighted source normalization (SOURCE-WEIGHT-001)
+# Fixture: reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt
+# Environment: NB_C_BIN=./golden_suite_generator/nanoBragg, KMP_DUPLICATE_LIB_OK=TRUE
+
+# PyTorch CLI command (TC-D1: weighted sources, -nointerpolate to avoid C segfault)
+python -m nanobrag_torch \
+  -sourcefile reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt \
+  -lambda 0.9768 \
+  -default_F 100 \
+  -cell 100 100 100 90 90 90 \
+  -distance 100 \
+  -detpixels_x 256 \
+  -detpixels_y 256 \
+  -pixel 0.1 \
+  -oversample 1 \
+  -phisteps 1 \
+  -mosaic_domains 1 \
+  -nointerpolate \
+  -nonoise \
+  -floatfile py_tc_d1.bin
+
+# C reference command (TC-D3: same parameters, -nointerpolate critical to avoid interpolation segfault)
+./golden_suite_generator/nanoBragg \
+  -sourcefile reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt \
+  -lambda 0.9768 \
+  -default_F 100 \
+  -cell 100 100 100 90 90 90 \
+  -distance 100 \
+  -detpixels_x 256 \
+  -detpixels_y 256 \
+  -pixel 0.1 \
+  -oversample 1 \
+  -phisteps 1 \
+  -mosaic_domains 1 \
+  -nointerpolate \
+  -nonoise \
+  -floatfile c_tc_d3.bin
+
+# Metrics computation (inline Python)
+python - <<'PY'
+import json, numpy as np
+from pathlib import Path
+
+py = np.fromfile('py_tc_d1.bin', dtype=np.float32)
+c = np.fromfile('c_tc_d3.bin', dtype=np.float32)
+py_sum, c_sum = float(py.sum()), float(c.sum())
+ratio = float(py_sum / c_sum) if c_sum else float('nan')
+corr = float(np.corrcoef(py, c)[0, 1])
+
+Path('metrics.json').write_text(json.dumps({
+    'py_sum': py_sum,
+    'c_sum': c_sum,
+    'sum_ratio': ratio,
+    'correlation': corr
+}, indent=2))
+
+print(f'correlation={corr:.12f}')
+print(f'sum_ratio={ratio:.6f}')
+PY
+
+# Exit criteria (Phase G):
+# - correlation ≥ 0.999
+# - |sum_ratio - 1| ≤ 3e-3
+# - Both C and PyTorch outputs captured successfully
+# - No interpolation segfault (via -nointerpolate flag)

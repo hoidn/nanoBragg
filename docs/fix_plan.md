@@ -4057,6 +4057,26 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   3. After parity metrics are recorded, update this ledger with a new Attempt and queue Phase H (memo + test update) via the next supervisor input.
   4. Once Phase H completes, propagate the new selectors/artifacts to VECTOR-TRICUBIC-002, VECTOR-GAPS-002, and PERF-PYTORCH-004 before resuming vectorization/perf initiatives.
 - Attempts History:
+  * [2025-10-09] Attempt #30 (ralph loop #260 — Mode: Docs+Parity, Phase G2/G3 evidence with C parsing bug discovery). Result: **BLOCKED (C sourcefile parsing bug + test parameter mismatch)**
+    Metrics: `pytest -v tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` — 7 passed, 1 xpassed in 21.24s. Phase A fixture CLI: PyTorch sum=42875.54, C sum=320.27, correlation=0.0297, sum_ratio=133.87 (FAILED parity — target corr≥0.999, ratio~1.0±0.003).
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_g/20251009T222635Z/notes.md` — Critical findings: C parses 2-line fixture as 4 sources (treats comment lines as sources with (0,0,0) and weight=0), causing normalization bug
+      - `reports/2025-11-source-weights/phase_g/20251009T222635Z/attempt_summary.md` — Full analysis with 3 findings, recommendations (Options A/B/C), and blocker summary
+      - `reports/2025-11-source-weights/phase_g/20251009T222635Z/commands.txt` — Canonical PyTorch + C CLI commands
+      - `reports/2025-11-source-weights/phase_g/20251009T222635Z/metrics.json` — Parity metrics
+      - `reports/2025-11-source-weights/phase_g/20251009T222635Z/{py,c}_stdout.txt` — Execution logs
+      - `reports/2025-11-source-weights/phase_g/20251009T222635Z/{py_tc_d1,c_tc_d3}.bin` — Float images
+      - `reports/2025-11-source-weights/phase_g/20251009T222635Z/pytest.log` — Test execution showing XPASS
+    Observations/Hypotheses:
+      - **C parsing bug**: nanoBragg.c treats comment lines in sourcefile as valid sources with (0,0,0) position and zero weight, inflating count from 2→4. This affects normalization divisor and may interact with weight application bug.
+      - **Test parameter mismatch**: `test_c_divergence_reference` uses DIFFERENT source geometry (Z=-1.0, X-offset sources, no comments) than supervisor-requested Phase A fixture (Z=10.0, co-located sources, 2 comment lines). Test creates tempfile avoiding C bug.
+      - **Geometry-dependent parity**: Test shows XPASS (C↔Py agree for Z=-1.0 case), but CLI using Phase A fixture shows 134× divergence. C weight bug may manifest differently based on source separation.
+      - **Phase G2 blocked**: Cannot meet exit criteria (correlation ≥0.999) with current C bug. Need either (A) comment-free fixture, (B) C-code fix, or (C) document as separate test case.
+    Next Actions:
+      1. **Supervisor decision**: Choose Option A (quick: new fixture), B (thorough: fix C parsing), or C (pragmatic: document as distinct test cases, proceed with XPASS evidence only)
+      2. **If Option C**: Remove xfail from test, file C parsing bug as new C-PARITY entry, mark Phase G complete with notes, proceed to Phase H using test evidence
+      3. **If Option A/B**: Rerun Phase G2 with corrected inputs, capture new bundle meeting exit criteria
+      4. **Create new fix_plan entry**: C sourcefile comment parsing bug (separate from SOURCE-WEIGHT-001)
   * [2025-10-09] Attempt #27 (ralph loop #256 — Mode: Docs+Parity, Phase G2/G3 evidence bundle). Result: **FAILED (incomplete evidence)** — pytest run succeeded but CLI commands/metrics were not captured; C binary absent; divergence test XPASSed.
     Metrics: `pytest -v tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` — 7 passed, 1 xpassed in 21.21s. `test_c_divergence_reference` returned XPASS (correlation logged ≈0.99999) and wrote `reports/2025-11-source-weights/phase_g/unexpected_c_parity/metrics.json`. PyTorch CLI attempt emitted `Need -hkl file, Fdump.bin, or -default_F > 0` (no floatfile generated). No C CLI executed.
     Artifacts:

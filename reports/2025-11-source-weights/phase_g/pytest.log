@@ -15,4 +15,4 @@ tests/test_cli_scaling.py::TestSourceWeights::test_single_source_fallback PASSED
 tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference XPASS [ 87%]
 tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_divergence_warning PASSED [100%]
 
-======================== 7 passed, 1 xpassed in 21.88s =========================
+======================== 7 passed, 1 xpassed in 21.24s =========================
