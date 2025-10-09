@@ -1,0 +1,355 @@
+
+This GDB supports auto-downloading debuginfo from the following URLs:
+  <https://debuginfod.ubuntu.com>
+Enable debuginfod for this session? (y or [n]) [answered N; input not from terminal]
+Debuginfod has been disabled.
+To make this setting permanent, add 'set debuginfod enabled off' to .gdbinit.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+nanoBragg nanocrystal diffraction simulator - James Holton and Ken Frankel 5-17-17
+WARNING: no mosaic spread specified.  setting mosaic_domains = 1
+mosflm convention selected.
+TRACE_C:fdet_after_rotz=0 0 1
+TRACE_C:sdet_after_rotz=0 -1 0
+TRACE_C:odet_after_rotz=1 0 0
+TRACE_C:twotheta_axis=0 0 -1
+TRACE_C:fdet_after_twotheta=0 0 1
+TRACE_C:sdet_after_twotheta=0 -1 0
+TRACE_C:odet_after_twotheta=1 0 0
+DETECTOR_FAST_AXIS 0 0 1
+DETECTOR_SLOW_AXIS 0 -1 0
+DETECTOR_NORMAL_AXIS 1 0 0
+pivoting detector around direct beam spot
+TRACE_C:detector_convention=MOSFLM
+TRACE_C:angles_rad=rotx:0 roty:0 rotz:0 twotheta:0
+TRACE_C:beam_center_m=X:1.285e-05 Y:1.285e-05 pixel_mm:0.1
+TRACE_C:initial_fdet=0 0 1
+TRACE_C:initial_sdet=0 -1 0
+TRACE_C:initial_odet=1 0 0
+TRACE_C:Rx=[1 0 0; 0 1 -0; 0 0 1]
+TRACE_C:Ry=[1 0 0; 0 1 0; -0 0 1]
+TRACE_C:Rz=[1 -0 0; 0 1 0; 0 0 1]
+TRACE_C:R_total=[1 0 0; 0 1 0; 0 0 1]
+TRACE_C:fdet_after_rotz=0 0 1
+TRACE_C:sdet_after_rotz=0 -1 0
+TRACE_C:odet_after_rotz=1 0 0
+TRACE_C:twotheta_axis=0 0 -1
+TRACE_C:fdet_after_twotheta=0 0 1
+TRACE_C:sdet_after_twotheta=0 -1 0
+TRACE_C:odet_after_twotheta=1 0 0
+TRACE_C:convention_mapping=Fbeam←Ybeam_mm(+0.5px),Sbeam←Xbeam_mm(+0.5px),beam_vec=[1 0 0]
+TRACE_C:Fbeam_m=0.0129
+TRACE_C:Sbeam_m=0.0129
+TRACE_C:distance_m=0.1
+TRACE_C:term_fast=-0 -0 -0.0129
+TRACE_C:term_slow=-0 0.0129 -0
+TRACE_C:term_beam=0.1 0 0
+TRACE_C:pix0_vector=0.1 0.0129 -0.0129
+DETECTOR_PIX0_VECTOR 0.1 0.0129 -0.0129
+XDS incident beam: 0 0 1
+auto-selected tricubic interpolation of structure factors
+TRACE: Computing cross products of reciprocal vectors:
+TRACE:   Input vectors for cross products:
+TRACE:     a_star = [0.01, 0, 0]
+TRACE:     b_star = [-6.12323e-19, 0.01, 0]
+TRACE:     c_star = [-6.12323e-19, -6.12323e-19, 0.01]
+TRACE:   Cross product results:
+TRACE:     a_star x b_star = [0, -0, 0.0001]
+TRACE:     b_star x c_star = [0.0001, 6.12323e-21, 6.12323e-21]
+TRACE:     c_star x a_star = [-0, 0.0001, 6.12323e-21]
+TRACE: Reciprocal cell volume calculation:
+TRACE:   V_star = a_star . (b_star x c_star) = 1e-06
+TRACE: Direct-space cell volume: V_cell = 1/V_star = 1e+06
+TRACE: Before computing real-space vectors:
+TRACE:   b_star_cross_c_star = [0.0001, 6.12323e-21, 6.12323e-21]
+TRACE:   c_star_cross_a_star = [-0, 0.0001, 6.12323e-21]
+TRACE:   a_star_cross_b_star = [0, -0, 0.0001]
+TRACE:   V_cell = 1e+06, V_star = 1e-06
+TRACE: After computing real-space vectors:
+TRACE:   a = [100, 6.12323e-15, 6.12323e-15] |a| = 100
+TRACE:   b = [-0, 100, 6.12323e-15] |b| = 100
+TRACE:   c = [0, -0, 100] |c| = 100
+TRACE: Re-generating reciprocal vectors from real-space vectors:
+TRACE:   Before re-generation: a_star = [0.01, 0, 0] |a_star| = 0.01
+TRACE:   Before re-generation: b_star = [-6.12323e-19, 0.01, 0] |b_star| = 0.01
+TRACE:   Before re-generation: c_star = [-6.12323e-19, -6.12323e-19, 0.01] |c_star| = 0.01
+TRACE:   Cross products: b_cross_c = [10000, 0, 0]
+TRACE:   Cross products: c_cross_a = [-6.12323e-13, 10000, 0]
+TRACE:   Cross products: a_cross_b = [-6.12323e-13, -6.12323e-13, 10000]
+TRACE:   After re-generation: a_star = [0.01, 0, 0] |a_star| = 0.01
+TRACE:   After re-generation: b_star = [-6.12323e-19, 0.01, 0] |b_star| = 0.01
+TRACE:   After re-generation: c_star = [-6.12323e-19, -6.12323e-19, 0.01] |c_star| = 0.01
+Unit Cell: 100 100 100 90 90 90
+Recp Cell: 0.01 0.01 0.01 90 90 90
+volume = 1e+06 A^3
+real-space cell vectors (Angstrom):
+     a           b           c         
+X: 100.00000000 -0.00000000  0.00000000
+Y:  0.00000000 100.00000000 -0.00000000
+Z:  0.00000000  0.00000000 100.00000000
+reciprocal-space cell vectors (Angstrom^-1):
+     a_star      b_star      c_star    
+X:  0.01000000 -0.00000000 -0.00000000
+Y:  0.00000000  0.01000000 -0.00000000
+Z:  0.00000000  0.00000000  0.01000000
+TRACE: Converting real-space vectors from Angstroms to meters:
+TRACE:   Before conversion: a = [100, 6.12323e-15, 6.12323e-15] |a| = 100 Angstroms
+TRACE:   Before conversion: b = [-0, 100, 6.12323e-15] |b| = 100 Angstroms
+TRACE:   Before conversion: c = [0, -0, 100] |c| = 100 Angstroms
+TRACE:   After conversion: a = [1e-08, 6.12323e-25, 6.12323[New Thread 0x7ffff7bde6c0 (LWP 474229)]
+[New Thread 0x7ffff73dd6c0 (LWP 474230)]
+[New Thread 0x7ffff6bdc6c0 (LWP 474231)]
+[New Thread 0x7ffff63db6c0 (LWP 474232)]
+[New Thread 0x7ffff5bda6c0 (LWP 474233)]
+[New Thread 0x7ffff53d96c0 (LWP 474234)]
+[New Thread 0x7ffff4bd86c0 (LWP 474235)]
+[New Thread 0x7ffff43d76c0 (LWP 474236)]
+[New Thread 0x7ffff3bd66c0 (LWP 474237)]
+[New Thread 0x7ffff33d56c0 (LWP 474238)]
+[New Thread 0x7ffff2bd46c0 (LWP 474239)]
+[New Thread 0x7ffff23d36c0 (LWP 474240)]
+[New Thread 0x7ffff1bd26c0 (LWP 474241)]
+[New Thread 0x7ffff13d16c0 (LWP 474242)]
+[New Thread 0x7ffff0bd06c0 (LWP 474243)]
+[New Thread 0x7ffff03cf6c0 (LWP 474244)]
+[New Thread 0x7fffefbce6c0 (LWP 474245)]
+[New Thread 0x7fffef3cd6c0 (LWP 474246)]
+[New Thread 0x7fffeebcc6c0 (LWP 474247)]
+[New Thread 0x7fffee3cb6c0 (LWP 474248)]
+[New Thread 0x7fffedbca6c0 (LWP 474249)]
+[New Thread 0x7fffed3c96c0 (LWP 474250)]
+[New Thread 0x7fffecbc86c0 (LWP 474251)]
+[New Thread 0x7fffec3c76c0 (LWP 474252)]
+[New Thread 0x7fffebbc66c0 (LWP 474253)]
+[New Thread 0x7fffeb3c56c0 (LWP 474254)]
+[New Thread 0x7fffeabc46c0 (LWP 474255)]
+[New Thread 0x7fffea3c36c0 (LWP 474256)]
+[New Thread 0x7fffe9bc26c0 (LWP 474257)]
+[New Thread 0x7fffe93c16c0 (LWP 474258)]
+[New Thread 0x7fffe8bc06c0 (LWP 474259)]
+
+Thread 3 "nanoBragg" received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 0x7ffff73dd6c0 (LWP 474230)]
+0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+3310	                                                      sub_Fhkl[i1][i2][i3]= Fhkl[h_interp[i1]-h_min][k_interp[i2]-k_min][l_interp[i3]-l_min];
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+rax            0x55515558b608      93807812589064
+rbx            0x18                24
+rcx            0x7ffff73dca70      140737341409904
+rdx            0xfffffffc000000b8  -17179869000
+rsi            0x7ffff73dca90      140737341409936
+rdi            0x7ffff73dcbd0      140737341410256
+rbp            0x7ffff73dcdf0      0x7ffff73dcdf0
+rsp            0x7ffff73dc650      0x7ffff73dc650
+r8             0xca                202
+r9             0x7ffff73dd690      140737341413008
+r10            0x0                 0
+r11            0x246               582
+r12            0x20                32
+r13            0x55555556bc9b      93824992328859
+r14            0x5555556fc700      93824993969920
+r15            0x7fffffffcd90      140737488342416
+rip            0x55555556e629      0x55555556e629 <main._omp_fn.0+10638>
+eflags         0x10203             [ CF IF RF ]
+cs             0x33                51
+ss             0x2b                43
+ds             0x0                 0
+es             0x0                 0
+fs             0x0                 0
+gs             0x0                 0
+fs_base        0x7ffff73dd6c0      140737341413056
+gs_base        0x0                 0
+
+Thread 32 (Thread 0x7fffe8bc06c0 (LWP 474259) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 31 (Thread 0x7fffe93c16c0 (LWP 474258) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 30 (Thread 0x7fffe9bc26c0 (LWP 474257) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 29 (Thread 0x7fffea3c36c0 (LWP 474256) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 28 (Thread 0x7fffeabc46c0 (LWP 474255) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 27 (Thread 0x7fffeb3c56c0 (LWP 474254) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 26 (Thread 0x7fffebbc66c0 (LWP 474253) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 25 (Thread 0x7fffec3c76c0 (LWP 474252) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 24 (Thread 0x7fffecbc86c0 (LWP 474251) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 23 (Thread 0x7fffed3c96c0 (LWP 474250) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 22 (Thread 0x7fffedbca6c0 (LWP 474249) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 21 (Thread 0x7fffee3cb6c0 (LWP 474248) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 20 (Thread 0x7fffeebcc6c0 (LWP 474247) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 19 (Thread 0x7fffef3cd6c0 (LWP 474246) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 18 (Thread 0x7fffefbce6c0 (LWP 474245) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 17 (Thread 0x7ffff03cf6c0 (LWP 474244) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 16 (Thread 0x7ffff0bd06c0 (LWP 474243) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 15 (Thread 0x7ffff13d16c0 (LWP 474242) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 14 (Thread 0x7ffff1bd26c0 (LWP 474241) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 13 (Thread 0x7ffff23d36c0 (LWP 474240) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 12 (Thread 0x7ffff2bd46c0 (LWP 474239) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 11 (Thread 0x7ffff33d56c0 (LWP 474238) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 10 (Thread 0x7ffff3bd66c0 (LWP 474237) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 9 (Thread 0x7ffff43d76c0 (LWP 474236) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 8 (Thread 0x7ffff4bd86c0 (LWP 474235) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 7 (Thread 0x7ffff53d96c0 (LWP 474234) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 6 (Thread 0x7ffff5bda6c0 (LWP 474233) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 5 (Thread 0x7ffff63db6c0 (LWP 474232) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 4 (Thread 0x7ffff6bdc6c0 (LWP 474231) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 3 (Thread 0x7ffff73dd6c0 (LWP 474230) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 2 (Thread 0x7ffff7bde6c0 (LWP 474229) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e8d79f in ?? () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c9caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#3  0x00007ffff7d29c6c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+
+Thread 1 (Thread 0x7ffff7e69c00 (LWP 474226) "nanoBragg"):
+#0  0x000055555556e629 in main._omp_fn.0 () at nanoBragg.c:3310
+#1  0x00007ffff7e83977 in GOMP_parallel () from /lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00005555555666d0 in main (argc=36, argv=0x7fffffffd9c8) at nanoBragg.c:2785

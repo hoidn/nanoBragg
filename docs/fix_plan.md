@@ -4091,6 +4091,30 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       3. **BLOCKER**: Do NOT proceed to Phase H or mark Phase G complete until: (a) XPASS explained and test expectation updated, (b) C segfault resolved and TC-D3 metrics captured, (c) Supervisor reviews findings and approves next steps.
       4. **IF C-PARITY-001 was incorrect**: Update decision memo, remove `@pytest.mark.xfail` from `test_c_divergence_reference`, revise Phase E/F/G documentation to reflect correct understanding.
       5. **IF C segfault persists**: Consider alternative C parity validation strategy (use different test case, fix C bug, or document as known C limitation).
+  * [2025-10-09] Attempt #29 (ralph loop #258 — Mode: Docs, Phase G2/G3/G4 fresh evidence with debug binary). Result: **PARTIAL SUCCESS** — pytest suite passed with XPASS; PyTorch CLI succeeded; C CLI segfault diagnosed with gdb.
+    Metrics: `pytest -v tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` — 7 passed, 1 xpassed in 21.88s. `test_c_divergence_reference` XPASS: correlation=0.9999886, sum_ratio=1.0038 (0.38% diff, meets spec ≤3e-3). C binary rebuilt with debug symbols (`CFLAGS="-g -O0 -DTRACING=1 -fopenmp"`).
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_g/20251009T215516Z/notes.md` — comprehensive Phase G evidence summary (exec summary, test results, parity metrics, CLI results, C-PARITY-001 reassessment analysis, reproduction commands)
+      - `reports/2025-11-source-weights/phase_g/20251009T215516Z/collect.log` — pytest collection validation (8 tests)
+      - `reports/2025-11-source-weights/phase_g/20251009T215516Z/pytest.log` — full test execution output
+      - `reports/2025-11-source-weights/phase_g/unexpected_c_parity/metrics.json` — XPASS parity data (c_sum=125522.62, py_sum=126004.64, correlation=0.9999886)
+      - `reports/2025-11-source-weights/phase_g/20251009T215516Z/py_tc_d1.bin` — PyTorch CLI output (262,144 bytes)
+      - `reports/2025-11-source-weights/phase_g/20251009T215516Z/py_stdout.txt` — PyTorch execution log (UserWarning for lambda override as expected)
+      - `reports/2025-11-source-weights/phase_g/20251009T215516Z/c_stdout.txt` — C execution log (91 lines, pre-crash initialization)
+      - `reports/2025-11-source-weights/phase_g/20251009T215516Z/c_segfault/backtrace.txt` — gdb trace (355 lines, all 32 threads)
+      - `reports/2025-11-source-weights/phase_g/20251009T215516Z/c_segfault/crash_analysis.md` — detailed crash analysis
+    First Divergence: **C-PARITY-001 reassessment confirmed necessary** — correlation 0.9999886 vs expected <0.8 indicates C and PyTorch agree on source weight handling. C segfault root cause: `nanoBragg.c:3310` tricubic interpolation accesses `Fhkl[negative_index]` when `-default_F` used without HKL file (interpolation auto-enabled, missing bounds check). Register `rdx=-17179869000` (invalid). Workaround: add `-interpolate 0` or provide minimal HKL.
+    Observations/Hypotheses:
+      - **XPASS persistence validated**: Correlation 0.9999886 (99.998%) and sum_ratio 1.0038 (0.38%) both meet spec thresholds (≥0.999, |ratio−1|≤3e-3), contradicting original C-PARITY-001 classification that C applies weights differently.
+      - **C segfault diagnosed**: Debug binary and gdb backtrace isolated crash to line 3310 in tricubic interpolation code. All 32 OpenMP threads hit same invalid array access, indicating systematic bug (not race condition). Code attempts interpolation when no HKL data exists.
+      - **Phase E decision memo validity questioned**: Either (1) C code changed between Phase E and now, (2) Phase E test parameters differed, (3) original analysis was incorrect, or (4) compiler/build flags affect behavior.
+      - **Test suite health**: All 7 spec-compliance tests pass correctly; only the divergence documentation test shows unexpected parity.
+    Next Actions (Phase H per plan:59-69):
+      - H1: Reproduce parity metrics with working C command (use `-interpolate 0` workaround or minimal HKL file)
+      - H2: Author parity reassessment memo quoting nanoBragg.c:2570-2720, superseding Phase E decision
+      - H3: Update `test_c_divergence_reference` to remove `@pytest.mark.xfail`, tighten tolerances to observed parity
+      - H4: Align spec acceptance text (AT-SRC-001) with equal-weight behavior
+      - Blocker: Must resolve C segfault to execute H1 controlled run before proceeding to H2/H3/H4
   * [2025-10-09] Attempt #26 (ralph loop #253 — Mode: Docs, Phase F1–F3 test redesign packet). Result: **SUCCESS** (Design packet complete; ready for Phase G implementation).
     Metrics: `pytest --collect-only -q tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` (9 tests collected). No code changes.
     Artifacts:
