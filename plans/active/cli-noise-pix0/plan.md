@@ -22,7 +22,7 @@
   - `reports/2025-10-cli-flags/phase_l/` — canonical evidence directories (rot_vector, scaling_audit, scaling_validation, nb_compare, supervisor_command).
 - Artifact Policy: Continue storing new work under `reports/2025-10-cli-flags/phase_l/<topic>/<timestamp>/`, capturing `commands.txt`, raw logs, `summary.md`, `env.json`, and `sha256.txt` per CLI-FLAGS-003 conventions.
 - Guardrails: Preserve vectorization (no scalar φ loops), maintain device/dtype neutrality, respect Protected Assets (`docs/index.md`), and cite nanoBragg.c snippets via CLAUDE Rule #11 when touching simulator/physics code.
-- Status Snapshot (2025-12-20 refresh):
+- Status Snapshot (2025-12-21 refresh):
   - ✅ `-nonoise` plumbing merged with regression coverage (`tests/test_cli_nonoise.py`) — files: `src/nanobrag_torch/io/noise.py`, artifacts `reports/2025-10-cli-flags/phase_j/nonoise_plumbing/`.
   - ✅ pix0 precedence and SAMPLE pivot parity fixed (Attempt #129) — see `reports/2025-10-cli-flags/phase_k/pix0_precedence/20251006T231255Z/`.
   - ✅ φ carryover shim removed end-to-end (Attempts #176–#183) — definitive proof in `reports/2025-10-cli-flags/phase_phi_removal/phase_d/20251008T203504Z/`; shim plan archived.
@@ -30,6 +30,7 @@
   - ℹ️ Spec-mode scaling delta now documented under Option 1: `reports/2025-10-cli-flags/phase_l/scaling_validation/option1_spec_compliance/20251009T013046Z/metrics.json` records the expected −14.6% `I_before_scaling` gap vs C-PARITY-001; downstream factors stay ≤1e-6 and `lattice_hypotheses.md` (H4/H5) closed.
   - 🧪 Phase M2 divergence analysis complete (Attempt #186) — `analysis_20251008T212459Z.md` and `lattice_hypotheses.md` isolate the F_latt sign flip (PyTorch +1.379 vs C −2.383) and elevate Hypothesis H4 (φ rotation mismatch) to HIGH confidence.
   - 🚩 Downstream nb-compare + supervisor command reruns remain blocked until Phase M closes (Phase N pending after optional Phase M6 decision).
+  - ✅ Phase N1 float images captured — Attempt #199 (2025-10-09) generated C/PyTorch ROI bins under `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z/` with commands/env/tests metadata.
 
 ---
 
@@ -77,7 +78,7 @@ Exit Criteria: `nb-compare` correlation ≥0.9995, sum_ratio 0.99–1.01, peak a
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| N1 | Regenerate C & PyTorch ROI outputs | [ ] | Run the authoritative command for both implementations, storing float images + metadata under `reports/2025-10-cli-flags/phase_l/nb_compare/<timestamp>/inputs/`. |
+| N1 | Regenerate C & PyTorch ROI outputs | [D] | ✅ Attempt #199 (2025-10-09). Float images, CLI logs, metadata, and pytest baseline stored in `reports/2025-10-cli-flags/phase_l/nb_compare/20251009T020401Z/inputs/` (see `commands.txt`, `env.txt`, `sha256.txt`). |
 | N2 | Execute nb-compare | [ ] | `nb-compare --roi 100 156 100 156 --resample --threshold 0.98 --outdir reports/2025-10-cli-flags/phase_l/nb_compare/<timestamp>/results/ -- [command args]`. Capture `summary.json`, PNG previews, CLI stdout. |
 | N3 | Log results | [ ] | Summarise metrics in `reports/.../nb_compare/<timestamp>/analysis.md` and update `docs/fix_plan.md` Attempts (VG-3/VG-4). |
 

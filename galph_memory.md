@@ -8,6 +8,15 @@
 - Captured repeated reminders on Protected Assets/dirty worktree hygiene and documented long-term goals (CLI parity restoration before vectorization, Dynamo cache validation, detector pivot rules).
 - Logged recommended follow-ups: restore Core Rule #13 duality, regenerate parity traces, tighten test tolerances after fixes, and prioritize evidence artifacts under `reports/` for Ralph’s loops.
 
+## 2025-12-21 (galph loop — Phase N2 planning)
+- Git up to date; refreshed docs/index.md, specs/spec-a.md shards, arch.md, docs/development/c_to_pytorch_config_map.md, docs/debugging/debugging.md, docs/development/testing_strategy.md, docs/fix_plan.md, and plans/active/cli-noise-pix0/plan.md before choosing focus.
+- Coin flip=heads; reviewed Ralph commit e7ad6b6 (Attempt #199) — documentation/artifact updates only, ROI float images captured, no regressions.
+- Detected plan drift (Phase N1 still open); selected Planning action on CLI-FLAGS-003 Phase N to realign plan/status with fix_plan.
+- Updated plans/active/cli-noise-pix0/plan.md Status Snapshot date and marked Phase N1 row [D] with Attempt #199 path.
+- Authored new input.md (Parity mode) directing Ralph to run targeted pytest, execute nb-compare for Phase N2, create analysis.md, and log metrics in docs/fix_plan + plan row N2.
+- Long-term Goals review: Goal 1 (phi carryover removal) confirmed complete; Goal 2 (spec audit) unchanged—docs/bugs keeps C bug quarantined; Goal 3 (vectorization) plan already current, no edits today.
+- Follow-up for Ralph: run the nb-compare command exactly as documented, capture summary/PNG/diff outputs under results/, update todo_nb_compare checklist, record Attempt with metrics, and flip plan row N2 to [D].
+
 ## 2025-12-21 (galph loop — Phase N1 ROI prep)
 - Git up to date; re-read docs/index.md, specs/spec-a-core.md, arch.md, docs/development/c_to_pytorch_config_map.md, docs/debugging/debugging.md, docs/development/testing_strategy.md, plans/active/cli-noise-pix0/plan.md before analysis.
 - Coin flip=heads; reviewed Ralph commits c0b4b8b and 0ed4037 — documentation-only work (Phase M6 skip record + Option 1 bundle) with no regressions.
