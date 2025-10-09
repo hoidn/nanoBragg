@@ -1376,3 +1376,11 @@
 - Updated `input.md` (101 lines) directing Ralph to create a timestamped `reports/gradients/<STAMP>/` bundle with tier2_baseline.md, gradcheck_phaseA.log, env.json, commands.txt, sha256.txt (collect-only optional), then mark plan rows A1–A3 [D] and log a new Attempt in docs/fix_plan.md after running `env KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest tests/test_suite.py::TestTier2GradientCorrectness -vv`.
 - No repository files besides input.md were modified; committed as `SUPERVISOR: gradcheck Phase A handoff - tests: not run` and pushed.
 - Follow-up for Ralph: execute the Phase A audit exactly per input.md (capture artifacts, update plan/ledger). After completion, next loops can proceed to Phase B misset_rot_x gradcheck.
+
+## 2025-12-22 (galph loop - Vectorization Phase G planning)
+- Synced with origin (already up to date); reviewed required spec/arch/testing docs plus `plans/active/vectorization.md`, `docs/fix_plan.md`, and Phase F summary before selecting focus.
+- Focused on `[VECTOR-TRICUBIC-001]` Phase G documentation closure (Action: Planning, Mode: Docs) to align with long-term Goal 3.
+- Updated `plans/active/vectorization.md` Status Snapshot (2025-12-22) and expanded Phase G checklist (G1a–G2c) with detailed doc, checklist, and CUDA delegation tasks.
+- Refreshed `docs/fix_plan.md` `[VECTOR-TRICUBIC-001]` Next Actions to point Ralph at the new Phase G steps and clarify that the CUDA rerun stays under PERF-PYTORCH-004 Attempt #14.
+- Authored `input.md` (Docs mode, 98 lines) instructing Ralph to execute Phase G1 (doc updates + collect-only proof), log artifacts under `reports/2025-10-vectorization/phase_g/<timestamp>/`, and update ledger/plan accordingly.
+- Outstanding follow-up for Ralph: perform Phase G1-G2 tasks per updated plan, record new Attempt in docs/fix_plan.md, and document CUDA follow-up delegation.

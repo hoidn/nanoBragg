@@ -1,101 +1,98 @@
-Summary: Capture Tier-2 gradcheck baseline evidence so the pending misset/beam gradchecks rest on a documented coverage audit with reproducible logs and consistent plan alignment.
-Mode: none
-Focus: docs/fix_plan.md §[AT-TIER2-GRADCHECK]
+Summary: Update vectorization docs and close out VECTOR-TRICUBIC-001 Phase G
+Mode: Docs
+Focus: [VECTOR-TRICUBIC-001] Vectorize tricubic interpolation and detector absorption — Phase G documentation closure
 Branch: feature/spec-based-2
-Mapped tests: env KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest tests/test_suite.py::TestTier2GradientCorrectness -vv
-Artifacts: reports/gradients/<STAMP>/tier2_baseline.md
-Artifacts: reports/gradients/<STAMP>/gradcheck_phaseA.log
-Artifacts: reports/gradients/<STAMP>/commands.txt
-Artifacts: reports/gradients/<STAMP>/env.json
-Artifacts: reports/gradients/<STAMP>/sha256.txt
-Artifacts: plans/active/gradcheck-tier2-completion/plan.md (Phase A rows → [D])
-Artifacts: docs/fix_plan.md (Attempt logging Phase A completion)
-Artifacts: reports/gradients/<STAMP>/collect_only.log (optional but recommended)
-Context Reminders:
-- Phase A is evidence-only: no simulator/test code edits; focus on documentation, logs, and reproducibility bundles per plan checklist.
-- The audit must enumerate existing gradcheck coverage with `file:line` anchors and explicitly highlight the remaining spec gaps (misset_rot_x, lambda_A, fluence).
-- Bundle naming should mirror prior gradient evidence (e.g., `reports/gradients/20251015T...`) for continuity and straightforward archival diffing.
-- `AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md` lists canonical selectors; cite it verbatim in tier2_baseline.md under Commands.
-- torch.compile must remain disabled via `NANOBRAGG_DISABLE_COMPILE=1`; mention the rationale (torch.compile backward bugs) in the baseline write-up.
-- Plan Phase B/C depend on environment-alignment decisions recorded now; document whether both `NB_DISABLE_COMPILE` and `NANOBRAGG_DISABLE_COMPILE` are set or aliased.
-- Protected Assets (docs/index.md) include input.md, loop.sh, supervisor.sh; ensure none are modified while documenting.
-- Use UTC timestamps for bundles so archives sort chronologically irrespective of local timezone.
-- If gradcheck emits warnings, capture them verbatim in the log and summarize in tier2_baseline.md with mitigation notes or follow-up actions.
-- Maintain vectorization/dtype guardrails referenced in docs/development/pytorch_runtime_checklist.md when describing the test setup (CPU float64, compile disabled).
-- Confirm there are no lingering references to the retired phi carryover shim in gradient tests while auditing coverage; note any findings.
-Do Now: AT-TIER2-GRADCHECK Phase A baseline audit — draft `reports/gradients/<STAMP>/tier2_baseline.md`, capture commands/env plus the pytest log for `env KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest tests/test_suite.py::TestTier2GradientCorrectness -vv`, then flip plan rows A1–A3 and add an Attempt in docs/fix_plan.md referencing the new bundle.
-If Blocked: Record failing selector output in `reports/gradients/<STAMP>/gradcheck_blockers.log`, include traceback + env details in tier2_baseline.md, leave plan rows open, and document the stall in docs/fix_plan.md Attempt before escalating to supervisor.
+Mapped tests: pytest --collect-only -q
+Artifacts:
+- reports/2025-10-vectorization/phase_g/<timestamp>/commands.txt
+- reports/2025-10-vectorization/phase_g/<timestamp>/summary.md
+- reports/2025-10-vectorization/phase_g/<timestamp>/collect.log
+- reports/2025-10-vectorization/phase_g/<timestamp>/env.json
+Do Now: [VECTOR-TRICUBIC-001] Phase G1 (doc updates + collect proof); run: pytest --collect-only -q
+If Blocked: Capture decision notes in phase_g/summary.md and flag blocker in docs/fix_plan.md Attempts history
 Priorities & Rationale:
-- plans/active/gradcheck-tier2-completion/plan.md:17 — Phase A checklist (A1 catalogue, A2 baseline log, A3 env alignment) is the gate to progress; complete each subtask explicitly with citations.
-- plans/active/gradcheck-tier2-completion/plan.md:31 — Phase B prerequisites depend on Phase A bundle being logged; document readiness for misset gradcheck.
-- docs/fix_plan.md:8 — Active focus list calls out `[AT-TIER2-GRADCHECK]` Phase A as next action; satisfying it reduces top-level risk.
-- docs/fix_plan.md:3350 — Item narrative reiterates that misset_rot_x, lambda_A, and fluence remain uncovered; baseline evidence must call this out to maintain accountability.
-- docs/development/testing_strategy.md:385 — Spec §4.1 enumerates required gradcheck parameters; cite this section when documenting uncovered items.
-- docs/development/testing_strategy.md:420 — Tiered gradient methodology emphasises float64 CPU runs; align the baseline with that requirement and note compliance.
-- arch.md:318 — Differentiability guidelines demand compile-disabled float64 gradchecks; capture compliance decisions in the audit.
-- docs/development/pytorch_runtime_checklist.md:42 — Device/dtype neutrality checklist requires CPU evidence with CUDA follow-up noted; mark CUDA as pending by design in tier2_baseline.md.
-- galph_memory.md (latest entry) — Supervisor expectation stresses baseline evidence before implementation; this bundle closes that loop.
-- specs/spec-a-core.md:211 — Reference fresh φ rotation pipeline in context to show why gradient coverage matters for orientation parameters.
-- docs/bugs/verified_c_bugs.md:166 — Confirms phi-carryover bug is C-only; mention this while noting gradient tests now rely solely on spec-compliant rotations.
-Reference Commands:
-- export KMP_DUPLICATE_LIB_OK=TRUE
-- export NANOBRAGG_DISABLE_COMPILE=1
-- env KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest tests/test_suite.py::TestTier2GradientCorrectness -vv
-- pytest --collect-only -q tests/test_suite.py::TestTier2GradientCorrectness
-- python - <<'PY' ... (dump env metadata to env.json)
-- sha256sum reports/gradients/<STAMP>/* > reports/gradients/<STAMP>/sha256.txt
+- plans/active/vectorization.md:12 — Status snapshot lists Phase G as the only open gate before retiring the initiative
+- plans/active/vectorization.md:83 — G1 checklist outlines the exact doc updates, collect-only proof, and CUDA handoff deliverables
+- docs/fix_plan.md:3397 — Next Actions require executing Phase G1/G2 and documenting the CUDA follow-up delegation
+- reports/2025-10-vectorization/phase_f/summary.md:1 — Consolidated metrics and references for tricubic/absorption work must feed the doc updates
+- docs/development/testing_strategy.md:1 — Tier-1/2 guidance needs audit so tests reflect the new vectorized suites
+- docs/development/pytorch_runtime_checklist.md:1 — Runtime guardrails have to mention the Phase F evidence and CUDA rerun expectation
 How-To Map:
-- Step 1: Export `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; create `reports/gradients/${STAMP}/` and seed tier2_baseline.md with a header detailing initiative, date, git commit placeholder, and plan references.
-- Step 2: Copy the A1–A3 checklist into tier2_baseline.md to track completion; mark checkboxes `[ ]` → `[X]` as tasks finish.
-- Step 3: Audit existing gradcheck coverage via `rg -n "gradcheck" tests/test_suite.py` and `rg -n "gradcheck" tests/test_gradients.py`; list each parameter covered with file:line anchors.
-- Step 4: Summarize uncovered parameters (misset_rot_x, lambda_A, fluence) referencing docs/development/testing_strategy.md:385 and plan lines; note absence of corresponding tests.
-- Step 5: Execute the authoritative command `env KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest tests/test_suite.py::TestTier2GradientCorrectness -vv | tee reports/gradients/${STAMP}/gradcheck_phaseA.log`; capture runtime, pass/skip counts, and warnings.
-- Step 6: Record the exit status with `echo $? >> reports/gradients/${STAMP}/commands.txt` immediately after pytest.
-- Step 7: Dump environment metadata via `python - <<'PY'` to collect python/torch/numpy versions, device availability, compile env vars, and git SHA into env.json; include `AUTHORITATIVE_CMDS_DOC` value.
-- Step 8: Append executed commands, environment exports, working directory, and git SHA to commands.txt; note timestamp and operator.
-- Step 9: Generate SHA256 checksums for tier2_baseline.md, gradcheck_phaseA.log, env.json, commands.txt, and optional collect-only log using `sha256sum` → sha256.txt.
-- Step 10: Optional but encouraged — run `pytest --collect-only -q tests/test_suite.py::TestTier2GradientCorrectness | tee reports/gradients/${STAMP}/collect_only.log`; reference this in the report.
-- Step 11: Flesh out tier2_baseline.md with sections: Context, Existing Coverage, Uncovered Parameters, Command & Results, Environment, Compile Disable Decision, Next Steps, and Checklist completion.
-- Step 12: Update plans/active/gradcheck-tier2-completion/plan.md to mark A1–A3 as [D], citing `reports/gradients/${STAMP}/` in the guidance column; preserve table formatting and Markdown alignment.
-- Step 13: Add a new Attempt entry under `[AT-TIER2-GRADCHECK]` in docs/fix_plan.md summarizing metrics (runtime, pass counts, warnings), compile-disable decision, and artifact paths.
-- Step 14: Re-read docs/fix_plan.md Next Actions to confirm they now steer toward Phase B once Phase A is logged; adjust wording if necessary to mention the new bundle.
-- Step 15: Run `git status --short` to verify only documentation/report files changed; avoid staging production code.
-- Step 16: Optionally append a brief "Future Work" section in tier2_baseline.md outlining Phase B/C tasks with references for smooth hand-off.
-Verification Checklist:
-- [ ] tier2_baseline.md includes spec/testing citations for uncovered parameters.
-- [ ] gradcheck_phaseA.log stored with runtime summary and pass counts.
-- [ ] env.json lists python/torch versions, device availability, compile env vars, git SHA.
-- [ ] commands.txt records every command and exit status in execution order.
-- [ ] sha256.txt hashes all artifacts created in the bundle.
-- [ ] plan Phase A rows marked [D] with bundle reference.
-- [ ] docs/fix_plan.md Attempt references metrics + artifacts and notes compile-disable reasoning.
-- [ ] Optional collect-only log captured and referenced (if executed).
+- Step 01: Confirm you are on feature/spec-based-2 with git status before editing
+- Step 02: Create reports/2025-10-vectorization/phase_g/<timestamp>/ using mkdir -p and record the timestamp in summary.md
+- Step 03: Start commands.txt and log every action (git rev-parse HEAD, editors invoked, pytest command)
+- Step 04: Re-read plans/active/vectorization.md G1a–G1d to align scope before touching documentation
+- Step 05: Open docs/architecture/pytorch_design.md and locate the vectorization section header for insertion
+- Step 06: Draft a new subsection highlighting tricubic gather, batched polynomials, and detector absorption vectorization with citations to Phase C–F bundles
+- Step 07: Mention the CUDA blocker explicitly and reference PERF-PYTORCH-004 in that subsection
+- Step 08: Add nanoBragg.c citation numbers where you reference C code (CLAUDE Rule #11 compliance)
+- Step 09: Save the doc and record the edit in commands.txt (include line numbers touched if helpful)
+- Step 10: Edit docs/development/pytorch_runtime_checklist.md to expand the vectorization and device bullets with new evidence requirements
+- Step 11: Add explicit mention that CUDA reruns resume once the device-placement defect (Attempt #14) clears
+- Step 12: Include the new regression commands (tests/test_tricubic_vectorized.py, tests/test_at_abs_001.py -k "cpu") in the checklist notes
+- Step 13: Review docs/development/testing_strategy.md; if guidance already covers the new tests, note the rationale in phase_g/summary.md
+- Step 14: If testing_strategy needs updates, edit the Tier-1 and Tier-2 sections to name the new test modules and expected commands
+- Step 15: Capture any choice not to edit testing_strategy as an explicit “no change required” entry in phase_g/summary.md with supporting reasoning
+- Step 16: Update summary.md with bullet points for each modified doc, including git diff highlights and artifact citations
+- Step 17: Record system metadata (uname -a, python --version, torch.__version__) and store as env.json in the phase_g directory
+- Step 18: Run pytest --collect-only -q, tee the output to reports/.../collect.log, and confirm exit code 0
+- Step 19: Append the pytest command and exit code to commands.txt for reproducibility
+- Step 20: Review git diff to ensure only documentation, plan, and fix_plan changes appear—no src/ modifications
+- Step 21: Update docs/fix_plan.md by adding the new Attempt entry referencing phase_g artifacts and refreshed docs
+- Step 22: In the same Attempt, call out the CUDA follow-up delegation to PERF-PYTORCH-004 (Attempt #14) per plan row G2c
+- Step 23: Edit plans/active/vectorization.md to flip G1a–G2c states as progress is made, culminating in a refreshed Status Snapshot
+- Step 24: In commands.txt document each plan/fix_plan edit with the exact file path and rationale
+- Step 25: Ensure phase_g/summary.md lists open follow-ups (CUDA rerun) and documents the verification command outcome
+- Step 26: Verify docs/index.md references remain untouched to honor the Protected Assets rule
+- Step 27: Run pytest --collect-only -q a second time only if edits change doc imports; otherwise rely on the single logged run
+- Step 28: When satisfied, stage doc edits, plan update, and fix_plan update but defer commit until supervisor review (leave working tree staged or note in summary)
+- Step 29: If unforeseen doc drift is uncovered (e.g., outdated gradients guidance), document it in summary.md and decide whether to fix now or schedule follow-up
+- Step 30: Before handing back, double-check commands.txt and summary.md for completeness and clarity so future audits have a full trail
+- Step 31: Screenshoot git diff or copy key snippets into summary.md so reviewers can trace changes quickly
+- Step 32: Verify phase_g/summary.md links to both phase_f/summary.md and phase_e/summary.md for continuity
+- Step 33: Note in summary.md whether testing_strategy was edited or explicitly left untouched with justification
+- Step 34: Update docs/fix_plan.md Attempt description with bullet points covering each updated document and artifact path
+- Step 35: After staging, run git diff --staged to confirm only intended files are included before finalizing the loop
+- Step 36: Ensure commands.txt records the pytest command with absolute path or repository-relative path for reproducibility
+- Step 37: Include the output of git rev-parse HEAD in commands.txt to tie artifacts to a commit
+- Step 38: Add SHA256 checksums for summary.md and collect.log to the phase_g directory if time permits (optional but preferred)
+- Step 39: Note any open questions for PERF-PYTORCH-004 in summary.md so the follow-up plan has immediate context
+- Step 40: Leave TODO markers only in summary.md; avoid placing TODOs inside permanent documentation files
+- Step 41: Re-run rg "phase_g" to verify no lingering TODO placeholders remain in source docs after edits
+- Step 42: Capture git status output inside commands.txt at the end of the loop for auditability
+- Step 43: Verify that env.json includes torch.cuda.is_available() result to document the CUDA blocker context
+- Step 44: If you touch testing_strategy, update its table of contents anchors as needed to keep links valid
+- Step 45: Before finishing, reread phase_g/summary.md to ensure it calls out any deferred follow-up tasks explicitly by plan/attempt ID
 Pitfalls To Avoid:
-- Skipping explicit gap documentation leaves future loops without targets; list uncovered parameters with file:line evidence.
-- Forgetting `NANOBRAGG_DISABLE_COMPILE=1` will cause gradcheck to crash under torch.compile; export it for each pytest run.
-- Gradcheck must run in float64 CPU mode; do not alter dtype/device or rely on GPU for this baseline.
-- Do not rename or delete prior gradient bundles; append new timestamped directories for archival integrity.
-- Tier2_baseline.md should quote spec sections directly; avoid paraphrasing without citations to prevent drift.
-- Plan and fix_plan edits must include artifact paths and metrics; missing references break traceability.
-- Protected Assets listed in docs/index.md (input.md, loop.sh, supervisor.sh) must remain untouched.
-- Resist adding instrumentation or logging to production code; this loop is documentation-only.
-- Capture pytest output even on failure; rerunning without original logs erodes reproducibility.
-- Keep environment metadata synchronized with commands; missing env.json details complicate audits.
-- Avoid mixing timestamp formats; stick to UTC ISO8601 (YYYYMMDDTHHMMSSZ) for directories and references.
+- Do not modify simulator or test code during this documentation loop
+- Keep edits ASCII and preserve headings, tables, and indentation conventions in every doc
+- Cite nanoBragg.c snippets verbatim when referencing C implementation details
+- Respect Protected Assets listed in docs/index.md; no deletions or renames
+- Maintain explicit mention of CUDA follow-up rather than removing GPU guidance
+- Reference exact report timestamps from Phase E/F bundles to avoid ambiguity
+- Avoid ad-hoc helper scripts; use existing tooling and log invocations verbatim
+- Do not skip the collect-only proof even though this is a docs loop
+- Limit docs/fix_plan.md changes to one new Attempt entry describing the Phase G deliverables
+- Leave clear notes in phase_g/summary.md for anything deferred to PERF-PYTORCH-004
 Pointers:
-- plans/active/gradcheck-tier2-completion/plan.md:1
-- docs/fix_plan.md:3350
-- docs/development/testing_strategy.md:385
-- docs/development/testing_strategy.md:420
-- arch.md:318
-- docs/development/pytorch_runtime_checklist.md:42
-- specs/spec-a-core.md:211
+- plans/active/vectorization.md:12
+- plans/active/vectorization.md:83
+- docs/fix_plan.md:3397
+- docs/architecture/pytorch_design.md:1
+- docs/development/pytorch_runtime_checklist.md:1
+- docs/development/testing_strategy.md:1
+- reports/2025-10-vectorization/phase_f/summary.md:1
 - docs/bugs/verified_c_bugs.md:166
-Next Up: Phase B misset_rot_x gradcheck implementation and targeted selector run once the Phase A bundle is merged cleanly; optionally queue beam parameter gradchecks for Phase C design review and document design notes ahead of implementation.
-Additional Notes:
-- Reconfirm that gradcheck tolerances (eps=1e-6, atol=1e-5, rtol=0.05) remain valid; document any deviations in tier2_baseline.md.
-- Mention whether torch.autograd.gradgradcheck remains skipped to prevent confusion about second-order coverage.
-- Clarify in the report that compile-disable env var naming (`NANOBRAGG_DISABLE_COMPILE`) supersedes legacy `NB_DISABLE_COMPILE` usage.
-- Note any observed runtime changes compared to Attempt #1 logs to monitor drift.
-- Flag open questions for Phase B (e.g., preferred loss function for misset_rot_x) in tier2_baseline.md to streamline next loop planning.
-- Ensure bundle references are mirrored in galph_memory.md summary once supervisor reviews the submission.
+- specs/spec-a-core.md:204
+- docs/architecture/c_function_reference.md:1
+- docs/development/pytorch_runtime_checklist.md:20
+- reports/2025-10-vectorization/phase_e/summary.md:1
+- reports/2025-10-vectorization/phase_c/implementation_notes.md:1
+- reports/2025-10-vectorization/phase_d/polynomial_validation.md:1
+- reports/2025-10-vectorization/phase_f/validation/20251222T000000Z/summary.md:1
+- docs/development/pytorch_runtime_checklist.md:40
+- docs/architecture/README.md:1
+- docs/index.md:1
+- docs/development/implementation_plan.md:1
+- plans/active/vectorization.md:1
+Next Up: Coordinate with PERF-PYTORCH-004 once the device-placement fix lands and rerun the CUDA benchmarks/tests captured in phase_f/summary.md appendix
