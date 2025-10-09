@@ -1618,3 +1618,10 @@
 - Added bullet 7 to `[SOURCE-WEIGHT-001]` Next Actions (docs/fix_plan.md:4049) to require PyTorch trace instrumentation that logs per-source F_cell/F_latt/polarization before further simulator edits.
 - Replaced `input.md` with a parity-mode handoff directing Ralph to extend `_apply_debug_output` for `TRACE_PY_SOURCE` blocks, rerun TC-D1 with `-trace_pixel 158 147`, and capture aligned C/Py traces under `reports/2025-11-source-weights/phase_e/<STAMP>/trace_per_source/`.
 - Follow-up for Ralph: implement the new trace logging, run the mapped collect-only selector plus TC-D1 trace commands, diff against `TRACE_C_SOURCE2`, and record the new STAMP + observations in `[SOURCE-WEIGHT-001]` Attempts.
+
+### 2025-12-24 (galph loop - SOURCE-WEIGHT spec decision prep)
+- Reworked `plans/active/source-weight-normalization.md` into Phases E–H focused on the spec-first decision, test realignment, evidence capture, and documentation sync; added reporting expectations and clarified artifact paths.
+- Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` status/next-actions to reference the forthcoming spec_vs_c decision memo and mark C correlation gaps as expected (`C-PARITY-001`).
+- Adjusted `plans/active/vectorization.md` Phase A to wait on the spec decision + spec-compliance tests instead of C correlation, documenting the new dependency chain.
+- Issued `input.md` (Mode: Docs) directing Ralph to author spec_vs_c_decision.md, run collect-only selectors, and stage artifacts under `reports/2025-11-source-weights/phase_e/<STAMP>/`.
+- Follow-up: Ralph to produce the decision memo per Phase E1, log the attempt in fix_plan, then proceed to Phase F test_plan.md once the memo is approved.
