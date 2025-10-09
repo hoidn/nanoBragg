@@ -68,7 +68,7 @@ This README documents the cross‑machine orchestration for the supervisor (galp
 
 ### Viewing recent interleaved logs
 
-Use the helper script to interleave the last N galph/ralph logs for a branch prefix (matching on iteration numbers) and wrap each log in an XML-like tag with CDATA:
+Use the helper script to interleave the last N galph/ralph logs for a branch prefix (matching on iteration numbers) and wrap each log in an XML-like tag with CDATA. The tool annotates each log with the post-state commit that stamped the handoff and can optionally snapshot selected directories from that commit:
 
 ```bash
 python -m scripts.orchestration.tail_interleave_logs feature-spec-based-2 -n 3
@@ -78,19 +78,33 @@ Output structure:
 
 ```xml
 <logs prefix="feature-spec-based-2" count="3">
-  <log role="galph" iter="141" path="logs/feature-spec-based-2/galph/iter-00141_....log">
+  <log role="galph" iter="141" path="logs/feature-spec-based-2/galph/iter-00141_....log" commit="abc1234" commit_subject="[SYNC i=141] actor=galph → next=ralph status=ok ...">
     <![CDATA[
     ...
     ]]>
+    <ls path="docs" commit="abc1234">
+      <![CDATA[
+      docs/architecture/pytorch_design.md
+      ...
+      ]]>
+    </ls>
   </log>
-  <log role="ralph" iter="141" path="logs/feature-spec-based-2/ralph/iter-00141_....log">
+  <log role="ralph" iter="141" path="logs/feature-spec-based-2/ralph/iter-00141_....log" commit="def5678" commit_subject="[SYNC i=142] actor=ralph → next=galph status=ok ...">
     <![CDATA[
     ...
     ]]>
+    <!-- Optional ls-tree snapshots repeat for each requested root -->
   </log>
   ...
 </logs>
 ```
+
+Flags of note:
+
+- `-n/--count` tail length (0 = all matching iterations)
+- `--min-iter/--max-iter` numeric bounds on iteration selection
+- `--no-ls` disables the commit `ls-tree` snapshots
+- `--ls-paths docs,plans,reports` overrides which repository roots are listed when `ls` output is enabled
 
 ### Manual state handoff (without running a loop)
 
