@@ -24,7 +24,7 @@
 | [CLI-DTYPE-002](#cli-dtype-002-cli-dtype-parity) | CLI dtype parity | High | in_progress |
 | [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | in_progress |
 | [STATIC-PYREFLY-001](#static-pyrefly-001-run-pyrefly-analysis-and-triage) | Run pyrefly analysis and triage | Medium | in_planning |
-| [SOURCE-WEIGHT-001](#source-weight-001-correct-weighted-source-normalization) | Correct weighted source normalization | Medium | done (Phase C/D complete, parity confirmed) |
+| [SOURCE-WEIGHT-001](#source-weight-001-correct-weighted-source-normalization) | Correct weighted source normalization | Medium | in_progress (Phase D/E parity evidence outstanding) |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | in_progress |
 
@@ -3771,7 +3771,7 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * Analysis (after Phase A1 lands): `python scripts/analysis/vectorization_inventory.py --package src/nanobrag_torch --outdir reports/2026-01-vectorization-gap/phase_a/<STAMP>/`
 - First Divergence (if known): No consolidated post-Phase G inventory exists; residual Python loops (e.g., mosaic rotation RNG, detector ROI rebuild, RNG shims) remain unquantified, risking regressions of the vectorization guardrails and blocking performance diagnosis.
 - Next Actions (2025-12-22 status refresh):
-  1. Phase B1: run the warm-run profiler capture (`KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1 --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`), record command/log/env artifacts, and verify the resulting correlation report (≥0.99 expected) is written to both `correlation.txt` and `summary.md` for downstream analysis.
+  1. Phase B1 (BLOCKED): defer the warm-run profiler capture (`KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1 --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`) until `[SOURCE-WEIGHT-001]` Phase D parity artifacts document correlation ≥0.99 and |sum_ratio−1| ≤1e-3 for the weighted-source fixture. Once evidence exists, rerun the profiler and ensure the new capture logs correlation ≥0.99 in both `correlation.txt` and `summary.md` for downstream analysis.
   2. Phase B2: correlate profiler hotspots (≥1% inclusive time) with the Phase A inventory; produce `hot_loops.csv` and a short narrative summarising loop IDs, %time, and proposed focus level.
   3. Phase B3: publish the prioritised backlog under `reports/2026-01-vectorization-gap/phase_b/<STAMP>/backlog.md`, then update this entry with counts and delegate-ready guidance before implementation begins.
 - Attempts History:
@@ -4015,7 +4015,7 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 ## [SOURCE-WEIGHT-001] Correct weighted source normalization
 - Spec/AT: `specs/spec-a-core.md` §4 (Sources, Divergence & Dispersion), `docs/architecture/pytorch_design.md` §§1.1/2.3, `docs/development/c_to_pytorch_config_map.md` (beam sourcing), `docs/development/testing_strategy.md` §1.4, and `golden_suite_generator/nanoBragg.c` lines 2570-2720 (source ingestion & steps computation).
 - Priority: Medium
-- Status: done (Phases A-D complete; weights ignored per spec, parity confirmed)
+- Status: in_progress (Phase C code/tests merged; Phase D parity evidence and documentation capture outstanding)
 - Owner/Date: galph/2025-11-17 (updated 2025-12-22)
 - Plan Reference: `plans/active/source-weight-normalization.md`
 - Reproduction (C & PyTorch):
@@ -4023,10 +4023,10 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE nanoBragg -mat A.mat -floatfile py_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources.txt ...` (matching geometry).
   * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
 - First Divergence (if known): Phase A showed PyTorch total intensity 3.28× larger than C for weighted sources. After commit `321c91e` reinstated division by `n_sources`, `_compute_physics_for_position` still multiplies intensity by `source_weights`, producing correlation ≈0.9155 and sum_ratio ≈0.7281 vs C for the TC-A fixture (metrics in `reports/2025-11-source-weights/phase_c/test_failure/metrics.json`).
-- Next Actions (2025-12-23 execution handoff):
-  1. Execute Phase C1–C3 from `plans/active/source-weight-normalization.md`: remove the `weights_broadcast` multiplier inside `src/nanobrag_torch/simulator.py::_compute_physics_for_position`, realign source-weight cache metadata, and expand `tests/test_cli_scaling.py::TestSourceWeights` coverage (CPU + CUDA markers). Store implementation notes, collect-only proof, and pytest logs under `reports/2025-11-source-weights/phase_c/<STAMP>/`.
-  2. After implementation, run Phase D1–D2 validations: `NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeights::test_weighted_source_matches_c -v` plus matching C/PyTorch CLI commands to capture correlation/sum_ratio metrics. Archive outputs under `reports/2025-11-source-weights/phase_d/<STAMP>/` with commands.txt, env.json, and metrics.json.
-  3. Complete Phase D3 / Phase E1 documentation handoff: update `docs/architecture/pytorch_design.md` (Sources subsection) and `docs/development/testing_strategy.md` with the "weights ignored" rule, log the new Attempt in this entry, and notify `[VECTOR-GAPS-002]` & `[PERF-PYTORCH-004]` that profiling can resume once parity metrics meet thresholds.
+- Next Actions (2025-12-24 status refresh):
+  1. Execute Phase D1–D2 from `plans/active/source-weight-normalization.md`: rerun the weighted-source parity test (`NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeights::test_weighted_source_matches_c -v`) and the paired CLI commands, explicitly forcing `-oversample 1`, and archive metrics (correlation, sum_ratio, totals) under `reports/2025-11-source-weights/phase_d/<STAMP>/` (`commands.txt`, `env.json`, `metrics.json`, pytest log).
+  2. Summarise the Phase D evidence in `reports/2025-11-source-weights/phase_d/<STAMP>/summary.md`, then update this entry with Attempt #7 capturing the new metrics and noting that the profiler correlation gate can be lifted once ≥0.99 is observed.
+  3. Phase E1–E2: update documentation once evidence lands (`docs/architecture/pytorch_design.md` Sources subsection, `docs/development/testing_strategy.md` parity notes) and notify `[VECTOR-GAPS-002]` / `[PERF-PYTORCH-004]` that the warm-run profiler may resume.
 - Attempts History:
   * [2025-11-17] Attempt #0 — Result: backlog entry. Issue documented and plan `plans/active/source-weight-normalization.md` created; awaiting evidence collection.
   * [2025-10-09] Attempt #1 — Phase A evidence capture (ralph). Result: success.
@@ -4132,9 +4132,10 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - **No regressions**: All key test suites pass (crystal geometry, detector geometry, source weight tests)
       - **Device neutrality preserved**: No device-specific code added; tensor operations remain device-agnostic
     Next Actions:
-      1. Phase D complete: Parity metrics captured (correlation ≥0.999 ✓, sum_ratio within tolerance ✓)
-      2. Documentation: Config.py already documents weights ignored; no further arch.md updates needed
-      3. Notify dependencies: VECTOR-GAPS-002 and PERF-PYTORCH-004 may resume with source-weight parity confirmed
+      1. Execute Phase D parity capture on the authoritative fixture (pytest selector + CLI commands with `-oversample 1`), record metrics under `reports/2025-11-source-weights/phase_d/<STAMP>/`.
+      2. Once evidence is archived, refresh documentation references (pytorch_design.md Sources subsection, testing_strategy.md parity notes) before marking the item complete.
+      3. Notify `[VECTOR-GAPS-002]` / `[PERF-PYTORCH-004]` only after ≥0.99 correlation is confirmed in Phase D artifacts so the warm-run profiler can resume.
+  * [2025-12-24] Attempt #7 (galph loop — parity audit). Result: analysis only. Reviewed post-fix profiler captures (`reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/summary.md`) showing correlation still 0.721 despite Phase C implementation. Confirmed no Phase D artifacts exist under `reports/2025-11-source-weights/phase_d/`, so the warm-run profiler remains untrusted. Updated Next Actions and `[VECTOR-GAPS-002]` gating to require explicit Phase D evidence before resuming profiling.
 - Risks/Assumptions: Maintain equal-weight behaviour, ensure device/dtype neutrality, and avoid double application of weights when accumulating source contributions. Tolerance of 5e-3 is acceptable given perfect correlation and minor precision differences.
 
 ---

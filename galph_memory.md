@@ -1,5 +1,10 @@
 # Galph Memory
 
+### 2025-12-24 (galph loop - SOURCE-WEIGHT Phase D evidence gate)
+- Discovered that no Phase D artifacts exist for SOURCE-WEIGHT-001; warm-run profiler captures still show correlation 0.721. Updated docs/fix_plan.md ([SOURCE-WEIGHT-001] status, Next Actions, Attempt #7) and plans/active/source-weight-normalization.md to mark Phase C done and Phase D pending. Repointed [VECTOR-GAPS-002] Phase B1 as BLOCKED until Phase D logs correlation ≥0.99.
+- Replaced input.md with Parity-mode instructions directing Ralph to rerun the weighted-source parity test (NB_RUN_PARALLEL=1, -oversample 1), collect CLI metrics under reports/2025-11-source-weights/phase_d/<STAMP>/, and update the ledger once evidence lands.
+- Follow-up for Ralph: execute the new Do Now commands, archive metrics/summary/env files, then append Attempt #7 completion details to docs/fix_plan.md so the 4096² profiler rerun can resume next loop.
+
 ### 2025-12-24 (galph loop - Vectorization gap Phase B1 rerun prep)
 - Confirmed no fresh profiler evidence exists after SOURCE-WEIGHT-001; the latest Phase B1 bundles (20251009T070458Z/094735Z) still report 0.72 correlation, so Phase B2 remains blocked.
 - Updated `docs/fix_plan.md` `[VECTOR-GAPS-002]` Next Actions to require the Phase B1 rerun to capture ≥0.99 correlation in both `correlation.txt` and `summary.md` for downstream backlog work.

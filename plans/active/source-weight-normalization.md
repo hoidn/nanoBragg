@@ -8,7 +8,7 @@
   - `docs/development/testing_strategy.md` §§1.4–2 — device/dtype discipline and authoritative commands for targeted pytest runs.
   - `golden_suite_generator/nanoBragg.c:2570-2720` — C reference showing weights copied from file but excluded from `steps` and accumulation.
   - Existing evidence bundles under `reports/2025-11-source-weights/phase_a/` (bias reproduction) and `phase_b/20251009T083515Z/` (spec-aligned gap confirmation).
-- Status Snapshot (2025-12-23): Phases A–B complete — spec analysis and PyTorch call-chain evidence (20251009T083515Z) confirm the simulator must ignore source weights. Phase C implementation remains pending to remove the `weights_broadcast` multiplier and harden cache metadata, after which Phase D parity runs will unblock `[VECTOR-GAPS-002]` Phase B profiling and PERF-PYTORCH-004 warm-run benchmarks.
+- Status Snapshot (2025-12-24): Phases A–C complete — equal-weight accumulation merged (commits 47822ce, 321c91e, dffea55) and regression tests enforce the spec rule. Phase D evidence capture is outstanding: we still need fresh parity artifacts (pytest + CLI metrics) before `[VECTOR-GAPS-002]` and PERF profiling can resume.
 
 ### Phase A — Evidence Baseline (Complete)
 Goal: Preserve reproducible proof of the weighted-source divergence.
@@ -39,19 +39,19 @@ Exit Criteria: PyTorch accumulation path ignores weights; regression tests cover
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Remove weighted accumulation | [ ] | Modify `src/nanobrag_torch/simulator.py` (`_compute_physics_for_position`) to bypass `weights_broadcast`; cite `nanoBragg.c:2620-2715` per CLAUDE Rule #11. Ensure equal-weight sums on CPU/CUDA and keep differentiability intact. |
-| C2 | Simplify source cache handling | [ ] | Review `Simulator.__init__` source caching (`self._source_weights`) and guard traces/logging so weights remain optional metadata without influencing physics. Update any trace outputs accordingly. |
-| C3 | Extend regression tests | [ ] | Update `tests/test_cli_scaling.py::TestSourceWeights` (TC-B/TC-D) to assert identical intensities for `[1.0, 1.0]` vs `[1.0, 0.2]` and add CUDA smoke (`pytest -k TestSourceWeights and cuda`). Store logs under `reports/2025-11-source-weights/phase_c/<STAMP>/tests/`. |
+| C1 | Remove weighted accumulation | [D] | Implemented in `src/nanobrag_torch/simulator.py` (commits 321c91e/dffea55); equal-weight sum enforced with spec citation. |
+| C2 | Simplify source cache handling | [D] | Metadata-only handling in `Simulator.__init__` retained; comments updated in `config.py` (commit dffea55). |
+| C3 | Extend regression tests | [D] | `tests/test_cli_scaling.py::TestSourceWeights` expanded with TC-A/TC-B/TC-D coverage (CPU focus, CUDA optional). |
 
 ### Phase D — Validation & Documentation
-Goal: Prove parity with the C reference on CPU (and CUDA when available) and refresh documentation/fix_plan entries.
+Goal: Prove parity with the C reference on CPU (and CUDA when available) using the authoritative weighted-source fixture so the 4096² profiler regain trust, then refresh documentation/fix_plan entries.
 Prereqs: Phase C merged locally; lint/tests green.
 Exit Criteria: Phase D bundle contains parity metrics, pytest logs, updated docs, and fix_plan attempt recorded.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| D1 | Run targeted parity test | [ ] | `NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeights::test_weighted_source_matches_c -v`. Archive log + collect-only proof under `phase_d/<STAMP>/pytest/`. |
-| D2 | Capture CLI metrics | [ ] | Re-run C & PyTorch commands, store outputs in `phase_d/<STAMP>/metrics.json` + `summary.md`; confirm correlation ≥0.999 and |sum_ratio−1| ≤ 1e-3. |
+| D1 | Run targeted parity test | [ ] | `NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeights::test_weighted_source_matches_c -v`. Archive log + collect-only proof under `phase_d/<STAMP>/pytest/`; this result gates `[VECTOR-GAPS-002]` Phase B1. |
+| D2 | Capture CLI metrics | [ ] | Re-run C & PyTorch commands (force `-oversample 1`), store outputs in `phase_d/<STAMP>/metrics.json` + `summary.md`; confirm correlation ≥0.999 and |sum_ratio−1| ≤ 1e-3 before lifting the profiler block. |
 | D3 | Update documentation | [ ] | Amend `docs/architecture/pytorch_design.md` (Sources subsection) and, if needed, `docs/development/testing_strategy.md` to note weights are ignored. Log Attempt in `docs/fix_plan.md` referencing artifact paths. |
 
 ### Phase E — Closure & Handoffs

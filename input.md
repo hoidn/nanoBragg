@@ -1,62 +1,43 @@
-Summary: Refresh the 4096² CPU profiler capture for VECTOR-GAPS-002 Phase B1 now that parity fixes landed, and document the ≥0.99 correlation evidence for the Phase B backlog.
-Mode: Perf
-Focus: [VECTOR-GAPS-002] Vectorization gap audit — Phase B1 profiler rerun
+Summary: Capture SOURCE-WEIGHT-001 Phase D parity evidence so the 4096² profiler can trust multi-source metrics again.
+Mode: Parity
+Focus: [SOURCE-WEIGHT-001] Correct weighted source normalization — Phase D parity capture
 Branch: feature/spec-based-2
-Mapped tests: pytest --collect-only -q
-Artifacts: reports/2026-01-vectorization-gap/phase_b/<STAMP>/commands.txt; reports/2026-01-vectorization-gap/phase_b/<STAMP>/pytest_collect.log; reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/run.log; reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/benchmark_results.json; reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/trace.json; reports/2026-01-vectorization-gap/phase_b/<STAMP>/correlation.txt; reports/2026-01-vectorization-gap/phase_b/<STAMP>/summary.md; reports/2026-01-vectorization-gap/phase_b/<STAMP>/env.json; reports/2026-01-vectorization-gap/phase_b/<STAMP>/torch_env.txt
-Do Now: [VECTOR-GAPS-002] Phase B1 — run `pytest --collect-only -q | tee reports/2026-01-vectorization-gap/phase_b/$(date -u +%Y%m%dT%H%M%SZ)/pytest_collect.log` then `export STAMP=$(date -u +%Y%m%dT%H%M%SZ) && mkdir -p reports/2026-01-vectorization-gap/phase_b/$STAMP/{profile,notes} && KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1 --outdir reports/2026-01-vectorization-gap/phase_b/$STAMP/profile/ | tee reports/2026-01-vectorization-gap/phase_b/$STAMP/profile/run.log`
-If Blocked: Capture the failing stdout/stderr into reports/2026-01-vectorization-gap/phase_b/<STAMP>/blocking.md, note the exit code in commands.txt, and append a docs/fix_plan.md attempt describing the failure mode before stopping.
+Mapped tests: NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeights::test_weighted_source_matches_c -v; pytest --collect-only -q
+Artifacts: reports/2025-11-source-weights/phase_d/<STAMP>/commands.txt; reports/2025-11-source-weights/phase_d/<STAMP>/pytest/pytest.log; reports/2025-11-source-weights/phase_d/<STAMP>/cli/c_stdout.log; reports/2025-11-source-weights/phase_d/<STAMP>/cli/py_stdout.log; reports/2025-11-source-weights/phase_d/<STAMP>/cli/c_weight.bin; reports/2025-11-source-weights/phase_d/<STAMP>/cli/py_weight.bin; reports/2025-11-source-weights/phase_d/<STAMP>/metrics.json; reports/2025-11-source-weights/phase_d/<STAMP>/summary.md; reports/2025-11-source-weights/phase_d/<STAMP>/env.json
+Do Now: [SOURCE-WEIGHT-001] Phase D1 — run `pytest --collect-only -q`, export `STAMP=$(date -u +%Y%m%dT%H%M%SZ)` and `OUTDIR=reports/2025-11-source-weights/phase_d/$STAMP`, then execute `NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeights::test_weighted_source_matches_c -v | tee $OUTDIR/pytest/pytest.log`, followed by C & PyTorch CLI runs with `-oversample 1` (see How-To Map) to populate metrics.
+If Blocked: Capture stdout/stderr and exit codes under `$OUTDIR/blocking.md`, append the failing command to `commands.txt`, and log the failure as a new Attempt in docs/fix_plan.md before stopping.
 Priorities & Rationale:
-- plans/active/vectorization-gap-audit.md (§Phase B1) names the profiler rerun as the gate to proceed; Source-weight and tricubic blockers are cleared and we must replace the stale 0.72 correlation evidence.
-- docs/fix_plan.md:3765-3773 now requires the new run to log correlation ≥0.99 into correlation.txt and summary.md so Phase B2 can trust hotspot ordering.
-- reports/2025-11-source-weights/phase_d/20251222T000000Z/summary.md shows parity restored; this profiler capture validates that fix on full-size workloads.
-- docs/development/testing_strategy.md §1.4 mandates CPU-first evidence with explicit device settings; this command conforms to the authoritative workflow.
-- reports/2026-01-vectorization-gap/phase_a/20251009T065238Z/summary.md provides loop classifications that Phase B2 will map against once this capture lands.
+- plans/active/source-weight-normalization.md:11-55 keeps Phase D open; without the parity bundle `[VECTOR-GAPS-002]` remains blocked.
+- docs/fix_plan.md:4015-4099 now marks SOURCE-WEIGHT-001 in_progress and requires Phase D evidence before resuming 4096² profiling.
+- specs/spec-a-core.md:151 mandates “weight column is read but ignored,” so the authoritative parity test must prove the equal-weight behaviour end-to-end.
+- tests/test_cli_scaling.py:253-386 encodes the weighted-source regression; rerunning it with NB_RUN_PARALLEL=1 establishes a trustworthy baseline.
+- docs/development/testing_strategy.md:1-70 insists on CPU parity proof with explicit env logging before any performance sampling.
 How-To Map:
-- Export `AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md` before running anything so logs capture the source of truth.
-- Append every command (directory prep, git status, pytest, profiler) to commands.txt via `printf` so the audit trail survives future reviews.
-- After the profiler finishes, produce correlation.txt with:
-  `python - <<'PY'
-import json, pathlib, os
-stamp = os.environ['STAMP']
-base = pathlib.Path('reports/2026-01-vectorization-gap/phase_b') / stamp
-metrics = json.loads((base / 'profile' / 'benchmark_results.json').read_text())
-with open(base / 'correlation.txt', 'w') as fh:
-    fh.write(f"correlation={metrics['correlation']:.6f}\n")
-print(f"correlation={metrics['correlation']:.6f}")
-PY`
-  and cite that number in summary.md.
-- Capture env.json via the documented snippet (python version, torch version, CUDA availability, device count, git SHA) and dump `python -m torch.utils.collect_env > reports/2026-01-vectorization-gap/phase_b/$STAMP/torch_env.txt` for hardware context.
-- Generate a quick top-k table from trace.json with:
-  `python - <<'PY'
-import json, pathlib, collections, os
-stamp = os.environ['STAMP']
-trace_path = pathlib.Path('reports/2026-01-vectorization-gap/phase_b') / stamp / 'profile' / 'trace.json'
-trace = json.loads(trace_path.read_text())
-durations = collections.Counter()
-for evt in trace.get('traceEvents', []):
-    if evt.get('ph') == 'X' and 'name' in evt:
-        durations[evt['name']] += evt.get('dur', 0)
-with open(trace_path.with_name('top_kernels.txt'), 'w') as fh:
-    for name, dur in durations.most_common(10):
-        fh.write(f"{name}\t{dur/1e6:.3f} ms\n")
-PY`
-  then summarise those kernels in summary.md to tee up Phase B2 mapping.
-- Update docs/fix_plan.md attempts with timestamp, cold/warm timings, correlation value, and any anomalies spotted in top_kernels.txt.
+- Export `AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md` and append every command (timestamp + text) to `$OUTDIR/commands.txt` via `printf` so provenance survives audits.
+- Run `pytest --collect-only -q | tee reports/2025-11-source-weights/phase_d/$STAMP/pytest_collect.log` immediately after defining `$STAMP`/`$OUTDIR`; confirm exit 0.
+- Execute the parity selector with env vars: `NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_cli_scaling.py::TestSourceWeights::test_weighted_source_matches_c -v | tee $OUTDIR/pytest/pytest.log`; capture exit code in `commands.txt`.
+- Reuse the fixture at `reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt`. For the C run:
+  `"$NB_C_BIN" -mat A.mat -floatfile $OUTDIR/cli/c_weight.bin -sourcefile reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -oversample 1 -nonoise -nointerpolate > $OUTDIR/cli/c_stdout.log 2>&1`.
+- For the PyTorch run:
+  `KMP_DUPLICATE_LIB_OK=TRUE python -m nanobrag_torch -mat A.mat -floatfile $OUTDIR/cli/py_weight.bin -sourcefile reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -oversample 1 -nonoise -nointerpolate > $OUTDIR/cli/py_stdout.log 2>&1`.
+- Capture environment data: `python - <<'PY'` (dump python/torch versions, git SHA) into `$OUTDIR/env.json`, and `python -m torch.utils.collect_env > $OUTDIR/torch_env.txt`.
+- Generate metrics: `python - <<'PY'` with `numpy.fromfile` to calculate totals, maxima, sum_ratio, and Pearson correlation; write the result to `$OUTDIR/metrics.json` and echo the correlation line for quick review.
+- Summarise findings in `$OUTDIR/summary.md` (include command list, correlation, sum_ratio, and confirmation that `-oversample 1` was explicit) and update docs/fix_plan.md with Attempt #7 completion details referencing the new directory.
 Pitfalls To Avoid:
-- Do not reuse 20251009T070458Z or 20251009T094735Z directories; create a fresh UTC-stamped folder.
-- Keep the profiler on CPU; flipping to CUDA mid-run will make the results incomparable to Phase A evidence.
-- Ensure `--keep-artifacts` is present; losing trace.json blocks Phase B2 callgraph correlation.
-- Avoid editing simulator code or adding instrumentation—this loop is evidence only.
-- Do not skip writing correlation.txt; downstream automation expects it when ranking loops.
-- Confirm `pytest --collect-only -q` exits 0 before running the profiler; unresolved import errors invalidate the capture.
-- Watch disk usage; trace.json is ~2 MB, but accidental large dumps (>500 MB) should be removed before completion (never touch files listed in docs/index.md).
-- Record both cold and warm timings from benchmark_results.json in summary.md; these values feed the PERF-PYTORCH-004 backlog.
-- If correlation <0.99, halt after updating fix_plan with the failure—Phase B2 stays blocked until parity passes.
+- Do not reuse legacy 20251009 directories; every run must use a fresh UTC `$STAMP`.
+- Keep `-oversample 1` on both CLI invocations; omitting it recreates the auto-selection mismatch that caused 52× divergence.
+- Ensure NB_RUN_PARALLEL=1 and NB_C_BIN point to `./golden_suite_generator/nanoBragg`; otherwise pytest will skip the parity test and the evidence is invalid.
+- Do not move or modify files listed in docs/index.md (especially fixtures and loop scripts).
+- No edits to production code during this evidence loop; parity proof only.
+- Store binary outputs under `$OUTDIR/cli/`; avoid leaving large temp files in /tmp — remove them or capture paths in commands.txt.
+- Maintain device/dtype neutrality: run everything on CPU float32; don’t add `.cpu()` calls to scripts.
+- Record exit codes after every command; mismatched return codes without documentation will invalidate the attempt.
+- If correlation <0.99 or sum_ratio deviates >5e-3, stop and log the anomaly rather than proceeding to profiler work.
+- Leave input.md untouched; only galph edits this file.
 Pointers:
-- plans/active/vectorization-gap-audit.md (Phase B table and guidance)
-- docs/fix_plan.md:3763-3810 ([VECTOR-GAPS-002] ledger context and attempts)
-- docs/development/testing_strategy.md §1.4 (device & dtype discipline expectations)
-- docs/development/pytorch_runtime_checklist.md (vectorization/runtime guardrails to cite in summary)
-- reports/2025-10-vectorization/phase_h/20251009T092228Z/summary.md (latest CUDA parity reference for comparison)
-Next Up: Phase B2 — parse the new trace, map hotspots to the loop inventory, and draft hot_loops.csv with inclusive-time percentages.
+- plans/active/source-weight-normalization.md:11-56 — Phase D checklist and gating notes.
+- docs/fix_plan.md:4015-4099 — Ledger context and updated Next Actions for SOURCE-WEIGHT-001.
+- specs/spec-a-core.md:145-165 — Normative statement that weights are ignored.
+- tests/test_cli_scaling.py:253-386 — Regression test exercising the weighted-source path.
+- docs/development/testing_strategy.md:1-120 — Authoritative commands and parity expectations.
+Next Up: Once Phase D artifacts land, resume `[VECTOR-GAPS-002]` Phase B1 profiler rerun with the refreshed parity metrics.
