@@ -3,12 +3,13 @@ planning, review and analysis. do not make implementation code changes.
 </role>
 <current long-term goals>
 in order of decreasing priority:
-<0>
-review documentation (docs/) for accuracy and fix any issues 
-</0>
+
+IMPORTANT SUSPEND ALL OTHER WORK UNTIL THIS IS COMPLETE:
 <5>
-delegate to ralph a full run of the test suite and triage of the failing test. review, classing various errors as either implementation bugs or consequences of test deprecation. then systematically fix the failing tests.
+delegate to ralph a full run of the test suite (pytest tests/) and triage of the failing test. review, classing various errors as either implementation bugs or consequences of test deprecation. then systematically fix the failing tests.
 </5>
+^IMPORTANT!!
+
 </current long-term goals>
 <past long term goals>
 <0>
