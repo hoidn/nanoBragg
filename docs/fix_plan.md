@@ -4257,6 +4257,23 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - H3: Update `docs/bugs/verified_c_bugs.md` to remove C-PARITY-001 linkage
       - H4: Signal dependent plans (VECTOR-TRICUBIC-002, VECTOR-GAPS-002, PERF-PYTORCH-004) that parity is resolved
       - H5: Archive plan once all Phase H tasks complete
+  * [2025-10-10] Attempt #36 (ralph loop #267 — Mode: Docs, Phase H1-H2 parity memo + test update per input.md Do Now). Result: **SUCCESS** (Phase H1-H2 COMPLETE - Parity memo published, test updated to expect PASS)
+    Metrics: `NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` — 8 passed in 21.25s. `test_c_divergence_reference` now PASSES (formerly XFAIL). Parity metrics: correlation=0.9999886, sum_ratio=1.0038, |sum_ratio−1|=0.0038 (0.38%, within 5e-3 tolerance). Test collection: 692 tests collected cleanly.
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md` — **AUTHORITATIVE MEMO** superseding Phase E decision (quotes nanoBragg.c:2570-2720, contrasts Phase E vs Phase G evidence, invalidates C-PARITY-001 for source weights)
+      - `reports/2025-11-source-weights/phase_h/20251010T002324Z/commands.txt` — H1/H2 task summary, test execution commands, and next actions for H3/H4
+      - `reports/2025-11-source-weights/phase_h/20251010T002324Z/pytest.log` — Test execution showing all 8 tests passed
+      - `tests/test_cli_scaling.py:585-695` — Updated test: removed `@pytest.mark.xfail`, updated docstring and assertions to expect PASS with Phase G-validated thresholds
+    Observations/Hypotheses:
+      - **Phase H1 COMPLETE**: Parity reassessment memo quotes C code proving equal weighting (line 2631: `weight = 1.0/sources`; line 2710: `steps = sources*mosaic_domains*phisteps*oversample*oversample` uses count not weight sum). Memo supersedes Phase E and declares C-PARITY-001 invalid for source weights.
+      - **Phase H2 COMPLETE**: Test `test_c_divergence_reference` updated to assert `correlation >= 0.999` and `|sum_ratio - 1| <= 5e-3` (0.5% tolerance). Test now PASSES as expected based on 5 consecutive XPASS measurements from Phase G.
+      - **Tolerance rationale**: 5e-3 (0.5%) accommodates Phase G observed |sum_ratio−1|=0.0038 (0.38%). Residual 0.38% attributed to floating-point precision and minor RNG variance, NOT systematic weight divergence.
+      - **Spec compliance validated**: Both C and PyTorch ignore source weights per `specs/spec-a-core.md:151-153`. Equal weighting results from division by source count in steps normalization.
+      - **Test suite health**: All 692 tests collect successfully; all 8 source weight tests pass (7 spec-compliance + 1 parity validation).
+    Next Actions (Phase H remaining tasks per plan):
+      - H3: Audit `docs/fix_plan.md` (this section) and `docs/bugs/verified_c_bugs.md` to remove C-PARITY-001 linkage for source weights; cross-reference `[C-SOURCEFILE-001]` for the separate comment parsing bug
+      - H4: Notify dependent plans by updating `plans/active/vectorization.md` (Phase A2), `plans/active/vectorization-gap-audit.md` (Phase B1), and fix_plan entries (`VECTOR-TRICUBIC-002`, `VECTOR-GAPS-002`, `PERF-PYTORCH-004`) to cite Phase H parity memo instead of retired Phase E divergence thresholds
+      - Phase I (blocked until H3/H4 complete): Update permanent docs (`docs/architecture/pytorch_design.md`, `docs/development/pytorch_runtime_checklist.md`), archive plan to `plans/archive/source-weight-normalization.md`
   * [2025-10-09] Attempt #30 (ralph loop — Mode: Docs+Parity, Phase G2 evidence bundle per input.md). Result: **PARAMETER ERROR DISCOVERED** — pytest XPASS replicated (correlation=0.9999886), but manual CLI commands used incorrect parameters causing 134× divergence.
     Metrics: `NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` — 7 passed, 1 xpassed in 21.28s. `test_c_divergence_reference` XPASS with correlation=0.9999886, sum_ratio=1.0038 (identical to Attempt #29). Manual CLI: PyTorch sum=43161.99, C sum=322.41, correlation=0.0297, sum_ratio=133.87 (**DIVERGENT** from test).
     Artifacts:

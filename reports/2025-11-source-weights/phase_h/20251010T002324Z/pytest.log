@@ -1,0 +1,137 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 8 items
+
+tests/test_cli_scaling.py::TestSourceWeights::test_source_weights_ignored_per_spec PASSED [ 12%]
+tests/test_cli_scaling.py::TestSourceWeights::test_cli_lambda_overrides_sourcefile PASSED [ 25%]
+tests/test_cli_scaling.py::TestSourceWeights::test_uniform_weights_ignored PASSED [ 37%]
+tests/test_cli_scaling.py::TestSourceWeights::test_edge_case_zero_sum_accepted PASSED [ 50%]
+tests/test_cli_scaling.py::TestSourceWeights::test_edge_case_negative_weights_accepted PASSED [ 62%]
+tests/test_cli_scaling.py::TestSourceWeights::test_single_source_fallback PASSED [ 75%]
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference FAILED [ 87%]
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_divergence_warning PASSED [100%]
+
+=================================== FAILURES ===================================
+___________ TestSourceWeightsDivergence.test_c_divergence_reference ____________
+
+self = <tests.test_cli_scaling.TestSourceWeightsDivergence object at 0x73c3234a5310>
+
+    @pytest.mark.skipif(not is_parallel_enabled(), reason="NB_RUN_PARALLEL=1 required")
+    def test_c_divergence_reference(self):
+        """
+        Validate C vs PyTorch parity on weighted sources (SOURCE-WEIGHT-001 Phase H).
+    
+        After Phase G validation (5 consecutive XPASS results), we confirmed that both
+        C and PyTorch correctly ignore source weights per spec-a-core.md:151-153.
+    
+        Expected parity (from Phase G evidence):
+        - Correlation ≥ 0.999 (both implementations use equal weighting)
+        - |sum_ratio - 1| ≤ 3e-3 (intensity sums agree within 0.3%)
+    
+        Per spec: "Both the weight column and the wavelength column are read but ignored"
+        (spec-a-core.md:151-152). Both implementations comply with this requirement.
+    
+        See parity reassessment memo:
+        reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md
+        """
+        if not is_parallel_enabled():
+            pytest.skip("NB_RUN_PARALLEL=1 required")
+    
+        c_bin = get_c_binary()
+        py_cli = f"{sys.executable} -m nanobrag_torch"
+    
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+    
+            # Create weighted source file (C will apply weights, PyTorch will ignore)
+            sourcefile = tmpdir / 'weighted_sources.txt'
+            with open(sourcefile, 'w') as f:
+                # Format: X Y Z weight lambda(m)
+                f.write("0.0 0.0 -1.0 1.0 1.0e-10\n")  # weight=1.0
+                f.write("0.1 0.0 -1.0 0.2 1.0e-10\n")  # weight=0.2 (C applies, Py ignores)
+    
+            # Shared parameters (small detector for fast test)
+            common_args = [
+                '-cell', '100', '100', '100', '90', '90', '90',
+                '-default_F', '300',
+                '-N', '5',
+                '-distance', '100',
+                '-detpixels', '128',
+                '-pixel', '0.1',
+                '-lambda', '1.0',
+                '-oversample', '1',
+                '-phisteps', '1',
+                '-mosaic_dom', '1',
+                '-sourcefile', str(sourcefile)
+            ]
+    
+            c_out = tmpdir / 'c_weighted.bin'
+            py_out = tmpdir / 'py_weighted.bin'
+    
+            # Run C
+            c_bin_abs = str(Path(c_bin).resolve())
+            c_cmd = [c_bin_abs] + common_args + ['-floatfile', str(c_out)]
+            result_c = subprocess.run(c_cmd, capture_output=True, text=True, cwd=tmpdir)
+            if result_c.returncode != 0:
+                pytest.fail(f"C simulation failed:\n{result_c.stderr}")
+    
+            # Run PyTorch
+            py_cmd = py_cli.split() + common_args + ['-floatfile', str(py_out)]
+            result_py = subprocess.run(py_cmd, capture_output=True, text=True, cwd=tmpdir)
+            if result_py.returncode != 0:
+                pytest.fail(f"PyTorch simulation failed:\n{result_py.stderr}")
+    
+            # Load images
+            shape = (128, 128)
+            c_img = read_float_image(c_out, shape)
+            py_img = read_float_image(py_out, shape)
+    
+            # Compute metrics
+            c_sum = np.sum(c_img)
+            py_sum = np.sum(py_img)
+            sum_ratio = py_sum / c_sum if c_sum > 0 else float('inf')
+    
+            # Correlation
+            c_flat = c_img.flatten()
+            py_flat = py_img.flatten()
+            correlation = np.corrcoef(c_flat, py_flat)[0, 1] if np.std(c_flat) > 0 and np.std(py_flat) > 0 else 0.0
+    
+            # Save metrics for documentation
+            metrics = {
+                'c_sum': float(c_sum),
+                'py_sum': float(py_sum),
+                'sum_ratio': float(sum_ratio),
+                'correlation': float(correlation),
+                'expected': 'correlation >= 0.999, |sum_ratio - 1| <= 3e-3',
+                'parity_memo': 'reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md'
+            }
+    
+            # Save metrics on failure for debugging
+            if correlation < 0.999 or abs(sum_ratio - 1.0) > 3e-3:
+                report_dir = Path('reports/2025-11-source-weights/phase_h') / 'parity_failure'
+                report_dir.mkdir(parents=True, exist_ok=True)
+                with open(report_dir / 'metrics.json', 'w') as f:
+                    json.dump(metrics, f, indent=2)
+    
+            # Phase H assertion: Expect PASS with spec-compliant thresholds
+            assert correlation >= 0.999, \
+                f"C vs PyTorch parity failed. Correlation={correlation:.6f} < 0.999. " \
+                f"C sum={c_sum:.6g}, PyTorch sum={py_sum:.6g}, ratio={sum_ratio:.6f}. " \
+                f"See reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md"
+    
+>           assert abs(sum_ratio - 1.0) <= 3e-3, \
+                f"C vs PyTorch sum ratio diverged. |{sum_ratio:.6f} - 1.0| = {abs(sum_ratio - 1.0):.6f} > 3e-3. " \
+                f"C sum={c_sum:.6g}, PyTorch sum={py_sum:.6g}. " \
+                f"See reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md"
+E           AssertionError: C vs PyTorch sum ratio diverged. |1.003840 - 1.0| = 0.003840 > 3e-3. C sum=125523, PyTorch sum=126005. See reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md
+E           assert np.float32(0.0038400888) <= 0.003
+E            +  where np.float32(0.0038400888) = abs((np.float32(1.0038401) - 1.0))
+
+tests/test_cli_scaling.py:688: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference
+========================= 1 failed, 7 passed in 21.22s =========================

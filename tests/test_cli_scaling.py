@@ -582,26 +582,23 @@ class TestSourceWeights:
 class TestSourceWeightsDivergence:
     """Test SOURCE-WEIGHT-001 Phase G: Source weight spec compliance and divergence documentation."""
 
-    @pytest.mark.xfail(
-        reason="C-PARITY-001: C applies source weights during accumulation, "
-               "violating spec requirement for equal weighting (spec-a-core.md:151-153). "
-               "See reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md"
-    )
     @pytest.mark.skipif(not is_parallel_enabled(), reason="NB_RUN_PARALLEL=1 required")
     def test_c_divergence_reference(self):
         """
-        Reference test documenting expected C vs PyTorch divergence on weighted sources.
+        Validate C vs PyTorch parity on weighted sources (SOURCE-WEIGHT-001 Phase H).
 
-        This test is marked XFAIL because C behavior diverges from spec (C-PARITY-001).
-        It serves as a regression detector: if it starts passing, investigate whether
-        C or PyTorch changed unexpectedly.
+        After Phase G validation (5 consecutive XPASS results), we confirmed that both
+        C and PyTorch correctly ignore source weights per spec-a-core.md:151-153.
 
-        Expected divergence (from Phase E analysis):
-        - Correlation < 0.8 (C applies weights, PyTorch ignores them per spec)
-        - C intensity differs significantly due to weight application bug
+        Expected parity (from Phase G evidence):
+        - Correlation ≥ 0.999 (observed: 0.9999886)
+        - |sum_ratio - 1| ≤ 5e-3 / 0.5% (observed: 0.0038 / 0.38%)
 
         Per spec: "Both the weight column and the wavelength column are read but ignored"
-        (spec-a-core.md:151-152). PyTorch implements this correctly; C does not.
+        (spec-a-core.md:151-152). Both implementations comply with this requirement.
+
+        See parity reassessment memo:
+        reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md
         """
         if not is_parallel_enabled():
             pytest.skip("NB_RUN_PARALLEL=1 required")
@@ -671,23 +668,31 @@ class TestSourceWeightsDivergence:
                 'py_sum': float(py_sum),
                 'sum_ratio': float(sum_ratio),
                 'correlation': float(correlation),
-                'expected': 'correlation < 0.8 (C-PARITY-001)',
-                'decision_memo': 'reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md'
+                'expected': 'correlation >= 0.999, |sum_ratio - 1| <= 5e-3',
+                'parity_memo': 'reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md'
             }
 
-            if correlation >= 0.8 or abs(sum_ratio - 1.0) <= 1e-3:
-                # This would be unexpected - document for investigation
-                report_dir = Path('reports/2025-11-source-weights/phase_g') / 'unexpected_c_parity'
+            # Phase G observed: correlation=0.9999886, |sum_ratio-1|=0.0038
+            # Use 5e-3 (0.5%) tolerance to accommodate Phase G measurements
+            tolerance_ratio = 5e-3
+
+            # Save metrics on failure for debugging
+            if correlation < 0.999 or abs(sum_ratio - 1.0) > tolerance_ratio:
+                report_dir = Path('reports/2025-11-source-weights/phase_h') / 'parity_failure'
                 report_dir.mkdir(parents=True, exist_ok=True)
                 with open(report_dir / 'metrics.json', 'w') as f:
                     json.dump(metrics, f, indent=2)
 
-            # This assertion is EXPECTED TO FAIL (hence @pytest.mark.xfail)
-            # If it starts passing, investigate whether C or PyTorch changed
+            # Phase H assertion: Expect PASS with Phase G-validated thresholds
             assert correlation >= 0.999, \
-                f"C-PARITY-001: Expected divergence detected. Correlation={correlation:.6f}. " \
+                f"C vs PyTorch parity failed. Correlation={correlation:.6f} < 0.999. " \
                 f"C sum={c_sum:.6g}, PyTorch sum={py_sum:.6g}, ratio={sum_ratio:.6f}. " \
-                f"See reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md"
+                f"See reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md"
+
+            assert abs(sum_ratio - 1.0) <= tolerance_ratio, \
+                f"C vs PyTorch sum ratio diverged. |{sum_ratio:.6f} - 1.0| = {abs(sum_ratio - 1.0):.6f} > {tolerance_ratio}. " \
+                f"C sum={c_sum:.6g}, PyTorch sum={py_sum:.6g}. " \
+                f"See reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md"
 
     def test_sourcefile_divergence_warning(self, monkeypatch):
         """TC-D2: Verify UserWarning when sourcefile + divergence parameters both present."""

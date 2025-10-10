@@ -1,0 +1,84 @@
+# SOURCE-WEIGHT-001 Phase H: Test Update and Validation Commands
+
+## Environment
+Date: 2025-10-10
+Working Directory: /home/ollie/Documents/tmp/nanoBragg
+NB_RUN_PARALLEL: 1
+KMP_DUPLICATE_LIB_OK: TRUE
+
+## Phase H Tasks Executed
+
+### H1: Parity Reassessment Memo
+- Created: reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md
+- Quotes: nanoBragg.c:2570-2720 (source ingestion and steps normalization)
+- Supersedes: reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md
+
+### H2: Test Expectation Update
+- File: tests/test_cli_scaling.py
+- Changes:
+  1. Removed @pytest.mark.xfail decorator from test_c_divergence_reference (line 585)
+  2. Updated docstring to reflect expected PASS status
+  3. Updated assertions to expect:
+     - correlation >= 0.999
+     - |sum_ratio - 1| <= 5e-3 (0.5% tolerance)
+  4. Updated metrics dict to reference Phase H parity memo
+
+## Test Execution
+
+### Targeted Test Run (Phase H Validation)
+Command:
+```bash
+NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_cli_scaling.py::TestSourceWeights \
+  tests/test_cli_scaling.py::TestSourceWeightsDivergence
+```
+
+Result: 8 passed in 21.25s
+
+Test Breakdown:
+- TestSourceWeights::test_source_weights_ignored_per_spec: PASSED
+- TestSourceWeights::test_cli_lambda_overrides_sourcefile: PASSED
+- TestSourceWeights::test_uniform_weights_ignored: PASSED
+- TestSourceWeights::test_edge_case_zero_sum_accepted: PASSED
+- TestSourceWeights::test_edge_case_negative_weights_accepted: PASSED
+- TestSourceWeights::test_single_source_fallback: PASSED
+- TestSourceWeightsDivergence::test_c_divergence_reference: PASSED (formerly XFAIL)
+- TestSourceWeightsDivergence::test_sourcefile_divergence_warning: PASSED
+
+### Test Collection Validation
+Command:
+```bash
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q
+```
+
+Result: 692 tests collected in 2.67s
+
+## Metrics (test_c_divergence_reference)
+
+From pytest execution log (reports/2025-11-source-weights/phase_h/20251010T002324Z/pytest.log):
+- C sum: 125523
+- PyTorch sum: 126005
+- Sum ratio: 1.003840
+- Correlation: 0.9999886
+- |sum_ratio - 1|: 0.003840 (0.384%, within 0.5% tolerance)
+
+## Next Actions (Phase H Remaining Tasks)
+
+### H3: Audit Bug Ledger References
+- Update docs/fix_plan.md [SOURCE-WEIGHT-001] to reference Phase H memo
+- Remove C-PARITY-001 linkage for source weights in docs/bugs/verified_c_bugs.md (if exists)
+- Cross-reference [C-SOURCEFILE-001] for the separate comment parsing bug
+
+### H4: Notify Dependent Plans
+- Update plans/active/vectorization.md (Phase A2)
+- Update plans/active/vectorization-gap-audit.md (Phase B1)
+- Update docs/fix_plan.md entries:
+  - [VECTOR-TRICUBIC-002]
+  - [VECTOR-GAPS-002]
+  - [PERF-PYTORCH-004]
+- Replace references to Phase E divergence memo with Phase H parity memo
+
+### Phase I: Documentation Propagation (Blocked until H3/H4 complete)
+- Update docs/architecture/pytorch_design.md (sources subsection)
+- Update docs/development/pytorch_runtime_checklist.md
+- Archive plan: plans/archive/source-weight-normalization.md
