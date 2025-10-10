@@ -1,0 +1,47 @@
+# Phase D4 Evidence Capture Commands
+# Timestamp: 20251010T073708Z
+
+# 1. Instrument simulator with env-guarded F_latt logging
+#    File: src/nanobrag_torch/simulator.py lines 312-367
+#    Added: NB_TRACE_SIM_F_LATT environment variable to capture h/k/l, F_latt_a/b/c, F_cell, intensity
+
+# 2. Run instrumented simulator
+export STAMP=20251010T073708Z
+NB_TRACE_SIM_F_LATT=reports/2026-01-vectorization-parity/phase_d/$STAMP/simulator_f_latt.log \
+KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY'
+import torch, sys
+from pathlib import Path
+sys.path.insert(0, str(Path.cwd() / 'src'))
+from nanobrag_torch.models.crystal import Crystal
+from nanobrag_torch.models.detector import Detector
+from nanobrag_torch.simulator import Simulator
+from nanobrag_torch.config import CrystalConfig, DetectorConfig, BeamConfig, DetectorConvention, DetectorPivot
+
+crystal_config = CrystalConfig(cell_a=100.0, cell_b=100.0, cell_c=100.0,
+    cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+    N_cells=(5, 5, 5), default_F=100.0,
+    phi_start_deg=0.0, osc_range_deg=0.0, phi_steps=1,
+    mosaic_spread_deg=0.0, mosaic_domains=1)
+detector_config = DetectorConfig(spixels=4096, fpixels=4096,
+    pixel_size_mm=0.05, distance_mm=500.0,
+    detector_convention=DetectorConvention.MOSFLM,
+    detector_pivot=DetectorPivot.BEAM,
+    detector_rotx_deg=0.0, detector_roty_deg=0.0,
+    detector_rotz_deg=0.0, detector_twotheta_deg=0.0)
+beam_config = BeamConfig(wavelength_A=0.5, polarization_factor=0.0,
+    flux=0.0, exposure=1.0, beamsize_mm=0.1)
+dtype = torch.float64
+device = torch.device('cpu')
+crystal = Crystal(crystal_config, dtype=dtype, device=device)
+detector = Detector(detector_config, dtype=dtype, device=device)
+simulator = Simulator(crystal, detector, crystal_config, beam_config, dtype=dtype, device=device)
+image = simulator.run()
+val = image[1792, 2048].item()
+print(f"Simulator pixel (1792,2048): {val:.15e}")
+PY
+
+# 3. Compare simulator trace vs trace helper
+grep -E "(h_frac|k_frac|l_frac|F_latt_(a|b|c))" reports/2026-01-vectorization-parity/phase_d/py_traces_post_fix/pixel_1792_2048.log
+cat reports/2026-01-vectorization-parity/phase_d/$STAMP/simulator_f_latt.log
+
+# 4. Analysis result: Miller indices 10^10× too large → unit mismatch (Å vs m⁻¹)

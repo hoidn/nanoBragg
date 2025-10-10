@@ -309,6 +309,63 @@ def compute_physics_for_position(
     F_total = F_cell * F_latt
     intensity = F_total * F_total  # |F|^2
 
+    # Environment-guarded F_latt instrumentation (Phase D4)
+    import os
+    trace_file = os.environ.get('NB_TRACE_SIM_F_LATT')
+    if trace_file:
+        # Extract first pixel values for single-pixel debugging
+        # h/k/l shape: (S, F, N_phi, N_mos) or (n_sources, S, F, N_phi, N_mos)
+        # Extract pixel (1792, 2048) for test case parity
+        try:
+            import pathlib
+            pathlib.Path(trace_file).parent.mkdir(parents=True, exist_ok=True)
+            with open(trace_file, 'a') as f:
+                # Log h/k/l Miller indices
+                if is_multi_source:
+                    # (n_sources, S, F, N_phi, N_mos)
+                    h_sample = h[:, 1792, 2048, :, :] if h.dim() == 5 else h[:, 0, :, :]
+                    k_sample = k[:, 1792, 2048, :, :] if k.dim() == 5 else k[:, 0, :, :]
+                    l_sample = l[:, 1792, 2048, :, :] if l.dim() == 5 else l[:, 0, :, :]  # noqa: E741
+                else:
+                    # (S, F, N_phi, N_mos)
+                    h_sample = h[1792, 2048, :, :] if h.dim() == 4 else h[0, :, :]
+                    k_sample = k[1792, 2048, :, :] if k.dim() == 4 else k[0, :, :]
+                    l_sample = l[1792, 2048, :, :] if l.dim() == 4 else l[0, :, :]  # noqa: E741
+
+                # Log F_latt components and intensity
+                if shape == CrystalShape.SQUARE:
+                    if is_multi_source:
+                        F_latt_a_sample = F_latt_a[:, 1792, 2048, :, :] if F_latt_a.dim() == 5 else F_latt_a[:, 0, :, :]
+                        F_latt_b_sample = F_latt_b[:, 1792, 2048, :, :] if F_latt_b.dim() == 5 else F_latt_b[:, 0, :, :]
+                        F_latt_c_sample = F_latt_c[:, 1792, 2048, :, :] if F_latt_c.dim() == 5 else F_latt_c[:, 0, :, :]
+                        F_latt_sample = F_latt[:, 1792, 2048, :, :] if F_latt.dim() == 5 else F_latt[:, 0, :, :]
+                    else:
+                        F_latt_a_sample = F_latt_a[1792, 2048, :, :] if F_latt_a.dim() == 4 else F_latt_a[0, :, :]
+                        F_latt_b_sample = F_latt_b[1792, 2048, :, :] if F_latt_b.dim() == 4 else F_latt_b[0, :, :]
+                        F_latt_c_sample = F_latt_c[1792, 2048, :, :] if F_latt_c.dim() == 4 else F_latt_c[0, :, :]
+                        F_latt_sample = F_latt[1792, 2048, :, :] if F_latt.dim() == 4 else F_latt[0, :, :]
+
+                    f.write(f"TRACE_SIM_F_LATT: pixel=(1792,2048) Na={N_cells_a} Nb={N_cells_b} Nc={N_cells_c}\n")
+                    f.write(f"  h_mean={h_sample.mean().item():.15e} k_mean={k_sample.mean().item():.15e} l_mean={l_sample.mean().item():.15e}\n")
+                    f.write(f"  F_latt_a_mean={F_latt_a_sample.mean().item():.15e}\n")
+                    f.write(f"  F_latt_b_mean={F_latt_b_sample.mean().item():.15e}\n")
+                    f.write(f"  F_latt_c_mean={F_latt_c_sample.mean().item():.15e}\n")
+                    f.write(f"  F_latt_mean={F_latt_sample.mean().item():.15e}\n")
+
+                    # Log F_cell and intensity for same pixel
+                    if is_multi_source:
+                        F_cell_sample = F_cell[:, 1792, 2048, :, :] if F_cell.dim() == 5 else F_cell[:, 0, :, :]
+                        intensity_sample = intensity[:, 1792, 2048] if intensity.dim() == 3 else intensity[:, 0]
+                    else:
+                        F_cell_sample = F_cell[1792, 2048, :, :] if F_cell.dim() == 4 else F_cell[0, :, :]
+                        intensity_sample = intensity[1792, 2048] if intensity.dim() == 2 else intensity[0]
+
+                    f.write(f"  F_cell_mean={F_cell_sample.mean().item():.15e}\n")
+                    f.write(f"  intensity_sum_phi_mos={intensity_sample.sum().item() if intensity_sample.dim() > 0 else intensity_sample.item():.15e}\n")
+        except Exception as e:
+            # Silent failure to avoid breaking production runs
+            pass
+
     # Apply dmin culling
     if dmin_mask is not None:
         if is_multi_source:

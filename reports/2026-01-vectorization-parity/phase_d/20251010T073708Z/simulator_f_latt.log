@@ -1,0 +1,8 @@
+TRACE_SIM_F_LATT: pixel=(1792,2048) Na=5.0 Nb=5.0 Nc=5.0
+  h_mean=-6.576005289140565e+08 k_mean=5.128313254643336e+10 l_mean=-9.996711997359876e+07
+  F_latt_a_mean=3.658078245859421e+00
+  F_latt_b_mean=5.115733689553132e-01
+  F_latt_c_mean=4.863481600288290e+00
+  F_latt_mean=9.101399884157525e+00
+  F_cell_mean=1.000000000000000e+02
+  intensity_sum_phi_mos=4.444446299773561e+09
