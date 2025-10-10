@@ -1,0 +1,22 @@
+# Tap 5.1 PyTorch HKL Audit Commands
+# Timestamp: 20251010T115342Z
+# Initiative: [VECTOR-PARITY-001] Phase E Task E12
+# Context: Per-subpixel HKL indexing audit to validate H1 hypothesis
+
+# Centre pixel (2048, 2048) - beam center, near-zero HKL
+KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py \
+  --pixel 2048 2048 \
+  --oversample 2 \
+  --taps hkl_subpixel \
+  --json \
+  --out-dir reports/2026-01-vectorization-parity/phase_e0/20251010T115342Z/py_taps \
+  --tag centre
+
+# Edge pixel (0, 0) - detector corner, high scattering angle
+KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py \
+  --pixel 0 0 \
+  --oversample 2 \
+  --taps hkl_subpixel \
+  --json \
+  --out-dir reports/2026-01-vectorization-parity/phase_e0/20251010T115342Z/py_taps \
+  --tag edge

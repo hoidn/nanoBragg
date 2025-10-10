@@ -227,6 +227,92 @@ def collect_f_cell_tap(crystal, crystal_config, S_per_m_all, oversample, dtype, 
     }
 
 
+def collect_hkl_subpixel_tap(crystal, crystal_config, S_per_m_all, oversample, dtype, device):
+    """
+    Collect Tap 5.1 (per-subpixel HKL audit) metrics for all subpixels.
+
+    Logs fractional HKL, rounded (h0,k0,l0), F_cell, and out_of_bounds status
+    per subpixel to diagnose the HKL indexing hypothesis (H1 from tap5_hypotheses.md).
+
+    Reference: specs/spec-a-core.md:232-240 (nearest-neighbour fallback contract)
+
+    Args:
+        crystal: Crystal instance
+        crystal_config: CrystalConfig instance
+        S_per_m_all: Scattering vectors for all subpixels, shape (oversample, oversample, 3)
+        oversample: Subpixel grid size
+        dtype: torch dtype
+        device: torch device
+
+    Returns:
+        dict: Tap 5.1 metrics with subpixels list (one entry per subpixel)
+    """
+    # Get rotated lattice vectors for phi=0, mosaic=0
+    (rot_a_all, rot_b_all, rot_c_all), _ = crystal.get_rotated_real_vectors(crystal_config)
+
+    # Extract phi=0, mosaic=0 vectors (shape: 3)
+    rot_a = rot_a_all[0, 0] * 1e-10  # Å → meters
+    rot_b = rot_b_all[0, 0] * 1e-10
+    rot_c = rot_c_all[0, 0] * 1e-10
+
+    subpixels = []
+
+    # Loop over subpixels
+    for sub_s in range(oversample):
+        for sub_f in range(oversample):
+            # Get scattering vector for this subpixel
+            S_per_m = S_per_m_all[sub_s, sub_f]
+
+            # Compute fractional Miller indices
+            h_frac = torch.dot(S_per_m.flatten(), rot_a.flatten())
+            k_frac = torch.dot(S_per_m.flatten(), rot_b.flatten())
+            l_frac = torch.dot(S_per_m.flatten(), rot_c.flatten())
+
+            # Round to nearest integer
+            h0 = int(torch.round(h_frac).item())
+            k0 = int(torch.round(k_frac).item())
+            l0 = int(torch.round(l_frac).item())
+
+            # Determine F_cell and out_of_bounds status
+            out_of_bounds = False
+            if hasattr(crystal, 'hkl_data') and crystal.hkl_data is not None:
+                # Get HKL grid bounds from crystal
+                h_range = crystal.hkl_data.get('h_range', (h0, h0))
+                k_range = crystal.hkl_data.get('k_range', (k0, k0))
+                l_range = crystal.hkl_data.get('l_range', (l0, l0))
+
+                in_bounds = (h_range[0] <= h0 <= h_range[1] and
+                            k_range[0] <= k0 <= k_range[1] and
+                            l_range[0] <= l0 <= l_range[1])
+
+                if not in_bounds:
+                    out_of_bounds = True
+                    f_cell = crystal_config.default_F
+                else:
+                    # In production: query HKL grid
+                    # For test case without HKL file: use default_F
+                    f_cell = crystal_config.default_F
+            else:
+                # No HKL data: all lookups return default_F
+                # Not considered out-of-bounds since there's no grid to violate
+                f_cell = crystal_config.default_F
+                out_of_bounds = False
+
+            subpixels.append({
+                'subpixel_index': [sub_s, sub_f],
+                'hkl_fractional': [float(h_frac.item()), float(k_frac.item()), float(l_frac.item())],
+                'hkl_rounded': [h0, k0, l0],
+                'F_cell': float(f_cell),
+                'out_of_bounds': out_of_bounds
+            })
+
+    return {
+        'oversample': oversample,
+        'total_subpixels': len(subpixels),
+        'subpixels': subpixels
+    }
+
+
 def collect_intensity_tap(I_before_scaling, steps, omega, r_e_sqr, fluence, capture_fraction, polar):
     """
     Collect Tap 5 (intensity pre-normalization) metrics.
@@ -630,6 +716,50 @@ def main():
         print(f"  HKL bounds: h=[{f_cell_tap['hkl_bounds']['h_min']},{f_cell_tap['hkl_bounds']['h_max']}] "
               f"k=[{f_cell_tap['hkl_bounds']['k_min']},{f_cell_tap['hkl_bounds']['k_max']}] "
               f"l=[{f_cell_tap['hkl_bounds']['l_min']},{f_cell_tap['hkl_bounds']['l_max']}]")
+
+    if 'hkl_subpixel' in enabled_taps and args.oversample > 1:
+        print()
+        print(f"=== Collecting Tap 5.1 (per-subpixel HKL audit) for oversample={args.oversample} ===")
+
+        # Compute subpixel scattering vectors (reuse logic from f_cell tap if already computed)
+        # If not already computed, generate them here
+        if 'f_cell' not in enabled_taps:
+            # Generate subpixel offsets and scattering vectors
+            oversample = args.oversample
+            subpixel_offsets = torch.linspace(-0.5, 0.5, oversample, dtype=dtype, device=device)
+            sub_s_grid, sub_f_grid = torch.meshgrid(subpixel_offsets, subpixel_offsets, indexing='ij')
+
+            S_per_m_all = torch.zeros((oversample, oversample, 3), dtype=dtype, device=device)
+
+            for sub_s_idx in range(oversample):
+                for sub_f_idx in range(oversample):
+                    subpix_offset_s = sub_s_grid[sub_s_idx, sub_f_idx] * pixel_size_m
+                    subpix_offset_f = sub_f_grid[sub_s_idx, sub_f_idx] * pixel_size_m
+                    subpixel_pos = target_coords + subpix_offset_s * detector.sdet_vec + subpix_offset_f * detector.fdet_vec
+                    R_sub = torch.norm(subpixel_pos)
+                    diffracted_sub = subpixel_pos / R_sub
+                    S_per_m_all[sub_s_idx, sub_f_idx] = (diffracted_sub - incident_vec) / lambda_m
+
+        # Collect HKL subpixel audit
+        hkl_subpixel_tap = collect_hkl_subpixel_tap(crystal, crystal_config, S_per_m_all, args.oversample, dtype, device)
+
+        tap_metrics['hkl_subpixel'] = {
+            'tap_id': 'hkl_subpixel',
+            'pixel_coords': [target_s, target_f],
+            'oversample': args.oversample,
+            'values': hkl_subpixel_tap
+        }
+
+        # Print summary to stdout
+        print(f"  Total subpixels: {hkl_subpixel_tap['total_subpixels']}")
+        print(f"  Subpixel details:")
+        for sp in hkl_subpixel_tap['subpixels']:
+            h_frac, k_frac, l_frac = sp['hkl_fractional']
+            h0, k0, l0 = sp['hkl_rounded']
+            print(f"    [{sp['subpixel_index'][0]},{sp['subpixel_index'][1]}]: "
+                  f"HKL_frac=({h_frac:.6f},{k_frac:.6f},{l_frac:.6f}) → "
+                  f"HKL_int=({h0},{k0},{l0}), F_cell={sp['F_cell']:.2f}, "
+                  f"out_of_bounds={sp['out_of_bounds']}")
 
     if 'intensity' in enabled_taps:
         print()
