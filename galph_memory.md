@@ -1,3 +1,10 @@
+### 2025-10-10 (galph loop - Test Suite Phase E relaunch)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase E refresh (Action: Planning, Mode: Parity).
+- Added Phase E–G sections plus updated status snapshot in `plans/active/test-suite-triage.md` to mandate the new full-suite rerun and downstream triage refresh.
+- Rewrote `docs/fix_plan.md` Next Actions/Reproduction paths to point at `phase_e` artifacts and logged the new task ladder.
+- Issued `input.md` instructing Ralph to perform the collect-only preflight, full `pytest tests/` run, and artifact/ledger updates under a fresh `phase_e/$STAMP` directory.
+- Action State: [ready_for_implementation]
+
 ### 2025-10-10 (galph loop - Tap 5.3 instrumentation brief prep)
 - Focus issue: [VECTOR-PARITY-001] Next Actions refresh (Action: Review/housekeeping, Mode: Docs).
 - Updated docs/fix_plan.md Active Focus + Next Actions to pivot completely to Tap 5.3 instrumentation, PyTorch/C captures, and synthesis.

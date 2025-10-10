@@ -42,13 +42,13 @@
 - Status: in_progress
 - Owner/Date: galph/2026-01-12
 - Plan Reference: `plans/active/test-suite-triage.md`
-- Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_b/<STAMP>/artifacts/pytest_full.xml`
-- Artifacts Root: `reports/2026-01-test-suite-triage/` (phases `phase_a`, `phase_b`, `phase_c`, `phase_d`)
+- Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_e/<STAMP>/artifacts/pytest_full.xml`
+- Artifacts Root: `reports/2026-01-test-suite-triage/` (phases `phase_a`, `phase_b`, `phase_c`, `phase_d`, `phase_e`, `phase_f`)
 - Phase D Handoff Bundle: `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md`
 - Next Actions:
-  1. ✅ `[CLI-DEFAULTS-001]` remediation closed (Attempt #6); archive remaining docs updates during determinism Phase C.
-  2. Launch `[DETERMINISM-001]` Phase A per `plans/active/determinism.md`, capture determinism failure artifacts under `phase_d/<STAMP>/determinism/`.
-  3. Queue `[DETERMINISM-001]` Phase B handoff once Phase A artifacts reviewed; then advance to `[DETERMINISM-001]` implementation before tackling next triage cluster.
+  1. Execute `plans/active/test-suite-triage.md` Phase E1–E3: refresh `collect-only` snapshot, run `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_e/<STAMP>/artifacts/pytest_full.xml`, and stage `summary.md` + `failures_raw.md`.
+  2. Phase E4: append Attempt #7 in this ledger with 2026 counts + artifact paths; note deltas vs Attempt #5.
+  3. Kick off Phase F triage refresh (extend `triage_summary.md`, update `pending_actions.md`) before delegating remediation backlogs.
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.
   * [2025-10-10] Attempt #2 — Result: ⚠️ partial (Phase B timeout). Full suite execution reached ~75% completion (520/692 tests) before 10-minute timeout. Captured 34 failures across determinism (6), sourcefile handling (6), grazing incidence (4), detector geometry (5), debug/trace (4), CLI flags (3), and others. Runtime: 600s. Exit: timeout. Artifacts: `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/{logs/pytest_full.log,failures_raw.md,summary.md,commands.txt}`. junit XML may be incomplete. Remaining 172 tests (~25%) not executed. Observations: Large detector parity tests and gradient checks likely contributors to timeout. Recommendation: split suite execution or extend timeout to 30-60min for complete run.
