@@ -4078,6 +4078,25 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       2. Phase B2.5 (diagnostic): Compare float binaries from benchmark_detailed.py vs nb-compare to verify whether they differ (hypothesis: benchmark may use cached/stale C output)
       3. Phase B3 (scope): Run smaller ROI checks (512×512, 1024×1024) via `nb-compare --roi` to determine if failure scales with detector size
       4. Phase C Prep: Once pytest confirms nb-compare correlation, proceed to trace-driven debugging focusing on sum_ratio=234x (likely source weighting or steps normalization bug)
+  * [2025-10-09] Attempt #4 (ralph loop) — Result: **EVIDENCE COLLECTION COMPLETE** — Phase B1 re-executed per input.md Do Now on current HEAD (git fadee7f), regression confirmed.
+    Metrics:
+      - benchmark_detailed.py: correlation_cold=0.721175, correlation_warm=0.721175 (❌ <<0.999 threshold), speedup_warm=1.126x, git_sha=fadee7f
+      - nb-compare: correlation=0.062983 (❌❌❌ catastrophic, 11.4x worse than benchmark), sum_ratio=225.036 (❌ 225x intensity error, >>5e-3 threshold)
+      - C_sum=25789.73, Py_sum=5803630.0 (PyTorch generating ~225x total intensity)
+    Artifacts:
+      - `reports/2026-01-vectorization-parity/phase_b/20251010T030852Z/profile/` — benchmark_results.json, profiler trace (trace.json), console log
+      - `reports/2026-01-vectorization-parity/phase_b/20251010T030852Z/nb_compare_full/` — comparison PNGs, summary.json, float binaries
+      - `reports/2026-01-vectorization-parity/phase_b/20251010T030852Z/{env.json,summary.md,commands.txt}` — full provenance (Python 3.13.5, PyTorch 2.7.1+cu126, git SHA fadee7f, device=cpu dtype=float32, reproduction commands)
+    Observations/Hypotheses:
+      - **CONSISTENT REGRESSION**: Attempt #4 (git fadee7f) matches prior attempts with near-identical correlations (benchmark 0.721, nb-compare 0.063) and sum_ratio ~225-236x, confirming deterministic systematic bug
+      - **BENCHMARK vs NB-COMPARE DELTA**: 11.4x correlation discrepancy (0.721 vs 0.063) suggests benchmark_detailed.py and nb-compare may not be measuring identical image pairs or configurations
+      - **INTENSITY EXPLOSION STABLE**: PyTorch sum ~225-236x higher than C sum across all attempts indicates catastrophic normalization bug (likely missing sources/steps/oversample division or double-counting)
+      - **PHASE B1 EXIT CRITERIA MET**: Fresh evidence bundle captured with complete provenance per input.md Do Now specification. Ready for Phase B2 pytest validation.
+    Next Actions (supervisor handoff):
+      1. Phase B2 (blocking): Execute authoritative pytest selector `KMP_DUPLICATE_LIB_OK=TRUE NB_C_BIN=./golden_suite_generator/nanoBragg NB_RUN_PARALLEL=1 pytest -v tests/test_at_parallel_*.py -k 4096` and archive console output to triangulate correct correlation value
+      2. Phase B2.5 (diagnostic): Investigate benchmark vs nb-compare discrepancy — compare float binaries and verify both tools use identical C/PyTorch configurations
+      3. Phase B3 (scope): Run ROI parity checks (512×512, 1024×1024) to determine if regression scales with detector size
+      4. Phase C Prep (triage): Once pytest confirms nb-compare metrics, proceed to trace-driven debugging targeting sum_ratio=225x normalization bug
 
 ---
 

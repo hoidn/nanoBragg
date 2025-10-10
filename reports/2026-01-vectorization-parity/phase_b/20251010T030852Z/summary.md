@@ -1,0 +1,16 @@
+# Phase B1 Benchmark + Parity Summary
+- Benchmark bundle: reports/benchmarks/20251009-200904
+- benchmark_results.json metrics:
+  - correlation_cold: 0.7211752710777161
+  - correlation_warm: 0.7211752710777161
+  - speedup_warm: 1.1256352476371676
+  - py_time_warm: 0.6728007793426514
+  - c_time: 0.7573282718658447
+- nb-compare metrics:
+  - correlation: 0.06298346978108438
+  - rmse: 5.522005558013916
+  - c_sum: 25789.73046875
+  - py_sum: 5803630.0
+  - sum_ratio: 225.03646850585938
+- Thresholds: correlation ≥0.999, |sum_ratio−1| ≤5e-3 (specs/spec-a-core.md:151; runtime checklist item #4)
+- Notes: CRITICAL REGRESSION — both benchmark and nb-compare show catastrophic parity failure (corr~0.06–0.72, sum_ratio=225×). This confirms VECTOR-PARITY-001 regression is real and blocking. Delta between benchmark (0.72) and nb-compare (0.06) correlations suggests the tools may be measuring slightly different conditions or the correlation varies with run parameters.
