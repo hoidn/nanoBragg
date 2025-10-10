@@ -2091,3 +2091,15 @@
 - Rewrote `input.md` (Docs mode) instructing Phase B callchain evidence capture with prompts/callchain deliverables under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/cli-defaults/phase_b/`.
 - Follow-up for Ralph: execute Phase B B1–B4 callchain tasks, log Attempt #4, then prep Phase C blueprint once divergence is nailed down.
 - <Action State>: [ready_for_implementation]
+
+### 2026-01-14 (galph loop - pre-plan note)
+- Focus issue: [CLI-DEFAULTS-001] Phase C remediation blueprint
+- Action type: Planning
+- Mode: Docs
+
+### 2026-01-14 (galph loop - CLI defaults Phase C blueprint)
+- Authored Phase C artifacts under `reports/2026-01-test-suite-triage/phase_d/20251010T161925Z/cli-defaults/phase_c/` (remediation_plan.md, tests.md) per plan tasks C1–C2.
+- Updated `plans/active/cli-defaults/plan.md:14-52` (Phase C now [D]) and refreshed `docs/fix_plan.md` header, Next Actions, and Attempts History (Attempt #5 recorded).
+- Rewrote `input.md` (Mode: Parity) to launch `[CLI-DEFAULTS-001]` implementation Attempt #6 with explicit test/command mapping and artifact policy.
+- Next follow-up for Ralph: implement HKL guard fix in `src/nanobrag_torch/__main__.py` and validate AT-CLI-002 using the new blueprint.
+- <Action State>: [ready_for_implementation]

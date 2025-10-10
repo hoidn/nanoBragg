@@ -14,7 +14,7 @@
 ### Status Snapshot (2025-10-10)
 - Phase A: complete (Attempt #3 — artifacts in `reports/2026-01-test-suite-triage/phase_d/20251010T155808Z/cli-defaults/phase_a/`)
 - Phase B: complete (Attempt #4 — artifacts in `reports/2026-01-test-suite-triage/phase_d/20251010T160902Z/cli-defaults/phase_b/`)
-- Phase C: ready for implementation
+- Phase C: complete (Attempt #5 — artifacts in `reports/2026-01-test-suite-triage/phase_d/20251010T161925Z/cli-defaults/phase_c/`)
 
 ### Phase A — Baseline Reconciliation (CLI vs direct API)
 Goal: Prove the divergence between the CLI runner and direct API invocation using identical configs, locking reproducibility before deeper tracing.
@@ -47,9 +47,9 @@ Exit Criteria: Documented remediation plan with acceptance tests + validation st
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Draft fix hypothesis & owner tasks | [ ] | Author `phase_c/<STAMP>/remediation_plan.md` enumerating suspected root cause, required code touchpoints (with file:line refs), and implementation sequencing for Ralph/subagents. Include device/dtype + vectorization guardrails. |
-| C2 | Map regression coverage | [ ] | Update `phase_c/<STAMP>/tests.md` listing targeted pytest selectors (AT-CLI-002 plus any new regression tests) and additional sanity checks (e.g., nb-compare vs debug script). |
-| C3 | Update fix_plan & input hooks | [ ] | Record Phase C outputs in `docs/fix_plan.md` ([CLI-DEFAULTS-001] section Attempts/Next Actions) and prepare supervisor `input.md` guidance for implementation attempt. |
+| C1 | Draft fix hypothesis & owner tasks | [D] | Attempt #5 → `reports/2026-01-test-suite-triage/phase_d/20251010T161925Z/cli-defaults/phase_c/remediation_plan.md` enumerates root cause, code touchpoints, and sequencing with device/dtype guardrails. |
+| C2 | Map regression coverage | [D] | Attempt #5 → `reports/2026-01-test-suite-triage/phase_d/20251010T161925Z/cli-defaults/phase_c/tests.md` lists selectors, auxiliary tools, and artifact expectations. |
+| C3 | Update fix_plan & input hooks | [D] | Attempt #5 → `docs/fix_plan.md` header/Next Actions refreshed and `input.md` rewritten (2025-10-10T16:19:25Z) to launch implementation Attempt #6. |
 
 ### Phase D — Validation Gate (post-fix, pending implementation)
 Goal: Define validation protocols to run once the fix is coded (kept in plan for continuity, executed later).
