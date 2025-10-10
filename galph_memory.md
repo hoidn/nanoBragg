@@ -1904,3 +1904,9 @@
 - Updated `docs/fix_plan.md` Active Focus + attempts to log D6 success and emphasise Phase E sweep; marked D6 as [D] in `plans/active/vectorization-parity-regression.md` and refreshed status snapshot to point at full-frame validation.
 - Authored `input.md` (Mode: Parity) directing Ralph to run the 4096² benchmark + nb-compare bundle and the high-resolution pytest into `reports/2026-01-vectorization-parity/phase_e/$STAMP/`, then summarise metrics in `phase_e_summary.md`.
 - Follow-up: Expect Phase E artifact bundle (benchmark_results.json, nb_compare summary, pytest log, phase_e_summary.md). Once validated, proceed with ledger updates (Phase E2) and unblock downstream vectorization plans.
+
+### 2026-01-07 (galph loop - TEST-GOLDEN Phase B prep)
+- Updated `docs/fix_plan.md` Active Focus to prioritise `[TEST-GOLDEN-001]` Phase B regeneration ahead of VECTOR-PARITY Phase E; refreshed `[VECTOR-PARITY-001]` and `[TEST-GOLDEN-001]` Next Actions to reference Phase B/C sequencing (target Attempt #19).
+- Marked Phase A tasks [D] in `plans/active/test-golden-refresh.md` and added status snapshot pointing to Attempt #18 scope audit.
+- Replaced `input.md` with Mode Parity instructions directing Ralph to regenerate all five golden datasets, capture command logs/checksums under `reports/2026-01-golden-refresh/phase_b/$STAMP/`, and prepare README provenance updates.
+- Follow-up: Expect Attempt bundle documenting Phase B regeneration outputs plus updated golden binaries/README; once landed, queue Phase C parity reruns to unblock VECTOR-PARITY Phase E.

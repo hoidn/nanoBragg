@@ -2,7 +2,7 @@
 
 **Last Updated:** 2026-01-07 (galph loop — TEST-GOLDEN-001 launch)
 **Active Focus:**
-- Execute VECTOR-PARITY Phase E full-frame validation and ledger updates now that Phase D6 cleanup succeeded.
+- Unblock VECTOR-PARITY Phase E by driving `[TEST-GOLDEN-001]` Phase B regeneration of stale golden datasets (target Attempt #19 bundle).
 - Prepare pyrefly + test-index documentation so future delegations have authoritative selectors.
 
 ## Index
@@ -51,7 +51,7 @@
   - **Phase D5 success:** ROI parity fully restored (corr=1.000000, sum_ratio=0.999987). Critical lesson: dimensional analysis error in Phase D4 planning (proposed 1e10 for Å→m⁻¹) was corrected during implementation to 1e-10 (Å→meters). The correct units for lattice vectors in the dot product h=a·S are meters (not m⁻¹), matching scattering_vector units (m⁻¹) to produce dimensionless Miller indices. This error highlights the importance of verifying unit conversions during implementation, not just during planning.
   - **Phase D6 cleanup:** ROI parity remains stable post-instrumentation removal (corr≈0.999999999, |sum_ratio−1|≈1.3e-5). Pytest collection stays green (695 tests). No residual trace hooks remain in production code; Phase E can now proceed without debug guards.
 - Next Actions:
-  1. 🚩 Coordinate with `[TEST-GOLDEN-001]` Phase A to inventory stale golden datasets and capture `scope_summary.md` (target Attempt #18) before resuming Phase E validation.
+  1. 🚩 Coordinate with `[TEST-GOLDEN-001]` Phase B regeneration (target Attempt #19) to refresh all stale golden datasets and capture provenance logs before resuming Phase E validation.
   2. 🔁 After `[TEST-GOLDEN-001]` Phase C parity checks succeed, rerun the Phase E ROI nb-compare bundle and targeted pytest selector to confirm corr≥0.95 and |sum_ratio−1|≤5×10⁻³.
   3. 🗒️ Once pytest passes, refresh `phase_e_summary.md`, update `plans/active/vectorization-parity-regression.md` (Phase E rows), and schedule benchmark/documentation updates for the following loop.
 - Risks/Assumptions:
@@ -195,9 +195,9 @@
   - Other datasets (triclinic, tilted detector, mosaic) likely impacted; need systematic audit before regenerating.
   - README provenance must stay authoritative; include git SHA + checksum after refresh.
 - Next Actions:
-  1. Execute `[TEST-GOLDEN-001]` Phase A (staleness audit) and log Attempt #18 with `scope_summary.md` + affected test list.
-  2. Run Phase B regeneration commands for all impacted datasets; update README and stage refreshed binaries with SHA256 evidence.
-  3. Complete Phase C parity tests (nb-compare + pytest) and Phase D ledger updates so `[VECTOR-PARITY-001]` Phase E can close.
+  1. ▶ Execute `[TEST-GOLDEN-001]` Phase B regeneration for all five datasets (target Attempt #19) capturing commands, stdout/stderr, and SHA256 manifests under `reports/2026-01-golden-refresh/phase_b/<STAMP>/`.
+  2. 📝 Update `tests/golden_data/README.md` provenance entries with new timestamps, git SHA, and checksum tables once regenerated artifacts are staged.
+  3. 🔁 Follow through with Phase C parity checks (ROI nb-compare + targeted pytest selector) and Phase D ledger updates so `[VECTOR-PARITY-001]` Phase E can close.
 - Risks/Assumptions:
   - Regeneration must respect Protected Assets (do not delete files referenced in `docs/index.md`).
   - Large binaries may exceed git LFS thresholds; preserve existing file paths and sizes.

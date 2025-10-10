@@ -9,6 +9,9 @@
   - `plans/active/vectorization-parity-regression.md` Phase E — blocked until golden refresh completes.
   - `reports/2026-01-vectorization-parity/phase_e/20251010T082240Z/phase_e_summary.md` — evidence of the current failure state (corr≈0.7157 on stale golden data).
 
+### Status Snapshot (2026-01-07)
+- Phase A staleness audit completed via Attempt #18 (`reports/2026-01-golden-refresh/phase_a/20251010T084007Z/`); Phase B regeneration is the next blocking milestone.
+
 ### Phase A — Scope Confirmation & Staleness Audit
 Goal: Enumerate which golden artifacts are invalidated, capture before/after metrics, and confirm the physics deltas introduced by Phase D5.
 Prereqs: Access to historical bundles (`reports/2026-01-vectorization-parity/phase_*`) and ability to run collect-only pytest.
@@ -16,9 +19,9 @@ Exit Criteria: Timestamped bundle under `reports/2026-01-golden-refresh/phase_a/
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| A1 | Compare current PyTorch output vs each golden dataset | [ ] | For each directory under `tests/golden_data/`, run `KMP_DUPLICATE_LIB_OK=TRUE python scripts/nb_compare.py --resample --outdir reports/2026-01-golden-refresh/phase_a/<STAMP>/<name>/ -- -cfg <matching PyTorch args>`; reuse commands from README. Document corr/sum_ratio gaps in `scope_summary.md`. |
-| A2 | Record provenance & impacted tests | [ ] | Parse `tests/golden_data/README.md` to map each dataset to consuming tests. Note in `scope_summary.md` which tests/actions depend on refreshed data; cross-check with `tests/test_at_parallel_012.py` and others. |
-| A3 | Summarise physics delta | [ ] | Using `reports/2026-01-vectorization-parity/phase_d/20251010T073708Z/` and `phase_d_summary.md`, describe why F_latt scaling changed. Capture narrative in `phase_a_summary.md` for future audits. |
+| A1 | Compare current PyTorch output vs each golden dataset | [D] | ✅ Attempt #18 (20251010T084007Z) captured ROI metrics; see `reports/2026-01-golden-refresh/phase_a/20251010T084007Z/` and sibling PNG/JSON artifacts. |
+| A2 | Record provenance & impacted tests | [D] | ✅ Attempt #18 enumerated consuming tests in `scope_summary.md`; reuse the table when staging Phase B regeneration. |
+| A3 | Summarise physics delta | [D] | ✅ Attempt #18 documented the Phase D5 lattice correction with references to `phase_d_summary.md`; no further action required. |
 
 ### Phase B — Regenerate Golden Artifacts (C Reference)
 Goal: Reproduce all affected golden files with the fixed C binary, capturing commands, checksums, and environment metadata.
