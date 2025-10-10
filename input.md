@@ -1,38 +1,37 @@
-Summary: Land SOURCE-WEIGHT-001 Phase I documentation updates that encode the Phase H parity decision.
+Summary: Refresh dependent plans with the new source-weight parity documentation before closing the initiative.
 Mode: Docs
-Focus: [SOURCE-WEIGHT-001] Phase I documentation updates
+Focus: [SOURCE-WEIGHT-001] Correct weighted source normalization — Phase I2
 Branch: feature/spec-based-2
-Mapped tests: none — evidence-only
+Mapped tests: KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q
 Artifacts: reports/2025-11-source-weights/phase_i/<STAMP>/
-Do Now: [SOURCE-WEIGHT-001] Phase I1 — edit docs/architecture/pytorch_design.md, docs/development/pytorch_runtime_checklist.md, and the spec acceptance text so they cite the Phase H memo (corr ≥0.999, |sum_ratio−1| ≤5e-3); capture notes + diffs under reports/2025-11-source-weights/phase_i/<STAMP>/ and finish with NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q.
-If Blocked: Write the snag and pending edits to reports/2025-11-source-weights/phase_i/<STAMP>/blockers.md, leave files untouched, and ping supervisor before proceeding elsewhere.
+Do Now: [SOURCE-WEIGHT-001] Correct weighted source normalization — KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q
+If Blocked: Capture the blocker analysis in <STAMP>/notes.md, run collect-only anyway, and log a fix_plan Attempt describing why Phase I2 must stay open.
 Priorities & Rationale:
-- docs/fix_plan.md:4065 — Next Actions now call for Phase I doc propagation keyed to the parity memo.
-- plans/active/source-weight-normalization.md:55 — Phase I1 checklist explicitly names the docs to revise.
-- docs/bugs/verified_c_bugs.md:169 — Ledger already clarifies C-PARITY-001 scope; documentation must echo the same thresholds.
-- plans/active/vectorization.md:14 — Vectorization relaunch waits on SOURCE-WEIGHT docs settling before Phase B refresh.
-- plans/active/vectorization-gap-audit.md:14 — Profiling backlog is ready once the documentation patch lands.
+- plans/active/source-weight-normalization.md:1-57 — Phase I2 requires propagating the doc updates through dependent ledgers before archival.
+- docs/fix_plan.md:4065-4080 — Next Actions list I2/I3; keep the ledger synced with new artifacts.
+- docs/architecture/pytorch_design.md:93-116 — New §1.1.5 documents the parity decision; dependent plans must cite it.
+- docs/development/pytorch_runtime_checklist.md:22-28 — Runtime guard now encodes equal-weighting rules; ensure plans reference this checklist.
+- plans/active/vectorization.md:1-76 & plans/active/vectorization-gap-audit.md:1-58 — Both plans rely on SOURCE-WEIGHT gating; update their status snapshots/Phase A references to include the new documentation sources.
 How-To Map:
-- Create reports/2025-11-source-weights/phase_i/<STAMP>/ (use ISO-like timestamp) and record commands + sha256 in notes.md.
-- Update docs/architecture/pytorch_design.md sources/integration section to state equal weighting, cite the 20251010T002324Z memo, and reiterate corr ≥0.999 / |sum_ratio−1| ≤5e-3 thresholds.
-- Amend docs/development/pytorch_runtime_checklist.md to include an explicit guardrail item for sourcefile handling and reference the same memo.
-- Inspect specs/spec-a-core.md §4; if language already matches, add a short parenthetical pointing to the memo, otherwise align the wording and quote thresholds.
-- After edits, run NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q and stash the log in the <STAMP> directory.
-- Record git diff snippets or `md5sum` hashes of touched files inside the notes.
+- Export STAMP="$(date -u +%Y%m%dT%H%M%SZ)" and mkdir -p reports/2025-11-source-weights/phase_i/$STAMP; record commands in commands.txt inside that directory.
+- Edit plans/active/vectorization.md (Phase A snapshot/A3 guidance) and plans/active/vectorization-gap-audit.md (dependencies + Phase B1 note) so they cite docs/architecture/pytorch_design.md §1.1.5 and the updated runtime checklist item when referring to SOURCE-WEIGHT parity prerequisites.
+- Update docs/fix_plan.md entries [VECTOR-TRICUBIC-002], [VECTOR-GAPS-002], and [PERF-PYTORCH-004] so their Next Actions reference the new documentation paths (pytorch_design.md §1.1.5, runtime checklist item #4) instead of the pre-Phase-I wording.
+- Append an Attempt to docs/fix_plan.md [SOURCE-WEIGHT-001] capturing Phase I2 progress (artifacts, commands, doc updates) and note any follow-on requirements for Phase I3.
+- Run KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q | tee reports/2025-11-source-weights/phase_i/$STAMP/collect.log after edits to confirm suite importability.
+- Summarise the work in reports/2025-11-source-weights/phase_i/$STAMP/notes.md (files touched, rationale, any follow-up) and include parity memo links for audit.
 Pitfalls To Avoid:
-- Do not alter simulator code or tests this loop — documentation only.
-- Keep nanoBragg.c quotations intact when adding prose (Rule #11).
-- Maintain existing vectorization/device wording; add context without rewriting unrelated sections.
-- Preserve ASCII; avoid typographic quotes or unicode dashes.
-- Reference the parity memo by path (`reports/2025-11-source-weights/phase_h/20251010T002324Z/`) exactly.
-- Do not change docs/index.md or Protected Asset lists in this loop.
-- Ensure thresholds stay corr ≥0.999 and |sum_ratio−1| ≤5e-3 everywhere.
-- Capture collect-only output after edits; skip full pytest runs.
-- Use relative paths in notes; no absolute machine paths.
+- No production code edits; keep changes confined to plans and ledgers.
+- Maintain the existing phased tables; do not rename or remove Protected Assets listed in docs/index.md.
+- Keep parity thresholds (corr ≥0.999, |sum_ratio−1| ≤5e-3) intact when updating text.
+- Do not commit the reports/ directory; reference paths only.
+- Preserve numbering in pytorch_runtime_checklist.md (item #4 stays the equal-weighting guard).
+- Confirm collect-only passes before logging Attempts; capture the command output in the artifact directory.
+- Avoid inventing new selectors—cite existing ones from testing_strategy.md.
 Pointers:
-- docs/fix_plan.md:4065
-- plans/active/source-weight-normalization.md:55
-- docs/architecture/pytorch_design.md:17
-- docs/development/pytorch_runtime_checklist.md:1-120
-- specs/spec-a-core.md:140-165
-Next Up: Phase I2 — propagate refreshed documentation into dependent ledgers once the edits land.
+- plans/active/source-weight-normalization.md:48-57
+- docs/fix_plan.md:3766-3782,4065-4080
+- docs/architecture/pytorch_design.md:93-116
+- docs/development/pytorch_runtime_checklist.md:22-28
+- plans/active/vectorization.md:1-76
+- plans/active/vectorization-gap-audit.md:1-58
+Next Up: Phase I3 archival packet once the dependent plans/fix_plan entries reflect the new documentation.
