@@ -2044,3 +2044,11 @@
 - Rewrote input.md directing Ralph to run the extended Phase B suite, capture a fresh `phase_b/<STAMP>/` bundle, and log Attempt #5 metrics.
 - Expect Ralph to execute the rerun, archive junit/log outputs, and update fix_plan Attempts before we draft the Phase D handoff.
 - <Action State>: [ready_for_implementation]
+### 2026-01-13 (galph loop - Test suite Phase C refresh)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase C triage refresh after Attempt #5 (Action: Planning, Mode: Docs).
+- Notes: Initial focus recorded prior to edits. Detailed summary to follow after plan/input updates.
+- Reviewed Attempt #5 bundle (`reports/2026-01-test-suite-triage/phase_b/20251010T135833Z/`) confirming 50 failures across 18 clusters; no new test execution performed.
+- Updated `plans/active/test-suite-triage.md` status snapshot (Phase B marked done) and added Phase C tasks C5–C7 to capture the refreshed triage requirements (new `phase_c/20251010T135833Z/` bundle, updated summary, ledger sync).
+- Refreshed `docs/fix_plan.md` Active Focus + Next Actions to emphasise Phase C5–C7, including explicit task list for staging the new artifacts before remediation proceeds.
+- Authored `input.md` (Docs mode) directing Ralph to produce the updated triage summary + pending actions using existing Attempt #5 evidence; Do Now references the canonical pytest command but notes reuse of the captured bundle.
+- <Action State>: [ready_for_implementation]

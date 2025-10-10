@@ -8,9 +8,10 @@
   - `docs/development/pytorch_runtime_checklist.md` — sanity checklist before executing PyTorch-heavy tests (KMP env, device neutrality).
   - `prompts/callchain.md` — fallback SOP if targeted tracing is required for specific failures (defer until triage completes).
 
-### Status Snapshot (2026-01-12)
+### Status Snapshot (2026-01-13)
 - Phase A ✅ complete (Attempt #1 — `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/`); 692 tests collected, no errors.
-- Phase B pending: need fresh timestamped bundle capturing full-suite run, junit XML, and failure summary before triage (Phase C) can begin.
+- Phase B ✅ complete (Attempt #5 — `reports/2026-01-test-suite-triage/phase_b/20251010T135833Z/`); full suite executed in 1865 s with 50 failures captured across 18 clusters.
+- Phase C refresh **pending:** existing triage summary (`phase_c/20251010T134156Z/`) only covers the 34-failure partial run; we must extend classification/mapping to the 50-failure Attempt #5 set before Phase D handoff.
 
 ### Phase A — Preflight & Inventory
 Goal: Confirm environment readiness and enumerate suite metadata so the full run is reproducible and guarded.
@@ -32,21 +33,24 @@ Exit Criteria: Full run log + junit/xml archived under `reports/2026-01-test-sui
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | B1 | Prepare reporting directory | [D] | Attempt #2 → Created `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/` with `logs/`, `artifacts/`. Documented command in `commands.txt`. |
-| B2 | Execute full test suite | [⚠️] | Attempt #2 → PARTIAL (timeout after 600 s). Reached ~75 % completion (520/692 tests). Log captured to `logs/pytest_full.log` (530 lines). Observed 34 failures; ~172 tests never executed. **Next:** Attempt #5 must rerun with an extended budget (`KMP_DUPLICATE_LIB_OK=TRUE timeout 3600 pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_b/<STAMP>/artifacts/pytest_full.xml`) and archive logs under a fresh `phase_b/<STAMP>/`. |
+| B2 | Execute full test suite | [D] | Attempt #5 → ✅ Completed with extended timeout (`reports/2026-01-test-suite-triage/phase_b/20251010T135833Z/`). Runtime 1864.76 s, 50 failures recorded, junit XML archived. Prior timeout resolved. |
 | B3 | Extract failure list | [D] | Attempt #2 → Extracted 34 failures into `failures_raw.md`. Categorized by test area (determinism, sourcefile, grazing, detector, debug, CLI). Noted 172 tests not reached (25% coverage gap). |
 | B4 | Update fix_plan attempt entry | [D] | Attempt #2 → Updated `docs/fix_plan.md` [TEST-SUITE-TRIAGE-001] with runtime=600s, failures=34 (partial), artifact path, and recommendations for split execution. |
 
 ### Phase C — Failure Classification & Triage Ledger
 Goal: Categorise failures into implementation bugs vs deprecated/obsolete tests and map them to remediation owners or follow-up plans.
-Prereqs: Phase B artifacts ready.
-Exit Criteria: `triage_summary.md` capturing classification table; fix_plan updated with sub-actions or delegations for each bucket.
+Prereqs: Phase B artifacts ready (Attempt #5 bundle).
+Exit Criteria: Updated `triage_summary.md` covering the full 50-failure dataset, plus refreshed fix_plan mappings and pending-actions table referencing the new artifact timestamp.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Create triage worksheet | [D] | Attempt #3 → `reports/2026-01-test-suite-triage/phase_c/20251010T134156Z/triage_summary.md` captures classification table + context. |
-| C2 | Determine category for each failure | [D] | Attempt #3 → All 34 observed failures classified as implementation bugs (triage summary §Classification Table). Remaining ~172 unexecuted tests still pending full-suite rerun (Phase B extension required). |
-| C3 | Align with fix_plan | [D] | Attempt #4 → All 14 clusters mapped to fix-plan entries in `triage_summary.md` Pending Actions table. 7 new IDs created: `[CLI-DEFAULTS-001]`, `[DETERMINISM-001]`, `[DETECTOR-GRAZING-001]`, `[SOURCE-WEIGHT-002]`, `[TOOLING-DUAL-RUNNER-001]`, `[DEBUG-TRACE-001]`, `[DETECTOR-CONFIG-001]`. Index updated in `docs/fix_plan.md`. |
-| C4 | Capture blockers & next steps | [D] | Attempt #4 → "Pending Actions" section added to `triage_summary.md` with cluster→fix-plan mapping table and 172 unexecuted test note. All clusters assigned owners (ralph/galph) and status (in_planning/in_progress). |
+| C1 | Create triage worksheet | [D] | Attempt #3 → `reports/2026-01-test-suite-triage/phase_c/20251010T134156Z/triage_summary.md` captures classification table + context for the partial run. |
+| C2 | Determine category for each failure | [D] | Attempt #3 → All 34 observed failures classified as implementation bugs (triage summary §Classification Table). Remaining tests flagged pending rerun. |
+| C3 | Align with fix_plan | [D] | Attempt #4 → Mapped initial clusters to fix-plan entries (`[CLI-DEFAULTS-001]`, `[DETERMINISM-001]`, etc.). |
+| C4 | Capture blockers & next steps | [D] | Attempt #4 → "Pending Actions" section added to `triage_summary.md` with cluster→fix-plan mapping + coverage gap callout. |
+| C5 | Harvest Attempt #5 failure set | [ ] | Create new timestamped bundle `reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/` and ingest `failures_raw.md`, junit XML, and duration data from Attempt #5 (50 failures). |
+| C6 | Extend classification to full dataset | [ ] | Update `triage_summary.md` (new timestamp) with 18-cluster coverage, marking deltas vs the 34-failure snapshot. Preserve original file for traceability; new summary should reference both Attempt #2 and Attempt #5 bundles. |
+| C7 | Refresh fix_plan & plan linkages | [ ] | Update `docs/fix_plan.md` `[TEST-SUITE-TRIAGE-001]` next actions + attempts to cite the new triage artifacts; ensure plan tables (this file) reference the refreshed timestamp before moving to Phase D. |
 
 ### Phase D — Remediation Roadmap Handoff
 Goal: Produce a ready-to-execute backlog for Ralph (or subagents) to address failing tests without ambiguity.
