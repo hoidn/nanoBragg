@@ -1,0 +1,27 @@
+{
+  "timestamp_utc": "20251010T053711Z",
+  "git_sha": "8ee8adc3f0797eeb4b170dea6c525157f5c91217",
+  "git_branch": "feature/spec-based-2",
+  "git_dirty": true,
+  "python_version": "3.13.5",
+  "platform": "Linux-6.14.0-29-generic-x86_64-with-glibc2.39",
+  "nb_c_bin": "./golden_suite_generator/nanoBragg",
+  "trace_command_template": "-default_F 100 -cell 100 100 100 90 90 90 -lambda 0.5 -distance 500 -pixel 0.05 -detpixels 4096 -N 5 -convention MOSFLM -oversample 1 -trace_pixel {slow} {fast}",
+  "pixels_traced": [
+    {
+      "name": "ROI_center",
+      "slow": 2048,
+      "fast": 2048
+    },
+    {
+      "name": "ROI_boundary",
+      "slow": 1792,
+      "fast": 2048
+    },
+    {
+      "name": "far_edge",
+      "slow": 4095,
+      "fast": 2048
+    }
+  ]
+}

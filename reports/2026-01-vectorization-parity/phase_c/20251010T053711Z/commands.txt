@@ -1,0 +1,53 @@
+# Phase C1 - C Trace Capture
+# Date: 2025-10-10
+# Configuration: 4096² detector, λ=0.5 Å, distance=500 mm, pixel=0.05 mm, MOSFLM convention
+# Selected pixels: (2048,2048) ROI center, (1792,2048) ROI boundary, (4095,2048) far edge
+
+# Environment setup
+export NB_C_BIN=./golden_suite_generator/nanoBragg
+export KMP_DUPLICATE_LIB_OK=TRUE
+
+# Pixel 1: ROI center (2048, 2048)
+$NB_C_BIN \
+  -default_F 100 \
+  -cell 100 100 100 90 90 90 \
+  -lambda 0.5 \
+  -distance 500 \
+  -pixel 0.05 \
+  -detpixels 4096 \
+  -N 5 \
+  -convention MOSFLM \
+  -oversample 1 \
+  -trace_pixel 2048 2048 \
+  -floatfile /tmp/c_trace_2048_2048.bin \
+  2>&1 | tee >(grep "TRACE_C:" > reports/2026-01-vectorization-parity/phase_c/$STAMP/c_traces/pixel_2048_2048.log)
+
+# Pixel 2: ROI boundary (1792, 2048) - NOTE: spec says (1791,2048) but trace plan uses first row OUTSIDE ROI
+$NB_C_BIN \
+  -default_F 100 \
+  -cell 100 100 100 90 90 90 \
+  -lambda 0.5 \
+  -distance 500 \
+  -pixel 0.05 \
+  -detpixels 4096 \
+  -N 5 \
+  -convention MOSFLM \
+  -oversample 1 \
+  -trace_pixel 1792 2048 \
+  -floatfile /tmp/c_trace_1792_2048.bin \
+  2>&1 | tee >(grep "TRACE_C:" > reports/2026-01-vectorization-parity/phase_c/$STAMP/c_traces/pixel_1792_2048.log)
+
+# Pixel 3: Far edge (4095, 2048)
+$NB_C_BIN \
+  -default_F 100 \
+  -cell 100 100 100 90 90 90 \
+  -lambda 0.5 \
+  -distance 500 \
+  -pixel 0.05 \
+  -detpixels 4096 \
+  -N 5 \
+  -convention MOSFLM \
+  -oversample 1 \
+  -trace_pixel 4095 2048 \
+  -floatfile /tmp/c_trace_4095_2048.bin \
+  2>&1 | tee >(grep "TRACE_C:" > reports/2026-01-vectorization-parity/phase_c/$STAMP/c_traces/pixel_4095_2048.log)
