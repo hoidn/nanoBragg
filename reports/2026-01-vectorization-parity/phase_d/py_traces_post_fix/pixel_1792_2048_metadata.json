@@ -1,8 +1,8 @@
 {
-  "timestamp_utc": "20251010T071716Z",
+  "timestamp_utc": "20251010T075117Z",
   "pixel_slow": 1792,
   "pixel_fast": 2048,
-  "tag": "f_latt_post_fix",
+  "tag": "post_fix",
   "device": "cpu",
   "dtype": "torch.float64",
   "configuration": {

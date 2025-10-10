@@ -883,6 +883,19 @@ class Simulator:
             rot_a_star = rot_a_star.to(device=self.device, dtype=self.dtype)
             rot_b_star = rot_b_star.to(device=self.device, dtype=self.dtype)
             rot_c_star = rot_c_star.to(device=self.device, dtype=self.dtype)
+
+            # VECTOR-PARITY-001 Phase D5: Convert lattice vectors from Angstroms to meters
+            # The scattering vector q is in m⁻¹ (Phase D1 fix), and real-space lattice vectors
+            # must be in meters for dimensionally correct h=a·q computation (meters × m⁻¹ = dimensionless).
+            # Crystal.get_rotated_real_vectors() returns vectors in Angstroms, so multiply by 1e-10.
+            # Reference: specs/spec-a-core.md line 135 ("scaled by 1e-10 to meters for all subsequent dot products with q")
+            # and line 446 ("q: scattering vector in m⁻¹").
+            # Evidence: reports/2026-01-vectorization-parity/phase_d/20251010T073708Z/simulator_f_latt.md
+            # and C-code trace showing a = [1e-08, ...] |a| = 1e-08 meters (100 Å × 1e-10).
+            rot_a = rot_a * 1e-10  # Å → meters
+            rot_b = rot_b * 1e-10  # Å → meters
+            rot_c = rot_c * 1e-10  # Å → meters
+
             # Cache rotated reciprocal vectors for GAUSS/TOPHAT shape models
             self._rot_a_star = rot_a_star
             self._rot_b_star = rot_b_star
@@ -895,6 +908,12 @@ class Simulator:
             rot_a_star = override_a_star.view(1, 1, 3)
             rot_b_star = self.crystal.b_star.view(1, 1, 3)
             rot_c_star = self.crystal.c_star.view(1, 1, 3)
+
+            # VECTOR-PARITY-001 Phase D5: Convert lattice vectors from Angstroms to meters (same as non-override path)
+            rot_a = rot_a * 1e-10  # Å → meters
+            rot_b = rot_b * 1e-10  # Å → meters
+            rot_c = rot_c * 1e-10  # Å → meters
+
             # Cache for shape models
             self._rot_a_star = rot_a_star
             self._rot_b_star = rot_b_star
