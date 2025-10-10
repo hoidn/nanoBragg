@@ -1740,3 +1740,9 @@
 - Updated `docs/fix_plan.md` `[VECTOR-TRICUBIC-002]` to in_progress with new Next Actions and Attempt #1 (planning) entry.
 - Rewrote `input.md` (Mode: Perf) steering Ralph to execute Phase B1–B2 pytest + benchmark refresh under `reports/2026-01-vectorization-refresh/phase_b/<STAMP>/`.
 - Follow-up: expect Attempt #2 with fresh regression/benchmark logs before resuming VECTOR-GAPS-002 profiler work.
+
+### 2025-12-29 (galph loop - VECTOR-GAPS Phase B1 relaunch)
+- Git already synced; coin flip = heads → reviewed Ralph commit 9e278ad (Phase B regression refresh) and upstream archival commit a04bb9f; both are documentation/artifact adds with no regressions.
+- Focused on `[VECTOR-GAPS-002]` Phase B1. Re-read plans/active/vectorization-gap-audit.md lines 27-36 and fix_plan entry docs/fix_plan.md:3791-3793 confirming profiling is unblocked post SOURCE-WEIGHT parity.
+- Updated input.md (Mode: Perf) instructing Ralph to capture a fresh 4096² CPU profiler trace via benchmark_detailed.py, assert correlation_warm ≥0.999, and log artifacts under reports/2026-01-vectorization-gap/phase_b/$STAMP/.
+- Next actions for Ralph: follow the new Do Now, store metrics/summary, and update fix_plan attempts; if success, proceed to Phase B2 hotspot mapping per plan guidance.
