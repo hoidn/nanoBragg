@@ -11,7 +11,7 @@
 ### Status Snapshot (2026-01-13)
 - Phase A ✅ complete (Attempt #1 — `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/`); 692 tests collected, no errors.
 - Phase B ✅ complete (Attempt #5 — `reports/2026-01-test-suite-triage/phase_b/20251010T135833Z/`); full suite executed in 1865 s with 50 failures captured across 18 clusters.
-- Phase C refresh **pending:** existing triage summary (`phase_c/20251010T134156Z/`) only covers the 34-failure partial run; we must extend classification/mapping to the 50-failure Attempt #5 set before Phase D handoff.
+- Phase C ✅ complete (Attempt #6 — `reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/`); all 50 failures classified across 18 clusters, mapped to 10 existing + 8 new fix-plan IDs. Ready for Phase D handoff.
 
 ### Phase A — Preflight & Inventory
 Goal: Confirm environment readiness and enumerate suite metadata so the full run is reproducible and guarded.
@@ -48,9 +48,9 @@ Exit Criteria: Updated `triage_summary.md` covering the full 50-failure dataset,
 | C2 | Determine category for each failure | [D] | Attempt #3 → All 34 observed failures classified as implementation bugs (triage summary §Classification Table). Remaining tests flagged pending rerun. |
 | C3 | Align with fix_plan | [D] | Attempt #4 → Mapped initial clusters to fix-plan entries (`[CLI-DEFAULTS-001]`, `[DETERMINISM-001]`, etc.). |
 | C4 | Capture blockers & next steps | [D] | Attempt #4 → "Pending Actions" section added to `triage_summary.md` with cluster→fix-plan mapping + coverage gap callout. |
-| C5 | Harvest Attempt #5 failure set | [ ] | Create new timestamped bundle `reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/` and ingest `failures_raw.md`, junit XML, and duration data from Attempt #5 (50 failures). |
-| C6 | Extend classification to full dataset | [ ] | Update `triage_summary.md` (new timestamp) with 18-cluster coverage, marking deltas vs the 34-failure snapshot. Preserve original file for traceability; new summary should reference both Attempt #2 and Attempt #5 bundles. |
-| C7 | Refresh fix_plan & plan linkages | [ ] | Update `docs/fix_plan.md` `[TEST-SUITE-TRIAGE-001]` next actions + attempts to cite the new triage artifacts; ensure plan tables (this file) reference the refreshed timestamp before moving to Phase D. |
+| C5 | Harvest Attempt #5 failure set | [D] | Attempt #6 → Created `reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/` and ingested `failures_raw.md`, summary, and commands from Attempt #5 (50 failures, 18 clusters). Artifacts: `{triage_summary.md,pending_actions.md,failures_raw.md}`. |
+| C6 | Extend classification to full dataset | [D] | Attempt #6 → Authored refreshed `triage_summary.md` covering all 50 failures across 18 clusters (C1-C18), highlighting deltas vs Attempt #2/Attempt #4 (34 failures → 50 failures; +16 new). Detailed cluster→fix-plan mappings, priority sequences (P1-P4), and reproduction commands included. |
+| C7 | Refresh fix_plan & plan linkages | [D] | Attempt #6 → Updated `pending_actions.md` with 8 new fix-plan IDs requiring creation plus status table for all 18 clusters. Plan tables (this file) refreshed to reference 20251010T135833Z timestamp. Ready for Phase D handoff. |
 
 ### Phase D — Remediation Roadmap Handoff
 Goal: Produce a ready-to-execute backlog for Ralph (or subagents) to address failing tests without ambiguity.
