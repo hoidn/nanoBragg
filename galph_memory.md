@@ -1,3 +1,10 @@
+### 2026-01-04 (galph loop - VECTOR-PARITY Phase B4 kickoff)
+- Repo already up to date; reviewed required spec/arch/testing docs and active plans before analysis. Coin flip = heads → audited Ralph commit 15a4d338 (Option A enablement) noting `test_high_resolution_variant` now fails with corr≈0.716 as expected.
+- Updated `plans/active/vectorization-parity-regression.md` Status Snapshot and Phase B table: B3a–B3e marked [D] with artifact references; Phase B4 ROI sweep remains open.
+- Refreshed `docs/fix_plan.md` `[VECTOR-PARITY-001]` Next Actions to focus on Phase B4a nb-compare ROI run + B4b summary and trace staging.
+- Replaced `input.md` (Mode: Parity) directing Ralph to execute the 512² ROI `nb-compare` command and archive outputs under `reports/2026-01-vectorization-parity/phase_b/<STAMP>/roi_compare/`.
+- Follow-up: Expect Attempt logging for B4a metrics/summary; once ROI evidence lands, plan for trace callchain prep per Phase C guidance.
+
 ### 2026-01-03 (galph loop - Option A activation)
 - Repo already synced. Reviewed required docs + active plans; coin flip = heads → audited Ralph commits `cab99e1`, `ab9aaee` (evidence-only, no regressions).
 - Adopted VECTOR-PARITY Phase B3 Option A (un-skip high-res pytest). Updated `plans/active/vectorization-parity-regression.md` with tasks B3a–B3e/B4a–B4b and refreshed status snapshot.

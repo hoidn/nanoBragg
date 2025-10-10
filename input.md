@@ -1,38 +1,37 @@
-Summary: Enable the 4096² high-resolution parity test (Option A) and capture the expected failure evidence.
+Summary: Capture ROI nb-compare metrics for the 4096² parity regression (Phase B4a) to unblock trace work.
 Mode: Parity
-Focus: [VECTOR-PARITY-001] Restore 4096² benchmark parity
+Focus: VECTOR-PARITY-001 / Restore 4096² benchmark parity
 Branch: feature/spec-based-2
-Mapped tests: KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_high_resolution_variant
-Artifacts: tests/golden_data/high_resolution_4096/image.bin; reports/2026-01-vectorization-parity/phase_b/$STAMP/{c_golden/,summary.md,pytest_highres.log,roi_compare/}
-Do Now: [VECTOR-PARITY-001] Execute Phase B3a–B3d Option A tasks — generate the C golden image, document provenance, implement the ROI-based pytest, then run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_high_resolution_variant` (expected FAIL) while capturing artifacts under reports/2026-01-vectorization-parity/phase_b/$STAMP/.
-If Blocked: Record the obstacle in reports/2026-01-vectorization-parity/phase_b/$STAMP/blockers.md (include commands/output) and note it in docs/fix_plan.md Attempt history before pausing.
+Mapped tests: none — evidence-only
+Artifacts: reports/2026-01-vectorization-parity/phase_b/<STAMP>/roi_compare/
+Do Now: VECTOR-PARITY-001 Phase B4a — run `NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE nb-compare --resample --roi 1792 2304 1792 2304 --outdir reports/2026-01-vectorization-parity/phase_b/$(date -u +%Y%m%dT%H%M%SZ)/roi_compare -- -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05`
+If Blocked: Capture the failing command output (stdout/stderr) plus `nb-compare --help` under the intended reports/<STAMP>/roi_compare/ directory and note the blocker in summary.md; do not pivot to other tests.
 Priorities & Rationale:
-- plans/active/vectorization-parity-regression.md:12 — Phase B3 Option A is now the gate before ROI scoping.
-- plans/active/vectorization-parity-regression.md:36 — Tasks B3a–B3e define the execution sequence for Option A.
-- docs/fix_plan.md:4012 — Next actions mandate generating golden data, updating docs, and running the high-res pytest.
-- specs/spec-a-parallel.md:90 — AT-PARALLEL-012 defines λ=0.5Å, 512×512 ROI, corr ≥0.95, ≤1.0 px peaks.
-- tests/test_at_parallel_012.py:364 — Current skip stub that must be replaced with ROI assertions.
+- spec-a-parallel.md:93 — high-resolution AT-012 ROI thresholds we must quantify.
+- plans/active/vectorization-parity-regression.md:40 — Phase B4a tasks demand nb-compare ROI evidence before trace work.
+- docs/fix_plan.md:4015 — Next Actions now center on ROI sweep + trace staging.
+- docs/development/testing_strategy.md:76 — reuse canonical golden-data commands; nb-compare is the approved parity tool.
+- docs/debugging/debugging.md:15 — trace SOP requires ROI context; ROI metrics guide the upcoming callchain.
 How-To Map:
-- export STAMP=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p reports/2026-01-vectorization-parity/phase_b/$STAMP/{c_golden,roi_compare}.
-- Generate golden data: `NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE $NB_C_BIN -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05 -floatfile tests/golden_data/high_resolution_4096/image.bin 2>&1 | tee reports/2026-01-vectorization-parity/phase_b/$STAMP/c_golden/command.log`; capture env via `python scripts/validation/dump_env.py > .../env.json` (or note manually) and compute sha256sum.
-- Update documentation: append command + ROI/tolerances to tests/golden_data/README.md (and testing_strategy.md §2.5 if needed); summarise in reports/.../summary.md.
-- Implement test: replace skip stub with loading the new binary, cut ROI `slice(1792, 2304)` in both axes, assert no NaNs/Infs, compute Pearson correlation, detect 50 peaks, and enforce ≤1.0 px offsets.
-- Run targeted pytest (expected FAIL) and tee output to reports/.../pytest_highres.log; record observed correlation/peak stats in summary.md and add Attempt note in docs/fix_plan.md.
-- Optional (if time permits): run `nb-compare --resample --roi 1792 2304 1792 2304 --outdir reports/2026-01-vectorization-parity/phase_b/$STAMP/roi_compare -- -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05` to prep for Phase B4a.
+- From repo root: `export NB_C_BIN=./golden_suite_generator/nanoBragg`
+- Run `STAMP=$(date -u +%Y%m%dT%H%M%SZ)` then `OUTDIR=reports/2026-01-vectorization-parity/phase_b/$STAMP/roi_compare`
+- `mkdir -p "$OUTDIR"`
+- `KMP_DUPLICATE_LIB_OK=TRUE nb-compare --resample --roi 1792 2304 1792 2304 --outdir "$OUTDIR" -- -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05`
+- After run: copy nb-compare stdout to `$OUTDIR/metrics.log`, ensure `summary.json`/PNGs land in same folder, then draft `$OUTDIR/summary.md` with correlation + sum_ratio values and mention if a 1024² ROI rerun happened.
 Pitfalls To Avoid:
-- Do not commit the new binary without updating tests/golden_data/README.md and citing the command.
-- Keep ROI centered (1792:2304 for both axes) and maintain float32 precision to match spec tolerances.
-- Preserve vectorization/device neutrality — no `.cpu()` shim inside the test implementation.
-- Verify no NaNs/Infs before correlation; fail fast if detected.
-- Respect Protected Assets (docs/index.md references); update index only after doc changes are final.
-- Ensure pytest failure is captured (expected) and recorded; do not mark xfail.
-- Watch repo size; confirm acceptable policy before committing 64MB binary (use git lfs if required by repo policy).
-- Maintain ASCII formatting when editing docs/tests.
-- Capture exact commands in commands.txt/summary.md; no ad-hoc scripts in repo root.
+- Do not run `pytest` suites — `test_high_resolution_variant` currently fails by design.
+- Keep ROI bounds exactly `1792 2304 1792 2304`; double-check order is slow,fast per spec.
+- Ensure `NB_C_BIN` points at `./golden_suite_generator/nanoBragg`; the frozen binary may drift.
+- Leave `reports/` artifacts uncommitted; reference them only in fix_plan attempts.
+- Preserve Protected Assets; no edits to docs/index.md or CLAUDE.md.
+- Keep `nb-compare` command with `--` separator; dropping it will ignore detector params.
+- Monitor disk usage; 4096² outputs are large — delete temporary files outside `$OUTDIR`.
+- Record SHA256 checksums only if new binaries created; none expected this run.
+- Stay on default dtype/device; no `.cpu()` shims or CUDA toggles unless instructed.
 Pointers:
-- plans/active/vectorization-parity-regression.md:12
-- plans/active/vectorization-parity-regression.md:36
-- docs/fix_plan.md:4012
-- specs/spec-a-parallel.md:90
-- tests/test_at_parallel_012.py:364
-Next Up: Phase B4a ROI nb-compare sweep once the high-res pytest evidence is in place.
+- plans/active/vectorization-parity-regression.md:32-41 — Phase B table and ROI tasks.
+- docs/fix_plan.md:4015-4032 — Next Actions + expectations for ROI bundle.
+- specs/spec-a-parallel.md:93 — AT-012 high-res acceptance thresholds.
+- docs/development/testing_strategy.md:76-104 — canonical golden-data commands and parity tooling.
+- docs/debugging/debugging.md:15-35 — trace-first methodology we prep for after ROI metrics.
+Next Up: Phase B4b — summarise ROI scope in `roi_scope.md` once metrics land.
