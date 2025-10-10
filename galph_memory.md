@@ -1734,3 +1734,9 @@
 - Focus: Review/housekeeping on `[SOURCE-WEIGHT-001]` Phase I3 prep. Updated `plans/active/source-weight-normalization.md` to mark Phase I2 complete (Attempt #39) so the status snapshot now leaves only Phase I3 open.
 - Replaced `input.md` (Mode: Docs) directing Ralph to build the Phase I3 archive bundle, land `plans/archive/source-weight-normalization.md`, flip `[SOURCE-WEIGHT-001]` to done, and capture collect-only proof under `reports/2025-11-source-weights/phase_i/<STAMP>/`.
 - Follow-up: Ralph to execute Phase I3 per the new input, then next supervisor loop can record the galph_memory readiness note for VECTOR-TRICUBIC-002 Phase A3 and archive the plan.
+### 2025-12-28 (galph loop - VECTOR-TRICUBIC Phase B staging)
+- Logged readiness note: SOURCE-WEIGHT parity locked to spec (corr ≥0.999, |sum_ratio−1| ≤5e-3) with memo `reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md` and selector `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference`.
+- Marked `plans/active/vectorization.md` Phase A3 [D] and refreshed Status Snapshot; synced `plans/active/vectorization-gap-audit.md` snapshot to match the 2025-12-28 galph readiness note.
+- Updated `docs/fix_plan.md` `[VECTOR-TRICUBIC-002]` to in_progress with new Next Actions and Attempt #1 (planning) entry.
+- Rewrote `input.md` (Mode: Perf) steering Ralph to execute Phase B1–B2 pytest + benchmark refresh under `reports/2026-01-vectorization-refresh/phase_b/<STAMP>/`.
+- Follow-up: expect Attempt #2 with fresh regression/benchmark logs before resuming VECTOR-GAPS-002 profiler work.

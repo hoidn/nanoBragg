@@ -11,7 +11,7 @@
   - plans/active/vectorization.md (Phases A–G history)
   - plans/active/perf-pytorch-compile-refactor/plan.md (4096² warm benchmark harness & profiler usage)
   - reports/2025-10-vectorization/gaps/20251009T061928Z/analysis.md (prior gap evidence: divergence/dispersion source loops)
-- Status Snapshot (2025-12-27 update): Phase A evidence archived; SOURCE-WEIGHT-001 Phase H1–H4 parity artifacts now propagate through the ledger (corr ≥0.999, |sum_ratio−1| ≤5e-3). Phase I1 documentation updates complete (`docs/architecture/pytorch_design.md` §1.1.5, `docs/development/pytorch_runtime_checklist.md` item #4); Phase I2 ledger propagation in progress. Phase B is unblocked and ready for the refreshed profiler capture/backlog work.
+- Status Snapshot (2025-12-28 update): Phase A evidence archived; SOURCE-WEIGHT-001 parity memo + documentation updates remain authoritative (corr ≥0.999, |sum_ratio−1| ≤5e-3). Phase I ledger propagation is complete and the 2025-12-28 galph_memory note confirms dependency readiness. Phase B remains unblocked and awaits the refreshed profiler capture/backlog work.
 
 ### Phase A — Loop Inventory & Evidence Capture
 Goal: Build an auditable inventory of remaining Python loops touching the simulator hot path, with code locations and rough complexity estimates.

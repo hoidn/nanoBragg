@@ -1,6 +1,6 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-12-25 (galph loop #206)
+**Last Updated:** 2025-12-28 (galph loop #214)
 **Active Focus:**
 - ROUTING: Close the reopened guard plan by capturing a fresh regression audit referencing commit `c49e3be` and re-confirming the guarded `loop.sh` flow (`plans/active/routing-loop-guard/plan.md` Phases A–C) before automation resumes.
 - ROUTING-SUPERVISOR: Launch Phase A of `plans/active/supervisor-loop-guard/plan.md`, then drive Phase B guard work (B2–B4) and new task B5 to add `supervisor.sh` to docs/index.md so Protected-Asset policy covers the script before automation runs again.
@@ -3766,7 +3766,7 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 ## [VECTOR-TRICUBIC-002] Vectorization relaunch backlog
 - Spec/AT: specs/spec-a-core.md Sections 4-5 (sampling, source weighting, detector absorption); arch.md Sections 2/8/15; docs/architecture/pytorch_design.md Section 1.1; docs/development/pytorch_runtime_checklist.md; docs/development/testing_strategy.md Sections 1.4-2; plans/archive/vectorization.md (Phase A-H historical record).
 - Priority: High
-- Status: in_planning (Phase A dependency gate outstanding)
+- Status: in_progress (Phase B regression refresh staging)
 - Owner/Date: galph/2025-12-24
 - Plan Reference: `plans/active/vectorization.md`
 - Reproduction (C & PyTorch):
@@ -3774,13 +3774,14 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * Regression refresh (Phase B1): `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -v` and `pytest tests/test_at_abs_001.py -v -k "cpu or cuda"`
   * Profiling relaunch (Phase C1): `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`
 - First Divergence (if known): **RESOLVED** (2025-12-26 — Phase H3/H4 propagation). Workflows for post-Phase-H vectorization maintenance stalled because SOURCE-WEIGHT-001 Phase E parity evidence never landed; profiler traces therefore remained low-correlation (≈0.72) and VECTOR-GAPS-002 Phase B1 stayed blocked. No consolidated roadmap existed to sequence blocker clearance, regression refresh, gap profiling, and new vectorization fixes.
-- Next Actions (2025-12-26 refresh — Phase A dependencies now clear):
-  1. ✅ COMPLETE — SOURCE-WEIGHT-001 Phase H3/H4 ledger propagation finished (ralph loop #268). Parity memo: `reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md`. Test selector: `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference` (PASSing). Thresholds: corr ≥0.999, |sum_ratio−1| ≤5e-3 (now documented in `docs/architecture/pytorch_design.md` §1.1.5 and `docs/development/pytorch_runtime_checklist.md` item #4).
-  2. ✅ COMPLETE — `plans/active/vectorization-gap-audit.md` Phase B1 marked UNBLOCKED. `[VECTOR-GAPS-002]` Next Actions updated to cite Phase H memo and new documentation locations.
-  3. Execute Phase B regression refresh commands (`pytest tests/test_tricubic_vectorized.py -v`, `pytest tests/test_at_abs_001.py -v -k "cpu or cuda"`, and the paired microbenchmarks) and store outputs under `reports/2026-01-vectorization-refresh/phase_b/<STAMP>/` for comparison against the 2025-10 baselines.
-  4. Resume VECTOR-GAPS-002 Phase B via plan Phase C once refresh evidence is green (profiler capture, hotspot mapping, backlog publication). Coordinate with `[PERF-PYTORCH-004]` when profiling restarts.
-  5. Prepare Phase D design packets and microbenchmark harnesses so Ralph can implement the prioritised vectorization fixes without additional discovery; update `input.md` templates accordingly when delegation is imminent.
-- Attempts History: None — initiative (re)opened 2025-12-24. First execution attempt will be logged after Phase A parity evidence is captured.
+- Next Actions (2025-12-28 update — Phase A closed, Phase B ready):
+  1. Run Phase B regression refresh commands (`pytest tests/test_tricubic_vectorized.py -v`, `pytest tests/test_at_abs_001.py -v -k "cpu or cuda"`, plus the paired microbenchmarks) and deposit outputs under `reports/2026-01-vectorization-refresh/phase_b/<STAMP>/`.
+  2. Log the artifact bundle and test results in this ledger (Attempt #2) and in `plans/active/vectorization.md` Phase B rows; include CPU vs CUDA notes if CUDA unavailable.
+  3. After refresh evidence is green, resume VECTOR-GAPS-002 Phase B (profiler capture/backlog) and coordinate with `[PERF-PYTORCH-004]` for warm-run benchmarks.
+  4. Prepare Phase D design packets/microbenchmarks so delegation to Ralph can begin once profiler backlog is prioritised.
+
+- Attempts History:
+  * [2025-12-28] Attempt #1 (galph loop) — Result: planning-only. Logged galph_memory readiness note capturing equal-weight decision, selector `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference`, and parity memo path `reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md`; updated `plans/active/vectorization.md` Phase A3 to [D]. Next Attempt: Phase B regression refresh bundle.
 
 ## [VECTOR-GAPS-002] Vectorization gap audit
 - Spec/AT: specs/spec-a-core.md §4, specs/spec-a-parallel.md §2.3 & §4, arch.md §§2/8/15, docs/architecture/pytorch_design.md §1.1, docs/development/pytorch_runtime_checklist.md, docs/development/testing_strategy.md §§1.4–2.
