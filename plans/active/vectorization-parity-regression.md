@@ -9,7 +9,7 @@
   - `docs/development/pytorch_runtime_checklist.md` — runtime guardrail reminders (especially item #4 on source weighting).
   - `docs/fix_plan.md` `[VECTOR-GAPS-002]` Attempts #3–#8 and `[PERF-PYTORCH-004]` baseline expectations.
   - Existing artifacts: good run `reports/benchmarks/20251009-161714/`; failing bundles under `reports/2026-01-vectorization-gap/phase_b/20251009T09*` and `20251010T02*`.
-- Status Snapshot (2026-01-06): Phases A–B (including B4 ROI sweeps) are complete; the Phase C trace plan lives at `reports/2026-01-vectorization-parity/phase_c/20251010T040739Z/trace_plan.md`. Awaiting instrumented C/Py trace capture for pixels (2048,2048), (1791,2048), and (4095,2048) to localise the first divergence and unblock VECTOR-GAPS-002 / PERF-PYTORCH-004.
+- Status Snapshot (2026-01-06): Phase C1 C-trace capture completed via Attempt #8 (`reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/summary.md`); logs exist for pixels (2048,2048), (1792,2048), and (4095,2048). PyTorch trace work (Phase C2) and diff analysis (Phase C3) remain outstanding.
 
 ### Phase A — Evidence Audit & Baseline Ledger
 Goal: Canonicalise the good vs bad benchmark evidence and capture parameter parity so future loops operate from a single source of truth.
@@ -47,7 +47,7 @@ Exit Criteria: `reports/2026-01-vectorization-parity/phase_c/<STAMP>/` contains 
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Capture instrumented C trace | [ ] | Instrument `golden_suite_generator/nanoBragg.c` for pixels (2048,2048), (1791,2048), (4095,2048); print aggregated tap points (pix0_vector, pixel_pos, scattering_vec, hkl, F_cell, omega_pixel, steps, intensity). Rebuild and run the authoritative 4096² command (λ=0.5 Å, distance=500 mm, pixel=0.05 mm, MOSFLM convention), saving logs to `reports/2026-01-vectorization-parity/phase_c/<STAMP>/c_traces/`. Keep artifacts git-ignored (verify `git status` stays clean). |
+| C1 | Capture instrumented C trace | [D] | ✅ Attempt #8 (`reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/`) logged 72-point TRACE_C taps for pixels (2048,2048), (1792,2048), (4095,2048) with commands/env metadata. Note: current pixels sit in low-intensity background (F_cell=0) — retain observation for C3 hypothesis drafting. |
 | C2 | Capture PyTorch trace | [ ] | Extend `scripts/debug_pixel_trace.py` to accept the same pixel coordinates; run the 4096² parity config with `KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py --pixel ${slow} ${fast}` (float64 CPU) so the tap points mirror the C trace, writing outputs to `reports/2026-01-vectorization-parity/phase_c/<STAMP>/py_traces/`. Run `pytest --collect-only -q` after script edits to confirm import health. |
 | C3 | Diff & hypothesise | [ ] | Generate `reports/2026-01-vectorization-parity/phase_c/<STAMP>/first_divergence.md` plus `diff_*.txt` per pixel, recording the earliest mismatched variable and relative error; refresh fix_plan Attempts with findings and gate Phase D accordingly. |
 

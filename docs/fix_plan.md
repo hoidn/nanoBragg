@@ -1,6 +1,6 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2026-01-05 (galph loop)
+**Last Updated:** 2026-01-06 (galph loop)
 **Active Focus:**
 - Restore 4096² benchmark parity via Phase C tracing while keeping vectorization/performance plans unblocked.
 - Prepare pyrefly + test-index documentation so future delegations have authoritative selectors.
@@ -25,20 +25,22 @@
   * C: `NB_C_BIN=./golden_suite_generator/nanoBragg python scripts/nb_compare.py --resample --roi 1792 2304 1792 2304 --outdir reports/2026-01-vectorization-parity/phase_b/<STAMP>/roi_compare -- -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05`
   * PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE python scripts/nb_compare.py --resample --roi 1792 2304 1792 2304 --outdir reports/2026-01-vectorization-parity/phase_b/<STAMP>/roi_compare -- -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05`
   * Shapes/ROI: detector 4096×4096, pixel 0.05 mm, ROI slow=1792–2303 / fast=1792–2303 (512²)
-- First Divergence (if known): Not yet isolated — Phase C trace plan pending.
+- First Divergence (if known): Not yet isolated — Phase C1 C traces captured (background only); awaiting PyTorch trace to compare.
 - Attempts History:
   * [2025-12-30] Attempt #0 — Result: partial (planning baseline). corr_warm=0.721175 (❌), speedup_warm=1.13×, sum_ratio=225.036 (full-frame). Artifacts: `reports/2026-01-vectorization-parity/phase_a/20251010T023622Z/artifact_matrix.md`, `reports/2026-01-vectorization-parity/phase_b/20251010T030852Z/summary.md`.
   * [2025-10-10] Attempt #6 — Result: failed (Phase B3d ROI pytest). corr_roi=0.7157 (❌), peak_matches=50/50 ≤1 px, runtime≈5.8 s. Artifacts: `reports/2026-01-vectorization-parity/phase_b/20251010T034152Z/pytest_highres.log`.
   * [2025-10-10] Attempt #7 — Result: success (Phase B4a ROI parity). corr_roi=0.999999999; sum_ratio=0.999987; RMSE=3.28e-05; mean_peak_delta=0.78 px; max_peak_delta=1.41 px. Artifacts: `reports/2026-01-vectorization-parity/phase_b/20251010T035732Z/roi_compare/{summary.json,summary.md,roi_scope.md}`.
+  * [2025-10-10] Attempt #8 — Result: success (Phase C1 C traces). Captured TRACE_C logs for pixels (2048,2048), (1792,2048), (4095,2048) with commands/env metadata; all three lie in background (F_cell=0). Artifacts: `reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/{summary.md,commands.txt,env/trace_env.json,c_traces/}`.
 - Observations/Hypotheses:
   - Full-frame correlation collapse is dominated by edge/background pixels; central ROI meets spec thresholds (`roi_scope.md`).
   - Benchmark vs nb-compare metrics diverge; need trace-backed validation to reconcile tooling differences.
   - ROI parity confirms physics is correct for signal-rich pixels; divergence likely resides in scaling applied outside the ROI.
+  - Phase C1 traces confirm the selected pixels are background-only (I_pixel_final=0); plan to add at least one on-peak trace if PyTorch outputs mirror that behaviour.
 - Next Actions (2026-01-06 refresh — Phase C instrumentation greenlit):
   1. ✅ **Phase C staging** — Completed via Attempt #8 (`reports/2026-01-vectorization-parity/phase_c/20251010T040739Z/trace_plan.md`).
-  2. ✅ **Supervisor decisions logged this loop** — Pixel set = {(2048,2048) ROI core, (1791,2048) first row outside ROI, (4095,2048) far edge}; extend `scripts/debug_pixel_trace.py` rather than fork; start with aggregated-per-pixel tap points (totals + loop counters) before drilling into per-source traces.
-  3. **Phase C1 — C trace capture** — Add guarded print taps for the three pixels in `golden_suite_generator/nanoBragg`, rebuild locally, and run the authoritative 4096² command (λ=0.5 Å, distance=500 mm, pixel=0.05 mm, MOSFLM convention) with stderr redirected to `reports/2026-01-vectorization-parity/phase_c/<STAMP>/c_traces/`. Keep artifacts git-ignored (verify `git status` stays clean).
-  4. **Phase C2 — PyTorch trace capture** — Enhance `scripts/debug_pixel_trace.py` to accept pixel coordinates + ROI config, emit float64 CPU traces into `.../py_traces/` matching the C filenames; rerun `pytest --collect-only -q` after script edits.
+  2. ✅ **Supervisor decisions logged this loop** — Pixel set = {(2048,2048) ROI core, (1792,2048) first row outside ROI, (4095,2048) far edge}; extend `scripts/debug_pixel_trace.py` rather than fork; start with aggregated-per-pixel tap points before drilling into per-source traces.
+  3. ✅ **Phase C1 — C trace capture** — TRACE_C logs archived at `reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/`; note all three pixels currently sit in background (F_cell=0).
+  4. **Phase C2 — PyTorch trace capture** — Enhance `scripts/debug_pixel_trace.py` to accept pixel coordinates + ROI config, emit float64 CPU traces into `.../py_traces/` matching the C filenames; rerun `pytest --collect-only -q` after script edits. If logs again show only zero intensity, add an on-peak pixel before proceeding.
   5. **Phase C3 — Trace diff & first divergence** — Produce `reports/.../first_divergence.md` summarising the earliest mismatched variable per pixel and update this entry’s Attempts History with artifact links + hypotheses.
   6. **Optional ROI sweep** — Only if traces fail to expose the inflation locus; otherwise defer to avoid churn and keep new `reports/` bundles untracked.
 - Risks/Assumptions:

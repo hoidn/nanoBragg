@@ -1841,3 +1841,10 @@
 - Focused on `[VECTOR-PARITY-001]` Phase C instrumentation. Updated `plans/active/vectorization-parity-regression.md` row C1 with explicit λ=0.5 Å, distance=500 mm, pixel=0.05 mm command context. Refreshed `reports/2026-01-vectorization-parity/phase_c/20251010T040739Z/trace_plan.md` to lock pixel set {(2048,2048),(1792,2048),(4095,2048)}, corrected command templates, and marked pixel-selection question resolved.
 - Tweaked `docs/fix_plan.md` Next Actions to reference the authoritative 4096² command parameters for Phase C1.
 - Replaced `input.md` (Mode: Parity) directing Ralph to instrument `golden_suite_generator/nanoBragg.c`, rebuild, and capture `TRACE_C` logs for the three approved pixels under a fresh `reports/2026-01-vectorization-parity/phase_c/<STAMP>/` bundle (logs + commands + env metadata). Expect Attempt update with artifact paths before progressing to Py traces.
+### 2026-01-06 (galph loop - Phase C2 Py trace handoff)
+- Verified Ralph's Phase C1 attempt (20251010T053711Z); C traces exist for all three pixels but sit in background (F_cell=0).
+- Updated `docs/fix_plan.md` (lines 19-45) to log Attempt #8, mark Phase C1 complete, and note the need for an on-peak pixel if Py traces also read zero; refreshed Last Updated date.
+- Marked Phase C1 as [D] in `plans/active/vectorization-parity-regression.md` with artifact path and background-intensity note; status snapshot now calls out pending C2/C3 work.
+- Authored new `input.md` (Mode: Parity) instructing Ralph to extend `scripts/debug_pixel_trace.py`, capture Py traces for the three pixels, and store artifacts under `reports/2026-01-vectorization-parity/phase_c/<STAMP>/` with commands/env metadata; added guard to pick an on-peak pixel next if everything stays zero.
+- Reminder: avoid creating `phase_c/unknown/` folders—`STAMP` env var must be set before trace runs.
+- Follow-up expectations: Ralph to deliver py_traces + summary + pytest collect log; supervisor to review numeric diffs and progress to Phase C3.
