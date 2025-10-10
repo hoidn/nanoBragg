@@ -1,6 +1,6 @@
 ## Context
 - Initiative: SOURCE-WEIGHT-001 — converge the simulator, test suite, and documentation on the spec contract that **source weights are ignored** while documenting any residual C-only defects.
-- Current Objective: Phase H deliverables (memo + test flip) and Phase I1 documentation updates landed (Attempt #38, 20251010T005717Z). Remaining work: propagate the refreshed documentation through dependent ledgers (Phase I2) and prepare the archival hand-off (Phase I3).
+- Current Objective: Phase H deliverables (memo + test flip) and Phase I1 documentation updates landed (Attempt #38, 20251010T005717Z). Phase I2 ledger propagation closed in Attempt #39 (20251010T011249Z); remaining work: assemble the archival hand-off (Phase I3).
 - Dependencies:
   - `specs/spec-a-core.md` §4 — normative statement: both weight and wavelength columns in sourcefile are ignored; CLI `-lambda` is authoritative.
   - `golden_suite_generator/nanoBragg.c:2570-2720` — C ingestion loop (will be quoted in the Phase H memo) confirming equal-weight accumulation.
@@ -8,7 +8,7 @@
   - `docs/architecture/pytorch_design.md` §1.1 and `docs/development/pytorch_runtime_checklist.md` — must inherit the parity decision during Phase I.
   - Plans blocked by this initiative: `plans/active/vectorization.md` (Phase A2) and `plans/active/vectorization-gap-audit.md` (Phase B1).
   - Evidence bundles: `reports/2025-11-source-weights/phase_{a..f}/` (baseline traces + design packet) and `reports/2025-11-source-weights/phase_g/{20251009T235016Z,20251010T000742Z}/` (final parity bundle).
-- Status Snapshot (2025-12-27): Phases A–G remain archival references and Phase H (Attempts #31–#37) is now fully complete — ledger, bug docs, and dependent plans all cite the Phase H memo (`reports/2025-11-source-weights/phase_h/20251010T002324Z/`). Phase I1 documentation updates (pytorch_design.md, pytorch_runtime_checklist.md, specs/spec-a-core.md) are complete (`reports/2025-11-source-weights/phase_i/20251010T005717Z/`). Outstanding gates: Phase I2 ledger propagation + dependencies refresh, followed by Phase I3 archival. `[C-SOURCEFILE-001]` continues to track the C comment parsing bug uncovered during Phase G.
+- Status Snapshot (2025-12-27): Phases A–G remain archival references and Phase H (Attempts #31–#37) is now fully complete — ledger, bug docs, and dependent plans all cite the Phase H memo (`reports/2025-11-source-weights/phase_h/20251010T002324Z/`). Phase I1 documentation updates (pytorch_design.md, pytorch_runtime_checklist.md, specs/spec-a-core.md) are complete (`reports/2025-11-source-weights/phase_i/20251010T005717Z/`). Phase I2 ledger propagation finished in Attempt #39 (20251010T011249Z), leaving Phase I3 archival as the final gate. `[C-SOURCEFILE-001]` continues to track the C comment parsing bug uncovered during Phase G.
 
 ### Legacy Phases — Archived (No Further Action)
 Goal: Preserve provenance; treat artifacts as immutable references.
@@ -53,7 +53,7 @@ Exit Criteria: Architecture/runtime docs updated, dependent plans ungated, plan 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | I1 | Update permanent docs | [D] | ✅ Attempt #38 (20251010T005717Z) revised `docs/architecture/pytorch_design.md` (§1.1.5), `docs/development/pytorch_runtime_checklist.md` (item #4), and `specs/spec-a-core.md:151-155`, citing the Phase H parity memo and parity thresholds. Artifacts stored under `reports/2025-11-source-weights/phase_i/20251010T005717Z/` with pytest collect-only proof. |
-| I2 | Ungate dependent plans | [ ] | Refresh `plans/active/vectorization.md` (Phase A2) and `plans/active/vectorization-gap-audit.md` (Phase B1) with the new selectors/artifacts, and update `docs/fix_plan.md` entries (`VECTOR-TRICUBIC-002`, `VECTOR-GAPS-002`, `PERF-PYTORCH-004`) so they cite the parity memo instead of the retired divergence thresholds. |
+| I2 | Ungate dependent plans | [D] | ✅ Attempt #39 (20251010T011249Z). Refreshed `plans/active/vectorization.md` (Phase A2) and `plans/active/vectorization-gap-audit.md` (Phase B1) with parity memo citations, and updated `docs/fix_plan.md` entries (`VECTOR-TRICUBIC-002`, `VECTOR-GAPS-002`, `PERF-PYTORCH-004`) to reference `docs/architecture/pytorch_design.md` §1.1.5 and `docs/development/pytorch_runtime_checklist.md` item #4. Artifacts: `reports/2025-11-source-weights/phase_i/20251010T011249Z/`. |
 | I3 | Archive initiative | [ ] | Draft closure summary for `plans/archive/source-weight-normalization.md`, update `[SOURCE-WEIGHT-001]` status to `done`, and log a final galph_memory entry noting residual risks (e.g., interpolation segfault remains a C bug). |
 
 ## Reporting Expectations
