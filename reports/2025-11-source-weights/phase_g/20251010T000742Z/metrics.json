@@ -1,0 +1,8 @@
+{
+  "c_sum": 125522.6171875,
+  "py_sum": 126004.640625,
+  "sum_ratio": 1.0038400888442993,
+  "correlation": 0.9999886333899755,
+  "expected": "correlation < 0.8 (C-PARITY-001)",
+  "decision_memo": "reports/2025-11-source-weights/phase_e/20251009T202432Z/spec_vs_c_decision.md"
+}

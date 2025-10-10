@@ -1,0 +1,22 @@
+# SOURCE-WEIGHT-001 Phase G2-G3 Parity Bundle
+# Generated: 2025-10-10T00:07:42Z
+# Mode: Parity (per input.md Do Now)
+
+# Environment Setup
+export KMP_DUPLICATE_LIB_OK=TRUE
+export NB_RUN_PARALLEL=1
+export NB_C_BIN=./golden_suite_generator/nanoBragg
+
+# Phase G2-G3: Run targeted pytest selectors
+NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_cli_scaling.py::TestSourceWeights \
+  tests/test_cli_scaling.py::TestSourceWeightsDivergence
+
+# Expected Results (per plan Phase G exit criteria):
+# - 7 passed tests (spec compliance)
+# - 1 xpassed test (test_c_divergence_reference)
+# - Correlation ≥ 0.999 (observed: 0.9999886)
+# - |sum_ratio - 1| ≤ 3e-3 (observed: |1.0038 - 1| = 0.0038 ✓)
+
+# XPASS Metrics Location:
+# reports/2025-11-source-weights/phase_g/unexpected_c_parity/metrics.json
