@@ -1,0 +1,18 @@
+# VECTOR-GAPS-002 Phase B1 Profiler Trace
+# Timestamp: 20251010T020149Z
+# Status: FAILED (correlation_warm = 0.721 < 0.999 threshold)
+
+export STAMP=20251010T020149Z
+NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts
+
+# Results stored in: reports/benchmarks/20251009-190219/
+# Profiler trace: reports/benchmarks/20251009-190219/profile_4096x4096/trace.json
+# Failure artifacts: reports/2026-01-vectorization-gap/phase_b/20251010T020149Z/failed/
+
+# Metrics:
+# - correlation_warm: 0.721175
+# - correlation_cold: 0.721175
+# - speedup_warm: 1.23x
+# - C time: 0.814s
+# - PyTorch warm time: 0.663s
+# - FAILURE: correlation_warm < 0.999 (threshold not met)

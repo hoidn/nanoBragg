@@ -3916,6 +3916,28 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - Despite the parity recovery, Phase B1 remains blocked pending `[SOURCE-WEIGHT-001]` weighted-source parity evidence so the profiler analysis reflects the spec-compliant scenario.
     Next Actions:
       1. Execute Phase B1 profiler rerun now that SOURCE-WEIGHT-001 Phase H parity is archived: `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`.
+  * [2025-10-10] Attempt #6 (ralph loop #274 — evidence-only). Result: ❌ FAILED (Phase B1 profiler rerun blocked by parity threshold).
+    Metrics: correlation_warm=0.721175 (−38% from ≥0.999 threshold), correlation_cold=0.721175, speedup_warm=1.23× (PyTorch faster), sum_ratio=not computed (temp files deleted), cache speedup=88778.4×. Command: `NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts`.
+    Artifacts:
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T020149Z/failed/benchmark_results.json` — Parity failure metrics
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T020149Z/failed/profile_run.log` — Full benchmark output
+      - `reports/benchmarks/20251009-190219/profile_4096x4096/trace.json` — Profiler trace (unreliable until parity fixed)
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T020149Z/summary.md` — Failure analysis and root cause hypotheses
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T020149Z/collect.log` — Test collection verification (per blocked protocol)
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T020149Z/env.json` — Environment metadata
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T020149Z/commands.txt` — Reproduction commands
+    Observations/Hypotheses:
+      - **CRITICAL REGRESSION:** Correlation dropped from 0.999998 (Attempt #5, 2025-12-25) back to 0.721175 — a severe parity regression occurred between 2025-12-25 and 2025-10-10.
+      - Both cold and warm runs show identical low correlation (0.72) → deterministic computation issue, not cache/compilation artifact.
+      - Warm speedup 1.23× indicates PyTorch is faster than C, but physics is fundamentally wrong.
+      - Root cause candidates: (1) Commits between 2025-12-25 and 2025-10-10 introduced regression, (2) SOURCE-WEIGHT-001 Phase H fixes were reverted, (3) Device/dtype configuration mismatch, (4) RNG seed or normalization change.
+      - Per `input.md` blocked protocol: stashed artifacts to `failed/`, ran pytest --collect-only, logged failure in fix_plan (this entry).
+    Next Actions:
+      1. **URGENT REGRESSION INVESTIGATION:** Git bisect between last known-good commit (Attempt #5 artifact) and current HEAD to identify regressing commit.
+      2. **PARALLEL TRACE DEBUGGING:** Run `scripts/debug_pixel_trace.py` vs instrumented C per `docs/debugging/debugging.md` §2.1 to find first numeric divergence.
+      3. **AT-PARALLEL VALIDATION:** Run `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py` to identify which parity tests are now failing.
+      4. **BLOCK Phase B2/B3:** Cannot proceed with vectorization gap analysis until correlation ≥0.999 restored.
+      5. **ESCALATE TO SUPERVISOR:** This is a critical regression requiring immediate triage.
 - Risks/Assumptions: Treat any new profiler run with correlation_warm < 0.999 or |sum_ratio−1| > 5e-3 as a blocker; halt Phase B2/B3 until parity is re-established and escalate to galph. Ensure NB_C_BIN points at `./golden_suite_generator/nanoBragg` and reuse the SOURCE-WEIGHT-001 parity memo as justification in attempt notes.
 - Exit Criteria (quote thresholds from spec):
   * Phase A: Complete loop inventory with manual classification (✓ completed Attempt #2).
