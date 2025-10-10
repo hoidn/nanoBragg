@@ -8,12 +8,13 @@
   - `docs/development/pytorch_runtime_checklist.md` — sanity checklist before executing PyTorch-heavy tests (KMP env, device neutrality).
   - `prompts/callchain.md` — fallback SOP if targeted tracing is required for specific failures (defer until triage completes).
 
-### Status Snapshot (2026-04-??)
+### Status Snapshot (2026-01-16)
 - Phase A ✅ complete (Attempt #1 — `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/`); 692 tests collected, no errors.
 - Phase B ✅ complete (Attempt #5 — `reports/2026-01-test-suite-triage/phase_b/20251010T135833Z/`); full suite executed in 1865 s with 50 failures captured across 18 clusters.
 - Phase C ✅ complete (Attempt #6 — `reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/`); all 50 failures classified across 18 clusters, mapped to 10 existing + 8 new fix-plan IDs.
 - Phase D ✅ complete (D1–D4). This loop issued the supervisor handoff for `[CLI-DEFAULTS-001]` (input stamp 20251010T153734Z) unlocking remediation attempts.
-- Phase E 🔄 reactivated (2026 refresh required): awaiting new Attempt capturing a fresh `pytest tests/` execution under `phase_e/` before downstream remediation resumes.
+- Phase E ✅ complete (Attempt #7 — `reports/2026-01-test-suite-triage/phase_e/20251010T180102Z/`); 691 executed tests, 516 passed, 49 failed, 126 skipped. CLI defaults cluster cleared; other clusters unchanged.
+- Phase F 🔄 in flight: triage workbook needs 2026 deltas before Phase G remediation coordination can resume.
 
 ### Phase A — Preflight & Inventory
 Goal: Confirm environment readiness and enumerate suite metadata so the full run is reproducible and guarded.
@@ -73,10 +74,10 @@ Exit Criteria: New Attempt logged with full-suite runtime ≤3600 s, artifacts
 
 | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
 | --- | --- | --- | --- |
-| E1 | Refresh preflight snapshot | [ ] | Run `pytest --collect-only -q` and capture env/disk summary in `preflight.md` (update Phase A template) to confirm no drift. |
-| E2 | Execute full test suite | [ ] | Command: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_e/<STAMP>/artifacts/pytest_full.xml`; store console log + `commands.txt`. |
-| E3 | Summarise 2026 results | [ ] | Produce `summary.md` (pass/skip/fail counts, top durations) and `failures_raw.md`; compare against Phase B Attempt #5. |
-| E4 | Update ledgers | [ ] | Append Attempt entry in `docs/fix_plan.md` `[TEST-SUITE-TRIAGE-001]`, note new cluster deltas, and link artifacts; include rationale if discrepancies vs 2025 run appear. |
+| E1 | Refresh preflight snapshot | [D] | Attempt #7 reused Phase A env snapshot; `collect_only.log` + `env.txt` captured under `reports/2026-01-test-suite-triage/phase_e/20251010T180102Z/`. |
+| E2 | Execute full test suite | [D] | Attempt #7 — `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_e/20251010T180102Z/artifacts/pytest_full.xml`; runtime 1860.74 s, 49 failures logged. |
+| E3 | Summarise 2026 results | [D] | Attempt #7 — `summary.md` + `failures_raw.{md,txt}` compare against Phase B Attempt #5; documented net delta (+1 pass, −1 failure). |
+| E4 | Update ledgers | [D] | Attempt #7 — `docs/fix_plan.md` updated with refreshed counts and artifact paths (Attempt entry dated 2025‑10‑10). |
 
 ### Phase F — Failure Classification Refresh
 Goal: Reclassify the refreshed failure set into implementation bugs vs deprecated tests and update downstream fix-plan item statuses.
@@ -85,9 +86,9 @@ Exit Criteria: Updated `triage_summary.md` and `pending_actions.md` covering the
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| F1 | Extend triage worksheet | [ ] | Duplicate prior template under `reports/2026-01-test-suite-triage/phase_f/<STAMP>/triage_summary.md`; annotate each failure with 2026 status (regressed, resolved, new). |
-| F2 | Map failures to fix-plan IDs | [ ] | Update or create fix-plan entries; ensure each cluster references authoritative specs/tests; archive deprecated tests rationale if any. |
-| F3 | Record pending actions table | [ ] | Produce refreshed `pending_actions.md` noting owner, priority, reproduction commands; cross-link in `docs/fix_plan.md`. |
+| F1 | Extend triage worksheet | [ ] | Create `reports/2026-01-test-suite-triage/phase_f/<STAMP>/triage_summary.md`. Start from Phase C table, flag the cleared CLI defaults cluster, and annotate each of the 49 remaining nodes using `phase_e/20251010T180102Z/failures_raw.md` + `logs/pytest_full.log`. |
+| F2 | Map failures to fix-plan IDs | [ ] | Update `triage_summary.md` ownership columns + produce `cluster_deltas.md` noting count changes (e.g., C1 resolved). Ensure every failure maps to an existing or new fix-plan item; raise TODOs for missing entries. |
+| F3 | Record pending actions table | [ ] | Publish `reports/2026-01-test-suite-triage/phase_f/<STAMP>/pending_actions.md` with owner, priority, reproduction command, and artifact expectations per cluster; cross-link in `docs/fix_plan.md` and `galph_memory.md`. |
 
 ### Phase G — Remediation Coordination
 Goal: Ensure remediation handoffs (determinism, CLI flags, dtype neutrality, etc.) remain prioritised in line with the refreshed failure ordering.

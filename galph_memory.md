@@ -2154,3 +2154,13 @@
 - Refreshed docs/fix_plan.md Active Focus to call for the Phase C document bundle; input.md now directs Ralph to author remediation_plan/tests/docs_updates under a new phase_c stamp (docs-only).
 - Next Ralph loop: produce the phase_c blueprint docs, log Attempt #3 in fix_plan, then we can green-light Phase D implementation.
 - <Action State>: [ready_for_implementation]
+### 2026-01-16 (galph loop - pre-plan note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase F failure classification refresh
+- Action type: Planning
+- Mode: Docs
+### 2026-01-16 (galph loop - TEST-SUITE-TRIAGE classification setup)
+- Logged Attempt #7 outcome (49 failures, CLI defaults resolved) and shifted plan focus to the new phase_f bundle.
+- Marked Phase E tasks [D] and rewrote `plans/active/test-suite-triage.md` guidance for the triage refresh (F1–F3 deliverables now emphasise triage_summary, cluster_deltas, pending_actions).
+- Updated `docs/fix_plan.md` Next Actions to call for Attempt #8 (phase_f artifacts) and refreshed the header/active focus summary; `input.md` now points Ralph at producing the documentation set under `reports/2026-01-test-suite-triage/phase_f/$STAMP/`.
+- Follow-up for Ralph: create the phase_f/ triage_summary.md + cluster_deltas.md + pending_actions.md bundle, record Attempt #8, and update ledger references per Do Now.
+- <Action State>: [ready_for_implementation]

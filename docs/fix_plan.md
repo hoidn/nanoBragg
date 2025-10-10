@@ -1,10 +1,10 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2026-01-16 (galph loop — dtype neutrality Phase C blueprint prep)
+**Last Updated:** 2026-01-16 (galph loop — test-suite triage classification refresh setup)
 **Active Focus:**
 - CRITICAL: `[DETERMINISM-001]` — execute Phase A per `plans/active/determinism.md`; blocked until dtype cache fix lands.
 - BLOCKER: `[DTYPE-NEUTRAL-001]` — author Phase C remediation blueprint (`remediation_plan.md`, `tests.md`, `docs_updates.md`) per `plans/active/dtype-neutral.md` so implementation can proceed.
-- `[TEST-SUITE-TRIAGE-001]` remains the umbrella initiative; update ladder once determinism artifacts land.
+- `[TEST-SUITE-TRIAGE-001]` remains the umbrella initiative; stage the new phase_f triage bundle before reissuing remediation handoffs.
 - Tap 5.3 oversample instrumentation for `[VECTOR-PARITY-001]` stays paused until suite triage critical path clears.
 
 ## Index
@@ -42,13 +42,13 @@
 - Status: in_progress
 - Owner/Date: galph/2026-01-12
 - Plan Reference: `plans/active/test-suite-triage.md`
-- Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_e/<STAMP>/artifacts/pytest_full.xml`
+- Reproduction: Full-suite baseline (already captured): `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_e/20251010T180102Z/artifacts/pytest_full.xml`
 - Artifacts Root: `reports/2026-01-test-suite-triage/` (phases `phase_a`, `phase_b`, `phase_c`, `phase_d`, `phase_e`, `phase_f`)
 - Phase D Handoff Bundle: `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md`
 - Next Actions:
-  1. Execute `plans/active/test-suite-triage.md` Phase E1–E3: refresh `collect-only` snapshot, run `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_e/<STAMP>/artifacts/pytest_full.xml`, and stage `summary.md` + `failures_raw.md`.
-  2. Phase E4: append Attempt #7 in this ledger with 2026 counts + artifact paths; note deltas vs Attempt #5.
-  3. Kick off Phase F triage refresh (extend `triage_summary.md`, update `pending_actions.md`) before delegating remediation backlogs.
+  1. Execute `plans/active/test-suite-triage.md` Phase F1–F3: stage `reports/2026-01-test-suite-triage/phase_f/<STAMP>/` with refreshed `triage_summary.md`, `cluster_deltas.md`, and `pending_actions.md` derived from the 49-node failure list in `phase_e/20251010T180102Z/`.
+  2. Append Attempt #8 in this ledger capturing the Phase F classification bundle, noting cluster deltas (e.g., CLI defaults resolved) and linking the new artifacts.
+  3. Once Phase F artifacts are filed, prep Phase G remediation ladder updates (handoff addendum + supervisor playbook) before reissuing remediation delegations.
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.
   * [2025-10-10] Attempt #2 — Result: ⚠️ partial (Phase B timeout). Full suite execution reached ~75% completion (520/692 tests) before 10-minute timeout. Captured 34 failures across determinism (6), sourcefile handling (6), grazing incidence (4), detector geometry (5), debug/trace (4), CLI flags (3), and others. Runtime: 600s. Exit: timeout. Artifacts: `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/{logs/pytest_full.log,failures_raw.md,summary.md,commands.txt}`. junit XML may be incomplete. Remaining 172 tests (~25%) not executed. Observations: Large detector parity tests and gradient checks likely contributors to timeout. Recommendation: split suite execution or extend timeout to 30-60min for complete run.
