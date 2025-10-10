@@ -1865,3 +1865,9 @@
 - Marked `plans/active/vectorization-parity-regression.md` D1 as [D] with Attempt #11 context to keep parity plan in sync.
 - Authored `input.md` (Mode: Parity) directing Ralph to execute Phase D2 fluence remediation with trace capture under `reports/2026-01-vectorization-parity/phase_d/$STAMP/` and to document `fluence_parity.md`.
 - Next follow-up: expect fluence parity artifacts (Phase D2) then reassess C4 unblock and update vectorization/backlog plans.
+### 2026-01-07 (galph loop - Phase D2 fluence briefing)
+- Confirmed repo synced; reviewed parity/vectorization docs per SOP. Coin flip = tails (skip commit audit).
+- Focused on `[VECTOR-PARITY-001]` Phase D2. Pulled spec + C references and quantified the TRACE_PY vs TRACE_C fluence gap (≈9.89e+08 ratio) for pixel (1792,2048).
+- Authored `reports/2026-01-vectorization-parity/phase_d/fluence_gap_analysis.md` summarising the mismatch and noting that the simulator already carries the spec-compliant value—issue isolated to `scripts/debug_pixel_trace.py` re-deriving fluence from flux.
+- Updated docs/fix_plan.md observations to point at the new evidence and rewrote input.md (Mode: Parity) instructing Ralph to emit `beam_config.fluence`, rerun the trace, and record `fluence_parity.md` under a fresh stamp.
+- Expect next attempt: code touch in `scripts/debug_pixel_trace.py`, refreshed TRACE_PY log (≤1e-3 rel err), `pytest --collect-only` log, and updated Attempt history.
