@@ -26,7 +26,7 @@
 | [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | in_progress |
 | [STATIC-PYREFLY-001](#static-pyrefly-001-run-pyrefly-analysis-and-triage) | Run pyrefly analysis and triage | Medium | in_planning |
 | [TEST-INDEX-001](#test-index-001-test-suite-discovery-reference-doc) | Test suite discovery reference doc | Medium | in_planning |
-| [SOURCE-WEIGHT-001](#source-weight-001-correct-weighted-source-normalization) | Correct weighted source normalization | Medium | in_progress (Phase D/E parity evidence outstanding) |
+| [SOURCE-WEIGHT-001](#source-weight-001-correct-weighted-source-normalization) | Correct weighted source normalization | Medium | in_progress (Phase H memo/test updates) |
 | [C-SOURCEFILE-001](#c-sourcefile-001-sourcefile-comment-parsing-bug) | Sourcefile comment parsing bug | Medium | in_planning |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | in_progress |
@@ -4065,29 +4065,20 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 ## [SOURCE-WEIGHT-001] Correct weighted source normalization
 - Spec/AT: `specs/spec-a-core.md` §4 (Sources, Divergence & Dispersion), `docs/architecture/pytorch_design.md` §§1.1/2.3, `docs/development/c_to_pytorch_config_map.md` (beam sourcing), `docs/development/testing_strategy.md` §1.4, and `golden_suite_generator/nanoBragg.c` lines 2570-2720 (source ingestion & steps computation).
 - Priority: Medium
-- Status: in_progress (Legacy Phases A–D complete; Phases E–H reorganised 2025-12-24 to enforce spec-first contract and realign tests/documentation)
-- Owner/Date: galph/2025-11-17 (updated 2025-12-24)
+- Status: in_progress (Phase G parity bundle complete; Phase H memo/test updates outstanding)
+- Owner/Date: galph/2025-11-17 (updated 2025-12-25)
 - Plan Reference: `plans/active/source-weight-normalization.md`
 - Reproduction (C & PyTorch):
-  * C: `"$NB_C_BIN" -mat A.mat -floatfile c_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources.txt -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -nonoise -nointerpolate`.
-  * PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE nanoBragg -mat A.mat -floatfile py_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources.txt ...` (matching geometry).
+  * C: `"$NB_C_BIN" -mat A.mat -floatfile c_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources_nocomments.txt -distance 231.274660 -lambda 0.9768 -pixel 0.172 -detpixels_x 256 -detpixels_y 256 -nonoise -nointerpolate`.
+  * PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE nanoBragg -mat A.mat -floatfile py_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources_nocomments.txt ...` (matching geometry).
   * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
-- First Divergence (if known): Pending parity reassessment — attempt `20251009T214016Z` observed correlation ≈0.99999 between C and PyTorch despite the historical `C-PARITY-001` classification. Treat the legacy divergence memo as provisional until Phase H confirms the true behaviour (equal weighting per `specs/spec-a-core.md:151`).
-- Next Actions (refreshed 2025-12-25 after auditing the 20251009T225052Z bundle and creating `[C-SOURCEFILE-001]`):
-  - Phase G0 ✅ Harmonise fixture/test parameters and publish the comment-free fixture (checksums + rationale) before re-running CLI commands.
-  - Phase G1 ☐ Canonicalise PyTorch + C commands against the sanitised fixture (force `-interpolate 0` unless a minimal HKL is supplied) and confirm both binaries run without crashing.
-  - Phase G2 ☐ Capture a fresh parity bundle (`correlation ≥ 0.999`, `|sum_ratio−1| ≤ 3e-3`) with stdout/stderr, floatfiles, metrics, and notes stored under a new `<STAMP>` path.
-  - Phase G3 ☐ Append a new Attempt summarising metrics, segfault guardrails, sanitised fixture path, and anomalies.
-  - Phase G4 ✅ Segfault root cause documented (`reports/2025-11-source-weights/phase_g/20251009T215516Z/c_segfault/crash_analysis.md`); reference this guard in future bundles.
-  - Phase G5 ☐ Cross-link the comment parsing bug plan/ledger entry so parity work and bug tracking remain decoupled.
-  - Phase H1 ☐ Author `reports/2025-11-source-weights/phase_h/<STAMP>/parity_reassessment.md` quoting `nanoBragg.c:2570-2720` and superseding the legacy decision memo.
-  - Phase H2 ☐ Update `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference` to expect PASS (no xfail) and archive targeted pytest logs with the memo.
-  - Phase H3 ☐ Audit `docs/bugs/verified_c_bugs.md` + this ledger to remove the outdated C-PARITY-001 linkage and reference the new comment parsing bug entry.
-  - Phase I1–I3 ☐ Blocked pending Phase H; see `plans/active/source-weight-normalization.md` for details.
-  1. Rebuild the C binary with debug symbols (`make -C golden_suite_generator clean && make -C golden_suite_generator CFLAGS="-g -O0"`), then run the canonical PyTorch and C commands from a fresh `reports/2025-11-source-weights/phase_g/<STAMP>/` directory using the sanitised fixture; archive `commands.txt`, stdout/stderr, floatfiles, and `metrics.json`.
-  2. If the C command fails, capture a `gdb` backtrace under `c_segfault/`, note the workaround (`-interpolate 0` or HKL), and record the sanitised fixture path inside `notes.md` before retrying.
-  3. After parity metrics are recorded, update this ledger with a new Attempt referencing the sanitised fixture and the `[C-SOURCEFILE-001]` hand-off; queue Phase H (memo + test update) via the next supervisor input.
-  4. Once Phase H completes, propagate the new selectors/artifacts to VECTOR-TRICUBIC-002, VECTOR-GAPS-002, and PERF-PYTORCH-004 before resuming vectorization/perf initiatives.
+- First Divergence (if known): Legacy divergence memo superseded. Phase G Attempts #34–#35 (20251009T235016Z, 20251010T000742Z) recorded corr=0.9999886 and |sum_ratio−1|=0.0038 with the sanitised fixture, confirming both implementations ignore weights per `specs/spec-a-core.md:151-153`. Residual C-only defect: comment lines generate ghost sources (tracked in `[C-SOURCEFILE-001]`).
+- Next Actions (refreshed 2025-12-25 post Phase G completion):
+  - Phase H1: Author `reports/2025-11-source-weights/phase_h/<STAMP>/parity_reassessment.md` quoting `nanoBragg.c:2570-2720`, contrasting Phase E assumptions vs Phase G evidence, and marking `phase_e/.../spec_vs_c_decision.md` as historical.
+  - Phase H2: Update `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference` to expect PASS (remove `@pytest.mark.xfail`; assert corr ≥0.999 and |sum_ratio−1| ≤3e-3). Capture targeted pytest logs alongside the memo.
+  - Phase H3: Audit this ledger section and `docs/bugs/verified_c_bugs.md` to remove the outdated C-PARITY-001 linkage; cross-reference `[C-SOURCEFILE-001]` and, if needed, log the interpolation segfault workaround under a new bug stub.
+  - Phase H4: Notify dependent initiatives by updating `plans/active/vectorization.md` (Phase A2), `plans/active/vectorization-gap-audit.md` (Phase B1), and fix_plan entries (`VECTOR-TRICUBIC-002`, `VECTOR-GAPS-002`, `PERF-PYTORCH-004`) to cite the Phase H memo instead of the retired divergence thresholds.
+  - Phase I1–I3: Remain blocked until H1–H4 complete; see `plans/active/source-weight-normalization.md` for detailed checklists.
 - Attempts History:
   * [2025-10-09] Attempt #31 (ralph loop #262 — Mode: Docs, Phase G0 fixture harmonization). Result: **success**
     Metrics: pytest --collect-only validation passed (8 tests). Sanitized fixture created and checksummed.

@@ -1,3 +1,11 @@
+### 2025-12-25 (galph loop - SOURCE-WEIGHT Phase H kickoff)
+- Synced repo (already up to date). Reviewed specs/arch/testing docs plus active plans before analysis.
+- Coin flip = heads → audited Ralph commits a1a6281 and 58b3da4; parity evidence solid, no regressions detected.
+- Updated `plans/active/source-weight-normalization.md` to mark Phase G tasks complete (Attempts #34–#35) and expanded Phase H with new H4 dependency notification step.
+- Refreshed `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` status/Next Actions to focus on Phase H memo + test flip; reproduction commands now reference the sanitised fixture.
+- Replaced `input.md` (Mode: Docs) directing Ralph to author the Phase H parity memo, remove the xfail, and rerun the targeted pytest selector while depositing artifacts under `reports/2025-11-source-weights/phase_h/<STAMP>/`.
+- Follow-up: Ralph to execute Phase H1–H2 per new input, then prep for H3/H4 ledger propagation next loop.
+
 ### 2025-12-24 (galph loop - SOURCE-WEIGHT Phase G reset)
 - Audited the 20251009T212241Z evidence bundle: PyTorch CLI aborted (`Need -hkl/-default_F`), `test_c_divergence_reference` XPASSed, and no metrics/commands were captured; reopened Phase G2/G3 and documented the anomaly (`unexpected_c_parity/metrics.json`).
 - Updated `plans/active/source-weight-normalization.md` Phase G guidance to require rebuilding the C binary, capturing full artifact sets, and halting if C parity persists; fix_plan entry `[SOURCE-WEIGHT-001]` now marks Attempt #27 as FAILED with explicit next steps.
