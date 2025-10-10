@@ -1,36 +1,36 @@
-Summary: Capture fresh 4096² parity evidence with the regenerated golden data so vectorization gating can clear.
+Summary: Map edge-pixel execution so we can target the full-frame parity failure before rerunning 4096x4096 benchmarks.
 Mode: Parity
-Focus: docs/fix_plan.md [VECTOR-PARITY-001] Restore 4096² benchmark parity
+Focus: docs/fix_plan.md [VECTOR-PARITY-001] Restore 4096x4096 benchmark parity
 Branch: feature/spec-based-2
-Mapped tests: tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_high_resolution_variant
-Artifacts: reports/2026-01-vectorization-parity/phase_e/$STAMP/
-Do Now: docs/fix_plan.md [VECTOR-PARITY-001] Restore 4096² benchmark parity — KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_high_resolution_variant
-If Blocked: Capture failing command output to $OUTDIR/attempt_failed.log, note env vars + git SHA in $OUTDIR/blockers.md, and stop; do not lower thresholds without supervisor sign-off.
+Mapped tests: none - evidence-only
+Artifacts: reports/2026-01-vectorization-parity/phase_e0/$STAMP/
+Do Now: docs/fix_plan.md [VECTOR-PARITY-001] Restore 4096x4096 benchmark parity - follow prompts/callchain.md with analysis_question="Why does the 4096x4096 full-frame parity stay at 0.721 when the 512x512 ROI matches? Focus: edge/background factors." and initiative_id=vectorization-parity-edge
+If Blocked: Record blockers in $OUTDIR/blockers.md with git SHA, command log, and which deliverable could not be produced; stop without rerunning the 4096x4096 benchmark.
 Priorities & Rationale:
-- plans/active/vectorization-parity-regression.md:75 — Phase E1 is waiting on a new 4096² benchmark + high-res pytest run with the regenerated assets.
-- docs/fix_plan.md:143 — `[VECTOR-TRICUBIC-002]` stays blocked until this Phase E evidence lands.
-- plans/active/vectorization.md:14 — Status snapshot now expects Phase E artifacts before restarting profiler/backlog work.
-- docs/development/testing_strategy.md:174 — Defines AT-PARALLEL-012 correlation and sum_ratio thresholds the rerun must satisfy.
+- plans/active/vectorization-parity-regression.md:12 - Phase snapshot shows full-frame parity still 0.721 after Attempt #21, so verification must wait for edge diagnostics.
+- plans/active/vectorization-parity-regression.md:68 - New Phase E0 tasks require a callchain/tap plan before Phase E benchmarks resume.
+- docs/fix_plan.md:54 - Next Actions now point at drafting the callchain brief and running the trace; Do Now aligns with that gating work.
+- reports/2026-01-vectorization-parity/phase_e/20251010T091603Z/blockers.md - Captures ROI vs full-frame metrics we must reference in the new brief.
 How-To Map:
-- export AUTHORITATIVE_CMDS_DOC=docs/development/testing_strategy.md; export NB_C_BIN=./golden_suite_generator/nanoBragg; ensure `command -v python` reports the expected venv.
-- Set STAMP=$(date -u +%Y%m%dT%H%M%SZ) and OUTDIR=reports/2026-01-vectorization-parity/phase_e/$STAMP; mkdir -p "$OUTDIR"/{benchmark,full_frame,logs}.
-- Benchmark (CPU, full frame): `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --iterations 1 --profile --keep-artifacts --outdir "$OUTDIR"/benchmark/ | tee "$OUTDIR"/logs/benchmark.log`.
-- Full-frame nb-compare for correlation: `KMP_DUPLICATE_LIB_OK=TRUE python scripts/nb_compare.py --resample --outdir "$OUTDIR"/full_frame -- -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05 -floatfile tests/golden_data/high_resolution_4096/image.bin | tee "$OUTDIR"/logs/nb_compare.log`.
-- Targeted pytest (Do Now command): `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_high_resolution_variant | tee "$OUTDIR"/logs/pytest_highres.log`.
-- Summarise corr, sum_ratio, RMSE, benchmark speedup, and pytest result in "$OUTDIR"/phase_e_summary.md (cite thresholds from testing_strategy §2.5); include hash of tests/golden_data/high_resolution_4096/image.bin from `reports/2026-01-golden-refresh/phase_b/20251010T085124Z/high_resolution_4096/checksums.txt`.
+- export AUTHORITATIVE_CMDS_DOC=docs/development/testing_strategy.md; export NB_C_BIN=./golden_suite_generator/nanoBragg; ensure python resolves inside the project venv.
+- STAMP=$(date -u +%Y%m%dT%H%M%SZ); OUTDIR=reports/2026-01-vectorization-parity/phase_e0/$STAMP; mkdir -p "$OUTDIR"/trace "$OUTDIR"/callgraph "$OUTDIR"/env.
+- Review prompts/callchain.md and jot the chosen variables (analysis_question, initiative_id=vectorization-parity-edge, scope_hints=["edge pixels","scaling","background"], roi_hint="single edge pixel", namespace_filter="nanobrag_torch", time_budget_minutes=30) into "$OUTDIR"/callchain_brief.md together with links to Attempt #21 evidence.
+- Use docs/index.md -> docs/architecture/pytorch_design.md and docs/development/testing_strategy.md to map likely entry points before touching code; capture notes in the brief.
+- Execute the callchain workflow: generate `callchain/static.md`, optional `callgraph/dynamic.txt` (small ROI only), `trace/tap_points.md`, `summary.md`, and `env/trace_env.json`, all under $OUTDIR, following the deliverable templates.
+- For any dynamic trace, run a minimal PyTorch invocation targeting pixel (0,0) (optionally (4095,4095)) while keeping ROI tiny; record the exact command at the top of callgraph/dynamic.txt.
+- After outputs are staged, update docs/fix_plan.md Attempt log in the Attempts History section with STAMP, location, and key findings.
 Pitfalls To Avoid:
-- Do not change regenerated golden datasets or commit `reports/` artifacts.
-- Keep env vars (`KMP_DUPLICATE_LIB_OK`, `NB_RUN_PARALLEL`, `NB_C_BIN`) set for every command; missing any will invalidate parity evidence.
-- Full-frame compare is heavy; ensure system has ≥16 GB free before running to avoid swap-induced noise.
-- Preserve command logs exactly; reruns must use new $STAMP paths.
-- No extra pytest selectors or `pytest -k 4096`; run only the mapped node to stay within scope.
-- Verify benchmark script finishes with corr ≥0.999; if not, document immediately instead of rerunning blindly.
-- Avoid torch.cuda unless explicitly needed; parity gating remains CPU-focused until sign-off.
-- Leave `reports/...` untracked; check `git status` before ending the loop.
-- Record git SHA and NB_C_BIN checksum in summary for traceability.
+- Do not rerun the 4096x4096 benchmark or pytest selector until Phase E0 concludes.
+- Keep ROI minimal; avoid GPU traces unless necessary and explicitly document if used.
+- Do not edit production code or add instrumentation; rely on trace tooling per prompts/callchain.md.
+- Preserve regenerated golden data; no writes outside reports/.
+- Ensure all deliverables stay within $OUTDIR and remain untracked.
+- Capture environment metadata in env/trace_env.json (python, torch, git SHA, NB_C_BIN checksum if available).
+- Reference Attempt #21 blockers instead of rewriting the same metrics from memory.
+- Maintain consistent variable names between static and dynamic artifacts to aid future diffing.
 Pointers:
-- plans/active/vectorization-parity-regression.md:68 — Phase E requirements and artifact expectations.
-- docs/fix_plan.md:141 — `[VECTOR-TRICUBIC-002]` dependency on this evidence.
-- plans/active/vectorization.md:12 — Updated status snapshot referencing the Phase E gating artifact.
-- docs/development/testing_strategy.md:170 — nb-compare + acceptance thresholds for AT-PARALLEL-012.
-Next Up: Once corr ≥0.999 evidence is archived, follow Phase E2 to update ledgers and unblock vectorization backlog.
+- plans/active/vectorization-parity-regression.md:68
+- docs/fix_plan.md:43
+- docs/development/testing_strategy.md:170
+- prompts/callchain.md:1
+Next Up: Once the tap plan is in place, we can delegate targeted instrumentation or partial simulator probes before retrying the full-frame run.

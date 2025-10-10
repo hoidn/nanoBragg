@@ -1923,3 +1923,8 @@
 - Updated `docs/fix_plan.md` `[VECTOR-TRICUBIC-002]` Next Actions to mirror the new gating (wait for phase_e_summary, then rerun profiler/backlog).
 - Replaced `input.md` with Mode Parity instructions for Ralph to execute `[VECTOR-PARITY-001]` Phase E1: run the 4096² benchmark + full-frame nb-compare + high-res pytest into `reports/2026-01-vectorization-parity/phase_e/$STAMP/` and summarise metrics.
 - Observed that legacy commits still have large `reports/` artifacts tracked (e.g., high_res ROI PNGs); flag for future hygiene sweep once protected assets checklist is ready.
+### 2026-01-10 (galph loop - Phase E0 kickoff)
+- Added Phase E0 “Edge Residual Diagnosis” section to `plans/active/vectorization-parity-regression.md` (lines 68-81) capturing callchain deliverables before reattempting full-frame parity; marked E1 as blocked pending those artifacts.
+- Updated `docs/fix_plan.md` `[VECTOR-PARITY-001]` Next Actions (line 54) to focus on drafting the callchain brief, executing the trace for an edge pixel, and summarising the first tap.
+- Replaced `input.md` with Mode Parity instructions directing Ralph to follow `prompts/callchain.md` (initiative_id=vectorization-parity-edge) and stage outputs under `reports/2026-01-vectorization-parity/phase_e0/$STAMP/`.
+- Expect Attempt #21a to deliver the Phase E0 callchain bundle (static map, tap plan, summary) plus ledger updates before scheduling any new 4096x4096 runs.

@@ -52,9 +52,9 @@
   - **Phase D5 success:** ROI parity fully restored (corr=1.000000, sum_ratio=0.999987). Critical lesson: dimensional analysis error in Phase D4 planning (proposed 1e10 for Å→m⁻¹) was corrected during implementation to 1e-10 (Å→meters). The correct units for lattice vectors in the dot product h=a·S are meters (not m⁻¹), matching scattering_vector units (m⁻¹) to produce dimensionless Miller indices. This error highlights the importance of verifying unit conversions during implementation, not just during planning.
   - **Phase D6 cleanup:** ROI parity remains stable post-instrumentation removal (corr≈0.999999999, |sum_ratio−1|≈1.3e-5). Pytest collection stays green (695 tests). No residual trace hooks remain in production code; Phase E can now proceed without debug guards.
 - Next Actions:
-  1. 🚩 Coordinate with `[TEST-GOLDEN-001]` Phase B regeneration (target Attempt #19) to refresh all stale golden datasets and capture provenance logs before resuming Phase E validation.
-  2. 🔁 After `[TEST-GOLDEN-001]` Phase C parity checks succeed, rerun the Phase E ROI nb-compare bundle and targeted pytest selector to confirm corr≥0.95 and |sum_ratio−1|≤5×10⁻³.
-  3. 🗒️ Once pytest passes, refresh `phase_e_summary.md`, update `plans/active/vectorization-parity-regression.md` (Phase E rows), and schedule benchmark/documentation updates for the following loop.
+  1. 📝 Draft the Phase E0 callchain brief (`reports/2026-01-vectorization-parity/phase_e0/<STAMP>/callchain_brief.md`) with `analysis_question`, ROI, and tracer settings per `prompts/callchain.md`; cite Attempt #21 blocker metrics.
+  2. 🔍 Execute the callchain tracing run for an edge pixel (e.g., (0,0)), producing the required deliverables (`callchain/static.md`, optional `callgraph/dynamic.txt`, `trace/tap_points.md`, `summary.md`, `env/trace_env.json`) under the Phase E0 reports directory.
+  3. 📌 Summarise first edge tap(s) in `phase_e0_summary.md`, update this ledger and `plans/active/vectorization-parity-regression.md` with the findings, and only then schedule the rerun of 4096² benchmarks/pytest.
 - Risks/Assumptions:
   - Profiler evidence remains invalid while corr_warm=0.721; avoid reusing traces from blocked attempts.
   - ROI thresholds (corr≥0.999, |sum_ratio−1|≤5×10⁻³) are treated as spec acceptance; full-frame parity may require masking.

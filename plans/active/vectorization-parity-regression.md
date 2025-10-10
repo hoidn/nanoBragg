@@ -9,7 +9,7 @@
   - `docs/development/pytorch_runtime_checklist.md` — runtime guardrail reminders (especially item #4 on source weighting).
   - `docs/fix_plan.md` `[VECTOR-GAPS-002]` Attempts #3–#8 and `[PERF-PYTORCH-004]` baseline expectations.
   - Existing artifacts: good run `reports/benchmarks/20251009-161714/`; failing bundles under `reports/2026-01-vectorization-gap/phase_b/20251009T09*` and `20251010T02*`.
-- Status Snapshot (2026-01-07 → refreshed 2026-01-07 PM): Phase C traces complete; Phase D1–D5 are closed. Attempt #15 converted the rotated lattice vectors to meters (1e-10 factor) and recovered ROI parity (corr≈0.9999999985, |sum_ratio−1|≈1.3e-5). Attempt #16 retired NB_TRACE_SIM_F_LATT instrumentation with ROI parity intact (corr≈0.999999999, |sum_ratio−1|≈1.3e-5). Attempt #19 (TEST-GOLDEN-001 Phase B) regenerated all golden datasets + README provenance; Phase E now waits on Phase C parity validation with the refreshed assets before ledger handback / downstream relaunch.
+- Status Snapshot (2026-01-10): Phase C traces complete and Phase D1–D6 closed. Attempt #19 (TEST-GOLDEN-001 Phase B) regenerated golden datasets; Attempt #20 validated the 512² ROI parity (corr=1.000000, |sum_ratio−1|=1.3e-5). Attempt #21 reran the 4096² benchmark and confirmed full-frame correlation remains stuck at 0.721177 despite the ROI fix—edge/background physics diverge while central pixels now match. Phase E verification is blocked pending an edge-focused diagnosis and tap plan.
 
 ### Phase A — Evidence Audit & Baseline Ledger
 Goal: Canonicalise the good vs bad benchmark evidence and capture parameter parity so future loops operate from a single source of truth.
@@ -65,14 +65,26 @@ Exit Criteria: Trace helper and simulator corrections merged locally with trace-
 | D5 | ROI parity restore | [D] | ✅ Attempt #15 (`reports/2026-01-vectorization-parity/phase_d/roi_compare_post_fix2/summary.json`) multiplied `rot_a/b/c` by 1e-10 (Å→meters) inside `Simulator._compute_physics_for_position()`, reran the 512² ROI nb-compare, and achieved corr=0.9999999985 with |sum_ratio−1|≈1.3e-5. TRACE_PY logs refreshed under `py_traces_post_fix/`. |
 | D6 | Instrumentation cleanup & guard | [D] | ✅ Attempt #16 (`reports/2026-01-vectorization-parity/phase_d/20251010T081102Z/cleanup/`) removed NB_TRACE_SIM_F_LATT hooks, reran `pytest --collect-only -q` (695 tests collected) and the ROI nb-compare command, and confirmed corr≈0.999999999 with |sum_ratio−1|≈1.3e-5. Phase D complete; proceed to Phase E full-frame validation. |
 
-### Phase E — Fix Verification & Handback
-Goal: Validate the eventual fix, restore guardrails, and unblock downstream plans.
-Prereqs: Phase D tables [D] (including new simulator diagnostics); code changes staged with passing targeted validations.
-Exit Criteria: Clean 4096² parity metrics archived, fix_plan & plans updated, blockers lifted; downstream vectorization/perf plans reactivated.
+### Phase E0 - Edge Residual Diagnosis
+Goal: Explain why full-frame correlation remains ~0.721 despite ROI parity success and design a tap plan targeting edge/background physics.
+Prereqs: Attempt #21 benchmark failure recorded; regenerated golden data validated (Attempt #20); blockers documented in `reports/2026-01-vectorization-parity/phase_e/20251010T091603Z/blockers.md`.
+Exit Criteria: Callchain deliverables for edge pixels (static map, tap plan, summary) archived under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/`; updated fix_plan next actions reflecting diagnosis scope.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| E1 | Verify fix across benchmarks/tests | [ ] | After D1–D5 work lands, rerun full 4096² benchmark (`scripts/benchmarks/benchmark_detailed.py` command from Phase B1) and the high-resolution pytest (`pytest tests/test_at_parallel_012.py::test_high_resolution_variant -v`). Archive outputs under `reports/2026-01-vectorization-parity/phase_e/<STAMP>/` and require corr ≥0.999, |sum_ratio−1| ≤5e-3. |
+| E0a | Capture ROI vs full-frame contrast memo | [D] | ✅ Attempt #21 `blockers.md` documents corr, speedup, and ROI vs full-frame divergence. Reference it directly in future artifacts to avoid duplication. |
+| E0b | Draft callchain brief | [ ] | Prepare variables for `prompts/callchain.md` (`analysis_question`, `initiative_id=vectorization-parity-edge`, `scope_hints=["edge pixels", "scaling", "background"]`, `roi_hint="single edge pixel"`, `namespace_filter="nanobrag_torch"`). Summarise intended ROI/input in `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/callchain_brief.md`. |
+| E0c | Execute callchain tracing for edge pixel(s) | [ ] | Follow `prompts/callchain.md`; run minimal PyTorch invocation covering pixel (0,0) and optionally (4095,4095). Store deliverables under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/` (`callchain/static.md`, `callgraph/dynamic.txt` if captured, `trace/tap_points.md`, `summary.md`, `env/trace_env.json`). Keep runtime <=30 min; reuse regenerated golden inputs. |
+| E0d | Synthesize diagnostics & unblock plan | [ ] | Produce `phase_e0_summary.md` comparing edge vs center factor order, propose first numeric tap, and update docs/fix_plan.md `[VECTOR-PARITY-001]` Next Actions accordingly. |
+
+### Phase E - Fix Verification & Handback
+Goal: Validate the eventual fix, restore guardrails, and unblock downstream plans.
+Prereqs: Phase E0 tasks [D] (edge diagnosis & tap plan); code changes staged with passing targeted validations.
+Exit Criteria: Clean 4096x4096 parity metrics archived, fix_plan & plans updated, blockers lifted; downstream vectorization/perf plans reactivated.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| E1 | Verify fix across benchmarks/tests | [B] | Blocked by Phase E0 - require callchain/tap outcomes to target next remediation. When unblocked, rerun full 4096x4096 benchmark (`scripts/benchmarks/benchmark_detailed.py` command from Phase B1) and the high-resolution pytest (`pytest tests/test_at_parallel_012.py::test_high_resolution_variant -v`). Archive outputs under `reports/2026-01-vectorization-parity/phase_e/<STAMP>/` and require corr >=0.999, |sum_ratio-1| <=5e-3. |
 | E2 | Update ledgers & guardrails | [ ] | Refresh `docs/fix_plan.md` entries `[VECTOR-GAPS-002]`, `[PERF-PYTORCH-004]`, `[VECTOR-PARITY-001]`; update `plans/active/vectorization.md` Status Snapshot to unblock downstream Phases D–F; document guardrail adjustments (e.g., PyTorch unit expectations) in `docs/development/pytorch_runtime_checklist.md` if changed. |
 | E3 | Archive plan | [ ] | Once parity + documentation updates are complete, move this plan to `plans/archive/vectorization-parity-regression.md` with closure summary + residual risks; log completion in `galph_memory.md`. |
 
