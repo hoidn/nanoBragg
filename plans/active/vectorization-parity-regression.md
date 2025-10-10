@@ -9,7 +9,7 @@
   - `docs/development/pytorch_runtime_checklist.md` — runtime guardrail reminders (especially item #4 on source weighting).
   - `docs/fix_plan.md` `[VECTOR-GAPS-002]` Attempts #3–#8 and `[PERF-PYTORCH-004]` baseline expectations.
   - Existing artifacts: good run `reports/benchmarks/20251009-161714/`; failing bundles under `reports/2026-01-vectorization-gap/phase_b/20251009T09*` and `20251010T02*`.
-- Status Snapshot (2026-01-06): Phase C1 C-trace capture completed via Attempt #8 (`reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/summary.md`); logs exist for pixels (2048,2048), (1792,2048), and (4095,2048). PyTorch trace work (Phase C2) and diff analysis (Phase C3) remain outstanding.
+- Status Snapshot (2026-01-06): Phase C1–C3 trace work complete — `reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/` (TRACE_C), `.../20251010T055346Z/` (TRACE_PY), and `.../20251010T061605Z/first_divergence.md` isolate the first mismatch at `scattering_vec_A_inv` with follow-on hypotheses (fluence + F_latt). Plan now pivots to Phase D physics remediation before any regression forensics.
 
 ### Phase A — Evidence Audit & Baseline Ledger
 Goal: Canonicalise the good vs bad benchmark evidence and capture parameter parity so future loops operate from a single source of truth.
@@ -48,30 +48,30 @@ Exit Criteria: `reports/2026-01-vectorization-parity/phase_c/<STAMP>/` contains 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | C1 | Capture instrumented C trace | [D] | ✅ Attempt #8 (`reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/`) logged 72-point TRACE_C taps for pixels (2048,2048), (1792,2048), (4095,2048) with commands/env metadata. Note: current pixels sit in low-intensity background (F_cell=0) — retain observation for C3 hypothesis drafting. |
-| C2 | Capture PyTorch trace | [ ] | Extend `scripts/debug_pixel_trace.py` to accept the same pixel coordinates; run the 4096² parity config with `KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py --pixel ${slow} ${fast}` (float64 CPU) so the tap points mirror the C trace, writing outputs to `reports/2026-01-vectorization-parity/phase_c/<STAMP>/py_traces/`. Run `pytest --collect-only -q` after script edits to confirm import health. |
-| C3 | Diff & hypothesise | [ ] | Generate `reports/2026-01-vectorization-parity/phase_c/<STAMP>/first_divergence.md` plus `diff_*.txt` per pixel, recording the earliest mismatched variable and relative error; refresh fix_plan Attempts with findings and gate Phase D accordingly. |
-
-### Phase D — Regression Isolation (Commit Forensics)
-Goal: Identify the change that reintroduced the 0.721 correlation and document impact radius.
-Prereqs: Divergence locus understood well enough to drive automation; good vs bad git commits enumerated.
-Exit Criteria: `reports/2026-01-vectorization-parity/phase_d/<STAMP>/` hosts `git_walk.md`, bisect notes, and culprit summary; fix_plan Attempt #4 records offending commit(s) and affected modules/tests.
+| C2 | Capture PyTorch trace | [D] | ✅ Attempt #9 (`reports/2026-01-vectorization-parity/phase_c/20251010T055346Z/`) — Extended `scripts/debug_pixel_trace.py`, captured 72 tap points per pixel, validated via `pytest --collect-only -q`. Logs stored under `py_traces/` with commands/env metadata.
+| C3 | Diff & hypothesise | [D] | ✅ Attempt #10 (`reports/2026-01-vectorization-parity/phase_c/20251010T061605Z/first_divergence.md`) — First divergence at `scattering_vec_A_inv` (10⁷× unit gap). Documented secondary hypotheses for fluence (10⁹×) and F_latt (~100×). Fix plan updated with sequenced remediation path. |
+### Phase D — Physics Remediation (Scattering Vector & Scaling)
+Goal: Implement and validate the three physics corrections identified in Phase C (scattering vector units, fluence scaling, F_latt normalisation) while keeping vectorization guardrails intact.
+Prereqs: Phase C evidence reviewed; spec references (`specs/spec-a-core.md` §§4–5) confirmed; updated supervisor memo (input.md) delegates code changes to engineer.
+Exit Criteria: All three fixes merged locally with trace-backed verification, targeted pytest/nb-compare evidence captured, and fix_plan `[VECTOR-PARITY-001]` Next Actions advanced to validation stage.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| D1 | Identify known-good git_sha | [ ] | Use `git log --format="%h %ad %s" --since "2025-12-24" --until "2025-12-26"` plus Phase A metadata to pin the revision used for Attempt #5 (likely galph commit `05b648a`). Document findings in `git_walk.md`. |
-| D2 | Run guided bisect | [ ] | `git bisect start` (bad = HEAD, good = identified known-good). For each candidate commit, run the Phase B1 benchmark command with `--outdir` set to `reports/2026-01-vectorization-parity/phase_d/<STAMP>/bisect/<commit>/`. Record correlation; abort bisect when culprit isolated; log results in `bisect_log.md`. |
-| D3 | Summarise regression impact | [ ] | Draft `culprit_summary.md` outlining the change set, suspected subsystem, and affected tests/benchmarks. Flag whether follow-up work should reopen existing fix_plan items (e.g., SOURCE-WEIGHT-001) or create new ones. |
+| D1 | Correct scattering vector units | [ ] | Ensure the PyTorch path emits `scattering_vec_A_inv` in **m⁻¹** to match spec & C trace. Reference `specs/spec-a-core.md` line 446 and `arch.md` §2 (unit systems). After code change, regenerate Py trace for pixel (1792,2048) with `KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py --pixel 1792 2048 --out-dir reports/2026-01-vectorization-parity/phase_d/<STAMP>/py_traces_post_fix/` and confirm values match TRACE_C within 1e-6 relative error. Update `diff_scattering_vec.md` with before/after numbers. |
+| D2 | Fix fluence scaling | [ ] | Audit beam fluence computation against `specs/spec-a-core.md` §5.2 and nanoBragg.c (lines ≈13200–13450). Adjust PyTorch implementation so TRACE_PY `fluence` matches C within 1e-3 relative error for all traced pixels. Capture verification via rerun of `debug_pixel_trace.py` (same stamp directory) and log calculations in `fluence_parity.md`. |
+| D3 | Restore F_latt normalisation | [ ] | Align lattice factor with C sincg implementation (`nanoBragg.c` lines ≈15000–16000). Validate that Py trace `F_latt` scales with Na×Nb×Nc (125 for parity config). Produce comparison table in `f_latt_parity.md` and ensure ROI nb-compare metrics remain ≥0.999 after change. |
+| D4 | Consolidate trace & parity smoke | [ ] | After D1–D3 patches, rerun `KMP_DUPLICATE_LIB_OK=TRUE python scripts/nb_compare.py --resample --roi 1792 2304 1792 2304 --outdir reports/2026-01-vectorization-parity/phase_d/<STAMP>/roi_compare_post_fix -- -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05` and regenerate TRACE_PY logs to ensure no regression. Record results in `phase_d_summary.md` along with updated correlation/sum_ratio metrics. |
 
 ### Phase E — Fix Verification & Handback
 Goal: Validate the eventual fix, restore guardrails, and unblock downstream plans.
-Prereqs: Culprit commit understood; fix landed or patch ready for review.
-Exit Criteria: Clean 4096² parity metrics archived, fix_plan & plans updated, blockers lifted.
+Prereqs: Phase D tables [D]; code changes staged with passing targeted validations.
+Exit Criteria: Clean 4096² parity metrics archived, fix_plan & plans updated, blockers lifted; downstream vectorization/perf plans reactivated.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| E1 | Verify fix across benchmarks/tests | [ ] | After patch application, rerun Phase B commands plus any targeted pytest selectors from divergence analysis. Store outputs under `reports/2026-01-vectorization-parity/phase_e/<STAMP>/` and ensure correlation ≥0.999, |sum_ratio−1| ≤5e-3. |
-| E2 | Update ledgers & guardrails | [ ] | Refresh `docs/fix_plan.md` entries `[VECTOR-GAPS-002]`, `[PERF-PYTORCH-004]`, `[VECTOR-PARITY-001]` with closure notes, and adjust `plans/active/vectorization-gap-audit.md`/`plans/active/vectorization.md` Status Snapshots to reflect unblocked state. |
-| E3 | Archive plan | [ ] | Once evidence is green and downstream work resumes, move this plan to `plans/archive/vectorization-parity-regression.md` with summary + residual risks; log completion in `galph_memory.md`. |
+| E1 | Verify fix across benchmarks/tests | [ ] | After D1–D4 work lands, rerun full 4096² benchmark (`scripts/benchmarks/benchmark_detailed.py` command from Phase B1) and the high-resolution pytest (`pytest tests/test_at_parallel_012.py::test_high_resolution_variant -v`). Archive outputs under `reports/2026-01-vectorization-parity/phase_e/<STAMP>/` and require corr ≥0.999, |sum_ratio−1| ≤5e-3. |
+| E2 | Update ledgers & guardrails | [ ] | Refresh `docs/fix_plan.md` entries `[VECTOR-GAPS-002]`, `[PERF-PYTORCH-004]`, `[VECTOR-PARITY-001]`; update `plans/active/vectorization.md` Status Snapshot to unblock downstream Phases D–F; document guardrail adjustments (e.g., PyTorch unit expectations) in `docs/development/pytorch_runtime_checklist.md` if changed. |
+| E3 | Archive plan | [ ] | Once parity + documentation updates are complete, move this plan to `plans/archive/vectorization-parity-regression.md` with closure summary + residual risks; log completion in `galph_memory.md`. |
 
 ## Reporting & Artifact Conventions
 - Store all new evidence under `reports/2026-01-vectorization-parity/` grouped by phase and timestamp (`<STAMP>` = `YYYYMMDDTHHMMSSZ`). Never commit large raw traces; reference paths in fix_plan attempts.

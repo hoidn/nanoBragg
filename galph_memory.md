@@ -1,3 +1,9 @@
+### 2026-01-06 (galph loop - Phase D1 kickoff)
+- Confirmed Phase C traces + first_divergence complete; updated plans/active/vectorization-parity-regression.md to mark C2/C3 done and replaced commit-bisect Phase D with physics remediation tasks (H1–H3).
+- Refreshed docs/fix_plan.md `[VECTOR-PARITY-001]` Next Actions to call out Phase D1–D4 workflow with m^-1 scattering vector requirement.
+- Authored input.md (Mode: Parity) directing Ralph to implement the Phase D1 scattering-vector fix, capture new trace under `reports/2026-01-vectorization-parity/phase_d/$STAMP/`, and diff against the C log with 1e-6 tolerance.
+- Next follow-up: expect Attempt update containing diff_scattering_vec artifacts; supervisor to review parity alignment before green-lighting fluence remediation (Phase D2).
+
 ### 2026-01-06 (galph loop - Phase C1 trace prep handoff)
 - Reviewed Phase C trace plan vs fix_plan; resolved conflict by updating trace_plan.md to reinforce extending `scripts/debug_pixel_trace.py` instead of spawning a new script.
 - No new parity evidence collected; focus remains on `[VECTOR-PARITY-001]` Phase C1 C-trace capture.
