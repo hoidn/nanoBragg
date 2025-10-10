@@ -123,7 +123,7 @@
 ## [VECTOR-TRICUBIC-002] Vectorization relaunch backlog
 - Spec/AT: `specs/spec-a-core.md` §§4–5, `arch.md` §§2/8/15, `docs/architecture/pytorch_design.md` §1.1, `docs/development/pytorch_runtime_checklist.md`, `docs/development/testing_strategy.md` §§1.4–2, `plans/archive/vectorization.md`.
 - Priority: High
-- Status: in_progress (Phase C parity gate satisfied; blocked on `[VECTOR-PARITY-001]` physics remediation)
+- Status: in_progress (waiting on `[VECTOR-PARITY-001]` Phase E full-frame validation + `[TEST-GOLDEN-001]` ledger updates before restarting profiling)
 - Owner/Date: galph/2025-12-24
 - Reproduction (C & PyTorch):
   * Regression refresh: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -v` and `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_abs_001.py -v -k "cpu or cuda"`
@@ -138,10 +138,11 @@
   - CPU favours tricubic microbenchmarks; absorption benefits from CUDA.
   - Phase C traces + `first_divergence.md` (Attempt #10) isolate unit/fluence/F_latt defects; implementation deferred to `[VECTOR-PARITY-001]` Phase D/E.
   - Cache effectiveness (72607.7×) and torch.compile operational, but physics correctness must be restored first.
+  - Attempt #20 (ROI parity) confirms regenerated golden data match the Phase D5 lattice fix; still need `[VECTOR-PARITY-001]` Phase E rerun to refresh full-frame metrics before profiling.
 - Next Actions:
-  1. Track `[VECTOR-PARITY-001]` Phase D1–D4/E1 remediation (scattering_vec units, fluence, F_latt) and record the unblock decision once corr ≥0.999 and |sum_ratio−1| ≤5×10⁻³ (update plan row C4 + galph_memory).
-  2. When parity fix is confirmed, run Phase D1 profiler capture (`KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`) and archive `trace.json`, `summary.md`, `env.json`.
-  3. After profiling, execute Phase D2/D3 backlog refresh and prepare Phase E1/E2 delegation (tricubic design addendum + input.md Do Now) before authorising implementation.
+  1. Hold Phase D1 until `[VECTOR-PARITY-001]` Phase E produces a ≥0.999 full-frame rerun with regenerated golden data (`reports/2026-01-vectorization-parity/phase_e/<STAMP>/phase_e_summary.md`) and `[TEST-GOLDEN-001]` Phase D updates land.
+  2. Once gating artifacts exist, execute Phase D1 profiler capture (`KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`) and archive `trace.json`, `summary.md`, `env.json`.
+  3. After D1, deliver Phase D2/D3 backlog refresh and prepare Phase E1/E2 delegation (tricubic design addendum + input.md Do Now) before authorising implementation.
 - Risks/Assumptions:
   - CUDA availability required for future refresh runs.
   - Parity regression must be resolved before shipping new vectorization work.

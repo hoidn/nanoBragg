@@ -11,11 +11,12 @@
   - plans/active/vectorization-gap-audit.md — loop inventory/profiling follow-on once parity is restored.
   - reports/2025-10-vectorization/ & reports/2026-01-vectorization-refresh/ — prior evidence bundles to reuse when refreshing baselines.
 
-## Status Snapshot (2026-01-06)
+## Status Snapshot (2026-01-10)
 - Phase A dependency gate ✅ (Attempts logged Dec 2025; SOURCE-WEIGHT contract propagated to docs/fix_plan.md).
 - Phase B regression refresh ✅ (Attempt #2 2025-10-09 captured CPU/CUDA tricubic + absorption suites under `reports/2026-01-vectorization-refresh/phase_b/20251010T013437Z/`).
-- Phase C parity gate ✅ (Attempt #10 delivered `first_divergence.md` pinpointing scattering-vector unit error); gating now deferred to `[VECTOR-PARITY-001]` Phase D/E physics remediation.
-- Phase D backlog refresh remains **blocked** until `[VECTOR-PARITY-001]` Phase E closes and `[TEST-GOLDEN-001]` refreshes the golden data set; ROI parity (Attempt #15, corr≈0.9999999985) is in hand but full-frame validation and benchmark reruns depend on the new assets.
+- Phase C parity gate ✅ (Attempt #10 delivered `first_divergence.md` and `[VECTOR-PARITY-001]` Phase D5/D6 corrections landed; ROI parity retested against regenerated golden data in Attempt #20).
+- Phase D backlog refresh remains **blocked** pending `[VECTOR-PARITY-001]` Phase E full-frame validation with the refreshed assets and `[TEST-GOLDEN-001]` Phase D ledger handoff; do not capture new profiler traces until `reports/2026-01-vectorization-parity/phase_e/<STAMP>/` records corr ≥0.999 / |sum_ratio−1| ≤5×10⁻³.
+- Phase E/F design packets are staged but stay paused until Phase D1 unlocks; tricubic addendum will launch first once the Phase E gating artifacts land.
 
 ### Phase A — Dependency Gate & Ledger Sync
 Goal: Ensure prerequisite parity decisions and guardrails are recorded so later profiling relies on trustworthy baselines.
@@ -59,9 +60,9 @@ Exit Criteria: `reports/2026-01-vectorization-gap/phase_b/<STAMP>/` contains new
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| D1 | Capture warm-run profiler trace | [B] | Blocked pending `[VECTOR-PARITY-001]` Phase D/E green-light. When unblocked, run `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/` and archive `trace.json`, `summary.md`, env metadata. |
-| D2 | Correlate trace with loop inventory | [B] | Blocked on D1. Map profiler hotspots to Phase A inventory (plans/active/vectorization-gap-audit.md); produce `hot_loops.csv` with inclusive % time, call counts, CPU vs CUDA deltas. |
-| D3 | Publish prioritized backlog | [B] | Blocked on D1/D2. Draft `backlog.md` summarising top candidates (≥1% inclusive time, spec-critical). Update docs/fix_plan.md Next Actions + galph_memory with decision rationale once parity fix unlocks profiling. |
+| D1 | Capture warm-run profiler trace | [B] | Blocked until `[VECTOR-PARITY-001]` Phase E full-frame rerun (corr ≥0.999, |sum_ratio−1| ≤5×10⁻³ recorded under `reports/2026-01-vectorization-parity/phase_e/<STAMP>/phase_e_summary.md`) **and** `[TEST-GOLDEN-001]` Phase D ledger updates confirm adoption of the regenerated datasets. When unblocked, run `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/` and archive `trace.json`, `summary.md`, env metadata. |
+| D2 | Correlate trace with loop inventory | [B] | Blocked on D1. Once new profiler data exists, map hotspots to Phase A inventory (`plans/active/vectorization-gap-audit.md`) and produce `hot_loops.csv` with inclusive % time, call counts, CPU vs CUDA deltas. |
+| D3 | Publish prioritized backlog | [B] | Blocked on D1/D2. After profiling unlocks, draft `backlog.md` summarising top candidates (≥1% inclusive time, spec-critical) and update docs/fix_plan.md Next Actions + galph_memory with rationale. |
 
 ### Phase E — Implementation Batch A (Tricubic Refresh)
 Goal: Revalidate and, if necessary, extend tricubic vectorization to cover new requirements discovered during backlog refresh (e.g., mixed-precision variants, batched HKL caches) while preserving parity and performance.
