@@ -4065,7 +4065,7 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 ## [SOURCE-WEIGHT-001] Correct weighted source normalization
 - Spec/AT: `specs/spec-a-core.md` §4 (Sources, Divergence & Dispersion), `docs/architecture/pytorch_design.md` §§1.1/2.3, `docs/development/c_to_pytorch_config_map.md` (beam sourcing), `docs/development/testing_strategy.md` §1.4, and `golden_suite_generator/nanoBragg.c` lines 2570-2720 (source ingestion & steps computation).
 - Priority: Medium
-- Status: in_progress (Phase G parity bundle complete; Phase H memo/test updates outstanding)
+- Status: in_progress (Phase H1–H2 complete; Phase H3/H4 ledger + plan propagation outstanding)
 - Owner/Date: galph/2025-11-17 (updated 2025-12-25)
 - Plan Reference: `plans/active/source-weight-normalization.md`
 - Reproduction (C & PyTorch):
@@ -4073,12 +4073,10 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE nanoBragg -mat A.mat -floatfile py_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources_nocomments.txt ...` (matching geometry).
   * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
 - First Divergence (if known): Legacy divergence memo superseded. Phase G Attempts #34–#35 (20251009T235016Z, 20251010T000742Z) recorded corr=0.9999886 and |sum_ratio−1|=0.0038 with the sanitised fixture, confirming both implementations ignore weights per `specs/spec-a-core.md:151-153`. Residual C-only defect: comment lines generate ghost sources (tracked in `[C-SOURCEFILE-001]`).
-- Next Actions (refreshed 2025-12-25 post Phase G completion):
-  - Phase H1: Author `reports/2025-11-source-weights/phase_h/<STAMP>/parity_reassessment.md` quoting `nanoBragg.c:2570-2720`, contrasting Phase E assumptions vs Phase G evidence, and marking `phase_e/.../spec_vs_c_decision.md` as historical.
-  - Phase H2: Update `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference` to expect PASS (remove `@pytest.mark.xfail`; assert corr ≥0.999 and |sum_ratio−1| ≤3e-3). Capture targeted pytest logs alongside the memo.
-  - Phase H3: Audit this ledger section and `docs/bugs/verified_c_bugs.md` to remove the outdated C-PARITY-001 linkage; cross-reference `[C-SOURCEFILE-001]` and, if needed, log the interpolation segfault workaround under a new bug stub.
-  - Phase H4: Notify dependent initiatives by updating `plans/active/vectorization.md` (Phase A2), `plans/active/vectorization-gap-audit.md` (Phase B1), and fix_plan entries (`VECTOR-TRICUBIC-002`, `VECTOR-GAPS-002`, `PERF-PYTORCH-004`) to cite the Phase H memo instead of the retired divergence thresholds.
-  - Phase I1–I3: Remain blocked until H1–H4 complete; see `plans/active/source-weight-normalization.md` for detailed checklists.
+- Next Actions (refreshed 2025-12-26 after Phase H1–H2 completion):
+  - Phase H3: Refresh this ledger section (mark historical Attempts as superseded, reference the 20251010T002324Z memo) and update `docs/bugs/verified_c_bugs.md` to ensure source weights are no longer linked to C-PARITY-001; point residual issues to `[C-SOURCEFILE-001]` and the tricubic segfault note.
+  - Phase H4: Update `plans/active/vectorization.md` (Phase A2/A3 summary), `plans/active/vectorization-gap-audit.md` (Phase B status snapshot), and fix_plan entries (`VECTOR-TRICUBIC-002`, `VECTOR-GAPS-002`, `PERF-PYTORCH-004`) so they cite the Phase H memo (corr ≥0.999, |sum_ratio−1| ≤5e-3) instead of the retired divergence thresholds.
+  - Phase I1–I3: Remain blocked until H3/H4 land; see `plans/active/source-weight-normalization.md` for the checklist before updating permanent docs and archiving the plan.
 - Attempts History:
   * [2025-10-09] Attempt #31 (ralph loop #262 — Mode: Docs, Phase G0 fixture harmonization). Result: **success**
     Metrics: pytest --collect-only validation passed (8 tests). Sanitized fixture created and checksummed.

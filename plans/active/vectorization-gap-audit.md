@@ -11,7 +11,7 @@
   - plans/active/vectorization.md (Phases A–G history)
   - plans/active/perf-pytorch-compile-refactor/plan.md (4096² warm benchmark harness & profiler usage)
   - reports/2025-10-vectorization/gaps/20251009T061928Z/analysis.md (prior gap evidence: divergence/dispersion source loops)
-- Status Snapshot (2025-12-24 update): Phase A evidence archived; VECTOR-TRICUBIC-001 Phase H closed. Phase B remains BLOCKED until `[SOURCE-WEIGHT-001]` delivers the Phase G spec-compliance implementation + evidence bundle (design packet already archived at 20251009T203823Z, replacing the legacy C-correlation gate).
+- Status Snapshot (2025-12-26 update): Phase A evidence archived; SOURCE-WEIGHT-001 Phase H1–H2 produced the parity memo (`reports/2025-11-source-weights/phase_h/20251010T002324Z/`) and PASSing divergence test (corr ≥0.999, |sum_ratio−1| ≤5e-3). Phase B remains BLOCKED until Phase H3/H4 propagate that evidence into the ledger and dependent plans.
 
 ### Phase A — Loop Inventory & Evidence Capture
 Goal: Build an auditable inventory of remaining Python loops touching the simulator hot path, with code locations and rough complexity estimates.
@@ -31,7 +31,7 @@ Exit Criteria: Ranked backlog stored at `reports/2026-01-vectorization-gap/phase
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Capture warm-run profiler trace | [B] | BLOCKED until `[SOURCE-WEIGHT-001]` Phases F–G deliver the spec-compliance test redesign and evidence bundle (replacing the prior C-correlation gate). Once the new pytest selectors and CLI artifacts exist, rerun `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1 --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`, record correlation metrics ≥0.99, and collect env/commands/pytest logs. |
+| B1 | Capture warm-run profiler trace | [B] | BLOCKED until `[SOURCE-WEIGHT-001]` Phase H3/H4 land (ledger + plan propagation). Once the parity memo + test selector are cited in fix_plan, rerun `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1 --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`, record correlation ≥0.99 and |sum_ratio−1| ≤5e-3, and capture env/commands/pytest logs. |
 | B2 | Correlate loops with trace | [B] | BLOCKED on B1 correlation fix. After valid profiler trace: Map Phase A entries to profiler hotspots (≥1% inclusive time). Produce `hot_loops.csv` with columns: module, line, loop_id, %time, call_count, notes. Flag GPU-relevant loops lacking CPU heat. |
 | B3 | Publish prioritised backlog | [ ] | Draft `backlog.md` summarising the top 3–5 candidates (e.g., `_generate_mosaic_rotations`, ROI rebuild, RNG). Document expected speedups, affected acceptance tests, risks. Update docs/fix_plan Next Actions accordingly. |
 

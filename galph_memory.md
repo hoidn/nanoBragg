@@ -1706,3 +1706,11 @@
 - Gathered geometry details from `tests/test_cli_scaling.py:600-665` and spec refs (`specs/spec-a-core.md:151-153`) so the next bundle can mirror the XPASS configuration.
 - Replaced `input.md` (Mode: Parity) with explicit guidance to build a fresh Phase G `<STAMP>` bundle using the test geometry, capture pytest XPASS + CLI outputs, compute `metrics.json`, and log a new Attempt referencing the sanitized fixture and `[C-SOURCEFILE-001]`.
 - Follow-up for Ralph: execute the new Phase G2–G3 instructions verbatim, store artifacts under `reports/2025-11-source-weights/phase_g/<STAMP>/`, ensure metrics meet corr ≥0.999 / |sum_ratio−1| ≤3e-3, then update docs/fix_plan.md attempts before moving on to Phase H.
+### 2025-12-26 (galph loop - SOURCE-WEIGHT Phase H3/H4 prep)
+- Repo already up to date. Reviewed spec/arch/testing docs plus active plans before analysis.
+- Confirmed Phase H1 memo + test PASS exist (`reports/2025-11-source-weights/phase_h/20251010T002324Z/`, `tests/test_cli_scaling.py:585-692`); focus shifts to H3/H4 ledger propagation.
+- Updated `plans/active/source-weight-normalization.md` status snapshot (H1/H2 marked done) and flipped H1/H2 table entries to `[D]`.
+- Refreshed `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` status/Next Actions to emphasise H3/H4 tasks; trimmed outdated text referencing C-PARITY-001.
+- Revised `plans/active/vectorization.md` (Phase A rows now cite the Phase H memo/tolerance) and `plans/active/vectorization-gap-audit.md` (status + B1 dependency now point at Phase H3/H4).
+- Rewrote `input.md` (Mode: Docs) directing Ralph to execute Phase H3/H4: tidy ledger + bug doc references and update VECTOR-TRICUBIC-002/VECTOR-GAPS-002/PERF-PYTORCH-004 gating language with the new parity memo.
+- Follow-up: Ralph to perform the ledger/doc updates per input.md, ensuring all dependent plans quote corr ≥0.999 and |sum_ratio−1| ≤5e-3 thresholds before we open Phase I documentation work.

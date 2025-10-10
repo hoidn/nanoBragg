@@ -8,7 +8,7 @@
   - `docs/architecture/pytorch_design.md` §1.1 and `docs/development/pytorch_runtime_checklist.md` — must inherit the parity decision during Phase I.
   - Plans blocked by this initiative: `plans/active/vectorization.md` (Phase A2) and `plans/active/vectorization-gap-audit.md` (Phase B1).
   - Evidence bundles: `reports/2025-11-source-weights/phase_{a..f}/` (baseline traces + design packet) and `reports/2025-11-source-weights/phase_g/{20251009T235016Z,20251010T000742Z}/` (final parity bundle).
-- Status Snapshot (2025-12-25): Phases A–F remain archival references. Phase G is ✅ complete with sanitised fixture (`reports/2025-11-source-weights/fixtures/two_sources_nocomments.txt`, SHA256 f23e1b1e60412c5378ee197542e0aca1ffc658198edd4e9584a3dffb57330c44) and matching PyTorch/C metrics (corr=0.9999886, ratio=1.0038). Remaining work: Phase H memo + test realignment, then Phase I documentation propagation before unblocking vectorization/perf plans. `[C-SOURCEFILE-001]` tracks the separate C comment parsing bug discovered while executing Phase G.
+- Status Snapshot (2025-12-25): Phases A–F remain archival references. Phase G is ✅ complete with sanitised fixture (`reports/2025-11-source-weights/fixtures/two_sources_nocomments.txt`, SHA256 f23e1b1e60412c5378ee197542e0aca1ffc658198edd4e9584a3dffb57330c44) and matching PyTorch/C metrics (corr=0.9999886, ratio=1.0038). Phase H1–H2 finished on 20251010T002324Z (memo + PASSing divergence test). Remaining work: Phase H3/H4 ledger + plan propagation, then Phase I documentation updates before unblocking vectorization/perf plans. `[C-SOURCEFILE-001]` tracks the separate C comment parsing bug discovered while executing Phase G.
 
 ### Legacy Phases — Archived (No Further Action)
 Goal: Preserve provenance; treat artifacts as immutable references.
@@ -40,8 +40,8 @@ Exit Criteria: New parity memo, updated tests (no xfail), and documentation refl
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| H1 | Author parity reassessment memo | [ ] | Create `reports/2025-11-source-weights/phase_h/<STAMP>/parity_reassessment.md` quoting `nanoBragg.c:2570-2720`, contrasting Phase E assumptions vs Phase G evidence, and explicitly stating that C and PyTorch ignore source weights. Mark `spec_vs_c_decision.md` as historical in the new memo. |
-| H2 | Update divergence test expectation | [ ] | Edit `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference` to remove `@pytest.mark.xfail` and assert correlation ≥0.999 with |sum_ratio−1| ≤3e-3. Validate via targeted pytest selector and archive logs beside the memo. |
+| H1 | Author parity reassessment memo | [D] | ✅ `reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md` is the authoritative memo quoting `nanoBragg.c:2570-2720`, superseding the Phase E decision and documenting equal weighting. |
+| H2 | Update divergence test expectation | [D] | ✅ `tests/test_cli_scaling.py:585-692` now expects PASS with correlation ≥0.999 and |sum_ratio−1| ≤5e-3; pytest log stored with the Phase H memo (20251010T002324Z) shows the selector passing. |
 | H3 | Correct bug ledger references | [ ] | Audit `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` narrative and `docs/bugs/verified_c_bugs.md` to ensure C-PARITY-001 is no longer cited for source weights, and cross-reference `[C-SOURCEFILE-001]`. If warranted, file a short bug note for the interpolation segfault under `docs/bugs/c-parity-XXX.md`. |
 | H4 | Notify dependent plans | [ ] | Update `plans/active/vectorization.md` (Phase A2), `plans/active/vectorization-gap-audit.md` (Phase B1), and related `docs/fix_plan.md` entries so they reference the Phase H memo instead of retired divergence thresholds. |
 
