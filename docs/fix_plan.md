@@ -26,7 +26,7 @@
 | [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | in_progress |
 | [STATIC-PYREFLY-001](#static-pyrefly-001-run-pyrefly-analysis-and-triage) | Run pyrefly analysis and triage | Medium | in_planning |
 | [TEST-INDEX-001](#test-index-001-test-suite-discovery-reference-doc) | Test suite discovery reference doc | Medium | in_planning |
-| [SOURCE-WEIGHT-001](#source-weight-001-correct-weighted-source-normalization) | Correct weighted source normalization | Medium | in_progress (Phase H memo/test updates) |
+| [SOURCE-WEIGHT-001](#source-weight-001-correct-weighted-source-normalization) | Correct weighted source normalization | Medium | in_progress (Phase I documentation updates) |
 | [C-SOURCEFILE-001](#c-sourcefile-001-sourcefile-comment-parsing-bug) | Sourcefile comment parsing bug | Medium | in_planning |
 | [ROUTING-LOOP-001](#routing-loop-001-loopsh-routing-guard) | loop.sh routing guard | High | done |
 | [ROUTING-SUPERVISOR-001](#routing-supervisor-001-supervisorsh-automation-guard) | supervisor.sh automation guard | High | in_progress |
@@ -4065,8 +4065,8 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 ## [SOURCE-WEIGHT-001] Correct weighted source normalization
 - Spec/AT: `specs/spec-a-core.md` §4 (Sources, Divergence & Dispersion), `docs/architecture/pytorch_design.md` §§1.1/2.3, `docs/development/c_to_pytorch_config_map.md` (beam sourcing), `docs/development/testing_strategy.md` §1.4, and `golden_suite_generator/nanoBragg.c` lines 2570-2720 (source ingestion & steps computation).
 - Priority: Medium
-- Status: in_progress (Phase H1–H2 complete; Phase H3/H4 ledger + plan propagation in progress)
-- Owner/Date: galph/2025-11-17 (updated 2025-12-26)
+- Status: in_progress (Phase H complete; Phase I documentation updates pending)
+- Owner/Date: galph/2025-11-17 (updated 2025-12-27)
 - Plan Reference: `plans/active/source-weight-normalization.md`
 - Parity Memo (Phase H1): `reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md` (supersedes Phase E decision; cites nanoBragg.c:2570-2720 confirming equal weighting)
 - Reproduction (C & PyTorch):
@@ -4074,10 +4074,10 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE nanoBragg -mat A.mat -floatfile py_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources_nocomments.txt ...` (matching geometry).
   * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
 - First Divergence (if known): **RESOLVED**. Legacy Phase E divergence classification was incorrect. Phase G Attempts #34–#35 (20251009T235016Z, 20251010T000742Z) recorded corr=0.9999886 and |sum_ratio−1|=0.0038 with the sanitised fixture, confirming both implementations ignore weights per `specs/spec-a-core.md:151-153` and achieve near-perfect parity. Phase H1 memo establishes correlation ≥0.999 and |sum_ratio−1| ≤5e-3 as the normative thresholds. Residual C-only defect: comment lines generate ghost sources (tracked in `[C-SOURCEFILE-001]`).
-- Next Actions (refreshed 2025-12-26 — Phase H3/H4 in progress this loop):
-  - Phase H3: ✅ IN PROGRESS — Updating this ledger section with Phase H memo reference and correcting `docs/bugs/verified_c_bugs.md` to clarify C-PARITY-001 does NOT apply to source weights (only to φ-carryover defect); ensuring residual issues point to `[C-SOURCEFILE-001]`.
-  - Phase H4: ✅ IN PROGRESS — Updating `plans/active/vectorization.md` (Phase A2), `plans/active/vectorization-gap-audit.md` (Phase B1), and fix_plan entries (`VECTOR-TRICUBIC-002`, `VECTOR-GAPS-002`, `PERF-PYTORCH-004`) to cite the Phase H memo (`reports/2025-11-source-weights/phase_h/20251010T002324Z/`) and normative thresholds (corr ≥0.999, |sum_ratio−1| ≤5e-3) instead of retired divergence expectations.
-  - Phase I1–I3: Remain blocked until H3/H4 complete; see `plans/active/source-weight-normalization.md` for the checklist before updating permanent docs and archiving the plan.
+- Next Actions (refreshed 2025-12-27 — Phase I ready to execute):
+  - Phase I1: Update `docs/architecture/pytorch_design.md` (sources subsection), `docs/development/pytorch_runtime_checklist.md`, and any SOURCE-WEIGHT acceptance text in `specs/spec-a-core.md` to cite the Phase H memo (`reports/2025-11-source-weights/phase_h/20251010T002324Z/`) and thresholds (corr ≥0.999, |sum_ratio−1| ≤5e-3). Capture edits under `reports/2025-11-source-weights/phase_i/<STAMP>/` with commands and diffs.
+  - Phase I2: Refresh dependent ledgers/plans (e.g., `[VECTOR-TRICUBIC-002]`, `[VECTOR-GAPS-002]`, `[PERF-PYTORCH-004]`) so their gating language now points at the updated documentation, and record the propagation in `galph_memory.md` once the doc patch is ready.
+  - Phase I3: Assemble the archive packet (closure summary + residual risks), move `plans/active/source-weight-normalization.md` to `plans/archive/`, and flip this entry to `done` after doc updates merge.
 - Attempts History:
   * [2025-10-09] Attempt #31 (ralph loop #262 — Mode: Docs, Phase G0 fixture harmonization). Result: **success**
     Metrics: pytest --collect-only validation passed (8 tests). Sanitized fixture created and checksummed.

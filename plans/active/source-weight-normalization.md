@@ -8,7 +8,7 @@
   - `docs/architecture/pytorch_design.md` §1.1 and `docs/development/pytorch_runtime_checklist.md` — must inherit the parity decision during Phase I.
   - Plans blocked by this initiative: `plans/active/vectorization.md` (Phase A2) and `plans/active/vectorization-gap-audit.md` (Phase B1).
   - Evidence bundles: `reports/2025-11-source-weights/phase_{a..f}/` (baseline traces + design packet) and `reports/2025-11-source-weights/phase_g/{20251009T235016Z,20251010T000742Z}/` (final parity bundle).
-- Status Snapshot (2025-12-25): Phases A–F remain archival references. Phase G is ✅ complete with sanitised fixture (`reports/2025-11-source-weights/fixtures/two_sources_nocomments.txt`, SHA256 f23e1b1e60412c5378ee197542e0aca1ffc658198edd4e9584a3dffb57330c44) and matching PyTorch/C metrics (corr=0.9999886, ratio=1.0038). Phase H1–H2 finished on 20251010T002324Z (memo + PASSing divergence test). Remaining work: Phase H3/H4 ledger + plan propagation, then Phase I documentation updates before unblocking vectorization/perf plans. `[C-SOURCEFILE-001]` tracks the separate C comment parsing bug discovered while executing Phase G.
+- Status Snapshot (2025-12-27): Phases A–G remain archival references and Phase H (Attempts #31–#37) is now fully complete — ledger, bug docs, and dependent plans all cite the Phase H memo (`reports/2025-11-source-weights/phase_h/20251010T002324Z/`). Phase I documentation updates (pytorch_design.md, pytorch_runtime_checklist.md, spec language) plus archival remain before closing the initiative. `[C-SOURCEFILE-001]` continues to track the C comment parsing bug uncovered during Phase G.
 
 ### Legacy Phases — Archived (No Further Action)
 Goal: Preserve provenance; treat artifacts as immutable references.
@@ -33,7 +33,7 @@ Exit Criteria: New `<STAMP>` bundle under `reports/2025-11-source-weights/phase_
 | G4 | Document segfault guard | [D] | ✅ Root cause captured in `reports/2025-11-source-weights/phase_g/20251009T215516Z/c_segfault/crash_analysis.md` (negative Fhkl index when interpolation auto-enables). Reference this note in new bundles so future runs pass `-interpolate 0` or ship a fixture HKL. |
 | G5 | Cross-link comment parsing bug plan | [D] | Attempt #35 notes reference `[C-SOURCEFILE-001]`; fix_plan entry created 2025-12-25 keeps bug tracking decoupled. |
 
-### Phase H — Parity Reassessment & Test Updates (Active)
+### Phase H — Parity Reassessment & Test Updates (Complete)
 Goal: Supersede the legacy spec-vs-C memo, update parity tests to expect PASS, and correct the bug ledger/docs.
 Prereqs: Phase G completed with working C output and updated fix_plan Attempt.
 Exit Criteria: New parity memo, updated tests (no xfail), and documentation reflecting that C honours equal weighting.
@@ -42,10 +42,10 @@ Exit Criteria: New parity memo, updated tests (no xfail), and documentation refl
 | --- | --- | --- | --- |
 | H1 | Author parity reassessment memo | [D] | ✅ `reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md` is the authoritative memo quoting `nanoBragg.c:2570-2720`, superseding the Phase E decision and documenting equal weighting. |
 | H2 | Update divergence test expectation | [D] | ✅ `tests/test_cli_scaling.py:585-692` now expects PASS with correlation ≥0.999 and |sum_ratio−1| ≤5e-3; pytest log stored with the Phase H memo (20251010T002324Z) shows the selector passing. |
-| H3 | Correct bug ledger references | [ ] | Audit `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` narrative and `docs/bugs/verified_c_bugs.md` to ensure C-PARITY-001 is no longer cited for source weights, and cross-reference `[C-SOURCEFILE-001]`. If warranted, file a short bug note for the interpolation segfault under `docs/bugs/c-parity-XXX.md`. |
-| H4 | Notify dependent plans | [ ] | Update `plans/active/vectorization.md` (Phase A2), `plans/active/vectorization-gap-audit.md` (Phase B1), and related `docs/fix_plan.md` entries so they reference the Phase H memo instead of retired divergence thresholds. |
+| H3 | Correct bug ledger references | [D] | ✅ 2025-12-27 (galph) — Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-001]` status/Next Actions and reconfirmed `docs/bugs/verified_c_bugs.md` scopes C-PARITY-001 to φ-carryover while pointing sourcefile issues to `[C-SOURCEFILE-001]`; parity memo + thresholds now cited everywhere. |
+| H4 | Notify dependent plans | [D] | ✅ 2025-12-27 (galph) — Refreshed `plans/active/vectorization.md` status snapshot and dependent fix_plan entries (`VECTOR-TRICUBIC-002`, `VECTOR-GAPS-002`, `PERF-PYTORCH-004`) to quote the Phase H memo and corr ≥0.999 / |sum_ratio−1| ≤5e-3 thresholds before profiling restarts. |
 
-### Phase I — Documentation & Downstream Unblocks (Blocked)
+### Phase I — Documentation & Downstream Unblocks (Active)
 Goal: Propagate the parity decision through permanent docs and unblock dependent plans.
 Prereqs: Phase H deliverables published and tests passing.
 Exit Criteria: Architecture/runtime docs updated, dependent plans ungated, plan ready for archive.

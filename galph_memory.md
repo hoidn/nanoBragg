@@ -1714,3 +1714,12 @@
 - Revised `plans/active/vectorization.md` (Phase A rows now cite the Phase H memo/tolerance) and `plans/active/vectorization-gap-audit.md` (status + B1 dependency now point at Phase H3/H4).
 - Rewrote `input.md` (Mode: Docs) directing Ralph to execute Phase H3/H4: tidy ledger + bug doc references and update VECTOR-TRICUBIC-002/VECTOR-GAPS-002/PERF-PYTORCH-004 gating language with the new parity memo.
 - Follow-up: Ralph to perform the ledger/doc updates per input.md, ensuring all dependent plans quote corr ≥0.999 and |sum_ratio−1| ≤5e-3 thresholds before we open Phase I documentation work.
+
+### 2025-12-27 (galph loop - SOURCE-WEIGHT Phase I kickoff)
+- Repo already up to date; reviewed spec/arch/testing docs plus active plans before analysis. No new commits from Ralph since last supervisor handoff.
+- Action type: Review/housekeeping (Mode: Docs) on `[SOURCE-WEIGHT-001]`. Verified docs/bugs/verified_c_bugs.md#169 already scoped C-PARITY-001 correctly; focus shifted to aligning plans/ledger with Phase H completion and staging Phase I.
+- Updated `docs/fix_plan.md` row for `[SOURCE-WEIGHT-001]` to note Phase H completion, refreshed Next Actions for Phase I1–I3, and bumped Owner timestamp to 2025-12-27.
+- Marked `plans/active/source-weight-normalization.md` Phase H3/H4 as [D], flipped Phase H header to “Complete”, set Phase I header to “Active”, and refreshed the status snapshot to highlight remaining doc/archival work.
+- Synced dependent plans: `plans/active/vectorization.md` status snapshot now references Phase H1–H4 parity and notes the pending Phase I doc patch; `plans/active/vectorization-gap-audit.md` likewise marks Phase B unblocked pending the documentation update.
+- Rewrote `input.md` (Mode: Docs) directing Ralph to execute Phase I1 doc updates (pytorch_design.md, pytorch_runtime_checklist.md, specs/spec-a-core.md) with artifacts under `reports/2025-11-source-weights/phase_i/<STAMP>/` and a collect-only pytest proof.
+- Next supervisor follow-up: confirm Ralph lands the Phase I docs, then handle Phase I2 ledger propagation + plan archival.

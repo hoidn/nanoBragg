@@ -11,7 +11,7 @@
   - plans/active/vectorization-gap-audit.md - open gap inventory plus profiling backlog (Phase B blocked today).
   - plans/active/source-weight-normalization.md - prerequisite parity work gating profiler reliability.
   - reports/2025-10-vectorization/ and reports/2026-01-vectorization-gap/ - prior artifacts to cross-check during refresh.
-- Status Snapshot (2025-12-26): Tricubic and absorption vectorization (Phases A-H) remain archived with CUDA parity. SOURCE-WEIGHT-001 Phase H1–H2 delivered the parity memo (`reports/2025-11-source-weights/phase_h/20251010T002324Z/`) and flipped the divergence test to PASS (corr ≥0.999, |sum_ratio−1| ≤5e-3). Outstanding work: Phase H3/H4 ledger + plan propagation so dependent initiatives can consume the new evidence before profiler refresh. VECTOR-GAPS-002 Phase B1 stays blocked until that propagation lands.
+- Status Snapshot (2025-12-27): Historical tricubic/absorption phases (A-H) remain archived with CUDA parity. SOURCE-WEIGHT-001 Phase H1–H4 now published across the ledger, so dependencies cite the parity memo (corr ≥0.999, |sum_ratio−1| ≤5e-3). Outstanding work: Phase A3 galph_memory readiness note plus the Phase B regression/benchmark refresh once SOURCE-WEIGHT Phase I doc updates settle. VECTOR-GAPS-002 Phase B1 is unblocked and awaits the refreshed profiler capture.
 
 ### Phase A - Dependency Gate And Ledger Sync
 Goal: Clear upstream blockers so downstream profiling and implementation can proceed on trustworthy baselines.
