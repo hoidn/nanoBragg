@@ -1758,3 +1758,9 @@
 - Updated `docs/fix_plan.md:3791-3810` Next Actions to instruct an immediate Phase B1 profiler rerun with parity thresholds explicit; refreshed risks note to treat correlation_warm <0.999 or |sum_ratio−1|>5e-3 as blockers.
 - Rewrote `input.md` directing Ralph to capture the new 4096² profiler trace (with metrics logging + collect-only proof) and to escalate if thresholds fail; artifacts to land under `reports/2026-01-vectorization-gap/phase_b/$STAMP/`.
 - Follow-up: Expect Ralph to execute the profiler run per updated memo, then log Attempt in `[VECTOR-GAPS-002]`; supervisor to review metrics next loop and, if green, push Phase B2 hotspot mapping guidance.
+### 2025-12-31 (galph loop - VECTOR-GAPS Phase B1 follow-up)
+- Repo already synced; reviewed docs/index, specs/arch/testing strategy, and vectorization plans.
+- Verified no new profiler bundles beyond 20251010 under `reports/2026-01-vectorization-gap/phase_b/`; Phase B1 evidence still outstanding.
+- No plan edits needed: `docs/fix_plan.md` and `plans/active/vectorization-gap-audit.md` already call for the refreshed B1 run with corr ≥0.999 and |sum_ratio−1| ≤5e-3.
+- Rewrote `input.md` (Mode: Perf) to restate the 4096² CPU profiler command, artifact checklist, and blocked protocol; evidence-only loop, thresholds enforced via summary script.
+- Follow-up: expect Ralph to execute the new B1 bundle, deposit artifacts under a fresh `$STAMP`, and update `[VECTOR-GAPS-002]`/plan rows before we advance to Phase B2 hotspot mapping.
