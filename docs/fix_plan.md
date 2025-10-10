@@ -1,8 +1,9 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2026-01-15 (galph loop — determinism planning kickoff)
+**Last Updated:** 2026-01-16 (galph loop — dtype neutrality planning kickoff)
 **Active Focus:**
-- CRITICAL: `[DETERMINISM-001]` — execute Phase A per `plans/active/determinism.md` (seed reproducibility evidence capture).
+- CRITICAL: `[DETERMINISM-001]` — execute Phase A per `plans/active/determinism.md`; blocked until dtype cache fix lands.
+- BLOCKER: `[DTYPE-NEUTRAL-001]` — drive Phase A evidence in `plans/active/dtype-neutral.md` to unblock determinism seeds.
 - `[TEST-SUITE-TRIAGE-001]` remains the umbrella initiative; update ladder once determinism artifacts land.
 - Tap 5.3 oversample instrumentation for `[VECTOR-PARITY-001]` stays paused until suite triage critical path clears.
 
@@ -30,7 +31,7 @@
 | [LATTICE-SHAPE-001](#lattice-shape-001-lattice-shape-models) | Lattice shape models | High | in_planning |
 | [DENZO-CONVENTION-001](#denzo-convention-001-denzo-convention-support) | DENZO convention support | Medium | in_planning |
 | [PIVOT-MODE-001](#pivot-mode-001-detector-pivot-modes) | Detector pivot modes | High | in_planning |
-| [DTYPE-NEUTRAL-001](#dtype-neutral-001-dtype-neutrality-guardrail) | dtype neutrality guardrail | Medium | in_planning |
+| [DTYPE-NEUTRAL-001](#dtype-neutral-001-dtype-neutrality-guardrail) | dtype neutrality guardrail | High | in_progress |
 | [LEGACY-SUITE-001](#legacy-suite-001-legacy-translation-suite-upkeep) | Legacy translation suite upkeep | Low | in_planning |
 | [GRADIENT-FLOW-001](#gradient-flow-001-gradient-flow-regression) | Gradient flow regression | High | in_planning |
 | [TRICLINIC-PARITY-001](#triclinic-parity-001-triclinic-parity-alignment) | Triclinic parity alignment | High | in_planning |
@@ -95,8 +96,8 @@
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A complete). Evidence gathering per `plans/active/determinism.md` Phase A executed: (A1) pytest collection succeeded (410 tests), environment snapshot captured (Python 3.13.5, PyTorch 2.7.1+cu126, CUDA 12.6 available, default dtype float32); (A2) AT-PARALLEL-013 reproduced: 4 failures (test_pytorch_determinism_same_seed, test_pytorch_determinism_different_seeds, test_pytorch_consistency_across_runs, test_numerical_precision_float64), 1 passed (test_platform_fingerprint), 1 skipped (test_c_pytorch_equivalence, requires NB_RUN_PARALLEL=1); (A3) AT-PARALLEL-024 reproduced: 3 failures (test_pytorch_determinism, test_seed_independence, test_mosaic_rotation_umat_determinism), 2 passed (test_lcg_compatibility, test_umat2misset_round_trip), 1 skipped (test_c_pytorch_equivalence); (A4) No control script exists (documented). **Critical finding**: All determinism test failures are **NOT seed-related** but **dtype neutrality violations** per CLAUDE.md §16. Tests request `dtype=torch.float64` but `Detector` basis vectors (`fdet_vec`, `sdet_vec`, `odet_vec`) remain float32 (default). Cache validation at `detector.py:767` attempts `torch.allclose(float32, float64)` → RuntimeError. **Root cause**: Blocker prevents tests from reaching seed-dependent code; determinism behavior cannot be assessed yet. Passing tests (AT-024 `test_lcg_compatibility`, `test_umat2misset_round_trip`) prove underlying RNG/misset math is sound. Secondary failure: `test_numerical_precision_float64` hits torch.compile() Dynamo error (separate issue). Runtime: ~5s (collection), ~20s per test file. Artifacts: `reports/2026-01-test-suite-triage/phase_d/20251010T171010Z/determinism/phase_a/{summary.md,commands.txt,env.json,at_parallel_013/pytest.log,at_parallel_024/pytest.log}`. Next: Fix dtype neutrality bug in `Detector` (blocking); then re-execute Phase A to capture actual seed-related failures (if any).
 - Next Actions:
-  1. **BLOCKING**: Fix dtype neutrality in `Detector` (all basis vectors must respect `self.dtype` parameter, not default to float32). This is prerequisite for Phase A rerun.
-  2. After dtype fix, re-run Phase A to confirm determinism tests reach seed logic; capture updated artifacts.
+  1. **BLOCKING**: Drive `[DTYPE-NEUTRAL-001]` Phase A/B deliverables (per `plans/active/dtype-neutral.md`) so detector caches honour requested dtype; supervisor will not schedule determinism rerun until dtype fix attempt is underway.
+  2. Once dtype fix implementation (Phase D/E of `[DTYPE-NEUTRAL-001]`) lands, re-run determinism Phase A to collect fresh seed-focused artifacts under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/determinism/`.
   3. If determinism failures persist post-fix, proceed to Phase B callchain analysis per plan.
 - Exit Criteria:
   - Determinism tests pass with bitwise equality for same-seed runs and documented seed divergence for different seeds.
@@ -531,20 +532,27 @@
   - Pivot tests pass with 1e-6 tolerance; guardrail documented in detector plan.
 
 ## [DTYPE-NEUTRAL-001] dtype neutrality guardrail
-- Spec/AT: `docs/development/testing_strategy.md` §1.4, `docs/development/pytorch_runtime_checklist.md`, `tests/test_perf_pytorch_006.py`
-- Priority: Medium
-- Status: in_planning
+- Spec/AT: `docs/development/testing_strategy.md` §1.4, `docs/development/pytorch_runtime_checklist.md`, `tests/test_at_parallel_013.py`, `tests/test_at_parallel_024.py`
+- Priority: High
+- Status: in_progress
 - Owner/Date: ralph/2025-10-10
-- Reproduction: `pytest -v tests/test_perf_pytorch_006.py`
-- First Divergence (if known): dtype neutrality regression (float32/float64 mismatch) flagged in `triage_summary.md` §C15.
-- Attempts History: none — Phase D item.
+- Plan Reference: `plans/active/dtype-neutral.md`
+- Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py::TestAT_PARALLEL_013_Determinism::test_pytorch_determinism_same_seed tests/test_at_parallel_024.py::TestAT_PARALLEL_024_MissetDeterminism::test_pytorch_determinism`
+- Source: Cluster C15 from `[TEST-SUITE-TRIAGE-001]` Attempt #6 triage summary (`reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/triage_summary.md` §C15)
+- First Divergence (if known): dtype neutrality regression (float32 cache vs float64 tensors) triggers `torch.allclose` RuntimeError in `Detector.get_pixel_coords` (line ~767).
+- Attempts History:
+  * [2026-01-16] Attempt #0 — Result: 📝 planning. Authored dtype-neutral remediation playbook (`plans/active/dtype-neutral.md`) capturing Phase A–E workflow and artifact policy under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/dtype-neutral/`.
 - Next Actions:
-  1. Reproduce failure across CPU/GPU and archive dtype diagnostics.
-  2. Audit tensor creation paths for hard-coded dtype/device assumptions; update runtime checklist if new rule needed.
+  1. Execute Phase A tasks (A1–A5) per plan to recapture dtype mismatch evidence and stack traces under the new artifact root.
+  2. Complete Phase B audit (B1–B5) to inventory cache/device touchpoints and log findings in fix_plan attempts.
+  3. After Phase B, draft Phase C artifacts (remediation_plan.md, tests.md, docs_updates.md) and prep supervisor input for Phase D implementation.
 - Risks/Assumptions:
-  - Ensure tests run on environments with both CPU and CUDA availability for parity.
+  - Determinism remediation remains blocked until detector caches honour requested dtype; prioritise CPU path even if CUDA unavailable.
+  - Validate reproducibility on both CPU and GPU once fixes land to protect `gpu_smoke` coverage.
 - Exit Criteria:
-  - dtype tests pass on CPU/GPU; runtime checklist updated with lessons learned.
+  - Detector cache transitions respect requested dtype/device without raising RuntimeError.
+  - Determinism selectors reach seed logic (dtype mismatch eliminated) so remaining failures, if any, focus on RNG behaviour.
+  - Runtime checklist updated with cache/dtype guidance; validation report archived under Phase E.
 
 ## [LEGACY-SUITE-001] Legacy translation suite upkeep
 - Spec/AT: `specs/spec-a-parallel.md` §2, `tests/test_suite.py::TestTier1TranslationCorrectness`

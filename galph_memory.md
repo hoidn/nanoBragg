@@ -2115,3 +2115,14 @@
 - Rewrote `input.md` (Mode: Parity) directing Attempt #1 to capture determinism failure evidence per plan Phase A.
 - Follow-up for Ralph: execute Phase A run (collect-only + AT-PARALLEL-013/024 reproductions), archive under the new determinism reports tree, and log Attempt #1.
 - <Action State>: [ready_for_implementation]
+
+### 2026-01-16 (galph loop - pre-plan note)
+- Focus issue: [DTYPE-NEUTRAL-001] dtype neutrality guardrail plan scaffolding
+- Action type: Planning
+- Mode: Parity
+### 2026-01-16 (galph loop - dtype neutrality plan issued)
+- Authored `plans/active/dtype-neutral.md` with Phase A–E structure to eliminate Detector cache dtype mismatch gating determinism.
+- Updated `docs/fix_plan.md` Active Focus + `[DTYPE-NEUTRAL-001]` entry (priority↑, status=in_progress, plan reference, new Next Actions); linked `[DETERMINISM-001]` to dependency.
+- Rewrote `input.md` (Parity mode) to launch Phase A evidence capture (collect-only + targeted determinism selectors + minimal reproducer) under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/dtype-neutral/`.
+- Follow-up: expect Attempt #1 artifacts (env.json, pytest logs, summary) next loop before scoping Phase B audit.
+- <Action State>: [ready_for_implementation]
