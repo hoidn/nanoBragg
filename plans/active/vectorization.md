@@ -50,7 +50,7 @@ Exit Criteria: `first_divergence.md` captured, decision logged in docs/fix_plan.
 | C1 | Track trace capture completeness | [D] | ✅ Attempts #8–#9 delivered TRACE_C/TRACE_PY logs under `reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/` and `.../20251010T055346Z/`; ledger updated in docs/fix_plan.md Attempt #8/#9. |
 | C2 | Obtain first divergence analysis | [D] | ✅ Attempt #10 published `first_divergence.md` (scattering_vec unit error + fluence/F_latt hypotheses). galph_memory 2026-01-06 entry logs supervisor review. |
 | C3 | Update vectorization plan/ledger post-diagnosis | [D] | ✅ This revision records Phase C closure and re-aligns docs/fix_plan.md `[VECTOR-TRICUBIC-002]` status to “await parity remediation”. |
-| C4 | Monitor parity remediation unblock | [B] | Blocked on `[VECTOR-PARITY-001]` Phase D1–D4/E1 parity fixes (scattering_vec units, fluence, F_latt). Resume this plan’s Phase D only after correlation ≥0.999 and |sum_ratio−1| ≤5×10⁻³ are met. |
+| C4 | Monitor parity remediation unblock | [B] | Blocked on the remaining `[VECTOR-PARITY-001]` steps — Phase D3 F_latt normalisation and D4/E1 consolidated parity smoke. Phase D1/D2 closed via Attempts #11/#12; resume this plan’s Phase D once corr ≥0.999 and |sum_ratio−1| ≤5×10⁻³. |
 
 ### Phase D — Warm-Run Profiling & Backlog Refresh
 Goal: Once parity is restored, capture a clean 4096² warm-run profile and integrate it with the loop inventory to rank the next vectorization targets.

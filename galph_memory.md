@@ -1871,3 +1871,9 @@
 - Authored `reports/2026-01-vectorization-parity/phase_d/fluence_gap_analysis.md` summarising the mismatch and noting that the simulator already carries the spec-compliant value—issue isolated to `scripts/debug_pixel_trace.py` re-deriving fluence from flux.
 - Updated docs/fix_plan.md observations to point at the new evidence and rewrote input.md (Mode: Parity) instructing Ralph to emit `beam_config.fluence`, rerun the trace, and record `fluence_parity.md` under a fresh stamp.
 - Expect next attempt: code touch in `scripts/debug_pixel_trace.py`, refreshed TRACE_PY log (≤1e-3 rel err), `pytest --collect-only` log, and updated Attempt history.
+### 2026-01-07 (galph loop - Phase D3 handoff prep)
+- Verified Ralph Attempt #12 (`reports/2026-01-vectorization-parity/phase_d/20251010T070307Z/fluence_parity.md`) closed Phase D2; TRACE_PY fluence now matches C (rel_err≈7.9e-16).
+- Updated `plans/active/vectorization-parity-regression.md` (row D2 → [D]) and `plans/active/vectorization.md` (C4 note) to reflect D1/D2 completion, leaving D3/F_latt as the active blocker.
+- Refreshed `docs/fix_plan.md` Next Actions: D1/D2 marked ✅ with Attempt references; item 8 now instructs F_latt parity memo + ROI guard.
+- Authored `input.md` (Mode: Parity) directing Ralph to implement Phase D3, regenerate TRACE_PY with STAMPed artifacts, write `f_latt_parity.md`, rerun ROI nb-compare, and execute the mapped parity test selector.
+- Follow-up: Expect Attempt #13 containing f_latt parity evidence (`reports/2026-01-vectorization-parity/phase_d/<STAMP>/f_latt_parity.md`) plus updated trace/roi outputs; supervisor to review and then unlock Phase D4.
