@@ -41,6 +41,7 @@
   - ROI parity confirms physics is correct for signal-rich pixels; divergence likely resides in scaling applied outside the ROI.
   - Phase C1 traces confirm the selected pixels are background-only (I_pixel_final=0); plan to add at least one on-peak trace if PyTorch outputs mirror that behaviour.
   - **Phase C3 confirms:** Geometric parity is perfect (≤10⁻¹² error). Physics divergence begins at scattering_vec (line 45). Three independent bugs compound to produce corr=0.721: (H1) scattering vector units, (H2) fluence calculation, (H3) F_latt normalization. All are actionable and should be fixed sequentially H1→H2→H3.
+  - 2026-01-06 supervisor review captured `reports/2026-01-vectorization-parity/phase_d/fluence_gap_analysis.md`, quantifying the legacy TRACE_PY fluence underflow (~9.89e+08 ratio vs C) and confirming `BeamConfig.fluence` already matches spec; the trace helper must stop re-deriving flux-based values during Phase D2.
 - Next Actions (2025-10-10 refresh — Phase C3 complete, ready for implementation):
   1. ✅ **Phase C staging** — Completed via Attempt #8 (`reports/2026-01-vectorization-parity/phase_c/20251010T040739Z/trace_plan.md`).
   2. ✅ **Supervisor decisions logged this loop** — Pixel set = {(2048,2048) ROI core, (1792,2048) first row outside ROI, (4095,2048) far edge}; extend `scripts/debug_pixel_trace.py` rather than fork; start with aggregated-per-pixel tap points before drilling into per-source traces.
