@@ -9,6 +9,7 @@ Welcome to the central index for all `nanoBragg-PyTorch` project documentation. 
 These are the core, living documents that guide the project.
 
 ### Core Project Guides
+* **[Index of Findings](./findings.md)** - Consolidated record of verified bugs, conventions, and parity gaps for quick recall.
 ### PyTorch Guardrails
 * **[PyTorch Runtime Checklist](./development/pytorch_runtime_checklist.md)** – quick do/don’t list for vectorization and device placement. Always review before editing simulator code.
 * **[PyTorch Design](./architecture/pytorch_design.md#vectorization-strategy)** – detailed explanation of the required broadcast shapes and batched flows.
