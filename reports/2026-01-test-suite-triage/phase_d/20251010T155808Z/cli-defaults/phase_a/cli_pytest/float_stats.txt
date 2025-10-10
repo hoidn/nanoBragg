@@ -1,0 +1,7 @@
+Shape: (32, 32)
+Min: 0.0
+Max: 0.0
+Mean: 0.0
+Sum: 0.0
+Non-zero count: 0
+Dtype: float32

@@ -1,0 +1,19 @@
+# Phase A Task A1: CLI reproduction baseline
+# Command executed:
+KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F
+
+# Test parameters (from test source):
+# -cell 100 100 100 90 90 90
+# -default_F 100
+# -detpixels 32
+# -pixel 0.1
+# -distance 100
+# -lambda 6.2
+# -N 5
+# -floatfile <tmpdir>/output.bin
+# -intfile <tmpdir>/output.img
+
+# Result: FAILED at line 59 (assert np.any(float_data > 0))
+# Exit code: 1
+# Runtime: ~4.86s
+# Observation: All pixels are zero in output float image

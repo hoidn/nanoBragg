@@ -1,0 +1,26 @@
+Creating minimal test configuration...
+Crystal config: default_F = 100.0
+Detector: 32x32, distance=100.0mm
+Beam: λ=6.2Å, fluence=1.259e+29
+
+Crystal HKL data: None
+Crystal default_F from config: 100.0
+
+Testing get_structure_factor method:
+  Input: h=[1.0, 2.0, 0.0], k=[0.0, 1.0, 3.0], l=[0.0, 0.0, 1.0]
+  F_result = tensor([100., 100., 100.])
+  Expected: all 100.0
+
+Creating simulator...
+
+Running simulation...
+auto-selected 1-fold oversampling
+
+Intensity statistics:
+  Shape: torch.Size([32, 32])
+  Min: 7.749086e-07
+  Max: 1.546525e+02
+  Mean: 2.024670e+01
+  Non-zero pixels: 1024
+
+✓  Got non-zero intensity

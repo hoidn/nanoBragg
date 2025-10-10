@@ -1,0 +1,50 @@
+
+============================================================
+CONFIGURATION ECHO (for debugging)
+============================================================
+
+### Crystal Configuration ###
+  Cell: a=100.000 b=100.000 c=100.000 Å
+        α=90.000° β=90.000° γ=90.000°
+  N_cells: 5 x 5 x 5
+  Default F: 100.0
+  Misset: 0.000° 0.000° 0.000°
+  Phi: start=0.000° range=0.000° steps=1
+  Mosaic: spread=0.000° domains=1
+  Crystal shape: SQUARE
+
+### Detector Configuration ###
+  Pixels: 32 x 32
+  Pixel size: 0.1000 mm
+  Distance: 100.000 mm
+  Beam center: S=1.650 mm, F=1.650 mm
+  Convention: MOSFLM
+  Pivot: BEAM
+  Rotations: rotx=0.000° roty=0.000°
+             rotz=0.000° twotheta=0.000°
+  Oversample: -1
+
+### Beam Configuration ###
+  Wavelength: 6.2000 Å
+  Polarization factor: 0.000
+  Fluence: 1.26e+29 photons/m²
+  Sources: 1 sources
+
+### Simulator Configuration ###
+============================================================
+
+Running simulation...
+  Detector: 32x32 pixels
+  Crystal: 100.0x100.0x100.0 Å
+  Wavelength: 6.20 Å
+  Device: cpu, Dtype: torch.float32
+auto-selected 1-fold oversampling
+
+Statistics:
+  Max intensity: 0.000e+00 at pixel (31, 31)
+  Mean: 0.000e+00
+  RMS: 0.000e+00
+  RMSD: 0.000e+00
+Wrote float image to /tmp/cli_test_a2/output.bin
+
+Simulation complete.
