@@ -1,42 +1,38 @@
-Summary: Fix the CLI default_F-only run so it emits non-zero intensities and passes AT-CLI-002.
+Summary: Capture determinism failure evidence for AT-PARALLEL-013/024 under Phase A of the new RNG plan.
 Mode: Parity
-Focus: [CLI-DEFAULTS-001] Minimal -default_F CLI invocation
+Focus: [DETERMINISM-001] PyTorch RNG determinism
 Branch: feature/spec-based-2
-Mapped tests: tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F
-Artifacts: reports/2026-01-test-suite-triage/phase_d/<STAMP>/cli-defaults/attempt_fix/
-Do Now: [CLI-DEFAULTS-001] Minimal -default_F CLI invocation — implement the Phase C guard fix, then run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F`
-If Blocked: If the CLI still yields zeros, add the Tap 4 probe from Phase B (see summary at reports/2026-01-test-suite-triage/phase_d/20251010T160902Z/cli-defaults/phase_b/summary.md) and capture the logs under `.../attempt_fix/debug_tap4/` before pausing.
-
+Mapped tests: tests/test_at_parallel_013.py; tests/test_at_parallel_024.py
+Artifacts: reports/2026-01-test-suite-triage/phase_d/<STAMP>/determinism/phase_a/
+Do Now: [DETERMINISM-001] PyTorch RNG determinism — run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q`
+If Blocked: If pytest collection fails, capture the traceback in `reports/.../phase_a/collect_failure.log` and rerun with `-vv` to narrow scope before proceeding.
 Priorities & Rationale:
-- spec compliance — spec-a-cli.md:163 requires the default_F-only CLI path to render non-zero intensity; we are currently violating AT-CLI-002.
-- orchestration bug — src/nanobrag_torch/__main__.py:443 and src/nanobrag_torch/__main__.py:1090 show the sentinel `hkl_data=None` plus loose guard that Phase C flagged as the root cause.
-- remediation blueprint — plans/active/cli-defaults/plan.md:48 documents the approved implementation steps and artifact policy for this attempt.
-- validation coverage — reports/2026-01-test-suite-triage/phase_d/20251010T161925Z/cli-defaults/phase_c/tests.md:1 lists the selectors and auxiliary checks you must run post-fix.
-
+- plans/active/determinism.md: Phase A tasks require collect-only env snapshot before reproducing failures.
+- docs/fix_plan.md:100 calls for Phase A Attempt #1 artifacts prior to advancing triage ladder.
+- specs/spec-a-core.md:520 documents seed contracts you must reference when summarising findings.
+- specs/spec-a-parallel.md: lines for AT-PARALLEL-013/024 define the acceptance tolerances we need to restate in Phase A summary.
+- docs/development/testing_strategy.md:30 enforces device/dtype notes you must include in `env.json`.
+- reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/triage_summary.md:59 details the determinism failure cluster; keep its terminology for the summary table.
 How-To Map:
-- Fix the config handling: remove the unconditional `config['hkl_data'] = None` assignment and tighten the guard as outlined in reports/2026-01-test-suite-triage/phase_d/20251010T161925Z/cli-defaults/phase_c/remediation_plan.md:1; ensure `try_load_hkl_or_fdump` only returns meaningful tuples.
-- Reproduce AT-CLI-002: parameters lifted from tests/test_at_cli_002.py:31-48 — 32×32 detector, `-default_F 100`, `-lambda 6.2`, `-distance 100`, `-pixel 0.1`; run the test via `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F` from repo root.
-- After the fix passes, run the control script for parity: `KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_default_f.py --out reports/.../attempt_fix/api_control/` and compare stats against the CLI floatfile (store `float_stats_cli.txt` and `float_stats_api.txt`).
-- Optional but recommended: `nb-compare --roi 0 31 0 31 --outdir reports/.../attempt_fix/nb_compare -- float_cli.bin float_api.bin` to confirm numerical alignment; capture summary in `nb_compare_summary.md`.
-- Maintain an updated `commands.txt` in the attempt directory listing every command executed (pytest, scripts, nb-compare) in chronological order.
-
+- After collect-only run, export commit/dtype/device details into `reports/2026-01-test-suite-triage/phase_d/<STAMP>/determinism/phase_a/env.json` (include torch/numpy versions and `torch.backends.cudnn.deterministic`).
+- Run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py --maxfail=0 --durations=10` and store stdout/stderr in `.../at_parallel_013/pytest.log`; note each failing assertion in `summary.md`.
+- Run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_024.py --maxfail=0 --durations=10` capturing logs under `.../at_parallel_024/` and record misset angle outputs if printed.
+- If a control script exists (`debug_misset_seed.py`), invoke it and capture output; otherwise document the absence explicitly in `summary.md`.
+- Update docs/fix_plan.md Attempts History with Attempt #1 once artifacts are in place; include timestamps and failure excerpts.
 Pitfalls To Avoid:
-- Do not leave the sentinel `config['hkl_data'] = None`; the guard must rely on `config.get` semantics only when real data exists.
-- Preserve device/dtype neutrality — no hard-coded `.cpu()`/`.cuda()`; reuse incoming `device`/`dtype` (testing strategy §1.4).
-- Keep vectorization intact; avoid adding loops inside the simulator when touching HKL handling.
-- Guard against stale `Fdump.bin`; note in artifacts whether one existed and how you handled it.
-- Update or add tests before running the full suite; keep runtime under control (no full pytest).
-- Follow artifact policy in plans/active/cli-defaults/plan.md:1 — commands, env snapshot, stats, and summaries all live under the timestamped attempt folder.
-- Respect Protected Assets — do not move files referenced in docs/index.md.
-- Ensure any new asserts log helpful context; do not leave debug prints enabled.
-
+- Do not touch production code; evidence run only.
+- Maintain `KMP_DUPLICATE_LIB_OK=TRUE` for every pytest invocation.
+- Keep timestamps consistent (`date -u +%Y%m%dT%H%M%SZ`) when creating `<STAMP>` directories.
+- Ensure artifacts stay under `reports/.../determinism/phase_a/`; no ad-hoc paths.
+- Record exact failing assertions and tolerances—do not paraphrase spec language loosely.
+- Avoid deleting existing artifacts or golden data (Protected Assets rule).
+- No full pytest suite runs this loop; limit to the mapped selectors.
+- Preserve default dtype (float64) noted in tests; document if overrides occur.
 Pointers:
-- specs/spec-a-cli.md:163 — AT-CLI-002 acceptance criteria.
-- src/nanobrag_torch/__main__.py:443 — sentinel assignment that must be removed.
-- src/nanobrag_torch/__main__.py:1090 — HKL guard to tighten.
-- plans/active/cli-defaults/plan.md:14 — status snapshot and Phase C/D expectations.
-- reports/2026-01-test-suite-triage/phase_d/20251010T161925Z/cli-defaults/phase_c/remediation_plan.md:1 — detailed remediation steps.
-- tests/test_at_cli_002.py:28 — failing test harness for reproduction.
-
-Next Up:
-- [DETERMINISM-001] PyTorch RNG determinism — prep plan once CLI defaults pass.
+- plans/active/determinism.md:1
+- docs/fix_plan.md:86
+- specs/spec-a-core.md:520
+- specs/spec-a-parallel.md:1
+- tests/test_at_parallel_013.py:1
+- tests/test_at_parallel_024.py:1
+Next Up: If time remains, queue Phase B callchain variables (analysis_question, initiative_id) in `phase_b/` stub without executing tracing.

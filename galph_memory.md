@@ -2103,3 +2103,15 @@
 - Rewrote `input.md` (Mode: Parity) to launch `[CLI-DEFAULTS-001]` implementation Attempt #6 with explicit test/command mapping and artifact policy.
 - Next follow-up for Ralph: implement HKL guard fix in `src/nanobrag_torch/__main__.py` and validate AT-CLI-002 using the new blueprint.
 - <Action State>: [ready_for_implementation]
+
+### 2026-01-15 (galph loop - pre-plan note)
+- Focus issue: [DETERMINISM-001] RNG determinism remediation plan
+- Action type: Planning
+- Mode: Docs
+
+### 2026-01-15 (galph loop - Determinism Phase A planning)
+- Authored `plans/active/determinism.md` with Phase A–D structure for RNG seed remediation; artifacts to land under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/determinism/`.
+- Refreshed `docs/fix_plan.md` header + Active Focus; marked `[CLI-DEFAULTS-001]` done and set `[DETERMINISM-001]` status to in_progress with plan reference + Phase A next steps.
+- Rewrote `input.md` (Mode: Parity) directing Attempt #1 to capture determinism failure evidence per plan Phase A.
+- Follow-up for Ralph: execute Phase A run (collect-only + AT-PARALLEL-013/024 reproductions), archive under the new determinism reports tree, and log Attempt #1.
+- <Action State>: [ready_for_implementation]

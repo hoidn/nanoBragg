@@ -1,17 +1,17 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-10 (galph loop — CLI defaults Phase C blueprint)
+**Last Updated:** 2026-01-15 (galph loop — determinism planning kickoff)
 **Active Focus:**
-- CRITICAL: `[CLI-DEFAULTS-001]` — execute Phase C handoff and launch implementation Attempt #6 per `plans/active/cli-defaults/plan.md` (Phase D pending).
-- Tap 5.3 oversample instrumentation for `[VECTOR-PARITY-001]` remains staged but is on hold pending completion of `[TEST-SUITE-TRIAGE-001]` deliverables.
-- Prepare pyrefly + test-index documentation once the suite triage backlog is unblocked.
+- CRITICAL: `[DETERMINISM-001]` — execute Phase A per `plans/active/determinism.md` (seed reproducibility evidence capture).
+- `[TEST-SUITE-TRIAGE-001]` remains the umbrella initiative; update ladder once determinism artifacts land.
+- Tap 5.3 oversample instrumentation for `[VECTOR-PARITY-001]` stays paused until suite triage critical path clears.
 
 ## Index
 | ID | Title | Priority | Status |
 | --- | --- | --- | --- |
 | [TEST-SUITE-TRIAGE-001](#test-suite-triage-001-full-pytest-run-and-triage) | Run full pytest suite and triage | Critical | in_progress |
-| [CLI-DEFAULTS-001](#cli-defaults-001-minimal-default_f-cli-invocation) | Minimal -default_F CLI invocation | High | in_progress |
-| [DETERMINISM-001](#determinism-001-pytorch-rng-determinism) | PyTorch RNG determinism | High | in_planning |
+| [CLI-DEFAULTS-001](#cli-defaults-001-minimal-default_f-cli-invocation) | Minimal -default_F CLI invocation | High | done |
+| [DETERMINISM-001](#determinism-001-pytorch-rng-determinism) | PyTorch RNG determinism | High | in_progress |
 | [DETECTOR-GRAZING-001](#detector-grazing-001-extreme-detector-angles) | Extreme detector angles | High | in_planning |
 | [SOURCE-WEIGHT-002](#source-weight-002-simulator-source-weighting) | Simulator source weighting | High | in_planning |
 | [TOOLING-DUAL-RUNNER-001](#tooling-dual-runner-001-restore-dual-runner-parity) | Restore dual-runner parity | High | in_planning |
@@ -45,8 +45,9 @@
 - Artifacts Root: `reports/2026-01-test-suite-triage/` (phases `phase_a`, `phase_b`, `phase_c`, `phase_d`)
 - Phase D Handoff Bundle: `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md`
 - Next Actions:
-  1. Monitor `[CLI-DEFAULTS-001]` remediation — expect Attempt #2 artifacts under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/` and update this ledger/plan once the fix lands.
-  2. Prepare next P1 delegation (`[DETERMINISM-001]`) immediately after CLI defaults passes; refresh `input.md` with determinism guidance when ready.
+  1. ✅ `[CLI-DEFAULTS-001]` remediation closed (Attempt #6); archive remaining docs updates during determinism Phase C.
+  2. Launch `[DETERMINISM-001]` Phase A per `plans/active/determinism.md`, capture determinism failure artifacts under `phase_d/<STAMP>/determinism/`.
+  3. Queue `[DETERMINISM-001]` Phase B handoff once Phase A artifacts reviewed; then advance to `[DETERMINISM-001]` implementation before tackling next triage cluster.
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.
   * [2025-10-10] Attempt #2 — Result: ⚠️ partial (Phase B timeout). Full suite execution reached ~75% completion (520/692 tests) before 10-minute timeout. Captured 34 failures across determinism (6), sourcefile handling (6), grazing incidence (4), detector geometry (5), debug/trace (4), CLI flags (3), and others. Runtime: 600s. Exit: timeout. Artifacts: `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/{logs/pytest_full.log,failures_raw.md,summary.md,commands.txt}`. junit XML may be incomplete. Remaining 172 tests (~25%) not executed. Observations: Large detector parity tests and gradient checks likely contributors to timeout. Recommendation: split suite execution or extend timeout to 30-60min for complete run.
@@ -86,18 +87,19 @@
 ## [DETERMINISM-001] PyTorch RNG determinism
 - Spec/AT: `specs/spec-a-core.md` §5.3 (RNG determinism), `tests/test_at_parallel_013.py`, `tests/test_at_parallel_024.py`
 - Priority: High
-- Status: in_planning
+- Status: in_progress
 - Owner/Date: ralph/2025-10-10
-- Reproduction: `pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py`
-- Source: Clusters C2+C5 from `[TEST-SUITE-TRIAGE-001]` Attempt #3 triage
-- Attempts History: none yet
+- Plan Reference: `plans/active/determinism.md`
+- Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py`
+- Source: Clusters C2+C5 from `[TEST-SUITE-TRIAGE-001]` Attempt #6 triage summary (`reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/triage_summary.md` §C2)
+- Attempts History: none yet — Phase A evidence capture pending
 - Next Actions:
-  1. Instrument RNG seeding path in simulator + crystal
-  2. Design plan enforcing seed propagation across torch + numpy domains
-  3. Add regression tests for mosaic/source sampling determinism
+  1. Execute Phase A tasks (collect-only env snapshot, reproduce AT-PARALLEL-013/024 failures, capture control summary) under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/determinism/phase_a/`.
+  2. Log Attempt #1 in this ledger with artifact paths and key findings; update plan status snapshot accordingly.
+  3. Prepare Phase B callchain invocation variables once Phase A artefacts confirm failure signatures.
 - Exit Criteria:
-  - Identical seeds produce identical outputs (bit-level reproducibility)
-  - All determinism tests pass; seed contract documented
+  - Determinism tests pass with bitwise equality for same-seed runs and documented seed divergence for different seeds.
+  - Seed propagation contract documented in code comments + docs; testing strategy updated with determinism workflow.
 
 ## [DETECTOR-GRAZING-001] Extreme detector angles
 - Spec/AT: `specs/spec-a-core.md` §4.6 (detector rotations), `tests/test_at_parallel_017.py`
