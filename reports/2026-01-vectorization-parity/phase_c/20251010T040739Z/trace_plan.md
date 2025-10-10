@@ -112,9 +112,9 @@ make clean && make
 export NB_C_BIN=./golden_suite_generator/nanoBragg
 ```
 
-### PyTorch Trace Hooks (scripts/debug_pixel_trace.py or new dedicated script)
+### PyTorch Trace Hooks (extend `scripts/debug_pixel_trace.py`)
 
-**Proposed script:** `scripts/debug_4096_trace.py` (minimal, focused on 3-pixel sweep)
+**Implementation approach:** Add pixel-selection arguments to `scripts/debug_pixel_trace.py` so the script can emit TRACE_PY logs for each target coordinate. Preserve existing trace schema from the golden simple_cubic case and append new tap points for the 4096² scenario.
 
 **Key trace points (align with C variable names per `docs/debugging/debugging.md` Trace Schema):**
 - `pix0_vector` [m] — detector origin after pivot/rotation
@@ -136,7 +136,7 @@ export NB_C_BIN=./golden_suite_generator/nanoBragg
 
 **Template invocation:**
 ```python
-# Pseudo-code for scripts/debug_4096_trace.py
+# Pseudo-code for updated scripts/debug_pixel_trace.py
 for pixel in [(2048, 2048), (1792, 2048), (4095, 2048)]:
     slow, fast = pixel
     # ... run simulator with trace hooks enabled at (slow, fast) ...
