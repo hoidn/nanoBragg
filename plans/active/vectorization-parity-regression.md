@@ -9,7 +9,7 @@
   - `docs/development/pytorch_runtime_checklist.md` — runtime guardrail reminders (especially item #4 on source weighting).
   - `docs/fix_plan.md` `[VECTOR-GAPS-002]` Attempts #3–#8 and `[PERF-PYTORCH-004]` baseline expectations.
   - Existing artifacts: good run `reports/benchmarks/20251009-161714/`; failing bundles under `reports/2026-01-vectorization-gap/phase_b/20251009T09*` and `20251010T02*`.
-- Status Snapshot (2026-01-06): Phase C1–C3 trace work complete — `reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/` (TRACE_C), `.../20251010T055346Z/` (TRACE_PY), and `.../20251010T061605Z/first_divergence.md` isolate the first mismatch at `scattering_vec_A_inv` with follow-on hypotheses (fluence + F_latt). Plan now pivots to Phase D physics remediation before any regression forensics.
+- Status Snapshot (2026-01-07): Phase C traces complete and Phase D1/D2 fixes landed. Attempt #13 captured the Phase D3 trace helper correction (machine-precision F_latt) but exposed a simulator regression delivering ~32× lower intensity (corr=-0.001 ROI). Phase D4 will focus on diagnosing the production pipeline before parity smoke reruns.
 
 ### Phase A — Evidence Audit & Baseline Ledger
 Goal: Canonicalise the good vs bad benchmark evidence and capture parameter parity so future loops operate from a single source of truth.
@@ -53,23 +53,24 @@ Exit Criteria: `reports/2026-01-vectorization-parity/phase_c/<STAMP>/` contains 
 ### Phase D — Physics Remediation (Scattering Vector & Scaling)
 Goal: Implement and validate the three physics corrections identified in Phase C (scattering vector units, fluence scaling, F_latt normalisation) while keeping vectorization guardrails intact.
 Prereqs: Phase C evidence reviewed; spec references (`specs/spec-a-core.md` §§4–5) confirmed; updated supervisor memo (input.md) delegates code changes to engineer.
-Exit Criteria: All three fixes merged locally with trace-backed verification, targeted pytest/nb-compare evidence captured, and fix_plan `[VECTOR-PARITY-001]` Next Actions advanced to validation stage.
+Exit Criteria: Trace helper and simulator corrections merged locally with trace-backed verification, targeted pytest/nb-compare evidence captured, and fix_plan `[VECTOR-PARITY-001]` Next Actions advanced to validation stage.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | D1 | Correct scattering vector units | [D] | ✅ Attempt #11 (`reports/2026-01-vectorization-parity/phase_d/20251010T062949Z/`) patched `src/nanobrag_torch/simulator.py` to emit m⁻¹, regenerated TRACE_PY for pixel (1792,2048) with rel_err ≤4.3e-14, and logged `diff_scattering_vec.md`. Pytest collection (692 tests) still passes. |
 | D2 | Fix fluence scaling | [D] | ✅ Attempt #12 (`reports/2026-01-vectorization-parity/phase_d/20251010T070307Z/fluence_parity.md`) switched the trace helper to emit `beam_config.fluence`, removing the 1e9× underflow. Post-fix TRACE_PY vs TRACE_C rel_err=7.9e-16 (≤1e-3 target), pytest --collect-only (692 tests) clean. |
-| D3 | Restore F_latt normalisation | [ ] | Align lattice factor with C sincg implementation (`nanoBragg.c` lines ≈15000–16000). Validate that Py trace `F_latt` scales with Na×Nb×Nc (125 for parity config). Produce comparison table in `f_latt_parity.md` and ensure ROI nb-compare metrics remain ≥0.999 after change. |
-| D4 | Consolidate trace & parity smoke | [ ] | After D1–D3 patches, rerun `KMP_DUPLICATE_LIB_OK=TRUE python scripts/nb_compare.py --resample --roi 1792 2304 1792 2304 --outdir reports/2026-01-vectorization-parity/phase_d/<STAMP>/roi_compare_post_fix -- -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05` and regenerate TRACE_PY logs to ensure no regression. Record results in `phase_d_summary.md` along with updated correlation/sum_ratio metrics. |
+| D3 | Restore F_latt normalisation (trace helper) | [P] | Attempt #13 (`reports/2026-01-vectorization-parity/phase_d/20251010T071935Z/`) imports production `sincg` into the trace helper and matches TRACE_C within 5e-15, but ROI `nb-compare` now fails (corr=-0.001, sum_ratio=12.5×) because the simulator still emits ~32× less intensity. Documented in `PHASE_D3_SUMMARY.md`; keep open until simulator parity is restored. |
+| D4 | Diagnose simulator F_latt regression | [ ] | Instrument `Simulator._compute_physics_for_position()` to log `h/k/l`, `F_latt_a/b/c`, `F_cell`, and per-loop accumulators for pixel (1792,2048). Compare against `scripts/debug_pixel_trace.py` and the C trace; capture findings in `reports/2026-01-vectorization-parity/phase_d/<STAMP>/simulator_f_latt.md`. Exit when simulator intensity matches trace within ≤1e-3 and ROI nb-compare achieves corr≥0.999 with |sum_ratio−1|≤5×10⁻³. |
+| D5 | Consolidate trace & parity smoke | [ ] | After D1–D4 patches, rerun `KMP_DUPLICATE_LIB_OK=TRUE python scripts/nb_compare.py --resample --roi 1792 2304 1792 2304 --outdir reports/2026-01-vectorization-parity/phase_d/<STAMP>/roi_compare_post_fix -- -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05` and regenerate TRACE_PY logs to ensure no regression. Record results in `phase_d_summary.md` along with updated correlation/sum_ratio metrics. |
 
 ### Phase E — Fix Verification & Handback
 Goal: Validate the eventual fix, restore guardrails, and unblock downstream plans.
-Prereqs: Phase D tables [D]; code changes staged with passing targeted validations.
+Prereqs: Phase D tables [D] (including new simulator diagnostics); code changes staged with passing targeted validations.
 Exit Criteria: Clean 4096² parity metrics archived, fix_plan & plans updated, blockers lifted; downstream vectorization/perf plans reactivated.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| E1 | Verify fix across benchmarks/tests | [ ] | After D1–D4 work lands, rerun full 4096² benchmark (`scripts/benchmarks/benchmark_detailed.py` command from Phase B1) and the high-resolution pytest (`pytest tests/test_at_parallel_012.py::test_high_resolution_variant -v`). Archive outputs under `reports/2026-01-vectorization-parity/phase_e/<STAMP>/` and require corr ≥0.999, |sum_ratio−1| ≤5e-3. |
+| E1 | Verify fix across benchmarks/tests | [ ] | After D1–D5 work lands, rerun full 4096² benchmark (`scripts/benchmarks/benchmark_detailed.py` command from Phase B1) and the high-resolution pytest (`pytest tests/test_at_parallel_012.py::test_high_resolution_variant -v`). Archive outputs under `reports/2026-01-vectorization-parity/phase_e/<STAMP>/` and require corr ≥0.999, |sum_ratio−1| ≤5e-3. |
 | E2 | Update ledgers & guardrails | [ ] | Refresh `docs/fix_plan.md` entries `[VECTOR-GAPS-002]`, `[PERF-PYTORCH-004]`, `[VECTOR-PARITY-001]`; update `plans/active/vectorization.md` Status Snapshot to unblock downstream Phases D–F; document guardrail adjustments (e.g., PyTorch unit expectations) in `docs/development/pytorch_runtime_checklist.md` if changed. |
 | E3 | Archive plan | [ ] | Once parity + documentation updates are complete, move this plan to `plans/archive/vectorization-parity-regression.md` with closure summary + residual risks; log completion in `galph_memory.md`. |
 

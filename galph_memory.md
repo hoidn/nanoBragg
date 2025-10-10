@@ -1877,3 +1877,9 @@
 - Refreshed `docs/fix_plan.md` Next Actions: D1/D2 marked ✅ with Attempt references; item 8 now instructs F_latt parity memo + ROI guard.
 - Authored `input.md` (Mode: Parity) directing Ralph to implement Phase D3, regenerate TRACE_PY with STAMPed artifacts, write `f_latt_parity.md`, rerun ROI nb-compare, and execute the mapped parity test selector.
 - Follow-up: Expect Attempt #13 containing f_latt parity evidence (`reports/2026-01-vectorization-parity/phase_d/<STAMP>/f_latt_parity.md`) plus updated trace/roi outputs; supervisor to review and then unlock Phase D4.
+
+### 2026-01-07 (galph loop - Phase D4 simulator instrumentation)
+- Updated docs/fix_plan.md (lines 19-55) with Attempt #13 summary, new D4 next action, and refreshed Active Focus for simulator F_latt regression.
+- Refreshed plans/active/vectorization-parity-regression.md (Status Snapshot + Phase D table) to add D4 simulator diagnosis row and shift parity smoke to D5; vectorization.md now tracks Phase D1–D5.
+- Authored input.md (Mode: Parity) directing Ralph to add env-guarded taps in Simulator._compute_physics_for_position, rerun the pixel probe, and capture logs under reports/2026-01-vectorization-parity/phase_d/$STAMP/.
+- Open questions: need simulator tap artifacts (simulator_f_latt.log/md) confirming where the 32× loss occurs before proceeding to D5 parity smoke.
