@@ -1,0 +1,28 @@
+# Phase C3: First Divergence Analysis Commands
+# Timestamp: 2025-10-10T06:16:05Z
+# Task: Manual trace comparison for pixels (2048,2048), (1792,2048), (4095,2048)
+
+# Environment setup
+export STAMP=20251010T061605Z
+mkdir -p reports/2026-01-vectorization-parity/phase_c/$STAMP/env
+
+# C traces (Phase C1) — previously captured
+# Source: reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/c_traces/
+
+# PyTorch traces (Phase C2) — previously captured
+# Source: reports/2026-01-vectorization-parity/phase_c/20251010T055346Z/py_traces/
+
+# Analysis performed via manual file reads and line-by-line comparison
+# Tools used: Read tool (Claude Code), manual diff inspection
+
+# Key comparisons (sample):
+# diff -u reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/c_traces/pixel_2048_2048.log \
+#          reports/2026-01-vectorization-parity/phase_c/20251010T055346Z/py_traces/pixel_2048_2048.log
+
+# Output artifacts
+# - first_divergence.md (comprehensive analysis)
+# - summary.md (executive summary)
+# - env/trace_env.json (metadata)
+# - commands.txt (this file)
+
+# Next actions: Delegate to debugging loop with hypotheses H1/H2/H3

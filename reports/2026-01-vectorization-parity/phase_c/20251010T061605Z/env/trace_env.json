@@ -1,0 +1,73 @@
+{
+  "timestamp": "2025-10-10T06:16:05Z",
+  "phase": "C3",
+  "task": "first_divergence_analysis",
+  "git_sha": "07b3211f9d9c56e5cd66813a40390e32b960dc34",
+  "git_branch": "feature/spec-based-2",
+  "python_version": "3.13.5",
+  "tolerance_geometric": 1e-12,
+  "tolerance_physics_target": 1e-06,
+  "pixels_analyzed": [
+    {
+      "slow": 2048,
+      "fast": 2048,
+      "type": "background",
+      "hkl": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "slow": 1792,
+      "fast": 2048,
+      "type": "on_peak",
+      "hkl": [
+        0,
+        5,
+        0
+      ]
+    },
+    {
+      "slow": 4095,
+      "fast": 2048,
+      "type": "edge_high_order",
+      "hkl": [
+        -4,
+        -40,
+        0
+      ]
+    }
+  ],
+  "c_trace_bundle": "../20251010T053711Z/c_traces/",
+  "py_trace_bundle": "../20251010T055346Z/py_traces/",
+  "first_divergence": {
+    "line_number": 45,
+    "variable": "scattering_vec_A_inv",
+    "magnitude_ratio_c_over_py": 10000000.0,
+    "suspected_cause": "m^-1 vs Angstrom^-1 unit mismatch"
+  },
+  "hypotheses": [
+    {
+      "id": "H1",
+      "name": "scattering_vec_unit_conversion",
+      "confidence": "HIGH",
+      "factor": 10000000.0,
+      "location": "simulator.py or utils/physics.py"
+    },
+    {
+      "id": "H2",
+      "name": "fluence_calculation_units",
+      "confidence": "HIGH",
+      "factor": 1000000000.0,
+      "location": "config.py or simulator scaling"
+    },
+    {
+      "id": "H3",
+      "name": "F_latt_normalization",
+      "confidence": "MEDIUM-HIGH",
+      "factor": 100,
+      "location": "utils/physics.py::sincg"
+    }
+  ]
+}
