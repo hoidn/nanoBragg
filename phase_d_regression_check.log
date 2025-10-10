@@ -1,0 +1,31 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 12 items
+
+tests/test_detector_geometry.py::TestDetectorGeometryRegressions::test_rotated_basis_vectors_match_c_reference PASSED [  8%]
+tests/test_detector_geometry.py::TestDetectorGeometryRegressions::test_pix0_vector_matches_c_reference_in_beam_pivot PASSED [ 16%]
+tests/test_detector_geometry.py::TestDetectorGeometryRegressions::test_mosflm_axis_mapping_correctness PASSED [ 25%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_parameter_gradients PASSED [ 33%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_basis_vector_gradients PASSED [ 41%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_pixel_coords_basis_vector_gradients PASSED [ 50%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_comprehensive_gradcheck PASSED [ 58%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_beam_strike_invariant_in_beam_pivot_mode PASSED [ 66%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_xds_convention_basic_geometry PASSED [ 75%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_real_valued_gradients PASSED [ 83%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_complex_gradient_edge_cases PASSED [ 91%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_simulator_real_valued_gradients PASSED [100%]
+
+============================= slowest 10 durations =============================
+6.66s call     tests/test_detector_geometry.py::TestDetectorDifferentiability::test_simulator_real_valued_gradients
+0.05s call     tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_parameter_gradients
+0.02s call     tests/test_detector_geometry.py::TestDetectorDifferentiability::test_comprehensive_gradcheck
+0.01s call     tests/test_detector_geometry.py::TestDetectorDifferentiability::test_pixel_coords_basis_vector_gradients
+0.01s call     tests/test_detector_geometry.py::TestDetectorDifferentiability::test_basis_vector_gradients
+0.01s call     tests/test_detector_geometry.py::TestDetectorDifferentiability::test_beam_strike_invariant_in_beam_pivot_mode
+
+(4 durations < 0.005s hidden.  Use -vv to show these durations.)
+============================== 12 passed in 8.79s ==============================
