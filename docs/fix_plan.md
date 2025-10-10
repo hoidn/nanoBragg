@@ -129,9 +129,9 @@
   - Phase C1 profiler captured but corr=0.721175 ❌ confirms upstream parity regression blocking vectorization work.
   - Cache effectiveness (72607.7×) and torch.compile operational, but physics correctness must be restored first.
 - Next Actions:
-  1. **BLOCKED:** Phase C1 profiler evidence invalid (corr=0.721175 ❌). Do NOT proceed with Phase C2/C3 hotspot mapping until parity ≥0.999.
-  2. After `[VECTOR-PARITY-001]` Phase C completes and restores corr≥0.999, rerun: `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts`
-  3. Only then execute Phase C2 loop inventory mapping and Phase C3 prioritised backlog drafting per original plan.
+  1. Await `[VECTOR-PARITY-001]` Phase C3 output (`first_divergence.md`) and update plans/active/vectorization.md Phase C2/C3 plus this ledger with the go/no-go decision.
+  2. Once parity ≥0.999, run Phase D1 profiler capture (`KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`) and archive `trace.json`, `summary.md`, `env.json`.
+  3. After profiling, execute Phase D2/D3 backlog refresh and prepare Phase E1/E2 delegation (tricubic design addendum + input.md Do Now) before authorising implementation.
 - Risks/Assumptions:
   - CUDA availability required for future refresh runs.
   - Parity regression must be resolved before shipping new vectorization work.

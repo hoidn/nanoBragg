@@ -1,76 +1,95 @@
 ## Context
-- Initiative: VECTOR-TRICUBIC-002 (successor to VECTOR-TRICUBIC-001); aligns with long-term Goal 1 (reactivate the vectorization roadmap starting from tricubic interpolation) and Goal 2 (close remaining vectorization gaps with measured performance deltas).
-- Phase Goal: Reconstitute an actionable, dependency-aware execution plan that hands Ralph a clean sequence of tasks - from clearing upstream blockers to delivering new vectorization fixes with before/after benchmarks.
+- Initiative: VECTOR-TRICUBIC-002 — relaunch the vectorization program beginning with tricubic interpolation and detector absorption, then expand to the remaining hot loops once parity resumes.
+- Plan Goal: Deliver a phase-ordered playbook that keeps evidence refreshed, gates on 4096² parity restoration, and stages new vectorization work (starting with tricubic) with reproducible benchmarks and documentation updates.
 - Dependencies:
-  - specs/spec-a-core.md Section 4 (sampling loops, source weighting, normalization) and Section 5 (detector absorption) - authoritative math + loop order.
-  - arch.md Sections 2, 8, 15 - broadcast shapes, device/dtype guardrails, differentiability mandates.
-  - docs/architecture/pytorch_design.md Section 1.1 - current tricubic/absorption vectorization evidence and §1.1.5 - source weighting C-parity confirmed (thresholds: corr ≥0.999, |sum_ratio−1| ≤5e-3).
-  - docs/development/pytorch_runtime_checklist.md - runtime guardrails to cite per phase, including item #4 (source equal-weighting guard).
-  - docs/development/testing_strategy.md Sections 1.4-2 - authoritative pytest selectors and benchmarking cadence.
-  - plans/archive/vectorization.md - historical Phase A-H evidence for tricubic/absorption vectorization.
-  - plans/active/vectorization-gap-audit.md - open gap inventory plus profiling backlog (Phase B blocked today).
-  - plans/active/source-weight-normalization.md - prerequisite parity work gating profiler reliability.
-  - reports/2025-10-vectorization/ and reports/2026-01-vectorization-gap/ - prior artifacts to cross-check during refresh.
-- Status Snapshot (2025-12-28): Historical tricubic/absorption phases (A-H) remain archived with CUDA parity. SOURCE-WEIGHT-001 Phase H1–H4 parity memo and documentation updates remain cited (corr ≥0.999, |sum_ratio−1| ≤5e-3). Phase I ledger propagation is now complete and the 2025-12-28 galph_memory note confirms readiness for downstream work. Phase B regression/benchmark refresh is the next active objective; VECTOR-GAPS-002 Phase B1 stays unblocked pending the refreshed profiler capture.
+  - specs/spec-a-core.md §§4–5 — authoritative sampling loops, normalization, and absorption physics.
+  - arch.md §§2, 8, 15 — broadcast shapes, device/dtype guardrails, differentiability requirements.
+  - docs/architecture/pytorch_design.md §1.1 & §1.1.5 — current vectorized flows and equal-weight source contract.
+  - docs/development/pytorch_runtime_checklist.md — runtime guardrails to cite in every delegation.
+  - docs/development/testing_strategy.md §§1.4–2 — authoritative pytest/benchmark commands.
+  - plans/active/vectorization-parity-regression.md — parity gating workstream (Phase C1–C3 traces).
+  - plans/active/vectorization-gap-audit.md — loop inventory/profiling follow-on once parity is restored.
+  - reports/2025-10-vectorization/ & reports/2026-01-vectorization-refresh/ — prior evidence bundles to reuse when refreshing baselines.
 
-### Phase A - Dependency Gate And Ledger Sync
-Goal: Clear upstream blockers so downstream profiling and implementation can proceed on trustworthy baselines.
-Prereqs: Repository clean minus supervised work; latest docs/fix_plan.md and galph_memory.md entries reviewed; C binary available via NB_C_BIN.
-Exit Criteria: SOURCE-WEIGHT-001 Phase E artifacts captured, VECTOR-GAPS-002 Phase B1 unblocked in both plan and fix_plan, and updated status recorded in the ledger.
+## Status Snapshot (2026-01-06)
+- Phase A dependency gate ✅ (Attempts logged Dec 2025; SOURCE-WEIGHT contract propagated to docs/fix_plan.md).
+- Phase B regression refresh ✅ (Attempt #2 2025-10-09 captured CPU/CUDA tricubic + absorption suites under `reports/2026-01-vectorization-refresh/phase_b/20251010T013437Z/`).
+- Phase C parity gate ⏳ in progress — C traces (Attempt #8) and Py traces (Attempt #9) exist; awaiting Phase C3 first_divergence.md before resuming profiling/backlog work.
+- Downstream phases (D–G) remain locked until `[VECTOR-PARITY-001]` reports parity ≥0.999 with trace-backed diagnosis.
 
-| ID | Task Description | State | How/Why & Guidance |
-| --- | --- | --- | --- |
-| A0 | Confirm lambda override consensus | [D] | ✅ Attempt #16 (2025-12-24 galph loop) logged Option B as the authoritative approach, citing `reports/2025-11-source-weights/phase_e/20251009T131709Z/lambda_semantics.md` and updating `docs/fix_plan.md`/`plans/active/source-weight-normalization.md`. No further action required. |
-| A1 | Record SOURCE-WEIGHT parity decision | [D] | ✅ Parity memo available at `reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md`; fix_plan now treats C behaviour as spec-compliant equal weighting (comment parsing defect tracked via `[C-SOURCEFILE-001]`). |
-| A2 | Capture spec-compliance test availability | [D] | ✅ SOURCE-WEIGHT-001 Phase H3/H4 ledger propagation complete (2025-12-26 ralph loop #268). Authoritative pytest selector: `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference` (now PASSing). Parity memo: `reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md`. Normative thresholds: corr ≥0.999, |sum_ratio−1| ≤5e-3 (now documented in `docs/architecture/pytorch_design.md` §1.1.5 and `docs/development/pytorch_runtime_checklist.md` item #4). Phase H2 test logs: `reports/2025-11-source-weights/phase_h/20251010T002324Z/pytest.log`. `[VECTOR-GAPS-002]` Phase B1 unblocked. |
-| A3 | Archive dependency memo | [D] | 2025-12-28 galph_memory update captures spec decision, selector (`tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference`), and parity memo path (`reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md`). |
-
-### Phase B - Evidence Refresh For Existing Vectorization Paths
-Goal: Reconfirm the archived tricubic and absorption vectorization work remains green after dependency churn; create fresh CPU and CUDA baselines for upcoming changes.
-Prereqs: Phase A complete; editable install; CUDA available if possible.
-Exit Criteria: New logs stored under reports/2026-01-vectorization-refresh/phase_b/<STAMP>/ covering pytest, benchmarks, and environment snapshots; docs/fix_plan.md attempt summarises results.
+### Phase A — Dependency Gate & Ledger Sync
+Goal: Ensure prerequisite parity decisions and guardrails are recorded so later profiling relies on trustworthy baselines.
+Prereqs: Latest galph_memory.md notes incorporated; SOURCE-WEIGHT-001 closure accepted; NB_C_BIN available.
+Exit Criteria: All dependency memos captured and linked in docs/fix_plan.md; VECTOR-GAPS-002 Phase B unblocked.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Rerun regression suites | [D] | ✅ 2025-10-09 (ralph loop): Both suites passed. Tricubic: 16/16 tests passed (exit 0), duration ~2.31s. Absorption: All CPU+CUDA variants passed (exit 0). Logs: `reports/2026-01-vectorization-refresh/phase_b/20251010T013437Z/pytest/{tricubic.log,absorption.log,exit_codes.txt}`. |
-| B2 | Capture CPU/CUDA microbenchmarks | [D] | ✅ 2025-10-09 (ralph loop): All benchmarks completed. Tricubic CPU: 1447.83 μs/call (690.7 calls/sec), CUDA: 5682.14 μs/call (176.0 calls/sec, expected slower). Absorption CPU: 4.72ms/22.90ms (256²/512²), CUDA: 5.43ms/5.56ms (4.1x speedup @512²). Artifacts: `reports/2026-01-vectorization-refresh/phase_b/20251010T013437Z/benchmarks/{tricubic_cpu,tricubic_cuda,absorption_cpu,absorption_cuda}/{*.json,*.md}`. |
-| B3 | Summarise refresh results | [D] | ✅ 2025-10-09 (ralph loop): Summary at `reports/2026-01-vectorization-refresh/phase_b/20251010T013437Z/summary.md`. No performance drift >5% detected vs Phase E/F baselines. CUDA confirmed operational. Tricubic CPU-favored (cache locality), absorption GPU-favored (scaling). No blocking issues for Phase C. |
+| A1 | Confirm lambda override consensus | [D] | ✅ `reports/2025-11-source-weights/phase_e/20251009T131709Z/lambda_semantics.md`; logged in fix_plan Attempt #16 (2025-12-24). |
+| A2 | Record SOURCE-WEIGHT parity decision | [D] | ✅ Attempt #16 propagated memo + thresholds to plan and docs. See `reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md`. |
+| A3 | Capture spec-compliance test availability | [D] | ✅ `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference` noted in fix_plan; artifact under `reports/2025-11-source-weights/phase_h/20251010T002324Z/pytest.log`. |
+| A4 | Archive dependency memo | [D] | ✅ 2025-12-28 galph_memory entry documents decisions + selector mapping; no further action required. |
 
-### Phase C - Gap Profiling And Prioritisation Relaunch
-Goal: Resume VECTOR-GAPS-002 Phase B using the fresh parity baseline to identify the highest-impact residual loops.
-Prereqs: Phase A unblocked and Phase B refresh complete.
-Exit Criteria: Updated profiler traces, hotspot ranking, and backlog stored under reports/2026-01-vectorization-gap/phase_b/<STAMP>/; fix_plan vectorization and perf entries reference the new artifacts.
-
-| ID | Task Description | State | How/Why & Guidance |
-| --- | --- | --- | --- |
-| C1 | Capture warm-run profiler | [ ] | `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`. Confirm correlation >=0.99 and record torch.compile status. |
-| C2 | Map profiler hotspots to loop inventory | [ ] | Use `python scripts/analysis/vectorization_inventory.py --package src/nanobrag_torch --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/inventory/`. Produce hot_loops.csv linking profiler percentage to loop IDs and note dependencies (ROI cache rebuild, _generate_mosaic_rotations, RNG loops). |
-| C3 | Publish prioritised backlog | [ ] | Write backlog.md ranking the top 3-5 candidates with expected speedups, required acceptance tests, and blocking dependencies. Update docs/fix_plan.md [VECTOR-GAPS-002] Next Actions to reference these tasks explicitly. |
-
-### Phase D - Implementation Packages And Delegation Prep
-Goal: Translate the prioritised backlog into execution-ready packets for Ralph (design notes, harnesses, acceptance criteria).
-Prereqs: Phase C backlog approved by galph and logged in fix_plan.
-Exit Criteria: Each high-priority loop has a design bundle and microbenchmark harness; input.md snippets prepared for delegation.
+### Phase B — Evidence Refresh For Existing Vectorization Paths
+Goal: Reconfirm historical tricubic/absorption vectorization evidence post dependency churn and snapshot performance baselines (CPU + CUDA).
+Prereqs: Phase A complete; editable install; CUDA available or explicitly noted absent.
+Exit Criteria: Fresh regression + benchmark artifacts stored under `reports/2026-01-vectorization-refresh/phase_b/<STAMP>/` with summary logged in docs/fix_plan.md.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| D1 | Draft loop-specific design packets | [ ] | For each backlog item, create `reports/2026-01-vectorization-gap/phase_d/<loop_slug>/design.md` quoting relevant nanoBragg.c sections (Rule 11) and outlining tensor shapes, gradients, and device considerations. |
-| D2 | Author microbenchmark harnesses | [ ] | Add scripts under `scripts/benchmarks/vectorization_<loop_slug>.py` with reproducible commands (record in commands.txt). Ensure harnesses respect the PyTorch runtime checklist (no per-iteration `.to()`). |
-| D3 | Prepare delegation guidance | [ ] | Update docs/fix_plan.md [VECTOR-GAPS-002] and [PERF-PYTORCH-004] Next Actions with specific Do Now templates referencing each design packet, acceptance tests, and artifact expectations. |
+| B1 | Rerun regression suites | [D] | ✅ Attempt #2 (2025-10-09) — `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -v` and `pytest tests/test_at_abs_001.py -v -k "cpu or cuda"`; logs in `reports/2026-01-vectorization-refresh/phase_b/20251010T013437Z/`. |
+| B2 | Refresh CPU/CUDA microbenchmarks | [D] | ✅ Same bundle; see `perf_summary.md` for timings (tricubic CPU 1.45 ms, CUDA 5.68 ms, absorption CPU 4.72 ms, CUDA 5.43 ms). |
+| B3 | Update ledger with results | [D] | ✅ docs/fix_plan.md Attempt #2 summarises metrics and links artifacts; status now “Phase B regression refresh complete”. |
 
-### Phase E - Validation, Documentation, And Closure
-Goal: Ensure each implemented vectorization fix is measured, documented, and integrated into permanent guardrails; archive the plan once residuals are resolved or defer-gated.
-Prereqs: At least one backlog item implemented by Ralph with artifacts collected.
-Exit Criteria: Before/after metrics stored, docs updated, fix_plan status flipped to done (or residuals documented), and plan moved to archive.
+### Phase C — Parity Alignment Gate
+Goal: Stay synchronized with `[VECTOR-PARITY-001]` and block new profiling until 4096² correlation ≥0.999 with trace-backed diagnosis.
+Prereqs: `[VECTOR-PARITY-001]` Phase C1–C2 traces captured (done); C3 first divergence pending; supervisor input memo (input.md) drives Ralph’s instrumentation work.
+Exit Criteria: `reports/2026-01-vectorization-parity/phase_c/<STAMP>/first_divergence.md` published, go/no-go decision recorded in docs/fix_plan.md, and parity regression either cleared or escalated.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| E1 | Capture before/after metrics | [ ] | For each implemented loop, store before.json and after.json (CPU and CUDA) under `reports/2026-01-vectorization-gap/phase_e/<loop_slug>/`. Require <=5% regression; open PERF-PYTORCH-004 follow-up if exceeded. |
-| E2 | Update permanent docs/checklists | [ ] | Amend docs/architecture/pytorch_design.md (vectorization subsection) and docs/development/pytorch_runtime_checklist.md with new guidance. Ensure docs/development/testing_strategy.md references any new regression tests or benchmarks. |
-| E3 | Close ledger and archive | [ ] | Once backlog cleared or deferred with rationale, record final Attempt in docs/fix_plan.md, append a closure note to galph_memory, and move this plan to plans/archive/ with a timestamped summary. |
+| C1 | Track trace capture completeness | [D] | ✅ Attempts #8–#9 delivered TRACE_C/TRACE_PY logs under `reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/` and `.../20251010T055346Z/`. Confirmed in docs/fix_plan.md. |
+| C2 | Obtain first divergence analysis | [P] | Active — Await `first_divergence.md` from `[VECTOR-PARITY-001]` Phase C3 summarising earliest mismatched tap + units. Supervisor to review and log decision in galph_memory.md. |
+| C3 | Update vectorization plan/ledger post-diagnosis | [ ] | Blocked on C2. When divergence documented, refresh this plan + docs/fix_plan.md with go/no-go, noting whether profiling can resume or additional parity work is needed. |
 
-## Interfaces And Reporting Expectations
-- Store artifacts for each phase under reports/<year>-<topic>/ as noted above; do not commit report directories, only reference them in fix_plan attempts.
-- Source authoritative commands for tests and benchmarks from docs/development/testing_strategy.md; cite section numbers in fix_plan attempts and design packets.
-- Every delegation to Ralph must include: (a) Do Now pytest selectors validated via `--collect-only`, (b) benchmark commands with `KMP_DUPLICATE_LIB_OK=TRUE`, (c) artifact storage location, and (d) reminders about Protected Assets, vectorization guardrails, and device/dtype neutrality.
-- Keep this plan synchronised with plans/active/vectorization-gap-audit.md (Phase C hand-off) and plans/active/source-weight-normalization.md (Phase A dependency). Update statuses together whenever a gate flips.
+### Phase D — Warm-Run Profiling & Backlog Refresh
+Goal: Once parity is restored, capture a clean 4096² warm-run profile and integrate it with the loop inventory to rank the next vectorization targets.
+Prereqs: Phase C exit criteria met (parity ≥0.999, divergence understood); NB_C_BIN instrumentation no longer required for this phase.
+Exit Criteria: `reports/2026-01-vectorization-gap/phase_b/<STAMP>/` contains new profiler trace + `hot_loops.csv`; prioritized backlog recorded in docs/fix_plan.md `[VECTOR-TRICUBIC-002]` and plans/active/vectorization-gap-audit.md.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| D1 | Capture warm-run profiler trace | [ ] | Run `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`. Archive `trace.json`, `summary.md`, env metadata. |
+| D2 | Correlate trace with loop inventory | [ ] | Map profiler hotspots to Phase A inventory (plans/active/vectorization-gap-audit.md). Produce `hot_loops.csv` with inclusive % time, call counts, CPU vs CUDA deltas. |
+| D3 | Publish prioritized backlog | [ ] | Write `backlog.md` summarising top candidates (≥1% inclusive time, spec-critical). Update docs/fix_plan.md Next Actions + galph_memory with decision rationale. |
+
+### Phase E — Implementation Batch A (Tricubic Refresh)
+Goal: Revalidate and, if necessary, extend tricubic vectorization to cover new requirements discovered during backlog refresh (e.g., mixed-precision variants, batched HKL caches) while preserving parity and performance.
+Prereqs: Phase D backlog identifies tricubic work as first target; divergence resolved; design references gathered.
+Exit Criteria: Updated tricubic implementation merged, tests passing on CPU/GPU, before/after metrics stored under `reports/2026-01-vectorization-refresh/phase_e/<STAMP>/`, documentation updated.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| E1 | Draft tricubic design addendum | [ ] | Author `reports/2026-01-vectorization-refresh/phase_e/<STAMP>/design.md` quoting nanoBragg.c polin2/3 sections (Rule #11), enumerating tensor shapes, differentiability notes, and acceptance commands. |
+| E2 | Prepare delegation package | [ ] | Update docs/fix_plan.md Next Actions + input.md with concrete Do Now (tests `tests/test_tricubic_vectorized.py`, nb-compare ROI, perf harness). Include rollback guard + artifact expectations. |
+| E3 | Validate implementation & metrics | [ ] | After Ralph’s code changes, ensure targeted pytest, nb-compare (if applicable), and benchmarks run. Archive `before.json`/`after.json` and summarise outcomes in docs/fix_plan.md Attempt history. |
+
+### Phase F — Implementation Batch B (Additional Hot Loops)
+Goal: Apply the same design→delegate→verify pattern to the remaining prioritized loops (e.g., mosaic rotation generation, noise RNG, phi accumulation) with tracked performance gains.
+Prereqs: Phase E complete; backlog from Phase D ranked.
+Exit Criteria: Each selected loop has design packet, delegated implementation, verified performance delta, and documentation updates recorded.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| F1 | Select next target from backlog | [ ] | Choose top candidate from `backlog.md` (≥1% inclusive time or high physics risk). Document selection + rationale in galph_memory and fix_plan Next Actions. |
+| F2 | Author design + harness | [ ] | Mirror Phase E1/E2 for the chosen loop; ensure reproducible commands (pytest selector, microbench). Store under `reports/2026-01-vectorization-refresh/phase_f/<loop_slug>/`. |
+| F3 | Delegate implementation & verify | [ ] | Coordinate with Ralph via input.md; after completion, archive metrics + diff summary and update docs/fix_plan.md. |
+
+### Phase G — Documentation & Closure
+Goal: Fold the new vectorization work into permanent guardrails and retire the plan once maintenance hooks are established.
+Prereqs: All targeted loops (Phase E/F) delivered or deferred with rationale; performance deltas recorded.
+Exit Criteria: Documentation updated, fix_plan marked done, plan archived with closure summary.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| G1 | Update architecture/runtime docs | [ ] | Amend `docs/architecture/pytorch_design.md` and `docs/development/pytorch_runtime_checklist.md` with new vectorization guidance + thresholds; cite reports bundles. |
+| G2 | Close ledger & archive plan | [ ] | Add final Attempt to docs/fix_plan.md (corr/speedup improvements, doc updates). Move this file to `plans/archive/` with closure note once maintenance cadence defined. |

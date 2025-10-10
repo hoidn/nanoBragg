@@ -1,38 +1,41 @@
-Summary: Capture PyTorch traces for the 4096² parity regression pixels so we can diff against the new C logs.
+Summary: Capture Phase C3 first-divergence evidence for the 4096² parity regression.
 Mode: Parity
-Focus: VECTOR-PARITY-001 / Phase C2 PyTorch trace capture
+Focus: docs/fix_plan.md#[VECTOR-PARITY-001] Restore 4096² benchmark parity
 Branch: feature/spec-based-2
-Mapped tests: pytest --collect-only -q
-Artifacts: reports/2026-01-vectorization-parity/phase_c/<STAMP>/py_traces/, reports/2026-01-vectorization-parity/phase_c/<STAMP>/summary.md, reports/2026-01-vectorization-parity/phase_c/<STAMP>/env/trace_env.json, reports/2026-01-vectorization-parity/phase_c/<STAMP>/commands.txt
-Do Now: [VECTOR-PARITY-001] Phase C2 — PyTorch trace capture; command: KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q
-If Blocked: Log root cause in Attempt history and park the partially captured traces under reports/2026-01-vectorization-parity/phase_c/blocked/<brief_reason>/ with commands.txt before stopping.
+Mapped tests: none — evidence-only
+Artifacts: reports/2026-01-vectorization-parity/phase_c/$STAMP/{commands.txt,env/trace_env.json,first_divergence.md,diff_pixel_*.txt,summary.md}
+Do Now: `[VECTOR-PARITY-001] Restore 4096² benchmark parity` — build Phase C3 `first_divergence.md` by comparing the existing C/Py trace logs and documenting the earliest mismatch per pixel (use `compare_c_python_traces.py`).
+If Blocked: If the comparison script fails (e.g., schema mismatch), fall back to manual `diff -u` for each pixel, capture the raw diff under the same reports/ directory, and log the issue plus mitigation in Attempt History.
 Priorities & Rationale:
-- Match the new C traces before diffing (docs/fix_plan.md:19-45) so parity diagnosis can proceed.
-- Follow the Phase C checklist (plans/active/vectorization-parity-regression.md:1-60) to keep artifacts consistent across pixels.
-- Stay within the parallel trace SOP expectations (docs/development/testing_strategy.md:60-200) for reproducibility and comparability.
+- plans/active/vectorization.md — Phase C requires `first_divergence.md` before profiling can resume.
+- docs/fix_plan.md#[VECTOR-PARITY-001] — Next Actions call for Phase C3 trace analysis before any further work.
+- reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/c_traces/ — authoritative C logs for pixels (2048,2048), (1792,2048), (4095,2048).
+- reports/2026-01-vectorization-parity/phase_c/20251010T055346Z/py_traces/ — matching PyTorch logs that must be compared.
+- compare_c_python_traces.py — in-repo utility to automate tap-by-tap diffing with tolerance control.
 How-To Map:
-- Source env vars each run: `export KMP_DUPLICATE_LIB_OK=TRUE` and `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)`.
-- Update `scripts/debug_pixel_trace.py` to accept `--pixel S F`, `--tag NAME`, and `--out-dir PATH`, emitting `TRACE_PY:` lines that mirror the C schema (pix0_vector, pixel_pos, scattering_vec, hkl, F_cell, omega_pixel, steps, scaling terms).
-- After edits, run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q` and save the log to `reports/2026-01-vectorization-parity/phase_c/$STAMP/pytest_collect.log`.
-- Generate trace (float64 CPU) for ROI center: `python scripts/debug_pixel_trace.py --pixel 2048 2048 --tag ROI_center --out-dir reports/2026-01-vectorization-parity/phase_c/$STAMP/py_traces`
-- Generate trace for ROI boundary: `python scripts/debug_pixel_trace.py --pixel 1792 2048 --tag ROI_boundary --out-dir reports/2026-01-vectorization-parity/phase_c/$STAMP/py_traces`
-- Generate trace for far edge: `python scripts/debug_pixel_trace.py --pixel 4095 2048 --tag far_edge --out-dir reports/2026-01-vectorization-parity/phase_c/$STAMP/py_traces`
-- For each run, tee stdout to `TRACE_PY` logs, capture command lines in `commands.txt`, and record environment metadata (git SHA, python version, device/dtype, ROI bounds) in `env/trace_env.json`.
-- Write `summary.md` noting whether intensities are zero; if all remain background, identify an on-peak candidate from ROI metrics for the next loop.
-- Keep raw tensors uncommitted; only reference report paths in fix_plan attempts.
+- `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)`
+- `mkdir -p reports/2026-01-vectorization-parity/phase_c/$STAMP/env`
+- `python compare_c_python_traces.py --c-trace reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/c_traces/pixel_2048_2048.log --py-trace reports/2026-01-vectorization-parity/phase_c/20251010T055346Z/py_traces/pixel_2048_2048.log --tolerance 1e-12 > reports/2026-01-vectorization-parity/phase_c/$STAMP/diff_pixel_2048_2048.txt`
+- Repeat the compare command for `pixel_1792_2048` and `pixel_4095_2048` (update output filenames accordingly).
+- `python - <<'PY'` block to write `reports/2026-01-vectorization-parity/phase_c/$STAMP/env/trace_env.json` capturing git SHA, branch, python version, tolerance used, and the three pixel filenames.
+- `printf` the executed commands into `reports/2026-01-vectorization-parity/phase_c/$STAMP/commands.txt` (one per line).
+- Author `reports/2026-01-vectorization-parity/phase_c/$STAMP/first_divergence.md` summarising for each pixel: first mismatched tap (variable name + line numbers), numeric values (C vs Py), %/absolute delta, suspected unit mismatch, and next-step recommendation.
+- Add a concise roll-up (`summary.md`) noting whether any divergences are common across pixels and whether fluence / structure factor differences explain the parity gap.
 Pitfalls To Avoid:
-- Do not commit the generated trace files; they must stay under reports/.
-- Avoid leaving `STAMP` unset—no more `phase_c/unknown/` bundles.
-- Ensure `TRACE_PY:` labels exactly match the C trace tokens for diff tooling.
-- Stay on CPU float64 for trace capture; no opportunistic CUDA runs here.
-- Preserve deterministic ordering—process pixels sequentially, not parallel background jobs.
-- Retain ROI bounds (1792-2303) in the script so future runs stay comparable.
-- Keep `pytest --collect-only` clean; fix import errors before logging success.
-- Document every command in commands.txt; do not rely on shell history.
-- Leave `reports/` artifacts untracked; verify `git status` is clean before finishing.
+- Do not modify C or Python trace generators; use existing logs only.
+- Keep `STAMP` unique per loop; do not reuse `unknown/` folders.
+- Ensure tolerance is ≤1e-12; higher tolerances can mask true divergences.
+- Note units explicitly in `first_divergence.md` (m, Å, Å⁻¹) to avoid mixing conventions.
+- Capture every command in `commands.txt`; missing provenance blocks future audits.
+- Do not delete or move the legacy trace bundles referenced in fix_plan.
+- Avoid editing production code or committing new scripts; this loop is evidence-only.
+- Maintain device/dtype neutrality when interpreting diffs (PyTorch traces should remain float64 CPU).
+- If results are inconclusive, stop and document rather than guessing.
+- Keep report files ASCII; no spreadsheets or binary artifacts.
 Pointers:
-- docs/fix_plan.md:19-45 — active parity ledger + Next Actions
-- plans/active/vectorization-parity-regression.md:1-60 — Phase C expectations and checklist
-- docs/development/testing_strategy.md:60-200 — parallel trace SOP and canonical commands
-- reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/summary.md — reference C-trace findings
-Next Up: Phase C3 diff + first_divergence.md once Py traces land.
+- plans/active/vectorization-parity-regression.md — Phase C tables describe expected artifacts for trace analysis.
+- plans/active/vectorization.md — Phase C gate now depends on this divergence report.
+- docs/development/testing_strategy.md#14-pytorch-device--dtype-discipline — reminder to state device/dtype in reports.
+- reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/summary.md — prior C-trace attempt context.
+- reports/2026-01-vectorization-parity/phase_c/20251010T055346Z/PHASE_C2_SUMMARY.md — Py trace notes including fluence discrepancy to revisit.
+Next Up: If time remains after authoring `first_divergence.md`, draft bullet hypotheses for parity root cause to accelerate supervisor review.
