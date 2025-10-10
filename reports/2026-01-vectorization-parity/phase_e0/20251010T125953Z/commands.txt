@@ -1,0 +1,3 @@
+export STAMP=20251010T125953Z
+mkdir -p reports/2026-01-vectorization-parity/phase_e0/20251010T125953Z/{py_taps,c_taps}
+exit_code=
