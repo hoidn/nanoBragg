@@ -1,0 +1,6 @@
+# Phase D Attempt #1 — CLI-DEFAULTS-001 reproduction
+# Date: 2025-10-10T15:31:38Z
+# Goal: Capture failure mode for minimal -default_F CLI invocation
+# Exit criteria: pytest.log artifact + attempt_notes.md with exit code and stack trace
+
+pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F

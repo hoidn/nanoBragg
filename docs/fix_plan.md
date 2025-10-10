@@ -64,16 +64,19 @@
 - Priority: High
 - Status: in_planning
 - Owner/Date: ralph/2025-10-10
-- Reproduction: `pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F`
+- Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F`
 - Source: Cluster C1 from `[TEST-SUITE-TRIAGE-001]` Attempt #3 triage
-- Attempts History: none yet
+- Attempts History:
+  * [2025-10-10] Attempt #1 — Result: ✅ reproduced. CLI runner exits 0 but produces all-zero float image. Test fails at line 59 assertion (np.any(float_data > 0)). Runtime 11.01s. **Root cause hypothesis (80% confidence)**: Missing HKL fallback logic—`-default_F 100` provided but no `-hkl` file; simulator likely not populating structure factors from `default_F` parameter. **Secondary hypothesis (15%)**: Zero fluence calculation from missing flux/exposure/beamsize defaults. **Tertiary (5%)**: Output scaling drops values to zero. Artifacts: `reports/2026-01-test-suite-triage/phase_d/20251010T153138Z/attempt_cli_defaults/{pytest.log,commands.txt,attempt_notes.md}`. Next: Inspect `Crystal.get_structure_factor()` for default_F fallback implementation.
 - Next Actions:
-  1. Reproduce targeted command; capture stderr/exit code
-  2. Identify missing HKL fallback or SMV header population logic
-  3. Draft fix plan with targeted pytest + acceptance criteria
+  1. ✅ DONE — Reproduce targeted command; capture pytest.log and failure mode
+  2. Examine `src/nanobrag_torch/models/crystal.py` method `get_structure_factor()` for default_F fallback logic
+  3. Verify BeamConfig fluence defaults in `src/nanobrag_torch/config.py`
+  4. Draft fix with targeted regression test; ensure test_minimal_render_with_default_F passes
 - Exit Criteria:
-  - CLI runner succeeds for minimal `-default_F` invocation
-  - Test passes; docs updated with minimal example
+  - CLI runner succeeds for minimal `-default_F` invocation with non-zero output
+  - Test `test_minimal_render_with_default_F` passes
+  - Docs updated with minimal example; default_F fallback behavior documented
 
 ## [DETERMINISM-001] PyTorch RNG determinism
 - Spec/AT: `specs/spec-a-core.md` §5.3 (RNG determinism), `tests/test_at_parallel_013.py`, `tests/test_at_parallel_024.py`
