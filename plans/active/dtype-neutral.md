@@ -9,8 +9,9 @@
 - `plans/active/determinism.md` — determinism plan currently blocked until dtype issues resolved; keep dependency noted in fix_plan.
   - `reports/2026-01-test-suite-triage/phase_d/20251010T171010Z/determinism/phase_a/summary.md` — Attempt #1 evidence showing RuntimeError from float32 vs float64 `torch.allclose` in `Detector.get_pixel_coords`.
 
-### Status Snapshot (2025-10-10)
-- Phase A ✅ complete — Attempt #1 (`reports/2026-01-test-suite-triage/phase_d/20251010T172810Z/dtype-neutral/phase_a/`) captures collect-only env snapshot, deterministic test failures, and minimal reproducer narrowing scope to `Detector.to()` cache handling.
+### Status Snapshot (2026-01-10)
+- Phase A ✅ complete — Attempt #1 (`reports/2026-01-test-suite-triage/phase_d/20251010T172810Z/dtype-neutral/phase_a/`) captured collect-only env snapshot, determinism failure logs, and minimal reproducer narrowing scope to `Detector.to()` cache handling.
+- Phase B ✅ complete — Attempt #2 (`reports/2026-01-test-suite-triage/phase_d/20251010T173558Z/dtype-neutral/phase_b/`) produced static audit artifacts (`analysis.md`, `tap_points.md`, `summary.md`) and isolated missing `dtype=self.dtype` coercion in cache `.to()` calls.
 
 ### Phase A — Failure Reproduction & Evidence Capture
 Goal: Reproduce dtype mismatch failures with authoritative pytest selectors and capture precise stack traces plus environment metadata for regression tracking.
@@ -32,23 +33,23 @@ Exit Criteria: `analysis.md` + checklist identifying every location where cached
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Static audit of detector caches | [ ] | Inspect `Detector.get_pixel_coords`, `_compute_planar_pixel_coords`, and cache initialization. Document how `_cached_basis_vectors` and `_cached_pix0_vector` are stored and reused. Highlight lack of dtype coercion in comparisons. |
-| B2 | Inventory tensor factories | [ ] | Trace creation of detector basis vectors (`setup_basis_vectors`, `_apply_rotations`), pixel grids (`torch.arange`, `meshgrid`), and constants (`beam_direction`, `min_ratio`). Note each factory ensuring device/dtype alignment. |
-| B3 | Cross-component survey | [ ] | Review `Crystal`, `Beam`, and simulator caches for similar dtype coupling (use grep for `torch.allclose` and `_cached_*`). Record any additional hotspots that could share fix infrastructure. |
-| B4 | Draft tap list | [ ] | Propose instrumentation taps (if needed) to confirm dtype transitions after fix (e.g., log dtype of cached tensors pre/post `to()`). Store under `tap_points.md`. |
-| B5 | Update fix_plan attempt log | [ ] | Append Attempt entry for `[DTYPE-NEUTRAL-001]` in `docs/fix_plan.md` summarizing findings and artifact path `reports/.../phase_b/<STAMP>/summary.md`. |
+| B1 | Static audit of detector caches | [D] | Attempt #2 (20251010T173558Z) — `analysis.md` §1 details `_cached_basis_vectors` / `_cached_pix0_vector` lifecycle and missing `dtype=self.dtype` coercion before `torch.allclose`. |
+| B2 | Inventory tensor factories | [D] | Attempt #2 — `analysis.md` §2 inventories detector tensor factories; confirms they already honour caller device/dtype. |
+| B3 | Cross-component survey | [D] | Attempt #2 — `all_cached_vars.txt` + summary.md §Scope confirm Detector is the sole dtype-unsafe cache; Simulator/Crystal/Beam unaffected. |
+| B4 | Draft tap list | [D] | Attempt #2 — `tap_points.md` captures optional asserts/logging to verify cache dtype parity post-fix (for use only if regressions persist). |
+| B5 | Update fix_plan attempt log | [D] | Attempt #2 — `[DTYPE-NEUTRAL-001]` entry in `docs/fix_plan.md` now records artifact path and findings; see Attempt #2 bullet. |
 
 ### Phase C — Remediation Blueprint
-Goal: Design the implementation approach and acceptance coverage without changing code; ensure determinism plan can depend on this fix.
-Prereqs: Phase B analysis complete.
-Exit Criteria: `remediation_plan.md` detailing code changes, tests, and documentation updates; `tests.md` enumerating required pytest selectors (existing + new) covering dtype neutrality; `docs_updates.md` listing docs to refresh.
+Goal: Lock down the minimal fix (cache `.to(..., dtype=self.dtype)`) and its validation/doc updates so implementation can proceed without ambiguity.
+Prereqs: Phase B analysis reviewed and supervisor sign-off (this loop).
+Exit Criteria: Blueprint bundle under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/dtype-neutral/phase_c/` containing `remediation_plan.md`, `tests.md`, `docs_updates.md`, plus fix_plan Attempt #3 entry summarising readiness.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Author remediation plan | [ ] | Outline modifications: (1) coercing cached tensors to `self.dtype` before comparison, (2) storing cache metadata (device/dtype) to trigger invalidation, (3) ensuring `_pixel_coords_cache` respects requested dtype, (4) downstream updates (crystal caches if applicable). Include code line references. |
-| C2 | Define regression coverage | [ ] | Specify targeted tests: determinism selectors, detector geometry dtype toggles, any new unit test to assert cache reinitializes when dtype changes. Include CPU+CUDA expectations (if CUDA available). |
-| C3 | Document doc/test touchpoints | [ ] | List updates needed for `docs/development/testing_strategy.md` (if new commands), `docs/architecture/detector.md` (cache dtype note), and runtime checklist. |
-| C4 | Update dependency graph | [ ] | Note in `remediation_plan.md` how this fix unblocks `[DETERMINISM-001]` Phase A rerun; add gating note for supervisor input. |
+| C1 | Author remediation_plan.md | [ ] | Document the 4-line diff (add `dtype=self.dtype` to cache retrieval in `detector.py:762-777`), include risk assessment, owner (Ralph), and rollback guidance. Reference Phase B summary for evidence. |
+| C2 | Draft tests.md | [ ] | Enumerate authoritative commands: `pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py --maxfail=0` and detector smoke (e.g., `tests/test_detector_geometry.py`). Note expected outcome: RuntimeError removed though seeds may still fail. |
+| C3 | Draft docs_updates.md | [ ] | Capture edits to `docs/architecture/detector.md` (cache dtype note) and `docs/development/pytorch_runtime_checklist.md` (§2 example). Include link to testing strategy references. |
+| C4 | Log Attempt #3 in fix_plan | [ ] | Update `[DTYPE-NEUTRAL-001]` with Phase C artifact path, blueprint highlights, and readiness message unlocking Phase D delegation. |
 
 ### Phase D — Implementation Execution (Delegate to Ralph)
 Goal: Provide ordered implementation tasks with clear acceptance criteria to eliminate dtype mismatch.

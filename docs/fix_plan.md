@@ -1,9 +1,9 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2026-01-16 (galph loop — dtype neutrality planning kickoff)
+**Last Updated:** 2026-01-16 (galph loop — dtype neutrality Phase C blueprint prep)
 **Active Focus:**
 - CRITICAL: `[DETERMINISM-001]` — execute Phase A per `plans/active/determinism.md`; blocked until dtype cache fix lands.
-- BLOCKER: `[DTYPE-NEUTRAL-001]` — advance Phase B static audit per `plans/active/dtype-neutral.md` to unblock determinism seeds.
+- BLOCKER: `[DTYPE-NEUTRAL-001]` — author Phase C remediation blueprint (`remediation_plan.md`, `tests.md`, `docs_updates.md`) per `plans/active/dtype-neutral.md` so implementation can proceed.
 - `[TEST-SUITE-TRIAGE-001]` remains the umbrella initiative; update ladder once determinism artifacts land.
 - Tap 5.3 oversample instrumentation for `[VECTOR-PARITY-001]` stays paused until suite triage critical path clears.
 

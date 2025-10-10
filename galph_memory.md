@@ -2136,3 +2136,14 @@
 - Rewrote `input.md` (Mode=Docs) directing Ralph to execute Phase B static audit (B1–B5) and stage artifacts under phase_b/.
 - Follow-up for Ralph: produce phase_b analysis/tap summaries, update fix_plan attempt log per plan task B5.
 - <Action State>: [ready_for_implementation]
+
+### 2026-01-16 (galph loop - pre-plan note)
+- Focus issue: [DTYPE-NEUTRAL-001] Phase C remediation blueprint
+- Action type: Planning
+- Mode: Docs
+
+### 2026-01-16 (galph loop - dtype Phase C blueprint handoff)
+- Reviewed Phase B artifacts; updated plans/active/dtype-neutral.md status snapshot with Attempt #2 completion and rewrote Phase C table for the 4-line cache fix blueprint.
+- Refreshed docs/fix_plan.md Active Focus to call for the Phase C document bundle; input.md now directs Ralph to author remediation_plan/tests/docs_updates under a new phase_c stamp (docs-only).
+- Next Ralph loop: produce the phase_c blueprint docs, log Attempt #3 in fix_plan, then we can green-light Phase D implementation.
+- <Action State>: [ready_for_implementation]
