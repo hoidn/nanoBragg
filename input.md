@@ -1,52 +1,58 @@
-Summary: Refresh tricubic/absorption evidence before resuming vectorization backlog.
+Summary: Capture fresh 4096² profiler trace after source-weight parity to unblock vectorization-gap backlog.
 Mode: Perf
-Focus: [VECTOR-TRICUBIC-002] Vectorization relaunch backlog
+Focus: [VECTOR-GAPS-002] Vectorization gap audit
 Branch: feature/spec-based-2
-Mapped tests: tests/test_tricubic_vectorized.py; tests/test_at_abs_001.py
-Artifacts: reports/2026-01-vectorization-refresh/phase_b/<STAMP>/
-Do Now: Execute Phase B1–B2 of [VECTOR-TRICUBIC-002]; run the mapped pytest selectors and capture the paired tricubic/absorption benchmarks (CPU + CUDA when available).
-If Blocked: Stop after capturing failing pytest/benchmark logs to reports/2026-01-vectorization-refresh/phase_b/<STAMP>/attempt_blocked/ and record the exit code in docs/fix_plan.md Attempts History.
+Mapped tests: none — evidence-only
+Artifacts: reports/2026-01-vectorization-gap/phase_b/$STAMP/profile/, reports/2026-01-vectorization-gap/phase_b/$STAMP/summary.md, reports/2026-01-vectorization-gap/phase_b/$STAMP/commands.txt, reports/2026-01-vectorization-gap/phase_b/$STAMP/env.json
+Do Now: [VECTOR-GAPS-002] Phase B1 — export STAMP=$(date -u +%Y%m%dT%H%M%SZ) && NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/$STAMP/profile/
+If Blocked: If the profiler aborts or correlation_warm < 0.999, capture profile_run.log and benchmark_results.json under reports/2026-01-vectorization-gap/phase_b/$STAMP/failed/, run pytest --collect-only -q, and record the failure in docs/fix_plan.md attempts before stopping.
 Priorities & Rationale:
-- docs/fix_plan.md:3766-3784 — Status now in_progress; Next Actions demand fresh Phase B regression evidence.
-- plans/active/vectorization.md:28-36 — Phase B checklist defines pytest selectors and benchmark cadence we must refresh.
-- docs/architecture/pytorch_design.md:3-67 — Revalidating tricubic/absorption ensures the documented tensor flows still hold after upstream parity shifts.
-- docs/development/pytorch_runtime_checklist.md:6-29 — Reinforces vectorization/device guardrails and mandates CPU+CUDA coverage.
-- plans/active/vectorization-gap-audit.md:1-36 — Downstream gap profiling depends on these refreshed baselines before profiling resumes.
+- docs/fix_plan.md:3791 — Next Actions call for resuming Phase B profiling now that SOURCE-WEIGHT-001 parity is locked.
+- plans/active/vectorization-gap-audit.md:34 — Task B1 defines the exact profiler command and artifact layout for this phase.
+- docs/architecture/pytorch_design.md:105 — Parity memo sets corr ≥0.999 and |sum_ratio−1| ≤5e-3 thresholds that this rerun must confirm.
+- docs/development/testing_strategy.md:18 — Device/dtype discipline requires the CPU float32 run and captures the authoritative command in the ledger.
 How-To Map:
-- Export `STAMP=$(date -u +%Y%m%dT%H%M%SZ)` and `BASE=reports/2026-01-vectorization-refresh/phase_b/$STAMP`; `mkdir -p "$BASE"/pytest "$BASE"/benchmarks` (do not git add).
-- `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -v | tee "$BASE/pytest/tricubic.log"`; record exit code in `$BASE/pytest/exit_codes.txt`.
-- `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_abs_001.py -v -k "cpu or cuda" | tee "$BASE/pytest/absorption.log"`; append exit code to the same tracker.
-- `python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --repeats 200 --device cpu --outdir "$BASE/benchmarks/tricubic_cpu"`.
-- Guard the CUDA reruns with:
-  ```bash
-  if python - <<'PY'
-import torch, sys
-sys.exit(0 if torch.cuda.is_available() else 1)
+1. STAMP=$(date -u +%Y%m%dT%H%M%SZ);
+2. NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/$STAMP/profile/ | tee reports/2026-01-vectorization-gap/phase_b/$STAMP/profile_run.log;
+3. python - <<'PY'
+import json, os
+from pathlib import Path
+base = Path('reports/2026-01-vectorization-gap/phase_b') / os.environ['STAMP'] / 'profile'
+metrics = json.load((base / 'benchmark_results.json').open())[0]
+print(f"correlation_warm={metrics['correlation_warm']:.9f}, speedup_warm={metrics['speedup_warm']:.3f}")
+if metrics['correlation_warm'] < 0.999:
+    raise SystemExit('Correlation below parity threshold; halt and log failure')
 PY
-  then
-      python scripts/benchmarks/tricubic_baseline.py --sizes 256 512 --repeats 200 --device cuda --outdir "$BASE/benchmarks/tricubic_cuda"
-  else
-      echo "cuda_unavailable=$(date -u)" >> "$BASE/benchmarks/notes.md"
-  fi
-  ```
-- Repeat the same pattern for absorption: always run the CPU command `python scripts/benchmarks/absorption_baseline.py --sizes 256 512 --repeats 200 --device cpu --outdir "$BASE/benchmarks/absorption_cpu"`; only add the CUDA run inside the guard above with the absorption script (write fallback note when skipped).
-- After runs, draft `$BASE/summary.md` noting mean/median warm timings vs `reports/2025-10-vectorization/phase_e/` and `/phase_f/`, flagging if drift >5%.
-- Update docs/fix_plan.md Attempts for [VECTOR-TRICUBIC-002] with metrics + artifact paths once data captured.
+4. python - <<'PY'
+import json, os, textwrap
+from pathlib import Path
+stamp = os.environ['STAMP']
+base = Path('reports/2026-01-vectorization-gap/phase_b') / stamp
+metrics = json.load((base / 'profile' / 'benchmark_results.json').open())[0]
+summary = textwrap.dedent(f"""
+# Phase B1 profiler rerun ({stamp})
+- Command: benchmark_detailed.py 4096 cpu float32 profile
+- correlation_warm: {metrics['correlation_warm']:.12f}
+- speedup_warm: {metrics['speedup_warm']:.3f}
+- Notes: confirm NB_C_BIN path, capture torch.compile warnings if any (expected: none)
+""")
+(base / 'summary.md').write_text(summary)
+PY
+5. NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q > reports/2026-01-vectorization-gap/phase_b/$STAMP/collect.log;
+6. Update docs/fix_plan.md attempts with metrics after review.
 Pitfalls To Avoid:
-- Do not commit anything under reports/; reference paths only.
-- Keep `KMP_DUPLICATE_LIB_OK=TRUE` on every pytest/benchmark invocation.
-- Guard CUDA runs with `torch.cuda.is_available()`; never assume GPU access.
-- Avoid editing plan/docs beyond required attempt notes; no code changes this loop.
-- Capture exit codes for each command; missing exit data invalidates the evidence.
-- Preserve runtime environment noted by the benchmark scripts; do not modify their defaults besides documented flags.
-- No ad-hoc scripts or notebooks—use the established benchmarks only.
-- Ensure pytest logs stay under `$BASE/pytest/`; don’t mix with benchmark outputs.
-- Record CPU vs CUDA availability explicitly in `$BASE/summary.md`.
-- Leave the git tree clean after recording attempt notes.
+- Do not modify production code or plans during this evidence loop.
+- Use a fresh $STAMP directory; never overwrite the 20251009 artifacts.
+- Keep --device cpu and --dtype float32 exactly; no GPU run on this pass.
+- Ensure NB_C_BIN points at ./golden_suite_generator/nanoBragg for C parity.
+- Capture profile_run.log and env.json; the script should emit env.json automatically.
+- Watch for torch.profiler errors or graph-break warnings; treat them as blockers.
+- Do not delete or move files listed in docs/index.md.
+- Maintain KMP_DUPLICATE_LIB_OK=TRUE throughout to avoid MKL crashes.
 Pointers:
-- docs/fix_plan.md:3766-3784 — Current mandate for Phase B refresh.
-- plans/active/vectorization.md:28-36 — Phase B tasks and command templates.
-- docs/architecture/pytorch_design.md:3-67 — Vectorization evidence gates we’re revalidating.
-- docs/development/pytorch_runtime_checklist.md:6-27 — Guardrails for the refresh run.
-- plans/active/vectorization-gap-audit.md:34-36 — Profiler work waits on these refreshed baselines.
-Next Up: Once data is archived, move to VECTOR-GAPS-002 Phase B1 profiler capture (`benchmark_detailed.py --profile`) using the same STAMP structure.
+- docs/fix_plan.md:3791
+- plans/active/vectorization-gap-audit.md:34
+- docs/architecture/pytorch_design.md:101
+- docs/development/testing_strategy.md:18
+- reports/2026-01-vectorization-gap/phase_a/20251009T065238Z/summary.md#L1
+Next Up (optional): Begin Phase B2 by mapping the new trace to hot loops (python scripts/analysis/vectorization_inventory.py --package src/nanobrag_torch --outdir reports/2026-01-vectorization-gap/phase_b/$STAMP/inventory/).
