@@ -120,13 +120,15 @@
 - Attempts History:
   * [2025-12-28] Attempt #1 — Result: planning. Logged dependency readiness in `plans/active/vectorization.md`.
   * [2025-10-09] Attempt #2 — Result: success (Phase B1). Tricubic CPU 1.45 ms/call; CUDA 5.68 ms/call; absorption CPU 4.72 ms (256²)/22.90 ms (512²); absorption CUDA 5.43 ms (256²)/5.56 ms (512²). Artifacts: `reports/2026-01-vectorization-refresh/phase_b/20251010T013437Z/`.
+  * [2025-10-10] Attempt #3 — Result: failed (Phase C1 profiler). corr_warm=0.721175 ❌ (threshold ≥0.999), speedup_warm=1.19×, cache=72607.7×. Artifacts: `reports/2026-01-vectorization-gap/phase_b/20251010T043632Z/{summary.md,profile_4096x4096/trace.json}`. Observations: Parity regression confirmed—profiler evidence CANNOT be used for Phase C2/C3 until `[VECTOR-PARITY-001]` resolves full-frame correlation. Next: Block Phase C2/C3; rerun profiler after parity fix.
 - Observations/Hypotheses:
   - CPU favours tricubic microbenchmarks; absorption benefits from CUDA.
-  - VECTOR-GAPS-002 Phase B can resume once parity regression clears.
+  - Phase C1 profiler captured but corr=0.721175 ❌ confirms upstream parity regression blocking vectorization work.
+  - Cache effectiveness (72607.7×) and torch.compile operational, but physics correctness must be restored first.
 - Next Actions:
-  1. Execute Phase C1 from `plans/active/vectorization.md` by running the warm 4096² profiler capture (`KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`) and log correlation + torch.compile status in the attempt notes.
-  2. Complete Phase C2 (vectorization plan) using `python scripts/analysis/vectorization_inventory.py --package src/nanobrag_torch --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/inventory/` to map profiler hotspots to the loop inventory; update `[VECTOR-GAPS-002]` attempts with the generated `hot_loops.csv` path.
-  3. Draft the prioritised backlog for Phase C3 under `reports/2026-01-vectorization-gap/phase_b/<STAMP>/backlog.md`, then refresh this entry’s Next Actions and `[VECTOR-GAPS-002]` to reference the ranked targets plus required acceptance tests.
+  1. **BLOCKED:** Phase C1 profiler evidence invalid (corr=0.721175 ❌). Do NOT proceed with Phase C2/C3 hotspot mapping until parity ≥0.999.
+  2. After `[VECTOR-PARITY-001]` Phase C completes and restores corr≥0.999, rerun: `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts`
+  3. Only then execute Phase C2 loop inventory mapping and Phase C3 prioritised backlog drafting per original plan.
 - Risks/Assumptions:
   - CUDA availability required for future refresh runs.
   - Parity regression must be resolved before shipping new vectorization work.
