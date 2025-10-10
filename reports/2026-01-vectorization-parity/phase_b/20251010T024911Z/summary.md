@@ -1,0 +1,16 @@
+# Phase B1 Benchmark + Parity Summary
+- Benchmark bundle: reports/benchmarks/20251009-194932
+- nb-compare metrics: see nb_compare_full/summary.json
+  - correlation: 0.05973830898774501
+  - rmse: 5.522035121917725
+  - c_sum: 24572.53125
+  - py_sum: 5803630.0
+  - sum_ratio: 236.1836395263672
+- Thresholds: correlation ≥0.999, |sum_ratio−1| ≤5e-3 (specs/spec-a-core.md:151; runtime checklist item #4)
+- Notes:
+  - **CRITICAL DISCREPANCY**: benchmark_detailed.py reports correlation=0.721175 (warm run) but nb-compare reports correlation=0.059738 for identical parameters
+  - Sum ratio 236.18 indicates PyTorch generating ~236x more total intensity than C (massive physics error)
+  - Hypothesis: benchmark_detailed.py may be comparing cached results incorrectly, or nb-compare is using different configuration mapping
+  - Benchmark internal correlation (0.721) suggests C vs PyTorch differ systematically, but nb-compare shows even worse parity
+  - Both failures are far outside acceptance thresholds (correlation ≥0.999, |sum_ratio−1| ≤5e-3)
+  - Configuration parity check needed: verify implicit conventions (-convention, pivot mode, beam center mapping) match between C and PyTorch

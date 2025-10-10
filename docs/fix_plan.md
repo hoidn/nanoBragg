@@ -4012,11 +4012,12 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 - Plan Reference: `plans/active/vectorization-parity-regression.md`
 - Reproduction (C & PyTorch): `NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts`
 - First Divergence (if known): Deterministic correlation collapse to 0.721175 (cold & warm) across `[VECTOR-GAPS-002]` Attempts #3–#8 despite cache speedups. Affected artifacts: `reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/benchmark_results.json` (git `ac94e90`) and `reports/2026-01-vectorization-gap/phase_b/20251010T022314Z/benchmark_results.json` (git `22ea5c18`). Last known-good run `reports/benchmarks/20251009-161714/benchmark_results.json` shows correlation 0.999998 and sum_ratio 0.9999876 but lacks recorded git SHA. VECTOR-GAPS-002 Phase B2/B3 and PERF-PYTORCH-004 remain blocked until correlation ≥0.999 and |sum_ratio−1| ≤5e-3 are restored.
-- Next Actions (2025-12-31 update — Phase A complete, Phase B reproduction pending):
-  1. Execute Phase B1 from `plans/active/vectorization-parity-regression.md`: rerun the 4096² benchmark on HEAD (script auto-writes to `reports/benchmarks/<timestamp>/`; copy that bundle to `reports/2026-01-vectorization-parity/phase_b/<STAMP>/profile/`) **and** immediately run `nb-compare` with the matching 4096 setup to capture correlation and sum_ratio (store under `reports/2026-01-vectorization-parity/phase_b/<STAMP>/nb_compare_full/`).
-  2. Run Phase B2 authoritative parity selectors (`KMP_DUPLICATE_LIB_OK=TRUE NB_C_BIN=./golden_suite_generator/nanoBragg NB_RUN_PARALLEL=1 pytest -v tests/test_at_parallel_*.py -k 4096`) and archive logs in the same bundle.
-  3. Complete Phase B3 ROI sanity checks via `nb-compare` (512×512) to determine whether the 0.721 regression is detector-size dependent; summarise findings in `summary.md`.
-  4. Once Phase B artefacts land, prepare Phase C trace localisation inputs (hot pixel pick + instrumentation mapping) so the next supervisor loop can author trace prompts without re-scoping evidence.
+- Next Actions (2025-10-09 update — Phase B1 complete with alarming findings; Phase B2/B3 + trace triage next):
+  1. **URGENT**: Investigate benchmark vs nb-compare correlation discrepancy (0.721 vs 0.060) — possible configuration mismatch or comparison methodology error
+  2. Run Phase B2 authoritative parity selectors (`KMP_DUPLICATE_LIB_OK=TRUE NB_C_BIN=./golden_suite_generator/nanoBragg NB_RUN_PARALLEL=1 pytest -v tests/test_at_parallel_*.py -k 4096`) to check whether pytest parity tests confirm regression
+  3. Complete Phase B3 ROI sanity checks via `nb-compare` (512×512) to scope regression detector-size dependency
+  4. Debug sum_ratio=236.18 catastrophic failure — PyTorch generating 236x total intensity vs C suggests normalization/scaling bug
+  5. Once evidence stabilizes, prepare Phase C trace localisation inputs
 - Attempts History:
   * [2025-12-30] Attempt #0 (galph loop) — Result: planning baseline. Documented repeated 0.721175 correlation across `reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/` and `20251010T022314Z/`, authored `plans/active/vectorization-parity-regression.md`, and added this fix_plan entry. No code changes. Next step: Phase A artifact audit and Attempt #1 with consolidated evidence.
   * [2025-10-09] Attempt #1 (ralph loop) — Result: success (Phase A1–A3 complete). Generated evidence bundle consolidating good vs failing benchmark runs.
@@ -4039,6 +4040,26 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       2. Phase B2 (B2): Execute `KMP_DUPLICATE_LIB_OK=TRUE NB_C_BIN=./golden_suite_generator/nanoBragg NB_RUN_PARALLEL=1 pytest -v tests/test_at_parallel_*.py -k 4096` to check AT coverage
       3. Phase B3 (B3): Use `nb-compare` with smaller ROIs (512×512, 1024×1024) to scope regression — does 0.721 correlation persist at reduced detector sizes?
       4. Phase D1 (git forensics): Use `git log --since "2025-12-24" --until "2025-12-26"` to identify good-run commit, then bisect between that SHA and current HEAD
+  * [2025-10-09] Attempt #2 (ralph loop) — Result: **BLOCKING EVIDENCE** — Phase B1 complete but reveals catastrophic parity failure.
+    Metrics:
+      - benchmark_detailed.py: correlation_warm=0.721175 (❌ <<0.999 threshold), speedup_warm=1.17x, git_sha=64d9eac3
+      - nb-compare: correlation=0.059738 (❌❌❌ catastrophic, 12x worse than benchmark), sum_ratio=236.18 (❌ 236x intensity error, >>5e-3 threshold)
+      - C_sum=24572.53, Py_sum=5803630.0 (PyTorch generating 236x total intensity)
+    Artifacts:
+      - `reports/2026-01-vectorization-parity/phase_b/20251010T024911Z/profile/` — benchmark_results.json, profiler trace, console log
+      - `reports/2026-01-vectorization-parity/phase_b/20251010T024911Z/nb_compare_full/` — comparison PNGs, summary.json, metrics
+      - `reports/2026-01-vectorization-parity/phase_b/20251010T024911Z/{env.json,summary.md,commands.txt}` — provenance and reproduction commands
+    Observations/Hypotheses:
+      - **CRITICAL DISCREPANCY**: benchmark_detailed.py reports 0.721 but nb-compare reports 0.060 for IDENTICAL parameters (-default_F 100 -cell 100 100 100 90 90 90 -lambda 6.2 -distance 100 -detpixels 4096)
+      - Hypothesis 1: benchmark_detailed.py may be comparing wrong images (cached vs fresh, or mismatched configs)
+      - Hypothesis 2: nb-compare may use different implicit configuration (convention, pivot, beam center mapping) than benchmark script
+      - Hypothesis 3: PyTorch normalization/scaling catastrophically broken (236x total intensity suggests missing 1/steps or 1/sources division)
+      - **BLOCKING**: Cannot proceed to Phase C trace triage until root cause of benchmark vs nb-compare discrepancy understood
+    Next Actions:
+      1. **URGENT DEBUG**: Examine benchmark_detailed.py correlation calculation — verify it compares fresh C vs fresh PyTorch outputs with identical configs
+      2. **URGENT DEBUG**: Check nb-compare configuration mapping — verify it passes correct implicit parameters (-convention MOSFLM, pivot mode, beam center) to both C and PyTorch
+      3. Run Phase B2 pytest selectors to get third correlation measurement and triangulate which tool is correct
+      4. If nb-compare correlation=0.060 is correct, immediately debug sum_ratio=236.18 (likely missing normalization factor in scaling)
 
 ---
 
