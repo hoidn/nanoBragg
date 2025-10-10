@@ -1,0 +1,16 @@
+{
+  "tap_id": "intensity_pre_norm",
+  "pixel_coords": [
+    2048,
+    2048
+  ],
+  "values": {
+    "accumulated_intensity": 153799897.866993,
+    "steps": 4,
+    "last_omega_applied": 9.999999925e-09,
+    "last_capture_fraction": 1.0,
+    "last_polar": 0.9999999975,
+    "normalized_intensity": 0.38449950753621404
+  },
+  "timestamp_utc": "20251010T110851Z"
+}

@@ -74,7 +74,7 @@ def parse_args():
     )
     parser.add_argument(
         '--taps', type=str, default=None, metavar='TAP[,TAP...]',
-        help='Comma-separated tap selectors (e.g., f_cell,omega). If unspecified, only legacy TRACE output.'
+        help='Comma-separated tap selectors (e.g., f_cell,omega,intensity). If unspecified, only legacy TRACE output.'
     )
     parser.add_argument(
         '--json', action='store_true',
@@ -224,6 +224,36 @@ def collect_f_cell_tap(crystal, crystal_config, S_per_m_all, oversample, dtype, 
             'l_min': int(l_min) if l_min != float('inf') else 0,
             'l_max': int(l_max) if l_max != float('-inf') else 0,
         }
+    }
+
+
+def collect_intensity_tap(I_before_scaling, steps, omega, r_e_sqr, fluence, capture_fraction, polar):
+    """
+    Collect Tap 5 (intensity pre-normalization) metrics.
+
+    Args:
+        I_before_scaling: Accumulated intensity before final scaling (F_cell² × F_latt²)
+        steps: Total number of sampling steps (sources × phi × mosaic × oversample²)
+        omega: Solid angle factor (last computed value)
+        r_e_sqr: Classical electron radius squared
+        fluence: Beam fluence (photons/m²)
+        capture_fraction: Detector capture fraction (last computed value)
+        polar: Polarization factor (last computed value)
+
+    Returns:
+        dict: Tap 5 metrics matching schema from tap_points.md
+    """
+    # Calculate normalized intensity per spec formula:
+    # I_pixel = r_e² × fluence × I_before_scaling / steps × capture × polar × omega
+    normalized_intensity = r_e_sqr * fluence * I_before_scaling / steps * capture_fraction * polar * omega
+
+    return {
+        'accumulated_intensity': float(I_before_scaling.item() if isinstance(I_before_scaling, torch.Tensor) else I_before_scaling),
+        'steps': int(steps),
+        'last_omega_applied': float(omega.item() if isinstance(omega, torch.Tensor) else omega),
+        'last_capture_fraction': float(capture_fraction),
+        'last_polar': float(polar.item() if isinstance(polar, torch.Tensor) else polar),
+        'normalized_intensity': float(normalized_intensity.item() if isinstance(normalized_intensity, torch.Tensor) else normalized_intensity)
     }
 
 
@@ -519,7 +549,7 @@ def main():
     emit_trace("TRACE_PY", "fluence_photons_per_m2", fluence)
 
     # Steps (sources × phi × mosaic × oversample²)
-    steps = 1 * crystal_config.phi_steps * crystal_config.mosaic_domains * 1  # oversample=1
+    steps = 1 * crystal_config.phi_steps * crystal_config.mosaic_domains * (args.oversample ** 2)
     emit_trace("TRACE_PY", "steps", steps)
 
     # Oversample flags (all zero for this config)
@@ -600,6 +630,36 @@ def main():
         print(f"  HKL bounds: h=[{f_cell_tap['hkl_bounds']['h_min']},{f_cell_tap['hkl_bounds']['h_max']}] "
               f"k=[{f_cell_tap['hkl_bounds']['k_min']},{f_cell_tap['hkl_bounds']['k_max']}] "
               f"l=[{f_cell_tap['hkl_bounds']['l_min']},{f_cell_tap['hkl_bounds']['l_max']}]")
+
+    if 'intensity' in enabled_taps:
+        print()
+        print(f"=== Collecting Tap 5 (intensity pre-normalization) ===")
+
+        # Collect intensity tap using already-computed values
+        # Reuse I_before_scaling, steps, omega, r_e_sqr, fluence, capture_fraction, polar
+        intensity_tap = collect_intensity_tap(
+            I_before_scaling=I_before_scaling,
+            steps=steps,
+            omega=omega,
+            r_e_sqr=r_e_sqr,
+            fluence=fluence,
+            capture_fraction=capture_fraction,
+            polar=polar
+        )
+
+        tap_metrics['intensity_pre_norm'] = {
+            'tap_id': 'intensity_pre_norm',
+            'pixel_coords': [target_s, target_f],
+            'values': intensity_tap
+        }
+
+        # Print summary to stdout
+        print(f"  Accumulated intensity (F_cell² × F_latt²): {intensity_tap['accumulated_intensity']:.15e}")
+        print(f"  Steps (sources × phi × mosaic × oversample²): {intensity_tap['steps']}")
+        print(f"  Last omega applied: {intensity_tap['last_omega_applied']:.15e} sr")
+        print(f"  Last capture fraction: {intensity_tap['last_capture_fraction']:.6f}")
+        print(f"  Last polarization: {intensity_tap['last_polar']:.15e}")
+        print(f"  Normalized intensity (final): {intensity_tap['normalized_intensity']:.15e}")
 
     print()
     print(f"=== Trace Complete ===")
