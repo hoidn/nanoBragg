@@ -19,3 +19,9 @@ Historical entries condensed for quick reference when deeper context is required
 - **[CORE-REGRESSION-001] Phi rotation unit test** — Updated unit test to match C loop formula (no midpoint); core suite stable at 98/7/1.
 - **[PERF-PYTORCH-001..003] Early performance fixes** — Addressed multi-source vectorization regression, source tensor device drift, and CUDA benchmark gap; reference commits 7f6c4b2/058986f with pytest runs in `reports/benchmarks/20250930-*`.
 - **Routing escalation log ([RALPH-VERIFICATION-001–011])** — Documented eleven consecutive Ralph-prompt routing violations; future loops must use `prompts/debug.md` while any AT parity test fails.
+
+## 2026-01-05
+- **[CLI-DTYPE-002] CLI dtype parity** — Paused pending renewed demand; reproduction script in `docs/fix_plan.md` (pre-refresh) validated parser accepts `-dtype float64`, but no fixes landed. Re-open when dtype overrides resurface in roadmap.
+- **[ABS-OVERSAMPLE-001] Fix -oversample_thick subpixel absorption** — Deferred until detector absorption rework resumes; prior analysis recorded in `plans/active/oversample-thick-subpixel.md` Phase A bundle (`reports/2025-11-absorption/phase_a/`).
+- **[C-SOURCEFILE-001] Sourcefile comment parsing bug** — Ownership moved to documentation backlog; evidence bundle `reports/2025-11-source-weights/phase_g/20251005T191102Z/` captures baseline. Await CLI flag implementation before reopening.
+- **[ROUTING-SUPERVISOR-001] supervisor.sh automation guard** — Guard scripts staged, awaiting next automation window; see `plans/active/supervisor-loop-guard/plan.md` Phase B notes.
