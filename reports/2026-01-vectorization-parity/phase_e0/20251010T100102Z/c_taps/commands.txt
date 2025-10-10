@@ -1,0 +1,19 @@
+# C Omega Tap Collection Command
+# Date: 2025-10-10T10:01:02Z
+# Purpose: Capture omega subpixel values for edge (0,0) and center (2048,2048) pixels with oversample=2
+
+./golden_suite_generator/nanoBragg \
+  -default_F 100 \
+  -cell 100 100 100 90 90 90 \
+  -lambda 0.5 \
+  -distance 500 \
+  -detpixels 4096 \
+  -pixel 0.05 \
+  -N 5 \
+  -oversample 2 \
+  -floatfile /tmp/test_omega_4096.bin
+
+# Tap captured via instrumentation at nanoBragg.c:2976-2985
+# Output filtered with: grep "TRACE_C_OMEGA"
+# C binary SHA256: TBD
+# Git commit: TBD
