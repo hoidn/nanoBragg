@@ -48,6 +48,13 @@ This is the baseline test for a perfect cubic crystal with no mosaicity. It is u
 
 Note: `-detsize 102.4` and `-pixel 0.1` result in a 1024×1024 pixel image.
 
+**Provenance:**
+- Generated: 2025-10-10T08:51:24Z
+- Git SHA: 0b2fa6d74da8774a007a7bb248965150f5c2ac54
+- C Binary SHA256: 889165595bbca5b51278fac465f82062532d7c76e4d974eea914377cbafebf61
+- Dataset SHA256: ecec0d4ddeef51652de4326be03edb4d331c1e5d5f6510d553297ff53ffb5bd4 (simple_cubic.bin), 1d8cc1c8ad9859cd8a0443a94171555f4622b74af1ba566ea854aff07e2f516e (simple_cubic.img)
+- Command log: `reports/2026-01-golden-refresh/phase_b/20251010T085124Z/simple_cubic/command.log`
+
 ---
 
 ### 2. `simple_cubic_mosaic` Test Case
@@ -74,6 +81,13 @@ This test validates the implementation of mosaicity. It is used in `test_simple_
 ```
 
 Note: `-detsize 100` and `-pixel 0.1` result in a 1000x1000 pixel image, matching the test's expectation.
+
+**Provenance:**
+- Generated: 2025-10-10T08:51:24Z
+- Git SHA: 0b2fa6d74da8774a007a7bb248965150f5c2ac54
+- C Binary SHA256: 889165595bbca5b51278fac465f82062532d7c76e4d974eea914377cbafebf61
+- Dataset SHA256: e1ce259133d6990d1ea356fd58e94f5444b5a2584aeeb1c9aaa02639495c17c9 (simple_cubic_mosaic.bin), 0169b5f2ccb36409b1795bcf5d99ce3839c326520f76f47424d56bc0425e7c1d (simple_cubic_mosaic.img)
+- Command log: `reports/2026-01-golden-refresh/phase_b/20251010T085124Z/simple_cubic_mosaic/command.log`
 
 ---
 
@@ -108,6 +122,13 @@ This test validates the implementation of general triclinic unit cells. It uses 
 **⚠️ CRITICAL:** This case uses `-detpixels 512`, NOT `-detsize`. This creates a 512×512 detector with 0.1mm pixels, beam center at 25.6mm.
 
 Note: The misset angles were generated randomly and saved for reproducibility. To regenerate this data, use the script at `tests/golden_data/triclinic_P1/regenerate_golden.sh`.
+
+**Provenance:**
+- Generated: 2025-10-10T08:51:24Z
+- Git SHA: 0b2fa6d74da8774a007a7bb248965150f5c2ac54
+- C Binary SHA256: 889165595bbca5b51278fac465f82062532d7c76e4d974eea914377cbafebf61
+- Dataset SHA256: b95f9387f2b2f852358b4749797343981aeb1e9e1854dba8c9a457ab6d708663
+- Command log: `reports/2026-01-golden-refresh/phase_b/20251010T085124Z/triclinic_P1/command.log`
 
 ---
 
@@ -149,6 +170,13 @@ This test validates the implementation of general detector geometry with rotatio
 
 To regenerate this data, use the script at `tests/golden_data/cubic_tilted_detector/regenerate_golden.sh`.
 
+**Provenance:**
+- Generated: 2025-10-10T08:51:24Z
+- Git SHA: 0b2fa6d74da8774a007a7bb248965150f5c2ac54
+- C Binary SHA256: 889165595bbca5b51278fac465f82062532d7c76e4d974eea914377cbafebf61
+- Dataset SHA256: 2837abc0dec85d4d4e6a42cb7f2bc5f40bf45efbf741d75e8336ae708786317e
+- Command log: `reports/2026-01-golden-refresh/phase_b/20251010T085124Z/cubic_tilted_detector/command.log`
+
 ---
 
 ### 5. `high_resolution_4096` Test Case (AT-PARALLEL-012 High-Resolution Variant)
@@ -185,10 +213,12 @@ This test validates the high-resolution variant with a 4096×4096 detector, comp
 - Top N=50 peaks in ROI within ≤ 1.0 px
 
 **Provenance:**
-- Generated: 2025-10-10T03:42Z
-- Git SHA: dfa74570f16ba70dc2481690d931b049fca174f8
-- SHA256: 5c623241d3141334449e251fee41901de0edd895f85b9de1aa556cf48d374867
-- Command log: `reports/2026-01-vectorization-parity/phase_b/20251010T034152Z/c_golden/command.log`
+- Generated: 2025-10-10T08:51:24Z
+- Git SHA: 0b2fa6d74da8774a007a7bb248965150f5c2ac54
+- C Binary SHA256: 889165595bbca5b51278fac465f82062532d7c76e4d974eea914377cbafebf61 (`./golden_suite_generator/nanoBragg`)
+- Dataset SHA256: 2df24451e8cbb5f18e3184e1b8e131a67fae239dea0abe9a4270ba7bef887912
+- Command log: `reports/2026-01-golden-refresh/phase_b/20251010T085124Z/high_resolution_4096/command.log`
+- Physics change: Phase D5 lattice unit fix (1e-10 conversion Å→meters for Miller indices, commit bc36384c→0b2fa6d7)
 
 Note: This large test case is used for validating performance and numerical stability at high resolution. The ROI-based comparison keeps validation tractable while still exercising the full simulation.
 
