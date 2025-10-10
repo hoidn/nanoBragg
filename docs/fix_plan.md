@@ -3832,6 +3832,25 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
     Observations/Hypotheses:
       - Highest-priority todo loops: `utils/noise.py:171` (LCG RNG; large-n loop) and `simulator.py:1568` (phi-step loop; needs profiling to confirm hotness).
       - Phi loop currently marked Uncertain pending profiling; Phase B1 trace required to decide whether to escalate.
+  * [2025-10-10] Attempt #3 — Result: Phase B1 BLOCKED (ralph evidence loop). Profiler ran successfully but C↔PyTorch correlation **failed threshold** (0.721 << 0.999 required).
+    Metrics: correlation_warm=0.721175 (−38% from threshold), speedup_warm=1.19x (PyTorch faster). Test collection: 105 tests discovered, passed.
+    Artifacts:
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T015244Z/failed/benchmark_results.json` — Metrics showing parity failure
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T015244Z/failed/profile_4096x4096/trace.json` — PyTorch profiler trace (Chrome format, 185KB)
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T015244Z/profile_run.log` — Full benchmark stdout/stderr
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T015244Z/pytest_collect.log` — Test health verification
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T015244Z/failure_summary.md` — Root cause analysis and next actions
+    Observations/Hypotheses:
+      - **CRITICAL DIVERGENCE:** 0.72 correlation indicates major C↔Py mismatch in 4096² benchmark, not a minor numerical drift.
+      - Same correlation in COLD and WARM runs → deterministic issue, not cache/compilation artifact.
+      - Contradicts known-good 0.999998 correlation from 2025-10-09 interim re-audit (`reports/benchmarks/20251009-161714/`) for simple_cubic harness.
+      - Root cause candidates: (1) Regression in PyTorch implementation since last known-good run, (2) Configuration mismatch between `benchmark_detailed.py` C invocation and PyTorch setup, (3) Source weighting / sampling divergence unresolved despite SOURCE-WEIGHT-001 parity memo.
+      - Profiler trace.json exists and is well-formed but cannot be trusted for vectorization analysis until parity restored.
+    Next Actions:
+      1. **URGENT:** Investigate regression — compare benchmark_detailed.py parameters vs known-good 2025-10-09 run; check for undocumented C CLI / PyTorch config drift.
+      2. Run targeted parity tests (AT-PARALLEL suite) to isolate failure mode: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py -k "4096"` (if such test exists) or reproduce with minimal nb-compare harness.
+      3. If regression confirmed: bisect commit history or delegate to debugging subagent with full context (spec, arch, parity memo, both benchmark runs).
+      4. **HOLD Phase B2/B3** until correlation ≥0.999 restored and documented in fix_plan.
       - Safe loops predominantly file I/O or fixed small-N validation; vectorization offers no measurable benefit.
     Next Actions:
       1. Advance to Phase B1 to gather runtime evidence for the todo/uncertain loops.
