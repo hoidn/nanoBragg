@@ -3938,6 +3938,30 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       3. **AT-PARALLEL VALIDATION:** Run `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py` to identify which parity tests are now failing.
       4. **BLOCK Phase B2/B3:** Cannot proceed with vectorization gap analysis until correlation ≥0.999 restored.
       5. **ESCALATE TO SUPERVISOR:** This is a critical regression requiring immediate triage.
+  * [2025-10-10] Attempt #7 (ralph loop #275 — evidence-only). Result: ❌ FAILED (Phase B1 profiler rerun BLOCKED AGAIN by parity threshold).
+    Metrics: correlation_warm=0.721175 (−38% from ≥0.999 threshold), correlation_cold=0.721175, speedup_warm=1.18× (PyTorch faster), sum_ratio=not computed (temp files deleted by benchmark script), cache speedup=90176.9×. Command: `NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts`.
+    Artifacts:
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T021229Z/failed/benchmark_results.json` — Parity failure metrics
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T021229Z/profile_run.log` — Full benchmark output
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T021229Z/failed/profile_4096x4096/trace.json` — Profiler trace (unreliable until parity fixed)
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T021229Z/summary.md` — Failure analysis and root cause hypotheses
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T021229Z/collect.log` — Test collection verification (per blocked protocol)
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T021229Z/env.json` — Environment metadata (PyTorch 2.7.1+cu126, Python 3.13.5, git 12cbad7)
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T021229Z/commands.txt` — Reproduction commands
+    Observations/Hypotheses:
+      - **PERSISTENT BLOCKER:** Correlation STILL 0.721175, identical to Attempts #3, #4, #6 — no improvement despite multiple retries.
+      - This indicates that the parity regression has persisted across multiple sessions and commits (from 2025-12-25 through 2025-10-10).
+      - The issue is deterministic (cold and warm runs both 0.72) and not related to caching/compilation.
+      - Cache effectiveness remains excellent (90176.9× speedup), validating PERF-PYTORCH-004 caching work.
+      - Warm speedup 1.18× indicates PyTorch is faster than C, but the physics calculation is fundamentally incorrect.
+      - Per `input.md` blocked protocol: stashed artifacts to `failed/`, captured pytest --collect-only, documented failure in this entry.
+    Next Actions:
+      1. **CRITICAL ESCALATION:** This is now the SEVENTH consecutive profiler failure at the same correlation value (0.721175). The parity issue is severe and blocking all Phase B work.
+      2. **INVESTIGATE SOURCE-WEIGHT-001:** Review SOURCE-WEIGHT-001 Phase H closure criteria. Did it include ≥0.999 correlation evidence for 4096² benchmark? If not, SOURCE-WEIGHT-001 may need to be reopened.
+      3. **GIT BISECT:** Identify the commit that introduced the 0.999998 → 0.721175 regression between Attempt #5 (2025-12-25) and current HEAD (12cbad7).
+      4. **PARALLEL TRACE DEBUGGING:** Run `scripts/debug_pixel_trace.py` vs instrumented C to find first numeric divergence.
+      5. **AT-PARALLEL VALIDATION:** Run full parity matrix to identify which tests are failing.
+      6. **BLOCK Phase B2/B3:** Cannot proceed until correlation ≥0.999.
 - Risks/Assumptions: Treat any new profiler run with correlation_warm < 0.999 or |sum_ratio−1| > 5e-3 as a blocker; halt Phase B2/B3 until parity is re-established and escalate to galph. Ensure NB_C_BIN points at `./golden_suite_generator/nanoBragg` and reuse the SOURCE-WEIGHT-001 parity memo as justification in attempt notes.
 - Exit Criteria (quote thresholds from spec):
   * Phase A: Complete loop inventory with manual classification (✓ completed Attempt #2).
