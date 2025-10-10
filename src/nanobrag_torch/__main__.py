@@ -440,7 +440,6 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
         config['cell_params'] = args.cell
 
     # Load HKL data
-    config['hkl_data'] = None
     config['default_F'] = args.default_F
     if args.hkl:
         config['hkl_data'] = read_hkl_file(args.hkl, default_F=args.default_F)
@@ -1087,8 +1086,9 @@ def main():
         crystal = Crystal(crystal_config, beam_config=beam_config)
 
         # Set HKL data if available
-        if 'hkl_data' in config and config['hkl_data'] is not None:
-            hkl_array, hkl_metadata = config['hkl_data']
+        hkl_entry = config.get('hkl_data')
+        if hkl_entry is not None:
+            hkl_array, hkl_metadata = hkl_entry
             # Check if we actually got data (not just (None, None))
             if hkl_array is not None:
                 if isinstance(hkl_array, torch.Tensor):
