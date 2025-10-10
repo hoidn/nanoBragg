@@ -1,0 +1,1 @@
+2837abc0dec85d4d4e6a42cb7f2bc5f40bf45efbf741d75e8336ae708786317e  tests/golden_data/cubic_tilted_detector/image.bin

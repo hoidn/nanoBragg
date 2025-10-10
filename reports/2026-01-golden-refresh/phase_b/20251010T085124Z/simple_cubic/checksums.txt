@@ -1,0 +1,2 @@
+ecec0d4ddeef51652de4326be03edb4d331c1e5d5f6510d553297ff53ffb5bd4  tests/golden_data/simple_cubic.bin
+1d8cc1c8ad9859cd8a0443a94171555f4622b74af1ba566ea854aff07e2f516e  tests/golden_data/simple_cubic.img

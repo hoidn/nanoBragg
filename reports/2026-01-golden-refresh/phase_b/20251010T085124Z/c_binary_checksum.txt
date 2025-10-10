@@ -1,0 +1,1 @@
+889165595bbca5b51278fac465f82062532d7c76e4d974eea914377cbafebf61  ./golden_suite_generator/nanoBragg

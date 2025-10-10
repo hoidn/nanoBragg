@@ -1,0 +1,1 @@
+2df24451e8cbb5f18e3184e1b8e131a67fae239dea0abe9a4270ba7bef887912  tests/golden_data/high_resolution_4096/image.bin

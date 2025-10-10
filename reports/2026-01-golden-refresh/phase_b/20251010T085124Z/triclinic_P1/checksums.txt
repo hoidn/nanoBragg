@@ -1,0 +1,1 @@
+b95f9387f2b2f852358b4749797343981aeb1e9e1854dba8c9a457ab6d708663  tests/golden_data/triclinic_P1/image.bin

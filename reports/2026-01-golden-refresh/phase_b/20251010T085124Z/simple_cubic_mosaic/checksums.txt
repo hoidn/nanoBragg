@@ -1,0 +1,2 @@
+e1ce259133d6990d1ea356fd58e94f5444b5a2584aeeb1c9aaa02639495c17c9  tests/golden_data/simple_cubic_mosaic.bin
+0169b5f2ccb36409b1795bcf5d99ce3839c326520f76f47424d56bc0425e7c1d  tests/golden_data/simple_cubic_mosaic.img
