@@ -1,0 +1,51 @@
+{
+  "timestamp_utc": "20251010T055346Z",
+  "git_sha": "978e7aaf134708df39ac602eee22da46873800bc",
+  "git_branch": "feature/spec-based-2",
+  "python_version": "3.13.5",
+  "pytorch_device": "cpu",
+  "pytorch_dtype": "float64",
+  "environment": {
+    "KMP_DUPLICATE_LIB_OK": "TRUE"
+  },
+  "configuration": {
+    "detpixels": 4096,
+    "pixel_mm": 0.05,
+    "distance_mm": 500.0,
+    "wavelength_A": 0.5,
+    "cell": "100 100 100 90 90 90",
+    "N_cells": "5 5 5",
+    "default_F": 100.0,
+    "convention": "MOSFLM",
+    "phi_steps": 1,
+    "mosaic_domains": 1,
+    "mosaic_spread_deg": 0.0
+  },
+  "pixels_traced": [
+    {
+      "slow": 2048,
+      "fast": 2048,
+      "tag": "ROI_center",
+      "log_file": "pixel_2048_2048.log"
+    },
+    {
+      "slow": 1792,
+      "fast": 2048,
+      "tag": "ROI_boundary",
+      "log_file": "pixel_1792_2048.log"
+    },
+    {
+      "slow": 4095,
+      "fast": 2048,
+      "tag": "far_edge",
+      "log_file": "pixel_4095_2048.log"
+    }
+  ],
+  "notes": [
+    "Phase C2: PyTorch trace capture for VECTOR-PARITY-001",
+    "Traces generated using scripts/debug_pixel_trace.py",
+    "Configuration matches 4096² parity case from Phase C1",
+    "Final intensities are NON-ZERO because default_F=100 is used (C traces used F_cell=0)",
+    "ROI bounds: slow 1792-2303, fast 1792-2303"
+  ]
+}

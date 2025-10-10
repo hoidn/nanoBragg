@@ -1,0 +1,13 @@
+# PyTorch Trace Generation Commands
+# Phase C2: VECTOR-PARITY-001 PyTorch trace capture
+# Date: 2025-10-09
+# Environment: KMP_DUPLICATE_LIB_OK=TRUE, dtype=float64, device=cpu
+
+# Pixel (2048, 2048) - ROI center
+python scripts/debug_pixel_trace.py --pixel 2048 2048 --tag ROI_center --out-dir "reports/2026-01-vectorization-parity/phase_c/20251010T055346Z/py_traces"
+
+# Pixel (1792, 2048) - ROI boundary
+python scripts/debug_pixel_trace.py --pixel 1792 2048 --tag ROI_boundary --out-dir "reports/2026-01-vectorization-parity/phase_c/20251010T055346Z/py_traces"
+
+# Pixel (4095, 2048) - Far edge
+python scripts/debug_pixel_trace.py --pixel 4095 2048 --tag far_edge --out-dir "reports/2026-01-vectorization-parity/phase_c/20251010T055346Z/py_traces"
