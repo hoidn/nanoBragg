@@ -9,9 +9,11 @@
 - `plans/active/determinism.md` — determinism plan currently blocked until dtype issues resolved; keep dependency noted in fix_plan.
   - `reports/2026-01-test-suite-triage/phase_d/20251010T171010Z/determinism/phase_a/summary.md` — Attempt #1 evidence showing RuntimeError from float32 vs float64 `torch.allclose` in `Detector.get_pixel_coords`.
 
-### Status Snapshot (2026-01-10)
+### Status Snapshot (2026-01-16)
 - Phase A ✅ complete — Attempt #1 (`reports/2026-01-test-suite-triage/phase_d/20251010T172810Z/dtype-neutral/phase_a/`) captured collect-only env snapshot, determinism failure logs, and minimal reproducer narrowing scope to `Detector.to()` cache handling.
 - Phase B ✅ complete — Attempt #2 (`reports/2026-01-test-suite-triage/phase_d/20251010T173558Z/dtype-neutral/phase_b/`) produced static audit artifacts (`analysis.md`, `tap_points.md`, `summary.md`) and isolated missing `dtype=self.dtype` coercion in cache `.to()` calls.
+- Phase D ✅ complete — Attempt #3 (`reports/2026-01-test-suite-triage/phase_d/20251010T120337Z/dtype-neutral/phase_d/`) applied the 4-line cache fix, ran AT-013/024 + detector geometry selectors, and eliminated the `detector.py:767` dtype crash.
+- Phase E ⏳ pending — Validation report + documentation updates still outstanding; delegate once Phase D artifacts reviewed (guardrails captured in `phase_c/docs_updates.md`).
 
 ### Phase A — Failure Reproduction & Evidence Capture
 Goal: Reproduce dtype mismatch failures with authoritative pytest selectors and capture precise stack traces plus environment metadata for regression tracking.
@@ -58,10 +60,10 @@ Exit Criteria: Checklist with discrete implementation steps + review hooks; read
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| D1 | Update detector cache handling | [ ] | Code change: ensure cached tensors are materialized with `self.dtype` when stored/retrieved; adjust `torch.allclose` guard to operate on dtype-consistent tensors. |
-| D2 | Add regression test | [ ] | Introduce targeted pytest covering dtype swap (e.g., create Detector float32, call `get_pixel_coords`, then switch to float64 and ensure recomputation without crash). |
-| D3 | Run determinism selectors | [ ] | `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py --maxfail=0 --durations=10`. Confirm dtype mismatch resolved (tests may still fail for seed reasons; capture new failure mode). |
-| D4 | GPU smoke (if available) | [ ] | Execute `pytest -v -m gpu_smoke` or equivalent to ensure dtype conversions respect CUDA tensors. |
+| D1 | Update detector cache handling | [D] | Attempt #3 (20251010T120337Z) — applied 4-line fix adding `dtype=self.dtype` to cache `.to()` calls (`detector.py:762-777`). |
+| D2 | Add regression test | [ ] | Targeted unit still pending (see `phase_c/tests.md` §Unit Coverage); schedule alongside Phase E doc updates if additional guardrail required. |
+| D3 | Run determinism selectors | [D] | Attempt #3 — `reports/2026-01-test-suite-triage/phase_d/20251010T120337Z/dtype-neutral/phase_d/primary/pytest.log` captures AT-PARALLEL-013/024 without dtype crashes (residual TorchDynamo errors noted). |
+| D4 | GPU smoke (if available) | [ ] | CUDA availability logged, but no `gpu_smoke` selector executed in Attempt #3; keep pending until we confirm requirement (see `phase_c/tests.md` tertiary checklist). |
 
 ### Phase E — Validation & Documentation Closeout
 Goal: Confirm dtype neutrality fix is stable and update documentation.

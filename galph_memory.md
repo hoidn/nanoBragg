@@ -2171,3 +2171,17 @@
 - Refreshed `[DTYPE-NEUTRAL-001]` Next Actions to list Phase D1–D4 implementation + validation steps and the dependency release workflow for `[DETERMINISM-001]`.
 - Issued new `input.md` directing Ralph to apply the 4-line cache dtype fix and run the authoritative AT-013/024 + detector geometry suite with artifacts under phase_d/.
 - <Action State>: [ready_for_implementation]
+
+### 2026-01-16 (galph loop - pre-edit note)
+- Focus issue: [DTYPE-NEUTRAL-001] ledger/plan alignment
+- Action type: Review or housekeeping
+- Mode: Docs
+
+### 2026-01-16 (galph loop - dtype Phase E alignment & determinism rerun setup)
+- Updated `docs/fix_plan.md` Active Focus + `[DTYPE-NEUTRAL-001]` entry to reflect Phase D completion and Phase E pending tasks; refreshed `[DETERMINISM-001]` Next Actions to demand a fresh Phase A rerun (lines 1-8, 90-104).
+- Marked Phase D checklist entries in `plans/active/dtype-neutral.md` as executed and captured a new status snapshot highlighting the outstanding Phase E validation bundle (lines 12-33, 64-79).
+- Added status snapshot to `plans/active/determinism.md` noting the dtype dependency is cleared and Phase A artifacts need refreshing (lines 14-28).
+- Reissued `input.md` (Mode: Parity) directing Ralph to rerun AT-013/024 plus collect-only under a new phase_a stamp, logging results per fix_plan guidance.
+- Follow-up for Ralph: execute the deterministic test reruns, archive logs + summary, and update fix_plan Attempt #2 before we author Phase B callchain tasks.
+- <Action State>: [ready_for_implementation]
+

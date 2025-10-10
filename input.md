@@ -1,34 +1,32 @@
-Summary: Apply the detector cache dtype fix and prove AT-013/024 progress without dtype crashes.
+Summary: Capture fresh determinism Phase A evidence now that dtype crashes are gone.
 Mode: Parity
-Focus: [DTYPE-NEUTRAL-001] dtype neutrality guardrail
+Focus: [DETERMINISM-001] PyTorch RNG determinism
 Branch: feature/spec-based-2
-Mapped tests: tests/test_at_parallel_013.py; tests/test_at_parallel_024.py; tests/test_detector_geometry.py
-Artifacts: reports/2026-01-test-suite-triage/phase_d/<STAMP>/dtype-neutral/phase_d/
-Do Now: [DTYPE-NEUTRAL-001] Phase D1–D4 — implement the 4-line `Detector` cache dtype fix, then run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py --maxfail=0 --durations=10 --tb=short`
-If Blocked: If the fix location is unclear, rerun the baseline failure (`pytest -v tests/test_at_parallel_013.py --maxfail=1 --tb=short`) and save the log to phase_d/baseline/ for inspection before editing.
+Mapped tests: tests/test_at_parallel_013.py; tests/test_at_parallel_024.py
+Artifacts: reports/2026-01-test-suite-triage/phase_d/<STAMP>/determinism/phase_a/
+Do Now: [DETERMINISM-001] Phase A1–A3 — run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q` then `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py --maxfail=0 --durations=10 --tb=short`, archiving logs under phase_a/.
+If Blocked: If TorchDynamo aborts before the tests finish, rerun each file with `--maxfail=1 --tb=long`, save the output to phase_a/debug/, and stop for supervisor review.
 Priorities & Rationale:
-- plans/active/dtype-neutral.md:40 — Phase D1–D4 require the dtype-coerced cache before determinism work can resume.
-- docs/fix_plan.md:520 — Active Next Actions elevate this fix as the gate to unblock `[DETERMINISM-001]`.
-- reports/2026-01-test-suite-triage/phase_d/20251010T173558Z/dtype-neutral/phase_b/summary.md — Confirms the 4-line `.to(..., dtype=self.dtype)` change scope.
-- reports/2026-01-test-suite-triage/phase_d/20251010T174636Z/dtype-neutral/phase_c/tests.md — Authoritative validation commands and artifact policy.
-- docs/development/testing_strategy.md#14-pytorch-device--dtype-discipline — Guardrail demanding CPU/GPU dtype neutrality.
+- docs/fix_plan.md:90-104 — Next Actions demand a fresh AT-013/024 rerun now that dtype crashes are resolved.
+- plans/active/determinism.md:14-28 — Phase A tasks reopened post dtype fix; artifacts must live under phase_a/<STAMP>/.
+- plans/active/dtype-neutral.md:12-16 — Phase D closed the cache bug, so determinism work is officially unblocked.
+- docs/development/testing_strategy.md:19-34 — Authoritative commands and env guardrails for PyTorch parity runs.
 How-To Map:
-- Edit `src/nanobrag_torch/models/detector.py` so every cache `.to(self.device)` call (lines ~762-777) specifies `dtype=self.dtype`; invalidate caches if dtype changes.
-- After edits, run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py --maxfail=0 --durations=10 --tb=short | tee phase_d_primary_validation.log` and archive under `primary/`.
-- Run regression guard: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_geometry.py --durations=10 --tb=short | tee phase_d_regression_check.log` (store under `secondary/`).
-- If CUDA available, run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v -m gpu_smoke --tb=short | tee phase_d_gpu_smoke.log` (store under `tertiary/`).
-- Summarize results in `reports/.../<STAMP>/dtype-neutral/phase_d/summary.md`, then prepare doc updates listed in `docs_updates.md` for the follow-up phase.
+- Stamp a new directory: `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)` and mkdir -p `reports/2026-01-test-suite-triage/phase_d/${STAMP}/determinism/phase_a/{collect_only,at_parallel_013,at_parallel_024}`.
+- `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q | tee reports/2026-01-test-suite-triage/phase_d/${STAMP}/determinism/phase_a/collect_only/pytest.log`.
+- `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py --maxfail=0 --durations=10 --tb=short | tee reports/2026-01-test-suite-triage/phase_d/${STAMP}/determinism/phase_a/at_parallel_013/pytest.log`.
+- `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_024.py --maxfail=0 --durations=10 --tb=short | tee reports/2026-01-test-suite-triage/phase_d/${STAMP}/determinism/phase_a/at_parallel_024/pytest.log`.
+- Summarise key failures and device notes in `reports/2026-01-test-suite-triage/phase_d/${STAMP}/determinism/phase_a/summary.md`, include `commands.txt`, and update attempts history per fix_plan instructions.
 Pitfalls To Avoid:
-- Do not leave tensors created with default dtype on CPU while mixing with GPU inputs; keep device-neutral allocations.
-- Avoid introducing `.item()` or `.detach()` anywhere in the detector cache code path.
-- Preserve cache invalidation semantics; ensure geometry version increments when dtype/device shifts.
-- Respect Protected Assets — no edits to files listed in docs/index.md (e.g., loop.sh, input.md).
-- Keep artifacts under the specified reports directory; no stray logs in repo root.
-- Run only the mapped tests before implementation is complete; defer full suite until cleanup.
+- No production code edits this loop; evidence capture only.
+- Keep `KMP_DUPLICATE_LIB_OK=TRUE` on every pytest invocation.
+- Do not flip env vars like `NB_RUN_PARALLEL`; we’re reproducing current defaults.
+- Store logs only under the stamped phase_a/ folders; avoid ad-hoc paths.
+- Capture TorchDynamo stack traces verbatim—don’t trim unless instructed.
+- Note GPU availability but don’t run additional suites beyond the mapped tests.
 Pointers:
-- plans/active/dtype-neutral.md:40
-- docs/fix_plan.md:520
-- reports/2026-01-test-suite-triage/phase_d/20251010T173558Z/dtype-neutral/phase_b/summary.md
-- reports/2026-01-test-suite-triage/phase_d/20251010T174636Z/dtype-neutral/phase_c/tests.md
-- src/nanobrag_torch/models/detector.py:762
-Next Up: Phase G addendum for `[TEST-SUITE-TRIAGE-001]` once dtype fix artifacts land.
+- docs/fix_plan.md:90-104
+- plans/active/determinism.md:14-28
+- plans/active/dtype-neutral.md:12-33
+- docs/development/testing_strategy.md:19-34
+Next Up: Phase E validation bundle for `[DTYPE-NEUTRAL-001]` or Phase B callchain tracing once determinism logs are archived.

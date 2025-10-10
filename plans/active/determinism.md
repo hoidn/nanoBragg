@@ -11,6 +11,10 @@
   - `src/nanobrag_torch/models/crystal.py`, `src/nanobrag_torch/utils/c_random.py`, and `src/nanobrag_torch/simulator.py` — seed handling surfaces.
 - Artifact Policy: All new work lands under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/determinism/` with subfolders per phase (`phase_a`, `phase_b`, …). Each attempt captures `commands.txt`, `env.json`, raw logs, and `summary.md`; diffs/traces live under `trace/` or `callchain/` as appropriate.
 
+### Status Snapshot (2026-01-16)
+- Dependency cleared — `[DTYPE-NEUTRAL-001]` Attempt #3 removed the detector dtype crash, so Phase A reproduction can resume.
+- Next step: capture fresh AT-PARALLEL-013/024 logs (expect TorchDynamo CUDA device failures) and update fix_plan Attempt history before launching Phase B callchain tracing.
+
 ### Phase A — Reproduce & Baseline Seed Drift
 Goal: Capture authoritative reproductions of the determinism failures, plus working controls, so later fixes have comparable baselines.
 Prereqs: Editable install (`pip install -e .`), clean workspace, GPU optional but document availability.
