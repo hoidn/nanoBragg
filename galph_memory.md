@@ -1910,3 +1910,11 @@
 - Marked Phase A tasks [D] in `plans/active/test-golden-refresh.md` and added status snapshot pointing to Attempt #18 scope audit.
 - Replaced `input.md` with Mode Parity instructions directing Ralph to regenerate all five golden datasets, capture command logs/checksums under `reports/2026-01-golden-refresh/phase_b/$STAMP/`, and prepare README provenance updates.
 - Follow-up: Expect Attempt bundle documenting Phase B regeneration outputs plus updated golden binaries/README; once landed, queue Phase C parity reruns to unblock VECTOR-PARITY Phase E.
+
+### 2026-01-07 (galph loop - Phase C parity prep handoff)
+- Confirmed Attempt #19 landed commit `ebc140f2` with regenerated golden data + README provenance.
+- Updated `plans/active/test-golden-refresh.md` (Status Snapshot + Phase B table) to mark regeneration complete and highlight Phase C parity validation as the active gate.
+- Refreshed `docs/fix_plan.md` Active Focus/Next Actions to call for ROI nb-compare + targeted pytest using the refreshed assets; noted Phase B completion.
+- Adjusted `plans/active/vectorization-parity-regression.md` status snapshot to reflect that `TEST-GOLDEN-001` now blocks only on Phase C validation.
+- Authored new `input.md` (Mode: Parity) instructing Ralph to capture ROI nb-compare metrics under `reports/2026-01-golden-refresh/phase_c/$STAMP/` and run the AT-PARALLEL-012 high-resolution pytest with NB_RUN_PARALLEL=1.
+- Follow-up: Expect Attempt with `phase_c_summary.md`, ROI summary assets, and `pytest_highres.log`; review results before scheduling broader selector sweeps.

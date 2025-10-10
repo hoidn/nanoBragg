@@ -9,7 +9,7 @@
   - `docs/development/pytorch_runtime_checklist.md` — runtime guardrail reminders (especially item #4 on source weighting).
   - `docs/fix_plan.md` `[VECTOR-GAPS-002]` Attempts #3–#8 and `[PERF-PYTORCH-004]` baseline expectations.
   - Existing artifacts: good run `reports/benchmarks/20251009-161714/`; failing bundles under `reports/2026-01-vectorization-gap/phase_b/20251009T09*` and `20251010T02*`.
-- Status Snapshot (2026-01-07 → refreshed 2026-01-07 PM): Phase C traces complete; Phase D1–D5 are closed. Attempt #15 converted the rotated lattice vectors to meters (1e-10 factor) and recovered ROI parity (corr≈0.9999999985, |sum_ratio−1|≈1.3e-5). Attempt #16 retired NB_TRACE_SIM_F_LATT instrumentation with ROI parity intact (corr≈0.999999999, |sum_ratio−1|≈1.3e-5). Attempt #17 highlighted stale high-res golden data; Phase E remains blocked pending `[TEST-GOLDEN-001]` regeneration before ledger handback / downstream relaunch.
+- Status Snapshot (2026-01-07 → refreshed 2026-01-07 PM): Phase C traces complete; Phase D1–D5 are closed. Attempt #15 converted the rotated lattice vectors to meters (1e-10 factor) and recovered ROI parity (corr≈0.9999999985, |sum_ratio−1|≈1.3e-5). Attempt #16 retired NB_TRACE_SIM_F_LATT instrumentation with ROI parity intact (corr≈0.999999999, |sum_ratio−1|≈1.3e-5). Attempt #19 (TEST-GOLDEN-001 Phase B) regenerated all golden datasets + README provenance; Phase E now waits on Phase C parity validation with the refreshed assets before ledger handback / downstream relaunch.
 
 ### Phase A — Evidence Audit & Baseline Ledger
 Goal: Canonicalise the good vs bad benchmark evidence and capture parameter parity so future loops operate from a single source of truth.

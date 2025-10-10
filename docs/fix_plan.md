@@ -2,7 +2,7 @@
 
 **Last Updated:** 2026-01-07 (galph loop — TEST-GOLDEN-001 launch)
 **Active Focus:**
-- Unblock VECTOR-PARITY Phase E by driving `[TEST-GOLDEN-001]` Phase B regeneration of stale golden datasets (target Attempt #19 bundle).
+- Unblock VECTOR-PARITY Phase E by completing `[TEST-GOLDEN-001]` Phase C parity validation on the refreshed golden datasets (Attempt #19 assets).
 - Prepare pyrefly + test-index documentation so future delegations have authoritative selectors.
 
 ## Index
@@ -198,8 +198,8 @@
 - Next Actions:
   1. ✅ Execute `[TEST-GOLDEN-001]` Phase B regeneration for all five datasets — COMPLETE (Attempt #19, 2025-10-10T08:51:24Z).
   2. ✅ Update `tests/golden_data/README.md` provenance entries — COMPLETE (all 5 datasets documented with SHA256, git SHA, C binary checksum).
-  3. ▶ Stage regenerated artifacts and commit with provenance: `git add tests/golden_data/ && git commit -m "[TEST-GOLDEN-001] Phase B: Regenerate all 5 golden datasets post Phase D5 lattice fix"`.
-  4. 🔁 Execute Phase C parity validation: ROI nb-compare + targeted pytest selector to verify corr≥0.95, |sum_ratio−1|≤5×10⁻³.
+  3. ✅ Stage regenerated artifacts and commit with provenance — COMPLETE (commit `ebc140f2`).
+  4. 🔁 Execute Phase C parity validation: ROI nb-compare + targeted pytest selector to verify corr≥0.95, |sum_ratio−1|≤5×10⁻³ (see `plans/active/test-golden-refresh.md` Phase C tasks).
   5. 📊 Update ledger with Phase C metrics and close Phase B tasks in `plans/active/test-golden-refresh.md`.
 - Risks/Assumptions:
   - Regeneration must respect Protected Assets (do not delete files referenced in `docs/index.md`).

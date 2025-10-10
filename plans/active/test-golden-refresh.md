@@ -10,7 +10,9 @@
   - `reports/2026-01-vectorization-parity/phase_e/20251010T082240Z/phase_e_summary.md` — evidence of the current failure state (corr≈0.7157 on stale golden data).
 
 ### Status Snapshot (2026-01-07)
-- Phase A staleness audit completed via Attempt #18 (`reports/2026-01-golden-refresh/phase_a/20251010T084007Z/`); Phase B regeneration is the next blocking milestone.
+- Phase A staleness audit completed via Attempt #18 (`reports/2026-01-golden-refresh/phase_a/20251010T084007Z/`).
+- Phase B regeneration + README provenance refresh finished in Attempt #19 (`reports/2026-01-golden-refresh/phase_b/20251010T085124Z/`).
+- Phase C parity validation (ROI nb-compare + targeted pytest sweep) now blocks `[VECTOR-PARITY-001]` Phase E handoff.
 
 ### Phase A — Scope Confirmation & Staleness Audit
 Goal: Enumerate which golden artifacts are invalidated, capture before/after metrics, and confirm the physics deltas introduced by Phase D5.
@@ -30,9 +32,9 @@ Exit Criteria: Fresh binaries under `tests/golden_data/` (git-tracked), with pro
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Execute canonical C commands | [ ] | From repo root: `pushd golden_suite_generator && KMP_DUPLICATE_LIB_OK=TRUE "$NB_C_BIN" ... && popd`. For each dataset, reuse command in README; store stdout/stderr and SHA256 in `phase_b/<STAMP>/<name>/`. |
-| B2 | Update README provenance | [ ] | Amend `tests/golden_data/README.md` with refreshed timestamps, SHA256, git SHA, and confirm detector/beam parameters. Preserve canonical command blocks verbatim. |
-| B3 | Commit regenerated artifacts | [ ] | Stage updated binaries/images after verifying sizes/checksums. Note in `phase_b_summary.md` which files changed and include hash table. |
+| B1 | Execute canonical C commands | [D] | ✅ Attempt #19 (2025-10-10T08:51:24Z) captured all five command logs + checksums under `reports/2026-01-golden-refresh/phase_b/20251010T085124Z/<dataset>/`. |
+| B2 | Update README provenance | [D] | ✅ Same attempt refreshed every provenance block in `tests/golden_data/README.md`; see git commit `ebc140f2`. |
+| B3 | Commit regenerated artifacts | [D] | ✅ Commit `ebc140f2` (`[TEST-GOLDEN-001] Phase B: Regenerate all 5 golden datasets post Phase D5 lattice fix`) staged binaries + README updates. |
 
 ### Phase C — PyTorch Parity Validation & Test Repair
 Goal: Prove regenerated golden data yields passing parity metrics and unblock Phase E pytest selector.
