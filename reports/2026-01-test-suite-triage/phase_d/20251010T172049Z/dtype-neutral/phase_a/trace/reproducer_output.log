@@ -1,0 +1,35 @@
+================================================================================
+Minimal Reproducer: Detector Dtype Cache Mismatch
+================================================================================
+
+Step 1: Create Detector with default dtype (float32)
+  detector.dtype = torch.float32
+  detector.fdet_vec.dtype = torch.float32
+
+Step 2: Call get_pixel_coords() to populate cache (float32)
+  coords.dtype = torch.float32
+  Cache populated with float32 basis vectors
+
+Step 3: Create new Detector instance with float64 dtype
+  detector.dtype = torch.float64
+  detector.fdet_vec.dtype = torch.float64
+
+Step 4: Attempt to call get_pixel_coords() (this will fail)
+  SUCCESS: coords.dtype = torch.float64
+
+================================================================================
+
+================================================================================
+Simulator Integration: Dtype Mismatch During Initialization
+================================================================================
+
+Creating Crystal and Detector with float64 dtype...
+  crystal.dtype = torch.float64
+  detector.dtype = torch.float64
+
+Attempting to create Simulator (triggers detector.get_pixel_coords())...
+  FAILURE: RuntimeError: Float did not match Double
+
+Stack trace location: simulator.py:569 -> detector.get_pixel_coords()
+
+================================================================================

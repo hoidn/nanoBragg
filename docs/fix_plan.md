@@ -537,18 +537,20 @@
 - Status: in_progress
 - Owner/Date: ralph/2025-10-10
 - Plan Reference: `plans/active/dtype-neutral.md`
-- Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py::TestAT_PARALLEL_013_Determinism::test_pytorch_determinism_same_seed tests/test_at_parallel_024.py::TestAT_PARALLEL_024_MissetDeterminism::test_pytorch_determinism`
+- Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_same_seed tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_pytorch_determinism`
 - Source: Cluster C15 from `[TEST-SUITE-TRIAGE-001]` Attempt #6 triage summary (`reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/triage_summary.md` §C15)
-- First Divergence (if known): dtype neutrality regression (float32 cache vs float64 tensors) triggers `torch.allclose` RuntimeError in `Detector.get_pixel_coords` (line ~767).
+- First Divergence (if known): `src/nanobrag_torch/models/detector.py:767` — `torch.allclose()` compares float32 cached basis vectors against float64 current vectors without dtype coercion, raising `RuntimeError: Float did not match Double`.
 - Attempts History:
   * [2026-01-16] Attempt #0 — Result: 📝 planning. Authored dtype-neutral remediation playbook (`plans/active/dtype-neutral.md`) capturing Phase A–E workflow and artifact policy under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/dtype-neutral/`.
+  * [2025-10-10T172049Z] Attempt #1 — Result: ✅ Phase A complete (evidence only). **Artifacts:** `reports/2026-01-test-suite-triage/phase_d/20251010T172049Z/dtype-neutral/phase_a/`. **Metrics:** Both AT-PARALLEL-013 and AT-PARALLEL-024 fail with identical RuntimeError at detector.py:767. Minimal reproducer confirms cached tensors retain float32 dtype while current tensors are float64. **Root Cause:** Lines 762-764 in `Detector.get_pixel_coords()` move cached vectors to current device via `.to(self.device)` but omit dtype parameter, leaving cached_f/s/o as float32 when comparing against float64 basis vectors. **Observations:** Environment snapshot shows PyTorch 2.7.1+cu126, Python 3.13.5, default dtype float32. Test collection passed (588 tests). **Next:** Phase B static audit to identify all dtype-coupled cache comparisons and survey Crystal/Simulator for similar issues. No code changes made in this evidence-only loop.
 - Next Actions:
-  1. Execute Phase A tasks (A1–A5) per plan to recapture dtype mismatch evidence and stack traces under the new artifact root.
-  2. Complete Phase B audit (B1–B5) to inventory cache/device touchpoints and log findings in fix_plan attempts.
-  3. After Phase B, draft Phase C artifacts (remediation_plan.md, tests.md, docs_updates.md) and prep supervisor input for Phase D implementation.
+  1. Execute Phase B static audit (B1–B5) to map all `torch.allclose()` calls lacking dtype coercion and inventory tensor factory touchpoints.
+  2. Draft Phase C remediation blueprint (remediation_plan.md, tests.md, docs_updates.md) specifying exact code changes and regression coverage.
+  3. After Phase B/C approval, delegate Phase D implementation to engineer (update cache `.to()` calls, add dtype switch test, run determinism selectors).
 - Risks/Assumptions:
   - Determinism remediation remains blocked until detector caches honour requested dtype; prioritise CPU path even if CUDA unavailable.
   - Validate reproducibility on both CPU and GPU once fixes land to protect `gpu_smoke` coverage.
+  - Cache invalidation logic may require dtype awareness to trigger recomputation when dtype switches (confirm in Phase B).
 - Exit Criteria:
   - Detector cache transitions respect requested dtype/device without raising RuntimeError.
   - Determinism selectors reach seed logic (dtype mismatch eliminated) so remaining failures, if any, focus on RNG behaviour.

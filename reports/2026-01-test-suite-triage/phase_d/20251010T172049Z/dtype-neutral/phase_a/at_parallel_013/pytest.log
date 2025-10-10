@@ -1,0 +1,53 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 1 item
+
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_same_seed FAILED [100%]
+
+=================================== FAILURES ===================================
+_ TestATParallel013CrossPlatformConsistency.test_pytorch_determinism_same_seed _
+
+self = <tests.test_at_parallel_013.TestATParallel013CrossPlatformConsistency object at 0x7f5beb089d10>
+
+    def test_pytorch_determinism_same_seed(self):
+        """Test that PyTorch produces identical results with same seed."""
+        # Run simulation twice with same seed
+>       result1 = run_simulation_deterministic(seed=42)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_at_parallel_013.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_at_parallel_013.py:131: in run_simulation_deterministic
+    simulator = Simulator(crystal, detector, crystal_config, beam_config)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/nanobrag_torch/simulator.py:569: in __init__
+    self._cached_pixel_coords_meters = self.detector.get_pixel_coords().to(device=self.device, dtype=self.dtype)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/nanobrag_torch/models/detector.py:767: in get_pixel_coords
+    torch.allclose(self.fdet_vec, cached_f, atol=1e-15)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <torch.utils._device.DeviceContext object at 0x7f5d7c0e0980>
+func = <built-in method allclose of type object at 0x7f5d21980fc0>, types = ()
+args = (tensor([0., 0., 1.], dtype=torch.float32), tensor([0., 0., 1.]))
+kwargs = {'atol': 1e-15}
+
+    def __torch_function__(self, func, types, args=(), kwargs=None):
+        kwargs = kwargs or {}
+        if func in _device_constructors() and kwargs.get('device') is None:
+            kwargs['device'] = self.device
+>       return func(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^
+E       RuntimeError: Float did not match Double
+
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_device.py:104: RuntimeError
+============================= slowest 10 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ============================
+FAILED tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_same_seed
+============================== 1 failed in 2.35s ===============================
