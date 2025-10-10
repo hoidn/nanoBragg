@@ -2037,3 +2037,10 @@
 - Updated `plans/active/test-suite-triage.md` Phase C rows (C1 → [D], C2 → [P]) and `docs/fix_plan.md` Attempt #3 + refreshed Next Actions to require cluster→fix-plan mapping.
 - Authored input.md (Docs mode) directing Ralph to complete Phase C3/C4 mapping via placeholder fix-plan entries and pending-actions table.
 - Next supervisor check: ensure Ralph records cluster ownership + placeholder IDs, then decide on Phase B rerun strategy.
+
+### 2026-01-12 (galph loop - Test suite Phase B rerun prep)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase B rerun (Action: Review/housekeeping, Mode: Docs).
+- Updated plans/active/test-suite-triage.md B2 guidance to mandate the 60-minute budget and refreshed docs/fix_plan.md Last Updated + Next Actions with the explicit `timeout 3600` command.
+- Rewrote input.md directing Ralph to run the extended Phase B suite, capture a fresh `phase_b/<STAMP>/` bundle, and log Attempt #5 metrics.
+- Expect Ralph to execute the rerun, archive junit/log outputs, and update fix_plan Attempts before we draft the Phase D handoff.
+- <Action State>: [ready_for_implementation]

@@ -1,6 +1,6 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2026-01-12 (galph loop — Test suite triage planning kickoff)
+**Last Updated:** 2026-01-12 (galph loop — Test suite Phase B rerun prep)
 **Active Focus:**
 - CRITICAL: Execute `[TEST-SUITE-TRIAGE-001]` full-suite pytest run and failure triage per `plans/active/test-suite-triage.md`; suspend all other engineering work until Phase A–C artefacts are captured.
 - Tap 5.3 oversample instrumentation for `[VECTOR-PARITY-001]` remains staged but is on hold pending completion of `[TEST-SUITE-TRIAGE-001]` deliverables.
@@ -40,7 +40,7 @@
   * [2025-10-10] Attempt #3 — Result: 📊 analysis (Phase C1). Classified all 34 observed failures as implementation bugs using `reports/2026-01-test-suite-triage/phase_c/20251010T134156Z/triage_summary.md`; no new commands executed (analysis derived from Phase B artifacts). Flagged remaining ~172 tests as coverage gap pending extended Phase B rerun. Next: align clusters C1–C14 with fix-plan entries and assign owners/next steps.
   * [2025-10-10] Attempt #4 — Result: ✅ success (Phase C3/C4 cluster mapping). Updated `triage_summary.md` with "Pending Actions" table mapping all 14 clusters to fix-plan entries: C3/C6/C8/C13/C14 → `[VECTOR-PARITY-001]` (in_progress); C10 → `[CLI-FLAGS-003]` (in_progress); C1/C2/C4/C5/C7/C9/C11/C12 → 7 new placeholder IDs (`[CLI-DEFAULTS-001]`, `[DETERMINISM-001]`, `[DETECTOR-GRAZING-001]`, `[SOURCE-WEIGHT-002]`, `[TOOLING-DUAL-RUNNER-001]`, `[DEBUG-TRACE-001]`, `[DETECTOR-CONFIG-001]`) with status=in_planning, owner=ralph. Docs-only loop (no pytest per input.md line 16). Added new fix-plan entries below (index updated). Refreshed `plans/active/test-suite-triage.md` Phase C table (C3/C4 marked [D]). Artifacts: `reports/2026-01-test-suite-triage/phase_c/20251010T134156Z/triage_summary.md` (lines 33-60). Next: Phase B rerun with ≥30 min timeout to capture remaining 172 tests; Phase D handoff once complete.
 - Next Actions:
-  1. Schedule Phase B rerun with ≥30 min budget (or split suite by module) to execute the remaining ~172 tests; capture logs + junit XML under a new timestamped bundle.
+  1. Schedule Phase B rerun with an extended budget (≥30 min). Use `KMP_DUPLICATE_LIB_OK=TRUE timeout 3600 pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_b/<STAMP>/artifacts/pytest_full.xml` and archive the full log set under a fresh `phase_b/<STAMP>/`.
   2. ✅ Complete Phase C3/C4 by mapping clusters C1–C14 to fix-plan entries (spawn new IDs for determinism, debug trace, dual runner, detector config) and append owners/next actions inside `triage_summary.md`. [DONE Attempt #4]
   3. Outline Phase D remediation handoff once coverage + mapping are in place (draft `handoff.md` with ordered priorities and selectors).
 - Exit Criteria:

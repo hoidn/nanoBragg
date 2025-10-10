@@ -32,7 +32,7 @@ Exit Criteria: Full run log + junit/xml archived under `reports/2026-01-test-sui
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | B1 | Prepare reporting directory | [D] | Attempt #2 → Created `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/` with `logs/`, `artifacts/`. Documented command in `commands.txt`. |
-| B2 | Execute full test suite | [⚠️] | Attempt #2 → PARTIAL (timeout after 600s). Reached ~75% completion (520/692 tests). Log captured to `logs/pytest_full.log` (530 lines). Observed 34 failures. Runtime constraints: 10-minute budget insufficient for full suite. |
+| B2 | Execute full test suite | [⚠️] | Attempt #2 → PARTIAL (timeout after 600 s). Reached ~75 % completion (520/692 tests). Log captured to `logs/pytest_full.log` (530 lines). Observed 34 failures; ~172 tests never executed. **Next:** Attempt #5 must rerun with an extended budget (`KMP_DUPLICATE_LIB_OK=TRUE timeout 3600 pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_b/<STAMP>/artifacts/pytest_full.xml`) and archive logs under a fresh `phase_b/<STAMP>/`. |
 | B3 | Extract failure list | [D] | Attempt #2 → Extracted 34 failures into `failures_raw.md`. Categorized by test area (determinism, sourcefile, grazing, detector, debug, CLI). Noted 172 tests not reached (25% coverage gap). |
 | B4 | Update fix_plan attempt entry | [D] | Attempt #2 → Updated `docs/fix_plan.md` [TEST-SUITE-TRIAGE-001] with runtime=600s, failures=34 (partial), artifact path, and recommendations for split execution. |
 
