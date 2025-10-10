@@ -62,7 +62,7 @@ Phase B4a confirmed central ROI meets spec thresholds. By sampling ROI→edge→
 **Selected Pixels (concrete coordinates):**
 1. **ROI center:** `(slow=2048, fast=2048)` — on-peak (if Bragg signal present), baseline trace
 2. **ROI boundary:** `(slow=1792, fast=2048)` — first row outside ROI, test edge sensitivity
-3. **Far edge:** `(slow=4000, fast=2048)` — near detector limit, probe inflation hypothesis
+3. **Far edge:** `(slow=4095, fast=2048)` — outermost slow index, probe inflation hypothesis
 
 ### Acceptance Criteria (per pixel)
 - **Perfect match:** |Py intensity − C intensity| / C intensity ≤ 0.001 (0.1% relative error)
@@ -137,7 +137,7 @@ export NB_C_BIN=./golden_suite_generator/nanoBragg
 **Template invocation:**
 ```python
 # Pseudo-code for scripts/debug_4096_trace.py
-for pixel in [(2048, 2048), (1792, 2048), (4000, 2048)]:
+for pixel in [(2048, 2048), (1792, 2048), (4095, 2048)]:
     slow, fast = pixel
     # ... run simulator with trace hooks enabled at (slow, fast) ...
     print(f"TRACE_PY: pixel_idx ({slow}, {fast})")
@@ -183,15 +183,15 @@ reports/2026-01-vectorization-parity/phase_c/20251010T040739Z/
 ├── c_traces/
 │   ├── pixel_2048_2048.log    # C trace for ROI center
 │   ├── pixel_1792_2048.log    # C trace for ROI boundary
-│   └── pixel_4000_2048.log    # C trace for far edge
+│   └── pixel_4095_2048.log    # C trace for far edge
 ├── py_traces/
 │   ├── pixel_2048_2048.log    # PyTorch trace for ROI center
 │   ├── pixel_1792_2048.log    # PyTorch trace for ROI boundary
-│   └── pixel_4000_2048.log    # PyTorch trace for far edge
+│   └── pixel_4095_2048.log    # PyTorch trace for far edge
 ├── diffs/
 │   ├── diff_2048_2048.txt     # Line-by-line C vs Py diff
 │   ├── diff_1792_2048.txt
-│   └── diff_4000_2048.txt
+│   └── diff_4095_2048.txt
 ├── first_divergence.md    # Summary: first mismatched variable per pixel, magnitude, hypothesis
 ├── commands.txt           # Exact C and PyTorch invocation commands used
 └── env.json               # Environment metadata (git SHA, Python/PyTorch versions, device/dtype)
@@ -201,25 +201,27 @@ reports/2026-01-vectorization-parity/phase_c/20251010T040739Z/
 
 **C trace generation:**
 ```bash
-# For each selected pixel (slow, fast):
+# For each selected pixel (slow, fast) on the failing 4096² configuration:
 export NB_C_BIN=./golden_suite_generator/nanoBragg
 $NB_C_BIN \
   -default_F 100 \
   -cell 100 100 100 90 90 90 \
-  -lambda 6.2 \
-  -distance 100 \
+  -lambda 0.5 \
+  -distance 500 \
+  -pixel 0.05 \
   -detpixels 4096 \
   -N 5 \
   -convention MOSFLM \
+  -oversample 1 \
   -floatfile /tmp/c_trace_test.bin \
-  2>&1 | grep "TRACE_C:" > reports/2026-01-vectorization-parity/phase_c/20251010T040739Z/c_traces/pixel_${slow}_${fast}.log
+  2>&1 | tee reports/2026-01-vectorization-parity/phase_c/20251010T040739Z/c_traces/pixel_${slow}_${fast}.log | grep "TRACE_C:" > /dev/null
 ```
 
 **PyTorch trace generation:**
 ```bash
 # Run debug script (to be authored in Phase C1)
 KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_4096_trace.py \
-  --pixels "2048,2048" "1792,2048" "4000,2048" \
+  --pixels "2048,2048" "1792,2048" "4095,2048" \
   --outdir reports/2026-01-vectorization-parity/phase_c/20251010T040739Z/py_traces/ \
   --device cpu \
   --dtype float64
@@ -249,7 +251,7 @@ diff -u \
 ## Open Questions / Risks
 
 ### Questions Requiring Supervisor Confirmation
-1. **Pixel selection approval:** Are (2048,2048), (1792,2048), (4000,2048) the optimal choices, or should corner pixels (e.g., 4095,4095) be prioritised?
+1. **Pixel selection (RESOLVED 2026-01-06):** Use (2048,2048), (1792,2048), (4095,2048). Corner pixels remain optional stretch goals once first divergence is mapped.
 2. **Trace script authoring:** Should we extend `scripts/debug_pixel_trace.py` or create standalone `scripts/debug_4096_trace.py`?
 3. **Instrumentation depth:** Do we need per-source/per-phi/per-mosaic traces (full loop unroll), or is final-aggregated trace sufficient for first divergence?
 4. **ROI sweep deferral:** Should Phase C proceed immediately, or should we first run the optional 1024² ROI sweep to map correlation geography more finely?

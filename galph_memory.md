@@ -1830,3 +1830,8 @@
 - Updated `plans/active/vectorization-parity-regression.md` (B4b → [D]) and refreshed `docs/fix_plan.md` Next Actions to pivot toward Phase C trace staging; Attempt #7 notes now reference the completed ROI scope doc.
 - Replaced `input.md` (Mode: Docs) directing Ralph to draft the Phase C trace plan (`reports/2026-01-vectorization-parity/phase_c/<STAMP>/trace_plan.md`) before any instrumentation.
 - Follow-up: Expect new Attempt logging with trace_plan.md; supervisor to review Phase C staging output, then greenlight C/Py trace capture.
+### 2026-01-06 (galph loop - Phase C1 C-trace kickoff)
+- Repo sync clean; reviewed core docs plus active parity/vectorization plans before selecting focus. Coin flip = heads → inspected Ralph commit 4a502f42 (Phase C1 profiler rerun). Outcome unchanged: evidence-only bundle confirming corr=0.721; no new regressions.
+- Focused on `[VECTOR-PARITY-001]` Phase C instrumentation. Updated `plans/active/vectorization-parity-regression.md` row C1 with explicit λ=0.5 Å, distance=500 mm, pixel=0.05 mm command context. Refreshed `reports/2026-01-vectorization-parity/phase_c/20251010T040739Z/trace_plan.md` to lock pixel set {(2048,2048),(1792,2048),(4095,2048)}, corrected command templates, and marked pixel-selection question resolved.
+- Tweaked `docs/fix_plan.md` Next Actions to reference the authoritative 4096² command parameters for Phase C1.
+- Replaced `input.md` (Mode: Parity) directing Ralph to instrument `golden_suite_generator/nanoBragg.c`, rebuild, and capture `TRACE_C` logs for the three approved pixels under a fresh `reports/2026-01-vectorization-parity/phase_c/<STAMP>/` bundle (logs + commands + env metadata). Expect Attempt update with artifact paths before progressing to Py traces.
