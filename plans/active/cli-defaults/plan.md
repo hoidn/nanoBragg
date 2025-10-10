@@ -11,6 +11,10 @@
   - `debug_default_f.py` — control-path reproduction that currently succeeds.
 - Artifact Policy: New work MUST live under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/cli-defaults/` with subfolders per phase (`phase_a`, `phase_b`, …). Each attempt captures `commands.txt`, `env.json`, raw logs, `summary.md`, and any diff artefacts.
 
+### Status Snapshot (2026-01-13)
+- Phase A: complete (Attempt #3 — artifacts in `reports/2026-01-test-suite-triage/phase_d/20251010T155808Z/cli-defaults/phase_a/`)
+- Phase B: pending callchain tracing (no artifacts captured yet)
+
 ### Phase A — Baseline Reconciliation (CLI vs direct API)
 Goal: Prove the divergence between the CLI runner and direct API invocation using identical configs, locking reproducibility before deeper tracing.
 Prereqs: Editable install (`pip install -e .`), `debug_default_f.py` confirmed working, clean workspace for artifact capture.
@@ -18,10 +22,10 @@ Exit Criteria: Artifact bundle showing CLI zero-output vs direct API non-zero ou
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| A1 | Capture CLI reproduction baseline | [ ] | Run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F` and store full log + floatfile stats under `phase_a/<STAMP>/cli_pytest/`. Note pytest exit code, runtime, and command copy in `commands.txt`. |
-| A2 | Record CLI configuration dump | [ ] | Re-run the CLI command with `-show_config` (same args) and redirect output to `phase_a/<STAMP>/cli_pytest/config_dump.txt`. Confirm `default_F`, fluence, sources, device/dtype. |
-| A3 | Capture direct API control output | [ ] | Execute `KMP_DUPLICATE_LIB_OK=TRUE python debug_default_f.py` and archive stdout + intensity tensor statistics under `phase_a/<STAMP>/api_control/`. Ensure script uses identical device/dtype as CLI. |
-| A4 | Produce reconciliation summary | [ ] | Write `phase_a/<STAMP>/summary.md` comparing CLI vs API stats (min/max/non-zero counts), highlight any config discrepancies, and embed references to raw artifacts. |
+| A1 | Capture CLI reproduction baseline | [D] | Attempt #3 → logs under `reports/2026-01-test-suite-triage/phase_d/20251010T155808Z/cli-defaults/phase_a/cli_pytest/` (`pytest.log`, `commands.txt`). |
+| A2 | Record CLI configuration dump | [D] | Attempt #3 → `reports/2026-01-test-suite-triage/phase_d/20251010T155808Z/cli-defaults/phase_a/cli_pytest/config_dump.txt` and `float_stats.txt` capture config parity. |
+| A3 | Capture direct API control output | [D] | Attempt #3 → `reports/2026-01-test-suite-triage/phase_d/20251010T155808Z/cli-defaults/phase_a/api_control/run.log` records non-zero output with matching device/dtype. |
+| A4 | Produce reconciliation summary | [D] | Attempt #3 → `reports/2026-01-test-suite-triage/phase_d/20251010T155808Z/cli-defaults/phase_a/summary.md` documents CLI vs API parity and hypothesis ranking. |
 
 ### Phase B — Callchain & State Capture
 Goal: Identify the first point where CLI execution diverges from the working direct invocation by tracing simulator internals per SOP.
