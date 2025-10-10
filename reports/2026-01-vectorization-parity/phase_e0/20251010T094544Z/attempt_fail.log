@@ -1,0 +1,30 @@
+BLOCKER: Trace script missing oversample support
+==================================================
+
+Attempted command (from input.md Do Now):
+  KMP_DUPLICATE_LIB_OK=TRUE NB_TRACE_EDGE_PIXEL="0,0" python scripts/debug_pixel_trace.py --pixel 0 0 --oversample 2 --out-dir reports/2026-01-vectorization-parity/phase_e0/$STAMP/py_taps/
+
+Error:
+  debug_pixel_trace.py: error: unrecognized arguments: --oversample 2
+
+Root cause:
+  scripts/debug_pixel_trace.py does not support:
+    - --oversample CLI argument
+    - NB_TRACE_EDGE_PIXEL environment variable
+  
+  Script is hard-coded to oversample=1 (line 383).
+
+Impact:
+  Cannot execute Phase E0 Next Action #1 (omega asymmetry quantification) without modifying the trace script.
+  input.md line 21 prohibits modifying trace script defaults during evidence-only pass.
+
+Resolution options:
+  A) Enhance debug_pixel_trace.py to accept --oversample argument (requires supervisor approval; violates evidence-only constraint)
+  B) Create a separate trace script for oversample analysis (same concern)
+  C) Revise Do Now to use simulator.run() directly with oversample=2 and manual omega extraction
+  D) Defer omega analysis until tooling gap is addressed
+
+Recommendation:
+  Option D - halt evidence pass, update fix_plan with blocker, request supervisor guidance on tooling enhancement vs. alternative evidence path.
+
+Timestamp: 2025-10-10T09:45:44Z
