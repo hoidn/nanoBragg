@@ -45,6 +45,7 @@ These are the core, living documents that guide the project.
 * **[Implementation Plan](./development/implementation_plan.md)** - Phased development roadmap.
 * **[Lessons in Differentiability](./development/lessons_in_differentiability.md)** - Key learnings about maintaining gradient flow.
 * **[Project Status](./development/PROJECT_STATUS.md)** - Current development status (duplicate link).
+* **[Test Status](./test_status.md)** - Current test suite status with detailed failure analysis and pass rates.
 * **[Testing Strategy](./development/testing_strategy.md)** - Three-tier validation approach.
 * **[Validation Scripts](../scripts/validation/README.md)** - Reusable parity/validation helpers referenced by prompts and supervisor input; prefer these over ad‑hoc snippets when available.
 
