@@ -2,7 +2,7 @@
 
 **Last Updated:** 2026-01-13 (galph loop — Test suite Phase C refresh planning)
 **Active Focus:**
-- CRITICAL: Complete `[TEST-SUITE-TRIAGE-001]` Phase C refresh — extend triage to the 50-failure Attempt #5 dataset and update mappings before proceeding to remediation. Suspend all other engineering work until the refreshed triage artifacts land.
+- CRITICAL: Execute `[TEST-SUITE-TRIAGE-001]` Phase D handoff — refresh this ledger (D3) with new IDs + handoff link, then publish supervisor guidance/input (D4). Suspend all other engineering work until Phase D artifacts are committed.
 - Tap 5.3 oversample instrumentation for `[VECTOR-PARITY-001]` remains staged but is on hold pending completion of `[TEST-SUITE-TRIAGE-001]` deliverables.
 - Prepare pyrefly + test-index documentation once the suite triage backlog is unblocked.
 
@@ -25,6 +25,15 @@
 | [TEST-GOLDEN-001](#test-golden-001-regenerate-golden-data-post-phase-d5) | Regenerate golden data post Phase D5 | High | in_planning |
 | [STATIC-PYREFLY-001](#static-pyrefly-001-run-pyrefly-analysis-and-triage) | Run pyrefly analysis and triage | Medium | in_progress |
 | [TEST-INDEX-001](#test-index-001-test-suite-discovery-reference-doc) | Test suite discovery reference doc | Medium | in_planning |
+| [CUDA-GRAPHS-001](#cuda-graphs-001-cuda-graphs-compatibility) | CUDA graphs compatibility | Medium | in_planning |
+| [UNIT-CONV-001](#unit-conv-001-mixed-unit-conversion-parity) | Mixed unit conversion parity | Medium | in_planning |
+| [LATTICE-SHAPE-001](#lattice-shape-001-lattice-shape-models) | Lattice shape models | High | in_planning |
+| [DENZO-CONVENTION-001](#denzo-convention-001-denzo-convention-support) | DENZO convention support | Medium | in_planning |
+| [PIVOT-MODE-001](#pivot-mode-001-detector-pivot-modes) | Detector pivot modes | High | in_planning |
+| [DTYPE-NEUTRAL-001](#dtype-neutral-001-dtype-neutrality-guardrail) | dtype neutrality guardrail | Medium | in_planning |
+| [LEGACY-SUITE-001](#legacy-suite-001-legacy-translation-suite-upkeep) | Legacy translation suite upkeep | Low | in_planning |
+| [GRADIENT-FLOW-001](#gradient-flow-001-gradient-flow-regression) | Gradient flow regression | High | in_planning |
+| [TRICLINIC-PARITY-001](#triclinic-parity-001-triclinic-parity-alignment) | Triclinic parity alignment | High | in_planning |
 
 ## [TEST-SUITE-TRIAGE-001] Full pytest run and triage
 - Spec/AT: `docs/development/testing_strategy.md` §§1–2, `arch.md` §2/§15, `specs/spec-a-core.md` (Acceptance Tests), `docs/development/pytorch_runtime_checklist.md` (runtime guardrails).
@@ -34,10 +43,10 @@
 - Plan Reference: `plans/active/test-suite-triage.md`
 - Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_b/<STAMP>/artifacts/pytest_full.xml`
 - Artifacts Root: `reports/2026-01-test-suite-triage/` (phases `phase_a`, `phase_b`, `phase_c`, `phase_d`)
+- Phase D Handoff Bundle: `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md`
 - Next Actions:
-  1. Phase C5 — stage `reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/` and ingest Attempt #5 artifacts (50 failures, junit XML, durations).
-  2. Phase C6 — author refreshed `triage_summary.md` covering all 18 clusters; highlight deltas vs Attempt #2 snapshot and map every failure to fix-plan owners.
-  3. Phase C7 — update this ledger and `plans/active/test-suite-triage.md` to reference the new summary before drafting the Phase D remediation handoff.
+  1. Phase D3 — update this ledger (index + sections) to add the nine new fix-plan IDs from `pending_actions.md`, cross-link `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md`, and refresh plan references.
+  2. Phase D4 — once D3 is complete, issue supervisor input (`input.md`) steering Ralph to `[CLI-DEFAULTS-001]` remediation with authoritative pytest command + artifact expectations.
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.
   * [2025-10-10] Attempt #2 — Result: ⚠️ partial (Phase B timeout). Full suite execution reached ~75% completion (520/692 tests) before 10-minute timeout. Captured 34 failures across determinism (6), sourcefile handling (6), grazing incidence (4), detector geometry (5), debug/trace (4), CLI flags (3), and others. Runtime: 600s. Exit: timeout. Artifacts: `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/{logs/pytest_full.log,failures_raw.md,summary.md,commands.txt}`. junit XML may be incomplete. Remaining 172 tests (~25%) not executed. Observations: Large detector parity tests and gradient checks likely contributors to timeout. Recommendation: split suite execution or extend timeout to 30-60min for complete run.
@@ -45,10 +54,6 @@
   * [2025-10-10] Attempt #4 — Result: ✅ success (Phase C3/C4 cluster mapping). Updated `triage_summary.md` with "Pending Actions" table mapping all 14 clusters to fix-plan entries: C3/C6/C8/C13/C14 → `[VECTOR-PARITY-001]` (in_progress); C10 → `[CLI-FLAGS-003]` (in_progress); C1/C2/C4/C5/C7/C9/C11/C12 → 7 new placeholder IDs (`[CLI-DEFAULTS-001]`, `[DETERMINISM-001]`, `[DETECTOR-GRAZING-001]`, `[SOURCE-WEIGHT-002]`, `[TOOLING-DUAL-RUNNER-001]`, `[DEBUG-TRACE-001]`, `[DETECTOR-CONFIG-001]`) with status=in_planning, owner=ralph. Docs-only loop (no pytest per input.md line 16). Added new fix-plan entries below (index updated). Refreshed `plans/active/test-suite-triage.md` Phase C table (C3/C4 marked [D]). Artifacts: `reports/2026-01-test-suite-triage/phase_c/20251010T134156Z/triage_summary.md` (lines 33-60). Next: Phase B rerun with ≥30 min timeout to capture remaining 172 tests; Phase D handoff once complete.
   * [2025-10-10] Attempt #5 — Result: ✅ success (Phase B complete coverage). Full suite execution completed in 1864.76s (31 min 4 s) with 100% coverage (691/692 tests, 1 skipped during collection). Exit code: 1 (failures present). Results: 515 passed (74.4%), 50 failed (7.2%), 126 skipped (18.2%), 2 xfailed, 19 warnings. Coverage gap from Attempt #2 resolved: 171 additional tests executed (25% increase). Identified 50 failures across 18 categories (C1-C18): determinism (6), CUDA graphs (6), grazing incidence (4), source weighting (6), CLI flags (3), debug trace (4), detector config (2), dtype support (2), legacy test suite (5), gradient flow (1), and others. Artifacts: `reports/2026-01-test-suite-triage/phase_b/20251010T135833Z/{logs/pytest_full.log,artifacts/pytest_full.xml,summary.md,failures_raw.md}`. Observations: Gradient tests dominated runtime (1660s / 89%), all passing. 16 new failure categories discovered vs Attempt #2 (C3, C6, C8, C13-C18). Runtime well within 3600s budget (1865s used, 1735s spare). Next: Proceed to Phase C extended triage for all 50 failures; update cluster mappings in triage_summary.md.
   * [2025-10-10] Attempt #6 — Result: ✅ success (Phase C5-C7 triage refresh). Created `reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/` bundle and ingested Attempt #5 artifacts (50 failures, 18 clusters). Authored comprehensive `triage_summary.md` covering all failures with cluster→fix-plan mappings, priority sequences (P1-P4), and reproduction commands. Identified 8 new fix-plan IDs requiring creation: [CUDA-GRAPHS-001], [UNIT-CONV-001], [LATTICE-SHAPE-001], [DENZO-CONVENTION-001], [PIVOT-MODE-001], [DTYPE-NEUTRAL-001], [LEGACY-SUITE-001], [GRADIENT-FLOW-001], [TRICLINIC-PARITY-001]. Produced `pending_actions.md` with status table (3 in_progress, 8 in_planning, 8 unassigned). Docs-only loop (no pytest execution per input.md line 11). Updated `plans/active/test-suite-triage.md` Phase C tasks (C5-C7 marked [D]) and Status Snapshot. Artifacts: `reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/{triage_summary.md,pending_actions.md,failures_raw.md}`. Next: Proceed to Phase D remediation handoff per supervisor approval.
-- Next Actions:
-  1. ✅ Phase C5-C7 complete — refreshed triage artifacts covering all 50 failures across 18 clusters. [DONE Attempt #6]
-  2. Create 8 new fix-plan IDs per `pending_actions.md` ([CUDA-GRAPHS-001], [UNIT-CONV-001], [LATTICE-SHAPE-001], [DENZO-CONVENTION-001], [PIVOT-MODE-001], [DTYPE-NEUTRAL-001], [LEGACY-SUITE-001], [GRADIENT-FLOW-001], [TRICLINIC-PARITY-001]) with owners + priorities.
-  3. Author Phase D `handoff.md` with ordered remediation priorities (P1-P4), reproduction commands, and verification selectors per `triage_summary.md` §Remediation Recommendations.
 - Exit Criteria:
   - `triage_summary.md` classifies every failing test (bug vs deprecation vs config).
   - `handoff.md` published with remediation priorities and reproduction commands.
@@ -431,6 +436,153 @@
 - Exit Criteria:
   - Reference doc published with selector tables + maintenance guidance.
   - Linked from `docs/index.md`; ledger reflects upkeep cadence.
+
+
+## [CUDA-GRAPHS-001] CUDA graphs compatibility
+- Spec/AT: `docs/architecture/pytorch_design.md` §5 (performance/compile), `docs/development/testing_strategy.md` §1.5, `tests/test_perf_pytorch_005_cudagraphs.py`
+- Priority: Medium
+- Status: in_planning
+- Owner/Date: ralph/2025-10-10
+- Reproduction: `pytest -v tests/test_perf_pytorch_005_cudagraphs.py`
+- First Divergence (if known): CUDA graph capture path raises at test setup (6 failures) per `triage_summary.md` §C3.
+- Attempts History: none — schedule Phase D attempts after ledger refresh.
+- Next Actions:
+  1. Capture failure logs under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/attempt_<NN>/` using the reproduction command.
+  2. Draft remediation plan (call out torch.compile graph constraints) and file torch issue references if needed.
+- Risks/Assumptions:
+  - Requires CUDA-capable device; ensure `torch.cuda.is_available()` before running tests.
+- Exit Criteria:
+  - All CUDA graph tests pass on CPU and GPU backends or are explicitly skipped with documented rationale.
+  - Performance memo updated with graph-mode compatibility notes.
+
+## [UNIT-CONV-001] Mixed unit conversion parity
+- Spec/AT: `specs/spec-a-core.md` §§2.3–2.4, `docs/architecture/detector.md` §2, `tests/test_at_parallel_015.py`
+- Priority: Medium
+- Status: in_planning
+- Owner/Date: ralph/2025-10-10
+- Reproduction: `pytest -v tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_mixed_units_comprehensive`
+- First Divergence (if known): Hybrid meter↔Å conversion mismatch detected in `triage_summary.md` §C5.
+- Attempts History: none — awaiting Phase D kickoff.
+- Next Actions:
+  1. Reproduce failure and capture logs/metrics under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/attempt_<NN>/`.
+  2. Audit detector + physics boundaries against ADR-01 to identify missing conversions.
+- Risks/Assumptions:
+  - Ensure pix0/pixel-size conversions respect Protected Assets list (`docs/index.md`).
+- Exit Criteria:
+  - Test passes with documented unit conversion audit; associated docs updated if formulas change.
+
+## [LATTICE-SHAPE-001] Lattice shape models
+- Spec/AT: `specs/spec-a-core.md` §8 (shape models), `docs/architecture/pytorch_design.md` §7, `tests/test_at_str_003.py`
+- Priority: High
+- Status: in_planning
+- Owner/Date: ralph/2025-10-10
+- Reproduction: `pytest -v tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels`
+- First Divergence (if known): GAUSS/TOPHAT implementations incomplete per `triage_summary.md` §C8.
+- Attempts History: none — pending plan authoring.
+- Next Actions:
+  1. Confirm failure reproduction and archive metrics under Phase D reports.
+  2. Draft implementation plan aligning with spec integrals (ensure vectorized path matches scalar reference).
+- Risks/Assumptions:
+  - Maintain differentiability; avoid `.item()` usage when wiring kernels.
+- Exit Criteria:
+  - GAUSS/TOPHAT tests pass with documented validation artefacts; `docs/architecture/pytorch_design.md` updated if formulas adjusted.
+
+## [DENZO-CONVENTION-001] DENZO convention support
+- Spec/AT: `docs/architecture/detector.md` §4, `specs/spec-a-cli.md` §CLI-CONVENTIONS, `tests/test_detector_conventions.py`
+- Priority: Medium
+- Status: in_planning
+- Owner/Date: ralph/2025-10-10
+- Reproduction: `pytest -v tests/test_detector_conventions.py::TestDetectorConventions::test_denzo_beam_center_mapping`
+- First Divergence (if known): DENZO beam-centre mapping unimplemented per `triage_summary.md` §C13.
+- Attempts History: none — to be tackled post Phase D.
+- Next Actions:
+  1. Capture failing log and verify expected beam-centre offsets vs spec.
+  2. Extend detector convention handling (likely new enum branch) and document in detector architecture.
+- Risks/Assumptions:
+  - Preserve MOSFLM default behaviour; ensure Protected Assets (e.g., docs/index.md references) remain valid.
+- Exit Criteria:
+  - DENZO convention test passes on CPU/GPU; documentation updated with new convention details.
+
+## [PIVOT-MODE-001] Detector pivot modes
+- Spec/AT: `specs/spec-a-core.md` §4.5, `arch.md` ADR-02, `tests/test_detector_pivots.py`
+- Priority: High
+- Status: in_planning
+- Owner/Date: ralph/2025-10-10
+- Reproduction: `pytest -v tests/test_detector_pivots.py`
+- First Divergence (if known): Pivot behaviour diverges between BEAM/SAMPLE modes (`triage_summary.md` §C14).
+- Attempts History: none yet — awaiting plan.
+- Next Actions:
+  1. Reproduce failure and capture per-mode geometry outputs under Phase D reports.
+  2. Compare against C reference (consult `docs/development/c_to_pytorch_config_map.md` pivot rules) and patch detector pipeline.
+- Risks/Assumptions:
+  - Dependent on `[VECTOR-PARITY-001]` Tap 5 resolution for detector geometry traces.
+- Exit Criteria:
+  - Pivot tests pass with 1e-6 tolerance; guardrail documented in detector plan.
+
+## [DTYPE-NEUTRAL-001] dtype neutrality guardrail
+- Spec/AT: `docs/development/testing_strategy.md` §1.4, `docs/development/pytorch_runtime_checklist.md`, `tests/test_perf_pytorch_006.py`
+- Priority: Medium
+- Status: in_planning
+- Owner/Date: ralph/2025-10-10
+- Reproduction: `pytest -v tests/test_perf_pytorch_006.py`
+- First Divergence (if known): dtype neutrality regression (float32/float64 mismatch) flagged in `triage_summary.md` §C15.
+- Attempts History: none — Phase D item.
+- Next Actions:
+  1. Reproduce failure across CPU/GPU and archive dtype diagnostics.
+  2. Audit tensor creation paths for hard-coded dtype/device assumptions; update runtime checklist if new rule needed.
+- Risks/Assumptions:
+  - Ensure tests run on environments with both CPU and CUDA availability for parity.
+- Exit Criteria:
+  - dtype tests pass on CPU/GPU; runtime checklist updated with lessons learned.
+
+## [LEGACY-SUITE-001] Legacy translation suite upkeep
+- Spec/AT: `specs/spec-a-parallel.md` §2, `tests/test_suite.py::TestTier1TranslationCorrectness`
+- Priority: Low
+- Status: in_planning
+- Owner/Date: ralph/2025-10-10
+- Reproduction: `pytest -v tests/test_suite.py::TestTier1TranslationCorrectness`
+- First Divergence (if known): Legacy suite expectations drifted post Phase D lattice fixes (`triage_summary.md` §C16).
+- Attempts History: none — determine keep vs deprecate.
+- Next Actions:
+  1. Decide whether to refresh expected data or decommission tests; document recommendation in Phase D attempt notes.
+  2. If keeping, regenerate golden data per `tests/golden_data/README.md` and update assertions.
+- Risks/Assumptions:
+  - Coordinate with documentation owners before removing legacy coverage.
+- Exit Criteria:
+  - Decision logged in fix_plan; either tests updated and passing or formally archived with rationale.
+
+## [GRADIENT-FLOW-001] Gradient flow regression
+- Spec/AT: `arch.md` §15, `docs/development/lessons_in_differentiability.md`, `tests/test_gradients.py`
+- Priority: High
+- Status: in_planning
+- Owner/Date: ralph/2025-10-10
+- Reproduction: `pytest -v tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation`
+- First Divergence (if known): Autograd graph break observed in `triage_summary.md` §C17.
+- Attempts History: none — pending gradient audit.
+- Next Actions:
+  1. Reproduce failure with `requires_grad=True` tensors and capture stack trace + intermediate gradients.
+  2. Trace computation graph to locate `.detach()`/`.item()` misuse; patch per ADR-08 guidelines.
+- Risks/Assumptions:
+  - Ensure gradcheck uses float64 + double precision tolerances; may need CPU run first.
+- Exit Criteria:
+  - Gradient tests pass with gradcheck validation; documentation updated with fixes if behaviour changes.
+
+## [TRICLINIC-PARITY-001] Triclinic parity alignment
+- Spec/AT: `specs/spec-a-parallel.md` AT-PARALLEL-026, `docs/architecture/conventions.md`, `tests/test_at_parallel_026.py`
+- Priority: High
+- Status: in_planning
+- Owner/Date: ralph/2025-10-10
+- Reproduction: `pytest -v tests/test_at_parallel_026.py::TestAT_PARALLEL_026_TriclinicAbsolutePosition::test_triclinic_absolute_peak_position_vs_c`
+- First Divergence (if known): PyTorch peak position deviates from C reference per `triage_summary.md` §C18.
+- Attempts History: none — will require trace-driven parity audit.
+- Next Actions:
+  1. Capture PyTorch vs C traces for the failing triclinic case (reuse Phase C trace tooling) and archive under Phase D reports.
+  2. Identify first divergence in reciprocal lattice pipeline; coordinate with `[VECTOR-PARITY-001]` team if shared root cause.
+- Risks/Assumptions:
+  - Ensure C binary instrumentation respects Protected Assets rule (see docs/index.md).
+- Exit Criteria:
+  - Test passes with parity metrics documented; findings synced with vectorization plan.
+
 
 ## Completed / Archived Items
 - [SOURCE-WEIGHT-001] Correct weighted source normalization — DONE (2025-10-10). corr=0.9999886, |sum_ratio−1|=0.0038; artifacts in `reports/2025-11-source-weights/phase_h/20251010T002324Z/`; guardrails captured in `docs/architecture/pytorch_design.md` §1.1.5.

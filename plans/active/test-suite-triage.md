@@ -11,7 +11,7 @@
 ### Status Snapshot (2026-01-13)
 - Phase A ✅ complete (Attempt #1 — `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/`); 692 tests collected, no errors.
 - Phase B ✅ complete (Attempt #5 — `reports/2026-01-test-suite-triage/phase_b/20251010T135833Z/`); full suite executed in 1865 s with 50 failures captured across 18 clusters.
-- Phase C ✅ complete (Attempt #6 — `reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/`); all 50 failures classified across 18 clusters, mapped to 10 existing + 8 new fix-plan IDs. Ready for Phase D handoff.
+- Phase C ✅ complete (Attempt #6 — `reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/`); all 50 failures classified across 18 clusters, mapped to 10 existing + 8 new fix-plan IDs. Phase D in progress: D1–D3 ✅ (triage summary + ledger refresh + handoff bundle), D4 (input.md handoff) pending.
 
 ### Phase A — Preflight & Inventory
 Goal: Confirm environment readiness and enumerate suite metadata so the full run is reproducible and guarded.
@@ -59,10 +59,10 @@ Exit Criteria: `handoff.md` summarising priority order, owners, and verifying co
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| D1 | Synthesize remediation priorities | [ ] | Convert `triage_summary.md` into ordered list (P0/P1/P2). Reference spec/arch citations per failure. |
-| D2 | Produce reproduction commands | [ ] | For each priority failure, note exact pytest selectors & required env (per testing_strategy §1.5). |
-| D3 | Update documentation touchpoints | [ ] | Ensure `docs/fix_plan.md` Active Focus reflects remediation queue; cross-link `handoff.md`. If semantics change, flag relevant specs/tests for update. |
-| D4 | Publish supervisor input template | [ ] | Once ready, craft `input.md` instructions guiding Ralph to tackle highest-priority fix; ensure Do Now references authoritative commands. |
+| D1 | Synthesize remediation priorities | [D] | Documented in `reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/triage_summary.md` (Priority 1–4 ladders with spec cites). |
+| D2 | Produce reproduction commands | [D] | Each cluster section in `triage_summary.md` records authoritative pytest selectors + env notes. |
+| D3 | Update documentation touchpoints | [D] | Completed: `docs/fix_plan.md` refreshed with new IDs + handoff link, plan synced, `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md` published. |
+| D4 | Publish supervisor input template | [ ] | Once D3 complete, craft `input.md` steering Ralph to highest-priority remediation (`[CLI-DEFAULTS-001]` unless D3 discovers blockers). |
 
 ### Exit Criteria (Plan Completion)
 - Phases A–D marked complete with `[D]` status in tables.

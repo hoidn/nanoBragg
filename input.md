@@ -1,32 +1,30 @@
-Summary: Extend the test-suite triage to cover the 50-failure Attempt #5 dataset and refresh the mappings before remediation work begins.
-Mode: Docs
-Focus: [TEST-SUITE-TRIAGE-001] Phase C5–C7 triage refresh
+Summary: Capture Phase D Attempt #1 for the minimal `-default_F` CLI failure (C1) so we can unblock remediation work.
+Mode: none
+Focus: [CLI-DEFAULTS-001] Minimal -default_F CLI invocation
 Branch: feature/spec-based-2
-Mapped tests: none — evidence-only
-Artifacts: reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/triage_summary.md; reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/commands.txt; reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/pending_actions.md
-Do Now: [TEST-SUITE-TRIAGE-001] Full pytest run and triage (Phase C5–C7 refresh) — reuse Attempt #5 bundle (reports/2026-01-test-suite-triage/phase_b/20251010T135833Z); pytest repro: KMP_DUPLICATE_LIB_OK=TRUE timeout 3600 pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_b/<STAMP>/artifacts/pytest_full.xml (rerun only if artifacts missing)
-If Blocked: Capture triage_summary_stub.md noting which Attempt #5 artifacts are missing, update Attempts History with the blocker, and ping supervisor before rerunning the full suite.
+Mapped tests: - pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F
+Artifacts: reports/2026-01-test-suite-triage/phase_d/<STAMP>/attempt_cli_defaults/
+Do Now: Run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F` and archive stdout/stderr as `pytest.log` plus `commands.txt` under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/attempt_cli_defaults/`.
+If Blocked: Capture `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_at_cli_002.py` with the same artifact layout and record the failure mode in `attempt_notes.md`.
 Priorities & Rationale:
-- plans/active/test-suite-triage.md:14 keeps Phase C refresh gated on completing the 50-failure classification before Phase D.
-- plans/active/test-suite-triage.md:51 calls for new artifacts under C5–C7, including a refreshed triage summary and ledger updates.
-- docs/fix_plan.md:37 lists Phase C5–C7 as the next actions; the ledger must reflect the new summary before other work resumes.
-- reports/2026-01-test-suite-triage/phase_b/20251010T135833Z/summary.md:41 enumerates all 18 failure clusters that the refreshed triage must cover.
+- docs/fix_plan.md:67 — C1 is tagged High priority; Phase D requires this failure to be reproduced before fixes start.
+- plans/active/test-suite-triage.md:14 — Phase D D1–D3 are complete; D4 (this input) is the remaining gate.
+- reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md — Priority ladder calls out `[CLI-DEFAULTS-001]` as first P1 remediation item.
+- docs/development/c_to_pytorch_config_map.md — Validate CLI flag expectations while inspecting the failure.
 How-To Map:
-- Stage the new phase_c directory: `STAMP=20251010T135833Z` ; `mkdir -p reports/2026-01-test-suite-triage/phase_c/$STAMP` ; log commands in `commands.txt`.
-- Reconcile failure list: `cp reports/2026-01-test-suite-triage/phase_b/$STAMP/failures_raw.md reports/2026-01-test-suite-triage/phase_c/$STAMP/failures_raw.md` then review each node against the category table in `summary.md`.
-- Draft `triage_summary.md` covering all 50 failures, highlighting deltas versus the earlier `phase_c/20251010T134156Z/triage_summary.md` snapshot.
-- Update `pending_actions.md` with cluster→fix-plan mapping, noting any new owners or status changes.
-- Once docs settle, refresh Attempts History for `[TEST-SUITE-TRIAGE-001]` with the new artifact path and note whether Phase C5–C7 are now [D].
+- Pick a new UTC stamp (`STAMP=$(date -u +%Y%m%dT%H%M%SZ)`) and create `reports/2026-01-test-suite-triage/phase_d/$STAMP/attempt_cli_defaults/`.
+- Write the executed commands to `commands.txt` (one line per invocation) before running the test.
+- Execute the Do Now pytest command with `KMP_DUPLICATE_LIB_OK=TRUE`, capturing full stdout/stderr into `pytest.log`.
+- After the run, jot a short `attempt_notes.md` summarising exit code, stack trace head, and immediate suspicion (default_F fallback vs HKL lookup).
 Pitfalls To Avoid:
-- Do not overwrite or delete the earlier `phase_c/20251010T134156Z` artifacts; keep both snapshots.
-- Avoid rerunning the full pytest suite unless the Attempt #5 bundle is corrupted.
-- Preserve Protected Assets listed in docs/index.md (loop.sh, input.md, etc.).
-- Keep documentation ASCII-only and retain tables’ column alignment.
-- When mapping clusters, ensure every failure ties back to an existing or newly created fix-plan ID—no orphan rows.
+- Do not run the full suite yet; stay on the single selector above until a fix is ready.
+- Keep `KMP_DUPLICATE_LIB_OK=TRUE` set for every PyTorch invocation.
+- Avoid mutating docs/specs during this loop; focus on evidence capture first.
+- Preserve vectorized code paths; no temporary Python loops in any quick experiments.
+- Log every command in `commands.txt` before execution to keep provenance complete.
 Pointers:
-- plans/active/test-suite-triage.md:11
-- plans/active/test-suite-triage.md:51
-- docs/fix_plan.md:3
-- docs/fix_plan.md:37
-- reports/2026-01-test-suite-triage/phase_b/20251010T135833Z/summary.md:41
-Next Up: Draft Phase D handoff (`plans/active/test-suite-triage.md` D1–D4) once the refreshed triage artifacts land.
+- docs/fix_plan.md:67
+- plans/active/test-suite-triage.md:60
+- reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md
+- tests/test_at_cli_002.py
+Next Up: If this attempt is wrapped early, line up `[DETERMINISM-001]` reproduction using `pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py`.

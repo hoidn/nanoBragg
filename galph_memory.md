@@ -2052,3 +2052,10 @@
 - Refreshed `docs/fix_plan.md` Active Focus + Next Actions to emphasise Phase C5–C7, including explicit task list for staging the new artifacts before remediation proceeds.
 - Authored `input.md` (Docs mode) directing Ralph to produce the updated triage summary + pending actions using existing Attempt #5 evidence; Do Now references the canonical pytest command but notes reuse of the captured bundle.
 - <Action State>: [ready_for_implementation]
+### 2026-01-13 (galph loop - Phase D handoff prep)
+- Pre-edit note: Selected focus issue `[TEST-SUITE-TRIAGE-001] Phase D handoff` with Action=Planning, Mode=Docs.
+- Completed Phase D3 ledger refresh: `docs/fix_plan.md` now carries the nine new fix-plan stubs and links to `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md`; plan snapshot updated (`plans/active/test-suite-triage.md:14,60-65`).
+- Authored Phase D handoff bundle (priority ladder + commands) at `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md`.
+- Rewrote `input.md` to launch Phase D Attempt #1 (reproduce `[CLI-DEFAULTS-001]` failure) with explicit artifact expectations.
+- Follow-up for Ralph: capture targeted pytest logs under a fresh `phase_d/<STAMP>/attempt_cli_defaults/` folder before attempting any fix.
+- <Action State>: [ready_for_implementation]
