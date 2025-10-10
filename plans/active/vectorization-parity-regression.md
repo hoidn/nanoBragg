@@ -15,6 +15,7 @@
 - Attempt #22 delivered Phase E0 callchain bundle (`reports/2026-01-vectorization-parity/phase_e0/20251010T092845Z/`) identifying last-value ω weighting as the top hypothesis.
 - Attempt #23 quantified PyTorch ω bias at oversample=2 (edge last/mean≈1.000028), showing the effect is ≈0.003 % and insufficient to explain the 0.721 correlation — re-prioritise C taps and alternate hypotheses (F_cell defaults, water background) before code changes.
 - Attempt #24 captured C omega taps (edge + centre) and produced `omega_comparison.md`, definitively refuting the omega hypothesis; next probes move to Tap 4 (F_cell defaults) and Tap 6 (water background scaling).
+- Attempt #25 recorded PyTorch Tap 4 metrics (`reports/2026-01-vectorization-parity/phase_e0/20251010T102752Z/`), showing edge and centre pixels both hit default_F with zero out-of-bounds lookups; F_cell bias is refuted on the PyTorch side, so Phase E6 must mirror the tap on C before pivoting to Tap 5 (pre-normalisation intensity) or Tap 6 (water background).
 
 ### Phase A — Evidence Audit & Baseline Ledger
 Goal: Canonicalise good vs bad benchmark evidence so every loop uses the same provenance.
@@ -77,9 +78,9 @@ Exit Criteria: Numeric taps proving or refuting the omega-last-value hypothesis 
 | E2 | Capture C omega taps for edge pixel | [D] | Attempt #24 (20251010T100102Z) instrumented `golden_suite_generator/nanoBragg.c:2976-2985` to log all four subpixels for pixels (0,0) and (2048,2048). Artifacts: `reports/2026-01-vectorization-parity/phase_e0/20251010T100102Z/c_taps/`. Result: C reuses the first subpixel's omega → identical values, no edge bias. |
 | E3 | Compare C vs PyTorch omega handling | [D] | `omega_comparison.md` (Attempt #24) quantifies both runs and refutes the omega hypothesis (≤0.003 % delta). Decision: escalate Tap 4 (F_cell defaults) and Tap 6 (water background) before revisiting physics changes. |
 | E4 | Update ledger & plan with outcomes | [D] | ✅ This loop — Attempt #24 recorded in `[VECTOR-PARITY-001]`; plan + ledger refreshed with Tap 4 focus and new Next Actions (E5–E7). |
-| E5 | PyTorch Tap 4 — F_cell lookup stats | [ ] | Extend `scripts/debug_pixel_trace.py` (or delegate new helper per `trace/tap_points.md`) to report Tap 4 metrics for pixels (0,0) and (2048,2048) at oversample=2. Archive JSON under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/py_taps/`. Capture command + env metadata. |
-| E6 | C Tap 4 — HKL default usage | [ ] | Instrument `golden_suite_generator/nanoBragg` to capture matching Tap 4 counters (default_F hits, HKL bounds). Store outputs under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/c_taps/`. Ensure instrumentation removed post-capture. |
-| E7 | Compare F_cell distributions & decide next probe | [ ] | Draft `f_cell_comparison.md` synthesising PyTorch vs C Tap 4 results; recommend whether Tap 5/6 (pre/post scaling, water background) should execute next. Update docs/fix_plan.md Next Actions accordingly. |
+| E5 | PyTorch Tap 4 — F_cell lookup stats | [D] | Attempt #25 (20251010T102752Z) captured edge/centre JSON + summary (`f_cell_summary.md`). Result: both pixels use default_F uniformly (out_of_bounds=0). Artifacts stored under `py_taps/`; env + commands logged. |
+| E6 | C Tap 4 — HKL default usage | [ ] | Instrument `golden_suite_generator/nanoBragg` to emit the same counters (default_F hits, HKL bounds) for pixels (0,0)/(2048,2048), oversample=2. Archive logs/JSON under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/c_taps/`; rebuild binary afterwards and capture commands/env metadata. |
+| E7 | Compare F_cell distributions & decide next probe | [ ] | Write `f_cell_comparison.md` contrasting PyTorch (Attempt #25) vs C Tap 4 results. If parity holds, escalate to Tap 5 (pre-normalisation intensity) focusing on edge background bleed; otherwise document discrepancies + remediation plan. Update docs/fix_plan.md Next Actions with the chosen hypothesis. |
 
 ### Phase F — Remediation & Full-Frame Validation (Pending)
 Goal: Implement the validated fix (likely ω averaging), re-run full-frame parity, and unblock downstream initiatives.

@@ -59,9 +59,9 @@
   - **Phase D6 cleanup:** ROI parity remains stable post-instrumentation removal (corr≈0.999999999, |sum_ratio−1|≈1.3e-5). Pytest collection stays green (695 tests). No residual trace hooks remain in production code; Phase E can now proceed without debug guards.
   - Attempt #24 (Phase E2/E3) shows C reuses the first subpixel's omega (edge + centre identical), aligning with PyTorch within ≈0.003 %. Omega bias is ruled out; focus shifts to HKL default usage and background scaling.
 - Next Actions:
-  1. 🛠️ Extend PyTorch instrumentation for Tap 4: add oversample support + F_cell counters to `scripts/debug_pixel_trace.py` (or targeted helper) and capture JSON for pixels (0,0)/(2048,2048) under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/py_taps/` with commands/env metadata.
-  2. 🧰 Mirror Tap 4 on the C binary: instrument `golden_suite_generator/nanoBragg` to log HKL/default_F statistics for the same pixels, archive under `.../c_taps/`, then rebuild clean.
-  3. 🧪 Author `f_cell_comparison.md` summarising PyTorch vs C Tap 4 stats, recommend whether to proceed with Tap 5 (pre-norm intensity) or Tap 6 (water background), and update plan/ledger with the chosen follow-up.
+  1. 🧰 Mirror Tap 4 on the C binary: instrument `golden_suite_generator/nanoBragg` to log default_F/HKL counters for pixels (0,0) and (2048,2048) at oversample=2; archive logs/JSON under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/c_taps/`, then rebuild the binary without taps (capture commands + env).
+  2. 🧪 Draft `f_cell_comparison.md` summarising Attempt #25 PyTorch data vs the new C tap outputs, explicitly stating whether F_cell usage matches; choose the next hypothesis (Tap 5 pre-normalisation intensity vs Tap 6 water background) and cite the deciding evidence.
+  3. 🧭 Prep the selected follow-up tap: if Tap 5, outline required metrics (`intensity_before_scaling`, normalization factors) and command scaffolding in input.md plus plan updates; if Tap 6, enumerate background terms to capture. Update plans/active/vectorization-parity-regression.md once the branch is chosen.
 - Risks/Assumptions:
   - Profiler evidence remains invalid while corr_warm=0.721; avoid reusing traces from blocked attempts.
   - ROI thresholds (corr≥0.999, |sum_ratio−1|≤5×10⁻³) are treated as spec acceptance; full-frame parity may require masking.
