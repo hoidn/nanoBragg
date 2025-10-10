@@ -1783,3 +1783,10 @@
 - Focused on `[VECTOR-PARITY-001]` housekeeping: updated fix_plan status to note Phase B1 reproduction outstanding and refreshed Next Actions with explicit step-by-step commands for the new 4096² benchmark, nb-compare sum_ratio capture, parity selectors, and ROI checks.
 - Rewrote `input.md` (Mode: Parity) instructing Ralph to re-run Phase B1 on current HEAD, copy the benchmark bundle into `reports/2026-01-vectorization-parity/phase_b/$STAMP/`, record git/env metadata, and regenerate summary.md with correlation/sum_ratio prior to advancing to B2.
 - Expect next loop to confirm receipt of a fresh Phase B1 bundle (correlation + sum_ratio) and, if captured, push the plan toward Phase B2 selectors; if thresholds unexpectedly pass, pause and reassess before moving to trace work.
+
+### 2026-01-02 (galph loop - VECTOR-PARITY Phase B1 alignment)
+- Repo already on feature/spec-based-2; coin flip = tails so skipped commit audit. Reviewed docs/index, spec shards, arch.md, testing_strategy, runtime checklist, and active vectorization plans before selecting focus.
+- Focused on `[VECTOR-PARITY-001]` Phase B1: inspected existing phase_b bundles (20251010T024911Z / 20251010T025909Z) showing benchmark correlation 0.721 vs nb-compare 0.059 with sum_ratio ≈236. Determined a fresh HEAD reproduction must log both benchmark and nb-compare metrics for direct comparison.
+- Updated `docs/fix_plan.md:4016` Next Actions to require recording correlation data from `benchmark_results.json` alongside nb-compare metrics in summary.md.
+- Rewrote `input.md` (Mode: Parity) instructing Ralph to rerun Phase B1, copy the benchmark bundle, run nb-compare, and populate summary.md with both benchmark correlations and nb-compare totals plus observations. Artifacts to land under `reports/2026-01-vectorization-parity/phase_b/$STAMP/`.
+- Next follow-up: Expect Ralph to execute the refreshed Phase B1 loop and update `[VECTOR-PARITY-001]` Attempt history. Supervisor should then review the new metrics delta and decide whether to progress to Phase B2 parity selectors or escalate to trace work.
