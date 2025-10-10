@@ -1,0 +1,87 @@
+{
+  "tap_id": "hkl_subpixel",
+  "pixel_coords": [
+    2048,
+    2048
+  ],
+  "oversample": 2,
+  "values": {
+    "oversample": 2,
+    "total_subpixels": 4,
+    "subpixels": [
+      {
+        "subpixel_index": [
+          0,
+          0
+        ],
+        "hkl_fractional": [
+          -1.9999999656405976e-06,
+          0.019999999800004453,
+          -0.019999999800004453
+        ],
+        "hkl_rounded": [
+          0,
+          0,
+          0
+        ],
+        "F_cell": 100.0,
+        "out_of_bounds": false
+      },
+      {
+        "subpixel_index": [
+          0,
+          1
+        ],
+        "hkl_fractional": [
+          -9.999999939213044e-07,
+          0.01999999990000445,
+          -4.4492946430909165e-15
+        ],
+        "hkl_rounded": [
+          0,
+          0,
+          0
+        ],
+        "F_cell": 100.0,
+        "out_of_bounds": false
+      },
+      {
+        "subpixel_index": [
+          1,
+          0
+        ],
+        "hkl_fractional": [
+          -9.999999939237536e-07,
+          4.448069996297892e-15,
+          -0.01999999990000445
+        ],
+        "hkl_rounded": [
+          0,
+          0,
+          0
+        ],
+        "F_cell": 100.0,
+        "out_of_bounds": false
+      },
+      {
+        "subpixel_index": [
+          1,
+          1
+        ],
+        "hkl_fractional": [
+          -4.3790577010150533e-47,
+          4.449294665337389e-15,
+          -4.449294665337389e-15
+        ],
+        "hkl_rounded": [
+          0,
+          0,
+          0
+        ],
+        "F_cell": 100.0,
+        "out_of_bounds": false
+      }
+    ]
+  },
+  "timestamp_utc": "20251010T120417Z"
+}

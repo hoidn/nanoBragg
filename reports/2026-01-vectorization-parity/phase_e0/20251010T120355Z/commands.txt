@@ -1,0 +1,16 @@
+# Phase E12 — PyTorch Tap 5.1 HKL Audit
+# Timestamp: 2025-10-10T12:03:55Z
+# Ralph Attempt #33
+
+# Environment
+export STAMP=20251010T120355Z
+export OUTDIR=reports/2026-01-vectorization-parity/phase_e0/${STAMP}
+export KMP_DUPLICATE_LIB_OK=TRUE
+
+# Commands executed
+python scripts/debug_pixel_trace.py --pixel 2048 2048 --oversample 2 --taps hkl_subpixel --json --out-dir ${OUTDIR}/py_taps --tag centre
+python scripts/debug_pixel_trace.py --pixel 0 0 --oversample 2 --taps hkl_subpixel --json --out-dir ${OUTDIR}/py_taps --tag edge
+
+# Outputs
+# ${OUTDIR}/py_taps/pixel_2048_2048_hkl_subpixel.json
+# ${OUTDIR}/py_taps/pixel_0_0_hkl_subpixel.json
