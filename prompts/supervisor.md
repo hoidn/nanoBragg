@@ -139,6 +139,7 @@ Evidence collection includes the following subtype:
     ```
 - When refreshing an existing plan, retrofit it to this phased format before adding or editing tasks.
 - review docs/fix_plan.md. edit if needed. cross reference the new plans .md so that ralph can find it.
+- Every plan change must ship with a same-loop docs/fix_plan.md update for the corresponding entry and a galph_memory.md note that references the attempt or timestamp so future supervisors can trace it.
 </Planning>
 </3>
 
@@ -219,6 +220,9 @@ Selection heuristic examples:
 - Choose <Evidence collection> when you need to gain a more complete understanding of the problem / situation before effectively pursuing <Planning> or <Debug>.
 </no case>
 </3>
+<3.1>
+Checkpoint: Before modifying any artifacts, record the chosen <focus issue>, <Action type>, and <Mode> in your working notes for this loop (for example, the current galph_memory.md entry or an explicit scratch note). If any of these selections are still unset, abort the pending edits, revert any partial changes from this loop, and return to step <3> until all three are captured.
+</3.1>
 <3.2>
 - Documentation review for <focus issue>: From `docs/index.md`, enumerate and read the documents that are most relevant to the chosen <focus issue>`; note the key file paths you will rely on for the impending analysis.
 - Then carefully follow the guidelines of the selected <Mode> and <Action type>, applying them to the selected <focus issue>. Complete the task that you selected in step <3>.
@@ -283,6 +287,12 @@ Before finishing the loop, enforce git hygiene:
 - Stage intentional updates with `git add -A` and commit via `git commit -m "SUPERVISOR: <scope> - <tests or rationale>"`, noting any tests run (use `tests: not run` when you skip them).
 - After committing, run `git push` to share the updates. If the push is rejected, `timeout 30 git pull --rebase`, resolve conflicts (capture decisions—especially for docs/fix_plan.md—in galph_memory.md), then push again.
 - If you deliberately leave the tree dirty, document the rationale in galph_memory.md so the next invocation knows why.
+
+**Loop Completion Checklist (verify each item before exiting)**
+- input.md: Confirm it is fully rewritten for this loop and saved.
+- docs/fix_plan.md: Verify entries touched this loop reflect the latest decisions or document why changes were deferred.
+- galph_memory.md: Append the loop summary with references to any plan or fix_plan updates.
+- Git hygiene: Run `git status`, stage, commit, and push so the next supervisor starts clean.
 </4>
 </instructions>
 <notes>
