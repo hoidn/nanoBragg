@@ -9,18 +9,18 @@ IMPORTANT SUSPEND ALL OTHER WORK UNTIL THIS IS COMPLETE:
 delegate to ralph a full run of the test suite (pytest tests/) and triage of the failing test. review, classing various errors as either implementation bugs or consequences of test deprecation. then systematically fix the failing tests.
 </5>
 ^IMPORTANT!!
-
-</current long-term goals>
-<past long term goals>
-<0>
-housekeep docs/fix_plan.md, reducing it length to <1000 lines
-</0>
 <1>
 review and firm up if needed plans/active/vectorization.md. then implement it (or rather, delegate its implementation to ralph), starting with the tricubic interpolation vectorization 
 </1>
 <2>
 Find all other cases of incomplete vectorization not covered by <1> and resolve them. Record the before / after performance.
 </2>
+
+</current long-term goals>
+<past long term goals>
+<0>
+housekeep docs/fix_plan.md, reducing it length to <1000 lines
+</0>
 <3>
 delegate to ralph: using parallel subagents, index the test suite and write the new reference doc to a .md under docs/. this doc should be discoverable and help streamline test discovery / selection in future iterations
 </3>
