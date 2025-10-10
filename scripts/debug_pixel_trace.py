@@ -335,23 +335,22 @@ def main():
     # Lattice factors (SQUARE shape)
     Na, Nb, Nc = crystal_config.N_cells
 
-    # F_latt = sinc(π·h) / sinc(π·h/N) for each axis
-    # PyTorch sinc(x) = sin(πx)/(πx), so sinc(π·h) = sin(π²·h)/(π²·h)
-    # But nanoBragg uses sincg which is sin(x)/x, so sincg(π·h) = sin(π·h)/(π·h)
-    # We need to replicate that behavior
-    def sincg(x):
-        """Sine cardinal function: sin(x)/x with limit at x=0."""
-        x_abs = torch.abs(x)
-        result = torch.where(
-            x_abs < 1e-6,
-            torch.ones_like(x),
-            torch.sin(x) / x
-        )
-        return result
+    # Import the production sincg function to ensure trace matches simulator
+    from nanobrag_torch.utils.physics import sincg
 
-    F_latt_a = sincg(np.pi * h_frac) / sincg(np.pi * h_frac / Na) if Na > 1 else torch.tensor(Na, dtype=dtype, device=device)
-    F_latt_b = sincg(np.pi * k_frac) / sincg(np.pi * k_frac / Nb) if Nb > 1 else torch.tensor(Nb, dtype=dtype, device=device)
-    F_latt_c = sincg(np.pi * l_frac) / sincg(np.pi * l_frac / Nc) if Nc > 1 else torch.tensor(Nc, dtype=dtype, device=device)
+    # C-Code Reference (from nanoBragg.c, lines 15026-15029):
+    # ```c
+    # double sincg(double x,double N) {
+    #     if(x==0.0) return N;
+    #     return sin(x*N)/sin(x);
+    # }
+    # ```
+    # Formula: sincg(π·h, Na) = sin(Na·π·h) / sin(π·h)
+    # This is NOT the same as sincg(π·h) / sincg(π·h/Na)!
+
+    F_latt_a = sincg(torch.pi * h_frac, torch.tensor(Na, dtype=dtype, device=device))
+    F_latt_b = sincg(torch.pi * k_frac, torch.tensor(Nb, dtype=dtype, device=device))
+    F_latt_c = sincg(torch.pi * l_frac, torch.tensor(Nc, dtype=dtype, device=device))
 
     emit_trace("TRACE_PY", "F_latt_a", F_latt_a)
     emit_trace("TRACE_PY", "F_latt_b", F_latt_b)

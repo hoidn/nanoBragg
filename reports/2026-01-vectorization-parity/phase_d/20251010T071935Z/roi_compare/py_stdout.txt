@@ -1,0 +1,15 @@
+Running simulation...
+  Detector: 4096x4096 pixels
+  Crystal: 100.0x100.0x100.0 Å
+  Wavelength: 0.50 Å
+  Device: cpu, Dtype: torch.float32
+auto-selected 1-fold oversampling
+
+Statistics:
+  Max intensity: 6.005e+03 at pixel (2059, 2041)
+  Mean: 1.482e+00
+  RMS: 2.653e+00
+  RMSD: 2.200e+00
+Wrote float image to /tmp/tmpvxifte6n_py.bin
+
+Simulation complete.

@@ -1,8 +1,8 @@
 {
-  "timestamp_utc": "20251010T063059Z",
+  "timestamp_utc": "20251010T071716Z",
   "pixel_slow": 1792,
   "pixel_fast": 2048,
-  "tag": "post_fix_scattering",
+  "tag": "f_latt_post_fix",
   "device": "cpu",
   "dtype": "torch.float64",
   "configuration": {
@@ -15,5 +15,5 @@
     "default_F": 100.0,
     "convention": "MOSFLM"
   },
-  "final_intensity": 9.449609197278574e-14
+  "final_intensity": 0.22994312487525026
 }

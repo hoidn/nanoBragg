@@ -1,0 +1,115 @@
+# Phase D3 Reproduction Commands
+# Generated: 20251010T071935Z
+
+# 1. Generate post-fix trace (validates F_latt parity)
+export STAMP=20251010T071935Z
+KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py \
+  --pixel 1792 2048 \
+  --tag f_latt_post_fix \
+  --out-dir reports/2026-01-vectorization-parity/phase_d/py_traces_post_fix/
+
+# 2. Generate F_latt parity comparison table
+python - <<'PY'
+import os
+from decimal import Decimal
+from pathlib import Path
+
+stamp = os.environ['STAMP']
+c_path = Path('reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/c_traces/pixel_1792_2048.log')
+py_path = Path('reports/2026-01-vectorization-parity/phase_d/py_traces_post_fix/pixel_1792_2048.log')
+keys = ['F_latt_a', 'F_latt_b', 'F_latt_c', 'F_latt']
+
+def grab(path, token):
+    for line in path.read_text().splitlines():
+        parts = line.split()
+        if len(parts) >= 2 and parts[1] == token:
+            return Decimal(parts[-1])
+
+for key in keys:
+    c_val = grab(c_path, key)
+    py_val = grab(py_path, key)
+    rel_err = abs((py_val - c_val) / c_val)
+    print(f"{key}: C={c_val:.12e} Py={py_val:.12e} rel_err={rel_err:.3e}")
+PY
+
+# 3. Run ROI comparison (identifies simulator blocker)
+KMP_DUPLICATE_LIB_OK=TRUE python scripts/nb_compare.py \
+  --resample \
+  --roi 1792 2304 1792 2304 \
+  --outdir reports/2026-01-vectorization-parity/phase_d/$STAMP/roi_compare/ \
+  -- -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 \
+     -distance 500 -detpixels 4096 -pixel 0.05
+
+# 4. Test sincg function in isolation (validates production code)
+KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY'
+import torch, sys
+from pathlib import Path
+sys.path.insert(0, str(Path.cwd() / "src"))
+from nanobrag_torch.utils.physics import sincg
+
+dtype, device = torch.float64, torch.device('cpu')
+h_frac = torch.tensor(-6.576005289138344e-02, dtype=dtype, device=device)
+k_frac = torch.tensor(5.128313254643337e+00, dtype=dtype, device=device)
+l_frac = torch.tensor(-9.996711997359879e-03, dtype=dtype, device=device)
+Na = Nb = Nc = 5
+
+F_latt_a = sincg(torch.pi * h_frac, torch.tensor(Na, dtype=dtype, device=device))
+F_latt_b = sincg(torch.pi * k_frac, torch.tensor(Nb, dtype=dtype, device=device))
+F_latt_c = sincg(torch.pi * l_frac, torch.tensor(Nc, dtype=dtype, device=device))
+F_latt = F_latt_a * F_latt_b * F_latt_c
+
+print(f"F_latt_a: {F_latt_a:.15e}")
+print(f"F_latt_b: {F_latt_b:.15e}")
+print(f"F_latt_c: {F_latt_c:.15e}")
+print(f"F_latt: {F_latt:.15e}")
+PY
+
+# 5. Test full simulator (exposes 32× discrepancy)
+KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY'
+import torch, sys
+from pathlib import Path
+sys.path.insert(0, str(Path.cwd() / "src"))
+from nanobrag_torch.models.crystal import Crystal
+from nanobrag_torch.models.detector import Detector
+from nanobrag_torch.simulator import Simulator
+from nanobrag_torch.config import CrystalConfig, DetectorConfig, BeamConfig, DetectorConvention, DetectorPivot
+
+crystal_config = CrystalConfig(
+    cell_a=100.0, cell_b=100.0, cell_c=100.0,
+    cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+    N_cells=(5, 5, 5), default_F=100.0,
+    phi_start_deg=0.0, osc_range_deg=0.0, phi_steps=1,
+    mosaic_spread_deg=0.0, mosaic_domains=1
+)
+detector_config = DetectorConfig(
+    spixels=4096, fpixels=4096, pixel_size_mm=0.05, distance_mm=500.0,
+    detector_convention=DetectorConvention.MOSFLM, detector_pivot=DetectorPivot.BEAM,
+    detector_rotx_deg=0.0, detector_roty_deg=0.0,
+    detector_rotz_deg=0.0, detector_twotheta_deg=0.0
+)
+beam_config = BeamConfig(
+    wavelength_A=0.5, polarization_factor=0.0,
+    flux=0.0, exposure=1.0, beamsize_mm=0.1
+)
+
+dtype, device = torch.float64, torch.device('cpu')
+crystal = Crystal(crystal_config, dtype=dtype, device=device)
+detector = Detector(detector_config, dtype=dtype, device=device)
+simulator = Simulator(crystal, detector, crystal_config, beam_config, dtype=dtype, device=device)
+
+image = simulator.run()
+pixel_val = image[1792, 2048].item()
+
+print(f"Simulator pixel (1792, 2048): {pixel_val:.15e}")
+print(f"Trace script final intensity: 2.299431248752503e-01")
+print(f"C reference: 2.692498564720e-01")
+print(f"Ratio (Simulator/C): {pixel_val/2.692498564720e-01:.6f}")
+print(f"Ratio (Trace/C): {2.299431248752503e-01/2.692498564720e-01:.6f}")
+PY
+
+# Expected Results:
+# - Command #1: Generates trace with F_latt ≈ 47.98 (matches C)
+# - Command #2: Shows rel_err < 1e-12 for all F_latt components
+# - Command #3: FAILS with corr=-0.001, sum_ratio=12.5×
+# - Command #4: Shows F_latt=47.98 (production sincg is correct)
+# - Command #5: Shows pixel=0.00827 (32× too small, simulator bug)
