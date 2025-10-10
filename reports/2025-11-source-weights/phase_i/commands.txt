@@ -1,0 +1,20 @@
+# Phase I3: Archive Initiative (SOURCE-WEIGHT-001 closure)
+# Date: 2025-10-10 (STAMP=20251010T012205Z)
+# Mode: Docs
+
+# 1. Test collection validation
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q
+
+# 2. Archive document creation
+# - File: plans/archive/source-weight-normalization.md
+# - Content: Initiative summary, phase highlights, parity metrics, residual risks
+
+# 3. Fix plan ledger update
+# - Set [SOURCE-WEIGHT-001] status to 'done'
+# - Log Attempt #40 with archive packet paths
+
+# 4. Remove active plan file
+rm plans/active/source-weight-normalization.md
+
+# 5. galph_memory update (supervisor responsibility; noted here for handoff)
+# - Append archival decision with links to archive plan and report stamp
