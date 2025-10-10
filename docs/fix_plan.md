@@ -1,13 +1,15 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2026-01-11 (galph loop — Tap 5.3 instrumentation prep)
+**Last Updated:** 2026-01-12 (galph loop — Test suite triage planning kickoff)
 **Active Focus:**
-- With Tap 5.2 synthesis complete, author Tap 5.3 oversample accumulation instrumentation and capture PyTorch/C evidence so Phase F remediation can be scoped on solid evidence.
-- Prepare pyrefly + test-index documentation so future delegations have authoritative selectors.
+- CRITICAL: Execute `[TEST-SUITE-TRIAGE-001]` full-suite pytest run and failure triage per `plans/active/test-suite-triage.md`; suspend all other engineering work until Phase A–C artefacts are captured.
+- Tap 5.3 oversample instrumentation for `[VECTOR-PARITY-001]` remains staged but is on hold pending completion of `[TEST-SUITE-TRIAGE-001]` deliverables.
+- Prepare pyrefly + test-index documentation once the suite triage backlog is unblocked.
 
 ## Index
 | ID | Title | Priority | Status |
 | --- | --- | --- | --- |
+| [TEST-SUITE-TRIAGE-001](#test-suite-triage-001-full-pytest-run-and-triage) | Run full pytest suite and triage | Critical | in_progress |
 | [VECTOR-PARITY-001](#vector-parity-001-restore-40962-benchmark-parity) | Restore 4096² benchmark parity | High | in_progress |
 | [VECTOR-GAPS-002](#vector-gaps-002-vectorization-gap-audit) | Vectorization gap audit | High | blocked |
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
@@ -16,6 +18,25 @@
 | [TEST-GOLDEN-001](#test-golden-001-regenerate-golden-data-post-phase-d5) | Regenerate golden data post Phase D5 | High | in_planning |
 | [STATIC-PYREFLY-001](#static-pyrefly-001-run-pyrefly-analysis-and-triage) | Run pyrefly analysis and triage | Medium | in_progress |
 | [TEST-INDEX-001](#test-index-001-test-suite-discovery-reference-doc) | Test suite discovery reference doc | Medium | in_planning |
+
+## [TEST-SUITE-TRIAGE-001] Full pytest run and triage
+- Spec/AT: `docs/development/testing_strategy.md` §§1–2, `arch.md` §2/§15, `specs/spec-a-core.md` (Acceptance Tests), `docs/development/pytorch_runtime_checklist.md` (runtime guardrails).
+- Priority: Critical
+- Status: in_progress
+- Owner/Date: galph/2026-01-12
+- Plan Reference: `plans/active/test-suite-triage.md`
+- Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_b/<STAMP>/artifacts/pytest_full.xml`
+- Artifacts Root: `reports/2026-01-test-suite-triage/` (phases `phase_a`, `phase_b`, `phase_c`, `phase_d`)
+- Attempts History:
+  * Pending — Phase A preflight not yet executed (next loop).
+- Next Actions:
+  1. Complete Phase A checklist (env capture, disk audit, collect-only snapshot).
+  2. Execute full-suite run (Phase B) and archive logs/junit.
+  3. Build triage worksheet (Phase C) before resuming any paused initiatives.
+- Exit Criteria:
+  - `triage_summary.md` classifies every failing test (bug vs deprecation vs config).
+  - `handoff.md` published with remediation priorities and reproduction commands.
+  - `[VECTOR-PARITY-001]` and other initiatives explicitly unblocked in this ledger.
 
 ## [VECTOR-PARITY-001] Restore 4096² benchmark parity
 - Spec/AT: `specs/spec-a-core.md` §§4–5, `specs/spec-a-parallel.md` §2.3, `arch.md` §§2/8/15, `docs/architecture/pytorch_design.md` §1.1 & §1.1.5, `docs/development/testing_strategy.md` §§1.4–2, `docs/development/pytorch_runtime_checklist.md` item #4.

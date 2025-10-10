@@ -2015,3 +2015,11 @@
 - Updated docs/fix_plan.md Next Actions (Tap 5.2 synthesis → Tap 5.3 instrumentation) and added new Phase E rows E15–E18 in plans/active/vectorization-parity-regression.md; vectorization.md snapshot now references Attempt #35.
 - Authored input.md (Mode: Docs) instructing Ralph to retire H1 in tap5_hypotheses.md, integrate Tap 5.2 evidence, and prep for Tap 5.3 instrumentation next loop.
 - Next follow-up: Expect Attempt entry detailing updated tap5_hypotheses.md + collect-only run; supervisor to scope Tap 5.3 instrumentation brief afterwards.
+### 2026-01-12 (galph loop - test suite triage planning kickoff)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Full pytest run + triage (Action: Planning, Mode: Docs) — recorded pre-edits per Step 3.1.
+- Pending: draft phased plan + update docs/fix_plan.md before authoring new input.md.
+- Authored `plans/active/test-suite-triage.md` with four-phase structure (Preflight → Full run → Triage → Handoff); aligned references to testing_strategy + runtime checklist.
+- Updated `docs/fix_plan.md` Last Updated, Active Focus, index, and added `[TEST-SUITE-TRIAGE-001]` section marking other initiatives paused pending triage artifacts.
+- Replaced `input.md` directing Ralph to execute Phase A preflight (env capture + `pytest --collect-only`) and archive outputs under `reports/2026-01-test-suite-triage/phase_a/<STAMP>/`.
+- Reviewed latest Ralph commits (ae9a19ea, 21c42e73): documentation-only Tap 5 evidence; no regressions detected but work now paused until test triage completes.
+- Next supervisor follow-up: verify Phase A artifacts + Attempt log, then queue Phase B full-suite execution.
