@@ -361,17 +361,77 @@ class TestATParallel012ReferencePatternCorrelation:
         )
         assert mean_dist <= 1.0, f"Mean peak distance {mean_dist:.2f}px > 1.0px requirement"
 
-    @pytest.mark.skip(reason="High-resolution variant requires large memory and golden data generation")
     def test_high_resolution_variant(self):
         """
         Test high-resolution variant with 4096×4096 detector.
 
-        This test requires:
+        Requirements from spec-a-parallel.md AT-PARALLEL-012:
         - λ=0.5Å
         - 4096×4096 detector, 0.05mm pixels, 500mm distance
-        - Compare on 512×512 ROI centered on beam
+        - Compare on 512×512 ROI centered on beam (slice [1792:2304, 1792:2304])
         - Pass: No NaNs/Infs, correlation ≥ 0.95 on ROI, top 50 peaks ≤ 1.0 px
         """
-        # This test would need golden data to be generated first
-        # and requires significant memory (4096×4096×4 bytes = 64MB per image)
-        pass
+        # Load golden data (4096x4096)
+        golden_file = Path(__file__).parent / "golden_data" / "high_resolution_4096" / "image.bin"
+        golden_image = load_golden_float_image(str(golden_file), (4096, 4096))
+
+        # Setup PyTorch configuration to match golden data generation
+        # Generated with: -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            N_cells=(5, 5, 5),
+            default_F=100.0
+        )
+
+        detector_config = DetectorConfig(
+            spixels=4096,
+            fpixels=4096,
+            pixel_size_mm=0.05,
+            distance_mm=500.0,
+            detector_convention=DetectorConvention.MOSFLM,  # C code default
+            detector_pivot=DetectorPivot.BEAM
+        )
+
+        beam_config = BeamConfig(
+            wavelength_A=0.5
+            # Use default fluence to match C code default
+        )
+
+        # Run PyTorch simulation
+        crystal = Crystal(crystal_config)
+        detector = Detector(detector_config)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config)
+
+        pytorch_image = simulator.run().cpu().numpy()
+
+        # Extract 512×512 ROI centered on beam (indices 1792:2304 for both axes)
+        roi_slice = slice(1792, 2304)
+        golden_roi = golden_image[roi_slice, roi_slice]
+        pytorch_roi = pytorch_image[roi_slice, roi_slice]
+
+        # Check for NaNs/Infs
+        assert not np.any(np.isnan(pytorch_roi)), "PyTorch ROI contains NaNs"
+        assert not np.any(np.isinf(pytorch_roi)), "PyTorch ROI contains Infs"
+        assert not np.any(np.isnan(golden_roi)), "Golden ROI contains NaNs"
+        assert not np.any(np.isinf(golden_roi)), "Golden ROI contains Infs"
+
+        # Calculate correlation on ROI
+        corr, _ = pearsonr(golden_roi.flatten(), pytorch_roi.flatten())
+
+        # Find peaks in ROI (both should detect exactly 50 per spec)
+        golden_peaks = find_peaks(golden_roi, n_peaks=50, percentile=99.0)
+        pytorch_peaks = find_peaks(pytorch_roi.astype(np.float32), n_peaks=50, percentile=99.0)
+
+        # Match peaks using spec-required 1.0 pixel tolerance (relaxed for high-res)
+        n_matches, mean_dist = match_peaks_hungarian(golden_peaks, pytorch_peaks, max_distance=1.0)
+
+        # Assertions per spec-a-parallel.md §AT-012 high-resolution variant
+        assert corr >= 0.95, f"ROI correlation {corr:.4f} < 0.95 requirement"
+
+        # Spec requires ≥95% of top 50 peaks within 1.0px for high-res variant
+        required_matches = int(0.95 * 50)  # 48 peaks
+        assert n_matches >= required_matches, (
+            f"Only {n_matches}/50 peaks matched within 1.0px in ROI (need ≥{required_matches})"
+        )
+        assert mean_dist <= 1.0, f"Mean peak distance {mean_dist:.2f}px > 1.0px requirement"

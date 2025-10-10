@@ -4123,6 +4123,34 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       3. Phase B3.2 (next ralph loop): Implement test body, remove skip, document generation command
       4. Phase B3.3 (next ralph loop): Run test to capture baseline FAIL metrics (correlation, peak distances)
       5. Phase B4 (after B3): ROI scope checks via `nb-compare --roi` to determine regression scaling
+  * [2025-10-10] Attempt #6 (ralph loop) — Result: **PHASE B3 OPTION A COMPLETE** — Generated 4096² golden data, documented provenance, implemented ROI-based pytest, captured failure evidence.
+    Metrics:
+      - **ROI Correlation**: 0.7157 (❌ <<0.95 threshold, 23.4% below spec requirement)
+      - **Test Duration**: 5.78s
+      - **File Size**: 64MB (4096×4096×4 bytes)
+      - **Pattern Consistency**: 0.7157 matches recurring ~0.72 correlation from VECTOR-GAPS-002 Attempts #3–#8 and VECTOR-PARITY-001 Phase B1/B2
+    Artifacts:
+      - `tests/golden_data/high_resolution_4096/image.bin` — C golden reference data
+      - `tests/golden_data/README.md` — Updated with Section 5 documenting high-res variant command, provenance, acceptance criteria
+      - `reports/2026-01-vectorization-parity/phase_b/20251010T034152Z/c_golden/{command.log,checksum.txt,git_info.txt}` — Golden generation artifacts
+      - `reports/2026-01-vectorization-parity/phase_b/20251010T034152Z/pytest_highres.log` — Full pytest failure output
+      - `reports/2026-01-vectorization-parity/phase_b/20251010T034152Z/summary.md` — Phase B3 execution summary
+      - `tests/test_at_parallel_012.py` — Removed skip decorator, implemented ROI extraction (slice [1792:2304, 1792:2304]), NaN/Inf checks, correlation/peak assertions
+    Observations/Hypotheses:
+      - **SYSTEMATIC PATTERN CONFIRMED**: 0.7157 correlation matches 0.721 from full-frame benchmarks, suggesting ROI vs full-frame doesn't affect regression
+      - **NO NUMERIC ISSUES**: Both golden and PyTorch ROIs passed NaN/Inf checks — problem is algorithmic/logic, not precision
+      - **RESOLUTION-INDEPENDENT**: Same ~0.72 pattern appears across multiple detector sizes/configs, supporting source weighting hypothesis
+      - **SPEC-COMPLIANT VALIDATION NOW ACTIVE**: AT-PARALLEL-012 high-res variant now executable via pytest, no tool discrepancy
+    Tasks Completed (per `plans/active/vectorization-parity-regression.md` Phase B3):
+      ✅ B3a: Generated 4096² golden float image with canonical C command
+      ✅ B3b: Documented provenance in `tests/golden_data/README.md` (Section 5 with command, SHA256, git SHA, acceptance criteria)
+      ✅ B3c: Implemented ROI-based pytest body (replaced skip stub with full implementation)
+      ✅ B3d: Executed targeted pytest (expected FAIL), captured output to `pytest_highres.log`
+      ✅ B3e: Updated ledgers with Option A progress (this attempt entry, summary.md)
+    Next Actions (Phase B4 — ROI scope analysis):
+      1. Phase B4a: Run `nb-compare --resample --roi 1792 2304 1792 2304 --outdir reports/2026-01-vectorization-parity/phase_b/<STAMP>/roi_compare -- -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05` to verify ROI-based parity
+      2. Phase B4b: Compile `roi_scope.md` with correlation vs ROI size analysis, peak offsets, hypotheses
+      3. Phase C Prep: Once ROI scoping complete, proceed to parallel trace-driven debugging per `docs/debugging/debugging.md` targeting the recurring 0.72 correlation pattern
 
 ---
 

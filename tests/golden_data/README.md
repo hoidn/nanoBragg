@@ -151,6 +151,49 @@ To regenerate this data, use the script at `tests/golden_data/cubic_tilted_detec
 
 ---
 
+### 5. `high_resolution_4096` Test Case (AT-PARALLEL-012 High-Resolution Variant)
+
+This test validates the high-resolution variant with a 4096×4096 detector, comparing on a 512×512 ROI centered on the beam.
+
+**Generated Files:**
+- `high_resolution_4096/image.bin`
+
+**⚠️ CANONICAL C-CODE COMMAND (COPY-PASTEABLE):**
+```bash
+./nanoBragg -lambda 0.5 \
+  -cell 100 100 100 90 90 90 \
+  -N 5 \
+  -default_F 100 \
+  -distance 500 \
+  -detpixels 4096 \
+  -pixel 0.05 \
+  -floatfile tests/golden_data/high_resolution_4096/image.bin
+```
+
+**Key Parameters:**
+- **Crystal**: 100Å cubic cell, 5×5×5 unit cells
+- **Beam**: λ=0.5Å (high-energy photons), structure factor F=100 (uniform)
+- **Detector**: 500mm distance, 0.05mm pixels, **4096×4096 pixels** (204.8mm square detector)
+- **Beam Center**: Default (center of detector) = 102.4mm from edge
+- **ROI**: 512×512 window centered on beam (slice [1792:2304, 1792:2304])
+- **Pivot Mode**: Default C-code pivot mode (BEAM)
+- **File Size**: 64MB (4096×4096×4 bytes)
+
+**Acceptance Criteria (from spec-a-parallel.md AT-PARALLEL-012):**
+- No NaNs/Infs in output
+- C vs PyTorch correlation ≥ 0.95 on 512×512 ROI
+- Top N=50 peaks in ROI within ≤ 1.0 px
+
+**Provenance:**
+- Generated: 2025-10-10T03:42Z
+- Git SHA: dfa74570f16ba70dc2481690d931b049fca174f8
+- SHA256: 5c623241d3141334449e251fee41901de0edd895f85b9de1aa556cf48d374867
+- Command log: `reports/2026-01-vectorization-parity/phase_b/20251010T034152Z/c_golden/command.log`
+
+Note: This large test case is used for validating performance and numerical stability at high resolution. The ROI-based comparison keeps validation tractable while still exercising the full simulation.
+
+---
+
 ## Detector Trace Format
 
 When nanoBragg.c is compiled with detector tracing enabled, it outputs the following vectors after all rotations have been applied:
