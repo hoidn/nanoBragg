@@ -65,6 +65,8 @@ An initial analysis pass in which you gather and review information in order to 
 
 After choosing a <focus issue> you will consider the following:
 <post issue selection document review>
+- Before consulting any other document, run a `grep` on `docs/findings.md` for keywords related to the <focus issue>. List the IDs of any relevant findings.
+- If a finding in the index conflicts with information in other documentation, clarify whether the documentation is out of date
 - Which existing docs/fix_plan.md items does it (i.e. the <focus issue>) relate to? 
 - Documentation review for <focus issue>: Using `docs/index.md` as the map, identify and read the specific documents relevant to the chosen <focus issue> (e.g., component contracts, architecture ADRs, parity/testing strategy). List the file paths you will rely on (with a one‑line rationale each) before drafting or updating the plan.
 - Is the <focus issue> related to a pre-existing docs/fix_plan.md in-progress item? If so, read the artifacts (typically under reports/) that were generated in the most recent ralph iteration related to the <focus issue>. These artifacts should be recorded in the docs/fix_plan.md entry; as a fallback, you can also check the commit message history.
