@@ -1778,3 +1778,8 @@
 - Authored `plans/active/vectorization-parity-regression.md` (Phases A–E) to drive parity diagnosis and added `[VECTOR-PARITY-001]` entry to docs/fix_plan.md (index + section at 4007) with status, next actions, and Attempt #0.
 - Replaced input.md (Mode: Parity) directing Ralph to execute Phase A1–A3: build artifact matrix/parameter diff under `reports/2026-01-vectorization-parity/phase_a/$STAMP/`, capture open questions, then log Attempt #1 in fix_plan.
 - Follow-up: expect Ralph to populate the Phase A bundle, update `[VECTOR-PARITY-001]` attempts, and leave downstream phases blocked until parity evidence lands.
+### 2026-01-01 (galph loop - VECTOR-PARITY Phase B1 rally)
+- Repo already up to date; reviewed required spec/arch/testing docs plus vectorization plans before selecting focus. Coin flip = tails (skipped commit audit).
+- Focused on `[VECTOR-PARITY-001]` housekeeping: updated fix_plan status to note Phase B1 reproduction outstanding and refreshed Next Actions with explicit step-by-step commands for the new 4096² benchmark, nb-compare sum_ratio capture, parity selectors, and ROI checks.
+- Rewrote `input.md` (Mode: Parity) instructing Ralph to re-run Phase B1 on current HEAD, copy the benchmark bundle into `reports/2026-01-vectorization-parity/phase_b/$STAMP/`, record git/env metadata, and regenerate summary.md with correlation/sum_ratio prior to advancing to B2.
+- Expect next loop to confirm receipt of a fresh Phase B1 bundle (correlation + sum_ratio) and, if captured, push the plan toward Phase B2 selectors; if thresholds unexpectedly pass, pause and reassess before moving to trace work.
