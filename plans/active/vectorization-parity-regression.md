@@ -12,8 +12,8 @@
 
 ### Status Snapshot (2026-01-10)
 - Phases A–D ✅ complete; ROI parity restored (corr≈1.000000, |sum_ratio−1|≈1.3e-5) and instrumentation cleanup verified.
-- Attempt #22 delivered Phase E0 callchain bundle (`reports/2026-01-vectorization-parity/phase_e0/20251010T092845Z/`) with high-confidence hypothesis: PyTorch multiplies the accumulated oversample sum by the last subpixel’s solid angle (`omega_last`), whereas C is suspected to average ω over all subpixels.
-- Next immediate work: quantify ω asymmetry per pixel, confirm C semantics, and, if mismatch is proven, implement averaged ω handling prior to re-running the 4096² comparison.
+- Attempt #22 delivered Phase E0 callchain bundle (`reports/2026-01-vectorization-parity/phase_e0/20251010T092845Z/`) identifying last-value ω weighting as the top hypothesis.
+- Attempt #23 quantified PyTorch ω bias at oversample=2 (edge last/mean≈1.000028), showing the effect is ≈0.003 % and insufficient to explain the 0.721 correlation — re-prioritise C taps and alternate hypotheses (F_cell defaults, water background) before code changes.
 
 ### Phase A — Evidence Audit & Baseline Ledger
 Goal: Canonicalise good vs bad benchmark evidence so every loop uses the same provenance.
@@ -65,15 +65,15 @@ Exit Criteria: ROI nb-compare passes, instrumentation removed, ledger captures l
 ### Phase E — Edge Residual Diagnosis (Active)
 Goal: Explain the remaining 0.721 correlation on full-frame runs by quantifying edge/oversample behavior and aligning PyTorch with C semantics.
 Prereqs: Phase D complete; regenerate golden data (Attempt #19) acknowledged; callchain SOP ready.
-Exit Criteria: Numeric taps proving or refuting the omega-last-value hypothesis, remediation plan approved, and fix inputs staged for implementation.
+Exit Criteria: Numeric taps proving or refuting the omega-last-value hypothesis (or successor hypothesis), remediation plan approved, and fix inputs staged for implementation.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | E0a | Draft analysis question & callchain brief | [D] | Attempt #22 → `callchain_brief.md`; initiative `vectorization-parity-edge`. |
 | E0b | Execute callchain + static map | [D] | Attempt #22 → `callchain/static.md`; entry→sink documented with file:line anchors. |
 | E0c | Summarise findings & tap plan | [D] | Attempt #22 → `summary.md` & `trace/tap_points.md`; hypothesis: `omega_last` bias at edges. |
-| E1 | Quantify PyTorch omega asymmetry | [ ] | Run `KMP_DUPLICATE_LIB_OK=TRUE NB_TRACE_EDGE_PIXEL="0,0" python scripts/debug_pixel_trace.py --pixel 0 0 --oversample 2 --out-dir reports/2026-01-vectorization-parity/phase_e0/<STAMP>/py_taps/`; compute `relative_asymmetry` for edge vs center pixel (store in `omega_analysis.md`). |
-| E2 | Capture C omega taps for edge pixel | [ ] | Instrument `golden_suite_generator/nanoBragg` oversample loop (see `trace/tap_points.md` Tap 3); command template in `callchain/static.md`; archive under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/c_taps/`. |
+| E1 | Quantify PyTorch omega asymmetry | [D] | ✅ Attempt #23 (20251010T095445Z): measured `last_over_mean≈1.000028` (≈0.003 % bias) for edge pixel (0,0) vs ≈0 for center (2048,2048). Artifacts: `reports/2026-01-vectorization-parity/phase_e0/20251010T095445Z/{py_taps/omega_metrics.json,omega_analysis.md}`. Conclusion: last-value ω weighting is negligible at oversample=2 → pursue alternate hypotheses (C taps or F_cell/background). |
+| E2 | Capture C omega taps for edge pixel | [ ] | Instrument `golden_suite_generator/nanoBragg` oversample loop (see `trace/tap_points.md` Tap 3); command template in `callchain/static.md`; archive under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/c_taps/`. Emphasise comparing average vs last-value despite small PyTorch bias. |
 | E3 | Compare C vs PyTorch omega handling | [ ] | Produce `omega_comparison.md` summarising whether C averages ω; include numeric table + decision. Block advancement if evidence inconclusive. |
 | E4 | Update ledger & plan with outcomes | [ ] | Upon completing E1–E3, add Attempt #23 summary to `[VECTOR-PARITY-001]`, refresh this plan (mark E1–E3 states), and draft remediation decision tree before implementation begins. |
 

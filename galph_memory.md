@@ -1934,3 +1934,10 @@
 - Updated `docs/fix_plan.md` Next Actions to align with the refreshed plan (omega tap execution → C trace → comparison → remediation → ledger updates).
 - Issued `input.md` (Mode: Parity) instructing Ralph to run Next Action #1 with the debug trace command and capture `omega_analysis.md` in a new `$STAMP`.
 - Follow-up: expect PyTorch omega tap artifacts + fix_plan Attempt update next run before proceeding to C instrumentation.
+
+### 2026-01-10 (galph loop - Phase E1 PyTorch tap review)
+- Captured PyTorch omega tap per plan (Attempt #23) and stored results in `reports/2026-01-vectorization-parity/phase_e0/20251010T095445Z/{py_taps/omega_metrics.json,omega_analysis.md}` → edge bias only ≈0.003 % (last/mean≈1.000028), so last-value ω alone can’t explain corr≈0.721.
+- Updated `plans/active/vectorization-parity-regression.md` (Phase E table + status snapshot) and `docs/fix_plan.md` (Attempt history + Next Actions) to mark E1 done and pivot Phase E toward C taps plus HKL/background diagnostics.
+- Refreshed `plans/active/vectorization.md` snapshot to note the negligible ω bias; profiling remains gated until new evidence lands.
+- Issued `input.md` (Mode: Parity) directing Ralph to instrument `golden_suite_generator/nanoBragg` for Tap 3, run the single-pixel `nb-compare` command, and archive C omega traces under a fresh `reports/.../c_taps/` bundle.
+- Follow-up: Expect Attempt logging the C tap outputs + `omega_comparison.md`; next supervisor action is to triage Tap 4 (HKL defaults) vs water background hypothesis once C evidence arrives.

@@ -15,7 +15,7 @@
 - Phase A dependency gate ✅ (Attempts logged Dec 2025; SOURCE-WEIGHT contract propagated to docs/fix_plan.md).
 - Phase B regression refresh ✅ (Attempt #2 2025-10-09 captured CPU/CUDA tricubic + absorption suites under `reports/2026-01-vectorization-refresh/phase_b/20251010T013437Z/`).
 - Phase C parity gate ✅ (Attempt #10 delivered `first_divergence.md` and `[VECTOR-PARITY-001]` Phase D5/D6 corrections landed; ROI parity retested against regenerated golden data in Attempt #20).
-- Phase D backlog refresh remains **blocked** pending `[VECTOR-PARITY-001]` Phase E full-frame validation with the refreshed assets and `[TEST-GOLDEN-001]` Phase D ledger handoff; do not capture new profiler traces until `reports/2026-01-vectorization-parity/phase_e/<STAMP>/` records corr ≥0.999 / |sum_ratio−1| ≤5×10⁻³.
+- Phase D backlog refresh remains **blocked** pending `[VECTOR-PARITY-001]` Phase E full-frame validation with the refreshed assets and `[TEST-GOLDEN-001]` Phase D ledger handoff; do not capture new profiler traces until `reports/2026-01-vectorization-parity/phase_e/<STAMP>/` records corr ≥0.999 / |sum_ratio−1| ≤5×10⁻³. Latest Phase E1 PyTorch tap (Attempt #23) shows ω bias ≈0.003 %, so remediation focus is shifting toward C taps + HKL/background analysis before any simulator edits.
 - Phase E/F design packets are staged but stay paused until Phase D1 unlocks; tricubic addendum will launch first once the Phase E gating artifacts land.
 
 ### Phase A — Dependency Gate & Ledger Sync
