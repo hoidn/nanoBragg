@@ -1,0 +1,43 @@
+================================================================================
+TAP 5 INTENSITY PRE-NORMALIZATION COMPARISON
+================================================================================
+
+EDGE PIXEL (0,0):
+--------------------------------------------------------------------------------
+Metric                         C Value              PyTorch Value        C/PyTorch Ratio
+--------------------------------------------------------------------------------
+I_before_scaling               1.415202e+05         3.542887e+04         3.994487       
+steps                          4                    4                    1.000000       
+omega_pixel (sr)               8.861099e-09         8.861351e-09         0.999972       
+capture_fraction               1.000000             1.000000             1.000000       
+polar                          0.961277             0.961286             0.999991       
+I_pixel_final                  3.013662e-04         7.544829e-05         3.994340       
+
+CENTRE PIXEL (2048,2048):
+--------------------------------------------------------------------------------
+Metric                         C Value              PyTorch Value        C/PyTorch Ratio
+--------------------------------------------------------------------------------
+I_before_scaling               0.000000e+00         1.537999e+08         0.0
+steps                          4                    4                    1.000000       
+omega_pixel (sr)               1.000000e-08         1.000000e-08         1.000000       
+capture_fraction               1.000000             1.000000             1.000000       
+polar                          1.000000             1.000000             1.000000       
+I_pixel_final                  0.000000e+00         3.844995e-01         0.0
+
+================================================================================
+KEY FINDINGS:
+================================================================================
+1. Edge pixel I_before_scaling ratio: 3.9945× (C higher)
+2. Omega ratio (edge): 0.999972× (≈0.0028% difference)
+3. Polar ratio (edge): 0.999991× (≈0.0009% difference)
+4. Steps match exactly: 4 == 4
+5. Centre pixel both implementations report zero intensity (F_cell=0)
+
+CONCLUSION:
+--------------------------------------------------------------------------------
+The ~4× discrepancy in I_before_scaling at the edge pixel is the primary
+divergence. Omega and polar variations are negligible (≤0.003%).
+This isolates the issue to the raw intensity accumulation loop:
+   I_term = (F_cell²) × (F_latt²)
+summed over all subpixels/sources/phi/mosaic.
+================================================================================

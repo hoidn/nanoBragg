@@ -1,0 +1,29 @@
+# Tap 5 Comparison (Phase E10) — Command Log
+# Generated: 2025-10-10T11:36:08Z
+
+## Input Artifacts
+
+# PyTorch Tap 5 (Attempt #29, 20251010T110735Z):
+cat ../../20251010T110735Z/py_taps/pixel_0_0_intensity_pre_norm.json
+cat ../../20251010T110735Z/py_taps/pixel_2048_2048_intensity_pre_norm.json
+
+# C Tap 5 (Attempt #30, 20251010T112334Z):
+cat ../../20251010T112334Z/c_taps/pixel_0_0_tap5.log | grep TRACE_C_TAP5
+cat ../../20251010T112334Z/c_taps/pixel_2048_2048_tap5.log | grep TRACE_C_TAP5
+
+## Analysis Scripts
+
+# Metrics extraction and table generation:
+python3 extract_tap5_metrics.py > tap5_metrics_table.txt
+
+## Key Findings
+
+# Edge pixel I_before_scaling ratio:
+# C:       141520.166457388
+# PyTorch:  35428.86956119085
+# Ratio:    3.9945× (C higher)
+
+# Centre pixel I_before_scaling ratio:
+# C:       0.0
+# PyTorch: 153799897.866993
+# Ratio:   N/A (C zero, PyTorch non-zero — critical HKL lookup divergence)
