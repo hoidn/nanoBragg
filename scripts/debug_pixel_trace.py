@@ -140,7 +140,7 @@ def main():
     beam_config = BeamConfig(
         wavelength_A=0.5,
         polarization_factor=0.0,  # Unpolarized
-        flux=1e12,
+        flux=0.0,  # Default: no flux specified (keeps default fluence 1.259e+29)
         exposure=1.0,
         beamsize_mm=0.1
     )
@@ -374,13 +374,12 @@ def main():
     emit_trace("TRACE_PY", "r_e_meters", r_e)
     emit_trace("TRACE_PY", "r_e_sqr", r_e_sqr)
 
-    # Fluence calculation
-    # fluence = flux * exposure / (beamsize^2 * π/4)
+    # Fluence calculation per spec-a-core.md line 517:
+    # fluence = flux * exposure / beamsize²  (square beam, not circular)
     flux = beam_config.flux
     exposure = beam_config.exposure
     beamsize_m = beam_config.beamsize_mm / 1000.0
-    beam_area_m2 = np.pi * (beamsize_m / 2) ** 2
-    fluence = flux * exposure / beam_area_m2
+    fluence = flux * exposure / (beamsize_m * beamsize_m)
     emit_trace("TRACE_PY", "fluence_photons_per_m2", fluence)
 
     # Steps (sources × phi × mosaic × oversample²)
