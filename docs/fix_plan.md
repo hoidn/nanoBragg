@@ -21,6 +21,7 @@
 | [VECTOR-TRICUBIC-001](#vector-tricubic-001-vectorize-tricubic-interpolation-and-detector-absorption) | Vectorize tricubic interpolation and detector absorption | High | done (Phase H CUDA parity archived) |
 | [VECTOR-TRICUBIC-002](#vector-tricubic-002-vectorization-relaunch-backlog) | Vectorization relaunch backlog | High | in_progress |
 | [VECTOR-GAPS-002](#vector-gaps-002-vectorization-gap-audit) | Vectorization gap audit | High | in_progress |
+| [VECTOR-PARITY-001](#vector-parity-001-restore-40962-benchmark-parity) | Restore 4096² benchmark parity | High | in_progress |
 | [ABS-OVERSAMPLE-001](#abs-oversample-001-fix-oversample_thick-subpixel-absorption) | Fix -oversample_thick subpixel absorption | High | in_planning |
 | [CLI-DTYPE-002](#cli-dtype-002-cli-dtype-parity) | CLI dtype parity | High | in_progress |
 | [CLI-FLAGS-003](#cli-flags-003-handle-nonoise-and-pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | in_progress |
@@ -4000,6 +4001,24 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * Phase B3: Prioritized backlog published with top 3-5 targets and impact estimates (pending B2).
   * Overall: Vectorization gap audit complete when backlog actionable and no Python loops ≥1% inclusive time remain unclassified.
 
+
+---
+
+## [VECTOR-PARITY-001] Restore 4096² benchmark parity
+- Spec/AT: `specs/spec-a-core.md` §§4–5 (sampling and scaling), `arch.md` §§2/8/15 (broadcast + differentiability guardrails), `docs/architecture/pytorch_design.md` §1.1 & §1.1.5 (vectorization + source weighting), `docs/development/testing_strategy.md` §§1.4–2 (parity acceptance thresholds), `docs/development/pytorch_runtime_checklist.md` item #4 (equal weighting discipline).
+- Priority: High
+- Status: in_progress (Phase A evidence audit pending)
+- Owner/Date: galph/2025-12-30
+- Plan Reference: `plans/active/vectorization-parity-regression.md`
+- Reproduction (C & PyTorch): `NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts`
+- First Divergence (if known): Deterministic correlation collapse to 0.721175 (cold & warm) across `[VECTOR-GAPS-002]` Attempts #3–#8 despite cache speedups. Affected artifacts: `reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/benchmark_results.json` (git `ac94e90`) and `reports/2026-01-vectorization-gap/phase_b/20251010T022314Z/benchmark_results.json` (git `22ea5c18`). Last known-good run `reports/benchmarks/20251009-161714/benchmark_results.json` shows correlation 0.999998 and sum_ratio 0.9999876 but lacks recorded git SHA. VECTOR-GAPS-002 Phase B2/B3 and PERF-PYTORCH-004 remain blocked until correlation ≥0.999 and |sum_ratio−1| ≤5e-3 are restored.
+- Next Actions:
+  1. Execute Phase A of `plans/active/vectorization-parity-regression.md` (A1–A3): consolidate artifact matrix, diff benchmark parameters, and log open questions under `reports/2026-01-vectorization-parity/phase_a/<STAMP>/`, then record Attempt #1 here.
+  2. Phase B (B1–B3): rerun 4096² benchmark on HEAD, run authoritative AT parity selectors, and probe reduced ROIs via nb-compare to document regression scope.
+  3. Phase C (C1–C3): produce matched C/Py traces following `docs/debugging/debugging.md`, capture `trace_diff.md`, and update this ledger with the first divergent quantity.
+  4. Phase D (D1–D3): isolate regressing commit via git bisect with benchmark correlation checks, capturing `culprit_summary.md` for implementation follow-up.
+- Attempts History:
+  * [2025-12-30] Attempt #0 (galph loop) — Result: planning baseline. Documented repeated 0.721175 correlation across `reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/` and `20251010T022314Z/`, authored `plans/active/vectorization-parity-regression.md`, and added this fix_plan entry. No code changes. Next step: Phase A artifact audit and Attempt #1 with consolidated evidence.
 
 ---
 

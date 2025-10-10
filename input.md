@@ -1,69 +1,113 @@
-Summary: Capture a clean 4096² CPU profiler bundle so VECTOR-GAPS-002 Phase B can move forward with hotspot ranking.
-Mode: Perf
-Focus: [VECTOR-GAPS-002] Vectorization gap audit
+Summary: Consolidate good vs bad 4096² parity evidence so the new regression plan starts with a single authoritative baseline.
+Mode: Parity
+Focus: [VECTOR-PARITY-001] Restore 4096² benchmark parity
 Branch: feature/spec-based-2
 Mapped tests: none — evidence-only
-Artifacts: reports/2026-01-vectorization-gap/phase_b/$STAMP/profile/, reports/2026-01-vectorization-gap/phase_b/$STAMP/profile_run.log, reports/2026-01-vectorization-gap/phase_b/$STAMP/summary.md, reports/2026-01-vectorization-gap/phase_b/$STAMP/collect.log, reports/2026-01-vectorization-gap/phase_b/$STAMP/env.json, reports/2026-01-vectorization-gap/phase_b/$STAMP/commands.txt
-Do Now: [VECTOR-GAPS-002] Phase B1 — export STAMP=$(date -u +%Y%m%dT%H%M%SZ) && NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/$STAMP/profile/
-If Blocked: If correlation_warm < 0.999 or |sum_ratio−1| > 5e-3, move the bundle to reports/2026-01-vectorization-gap/phase_b/$STAMP/failed/, capture NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q > reports/2026-01-vectorization-gap/phase_b/$STAMP/collect.log, and log the failure as a new Attempt on [VECTOR-GAPS-002] before stopping.
+Artifacts: reports/2026-01-vectorization-parity/phase_a/$STAMP/artifact_matrix.md, reports/2026-01-vectorization-parity/phase_a/$STAMP/param_diff.md, reports/2026-01-vectorization-parity/phase_a/$STAMP/commands.txt
+Do Now: [VECTOR-PARITY-001] Phase A1–A3 — export STAMP=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p reports/2026-01-vectorization-parity/phase_a/$STAMP; generate artifact_matrix.md + param_diff.md covering good run reports/benchmarks/20251009-161714 and failing runs under reports/2026-01-vectorization-gap/phase_b/20251009T*/ and 20251010T02*/; note unresolved items and record the exact commands used in commands.txt.
+If Blocked: If any referenced artifact is missing, document the gap in artifact_matrix.md (Missing: <path>) and halt—do not fabricate metrics. Leave a note in docs/fix_plan.md attempt update describing the missing file before stopping.
 Priorities & Rationale:
-- docs/fix_plan.md:3801 — Next Actions demand the fresh Phase B1 profiler capture with thresholds corr ≥0.999 and |sum_ratio−1| ≤5e-3.
-- plans/active/vectorization-gap-audit.md:34 — Phase B1 row defines the exact benchmark command and cites the SOURCE-WEIGHT parity memo.
-- docs/architecture/pytorch_design.md:101 — Confirms equal-weighting semantics and the validated correlation/sum_ratio tolerances we must hit.
-- docs/development/pytorch_runtime_checklist.md:22 — Reinforces the equal-weighting guard and CLI parity requirements for this run.
+- docs/fix_plan.md:4007 — New entry requires Phase A evidence bundle before further debugging.
+- plans/active/vectorization-parity-regression.md:14 — Phase A exit criteria define artifact_matrix.md, param_diff.md, and ledger update expectations.
+- docs/development/testing_strategy.md:52 — Establishes parity thresholds (corr ≥0.999, |sum_ratio−1| ≤5e-3) to highlight in the matrix.
+- docs/development/pytorch_runtime_checklist.md:18 — Reiterates equal-weighting guard, ensuring parameter diffs flag any deviation.
+- reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/summary.md — Provides primary failing metrics to capture in the matrix.
 How-To Map:
 1. export STAMP=$(date -u +%Y%m%dT%H%M%SZ)
-2. NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/$STAMP/profile/ | tee reports/2026-01-vectorization-gap/phase_b/$STAMP/profile_run.log
+2. mkdir -p reports/2026-01-vectorization-parity/phase_a/$STAMP
 3. python - <<'PY'
-import json, os, textwrap
+import json, os
 from pathlib import Path
 stamp = os.environ['STAMP']
-base = Path('reports/2026-01-vectorization-gap/phase_b') / stamp
-metrics = json.load((base / 'profile' / 'benchmark_results.json').open())[0]
-summary = textwrap.dedent(f"""
-# Phase B1 profiler rerun ({stamp})
-- Command: benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile
-- correlation_warm: {metrics['correlation_warm']:.12f}
-- sum_ratio: {metrics['sum_ratio']:.12f}
-- speedup_warm: {metrics['speedup_warm']:.3f}
-- notes: thresholds corr ≥ 0.999 and |sum_ratio − 1| ≤ 5e-3 per plans/active/vectorization-gap-audit.md Phase B1
-""")
-(base / 'summary.md').write_text(summary)
-if metrics['correlation_warm'] < 0.999 or abs(metrics['sum_ratio'] - 1.0) > 5e-3:
-    raise SystemExit('Parity threshold not met; follow blocked protocol in input.md')
+base = Path('reports/2026-01-vectorization-parity/phase_a') / stamp
+base.mkdir(parents=True, exist_ok=True)
+rows = []
+# Known-good run
+rows.append({
+    "label": "good-20251009-161714",
+    "path": "reports/benchmarks/20251009-161714/benchmark_results.json",
+    "metrics": json.load(Path("reports/benchmarks/20251009-161714/benchmark_results.json").open())[0],
+    "env": None,
+})
+# Failing runs (current HEAD bundles)
+fail_globs = [Path('reports/2026-01-vectorization-gap/phase_b').glob('20251009T*/'),
+              Path('reports/2026-01-vectorization-gap/phase_b').glob('20251010T02*/')]
+for glob_iter in fail_globs:
+    for directory in sorted(glob_iter):
+        metrics_file = None
+        for candidate in ['benchmark_results.json', 'failed/benchmark_results.json', 'profile/benchmark_results.json']:
+            path = directory / candidate
+            if path.exists():
+                metrics_file = path
+                break
+        if not metrics_file:
+            continue
+        env = None
+        env_path = directory / 'env.json'
+        if env_path.exists():
+            env = json.load(env_path.open())
+        rows.append({
+            "label": directory.name,
+            "path": str(metrics_file),
+            "metrics": json.load(metrics_file.open())[0],
+            "env": env,
+        })
+md_lines = ["# Artifact Matrix\n", "| run | correlation_warm | sum_ratio | speedup_warm | git_sha | notes |", "| --- | --- | --- | --- | --- | --- |"]
+for row in rows:
+    metrics = row['metrics']
+    corr = metrics.get('correlation_warm', 'n/a')
+    sum_ratio = metrics.get('sum_ratio', 'n/a')
+    speed = metrics.get('speedup_warm', 'n/a')
+    git_sha = row['env'].get('git_sha') if row['env'] else 'missing'
+    note = f"path={row['path']}"
+    md_lines.append(f"| {row['label']} | {corr} | {sum_ratio} | {speed} | {git_sha} | {note} |")
+# Placeholder for open questions
+md_lines.append("\n## Open Questions\n- [ ] Capture git SHA for reports/benchmarks/20251009-161714 (not recorded).\n- [ ] Confirm whether any smaller ROI bundles exist for comparison.\n")
+(base / 'artifact_matrix.md').write_text("\n".join(md_lines))
 PY
-4. NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q > reports/2026-01-vectorization-gap/phase_b/$STAMP/collect.log
-5. python - <<'PY'
-import json, os, platform
+4. python - <<'PY'
+import os
 from pathlib import Path
 stamp = os.environ['STAMP']
-data = {
-    "python": platform.python_version(),
-    "torch": __import__('torch').__version__,
-    "git_sha": os.popen('git rev-parse HEAD').read().strip(),
-}
-base = Path('reports/2026-01-vectorization-gap/phase_b') / stamp
-(base / 'env.json').write_text(json.dumps(data, indent=2))
-with (base / 'commands.txt').open('w') as fh:
-    fh.write("export STAMP='" + stamp + "'\n")
-    fh.write("NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/$STAMP/profile/\n")
-    fh.write("NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q > reports/2026-01-vectorization-gap/phase_b/$STAMP/collect.log\n")
+base = Path('reports/2026-01-vectorization-parity/phase_a') / stamp
+lines = ["# Parameter Diff\n"]
+def append_run(title, cmd_path, env_path):
+    lines.append(f"## {title}\n")
+    if cmd_path.exists():
+        lines.append('```\n' + cmd_path.read_text().strip() + '\n```\n')
+    else:
+        lines.append('_commands.txt missing_\n')
+    if env_path.exists():
+        lines.append('```json\n' + env_path.read_text().strip() + '\n```\n')
+    else:
+        lines.append('_env.json missing_\n')
+append_run('failing 20251009T095913Z', Path('reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/commands.txt'), Path('reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/env.json'))
+append_run('failing 20251010T022314Z', Path('reports/2026-01-vectorization-gap/phase_b/20251010T022314Z/commands.txt'), Path('reports/2026-01-vectorization-gap/phase_b/20251010T022314Z/env.json'))
+append_run('good 20251009-161714', Path('reports/benchmarks/20251009-161714/commands.txt'), Path('reports/benchmarks/20251009-161714/env.json'))
+(base / 'param_diff.md').write_text("\n".join(lines))
 PY
-6. Update docs/fix_plan.md [VECTOR-GAPS-002] and plans/active/vectorization-gap-audit.md Phase B1 with metrics, artifact paths, and attempt outcome; avoid Phase B2/B3 until thresholds are satisfied.
+5. {
+    echo "export STAMP=$STAMP";
+    echo "python artifact_matrix generation (see step 3)";
+    echo "python param_diff generation (see step 4)";
+} > reports/2026-01-vectorization-parity/phase_a/$STAMP/commands.txt
+6. Review artifact_matrix.md: append any additional open questions or observations per Phase A3 guidance (e.g., parity thresholds, missing files).
+7. Update docs/fix_plan.md [VECTOR-PARITY-001] with Attempt #1 summarising the Phase A bundle (paths, key metrics, noted gaps).
 Pitfalls To Avoid:
-- Do not reuse or overwrite any 20251009/20251010 profiler directories; always create a fresh $STAMP.
-- Keep this loop evidence-only: no production code edits, no plan rewrites beyond logging metrics.
-- Ensure KMP_DUPLICATE_LIB_OK=TRUE stays set or the run may crash due to MKL conflicts.
-- Use NB_C_BIN=./golden_suite_generator/nanoBragg so the C reference matches prior parity bundles.
-- Stay on CPU float32; skip CUDA until PERF-PYTORCH-004 resumes.
-- Capture profile_run.log, env.json, and commands.txt even on failure.
-- Treat correlation and sum_ratio gates as hard stops; if they fail, follow the blocked protocol before exiting.
-- Verify benchmark_detailed.py completed without SIGKILL; large ROI runs are memory-intensive.
-- Keep pytest --collect-only output for audit; missing it blocks ledger updates.
+- Do not rerun benchmark_detailed.py or modify profiler outputs; this loop reuses existing evidence only.
+- Keep scripts read-only: never edit artifacts under reports/benchmarks/2025* beyond new summaries.
+- Ensure python scripts gracefully handle missing files and record gaps instead of failing silently.
+- Preserve device/dtype context in notes (CPU float32); flag any deviation in param_diff.md.
+- Avoid touching production code or plans beyond the required ledger updates.
+- Record every command you run into commands.txt; no ad-hoc shell history.
+- Maintain ASCII output; avoid rich formatting beyond Markdown tables for compatibility with prompts.
+- When updating docs/fix_plan.md, only add the new Attempt; do not alter existing historical entries.
+- Run `pytest --collect-only` only if you end up editing test harness files (not expected this loop).
+- If you discover additional failing bundles, append them to the matrix instead of overwriting; keep provenance clear.
 Pointers:
-- docs/fix_plan.md:3801
-- plans/active/vectorization-gap-audit.md:34
-- docs/architecture/pytorch_design.md:101
-- docs/development/pytorch_runtime_checklist.md:22
-- reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md
-Next Up: Phase B2 — map ≥1% profiler hotspots to the Phase A loop inventory once B1 produces a green bundle.
+- docs/fix_plan.md:4007
+- plans/active/vectorization-parity-regression.md:14
+- docs/development/testing_strategy.md:52
+- docs/development/pytorch_runtime_checklist.md:18
+- reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/summary.md
+Next Up: Phase B1 — rerun the 4096² benchmark on current HEAD once the evidence baseline is captured.

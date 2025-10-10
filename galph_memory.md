@@ -1764,3 +1764,10 @@
 - No plan edits needed: `docs/fix_plan.md` and `plans/active/vectorization-gap-audit.md` already call for the refreshed B1 run with corr ≥0.999 and |sum_ratio−1| ≤5e-3.
 - Rewrote `input.md` (Mode: Perf) to restate the 4096² CPU profiler command, artifact checklist, and blocked protocol; evidence-only loop, thresholds enforced via summary script.
 - Follow-up: expect Ralph to execute the new B1 bundle, deposit artifacts under a fresh `$STAMP`, and update `[VECTOR-GAPS-002]`/plan rows before we advance to Phase B2 hotspot mapping.
+
+### 2025-12-30 (galph loop - VECTOR-PARITY baseline plan)
+- Synced repo (already up to date), reviewed docs/index, specs, arch, testing_strategy, relevant plans, and fix_plan before analysis.
+- Identified persistent 0.721 correlation regression blocking VECTOR-GAPS-002/ PERF-PYTORCH-004 despite repeated profiler attempts; coin flip = heads — recent Ralph commits are evidence-only (no regressions).
+- Authored `plans/active/vectorization-parity-regression.md` (Phases A–E) to drive parity diagnosis and added `[VECTOR-PARITY-001]` entry to docs/fix_plan.md (index + section at 4007) with status, next actions, and Attempt #0.
+- Replaced input.md (Mode: Parity) directing Ralph to execute Phase A1–A3: build artifact matrix/parameter diff under `reports/2026-01-vectorization-parity/phase_a/$STAMP/`, capture open questions, then log Attempt #1 in fix_plan.
+- Follow-up: expect Ralph to populate the Phase A bundle, update `[VECTOR-PARITY-001]` attempts, and leave downstream phases blocked until parity evidence lands.
