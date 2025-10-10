@@ -46,10 +46,10 @@ Exit Criteria: Blueprint bundle under `reports/2026-01-test-suite-triage/phase_d
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Author remediation_plan.md | [ ] | Document the 4-line diff (add `dtype=self.dtype` to cache retrieval in `detector.py:762-777`), include risk assessment, owner (Ralph), and rollback guidance. Reference Phase B summary for evidence. |
-| C2 | Draft tests.md | [ ] | Enumerate authoritative commands: `pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py --maxfail=0` and detector smoke (e.g., `tests/test_detector_geometry.py`). Note expected outcome: RuntimeError removed though seeds may still fail. |
-| C3 | Draft docs_updates.md | [ ] | Capture edits to `docs/architecture/detector.md` (cache dtype note) and `docs/development/pytorch_runtime_checklist.md` (§2 example). Include link to testing strategy references. |
-| C4 | Log Attempt #3 in fix_plan | [ ] | Update `[DTYPE-NEUTRAL-001]` with Phase C artifact path, blueprint highlights, and readiness message unlocking Phase D delegation. |
+| C1 | Author remediation_plan.md | [D] | ✅ Attempt #3 (20251010T174636Z) — Complete remediation plan authored covering 4-line diff, risk assessment, rollback plan, validation strategy, success criteria, and artifact references. Stored in `reports/2026-01-test-suite-triage/phase_d/20251010T174636Z/dtype-neutral/phase_c/remediation_plan.md`. |
+| C2 | Draft tests.md | [D] | ✅ Attempt #3 — Comprehensive test specification authored with primary (AT-013/024 dtype crash elimination), secondary (detector geometry regression), and tertiary (CPU/CUDA device coverage) validation phases. Includes exact pytest commands, expected outcomes, artifact capture paths, and troubleshooting guidance. Stored in `reports/.../phase_c/tests.md`. |
+| C3 | Draft docs_updates.md | [D] | ✅ Attempt #3 — Documentation update plan authored specifying 4 file touchpoints: `docs/architecture/detector.md` §7.3 (new dtype neutrality subsection), `docs/development/pytorch_runtime_checklist.md` §2 (cache dtype example), `docs/development/testing_strategy.md` §1.4 (cache consistency bullet), `docs/fix_plan.md` Attempt #3 (this entry). Includes update sequence, validation checklist, and cross-reference integrity check. Stored in `reports/.../phase_c/docs_updates.md`. |
+| C4 | Log Attempt #3 in fix_plan | [D] | ✅ Attempt #3 — Updated `[DTYPE-NEUTRAL-001]` entry in `docs/fix_plan.md` with Phase C artifact path (`reports/2026-01-test-suite-triage/phase_d/20251010T174636Z/dtype-neutral/phase_c/`), deliverables summary (3 blueprint docs), and updated Next Actions pointing to Phase D implementation execution. |
 
 ### Phase D — Implementation Execution (Delegate to Ralph)
 Goal: Provide ordered implementation tasks with clear acceptance criteria to eliminate dtype mismatch.
