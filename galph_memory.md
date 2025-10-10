@@ -1,3 +1,9 @@
+### 2026-01-07 (galph loop - TEST-GOLDEN-001 kickoff)
+- Added `[TEST-GOLDEN-001]` ledger entry and authored `plans/active/test-golden-refresh.md` to manage golden-data regeneration blocking Phase E.
+- Updated `[VECTOR-PARITY-001]` Next Actions to depend on the new plan; noted gating in vectorization/vectorization-parity active plans.
+- Replaced input.md with Phase A audit instructions (Mode: Parity) directing Ralph to capture the high-res ROI nb-compare and draft scope_summary.md under `reports/2026-01-golden-refresh/phase_a/$STAMP/`.
+- Expect Attempt #18 delivering scope_summary.md + metrics before launching regeneration (Phase B).
+
 ### 2026-01-06 (galph loop - Phase D1 kickoff)
 - Confirmed Phase C traces + first_divergence complete; updated plans/active/vectorization-parity-regression.md to mark C2/C3 done and replaced commit-bisect Phase D with physics remediation tasks (H1–H3).
 - Refreshed docs/fix_plan.md `[VECTOR-PARITY-001]` Next Actions to call out Phase D1–D4 workflow with m^-1 scattering vector requirement.

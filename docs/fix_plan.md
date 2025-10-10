@@ -1,6 +1,6 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2026-01-07 (galph loop)
+**Last Updated:** 2026-01-07 (galph loop — TEST-GOLDEN-001 launch)
 **Active Focus:**
 - Execute VECTOR-PARITY Phase E full-frame validation and ledger updates now that Phase D6 cleanup succeeded.
 - Prepare pyrefly + test-index documentation so future delegations have authoritative selectors.
@@ -13,6 +13,7 @@
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
 | [VECTOR-TRICUBIC-002](#vector-tricubic-002-vectorization-relaunch-backlog) | Vectorization relaunch backlog | High | in_progress |
 | [CLI-FLAGS-003](#cli-flags-003-handle--nonoise-and--pix0_vector_mm) | Handle -nonoise and -pix0_vector_mm | High | in_progress |
+| [TEST-GOLDEN-001](#test-golden-001-regenerate-golden-data-post-phase-d5) | Regenerate golden data post Phase D5 | High | in_planning |
 | [STATIC-PYREFLY-001](#static-pyrefly-001-run-pyrefly-analysis-and-triage) | Run pyrefly analysis and triage | Medium | in_progress |
 | [TEST-INDEX-001](#test-index-001-test-suite-discovery-reference-doc) | Test suite discovery reference doc | Medium | in_planning |
 
@@ -49,19 +50,10 @@
   - Attempt #14 confirms the simulator regression: NB_TRACE_SIM_F_LATT shows lattice vectors remained in Å, producing h/k/l values 10^10× too large and intensities ~32× low. Fix requires multiplying `rot_a/b/c` by 1e10 (Å→m⁻¹) before computing h·S. Evidence: `reports/2026-01-vectorization-parity/phase_d/20251010T073708Z/simulator_f_latt.md`.
   - **Phase D5 success:** ROI parity fully restored (corr=1.000000, sum_ratio=0.999987). Critical lesson: dimensional analysis error in Phase D4 planning (proposed 1e10 for Å→m⁻¹) was corrected during implementation to 1e-10 (Å→meters). The correct units for lattice vectors in the dot product h=a·S are meters (not m⁻¹), matching scattering_vector units (m⁻¹) to produce dimensionless Miller indices. This error highlights the importance of verifying unit conversions during implementation, not just during planning.
   - **Phase D6 cleanup:** ROI parity remains stable post-instrumentation removal (corr≈0.999999999, |sum_ratio−1|≈1.3e-5). Pytest collection stays green (695 tests). No residual trace hooks remain in production code; Phase E can now proceed without debug guards.
-- Next Actions (2025-10-10 refresh — Phase C3 complete, ready for implementation):
-  1. ✅ **Phase C staging** — Completed via Attempt #8 (`reports/2026-01-vectorization-parity/phase_c/20251010T040739Z/trace_plan.md`).
-  2. ✅ **Supervisor decisions logged this loop** — Pixel set = {(2048,2048) ROI core, (1792,2048) first row outside ROI, (4095,2048) far edge}; extend `scripts/debug_pixel_trace.py` rather than fork; start with aggregated-per-pixel tap points before drilling into per-source traces.
-  3. ✅ **Phase C1 — C trace capture** — TRACE_C logs archived at `reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/`; note all three pixels currently sit in background (F_cell=0).
-  4. ✅ **Phase C2 — PyTorch trace capture** — TRACE_PY logs archived at `reports/2026-01-vectorization-parity/phase_c/20251010T055346Z/py_traces/`; script debugged and verified via Attempt #9. Note: PyTorch shows non-zero intensity (uses default_F=100) while C shows zero (no HKL file); beam center parity exact; fluence discrepancy flagged for investigation.
-  5. ✅ **Phase C3 — Trace diff & first divergence** — Complete. Artifact: `reports/2026-01-vectorization-parity/phase_c/20251010T061605Z/first_divergence.md`. Three critical bugs identified with high confidence (H1/H2/H3), all actionable. Geometric parity confirmed perfect. Ready for debugging/implementation loop delegation.
-  6. ✅ **Phase D1 — Fix H1 (scattering_vec unit conversion)** — Completed via Attempt #11 (`reports/2026-01-vectorization-parity/phase_d/20251010T062949Z/`); TRACE_PY now matches C within ≤4.3e-14 rel_err and `diff_scattering_vec.md` documents the post-fix values.
-  7. ✅ **Phase D2 — Fix H2 (fluence calculation)** — Completed via Attempt #12 (`reports/2026-01-vectorization-parity/phase_d/20251010T070307Z/fluence_parity.md`); trace helper now emits `beam_config.fluence`, yielding rel_err=7.9e-16 against TRACE_C with pytest collect (692 tests) clean.
-  8. ✅ **Phase D3 — Trace helper F_latt normalization** — Attempt #13 (`reports/2026-01-vectorization-parity/phase_d/20251010T071935Z/PHASE_D3_SUMMARY.md`) imports production `sincg` into the trace helper and matches TRACE_C within 5e-15. Remaining ROI failure is isolated to the simulator (resolved by Phase D4).
-  9. ✅ **Phase D4 — Diagnose simulator F_latt regression (32× intensity gap)** — Attempt #14 (`reports/2026-01-vectorization-parity/phase_d/20251010T073708Z/simulator_f_latt.md`) instrumented `Simulator._compute_physics_for_position()` and proved `rot_a/b/c` must be converted to m⁻¹ (1e10 scale-up) to align h/k/l with the trace helper. Temporary NB_TRACE_SIM_F_LATT logging is in place for verification.
-  10. ✅ **Phase D5 — Apply fix + parity smoke** — Attempt #15 (commit bc36384c). **Result: SUCCESS.** Applied lattice vector unit conversion (Å→meters) by multiplying `rot_a/b/c` by 1e-10 after `Crystal.get_rotated_real_vectors()` in `src/nanobrag_torch/simulator.py:306-308`. Achieved perfect parity: corr=1.000000 (0.9999999985), sum_ratio=0.999987, RMSE=3.28e-05. Initial dimensional analysis error (attempted 1e10, should be 1e-10) corrected during implementation. ROI nb-compare (512² window at 4096² detector, λ=0.5Å, pixel=0.05mm) validates fix. Artifacts: `reports/2026-01-vectorization-parity/phase_d/roi_compare_post_fix2/{summary.json,diff.png,c.png,py.png}`. NB_TRACE_SIM_F_LATT instrumentation remains in place (removal deferred to Phase D6). Pytest collection clean (692 tests).
-  11. ✅ **Phase D6 — Cleanup instrumentation** — Attempt #16 (2025-10-10). **Result: SUCCESS.** Removed env-guarded NB_TRACE_SIM_F_LATT logging from `src/nanobrag_torch/simulator.py` (deleted lines 312-367, 56 lines total). Verification: pytest collection clean (695 tests, +3 from baseline); ROI parity maintained (corr=1.000000, sum_ratio=0.999987, RMSE=3.3e-05, mean_peak_delta=0.87 px). Production physics preserved (lattice scaling at 1e-10 untouched). Artifacts: `reports/2026-01-vectorization-parity/phase_d/20251010T081102Z/cleanup/{commands.txt,phase_d6_summary.md,pytest_collect_after.log,roi_compare/summary.json}`. Phase D complete; ready for Phase E full-frame validation.
-  12. ⚠️ **Phase E — Full validation sweep** — Attempt #17 (2025-10-10). **Result: BLOCKED (golden data staleness).** Fresh C↔PyTorch comparison achieves **PASS** (corr=0.999994, sum_ratio=0.999999, RMSE=0.000341) via `nb-compare` with λ=0.5Å, distance=500mm, pixel=0.05mm, detpixels=4096. However, `pytest tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_high_resolution_variant` **FAILS** (ROI corr=0.7157 < 0.95 threshold). Root cause: golden data file `tests/golden_data/high_resolution_4096/image.bin` predates Phase D5 lattice unit fix (Oct 9 timestamp vs Oct 10 commit bc36384c). Regenerated golden data with current C binary (confirmed TRACE_C shows lattice conversion), but pytest still fails with 0.7157. Hypothesis: either C binary did not write correctly, pytest is loading cached data, or config mismatch. Benchmark run (4096² cpu float32) showed 0.721177 correlation, but this is **PARAMETER MISMATCH** (benchmark uses λ=6.2Å/distance=100mm vs test's λ=0.5Å/distance=500mm) and is NOT APPLICABLE to Phase E. Artifacts: `reports/2026-01-vectorization-parity/phase_e/20251010T082240Z/{phase_e_summary.md,nb_compare_full/summary.json,pytest_highres.log,benchmark/}`. **Blocking issue:** Test suite relies on stale golden data; ALL `tests/golden_data/*.bin` files likely need regeneration post-Phase-D5. Cannot close Phase E until pytest passes. Next: Debug why regenerated golden data still fails pytest (verify file write, check pytest loading, compare C output sum vs golden file sum); regenerate ALL golden data per `tests/golden_data/README.md`; create `[TEST-GOLDEN-001]` fix_plan item for golden data refresh.
+- Next Actions:
+  1. 🚩 Coordinate with `[TEST-GOLDEN-001]` Phase A to inventory stale golden datasets and capture `scope_summary.md` (target Attempt #18) before resuming Phase E validation.
+  2. 🔁 After `[TEST-GOLDEN-001]` Phase C parity checks succeed, rerun the Phase E ROI nb-compare bundle and targeted pytest selector to confirm corr≥0.95 and |sum_ratio−1|≤5×10⁻³.
+  3. 🗒️ Once pytest passes, refresh `phase_e_summary.md`, update `plans/active/vectorization-parity-regression.md` (Phase E rows), and schedule benchmark/documentation updates for the following loop.
 - Risks/Assumptions:
   - Profiler evidence remains invalid while corr_warm=0.721; avoid reusing traces from blocked attempts.
   - ROI thresholds (corr≥0.999, |sum_ratio−1|≤5×10⁻³) are treated as spec acceptance; full-frame parity may require masking.
@@ -184,6 +176,35 @@
 - Exit Criteria:
   - PyTorch CLI honours both flags with corr≥0.999, |sum_ratio−1|≤5×10⁻³.
   - Regression test suite updated; documentation linked from `docs/index.md`.
+
+## [TEST-GOLDEN-001] Regenerate golden data post Phase D5
+- Spec/AT: `specs/spec-a-parallel.md` §AT-PARALLEL-012, `tests/golden_data/README.md`, `docs/development/testing_strategy.md` §§1.4–2, `docs/development/pytorch_runtime_checklist.md`, `plans/active/test-golden-refresh.md`.
+- Priority: High
+- Status: in_planning
+- Owner/Date: galph/2026-01-07
+- Reproduction (C & PyTorch):
+  * C (high-res reference): `pushd golden_suite_generator && KMP_DUPLICATE_LIB_OK=TRUE "$NB_C_BIN" -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05 -floatfile ../tests/golden_data/high_resolution_4096/image.bin && popd`
+  * PyTorch ROI parity: `KMP_DUPLICATE_LIB_OK=TRUE python scripts/nb_compare.py --resample --roi 1792 2304 1792 2304 --outdir reports/2026-01-golden-refresh/phase_c/<STAMP>/high_res_roi -- -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05`
+  * Targeted pytest: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_high_resolution_variant`
+  * Shapes/ROI: detector 4096×4096, ROI slow/fast 1792–2303 (512²), noise disabled.
+- First Divergence (if known): Attempt #17 (`reports/2026-01-vectorization-parity/phase_e/20251010T082240Z/`) — ROI correlation 0.7157 due to stale `tests/golden_data/high_resolution_4096/image.bin` predating Phase D5 lattice fix.
+- Attempts History: none — plan authored this loop (see `plans/active/test-golden-refresh.md`).
+- Observations/Hypotheses:
+  - Phase D5 lattice unit change invalidates any golden data that depend on `F_latt`; high-resolution 4096² case already confirmed.
+  - Other datasets (triclinic, tilted detector, mosaic) likely impacted; need systematic audit before regenerating.
+  - README provenance must stay authoritative; include git SHA + checksum after refresh.
+- Next Actions:
+  1. Execute `[TEST-GOLDEN-001]` Phase A (staleness audit) and log Attempt #18 with `scope_summary.md` + affected test list.
+  2. Run Phase B regeneration commands for all impacted datasets; update README and stage refreshed binaries with SHA256 evidence.
+  3. Complete Phase C parity tests (nb-compare + pytest) and Phase D ledger updates so `[VECTOR-PARITY-001]` Phase E can close.
+- Risks/Assumptions:
+  - Regeneration must respect Protected Assets (do not delete files referenced in `docs/index.md`).
+  - Large binaries may exceed git LFS thresholds; preserve existing file paths and sizes.
+  - Requires stable `NB_C_BIN`; document git SHA for every regeneration run.
+- Exit Criteria:
+  - All golden datasets enumerated in Phase A regenerated with updated provenance entries.
+  - ROI correlation ≥0.95 and |sum_ratio−1| ≤5×10⁻³ validated via nb-compare.
+  - Targeted pytest selector passes; `[VECTOR-PARITY-001]` Phase E unblocked and plan ready for archive once downstream tasks finish.
 
 ## [STATIC-PYREFLY-001] Run pyrefly analysis and triage
 - Spec/AT: `prompts/pyrefly.md`, `prompts/supervisor.md`, `docs/development/testing_strategy.md` §1.5, `pyproject.toml` `[tool.pyrefly]`.

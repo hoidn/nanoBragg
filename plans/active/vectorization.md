@@ -15,7 +15,7 @@
 - Phase A dependency gate ✅ (Attempts logged Dec 2025; SOURCE-WEIGHT contract propagated to docs/fix_plan.md).
 - Phase B regression refresh ✅ (Attempt #2 2025-10-09 captured CPU/CUDA tricubic + absorption suites under `reports/2026-01-vectorization-refresh/phase_b/20251010T013437Z/`).
 - Phase C parity gate ✅ (Attempt #10 delivered `first_divergence.md` pinpointing scattering-vector unit error); gating now deferred to `[VECTOR-PARITY-001]` Phase D/E physics remediation.
-- Phase D backlog refresh remains **blocked** until `[VECTOR-PARITY-001]` finishes Phase D6 cleanup + Phase E full-frame validation. ROI parity (Attempt #15, corr≈0.9999999985) is in hand but the instrumentation removal + benchmark reruns are still outstanding.
+- Phase D backlog refresh remains **blocked** until `[VECTOR-PARITY-001]` Phase E closes and `[TEST-GOLDEN-001]` refreshes the golden data set; ROI parity (Attempt #15, corr≈0.9999999985) is in hand but full-frame validation and benchmark reruns depend on the new assets.
 
 ### Phase A — Dependency Gate & Ledger Sync
 Goal: Ensure prerequisite parity decisions and guardrails are recorded so later profiling relies on trustworthy baselines.
