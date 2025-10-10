@@ -1746,3 +1746,9 @@
 - Focused on `[VECTOR-GAPS-002]` Phase B1. Re-read plans/active/vectorization-gap-audit.md lines 27-36 and fix_plan entry docs/fix_plan.md:3791-3793 confirming profiling is unblocked post SOURCE-WEIGHT parity.
 - Updated input.md (Mode: Perf) instructing Ralph to capture a fresh 4096² CPU profiler trace via benchmark_detailed.py, assert correlation_warm ≥0.999, and log artifacts under reports/2026-01-vectorization-gap/phase_b/$STAMP/.
 - Next actions for Ralph: follow the new Do Now, store metrics/summary, and update fix_plan attempts; if success, proceed to Phase B2 hotspot mapping per plan guidance.
+### 2025-12-29 (galph loop - VECTOR-GAPS Phase B1 prep refresh)
+- Repo already synced; reviewed spec/arch/testing docs and active plans before analysis.
+- Action type: Review/housekeeping (Mode: Perf) on `[VECTOR-GAPS-002]` to retire stale “await parity” guidance now that SOURCE-WEIGHT-001 Phase H memo is archived.
+- Updated `docs/fix_plan.md:3791-3810` Next Actions to instruct an immediate Phase B1 profiler rerun with parity thresholds explicit; refreshed risks note to treat correlation_warm <0.999 or |sum_ratio−1|>5e-3 as blockers.
+- Rewrote `input.md` directing Ralph to capture the new 4096² profiler trace (with metrics logging + collect-only proof) and to escalate if thresholds fail; artifacts to land under `reports/2026-01-vectorization-gap/phase_b/$STAMP/`.
+- Follow-up: Expect Ralph to execute the profiler run per updated memo, then log Attempt in `[VECTOR-GAPS-002]`; supervisor to review metrics next loop and, if green, push Phase B2 hotspot mapping guidance.
