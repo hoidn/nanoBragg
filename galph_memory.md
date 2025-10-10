@@ -1,3 +1,10 @@
+### 2026-01-03 (galph loop - Option A activation)
+- Repo already synced. Reviewed required docs + active plans; coin flip = heads → audited Ralph commits `cab99e1`, `ab9aaee` (evidence-only, no regressions).
+- Adopted VECTOR-PARITY Phase B3 Option A (un-skip high-res pytest). Updated `plans/active/vectorization-parity-regression.md` with tasks B3a–B3e/B4a–B4b and refreshed status snapshot.
+- Refreshed `docs/fix_plan.md` `[VECTOR-PARITY-001]` Next Actions to align with Option A execution (golden data generation, doc updates, pytest run, ROI nb-compare).
+- Replaced `input.md` (Mode: Parity) instructing Ralph to generate the 4096² golden image, update docs, implement the ROI-based pytest, run the targeted selector (expected FAIL), and capture artifacts under `reports/2026-01-vectorization-parity/phase_b/$STAMP/`.
+- Follow-up: Expect Attempt logging for B3a–B3d with golden data + pytest failure evidence; then proceed to B4 ROI sweep and Phase C trace prep.
+
 ### 2026-01-03 (galph loop - VECTOR-PARITY Phase B2 prep)
 - Repo already up to date; reread spec/arch/testing docs and active plans before analysis. Coin flip = heads → reviewed Ralph commit f1a6a9b9 (benchmark evidence only); regression remains but no new regressions introduced.
 - Updated plans/active/vectorization-parity-regression.md status snapshot + Phase B1 row to log bundle 20251010T030852Z; fix_plan Next Actions now center on Phase B2 pytest + ROI scope before trace work.
