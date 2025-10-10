@@ -153,7 +153,9 @@ def compute_physics_for_position(
                 wavelength = wavelength.view(n_sources, 1, 1, 1)
 
     # Scattering vector using crystallographic convention
-    scattering_vector = (diffracted_beam_unit - incident_beam_unit) / wavelength
+    # Convert wavelength from Angstroms to meters (×1e-10) to get q in m⁻¹ per spec-a-core.md line 446
+    wavelength_meters = wavelength * 1e-10
+    scattering_vector = (diffracted_beam_unit - incident_beam_unit) / wavelength_meters
 
     # Apply dmin culling if specified
     dmin_mask = None

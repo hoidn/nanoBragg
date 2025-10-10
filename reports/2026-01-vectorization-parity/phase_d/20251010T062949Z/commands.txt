@@ -1,0 +1,15 @@
+# Phase D1 - Scattering Vector Unit Fix Commands
+
+# 1. Generate post-fix PyTorch trace for pixel (1792, 2048)
+KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py \
+  --pixel 1792 2048 \
+  --tag post_fix_scattering \
+  --out-dir reports/2026-01-vectorization-parity/phase_d/20251010T062949Z/py_traces_post_fix
+
+# 2. Verify pytest collection (no import regressions)
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q
+
+# 3. Capture environment metadata
+git rev-parse HEAD > env/git_sha.txt
+python --version > env/python_version.txt
+python -c "import torch; print(torch.__version__)" > env/pytorch_version.txt

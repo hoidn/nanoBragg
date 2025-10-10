@@ -278,10 +278,10 @@ def main():
     emit_trace("TRACE_PY", "lambda_meters", lambda_m)
     emit_trace("TRACE_PY", "lambda_angstroms", lambda_A)
 
-    # Scattering vector: S = (d - i) / λ [in 1/m], then convert to 1/Å
+    # Scattering vector: S = (d - i) / λ [in m⁻¹] per spec-a-core.md line 446
+    # Note: Variable name "scattering_vec_A_inv" is historical from C code but actually contains m⁻¹ values
     S_per_m = (diffracted_vec - incident_vec) / lambda_m
-    S_per_A = S_per_m * 1e-10
-    emit_trace("TRACE_PY", "scattering_vec_A_inv", S_per_A.cpu().numpy())
+    emit_trace("TRACE_PY", "scattering_vec_A_inv", S_per_m.cpu().numpy())
 
     # Get rotated lattice vectors (phi=0, no mosaic)
     # The method returns (N_phi, N_mos, 3) tensors, extract first element for phi=0, mos=0
@@ -475,7 +475,7 @@ def main():
         emit_trace("TRACE_PY", "incident_vec", incident_vec.cpu().numpy())
         emit_trace("TRACE_PY", "lambda_meters", lambda_m)
         emit_trace("TRACE_PY", "lambda_angstroms", lambda_A)
-        emit_trace("TRACE_PY", "scattering_vec_A_inv", S_per_A.cpu().numpy())
+        emit_trace("TRACE_PY", "scattering_vec_A_inv", S_per_m.cpu().numpy())
         emit_trace("TRACE_PY", "rot_a_angstroms", rot_a_A.cpu().numpy())
         emit_trace("TRACE_PY", "rot_b_angstroms", rot_b_A.cpu().numpy())
         emit_trace("TRACE_PY", "rot_c_angstroms", rot_c_A.cpu().numpy())
