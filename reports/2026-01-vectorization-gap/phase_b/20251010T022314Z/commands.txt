@@ -1,0 +1,13 @@
+# VECTOR-GAPS-002 Phase B1 Profiler Capture (FAILED - parity threshold)
+# Timestamp: 20251010T022314Z
+# Git SHA: 22ea5c188f6a7c9f38f18228dd1b0e27c14e5290
+
+# Profiler command (executed):
+export STAMP='20251010T022314Z'
+NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts
+
+# Test collection (executed per blocked protocol):
+NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q > reports/2026-01-vectorization-gap/phase_b/$STAMP/collect.log
+
+# Status: BLOCKED (correlation_warm=0.721175 << 0.999 threshold)
+# Artifacts moved to: reports/2026-01-vectorization-gap/phase_b/20251010T022314Z/failed/

@@ -3962,6 +3962,36 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       4. **PARALLEL TRACE DEBUGGING:** Run `scripts/debug_pixel_trace.py` vs instrumented C to find first numeric divergence.
       5. **AT-PARALLEL VALIDATION:** Run full parity matrix to identify which tests are failing.
       6. **BLOCK Phase B2/B3:** Cannot proceed until correlation ≥0.999.
+  * [2025-10-10] Attempt #8 (ralph loop #276 — evidence-only). Result: ❌ FAILED (Phase B1 profiler rerun BLOCKED AGAIN by parity threshold).
+    Metrics: correlation_warm=0.721175 (−38% from ≥0.999 threshold), correlation_cold=0.721175, speedup_warm=1.15× (PyTorch faster), speedup_cold=0.30× (C faster), cache_speedup=64480.5×. Command: `NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts`.
+    Artifacts:
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T022314Z/failed/benchmark_results.json` — Parity failure metrics
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T022314Z/failed/profile_4096x4096/trace.json` — Profiler trace (unreliable until parity fixed)
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T022314Z/profile_run.log` — Full benchmark output
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T022314Z/summary.md` — Blocking analysis with root cause hypotheses
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T022314Z/collect.log` — Test collection (694 tests, exit 0)
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T022314Z/env.json` — Environment metadata (Python 3.13.5, PyTorch 2.7.1+cu126, git 22ea5c18)
+      - `reports/2026-01-vectorization-gap/phase_b/20251010T022314Z/commands.txt` — Reproduction commands and blocking status
+    Observations/Hypotheses:
+      - **EIGHTH CONSECUTIVE FAILURE:** Correlation STILL 0.721175, identical to Attempts #3, #4, #6, #7. No improvement across multiple sessions.
+      - **PERSISTENT REGRESSION:** Correlation dropped from 0.999998 (Attempt #5, 2025-12-25) to 0.721175 and has remained stuck at this value.
+      - Both cold and warm runs show identical low correlation → deterministic computation issue, not cache/compilation artifact.
+      - Warm speedup 1.15× (PyTorch faster than C) indicates performance is good but physics is fundamentally wrong.
+      - Cache effectiveness excellent (64480.5× speedup) validates PERF-PYTORCH-004 caching work.
+      - Test collection passed (694 tests) suggests import/collection health is good.
+      - Root cause candidates (ordered by likelihood):
+        1. Regression between Attempt #5 (2025-12-25) and current HEAD (22ea5c18) — git bisect required
+        2. SOURCE-WEIGHT-001 Phase H may not have validated 4096² benchmark specifically (only smaller ROIs?)
+        3. Configuration mismatch in benchmark_detailed.py C vs PyTorch parameters
+        4. Device/dtype precision mismatch between C and PyTorch
+        5. RNG seed or weighted-source normalization regression
+    Next Actions:
+      1. **CRITICAL ESCALATION:** This is now the EIGHTH consecutive profiler failure at the same correlation value. The parity issue is severe, persistent, and blocking all Phase B work.
+      2. **URGENT TRIAGE NEEDED:** Supervisor (galph) must decide whether to: (a) git bisect to find regressing commit, (b) reopen SOURCE-WEIGHT-001 Phase H for 4096² validation, (c) run full AT-PARALLEL suite to identify scope of failure.
+      3. **PARALLEL TRACE DEBUGGING:** Execute `scripts/debug_pixel_trace.py` vs instrumented C per `docs/debugging/debugging.md` §2.1 to find first numeric divergence.
+      4. **AT-PARALLEL VALIDATION:** Run `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_parity_matrix.py` to identify which parity tests are failing.
+      5. **GIT BISECT:** If AT-PARALLEL tests confirm widespread failure, bisect between Attempt #5 known-good commit and current HEAD.
+      6. **BLOCK Phase B2/B3:** Cannot proceed with vectorization gap analysis until correlation ≥0.999 restored and validated.
 - Risks/Assumptions: Treat any new profiler run with correlation_warm < 0.999 or |sum_ratio−1| > 5e-3 as a blocker; halt Phase B2/B3 until parity is re-established and escalate to galph. Ensure NB_C_BIN points at `./golden_suite_generator/nanoBragg` and reuse the SOURCE-WEIGHT-001 parity memo as justification in attempt notes.
 - Exit Criteria (quote thresholds from spec):
   * Phase A: Complete loop inventory with manual classification (✓ completed Attempt #2).

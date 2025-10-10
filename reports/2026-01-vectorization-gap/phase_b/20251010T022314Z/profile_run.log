@@ -1,0 +1,108 @@
+[W1009 19:23:38.197741238 CPUAllocator.cpp:245] Memory block of unknown size was allocated before the profiling started, profiler results will not include the deallocation event
+================================================================================
+Detailed nanoBragg Performance Analysis
+================================================================================
+
+Outputs will be saved to: reports/benchmarks/20251009-192334
+
+System Information:
+CPU cores: 32
+Total RAM: 125.7 GB
+PyTorch version: 2.7.1+cu126
+CUDA available: True
+GPU: NVIDIA GeForce RTX 3090
+
+Benchmark Configuration:
+Test sizes: [4096]
+Iterations: 1
+Device: cpu
+Dtype: float32
+Profiling: enabled
+Artifacts: keeping profiler traces
+
+C binary: ./golden_suite_generator/nanoBragg
+
+================================================================================
+Benchmarking Different Detector Sizes
+================================================================================
+
+PERF-PYTORCH-005: Testing simulator cache reuse
+Each size will be run twice: cold (first run) and warm (cached)
+
+==================================================
+Detector Size: 4096x4096 (16,777,216 pixels)
+--------------------------------------------------
+Running C implementation...
+Running PyTorch COLD (first run) on CPU...
+  Setup time (cold): 0.169s
+  Simulation time: 2.317s
+  Cache hit: False
+Running PyTorch WARM (cached) on CPU...
+  Profiling enabled: reports/benchmarks/20251009-192334/profile_4096x4096
+    Saved trace to: reports/benchmarks/20251009-192334/profile_4096x4096/trace.json
+  Setup time (warm): 0.000s
+  Simulation time: 0.619s
+  Cache hit: True
+  Profiler trace saved: reports/benchmarks/20251009-192334/profile_4096x4096/trace.json
+  Setup speedup: 64480.5x faster
+
+Results:
+  C time: 0.757s (memory: 0.0 MB)
+  PyTorch COLD total: 2.525s (memory: 438.8 MB)
+  PyTorch WARM total: 0.658s (memory: 14.1 MB)
+  Speedup (cold): 0.30x (C faster)
+  Speedup (warm): 1.15x (PyTorch faster)
+  Correlation (cold): 0.721175
+  Correlation (warm): 0.721175
+
+  ✓ Cache effectiveness: 64480.5x faster setup
+  ✓ PERF-PYTORCH-005 EXIT CRITERIA MET: Warm setup 0.0ms < 50ms
+
+================================================================================
+PERFORMANCE SUMMARY (PERF-PYTORCH-005: Cache Reuse)
+================================================================================
+
+Size             Pixels    C (s)    PyTorch    PyTorch      Setup       Corr
+                                   COLD (s)   WARM (s)    Speedup     (warm)
+----------------------------------------------------------------------------------
+4096x4096    16,777,216    0.757      2.525      0.658   64480.5x   0.721175
+
+================================================================================
+CACHE EFFECTIVENESS (PERF-PYTORCH-005)
+================================================================================
+
+Size       Setup COLD (ms) Setup WARM (ms)      Speedup    Exit Crit
+----------------------------------------------------------------------
+4096x4096            169.1             0.0     64480.5x            ✓
+
+PERF-PYTORCH-005 Exit Criteria: Setup time < 50ms for cached runs
+  ✓ ALL SIZES MEET EXIT CRITERIA
+
+Detailed results saved to reports/benchmarks/20251009-192334/benchmark_results.json
+
+================================================================================
+ANALYSIS
+================================================================================
+
+COLD runs (first time, includes compilation):
+  ✓ C is on average 3.34x faster than PyTorch
+
+WARM runs (cached simulator):
+  ✓ PyTorch is on average 1.15x faster than C
+
+Cache effectiveness: 64480.5x faster setup on average
+✓ All correlations > 0.99, indicating excellent numerical agreement
+
+================================================================================
+PROFILING ARTIFACTS
+================================================================================
+
+Profiler traces saved to subdirectories:
+  4096x4096: reports/benchmarks/20251009-192334/profile_4096x4096/trace.json
+
+To view profiler traces:
+  Chrome: Open chrome://tracing and load trace.json
+  TensorBoard: Run 'tensorboard --logdir reports/benchmarks/20251009-192334'
+
+
+All outputs saved to: reports/benchmarks/20251009-192334
