@@ -15,7 +15,7 @@
 - Phase A dependency gate ✅ (Attempts logged Dec 2025; SOURCE-WEIGHT contract propagated to docs/fix_plan.md).
 - Phase B regression refresh ✅ (Attempt #2 2025-10-09 captured CPU/CUDA tricubic + absorption suites under `reports/2026-01-vectorization-refresh/phase_b/20251010T013437Z/`).
 - Phase C parity gate ✅ (Attempt #10 delivered `first_divergence.md` pinpointing scattering-vector unit error); gating now deferred to `[VECTOR-PARITY-001]` Phase D/E physics remediation.
-- Phase D backlog refresh remains **blocked** until `[VECTOR-PARITY-001]` records parity ≥0.999 with trace-backed fix confirmation.
+- Phase D backlog refresh remains **blocked** until `[VECTOR-PARITY-001]` finishes Phase D6 cleanup + Phase E full-frame validation. ROI parity (Attempt #15, corr≈0.9999999985) is in hand but the instrumentation removal + benchmark reruns are still outstanding.
 
 ### Phase A — Dependency Gate & Ledger Sync
 Goal: Ensure prerequisite parity decisions and guardrails are recorded so later profiling relies on trustworthy baselines.
@@ -50,7 +50,7 @@ Exit Criteria: `first_divergence.md` captured, decision logged in docs/fix_plan.
 | C1 | Track trace capture completeness | [D] | ✅ Attempts #8–#9 delivered TRACE_C/TRACE_PY logs under `reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/` and `.../20251010T055346Z/`; ledger updated in docs/fix_plan.md Attempt #8/#9. |
 | C2 | Obtain first divergence analysis | [D] | ✅ Attempt #10 published `first_divergence.md` (scattering_vec unit error + fluence/F_latt hypotheses). galph_memory 2026-01-06 entry logs supervisor review. |
 | C3 | Update vectorization plan/ledger post-diagnosis | [D] | ✅ This revision records Phase C closure and re-aligns docs/fix_plan.md `[VECTOR-TRICUBIC-002]` status to “await parity remediation”. |
-| C4 | Monitor parity remediation unblock | [B] | Blocked on the remaining `[VECTOR-PARITY-001]` steps — Phase D3 F_latt normalisation and D4/E1 consolidated parity smoke. Phase D1/D2 closed via Attempts #11/#12; resume this plan’s Phase D once corr ≥0.999 and |sum_ratio−1| ≤5×10⁻³. |
+| C4 | Monitor parity remediation unblock | [B] | Blocked pending `[VECTOR-PARITY-001]` Phase D6 instrumentation cleanup and Phase E benchmark/pytest reruns. Phase D1–D5 closed via Attempts #11–#15 (ROI parity corr≈0.9999999985, |sum_ratio−1|≈1.3e-5). Resume this plan’s Phase D once full-frame metrics meet corr ≥0.999 and |sum_ratio−1| ≤5×10⁻³. |
 
 ### Phase D — Warm-Run Profiling & Backlog Refresh
 Goal: Once parity is restored, capture a clean 4096² warm-run profile and integrate it with the loop inventory to rank the next vectorization targets.

@@ -9,7 +9,7 @@
   - `docs/development/pytorch_runtime_checklist.md` — runtime guardrail reminders (especially item #4 on source weighting).
   - `docs/fix_plan.md` `[VECTOR-GAPS-002]` Attempts #3–#8 and `[PERF-PYTORCH-004]` baseline expectations.
   - Existing artifacts: good run `reports/benchmarks/20251009-161714/`; failing bundles under `reports/2026-01-vectorization-gap/phase_b/20251009T09*` and `20251010T02*`.
-- Status Snapshot (2026-01-07): Phase C traces complete; Phase D1–D4 are now closed, with Attempt #14 isolating the Miller-index unit mismatch (rot_a/b/c in Å versus scattering vector in m⁻¹). Phase D5 will implement the 1e10 lattice-vector conversion, rerun ROI parity, and clean up NB_TRACE_SIM_F_LATT before handing off to Phase E.
+- Status Snapshot (2026-01-07 → refreshed 2026-01-07 PM): Phase C traces complete; Phase D1–D5 are closed. Attempt #15 converted the rotated lattice vectors to meters (1e-10 factor) and recovered ROI parity (corr≈0.9999999985, |sum_ratio−1|≈1.3e-5). Phase D6 now focuses on removing temporary NB_TRACE_SIM_F_LATT instrumentation and confirming the fix holds before Phase E full-frame validation.
 
 ### Phase A — Evidence Audit & Baseline Ledger
 Goal: Canonicalise the good vs bad benchmark evidence and capture parameter parity so future loops operate from a single source of truth.
@@ -62,7 +62,8 @@ Exit Criteria: Trace helper and simulator corrections merged locally with trace-
 | D3 | Restore F_latt normalisation (trace helper) | [D] | ✅ Attempt #13 (`reports/2026-01-vectorization-parity/phase_d/20251010T071935Z/`) imports production `sincg` into the trace helper; TRACE_PY now matches TRACE_C within 5e-15. ROI `nb-compare` remains red only because the simulator still held Å-based lattice vectors prior to D4. |
 
 | D4 | Diagnose simulator F_latt regression | [D] | ✅ Attempt #14 (`reports/2026-01-vectorization-parity/phase_d/20251010T073708Z/simulator_f_latt.md`) used NB_TRACE_SIM_F_LATT to show `h/k/l` were 10^10× too large (rot_a/b/c still in Å). Recommended fix: convert the rotated lattice vectors to m⁻¹ before calling `compute_physics_for_position()`. |
-| D5 | Consolidate trace & parity smoke | [ ] | Implement the 1e10 Å→m⁻¹ conversion for `rot_a/b/c`, remove temporary logging once confirmed, then rerun `KMP_DUPLICATE_LIB_OK=TRUE python scripts/nb_compare.py --resample --roi 1792 2304 1792 2304 --outdir reports/2026-01-vectorization-parity/phase_d/<STAMP>/roi_compare_post_fix -- -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05` and regenerate TRACE_PY logs. Summarise results (corr≥0.999, |sum_ratio−1|≤5×10⁻³) in `phase_d_summary.md`. |
+| D5 | ROI parity restore | [D] | ✅ Attempt #15 (`reports/2026-01-vectorization-parity/phase_d/roi_compare_post_fix2/summary.json`) multiplied `rot_a/b/c` by 1e-10 (Å→meters) inside `Simulator._compute_physics_for_position()`, reran the 512² ROI nb-compare, and achieved corr=0.9999999985 with |sum_ratio−1|≈1.3e-5. TRACE_PY logs refreshed under `py_traces_post_fix/`. |
+| D6 | Instrumentation cleanup & guard | [ ] | Drop NB_TRACE_SIM_F_LATT instrumentation from `src/nanobrag_torch/simulator.py` (env-guarded code added during Attempt #14/#15). After removal, rerun `pytest --collect-only -q` (with `NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE`) and the ROI nb-compare command from D5, archiving outputs under `reports/2026-01-vectorization-parity/phase_d/<STAMP>/cleanup/`. Summarise results in `phase_d_summary.md` confirming parity remains ≥0.999 with |sum_ratio−1|≤5×10⁻³. |
 
 ### Phase E — Fix Verification & Handback
 Goal: Validate the eventual fix, restore guardrails, and unblock downstream plans.

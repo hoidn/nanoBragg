@@ -1888,3 +1888,8 @@
 - Refreshed `docs/fix_plan.md` `[VECTOR-PARITY-001]` section — Attempt #13 now marked ✅, observations cite the Å→m⁻¹ requirement, Next Actions item 10 rewritten for the conversion + ROI rerun.
 - Authored `input.md` (Mode: Parity) directing Ralph to scale `rot_a/b/c` by 1e10, regenerate NB_TRACE_SIM_F_LATT evidence, rerun the ROI nb-compare, and execute the high-res pytest before retiring the instrumentation.
 - Follow-up: expect Attempt bundle under `reports/2026-01-vectorization-parity/phase_d/$STAMP/` with updated traces, `roi_compare_post_fix`, `phase_d_summary.md`, and pytest log; once corr≥0.999 and |sum_ratio−1|≤5×10⁻³ we can unlock Phase E in the parity plan.
+### 2026-01-07 (galph loop - Phase D6 cleanup prep)
+- Updated `plans/active/vectorization-parity-regression.md` status snapshot to reflect Attempt #15 ROI parity success (1e-10 lattice scaling) and added Phase D6 row directing NB_TRACE_SIM_F_LATT removal + ROI recheck; plan now queues Phase E once cleanup holds.
+- Refreshed `plans/active/vectorization.md` snapshot/Phase C4 to note D6/E gating so tricubic relaunch stays blocked until cleanup and full-frame validation finish.
+- Authored new `input.md` (Mode: Parity) instructing Ralph to execute `[VECTOR-PARITY-001]` Phase D6: strip simulator instrumentation, rerun `pytest --collect-only`, rerun the 512² ROI nb-compare into `reports/2026-01-vectorization-parity/phase_d/$STAMP/cleanup/`, and document corr/sum_ratio in `phase_d_summary.md`.
+- Expect Attempt bundle with cleanup artifacts + updated fix_plan entry before approving Phase E1 benchmark/pytest reruns.
