@@ -180,15 +180,16 @@
 ## [TEST-GOLDEN-001] Regenerate golden data post Phase D5
 - Spec/AT: `specs/spec-a-parallel.md` §AT-PARALLEL-012, `tests/golden_data/README.md`, `docs/development/testing_strategy.md` §§1.4–2, `docs/development/pytorch_runtime_checklist.md`, `plans/active/test-golden-refresh.md`.
 - Priority: High
-- Status: in_planning
-- Owner/Date: galph/2026-01-07
+- Status: in_progress
+- Owner/Date: galph/2026-01-07; ralph/2025-10-10 (Phase A)
 - Reproduction (C & PyTorch):
   * C (high-res reference): `pushd golden_suite_generator && KMP_DUPLICATE_LIB_OK=TRUE "$NB_C_BIN" -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05 -floatfile ../tests/golden_data/high_resolution_4096/image.bin && popd`
   * PyTorch ROI parity: `KMP_DUPLICATE_LIB_OK=TRUE python scripts/nb_compare.py --resample --roi 1792 2304 1792 2304 --outdir reports/2026-01-golden-refresh/phase_c/<STAMP>/high_res_roi -- -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05`
   * Targeted pytest: `KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_high_resolution_variant`
   * Shapes/ROI: detector 4096×4096, ROI slow/fast 1792–2303 (512²), noise disabled.
 - First Divergence (if known): Attempt #17 (`reports/2026-01-vectorization-parity/phase_e/20251010T082240Z/`) — ROI correlation 0.7157 due to stale `tests/golden_data/high_resolution_4096/image.bin` predating Phase D5 lattice fix.
-- Attempts History: none — plan authored this loop (see `plans/active/test-golden-refresh.md`).
+- Attempts History:
+  * [2025-10-10] Attempt #18 — Result: ✅ success (Phase A scope audit). Enumerated 5 golden datasets requiring regeneration (`simple_cubic`, `simple_cubic_mosaic`, `triclinic_P1`, `cubic_tilted_detector`, `high_resolution_4096`). Ran high-resolution ROI audit: corr=1.000000 (✅ PASS, threshold ≥0.95), sum_ratio=0.999987 (✅), RMSE=3.3e-05, mean_peak_delta=0.87 px, max_peak_delta=1.41 px. Identified 5 consuming test files (`test_at_parallel_012.py`, `test_at_parallel_013.py`, `test_suite.py`, `test_detector_geometry.py`, `test_crystal_geometry.py`). Physics delta: Phase D5 lattice unit fix (commit bc36384c) changed F_latt scaling by correcting 10^10× Miller index mismatch (lattice vectors Å→meters conversion). All datasets predating this fix are stale. Artifacts: `reports/2026-01-golden-refresh/phase_a/20251010T084007Z/{scope_summary.md,high_resolution_4096/{commands.txt,summary.json,*.png}}`. Exit criteria met: scope enumerated, corr ≥0.95 confirmed, consuming tests mapped. Next: Phase B regeneration (5 datasets) using canonical commands in `scope_summary.md` §Phase B.
 - Observations/Hypotheses:
   - Phase D5 lattice unit change invalidates any golden data that depend on `F_latt`; high-resolution 4096² case already confirmed.
   - Other datasets (triclinic, tilted detector, mosaic) likely impacted; need systematic audit before regenerating.
