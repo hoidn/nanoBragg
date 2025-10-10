@@ -30,9 +30,9 @@
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.
 - Next Actions:
-  1. Complete Phase A checklist (env capture, disk audit, collect-only snapshot).
-  2. Execute full-suite run (Phase B) and archive logs/junit.
-  3. Build triage worksheet (Phase C) before resuming any paused initiatives.
+  1. Execute Phase B full-suite run with fresh timestamped bundle (`reports/2026-01-test-suite-triage/phase_b/<STAMP>/` capturing logs + junit XML).
+  2. Extract failure inventory into `failures_raw.md` and update Attempt history with runtime + failure counts.
+  3. Launch Phase C triage worksheet (classify failures, prep `triage_summary.md`) before resuming paused initiatives.
 - Exit Criteria:
   - `triage_summary.md` classifies every failing test (bug vs deprecation vs config).
   - `handoff.md` published with remediation priorities and reproduction commands.
