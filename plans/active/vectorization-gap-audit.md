@@ -5,13 +5,13 @@
   - specs/spec-a-core.md §4 (sampling loops and normalization requirements)
   - specs/spec-a-parallel.md §2.3 & §4 (parallel validation + performance acceptance tests)
   - arch.md §§2, 8, 15 (batch shapes, differentiability guardrails)
-  - docs/architecture/pytorch_design.md §1.1 (current vectorized flows)
-  - docs/development/pytorch_runtime_checklist.md (vectorization/device do/don'ts)
+  - docs/architecture/pytorch_design.md §1.1 (current vectorized flows) and §1.1.5 (source weighting C-parity confirmed; thresholds: corr ≥0.999, |sum_ratio−1| ≤5e-3)
+  - docs/development/pytorch_runtime_checklist.md (vectorization/device do/don'ts), item #4 (source equal-weighting guard)
   - docs/development/testing_strategy.md §§1.4–2 (authoritative commands, perf cadence)
   - plans/active/vectorization.md (Phases A–G history)
   - plans/active/perf-pytorch-compile-refactor/plan.md (4096² warm benchmark harness & profiler usage)
   - reports/2025-10-vectorization/gaps/20251009T061928Z/analysis.md (prior gap evidence: divergence/dispersion source loops)
-- Status Snapshot (2025-12-27 update): Phase A evidence archived; SOURCE-WEIGHT-001 Phase H1–H4 parity artifacts now propagate through the ledger (corr ≥0.999, |sum_ratio−1| ≤5e-3). Phase B is unblocked and ready for the refreshed profiler capture/backlog work once the SOURCE-WEIGHT Phase I documentation patch lands.
+- Status Snapshot (2025-12-27 update): Phase A evidence archived; SOURCE-WEIGHT-001 Phase H1–H4 parity artifacts now propagate through the ledger (corr ≥0.999, |sum_ratio−1| ≤5e-3). Phase I1 documentation updates complete (`docs/architecture/pytorch_design.md` §1.1.5, `docs/development/pytorch_runtime_checklist.md` item #4); Phase I2 ledger propagation in progress. Phase B is unblocked and ready for the refreshed profiler capture/backlog work.
 
 ### Phase A — Loop Inventory & Evidence Capture
 Goal: Build an auditable inventory of remaining Python loops touching the simulator hot path, with code locations and rough complexity estimates.
@@ -31,7 +31,7 @@ Exit Criteria: Ranked backlog stored at `reports/2026-01-vectorization-gap/phase
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Capture warm-run profiler trace | [ ] | ✅ UNBLOCKED (2025-12-26 ralph loop #268 — SOURCE-WEIGHT-001 Phase H3/H4 ledger propagation complete). Parity memo: `reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md`. Normative thresholds: corr ≥0.999, |sum_ratio−1| ≤5e-3. Test selector: `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference` (PASSing). Ready to run: `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1 --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`. |
+| B1 | Capture warm-run profiler trace | [ ] | ✅ UNBLOCKED (2025-12-26 ralph loop #268 — SOURCE-WEIGHT-001 Phase H3/H4 ledger propagation complete). Parity memo: `reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md`. Normative thresholds: corr ≥0.999, |sum_ratio−1| ≤5e-3 (now documented in `docs/architecture/pytorch_design.md` §1.1.5 and `docs/development/pytorch_runtime_checklist.md` item #4). Test selector: `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference` (PASSing). Ready to run: `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --keep-artifacts --iterations 1 --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`. |
 | B2 | Correlate loops with trace | [B] | BLOCKED on B1 correlation fix. After valid profiler trace: Map Phase A entries to profiler hotspots (≥1% inclusive time). Produce `hot_loops.csv` with columns: module, line, loop_id, %time, call_count, notes. Flag GPU-relevant loops lacking CPU heat. |
 | B3 | Publish prioritised backlog | [ ] | Draft `backlog.md` summarising the top 3–5 candidates (e.g., `_generate_mosaic_rotations`, ROI rebuild, RNG). Document expected speedups, affected acceptance tests, risks. Update docs/fix_plan Next Actions accordingly. |
 

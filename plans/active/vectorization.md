@@ -4,14 +4,14 @@
 - Dependencies:
   - specs/spec-a-core.md Section 4 (sampling loops, source weighting, normalization) and Section 5 (detector absorption) - authoritative math + loop order.
   - arch.md Sections 2, 8, 15 - broadcast shapes, device/dtype guardrails, differentiability mandates.
-  - docs/architecture/pytorch_design.md Section 1.1 - current tricubic/absorption vectorization evidence.
-  - docs/development/pytorch_runtime_checklist.md - runtime guardrails to cite per phase.
+  - docs/architecture/pytorch_design.md Section 1.1 - current tricubic/absorption vectorization evidence and §1.1.5 - source weighting C-parity confirmed (thresholds: corr ≥0.999, |sum_ratio−1| ≤5e-3).
+  - docs/development/pytorch_runtime_checklist.md - runtime guardrails to cite per phase, including item #4 (source equal-weighting guard).
   - docs/development/testing_strategy.md Sections 1.4-2 - authoritative pytest selectors and benchmarking cadence.
   - plans/archive/vectorization.md - historical Phase A-H evidence for tricubic/absorption vectorization.
   - plans/active/vectorization-gap-audit.md - open gap inventory plus profiling backlog (Phase B blocked today).
   - plans/active/source-weight-normalization.md - prerequisite parity work gating profiler reliability.
   - reports/2025-10-vectorization/ and reports/2026-01-vectorization-gap/ - prior artifacts to cross-check during refresh.
-- Status Snapshot (2025-12-27): Historical tricubic/absorption phases (A-H) remain archived with CUDA parity. SOURCE-WEIGHT-001 Phase H1–H4 now published across the ledger, so dependencies cite the parity memo (corr ≥0.999, |sum_ratio−1| ≤5e-3). Outstanding work: Phase A3 galph_memory readiness note plus the Phase B regression/benchmark refresh once SOURCE-WEIGHT Phase I doc updates settle. VECTOR-GAPS-002 Phase B1 is unblocked and awaits the refreshed profiler capture.
+- Status Snapshot (2025-12-27): Historical tricubic/absorption phases (A-H) remain archived with CUDA parity. SOURCE-WEIGHT-001 Phase H1–H4 now published across the ledger, so dependencies cite the parity memo (corr ≥0.999, |sum_ratio−1| ≤5e-3). Phase I1 documentation updates complete (`docs/architecture/pytorch_design.md` §1.1.5, `docs/development/pytorch_runtime_checklist.md` item #4); Phase I2 ledger propagation in progress. Outstanding work: Phase A3 galph_memory readiness note plus the Phase B regression/benchmark refresh. VECTOR-GAPS-002 Phase B1 is unblocked and awaits the refreshed profiler capture.
 
 ### Phase A - Dependency Gate And Ledger Sync
 Goal: Clear upstream blockers so downstream profiling and implementation can proceed on trustworthy baselines.
@@ -22,7 +22,7 @@ Exit Criteria: SOURCE-WEIGHT-001 Phase E artifacts captured, VECTOR-GAPS-002 Pha
 | --- | --- | --- | --- |
 | A0 | Confirm lambda override consensus | [D] | ✅ Attempt #16 (2025-12-24 galph loop) logged Option B as the authoritative approach, citing `reports/2025-11-source-weights/phase_e/20251009T131709Z/lambda_semantics.md` and updating `docs/fix_plan.md`/`plans/active/source-weight-normalization.md`. No further action required. |
 | A1 | Record SOURCE-WEIGHT parity decision | [D] | ✅ Parity memo available at `reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md`; fix_plan now treats C behaviour as spec-compliant equal weighting (comment parsing defect tracked via `[C-SOURCEFILE-001]`). |
-| A2 | Capture spec-compliance test availability | [D] | ✅ SOURCE-WEIGHT-001 Phase H3/H4 ledger propagation complete (2025-12-26 ralph loop #268). Authoritative pytest selector: `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference` (now PASSing). Parity memo: `reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md`. Normative thresholds: corr ≥0.999, |sum_ratio−1| ≤5e-3. Phase H2 test logs: `reports/2025-11-source-weights/phase_h/20251010T002324Z/pytest.log`. `[VECTOR-GAPS-002]` Phase B1 unblocked. |
+| A2 | Capture spec-compliance test availability | [D] | ✅ SOURCE-WEIGHT-001 Phase H3/H4 ledger propagation complete (2025-12-26 ralph loop #268). Authoritative pytest selector: `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference` (now PASSing). Parity memo: `reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md`. Normative thresholds: corr ≥0.999, |sum_ratio−1| ≤5e-3 (now documented in `docs/architecture/pytorch_design.md` §1.1.5 and `docs/development/pytorch_runtime_checklist.md` item #4). Phase H2 test logs: `reports/2025-11-source-weights/phase_h/20251010T002324Z/pytest.log`. `[VECTOR-GAPS-002]` Phase B1 unblocked. |
 | A3 | Archive dependency memo | [ ] | Once A1–A2 complete, append a galph_memory note summarising readiness (spec decision, test selectors, artifact paths) so future loops can resume profiling without chasing C parity. |
 
 ### Phase B - Evidence Refresh For Existing Vectorization Paths

@@ -1,0 +1,19 @@
+# SOURCE-WEIGHT-001 Phase I2 — Dependent Plans & Ledgers Documentation Update
+
+## Environment
+export STAMP="20251010T011249Z"
+export ARTIFACT_DIR="reports/2025-11-source-weights/phase_i/$STAMP"
+
+## Test Suite Verification
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q > "$ARTIFACT_DIR/collect.log" 2>&1
+
+## Files Modified
+# plans/active/vectorization.md (Dependencies section + Phase A2 task + Status Snapshot)
+# plans/active/vectorization-gap-audit.md (Dependencies section + Phase B1 task + Status Snapshot)
+# docs/fix_plan.md ([VECTOR-TRICUBIC-002] Next Actions #1-2, [VECTOR-GAPS-002] Next Actions #1, [PERF-PYTORCH-004] First Divergence)
+
+## Verification
+# All plan and fix_plan entries now cite:
+# - docs/architecture/pytorch_design.md §1.1.5 (source weighting C-parity)
+# - docs/development/pytorch_runtime_checklist.md item #4 (equal-weighting guard)
+# - Normative thresholds: corr ≥0.999, |sum_ratio−1| ≤5e-3
