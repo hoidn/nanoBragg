@@ -1982,3 +1982,8 @@
 - Refreshed `[VECTOR-PARITY-001]` Next Actions to call for a `TRACE_C_TAP5`-guarded capture plus comparison write-up; plan `vectorization-parity-regression.md` already marks E8 done/E9 pending so no edits required.
 - Replaced `input.md` (Mode: Parity) with instructions to add a runtime `TRACE_C_TAP5` block in `golden_suite_generator/nanoBragg.c`, run the oversample=2 traces for pixels (0,0)/(2048,2048), archive logs under `reports/2026-01-vectorization-parity/phase_e0/$STAMP/c_taps/`, and maintain commands/env metadata.
 - Expect Attempt #30 to deliver `pixel_*_tap5.log`, `trace_env.json`, and a brief `intensity_pre_norm_c_notes.md` so we can line up Tap 5 metrics before deciding on Tap 6 vs Phase F.
+### 2026-01-11 (galph loop - Tap 5.1 PyTorch audit planning)
+- Updated `plans/active/vectorization-parity-regression.md` Phase E rows: E10/E11 marked [D]; added E12–E14 for Tap 5.1 PyTorch/C and Tap 5.2 bounds work. Status snapshot now notes Attempt #31 centre-pixel HKL fallback.
+- Refreshed `docs/fix_plan.md` Next Actions to focus on Tap 5.1 PyTorch, Tap 5.1 C mirror, and Tap 5.2 bounds parity; synced `plans/active/vectorization.md` status to reflect new evidence queue.
+- Authored `input.md` (Mode: Parity) directing Ralph to extend `scripts/debug_pixel_trace.py` with an `hkl_subpixel` tap and capture the centre-pixel HKL audit bundle before we touch the C binary.
+- Follow-up: Expect Attempt logging under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/py_taps/` with `tap5_hkl_audit.md`. Next supervisor loop should review the PyTorch tap output, then delegate the C instrumentation (plan E13) and HKL bounds capture (E14).
