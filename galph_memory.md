@@ -1,3 +1,9 @@
+### 2026-01-11 (galph loop - PyTorch Tap 5.1 audit prep)
+- Confirmed `[VECTOR-PARITY-001]` Next Actions stay focused on Tap 5.1/5.2; plan rows (vectorization-parity-regression.md E12–E14) already capture the schema.
+- No plan edits needed; evidence backlog (Tap 5 comparison + hypotheses) remains authoritative.
+- Replaced input.md with Parity-mode instructions to add the `hkl_subpixel` tap, archive centre-pixel JSON under a fresh stamp, and summarise findings in tap5_hkl_audit.md.
+- Expect Attempt log with PyTorch Tap 5.1 before we authorise the C mirror instrumentation (E13).
+
 ### 2026-01-10 (galph loop - Tap 5 comparison planning)
 - Heads audit: Reviewed Ralph commits 25c88957 (PyTorch Tap 5 tooling) and e8dafd99 (C Tap 5 instrumentation); evidence looks solid, no regressions spotted.
 - Updated `docs/fix_plan.md` Next Actions (lines 67-69) to swap in Tap 5 comparison + hypothesis ranking; removed the now-complete instrumentation directive.
