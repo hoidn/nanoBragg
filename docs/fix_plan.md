@@ -68,11 +68,12 @@
   - Attempt #24 (Phase E2/E3) shows C reuses the first subpixel's omega (edge + centre identical), aligning with PyTorch within ≈0.003 %. Omega bias is ruled out; focus shifts to HKL/default_F usage and background scaling.
   - Attempts #26–#28 closed the default_F hypothesis: both implementations leave in-bounds HKLs at 0.0 with no fallback. Remaining parity gap must come from intensity accumulation or background terms.
   - Attempt #29 demonstrates PyTorch Tap 5 pre-normalisation metrics match spec (steps=oversample², ω/ polar ratios ≈1.13×/1.04× centre vs edge). Discrepancy likely originates on the C side or downstream scaling.
-  - Attempt #34 confirms C mirrors PyTorch HKL indexing and default_F semantics; next probe must target oversample accumulation or bounds metadata (Tap 5.2).
+  - Attempt #34 confirms C mirrors PyTorch HKL indexing and default_F semantics.
+  - Attempt #35 shows Tap 5.2 “bounds” taps diverge semantically (PyTorch per-pixel vs C global grid) yet both sides treat `(0,0,0)` as in-bounds with `default_F=100`; oversample accumulation remains the leading hypothesis.
 - Next Actions:
-  1. 📏 Tap 5.2 (HKL bounds parity) — Capture `TRACE_PY_HKL_BOUNDS` and `TRACE_C_HKL_BOUNDS` framing `[h_min,h_max]`, `[k_min,k_max]`, `[l_min,l_max]`; archive logs under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/bounds/` with summary `tap5_hkl_bounds.md`, then update this ledger and `plans/active/vectorization-parity-regression.md`.
-  2. 🧭 Hypothesis refresh — Fold Tap 5.2 evidence into `tap5_hypotheses.md`, re-rank remaining hypotheses (H2 oversample accumulation vs H3 background), and document the chosen remediation gate in both this ledger and the active plan.
-  3. 🛠️ Prep Tap 5.3 instrumentation — Draft the instrumentation brief for per-subpixel intensity accumulation traces (expected Phase E15) so we can capture `F_cell²·F_latt²` contributions once bounds parity is confirmed.
+  1. 🧭 Tap 5.2 synthesis — Update `tap5_hypotheses.md` with the bounds semantics finding (PyTorch per-pixel vs C global), explicitly retire H1, and reaffirm Tap 5.3 (oversample accumulation) as the leading hypothesis; cross-link `reports/2026-01-vectorization-parity/phase_e0/20251010T123132Z/comparison/tap5_hkl_bounds.md`.
+  2. 🛠️ Tap 5.3 instrumentation brief — Author `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/tap5_accum_plan.md` capturing logging schema, guard names (`TRACE_PY_TAP5_ACCUM` / `TRACE_C_TAP5_ACCUM`), pixels/ROI, and acceptance checks before any code edits.
+  3. 🧪 Tap 5.3 PyTorch capture — Extend `scripts/debug_pixel_trace.py` with the Tap 5.3 hook and record per-subpixel `F_cell²·F_latt²`, ω, and capture weights for pixels (0,0) and (2048,2048) at oversample=2; archive logs + summary and log pytest collect-only.
 - Risks/Assumptions:
   - Profiler evidence remains invalid while corr_warm=0.721; avoid reusing traces from blocked attempts.
   - ROI thresholds (corr≥0.999, |sum_ratio−1|≤5×10⁻³) are treated as spec acceptance; full-frame parity may require masking.

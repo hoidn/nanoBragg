@@ -2004,3 +2004,8 @@
 - Refreshed `plans/active/vectorization.md` status snapshot to reference Attempts #29–#34 and new gating tasks (Tap 5.2 bounds + Tap 5.3 accumulation).
 - Replaced input.md with Parity-mode instructions for Tap 5.2: add `TRACE_PY_HKL_BOUNDS`/`TRACE_C_HKL_BOUNDS`, archive logs under `bounds/`, summarise in `tap5_hkl_bounds.md`, then run pytest collect-only.
 - Next loop: expect Attempt log containing PyTorch/C bounds logs + summary before drafting Tap 5.3 instrumentation brief.
+### 2026-01-11 (galph loop - Tap 5.2 synthesis prep)
+- Confirmed Attempt #35 semantics: PyTorch per-pixel vs C global HKL bounds; both keep (0,0,0) in range with default_F.
+- Updated docs/fix_plan.md Next Actions (Tap 5.2 synthesis → Tap 5.3 instrumentation) and added new Phase E rows E15–E18 in plans/active/vectorization-parity-regression.md; vectorization.md snapshot now references Attempt #35.
+- Authored input.md (Mode: Docs) instructing Ralph to retire H1 in tap5_hypotheses.md, integrate Tap 5.2 evidence, and prep for Tap 5.3 instrumentation next loop.
+- Next follow-up: Expect Attempt entry detailing updated tap5_hypotheses.md + collect-only run; supervisor to scope Tap 5.3 instrumentation brief afterwards.
