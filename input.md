@@ -1,36 +1,38 @@
-Summary: Capture Tap 5.1 HKL taps from the C binary to mirror the new PyTorch evidence.
+Summary: Capture Tap 5.2 HKL bounds parity so both implementations prove (0,0,0) lives inside the loaded grid.
 Mode: Parity
 Focus: VECTOR-PARITY-001 Restore 4096² benchmark parity
 Branch: feature/spec-based-2
 Mapped tests: pytest --collect-only -q
-Artifacts: reports/2026-01-vectorization-parity/phase_e0/<STAMP>/c_taps/, reports/2026-01-vectorization-parity/phase_e0/<STAMP>/comparison/
-Do Now: Execute docs/fix_plan.md item [VECTOR-PARITY-001] Next Action 1 (Tap 5.1 C mirror); add the guarded `TRACE_C_TAP5_HKL` block, rebuild `golden_suite_generator/nanoBragg`, capture pixels (0,0) and (2048,2048) with `TRACE_C_TAP5_HKL=1`, then run pytest --collect-only -q.
-If Blocked: Capture the attempted instrumentation diff plus any compiler errors under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/attempt_log.md` and restore the binary to the previous TRACE_C_TAP5 state.
+Artifacts: reports/2026-01-vectorization-parity/phase_e0/<STAMP>/bounds/, reports/2026-01-vectorization-parity/phase_e0/<STAMP>/comparison/, reports/2026-01-vectorization-parity/phase_e0/<STAMP>/env/
+Do Now: Execute docs/fix_plan.md item [VECTOR-PARITY-001] Next Action 1 (Tap 5.2 HKL bounds parity); emit `TRACE_PY_HKL_BOUNDS` and `TRACE_C_HKL_BOUNDS`, capture logs for pixels (0,0) and (2048,2048), summarise in tap5_hkl_bounds.md, then run pytest --collect-only -q.
+If Blocked: Archive the attempted instrumentation diff plus stderr output under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/bounds/attempt_log.md`, revert the binary to its previous TRACE_C_TAP5 state, and note blockers in comparison/tap5_hkl_bounds.md.
 Priorities & Rationale:
-- docs/fix_plan.md:69 – Next Action 1 is the C Tap 5.1 mirror; completing it unblocks the HKL bounds check.
-- plans/active/vectorization-parity-regression.md:91 – Phase E13 requires a C-side schema identical to the PyTorch tap to compare HKL rounding.
-- plans/active/vectorization.md:18 – Phase D backlog stays blocked until Tap 5 evidence (now extending to C Tap 5.1) is archived.
-- specs/spec-a-core.md:232 – HKL fallback semantics demand proof that (0,0,0) is in range rather than default_F.
+- docs/fix_plan.md:72 — Next Action 1 now targets Tap 5.2 HKL bounds; completing it unblocks the oversample accumulation probe.
+- plans/active/vectorization-parity-regression.md:94 — Phase E14 requires matched `[h_min,h_max]` etc. before Phase E15 instrumentation can start.
+- plans/active/vectorization.md:17 — VECTOR-TRICUBIC backlog stays gated until Tap 5 bounds/accumulation evidence lands.
+- specs/spec-a-core.md:232 — HKL lookup semantics demand we prove `(0,0,0)` is in range when no HKL file is loaded.
 How-To Map:
 - export STAMP=$(date -u +%Y%m%dT%H%M%SZ); OUTDIR=reports/2026-01-vectorization-parity/phase_e0/$STAMP
-- mkdir -p "$OUTDIR"/c_taps "$OUTDIR"/comparison "$OUTDIR"/env
-- Edit `golden_suite_generator/nanoBragg.c` HKL lookup block (~lines 3300-3355) to wrap the existing Tap 5 instrumentation with `#ifdef TRACE_C_TAP5_HKL` (new guard) logging fractional HKL (double), rounded `(h0,k0,l0)` ints, `F_cell`, `out_of_bounds`, and raw structure-factor table indices. Follow the formatting from Attempt #30 (`TRACE_C_TAP5`) but reuse identical token names emitted by the PyTorch tap JSON.
-- Rebuild: `make -C golden_suite_generator nanoBragg`
-- Capture edge pixel: `TRACE_C_TAP5_HKL=1 ./golden_suite_generator/nanoBragg -cell 100 100 100 90 90 90 -lambda 0.5 -distance 500 -detpixels 4096 -pixel 0.05 -mosflm -oversample 2 -default_F 100 -N 5 -trace_pixel 0 0 -roi 0 0 0 0 -floatfile /tmp/tap5_edge.bin > "$OUTDIR"/c_taps/pixel_0_0_hkl.log 2>&1`
-- Capture centre pixel: same command with `-trace_pixel 2048 2048 -roi 2048 2048 2048 2048` and log to `pixel_2048_2048_hkl.log`
-- Copy the log excerpts into structured JSON (matching PyTorch schema) under `$OUTDIR/c_taps/` and document findings in `$OUTDIR/comparison/tap5_hkl_c_summary.md`
-- Record environment metadata: `git rev-parse HEAD > "$OUTDIR"/env/git_sha.txt`; `python - <<'PY'` block dumping platform/python/torch versions into `$OUTDIR/env/trace_env.json`
-- Run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q | tee "$OUTDIR"/comparison/pytest_collect.log`
+- mkdir -p "$OUTDIR"/bounds "$OUTDIR"/comparison "$OUTDIR"/env "$OUTDIR"/bounds/py "$OUTDIR"/bounds/c
+- PyTorch bounds tap: extend `scripts/debug_pixel_trace.py` with `--taps hkl_bounds` that records `[h_min,h_max]`, `[k_min,h_max]`, `[l_min,l_max]`, and `default_F` for pixels (0,0) and (2048,2048). Command:
+  `KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python scripts/debug_pixel_trace.py --taps hkl_bounds --pixel 0 0 --out-dir "$OUTDIR"/bounds/py`
+  and repeat with `--pixel 2048 2048`. Each run should write JSON/LOG pairs plus append to `$OUTDIR/bounds/py/commands.txt`.
+- C bounds tap: add a `TRACE_C_HKL_BOUNDS` guard near the existing HKL lookup (around lines 3320-3345) that prints the six bounds and `default_F` once per traced pixel. Rebuild with `make -C golden_suite_generator nanoBragg`. Capture logs:
+  `TRACE_C_HKL_BOUNDS=1 ./golden_suite_generator/nanoBragg -cell 100 100 100 90 90 90 -lambda 0.5 -distance 500 -detpixels 4096 -pixel 0.05 -mosflm -oversample 2 -default_F 100 -N 5 -trace_pixel 0 0 -roi 0 0 0 0 -floatfile /tmp/tap5_bounds_edge.bin > "$OUTDIR"/bounds/c/pixel_0_0_bounds.log 2>&1`
+  and repeat with `-trace_pixel 2048 2048 -roi 2048 2048 2048 2048` writing `pixel_2048_2048_bounds.log`.
+- Summarise results in `$OUTDIR/comparison/tap5_hkl_bounds.md` (one table per implementation, note whether `(0,0,0)` is inside bounds, record any mismatches).
+- Record environment metadata (`git rev-parse HEAD`, `python - <<'PY' ...`) under `$OUTDIR/env/`.
+- Run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q | tee "$OUTDIR"/comparison/pytest_collect.log`.
 Pitfalls To Avoid:
-- Do not leave TRACE_C_TAP5_HKL instrumentation active without the guard macro.
-- Keep commands reproducible; log every CLI invocation in `commands.txt`.
-- Do not overwrite prior Tap 5 artifacts—use a fresh STAMP directory.
-- Avoid touching PyTorch code paths this loop; parity evidence only.
-- Maintain MOSFLM convention parameters exactly as provided.
-- Keep generated binaries untracked; only logs/metadata go in reports/.
+- Keep new instrumentation under guards (`TRACE_PY_HKL_BOUNDS`, `TRACE_C_HKL_BOUNDS`) so binaries remain clean.
+- Do not clobber existing Tap 5 artifacts; always write into the freshly stamped OUTDIR.
+- Preserve MOSFLM convention and oversample=2 parameters exactly to match prior taps.
+- Ensure logs include both edge and centre pixels; missing either invalidates the comparison.
+- Avoid editing production physics beyond instrumentation; parity evidence only this loop.
+- Capture every command in `commands.txt` within both `bounds/py` and `bounds/c` directories.
 Pointers:
-- docs/fix_plan.md:69
-- plans/active/vectorization-parity-regression.md:91
+- docs/fix_plan.md:72
+- plans/active/vectorization-parity-regression.md:94
 - specs/spec-a-core.md:232
-- plans/active/vectorization.md:18
-Next Up: Prepare Tap 5.2 HKL bounds parity capture once the C Tap 5.1 logs land.
+- plans/active/vectorization.md:17
+Next Up: Prepare Tap 5.3 oversample accumulation instrumentation brief once HKL bounds parity is confirmed.

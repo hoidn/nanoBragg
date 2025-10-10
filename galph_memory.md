@@ -1999,3 +1999,8 @@
 - Marked `plans/active/vectorization-parity-regression.md` E12 as [D] with Attempt #32/#33 references and refreshed the status snapshot; `plans/active/vectorization.md` snapshot now reflects Tap 5 evidence through Attempt #33.
 - New `input.md` (Mode: Parity) directs Ralph to instrument `TRACE_C_TAP5_HKL`, capture edge/centre logs, and run pytest collect-only before tackling Tap 5.2.
 - Expect Attempt log delivering `$STAMP/c_taps/pixel_*_hkl.log` + summary; next supervisor pass should review the C tap output and queue the HKL bounds check.
+### 2026-01-11 (galph loop - Tap 5.2 bounds prep)
+- Located Attempt #34 bundle (`reports/2026-01-vectorization-parity/phase_e0/20251010T121436Z/`) confirming C Tap 5.1 HKL parity; updated `docs/fix_plan.md` (Last Updated stamp, Active Focus, Attempt #34 entry) and marked plan `vectorization-parity-regression` E13 as [D] with new E15 placeholder for oversample accumulation.
+- Refreshed `plans/active/vectorization.md` status snapshot to reference Attempts #29–#34 and new gating tasks (Tap 5.2 bounds + Tap 5.3 accumulation).
+- Replaced input.md with Parity-mode instructions for Tap 5.2: add `TRACE_PY_HKL_BOUNDS`/`TRACE_C_HKL_BOUNDS`, archive logs under `bounds/`, summarise in `tap5_hkl_bounds.md`, then run pytest collect-only.
+- Next loop: expect Attempt log containing PyTorch/C bounds logs + summary before drafting Tap 5.3 instrumentation brief.
