@@ -1928,3 +1928,9 @@
 - Updated `docs/fix_plan.md` `[VECTOR-PARITY-001]` Next Actions (line 54) to focus on drafting the callchain brief, executing the trace for an edge pixel, and summarising the first tap.
 - Replaced `input.md` with Mode Parity instructions directing Ralph to follow `prompts/callchain.md` (initiative_id=vectorization-parity-edge) and stage outputs under `reports/2026-01-vectorization-parity/phase_e0/$STAMP/`.
 - Expect Attempt #21a to deliver the Phase E0 callchain bundle (static map, tap plan, summary) plus ledger updates before scheduling any new 4096x4096 runs.
+### 2026-01-10 (galph loop - VECTOR-PARITY Phase E tap prep)
+- Reviewed Ralph’s recent commits (`5d708d55`, `7863be99`) — evidence-only bundles, no regressions found.
+- Rewrote `plans/active/vectorization-parity-regression.md` to add Phase E (omega taps) and Phase F remediation guidance; Phase E0 tasks marked [D], new E1–E4 checklists map to Tap 2/3 workflow.
+- Updated `docs/fix_plan.md` Next Actions to align with the refreshed plan (omega tap execution → C trace → comparison → remediation → ledger updates).
+- Issued `input.md` (Mode: Parity) instructing Ralph to run Next Action #1 with the debug trace command and capture `omega_analysis.md` in a new `$STAMP`.
+- Follow-up: expect PyTorch omega tap artifacts + fix_plan Attempt update next run before proceeding to C instrumentation.
