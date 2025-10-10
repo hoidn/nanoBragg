@@ -1957,3 +1957,9 @@
 - Updated `docs/fix_plan.md` Next Actions (lines 61-64) to point Ralph at C Tap 4 capture → comparison → branch selection; recorded same priorities in `input.md`.
 - Authored `input.md` (Mode: Parity) instructing Ralph to instrument `golden_suite_generator/nanoBragg` for Tap 4 counters, stash outputs under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/c_taps/`, and verify with pytest collect-only after restoring the binary.
 - Follow-up: Expect Attempt log with C tap metrics + notes; next supervisor loop should assign `f_cell_comparison.md` drafting and decide between Tap 5 (pre-normalisation intensity) vs Tap 6 (water background).
+### 2026-01-10 (galph loop - Tap 4 comparison prep)
+- Updated docs/fix_plan.md Active Focus + Next Actions: Tap 4 C/Py discrepancy now the priority; Next Actions #1-3 cover `f_cell_comparison.md`, default_F audit, and next-tap selection.
+- Marked plans/active/vectorization-parity-regression.md Phase E6 as [D] with Attempt #27 notes; E7 now explicitly requires the comparison + audit before choosing Tap 5/6.
+- Refreshed plans/active/vectorization.md status snapshot to reflect the centre-pixel F_cell mismatch blocking Phase D profiling work.
+- Replaced input.md (Mode: Parity) directing Ralph to generate `f_cell_comparison.md` + `default_f_audit.md` under a fresh `reports/.../comparison/` bundle, using the provided Python helper and code-inspection steps.
+- Expect Attempt update logging the new comparison/audit artifacts plus preliminary recommendation on Tap 5 vs Tap 6.
