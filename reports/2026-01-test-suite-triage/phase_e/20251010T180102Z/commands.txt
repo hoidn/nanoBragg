@@ -1,0 +1,11 @@
+# Phase E Commands
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+ROOT=reports/2026-01-test-suite-triage/phase_e/$STAMP
+
+# E1: Preflight
+pytest --collect-only -q | tee "$ROOT/collect_only.log"
+python -m torch.utils.collect_env > "$ROOT/env.txt"
+df -h . > "$ROOT/disk_usage.txt"
+
+# E2: Full suite
+KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml="$ROOT"/artifacts/pytest_full.xml | tee "$ROOT"/logs/pytest_full.log
