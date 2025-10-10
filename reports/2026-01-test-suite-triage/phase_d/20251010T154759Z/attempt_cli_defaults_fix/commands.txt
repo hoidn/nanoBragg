@@ -1,0 +1,32 @@
+# Commands Executed During Investigation
+# Timestamp: 2025-10-10T15:47:59Z
+# Focus: [CLI-DEFAULTS-001] Minimal -default_F CLI invocation
+
+# 1. Initial git sync
+git pull --rebase
+
+# 2. Run baseline test to confirm failure
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F
+
+# 3. Manual CLI invocation to reproduce issue
+python -m nanobrag_torch -cell 100 100 100 90 90 90 -default_F 100 -detpixels 32 -pixel 0.1 -distance 100 -lambda 6.2 -N 5 -floatfile /tmp/test_cli_output.bin
+
+# 4. Verify output is all zeros
+python3 -c "import numpy as np; data = np.fromfile('/tmp/test_cli_output.bin', dtype=np.float32); print(f'Shape: {data.shape}'); print(f'Min: {data.min():.6e}'); print(f'Max: {data.max():.6e}'); print(f'Mean: {data.mean():.6e}'); print(f'Non-zero: {(data > 0).sum()}')"
+
+# 5. Run CLI with -show_config to verify configuration
+python -m nanobrag_torch -cell 100 100 100 90 90 90 -default_F 100 -detpixels 32 -pixel 0.1 -distance 100 -lambda 6.2 -N 5 -show_config -floatfile /tmp/test_cli_output2.bin
+
+# 6. Create and run debug script (works correctly!)
+python debug_default_f.py
+
+# 7. Compare debug script output vs CLI output
+# Debug script: Max: 1.546525e+02, Non-zero pixels: 73 ✓
+# CLI: Max: 0.000000e+00, Non-zero pixels: 0 ✗
+
+# Investigation outcome:
+# - Crystal.get_structure_factor() works correctly in isolation
+# - Configuration is correctly parsed and set
+# - Debug script produces non-zero output with same classes
+# - CLI produces all-zero output
+# - Root cause not identified - requires deeper instrumentation
