@@ -1,0 +1,98 @@
+# VECTOR-PARITY-001 Phase A Evidence Bundle
+# Timestamp: 20251010T023622Z
+# Mode: Parity (evidence-only, no code changes)
+
+# Step 1: Generate timestamp
+export STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+# Result: STAMP=20251010T023622Z
+
+# Step 2: Create artifact directory
+mkdir -p reports/2026-01-vectorization-parity/phase_a/$STAMP
+
+# Step 3: Generate artifact matrix (Python inline script from input.md)
+python3 - <<'PY'
+import json, os
+from pathlib import Path
+stamp = os.environ['STAMP']
+base = Path('reports/2026-01-vectorization-parity/phase_a') / stamp
+base.mkdir(parents=True, exist_ok=True)
+rows = []
+# Known-good run
+good_path = Path("reports/benchmarks/20251009-161714/benchmark_results.json")
+if good_path.exists():
+    rows.append({
+        "label": "good-20251009-161714",
+        "path": str(good_path),
+        "metrics": json.load(good_path.open())[0],
+        "env": None,
+    })
+# Failing runs (current HEAD bundles)
+fail_globs = [Path('reports/2026-01-vectorization-gap/phase_b').glob('20251009T*/'),
+              Path('reports/2026-01-vectorization-gap/phase_b').glob('20251010T02*/')]
+for glob_iter in fail_globs:
+    for directory in sorted(glob_iter):
+        metrics_file = None
+        for candidate in ['benchmark_results.json', 'failed/benchmark_results.json', 'profile/benchmark_results.json']:
+            path = directory / candidate
+            if path.exists():
+                metrics_file = path
+                break
+        if not metrics_file:
+            continue
+        env = None
+        env_path = directory / 'env.json'
+        if env_path.exists():
+            env = json.load(env_path.open())
+        rows.append({
+            "label": directory.name,
+            "path": str(metrics_file),
+            "metrics": json.load(metrics_file.open())[0],
+            "env": env,
+        })
+md_lines = ["# Artifact Matrix\n", "| run | correlation_warm | sum_ratio | speedup_warm | git_sha | notes |", "| --- | --- | --- | --- | --- | --- |"]
+for row in rows:
+    metrics = row['metrics']
+    corr = metrics.get('correlation_warm', 'n/a')
+    sum_ratio = metrics.get('sum_ratio', 'n/a')
+    speed = metrics.get('speedup_warm', 'n/a')
+    git_sha = row['env'].get('git_sha') if row['env'] else 'missing'
+    note = f"path={row['path']}"
+    md_lines.append(f"| {row['label']} | {corr} | {sum_ratio} | {speed} | {git_sha} | {note} |")
+# Placeholder for open questions
+md_lines.append("\n## Open Questions\n- [ ] Capture git SHA for reports/benchmarks/20251009-161714 (not recorded).\n- [ ] Confirm whether any smaller ROI bundles exist for comparison.\n")
+(base / 'artifact_matrix.md').write_text("\n".join(md_lines))
+print(f"Generated artifact_matrix.md with {len(rows)} runs")
+PY
+# Output: Generated artifact_matrix.md with 7 runs
+
+# Step 4: Generate parameter diff (Python inline script from input.md)
+python3 - <<'PY'
+import os
+from pathlib import Path
+stamp = os.environ['STAMP']
+base = Path('reports/2026-01-vectorization-parity/phase_a') / stamp
+lines = ["# Parameter Diff\n"]
+def append_run(title, cmd_path, env_path):
+    lines.append(f"## {title}\n")
+    if cmd_path.exists():
+        lines.append('```\n' + cmd_path.read_text().strip() + '\n```\n')
+    else:
+        lines.append('_commands.txt missing_\n')
+    if env_path.exists():
+        lines.append('```json\n' + env_path.read_text().strip() + '\n```\n')
+    else:
+        lines.append('_env.json missing_\n')
+append_run('failing 20251009T095913Z', Path('reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/commands.txt'), Path('reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/env.json'))
+append_run('failing 20251010T022314Z', Path('reports/2026-01-vectorization-gap/phase_b/20251010T022314Z/commands.txt'), Path('reports/2026-01-vectorization-gap/phase_b/20251010T022314Z/env.json'))
+append_run('good 20251009-161714', Path('reports/benchmarks/20251009-161714/commands.txt'), Path('reports/benchmarks/20251009-161714/env.json'))
+(base / 'param_diff.md').write_text("\n".join(lines))
+print(f"Generated param_diff.md with parameter comparisons")
+PY
+# Output: Generated param_diff.md with parameter comparisons
+
+# Step 5: Verification
+ls -lah reports/2026-01-vectorization-parity/phase_a/$STAMP/
+
+# Step 6: Test collection sanity check (docs-only loop requirement)
+env KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q
+# Result: 692 tests collected in 2.65s (✅ collection passes)

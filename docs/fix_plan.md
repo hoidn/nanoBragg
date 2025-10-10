@@ -4019,6 +4019,26 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   4. Phase D (D1–D3): isolate regressing commit via git bisect with benchmark correlation checks, capturing `culprit_summary.md` for implementation follow-up.
 - Attempts History:
   * [2025-12-30] Attempt #0 (galph loop) — Result: planning baseline. Documented repeated 0.721175 correlation across `reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/` and `20251010T022314Z/`, authored `plans/active/vectorization-parity-regression.md`, and added this fix_plan entry. No code changes. Next step: Phase A artifact audit and Attempt #1 with consolidated evidence.
+  * [2025-10-09] Attempt #1 (ralph loop) — Result: success (Phase A1–A3 complete). Generated evidence bundle consolidating good vs failing benchmark runs.
+    Metrics:
+      - Known-good run (20251009-161714): correlation_warm=0.9999985 (✅ >0.999 threshold), git_sha=missing, speedup_warm=0.776
+      - 6 failing runs: **identical** correlation_warm=0.721175 (❌ <<0.999 threshold), speedup_warm range 0.780–1.228
+      - All sum_ratio values missing (n/a) — metric not captured by `benchmark_detailed.py` without `--compare` flag
+    Artifacts:
+      - `reports/2026-01-vectorization-parity/phase_a/20251010T023622Z/artifact_matrix.md` — Consolidated table of 7 benchmark runs with correlation/speedup/git provenance
+      - `reports/2026-01-vectorization-parity/phase_a/20251010T023622Z/param_diff.md` — Parameter comparison showing failing runs used same commands (--sizes 4096 --device cpu --dtype float32 --profile --iterations 1)
+      - `reports/2026-01-vectorization-parity/phase_a/20251010T023622Z/commands.txt` — Documentation of Phase A artifact generation
+    Observations/Hypotheses:
+      - **Deterministic Failure**: Identical correlation (0.7211752710777161) across all 6 failing runs indicates systematic bug, not randomness
+      - **28% Parity Gap**: Good vs bad correlation delta = 0.278 (massive regression from near-perfect parity)
+      - **Git Provenance Gap**: Good run lacks recorded git_sha; 3 of 6 failing runs have SHAs (8f1b96b, 12cbad7, 22ea5c1)
+      - **Missing Metrics**: sum_ratio not captured; Phase B should add `--compare` flag or use `nb-compare` for sum verification
+      - **Speed Uncorrelated with Accuracy**: Failing runs show higher warm speedups (1.15–1.23×) than good run (0.78×), suggesting compilation/caching changes decoupled from physics correctness
+    Next Actions:
+      1. Phase B1 (B1): Rerun 4096² benchmark on current HEAD with full provenance (git_sha, env.json, sum_ratio via comparison)
+      2. Phase B2 (B2): Execute `KMP_DUPLICATE_LIB_OK=TRUE NB_C_BIN=./golden_suite_generator/nanoBragg NB_RUN_PARALLEL=1 pytest -v tests/test_at_parallel_*.py -k 4096` to check AT coverage
+      3. Phase B3 (B3): Use `nb-compare` with smaller ROIs (512×512, 1024×1024) to scope regression — does 0.721 correlation persist at reduced detector sizes?
+      4. Phase D1 (git forensics): Use `git log --since "2025-12-24" --until "2025-12-26"` to identify good-run commit, then bisect between that SHA and current HEAD
 
 ---
 
