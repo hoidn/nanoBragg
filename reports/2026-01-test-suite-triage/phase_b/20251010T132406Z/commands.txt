@@ -1,0 +1,1 @@
+cd /home/ollie/Documents/tmp/nanoBragg && KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/artifacts/pytest_full.xml 2>&1 | tee reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/logs/pytest_full.log
