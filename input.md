@@ -1,64 +1,37 @@
-Summary: Consolidate Tap 4 evidence and audit the default_F fallback so we know which parity tap to pursue next.
+Summary: Extend the parity tap tooling to capture PyTorch Tap 5 (pre-normalisation intensity) so we can compare edge vs centre before scaling.
 Mode: Parity
 Focus: [VECTOR-PARITY-001] Restore 4096² benchmark parity
 Branch: feature/spec-based-2
-Mapped tests: none — evidence-only
-Artifacts: reports/2026-01-vectorization-parity/phase_e0/<STAMP>/comparison/
-Do Now: [VECTOR-PARITY-001] Next Actions #1-2 — draft `f_cell_comparison.md` plus `default_f_audit.md` from Attempts #26/27 before choosing Tap 5 vs Tap 6
-If Blocked: Capture a narrative summary in `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/comparison/notes.md` explaining what data was missing and why the audit could not proceed.
+Mapped tests: pytest --collect-only -q (post-instrumentation sanity)
+Artifacts: reports/2026-01-vectorization-parity/phase_e0/<STAMP>/py_taps/ ; reports/2026-01-vectorization-parity/phase_e0/<STAMP>/comparison/
+Do Now: [VECTOR-PARITY-001] Next Actions #1 — update `scripts/debug_pixel_trace.py` for Tap 5 `--taps intensity` and capture PyTorch metrics via `KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py --pixel 0 0 --tag edge --oversample 2 --taps intensity --json --out-dir "$OUT_PY"` (repeat for centre pixel)
+If Blocked: Drop findings + blockers in `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/py_taps/notes.md` with referenced code lines before stopping.
 Priorities & Rationale:
-- docs/fix_plan.md:60-66 — Next Actions call for the Tap 4 comparison and default_F audit before selecting the next hypothesis.
-- plans/active/vectorization-parity-regression.md:70-92 — Phase E table now marks E6 done and keeps E7 open pending this comparison/audit.
-- reports/2026-01-vectorization-parity/phase_e0/20251010T102752Z/f_cell_summary.md — PyTorch Tap 4 findings to reference.
-- reports/2026-01-vectorization-parity/phase_e0/20251010T103811Z/c_taps/PHASE_E6_SUMMARY.md — C Tap 4 evidence showing the centre-pixel 0.0 F_cell.
-- specs/spec-a-core.md — Verify expected default_F behaviour when no HKL file is supplied.
+- docs/fix_plan.md:65-67 — Stage Tap 5 instrumentation before advancing to Tap 6 or remediation.
+- plans/active/vectorization-parity-regression.md:85-87 — Phase E tasks E8–E10 define this Tap 5 capture + comparison.
+- plans/active/vectorization.md:13-17 — Vectorization relaunch remains gated on completing Tap 5 evidence.
+- specs/spec-a-core.md:471-476 — Governs default_F and rendering/normalisation semantics you must respect when instrumenting.
+- arch.md:216 — Documents expected final-scaling pipeline; Tap 5 must reuse these intermediates.
 How-To Map:
-- `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; `export BASE=reports/2026-01-vectorization-parity/phase_e0`; `export OUTDIR="$BASE/${STAMP}/comparison"`; `mkdir -p "$OUTDIR"`.
-- Append each command you execute to `$OUTDIR/commands.txt` (e.g., `printf "%s\n" "<cmd>" >> "$OUTDIR/commands.txt"`).
-- Generate the comparison doc:
-  `python - <<'PY'`
-  ```
-  import json, os, pathlib, textwrap
-  base = pathlib.Path(os.environ["BASE"]) 
-  outdir = pathlib.Path(os.environ["OUTDIR"]) 
-  outdir.mkdir(parents=True, exist_ok=True)
-  py_files = {
-      "edge": base / "20251010T102752Z/py_taps/pixel_0_0_f_cell_stats.json",
-      "centre": base / "20251010T102752Z/py_taps/pixel_2048_2048_f_cell_stats.json",
-  }
-  c_metrics = json.load((base / "20251010T103811Z/c_taps/tap4_metrics.json").open())
-  lines = ["# Tap 4 F_cell Comparison", "", "| Pixel | Impl | total_lookups | out_of_bounds | zero_f | default_f | mean_f_cell | h_range | k_range | l_range |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
-  for label, py_path in py_files.items():
-      py_stats = json.load(py_path.open())["values"]
-      c_key = f"pixel_{0 if label == 'edge' else 2048}_{0 if label == 'edge' else 2048}"
-      c_stats = c_metrics[c_key]
-      bounds = py_stats["hkl_bounds"]
-      lines.append(f"| {label} | PyTorch | {py_stats['total_lookups']} | {py_stats['out_of_bounds_count']} | {py_stats['zero_f_count']} | N/A | {py_stats['mean_f_cell']:.6f} | [{bounds['h_min']}, {bounds['h_max']}] | [{bounds['k_min']}, {bounds['k_max']}] | [{bounds['l_min']}, {bounds['l_max']}] |")
-      lines.append(f"| {label} | C | {c_stats['total_lookups']} | {c_stats['out_of_bounds_count']} | {c_stats['zero_f_count']} | {c_stats['default_f_count']} | {c_stats['mean_f_cell']:.6f} | [{c_stats['hkl_min'][0]}, {c_stats['hkl_max'][0]}] | [{c_stats['hkl_min'][1]}, {c_stats['hkl_max'][1]}] | [{c_stats['hkl_min'][2]}, {c_stats['hkl_max'][2]}] |")
-  lines.extend(["", "## Notes", "- PyTorch metrics from Attempt #26 (`20251010T102752Z/py_taps`).", "- C metrics from Attempt #27 (`20251010T103811Z/c_taps`).", "- Highlight the centre-pixel discrepancy (PyTorch `default_F=100` vs C `F_cell=0`).", "- Add any observations about intensity ratios or follow-up hypotheses before committing."])
-  (outdir / "f_cell_comparison.md").write_text("\n".join(lines))
-  PY
-- Audit fallback logic:
-  * `rg -n "default_F" src/nanobrag_torch -g"*.py" > "$OUTDIR/default_f_refs.txt"`
-  * Inspect `src/nanobrag_torch/models/crystal.py` default-F handling (note key functions and conditions) via `sed -n '1,220p'` into `$OUTDIR/models_crystal_snippet.txt`.
-  * Review `scripts/debug_pixel_trace.py` taps around `collect_f_cell_tap` to ensure instrumentation mirrors production (capture snippet to `$OUTDIR/trace_helper_snippet.txt`).
-  * Summarise findings + spec citations in `$OUTDIR/default_f_audit.md` (include whether the fallback should apply to in-bounds HKL lookups when the array contains zeros).
-- Close the loop by drafting Attempt notes for `[VECTOR-PARITY-001]` (reference the new artifacts) but do not mark E7 done until the audit conclusion is ready to select Tap 5 vs Tap 6.
+- `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; `export BASE=reports/2026-01-vectorization-parity/phase_e0`; `export OUT_PY="$BASE/${STAMP}/py_taps"`; `export OUT_CMP="$BASE/${STAMP}/comparison"`; `mkdir -p "$OUT_PY" "$OUT_CMP"` and append every command to `$OUT_PY/commands.txt`.
+- Modify `scripts/debug_pixel_trace.py` to accept `--taps intensity` that records at least `{accumulated_intensity, steps, last_omega_applied, normalized_intensity}` using existing `I_before_scaling`, `omega`, and `steps` variables (see lines 505-545); avoid recomputing physics or breaking differentiability.
+- After edits, run `KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py --pixel 0 0 --tag edge --oversample 2 --taps intensity --json --out-dir "$OUT_PY"` and the same command with `--pixel 2048 2048 --tag centre`.
+- Write a concise `pre_norm_summary.md` under `$OUT_CMP` comparing edge vs centre metrics (note any deltas) and reference the JSON filenames.
+- Sanity check importability with `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q` and log output to `$OUT_PY/pytest_collect.log`.
 Pitfalls To Avoid:
-- No production code edits; analysis only.
-- Do not re-instrument the C binary this loop.
-- Keep all artifacts under `reports/` and out of git.
-- Preserve Protected Assets (`docs/index.md`, `loop.sh`, `supervisor.sh`).
-- Avoid assuming default_F semantics without citing spec (§4 of `specs/spec-a-core.md`).
-- Maintain device/dtype neutrality in any snippets; no `.cpu()` hacks.
-- Watch for stale STAMP reuse—each new bundle gets its own directory.
-- Keep notes ASCII-only per editing constraints.
-- Document commands/env in `$OUTDIR/commands.txt` for reproducibility.
-- Do not run full pytest; evidence gathering only.
+- No ad-hoc `.cpu()` or device assumptions; taps must respect caller device/dtype.
+- Do not re-derive physics; reuse already-computed tensors (Rule 11 instrumentation guardrail).
+- Keep all tap artifacts under `reports/`; never add them to git.
+- Preserve existing Tap 4 functionality; adding Tap 5 must not change prior outputs.
+- Make tap key names stable (`intensity_pre_norm`) to align with planned comparisons.
+- Ensure tap JSON is serialised with numeric types (use `float()` casts where needed).
+- Maintain ASCII formatting in summary docs per repo guideline.
+- Capture commands/env context; missing provenance will block applying the evidence.
+- Do not touch Protected Assets listed in docs/index.md.
 Pointers:
-- docs/fix_plan.md:60-66
-- plans/active/vectorization-parity-regression.md:70-92
-- reports/2026-01-vectorization-parity/phase_e0/20251010T102752Z/f_cell_summary.md
-- reports/2026-01-vectorization-parity/phase_e0/20251010T103811Z/c_taps/PHASE_E6_SUMMARY.md
-- specs/spec-a-core.md
-Next Up: 1) Once audit lands, decide between Tap 5 (pre-normalisation intensity) and Tap 6 (water background).
+- docs/fix_plan.md:65-67
+- plans/active/vectorization-parity-regression.md:85-87
+- plans/active/vectorization.md:13-17
+- specs/spec-a-core.md:471-476
+- scripts/debug_pixel_trace.py:505-606
+Next Up: Run `[VECTOR-PARITY-001]` Next Action #2 to instrument C Tap 5 once PyTorch metrics look sound.

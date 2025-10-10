@@ -1963,3 +1963,9 @@
 - Refreshed plans/active/vectorization.md status snapshot to reflect the centre-pixel F_cell mismatch blocking Phase D profiling work.
 - Replaced input.md (Mode: Parity) directing Ralph to generate `f_cell_comparison.md` + `default_f_audit.md` under a fresh `reports/.../comparison/` bundle, using the provided Python helper and code-inspection steps.
 - Expect Attempt update logging the new comparison/audit artifacts plus preliminary recommendation on Tap 5 vs Tap 6.
+
+### 2026-01-10 (galph loop - Tap 5 PyTorch instrumentation prep)
+- Logged Attempt #28 in `docs/fix_plan.md` and rewrote `[VECTOR-PARITY-001]` Next Actions to drive Tap 5 (`intensity_pre_norm`) for PyTorch and C; Active Focus now points at capturing Tap 5 evidence before considering water background.
+- Updated `plans/active/vectorization-parity-regression.md` (Phase E7→[D], added E8–E10) and `plans/active/vectorization.md` snapshot to reflect the default_F hypothesis closure and new Tap 5 priority.
+- Issued `input.md` (Mode: Parity) instructing Ralph to extend `scripts/debug_pixel_trace.py` with `--taps intensity`, capture edge/centre JSON under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/py_taps/`, summarise in `pre_norm_summary.md`, and run `pytest --collect-only -q`.
+- Next follow-up: supervisor to review Tap 5 PyTorch bundle, then delegate C instrumentation (Next Action #2) and the comparison write-up (Next Action #3).

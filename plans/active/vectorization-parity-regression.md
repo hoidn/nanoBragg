@@ -16,7 +16,7 @@
 - Attempt #23 quantified PyTorch ω bias at oversample=2 (edge last/mean≈1.000028), showing the effect is ≈0.003 % and insufficient to explain the 0.721 correlation — re-prioritise C taps and alternate hypotheses (F_cell defaults, water background) before code changes.
 - Attempt #24 captured C omega taps (edge + centre) and produced `omega_comparison.md`, definitively refuting the omega hypothesis; next probes moved to Tap 4 (F_cell defaults) and Tap 6 (water background scaling).
 - Attempt #25 recorded PyTorch Tap 4 metrics (`reports/2026-01-vectorization-parity/phase_e0/20251010T102752Z/`), confirming default_F usage at both edge and centre pixels (out_of_bounds=0).
-- Attempt #27 mirrored Tap 4 on the C side (`reports/2026-01-vectorization-parity/phase_e0/20251010T103811Z/`) and uncovered a mismatch: C returns 0.0 for the centre pixel (in-bounds HKL lookup) while PyTorch reports default_F=100. Need to audit the PyTorch fallback path before selecting the next tap (Tap 5 vs Tap 6).
+- Attempt #27 mirrored Tap 4 on the C side (`reports/2026-01-vectorization-parity/phase_e0/20251010T103811Z/`) and uncovered a mismatch; Attempt #28 (20251010T105617Z) consolidated the PyTorch/C metrics, audited fallback logic, and refuted the default_F hypothesis. Phase E now pivots to Tap 5 `intensity_pre_norm` before considering Tap 6 water background or Phase F remediation.
 
 ### Phase A — Evidence Audit & Baseline Ledger
 Goal: Canonicalise good vs bad benchmark evidence so every loop uses the same provenance.
@@ -81,7 +81,10 @@ Exit Criteria: Numeric taps proving or refuting the omega-last-value hypothesis 
 | E4 | Update ledger & plan with outcomes | [D] | ✅ This loop — Attempt #24 recorded in `[VECTOR-PARITY-001]`; plan + ledger refreshed with Tap 4 focus and new Next Actions (E5–E7). |
 | E5 | PyTorch Tap 4 — F_cell lookup stats | [D] | Attempt #25 (20251010T102752Z) captured edge/centre JSON + summary (`f_cell_summary.md`). Result: both pixels use default_F uniformly (out_of_bounds=0). Artifacts stored under `py_taps/`; env + commands logged. |
 | E6 | C Tap 4 — HKL default usage | [D] | Attempt #27 (20251010T103811Z) instrumented `golden_suite_generator/nanoBragg.c:3337-3354` and captured `tap4_metrics.json`. Edge pixel matches PyTorch (default_F=100); centre pixel retrieves in-bounds HKL values of 0.0 (no default fallback). Clean rebuild verified (692 tests). |
-| E7 | Compare F_cell distributions & decide next probe | [ ] | Consolidate Attempt #25 (PyTorch) and Attempt #27 (C) metrics into `f_cell_comparison.md`, then audit PyTorch’s fallback logic (`models/crystal.py`, trace helper) to explain the centre-pixel discrepancy. Use the findings to choose Tap 5 (pre-normalisation intensity) or Tap 6 (water background) and update docs/fix_plan.md + this plan. |
+| E7 | Compare F_cell distributions & decide next probe | [D] | Attempt #28 (20251010T105617Z) merged Tap 4 metrics into `f_cell_comparison.md`, audited fallback paths, and concluded default_F semantics align; default_F hypothesis closed, proceed to Tap 5. |
+| E8 | PyTorch Tap 5 — intensity pre-normalisation | [ ] | Extend `scripts/debug_pixel_trace.py` with `--taps intensity` (accumulated intensity, steps, last ω) and capture JSON for pixels (0,0) & (2048,2048) at oversample=2. Store outputs + `pre_norm_summary.md` under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/py_taps/`; cite `specs/spec-a-core.md` §§472–476 and `arch.md` §8. |
+| E9 | C Tap 5 — intensity pre-normalisation | [ ] | Instrument `golden_suite_generator/nanoBragg` (around intensity accumulation prior to scaling, approx. lines 3770–3815) with `TRACE_C_TAP5` guards, logging raw sums + normalised intensity for the same pixels. Archive under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/c_taps/` and verify rebuild via `pytest --collect-only -q`. |
+| E10 | Compare Tap 5 outputs & select next hypothesis | [ ] | Generate `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/comparison/intensity_pre_norm.md` summarising PyTorch vs C results; determine whether discrepancies persist pre-scaling (→ Phase F fix) or if Tap 6 (water background) evidence is required. Update this plan + docs/fix_plan.md accordingly. |
 
 ### Phase F — Remediation & Full-Frame Validation (Pending)
 Goal: Implement the validated fix (likely ω averaging), re-run full-frame parity, and unblock downstream initiatives.
@@ -95,6 +98,6 @@ Exit Criteria: corr≥0.999 and |sum_ratio−1|≤5×10⁻³ for full-frame nb-c
 | F3 | Refresh pytest evidence & documentation | [ ] | Run mapped selectors (high-res test, collect-only); update docs/fix_plan.md Attempts, `docs/architecture/pytorch_design.md` addendum if semantics change; ensure `plans/active/vectorization.md` gating lifted. |
 
 ## Exit Criteria for Plan Completion
-- Phase E tasks E1–E7 complete with archived tap evidence and ledger updates.
+- Phase E tasks E1–E10 complete with archived tap evidence and ledger updates.
 - Phase F parity rerun succeeds; `[VECTOR-PARITY-001]` marked done and downstream plans (VECTOR-GAPS-002, VECTOR-TRICUBIC-002) formally unblocked.
 - Documentation & guardrails updated to capture the oversample omega rule (spec references + checklist updates).
