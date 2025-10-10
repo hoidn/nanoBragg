@@ -1,3 +1,9 @@
+### 2025-10-10 (galph loop - Tap 5.3 instrumentation brief prep)
+- Focus issue: [VECTOR-PARITY-001] Next Actions refresh (Action: Review/housekeeping, Mode: Docs).
+- Updated docs/fix_plan.md Active Focus + Next Actions to pivot completely to Tap 5.3 instrumentation, PyTorch/C captures, and synthesis.
+- Issued input.md guiding Ralph to author tap5_accum_plan.md and log collect-only; artefact cadence uses phase_e0/<STAMP>.
+- No code changes; awaiting instrumentation plan before enabling new traces.
+
 ### 2026-01-11 (galph loop - PyTorch Tap 5.1 audit prep)
 - Confirmed `[VECTOR-PARITY-001]` Next Actions stay focused on Tap 5.1/5.2; plan rows (vectorization-parity-regression.md E12–E14) already capture the schema.
 - No plan edits needed; evidence backlog (Tap 5 comparison + hypotheses) remains authoritative.

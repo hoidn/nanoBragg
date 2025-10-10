@@ -1,8 +1,8 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2026-01-11 (galph loop — Tap 5.1 HKL parity review)
+**Last Updated:** 2026-01-11 (galph loop — Tap 5.3 instrumentation prep)
 **Active Focus:**
-- With Tap 5.1 (PyTorch + C) logged, capture Tap 5.2 HKL bounds parity and draft Tap 5.3 oversample instrumentation so Phase F remediation can be scoped on solid evidence.
+- With Tap 5.2 synthesis complete, author Tap 5.3 oversample accumulation instrumentation and capture PyTorch/C evidence so Phase F remediation can be scoped on solid evidence.
 - Prepare pyrefly + test-index documentation so future delegations have authoritative selectors.
 
 ## Index
@@ -72,9 +72,10 @@
   - Attempt #34 confirms C mirrors PyTorch HKL indexing and default_F semantics.
   - Attempt #35 shows Tap 5.2 “bounds” taps diverge semantically (PyTorch per-pixel vs C global grid) yet both sides treat `(0,0,0)` as in-bounds with `default_F=100`; oversample accumulation remains the leading hypothesis.
 - Next Actions:
-  1. 🧭 Tap 5.2 synthesis — Update `tap5_hypotheses.md` with the bounds semantics finding (PyTorch per-pixel vs C global), explicitly retire H1, and reaffirm Tap 5.3 (oversample accumulation) as the leading hypothesis; cross-link `reports/2026-01-vectorization-parity/phase_e0/20251010T123132Z/comparison/tap5_hkl_bounds.md`.
-  2. 🛠️ Tap 5.3 instrumentation brief — Author `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/tap5_accum_plan.md` capturing logging schema, guard names (`TRACE_PY_TAP5_ACCUM` / `TRACE_C_TAP5_ACCUM`), pixels/ROI, and acceptance checks before any code edits.
-  3. 🧪 Tap 5.3 PyTorch capture — Extend `scripts/debug_pixel_trace.py` with the Tap 5.3 hook and record per-subpixel `F_cell²·F_latt²`, ω, and capture weights for pixels (0,0) and (2048,2048) at oversample=2; archive logs + summary and log pytest collect-only.
+  1. 🛠️ Tap 5.3 instrumentation brief — Author `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/tap5_accum_plan.md` capturing logging schema, guard names (`TRACE_PY_TAP5_ACCUM` / `TRACE_C_TAP5_ACCUM`), pixels/ROI, and acceptance checks before any code edits.
+  2. 🧪 Tap 5.3 PyTorch capture — Extend `scripts/debug_pixel_trace.py` with the Tap 5.3 hook and record per-subpixel `F_cell²·F_latt²`, ω, and capture weights for pixels (0,0) and (2048,2048) at oversample=2; archive logs + summary and log pytest collect-only.
+  3. 🔁 Tap 5.3 C mirror — Add `TRACE_C_TAP5_ACCUM` guard to `golden_suite_generator/nanoBragg.c`, capture matching per-subpixel accumulation logs for the same pixels, and store artifacts alongside the PyTorch bundle with commands/env notes.
+  4. 🧭 Tap 5.3 synthesis — Compare PyTorch vs C accumulation logs, update `tap5_hypotheses.md` with conclusions, and decide whether Phase F remediation or Tap 6 instrumentation is required.
 - Risks/Assumptions:
   - Profiler evidence remains invalid while corr_warm=0.721; avoid reusing traces from blocked attempts.
   - ROI thresholds (corr≥0.999, |sum_ratio−1|≤5×10⁻³) are treated as spec acceptance; full-frame parity may require masking.
