@@ -1,0 +1,244 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/nanoBragg4/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 6 items
+
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_pytorch_determinism FAILED [ 16%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_seed_independence FAILED [ 33%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_c_pytorch_equivalence SKIPPED [ 50%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_lcg_compatibility PASSED [ 66%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_mosaic_rotation_umat_determinism FAILED [ 83%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_umat2misset_round_trip PASSED [100%]
+
+=================================== FAILURES ===================================
+_________________ TestAT_PARALLEL_024.test_pytorch_determinism _________________
+
+self = <tests.test_at_parallel_024.TestAT_PARALLEL_024 object at 0x7efa7bb6fd90>
+base_config = {'N_cells': (5, 5, 5), 'cell_params': (100.0, 100.0, 100.0, 90.0, 90.0, 90.0), 'default_F': 100.0, 'detector_size': (256, 256), ...}
+tmp_path = PosixPath('/tmp/pytest-of-ollie/pytest-482/test_pytorch_determinism0')
+
+    def test_pytorch_determinism(self, base_config, tmp_path):
+        """Test that same seed produces identical results in PyTorch."""
+        seeds = [12345, 54321]
+    
+        for seed in seeds:
+            # Create two identical crystal configurations with the same seed
+            crystal_config1 = CrystalConfig(
+                cell_a=base_config['cell_params'][0],
+                cell_b=base_config['cell_params'][1],
+                cell_c=base_config['cell_params'][2],
+                cell_alpha=base_config['cell_params'][3],
+                cell_beta=base_config['cell_params'][4],
+                cell_gamma=base_config['cell_params'][5],
+                N_cells=base_config['N_cells'],
+                default_F=base_config['default_F'],
+                phi_start_deg=base_config['phi'],
+                osc_range_deg=base_config['osc'],
+                mosaic_spread_deg=base_config['mosaic'],
+                misset_random=True,
+                misset_seed=seed
+            )
+    
+            crystal_config2 = CrystalConfig(
+                cell_a=base_config['cell_params'][0],
+                cell_b=base_config['cell_params'][1],
+                cell_c=base_config['cell_params'][2],
+                cell_alpha=base_config['cell_params'][3],
+                cell_beta=base_config['cell_params'][4],
+                cell_gamma=base_config['cell_params'][5],
+                N_cells=base_config['N_cells'],
+                default_F=base_config['default_F'],
+                phi_start_deg=base_config['phi'],
+                osc_range_deg=base_config['osc'],
+                mosaic_spread_deg=base_config['mosaic'],
+                misset_random=True,
+                misset_seed=seed
+            )
+    
+            # Create detector and beam configs
+            detector_config = DetectorConfig(
+                distance_mm=base_config['distance'],
+                pixel_size_mm=base_config['pixel_size'],
+                spixels=base_config['detector_size'][0],
+                fpixels=base_config['detector_size'][1],
+                oversample=base_config['oversample']
+            )
+    
+            beam_config = BeamConfig(
+                wavelength_A=base_config['wavelength']
+            )
+    
+            # Create two separate simulators
+            crystal1 = Crystal(crystal_config1, beam_config, dtype=torch.float64)
+            detector1 = Detector(detector_config, dtype=torch.float64)
+>           sim1 = Simulator(crystal1, detector1, crystal_config1, beam_config)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_at_parallel_024.py:116: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/nanobrag_torch/simulator.py:569: in __init__
+    self._cached_pixel_coords_meters = self.detector.get_pixel_coords().to(device=self.device, dtype=self.dtype)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <nanobrag_torch.models.detector.Detector object at 0x7efa7bb5be00>
+
+    def get_pixel_coords(self) -> torch.Tensor:
+        """
+        Get 3D coordinates of all detector pixels.
+    
+        Supports both planar and curved (spherical) detector mappings.
+        For curved detector: pixels are mapped to a spherical arc by rotating
+        from the beam direction by angles Sdet/distance and Fdet/distance.
+    
+        Returns:
+            torch.Tensor: Pixel coordinates with shape (spixels, fpixels, 3) in meters
+        """
+        # Check if geometry has changed by comparing cached values
+        geometry_changed = False
+        if hasattr(self, "_cached_basis_vectors") and hasattr(
+            self, "_cached_pix0_vector"
+        ):
+            # Check if basis vectors have changed
+            # Move cached vectors to current device for comparison
+            cached_f = self._cached_basis_vectors[0].to(self.device)
+            cached_s = self._cached_basis_vectors[1].to(self.device)
+            cached_o = self._cached_basis_vectors[2].to(self.device)
+    
+            if not (
+>               torch.allclose(self.fdet_vec, cached_f, atol=1e-15)
+                and torch.allclose(
+                    self.sdet_vec, cached_s, atol=1e-15
+                )
+                and torch.allclose(
+                    self.odet_vec, cached_o, atol=1e-15
+                )
+            ):
+E           RuntimeError: Float did not match Double
+
+src/nanobrag_torch/models/detector.py:767: RuntimeError
+__________________ TestAT_PARALLEL_024.test_seed_independence __________________
+
+self = <tests.test_at_parallel_024.TestAT_PARALLEL_024 object at 0x7efa7bbd8410>
+base_config = {'N_cells': (5, 5, 5), 'cell_params': (100.0, 100.0, 100.0, 90.0, 90.0, 90.0), 'default_F': 100.0, 'detector_size': (256, 256), ...}
+
+    def test_seed_independence(self, base_config):
+        """Test that different seeds produce different orientations."""
+        seeds = [12345, 54321]
+        images = []
+        missets = []
+    
+        for seed in seeds:
+            crystal_config = CrystalConfig(
+                cell_a=base_config['cell_params'][0],
+                cell_b=base_config['cell_params'][1],
+                cell_c=base_config['cell_params'][2],
+                cell_alpha=base_config['cell_params'][3],
+                cell_beta=base_config['cell_params'][4],
+                cell_gamma=base_config['cell_params'][5],
+                N_cells=base_config['N_cells'],
+                default_F=base_config['default_F'],
+                phi_start_deg=base_config['phi'],
+                osc_range_deg=base_config['osc'],
+                mosaic_spread_deg=base_config['mosaic'],
+                misset_random=True,
+                misset_seed=seed
+            )
+    
+            detector_config = DetectorConfig(
+                distance_mm=base_config['distance'],
+                pixel_size_mm=base_config['pixel_size'],
+                spixels=base_config['detector_size'][0],
+                fpixels=base_config['detector_size'][1],
+                oversample=base_config['oversample']
+            )
+    
+            beam_config = BeamConfig(
+                wavelength_A=base_config['wavelength']
+            )
+    
+            crystal = Crystal(crystal_config, beam_config, dtype=torch.float64)
+            detector = Detector(detector_config, dtype=torch.float64)
+>           sim = Simulator(crystal, detector, crystal_config, beam_config)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_at_parallel_024.py:171: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/nanobrag_torch/simulator.py:569: in __init__
+    self._cached_pixel_coords_meters = self.detector.get_pixel_coords().to(device=self.device, dtype=self.dtype)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <nanobrag_torch.models.detector.Detector object at 0x7efa7bbd8cd0>
+
+    def get_pixel_coords(self) -> torch.Tensor:
+        """
+        Get 3D coordinates of all detector pixels.
+    
+        Supports both planar and curved (spherical) detector mappings.
+        For curved detector: pixels are mapped to a spherical arc by rotating
+        from the beam direction by angles Sdet/distance and Fdet/distance.
+    
+        Returns:
+            torch.Tensor: Pixel coordinates with shape (spixels, fpixels, 3) in meters
+        """
+        # Check if geometry has changed by comparing cached values
+        geometry_changed = False
+        if hasattr(self, "_cached_basis_vectors") and hasattr(
+            self, "_cached_pix0_vector"
+        ):
+            # Check if basis vectors have changed
+            # Move cached vectors to current device for comparison
+            cached_f = self._cached_basis_vectors[0].to(self.device)
+            cached_s = self._cached_basis_vectors[1].to(self.device)
+            cached_o = self._cached_basis_vectors[2].to(self.device)
+    
+            if not (
+>               torch.allclose(self.fdet_vec, cached_f, atol=1e-15)
+                and torch.allclose(
+                    self.sdet_vec, cached_s, atol=1e-15
+                )
+                and torch.allclose(
+                    self.odet_vec, cached_o, atol=1e-15
+                )
+            ):
+E           RuntimeError: Float did not match Double
+
+src/nanobrag_torch/models/detector.py:767: RuntimeError
+__________ TestAT_PARALLEL_024.test_mosaic_rotation_umat_determinism ___________
+
+self = <tests.test_at_parallel_024.TestAT_PARALLEL_024 object at 0x7efa7bbdc170>
+
+    def test_mosaic_rotation_umat_determinism(self):
+        """Test that mosaic_rotation_umat is deterministic with same seed."""
+        seed = 12345
+        mosaicity = np.pi / 2.0  # 90 degrees
+    
+        # Generate two matrices with same seed
+        umat1 = mosaic_rotation_umat(mosaicity, seed)
+        umat2 = mosaic_rotation_umat(mosaicity, seed)
+    
+        # They should be identical
+        assert torch.allclose(umat1, umat2, rtol=1e-12, atol=1e-15), \
+            "Same seed did not produce identical rotation matrices"
+    
+        # Check that it's unitary (rotation matrix property)
+        identity = torch.matmul(umat1, umat1.T)
+        expected_identity = torch.eye(3, dtype=torch.float64)
+>       assert torch.allclose(identity, expected_identity, rtol=1e-10, atol=1e-12), \
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            "Generated matrix is not unitary"
+E       RuntimeError: Float did not match Double
+
+tests/test_at_parallel_024.py:356: RuntimeError
+============================= slowest 10 durations =============================
+
+(10 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ============================
+FAILED tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_pytorch_determinism
+FAILED tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_seed_independence
+FAILED tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_mosaic_rotation_umat_determinism
+==================== 3 failed, 2 passed, 1 skipped in 2.09s ====================

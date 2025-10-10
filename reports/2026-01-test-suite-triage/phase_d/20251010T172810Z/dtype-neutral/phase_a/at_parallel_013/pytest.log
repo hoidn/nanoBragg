@@ -1,0 +1,834 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/nanoBragg4/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 6 items
+
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_same_seed FAILED [ 16%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_different_seeds FAILED [ 33%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_consistency_across_runs FAILED [ 50%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_c_pytorch_equivalence SKIPPED [ 66%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_platform_fingerprint PASSED [ 83%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_numerical_precision_float64 FAILED [100%]
+
+=================================== FAILURES ===================================
+_ TestATParallel013CrossPlatformConsistency.test_pytorch_determinism_same_seed _
+
+self = <tests.test_at_parallel_013.TestATParallel013CrossPlatformConsistency object at 0x7c9c66249e50>
+
+    def test_pytorch_determinism_same_seed(self):
+        """Test that PyTorch produces identical results with same seed."""
+        # Run simulation twice with same seed
+>       result1 = run_simulation_deterministic(seed=42)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_at_parallel_013.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_at_parallel_013.py:131: in run_simulation_deterministic
+    simulator = Simulator(crystal, detector, crystal_config, beam_config)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/nanobrag_torch/simulator.py:569: in __init__
+    self._cached_pixel_coords_meters = self.detector.get_pixel_coords().to(device=self.device, dtype=self.dtype)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/nanobrag_torch/models/detector.py:767: in get_pixel_coords
+    torch.allclose(self.fdet_vec, cached_f, atol=1e-15)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <torch.utils._device.DeviceContext object at 0x7c9df31c4980>
+func = <built-in method allclose of type object at 0x7c9d98980fc0>, types = ()
+args = (tensor([0., 0., 1.], dtype=torch.float32), tensor([0., 0., 1.]))
+kwargs = {'atol': 1e-15}
+
+    def __torch_function__(self, func, types, args=(), kwargs=None):
+        kwargs = kwargs or {}
+        if func in _device_constructors() and kwargs.get('device') is None:
+            kwargs['device'] = self.device
+>       return func(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^
+E       RuntimeError: Float did not match Double
+
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_device.py:104: RuntimeError
+_ TestATParallel013CrossPlatformConsistency.test_pytorch_determinism_different_seeds _
+
+self = <tests.test_at_parallel_013.TestATParallel013CrossPlatformConsistency object at 0x7c9c6624a210>
+
+    def test_pytorch_determinism_different_seeds(self):
+        """Test that PyTorch produces different results with different seeds."""
+        # Note: This test configuration uses fixed misset angles and no mosaic/noise,
+        # so different seeds won't affect the result. We expect identical results.
+    
+        # Run simulation with different seeds
+>       result1 = run_simulation_deterministic(seed=42)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_at_parallel_013.py:177: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_at_parallel_013.py:131: in run_simulation_deterministic
+    simulator = Simulator(crystal, detector, crystal_config, beam_config)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/nanobrag_torch/simulator.py:569: in __init__
+    self._cached_pixel_coords_meters = self.detector.get_pixel_coords().to(device=self.device, dtype=self.dtype)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/nanobrag_torch/models/detector.py:767: in get_pixel_coords
+    torch.allclose(self.fdet_vec, cached_f, atol=1e-15)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <torch.utils._device.DeviceContext object at 0x7c9df31c0690>
+func = <built-in method allclose of type object at 0x7c9d98980fc0>, types = ()
+args = (tensor([0., 0., 1.], dtype=torch.float32), tensor([0., 0., 1.]))
+kwargs = {'atol': 1e-15}
+
+    def __torch_function__(self, func, types, args=(), kwargs=None):
+        kwargs = kwargs or {}
+        if func in _device_constructors() and kwargs.get('device') is None:
+            kwargs['device'] = self.device
+>       return func(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^
+E       RuntimeError: Float did not match Double
+
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_device.py:104: RuntimeError
+_ TestATParallel013CrossPlatformConsistency.test_pytorch_consistency_across_runs _
+
+self = <tests.test_at_parallel_013.TestATParallel013CrossPlatformConsistency object at 0x7c9c661cfbb0>
+
+    def test_pytorch_consistency_across_runs(self):
+        """Test PyTorch consistency across multiple runs."""
+        # Run simulation multiple times
+        n_runs = 5
+        results = []
+    
+        for i in range(n_runs):
+            # Each run with same seed should be identical
+>           result = run_simulation_deterministic(seed=42)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_at_parallel_013.py:201: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_at_parallel_013.py:131: in run_simulation_deterministic
+    simulator = Simulator(crystal, detector, crystal_config, beam_config)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/nanobrag_torch/simulator.py:569: in __init__
+    self._cached_pixel_coords_meters = self.detector.get_pixel_coords().to(device=self.device, dtype=self.dtype)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/nanobrag_torch/models/detector.py:767: in get_pixel_coords
+    torch.allclose(self.fdet_vec, cached_f, atol=1e-15)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <torch.utils._device.DeviceContext object at 0x7c9c6624b890>
+func = <built-in method allclose of type object at 0x7c9d98980fc0>, types = ()
+args = (tensor([0., 0., 1.], dtype=torch.float32), tensor([0., 0., 1.]))
+kwargs = {'atol': 1e-15}
+
+    def __torch_function__(self, func, types, args=(), kwargs=None):
+        kwargs = kwargs or {}
+        if func in _device_constructors() and kwargs.get('device') is None:
+            kwargs['device'] = self.device
+>       return func(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^
+E       RuntimeError: Float did not match Double
+
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_device.py:104: RuntimeError
+__ TestATParallel013CrossPlatformConsistency.test_numerical_precision_float64 __
+
+code = <code object sincg at 0x3cee94a0, file "/home/ollie/Documents/nanoBragg4/nanoBragg/src/nanobrag_torch/utils/physics.py", line 32>
+globals = {'__builtins__': {'ArithmeticError': <class 'ArithmeticError'>, 'AssertionError': <class 'AssertionError'>, 'Attribute...n\nThis module contains PyTorch implementations of physical models and\ncalculations from the original C code.\n', ...}
+locals = {'N': tensor(5.), 'u': tensor([[[[-1.6756]],
+
+         [[-1.6625]],
+
+         [[-1.6596]],
+
+         ...,
+
+         [[ 1.1399]],
+
+         [[ 1.1429]],
+
+         [[ 1.1491]]]])}
+builtins = {'ArithmeticError': <class 'ArithmeticError'>, 'AssertionError': <class 'AssertionError'>, 'AttributeError': <class 'AttributeError'>, 'BaseException': <class 'BaseException'>, ...}
+closure = ()
+compiler_fn = <torch._dynamo.repro.after_dynamo.WrapBackendDebug object at 0x7c9c68b79e80>
+one_graph = False, export = False, export_constraints = None
+hooks = Hooks(guard_export_fn=None, guard_fail_fn=None), cache_entry = None
+cache_size = CacheSizeRelevantForFrame(num_cache_entries=0, num_cache_entries_with_same_id_matched_objs=0)
+frame = <torch._C._dynamo.eval_frame._PyInterpreterFrame object at 0x7c9c65f92f90>
+frame_state = {'_id': 0}
+
+    def _compile(
+        code: CodeType,
+        globals: dict[str, object],
+        locals: dict[str, object],
+        builtins: dict[str, object],
+        closure: tuple[CellType],
+        compiler_fn: CompilerFn,
+        one_graph: bool,
+        export: bool,
+        export_constraints: Optional[typing.Never],
+        hooks: Hooks,
+        cache_entry: Optional[CacheEntry],
+        cache_size: CacheSizeRelevantForFrame,
+        frame: Optional[DynamoFrameType] = None,
+        frame_state: Optional[dict[str, Union[int, FrameStateSizeEntry]]] = None,
+        *,
+        compile_id: CompileId,
+        skip: int = 0,
+    ) -> ConvertFrameReturn:
+        from torch.fx.experimental.validator import (
+            bisect,
+            BisectValidationException,
+            translation_validation_enabled,
+            ValidationException,
+        )
+    
+        # Only nonlocal defs here please!
+        # Time spent compiling this frame before restarting or failing analysis
+        dynamo_time_before_restart: float = 0.0
+        output: Optional[OutputGraph] = None
+        tracer: Optional[InstructionTranslator] = None
+    
+        tf_mode_stack: list[torch.overrides.TorchFunctionMode] = (
+            torch.overrides._get_current_function_mode_stack()
+        )
+    
+        @preserve_global_state
+        def transform(
+            instructions: list[Instruction], code_options: dict[str, object]
+        ) -> None:
+            nonlocal output
+            nonlocal tracer
+            speculation_log.restart()
+            exn_vt_stack = ExceptionStack()
+            tracer = InstructionTranslator(
+                instructions,
+                code,
+                locals,
+                globals,
+                builtins,
+                closure,
+                tf_mode_stack,
+                code_options,
+                compiler_fn,
+                one_graph,
+                export,
+                export_constraints,
+                frame_state=frame_state,
+                speculation_log=speculation_log,
+                exn_vt_stack=exn_vt_stack,
+                distributed_state=distributed_state,
+            )
+    
+            try:
+                with tracing(tracer.output.tracing_context), tracer.set_current_tx():
+                    tracer.run()
+            except exc.UnspecializeRestartAnalysis:
+                speculation_log.clear()
+                raise
+            except (
+                exc.SpeculationRestartAnalysis,
+                exc.TensorifyScalarRestartAnalysis,
+                exc.SkipFrame,
+            ):
+                raise
+            except Exception:
+                if translation_validation_enabled():
+                    bisect(tracer.output.shape_env)
+                raise
+            finally:
+                tracer.output.call_cleanup_hooks()
+    
+            output = tracer.output
+            assert output is not None
+            assert output.output_instructions
+            instructions[:] = output.output_instructions
+            code_options.update(output.code_options)
+            propagate_inst_exn_table_entries(instructions)
+            check_inst_exn_tab_entries_valid(instructions)
+            instructions[:] = remove_pointless_jumps(remove_dead_code(instructions))
+    
+        @compile_time_strobelight_meta(phase_name="compile_inner")
+        def compile_inner(
+            code: CodeType,
+            one_graph: bool,
+            hooks: Hooks,
+            transform: Callable[[list[Instruction], dict[str, Any]], Any],
+        ) -> ConvertFrameReturn:
+            with contextlib.ExitStack() as stack:
+                stack.enter_context(
+                    dynamo_timed(
+                        "_compile.compile_inner",
+                        phase_name="entire_frame_compile",
+                        dynamo_compile_column_us="dynamo_cumulative_compile_time_us",
+                    )
+                )
+                stack.enter_context(
+                    _WaitCounter("pytorch.wait_counter.dynamo_compile").guard()
+                )
+                stack.enter_context(torch._dynamo.callback_handler.install_callbacks())
+                stack.enter_context(CompileTimeInstructionCounter.record())
+                return _compile_inner(code, one_graph, hooks, transform)
+    
+            return (
+                ConvertFrameReturn()
+            )  # dead, but see https://github.com/python/mypy/issues/7577
+    
+        @maybe_cprofile
+        def _compile_inner(
+            code: CodeType,
+            one_graph: bool,
+            hooks: Hooks,
+            transform: Callable[[list[Instruction], dict[str, Any]], Any],
+        ) -> ConvertFrameReturn:
+            nonlocal dynamo_time_before_restart
+            last_attempt_start_time = start_time = time.time()
+    
+            def log_bytecode(
+                prefix: str, name: str, filename: str, line_no: int, code: CodeType
+            ) -> None:
+                if bytecode_log.isEnabledFor(logging.DEBUG):
+                    bytecode_log.debug(
+                        format_bytecode(prefix, name, filename, line_no, code)
+                    )
+    
+            log_bytecode(
+                "ORIGINAL BYTECODE",
+                code.co_name,
+                code.co_filename,
+                code.co_firstlineno,
+                code,
+            )
+    
+            out_code = None
+            for attempt in itertools.count():
+                CompileContext.get().attempt = attempt
+                try:
+                    out_code = transform_code_object(code, transform)
+                    break
+                except exc.RestartAnalysis as e:
+                    if not isinstance(e, exc.TensorifyScalarRestartAnalysis):
+                        TensorifyState.clear()
+                    log.info(
+                        "Restarting analysis due to %s",
+                        LazyString(format_traceback_short, e.__traceback__),
+                    )
+                    # If restart reason is None just log the type of the exception
+                    restart_reasons.add(e.restart_reason or str(type(e)))
+                    # We now have a new "last attempt", reset the clock
+                    last_attempt_start_time = time.time()
+                    if attempt > 100:
+                        unimplemented_v2(
+                            gb_type="Excessive RestartAnalysis() calls",
+                            context="",
+                            explanation="Dynamo attempted to trace the same frame 100+ times. "
+                            "Giving up on compiling as the compile time tradeoff is likely not "
+                            "worth the performance gain.",
+                            hints=[],
+                        )
+                except exc.SkipFrame as e:
+                    if not isinstance(e, exc.TensorifyScalarRestartAnalysis):
+                        TensorifyState.clear()
+                    log.debug(
+                        "Skipping frame %s %s \
+                        %s %s",
+                        e,
+                        code.co_name,
+                        code.co_filename,
+                        code.co_firstlineno,
+                    )
+                    if one_graph:
+                        log.debug("No graph captured with one_graph=True")
+                    return ConvertFrameReturn()
+    
+            assert distributed_state is None or distributed_state.all_states is not None, (
+                "compiler collective wasn't run before compilation completed"
+            )
+    
+            assert out_code is not None
+            log_bytecode(
+                "MODIFIED BYTECODE",
+                code.co_name,
+                code.co_filename,
+                code.co_firstlineno,
+                out_code,
+            )
+    
+            for hook in _bytecode_hooks.values():
+                hook_output = hook(code, out_code)
+                if hook_output is not None:
+                    out_code = hook_output
+    
+            orig_code_map[out_code] = code
+            output_codes.add(out_code)
+            dynamo_time_before_restart = last_attempt_start_time - start_time
+            assert output is not None
+    
+            # Tests for new code objects.
+            # The rationale for these tests can be found in torch/csrc/dynamo/eval_frame.c
+            # Only test once the code object is created.
+            # They are not tested during runtime.
+    
+            def count_args(code: CodeType) -> int:
+                import inspect
+    
+                return (
+                    code.co_argcount
+                    + code.co_kwonlyargcount
+                    + bool(code.co_flags & inspect.CO_VARARGS)
+                    + bool(code.co_flags & inspect.CO_VARKEYWORDS)
+                )
+    
+            assert out_code is not None
+    
+            total_argcount_old = count_args(code)
+            total_argcount_new = count_args(out_code)
+            msg = "arg mismatch: "
+            msg += f"old code object has args {code.co_varnames[:total_argcount_old]}, "
+            msg += f"new code object has args {out_code.co_varnames[:total_argcount_new]}"
+            assert (
+                code.co_varnames[:total_argcount_old]
+                == out_code.co_varnames[:total_argcount_new]
+            ), msg
+    
+            msg = "free var mismatch: "
+            msg += f"old code object has free var {code.co_freevars}, "
+            msg += f"new code object has free var {out_code.co_freevars}"
+            assert code.co_freevars == out_code.co_freevars, msg
+    
+            msg = "cell var mismatch: "
+            msg += f"old code object has cell var {code.co_cellvars}, "
+            msg += f"new code object has cell var {out_code.co_cellvars}"
+            assert code.co_cellvars == out_code.co_cellvars, msg
+    
+            # Skipping Dynamo on a frame without any extracted graph.
+            # This does not affect eager functionality. But this is necessary
+            # for export for cases where Dynamo-reconstructed bytecode can create
+            # new function frames, confusing export in thinking that there
+            # are extra graphs now.
+    
+            if output.export and output.is_empty_graph():
+                return ConvertFrameReturn()
+    
+            assert output.guards is not None
+            CleanupManager.instance[out_code] = output.cleanups
+            nonlocal cache_entry
+            check_fn = CheckFunctionManager(
+                code,
+                output,
+                cache_entry,
+                hooks.guard_fail_fn if hooks else None,
+            )
+    
+            compile_id_str = str(compile_id) if compile_id is not None else "Unknown"
+            annotation_str = "Torch-Compiled Region: " + compile_id_str
+            guarded_code = GuardedCode(
+                out_code,
+                check_fn.guard_manager,  # type: ignore[arg-type]
+                compile_id,
+                annotation_str,
+            )
+    
+            if not output.is_empty_graph() and hooks.guard_export_fn is not None:
+                # We should not run the guard_export_fn when Dynamo does not
+                # generate any graph. This can happen in export when TorchDynamo
+                # generated bytecode has some reconstruction logic for mutated
+                # variables which can trigger TorchDynamo on the children frames but
+                # they are benign and do not generate any new graphs.
+                hooks.guard_export_fn(output.guards)
+    
+            return wrap_guarded_code(guarded_code)
+    
+        metrics_context = get_metrics_context()
+        with (
+            _use_lazy_graph_module(config.use_lazy_graph_module),
+            compile_context(CompileContext(compile_id)),
+            chromium_event_timed(
+                "dynamo", reset_event_log_on_exit=True, log_pt2_compile_event=True
+            ),
+            metrics_context,
+        ):
+            restart_reasons: set[str] = set()
+            # This is shared across restarts
+            speculation_log = SpeculationLog()
+            if compile_pg := get_compile_pg():
+                distributed_state = DistributedState(compile_pg, LocalState())
+            else:
+                distributed_state = None
+    
+            # Check recompilations
+            recompile_reason: Optional[str] = None
+            if is_recompilation(cache_size) and frame:
+                reasons = get_and_maybe_log_recompilation_reasons(cache_entry, frame)
+                recompile_reason = (
+                    "Unable to find recompilation reasons" if not reasons else reasons[0]
+                )
+            metrics_context.update_outer({"recompile_reason": recompile_reason})
+    
+            exceeded, limit_type = exceeds_recompile_limit(cache_size, compile_id)
+            if exceeded:
+    
+                def format_func_info(code: CodeType) -> str:
+                    return f"'{code.co_name}' ({code.co_filename}:{code.co_firstlineno})"
+    
+                log.warning(
+                    "torch._dynamo hit config.%s (%s)\n"
+                    "   function: %s\n"
+                    "   last reason: %s\n"
+                    'To log all recompilation reasons, use TORCH_LOGS="recompiles".\n'
+                    "To diagnose recompilation issues, see %s.",
+                    limit_type,
+                    getattr(config, limit_type),
+                    format_func_info(code),
+                    recompile_reason,
+                    troubleshooting_url,
+                )
+                if config.fail_on_recompile_limit_hit:
+                    raise FailOnRecompileLimitHit(
+                        f"{limit_type} reached, because fail_on_recompile_limit_hit = True this is a HARD failure"
+                    )
+                elif one_graph:
+                    raise FailOnRecompileLimitHit(
+                        f"{limit_type} reached with one_graph=True. Excessive recompilations can degrade "
+                        "performance due to the compilation overhead of each recompilation. To monitor "
+                        "recompilations, enable TORCH_LOGS=recompiles. If recompilations are expected, consider "
+                        "increasing torch._dynamo.config.cache_size_limit to an appropriate value."
+                    )
+                elif justknobs_check(
+                    "pytorch/compiler:skip_code_recursive_on_recompile_limit_hit"
+                ):
+                    raise RecompileLimitExceeded(f"{limit_type} reached")
+                else:
+                    # do not recursively skip frames
+                    unimplemented_v2(
+                        gb_type="Dynamo cache limit exceeded",
+                        context=f"Limit type: {limit_type}",
+                        explanation="Dynamo attempted to recompile the code object too many times, "
+                        f"exceeding the {limit_type} cache size limit."
+                        "Giving up on compiling as the compile time tradeoff is likely not "
+                        "worth the performance gain.",
+                        hints=[],
+                    )
+    
+            log.debug(
+                "torchdynamo start compiling %s %s:%s, stack (elided %s frames):\n%s",
+                code.co_name,
+                code.co_filename,
+                code.co_firstlineno,
+                skip + 2,
+                # -2: omit current frame, omit contextlib decorator
+                "".join(CapturedTraceback.extract(skip=2 + skip).format()),
+            )
+            # -4: -2 as above, plus trace_structured frames
+            #
+            # NB: the frame looks like this:
+            #
+            # # handled by skip argument
+            # torch/_dynamo/convert_frame.py:1069 in catch_errors
+            # torch/_dynamo/convert_frame.py:910 in _convert_frame
+            # torch/_dynamo/convert_frame.py:464 in _convert_frame_assert
+            # torch/_utils_internal.py:70 in wrapper_function
+            #
+            # # 2 current frame and context lib
+            # env/lib/python3.10/contextlib.py:79 in inner
+            # torch/_dynamo/convert_frame.py:776 in _compile
+            #
+            # # 2 extra here
+            # torch/_logging/_internal.py:1064 in trace_structured
+            # torch/_dynamo/convert_frame.py:780 in <lambda>
+            convert_frame_intern = structured.intern_string(__file__)
+            # Initialize the ChromiumEventLogger on start
+            torch._logging.trace_structured(
+                "dynamo_start",
+                lambda: {
+                    "stack": list(
+                        itertools.takewhile(
+                            lambda f: f["filename"] != convert_frame_intern,
+                            structured.from_traceback(
+                                CapturedTraceback.extract(skip=4 + skip).summary()
+                            ),
+                        )
+                    )
+                    + [
+                        {
+                            "line": code.co_firstlineno,
+                            "name": code.co_name,
+                            "filename": structured.intern_string(code.co_filename),
+                        }
+                    ]
+                },
+            )
+            start_time_ns = time.time_ns()
+            fail_type: Optional[str] = None
+            fail_reason: Optional[str] = None
+            fail_user_frame_filename: Optional[str] = None
+            fail_user_frame_lineno: Optional[int] = None
+            torch._dynamo.utils.ReinplaceCounters.clear()
+            guarded_code = None
+            try:
+                guarded_code = compile_inner(code, one_graph, hooks, transform)
+    
+                # NB: We only put_code_state in success case.  Success case here
+                # does include graph breaks; specifically, if a graph break still
+                # resulted in a partially compiled graph, we WILL return here.  An
+                # Unsupported exception will only bubble to the top level if we
+                # are unable to compile the frame at all.  In this case, there's
+                # no point in uploading the code state, because we will always
+                # fail exactly the same way even without the update.  (It's useful
+                # to upload for graph break though, because this can prevent
+                # extra graph break compilations.)
+                put_code_state()
+    
+                return guarded_code
+            except Exception as e:
+                # NB: e's msg is mutated here to add user stack, but we DON'T want
+                # that stack in the Scuba logged fail_reason. So we grab the fail
+                # info here and add it to the metrics context below.
+                fail_type = type(e).__qualname__
+                fail_reason = str(e)
+                exception_handler(e, code, frame, export=export)
+                # NB: this is the post-mutation exception
+                torch._logging.trace_structured(
+                    "artifact",
+                    metadata_fn=lambda: {
+                        "name": "dynamo_error",
+                        "encoding": "string",
+                    },
+                    payload_fn=lambda: traceback.format_exc(),
+                )
+                fail_user_frame_filename, fail_user_frame_lineno = exc.get_exc_message(
+                    e, compile_id
+                )
+                if isinstance(
+                    e,
+                    (
+                        Unsupported,
+                        TorchRuntimeError,
+                        BackendCompilerFailed,
+                        AssertionError,
+                        ConstraintViolationError,
+                        GuardOnDataDependentSymNode,
+                        ValidationException,
+                        UncapturedHigherOrderOpError,
+                        BisectValidationException,
+                        ShortenTraceback,
+                    ),
+                ):
+                    raise
+                else:
+                    # Rewrap for clarity
+>                   raise InternalTorchDynamoError(
+                        f"{type(e).__qualname__}: {str(e)}"
+                    ).with_traceback(e.__traceback__) from None
+
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1110: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1059: in _compile
+    guarded_code = compile_inner(code, one_graph, hooks, transform)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_utils_internal.py:97: in wrapper_function
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:761: in compile_inner
+    return _compile_inner(code, one_graph, hooks, transform)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:797: in _compile_inner
+    out_code = transform_code_object(code, transform)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/bytecode_transformation.py:1422: in transform_code_object
+    transformations(instructions, code_options)
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:257: in _fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:715: in transform
+    tracer.run()
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:3498: in run
+    super().run()
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:1337: in run
+    while self.step():
+          ^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:1246: in step
+    self.dispatch_table[inst.opcode](self, inst)
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:2330: in LOAD_ATTR
+    self._load_attr(inst)
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:2318: in _load_attr
+    result = BuiltinVariable(getattr).call_function(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builtin.py:1111: in call_function
+    return handler(tx, args, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builtin.py:790: in <lambda>
+    tx, [v.realize() for v in args], kwargs
+         ^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/lazy.py:67: in realize
+    self._cache.realize()
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/lazy.py:33: in realize
+    self.vt = VariableTracker.build(tx, self.value, source)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/base.py:540: in build
+    return builder.VariableBuilder(tx, source)(value)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builder.py:417: in __call__
+    vt = self._wrap(value)
+         ^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builder.py:573: in _wrap
+    if has_triton():
+       ^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:95: in has_triton
+    return is_device_compatible_with_triton()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:91: in is_device_compatible_with_triton
+    if device_interface.is_available() and extra_check(device_interface):
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:72: in cuda_extra_check
+    return device_interface.Worker.get_device_properties().major >= 7
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+device = 0
+
+    @staticmethod
+    def get_device_properties(device: _device_t = None):
+        if device is not None:
+            if isinstance(device, str):
+                device = torch.device(device)
+                assert device.type == "cuda"
+            if isinstance(device, torch.device):
+                device = device.index
+        if device is None:
+            device = CudaInterface.Worker.current_device()
+    
+        if "cuda" not in caching_worker_device_properties:
+            device_prop = [
+                torch.cuda.get_device_properties(i)
+                for i in range(torch.cuda.device_count())
+            ]
+            caching_worker_device_properties["cuda"] = device_prop
+    
+>       return caching_worker_device_properties["cuda"][device]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       torch._dynamo.exc.InternalTorchDynamoError: IndexError: list index out of range
+E       
+E       from user code:
+E          File "/home/ollie/Documents/nanoBragg4/nanoBragg/src/nanobrag_torch/utils/physics.py", line 48, in sincg
+E           if N.device != u.device:
+E       
+E       Set TORCHDYNAMO_VERBOSE=1 for the internal stack trace (please do this especially if you're reporting a bug to PyTorch). For even more developer context, set TORCH_LOGS="+dynamo"
+
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/device_interface.py:218: InternalTorchDynamoError
+
+During handling of the above exception, another exception occurred:
+
+self = <tests.test_at_parallel_013.TestATParallel013CrossPlatformConsistency object at 0x7c9c66205e10>
+
+    def test_numerical_precision_float64(self):
+        """Test that float64 precision is maintained throughout."""
+        import os
+        # Disable torch.compile for this test to avoid CUDA/Triton device detection issues
+        os.environ["NANOBRAGG_DISABLE_COMPILE"] = "1"
+    
+        set_deterministic_mode()
+    
+        # Create test configuration
+        crystal_config = CrystalConfig(
+            cell_a=70.0, cell_b=80.0, cell_c=90.0,
+            cell_alpha=75.0, cell_beta=85.0, cell_gamma=95.0,
+            N_cells=(5, 5, 5),
+            default_F=100.0
+        )
+    
+        # Verify float64 is used
+        crystal = Crystal(crystal_config, dtype=torch.float64)
+    
+        # Check that internal tensors are float64
+        assert crystal.cell_a.dtype == torch.float64, "Crystal cell_a not float64"
+        assert crystal.cell_b.dtype == torch.float64, "Crystal cell_b not float64"
+        assert crystal.cell_c.dtype == torch.float64, "Crystal cell_c not float64"
+    
+        # Run small simulation to verify precision maintained
+        detector_config = DetectorConfig(
+            spixels=64,  # Small for quick test
+            fpixels=64,
+            pixel_size_mm=0.1,
+            distance_mm=100.0
+        )
+    
+        detector = Detector(detector_config, dtype=torch.float64)
+        beam_config = BeamConfig(wavelength_A=1.0, fluence=1e15)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config, dtype=torch.float64)
+    
+>       result = simulator.run()
+                 ^^^^^^^^^^^^^^^
+
+tests/test_at_parallel_013.py:338: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/nanobrag_torch/simulator.py:976: in run
+    physics_intensity_flat, physics_intensity_pre_polar_flat = self._compute_physics_for_position(
+src/nanobrag_torch/simulator.py:676: in _compute_physics_for_position
+    return self._compiled_compute_physics(
+src/nanobrag_torch/simulator.py:252: in compute_physics_for_position
+    F_latt_a = sincg(torch.pi * h, Na)
+               ^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/eval_frame.py:655: in _fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1432: in __call__
+    return self._torchdynamo_orig_callable(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1213: in __call__
+    result = self._inner_convert(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:598: in __call__
+    return _compile(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:939: in _compile
+    metrics_context,
+    ^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/metrics_context.py:88: in __exit__
+    self._on_exit(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/utils.py:1493: in record_compilation_metrics
+    "triton_version": triton.__version__ if has_triton() else "",
+                                            ^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:95: in has_triton
+    return is_device_compatible_with_triton()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:91: in is_device_compatible_with_triton
+    if device_interface.is_available() and extra_check(device_interface):
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:72: in cuda_extra_check
+    return device_interface.Worker.get_device_properties().major >= 7
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+device = 0
+
+    @staticmethod
+    def get_device_properties(device: _device_t = None):
+        if device is not None:
+            if isinstance(device, str):
+                device = torch.device(device)
+                assert device.type == "cuda"
+            if isinstance(device, torch.device):
+                device = device.index
+        if device is None:
+            device = CudaInterface.Worker.current_device()
+    
+        if "cuda" not in caching_worker_device_properties:
+            device_prop = [
+                torch.cuda.get_device_properties(i)
+                for i in range(torch.cuda.device_count())
+            ]
+            caching_worker_device_properties["cuda"] = device_prop
+    
+>       return caching_worker_device_properties["cuda"][device]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/device_interface.py:218: IndexError
+----------------------------- Captured stdout call -----------------------------
+auto-selected 2-fold oversampling
+============================= slowest 10 durations =============================
+0.02s call     tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_numerical_precision_float64
+
+(9 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ============================
+FAILED tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_same_seed
+FAILED tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_different_seeds
+FAILED tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_consistency_across_runs
+FAILED tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_numerical_precision_float64
+==================== 4 failed, 1 passed, 1 skipped in 2.87s ====================

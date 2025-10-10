@@ -1,0 +1,3 @@
+initial dtype torch.float64
+post to dtype torch.float32
+runtime error: Float did not match Double

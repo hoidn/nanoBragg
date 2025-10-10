@@ -1,39 +1,31 @@
-Summary: Capture dtype-mismatch evidence for `Detector` caches (Phase A A1–A5 of `[DTYPE-NEUTRAL-001]`).
-Mode: Parity
+Summary: Phase B static audit for dtype-neutral cache handling so determinism work can resume.
+Mode: Docs
 Focus: [DTYPE-NEUTRAL-001] dtype neutrality guardrail
 Branch: feature/spec-based-2
-Mapped tests: tests/test_at_parallel_013.py::TestAT_PARALLEL_013_Determinism::test_pytorch_determinism_same_seed; tests/test_at_parallel_024.py::TestAT_PARALLEL_024_MissetDeterminism::test_pytorch_determinism
-Artifacts: reports/2026-01-test-suite-triage/phase_d/<STAMP>/dtype-neutral/phase_a/
-Do Now: [DTYPE-NEUTRAL-001] dtype neutrality guardrail — run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q`
-If Blocked: If collection fails, capture stderr to `reports/.../dtype-neutral/phase_a/collect_failure.log`, rerun with `-vv`, and note the traceback in `summary.md` before proceeding.
+Mapped tests: none — evidence-only
+Artifacts: reports/2026-01-test-suite-triage/phase_d/<STAMP>/dtype-neutral/phase_b/
+Do Now: Run plans/active/dtype-neutral.md Phase B (B1–B5) static audit; capture analysis/tap list/summary under reports/2026-01-test-suite-triage/phase_d/<STAMP>/dtype-neutral/phase_b/ (no pytest).
+If Blocked: Record the blocker in phase_b/summary.md, update docs/fix_plan.md attempt notes, and signal in Attempts History before exiting.
 Priorities & Rationale:
-- plans/active/dtype-neutral.md:12 — Phase A exit criteria require env snapshot + reproductions before any fix design.
-- docs/fix_plan.md:534 — Next Actions demand Phase A/B artifacts to unblock determinism plan.
-- docs/development/testing_strategy.md:23 — Device/dtype discipline must be documented in `env.json`.
-- docs/development/pytorch_runtime_checklist.md:8 — Checklist reiterates dtype neutrality expectations the evidence should verify.
-- reports/2026-01-test-suite-triage/phase_d/20251010T171010Z/determinism/phase_a/summary.md — Use prior Attempt #1 format for continuity when drafting the new summary.
+- Highlight cache dtype gaps per plans/active/dtype-neutral.md:33-39 to unblock determinism triage.
+- Keep docs/fix_plan.md:534-557 in sync with new evidence so the ledger reflects Phase B progress.
+- Cross-check detector caching rules in docs/architecture/detector.md:73-88 to confirm expected device/dtype behaviour.
 How-To Map:
-- Export `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; create `reports/2026-01-test-suite-triage/phase_d/$STAMP/dtype-neutral/phase_a/{at_parallel_013,at_parallel_024}` before running tests.
-- After the collect-only run, record environment details with `python scripts/validation/dump_env.py` (or equivalent snippet) into `env.json` capturing Python/Torch/numpy versions, default dtype, CUDA availability, and seed values; cite testing_strategy.md §1.4 in the file header.
-- Run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py::TestAT_PARALLEL_013_Determinism::test_pytorch_determinism_same_seed --maxfail=0 --durations=10`, tee stdout/stderr to `.../at_parallel_013/pytest.log`, and extract the RuntimeError snippet into `summary.md` with precise tensor dtypes.
-- Run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_024.py::TestAT_PARALLEL_024_MissetDeterminism::test_pytorch_determinism --maxfail=0 --durations=10`, capture output in `.../at_parallel_024/pytest.log`, and note any additional assertions.
-- For A4, draft a minimal reproducer: reuse `tests/test_detector_geometry.py` if a dtype toggle test exists; otherwise place a short script `reproduce_dtype_cache.py` under the same `phase_a/` folder that instantiates `Detector` in float32, calls `get_pixel_coords()`, switches to float64, and records the failure stack trace in `trace/dtype_cache.txt`.
-- Summarise findings in `phase_a/summary.md` referencing spec citations and highlighting that determinism tests cannot proceed without dtype fix; include table of commands run.
-- Update `docs/fix_plan.md` Attempts History for `[DTYPE-NEUTRAL-001]` with Attempt #1 details (command list, artifact path, failure signature).
+- `STAMP=$(date -u +%Y%m%dT%H%M%SZ); ART_ROOT=reports/2026-01-test-suite-triage/phase_d/$STAMP/dtype-neutral/phase_b; mkdir -p "$ART_ROOT"` — log this in `$ART_ROOT/commands.txt`.
+- Use `rg -n "_cached" src/nanobrag_torch/models/detector.py` and `rg -n "allclose" src/nanobrag_torch/models/detector.py` to enumerate cache comparisons; copy relevant line anchors into `$ART_ROOT/analysis.md`.
+- Inventory other modules with cache+dtype coupling via `rg -n "_cached_" src/nanobrag_torch -g"*.py"` and `rg -n "torch.allclose" src/nanobrag_torch -g"*.py"`; note any hotspots in detector, simulator, crystal, or beam components.
+- Compile a tap proposal in `$ART_ROOT/tap_points.md` (B4) listing where instrumentation might confirm dtype transitions post-fix.
+- Summarise findings and recommended remediation scope in `$ART_ROOT/summary.md`, then append Attempt details to docs/fix_plan.md `[DTYPE-NEUTRAL-001]` per B5.
 Pitfalls To Avoid:
-- Do not modify production code or existing tests; evidence only.
-- Keep every pytest invocation prefixed with `KMP_DUPLICATE_LIB_OK=TRUE`.
-- Use UTC stamps consistently; no ad-hoc directory names.
-- Store scripts/logs under the designated `dtype-neutral/phase_a/` tree; avoid clutter elsewhere.
-- Record exact error text (RuntimeError) and tensor dtypes; no paraphrasing.
-- Respect Protected Assets per docs/index.md; avoid touching tracked binaries/scripts.
-- Do not run the full test suite; stay within mapped selectors and collect-only.
-- If CUDA unavailable, note it explicitly in `env.json` instead of assuming CPU-only.
+- No edits to src/ or tests/ files; this loop is evidence-only.
+- Do not run pytest beyond the commands listed (none required this turn).
+- Keep all artifacts under the timestamped ART_ROOT; avoid scattering logs elsewhere.
+- Preserve Protected Assets (see docs/index.md) — no renames/deletions.
+- Maintain ASCII output in reports; avoid adding notebooks or binaries.
 Pointers:
-- plans/active/dtype-neutral.md:1
+- plans/active/dtype-neutral.md:28
 - docs/fix_plan.md:534
-- docs/development/testing_strategy.md:23
-- docs/development/pytorch_runtime_checklist.md:8
-- src/nanobrag_torch/models/detector.py:720
-- reports/2026-01-test-suite-triage/phase_d/20251010T171010Z/determinism/phase_a/summary.md
-Next Up: Stage Phase B `analysis.md` skeleton once Phase A artifacts are committed.
+- docs/architecture/detector.md:73
+- src/nanobrag_torch/models/detector.py:744
+- tests/test_at_parallel_013.py:146
+Next Up: Draft Phase C remediation plan once Phase B artifacts are reviewed.

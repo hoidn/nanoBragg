@@ -2126,3 +2126,13 @@
 - Rewrote `input.md` (Parity mode) to launch Phase A evidence capture (collect-only + targeted determinism selectors + minimal reproducer) under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/dtype-neutral/`.
 - Follow-up: expect Attempt #1 artifacts (env.json, pytest logs, summary) next loop before scoping Phase B audit.
 - <Action State>: [ready_for_implementation]
+### 2025-10-10 (galph loop - pre-evidence note)
+- Focus issue: [DTYPE-NEUTRAL-001] Phase A evidence capture kickoff
+- Action type: Evidence collection
+- Mode: Parity
+### 2025-10-10 (galph loop - dtype Phase A evidence logged)
+- Captured `[DTYPE-NEUTRAL-001]` Phase A artifacts under `reports/2026-01-test-suite-triage/phase_d/20251010T172810Z/dtype-neutral/phase_a/` (collect-only env snapshot, AT-PARALLEL-013/024 logs, minimal repro, summary).
+- Marked Phase A rows [D] and added status snapshot in `plans/active/dtype-neutral.md`; fix_plan entry now records Attempt #1 (20251010T172810Z) with findings.
+- Rewrote `input.md` (Mode=Docs) directing Ralph to execute Phase B static audit (B1–B5) and stage artifacts under phase_b/.
+- Follow-up for Ralph: produce phase_b analysis/tap summaries, update fix_plan attempt log per plan task B5.
+- <Action State>: [ready_for_implementation]

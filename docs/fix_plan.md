@@ -3,7 +3,7 @@
 **Last Updated:** 2026-01-16 (galph loop — dtype neutrality planning kickoff)
 **Active Focus:**
 - CRITICAL: `[DETERMINISM-001]` — execute Phase A per `plans/active/determinism.md`; blocked until dtype cache fix lands.
-- BLOCKER: `[DTYPE-NEUTRAL-001]` — drive Phase A evidence in `plans/active/dtype-neutral.md` to unblock determinism seeds.
+- BLOCKER: `[DTYPE-NEUTRAL-001]` — advance Phase B static audit per `plans/active/dtype-neutral.md` to unblock determinism seeds.
 - `[TEST-SUITE-TRIAGE-001]` remains the umbrella initiative; update ladder once determinism artifacts land.
 - Tap 5.3 oversample instrumentation for `[VECTOR-PARITY-001]` stays paused until suite triage critical path clears.
 
@@ -537,12 +537,12 @@
 - Status: in_progress
 - Owner/Date: ralph/2025-10-10
 - Plan Reference: `plans/active/dtype-neutral.md`
-- Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_same_seed tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_pytorch_determinism`
+- Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py --maxfail=0 --durations=10` and `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_024.py --maxfail=0 --durations=10`
 - Source: Cluster C15 from `[TEST-SUITE-TRIAGE-001]` Attempt #6 triage summary (`reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/triage_summary.md` §C15)
 - First Divergence (if known): `src/nanobrag_torch/models/detector.py:767` — `torch.allclose()` compares float32 cached basis vectors against float64 current vectors without dtype coercion, raising `RuntimeError: Float did not match Double`.
 - Attempts History:
   * [2026-01-16] Attempt #0 — Result: 📝 planning. Authored dtype-neutral remediation playbook (`plans/active/dtype-neutral.md`) capturing Phase A–E workflow and artifact policy under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/dtype-neutral/`.
-  * [2025-10-10T172049Z] Attempt #1 — Result: ✅ Phase A complete (evidence only). **Artifacts:** `reports/2026-01-test-suite-triage/phase_d/20251010T172049Z/dtype-neutral/phase_a/`. **Metrics:** Both AT-PARALLEL-013 and AT-PARALLEL-024 fail with identical RuntimeError at detector.py:767. Minimal reproducer confirms cached tensors retain float32 dtype while current tensors are float64. **Root Cause:** Lines 762-764 in `Detector.get_pixel_coords()` move cached vectors to current device via `.to(self.device)` but omit dtype parameter, leaving cached_f/s/o as float32 when comparing against float64 basis vectors. **Observations:** Environment snapshot shows PyTorch 2.7.1+cu126, Python 3.13.5, default dtype float32. Test collection passed (588 tests). **Next:** Phase B static audit to identify all dtype-coupled cache comparisons and survey Crystal/Simulator for similar issues. No code changes made in this evidence-only loop.
+  * [2025-10-10T172810Z] Attempt #1 — Result: ✅ Phase A evidence captured. **Artifacts:** `reports/2026-01-test-suite-triage/phase_d/20251010T172810Z/dtype-neutral/phase_a/` ({`env.json`, `collect_only.log`, `at_parallel_013/pytest.log`, `at_parallel_024/pytest.log`, `minimal_repro.log`, `summary.md`}). **Findings:** `tests/test_at_parallel_013.py` and `tests/test_at_parallel_024.py` both raise `RuntimeError: Float did not match Double` at `src/nanobrag_torch/models/detector.py:767` when the simulator forces the detector from float64 → float32 via `Detector.to()`. Minimal reproducer demonstrates cached basis vectors remain float64 because `_cached_basis_vectors` is not re-cast during `.to()`/`invalidate_cache()`. Dynamo compilation failure for `test_numerical_precision_float64` persists as secondary issue. **Env:** Python 3.13.5, torch 2.7.1+cu126, CUDA available (1 device), default dtype float32, 692 tests collected (`pytest --collect-only -q`). **Next:** Move to Phase B static audit (B1–B5) before drafting remediation blueprint.
 - Next Actions:
   1. Execute Phase B static audit (B1–B5) to map all `torch.allclose()` calls lacking dtype coercion and inventory tensor factory touchpoints.
   2. Draft Phase C remediation blueprint (remediation_plan.md, tests.md, docs_updates.md) specifying exact code changes and regression coverage.

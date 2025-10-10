@@ -1,0 +1,5 @@
+# Phase A evidence capture commands
+KMP_DUPLICATE_LIB_OK=TRUE AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md pytest --collect-only -q
+KMP_DUPLICATE_LIB_OK=TRUE AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md pytest -v tests/test_at_parallel_013.py --maxfail=0 --durations=10
+KMP_DUPLICATE_LIB_OK=TRUE AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md pytest -v tests/test_at_parallel_024.py --maxfail=0 --durations=10
+python minimal_repro (inline script; see minimal_repro.log)
