@@ -1,0 +1,8 @@
+183:            else torch.allclose(
+190:            else torch.allclose(
+197:            else torch.allclose(
+204:            else torch.allclose(
+767:                torch.allclose(self.fdet_vec, cached_f, atol=1e-15)
+768:                and torch.allclose(
+771:                and torch.allclose(
+778:            if not torch.allclose(

@@ -1,0 +1,10 @@
+145:        self._cached_basis_vectors = (
+150:        self._cached_pix0_vector = self.pix0_vector.clone()
+757:        if hasattr(self, "_cached_basis_vectors") and hasattr(
+758:            self, "_cached_pix0_vector"
+762:            cached_f = self._cached_basis_vectors[0].to(self.device)
+763:            cached_s = self._cached_basis_vectors[1].to(self.device)
+764:            cached_o = self._cached_basis_vectors[2].to(self.device)
+777:            cached_pix0 = self._cached_pix0_vector.to(self.device)
+794:            self._cached_basis_vectors = (
+799:            self._cached_pix0_vector = self.pix0_vector.clone()

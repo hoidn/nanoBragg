@@ -1,0 +1,19 @@
+src/nanobrag_torch/models/detector.py:145:        self._cached_basis_vectors = (
+src/nanobrag_torch/models/detector.py:150:        self._cached_pix0_vector = self.pix0_vector.clone()
+src/nanobrag_torch/models/detector.py:757:        if hasattr(self, "_cached_basis_vectors") and hasattr(
+src/nanobrag_torch/models/detector.py:758:            self, "_cached_pix0_vector"
+src/nanobrag_torch/models/detector.py:762:            cached_f = self._cached_basis_vectors[0].to(self.device)
+src/nanobrag_torch/models/detector.py:763:            cached_s = self._cached_basis_vectors[1].to(self.device)
+src/nanobrag_torch/models/detector.py:764:            cached_o = self._cached_basis_vectors[2].to(self.device)
+src/nanobrag_torch/models/detector.py:777:            cached_pix0 = self._cached_pix0_vector.to(self.device)
+src/nanobrag_torch/models/detector.py:794:            self._cached_basis_vectors = (
+src/nanobrag_torch/models/detector.py:799:            self._cached_pix0_vector = self.pix0_vector.clone()
+src/nanobrag_torch/simulator.py:569:        self._cached_pixel_coords_meters = self.detector.get_pixel_coords().to(device=self.device, dtype=self.dtype)
+src/nanobrag_torch/simulator.py:573:        self._cached_roi_mask = torch.ones(
+src/nanobrag_torch/simulator.py:595:        self._cached_roi_mask[:roi_ymin, :] = 0  # Below ymin
+src/nanobrag_torch/simulator.py:596:        self._cached_roi_mask[roi_ymax+1:, :] = 0  # Above ymax
+src/nanobrag_torch/simulator.py:597:        self._cached_roi_mask[:, :roi_xmin] = 0  # Left of xmin
+src/nanobrag_torch/simulator.py:598:        self._cached_roi_mask[:, roi_xmax+1:] = 0  # Right of xmax
+src/nanobrag_torch/simulator.py:604:            self._cached_roi_mask = self._cached_roi_mask * mask_array
+src/nanobrag_torch/simulator.py:810:        roi_mask = self._cached_roi_mask
+src/nanobrag_torch/simulator.py:813:        pixel_coords_meters = self._cached_pixel_coords_meters
