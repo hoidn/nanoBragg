@@ -1,0 +1,7 @@
+# Phase B Rerun - Full pytest suite with extended timeout
+# Date: 2025-10-10
+# Attempt: #5 (following partial Attempt #2 timeout)
+# Timeout: 3600 seconds (60 minutes)
+# Environment: KMP_DUPLICATE_LIB_OK=TRUE
+
+KMP_DUPLICATE_LIB_OK=TRUE timeout 3600 pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_b/$STAMP/artifacts/pytest_full.xml | tee reports/2026-01-test-suite-triage/phase_b/$STAMP/logs/pytest_full.log
