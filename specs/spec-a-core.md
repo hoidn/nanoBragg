@@ -150,7 +150,9 @@ fields default to:
     - Positions are normalized to unit direction vectors (X,Y,Z overwrites become unit direction).
 Both the weight column and the wavelength column are read but ignored: the CLI -lambda parameter
 is the sole authoritative wavelength source for all sources, and equal weighting results (all
-sources contribute equally via division by total source count in the steps normalization).
+sources contribute equally via division by total source count in the steps normalization). (C-PyTorch
+parity validated: correlation ≥0.999, |sum_ratio−1| ≤5e-3; see reports/2025-11-source-weights/
+phase_h/20251010T002324Z/parity_reassessment.md for C reference code inspection.)
 - Generated sources (when no file provided):
     - Horizontal/vertical divergence grids are defined by ranges and either steps or step sizes.
 Elliptical trimming: with round_div on, grid points outside the ellipse (normalized squared radius >

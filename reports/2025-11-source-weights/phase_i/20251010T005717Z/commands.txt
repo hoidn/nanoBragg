@@ -1,0 +1,32 @@
+# Phase I1 Documentation Updates - SOURCE-WEIGHT-001
+# Date: 2025-10-10T00:57:17Z
+# Branch: feature/spec-based-2
+# Git Status: clean working tree
+
+# Updated Files:
+# 1. docs/architecture/pytorch_design.md - Added §1.1.5 "Source Weighting & Integration"
+# 2. docs/development/pytorch_runtime_checklist.md - Added item #4 "Source Handling & Equal Weighting"
+# 3. specs/spec-a-core.md:151-155 - Added parenthetical parity reference
+
+# Validation Command (per input.md Do Now):
+NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q
+
+# Expected: pytest collection succeeds with no errors
+# Actual: (see collect.log)
+
+# Diff Summary:
+# - pytorch_design.md: +24 lines (new subsection 1.1.5)
+# - pytorch_runtime_checklist.md: +6 lines (new item 4, renumbered old 4→5)
+# - spec-a-core.md: +3 lines (parenthetical citation added to lines 153-155)
+
+# Parity Memo Referenced: reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md
+# Thresholds Cited: correlation ≥0.999, |sum_ratio−1| ≤5e-3
+# C-Code Reference: nanoBragg.c:2570-2720
+
+# Environment:
+# - Python: $(python3 --version)
+# - PyTorch: (installed via pip)
+# - Working Dir: /home/ollie/Documents/tmp/nanoBragg
+# - Git SHA: $(git rev-parse HEAD)
+Python 3.13.5
+7a99807a6e2d31732fb26f59883a7a09c9aa2b6d

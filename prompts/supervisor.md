@@ -266,6 +266,13 @@ Implementation: refer to phased plans, checklists, and all associated artifacts
 - Commit input.md each run as part of step <4> (commit only if the content changed).
  </3.5>
 
+ <3.7>
+cleanup step: 
+In this iteration, did we decide to change the program's intended semantics? If so, review $SPECS and update misalignments, if required.
+Will any decisions made in this iteration change *actual semantics?* If so, evaluate which <tests> will require corresponding updates. Enter any test misalignments that you discover 
+as future tasks in docs/fix_plan.md.
+</3.7>
+
 <4>
 Before finishing the loop, enforce git hygiene:
 - Run `git status --short` to inspect new or modified files that appeared during this invocation.

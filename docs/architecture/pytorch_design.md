@@ -90,6 +90,31 @@ Extensions must preserve these shapes; adding a new sampling dimension requires 
 - **Artifacts:** `reports/2025-10-vectorization/` (phase_c through phase_f evidence bundles)
 - **C-Code:** `nanoBragg.c:2604-3278` (tricubic), `nanoBragg.c:2975-2983` (absorption)
 
+### 1.1.5 Source Weighting & Integration (C-Parity Confirmed)
+
+**Objective:** Ensure equal weighting across all sources per normative spec, matching C reference behavior.
+
+**Implementation:** `src/nanobrag_torch/simulator.py` lines 399-423 (guard) and steps normalization at line 1892.
+
+**C-Code Reference:** `nanoBragg.c` lines 2570-2720 (source ingestion and steps calculation).
+
+**Normative Spec:** `specs/spec-a-core.md:151-153` explicitly states that source weight and wavelength columns are read but ignored; CLI `-lambda` is authoritative and equal weighting applies via division by source count.
+
+**Parity Validation:**
+- **Phase H Reassessment:** `reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md` supersedes legacy divergence classification; C code inspection (lines 2570-2720) confirms weights stored in `source_I[]` are never used as multiplicative factors, and `steps = sources * mosaic_domains * phisteps * oversample^2` divides by count, not weight sum.
+- **Parity Thresholds:** Correlation ≥0.999, |sum_ratio−1| ≤5e-3 (observed: 0.9999886, 0.0038 across seven consecutive validation runs)
+- **Evidence:** `tests/test_cli_scaling.py::TestSourceWeightsDivergence` (7 tests passing, xfail removed in Phase H2)
+
+**Data Flow:**
+1. Source weights are parsed from sourcefile but never multiplied into intensity contributions
+2. All sources contribute equally to pixel accumulation
+3. Final normalization: `I_scaled = r_e^2 * fluence * I / steps` where `steps = source_count * ...`
+4. Weight column serves documentary purpose only (may encode flux metadata for external tools)
+
+**Known C Defect (Decoupled):** Comment lines in sourcefiles are incorrectly parsed as zero-weight sources, inflating count in C binary. Tracked separately in `[C-SOURCEFILE-001]` and does not affect weight handling semantics.
+
+**Acceptance:** AT-SRC-001 (sourcefile and weighting) validates equal contribution via correlation checks.
+
 ## 1.2 Differentiability vs Performance
 
 Principle: Differentiability is required; over-hardening is not. Prefer the minimal change that passes gradcheck and preserves vectorization.

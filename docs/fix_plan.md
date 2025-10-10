@@ -4065,8 +4065,8 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 ## [SOURCE-WEIGHT-001] Correct weighted source normalization
 - Spec/AT: `specs/spec-a-core.md` §4 (Sources, Divergence & Dispersion), `docs/architecture/pytorch_design.md` §§1.1/2.3, `docs/development/c_to_pytorch_config_map.md` (beam sourcing), `docs/development/testing_strategy.md` §1.4, and `golden_suite_generator/nanoBragg.c` lines 2570-2720 (source ingestion & steps computation).
 - Priority: Medium
-- Status: in_progress (Phase H complete; Phase I documentation updates pending)
-- Owner/Date: galph/2025-11-17 (updated 2025-12-27)
+- Status: in_progress (Phase H complete; Phase I1 complete; Phase I2-I3 pending)
+- Owner/Date: galph/2025-11-17 (updated 2025-10-10 ralph loop #269)
 - Plan Reference: `plans/active/source-weight-normalization.md`
 - Parity Memo (Phase H1): `reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md` (supersedes Phase E decision; cites nanoBragg.c:2570-2720 confirming equal weighting)
 - Reproduction (C & PyTorch):
@@ -4074,8 +4074,8 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
   * PyTorch: `KMP_DUPLICATE_LIB_OK=TRUE nanoBragg -mat A.mat -floatfile py_weight.bin -sourcefile reports/2025-11-source-weights/fixtures/two_sources_nocomments.txt ...` (matching geometry).
   * Shapes/ROI: 256×256 detector, oversample 1, two sources with weights [1.0, 0.2].
 - First Divergence (if known): **RESOLVED**. Legacy Phase E divergence classification was incorrect. Phase G Attempts #34–#35 (20251009T235016Z, 20251010T000742Z) recorded corr=0.9999886 and |sum_ratio−1|=0.0038 with the sanitised fixture, confirming both implementations ignore weights per `specs/spec-a-core.md:151-153` and achieve near-perfect parity. Phase H1 memo establishes correlation ≥0.999 and |sum_ratio−1| ≤5e-3 as the normative thresholds. Residual C-only defect: comment lines generate ghost sources (tracked in `[C-SOURCEFILE-001]`).
-- Next Actions (refreshed 2025-12-27 — Phase I ready to execute):
-  - Phase I1: Update `docs/architecture/pytorch_design.md` (sources subsection), `docs/development/pytorch_runtime_checklist.md`, and any SOURCE-WEIGHT acceptance text in `specs/spec-a-core.md` to cite the Phase H memo (`reports/2025-11-source-weights/phase_h/20251010T002324Z/`) and thresholds (corr ≥0.999, |sum_ratio−1| ≤5e-3). Capture edits under `reports/2025-11-source-weights/phase_i/<STAMP>/` with commands and diffs.
+- Next Actions (updated 2025-10-10 ralph loop #269 — Phase I1 complete):
+  - ✅ Phase I1: Documentation updates COMPLETE. Updated `docs/architecture/pytorch_design.md` (new §1.1.5), `docs/development/pytorch_runtime_checklist.md` (new item #4), and `specs/spec-a-core.md:151-155` (parenthetical parity citation). Artifacts under `reports/2025-11-source-weights/phase_i/20251010T005717Z/`. Pytest collection: 692 tests, exit 0.
   - Phase I2: Refresh dependent ledgers/plans (e.g., `[VECTOR-TRICUBIC-002]`, `[VECTOR-GAPS-002]`, `[PERF-PYTORCH-004]`) so their gating language now points at the updated documentation, and record the propagation in `galph_memory.md` once the doc patch is ready.
   - Phase I3: Assemble the archive packet (closure summary + residual risks), move `plans/active/source-weight-normalization.md` to `plans/archive/`, and flip this entry to `done` after doc updates merge.
 - Attempts History:
@@ -4292,6 +4292,25 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       - I1: Update permanent docs (`docs/architecture/pytorch_design.md` sources subsection, `docs/development/pytorch_runtime_checklist.md`) to reference Phase H memo
       - I2: Final verification that all cross-references are consistent
       - I3: Archive plan to `plans/archive/source-weight-normalization.md` with closure summary and residual risk note (tricubic segfault remains a C-only defect)
+  * [2025-10-10] Attempt #38 (ralph loop #269 — Mode: Docs, Phase I1 documentation updates per input.md Do Now). Result: **SUCCESS** (Phase I1 COMPLETE - All three documentation files updated with parity memo citations)
+    Metrics: `NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q` — 692 tests collected successfully, exit 0. No code changes; documentation-only loop.
+    Artifacts:
+      - `reports/2025-11-source-weights/phase_i/20251010T005717Z/notes.md` — Phase I1 complete summary with file changes, validation results, and Phase I2-I3 handoff
+      - `reports/2025-11-source-weights/phase_i/20251010T005717Z/documentation_updates.patch` — Unified diff showing all three file edits (+33 lines total)
+      - `reports/2025-11-source-weights/phase_i/20251010T005717Z/commands.txt` — Reproduction commands with environment metadata
+      - `reports/2025-11-source-weights/phase_i/20251010T005717Z/collect.log` — pytest collection output
+      - `docs/architecture/pytorch_design.md:93-116` — New §1.1.5 "Source Weighting & Integration (C-Parity Confirmed)" (24 lines added)
+      - `docs/development/pytorch_runtime_checklist.md:22-27` — New item #4 "Source Handling & Equal Weighting (C-Parity)" (6 lines added, renumbered old #4→#5)
+      - `specs/spec-a-core.md:151-155` — Added parenthetical parity citation (3 lines added to existing normative text)
+    Observations/Hypotheses:
+      - **Phase I1 COMPLETE**: All three documentation files updated to cite Phase H parity memo (`reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md`) and encode validated thresholds (correlation ≥0.999, |sum_ratio−1| ≤5e-3).
+      - **Architecture documentation enhanced**: pytorch_design.md now has dedicated subsection (1.1.5) documenting equal weighting requirement, C-code reference (nanoBragg.c:2570-2720), implementation details, and AT-SRC-001 test reference.
+      - **Runtime checklist updated**: pytorch_runtime_checklist.md gains actionable guardrail (#4) prohibiting weight multiplication and citing parity memo for validation.
+      - **Spec augmented**: spec-a-core.md retains correct normative language (lines 151-153) and adds empirical parity validation parenthetical pointing to Phase H memo.
+      - **Validation clean**: All 692 tests collect successfully with no errors; documentation changes do not affect test execution.
+    Next Actions (Phase I2-I3 per plan):
+      - I2: Refresh dependent ledgers/plans (VECTOR-TRICUBIC-002, VECTOR-GAPS-002, PERF-PYTORCH-004) to cite updated docs instead of legacy divergence thresholds
+      - I3: Archive plan to `plans/archive/source-weight-normalization.md`, flip ledger status to `done`, log final galph_memory entry with residual risks
   * [2025-10-09] Attempt #30 (ralph loop — Mode: Docs+Parity, Phase G2 evidence bundle per input.md). Result: **PARAMETER ERROR DISCOVERED** — pytest XPASS replicated (correlation=0.9999886), but manual CLI commands used incorrect parameters causing 134× divergence.
     Metrics: `NB_RUN_PARALLEL=1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_scaling.py::TestSourceWeights tests/test_cli_scaling.py::TestSourceWeightsDivergence` — 7 passed, 1 xpassed in 21.28s. `test_c_divergence_reference` XPASS with correlation=0.9999886, sum_ratio=1.0038 (identical to Attempt #29). Manual CLI: PyTorch sum=43161.99, C sum=322.41, correlation=0.0297, sum_ratio=133.87 (**DIVERGENT** from test).
     Artifacts:

@@ -19,7 +19,14 @@ Use this quick checklist before and after every PyTorch simulator edit. It disti
    - Watch the console for Dynamo “graph break” warnings; treat them as blockers.
    - Benchmarks should reuse compiled functions; avoid changing shapes every call unless batching logic handles it.
 
-4. **Documentation & Tests**
+4. **Source Handling & Equal Weighting (C-Parity)**
+   - **Do not apply source weights as multiplicative factors.** The weight column in sourcefiles is parsed but ignored per `specs/spec-a-core.md:151-153`.
+   - Steps normalization divides by source count, not weight sum: `steps = sources * mosaic_domains * phisteps * oversample^2`.
+   - CLI `-lambda` is authoritative for all sources; sourcefile wavelength column is also ignored.
+   - **Parity Memo:** `reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md` confirms C reference (nanoBragg.c:2570-2720) implements equal weighting; correlation ≥0.999, |sum_ratio−1| ≤5e-3 are the validated thresholds.
+   - **Tests:** `pytest tests/test_cli_scaling.py::TestSourceWeights* -v` (expect 7/7 passing)
+
+5. **Documentation & Tests**
    - Update relevant docs/tests when you change vectorization or device handling.
    - Capture timings/metrics (CPU vs CUDA) and link them in `docs/fix_plan.md`.
 
