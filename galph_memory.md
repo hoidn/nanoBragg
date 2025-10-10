@@ -1,3 +1,11 @@
+### 2026-01-10 (galph loop - Tap 5 comparison planning)
+- Heads audit: Reviewed Ralph commits 25c88957 (PyTorch Tap 5 tooling) and e8dafd99 (C Tap 5 instrumentation); evidence looks solid, no regressions spotted.
+- Updated `docs/fix_plan.md` Next Actions (lines 67-69) to swap in Tap 5 comparison + hypothesis ranking; removed the now-complete instrumentation directive.
+- Refreshed `plans/active/vectorization-parity-regression.md` Phase E rows: E9 marked [D] with Attempt #30 notes, new E10/E11 tasks capture comparison + follow-up decision gating; Phase F wording now defers to whatever Tap 5 remediation emerges.
+- Synced `plans/active/vectorization.md` status snapshot to note the 4× C vs PyTorch `I_before_scaling` gap uncovered by Attempt #30.
+- Authored input.md (Mode: Parity) steering Ralph to produce `intensity_pre_norm.md` and `tap5_hypotheses.md` under a fresh Phase E0 bundle before we pick Tap 6 vs deeper Tap 5 instrumentation.
+- Follow-up: Expect Attempt logging with the new comparison pack; supervisor to review ratios, bless next tap (likely water background) or scope per-subpixel audit.
+
 ### 2026-01-07 (galph loop - TEST-GOLDEN-001 kickoff)
 - Added `[TEST-GOLDEN-001]` ledger entry and authored `plans/active/test-golden-refresh.md` to manage golden-data regeneration blocking Phase E.
 - Updated `[VECTOR-PARITY-001]` Next Actions to depend on the new plan; noted gating in vectorization/vectorization-parity active plans.
