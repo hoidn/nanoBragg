@@ -1859,3 +1859,9 @@
 - Updated `docs/fix_plan.md` `[VECTOR-TRICUBIC-002]` Next Actions to mirror new plan (await first_divergence, then profiler/backlog, then tricubic delegation).
 - Authored input.md (Mode: Parity) instructing Ralph to produce Phase C3 `first_divergence.md` using existing trace logs and `compare_c_python_traces.py`; artifacts go under `reports/2026-01-vectorization-parity/phase_c/$STAMP/`.
 - Follow-up: Expect next Ralph attempt to deliver divergence summary + supporting diffs; supervisor to review and decide on unlocking Phase D profiling.
+### 2026-01-06 (galph loop - Vectorization plan realignment)
+- Updated `plans/active/vectorization.md` Phase C to closed status (C1–C3 [D], new C4 blocker) and flagged Phase D rows [B] pending `[VECTOR-PARITY-001]` Phase D/E parity fixes; status snapshot now reflects first_divergence completion.
+- Refreshed `docs/fix_plan.md` `[VECTOR-TRICUBIC-002]` section: status notes Phase C satisfied, Next Actions now monitor parity Phase D/E before rerunning profiler; observations cite Attempt #10/11.
+- Marked `plans/active/vectorization-parity-regression.md` D1 as [D] with Attempt #11 context to keep parity plan in sync.
+- Authored `input.md` (Mode: Parity) directing Ralph to execute Phase D2 fluence remediation with trace capture under `reports/2026-01-vectorization-parity/phase_d/$STAMP/` and to document `fluence_parity.md`.
+- Next follow-up: expect fluence parity artifacts (Phase D2) then reassess C4 unblock and update vectorization/backlog plans.

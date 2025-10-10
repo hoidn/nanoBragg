@@ -14,8 +14,8 @@
 ## Status Snapshot (2026-01-06)
 - Phase A dependency gate ✅ (Attempts logged Dec 2025; SOURCE-WEIGHT contract propagated to docs/fix_plan.md).
 - Phase B regression refresh ✅ (Attempt #2 2025-10-09 captured CPU/CUDA tricubic + absorption suites under `reports/2026-01-vectorization-refresh/phase_b/20251010T013437Z/`).
-- Phase C parity gate ⏳ in progress — C traces (Attempt #8) and Py traces (Attempt #9) exist; awaiting Phase C3 first_divergence.md before resuming profiling/backlog work.
-- Downstream phases (D–G) remain locked until `[VECTOR-PARITY-001]` reports parity ≥0.999 with trace-backed diagnosis.
+- Phase C parity gate ✅ (Attempt #10 delivered `first_divergence.md` pinpointing scattering-vector unit error); gating now deferred to `[VECTOR-PARITY-001]` Phase D/E physics remediation.
+- Phase D backlog refresh remains **blocked** until `[VECTOR-PARITY-001]` records parity ≥0.999 with trace-backed fix confirmation.
 
 ### Phase A — Dependency Gate & Ledger Sync
 Goal: Ensure prerequisite parity decisions and guardrails are recorded so later profiling relies on trustworthy baselines.
@@ -42,25 +42,26 @@ Exit Criteria: Fresh regression + benchmark artifacts stored under `reports/2026
 
 ### Phase C — Parity Alignment Gate
 Goal: Stay synchronized with `[VECTOR-PARITY-001]` and block new profiling until 4096² correlation ≥0.999 with trace-backed diagnosis.
-Prereqs: `[VECTOR-PARITY-001]` Phase C1–C2 traces captured (done); C3 first divergence pending; supervisor input memo (input.md) drives Ralph’s instrumentation work.
-Exit Criteria: `reports/2026-01-vectorization-parity/phase_c/<STAMP>/first_divergence.md` published, go/no-go decision recorded in docs/fix_plan.md, and parity regression either cleared or escalated.
+Prereqs: `[VECTOR-PARITY-001]` Phase C1–C3 artifacts published (`reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/` .. `061605Z/`).
+Exit Criteria: `first_divergence.md` captured, decision logged in docs/fix_plan.md/galph_memory, and follow-up physics remediation queued in `[VECTOR-PARITY-001]` Phase D/E (met 2025-10-10; ongoing monitoring captured below).
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Track trace capture completeness | [D] | ✅ Attempts #8–#9 delivered TRACE_C/TRACE_PY logs under `reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/` and `.../20251010T055346Z/`. Confirmed in docs/fix_plan.md. |
-| C2 | Obtain first divergence analysis | [P] | Active — Await `first_divergence.md` from `[VECTOR-PARITY-001]` Phase C3 summarising earliest mismatched tap + units. Supervisor to review and log decision in galph_memory.md. |
-| C3 | Update vectorization plan/ledger post-diagnosis | [ ] | Blocked on C2. When divergence documented, refresh this plan + docs/fix_plan.md with go/no-go, noting whether profiling can resume or additional parity work is needed. |
+| C1 | Track trace capture completeness | [D] | ✅ Attempts #8–#9 delivered TRACE_C/TRACE_PY logs under `reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/` and `.../20251010T055346Z/`; ledger updated in docs/fix_plan.md Attempt #8/#9. |
+| C2 | Obtain first divergence analysis | [D] | ✅ Attempt #10 published `first_divergence.md` (scattering_vec unit error + fluence/F_latt hypotheses). galph_memory 2026-01-06 entry logs supervisor review. |
+| C3 | Update vectorization plan/ledger post-diagnosis | [D] | ✅ This revision records Phase C closure and re-aligns docs/fix_plan.md `[VECTOR-TRICUBIC-002]` status to “await parity remediation”. |
+| C4 | Monitor parity remediation unblock | [B] | Blocked on `[VECTOR-PARITY-001]` Phase D1–D4/E1 parity fixes (scattering_vec units, fluence, F_latt). Resume this plan’s Phase D only after correlation ≥0.999 and |sum_ratio−1| ≤5×10⁻³ are met. |
 
 ### Phase D — Warm-Run Profiling & Backlog Refresh
 Goal: Once parity is restored, capture a clean 4096² warm-run profile and integrate it with the loop inventory to rank the next vectorization targets.
-Prereqs: Phase C exit criteria met (parity ≥0.999, divergence understood); NB_C_BIN instrumentation no longer required for this phase.
+Prereqs: Phase C exit criteria met (✅) **and** `[VECTOR-PARITY-001]` Phase D/E report corrected physics with parity ≥0.999 and |sum_ratio−1| ≤5×10⁻³. NB_C_BIN instrumentation no longer required once parity fix lands.
 Exit Criteria: `reports/2026-01-vectorization-gap/phase_b/<STAMP>/` contains new profiler trace + `hot_loops.csv`; prioritized backlog recorded in docs/fix_plan.md `[VECTOR-TRICUBIC-002]` and plans/active/vectorization-gap-audit.md.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| D1 | Capture warm-run profiler trace | [ ] | Run `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`. Archive `trace.json`, `summary.md`, env metadata. |
-| D2 | Correlate trace with loop inventory | [ ] | Map profiler hotspots to Phase A inventory (plans/active/vectorization-gap-audit.md). Produce `hot_loops.csv` with inclusive % time, call counts, CPU vs CUDA deltas. |
-| D3 | Publish prioritized backlog | [ ] | Write `backlog.md` summarising top candidates (≥1% inclusive time, spec-critical). Update docs/fix_plan.md Next Actions + galph_memory with decision rationale. |
+| D1 | Capture warm-run profiler trace | [B] | Blocked pending `[VECTOR-PARITY-001]` Phase D/E green-light. When unblocked, run `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/` and archive `trace.json`, `summary.md`, env metadata. |
+| D2 | Correlate trace with loop inventory | [B] | Blocked on D1. Map profiler hotspots to Phase A inventory (plans/active/vectorization-gap-audit.md); produce `hot_loops.csv` with inclusive % time, call counts, CPU vs CUDA deltas. |
+| D3 | Publish prioritized backlog | [B] | Blocked on D1/D2. Draft `backlog.md` summarising top candidates (≥1% inclusive time, spec-critical). Update docs/fix_plan.md Next Actions + galph_memory with decision rationale once parity fix unlocks profiling. |
 
 ### Phase E — Implementation Batch A (Tricubic Refresh)
 Goal: Revalidate and, if necessary, extend tricubic vectorization to cover new requirements discovered during backlog refresh (e.g., mixed-precision variants, batched HKL caches) while preserving parity and performance.
