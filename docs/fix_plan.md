@@ -4097,6 +4097,30 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       2. Phase B2.5 (diagnostic): Investigate benchmark vs nb-compare discrepancy — compare float binaries and verify both tools use identical C/PyTorch configurations
       3. Phase B3 (scope): Run ROI parity checks (512×512, 1024×1024) to determine if regression scales with detector size
       4. Phase C Prep (triage): Once pytest confirms nb-compare metrics, proceed to trace-driven debugging targeting sum_ratio=225x normalization bug
+  * [2025-10-09] Attempt #5 (ralph loop) — Result: **BLOCKED - Missing Test Infrastructure** — Phase B2 pytest selector executed, reveals NO active 4096² parity tests.
+    Metrics:
+      - pytest exit status: 5 (no tests collected)
+      - Collection result: 128 items collected, 128 deselected, 0 selected
+      - Selector `-k 4096` matched NO test functions
+    Artifacts:
+      - `reports/2026-01-vectorization-parity/phase_b/20251010T031841Z/pytest_parallel.log` — pytest console output showing 0 tests selected
+      - `reports/2026-01-vectorization-parity/phase_b/20251010T031841Z/summary.md` — Analysis of missing test infrastructure
+      - `reports/2026-01-vectorization-parity/phase_b/20251010T031841Z/env.json` — Environment (Python 3.13.5, PyTorch 2.7.1+cu126, git SHA 516151f7)
+      - `reports/2026-01-vectorization-parity/phase_b/20251010T031841Z/commands.txt` — Executed pytest command
+    Observations/Hypotheses:
+      - **NO ACTIVE 4096 TEST**: Only reference is `tests/test_at_parallel_012.py::test_high_resolution_variant` marked with `@pytest.mark.skip`
+      - **BLOCKED TRIANGULATION**: Cannot use pytest to triangulate between benchmark_detailed.py (0.721) and nb-compare (0.060) correlation values
+      - **EVIDENCE-ONLY LOOP**: This was an evidence-gathering loop as specified in input.md, no code changes attempted
+      - **PYTEST LIMITATION**: The 4096² parity regression is validated ONLY by benchmark/nb-compare tools, not by pytest suite
+      - **TEST INFRASTRUCTURE GAP**: High-resolution variant test exists but requires: golden data generation, large memory (64MB per image), and is currently skipped
+    Next Actions:
+      1. **Decision Point**: Choose validation path for 4096² parity:
+         - Option A: Implement `test_high_resolution_variant` with golden data generation and un-skip
+         - Option B: Add 4096² case to `tests/parity_cases.yaml` for parameterized harness
+         - Option C: Accept that 4096² validation relies on benchmark/nb-compare tools only (document in testing_strategy.md)
+      2. Phase B2.5 (still urgent): Compare float binaries from benchmark_detailed.py vs nb-compare to explain 12x correlation discrepancy
+      3. Phase B3 (scope): Run ROI parity checks with nb-compare at smaller sizes (512², 1024²) to scope regression
+      4. Phase C Prep: Given pytest provides no 4096² baseline, proceed to trace-driven debugging using nb-compare metrics as ground truth (correlation ~0.060, sum_ratio ~225x)
 
 ---
 

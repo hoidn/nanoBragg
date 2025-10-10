@@ -1,0 +1,19 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 128 items / 128 deselected / 0 selected
+
+=============================== warnings summary ===============================
+tests/test_at_parallel_026.py:23
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_026.py:23: PytestUnknownMarkWarning: Unknown pytest.mark.parallel_validation - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.mark.parallel_validation
+
+tests/test_at_parallel_026.py:116
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_026.py:116: PytestUnknownMarkWarning: Unknown pytest.mark.requires_c_binary - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.requires_c_binary
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+===================== 128 deselected, 2 warnings in 2.68s ======================
