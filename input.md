@@ -1,30 +1,39 @@
-Summary: Capture Phase D Attempt #1 for the minimal `-default_F` CLI failure (C1) so we can unblock remediation work.
-Mode: none
+Summary: Restore the minimal `-default_F` CLI path so AT-CLI-002 produces non-zero intensities.
+Mode: Parity
 Focus: [CLI-DEFAULTS-001] Minimal -default_F CLI invocation
 Branch: feature/spec-based-2
-Mapped tests: - pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F
-Artifacts: reports/2026-01-test-suite-triage/phase_d/<STAMP>/attempt_cli_defaults/
-Do Now: Run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F` and archive stdout/stderr as `pytest.log` plus `commands.txt` under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/attempt_cli_defaults/`.
-If Blocked: Capture `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests/test_at_cli_002.py` with the same artifact layout and record the failure mode in `attempt_notes.md`.
+Mapped tests: pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F; pytest -v tests/test_at_cli_002.py
+Artifacts: reports/2026-01-test-suite-triage/phase_d/<STAMP>/attempt_cli_defaults_fix/
+Do Now: [CLI-DEFAULTS-001] run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F` after implementing the default_F fallback and archive commands/logs under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/attempt_cli_defaults_fix/`.
+If Blocked: Re-run the same selector and capture `float_stats.txt` (min/max/sum all zero) plus hypothesis notes in `attempt_notes.md`, then push the artifacts so we can escalate causes (structure-factor lookup vs fluence).
 Priorities & Rationale:
-- docs/fix_plan.md:67 — C1 is tagged High priority; Phase D requires this failure to be reproduced before fixes start.
-- plans/active/test-suite-triage.md:14 — Phase D D1–D3 are complete; D4 (this input) is the remaining gate.
-- reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md — Priority ladder calls out `[CLI-DEFAULTS-001]` as first P1 remediation item.
-- docs/development/c_to_pytorch_config_map.md — Validate CLI flag expectations while inspecting the failure.
+- docs/fix_plan.md:62 — Fix plan hypotheses call out missing default_F fallback and fluence defaults.
+- reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md:11 — Priority ladder puts `[CLI-DEFAULTS-001]` at the top of the remediation queue.
+- specs/spec-a-cli.md:163 — AT-CLI-002 mandates successful renders when only `-default_F` supplies structure factors.
+- plans/active/test-suite-triage.md:11 — Phase D is now complete; this loop activates the first P1 fix so triage momentum continues.
+- tests/test_at_cli_002.py:28 — Acceptance test asserts the float image contains non-zero intensities for this scenario.
 How-To Map:
-- Pick a new UTC stamp (`STAMP=$(date -u +%Y%m%dT%H%M%SZ)`) and create `reports/2026-01-test-suite-triage/phase_d/$STAMP/attempt_cli_defaults/`.
-- Write the executed commands to `commands.txt` (one line per invocation) before running the test.
-- Execute the Do Now pytest command with `KMP_DUPLICATE_LIB_OK=TRUE`, capturing full stdout/stderr into `pytest.log`.
-- After the run, jot a short `attempt_notes.md` summarising exit code, stack trace head, and immediate suspicion (default_F fallback vs HKL lookup).
+- `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; `mkdir -p reports/2026-01-test-suite-triage/phase_d/$STAMP/attempt_cli_defaults_fix` before code edits.
+- Inspect `src/nanobrag_torch/models/crystal.py:210` to confirm the no-HKL path actually returns `default_F`; trace the call sites in `__main__` to verify the Crystal config carries the flag.
+- Review `src/nanobrag_torch/config.py:514` to ensure BeamConfig retains a positive fluence without explicit flux/exposure; adjust only if the defaults zero the signal.
+- Log every invocation in `commands.txt`; after implementation run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F | tee pytest.log`.
+- Add a quick CLI smoke check (`python -m nanobrag_torch ...`) and write `float_stats.txt` capturing min/max/sum so we have numeric evidence of the non-zero image.
+- When the targeted test passes, follow up with `pytest -v tests/test_at_cli_002.py` and store the log as `pytest_full.log` in the same artifact folder.
+- Update `docs/fix_plan.md` `[CLI-DEFAULTS-001]` Attempts with the new stamp + findings and summarise outcomes in `attempt_notes.md`.
 Pitfalls To Avoid:
-- Do not run the full suite yet; stay on the single selector above until a fix is ready.
-- Keep `KMP_DUPLICATE_LIB_OK=TRUE` set for every PyTorch invocation.
-- Avoid mutating docs/specs during this loop; focus on evidence capture first.
-- Preserve vectorized code paths; no temporary Python loops in any quick experiments.
-- Log every command in `commands.txt` before execution to keep provenance complete.
+- Avoid reintroducing Python loops; keep structure-factor fixes vectorised.
+- Do not call `.item()` on tensors that should stay differentiable.
+- Stick to the mapped tests; skip `pytest tests/` until broader remediation resumes.
+- Always set `KMP_DUPLICATE_LIB_OK=TRUE` for torch runs.
+- Keep new tensors device/dtype neutral (`type_as` / `.to()` helpers) to protect GPU flows.
+- Leave existing artifacts intact; add new directories instead of overwriting prior attempts.
+- Align CLI semantics with `docs/development/c_to_pytorch_config_map.md` — no ad-hoc flags or shortcuts.
+- Document every executed command in `commands.txt` for provenance.
 Pointers:
-- docs/fix_plan.md:67
-- plans/active/test-suite-triage.md:60
-- reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md
-- tests/test_at_cli_002.py
-Next Up: If this attempt is wrapped early, line up `[DETERMINISM-001]` reproduction using `pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py`.
+- docs/fix_plan.md:62
+- reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md:11
+- specs/spec-a-cli.md:163
+- tests/test_at_cli_002.py:28
+- src/nanobrag_torch/models/crystal.py:210
+- src/nanobrag_torch/config.py:514
+Next Up: `[DETERMINISM-001]` RNG determinism reproduction (`pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py`) once default_F passes.

@@ -2059,3 +2059,11 @@
 - Rewrote `input.md` to launch Phase D Attempt #1 (reproduce `[CLI-DEFAULTS-001]` failure) with explicit artifact expectations.
 - Follow-up for Ralph: capture targeted pytest logs under a fresh `phase_d/<STAMP>/attempt_cli_defaults/` folder before attempting any fix.
 - <Action State>: [ready_for_implementation]
+
+### 2026-01-13 (galph loop - CLI defaults remediation launch)
+- Focus issue: `[TEST-SUITE-TRIAGE-001]` Phase D follow-through (Action: Review/housekeeping, Mode: Parity).
+- Updated `plans/active/test-suite-triage.md` status snapshot (Phase D now ✅) and marked D4 as complete with reference to input stamp 20251010T153734Z.
+- Refreshed `docs/fix_plan.md` Active Focus + Next Actions to track `[CLI-DEFAULTS-001]` remediation and queue `[DETERMINISM-001]` once ready.
+- Authored new `input.md` (Parity mode) directing Ralph to implement the default_F fallback, rerun AT-CLI-002, and archive artifacts under `phase_d/<STAMP>/attempt_cli_defaults_fix/`.
+- Expect Ralph to deliver Attempt #2 for `[CLI-DEFAULTS-001]` with passing targeted test, float stats evidence, and fix_plan attempt update before moving to determinism cluster.
+- <Action State>: [ready_for_implementation]

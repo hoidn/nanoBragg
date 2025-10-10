@@ -2,7 +2,7 @@
 
 **Last Updated:** 2026-01-13 (galph loop — Test suite Phase C refresh planning)
 **Active Focus:**
-- CRITICAL: Execute `[TEST-SUITE-TRIAGE-001]` Phase D handoff — refresh this ledger (D3) with new IDs + handoff link, then publish supervisor guidance/input (D4). Suspend all other engineering work until Phase D artifacts are committed.
+- CRITICAL: Shepherd `[CLI-DEFAULTS-001]` remediation (Phase D follow-through) — review Attempt #2 artifacts, unblock subsequent P1 triage items, and keep `[TEST-SUITE-TRIAGE-001]` ledger synced.
 - Tap 5.3 oversample instrumentation for `[VECTOR-PARITY-001]` remains staged but is on hold pending completion of `[TEST-SUITE-TRIAGE-001]` deliverables.
 - Prepare pyrefly + test-index documentation once the suite triage backlog is unblocked.
 
@@ -45,8 +45,8 @@
 - Artifacts Root: `reports/2026-01-test-suite-triage/` (phases `phase_a`, `phase_b`, `phase_c`, `phase_d`)
 - Phase D Handoff Bundle: `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md`
 - Next Actions:
-  1. Phase D3 — update this ledger (index + sections) to add the nine new fix-plan IDs from `pending_actions.md`, cross-link `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md`, and refresh plan references.
-  2. Phase D4 — once D3 is complete, issue supervisor input (`input.md`) steering Ralph to `[CLI-DEFAULTS-001]` remediation with authoritative pytest command + artifact expectations.
+  1. Monitor `[CLI-DEFAULTS-001]` remediation — expect Attempt #2 artifacts under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/` and update this ledger/plan once the fix lands.
+  2. Prepare next P1 delegation (`[DETERMINISM-001]`) immediately after CLI defaults passes; refresh `input.md` with determinism guidance when ready.
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.
   * [2025-10-10] Attempt #2 — Result: ⚠️ partial (Phase B timeout). Full suite execution reached ~75% completion (520/692 tests) before 10-minute timeout. Captured 34 failures across determinism (6), sourcefile handling (6), grazing incidence (4), detector geometry (5), debug/trace (4), CLI flags (3), and others. Runtime: 600s. Exit: timeout. Artifacts: `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/{logs/pytest_full.log,failures_raw.md,summary.md,commands.txt}`. junit XML may be incomplete. Remaining 172 tests (~25%) not executed. Observations: Large detector parity tests and gradient checks likely contributors to timeout. Recommendation: split suite execution or extend timeout to 30-60min for complete run.
