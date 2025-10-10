@@ -1,63 +1,38 @@
-Summary: Capture simulator-side F_latt taps so we can explain the 32× intensity gap before repeating ROI parity.
+Summary: Convert rotated lattice vectors to m⁻¹, rerun ROI parity, and retire NB_TRACE_SIM_F_LATT once metrics clear.
 Mode: Parity
-Focus: docs/fix_plan.md [VECTOR-PARITY-001] Phase D4 – Diagnose simulator F_latt regression
+Focus: [VECTOR-PARITY-001] Restore 4096² benchmark parity — Phase D5
 Branch: feature/spec-based-2
-Mapped tests: none — evidence-only
-Artifacts: reports/2026-01-vectorization-parity/phase_d/$STAMP/trace_ref/, reports/2026-01-vectorization-parity/phase_d/$STAMP/simulator_f_latt.log, reports/2026-01-vectorization-parity/phase_d/$STAMP/simulator_f_latt.md
-Do Now: docs/fix_plan.md [VECTOR-PARITY-001] Phase D4 — run NB_TRACE_SIM_F_LATT=reports/2026-01-vectorization-parity/phase_d/$STAMP/simulator_f_latt.log KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY' (script below) to regenerate the simulator pixel probe once instrumentation is in place (set STAMP first); include summary notes in simulator_f_latt.md
-If Blocked: If instrumentation cannot be added safely, capture the existing simulator output and log the limitation in docs/fix_plan.md Attempts History with proposed follow-up commands.
+Mapped tests: pytest tests/test_at_parallel_012.py::test_high_resolution_variant -v
+Artifacts: reports/2026-01-vectorization-parity/phase_d/$STAMP/roi_compare_post_fix/; reports/2026-01-vectorization-parity/phase_d/$STAMP/phase_d_summary.md; reports/2026-01-vectorization-parity/phase_d/$STAMP/py_traces_post_fix/pixel_1792_2048.log; reports/2026-01-vectorization-parity/phase_d/$STAMP/commands.txt; reports/2026-01-vectorization-parity/phase_d/$STAMP/env/trace_env.json
+Do Now: docs/fix_plan.md item 10 (Phase D5 — Apply fix + parity smoke); after implementing the 1e10 Å→m⁻¹ conversion, run `KMP_DUPLICATE_LIB_OK=TRUE python scripts/nb_compare.py --resample --roi 1792 2304 1792 2304 --outdir reports/2026-01-vectorization-parity/phase_d/$STAMP/roi_compare_post_fix -- -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05` followed by `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::test_high_resolution_variant -v`.
+If Blocked: Capture a fresh NB_TRACE_SIM_F_LATT log reproducing the mismatch, park it under reports/2026-01-vectorization-parity/phase_d/$STAMP/blockers/ with notes, and halt for supervisor review.
 Priorities & Rationale:
-- Resolve the D3 partial noted in docs/fix_plan.md:37-55 so parity progress resumes.
-- Follow plans/active/vectorization-parity-regression.md:60-64 guidance for Phase D4 instrumentation.
-- Align taps with specs/spec-a-core.md:221-242 to ensure recorded F_latt uses Na×Nb×Nc scaling.
-- Preserve existing trace helper flow from scripts/debug_pixel_trace.py (reports/2026-01-vectorization-parity/phase_d/20251010T071935Z/PHASE_D3_SUMMARY.md) while adding simulator probes.
+- docs/fix_plan.md:58 — Phase D5 exit criteria demand the lattice-vector unit fix plus ROI metrics within spec.
+- plans/active/vectorization-parity-regression.md:64 — Plan now locks D4 as closed and points D5 at the 1e10 conversion before Phase E can proceed.
+- specs/spec-a-core.md:43 & :135 — Spec states q is in m⁻¹ and requires cell vectors scaled by 1e-10 for dot products with q.
+- reports/2026-01-vectorization-parity/phase_d/20251010T073708Z/simulator_f_latt.md — Attempt #14 evidence proving the h/k/l unit mismatch and the recommended fix.
+- arch.md:70-73 — Architecture ADR-01 highlights the meters↔Å boundary we must treat consistently.
 How-To Map:
-- export STAMP=$(date -u +%Y%m%dT%H%M%SZ)
-- KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py --pixel 1792 2048 --tag trace_ref --out-dir reports/2026-01-vectorization-parity/phase_d/$STAMP/trace_ref
-- NB_TRACE_SIM_F_LATT=reports/2026-01-vectorization-parity/phase_d/$STAMP/simulator_f_latt.log KMP_DUPLICATE_LIB_OK=TRUE python - <<'PY'
-import torch, sys
-from pathlib import Path
-sys.path.insert(0, str(Path.cwd() / 'src'))
-from nanobrag_torch.models.crystal import Crystal
-from nanobrag_torch.models.detector import Detector
-from nanobrag_torch.simulator import Simulator
-from nanobrag_torch.config import CrystalConfig, DetectorConfig, BeamConfig, DetectorConvention, DetectorPivot
-crystal_config = CrystalConfig(cell_a=100.0, cell_b=100.0, cell_c=100.0,
-    cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
-    N_cells=(5, 5, 5), default_F=100.0,
-    phi_start_deg=0.0, osc_range_deg=0.0, phi_steps=1,
-    mosaic_spread_deg=0.0, mosaic_domains=1)
-detector_config = DetectorConfig(spixels=4096, fpixels=4096,
-    pixel_size_mm=0.05, distance_mm=500.0,
-    detector_convention=DetectorConvention.MOSFLM,
-    detector_pivot=DetectorPivot.BEAM,
-    detector_rotx_deg=0.0, detector_roty_deg=0.0,
-    detector_rotz_deg=0.0, detector_twotheta_deg=0.0)
-beam_config = BeamConfig(wavelength_A=0.5, polarization_factor=0.0,
-    flux=0.0, exposure=1.0, beamsize_mm=0.1)
-dtype = torch.float64
-device = torch.device('cpu')
-crystal = Crystal(crystal_config, dtype=dtype, device=device)
-detector = Detector(detector_config, dtype=dtype, device=device)
-simulator = Simulator(crystal, detector, crystal_config, beam_config, dtype=dtype, device=device)
-image = simulator.run()
-val = image[1792, 2048].item()
-print(f"Simulator pixel (1792,2048): {val:.15e}")
-PY
-- Summarise key taps (F_latt_a/b/c, F_latt, F_cell, accumulator, final intensity) into reports/2026-01-vectorization-parity/phase_d/$STAMP/simulator_f_latt.md with notes comparing against the trace helper output.
+1. `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; create `reports/2026-01-vectorization-parity/phase_d/$STAMP/{}` directories as needed.
+2. Edit `src/nanobrag_torch/simulator.py` so the rotated lattice vectors passed into `_compute_physics_for_position` are scaled by `1e10` (Å→m⁻¹) without breaking broadcasting or device/dtype neutrality; keep the NB_TRACE_SIM_F_LATT guard intact.
+3. `KMP_DUPLICATE_LIB_OK=TRUE NB_TRACE_SIM_F_LATT=1 python scripts/debug_pixel_trace.py --pixel 1792 2048 --tag post_fix --out-dir reports/2026-01-vectorization-parity/phase_d/$STAMP/py_traces_post_fix` (reuse prior commands.txt template) and verify h/k/l match the C trace within ≤1e-12.
+4. Run the ROI parity command listed in Do Now; stash `summary.json`, `summary.md`, raw bins, and `commands.txt` under `$STAMP/roi_compare_post_fix/`.
+5. `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_at_parallel_012.py::test_high_resolution_variant -v` and archive the log beside `phase_d_summary.md` with corr/sum_ratio annotations.
+6. Remove or disable NB_TRACE_SIM_F_LATT instrumentation once parity is green; rerun `pytest --collect-only -q` to ensure the suite still collects.
+7. Update docs/fix_plan.md Attempts + Next Actions and log the new bundle in attempts history.
 Pitfalls To Avoid:
-- Do not modify production physics without env-guarded logging; no permanent print statements.
-- Keep device/dtype neutrality when adding taps (use existing tensor device/dtype).
-- Preserve Protected Assets listed in docs/index.md; no file moves/renames.
-- Avoid rerunning full pytest; evidence loop only (no broad suites).
-- Ensure env var NB_TRACE_SIM_F_LATT is unset after run to prevent noisy traces in later tests.
-- Reuse scripts/debug_pixel_trace.py flows; do not fork a new untracked script unless documented.
-- Maintain vectorization—no per-source Python loops in instrumentation.
-- Capture commands.txt alongside artifacts per testing_strategy.md §1.5.
+- Do not downcast tensors or detach gradients when applying the 1e10 factor; keep device/dtype neutrality.
+- Avoid per-element Python loops; rely on existing batched tensors for rot_a/b/c.
+- Do not leave NB_TRACE_SIM_F_LATT prints active by default after verification.
+- Preserve ROI ordering `(slow, fast)` in nb-compare arguments.
+- Keep the trace helper unchanged apart from updating outputs; no re-derivation of fluence or sincg.
+- No full pytest run; stick to the mapped selector plus collect-only sanity check.
+- Do not touch protected assets listed in docs/index.md.
+- Maintain the same STAMP naming convention so reports stay discoverable.
+- Confirm updated code still honours `KMP_DUPLICATE_LIB_OK=TRUE` env handling.
 Pointers:
-- docs/fix_plan.md:19-55
-- plans/active/vectorization-parity-regression.md:12-65
-- reports/2026-01-vectorization-parity/phase_d/20251010T071935Z/PHASE_D3_SUMMARY.md
-- specs/spec-a-core.md:221-242
-- scripts/debug_pixel_trace.py:1-200
-Next Up: Prep simulator parity summary + plan D5 smoke rerun once taps align.
+- docs/fix_plan.md:58 — Phase D5 task definition and thresholds.
+- plans/active/vectorization-parity-regression.md:64 — Phase D table with D4 closure and D5 guidance.
+- reports/2026-01-vectorization-parity/phase_d/20251010T073708Z/simulator_f_latt.md — Prior diagnosis transcript to mirror.
+- specs/spec-a-core.md:135 — Canonical Å→m scaling requirement for lattice vectors.
+Next Up: If parity lands quickly, prep Phase E1 full-frame rerun (benchmark + high-res pytest) per plans/active/vectorization-parity-regression.md.

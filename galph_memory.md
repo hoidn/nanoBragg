@@ -1883,3 +1883,8 @@
 - Refreshed plans/active/vectorization-parity-regression.md (Status Snapshot + Phase D table) to add D4 simulator diagnosis row and shift parity smoke to D5; vectorization.md now tracks Phase D1–D5.
 - Authored input.md (Mode: Parity) directing Ralph to add env-guarded taps in Simulator._compute_physics_for_position, rerun the pixel probe, and capture logs under reports/2026-01-vectorization-parity/phase_d/$STAMP/.
 - Open questions: need simulator tap artifacts (simulator_f_latt.log/md) confirming where the 32× loss occurs before proceeding to D5 parity smoke.
+### 2026-01-07 (galph loop - Phase D5 prep)
+- Closed out D3/D4 bookkeeping: updated `plans/active/vectorization-parity-regression.md` status snapshot + Phase D table (rows D3–D5) to record Attempt #14’s Miller-index unit diagnosis and funnel work into Phase D5 conversion/parity.
+- Refreshed `docs/fix_plan.md` `[VECTOR-PARITY-001]` section — Attempt #13 now marked ✅, observations cite the Å→m⁻¹ requirement, Next Actions item 10 rewritten for the conversion + ROI rerun.
+- Authored `input.md` (Mode: Parity) directing Ralph to scale `rot_a/b/c` by 1e10, regenerate NB_TRACE_SIM_F_LATT evidence, rerun the ROI nb-compare, and execute the high-res pytest before retiring the instrumentation.
+- Follow-up: expect Attempt bundle under `reports/2026-01-vectorization-parity/phase_d/$STAMP/` with updated traces, `roi_compare_post_fix`, `phase_d_summary.md`, and pytest log; once corr≥0.999 and |sum_ratio−1|≤5×10⁻³ we can unlock Phase E in the parity plan.
