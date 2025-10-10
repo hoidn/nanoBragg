@@ -8,6 +8,10 @@
   - `docs/development/pytorch_runtime_checklist.md` — sanity checklist before executing PyTorch-heavy tests (KMP env, device neutrality).
   - `prompts/callchain.md` — fallback SOP if targeted tracing is required for specific failures (defer until triage completes).
 
+### Status Snapshot (2026-01-12)
+- Phase A ✅ complete (Attempt #1 — `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/`); 692 tests collected, no errors.
+- Phase B pending: need fresh timestamped bundle capturing full-suite run, junit XML, and failure summary before triage (Phase C) can begin.
+
 ### Phase A — Preflight & Inventory
 Goal: Confirm environment readiness and enumerate suite metadata so the full run is reproducible and guarded.
 Prereqs: None; execute prior to any full-suite invocation.
@@ -15,10 +19,10 @@ Exit Criteria: Preflight checklist logged in `reports/2026-01-test-suite-triage/
 
 | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
 | --- | --- | --- | --- |
-| A1 | Confirm guardrails & env | [ ] | Review `docs/development/testing_strategy.md` §§1.4–1.5; ensure `KMP_DUPLICATE_LIB_OK=TRUE`, `NB_C_BIN` precedence known, GPU availability noted. Capture environment via `python -m site` + `python -c "import torch; print(torch.__version__, torch.cuda.is_available())"` into `preflight.md`. |
-| A2 | Disk & cache sanity check | [ ] | Ensure `reports/` has ≥2 GB free (`df -h .`). If insufficient, coordinate cleanup (respect Protected Assets). Record finding in `preflight.md`. |
-| A3 | Test inventory snapshot | [ ] | Run `pytest --collect-only tests -q` (with KMP env) and store output as `collect_only.log` under Phase A stamp. Summarise counts (total tests, deselected markers) inside `preflight.md`. |
-| A4 | Update fix_plan attempts ledger | [ ] | Log Phase A completion under `[TEST-SUITE-TRIAGE-001]` in `docs/fix_plan.md` with artifact paths and suite counts to keep ledger in sync. |
+| A1 | Confirm guardrails & env | [D] | Attempt #1 → `preflight.md` records Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6 availability; referenced `docs/development/testing_strategy.md` §§1.4–1.5. |
+| A2 | Disk & cache sanity check | [D] | Attempt #1 → `disk_usage.txt` shows 77 GB free (83 % used); cleanup not required. |
+| A3 | Test inventory snapshot | [D] | Attempt #1 → `collect_only.log` captured 692 collected tests, 0 errors; summarised inside `preflight.md`. |
+| A4 | Update fix_plan attempts ledger | [D] | Attempt #1 logged in `docs/fix_plan.md` under `[TEST-SUITE-TRIAGE-001]` with artifact paths and counts. |
 
 ### Phase B — Full Suite Execution & Logging
 Goal: Execute `pytest tests/` once, capturing complete logs, timings, and failure summaries for downstream triage.
