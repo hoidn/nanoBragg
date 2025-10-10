@@ -1,0 +1,1 @@
+Command: ./golden_suite_generator/nanoBragg -default_F 100 -cell 100 100 100 90 90 90 -lambda 0.5 -distance 500 -detpixels 4096 -pixel 0.05 -N 5 -oversample 2 -floatfile /tmp/tap4.bin

@@ -1,0 +1,36 @@
+{
+  "pixel_0_0": {
+    "total_lookups": 4,
+    "out_of_bounds_count": 4,
+    "zero_f_count": 0,
+    "default_f_count": 4,
+    "hkl_min": [
+      -7.900663,
+      39.347118,
+      -39.356724
+    ],
+    "hkl_max": [
+      -7.897033,
+      39.356724,
+      -39.347118
+    ],
+    "mean_f_cell": 100.0
+  },
+  "pixel_2048_2048": {
+    "total_lookups": 4,
+    "out_of_bounds_count": 0,
+    "zero_f_count": 4,
+    "default_f_count": 0,
+    "hkl_min": [
+      -1e-06,
+      0.005,
+      -0.015
+    ],
+    "hkl_max": [
+      -0.0,
+      0.015,
+      -0.005
+    ],
+    "mean_f_cell": 0.0
+  }
+}
