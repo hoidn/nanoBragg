@@ -9,7 +9,7 @@
   - `docs/development/pytorch_runtime_checklist.md` — runtime guardrail reminders (especially item #4 on source weighting).
   - `docs/fix_plan.md` `[VECTOR-GAPS-002]` Attempts #3–#8 and `[PERF-PYTORCH-004]` baseline expectations.
   - Existing artifacts: good run `reports/benchmarks/20251009-161714/`; failing bundles under `reports/2026-01-vectorization-gap/phase_b/20251009T09*` and `20251010T02*`.
-- Status Snapshot (2025-12-30): Eight consecutive Phase B1 profiler runs show deterministic correlation 0.721175 despite cache speedups; the last known-good run (Attempt #5) captured correlation 0.999998 but lacks git provenance. Downstream profiling and perf work remain blocked pending a parity root cause.
+- Status Snapshot (2025-12-31): Phase A1–A3 complete (`reports/2026-01-vectorization-parity/phase_a/20251010T023622Z/` consolidates 0.999998 vs 0.721175 correlation evidence and highlights the missing sum-ratio metric + unknown good-run git SHA). Phase B now targets a fresh 4096² reproduction with full provenance (benchmark + nb-compare sum_ratio) plus parity selector smoke before moving to trace localisation.
 
 ### Phase A — Evidence Audit & Baseline Ledger
 Goal: Canonicalise the good vs bad benchmark evidence and capture parameter parity so future loops operate from a single source of truth.
@@ -18,9 +18,9 @@ Exit Criteria: `reports/2026-01-vectorization-parity/phase_a/<STAMP>/` contains 
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| A1 | Build artifact matrix | [ ] | Catalogue known-good vs failing runs (paths, correlation, sum_ratio, commit if known) into `artifact_matrix.md`. Use `reports/benchmarks/20251009-161714/benchmark_results.json` for the good baseline and the `reports/2026-01-vectorization-gap/phase_b/20251009T09*/` + `20251010T02*/` bundles for failures. | 
-| A2 | Diff benchmark parameters | [ ] | Extract command lines and env metadata from each run (`commands.txt`, `env.json` when present) and document differences in `param_diff.md`. Verify NB_C_BIN, ROI, dtype, and device align with the spec via `docs/development/c_to_pytorch_config_map.md`. |
-| A3 | Record open questions & ledger hooks | [ ] | List unknowns (e.g., missing git_sha for good run) and note required follow-ups (AT suite coverage, trace status) inside `artifact_matrix.md`. Update `docs/fix_plan.md` `[VECTOR-PARITY-001]` with Attempt #1 referencing the Phase A bundle and outstanding items. |
+| A1 | Build artifact matrix | [D] | ✅ Attempt #1 (2025-10-09 ralph loop) captured seven runs in `reports/2026-01-vectorization-parity/phase_a/20251010T023622Z/artifact_matrix.md`, contrasting the 0.999998 good baseline (`reports/benchmarks/20251009-161714/`) with six 0.721175 failures (`reports/2026-01-vectorization-gap/phase_b/20251009T09*/`, `20251010T02*/`). |
+| A2 | Diff benchmark parameters | [D] | ✅ Same bundle `param_diff.md` summarises commands/env metadata and notes missing git SHA for the good run; verified parity inputs match spec using `docs/development/c_to_pytorch_config_map.md`. |
+| A3 | Record open questions & ledger hooks | [D] | ✅ Attempt #1 logged unresolved items (git provenance, absent sum_ratio) and updated `docs/fix_plan.md` `[VECTOR-PARITY-001]` with metrics, artifact paths, and Phase B focus. |
 
 ### Phase B — Reproduction Scope & Test Matrix
 Goal: Confirm the regression on current HEAD, determine whether it affects smaller ROIs/tests, and document authoritative reproduction commands for debugging.
@@ -29,7 +29,7 @@ Exit Criteria: New evidence bundle under `reports/2026-01-vectorization-parity/p
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Re-run 4096² benchmark on HEAD | [ ] | Execute `NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-parity/phase_b/<STAMP>/profile/`. Capture `benchmark_results.json`, `profile_run.log`, `env.json`. Stop immediately if correlation ≥0.999 (document surprise). |
+| B1 | Re-run 4096² benchmark on HEAD | [ ] | Execute `NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts`. Note the timestamped output path printed by the script (e.g., `reports/benchmarks/20250101-123456/`) and copy its contents into `reports/2026-01-vectorization-parity/phase_b/<STAMP>/profile/` (preserve `benchmark_results.json`, `profile_4096x4096/trace.json`, console log). Immediately follow with a full-resolution parity check: `NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE nb-compare --resample --threshold 0.999 --outdir reports/2026-01-vectorization-parity/phase_b/<STAMP>/nb_compare_full -- -default_F 100 -cell 100 100 100 90 90 90 -lambda 6.2 -distance 100 -detpixels 4096`. Capture correlation and sum_ratio from `summary.json`; record env metadata. Stop early if correlation ≥0.999 **and** |sum_ratio−1| ≤5e-3 (document the surprise in summary). |
 | B2 | Run AT parity selectors | [ ] | Invoke `KMP_DUPLICATE_LIB_OK=TRUE NB_C_BIN=./golden_suite_generator/nanoBragg NB_RUN_PARALLEL=1 pytest -v tests/test_at_parallel_*.py -k 4096` (exact selectors per `docs/development/testing_strategy.md` §2). Store logs in `pytest_parallel.log`; note any failures/XFAIL transitions. |
 | B3 | ROI sanity check via nb-compare | [ ] | Use `nb-compare --resample --outdir reports/2026-01-vectorization-parity/phase_b/<STAMP>/nb_compare -- -default_F 100 -cell 100 100 100 90 90 90 -lambda 1.0 -distance 100 -detpixels 512` (small ROI) to verify whether the regression appears at reduced detector sizes. Include summary with correlation metrics. |
 

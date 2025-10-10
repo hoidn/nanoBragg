@@ -1,3 +1,10 @@
+### 2025-12-31 (galph loop - VECTOR-PARITY Phase B kickoff)
+- Repo already up to date; re-read spec/arch/testing docs and active plans before analysis. Coin flip = heads → reviewed Ralph commits b69ad67/a7c739d (evidence-only bundles + plan update); no regressions found.
+- Updated `plans/active/vectorization-parity-regression.md` status snapshot to mark Phase A1–A3 [D] and expanded Phase B1 guidance (benchmark copy + nb-compare sum_ratio capture under `reports/2026-01-vectorization-parity/phase_b/$STAMP/`).
+- Refreshed `docs/fix_plan.md` `[VECTOR-PARITY-001]` Next Actions to point at the Phase B1 evidence bundle (include copy step from `reports/benchmarks/<ts>` and full-resolution nb-compare).
+- Replaced `input.md` (Mode: Parity) directing Ralph to execute Phase B1: rerun the 4096² benchmark, copy the output into the phase_b bundle, run nb-compare for correlation/sum_ratio, and stage env/summary/commands artifacts; mapped tests now include `pytest -v tests/test_at_parallel_*.py -k 4096` for the follow-up.
+- Next follow-up: Expect Attempt #2 in `[VECTOR-PARITY-001]` with the new evidence bundle; supervisor should review metrics, then hand Vector-Parity plan into Phase B2 parity selectors / Phase C trace prep.
+
 ### 2025-12-25 (galph loop - SOURCE-WEIGHT Phase H kickoff)
 - Synced repo (already up to date). Reviewed specs/arch/testing docs plus active plans before analysis.
 - Coin flip = heads → audited Ralph commits a1a6281 and 58b3da4; parity evidence solid, no regressions detected.
