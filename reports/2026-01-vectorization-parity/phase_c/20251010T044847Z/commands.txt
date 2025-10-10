@@ -1,0 +1,69 @@
+# Phase C1 — C Trace Capture Commands (EXECUTED)
+# Timestamp: 2025-10-10T04:48:47Z
+# Git SHA: 6d841a84
+# Configuration: 4096² MOSFLM λ=0.5Å distance=500mm pixel=0.05mm
+
+## Build Command
+
+cd /home/ollie/Documents/tmp/nanoBragg/golden_suite_generator
+make clean && make nanoBragg
+
+## Trace Capture Commands (executed in parallel)
+
+# Pixel (2048, 2048) - ROI center
+/home/ollie/Documents/tmp/nanoBragg/golden_suite_generator/nanoBragg \
+  -default_F 100 \
+  -cell 100 100 100 90 90 90 \
+  -lambda 0.5 \
+  -distance 500 \
+  -pixel 0.05 \
+  -detpixels 4096 \
+  -N 5 \
+  -convention MOSFLM \
+  -oversample 1 \
+  -trace_pixel 2048 2048 \
+  -floatfile /tmp/c_trace_2048_2048.bin \
+  > reports/2026-01-vectorization-parity/phase_c/20251010T044847Z/c_traces/pixel_2048_2048.log 2>&1
+
+# Pixel (1792, 2048) - ROI boundary
+/home/ollie/Documents/tmp/nanoBragg/golden_suite_generator/nanoBragg \
+  -default_F 100 \
+  -cell 100 100 100 90 90 90 \
+  -lambda 0.5 \
+  -distance 500 \
+  -pixel 0.05 \
+  -detpixels 4096 \
+  -N 5 \
+  -convention MOSFLM \
+  -oversample 1 \
+  -trace_pixel 1792 2048 \
+  -floatfile /tmp/c_trace_1792_2048.bin \
+  > reports/2026-01-vectorization-parity/phase_c/20251010T044847Z/c_traces/pixel_1792_2048.log 2>&1
+
+# Pixel (4095, 2048) - Far edge
+/home/ollie/Documents/tmp/nanoBragg/golden_suite_generator/nanoBragg \
+  -default_F 100 \
+  -cell 100 100 100 90 90 90 \
+  -lambda 0.5 \
+  -distance 500 \
+  -pixel 0.05 \
+  -detpixels 4096 \
+  -N 5 \
+  -convention MOSFLM \
+  -oversample 1 \
+  -trace_pixel 4095 2048 \
+  -floatfile /tmp/c_trace_4095_2048.bin \
+  > reports/2026-01-vectorization-parity/phase_c/20251010T044847Z/c_traces/pixel_4095_2048.log 2>&1
+
+## Results
+
+All three traces completed successfully with 72 TRACE_C output lines each.
+Execution time: ~60 seconds per trace (4096² simulation)
+No errors or warnings.
+
+## Verification
+
+grep -c "TRACE_C:" reports/2026-01-vectorization-parity/phase_c/20251010T044847Z/c_traces/pixel_*.log
+# pixel_1792_2048.log: 72
+# pixel_2048_2048.log: 72
+# pixel_4095_2048.log: 72
