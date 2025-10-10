@@ -1,0 +1,71 @@
+    emit_trace("TRACE_PY", "twotheta_axis", twotheta_axis)
+    emit_trace("TRACE_PY", "fdet_after_twotheta", detector.fdet_vec.cpu().numpy())
+    emit_trace("TRACE_PY", "sdet_after_twotheta", detector.sdet_vec.cpu().numpy())
+    emit_trace("TRACE_PY", "odet_after_twotheta", detector.odet_vec.cpu().numpy())
+
+    # Convention mapping
+    emit_trace("TRACE_PY", "convention_mapping", "Fbeam←Ybeam_mm(+0.5px),Sbeam←Xbeam_mm(+0.5px),beam_vec=[1 0 0]")
+
+    # Fbeam and Sbeam
+    emit_trace("TRACE_PY", "Fbeam_m", beam_center_f_m)
+    emit_trace("TRACE_PY", "Sbeam_m", beam_center_s_m)
+    emit_trace("TRACE_PY", "distance_m", detector_config.distance_mm / 1000.0)
+
+    # pix0 calculation terms (pixel_size_m already defined above)
+    distance_m = detector_config.distance_mm / 1000.0
+
+    # Beam direction for MOSFLM: [1, 0, 0]
+    beam_direction = torch.tensor([1.0, 0.0, 0.0], dtype=dtype, device=device)
+
+    term_fast = -beam_center_f_m * detector.fdet_vec
+    term_slow = -beam_center_s_m * detector.sdet_vec
+    term_beam = distance_m * beam_direction
+
+    emit_trace("TRACE_PY", "term_fast", term_fast.cpu().numpy())
+    emit_trace("TRACE_PY", "term_slow", term_slow.cpu().numpy())
+    emit_trace("TRACE_PY", "term_beam", term_beam.cpu().numpy())
+
+    # pix0_vector
+    pix0_vector = detector.pix0_vector
+    emit_trace("TRACE_PY", "pix0_vector", pix0_vector.cpu().numpy())
+
+    # Now compute target pixel position
+    # Get pixel coordinates (meters)
+    # Note: get_pixel_coords() returns all pixel coordinates, no arguments needed
+    pixel_coords_m = detector.get_pixel_coords()
+    target_coords = pixel_coords_m[target_s, target_f]
+
+    emit_trace("TRACE_PY", "pix0_vector_meters", pix0_vector.cpu().numpy())
+    emit_trace("TRACE_PY", "fdet_vec", detector.fdet_vec.cpu().numpy())
+    emit_trace("TRACE_PY", "sdet_vec", detector.sdet_vec.cpu().numpy())
+    emit_trace("TRACE_PY", "pixel_pos_meters", target_coords.cpu().numpy())
+
+    # Airpath and solid angle
+    R = torch.norm(target_coords)
+    emit_trace("TRACE_PY", "R_distance_meters", R)
+
+    # Solid angle (omega)
+    close_distance_m = detector.close_distance
+    omega = (pixel_size_m ** 2 * close_distance_m) / (R ** 3)
+    emit_trace("TRACE_PY", "omega_pixel_sr", omega)
+    emit_trace("TRACE_PY", "close_distance_meters", close_distance_m)
+
+    # Obliquity factor
+    obliquity_factor = close_distance_m / R
+    emit_trace("TRACE_PY", "obliquity_factor", obliquity_factor)
+
+    # Diffracted direction
+    diffracted_vec = target_coords / R
+    emit_trace("TRACE_PY", "diffracted_vec", diffracted_vec.cpu().numpy())
+
+    # Incident beam direction (MOSFLM: [1, 0, 0]) - already defined as beam_direction
+    incident_vec = beam_direction
+    emit_trace("TRACE_PY", "incident_vec", incident_vec.cpu().numpy())
+
+    # Wavelength
+    lambda_m = beam_config.wavelength_A * 1e-10
+    lambda_A = beam_config.wavelength_A
+    emit_trace("TRACE_PY", "lambda_meters", lambda_m)
+    emit_trace("TRACE_PY", "lambda_angstroms", lambda_A)
+
+    # Scattering vector: S = (d - i) / λ [in m⁻¹] per spec-a-core.md line 446

@@ -1,0 +1,36 @@
+src/nanobrag_torch/__main__.py:104:    parser.add_argument('-default_F', type=float, default=0.0,
+src/nanobrag_torch/__main__.py:402:    if not has_hkl and args.default_F == 0:
+src/nanobrag_torch/__main__.py:403:        print("Error: Need -hkl file, Fdump.bin, or -default_F > 0")
+src/nanobrag_torch/__main__.py:444:    config['default_F'] = args.default_F
+src/nanobrag_torch/__main__.py:446:        config['hkl_data'] = read_hkl_file(args.hkl, default_F=args.default_F)
+src/nanobrag_torch/__main__.py:448:        config['hkl_data'] = try_load_hkl_or_fdump(None, fdump_path="Fdump.bin", default_F=args.default_F)
+src/nanobrag_torch/__main__.py:773:    print(f"  Default F: {crystal_config.default_F}")
+src/nanobrag_torch/__main__.py:864:                default_F=config.get('default_F', 0.0),
+src/nanobrag_torch/simulator.py:454:        # This preserves essential parameters like cell dimensions and default_F
+src/nanobrag_torch/config.py:145:    default_F: float = 0.0  # Default structure factor magnitude (matches C default)
+src/nanobrag_torch/models/crystal.py:202:            default_F=self.config.default_F,
+src/nanobrag_torch/models/crystal.py:223:        on the 'interpolate' flag. Out-of-range accesses return default_F.
+src/nanobrag_torch/models/crystal.py:225:        # If no HKL data loaded, return default_F for all reflections
+src/nanobrag_torch/models/crystal.py:227:            return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
+src/nanobrag_torch/models/crystal.py:231:            return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
+src/nanobrag_torch/models/crystal.py:252:            return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
+src/nanobrag_torch/models/crystal.py:280:            return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
+src/nanobrag_torch/models/crystal.py:289:        # Use default_F for out-of-bounds indices
+src/nanobrag_torch/models/crystal.py:293:            torch.full_like(F_values, self.config.default_F)
+src/nanobrag_torch/models/crystal.py:317:            F_cell = default_F;
+src/nanobrag_torch/models/crystal.py:334:            return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
+src/nanobrag_torch/models/crystal.py:378:            # Return default_F for this evaluation
+src/nanobrag_torch/models/crystal.py:379:            return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
+src/nanobrag_torch/models/crystal.py:409:            # If no HKL data loaded, use default_F everywhere: shape (B, 4, 4, 4)
+src/nanobrag_torch/models/crystal.py:410:            sub_Fhkl = torch.full((B, 4, 4, 4), self.config.default_F, dtype=self.dtype, device=self.device)
+src/nanobrag_torch/io/hkl.py:17:    default_F: float = 0.0,
+src/nanobrag_torch/io/hkl.py:27:    - Unspecified grid points retain default_F
+src/nanobrag_torch/io/hkl.py:31:        default_F: Default structure factor for unspecified reflections
+src/nanobrag_torch/io/hkl.py:104:        default_F,
+src/nanobrag_torch/io/hkl.py:258:    default_F: float = 0.0,
+src/nanobrag_torch/io/hkl.py:269:    - If neither available and default_F == 0: return None (program should exit)
+src/nanobrag_torch/io/hkl.py:270:    - If neither available but default_F > 0: can proceed with default values only
+src/nanobrag_torch/io/hkl.py:275:        default_F: Default structure factor value
+src/nanobrag_torch/io/hkl.py:285:        F_grid, metadata = read_hkl_file(hkl_path, default_F, device, dtype)
+src/nanobrag_torch/io/hkl.py:304:    if default_F == 0:
+src/nanobrag_torch/io/hkl.py:307:        # Can proceed with only default_F values

@@ -1,0 +1,91 @@
+    def get_structure_factor(
+        self, h: torch.Tensor, k: torch.Tensor, l: torch.Tensor  # noqa: E741
+    ) -> torch.Tensor:
+        """
+        Look up or interpolate the structure factor for given h,k,l indices.
+
+        Implements AT-STR-001 (nearest-neighbor lookup) and AT-STR-002 (tricubic interpolation).
+
+        This method handles both nearest-neighbor lookup and differentiable tricubic
+        interpolation, as determined by self.interpolate flag, to match the C-code.
+
+        C-Code Implementation Reference (from nanoBragg.c, lines 3101-3139):
+        The C code performs nearest-neighbor lookup or tricubic interpolation based
+        on the 'interpolate' flag. Out-of-range accesses return default_F.
+        """
+        # If no HKL data loaded, return default_F for all reflections
+        if self.hkl_data is None:
+            return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
+
+        # Get metadata
+        if self.hkl_metadata is None:
+            return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
+
+        h_min = self.hkl_metadata['h_min']
+        h_max = self.hkl_metadata['h_max']
+        k_min = self.hkl_metadata['k_min']
+        k_max = self.hkl_metadata['k_max']
+        l_min = self.hkl_metadata['l_min']
+        l_max = self.hkl_metadata['l_max']
+
+        if self.interpolate:
+            # Tricubic interpolation (AT-STR-002)
+            return self._tricubic_interpolation(h, k, l)
+        else:
+            # Nearest-neighbor lookup
+            return self._nearest_neighbor_lookup(h, k, l)
+
+    def _nearest_neighbor_lookup(
+        self, h: torch.Tensor, k: torch.Tensor, l: torch.Tensor  # noqa: E741
+    ) -> torch.Tensor:
+        """Nearest-neighbor structure factor lookup (AT-STR-001)."""
+        if self.hkl_metadata is None:
+            return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
+
+        h_min = self.hkl_metadata['h_min']
+        h_max = self.hkl_metadata['h_max']
+        k_min = self.hkl_metadata['k_min']
+        k_max = self.hkl_metadata['k_max']
+        l_min = self.hkl_metadata['l_min']
+        l_max = self.hkl_metadata['l_max']
+
+        # Round to nearest integers (h0, k0, l0 in C code)
+        h_int = torch.round(h).long()
+        k_int = torch.round(k).long()
+        l_int = torch.round(l).long()
+
+        # Check bounds
+        in_bounds = (
+            (h_int >= h_min) & (h_int <= h_max) &
+            (k_int >= k_min) & (k_int <= k_max) &
+            (l_int >= l_min) & (l_int <= l_max)
+        )
+
+        # Compute indices into grid
+        h_idx = h_int - h_min
+        k_idx = k_int - k_min
+        l_idx = l_int - l_min
+
+        # Clamp indices to valid range for safety
+        if self.hkl_data is None:
+            return torch.full_like(h, float(self.config.default_F), device=self.device, dtype=self.dtype)
+
+        h_idx = torch.clamp(h_idx, 0, self.hkl_data.shape[0] - 1)
+        k_idx = torch.clamp(k_idx, 0, self.hkl_data.shape[1] - 1)
+        l_idx = torch.clamp(l_idx, 0, self.hkl_data.shape[2] - 1)
+
+        # Look up values
+        F_values = self.hkl_data[h_idx, k_idx, l_idx]
+
+        # Use default_F for out-of-bounds indices
+        F_result = torch.where(
+            in_bounds,
+            F_values,
+            torch.full_like(F_values, self.config.default_F)
+        )
+
+        return F_result
+
+    def _tricubic_interpolation(
+        self, h: torch.Tensor, k: torch.Tensor, l: torch.Tensor  # noqa: E741
+    ) -> torch.Tensor:
