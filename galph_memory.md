@@ -1969,3 +1969,8 @@
 - Updated `plans/active/vectorization-parity-regression.md` (Phase E7→[D], added E8–E10) and `plans/active/vectorization.md` snapshot to reflect the default_F hypothesis closure and new Tap 5 priority.
 - Issued `input.md` (Mode: Parity) instructing Ralph to extend `scripts/debug_pixel_trace.py` with `--taps intensity`, capture edge/centre JSON under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/py_taps/`, summarise in `pre_norm_summary.md`, and run `pytest --collect-only -q`.
 - Next follow-up: supervisor to review Tap 5 PyTorch bundle, then delegate C instrumentation (Next Action #2) and the comparison write-up (Next Action #3).
+### 2026-01-10 (galph loop - Phase E9 C Tap 5 kickoff)
+- Logged Ralph’s Attempt #29 (PyTorch Tap 5) in `docs/fix_plan.md`, updated Active Focus to shift from tool bring-up to C instrumentation, and pruned the stale “extend tap tooling” Next Action.
+- Refreshed `[VECTOR-PARITY-001]` Next Actions to call for a `TRACE_C_TAP5`-guarded capture plus comparison write-up; plan `vectorization-parity-regression.md` already marks E8 done/E9 pending so no edits required.
+- Replaced `input.md` (Mode: Parity) with instructions to add a runtime `TRACE_C_TAP5` block in `golden_suite_generator/nanoBragg.c`, run the oversample=2 traces for pixels (0,0)/(2048,2048), archive logs under `reports/2026-01-vectorization-parity/phase_e0/$STAMP/c_taps/`, and maintain commands/env metadata.
+- Expect Attempt #30 to deliver `pixel_*_tap5.log`, `trace_env.json`, and a brief `intensity_pre_norm_c_notes.md` so we can line up Tap 5 metrics before deciding on Tap 6 vs Phase F.
