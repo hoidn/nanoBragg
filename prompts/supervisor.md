@@ -59,6 +59,13 @@ At the start of every invocation:
 - After resolving any conflicts, read the latest galph_memory.md entry (and any linked plan files) so you do not lose past context.
 - Prune or summarize older entries when they become stale or redundant.
 
+<Action State Tracking>
+- At the end of every turn, in galph_memory.md, you must declare the <Action State> for your current <focus issue>.
+- The state can be one of: [gathering_evidence], [planning], [ready_for_implementation].
+- You may not remain in the [gathering_evidence] or [planning] state for the same <focus issue> for more than two consecutive turns.
+- On the third turn, you MUST either transition to [ready_for_implementation] and delegate a code change, or you must explicitly change your <focus issue> to something else and document why the original issue is blocked.
+</Action State Tracking>
+
 During the main, central phase of invocation you will be doing essentially three things:
 <main analysis step 1> 
 An initial analysis pass in which you gather and review information in order to choose a <focus issue> for the turn, corresponding to <instructions> steps <0> through <3>. This will involve a multi-category selection process. You will choose both a <focus issue> and an associated <Action type> for the remainder of the iteration. 
