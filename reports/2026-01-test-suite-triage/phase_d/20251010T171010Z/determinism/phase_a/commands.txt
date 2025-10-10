@@ -1,0 +1,10 @@
+# Phase A: Evidence Capture for AT-PARALLEL-013/024
+
+## Collection (validation)
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q
+
+## AT-PARALLEL-013 reproduction
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py --maxfail=0 --durations=10
+
+## AT-PARALLEL-024 reproduction  
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_024.py --maxfail=0 --durations=10
