@@ -4059,6 +4059,25 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       2. **URGENT DEBUG**: Check nb-compare configuration mapping — verify it passes correct implicit parameters (-convention MOSFLM, pivot mode, beam center) to both C and PyTorch
       3. Run Phase B2 pytest selectors to get third correlation measurement and triangulate which tool is correct
       4. If nb-compare correlation=0.060 is correct, immediately debug sum_ratio=236.18 (likely missing normalization factor in scaling)
+  * [2025-10-09] Attempt #3 (ralph loop) — Result: **EVIDENCE REFRESH** — Phase B1 re-executed on current HEAD (git 5898682a), reproduces identical catastrophic parity failure.
+    Metrics:
+      - benchmark_detailed.py: correlation_warm=0.7211752710777161 (❌ <<0.999 threshold), speedup_warm=1.189x, git_sha=5898682a
+      - nb-compare: correlation=0.059497 (❌❌❌ catastrophic, 12.1x worse than benchmark), sum_ratio=234.16 (❌ 234x intensity error, >>5e-3 threshold)
+      - C_sum=24784.93, Py_sum=5803630.0 (PyTorch generating ~234x total intensity)
+    Artifacts:
+      - `reports/2026-01-vectorization-parity/phase_b/20251010T025909Z/profile/` — benchmark_results.json, profiler trace (trace.json), console log
+      - `reports/2026-01-vectorization-parity/phase_b/20251010T025909Z/nb_compare_full/` — comparison PNGs (c.png, py.png, diff.png), summary.json, float binaries
+      - `reports/2026-01-vectorization-parity/phase_b/20251010T025909Z/{env.json,summary.md,commands.txt}` — full provenance (Python 3.13.5, PyTorch 2.7.1+cu126, git SHA, device/dtype, reproduction commands)
+    Observations/Hypotheses:
+      - **DETERMINISTIC FAILURE**: Attempt #2 (git 64d9eac3) and Attempt #3 (git 5898682a) show near-identical nb-compare correlations (0.059738 vs 0.059497) and sum_ratios (236.18 vs 234.16), confirming systematic bug across commits
+      - **BENCHMARK vs NB-COMPARE DISCREPANCY**: benchmark_detailed.py consistently reports 0.721 while nb-compare reports 0.060 for same parameters — 12x disagreement suggests tools are NOT comparing identical image pairs
+      - **INTENSITY EXPLOSION**: PyTorch sum ~234x higher than C sum indicates catastrophic scaling bug (likely missing sources/steps/oversample normalization or double-counting source contributions)
+      - **PHASE B1 COMPLETE**: Fresh evidence bundle now archived with git provenance, ready for Phase B2 pytest validation and Phase C trace triage
+    Next Actions:
+      1. Phase B2 (urgent): Execute `KMP_DUPLICATE_LIB_OK=TRUE NB_C_BIN=./golden_suite_generator/nanoBragg NB_RUN_PARALLEL=1 pytest -v tests/test_at_parallel_*.py -k 4096` to get authoritative pytest correlation measurement
+      2. Phase B2.5 (diagnostic): Compare float binaries from benchmark_detailed.py vs nb-compare to verify whether they differ (hypothesis: benchmark may use cached/stale C output)
+      3. Phase B3 (scope): Run smaller ROI checks (512×512, 1024×1024) via `nb-compare --roi` to determine if failure scales with detector size
+      4. Phase C Prep: Once pytest confirms nb-compare correlation, proceed to trace-driven debugging focusing on sum_ratio=234x (likely source weighting or steps normalization bug)
 
 ---
 
