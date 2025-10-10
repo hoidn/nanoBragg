@@ -1693,3 +1693,8 @@
 - Rechecked `plans/active/source-weight-normalization.md` G0–G3 and `docs/fix_plan.md:4047-4175`; no ledger edits needed, but confirmed sanitised fixture (`reports/2025-11-source-weights/fixtures/two_sources_nocomments.txt`) and checksum are in place for the rerun.
 - Left plan statuses unchanged (Review mode only) and refreshed `input.md` with explicit checksum verification, clarified `$STAMP` artifact paths, and reiterated metrics thresholds + `[C-SOURCEFILE-001]` linkage before Ralph updates the ledger.
 - Follow-up for Ralph: execute Phase G1–G3 exactly as scripted (collect-only proof, pytest selectors, Py/C CLI runs, metrics.json), log the new Attempt, and block further work if correlation or sum ratio fail the thresholds.
+### 2025-12-26 (galph loop - SOURCE-WEIGHT parity focus)
+- Reviewed docs/fix_plan.md `[SOURCE-WEIGHT-001]` and Phase G plan; confirmed parity evidence still missing after sanitizer work. Re-ran collect-only for the mapped selectors (8 tests) to validate command provenance.
+- Gathered geometry details from `tests/test_cli_scaling.py:600-665` and spec refs (`specs/spec-a-core.md:151-153`) so the next bundle can mirror the XPASS configuration.
+- Replaced `input.md` (Mode: Parity) with explicit guidance to build a fresh Phase G `<STAMP>` bundle using the test geometry, capture pytest XPASS + CLI outputs, compute `metrics.json`, and log a new Attempt referencing the sanitized fixture and `[C-SOURCEFILE-001]`.
+- Follow-up for Ralph: execute the new Phase G2–G3 instructions verbatim, store artifacts under `reports/2025-11-source-weights/phase_g/<STAMP>/`, ensure metrics meet corr ≥0.999 / |sum_ratio−1| ≤3e-3, then update docs/fix_plan.md attempts before moving on to Phase H.
