@@ -1,0 +1,9 @@
+# Phase E13: C Tap 5.1 HKL audit commands
+# Timestamp: 20251010T121436Z
+# Purpose: Mirror PyTorch Tap 5.1 per-subpixel HKL audit for pixels (0,0) and (2048,2048)
+
+# Edge pixel (0,0)
+TRACE_C_TAP5_HKL=1 ./golden_suite_generator/nanoBragg -cell 100 100 100 90 90 90 -lambda 0.5 -distance 500 -detpixels 4096 -pixel 0.05 -mosflm -oversample 2 -default_F 100 -N 5 -trace_pixel 0 0 -roi 0 0 0 0 -floatfile /tmp/tap5_edge.bin > reports/2026-01-vectorization-parity/phase_e0/20251010T121436Z/c_taps/pixel_0_0_hkl.log 2>&1
+
+# Centre pixel (2048,2048)
+TRACE_C_TAP5_HKL=1 ./golden_suite_generator/nanoBragg -cell 100 100 100 90 90 90 -lambda 0.5 -distance 500 -detpixels 4096 -pixel 0.05 -mosflm -oversample 2 -default_F 100 -N 5 -trace_pixel 2048 2048 -roi 2048 2048 2048 2048 -floatfile /tmp/tap5_centre.bin > reports/2026-01-vectorization-parity/phase_e0/20251010T121436Z/c_taps/pixel_2048_2048_hkl.log 2>&1

@@ -3334,6 +3334,16 @@ if(! debug_printed_thread) {
                                         printf("TRACE_C: F_cell %.15g\n", F_cell);
                                     }
 
+                                    /* TRACE_C_TAP5_HKL: per-subpixel HKL audit for Phase E13 */
+                                    if(getenv("TRACE_C_TAP5_HKL") && fpixel==trace_fpixel && spixel==trace_spixel && source==0 && mos_tic==0 && phi_tic==0) {
+                                        int out_of_bounds = 0;
+                                        if (hkls && !((h0<=h_max) && (h0>=h_min) && (k0<=k_max) && (k0>=k_min) && (l0<=l_max) && (l0>=l_min))) {
+                                            out_of_bounds = 1;
+                                        }
+                                        printf("TRACE_C_TAP5_HKL: subpixel=%d %d hkl_frac=%.15g %.15g %.15g h0=%d k0=%d l0=%d F_cell=%.15g out_of_bounds=%d\n",
+                                               subS, subF, h, k, l, h0, k0, l0, F_cell, out_of_bounds);
+                                    }
+
                                     /* SOURCE-WEIGHT trace: per-source diagnostic for source index 2 */
                                     if(fpixel==trace_fpixel && spixel==trace_spixel && source==2 && mos_tic==0 && phi_tic==0) {
                                         printf("TRACE_C_SOURCE2: F_cell %.15g\n", F_cell);
