@@ -1918,3 +1918,8 @@
 - Adjusted `plans/active/vectorization-parity-regression.md` status snapshot to reflect that `TEST-GOLDEN-001` now blocks only on Phase C validation.
 - Authored new `input.md` (Mode: Parity) instructing Ralph to capture ROI nb-compare metrics under `reports/2026-01-golden-refresh/phase_c/$STAMP/` and run the AT-PARALLEL-012 high-resolution pytest with NB_RUN_PARALLEL=1.
 - Follow-up: Expect Attempt with `phase_c_summary.md`, ROI summary assets, and `pytest_highres.log`; review results before scheduling broader selector sweeps.
+### 2026-01-10 (galph loop - Phase E gating prep)
+- Refreshed `plans/active/vectorization.md` status snapshot + Phase D table to gate profiler relaunch on `[VECTOR-PARITY-001]` Phase E evidence and `[TEST-GOLDEN-001]` ledger updates; added note that Phase E/F design packets stay paused until D1 unlocks.
+- Updated `docs/fix_plan.md` `[VECTOR-TRICUBIC-002]` Next Actions to mirror the new gating (wait for phase_e_summary, then rerun profiler/backlog).
+- Replaced `input.md` with Mode Parity instructions for Ralph to execute `[VECTOR-PARITY-001]` Phase E1: run the 4096² benchmark + full-frame nb-compare + high-res pytest into `reports/2026-01-vectorization-parity/phase_e/$STAMP/` and summarise metrics.
+- Observed that legacy commits still have large `reports/` artifacts tracked (e.g., high_res ROI PNGs); flag for future hygiene sweep once protected assets checklist is ready.
