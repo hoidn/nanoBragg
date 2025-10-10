@@ -1,8 +1,8 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2026-01-13 (galph loop — Test suite Phase C refresh planning)
+**Last Updated:** 2026-01-13 (galph loop — CLI defaults plan kickoff)
 **Active Focus:**
-- CRITICAL: Shepherd `[CLI-DEFAULTS-001]` remediation (Phase D follow-through) — review Attempt #2 artifacts, unblock subsequent P1 triage items, and keep `[TEST-SUITE-TRIAGE-001]` ledger synced.
+- CRITICAL: Shepherd `[CLI-DEFAULTS-001]` remediation via `plans/active/cli-defaults/plan.md` (Phase A/B execution) — refresh evidence, unblock subsequent P1 triage items, and keep `[TEST-SUITE-TRIAGE-001]` ledger synced.
 - Tap 5.3 oversample instrumentation for `[VECTOR-PARITY-001]` remains staged but is on hold pending completion of `[TEST-SUITE-TRIAGE-001]` deliverables.
 - Prepare pyrefly + test-index documentation once the suite triage backlog is unblocked.
 
@@ -10,7 +10,7 @@
 | ID | Title | Priority | Status |
 | --- | --- | --- | --- |
 | [TEST-SUITE-TRIAGE-001](#test-suite-triage-001-full-pytest-run-and-triage) | Run full pytest suite and triage | Critical | in_progress |
-| [CLI-DEFAULTS-001](#cli-defaults-001-minimal-default_f-cli-invocation) | Minimal -default_F CLI invocation | High | in_planning |
+| [CLI-DEFAULTS-001](#cli-defaults-001-minimal-default_f-cli-invocation) | Minimal -default_F CLI invocation | High | in_progress |
 | [DETERMINISM-001](#determinism-001-pytorch-rng-determinism) | PyTorch RNG determinism | High | in_planning |
 | [DETECTOR-GRAZING-001](#detector-grazing-001-extreme-detector-angles) | Extreme detector angles | High | in_planning |
 | [SOURCE-WEIGHT-002](#source-weight-002-simulator-source-weighting) | Simulator source weighting | High | in_planning |
@@ -62,18 +62,18 @@
 ## [CLI-DEFAULTS-001] Minimal -default_F CLI invocation
 - Spec/AT: `specs/spec-a-cli.md` §AT-CLI-002, `tests/test_at_cli_002.py`, `docs/development/c_to_pytorch_config_map.md`
 - Priority: High
-- Status: in_planning
+- Status: in_progress
 - Owner/Date: ralph/2025-10-10
+- Plan Reference: `plans/active/cli-defaults/plan.md`
 - Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F`
 - Source: Cluster C1 from `[TEST-SUITE-TRIAGE-001]` Attempt #3 triage
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ reproduced. CLI runner exits 0 but produces all-zero float image. Test fails at line 59 assertion (np.any(float_data > 0)). Runtime 11.01s. **Root cause hypothesis (80% confidence)**: Missing HKL fallback logic—`-default_F 100` provided but no `-hkl` file; simulator likely not populating structure factors from `default_F` parameter. **Secondary hypothesis (15%)**: Zero fluence calculation from missing flux/exposure/beamsize defaults. **Tertiary (5%)**: Output scaling drops values to zero. Artifacts: `reports/2026-01-test-suite-triage/phase_d/20251010T153138Z/attempt_cli_defaults/{pytest.log,commands.txt,attempt_notes.md}`. Next: Inspect `Crystal.get_structure_factor()` for default_F fallback implementation.
   * [2025-10-10] Attempt #2 — Result: ⚠️ blocked. Investigation completed but root cause not identified. **Key findings**: (1) `Crystal.get_structure_factor()` correctly returns `default_F` when `hkl_data=None` (verified); (2) CLI configuration correctly parsed (`default_F=100.0`, `hkl_data=None`, `fluence=1.26e29`); (3) **Paradox**: Created minimal debug script (`debug_default_f.py`) that directly instantiates same classes—produces non-zero output (max=154.7, 73 non-zero pixels), but CLI with identical parameters produces all zeros; (4) Source generation correct (1 source). **Hypotheses**: Issue must be in simulator pipeline (Ewald sphere filtering, device/dtype handling, or invocation differences), not in structure factor logic or configuration. **Recommendation**: Add detailed tracing to `Simulator.run()` to compare CLI vs debug script execution paths; instrument reflection generation and Ewald sphere filtering. Artifacts: `reports/2026-01-test-suite-triage/phase_d/20251010T154759Z/attempt_cli_defaults_fix/{attempt_notes.md,commands.txt,float_stats.txt}` (CLI output: min/max/sum all zero). Next: Requires deeper instrumentation or alternative debugging approach—escalate.
 - Next Actions:
-  1. ✅ DONE — Reproduce targeted command; capture pytest.log and failure mode
-  2. Examine `src/nanobrag_torch/models/crystal.py` method `get_structure_factor()` for default_F fallback logic
-  3. Verify BeamConfig fluence defaults in `src/nanobrag_torch/config.py`
-  4. Draft fix with targeted regression test; ensure test_minimal_render_with_default_F passes
+  1. Execute Phase A (A1–A4) from `plans/active/cli-defaults/plan.md`: capture CLI vs direct-API baselines, `-show_config` dump, and reconciliation summary under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/cli-defaults/phase_a/`.
+  2. Run Phase B (B1–B4) callchain tracing to isolate the first divergent variable between CLI and API paths; archive traces under the same root and synthesize `summary.md`.
+  3. Upon completing Phase B, draft the Phase C remediation blueprint (C1–C3), update this ledger with findings, and prepare supervisor `input.md` for implementation delegation.
 - Exit Criteria:
   - CLI runner succeeds for minimal `-default_F` invocation with non-zero output
   - Test `test_minimal_render_with_default_F` passes

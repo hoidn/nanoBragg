@@ -2067,3 +2067,16 @@
 - Authored new `input.md` (Parity mode) directing Ralph to implement the default_F fallback, rerun AT-CLI-002, and archive artifacts under `phase_d/<STAMP>/attempt_cli_defaults_fix/`.
 - Expect Ralph to deliver Attempt #2 for `[CLI-DEFAULTS-001]` with passing targeted test, float stats evidence, and fix_plan attempt update before moving to determinism cluster.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-10 15:52:37Z (galph loop - Pre-plan note)
+- Focus issue selection (pre-edit): [CLI-DEFAULTS-001] minimal -default_F CLI fix
+- Action type: Planning
+- Mode: Parity
+- Note: Recording focus/action/mode before plan drafting per Step 3.1.
+
+### 2025-10-10 15:56:17Z (galph loop — CLI defaults Phase A planning)
+- Authored `plans/active/cli-defaults/plan.md` with Phase A–D structure; artifacts to land under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/cli-defaults/`.
+- Updated `docs/fix_plan.md` (Last Updated header, Active Focus, `[CLI-DEFAULTS-001]` section now in_progress with plan reference and refreshed Next Actions).
+- Replaced `input.md` with Parity-mode instructions directing Ralph to execute Phase A capture (pytest selector, `-show_config`, `debug_default_f.py`) and store summaries.
+- Next loop: verify Phase A artifacts + attempt log, then advance plan Phase B callchain tracing.
+- <Action State>: [ready_for_implementation]

@@ -1,39 +1,37 @@
-Summary: Restore the minimal `-default_F` CLI path so AT-CLI-002 produces non-zero intensities.
+Summary: Capture CLI vs API baselines for the default_F regression and package Phase A evidence for `[CLI-DEFAULTS-001]`.
 Mode: Parity
 Focus: [CLI-DEFAULTS-001] Minimal -default_F CLI invocation
 Branch: feature/spec-based-2
-Mapped tests: pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F; pytest -v tests/test_at_cli_002.py
-Artifacts: reports/2026-01-test-suite-triage/phase_d/<STAMP>/attempt_cli_defaults_fix/
-Do Now: [CLI-DEFAULTS-001] run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F` after implementing the default_F fallback and archive commands/logs under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/attempt_cli_defaults_fix/`.
-If Blocked: Re-run the same selector and capture `float_stats.txt` (min/max/sum all zero) plus hypothesis notes in `attempt_notes.md`, then push the artifacts so we can escalate causes (structure-factor lookup vs fluence).
+Mapped tests: tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F
+Artifacts: reports/2026-01-test-suite-triage/phase_d/<STAMP>/cli-defaults/phase_a/
+Do Now: `[CLI-DEFAULTS-001]` Phase A — run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F`, capture the zero-output CLI reproduction, collect `-show_config` output, and reproduce the working API path via `debug_default_f.py`, storing everything under the Phase A artifact root.
+If Blocked: Re-run the pytest selector with `-vv` and append stderr/stdout plus `float_stats.txt`; note blocking detail in `summary.md` and log the attempt in `docs/fix_plan.md`.
 Priorities & Rationale:
-- docs/fix_plan.md:62 — Fix plan hypotheses call out missing default_F fallback and fluence defaults.
-- reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md:11 — Priority ladder puts `[CLI-DEFAULTS-001]` at the top of the remediation queue.
-- specs/spec-a-cli.md:163 — AT-CLI-002 mandates successful renders when only `-default_F` supplies structure factors.
-- plans/active/test-suite-triage.md:11 — Phase D is now complete; this loop activates the first P1 fix so triage momentum continues.
-- tests/test_at_cli_002.py:28 — Acceptance test asserts the float image contains non-zero intensities for this scenario.
+- `docs/fix_plan.md` ([CLI-DEFAULTS-001]) now references `plans/active/cli-defaults/plan.md`; Phase A completion unblocks P1 suite triage follow-ups.
+- `specs/spec-a-cli.md` §AT-CLI-002 demands non-zero output for default_F-only runs; evidence must show present gap.
+- `specs/spec-a-core.md` §§3–4 describe structure-factor fallback and fluence defaults—use these while comparing CLI vs API configs.
+- `docs/debugging/debugging.md` mandates trace-first workflow; Phase A evidence sets the scene for Phase B callchain work.
+- `tests/test_at_cli_002.py:15-76` provides authoritative parameters; reuse them verbatim to avoid drift.
 How-To Map:
-- `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; `mkdir -p reports/2026-01-test-suite-triage/phase_d/$STAMP/attempt_cli_defaults_fix` before code edits.
-- Inspect `src/nanobrag_torch/models/crystal.py:210` to confirm the no-HKL path actually returns `default_F`; trace the call sites in `__main__` to verify the Crystal config carries the flag.
-- Review `src/nanobrag_torch/config.py:514` to ensure BeamConfig retains a positive fluence without explicit flux/exposure; adjust only if the defaults zero the signal.
-- Log every invocation in `commands.txt`; after implementation run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F | tee pytest.log`.
-- Add a quick CLI smoke check (`python -m nanobrag_torch ...`) and write `float_stats.txt` capturing min/max/sum so we have numeric evidence of the non-zero image.
-- When the targeted test passes, follow up with `pytest -v tests/test_at_cli_002.py` and store the log as `pytest_full.log` in the same artifact folder.
-- Update `docs/fix_plan.md` `[CLI-DEFAULTS-001]` Attempts with the new stamp + findings and summarise outcomes in `attempt_notes.md`.
+- `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F` → save full stdout/stderr to `phase_a/<STAMP>/cli_pytest/pytest.log`; run `python - <<'PY'` snippet to dump floatfile stats into `float_stats.txt`.
+- `KMP_DUPLICATE_LIB_OK=TRUE python -m nanobrag_torch -cell 100 100 100 90 90 90 -default_F 100 -detpixels 32 -pixel 0.1 -distance 100 -lambda 6.2 -N 5 -floatfile float.bin -intfile int.img -show_config` (use tmpdir) → redirect stdout to `config_dump.txt` and include `commands.txt`.
+- `KMP_DUPLICATE_LIB_OK=TRUE python debug_default_f.py` → store stdout in `phase_a/<STAMP>/api_control/run.log`; capture torch stats via `python - <<'PY'` if additional tensors inspected.
+- Write `phase_a/<STAMP>/summary.md` comparing CLI vs API min/max/mean/non-zero plus initial hypotheses; mention identical device/dtype.
+- Update `docs/fix_plan.md` Attempts list with the new timestamp and Phase A completion notes once artifacts are ready.
 Pitfalls To Avoid:
-- Avoid reintroducing Python loops; keep structure-factor fixes vectorised.
-- Do not call `.item()` on tensors that should stay differentiable.
-- Stick to the mapped tests; skip `pytest tests/` until broader remediation resumes.
-- Always set `KMP_DUPLICATE_LIB_OK=TRUE` for torch runs.
-- Keep new tensors device/dtype neutral (`type_as` / `.to()` helpers) to protect GPU flows.
-- Leave existing artifacts intact; add new directories instead of overwriting prior attempts.
-- Align CLI semantics with `docs/development/c_to_pytorch_config_map.md` — no ad-hoc flags or shortcuts.
-- Document every executed command in `commands.txt` for provenance.
+- Do not shortcut artifact paths; follow `reports/2026-01-test-suite-triage/phase_d/<STAMP>/cli-defaults/phase_a/` exactly.
+- Keep device/dtype consistent between CLI and API runs; no accidental GPU toggle.
+- Preserve vectorization by avoiding ad-hoc script edits; this loop is evidence-only.
+- Respect Protected Assets listed in `docs/index.md` (e.g., `input.md`, `loop.sh`).
+- Do not delete or alter `debug_default_f.py`; treat it as read-only evidence.
+- Ensure `KMP_DUPLICATE_LIB_OK=TRUE` is set on every torch-invoking command.
+- Log attempt metadata (exit codes, runtimes) in `commands.txt` for each subtask.
+- Avoid running additional pytest modules; stick to the mapped selector.
+- Remember to sync timestamps/paths in `summary.md` and `docs/fix_plan.md`.
 Pointers:
-- docs/fix_plan.md:62
-- reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md:11
-- specs/spec-a-cli.md:163
-- tests/test_at_cli_002.py:28
-- src/nanobrag_torch/models/crystal.py:210
-- src/nanobrag_torch/config.py:514
-Next Up: `[DETERMINISM-001]` RNG determinism reproduction (`pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py`) once default_F passes.
+- plans/active/cli-defaults/plan.md — Phase A checklist and artifact policy.
+- docs/fix_plan.md:62 — `[CLI-DEFAULTS-001]` ledger entry.
+- tests/test_at_cli_002.py:28-63 — canonical CLI command arguments.
+- src/nanobrag_torch/__main__.py:1070-1180 — CLI simulator invocation path (for context only).
+- docs/debugging/debugging.md:24-91 — trace-first SOP framing Phase B.
+Next Up: Begin Phase B callchain tracing per `plans/active/cli-defaults/plan.md` once Phase A evidence is logged.
