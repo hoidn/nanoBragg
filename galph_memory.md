@@ -1893,3 +1893,8 @@
 - Refreshed `plans/active/vectorization.md` snapshot/Phase C4 to note D6/E gating so tricubic relaunch stays blocked until cleanup and full-frame validation finish.
 - Authored new `input.md` (Mode: Parity) instructing Ralph to execute `[VECTOR-PARITY-001]` Phase D6: strip simulator instrumentation, rerun `pytest --collect-only`, rerun the 512² ROI nb-compare into `reports/2026-01-vectorization-parity/phase_d/$STAMP/cleanup/`, and document corr/sum_ratio in `phase_d_summary.md`.
 - Expect Attempt bundle with cleanup artifacts + updated fix_plan entry before approving Phase E1 benchmark/pytest reruns.
+### 2026-01-07 (galph loop - Phase E validation kickoff)
+- Confirmed Ralph’s Attempt #16 (commit 9dd1c73d) removed NB_TRACE_SIM_F_LATT and preserved ROI parity; noted large artifact bundle but parity evidence sound.
+- Updated `docs/fix_plan.md` Active Focus + attempts to log D6 success and emphasise Phase E sweep; marked D6 as [D] in `plans/active/vectorization-parity-regression.md` and refreshed status snapshot to point at full-frame validation.
+- Authored `input.md` (Mode: Parity) directing Ralph to run the 4096² benchmark + nb-compare bundle and the high-resolution pytest into `reports/2026-01-vectorization-parity/phase_e/$STAMP/`, then summarise metrics in `phase_e_summary.md`.
+- Follow-up: Expect Phase E artifact bundle (benchmark_results.json, nb_compare summary, pytest log, phase_e_summary.md). Once validated, proceed with ledger updates (Phase E2) and unblock downstream vectorization plans.
