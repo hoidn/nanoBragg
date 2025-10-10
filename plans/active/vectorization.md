@@ -32,9 +32,9 @@ Exit Criteria: New logs stored under reports/2026-01-vectorization-refresh/phase
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Rerun regression suites | [ ] | `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_tricubic_vectorized.py -v` and `pytest tests/test_at_abs_001.py -v -k "cpu or cuda"` (guard CUDA with `torch.cuda.is_available()`). Store logs, pytest exit codes, and collection proof. |
-| B2 | Capture CPU/CUDA microbenchmarks | [ ] | `python scripts/benchmarks/tricubic_baseline.py --device cpu --device cuda --sizes 256 512 --repeats 200 --outdir reports/2026-01-vectorization-refresh/phase_b/<STAMP>/tricubic/`; repeat for absorption baseline. Record mean/std, compare against reports/2025-10-vectorization/phase_e/ and phase_f/. |
-| B3 | Summarise refresh results | [ ] | Draft summary.md noting deltas versus 2025-10 baselines (expect <=5% drift). Update docs/fix_plan.md [VECTOR-TRICUBIC-002] Attempt with findings and highlight if revectorization regressions reappear. |
+| B1 | Rerun regression suites | [D] | ✅ 2025-10-09 (ralph loop): Both suites passed. Tricubic: 16/16 tests passed (exit 0), duration ~2.31s. Absorption: All CPU+CUDA variants passed (exit 0). Logs: `reports/2026-01-vectorization-refresh/phase_b/20251010T013437Z/pytest/{tricubic.log,absorption.log,exit_codes.txt}`. |
+| B2 | Capture CPU/CUDA microbenchmarks | [D] | ✅ 2025-10-09 (ralph loop): All benchmarks completed. Tricubic CPU: 1447.83 μs/call (690.7 calls/sec), CUDA: 5682.14 μs/call (176.0 calls/sec, expected slower). Absorption CPU: 4.72ms/22.90ms (256²/512²), CUDA: 5.43ms/5.56ms (4.1x speedup @512²). Artifacts: `reports/2026-01-vectorization-refresh/phase_b/20251010T013437Z/benchmarks/{tricubic_cpu,tricubic_cuda,absorption_cpu,absorption_cuda}/{*.json,*.md}`. |
+| B3 | Summarise refresh results | [D] | ✅ 2025-10-09 (ralph loop): Summary at `reports/2026-01-vectorization-refresh/phase_b/20251010T013437Z/summary.md`. No performance drift >5% detected vs Phase E/F baselines. CUDA confirmed operational. Tricubic CPU-favored (cache locality), absorption GPU-favored (scaling). No blocking issues for Phase C. |
 
 ### Phase C - Gap Profiling And Prioritisation Relaunch
 Goal: Resume VECTOR-GAPS-002 Phase B using the fresh parity baseline to identify the highest-impact residual loops.

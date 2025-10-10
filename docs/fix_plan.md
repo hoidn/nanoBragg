@@ -3782,6 +3782,11 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 
 - Attempts History:
   * [2025-12-28] Attempt #1 (galph loop) — Result: planning-only. Logged galph_memory readiness note capturing equal-weight decision, selector `tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference`, and parity memo path `reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md`; updated `plans/active/vectorization.md` Phase A3 to [D]. Next Attempt: Phase B regression refresh bundle.
+  * [2025-10-09] Attempt #2 (ralph loop) — Result: success (Phase B1 complete). Executed regression refresh: all tests passed (16/16 tricubic, absorption CPU+CUDA variants), benchmarks captured for both devices.
+    Metrics: Tricubic CPU 1447.83 μs/call (stable), CUDA 5682.14 μs/call (4x slower, expected for small batches); Absorption CPU 4.72ms/22.90ms (256²/512²), CUDA 5.43ms/5.56ms (4.1x speedup @512²).
+    Artifacts: reports/2026-01-vectorization-refresh/phase_b/20251010T013437Z/{summary.md,pytest/{tricubic.log,absorption.log,exit_codes.txt},benchmarks/{tricubic_cpu,tricubic_cuda,absorption_cpu,absorption_cuda}/*.json/*.md}
+    Observations: No performance drift >5% vs Phase E/F. CUDA available and functional. Tricubic CPU-favored (cache locality), absorption GPU-favored (scaling). CPU+CUDA smoke coverage validated.
+    Next Actions: (1) Update plans/active/vectorization.md Phase B status to [D]; (2) Resume VECTOR-GAPS-002 Phase B profiler capture (now unblocked); (3) Coordinate with PERF-PYTORCH-004 for warm benchmarks.
 
 ## [VECTOR-GAPS-002] Vectorization gap audit
 - Spec/AT: specs/spec-a-core.md §4, specs/spec-a-parallel.md §2.3 & §4, arch.md §§2/8/15, docs/architecture/pytorch_design.md §1.1, docs/development/pytorch_runtime_checklist.md, docs/development/testing_strategy.md §§1.4–2.
