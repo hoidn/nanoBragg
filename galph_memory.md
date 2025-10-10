@@ -1848,3 +1848,8 @@
 - Authored new `input.md` (Mode: Parity) instructing Ralph to extend `scripts/debug_pixel_trace.py`, capture Py traces for the three pixels, and store artifacts under `reports/2026-01-vectorization-parity/phase_c/<STAMP>/` with commands/env metadata; added guard to pick an on-peak pixel next if everything stays zero.
 - Reminder: avoid creating `phase_c/unknown/` folders—`STAMP` env var must be set before trace runs.
 - Follow-up expectations: Ralph to deliver py_traces + summary + pytest collect log; supervisor to review numeric diffs and progress to Phase C3.
+### 2025-10-10 06:14 UTC (galph loop - Vectorization plan refresh)
+- Refreshed `plans/active/vectorization.md` into phased format (Phases A–G) emphasising Phase C parity gate + downstream implementation batches.
+- Updated `docs/fix_plan.md` `[VECTOR-TRICUBIC-002]` Next Actions to mirror new plan (await first_divergence, then profiler/backlog, then tricubic delegation).
+- Authored input.md (Mode: Parity) instructing Ralph to produce Phase C3 `first_divergence.md` using existing trace logs and `compare_c_python_traces.py`; artifacts go under `reports/2026-01-vectorization-parity/phase_c/$STAMP/`.
+- Follow-up: Expect next Ralph attempt to deliver divergence summary + supporting diffs; supervisor to review and decide on unlocking Phase D profiling.
