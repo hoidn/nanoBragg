@@ -1,0 +1,10 @@
+# Phase E5 PyTorch Tap 4 Execution Log
+Timestamp: 20251010T102827Z
+Commands executed:
+
+## Edge pixel (0,0)
+KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py --pixel 0 0 --tag edge --oversample 2 --taps f_cell --json --out-dir reports/2026-01-vectorization-parity/phase_e0/20251010T102752Z/py_taps
+
+## Centre pixel (2048,2048)
+KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py --pixel 2048 2048 --tag centre --oversample 2 --taps f_cell --json --out-dir reports/2026-01-vectorization-parity/phase_e0/20251010T102752Z/py_taps
+

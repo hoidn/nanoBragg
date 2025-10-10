@@ -1,0 +1,23 @@
+{
+  "tap_id": "f_cell_stats",
+  "pixel_coords": [
+    0,
+    0
+  ],
+  "oversample": 2,
+  "values": {
+    "total_lookups": 4,
+    "out_of_bounds_count": 0,
+    "zero_f_count": 0,
+    "mean_f_cell": 100.0,
+    "hkl_bounds": {
+      "h_min": -8,
+      "h_max": -8,
+      "k_min": 39,
+      "k_max": 39,
+      "l_min": -39,
+      "l_max": -39
+    }
+  },
+  "timestamp_utc": "20251010T102810Z"
+}
