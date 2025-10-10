@@ -1993,3 +1993,9 @@
 - Refreshed `docs/fix_plan.md` Next Actions to focus on Tap 5.1 PyTorch, Tap 5.1 C mirror, and Tap 5.2 bounds parity; synced `plans/active/vectorization.md` status to reflect new evidence queue.
 - Authored `input.md` (Mode: Parity) directing Ralph to extend `scripts/debug_pixel_trace.py` with an `hkl_subpixel` tap and capture the centre-pixel HKL audit bundle before we touch the C binary.
 - Follow-up: Expect Attempt logging under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/py_taps/` with `tap5_hkl_audit.md`. Next supervisor loop should review the PyTorch tap output, then delegate the C instrumentation (plan E13) and HKL bounds capture (E14).
+### 2026-01-11 (galph loop - Tap 5.1 C mirror prep)
+- Verified Ralph’s last two commits (Attempt #32/#33) land the PyTorch Tap 5.1 HKL audit; no regressions spotted.
+- Updated `docs/fix_plan.md` Next Actions to drop the completed PyTorch tap and emphasise C Tap 5.1 → Tap 5.2 → hypothesis refresh.
+- Marked `plans/active/vectorization-parity-regression.md` E12 as [D] with Attempt #32/#33 references and refreshed the status snapshot; `plans/active/vectorization.md` snapshot now reflects Tap 5 evidence through Attempt #33.
+- New `input.md` (Mode: Parity) directs Ralph to instrument `TRACE_C_TAP5_HKL`, capture edge/centre logs, and run pytest collect-only before tackling Tap 5.2.
+- Expect Attempt log delivering `$STAMP/c_taps/pixel_*_hkl.log` + summary; next supervisor pass should review the C tap output and queue the HKL bounds check.

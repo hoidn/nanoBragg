@@ -1,39 +1,36 @@
-Summary: Capture PyTorch Tap 5.1 per-subpixel HKL evidence so we can prove the centre pixel is wrongly defaulting to F_cell=default_F.
+Summary: Capture Tap 5.1 HKL taps from the C binary to mirror the new PyTorch evidence.
 Mode: Parity
-Focus: [VECTOR-PARITY-001] Restore 4096² benchmark parity
+Focus: VECTOR-PARITY-001 Restore 4096² benchmark parity
 Branch: feature/spec-based-2
-Mapped tests: none — evidence-only
-Artifacts: reports/2026-01-vectorization-parity/phase_e0/<STAMP>/py_taps/hkl_subpixel_*.json; reports/2026-01-vectorization-parity/phase_e0/<STAMP>/comparison/tap5_hkl_audit.md
-Do Now: [VECTOR-PARITY-001] Add the PyTorch `hkl_subpixel` tap and run `KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py --pixel 2048 2048 --oversample 2 --taps hkl_subpixel --json --out-dir $OUTDIR/py_taps --tag centre`.
-If Blocked: Log the obstacle in docs/fix_plan.md attempts, stash whatever JSON/logs you did capture under $OUTDIR, and stop—do not touch the C binary or run nb-compare until we regroup.
+Mapped tests: pytest --collect-only -q
+Artifacts: reports/2026-01-vectorization-parity/phase_e0/<STAMP>/c_taps/, reports/2026-01-vectorization-parity/phase_e0/<STAMP>/comparison/
+Do Now: Execute docs/fix_plan.md item [VECTOR-PARITY-001] Next Action 1 (Tap 5.1 C mirror); add the guarded `TRACE_C_TAP5_HKL` block, rebuild `golden_suite_generator/nanoBragg`, capture pixels (0,0) and (2048,2048) with `TRACE_C_TAP5_HKL=1`, then run pytest --collect-only -q.
+If Blocked: Capture the attempted instrumentation diff plus any compiler errors under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/attempt_log.md` and restore the binary to the previous TRACE_C_TAP5 state.
 Priorities & Rationale:
-- docs/fix_plan.md:68-76 — Next Actions #1-3 require the PyTorch HKL audit before instrumenting C.
-- plans/active/vectorization-parity-regression.md:70-93 — Phase E row E12 defines the tap schema and storage targets we must hit.
-- reports/2026-01-vectorization-parity/phase_e0/20251010T113608Z/comparison/intensity_pre_norm.md:10 — Shows the centre pixel default_F fallback we are validating.
-- specs/spec-a-core.md:232-240 — Normative contract for nearest-neighbour HKL lookup that our tap output must cite.
-- scripts/debug_pixel_trace.py:1-200 — Existing tap infrastructure to extend; mirror collect_f_cell_tap patterns.
+- docs/fix_plan.md:69 – Next Action 1 is the C Tap 5.1 mirror; completing it unblocks the HKL bounds check.
+- plans/active/vectorization-parity-regression.md:91 – Phase E13 requires a C-side schema identical to the PyTorch tap to compare HKL rounding.
+- plans/active/vectorization.md:18 – Phase D backlog stays blocked until Tap 5 evidence (now extending to C Tap 5.1) is archived.
+- specs/spec-a-core.md:232 – HKL fallback semantics demand proof that (0,0,0) is in range rather than default_F.
 How-To Map:
-- Export `STAMP=$(date -u +%Y%m%dT%H%M%SZ)` and `OUTDIR=reports/2026-01-vectorization-parity/phase_e0/${STAMP}`; create `$OUTDIR/py_taps`, `$OUTDIR/comparison`, and `$OUTDIR/commands.txt`.
-- Add a `collect_hkl_subpixel_tap` helper (parallel to `collect_f_cell_tap`) that logs per-subpixel fractional HKL, rounded `(h0,k0,l0)`, retrieved `F_cell`, and `out_of_bounds` booleans; keep tensors on the caller’s device/dtype.
-- Update tap routing so `--taps hkl_subpixel` calls the new helper and writes JSON files when `--json` is set; follow the existing schema conventions (tap_id, pixel coords, subpixels list).
-- Run the centre-pixel command listed above; append the exact command and env vars to `$OUTDIR/commands.txt`. If time allows, capture the edge pixel `(0,0)` with `--tag edge` for later comparisons.
-- Validate JSON structure via `python -m json.tool $OUTDIR/py_taps/*json` (or `jq`) before writing the comparison memo.
-- Summarise findings in `$OUTDIR/comparison/tap5_hkl_audit.md` (centre vs optional edge), quoting the spec clause and calling out whether `out_of_bounds` stayed `True` on PyTorch.
-- Record Attempt details in docs/fix_plan.md under `[VECTOR-PARITY-001]`, referencing the new bundle path and command snippets; leave plan rows E12-E14 untouched until C taps land.
+- export STAMP=$(date -u +%Y%m%dT%H%M%SZ); OUTDIR=reports/2026-01-vectorization-parity/phase_e0/$STAMP
+- mkdir -p "$OUTDIR"/c_taps "$OUTDIR"/comparison "$OUTDIR"/env
+- Edit `golden_suite_generator/nanoBragg.c` HKL lookup block (~lines 3300-3355) to wrap the existing Tap 5 instrumentation with `#ifdef TRACE_C_TAP5_HKL` (new guard) logging fractional HKL (double), rounded `(h0,k0,l0)` ints, `F_cell`, `out_of_bounds`, and raw structure-factor table indices. Follow the formatting from Attempt #30 (`TRACE_C_TAP5`) but reuse identical token names emitted by the PyTorch tap JSON.
+- Rebuild: `make -C golden_suite_generator nanoBragg`
+- Capture edge pixel: `TRACE_C_TAP5_HKL=1 ./golden_suite_generator/nanoBragg -cell 100 100 100 90 90 90 -lambda 0.5 -distance 500 -detpixels 4096 -pixel 0.05 -mosflm -oversample 2 -default_F 100 -N 5 -trace_pixel 0 0 -roi 0 0 0 0 -floatfile /tmp/tap5_edge.bin > "$OUTDIR"/c_taps/pixel_0_0_hkl.log 2>&1`
+- Capture centre pixel: same command with `-trace_pixel 2048 2048 -roi 2048 2048 2048 2048` and log to `pixel_2048_2048_hkl.log`
+- Copy the log excerpts into structured JSON (matching PyTorch schema) under `$OUTDIR/c_taps/` and document findings in `$OUTDIR/comparison/tap5_hkl_c_summary.md`
+- Record environment metadata: `git rev-parse HEAD > "$OUTDIR"/env/git_sha.txt`; `python - <<'PY'` block dumping platform/python/torch versions into `$OUTDIR/env/trace_env.json`
+- Run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q | tee "$OUTDIR"/comparison/pytest_collect.log`
 Pitfalls To Avoid:
-- Do not modify production HKL lookup logic; restrict changes to tap plumbing.
-- Leave the C binary alone this loop—no new TRACE_C guards or rebuilds.
-- Keep dtype/device neutrality when building tap payloads; no forced `.cpu()` or float64-only tensors.
-- Avoid rerunning older stamps; every artifact must live under the fresh `$STAMP` directory.
-- Don’t run pytest or nb-compare—this is an evidence-only turn.
-- Ensure `KMP_DUPLICATE_LIB_OK=TRUE` prefixes every Python invocation.
-- Keep commands history exact; no rewriting `commands.txt` after execution.
-- Respect Protected Assets from docs/index.md; no file moves or deletes.
-- Validate JSON before exiting so the next loop isn’t blocked on format errors.
+- Do not leave TRACE_C_TAP5_HKL instrumentation active without the guard macro.
+- Keep commands reproducible; log every CLI invocation in `commands.txt`.
+- Do not overwrite prior Tap 5 artifacts—use a fresh STAMP directory.
+- Avoid touching PyTorch code paths this loop; parity evidence only.
+- Maintain MOSFLM convention parameters exactly as provided.
+- Keep generated binaries untracked; only logs/metadata go in reports/.
 Pointers:
-- docs/fix_plan.md:68-76
-- plans/active/vectorization-parity-regression.md:70-93
-- reports/2026-01-vectorization-parity/phase_e0/20251010T113608Z/comparison/intensity_pre_norm.md:10
-- specs/spec-a-core.md:232-240
-- scripts/debug_pixel_trace.py:1-200
-Next Up: Instrument the C-side `TRACE_C_TAP5_HKL` mirror (Phase E13) once the PyTorch tap output is archived.
+- docs/fix_plan.md:69
+- plans/active/vectorization-parity-regression.md:91
+- specs/spec-a-core.md:232
+- plans/active/vectorization.md:18
+Next Up: Prepare Tap 5.2 HKL bounds parity capture once the C Tap 5.1 logs land.
