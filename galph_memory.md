@@ -1,3 +1,9 @@
+### 2026-01-06 (galph loop - Phase C1 trace prep handoff)
+- Reviewed Phase C trace plan vs fix_plan; resolved conflict by updating trace_plan.md to reinforce extending `scripts/debug_pixel_trace.py` instead of spawning a new script.
+- No new parity evidence collected; focus remains on `[VECTOR-PARITY-001]` Phase C1 C-trace capture.
+- Authored input.md (Mode: Parity) directing Ralph to instrument `golden_suite_generator/nanoBragg` with TRACE_C taps for pixels (2048,2048), (1792,2048), (4095,2048), rebuild the binary, record logs under `reports/2026-01-vectorization-parity/phase_c/<STAMP>/c_traces/`, and run `pytest --collect-only -q` after Python trace edits.
+- Follow-up: Expect Attempt update with commands.txt, trace_env.json, and three TRACE_C logs; supervisor to review earliest divergence before moving to Phase C2 PyTorch traces.
+
 ### 2026-01-06 (galph loop - VECTOR-PARITY Phase C instrumentation handoff)
 - Repo already synced; reviewed required spec/arch/testing docs and active plans before selection. Coin flip = heads → audited Ralph commits 0548f356 (ROI parity bundle) and b401d45f (Phase C trace plan). ROI commit added tracked `reports/…/roi_compare` artifacts; reinforced keep-future-artifacts-untracked guidance in plan/input.
 - Confirmed trace_plan open questions: approved pixel set (2048,2048), (1791,2048), (4095,2048); aggregate tap scope only; reuse `scripts/debug_pixel_trace.py`.
