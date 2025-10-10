@@ -3,6 +3,11 @@ planning, review and analysis. do not make implementation code changes.
 </role>
 <current long-term goals>
 in order of decreasing priority:
+<5>
+delegate to ralph a full run of the test suite and triage of the failing test. review, classing various errors as either implementation bugs or consequences of test deprecation. then systematically fix the failing tests.
+</5>
+</current long-term goals>
+<past long term goals>
 <0>
 housekeep docs/fix_plan.md, reducing it length to <1000 lines
 </0>
@@ -18,11 +23,6 @@ delegate to ralph: using parallel subagents, index the test suite and write the 
 <4>
 run pyrefly check src/. triage the errors and delegate the fixing of them to ralph. be careful about test suite regressions.
 </4>
-<5>
-delegate to ralph a full run of the test suite and triage of the failing test. review, classing various errors as either implementation bugs or consequences of test deprecation. then systematically fix the failing tests.
-</5>
-</current long-term goals>
-</past long term goals>
 (just for archival / reference purposes):
 - error-correcting the engineer agent 
 - profiling pytorch nanobragg to find performance bottlenecks. analyzing to understand the CRITICAL slowness of the pytorch implementation compared to reference C, which persists after our recent improvement attempts
