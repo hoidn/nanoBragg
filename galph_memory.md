@@ -1817,3 +1817,9 @@
 - Refreshed `docs/fix_plan.md` `[VECTOR-PARITY-001]` status/Next Actions to require a written validation-path memo (options A–C) before further parity runs; status now reflects Phase B3 as the blocker.
 - Rewrote `input.md` (Mode: Docs) directing Ralph to author the Phase B3 validation-path memo under `reports/2026-01-vectorization-parity/phase_b/$STAMP/` summarising options and recommending a path.
 - Follow-up: Expect Attempt #6 documenting the memo; supervisor to review recommendation and, if approved, unblock Phase B4 ROI checks and trace prep.
+### 2026-01-05 (galph loop - VECTOR-PARITY Phase B4 wrap)
+- Repo already up to date; reviewed required spec/arch/testing docs plus active vectorization plans. Coin flip = tails (skipped commit audit).
+- Focused on `[VECTOR-PARITY-001]` Phase B4b: authored `reports/2026-01-vectorization-parity/phase_b/20251010T035732Z/roi_compare/roi_scope.md` summarising full-frame vs ROI metrics, spec thresholds, hypotheses, and follow-up recommendations.
+- Updated `plans/active/vectorization-parity-regression.md` (B4b → [D]) and refreshed `docs/fix_plan.md` Next Actions to pivot toward Phase C trace staging; Attempt #7 notes now reference the completed ROI scope doc.
+- Replaced `input.md` (Mode: Docs) directing Ralph to draft the Phase C trace plan (`reports/2026-01-vectorization-parity/phase_c/<STAMP>/trace_plan.md`) before any instrumentation.
+- Follow-up: Expect new Attempt logging with trace_plan.md; supervisor to review Phase C staging output, then greenlight C/Py trace capture.

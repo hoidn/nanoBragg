@@ -4012,10 +4012,10 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 - Plan Reference: `plans/active/vectorization-parity-regression.md`
 - Reproduction (C & PyTorch): `NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts`
 - First Divergence (if known): Deterministic correlation collapse to 0.721175 (cold & warm) across `[VECTOR-GAPS-002]` Attempts #3–#8 despite cache speedups. Affected artifacts: `reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/benchmark_results.json` (git `ac94e90`) and `reports/2026-01-vectorization-gap/phase_b/20251010T022314Z/benchmark_results.json` (git `22ea5c18`). Last known-good run `reports/benchmarks/20251009-161714/benchmark_results.json` shows correlation 0.999998 and sum_ratio 0.9999876 but lacks recorded git SHA. VECTOR-GAPS-002 Phase B2/B3 and PERF-PYTORCH-004 remain blocked until correlation ≥0.999 and |sum_ratio−1| ≤5e-3 are restored.
-- Next Actions (2026-01-04 refresh — execute Phase B4 ROI scope before trace work):
- 1. **Phase B4a** — Run `nb-compare --resample --roi 1792 2304 1792 2304 --outdir reports/2026-01-vectorization-parity/phase_b/<STAMP>/roi_compare -- -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05` (ROI 512×512). Capture metrics.json, PNGs, stdout/stderr, and record correlation/sum_ratio deltas; optionally repeat with 1024×1024 ROI if resources allow.
- 2. **Phase B4b** — Draft `roi_scope.md` in the same bundle summarising ROI size vs correlation/peak offsets, linking directly to nb-compare outputs and spec thresholds.
- 3. **Phase C staging** — Once ROI scope evidence is stored, outline the parallel trace plan (question, ROI, entry point) referencing `docs/debugging/debugging.md`; do not start tracing until supervisor review.
+- Next Actions (2026-01-04 refresh — Phase B4 evidence captured; proceed to trace staging):
+ 1. **Phase C staging** — Draft the parallel trace question (focus pixel, suspected subsystem) referencing `docs/debugging/debugging.md`, and outline tap points under `reports/2026-01-vectorization-parity/phase_c/<STAMP>/trace_plan.md`.
+ 2. **Optional ROI sweep** — If correlation outside the central ROI must be characterised further, schedule additional 1024² / edge ROI captures (document results under a new `<STAMP>/roi_compare/`).
+ 3. **Phase C1 instrumentation prep** — Identify the minimum C trace edits needed (target variables: S, F_latt, normalization factors) and ensure `golden_suite_generator/nanoBragg` rebuild instructions are ready before delegating to Ralph.
 - Attempts History:
   * [2025-12-30] Attempt #0 (galph loop) — Result: planning baseline. Documented repeated 0.721175 correlation across `reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/` and `20251010T022314Z/`, authored `plans/active/vectorization-parity-regression.md`, and added this fix_plan entry. No code changes. Next step: Phase A artifact audit and Attempt #1 with consolidated evidence.
   * [2025-10-09] Attempt #1 (ralph loop) — Result: success (Phase A1–A3 complete). Generated evidence bundle consolidating good vs failing benchmark runs.
@@ -4174,13 +4174,10 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
         4. Full-frame comparison may include regions with zero intensity (padding/background) skewing correlation
       - **PHYSICAL CORRECTNESS VALIDATED**: Core physics (scattering vectors, structure factors, lattice factors, polarization) is correct in the ROI where Bragg peaks concentrate
       - **PHASE B4a EXIT CRITERIA MET**: ROI parity check passed with flying colors (correlation≈1.0 >> 0.95 threshold)
-    Next Actions (Phase B4b — ROI scope analysis):
-      1. Create `roi_scope.md` documenting the full-frame vs ROI correlation discrepancy (0.721 full vs 1.000 ROI)
-      2. Formulate hypothesis: edge effects or zero-padding artifacts in full-frame comparison; core physics valid in signal-rich ROI
-      3. **DECISION NEEDED**: Should we consider the 4096² "regression" resolved (physics correct in ROI) or investigate full-frame edge behavior?
-      4. If edge investigation required, run additional ROI sweeps at different positions (corners, edges) to scope the 0.721 zone
-      5. **UNBLOCK DOWNSTREAM**: VECTOR-GAPS-002 Phase B2/B3 and PERF-PYTORCH-004 can potentially proceed since core physics parity is validated (0.999999 on ROI)
-      6. Update plan status in `plans/active/vectorization-parity-regression.md` Phase B4a → [D] (done), prepare Phase B4b or decide to skip to Phase E if full-frame investigation deemed unnecessary
+    Follow-Up (Phase C trace staging):
+      1. Documented ROI scope in `reports/2026-01-vectorization-parity/phase_b/20251010T035732Z/roi_compare/roi_scope.md`; share summary during next supervisor loop.
+      2. Queue Phase C plan to capture matched C/Py traces (identify representative pixel(s) and instrumentation scope).
+      3. Optional: schedule expanded ROI sweeps (1024² center + edge cases) if additional evidence is required before tracing.
 
 ---
 

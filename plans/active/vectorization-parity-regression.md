@@ -38,7 +38,7 @@ Exit Criteria: New evidence bundle under `reports/2026-01-vectorization-parity/p
 | B3d | Execute targeted pytest (expected FAIL) | [D] | ✅ 2025-10-10 (Attempt #6) — Captured failure evidence in `reports/2026-01-vectorization-parity/phase_b/20251010T034152Z/pytest_highres.log` (corr=0.7157, 50/50 peak matches within ≤1.0 px, runtime ≈5.8 s). |
 | B3e | Update ledgers with Option A progress | [D] | ✅ 2025-10-10 (Attempt #6) — Logged Attempt #6 in `docs/fix_plan.md` with metrics/artifact paths and refreshed this plan status; `summary.md` notes support downstream ROI tasks. |
 | B4a | ROI sanity sweep via nb-compare | [D] | ✅ 2025-10-10 (Attempt #7) — `nb-compare --resample --roi 1792 2304 1792 2304` completed with **perfect correlation 0.999999999** (≈1.0) and sum_ratio 0.999987. Artifacts: `reports/2026-01-vectorization-parity/phase_b/20251010T035732Z/roi_compare/`. **Critical finding**: ROI shows perfect parity, contradicting full-frame 0.721 → suggests edge/boundary artifact, not physics bug. |
-| B4b | Summarise ROI findings | [ ] | Compile `roi_scope.md` detailing correlation vs ROI size, peak offsets, and hypotheses; reference spec thresholds and store alongside metrics.json/PNGs. Use results to gate Phase C trace focus. |
+| B4b | Summarise ROI findings | [D] | Completed `reports/2026-01-vectorization-parity/phase_b/20251010T035732Z/roi_compare/roi_scope.md` summarising full-frame vs ROI metrics, spec thresholds, and next-ROI recommendations; ready to brief Phase C trace staging. |
 
 ### Phase C — Divergence Localisation (Trace & Configuration)
 Goal: Identify the first numeric divergence between C and PyTorch for the failing configuration, following the parallel trace SOP.

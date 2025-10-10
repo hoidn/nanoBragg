@@ -1,37 +1,35 @@
-Summary: Capture ROI nb-compare metrics for the 4096² parity regression (Phase B4a) to unblock trace work.
-Mode: Parity
+Summary: Draft the Phase C trace plan for the 4096² parity regression, converting Phase C1–C3 into a concrete trace question + tap point checklist.
+Mode: Docs
 Focus: VECTOR-PARITY-001 / Restore 4096² benchmark parity
 Branch: feature/spec-based-2
 Mapped tests: none — evidence-only
-Artifacts: reports/2026-01-vectorization-parity/phase_b/<STAMP>/roi_compare/
-Do Now: VECTOR-PARITY-001 Phase B4a — run `NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE nb-compare --resample --roi 1792 2304 1792 2304 --outdir reports/2026-01-vectorization-parity/phase_b/$(date -u +%Y%m%dT%H%M%SZ)/roi_compare -- -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05`
-If Blocked: Capture the failing command output (stdout/stderr) plus `nb-compare --help` under the intended reports/<STAMP>/roi_compare/ directory and note the blocker in summary.md; do not pivot to other tests.
+Artifacts: reports/2026-01-vectorization-parity/phase_c/<STAMP>/trace_plan.md
+Do Now: VECTOR-PARITY-001 Phase C staging — create `reports/2026-01-vectorization-parity/phase_c/$(date -u +%Y%m%dT%H%M%SZ)/trace_plan.md` outlining the trace question, chosen pixel/ROI, instrumentation scope, and tap-point checklist per `plans/active/vectorization-parity-regression.md` Phase C.
+If Blocked: Capture the obstacle and any partial notes in `reports/2026-01-vectorization-parity/phase_c/<STAMP>/trace_plan.md` (mark as BLOCKED at top) and log the blocker in fix_plan attempt summary; do not pivot to implementation.
 Priorities & Rationale:
-- spec-a-parallel.md:93 — high-resolution AT-012 ROI thresholds we must quantify.
-- plans/active/vectorization-parity-regression.md:40 — Phase B4a tasks demand nb-compare ROI evidence before trace work.
-- docs/fix_plan.md:4015 — Next Actions now center on ROI sweep + trace staging.
-- docs/development/testing_strategy.md:76 — reuse canonical golden-data commands; nb-compare is the approved parity tool.
-- docs/debugging/debugging.md:15 — trace SOP requires ROI context; ROI metrics guide the upcoming callchain.
+- plans/active/vectorization-parity-regression.md:52-74 — Phase C tasks demand a trace question and tap-point plan before code instrumentation.
+- docs/fix_plan.md:4015-4032 — Next Actions now call for Phase C staging after ROI scope.
+- docs/debugging/debugging.md:15-60 — Parallel trace SOP we must follow; plan should cite entry→sink variables.
+- specs/spec-a-parallel.md:90-118 — AT-012 ROI thresholds inform pixel/ROI selection for the trace.
+- reports/2026-01-vectorization-parity/phase_b/20251010T035732Z/roi_compare/roi_scope.md — Use these findings to justify ROI choice and edge hypotheses.
 How-To Map:
-- From repo root: `export NB_C_BIN=./golden_suite_generator/nanoBragg`
-- Run `STAMP=$(date -u +%Y%m%dT%H%M%SZ)` then `OUTDIR=reports/2026-01-vectorization-parity/phase_b/$STAMP/roi_compare`
-- `mkdir -p "$OUTDIR"`
-- `KMP_DUPLICATE_LIB_OK=TRUE nb-compare --resample --roi 1792 2304 1792 2304 --outdir "$OUTDIR" -- -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05`
-- After run: copy nb-compare stdout to `$OUTDIR/metrics.log`, ensure `summary.json`/PNGs land in same folder, then draft `$OUTDIR/summary.md` with correlation + sum_ratio values and mention if a 1024² ROI rerun happened.
+- From repo root: `STAMP=$(date -u +%Y%m%dT%H%M%SZ)` and `OUTDIR=reports/2026-01-vectorization-parity/phase_c/$STAMP`.
+- `mkdir -p "$OUTDIR"` then `cat <<'MD' > "$OUTDIR"/trace_plan.md` to draft the document.
+- Include sections: **Question & Initiative Context**, **Target ROI & Pixel Selection** (cite ROI metrics), **Instrumentation Scope** (C trace edits + PyTorch script hooks), **Tap Points & Owners**, **Expected Outputs & Storage**, **Open Questions / Risks**.
+- Reference spec clauses and plan rows in-line so the supervisor can cross-check easily.
 Pitfalls To Avoid:
-- Do not run `pytest` suites — `test_high_resolution_variant` currently fails by design.
-- Keep ROI bounds exactly `1792 2304 1792 2304`; double-check order is slow,fast per spec.
-- Ensure `NB_C_BIN` points at `./golden_suite_generator/nanoBragg`; the frozen binary may drift.
-- Leave `reports/` artifacts uncommitted; reference them only in fix_plan attempts.
-- Preserve Protected Assets; no edits to docs/index.md or CLAUDE.md.
-- Keep `nb-compare` command with `--` separator; dropping it will ignore detector params.
-- Monitor disk usage; 4096² outputs are large — delete temporary files outside `$OUTDIR`.
-- Record SHA256 checksums only if new binaries created; none expected this run.
-- Stay on default dtype/device; no `.cpu()` shims or CUDA toggles unless instructed.
+- Do not start editing production code or instrumentation until the plan is signed off.
+- Keep ROI indices in (slow, fast) order; reference central ROI 1792–2304 unless justifying alternatives.
+- Cite the exact command templates (C + PyTorch) you expect to run; no ad-hoc args.
+- Avoid duplicating large trace logs in git; the plan should refer to future artifact locations only.
+- Preserve Protected Assets (`docs/index.md`, `CLAUDE.md`, `input.md`).
+- Stay device/dtype neutral in proposed scripts; mention `KMP_DUPLICATE_LIB_OK=TRUE` in plan.
+- Note NB_C_BIN precedence (`./golden_suite_generator/nanoBragg`).
+- Leave TODOs explicit if something requires supervisor confirmation.
 Pointers:
-- plans/active/vectorization-parity-regression.md:32-41 — Phase B table and ROI tasks.
-- docs/fix_plan.md:4015-4032 — Next Actions + expectations for ROI bundle.
-- specs/spec-a-parallel.md:93 — AT-012 high-res acceptance thresholds.
-- docs/development/testing_strategy.md:76-104 — canonical golden-data commands and parity tooling.
-- docs/debugging/debugging.md:15-35 — trace-first methodology we prep for after ROI metrics.
-Next Up: Phase B4b — summarise ROI scope in `roi_scope.md` once metrics land.
+- plans/active/vectorization-parity-regression.md:52-74 — Phase C checklist.
+- docs/debugging/debugging.md:21-84 — Trace workflow details.
+- docs/development/testing_strategy.md:52-105 — nb-compare + acceptance thresholds.
+- reports/2026-01-vectorization-parity/phase_b/20251010T035732Z/roi_compare/roi_scope.md — Latest ROI analysis feeding trace scope.
+- docs/development/pytorch_runtime_checklist.md:1-120 — Runtime guardrails to cite in trace plan.
+Next Up: Optionally schedule 1024² ROI parity capture to map edge behavior before Phase C instrumentation.
