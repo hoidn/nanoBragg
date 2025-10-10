@@ -43,8 +43,8 @@ Exit Criteria: `triage_summary.md` capturing classification table; fix_plan upda
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Create triage worksheet | [ ] | Draft `triage_summary.md` with table: `Test Node | Failure Type | Root Cause Hypothesis | Category (Bug/Deprecation/Config) | Next Action | Owner`. Populate initial entries from `failures_raw.md`. |
-| C2 | Determine category for each failure | [ ] | Use logs + specs to label each test. For uncertain cases, flag `Needs Investigation` with reference to spec/arch section. |
+| C1 | Create triage worksheet | [D] | Attempt #3 → `reports/2026-01-test-suite-triage/phase_c/20251010T134156Z/triage_summary.md` captures classification table + context. |
+| C2 | Determine category for each failure | [P] | All 34 observed failures classified as implementation bugs (triage summary §Classification Table). Remaining ~172 unexecuted tests still pending full-suite rerun. |
 | C3 | Align with fix_plan | [ ] | For each bug-classified failure, either reference existing fix_plan item or create sub-task bullet under `[TEST-SUITE-TRIAGE-001]` (or spawn new IDs). For deprecation candidates, document rationale and propose retirement steps (requires spec update). |
 | C4 | Capture blockers & next steps | [ ] | Append "Pending Actions" section to `triage_summary.md` listing tasks to delegate (e.g., targeted fixes, doc updates). Update fix_plan and, if needed, corresponding plans/active/ documents. |
 

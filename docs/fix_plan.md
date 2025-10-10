@@ -30,10 +30,11 @@
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.
   * [2025-10-10] Attempt #2 — Result: ⚠️ partial (Phase B timeout). Full suite execution reached ~75% completion (520/692 tests) before 10-minute timeout. Captured 34 failures across determinism (6), sourcefile handling (6), grazing incidence (4), detector geometry (5), debug/trace (4), CLI flags (3), and others. Runtime: 600s. Exit: timeout. Artifacts: `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/{logs/pytest_full.log,failures_raw.md,summary.md,commands.txt}`. junit XML may be incomplete. Remaining 172 tests (~25%) not executed. Observations: Large detector parity tests and gradient checks likely contributors to timeout. Recommendation: split suite execution or extend timeout to 30-60min for complete run.
+  * [2025-10-10] Attempt #3 — Result: 📊 analysis (Phase C1). Classified all 34 observed failures as implementation bugs using `reports/2026-01-test-suite-triage/phase_c/20251010T134156Z/triage_summary.md`; no new commands executed (analysis derived from Phase B artifacts). Flagged remaining ~172 tests as coverage gap pending extended Phase B rerun. Next: align clusters C1–C14 with fix-plan entries and assign owners/next steps.
 - Next Actions:
-  1. Execute Phase B full-suite run with fresh timestamped bundle (`reports/2026-01-test-suite-triage/phase_b/<STAMP>/` capturing logs + junit XML).
-  2. Extract failure inventory into `failures_raw.md` and update Attempt history with runtime + failure counts.
-  3. Launch Phase C triage worksheet (classify failures, prep `triage_summary.md`) before resuming paused initiatives.
+  1. Schedule Phase B rerun with ≥30 min budget (or split suite by module) to execute the remaining ~172 tests; capture logs + junit XML under a new timestamped bundle.
+  2. Complete Phase C3/C4 by mapping clusters C1–C14 to fix-plan entries (spawn new IDs for determinism, debug trace, dual runner, detector config) and append owners/next actions inside `triage_summary.md`.
+  3. Outline Phase D remediation handoff once coverage + mapping are in place (draft `handoff.md` with ordered priorities and selectors).
 - Exit Criteria:
   - `triage_summary.md` classifies every failing test (bug vs deprecation vs config).
   - `handoff.md` published with remediation priorities and reproduction commands.

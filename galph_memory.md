@@ -2030,3 +2030,10 @@
 - Updated `docs/fix_plan.md` Next Actions to concentrate on Phase B full-suite run → failure inventory → Phase C triage prep.
 - Rewrote `input.md` directing Ralph to execute Phase B canonical command (`pytest tests/ -v --durations=25 --maxfail=0`) with new timestamped artifact bundle and `failures_raw.md` summary.
 - Follow-up: Expect Attempt #2 under `[TEST-SUITE-TRIAGE-001]` delivering Phase B logs (`reports/2026-01-test-suite-triage/phase_b/<STAMP>/`) plus failure inventory; next supervisor iteration should review artifacts and script Phase C triage worksheet.
+
+### 2026-01-12 (galph loop - Test suite triage Phase C prep)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase C triage (Action: Review/housekeeping, Mode: Docs).
+- Added triage classification bundle `reports/2026-01-test-suite-triage/phase_c/20251010T134156Z/triage_summary.md` (cluster table + follow-ups). No new commands executed.
+- Updated `plans/active/test-suite-triage.md` Phase C rows (C1 → [D], C2 → [P]) and `docs/fix_plan.md` Attempt #3 + refreshed Next Actions to require cluster→fix-plan mapping.
+- Authored input.md (Docs mode) directing Ralph to complete Phase C3/C4 mapping via placeholder fix-plan entries and pending-actions table.
+- Next supervisor check: ensure Ralph records cluster ownership + placeholder IDs, then decide on Phase B rerun strategy.
