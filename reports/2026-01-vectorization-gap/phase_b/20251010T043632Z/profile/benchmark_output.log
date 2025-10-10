@@ -1,0 +1,4 @@
+usage: benchmark_detailed.py [-h] [--sizes SIZES] [--iterations ITERATIONS]
+                             [--device DEVICE] [--dtype DTYPE] [--profile]
+                             [--keep-artifacts] [--disable-compile]
+benchmark_detailed.py: error: unrecognized arguments: --outdir reports/2026-01-vectorization-gap/phase_b/20251010T043632Z/profile/

@@ -1,0 +1,16 @@
+APPEND to [VECTOR-TRICUBIC-002] Attempts History (after Attempt #2):
+
+  * [2025-10-10] Attempt #3 — Result: failed (Phase C1 profiler).
+    Metrics: corr_warm=0.721175 ❌ (threshold ≥0.999), corr_cold=0.721175, C_time=0.781s, Py_warm=0.657s, speedup_warm=1.19×, cache_speedup=72607.7× (setup <50ms ✓).
+    Artifacts: `reports/2026-01-vectorization-gap/phase_b/20251010T043632Z/{summary.md,profile_4096x4096/trace.json,benchmark_results.json,benchmark_stdout.log}`.
+    Observations: Parity regression confirmed—profiler evidence **CANNOT** be used for Phase C2/C3 until `[VECTOR-PARITY-001]` resolves full-frame correlation. torch.compile operational (warm speedup 1.19×). Cache effectiveness verified (72607.7× setup speedup). Physics correctness (corr ≥0.999) must be restored before vectorization hotspot analysis.
+    Next Actions: Block Phase C2/C3; defer to `[VECTOR-PARITY-001]` Phase C trace comparison (pixels: 2048,2048 / 1791,2048 / 4095,2048); rerun profiler capture after parity fix validated.
+
+UPDATE Observations/Hypotheses (add):
+  - Phase C1 profiler captured but corr=0.721175 ❌ confirms upstream parity regression blocking vectorization work.
+  - Cache effectiveness (72607.7×) and torch.compile operational, but physics correctness must be restored first.
+
+UPDATE Next Actions (replace all 3):
+  1. **BLOCKED:** Phase C1 profiler evidence invalid (corr=0.721175 ❌). Do NOT proceed with Phase C2/C3 hotspot mapping until parity ≥0.999.
+  2. After `[VECTOR-PARITY-001]` Phase C completes and restores corr≥0.999, rerun: `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts`
+  3. Only then execute Phase C2 loop inventory mapping and Phase C3 prioritised backlog drafting per original plan.
