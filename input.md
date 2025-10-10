@@ -1,33 +1,34 @@
-Summary: Capture the 2026 failure classification bundle (triage ledger + follow-up table) so remediation sequencing can resume.
-Mode: Docs
-Focus: [TEST-SUITE-TRIAGE-001] Full pytest run and triage
+Summary: Apply the detector cache dtype fix and prove AT-013/024 progress without dtype crashes.
+Mode: Parity
+Focus: [DTYPE-NEUTRAL-001] dtype neutrality guardrail
 Branch: feature/spec-based-2
-Mapped tests: none — evidence-only
-Artifacts: reports/2026-01-test-suite-triage/phase_f/<STAMP>/
-Do Now: [TEST-SUITE-TRIAGE-001] triage refresh — create triage_summary.md, cluster_deltas.md, and pending_actions.md in reports/2026-01-test-suite-triage/phase_f/$STAMP/, using the 49-node failure list from phase_e/20251010T180102Z.
-If Blocked: write reports/2026-01-test-suite-triage/phase_f/$STAMP/blocked.md summarising the snag (include attempted commands), update docs/fix_plan.md Attempt history with the blockage, then stop.
+Mapped tests: tests/test_at_parallel_013.py; tests/test_at_parallel_024.py; tests/test_detector_geometry.py
+Artifacts: reports/2026-01-test-suite-triage/phase_d/<STAMP>/dtype-neutral/phase_d/
+Do Now: [DTYPE-NEUTRAL-001] Phase D1–D4 — implement the 4-line `Detector` cache dtype fix, then run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py --maxfail=0 --durations=10 --tb=short`
+If Blocked: If the fix location is unclear, rerun the baseline failure (`pytest -v tests/test_at_parallel_013.py --maxfail=1 --tb=short`) and save the log to phase_d/baseline/ for inspection before editing.
 Priorities & Rationale:
-- plans/active/test-suite-triage.md:11 highlights that the 2026 full-suite rerun is complete and only the classification refresh remains before coordination restarts.
-- plans/active/test-suite-triage.md:82-91 spells out the outstanding worksheet, ownership, and pending-actions deliverables.
-- docs/fix_plan.md:45-52 moves the Next Actions focus to staging the phase_f bundle and logging Attempt #8.
-- reports/2026-01-test-suite-triage/phase_e/20251010T180102Z/failures_raw.md:1-60 lists the exact 49 failures the refresh must classify.
+- plans/active/dtype-neutral.md:40 — Phase D1–D4 require the dtype-coerced cache before determinism work can resume.
+- docs/fix_plan.md:520 — Active Next Actions elevate this fix as the gate to unblock `[DETERMINISM-001]`.
+- reports/2026-01-test-suite-triage/phase_d/20251010T173558Z/dtype-neutral/phase_b/summary.md — Confirms the 4-line `.to(..., dtype=self.dtype)` change scope.
+- reports/2026-01-test-suite-triage/phase_d/20251010T174636Z/dtype-neutral/phase_c/tests.md — Authoritative validation commands and artifact policy.
+- docs/development/testing_strategy.md#14-pytorch-device--dtype-discipline — Guardrail demanding CPU/GPU dtype neutrality.
 How-To Map:
-- Export `STAMP=$(date -u +%Y%m%dT%H%M%SZ)` and create `ROOT=reports/2026-01-test-suite-triage/phase_f/$STAMP`; run `mkdir -p "$ROOT"`.
-- Copy the prior worksheet: `cp reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/triage_summary.md "$ROOT"/triage_summary.md` and update the counts/annotations so C1 (CLI defaults) is marked cleared while the remaining clusters reflect the 49 current failures.
-- Generate `cluster_deltas.md`: tabulate Attempt #5 vs Attempt #7 counts (use the failure list + previous table) and note any cluster ownership changes; include a section for newly resolved items.
-- Author `pending_actions.md` with one row per cluster (owner, priority, reproduction command, expected artifact). Ensure each entry links back to the relevant fix-plan ID.
-- Record provenance: append a short `commands.txt` (copy commands used above), and update docs/fix_plan.md attempts with the new STAMP + artifact paths once the docs are in place.
+- Edit `src/nanobrag_torch/models/detector.py` so every cache `.to(self.device)` call (lines ~762-777) specifies `dtype=self.dtype`; invalidate caches if dtype changes.
+- After edits, run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py --maxfail=0 --durations=10 --tb=short | tee phase_d_primary_validation.log` and archive under `primary/`.
+- Run regression guard: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_geometry.py --durations=10 --tb=short | tee phase_d_regression_check.log` (store under `secondary/`).
+- If CUDA available, run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v -m gpu_smoke --tb=short | tee phase_d_gpu_smoke.log` (store under `tertiary/`).
+- Summarize results in `reports/.../<STAMP>/dtype-neutral/phase_d/summary.md`, then prepare doc updates listed in `docs_updates.md` for the follow-up phase.
 Pitfalls To Avoid:
-- Do not renumber existing cluster IDs; keep continuity with the Phase C worksheet.
-- Avoid editing tests or production code—this is a documents-only task.
-- Maintain ASCII output; no embedded spreadsheets or binary attachments.
-- Ensure Attempt numbering in docs/fix_plan.md moves forward (log this as Attempt #8).
-- Reference authoritative selectors from the worksheet; do not invent new pytest commands.
-- Keep CLI defaults cluster marked complete rather than deleting it; note its resolution in cluster_deltas.md.
+- Do not leave tensors created with default dtype on CPU while mixing with GPU inputs; keep device-neutral allocations.
+- Avoid introducing `.item()` or `.detach()` anywhere in the detector cache code path.
+- Preserve cache invalidation semantics; ensure geometry version increments when dtype/device shifts.
+- Respect Protected Assets — no edits to files listed in docs/index.md (e.g., loop.sh, input.md).
+- Keep artifacts under the specified reports directory; no stray logs in repo root.
+- Run only the mapped tests before implementation is complete; defer full suite until cleanup.
 Pointers:
-- plans/active/test-suite-triage.md:11
-- plans/active/test-suite-triage.md:82-91
-- docs/fix_plan.md:45-52
-- reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/triage_summary.md:1-60
-- reports/2026-01-test-suite-triage/phase_e/20251010T180102Z/summary.md:1-120
-Next Up: Prepare the remediation ladder addendum (phase_d handoff update) once the refreshed pending_actions.md is committed.
+- plans/active/dtype-neutral.md:40
+- docs/fix_plan.md:520
+- reports/2026-01-test-suite-triage/phase_d/20251010T173558Z/dtype-neutral/phase_b/summary.md
+- reports/2026-01-test-suite-triage/phase_d/20251010T174636Z/dtype-neutral/phase_c/tests.md
+- src/nanobrag_torch/models/detector.py:762
+Next Up: Phase G addendum for `[TEST-SUITE-TRIAGE-001]` once dtype fix artifacts land.

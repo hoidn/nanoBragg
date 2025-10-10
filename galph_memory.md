@@ -2164,3 +2164,10 @@
 - Updated `docs/fix_plan.md` Next Actions to call for Attempt #8 (phase_f artifacts) and refreshed the header/active focus summary; `input.md` now points Ralph at producing the documentation set under `reports/2026-01-test-suite-triage/phase_f/$STAMP/`.
 - Follow-up for Ralph: create the phase_f/ triage_summary.md + cluster_deltas.md + pending_actions.md bundle, record Attempt #8, and update ledger references per Do Now.
 - <Action State>: [ready_for_implementation]
+
+### 2026-01-16 (galph loop - dtype Phase D handoff prep)
+- Focus issue: [DTYPE-NEUTRAL-001] dtype neutrality guardrail (Action: Review/housekeeping, Mode: Parity).
+- Updated `docs/fix_plan.md` header to point at Phase D execution (Phase C blueprint noted complete) and rewrote Next Actions for `[TEST-SUITE-TRIAGE-001]` to launch Phase G handoff addendum.
+- Refreshed `[DTYPE-NEUTRAL-001]` Next Actions to list Phase D1–D4 implementation + validation steps and the dependency release workflow for `[DETERMINISM-001]`.
+- Issued new `input.md` directing Ralph to apply the 4-line cache dtype fix and run the authoritative AT-013/024 + detector geometry suite with artifacts under phase_d/.
+- <Action State>: [ready_for_implementation]
