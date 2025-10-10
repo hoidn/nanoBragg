@@ -270,7 +270,7 @@ Implementation: refer to phased plans, checklists, and all associated artifacts
 cleanup step: 
 In this iteration, did we decide to change the program's *intended* semantics? If so, review $SPECS and fix any misalignments that you discover. 
 Will any decisions made in this iteration change *actual semantics?* If so, evaluate which <tests> will require corresponding updates. Enter any test misalignments that you discover 
-as future tasks in docs/fix_plan.md.
+in docs/fix_plan.md.
 </3.7>
 
 <4>
