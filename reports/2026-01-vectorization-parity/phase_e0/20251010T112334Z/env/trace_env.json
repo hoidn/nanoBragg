@@ -1,0 +1,8 @@
+{
+  "timestamp": "20251010T112334Z",
+  "git_sha": "708a2d374632c45b387c0b4bd4c93432dcaec30a",
+  "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0",
+  "cflags": "-O2 -fno-fast-math -ffp-contract=off -DTRACING=1 -fopenmp",
+  "python": "3.13.5",
+  "system": "Linux-6.14.0-29-generic-x86_64-with-glibc2.39"
+}

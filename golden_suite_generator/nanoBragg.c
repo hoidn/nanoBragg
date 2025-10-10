@@ -3394,6 +3394,21 @@ if(! debug_printed_thread) {
                 printf("TRACE_C: floatimage_accumulated %.15g\n", floatimage[imgidx]);
             }
 
+            /* Tap 5 (intensity pre-normalization): capture scaling intermediates for parity validation
+             * Reference: specs/spec-a-core.md:246-259 (final per-pixel scaling equation)
+             * Purpose: Compare I_before_scaling and normalization factors (steps, omega, capture, polar)
+             *          between C and PyTorch implementations to isolate discrepancies in Phase E parity */
+            const char *tap5_env = getenv("TRACE_C_TAP5");
+            if(tap5_env && fpixel==trace_fpixel && spixel==trace_spixel) {
+                printf("TRACE_C_TAP5: pixel %d %d\n", spixel, fpixel);
+                printf("TRACE_C_TAP5: I_before_scaling %.15g\n", I);
+                printf("TRACE_C_TAP5: steps %d\n", steps);
+                printf("TRACE_C_TAP5: omega_pixel %.15g\n", omega_pixel);
+                printf("TRACE_C_TAP5: capture_fraction %.15g\n", capture_fraction);
+                printf("TRACE_C_TAP5: polar %.15g\n", polar);
+                printf("TRACE_C_TAP5: I_pixel_final %.15g\n", test);
+            }
+
             /* now keep track of statistics */
             if(floatimage[imgidx] > max_I) {
                 max_I = floatimage[imgidx];

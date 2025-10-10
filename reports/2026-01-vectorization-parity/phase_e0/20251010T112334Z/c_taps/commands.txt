@@ -1,0 +1,2 @@
+TRACE_C_TAP5=1 ./golden_suite_generator/nanoBragg -cell 100 100 100 90 90 90 -lambda 0.5 -distance 500 -detpixels 4096 -pixel 0.05 -mosflm -oversample 2 -default_F 100 -N 5 -trace_pixel 0 0 -roi 0 0 0 0 -floatfile /tmp/tap5_edge.bin
+TRACE_C_TAP5=1 ./golden_suite_generator/nanoBragg -cell 100 100 100 90 90 90 -lambda 0.5 -distance 500 -detpixels 4096 -pixel 0.05 -mosflm -oversample 2 -default_F 100 -N 5 -trace_pixel 2048 2048 -roi 2048 2048 2048 2048 -floatfile /tmp/tap5_centre.bin
