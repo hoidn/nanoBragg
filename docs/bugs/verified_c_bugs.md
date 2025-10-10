@@ -166,6 +166,8 @@ The follow-up log contains `reading Fs from Fdump.bin`, demonstrating the implic
 ### C-PARITY-001 — φ=0 Uses Stale Crystal Vectors (Medium)
 **Summary:** Inside the φ loop, the rotated vectors `ap/bp/cp` are only updated when `phi != 0.0`; otherwise, they retain the previous state (often from the prior pixel's final φ step). This produces step-0 Miller fractions that mirror the previous pixel rather than the unrotated lattice.
 
+**IMPORTANT:** This bug classification applies ONLY to the φ-carryover defect. It does NOT apply to source weight handling. Per Phase H parity reassessment (`reports/2025-11-source-weights/phase_h/20251010T002324Z/parity_reassessment.md`), both C and PyTorch correctly ignore source weights with near-perfect parity (corr=0.9999886, |sum_ratio−1|=0.0038). For the separate C sourcefile comment parsing issue, see `[C-SOURCEFILE-001]` in `docs/fix_plan.md`.
+
 **Reproduction:**
 ```bash
 ./golden_suite_generator/nanoBragg -cell 70 70 70 90 90 90 -default_F 1 -N 2 \
