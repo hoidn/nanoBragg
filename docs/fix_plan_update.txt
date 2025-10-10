@@ -1,0 +1,33 @@
+
+VECTOR-PARITY-001 Attempt #9 Update:
+===================================
+Date: 2025-10-10
+Result: SUCCESS (Phase C1 C-trace capture complete)
+
+Summary:
+Captured C traces for pixels (2048,2048), (1792,2048), (4095,2048) using existing -trace_pixel mechanism in nanoBragg.c. Each log contains 72 TRACE_C lines with detector geometry and pixel-specific physics.
+
+Details:
+- No additional C-code instrumentation required (existing trace infrastructure at lines 3380-3395)
+- Each pixel: 72 TRACE_C output lines including:
+  * Detector geometry (pix0_vector, basis vectors, rotation matrices)
+  * Pixel physics (I_before_scaling, r_e_sqr, fluence, steps, capture_fraction, polar, omega_pixel)
+  * Final scaled intensity
+- Execution: ~60s per pixel (full 4096² simulation required for correct physics)
+- All three traces completed cleanly, no errors
+
+Artifacts:
+- reports/2026-01-vectorization-parity/phase_c/20251010T044847Z/c_traces/pixel_2048_2048.log (9.0K, 72 TRACE_C lines)
+- reports/2026-01-vectorization-parity/phase_c/20251010T044847Z/c_traces/pixel_1792_2048.log (9.0K, 72 TRACE_C lines) 
+- reports/2026-01-vectorization-parity/phase_c/20251010T044847Z/c_traces/pixel_4095_2048.log (9.0K, 72 TRACE_C lines)
+- reports/2026-01-vectorization-parity/phase_c/20251010T044847Z/commands.txt (canonical commands)
+- reports/2026-01-vectorization-parity/phase_c/20251010T044847Z/env.json (git SHA 6d841a84, compiler flags, config params)
+
+Git Status:
+Clean (reports/ directory gitignored per .gitignore:13-14)
+
+Next Actions:
+1. Phase C2: PyTorch trace capture for same three pixels
+2. Phase C3: Trace diff & first divergence analysis
+
+This update should be merged into docs/fix_plan.md [VECTOR-PARITY-001] Attempts History.
