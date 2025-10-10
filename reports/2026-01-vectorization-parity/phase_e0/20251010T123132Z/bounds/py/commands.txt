@@ -1,0 +1,12 @@
+# PyTorch HKL bounds tap commands
+# Executed: 2025-10-10T12:33:52Z
+
+# Pixel (0,0) - edge pixel
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python scripts/debug_pixel_trace.py \
+  --taps f_cell --pixel 0 0 --oversample 2 \
+  --out-dir reports/2026-01-vectorization-parity/phase_e0/20251010T123132Z/bounds/py
+
+# Pixel (2048,2048) - centre pixel
+KMP_DUPLICATE_LIB_OK=TRUE PYTHONPATH=src python scripts/debug_pixel_trace.py \
+  --taps f_cell --pixel 2048 2048 --oversample 2 \
+  --out-dir reports/2026-01-vectorization-parity/phase_e0/20251010T123132Z/bounds/py

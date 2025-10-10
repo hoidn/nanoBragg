@@ -1,0 +1,16 @@
+# C HKL bounds tap commands
+# Executed: 2025-10-10T12:35:15Z
+
+# Pixel (0,0) - edge pixel
+TRACE_C_HKL_BOUNDS=1 ./golden_suite_generator/nanoBragg \
+  -cell 100 100 100 90 90 90 -lambda 0.5 -distance 500 -detpixels 4096 -pixel 0.05 \
+  -mosflm -oversample 2 -default_F 100 -N 5 \
+  -trace_pixel 0 0 -roi 0 0 0 0 \
+  -floatfile /tmp/tap5_bounds_edge.bin
+
+# Pixel (2048,2048) - centre pixel
+TRACE_C_HKL_BOUNDS=1 ./golden_suite_generator/nanoBragg \
+  -cell 100 100 100 90 90 90 -lambda 0.5 -distance 500 -detpixels 4096 -pixel 0.05 \
+  -mosflm -oversample 2 -default_F 100 -N 5 \
+  -trace_pixel 2048 2048 -roi 2048 2048 2048 2048 \
+  -floatfile /tmp/tap5_bounds_centre.bin

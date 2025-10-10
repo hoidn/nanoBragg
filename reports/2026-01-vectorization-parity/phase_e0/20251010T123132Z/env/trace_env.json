@@ -1,0 +1,10 @@
+{
+  "timestamp_utc": "20251010T123621Z",
+  "git_sha": "1132633000e707582e8ab4d9939af0116b9575fc",
+  "git_branch": "feature/spec-based-2",
+  "c_binary_sha256": "7185c8188980d09d36365e65da72796cfb124112dd79ea5961c23a240a302d61",
+  "python_version": "Python 3.13.5",
+  "torch_version": "2.7.1+cu126",
+  "device": "cpu",
+  "dtype": "float64"
+}

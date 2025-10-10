@@ -1,0 +1,19 @@
+{
+  "timestamp_utc": "20251010T123352Z",
+  "pixel_slow": 0,
+  "pixel_fast": 0,
+  "tag": "pixel",
+  "device": "cpu",
+  "dtype": "torch.float64",
+  "configuration": {
+    "detpixels": 4096,
+    "pixel_mm": 0.05,
+    "distance_mm": 500.0,
+    "wavelength_A": 0.5,
+    "cell": "100 100 100 90 90 90",
+    "N_cells": "5 5 5",
+    "default_F": 100.0,
+    "convention": "MOSFLM"
+  },
+  "final_intensity": 7.54482940820927e-05
+}
