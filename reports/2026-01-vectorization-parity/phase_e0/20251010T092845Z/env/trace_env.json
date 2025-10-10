@@ -1,0 +1,35 @@
+{
+  "timestamp": "2025-10-10T09:28:45Z",
+  "commit_sha": "aa390d8e",
+  "branch": "feature/spec-based-2",
+  "os": "Linux 6.14.0-29-generic",
+  "python_version": "3.x",
+  "pytorch_version": "2.x",
+  "device": "cpu",
+  "dtype": "float32",
+  "relevant_env_vars": {
+    "KMP_DUPLICATE_LIB_OK": "TRUE",
+    "NB_C_BIN": "./golden_suite_generator/nanoBragg",
+    "NB_RUN_PARALLEL": "1"
+  },
+  "analysis_scope": {
+    "initiative_id": "vectorization-parity-edge",
+    "roi_hint": "single edge pixel (0,0) or (4095,4095)",
+    "namespace_filter": "nanobrag_torch",
+    "time_budget_minutes": 30
+  },
+  "primary_hypothesis": "oversample_last_value_semantics",
+  "secondary_hypotheses": [
+    "f_cell_zero_edge_bias",
+    "water_background_ratio_effect",
+    "roi_timing_difference"
+  ],
+  "recommended_first_tap": "omega_subpixel_edge",
+  "referenced_artifacts": {
+    "phase_d_roi_success": "reports/2026-01-vectorization-parity/phase_d/roi_compare_post_fix2/summary.json",
+    "phase_e_blocker": "reports/2026-01-vectorization-parity/phase_e/20251010T091603Z/blockers.md",
+    "spec_core": "specs/spec-a-core.md",
+    "spec_parallel": "specs/spec-a-parallel.md",
+    "testing_strategy": "docs/development/testing_strategy.md"
+  }
+}
