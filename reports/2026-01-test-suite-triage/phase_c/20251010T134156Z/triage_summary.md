@@ -30,9 +30,32 @@ All 34 observed failures correspond to known implementation gaps or incomplete f
 ## Unclassified / Deferred
 - Remaining ~172 tests were not executed in Attempt #2. Phase C triage must be revisited after a complete run (Phase B rerun with ≥30 min budget or split suites).
 
+## Pending Actions
+
+Phase C3/C4 mapping complete (Attempt #4, 2025-10-10). Each cluster mapped to existing fix-plan ID or new placeholder as shown below:
+
+| Cluster ID | Proposed Fix-Plan Link | Owner | Status | Notes |
+| --- | --- | --- | --- | --- |
+| C1 | `[CLI-DEFAULTS-001]` (new) | ralph | in_planning | Minimal `-default_F` CLI invocation fails; requires HKL fallback + SMV header population. |
+| C2 | `[DETERMINISM-001]` (new) | ralph | in_planning | PyTorch RNG not deterministic; mosaic/source sampling ignores seeds. Requires torch + numpy seed propagation audit. |
+| C3 | `[VECTOR-PARITY-001]` Tap 5 | galph | in_progress | Mixed-unit test blocked on Tap 5 HKL/unit remediation (Attempt #36–#37 active). |
+| C4 | `[DETECTOR-GRAZING-001]` (new) | ralph | in_planning | Extreme detector angles fail; audit pivot/obliquity math for grazing incidence (defer until Tap 5 complete). |
+| C5 | `[DETERMINISM-001]` | ralph | in_planning | Same root as C2; fold mosaic rotation reproducibility into determinism plan. |
+| C6 | `[VECTOR-PARITY-001]` Tap 5 | galph | in_progress | Triclinic peak position blocked on HKL lookup fix (Tap 5.1/5.2). |
+| C7 | `[SOURCE-WEIGHT-002]` (new) | ralph | in_planning | Reopen `[SOURCE-WEIGHT-001]`: simulator still ignores source weights despite IO support. Requires flux normalization audit + regression tests. |
+| C8 | `[VECTOR-TRICUBIC-002]` | galph | in_progress | GAUSS lattice shape deviation; extend vectorization plan with GAUSS parity tap post-Tap 5. |
+| C9 | `[TOOLING-DUAL-RUNNER-001]` (new) | ralph | in_planning | Dual-runner helper not wired for PyTorch CLI; restore C vs PyTorch parity harness. |
+| C10 | `[CLI-FLAGS-003]` | ralph | in_progress | `-pix0_vector_mm` + HKL/Fdump semantics missing; gating tests for active CLI plan. |
+| C11 | `[DEBUG-TRACE-001]` (new) | ralph | in_planning | Debug flags (`--printout`, `--trace_pixel`) unsupported; requires C trace instrumentation parity. |
+| C12 | `[DETECTOR-CONFIG-001]` (new) | ralph | in_planning | Detector defaults/custom config diverge from spec; audit dataclass + CLI mapping. |
+| C13 | `[VECTOR-PARITY-001]` detector backlog | galph | in_progress | Denzo convention mapping unresolved; schedule parity tap post-Tap 5. |
+| C14 | `[VECTOR-PARITY-001]` pivot tasks | galph | in_progress | BEAM vs SAMPLE pivot semantics incorrect; elevate post-Tap 5 HKL fix. |
+
+**Unexecuted Tests (172 remaining):** Deferred until Phase B rerun with ≥30 min timeout or split-suite execution. Coverage gap documented in `docs/fix_plan.md` [TEST-SUITE-TRIAGE-001] Next Actions (task 1).
+
 ## Proposed Follow-ups
-1. Update `docs/fix_plan.md` `[TEST-SUITE-TRIAGE-001]` with Phase C Attempt #3 referencing this summary and noting “all observed failures = implementation bugs”.
-2. Under `[TEST-SUITE-TRIAGE-001]` Next Actions, add bullet to spawn targeted remediation items (determinism, source weighting, debug trace).
-3. Refresh `plans/active/test-suite-triage.md` Phase C table: mark `C1` complete, add checklist rows for mapping clusters to fix-plan entries (C2–C14 pending once owners assigned).
-4. Prepare Phase C `pending_actions.md` (future loop) once owner/plan IDs assigned; blocked on decision about determinism plan structure.
+1. ✅ Update `docs/fix_plan.md` `[TEST-SUITE-TRIAGE-001]` with Phase C Attempt #4 referencing this summary and cluster→fix-plan mapping.
+2. ✅ Add new fix-plan entries: `[CLI-DEFAULTS-001]`, `[DETERMINISM-001]`, `[DETECTOR-GRAZING-001]`, `[SOURCE-WEIGHT-002]`, `[TOOLING-DUAL-RUNNER-001]`, `[DEBUG-TRACE-001]`, `[DETECTOR-CONFIG-001]`.
+3. ✅ Refresh `plans/active/test-suite-triage.md` Phase C table: mark C3/C4 [D]one.
+4. Phase D handoff: Draft `handoff.md` with remediation priorities once Phase B rerun completes.
 

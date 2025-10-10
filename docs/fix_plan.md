@@ -10,6 +10,13 @@
 | ID | Title | Priority | Status |
 | --- | --- | --- | --- |
 | [TEST-SUITE-TRIAGE-001](#test-suite-triage-001-full-pytest-run-and-triage) | Run full pytest suite and triage | Critical | in_progress |
+| [CLI-DEFAULTS-001](#cli-defaults-001-minimal-default_f-cli-invocation) | Minimal -default_F CLI invocation | High | in_planning |
+| [DETERMINISM-001](#determinism-001-pytorch-rng-determinism) | PyTorch RNG determinism | High | in_planning |
+| [DETECTOR-GRAZING-001](#detector-grazing-001-extreme-detector-angles) | Extreme detector angles | High | in_planning |
+| [SOURCE-WEIGHT-002](#source-weight-002-simulator-source-weighting) | Simulator source weighting | High | in_planning |
+| [TOOLING-DUAL-RUNNER-001](#tooling-dual-runner-001-restore-dual-runner-parity) | Restore dual-runner parity | High | in_planning |
+| [DEBUG-TRACE-001](#debug-trace-001-debug-flag-support) | Debug flag support | High | in_planning |
+| [DETECTOR-CONFIG-001](#detector-config-001-detector-defaults-audit) | Detector defaults audit | High | in_planning |
 | [VECTOR-PARITY-001](#vector-parity-001-restore-40962-benchmark-parity) | Restore 4096² benchmark parity | High | in_progress |
 | [VECTOR-GAPS-002](#vector-gaps-002-vectorization-gap-audit) | Vectorization gap audit | High | blocked |
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
@@ -31,14 +38,127 @@
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.
   * [2025-10-10] Attempt #2 — Result: ⚠️ partial (Phase B timeout). Full suite execution reached ~75% completion (520/692 tests) before 10-minute timeout. Captured 34 failures across determinism (6), sourcefile handling (6), grazing incidence (4), detector geometry (5), debug/trace (4), CLI flags (3), and others. Runtime: 600s. Exit: timeout. Artifacts: `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/{logs/pytest_full.log,failures_raw.md,summary.md,commands.txt}`. junit XML may be incomplete. Remaining 172 tests (~25%) not executed. Observations: Large detector parity tests and gradient checks likely contributors to timeout. Recommendation: split suite execution or extend timeout to 30-60min for complete run.
   * [2025-10-10] Attempt #3 — Result: 📊 analysis (Phase C1). Classified all 34 observed failures as implementation bugs using `reports/2026-01-test-suite-triage/phase_c/20251010T134156Z/triage_summary.md`; no new commands executed (analysis derived from Phase B artifacts). Flagged remaining ~172 tests as coverage gap pending extended Phase B rerun. Next: align clusters C1–C14 with fix-plan entries and assign owners/next steps.
+  * [2025-10-10] Attempt #4 — Result: ✅ success (Phase C3/C4 cluster mapping). Updated `triage_summary.md` with "Pending Actions" table mapping all 14 clusters to fix-plan entries: C3/C6/C8/C13/C14 → `[VECTOR-PARITY-001]` (in_progress); C10 → `[CLI-FLAGS-003]` (in_progress); C1/C2/C4/C5/C7/C9/C11/C12 → 7 new placeholder IDs (`[CLI-DEFAULTS-001]`, `[DETERMINISM-001]`, `[DETECTOR-GRAZING-001]`, `[SOURCE-WEIGHT-002]`, `[TOOLING-DUAL-RUNNER-001]`, `[DEBUG-TRACE-001]`, `[DETECTOR-CONFIG-001]`) with status=in_planning, owner=ralph. Docs-only loop (no pytest per input.md line 16). Added new fix-plan entries below (index updated). Refreshed `plans/active/test-suite-triage.md` Phase C table (C3/C4 marked [D]). Artifacts: `reports/2026-01-test-suite-triage/phase_c/20251010T134156Z/triage_summary.md` (lines 33-60). Next: Phase B rerun with ≥30 min timeout to capture remaining 172 tests; Phase D handoff once complete.
 - Next Actions:
   1. Schedule Phase B rerun with ≥30 min budget (or split suite by module) to execute the remaining ~172 tests; capture logs + junit XML under a new timestamped bundle.
-  2. Complete Phase C3/C4 by mapping clusters C1–C14 to fix-plan entries (spawn new IDs for determinism, debug trace, dual runner, detector config) and append owners/next actions inside `triage_summary.md`.
+  2. ✅ Complete Phase C3/C4 by mapping clusters C1–C14 to fix-plan entries (spawn new IDs for determinism, debug trace, dual runner, detector config) and append owners/next actions inside `triage_summary.md`. [DONE Attempt #4]
   3. Outline Phase D remediation handoff once coverage + mapping are in place (draft `handoff.md` with ordered priorities and selectors).
 - Exit Criteria:
   - `triage_summary.md` classifies every failing test (bug vs deprecation vs config).
   - `handoff.md` published with remediation priorities and reproduction commands.
   - `[VECTOR-PARITY-001]` and other initiatives explicitly unblocked in this ledger.
+
+## [CLI-DEFAULTS-001] Minimal -default_F CLI invocation
+- Spec/AT: `specs/spec-a-cli.md` §AT-CLI-002, `tests/test_at_cli_002.py`, `docs/development/c_to_pytorch_config_map.md`
+- Priority: High
+- Status: in_planning
+- Owner/Date: ralph/2025-10-10
+- Reproduction: `pytest -v tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F`
+- Source: Cluster C1 from `[TEST-SUITE-TRIAGE-001]` Attempt #3 triage
+- Attempts History: none yet
+- Next Actions:
+  1. Reproduce targeted command; capture stderr/exit code
+  2. Identify missing HKL fallback or SMV header population logic
+  3. Draft fix plan with targeted pytest + acceptance criteria
+- Exit Criteria:
+  - CLI runner succeeds for minimal `-default_F` invocation
+  - Test passes; docs updated with minimal example
+
+## [DETERMINISM-001] PyTorch RNG determinism
+- Spec/AT: `specs/spec-a-core.md` §5.3 (RNG determinism), `tests/test_at_parallel_013.py`, `tests/test_at_parallel_024.py`
+- Priority: High
+- Status: in_planning
+- Owner/Date: ralph/2025-10-10
+- Reproduction: `pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py`
+- Source: Clusters C2+C5 from `[TEST-SUITE-TRIAGE-001]` Attempt #3 triage
+- Attempts History: none yet
+- Next Actions:
+  1. Instrument RNG seeding path in simulator + crystal
+  2. Design plan enforcing seed propagation across torch + numpy domains
+  3. Add regression tests for mosaic/source sampling determinism
+- Exit Criteria:
+  - Identical seeds produce identical outputs (bit-level reproducibility)
+  - All determinism tests pass; seed contract documented
+
+## [DETECTOR-GRAZING-001] Extreme detector angles
+- Spec/AT: `specs/spec-a-core.md` §4.6 (detector rotations), `tests/test_at_parallel_017.py`
+- Priority: High
+- Status: in_planning
+- Owner/Date: ralph/2025-10-10
+- Reproduction: `pytest -v tests/test_at_parallel_017.py`
+- Source: Cluster C4 from `[TEST-SUITE-TRIAGE-001]` Attempt #3 triage
+- Attempts History: none yet
+- Next Actions:
+  1. After `[VECTOR-PARITY-001]` Tap 5 complete, schedule detector geometry audit
+  2. Focus on pivot/obliquity math for grazing incidence
+  3. Add targeted tests for extreme rotation angles
+- Exit Criteria:
+  - Grazing incidence tests pass
+  - Detector geometry audit documented with findings
+
+## [SOURCE-WEIGHT-002] Simulator source weighting
+- Spec/AT: `specs/spec-a-core.md` §§3.4–3.5 (source weighting), `tests/test_at_src_001.py`, `tests/test_at_src_001_simple.py`
+- Priority: High
+- Status: in_planning
+- Owner/Date: ralph/2025-10-10
+- Reproduction: `pytest -v tests/test_at_src_001.py tests/test_at_src_001_simple.py`
+- Source: Cluster C7 from `[TEST-SUITE-TRIAGE-001]` Attempt #3 triage; reopens `[SOURCE-WEIGHT-001]` marked complete but simulator path broken
+- Attempts History: none yet
+- Next Actions:
+  1. Author follow-up plan ensuring `Simulator` multiplies source weights
+  2. Audit flux normalization path against spec
+  3. Add regression tests validating weighted multi-source runs
+- Exit Criteria:
+  - Source weighting tests pass
+  - Simulator honors weights; normalization matches spec
+
+## [TOOLING-DUAL-RUNNER-001] Restore dual-runner parity
+- Spec/AT: `specs/spec-a-parallel.md` §2.5 (tooling requirements), `tests/test_at_tools_001.py`
+- Priority: High
+- Status: in_planning
+- Owner/Date: ralph/2025-10-10
+- Reproduction: `pytest -v tests/test_at_tools_001.py::test_script_integration`
+- Source: Cluster C9 from `[TEST-SUITE-TRIAGE-001]` Attempt #3 triage
+- Attempts History: none yet
+- Next Actions:
+  1. Create tooling plan restoring dual-runner C vs PyTorch harness
+  2. Wire PyTorch binary into comparison helper
+  3. Add integration test validating script functionality
+- Exit Criteria:
+  - Dual-runner helper works for both C and PyTorch binaries
+  - Integration test passes; docs reference tooling location
+
+## [DEBUG-TRACE-001] Debug flag support
+- Spec/AT: `specs/spec-a-cli.md` (trace flags), `tests/test_debug_trace.py`
+- Priority: High
+- Status: in_planning
+- Owner/Date: ralph/2025-10-10
+- Reproduction: `pytest -v tests/test_debug_trace.py`
+- Source: Cluster C11 from `[TEST-SUITE-TRIAGE-001]` Attempt #3 triage
+- Attempts History: none yet
+- Next Actions:
+  1. Design debugging/trace instrumentation plan
+  2. Implement `--printout` and `--trace_pixel` flags
+  3. Ensure C trace instrumentation parity
+- Exit Criteria:
+  - Debug flags functional; tests pass
+  - Trace output matches C format; docs updated
+
+## [DETECTOR-CONFIG-001] Detector defaults audit
+- Spec/AT: `specs/spec-a-core.md` §4 (detector configuration), `tests/test_detector_config.py`
+- Priority: High
+- Status: in_planning
+- Owner/Date: ralph/2025-10-10
+- Reproduction: `pytest -v tests/test_detector_config.py`
+- Source: Cluster C12 from `[TEST-SUITE-TRIAGE-001]` Attempt #3 triage
+- Attempts History: none yet
+- Next Actions:
+  1. Audit detector config dataclass + CLI mapping
+  2. Capture reproduction commands; identify spec divergence
+  3. Fix defaults; add targeted tests
+- Exit Criteria:
+  - Detector initialization tests pass
+  - Defaults match spec; CLI mapping documented
 
 ## [VECTOR-PARITY-001] Restore 4096² benchmark parity
 - Spec/AT: `specs/spec-a-core.md` §§4–5, `specs/spec-a-parallel.md` §2.3, `arch.md` §§2/8/15, `docs/architecture/pytorch_design.md` §1.1 & §1.1.5, `docs/development/testing_strategy.md` §§1.4–2, `docs/development/pytorch_runtime_checklist.md` item #4.

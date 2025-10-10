@@ -44,9 +44,9 @@ Exit Criteria: `triage_summary.md` capturing classification table; fix_plan upda
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | C1 | Create triage worksheet | [D] | Attempt #3 → `reports/2026-01-test-suite-triage/phase_c/20251010T134156Z/triage_summary.md` captures classification table + context. |
-| C2 | Determine category for each failure | [P] | All 34 observed failures classified as implementation bugs (triage summary §Classification Table). Remaining ~172 unexecuted tests still pending full-suite rerun. |
-| C3 | Align with fix_plan | [ ] | For each bug-classified failure, either reference existing fix_plan item or create sub-task bullet under `[TEST-SUITE-TRIAGE-001]` (or spawn new IDs). For deprecation candidates, document rationale and propose retirement steps (requires spec update). |
-| C4 | Capture blockers & next steps | [ ] | Append "Pending Actions" section to `triage_summary.md` listing tasks to delegate (e.g., targeted fixes, doc updates). Update fix_plan and, if needed, corresponding plans/active/ documents. |
+| C2 | Determine category for each failure | [D] | Attempt #3 → All 34 observed failures classified as implementation bugs (triage summary §Classification Table). Remaining ~172 unexecuted tests still pending full-suite rerun (Phase B extension required). |
+| C3 | Align with fix_plan | [D] | Attempt #4 → All 14 clusters mapped to fix-plan entries in `triage_summary.md` Pending Actions table. 7 new IDs created: `[CLI-DEFAULTS-001]`, `[DETERMINISM-001]`, `[DETECTOR-GRAZING-001]`, `[SOURCE-WEIGHT-002]`, `[TOOLING-DUAL-RUNNER-001]`, `[DEBUG-TRACE-001]`, `[DETECTOR-CONFIG-001]`. Index updated in `docs/fix_plan.md`. |
+| C4 | Capture blockers & next steps | [D] | Attempt #4 → "Pending Actions" section added to `triage_summary.md` with cluster→fix-plan mapping table and 172 unexecuted test note. All clusters assigned owners (ralph/galph) and status (in_planning/in_progress). |
 
 ### Phase D — Remediation Roadmap Handoff
 Goal: Produce a ready-to-execute backlog for Ralph (or subagents) to address failing tests without ambiguity.
