@@ -34,10 +34,13 @@
   - Full-frame correlation collapse is dominated by edge/background pixels; central ROI meets spec thresholds (`roi_scope.md`).
   - Benchmark vs nb-compare metrics diverge; need trace-backed validation to reconcile tooling differences.
   - ROI parity confirms physics is correct for signal-rich pixels; divergence likely resides in scaling applied outside the ROI.
-- Next Actions:
-  1. Draft Phase C trace plan (`reports/2026-01-vectorization-parity/phase_c/<STAMP>/trace_plan.md`) covering question, pixel selection, and tap points.
-  2. Instrument matched C/Py traces per `docs/debugging/debugging.md` for a representative ROI pixel and diff to first divergence.
-  3. Optionally capture 1024² and edge/corner ROIs to map correlation behaviour before executing traces.
+- Next Actions (2026-01-06 refresh — Phase C instrumentation greenlit):
+  1. ✅ **Phase C staging** — Completed via Attempt #8 (`reports/2026-01-vectorization-parity/phase_c/20251010T040739Z/trace_plan.md`).
+  2. ✅ **Supervisor decisions logged this loop** — Pixel set = {(2048,2048) ROI core, (1791,2048) first row outside ROI, (4095,2048) far edge}; extend `scripts/debug_pixel_trace.py` rather than fork; start with aggregated-per-pixel tap points (totals + loop counters) before drilling into per-source traces.
+  3. **Phase C1 — C trace capture** — Add guarded print taps for the three pixels in `golden_suite_generator/nanoBragg`, rebuild locally, and run the authoritative 4096² command with stderr redirected to `reports/2026-01-vectorization-parity/phase_c/<STAMP>/c_traces/`. Keep artifacts git-ignored (verify `git status` stays clean).
+  4. **Phase C2 — PyTorch trace capture** — Enhance `scripts/debug_pixel_trace.py` to accept pixel coordinates + ROI config, emit float64 CPU traces into `.../py_traces/` matching the C filenames; rerun `pytest --collect-only -q` after script edits.
+  5. **Phase C3 — Trace diff & first divergence** — Produce `reports/.../first_divergence.md` summarising the earliest mismatched variable per pixel and update this entry’s Attempts History with artifact links + hypotheses.
+  6. **Optional ROI sweep** — Only if traces fail to expose the inflation locus; otherwise defer to avoid churn and keep new `reports/` bundles untracked.
 - Risks/Assumptions:
   - Profiler evidence remains invalid while corr_warm=0.721; avoid reusing traces from blocked attempts.
   - ROI thresholds (corr≥0.999, |sum_ratio−1|≤5×10⁻³) are treated as spec acceptance; full-frame parity may require masking.
@@ -211,4 +214,3 @@
 - [VECTOR-TRICUBIC-001] Vectorize tricubic interpolation and detector absorption — DONE. CUDA/CPU parity maintained (`reports/2026-01-vectorization-refresh/phase_b/20251010T013437Z/`); plan archived in `plans/archive/vectorization.md`.
 - [ROUTING-LOOP-001] `loop.sh` routing guard — DONE. Automation guard active; see `plans/active/routing-loop-guard/` for history.
 - [PROTECTED-ASSETS-001], [REPO-HYGIENE-002], [CLI-DTYPE-002], [ABS-OVERSAMPLE-001], [C-SOURCEFILE-001], [ROUTING-SUPERVISOR-001] — Archived to `docs/fix_plan_archive.md` with summary + artifact links; re-open if prerequisites resurface.
-

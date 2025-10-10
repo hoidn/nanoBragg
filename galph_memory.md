@@ -1,3 +1,10 @@
+### 2026-01-06 (galph loop - VECTOR-PARITY Phase C instrumentation handoff)
+- Repo already synced; reviewed required spec/arch/testing docs and active plans before selection. Coin flip = heads → audited Ralph commits 0548f356 (ROI parity bundle) and b401d45f (Phase C trace plan). ROI commit added tracked `reports/…/roi_compare` artifacts; reinforced keep-future-artifacts-untracked guidance in plan/input.
+- Confirmed trace_plan open questions: approved pixel set (2048,2048), (1791,2048), (4095,2048); aggregate tap scope only; reuse `scripts/debug_pixel_trace.py`.
+- Updated plans/active/vectorization-parity-regression.md (lines 12,50-52) and docs/fix_plan.md (line 37) with supervisor decisions; Next Actions now stage Phase C1–C3 instrumentation.
+- Replaced input.md (Mode: Parity) directing Ralph to instrument C & Py traces, store logs under `reports/2026-01-vectorization-parity/phase_c/<STAMP>/`, and draft first_divergence.md skeleton.
+- Follow-up: Expect Attempt logging with c_traces/py_traces + first_divergence.md; supervisor to review earliest mismatch before authorising ROI sweeps or implementation.
+
 ### 2026-01-04 (galph loop - VECTOR-PARITY Phase B4 kickoff)
 - Repo already up to date; reviewed required spec/arch/testing docs and active plans before analysis. Coin flip = heads → audited Ralph commit 15a4d338 (Option A enablement) noting `test_high_resolution_variant` now fails with corr≈0.716 as expected.
 - Updated `plans/active/vectorization-parity-regression.md` Status Snapshot and Phase B table: B3a–B3e marked [D] with artifact references; Phase B4 ROI sweep remains open.
