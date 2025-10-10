@@ -1946,3 +1946,8 @@
 - Updated plans/active/vectorization-parity-regression.md (E4→[D], added E5–E7) and plans/active/vectorization.md status snapshot to reflect the omega hypothesis being refuted and the new F_cell priority.
 - Issued input.md (Mode: Docs) directing Ralph to extend `scripts/debug_pixel_trace.py` with `--oversample/--taps` support, capture Tap 4 PyTorch stats for pixels (0,0)/(2048,2048), and archive outputs under `reports/2026-01-vectorization-parity/phase_e0/$STAMP/py_taps/`.
 - Expect next loop to confirm tooling updates landed, then delegate Phase E6 C-side Tap 4 instrumentation.
+
+### 2026-01-10 (galph loop - Phase E5 PyTorch tap handoff)
+- Confirmed tooling commit `d1dd79cf` landed; E5 remains open because Tap 4 metrics were not yet captured. Updated `input.md` (Mode: Parity) to direct Ralph to run the new `scripts/debug_pixel_trace.py` Tap 4 flow for pixels (0,0) and (2048,2048) with a shared $STAMP, archive JSON/metadata under `reports/2026-01-vectorization-parity/phase_e0/$STAMP/py_taps/`, and summarise results in `f_cell_summary.md` before logging Attempt #26 in fix_plan.
+- Coin flip audit (heads) reviewed commits `d1dd79cf` and `632d9fe0`; tooling change looks healthy, but note that `632d9fe0` introduced tracked PNGs under `comparisons/20251010-030139-d46877f6/` (≈1.3 MB each). Flag this for a future hygiene sweep once we plan repo cleanup—do not delete yet, but record the path when scoping cleanup work.
+- No plan edits this loop; `plans/active/vectorization-parity-regression.md` already enumerates E5–E7. Next supervisor check: verify Ralph's Phase E5 bundle (Tap 4 metrics + summary) and, if satisfactory, prep Phase E6 instructions for C instrumentation.

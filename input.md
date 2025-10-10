@@ -1,31 +1,35 @@
-Summary: Capture Tap 4 F_cell stats in PyTorch for edge vs centre pixels at oversample=2 and stage artifacts for Phase E5.
-Mode: Docs
+Summary: Capture PyTorch Tap 4 F_cell metrics for edge vs centre pixels at oversample=2 and package them as Phase E5 evidence.
+Mode: Parity
 Focus: [VECTOR-PARITY-001] Restore 4096² benchmark parity
 Branch: feature/spec-based-2
 Mapped tests: none — evidence-only
-Artifacts: reports/2026-01-vectorization-parity/phase_e0/$STAMP/py_taps/, reports/2026-01-vectorization-parity/phase_e0/$STAMP/f_cell_comparison.md (draft)
-Do Now: docs/fix_plan.md [VECTOR-PARITY-001] Next Action 1 — run `KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py --pixel 0 0 --tag edge --oversample 2 --taps f_cell --out-dir reports/2026-01-vectorization-parity/phase_e0/$STAMP/py_taps --json` (then repeat with `--pixel 2048 2048 --tag centre`) after extending the script per plan.
-If Blocked: Log the tooling gap in `reports/2026-01-vectorization-parity/phase_e0/$STAMP/attempt_fail.log`, note it in docs/fix_plan.md Attempts, and pause for supervisor guidance.
+Artifacts: reports/2026-01-vectorization-parity/phase_e0/$STAMP/py_taps/, reports/2026-01-vectorization-parity/phase_e0/$STAMP/f_cell_summary.md
+Do Now: [VECTOR-PARITY-001] Phase E5 PyTorch Tap 4 capture — run `KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py --pixel 0 0 --tag edge --oversample 2 --taps f_cell --json --out-dir reports/2026-01-vectorization-parity/phase_e0/$STAMP/py_taps` and repeat with `--pixel 2048 2048 --tag centre` using the same $STAMP.
+If Blocked: Capture stdout/stderr to `reports/2026-01-vectorization-parity/phase_e0/$STAMP/attempt_fail.log`, note the failure and command in docs/fix_plan.md Attempts, and stop for supervisor review.
 Priorities & Rationale:
-- `docs/fix_plan.md:58-62` elevates Tap 4 instrumentation as the next unblocker now that omega bias is ruled out.
-- `plans/active/vectorization-parity-regression.md:80-82` defines Phase E5–E7 deliverables and artifact expectations for F_cell diagnostics.
-- `reports/2026-01-vectorization-parity/phase_e0/20251010T092845Z/trace/tap_points.md` lists the Tap 4 schema (keys + units) that the new tooling must emit.
+- `docs/fix_plan.md:3-6` flags Tap 4 diagnostics as the active unblocker after omega bias was cleared.
+- `docs/fix_plan.md:48-49` records Attempt #25 (tooling landed) and expects the actual Tap 4 run next.
+- `plans/active/vectorization-parity-regression.md:80-82` defines Phase E5 deliverables (PyTorch tap metrics, JSON archive, comparison prep).
+- `reports/2026-01-vectorization-parity/phase_e0/20251010T092845Z/trace/tap_points.md` lists the Tap 4 schema you must populate (total_lookups, HKL bounds, default_F hits).
 How-To Map:
-- Export `STAMP=$(date -u +%Y%m%dT%H%M%SZ)` and create `reports/2026-01-vectorization-parity/phase_e0/$STAMP/py_taps` before running commands.
-- Update `scripts/debug_pixel_trace.py` to accept `--oversample` (default 1) and a `--taps` selector supporting at least `f_cell`, writing JSON alongside TRACE output without breaking existing CLI flags.
-- Implement Tap 4 metrics (total_lookups, out_of_bounds_count, zero_f_count, mean_f_cell, HKL bounds) using production lattice/HKL helpers; avoid duplicating physics.
-- Run the edge and centre commands in the Do Now line (same $STAMP) and archive stdout/stderr to `commands.txt` within the tap folder.
-- Summarise results in `reports/2026-01-vectorization-parity/phase_e0/$STAMP/f_cell_summary.md` (numbers + quick interpretation) to seed the comparison memo next loop.
+- Export `STAMP=$(date -u +%Y%m%dT%H%M%SZ)` then `OUTDIR=reports/2026-01-vectorization-parity/phase_e0/$STAMP/py_taps`; create directories for `py_taps`, `env`, and `notes` (`mkdir -p "$OUTDIR" reports/2026-01-vectorization-parity/phase_e0/$STAMP/env reports/2026-01-vectorization-parity/phase_e0/$STAMP/notes`).
+- Record environment metadata with `env | sort > reports/2026-01-vectorization-parity/phase_e0/$STAMP/env/trace_env.txt` and `python - <<'PY'` snippet to dump `torch.__version__` + device availability to `env/torch_env.json`.
+- Run the edge command first, tee stdout to `$OUTDIR/pixel_0_0_stdout.log` (`... --tag edge ... | tee $OUTDIR/pixel_0_0_stdout.log`); ensure JSON + metadata files land alongside TRACE logs.
+- Run the centre command reusing the same $STAMP and tee stdout to `$OUTDIR/pixel_2048_2048_stdout.log`; append both invocations (with exact timestamps) to `$OUTDIR/commands.txt`.
+- Parse the two `pixel_*_f_cell_stats.json` files and draft `reports/2026-01-vectorization-parity/phase_e0/$STAMP/f_cell_summary.md` summarising totals, mean F_cell, HKL bounds, and any edge/centre deltas; call out whether out_of_bounds_count differs (if zero, emphasise default_F usage).
+- Update `[VECTOR-PARITY-001]` Attempts in `docs/fix_plan.md` with Attempt #26 (Phase E5 PyTorch tap capture) referencing the new artifact paths.
 Pitfalls To Avoid:
-- Do not introduce `.cpu()`/`.detach()` when gathering stats; keep tensors on caller device.
-- Preserve existing TRACE output format; add new blocks after legacy lines.
-- Keep new arguments optional so prior invocations remain compatible.
-- Respect Protected Assets; write artifacts only under `reports/` with the stamped path.
-- Avoid hard-coding STAMP values; use the exported variable consistently.
-- No ad-hoc scripts outside `scripts/`; extend the existing helper per plan.
+- Use the same `$STAMP` for both pixels so artifacts collocate; do not mix directories.
+- Keep tensors on the requested device; avoid adding `.cpu()`/`.detach()` during analysis.
+- Do not commit anything under `reports/`; leave artifacts untracked.
+- Preserve existing TRACE output ordering; tap output must append without altering legacy lines.
+- Confirm JSON files exist before drafting the summary; rerun command if a file is missing.
+- Respect Protected Assets (no edits to docs/index.md or tracked golden data).
+- After edits to docs/fix_plan.md, run `pytest --collect-only -q` only if you touched code (not required for pure evidence loop).
+- Use UTC timestamps in notes/summary for consistency with earlier bundles.
 Pointers:
-- docs/fix_plan.md:58-62 — Tap 4 Next Actions + expectations.
-- plans/active/vectorization-parity-regression.md:80-82 — Phase E5/E6/E7 checklist.
-- reports/2026-01-vectorization-parity/phase_e0/20251010T092845Z/trace/tap_points.md — Tap definitions (see Tap 4 block).
-- docs/development/testing_strategy.md#1.5 — Command logging + artifact storage guardrails.
-Next Up: Prep C Tap 4 instrumentation (Phase E6) once PyTorch stats land.
+- docs/fix_plan.md:3-6 — Active focus statement for Tap 4.
+- docs/fix_plan.md:48-49 — Attempt #25 context and expectation for Phase E5 follow-up.
+- plans/active/vectorization-parity-regression.md:80-82 — Phase E5/E6/E7 checklist and artifact contract.
+- docs/development/testing_strategy.md#1.5 — Logging commands and storing artifacts under reports/.
+Next Up: Stage Phase E6 C Tap 4 instrumentation once PyTorch metrics are archived.
