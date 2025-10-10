@@ -11,9 +11,10 @@
   - `debug_default_f.py` — control-path reproduction that currently succeeds.
 - Artifact Policy: New work MUST live under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/cli-defaults/` with subfolders per phase (`phase_a`, `phase_b`, …). Each attempt captures `commands.txt`, `env.json`, raw logs, `summary.md`, and any diff artefacts.
 
-### Status Snapshot (2026-01-13)
+### Status Snapshot (2025-10-10)
 - Phase A: complete (Attempt #3 — artifacts in `reports/2026-01-test-suite-triage/phase_d/20251010T155808Z/cli-defaults/phase_a/`)
-- Phase B: pending callchain tracing (no artifacts captured yet)
+- Phase B: complete (Attempt #4 — artifacts in `reports/2026-01-test-suite-triage/phase_d/20251010T160902Z/cli-defaults/phase_b/`)
+- Phase C: ready for implementation
 
 ### Phase A — Baseline Reconciliation (CLI vs direct API)
 Goal: Prove the divergence between the CLI runner and direct API invocation using identical configs, locking reproducibility before deeper tracing.
@@ -34,10 +35,10 @@ Exit Criteria: Callchain artefacts for both CLI and API runs pinpointing the div
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Define analysis question & scope | [ ] | Draft `phase_b/<STAMP>/analysis.md` stating why CLI zeroes while direct API produces intensity; set initiative_id `cli-defaults-b1`, scope hints `['Simulator.run', 'Ewald filter', 'HKL occupancy']`. |
-| B2 | Execute callchain tracing for CLI path | [ ] | Follow `prompts/callchain.md` using CLI entry (`python -m nanobrag_torch ...`). Generate `reports/2026-01-test-suite-triage/phase_d/<STAMP>/cli-defaults/phase_b/callchain/static.md` etc. Capture ROI/pixel focus (use pixel with expected intensity e.g., centre (16,16)). |
-| B3 | Mirror callchain for direct API path | [ ] | Repeat Callchain SOP on `debug_default_f.py` (or equivalent harness). Ensure identical tap names for cross-comparison. Store under `phase_b/<STAMP>/api_callchain/`. |
-| B4 | Summarise divergence | [ ] | Synthesize `phase_b/<STAMP>/summary.md` outlining first mismatching variable, cite file:line anchors from traces, and recommend instrumentation focus for Phase C. |
+| B1 | Define analysis question & scope | [D] | Attempt #4 → `reports/2026-01-test-suite-triage/phase_d/20251010T160902Z/cli-defaults/phase_b/analysis.md` defines question: "Why does CLI default_F emit zeros while API yields intensities?" Initiative: cli-defaults-b1, scope: CLI orchestration, HKL assignment, structure factor fallback. |
+| B2 | Execute callchain tracing for CLI path | [D] | Attempt #4 → Static analysis via subagent produced `callchain/static.md` documenting CLI entry→config→simulator→sink with file:line anchors. Root cause identified at `__main__.py:1090`. |
+| B3 | Mirror callchain for direct API path | [D] | Attempt #4 → `api_callchain/static.md` documents API control path showing clean default_F flow with no HKL assignment interference. |
+| B4 | Summarise divergence | [D] | Attempt #4 → `summary.md` identifies first divergent tap (Tap 4: HKL assignment check), proposes fix for `__main__.py:1090` conditional, recommends Phase C implementation. |
 
 ### Phase C — Remediation Blueprint & Regression Guard
 Goal: Using Phase B findings, outline the fix strategy (without coding) and specify regression coverage to close AT-CLI-002 reliably.

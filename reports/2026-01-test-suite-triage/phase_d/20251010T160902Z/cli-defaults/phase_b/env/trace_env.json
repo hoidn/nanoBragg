@@ -1,0 +1,37 @@
+{
+  "timestamp": "2025-10-10T16:09:02Z",
+  "initiative": "CLI-DEFAULTS-001",
+  "phase": "B",
+  "python_version": "3.13",
+  "pytorch_version": "2.7.1+cu126",
+  "cuda_version": "12.6",
+  "device": "NVIDIA GeForce RTX 3090",
+  "os": "Linux 6.14.0-29-generic",
+  "git_commit": "c073beb7",
+  "git_branch": "feature/spec-based-2",
+  "analysis_type": "static_callchain",
+  "tools_used": [
+    "Read (file inspection)",
+    "Task (subagent callchain tracing)",
+    "Static code analysis (no runtime execution)"
+  ],
+  "test_case": {
+    "cli_command": "python -m nanobrag_torch -cell 100 100 100 90 90 90 -default_F 100 -detpixels 32 -pixel 0.1 -distance 100 -lambda 6.2 -N 5 -floatfile /tmp/cli.bin",
+    "api_script": "debug_default_f.py",
+    "detector_size": "32x32",
+    "crystal": "100Å cubic, N=5x5x5",
+    "default_F": 100,
+    "wavelength": "6.2Å"
+  },
+  "key_files_analyzed": [
+    "src/nanobrag_torch/__main__.py",
+    "src/nanobrag_torch/config.py",
+    "src/nanobrag_torch/simulator.py",
+    "src/nanobrag_torch/models/crystal.py",
+    "src/nanobrag_torch/models/detector.py",
+    "debug_default_f.py",
+    "tests/test_at_cli_002.py"
+  ],
+  "prior_evidence": "reports/2026-01-test-suite-triage/phase_d/20251010T155808Z/cli-defaults/phase_a/",
+  "notes": "Static analysis only; no dynamic traces captured in this phase. Tap points proposed for Phase C confirmation."
+}
