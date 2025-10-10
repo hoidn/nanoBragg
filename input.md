@@ -1,36 +1,33 @@
-Summary: Capture matching C and PyTorch pixel traces for the 4096² parity regression so we can pinpoint the first divergence.
-Mode: Parity
-Focus: VECTOR-PARITY-001 / Restore 4096² benchmark parity
+Summary: Capture fresh 4096² profiler evidence to restart Phase C of the vectorization relaunch.
+Mode: Docs
+Focus: VECTOR-TRICUBIC-002 Vectorization relaunch backlog
 Branch: feature/spec-based-2
 Mapped tests: none — evidence-only
-Artifacts: reports/2026-01-vectorization-parity/phase_c/<STAMP>/{c_traces,py_traces,first_divergence.md}
-Do Now: VECTOR-PARITY-001 Phase C1/C2 — instrument `golden_suite_generator/nanoBragg` to log aggregated tap points for pixels (2048,2048), (1791,2048), (4095,2048) and run the 4096² parity command; extend `scripts/debug_pixel_trace.py` to emit the identical tap set for those pixels (float64 CPU); store logs and the initial `first_divergence.md` skeleton under `reports/2026-01-vectorization-parity/phase_c/$STAMP/`.
-If Blocked: Capture the blocker and partial data in `reports/2026-01-vectorization-parity/phase_c/$STAMP/first_divergence.md` (prefix with `BLOCKED:`) and summarise the issue in docs/fix_plan Attempt notes before pausing instrumentation.
+Artifacts: reports/2026-01-vectorization-gap/phase_b/<STAMP>/
+Do Now: VECTOR-TRICUBIC-002 — Run the Phase C1 warm profiler capture via `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`
+If Blocked: Capture stdout/stderr to `reports/2026-01-vectorization-gap/phase_b/<STAMP>/attempts/failed_profile.log`, log the exit code, and note the failure in docs/fix_plan.md before stopping.
 Priorities & Rationale:
-- plans/active/vectorization-parity-regression.md:12 — Phase C now unblocked; instrumentation is the gate to resume VECTOR-GAPS-002/PERF-PYTORCH-004.
-- plans/active/vectorization-parity-regression.md:50 — C1/C2 tasks require traces for pixels (2048,2048), (1791,2048), (4095,2048) with git-clean artifact handling.
-- docs/fix_plan.md:37 — Next Actions 2–5 log supervisor decisions and mandate aggregated tap points + clean `reports/` handling.
-- docs/debugging/debugging.md:21 — Parallel trace SOP (naming/precision) must be followed when adding print taps.
-- docs/development/testing_strategy.md:52 — Use the documented 4096² parity command as the authoritative reproduction.
+- plans/active/vectorization.md:39 – Phase C1 is the next gate to unblock backlog work.
+- docs/fix_plan.md:110 – Updated Next Actions require this profiler capture before further delegation.
+- docs/development/testing_strategy.md:80 – Confirms profiling runs supplement Tier 1 parity before new vectorization edits.
+- docs/architecture/pytorch_design.md:34 – Maintains vectorization guardrails while analysing hotspots.
 How-To Map:
-- `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; `OUTDIR=reports/2026-01-vectorization-parity/phase_c/$STAMP`; `mkdir -p "$OUTDIR"/c_traces "$OUTDIR"/py_traces`.
-- After adding guarded `fprintf` blocks for each pixel (aggregated totals only), rebuild: `make -C golden_suite_generator`.
-- Run the C parity config, keeping stderr for trace logs: `NB_C_BIN=./golden_suite_generator/nanoBragg $NB_C_BIN -default_F 100 -cell 100 100 100 90 90 90 -N 5 -lambda 6.2 -distance 100 -detpixels 4096 -pixel 0.1 -floatfile /tmp/c_trace.bin 2> "$OUTDIR"/c_traces/pixels.log` (split into per-pixel files if needed).
-- Update `scripts/debug_pixel_trace.py` to accept `--pixel <slow> <fast>` and emit the same tap names/precision; run per pixel with float64 CPU tensors, e.g. `KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py --pixel 2048 2048 --device cpu --dtype float64 2> "$OUTDIR"/py_traces/pixel_2048_2048.log`.
-- After each run confirm `git status --short` stays clean (no new tracked `reports/` content); if files appear, move them out of git control before proceeding.
-- Start `first_divergence.md` in `$OUTDIR` noting the command SHAs, tap list, and any immediate mismatches; leave TODO markers for the diff step once both traces exist.
+- Ensure editable install is active (`pip install -e .` already satisfied if unchanged) and export `KMP_DUPLICATE_LIB_OK=TRUE` inline with the command.
+- Replace `<STAMP>` with an ISO8601 timestamp (e.g., `20260105T153000Z`) when creating the reports directory; keep all artifacts under that folder.
+- Run `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/` from repo root.
+- After the run, record correlation metrics, torch.compile status, and profiler summary in `reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/summary.md`, then queue an Attempt update for docs/fix_plan.md.
 Pitfalls To Avoid:
-- Do not downgrade to float32 for traces; stay on CPU float64 for determinism.
-- Keep tap names/units identical between C and PyTorch (see debug SOP) to simplify diffs.
-- Avoid printing per-source/per-phi loops initially; capture aggregated totals first as agreed.
-- Ensure pixel order is `(slow, fast)` and indices are zero-based to match C loop counters.
-- Do not commit new artifacts under `reports/`; leave them untracked and referenced only.
-- Re-run `pytest --collect-only -q` after modifying the PyTorch trace script.
-- Respect `NB_C_BIN` precedence; do not run the frozen root binary by accident.
-- Preserve existing trace plan structure; document deviations in `first_divergence.md`.
+- Do not commit the generated `reports/` artifacts; reference them only.
+- Respect vectorization guardrails—no temporary edits to simulator code to ease profiling.
+- Keep device/dtype neutrality; run on CPU as requested and note CUDA status without forcing GPU transfers.
+- Avoid modifying Protected Assets listed in docs/index.md during this loop.
+- Do not spawn subagents without full prompts per CLAUDE.md; single-agent loop only.
+- Skip full pytest runs; only the profiling command is expected here.
+- Preserve existing plan states; log progress via attempts rather than changing task checkboxes.
+- Maintain the Do Now focus; do not chase other fix_plan items mid-loop.
 Pointers:
-- plans/active/vectorization-parity-regression.md:12,50-52 — Phase C context and checklist.
-- docs/fix_plan.md:37-42 — Supervisor-approved Next Actions for instrumentation.
-- docs/debugging/debugging.md:21-80 — Required trace schema and SOP steps.
-- reports/2026-01-vectorization-parity/phase_b/20251010T035732Z/roi_compare/roi_scope.md — ROI findings motivating pixel selection.
-Next Up: If traces land cleanly, proceed to Phase C3 diffing (`first_divergence.md`) before considering any new ROI sweeps.
+- docs/fix_plan.md:110
+- plans/active/vectorization.md:39
+- docs/development/testing_strategy.md:80
+- docs/architecture/pytorch_design.md:34
+Next Up: Finish Phase C2 hotspot mapping once profiler artifacts are ready.

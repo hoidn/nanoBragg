@@ -124,9 +124,9 @@
   - CPU favours tricubic microbenchmarks; absorption benefits from CUDA.
   - VECTOR-GAPS-002 Phase B can resume once parity regression clears.
 - Next Actions:
-  1. Sync Phase C guidance in `plans/active/vectorization.md` with latest ROI findings.
-  2. Coordinate with `[VECTOR-GAPS-002]` to feed hotspot data back into implementation backlog.
-  3. Stage Phase D microbenchmark + documentation packets for delegation.
+  1. Execute Phase C1 from `plans/active/vectorization.md` by running the warm 4096² profiler capture (`KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/profile/`) and log correlation + torch.compile status in the attempt notes.
+  2. Complete Phase C2 (vectorization plan) using `python scripts/analysis/vectorization_inventory.py --package src/nanobrag_torch --outdir reports/2026-01-vectorization-gap/phase_b/<STAMP>/inventory/` to map profiler hotspots to the loop inventory; update `[VECTOR-GAPS-002]` attempts with the generated `hot_loops.csv` path.
+  3. Draft the prioritised backlog for Phase C3 under `reports/2026-01-vectorization-gap/phase_b/<STAMP>/backlog.md`, then refresh this entry’s Next Actions and `[VECTOR-GAPS-002]` to reference the ranked targets plus required acceptance tests.
 - Risks/Assumptions:
   - CUDA availability required for future refresh runs.
   - Parity regression must be resolved before shipping new vectorization work.
