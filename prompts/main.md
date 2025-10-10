@@ -50,7 +50,7 @@ Callchain Snapshot (analysis aid)
 - Ralph is exempt from the supervisor’s Evidence-only phase.
 - Mode flags: input.md may specify mode flags (e.g., TDD | Parity | Perf | Docs). These overlay the current Phase; follow their guidance for this loop.
 - TDD mode (engineer-scoped): If a failing test exists, make it pass without weakening the test. If overspecified, propose a precise test adjustment back to galph and proceed once aligned.
- - Mapped selectors from Evidence: Galph may include pytest selectors validated only with --collect-only; execute them as part of your implementation loop.
+ - Mapped selectors from Evidence: Galph may include pytest selectors; execute them as part of your implementation loop.
 
 - **Project Hygiene**: All code, especially test runners and scripts, MUST assume the project is installed in editable mode (`pip install -e .`). Scripts MUST NOT manipulate `sys.path`. Tests MUST be runnable via standard tools like `pytest` from the project root. Refer to `CLAUDE.md` for setup instructions.
  
@@ -148,9 +148,8 @@ declare:
    a. The entire suite MUST pass without any `FAILED` or `ERROR` statuses.
    b. **Test collection itself MUST succeed.** An `ImportError` or any other collection error is a CRITICAL blocking failure that you must fix immediately.
    c. An iteration is only considered successful if this full regression check passes cleanly.
-   d. Run the full suite at most once in this loop; when iterating, re-run only targeted tests until ready for the final full run. For prompt/docs‑only loops, use `pytest --collect-only -q`.
+   d. Run the full suite at most once in this loop; when iterating, re-run only targeted tests until ready for the final full run. 
    When reporting results, cite the Acceptance Test numbers covered (e.g., "AT-28, AT-33").
-   If a loop changes only non-code artifacts (e.g., prompts/docs/plan), at minimum ensure `pytest --collect-only -q` succeeds before committing.
 </step 6>
 <step 7>
 - Update `docs/fix_plan.md` for the active item using `prompts/update_fix_plan.md`: append to its Attempts History with metrics, artifact paths, observations, and next actions; record First Divergence if known; only mark the item `done` when exit criteria are satisfied, otherwise keep it active with concrete follow-ups.
@@ -211,7 +210,7 @@ Loop Self‑Checklist (end of every loop):
 - Module/layer check done and justified.
 - Spec sections/acceptance IDs/test names quoted and limited (one area; 1–2 items max).
 - Backpressure present: unit + smallest integration, with expected pass/fail and remediation.
-- **Full `pytest tests/` run from project root executed at most once in this loop and passed without any errors or collection failures.** (Doc/prompt-only loops use `pytest --collect-only -q`.)
+- **Full `pytest tests/` run from project root executed at most once in this loop and passed without any errors or collection failures.** 
 - Any new problems discovered during this loop - or existing problems not mentioned in the docs/fix_plan.md - added to the docs/fix_plan.md TODO list.
 - Evidence includes file:line pointers for presence/absence; no "assume missing".
 - Scope stayed within a single module category; if not, capture deferral in `docs/fix_plan.md`.
