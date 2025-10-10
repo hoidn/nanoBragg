@@ -1,74 +1,35 @@
-Summary: Run the authoritative 4096² AT parity selector to confirm the regression on current HEAD and log the results beside the Phase B1 bundle so VECTOR-PARITY-001 can advance to trace triage.
-Mode: Parity
+Summary: Draft the 4096² validation-path memo to unblock Phase B3.
+Mode: Docs
 Focus: [VECTOR-PARITY-001] Restore 4096² benchmark parity
 Branch: feature/spec-based-2
-Mapped tests: pytest -v tests/test_at_parallel_*.py -k 4096
-Artifacts: reports/2026-01-vectorization-parity/phase_b/$STAMP/{pytest_parallel.log,summary.md,commands.txt,env.json}
-Do Now: [VECTOR-PARITY-001] Phase B2 — export STAMP=$(date -u +%Y%m%dT%H%M%SZ); KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_*.py -k 4096 | tee reports/2026-01-vectorization-parity/phase_b/$STAMP/pytest_parallel.log; add env.json + summary.md capturing exit status and any reported correlations; record the exact command in commands.txt.
-If Blocked: If pytest errors or the selector fails to run, capture the full console output in pytest_parallel.log, note the failure (including tracebacks and exit code) in summary.md, update docs/fix_plan.md Attempts with the partial bundle path, and stop—do not rerun under modified parameters.
+Mapped tests: none — evidence-only
+Artifacts: reports/2026-01-vectorization-parity/phase_b/$STAMP/{validation_path.md,summary.md,commands.txt}
+Do Now: [VECTOR-PARITY-001] Draft Phase B3 validation-path memo (document options; no pytest selector yet)
+If Blocked: Capture current obstacles in reports/2026-01-vectorization-parity/phase_b/$STAMP/blockers.md and notify galph in docs/fix_plan.md attempts.
 Priorities & Rationale:
-- docs/fix_plan.md:4010-4031 — Next Actions now require Phase B2 pytest evidence before Phase C tracing can start.
-- plans/active/vectorization-parity-regression.md:32-34 — Phase B1 is complete; Phase B2 parity selectors are the remaining gate.
-- specs/spec-a-core.md:151-155 — Equal-weight contract sets the correlation/sum_ratio thresholds we must compare against.
-- docs/development/pytorch_runtime_checklist.md:22-27 — Reinforces the equal-weight guardrail and references the parity memo.
-- reports/2026-01-vectorization-parity/phase_b/20251010T030852Z/summary.md — Use this benchmark bundle as context when documenting pytest findings.
+- plans/active/vectorization-parity-regression.md:30 — Phase B3 requires a decision before any further parity evidence.
+- docs/fix_plan.md:4016 — Next Actions now hinge on a written validation-path recommendation.
+- specs/spec-a-parallel.md:90 — High-resolution AT-012 variant defines required acceptance thresholds.
+- tests/test_at_parallel_012.py:364 — Current skip documents missing infrastructure; memo must reference constraints.
 How-To Map:
-1. export STAMP=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p reports/2026-01-vectorization-parity/phase_b/$STAMP.
-2. KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_*.py -k 4096 | tee reports/2026-01-vectorization-parity/phase_b/$STAMP/pytest_parallel.log.
-3. python - <<'PY'
-import json, os, platform, subprocess
-from pathlib import Path
-stamp = os.environ['STAMP']
-root = Path('reports/2026-01-vectorization-parity/phase_b') / stamp
-root.mkdir(parents=True, exist_ok=True)
-info = {
-    "python": platform.python_version(),
-    "torch": __import__('torch').__version__,
-    "git_sha": subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip(),
-    "device": "cpu",
-    "dtype": "float32",
-}
-root.joinpath('env.json').write_text(json.dumps(info, indent=2))
-PY
-4. python - <<'PY'
-import os
-from pathlib import Path
-stamp = os.environ['STAMP']
-root = Path('reports/2026-01-vectorization-parity/phase_b') / stamp
-log_path = root / 'pytest_parallel.log'
-summary_lines = [
-    "# Phase B2 Parity Selector Summary\n",
-    "- Prior benchmark bundle: reports/2026-01-vectorization-parity/phase_b/20251010T030852Z/summary.md\n",
-]
-if log_path.exists():
-    summary_lines.append("- pytest command: NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_*.py -k 4096\n")
-    summary_lines.append("- Exit status: <fill after review>\n")
-    summary_lines.append("- Notable outputs: <copy correlation values or failing test names from pytest_parallel.log>\n")
-else:
-    summary_lines.append("- pytest_parallel.log missing (see attempts history)\n")
-summary_lines.append("- Thresholds: correlation ≥0.999, |sum_ratio−1| ≤5e-3 (specs/spec-a-core.md:151-155)\n")
-summary_lines.append("- Notes: <document whether regression reproduced and any discrepancies vs benchmark metrics>\n")
-root.joinpath('summary.md').write_text("".join(summary_lines))
-PY
-5. printf "%s\n" \
-   "export STAMP=$STAMP" \
-   "KMP_DUPLICATE_LIB_OK=TRUE NB_RUN_PARALLEL=1 NB_C_BIN=./golden_suite_generator/nanoBragg pytest -v tests/test_at_parallel_*.py -k 4096" \
-   > reports/2026-01-vectorization-parity/phase_b/$STAMP/commands.txt
+- export STAMP=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p reports/2026-01-vectorization-parity/phase_b/$STAMP/.
+- Summarise prior artifacts (`20251010T030852Z`, `20251010T031841Z`) and spec expectations in validation_path.md; include pros/cons for Options A–C and recommended path with acceptance checklist.
+- Record supporting context (commands run, files reviewed) in commands.txt; include the exact pytest selector output reference path rather than rerunning.
+- Capture conclusions + open questions in summary.md; update docs/fix_plan.md attempts when done.
 Pitfalls To Avoid:
-- Evidence-only loop: do not modify simulator or tests.
-- Keep NB_RUN_PARALLEL=1 and NB_C_BIN pointing to ./golden_suite_generator/nanoBragg to match parity baseline.
-- Do not reuse the 20251010T030852Z STAMP; create a fresh timestamp for this run.
-- Capture the entire pytest log (including failures) before editing summary.md.
-- If pytest prints correlation metrics, copy them verbatim into summary.md; otherwise note their absence.
-- Stay on CPU float32; changing device/dtype invalidates comparisons.
-- Record the exit code; if non-zero, flag it clearly in summary.md and fix_plan Attempt notes.
-- Avoid running additional selectors; execute only the command above this loop.
-- Ensure env.json is written after the run so git_sha matches the tested commit.
-- Do not delete or overwrite prior Phase B1 artifacts when adding the new bundle.
+- Do not un-skip or edit tests this loop; documentation only.
+- Keep Protected Assets (docs/index.md references) untouched.
+- No new benchmark runs; rely on existing artifacts for evidence.
+- Avoid inventing tolerances—quote spec values or prior plan guidance.
+- Preserve device/dtype neutrality in recommendations.
+- Do not spawn subagents without embedding full context per CLAUDE.md if you choose to delegate.
+- Avoid editing production code or golden data files.
+- Document any blockers immediately rather than guessing missing data.
+- Maintain ASCII formatting in new files.
 Pointers:
-- docs/fix_plan.md:4010-4097
-- plans/active/vectorization-parity-regression.md:32-34
-- specs/spec-a-core.md:151-155
-- docs/development/pytorch_runtime_checklist.md:22-27
-- reports/2026-01-vectorization-parity/phase_b/20251010T030852Z/summary.md
-Next Up: Phase B3 ROI nb-compare sweep once pytest evidence is archived and analyzed.
+- plans/active/vectorization-parity-regression.md:12
+- plans/active/vectorization-parity-regression.md:30
+- docs/fix_plan.md:4016
+- specs/spec-a-parallel.md:90
+- tests/test_at_parallel_012.py:364
+Next Up: Phase B4 nb-compare ROI checks once validation-path memo is accepted.

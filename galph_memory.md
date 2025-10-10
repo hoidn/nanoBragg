@@ -1796,3 +1796,10 @@
 - Updated `docs/fix_plan.md:4016` Next Actions to require recording correlation data from `benchmark_results.json` alongside nb-compare metrics in summary.md.
 - Rewrote `input.md` (Mode: Parity) instructing Ralph to rerun Phase B1, copy the benchmark bundle, run nb-compare, and populate summary.md with both benchmark correlations and nb-compare totals plus observations. Artifacts to land under `reports/2026-01-vectorization-parity/phase_b/$STAMP/`.
 - Next follow-up: Expect Ralph to execute the refreshed Phase B1 loop and update `[VECTOR-PARITY-001]` Attempt history. Supervisor should then review the new metrics delta and decide whether to progress to Phase B2 parity selectors or escalate to trace work.
+
+### 2026-01-04 (galph loop - VECTOR-PARITY Phase B3 decision)
+- Repo already synced; reviewed required spec/arch/testing docs plus active plans before selecting focus. Coin flip = heads → audited recent Ralph commit cab99e1 (Phase B2 evidence-only) confirming no active 4096² pytest coverage.
+- Updated `plans/active/vectorization-parity-regression.md` status snapshot and Phase B table: B2 marked [D] with deselected-test evidence; added new Phase B3 decision task and shifted ROI work to B4.
+- Refreshed `docs/fix_plan.md` `[VECTOR-PARITY-001]` status/Next Actions to require a written validation-path memo (options A–C) before further parity runs; status now reflects Phase B3 as the blocker.
+- Rewrote `input.md` (Mode: Docs) directing Ralph to author the Phase B3 validation-path memo under `reports/2026-01-vectorization-parity/phase_b/$STAMP/` summarising options and recommending a path.
+- Follow-up: Expect Attempt #6 documenting the memo; supervisor to review recommendation and, if approved, unblock Phase B4 ROI checks and trace prep.
