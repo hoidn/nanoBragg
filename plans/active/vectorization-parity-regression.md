@@ -14,6 +14,7 @@
 - Phases A–D ✅ complete; ROI parity restored (corr≈1.000000, |sum_ratio−1|≈1.3e-5) and instrumentation cleanup verified.
 - Attempt #22 delivered Phase E0 callchain bundle (`reports/2026-01-vectorization-parity/phase_e0/20251010T092845Z/`) identifying last-value ω weighting as the top hypothesis.
 - Attempt #23 quantified PyTorch ω bias at oversample=2 (edge last/mean≈1.000028), showing the effect is ≈0.003 % and insufficient to explain the 0.721 correlation — re-prioritise C taps and alternate hypotheses (F_cell defaults, water background) before code changes.
+- Attempt #24 captured C omega taps (edge + centre) and produced `omega_comparison.md`, definitively refuting the omega hypothesis; next probes move to Tap 4 (F_cell defaults) and Tap 6 (water background scaling).
 
 ### Phase A — Evidence Audit & Baseline Ledger
 Goal: Canonicalise good vs bad benchmark evidence so every loop uses the same provenance.
@@ -73,9 +74,12 @@ Exit Criteria: Numeric taps proving or refuting the omega-last-value hypothesis 
 | E0b | Execute callchain + static map | [D] | Attempt #22 → `callchain/static.md`; entry→sink documented with file:line anchors. |
 | E0c | Summarise findings & tap plan | [D] | Attempt #22 → `summary.md` & `trace/tap_points.md`; hypothesis: `omega_last` bias at edges. |
 | E1 | Quantify PyTorch omega asymmetry | [D] | ✅ Attempt #23 (20251010T095445Z): measured `last_over_mean≈1.000028` (≈0.003 % bias) for edge pixel (0,0) vs ≈0 for center (2048,2048). Artifacts: `reports/2026-01-vectorization-parity/phase_e0/20251010T095445Z/{py_taps/omega_metrics.json,omega_analysis.md}`. Conclusion: last-value ω weighting is negligible at oversample=2 → pursue alternate hypotheses (C taps or F_cell/background). |
-| E2 | Capture C omega taps for edge pixel | [ ] | Instrument `golden_suite_generator/nanoBragg` oversample loop (see `trace/tap_points.md` Tap 3); command template in `callchain/static.md`; archive under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/c_taps/`. Emphasise comparing average vs last-value despite small PyTorch bias. |
-| E3 | Compare C vs PyTorch omega handling | [ ] | Produce `omega_comparison.md` summarising whether C averages ω; include numeric table + decision. Block advancement if evidence inconclusive. |
-| E4 | Update ledger & plan with outcomes | [ ] | Upon completing E1–E3, add Attempt #23 summary to `[VECTOR-PARITY-001]`, refresh this plan (mark E1–E3 states), and draft remediation decision tree before implementation begins. |
+| E2 | Capture C omega taps for edge pixel | [D] | Attempt #24 (20251010T100102Z) instrumented `golden_suite_generator/nanoBragg.c:2976-2985` to log all four subpixels for pixels (0,0) and (2048,2048). Artifacts: `reports/2026-01-vectorization-parity/phase_e0/20251010T100102Z/c_taps/`. Result: C reuses the first subpixel's omega → identical values, no edge bias. |
+| E3 | Compare C vs PyTorch omega handling | [D] | `omega_comparison.md` (Attempt #24) quantifies both runs and refutes the omega hypothesis (≤0.003 % delta). Decision: escalate Tap 4 (F_cell defaults) and Tap 6 (water background) before revisiting physics changes. |
+| E4 | Update ledger & plan with outcomes | [D] | ✅ This loop — Attempt #24 recorded in `[VECTOR-PARITY-001]`; plan + ledger refreshed with Tap 4 focus and new Next Actions (E5–E7). |
+| E5 | PyTorch Tap 4 — F_cell lookup stats | [ ] | Extend `scripts/debug_pixel_trace.py` (or delegate new helper per `trace/tap_points.md`) to report Tap 4 metrics for pixels (0,0) and (2048,2048) at oversample=2. Archive JSON under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/py_taps/`. Capture command + env metadata. |
+| E6 | C Tap 4 — HKL default usage | [ ] | Instrument `golden_suite_generator/nanoBragg` to capture matching Tap 4 counters (default_F hits, HKL bounds). Store outputs under `reports/2026-01-vectorization-parity/phase_e0/<STAMP>/c_taps/`. Ensure instrumentation removed post-capture. |
+| E7 | Compare F_cell distributions & decide next probe | [ ] | Draft `f_cell_comparison.md` synthesising PyTorch vs C Tap 4 results; recommend whether Tap 5/6 (pre/post scaling, water background) should execute next. Update docs/fix_plan.md Next Actions accordingly. |
 
 ### Phase F — Remediation & Full-Frame Validation (Pending)
 Goal: Implement the validated fix (likely ω averaging), re-run full-frame parity, and unblock downstream initiatives.
@@ -89,6 +93,6 @@ Exit Criteria: corr≥0.999 and |sum_ratio−1|≤5×10⁻³ for full-frame nb-c
 | F3 | Refresh pytest evidence & documentation | [ ] | Run mapped selectors (high-res test, collect-only); update docs/fix_plan.md Attempts, `docs/architecture/pytorch_design.md` addendum if semantics change; ensure `plans/active/vectorization.md` gating lifted. |
 
 ## Exit Criteria for Plan Completion
-- Phase E tasks E1–E4 complete with archived tap evidence and ledger updates.
+- Phase E tasks E1–E7 complete with archived tap evidence and ledger updates.
 - Phase F parity rerun succeeds; `[VECTOR-PARITY-001]` marked done and downstream plans (VECTOR-GAPS-002, VECTOR-TRICUBIC-002) formally unblocked.
 - Documentation & guardrails updated to capture the oversample omega rule (spec references + checklist updates).

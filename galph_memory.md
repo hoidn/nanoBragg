@@ -1941,3 +1941,8 @@
 - Refreshed `plans/active/vectorization.md` snapshot to note the negligible ω bias; profiling remains gated until new evidence lands.
 - Issued `input.md` (Mode: Parity) directing Ralph to instrument `golden_suite_generator/nanoBragg` for Tap 3, run the single-pixel `nb-compare` command, and archive C omega traces under a fresh `reports/.../c_taps/` bundle.
 - Follow-up: Expect Attempt logging the C tap outputs + `omega_comparison.md`; next supervisor action is to triage Tap 4 (HKL defaults) vs water background hypothesis once C evidence arrives.
+### 2026-01-10 (galph loop - Phase E Tap 4 pivot)
+- Logged Attempt #24 outcome in docs/fix_plan.md and marked Phase E2/E3 complete; refreshed Next Actions to focus on Tap 4 HKL/default_F diagnostics.
+- Updated plans/active/vectorization-parity-regression.md (E4→[D], added E5–E7) and plans/active/vectorization.md status snapshot to reflect the omega hypothesis being refuted and the new F_cell priority.
+- Issued input.md (Mode: Docs) directing Ralph to extend `scripts/debug_pixel_trace.py` with `--oversample/--taps` support, capture Tap 4 PyTorch stats for pixels (0,0)/(2048,2048), and archive outputs under `reports/2026-01-vectorization-parity/phase_e0/$STAMP/py_taps/`.
+- Expect next loop to confirm tooling updates landed, then delegate Phase E6 C-side Tap 4 instrumentation.
