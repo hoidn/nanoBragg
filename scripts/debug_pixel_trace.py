@@ -374,12 +374,10 @@ def main():
     emit_trace("TRACE_PY", "r_e_meters", r_e)
     emit_trace("TRACE_PY", "r_e_sqr", r_e_sqr)
 
-    # Fluence calculation per spec-a-core.md line 517:
-    # fluence = flux * exposure / beamsize²  (square beam, not circular)
-    flux = beam_config.flux
-    exposure = beam_config.exposure
-    beamsize_m = beam_config.beamsize_mm / 1000.0
-    fluence = flux * exposure / (beamsize_m * beamsize_m)
+    # Fluence from BeamConfig (already computed per spec-a-core.md line 517)
+    # Do NOT recompute; BeamConfig.__post_init__ applies the spec formula
+    # and handles edge cases (flux=0, beamsize clipping, etc.)
+    fluence = beam_config.fluence
     emit_trace("TRACE_PY", "fluence_photons_per_m2", fluence)
 
     # Steps (sources × phi × mosaic × oversample²)

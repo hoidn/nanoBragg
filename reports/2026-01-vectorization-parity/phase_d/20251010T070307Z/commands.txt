@@ -1,0 +1,50 @@
+# Phase D2 Fluence Parity Fix — Reproduction Commands
+# Timestamp: 2025-10-10T07:03:07Z
+# Initiative: VECTOR-PARITY-001 Phase D2
+
+## 1. Generate Post-Fix PyTorch Trace
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+KMP_DUPLICATE_LIB_OK=TRUE python scripts/debug_pixel_trace.py \
+  --pixel 1792 2048 \
+  --tag fluence_post_fix \
+  --out-dir reports/2026-01-vectorization-parity/phase_d/$STAMP/py_traces_post_fix/
+
+# Actual STAMP used: 20251010T070307Z
+
+## 2. Extract Fluence Values from Traces
+grep "fluence_photons_per_m2" \
+  reports/2026-01-vectorization-parity/phase_c/20251010T053711Z/c_traces/pixel_1792_2048.log
+
+grep "fluence_photons_per_m2" \
+  reports/2026-01-vectorization-parity/phase_d/20251010T070307Z/py_traces_post_fix/pixel_1792_2048.log
+
+## 3. Calculate Parity Metrics
+python3 -c "
+from decimal import Decimal
+c_val = Decimal('1.25932015286227e+29')
+py_val = Decimal('1.259320152862271e+29')
+rel_err = abs((c_val - py_val) / c_val)
+print(f'C fluence:  {c_val:.15e}')
+print(f'Py fluence: {py_val:.15e}')
+print(f'Relative error: {float(rel_err):.3e}')
+print(f'Target: ≤1e-3')
+print(f'Status: {\"PASS\" if rel_err <= Decimal(\"1e-3\") else \"FAIL\"}')
+"
+
+## 4. Verify Test Collection (Sanity Check)
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q
+
+## Configuration Parameters (matching Phase C1 C traces)
+# Command line flags:
+#   -default_F 100
+#   -cell 100 100 100 90 90 90
+#   -lambda 0.5
+#   -distance 500
+#   -pixel 0.05
+#   -detpixels 4096
+#   -N 5
+#   -convention MOSFLM
+#   -oversample 1
+#
+# Target pixel: (slow=1792, fast=2048)
+# Expected result: fluence_photons_per_m2 matches C within ≤1e-3 relative error
