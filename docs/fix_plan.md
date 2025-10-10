@@ -4012,10 +4012,11 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
 - Plan Reference: `plans/active/vectorization-parity-regression.md`
 - Reproduction (C & PyTorch): `NB_C_BIN=./golden_suite_generator/nanoBragg KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmarks/benchmark_detailed.py --sizes 4096 --device cpu --dtype float32 --profile --iterations 1 --keep-artifacts`
 - First Divergence (if known): Deterministic correlation collapse to 0.721175 (cold & warm) across `[VECTOR-GAPS-002]` Attempts #3–#8 despite cache speedups. Affected artifacts: `reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/benchmark_results.json` (git `ac94e90`) and `reports/2026-01-vectorization-gap/phase_b/20251010T022314Z/benchmark_results.json` (git `22ea5c18`). Last known-good run `reports/benchmarks/20251009-161714/benchmark_results.json` shows correlation 0.999998 and sum_ratio 0.9999876 but lacks recorded git SHA. VECTOR-GAPS-002 Phase B2/B3 and PERF-PYTORCH-004 remain blocked until correlation ≥0.999 and |sum_ratio−1| ≤5e-3 are restored.
-- Next Actions (2026-01-04 refresh — Phase B4 evidence captured; proceed to trace staging):
- 1. **Phase C staging** — Draft the parallel trace question (focus pixel, suspected subsystem) referencing `docs/debugging/debugging.md`, and outline tap points under `reports/2026-01-vectorization-parity/phase_c/<STAMP>/trace_plan.md`.
- 2. **Optional ROI sweep** — If correlation outside the central ROI must be characterised further, schedule additional 1024² / edge ROI captures (document results under a new `<STAMP>/roi_compare/`).
- 3. **Phase C1 instrumentation prep** — Identify the minimum C trace edits needed (target variables: S, F_latt, normalization factors) and ensure `golden_suite_generator/nanoBragg` rebuild instructions are ready before delegating to Ralph.
+- Next Actions (2026-01-04 refresh — Phase C staging complete; awaiting supervisor approval for Phase C1 execution):
+ 1. ✅ **Phase C staging** — COMPLETE (Attempt #8). Trace plan authored at `reports/2026-01-vectorization-parity/phase_c/20251010T040739Z/trace_plan.md` with 3-pixel strategy, hypothesis prioritisation, 12-variable tap points, and canonical C/Py commands.
+ 2. **Supervisor review** — Answer open questions in trace_plan.md (pixel selection, script approach, instrumentation depth, ROI sweep deferral) in next `input.md` Do Now.
+ 3. **Phase C1 execution** — (next ralph loop) Instrument C code, rebuild binary, capture traces for pixels (2048,2048), (1792,2048), (4000,2048).
+ 4. **Optional ROI sweep** — If correlation outside the central ROI must be characterised further, schedule additional 1024² / edge ROI captures (document results under a new `<STAMP>/roi_compare/`).
 - Attempts History:
   * [2025-12-30] Attempt #0 (galph loop) — Result: planning baseline. Documented repeated 0.721175 correlation across `reports/2026-01-vectorization-gap/phase_b/20251009T095913Z/` and `20251010T022314Z/`, authored `plans/active/vectorization-parity-regression.md`, and added this fix_plan entry. No code changes. Next step: Phase A artifact audit and Attempt #1 with consolidated evidence.
   * [2025-10-09] Attempt #1 (ralph loop) — Result: success (Phase A1–A3 complete). Generated evidence bundle consolidating good vs failing benchmark runs.
@@ -4178,6 +4179,35 @@ For additional historical entries (AT-PARALLEL-020, AT-PARALLEL-024 parity, earl
       1. Documented ROI scope in `reports/2026-01-vectorization-parity/phase_b/20251010T035732Z/roi_compare/roi_scope.md`; share summary during next supervisor loop.
       2. Queue Phase C plan to capture matched C/Py traces (identify representative pixel(s) and instrumentation scope).
       3. Optional: schedule expanded ROI sweeps (1024² center + edge cases) if additional evidence is required before tracing.
+  * [2025-10-10] Attempt #8 (ralph loop #278 — docs-only, Phase C staging). Result: ✅ **PHASE C TRACE PLAN DRAFTED** — Created detailed trace plan per supervisor input.md directive.
+    Metrics: n/a (docs-only loop, no code execution or pytest)
+    Artifacts:
+      - `reports/2026-01-vectorization-parity/phase_c/20251010T040739Z/trace_plan.md` — Complete Phase C instrumentation plan
+    Observations/Hypotheses:
+      - **Trace Question Defined**: "Where does PyTorch first diverge from C-code for pixels with perfect ROI parity but catastrophic full-frame failure?"
+      - **Pixel Selection Strategy**: 3-pixel sweep (ROI center @ 2048,2048; ROI boundary @ 1792,2048; far edge @ 4000,2048) to map divergence geography
+      - **Hypothesis Prioritisation**: H1 (edge overexposure/halo accumulation - HIGH), H2 (missing normalization factor - MEDIUM), H3 (boundary artifacts - LOW)
+      - **Tap Points Identified**: 12 critical variables mapped from C source to PyTorch modules (pix0_vector, scattering_vec, hkl, F_cell/F_latt, omega_pixel, polar, steps, final_intensity)
+      - **Instrumentation Scope**: C trace via golden_suite_generator/nanoBragg.c fprintf to stderr; PyTorch trace via scripts/debug_4096_trace.py (to be authored)
+      - **Exit Criteria**: first_divergence.md documenting first mismatched variable per pixel class with magnitude and subsystem identification
+    Plan Structure:
+      - §1: Question & Initiative Context (trace question, hypothesis prioritisation H1/H2/H3, spec/arch anchors)
+      - §2: Target ROI & Pixel Selection (3-pixel strategy with rationale, acceptance criteria)
+      - §3: Instrumentation Scope (C trace printf template, PyTorch script hooks, device/dtype discipline)
+      - §4: Tap Points & Owners (12-variable checklist with C line numbers, PyTorch modules, units, subsystem mapping)
+      - §5: Expected Outputs & Storage (artifact directory structure, canonical C/Py commands, diff workflow)
+      - §6: Open Questions / Risks (4 supervisor confirmation questions, 5 risk/mitigation pairs, TODOs before C1)
+      - §7: References & Dependencies (normative docs, evidence trail, tooling, plan/fix_plan links)
+    Open Questions Requiring Supervisor Confirmation:
+      1. Pixel selection approval (are 2048,2048 / 1792,2048 / 4000,2048 optimal?)
+      2. Trace script authoring (extend existing debug_pixel_trace.py or create standalone debug_4096_trace.py?)
+      3. Instrumentation depth (per-source/phi/mosaic loop unroll vs final-aggregated trace?)
+      4. ROI sweep deferral (proceed to Phase C immediately or run optional 1024² ROI sweep first?)
+    Next Actions (awaiting supervisor sign-off):
+      1. Supervisor review of trace_plan.md and answer open questions in next input.md
+      2. Phase C1 (ralph loop): Instrument golden_suite_generator/nanoBragg.c with trace printfs, rebuild, capture C traces for 3 pixels
+      3. Phase C2 (ralph loop): Author/adapt PyTorch trace script, capture Py traces matching C format
+      4. Phase C3 (ralph loop): Generate diffs, document first divergence, update hypotheses, log findings in fix_plan Attempt #9
 
 ---
 
