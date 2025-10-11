@@ -2545,3 +2545,14 @@
 - Rewrote input.md for Phase M1d with parity-mode instructions, authoritative selectors, and artifact cadence.
 - Expect Ralph to execute CUDA-graphs fixture updates next loop and log Attempt #26 under phase_m1/$STAMP/simulator_api/.
 - Action State: [ready_for_implementation]
+
+### 2026-01-21 (galph loop - Focus Setup)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase M1 Cluster C7
+- Action type: Review/housekeeping
+- Mode: Parity
+- Reviewed Ralph commits 4e6dad19 and eb1247f6 (Step 2 coin flip): fixtures + debug trace changes look healthy; no regressions spotted.
+- Updated plans/active/test-suite-triage.md status snapshot + row M1d to mark Attempt #26 done; Phase M1 bullet now highlights only Cluster C7 remaining.
+- Adjusted docs/fix_plan.md Next Actions to remove C5 and reference the lattice-shape cluster; ensured reproduction pointer matches triage_summary.md lines 218-243.
+- Rewrote input.md for Phase M1e (Cluster C7) with stamped artifact cadence and Detector fixture guidance.
+- No semantic changes this loop; awaiting Ralph to implement test fixture updates and log Attempt #27.
+- <Action State>: [ready_for_implementation]

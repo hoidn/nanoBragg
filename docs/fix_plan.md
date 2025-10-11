@@ -46,7 +46,7 @@
 - Phase D Handoff Bundle: `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md`
 - Phase G Handoff Addendum: `reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/handoff_addendum.md`
 - Next Actions (2026-01-21 sprint relaunch):
-1. Continue Phase M1 Sprint 0 quick fixes (remaining clusters C5/C7 — C1 closed in Attempt #21, C3 closed in Attempt #22, C4 closed in Attempt #25) with artifact bundles under `reports/2026-01-test-suite-triage/phase_m1/<STAMP>/` as outlined in `plans/active/test-suite-triage.md`; CUDA-graphs baseline failure log: `reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:157-182` plus `.../commands.txt` reproduction snippets.
+1. Continue Phase M1 Sprint 0 quick fixes (remaining cluster C7 — C1 closed in Attempt #21, C3 closed in Attempt #22, C4 closed in Attempt #25, C5 closed in Attempt #26) with artifact bundles under `reports/2026-01-test-suite-triage/phase_m1/<STAMP>/` as outlined in `plans/active/test-suite-triage.md`; lattice shape baseline log: `reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:218-243` plus `.../commands.txt` reproduction snippets.
   2. Update `docs/fix_plan.md`, `remediation_tracker.md`, and `reports/.../phase_m1/<STAMP>/summary.md` with refreshed failure counts once Phase M1 selectors pass (target ≤15 failures remaining).
   3. Kick off Phase M2 gradient infrastructure guard: draft compile-disable approach, land targeted `tests/test_gradients.py` run, and archive logs under `reports/2026-01-test-suite-triage/phase_m2/<STAMP>/`.
 - Attempts History:
