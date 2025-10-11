@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_k//artifacts/pytest_full.xml 2>&1 | tee reports/2026-01-test-suite-triage/phase_k//logs/pytest_full.log
