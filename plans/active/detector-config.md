@@ -11,8 +11,8 @@
 
 ### Status Snapshot (2026-01-22)
 - Phase A — Evidence & Guardrail Alignment · **[D]** Phase L + M3 artifacts ingested; spec/arch cross-check complete; findings cross-referenced.
-- Phase B — Behavior Contract & Blueprint Refresh · **[P]** Need to ratify the Option A `beam_center_source` approach, document CLI propagation, and capture risk/compatibility notes before coding.
-- Phase C — Implementation & Targeted Validation · **[ ]** Pending code/test changes once the blueprint is approved.
+- Phase B — Behavior Contract & Blueprint Refresh · **[D]** Option A design complete (STAMP 20251011T201712Z); `beam_center_source` approach ratified with CLI propagation, test/doc impacts, and risk assessment documented in `reports/2026-01-test-suite-triage/phase_m3/20251011T201712Z/mosflm_offset/design.md`.
+- Phase C — Implementation & Targeted Validation · **[P]** Awaiting supervisor approval to proceed with code/test changes per design blueprint.
 - Phase D — Full-Suite Regression & Closure · **[ ]** Pending post-fix chunked rerun, tracker sync, and plan archival.
 
 ### Phase A — Evidence & Guardrail Alignment
@@ -33,10 +33,10 @@ Exit Criteria: Design artifact captured under `reports/2026-01-test-suite-triage
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Ratify remediation option | [P] | Compare Option A (beam_center_source flag) vs Option B heuristic per `mosflm_offset/summary.md`; document decision + rationale in `reports/.../mosflm_offset/design.md`. Default expectation: adopt Option A for clarity. |
-| B2 | Define config/CLI propagation | [P] | Specify required updates to `DetectorConfig`, CLI parsing in `__main__.py`, and any factory helpers so `beam_center_source` is tracked end-to-end. Capture field defaults, enum, and backward compatibility rules. |
-| B3 | Map test & doc impacts | [P] | Enumerate the test cases to add/adjust (auto vs explicit, multiple conventions, edge case where explicit equals default). Outline doc sections needing edits (`detector.md`, `c_to_pytorch_config_map.md`). |
-| B4 | Risk & compatibility assessment | [P] | Identify interactions with findings API-002/CONVENTION-001, PyTorch dtype/device neutrality, and how CUSTOM/XDS conventions behave. Record in design note. |
+| B1 | Ratify remediation option | [D] | Compare Option A (beam_center_source flag) vs Option B heuristic per `mosflm_offset/summary.md`; document decision + rationale in `reports/.../mosflm_offset/design.md`. Default expectation: adopt Option A for clarity. |
+| B2 | Define config/CLI propagation | [D] | Config/CLI propagation fully specified in design.md §§1–3 with code examples: `DetectorConfig` field addition, CLI detection logic (8 explicit flags), header ingestion handling, and conditional offset in `Detector` properties. |
+| B3 | Map test & doc impacts | [D] | Test/doc impacts enumerated in design.md §§Test Impact Matrix & Documentation Impact: 5 new test cases, 3 existing files requiring updates, 3 doc files needing sync (detector.md, c_to_pytorch_config_map.md, findings.md). |
+| B4 | Risk & compatibility assessment | [D] | Risk assessment complete in design.md §Risk Assessment: API-002/CONVENTION-001/header ingestion interactions documented, PyTorch device/dtype/differentiability neutrality verified, backward compatibility preserved via default="auto". |
 
 ### Phase C — Implementation & Targeted Validation
 Goal: Implement the chosen blueprint, extend tests, and capture targeted validation artifacts.
