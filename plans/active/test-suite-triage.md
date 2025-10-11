@@ -19,7 +19,7 @@
 - Phase H ✅ complete (Attempt #10 — `reports/2026-01-test-suite-triage/phase_h/20251011T033418Z/` captured full-suite rerun, 36 failures remaining, gradient checks stable).
 - Phase I ✅ complete (Attempt #11 — `reports/2026-01-test-suite-triage/phase_i/20251011T042127Z/` delivers triage_summary.md + classification_overview.md with 36 failures classified; fix_plan updated accordingly).
 - **Phase J (active)** — draft remediation tracker + execution sequence using Phase I inputs before resuming individual remediation workstreams.
-- **Phase K (pending)** — Attempt #14 (`reports/2026-01-test-suite-triage/phase_k/20251011T070734Z/`) timed out after 600s because `STAMP` was not exported and the harness defaulted to a 10-minute limit; rerun must export `STAMP`, pre-create the Phase K directories, and wrap `pytest` in `timeout 3600` before capturing refreshed artifacts for Sprint 1.
+- **Phase K (active)** — Attempt #15 (`reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/`) completed the 60-minute full-suite rerun (512 passed / 31 failed / 143 skipped). Proceed with K2–K3 to regenerate the classification bundle and refresh the remediation tracker before resuming remediation sprints.
 
 ### Phase A — Preflight & Inventory
 Goal: Confirm environment readiness and enumerate suite metadata so the full run is reproducible and guarded.
@@ -147,9 +147,9 @@ Exit Criteria: Phase K directory populated with logs + junit XML + env snapsho
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| K1 | Execute full suite (Phase K) | [ ] | Export `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`, run `mkdir -p reports/2026-01-test-suite-triage/phase_k/$STAMP/{artifacts,logs,analysis,env}`, then execute `timeout 3600 CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_k/$STAMP/artifacts/pytest_full.xml 2>&1 | tee reports/2026-01-test-suite-triage/phase_k/$STAMP/logs/pytest_full.log`; store durations + `commands.txt` and record `env/torch_env.txt`. |
-| K2 | Refresh classification | [ ] | Regenerate `triage_summary.md` + `classification_overview.md` using Phase K outputs; include delta vs Phase I counts and implementation-vs-deprecation labels; archive under `phase_k/$STAMP/analysis/`. |
-| K3 | Sync tracker + ledger | [ ] | Copy `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/` into `phase_j/$STAMP/` (or update the tracker in-place), refresh `remediation_tracker.md` and `remediation_sequence.md` with new counts/owners, write `phase_k/$STAMP/summary.md` noting cluster priority shifts, and add Attempt #15 notes + artifact links to `docs/fix_plan.md`. |
+| K1 | Execute full suite (Phase K) | [D] | Attempt #15 (20251011T072940Z) captured the rerun with `timeout 3600`; artifacts include `logs/pytest_full.log`, `artifacts/pytest_full.xml`, `env/torch_env.txt`, and `summary.md`. |
+| K2 | Refresh classification | [ ] | Create `reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/` and regenerate `triage_summary.md` + `classification_overview.md` from the new junit/log; highlight deltas vs Phase I and label each failure as implementation bug vs deprecation candidate. |
+| K3 | Sync tracker + ledger | [ ] | Update `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/` (or clone to a new STAMP) with refreshed counts/owners, note shifts in `remediation_tracker.md`/`remediation_sequence.md`, and log Attempt #15 + analysis outputs in `docs/fix_plan.md` alongside a brief `phase_k/.../analysis/summary.md`. |
 
 ### Exit Criteria (Plan Completion)
 - Phases A–K marked `[D]` once delivered (Phase H–K added for 2026 rerun, classification refresh, and remediation sequencing).
