@@ -2533,3 +2533,15 @@
 - docs/fix_plan.md: added context to Next Actions and logged Attempt #24 (regression still open).
 - Rewrote input.md directing Ralph to add the missing summary print and close Cluster C4.
 - <Action State>: [ready_for_implementation]
+
+### 2026-01-21 (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase M1 cluster progression
+- Action type: Review/housekeeping
+- Mode: Parity
+### 2026-01-21 (galph loop - Phase M1d briefing)
+- Reviewed Ralph commits 84a67719 and 4e6dad19; Cluster C4 debug trace fix landed cleanly, existing `.item()` usage stays confined to debug-only paths.
+- Updated plans/active/test-suite-triage.md status snapshot + row M1c to reflect Attempt #25 closure and expanded M1d/M1e guidance.
+- Refreshed docs/fix_plan.md Next Actions to focus on clusters C5/C7.
+- Rewrote input.md for Phase M1d with parity-mode instructions, authoritative selectors, and artifact cadence.
+- Expect Ralph to execute CUDA-graphs fixture updates next loop and log Attempt #26 under phase_m1/$STAMP/simulator_api/.
+- Action State: [ready_for_implementation]

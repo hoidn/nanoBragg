@@ -1,45 +1,45 @@
-Summary: Restore TRACE output to include the final-intensity summary so Cluster C4 stops failing.
-Mode: none
-Focus: [TEST-SUITE-TRIAGE-001] Phase M1c — Cluster C4 debug trace guard
+Summary: Fix CUDA-graphs fixtures to use the positional Simulator API so Cluster C5 stops erroring and the module passes.
+Mode: Parity
+Focus: [TEST-SUITE-TRIAGE-001] Phase M1d — Cluster C5 simulator API alignment
 Branch: feature/spec-based-2
-Mapped tests: tests/test_debug_trace.py::TestDebugTraceFeatures::test_trace_pixel_flag; tests/test_debug_trace.py
-Artifacts: reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/{pytest_before.log,pytest_after.log,summary.md}
-Do Now: [TEST-SUITE-TRIAGE-001] Phase M1c — env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_debug_trace.py::TestDebugTraceFeatures::test_trace_pixel_flag
-If Blocked: Capture the failure log under phase_m1/$STAMP/debug_trace/blocked.log and update docs/fix_plan.md with the blocker description + command used.
+Mapped tests: tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_basic_execution; tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_gradient_flow_preserved; tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_cpu_cuda_correlation
+Artifacts: reports/2026-01-test-suite-triage/phase_m1/$STAMP/simulator_api/{env.txt,pytest_before.log,pytest_module.log,summary.md}
+Do Now: [TEST-SUITE-TRIAGE-001] Phase M1d — env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_basic_execution
+If Blocked: Record the failure log under phase_m1/$STAMP/simulator_api/blocked.log, update docs/fix_plan.md Attempt history with the command/env, and state the blocker in remediation_tracker.md before exiting.
 
 Priorities & Rationale:
-- docs/fix_plan.md:48-109 – Cluster C4 remains open after Attempt #24; new failure log pinned at reports/2026-01-test-suite-triage/phase_m1/20251011T163812Z/debug_trace/pytest_failed.log.
-- plans/active/test-suite-triage.md:208-214 – Task M1c now calls for emitting "Final intensity" when only -trace_pixel is set.
-- reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:130-153 – Original C4 diagnosis; reconcile new output requirement without regressing the pre-polar guard.
-- tests/test_debug_trace.py:96-155 – Acceptance criteria for debug CLI flags; assertions we must satisfy.
-- arch.md:1016-1345 – `_apply_debug_output` implementation; keep vectorization/device guardrails.
+- docs/fix_plan.md:48-109 – Sprint 0 now targets C5/C7 after C4 closure; C5 failure log still outstanding.
+- plans/active/test-suite-triage.md:202-214 – Task M1d prescribes upgrading CUDA-graphs fixtures to positional Simulator ctor.
+- reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:157-182 – Reproduction command and scope for Cluster C5.
+- tests/test_perf_pytorch_005_cudagraphs.py:20-118 – Assertions that expect the simulator to build successfully for CPU/CUDA runs.
+- src/nanobrag_torch/simulator.py:150-236 – Constructor signature (positional detector required) to mirror in the fixtures.
 
 How-To Map:
-1. `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; mkdir -p `reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace` and drop `env.txt` with `env | sort` for traceability.
-2. Reproduce current failure once via `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_debug_trace.py::TestDebugTraceFeatures::test_trace_pixel_flag | tee reports/.../pytest_before.log` so the baseline for this attempt lives beside the new work.
-3. Update `src/nanobrag_torch/simulator.py` so `_apply_debug_output` prints the per-pixel summary ("Final intensity" + "Normalized intensity") whenever `trace_pixel` is set, regardless of `printout`. Preserve differentiability (no `.item()` on tensors needed beyond existing debug path) and keep device/dtype neutrality.
-4. Double-check that `I_before_normalization_pre_polar` stays initialised for both oversample and non-oversample branches; avoid reintroducing the old UnboundLocalError.
-5. Run `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_debug_trace.py` and save the passing log to `reports/.../pytest_after.log`. If CUDA is available later, note whether GPU execution is required (optional per plan, but mention in summary if skipped).
-6. Update `reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/summary.md` with command list, runtimes, and before→after status. Remove temporary float images (the tests leave `/tmp/` files) if they persist.
-7. Sync documentation: mark M1c `[D]` in plans/active/test-suite-triage.md after validating, add Attempt #25 entry (success) to docs/fix_plan.md with links to artifacts, and refresh remediation tracker if it references C4.
+1. `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)` then `mkdir -p reports/2026-01-test-suite-triage/phase_m1/$STAMP/simulator_api` and run `env | sort > .../env.txt`.
+2. Capture the current failure: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_basic_execution | tee reports/.../pytest_before.log`.
+3. Update the CUDA-graphs fixtures so they instantiate `Simulator(crystal, detector, beam)` (no `detector_config=` kwarg). Ensure detector/beam objects come from existing helpers to keep parity with other tests.
+4. Re-run the full module for coverage: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_perf_pytorch_005_cudagraphs.py | tee reports/.../pytest_module.log`. Note any CUDA skips explicitly.
+5. Summarise changes, commands, runtimes, and remaining skips in `reports/.../summary.md`; include references to updated fixtures.
+6. Update docs/fix_plan.md with Attempt #26 context, refresh plans/active/test-suite-triage.md row M1d to [D], and sync remediation_tracker.md counts.
+7. If edits fall through to other clusters (e.g., shared fixtures), add notes in summary + fix_plan about affected selectors before closing the loop.
 
 Pitfalls To Avoid:
-- Do not strip existing TRACE_PY lines; only add the missing summary without breaking parity instrumentation.
-- Keep all new debug strings ASCII and consistent with existing wording (tests match on "Final intensity").
-- No `.cpu()`/`.cuda()` calls; rely on existing tensors for device propagation.
-- Preserve vectorization (no per-pixel Python loops when adding output logic).
-- Ensure CLI env var `KMP_DUPLICATE_LIB_OK=TRUE` accompanies every pytest invocation.
-- Do not delete or rename anything listed in docs/index.md (e.g., loop.sh, input.md).
-- Capture artifacts under the prescribed reports/ path; avoid scattering logs elsewhere.
-- Update docs/fix_plan.md in the same loop; do not leave the ledger stale.
-- Clean up temporary output files (float images) generated by the debug tests.
-- Mention skipped CUDA validation explicitly if it is not run.
+- Do not reintroduce keyword-based Simulator construction in shared helpers.
+- Keep artifacts under reports/2026-01-test-suite-triage/phase_m1/$STAMP/simulator_api.
+- Preserve device/dtype neutrality; no `.cpu()` shim in fixtures.
+- Ensure every pytest command includes `KMP_DUPLICATE_LIB_OK=TRUE`.
+- Avoid touching files referenced in docs/index.md beyond their intended edits.
+- Capture before/after logs; do not overwrite prior attempts’ artifacts.
+- Leave gradient guard (M2) untouched this loop; scope creep adds risk.
+- Document any CUDA skips or env limitations in summary.md.
+- Keep fixture updates minimal; no speculative refactors beyond positional constructor swap.
+- Update remediation_tracker.md in the same loop to reflect remaining failure counts.
 
 Pointers:
 - docs/fix_plan.md:48-109
 - plans/active/test-suite-triage.md:202-214
-- tests/test_debug_trace.py:96-155
-- src/nanobrag_torch/simulator.py:1200-1405
-- reports/2026-01-test-suite-triage/phase_m1/20251011T163812Z/debug_trace/pytest_failed.log
+- reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:157-182
+- tests/test_perf_pytorch_005_cudagraphs.py:20-118
+- src/nanobrag_torch/simulator.py:150-236
 
-Next Up: [TEST-SUITE-TRIAGE-001] Phase M1d — run `tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_basic_execution` after resolving Cluster C4.
+Next Up: Phase M1e – restore lattice-shape fixtures so Cluster C7 stops passing `detector=None`.
