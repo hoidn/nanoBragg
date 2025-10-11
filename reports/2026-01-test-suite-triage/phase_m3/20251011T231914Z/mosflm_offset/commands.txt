@@ -1,0 +1,46 @@
+# Phase M3 MOSFLM Offset Design (Option A) - Commands Log
+# STAMP: 20251011T231914Z
+# Mode: Docs
+# Focus: DETECTOR-CONFIG-001 / Detector defaults audit Phase B
+
+## Preparation
+# Created STAMP directory
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+mkdir -p reports/2026-01-test-suite-triage/phase_m3/$STAMP/mosflm_offset
+
+## Design Document Creation
+# Authored comprehensive Option A design document (13 sections, 950+ lines) covering:
+# - Normative requirements (spec-a-core.md §72, arch.md §ADR-03)
+# - Problem statement (current buggy behavior, failing test)
+# - Solution design (beam_center_source provenance tracking)
+# - Implementation blueprint (3 components: config.py, __main__.py, detector.py)
+# - Option A vs B comparison (explicit tracking vs value heuristic)
+# - Test impact matrix (5 new tests, 3 existing updates)
+# - Documentation impact (detector.md, c_to_pytorch_config_map.md, findings.md)
+# - Risk assessment (API-002, CONVENTION-001, header ingestion, PyTorch neutrality)
+# - Implementation sequence (C1-C7 tasks, 3-hour estimate)
+# - Exit criteria (30+ checkpoints)
+# - 2 appendices (CLI examples, test templates)
+
+# Design file location:
+# reports/2026-01-test-suite-triage/phase_m3/20251011T231914Z/mosflm_offset/design.md
+
+## No pytest execution (docs-only loop per input.md directive)
+
+## Phase B Exit Criteria Verification (per plans/active/detector-config.md)
+# B1 ✅ Option A rationale documented (§5 comparison with Option B rejection reasoning)
+# B2 ✅ Config/CLI propagation defined (§4.2 implementation blueprint with code examples)
+# B3 ✅ Test/doc impacts mapped (§6 test matrix: 5 new tests, 3 existing updates; §7 doc impacts)
+# B4 ✅ Risk assessment complete (§8 covering API-002, CONVENTION-001, headers, PyTorch, differentiability)
+
+## Next Actions (Phase C handoff)
+# - Await supervisor approval for Phase C implementation
+# - Phase C tasks C1-C7 enumerated with 3-hour total estimate
+# - Validation strategy defined (targeted selectors, module/cluster tests, device/dtype smoke)
+# - Expected before/after outcomes documented (1 failure → 0 failures)
+
+## References
+# - Spec: specs/spec-a-core.md §§68-73 (MOSFLM convention beam center formula)
+# - Arch: arch.md §ADR-03 (Beam-center Mapping and +0.5 pixel offsets)
+# - Cluster summary: reports/2026-01-test-suite-triage/phase_m3/20251011T193829Z/mosflm_offset/summary.md
+# - Fix plan: docs/fix_plan.md [DETECTOR-CONFIG-001]
