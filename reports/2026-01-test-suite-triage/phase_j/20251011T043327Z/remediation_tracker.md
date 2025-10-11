@@ -12,15 +12,16 @@
 
 This tracker maps all 36 active test failures across 16 clusters to their owning fix-plan items, defines reproduction commands, documents blocking dependencies, and specifies exit criteria. Use this document as the single source of truth for remediation execution order and progress tracking.
 
-**Current Status:**
-- **Total Failures:** 36 (down from 49 in Phase F, -26% improvement)
-- **Active Clusters:** 16 (C1 resolved, C3/C15 eliminated/merged)
-- **Implementation Bugs:** 35 (97.2%)
-- **Likely Deprecations:** 1 (2.8% — C12 legacy suite)
+**Current Status (Updated 2025-10-11 Phase K):**
+- **Total Failures:** 31 (down from 36 in Phase I, -13.9% improvement)
+- **Active Clusters:** 14 (C1/C2/C15 resolved)
+- **Implementation Bugs:** 30 (96.8%)
+- **Likely Deprecations:** 1 (3.2% — C12 legacy suite)
 
 **Blocker Notes:**
 - ✅ [DTYPE-NEUTRAL-001] **VERIFIED COMPLETE** — Pre-Sprint gate passed (20251011T044530Z)
 - ✅ Determinism clusters (C2/C15) CLOSED — Attempt #10 (20251011T060454Z) logged passing selectors + documentation updates
+- ⬇️ Source weighting (C3) improved — 6→4 failures (-33% cluster reduction); Phase C implementation pending
 - [VECTOR-PARITY-001] Tap 5 instrumentation paused pending Phase J sequencing
 
 ---
@@ -31,7 +32,7 @@ This tracker maps all 36 active test failures across 16 clusters to their owning
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | C1 | CLI Defaults | 0 | ralph | [CLI-DEFAULTS-001] | ✅ RESOLVED | done | - | - |
 | C2 | Determinism - Mosaic RNG | 0 | ralph | [DETERMINISM-001] | P1.1 | ✅ RESOLVED | - | Closure logged (Attempt #10) |
-| C3 | Source Weighting | 6 | ralph | [SOURCE-WEIGHT-002] | P1.2 | in_planning | - | None |
+| C3 | Source Weighting | 4 | ralph | [SOURCE-WEIGHT-002] | P1.2 | in_progress | - | Phase C implementation pending |
 | C4 | Lattice Shape Models | 2 | ralph | [LATTICE-SHAPE-001] | P1.4 | in_planning | - | None |
 | C5 | Dual Runner Tooling | 1 | ralph | [TOOLING-DUAL-RUNNER-001] | P2.1 | in_planning | - | None |
 | C6 | CLI Flags (pix0/HKL) | 2 | ralph | [CLI-FLAGS-003] | P2.2 | in_progress | - | None |
@@ -78,7 +79,7 @@ This tracker maps all 36 active test failures across 16 clusters to their owning
 
 ---
 
-### C3: Source Weighting (6 failures)
+### C3: Source Weighting (4 failures) ⬇️ IMPROVED
 
 **Fix Plan:** [SOURCE-WEIGHT-002] (in_planning)
 **Owner:** ralph
@@ -96,6 +97,11 @@ KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001.py tests/test_at_src_0
 - Sourcefile parsing handles all column configurations (X,Y,Z, wavelength, weight)
 - Multi-source runs apply weights correctly in normalization
 - Flux normalization matches spec equations
+
+**Phase K Update (2025-10-11):**
+- 6→4 failures (2 tests now passing: partial progress observed)
+- Phase B equal-weight semantics approved but implementation paused pending K3 tracker refresh
+- Next: Resume Phase C implementation per approved design (Option A)
 
 **Spec Reference:** spec-a-core.md §§3.4–3.5 (Beam Sources & Weighting)
 

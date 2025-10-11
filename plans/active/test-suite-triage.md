@@ -149,7 +149,7 @@ Exit Criteria: Phase K directory populated with logs + junit XML + env snapsho
 | --- | --- | --- | --- |
 | K1 | Execute full suite (Phase K) | [D] | Attempt #15 (20251011T072940Z) captured the rerun with `timeout 3600`; artifacts include `logs/pytest_full.log`, `artifacts/pytest_full.xml`, `env/torch_env.txt`, and `summary.md`. |
 | K2 | Refresh classification | [D] | Attempt #16 → `analysis/{triage_summary.md,classification_overview.md,summary.md}` reconciled Phase K failures with Phase I baseline (31 failures across 14 clusters; C1/C2/C15 resolved, C3 improved). |
-| K3 | Sync tracker + ledger | [ ] | Update `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/` (or clone to a new STAMP) with refreshed counts/owners (mark C2/C15 ✅, set C3 = 4 failures, Sprint 1 progress 3/17), revise `remediation_sequence.md`, and log Attempt #16/K3 outputs in `docs/fix_plan.md`. |
+| K3 | Sync tracker + ledger | [D] | Updated `remediation_tracker.md` (C2/C15 marked ✅ RESOLVED, C3 updated 6→4 with "⬇️ IMPROVED" flag + Phase K notes, Executive Summary refreshed: 36→31 failures / 16→14 clusters) and `remediation_sequence.md` (Sprint 1.1 marked ✅ COMPLETE with artifacts/validation, Sprint 1 progress table updated: 17.6% complete / 3/17 resolved / 31 remaining). Logged K3 tracker updates in `docs/fix_plan.md` Attempt #16 entry`. |
 
 ### Exit Criteria (Plan Completion)
 - Phases A–K marked `[D]` once delivered (Phase H–K added for 2026 rerun, classification refresh, and remediation sequencing).

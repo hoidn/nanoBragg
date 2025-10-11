@@ -55,37 +55,40 @@ This document defines the **execution order** for fixing the 36 active test fail
 **Focus:** Fundamental spec requirements that gate other work
 **Gating Test:** Full suite at sprint end must show ≤30 failures (current: 36)
 
-### Sprint 1.1: Determinism (C2 + C15)
+### ✅ Sprint 1.1: Determinism (C2 + C15) — COMPLETE
 
-**Fix Plan:** [DETERMINISM-001]
-**Failures:** 3 total (C2: 2, C15: 1)
+**Fix Plan:** [DETERMINISM-001] (done)
+**Failures:** 3 total (C2: 2, C15: 1) → 0 ✅
 **Owner:** ralph
+**Resolution Date:** 2025-10-11 (Attempt #10)
 
-**Execution Steps:**
-1. Verify [DTYPE-NEUTRAL-001] blocker resolution (Pre-Sprint action)
-2. Fix RNG seeding for mosaic rotation generation
-3. Implement bitwise-deterministic mode per spec-a-core.md §5.3
-4. Fix test dtype harmonization (AT-024:356 dtype mismatch)
+**Execution Steps (Completed):**
+1. ✅ Verified [DTYPE-NEUTRAL-001] blocker resolution (Pre-Sprint gate passed)
+2. ✅ Fixed RNG seeding for mosaic rotation generation
+3. ✅ Implemented bitwise-deterministic mode per spec-a-core.md §5.3
+4. ✅ Fixed test dtype harmonization (AT-024:356 dtype mismatch)
 
-**Gating Tests:**
+**Gating Tests (All Passing):**
 ```bash
-# Targeted validation (run after each fix step)
+# Validation results: 10 passed, 2 skipped, 0 failures
 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py
 ```
 
-**Exit Criteria:**
-- All 3 determinism tests pass
-- Same-seed runs produce bitwise-identical output
-- Seed propagation documented
+**Exit Criteria Met:**
+- ✅ All 3 determinism tests pass
+- ✅ Same-seed runs produce bitwise-identical output
+- ✅ Seed propagation documented (arch.md ADR-05, testing_strategy.md §2.7)
+
+**Artifacts:** `reports/determinism-callchain/phase_e/20251011T060454Z/validation/`
 
 **Rationale:** Determinism is a spec requirement (§5.3) and affects scientific reproducibility. Must be resolved before other physics work to ensure test stability.
 
 ---
 
-### Sprint 1.2: Source Weighting (C3)
+### Sprint 1.2: Source Weighting (C3) — IN PROGRESS
 
 **Fix Plan:** [SOURCE-WEIGHT-002]
-**Failures:** 6
+**Failures:** 4 (improved from 6, -33%) ⬇️
 **Owner:** ralph
 
 **Execution Steps:**
@@ -616,7 +619,8 @@ CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=2
 | Sprint | Clusters Fixed | Failures Resolved | Target Remaining | Cumulative % Complete |
 | --- | --- | --- | --- | --- |
 | Pre-Sprint | Blocker verification | 0 | 36 | 0% |
-| Sprint 1 | C2, C3, C4, C8, C10, C15, C16, C18 | 17 | ≤19 | 47% |
+| **Sprint 1.1** | **C2, C15 (Determinism)** | **3** | **31 (actual Phase K)** | **17.6%** ✅ |
+| Sprint 1 (remaining) | C3, C4, C8, C10, C16, C18 | 14 | ≤17 | 47% (target) |
 | Sprint 2 | C5, C6, C7, C13 | 9 | ≤10 | 72% |
 | Sprint 3 | C9, C11, C14 | 5 | ≤5 | 86% |
 | Sprint 4 | C12 | 5 | 0 | 100% |
