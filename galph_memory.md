@@ -2652,3 +2652,14 @@
 - Rewrote `input.md` with the chunk ladder commands, STAMP setup, artifact expectations, and exit-code logging instructions for Ralph.
 - Next for Ralph: execute the chunk ladder, capture exit codes & summary, then update tracker/analysis per fix-plan step 3.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-11T20:12:17Z (galph loop - focus selection note)
+- Focus issue: [DETECTOR-CONFIG-001] MOSFLM explicit beam center handling
+- Action type: Planning
+- Mode: Docs
+
+### 2025-10-11T20:16:04Z (galph loop recap)
+- Refreshed `plans/active/detector-config.md` with phased Option A blueprint (Phase B pending design note, phases C/D staged).
+- Updated `docs/fix_plan.md` Next Actions for [DETECTOR-CONFIG-001] to require Option A design + implementation + chunk rerun.
+- Reissued `input.md` directing Ralph to author the design artifact under a fresh STAMP before coding.
+- <Action State>: [planning]
