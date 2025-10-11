@@ -1577,6 +1577,20 @@ class Simulator:
                     print(f"TRACE_PY: I_pixel_final {I_pixel_final:.15g}")
                     print(f"TRACE_PY: floatimage_accumulated {I_pixel_final:.15g}")
 
+                    # Phase M1c: Emit human-readable summary when trace_pixel is used
+                    # Test expects "Final intensity" or "intensity =" to be present
+                    # Test also expects "Position" or "Airpath" to be present
+                    I_normalized = normalized_intensity[target_slow, target_fast].item()
+                    print(f"\nFinal intensity = {I_pixel_final:.6e}")
+                    print(f"Normalized intensity = {I_normalized:.6e}")
+
+                    # Add Position and Airpath for test compliance
+                    if pixel_coords_meters is not None:
+                        coords = pixel_coords_meters[target_slow, target_fast]
+                        print(f"Position (meters): ({coords[0].item():.6e}, {coords[1].item():.6e}, {coords[2].item():.6e})")
+                        airpath_m = torch.sqrt(torch.sum(coords * coords)).item()
+                        print(f"Airpath (meters): {airpath_m:.6e}")
+
                     # SOURCE-WEIGHT-001 Phase E3: Per-source trace instrumentation
                     # Emit TRACE_PY_SOURCE blocks when multi-source mode is active
                     # This enables line-by-line comparison with TRACE_C_SOURCE2 from nanoBragg.c:3337

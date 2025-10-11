@@ -1,0 +1,15 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 5 items
+
+tests/test_debug_trace.py::TestDebugTraceFeatures::test_printout_flag PASSED [ 20%]
+tests/test_debug_trace.py::TestDebugTraceFeatures::test_printout_pixel_flag PASSED [ 40%]
+tests/test_debug_trace.py::TestDebugTraceFeatures::test_trace_pixel_flag PASSED [ 60%]
+tests/test_debug_trace.py::TestDebugTraceFeatures::test_combined_debug_flags PASSED [ 80%]
+tests/test_debug_trace.py::TestDebugTraceFeatures::test_out_of_bounds_pixel PASSED [100%]
+
+============================== 5 passed in 23.04s ==============================
