@@ -1,0 +1,12 @@
+# Phase E Validation Commands
+# Timestamp: 2025-10-11T06:04:54Z
+# Purpose: Execute determinism regression suite post-documentation integration
+
+# Environment guards (as documented in testing_strategy.md §2.7.2):
+export CUDA_VISIBLE_DEVICES=''
+export TORCHDYNAMO_DISABLE=1
+export NANOBRAGG_DISABLE_COMPILE=1
+export KMP_DUPLICATE_LIB_OK=TRUE
+
+# Run determinism tests:
+CUDA_VISIBLE_DEVICES='' TORCHDYNAMO_DISABLE=1 NANOBRAGG_DISABLE_COMPILE=1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py > pytest.log 2>&1

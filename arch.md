@@ -84,6 +84,10 @@ Notes
 
 - ADR-05 Deterministic Sampling & Seeds
   - Distinct RNG domains: noise, mosaic, misset. Spec requires fixed defaults and -seed overrides. Implement the spec's LCG+shuffle PRNG for determinism; torch.Generator may be used only if it reproduces the exact bitstream.
+  - **Implementation Note (2025-10-11):** The C-code RNG contract uses pointer side effects (`ran1(&seed)`) to advance seed state in-place. PyTorch replicates this via stateful `LCGRandom` class instead of raw pointer manipulation:
+    - C: `ran1(&mosaic_seed)` mutates `mosaic_seed` variable directly
+    - PyTorch: `LCGRandom(seed).uniform()` advances internal `self.state` attribute
+    - Both approaches produce identical random sequences when seeded identically (verified by `test_lcg_compatibility` in AT-PARALLEL-024). The PyTorch design is functionally equivalent while being memory-safe and thread-compatible.
 
 - ADR-08 Differentiability Preservation [CRITICAL]
   - All operations on differentiable parameters must maintain computation graph connectivity. See Section 15 for comprehensive guidelines.

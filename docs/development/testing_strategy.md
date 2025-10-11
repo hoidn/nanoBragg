@@ -349,6 +349,122 @@ Optional visual parity harness (sanity check):
 
 When the visual harness and the AT tests disagree, treat the AT tests as the primary gate (authoritative) and use parallel trace‑driven debugging (Section 2.1) to identify the first divergence. Scripts are supportive tools; conformance is determined by the pytest suite.
 
+## 2.7 Determinism Validation Workflow
+
+**Purpose:** Ensure reproducible simulations across platforms, devices, and runs.
+
+### 2.7.1 Authoritative Tests
+
+| Test File | Purpose | Key Validations |
+|-----------|---------|----------------|
+| `tests/test_at_parallel_013.py` | Cross-platform determinism | Same-seed bitwise equality, different-seed independence, float64 precision, platform fingerprint |
+| `tests/test_at_parallel_024.py` | Mosaic/misset RNG determinism | LCG bitstream parity, seed isolation, `mosaic_rotation_umat` determinism, umat↔misset round-trip |
+
+### 2.7.2 Environment Setup
+
+Determinism tests require specific environment guards to prevent non-deterministic behavior:
+
+```bash
+# Required before pytest execution:
+export CUDA_VISIBLE_DEVICES=''           # Force CPU-only (avoid CUDA non-determinism)
+export TORCHDYNAMO_DISABLE=1             # Disable TorchDynamo graph capture
+export NANOBRAGG_DISABLE_COMPILE=1       # Disable torch.compile in simulator
+export KMP_DUPLICATE_LIB_OK=TRUE         # Avoid MKL conflicts
+
+# Execute determinism tests:
+pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py
+```
+
+**Rationale:**
+- `CUDA_VISIBLE_DEVICES=''`: GPU operations may introduce non-deterministic atomics/reductions. CPU execution guarantees bitwise reproducibility.
+- `TORCHDYNAMO_DISABLE=1`: Prevents TorchDynamo/Triton CUDA device query crashes when `CUDA_VISIBLE_DEVICES=''` is set (TorchDynamo attempts to index device 0 on zero-length device list).
+- `NANOBRAGG_DISABLE_COMPILE=1`: Ensures simulator respects Dynamo disable flag.
+- Test files MUST set environment variables at module level before `torch` import (see implementation note below).
+
+### 2.7.3 Validation Metrics
+
+**Same-Seed Runs (Bitwise Reproducibility):**
+
+| Metric | Threshold | Spec Reference |
+|--------|-----------|----------------|
+| `np.array_equal(img1, img2)` | ✅ True (exact match) | AT-PARALLEL-013 §Same-Seed |
+| Correlation | ≥0.9999999 | AT-PARALLEL-013 §Same-Seed |
+| `np.allclose(img1, img2, rtol=1e-7, atol=1e-12)` | ✅ True | AT-PARALLEL-013 §Same-Seed |
+| Max absolute difference | ≤1e-10 (float64) | AT-PARALLEL-013 §Precision |
+
+**Different-Seed Runs (Statistical Independence):**
+
+| Metric | Threshold | Spec Reference |
+|--------|-----------|----------------|
+| `np.array_equal(img1, img2)` | ❌ False (must differ) | AT-PARALLEL-013 §Diff-Seed |
+| Correlation | ≤0.7 (low correlation) | AT-PARALLEL-013 §Diff-Seed |
+| Non-zero pixels differ | ≥50% | AT-PARALLEL-013 §Diff-Seed |
+
+### 2.7.4 Reproduction Commands
+
+```bash
+# Full determinism suite:
+CUDA_VISIBLE_DEVICES='' TORCHDYNAMO_DISABLE=1 NANOBRAGG_DISABLE_COMPILE=1 \
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_at_parallel_013.py \
+  tests/test_at_parallel_024.py
+
+# Individual tests:
+# Same-seed bitwise equality (critical):
+CUDA_VISIBLE_DEVICES='' TORCHDYNAMO_DISABLE=1 NANOBRAGG_DISABLE_COMPILE=1 \
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_same_seed
+
+# LCG bitstream parity (seed contract validation):
+CUDA_VISIBLE_DEVICES='' TORCHDYNAMO_DISABLE=1 NANOBRAGG_DISABLE_COMPILE=1 \
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_at_parallel_024.py::TestATParallel024RandomMisset::test_lcg_compatibility
+```
+
+**Expected Results:**
+- AT-PARALLEL-013: 5 passed, 1 skipped (runtime ~5-6s)
+- AT-PARALLEL-024: 5 passed, 1 skipped (runtime ~4-5s)
+- Total: 10 passed, 2 skipped
+
+**Skipped Tests:** `test_c_pytorch_equivalence` (both files) require `NB_RUN_PARALLEL=1` and C binary
+
+### 2.7.5 Implementation Note
+
+**Test files MUST set environment variables at module level before `torch` import:**
+
+```python
+# CORRECT (tests/test_at_parallel_013.py lines 1-10):
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
+os.environ['TORCHDYNAMO_DISABLE'] = '1'
+os.environ['NANOBRAGG_DISABLE_COMPILE'] = '1'
+
+import torch  # ← Import AFTER env setup
+import numpy as np
+import pytest
+```
+
+**Why:** PyTorch initializes CUDA runtime on import if `torch.cuda.is_available()` returns `True`. Setting `CUDA_VISIBLE_DEVICES` after import has no effect.
+
+### 2.7.6 Artifact Expectations
+
+- Test logs: `reports/2026-01-test-suite-triage/phase_d/<STAMP>/determinism/`
+- Metrics: Correlation values, `np.array_equal` results, float64 precision checks
+- Environment snapshot: `env.json` capturing Python/PyTorch/CUDA versions
+- Commands log: `commands.txt` with exact reproduction steps
+
+### 2.7.7 Known Limitations
+
+- **CUDA Determinism:** Currently deferred. Tests force CPU-only execution to avoid TorchDynamo device query bug. Future work: Re-enable CUDA execution after upstream fix, validate GPU determinism with `torch.cuda.manual_seed_all()` and CuDNN deterministic mode.
+- **Noise Seed:** Current tests focus on mosaic/misset seeds. Poisson noise determinism (`seed` parameter) validated implicitly but not traced in detail. Add explicit noise seed tests if regressions occur.
+
+### 2.7.8 References
+
+- Spec: `specs/spec-a-core.md` §5.3 (RNG determinism), `specs/spec-a-parallel.md` AT-PARALLEL-013/024
+- Architecture: `arch.md` ADR-05 (Deterministic Sampling & Seeds)
+- Implementation: `src/nanobrag_torch/utils/c_random.py` (LCG), `src/nanobrag_torch/models/crystal.py` (seed propagation)
+- Phase C Analysis: `reports/determinism-callchain/phase_c/20251011T052920Z/testing_strategy_notes.md` (detailed workflow notes)
+
 ## 3. Tier 1: Translation Correctness Testing
 
 **Goal:** To prove the PyTorch code is a faithful port of the C code.

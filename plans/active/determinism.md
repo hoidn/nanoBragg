@@ -62,8 +62,8 @@ Exit Criteria: Architecture docs, source docstrings, and testing strategy update
 | --- | --- | --- | --- |
 | D1 | Update `docs/architecture/c_function_reference.md` RNG section | [D] | Attempt #8 → `reports/determinism-callchain/phase_d/20251011T054542Z/docs_integration/` captures the merged overview, seed domain table, pointer warning, and invocation site audit. |
 | D2 | Expand `src/nanobrag_torch/utils/c_random.py` docstrings | [D] | Attempt #9 (20251011T055456Z) → `reports/determinism-callchain/phase_d/20251011T055456Z/docs_integration/` captures 88-line diff with module + function docstring enhancements. Module docstring: algorithm overview, seed contract, key functions, determinism requirements, validation refs. Function docstring: RNG consumption (3 values), C equivalent, seed state progression example. Pytest collection: 692 tests, 2.65s, no errors. |
-| D3 | Enhance `arch.md` ADR-05 with pointer-side-effect note | [ ] | Append implementation note describing `ran1(&seed)` parity and LCGRandom equivalence (reference Attempt #6 + docs_updates §1.2). Archive edits alongside commands log under Phase D docs integration. |
-| D4 | Integrate determinism workflow into `docs/development/testing_strategy.md` | [ ] | Fold `testing_strategy_notes.md` into a new §2.6 (or agreed section), including env vars, selectors, metrics, and artifact expectations. Capture pytest selector table + env guard rationale in the same Phase D bundle. |
+| D3 | Enhance `arch.md` ADR-05 with pointer-side-effect note | [D] | Attempt #10 (20251011T060454Z) — Added 4-line implementation note to arch.md ADR-05 explaining C `ran1(&seed)` pointer mutation vs PyTorch `LCGRandom(seed).uniform()` state advancement equivalence; cross-referenced AT-PARALLEL-024 verification. |
+| D4 | Integrate determinism workflow into `docs/development/testing_strategy.md` | [D] | Attempt #10 (20251011T060454Z) — Integrated 116-line §2.7 into testing_strategy.md documenting env guards, validation metrics, reproduction commands, artifact expectations, known limitations. |
 | D5 | Optional: add deterministic workflow vignette to `README_PYTORCH.md` | [ ] | Only execute if time permits; highlight CLI invocation plus pytest selectors. Mark `[P]` or leave `[ ]` and note optional in guidance. |
 
 ### Phase E — Validation & Closure
@@ -73,9 +73,9 @@ Exit Criteria: Determinism tests pass with documented env guards; fix_plan updat
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| E1 | Execute determinism regression suite | [ ] | Run `CUDA_VISIBLE_DEVICES='' TORCHDYNAMO_DISABLE=1 NANOBRAGG_DISABLE_COMPILE=1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py`. Capture logs + env under `reports/determinism-callchain/phase_e/<STAMP>/validation/`. |
-| E2 | Summarise results & sync ledgers | [ ] | Produce `summary.md` noting pass counts, runtimes, and any skips; update `docs/fix_plan.md` attempts + Next Actions; cross-link documentation PR/commit IDs. |
-| E3 | Prepare closure handoff | [ ] | Draft `closure.md` detailing remaining risks (if any), confirm docs merged, and note follow-up items (e.g., optional README vignette). Once accepted, mark plan ready for archive. |
+| E1 | Execute determinism regression suite | [D] | Attempt #10 (20251011T060454Z) — Executed determinism tests with env guards: 10 passed, 2 skipped, 5.52s runtime. All thresholds met (correlation 1.0, bitwise equality true, float64 precision maintained). |
+| E2 | Summarise results & sync ledgers | [D] | Attempt #10 — Phase E summary.md produced with test breakdown, validation metrics, artifact inventory, exit criteria assessment. docs/fix_plan.md Attempt #10 logged with complete results. |
+| E3 | Prepare closure handoff | [D] | Attempt #10 — Closure handoff prepared in Phase E summary.md; all exit criteria met; docs/fix_plan.md status updated to 'done'; plan ready for archive after commit. |
 
 ### Exit Criteria (Overall Plan)
 - Phases A–C `[D]`, Phase D `[D]` after documentation merged, Phase E `[D]` post-validation.

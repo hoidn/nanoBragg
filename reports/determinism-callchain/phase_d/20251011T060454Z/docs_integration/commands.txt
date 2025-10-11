@@ -1,0 +1,18 @@
+# Phase D3-D4 Documentation Integration Commands
+# Timestamp: 2025-10-11T06:04:54Z
+
+# D3: Update arch.md ADR-05
+# Added pointer-side-effect note and LCGRandom parity explanation
+
+# D4: Update testing_strategy.md
+# Added §2.7 Determinism Validation Workflow
+
+# Sanity check: pytest collection
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q > collect_only.log 2>&1
+
+# Git diff to verify documentation-only changes
+git diff --stat > git_diff_stat.txt
+git diff > git_diff.txt
+
+# Capture SHA256 manifest
+find reports/determinism-callchain/phase_d/20251011T060454Z/ -type f -exec sha256sum {} \; > sha256.txt
