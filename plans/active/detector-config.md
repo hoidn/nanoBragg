@@ -9,9 +9,9 @@
   - docs/findings.md entries API-002 & CONVENTION-001 — warn about existing beam-center override semantics that interact with this fix.
   - reports/2026-01-test-suite-triage/phase_m3/20251011T193829Z/mosflm_offset/summary.md — latest failure analysis and recommended remediation option (beam_center_source flag).
 
-### Status Snapshot (2026-01-22)
+### Status Snapshot (2026-01-21)
 - Phase A — Evidence & Guardrail Alignment · **[D]** Phase L + M3 artifacts ingested; spec/arch cross-check complete; findings cross-referenced.
-- Phase B — Behavior Contract & Blueprint Refresh · **[D]** Option A design complete (STAMP 20251011T203303Z); `beam_center_source` approach ratified with CLI propagation, test/doc impacts, and risk assessment documented in `reports/2026-01-test-suite-triage/phase_m3/20251011T203303Z/mosflm_offset/design.md`.
+- Phase B — Behavior Contract & Blueprint Refresh · **[D]** Option A design complete (STAMP 20251011T210514Z); `beam_center_source` approach ratified with CLI propagation, test/doc impacts, and risk assessment documented in `reports/2026-01-test-suite-triage/phase_m3/20251011T210514Z/mosflm_offset/design.md`.
 - Phase C — Implementation & Targeted Validation · **[P]** Awaiting supervisor approval to proceed with code/test changes per design blueprint.
 - Phase D — Full-Suite Regression & Closure · **[ ]** Pending post-fix chunked rerun, tracker sync, and plan archival.
 

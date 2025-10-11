@@ -1,0 +1,44 @@
+# MOSFLM Beam Center Offset Design - Phase B Commands
+# STAMP: 20251011T210514Z
+# Mode: Docs
+# Actor: ralph
+
+# Step 1: Create timestamped directory structure
+export STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+mkdir -p reports/2026-01-test-suite-triage/phase_m3/$STAMP/mosflm_offset
+
+# Step 2: Draft comprehensive Option A design document
+# File: reports/2026-01-test-suite-triage/phase_m3/20251011T210514Z/mosflm_offset/design.md
+# - Detailed problem statement and root cause analysis
+# - Normative requirements from spec-a-core.md §72 and arch.md §ADR-03
+# - Design rationale: Option A (explicit tracking) vs Option B (heuristic)
+# - Complete implementation specification across 3 layers:
+#   * Configuration layer (DetectorConfig.beam_center_source field)
+#   * CLI parsing layer (determine_beam_center_source() helper)
+#   * Detector layer (conditional offset in beam_center properties)
+# - Test impact matrix (3 existing tests updated, 5 new tests required)
+# - Documentation impact (detector.md, c_to_pytorch_config_map.md, findings.md)
+# - Risk assessment (API compatibility, PyTorch guardrails, parity)
+# - Implementation checklist (Phase C tasks C1-C7)
+# - Exit criteria (code, tests, docs, parity, regression prevention)
+
+# Step 3: Document commands
+# (this file)
+
+# Next Steps (Phase C - Implementation):
+# 1. Update src/nanobrag_torch/config.py (add beam_center_source field)
+# 2. Update src/nanobrag_torch/__main__.py (add detection logic)
+# 3. Update src/nanobrag_torch/models/detector.py (conditional offset)
+# 4. Expand tests/test_detector_config.py (2 updates + 5 new tests)
+# 5. Run targeted validation:
+#    env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py
+#    env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation
+# 6. Update documentation (detector.md, c_to_pytorch_config_map.md, findings.md)
+# 7. Update ledger and tracker (fix_plan.md, remediation_tracker.md, detector-config.md)
+
+# Artifacts Created:
+# - design.md (comprehensive Option A specification, ~600 lines)
+# - commands.txt (this file)
+
+# Duration: ~45 minutes (design authoring + validation against refs)
+# Docs-only loop: no pytest execution, no code changes
