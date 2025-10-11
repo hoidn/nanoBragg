@@ -73,7 +73,7 @@ class Detector:
 
         # Convert beam center from mm to pixels
         # Note: beam center is given in mm from detector origin
-        # MOSFLM convention adds +0.5 pixel offset per AT-PARALLEL-002
+        # MOSFLM convention adds +0.5 pixel offset per specs/spec-a-core.md:72
         self.beam_center_s: torch.Tensor
         self.beam_center_f: torch.Tensor
 
@@ -81,22 +81,29 @@ class Detector:
         from ..config import DetectorConvention
 
         # Calculate pixel coordinates from mm values
-        # NOTE: The MOSFLM +0.5 pixel offset is already included in config.beam_center_s/f
-        # by DetectorConfig.__post_init__ (lines 259-261), so we do NOT add it here.
+        # CRITICAL FIX [DETECTOR-CONFIG-001]: Apply MOSFLM +0.5 pixel offset during mm→pixel conversion
+        # Per specs/spec-a-core.md §72: "Fbeam = Ybeam + 0.5·pixel; Sbeam = Xbeam + 0.5·pixel"
+        # Per arch.md §ADR-03: "MOSFLM: Fbeam = Ybeam + 0.5·pixel; Sbeam = Xbeam + 0.5·pixel.
+        #                       CUSTOM (when active): spec is silent; ADR decision is to not apply implicit +0.5 offsets"
         # BL-1: Guard against None values (should be set by __post_init__, but defend)
         if config.beam_center_s is None or config.beam_center_f is None:
             raise ValueError(
                 "beam_center_s and beam_center_f must be set. "
                 "DetectorConfig.__post_init__ should have set defaults."
             )
+
+        # Convert mm to pixels
         beam_center_s_pixels = config.beam_center_s / config.pixel_size_mm
         beam_center_f_pixels = config.beam_center_f / config.pixel_size_mm
 
-        # The convention-specific offsets are already applied in DetectorConfig.__post_init__
-        # nanoBragg.c lines 1218-1234:
-        #   MOSFLM: beam_center_mm includes +0.5 pixel worth of offset
-        #   DENZO/XDS/DIALS/ADXV/CUSTOM: No offset
-        # No additional offset needed here.
+        # Apply MOSFLM +0.5 pixel offset AFTER mm→pixel conversion
+        # This matches C code behavior (nanoBragg.c lines 1220-1221):
+        #   Fbeam = Ybeam + 0.5*pixel_size (in mm), converted to meters
+        #   Sbeam = Xbeam + 0.5*pixel_size (in mm), converted to meters
+        # Here we work in pixels, so add +0.5 pixels for MOSFLM
+        if config.detector_convention == DetectorConvention.MOSFLM:
+            beam_center_s_pixels = beam_center_s_pixels + 0.5
+            beam_center_f_pixels = beam_center_f_pixels + 0.5
 
         # Convert to tensors on proper device
         if isinstance(beam_center_s_pixels, torch.Tensor):
@@ -515,16 +522,11 @@ class Detector:
                     "beam_center_f and beam_center_s must be set by DetectorConfig.__post_init__"
                 )
 
-            if self.config.detector_convention == DetectorConvention.MOSFLM:
-                # MOSFLM convention: add +0.5 pixel offset (C: nanoBragg.c:1220-1221)
-                # beam_center_f/s are in mm; convert to m and add half-pixel in meters
-                # Use config values directly (they're in mm) and convert
-                Fbeam = (self.config.beam_center_f / 1000.0) + (0.5 * self.pixel_size)
-                Sbeam = (self.config.beam_center_s / 1000.0) + (0.5 * self.pixel_size)
-            else:
-                # Other conventions: convert mm→m without offset
-                Fbeam = self.config.beam_center_f / 1000.0
-                Sbeam = self.config.beam_center_s / 1000.0
+            # CRITICAL [DETECTOR-CONFIG-001]: The +0.5 offset was already applied in __init__
+            # (lines 104-106), so self.beam_center_f/s are now in pixels WITH the offset
+            # We just need to convert from pixels to meters:
+            Fbeam = self.beam_center_f * self.pixel_size  # pixels * (m/pixel) → meters
+            Sbeam = self.beam_center_s * self.pixel_size  # pixels * (m/pixel) → meters
 
             # Reuse beam_vector from r-factor calculation above
             # This ensures CUSTOM convention overrides (e.g., -beam_vector) are honored
@@ -575,16 +577,10 @@ class Detector:
 
                 # Update beam_center_f/s tensors to maintain header consistency
                 # Convert from meters back to pixels: beam_center = offset_m / pixel_size_m
-                # Note: For MOSFLM the +0.5 offset was already applied above, so reverse it
-                if self.config.detector_convention == DetectorConvention.MOSFLM:
-                    # MOSFLM: Fbeam = (beam_center_f + 0.5) * pixel_size
-                    # So: beam_center_f = Fbeam / pixel_size - 0.5
-                    self.beam_center_f = (Fbeam / self.pixel_size - 0.5).to(device=self.device, dtype=self.dtype)
-                    self.beam_center_s = (Sbeam / self.pixel_size - 0.5).to(device=self.device, dtype=self.dtype)
-                else:
-                    # Other conventions: beam_center = offset / pixel_size
-                    self.beam_center_f = (Fbeam / self.pixel_size).to(device=self.device, dtype=self.dtype)
-                    self.beam_center_s = (Sbeam / self.pixel_size).to(device=self.device, dtype=self.dtype)
+                # CRITICAL [DETECTOR-CONFIG-001]: beam_center_f/s now STORE pixel values WITH offset already
+                # So we just convert Fbeam/Sbeam (which are in meters) back to pixels
+                self.beam_center_f = (Fbeam / self.pixel_size).to(device=self.device, dtype=self.dtype)
+                self.beam_center_s = (Sbeam / self.pixel_size).to(device=self.device, dtype=self.dtype)
 
             # Use exact C-code formula WITH distance correction (AT-GEO-003)
             # BEAM pivot formula (C-code reference: nanoBragg.c lines 1833-1835):
@@ -648,15 +644,11 @@ class Detector:
             # - Sclose (slow coord) ← beam_center_s (slow param)
             # NOTE: The beam centers already have the +0.5 offset from __init__ for MOSFLM!
 
-            # C-code lines 1273-1276: CUSTOM convention uses Fclose=Xbeam, Sclose=Ybeam (no +0.5 offset)
-            # MOSFLM adds +0.5 pixel offset per C-code lines 1233-1234
-            if self.config.detector_convention == DetectorConvention.MOSFLM:
-                Fclose = (self.beam_center_f + 0.5) * self.pixel_size
-                Sclose = (self.beam_center_s + 0.5) * self.pixel_size
-            else:
-                # CUSTOM, XDS, DIALS: use beam centers as-is
-                Fclose = self.beam_center_f * self.pixel_size
-                Sclose = self.beam_center_s * self.pixel_size
+            # CRITICAL [DETECTOR-CONFIG-001]: The +0.5 offset was already applied in __init__
+            # (lines 104-106 for MOSFLM), so self.beam_center_f/s are now in pixels WITH the offset
+            # We just need to convert from pixels to meters for all conventions:
+            Fclose = self.beam_center_f * self.pixel_size  # pixels * (m/pixel) → meters
+            Sclose = self.beam_center_s * self.pixel_size  # pixels * (m/pixel) → meters
 
             # Compute pix0 BEFORE rotations using close_distance if specified
             # When close_distance is provided, use it directly for SAMPLE pivot
@@ -1067,17 +1059,10 @@ class Detector:
         Sbeam_computed = torch.dot(R, self.sdet_vec)
 
         # Get original beam center in meters
-        # CRITICAL: For MOSFLM, the beam centers stored are user-provided (Xbeam/Ybeam),
-        # but the pix0_vector calculation adds +0.5 pixel to get Fbeam/Sbeam.
-        # We need to apply the same offset here for consistent comparison.
-        if self.config.detector_convention == DetectorConvention.MOSFLM:
-            # Add +0.5 pixel offset to match what's used in pix0_vector calculation
-            Fbeam_original = (self.beam_center_f + 0.5) * self.pixel_size
-            Sbeam_original = (self.beam_center_s + 0.5) * self.pixel_size
-        else:
-            # Other conventions: use beam centers as-is
-            Fbeam_original = self.beam_center_f * self.pixel_size
-            Sbeam_original = self.beam_center_s * self.pixel_size
+        # CRITICAL [DETECTOR-CONFIG-001]: beam_center_f/s now ALREADY have the +0.5 offset
+        # applied in __init__ (lines 104-106 for MOSFLM), so we just convert pixels→meters
+        Fbeam_original = self.beam_center_f * self.pixel_size
+        Sbeam_original = self.beam_center_s * self.pixel_size
 
         # Calculate errors
         error_f = abs(Fbeam_computed - Fbeam_original)
