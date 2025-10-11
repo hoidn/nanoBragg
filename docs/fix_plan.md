@@ -2,8 +2,8 @@
 
 **Last Updated:** 2026-01-17 (galph loop — Sprint 1 kickoff alignment)
 **Active Focus:**
-- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — Launch Sprint 1.2 (`[SOURCE-WEIGHT-002]`) per `remediation_sequence.md`; capture new Attempt bundle under `reports/2026-01-test-suite-triage/phase_j/<STAMP>/` and update this ledger once source weighting baselines are recorded.
-- ACTIVE: `[SOURCE-WEIGHT-002]` — Author Phase A plan scaffold + baseline reproductions before diving into simulator fixes; ensure docs/fix_plan Attempts capture repro commands and evidence.
+- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — Sprint 1.2 active. Drive `[SOURCE-WEIGHT-002]` Phase B semantics brief + design so remediation tracker can advance to implementation.
+- ACTIVE: `[SOURCE-WEIGHT-002]` — Execute Phase B tasks (semantics.md, dtype decision, touchpoint map, verification checklist) and log Attempt #15 once artifacts land under `reports/2026-01-test-suite-triage/phase_j/<STAMP>/source_weighting/`.
 - MONITOR: `[DETERMINISM-001]` — Documentation + validation complete (Attempt #10); keep optional README vignette deferred until Sprint 1 stabilises.
 - `[VECTOR-PARITY-001]` Tap 5.3 instrumentation remains paused; unblock after Sprint 1 remediation tracker signals Source Weighting closure.
 
@@ -162,11 +162,11 @@
 - Attempts History:
   * [2025-10-11] Attempt #1 — Result: ✅ Phase A baseline COMPLETE (evidence-only). Executed baseline test run capturing 6 failures (1 passed, 85.7% fail rate, runtime 2.08s). **Root causes identified**: (1) dtype mismatch — tests expect float64, implementation returns float32 (affects 5/6 failures); (2) wavelength column parsing missing — sourcefile λ values ignored, contradicts AT-SRC-001 requirement (affects 2/6 failures). Warning confirms "sourcefile wavelengths are ignored" per spec lines 150-151, but AT-SRC-001 requires per-source λ support — spec clarification needed. Weight column appears correctly parsed (no weight-related assertion failures). Artifacts: `reports/2026-01-test-suite-triage/phase_j/20251011T062017Z/source_weighting/{summary.md,logs/pytest.log,artifacts/pytest.xml,env/*}`. Next: Proceed to Phase B implementation once approved — (1) fix dtype consistency in `io/source.py`, (2) implement per-source wavelength support, (3) validate AT-SRC-001 weighted multi-source normalization.
 - Next Actions:
-  1. ✅ Phase A baseline complete — evidence archived under 20251011T062017Z timestamp
-  2. Await supervisor approval before beginning Phase B implementation
-  3. Address dtype mismatch: update `read_sourcefile()` to accept/default `dtype=torch.float64`
-  4. Resolve spec contradiction: implement per-source wavelength per AT-SRC-001 (lines 150-151 state "ignored", AT-SRC-001 requires application)
-  5. Validate steps normalization includes source count and per-source weights
+  1. Author Phase B semantics brief (`semantics.md`) pairing spec text with proposed behaviour + amendment notes.
+  2. Decide dtype/device handling strategy for parser + beam config; document in the brief and update plan if helper work is required.
+  3. Produce implementation touchpoint map (io/source.py, BeamConfig plumbing, Simulator accumulation) with file:line anchors and guardrail callouts.
+  4. Capture Phase C/D verification checklist (targeted pytest selectors, gradient checks, documentation updates) to unblock implementation delegation.
+  5. Log Attempt #15 once the Phase B artifact bundle is archived; then green-light Phase C code changes per plan.
 - Exit Criteria:
   - All 7 tests in `test_at_src_001*.py` pass (currently 1/7 passing)
   - Sourcefile parsing handles all column configurations (full 5-column, partial, defaults)

@@ -1,34 +1,36 @@
-Summary: Kick off Sprint 1.2 by documenting source weighting scope and capturing the failing baseline.
-Mode: Parity
+Summary: Deliver `[SOURCE-WEIGHT-002]` Phase B semantics brief + design so Sprint 1.2 can advance to implementation.
+Mode: Docs+Parity
 Focus: [SOURCE-WEIGHT-002] Simulator source weighting
 Branch: feature/spec-based-2
-Mapped tests: KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001.py tests/test_at_src_001_simple.py
-Artifacts: plans/active/source-weighting.md, reports/2026-01-test-suite-triage/phase_j/<STAMP>/source_weighting/
-Do Now: Execute [SOURCE-WEIGHT-002] Phase A baseline — author the plan scaffold under plans/active/source-weighting.md, then run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001.py tests/test_at_src_001_simple.py` and archive commands/logs/env in reports/2026-01-test-suite-triage/phase_j/<STAMP>/source_weighting/.
-If Blocked: Capture the failure output and env snapshot in reports/2026-01-test-suite-triage/phase_j/blockers/<STAMP>/, note the blocker in docs/fix_plan.md Attempts, and stop for supervisor review.
+Mapped tests: none — evidence-only
+Artifacts: reports/2026-01-test-suite-triage/phase_j/<STAMP>/source_weighting/{semantics.md,implementation_map.md,verification_checklist.md,env.json}
+Do Now: Execute `[SOURCE-WEIGHT-002]` Phase B tasks B1–B4 — create the semantics/design artifact bundle under a fresh `<STAMP>` in `reports/2026-01-test-suite-triage/phase_j/` (no pytest run this loop; planning deliverables only).
+If Blocked: Capture an interim blockers.md in the `<STAMP>` directory summarising what prevented the brief and note the dependency in docs/fix_plan.md Attempts; stop for supervisor review.
 Priorities & Rationale:
-- docs/fix_plan.md:5-7 — Active focus now targets Sprint 1.2 `[SOURCE-WEIGHT-002]`.
-- docs/fix_plan.md:54-55 — Next Actions call for plan creation + baseline capture before moving to Detector Config.
-- plans/active/test-suite-triage.md:85-108 — Sprint 1.2 sequence defines the required tests and exit criteria.
-- reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md:32-47,95-119 — C3 remains open with six failures; tracker expects plan + regression evidence.
+- docs/fix_plan.md:5-7,160-175 — Sprint 1.2 now requires the Phase B semantics brief before code edits.
+- plans/active/source-weighting.md:32-87 — Phase B table defines B1–B4 deliverables needed to unlock implementation.
+- specs/spec-a-core.md:142-210 — authoritative sourcefile semantics that must be reconciled with AT-SRC-001 expectations.
+- tests/test_at_src_001.py:1-230 — current acceptance criteria demonstrating the required per-source weight/λ behaviour.
+- docs/architecture/pytorch_design.md:95-116 — existing equal-weight assumption we must revisit in the design brief.
 How-To Map:
-- Create a fresh UTC stamp (e.g., 20260117THHMMSSZ) and `mkdir -p reports/2026-01-test-suite-triage/phase_j/<STAMP>/source_weighting/` before running commands.
-- Draft plans/active/source-weighting.md using the phased template (Context + Phase A/B sections); cite specs/spec-a-core.md §§3.4–3.5 and remediation_sequence Sprint 1.2 guidance.
-- Log the exact pytest command, env vars, and git status into `commands.txt`; capture stdout/stderr in `pytest.log`; record `python -m nanobrag_torch --version` (or equivalent) plus `torch.__version__` in `env.json`.
-- After the run, summarise failure counts + key stack traces in `summary.md` and update docs/fix_plan.md Attempts with the stamp/location.
-- Finish by running `pytest --collect-only -q` if you modify tests/plan files, and note results in the artifact bundle.
+- `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)` then `mkdir -p reports/2026-01-test-suite-triage/phase_j/$STAMP/source_weighting`.
+- Capture env snapshot for traceability: `python -m platform` info, `torch.__version__`, and current git SHA into `env.json` inside the new directory.
+- Draft `semantics.md` covering spec text vs test behaviour, proposed resolution, and any spec amendment notes; cite exact line numbers.
+- Create `implementation_map.md` outlining modules/files to touch (io/source.py, BeamConfig, simulator) with current line anchors and guardrails (vectorization, dtype neutrality, differentiability).
+- Write `verification_checklist.md` enumerating targeted pytest selectors, gradient checks, documentation updates, and artifact expectations for Phases C/D.
+- Update plans/active/source-weighting.md status section if new insights arise; log the artifact paths + key decisions in Attempt history when reporting back.
 Pitfalls To Avoid:
-- Do not edit simulator physics yet; this loop is evidence-only.
-- Keep ASCII formatting in the new plan/documentation.
-- Always set `KMP_DUPLICATE_LIB_OK=TRUE`; no other env tweaks unless documented.
-- No full `pytest tests/` runs; stay on the two mapped selectors.
-- Preserve Protected Assets referenced in docs/index.md (e.g., loop.sh, input.md).
-- Avoid removing existing remediation tracker history; append new notes instead.
-- Capture timestamps consistently; include sha256 manifest if you add binaries/logs.
-- Maintain device/dtype neutrality—do not hard-code `.cpu()`/`.cuda()` in any scratch scripts.
+- Do not modify production code or tests yet; this loop is planning only.
+- Keep all new docs ASCII and reference authoritative spec sections directly.
+- Respect Protected Assets (docs/index.md); do not relocate input.md/loop.sh.
+- Ensure dtype/device guidance aligns with runtime guardrails (no `.cpu()`/`.cuda()` shortcuts in proposals).
+- Avoid inventing new scripts; place artifacts under the prescribed reports path.
+- Include concrete file:line anchors for planned code edits; avoid vague directives.
+- Note spec contradictions explicitly; do not silently overwrite the current contract.
 Pointers:
-- docs/fix_plan.md:5-8,54-55
-- plans/active/test-suite-triage.md:85-108
-- reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_sequence.md:85-109
-- reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md:32-47,95-119
-Next Up: Stage Detector Config plan refresh for Sprint 1.3 once source weighting baseline is logged.
+- plans/active/source-weighting.md:32-87
+- docs/fix_plan.md:160-175
+- specs/spec-a-core.md:142-210
+- docs/architecture/pytorch_design.md:95-116
+- tests/test_at_src_001_simple.py:1-60
+Next Up: Once Phase B artifacts are committed, proceed to Phase C implementation tasks (C1–C3) with targeted pytest selectors.

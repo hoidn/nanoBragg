@@ -2294,3 +2294,16 @@
 - Summary: Determinism closure verified and logged — updated docs/fix_plan.md header + Next Actions to pivot Sprint 1 toward `[SOURCE-WEIGHT-002]`, refreshed `[DETERMINISM-001]` checklist as complete, synced remediation tracker (C2/C15 counts→0 with resolution notes), and rewrote input.md instructing Ralph to author the source-weighting plan + capture baseline logs.
 - Open Questions: none; expect Attempt #14 delivering plan + failing baseline before moving to Detector Config.
 - <Action State>: [ready_for_implementation]
+
+### 2026-01-17 (galph loop - pre-edit focus note)
+- Focus issue: [SOURCE-WEIGHT-002] Phase B implementation planning
+- Action type: Planning
+- Mode: Parity + Docs
+- Note: Recording focus/mode prior to plan updates. Detailed summary to follow end-of-loop.
+
+### 2026-01-17 (galph loop - Source weighting Phase B brief setup)
+- Aligned `[SOURCE-WEIGHT-002]` with Phase B focus: updated docs/fix_plan.md header + Next Actions to demand semantics/design artifacts and logged Attempt #15 placeholder.
+- Refreshed plans/active/source-weighting.md to phased template (Phase A marked [D], new Phase B–D tables with deliverables/exit criteria).
+- Replaced input.md with Docs+Parity guidance instructing Ralph to produce the Phase B semantics bundle (semantics.md, implementation_map.md, verification_checklist.md) under a fresh phase_j/<STAMP>/ directory; no tests this loop.
+- Follow-up for Ralph: execute Phase B tasks B1–B4, archive artifacts, and record Attempt #15 before requesting implementation approval.
+- <Action State>: [ready_for_implementation]
