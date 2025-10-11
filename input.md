@@ -1,44 +1,45 @@
-Summary: Capture Sprint 0 closure artifacts and sync the ledger/tracker before scoping the Phase M2 gradient guard.
-Mode: Docs
-Focus: [TEST-SUITE-TRIAGE-001] Phase M1f — Sprint 0 ledger refresh
+Summary: Implement the Phase M2 gradient compile guard and prove the gradcheck suite passes under NANOBRAGG_DISABLE_COMPILE=1.
+Mode: none
+Focus: [TEST-SUITE-TRIAGE-001] Phase M2 — Gradient Infrastructure Gate
 Branch: feature/spec-based-2
-Mapped tests: none — evidence-only
-Artifacts: reports/2026-01-test-suite-triage/phase_m1/$STAMP/summary.md; reports/2026-01-test-suite-triage/phase_m2/$STAMP/strategy.md; remediation_tracker.md
-Do Now: Execute docs/fix_plan.md [TEST-SUITE-TRIAGE-001] Next Actions #1 — Phase M1f ledger refresh (doc updates only, no pytest)
-If Blocked: Log the blocker + attempted command in docs/fix_plan.md Attempt history and drop a TODO in reports/2026-01-test-suite-triage/phase_m1/$STAMP/summary.md; stop and wait for supervisor guidance.
+Mapped tests: env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -v tests/test_gradients.py -k "gradcheck" --tb=short; (optional GPU) env CUDA_VISIBLE_DEVICES=0 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -v tests/test_gradients.py -k "gradcheck" --tb=short
+Artifacts: reports/2026-01-test-suite-triage/phase_m2/$STAMP/gradient_guard/; reports/2026-01-test-suite-triage/phase_m2/$STAMP/gradients_cpu/; reports/2026-01-test-suite-triage/phase_m2/$STAMP/gradients_gpu/ (if run); reports/2026-01-test-suite-triage/phase_m2/$STAMP/summary.md
+Do Now: Execute docs/fix_plan.md [TEST-SUITE-TRIAGE-001] Next Actions #1 — implement Phase M2b guard and run `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -v tests/test_gradients.py -k "gradcheck" --tb=short`
+If Blocked: Capture the failure log under reports/2026-01-test-suite-triage/phase_m2/$STAMP/blocked.md with command/output and stop for supervisor guidance.
 
 Priorities & Rationale:
-- docs/fix_plan.md:3-48 — Next Actions now require the M1f ledger refresh and Phase M2 brief before any new fixes.
-- plans/active/test-suite-triage.md:11-26 — Status snapshot notes Sprint 0 clusters closed and calls out M1f + M2 as the remaining Phase M1 work.
-- plans/active/test-suite-triage.md:210-215 — Row M1e marked [D]; row M1f still open pending ledger/tracker updates.
-- reports/2026-01-test-suite-triage/phase_m1/20251011T170539Z/shape_models/summary.md:1 — Source of Attempt #27 data that must be rolled into the new summary bundle.
-- docs/development/testing_strategy.md:52-86 — Authoritative guidance for documenting environment + commands even when no tests run.
+- docs/fix_plan.md:40-120 — Next Actions now target Phase M2b-d (compile guard + gradient reruns + documentation updates).
+- plans/active/test-suite-triage.md:11-260 — Phase M1 closed; Phase M2 table lists the required guard, test reruns, and documentation touch points.
+- reports/2026-01-test-suite-triage/phase_m2/20251011T171454Z/strategy.md:1 — Strategy brief defining guard mechanics, commands, and documentation scope.
+- arch.md:120-220 — Differentiability guidelines the guard must respect when disabling torch.compile.
+- docs/development/testing_strategy.md:52-140 — Authoritative commands and gradient test expectations.
 
 How-To Map:
-1. `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)` then `mkdir -p reports/2026-01-test-suite-triage/phase_m1/$STAMP` and `reports/2026-01-test-suite-triage/phase_m2/$STAMP`.
-2. Copy key metrics from Attempt #27: summarise 11 remaining failures, Sprint 0 completion, and artifact pointers into `reports/2026-01-test-suite-triage/phase_m1/$STAMP/summary.md` (include command log snippets and environment notes per testing_strategy §1.5).
-3. Update `remediation_tracker.md` Sprint 0 rows with Attempt #27 data (failure counts, status → COMPLETE) and record the new STAMP/path.
-4. Append Attempt #27 closure + the new summary path to `[TEST-SUITE-TRIAGE-001]` Attempts in docs/fix_plan.md; note that Sprint 0 is done and Phase M2 planning is next.
-5. Draft Phase M2 guard brief: create `reports/2026-01-test-suite-triage/phase_m2/$STAMP/strategy.md` describing the proposed `NANOBRAGG_DISABLE_COMPILE=1` guard, expected selectors (`pytest -v tests/test_gradients.py -k "gradcheck"`), and documentation touch points.
-6. Confirm plans/active/test-suite-triage.md row M1f flips to [D] and reference the new summary; leave M2a ready for delegation.
+1. `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)` then `mkdir -p reports/2026-01-test-suite-triage/phase_m2/$STAMP/{gradient_guard,gradients_cpu}` (and `gradients_gpu` if CUDA run).
+2. Update `src/nanobrag_torch/simulator.py` so `NANOBRAGG_DISABLE_COMPILE=1` reliably skips `torch.compile` (ensure the flag is read before any compile call) and set the env flag at the top of `tests/test_gradients.py` before importing torch; record the command summary in `gradient_guard/commands.txt` plus a short rationale in `gradient_guard/notes.md`.
+3. Run the CPU selector: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -v tests/test_gradients.py -k "gradcheck" --tb=short`; save stdout to `gradients_cpu/pytest.log`, capture `env.txt` via `python - <<'PY'
+import torch, json, platform
+print(json.dumps({"python": platform.python_version(), "torch": torch.__version__}, indent=2))
+PY`.
+4. If `torch.cuda.is_available()`, repeat Step 3 with `CUDA_VISIBLE_DEVICES=0` and store results in `gradients_gpu/`. Afterwards update `arch.md` §15, `docs/development/testing_strategy.md` §1.4, `docs/development/pytorch_runtime_checklist.md`, `remediation_tracker.md`, and append the new Attempt + summary path to `[TEST-SUITE-TRIAGE-001]`; summarise everything in `phase_m2/$STAMP/summary.md` with commands/env/exit status.
 
 Pitfalls To Avoid:
-- Do not rerun pytest; this loop is evidence-only.
-- Preserve prior Attempt numbering in docs/fix_plan.md; append rather than overwrite.
-- Keep `$STAMP` directories unique—never reuse an existing timestamp.
-- Include environment + command strings in the summary even if no tests were executed.
-- When editing remediation_tracker.md, update both the table row and any aggregate counts.
-- Reference the Attempt #27 artifact path exactly (`20251011T170539Z`) when citing prior evidence.
-- Avoid editing production code or deleting historical artifacts.
-- Maintain UTF-8 ASCII only; no fancy characters beyond what already exists.
-- Double-check Mode in future loops before dispatching new work.
-- Leave Phase M2 implementation tasks untouched; we only author the strategy doc this loop.
+- Set `os.environ['NANOBRAGG_DISABLE_COMPILE'] = '1'` **before** importing torch in tests to avoid Dynamo caching the compiled graph.
+- Do not remove existing compile support—only gate it; production runs must still compile when the env var is unset.
+- Keep artifact directories unique per STAMP and avoid overwriting prior Attempt bundles.
+- Capture pytest output with `--tb=short` for readability; no full-suite invocations this loop.
+- Maintain ASCII text; avoid non-standard Unicode in docs or logs.
+- Update documentation sections atomically—reference precise subsections when editing.
+- If CUDA smoke fails, stop after logging under `gradients_gpu/` and do not patch around the failure.
+- Ensure `remediation_tracker.md` counts align with the new pass totals before closing.
+- Record the new Attempt in docs/fix_plan.md without renumbering prior entries.
+- Leave `NANOBRAGG_DISABLE_COMPILE` unset after tests to avoid surprising other suites.
 
 Pointers:
-- docs/fix_plan.md:3-48
-- plans/active/test-suite-triage.md:11-222
-- reports/2026-01-test-suite-triage/phase_m1/20251011T170539Z/shape_models/summary.md:1
-- docs/development/testing_strategy.md:52-86
-- remediation_tracker.md:1-200
+- docs/fix_plan.md:40-120
+- plans/active/test-suite-triage.md:25-250
+- reports/2026-01-test-suite-triage/phase_m2/20251011T171454Z/strategy.md:1-200
+- arch.md:120-220
+- docs/development/testing_strategy.md:52-140
 
-Next Up: Phase M2a — implement the gradient compile guard once the brief is approved.
+Next Up: If time remains, start Phase M2d documentation updates per summary checklist.

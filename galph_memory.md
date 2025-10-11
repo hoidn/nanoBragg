@@ -2567,3 +2567,13 @@
 - Rewrote input.md directing Ralph to produce the new summary bundle, sync remediation_tracker.md, and draft the Phase M2 guard strategy.
 - Action State: [ready_for_implementation]
 
+### 2025-10-11T17:24:49Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase M2 gradient guard
+- Action type: Review/housekeeping
+- Mode: none
+### 2025-10-11T17:24:49Z (galph loop - Phase M2 briefing)
+- Updated `plans/active/test-suite-triage.md` status snapshot to mark Phase M1 complete and flipped M2a to [D] referencing strategy bundle 20251011T171454Z.
+- Refreshed `[TEST-SUITE-TRIAGE-001]` Next Actions in `docs/fix_plan.md` to target Phase M2b–M2d (compile guard implementation, gradcheck reruns, documentation sync).
+- Replaced `input.md` with guard-implementation instructions: implement `NANOBRAGG_DISABLE_COMPILE` path, run targeted gradcheck selector(s), capture artifacts under `phase_m2/$STAMP/`, and update docs/tracker.
+- Follow-up for Ralph: execute Phase M2b CPU run first, extend to CUDA if available, then update docs/ledger per strategy.
+- <Action State>: [ready_for_implementation]
