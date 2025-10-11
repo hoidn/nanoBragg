@@ -135,9 +135,9 @@ Exit Criteria: `reports/2026-01-test-suite-triage/phase_j/<STAMP>/remediation_tr
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| J1 | Draft remediation tracker | [ ] | Author `remediation_tracker.md` listing per-cluster owner, fix-plan ID, reproduction selector, blocking dependencies, and deliverable expectations (logs, doc updates, code patches). |
-| J2 | Define execution sequence | [ ] | Produce `remediation_sequence.md` outlining sprint order (e.g., Determinism → dtype → vectorization); include success criteria + gating tests for each step. |
-| J3 | Update fix_plan dependencies | [ ] | Align `[TEST-SUITE-TRIAGE-001]` Next Actions and related entries (e.g., mark `[DTYPE-NEUTRAL-001]` paused) to reference Phase J artifacts; capture the adjustments in `galph_memory.md`. |
+| J1 | Draft remediation tracker | [D] | Author `remediation_tracker.md` listing per-cluster owner, fix-plan ID, reproduction selector, blocking dependencies, and deliverable expectations (logs, doc updates, code patches). |
+| J2 | Define execution sequence | [D] | Attempt #12 → `remediation_sequence.md` authored with 4-sprint roadmap (Pre-Sprint → Sprint 1 P1 [17 failures] → Sprint 2 P2 [9] → Sprint 3 P3 [5] → Sprint 4 P4 [5]), gating tests, success metrics (36→0 failures), parallel work opportunities. |
+| J3 | Update fix_plan dependencies | [D] | Attempt #12 → `docs/fix_plan.md` Next Actions updated with Pre-Sprint blocker verification + Sprint 1 guidance; Attempt #12 entry logged with artifact paths and sequence highlights. |
 
 ### Exit Criteria (Plan Completion)
 - Phases A–J marked `[D]` once delivered (Phase H–J newly added for 2026 rerun, classification refresh, and remediation sequencing).
