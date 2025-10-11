@@ -1,0 +1,37 @@
+# DETECTOR-CONFIG-001 Phase B Ratification Commands
+# STAMP: 20251011T211646Z
+# Mode: Docs-only (no code execution per input.md line 2)
+
+# 1. Create STAMP directory
+export STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+mkdir -p reports/2026-01-test-suite-triage/phase_m3/$STAMP/mosflm_offset
+
+# 2. Verify design document exists
+ls -la reports/2026-01-test-suite-triage/phase_m3/20251011T210514Z/mosflm_offset/design.md
+# Result: 995 lines, comprehensive design artifact
+
+# 3. Verify prior verification documents
+ls -la reports/2026-01-test-suite-triage/phase_m3/20251011T211142Z/mosflm_offset/phase_b_verification.md
+# Result: Prior loop already verified Phase B complete
+
+# 4. No pytest execution (docs-only loop per input.md)
+
+# 5. Artifacts produced:
+#    - phase_b_ratification.md (ratification declaration)
+#    - commands.txt (this file)
+
+# Next Actions (for supervisor):
+# - Update input.md with Phase C "Do Now" directive
+# - Update plans/active/detector-config.md Phase C status from [P] to [ ] (ready)
+
+# Next Actions (for ralph Phase C loop):
+# Execute implementation tasks C1-C7 per design.md:
+#   C1: Update src/nanobrag_torch/config.py
+#   C2: Update src/nanobrag_torch/__main__.py
+#   C3: Update src/nanobrag_torch/models/detector.py
+#   C4: Update tests (test_detector_config.py + new test file)
+#   C5: Run targeted validation:
+#       env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation
+#       env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py
+#   C6: Update docs (detector.md, c_to_pytorch_config_map.md, findings.md)
+#   C7: Update fix_plan.md and remediation_tracker.md
