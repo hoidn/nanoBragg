@@ -1,0 +1,56 @@
+[2025-10-11] Attempt #56 — Result: ✅ **SUCCESS (Phase D Complete — C8 Cluster Resolved)**.
+
+Validation loop per Ralph prompt (one thing per loop: verify Phase C implementation and document completion).
+
+**Finding**: Phase C implementation already complete (all code changes committed, tests passing).
+
+**Mission**: Execute Phase D targeted validation and document closure.
+
+**Test Results**: Targeted validation suite (54 detector/beam-center tests) **100% pass rate** (54/54 PASSED in 18.75s).
+
+Critical C8 test `test_at_parallel_003::test_detector_offset_preservation` **PASSED** ✅ (resolution confirmed).
+
+Comprehensive test coverage:
+(1) `test_beam_center_source.py` 5/5 PASSED (auto vs explicit validation)
+(2) `test_detector_config.py` 15/15 PASSED (configuration layer)
+(3) `test_at_parallel_001.py` 8/8 PASSED
+(4) `test_at_parallel_002.py` 4/4 PASSED
+(5) `test_at_parallel_003.py` 3/3 PASSED
+(6) `test_at_parallel_004.py` 5/5 PASSED
+(7) `test_at_geo_001.py` 1/1 PASSED
+(8) `test_at_geo_002.py` 6/6 PASSED
+(9) `test_at_geo_003.py` 8/8 PASSED
+
+**Sample full-suite run**: 169 tests passed, 1 failure (pre-existing C15 "mixed units" cluster, unrelated to C8), 17 skipped, 75.71s.
+
+**Net change**: C8 failures 1→0, no new regressions detected.
+
+**Artifacts**: Created Phase D summary at `reports/2026-01-test-suite-triage/phase_d/20251011T222046Z/summary.md` documenting verification results, exit criteria verification, baseline comparison, and closure recommendations.
+
+**Key Achievement**: MOSFLM beam center offset fix successfully verified—explicit beam centers preserved, auto-calculated defaults correctly receive +0.5 pixel offset per spec-a-core.md §72.
+
+**Exit Criteria Verified**:
+✅ C8 test passing (1→0 failures)
+✅ Targeted suite 100% (54/54)
+✅ No regressions in detector/beam-center domain
+✅ Implementation follows Option A design
+✅ PyTorch device/dtype/differentiability neutrality preserved
+✅ Backward compatibility maintained (default="auto")
+✅ Documentation synced
+
+**Status**: Phase D complete, ready for plan archival.
+
+**Runtime**: 18.75s (targeted suite).
+
+**Next**: Mark [DETECTOR-CONFIG-001] status="done", archive plan to `plans/archive/`, commit Phase D artifacts.
+
+---
+
+**Resolution Summary**: C8 cluster resolved (1→0 failures). MOSFLM +0.5 pixel offset now correctly applied ONLY to auto-calculated beam centers; explicit user-provided coordinates remain unchanged per spec-a-core.md §72. Implementation complete via `beam_center_source` provenance tracking (Option A design). Targeted validation 100% pass rate (54/54 tests). No regressions detected.
+
+**Key Artifacts**:
+- Phase D Summary: `reports/2026-01-test-suite-triage/phase_d/20251011T222046Z/summary.md`
+- Design Document: `reports/2026-01-test-suite-triage/phase_m3/20251011T214422Z/mosflm_offset/design.md`
+- Implementation: `src/nanobrag_torch/{config.py,__main__.py,models/detector.py}` (beam_center_source field + conditional offset)
+- Tests: `tests/test_beam_center_source.py` (5 new test cases), `tests/test_at_parallel_003.py` (now passing)
+- Documentation: `docs/architecture/detector.md` §8.2, `docs/development/c_to_pytorch_config_map.md` MOSFLM row
