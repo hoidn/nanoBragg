@@ -2254,3 +2254,9 @@
 - Issued new `input.md` directing Ralph to execute Phase B3 C-reference sweep under `reports/determinism-callchain/phase_b3/<STAMP>/`.
 - Next for Ralph: follow input.md to document nanoBragg.c seed propagation, capture commands + summary, and update Attempts History.
 - <Action State>: [gathering_evidence]
+### 2026-01-17 (galph loop - determinism doc handoff refresh)
+- Focus issue: [DETERMINISM-001] Phase C documentation bundle (Action: Review/housekeeping, Mode: Docs).
+- Updated `plans/active/determinism.md` status snapshot and Phase B row to mark the C seed contract complete; re-scoped Phase C tasks to the new remediation_summary/docs_updates/testing_strategy notes deliverables (C1–C4 pending).
+- Refreshed `docs/fix_plan.md` Next Actions/Exit Criteria to call for the Phase C artifact trio before marking the item done.
+- Replaced `input.md` with Docs-mode instructions directing Ralph to create the timestamped Phase C bundle under `reports/determinism-callchain/phase_c/`.
+- <Action State>: [ready_for_implementation]

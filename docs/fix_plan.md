@@ -113,15 +113,15 @@
 
   * [2025-10-11T050024Z] Attempt #6 — Result: ✅ **SUCCESS — Determinism blockers CLEARED**. Implemented Dynamo guard + dtype standardization per input.md directive. **Code changes:** (1) `tests/test_at_parallel_013.py`: set `CUDA_VISIBLE_DEVICES=''`, `TORCHDYNAMO_DISABLE='1'`, `NANOBRAGG_DISABLE_COMPILE='1'` at module level before torch import to prevent device query crashes; cleaned up `set_deterministic_mode()` to remove redundant env settings; added `dtype=torch.float64` to Simulator instantiation in `run_simulation_deterministic()`; (2) `src/nanobrag_torch/utils/c_random.py`: changed `mosaic_rotation_umat()` dtype parameter from hardcoded `torch.float32` to `Optional[torch.dtype] = None`, defaulting to `torch.get_default_dtype()` when omitted; (3) `src/nanobrag_torch/models/crystal.py:728`: pass `dtype=self.dtype` and `device=self.device` to `mosaic_rotation_umat()` to respect execution context; (4) `tests/test_at_parallel_024.py`: explicitly request `dtype=torch.float64` in `test_mosaic_rotation_umat_determinism()`. **Test results:** AT-PARALLEL-013: 5 passed, 1 skipped (5.43s); AT-PARALLEL-024: 5 passed, 1 skipped (3.95s). All determinism tests now execute and pass: same-seed runs produce bit-for-bit identical results (`np.array_equal` passes), correlation ≥0.9999999, float64 precision maintained throughout pipeline, no TorchDynamo/Triton failures. **Key fixes:** (1) TorchDynamo/Triton device query issue resolved by setting env vars at module level before torch import; (2) dtype neutrality achieved in `mosaic_rotation_umat` by making dtype parameter optional and defaulting to caller's dtype; (3) test dtype consistency ensured by passing explicit `dtype=torch.float64` to Simulator. **Artifacts:** `reports/2026-01-test-suite-triage/phase_d/20251011T050024Z/determinism/phase_a_fix/{logs/summary.txt,at_parallel_013/pytest.log,at_parallel_024/pytest.log,commands.txt}`. **Phase A complete — determinism contract now validated.** Next: Mark [DETERMINISM-001] done and update `plans/active/determinism.md` Phase B status to indicate blockers cleared.
 - Next Actions:
-  1. ✅ Attempt #4 complete — TorchDynamo blocker resolved, dtype neutrality achieved
-  2. ✅ AT-PARALLEL-013 passing — 5 passed, 1 skipped; bitwise determinism validated
-  3. ✅ AT-PARALLEL-024 passing — 5 passed, 1 skipped; RNG reproducibility confirmed
-  4. Mark [DETERMINISM-001] done; update `plans/active/determinism.md` Phase B status
-- Exit Criteria: ✅ COMPLETE
+  1. Author Phase C remediation summary (`reports/determinism-callchain/phase_c/<STAMP>/remediation_summary.md`) consolidating Attempt #6 fixes + Dynamo guard rationale.
+  2. Draft RNG documentation checklist (`reports/determinism-callchain/phase_c/<STAMP>/docs_updates.md`) pointing at `docs/architecture/c_function_reference.md` + `src/nanobrag_torch/utils/c_random.py` comment updates for the pointer-side-effect seed contract.
+  3. Plan testing-strategy update (`reports/determinism-callchain/phase_c/<STAMP>/testing_strategy_notes.md`) covering env vars (`TORCHDYNAMO_DISABLE`, `CUDA_VISIBLE_DEVICES=-1`) and authoritative selectors.
+  4. Refresh this fix-plan entry + supervisor input once the above artifacts land, then mark status `done`.
+- Exit Criteria: ✅ COMPLETE once
   - ✅ Determinism tests pass with bitwise equality for same-seed runs (np.array_equal, correlation ≥0.9999999)
-  - ✅ Different seeds produce different results (validated by test_pytorch_determinism_different_seeds)
-  - Seed propagation contract documented in code comments + docs (PENDING)
-  - Testing strategy updated with determinism workflow (PENDING)
+  - ✅ Different seeds produce different results (validated by `test_pytorch_determinism_different_seeds`)
+  - ✅ Seed propagation contract documented in code comments + docs (per Phase C checklist)
+  - ✅ Testing strategy updated with determinism workflow (env guards + selectors)
 
 ## [DETECTOR-GRAZING-001] Extreme detector angles
 - Spec/AT: `specs/spec-a-core.md` §4.6 (detector rotations), `tests/test_at_parallel_017.py`

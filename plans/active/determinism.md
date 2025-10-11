@@ -11,9 +11,11 @@
   - `src/nanobrag_torch/models/crystal.py`, `src/nanobrag_torch/utils/c_random.py`, and `src/nanobrag_torch/simulator.py` — seed handling surfaces.
 - Artifact Policy: All new work lands under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/determinism/` with subfolders per phase (`phase_a`, `phase_b`, …). Each attempt captures `commands.txt`, `env.json`, raw logs, and `summary.md`; diffs/traces live under `trace/` or `callchain/` as appropriate.
 
-### Status Snapshot (2026-01-16)
-- Dependency cleared — `[DTYPE-NEUTRAL-001]` Attempt #3 removed the detector dtype crash, so Phase A reproduction can resume.
-- Next step: capture fresh AT-PARALLEL-013/024 logs (expect TorchDynamo CUDA device failures) and update fix_plan Attempt history before launching Phase B callchain tracing.
+### Status Snapshot (2026-01-17)
+- Phase A ✅ complete (Attempts #1–#3) — determinism reproductions and environment baselines captured under `reports/2026-01-test-suite-triage/phase_d/20251011T045211Z/determinism/phase_a/`.
+- Phase B ✅ complete (Attempt #5) — C-side seed contract documented at `reports/determinism-callchain/phase_b3/20251011T051737Z/`, complementing the PyTorch callchain bundle from Attempt #4.
+- Phase C 🔄 pending — need to publish remediation blueprint + documentation updates (seed side-effect contract, Dynamo guard instructions) before closing `[DETERMINISM-001]`.
+- Phase D remains templated for future regression checks once documentation tasks land.
 
 ### Phase A — Reproduce & Baseline Seed Drift
 Goal: Capture authoritative reproductions of the determinism failures, plus working controls, so later fixes have comparable baselines.
@@ -36,20 +38,20 @@ Exit Criteria: Callchain bundle pinpointing first divergent taps for mosaic/miss
 | --- | --- | --- | --- |
 | B1 | Define analysis question & scope hints | [D] | Recorded analysis question + scope inside `reports/determinism-callchain/callchain/static.md` (20260117T) per callchain SOP; scope hints captured alongside taps for Crystal/Simulator seed flow. |
 | B2 | Execute callchain tracing for Crystal/Simulator seed flow | [D] | Callchain artifacts captured under `reports/determinism-callchain/` (`callchain/static.md`, `trace/tap_points.md`, placeholder `callgraph/dynamic.txt`) highlighting missing `mosaic_seed` usage. |
-| B3 | Compare against C reference | [ ] | Document expected seed handling from `nanoBragg.c` sections (noise/misset seeds). If needed, add TODO to instrument `golden_suite_generator/nanoBragg` seed logs. Summarise differences in `phase_b/<STAMP>/summary.md`. |
+| B3 | Compare against C reference | [D] | Attempt #5 (20251011T051737Z) — `reports/determinism-callchain/phase_b3/20251011T051737Z/` captures grep outputs, `c_rng_excerpt.c`, and `c_seed_flow.md` summarising `misset_seed`/`mosaic_seed` propagation and the pointer-side-effect contract. |
 | B4 | Update docs/fix_plan ledger | [D] | Attempt #4 logged in `[DETERMINISM-001]` (docs/fix_plan.md) with findings + `reports/determinism-callchain/` artifacts; ready to proceed to Phase B3. |
 
-### Phase C — Remediation Blueprint & Test Strategy
-Goal: Synthesize the fix approach without code changes; enumerate touchpoints, acceptance tests, and documentation updates required.
-Prereqs: Phase B tap findings that explain seed drift.
-Exit Criteria: Remediation plan and regression coverage doc ready for implementation handoff.
+### Phase C — Documentation & Remediation Blueprint
+Goal: Codify the PyTorch-side fixes, update permanent documentation (seed contract + deterministic run instructions), and stage the close-out handoff for `[DETERMINISM-001]`.
+Prereqs: Phase B artifacts (`reports/determinism-callchain/…/phase_b3/`) and Attempt #6 implementation logs confirming tests pass.
+Exit Criteria: Remediation summary + doc updates published, fix_plan/input refreshed for final closure.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Draft remediation plan | [ ] | Author `phase_c/<STAMP>/remediation_plan.md` covering: config seeding contract, required changes to `parse_and_validate_args`, `Simulator` seed hookup, and interactions with mosaic/random misset. Cite spec sections and `c_random.py` semantics. |
-| C2 | Define regression coverage | [ ] | Produce `phase_c/<STAMP>/tests.md` listing pytest selectors (AT-PARALLEL-013/024, targeted unit tests for `Crystal` seeding, potential new deterministic smoke). Include CPU/GPU expectations per runtime checklist. |
-| C3 | Document doc/test touchpoints | [ ] | Add `phase_c/<STAMP>/docs_updates.md` noting spec/README adjustments if behaviour changes and update requirements in `docs/development/testing_strategy.md` if new commands introduced. |
-| C4 | Refresh fix_plan + input blueprint | [ ] | Update `[DETERMINISM-001]` entry with Phase C status and upcoming implementation tasks; prepare supervisor input template (without dispatching fix). |
+| C1 | Author remediation summary | [ ] | Create `reports/determinism-callchain/phase_c/<STAMP>/remediation_summary.md` describing env guards (TorchDynamo disable), dtype propagation fixes, and how seeds reach `mosaic_rotation_umat`. Reference Attempt #6 artifacts. |
+| C2 | Update RNG documentation | [ ] | Draft `docs_updates.md` capturing where to document the pointer-side-effect seed contract (target: `docs/architecture/c_function_reference.md` RNG section + `src/nanobrag_torch/utils/c_random.py` docstring). Log concrete edit checklist. |
+| C3 | Update testing strategy | [ ] | Extend `docs/development/testing_strategy.md` §1.4/§2 with deterministic run instructions (env vars, pytest selectors, artifact expectations). Capture diff plan in `phase_c/<STAMP>/testing_strategy_notes.md`. |
+| C4 | Refresh fix_plan + input blueprint | [ ] | Update `[DETERMINISM-001]` Next Actions to point at Phase C doc tasks and prepare supervisor input (Docs mode) for execution. |
 
 ### Phase D — Validation Gate (post-fix, pending implementation)
 Goal: Define validation checklist to execute immediately after code changes land.
