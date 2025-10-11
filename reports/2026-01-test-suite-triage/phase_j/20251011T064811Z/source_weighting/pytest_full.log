@@ -1,0 +1,61 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 10 items
+
+tests/test_at_src_001_simple.py::test_sourcefile_dtype_propagation[dtype0] PASSED [ 10%]
+tests/test_at_src_001_simple.py::test_sourcefile_dtype_propagation[dtype1] PASSED [ 20%]
+tests/test_at_src_001_simple.py::test_sourcefile_dtype_propagation[None] PASSED [ 30%]
+tests/test_at_src_001_simple.py::test_sourcefile_parsing FAILED          [ 40%]
+tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_sourcefile_with_all_columns PASSED [ 50%]
+tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_sourcefile_with_missing_columns PASSED [ 60%]
+tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_sourcefile_default_position PASSED [ 70%]
+tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_multiple_sources_normalization PASSED [ 80%]
+tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_empty_sourcefile PASSED [ 90%]
+tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_weighted_sources_integration PASSED [100%]
+
+=================================== FAILURES ===================================
+___________________________ test_sourcefile_parsing ____________________________
+
+    def test_sourcefile_parsing():
+        """Basic test of source file parsing."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sourcefile = Path(tmpdir) / "test_sources.txt"
+    
+            # Write test source file with two sources
+            content = """# Test source file
+    -10.0  0.0  0.0  2.0  1.0e-10
+    0.0  -10.0  0.0  3.0  1.5e-10
+    """
+            sourcefile.write_text(content)
+    
+            # Read source file
+            default_wavelength_m = 6.2e-10
+            directions, weights, wavelengths = read_sourcefile(
+                sourcefile,
+                default_wavelength_m=default_wavelength_m
+            )
+    
+            # Check results
+            assert directions.shape == (2, 3)
+            assert weights.shape == (2,)
+            assert wavelengths.shape == (2,)
+    
+            # Check directions are normalized
+            norms = torch.linalg.norm(directions, dim=1)
+>           torch.testing.assert_close(norms, torch.ones(2, dtype=torch.float64))
+E           AssertionError: The values for attribute 'dtype' do not match: torch.float32 != torch.float64.
+
+tests/test_at_src_001_simple.py:83: AssertionError
+=============================== warnings summary ===============================
+tests/test_at_src_001_simple.py::test_sourcefile_parsing
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_src_001_simple.py:71: UserWarning: Sourcefile wavelength column differs from CLI -lambda value. Per spec-a-core.md:150-151, sourcefile wavelengths are ignored. All sources will use CLI wavelength 6.200000e-10 m.
+    directions, weights, wavelengths = read_sourcefile(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_at_src_001_simple.py::test_sourcefile_parsing - AssertionEr...
+==================== 1 failed, 9 passed, 1 warning in 9.97s ====================

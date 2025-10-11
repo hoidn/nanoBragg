@@ -1,0 +1,33 @@
+diff --git a/src/nanobrag_torch/io/source.py b/src/nanobrag_torch/io/source.py
+index a6984017..44f91605 100644
+--- a/src/nanobrag_torch/io/source.py
++++ b/src/nanobrag_torch/io/source.py
+@@ -20,7 +20,7 @@ def read_sourcefile(
+     default_wavelength_m: float,
+     default_source_distance_m: float = 10.0,
+     beam_direction: Optional[torch.Tensor] = None,
+-    dtype: torch.dtype = torch.float32,
++    dtype: Optional[torch.dtype] = None,
+     device: torch.device = torch.device('cpu'),
+ ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+     """Read source file containing X,Y,Z position, weight, and wavelength.
+@@ -48,7 +48,7 @@ def read_sourcefile(
+         default_wavelength_m: Default wavelength in meters (λ0)
+         default_source_distance_m: Default source distance in meters (10 m)
+         beam_direction: Unit beam direction vector (default [0,0,1])
+-        dtype: Data type for output tensors (default: torch.float32)
++        dtype: Data type for output tensors (default: None, uses torch.get_default_dtype())
+         device: Device for output tensors (default: CPU)
+ 
+     Returns:
+@@ -57,6 +57,10 @@ def read_sourcefile(
+         - weights: (N,) tensor of weights (currently all 1.0 per spec)
+         - wavelengths: (N,) tensor of wavelengths in meters
+     """
++    # Resolve dtype: use caller's dtype if provided, else torch default
++    if dtype is None:
++        dtype = torch.get_default_dtype()
++
+     if beam_direction is None:
+         beam_direction = torch.tensor([0.0, 0.0, 1.0], dtype=dtype, device=device)
+ 
