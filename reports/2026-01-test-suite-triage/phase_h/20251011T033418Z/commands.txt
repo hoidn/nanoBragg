@@ -1,0 +1,19 @@
+# Phase H: 2026 Suite Relaunch
+# Task: Full pytest execution with fresh artifact capture
+# Timestamp: ${STAMP}
+
+# H1: Stage workspace
+export STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+mkdir -p reports/2026-01-test-suite-triage/phase_h/${STAMP}/{collect_only,full_suite,artifacts,docs}
+
+# H2: Optional preflight snapshot
+CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q > reports/2026-01-test-suite-triage/phase_h/${STAMP}/collect_only/pytest.log
+
+# H3: Full suite execution
+CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_h/${STAMP}/artifacts/pytest_full.xml 2>&1 | tee reports/2026-01-test-suite-triage/phase_h/${STAMP}/full_suite/pytest_full.log
+
+# Environment metadata commands:
+python -V
+pip list | grep torch
+nvidia-smi
+Exit code: 
