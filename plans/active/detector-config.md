@@ -9,11 +9,11 @@
   - docs/findings.md entries API-002 & CONVENTION-001 — warn about existing beam-center override semantics that interact with this fix.
   - reports/2026-01-test-suite-triage/phase_m3/20251011T193829Z/mosflm_offset/summary.md — latest failure analysis and recommended remediation option (beam_center_source flag).
 
-### Status Snapshot (2026-01-21)
+### Status Snapshot (2025-10-11)
 - Phase A — Evidence & Guardrail Alignment · **[D]** Phase L + M3 artifacts ingested; spec/arch cross-check complete; findings cross-referenced.
 - Phase B — Behavior Contract & Blueprint Refresh · **[D]** Option A design complete (STAMP 20251011T214422Z); `beam_center_source` approach ratified with CLI propagation, test/doc impacts, and risk assessment documented in `reports/2026-01-test-suite-triage/phase_m3/20251011T214422Z/mosflm_offset/design.md`. **Verification complete** (STAMP 20251011T220319Z) — design meets all exit criteria, implementation-ready.
-- Phase C — Implementation & Targeted Validation · **[P]** Awaiting supervisor approval and implementation handoff (tasks C1-C7, estimated 3-5 hours).
-- Phase D — Full-Suite Regression & Closure · **[P]** Pending Phase M chunked rerun, tracker sync, and plan archival.
+- Phase C — Implementation & Targeted Validation · **[D]** Complete; C1-C7 tasks executed, targeted tests 16/16 passed, documentation synced (Attempt #42).
+- Phase D — Full-Suite Regression & Closure · **[D]** Complete; D1 chunked rerun executed (STAMP 20251011T223549Z), C8 cluster RESOLVED, 554/13/119 pass/fail/skip, no new regressions (Attempt #56).
 
 ### Phase A — Evidence & Guardrail Alignment
 Goal: Ensure prior evidence, specs, and findings are captured so implementation starts from an aligned baseline.
@@ -60,9 +60,9 @@ Exit Criteria: Chunked suite rerun captured with ≤ the pre-fix 13 failures (id
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| D1 | Phase M chunked rerun | [ ] | Execute 10-command ladder from `plans/active/test-suite-triage.md` Phase M under new STAMP. Store logs in `reports/.../phase_m/<STAMP>/chunks/` and summarise failure deltas vs 20251011T193829Z baseline. |
-| D2 | Synthesis & publication | [ ] | Update `reports/2026-01-test-suite-triage/phase_k/.../analysis/summary.md` and `phase_m3/.../mosflm_offset/summary.md` with post-fix results. Note any residual anomalies. |
-| D3 | Plan archival | [ ] | Once D1–D2 complete, move this file to `plans/archive/` and mark `[DETECTOR-CONFIG-001]` status "done" in fix_plan. |
+| D1 | Phase M chunked rerun | [D] | Executed 10-chunk ladder (STAMP 20251011T223549Z); 686 tests, 554 passed (80.8%), 13 failed (1.9%), 119 skipped. C8 test PASSES, no new regressions. Summary at `reports/2026-01-test-suite-triage/phase_m/20251011T223549Z/summary.md`. |
+| D2 | Synthesis & publication | [P] | Update `reports/2026-01-test-suite-triage/phase_k/.../analysis/summary.md` and `phase_m3/.../mosflm_offset/summary.md` with post-fix results. Note any residual anomalies. |
+| D3 | Plan archival | [P] | Once D1–D2 complete, move this file to `plans/archive/` and mark `[DETECTOR-CONFIG-001]` status "done" in fix_plan. |
 
 ### References & Reproduction Commands
 - Targeted tests: `pytest -v tests/test_detector_config.py`, `pytest -v tests/test_at_parallel_002.py`, `pytest -v tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation`.
