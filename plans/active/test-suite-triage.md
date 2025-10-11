@@ -251,9 +251,9 @@ Exit Criteria: Phase M directory contains targeted + full-suite rerun artifact
 
 | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
 | --- | --- | --- | --- |
-| M1 | Retest detector-config after fix | [ ] | Once MOSFLM offset patch merges, rerun `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0`; archive under `reports/2026-01-test-suite-triage/phase_m/<STAMP>/detector_config/` with diff vs Attempt #17. |
+| M1 | Retest detector-config after fix | [D] | Attempt #40 (20251011T190855Z) executed `pytest -v tests/test_detector_config.py` and `pytest -v tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_scales_with_pixel_size`; logs archived under `reports/2026-01-test-suite-triage/phase_m3/20251011T190855Z/mosflm_fix/`. Diff vs Attempt #17 noted in summary.md. |
 | M2 | Full-suite validation sweep | [ ] | Execute `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m/<STAMP>/artifacts/pytest_full.xml`; ensure runtime guardrails per testing_strategy §§1.4–1.5. |
-| M3 | Tracker + ledger sync | [ ] | Update `[TEST-SUITE-TRIAGE-001]`, `[DETECTOR-CONFIG-001]`, and `remediation_tracker.md` with new pass/fail counts; note residual failing clusters for Sprint 1.4 planning. |
+| M3 | Tracker + ledger sync | [ ] | After Phase M2 run, update `reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/summary.md`, `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md`, and `[TEST-SUITE-TRIAGE-001]` Attempts with fresh counts. |
 
 ### Metrics & Reporting Guidelines
 - Capture total runtime, pass/fail counts, and slowest tests (top 25) from `--durations=25` output.

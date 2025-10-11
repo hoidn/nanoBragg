@@ -1,37 +1,38 @@
-Summary: Capture fresh MOSFLM detector evidence and push the post-fix suite rerun for [DETECTOR-CONFIG-001].
+Summary: Execute Phase M2 full-suite validation and queue tracker updates for TEST-SUITE-TRIAGE-001.
 Mode: Parity
-Focus: docs/fix_plan.md#[DETECTOR-CONFIG-001] Detector defaults audit
+Focus: TEST-SUITE-TRIAGE-001 / Full pytest run and triage
 Branch: feature/spec-based-2
-Mapped tests: tests/test_detector_config.py; tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_scales_with_pixel_size; pytest chunk map per plans/active/test-suite-triage.md Phase M
-Artifacts: reports/2026-01-test-suite-triage/phase_m3/$STAMP/mosflm_fix/; reports/2026-01-test-suite-triage/phase_m/$STAMP/chunks/; reports/2026-01-test-suite-triage/phase_m/$STAMP/summary.md
-Do Now: docs/fix_plan.md#[DETECTOR-CONFIG-001] Detector defaults audit — env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0
-If Blocked: If detector_config pytest fails unexpectedly, stop, capture the failing log under the stamped folder, and note the exit code plus hypothesis in attempts history; do not proceed to chunked runs.
+Mapped tests: pytest tests/ -v --durations=25 --maxfail=0
+Artifacts: reports/2026-01-test-suite-triage/phase_m/$STAMP/
+Do Now: [TEST-SUITE-TRIAGE-001] Full-suite validation sweep — env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m/$STAMP/artifacts/pytest_full.xml (capture stdout to logs/pytest_full.log)
+If Blocked: Run pytest --collect-only -q and log output under reports/2026-01-test-suite-triage/phase_m/$STAMP/preflight/collect_only.log, then document the blocker in docs/fix_plan.md Attempts.
 Priorities & Rationale:
-- specs/spec-a-core.md:72 — MOSFLM defaults require (detsize + pixel)/2 before applying the +0.5 mapping; need evidence that implementation now matches.
-- docs/fix_plan.md:220 — Next actions demand a fresh targeted bundle and tracker sync before closing the cluster.
-- plans/active/detector-config.md:42 — Phase C gate now hinges on rerunning chunked Phase M commands post-fix.
-- plans/active/test-suite-triage.md:232 — Phase M instructions define the chunked rerun cadence and storage layout we must follow.
+- plans/active/test-suite-triage.md:254 — Phase M2 is the remaining gate before sprint handoff; evidence bundle required now that detector defaults validated.
+- docs/fix_plan.md:38 — Next Actions call for Phase M2 execution and tracker refresh using Attempt #40 evidence.
+- docs/development/testing_strategy.md:30 — Handoff rules demand explicit pytest commands and guardrail adherence for suite runs.
+- docs/development/testing_strategy.md:373 — Environment checklist mandates KMP_DUPLICATE_LIB_OK=TRUE for PyTorch execution.
+- reports/2026-01-test-suite-triage/phase_m3/20251011T190855Z/mosflm_fix/summary.md:1 — Confirms Phase M1 prerequisites satisfied (MOSFLM verification) preceding this run.
 How-To Map:
-- Export STAMP="$(date -u +%Y%m%dT%H%M%SZ)" once and reuse it for both bundles.
-- Targeted bundle: run the Do Now command, then `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_scales_with_pixel_size --maxfail=0`; save `commands.txt`, both pytest logs, and a short `summary.md` (note 513.0 px / 1024.5 px expectations) into `reports/2026-01-test-suite-triage/phase_m3/$STAMP/mosflm_fix/`.
-- Tracker sync: once logs are captured, update `reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/summary.md` and `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md` with the new status, then append the Attempt to docs/fix_plan.md.
-- Chunked rerun: follow the 10-command map in `plans/active/test-suite-triage.md` (Chunk 01–10). Set up `reports/2026-01-test-suite-triage/phase_m/$STAMP/chunks/`, copy the command list to `commands.txt`, run each command prefixed with `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE`, and tee logs to `chunks/chunk_##/pytest.log`. Aggregate counts into `phase_m/$STAMP/summary.md` with pass/fail/skipped totals versus Phase M0.
-- After tests, update docs/fix_plan.md Attempts history and note residual failure clusters; leave remediation_tracker diffs staged for review.
+- export STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+- mkdir -p reports/2026-01-test-suite-triage/phase_m/$STAMP/{artifacts,logs}
+- env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m/$STAMP/artifacts/pytest_full.xml | tee reports/2026-01-test-suite-triage/phase_m/$STAMP/logs/pytest_full.log
+- Summarise totals in reports/2026-01-test-suite-triage/phase_m/$STAMP/summary.md (pass/fail/skip counts, runtime, notable slow tests); reuse template from phase_m0.
+- Update docs/fix_plan.md Attempts and reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/summary.md with new counts after the run.
 Pitfalls To Avoid:
-- Do not rerun the entire suite without the chunk split; the single-command run times out.
-- Keep `KMP_DUPLICATE_LIB_OK=TRUE` on every pytest invocation to avoid MKL crashes.
-- Reuse the same STAMP for all artifacts in this loop; mismatched directories break audit trails.
-- Avoid editing production code—this loop is evidence capture only.
-- When updating trackers, change only the relevant cluster rows; retain historical counts.
-- Don’t overwrite older `phase_m3` bundles; add a new stamped folder.
-- Watch for GPU availability—if CUDA is absent, note it in summary.md and proceed CPU-only.
-- Ensure pytest exits with `--maxfail=0` so we collect full failure sets.
-- Keep docs/index.md referenced assets untouched (loop.sh, supervisor.sh, input.md).
-- Document commands and runtimes inside each folder via `commands.txt` for reproducibility.
+- Do not drop KMP_DUPLICATE_LIB_OK=TRUE; required per runtime checklist.
+- Keep CUDA_VISIBLE_DEVICES=-1 to lock execution to CPU for parity.
+- Avoid using legacy chunk scripts; single command with --maxfail=0 is required unless it times out.
+- Do not edit production code or tests in this loop; evidence-only per supervisor directive.
+- Preserve existing Attempt numbering in docs/fix_plan.md (append Attempt #41 next).
+- Ensure artifacts directories use the same STAMP for all files.
+- Capture --durations=25 output; needed for future performance comparisons.
+- Leave existing phase_m0 artifacts untouched; create new STAMP folder.
+- If pytest fails unexpectedly, do not rerun immediately—record failure details first.
+- Respect Protected Assets listed in docs/index.md (input.md already handled).
 Pointers:
-- specs/spec-a-core.md#L70 — MOSFLM default and mapping formula reference.
-- docs/architecture/detector.md#L143 — Updated narrative for beam-center handling.
-- docs/development/c_to_pytorch_config_map.md#L54 — Beam parameter mapping expectations.
-- plans/active/detector-config.md#L40 — Phase C status + guidance.
-- plans/active/test-suite-triage.md#L228 — Phase M chunk workflow and goals.
-Next Up: If time remains, prep docs/fix_plan.md Attempt summary for the chunked rerun so we can transition to Phase M tracker updates next loop.
+- plans/active/test-suite-triage.md:254
+- docs/fix_plan.md:38
+- docs/development/testing_strategy.md:30
+- docs/development/testing_strategy.md:373
+- reports/2026-01-test-suite-triage/phase_m3/20251011T190855Z/mosflm_fix/summary.md:1
+Next Up: If time remains, draft Phase M3c mixed-units hypotheses per docs/fix_plan.md Next Actions step 2.
