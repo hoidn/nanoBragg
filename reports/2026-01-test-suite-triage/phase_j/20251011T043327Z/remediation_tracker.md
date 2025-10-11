@@ -12,17 +12,19 @@
 
 This tracker maps all 36 active test failures across 16 clusters to their owning fix-plan items, defines reproduction commands, documents blocking dependencies, and specifies exit criteria. Use this document as the single source of truth for remediation execution order and progress tracking.
 
-**Current Status (Updated 2025-10-11 Phase D4):**
-- **Total Failures:** 27 (down from 36 in Phase I, -25.0% improvement)
-- **Active Clusters:** 13 (C1/C2/C3/C15 resolved)
-- **Implementation Bugs:** 26 (96.3%)
-- **Likely Deprecations:** 1 (3.7% — C12 legacy suite)
+**Current Status (Updated 2025-10-11 Phase M1f):**
+- **Total Failures:** 11 (down from 46 in Phase M0, -76.1% improvement)
+- **Active Clusters:** 4 (C1/C2/C3/C4/C5/C7/C15 resolved; Sprint 0 complete)
+- **Implementation Bugs:** 10 (90.9%)
+- **Likely Deprecations:** 1 (9.1% — C12 legacy suite)
 
-**Blocker Notes:**
+**Sprint 0 Closure Notes:**
 - ✅ [DTYPE-NEUTRAL-001] **VERIFIED COMPLETE** — Pre-Sprint gate passed (20251011T044530Z)
+- ✅ Sprint 0 (C1/C3/C4/C5/C7) **COMPLETE** — 35/35 failures retired (100% success); Phase M1 ledger refresh at 20251011T171454Z
 - ✅ Determinism clusters (C2/C15) CLOSED — Attempt #10 (20251011T060454Z) logged passing selectors + documentation updates
 - ✅ Source weighting (C3) **RESOLVED** — 4→0 failures; Phase D4 closure complete (20251011T101713Z)
-- [VECTOR-PARITY-001] Tap 5 instrumentation paused pending Phase J sequencing
+- [VECTOR-PARITY-001] Tap 5 instrumentation paused pending Phase M2 gradient guard
+- → Phase M2 (Gradient Compile Guard, C2 cluster with 10 failures) ready for delegation per strategy brief (20251011T171454Z)
 
 ---
 
@@ -30,13 +32,13 @@ This tracker maps all 36 active test failures across 16 clusters to their owning
 
 | Cluster ID | Category | Count | Owner | Fix Plan ID | Priority | Status | Blocker | Dependencies |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| C1 | CLI Defaults | 0 | ralph | [CLI-DEFAULTS-001] | ✅ RESOLVED | done | - | - |
-| C2 | Determinism - Mosaic RNG | 0 | ralph | [DETERMINISM-001] | P1.1 | ✅ RESOLVED | - | Closure logged (Attempt #10) |
-| C3 | Source Weighting | 0 | ralph | [SOURCE-WEIGHT-002] | P1.2 | ✅ RESOLVED | - | Closure logged (Attempt #19, Phase D4) |
-| C4 | Lattice Shape Models | 2 | ralph | [LATTICE-SHAPE-001] | P1.4 | in_planning | - | None |
-| C5 | Dual Runner Tooling | 1 | ralph | [TOOLING-DUAL-RUNNER-001] | P2.1 | in_planning | - | None |
-| C6 | CLI Flags (pix0/HKL) | 2 | ralph | [CLI-FLAGS-003] | P2.2 | in_progress | - | None |
-| C7 | Debug Trace | 4 | ralph | [DEBUG-TRACE-001] | P2.3 | in_planning | - | None |
+| C1 | CLI Defaults | 0 | ralph | [CLI-TEST-SETUP-001] | ✅ RESOLVED | done | - | Sprint 0 Attempt #21 (20251011T160713Z) |
+| C2 | Gradient Compile Guard | 10 | ralph | [GRADIENT-GUARD-001] | P1.1 | → Phase M2 | - | Phase M2 strategy at 20251011T171454Z |
+| C3 | Detector Dtype | 0 | ralph | [DETECTOR-DTYPE-CONVERSION-001] | ✅ RESOLVED | done | - | Sprint 0 Attempt #22 (20251011T162027Z) |
+| C4 | Debug Trace Scope | 0 | ralph | [DEBUG-TRACE-SCOPE-001] | ✅ RESOLVED | done | - | Sprint 0 Attempt #25 (20251011T164229Z) |
+| C5 | Simulator API Kwargs | 0 | ralph | [SIMULATOR-API-KWARGS-001] | ✅ RESOLVED | done | - | Sprint 0 Attempt #26 (20251011T165255Z) |
+| C6 | MOSFLM Offset | 1 | ralph | [DETECTOR-CONFIG-001] | P2.1 | in_planning | - | Pending specialist |
+| C7 | Lattice Shape Fixtures | 0 | ralph | [SIMULATOR-DETECTOR-REQUIRED-001] | ✅ RESOLVED | done | - | Sprint 0 Attempt #27 (20251011T170539Z) |
 | C8 | Detector Config | 2 | ralph | [DETECTOR-CONFIG-001] | P1.3 | in_planning | - | None |
 | C9 | DENZO Convention | 1 | ralph | [DENZO-CONVENTION-001] | P3.3 | in_planning | - | None |
 | C10 | Detector Pivots | 2 | ralph | [PIVOT-MODE-001] | P1.5 | in_planning | - | None |
@@ -52,11 +54,23 @@ This tracker maps all 36 active test failures across 16 clusters to their owning
 
 ## Cluster Details with Reproduction Commands
 
-### ✅ C1: CLI Defaults (RESOLVED)
+### ✅ C1: CLI Test Fixtures (RESOLVED — Sprint 0)
 
-**Status:** ✅ Fully resolved in [CLI-DEFAULTS-001] Attempt #6
-**Exit Criteria:** Minimal `-default_F` CLI invocation emits non-zero intensities
-**Validation:** Remains stable through Phase H rerun (no regressions)
+**Fix Plan:** [CLI-TEST-SETUP-001] (implicit, subsumed under [CLI-DEFAULTS-001])
+**Owner:** ralph
+**Resolution:** Attempt #21 Sprint 0 (20251011T160713Z) hardened 18 CLI test fixtures by adding `-default_F 100` parameter
+
+**Failures Resolved:** 18 → 0 (100% reduction)
+
+**Code Changes:**
+- Files: `tests/test_cli_flags.py`, `tests/test_cli_scaling.py`
+- Change: Added `-default_F 100` to fixture parameter lists
+
+**Artifacts:**
+- `reports/2026-01-test-suite-triage/phase_m1/20251011T160713Z/cli_fixtures/`
+- Summary: `summary.md`
+
+**Follow-up:** No further work required; cluster remains closed unless CLI fixture regressions surface.
 
 ---
 
