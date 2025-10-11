@@ -3,7 +3,7 @@
 **Initiative:** `[TEST-SUITE-TRIAGE-001]` Sprint 1.2  
 **Owner:** ralph  
 **Priority:** High (Critical Path — Spec Compliance)  
-**Status Snapshot (2026-01-19):** Phase A complete (Attempt #1 @ `20251011T062017Z`). Phase B artifacts (Attempt #15 @ `20251011T062955Z`) approved with Option A; Phase C implementation now active following `[TEST-SUITE-TRIAGE-001]` Phase K tracker refresh (C3 failures 6→4).
+**Status Snapshot (2026-01-19):** Phase A complete (Attempt #1 @ `20251011T062017Z`). Phase B artifacts (Attempt #15 @ `20251011T062955Z`) approved with Option A. Phase C implementation COMPLETE (Attempt #17 @ `reports/2026-01-test-suite-triage/phase_j/20251011T064811Z/` — targeted pytest 10/10 passing). Phase D validation (acceptance suite + spec/doc updates) is the active gate before closing C3.
 
 ---
 
@@ -52,17 +52,17 @@ Exit Criteria: Design memo approved + fix_plan updated with Phase B decisions;
 
 ---
 
-### Phase C — Implementation & Unit Tests (Active)
+### Phase C — Implementation & Unit Tests ✅
 Goal: Implement Option A fixes (dtype neutrality + acceptance test alignment) while maintaining vectorized flows.
 Prereqs: Phase B artifacts accepted; update docs/fix_plan Next Actions accordingly.
 Exit Criteria: Code changes landed with targeted acceptance tests passing locally (no full suite yet).
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Update source parser dtype handling | [ ] | Implement Option A dtype-neutral parser update; archive diff + before/after dtype inspection under new Phase C timestamp (Attempt #17). |
-| C2 | Add dtype propagation regression test | [ ] | Author regression test covering caller-specified dtype/device; ensure parity with Option A semantics before moving on. |
-| C3 | Align AT-SRC-001 expectations | [ ] | Refresh test assertions/spec excerpts to match Option A behaviour, documenting deltas in `verification_checklist.md`. |
-| C4 | Targeted validation run | [ ] | Re-run `tests/test_at_src_001*.py` (CPU first, GPU when available) and capture logs under Phase C artifacts directory. |
+| C1 | Update source parser dtype handling | [D] | ✅ Attempt #17 logged in `source.py.diff`; no code change required beyond confirming `dtype: Optional[torch.dtype] = None` fallback. |
+| C2 | Add dtype propagation regression test | [D] | ✅ Attempt #17 added parametrised `test_sourcefile_dtype_propagation` (float32/float64/None) with artifacts under `pytest_final.log`. |
+| C3 | Align AT-SRC-001 expectations | [D] | ✅ Attempt #17 refreshed wavelength/dtype assertions in `tests/test_at_src_001*.py`; rationale captured in `summary.md`. |
+| C4 | Targeted validation run | [D] | ✅ Attempt #17 `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001_simple.py tests/test_at_src_001.py` (10 passed, 1 warning) recorded in `pytest_final.log`. |
 
 ---
 
@@ -89,4 +89,4 @@ Exit Criteria: Updated docs + passing Tier 1/Tier 2 tests recorded; fix-plan
 
 ---
 
-**Plan Status:** Phase B complete — Option A endorsed; Phase C active with Attempt #17 targeting dtype-neutral parser + AT-SRC-001 alignment.
+**Plan Status:** Phases A–C complete (Attempt #17 delivers Option A implementation); Phase D validation/documentation remains open before closing `[SOURCE-WEIGHT-002]` and clearing C3.

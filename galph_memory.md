@@ -2372,3 +2372,17 @@
 - Follow-up: Expect Attempt #17 delivering parser fix + targeted tests + artifact paths, then refresh Sprint 1 tracker counts.
 - <Action State>: [ready_for_implementation]
 
+
+### 2026-01-19 (galph loop - Source Weighting Phase C evidence prep)
+- Focus issue: [SOURCE-WEIGHT-002] Phase C dtype implementation
+- Action type: Evidence collection
+- Mode: none
+
+### 2026-01-19 (galph loop - Source Weighting Phase D handoff)
+- Verified Attempt #17 artifacts (`reports/2026-01-test-suite-triage/phase_j/20251011T064811Z/`) already deliver Phase C Option A fixes; reran `pytest` targets (test_at_src_001*.py) locally (10/10 passing) to confirm baseline.
+- Updated `docs/fix_plan.md:155-171` with Attempt #17 summary, refreshed Next Actions to Phase D1–D4 (acceptance sweep, full suite delta, spec/runtime checklist updates, ledger closure).
+- Refreshed `plans/active/source-weighting.md:6-92` status snapshot + Phase C table (marked C1–C4 [D]) and plan status text—Phase D validation now the active gate.
+- Rewrote `input.md` (Docs mode) directing Ralph to capture Phase D artifacts under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/`, update spec AT-SRC-001 text, refresh runtime checklist, and rerun `pytest tests/ --maxfail=5`.
+- Outstanding: spec still reflects legacy per-source weighting wording (must be updated in Phase D3); documentation + tracker sync pending after next loop.
+- <Action State>: [ready_for_implementation]
+
