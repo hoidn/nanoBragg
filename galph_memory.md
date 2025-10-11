@@ -2241,3 +2241,16 @@
 - TorchDynamo still queries CUDA device metadata when cuda_available==True but device_count==0, causing the same IndexError as Attempt #2; mosaic_rotation_umat dtype mismatch persists.
 - Next loop should choose between disabling Dynamo for determinism selectors or provisioning a stub CUDA device before launching Phase B callchain.
 - <Action State>: [planning]
+
+### 2026-01-17 (galph loop - scratch note)
+- Focus issue: [DETERMINISM-001] Phase B callchain
+- Action type: Evidence collection (Callchain)
+- Mode: Parity
+- NOTE: Preliminary selection recorded before artifact updates.
+
+### 2026-01-17 (galph loop - determinism Phase B callchain summary)
+- Captured Phase B1-B2 callchain evidence for [DETERMINISM-001]; artifacts in `reports/determinism-callchain/` (static/taps/summary/env).
+- Updated `plans/active/determinism.md` (B1/B2/B4 → [D]) and logged Attempt #4 in `docs/fix_plan.md` noting mosaic_seed gap.
+- Issued new `input.md` directing Ralph to execute Phase B3 C-reference sweep under `reports/determinism-callchain/phase_b3/<STAMP>/`.
+- Next for Ralph: follow input.md to document nanoBragg.c seed propagation, capture commands + summary, and update Attempts History.
+- <Action State>: [gathering_evidence]

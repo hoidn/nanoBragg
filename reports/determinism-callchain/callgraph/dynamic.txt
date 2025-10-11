@@ -1,0 +1,2 @@
+# Dynamic callgraph
+Not captured this loop. AT-PARALLEL-013 currently aborts with TorchDynamo CUDA device probing (`torch/_dynamo/device_interface.py:218`) when CUDA is present but masked. Once Dynamo is disabled for determinism selectors, rerun a minimal ROI trace to populate this file.

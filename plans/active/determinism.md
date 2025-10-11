@@ -34,10 +34,10 @@ Exit Criteria: Callchain bundle pinpointing first divergent taps for mosaic/miss
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Define analysis question & scope hints | [ ] | Prepare `analysis.md` with `<analysis_question>` (e.g., "Why do AT-PARALLEL-024 misset seeds drift between runs?") referencing triage summary §C2. Set `initiative_id=determinism-b1`, `scope_hints` = ["Crystal.misset_seed", "Simulator.seed_all", "torch.manual_seed"]. |
-| B2 | Execute callchain tracing for Crystal/Simulator seed flow | [ ] | Follow `prompts/callchain.md`; capture `callchain/static.md`, `callgraph/dynamic.txt` (optional), and `trace/tap_points.md` under `phase_b/<STAMP>/callchain/`. Focus on config parsing → `CrystalConfig` → `Crystal` random misset logic. |
+| B1 | Define analysis question & scope hints | [D] | Recorded analysis question + scope inside `reports/determinism-callchain/callchain/static.md` (20260117T) per callchain SOP; scope hints captured alongside taps for Crystal/Simulator seed flow. |
+| B2 | Execute callchain tracing for Crystal/Simulator seed flow | [D] | Callchain artifacts captured under `reports/determinism-callchain/` (`callchain/static.md`, `trace/tap_points.md`, placeholder `callgraph/dynamic.txt`) highlighting missing `mosaic_seed` usage. |
 | B3 | Compare against C reference | [ ] | Document expected seed handling from `nanoBragg.c` sections (noise/misset seeds). If needed, add TODO to instrument `golden_suite_generator/nanoBragg` seed logs. Summarise differences in `phase_b/<STAMP>/summary.md`. |
-| B4 | Update docs/fix_plan ledger | [ ] | Append Attempt entry for Phase B in `[DETERMINISM-001]` (docs/fix_plan.md) noting discovered divergence + artifact path. |
+| B4 | Update docs/fix_plan ledger | [D] | Attempt #4 logged in `[DETERMINISM-001]` (docs/fix_plan.md) with findings + `reports/determinism-callchain/` artifacts; ready to proceed to Phase B3. |
 
 ### Phase C — Remediation Blueprint & Test Strategy
 Goal: Synthesize the fix approach without code changes; enumerate touchpoints, acceptance tests, and documentation updates required.
@@ -62,7 +62,7 @@ Exit Criteria: Documented validation script/test suite ensuring determinism hold
 | D2 | Define documentation updates post-validation | [ ] | Note updates to `README_PYTORCH.md` or user guides demonstrating deterministic workflows. |
 
 ### Exit Criteria (Overall Plan)
-- Phases A–C completed with `[D]` statuses and artifacts stored under timestamped subdirectories in `reports/2026-01-test-suite-triage/phase_d/`.
+- Phases A–C completed with `[D]` statuses and artifacts stored under timestamped subdirectories in `reports/2026-01-test-suite-triage/phase_d/` (Phase A) and the supervisor callchain bundle `reports/determinism-callchain/` (Phase B).
 - `[DETERMINISM-001]` in `docs/fix_plan.md` references this plan and lists latest completed phase + artifact timestamp.
 - Phase D remains templated until code changes land; checklist ready for execution.
 
