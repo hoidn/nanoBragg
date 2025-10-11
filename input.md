@@ -1,32 +1,44 @@
-Summary: Capture the directive-mandated full-suite baseline and refresh failure triage before resuming MOSFLM remediation.
+Summary: Capture the chunked full-suite baseline so we can finish Phase M0 triage and unblock detector remediation.
 Mode: Parity
 Focus: [TEST-SUITE-TRIAGE-001] Full pytest run and triage
 Branch: feature/spec-based-2
-Mapped tests: pytest --collect-only -q tests; pytest tests/ -v --durations=25 --maxfail=0
-Artifacts: reports/2026-01-test-suite-triage/phase_m0/$STAMP/{preflight,artifacts,triage_summary.md}
-Do Now: [TEST-SUITE-TRIAGE-001] Full pytest run and triage — KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m0/$STAMP/artifacts/pytest_full.xml
-If Blocked: Stop after logging the failure in reports/2026-01-test-suite-triage/phase_m0/$STAMP/attempt_blocked.md and update docs/fix_plan.md + plans/active/test-suite-triage.md (Phase M0 table) with the observed blocker.
+Mapped tests: pytest --collect-only -q tests; chunk_01‒chunk_10 pytest splits (see How-To Map)
+Artifacts: reports/2026-01-test-suite-triage/phase_m0/$STAMP/{preflight,artifacts,chunks/chunk_##,triage_summary.md,summary.md}
+Do Now: [TEST-SUITE-TRIAGE-001] Full pytest run and triage — Preflight: CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests | tee reports/2026-01-test-suite-triage/phase_m0/$STAMP/preflight/collect_only.log
+If Blocked: If any chunk still hits the 360 s ceiling, stop immediately after logging the truncated output to chunk_##/pytest.log, note the exit code in chunk_##/commands.txt and phase_m0/$STAMP/blocked.md, then ping supervisor before retrying.
 Priorities & Rationale:
-- plans/active/test-suite-triage.md:168 — Phase M0 mandates the preflight snapshot, full-suite rerun, and refreshed triage package before other work.
-- docs/fix_plan.md:38 — Next Actions now require Phase M0a–M0c artifacts and ledger sync; completing them unblocks downstream remediation.
-- docs/development/testing_strategy.md:18 — Device/dtype discipline plus full-suite cadence guardrails apply while collecting this baseline.
-- docs/development/pytorch_runtime_checklist.md:12 — Reconfirm runtime guardrails (dtype neutrality, vectorization) before entering the long run.
+- plans/active/test-suite-triage.md:168 — Phase M0 remains open; chunk map (lines 179-208) defines the harness-compliant execution order.
+- docs/fix_plan.md:48 — Next Actions now mandate the 10-command rerun so ledger and remediation tracker can advance past Attempt #18.
+- reports/2026-01-test-suite-triage/phase_m0/20251011T145727Z/blocked.md:1 — Previous run failed from the 360 s limit; this plan explicitly mitigates it.
+- docs/development/testing_strategy.md:18 — Device/dtype neutrality and full-suite cadence rules still govern each chunk execution.
 How-To Map:
-- Export STAMP=`date -u +%Y%m%dT%H%M%SZ`; mkdir -p reports/2026-01-test-suite-triage/phase_m0/$STAMP/{preflight,artifacts}.
-- Preflight (Phase M0a): `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests | tee reports/2026-01-test-suite-triage/phase_m0/$STAMP/preflight/collect_only.log`; capture `python -m pip freeze > .../preflight/pip_freeze.txt` and `python - <<'PY'` env summary (Python, torch, CUDA) into `env.txt`.
-- Full-suite run (Phase M0b): `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m0/$STAMP/artifacts/pytest_full.xml | tee reports/2026-01-test-suite-triage/phase_m0/$STAMP/artifacts/pytest_full.log`; note runtime + exit code in `commands.txt`.
-- Post-run triage (Phase M0c): parse failures into `reports/2026-01-test-suite-triage/phase_m0/$STAMP/triage_summary.md`, flag each as implementation bug vs deprecation candidate, and log counts in `summary.md`.
-- Update docs: append Attempt entry under `[TEST-SUITE-TRIAGE-001]` in docs/fix_plan.md with metrics, link new artifacts, and note any novel failure classes.
-- Prep follow-up: if detector-config regressions resurface, open a new row in remediation_tracker.md with cluster IDs; otherwise, document confirmation so `[DETECTOR-CONFIG-001]` stays marked done.
+- Export STAMP=`date -u +%Y%m%dT%H%M%SZ`; mkdir -p reports/2026-01-test-suite-triage/phase_m0/$STAMP/{preflight,artifacts,chunks} and touch phase_m0/$STAMP/commands.txt.
+- Preflight (M0a): run the Do Now command; if the `tee` path complains, fix the directory before rerunning. Capture `python -m pip freeze > .../preflight/pip_freeze.txt` and `python - <<'PY'` env summary (Python, torch, CUDA availability) into `.../preflight/env.txt`.
+- Append the preflight command + exit code to phase_m0/$STAMP/commands.txt (e.g., `printf "M0a collect_only exit=%s\n" $? >> .../commands.txt`).
+- For each chunk below, run the command in a fresh shell (one chunk per command to avoid the 360 s cap); before each run `mkdir -p reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_##`.
+  - Chunk 01: CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v --maxfail=0 --durations=5 --junitxml=reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_01/pytest.xml tests/test_at_abs_001.py tests/test_at_cli_009.py tests/test_at_io_002.py tests/test_at_parallel_007.py tests/test_at_parallel_017.py tests/test_at_parallel_028.py tests/test_at_pol_001.py tests/test_at_src_002.py tests/test_cli_scaling.py tests/test_detector_pivots.py tests/test_physics.py 2>&1 | tee reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_01/pytest.log
+  - Chunk 02: CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v --maxfail=0 --durations=5 --junitxml=reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_02/pytest.xml tests/test_at_bkg_001.py tests/test_at_crystal_absolute.py tests/test_at_io_003.py tests/test_at_parallel_008.py tests/test_at_parallel_018.py tests/test_at_parallel_029.py tests/test_at_pre_001.py tests/test_at_src_003.py tests/test_cli_scaling_phi0.py tests/test_divergence_culling.py tests/test_pivot_mode_selection.py 2>&1 | tee reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_02/pytest.log
+  - Chunk 03: CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v --maxfail=0 --durations=5 --junitxml=reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_03/pytest.xml tests/test_at_cli_001.py tests/test_at_flu_001.py tests/test_at_io_004.py tests/test_at_parallel_009.py tests/test_at_parallel_020.py tests/test_at_perf_001.py tests/test_at_pre_002.py tests/test_at_sta_001.py tests/test_configuration_consistency.py tests/test_gradients.py tests/test_show_config.py 2>&1 | tee reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_03/pytest.log
+  - Chunk 04: CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v --maxfail=0 --durations=5 --junitxml=reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_04/pytest.xml tests/test_at_cli_002.py tests/test_at_geo_001.py tests/test_at_noise_001.py tests/test_at_parallel_010.py tests/test_at_parallel_021.py tests/test_at_perf_002.py tests/test_at_roi_001.py tests/test_at_str_001.py tests/test_crystal_geometry.py tests/test_mosflm_matrix.py tests/test_suite.py 2>&1 | tee reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_04/pytest.log
+  - Chunk 05: CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v --maxfail=0 --durations=5 --junitxml=reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_05/pytest.xml tests/test_at_cli_003.py tests/test_at_geo_002.py tests/test_at_parallel_001.py tests/test_at_parallel_011.py tests/test_at_parallel_022.py tests/test_at_perf_003.py tests/test_at_sam_001.py tests/test_at_str_002.py tests/test_custom_vectors.py tests/test_multi_source_integration.py tests/test_trace_pixel.py 2>&1 | tee reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_05/pytest.log
+  - Chunk 06: CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v --maxfail=0 --durations=5 --junitxml=reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_06/pytest.xml tests/test_at_cli_004.py tests/test_at_geo_003.py tests/test_at_parallel_002.py tests/test_at_parallel_012.py tests/test_at_parallel_023.py tests/test_at_perf_004.py tests/test_at_sam_002.py tests/test_at_str_003.py tests/test_debug_trace.py tests/test_oversample_autoselect.py tests/test_tricubic_vectorized.py 2>&1 | tee reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_06/pytest.log
+  - Chunk 07: CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v --maxfail=0 --durations=5 --junitxml=reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_07/pytest.xml tests/test_at_cli_005.py tests/test_at_geo_004.py tests/test_at_parallel_003.py tests/test_at_parallel_013.py tests/test_at_parallel_024.py tests/test_at_perf_005.py tests/test_at_sam_003.py tests/test_at_str_004.py tests/test_detector_basis_vectors.py tests/test_parity_coverage_lint.py tests/test_units.py 2>&1 | tee reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_07/pytest.log
+  - Chunk 08: CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v --maxfail=0 --durations=5 --junitxml=reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_08/pytest.xml tests/test_at_cli_006.py tests/test_at_geo_005.py tests/test_at_parallel_004.py tests/test_at_parallel_014.py tests/test_at_parallel_025.py tests/test_at_perf_006.py tests/test_at_src_001.py tests/test_at_tools_001.py tests/test_detector_config.py tests/test_parity_matrix.py 2>&1 | tee reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_08/pytest.log
+  - Chunk 09: CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v --maxfail=0 --durations=5 --junitxml=reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_09/pytest.xml tests/test_at_cli_007.py tests/test_at_geo_006.py tests/test_at_parallel_005.py tests/test_at_parallel_015.py tests/test_at_parallel_026.py tests/test_at_perf_007.py tests/test_at_src_001_cli.py tests/test_beam_center_offset.py tests/test_detector_conventions.py tests/test_perf_pytorch_005_cudagraphs.py 2>&1 | tee reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_09/pytest.log
+  - Chunk 10: CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v --maxfail=0 --durations=5 --junitxml=reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_10/pytest.xml tests/test_at_cli_008.py tests/test_at_io_001.py tests/test_at_parallel_006.py tests/test_at_parallel_016.py tests/test_at_parallel_027.py tests/test_at_perf_008.py tests/test_at_src_001_simple.py tests/test_cli_flags.py tests/test_detector_geometry.py tests/test_perf_pytorch_006.py 2>&1 | tee reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_10/pytest.log
+- After each chunk, append a line to both chunk_##/commands.txt and the root commands.txt noting the exact command, wall time, and exit code (retain chronological order).
+- Once all commands finish, combine the junit files (or parse the logs) to tally total passed/failed/skipped counts; summarise per-chunk deltas in phase_m0/$STAMP/summary.md.
+- Draft triage_summary.md highlighting new vs known failures, marking each cluster as Implementation Bug vs Deprecation Candidate; update remediation_tracker.md if counts shift.
+- Update docs/fix_plan.md `[TEST-SUITE-TRIAGE-001]` Attempts with the new STAMP, counts, and notable observations; include any chunk-specific blockers or surprises.
 Pitfalls To Avoid:
-- Do not shorten runtime options; allow the run to exceed 30 minutes if needed rather than splitting unless timeout recurs.
-- Keep `KMP_DUPLICATE_LIB_OK=TRUE` on every pytest invocation to avoid MKL crashes.
-- No implementation edits this loop; capture evidence only.
-- Store artifacts exactly under the phase_m0/$STAMP/ hierarchy to keep history consistent.
-- Watch disk usage; abort if <10 GB free and record the blockage.
+- Do not run a loop or monolithic command; each pytest invocation must stay under the 360 s harness limit.
+- Keep `KMP_DUPLICATE_LIB_OK=TRUE` and `CUDA_VISIBLE_DEVICES=-1` on every command to match prior evidence.
+- Ensure `STAMP` is set exactly once per attempt; reusing a directory will corrupt artifacts.
+- Store logs/junit files in the prescribed chunk_## folders so the supervisor can diff against Attempt #18.
+- Watch disk space (>10 GB free); abort and log if the run would exceed budget.
 Pointers:
 - plans/active/test-suite-triage.md:168
-- docs/fix_plan.md:38
-- docs/development/testing_strategy.md:18
-- docs/development/pytorch_runtime_checklist.md:12
-Next Up: If time remains after triage, stage the remediation_tracker.md updates so Phase M gating can resume once MOSFLM fixes land.
+- docs/fix_plan.md:48
+- reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/summary.md:1
+- reports/2026-01-test-suite-triage/phase_m0/20251011T145727Z/blocked.md:1
+Next Up: If time remains, start drafting per-chunk failure tables to speed M0c classification (no reruns).

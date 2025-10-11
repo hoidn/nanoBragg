@@ -173,8 +173,30 @@ Exit Criteria: Full-suite rerun artifacts archived under `reports/2026-01-test-s
 | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
 | --- | --- | --- | --- |
 | M0a | Refresh pre-run environment checklist | [ ] | Re-run Phase A guardrails in light form: capture `collect_only.log` + env snapshot under `phase_m0/<STAMP>/preflight/`; cite `docs/development/testing_strategy.md` §1 and `arch.md` §2 for guardrails. |
-| M0b | Execute full `pytest tests/` rerun | [ ] | `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m0/$STAMP/artifacts/pytest_full.xml`; tee console log to `pytest_full.log`, capture exit code, runtime, counts. |
+| M0b | Execute chunked suite rerun | [ ] | Follow the runtime guard note below: run the ten chunk commands sequentially (each <360 s) with `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE`, capture per-chunk junit/log output under `phase_m0/$STAMP/chunks/chunk_##/`, and record exit codes in `commands.txt`. |
 | M0c | Re-triage and classify failures | [ ] | Update `reports/2026-01-test-suite-triage/phase_m0/$STAMP/triage_summary.md` with failure clusters, mark each as implementation bug vs legacy/deprecation; sync findings into `docs/fix_plan.md` Attempt ledger and `remediation_tracker.md` pending queue. |
+
+**Runtime guard note (2026-01-21):** Supervisor review confirmed the CLI harness enforces a hard 360 s timeout per command, so Phase M0b must execute the suite in timestamped chunks rather than one monolithic `pytest tests/` invocation. Run the ten chunk commands below (each with `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v --maxfail=0 --durations=5 --junitxml=.../pytest.xml …`) and archive logs under `reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_##/{commands.txt,pytest.log,pytest.xml}` before compiling the combined triage summary.
+
+Chunk 01 (11 files): `tests/test_at_abs_001.py tests/test_at_cli_009.py tests/test_at_io_002.py tests/test_at_parallel_007.py tests/test_at_parallel_017.py tests/test_at_parallel_028.py tests/test_at_pol_001.py tests/test_at_src_002.py tests/test_cli_scaling.py tests/test_detector_pivots.py tests/test_physics.py`
+
+Chunk 02 (11 files): `tests/test_at_bkg_001.py tests/test_at_crystal_absolute.py tests/test_at_io_003.py tests/test_at_parallel_008.py tests/test_at_parallel_018.py tests/test_at_parallel_029.py tests/test_at_pre_001.py tests/test_at_src_003.py tests/test_cli_scaling_phi0.py tests/test_divergence_culling.py tests/test_pivot_mode_selection.py`
+
+Chunk 03 (11 files): `tests/test_at_cli_001.py tests/test_at_flu_001.py tests/test_at_io_004.py tests/test_at_parallel_009.py tests/test_at_parallel_020.py tests/test_at_perf_001.py tests/test_at_pre_002.py tests/test_at_sta_001.py tests/test_configuration_consistency.py tests/test_gradients.py tests/test_show_config.py`
+
+Chunk 04 (11 files): `tests/test_at_cli_002.py tests/test_at_geo_001.py tests/test_at_noise_001.py tests/test_at_parallel_010.py tests/test_at_parallel_021.py tests/test_at_perf_002.py tests/test_at_roi_001.py tests/test_at_str_001.py tests/test_crystal_geometry.py tests/test_mosflm_matrix.py tests/test_suite.py`
+
+Chunk 05 (11 files): `tests/test_at_cli_003.py tests/test_at_geo_002.py tests/test_at_parallel_001.py tests/test_at_parallel_011.py tests/test_at_parallel_022.py tests/test_at_perf_003.py tests/test_at_sam_001.py tests/test_at_str_002.py tests/test_custom_vectors.py tests/test_multi_source_integration.py tests/test_trace_pixel.py`
+
+Chunk 06 (11 files): `tests/test_at_cli_004.py tests/test_at_geo_003.py tests/test_at_parallel_002.py tests/test_at_parallel_012.py tests/test_at_parallel_023.py tests/test_at_perf_004.py tests/test_at_sam_002.py tests/test_at_str_003.py tests/test_debug_trace.py tests/test_oversample_autoselect.py tests/test_tricubic_vectorized.py`
+
+Chunk 07 (11 files): `tests/test_at_cli_005.py tests/test_at_geo_004.py tests/test_at_parallel_003.py tests/test_at_parallel_013.py tests/test_at_parallel_024.py tests/test_at_perf_005.py tests/test_at_sam_003.py tests/test_at_str_004.py tests/test_detector_basis_vectors.py tests/test_parity_coverage_lint.py tests/test_units.py`
+
+Chunk 08 (10 files): `tests/test_at_cli_006.py tests/test_at_geo_005.py tests/test_at_parallel_004.py tests/test_at_parallel_014.py tests/test_at_parallel_025.py tests/test_at_perf_006.py tests/test_at_src_001.py tests/test_at_tools_001.py tests/test_detector_config.py tests/test_parity_matrix.py`
+
+Chunk 09 (10 files): `tests/test_at_cli_007.py tests/test_at_geo_006.py tests/test_at_parallel_005.py tests/test_at_parallel_015.py tests/test_at_parallel_026.py tests/test_at_perf_007.py tests/test_at_src_001_cli.py tests/test_beam_center_offset.py tests/test_detector_conventions.py tests/test_perf_pytorch_005_cudagraphs.py`
+
+Chunk 10 (10 files): `tests/test_at_cli_008.py tests/test_at_io_001.py tests/test_at_parallel_006.py tests/test_at_parallel_016.py tests/test_at_parallel_027.py tests/test_at_perf_008.py tests/test_at_src_001_simple.py tests/test_cli_flags.py tests/test_detector_geometry.py tests/test_perf_pytorch_006.py`
 
 ### Exit Criteria (Plan Completion)
 - Phases A–K marked `[D]` once delivered (Phase H–K added for 2026 rerun, classification refresh, and remediation sequencing).

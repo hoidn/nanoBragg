@@ -47,7 +47,7 @@
 - Phase G Handoff Addendum: `reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/handoff_addendum.md`
 - Next Actions (2026-01-20 directive refresh):
   1. Run Phase M0a preflight snapshot (collect-only + env) and log Attempt in `reports/.../phase_m0/<STAMP>/preflight/`.
-  2. Execute Phase M0b full-suite rerun capturing junit/log metrics under `phase_m0/<STAMP>/artifacts/`.
+  2. Execute Phase M0b chunked rerun (ten commands, each <360 s) per `plans/active/test-suite-triage.md` Phase M0 chunk map, capturing chunk-local junit/log metrics under `phase_m0/<STAMP>/chunks/chunk_##/`.
   3. Author Phase M0c triage_summary.md (implementation bug vs deprecation), sync findings into `docs/fix_plan.md` Attempts + `remediation_tracker.md` pending queue; prepare MOSFLM remediation follow-up.
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.

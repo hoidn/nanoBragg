@@ -1,3 +1,14 @@
+### 2025-10-11 (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase M0 baseline rerun
+- Action type: Review/housekeeping
+- Mode: Parity
+
+### 2025-10-11 (galph loop - Phase M0 chunk playbook)
+- Updated `plans/active/test-suite-triage.md` Phase M0 guidance with the 10-command chunk map to respect the 360 s harness cap (lines 168-208).
+- Aligned `docs/fix_plan.md` Next Actions with the chunked rerun workflow (lines 48-51) and preserved Attempt #18 context.
+- Rewrote `input.md` to direct STAMPed preflight + chunk execution, including per-chunk logging and aggregation steps.
+- Action State: [ready_for_implementation]
+
 ### 2025-10-11 (galph loop - Phase K timeout remediation prep)
 - Recorded focus/action/mode before edits per Step 3.1: focus=`[TEST-SUITE-TRIAGE-001] Phase K rerun`, action=Review/housekeeping, mode=Parity.
 - Updated `docs/fix_plan.md` (lines 1-90) to log Attempt #14 timeout analysis, require `timeout 3600` + STAMP pre-creation, and shift the next logging step to Attempt #15.
