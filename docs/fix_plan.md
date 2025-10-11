@@ -1,8 +1,8 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2026-01-17 (galph loop — Phase H suite relaunch directive)
+**Last Updated:** 2026-01-17 (galph loop — Phase I classification kickoff)
 **Active Focus:**
-- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — Execute Phase H suite relaunch and Phase I classification per `plans/active/test-suite-triage.md` (Phase H–J tables added this loop). Produce Attempt #10 artifacts under `reports/2026-01-test-suite-triage/phase_h/<STAMP>/` before resuming any other initiatives.
+- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — Complete Phase I classification per `plans/active/test-suite-triage.md` (tasks I1–I3). Produce Attempt #11 artifacts under `reports/2026-01-test-suite-triage/phase_i/<STAMP>/`, refresh this ledger, and prepare Phase J scaffolding before resuming other initiatives.
 - ON HOLD: `[DETERMINISM-001]` — paused until `[TEST-SUITE-TRIAGE-001]` Phase I delivers refreshed failure classification (determinism cluster depends on dtype + suite rerun evidence).
 - ON HOLD: `[DTYPE-NEUTRAL-001]` — validation complete (Attempt #4, 20260116); additional documentation edits deferred until suite relaunch confirms no regressions.
 - `[VECTOR-PARITY-001]` Tap 5.3 instrumentation remains paused; unblock after Phase H–I artifacts land and remediation tracker (Phase J) sequences follow-up work.
@@ -47,10 +47,9 @@
 - Phase D Handoff Bundle: `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md`
 - Phase G Handoff Addendum: `reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/handoff_addendum.md`
 - Next Actions:
-  1. Phase H execution: complete tasks H1–H4 (stage stamped directory, optional collect-only snapshot, full suite run, `summary.md`). Store artifacts under `reports/2026-01-test-suite-triage/phase_h/<STAMP>/` and record env/runtime metadata.
-  2. Log Attempt #10 here once Phase H artifacts exist (counts, runtime, exit code, artifact paths) and tick `plans/active/test-suite-triage.md` H1–H5 to [D].
-  3. Phase I classification: create `phase_i/<STAMP>/triage_summary.md` + `classification_overview.md`, classify each failure (implementation bug vs deprecation candidate), and update this ledger + galph_memory with findings before re-enabling dependent initiatives.
-  4. Prepare Phase J scaffolding (remediation tracker + execution sequence) for handoff immediately after Phase I so engineers have a sequenced backlog when fixes begin.
+  1. Phase I classification: execute tasks I1–I2 from `plans/active/test-suite-triage.md` — clone the Phase F tables, rebuild `phase_i/<STAMP>/triage_summary.md`, annotate each of the 36 Phase H failures with status (`Implementation Bug`, `Likely Deprecation`, `Needs Verification`), and capture deltas vs Attempt #8.
+  2. Ledger sync: record Attempt #11 in this entry with counts, rationale tallies, and artifact paths; update galph_memory with the classification outcome and refresh plan status snapshot (Phase I → [D]).
+  3. Phase J readiness: draft the remediation tracker skeleton (owner/ID/selector columns) so the next loop can populate it immediately after Phase I closes.
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.
   * [2025-10-10] Attempt #2 — Result: ⚠️ partial (Phase B timeout). Full suite execution reached ~75% completion (520/692 tests) before 10-minute timeout. Captured 34 failures across determinism (6), sourcefile handling (6), grazing incidence (4), detector geometry (5), debug/trace (4), CLI flags (3), and others. Runtime: 600s. Exit: timeout. Artifacts: `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/{logs/pytest_full.log,failures_raw.md,summary.md,commands.txt}`. junit XML may be incomplete. Remaining 172 tests (~25%) not executed. Observations: Large detector parity tests and gradient checks likely contributors to timeout. Recommendation: split suite execution or extend timeout to 30-60min for complete run.

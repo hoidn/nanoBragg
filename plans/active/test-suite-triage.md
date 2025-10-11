@@ -16,9 +16,9 @@
 - Phase E ✅ complete (Attempt #7 — `reports/2026-01-test-suite-triage/phase_e/20251010T180102Z/`); 691 executed tests, 516 passed, 49 failed, 126 skipped. CLI defaults cluster cleared; other clusters unchanged.
 - Phase F ✅ complete (Attempt #8 — `reports/2026-01-test-suite-triage/phase_f/20251010T184326Z/`); refreshed triage bundle with 49-failure classification, cluster deltas, and pending actions table. C1 resolved, 17 active clusters documented.
 - Phase G ✅ progressing — Attempt #9 recorded the refreshed remediation ladder addendum at `reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/`.
-- **Phase H (new)** — mandated relaunch of `pytest tests/` with fresh artifacts per 2026-01-17 supervisor directive; pending execution.
-- **Phase I (new)** — failure classification refresh to separate lingering implementation bugs from candidate deprecations; pending Phase H completion.
-- **Phase J (new)** — remediation gating + fix scheduling built on refreshed failure inventory; pending Phase I completion.
+- Phase H ✅ complete (Attempt #10 — `reports/2026-01-test-suite-triage/phase_h/20251011T033418Z/` captured full-suite rerun, 36 failures remaining, gradient checks stable).
+- **Phase I (active)** — rebuild classification tables using Phase H inputs to separate implementation bugs vs deprecation candidates.
+- Phase J — pending (remediation tracker sequencing once Phase I closes, see plan Section “Phase J”).
 
 ### Phase A — Preflight & Inventory
 Goal: Confirm environment readiness and enumerate suite metadata so the full run is reproducible and guarded.

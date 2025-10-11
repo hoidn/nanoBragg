@@ -2202,3 +2202,11 @@
 - Refreshed `docs/fix_plan.md` Active Focus + `[TEST-SUITE-TRIAGE-001]` Next Actions to mandate Attempt #10 suite rerun before other initiatives resume.
 - Replaced `input.md` with Parity-mode instructions for Ralph to run the full `pytest tests/` suite (Phase H) and stage Phase I triage scaffolding.
 - <Action State>: [ready_for_implementation]
+
+### 2026-01-17 (galph loop - Phase I classification kickoff)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase I classification (Action: Review/housekeeping, Mode: Docs).
+- Confirmed Ralph’s Attempt #10 full-suite rerun (reports/2026-01-test-suite-triage/phase_h/20251011T033418Z/) and refreshed plan snapshot to mark Phase H complete.
+- Updated docs/fix_plan.md Active Focus + Next Actions to pivot entirely to Phase I (Attempt #11) and queued Phase J prep.
+- Refined plans/active/test-suite-triage.md status lines to show Phase I active, Phase J pending; preserved Phase H table as completed.
+- Authored input.md directing Ralph to build the new phase_i/<STAMP>/triage_summary.md + classification_overview.md bundle and log Attempt #11.
+- <Action State>: [ready_for_implementation]
