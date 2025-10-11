@@ -1,0 +1,16 @@
+# Phase M2 Full-Suite Validation Commands
+# Timestamp: 2025-10-11T19:17:57Z
+# Status: BLOCKED (timeout)
+
+# Directory setup
+export STAMP=20251011T191757Z
+mkdir -p reports/2026-01-test-suite-triage/phase_m/${STAMP}/{artifacts,logs}
+
+# Attempted full-suite execution (BLOCKED after 600s)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m/${STAMP}/artifacts/pytest_full.xml 2>&1 | tee reports/2026-01-test-suite-triage/phase_m/${STAMP}/logs/pytest_full.log
+
+# Exit: Timeout after 600s at ~75% completion (~515/687 tests)
+# Last visible test: tests/test_gradients.py::TestAdvancedGradients::test_joint_gradcheck
+
+# Recommendation: Use chunked execution per Phase M0 precedent (Attempt #20)
+# See plans/active/test-suite-triage.md Phase M0b for 10-chunk workflow
