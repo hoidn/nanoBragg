@@ -86,6 +86,28 @@ The cache is invalidated when:
 - `pix0_vector` changes
 - Device or dtype changes
 
+### 7.3 Dtype Neutrality
+
+**Critical Implementation Detail:** Cache retrieval in `get_pixel_coords()` must coerce cached tensors to the current `self.dtype` before comparison to support dynamic dtype switching.
+
+**Mechanism:**
+```python
+# CORRECT: Coerce device AND dtype
+cached_f = self._cached_basis_vectors[0].to(device=self.device, dtype=self.dtype)
+
+# INCORRECT: Only device coercion (causes dtype mismatch crashes)
+cached_f = self._cached_basis_vectors[0].to(self.device)  # ❌ Missing dtype
+```
+
+**Rationale:**
+When `detector.to(dtype=torch.float64)` is called, live geometry tensors (`self.fdet_vec`, etc.) are converted to float64, but cached tensors remain in their original dtype. The `torch.allclose` comparison between float32 cached tensors and float64 live tensors raises `RuntimeError: Float did not match Double`. Coercing cached tensors to `self.dtype` during retrieval ensures type consistency.
+
+**Testing:**
+- Validated by `tests/test_at_parallel_013.py` (deterministic mode, float64 precision)
+- Validated by `tests/test_at_parallel_024.py` (mosaic rotation with dtype switching)
+
+**Performance Impact:** Negligible — coercion only occurs during cache validation (not on cache hits).
+
 ## 8. Differentiability
 
 ### 8.1 Differentiable Parameters

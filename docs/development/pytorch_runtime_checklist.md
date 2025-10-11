@@ -14,6 +14,14 @@ Use this quick checklist before and after every PyTorch simulator edit. It disti
    - Materialize configuration tensors (beam, detector, crystal) on the execution device before the main loop.
    - Avoid per-iteration `.to()`, `.cpu()`, `.cuda()`, or tensor factories (`torch.tensor(...)`) inside compiled regions; cache constants once.
    - Run CPU **and** CUDA smoke commands (`pytest -v -m gpu_smoke`) when a GPU is available.
+   - **Cache dtype neutrality:** When retrieving cached tensors for comparison, use `.to(device=..., dtype=...)` to match both device AND dtype of live tensors. Example from `Detector.get_pixel_coords()`:
+     ```python
+     # Retrieve cached basis vector with dtype coercion
+     cached_f = self._cached_basis_vectors[0].to(device=self.device, dtype=self.dtype)
+     # Now safe to compare with live geometry tensor
+     torch.allclose(self.fdet_vec, cached_f, atol=1e-15)  # ✅ Both same dtype
+     ```
+     Omitting `dtype=` causes `RuntimeError` when dtype switches occur (e.g., `detector.to(dtype=torch.float64)`).
 
 3. **torch.compile Hygiene**
    - Watch the console for Dynamo “graph break” warnings; treat them as blockers.
