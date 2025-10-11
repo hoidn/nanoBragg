@@ -1,0 +1,484 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="5" skipped="57" tests="367" time="122.955" timestamp="2025-10-11T02:19:01.588417-07:00" hostname="ollie-System-Product-Name"><testcase classname="" name="tests.test_at_parallel_009" time="0.000"><skipped message="collection skipped">('/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_009.py', 24, 'Skipped: Skipping parallel validation tests. Set NB_RUN_PARALLEL=1 to run.')</skipped></testcase><testcase classname="tests.test_at_abs_001.TestAT_ABS_001" name="test_absorption_disabled_when_zero[cpu]" time="1.421" /><testcase classname="tests.test_at_abs_001.TestAT_ABS_001" name="test_capture_fraction_calculation[False-cpu]" time="0.001" /><testcase classname="tests.test_at_abs_001.TestAT_ABS_001" name="test_capture_fraction_calculation[True-cpu]" time="0.001" /><testcase classname="tests.test_at_abs_001.TestAT_ABS_001" name="test_last_value_vs_accumulation_semantics[cpu]" time="0.191" /><testcase classname="tests.test_at_abs_001.TestAT_ABS_001" name="test_parallax_dependence[False-cpu]" time="0.124" /><testcase classname="tests.test_at_abs_001.TestAT_ABS_001" name="test_parallax_dependence[True-cpu]" time="0.005" /><testcase classname="tests.test_at_abs_001.TestAT_ABS_001" name="test_absorption_with_tilted_detector[False-cpu]" time="0.006" /><testcase classname="tests.test_at_abs_001.TestAT_ABS_001" name="test_absorption_with_tilted_detector[True-cpu]" time="0.006" /><testcase classname="tests.test_at_bkg_001.TestAT_BKG_001" name="test_water_background_calculation" time="0.166" /><testcase classname="tests.test_at_bkg_001.TestAT_BKG_001" name="test_water_background_zero" time="0.003" /><testcase classname="tests.test_at_bkg_001.TestAT_BKG_001" name="test_water_background_additive" time="0.005" /><testcase classname="tests.test_at_cli_001.TestAT_CLI_001" name="test_cli_help_short_flag" time="0.994" /><testcase classname="tests.test_at_cli_001.TestAT_CLI_001" name="test_cli_help_long_flag" time="0.995" /><testcase classname="tests.test_at_cli_001.TestAT_CLI_001" name="test_cli_invocable" time="0.000" /><testcase classname="tests.test_at_cli_001.TestAT_CLI_001" name="test_cli_help_includes_examples" time="1.002" /><testcase classname="tests.test_at_cli_001.TestAT_CLI_001" name="test_cli_help_includes_wavelength_synonyms" time="0.985" /><testcase classname="tests.test_at_cli_001.TestAT_CLI_001" name="test_cli_help_includes_output_synonyms" time="0.993" /><testcase classname="tests.test_at_cli_002.TestAT_CLI_002" name="test_minimal_render_with_default_F" time="1.000" /><testcase classname="tests.test_at_cli_002.TestAT_CLI_002" name="test_minimal_render_with_hkl_file" time="1.009" /><testcase classname="tests.test_at_cli_002.TestAT_CLI_002" name="test_data_ordering_fast_major" time="1.002" /><testcase classname="tests.test_at_cli_002.TestAT_CLI_002" name="test_error_without_required_inputs" time="0.998" /><testcase classname="tests.test_at_cli_003.TestATCLI003" name="test_mosflm_default_pivot_beam" time="1.008" /><testcase classname="tests.test_at_cli_003.TestATCLI003" name="test_xds_default_pivot_sample" time="1.009" /><testcase classname="tests.test_at_cli_003.TestATCLI003" name="test_pivot_override_mosflm_to_sample" time="1.011" /><testcase classname="tests.test_at_cli_003.TestATCLI003" name="test_pivot_override_xds_to_beam" time="1.005" /><testcase classname="tests.test_at_cli_003.TestATCLI003" name="test_convention_header_keys_consistency" time="3.006" /><testcase classname="tests.test_at_cli_004" name="test_header_precedence_img_then_mask" time="1.003" /><testcase classname="tests.test_at_cli_004" name="test_mask_zeros_are_skipped" time="1.002" /><testcase classname="tests.test_at_cli_004" name="test_mask_beam_center_y_flip" time="1.007" /><testcase classname="tests.test_at_cli_004" name="test_conflicting_detector_size" time="0.995" /><testcase classname="tests.test_at_cli_004" name="test_img_only_no_mask" time="1.003" /><testcase classname="tests.test_at_cli_005" name="test_cli_roi_basic" time="0.995" /><testcase classname="tests.test_at_cli_005" name="test_cli_roi_with_noise" time="1.001" /><testcase classname="tests.test_at_cli_005" name="test_cli_roi_edge_cases" time="1.991" /><testcase classname="tests.test_at_cli_005" name="test_cli_roi_different_conventions" time="2.006" /><testcase classname="tests.test_at_cli_006" name="test_autoscale_without_scale_flag" time="0.995" /><testcase classname="tests.test_at_cli_006" name="test_explicit_scale_flag" time="0.997" /><testcase classname="tests.test_at_cli_006" name="test_pgm_without_pgmscale" time="0.993" /><testcase classname="tests.test_at_cli_006" name="test_pgm_with_explicit_pgmscale" time="1.001" /><testcase classname="tests.test_at_cli_006" name="test_pgm_format_compliance" time="0.995" /><testcase classname="tests.test_at_cli_007.TestATCLI007NoiseDeterminism" name="test_identical_seed_produces_identical_noise" time="2.019" /><testcase classname="tests.test_at_cli_007.TestATCLI007NoiseDeterminism" name="test_different_seed_produces_different_noise" time="2.002" /><testcase classname="tests.test_at_cli_007.TestATCLI007NoiseDeterminism" name="test_seed_determinism_without_roi" time="2.008" /><testcase classname="tests.test_at_cli_007.TestATCLI007NoiseDeterminism" name="test_negative_seed_accepted" time="2.008" /><testcase classname="tests.test_at_cli_007.TestATCLI007NoiseDeterminism" name="test_overload_count_determinism" time="3.019" /><testcase classname="tests.test_at_cli_008.TestATCLI008DminFiltering" name="test_dmin_filtering_reduces_intensity" time="2.035" /><testcase classname="tests.test_at_cli_008.TestATCLI008DminFiltering" name="test_dmin_very_strict_removes_most_intensity" time="1.020" /><testcase classname="tests.test_at_cli_008.TestATCLI008DminFiltering" name="test_dmin_zero_has_no_effect" time="2.009" /><testcase classname="tests.test_at_cli_009.TestATCLI009ErrorHandling" name="test_missing_hkl_and_fdump_with_default_f_zero" time="1.002" /><testcase classname="tests.test_at_cli_009.TestATCLI009ErrorHandling" name="test_missing_hkl_but_has_default_f" time="0.989" /><testcase classname="tests.test_at_cli_009.TestATCLI009ErrorHandling" name="test_missing_cell_parameters" time="0.988" /><testcase classname="tests.test_at_cli_009.TestATCLI009ErrorHandling" name="test_fdump_fallback" time="1.007" /><testcase classname="tests.test_at_cli_009.TestATCLI009ErrorHandling" name="test_help_message" time="0.993" /><testcase classname="tests.test_at_cli_009.TestATCLI009ErrorHandling" name="test_unsupported_flag_dispstep" time="1.004" /><testcase classname="tests.test_at_cli_009.TestATCLI009ErrorHandling" name="test_unsupported_flag_hdiv" time="0.999" /><testcase classname="tests.test_at_cli_009.TestATCLI009ErrorHandling" name="test_unsupported_flag_vdiv" time="1.004" /><testcase classname="tests.test_at_crystal_absolute.TestATCrystalAbsolute" name="test_triclinic_absolute_positions" time="0.191" /><testcase classname="tests.test_at_crystal_absolute.TestATCrystalAbsolute" name="test_cubic_vs_triclinic_systematic_difference" time="0.011" /><testcase classname="tests.test_at_crystal_absolute.TestATCrystalAbsolute" name="test_known_reflection_d_spacings" time="0.004" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_fluence_calculation_from_flux_exposure_beamsize" time="0.000" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_no_fluence_calculation_when_flux_zero" time="0.000" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_no_fluence_calculation_when_exposure_zero" time="0.000" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_fluence_calculation_with_beamsize_zero" time="0.000" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_flux_recomputation_from_fluence_and_exposure" time="0.000" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_sample_clipping_warning" time="0.000" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_no_clipping_when_beamsize_larger" time="0.000" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_no_clipping_when_beamsize_zero" time="0.000" /><testcase classname="tests.test_at_geo_001" name="test_at_geo_001_mosflm_beam_center_mapping" time="0.001" /><testcase classname="tests.test_at_geo_002" name="test_at_geo_002_setup_a_distance_only" time="0.000" /><testcase classname="tests.test_at_geo_002" name="test_at_geo_002_setup_b_close_distance_only" time="0.000" /><testcase classname="tests.test_at_geo_002" name="test_at_geo_002_setup_c_explicit_override" time="0.000" /><testcase classname="tests.test_at_geo_002" name="test_at_geo_002_setup_c_beam_override" time="0.000" /><testcase classname="tests.test_at_geo_002" name="test_at_geo_002_direct_instantiation" time="0.000" /><testcase classname="tests.test_at_geo_003.TestATGEO003RFactorAndBeamCenter" name="test_r_factor_calculation" time="0.001" /><testcase classname="tests.test_at_geo_003.TestATGEO003RFactorAndBeamCenter" name="test_distance_update_with_close_distance" time="0.001" /><testcase classname="tests.test_at_geo_003.TestATGEO003RFactorAndBeamCenter" name="test_beam_center_preservation_beam_pivot" time="0.001" /><testcase classname="tests.test_at_geo_003.TestATGEO003RFactorAndBeamCenter" name="test_beam_center_preservation_sample_pivot" time="0.001" /><testcase classname="tests.test_at_geo_003.TestATGEO003RFactorAndBeamCenter" name="test_no_rotations_r_factor_equals_one" time="0.001" /><testcase classname="tests.test_at_geo_003.TestATGEO003RFactorAndBeamCenter" name="test_beam_center_with_various_rotations[DetectorPivot.BEAM]" time="0.003" /><testcase classname="tests.test_at_geo_003.TestATGEO003RFactorAndBeamCenter" name="test_beam_center_with_various_rotations[DetectorPivot.SAMPLE]" time="0.004" /><testcase classname="tests.test_at_geo_003.TestATGEO003RFactorAndBeamCenter" name="test_gradients_flow_through_r_factor" time="0.001" /><testcase classname="tests.test_at_geo_004" name="test_twotheta_axis_defaults" time="0.000" /><testcase classname="tests.test_at_geo_004" name="test_twotheta_axis_override" time="0.000" /><testcase classname="tests.test_at_geo_004" name="test_twotheta_rotation_applied" time="0.001" /><testcase classname="tests.test_at_geo_004" name="test_twotheta_value_preserved" time="0.001" /><testcase classname="tests.test_at_geo_004" name="test_mosflm_twotheta_rotation" time="0.001" /><testcase classname="tests.test_at_geo_004" name="test_dials_twotheta_rotation" time="0.000" /><testcase classname="tests.test_at_geo_005.TestATGEO005CurvedDetector" name="test_curved_detector_equal_distance" time="0.001" /><testcase classname="tests.test_at_geo_005.TestATGEO005CurvedDetector" name="test_curved_vs_planar_difference" time="0.002" /><testcase classname="tests.test_at_geo_005.TestATGEO005CurvedDetector" name="test_small_angle_rotation_consistency" time="0.001" /><testcase classname="tests.test_at_geo_005.TestATGEO005CurvedDetector" name="test_gradient_flow_curved_detector" time="0.001" /><testcase classname="tests.test_at_geo_005.TestATGEO005CurvedDetector" name="test_beam_center_affects_curvature" time="0.002" /><testcase classname="tests.test_at_geo_006.TestATGEO006PointPixelSolidAngle" name="test_point_pixel_solid_angle" time="0.001" /><testcase classname="tests.test_at_geo_006.TestATGEO006PointPixelSolidAngle" name="test_default_solid_angle_with_obliquity" time="0.001" /><testcase classname="tests.test_at_geo_006.TestATGEO006PointPixelSolidAngle" name="test_off_center_pixel_comparison" time="0.002" /><testcase classname="tests.test_at_geo_006.TestATGEO006PointPixelSolidAngle" name="test_gradient_flow" time="0.001" /><testcase classname="tests.test_at_geo_006.TestATGEO006PointPixelSolidAngle" name="test_corner_pixel_values" time="0.001" /><testcase classname="tests.test_at_io_001.TestAT_IO_001" name="test_smv_header_required_keys" time="0.001" /><testcase classname="tests.test_at_io_001.TestAT_IO_001" name="test_smv_data_ordering" time="0.000" /><testcase classname="tests.test_at_io_001.TestAT_IO_001" name="test_smv_convention_specific_headers" time="0.001" /><testcase classname="tests.test_at_io_001.TestAT_IO_001" name="test_smv_torch_tensor_input" time="0.001" /><testcase classname="tests.test_at_io_001.TestAT_IO_001" name="test_smv_byte_order" time="0.001" /><testcase classname="tests.test_at_io_002.TestAT_IO_002" name="test_pgm_header_format" time="0.000" /><testcase classname="tests.test_at_io_002.TestAT_IO_002" name="test_pgm_pixel_scaling" time="0.000" /><testcase classname="tests.test_at_io_002.TestAT_IO_002" name="test_pgm_with_default_scale" time="0.000" /><testcase classname="tests.test_at_io_002.TestAT_IO_002" name="test_pgm_torch_tensor_input" time="0.000" /><testcase classname="tests.test_at_io_002.TestAT_IO_002" name="test_pgm_clipping_behavior" time="0.000" /><testcase classname="tests.test_at_io_003.TestAT_IO_003" name="test_fdump_write_and_read" time="0.001" /><testcase classname="tests.test_at_io_003.TestAT_IO_003" name="test_fdump_cache_behavior" time="0.001" /><testcase classname="tests.test_at_io_003.TestAT_IO_003" name="test_fdump_no_files_with_default_F" time="0.000" /><testcase classname="tests.test_at_io_003.TestAT_IO_003" name="test_fdump_no_files_zero_default" time="0.000" /><testcase classname="tests.test_at_io_003.TestAT_IO_003" name="test_fdump_preserves_default_F" time="0.001" /><testcase classname="tests.test_at_io_003.TestAT_IO_003" name="test_fdump_header_structure" time="0.001" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_minimal_hkl_format" time="0.001" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_five_column_with_phase" time="0.001" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_six_column_with_sigma_and_phase" time="0.001" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_negative_indices_handling" time="0.001" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_all_formats_produce_same_pattern" time="0.010" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_fdump_caching_for_all_formats" time="0.002" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_comment_and_blank_line_handling" time="0.001" /><testcase classname="tests.test_at_noise_001.TestATNoise001" name="test_small_mean_exact_poisson" time="0.670" /><testcase classname="tests.test_at_noise_001.TestATNoise001" name="test_medium_mean_rejection_sampling" time="0.068" /><testcase classname="tests.test_at_noise_001.TestATNoise001" name="test_large_mean_gaussian_approximation" time="0.009" /><testcase classname="tests.test_at_noise_001.TestATNoise001" name="test_seed_reproducibility" time="0.001" /><testcase classname="tests.test_at_noise_001.TestATNoise001" name="test_adc_and_clipping" time="0.000" /><testcase classname="tests.test_at_noise_001.TestATNoise001" name="test_all_regimes_in_single_image" time="0.000" /><testcase classname="tests.test_at_noise_001.TestATNoise001" name="test_noise_config_integration" time="0.000" /><testcase classname="tests.test_at_parallel_001.TestATParallel001" name="test_beam_center_scales_with_detector_size[64]" time="0.000" /><testcase classname="tests.test_at_parallel_001.TestATParallel001" name="test_beam_center_scales_with_detector_size[128]" time="0.000" /><testcase classname="tests.test_at_parallel_001.TestATParallel001" name="test_beam_center_scales_with_detector_size[256]" time="0.000" /><testcase classname="tests.test_at_parallel_001.TestATParallel001" name="test_beam_center_scales_with_detector_size[512]" time="0.000" /><testcase classname="tests.test_at_parallel_001.TestATParallel001" name="test_beam_center_scales_with_detector_size[1024]" time="0.000" /><testcase classname="tests.test_at_parallel_001.TestATParallel001" name="test_peak_position_at_beam_center" time="0.004" /><testcase classname="tests.test_at_parallel_001.TestATParallel001" name="test_cli_beam_center_calculation" time="3.043" /><testcase classname="tests.test_at_parallel_001.TestATParallel001" name="test_intensity_scaling_with_solid_angle" time="0.008" /><testcase classname="tests.test_at_parallel_002.TestATParallel002" name="test_beam_center_scales_with_pixel_size" time="0.002" /><testcase classname="tests.test_at_parallel_002.TestATParallel002" name="test_peak_position_scales_inversely_with_pixel_size" time="0.021" /><testcase classname="tests.test_at_parallel_002.TestATParallel002" name="test_pattern_correlation_across_pixel_sizes" time="0.139" /><testcase classname="tests.test_at_parallel_002.TestATParallel002" name="test_beam_center_parameter_consistency" time="0.002" /><testcase classname="tests.test_at_parallel_003.TestATParallel003" name="test_detector_offset_preservation" time="0.005" /><testcase classname="tests.test_at_parallel_003.TestATParallel003" name="test_peak_position_at_offset_beam_centers" time="0.016" /><testcase classname="tests.test_at_parallel_003.TestATParallel003" name="test_offset_ratio_preservation" time="0.000" /><testcase classname="tests.test_at_parallel_004.TestAT_PARALLEL_004" name="test_mosflm_adds_half_pixel_offset" time="0.001" /><testcase classname="tests.test_at_parallel_004.TestAT_PARALLEL_004" name="test_xds_has_no_pixel_offset" time="0.001" /><testcase classname="tests.test_at_parallel_004.TestAT_PARALLEL_004" name="test_peak_position_difference" time="0.073" /><testcase classname="tests.test_at_parallel_004.TestAT_PARALLEL_004" name="test_pattern_correlation_when_aligned" time="0.013" /><testcase classname="tests.test_at_parallel_004.TestAT_PARALLEL_004" name="test_beam_center_calculation_consistency" time="0.001" /><testcase classname="tests.test_at_parallel_005.TestAT_PARALLEL_005_BeamCenterMapping" name="test_mosflm_xbeam_ybeam_mapping" time="0.000"><skipped type="pytest.skip" message="Parallel validation tests only run with NB_RUN_PARALLEL=1">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_005.py:39: Parallel validation tests only run with NB_RUN_PARALLEL=1</skipped></testcase><testcase classname="tests.test_at_parallel_005.TestAT_PARALLEL_005_BeamCenterMapping" name="test_xds_orgx_orgy_mapping" time="0.000"><skipped type="pytest.skip" message="Parallel validation tests only run with NB_RUN_PARALLEL=1">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_005.py:64: Parallel validation tests only run with NB_RUN_PARALLEL=1</skipped></testcase><testcase classname="tests.test_at_parallel_005.TestAT_PARALLEL_005_BeamCenterMapping" name="test_pivot_mode_consistency" time="0.000"><skipped type="pytest.skip" message="Parallel validation tests only run with NB_RUN_PARALLEL=1">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_005.py:90: Parallel validation tests only run with NB_RUN_PARALLEL=1</skipped></testcase><testcase classname="tests.test_at_parallel_005.TestAT_PARALLEL_005_BeamCenterMapping" name="test_equivalent_configurations_produce_same_pattern" time="0.000"><skipped type="pytest.skip" message="Parallel validation tests only run with NB_RUN_PARALLEL=1">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_005.py:131: Parallel validation tests only run with NB_RUN_PARALLEL=1</skipped></testcase><testcase classname="tests.test_at_parallel_006.TestATParallel006SingleReflection" name="test_bragg_angle_prediction_single_distance" time="0.169" /><testcase classname="tests.test_at_parallel_006.TestATParallel006SingleReflection" name="test_distance_scaling" time="0.090" /><testcase classname="tests.test_at_parallel_006.TestATParallel006SingleReflection" name="test_combined_wavelength_and_distance" time="0.071" /><testcase classname="tests.test_at_parallel_007.TestATParallel007PeakPositionWithRotations" name="test_peak_positions_with_rotations" time="0.000"><skipped type="pytest.skip" message="Parallel C-PyTorch tests disabled (set NB_RUN_PARALLEL=1)">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_007.py:244: Parallel C-PyTorch tests disabled (set NB_RUN_PARALLEL=1)</skipped></testcase><testcase classname="tests.test_at_parallel_007.TestATParallel007PeakPositionWithRotations" name="test_peak_intensity_ordering" time="0.000"><skipped type="pytest.skip" message="Parallel C-PyTorch tests disabled">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_007.py:303: Parallel C-PyTorch tests disabled</skipped></testcase><testcase classname="tests.test_at_parallel_007.TestATParallel007PeakPositionWithRotations" name="test_rotation_effect_on_pattern" time="0.000"><skipped type="pytest.skip" message="Parallel C-PyTorch tests disabled">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_007.py:335: Parallel C-PyTorch tests disabled</skipped></testcase><testcase classname="tests.test_at_parallel_008.TestAT_PARALLEL_008" name="test_triclinic_multi_peak_pattern" time="0.000"><skipped type="pytest.skip" message="Requires NB_RUN_PARALLEL=1">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_008.py:187: Requires NB_RUN_PARALLEL=1</skipped></testcase><testcase classname="tests.test_at_parallel_008.TestAT_PARALLEL_008" name="test_peak_intensity_ordering" time="0.000"><skipped type="pytest.skip" message="Requires NB_RUN_PARALLEL=1">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_008.py:324: Requires NB_RUN_PARALLEL=1</skipped></testcase><testcase classname="tests.test_at_parallel_008.TestAT_PARALLEL_008" name="test_non_max_suppression" time="0.000"><skipped type="pytest.skip" message="Requires NB_RUN_PARALLEL=1">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_008.py:368: Requires NB_RUN_PARALLEL=1</skipped></testcase><testcase classname="tests.test_at_parallel_010.TestATParallel010SolidAngleCorrections" name="test_point_pixel_distance_scaling" time="0.000"><skipped type="pytest.skip" message="AT-PARALLEL tests require NB_RUN_PARALLEL=1 and C binary">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_010.py:152: AT-PARALLEL tests require NB_RUN_PARALLEL=1 and C binary</skipped></testcase><testcase classname="tests.test_at_parallel_010.TestATParallel010SolidAngleCorrections" name="test_obliquity_distance_scaling" time="0.000"><skipped type="pytest.skip" message="AT-PARALLEL tests require NB_RUN_PARALLEL=1 and C binary">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_010.py:228: AT-PARALLEL tests require NB_RUN_PARALLEL=1 and C binary</skipped></testcase><testcase classname="tests.test_at_parallel_010.TestATParallel010SolidAngleCorrections" name="test_obliquity_with_tilts" time="0.000"><skipped type="pytest.skip" message="AT-PARALLEL tests require NB_RUN_PARALLEL=1 and C binary">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_010.py:285: AT-PARALLEL tests require NB_RUN_PARALLEL=1 and C binary</skipped></testcase><testcase classname="tests.test_at_parallel_010.TestATParallel010SolidAngleCorrections" name="test_combined_distance_and_tilt" time="0.000"><skipped type="pytest.skip" message="AT-PARALLEL tests require NB_RUN_PARALLEL=1 and C binary">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_010.py:340: AT-PARALLEL tests require NB_RUN_PARALLEL=1 and C binary</skipped></testcase><testcase classname="tests.test_at_parallel_011.TestATParallel011PolarizationFactor" name="test_unpolarized_theory" time="0.007" /><testcase classname="tests.test_at_parallel_011.TestATParallel011PolarizationFactor" name="test_polarized_kahn_model" time="0.006" /><testcase classname="tests.test_at_parallel_011.TestATParallel011PolarizationFactor" name="test_c_pytorch_equivalence" time="0.000"><skipped type="pytest.skip" message="Parallel validation requires NB_RUN_PARALLEL=1 environment variable">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_011.py:360: Parallel validation requires NB_RUN_PARALLEL=1 environment variable</skipped></testcase><testcase classname="tests.test_at_parallel_012.TestATParallel012ReferencePatternCorrelation" name="test_simple_cubic_correlation" time="0.174" /><testcase classname="tests.test_at_parallel_012.TestATParallel012ReferencePatternCorrelation" name="test_triclinic_P1_correlation" time="0.102" /><testcase classname="tests.test_at_parallel_012.TestATParallel012ReferencePatternCorrelation" name="test_cubic_tilted_detector_correlation" time="0.176" /><testcase classname="tests.test_at_parallel_012.TestATParallel012ReferencePatternCorrelation" name="test_high_resolution_variant" time="2.374" /><testcase classname="tests.test_at_parallel_013.TestATParallel013CrossPlatformConsistency" name="test_pytorch_determinism_same_seed" time="1.169" /><testcase classname="tests.test_at_parallel_013.TestATParallel013CrossPlatformConsistency" name="test_pytorch_determinism_different_seeds" time="1.238" /><testcase classname="tests.test_at_parallel_013.TestATParallel013CrossPlatformConsistency" name="test_pytorch_consistency_across_runs" time="2.524" /><testcase classname="tests.test_at_parallel_013.TestATParallel013CrossPlatformConsistency" name="test_c_pytorch_equivalence" time="0.000"><skipped type="pytest.skip" message="Requires NB_RUN_PARALLEL=1 and C binary">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_013.py:231: Requires NB_RUN_PARALLEL=1 and C binary</skipped></testcase><testcase classname="tests.test_at_parallel_013.TestATParallel013CrossPlatformConsistency" name="test_platform_fingerprint" time="0.000" /><testcase classname="tests.test_at_parallel_013.TestATParallel013CrossPlatformConsistency" name="test_numerical_precision_float64" time="0.303" /><testcase classname="tests.test_at_parallel_014.TestATParallel014NoiseRobustness" name="test_mean_preservation_after_scaling" time="0.321" /><testcase classname="tests.test_at_parallel_014.TestATParallel014NoiseRobustness" name="test_peak_centroid_stability" time="0.033" /><testcase classname="tests.test_at_parallel_014.TestATParallel014NoiseRobustness" name="test_overload_count_consistency" time="0.023" /><testcase classname="tests.test_at_parallel_014.TestATParallel014NoiseRobustness" name="test_noise_statistics" time="1.454" /><testcase classname="tests.test_at_parallel_014.TestATParallel014NoiseRobustness" name="test_deterministic_noise_with_seed" time="0.016" /><testcase classname="tests.test_at_parallel_015.TestATParallel015MixedUnits" name="test_distance_units_consistency" time="0.011" /><testcase classname="tests.test_at_parallel_015.TestATParallel015MixedUnits" name="test_wavelength_units_consistency" time="0.018" /><testcase classname="tests.test_at_parallel_015.TestATParallel015MixedUnits" name="test_angle_units_consistency" time="0.014" /><testcase classname="tests.test_at_parallel_015.TestATParallel015MixedUnits" name="test_mixed_units_comprehensive" time="0.119"><failure message="AssertionError: Zero maximum intensity&#10;assert tensor(0., dtype=torch.float32) &gt; 0&#10; +  where tensor(0., dtype=torch.float32) = &lt;built-in method max of Tensor object at 0x7f9f369344b0&gt;()&#10; +    where &lt;built-in method max of Tensor object at 0x7f9f369344b0&gt; = tensor([[0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        ...,\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.]], dtype=torch.float32).max">self = &lt;tests.test_at_parallel_015.TestATParallel015MixedUnits object at 0x7f9fac72fa80&gt;
+
+    def test_mixed_units_comprehensive(self):
+        """Test comprehensive mixed unit scenario."""
+        # Configuration with explicit units
+        crystal_config = CrystalConfig(
+            cell_a=75.5,      # Angstroms
+            cell_b=82.3,      # Angstroms
+            cell_c=91.7,      # Angstroms
+            cell_alpha=87.5,  # degrees
+            cell_beta=92.3,   # degrees
+            cell_gamma=95.8,  # degrees
+            default_F=100.0,
+            N_cells=(3, 3, 3),
+            phi_start_deg=0.0,    # degrees
+            osc_range_deg=1.0,    # degrees
+            phi_steps=1,
+        )
+    
+        detector_config = DetectorConfig(
+            distance_mm=150.5,      # millimeters
+            pixel_size_mm=0.172,    # millimeters
+            spixels=128,
+            fpixels=128,
+            detector_convention=DetectorConvention.XDS,
+            detector_rotx_deg=5.0,  # degrees
+            detector_roty_deg=3.0,  # degrees
+            detector_rotz_deg=2.0,  # degrees
+            detector_twotheta_deg=10.0,  # degrees
+        )
+    
+        beam_config = BeamConfig(
+            wavelength_A=1.54,  # Angstroms (Cu K-alpha)
+            fluence=1e23,
+            polarization_factor=0.95,  # dimensionless
+            dmin=2.0,          # Angstroms
+        )
+    
+        # Create models
+        det = Detector(detector_config)
+        crystal = Crystal(crystal_config)
+    
+        # Verify unit conversions happened correctly
+        # Detector distance should be in meters internally
+        assert np.isclose(det.distance, 0.1505, rtol=1e-6), \
+            f"Distance conversion error: {det.distance} != 0.1505"
+    
+        # Pixel size should be in meters internally
+        assert np.isclose(det.pixel_size, 0.000172, rtol=1e-6), \
+            f"Pixel size conversion error: {det.pixel_size} != 0.000172"
+    
+        # Rotations are converted internally but not exposed as attributes
+        # We can verify they work correctly by running the simulation
+    
+        # Wavelength should be in meters internally (used in simulator)
+        # Note: BeamConfig stores in Angstroms, conversion happens in simulator
+        assert beam_config.wavelength_A == 1.54, "Wavelength storage error"
+    
+        # Run simulation
+        sim = Simulator(detector=det, crystal=crystal, beam_config=beam_config)
+        intensity = sim.run(oversample=1)
+    
+        # Comprehensive checks
+        assert intensity.shape == (128, 128), f"Wrong output shape: {intensity.shape}"
+&gt;       assert intensity.max() &gt; 0, "Zero maximum intensity"
+E       AssertionError: Zero maximum intensity
+E       assert tensor(0., dtype=torch.float32) &gt; 0
+E        +  where tensor(0., dtype=torch.float32) = &lt;built-in method max of Tensor object at 0x7f9f369344b0&gt;()
+E        +    where &lt;built-in method max of Tensor object at 0x7f9f369344b0&gt; = tensor([[0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        ...,\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.]], dtype=torch.float32).max
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_015.py:274: AssertionError</failure></testcase><testcase classname="tests.test_at_parallel_015.TestATParallel015MixedUnits" name="test_detector_rotation_units" time="0.026" /><testcase classname="tests.test_at_parallel_016.TestATParallel016ExtremeScale" name="test_tiny_scale" time="0.867" /><testcase classname="tests.test_at_parallel_016.TestATParallel016ExtremeScale" name="test_large_cell" time="0.806" /><testcase classname="tests.test_at_parallel_016.TestATParallel016ExtremeScale" name="test_long_distance" time="0.012" /><testcase classname="tests.test_at_parallel_016.TestATParallel016ExtremeScale" name="test_extreme_scale_c_comparison" time="0.000"><skipped type="pytest.skip" message="C-PyTorch parallel tests require NB_RUN_PARALLEL=1">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_016.py:223: C-PyTorch parallel tests require NB_RUN_PARALLEL=1</skipped></testcase><testcase classname="tests.test_at_parallel_016.TestATParallel016ExtremeScale" name="test_combined_extremes" time="0.012" /><testcase classname="tests.test_at_parallel_016.TestATParallel016ExtremeScale" name="test_numerical_stability_metrics" time="0.004" /><testcase classname="tests.test_at_parallel_017.TestATParallel017GrazingIncidence" name="test_large_detector_tilts" time="0.168" /><testcase classname="tests.test_at_parallel_017.TestATParallel017GrazingIncidence" name="test_large_twotheta" time="0.014" /><testcase classname="tests.test_at_parallel_017.TestATParallel017GrazingIncidence" name="test_combined_extreme_angles" time="0.008" /><testcase classname="tests.test_at_parallel_017.TestATParallel017GrazingIncidence" name="test_near_90_degree_incidence" time="0.007" /><testcase classname="tests.test_at_parallel_017.TestATParallel017GrazingIncidence" name="test_solid_angle_obliquity_corrections" time="0.002" /><testcase classname="tests.test_at_parallel_017.TestATParallel017GrazingIncidence" name="test_extreme_rotation_stability" time="0.005" /><testcase classname="tests.test_at_parallel_018.TestATParallel018CrystalBoundaryConditions" name="test_cubic_crystal_aligned_axes" time="0.005" /><testcase classname="tests.test_at_parallel_018.TestATParallel018CrystalBoundaryConditions" name="test_zero_angle_rotations" time="0.005" /><testcase classname="tests.test_at_parallel_018.TestATParallel018CrystalBoundaryConditions" name="test_near_singular_cell_angles" time="0.010" /><testcase classname="tests.test_at_parallel_018.TestATParallel018CrystalBoundaryConditions" name="test_aligned_spindle_and_beam" time="0.163" /><testcase classname="tests.test_at_parallel_018.TestATParallel018CrystalBoundaryConditions" name="test_very_small_unit_cell" time="0.006" /><testcase classname="tests.test_at_parallel_018.TestATParallel018CrystalBoundaryConditions" name="test_very_large_unit_cell" time="0.005" /><testcase classname="tests.test_at_parallel_018.TestATParallel018CrystalBoundaryConditions" name="test_continuity_near_90_degrees" time="0.036" /><testcase classname="tests.test_at_parallel_018.TestATParallel018CrystalBoundaryConditions" name="test_identity_misset_matrix" time="0.005" /><testcase classname="tests.test_at_parallel_020.TestATParallel020" name="test_comprehensive_integration" time="0.000"><skipped type="pytest.skip" message="NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_020.py:280: NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)</skipped></testcase><testcase classname="tests.test_at_parallel_020.TestATParallel020" name="test_comprehensive_without_absorption" time="0.000"><skipped type="pytest.skip" message="NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_020.py:332: NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)</skipped></testcase><testcase classname="tests.test_at_parallel_020.TestATParallel020" name="test_phi_rotation_only" time="0.000"><skipped type="pytest.skip" message="NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_020.py:364: NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)</skipped></testcase><testcase classname="tests.test_at_parallel_020.TestATParallel020" name="test_comprehensive_minimal_features" time="0.000"><skipped type="pytest.skip" message="NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_020.py:399: NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)</skipped></testcase><testcase classname="tests.test_at_parallel_021.TestCrystalPhiRotation" name="test_single_step_phi_rotation" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_021.py:114: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_021.TestCrystalPhiRotation" name="test_multi_step_phi_rotation" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_021.py:252: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_022.TestATParallel022" name="test_single_step_with_detector_rotations" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_022.py:188: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_022.TestATParallel022" name="test_multi_step_with_detector_rotations" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_022.py:265: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_022.TestATParallel022" name="test_large_detector_rotations" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_022.py:343: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles0-cubic-cell_params0]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles0-triclinic-cell_params1]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles1-cubic-cell_params0]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles1-triclinic-cell_params1]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles2-cubic-cell_params0]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles2-triclinic-cell_params1]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles3-cubic-cell_params0]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles3-triclinic-cell_params1]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles4-cubic-cell_params0]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles4-triclinic-cell_params1]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_misset_changes_pattern" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:293: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_024.TestAT_PARALLEL_024" name="test_pytorch_determinism" time="0.056" /><testcase classname="tests.test_at_parallel_024.TestAT_PARALLEL_024" name="test_seed_independence" time="0.028" /><testcase classname="tests.test_at_parallel_024.TestAT_PARALLEL_024" name="test_c_pytorch_equivalence" time="0.000"><skipped type="pytest.skip" message="Known scaling issue: ~500x difference between C and PyTorch implementations. Interface fix is complete - C code correctly receives misset parameters.">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_024.py:192: Known scaling issue: ~500x difference between C and PyTorch implementations. Interface fix is complete - C code correctly receives misset parameters.</skipped></testcase><testcase classname="tests.test_at_parallel_024.TestAT_PARALLEL_024" name="test_lcg_compatibility" time="0.000" /><testcase classname="tests.test_at_parallel_024.TestAT_PARALLEL_024" name="test_mosaic_rotation_umat_determinism" time="0.000" /><testcase classname="tests.test_at_parallel_024.TestAT_PARALLEL_024" name="test_umat2misset_round_trip" time="0.002" /><testcase classname="tests.test_at_parallel_025" name="test_maximum_intensity_simple_case" time="0.000"><skipped type="pytest.skip" message="AT-PARALLEL tests require NB_RUN_PARALLEL=1">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_025.py:60: AT-PARALLEL tests require NB_RUN_PARALLEL=1</skipped></testcase><testcase classname="tests.test_at_parallel_025" name="test_maximum_intensity_with_offset" time="0.000"><skipped type="pytest.skip" message="AT-PARALLEL tests require NB_RUN_PARALLEL=1">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_025.py:126: AT-PARALLEL tests require NB_RUN_PARALLEL=1</skipped></testcase><testcase classname="tests.test_at_parallel_025" name="test_maximum_intensity_triclinic" time="0.000"><skipped type="pytest.skip" message="AT-PARALLEL tests require NB_RUN_PARALLEL=1">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_025.py:193: AT-PARALLEL tests require NB_RUN_PARALLEL=1</skipped></testcase><testcase classname="tests.test_at_parallel_026.TestAT_PARALLEL_026_TriclinicAbsolutePosition" name="test_triclinic_absolute_peak_position_pytorch_only" time="0.012" /><testcase classname="tests.test_at_parallel_026.TestAT_PARALLEL_026_TriclinicAbsolutePosition" name="test_triclinic_absolute_peak_position_vs_c" time="0.012"><failure message="AssertionError: C reference run failed&#10;assert None is not None">self = &lt;tests.test_at_parallel_026.TestAT_PARALLEL_026_TriclinicAbsolutePosition object at 0x7f9fac650550&gt;
+
+    @pytest.mark.requires_c_binary
+    def test_triclinic_absolute_peak_position_vs_c(self):
+        """Test that PyTorch and C produce peaks at the same absolute position"""
+    
+        from scripts.c_reference_runner import CReferenceRunner
+    
+        # Setup configuration
+        crystal_config, detector_config, beam_config = self.setup_triclinic_config()
+    
+        # Create models
+        crystal = Crystal(crystal_config)
+        detector = Detector(detector_config)
+    
+        # Create PyTorch simulator
+        simulator = Simulator(crystal, detector, crystal_config, beam_config)
+    
+        # Run PyTorch simulation
+        pytorch_image = simulator.run()
+        pytorch_slow, pytorch_fast, pytorch_intensity = self.find_peak_position(pytorch_image)
+    
+        # Setup C runner
+        runner = CReferenceRunner()
+    
+        # Run C simulation with same configs
+        c_image = runner.run_simulation(
+            detector_config,
+            crystal_config,
+            beam_config,
+            label="Triclinic absolute position test"
+        )
+    
+&gt;       assert c_image is not None, "C reference run failed"
+E       AssertionError: C reference run failed
+E       assert None is not None
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_026.py:147: AssertionError</failure></testcase><testcase classname="tests.test_at_parallel_026.TestAT_PARALLEL_026_TriclinicAbsolutePosition" name="test_triclinic_vs_cubic_peak_difference" time="0.024" /><testcase classname="tests.test_at_parallel_027.TestAT_PARALLEL_027" name="test_structure_factor_loading" time="0.001" /><testcase classname="tests.test_at_parallel_027.TestAT_PARALLEL_027" name="test_intensity_ratios" time="0.006" /><testcase classname="tests.test_at_parallel_027.TestAT_PARALLEL_027" name="test_pattern_structure" time="0.006" /><testcase classname="tests.test_at_parallel_027.TestAT_PARALLEL_027" name="test_c_pytorch_equivalence" time="0.000"><skipped type="pytest.skip" message="C-PyTorch parallel tests disabled unless NB_RUN_PARALLEL=1">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_027.py:156: C-PyTorch parallel tests disabled unless NB_RUN_PARALLEL=1</skipped></testcase><testcase classname="tests.test_at_parallel_027.TestAT_PARALLEL_027" name="test_f_squared_scaling" time="0.001" /><testcase classname="tests.test_at_parallel_028.TestATParallel028PerformanceParity" name="test_cpu_performance_parity" time="0.000"><skipped type="pytest.skip" message="Performance tests disabled by default. Set NB_RUN_PERFORMANCE=1 to run.">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_028.py:171: Performance tests disabled by default. Set NB_RUN_PERFORMANCE=1 to run.</skipped></testcase><testcase classname="tests.test_at_parallel_028.TestATParallel028PerformanceParity" name="test_gpu_performance_superiority" time="0.000"><skipped type="pytest.skip" message="Performance tests disabled by default. Set NB_RUN_PERFORMANCE=1 to run.">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_028.py:204: Performance tests disabled by default. Set NB_RUN_PERFORMANCE=1 to run.</skipped></testcase><testcase classname="tests.test_at_parallel_028.TestATParallel028PerformanceParity" name="test_performance_measurement_validity" time="0.678" /><testcase classname="tests.test_at_parallel_029.TestSubpixelSamplingAT029" name="test_pytorch_aliasing_reduction" time="0.952" /><testcase classname="tests.test_at_parallel_029.TestSubpixelSamplingAT029" name="test_pytorch_peak_stability" time="0.946" /><testcase classname="tests.test_at_parallel_029.TestSubpixelSamplingAT029" name="test_pytorch_fwhm_convergence" time="0.952" /><testcase classname="tests.test_at_parallel_029.TestSubpixelSamplingAT029" name="test_c_pytorch_oversample_equivalence" time="0.000"><skipped type="pytest.skip" message="Parallel validation requires C binary and NB_RUN_PARALLEL=1">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_029.py:271: Parallel validation requires C binary and NB_RUN_PARALLEL=1</skipped></testcase><testcase classname="tests.test_at_parallel_029.TestSubpixelSamplingAT029" name="test_issue_subpixel_aliasing" time="0.000"><skipped type="pytest.skip" message="Parallel validation requires C binary and NB_RUN_PARALLEL=1">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_029.py:326: Parallel validation requires C binary and NB_RUN_PARALLEL=1</skipped></testcase><testcase classname="tests.test_at_perf_001.TestATPERF001VectorizationPerformance" name="test_vectorization_scaling" time="2.667" /><testcase classname="tests.test_at_perf_001.TestATPERF001VectorizationPerformance" name="test_performance_parity_with_c" time="0.031"><skipped type="pytest.skip" message="C binary not found at ./nanoBragg">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_perf_001.py:99: C binary not found at ./nanoBragg</skipped></testcase><testcase classname="tests.test_at_perf_001.TestATPERF001VectorizationPerformance" name="test_memory_scaling" time="0.109" /><testcase classname="tests.test_at_perf_002.TestATPERF002ParallelExecution" name="test_cpu_thread_scaling" time="1.985" /><testcase classname="tests.test_at_perf_002.TestATPERF002ParallelExecution" name="test_pytorch_cpu_vs_c_performance" time="0.298"><skipped type="pytest.skip" message="C binary not found at ./nanoBragg">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_perf_002.py:87: C binary not found at ./nanoBragg</skipped></testcase><testcase classname="tests.test_at_perf_002.TestATPERF002ParallelExecution" name="test_gpu_acceleration" time="0.000"><skipped type="pytest.skip" message="CUDA not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_perf_002.py:183: CUDA not available</skipped></testcase><testcase classname="tests.test_at_perf_002.TestATPERF002ParallelExecution" name="test_thread_efficiency" time="2.067" /><testcase classname="tests.test_at_perf_003.TestATPERF003MemoryBandwidth" name="test_peak_memory_usage" time="5.793" /><testcase classname="tests.test_at_perf_003.TestATPERF003MemoryBandwidth" name="test_float32_vs_float64_performance" time="7.604" /><testcase classname="tests.test_at_perf_003.TestATPERF003MemoryBandwidth" name="test_cache_friendly_access" time="0.468" /><testcase classname="tests.test_at_perf_003.TestATPERF003MemoryBandwidth" name="test_memory_bandwidth_utilization" time="1.762" /><testcase classname="tests.test_at_perf_003.TestATPERF003MemoryBandwidth" name="test_intermediate_tensor_optimization" time="0.023" /><testcase classname="tests.test_at_perf_004.TestATPERF004HotPathOptimization" name="test_sincg_throughput" time="0.565" /><testcase classname="tests.test_at_perf_004.TestATPERF004HotPathOptimization" name="test_dot_product_throughput" time="0.098" /><testcase classname="tests.test_at_perf_004.TestATPERF004HotPathOptimization" name="test_profile_hot_paths" time="0.082" /><testcase classname="tests.test_at_perf_004.TestATPERF004HotPathOptimization" name="test_vectorization_efficiency" time="0.052" /><testcase classname="tests.test_at_perf_004.TestATPERF004HotPathOptimization" name="test_critical_operations_performance" time="0.281" /><testcase classname="tests.test_at_perf_005.TestATPERF005CompilationOptimization" name="test_torch_compile_speedup" time="0.817" /><testcase classname="tests.test_at_perf_005.TestATPERF005CompilationOptimization" name="test_hot_function_compilation" time="0.149" /><testcase classname="tests.test_at_perf_005.TestATPERF005CompilationOptimization" name="test_compilation_amortization" time="0.143" /><testcase classname="tests.test_at_perf_005.TestATPERF005CompilationOptimization" name="test_gpu_kernel_compilation" time="0.000"><skipped type="pytest.skip" message="CUDA required for GPU compilation test">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_perf_005.py:281: CUDA required for GPU compilation test</skipped></testcase><testcase classname="tests.test_at_perf_005.TestATPERF005CompilationOptimization" name="test_dtype_optimization_impact" time="0.094" /><testcase classname="tests.test_at_perf_006.TestATPERF006TensorVectorization" name="test_no_python_loops_in_core_path" time="0.002" /><testcase classname="tests.test_at_perf_006.TestATPERF006TensorVectorization" name="test_profile_tensor_operations_ratio" time="0.022" /><testcase classname="tests.test_at_perf_006.TestATPERF006TensorVectorization" name="test_vectorized_speedup" time="0.121" /><testcase classname="tests.test_at_perf_006.TestATPERF006TensorVectorization" name="test_tensor_shapes_include_all_dimensions" time="0.002"><skipped type="pytest.skip" message="Cannot verify tensor shapes without access to intermediate values">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_perf_006.py:218: Cannot verify tensor shapes without access to intermediate values</skipped></testcase><testcase classname="tests.test_at_perf_006" name="test_oversample_performance_scaling[1]" time="0.007" /><testcase classname="tests.test_at_perf_006" name="test_oversample_performance_scaling[2]" time="0.009" /><testcase classname="tests.test_at_perf_006" name="test_oversample_performance_scaling[3]" time="0.012" /><testcase classname="tests.test_at_perf_006" name="test_oversample_performance_scaling[4]" time="0.017" /><testcase classname="tests.test_at_perf_006" name="test_detector_thickness_vectorization" time="0.023" /><testcase classname="tests.test_at_perf_007.TestATPerf007ComprehensiveBenchmark" name="test_benchmark_suite_execution" time="0.000"><skipped type="pytest.skip" message="Set NB_RUN_BENCHMARKS=1 to run comprehensive benchmarks">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_perf_007.py:376: Set NB_RUN_BENCHMARKS=1 to run comprehensive benchmarks</skipped></testcase><testcase classname="tests.test_at_perf_007.TestATPerf007ComprehensiveBenchmark" name="test_pytorch_performance_basic" time="0.027" /><testcase classname="tests.test_at_perf_007.TestATPerf007ComprehensiveBenchmark" name="test_memory_scaling" time="0.068" /><testcase classname="tests.test_at_perf_007.TestATPerf007ComprehensiveBenchmark" name="test_gpu_performance" time="0.000"><skipped type="pytest.skip" message="CUDA not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_perf_007.py:465: CUDA not available</skipped></testcase><testcase classname="tests.test_at_perf_007.TestATPerf007ComprehensiveBenchmark" name="test_benchmark_output_format" time="0.001" /><testcase classname="tests.test_at_perf_008.TestATPERF008CUDATensorResidency" name="test_large_tensor_gpu_residency" time="0.000"><skipped type="pytest.skip" message="CUDA not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_perf_008.py:141: CUDA not available</skipped></testcase><testcase classname="tests.test_at_perf_008.TestATPERF008CUDATensorResidency" name="test_auto_device_selection_uses_cuda" time="0.000"><skipped type="pytest.skip" message="CUDA not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_perf_008.py:212: CUDA not available</skipped></testcase><testcase classname="tests.test_at_perf_008.TestATPERF008CUDATensorResidency" name="test_skip_when_cuda_unavailable" time="0.006" /><testcase classname="tests.test_at_perf_008.TestATPERF008CUDATensorResidency" name="test_memory_efficient_gpu_usage" time="0.000"><skipped type="pytest.skip" message="CUDA not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_perf_008.py:283: CUDA not available</skipped></testcase><testcase classname="tests.test_at_pol_001.TestATPOL001KahnModel" name="test_polarization_factor_calculation" time="0.001" /><testcase classname="tests.test_at_pol_001.TestATPOL001KahnModel" name="test_nopolar_toggle" time="0.009" /><testcase classname="tests.test_at_pol_001.TestATPOL001KahnModel" name="test_oversample_polar_last_value_semantics" time="0.014" /><testcase classname="tests.test_at_pol_001.TestATPOL001KahnModel" name="test_polarization_with_tilted_detector" time="0.010" /><testcase classname="tests.test_at_pol_001.TestATPOL001KahnModel" name="test_polarization_factor_range" time="0.131" /><testcase classname="tests.test_at_pre_001" name="test_header_precedence_img_then_mask" time="0.982" /><testcase classname="tests.test_at_pre_001" name="test_mask_beam_center_y_flip" time="0.985" /><testcase classname="tests.test_at_pre_001" name="test_img_only_no_mask" time="0.992" /><testcase classname="tests.test_at_pre_002" name="test_xbeam_ybeam_forces_beam_pivot" time="0.976" /><testcase classname="tests.test_at_pre_002" name="test_xclose_yclose_forces_sample_pivot" time="0.988" /><testcase classname="tests.test_at_pre_002" name="test_orgx_orgy_forces_sample_pivot" time="0.993" /><testcase classname="tests.test_at_pre_002" name="test_explicit_pivot_override" time="1.969" /><testcase classname="tests.test_at_pre_002" name="test_distance_vs_close_distance_pivot_defaults" time="1.950" /><testcase classname="tests.test_at_pre_002" name="test_convention_default_pivots" time="1.960" /><testcase classname="tests.test_at_roi_001.TestAT_ROI_001" name="test_roi_bounds_default_to_full_detector" time="0.000" /><testcase classname="tests.test_at_roi_001.TestAT_ROI_001" name="test_roi_bounds_validation" time="0.000" /><testcase classname="tests.test_at_roi_001.TestAT_ROI_001" name="test_roi_limits_rendering_area" time="0.007" /><testcase classname="tests.test_at_roi_001.TestAT_ROI_001" name="test_mask_array_filtering" time="0.006" /><testcase classname="tests.test_at_roi_001.TestAT_ROI_001" name="test_roi_and_mask_combination" time="0.006" /><testcase classname="tests.test_at_roi_001.TestAT_ROI_001" name="test_mask_array_dimension_validation" time="0.000" /><testcase classname="tests.test_at_roi_001.TestAT_ROI_001" name="test_statistics_exclude_masked_pixels" time="0.011" /><testcase classname="tests.test_at_sam_001" name="test_at_sam_001_steps_normalization" time="0.476" /><testcase classname="tests.test_at_sam_002.TestAT_SAM_002_OversampleLastValue" name="test_oversample_omega_last_value_semantics" time="0.312" /><testcase classname="tests.test_at_sam_002.TestAT_SAM_002_OversampleLastValue" name="test_oversample_without_subpixel_flags" time="0.268" /><testcase classname="tests.test_at_sam_002.TestAT_SAM_002_OversampleLastValue" name="test_oversample_flag_precedence" time="0.005" /><testcase classname="tests.test_at_sam_003" name="test_dmin_culling_basic" time="0.013" /><testcase classname="tests.test_at_sam_003" name="test_dmin_culling_exact_threshold" time="0.006" /><testcase classname="tests.test_at_sam_003" name="test_dmin_zero_no_culling" time="0.006" /><testcase classname="tests.test_at_src_001.TestAT_SRC_001_SourcefileAndWeighting" name="test_sourcefile_with_all_columns" time="0.001" /><testcase classname="tests.test_at_src_001.TestAT_SRC_001_SourcefileAndWeighting" name="test_sourcefile_with_missing_columns" time="0.001" /><testcase classname="tests.test_at_src_001.TestAT_SRC_001_SourcefileAndWeighting" name="test_sourcefile_default_position" time="0.001" /><testcase classname="tests.test_at_src_001.TestAT_SRC_001_SourcefileAndWeighting" name="test_multiple_sources_normalization" time="0.001" /><testcase classname="tests.test_at_src_001.TestAT_SRC_001_SourcefileAndWeighting" name="test_empty_sourcefile" time="0.000" /><testcase classname="tests.test_at_src_001.TestAT_SRC_001_SourcefileAndWeighting" name="test_weighted_sources_integration" time="0.006" /><testcase classname="tests.test_at_src_001_cli.TestAT_SRC_001_CLI" name="test_sourcefile_loading_via_cli" time="0.976" /><testcase classname="tests.test_at_src_001_cli.TestAT_SRC_001_CLI" name="test_sourcefile_with_missing_columns" time="0.985" /><testcase classname="tests.test_at_src_001_cli.TestAT_SRC_001_CLI" name="test_sourcefile_takes_precedence_over_divergence" time="0.979" /><testcase classname="tests.test_at_src_001_simple" name="test_sourcefile_dtype_propagation[dtype0]" time="0.001" /><testcase classname="tests.test_at_src_001_simple" name="test_sourcefile_dtype_propagation[dtype1]" time="0.001" /><testcase classname="tests.test_at_src_001_simple" name="test_sourcefile_dtype_propagation[None]" time="0.001" /><testcase classname="tests.test_at_src_001_simple" name="test_sourcefile_parsing" time="0.001"><failure message="AssertionError: The values for attribute 'dtype' do not match: torch.float64 != torch.float32.">def test_sourcefile_parsing():
+        """Basic test of source file parsing."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sourcefile = Path(tmpdir) / "test_sources.txt"
+    
+            # Write test source file with two sources
+            content = """# Test source file
+    -10.0  0.0  0.0  2.0  1.0e-10
+    0.0  -10.0  0.0  3.0  1.5e-10
+    """
+            sourcefile.write_text(content)
+    
+            # Read source file
+            default_wavelength_m = 6.2e-10
+            directions, weights, wavelengths = read_sourcefile(
+                sourcefile,
+                default_wavelength_m=default_wavelength_m
+            )
+    
+            # Check results
+            assert directions.shape == (2, 3)
+            assert weights.shape == (2,)
+            assert wavelengths.shape == (2,)
+    
+            # Check directions are normalized
+            norms = torch.linalg.norm(directions, dim=1)
+&gt;           torch.testing.assert_close(norms, torch.ones(2, dtype=torch.float32))
+E           AssertionError: The values for attribute 'dtype' do not match: torch.float64 != torch.float32.
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_at_src_001_simple.py:83: AssertionError</failure></testcase><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_no_parameters_provided" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_only_step_provided" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_only_range_provided" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_only_count_provided_angles" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_only_count_provided_thickness" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_range_and_step_provided" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_count_and_range_provided" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_divergence_auto_selection" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_dispersion_auto_selection" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_thickness_auto_selection" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_all_parameters_provided" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_conflicting_parameters" time="0.000" /><testcase classname="tests.test_at_src_003.TestSourcefileLambdaOverride" name="test_lambda_override_single_source" time="0.001" /><testcase classname="tests.test_at_src_003.TestSourcefileLambdaOverride" name="test_lambda_override_multiple_sources" time="0.001" /><testcase classname="tests.test_at_src_003.TestSourcefileWarningEmission" name="test_warning_emitted_on_mismatch" time="0.000" /><testcase classname="tests.test_at_src_003.TestSourcefileWarningEmission" name="test_no_warning_when_matching" time="0.000" /><testcase classname="tests.test_at_src_003.TestSourcefileWarningEmission" name="test_no_warning_when_column_missing" time="0.000" /><testcase classname="tests.test_at_src_003.TestStepsNormalizationParity" name="test_steps_count_includes_zero_weight_sources" time="0.001" /><testcase classname="tests.test_at_src_003.TestStepsNormalizationParity" name="test_equal_weighting_preserved" time="0.000" /><testcase classname="tests.test_at_sta_001.TestAT_STA_001" name="test_statistics_basic" time="0.006" /><testcase classname="tests.test_at_sta_001.TestAT_STA_001" name="test_statistics_with_roi" time="0.006" /><testcase classname="tests.test_at_sta_001.TestAT_STA_001" name="test_statistics_with_mask" time="0.002" /><testcase classname="tests.test_at_sta_001.TestAT_STA_001" name="test_statistics_empty_roi" time="0.005" /><testcase classname="tests.test_at_sta_001.TestAT_STA_001" name="test_statistics_last_max_location" time="0.005" /><testcase classname="tests.test_at_str_001" name="test_at_str_001_nearest_neighbor_lookup" time="0.002" /><testcase classname="tests.test_at_str_002" name="test_tricubic_interpolation_enabled" time="0.007" /><testcase classname="tests.test_at_str_002" name="test_tricubic_out_of_bounds_fallback" time="0.001" /><testcase classname="tests.test_at_str_002" name="test_auto_enable_interpolation" time="0.001" /><testcase classname="tests.test_at_str_003.TestAT_STR_003_LatticeShapeModels" name="test_square_shape_model" time="0.001" /><testcase classname="tests.test_at_str_003.TestAT_STR_003_LatticeShapeModels" name="test_round_shape_model" time="0.101" /><testcase classname="tests.test_at_str_003.TestAT_STR_003_LatticeShapeModels" name="test_gauss_shape_model" time="0.001"><failure message="AttributeError: 'NoneType' object has no attribute 'get_pixel_coords'">self = &lt;tests.test_at_str_003.TestAT_STR_003_LatticeShapeModels object at 0x7f9fac5623f0&gt;
+
+    def test_gauss_shape_model(self):
+        """Test GAUSS (Gaussian in reciprocal space) lattice shape model."""
+        # Configure for GAUSS shape
+        self.crystal_config.shape = CrystalShape.GAUSS
+        self.crystal_config.fudge = 1.0
+    
+        # Create simulator to test the full implementation
+&gt;       simulator = Simulator(
+            crystal=Crystal(self.crystal_config),
+            detector=None,  # Not needed for this test
+            crystal_config=self.crystal_config,
+            beam_config=self.beam_config,
+        )
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_at_str_003.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;nanobrag_torch.simulator.Simulator object at 0x7f9f9f6329f0&gt;
+crystal = &lt;nanobrag_torch.models.crystal.Crystal object at 0x7f9fa8698b90&gt;
+detector = None
+crystal_config = CrystalConfig(cell_a=100.0, cell_b=100.0, cell_c=100.0, cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0, misset_deg=(...'gauss'&gt;, fudge=1.0, sample_x=1.0000000000000001e-07, sample_y=1.0000000000000001e-07, sample_z=1.0000000000000001e-07)
+beam_config = BeamConfig(wavelength_A=1.0, N_source_points=1, source_distance_mm=10000.0, source_size_mm=0.0, source_directions=None...=(0.0, 0.0, 1.0), flux=0.0, exposure=0.0, beamsize_mm=0.0, fluence=1.2593201528622709e+29, dmin=0.0, water_size_um=0.0)
+device = None, dtype = torch.float32, debug_config = None
+
+    def __init__(
+        self,
+        crystal: Crystal,
+        detector: Detector,
+        crystal_config: Optional[CrystalConfig] = None,
+        beam_config: Optional[BeamConfig] = None,
+        device=None,
+        dtype=torch.float32,
+        debug_config: Optional[dict] = None,
+    ):
+        """
+        Initialize simulator with crystal, detector, and configurations.
+    
+        Args:
+            crystal: Crystal object containing unit cell and structure factors
+            detector: Detector object with geometry parameters
+            crystal_config: Configuration for crystal rotation parameters (phi, mosaic)
+            beam_config: Beam configuration (optional, for future use)
+            device: PyTorch device (cpu/cuda)
+            dtype: PyTorch data type
+            debug_config: Debug configuration with printout, printout_pixel, trace_pixel options
+        """
+        self.crystal = crystal
+        self.detector = detector
+        # If crystal_config is provided, update only the rotation-related parameters
+        # This preserves essential parameters like cell dimensions and default_F
+        if crystal_config is not None:
+            # Update only the rotation-related fields that are explicitly set
+            # This preserves the crystal's essential parameters while allowing rotation updates
+            if hasattr(crystal_config, 'phi_start_deg'):
+                self.crystal.config.phi_start_deg = crystal_config.phi_start_deg
+            if hasattr(crystal_config, 'osc_range_deg'):
+                self.crystal.config.osc_range_deg = crystal_config.osc_range_deg
+            if hasattr(crystal_config, 'phi_steps'):
+                self.crystal.config.phi_steps = crystal_config.phi_steps
+            if hasattr(crystal_config, 'mosaic_spread_deg'):
+                self.crystal.config.mosaic_spread_deg = crystal_config.mosaic_spread_deg
+            if hasattr(crystal_config, 'mosaic_domains'):
+                self.crystal.config.mosaic_domains = crystal_config.mosaic_domains
+            if hasattr(crystal_config, 'mosaic_seed'):
+                self.crystal.config.mosaic_seed = crystal_config.mosaic_seed
+            if hasattr(crystal_config, 'spindle_axis'):
+                self.crystal.config.spindle_axis = crystal_config.spindle_axis
+        # Use the provided beam_config, or Crystal's beam_config, or default
+        if beam_config is not None:
+            self.beam_config = beam_config
+        elif hasattr(crystal, 'beam_config') and crystal.beam_config is not None:
+            self.beam_config = crystal.beam_config
+        else:
+            self.beam_config = BeamConfig()
+        # Normalize device to ensure consistency
+        if device is not None:
+            # Create a dummy tensor on the device to get the actual device with index
+            temp = torch.zeros(1, device=device)
+            self.device = temp.device
+        else:
+            self.device = torch.device("cpu")
+        self.dtype = dtype
+    
+        # PERF-PYTORCH-004 Attempt #14: Ensure detector is on the same device/dtype as simulator
+        # This prevents device mismatch errors when detector tensors (beam_vector, pixel_coords)
+        # interact with simulator tensors (wavelength, incident_beam_direction) during compilation
+        if self.detector is not None:
+            self.detector = self.detector.to(device=self.device, dtype=self.dtype)
+    
+        # Store debug configuration
+        self.debug_config = debug_config if debug_config is not None else {}
+        self.printout = self.debug_config.get('printout', False)
+        self.printout_pixel = self.debug_config.get('printout_pixel', None)  # [fast, slow]
+        self.trace_pixel = self.debug_config.get('trace_pixel', None)  # [slow, fast]
+    
+        # Phase CLI-FLAGS-003 M0a: Enable trace instrumentation on Crystal when trace_pixel is active
+        # This guards _last_tricubic_neighborhood population to prevent unconditional debug payload retention
+        if self.trace_pixel is not None:
+            self.crystal._enable_trace = True
+    
+        # Set incident beam direction from detector.beam_vector
+        # This is critical for convention consistency (AT-PARALLEL-004) and CLI override support (CLI-FLAGS-003 Phase H2)
+        # The detector.beam_vector property handles both convention defaults and CUSTOM overrides (e.g., -beam_vector)
+        if self.detector is not None:
+            # Use detector's beam_vector property which handles:
+            # - CUSTOM convention with user-supplied custom_beam_vector
+            # - Convention defaults (MOSFLM: [1,0,0], XDS/DIALS: [0,0,1])
+            # The detector normalizes and returns the vector with correct device/dtype
+            self.incident_beam_direction = self.detector.beam_vector.clone()
+        else:
+            # If no detector provided, default to MOSFLM beam direction
+            self.incident_beam_direction = torch.tensor(
+                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
+            )
+        # PERF-PYTORCH-006: Store wavelength as tensor with correct dtype
+        self.wavelength = torch.tensor(self.beam_config.wavelength_A, device=self.device, dtype=self.dtype)
+    
+        # Physical constants (from nanoBragg.c ~line 240)
+        # PERF-PYTORCH-006: Store as tensors with correct dtype to avoid implicit float64 upcasting
+        self.r_e_sqr = torch.tensor(
+            7.94079248018965e-30, device=self.device, dtype=self.dtype  # classical electron radius squared (meters squared)
+        )
+        # Use fluence from beam config (AT-FLU-001)
+        self.fluence = torch.tensor(self.beam_config.fluence, device=self.device, dtype=self.dtype)
+        # Polarization setup from beam config
+        # PERF-PYTORCH-006: Store as tensor with correct dtype
+        kahn_value = self.beam_config.polarization_factor if not self.beam_config.nopolar else 0.0
+        self.kahn_factor = torch.tensor(kahn_value, device=self.device, dtype=self.dtype)
+        self.polarization_axis = torch.tensor(
+            self.beam_config.polarization_axis, device=self.device, dtype=self.dtype
+        )
+    
+        # PERF-PYTORCH-004 P1.2 + P3.0: Pre-normalize source tensors to avoid repeated .to() calls in run()
+        # Move source direction/wavelength/weight tensors to correct device/dtype once during init
+        # P3.0: Seed fallback tensors (equal weights, primary wavelength) when omitted before device cast
+        _has_sources = (self.beam_config.source_directions is not None and
+                       len(self.beam_config.source_directions) &gt; 0)
+        if _has_sources:
+            self._source_directions = self.beam_config.source_directions.to(device=self.device, dtype=self.dtype)
+    
+            # P3.0: Default source_wavelengths to primary wavelength if not provided (AT-SRC-001)
+            if self.beam_config.source_wavelengths is not None:
+                self._source_wavelengths = self.beam_config.source_wavelengths.to(device=self.device, dtype=self.dtype)  # meters
+            else:
+                # Use primary wavelength for all sources
+                primary_wavelength_m = self.beam_config.wavelength_A * 1e-10
+                n_sources = len(self.beam_config.source_directions)
+                self._source_wavelengths = torch.full((n_sources,), primary_wavelength_m, device=self.device, dtype=self.dtype)
+    
+            self._source_wavelengths_A = self._source_wavelengths * 1e10  # Convert to Angstroms once
+    
+            # P3.0: Default source_weights to equal weights if not provided
+            if self.beam_config.source_weights is not None:
+                self._source_weights = self.beam_config.source_weights.to(device=self.device, dtype=self.dtype)
+            else:
+                # Default to equal weights if not provided
+                self._source_weights = torch.ones(len(self.beam_config.source_directions), device=self.device, dtype=self.dtype)
+        else:
+            self._source_directions = None
+            self._source_wavelengths_A = None
+            self._source_weights = None
+    
+        # PERF-PYTORCH-004 P3.4: Cache frequently-accessed tensors to reduce per-run allocations
+        # Pre-convert pixel coordinates to correct device/dtype once
+&gt;       self._cached_pixel_coords_meters = self.detector.get_pixel_coords().to(device=self.device, dtype=self.dtype)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'get_pixel_coords'
+
+/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py:569: AttributeError</failure></testcase><testcase classname="tests.test_at_str_003.TestAT_STR_003_LatticeShapeModels" name="test_tophat_shape_model" time="0.001" /><testcase classname="tests.test_at_str_003.TestAT_STR_003_LatticeShapeModels" name="test_shape_model_comparison" time="0.001"><failure message="AttributeError: 'NoneType' object has no attribute 'get_pixel_coords'">self = &lt;tests.test_at_str_003.TestAT_STR_003_LatticeShapeModels object at 0x7f9fac3d8ef0&gt;
+
+    def test_shape_model_comparison(self):
+        """Compare all four shape models at the same reflection."""
+        # Test point slightly off a Bragg peak
+        h_frac = 0.1  # Fractional Miller index offset
+        k_frac = 0.1
+        l_frac = 0.1
+    
+        results = {}
+    
+        for shape in [CrystalShape.SQUARE, CrystalShape.ROUND,
+                     CrystalShape.GAUSS, CrystalShape.TOPHAT]:
+            self.crystal_config.shape = shape
+    
+            # Create simulator with this shape
+&gt;           simulator = Simulator(
+                crystal=Crystal(self.crystal_config),
+                detector=None,
+                crystal_config=self.crystal_config,
+                beam_config=self.beam_config,
+            )
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_at_str_003.py:181: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;nanobrag_torch.simulator.Simulator object at 0x7f9fa863dd90&gt;
+crystal = &lt;nanobrag_torch.models.crystal.Crystal object at 0x7f9fa869a3f0&gt;
+detector = None
+crystal_config = CrystalConfig(cell_a=100.0, cell_b=100.0, cell_c=100.0, cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0, misset_deg=(...square'&gt;, fudge=1.0, sample_x=1.0000000000000001e-07, sample_y=1.0000000000000001e-07, sample_z=1.0000000000000001e-07)
+beam_config = BeamConfig(wavelength_A=1.0, N_source_points=1, source_distance_mm=10000.0, source_size_mm=0.0, source_directions=None...=(0.0, 0.0, 1.0), flux=0.0, exposure=0.0, beamsize_mm=0.0, fluence=1.2593201528622709e+29, dmin=0.0, water_size_um=0.0)
+device = None, dtype = torch.float32, debug_config = None
+
+    def __init__(
+        self,
+        crystal: Crystal,
+        detector: Detector,
+        crystal_config: Optional[CrystalConfig] = None,
+        beam_config: Optional[BeamConfig] = None,
+        device=None,
+        dtype=torch.float32,
+        debug_config: Optional[dict] = None,
+    ):
+        """
+        Initialize simulator with crystal, detector, and configurations.
+    
+        Args:
+            crystal: Crystal object containing unit cell and structure factors
+            detector: Detector object with geometry parameters
+            crystal_config: Configuration for crystal rotation parameters (phi, mosaic)
+            beam_config: Beam configuration (optional, for future use)
+            device: PyTorch device (cpu/cuda)
+            dtype: PyTorch data type
+            debug_config: Debug configuration with printout, printout_pixel, trace_pixel options
+        """
+        self.crystal = crystal
+        self.detector = detector
+        # If crystal_config is provided, update only the rotation-related parameters
+        # This preserves essential parameters like cell dimensions and default_F
+        if crystal_config is not None:
+            # Update only the rotation-related fields that are explicitly set
+            # This preserves the crystal's essential parameters while allowing rotation updates
+            if hasattr(crystal_config, 'phi_start_deg'):
+                self.crystal.config.phi_start_deg = crystal_config.phi_start_deg
+            if hasattr(crystal_config, 'osc_range_deg'):
+                self.crystal.config.osc_range_deg = crystal_config.osc_range_deg
+            if hasattr(crystal_config, 'phi_steps'):
+                self.crystal.config.phi_steps = crystal_config.phi_steps
+            if hasattr(crystal_config, 'mosaic_spread_deg'):
+                self.crystal.config.mosaic_spread_deg = crystal_config.mosaic_spread_deg
+            if hasattr(crystal_config, 'mosaic_domains'):
+                self.crystal.config.mosaic_domains = crystal_config.mosaic_domains
+            if hasattr(crystal_config, 'mosaic_seed'):
+                self.crystal.config.mosaic_seed = crystal_config.mosaic_seed
+            if hasattr(crystal_config, 'spindle_axis'):
+                self.crystal.config.spindle_axis = crystal_config.spindle_axis
+        # Use the provided beam_config, or Crystal's beam_config, or default
+        if beam_config is not None:
+            self.beam_config = beam_config
+        elif hasattr(crystal, 'beam_config') and crystal.beam_config is not None:
+            self.beam_config = crystal.beam_config
+        else:
+            self.beam_config = BeamConfig()
+        # Normalize device to ensure consistency
+        if device is not None:
+            # Create a dummy tensor on the device to get the actual device with index
+            temp = torch.zeros(1, device=device)
+            self.device = temp.device
+        else:
+            self.device = torch.device("cpu")
+        self.dtype = dtype
+    
+        # PERF-PYTORCH-004 Attempt #14: Ensure detector is on the same device/dtype as simulator
+        # This prevents device mismatch errors when detector tensors (beam_vector, pixel_coords)
+        # interact with simulator tensors (wavelength, incident_beam_direction) during compilation
+        if self.detector is not None:
+            self.detector = self.detector.to(device=self.device, dtype=self.dtype)
+    
+        # Store debug configuration
+        self.debug_config = debug_config if debug_config is not None else {}
+        self.printout = self.debug_config.get('printout', False)
+        self.printout_pixel = self.debug_config.get('printout_pixel', None)  # [fast, slow]
+        self.trace_pixel = self.debug_config.get('trace_pixel', None)  # [slow, fast]
+    
+        # Phase CLI-FLAGS-003 M0a: Enable trace instrumentation on Crystal when trace_pixel is active
+        # This guards _last_tricubic_neighborhood population to prevent unconditional debug payload retention
+        if self.trace_pixel is not None:
+            self.crystal._enable_trace = True
+    
+        # Set incident beam direction from detector.beam_vector
+        # This is critical for convention consistency (AT-PARALLEL-004) and CLI override support (CLI-FLAGS-003 Phase H2)
+        # The detector.beam_vector property handles both convention defaults and CUSTOM overrides (e.g., -beam_vector)
+        if self.detector is not None:
+            # Use detector's beam_vector property which handles:
+            # - CUSTOM convention with user-supplied custom_beam_vector
+            # - Convention defaults (MOSFLM: [1,0,0], XDS/DIALS: [0,0,1])
+            # The detector normalizes and returns the vector with correct device/dtype
+            self.incident_beam_direction = self.detector.beam_vector.clone()
+        else:
+            # If no detector provided, default to MOSFLM beam direction
+            self.incident_beam_direction = torch.tensor(
+                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
+            )
+        # PERF-PYTORCH-006: Store wavelength as tensor with correct dtype
+        self.wavelength = torch.tensor(self.beam_config.wavelength_A, device=self.device, dtype=self.dtype)
+    
+        # Physical constants (from nanoBragg.c ~line 240)
+        # PERF-PYTORCH-006: Store as tensors with correct dtype to avoid implicit float64 upcasting
+        self.r_e_sqr = torch.tensor(
+            7.94079248018965e-30, device=self.device, dtype=self.dtype  # classical electron radius squared (meters squared)
+        )
+        # Use fluence from beam config (AT-FLU-001)
+        self.fluence = torch.tensor(self.beam_config.fluence, device=self.device, dtype=self.dtype)
+        # Polarization setup from beam config
+        # PERF-PYTORCH-006: Store as tensor with correct dtype
+        kahn_value = self.beam_config.polarization_factor if not self.beam_config.nopolar else 0.0
+        self.kahn_factor = torch.tensor(kahn_value, device=self.device, dtype=self.dtype)
+        self.polarization_axis = torch.tensor(
+            self.beam_config.polarization_axis, device=self.device, dtype=self.dtype
+        )
+    
+        # PERF-PYTORCH-004 P1.2 + P3.0: Pre-normalize source tensors to avoid repeated .to() calls in run()
+        # Move source direction/wavelength/weight tensors to correct device/dtype once during init
+        # P3.0: Seed fallback tensors (equal weights, primary wavelength) when omitted before device cast
+        _has_sources = (self.beam_config.source_directions is not None and
+                       len(self.beam_config.source_directions) &gt; 0)
+        if _has_sources:
+            self._source_directions = self.beam_config.source_directions.to(device=self.device, dtype=self.dtype)
+    
+            # P3.0: Default source_wavelengths to primary wavelength if not provided (AT-SRC-001)
+            if self.beam_config.source_wavelengths is not None:
+                self._source_wavelengths = self.beam_config.source_wavelengths.to(device=self.device, dtype=self.dtype)  # meters
+            else:
+                # Use primary wavelength for all sources
+                primary_wavelength_m = self.beam_config.wavelength_A * 1e-10
+                n_sources = len(self.beam_config.source_directions)
+                self._source_wavelengths = torch.full((n_sources,), primary_wavelength_m, device=self.device, dtype=self.dtype)
+    
+            self._source_wavelengths_A = self._source_wavelengths * 1e10  # Convert to Angstroms once
+    
+            # P3.0: Default source_weights to equal weights if not provided
+            if self.beam_config.source_weights is not None:
+                self._source_weights = self.beam_config.source_weights.to(device=self.device, dtype=self.dtype)
+            else:
+                # Default to equal weights if not provided
+                self._source_weights = torch.ones(len(self.beam_config.source_directions), device=self.device, dtype=self.dtype)
+        else:
+            self._source_directions = None
+            self._source_wavelengths_A = None
+            self._source_weights = None
+    
+        # PERF-PYTORCH-004 P3.4: Cache frequently-accessed tensors to reduce per-run allocations
+        # Pre-convert pixel coordinates to correct device/dtype once
+&gt;       self._cached_pixel_coords_meters = self.detector.get_pixel_coords().to(device=self.device, dtype=self.dtype)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'get_pixel_coords'
+
+/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py:569: AttributeError</failure></testcase></testsuite></testsuites>
