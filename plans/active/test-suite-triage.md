@@ -232,7 +232,7 @@ Exit Criteria: Each cluster mapped to its canonical plan with up-to-date status;
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| M3a | Sync MOSFLM remediation (C6) | [ ] | Ensure `plans/active/detector-config.md` Phase B/C incorporate Phase M0 findings (`triage_summary.md:186`–`214`). Capture targeted pytest log refresh if parameters drift. |
+| M3a | Sync MOSFLM remediation (C6) | [D] | **Phase M3a complete (Attempt #31, 20251011T175917Z).** Consolidated C6 findings from `triage_summary.md:186-214` into `reports/2026-01-test-suite-triage/phase_m3/20251011T175917Z/mosflm_sync/summary.md`. Updated `plans/active/detector-config.md` Phase B tasks (B1/B2/B4 → [D], B3 → [P]). Documented reproduction commands (targeted/module/cluster), code locations (detector.py:78-142/612-690/~520), offset formula, test coverage gaps, and implementation handoff checklist. Blueprint ready for [DETECTOR-CONFIG-001] Phase C delegation. |
 | M3b | Assign detector orthogonality owner (C8) | [ ] | Coordinate with geometry specialist; record scope in `phase_m3/$STAMP/detector_ortho/notes.md`. Selector: `pytest -v tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_detector_tilts`. |
 | M3c | Scope mixed-units zero intensity (C9) | [ ] | Promote to `[VECTOR-PARITY-001]` Tap backlog; add callchain requirement referencing `triage_summary.md:277`–`303`. Store hypotheses in `phase_m3/$STAMP/mixed_units/hypotheses.md`. |
 

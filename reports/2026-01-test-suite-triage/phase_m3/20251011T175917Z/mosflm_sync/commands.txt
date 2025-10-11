@@ -1,0 +1,42 @@
+# Phase M3a: MOSFLM Remediation Sync - Commands Log
+# Timestamp: 20251011T175917Z
+# Mode: Docs-only (no pytest execution per input.md directive)
+
+## Workspace Setup
+export STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+mkdir -p reports/2026-01-test-suite-triage/phase_m3/$STAMP/mosflm_sync
+
+## Docs Analysis Commands (executed via Read tool)
+# - reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:186-214
+# - plans/active/detector-config.md:25-47 (Phase B tasks)
+# - docs/fix_plan.md [TEST-SUITE-TRIAGE-001] Attempt #17 (Phase L evidence)
+# - specs/spec-a-core.md §§68-73 (MOSFLM convention specifications)
+# - arch.md §ADR-03 (beam-center mapping decisions)
+
+## Deliverables Created (via Write/Edit tools)
+# - reports/2026-01-test-suite-triage/phase_m3/20251011T175917Z/mosflm_sync/summary.md
+# - Updated plans/active/detector-config.md Phase B tasks (B1→[D], B2→[D], B3→[P], B4→[D])
+# - Updated docs/fix_plan.md [TEST-SUITE-TRIAGE-001] Attempt #31
+# - Updated plans/active/test-suite-triage.md task M3a→[D]
+
+## Validation Commands (for next implementation loop)
+# Targeted (single test):
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_scales_with_pixel_size
+
+# Module-level (2 failures):
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_002.py
+
+# Full C6 cluster (3 failures):
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_002.py tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation
+
+# Detector config module (post-C2 test additions):
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py
+
+## Next Phase
+# Delegate [DETECTOR-CONFIG-001] Phase B→C implementation to Ralph via input.md
+# OR proceed to Phase M3b (C8 detector orthogonality owner assignment)
+
+## Exit Status
+# Phase M3a: COMPLETE
+# Artifacts: summary.md, commands.txt, updated plans
+# Blueprint ready for implementation handoff
