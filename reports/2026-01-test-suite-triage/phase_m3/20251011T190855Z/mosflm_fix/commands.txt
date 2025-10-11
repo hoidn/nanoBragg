@@ -1,0 +1,15 @@
+# DETECTOR-CONFIG-001 Phase M3 Evidence Capture
+# Timestamp: 20251011T190855Z
+# Purpose: Validate MOSFLM detector defaults post-fix
+
+# Test 1: Detector configuration unit tests
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0
+
+# Test 2: AT-PARALLEL-002 beam center scaling validation
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_scales_with_pixel_size --maxfail=0
+
+# Environment
+# - Python: 3.13.5
+# - PyTorch: 2.7.1+cu126
+# - CUDA: 12.6 (forced CPU-only via CUDA_VISIBLE_DEVICES=-1)
+# - Device: CPU
