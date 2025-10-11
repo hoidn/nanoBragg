@@ -1,0 +1,10 @@
+# Phase L Detector Config Targeted Rerun
+# Timestamp: 2025-10-11T10:46:18Z
+# Environment: CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE
+
+# Test execution command:
+CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0
+
+# Environment captures:
+python -c "import sys, torch; print(f'Python: {sys.version}\nPyTorch: {torch.__version__}\nCUDA Available: {torch.cuda.is_available()}\nCUDA Version: {torch.version.cuda if torch.cuda.is_available() else \"N/A\"}')" > env/torch_env.txt
+pip freeze > env/pip_freeze.txt
