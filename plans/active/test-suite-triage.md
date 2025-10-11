@@ -8,7 +8,7 @@
   - `docs/development/pytorch_runtime_checklist.md` — sanity checklist before executing PyTorch-heavy tests (KMP env, device neutrality).
   - `prompts/callchain.md` — fallback SOP if targeted tracing is required for specific failures (defer until triage completes).
 
-### Status Snapshot (2026-01-18)
+### Status Snapshot (2025-10-11)
 - Phase A ✅ complete (Attempt #1 — `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/`); 692 tests collected, no errors.
 - Phase B ✅ complete (Attempt #5 — `reports/2026-01-test-suite-triage/phase_b/20251010T135833Z/`); full suite executed in 1865 s with 50 failures captured across 18 clusters.
 - Phase C ✅ complete (Attempt #6 — `reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/`); all 50 failures classified across 18 clusters, mapped to 10 existing + 8 new fix-plan IDs.
@@ -19,7 +19,7 @@
 - Phase H ✅ complete (Attempt #10 — `reports/2026-01-test-suite-triage/phase_h/20251011T033418Z/` captured full-suite rerun, 36 failures remaining, gradient checks stable).
 - Phase I ✅ complete (Attempt #11 — `reports/2026-01-test-suite-triage/phase_i/20251011T042127Z/` delivers triage_summary.md + classification_overview.md with 36 failures classified; fix_plan updated accordingly).
 - **Phase J (active)** — draft remediation tracker + execution sequence using Phase I inputs before resuming individual remediation workstreams.
-- **Phase K (pending)** — 2026-01-18 rerun of `pytest tests/` to refresh failure inventory and unblock Sprint 1 remediation sequencing.
+- **Phase K (pending)** — Attempt #14 (`reports/2026-01-test-suite-triage/phase_k/20251011T070734Z/`) timed out after 600s because `STAMP` was not exported and the harness defaulted to a 10-minute limit; rerun must export `STAMP`, pre-create the Phase K directories, and wrap `pytest` in `timeout 3600` before capturing refreshed artifacts for Sprint 1.
 
 ### Phase A — Preflight & Inventory
 Goal: Confirm environment readiness and enumerate suite metadata so the full run is reproducible and guarded.
@@ -143,13 +143,13 @@ Exit Criteria: `reports/2026-01-test-suite-triage/phase_j/<STAMP>/remediation_tr
 ### Phase K — 2026 Full-Suite Refresh
 Goal: Capture a fresh `pytest tests/` run and recalibrate failure classification before restarting Sprint 1 remediation.
 Prereqs: Phase J tracker current; confirm runtime checklist via Phase A artifacts; ensure disk budget for new artifacts.
-Exit Criteria: Phase K directory populated with logs + junit XML + env snapshot; updated classification + tracker synced to fix plan; Attempt #13 recorded.
+Exit Criteria: Phase K directory populated with logs + junit XML + env snapshot; updated classification + tracker synced to fix plan; Attempt #15 recorded.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| K1 | Execute full suite (Phase K) | [ ] | Run `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_k/$STAMP/artifacts/pytest_full.xml`; capture stdout/stderr to `logs/pytest_full.log`, store durations + `commands.txt`, and record `env/torch_env.txt`. |
+| K1 | Execute full suite (Phase K) | [ ] | Export `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`, run `mkdir -p reports/2026-01-test-suite-triage/phase_k/$STAMP/{artifacts,logs,analysis,env}`, then execute `timeout 3600 CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_k/$STAMP/artifacts/pytest_full.xml 2>&1 | tee reports/2026-01-test-suite-triage/phase_k/$STAMP/logs/pytest_full.log`; store durations + `commands.txt` and record `env/torch_env.txt`. |
 | K2 | Refresh classification | [ ] | Regenerate `triage_summary.md` + `classification_overview.md` using Phase K outputs; include delta vs Phase I counts and implementation-vs-deprecation labels; archive under `phase_k/$STAMP/analysis/`. |
-| K3 | Sync tracker + ledger | [ ] | Update `phase_j/latest/remediation_tracker.md` with new counts + owners; write `phase_k/$STAMP/summary.md` noting cluster priority shifts; add Attempt #13 notes + artifact links to `docs/fix_plan.md`. |
+| K3 | Sync tracker + ledger | [ ] | Copy `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/` into `phase_j/$STAMP/` (or update the tracker in-place), refresh `remediation_tracker.md` and `remediation_sequence.md` with new counts/owners, write `phase_k/$STAMP/summary.md` noting cluster priority shifts, and add Attempt #15 notes + artifact links to `docs/fix_plan.md`. |
 
 ### Exit Criteria (Plan Completion)
 - Phases A–K marked `[D]` once delivered (Phase H–K added for 2026 rerun, classification refresh, and remediation sequencing).
