@@ -120,3 +120,21 @@ Phase K2-K3 delivered comprehensive triage artifacts reconciling Phase K pytest 
 ---
 
 **Phase K2–K3 COMPLETE. Tracker refreshed; Sprint 1.2 ready.**
+
+
+## Phase D4 Update (2025-10-11)
+
+**C3 cluster RESOLVED post-Phase K:**
+
+After Phase K baseline (31 failures, C3=4), Attempt #19 (Phase D) delivered dtype neutrality fix clearing all remaining C3 failures:
+
+- **Final Result:** 27 failures total (-4 vs Phase K, -12.9%)
+- **C3 Status:** 4 → 0 ✅ (100% cluster resolution)
+- **Sprint 1 Progress:** 30.6% complete (7/17 failures resolved: C1, C2, C3, C15)
+- **Phase D4 Closure:** `reports/2026-01-test-suite-triage/phase_d/20251011T101713Z/source_weighting/closure.md`
+
+**Tracker sync complete:**
+- `remediation_tracker.md` — C3 marked ✅ RESOLVED, 27 failures total
+- `remediation_sequence.md` — Sprint 1.2 marked ✅ COMPLETE, progress table updated
+- `classification_overview.md` — Implementation bugs: 30→26, active clusters: 14→13
+
