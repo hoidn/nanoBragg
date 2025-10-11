@@ -1,0 +1,14 @@
+STAMP=20251011T153931Z
+M0a preflight started at 2025-10-11 15:39:31
+M0a collect_only exit=0 (687 tests collected)
+
+# Chunks 02-10 execution completed
+# Chunk 02: exit_code=0, duration=23.66s, passed=46, skipped=5
+# Chunk 03: exit_code=1, duration=85.24s, passed=42, failed=10, skipped=10
+# Chunk 04: exit_code=1, duration=32.81s, passed=68, failed=5, skipped=12
+# Chunk 05: exit_code=0, duration=76.14s, passed=38, skipped=6
+# Chunk 06: exit_code=1, duration=61.91s, passed=51, failed=8, skipped=13
+# Chunk 07: exit_code=1, duration=15.19s, passed=59, failed=1, skipped=3
+# Chunk 08: exit_code=0, duration=44.74s, passed=58, skipped=59
+# Chunk 09: exit_code=1, duration=71.08s, passed=32, failed=4, skipped=9
+# Chunk 10: exit_code=1, duration=38.87s, passed=50, failed=16, skipped=10

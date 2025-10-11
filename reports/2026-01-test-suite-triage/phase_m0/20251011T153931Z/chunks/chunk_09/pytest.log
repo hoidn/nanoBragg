@@ -1,0 +1,277 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 45 items
+
+tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_identical_seed_produces_identical_noise PASSED [  2%]
+tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_different_seed_produces_different_noise PASSED [  4%]
+tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_seed_determinism_without_roi PASSED [  6%]
+tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_negative_seed_accepted PASSED [  8%]
+tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_overload_count_determinism PASSED [ 11%]
+tests/test_at_geo_006.py::TestATGEO006PointPixelSolidAngle::test_point_pixel_solid_angle PASSED [ 13%]
+tests/test_at_geo_006.py::TestATGEO006PointPixelSolidAngle::test_default_solid_angle_with_obliquity PASSED [ 15%]
+tests/test_at_geo_006.py::TestATGEO006PointPixelSolidAngle::test_off_center_pixel_comparison PASSED [ 17%]
+tests/test_at_geo_006.py::TestATGEO006PointPixelSolidAngle::test_gradient_flow PASSED [ 20%]
+tests/test_at_geo_006.py::TestATGEO006PointPixelSolidAngle::test_corner_pixel_values PASSED [ 22%]
+tests/test_at_parallel_005.py::TestAT_PARALLEL_005_BeamCenterMapping::test_mosflm_xbeam_ybeam_mapping SKIPPED [ 24%]
+tests/test_at_parallel_005.py::TestAT_PARALLEL_005_BeamCenterMapping::test_xds_orgx_orgy_mapping SKIPPED [ 26%]
+tests/test_at_parallel_005.py::TestAT_PARALLEL_005_BeamCenterMapping::test_pivot_mode_consistency SKIPPED [ 28%]
+tests/test_at_parallel_005.py::TestAT_PARALLEL_005_BeamCenterMapping::test_equivalent_configurations_produce_same_pattern SKIPPED [ 31%]
+tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_distance_units_consistency PASSED [ 33%]
+tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_wavelength_units_consistency PASSED [ 35%]
+tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_angle_units_consistency PASSED [ 37%]
+tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_mixed_units_comprehensive FAILED [ 40%]
+tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_detector_rotation_units PASSED [ 42%]
+tests/test_at_parallel_026.py::TestAT_PARALLEL_026_TriclinicAbsolutePosition::test_triclinic_absolute_peak_position_pytorch_only PASSED [ 44%]
+tests/test_at_parallel_026.py::TestAT_PARALLEL_026_TriclinicAbsolutePosition::test_triclinic_absolute_peak_position_vs_c PASSED [ 46%]
+tests/test_at_parallel_026.py::TestAT_PARALLEL_026_TriclinicAbsolutePosition::test_triclinic_vs_cubic_peak_difference PASSED [ 48%]
+tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_benchmark_suite_execution SKIPPED [ 51%]
+tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_pytorch_performance_basic PASSED [ 53%]
+tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_memory_scaling PASSED [ 55%]
+tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_gpu_performance SKIPPED [ 57%]
+tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_benchmark_output_format PASSED [ 60%]
+tests/test_at_src_001_cli.py::TestAT_SRC_001_CLI::test_sourcefile_loading_via_cli PASSED [ 62%]
+tests/test_at_src_001_cli.py::TestAT_SRC_001_CLI::test_sourcefile_with_missing_columns PASSED [ 64%]
+tests/test_at_src_001_cli.py::TestAT_SRC_001_CLI::test_sourcefile_takes_precedence_over_divergence PASSED [ 66%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_adxv_convention_basis_vectors PASSED [ 68%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_denzo_convention_basis_vectors PASSED [ 71%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_denzo_beam_center_mapping PASSED [ 73%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_adxv_beam_direction PASSED [ 75%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_adxv_twotheta_axis_default PASSED [ 77%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_denzo_twotheta_axis_default PASSED [ 80%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_adxv_default_beam_centers PASSED [ 82%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_all_conventions_orthonormal PASSED [ 84%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_conventions_with_rotations PASSED [ 86%]
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_basic_execution[cpu] FAILED [ 88%]
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_basic_execution[cuda] SKIPPED [ 91%]
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_cuda_multiple_runs SKIPPED [ 93%]
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_gradient_flow_preserved FAILED [ 95%]
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_cpu_cuda_correlation[cpu] FAILED [ 97%]
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_cpu_cuda_correlation[cuda] SKIPPED [100%]
+
+=================================== FAILURES ===================================
+__________ TestATParallel015MixedUnits.test_mixed_units_comprehensive __________
+
+self = <tests.test_at_parallel_015.TestATParallel015MixedUnits object at 0x798063f9ac40>
+
+    def test_mixed_units_comprehensive(self):
+        """Test comprehensive mixed unit scenario."""
+        # Configuration with explicit units
+        crystal_config = CrystalConfig(
+            cell_a=75.5,      # Angstroms
+            cell_b=82.3,      # Angstroms
+            cell_c=91.7,      # Angstroms
+            cell_alpha=87.5,  # degrees
+            cell_beta=92.3,   # degrees
+            cell_gamma=95.8,  # degrees
+            default_F=100.0,
+            N_cells=(3, 3, 3),
+            phi_start_deg=0.0,    # degrees
+            osc_range_deg=1.0,    # degrees
+            phi_steps=1,
+        )
+    
+        detector_config = DetectorConfig(
+            distance_mm=150.5,      # millimeters
+            pixel_size_mm=0.172,    # millimeters
+            spixels=128,
+            fpixels=128,
+            detector_convention=DetectorConvention.XDS,
+            detector_rotx_deg=5.0,  # degrees
+            detector_roty_deg=3.0,  # degrees
+            detector_rotz_deg=2.0,  # degrees
+            detector_twotheta_deg=10.0,  # degrees
+        )
+    
+        beam_config = BeamConfig(
+            wavelength_A=1.54,  # Angstroms (Cu K-alpha)
+            fluence=1e23,
+            polarization_factor=0.95,  # dimensionless
+            dmin=2.0,          # Angstroms
+        )
+    
+        # Create models
+        det = Detector(detector_config)
+        crystal = Crystal(crystal_config)
+    
+        # Verify unit conversions happened correctly
+        # Detector distance should be in meters internally
+        assert np.isclose(det.distance, 0.1505, rtol=1e-6), \
+            f"Distance conversion error: {det.distance} != 0.1505"
+    
+        # Pixel size should be in meters internally
+        assert np.isclose(det.pixel_size, 0.000172, rtol=1e-6), \
+            f"Pixel size conversion error: {det.pixel_size} != 0.000172"
+    
+        # Rotations are converted internally but not exposed as attributes
+        # We can verify they work correctly by running the simulation
+    
+        # Wavelength should be in meters internally (used in simulator)
+        # Note: BeamConfig stores in Angstroms, conversion happens in simulator
+        assert beam_config.wavelength_A == 1.54, "Wavelength storage error"
+    
+        # Run simulation
+        sim = Simulator(detector=det, crystal=crystal, beam_config=beam_config)
+        intensity = sim.run(oversample=1)
+    
+        # Comprehensive checks
+        assert intensity.shape == (128, 128), f"Wrong output shape: {intensity.shape}"
+>       assert intensity.max() > 0, "Zero maximum intensity"
+E       AssertionError: Zero maximum intensity
+E       assert tensor(0.) > 0
+E        +  where tensor(0.) = <built-in method max of Tensor object at 0x798056eb80a0>()
+E        +    where <built-in method max of Tensor object at 0x798056eb80a0> = tensor([[0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        ...,\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.]]).max
+
+tests/test_at_parallel_015.py:274: AssertionError
+____________ TestCUDAGraphsCompatibility.test_basic_execution[cpu] _____________
+
+self = <tests.test_perf_pytorch_005_cudagraphs.TestCUDAGraphsCompatibility object at 0x798063e1c050>
+device = 'cpu'
+
+    @pytest.mark.parametrize("device", ["cpu", pytest.param("cuda", marks=pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available"))])
+    def test_basic_execution(self, device):
+        """Test that basic simulation runs on both CPU and CUDA without errors."""
+        # Simple cubic crystal configuration
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            misset_deg=(0.0, 0.0, 0.0),
+            phi_start_deg=0.0, osc_range_deg=0.0, phi_steps=1,
+            spindle_axis=(0.0, 0.0, 1.0),
+            mosaic_spread_deg=0.0, mosaic_domains=1,
+            N_cells=(3, 3, 3),
+            default_F=100.0
+        )
+    
+        # Small detector for fast test
+        detector_config = DetectorConfig(
+            distance_mm=100.0,
+            pixel_size_mm=0.1,
+            spixels=64, fpixels=64,
+            beam_center_s=3.2, beam_center_f=3.2
+        )
+    
+        beam_config = BeamConfig(
+            wavelength_A=6.2
+        )
+    
+        # Create simulator on target device (dtype defaults to float32)
+>       simulator = Simulator(
+            crystal_config=crystal_config,
+            detector_config=detector_config,
+            beam_config=beam_config,
+            device=device,
+            dtype=torch.float32
+        )
+E       TypeError: Simulator.__init__() got an unexpected keyword argument 'detector_config'
+
+tests/test_perf_pytorch_005_cudagraphs.py:53: TypeError
+___________ TestCUDAGraphsCompatibility.test_gradient_flow_preserved ___________
+
+self = <tests.test_perf_pytorch_005_cudagraphs.TestCUDAGraphsCompatibility object at 0x798063f9be10>
+
+    def test_gradient_flow_preserved(self):
+        """Test that cloning incident_beam_direction preserves gradient flow."""
+        # Use float64 for gradcheck precision
+        distance_tensor = torch.tensor(100.0, requires_grad=True, dtype=torch.float64)
+    
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            misset_deg=(0.0, 0.0, 0.0),
+            phi_start_deg=0.0, osc_range_deg=0.0, phi_steps=1,
+            spindle_axis=(0.0, 0.0, 1.0),
+            mosaic_spread_deg=0.0, mosaic_domains=1,
+            N_cells=(3, 3, 3),
+            default_F=100.0
+        )
+    
+        detector_config = DetectorConfig(
+            distance_mm=distance_tensor,
+            pixel_size_mm=0.1,
+            spixels=32, fpixels=32,
+            beam_center_s=1.6, beam_center_f=1.6
+        )
+    
+        beam_config = BeamConfig(
+            wavelength_A=6.2
+        )
+    
+>       simulator = Simulator(
+            crystal_config=crystal_config,
+            detector_config=detector_config,
+            beam_config=beam_config,
+            device="cpu",
+            dtype=torch.float64
+        )
+E       TypeError: Simulator.__init__() got an unexpected keyword argument 'detector_config'
+
+tests/test_perf_pytorch_005_cudagraphs.py:142: TypeError
+__________ TestCUDAGraphsCompatibility.test_cpu_cuda_correlation[cpu] __________
+
+self = <tests.test_perf_pytorch_005_cudagraphs.TestCUDAGraphsCompatibility object at 0x798063e28170>
+device = 'cpu'
+
+    @pytest.mark.parametrize("device", ["cpu", pytest.param("cuda", marks=pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available"))])
+    def test_cpu_cuda_correlation(self, device):
+        """Test that CPU and CUDA (if available) produce highly correlated results."""
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            misset_deg=(0.0, 0.0, 0.0),
+            phi_start_deg=0.0, osc_range_deg=0.0, phi_steps=1,
+            spindle_axis=(0.0, 0.0, 1.0),
+            mosaic_spread_deg=0.0, mosaic_domains=1,
+            N_cells=(3, 3, 3),
+            default_F=100.0
+        )
+    
+        detector_config = DetectorConfig(
+            distance_mm=100.0,
+            pixel_size_mm=0.1,
+            spixels=64, fpixels=64,
+            beam_center_s=3.2, beam_center_f=3.2
+        )
+    
+        beam_config = BeamConfig(
+            wavelength_A=6.2
+        )
+    
+        # Run on CPU
+>       simulator_cpu = Simulator(
+            crystal_config=crystal_config,
+            detector_config=detector_config,
+            beam_config=beam_config,
+            device="cpu",
+            dtype=torch.float32
+        )
+E       TypeError: Simulator.__init__() got an unexpected keyword argument 'detector_config'
+
+tests/test_perf_pytorch_005_cudagraphs.py:184: TypeError
+=============================== warnings summary ===============================
+tests/test_at_parallel_026.py:23
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_026.py:23: PytestUnknownMarkWarning: Unknown pytest.mark.parallel_validation - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.mark.parallel_validation
+
+tests/test_at_parallel_026.py:116
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_026.py:116: PytestUnknownMarkWarning: Unknown pytest.mark.requires_c_binary - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.requires_c_binary
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/chunks/chunk_09/pytest.xml -
+============================= slowest 5 durations ==============================
+13.82s call     tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_overload_count_determinism
+9.26s call     tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_identical_seed_produces_identical_noise
+9.25s call     tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_different_seed_produces_different_noise
+9.20s call     tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_seed_determinism_without_roi
+9.18s call     tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_negative_seed_accepted
+=========================== short test summary info ============================
+FAILED tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_mixed_units_comprehensive
+FAILED tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_basic_execution[cpu]
+FAILED tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_gradient_flow_preserved
+FAILED tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_cpu_cuda_correlation[cpu]
+======== 4 failed, 32 passed, 9 skipped, 2 warnings in 71.08s (0:01:11) ========
+EXIT_CODE=1

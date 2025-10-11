@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="9" tests="45" time="71.082" timestamp="2025-10-11T08:48:54.907551-07:00" hostname="ollie-System-Product-Name"><testcase classname="tests.test_at_cli_007.TestATCLI007NoiseDeterminism" name="test_identical_seed_produces_identical_noise" time="9.258" /><testcase classname="tests.test_at_cli_007.TestATCLI007NoiseDeterminism" name="test_different_seed_produces_different_noise" time="9.248" /><testcase classname="tests.test_at_cli_007.TestATCLI007NoiseDeterminism" name="test_seed_determinism_without_roi" time="9.204" /><testcase classname="tests.test_at_cli_007.TestATCLI007NoiseDeterminism" name="test_negative_seed_accepted" time="9.184" /><testcase classname="tests.test_at_cli_007.TestATCLI007NoiseDeterminism" name="test_overload_count_determinism" time="13.820" /><testcase classname="tests.test_at_geo_006.TestATGEO006PointPixelSolidAngle" name="test_point_pixel_solid_angle" time="0.002" /><testcase classname="tests.test_at_geo_006.TestATGEO006PointPixelSolidAngle" name="test_default_solid_angle_with_obliquity" time="0.001" /><testcase classname="tests.test_at_geo_006.TestATGEO006PointPixelSolidAngle" name="test_off_center_pixel_comparison" time="0.002" /><testcase classname="tests.test_at_geo_006.TestATGEO006PointPixelSolidAngle" name="test_gradient_flow" time="0.001" /><testcase classname="tests.test_at_geo_006.TestATGEO006PointPixelSolidAngle" name="test_corner_pixel_values" time="0.001" /><testcase classname="tests.test_at_parallel_005.TestAT_PARALLEL_005_BeamCenterMapping" name="test_mosflm_xbeam_ybeam_mapping" time="0.000"><skipped type="pytest.skip" message="Parallel validation tests only run with NB_RUN_PARALLEL=1">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_005.py:39: Parallel validation tests only run with NB_RUN_PARALLEL=1</skipped></testcase><testcase classname="tests.test_at_parallel_005.TestAT_PARALLEL_005_BeamCenterMapping" name="test_xds_orgx_orgy_mapping" time="0.000"><skipped type="pytest.skip" message="Parallel validation tests only run with NB_RUN_PARALLEL=1">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_005.py:64: Parallel validation tests only run with NB_RUN_PARALLEL=1</skipped></testcase><testcase classname="tests.test_at_parallel_005.TestAT_PARALLEL_005_BeamCenterMapping" name="test_pivot_mode_consistency" time="0.000"><skipped type="pytest.skip" message="Parallel validation tests only run with NB_RUN_PARALLEL=1">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_005.py:90: Parallel validation tests only run with NB_RUN_PARALLEL=1</skipped></testcase><testcase classname="tests.test_at_parallel_005.TestAT_PARALLEL_005_BeamCenterMapping" name="test_equivalent_configurations_produce_same_pattern" time="0.000"><skipped type="pytest.skip" message="Parallel validation tests only run with NB_RUN_PARALLEL=1">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_005.py:131: Parallel validation tests only run with NB_RUN_PARALLEL=1</skipped></testcase><testcase classname="tests.test_at_parallel_015.TestATParallel015MixedUnits" name="test_distance_units_consistency" time="1.772" /><testcase classname="tests.test_at_parallel_015.TestATParallel015MixedUnits" name="test_wavelength_units_consistency" time="0.015" /><testcase classname="tests.test_at_parallel_015.TestATParallel015MixedUnits" name="test_angle_units_consistency" time="0.012" /><testcase classname="tests.test_at_parallel_015.TestATParallel015MixedUnits" name="test_mixed_units_comprehensive" time="1.474"><failure message="AssertionError: Zero maximum intensity&#10;assert tensor(0.) &gt; 0&#10; +  where tensor(0.) = &lt;built-in method max of Tensor object at 0x798056eb80a0&gt;()&#10; +    where &lt;built-in method max of Tensor object at 0x798056eb80a0&gt; = tensor([[0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        ...,\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.]]).max">self = &lt;tests.test_at_parallel_015.TestATParallel015MixedUnits object at 0x798063f9ac40&gt;
+
+    def test_mixed_units_comprehensive(self):
+        """Test comprehensive mixed unit scenario."""
+        # Configuration with explicit units
+        crystal_config = CrystalConfig(
+            cell_a=75.5,      # Angstroms
+            cell_b=82.3,      # Angstroms
+            cell_c=91.7,      # Angstroms
+            cell_alpha=87.5,  # degrees
+            cell_beta=92.3,   # degrees
+            cell_gamma=95.8,  # degrees
+            default_F=100.0,
+            N_cells=(3, 3, 3),
+            phi_start_deg=0.0,    # degrees
+            osc_range_deg=1.0,    # degrees
+            phi_steps=1,
+        )
+    
+        detector_config = DetectorConfig(
+            distance_mm=150.5,      # millimeters
+            pixel_size_mm=0.172,    # millimeters
+            spixels=128,
+            fpixels=128,
+            detector_convention=DetectorConvention.XDS,
+            detector_rotx_deg=5.0,  # degrees
+            detector_roty_deg=3.0,  # degrees
+            detector_rotz_deg=2.0,  # degrees
+            detector_twotheta_deg=10.0,  # degrees
+        )
+    
+        beam_config = BeamConfig(
+            wavelength_A=1.54,  # Angstroms (Cu K-alpha)
+            fluence=1e23,
+            polarization_factor=0.95,  # dimensionless
+            dmin=2.0,          # Angstroms
+        )
+    
+        # Create models
+        det = Detector(detector_config)
+        crystal = Crystal(crystal_config)
+    
+        # Verify unit conversions happened correctly
+        # Detector distance should be in meters internally
+        assert np.isclose(det.distance, 0.1505, rtol=1e-6), \
+            f"Distance conversion error: {det.distance} != 0.1505"
+    
+        # Pixel size should be in meters internally
+        assert np.isclose(det.pixel_size, 0.000172, rtol=1e-6), \
+            f"Pixel size conversion error: {det.pixel_size} != 0.000172"
+    
+        # Rotations are converted internally but not exposed as attributes
+        # We can verify they work correctly by running the simulation
+    
+        # Wavelength should be in meters internally (used in simulator)
+        # Note: BeamConfig stores in Angstroms, conversion happens in simulator
+        assert beam_config.wavelength_A == 1.54, "Wavelength storage error"
+    
+        # Run simulation
+        sim = Simulator(detector=det, crystal=crystal, beam_config=beam_config)
+        intensity = sim.run(oversample=1)
+    
+        # Comprehensive checks
+        assert intensity.shape == (128, 128), f"Wrong output shape: {intensity.shape}"
+&gt;       assert intensity.max() &gt; 0, "Zero maximum intensity"
+E       AssertionError: Zero maximum intensity
+E       assert tensor(0.) &gt; 0
+E        +  where tensor(0.) = &lt;built-in method max of Tensor object at 0x798056eb80a0&gt;()
+E        +    where &lt;built-in method max of Tensor object at 0x798056eb80a0&gt; = tensor([[0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        ...,\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.]]).max
+
+tests/test_at_parallel_015.py:274: AssertionError</failure></testcase><testcase classname="tests.test_at_parallel_015.TestATParallel015MixedUnits" name="test_detector_rotation_units" time="0.021" /><testcase classname="tests.test_at_parallel_026.TestAT_PARALLEL_026_TriclinicAbsolutePosition" name="test_triclinic_absolute_peak_position_pytorch_only" time="0.543" /><testcase classname="tests.test_at_parallel_026.TestAT_PARALLEL_026_TriclinicAbsolutePosition" name="test_triclinic_absolute_peak_position_vs_c" time="0.019" /><testcase classname="tests.test_at_parallel_026.TestAT_PARALLEL_026_TriclinicAbsolutePosition" name="test_triclinic_vs_cubic_peak_difference" time="0.021" /><testcase classname="tests.test_at_perf_007.TestATPerf007ComprehensiveBenchmark" name="test_benchmark_suite_execution" time="0.000"><skipped type="pytest.skip" message="Set NB_RUN_BENCHMARKS=1 to run comprehensive benchmarks">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_perf_007.py:376: Set NB_RUN_BENCHMARKS=1 to run comprehensive benchmarks</skipped></testcase><testcase classname="tests.test_at_perf_007.TestATPerf007ComprehensiveBenchmark" name="test_pytorch_performance_basic" time="0.551" /><testcase classname="tests.test_at_perf_007.TestATPerf007ComprehensiveBenchmark" name="test_memory_scaling" time="0.044" /><testcase classname="tests.test_at_perf_007.TestATPerf007ComprehensiveBenchmark" name="test_gpu_performance" time="0.000"><skipped type="pytest.skip" message="CUDA not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_perf_007.py:465: CUDA not available</skipped></testcase><testcase classname="tests.test_at_perf_007.TestATPerf007ComprehensiveBenchmark" name="test_benchmark_output_format" time="0.001" /><testcase classname="tests.test_at_src_001_cli.TestAT_SRC_001_CLI" name="test_sourcefile_loading_via_cli" time="4.574" /><testcase classname="tests.test_at_src_001_cli.TestAT_SRC_001_CLI" name="test_sourcefile_with_missing_columns" time="4.603" /><testcase classname="tests.test_at_src_001_cli.TestAT_SRC_001_CLI" name="test_sourcefile_takes_precedence_over_divergence" time="4.580" /><testcase classname="tests.test_detector_conventions.TestDetectorConventions" name="test_adxv_convention_basis_vectors" time="0.001" /><testcase classname="tests.test_detector_conventions.TestDetectorConventions" name="test_denzo_convention_basis_vectors" time="0.001" /><testcase classname="tests.test_detector_conventions.TestDetectorConventions" name="test_denzo_beam_center_mapping" time="0.001" /><testcase classname="tests.test_detector_conventions.TestDetectorConventions" name="test_adxv_beam_direction" time="0.001" /><testcase classname="tests.test_detector_conventions.TestDetectorConventions" name="test_adxv_twotheta_axis_default" time="0.000" /><testcase classname="tests.test_detector_conventions.TestDetectorConventions" name="test_denzo_twotheta_axis_default" time="0.000" /><testcase classname="tests.test_detector_conventions.TestDetectorConventions" name="test_adxv_default_beam_centers" time="0.000" /><testcase classname="tests.test_detector_conventions.TestDetectorConventions" name="test_all_conventions_orthonormal" time="0.003" /><testcase classname="tests.test_detector_conventions.TestDetectorConventions" name="test_conventions_with_rotations" time="0.003" /><testcase classname="tests.test_perf_pytorch_005_cudagraphs.TestCUDAGraphsCompatibility" name="test_basic_execution[cpu]" time="0.000"><failure message="TypeError: Simulator.__init__() got an unexpected keyword argument 'detector_config'">self = &lt;tests.test_perf_pytorch_005_cudagraphs.TestCUDAGraphsCompatibility object at 0x798063e1c050&gt;
+device = 'cpu'
+
+    @pytest.mark.parametrize("device", ["cpu", pytest.param("cuda", marks=pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available"))])
+    def test_basic_execution(self, device):
+        """Test that basic simulation runs on both CPU and CUDA without errors."""
+        # Simple cubic crystal configuration
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            misset_deg=(0.0, 0.0, 0.0),
+            phi_start_deg=0.0, osc_range_deg=0.0, phi_steps=1,
+            spindle_axis=(0.0, 0.0, 1.0),
+            mosaic_spread_deg=0.0, mosaic_domains=1,
+            N_cells=(3, 3, 3),
+            default_F=100.0
+        )
+    
+        # Small detector for fast test
+        detector_config = DetectorConfig(
+            distance_mm=100.0,
+            pixel_size_mm=0.1,
+            spixels=64, fpixels=64,
+            beam_center_s=3.2, beam_center_f=3.2
+        )
+    
+        beam_config = BeamConfig(
+            wavelength_A=6.2
+        )
+    
+        # Create simulator on target device (dtype defaults to float32)
+&gt;       simulator = Simulator(
+            crystal_config=crystal_config,
+            detector_config=detector_config,
+            beam_config=beam_config,
+            device=device,
+            dtype=torch.float32
+        )
+E       TypeError: Simulator.__init__() got an unexpected keyword argument 'detector_config'
+
+tests/test_perf_pytorch_005_cudagraphs.py:53: TypeError</failure></testcase><testcase classname="tests.test_perf_pytorch_005_cudagraphs.TestCUDAGraphsCompatibility" name="test_basic_execution[cuda]" time="0.000"><skipped type="pytest.skip" message="CUDA not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_perf_pytorch_005_cudagraphs.py:25: CUDA not available</skipped></testcase><testcase classname="tests.test_perf_pytorch_005_cudagraphs.TestCUDAGraphsCompatibility" name="test_cuda_multiple_runs" time="0.000"><skipped type="pytest.skip" message="CUDA not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_perf_pytorch_005_cudagraphs.py:70: CUDA not available</skipped></testcase><testcase classname="tests.test_perf_pytorch_005_cudagraphs.TestCUDAGraphsCompatibility" name="test_gradient_flow_preserved" time="0.000"><failure message="TypeError: Simulator.__init__() got an unexpected keyword argument 'detector_config'">self = &lt;tests.test_perf_pytorch_005_cudagraphs.TestCUDAGraphsCompatibility object at 0x798063f9be10&gt;
+
+    def test_gradient_flow_preserved(self):
+        """Test that cloning incident_beam_direction preserves gradient flow."""
+        # Use float64 for gradcheck precision
+        distance_tensor = torch.tensor(100.0, requires_grad=True, dtype=torch.float64)
+    
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            misset_deg=(0.0, 0.0, 0.0),
+            phi_start_deg=0.0, osc_range_deg=0.0, phi_steps=1,
+            spindle_axis=(0.0, 0.0, 1.0),
+            mosaic_spread_deg=0.0, mosaic_domains=1,
+            N_cells=(3, 3, 3),
+            default_F=100.0
+        )
+    
+        detector_config = DetectorConfig(
+            distance_mm=distance_tensor,
+            pixel_size_mm=0.1,
+            spixels=32, fpixels=32,
+            beam_center_s=1.6, beam_center_f=1.6
+        )
+    
+        beam_config = BeamConfig(
+            wavelength_A=6.2
+        )
+    
+&gt;       simulator = Simulator(
+            crystal_config=crystal_config,
+            detector_config=detector_config,
+            beam_config=beam_config,
+            device="cpu",
+            dtype=torch.float64
+        )
+E       TypeError: Simulator.__init__() got an unexpected keyword argument 'detector_config'
+
+tests/test_perf_pytorch_005_cudagraphs.py:142: TypeError</failure></testcase><testcase classname="tests.test_perf_pytorch_005_cudagraphs.TestCUDAGraphsCompatibility" name="test_cpu_cuda_correlation[cpu]" time="0.000"><failure message="TypeError: Simulator.__init__() got an unexpected keyword argument 'detector_config'">self = &lt;tests.test_perf_pytorch_005_cudagraphs.TestCUDAGraphsCompatibility object at 0x798063e28170&gt;
+device = 'cpu'
+
+    @pytest.mark.parametrize("device", ["cpu", pytest.param("cuda", marks=pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available"))])
+    def test_cpu_cuda_correlation(self, device):
+        """Test that CPU and CUDA (if available) produce highly correlated results."""
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            misset_deg=(0.0, 0.0, 0.0),
+            phi_start_deg=0.0, osc_range_deg=0.0, phi_steps=1,
+            spindle_axis=(0.0, 0.0, 1.0),
+            mosaic_spread_deg=0.0, mosaic_domains=1,
+            N_cells=(3, 3, 3),
+            default_F=100.0
+        )
+    
+        detector_config = DetectorConfig(
+            distance_mm=100.0,
+            pixel_size_mm=0.1,
+            spixels=64, fpixels=64,
+            beam_center_s=3.2, beam_center_f=3.2
+        )
+    
+        beam_config = BeamConfig(
+            wavelength_A=6.2
+        )
+    
+        # Run on CPU
+&gt;       simulator_cpu = Simulator(
+            crystal_config=crystal_config,
+            detector_config=detector_config,
+            beam_config=beam_config,
+            device="cpu",
+            dtype=torch.float32
+        )
+E       TypeError: Simulator.__init__() got an unexpected keyword argument 'detector_config'
+
+tests/test_perf_pytorch_005_cudagraphs.py:184: TypeError</failure></testcase><testcase classname="tests.test_perf_pytorch_005_cudagraphs.TestCUDAGraphsCompatibility" name="test_cpu_cuda_correlation[cuda]" time="0.000"><skipped type="pytest.skip" message="CUDA not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_perf_pytorch_005_cudagraphs.py:158: CUDA not available</skipped></testcase></testsuite></testsuites>

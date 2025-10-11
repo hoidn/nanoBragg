@@ -1,0 +1,573 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 86 items
+
+tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F PASSED [  1%]
+tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_hkl_file PASSED [  2%]
+tests/test_at_cli_002.py::TestAT_CLI_002::test_data_ordering_fast_major PASSED [  3%]
+tests/test_at_cli_002.py::TestAT_CLI_002::test_error_without_required_inputs PASSED [  4%]
+tests/test_at_geo_001.py::test_at_geo_001_mosflm_beam_center_mapping PASSED [  5%]
+tests/test_at_noise_001.py::TestATNoise001::test_small_mean_exact_poisson PASSED [  6%]
+tests/test_at_noise_001.py::TestATNoise001::test_medium_mean_rejection_sampling PASSED [  8%]
+tests/test_at_noise_001.py::TestATNoise001::test_large_mean_gaussian_approximation PASSED [  9%]
+tests/test_at_noise_001.py::TestATNoise001::test_seed_reproducibility PASSED [ 10%]
+tests/test_at_noise_001.py::TestATNoise001::test_adc_and_clipping PASSED [ 11%]
+tests/test_at_noise_001.py::TestATNoise001::test_all_regimes_in_single_image PASSED [ 12%]
+tests/test_at_noise_001.py::TestATNoise001::test_noise_config_integration PASSED [ 13%]
+tests/test_at_parallel_010.py::TestATParallel010SolidAngleCorrections::test_point_pixel_distance_scaling SKIPPED [ 15%]
+tests/test_at_parallel_010.py::TestATParallel010SolidAngleCorrections::test_obliquity_distance_scaling SKIPPED [ 16%]
+tests/test_at_parallel_010.py::TestATParallel010SolidAngleCorrections::test_obliquity_with_tilts SKIPPED [ 17%]
+tests/test_at_parallel_010.py::TestATParallel010SolidAngleCorrections::test_combined_distance_and_tilt SKIPPED [ 18%]
+tests/test_at_parallel_021.py::TestCrystalPhiRotation::test_single_step_phi_rotation SKIPPED [ 19%]
+tests/test_at_parallel_021.py::TestCrystalPhiRotation::test_multi_step_phi_rotation SKIPPED [ 20%]
+tests/test_at_perf_002.py::TestATPERF002ParallelExecution::test_cpu_thread_scaling PASSED [ 22%]
+tests/test_at_perf_002.py::TestATPERF002ParallelExecution::test_pytorch_cpu_vs_c_performance PASSED [ 23%]
+tests/test_at_perf_002.py::TestATPERF002ParallelExecution::test_gpu_acceleration SKIPPED [ 24%]
+tests/test_at_perf_002.py::TestATPERF002ParallelExecution::test_thread_efficiency PASSED [ 25%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_roi_bounds_default_to_full_detector PASSED [ 26%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_roi_bounds_validation PASSED [ 27%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_roi_limits_rendering_area PASSED [ 29%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_mask_array_filtering PASSED [ 30%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_roi_and_mask_combination PASSED [ 31%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_mask_array_dimension_validation PASSED [ 32%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_statistics_exclude_masked_pixels PASSED [ 33%]
+tests/test_at_str_001.py::test_at_str_001_nearest_neighbor_lookup PASSED [ 34%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_cubic_regression PASSED [ 36%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_triclinic_correctness PASSED [ 37%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_metric_duality PASSED [ 38%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_volume_identity PASSED [ 39%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_resolution_shell_consistency PASSED [ 40%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_rotation_invariance PASSED [ 41%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_gradient_flow PASSED [ 43%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_identity PASSED [ 44%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_x_rotation PASSED [ 45%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_y_rotation PASSED [ 46%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_z_rotation PASSED [ 47%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_order PASSED [ 48%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_properties PASSED [ 50%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_tensor_types PASSED [ 51%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_orientation PASSED [ 52%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_zero_rotation PASSED [ 53%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_tensor_inputs PASSED [ 54%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_rotation_order PASSED [ 55%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_gradient_flow PASSED [ 56%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_read_identity_matrix PASSED [ 58%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_read_cubic_matrix PASSED [ 59%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_wavelength_scaling PASSED [ 60%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_triclinic_matrix PASSED [ 61%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_missing_file PASSED [ 62%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_invalid_format PASSED [ 63%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_comments_and_whitespace PASSED [ 65%]
+tests/test_suite.py::TestGeometryFunctions::test_dot_product PASSED      [ 66%]
+tests/test_suite.py::TestGeometryFunctions::test_cross_product PASSED    [ 67%]
+tests/test_suite.py::TestGeometryFunctions::test_magnitude PASSED        [ 68%]
+tests/test_suite.py::TestGeometryFunctions::test_unitize PASSED          [ 69%]
+tests/test_suite.py::TestGeometryFunctions::test_rotate_axis PASSED      [ 70%]
+tests/test_suite.py::TestGeometryFunctions::test_rotate_umat PASSED      [ 72%]
+tests/test_suite.py::TestCrystalModel::test_zero_rotation PASSED         [ 73%]
+tests/test_suite.py::TestCrystalModel::test_phi_rotation_90_deg PASSED   [ 74%]
+tests/test_suite.py::TestCrystalModel::test_rotation_gradients PASSED    [ 75%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_golden_data_exists PASSED [ 76%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_simple_cubic_reproduction XFAIL [ 77%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_cubic_tilted_detector_reproduction PASSED [ 79%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_triclinic_P1_reproduction PASSED [ 80%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_peak_position_validation PASSED [ 81%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_sensitivity_to_cell_params FAILED [ 82%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_performance_simple_cubic FAILED [ 83%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_performance_triclinic FAILED [ 84%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_memory_usage_analysis PASSED [ 86%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_extreme_cell_parameters FAILED [ 87%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_rotation_compatibility FAILED [ 88%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_simple_cubic_mosaic_reproduction PASSED [ 89%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_simulator_phi_rotation PASSED [ 90%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_crystal_params PASSED [ 91%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_detector_params PASSED [ 93%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_phi_rotation SKIPPED [ 94%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_mosaic_spread SKIPPED [ 95%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradient_numerical_stability SKIPPED [ 96%]
+tests/test_suite.py::TestTier3ScientificValidation::test_bragg_spot_position SKIPPED [ 97%]
+tests/test_suite.py::TestTier3ScientificValidation::test_polarization_limits SKIPPED [ 98%]
+tests/test_suite.py::test_import PASSED                                  [100%]
+
+=================================== FAILURES ===================================
+_______ TestTier1TranslationCorrectness.test_sensitivity_to_cell_params ________
+
+self = <tests.test_suite.TestTier1TranslationCorrectness object at 0x72e5f723ae00>
+
+    def test_sensitivity_to_cell_params(self):
+        """Test that the model behaves physically when cell parameters change."""
+        import os
+    
+        os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+    
+        # Set up base triclinic cell
+        device = torch.device("cpu")
+        dtype = torch.float64
+    
+        base_config = CrystalConfig(
+            cell_a=70.0,
+            cell_b=80.0,
+            cell_c=90.0,
+            cell_alpha=75.0,
+            cell_beta=85.0,
+            cell_gamma=95.0,
+            N_cells=[3, 3, 3],  # Smaller for speed
+        )
+    
+        # Create base simulation
+        crystal = Crystal(config=base_config, device=device, dtype=dtype)
+        detector = Detector(device=device, dtype=dtype)
+        detector.spixels = 256  # Smaller for speed
+        detector.fpixels = 256
+        detector.beam_center_f = 128.5
+        detector.beam_center_s = 128.5
+    
+        rot_config = CrystalConfig(
+            phi_start_deg=torch.tensor(0.0, device=device, dtype=dtype),
+            phi_steps=1,  # Explicitly set phi_steps
+            osc_range_deg=torch.tensor(0.0, device=device, dtype=dtype),
+            mosaic_spread_deg=torch.tensor(0.0, device=device, dtype=dtype),
+        )
+    
+>       simulator = Simulator(
+            crystal, detector, crystal_config=rot_config, device=device, dtype=dtype
+        )
+
+tests/test_suite.py:678: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/nanobrag_torch/simulator.py:492: in __init__
+    self.detector = self.detector.to(device=self.device, dtype=self.dtype)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <nanobrag_torch.models.detector.Detector object at 0x72e5edece450>
+device = device(type='cpu'), dtype = torch.float64
+
+    def to(self, device=None, dtype=None):
+        """Move detector to specified device and/or dtype."""
+        if device is not None:
+            self.device = device
+        if dtype is not None:
+            self.dtype = dtype
+    
+        # Move basis vectors to new device/dtype
+        self.fdet_vec = self.fdet_vec.to(device=self.device, dtype=self.dtype)
+        self.sdet_vec = self.sdet_vec.to(device=self.device, dtype=self.dtype)
+        self.odet_vec = self.odet_vec.to(device=self.device, dtype=self.dtype)
+    
+        # Move beam center tensors
+>       self.beam_center_s = self.beam_center_s.to(device=self.device, dtype=self.dtype)
+                             ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'float' object has no attribute 'to'
+
+src/nanobrag_torch/models/detector.py:239: AttributeError
+________ TestTier1TranslationCorrectness.test_performance_simple_cubic _________
+
+self = <tests.test_suite.TestTier1TranslationCorrectness object at 0x72e5f723b240>
+
+    def test_performance_simple_cubic(self):
+        """Test performance of simple cubic simulation."""
+        import os
+        import time
+    
+        os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+    
+        device = torch.device("cpu")
+        dtype = torch.float64
+    
+        # Create simple cubic crystal
+        crystal = Crystal(device=device, dtype=dtype)
+        detector = Detector(device=device, dtype=dtype)
+        # Use smaller detector for consistent timing
+        detector.spixels = 256
+        detector.fpixels = 256
+        detector.beam_center_f = 128.5
+        detector.beam_center_s = 128.5
+    
+        rot_config = CrystalConfig(
+            phi_start_deg=torch.tensor(0.0, device=device, dtype=dtype),
+            phi_steps=1,  # Explicitly set phi_steps
+            osc_range_deg=torch.tensor(0.0, device=device, dtype=dtype),
+            mosaic_spread_deg=torch.tensor(0.0, device=device, dtype=dtype),
+        )
+    
+>       simulator = Simulator(
+            crystal, detector, crystal_config=rot_config, device=device, dtype=dtype
+        )
+
+tests/test_suite.py:804: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/nanobrag_torch/simulator.py:492: in __init__
+    self.detector = self.detector.to(device=self.device, dtype=self.dtype)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <nanobrag_torch.models.detector.Detector object at 0x72e5edaf8550>
+device = device(type='cpu'), dtype = torch.float64
+
+    def to(self, device=None, dtype=None):
+        """Move detector to specified device and/or dtype."""
+        if device is not None:
+            self.device = device
+        if dtype is not None:
+            self.dtype = dtype
+    
+        # Move basis vectors to new device/dtype
+        self.fdet_vec = self.fdet_vec.to(device=self.device, dtype=self.dtype)
+        self.sdet_vec = self.sdet_vec.to(device=self.device, dtype=self.dtype)
+        self.odet_vec = self.odet_vec.to(device=self.device, dtype=self.dtype)
+    
+        # Move beam center tensors
+>       self.beam_center_s = self.beam_center_s.to(device=self.device, dtype=self.dtype)
+                             ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'float' object has no attribute 'to'
+
+src/nanobrag_torch/models/detector.py:239: AttributeError
+__________ TestTier1TranslationCorrectness.test_performance_triclinic __________
+
+self = <tests.test_suite.TestTier1TranslationCorrectness object at 0x72e5f72acf50>
+
+    def test_performance_triclinic(self):
+        """Test performance of triclinic simulation.
+    
+        This test verifies that triclinic crystal simulation does not
+        have excessive overhead compared to simple cubic. Due to system
+        load variations, we use a median of multiple runs and a relaxed
+        tolerance.
+        """
+        import os
+        import time
+        import statistics
+    
+        os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+    
+        device = torch.device("cpu")
+        dtype = torch.float64
+    
+        # Create triclinic crystal
+        triclinic_config = CrystalConfig(
+            cell_a=70.0,
+            cell_b=80.0,
+            cell_c=90.0,
+            cell_alpha=75.0,
+            cell_beta=85.0,
+            cell_gamma=95.0,
+            N_cells=[5, 5, 5],
+        )
+    
+        crystal = Crystal(config=triclinic_config, device=device, dtype=dtype)
+        detector = Detector(device=device, dtype=dtype)
+        # Use smaller detector for consistent timing
+        detector.spixels = 256
+        detector.fpixels = 256
+        detector.beam_center_f = 128.5
+        detector.beam_center_s = 128.5
+    
+        rot_config = CrystalConfig(
+            phi_start_deg=torch.tensor(0.0, device=device, dtype=dtype),
+            phi_steps=1,  # Explicitly set phi_steps
+            osc_range_deg=torch.tensor(0.0, device=device, dtype=dtype),
+            mosaic_spread_deg=torch.tensor(0.0, device=device, dtype=dtype),
+        )
+    
+        # Set beam config with wavelength
+        from nanobrag_torch.config import BeamConfig
+        beam_config = BeamConfig(wavelength_A=1.0)
+    
+>       simulator = Simulator(
+            crystal, detector, beam_config=beam_config, crystal_config=rot_config, device=device, dtype=dtype
+        )
+
+tests/test_suite.py:879: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/nanobrag_torch/simulator.py:492: in __init__
+    self.detector = self.detector.to(device=self.device, dtype=self.dtype)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <nanobrag_torch.models.detector.Detector object at 0x72e5edaf8450>
+device = device(type='cpu'), dtype = torch.float64
+
+    def to(self, device=None, dtype=None):
+        """Move detector to specified device and/or dtype."""
+        if device is not None:
+            self.device = device
+        if dtype is not None:
+            self.dtype = dtype
+    
+        # Move basis vectors to new device/dtype
+        self.fdet_vec = self.fdet_vec.to(device=self.device, dtype=self.dtype)
+        self.sdet_vec = self.sdet_vec.to(device=self.device, dtype=self.dtype)
+        self.odet_vec = self.odet_vec.to(device=self.device, dtype=self.dtype)
+    
+        # Move beam center tensors
+>       self.beam_center_s = self.beam_center_s.to(device=self.device, dtype=self.dtype)
+                             ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'float' object has no attribute 'to'
+
+src/nanobrag_torch/models/detector.py:239: AttributeError
+_________ TestTier1TranslationCorrectness.test_extreme_cell_parameters _________
+
+self = <tests.test_suite.TestTier1TranslationCorrectness object at 0x72e5f73c7f20>
+
+    def test_extreme_cell_parameters(self):
+        """Test numerical stability for edge cases."""
+        import os
+    
+        os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+    
+        device = torch.device("cpu")
+        dtype = torch.float64
+    
+        print("\n=== Testing Extreme Cell Parameters ===")
+    
+        # Test cases with different extreme parameters
+        test_cases = [
+            # Nearly cubic cells (angles near 90°)
+            {
+                "name": "Nearly cubic",
+                "config": CrystalConfig(
+                    cell_a=100.0,
+                    cell_b=100.1,
+                    cell_c=99.9,
+                    cell_alpha=89.9,
+                    cell_beta=90.1,
+                    cell_gamma=90.0,
+                    N_cells=[2, 2, 2],
+                ),
+            },
+            # Moderately skewed cells (challenging but not extreme)
+            {
+                "name": "Moderately skewed",
+                "config": CrystalConfig(
+                    cell_a=50.0,
+                    cell_b=60.0,
+                    cell_c=70.0,
+                    cell_alpha=70.0,  # Less extreme than 45°
+                    cell_beta=110.0,  # Less extreme than 135°
+                    cell_gamma=80.0,   # Less extreme than 60°
+                    N_cells=[2, 2, 2],
+                ),
+            },
+            # Very small cell dimensions
+            {
+                "name": "Very small cells",
+                "config": CrystalConfig(
+                    cell_a=1.0,
+                    cell_b=1.5,
+                    cell_c=2.0,
+                    cell_alpha=90.0,
+                    cell_beta=90.0,
+                    cell_gamma=90.0,
+                    N_cells=[10, 10, 10],
+                ),
+            },
+            # Very large cell dimensions
+            {
+                "name": "Very large cells",
+                "config": CrystalConfig(
+                    cell_a=1000.0,
+                    cell_b=1200.0,
+                    cell_c=1500.0,
+                    cell_alpha=90.0,
+                    cell_beta=90.0,
+                    cell_gamma=90.0,
+                    N_cells=[1, 1, 1],
+                ),
+            },
+        ]
+    
+        for test_case in test_cases:
+            print(f"\nTesting: {test_case['name']}")
+    
+            try:
+                # Create crystal
+                crystal = Crystal(
+                    config=test_case["config"], device=device, dtype=dtype
+                )
+    
+                # Check geometry calculations
+                tensors = crystal.compute_cell_tensors()
+    
+                # Verify no NaN or Inf values
+                for key, tensor in tensors.items():
+                    if key == "V":  # Volume is scalar
+                        assert torch.isfinite(
+                            tensor
+                        ), f"NaN/Inf in {key} for {test_case['name']}"
+                        print(f"  Volume: {tensor.item():.3e}")
+                        # Check for reasonable volume bounds
+                        assert tensor.item() > 1e-12, f"Volume too small for {test_case['name']}: {tensor.item():.3e}"
+                        assert tensor.item() < 1e15, f"Volume too large for {test_case['name']}: {tensor.item():.3e}"
+                    else:  # Vectors
+                        assert torch.all(
+                            torch.isfinite(tensor)
+                        ), f"NaN/Inf in {key} for {test_case['name']}"
+                        magnitude = torch.norm(tensor).item()
+                        print(f"  |{key}|: {magnitude:.3e}")
+                        # Check for reasonable vector magnitude bounds
+                        assert magnitude < 1e10, f"Vector {key} magnitude too large for {test_case['name']}: {magnitude:.3e}"
+    
+                # Try to run a small simulation
+                detector = Detector(device=device, dtype=dtype)
+                detector.spixels = 64
+                detector.fpixels = 64
+                detector.beam_center_f = 32.5
+                detector.beam_center_s = 32.5
+    
+                rot_config = CrystalConfig(
+                    phi_start_deg=torch.tensor(0.0, device=device, dtype=dtype),
+                    osc_range_deg=torch.tensor(0.0, device=device, dtype=dtype),
+                    mosaic_spread_deg=torch.tensor(0.0, device=device, dtype=dtype),
+                )
+    
+>               simulator = Simulator(
+                    crystal,
+                    detector,
+                    crystal_config=rot_config,
+                    device=device,
+                    dtype=dtype,
+                )
+
+tests/test_suite.py:1133: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/nanobrag_torch/simulator.py:492: in __init__
+    self.detector = self.detector.to(device=self.device, dtype=self.dtype)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <nanobrag_torch.models.detector.Detector object at 0x72e5edece050>
+device = device(type='cpu'), dtype = torch.float64
+
+    def to(self, device=None, dtype=None):
+        """Move detector to specified device and/or dtype."""
+        if device is not None:
+            self.device = device
+        if dtype is not None:
+            self.dtype = dtype
+    
+        # Move basis vectors to new device/dtype
+        self.fdet_vec = self.fdet_vec.to(device=self.device, dtype=self.dtype)
+        self.sdet_vec = self.sdet_vec.to(device=self.device, dtype=self.dtype)
+        self.odet_vec = self.odet_vec.to(device=self.device, dtype=self.dtype)
+    
+        # Move beam center tensors
+>       self.beam_center_s = self.beam_center_s.to(device=self.device, dtype=self.dtype)
+                             ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'float' object has no attribute 'to'
+
+src/nanobrag_torch/models/detector.py:239: AttributeError
+----------------------------- Captured stdout call -----------------------------
+
+=== Testing Extreme Cell Parameters ===
+
+Testing: Nearly cubic
+  |a|: 1.000e+02
+  |b|: 1.001e+02
+  |c|: 9.990e+01
+  |a_star|: 1.000e-02
+  |b_star|: 9.990e-03
+  |c_star|: 1.001e-02
+  Volume: 1.000e+06
+  ✗ Failed: 'float' object has no attribute 'to'
+_________ TestTier1TranslationCorrectness.test_rotation_compatibility __________
+
+self = <tests.test_suite.TestTier1TranslationCorrectness object at 0x72e5f72e0410>
+
+    def test_rotation_compatibility(self):
+        """Test that dynamic geometry works with crystal rotations."""
+        import os
+    
+        os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+    
+        device = torch.device("cpu")
+        dtype = torch.float64
+    
+        print("\n=== Testing Rotation Compatibility ===")
+    
+        # Create triclinic crystal with proper parameters
+        config = CrystalConfig(
+            cell_a=70.0,
+            cell_b=80.0,
+            cell_c=90.0,
+            cell_alpha=75.0,
+            cell_beta=85.0,
+            cell_gamma=95.0,
+            N_cells=[3, 3, 3],
+            default_F=100.0,  # Add non-zero structure factor
+        )
+    
+        crystal = Crystal(config=config, device=device, dtype=dtype)
+        detector = Detector(device=device, dtype=dtype)
+        detector.spixels = 128
+        detector.fpixels = 128
+        detector.beam_center_f = 64.5
+        detector.beam_center_s = 64.5
+    
+        # Test with phi rotation and mosaic spread
+        rot_config = CrystalConfig(
+            phi_start_deg=torch.tensor(10.0, device=device, dtype=dtype),
+            osc_range_deg=torch.tensor(20.0, device=device, dtype=dtype),
+            phi_steps=5,
+            mosaic_spread_deg=torch.tensor(0.5, device=device, dtype=dtype),
+            mosaic_domains=10,
+        )
+    
+        # Create beam config with proper wavelength
+        from nanobrag_torch.config import BeamConfig
+        beam_config = BeamConfig(wavelength_A=1.0)
+    
+>       simulator = Simulator(
+            crystal, detector, beam_config=beam_config, crystal_config=rot_config, device=device, dtype=dtype
+        )
+
+tests/test_suite.py:1247: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/nanobrag_torch/simulator.py:492: in __init__
+    self.detector = self.detector.to(device=self.device, dtype=self.dtype)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <nanobrag_torch.models.detector.Detector object at 0x72e5f72af650>
+device = device(type='cpu'), dtype = torch.float64
+
+    def to(self, device=None, dtype=None):
+        """Move detector to specified device and/or dtype."""
+        if device is not None:
+            self.device = device
+        if dtype is not None:
+            self.dtype = dtype
+    
+        # Move basis vectors to new device/dtype
+        self.fdet_vec = self.fdet_vec.to(device=self.device, dtype=self.dtype)
+        self.sdet_vec = self.sdet_vec.to(device=self.device, dtype=self.dtype)
+        self.odet_vec = self.odet_vec.to(device=self.device, dtype=self.dtype)
+    
+        # Move beam center tensors
+>       self.beam_center_s = self.beam_center_s.to(device=self.device, dtype=self.dtype)
+                             ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'float' object has no attribute 'to'
+
+src/nanobrag_torch/models/detector.py:239: AttributeError
+----------------------------- Captured stdout call -----------------------------
+
+=== Testing Rotation Compatibility ===
+- generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/chunks/chunk_04/pytest.xml -
+============================= slowest 5 durations ==============================
+4.61s call     tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_hkl_file
+4.61s call     tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F
+4.60s call     tests/test_at_cli_002.py::TestAT_CLI_002::test_data_ordering_fast_major
+4.19s call     tests/test_at_perf_002.py::TestATPERF002ParallelExecution::test_cpu_thread_scaling
+3.99s call     tests/test_at_cli_002.py::TestAT_CLI_002::test_error_without_required_inputs
+=========================== short test summary info ============================
+FAILED tests/test_suite.py::TestTier1TranslationCorrectness::test_sensitivity_to_cell_params
+FAILED tests/test_suite.py::TestTier1TranslationCorrectness::test_performance_simple_cubic
+FAILED tests/test_suite.py::TestTier1TranslationCorrectness::test_performance_triclinic
+FAILED tests/test_suite.py::TestTier1TranslationCorrectness::test_extreme_cell_parameters
+FAILED tests/test_suite.py::TestTier1TranslationCorrectness::test_rotation_compatibility
+============= 5 failed, 68 passed, 12 skipped, 1 xfailed in 32.81s =============
+EXIT_CODE=1
