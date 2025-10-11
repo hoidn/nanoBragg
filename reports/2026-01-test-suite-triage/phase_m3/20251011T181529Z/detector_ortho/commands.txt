@@ -1,0 +1,80 @@
+# Phase M3b: Detector Orthogonality Notes - Commands Log
+
+## Evidence Gathering (Docs-Only Loop)
+
+### Timestamp Generation
+export STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+# Result: 20251011T181529Z
+
+### Artifact Directory Setup
+mkdir -p reports/2026-01-test-suite-triage/phase_m3/$STAMP/detector_ortho
+
+### File Reads (Context Assembly)
+- reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:247-266
+- tests/test_at_parallel_017.py (full file)
+- specs/spec-a-core.md §49-100 (Geometry & Conventions)
+- docs/fix_plan.md [TEST-SUITE-TRIAGE-001] Next Actions
+- plans/active/test-suite-triage.md:236 (Phase M3b task)
+
+### Documentation Artifacts Created
+- notes.md (this file's sibling) — comprehensive owner handoff with:
+  * Failure context (test signature, configuration, error message)
+  * Spec/arch references (§49-54, §87-89, ADR-02)
+  * Code locations (detector.py:78-142, :238-299, :612-690)
+  * Reproduction commands (targeted/module/full-suite selectors)
+  * Remediation options (tolerance relaxation vs orthonormalization vs rotation refactor)
+  * Exit criteria + artifact expectations
+  * Open design questions
+
+## Reproduction Selector (NOT EXECUTED - docs-only directive)
+
+### Targeted Test (Fastest)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_detector_tilts
+
+# Expected: 1 FAILED (AssertionError: fdet and sdet not orthogonal, got 1.49e-08)
+# Runtime: ~5-10 seconds
+
+### Module-Level Validation
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_at_parallel_017.py
+
+# Expected: 5 passed, 1 failed
+# Runtime: ~45-60 seconds
+
+### Full Geometry Suite (Regression Validation)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_detector_basis_vectors.py \
+  tests/test_detector_geometry.py \
+  tests/test_at_parallel_017.py
+
+# Expected: Most tests pass, C8 failure persists until remediation
+# Runtime: ~2-3 minutes
+
+## Next Steps (For Implementation Loop)
+
+1. Execute targeted selector to establish baseline failure signature
+2. Choose remediation option (recommend: relax tolerance to 1e-7)
+3. Implement fix (test modification or code change)
+4. Rerun targeted selector → module → full suite
+5. Capture before/after logs under phase_m3/$NEW_STAMP/detector_ortho/
+6. Update remediation_tracker.md C8 row with ✅ RESOLVED + artifact paths
+7. Update docs/fix_plan.md [TEST-SUITE-TRIAGE-001] Attempts History
+
+## Environment Metadata
+
+- Python: 3.13.5
+- PyTorch: 2.7.1+cu126
+- CUDA: 12.6 (disabled via CUDA_VISIBLE_DEVICES=-1)
+- Platform: linux 6.14.0-29-generic
+- Mode: Docs (no pytest execution per input.md line 25)
+
+## Artifacts Generated This Loop
+
+- reports/2026-01-test-suite-triage/phase_m3/20251011T181529Z/detector_ortho/notes.md
+- reports/2026-01-test-suite-triage/phase_m3/20251011T181529Z/detector_ortho/commands.txt (this file)
+
+## Ledger Update Pending
+
+- docs/fix_plan.md [TEST-SUITE-TRIAGE-001] Attempt #33 (next)
+- plans/active/test-suite-triage.md M3b → [D]
