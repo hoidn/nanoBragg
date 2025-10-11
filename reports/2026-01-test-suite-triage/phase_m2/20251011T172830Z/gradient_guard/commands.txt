@@ -1,0 +1,14 @@
+# Phase M2b Gradient Guard Commands
+
+## Implementation Verification
+# Check test file sets env var before torch import
+grep -n "NANOBRAGG_DISABLE_COMPILE" tests/test_gradients.py
+
+# Check simulator respects the flag
+grep -n "NANOBRAGG_DISABLE_COMPILE\|torch.compile" src/nanobrag_torch/simulator.py
+
+## Test Execution (CPU)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -v tests/test_gradients.py -k "gradcheck" --tb=short
+
+## Optional GPU Test
+env CUDA_VISIBLE_DEVICES=0 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -v tests/test_gradients.py -k "gradcheck" --tb=short
