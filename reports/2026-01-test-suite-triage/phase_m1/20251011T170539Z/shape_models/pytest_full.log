@@ -1,0 +1,17 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 7 items
+
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_square_shape_model PASSED [ 14%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_round_shape_model PASSED [ 28%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_gauss_shape_model PASSED [ 42%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_tophat_shape_model PASSED [ 57%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_shape_model_comparison PASSED [ 71%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_fudge_parameter_scaling PASSED [ 85%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_shape_models_at_bragg_peak PASSED [100%]
+
+============================== 7 passed in 4.82s ===============================

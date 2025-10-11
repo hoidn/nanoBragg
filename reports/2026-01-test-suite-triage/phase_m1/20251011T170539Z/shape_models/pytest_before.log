@@ -1,0 +1,187 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 1 item
+
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_gauss_shape_model FAILED [100%]
+
+=================================== FAILURES ===================================
+___________ TestAT_STR_003_LatticeShapeModels.test_gauss_shape_model ___________
+
+self = <tests.test_at_str_003.TestAT_STR_003_LatticeShapeModels object at 0x703eddc30770>
+
+    def test_gauss_shape_model(self):
+        """Test GAUSS (Gaussian in reciprocal space) lattice shape model."""
+        # Configure for GAUSS shape
+        self.crystal_config.shape = CrystalShape.GAUSS
+        self.crystal_config.fudge = 1.0
+    
+        # Create simulator to test the full implementation
+>       simulator = Simulator(
+            crystal=Crystal(self.crystal_config),
+            detector=None,  # Not needed for this test
+            crystal_config=self.crystal_config,
+            beam_config=self.beam_config,
+        )
+
+tests/test_at_str_003.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <nanobrag_torch.simulator.Simulator object at 0x703eddde7620>
+crystal = <nanobrag_torch.models.crystal.Crystal object at 0x703eddde74d0>
+detector = None
+crystal_config = CrystalConfig(cell_a=100.0, cell_b=100.0, cell_c=100.0, cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0, misset_deg=(...'gauss'>, fudge=1.0, sample_x=1.0000000000000001e-07, sample_y=1.0000000000000001e-07, sample_z=1.0000000000000001e-07)
+beam_config = BeamConfig(wavelength_A=1.0, N_source_points=1, source_distance_mm=10000.0, source_size_mm=0.0, source_directions=None...=(0.0, 0.0, 1.0), flux=0.0, exposure=0.0, beamsize_mm=0.0, fluence=1.2593201528622709e+29, dmin=0.0, water_size_um=0.0)
+device = None, dtype = torch.float32, debug_config = None
+
+    def __init__(
+        self,
+        crystal: Crystal,
+        detector: Detector,
+        crystal_config: Optional[CrystalConfig] = None,
+        beam_config: Optional[BeamConfig] = None,
+        device=None,
+        dtype=torch.float32,
+        debug_config: Optional[dict] = None,
+    ):
+        """
+        Initialize simulator with crystal, detector, and configurations.
+    
+        Args:
+            crystal: Crystal object containing unit cell and structure factors
+            detector: Detector object with geometry parameters
+            crystal_config: Configuration for crystal rotation parameters (phi, mosaic)
+            beam_config: Beam configuration (optional, for future use)
+            device: PyTorch device (cpu/cuda)
+            dtype: PyTorch data type
+            debug_config: Debug configuration with printout, printout_pixel, trace_pixel options
+        """
+        self.crystal = crystal
+        self.detector = detector
+        # If crystal_config is provided, update only the rotation-related parameters
+        # This preserves essential parameters like cell dimensions and default_F
+        if crystal_config is not None:
+            # Update only the rotation-related fields that are explicitly set
+            # This preserves the crystal's essential parameters while allowing rotation updates
+            if hasattr(crystal_config, 'phi_start_deg'):
+                self.crystal.config.phi_start_deg = crystal_config.phi_start_deg
+            if hasattr(crystal_config, 'osc_range_deg'):
+                self.crystal.config.osc_range_deg = crystal_config.osc_range_deg
+            if hasattr(crystal_config, 'phi_steps'):
+                self.crystal.config.phi_steps = crystal_config.phi_steps
+            if hasattr(crystal_config, 'mosaic_spread_deg'):
+                self.crystal.config.mosaic_spread_deg = crystal_config.mosaic_spread_deg
+            if hasattr(crystal_config, 'mosaic_domains'):
+                self.crystal.config.mosaic_domains = crystal_config.mosaic_domains
+            if hasattr(crystal_config, 'mosaic_seed'):
+                self.crystal.config.mosaic_seed = crystal_config.mosaic_seed
+            if hasattr(crystal_config, 'spindle_axis'):
+                self.crystal.config.spindle_axis = crystal_config.spindle_axis
+        # Use the provided beam_config, or Crystal's beam_config, or default
+        if beam_config is not None:
+            self.beam_config = beam_config
+        elif hasattr(crystal, 'beam_config') and crystal.beam_config is not None:
+            self.beam_config = crystal.beam_config
+        else:
+            self.beam_config = BeamConfig()
+        # Normalize device to ensure consistency
+        if device is not None:
+            # Create a dummy tensor on the device to get the actual device with index
+            temp = torch.zeros(1, device=device)
+            self.device = temp.device
+        else:
+            self.device = torch.device("cpu")
+        self.dtype = dtype
+    
+        # PERF-PYTORCH-004 Attempt #14: Ensure detector is on the same device/dtype as simulator
+        # This prevents device mismatch errors when detector tensors (beam_vector, pixel_coords)
+        # interact with simulator tensors (wavelength, incident_beam_direction) during compilation
+        if self.detector is not None:
+            self.detector = self.detector.to(device=self.device, dtype=self.dtype)
+    
+        # Store debug configuration
+        self.debug_config = debug_config if debug_config is not None else {}
+        self.printout = self.debug_config.get('printout', False)
+        self.printout_pixel = self.debug_config.get('printout_pixel', None)  # [fast, slow]
+        self.trace_pixel = self.debug_config.get('trace_pixel', None)  # [slow, fast]
+    
+        # Phase CLI-FLAGS-003 M0a: Enable trace instrumentation on Crystal when trace_pixel is active
+        # This guards _last_tricubic_neighborhood population to prevent unconditional debug payload retention
+        if self.trace_pixel is not None:
+            self.crystal._enable_trace = True
+    
+        # Set incident beam direction from detector.beam_vector
+        # This is critical for convention consistency (AT-PARALLEL-004) and CLI override support (CLI-FLAGS-003 Phase H2)
+        # The detector.beam_vector property handles both convention defaults and CUSTOM overrides (e.g., -beam_vector)
+        if self.detector is not None:
+            # Use detector's beam_vector property which handles:
+            # - CUSTOM convention with user-supplied custom_beam_vector
+            # - Convention defaults (MOSFLM: [1,0,0], XDS/DIALS: [0,0,1])
+            # The detector normalizes and returns the vector with correct device/dtype
+            self.incident_beam_direction = self.detector.beam_vector.clone()
+        else:
+            # If no detector provided, default to MOSFLM beam direction
+            self.incident_beam_direction = torch.tensor(
+                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
+            )
+        # PERF-PYTORCH-006: Store wavelength as tensor with correct dtype
+        self.wavelength = torch.tensor(self.beam_config.wavelength_A, device=self.device, dtype=self.dtype)
+    
+        # Physical constants (from nanoBragg.c ~line 240)
+        # PERF-PYTORCH-006: Store as tensors with correct dtype to avoid implicit float64 upcasting
+        self.r_e_sqr = torch.tensor(
+            7.94079248018965e-30, device=self.device, dtype=self.dtype  # classical electron radius squared (meters squared)
+        )
+        # Use fluence from beam config (AT-FLU-001)
+        self.fluence = torch.tensor(self.beam_config.fluence, device=self.device, dtype=self.dtype)
+        # Polarization setup from beam config
+        # PERF-PYTORCH-006: Store as tensor with correct dtype
+        kahn_value = self.beam_config.polarization_factor if not self.beam_config.nopolar else 0.0
+        self.kahn_factor = torch.tensor(kahn_value, device=self.device, dtype=self.dtype)
+        self.polarization_axis = torch.tensor(
+            self.beam_config.polarization_axis, device=self.device, dtype=self.dtype
+        )
+    
+        # PERF-PYTORCH-004 P1.2 + P3.0: Pre-normalize source tensors to avoid repeated .to() calls in run()
+        # Move source direction/wavelength/weight tensors to correct device/dtype once during init
+        # P3.0: Seed fallback tensors (equal weights, primary wavelength) when omitted before device cast
+        _has_sources = (self.beam_config.source_directions is not None and
+                       len(self.beam_config.source_directions) > 0)
+        if _has_sources:
+            self._source_directions = self.beam_config.source_directions.to(device=self.device, dtype=self.dtype)
+    
+            # P3.0: Default source_wavelengths to primary wavelength if not provided (AT-SRC-001)
+            if self.beam_config.source_wavelengths is not None:
+                self._source_wavelengths = self.beam_config.source_wavelengths.to(device=self.device, dtype=self.dtype)  # meters
+            else:
+                # Use primary wavelength for all sources
+                primary_wavelength_m = self.beam_config.wavelength_A * 1e-10
+                n_sources = len(self.beam_config.source_directions)
+                self._source_wavelengths = torch.full((n_sources,), primary_wavelength_m, device=self.device, dtype=self.dtype)
+    
+            self._source_wavelengths_A = self._source_wavelengths * 1e10  # Convert to Angstroms once
+    
+            # P3.0: Default source_weights to equal weights if not provided
+            if self.beam_config.source_weights is not None:
+                self._source_weights = self.beam_config.source_weights.to(device=self.device, dtype=self.dtype)
+            else:
+                # Default to equal weights if not provided
+                self._source_weights = torch.ones(len(self.beam_config.source_directions), device=self.device, dtype=self.dtype)
+        else:
+            self._source_directions = None
+            self._source_wavelengths_A = None
+            self._source_weights = None
+    
+        # PERF-PYTORCH-004 P3.4: Cache frequently-accessed tensors to reduce per-run allocations
+        # Pre-convert pixel coordinates to correct device/dtype once
+>       self._cached_pixel_coords_meters = self.detector.get_pixel_coords().to(device=self.device, dtype=self.dtype)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'get_pixel_coords'
+
+src/nanobrag_torch/simulator.py:569: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_gauss_shape_model
+============================== 1 failed in 1.95s ===============================
